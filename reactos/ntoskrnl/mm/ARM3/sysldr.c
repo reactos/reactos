@@ -13,7 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 16 "ARM³::LOADER"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -112,7 +111,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
 
     /* Not session load, shouldn't have an entry */
     ASSERT(LdrEntry == NULL);
-    
+
     /* Attach to the system process */
     KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
 
@@ -154,12 +153,12 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
         KeUnstackDetachProcess(&ApcState);
         return Status;
     }
-    
+
     /* Reserve system PTEs needed */
     PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     /* New driver base */
     LastPte = PointerPte + PteCount;
     DriverBase = MiPteToAddress(PointerPte);
@@ -182,7 +181,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
             pos = wcsrchr(FileName->Buffer, '\\');
             len = wcslen(pos) * sizeof(WCHAR);
             if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
-        }   
+        }
 #endif
         TempPte.u.Hard.PageFrameNumber = MiAllocatePfn(PointerPte, MM_EXECUTE);
 
@@ -192,7 +191,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
         /* Move on */
         PointerPte++;
     }
-        
+
     /* Copy the image */
     RtlCopyMemory(DriverBase, Base, PteCount << PAGE_SHIFT);
 
@@ -386,14 +385,14 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
         /* Then there's nothing to do */
         return STATUS_SUCCESS;
     }
-    
+
     /* Check for single-entry */
     if ((ULONG_PTR)ImportList & MM_SYSLDR_SINGLE_ENTRY)
     {
         /* Set it up */
         SingleEntry.Count = 1;
         SingleEntry.Entry[0] = (PVOID)((ULONG_PTR)ImportList &~ MM_SYSLDR_SINGLE_ENTRY);
-        
+
         /* Use this as the import list */
         ImportList = &SingleEntry;
     }
@@ -404,24 +403,24 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
         /* Get the entry */
         LdrEntry = ImportList->Entry[i];
         DPRINT1("%wZ <%wZ>\n", &LdrEntry->FullDllName, &LdrEntry->BaseDllName);
-        
+
         /* Skip boot loaded images */
         if (LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) continue;
-        
+
         /* Dereference the entry */
         ASSERT(LdrEntry->LoadCount >= 1);
         if (!--LdrEntry->LoadCount)
         {
             /* Save the import data in case unload fails */
             CurrentImports = LdrEntry->LoadedImports;
-            
+
             /* This is the last entry */
             LdrEntry->LoadedImports = MM_SYSLDR_NO_IMPORTS;
             if (MiCallDllUnloadAndUnloadDll(LdrEntry))
             {
                 /* Unloading worked, parse this DLL's imports too */
                 MiDereferenceImports(CurrentImports);
-                
+
                 /* Check if we had valid imports */
                 if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) ||
                     (CurrentImports != MM_SYSLDR_NO_IMPORTS) ||
@@ -438,7 +437,7 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
             }
         }
     }
-    
+
     /* Done */
     return STATUS_SUCCESS;
 }
@@ -1454,7 +1453,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         /* Remember the original address */
         DllBase = LdrEntry->DllBase;
-        
+
         /* Loop the PTEs */
         PointerPte = StartPte;
         while (PointerPte < LastPte)
@@ -1464,11 +1463,11 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
             ASSERT(Pfn1->u3.e1.Rom == 0);
             Pfn1->u3.e1.Modified = TRUE;
-            
+
             /* Next */
             PointerPte++;
         }
-        
+
         /* Now reserve system PTEs for the image */
         PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
         if (!PointerPte)
@@ -1477,7 +1476,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             DPRINT1("[Mm0]: Couldn't allocate driver section!\n");
             while (TRUE);
         }
-        
+
         /* This is the new virtual address for the module */
         LastPte = PointerPte + PteCount;
         NewImageAddress = MiPteToAddress(PointerPte);
@@ -1485,7 +1484,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Sanity check */
         DPRINT("[Mm0]: Copying from: %p to: %p\n", DllBase, NewImageAddress);
         ASSERT(ExpInitializationPhase == 0);
-        
+
         /* Loop the new driver PTEs */
         TempPte = ValidKernelPte;
         while (PointerPte < LastPte)
@@ -1504,7 +1503,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             PointerPte++;
             StartPte++;
         }
-        
+
         /* Update position */
         PointerPte -= PteCount;
 
@@ -1547,7 +1546,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         LdrEntry->EntryPoint = (PVOID)((ULONG_PTR)NewImageAddress +
                                 NtHeader->OptionalHeader.AddressOfEntryPoint);
         LdrEntry->SizeOfImage = PteCount << PAGE_SHIFT;
-        
+
         /* FIXME: We'll need to fixup the PFN linkage when switching to ARM3 */
     }
 }
@@ -1568,7 +1567,7 @@ MiBuildImportsForBootDrivers(VOID)
     ULONG_PTR DllBase, DllEnd;
     ULONG Modules = 0, i, j = 0;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
-    
+
     /* Initialize variables */
     KernelEntry = HalEntry = LastEntry = NULL;
 
@@ -1592,7 +1591,7 @@ MiBuildImportsForBootDrivers(VOID)
             /* Found it */
             HalEntry = LdrEntry;
         }
-        
+
         /* Check if this is a driver DLL */
         if (LdrEntry->Flags & LDRP_DRIVER_DEPENDENT_DLL)
         {
@@ -1611,9 +1610,9 @@ MiBuildImportsForBootDrivers(VOID)
         else
         {
             /* No referencing needed */
-            LdrEntry->LoadCount = 0;    
+            LdrEntry->LoadCount = 0;
         }
-        
+
         /* Remember this came from the loader */
         LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
 
@@ -1621,10 +1620,10 @@ MiBuildImportsForBootDrivers(VOID)
         NextEntry = NextEntry->Flink;
         Modules++;
     }
-    
+
     /* We must have at least found the kernel and HAL */
     if (!(HalEntry) || (!KernelEntry)) return STATUS_NOT_FOUND;
-    
+
     /* Allocate the list */
     EntryArray = ExAllocatePoolWithTag(PagedPool, Modules * sizeof(PVOID), 'TDmM');
     if (!EntryArray) return STATUS_INSUFFICIENT_RESOURCES;
@@ -1643,7 +1642,7 @@ MiBuildImportsForBootDrivers(VOID)
                                                   TRUE,
                                                   IMAGE_DIRECTORY_ENTRY_IAT,
                                                   &ImportSize);
-        if (!ImageThunk)                                                
+        if (!ImageThunk)
 #else
         /* Get its imports */
         ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
@@ -1658,12 +1657,12 @@ MiBuildImportsForBootDrivers(VOID)
             NextEntry = NextEntry->Flink;
             continue;
         }
-        
+
         /* Clear the list and count the number of IAT thunks */
         RtlZeroMemory(EntryArray, Modules * sizeof(PVOID));
 #ifdef _WORKING_LOADER_
         ImportSize /= sizeof(ULONG_PTR);
-        
+
         /* Scan the thunks */
         for (i = 0, DllBase = 0, DllEnd = 0; i < ImportSize; i++, ImageThunk++)
 #else
@@ -1689,7 +1688,7 @@ MiBuildImportsForBootDrivers(VOID)
                     continue;
                 }
             }
-            
+
             /* Loop the loaded module list to locate this address owner */
             j = 0;
             NextEntry2 = PsLoadedModuleList.Flink;
@@ -1699,11 +1698,11 @@ MiBuildImportsForBootDrivers(VOID)
                 LdrEntry2 = CONTAINING_RECORD(NextEntry2,
                                               LDR_DATA_TABLE_ENTRY,
                                               InLoadOrderLinks);
-                                              
+
                 /* Get the address range for this module */
                 DllBase = (ULONG_PTR)LdrEntry2->DllBase;
                 DllEnd = DllBase + LdrEntry2->SizeOfImage;
-                
+
                 /* Check if this IAT entry matches it */
                 if ((*ImageThunk >= DllBase) && (*ImageThunk < DllEnd))
                 {
@@ -1712,12 +1711,12 @@ MiBuildImportsForBootDrivers(VOID)
                     EntryArray[j] = LdrEntry2;
                     break;
                 }
-                
+
                 /* Keep searching */
                 NextEntry2 = NextEntry2->Flink;
                 j++;
             }
-            
+
             /* Do we have a thunk outside the range? */
             if ((*ImageThunk < DllBase) || (*ImageThunk >= DllEnd))
             {
@@ -1729,19 +1728,19 @@ MiBuildImportsForBootDrivers(VOID)
                             LdrEntry, ImageThunk, *ImageThunk);
                     ASSERT(FALSE);
                 }
-                
+
                 /* Reset if we hit this */
                 DllBase = 0;
             }
 #ifndef _WORKING_LOADER_
             ImageThunk++;
             }
-        
+
             i++;
             ImportDescriptor++;
 #endif
         }
-        
+
         /* Now scan how many imports we really have */
         for (i = 0, ImportSize = 0; i < Modules; i++)
         {
@@ -1755,7 +1754,7 @@ MiBuildImportsForBootDrivers(VOID)
                 ImportSize++;
             }
         }
-        
+
         /* Do we have any imports after all? */
         if (!ImportSize)
         {
@@ -1776,10 +1775,10 @@ MiBuildImportsForBootDrivers(VOID)
                                                   LoadedImportsSize,
                                                   'TDmM');
             ASSERT(LoadedImports);
-            
+
             /* Save the count */
             LoadedImports->Count = ImportSize;
-            
+
             /* Now copy all imports */
             for (i = 0, j = 0; i < Modules; i++)
             {
@@ -1795,25 +1794,25 @@ MiBuildImportsForBootDrivers(VOID)
                     j++;
                 }
             }
-            
+
             /* Should had as many entries as we expected */
             ASSERT(j == ImportSize);
             LdrEntry->LoadedImports = LoadedImports;
         }
-        
+
         /* Next */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Free the initial array */
     ExFreePool(EntryArray);
-    
+
     /* FIXME: Might not need to keep the HAL/Kernel imports around */
-    
+
     /* Kernel and HAL are loaded at boot */
     KernelEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
     HalEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
-    
+
     /* All worked well */
     return STATUS_SUCCESS;
 }
@@ -1827,7 +1826,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_SECTION_HEADER SectionHeader;
     ULONG Sections, Size;
-    
+
     /* Get the kernel section header */
     DllBase = (ULONG_PTR)LdrEntry->DllBase;
     NtHeaders = RtlImageNtHeader((PVOID)DllBase);
@@ -1839,7 +1838,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     {
         /* Grab the size of the section */
         Size = max(SectionHeader->SizeOfRawData, SectionHeader->Misc.VirtualSize);
-        
+
         /* Check for .RSRC section */
         if (*(PULONG)SectionHeader->Name == 'rsr.')
         {
@@ -1862,7 +1861,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             {
                 /* Found Mm* Pool code */
                 MmPoolCodeStart = DllBase + SectionHeader->VirtualAddress;
-                MmPoolCodeEnd = ExPoolCodeStart + Size;                
+                MmPoolCodeEnd = ExPoolCodeStart + Size;
             }
         }
         else if ((*(PULONG)SectionHeader->Name == 'YSIM') &&
@@ -1872,7 +1871,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             MmPteCodeStart = DllBase + SectionHeader->VirtualAddress;
             MmPteCodeEnd = ExPoolCodeStart + Size;
         }
-        
+
         /* Keep going */
         Sections--;
         SectionHeader++;
@@ -1900,7 +1899,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  LDR_DATA_TABLE_ENTRY,
                                  InLoadOrderLinks);
     PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
-    
+
     /* Locate resource section, pool code, and system pte code */
     MiLocateKernelSections(LdrEntry);
 
@@ -2012,11 +2011,11 @@ MiUseLargeDriverPage(IN ULONG NumberOfPtes,
             /* Keep trying */
             NextEntry = NextEntry->Flink;
         }
-        
+
         /* If we didn't find the driver, it doesn't need large pages */
         if (DriverFound == FALSE) return FALSE;
     }
- 
+
     /* Nothing to do yet */
     DPRINT1("Large pages not supported!\n");
     return FALSE;
@@ -2028,13 +2027,13 @@ MiComputeDriverProtection(IN BOOLEAN SessionSpace,
                           IN ULONG SectionProtection)
 {
     ULONG Protection = MM_ZERO_ACCESS;
-    
+
     /* Check if the caller gave anything */
     if (SectionProtection)
     {
         /* Always turn on execute access */
         SectionProtection |= IMAGE_SCN_MEM_EXECUTE;
-        
+
         /* Check if the registry setting is on or not */
         if (!MmEnforceWriteProtection)
         {
@@ -2042,11 +2041,11 @@ MiComputeDriverProtection(IN BOOLEAN SessionSpace,
             SectionProtection |= (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
         }
     }
-    
+
     /* Convert to internal PTE flags */
     if (SectionProtection & IMAGE_SCN_MEM_EXECUTE) Protection |= MM_EXECUTE;
     if (SectionProtection & IMAGE_SCN_MEM_READ) Protection |= MM_READONLY;
-    
+
     /* Check for write access */
     if (SectionProtection & IMAGE_SCN_MEM_WRITE)
     {
@@ -2062,10 +2061,10 @@ MiComputeDriverProtection(IN BOOLEAN SessionSpace,
             Protection = (Protection & MM_EXECUTE) ? MM_EXECUTE_READWRITE : MM_READWRITE;
         }
     }
-    
+
     /* If there's no access at all by now, convert to internal no access flag */
     if (Protection == MM_ZERO_ACCESS) Protection = MM_NOACCESS;
-    
+
     /* Return the computed PTE protection */
     return Protection;
 }
@@ -2093,14 +2092,14 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     PMMPTE PointerPte, StartPte, LastPte, CurrentPte, ComboPte = NULL;
     ULONG CurrentMask, CombinedMask = 0;
     PAGED_CODE();
-    
+
     /* No need to write protect physical memory-backed drivers (large pages) */
     if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
-    
+
     /* Get the image headers */
     NtHeaders = RtlImageNtHeader(ImageBase);
     if (!NtHeaders) return;
-    
+
     /* Check if this is a session driver or not */
     if (!MI_IS_SESSION_ADDRESS(ImageBase))
     {
@@ -2114,13 +2113,13 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
         DPRINT1("Session drivers not supported\n");
         ASSERT(FALSE);
     }
-    
+
     /* These are the only protection masks we care about */
     ProtectionMask = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE;
-    
+
     /* Calculate the number of pages this driver is occupying */
     DriverPages = BYTES_TO_PAGES(NtHeaders->OptionalHeader.SizeOfImage);
-    
+
     /* Get the number of sections and the first section header */
     Sections = NtHeaders->FileHeader.NumberOfSections;
     ASSERT(Sections != 0);
@@ -2132,7 +2131,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     {
         /* Get the section size */
         Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-        
+
         /* Get its virtual address */
         BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
         if (BaseAddress < CurrentAddress)
@@ -2141,24 +2140,24 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
             DPRINT1("Badly linked image!\n");
             return;
         }
-        
+
         /* Remember the current address */
         CurrentAddress = BaseAddress + Size - 1;
-        
+
         /* Next */
         Sections--;
         Section++;
     }
-    
+
     /* Get the number of sections and the first section header */
     Sections = NtHeaders->FileHeader.NumberOfSections;
     ASSERT(Sections != 0);
     Section = IMAGE_FIRST_SECTION(NtHeaders);
-    
+
     /* Set the address at the end to initialize the loop */
     CurrentAddress = (ULONG_PTR)Section + Sections - 1;
     CurrentProtection = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ;
-    
+
     /* Set the PTE points for the image, and loop its sections */
     StartPte = MiAddressToPte(ImageBase);
     LastPte = StartPte + DriverPages;
@@ -2166,97 +2165,97 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     {
         /* Get the section size */
         Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-        
+
         /* Get its virtual address and PTE */
         BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
         PointerPte = MiAddressToPte(BaseAddress);
-        
+
         /* Check if we were already protecting a run, and found a new run */
         if ((ComboPte) && (PointerPte > ComboPte))
         {
             /* Compute protection */
             CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
-            
+
             /* Set it */
             MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
-            
+
             /* Check for overlap */
             if (ComboPte == StartPte) StartPte++;
-            
+
             /* One done, reset variables */
             ComboPte = NULL;
             CombinedProtection = 0;
         }
-        
+
         /* Break out when needed */
         if (PointerPte >= LastPte) break;
-        
+
         /* Get the requested protection from the image header */
         SectionProtection = Section->Characteristics & ProtectionMask;
         if (SectionProtection == CurrentProtection)
         {
             /* Same protection, so merge the request */
             CurrentAddress = BaseAddress + Size - 1;
-        
+
             /* Next */
             Sections--;
             Section++;
             continue;
         }
-        
+
         /* This is now a new section, so close up the old one */
         CurrentPte = MiAddressToPte(CurrentAddress);
-        
+
         /* Check for overlap */
         if (CurrentPte == PointerPte)
         {
             /* Skip the last PTE, since it overlaps with us */
             CurrentPte--;
-    
+
             /* And set the PTE we will merge with */
             ASSERT((ComboPte == NULL) || (ComboPte == PointerPte));
             ComboPte = PointerPte;
-            
+
             /* Get the most flexible protection by merging both */
             CombinedMask |= (SectionProtection | CurrentProtection);
         }
-        
+
         /* Loop any PTEs left */
         if (CurrentPte >= StartPte)
         {
             /* Sanity check */
             ASSERT(StartPte < LastPte);
-            
+
             /* Make sure we don't overflow past the last PTE in the driver */
             if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
             ASSERT(CurrentPte >= StartPte);
-            
+
             /* Compute the protection and set it */
             CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
             MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
         }
-        
+
         /* Set new state */
         StartPte = PointerPte;
         CurrentAddress = BaseAddress + Size - 1;
         CurrentProtection = SectionProtection;
-        
+
         /* Next */
         Sections--;
         Section++;
     }
-    
+
     /* Is there a leftover section to merge? */
     if (ComboPte)
     {
         /* Compute and set the protection */
         CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
         MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
-        
+
         /* Handle overlap */
         if (ComboPte == StartPte) StartPte++;
     }
-    
+
     /* Finally, handle the last section */
     CurrentPte = MiAddressToPte(CurrentAddress);
     if ((StartPte < LastPte) && (CurrentPte >= StartPte))
@@ -2264,7 +2263,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
         /* Handle overlap */
         if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
         ASSERT(CurrentPte >= StartPte);
-        
+
         /* Compute and set the protection */
         CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
         MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
@@ -2281,17 +2280,17 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
     PFN_NUMBER PageCount = 0, PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
-    
+
     /* Get the driver's base address */
     ImageBase = MiPteToAddress(PointerPte);
     ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(ImageBase) == FALSE);
-    
+
     /* If this is a large page, it's stuck in physical memory */
     if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
 
     /* Lock the working set */
     MiLockWorkingSet(CurrentThread, &MmSystemCacheWs);
-    
+
     /* Loop the PTEs */
     while (PointerPte <= LastPte)
     {
@@ -2301,18 +2300,18 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
             PageFrameIndex = PFN_FROM_PTE(PointerPte);
             Pfn1 = MiGetPfnEntry(PageFrameIndex);
             ASSERT(Pfn1->u2.ShareCount == 1);
-            
+
             /* No working sets in ReactOS yet */
             PageCount++;
         }
-        
+
         ImageBase = (PVOID)((ULONG_PTR)ImageBase + PAGE_SIZE);
         PointerPte++;
     }
-    
+
     /* Release the working set */
     MiUnlockWorkingSet(CurrentThread, &MmSystemCacheWs);
-    
+
     /* Do we have any driver pages? */
     if (PageCount)
     {
@@ -2331,16 +2330,16 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PIMAGE_SECTION_HEADER Section;
     PMMPTE PointerPte = NULL, LastPte = NULL;
     if (MmDisablePagingExecutive) return;
-    
+
     /* Get the driver base address and its NT header */
     ImageBase = (ULONG_PTR)LdrEntry->DllBase;
     NtHeaders = RtlImageNtHeader((PVOID)ImageBase);
     if (!NtHeaders) return;
-    
+
     /* Get the sections and their alignment */
     Sections = NtHeaders->FileHeader.NumberOfSections;
     Alignment = NtHeaders->OptionalHeader.SectionAlignment - 1;
-    
+
     /* Loop each section */
     Section = IMAGE_FIRST_SECTION(NtHeaders);
     while (Sections)
@@ -2357,10 +2356,10 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
                                                            Section->
                                                            VirtualAddress));
             }
-            
+
             /* Compute the size */
             Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-            
+
             /* Find the last PTE that maps this section */
             LastPte = MiAddressToPte(ImageBase +
                                      Section->VirtualAddress +
@@ -2378,12 +2377,12 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
                 PointerPte = NULL;
             }
         }
-        
+
         /* Keep searching */
         Sections--;
         Section++;
     }
-    
+
     /* Handle the straggler */
     if (PointerPte) MiSetPagingOfDriver(PointerPte, LastPte);
 }
@@ -2427,7 +2426,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     PIMAGE_NT_HEADERS NtHeaders;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PAGED_CODE();
-    
+
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
@@ -2485,7 +2484,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
             Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
             goto Fail;
         }
-        
+
         /* Make sure it's a real image */
         NtHeaders = RtlImageNtHeader(ViewBase);
         if (!NtHeaders)
@@ -2494,7 +2493,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
             Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
             goto Fail;
         }
-        
+
         /* Make sure it's for the correct architecture */
         if ((NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE) ||
             (NtHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC))
@@ -2606,7 +2605,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
 
     /* Check if we already have a name, use it instead */
     if (LoadedName) BaseName = *LoadedName;
-    
+
     /* Check for loader snap debugging */
     if (NtGlobalFlag & FLG_SHOW_LDR_SNAPS)
     {
@@ -2799,7 +2798,7 @@ LoaderScan:
         ObDereferenceObject(Section);
         Section = NULL;
     }
-    
+
     /* Check for failure of the load earlier */
     if (!NT_SUCCESS(Status)) goto Quickie;
 
@@ -2812,7 +2811,7 @@ LoaderScan:
                                       STATUS_INVALID_IMAGE_FORMAT);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    
+
     /* Get the NT Header */
     NtHeader = RtlImageNtHeader(ModuleLoadBase);
 
@@ -3016,7 +3015,7 @@ MiLookupDataTableEntry(IN PVOID Address)
     PLDR_DATA_TABLE_ENTRY LdrEntry, FoundEntry = NULL;
     PLIST_ENTRY NextEntry;
     PAGED_CODE();
-    
+
     /* Loop entries */
     NextEntry = PsLoadedModuleList.Flink;
     do
@@ -3025,7 +3024,7 @@ MiLookupDataTableEntry(IN PVOID Address)
         LdrEntry =  CONTAINING_RECORD(NextEntry,
                                       LDR_DATA_TABLE_ENTRY,
                                       InLoadOrderLinks);
-        
+
         /* Check if the address matches */
         if ((Address >= LdrEntry->DllBase) &&
             (Address < (PVOID)((ULONG_PTR)LdrEntry->DllBase +
@@ -3035,11 +3034,11 @@ MiLookupDataTableEntry(IN PVOID Address)
             FoundEntry = LdrEntry;
             break;
         }
-        
+
         /* Move on */
         NextEntry = NextEntry->Flink;
     } while(NextEntry != &PsLoadedModuleList);
-    
+
     /* Return the entry */
     return FoundEntry;
 }

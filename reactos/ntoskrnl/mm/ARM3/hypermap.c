@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::HYPERMAP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -125,7 +124,7 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(NumberOfPages != 0);
     ASSERT(NumberOfPages <= (MI_ZERO_PTES - 1));
-    
+
     //
     // Pick the first zeroing PTE
     //
@@ -144,39 +143,39 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
         PointerPte->u.Hard.PageFrameNumber = Offset;
         KeFlushProcessTb();
     }
-    
+
     //
     // Prepare the next PTE
     //
     PointerPte->u.Hard.PageFrameNumber = Offset - NumberOfPages;
-   
+
     /* Choose the correct PTE to use, and which template */
     PointerPte += (Offset + 1);
     TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte); // Hyperspace is local!
-    
+
     /* Make sure the list isn't empty and loop it */
     ASSERT(Pfn1 != (PVOID)LIST_HEAD);
     while (Pfn1 != (PVOID)LIST_HEAD)
     {
         /* Get the page index for this PFN */
         PageFrameIndex = MiGetPfnEntryIndex(Pfn1);
-        
+
         //
         // Write the PFN
         //
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        
+
         //
         // Set the correct PTE to write to, and set its new value
         //
         PointerPte--;
         MI_WRITE_VALID_PTE(PointerPte, TempPte);
-        
+
         /* Move to the next PFN */
         Pfn1 = (PMMPFN)Pfn1->u1.Flink;
     }
-    
+
     //
     // Return the address
     //
@@ -189,14 +188,14 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
                         IN PFN_NUMBER NumberOfPages)
 {
     PMMPTE PointerPte;
-    
+
     //
     // Sanity checks
     //
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT (NumberOfPages != 0);
     ASSERT (NumberOfPages <= (MI_ZERO_PTES - 1));
-    
+
     //
     // Get the first PTE for the mapped zero VA
     //

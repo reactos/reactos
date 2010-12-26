@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::SECTION"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -82,14 +81,14 @@ MiMakeProtectionMask(IN ULONG Protect)
 
     /* PAGE_EXECUTE_WRITECOMBINE is theoretically the maximum */
     if (Protect >= (PAGE_WRITECOMBINE * 2)) return MM_INVALID_PROTECTION;
-    
+
     /*
      * Windows API protection mask can be understood as two bitfields, differing
      * by whether or not execute rights are being requested
      */
     Mask1 = Protect & 0xF;
     Mask2 = (Protect >> 4) & 0xF;
-    
+
     /* Check which field is there */
     if (!Mask1)
     {
@@ -103,10 +102,10 @@ MiMakeProtectionMask(IN ULONG Protect)
         if (Mask2) return MM_INVALID_PROTECTION;
         ProtectMask = MmUserProtectionToMask1[Mask1];
     }
-    
+
     /* Make sure the final mask is a valid one */
     if (ProtectMask == MM_INVALID_PROTECTION) return MM_INVALID_PROTECTION;
-    
+
     /* Check for PAGE_GUARD option */
     if (Protect & PAGE_GUARD)
     {
@@ -117,41 +116,41 @@ MiMakeProtectionMask(IN ULONG Protect)
             /* Fail such requests */
             return MM_INVALID_PROTECTION;
         }
-        
+
         /* This actually turns on guard page in this scenario! */
         ProtectMask |= MM_DECOMMIT;
     }
-    
+
     /* Check for nocache option */
     if (Protect & PAGE_NOCACHE)
     {
         /* The earlier check should've eliminated this possibility */
         ASSERT((Protect & PAGE_GUARD) == 0);
-        
+
         /* Check for no-access page or write combine page */
         if ((ProtectMask == MM_NOACCESS) || (Protect & PAGE_WRITECOMBINE))
         {
             /* Such a request is invalid */
             return MM_INVALID_PROTECTION;
         }
-        
+
         /* Add the PTE flag */
         ProtectMask |= MM_NOCACHE;
     }
-    
+
     /* Check for write combine option */
     if (Protect & PAGE_WRITECOMBINE)
     {
         /* The two earlier scenarios should've caught this */
         ASSERT((Protect & (PAGE_GUARD | PAGE_NOACCESS)) == 0);
-        
+
         /* Don't allow on no-access pages */
         if (ProtectMask == MM_NOACCESS) return MM_INVALID_PROTECTION;
-        
+
         /* This actually turns on write-combine in this scenario! */
         ProtectMask |= MM_NOACCESS;
     }
-    
+
     /* Return the final MM PTE protection mask */
     return ProtectMask;
 }
@@ -170,7 +169,7 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     /* Initialize the system space lock */
     Session->SystemSpaceViewLockPointer = &Session->SystemSpaceViewLock;
     KeInitializeGuardedMutex(Session->SystemSpaceViewLockPointer);
-    
+
     /* Set the start address */
     Session->SystemSpaceViewStart = MiSystemViewStart;
 
@@ -202,7 +201,7 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
                                                           '  mM');
     ASSERT(Session->SystemSpaceViewTable != NULL);
     RtlZeroMemory(Session->SystemSpaceViewTable, AllocSize);
-    
+
     /* Success */
     return TRUE;
 }
@@ -263,7 +262,7 @@ MiAddMappedPtes(IN PMMPTE FirstPte,
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
     ASSERT(ControlArea->u.Flags.Rom == 0);
     ASSERT(ControlArea->FilePointer == NULL);
-    
+
     /* Sanity checks */
     ASSERT(PteCount != 0);
     ASSERT(ControlArea->NumberOfMappedViews >= 1);
@@ -292,10 +291,10 @@ MiAddMappedPtes(IN PMMPTE FirstPte,
             UNIMPLEMENTED;
             while (TRUE);
         }
-        
+
         /* The PTE should be completely clear */
         ASSERT(PointerPte->u.Long == 0);
-        
+
         /* Build the prototype PTE and write it */
         MI_MAKE_PROTOTYPE_PTE(&TempPte, ProtoPte);
         MI_WRITE_INVALID_PTE(PointerPte, TempPte);
@@ -327,7 +326,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
 
     /* Find the system double-mapped PDE that describes this mapping */
     SystemMapPde = &MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)];
-    
+
     /* Use the PDE template and loop the PDEs */
     TempPde = ValidKernelPde;
     while (PointerPde <= LastPde)
@@ -352,7 +351,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
 
             /* Make the system PDE entry valid */
             MI_WRITE_VALID_PDE(SystemMapPde, TempPde);
-            
+
             /* The system PDE entry might be the PDE itself, so check for this */
             if (PointerPde->u.Hard.Valid == 0)
             {
@@ -375,10 +374,10 @@ MiCheckPurgeAndUpMapCount(IN PCONTROL_AREA ControlArea,
                           IN BOOLEAN FailIfSystemViews)
 {
     KIRQL OldIrql;
-    
+
     /* Flag not yet supported */
     ASSERT(FailIfSystemViews == FALSE);
-    
+
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
@@ -412,12 +411,12 @@ MiLocateSubsection(IN PMMVAD Vad,
 
     /* Get the subsection */
     Subsection = (PSUBSECTION)(ControlArea + 1);
-    
+
     /* We only support single-subsection segments */
     ASSERT(Subsection->SubsectionBase != NULL);
     ASSERT(Vad->FirstPrototypePte >= Subsection->SubsectionBase);
     ASSERT(Vad->FirstPrototypePte < &Subsection->SubsectionBase[Subsection->PtesInSubsection]);
-    
+
     /* Compute the PTE offset */
     PteOffset = (ULONG_PTR)Vpn - Vad->StartingVpn;
     PteOffset += Vad->FirstPrototypePte - Subsection->SubsectionBase;
@@ -425,7 +424,7 @@ MiLocateSubsection(IN PMMVAD Vad,
     /* Again, we only support single-subsection segments */
     ASSERT(PteOffset < 0xF0000000);
     ASSERT(PteOffset < Subsection->PtesInSubsection);
-    
+
     /* Return the subsection */
     return Subsection;
 }
@@ -448,7 +447,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
     /* Make sure control area is on the right delete path */
     ASSERT(ControlArea->u.Flags.BeingDeleted == 1);
     ASSERT(ControlArea->WritableUserReferences == 0);
-    
+
     /* These things are not supported yet */
     ASSERT(ControlArea->DereferenceList.Flink == NULL);
     ASSERT(!(ControlArea->u.Flags.Image) & !(ControlArea->u.Flags.File));
@@ -462,7 +461,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
 
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     /* Check if the master PTE is invalid */
     PteForProto = MiAddressToPte(PointerPte);
     if (!PteForProto->u.Hard.Valid)
@@ -497,7 +496,7 @@ MiSegmentDelete(IN PSEGMENT Segment)
         PointerPte->u.Long = 0;
         PointerPte++;
     }
-    
+
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
@@ -513,7 +512,7 @@ MiCheckControlArea(IN PCONTROL_AREA ControlArea,
 {
     BOOLEAN DeleteSegment = FALSE;
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    
+
     /* Check if this is the last reference or view */
     if (!(ControlArea->NumberOfMappedViews) &&
         !(ControlArea->NumberOfSectionReferences))
@@ -531,7 +530,7 @@ MiCheckControlArea(IN PCONTROL_AREA ControlArea,
 
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    
+
     /* Delete the segment if needed */
     if (DeleteSegment)
     {
@@ -557,7 +556,7 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
     ASSERT(Vad->u2.VadFlags2.ExtendableFile == FALSE);
     ASSERT(ControlArea);
     ASSERT(ControlArea->FilePointer == NULL);
-    
+
     /* Delete the actual virtual memory pages */
     MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
                              (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
@@ -600,17 +599,17 @@ MiMapViewInSystemSpace(IN PVOID Section,
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
     ASSERT(ControlArea->u.Flags.Rom == 0);
     ASSERT(ControlArea->u.Flags.WasPurged == 0);
-    
+
     /* Increase the reference and map count on the control area, no purges yet */
     Status = MiCheckPurgeAndUpMapCount(ControlArea, FALSE);
     ASSERT(NT_SUCCESS(Status));
-    
+
     /* Get the section size at creation time */
     SectionSize = ((PSECTION)Section)->SizeOfSection.LowPart;
 
     /* If the caller didn't specify a view size, assume the whole section */
     if (!(*ViewSize)) *ViewSize = SectionSize;
-    
+
     /* Check if the caller wanted a larger section than the view */
     if (*ViewSize > SectionSize)
     {
@@ -622,7 +621,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Get the number of 64K buckets required for this mapping */
     Buckets = *ViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE;
     if (*ViewSize & (MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) Buckets++;
-    
+
     /* Check if the view is more than 4GB large */
     if (Buckets >= MI_SYSTEM_VIEW_BUCKET_SIZE)
     {
@@ -645,7 +644,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
                              BYTES_TO_PAGES(*ViewSize),
                              ControlArea);
     ASSERT(NT_SUCCESS(Status));
-    
+
     /* Return the base adress of the mapping and success */
     *MappedBase = Base;
     return STATUS_SUCCESS;
@@ -682,10 +681,10 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     ASSERT(ControlArea->u.Flags.Rom == 0);
     ASSERT(ControlArea->FilePointer == NULL);
     ASSERT(Segment->SegmentFlags.TotalNumberOfPtes4132 == 0);
-    
+
     /* Based sections not supported */
     ASSERT(Section->Address.StartingVpn == 0);
-    
+
     /* These flags/parameters are not supported */
     ASSERT((AllocationType & MEM_DOS_LIM) == 0);
     ASSERT((AllocationType & MEM_RESERVE) == 0);
@@ -708,7 +707,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     {
         /* A size was specified, align it to a 64K boundary */
         *ViewSize += SectionOffset->LowPart & (_64K - 1);
-        
+
         /* Align the offset as well to make this an aligned map */
         SectionOffset->LowPart &= ~((ULONG)_64K - 1);
     }
@@ -725,11 +724,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* The offset must be in this segment's PTE chunk and it must be valid */
     ASSERT(PteOffset < Segment->TotalNumberOfPtes);
     ASSERT(((SectionOffset->QuadPart + *ViewSize + PAGE_SIZE - 1) >> PAGE_SHIFT) >= PteOffset);
-    
+
     /* In ARM3, only one subsection is used for now. It must contain these PTEs */
     ASSERT(PteOffset < Subsection->PtesInSubsection);
     ASSERT(Subsection->SubsectionBase != NULL);
-    
+
     /* In ARM3, only MEM_COMMIT is supported for now. The PTEs must've been committed */
     ASSERT(Segment->NumberOfCommittedPages >= Segment->TotalNumberOfPtes);
 
@@ -768,7 +767,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
 
     /* Get the ending address, which is the last piece we need for the VAD */
     EndingAddress = (StartAddress + *ViewSize - 1) | (PAGE_SIZE - 1);
-    
+
     /* A VAD can now be allocated. Do so and zero it out */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'ldaV');
     ASSERT(Vad);
@@ -796,13 +795,13 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Make sure the last PTE is valid and still within the subsection */
     ASSERT(PteOffset < Subsection->PtesInSubsection);
     ASSERT(Vad->FirstPrototypePte <= Vad->LastContiguousPte);
-    
+
     /* FIXME: Should setup VAD bitmap */
     Status = STATUS_SUCCESS;
 
     /* Pretend as if we own the working set */
     MiLockProcessWorkingSet(Process, Thread);
-    
+
     /* Insert the VAD */
     MiInsertVad(Vad, Process);
 
@@ -836,7 +835,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
 
     /* No large pages in ARM3 yet */
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
-    
+
     /* Pagefile-backed sections need a known size */
     if (!(*MaximumSize)) return STATUS_INVALID_PARAMETER_4;
 
@@ -861,7 +860,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                                        'tSmM');
     ASSERT(NewSegment);
     *Segment = NewSegment;
-    
+
     /* Now allocate the control area, which has the subsection structure */
     ControlArea = ExAllocatePoolWithTag(NonPagedPool,
                                         sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
@@ -899,14 +898,14 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
 
     /* The subsection's base address is the first Prototype PTE in the segment */
     Subsection->SubsectionBase = PointerPte;
-    
+
     /* Start with an empty PTE, unless this is a commit operation */
     TempPte.u.Long = 0;
     if (AllocationAttributes & SEC_COMMIT)
     {
         /* In which case, write down the protection mask in the Prototype PTEs */
         TempPte.u.Soft.Protection = ProtectionMask;
-        
+
         /* For accounting, also mark these pages as being committed */
         NewSegment->NumberOfCommittedPages = PteCount;
     }
@@ -926,7 +925,7 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     PSECTION_OBJECT Section;
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(SectionObject != NULL);
-    
+
     /* Check if it's an ARM3, or ReactOS section */
     if ((ULONG_PTR)SectionObject & 1)
     {
@@ -947,7 +946,7 @@ MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
     POBJECT_NAME_INFORMATION ObjectNameInfo;
     NTSTATUS Status;
     ULONG ReturnLength;
-    
+
     /* Allocate memory for our structure */
     ObjectNameInfo = ExAllocatePoolWithTag(PagedPool, 1024, '  mM');
     if (!ObjectNameInfo) return STATUS_NO_MEMORY;
@@ -1038,7 +1037,7 @@ InvalidAddress:
 
       /* Unlock address space */
       MmUnlockAddressSpace(AddressSpace);
-      
+
       /* Get the filename of the section */
       Status = MmGetFileNameForSection(Section, &ModuleNameInformation);
    }
@@ -1047,7 +1046,7 @@ InvalidAddress:
        /* Get the VAD */
        Vad = MiLocateAddress(Address);
        if (!Vad) goto InvalidAddress;
-       
+
        /* Make sure it's not a VM VAD */
        if (Vad->u.VadFlags.PrivateMemory == 1)
        {
@@ -1056,22 +1055,22 @@ NotSection:
            MmUnlockAddressSpace(AddressSpace);
            return STATUS_SECTION_NOT_IMAGE;
        }
-       
+
        /* Get the control area */
        ControlArea = Vad->ControlArea;
        if (!(ControlArea) || !(ControlArea->u.Flags.Image)) goto NotSection;
-       
+
        /* Get the file object */
        FileObject = ControlArea->FilePointer;
        ASSERT(FileObject != NULL);
        ObReferenceObject(FileObject);
-       
+
        /* Unlock address space */
        MmUnlockAddressSpace(AddressSpace);
-       
+
        /* Get the filename of the file object */
        Status = MmGetFileNameForFileObject(FileObject, &ModuleNameInformation);
-       
+
        /* Dereference it */
        ObDereferenceObject(FileObject);
    }
@@ -1092,7 +1091,7 @@ NotSection:
        ExFreePoolWithTag(ModuleNameInformation, '  mM');
        DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
    }
-   
+
    /* Return status */
    return Status;
 }
@@ -1174,7 +1173,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
     ASSERT(ControlArea->u.Flags.Rom == 0);
     ASSERT(ControlArea->u.Flags.WasPurged == 0);
-    
+
     /* A pagefile-backed mapping only has one subsection, and this is all ARM3 supports */
     Subsection = (PSUBSECTION)(ControlArea + 1);
     ASSERT(Subsection->NextSubsection == NULL);
@@ -1228,15 +1227,15 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     /* Get the segment and control area */
     Section = (PSECTION)SectionObject;
     ControlArea = Section->Segment->ControlArea;
-    
+
     /* These flags/states are not yet supported by ARM3 */
     ASSERT(Section->u.Flags.Image == 0);
     ASSERT(Section->u.Flags.NoCache == 0);
     ASSERT(Section->u.Flags.WriteCombined == 0);
     ASSERT((AllocationType & MEM_RESERVE) == 0);
     ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
-    
-    
+
+
 #if 0
     /* FIXME: Check if the mapping protection is compatible with the create */
     if (!MiIsProtectionCompatible(Section->InitialPageProtection, Protect))
@@ -1296,7 +1295,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
         DPRINT1("The protection is invalid\n");
         return STATUS_INVALID_PAGE_PROTECTION;
     }
-    
+
     /* We only handle pagefile-backed sections, which cannot be writecombined */
     if (Protect & PAGE_WRITECOMBINE)
     {
@@ -1310,7 +1309,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
         KeStackAttachProcess(&Process->Pcb, &ApcState);
         Attached = TRUE;
     }
-    
+
     /* Lock the address space and make sure the process is alive */
     MmLockAddressSpace(&Process->Vm);
     if (!Process->VmDeleted)
@@ -1334,7 +1333,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
         DPRINT1("The process is dying\n");
         Status = STATUS_PROCESS_IS_TERMINATING;
     }
-    
+
     /* Unlock the address space and detatch if needed, then return status */
     MmUnlockAddressSpace(&Process->Vm);
     if (Attached) KeUnstackDetachProcess(&ApcState);
@@ -1454,9 +1453,9 @@ NtCreateSection(OUT PHANDLE SectionHandle,
                              FileHandle,
                              NULL);
     if (!NT_SUCCESS(Status)) return Status;
-                             
+
     /* FIXME: Should zero last page for a file mapping */
-    
+
     /* Now insert the object */
     Status = ObInsertObject(SectionObject,
                             NULL,
@@ -1558,7 +1557,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     ACCESS_MASK DesiredAccess;
     ULONG ProtectionMask;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    
+
     /* Check for invalid zero bits */
     if (ZeroBits > 21) // per-arch?
     {
@@ -1572,7 +1571,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         DPRINT1("Invalid inherit disposition\n");
         return STATUS_INVALID_PARAMETER_8;
     }
-   
+
     /* Allow only valid allocation types */
     if ((AllocationType & ~(MEM_TOP_DOWN | MEM_LARGE_PAGES | MEM_DOS_LIM |
                             SEC_NO_CHANGE | MEM_RESERVE)))
@@ -1605,7 +1604,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
             ProbeForWritePointer(BaseAddress);
             ProbeForWriteSize_t(ViewSize);
         }
-        
+
         /* Check if a section offset was given */
         if (SectionOffset)
         {
@@ -1613,7 +1612,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
             if (PreviousMode != KernelMode) ProbeForWriteLargeInteger(SectionOffset);
             SafeSectionOffset = *SectionOffset;
         }
-        
+
         /* Capture the other parameters */
         SafeBaseAddress = *BaseAddress;
         SafeViewSize = *ViewSize;
@@ -1645,7 +1644,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         DPRINT1("Invalid zero bits\n");
         return STATUS_INVALID_PARAMETER_4;
     }
-   
+
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_VM_OPERATION,
@@ -1667,7 +1666,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         ObDereferenceObject(Process);
         return Status;
     }
-    
+
     /* Now do the actual mapping */
     Status = MmMapViewOfSection(Section,
                                 Process,
@@ -1692,7 +1691,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                              SafeSectionOffset.LowPart,
                              SafeViewSize);
     }
-    
+
     /* Return data only on success */
     if (NT_SUCCESS(Status))
     {
@@ -1744,7 +1743,7 @@ NtUnmapViewOfSection(IN HANDLE ProcessHandle,
 
     /* Unmap the view */
     Status = MmUnmapViewOfSection(Process, BaseAddress);
-    
+
     /* Dereference the process and return status */
     ObDereferenceObject(Process);
     return Status;
@@ -1782,7 +1781,7 @@ NtExtendSection(IN HANDLE SectionHandle,
         /* Just read the size directly */
         SafeNewMaximumSize = *NewMaximumSize;
     }
-   
+
     /* Reference the section */
     Status = ObReferenceObjectByHandle(SectionHandle,
                                        SECTION_EXTEND_SIZE,
@@ -1799,12 +1798,12 @@ NtExtendSection(IN HANDLE SectionHandle,
         ObDereferenceObject(Section);
         return STATUS_SECTION_NOT_EXTENDED;
     }
-    
+
     /* FIXME: Do the work */
 
     /* Dereference the section */
     ObDereferenceObject(Section);
-    
+
     /* Enter SEH */
     _SEH2_TRY
     {
@@ -1816,7 +1815,7 @@ NtExtendSection(IN HANDLE SectionHandle,
         /* Nothing to do */
     }
     _SEH2_END;
-    
+
     /* Return the status */
     return STATUS_NOT_IMPLEMENTED;
 }

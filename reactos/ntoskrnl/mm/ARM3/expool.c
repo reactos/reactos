@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::EXPOOL"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -53,14 +52,14 @@ PKGUARDED_MUTEX ExpPagedPoolMutex;
  */
 PLIST_ENTRY
 NTAPI
-ExpDecodePoolLink(IN PLIST_ENTRY Link) 
+ExpDecodePoolLink(IN PLIST_ENTRY Link)
 {
     return (PLIST_ENTRY)((ULONG_PTR)Link & ~1);
 }
 
 PLIST_ENTRY
 NTAPI
-ExpEncodePoolLink(IN PLIST_ENTRY Link) 
+ExpEncodePoolLink(IN PLIST_ENTRY Link)
 {
     return (PLIST_ENTRY)((ULONG_PTR)Link | 1);
 }
@@ -104,7 +103,7 @@ ExpRemovePoolEntryList(IN PLIST_ENTRY Entry)
     Flink->Blink = ExpEncodePoolLink(Blink);
     Blink->Flink = ExpEncodePoolLink(Flink);
 }
-    
+
 PLIST_ENTRY
 NTAPI
 ExpRemovePoolHeadList(IN PLIST_ENTRY ListHead)
@@ -170,7 +169,7 @@ ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
     {
         /* Get it */
         PreviousEntry = POOL_PREV_BLOCK(Entry);
-        
+
         /* The two blocks must be on the same page! */
         if (PAGE_ALIGN(Entry) != PAGE_ALIGN(PreviousEntry))
         {
@@ -251,31 +250,31 @@ ExpCheckPoolBlocks(IN PVOID Block)
     BOOLEAN FoundBlock = FALSE;
     SIZE_T Size = 0;
     PPOOL_HEADER Entry;
-    
+
     /* Get the first entry for this page, make sure it really is the first */
     Entry = PAGE_ALIGN(Block);
     ASSERT(Entry->PreviousSize == 0);
-    
+
     /* Now scan each entry */
     while (TRUE)
     {
         /* When we actually found our block, remember this */
         if (Entry == Block) FoundBlock = TRUE;
-        
+
         /* Now validate this block header */
         ExpCheckPoolHeader(Entry);
-        
+
         /* And go to the next one, keeping track of our size */
         Size += Entry->BlockSize;
         Entry = POOL_NEXT_BLOCK(Entry);
-        
+
         /* If we hit the last block, stop */
         if (Size >= (PAGE_SIZE / POOL_BLOCK_SIZE)) break;
-        
+
         /* If we hit the end of the page, stop */
         if (PAGE_ALIGN(Entry) == Entry) break;
     }
-    
+
     /* We must've found our block, and we must have hit the end of the page */
     if ((PAGE_ALIGN(Entry) != Entry) || !(FoundBlock))
     {
@@ -304,7 +303,7 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
     PoolDescriptor->PoolIndex = PoolIndex;
     PoolDescriptor->Threshold = Threshold;
     PoolDescriptor->LockAddress = PoolLock;
-    
+
     //
     // Initialize accounting data
     //
@@ -313,18 +312,18 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
     PoolDescriptor->TotalPages = 0;
     PoolDescriptor->TotalBytes = 0;
     PoolDescriptor->TotalBigPages = 0;
-    
+
     //
     // Nothing pending for now
     //
     PoolDescriptor->PendingFrees = NULL;
     PoolDescriptor->PendingFreeDepth = 0;
-    
+
     //
     // Loop all the descriptor's allocation lists and initialize them
     //
     NextEntry = PoolDescriptor->ListHeads;
-    LastEntry = NextEntry + POOL_LISTS_PER_PAGE;    
+    LastEntry = NextEntry + POOL_LISTS_PER_PAGE;
     while (NextEntry < LastEntry)
     {
         ExpInitializePoolListHead(NextEntry);
@@ -339,7 +338,7 @@ InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
     PPOOL_DESCRIPTOR Descriptor;
-    
+
     //
     // Check what kind of pool this is
     //
@@ -375,7 +374,7 @@ InitializePool(IN POOL_TYPE PoolType,
                          -1,
                          -1);
         }
-        
+
         //
         // Setup the vector and guarded mutex for paged pool
         //
@@ -461,14 +460,14 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ASSERT(Tag != 0);
     ASSERT(Tag != ' GIB');
     ASSERT(NumberOfBytes != 0);
-    
+
     //
     // Get the pool type and its corresponding vector for this request
     //
     PoolType = PoolType & BASE_POOL_TYPE_MASK;
     PoolDesc = PoolVector[PoolType];
     ASSERT(PoolDesc != NULL);
-    
+
     //
     // Check if this is a big page allocation
     //
@@ -479,13 +478,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         return MiAllocatePoolPages(PoolType, NumberOfBytes);
     }
-    
+
     //
     // Should never request 0 bytes from the pool, but since so many drivers do
     // it, we'll just assume they want 1 byte, based on NT's similar behavior
     //
     if (!NumberOfBytes) NumberOfBytes = 1;
-    
+
     //
     // A pool allocation is defined by its data, a linked list to connect it to
     // the free list (if necessary), and a pool header to store accounting info.
@@ -514,7 +513,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // Acquire the pool lock now
             //
             OldIrql = ExLockPool(PoolDesc);
-            
+
             //
             // And make sure the list still has entries
             //
@@ -530,7 +529,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                 ListHead++;
                 continue;
             }
-            
+
             //
             // Remove a free entry from the list
             // Note that due to the way we insert free blocks into multiple lists
@@ -543,7 +542,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             ExpCheckPoolBlocks(Entry);
             ASSERT(Entry->BlockSize >= i);
             ASSERT(Entry->PoolType == 0);
-            
+
             //
             // Check if this block is larger that what we need. The block could
             // not possibly be smaller, due to the reason explained above (and
@@ -563,12 +562,12 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                     //
                     FragmentEntry = POOL_BLOCK(Entry, i);
                     FragmentEntry->BlockSize = Entry->BlockSize - i;
-                    
+
                     //
                     // And make it point back to us
                     //
                     FragmentEntry->PreviousSize = i;
-                    
+
                     //
                     // Now get the block that follows the new fragment and check
                     // if it's still on the same page as us (and not at the end)
@@ -581,7 +580,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                         // fragment block
                         //
                         NextEntry->PreviousSize = FragmentEntry->BlockSize;
-                    }   
+                    }
                 }
                 else
                 {
@@ -590,13 +589,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                     // so we'll make this entry the fragment instead
                     //
                     FragmentEntry = Entry;
-                    
+
                     //
                     // And then we'll remove from it the actual size required.
                     // Now the entry is a leftover free fragment
                     //
                     Entry->BlockSize -= i;
-                    
+
                     //
                     // Now let's go to the next entry after the fragment (which
                     // used to point to our original free entry) and make it
@@ -607,7 +606,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                     //
                     Entry = POOL_NEXT_BLOCK(Entry);
                     Entry->PreviousSize = FragmentEntry->BlockSize;
-                    
+
                     //
                     // And now let's go to the entry after that one and check if
                     // it's still on the same page, and not at the end
@@ -621,12 +620,12 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                         NextEntry->PreviousSize = i;
                     }
                 }
-                
+
                 //
                 // Now our (allocation) entry is the right size
                 //
                 Entry->BlockSize = i;
-                
+
                 //
                 // And the next entry is now the free fragment which contains
                 // the remaining difference between how big the original entry
@@ -634,10 +633,10 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                 //
                 FragmentEntry->PoolType = 0;
                 BlockSize = FragmentEntry->BlockSize;
-                
+
                 //
-                // Now check if enough free bytes remained for us to have a 
-                // "full" entry, which contains enough bytes for a linked list 
+                // Now check if enough free bytes remained for us to have a
+                // "full" entry, which contains enough bytes for a linked list
                 // and thus can be used for allocations (up to 8 bytes...)
                 //
                 ExpCheckPoolLinks(&PoolDesc->ListHeads[BlockSize - 1]);
@@ -651,7 +650,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                     ExpCheckPoolLinks(POOL_FREE_BLOCK(FragmentEntry));
                 }
             }
-            
+
             //
             // We have found an entry for this allocation, so set the pool type
             // and release the lock since we're done
@@ -669,7 +668,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             return POOL_FREE_BLOCK(Entry);
         }
     } while (++ListHead != &PoolDesc->ListHeads[POOL_LISTS_PER_PAGE]);
-    
+
     //
     // There were no free entries left, so we have to allocate a new fresh page
     //
@@ -678,7 +677,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
     Entry->PoolType = PoolType + 1;
-    
+
     //
     // This page will have two entries -- one for the allocation (which we just
     // created above), and one for the remaining free bytes, which we're about
@@ -690,7 +689,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     FragmentEntry->Ulong1 = 0;
     FragmentEntry->BlockSize = BlockSize;
     FragmentEntry->PreviousSize = i;
-    
+
     //
     // Now check if enough free bytes remained for us to have a "full" entry,
     // which contains enough bytes for a linked list and thus can be used for
@@ -710,7 +709,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         ExpInsertPoolTailList(&PoolDesc->ListHeads[BlockSize - 1],
                               POOL_FREE_BLOCK(FragmentEntry));
         ExpCheckPoolLinks(POOL_FREE_BLOCK(FragmentEntry));
-       
+
         //
         // Release the pool lock
         //
@@ -763,14 +762,14 @@ ExFreePoolWithTag(IN PVOID P,
         MiFreePoolPages(P);
         return;
     }
-    
+
     //
     // Get the entry for this pool allocation
     // The pointer math here may look wrong or confusing, but it is quite right
     //
     Entry = P;
     Entry--;
-    
+
     //
     // Get the size of the entry, and it's pool type, then load the descriptor
     // for this pool type
@@ -804,7 +803,7 @@ ExFreePoolWithTag(IN PVOID P,
             // The next block is free, so we'll do a combine
             //
             Combined = TRUE;
-            
+
             //
             // Make sure there's actual data in the block -- anything smaller
             // than this means we only have the header, so there's no linked list
@@ -821,7 +820,7 @@ ExFreePoolWithTag(IN PVOID P,
                 ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Flink));
                 ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Blink));
             }
-            
+
             //
             // Our entry is now combined with the next entry
             //
@@ -844,7 +843,7 @@ ExFreePoolWithTag(IN PVOID P,
             // It is, so we can do a combine
             //
             Combined = TRUE;
-            
+
             //
             // Make sure there's actual data in the block -- anything smaller
             // than this means we only have the header so there's no linked list
@@ -861,20 +860,20 @@ ExFreePoolWithTag(IN PVOID P,
                 ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Flink));
                 ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Blink));
             }
-            
+
             //
             // Combine our original block (which might've already been combined
             // with the next block), into the previous block
             //
             NextEntry->BlockSize = NextEntry->BlockSize + Entry->BlockSize;
-            
+
             //
             // And now we'll work with the previous block instead
             //
             Entry = NextEntry;
         }
     }
-    
+
     //
     // By now, it may have been possible for our combined blocks to actually
     // have made up a full page (if there were only 2-3 allocations on the
@@ -897,7 +896,7 @@ ExFreePoolWithTag(IN PVOID P,
     Entry->PoolType = 0;
     BlockSize = Entry->BlockSize;
     ASSERT(BlockSize != 1);
-    
+
     //
     // Check if we actually did combine it with anyone
     //
@@ -908,14 +907,14 @@ ExFreePoolWithTag(IN PVOID P,
         // the one after the original, depending if we combined with the previous)
         //
         NextEntry = POOL_NEXT_BLOCK(Entry);
-        
+
         //
         // As long as the next block isn't on a page boundary, have it point
         // back to us
         //
         if (PAGE_ALIGN(NextEntry) != NextEntry) NextEntry->PreviousSize = BlockSize;
     }
-    
+
     //
     // Insert this new free block, and release the pool lock
     //
