@@ -91,13 +91,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Type"
-    IDS_COLUMNDATE      "Date"
-    IDS_COLUMNTIME      "Time"
-    IDS_COLUMNSOURCE    "Source"
-    IDS_COLUMNCATEGORY  "Category"
-    IDS_COLUMNEVENT     "Event"
-    IDS_COLUMNUSER      "User"
-    IDS_COLUMNCOMPUTER  "Computer"
-    IDS_COLUMNEVENTDATA "Event Data"
+    IDS_COLUMNTYPE      "Вид"
+    IDS_COLUMNDATE      "Дата"
+    IDS_COLUMNTIME      "Време"
+    IDS_COLUMNSOURCE    "Източник"
+    IDS_COLUMNCATEGORY  "Разряд"
+    IDS_COLUMNEVENT     "Събитие"
+    IDS_COLUMNUSER      "Потребител"
+    IDS_COLUMNCOMPUTER  "Компютър"
+    IDS_COLUMNEVENTDATA "Данни за събитието"
 END

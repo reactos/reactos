@@ -42,6 +42,7 @@ LEDS BITMAP rc/leds.bmp
 MINES BITMAP rc/mines.bmp
 
 /* include localised resources */
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
 #include "lang/en-US.rc"

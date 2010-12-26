@@ -11,6 +11,9 @@ URLSite = http://tuxpaint.org/
 URLDownload = http://ovh.dl.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21/tuxpaint-0.9.21-win32-installer.exe
 CDPath = none
 
+[Section.0405]
+Description = Open source bitmapový editor určený dětem.
+
 [Section.0407]
 Description = Ein Open Source Bitmap Zeichenprogramm für kleine Kinder.
 

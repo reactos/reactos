@@ -11,6 +11,12 @@ URLSite = Unknown
 URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
 CDPath = none
 
+[Section.0405]
+Name = Ovladač AC97 pro VirtualBox
+Licence = Neznámá
+Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
+URLSite = Neznámá
+
 [Section.0407]
 Name = AC97 Treiber für VirtualBox
 Licence = Unbekannt

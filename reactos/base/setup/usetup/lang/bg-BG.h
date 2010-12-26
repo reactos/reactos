@@ -1496,7 +1496,7 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
+        "На избрания дял няма достатъчно свободно пространство.\n"
         "  * Натиснете клавиш, за да продължите.",
         NULL
     },
@@ -1640,7 +1640,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_COPYING,
      "   Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Тече записване на файловете..."},
+     "Файловете се записват..."},
     {STRING_REGHIVEUPDATE,
     "   Осъвременяване на регистърните роеве..."},
     {STRING_IMPORTFILE,

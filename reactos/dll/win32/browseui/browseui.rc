@@ -47,7 +47,6 @@ IDR_REGTREEOPTIONS       REGISTRY                "res\\regtreeoptions.rgs"
  * Everything specific to any language goes
  * in one of the specific files.
  */
-//#include "lang/bg-BG.rc"
 //#include "lang/ca-ES.rc"
 //#include "lang/cs-CZ.rc"
 //#include "lang/da-DK.rc"
@@ -76,3 +75,6 @@ IDR_REGTREEOPTIONS       REGISTRY                "res\\regtreeoptions.rgs"
 #include "lang/uk-UA.rc"
 //#include "lang/zh-CN.rc"
 //#include "lang/zh-TW.rc"
+
+/* UTF-8 */
+#include "lang/bg-BG.rc"
