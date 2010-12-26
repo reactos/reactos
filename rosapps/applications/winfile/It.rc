@@ -38,7 +38,7 @@ IDM_WINEFILE MENU
         MENUITEM "&Apri\tInvio",                ID_ACTIVATE
         MENUITEM "&Sposta...\tF7",              ID_FILE_MOVE
         MENUITEM "&Copia...\tF8",               ID_FILE_COPY
-        MENUITEM "&Negli Appunti...\tF9",       118
+        MENUITEM "&Negli appunti...\tF9",       118
         MENUITEM "&Cancella\tDel",              ID_FILE_DELETE
         MENUITEM "Ri&nomina...",                109
         MENUITEM "Propri&età...\tAlt+Invio",    ID_EDIT_PROPERTIES
@@ -50,7 +50,7 @@ IDM_WINEFILE MENU
         MENUITEM "&Stampa...",                  102
         MENUITEM "Associa...",                  103
         MENUITEM SEPARATOR
-        MENUITEM "Cr&ea Directory...",          111
+        MENUITEM "Cr&ea cartella...",          111
         MENUITEM "Cerc&a...",                   104
         MENUITEM "&Seleziona i file...",        116
         MENUITEM SEPARATOR
@@ -62,65 +62,65 @@ IDM_WINEFILE MENU
     }
 
     POPUP "&Disco"  {
-        MENUITEM "&Copia Disco...",             201
-        MENUITEM "&Etichetta Disco...",         202
+        MENUITEM "&Copia disco...",             201
+        MENUITEM "&Etichetta disco...",         202
         MENUITEM SEPARATOR
-        MENUITEM "&Formatta Disco...",          ID_FORMAT_DISK
+        MENUITEM "&Formatta disco...",          ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "&Crea Disco di Sistema...", -1    /*TODO*/
+        MENUITEM "&Crea disco di sistema...", -1    /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Connetti & Drive di Rete",    ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Disconnetti Drive di Rete",  ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "Connetti unità di rete",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Disconnetti unità di rete",  ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Condividi come...",           254
         MENUITEM "&Rimuovi condivisione...",    255
         MENUITEM SEPARATOR
-        MENUITEM "&Seleziona Drive...",         251
+        MENUITEM "&Seleziona unità...",         251
     }
 
     POPUP "&Directory"  {
-        MENUITEM "&Livello Sucessivo\t+",       301
-        MENUITEM "Espandi &Albero\t*",          302
+        MENUITEM "&Livello successivo\t+",       301
+        MENUITEM "&Espandi albero\t*",          302
         MENUITEM "Espandi &tutto\tStrg+*",      303
-        MENUITEM "Riduci &Albero\t-",           304
+        MENUITEM "&Riduci albero\t-",           304
         MENUITEM SEPARATOR
         MENUITEM "&Seleziona unità",            505
     }
 
     POPUP "&Visualizza"  {
-        MENUITEM "A&lbero e Directory",         413
-        MENUITEM "So&lo Albero",                411
-        MENUITEM "&Solo Directory",             412
+        MENUITEM "&Albero e cartella",         413
+        MENUITEM "Solo &albero",                411
+        MENUITEM "Solo &cartella",             412
         MENUITEM SEPARATOR
         MENUITEM "Di&vidi",                     ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Nome",                       ID_VIEW_NAME
         MENUITEM "&Mostra tutti i dettagli sui file",ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "&Mostra dettagli parziali...",ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "Mostra dettagli &parziali...",ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Ordina per Nome",            ID_VIEW_SORT_NAME
-        MENUITEM "&Ordina per Tipo",            ID_VIEW_SORT_TYPE
-        MENUITEM "&Ordina per Dimensione",      ID_VIEW_SORT_SIZE
-        MENUITEM "&Ordina per Data",            ID_VIEW_SORT_DATE
+        MENUITEM "Ordina per n&ome",            ID_VIEW_SORT_NAME
+        MENUITEM "Ordina per &tipo",            ID_VIEW_SORT_TYPE
+        MENUITEM "Ordina per &dimensione",      ID_VIEW_SORT_SIZE
+        MENUITEM "Ordina per d&ata",            ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Ordina per &...",             ID_VIEW_FILTER
     }
 
     POPUP "&Opzioni"  {
-        MENUITEM "&Confermazione...",           501
-        MENUITEM "&Font...",                    ID_SELECT_FONT
+        MENUITEM "&Conferma...",           501
+        MENUITEM "C&arattere...",                    ID_SELECT_FONT
         MENUITEM "&Personalizza barra degli strumenti...", 512
         MENUITEM SEPARATOR
-        MENUITEM "&Barra degli strumenti",      ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Barra dei Drive",            ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Barra di stato",             ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Barra degli &strumenti",      ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Barra delle &unità",            ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra di s&tato",             ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "A& tutto schermo\tCtrl+Shift+S",ID_VIEW_FULLSCREEN
+        MENUITEM "A tutto scher&mo\tCtrl+Shift+S",ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Esegui minimizzato",         504
-        MENUITEM "&Salva impostazioni all'uscita",511
+        MENUITEM "Sa&lva impostazioni all'uscita",511
     }
 
 
@@ -131,14 +131,14 @@ IDM_WINEFILE MENU
     }
 
     POPUP "&Finestra"  {
-        MENUITEM "Nuova &Finestra",             ID_WINDOW_NEW
+        MENUITEM "&Nuova finestra",             ID_WINDOW_NEW
         MENUITEM "Finestre a cascata\tCtrl+F5", ID_WINDOW_CASCADE
-        MENUITEM "Ordina &Orizontalmente",      ID_WINDOW_TILE_HORZ
-        MENUITEM "Ordina &Verticlmente\tCtrl+F4",ID_WINDOW_TILE_VERT
+        MENUITEM "Ordina &orizzontalmente",      ID_WINDOW_TILE_HORZ
+        MENUITEM "Ordina &verticalmente\tCtrl+F4",ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
         MENUITEM "Disponi automaticamente",     ID_WINDOW_AUTOSORT
 #endif
-        MENUITEM "Disponi &Simboli",            ID_WINDOW_ARRANGE
+        MENUITEM "Disponi &simboli",            ID_WINDOW_ARRANGE
         MENUITEM "&Aggiorna\tF5",               ID_REFRESH
     }
 
@@ -178,9 +178,9 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
     CONTROL         "Docu&menti",IDC_VIEW_TYPE_DOCUMENTS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
-    CONTROL         "&Altri files",IDC_VIEW_TYPE_OTHERS,"Button",
+    CONTROL         "&Altri file",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
-    CONTROL         "&Mostra files nascosti/di sistema",IDC_VIEW_TYPE_HIDDEN,
+    CONTROL         "&Mostra file nascosti/di sistema",IDC_VIEW_TYPE_HIDDEN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
     PUSHBUTTON      "Annulla",IDCANCEL,104,24,50,14
@@ -188,7 +188,7 @@ END
 
 IDD_DIALOG_PROPERTIES DIALOG  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Propprietà di %s"
+CAPTION "Proprietà di %s"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
@@ -201,7 +201,7 @@ BEGIN
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Versione:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Cop&yright:",-1,7,51,59,9
+    LTEXT           "&Copyright:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Dimensione:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
@@ -210,7 +210,7 @@ BEGIN
     CONTROL         "&Nascosto",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
     CONTROL         "&Archivio",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "&Di sistema",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
-    CONTROL         "&Compresso",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX |  WS_TABSTOP,17,111,68,9
+    CONTROL         "Co&mpresso",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX |  WS_TABSTOP,17,111,68,9
     GROUPBOX        "&Informazioni sulla versione",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -225,12 +225,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_WINEFILE            "Wine File Manager"
+    IDS_WINEFILE            "Gestore di file di Wine"
     IDS_ERROR               "Errore"
-    IDS_ROOT_FS             "root fs"
-    IDS_UNIXFS              "unixfs"
+    IDS_ROOT_FS             "radice fs"
+    IDS_UNIXFS              "unix fs"
     IDS_DESKTOP             "Scrivania"
-    IDS_SHELL               "Shell"
+    IDS_SHELL               "Terminale"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Non ancora implementato"
     IDS_WINE_FILE           "Wine File"
@@ -240,10 +240,10 @@ STRINGTABLE
 {
     IDS_COL_NAME            "Nome"
     IDS_COL_SIZE            "Dimensione"
-    IDS_COL_CDATE           "CDate"
-    IDS_COL_ADATE           "ADate"
-    IDS_COL_MDATE           "MDate"
-    IDS_COL_IDX             "Index/Inode"
+    IDS_COL_CDATE           "Data di creazione"
+    IDS_COL_ADATE           "Data di ultimo accesso"
+    IDS_COL_MDATE           "Data di ultima modifica"
+    IDS_COL_IDX             "Indice/Inode"
     IDS_COL_LINKS           "Collegamenti"
     IDS_COL_ATTR            "Attributi"
     IDS_COL_SEC             "Sicurezza"

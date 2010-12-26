@@ -2019,8 +2019,7 @@ static BOOL toggle_fullscreen(HWND hwnd)
 		g_fullscreen.wasZoomed = IsZoomed(hwnd);
 
 		Frame_CalcFrameClient(hwnd, &rt);
-		ClientToScreen(hwnd, (LPPOINT)&rt.left);
-		ClientToScreen(hwnd, (LPPOINT)&rt.right);
+                MapWindowPoints( hwnd, 0, (POINT *)&rt, 2 );
 
 		rt.left = g_fullscreen.orgPos.left-rt.left;
 		rt.top = g_fullscreen.orgPos.top-rt.top;
@@ -2046,8 +2045,7 @@ static void fullscreen_move(HWND hwnd)
 	GetWindowRect(hwnd, &pos);
 
 	Frame_CalcFrameClient(hwnd, &rt);
-	ClientToScreen(hwnd, (LPPOINT)&rt.left);
-	ClientToScreen(hwnd, (LPPOINT)&rt.right);
+        MapWindowPoints( hwnd, 0, (POINT *)&rt, 2 );
 
 	rt.left = pos.left-rt.left;
 	rt.top = pos.top-rt.top;
