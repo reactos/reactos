@@ -1978,6 +1978,46 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
   /* FIXME: Add display peripheral (monitor) data */
 }
 
+static VOID
+DetectSWBus(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+{
+  PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+  PCONFIGURATION_COMPONENT_DATA BusKey;
+  ULONG Size;
+
+  /* Increment bus number */
+  (*BusNumber)++;
+
+    /* Set 'Configuration Data' value */
+    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
+    PartialResourceList = MmHeapAlloc(Size);
+    if (PartialResourceList == NULL)
+    {
+        DPRINTM(DPRINT_HWDETECT, "Failed to allocate resource descriptor\n");
+        return;
+    }
+
+    /* Initialize resource descriptor */
+    memset(PartialResourceList, 0, Size);
+    PartialResourceList->Version = 1;
+    PartialResourceList->Revision = 1;
+    PartialResourceList->Count = 0;
+
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0x0,
+                           0x0,
+                           0xFFFFFFFF,
+                           "SWENUM",
+                           PartialResourceList,
+                           Size,
+                           &BusKey);
+
+    MmHeapFree(PartialResourceList);
+}
 
 static VOID
 DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
@@ -2056,7 +2096,8 @@ PcHwDetect(VOID)
   DetectPnpBios(SystemKey, &BusNumber);
   DetectIsaBios(SystemKey, &BusNumber);
   DetectAcpiBios(SystemKey, &BusNumber);
-  
+  DetectSWBus(SystemKey, &BusNumber);
+
   DPRINTM(DPRINT_HWDETECT, "DetectHardware() Done\n");
 
   return SystemKey;

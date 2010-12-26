@@ -2043,6 +2043,9 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI");
    UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
    static ULONG DeviceIndexPci = 0;
+   const UNICODE_STRING IdentifierSW = RTL_CONSTANT_STRING(L"SWENUM");
+   UNICODE_STRING HardwareIdSW= RTL_CONSTANT_STRING(L"SWENUM\0");
+   static ULONG DeviceIndexSW = 0;
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2287,7 +2290,7 @@ IopEnumerateDetectedDevices(
          if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
             ValueName.Length -= sizeof(WCHAR);
       }
-
+DPRINT1("RelativePath %wZ\n", RelativePath);
       if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierSerial, FALSE) == 0)
       {
          pHardwareId = &HardwareIdSerial;
@@ -2326,9 +2329,14 @@ IopEnumerateDetectedDevices(
             pHardwareId = &HardwareIdIsa;
             DeviceIndex = DeviceIndexIsa++;
          }
+         else if (RtlCompareUnicodeString(&ValueName, &IdentifierSW, FALSE) == 0)
+         {
+            pHardwareId = &HardwareIdSW;
+            DeviceIndex = DeviceIndexSW++;
+         }
          else
          {
-            DPRINT("Unknown device '%wZ'\n", &ValueName);
+            DPRINT1("Unknown device '%wZ'\n", &ValueName);
             goto nextdevice;
          }
       }

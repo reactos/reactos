@@ -48,7 +48,7 @@ ext2.sys=,,,,,,x,,,,,,4
 *PNP0C08 = acpi
 ;PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
-ROOT\SWENUM = swenum
+SWENUM = swenum
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
