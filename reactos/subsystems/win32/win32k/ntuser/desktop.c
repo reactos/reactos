@@ -708,22 +708,20 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
    PDESKTOP Desktop = IntGetActiveDesktop();
    HWND* HwndList;
 
-   static UINT MsgType = 0;
-
-   if (!MsgType)
+   if (!gpsi->uiShellMsg)
    {
 
       /* Too bad, this doesn't work.*/
 #if 0
       UNICODE_STRING Str;
       RtlInitUnicodeString(&Str, L"SHELLHOOK");
-      MsgType = UserRegisterWindowMessage(&Str);
+      gpsi->uiShellMsg = UserRegisterWindowMessage(&Str);
 #endif
 
-      MsgType = IntAddAtom(L"SHELLHOOK");
+      gpsi->uiShellMsg = IntAddAtom(L"SHELLHOOK");
 
-      DPRINT("MsgType = %x\n", MsgType);
-      if (!MsgType)
+      DPRINT("MsgType = %x\n", gpsi->uiShellMsg);
+      if (!gpsi->uiShellMsg)
          DPRINT1("LastError: %x\n", EngGetLastError());
    }
 
@@ -740,7 +738,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
       for (; *cursor; cursor++)
       {
-         co_IntSendMessageNoWait(*cursor, MsgType, Message, lParam);
+         UserPostMessage(*cursor, gpsi->uiShellMsg, Message, lParam);
       }
 
       ExFreePool(HwndList);
