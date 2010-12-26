@@ -1,8 +1,7 @@
 /*
- * Help Viewer
+ * Simplified Chinese language support
  *
- * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright (C) 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,38 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winhelp_res.h"
+#include "resources.h"
 
-/* @makedep: winhelp.ico */
-IDI_WINHELP ICON winhelp.ico
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
 
-#include "Bg.rc"
-#include "Cs.rc"
-#include "En.rc"
-#include "Es.rc"
-#include "Fi.rc"
-#include "Hu.rc"
-#include "No.rc"
-#include "Pl.rc"
-#include "Sk.rc"
-#include "Sv.rc"
-#include "Tr.rc"
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-/* UTF-8 */
-#include "Da.rc"
-#include "De.rc"
-#include "Fr.rc"
-#include "He.rc"
-#include "It.rc"
-#include "Ja.rc"
-#include "Ko.rc"
-#include "Lt.rc"
-#include "Nl.rc"
-#include "Pt.rc"
-#include "Rm.rc"
-#include "Ro.rc"
-#include "Ru.rc"
-#include "Si.rc"
-#include "Sr.rc"
-#include "Uk.rc"
-#include "Zh.rc"
+STRINGTABLE
+{
+    IDS_FAILED, "启动写字板失败"
+}

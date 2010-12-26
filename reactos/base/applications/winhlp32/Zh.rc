@@ -4,6 +4,7 @@
  *
  * Copyright 2002 liuspider <liuspider@yahoo.com>
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +38,7 @@ MAIN_MENU MENU
   MENUITEM "打印(&P)", MNID_FILE_PRINT
   MENUITEM "打印机设置(&S)...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "退出(&E)", MNID_FILE_EXIT
+  MENUITEM "退出(&X)", MNID_FILE_EXIT
  }
  POPUP "编辑(&E)" {
    MENUITEM "复制(&C)...", MNID_EDIT_COPYDLG
@@ -48,7 +49,7 @@ MAIN_MENU MENU
    MENUITEM "定义(&D)...", MNID_BKMK_DEFINE
  }
  POPUP "选项(&O)" {
-   POPUP	"显示帮助"
+   POPUP	"总是显示帮助"
    BEGIN
      MENUITEM "默认",	MNID_OPTS_HELP_DEFAULT
      MENUITEM "显示",	MNID_OPTS_HELP_VISIBLE
@@ -67,8 +68,24 @@ MAIN_MENU MENU
    MENUITEM "如何使用帮助(&O)", MNID_HELP_HELPON
    MENUITEM "总是在最前面(&T)", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "资料信息(&I)...", MNID_HELP_ABOUT
+   MENUITEM "关于 Wine 帮助(&I)...", MNID_HELP_ABOUT
  }
+}
+
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "索引"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "搜索"
+{
+    LTEXT  "尚未实现", -1, 10, 10, 180, 150
 }
 
 /* Strings */
@@ -79,16 +96,39 @@ STID_WHERROR, 		"错误"
 STID_WARNING,  		"警告"
 STID_INFO,  		"信息"
 STID_NOT_IMPLEMENTED, 	"未实现"
-STID_HLPFILE_ERROR_s, 	"读入帮助文件 ‘%s’ 时发生错误"
-STID_INDEX, 		"内容(&C)"
+STID_HLPFILE_ERROR_s, 	"读入帮助文件“%s”时发生错误"
+STID_INDEX, 		"索引(&I)"
 STID_CONTENTS,		"概要"
 STID_BACK, 		"返回(&B)"
 STID_ALL_FILES, 	"所有文件 (*.*)"
 STID_HELP_FILES_HLP, 	"帮助文件 (*.hlp)"
-STID_FILE_NOT_FOUND_s	"不能打开文件 '%s'. 你想要自己找这个文件吗?"
-STID_NO_RICHEDIT	"找不到 richedit... 终止"
-STID_PSH_INDEX,		"帮助内容: "
+STID_FILE_NOT_FOUND_s	"找不到文件“%s”。 你想要自己找这个文件吗？"
+STID_NO_RICHEDIT	"找不到 richedit 的实现……终止"
+STID_PSH_INDEX,		"帮助主题："
 }
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "注释...",       MNID_CTXT_ANNOTATE
+		MENUITEM "复制",          MNID_CTXT_COPY
+		MENUITEM "打印...",       MNID_CTXT_PRINT
+		POPUP    "字体"
+		BEGIN
+			MENUITEM "小号",      MNID_CTXT_FONTS_SMALL
+			MENUITEM "中号",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "大号",      MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "总是显示帮助"
+		BEGIN
+			MENUITEM "默认",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "显示",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "不显示", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "使用系统颜色",   MNID_CTXT_SYSTEM_COLORS
+	END
+END
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 

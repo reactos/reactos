@@ -61,7 +61,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "其他(&X)"
         BEGIN
-            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO
+            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO /* 准确性待议 */
             MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
             MENUITEM "默认格式(&D)", ID_EDIT_DEFCHARFORMAT
             MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
@@ -118,7 +118,7 @@ BEGIN
     BEGIN
         MENUITEM "黑色",      ID_COLOR_BLACK /* 未找到“标准译名表” */
         MENUITEM "栗色",     ID_COLOR_MAROON
-        MENUITEM "调和绿",      ID_COLOR_GREEN
+        MENUITEM "绿色",      ID_COLOR_GREEN
         MENUITEM "橄榄色"       ID_COLOR_OLIVE
         MENUITEM "藏青"        ID_COLOR_NAVY
         MENUITEM "紫色"      ID_COLOR_PURPLE
@@ -126,7 +126,7 @@ BEGIN
         MENUITEM "灰色"        ID_COLOR_GRAY
         MENUITEM "银色"      ID_COLOR_SILVER
         MENUITEM "红色"         ID_COLOR_RED
-        MENUITEM "绿色"        ID_COLOR_LIME
+        MENUITEM "青柠色"        ID_COLOR_LIME
         MENUITEM "黄色"      ID_COLOR_YELLOW
         MENUITEM "蓝色"        ID_COLOR_BLUE
         MENUITEM "洋红"     ID_COLOR_FUCHSIA /* =magenta? */
