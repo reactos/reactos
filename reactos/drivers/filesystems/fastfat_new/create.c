@@ -1106,6 +1106,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
                 Status = STATUS_SUCCESS;
             else
                 Status = STATUS_UNMAPPABLE_CHARACTER;
+
+            /* First run init is done */
+            FirstRun = FALSE;
         }
         else
         {
@@ -1158,8 +1161,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         UNIMPLEMENTED;
     }
 
-    /* Check, if path is a directory or a file */
+    /* Check, if path is a existing directory or file */
     if (FfError == FF_ERR_FILE_OBJECT_IS_A_DIR ||
+        FfError == FF_ERR_FILE_ALREADY_OPEN ||
         FfError == FF_ERR_NONE)
     {
         if (FfError == FF_ERR_FILE_OBJECT_IS_A_DIR)
@@ -1266,7 +1270,18 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* We come here only in the case when a new file is created */
-    ASSERT(FALSE);
+    //ASSERT(FALSE);
+    DPRINT1("TODO: Create a new file/directory, called '%wZ'\n", &IrpSp->FileObject->FileName);
+
+    Status = STATUS_NOT_IMPLEMENTED;
+
+    /* Unlock VCB */
+    FatReleaseVcb(IrpContext, Vcb);
+
+    /* Complete the request */
+    FatCompleteRequest(IrpContext, Irp, Status);
+
+    return Status;
 }
 
 NTSTATUS
