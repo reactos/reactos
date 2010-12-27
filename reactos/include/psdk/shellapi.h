@@ -70,7 +70,8 @@ extern "C" {
 #define NIIF_NONE	0
 #define NIIF_INFO	1
 #define NIIF_WARNING	2
-#define NIIF_ERROR 3
+#define NIIF_ERROR	3
+#define NIIF_USER	4
 #if _WIN32_IE >= 0x0600
 #define NIIF_ICON_MASK	0xf
 #define NIIF_NOSOUND	0x10
