@@ -123,7 +123,6 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   PDEVICE_EXTENSION DeviceExt;
   BOOLEAN First = TRUE;
   PVFATFCB Fcb;
-  PVFATCCB Ccb;
   NTSTATUS Status;
   ULONG BytesDone;
   ULONG BytesPerSector;
@@ -145,7 +144,6 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
 
   *LengthRead = 0;
 
-  Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
   Fcb = IrpContext->FileObject->FsContext;
   BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
   BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
@@ -328,7 +326,6 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 {
    PDEVICE_EXTENSION DeviceExt;
    PVFATFCB Fcb;
-   PVFATCCB Ccb;
    ULONG Count;
    ULONG FirstCluster;
    ULONG CurrentCluster;
@@ -352,7 +349,6 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    ASSERT(IrpContext->FileObject);
    ASSERT(IrpContext->FileObject->FsContext2 != NULL);
 
-   Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
    Fcb = IrpContext->FileObject->FsContext;
    BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
    BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
