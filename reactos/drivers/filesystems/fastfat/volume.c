@@ -216,7 +216,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   {
     RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
     memset(&VolumeLabelDirEntry.FatX.Filename[LabelLen], ' ', 42 - LabelLen);
-    VolumeLabelDirEntry.FatX.Attrib = 0x08;
+    VolumeLabelDirEntry.FatX.Attrib = _A_VOLID;
   }
   else
   {
@@ -230,7 +230,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
     {
       memset(&VolumeLabelDirEntry.Fat.Filename[LabelLen], ' ', sizeof(VolumeLabelDirEntry.Fat.Filename) - LabelLen);
     }
-    VolumeLabelDirEntry.Fat.Attrib = 0x08;
+    VolumeLabelDirEntry.Fat.Attrib = _A_VOLID;
   }
 
   pRootFcb = vfatOpenRootFCB(DeviceExt);

@@ -2,6 +2,7 @@
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <debug.h>
+#include <dos.h>
 
 #define USE_ROS_CC_AND_FS
 
