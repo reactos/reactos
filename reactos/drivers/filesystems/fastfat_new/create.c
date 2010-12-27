@@ -493,7 +493,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     BOOLEAN OpenDirectory;
     BOOLEAN IsPagingFile;
     BOOLEAN OpenTargetDirectory;
-    BOOLEAN DirectoryFile;
+    BOOLEAN IsDirectoryFile;
     BOOLEAN NonDirectoryFile;
     BOOLEAN NoEaKnowledge;
     BOOLEAN DeleteOnClose;
@@ -609,7 +609,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     Vcb = &((PVOLUME_DEVICE_OBJECT)IrpSp->DeviceObject)->Vcb;
 
     /* Get options */
-    DirectoryFile           = BooleanFlagOn(Options, FILE_DIRECTORY_FILE);
+    IsDirectoryFile         = BooleanFlagOn(Options, FILE_DIRECTORY_FILE);
     NonDirectoryFile        = BooleanFlagOn(Options, FILE_NON_DIRECTORY_FILE);
     SequentialOnly          = BooleanFlagOn(Options, FILE_SEQUENTIAL_ONLY);
     NoIntermediateBuffering = BooleanFlagOn(Options, FILE_NO_INTERMEDIATE_BUFFERING);
@@ -624,17 +624,17 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
     CreateDisposition = (Options >> 24) & 0x000000ff;
 
     /* Get Create/Open directory flags based on it */
-    CreateDirectory = (BOOLEAN)(DirectoryFile &&
+    CreateDirectory = (BOOLEAN)(IsDirectoryFile &&
                                 ((CreateDisposition == FILE_CREATE) ||
                                  (CreateDisposition == FILE_OPEN_IF)));
 
-    OpenDirectory   = (BOOLEAN)(DirectoryFile &&
+    OpenDirectory   = (BOOLEAN)(IsDirectoryFile &&
                                 ((CreateDisposition == FILE_OPEN) ||
                                  (CreateDisposition == FILE_OPEN_IF)));
 
     /* Validate parameters: directory/nondirectory mismatch and
        AllocationSize being more than 4GB */
-    if ((DirectoryFile && NonDirectoryFile) ||
+    if ((IsDirectoryFile && NonDirectoryFile) ||
         Irp->Overlay.AllocationSize.HighPart != 0)
     {
         FatCompleteRequest(IrpContext, Irp, STATUS_INVALID_PARAMETER);
@@ -686,9 +686,9 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
             FatDecodeFileObject(RelatedFO, &DecodedVcb, &Fcb, &Ccb) == UserVolumeOpen)
         {
             /* Check parameters */
-            if (DirectoryFile || OpenTargetDirectory)
+            if (IsDirectoryFile || OpenTargetDirectory)
             {
-                Status = DirectoryFile ? STATUS_NOT_A_DIRECTORY : STATUS_INVALID_PARAMETER;
+                Status = IsDirectoryFile ? STATUS_NOT_A_DIRECTORY : STATUS_INVALID_PARAMETER;
 
                 /* Unlock VCB */
                 FatReleaseVcb(IrpContext, Vcb);
