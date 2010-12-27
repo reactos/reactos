@@ -789,6 +789,7 @@ static void X11DRV_Expose( HWND hwnd, XEvent *xev )
 
         flags |= RDW_ALLCHILDREN;
     }
+    else OffsetRect( &rect, virtual_screen_rect.left, virtual_screen_rect.top );
 
     RedrawWindow( hwnd, &rect, 0, flags );
 }

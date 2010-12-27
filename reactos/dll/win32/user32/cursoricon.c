@@ -1715,6 +1715,7 @@ BOOL WINAPI GetIconInfoExA( HICON icon, ICONINFOEXA *info )
 BOOL WINAPI GetIconInfoExW( HICON icon, ICONINFOEXW *info )
 {
     struct cursoricon_object *ptr;
+    HMODULE module;
     BOOL ret = TRUE;
 
     if (info->cbSize != sizeof(*info))
@@ -1740,7 +1741,6 @@ BOOL WINAPI GetIconInfoExW( HICON icon, ICONINFOEXW *info )
     info->szResName[0] = 0;
     if (ptr->module)
     {
-        GetModuleFileNameW( ptr->module, info->szModName, MAX_PATH );
         if (IS_INTRESOURCE( ptr->resname )) info->wResID = LOWORD( ptr->resname );
         else lstrcpynW( info->szResName, ptr->resname, MAX_PATH );
     }
@@ -1750,7 +1750,9 @@ BOOL WINAPI GetIconInfoExW( HICON icon, ICONINFOEXW *info )
         DeleteObject( info->hbmColor );
         ret = FALSE;
     }
+    module = ptr->module;
     release_icon_ptr( icon, ptr );
+    if (ret && module) GetModuleFileNameW( module, info->szModName, MAX_PATH );
     return ret;
 }
 

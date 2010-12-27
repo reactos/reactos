@@ -6312,6 +6312,7 @@ DWORD WineEngGetFontUnicodeRanges(GdiFont *font, LPGLYPHSET glyphset)
     {
         glyphset->cbThis = size;
         glyphset->cRanges = num_ranges;
+        glyphset->flAccel = 0;
     }
     return size;
 }

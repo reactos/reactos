@@ -240,6 +240,11 @@ static HWND update_mouse_state( HWND hwnd, Window window, int x, int y, unsigned
         x += data->whole_rect.left - data->client_rect.left;
         y += data->whole_rect.top - data->client_rect.top;
     }
+    if (window == root_window)
+    {
+        x += virtual_screen_rect.left;
+        y += virtual_screen_rect.top;
+    }
     pt->x = x;
     pt->y = y;
     if (GetWindowLongW( data->hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL)

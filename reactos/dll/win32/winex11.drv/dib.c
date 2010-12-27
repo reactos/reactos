@@ -4210,8 +4210,7 @@ INT CDECL X11DRV_GetDIBits( X11DRV_PDEVICE *physDev, HBITMAP hbitmap, UINT start
      descr.ySrc = startscan;
   }
   descr.shm_mode = physBitmap->shm_mode;
-  descr.dibpitch = (obj_size == sizeof(DIBSECTION)) ? dib.dsBm.bmWidthBytes
-		       : (((descr.infoWidth * descr.infoBpp + 31) &~31) / 8);
+  descr.dibpitch = (((descr.infoWidth * descr.infoBpp + 31) &~31) / 8);
 
   X11DRV_DIB_Lock( physBitmap, DIB_Status_GdiMod );
   X11DRV_DIB_GetImageBits( &descr );

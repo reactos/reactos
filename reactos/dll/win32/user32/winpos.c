@@ -446,7 +446,7 @@ static POINT WINPOS_GetWinOffset( HWND hwndFrom, HWND hwndTo, BOOL *mirrored )
                 mirror_from = TRUE;
                 offset.x += wndPtr->rectClient.right - wndPtr->rectClient.left;
             }
-            for (;;)
+            while (wndPtr->parent)
             {
                 offset.x += wndPtr->rectClient.left;
                 offset.y += wndPtr->rectClient.top;
@@ -461,6 +461,7 @@ static POINT WINPOS_GetWinOffset( HWND hwndFrom, HWND hwndTo, BOOL *mirrored )
                     goto other_process;
                 }
             }
+            if (wndPtr && wndPtr != WND_DESKTOP) WIN_ReleasePtr( wndPtr );
         }
     }
 
@@ -476,7 +477,7 @@ static POINT WINPOS_GetWinOffset( HWND hwndFrom, HWND hwndTo, BOOL *mirrored )
                 mirror_to = TRUE;
                 offset.x -= wndPtr->rectClient.right - wndPtr->rectClient.left;
             }
-            for (;;)
+            while (wndPtr->parent)
             {
                 offset.x -= wndPtr->rectClient.left;
                 offset.y -= wndPtr->rectClient.top;
@@ -491,6 +492,7 @@ static POINT WINPOS_GetWinOffset( HWND hwndFrom, HWND hwndTo, BOOL *mirrored )
                     goto other_process;
                 }
             }
+            if (wndPtr && wndPtr != WND_DESKTOP) WIN_ReleasePtr( wndPtr );
         }
     }
 
@@ -1230,8 +1232,18 @@ BOOL WINAPI GetWindowPlacement( HWND hwnd, WINDOWPLACEMENT *wndpl )
     }
     if (pWnd == WND_OTHER_PROCESS)
     {
-        if (IsWindow( hwnd )) FIXME( "not supported on other process window %p\n", hwnd );
-        return FALSE;
+        if (!IsWindow( hwnd )) return FALSE;
+        FIXME( "not supported on other process window %p\n", hwnd );
+        /* provide some dummy information */
+        wndpl->length  = sizeof(*wndpl);
+        wndpl->showCmd = SW_SHOWNORMAL;
+        wndpl->flags = 0;
+        wndpl->ptMinPosition.x = -1;
+        wndpl->ptMinPosition.y = -1;
+        wndpl->ptMaxPosition.x = -1;
+        wndpl->ptMaxPosition.y = -1;
+        GetWindowRect( hwnd, &wndpl->rcNormalPosition );
+        return TRUE;
     }
 
     /* update the placement according to the current style */

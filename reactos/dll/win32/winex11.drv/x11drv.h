@@ -784,6 +784,7 @@ extern void update_user_time( Time time );
 extern void update_net_wm_states( Display *display, struct x11drv_win_data *data );
 extern void make_window_embedded( Display *display, struct x11drv_win_data *data );
 extern void change_systray_owner( Display *display, Window systray_window );
+extern void update_systray_balloon_position(void);
 extern HWND create_foreign_window( Display *display, Window window );
 
 static inline void mirror_rect( const RECT *window_rect, RECT *rect )

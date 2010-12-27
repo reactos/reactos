@@ -1820,17 +1820,16 @@ void CDECL X11DRV_SetWindowText( HWND hwnd, LPCWSTR text )
  */
 void CDECL X11DRV_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
 {
-    struct x11drv_win_data *data;
+    struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
     DWORD changed;
 
     if (hwnd == GetDesktopWindow()) return;
     changed = style->styleNew ^ style->styleOld;
 
-    if (offset == GWL_STYLE && (changed & WS_VISIBLE) && (style->styleNew & WS_VISIBLE))
+    /* if WS_VISIBLE was set through WM_SETREDRAW, map the window if it's the first time */
+    if (offset == GWL_STYLE && (changed & WS_VISIBLE) && (style->styleNew & WS_VISIBLE) && !data)
     {
-        /* we don't unmap windows, that causes trouble with the window manager */
-        if (!(data = X11DRV_get_win_data( hwnd )) &&
-            !(data = X11DRV_create_win_data( hwnd ))) return;
+        if (!(data = X11DRV_create_win_data( hwnd ))) return;
 
         if (data->whole_window && is_window_rect_mapped( &data->window_rect ))
         {
@@ -1839,20 +1838,13 @@ void CDECL X11DRV_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
             if (!data->mapped) map_window( display, data, style->styleNew );
         }
     }
+    if (!data || !data->whole_window) return;
 
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
-    {
-        data = X11DRV_get_win_data( hwnd );
-        if (data && data->whole_window)
-            set_wm_hints( thread_display(), data );
-    }
+        set_wm_hints( thread_display(), data );
 
-    if (offset == GWL_EXSTYLE && (changed & WS_EX_LAYERED))
-    {
-        /* changing WS_EX_LAYERED resets attributes */
-        if ((data = X11DRV_get_win_data( hwnd )) && data->whole_window)
-            sync_window_opacity( thread_display(), data->whole_window, 0, 0, 0 );
-    }
+    if (offset == GWL_EXSTYLE && (changed & WS_EX_LAYERED)) /* changing WS_EX_LAYERED resets attributes */
+        sync_window_opacity( thread_display(), data->whole_window, 0, 0, 0 );
 }
 
 
@@ -2070,6 +2062,9 @@ static LRESULT WINAPI foreign_window_proc( HWND hwnd, UINT msg, WPARAM wparam, L
 {
     switch(msg)
     {
+    case WM_WINDOWPOSCHANGED:
+        update_systray_balloon_position();
+        break;
     case WM_PARENTNOTIFY:
         if (LOWORD(wparam) == WM_DESTROY)
         {
