@@ -8,6 +8,7 @@
 	<library>shlwapi</library>
 	<library>advapi32</library>
 	<library>dbghelp</library>
+	<library>msvcrt</library>
 	<library>user32</library>
 	<file>asmcache.c</file>
 	<file>asmenum.c</file>

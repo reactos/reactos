@@ -123,15 +123,20 @@ static BOOL get_assembly_directory(LPWSTR dir, DWORD size, BYTE architecture)
 /* IAssemblyCache */
 
 typedef struct {
-    const IAssemblyCacheVtbl *lpIAssemblyCacheVtbl;
+    IAssemblyCache IAssemblyCache_iface;
 
     LONG ref;
 } IAssemblyCacheImpl;
 
+static inline IAssemblyCacheImpl *impl_from_IAssemblyCache(IAssemblyCache *iface)
+{
+    return CONTAINING_RECORD(iface, IAssemblyCacheImpl, IAssemblyCache_iface);
+}
+
 static HRESULT WINAPI IAssemblyCacheImpl_QueryInterface(IAssemblyCache *iface,
                                                         REFIID riid, LPVOID *ppobj)
 {
-    IAssemblyCacheImpl *This = (IAssemblyCacheImpl *)iface;
+    IAssemblyCacheImpl *This = impl_from_IAssemblyCache(iface);
 
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
 
@@ -151,7 +156,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryInterface(IAssemblyCache *iface,
 
 static ULONG WINAPI IAssemblyCacheImpl_AddRef(IAssemblyCache *iface)
 {
-    IAssemblyCacheImpl *This = (IAssemblyCacheImpl *)iface;
+    IAssemblyCacheImpl *This = impl_from_IAssemblyCache(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
@@ -161,7 +166,7 @@ static ULONG WINAPI IAssemblyCacheImpl_AddRef(IAssemblyCache *iface)
 
 static ULONG WINAPI IAssemblyCacheImpl_Release(IAssemblyCache *iface)
 {
-    IAssemblyCacheImpl *This = (IAssemblyCacheImpl *)iface;
+    IAssemblyCacheImpl *This = impl_from_IAssemblyCache(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
@@ -222,6 +227,8 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryAssemblyInfo(IAssemblyCache *iface
 
     if (!pAsmInfo)
         goto done;
+
+    hr = IAssemblyName_GetPath(next, pAsmInfo->pszCurrentAssemblyPathBuf, &pAsmInfo->cchBuf);
 
     pAsmInfo->dwAssemblyFlags = ASSEMBLYINFO_FLAG_INSTALLED;
 
@@ -362,10 +369,10 @@ HRESULT WINAPI CreateAssemblyCache(IAssemblyCache **ppAsmCache, DWORD dwReserved
     if (!cache)
         return E_OUTOFMEMORY;
 
-    cache->lpIAssemblyCacheVtbl = &AssemblyCacheVtbl;
+    cache->IAssemblyCache_iface.lpVtbl = &AssemblyCacheVtbl;
     cache->ref = 1;
 
-    *ppAsmCache = (IAssemblyCache *)cache;
+    *ppAsmCache = &cache->IAssemblyCache_iface;
 
     return S_OK;
 }
@@ -373,15 +380,20 @@ HRESULT WINAPI CreateAssemblyCache(IAssemblyCache **ppAsmCache, DWORD dwReserved
 /* IAssemblyCacheItem */
 
 typedef struct {
-    const IAssemblyCacheItemVtbl *lpIAssemblyCacheItemVtbl;
+    IAssemblyCacheItem IAssemblyCacheItem_iface;
 
     LONG ref;
 } IAssemblyCacheItemImpl;
 
+static inline IAssemblyCacheItemImpl *impl_from_IAssemblyCacheItem(IAssemblyCacheItem *iface)
+{
+    return CONTAINING_RECORD(iface, IAssemblyCacheItemImpl, IAssemblyCacheItem_iface);
+}
+
 static HRESULT WINAPI IAssemblyCacheItemImpl_QueryInterface(IAssemblyCacheItem *iface,
                                                             REFIID riid, LPVOID *ppobj)
 {
-    IAssemblyCacheItemImpl *This = (IAssemblyCacheItemImpl *)iface;
+    IAssemblyCacheItemImpl *This = impl_from_IAssemblyCacheItem(iface);
 
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
 
@@ -401,7 +413,7 @@ static HRESULT WINAPI IAssemblyCacheItemImpl_QueryInterface(IAssemblyCacheItem *
 
 static ULONG WINAPI IAssemblyCacheItemImpl_AddRef(IAssemblyCacheItem *iface)
 {
-    IAssemblyCacheItemImpl *This = (IAssemblyCacheItemImpl *)iface;
+    IAssemblyCacheItemImpl *This = impl_from_IAssemblyCacheItem(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
@@ -411,7 +423,7 @@ static ULONG WINAPI IAssemblyCacheItemImpl_AddRef(IAssemblyCacheItem *iface)
 
 static ULONG WINAPI IAssemblyCacheItemImpl_Release(IAssemblyCacheItem *iface)
 {
-    IAssemblyCacheItemImpl *This = (IAssemblyCacheItemImpl *)iface;
+    IAssemblyCacheItemImpl *This = impl_from_IAssemblyCacheItem(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
