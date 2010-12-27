@@ -156,16 +156,16 @@ EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
 LPWSTR WINAPI
 EngGetDriverName(HDEV hdev)
 {
-  // DHPDEV from NtGdiGetDhpdev must be from print driver.
-  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
+    // DHPDEV from NtGdiGetDhpdev must be from print driver.
+    PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pPDev) return NULL;
-  
-  if (pPDev->Sig != PDEV_UMPD_ID)
-  {
-     pPDev = (PUMPDEV)pPDev->Sig;
-  }
-  return pPDev->pdi5Info->pDriverPath;
+    if (!pPDev) return NULL;
+
+    if (pPDev->Sig != PDEV_UMPD_ID)
+    {
+        pPDev = (PUMPDEV)pPDev->Sig;
+    }
+    return pPDev->pdi5Info->pDriverPath;
 }
 
 /*
@@ -174,15 +174,15 @@ EngGetDriverName(HDEV hdev)
 LPWSTR WINAPI
 EngGetPrinterDataFileName(HDEV hdev)
 {
-  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
+    PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pPDev) return NULL;
+    if (!pPDev) return NULL;
 
-  if (pPDev->Sig != PDEV_UMPD_ID)
-  {
-     pPDev = (PUMPDEV)pPDev->Sig;
-  }
-  return pPDev->pdi5Info->pDataFile;
+    if (pPDev->Sig != PDEV_UMPD_ID)
+    {
+        pPDev = (PUMPDEV)pPDev->Sig;
+    }
+    return pPDev->pdi5Info->pDataFile;
 }
 
 /*
@@ -191,7 +191,7 @@ EngGetPrinterDataFileName(HDEV hdev)
 HANDLE WINAPI
 EngLoadModule(LPWSTR pwsz)
 {
-   return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
 }
 
 /*
@@ -204,7 +204,7 @@ EngMultiByteToWideChar(UINT CodePage,
                        LPSTR MultiByteString,
                        INT BytesInMultiByteString)
 {
-  return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
+    return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
 }
 
 /*
@@ -213,16 +213,16 @@ EngMultiByteToWideChar(UINT CodePage,
 VOID WINAPI
 EngQueryLocalTime(PENG_TIME_FIELDS etf)
 {
-  SYSTEMTIME SystemTime;
-  GetLocalTime( &SystemTime );
-  etf->usYear    = SystemTime.wYear;
-  etf->usMonth   = SystemTime.wMonth;
-  etf->usWeekday = SystemTime.wDayOfWeek;
-  etf->usDay     = SystemTime.wDay;
-  etf->usHour    = SystemTime.wHour;
-  etf->usMinute  = SystemTime.wMinute;
-  etf->usSecond  = SystemTime.wSecond;
-  etf->usMilliseconds = SystemTime.wMilliseconds;
+    SYSTEMTIME SystemTime;
+    GetLocalTime( &SystemTime );
+    etf->usYear    = SystemTime.wYear;
+    etf->usMonth   = SystemTime.wMonth;
+    etf->usWeekday = SystemTime.wDayOfWeek;
+    etf->usDay     = SystemTime.wDay;
+    etf->usHour    = SystemTime.wHour;
+    etf->usMinute  = SystemTime.wMinute;
+    etf->usSecond  = SystemTime.wSecond;
+    etf->usMilliseconds = SystemTime.wMilliseconds;
 }
 
 /*
@@ -232,7 +232,7 @@ VOID
 WINAPI
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
-  RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
+    RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
 }
 
 
@@ -249,6 +249,6 @@ EngWideCharToMultiByte( UINT CodePage,
                         LPSTR MultiByteString,
                         INT BytesInMultiByteString)
 {
-  return WideCharToMultiByte(CodePage, 0, WideCharString, (BytesInWideCharString/sizeof(WCHAR)),
-                             MultiByteString, BytesInMultiByteString, NULL, NULL);
+    return WideCharToMultiByte(CodePage, 0, WideCharString, (BytesInWideCharString/sizeof(WCHAR)),
+                               MultiByteString, BytesInMultiByteString, NULL, NULL);
 }

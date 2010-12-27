@@ -104,10 +104,10 @@ GetSystemPaletteEntries(HDC hDC,
             RtlCopyMemory(ippe, sys_pal_template, 10 * sizeof(PALETTEENTRY));
             RtlCopyMemory(&ippe[246], &sys_pal_template[10], 10 * sizeof(PALETTEENTRY));
             RtlZeroMemory(&ippe[10], sizeof(ippe) - 20 * sizeof(PALETTEENTRY));
-            
+
             if (iStartIndex < 256)
             {
-                RtlCopyMemory(ppe, 
+                RtlCopyMemory(ppe,
                               &ippe[iStartIndex],
                               min(256 - iStartIndex, cEntries) *
                               sizeof(PALETTEENTRY));
@@ -125,9 +125,9 @@ GetDIBColorTable(HDC hDC,
                  UINT cEntries,
                  RGBQUAD *pColors)
 {
-  if (cEntries)
-     return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
-  return 0;
+    if (cEntries)
+        return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
+    return 0;
 }
 
 /*
@@ -139,21 +139,21 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
 {
 #if 0
 // Handle something other than a normal dc object.
- if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
- {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-      return MFDRV_(hDC);
-    else
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
-      HPALETTE Pal = GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
-      PLDC pLDC = GdiGetLDC((HDC) Pal);
-      if ( !pLDC ) return FALSE;
-      if (pLDC->iType == LDC_EMFLDC) return EMFDRV_(Pal);
-      return FALSE;
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_(hDC);
+        else
+        {
+            HPALETTE Pal = GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
+            PLDC pLDC = GdiGetLDC((HDC) Pal);
+            if ( !pLDC ) return FALSE;
+            if (pLDC->iType == LDC_EMFLDC) return EMFDRV_(Pal);
+            return FALSE;
+        }
     }
- }
 #endif
- return UserRealizePalette(hDC);
+    return UserRealizePalette(hDC);
 }
 
 /*
@@ -162,11 +162,11 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
 BOOL
 WINAPI
 ResizePalette(
-	HPALETTE	hPalette,
-	UINT		nEntries
-	)
+    HPALETTE	hPalette,
+    UINT		nEntries
+)
 {
-  return NtGdiResizePalette(hPalette, nEntries);
+    return NtGdiResizePalette(hPalette, nEntries);
 }
 
 /*
@@ -195,11 +195,11 @@ SetDIBColorTable(HDC hDC,
 BOOL
 WINAPI
 UpdateColors(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-  ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
-  return NtGdiUpdateColors(hdc);
+    ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+    return NtGdiUpdateColors(hdc);
 }
 
 /* EOF */

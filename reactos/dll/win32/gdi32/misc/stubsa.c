@@ -31,14 +31,14 @@ PolyTextOutA( HDC hdc, const POLYTEXTA *pptxt, INT cStrings )
 BOOL
 WINAPI
 GetLogColorSpaceA(
-	HCOLORSPACE		a0,
-	LPLOGCOLORSPACEA	a1,
-	DWORD			a2
-	)
+    HCOLORSPACE		a0,
+    LPLOGCOLORSPACEA	a1,
+    DWORD			a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -48,10 +48,10 @@ GetLogColorSpaceA(
 BOOL
 WINAPI
 GetICMProfileA(
-	HDC		hdc,
-	LPDWORD pBufSize,
-	LPSTR		pszFilename
-	)
+    HDC		hdc,
+    LPDWORD pBufSize,
+    LPSTR		pszFilename
+)
 {
     WCHAR filenameW[MAX_PATH];
     DWORD buflen = MAX_PATH;
@@ -81,13 +81,13 @@ GetICMProfileA(
 BOOL
 WINAPI
 SetICMProfileA(
-	HDC	a0,
-	LPSTR	a1
-	)
+    HDC	a0,
+    LPSTR	a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -97,24 +97,24 @@ SetICMProfileA(
 int
 WINAPI
 EnumICMProfilesA(
-	HDC		a0,
-	ICMENUMPROCA	a1,
-	LPARAM		a2
-	)
+    HDC		a0,
+    ICMENUMPROCA	a1,
+    LPARAM		a2
+)
 {
-  /*
-   * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
-   * to find out how big a buffer we need. Then allocate that buffer
-   * and call NtGdiEnumICMProfiles again to have the buffer filled.
-   *
-   * Finally, step through the buffer ( MULTI-SZ recommended for format ),
-   * and convert each string to ANSI, calling the user's callback function
-   * until we run out of strings or the user returns FALSE
-   */
+    /*
+     * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
+     * to find out how big a buffer we need. Then allocate that buffer
+     * and call NtGdiEnumICMProfiles again to have the buffer filled.
+     *
+     * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+     * and convert each string to ANSI, calling the user's callback function
+     * until we run out of strings or the user returns FALSE
+     */
 
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -124,15 +124,15 @@ EnumICMProfilesA(
 BOOL
 WINAPI
 UpdateICMRegKeyA(
-	DWORD	a0,
-	LPSTR	a1,
-	LPSTR	a2,
-	UINT	a3
-	)
+    DWORD	a0,
+    LPSTR	a1,
+    LPSTR	a2,
+    UINT	a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*

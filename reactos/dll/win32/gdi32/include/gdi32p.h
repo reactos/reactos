@@ -44,55 +44,55 @@ typedef INT
 // Based on wmfapi.h and Wine.
 typedef struct tagMETAFILEDC
 {
-  PVOID       pvMetaBuffer;
-  HANDLE      hFile;
-  DWORD       Size;
-  DWORD       dwWritten;
-  METAHEADER  mh;
-  WORD        reserved;
-  HLOCAL      MFObjList;
-  HPEN        hPen;
-  HBRUSH      hBrush;
-  HDC         hDc;
-  HGDIOBJ     hMetaDc;
-  HPALETTE    hPalette;
-  HFONT       hFont;
-  HBITMAP     hBitmap;
-  HRGN        hRegion;
-  HGDIOBJ     hMetafile;
-  HGDIOBJ     hMemDc;
-  HPEN        hExtPen;
-  HGDIOBJ     hEnhMetaDc;
-  HGDIOBJ     hEnhMetaFile;
-  HCOLORSPACE hColorSpace;
-  WCHAR       Filename[MAX_PATH+2];
+    PVOID       pvMetaBuffer;
+    HANDLE      hFile;
+    DWORD       Size;
+    DWORD       dwWritten;
+    METAHEADER  mh;
+    WORD        reserved;
+    HLOCAL      MFObjList;
+    HPEN        hPen;
+    HBRUSH      hBrush;
+    HDC         hDc;
+    HGDIOBJ     hMetaDc;
+    HPALETTE    hPalette;
+    HFONT       hFont;
+    HBITMAP     hBitmap;
+    HRGN        hRegion;
+    HGDIOBJ     hMetafile;
+    HGDIOBJ     hMemDc;
+    HPEN        hExtPen;
+    HGDIOBJ     hEnhMetaDc;
+    HGDIOBJ     hEnhMetaFile;
+    HCOLORSPACE hColorSpace;
+    WCHAR       Filename[MAX_PATH+2];
 } METAFILEDC,*PMETAFILEDC;
 
 // Metafile Entry handle
 typedef struct tagMF_ENTRY
 {
-  LIST_ENTRY   List;
-  HGDIOBJ      hmDC;             // Handle return from NtGdiCreateClientObj.
-  PMETAFILEDC pmfDC;
+    LIST_ENTRY   List;
+    HGDIOBJ      hmDC;             // Handle return from NtGdiCreateClientObj.
+    PMETAFILEDC pmfDC;
 } MF_ENTRY, *PMF_ENTRY;
 
 typedef struct tagENHMETAFILE
 {
-  PVOID      pvMetaBuffer;
-  HANDLE     hFile;      /* Handle for disk based MetaFile */
-  DWORD      Size;
-  INT        iType;
-  PENHMETAHEADER emf;
-  UINT       handles_size, cur_handles;
-  HGDIOBJ   *handles;
-  INT        horzres, vertres;
-  INT        horzsize, vertsize;
-  INT        logpixelsx, logpixelsy;
-  INT        bitspixel;
-  INT        textcaps;
-  INT        rastercaps;
-  INT        technology;
-  INT        planes;
+    PVOID      pvMetaBuffer;
+    HANDLE     hFile;      /* Handle for disk based MetaFile */
+    DWORD      Size;
+    INT        iType;
+    PENHMETAHEADER emf;
+    UINT       handles_size, cur_handles;
+    HGDIOBJ   *handles;
+    INT        horzres, vertres;
+    INT        horzsize, vertsize;
+    INT        logpixelsx, logpixelsy;
+    INT        bitspixel;
+    INT        textcaps;
+    INT        rastercaps;
+    INT        technology;
+    INT        planes;
 } ENHMETAFILE,*PENHMETAFILE;
 
 
@@ -102,26 +102,26 @@ typedef struct tagENHMETAFILE
 #define UMPDEV_SUPPORT_ESCAPE 0x0004
 typedef struct _UMPDEV
 {
-  DWORD           Sig;            // Init with PDEV_UMPD_ID
-  struct _UMPDEV *pumpdNext;
-  PDRIVER_INFO_5W pdi5Info;
-  HMODULE         hModule;
-  DWORD           dwFlags;
-  DWORD           dwDriverAttributes;
-  DWORD           dwConfigVersion; // Number of times the configuration
-                                   // file for this driver has been upgraded
-                                   // or downgraded since the last spooler restart.
-  DWORD           dwDriverCount;   // After init should be 2
-  DWORD           WOW64_UMPDev;
-  DWORD           WOW64_hMod;
-  DWORD           Unknown;
-  PVOID           apfn[INDEX_LAST]; // Print Driver pfn
+    DWORD           Sig;            // Init with PDEV_UMPD_ID
+    struct _UMPDEV *pumpdNext;
+    PDRIVER_INFO_5W pdi5Info;
+    HMODULE         hModule;
+    DWORD           dwFlags;
+    DWORD           dwDriverAttributes;
+    DWORD           dwConfigVersion; // Number of times the configuration
+    // file for this driver has been upgraded
+    // or downgraded since the last spooler restart.
+    DWORD           dwDriverCount;   // After init should be 2
+    DWORD           WOW64_UMPDev;
+    DWORD           WOW64_hMod;
+    DWORD           Unknown;
+    PVOID           apfn[INDEX_LAST]; // Print Driver pfn
 } UMPDEV, *PUMPDEV;
 
 #define LOCALFONT_COUNT 10
 typedef struct _LOCALFONT
 {
-  FONT_ATTR  lfa[LOCALFONT_COUNT];
+    FONT_ATTR  lfa[LOCALFONT_COUNT];
 } LOCALFONT, *PLOCALFONT;
 
 // sdk/winspool.h
@@ -322,35 +322,35 @@ GdiAllocBatchCommand(
     /* Get the size of the entry */
     switch(Cmd)
     {
-        case GdiBCPatBlt:
-            ulSize = 0;
-            break;
-        case GdiBCPolyPatBlt:
-            ulSize = 0;
-            break;
-        case GdiBCTextOut:
-            ulSize = 0;
-            break;
-        case GdiBCExtTextOut:
-            ulSize = 0;
-            break;
-        case GdiBCSetBrushOrg:
-            ulSize = 0;
-            break;
-        case GdiBCExtSelClipRgn:
-            ulSize = 0;
-            break;
-        case GdiBCSelObj:
-            ulSize = sizeof(GDIBSOBJECT);
-            break;
-        case GdiBCDelRgn:
-            ulSize = sizeof(GDIBSOBJECT);
-            break;
-        case GdiBCDelObj:
-            ulSize = sizeof(GDIBSOBJECT);
-            break;
-        default:
-            return NULL;
+    case GdiBCPatBlt:
+        ulSize = 0;
+        break;
+    case GdiBCPolyPatBlt:
+        ulSize = 0;
+        break;
+    case GdiBCTextOut:
+        ulSize = 0;
+        break;
+    case GdiBCExtTextOut:
+        ulSize = 0;
+        break;
+    case GdiBCSetBrushOrg:
+        ulSize = 0;
+        break;
+    case GdiBCExtSelClipRgn:
+        ulSize = 0;
+        break;
+    case GdiBCSelObj:
+        ulSize = sizeof(GDIBSOBJECT);
+        break;
+    case GdiBCDelRgn:
+        ulSize = sizeof(GDIBSOBJECT);
+        break;
+    case GdiBCDelObj:
+        ulSize = sizeof(GDIBSOBJECT);
+        break;
+    default:
+        return NULL;
     }
 
     /* Unsupported operation */
@@ -358,7 +358,7 @@ GdiAllocBatchCommand(
 
     /* Check if the buffer is full */
     if ((pTeb->GdiBatchCount >= GDI_BatchLimit) ||
-        ((pTeb->GdiTebBatch.Offset + ulSize) > GDIBATCHBUFSIZE))
+            ((pTeb->GdiTebBatch.Offset + ulSize) > GDIBATCHBUFSIZE))
     {
         /* Call win32k, the kernel will call NtGdiFlushUserBatch to flush
            the current batch */

@@ -7,22 +7,22 @@
 HCOLORSPACE
 FASTCALL
 IntCreateColorSpaceW(
-        LPLOGCOLORSPACEW lplcpw,
-        BOOL Ascii
-        )
+    LPLOGCOLORSPACEW lplcpw,
+    BOOL Ascii
+)
 {
-  LOGCOLORSPACEEXW lcpeexw;  
+    LOGCOLORSPACEEXW lcpeexw;
 
-  if ((lplcpw->lcsSignature != LCS_SIGNATURE) ||
-                (lplcpw->lcsVersion != 0x400) ||
-      (lplcpw->lcsSize != sizeof(LOGCOLORSPACEW)))
-  {
-      SetLastError(ERROR_INVALID_COLORSPACE); 
-      return NULL;
-  }
-  RtlCopyMemory(&lcpeexw.lcsColorSpace, lplcpw, sizeof(LOGCOLORSPACEW));
- 
-  return NtGdiCreateColorSpace(&lcpeexw);
+    if ((lplcpw->lcsSignature != LCS_SIGNATURE) ||
+            (lplcpw->lcsVersion != 0x400) ||
+            (lplcpw->lcsSize != sizeof(LOGCOLORSPACEW)))
+    {
+        SetLastError(ERROR_INVALID_COLORSPACE);
+        return NULL;
+    }
+    RtlCopyMemory(&lcpeexw.lcsColorSpace, lplcpw, sizeof(LOGCOLORSPACEW));
+
+    return NtGdiCreateColorSpace(&lcpeexw);
 }
 
 /*
@@ -31,10 +31,10 @@ IntCreateColorSpaceW(
 HCOLORSPACE
 WINAPI
 CreateColorSpaceW(
-	LPLOGCOLORSPACEW lplcpw
-	)
+    LPLOGCOLORSPACEW lplcpw
+)
 {
-  return IntCreateColorSpaceW(lplcpw, FALSE);
+    return IntCreateColorSpaceW(lplcpw, FALSE);
 }
 
 
@@ -44,36 +44,36 @@ CreateColorSpaceW(
 HCOLORSPACE
 WINAPI
 CreateColorSpaceA(
-	LPLOGCOLORSPACEA lplcpa
-	)
+    LPLOGCOLORSPACEA lplcpa
+)
 {
-  LOGCOLORSPACEW lcpw;
+    LOGCOLORSPACEW lcpw;
 
-  if ((lplcpa->lcsSignature != LCS_SIGNATURE) ||
-                (lplcpa->lcsVersion != 0x400) ||
-      (lplcpa->lcsSize != sizeof(LOGCOLORSPACEA)))
-  {
-      SetLastError(ERROR_INVALID_COLORSPACE); 
-      return NULL;
-  }
+    if ((lplcpa->lcsSignature != LCS_SIGNATURE) ||
+            (lplcpa->lcsVersion != 0x400) ||
+            (lplcpa->lcsSize != sizeof(LOGCOLORSPACEA)))
+    {
+        SetLastError(ERROR_INVALID_COLORSPACE);
+        return NULL;
+    }
 
-  lcpw.lcsSignature  = lplcpa->lcsSignature;
-  lcpw.lcsVersion    = lplcpa->lcsVersion;
-  lcpw.lcsSize       = sizeof(LOGCOLORSPACEW);
-  lcpw.lcsCSType     = lplcpa->lcsCSType;
-  lcpw.lcsIntent     = lplcpa->lcsIntent;
-  lcpw.lcsEndpoints  = lplcpa->lcsEndpoints;
-  lcpw.lcsGammaRed   = lplcpa->lcsGammaRed;
-  lcpw.lcsGammaGreen = lplcpa->lcsGammaGreen;
-  lcpw.lcsGammaBlue  = lplcpa->lcsGammaBlue;
+    lcpw.lcsSignature  = lplcpa->lcsSignature;
+    lcpw.lcsVersion    = lplcpa->lcsVersion;
+    lcpw.lcsSize       = sizeof(LOGCOLORSPACEW);
+    lcpw.lcsCSType     = lplcpa->lcsCSType;
+    lcpw.lcsIntent     = lplcpa->lcsIntent;
+    lcpw.lcsEndpoints  = lplcpa->lcsEndpoints;
+    lcpw.lcsGammaRed   = lplcpa->lcsGammaRed;
+    lcpw.lcsGammaGreen = lplcpa->lcsGammaGreen;
+    lcpw.lcsGammaBlue  = lplcpa->lcsGammaBlue;
 
-  RtlMultiByteToUnicodeN( lcpw.lcsFilename,
-                                  MAX_PATH,
-                                      NULL,
-                       lplcpa->lcsFilename,
-           strlen(lplcpa->lcsFilename) + 1);
+    RtlMultiByteToUnicodeN( lcpw.lcsFilename,
+                            MAX_PATH,
+                            NULL,
+                            lplcpa->lcsFilename,
+                            strlen(lplcpa->lcsFilename) + 1);
 
-  return IntCreateColorSpaceW(&lcpw, FALSE);
+    return IntCreateColorSpaceW(&lcpw, FALSE);
 }
 
 /*
@@ -83,14 +83,14 @@ HCOLORSPACE
 WINAPI
 GetColorSpace(HDC hDC)
 {
-  PDC_ATTR pDc_Attr;
+    PDC_ATTR pDc_Attr;
 
-  if (!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
-  {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return NULL;
-  }
-  return pDc_Attr->hColorSpace;
+    if (!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+    return pDc_Attr->hColorSpace;
 }
 
 
@@ -100,31 +100,31 @@ GetColorSpace(HDC hDC)
 HCOLORSPACE
 WINAPI
 SetColorSpace(
-	HDC hDC,
-	HCOLORSPACE hCS
-	)
+    HDC hDC,
+    HCOLORSPACE hCS
+)
 {
-  HCOLORSPACE rhCS = GetColorSpace(hDC);
+    HCOLORSPACE rhCS = GetColorSpace(hDC);
 
-  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
-  {
-     if (NtGdiSetColorSpace(hDC, hCS)) return rhCS;
-  }
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+    {
+        if (NtGdiSetColorSpace(hDC, hCS)) return rhCS;
+    }
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
-  {
-     PLDC pLDC = GdiGetLDC(hDC);
-      if ( !pLDC )
-      {
-         SetLastError(ERROR_INVALID_HANDLE);
-         return NULL;
-      }
-      if (pLDC->iType == LDC_EMFLDC)
-      {
-        return NULL;
-      }
-  }
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return NULL;
+        }
+        if (pLDC->iType == LDC_EMFLDC)
+        {
+            return NULL;
+        }
+    }
 #endif
-  return NULL;
+    return NULL;
 }
 

@@ -29,12 +29,12 @@ DllMain (
 {
     switch (dwReason)
     {
-        case DLL_PROCESS_ATTACH :
-                DisableThreadLibraryCalls(hDll);
-                break;
+    case DLL_PROCESS_ATTACH :
+        DisableThreadLibraryCalls(hDll);
+        break;
 
-        default:
-                break;
+    default:
+        break;
     }
     return TRUE;
 }
@@ -69,17 +69,17 @@ GdiDllInitialize (
 {
     switch (dwReason)
     {
-        case DLL_PROCESS_ATTACH:
-            GdiProcessSetup ();
-            break;
+    case DLL_PROCESS_ATTACH:
+        GdiProcessSetup ();
+        break;
 
-        case DLL_THREAD_ATTACH:
-            NtCurrentTeb()->GdiTebBatch.Offset = 0;
-            NtCurrentTeb()->GdiBatchCount = 0;
-            break;
+    case DLL_THREAD_ATTACH:
+        NtCurrentTeb()->GdiTebBatch.Offset = 0;
+        NtCurrentTeb()->GdiBatchCount = 0;
+        break;
 
-        default:
-            return FALSE;
+    default:
+        return FALSE;
     }
 
     // Very simple, the list will fill itself as it is needed.
