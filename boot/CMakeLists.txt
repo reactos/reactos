@@ -267,3 +267,6 @@ add_custom_target(livecd_hives DEPENDS ${LIVECD_DIR}/reactos/system32/config/sam
 
 add_livecd_target(setupldr loader)
 add_livecd(${REACTOS_SOURCE_DIR}/boot/bootdata/livecd.ini "" freeldr.ini)
+
+#regtest
+add_cab(${REACTOS_SOURCE_DIR}/boot/bootdata/bootcdregtest/regtest.cmd 7)
