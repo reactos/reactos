@@ -1,4 +1,4 @@
-<module name="fusion" type="win32dll" baseaddress="${BASEADDRESS_FUSION}" installbase="system32" installname="fusion.dll" allowwarnings="true">
+<module name="fusion" type="win32dll" baseaddress="${BASEADDRESS_FUSION}" installbase="system32" installname="fusion.dll" crt="msvcrt" allowwarnings="true">
 	<importlibrary definition="fusion.spec" />
 	<include base="fusion">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -8,7 +8,6 @@
 	<library>shlwapi</library>
 	<library>advapi32</library>
 	<library>dbghelp</library>
-	<library>msvcrt</library>
 	<library>user32</library>
 	<file>asmcache.c</file>
 	<file>asmenum.c</file>
