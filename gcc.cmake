@@ -24,16 +24,29 @@ set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_F
 add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
 
 # Tuning
-add_definitions(-march=pentium -mtune=i686)
+if(ARCH MATCHES i386)
+    add_definitions(-march=${OARCH} -mtune=${TUNE})
+elseif(ARCH MATCHES amd64)
+    add_definitions(-march=${OARCH})
+endif()
 
 # Warnings
 add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value -Winvalid-pch)
 
 # Optimizations
-add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+if(ARCH MATCHES i386)
+    add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+elseif(ARCH MATCHES amd64)
+    add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=4)
+endif()
+
+# Other
+if(ARCH MATCHES amd64)
+add_definitions(-U_X86_ -UWIN32)
+endif()
 
 # Macros
-MACRO(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
+macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     # Add the precompiled header to the build
     get_filename_component(FILE ${_header_filename} NAME)
     set(_gch_filename "${_target_name}_${FILE}.gch")
@@ -43,7 +56,7 @@ MACRO(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     get_directory_property(DIRINC INCLUDE_DIRECTORIES)
     foreach(item ${DIRINC})
         list(APPEND ${_out_compile_flags} -I${item})
-    endforeach(item) 
+    endforeach() 
 
     # This is a particular bit of undocumented/hacky magic I'm quite proud of
     get_directory_property(_compiler_flags DEFINITIONS)
@@ -55,11 +68,11 @@ MACRO(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     if (_target_defs)
         foreach(item ${_target_defs})
             list(APPEND ${_out_compile_flags} -D${item})
-        endforeach(item)
+        endforeach()
     endif()
-ENDMACRO(_PCH_GET_COMPILE_FLAGS) 
+endmacro() 
 
-MACRO(add_pch _target_name _header_filename _src_list)
+macro(add_pch _target_name _header_filename _src_list)
     get_filename_component(FILE ${_header_filename} NAME)
     set(_gch_filename "${_target_name}_${FILE}.gch")
     list(APPEND ${_src_list} ${_gch_filename})
@@ -69,7 +82,7 @@ MACRO(add_pch _target_name _header_filename _src_list)
         OUTPUT ${_gch_filename}
         COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
         DEPENDS ${_header_filename})
-ENDMACRO(add_pch _target_name _header_filename _src_list)
+endmacro()
 
 macro(add_linkerflag MODULE _flag)
     set(NEW_LINKER_FLAGS ${_flag})
@@ -99,11 +112,10 @@ endmacro()
 macro(set_module_type MODULE TYPE)
 
     add_dependencies(${MODULE} psdk buildno_header)
-	
     if(${IS_CPP})
-	  target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
-	endif()
-	
+        target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
+    endif()
+
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
         set_entrypoint(${MODULE} NtProcessStartup@4)
@@ -115,7 +127,7 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-		target_link_libraries(${MODULE} mingw_common)
+        target_link_libraries(${MODULE} mingw_common)
     elseif(${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
         set_entrypoint(${MODULE} mainCRTStartup)
@@ -124,15 +136,15 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-		target_link_libraries(${MODULE} mingw_common)
+        target_link_libraries(${MODULE} mingw_common)
     elseif(${TYPE} MATCHES win32dll)
         set_entrypoint(${MODULE} DllMainCRTStartup@12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
-		if(DEFINED baseaddress_${MODULE})
-			set_image_base(${MODULE} ${baseaddress_${MODULE}})
-		else()
-			message(STATUS "${MODULE} has no base address")
-		endif()
+        if(DEFINED baseaddress_${MODULE})
+            set_image_base(${MODULE} ${baseaddress_${MODULE}})
+        else()
+            message(STATUS "${MODULE} has no base address")
+        endif()
     elseif(${TYPE} MATCHES win32ocx)
         set_entrypoint(${MODULE} DllMainCRTStartup@12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
@@ -142,14 +154,14 @@ macro(set_module_type MODULE TYPE)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     elseif(${TYPE} MATCHES kernelmodedriver)
-	    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols -Wl,-file-alignment=0x1000 -Wl,-section-alignment=0x1000" SUFFIX ".sys")
-	    set_entrypoint(${MODULE} DriverEntry@8)
-		set_subsystem(${MODULE} native)
+        set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols -Wl,-file-alignment=0x1000 -Wl,-section-alignment=0x1000" SUFFIX ".sys")
+        set_entrypoint(${MODULE} DriverEntry@8)
+        set_subsystem(${MODULE} native)
         set_image_base(${MODULE} 0x00010000)
-		add_dependencies(${MODULE} bugcodes)
+        add_dependencies(${MODULE} bugcodes)
     elseif(${TYPE} MATCHES nativedll)
         set_subsystem(${MODULE} native)
-	else()
+    else()
         message(FATAL_ERROR "Unknown module type : ${TYPE}")
     endif()
 endmacro()
@@ -166,18 +178,24 @@ macro(set_rc_compiler)
 
     foreach(arg ${defines})
         set(rc_result_defs "${rc_result_defs} -D${arg}")
-    endforeach(arg ${defines})
+    endforeach()
 
     foreach(arg ${includes})
         set(rc_result_incs "-I${arg} ${rc_result_incs}")
-    endforeach(arg ${includes})
+    endforeach()
 
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>")
 endmacro()
 
 #idl files support
 set(IDL_COMPILER native-widl)
-set(IDL_FLAGS -m32 --win32)
+
+if(ARCH MATCHES i386)
+    set(IDL_FLAGS -m32 --win32)
+elseif(ARCH MATCHES amd64)
+    set(IDL_FLAGS -m64 --win64)
+endif()
+
 set(IDL_HEADER_ARG -h -H) #.h
 set(IDL_TYPELIB_ARG -t -T) #.tlb
 set(IDL_SERVER_ARG -s -S) #.c for server library

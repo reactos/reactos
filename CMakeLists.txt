@@ -3,48 +3,56 @@ cmake_minimum_required(VERSION 2.8)
 project(REACTOS)
 
 # Compile options
-include(config.cmake)
+if(ARCH MATCHES i386)
+    include(config.cmake)
+elseif(ARCH MATCHES amd64)
+    include(config-amd64.cmake)
+endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
-add_definitions(-DTARGET_i386)
-if(MSVC)
-add_definitions(-Dinline=__inline)
-endif()
+    if(ARCH MATCHES i386)
+        add_definitions(-DTARGET_i386)
+        if(MSVC)
+            add_definitions(-Dinline=__inline)
+        endif()
+    elseif(ARCH MATCHES amd64)
+        add_definitions(-DTARGET_amd64)
+    endif()
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/tools/unicode
-    include
-    include/host
-    include/reactos
-    include/reactos/wine
-    ${REACTOS_BINARY_DIR}/include)
+    include_directories(
+        ${REACTOS_SOURCE_DIR}/tools/unicode
+        include
+        include/host
+        include/reactos
+        include/reactos/wine
+        ${REACTOS_BINARY_DIR}/include)
 
-add_subdirectory(tools)
-add_subdirectory(lib)
+    add_subdirectory(tools)
+    add_subdirectory(lib)
 
-if(NOT MSVC)
-export(TARGETS widl nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+    if(NOT MSVC)
+        export(TARGETS widl nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+    else()
+        export(TARGETS nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+    endif()
+
 else()
-export(TARGETS nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-endif()
 
-else()
+    if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
+        set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+    endif()
 
-if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-    set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
-endif()
-
-set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
-include(${IMPORT_EXECUTABLES})
+    set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+    include(${IMPORT_EXECUTABLES})
 
 endif(NOT CMAKE_CROSSCOMPILING)
 
 # Compiler specific definitions and macros
 if(MSVC)
-include(msc.cmake)
+    include(msc.cmake)
 else()
-include(gcc.cmake)
+    include(gcc.cmake)
 endif(MSVC)
 
 # Generic macros
@@ -65,147 +73,154 @@ add_definitions(-D__REACTOS__)
 
 if(CMAKE_CROSSCOMPILING)
 
-#Some cleanup
-file(REMOVE
-    ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
-    ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt
-    ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt
-    ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt
-    ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
-    ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
+    #Some cleanup
+    file(REMOVE
+        ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
+        ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt
+        ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt
+        ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt
+        ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
+        ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
 
-#Some useful variables
-set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
-set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
+    #Some useful variables
+    set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
+    set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
 
-# Activate support for assembly source files
-enable_language(ASM)
+    # Activate support for assembly source files
+    enable_language(ASM)
 
-# Activate language support for resource files
-enable_language(RC)
+    # Activate language support for resource files
+    enable_language(RC)
 
+    if(DBG)
+        add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
+    else()
+        add_definitions(-DDBG=0)
+    endif()
 
-if(DBG)
-add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
-else()
-add_definitions(-DDBG=0)
-endif(DBG)
+    if(KDBG)
+        add_definitions(-DKDBG=1)
+    else()
+        add_definitions(-DKDBG=0)
+    endif()
 
-if(KDBG)
-add_definitions(-DKDBG=1)
-else()
-add_definitions(-DKDBG=0)
-endif(KDBG)
+    # Version Options
+    add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
 
-# Version Options
-add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
+    # Arch Options
+    if(ARCH MATCHES i386)
+        add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
+    elseif(ARCH MATCHES amd64)
+        add_definitions(-D_M_AMD64 -D_AMD64_ -D_M_AXP64 -D__x86_64__ -D_WIN64)
+    endif()
 
-# Arch Options
-add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
+    # Other
+    if(ARCH MATCHES i386)
+        add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
+    elseif(ARCH MATCHES amd64)
+        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+    endif()
 
-# Other
-add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
+    include_directories(
+        include
+        include/psdk
+        include/dxsdk
+        ${REACTOS_BINARY_DIR}/include
+        ${REACTOS_BINARY_DIR}/include/dxsdk
+        ${REACTOS_BINARY_DIR}/include/psdk
+        ${REACTOS_BINARY_DIR}/include/reactos
+        include/crt
+        include/ddk
+        include/ndk
+        include/reactos
+        include/reactos/libs)
 
-include_directories(
-    include
-    include/psdk
-    include/dxsdk
-    ${REACTOS_BINARY_DIR}/include
-    ${REACTOS_BINARY_DIR}/include/dxsdk
-    ${REACTOS_BINARY_DIR}/include/psdk
-    ${REACTOS_BINARY_DIR}/include/reactos
-    include/crt
-    include/ddk
-    include/ndk
-    include/reactos
-    include/reactos/libs)
+    if(MSVC)
+        include_directories(include/crt/msc)
+    else()
+        include_directories(include/crt/mingw32)
+    endif()
 
-if(MSVC)
-include_directories(include/crt/msc)
-else()
-include_directories(include/crt/mingw32)
-endif(MSVC)
+    add_subdirectory(include/psdk)
+    add_subdirectory(include/dxsdk)
+    add_subdirectory(include/reactos/idl)
+    add_subdirectory(include/reactos/wine)
+    add_subdirectory(include/reactos/mc)
+    add_subdirectory(include/asm)
 
-add_subdirectory(include/psdk)
-add_subdirectory(include/dxsdk)
-add_subdirectory(include/reactos/idl)
-add_subdirectory(include/reactos/wine)
-add_subdirectory(include/reactos/mc)
-add_subdirectory(include/asm)
+    include(baseaddress.cmake)
 
-include(baseaddress.cmake)
+    add_subdirectory(base)
+    add_subdirectory(boot)
+    add_subdirectory(dll)
+    add_subdirectory(drivers)
+    add_subdirectory(hal)
+    add_subdirectory(lib)
+    add_subdirectory(media)
+    add_subdirectory(modules)
+    add_subdirectory(ntoskrnl)
+    add_subdirectory(subsystems)
 
-add_subdirectory(base)
-add_subdirectory(boot)
-add_subdirectory(dll)
-add_subdirectory(drivers)
-add_subdirectory(hal)
-add_subdirectory(lib)
-add_subdirectory(media)
-add_subdirectory(modules)
-add_subdirectory(ntoskrnl)
-add_subdirectory(subsystems)
+    # nci generated intermediate files
 
-# nci generated intermediate files
+    list(APPEND nci_output 
+        ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
+        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
+        ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
+        ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
+        ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
+        ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
 
-list(APPEND nci_output 
-    ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
-    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
-    ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
-    ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
-    ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
-    ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
+    list(APPEND nci_folders
+        ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
+        ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
+        ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
+        ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
+        ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
+        ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include)
 
-list(APPEND nci_folders
-    ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
-    ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
-    ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
-    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
-    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
-    ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include)
+    file(MAKE_DIRECTORY ${nci_folders})
 
-file(MAKE_DIRECTORY ${nci_folders})
+    add_custom_command(
+        OUTPUT ${nci_output}
+        COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
+        DEPENDS native-nci ${nci_folders})
 
-add_custom_command(
-    OUTPUT ${nci_output}
-    COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
-    DEPENDS native-nci ${nci_folders})
+    set_source_files_properties(${nci_output} PROPERTIES GENERATED TRUE)
 
-set_source_files_properties(${nci_output} PROPERTIES GENERATED TRUE)
+    add_custom_target(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
+    add_custom_target(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
+    add_custom_target(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
+    add_custom_target(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
+    add_custom_target(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
+    add_custom_target(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
 
-add_custom_target(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
-add_custom_target(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
-add_custom_target(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
-add_custom_target(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
-add_custom_target(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
-add_custom_target(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
-file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
+    add_custom_command(
+        OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+        COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+        DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h)
 
-add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-    COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-    DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h)
+    add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
 
-add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib)
 
-file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib)
+    list(APPEND OUTPUT_FILES
+        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib8gen.c
+        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib16gen.c
+        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib32gen.c)
 
-list(APPEND OUTPUT_FILES
-    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib8gen.c
-    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib16gen.c
-    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib32gen.c)
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILES}
+        COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
+        DEPENDS native-gendib) 
 
-add_custom_command(
-    OUTPUT ${OUTPUT_FILES}
-    COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
-    DEPENDS native-gendib) 
+    add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
 
-add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
-
-#bootcd and livecd
-include(ros_cd.cmake)
+    #bootcd and livecd
+    include(ros_cd.cmake)
 
 endif()
