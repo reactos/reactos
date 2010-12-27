@@ -29,58 +29,76 @@ endforeach()
 
 #reactos.cab
 add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -I
+    OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.inf
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot -I
     DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.dff)
 add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.cab
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/bootcd/reactos/reactos.inf -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -N
-    DEPENDS ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf)
-list(APPEND BOOTCD_FILES ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.cab)
+    OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.cab
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/reactos.inf -L ${REACTOS_BINARY_DIR}/boot -N
+    DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.inf)
 
 #bootcd target
-set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
+macro(create_bootcd_dir BOOTCD_DIR _target)
 
-file(MAKE_DIRECTORY
-    "${BOOTCD_DIR}"
-    "${BOOTCD_DIR}/loader"
-    "${BOOTCD_DIR}/reactos"
-    "${BOOTCD_DIR}/reactos/system32")
+    file(MAKE_DIRECTORY
+        "${BOOTCD_DIR}"
+        "${BOOTCD_DIR}/loader"
+        "${BOOTCD_DIR}/reactos"
+        "${BOOTCD_DIR}/reactos/system32")
 
-file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt MINICD_TARGET_ENTRIES)
-foreach(ENTRY ${MINICD_TARGET_ENTRIES})
-    string(REGEX REPLACE "^(.*)\t.*\t.*" "\\1" _targetname ${ENTRY})
-    string(REGEX REPLACE "^.*\t(.*)\t.*" "\\1" _DIR ${ENTRY})
-    string(REGEX REPLACE "^.*\t.*\t(.*)"  "\\1"_NAMEONCD ${ENTRY})
-    get_target_property(_FILENAME ${_targetname} LOCATION)
-    set(filename ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD})
-    list(APPEND BOOTCD_FILES ${filename})
-    add_custom_command(
-        OUTPUT ${filename}
-        COMMAND ${CMAKE_COMMAND} -E copy ${_FILENAME} ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD}
-        DEPENDS ${_targetname})
-endforeach()
+    file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt MINICD_TARGET_ENTRIES)
+    foreach(ENTRY ${MINICD_TARGET_ENTRIES})
+        string(REGEX REPLACE "^(.*)\t.*\t.*" "\\1" _targetname ${ENTRY})
+        string(REGEX REPLACE "^.*\t(.*)\t.*" "\\1" _DIR ${ENTRY})
+        string(REGEX REPLACE "^.*\t.*\t(.*)"  "\\1"_NAMEONCD ${ENTRY})
+        get_target_property(_FILENAME ${_targetname} LOCATION)
+        set(filename ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD})
+        list(APPEND ${_target}_FILES ${filename})
+        add_custom_command(
+            OUTPUT ${filename}
+            COMMAND ${CMAKE_COMMAND} -E copy ${_FILENAME} ${filename}
+            DEPENDS ${_targetname})
+    endforeach()
 
-file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt MINICD_ENTRIES)
-foreach(ENTRY ${MINICD_ENTRIES})
-    string(REGEX REPLACE "^(.*)\t.*\t.*" "\\1" _FILENAME ${ENTRY})
-    string(REGEX REPLACE "^.*\t(.*)\t.*" "\\1" _DIR ${ENTRY})
-    string(REGEX REPLACE "^.*\t.*\t(.*)"  "\\1"_NAMEONCD ${ENTRY})
-    set(filename ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD})
-    list(APPEND BOOTCD_FILES ${filename})
-    add_custom_command(
-        OUTPUT ${filename}
-        COMMAND ${CMAKE_COMMAND} -E copy ${_FILENAME} ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD}
-        DEPENDS ${_FILENAME})
-endforeach()
-
-add_custom_target(bootcd 
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/minicd.iso
-    DEPENDS ${BOOTCD_FILES})
+    file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt MINICD_ENTRIES)
+    foreach(ENTRY ${MINICD_ENTRIES})
+        string(REGEX REPLACE "^(.*)\t.*\t.*" "\\1" _FILENAME ${ENTRY})
+        string(REGEX REPLACE "^.*\t(.*)\t.*" "\\1" _DIR ${ENTRY})
+        string(REGEX REPLACE "^.*\t.*\t(.*)"  "\\1"_NAMEONCD ${ENTRY})
+        set(filename ${BOOTCD_DIR}/${_DIR}/${_NAMEONCD})
+        list(APPEND ${_target}_FILES ${filename})
+        add_custom_command(
+            OUTPUT ${filename}
+            COMMAND ${CMAKE_COMMAND} -E copy ${_FILENAME} ${filename}
+            DEPENDS ${_FILENAME})
+    endforeach()
     
-add_dependencies(bootcd dosmbr ext2 fat32 fat isoboot isobtrt vgafonts)
+    add_custom_command(
+        OUTPUT ${BOOTCD_DIR}/reactos/reactos.inf ${BOOTCD_DIR}/reactos/reactos.cab
+        COMMAND ${CMAKE_COMMAND} -E copy ${REACTOS_BINARY_DIR}/boot/reactos.inf ${BOOTCD_DIR}/reactos/reactos.inf
+        COMMAND ${CMAKE_COMMAND} -E copy ${REACTOS_BINARY_DIR}/boot/reactos.cab ${BOOTCD_DIR}/reactos/reactos.cab
+        DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.cab)
+    list(APPEND ${_target}_FILES ${filename} ${BOOTCD_DIR}/reactos/reactos.inf ${BOOTCD_DIR}/reactos/reactos.cab)
+endmacro()
 
-set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/minicd.iso)
+create_bootcd_dir(${REACTOS_BINARY_DIR}/boot/bootcd bootcd)
+add_custom_target(bootcd 
+    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
+    DEPENDS ${bootcd_FILES})
+add_dependencies(bootcd dosmbr ext2 fat32 fat isoboot isobtrt vgafonts)
+set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/bootcd.iso)
+
+#bootcdregtest target
+create_bootcd_dir(${REACTOS_BINARY_DIR}/boot/bootcdregtest bootcdregtest)
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest/reactos/unattend.inf
+    COMMAND ${CMAKE_COMMAND} -E copy ${REACTOS_SOURCE_DIR}/boot/bootdata/bootcdregtest/unattend.inf ${REACTOS_BINARY_DIR}/boot/bootcdregtest/reactos/unattend.inf
+    DEPENDS ${REACTOS_SOURCE_DIR}/boot/bootdata/bootcdregtest/unattend.inf ${REACTOS_BINARY_DIR}/boot/bootcdregtest)
+add_custom_target(bootcdregtest
+    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${REACTOS_BINARY_DIR}/boot/bootcdregtest REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+    DEPENDS ${REACTOS_BINARY_DIR}/boot/bootcdregtest/reactos/unattend.inf ${bootcdregtest_FILES})
+add_dependencies(bootcdregtest dosmbr ext2 fat32 fat isoboot isobtrt vgafonts)
+
 
 #livecd target
 file(MAKE_DIRECTORY
