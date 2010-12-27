@@ -564,7 +564,7 @@ NtUserSetSysColors(
   }
   if (Ret)
   {
-     UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
+     UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
   }
   UserLeave();
   return Ret;
