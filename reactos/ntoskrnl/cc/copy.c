@@ -203,7 +203,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
     {
-        return STATUS_INSUFFICIANT_RESOURCES;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
@@ -265,7 +265,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
     {
-        return STATUS_INSUFFICIANT_RESOURCES;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
     MmBuildMdlForNonPagedPool(Mdl);
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
