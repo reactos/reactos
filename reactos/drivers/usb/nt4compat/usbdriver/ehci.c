@@ -6006,6 +6006,7 @@ ehci_isr_removing_urb(PEHCI_DEV ehci, PURB purb, BOOLEAN doorbell_rings, ULONG c
                 default:
                     TRAP();
             }
+            break;
         }
         case URB_FLAG_STATE_DOORBELL:
         {

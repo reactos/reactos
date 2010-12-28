@@ -113,6 +113,7 @@ UniataChipDetectChannels(
             KdPrint2((PRINT_PREFIX "New ATI PATA 1 chan\n"));
             break;
         }
+        break;
     case ATA_SILICON_IMAGE_ID:
 
         if(ChipFlags & SIIBUG) {
