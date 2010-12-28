@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(REACTOS)
 
+if(NOT ARCH)
+    set(ARCH i386)
+endif()
+
 # Compile options
 if(ARCH MATCHES i386)
     include(config.cmake)

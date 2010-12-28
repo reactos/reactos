@@ -1,8 +1,4 @@
 
-if(NOT ARCH)
-    set(ARCH i386)
-endif()
-
 # Choose the right MinGW prefix
 if(ARCH MATCHES i386)
 
