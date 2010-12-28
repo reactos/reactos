@@ -437,8 +437,9 @@ static LRESULT co_UserFreeWindow(PWND Window,
    TIMER_RemoveWindowTimers(Window->head.h);
 #endif
 
-   if (!(Window->style & WS_CHILD) && Window->IDMenu
-       && (Menu = UserGetMenuObject((HMENU)Window->IDMenu)))
+   if ( ((Window->style & (WS_CHILD|WS_POPUP)) != WS_CHILD) &&
+        Window->IDMenu &&
+        (Menu = UserGetMenuObject((HMENU)Window->IDMenu)))
    {
       IntDestroyMenuObject(Menu, TRUE, TRUE);
       Window->IDMenu = 0;
