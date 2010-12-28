@@ -498,9 +498,7 @@ OFFSET(PrProfileListHead, KPROCESS, ProfileListHead),
 OFFSET(PrDirectoryTableBase, KPROCESS, DirectoryTableBase),
 #ifdef _M_IX86
 OFFSET(PrLdtDescriptor, KPROCESS, LdtDescriptor),
-#endif
 OFFSET(PrIopmOffset, KPROCESS, IopmOffset),
-#ifdef _M_IX86
 OFFSET(PrInt21Descriptor, KPROCESS, Int21Descriptor),
 OFFSET(PrVdmTrapcHandler, KPROCESS, VdmTrapcHandler),
 //OFFSET(PrVdmObjects, KPROCESS, VdmObjects),

@@ -3,6 +3,7 @@
 
 /* DDK/IFS/NDK Headers */
 #include <excpt.h>
+#include <setjmp.h>
 #include <ntdef.h>
 #include <ntifs.h>
 #include <arc/arc.h>
@@ -60,6 +61,7 @@ __attribute__ ((section(".asmdef")))
 #else
 #error Your compiler is not supported.
 #endif
+
 ASMGENDATA Table[] =
 {
 
