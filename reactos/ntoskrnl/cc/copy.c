@@ -210,6 +210,8 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
      Status = IoStatus.Status;
   }
 
+  IoFreeMdl(Mdl);
+
   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
     {
       DPRINT1("IoPageRead failed, Status %x\n", Status);
@@ -262,6 +264,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
      Status = IoStatus.Status;
   }
+  IoFreeMdl(Mdl);
   if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
       DPRINT1("IoPageWrite failed, Status %x\n", Status);
