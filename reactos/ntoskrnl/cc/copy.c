@@ -186,62 +186,69 @@ NTSTATUS
 NTAPI
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
-  ULONG Size;
-  PMDL Mdl;
-  NTSTATUS Status;
-  LARGE_INTEGER SegOffset;
-  IO_STATUS_BLOCK IoStatus;
-  KEVENT Event;
+    ULONG Size;
+    PMDL Mdl;
+    NTSTATUS Status;
+    LARGE_INTEGER SegOffset;
+    IO_STATUS_BLOCK IoStatus;
+    KEVENT Event;
 
-  SegOffset.QuadPart = CacheSeg->FileOffset;
-  Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-  if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    SegOffset.QuadPart = CacheSeg->FileOffset;
+    Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
+    if (Size > CacheSeg->Bcb->CacheSegmentSize)
     {
-      Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
-  MmBuildMdlForNonPagedPool(Mdl);
-  Mdl->MdlFlags |= MDL_IO_PAGE_READ;
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, & Event, &IoStatus);
-  if (Status == STATUS_PENDING)
-  {
-     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-     Status = IoStatus.Status;
-  }
 
-  IoFreeMdl(Mdl);
-
-  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+    Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
+    if (!Mdl)
     {
-      DPRINT1("IoPageRead failed, Status %x\n", Status);
-      return Status;
+        return STATUS_INSUFFICIANT_RESOURCES;
     }
-  if (CacheSeg->Bcb->CacheSegmentSize > Size)
+    MmBuildMdlForNonPagedPool(Mdl);
+    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+    if (Status == STATUS_PENDING)
     {
-      memset ((char*)CacheSeg->BaseAddress + Size, 0,
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+
+    IoFreeMdl(Mdl);
+
+    if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+    {
+        DPRINT1("IoPageRead failed, Status %x\n", Status);
+        return Status;
+    }
+
+    if (CacheSeg->Bcb->CacheSegmentSize > Size)
+    {
+        RtlZeroMemory((char*)CacheSeg->BaseAddress + Size,
 	      CacheSeg->Bcb->CacheSegmentSize - Size);
     }
-  return STATUS_SUCCESS;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
-  ULONG Size;
-  PMDL Mdl;
-  NTSTATUS Status;
-  IO_STATUS_BLOCK IoStatus;
-  LARGE_INTEGER SegOffset;
-  KEVENT Event;
+    ULONG Size;
+    PMDL Mdl;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    LARGE_INTEGER SegOffset;
+    KEVENT Event;
 
-  CacheSeg->Dirty = FALSE;
-  SegOffset.QuadPart = CacheSeg->FileOffset;
-  Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-  if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    CacheSeg->Dirty = FALSE;
+    SegOffset.QuadPart = CacheSeg->FileOffset;
+    Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
+    if (Size > CacheSeg->Bcb->CacheSegmentSize)
     {
-      Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = CacheSeg->Bcb->CacheSegmentSize;
     }
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
@@ -254,24 +261,30 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
-  Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
-  MmBuildMdlForNonPagedPool(Mdl);
-  Mdl->MdlFlags |= MDL_IO_PAGE_READ;
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Status = IoSynchronousPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
-  if (Status == STATUS_PENDING)
-  {
-     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-     Status = IoStatus.Status;
-  }
-  IoFreeMdl(Mdl);
-  if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
+
+    Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
+    if (!Mdl)
     {
-      DPRINT1("IoPageWrite failed, Status %x\n", Status);
-      CacheSeg->Dirty = TRUE;
-      return(Status);
+        return STATUS_INSUFFICIANT_RESOURCES;
     }
-  return(STATUS_SUCCESS);
+    MmBuildMdlForNonPagedPool(Mdl);
+    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Status = IoSynchronousPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+    IoFreeMdl(Mdl);
+    if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
+    {
+        DPRINT1("IoPageWrite failed, Status %x\n", Status);
+        CacheSeg->Dirty = TRUE;
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
