@@ -22,10 +22,10 @@ if not exist host-tools (
 cd host-tools
 set REACTOS_BUILD_TOOLS_DIR=%CD%
 if "%BUILD_ENVIRONMENT%" == "MINGW" (
-	cmake -G "MinGW Makefiles" %ROS_SOURCE_DIR%
+	cmake -G "MinGW Makefiles" -DARCH=%ROS_ARCH% %ROS_SOURCE_DIR%
 )
 if "%BUILD_ENVIRONMENT%" == "WDK" (
-	cmake -G "NMake Makefiles" %ROS_SOURCE_DIR%
+	cmake -G "NMake Makefiles" -DARCH=%_BUILDARCH% %ROS_SOURCE_DIR%
 )
 cd..
 
