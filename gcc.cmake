@@ -45,6 +45,13 @@ if(ARCH MATCHES amd64)
 add_definitions(-U_X86_ -UWIN32)
 endif()
 
+# alternative arch name
+if(ARCH MATCHES amd64)
+    set(ARCH2 x86_64)
+else()
+    set(ARCH2 ${ARCH})
+endif()
+
 # Macros
 macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     # Add the precompiled header to the build
@@ -56,7 +63,7 @@ macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     get_directory_property(DIRINC INCLUDE_DIRECTORIES)
     foreach(item ${DIRINC})
         list(APPEND ${_out_compile_flags} -I${item})
-    endforeach() 
+    endforeach()
 
     # This is a particular bit of undocumented/hacky magic I'm quite proud of
     get_directory_property(_compiler_flags DEFINITIONS)
@@ -70,7 +77,7 @@ macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
             list(APPEND ${_out_compile_flags} -D${item})
         endforeach()
     endif()
-endmacro() 
+endmacro()
 
 macro(add_pch _target_name _header_filename _src_list)
     get_filename_component(FILE ${_header_filename} NAME)
@@ -93,11 +100,17 @@ macro(add_linkerflag MODULE _flag)
     set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
 endmacro()
 
+# Optional 3rd parameter: stdcall stack bytes
 macro(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
         add_linkerflag(${MODULE} "-Wl,-entry,0")
-    else()
+    elseif(ARCH MATCHES i386)
+        if (${ARGC} GREATER 2)
+            set(ENTRYPOINT ${ENTRYPOINT}@${ARGV2})
+        endif()
         add_linkerflag(${MODULE} "-Wl,-entry,_${ENTRYPOINT}")
+    else()
+        add_linkerflag(${MODULE} "-Wl,-entry,${ENTRYPOINT}")
     endif()
 endmacro()
 
@@ -118,7 +131,7 @@ macro(set_module_type MODULE TYPE)
 
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
-        set_entrypoint(${MODULE} NtProcessStartup@4)
+        set_entrypoint(${MODULE} NtProcessStartup 4)
     elseif(${TYPE} MATCHES win32gui)
         set_subsystem(${MODULE} windows)
         set_entrypoint(${MODULE} WinMainCRTStartup)
@@ -138,7 +151,7 @@ macro(set_module_type MODULE TYPE)
         endif(NOT IS_UNICODE)
         target_link_libraries(${MODULE} mingw_common)
     elseif(${TYPE} MATCHES win32dll)
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
@@ -146,16 +159,16 @@ macro(set_module_type MODULE TYPE)
             message(STATUS "${MODULE} has no base address")
         endif()
     elseif(${TYPE} MATCHES win32ocx)
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".ocx")
     elseif(${TYPE} MATCHES cpl)
-        set_entrypoint(${MODULE} DllMainCRTStartup@12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     elseif(${TYPE} MATCHES kernelmodedriver)
         set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols -Wl,-file-alignment=0x1000 -Wl,-section-alignment=0x1000" SUFFIX ".sys")
-        set_entrypoint(${MODULE} DriverEntry@8)
+        set_entrypoint(${MODULE} DriverEntry 8)
         set_subsystem(${MODULE} native)
         set_image_base(${MODULE} 0x00010000)
         add_dependencies(${MODULE} bugcodes)
@@ -221,13 +234,17 @@ macro(add_importlib_target _exports_file)
         else()
             set(DLLNAME_OPTION "")
         endif()
-    
+
+        if(NOT ARCH MATCHES i386)
+            set(DECO_OPTION "-@")
+        endif()
+
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def ${DLLNAME_OPTION} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND native-spec2def ${DLLNAME_OPTION} ${DECO_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
-        
+
     elseif(${_extension} STREQUAL ".def")
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
@@ -236,7 +253,7 @@ macro(add_importlib_target _exports_file)
     else()
         message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
     endif()
-    
+
     add_custom_target(
         lib${_name}
         DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
@@ -247,7 +264,7 @@ macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} ${DECO_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
