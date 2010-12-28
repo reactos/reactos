@@ -98,14 +98,14 @@ if(CMAKE_CROSSCOMPILING)
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
-    else()
-        add_definitions(-DDBG=0)
     endif()
 
     if(KDBG)
         add_definitions(-DKDBG=1)
-    else()
-        add_definitions(-DKDBG=0)
+    endif()
+
+    if(_WINKD_)
+        add_definitions(-D_WINKD_=1)
     endif()
 
     # Version Options
@@ -167,7 +167,7 @@ if(CMAKE_CROSSCOMPILING)
 
     # nci generated intermediate files
 
-    list(APPEND nci_output 
+    list(APPEND nci_output
         ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
         ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
         ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
@@ -218,7 +218,7 @@ if(CMAKE_CROSSCOMPILING)
     add_custom_command(
         OUTPUT ${OUTPUT_FILES}
         COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
-        DEPENDS native-gendib) 
+        DEPENDS native-gendib)
 
     add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
 
