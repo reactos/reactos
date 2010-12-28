@@ -157,8 +157,6 @@ VOID
 MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
                       IN PMMPTE PointerPte)
 {
-    ULONG_PTR Offset;
-
     /* Store the Address */
     NewPte->u.Long = (ULONG64)PointerPte;
 
