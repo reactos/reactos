@@ -653,6 +653,14 @@ User32EnumWindows(HDESK hDesktop,
         return FALSE;
     }
 
+    if (!dwCount)
+    {
+       if (!dwThreadId)
+          return FALSE; 
+       else
+          return TRUE;
+    }
+
     /* call the user's callback function until we're done or
        they tell us to quit */
     for ( i = 0; i < dwCount; i++ )
