@@ -1450,14 +1450,11 @@ IsChild(HWND hWndParent,
 
     _SEH2_TRY
     {
-        while (Wnd != NULL)
+        while (Wnd != NULL && ((Wnd->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
         {
             if (Wnd->spwndParent != NULL)
             {
                 Wnd = DesktopPtrToUser(Wnd->spwndParent);
-
-                if(Wnd == DesktopWnd)
-                    Wnd = NULL;
 
                 if (Wnd == WndParent)
                 {

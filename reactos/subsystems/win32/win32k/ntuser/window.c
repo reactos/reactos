@@ -899,15 +899,11 @@ IntIsChildWindow(PWND Parent, PWND BaseWindow)
    PWND Window;
 
    Window = BaseWindow;
-   while (Window)
+   while (Window && ((Window->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
    {
       if (Window == Parent)
       {
          return(TRUE);
-      }
-      if(!(Window->style & WS_CHILD))
-      {
-         break;
       }
 
       Window = Window->spwndParent;
@@ -1090,7 +1086,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 PWND FASTCALL
 co_IntSetParent(PWND Wnd, PWND WndNewParent)
 {
-   PWND WndOldParent;
+   PWND WndOldParent, pWndExam;
    BOOL WasVisible;
 
    ASSERT(Wnd);
@@ -1098,11 +1094,29 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    ASSERT_REFS_CO(Wnd);
    ASSERT_REFS_CO(WndNewParent);
 
+   if (Wnd == Wnd->head.rpdesk->spwndMessage)
+   {
+      EngSetLastError(ERROR_ACCESS_DENIED);
+      return( NULL);
+   }
+
    /* Some applications try to set a child as a parent */
    if (IntIsChildWindow(Wnd, WndNewParent))
    {
       EngSetLastError( ERROR_INVALID_PARAMETER );
       return NULL;
+   }
+
+   pWndExam = WndNewParent; // Load parent Window to examine.
+   // Now test for set parent to parent hit.
+   while (pWndExam)
+   {
+      if (Wnd == pWndExam)
+      {
+         EngSetLastError(ERROR_INVALID_PARAMETER);
+         return NULL;
+      }
+      pWndExam = pWndExam->spwndParent;
    }
 
    /*
@@ -1148,6 +1162,62 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
     */
 
    return WndOldParent;
+}
+
+HWND FASTCALL
+co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
+{
+   PWND Wnd = NULL, WndParent = NULL, WndOldParent;
+   HWND hWndOldParent = NULL;
+   USER_REFERENCE_ENTRY Ref, ParentRef;
+
+   if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      return( NULL);
+   }
+
+   if (hWndChild == IntGetDesktopWindow())
+   {
+      EngSetLastError(ERROR_ACCESS_DENIED);
+      return( NULL);
+   }
+
+   if (hWndNewParent)
+   {
+      if (!(WndParent = UserGetWindowObject(hWndNewParent)))
+      {
+         return( NULL);
+      }
+   }
+   else
+   {
+      if (!(WndParent = UserGetWindowObject(IntGetDesktopWindow())))
+      {
+         return( NULL);
+      }
+   }
+
+   if (!(Wnd = UserGetWindowObject(hWndChild)))
+   {
+      return( NULL);
+   }
+
+   UserRefObjectCo(Wnd, &Ref);
+   UserRefObjectCo(WndParent, &ParentRef);
+
+   WndOldParent = co_IntSetParent(Wnd, WndParent);
+
+   UserDerefObjectCo(WndParent);
+   UserDerefObjectCo(Wnd);
+
+   if (WndOldParent)
+   {
+      hWndOldParent = WndOldParent->head.h;
+      UserDereferenceObject(WndOldParent);
+   }
+
+   return( hWndOldParent);
 }
 
 BOOL FASTCALL
@@ -3055,63 +3125,6 @@ CLEANUP:
    DPRINT("Leave NtUserGetListBoxInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-HWND FASTCALL
-co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
-{
-   PWND Wnd = NULL, WndParent = NULL, WndOldParent;
-   HWND hWndOldParent = NULL;
-   USER_REFERENCE_ENTRY Ref, ParentRef;
-
-   if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
-   {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return( NULL);
-   }
-
-   if (hWndChild == IntGetDesktopWindow())
-   {
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      return( NULL);
-   }
-
-   if (hWndNewParent)
-   {
-      if (!(WndParent = UserGetWindowObject(hWndNewParent)))
-      {
-         return( NULL);
-      }
-   }
-   else
-   {
-      if (!(WndParent = UserGetWindowObject(IntGetDesktopWindow())))
-      {
-         return( NULL);
-      }
-   }
-
-   if (!(Wnd = UserGetWindowObject(hWndChild)))
-   {
-      return( NULL);
-   }
-
-   UserRefObjectCo(Wnd, &Ref);
-   UserRefObjectCo(WndParent, &ParentRef);
-
-   WndOldParent = co_IntSetParent(Wnd, WndParent);
-
-   UserDerefObjectCo(WndParent);
-   UserDerefObjectCo(Wnd);
-
-   if (WndOldParent)
-   {
-      hWndOldParent = WndOldParent->head.h;
-      UserDereferenceObject(WndOldParent);
-   }
-
-   return( hWndOldParent);
 }
 
 /*
