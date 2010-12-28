@@ -199,8 +199,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = _alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
-  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
+  Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -253,8 +252,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
-  Mdl = _alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
-  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
+  Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
