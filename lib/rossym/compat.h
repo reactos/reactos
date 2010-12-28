@@ -15,7 +15,7 @@ typedef int s32int;
 typedef unsigned long long u64int;
 typedef long long s64int;
 
-#ifndef WIN32
+#ifndef _WIN32
 typedef ulong size_t;
 #endif
 
