@@ -48,20 +48,19 @@ include_directories(
 
 spec2def(oleaut32.dll oleaut32.spec)
 
+rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
+
 add_library(oleaut32 SHARED ${SOURCE})
 
 set_module_type(oleaut32 win32dll)
 
 target_link_libraries(oleaut32
-    oleaut32_proxy
     wine
     wineldr
     uuid
     ${PSEH_LIB})
 
 add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl32 urlmon msvcrt kernel32 ntdll)
-
-rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 add_cab_target(oleaut32 1)
 add_importlib_target(oleaut32.spec)

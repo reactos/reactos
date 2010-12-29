@@ -181,10 +181,6 @@ macro(rpcproxy TARGET)
             PROPERTIES GENERATED TRUE)
         list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
         list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl)
-        list(APPEND PROXY_DEPENDS ${TARGET}_${FILE}_p)
-        add_custom_target(${TARGET}_${FILE}_p 
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
-        #add_dependencies(${TARGET}_proxy ${TARGET}_${FILE}_p)
     endforeach()
 
     add_custom_command(
@@ -194,9 +190,6 @@ macro(rpcproxy TARGET)
     set_source_files_properties(
         ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
         PROPERTIES GENERATED TRUE)
-    
-    add_library(${TARGET}_proxy ${SOURCE})
-    add_dependencies(${TARGET}_proxy psdk ${PROXY_DEPENDS})
 endmacro()
 
 macro(idl_files)

@@ -14,11 +14,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy.def)
 
-add_library(qmgrprxy SHARED ${SOURCE})
-
 rpcproxy(qmgrprxy qmgrprxy.idl)
 
+add_library(qmgrprxy SHARED ${SOURCE})
+
 set_module_type(qmgrprxy win32dll)
-target_link_libraries(qmgrprxy qmgrprxy_proxy ${PSEH_LIB} wine)
+target_link_libraries(qmgrprxy ${PSEH_LIB} wine)
 add_importlibs(qmgrprxy rpcrt4 msvcrt kernel32 ntdll)
 add_cab_target(qmgrprxy 1)

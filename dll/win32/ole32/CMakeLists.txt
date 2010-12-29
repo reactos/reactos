@@ -71,7 +71,6 @@ set_module_type(ole32 win32dll)
 target_link_libraries(ole32
     wine
     irot_client
-    ole32_proxy
     uuid
     ${PSEH_LIB})
     

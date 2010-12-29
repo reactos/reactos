@@ -14,7 +14,9 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(quartz.dll quartz.spec)
 
-add_library(quartz SHARED
+rpcproxy(quartz quartz_strmif.idl)
+
+list(APPEND SOURCE
     avidec.c
     acmwrapper.c
     waveparser.c
@@ -42,10 +44,11 @@ add_library(quartz SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
+add_library(quartz SHARED ${SOURCE})
+
 set_module_type(quartz win32dll)
 
 target_link_libraries(quartz
-    quartz_proxy
     strmiids
     uuid
     wine
@@ -67,6 +70,4 @@ add_importlibs(quartz
     kernel32
     ntdll)
 
-
-rpcproxy(quartz quartz_strmif.idl)
 add_cab_target(quartz 1)

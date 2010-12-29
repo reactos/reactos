@@ -18,12 +18,13 @@ list(APPEND SOURCE
     sti_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
+rpcproxy(sti sti_wia.idl)
+
 add_library(sti SHARED ${SOURCE})
 
 set_entrypoint(sti 0)
 
 target_link_libraries(sti
-    sti_proxy
     wine
     uuid
     ${PSEH_LIB})
@@ -36,5 +37,4 @@ add_importlibs(sti
     kernel32
     ntdll)
 
-rpcproxy(sti sti_wia.idl)
 add_cab_target(sti 1)

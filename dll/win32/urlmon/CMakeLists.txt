@@ -8,7 +8,9 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(urlmon.dll urlmon.spec)
 
-add_library(urlmon SHARED
+rpcproxy(urlmon urlmon_urlmon.idl)
+
+list(APPEND SOURCE
     bindctx.c
     binding.c
     bindprot.c
@@ -34,10 +36,12 @@ add_library(urlmon SHARED
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
+add_library(urlmon SHARED ${SOURCE})
+    
+
 set_module_type(urlmon win32dll)
 
 target_link_libraries(urlmon
-    urlmon_proxy
     uuid
     wine
     ${PSEH_LIB})
@@ -66,6 +70,5 @@ add_definitions(
 add_definitions(-DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
 #add_definitions(-DPROXY_CLSID_IS="{0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}")
 
-rpcproxy(urlmon urlmon_urlmon.idl)
 add_cab_target(urlmon 1)
 add_importlib_target(urlmon.spec)
