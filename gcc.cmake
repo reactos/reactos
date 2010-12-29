@@ -9,7 +9,7 @@ else()
 link_directories("${REACTOS_SOURCE_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
 set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,--disable-auto-import")
+set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
 # -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
@@ -242,8 +242,8 @@ macro(add_importlib_target _exports_file)
 
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def ${DLLNAME_OPTION} ${DECO_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            COMMAND native-spec2def ${DLLNAME_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     elseif(${_extension} STREQUAL ".def")
@@ -265,7 +265,7 @@ macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} ${DECO_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)

@@ -49,14 +49,14 @@ set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")
 
 if(ARCH MATCHES i386)
-    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,--disable-auto-import")
+    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
 #-Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 elseif(ARCH MATCHES amd64)
-    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,--disable-auto-import")
+    set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
 endif()
 
 # adjust the default behaviour of the FIND_XXX() commands:
-# search headers and libraries in the target environment, search 
+# search headers and libraries in the target environment, search
 # programs in the host environment
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
