@@ -342,6 +342,20 @@ CreateWindowExA(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND pWndParent;
+        PCLS pCls;
+
+        pWndParent = ValidateHwnd(hWndParent);
+
+        if (!pWndParent) return NULL;
+
+        pCls = DesktopPtrToUser(pWndParent->pcls);
+
+        if (pCls->fnid != FNID_MDICLIENT) // wine uses WIN_ISMDICLIENT
+        {
+           WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+           return NULL;
+        }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
@@ -358,7 +372,7 @@ CreateWindowExA(DWORD dwExStyle,
 
         lpParam = (LPVOID)&mdi;
 
-        if (GetWindowLongPtrW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+        if (pWndParent->style & MDIS_ALLCHILDSTYLES)
         {
             if (dwStyle & WS_POPUP)
             {
@@ -454,7 +468,21 @@ CreateWindowExW(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND pWndParent;
+        PCLS pCls;
 
+        pWndParent = ValidateHwnd(hWndParent);
+
+        if (!pWndParent) return NULL;
+
+        pCls = DesktopPtrToUser(pWndParent->pcls);
+
+        if (pCls->fnid != FNID_MDICLIENT)
+        {
+           WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+           return NULL;
+        }
+        
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
         */
@@ -470,7 +498,7 @@ CreateWindowExW(DWORD dwExStyle,
 
         lpParam = (LPVOID)&mdi;
 
-        if (GetWindowLongPtrW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+        if (pWndParent->style & MDIS_ALLCHILDSTYLES)
         {
             if (dwStyle & WS_POPUP)
             {
