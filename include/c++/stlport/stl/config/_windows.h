@@ -96,10 +96,12 @@ extern "C" {
 
 #    if defined (_STLP_NEW_PLATFORM_SDK) && !defined(_WDMDDK_)
 #      include <windef.h>
+#ifndef InterlockedIncrement
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedIncrement(IN OUT LONG volatile *);
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedDecrement(IN OUT LONG volatile *);
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedExchange(IN OUT LONG volatile *, LONG);
 _STLP_IMPORT_DECLSPEC void _STLP_STDCALL Sleep(DWORD);
+#endif
 #      if defined (_WIN64)
 _STLP_IMPORT_DECLSPEC void* _STLP_STDCALL _InterlockedExchangePointer(void* volatile *, void*);
 #      endif
@@ -180,7 +182,7 @@ _STLP_WCE_WINBASEAPI void WINAPI Sleep(DWORD);
 _STLP_IMPORT_DECLSPEC void _STLP_STDCALL OutputDebugStringA(const char* lpOutputString);
 #    endif
 
-#    if defined (InterlockedIncrement)
+#    if defined (InterlockedIncrement) && defined(_MSC_VER)
 #      pragma intrinsic(_InterlockedIncrement)
 #      pragma intrinsic(_InterlockedDecrement)
 #      pragma intrinsic(_InterlockedExchange)
