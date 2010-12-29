@@ -224,6 +224,10 @@ macro(add_importlibs MODULE)
     endforeach()
 endmacro()
 
+if(NOT ARCH MATCHES i386)
+    set(DECO_OPTION "-@")
+endif()
+
 macro(add_importlib_target _exports_file)
 
     get_filename_component(_name ${_exports_file} NAME_WE)
@@ -234,10 +238,6 @@ macro(add_importlib_target _exports_file)
             set(DLLNAME_OPTION "-n=${ARGV1}")
         else()
             set(DLLNAME_OPTION "")
-        endif()
-
-        if(NOT ARCH MATCHES i386)
-            set(DECO_OPTION "-@")
         endif()
 
         add_custom_command(
@@ -271,17 +271,6 @@ macro(spec2def _dllname _spec_file)
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
     list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
-endmacro()
-
-# Optional 3rd parameter: dllname
-macro(set_export_spec _module _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
-    if (${ARGC} GREATER 2)
-        set(_dllname ${ARGV2})
-    else()
-        set(_dllname ${_file}.dll)
-    endif()
-    spec2def(${_dllname} ${_spec_file})
 endmacro()
 
 #pseh lib, needed with mingw

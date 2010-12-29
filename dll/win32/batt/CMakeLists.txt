@@ -1,4 +1,6 @@
 
+spec2def(batt.dll batt.spec)
+
 set_unicode()
 
 add_library(batt SHARED
@@ -8,9 +10,7 @@ add_library(batt SHARED
 
 set_module_type(batt win32dll)
 
-set_export_spec(batt batt.spec)
-
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/batt.def)
+add_importlib_target(batt.spec)
 
 add_importlibs(batt msvcrt kernel32)
 

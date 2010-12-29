@@ -1,4 +1,6 @@
 
+spec2def(aclui.dll aclui.spec)
+
 set_unicode()
 
 add_definitions(-DSUPPORT_UXTHEME)
@@ -18,9 +20,7 @@ add_library(aclui SHARED
 
 set_module_type(aclui win32dll)
 
-set_export_spec(aclui aclui.spec aclui.dll)
-
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/aclui.def)
+add_importlib_target(aclui.spec)
 
 add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme msvcrt kernel32 ntdll)
 
