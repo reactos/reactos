@@ -305,4 +305,21 @@
 // Include stlport windows specifics
 #include "_windows.h"
 
+#ifdef _M_AMD64
+#ifdef __cplusplus
+extern "C" {
+#endif
+    _STLP_IMPORT_DECLSPEC void* InterlockedFlushSList(void*);
+    _STLP_IMPORT_DECLSPEC void* InterlockedPopEntrySList(void*);
+    _STLP_IMPORT_DECLSPEC void* InterlockedPushEntrySList(void*, void*);
+#ifdef __cplusplus
+}
+#endif
+#define InterlockedPopEntrySList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedPopEntrySList(list))
+#define InterlockedFlushSList(list) reinterpret_cast<_STLP_atomic_freelist::item*>(InterlockedFlushSList(list))
+
+#undef __cdecl__
+#define __cdecl__
+#endif
+
 #endif
