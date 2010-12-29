@@ -1704,12 +1704,21 @@ BOOLEAN
 NTAPI
 IoIsOperationSynchronous(IN PIRP Irp)
 {
+    BOOLEAN SynchIO;
+    BOOLEAN ForceAsync;
+
+    /* If the IRP requests synchronous paging I/O, if the file object was opened
+       for synchronous I/O, if the IRP_SYNCHRONOUS_API flag is set in the IRP
+       the operation is synchronous */
+    SynchIO = (IoGetCurrentIrpStackLocation(Irp)->FileObject->Flags & FO_SYNCHRONOUS_IO) ||
+              (Irp->Flags & IRP_SYNCHRONOUS_API) || (Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO);
+
+    /* If the IRP requests asynchronous paging I/O, the operation is asynchronous,
+       even if one of the above conditions is true */
+    ForceAsync = (Irp->Flags & IRP_PAGING_IO) && !(Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO);
+
     /* Check the flags */
-    if (!(Irp->Flags & (IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO)) &&
-        ((Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) ||
-         (Irp->Flags & IRP_SYNCHRONOUS_API) ||
-         (IoGetCurrentIrpStackLocation(Irp)->FileObject->Flags &
-          FO_SYNCHRONOUS_IO)))
+    if (SynchIO && !ForceAsync)
     {
         /* Synch API or Paging I/O is OK, as is Sync File I/O */
         return TRUE;
