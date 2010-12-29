@@ -668,7 +668,8 @@ User32EnumWindows(HDESK hDesktop,
         /* FIXME I'm only getting NULLs from Thread Enumeration, and it's
          * probably because I'm not doing it right in NtUserBuildHwndList.
          * Once that's fixed, we shouldn't have to check for a NULL HWND
-         * here
+         * here 
+         * This is now fixed in revision 50205. (jt)
          */
         if (!pHwnd[i]) /* don't enumerate a NULL HWND */
             continue;
