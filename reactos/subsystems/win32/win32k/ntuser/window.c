@@ -1423,7 +1423,7 @@ NtUserBuildHwndList(
          ObDereferenceObject(Desktop);
       }
    }
-   else
+   else // Build EnumThreadWindows list!
    {
       PETHREAD Thread;
       PTHREADINFO W32Thread;
@@ -1431,37 +1431,46 @@ NtUserBuildHwndList(
       PWND Window;
 
       Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
-      if(!NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status))
       {
+         DPRINT1("Thread Id is not valid!\n");
          return ERROR_INVALID_PARAMETER;
       }
-      if(!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
+      if (!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
-         DPRINT("Thread is not a GUI Thread!\n");
+         DPRINT1("Thread is not initialized!\n");
          return ERROR_INVALID_PARAMETER;
       }
 
       Current = W32Thread->WindowListHead.Flink;
-      while(Current != &(W32Thread->WindowListHead))
+      while (Current != &(W32Thread->WindowListHead))
       {
          Window = CONTAINING_RECORD(Current, WND, ThreadListEntry);
          ASSERT(Window);
 
-         if(bChildren || Window->spwndOwner != NULL)
+         if (dwCount < *pBufSize && pWnd)
          {
-             if(dwCount < *pBufSize && pWnd)
-             {
-                Status = MmCopyToCaller(pWnd++, &Window->head.h, sizeof(HWND));
-                if(!NT_SUCCESS(Status))
-                {
-                   SetLastNtError(Status);
-                   break;
-                }
-             }
-             dwCount++;
+            _SEH2_TRY
+            {
+               ProbeForWrite(pWnd, sizeof(HWND), 1);
+               *pWnd = Window->head.h;
+               pWnd++;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+               Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT1("Failure to build window list!\n");
+               SetLastNtError(Status);
+               break;
+            }
          }
-         Current = Current->Flink;
+         dwCount++;
+         Current = Window->ThreadListEntry.Flink;
       }
 
       ObDereferenceObject(Thread);
