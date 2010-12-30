@@ -3,7 +3,7 @@
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
 #include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
+//#include "lang/ja-JP.rc" FIXME: iconv issue
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"

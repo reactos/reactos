@@ -23,7 +23,7 @@ IDB_HEADER    BITMAP "resources/header.bmp"
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
+//#include "lang/ja-JP.rc" FIXME: iconv issue
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"

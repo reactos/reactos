@@ -20,7 +20,7 @@ IDB_SPECT   BITMAP "res/spectrum.bmp"
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
+//#include "lang/ja-JP.rc" FIXME: iconv issue
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
