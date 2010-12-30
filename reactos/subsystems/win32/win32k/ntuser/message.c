@@ -33,6 +33,81 @@ IntCleanupMessageImpl(VOID)
     return STATUS_SUCCESS;
 }
 
+/* From wine: */
+/* flag for messages that contain pointers */
+/* 32 messages per entry, messages 0..31 map to bits 0..31 */
+
+#define SET(msg) (1 << ((msg) & 31))
+
+static const unsigned int message_pointer_flags[] =
+{
+    /* 0x00 - 0x1f */
+    SET(WM_CREATE) | SET(WM_SETTEXT) | SET(WM_GETTEXT) |
+    SET(WM_WININICHANGE) | SET(WM_DEVMODECHANGE),
+    /* 0x20 - 0x3f */
+    SET(WM_GETMINMAXINFO) | SET(WM_DRAWITEM) | SET(WM_MEASUREITEM) | SET(WM_DELETEITEM) |
+    SET(WM_COMPAREITEM),
+    /* 0x40 - 0x5f */
+    SET(WM_WINDOWPOSCHANGING) | SET(WM_WINDOWPOSCHANGED) | SET(WM_COPYDATA) |
+    SET(WM_COPYGLOBALDATA) | SET(WM_NOTIFY) | SET(WM_HELP),
+    /* 0x60 - 0x7f */
+    SET(WM_STYLECHANGING) | SET(WM_STYLECHANGED),
+    /* 0x80 - 0x9f */
+    SET(WM_NCCREATE) | SET(WM_NCCALCSIZE) | SET(WM_GETDLGCODE),
+    /* 0xa0 - 0xbf */
+    SET(EM_GETSEL) | SET(EM_GETRECT) | SET(EM_SETRECT) | SET(EM_SETRECTNP),
+    /* 0xc0 - 0xdf */
+    SET(EM_REPLACESEL) | SET(EM_GETLINE) | SET(EM_SETTABSTOPS),
+    /* 0xe0 - 0xff */
+    SET(SBM_GETRANGE) | SET(SBM_SETSCROLLINFO) | SET(SBM_GETSCROLLINFO) | SET(SBM_GETSCROLLBARINFO),
+    /* 0x100 - 0x11f */
+    0,
+    /* 0x120 - 0x13f */
+    0,
+    /* 0x140 - 0x15f */
+    SET(CB_GETEDITSEL) | SET(CB_ADDSTRING) | SET(CB_DIR) | SET(CB_GETLBTEXT) |
+    SET(CB_INSERTSTRING) | SET(CB_FINDSTRING) | SET(CB_SELECTSTRING) |
+    SET(CB_GETDROPPEDCONTROLRECT) | SET(CB_FINDSTRINGEXACT),
+    /* 0x160 - 0x17f */
+    0,
+    /* 0x180 - 0x19f */
+    SET(LB_ADDSTRING) | SET(LB_INSERTSTRING) | SET(LB_GETTEXT) | SET(LB_SELECTSTRING) |
+    SET(LB_DIR) | SET(LB_FINDSTRING) |
+    SET(LB_GETSELITEMS) | SET(LB_SETTABSTOPS) | SET(LB_ADDFILE) | SET(LB_GETITEMRECT),
+    /* 0x1a0 - 0x1bf */
+    SET(LB_FINDSTRINGEXACT),
+    /* 0x1c0 - 0x1df */
+    0,
+    /* 0x1e0 - 0x1ff */
+    0,
+    /* 0x200 - 0x21f */
+    SET(WM_NEXTMENU) | SET(WM_SIZING) | SET(WM_MOVING) | SET(WM_DEVICECHANGE),
+    /* 0x220 - 0x23f */
+    SET(WM_MDICREATE) | SET(WM_MDIGETACTIVE) | SET(WM_DROPOBJECT) |
+    SET(WM_QUERYDROPOBJECT) | SET(WM_DRAGLOOP) | SET(WM_DRAGSELECT) | SET(WM_DRAGMOVE),
+    /* 0x240 - 0x25f */
+    0,
+    /* 0x260 - 0x27f */
+    0,
+    /* 0x280 - 0x29f */
+    0,
+    /* 0x2a0 - 0x2bf */
+    0,
+    /* 0x2c0 - 0x2df */
+    0,
+    /* 0x2e0 - 0x2ff */
+    0,
+    /* 0x300 - 0x31f */
+    SET(WM_ASKCBFORMATNAME)
+};
+
+/* check whether a given message type includes pointers */
+static inline int is_pointer_message( UINT message )
+{
+    if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
+        return (message_pointer_flags[message / 32] & SET(message)) != 0;
+}
+
 #define MMS_SIZE_WPARAM      -1
 #define MMS_SIZE_WPARAMWCHAR -2
 #define MMS_SIZE_LPARAMSZ    -3
@@ -64,6 +139,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_COPYGLOBALDATA, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
+    { WM_MDICREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
 };
 
 static PMSGMEMORY FASTCALL
@@ -89,6 +165,7 @@ static UINT FASTCALL
 MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
     CREATESTRUCTW *Cs;
+    MDICREATESTRUCTW *mCs;
     PUNICODE_STRING WindowName;
     PUNICODE_STRING ClassName;
     UINT Size = 0;
@@ -117,6 +194,21 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 WindowName = (PUNICODE_STRING) Cs->lpszName;
                 ClassName = (PUNICODE_STRING) Cs->lpszClass;
                 Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
+                if (IS_ATOM(ClassName->Buffer))
+                {
+                    Size += sizeof(WCHAR) + sizeof(ATOM);
+                }
+                else
+                {
+                    Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
+                }
+                break;
+
+            case WM_MDICREATE:
+                mCs = (MDICREATESTRUCTW *)lParam;
+                WindowName = (PUNICODE_STRING) mCs->szTitle;
+                ClassName = (PUNICODE_STRING) mCs->szClass;
+                Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
                 if (IS_ATOM(ClassName->Buffer))
                 {
                     Size += sizeof(WCHAR) + sizeof(ATOM);
@@ -162,6 +254,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
     NCCALCSIZE_PARAMS *PackedNcCalcsize;
     CREATESTRUCTW *UnpackedCs;
     CREATESTRUCTW *PackedCs;
+    MDICREATESTRUCTW *UnpackedmCs, *PackedmCs;
     PLARGE_STRING WindowName;
     PUNICODE_STRING ClassName;
     POOL_TYPE PoolType;
@@ -240,6 +333,53 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         ASSERT(CsData == (PCHAR) PackedCs + Size);
         *lParamPacked = (LPARAM) PackedCs;
     }
+    else if (WM_MDICREATE == Msg)
+    {
+        UnpackedmCs = (MDICREATESTRUCTW *) lParam;
+        WindowName = (PLARGE_STRING) UnpackedmCs->szTitle;
+        ClassName = (PUNICODE_STRING) UnpackedmCs->szClass;
+        Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
+        if (IS_ATOM(ClassName->Buffer))
+        {
+            Size += sizeof(WCHAR) + sizeof(ATOM);
+        }
+        else
+        {
+            Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
+        }
+        PackedmCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
+        if (NULL == PackedmCs)
+        {
+            DPRINT1("Not enough memory to pack lParam\n");
+            return STATUS_NO_MEMORY;
+        }
+        RtlCopyMemory(PackedmCs, UnpackedmCs, sizeof(CREATESTRUCTW));
+        CsData = (PCHAR) (PackedmCs + 1);
+        PackedmCs->szTitle = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
+        RtlCopyMemory(CsData, WindowName->Buffer, WindowName->Length);
+        CsData += WindowName->Length;
+        *((WCHAR *) CsData) = L'\0';
+        CsData += sizeof(WCHAR);
+        PackedmCs->szClass = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
+        if (IS_ATOM(ClassName->Buffer))
+        {
+            *((WCHAR *) CsData) = L'A';
+            CsData += sizeof(WCHAR);
+            *((ATOM *) CsData) = (ATOM)(DWORD_PTR) ClassName->Buffer;
+            CsData += sizeof(ATOM);
+        }
+        else
+        {
+            *((WCHAR *) CsData) = L'S';
+            CsData += sizeof(WCHAR);
+            RtlCopyMemory(CsData, ClassName->Buffer, ClassName->Length);
+            CsData += ClassName->Length;
+            *((WCHAR *) CsData) = L'\0';
+            CsData += sizeof(WCHAR);
+        }
+        ASSERT(CsData == (PCHAR) PackedmCs + Size);
+        *lParamPacked = (LPARAM) PackedmCs;
+    }
     else if (PoolType == NonPagedPool)
     {
         PMSGMEMORY MsgMemoryEntry;
@@ -288,6 +428,11 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     {
         ExFreePool((PVOID) lParamPacked);
 
+        return STATUS_SUCCESS;
+    }
+    else if (WM_MDICREATE == Msg)
+    {
+        ExFreePool((PVOID) lParamPacked);
         return STATUS_SUCCESS;
     }
     else if (NonPagedPoolUsed)
@@ -910,7 +1055,7 @@ UserPostThreadMessage( DWORD idThread,
     LARGE_INTEGER LargeTickCount;
     NTSTATUS Status;
 
-    if (FindMsgMemory(Msg) != 0)
+    if (is_pointer_message(Msg))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -990,7 +1135,7 @@ UserPostMessage( HWND Wnd,
         return TRUE;
     }
 
-    if (MsgMemoryEntry)
+    if (is_pointer_message(Message.message))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1486,7 +1631,7 @@ UserSendNotifyMessage( HWND hWnd,
 {
     BOOL Ret = TRUE;
 
-    if (FindMsgMemory(Msg) != 0)
+    if (is_pointer_message(Msg))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;

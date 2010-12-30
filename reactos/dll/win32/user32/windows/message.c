@@ -296,6 +296,26 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
         }
         break;
 
+      case WM_MDICREATE:
+        {
+          MDICREATESTRUCTW *mCs = (MDICREATESTRUCTW *) KMMsg->lParam;
+          PCHAR Class;
+          mCs->szTitle = (LPCWSTR) ((PCHAR) mCs + (DWORD_PTR) mCs->szTitle);
+          Class = (PCHAR) mCs + (DWORD_PTR) mCs->szClass;
+          if (L'A' == *((WCHAR *) Class))
+            {
+              Class += sizeof(WCHAR);
+              mCs->szClass = (LPCWSTR)(DWORD_PTR) (*((ATOM *) Class));
+            }
+          else
+            {
+              ASSERT(L'S' == *((WCHAR *) Class));
+              Class += sizeof(WCHAR);
+              mCs->szClass = (LPCWSTR) Class;
+            }
+        }
+        break;
+
       case WM_DDE_ACK:
         {
           PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
@@ -383,7 +403,7 @@ MsgiKMToUMReply(PMSG KMMsg, PMSG UMMsg, LRESULT *Result)
 }
 
 static BOOL FASTCALL
-MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
+MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
   UNICODE_STRING UnicodeString;
 
@@ -457,6 +477,7 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case WM_NCCREATE:
     case WM_CREATE:
       {
+        MDICREATESTRUCTW mdi_cs;
         struct s
         {
            CREATESTRUCTW cs;    /* new structure */
@@ -480,6 +501,15 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
             RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)xs->cs.lpszClass);
             xs->lpszClass = xs->cs.lpszClass = UnicodeString.Buffer;
           }
+
+        if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
+        {
+           mdi_cs = *(MDICREATESTRUCTW *)xs->cs.lpCreateParams;
+           mdi_cs.szTitle = xs->cs.lpszName;
+           mdi_cs.szClass = xs->cs.lpszClass;
+           xs->cs.lpCreateParams = &mdi_cs;
+        }
+
         UnicodeMsg->lParam = (LPARAM)xs;
         break;
       }
@@ -648,7 +678,7 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
 
 
 static BOOL FASTCALL
-MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
+MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
 {
   ANSI_STRING AnsiString;
   UNICODE_STRING UnicodeString;
@@ -660,6 +690,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case WM_CREATE:
       case WM_NCCREATE:
         {
+          MDICREATESTRUCTA mdi_cs;
           CREATESTRUCTA* CsA;
           CREATESTRUCTW* CsW;
           NTSTATUS Status;
@@ -693,6 +724,15 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
                 }
               CsA->lpszClass = AnsiString.Buffer;
             }
+
+          if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
+          {
+             mdi_cs = *(MDICREATESTRUCTA *)CsW->lpCreateParams;
+             mdi_cs.szTitle = CsA->lpszName; 
+             mdi_cs.szClass = CsA->lpszClass;
+             CsA->lpCreateParams = &mdi_cs;
+          }
+
           AnsiMsg->lParam = (LPARAM)CsA;
           break;
         }
@@ -1064,7 +1104,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       UnicodeMsg.message = Msg;
       UnicodeMsg.wParam = wParam;
       UnicodeMsg.lParam = lParam;
-      if (! MsgiUnicodeToAnsiMessage(&AnsiMsg, &UnicodeMsg))
+      if (! MsgiUnicodeToAnsiMessage(hWnd, &AnsiMsg, &UnicodeMsg))
       {
           goto Exit;
       }
@@ -1248,7 +1288,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       AnsiMsg.message = Msg;
       AnsiMsg.wParam = wParam;
       AnsiMsg.lParam = lParam;
-      if (! MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
+      if (! MsgiAnsiToUnicodeMessage(hWnd, &UnicodeMsg, &AnsiMsg))
       {
           goto Exit;
       }
@@ -1512,7 +1552,7 @@ DispatchMessageA(CONST MSG *lpmsg)
        }
        else
        {
-          if (!MsgiAnsiToUnicodeMessage(&UnicodeMsg, (LPMSG)lpmsg))
+          if (!MsgiAnsiToUnicodeMessage(lpmsg->hwnd, &UnicodeMsg, (LPMSG)lpmsg))
           {
              return FALSE;
           }
@@ -1970,7 +2010,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
 
-  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  if (!MsgiAnsiToUnicodeMessage(Wnd, &UcMsg, &AnsiMsg))
   {
      return FALSE;
   }
@@ -2020,7 +2060,7 @@ SendMessageCallbackA(
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
 
-  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  if (!MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
       return FALSE;
   }
@@ -2118,7 +2158,7 @@ SendMessageTimeoutA(
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
 
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  if (! MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
       return FALSE;
   }
@@ -2221,7 +2261,7 @@ SendNotifyMessageA(
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  if (! MsgiAnsiToUnicodeMessage(hWnd, &UcMsg, &AnsiMsg))
   {
      return FALSE;
   }
