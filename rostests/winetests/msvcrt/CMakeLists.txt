@@ -24,3 +24,4 @@ list(APPEND SOURCE
 add_executable(msvcrt_winetest ${SOURCE})
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest msvcrt kernel32 ntdll)
+add_cab_target(msvcrt_winetest 7)

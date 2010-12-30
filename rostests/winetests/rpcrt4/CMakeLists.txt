@@ -28,3 +28,4 @@ target_link_libraries(rpcrt4_winetest
 
 set_module_type(rpcrt4_winetest win32cui)
 add_importlibs(rpcrt4_winetest ole32 rpcrt4 msvcrt kernel32 ntdll)
+add_cab_target(rpcrt4_winetest 7)

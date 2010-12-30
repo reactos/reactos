@@ -12,3 +12,4 @@ target_link_libraries(atl_winetest wine uuid)
 
 set_module_type(atl_winetest win32cui)
 add_importlibs(atl_winetest ole32 user32 atl msvcrt kernel32 ntdll)
+add_cab_target(atl_winetest 7)

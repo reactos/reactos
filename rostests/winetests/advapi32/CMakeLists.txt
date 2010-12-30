@@ -23,3 +23,4 @@ target_link_libraries(advapi32_winetest uuid)
 
 set_module_type(advapi32_winetest win32cui)
 add_importlibs(advapi32_winetest advapi32 ole32 msvcrt kernel32 ntdll)
+add_cab_target(advapi32_winetest 7)
