@@ -5,10 +5,10 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-ADD_TYPELIB(oleaut32_typelibs test_reg.idl test_tlb.idl tmarshal.idl)
+add_typelib(oleaut32_typelibs test_reg.idl test_tlb.idl tmarshal.idl)
 add_dependencies(oleaut32_typelibs stdole2)
 
-ADD_INTERFACE_DEFINITIONS(oleaut32_idlheaders test_reg.idl tmarshal.idl)
+add_interface_definitions(oleaut32_idlheaders test_reg.idl tmarshal.idl)
 add_idl_interface(tmarshal.idl)
 
 list(APPEND SOURCE
