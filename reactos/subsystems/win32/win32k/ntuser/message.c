@@ -353,7 +353,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
             DPRINT1("Not enough memory to pack lParam\n");
             return STATUS_NO_MEMORY;
         }
-        RtlCopyMemory(PackedmCs, UnpackedmCs, sizeof(CREATESTRUCTW));
+        RtlCopyMemory(PackedmCs, UnpackedmCs, sizeof(MDICREATESTRUCTW));
         CsData = (PCHAR) (PackedmCs + 1);
         PackedmCs->szTitle = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
         RtlCopyMemory(CsData, WindowName->Buffer, WindowName->Length);
