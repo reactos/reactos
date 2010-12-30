@@ -343,15 +343,12 @@ CreateWindowExA(DWORD dwExStyle,
         UINT id = 0;
         HWND top_child;
         PWND pWndParent;
-        PCLS pCls;
 
         pWndParent = ValidateHwnd(hWndParent);
 
         if (!pWndParent) return NULL;
 
-        pCls = DesktopPtrToUser(pWndParent->pcls);
-
-        if (pCls->fnid != FNID_MDICLIENT) // wine uses WIN_ISMDICLIENT
+        if (pWndParent->fnid != FNID_MDICLIENT) // wine uses WIN_ISMDICLIENT
         {
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
            return NULL;
@@ -469,15 +466,12 @@ CreateWindowExW(DWORD dwExStyle,
         UINT id = 0;
         HWND top_child;
         PWND pWndParent;
-        PCLS pCls;
 
         pWndParent = ValidateHwnd(hWndParent);
 
         if (!pWndParent) return NULL;
 
-        pCls = DesktopPtrToUser(pWndParent->pcls);
-
-        if (pCls->fnid != FNID_MDICLIENT)
+        if (pWndParent->fnid != FNID_MDICLIENT)
         {
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
            return NULL;

@@ -3878,15 +3878,23 @@ NtUserSetWindowFNID(HWND hWnd,
       RETURN( FALSE);
    }
 
-   if (Wnd->pcls)
-   {  // From user land we only set these.
-      if ((fnID != FNID_DESTROY) || ((fnID < FNID_BUTTON) && (fnID > FNID_IME)) )
+   if (Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process())
+   {
+      EngSetLastError(ERROR_ACCESS_DENIED);
+      RETURN( FALSE);
+   }
+
+   // From user land we only set these.
+   if (fnID != FNID_DESTROY)
+   {
+      if ( ((fnID < FNID_BUTTON) && (fnID > FNID_IME)) ||
+           Wnd->fnid != 0 )
       {
          RETURN( FALSE);
       }
-      else
-         Wnd->pcls->fnid |= fnID;
    }
+   
+   Wnd->fnid |= fnID;
    RETURN( TRUE);
 
 CLEANUP:
