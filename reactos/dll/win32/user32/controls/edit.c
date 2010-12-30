@@ -4476,6 +4476,18 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 {
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
+#ifdef __REACTOS__
+        PWND pWnd;
+
+        pWnd = ValidateHwnd(hwnd);
+        if (pWnd)
+        {
+           if (!pWnd->fnid)
+           {
+              NtUserSetWindowFNID(hwnd, FNID_EDIT);
+           }
+        }    
+#endif    
 
         TRACE("hwnd=%p msg=%x (%s) wparam=%lx lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
 
@@ -4723,6 +4735,9 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	case WM_DESTROY:
 		result = EDIT_WM_Destroy(es);
 		es = NULL;
+#ifdef __REACTOS__
+                NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
 		break;
 
 	case WM_GETDLGCODE:
