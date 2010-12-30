@@ -3887,9 +3887,10 @@ NtUserSetWindowFNID(HWND hWnd,
    // From user land we only set these.
    if (fnID != FNID_DESTROY)
    {
-      if ( ((fnID < FNID_BUTTON) && (fnID > FNID_IME)) ||
+      if ( ((fnID < FNID_BUTTON) && (fnID > FNID_GHOST)) ||
            Wnd->fnid != 0 )
       {
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          RETURN( FALSE);
       }
    }
