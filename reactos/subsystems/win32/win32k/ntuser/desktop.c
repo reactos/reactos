@@ -1036,12 +1036,16 @@ NtUserCreateDesktop(
    }
    ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
+//// why is this here?
+#if 0
    if (! NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create desktop handle\n");
       SetLastNtError(Status);
       RETURN( NULL);
    }
+#endif
+////
 
    /*
     * Create a handle for CSRSS and notify CSRSS for Creating Desktop Window.
@@ -1072,7 +1076,35 @@ NtUserCreateDesktop(
       SetLastNtError(Status);
       RETURN( NULL);
    }
+#if 0 // Turn on when server side proc is ready.
+   //
+   // Create desktop window.
+   //
+   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_DESKTOP])));
+   ClassName.Length = 0;
+   RtlZeroMemory(&MenuName, sizeof(MenuName));
+   RtlZeroMemory(&WindowName, sizeof(WindowName));
 
+   RtlZeroMemory(&Cs, sizeof(Cs));
+   Cs.x = UserGetSystemMetrics(SM_XVIRTUALSCREEN);
+   Cs.y = UserGetSystemMetrics(SM_YVIRTUALSCREEN);
+   Cs.cx = UserGetSystemMetrics(SM_CXVIRTUALSCREEN);
+   Cs.cy = UserGetSystemMetrics(SM_CYVIRTUALSCREEN);
+   Cs.style = WS_POPUP|WS_CLIPCHILDREN;
+   Cs.hInstance = hModClient; // Experimental mode... Move csr stuff to User32. hModuleWin; // Server side winproc!
+   Cs.lpszName = (LPCWSTR) &WindowName;
+   Cs.lpszClass = (LPCWSTR) &ClassName;
+
+   pWndDesktop = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName);
+   if (!pWnd)
+   {
+      DPRINT1("Failed to create Desktop window handle\n");
+   }
+   else
+   {
+      DesktopObject->pDeskInfo->spwnd = pWndDesktop;
+   }
+#endif
    W32Thread = PsGetCurrentThreadWin32Thread();
 
    if (!W32Thread->rpdesk) IntSetThreadDesktop(DesktopObject,FALSE);
@@ -1089,7 +1121,7 @@ NtUserCreateDesktop(
    RtlZeroMemory(&Cs, sizeof(Cs));
    Cs.cx = Cs.cy = 100;
    Cs.style = WS_POPUP|WS_CLIPCHILDREN;
-   Cs.hInstance = hModClient;
+   Cs.hInstance = hModClient; // hModuleWin; // Server side winproc! Leave it to Timo to not pass on notes!
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
@@ -1103,6 +1135,14 @@ NtUserCreateDesktop(
       DesktopObject->spwndMessage = pWnd;
    }
 
+   /* Now,,,
+      if !(WinStaObject->Flags & WSF_NOIO) is (not set) for desktop input output mode (see wiki)
+      Create Tooltip. Saved in DesktopObject->spwndTooltip.
+      Tooltip dwExStyle: WS_EX_TOOLWINDOW|WS_EX_TOPMOST
+      hWndParent are spwndMessage. Use hModuleWin for server side winproc!
+      The rest is same as message window.
+      http://msdn.microsoft.com/en-us/library/bb760250(VS.85).aspx
+   */
    RETURN( Desktop);
 
 CLEANUP:

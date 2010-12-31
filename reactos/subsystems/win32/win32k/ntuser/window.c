@@ -2130,7 +2130,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
    Window->rcClient = Window->rcWindow;
 
-
    /* Link the window*/
    if (NULL != ParentWindow)
    {
@@ -2140,7 +2139,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       else
           IntLinkHwnd(Window, hwndInsertAfter);
    }
-   
+
    /* Send the NCCREATE message */
    Result = co_IntSendMessage(UserHMGetHandle(Window), WM_NCCREATE, 0, (LPARAM) Cs);
    if (!Result)
@@ -3886,8 +3885,8 @@ NtUserSetWindowFNID(HWND hWnd,
 
    // From user land we only set these.
    if (fnID != FNID_DESTROY)
-   {
-      if ( ((fnID < FNID_BUTTON) && (fnID > FNID_GHOST)) ||
+   { //       Hacked so we can mark desktop~!
+      if ( (/*(fnID < FNID_BUTTON)*/ (fnID < FNID_FIRST) && (fnID > FNID_GHOST)) ||
            Wnd->fnid != 0 )
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
