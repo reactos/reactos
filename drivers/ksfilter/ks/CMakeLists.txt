@@ -40,7 +40,7 @@ set_image_base(ks 0x00010000)
 
 target_link_libraries(ks ${PSEH_LIB})
 
-add_importlibs(ks ntoskrnl hal msvcrt)
+add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 
 add_cab_target(ks 2)
