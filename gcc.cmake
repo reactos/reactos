@@ -218,9 +218,11 @@ set(IDL_PROXY_ARG -p -P)
 set(IDL_DLLDATA_ARG --dlldata-only --dlldata=)
 
 macro(add_importlibs MODULE)
+    add_dependency_node(${MODULE})
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.a)
         add_dependencies(${MODULE} lib${LIB})
+        add_dependency_edge(${MODULE} ${LIB})
     endforeach()
 endmacro()
 

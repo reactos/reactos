@@ -47,3 +47,5 @@ This settings is disabled (0) by default.")
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to compile the multi processor versions for ntoskrnl and hal.")
 
+set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
+"Whether to create a graphml dependency of dlls.")

@@ -79,6 +79,7 @@ if(CMAKE_CROSSCOMPILING)
 
     #Some cleanup
     file(REMOVE
+        ${REACTOS_BINARY_DIR}/dependencies.graphml
         ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
         ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt
         ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt
@@ -144,6 +145,8 @@ if(CMAKE_CROSSCOMPILING)
     else()
         include_directories(include/crt/mingw32)
     endif()
+
+    add_dependency_header()
 
     add_subdirectory(include/psdk)
     add_subdirectory(include/dxsdk)
@@ -226,5 +229,7 @@ if(CMAKE_CROSSCOMPILING)
 
     #bootcd and livecd
     include(ros_cd.cmake)
+
+    add_dependency_footer()
 
 endif()

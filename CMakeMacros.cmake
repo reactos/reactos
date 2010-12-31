@@ -36,7 +36,7 @@ macro(idl_compile_object OBJECT SOURCE)
     get_property(FLAGS SOURCE ${SOURCE} PROPERTY COMPILE_FLAGS)
     get_property(DEFINES SOURCE ${SOURCE} PROPERTY COMPILE_DEFINITIONS)
     get_property(INCLUDE_DIRECTORIES DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-  
+
     foreach(DIR ${INCLUDE_DIRECTORIES})
         set(FLAGS "${FLAGS} -I${DIR}")
     endforeach()
@@ -73,7 +73,7 @@ macro(add_minicd_target _targetname _dir) # optional parameter: _nameoncd
     else()
         set(_nameoncd ${ARGN})
     endif()
-    
+
     file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
 endmacro()
 
@@ -96,7 +96,7 @@ macro(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
     else()
         set(_nameoncd ${ARGN})
     endif()
-    
+
     file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
 endmacro()
 
@@ -149,7 +149,7 @@ macro(add_cab FILENAME _num)
     file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_cab.txt "${FILENAME}\t${_num}\n")
     cab_to_dir(${_num} _dir)
     add_livecd(${FILENAME} ${_dir})
-endmacro()    
+endmacro()
 
 macro(custom_incdefs)
     if(NOT DEFINED result_incs) #rpc_defines
@@ -181,6 +181,13 @@ macro(rpcproxy TARGET)
             PROPERTIES GENERATED TRUE)
         list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
         list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl)
+<<<<<<< .mine
+        list(APPEND PROXY_DEPENDS ${TARGET}_${FILE}_p)
+        add_custom_target(${TARGET}_${FILE}_p
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
+        #add_dependencies(${TARGET}_proxy ${TARGET}_${FILE}_p)
+=======
+>>>>>>> .r50241
     endforeach()
 
     add_custom_command(
@@ -190,6 +197,12 @@ macro(rpcproxy TARGET)
     set_source_files_properties(
         ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
         PROPERTIES GENERATED TRUE)
+<<<<<<< .mine
+
+    add_library(${TARGET}_proxy ${SOURCE})
+    add_dependencies(${TARGET}_proxy psdk ${PROXY_DEPENDS})
+=======
+>>>>>>> .r50241
 endmacro()
 
 macro(idl_files)
@@ -205,7 +218,7 @@ macro(idl_files)
             PROPERTIES GENERATED TRUE)
         add_library(${FILE}_server ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c)
         add_dependencies(${FILE}_server psdk)
-    
+
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
             COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
@@ -240,4 +253,31 @@ macro(add_idl_interface IDL_FILE)
         COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} -u -U ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}
         DEPENDS ${IDL_FILE})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c PROPERTIES GENERATED TRUE)
+endmacro()
+
+macro(add_dependency_node _node)
+    if(GENERATE_DEPENDENCY_GRAPH)
+        get_target_property(_type ${_node} TYPE)
+        if(_type MATCHES SHARED_LIBRARY)
+            file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "    <node id=\"${_node}\"/>\n")
+        endif()
+     endif()
+endmacro()
+
+macro(add_dependency_edge _source _target)
+    if(GENERATE_DEPENDENCY_GRAPH)
+        get_target_property(_type ${_source} TYPE)
+        if(_type MATCHES SHARED_LIBRARY)
+            file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "    <edge source=\"${_source}\" target=\"${_target}\"/>\n")
+        endif()
+    endif()
+endmacro()
+
+macro(add_dependency_header)
+    file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    add_dependency_node(ntdll)
+endmacro()
+
+macro(add_dependency_footer)
+    file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
 endmacro()
