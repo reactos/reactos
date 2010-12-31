@@ -129,25 +129,66 @@ WindowFromPoint(POINT Point)
 int WINAPI
 MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 {
-    PWND FromWnd, ToWnd;
+    PWND FromWnd = NULL, ToWnd = NULL;
+    BOOL mirror_from, mirror_to;
     POINT Delta;
     UINT i;
 
-    FromWnd = ValidateHwndOrDesk(hWndFrom);
-    if (!FromWnd)
-        return 0;
+    if (hWndFrom)
+    {
+       FromWnd = ValidateHwnd(hWndFrom);
+       if (!FromWnd)
+           return 0;
+    }
+    if (hWndTo)
+    {
+       ToWnd = ValidateHwnd(hWndTo);
+       if (!ToWnd)
+           return 0;
+    }
 
-    ToWnd = ValidateHwndOrDesk(hWndTo);
-    if (!ToWnd)
-        return 0;
+    /* Note: Desktop Top and Left is always 0! */
+    Delta.x = Delta.y = 0;
+    mirror_from = mirror_to = FALSE;
 
-    Delta.x = FromWnd->rcClient.left - ToWnd->rcClient.left;
-    Delta.y = FromWnd->rcClient.top - ToWnd->rcClient.top;
+    if (FromWnd && FromWnd->fnid != FNID_DESKTOP)
+    {
+       if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
+       {
+          mirror_from = TRUE;
+          Delta.x = FromWnd->rcClient.right - FromWnd->rcClient.left;
+       }
+       else
+          Delta.x = FromWnd->rcClient.left;
+       Delta.y = FromWnd->rcClient.top;
+    }
+
+    if (ToWnd && ToWnd->fnid != FNID_DESKTOP)
+    {
+       if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
+       {
+          mirror_to = TRUE;
+          Delta.x -= ToWnd->rcClient.right - ToWnd->rcClient.left;
+       }
+       else
+          Delta.x -= ToWnd->rcClient.left;
+       Delta.y -= ToWnd->rcClient.top;
+    }
+
+    if (mirror_from) Delta.x = -Delta.x;
 
     for (i = 0; i != cPoints; i++)
     {
         lpPoints[i].x += Delta.x;
         lpPoints[i].y += Delta.y;
+        if (mirror_from || mirror_to) lpPoints[i].x = -lpPoints[i].x;
+    }
+
+    if ((mirror_from || mirror_to) && cPoints == 2)  /* special case for rectangle */
+    {
+       int tmp = lpPoints[0].x;
+       lpPoints[0].x = lpPoints[1].x;
+       lpPoints[1].x = tmp;
     }
 
     return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
@@ -160,17 +201,20 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 BOOL WINAPI
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
-    PWND Wnd, DesktopWnd;
-
+    PWND Wnd;
+    /* Note: Desktop Top and Left is always 0! */
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return FALSE;
 
-    DesktopWnd = GetThreadDesktopWnd();
-
-    lpPoint->x += DesktopWnd->rcClient.left - Wnd->rcClient.left;
-    lpPoint->y += DesktopWnd->rcClient.top - Wnd->rcClient.top;
-
+    if (Wnd->fnid != FNID_DESKTOP)
+    {
+       if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+          lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+       else
+          lpPoint->x -= Wnd->rcClient.left;
+       lpPoint->y -= Wnd->rcClient.top;
+    }
     return TRUE;
 }
 
@@ -181,17 +225,20 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 BOOL WINAPI
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
-    PWND Wnd, DesktopWnd;
-
+    PWND Wnd;
+    /* Note: Desktop Top and Left is always 0! */
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
         return FALSE;
 
-    DesktopWnd = GetThreadDesktopWnd();
-
-    lpPoint->x += Wnd->rcClient.left - DesktopWnd->rcClient.left;
-    lpPoint->y += Wnd->rcClient.top - DesktopWnd->rcClient.top;
-
+    if (Wnd->fnid != FNID_DESKTOP)
+    {
+       if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+          lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+       else
+          lpPoint->x += Wnd->rcClient.left;
+       lpPoint->y += Wnd->rcClient.top;
+    }
     return TRUE;
 }
 
