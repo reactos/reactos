@@ -94,20 +94,37 @@ static DWORD WINAPI
 RpcServerThread(LPVOID lpParameter)
 {
     RPC_STATUS Status;
+    BOOLEAN RegisteredProtSeq = FALSE;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
     DPRINT("RpcServerThread() called\n");
 
+#if 0
+    /* XP-compatible protocol sequence/endpoint */
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     20,
-                                    L"\\pipe\\umpnpmgr",
+                                    L"\\pipe\\ntsvcs",
                                     NULL);  // Security descriptor
-    if (Status != RPC_S_OK)
-    {
+    if (Status == RPC_S_OK)
+        RegisteredProtSeq = TRUE;
+    else
         DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+#endif
+
+    /* Vista-compatible protocol sequence/endpoint */
+    Status = RpcServerUseProtseqEpW(L"ncacn_np",
+                                    20,
+                                    L"\\pipe\\plugplay",
+                                    NULL);  // Security descriptor
+    if (Status == RPC_S_OK)
+        RegisteredProtSeq = TRUE;
+    else
+        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+
+    /* Make sure there's a usable endpoint */
+    if (RegisteredProtSeq == FALSE)
         return 0;
-    }
 
     Status = RpcServerRegisterIf(pnp_v1_0_s_ifspec,
                                  NULL,

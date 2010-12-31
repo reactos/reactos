@@ -36,7 +36,7 @@ PnpBindRpc(LPCWSTR pszMachine,
     Status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       (LPWSTR)pszMachine,
-                                      L"\\pipe\\umpnpmgr",
+                                      L"\\pipe\\plugplay",
                                       NULL,
                                       &pszStringBinding);
     if (Status != RPC_S_OK)
