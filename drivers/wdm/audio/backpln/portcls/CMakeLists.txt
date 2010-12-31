@@ -68,6 +68,6 @@ set_image_base(portcls 0x00010000)
 set_subsystem(portcls native)
 set_target_properties(portcls PROPERTIES SUFFIX ".sys")
 
-add_importlibs(portcls ntoskrnl ks drmk hal msvcrt)
+add_importlibs(portcls ntoskrnl ks drmk hal)
 
 add_cab_target(portcls 2)
