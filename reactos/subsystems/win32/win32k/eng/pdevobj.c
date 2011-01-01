@@ -18,6 +18,9 @@ PPDEVOBJ gppdevPrimary = NULL;
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
+extern DRVFN gpDxFuncs[DXG_INDEX_DXDDIOCTL];
+extern HANDLE ghDxGraphics;
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
@@ -379,7 +382,25 @@ PDEVOBJ_bSwitchMode(
     PSURFACE pSurface;
     BOOL retval = FALSE;
 
-    /* Lock the PDEV */
+    PGD_DXDDSUSPENDDIRECTDRAW pfnDdSuspendDirectDraw = (PGD_DXDDSUSPENDDIRECTDRAW)gpDxFuncs[DXG_INDEX_DXDDSUSPENDDIRECTDRAW].pfn;
+    PGD_DXDDRESUMEDIRECTDRAW pfnDdResumeDirectDraw = (PGD_DXDDRESUMEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DXDDRESUMEDIRECTDRAW].pfn;
+    PGD_DXDDDYNAMICMODECHANGE pfnDxDdDynamicModeChange = (PGD_DXDDDYNAMICMODECHANGE)gpDxFuncs[DXG_INDEX_DXDDDYNAMICMODECHANGE].pfn;
+
+    /* 1.0 suppend directx */
+    /* Suppend DirectX */
+    /* TODO suppend all graphic / video / tv card at mode changes, we need list of all primary drv and suppend each */
+    if ( (pfnDdSuspendDirectDraw != NULL) && (ppdev->pEDDgpl != NULL) && (ghDxGraphics != NULL) )
+    { 
+            /* note 
+                value 1 = current ppdev is metadev and use DxEngLockShareSem as lock
+                value 2 = current ppdev is not metadev use DxEngIsHdevLockedByCurrentThread as lock
+                all other value will give unwanted effect, windows xp always use DxEngIsHdevLockedByCurrentThread
+                when it try todo a mode change
+            */
+        pfnDdSuspendDirectDraw(ppdev,2);
+    }
+
+    /* 1.2 Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
     /* And everything else */
     EngAcquireSemaphore(ghsemPDEV);
@@ -389,7 +410,7 @@ PDEVOBJ_bSwitchMode(
     // Lookup the GraphicsDevice + select DEVMODE
     // pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
 
-    /* 1. Temporarily disable the current PDEV */
+    /* 1.3 Temporarily disable the current PDEV */
     if (!ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE))
     {
         DPRINT1("DrvAssertMode failed\n");
@@ -418,9 +439,13 @@ PDEVOBJ_bSwitchMode(
     /* 6. Copy old PDEV state to new PDEV instance */
 
     /* 7. Switch the PDEVs */
+    if ( (pfnDxDdDynamicModeChange != NULL) && (ppdev->pEDDgpl != NULL) && (ghDxGraphics != NULL) ) 
+    {
+        /* note the ldev struct are being copy to the new ppdev (ppdevTmp) */
+        ppdevTmp->pEDDgpl = ppdev->pEDDgpl;
+        pfnDxDdDynamicModeChange(ppdev, ppdevTmp, TRUE);
+    }
     PDEVOBJ_vSwitchPdev(ppdev, ppdevTmp);
-
-    /* 8. Disable DirectDraw */
 
     PDEVOBJ_vRelease(ppdevTmp);
 
@@ -436,6 +461,19 @@ leave:
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
     EngReleaseSemaphore(ghsemPDEV);
+
+    /* Resume DirectX */
+    /* TODO resume all graphic / video / tv card at mode changes, we need list of all primary drv and resume each */
+    if ( (pfnDdResumeDirectDraw != NULL) && (ppdev->pEDDgpl != NULL) && (ghDxGraphics != NULL) )
+    { 
+        /* note 
+           value 1 = current ppdev is metadev 
+           value 0 = current ppdev is not metadev u
+           all other value will give unwanted effect, windows xp always use DxEngIsHdevLockedByCurrentThread
+           when it try todo a mode change
+        */
+        pfnDdResumeDirectDraw(ppdev, 0);
+    }
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
