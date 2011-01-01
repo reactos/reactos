@@ -121,6 +121,8 @@ NpfsOpenFileSystem(PNPFS_FCB Fcb,
         return;
     }
 
+    RtlZeroMemory(Ccb, sizeof(NPFS_CCB));
+
     Ccb->Type = CCB_DEVICE;
     Ccb->Fcb = Fcb;
 
@@ -149,6 +151,8 @@ NpfsOpenRootDirectory(PNPFS_FCB Fcb,
         IoStatus->Status = STATUS_NO_MEMORY;
         return;
     }
+
+    RtlZeroMemory(Ccb, sizeof(NPFS_CCB));
 
     Ccb->Type = CCB_DIRECTORY;
     Ccb->Fcb = Fcb;
@@ -880,6 +884,9 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     if (Ccb->Type == CCB_DIRECTORY)
     {
         DPRINT("Closing the root directory!\n");
+
+        if (Ccb->u.Directory.SearchPattern.Buffer != NULL)
+            ExFreePool(Ccb->u.Directory.SearchPattern.Buffer);
 
         ExFreePool(Ccb);
         FileObject->FsContext = NULL;
