@@ -8,6 +8,19 @@
  */
 
 #include "usbehci.h"
+#include "hwiface.h"
+#include "physmem.h"
+#include "transfer.h"
+
+VOID NTAPI
+WorkerThread(IN PVOID Context)
+{
+    PWORKITEMDATA WorkItemData = (PWORKITEMDATA)Context;
+    
+    CompletePendingURBRequest((PPDO_DEVICE_EXTENSION)WorkItemData->Context);
+    
+    ExFreePool(WorkItemData);
+}
 
 VOID
 RemoveUrbRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
@@ -23,7 +36,8 @@ RequestURBCancel (PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
 {
     KIRQL OldIrql = Irp->CancelIrql;
     IoReleaseCancelSpinLock(DISPATCH_LEVEL);
-
+    DPRINT1("IRP CANCELLED\n");
+    ASSERT(FALSE);
     KeAcquireSpinLockAtDpcLevel(&PdoDeviceExtension->IrpQueueLock);
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
@@ -40,7 +54,7 @@ QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
 
     KeAcquireSpinLock(&DeviceExtension->IrpQueueLock, &OldIrql);
 
-    if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
+    if ((Irp->Cancel) && (IoSetCancelRoutine(Irp, RequestURBCancel)))
     {
         KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, OldIrql);
         Irp->IoStatus.Status = STATUS_CANCELLED;
@@ -67,7 +81,6 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
     ASSERT(Stack);
 
     Urb = (PURB) Stack->Parameters.Others.Argument1;
-
     ASSERT(Urb);
 
     Information = 0;
@@ -92,9 +105,12 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
     {
         case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
         {
+            DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER UsbDevice %x\n", UsbDevice);
             if (&UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor != Urb->UrbBulkOrInterruptTransfer.PipeHandle)
             {
+                DPRINT1("Invalid Parameter, Expected EndPointDescriptor of %x, but got %x\n", &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor, Urb->UrbBulkOrInterruptTransfer.PipeHandle);
                 Status = STATUS_INVALID_PARAMETER;
+                ASSERT(FALSE);
                 break;
             }
 
@@ -128,6 +144,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
         }
         case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
         {
+            DPRINT1("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
             if (Urb->UrbControlGetStatusRequest.Index == 0)
             {
                 ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer != NULL);
@@ -143,25 +160,55 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
         }
         case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
         {
+            USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+            
+            DPRINT1("URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE\n");
             switch(Urb->UrbControlDescriptorRequest.DescriptorType)
             {
                 case USB_DEVICE_DESCRIPTOR_TYPE:
                 {
+                    PUCHAR BufPtr;
+                    DPRINT1("Device Descr Type\n");
+
                     if (Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR))
                     {
                         Urb->UrbControlDescriptorRequest.TransferBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
                     }
+                    if (UsbDevice == PdoDeviceExtension->UsbDevices[0])
+                    {
+                        DPRINT1("ROOTHUB!\n");
+                        BufPtr = (PUCHAR)Urb->UrbControlDescriptorRequest.TransferBuffer;
+
+                        DPRINT1("Length %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+                        /* Copy the Device Descriptor */
+                        RtlCopyMemory(BufPtr, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+                        DumpDeviceDescriptor((PUSB_DEVICE_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer);
+                        break;
+                    }
+
                     ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer != NULL);
-                    RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer,
-                                  &UsbDevice->DeviceDescriptor,
-                                  Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+                    DPRINT("Calling BuildSetUpPacketFromUrb\n");
+                    BuildSetupPacketFromURB(&FdoDeviceExtension->hcd, Urb, &CtrlSetup);
+                    DPRINT("SubmitControlTransfer\n");
+                    SubmitControlTransfer(&FdoDeviceExtension->hcd,
+                                          &CtrlSetup,
+                                          Urb->UrbControlDescriptorRequest.TransferBuffer,
+                                          Urb->UrbControlDescriptorRequest.TransferBufferLength,
+                                          Irp);
+                    
                     break;
                 }
                 case USB_CONFIGURATION_DESCRIPTOR_TYPE:
                 {
                     PUCHAR BufPtr;
                     LONG i, j;
-
+                    DPRINT1("Config Descr Type\n");
+                    if (UsbDevice == PdoDeviceExtension->UsbDevices[0])
+                    {
+                        DPRINT1("ROOTHUB!\n");
+                    }
                     if (Urb->UrbControlDescriptorRequest.TransferBufferLength >= UsbDevice->ActiveConfig->ConfigurationDescriptor.wTotalLength)
                     {
                         Urb->UrbControlDescriptorRequest.TransferBufferLength = UsbDevice->ActiveConfig->ConfigurationDescriptor.wTotalLength;
@@ -171,13 +218,15 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                         DPRINT1("TransferBufferLenth %x is too small!!!\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
                         if (Urb->UrbControlDescriptorRequest.TransferBufferLength < sizeof(USB_CONFIGURATION_DESCRIPTOR))
                         {
-                            DPRINT("Configuration Descriptor cannot fit into given buffer!\n");
+                            DPRINT1("Configuration Descriptor cannot fit into given buffer!\n");
                             break;
                         }
                     }
 
                     ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
                     BufPtr = (PUCHAR)Urb->UrbControlDescriptorRequest.TransferBuffer;
+
+                    DPRINT1("Length %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
 
                     /* Copy the Configuration Descriptor */
                     RtlCopyMemory(BufPtr, &UsbDevice->ActiveConfig->ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
@@ -193,31 +242,30 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                     for (i = 0; i < UsbDevice->ActiveConfig->ConfigurationDescriptor.bNumInterfaces; i++)
                     {
                         /* Copy the Interface Descriptor */
-                        RtlCopyMemory(BufPtr, &UsbDevice->ActiveConfig->Interfaces[i]->InterfaceDescriptor, sizeof(USB_INTERFACE_DESCRIPTOR));
+                        RtlCopyMemory(BufPtr,
+                                      &UsbDevice->ActiveConfig->Interfaces[i]->InterfaceDescriptor,
+                                      sizeof(USB_INTERFACE_DESCRIPTOR));
                         BufPtr += sizeof(USB_INTERFACE_DESCRIPTOR);
                         for (j = 0; j < UsbDevice->ActiveConfig->Interfaces[i]->InterfaceDescriptor.bNumEndpoints; j++)
                         {
                             /* Copy the EndPoint Descriptor */
-                            RtlCopyMemory(BufPtr, &UsbDevice->ActiveConfig->Interfaces[i]->EndPoints[j]->EndPointDescriptor, sizeof(USB_ENDPOINT_DESCRIPTOR));
+                            RtlCopyMemory(BufPtr,
+                                          &UsbDevice->ActiveConfig->Interfaces[i]->EndPoints[j]->EndPointDescriptor,
+                                          sizeof(USB_ENDPOINT_DESCRIPTOR));
                             BufPtr += sizeof(USB_ENDPOINT_DESCRIPTOR);
                         }
                     }
-
+                    DumpFullConfigurationDescriptor((PUSB_CONFIGURATION_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer);
                     break;
                 }
                 case USB_STRING_DESCRIPTOR_TYPE:
                 {
-                    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
-                    PUSB_STRING_DESCRIPTOR StringDesc;
-                    BOOLEAN ResultOk;
-
-                    StringDesc = (PUSB_STRING_DESCRIPTOR)  Urb->UrbControlDescriptorRequest.TransferBuffer;
+                    DPRINT1("StringDescriptorType\n");
+                    DPRINT1("Urb->UrbControlDescriptorRequest.Index %x\n", Urb->UrbControlDescriptorRequest.Index);
+                    DPRINT1("Urb->UrbControlDescriptorRequest.LanguageId %x\n", Urb->UrbControlDescriptorRequest.LanguageId);
 
                     if (Urb->UrbControlDescriptorRequest.Index == 0)
-                        DPRINT("Requesting LANGID's\n");
-
-
-                    RtlZeroMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength-1);
+                        DPRINT1("Requesting LANGID's\n");
 
                     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
                     CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
@@ -229,8 +277,14 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                     CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
                     CtrlSetup.wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
 
-                    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port,
-                        Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength);
+                    SubmitControlTransfer(&FdoDeviceExtension->hcd,
+                                          &CtrlSetup,
+                                          Urb->UrbControlDescriptorRequest.TransferBuffer,
+                                          Urb->UrbControlDescriptorRequest.TransferBufferLength,
+                                          Irp);
+
+                    IoMarkIrpPending(Irp);
+                    Status = STATUS_PENDING;
                     break;
                 }
                 default:
@@ -245,14 +299,17 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
             PUSBD_INTERFACE_INFORMATION InterfaceInfo;
             LONG iCount, pCount;
 
-            DPRINT("Selecting Configuration\n");
-            DPRINT("Urb->UrbSelectConfiguration.ConfigurationHandle %x\n",Urb->UrbSelectConfiguration.ConfigurationHandle);
+            DPRINT1("Selecting Configuration\n");
+            DPRINT1("ConfigurationHandle %x\n",Urb->UrbSelectConfiguration.ConfigurationHandle);
 
             if (Urb->UrbSelectConfiguration.ConfigurationDescriptor)
             {
                 Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)&PdoDeviceExtension->UsbDevices[0]->ActiveConfig->ConfigurationDescriptor;
                 DPRINT("ConfigHandle %x\n", Urb->UrbSelectConfiguration.ConfigurationHandle);
                 InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
+
+                DPRINT1("Length %x\n", InterfaceInfo->Length);
+                DPRINT1("NumberOfPipes %x\n", InterfaceInfo->NumberOfPipes);
 
                 for (iCount = 0; iCount < Urb->UrbSelectConfiguration.ConfigurationDescriptor->bNumInterfaces; iCount++)
                 {
@@ -274,6 +331,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                         /* InterfaceInfo->Pipes[j].PipeFlags = 0; */
                     }
                     InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((PUCHAR)InterfaceInfo + InterfaceInfo->Length);
+                    if (InterfaceInfo->Length == 0) break;
                 }
             }
             else
@@ -284,6 +342,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
         }
         case URB_FUNCTION_CLASS_DEVICE:
         {
+            DPRINT1("URB_FUNCTION_CLASS_DEVICE\n");
             switch (Urb->UrbControlVendorClassRequest.Request)
             {
                 case USB_REQUEST_GET_DESCRIPTOR:
@@ -353,7 +412,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                             DPRINT1("USB_DEVICE_CLASS_HUB request\n");
                             UsbHubDescr->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
                             UsbHubDescr->bDescriptorType = 0x29;
-                            UsbHubDescr->bNumberOfPorts = 0x08;
+                            UsbHubDescr->bNumberOfPorts = PdoDeviceExtension->NumberOfPorts;
                             UsbHubDescr->wHubCharacteristics = 0x0012;
                             UsbHubDescr->bPowerOnToPowerGood = 0x01;
                             UsbHubDescr->bHubControlCurrent = 0x00;
@@ -383,6 +442,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                 {
                     DPRINT1("Unhandled URB request for class device\n");
                     Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
+                    ASSERT(FALSE);
                 }
             }
             break;
@@ -390,13 +450,13 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
         case URB_FUNCTION_CLASS_OTHER:
         {
             DPRINT("URB_FUNCTION_CLASS_OTHER\n");
-            /* FIXME: Each one of these needs to make sure that the index value is a valid for the number of ports and return STATUS_UNSUCCESSFUL is not */
+            /* FIXME: Each one of these needs to make sure that the index value is a valid for the number of ports and return STATUS_UNSUCCESSFUL if not */
 
             switch (Urb->UrbControlVendorClassRequest.Request)
             {
                 case USB_REQUEST_GET_STATUS:
                 {
-                    DPRINT("USB_REQUEST_GET_STATUS Port %d\n", Urb->UrbControlVendorClassRequest.Index);
+                    DPRINT1("USB_REQUEST_GET_STATUS Port %d\n", Urb->UrbControlVendorClassRequest.Index);
 
                     ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
                     DPRINT("PortStatus %x\n", PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus);
@@ -407,20 +467,23 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                 }
                 case USB_REQUEST_CLEAR_FEATURE:
                 {
-                    DPRINT("USB_REQUEST_CLEAR_FEATURE Port %d, value %x\n", Urb->UrbControlVendorClassRequest.Index,
+                    DPRINT1("USB_REQUEST_CLEAR_FEATURE Port %d, value %x\n", Urb->UrbControlVendorClassRequest.Index,
                         Urb->UrbControlVendorClassRequest.Value);
                     switch (Urb->UrbControlVendorClassRequest.Value)
                     {
                         case C_PORT_CONNECTION:
+                            DPRINT1("C_PORT_CONNECTION\n");
                             PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange &= ~USB_PORT_STATUS_CONNECT;
                             break;
                         case C_PORT_RESET:
+                            DPRINT1("C_PORT_RESET\n");
                             PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange &= ~USB_PORT_STATUS_RESET;
                             break;
                         default:
                             DPRINT1("Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
                             break;
                     }
+                    CompletePendingURBRequest(PdoDeviceExtension);
                     break;
                 }
                 case USB_REQUEST_SET_FEATURE:
@@ -432,32 +495,43 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                     {
                         case PORT_RESET:
                         {
-                            PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus |= USB_PORT_STATUS_ENABLE;
-                            ResetPort(FdoDeviceExtension, Urb->UrbControlVendorClassRequest.Index-1);
+                            //PWORKITEMDATA WorkItemData;
 
+                            PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus |= USB_PORT_STATUS_ENABLE;
+                            PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange |= USB_PORT_STATUS_RESET;
+
+                            ResetPort(&FdoDeviceExtension->hcd, Urb->UrbControlVendorClassRequest.Index-1);
+                            //WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEMDATA));
+                            //WorkItemData->Context = PdoDeviceExtension;
+                            //ExInitializeWorkItem(&WorkItemData->WorkItem, (PWORKER_THREAD_ROUTINE)WorkerThread, (PVOID) WorkItemData)
+                            //ExQueueWorkItem(&WorkItemData->WorkItem, DelayedWorkQueue);
+                            //IoMarkIrpPending(Irp);
+                            //Status = STATUS_PENDING;
                             break;
                         }
                         case PORT_ENABLE:
                         {
-                            DPRINT1("PORT_ENABLE not implemented\n");
+                            DPRINT("PORT_ENABLE not implemented\n");
                             break;
                         }
                         case PORT_POWER:
                         {
-                            DPRINT1("PORT_POWER not implemented\n");
+                            DPRINT("PORT_POWER not implemented\n");
                             break;
                         }
                         default:
                         {
-                            DPRINT1("Unknown Set Feature!\n");
+                            DPRINT("Unknown Set Feature!\n");
                             break;
                         }
                     }
+                    CompletePendingURBRequest(PdoDeviceExtension);
                     break;
                 }
                 case USB_REQUEST_SET_ADDRESS:
                 {
                     DPRINT1("USB_REQUEST_SET_ADDRESS\n");
+                    ASSERT(FALSE);
                     break;
                 }
                 case USB_REQUEST_GET_DESCRIPTOR:
@@ -508,7 +582,6 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
             DPRINT1("Unhandled URB %x\n", Urb->UrbHeader.Function);
             Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
         }
-
     }
 
     Irp->IoStatus.Status = Status;
@@ -539,8 +612,11 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
         Irp = CONTAINING_RECORD(NextIrp, IRP, Tail.Overlay.ListEntry);
 
         if (!Irp)
+        {
+            DPRINT1("No IRP\n");
             break;
-
+        }
+        IoSetCancelRoutine(Irp, NULL);
         KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
         HandleUrbRequest(DeviceExtension, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
