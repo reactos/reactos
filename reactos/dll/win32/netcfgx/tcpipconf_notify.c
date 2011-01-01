@@ -2765,11 +2765,12 @@ LoadFilterSettings(
 HRESULT
 Initialize(TcpipConfNotifyImpl * This)
 {
-    DWORD dwSize;
+    DWORD dwSize, Status;
     WCHAR szBuffer[50];
     IP_ADAPTER_INFO * pCurrentAdapter;
     IP_ADAPTER_INFO * pInfo;
     PIP_PER_ADAPTER_INFO pPerInfo;
+    IP_PER_ADAPTER_INFO Info;
     LPOLESTR pStr;
     HRESULT hr;
     BOOL bFound;
@@ -2846,13 +2847,17 @@ Initialize(TcpipConfNotifyImpl * This)
         CopyIpAddrString(&pCurrentAdapter->IpAddressList, &pCurSettings->Ip, SUBMASK, NULL);
         CopyIpAddrString(&pCurrentAdapter->GatewayList, &pCurSettings->Gw, METRIC, NULL); //FIXME
     }
-    uLength = 0;
-    if (GetPerAdapterInfo(pCurrentAdapter->Index, NULL, &uLength) == ERROR_BUFFER_OVERFLOW)
+
+    uLength = sizeof(IP_PER_ADAPTER_INFO);
+    ZeroMemory(&Info, sizeof(IP_PER_ADAPTER_INFO));
+
+    if (GetPerAdapterInfo(pCurrentAdapter->Index, &Info, &uLength) == ERROR_BUFFER_OVERFLOW)
     {
         pPerInfo = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(uLength);
         if (pPerInfo)
         {
-            if (GetPerAdapterInfo(pCurrentAdapter->Index, pPerInfo, &uLength) == NOERROR)
+            Status = GetPerAdapterInfo(pCurrentAdapter->Index, pPerInfo, &uLength);
+            if (Status == NOERROR)
             {
                 if (!pPerInfo->AutoconfigActive)
                 {
@@ -2862,9 +2867,8 @@ Initialize(TcpipConfNotifyImpl * This)
             }
             CoTaskMemFree(pPerInfo);
         }
+
     }
-
-
     if (FAILED(LoadFilterSettings(This)))
         return E_FAIL;
 
@@ -3284,16 +3288,15 @@ INetCfgComponentControl_fnApplyRegistryChanges(
 
         if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
         {
-            RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+            RegDeleteValueW(hKey, L"NameServer");
         }
         else
         {
             pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
             if(pStr)
             {
-
                 RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
-                RegDeleteValueW(hKey, L"DhcpNameServer");
+                //RegDeleteValueW(hKey, L"DhcpNameServer");
                 CoTaskMemFree(pStr);
             }
         }
