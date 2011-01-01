@@ -198,9 +198,9 @@
 //typedef x (NTAPI *PGD_DxDdHeapVidMemAllocAligned)(
 //typedef x (NTAPI *PGD_DxDdHeapVidMemFree)(
 //typedef x (NTAPI *PGD_DxDdDisableDirectDraw)(
-//typedef x (NTAPI *PGD_DxDdSuspendDirectDraw)(
-//typedef x (NTAPI *PGD_DxDdResumeDirectDraw)(
-//typedef x (NTAPI *PGD_DxDdDynamicModeChange)(
+
+
+
 //typedef x (NTAPI *PGD_DxDdCloseProcess)(
 //typedef x (NTAPI *PGD_DxDdGetDirectDrawBound)(
 //typedef x (NTAPI *PGD_DxDdEnableDirectDrawRedirection)(
@@ -215,6 +215,7 @@ typedef BOOLEAN (NTAPI *PGD_DXDDENABLEDIRECTDRAW)(PVOID, BOOLEAN);
 typedef PDD_SURFACE_LOCAL (NTAPI *PGD_DXDDLOCKDIRECTDRAWSURFACE)(HANDLE hDdSurface);
 typedef BOOL (NTAPI *PGD_DXDDUNLOCKDIRECTDRAWSURFACE)(HANDLE hDdSurface);
 typedef DWORD (NTAPI *PGD_ENGDXIOCTL)(ULONG, PVOID, ULONG);
-
-
+typedef DWORD (NTAPI *PGD_DXDDSUSPENDDIRECTDRAW)(HDEV,DWORD);
+typedef DWORD (NTAPI *PGD_DXDDRESUMEDIRECTDRAW)(HDEV,BOOLEAN);
+typedef DWORD (NTAPI *PGD_DXDDDYNAMICMODECHANGE)(HDEV oldHdev, HDEV newHdev, DWORD dwType);
 
