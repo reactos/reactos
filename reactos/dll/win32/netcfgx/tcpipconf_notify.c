@@ -2867,8 +2867,16 @@ Initialize(TcpipConfNotifyImpl * This)
             }
             CoTaskMemFree(pPerInfo);
         }
-
     }
+    else
+    {
+        if (!Info.AutoconfigActive)
+        {
+            CopyIpAddrString(&Info.DnsServerList, &pCurSettings->Ns, IPADDR, NULL);
+        }
+        pCurSettings->AutoconfigActive = Info.AutoconfigActive;
+    }
+
     if (FAILED(LoadFilterSettings(This)))
         return E_FAIL;
 
