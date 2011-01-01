@@ -1,54 +1,59 @@
 /*
  * PROJECT:         ReactOS Win32K
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            subsystems/win32/win32k/eng/engevent.c
  * PURPOSE:         Event Support Routines
  * PROGRAMMERS:     Aleksey Bragin <aleksey@reactos.org>
+ *                  ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <win32k.h>
+#include <ntddvdeo.h>
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ENG ' gnE'
+/* Dfsm - <unknown>    - Eng event allocation (ENG_KEVENTALLOC,ENG_ALLOC) in ntgdi\gre */
+#define TAG_GRE_EVENT 'msfD'
 
-/* PUBLIC FUNCTIONS **********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOL
 APIENTRY
 EngCreateEvent(OUT PEVENT* Event)
 {
+    BOOLEAN Result = TRUE;
     PENG_EVENT EngEvent;
 
     /* Allocate memory for the event structure */
-    EngEvent = EngAllocMem(FL_NONPAGED_MEMORY | FL_ZERO_MEMORY,
-                           sizeof(ENG_EVENT),
-                           TAG_ENG);
-
-    /* Check if we are out of memory */
-    if (!EngEvent)
+    EngEvent = ExAllocatePoolWithTag(NonPagedPool,
+                                     sizeof(ENG_EVENT) + sizeof(KEVENT),
+                                     TAG_GRE_EVENT);
+    if (EngEvent)
     {
-        /* We are, fail */
-        return FALSE;
+        /* Set KEVENT pointer */
+        EngEvent->fFlags = 0;
+        EngEvent->pKEvent = EngEvent + 1;
+
+        /* Initialize the kernel event */
+        KeInitializeEvent(EngEvent->pKEvent,
+                          SynchronizationEvent,
+                          FALSE);
+
+        /* Pass pointer to our structure to the caller */
+        *Event = EngEvent;
+        DPRINT("EngCreateEvent() created %p\n", EngEvent);
+    }
+    else
+    {
+        /* Out of memory */
+        DPRINT("EngCreateEvent() failed\n");    
+        Result = FALSE;
     }
 
-    /* Set KEVENT pointer */
-    EngEvent->pKEvent = &EngEvent->KEvent;
-
-    /* Initialize the kernel event */
-    KeInitializeEvent(EngEvent->pKEvent,
-                      SynchronizationEvent,
-                      FALSE);
-
-    /* Pass pointer to our structure to the caller */
-    *Event = EngEvent;
-
-    DPRINT("EngCreateEvent() created %p\n", EngEvent);
-
-    /* Return success */
-    return TRUE;
+    /* Return result */
+    return Result;
 }
 
 BOOL
@@ -66,7 +71,7 @@ EngDeleteEvent(IN PEVENT Event)
     }
 
     /* Free the allocated memory */
-    EngFreeMem(Event);
+    ExFreePool(Event);
 
     /* Return success */
     return TRUE;
@@ -106,18 +111,57 @@ EngMapEvent(IN HDEV hDev,
             IN PVOID Reserved2,
             IN PVOID Reserved3)
 {
-    DPRINT("EngMapEvent(%x %x %p %p %p)\n", hDev, hUserObject, Reserved1, Reserved2, Reserved3);
-    UNIMPLEMENTED;
-    return NULL;
+    PENG_EVENT EngEvent;
+    NTSTATUS Status;
+
+    /* Allocate memory for the event structure */
+    EngEvent = ExAllocatePoolWithTag(NonPagedPool,
+                                     sizeof(ENG_EVENT),
+                                     TAG_GRE_EVENT);
+    if (!EngEvent) return NULL;
+    
+    /* Zero it out */
+    EngEvent->fFlags = 0;
+    EngEvent->pKEvent = NULL;
+    
+    /* Create a handle, and have Ob fill out the pKEvent field */
+    Status = ObReferenceObjectByHandle(EngEvent,
+                                       EVENT_ALL_ACCESS,
+                                       ExEventObjectType,
+                                       UserMode,
+                                       &EngEvent->pKEvent,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Pulse the event and set that it's mapped by user */
+        KePulseEvent(EngEvent->pKEvent, EVENT_INCREMENT, FALSE);
+        EngEvent->fFlags |= ENG_EVENT_USERMAPPED;
+    }
+    else
+    {
+        /* Free the allocation */
+        ExFreePool(EngEvent);
+        EngEvent = NULL;
+    }
+    
+    /* Support legacy interface */
+    if (Reserved1) *(PVOID*)Reserved1 = EngEvent;
+    return EngEvent;
 }
 
 BOOL
 APIENTRY
 EngUnmapEvent(IN PEVENT Event)
 {
-    DPRINT("EngUnmapEvent(%p)\n", Event);
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Must be a usermapped event */
+    if (!(Event->fFlags & ENG_EVENT_USERMAPPED)) return FALSE;
+    
+    /* Dereference the object, destroying it */
+    ObDereferenceObject(Event->pKEvent);
+    
+    /* Free the Eng object */
+    ExFreePool(Event);
+    return TRUE;
 }
 
 BOOL
@@ -126,7 +170,6 @@ EngWaitForSingleObject(IN PEVENT Event,
                        IN PLARGE_INTEGER TimeOut)
 {
     NTSTATUS Status;
-
     DPRINT("EngWaitForSingleObject(%p %I64d)\n", Event, TimeOut->QuadPart);
 
     /* Validate parameters */
@@ -148,12 +191,7 @@ EngWaitForSingleObject(IN PEVENT Event,
                                    TimeOut);
 
     /* Check if there is a failure or a timeout */
-    if (!NT_SUCCESS(Status))
-    {
-        /* Return failure */
-        return FALSE;
-    }
-
-    /* Return success */
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
+
+/* EOF */
