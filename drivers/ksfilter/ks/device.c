@@ -282,8 +282,6 @@ IKsDevice_PnpStartDevice(
     NTSTATUS Status;
     PCM_RESOURCE_LIST TranslatedResourceList;
     PCM_RESOURCE_LIST UntranslatedResourceList;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor, UnPartialDescriptor;
-    ULONG Index;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -308,31 +306,6 @@ IKsDevice_PnpStartDevice(
 
     TranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
     UntranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResources;
-
-    DPRINT("ResourceDescriptorCount %lu\n", TranslatedResourceList->List[0].PartialResourceList.Count);
-    for (Index = 0; Index < TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
-    {
-        PartialDescriptor = &TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        UnPartialDescriptor = &UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
-
-        if (PartialDescriptor->Type == CmResourceTypeInterrupt)
-        {
-            DPRINT("CmResourceTypeInterrupt Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
-            DPRINT("CmResourceTypeInterrupt Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
-
-        }
-        else if (PartialDescriptor->Type == CmResourceTypePort)
-        {
-            DPRINT("CmResourceTypePort Index %u TRANS    Port Length %u Start %u %u Flags %x Share %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
-            DPRINT("CmResourceTypePort Index %u UNTRANS  Port Length %u Start %u %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
-        }
-        else if (PartialDescriptor->Type == CmResourceTypeMemory)
-        {
-            DPRINT("CmResourceTypeMemory Index %u TRANS  Start %x Length %u Flags %x Share %x\n", Index, PartialDescriptor->u.Memory.Start.LowPart, PartialDescriptor->u.Memory.Length, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
-            DPRINT("CmResourceTypeMemory Index %u TRANS  Start %x Length %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Memory.Start.LowPart, UnPartialDescriptor->u.Memory.Length, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
-        }
-    }
 
     ASSERT(DeviceHeader->KsDevice.Descriptor);
 
