@@ -12,7 +12,6 @@
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<library>kernel32</library>
 	<file>_newmode.c</file>
-	<file>atonexit.c</file>
 	<file>binmode.c</file>
 	<file>charmax.c</file>
 	<file>cinitexe.c</file>
