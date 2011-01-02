@@ -130,7 +130,7 @@
 # @ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
 # @ cdecl ___mb_cur_max_func() MSVCRT___mb_cur_max_func
-@ cdecl ___setlc_active_func() 
+@ cdecl ___setlc_active_func()
 @ cdecl ___unguarded_readlc_active_add_func()
 @ extern __argc __argc
 @ extern __argv __argv
@@ -246,7 +246,7 @@
 @ cdecl -arch=i386 _adj_fprem()
 @ cdecl -arch=i386 _adj_fprem1()
 @ cdecl -arch=i386 _adj_fptan()
-@ extern -arch=i386 _adjust_fdiv 
+@ extern -arch=i386 _adjust_fdiv
 # extern _aexit_rtn
 @ cdecl _aligned_free(ptr)
 # stub _aligned_free_dbg
@@ -259,7 +259,7 @@
 @ cdecl _aligned_realloc(ptr long long)
 # stub _aligned_realloc_dbg
 @ cdecl _amsg_exit(long)
-@ cdecl _assert(str str long) 
+@ cdecl _assert(str str long)
 @ stub _atodbl #(ptr str)
 # stub _atodbl_l
 # @ cdecl _atof_l(str ptr)
@@ -599,7 +599,6 @@
 @ cdecl _makepath(ptr str str str str)
 @ cdecl _makepath_s(ptr long str str str str)
 # stub _malloc_dbg
-@ cdecl _matherr(ptr)
 @ cdecl _mbbtombc(long)
 # stub _mbbtombc_l
 @ cdecl _mbbtype(long long)
@@ -778,7 +777,7 @@
 # stub _putwch
 @ cdecl _putws(wstr)
 # extern _pwctype
-@ cdecl _read(long ptr long) 
+@ cdecl _read(long ptr long)
 # stub _realloc_dbg
 # stub _resetstkoflw
 @ cdecl _rmdir(str)
@@ -861,7 +860,7 @@
 @ cdecl _stat64(str ptr)
 @ cdecl _stati64(str ptr)
 @ cdecl _statusfp()
-@ cdecl _strcmpi(str str) 
+@ cdecl _strcmpi(str str)
 # stub _strcoll_l
 @ cdecl _strdate(ptr)
 # stub _strdate_s
@@ -918,7 +917,7 @@
 # stub _tempnam_dbg
 @ cdecl _time32(ptr)
 @ cdecl _time64(ptr)
-@ extern _timezone 
+@ extern _timezone
 @ cdecl _tolower(long)
 # stub _tolower_l
 @ cdecl _toupper(long)
@@ -926,7 +925,7 @@
 # stub _towlower_l
 # stub _towupper_l
 @ extern _tzname
-@ cdecl _tzset() 
+@ cdecl _tzset()
 @ cdecl _ui64toa(long long ptr long)
 # stub _ui64toa_s
 @ cdecl _ui64tow(long long ptr long)
@@ -981,10 +980,10 @@
 # @ cdecl _vsnprintf_l(ptr long str ptr ptr)
 # @ cdecl _vsnprintf_s(ptr long long str ptr)
 # @ cdecl _vsnprintf_s_l(ptr long long str ptr ptr)
-@ cdecl _vsnwprintf(ptr long wstr ptr) 
-# @ cdecl _vsnwprintf_l(ptr long wstr ptr ptr) 
-# @ cdecl _vsnwprintf_s(ptr long long wstr ptr) 
-# @ cdecl _vsnwprintf_s_l(ptr long long wstr ptr ptr) 
+@ cdecl _vsnwprintf(ptr long wstr ptr)
+# @ cdecl _vsnwprintf_l(ptr long wstr ptr ptr)
+# @ cdecl _vsnwprintf_s(ptr long long wstr ptr)
+# @ cdecl _vsnwprintf_s_l(ptr long long wstr ptr ptr)
 # stub _vsprintf_l
 # stub _vsprintf_p
 # stub _vsprintf_p_l
@@ -1149,21 +1148,21 @@
 #@ cdecl _y0(double)
 #@ cdecl _y1(double)
 #@ cdecl _yn(long double )
-@ cdecl abort() 
+@ cdecl abort()
 @ cdecl abs(long)
-@ cdecl acos(double) 
+@ cdecl acos(double)
 @ cdecl asctime(ptr)
 # stub asctime_s
-@ cdecl asin(double) 
-@ cdecl atan(double) 
-@ cdecl atan2(double double) 
-@ cdecl atexit(ptr) 
-@ cdecl atof(str) 
+@ cdecl asin(double)
+@ cdecl atan(double)
+@ cdecl atan2(double double)
+@ cdecl atexit(ptr)
+@ cdecl atof(str)
 @ cdecl atoi(str)
-@ cdecl atol(str) 
+@ cdecl atol(str)
 @ cdecl bsearch(ptr ptr long long ptr)
 # stub bsearch_s
-# @ cdecl btowc(long) 
+# @ cdecl btowc(long)
 @ cdecl calloc(long long)
 @ cdecl ceil(double)
 @ cdecl -arch=x86_64 ceilf(double)
@@ -1405,7 +1404,7 @@
 # stub wctomb_s
 @ varargs wprintf(wstr)
 # stub wprintf_s
-@ varargs wscanf(wstr) 
+@ varargs wscanf(wstr)
 # @ varargs wscanf_s(wstr)
 
 # Functions not exported in native dll:
