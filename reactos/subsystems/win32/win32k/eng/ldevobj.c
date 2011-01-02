@@ -31,6 +31,8 @@ NTSTATUS
 NTAPI
 InitLDEVImpl()
 {
+    ULONG cbSize;
+
     /* Initialize the loader lock */
     ghsemLDEVList = EngCreateSemaphore();
     if (!ghsemLDEVList)
@@ -60,7 +62,11 @@ InitLDEVImpl()
     gpldevWin32k->pGdiDriverInfo->ImageAddress = &__ImageBase;
     gpldevWin32k->pGdiDriverInfo->SectionPointer = NULL;
     gpldevWin32k->pGdiDriverInfo->EntryPoint = (PVOID)DriverEntry;
-    gpldevWin32k->pGdiDriverInfo->ExportSectionPointer = NULL;
+    gpldevWin32k->pGdiDriverInfo->ExportSectionPointer =
+        RtlImageDirectoryEntryToData(&__ImageBase,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                     &cbSize);
     gpldevWin32k->pGdiDriverInfo->ImageLength = 0; // FIXME;
 
     return STATUS_SUCCESS;
@@ -182,7 +188,7 @@ LDEVOBJ_bLoadImage(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to load a GDI driver: '%S', Status = 0x%lx\n", 
+        DPRINT1("Failed to load a GDI driver: '%S', Status = 0x%lx\n",
                 pstrPathName->Buffer, Status);
 
         /* Free the allocated memory */
@@ -277,17 +283,14 @@ LDEVOBJ_pvFindImageProcAddress(
     PVOID pvProcAdress = NULL;
     PUSHORT pOrdinals;
     PULONG pNames, pAddresses;
-    ULONG i, cbSize;
+    ULONG i;
 
     /* Make sure we have a driver info */
     ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
 
     /* Get the pointer to the export directory */
     pvImageBase = pldev->pGdiDriverInfo->ImageAddress;
-    pExportDir = RtlImageDirectoryEntryToData(pvImageBase,
-                                              TRUE,
-                                              IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                              &cbSize);
+    pExportDir = pldev->pGdiDriverInfo->ExportSectionPointer;
     if (!pExportDir)
     {
         return NULL;
