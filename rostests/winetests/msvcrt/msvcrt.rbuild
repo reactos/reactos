@@ -6,6 +6,7 @@
 	<include base="msvcrt">include/reactos/wine/msvcrt</include>
 	<define name="__ROS_LONG64__" />
 	<define name="_CRT_NONSTDC_NO_DEPRECATE" />
+	<library>msvcrt</library>
 
 	<!-- FIXME: workarounds until we have a proper oldnames library -->
 	<define name="open">_open</define>
