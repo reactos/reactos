@@ -1127,15 +1127,15 @@ MiQueryAddressState(IN PVOID Va,
         if (!PointerPde->u.Long)
         {
             /* No address in this range used yet, move to the next PDE range */
-            *NextVa = MiPteToAddress(MiPteToAddress(PointerPde + 1));
+            *NextVa = MiPteToAddress(MiPdeToAddress(PointerPde + 1));
             break;
         }
 
-        /* The PDE is empty, but is it faulted in? */
+        /* The PDE is not empty, but is it faulted in? */
         if (!PointerPde->u.Hard.Valid)
         {
             /* It isn't, go ahead and do the fault */
-            LockChange = MiMakeSystemAddressValid(MiPteToAddress(PointerPde),
+            LockChange = MiMakeSystemAddressValid(MiPdeToAddress(PointerPde),
                                                   TargetProcess);
         }
 
@@ -2353,6 +2353,8 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PMEMORY_AREA MemoryArea;
+    SIZE_T ResultLength;
 
     /* Check for illegal addresses in user-space, or the shared memory area */
     if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
@@ -2542,30 +2544,49 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     /* This must be a VM VAD */
     ASSERT(Vad->u.VadFlags.PrivateMemory);
 
-    /* Build the initial information block */
-    Address = PAGE_ALIGN(BaseAddress);
-    MemoryInfo.BaseAddress = Address;
-    MemoryInfo.AllocationBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
-    MemoryInfo.AllocationProtect = MmProtectToValue[Vad->u.VadFlags.Protection];
-    MemoryInfo.Type = MEM_PRIVATE;
+    /* Lock the address space of the process */
+    MmLockAddressSpace(&TargetProcess->Vm);
 
-    /* Find the largest chunk of memory which has the same state and protection mask */
-    MemoryInfo.State = MiQueryAddressState(Address,
-                                           Vad,
-                                           TargetProcess,
-                                           &MemoryInfo.Protect,
-                                           &NextAddress);
-    Address = NextAddress;
-    while (((ULONG_PTR)Address >> PAGE_SHIFT) <= Vad->EndingVpn)
+    /* Find the memory area the specified address belongs to */
+    MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
+    ASSERT(MemoryArea != NULL);
+
+    /* Determine information dependent on the memory area type */
+    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-        /* Keep going unless the state or protection mask changed */
-        NewState = MiQueryAddressState(Address, Vad, TargetProcess, &NewProtect, &NextAddress);
-        if ((NewState != MemoryInfo.State) || (NewProtect != MemoryInfo.Protect)) break;
+        Status = MmQuerySectionView(MemoryArea, BaseAddress, &MemoryInfo, &ResultLength);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    else
+    {
+        /* Build the initial information block */
+        Address = PAGE_ALIGN(BaseAddress);
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
+        MemoryInfo.AllocationProtect = MmProtectToValue[Vad->u.VadFlags.Protection];
+        MemoryInfo.Type = MEM_PRIVATE;
+
+        /* Find the largest chunk of memory which has the same state and protection mask */
+        MemoryInfo.State = MiQueryAddressState(Address,
+                                               Vad,
+                                               TargetProcess,
+                                               &MemoryInfo.Protect,
+                                               &NextAddress);
         Address = NextAddress;
+        while (((ULONG_PTR)Address >> PAGE_SHIFT) <= Vad->EndingVpn)
+        {
+            /* Keep going unless the state or protection mask changed */
+            NewState = MiQueryAddressState(Address, Vad, TargetProcess, &NewProtect, &NextAddress);
+            if ((NewState != MemoryInfo.State) || (NewProtect != MemoryInfo.Protect)) break;
+            Address = NextAddress;
+        }
+
+        /* Now that we know the last VA address, calculate the region size */
+        MemoryInfo.RegionSize = ((ULONG_PTR)Address - (ULONG_PTR)MemoryInfo.BaseAddress);
     }
 
-    /* Now that we know the last VA address, calculate the region size */
-    MemoryInfo.RegionSize = ((ULONG_PTR)Address - (ULONG_PTR)MemoryInfo.BaseAddress);
+    /* Unlock the address space of the process */
+    MmUnlockAddressSpace(&TargetProcess->Vm);
 
     /* Check if we were attached */
     if (ProcessHandle != NtCurrentProcess())
@@ -2596,7 +2617,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     }
 
     /* All went well */
-    DPRINT("Base: %p AllocBase: %p Protect: %lx AllocProtect: %lx "
+    DPRINT("Base: %p AllocBase: %p AllocProtect: %lx Protect: %lx "
             "State: %lx Type: %lx Size: %lx\n",
             MemoryInfo.BaseAddress, MemoryInfo.AllocationBase,
             MemoryInfo.AllocationProtect, MemoryInfo.Protect,

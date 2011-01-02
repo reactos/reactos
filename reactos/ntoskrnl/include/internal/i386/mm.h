@@ -29,7 +29,7 @@ PULONG MmGetPageDirectory(VOID);
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
 #define MiAddressToPte(x) \
     ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
 #define MiAddressToPteOffset(x) \
