@@ -71,7 +71,7 @@ enum
 # define _flsbuf(chr, stream) 0
 #endif
 
-#define get_exp(f) floor(f > 0 ? log10(f) : log10(-f))
+#define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
 
 void
 #ifdef _LIBCNT
@@ -92,16 +92,30 @@ format_float(
     static const TCHAR _nan[] = _T("#QNAN");
     static const TCHAR _infinity[] = _T("#INF");
     const TCHAR *digits = digits_l;
-    int exponent = 0;
-    long double fpval;
-    int num_digits, val32, base = 10;
-    __int64 val64;
+    int exponent = 0, sign;
+    long double fpval, fpval2;
+    int padding = 0, num_digits, val32, base = 10;
 
+    /* Normalize the precision */
     if (precision < 0) precision = 6;
-    else if (precision > 512) precision = 512;
+    else if (precision > 17)
+    {
+        padding = precision - 17;
+        precision = 17;
+    }
 
+    /* Get the float value and calculate the exponent */
     fpval = va_arg_ffp(*argptr, flags);
     exponent = get_exp(fpval);
+    sign = fpval < 0 ? -1 : 1;
+
+    /* Shift the decimal point and round */
+    fpval2 = round(sign * fpval * pow(10., precision - exponent));
+    if (fpval2 >= (unsigned __int64)pow(10., precision + 1))
+    {
+        exponent++;
+        fpval2 = round(sign * fpval * pow(10., precision - exponent));
+    }
 
     switch (chr)
     {
@@ -111,21 +125,18 @@ format_float(
             if (precision > 0) precision--;
             if (exponent < -4 || exponent >= precision) goto case_e;
 
-            /* Skip trailing 0s */
-            val64 = (__int64)(fpval * pow(10., precision) + 0.5);
-            while (precision && val64 % 10 == 0)
+            /* Skip trailing zeroes */
+            while (precision && (unsigned __int64)fpval2 % 10 == 0)
             {
                 precision--;
-                val64 /= 10;
+                fpval2 /= 10;
             }
-
             break;
 
         case _T('E'):
             digits = digits_u;
         case _T('e'):
         case_e:
-            fpval /= pow(10., exponent);
             val32 = exponent >= 0 ? exponent : -exponent;
 
             // FIXME: handle length of exponent field:
@@ -154,13 +165,9 @@ format_float(
             break;
     }
 
-    /* CHECKME: Windows seems to handle a max of 17 digits(?) */
-    num_digits = precision <= 17 ? precision: 17;
-
     /* Handle sign */
     if (fpval < 0)
     {
-        fpval = -fpval;
         *prefix = _T("-");
     }
     else if (flags & FLAG_FORCE_SIGN)
@@ -173,22 +180,25 @@ format_float(
     {
         (*string) -= sizeof(_nan) / sizeof(TCHAR) - 1;
         _tcscpy((*string), _nan);
-        val64 = 1;
+        fpval2 = 1;
     }
     else if (!_finite(fpval))
     {
         (*string) -= sizeof(_infinity) / sizeof(TCHAR) - 1;
         _tcscpy((*string), _infinity);
-        val64 = 1;
+        fpval2 = 1;
     }
     else
     {
+        /* Zero padding */
+        while (padding-- > 0) *--(*string) = _T('0');
+
         /* Digits after the decimal point */
-        val64 = (__int64)(fpval * pow(10., precision) + 0.5);
+        num_digits = precision;
         while (num_digits-- > 0)
         {
-            *--(*string) = digits[val64 % 10];
-            val64 /= 10;
+            *--(*string) = digits[(unsigned __int64)fpval2 % 10];
+            fpval2 /= base;
         }
     }
 
@@ -198,10 +208,10 @@ format_float(
     /* Digits before the decimal point */
     do
     {
-        *--(*string) = digits[val64 % base];
-        val64 /= base;
+        *--(*string) = digits[(unsigned __int64)fpval2 % base];
+        fpval2 /= base;
     }
-    while (val64);
+    while ((unsigned __int64)fpval2);
 
 }
 
