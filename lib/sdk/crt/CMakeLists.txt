@@ -61,7 +61,6 @@ list(APPEND CRT_SOURCE
     math/sinf.c
     math/sinh.c
     math/tanh.c
-    math/pow_asm.c
     mbstring/hanzen.c
     mbstring/ischira.c
     mbstring/iskana.c
@@ -124,6 +123,7 @@ list(APPEND CRT_SOURCE
     misc/assert.c
     misc/environ.c
     misc/getargs.c
+    misc/i10output.c
     misc/initterm.c
     misc/lock.c
     misc/purecall.c

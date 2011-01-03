@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::ARMPAGE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -329,7 +328,7 @@ MmInitGlobalKernelPageDirectory(VOID)
     ULONG i;
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
 
-        
+
     /* Loop the 2GB of address space which belong to the kernel */
     for (i = MiGetPdeOffset(MmSystemRangeStart); i < 2048; i++)
     {

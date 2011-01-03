@@ -77,12 +77,12 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
-      if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (co_IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
-         UserPostMessage( HWND_BROADCAST,
-                          WM_PALETTEISCHANGING,
-                         (WPARAM)hWnd,
-                          0);
+         UserSendNotifyMessage( HWND_BROADCAST,
+                                WM_PALETTEISCHANGING,
+                               (WPARAM)hWnd,
+                                0);
       }
 
       if (Window->spwndPrev != NULL)
@@ -166,7 +166,7 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
    if (hWndPrev)
    {
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      co_IntSendMessageNoWait(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -177,7 +177,7 @@ co_IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    {
       PWND pWnd = UserGetWindowObject(hWnd);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      co_IntSendMessageNoWait(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -492,7 +492,7 @@ NtUserSetActiveWindow(HWND hWnd)
 
       if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
 
@@ -579,7 +579,7 @@ NtUserSetCapture(HWND hWnd)
    if (Window)
       IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
-   co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   co_IntSendMessageNoWait(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    ThreadQueue->CaptureWindow = hWnd;
 
    RETURN( hWndPrev);
@@ -614,7 +614,7 @@ HWND FASTCALL co_UserSetFocus(PWND Wnd OPTIONAL)
 
       if (Wnd->head.pti->MessageQueue != ThreadQueue)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
          return( 0);
       }
 

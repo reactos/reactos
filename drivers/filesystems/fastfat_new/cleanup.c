@@ -221,7 +221,8 @@ FatiCleanup(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
             Fcb->Condition == FcbGood)
         {
             /* Yes, a delayed one */
-            SetFlag(Fcb->State, FCB_STATE_DELAY_CLOSE);
+            //SetFlag(Fcb->State, FCB_STATE_DELAY_CLOSE);
+            DPRINT1("Setting a delay on close for some reason for FCB %p, FF handle %p, file name '%wZ'\n", Fcb, Fcb->FatHandle, &Fcb->FullFileName);
         }
 
         /* Unlock all file locks */

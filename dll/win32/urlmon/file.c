@@ -25,8 +25,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    const IInternetProtocolExVtbl  *lpIInternetProtocolExVtbl;
-    const IInternetPriorityVtbl    *lpInternetPriorityVtbl;
+    IInternetProtocolEx IInternetProtocolEx_iface;
+    IInternetPriority   IInternetPriority_iface;
 
     HANDLE file;
     ULONG size;
@@ -35,31 +35,36 @@ typedef struct {
     LONG ref;
 } FileProtocol;
 
-#define PRIORITY(x)    ((IInternetPriority*)    &(x)->lpInternetPriorityVtbl)
-#define PROTOCOLEX(x)  ((IInternetProtocolEx*)  &(x)->lpIInternetProtocolExVtbl)
+static inline FileProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
+{
+    return CONTAINING_RECORD(iface, FileProtocol, IInternetProtocolEx_iface);
+}
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(FileProtocol, IInternetProtocolEx, iface)
+static inline FileProtocol *impl_from_IInternetPriority(IInternetPriority *iface)
+{
+    return CONTAINING_RECORD(iface, FileProtocol, IInternetPriority_iface);
+}
 
 static HRESULT WINAPI FileProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = PROTOCOLEX(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
-        *ppv = PROTOCOLEX(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
-        *ppv = PROTOCOLEX(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolEx, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolEx %p)\n", This, ppv);
-        *ppv = PROTOCOLEX(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
-        *ppv = PRIORITY(This);
+        *ppv = &This->IInternetPriority_iface;
     }
 
     if(*ppv) {
@@ -73,7 +78,7 @@ static HRESULT WINAPI FileProtocol_QueryInterface(IInternetProtocolEx *iface, RE
 
 static ULONG WINAPI FileProtocol_AddRef(IInternetProtocolEx *iface)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -81,7 +86,7 @@ static ULONG WINAPI FileProtocol_AddRef(IInternetProtocolEx *iface)
 
 static ULONG WINAPI FileProtocol_Release(IInternetProtocolEx *iface)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -101,7 +106,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szU
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     IUri *uri;
     HRESULT hres;
 
@@ -112,8 +117,8 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szU
     if(FAILED(hres))
         return hres;
 
-    hres = IInternetProtocolEx_StartEx(PROTOCOLEX(This), uri, pOIProtSink, pOIBindInfo,
-            grfPI, (HANDLE*)dwReserved);
+    hres = IInternetProtocolEx_StartEx(&This->IInternetProtocolEx_iface, uri, pOIProtSink,
+            pOIBindInfo, grfPI, (HANDLE*)dwReserved);
 
     IUri_Release(uri);
     return hres;
@@ -121,7 +126,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szU
 
 static HRESULT WINAPI FileProtocol_Continue(IInternetProtocolEx *iface, PROTOCOLDATA *pProtocolData)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)->(%p)\n", This, pProtocolData);
     return E_NOTIMPL;
 }
@@ -129,14 +134,14 @@ static HRESULT WINAPI FileProtocol_Continue(IInternetProtocolEx *iface, PROTOCOL
 static HRESULT WINAPI FileProtocol_Abort(IInternetProtocolEx *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI FileProtocol_Terminate(IInternetProtocolEx *iface, DWORD dwOptions)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -145,14 +150,14 @@ static HRESULT WINAPI FileProtocol_Terminate(IInternetProtocolEx *iface, DWORD d
 
 static HRESULT WINAPI FileProtocol_Suspend(IInternetProtocolEx *iface)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI FileProtocol_Resume(IInternetProtocolEx *iface)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -160,7 +165,7 @@ static HRESULT WINAPI FileProtocol_Resume(IInternetProtocolEx *iface)
 static HRESULT WINAPI FileProtocol_Read(IInternetProtocolEx *iface, void *pv,
         ULONG cb, ULONG *pcbRead)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     DWORD read = 0;
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
@@ -183,14 +188,14 @@ static HRESULT WINAPI FileProtocol_Read(IInternetProtocolEx *iface, void *pv,
 static HRESULT WINAPI FileProtocol_Seek(IInternetProtocolEx *iface, LARGE_INTEGER dlibMove,
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI FileProtocol_LockRequest(IInternetProtocolEx *iface, DWORD dwOptions)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -199,7 +204,7 @@ static HRESULT WINAPI FileProtocol_LockRequest(IInternetProtocolEx *iface, DWORD
 
 static HRESULT WINAPI FileProtocol_UnlockRequest(IInternetProtocolEx *iface)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)\n", This);
 
@@ -239,7 +244,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE *dwReserved)
 {
-    FileProtocol *This = PROTOCOL_THIS(iface);
+    FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     BINDINFO bindinfo;
     DWORD grfBINDF = 0;
     DWORD scheme;
@@ -314,8 +319,6 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     return report_result(pOIProtSink, S_OK, 0);
 }
 
-#undef PROTOCOL_THIS
-
 static const IInternetProtocolExVtbl FileProtocolExVtbl = {
     FileProtocol_QueryInterface,
     FileProtocol_AddRef,
@@ -333,30 +336,28 @@ static const IInternetProtocolExVtbl FileProtocolExVtbl = {
     FileProtocol_StartEx
 };
 
-#define PRIORITY_THIS(iface) DEFINE_THIS(FileProtocol, InternetPriority, iface)
-
 static HRESULT WINAPI FilePriority_QueryInterface(IInternetPriority *iface,
                                                   REFIID riid, void **ppv)
 {
-    FileProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocolEx_QueryInterface(PROTOCOLEX(This), riid, ppv);
+    FileProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_QueryInterface(&This->IInternetProtocolEx_iface, riid, ppv);
 }
 
 static ULONG WINAPI FilePriority_AddRef(IInternetPriority *iface)
 {
-    FileProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocolEx_AddRef(PROTOCOLEX(This));
+    FileProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_AddRef(&This->IInternetProtocolEx_iface);
 }
 
 static ULONG WINAPI FilePriority_Release(IInternetPriority *iface)
 {
-    FileProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocolEx_Release(PROTOCOLEX(This));
+    FileProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_Release(&This->IInternetProtocolEx_iface);
 }
 
 static HRESULT WINAPI FilePriority_SetPriority(IInternetPriority *iface, LONG nPriority)
 {
-    FileProtocol *This = PRIORITY_THIS(iface);
+    FileProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%d)\n", This, nPriority);
 
@@ -366,15 +367,13 @@ static HRESULT WINAPI FilePriority_SetPriority(IInternetPriority *iface, LONG nP
 
 static HRESULT WINAPI FilePriority_GetPriority(IInternetPriority *iface, LONG *pnPriority)
 {
-    FileProtocol *This = PRIORITY_THIS(iface);
+    FileProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%p)\n", This, pnPriority);
 
     *pnPriority = This->priority;
     return S_OK;
 }
-
-#undef PRIORITY_THIS
 
 static const IInternetPriorityVtbl FilePriorityVtbl = {
     FilePriority_QueryInterface,
@@ -394,12 +393,12 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     ret = heap_alloc(sizeof(FileProtocol));
 
-    ret->lpIInternetProtocolExVtbl = &FileProtocolExVtbl;
-    ret->lpInternetPriorityVtbl = &FilePriorityVtbl;
+    ret->IInternetProtocolEx_iface.lpVtbl = &FileProtocolExVtbl;
+    ret->IInternetPriority_iface.lpVtbl = &FilePriorityVtbl;
     ret->file = INVALID_HANDLE_VALUE;
     ret->priority = 0;
     ret->ref = 1;
 
-    *ppobj = PROTOCOLEX(ret);
+    *ppobj = &ret->IInternetProtocolEx_iface;
     return S_OK;
 }

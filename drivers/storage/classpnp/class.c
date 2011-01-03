@@ -3502,6 +3502,7 @@ ClassInterpretSenseInfo(
                 }
 
                 }
+                break;
             }
 
             default: {

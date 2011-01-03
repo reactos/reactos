@@ -170,11 +170,18 @@ NtGdiCreateBitmap(
     iFormat = BitmapFormat(cBitsPixel, BI_RGB);
 
     /* Check parameters */
-    if (iFormat == 0 || nWidth <= 0 || nWidth >= 0x8000000 || nHeight <= 0)
+    if (iFormat == 0 || nWidth <= 0 || nHeight <= 0)
     {
         DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
                 nWidth, nHeight, cBitsPixel);
         EngSetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    if(WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel)*nHeight >= 0x8000000)
+    {
+        /* I just can't get enough, I just can't get enough */
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 
@@ -307,7 +314,7 @@ IntCreateCompatibleBitmap(
 
                         if (!psurf->ppal)
                         {
-                            SetLastWin32Error(ERROR_INVALID_HANDLE);
+                            EngSetLastError(ERROR_INVALID_HANDLE);
                             return 0;
                         }
 
@@ -351,7 +358,7 @@ NtGdiCreateCompatibleBitmap(
 
     if (Width <= 0 || Height <= 0 || (Width * Height) > 0x3FFFFFFF)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
@@ -365,7 +372,7 @@ NtGdiCreateCompatibleBitmap(
 
     if (NULL == Dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
 
@@ -390,7 +397,7 @@ NtGdiGetBitmapDimension(
     psurfBmp = SURFACE_LockSurface(hBitmap);
     if (psurfBmp == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -425,7 +432,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return Result;
     }
 
@@ -597,7 +604,7 @@ NtGdiGetBitmapBits(
     psurf = SURFACE_LockSurface(hBitmap);
     if (!psurf)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -651,7 +658,7 @@ NtGdiSetBitmapBits(
     psurf = SURFACE_LockSurface(hBitmap);
     if (psurf == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -688,7 +695,7 @@ NtGdiSetBitmapDimension(
     psurf = SURFACE_LockSurface(hBitmap);
     if (psurf == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 

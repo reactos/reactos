@@ -185,7 +185,7 @@ macro(rpcproxy TARGET)
 
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
-        COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_DLLDATA_ARG}${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
+        COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_DLLDATA_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
         DEPENDS ${IDLS})
     set_source_files_properties(
         ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
@@ -198,7 +198,7 @@ macro(idl_files)
         get_filename_component(FILE ${_in_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
-            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
             DEPENDS ${_in_file})
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
@@ -208,7 +208,7 @@ macro(idl_files)
 
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
-            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
             DEPENDS ${_in_file})
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
@@ -237,7 +237,7 @@ macro(add_idl_interface IDL_FILE)
     get_filename_component(FILE ${IDL_FILE} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c
-        COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} -u -U ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}
+        COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_INTERFACE_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}
         DEPENDS ${IDL_FILE})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c PROPERTIES GENERATED TRUE)
 endmacro()

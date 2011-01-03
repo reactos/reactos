@@ -34,7 +34,7 @@ GreGetKerningPairs(
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -44,7 +44,7 @@ GreGetKerningPairs(
 
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -57,13 +57,13 @@ GreGetKerningPairs(
   {
      if (Count > NumPairs)
      {
-        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
      pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
      if (!pKP)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
      }
      ftGdiGetKerningPairs(FontGDI,Count,pKP);
@@ -132,7 +132,7 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
         break;
 
      default:
-        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+        EngSetLastError(ERROR_BUFFER_OVERFLOW);
         return 0;
   }
   return Count;
@@ -323,7 +323,7 @@ NtGdiAddFontResourceW(
   SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
   if(!SafeFileName.Buffer)
   {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return 0;
   }
 
@@ -396,7 +396,7 @@ NtGdiGetFontData(
   Dc = DC_LockDc(hDC);
   if (Dc == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
   pdcattr = Dc->pdcattr;
@@ -407,7 +407,7 @@ NtGdiGetFontData(
 
   if (TextObj == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
 
@@ -441,7 +441,7 @@ NtGdiGetFontUnicodeRanges(
   pDc = DC_LockDc(hdc);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -452,7 +452,7 @@ NtGdiGetFontUnicodeRanges(
         
   if ( TextObj == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      goto Exit;
   }
   FontGdi = ObjToGDI(TextObj->Font, FONT);
@@ -464,7 +464,7 @@ NtGdiGetFontUnicodeRanges(
      pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
      if (!pgsSafe)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         Size = 0;
         goto Exit;
      }
@@ -515,7 +515,7 @@ NtGdiGetGlyphOutline(
   dc = DC_LockDc(hdc);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
 
@@ -524,7 +524,7 @@ NtGdiGetGlyphOutline(
      pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
      if (!pvBuf)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto Exit;
      }
   }
@@ -570,7 +570,7 @@ NtGdiGetGlyphOutline(
 
   if (! NT_SUCCESS(Status))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      Ret = GDI_ERROR;
   }
 
@@ -596,7 +596,7 @@ NtGdiGetKerningPairs(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -606,7 +606,7 @@ NtGdiGetKerningPairs(HDC  hDC,
 
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -619,13 +619,13 @@ NtGdiGetKerningPairs(HDC  hDC,
   {
      if (Count > NumPairs)
      {
-        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
      pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
      if (!pKP)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
      }
      ftGdiGetKerningPairs(FontGDI,Count,pKP);
@@ -641,7 +641,7 @@ NtGdiGetKerningPairs(HDC  hDC,
      _SEH2_END
      if (!NT_SUCCESS(Status))
      {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         Count = 0;
      }     
      ExFreePoolWithTag(pKP,TAG_GDITEXT);
@@ -672,7 +672,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   pdcattr = dc->pdcattr;
@@ -681,7 +681,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   DC_UnlockDc(dc);
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -690,13 +690,13 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   if (!otm) return Size;
   if (Size > Data)
   {
-      SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+      EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
       return 0;
   }
   potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
   if (!potm)
   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
   }
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
@@ -715,7 +715,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
 
      if (!NT_SUCCESS(Status))
      {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         Size = 0;
      }
   }
@@ -753,7 +753,7 @@ NtGdiGetFontResourceInfoInternalW(
        dwType == 4 seems to be handled by gdi32 only */
     if (dwType == 4 || dwType > 5)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -765,7 +765,7 @@ NtGdiGetFontResourceInfoInternalW(
                                                  'RTSU');
     if (!SafeFileNames.Buffer)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -845,7 +845,7 @@ NtGdiGetRealizationInfo(
   pDc = DC_LockDc(hdc);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   pdcattr = pDc->pdcattr;

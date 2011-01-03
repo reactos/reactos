@@ -548,7 +548,10 @@ void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
     }
 }
 
-CLIENT_CALL_RETURN WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat, ...)
+/* the return type should be CLIENT_CALL_RETURN, but this is incompatible
+ * with the way gcc returns structures. "void *" should be the largest type
+ * that MIDL should allow you to return anyway */
+LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pFormat, ...)
 {
     /* pointer to start of stack where arguments start */
     RPC_MESSAGE rpcMsg;
@@ -571,7 +574,7 @@ CLIENT_CALL_RETURN WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STR
     /* -Oif or -Oicf generated format */
     BOOL bV2Format = FALSE;
     /* the value to return to the client from the remote procedure */
-    CLIENT_CALL_RETURN RetVal = {0};
+    LONG_PTR RetVal = 0;
     /* the pointer to the object when in OLE mode */
     void * This = NULL;
     PFORMAT_STRING pHandleFormat;
@@ -627,7 +630,7 @@ CLIENT_CALL_RETURN WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STR
     if (!(pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT))
     {
         pFormat = client_get_handle(&stubMsg, pProcHeader, pHandleFormat, &hBinding);
-        if (!pFormat) return RetVal;
+        if (!pFormat) return 0;
     }
 
     bV2Format = (pStubDesc->Version >= 0x20000);
@@ -726,7 +729,7 @@ CLIENT_CALL_RETURN WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STR
         }
         __EXCEPT_ALL
         {
-            RetVal.Simple = NdrProxyErrorHandler(GetExceptionCode());
+            RetVal = NdrProxyErrorHandler(GetExceptionCode());
         }
         __ENDTRY
     }

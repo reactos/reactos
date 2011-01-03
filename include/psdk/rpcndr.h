@@ -17,18 +17,17 @@
  */
 
 #ifndef __RPCNDR_H_VERSION__
-/* FIXME: What version?   Perhaps something is better than nothing, however incorrect */
-#define __RPCNDR_H_VERSION__ ( 399 )
+#define __RPCNDR_H_VERSION__ ( 500 )
 #endif
 
 #ifndef __WINE_RPCNDR_H
 #define __WINE_RPCNDR_H
 
+#include <basetsd.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <basetsd.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -36,7 +35,6 @@ extern "C" {
 #pragma warning(disable:4255)
 #pragma warning(disable:4820)
 #endif
-
 #undef CONST_VTBL
 #ifdef CONST_VTABLE
 # define CONST_VTBL const
@@ -118,8 +116,8 @@ typedef unsigned char boolean;
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
 
-void  * __RPC_USER MIDL_user_allocate(SIZE_T size);
-void             __RPC_USER MIDL_user_free( void  * );
+void * __RPC_USER MIDL_user_allocate(SIZE_T);
+void __RPC_USER MIDL_user_free(void *);
 
 #define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
@@ -204,7 +202,7 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG_PTR MaxCount;
   ULONG Offset;
   ULONG ActualCount;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
   void (__RPC_API *pfnFree)(void *);
   unsigned char *StackTop;
   unsigned char *pPresentedType;
@@ -343,7 +341,7 @@ typedef struct _COMM_FAULT_OFFSETS
 typedef struct _MIDL_STUB_DESC
 {
   void *RpcInterfaceInformation;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
   void (__RPC_API *pfnFree)(void *);
   union {
     handle_t *pAutoHandle;
@@ -486,7 +484,7 @@ typedef struct _NDR_USER_MARSHAL_INFO_LEVEL1
 {
     void *Buffer;
     ULONG BufferSize;
-    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
     void (__RPC_API *pfnFree)(void *);
     struct IRpcChannelBuffer *pRpcChannelBuffer;
     ULONG_PTR Reserved[5];
@@ -652,13 +650,15 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI unsigned char* RPC_ENTRY
   NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
-CLIENT_CALL_RETURN RPC_VAR_ENTRY
+/* Note: this should return a CLIENT_CALL_RETURN, but calling convention for
+ * returning structures/unions is different between Windows and gcc on i386. */
+LONG_PTR RPC_VAR_ENTRY
   NdrClientCall2( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-CLIENT_CALL_RETURN RPC_VAR_ENTRY
+LONG_PTR RPC_VAR_ENTRY
   NdrClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-CLIENT_CALL_RETURN RPC_VAR_ENTRY
+LONG_PTR RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-CLIENT_CALL_RETURN RPC_VAR_ENTRY
+LONG_PTR RPC_VAR_ENTRY
   NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 
 RPCRTAPI void RPC_ENTRY

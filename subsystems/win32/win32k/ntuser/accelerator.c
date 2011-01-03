@@ -77,14 +77,14 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 
    if (!hAccel)
    {
-      SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+      EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
       return NULL;
    }
 
    Accel= UserGetObject(gHandleTable, hAccel,  otAccel);
    if (!Accel)
    {
-      SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+      EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
       return NULL;
    }
 

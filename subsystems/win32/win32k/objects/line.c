@@ -116,7 +116,7 @@ IntGdiLineTo(DC  *dc,
         psurf = dc->dclevel.pSurface;
         if (NULL == psurf)
         {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
 
@@ -383,7 +383,7 @@ NtGdiLineTo(HDC  hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)

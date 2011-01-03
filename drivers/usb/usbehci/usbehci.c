@@ -88,7 +88,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DPRINT1("Driver Entry %wZ!\n", RegistryPath);
 
     DriverObject->DriverExtension->AddDevice = AddDevice;
-
     DriverObject->MajorFunction[IRP_MJ_CREATE] = UsbEhciCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = UsbEhciClose;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = UsbEhciCleanup;

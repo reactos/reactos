@@ -22,8 +22,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    const IBindStatusCallbackVtbl  *lpBindStatusCallbackVtbl;
-    const IServiceProviderVtbl     *lpServiceProviderVtbl;
+    IBindStatusCallback IBindStatusCallback_iface;
+    IServiceProvider    IServiceProvider_iface;
 
     LONG ref;
 
@@ -32,27 +32,32 @@ typedef struct {
     LPWSTR cache_file;
 } DownloadBSC;
 
-#define STATUSCLB(x)     ((IBindStatusCallback*)  &(x)->lpBindStatusCallbackVtbl)
-#define SERVPROV(x)      ((IServiceProvider*)     &(x)->lpServiceProviderVtbl)
+static inline DownloadBSC *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
+{
+    return CONTAINING_RECORD(iface, DownloadBSC, IBindStatusCallback_iface);
+}
 
-#define STATUSCLB_THIS(iface) DEFINE_THIS(DownloadBSC, BindStatusCallback, iface)
+static inline DownloadBSC *impl_from_IServiceProvider(IServiceProvider *iface)
+{
+    return CONTAINING_RECORD(iface, DownloadBSC, IServiceProvider_iface);
+}
 
 static HRESULT WINAPI DownloadBSC_QueryInterface(IBindStatusCallback *iface,
         REFIID riid, void **ppv)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown, %p)\n", This, ppv);
-        *ppv = STATUSCLB(This);
+        *ppv = &This->IBindStatusCallback_iface;
     }else if(IsEqualGUID(&IID_IBindStatusCallback, riid)) {
         TRACE("(%p)->(IID_IBindStatusCallback, %p)\n", This, ppv);
-        *ppv = STATUSCLB(This);
+        *ppv = &This->IBindStatusCallback_iface;
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider, %p)\n", This, ppv);
-        *ppv = SERVPROV(This);
+        *ppv = &This->IServiceProvider_iface;
     }
 
     if(*ppv) {
@@ -66,7 +71,7 @@ static HRESULT WINAPI DownloadBSC_QueryInterface(IBindStatusCallback *iface,
 
 static ULONG WINAPI DownloadBSC_AddRef(IBindStatusCallback *iface)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref = %d\n", This, ref);
@@ -76,7 +81,7 @@ static ULONG WINAPI DownloadBSC_AddRef(IBindStatusCallback *iface)
 
 static ULONG WINAPI DownloadBSC_Release(IBindStatusCallback *iface)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref = %d\n", This, ref);
@@ -95,7 +100,7 @@ static ULONG WINAPI DownloadBSC_Release(IBindStatusCallback *iface)
 static HRESULT WINAPI DownloadBSC_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pbind)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
 
     TRACE("(%p)->(%d %p)\n", This, dwReserved, pbind);
 
@@ -107,14 +112,14 @@ static HRESULT WINAPI DownloadBSC_OnStartBinding(IBindStatusCallback *iface,
 
 static HRESULT WINAPI DownloadBSC_GetPriority(IBindStatusCallback *iface, LONG *pnPriority)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     FIXME("(%p)->(%p)\n", This, pnPriority);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DownloadBSC_OnLowResource(IBindStatusCallback *iface, DWORD reserved)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     FIXME("(%p)->(%d)\n", This, reserved);
     return E_NOTIMPL;
 }
@@ -133,7 +138,7 @@ static HRESULT on_progress(DownloadBSC *This, ULONG progress, ULONG progress_max
 static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG ulProgress,
         ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     HRESULT hres = S_OK;
 
     TRACE("%p)->(%u %u %u %s)\n", This, ulProgress, ulProgressMax, ulStatusCode,
@@ -167,18 +172,20 @@ static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG u
 static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
 
     TRACE("(%p)->(%08x %s)\n", This, hresult, debugstr_w(szError));
 
-    if(This->cache_file) {
-        BOOL b;
+    if(This->file_name) {
+        if(This->cache_file) {
+            BOOL b;
 
-        b = CopyFileW(This->cache_file, This->file_name, FALSE);
-        if(!b)
-            FIXME("CopyFile failed: %u\n", GetLastError());
-    }else {
-        FIXME("No cache file\n");
+            b = CopyFileW(This->cache_file, This->file_name, FALSE);
+            if(!b)
+                FIXME("CopyFile failed: %u\n", GetLastError());
+        }else {
+            FIXME("No cache file\n");
+        }
     }
 
     if(This->callback)
@@ -190,7 +197,7 @@ static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
 static HRESULT WINAPI DownloadBSC_GetBindInfo(IBindStatusCallback *iface,
         DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     DWORD bindf = 0;
 
     TRACE("(%p)->(%p %p)\n", This, grfBINDF, pbindinfo);
@@ -214,7 +221,7 @@ static HRESULT WINAPI DownloadBSC_GetBindInfo(IBindStatusCallback *iface,
 static HRESULT WINAPI DownloadBSC_OnDataAvailable(IBindStatusCallback *iface,
         DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
 
     TRACE("(%p)->(%08x %d %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
 
@@ -224,12 +231,10 @@ static HRESULT WINAPI DownloadBSC_OnDataAvailable(IBindStatusCallback *iface,
 static HRESULT WINAPI DownloadBSC_OnObjectAvailable(IBindStatusCallback *iface,
         REFIID riid, IUnknown *punk)
 {
-    DownloadBSC *This = STATUSCLB_THIS(iface);
+    DownloadBSC *This = impl_from_IBindStatusCallback(iface);
     FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), punk);
     return E_NOTIMPL;
 }
-
-#undef STATUSCLB_THIS
 
 static const IBindStatusCallbackVtbl BindStatusCallbackVtbl = {
     DownloadBSC_QueryInterface,
@@ -245,31 +250,29 @@ static const IBindStatusCallbackVtbl BindStatusCallbackVtbl = {
     DownloadBSC_OnObjectAvailable
 };
 
-#define SERVPROV_THIS(iface) DEFINE_THIS(DownloadBSC, ServiceProvider, iface)
-
 static HRESULT WINAPI DwlServiceProvider_QueryInterface(IServiceProvider *iface,
         REFIID riid, void **ppv)
 {
-    DownloadBSC *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+    DownloadBSC *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_QueryInterface(&This->IBindStatusCallback_iface, riid, ppv);
 }
 
 static ULONG WINAPI DwlServiceProvider_AddRef(IServiceProvider *iface)
 {
-    DownloadBSC *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_AddRef(STATUSCLB(This));
+    DownloadBSC *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_AddRef(&This->IBindStatusCallback_iface);
 }
 
 static ULONG WINAPI DwlServiceProvider_Release(IServiceProvider *iface)
 {
-    DownloadBSC *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_Release(STATUSCLB(This));
+    DownloadBSC *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_Release(&This->IBindStatusCallback_iface);
 }
 
 static HRESULT WINAPI DwlServiceProvider_QueryService(IServiceProvider *iface,
         REFGUID guidService, REFIID riid, void **ppv)
 {
-    DownloadBSC *This = SERVPROV_THIS(iface);
+    DownloadBSC *This = impl_from_IServiceProvider(iface);
     IServiceProvider *serv_prov;
     HRESULT hres;
 
@@ -292,8 +295,6 @@ static HRESULT WINAPI DwlServiceProvider_QueryService(IServiceProvider *iface,
     return E_NOINTERFACE;
 }
 
-#undef SERVPROV_THIS
-
 static const IServiceProviderVtbl ServiceProviderVtbl = {
     DwlServiceProvider_QueryInterface,
     DwlServiceProvider_AddRef,
@@ -301,12 +302,12 @@ static const IServiceProviderVtbl ServiceProviderVtbl = {
     DwlServiceProvider_QueryService
 };
 
-static IBindStatusCallback *DownloadBSC_Create(IBindStatusCallback *callback, LPCWSTR file_name)
+static HRESULT DownloadBSC_Create(IBindStatusCallback *callback, LPCWSTR file_name, IBindStatusCallback **ret_callback)
 {
     DownloadBSC *ret = heap_alloc(sizeof(*ret));
 
-    ret->lpBindStatusCallbackVtbl = &BindStatusCallbackVtbl;
-    ret->lpServiceProviderVtbl    = &ServiceProviderVtbl;
+    ret->IBindStatusCallback_iface.lpVtbl = &BindStatusCallbackVtbl;
+    ret->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
     ret->ref = 1;
     ret->file_name = heap_strdupW(file_name);
     ret->cache_file = NULL;
@@ -315,7 +316,22 @@ static IBindStatusCallback *DownloadBSC_Create(IBindStatusCallback *callback, LP
         IBindStatusCallback_AddRef(callback);
     ret->callback = callback;
 
-    return STATUSCLB(ret);
+    *ret_callback = &ret->IBindStatusCallback_iface;
+    return S_OK;
+}
+
+HRESULT create_default_callback(IBindStatusCallback **ret)
+{
+    IBindStatusCallback *callback;
+    HRESULT hres;
+
+    hres = DownloadBSC_Create(NULL, NULL, &callback);
+    if(FAILED(hres))
+        return hres;
+
+    hres = wrap_callback(callback, ret);
+    IBindStatusCallback_Release(callback);
+    return hres;
 }
 
 /***********************************************************************
@@ -348,7 +364,10 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller, LPCWSTR szURL, LPCWSTR szFi
     if(pCaller)
         FIXME("pCaller not supported\n");
 
-    callback = DownloadBSC_Create(lpfnCB, szFileName);
+    hres = DownloadBSC_Create(lpfnCB, szFileName, &callback);
+    if(FAILED(hres))
+        return hres;
+
     hres = CreateAsyncBindCtx(0, callback, NULL, &bindctx);
     IBindStatusCallback_Release(callback);
     if(FAILED(hres))

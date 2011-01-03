@@ -43,7 +43,8 @@ extern HINSTANCE hInst;
 
 /******************************************************************************/
 
-enum OPTION_FLAGS {
+enum OPTION_FLAGS
+{
     OPTIONS_AUTO_REFRESH            	   = 0x01,
     OPTIONS_READ_ONLY_MODE          	   = 0x02,
     OPTIONS_CONFIRM_ON_DELETE       	   = 0x04,
@@ -53,12 +54,13 @@ enum OPTION_FLAGS {
     OPTIONS_VIEW_DATA_ONLY      	   = 0x40,
 };
 
-typedef struct {
+typedef struct
+{
     HWND    hWnd;
     HWND    hTreeWnd;
     HWND    hListWnd;
-	HWND    hAddressBarWnd;
-	HWND    hAddressBtnWnd;
+    HWND    hAddressBarWnd;
+    HWND    hAddressBtnWnd;
     int     nFocusPanel;      /* 0: left  1: right */
     int	    nSplitPos;
     WINDOWPLACEMENT pos;

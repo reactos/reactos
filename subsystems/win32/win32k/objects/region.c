@@ -2336,20 +2336,20 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
            else if (src2Rgn == NULL)
            {
               DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
-              SetLastWin32Error(ERROR_INVALID_HANDLE);
+              EngSetLastError(ERROR_INVALID_HANDLE);
            }
         }
      }
      else
      {
         DPRINT("IntGdiCombineRgn: hSrc1 unavailable\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
      }
   }
   else
   {
      DPRINT("IntGdiCombineRgn: hDest unavailable\n");
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
   }
   return result;
 }
@@ -3231,14 +3231,14 @@ NtGdiCombineRgn(HRGN  hDest,
 
   if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return ERROR;
   }
 
   destRgn = RGNOBJAPI_Lock(hDest, NULL);
   if (!destRgn)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return ERROR;
   }
 
@@ -3246,7 +3246,7 @@ NtGdiCombineRgn(HRGN  hDest,
   if (!src1Rgn)
   {
      RGNOBJAPI_Unlock(destRgn);
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return ERROR;
   }
 
@@ -3285,7 +3285,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     /* Allocate region data structure with space for 1 RECTL */
     if (!(pRgn = REGION_AllocUserRgnWithHandle(1)))
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hRgn = pRgn->BaseObject.hHmgr;
@@ -3518,7 +3518,7 @@ NtGdiExtCreateRegion(
 
     if (Region == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
     hRgn = Region->BaseObject.hHmgr;
@@ -3562,7 +3562,7 @@ NtGdiExtCreateRegion(
     _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         RGNOBJAPI_Unlock(Region);
         GreDeleteObject(hRgn);
         return NULL;
@@ -3667,7 +3667,7 @@ NtGdiGetRandomRgn(
     pDC = DC_LockDc(hDC);
     if (pDC == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return -1;
     }
 
@@ -3768,7 +3768,7 @@ NtGdiInvertRgn(
 
     if (!(RgnData = RGNOBJAPI_Lock(hRgn, NULL)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -3921,7 +3921,7 @@ NtGdiUnionRectWithRgn(
 
     if (!(Rgn = RGNOBJAPI_Lock(hDest, NULL)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
 

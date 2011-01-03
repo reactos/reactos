@@ -847,6 +847,7 @@ VBEQueryMode(
    ULONG VideoModeId)
 {
    PVBE_MODEINFO VBEMode = &DeviceExtension->ModeInfo[VideoModeId];
+   ULONG dpi;
 
    VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
    VideoMode->ModeIndex = VideoModeId;
@@ -860,9 +861,10 @@ VBEQueryMode(
    VideoMode->BitsPerPlane = VBEMode->BitsPerPixel / VBEMode->NumberOfPlanes;
    VideoMode->Frequency = 1;
 
-   /* Assume 96DPI and 25.4 millimeters per inch */
-   VideoMode->XMillimeter = VBEMode->XResolution * 254 / 960;
-   VideoMode->YMillimeter = VBEMode->YResolution * 254 / 960;
+   /* Assume 96DPI and 25.4 millimeters per inch, round to nearest */
+   dpi = 96;
+   VideoMode->XMillimeter = ((ULONGLONG)VBEMode->XResolution * 254 + (dpi * 5)) / (dpi * 10);
+   VideoMode->YMillimeter = ((ULONGLONG)VBEMode->YResolution * 254 + (dpi * 5)) / (dpi * 10);
 
    if (VBEMode->BitsPerPixel > 8)
    {

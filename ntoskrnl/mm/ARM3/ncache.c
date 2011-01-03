@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::NCACHE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -29,25 +28,25 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
     PHYSICAL_ADDRESS LowAddress, HighAddress, SkipBytes;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     PMDL Mdl;
-    PVOID BaseAddress;    
+    PVOID BaseAddress;
     PPFN_NUMBER MdlPages;
     PMMPTE PointerPte;
     MMPTE TempPte;
-    
+
     //
     // Get the page count
     //
     ASSERT(NumberOfBytes != 0);
     PageCount = BYTES_TO_PAGES(NumberOfBytes);
-    
+
     //
     // Use the MDL allocator for simplicity, so setup the parameters
     //
     LowAddress.QuadPart = 0;
     HighAddress.QuadPart = -1;
-    SkipBytes.QuadPart = 0;    
+    SkipBytes.QuadPart = 0;
     CacheAttribute = MiPlatformCacheAttributes[0][MmNonCached];
-    
+
     //
     // Now call the MDL allocator
     //
@@ -58,7 +57,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
                                 CacheAttribute,
                                 0);
     if (!Mdl) return NULL;
-    
+
     //
     // Get the MDL VA and check how many pages we got (could be partial)
     //
@@ -74,12 +73,12 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
         ExFreePool(Mdl);
         return NULL;
     }
-    
+
     //
     // Allocate system PTEs for the base address
     // We use an extra page to store the actual MDL pointer for the free later
     //
-    PointerPte = MiReserveSystemPtes(PageCount + 1, SystemPteSpace);    
+    PointerPte = MiReserveSystemPtes(PageCount + 1, SystemPteSpace);
     if (!PointerPte)
     {
         //
@@ -89,57 +88,57 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
         ExFreePool(Mdl);
         return NULL;
     }
-    
+
     //
     // Store the MDL pointer
     //
     *(PMDL*)PointerPte++ = Mdl;
-    
+
     //
     // Okay, now see what range we got
     //
     BaseAddress = MiPteToAddress(PointerPte);
-    
+
     //
     // This is our array of pages
     //
     MdlPages = (PPFN_NUMBER)(Mdl + 1);
-    
+
     //
     // Setup the template PTE
     //
     TempPte = ValidKernelPte;
-    
+
     //
     // Now check what kind of caching we should use
     //
     switch (CacheAttribute)
     {
         case MiNonCached:
-            
+
             //
             // Disable caching
             //
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
-            
+
         case MiWriteCombined:
-            
+
             //
             // Enable write combining
             //
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_COMBINED(&TempPte);
             break;
-            
+
         default:
             //
             // Nothing to do
             //
             break;
     }
-    
+
     //
     // Now loop the MDL pages
     //
@@ -149,19 +148,19 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
         // Get the PFN
         //
         PageFrameIndex = *MdlPages++;
-        
+
         //
         // Set the PFN in the page and write it
         //
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--PageCount);
-    
+
     //
     // Return the base address
     //
     return BaseAddress;
-    
+
 }
 
 /*
@@ -175,34 +174,34 @@ MmFreeNonCachedMemory(IN PVOID BaseAddress,
     PMDL Mdl;
     PMMPTE PointerPte;
     PFN_NUMBER PageCount;
-    
+
     //
     // Sanity checks
     //
     ASSERT(NumberOfBytes != 0);
     ASSERT(PAGE_ALIGN(BaseAddress) == BaseAddress);
-    
+
     //
     // Get the page count
     //
     PageCount = BYTES_TO_PAGES(NumberOfBytes);
-    
+
     //
     // Get the first PTE
     //
     PointerPte = MiAddressToPte(BaseAddress);
-    
+
     //
     // Remember this is where we store the shadow MDL pointer
     //
     Mdl = *(PMDL*)(--PointerPte);
-    
+
     //
     // Kill the MDL (and underlying pages)
     //
     MmFreePagesFromMdl(Mdl);
     ExFreePool(Mdl);
-    
+
     //
     // Now free the system PTEs for the underlying VA
     //

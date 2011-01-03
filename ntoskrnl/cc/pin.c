@@ -22,84 +22,84 @@ extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 /*
  * @implemented
  */
-BOOLEAN NTAPI
-CcMapData (IN PFILE_OBJECT FileObject,
-	   IN PLARGE_INTEGER FileOffset,
-	   IN ULONG Length,
-	   IN ULONG Flags,
-	   OUT PVOID *pBcb,
-	   OUT PVOID *pBuffer)
+BOOLEAN
+NTAPI
+CcMapData(
+    IN PFILE_OBJECT FileObject,
+	IN PLARGE_INTEGER FileOffset,
+	IN ULONG Length,
+	IN ULONG Flags,
+	OUT PVOID *pBcb,
+	OUT PVOID *pBuffer)
 {
-  ULONG ReadOffset;
-  BOOLEAN Valid;
-  PBCB Bcb;
-  PCACHE_SEGMENT CacheSeg;
-  NTSTATUS Status;
-  PINTERNAL_BCB iBcb;
-  ULONG ROffset;
+    ULONG ReadOffset;
+    BOOLEAN Valid;
+    PBCB Bcb;
+    PCACHE_SEGMENT CacheSeg;
+    NTSTATUS Status;
+    PINTERNAL_BCB iBcb;
+    ULONG ROffset;
 
-  DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Flags %d,"
-	 " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
-	 Length, Flags, pBcb, pBuffer);
+    DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Flags %d,"
+           " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
+           Length, Flags, pBcb, pBuffer);
 
-  ReadOffset = (ULONG)FileOffset->QuadPart;
+    ReadOffset = (ULONG)FileOffset->QuadPart;
 
-  ASSERT(FileObject);
-  ASSERT(FileObject->SectionObjectPointer);
-  ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+    ASSERT(FileObject);
+    ASSERT(FileObject->SectionObjectPointer);
+    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
 
-  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-  ASSERT(Bcb);
+    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(Bcb);
 
-  DPRINT("AllocationSize %I64x, FileSize %I64x\n",
-         Bcb->AllocationSize.QuadPart,
-         Bcb->FileSize.QuadPart);
+    DPRINT("AllocationSize %I64x, FileSize %I64x\n",
+           Bcb->AllocationSize.QuadPart,
+           Bcb->FileSize.QuadPart);
 
-  if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
+    if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
     {
-      return(FALSE);
+        return FALSE;
     }
-  ROffset = ROUND_DOWN (ReadOffset, Bcb->CacheSegmentSize);
-  Status = CcRosRequestCacheSegment(Bcb,
-				    ROffset,
-				    pBuffer,
-				    &Valid,
-				    &CacheSeg);
-  if (!NT_SUCCESS(Status))
+    ROffset = ROUND_DOWN (ReadOffset, Bcb->CacheSegmentSize);
+    Status = CcRosRequestCacheSegment(Bcb, ROffset,
+    			                      pBuffer, &Valid,
+                                      &CacheSeg);
+    if (!NT_SUCCESS(Status))
     {
-      return(FALSE);
+        return FALSE;
     }
-  if (!Valid)
+    if (!Valid)
     {
-      if (!(Flags & MAP_WAIT))
-	{
-          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-	  return(FALSE);
-	}
-      if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
-	{
-          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-	  return(FALSE);
-	}
+        if (!(Flags & MAP_WAIT))
+        {
+            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+            return FALSE;
+        }
+        if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
+        {
+            CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
+	        return FALSE;
+        }
     }
 
-  *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
-  iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
-  if (iBcb == NULL)
+    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
+    iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
+    if (iBcb == NULL)
     {
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-      return FALSE;
+        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
+        return FALSE;
     }
-  memset(iBcb, 0, sizeof(INTERNAL_BCB));
-  iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
-  iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
-  iBcb->PFCB.MappedLength = Length;
-  iBcb->PFCB.MappedFileOffset = *FileOffset;
-  iBcb->CacheSegment = CacheSeg;
-  iBcb->Dirty = FALSE;
-  iBcb->RefCount = 1;
-  *pBcb = (PVOID)iBcb;
-  return(TRUE);
+    memset(iBcb, 0, sizeof(INTERNAL_BCB));
+    iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
+    iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
+    iBcb->PFCB.MappedLength = Length;
+    iBcb->PFCB.MappedFileOffset = *FileOffset;
+    iBcb->CacheSegment = CacheSeg;
+    iBcb->Dirty = FALSE;
+    iBcb->RefCount = 1;
+    *pBcb = (PVOID)iBcb;
+    return TRUE;
 }
 
 /*

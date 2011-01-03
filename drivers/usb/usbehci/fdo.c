@@ -7,37 +7,10 @@
  *              Michael Martin (michael.martin@reactos.org)
  */
 
-/* INCLUDES *******************************************************************/
+#include "hwiface.h"
 #include "usbehci.h"
+#include "physmem.h"
 #include <stdio.h>
-
-VOID NTAPI
-TimerDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
-{
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    ULONG tmp;
-    ULONG Base;
-    LONG i;
-
-    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeferredContext;
-    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) FdoDeviceExtension->Pdo->DeviceExtension;
-
-    Base = (ULONG)FdoDeviceExtension->ResourceMemory;
-
-    for (i = 0; i < FdoDeviceExtension->ECHICaps.HCSParams.PortCount; i++)
-    {
-        tmp = READ_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)));
-
-        if ((tmp & 0x04) && (!(PdoDeviceExtension->Ports[i].PortChange & USB_PORT_STATUS_RESET)))
-        {
-            DPRINT("Port %x is enabled\n", i);
-            PdoDeviceExtension->Ports[i].PortChange |= USB_PORT_STATUS_RESET;
-            CompletePendingURBRequest(PdoDeviceExtension);
-        }
-    }
-    return;
-}
 
 VOID NTAPI
 EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
@@ -46,7 +19,8 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
     PPDO_DEVICE_EXTENSION PdoDeviceExtension;
     ULONG CStatus;
     ULONG tmp;
-    ULONG Base;
+    ULONG OpRegisters;
+    PEHCI_HOST_CONTROLLER hcd;
     LONG i;
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeferredContext;
@@ -59,17 +33,122 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) FdoDeviceExtension->Pdo->DeviceExtension;
 
-    Base = (ULONG)FdoDeviceExtension->ResourceMemory;
+    OpRegisters = (ULONG)FdoDeviceExtension->hcd.OpRegisters;
 
+    hcd = &FdoDeviceExtension->hcd;
+    
     CStatus = (ULONG) SystemArgument2;
+
+    
+    /* TD retired or Error */
+    if (CStatus & (EHCI_STS_INT | EHCI_ERROR_INT))
+    {
+        DPRINT("Asyn Complete!\n");
+        ULONG CurrentAddr, OffSet;
+        PQUEUE_HEAD CompletedQH, NextQH;
+        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD;
+        
+		/* AsyncListAddr Register will have the next QueueHead to execute */
+        CurrentAddr = GetAsyncListQueueRegister(hcd);
+
+		/* Calculate the VA for the next QueueHead */
+        OffSet = CurrentAddr - (ULONG)FdoDeviceExtension->hcd.CommonBufferPA.LowPart;
+        NextQH = (PQUEUE_HEAD)((ULONG)FdoDeviceExtension->hcd.CommonBufferVA + OffSet);
+
+        /* Get the previous QueueHead which is the QueueHead just completed */
+        CompletedQH = NextQH->PreviousQueueHead;
+        ASSERT(CompletedQH);
+        DPRINT("CompletedQH %x\n", CompletedQH);
+
+        //DumpQueueHead(CompletedQH);
+
+		/* Free memory for the Descriptors */
+        CompletedTD = CompletedQH->TransferDescriptor;
+        //DumpTransferDescriptor(CompletedTD);
+        FreeDescriptor(CompletedTD);
+        CompletedTD = CompletedTD->NextDescriptor;
+        //DumpTransferDescriptor(CompletedTD);
+        FreeDescriptor(CompletedTD);
+        CompletedTD = CompletedTD->NextDescriptor;
+        //DumpTransferDescriptor(CompletedTD);
+        FreeDescriptor(CompletedTD);
+        
+        /* If the Event is set then release waiter */
+        if (CompletedQH->Event)
+        {
+            KeSetEvent(CompletedQH->Event, IO_NO_INCREMENT, FALSE);
+        }
+
+        /* Free the Mdl */
+        ASSERT(CompletedQH->MdlToFree);
+        IoFreeMdl(CompletedQH->MdlToFree);
+
+        /* Is there an IRP that needs to be completed */
+        if (CompletedQH->IrpToComplete)
+        {
+            PIRP Irp; 
+    
+            Irp = CompletedQH->IrpToComplete;            
+
+            /* Check for error */
+            if (CStatus & EHCI_ERROR_INT)
+            {
+                PIO_STACK_LOCATION Stack;
+                PURB Urb;
+
+                Stack = IoGetCurrentIrpStackLocation(Irp);
+                ASSERT(Stack);
+                Urb = (PURB) Stack->Parameters.Others.Argument1;
+                ASSERT(FALSE);
+                /* Haled bit should be set */
+                if (CompletedQH->Token.Bits.Halted)
+                {
+                    if (CompletedQH->Token.Bits.DataBufferError)
+                    {
+                        DPRINT1("Data buffer error\n");
+                        Urb->UrbHeader.Status = USBD_STATUS_DATA_BUFFER_ERROR;
+                        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                        Irp->IoStatus.Information = 0;
+                    }
+                    else if (CompletedQH->Token.Bits.BabbleDetected)
+                    {
+                        DPRINT1("Babble Detected\n");
+                        Urb->UrbHeader.Status = USBD_STATUS_BABBLE_DETECTED;
+                        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                        Irp->IoStatus.Information = 0;
+                    }
+                    else
+                    {
+                        DPRINT1("Stall PID\n");
+                        Urb->UrbHeader.Status = USBD_STATUS_STALL_PID;
+                        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                        Irp->IoStatus.Information = 0;
+                    }
+                }
+            }
+            else
+            {
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+                Irp->IoStatus.Information = 0;              
+                DPRINT1("Completing Irp\n");
+
+            }
+            IoCompleteRequest(Irp,  IO_NO_INCREMENT);
+        }
+
+        /* Unlink QueueHead */
+        UnlinkQueueHead(hcd, CompletedQH);
+        /* Wait for a complete AsnycList tranversal before deleting? */
+        DeleteQueueHead(CompletedQH);
+    }
 
     /* Port Change */
     if (CStatus & EHCI_STS_PCD)
     {
         /* Loop through the ports */
-        for (i = 0; i < FdoDeviceExtension->ECHICaps.HCSParams.PortCount; i++)
+        for (i = 0; i < FdoDeviceExtension->hcd.ECHICaps.HCSParams.PortCount; i++)
         {
-            tmp = READ_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)));
+            tmp = READ_REGISTER_ULONG((PULONG) ((OpRegisters + EHCI_PORTSC) + (4 * i)));
 
             /* Check for port change on this port */
             if (tmp & 0x02)
@@ -80,9 +159,9 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     DPRINT1("Device connected on port %d\n", i);
 
                     /* Check if a companion host controller exists */
-                    if (FdoDeviceExtension->ECHICaps.HCSParams.CHCCount)
+                    if (FdoDeviceExtension->hcd.ECHICaps.HCSParams.CHCCount)
                     {
-                        tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
+                        tmp = READ_REGISTER_ULONG((PULONG)((OpRegisters + EHCI_PORTSC) + (4 * i)));
 
                         /* Port should be in disabled state, as per USB 2.0 specs */
                         if (tmp & 0x04)
@@ -93,9 +172,9 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                         /* Is this non high speed device */
                         if (tmp & 0x400)
                         {
-                            DPRINT1("Releasing ownership to companion host controller!\n");
+                            DPRINT1("Non HighSpeed device connected. Releasing ownership.\n");
                             /* Release ownership to companion host controller */
-                            WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)), 0x4000);
+                            WRITE_REGISTER_ULONG((PULONG) ((OpRegisters + EHCI_PORTSC) + (4 * i)), 0x2000);
                             continue;
                         }
                     }
@@ -111,13 +190,14 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
                     //KeStallExecutionProcessor(20);
 
-                    tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
+                    tmp = READ_REGISTER_ULONG((PULONG)((OpRegisters + EHCI_PORTSC) + (4 * i)));
 
                     PdoDeviceExtension->ChildDeviceCount++;
                     PdoDeviceExtension->Ports[i].PortStatus &= ~0x8000;
+                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED;
                     PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_CONNECT;
                     PdoDeviceExtension->Ports[i].PortChange |= USB_PORT_STATUS_CONNECT;
-
+                    DPRINT1("Completing URB\n");
                     CompletePendingURBRequest(PdoDeviceExtension);
                 }
                 else
@@ -125,12 +205,18 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     DPRINT1("Device disconnected on port %d\n", i);
 
                     /* Clear status change */
-                    tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
+                    tmp = READ_REGISTER_ULONG((PULONG)((OpRegisters + EHCI_PORTSC) + (4 * i)));
                     tmp |= 0x02;
-                    WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)), tmp);
+                    WRITE_REGISTER_ULONG((PULONG) ((OpRegisters + EHCI_PORTSC) + (4 * i)), tmp);
                 }
             }
         }
+    }
+
+    /* Asnyc Advance */
+    if (CStatus & EHCI_STS_IAA)
+    {
+        DPRINT1("Async Advance!\n");
     }
 }
 
@@ -139,17 +225,15 @@ InterruptService(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT) ServiceContext;
-    ULONG CurrentFrame;
-    ULONG Base;
+    PEHCI_HOST_CONTROLLER hcd;
     ULONG CStatus = 0;
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
-    Base = (ULONG)FdoDeviceExtension->ResourceMemory;
+    hcd = &FdoDeviceExtension->hcd;
 
     /* Read device status */
-    CStatus = READ_REGISTER_ULONG ((PULONG) (Base + EHCI_USBSTS));
-    CurrentFrame = READ_REGISTER_ULONG((PULONG) (Base + EHCI_FRINDEX));
+    CStatus = ReadControllerStatus(hcd);
 
     CStatus &= (EHCI_ERROR_INT | EHCI_STS_INT | EHCI_STS_IAA | EHCI_STS_PCD | EHCI_STS_FLR);
 
@@ -158,9 +242,9 @@ InterruptService(PKINTERRUPT Interrupt, PVOID ServiceContext)
         /* This interrupt isnt for us or not ready for it. */
         return FALSE;
     }
-
+    
     /* Clear status */
-    WRITE_REGISTER_ULONG((PULONG) (Base + EHCI_USBSTS), CStatus);
+    ClearControllerStatus(hcd, CStatus);
 
     if (CStatus & EHCI_ERROR_INT)
     {
@@ -179,237 +263,8 @@ InterruptService(PKINTERRUPT Interrupt, PVOID ServiceContext)
         /* FIXME: Reset the controller */
     }
 
-    if (CStatus & EHCI_STS_INT)
-    {
-       FdoDeviceExtension->AsyncComplete = TRUE;
-    }
-
     KeInsertQueueDpc(&FdoDeviceExtension->DpcObject, FdoDeviceExtension, (PVOID)CStatus);
-
     return TRUE;
-}
-
-BOOLEAN
-ResetPort(PFDO_DEVICE_EXTENSION FdoDeviceExtension, UCHAR Port)
-{
-    ULONG Base;
-    ULONG tmp;
-    LARGE_INTEGER DueTime;
-
-    DPRINT("Reset Port %x\n", Port);
-
-    Base = (ULONG)FdoDeviceExtension->ResourceMemory;
-
-    tmp = READ_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * Port)));
-    tmp |= 0x100;
-    WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * Port)), tmp);
-
-    DueTime.QuadPart = -100;
-
-    KeSetTimerEx(&FdoDeviceExtension->UpdateTimer, DueTime, 0, &FdoDeviceExtension->TimerDpcObject);
-    return TRUE;
-}
-
-VOID
-StopEhci(PDEVICE_OBJECT DeviceObject)
-{
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-    PEHCI_USBCMD_CONTENT UsbCmd;
-    ULONG base;
-    LONG tmp;
-
-    DPRINT("Stopping Ehci controller\n");
-    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    base = (ULONG)FdoDeviceExtension->ResourceMemory;
-
-    WRITE_REGISTER_ULONG((PULONG) (base + EHCI_USBINTR), 0);
-
-    tmp = READ_REGISTER_ULONG((PULONG) (base + EHCI_USBCMD));
-    UsbCmd = (PEHCI_USBCMD_CONTENT) & tmp;
-    UsbCmd->Run = 0;
-    WRITE_REGISTER_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
-}
-
-VOID
-StartEhci(PDEVICE_OBJECT DeviceObject)
-{
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-    PEHCI_USBCMD_CONTENT UsbCmd;
-    PEHCI_USBSTS_CONTEXT usbsts;
-    NTSTATUS Status;
-    LONG tmp;
-    LONG tmp2;
-    ULONG base;
-
-    DPRINT("Starting Ehci controller\n");
-    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    base = (ULONG)FdoDeviceExtension->ResourceMemory;
-
-    tmp = READ_REGISTER_ULONG ((PULONG)(base + EHCI_USBCMD));
-
-    /* Stop the device */
-    UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
-    UsbCmd->Run = 0;
-    WRITE_REGISTER_ULONG ((PULONG)(base + EHCI_USBCMD), tmp);
-
-    /* Wait for the device to stop */
-    for (;;)
-    {
-        KeStallExecutionProcessor(10);
-        tmp = READ_REGISTER_ULONG((PULONG)(base + EHCI_USBSTS));
-        usbsts = (PEHCI_USBSTS_CONTEXT)&tmp;
-
-        if (usbsts->HCHalted)
-        {
-            break;
-        }
-        DPRINT("Waiting for Halt, USBSTS: %x\n", READ_REGISTER_ULONG ((PULONG)(base + EHCI_USBSTS)));
-    }
-
-    tmp = READ_REGISTER_ULONG ((PULONG)(base + EHCI_USBCMD));
-
-    /* Reset the device */
-    UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
-    UsbCmd->HCReset = TRUE;
-    WRITE_REGISTER_ULONG ((PULONG)(base + EHCI_USBCMD), tmp);
-
-    /* Wait for the device to reset */
-    for (;;)
-    {
-        KeStallExecutionProcessor(10);
-        tmp = READ_REGISTER_ULONG((PULONG)(base + EHCI_USBCMD));
-        UsbCmd = (PEHCI_USBCMD_CONTENT)&tmp;
-
-        if (!UsbCmd->HCReset)
-        {
-            break;
-        }
-        DPRINT("Waiting for reset, USBCMD: %x\n", READ_REGISTER_ULONG ((PULONG)(base + EHCI_USBCMD)));
-    }
-
-    UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
-
-    /* Disable Interrupts on the device */
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBINTR), 0);
-    /* Clear the Status */
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBSTS), 0x0000001f);
-
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_CTRLDSSEGMENT), 0);
-
-    /* Set the Periodic Frame List */
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_PERIODICLISTBASE), FdoDeviceExtension->PeriodicFramListPhysAddr.LowPart);
-    /* Set the Async List Queue */
-    WRITE_REGISTER_ULONG((PULONG) (base + EHCI_ASYNCLISTBASE), FdoDeviceExtension->AsyncListQueueHeadPtrPhysAddr.LowPart & ~(0x1f));
-
-    /* Set the ansync and periodic to disable */
-    UsbCmd->PeriodicEnable = 0;
-    UsbCmd->AsyncEnable = 0;
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBCMD), tmp);
-
-    /* Set the threshold */
-    UsbCmd->IntThreshold = 1;
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBCMD), tmp);
-
-    KeInitializeDpc(&FdoDeviceExtension->DpcObject,
-                    EhciDefferedRoutine,
-                    FdoDeviceExtension);
-
-    KeInitializeDpc(&FdoDeviceExtension->TimerDpcObject,
-                    TimerDefferedRoutine,
-                    FdoDeviceExtension);
-
-
-    Status = IoConnectInterrupt(&FdoDeviceExtension->EhciInterrupt,
-                       InterruptService,
-                       FdoDeviceExtension->DeviceObject,
-                       NULL,
-                       FdoDeviceExtension->Vector,
-                       FdoDeviceExtension->Irql,
-                       FdoDeviceExtension->Irql,
-                       FdoDeviceExtension->Mode,
-                       FdoDeviceExtension->IrqShared,
-                       FdoDeviceExtension->Affinity,
-                       FALSE);
-
-    /* Turn back on interrupts */
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBINTR),
-                      EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
-                      | EHCI_USBINTR_FLROVR  | EHCI_USBINTR_PC);
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBINTR),
-                      EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
-                      | EHCI_USBINTR_FLROVR  | EHCI_USBINTR_PC);
-
-    UsbCmd->Run = 1;
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBCMD), tmp);
-
-    /* Wait for the device to start */
-    for (;;)
-    {
-        KeStallExecutionProcessor(10);
-        tmp2 = READ_REGISTER_ULONG((PULONG)(base + EHCI_USBSTS));
-        usbsts = (PEHCI_USBSTS_CONTEXT)&tmp2;
-
-        if (!usbsts->HCHalted)
-        {
-            break;
-        }
-        DPRINT("Waiting for start, USBSTS: %x\n", READ_REGISTER_ULONG ((PULONG)(base + EHCI_USBSTS)));
-    }
-
-    /* Set all port routing to ECHI controller */
-    WRITE_REGISTER_ULONG((PULONG)(base + EHCI_CONFIGFLAG), 1);
-}
-
-VOID
-GetCapabilities(PFDO_DEVICE_EXTENSION DeviceExtension, ULONG Base)
-{
-    PEHCI_CAPS PCap;
-    PEHCI_HCS_CONTENT PHCS;
-    LONG i;
-
-    if (!DeviceExtension)
-        return;
-
-    PCap = &DeviceExtension->ECHICaps;
-
-    PCap->Length = READ_REGISTER_UCHAR((PUCHAR)Base);
-    PCap->Reserved = READ_REGISTER_UCHAR((PUCHAR)(Base + 1));
-    PCap->HCIVersion = READ_REGISTER_USHORT((PUSHORT)(Base + 2));
-    PCap->HCSParamsLong = READ_REGISTER_ULONG((PULONG)(Base + 4));
-    PCap->HCCParams = READ_REGISTER_ULONG((PULONG)(Base + 8));
-
-    DPRINT("Length %d\n", PCap->Length);
-    DPRINT("Reserved %d\n", PCap->Reserved);
-    DPRINT("HCIVersion %x\n", PCap->HCIVersion);
-    DPRINT("HCSParams %x\n", PCap->HCSParamsLong);
-    DPRINT("HCCParams %x\n", PCap->HCCParams);
-
-    if (PCap->HCCParams & 0x02)
-        DPRINT1("Frame list size is configurable\n");
-
-    if (PCap->HCCParams & 0x01)
-        DPRINT1("64bit address mode not supported!\n");
-
-    DPRINT1("Number of Ports: %d\n", PCap->HCSParams.PortCount);
-
-    if (PCap->HCSParams.PortPowerControl)
-        DPRINT1("Port Power Control is enabled\n");
-
-    if (!PCap->HCSParams.CHCCount)
-    {
-        DPRINT1("Number of Companion Host controllers %x\n", PCap->HCSParams.CHCCount);
-        DPRINT1("Number of Ports Per CHC: %d\n", PCap->HCSParams.PortPerCHC);
-    }
-
-    /* Copied from USBDRIVER in trunk */
-    PHCS = (PEHCI_HCS_CONTENT)&DeviceExtension->ECHICaps.HCSParams;
-    if (PHCS->PortRouteRules)
-    {
-        for (i = 0; i < PCap->HCSParams.PortCount; i++)
-        {
-            PCap->PortRoute[i] = READ_REGISTER_UCHAR((PUCHAR) (Base + 12 + i));
-        }
-    }
 }
 
 NTSTATUS
@@ -426,62 +281,6 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
     NTSTATUS Status;
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    RtlZeroMemory(&DeviceDescription, sizeof(DEVICE_DESCRIPTION));
-    DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
-    DeviceDescription.Master = TRUE;
-    DeviceDescription.ScatterGather = TRUE;
-    DeviceDescription.Dma32BitAddresses = TRUE;
-    DeviceDescription.DmaWidth = 2;
-    DeviceDescription.InterfaceType = PCIBus;
-    DeviceDescription.MaximumLength = EHCI_MAX_SIZE_TRANSFER;
-
-    FdoDeviceExtension->pDmaAdapter = IoGetDmaAdapter(FdoDeviceExtension->LowerDevice,
-                                                      &DeviceDescription,
-                                                      &FdoDeviceExtension->MapRegisters);
-
-    if (FdoDeviceExtension->pDmaAdapter == NULL)
-    {
-        DPRINT1("IoGetDmaAdapter failed!\n");
-        ASSERT(FALSE);
-    }
-
-    /* Allocate Common Buffer for Periodic Frame List */
-    FdoDeviceExtension->PeriodicFramList =
-        FdoDeviceExtension->pDmaAdapter->DmaOperations->AllocateCommonBuffer(FdoDeviceExtension->pDmaAdapter,
-        sizeof(ULONG) * 1024, &FdoDeviceExtension->PeriodicFramListPhysAddr, FALSE);
-
-    if (FdoDeviceExtension->PeriodicFramList == NULL)
-    {
-        DPRINT1("FdoDeviceExtension->PeriodicFramList is null\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Zeroize it */
-    RtlZeroMemory(FdoDeviceExtension->PeriodicFramList, sizeof(ULONG) * 1024);
-
-    ExInitializeFastMutex(&FdoDeviceExtension->FrameListMutex);
-
-    /* Allocate Common Buffer for Async List Head Queue */
-    FdoDeviceExtension->AsyncListQueueHeadPtr =
-        FdoDeviceExtension->pDmaAdapter->DmaOperations->AllocateCommonBuffer(FdoDeviceExtension->pDmaAdapter,
-        /* FIXME: Memory Size should be calculated using
-                  structures sizes needed for queue head + 20480 (max data transfer */
-        20800,
-        &FdoDeviceExtension->AsyncListQueueHeadPtrPhysAddr, FALSE);
-
-    if (FdoDeviceExtension->AsyncListQueueHeadPtr == NULL)
-    {
-        DPRINT1("Failed to allocate common buffer for AsyncListQueueHeadPtr!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Zeroize it */
-    RtlZeroMemory(FdoDeviceExtension->AsyncListQueueHeadPtr,
-                  /* FIXME: Same as FIXME above */
-                  20800);
-
-    ExInitializeFastMutex(&FdoDeviceExtension->AsyncListMutex);
 
     Status = IoGetDeviceProperty(FdoDeviceExtension->LowerDevice,
                                  DevicePropertyAddress,
@@ -531,26 +330,21 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
             }
             case CmResourceTypeMemory:
             {
-                ULONG ResourceBase = 0;
-                ULONG MemLength;
+                PVOID ResourceBase = 0;
 
                 DPRINT("Mem Start: %x\n", resource->u.Memory.Start);
                 DPRINT("Mem Length: %d\n", resource->u.Memory.Length);
 
-                ResourceBase = (ULONG) MmMapIoSpace(resource->u.Memory.Start, resource->u.Memory.Length, FALSE);
+                ResourceBase = MmMapIoSpace(resource->u.Memory.Start, resource->u.Memory.Length, FALSE);
                 DPRINT("ResourceBase %x\n", ResourceBase);
-
-                FdoDeviceExtension->ResourceBase = (PULONG) ResourceBase;
-                GetCapabilities(FdoDeviceExtension, (ULONG)ResourceBase);
-                FdoDeviceExtension->ResourceMemory = (PULONG)((ULONG)ResourceBase + FdoDeviceExtension->ECHICaps.Length);
-                DPRINT("ResourceMemory %x\n", FdoDeviceExtension->ResourceMemory);
-                if (FdoDeviceExtension->ResourceBase  == NULL)
+                if (ResourceBase  == NULL)
                 {
                     DPRINT1("MmMapIoSpace failed!!!!!!!!!\n");
                 }
-                MemLength = resource->u.Memory.Length;
-                FdoDeviceExtension->Size = MemLength;
 
+                GetCapabilities(&FdoDeviceExtension->hcd.ECHICaps, (ULONG)ResourceBase);
+                DPRINT1("hcd.ECHICaps.Length %x\n", FdoDeviceExtension->hcd.ECHICaps.Length);
+                FdoDeviceExtension->hcd.OpRegisters = (ULONG)((ULONG)ResourceBase + FdoDeviceExtension->hcd.ECHICaps.Length);
                 break;
             }
             case CmResourceTypeDma:
@@ -573,7 +367,90 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
         }
     }
 
-    StartEhci(DeviceObject);
+    KeInitializeDpc(&FdoDeviceExtension->DpcObject,
+                    EhciDefferedRoutine,
+                    FdoDeviceExtension);
+
+    RtlZeroMemory(&DeviceDescription, sizeof(DEVICE_DESCRIPTION));
+    DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
+    DeviceDescription.Master = TRUE;
+    DeviceDescription.ScatterGather = TRUE;
+    DeviceDescription.Dma32BitAddresses = TRUE;
+    DeviceDescription.DmaWidth = 2;
+    DeviceDescription.InterfaceType = PCIBus;
+    DeviceDescription.MaximumLength = EHCI_MAX_SIZE_TRANSFER;
+
+    FdoDeviceExtension->pDmaAdapter = IoGetDmaAdapter(FdoDeviceExtension->LowerDevice,
+                                                      &DeviceDescription,
+                                                      &FdoDeviceExtension->MapRegisters);
+
+    if (FdoDeviceExtension->pDmaAdapter == NULL)
+    {
+        DPRINT1("Ehci: IoGetDmaAdapter failed!\n");
+        ASSERT(FALSE);
+    }
+
+    /* Allocate Common Buffer for Periodic Frame List */
+    FdoDeviceExtension->PeriodicFrameList.VirtualAddr =
+        FdoDeviceExtension->pDmaAdapter->DmaOperations->AllocateCommonBuffer(FdoDeviceExtension->pDmaAdapter,
+        sizeof(ULONG) * 1024, &FdoDeviceExtension->PeriodicFrameList.PhysicalAddr, FALSE);
+
+    if (FdoDeviceExtension->PeriodicFrameList.VirtualAddr == NULL)
+    {
+        DPRINT1("Ehci: FdoDeviceExtension->PeriodicFramList is null\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Zeroize it */
+    RtlZeroMemory(FdoDeviceExtension->PeriodicFrameList.VirtualAddr, sizeof(ULONG) * 1024);
+
+    ExInitializeFastMutex(&FdoDeviceExtension->FrameListMutex);
+
+    /* Allocate pages for queueheads and descriptors */
+    FdoDeviceExtension->hcd.CommonBufferVA =
+        FdoDeviceExtension->pDmaAdapter->DmaOperations->AllocateCommonBuffer(FdoDeviceExtension->pDmaAdapter,
+                                                                             PAGE_SIZE * 16,
+                                                                             &FdoDeviceExtension->hcd.CommonBufferPA,
+                                                                             FALSE);
+
+    if (FdoDeviceExtension->hcd.CommonBufferVA == 0)
+    {
+        DPRINT1("Ehci: Failed to allocate common buffer!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    FdoDeviceExtension->hcd.CommonBufferSize = PAGE_SIZE * 16;
+
+    /* Zeroize it */
+    RtlZeroMemory(FdoDeviceExtension->hcd.CommonBufferVA,
+                  PAGE_SIZE * 16);
+
+    /* Init SpinLock for host controller device lock */
+    KeInitializeSpinLock(&FdoDeviceExtension->hcd.Lock);
+
+    /* Reserved a Queue Head that will always be in the AsyncList Address Register */
+    FdoDeviceExtension->hcd.AsyncListQueue = CreateQueueHead(&FdoDeviceExtension->hcd);
+    FdoDeviceExtension->hcd.AsyncListQueue->HorizontalLinkPointer = FdoDeviceExtension->hcd.AsyncListQueue->PhysicalAddr | QH_TYPE_QH;
+    FdoDeviceExtension->hcd.AsyncListQueue->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+    FdoDeviceExtension->hcd.AsyncListQueue->Token.Bits.InterruptOnComplete = FALSE;
+
+    /* Ensure the controller is stopped */
+    StopEhci(&FdoDeviceExtension->hcd);
+
+    Status = IoConnectInterrupt(&FdoDeviceExtension->EhciInterrupt,
+                                InterruptService,
+                                FdoDeviceExtension->DeviceObject,
+                                NULL,
+                                FdoDeviceExtension->Vector,
+                                FdoDeviceExtension->Irql,
+                                FdoDeviceExtension->Irql,
+                                FdoDeviceExtension->Mode,
+                                FdoDeviceExtension->IrqShared,
+                                FdoDeviceExtension->Affinity,
+                                FALSE);
+
+    StartEhci(&FdoDeviceExtension->hcd);
+    DPRINT1("AsycnAddr %x\n", GetAsyncListQueueRegister(&FdoDeviceExtension->hcd));
     FdoDeviceExtension->DeviceState = DEVICESTARTED;
 
     return STATUS_SUCCESS;
@@ -628,7 +505,7 @@ FdoQueryBusRelations(
         /* Bail on any other error */
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("UsbEhci: Failed to create PDO %wZ, Status %x\n", &DeviceName, Status);
+            DPRINT1("Ehci: Failed to create PDO %wZ, Status %x\n", &DeviceName, Status);
             return Status;
         }
     }
@@ -639,7 +516,7 @@ FdoQueryBusRelations(
 
     PdoDeviceExtension->ControllerFdo = DeviceObject;
     PdoDeviceExtension->DeviceObject = Pdo;
-    PdoDeviceExtension->NumberOfPorts = DeviceExtension->ECHICaps.HCSParams.PortCount;
+    PdoDeviceExtension->NumberOfPorts = DeviceExtension->hcd.ECHICaps.HCSParams.PortCount;
 
     InitializeListHead(&PdoDeviceExtension->IrpQueue);
     KeInitializeSpinLock(&PdoDeviceExtension->IrpQueueLock);
@@ -683,6 +560,7 @@ FdoDispatchPnp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         case IRP_MN_START_DEVICE:
         {
             DPRINT1("Ehci: START_DEVICE\n");
+
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = ForwardAndWait(DeviceObject, Irp);
 
@@ -905,7 +783,7 @@ FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PUSB_DEVICE UsbDevice = NULL;
     URB *Urb;
 
-    /*FIXME: This should never be called by a miniport as the miniport should only be dealing with the pdo */
+    /*FIXME: This should never be called by upper drivers as they should only be dealing with the pdo */
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) FdoDeviceExtension->Pdo->DeviceExtension;
@@ -924,7 +802,7 @@ FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     if (!UsbDevice)
     {
-        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        DPRINT1("Ehci: Invalid DeviceHandle or device not connected\n");
         return STATUS_DEVICE_NOT_CONNECTED;
     }
     switch (Urb->UrbHeader.Function)
@@ -946,7 +824,6 @@ FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             {
                 case USB_DEVICE_DESCRIPTOR_TYPE:
                 {
-                    /* FIXME: This probably not used for FDO and should be removed? */
                     DPRINT1("USB DEVICE DESC\n");
                     break;
                 }
@@ -954,55 +831,13 @@ FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     DPRINT1("USB CONFIG DESC\n");
                     //break;
                 case USB_STRING_DESCRIPTOR_TYPE:
-                    DPRINT1("Usb String Descriptor\n");
                 {
-                    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
-                    PUSB_STRING_DESCRIPTOR UsbString;
-                    BOOLEAN ResultOk;
-
-                    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-                    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
-                    CtrlSetup.bmRequestType._BM.Reserved = 0;
-                    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
-                    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
-                    CtrlSetup.wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
-                    CtrlSetup.wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
-
-                    if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_STRING_DESCRIPTOR_TYPE)
-                    {
-                        CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
-                        RtlZeroMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength-1);
-                    }
-                    else
-                        CtrlSetup.wIndex.W = 0;
-
-                    CtrlSetup.wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
-
-                    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port,
-                                Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength);
-
-                    if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_STRING_DESCRIPTOR_TYPE)
-                    {
-                        UsbString = Urb->UrbControlDescriptorRequest.TransferBuffer;
-                        DPRINT1("Index %x\n", Urb->UrbControlDescriptorRequest.Index);
-                        DPRINT1("BufferLength %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
-                        DPRINT1("Length %x\n", UsbString->bLength);
-                        if (Urb->UrbControlDescriptorRequest.Index == 0)
-                        {
-                            DPRINT1("%x\n", (ULONG)Urb->UrbControlDescriptorRequest.TransferBuffer);
-                        }
-                        else
-                            DPRINT1("String %S\n", &UsbString->bString);
-                    }
-                    UsbString = Urb->UrbControlDescriptorRequest.TransferBuffer;
-                    Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
-                    Status = STATUS_SUCCESS;
-                    Information = UsbString->bLength;
+                    DPRINT1("Usb String Descriptor\n");
                     break;
                 }
                 default:
                 {
-                    DPRINT1("Descriptor Type %x not supported!\n", Urb->UrbControlDescriptorRequest.DescriptorType);
+                    DPRINT1("Ehci: Descriptor Type %x not supported!\n", Urb->UrbControlDescriptorRequest.DescriptorType);
                 }
             }
             break;

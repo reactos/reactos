@@ -10,8 +10,6 @@
 #define DR_MASK(x)                              (1 << (x))
 #define DR_REG_MASK                             0x4F
 
-#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_I386
-
 //
 // INT3 is 1 byte long
 //
@@ -33,7 +31,7 @@
 
 #define KiGetLinkedTrapFrame(x) \
     (PKTRAP_FRAME)((x)->Edx)
-    
+
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Eax)
 
@@ -77,7 +75,7 @@
 #define KTE_SKIP_PM_BIT  (((KTRAP_EXIT_SKIP_BITS) { { .SkipPreviousMode = TRUE } }).Bits)
 #define KTE_SKIP_SEG_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipSegments  = TRUE } }).Bits)
 #define KTE_SKIP_VOL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipVolatiles = TRUE } }).Bits)
- 
+
 typedef union _KTRAP_EXIT_SKIP_BITS
 {
     struct
@@ -165,7 +163,7 @@ typedef struct _KV8086_STACK_FRAME
     FX_SAVE_AREA NpxArea;
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
-              
+
 //
 // Registers an interrupt handler with an IDT vector
 //
@@ -173,7 +171,7 @@ FORCEINLINE
 VOID
 KeRegisterInterruptHandler(IN ULONG Vector,
                            IN PVOID Handler)
-{                           
+{
     UCHAR Entry;
     ULONG_PTR Address;
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -388,7 +386,7 @@ NTAPI
 VdmDispatchBop(
     IN PKTRAP_FRAME TrapFrame
 );
- 
+
 BOOLEAN
 FASTCALL
 KiVdmOpcodePrefix(
@@ -609,7 +607,7 @@ KiSystemCallTrampoline(IN PVOID Handler,
                        IN ULONG StackBytes)
 {
     NTSTATUS Result;
-    
+
     /*
      * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
      * and then calls the function associated with the system call.
@@ -705,7 +703,7 @@ NTSTATUS
 FORCEINLINE
 KiConvertToGuiThread(VOID)
 {
-    NTSTATUS Result;  
+    NTSTATUS Result;
     PVOID StackFrame;
 
     /*
@@ -769,7 +767,7 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
         "subl %1, %%esp\n"
         "pushl %2\n"
         "jmp _KiSystemStartupBootStack@0\n"
-        : 
+        :
         : "c"(InitialStack),
           "i"(NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH),
           "i"(CR0_EM | CR0_TS | CR0_MP)
@@ -825,7 +823,7 @@ KiEndInterrupt(IN KIRQL Irql,
     /* Disable interrupts and end the interrupt */
     _disable();
     HalEndSystemInterrupt(Irql, TrapFrame);
-    
+
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }

@@ -210,12 +210,14 @@ elseif(ARCH MATCHES amd64)
     set(IDL_FLAGS -m64 --win64)
 endif()
 
-set(IDL_HEADER_ARG -h -H) #.h
-set(IDL_TYPELIB_ARG -t -T) #.tlb
+set(IDL_HEADER_ARG -h -o) #.h
+set(IDL_TYPELIB_ARG -t -o) #.tlb
 set(IDL_SERVER_ARG -s -S) #.c for server library
 set(IDL_CLIENT_ARG -c -C) #.c for stub client library
 set(IDL_PROXY_ARG -p -P)
-set(IDL_DLLDATA_ARG --dlldata-only --dlldata=)
+set(IDL_INTERFACE_ARG -u -o)
+set(IDL_DLLDATA_ARG --dlldata-only -o)
+
 
 macro(add_importlibs MODULE)
     add_dependency_node(${MODULE})

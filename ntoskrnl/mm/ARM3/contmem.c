@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::CONTMEM"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -32,7 +31,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
     KIRQL OldIrql;
     PAGED_CODE();
     ASSERT(SizeInPages != 0);
-        
+
     //
     // Convert the boundary PFN into an alignment mask
     //
@@ -40,7 +39,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
 
     /* Disable APCs */
     KeEnterGuardedRegion();
-    
+
     //
     // Loop all the physical memory blocks
     //
@@ -51,23 +50,23 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
         //
         Page = MmPhysicalMemoryBlock->Run[i].BasePage;
         PageCount = MmPhysicalMemoryBlock->Run[i].PageCount;
-        
+
         //
         // Check how far this memory block will go
         //
         LastPage = Page + PageCount;
-        
+
         //
         // Trim it down to only the PFNs we're actually interested in
         //
         if ((LastPage - 1) > HighestPfn) LastPage = HighestPfn + 1;
         if (Page < LowestPfn) Page = LowestPfn;
-        
+
         //
         // Skip this run if it's empty or fails to contain all the pages we need
         //
         if (!(PageCount) || ((Page + SizeInPages) > LastPage)) continue;
-        
+
         //
         // Now scan all the relevant PFNs in this run
         //
@@ -82,7 +81,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                 Length = 0;
                 continue;
             }
-            
+
             //
             // If we haven't chosen a start PFN yet and the caller specified an
             // alignment, make sure the page matches the alignment restriction
@@ -95,7 +94,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                 //
                 continue;
             }
-            
+
             //
             // Increase the number of valid pages, and check if we have enough
             //
@@ -106,7 +105,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                 //
                 Pfn1 -= (Length - 1);
                 Page -= (Length - 1);
-                
+
                 //
                 // Acquire the PFN lock
                 //
@@ -117,7 +116,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                     // Things might've changed for us. Is the page still free?
                     //
                     if (MiIsPfnInUse(Pfn1)) break;
-                    
+
                     //
                     // So far so good. Is this the last confirmed valid page?
                     //
@@ -127,7 +126,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                         // Sanity check that we didn't go out of bounds
                         //
                         ASSERT(i != MmPhysicalMemoryBlock->NumberOfRuns);
-                        
+
                         //
                         // Loop until all PFN entries have been processed
                         //
@@ -148,43 +147,43 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             Pfn1->u3.e1.PrototypePte = 0;
                             Pfn1->u4.VerifierAllocation = 0;
                             Pfn1->PteAddress = (PVOID)0xBAADF00D;
-                            
+
                             //
                             // Check if this is the last PFN, otherwise go on
                             //
                             if (Pfn1 == EndPfn) break;
                             Pfn1--;
                         } while (TRUE);
-                        
+
                         //
                         // Mark the first and last PFN so we can find them later
                         //
                         Pfn1->u3.e1.StartOfAllocation = 1;
                         (Pfn1 + SizeInPages - 1)->u3.e1.EndOfAllocation = 1;
-                        
+
                         //
                         // Now it's safe to let go of the PFN lock
                         //
                         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-                        
+
                         //
                         // Quick sanity check that the last PFN is consistent
                         //
                         EndPfn = Pfn1 + SizeInPages;
                         ASSERT(EndPfn == MI_PFN_ELEMENT(Page + 1));
-                        
+
                         //
                         // Compute the first page, and make sure it's consistent
                         //
                         Page = Page - SizeInPages + 1;
                         ASSERT(Pfn1 == MI_PFN_ELEMENT(Page));
                         ASSERT(Page != 0);
-                        
+
                         /* Enable APCs and return the page */
                         KeLeaveGuardedRegion();
-                        return Page;                                
+                        return Page;
                     }
-                    
+
                     //
                     // Keep going. The purpose of this loop is to reconfirm that
                     // after acquiring the PFN lock these pages are still usable
@@ -192,7 +191,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                     Pfn1++;
                     Page++;
                 } while (TRUE);
-                
+
                 //
                 // If we got here, something changed while we hadn't acquired
                 // the PFN lock yet, so we'll have to restart
@@ -202,11 +201,11 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
             }
         }
     } while (++i != MmPhysicalMemoryBlock->NumberOfRuns);
-    
+
     //
     // And if we get here, it means no suitable physical memory runs were found
     //
-    return 0;    
+    return 0;
 }
 
 PVOID
@@ -221,7 +220,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
 {
     PMMPTE StartPte, EndPte;
     PFN_NUMBER PreviousPage = 0, Page, HighPage, BoundaryMask, Pages = 0;
-    
+
     //
     // Okay, first of all check if the PFNs match our restrictions
     //
@@ -229,13 +228,13 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
     if (LowestPfn + SizeInPages <= LowestPfn) return NULL;
     if (LowestPfn + SizeInPages - 1 > HighestPfn) return NULL;
     if (BaseAddressPages < SizeInPages) return NULL;
-    
+
     //
     // This is the last page we need to get to and the boundary requested
     //
     HighPage = HighestPfn + 1 - SizeInPages;
     BoundaryMask = ~(BoundaryPfn - 1);
-    
+
     //
     // And here's the PTEs for this allocation. Let's go scan them.
     //
@@ -248,7 +247,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
         //
         ASSERT (StartPte->u.Hard.Valid == 1);
         Page = PFN_FROM_PTE(StartPte);
-        
+
         //
         // Is this the beginning of our adventure?
         //
@@ -271,7 +270,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
                     Pages++;
                 }
             }
-            
+
             //
             // Have we found all the pages we need by now?
             // Incidently, this means you only wanted one page
@@ -297,7 +296,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
                 Pages = 0;
                 continue;
             }
-            
+
             //
             // Otherwise, we're still in the game. Do we have all our pages?
             //
@@ -309,7 +308,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
                 return MiPteToAddress(StartPte - Pages + 1);
             }
         }
-        
+
         //
         // Try with the next PTE, remember this PFN
         //
@@ -317,7 +316,7 @@ MiCheckForContiguousMemory(IN PVOID BaseAddress,
         StartPte++;
         continue;
     }
-    
+
     //
     // All good returns are within the loop...
     //
@@ -349,14 +348,14 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
                                  SizeInPages,
                                  CacheType);
     if (!Page) return NULL;
-    
+
     //
     // We'll just piggyback on the I/O memory mapper
     //
     PhysicalAddress.QuadPart = Page << PAGE_SHIFT;
     BaseAddress = MmMapIoSpace(PhysicalAddress, SizeInPages << PAGE_SHIFT, CacheType);
     ASSERT(BaseAddress);
-    
+
     /* Loop the PFN entries */
     Pfn1 = MiGetPfnEntry(Page);
     EndPfn = Pfn1 + SizeInPages;
@@ -367,7 +366,7 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
         Pfn1->PteAddress = PointerPte;
         Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte++));
     } while (++Pfn1 < EndPfn);
-    
+
     /* Return the address */
     return BaseAddress;
 }
@@ -389,12 +388,12 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
     //
     ASSERT(NumberOfBytes != 0);
     ASSERT(CacheType <= MmWriteCombined);
-    
+
     //
     // Compute size requested
     //
     SizeInPages = BYTES_TO_PAGES(NumberOfBytes);
-    
+
     //
     // Convert the cache attribute and check for cached requests
     //
@@ -409,7 +408,7 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
                                             NumberOfBytes,
                                             'mCmM');
         if (BaseAddress)
-        {    
+        {
             //
             // Now make sure it's actually contiguous (if it came from expansion
             // it might not be).
@@ -427,20 +426,20 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
                 //
                 return BaseAddress;
             }
-            
+
             //
             // No such luck
             //
             ExFreePool(BaseAddress);
         }
     }
-    
+
     //
     // According to MSDN, the system won't try anything else if you're higher
     // than APC level.
     //
     if (KeGetCurrentIrql() > APC_LEVEL) return NULL;
-    
+
     //
     // Otherwise, we'll go try to find some
     //
@@ -460,7 +459,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     PMMPFN Pfn1, StartPfn;
     PMMPTE PointerPte;
     PAGED_CODE();
-    
+
     //
     // First, check if the memory came from initial nonpaged pool, or expansion
     //
@@ -476,15 +475,15 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         ExFreePool(BaseAddress);
         return;
     }
-    
+
     /* Get the PTE and frame number for the allocation*/
     PointerPte = MiAddressToPte(BaseAddress);
     PageFrameIndex = PFN_FROM_PTE(PointerPte);
-    
+
     //
     // Now get the PFN entry for this, and make sure it's the correct one
     //
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);        
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
     if ((!Pfn1) || (Pfn1->u3.e1.StartOfAllocation == 0))
     {
         //
@@ -496,13 +495,13 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
                      0,
                      0);
     }
-    
+
     //
     // Now this PFN isn't the start of any allocation anymore, it's going out
     //
     StartPfn = Pfn1;
     Pfn1->u3.e1.StartOfAllocation = 0;
-    
+
     /* Loop the PFNs until we find the one that marks the end of the allocation */
     do
     {
@@ -513,35 +512,35 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
         ASSERT(Pfn1->u4.VerifierAllocation == 0);
         ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-        
+
         /* Set the special pending delete marker */
         MI_SET_PFN_DELETED(Pfn1);
-        
+
         /* Keep going for assertions */
         PointerPte++;
     } while (Pfn1++->u3.e1.EndOfAllocation == 0);
-         
+
     //
     // Found it, unmark it
     //
     Pfn1--;
     Pfn1->u3.e1.EndOfAllocation = 0;
-    
+
     //
     // Now compute how many pages this represents
     //
     PageCount = (ULONG)(Pfn1 - StartPfn + 1);
-    
+
     //
     // So we can know how much to unmap (recall we piggyback on I/O mappings)
     //
     MmUnmapIoSpace(BaseAddress, PageCount << PAGE_SHIFT);
-    
+
     //
     // Lock the PFN database
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     //
     // Loop all the pages
     //
@@ -552,7 +551,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         /* Decrement the share count and move on */
         MiDecrementShareCount(Pfn1++, PageFrameIndex++);
     } while (PageFrameIndex < LastPage);
-    
+
     //
     // Release the PFN lock
     //
@@ -579,33 +578,33 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
     //
     ASSERT(NumberOfBytes != 0);
     ASSERT(CacheType <= MmWriteCombined);
-    
+
     //
     // Convert the lowest address into a PFN
     //
     LowestPfn = (PFN_NUMBER)(LowestAcceptableAddress.QuadPart >> PAGE_SHIFT);
     if (BYTE_OFFSET(LowestAcceptableAddress.LowPart)) LowestPfn++;
-    
+
     //
     // Convert and validate the boundary address into a PFN
     //
     if (BYTE_OFFSET(BoundaryAddressMultiple.LowPart)) return NULL;
     BoundaryPfn = (PFN_NUMBER)(BoundaryAddressMultiple.QuadPart >> PAGE_SHIFT);
-    
+
     //
     // Convert the highest address into a PFN
     //
     HighestPfn = (PFN_NUMBER)(HighestAcceptableAddress.QuadPart >> PAGE_SHIFT);
     if (HighestPfn > MmHighestPhysicalPage) HighestPfn = MmHighestPhysicalPage;
-    
+
     //
     // Validate the PFN bounds
     //
     if (LowestPfn > HighestPfn) return NULL;
-    
+
     //
     // Let the contiguous memory allocator handle it
-    //    
+    //
     return MiAllocateContiguousMemory(NumberOfBytes,
                                       LowestPfn,
                                       HighestPfn,
@@ -633,10 +632,10 @@ MmAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
     //
     HighestPfn = (PFN_NUMBER)(HighestAcceptableAddress.QuadPart >> PAGE_SHIFT);
     if (HighestPfn > MmHighestPhysicalPage) HighestPfn = MmHighestPhysicalPage;
-    
+
     //
     // Let the contiguous memory allocator handle it
-    //    
+    //
     return MiAllocateContiguousMemory(NumberOfBytes, 0, HighestPfn, 0, MmCached);
 }
 

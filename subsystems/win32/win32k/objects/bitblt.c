@@ -53,7 +53,7 @@ NtGdiAlphaBlend(
 
     if (WidthDest < 0 || HeightDest < 0 || WidthSrc < 0 || HeightSrc < 0)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -67,7 +67,7 @@ NtGdiAlphaBlend(
     if ((NULL == DCDest) || (NULL == DCSrc))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
         if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
@@ -342,7 +342,7 @@ NtGdiTransparentBlt(
     if ((NULL == DCDest) || (NULL == DCSrc))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
         if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
@@ -659,7 +659,7 @@ GreStretchBltMask(
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -958,7 +958,7 @@ IntGdiPolyPatBlt(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -1017,7 +1017,7 @@ NtGdiPatBlt(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -1035,7 +1035,7 @@ NtGdiPatBlt(
     pbrush = BRUSH_LockBrush(pdcattr->hbrush);
     if (pbrush == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         DC_UnlockDc(dc);
         return FALSE;
     }
@@ -1065,7 +1065,7 @@ NtGdiPolyPatBlt(
         rb = ExAllocatePoolWithTag(PagedPool, sizeof(PATRECT) * cRects, TAG_PATBLT);
         if (!rb)
         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
         _SEH2_TRY

@@ -480,8 +480,8 @@ MiCacheEvictPages(PVOID BaseAddress, ULONG Target)
 	MmLockCacheSectionSegment(Segment);
 
 	for (i = 0; 
-		 i < Segment->Length.QuadPart - 
-			 MemoryArea->Data.CacheData.ViewOffset.QuadPart && 
+		 i < ((ULONG_PTR)MemoryArea->EndingAddress) - 
+			 ((ULONG_PTR)MemoryArea->StartingAddress) && 
 			 Result < Target; 
 		 i += PAGE_SIZE) {
 		Offset.QuadPart = MemoryArea->Data.CacheData.ViewOffset.QuadPart + i;

@@ -2,7 +2,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Window painting function
- *  FILE:             subsys/win32k/ntuser/painting.c
+ *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
  *  REVISION HISTORY:
  *       06/06/2001   Created (?)
@@ -660,9 +660,7 @@ IntGetPaintMessage(
    MSG *Message,
    BOOL Remove)
 {
-   PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
-
-   if (!MessageQueue->PaintCount)
+   if (!Thread->cPaintsReady)
       return FALSE;
 
    if ((MsgFilterMin != 0 || MsgFilterMax != 0) &&
@@ -673,9 +671,9 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
-      MessageQueue->PaintCount = 0;
+      Thread->cPaintsReady = 0;
       return FALSE;
    }
 
@@ -1085,7 +1083,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECTL));
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          RETURN(FALSE);
       }
    }
@@ -1141,7 +1139,7 @@ NtUserRedrawWindow(
       _SEH2_END
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(RtlNtStatusToDosError(Status));
+         EngSetLastError(RtlNtStatusToDosError(Status));
          RETURN( FALSE);
       }
    }
@@ -1151,7 +1149,7 @@ NtUserRedrawWindow(
                   RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN|RDW_NOCHILDREN) )
    {
       /* RedrawWindow fails only in case that flags are invalid */
-      SetLastWin32Error(ERROR_INVALID_FLAGS);
+      EngSetLastError(ERROR_INVALID_FLAGS);
       RETURN( FALSE);
    }
 
@@ -1954,7 +1952,7 @@ UserRealizePalette(HDC hdc)
       hWnd = IntWindowFromDC(hdc);
       if (hWnd) // Send broadcast if dc is associated with a window.
       {  // FYI: Thread locked in CallOneParam.
-         co_IntSendMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
+         UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
   return Ret;
@@ -2077,7 +2075,7 @@ NtUserPrintWindow(
           if ( (nFlags & PW_CLIENTONLY) == nFlags)
              Ret = IntPrintWindow( Window, hdcBlt, nFlags);
           else
-             SetLastWin32Error(ERROR_INVALID_PARAMETER);
+             EngSetLastError(ERROR_INVALID_PARAMETER);
        }
     }
 

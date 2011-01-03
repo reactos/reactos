@@ -1996,19 +1996,11 @@ NTAPI
 NtUserGetListBoxInfo(
   HWND hWnd);
 
-typedef struct tagNTUSERGETMESSAGEINFO
-{
-  MSG Msg;
-  ULONG LParamSize;
-} NTUSERGETMESSAGEINFO, *PNTUSERGETMESSAGEINFO;
-
-BOOL
-NTAPI
-NtUserGetMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax);
+BOOL APIENTRY
+NtUserGetMessage(PMSG pMsg,
+                 HWND hWnd,
+                 UINT MsgFilterMin,
+                 UINT MsgFilterMax);
 
 DWORD
 NTAPI
@@ -2104,7 +2096,8 @@ enum ThreadStateRoutines
     THREADSTATE_PROGMANWINDOW,
     THREADSTATE_TASKMANWINDOW,
     THREADSTATE_GETMESSAGETIME,
-    THREADSTATE_GETINPUTSTATE
+    THREADSTATE_GETINPUTSTATE,
+    THREADSTATE_UPTIMELASTREAD
 };
 
 DWORD_PTR
@@ -2254,6 +2247,15 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
+
+typedef struct tagDOSENDMESSAGE
+{
+  UINT uFlags;
+  UINT uTimeout;
+  ULONG_PTR Result;
+}
+DOSENDMESSAGE, *PDOSENDMESSAGE;
+
 BOOL
 NTAPI
 NtUserMessageCall(
@@ -2363,14 +2365,12 @@ NtUserPaintMenuBar(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-BOOL
-NTAPI
-NtUserPeekMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg);
+BOOL APIENTRY
+NtUserPeekMessage( PMSG pMsg,
+                   HWND hWnd,
+                   UINT MsgFilterMin,
+                   UINT MsgFilterMax,
+                   UINT RemoveMsg);
 
 BOOL
 NTAPI
@@ -3300,33 +3300,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-
-typedef struct tagNTUSERSENDMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-          PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessageTimeout(HWND hWnd,
-			 UINT Msg,
-			 WPARAM wParam,
-			 LPARAM lParam,
-			 UINT uFlags,
-			 UINT uTimeout,
-			 ULONG_PTR *uResult,
-             PNTUSERSENDMESSAGEINFO Info);
 
 typedef struct _SETSCROLLBARINFO
 {

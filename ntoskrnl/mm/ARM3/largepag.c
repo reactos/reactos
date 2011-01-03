@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::LARGEPAGE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -46,7 +45,7 @@ MiInitializeLargePageSupport(VOID)
     /* Initialize the process tracking list, and insert the system process */
     InitializeListHead(&MmProcessList);
     InsertTailList(&MmProcessList, &PsGetCurrentProcess()->MmProcessLinks);
-#endif    
+#endif
 }
 
 VOID
@@ -89,7 +88,7 @@ MiInitializeDriverLargePageList(VOID)
             p++;
             continue;
         }
-        
+
         /* A star means everything */
         if (*p == L'*')
         {
@@ -97,7 +96,7 @@ MiInitializeDriverLargePageList(VOID)
             MiLargePageAllDrivers = TRUE;
             break;
         }
-        
+
         DPRINT1("Large page drivers not supported\n");
         ASSERT(FALSE);
     }

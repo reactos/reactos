@@ -145,7 +145,7 @@ ExfReInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Reset the count */
-    ExpSetRundown(&RunRef->Count, 0);
+    ExpSetRundown(RunRef, 0);
 }
 
 /*++
@@ -173,7 +173,7 @@ ExfRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Mark the counter as active */
-    ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
+    ExpSetRundown(RunRef, EX_RUNDOWN_ACTIVE);
 }
 
 /*++
@@ -359,7 +359,7 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
         WaitBlock.Count = Count;
 
         /* Now set the pointer */
-        NewValue = ExpChangeRundown(RunRef, PtrToUlong(WaitBlockPointer), Value);
+        NewValue = ExpChangeRundown(RunRef, (ULONG_PTR)WaitBlockPointer, Value);
         if (NewValue == Value) break;
 
         /* Loop again */

@@ -61,7 +61,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "其他(&X)"
         BEGIN
-            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO
+            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO /* 准确性待议 */
             MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
             MENUITEM "默认格式(&D)", ID_EDIT_DEFCHARFORMAT
             MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
@@ -107,8 +107,8 @@ BEGIN
         MENUITEM "复制(&C)", ID_EDIT_COPY
         MENUITEM "粘贴(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "项目符号(&B)",      ID_BULLET
-        MENUITEM "段落(&P)...",       ID_PARAFORMAT
+        MENUITEM "项目符号(&B)",       ID_BULLET
+        MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
 
@@ -118,21 +118,21 @@ BEGIN
     BEGIN
         MENUITEM "黑色",      ID_COLOR_BLACK /* 未找到“标准译名表” */
         MENUITEM "栗色",     ID_COLOR_MAROON
-        MENUITEM "调和绿",      ID_COLOR_GREEN
-        MENUITEM "橄榄色",      ID_COLOR_OLIVE
-        MENUITEM "藏青",       ID_COLOR_NAVY
-        MENUITEM "紫色",     ID_COLOR_PURPLE
-        MENUITEM "鸭翅绿",       ID_COLOR_TEAL
-        MENUITEM "灰色",       ID_COLOR_GRAY
-        MENUITEM "银色",     ID_COLOR_SILVER
-        MENUITEM "红色",        ID_COLOR_RED
-        MENUITEM "绿色",       ID_COLOR_LIME
-        MENUITEM "黄色",     ID_COLOR_YELLOW
-        MENUITEM "蓝色",       ID_COLOR_BLUE
-        MENUITEM "洋红",    ID_COLOR_FUCHSIA /* =magenta? */
-        MENUITEM "水绿",       ID_COLOR_AQUA
-        MENUITEM "白色",      ID_COLOR_WHITE
-        MENUITEM "自动",  ID_COLOR_AUTOMATIC
+        MENUITEM "绿色",      ID_COLOR_GREEN
+        MENUITEM "橄榄色",       ID_COLOR_OLIVE
+        MENUITEM "藏青",        ID_COLOR_NAVY
+        MENUITEM "紫色",      ID_COLOR_PURPLE
+        MENUITEM "鸭翅绿",        ID_COLOR_TEAL
+        MENUITEM "灰色",        ID_COLOR_GRAY
+        MENUITEM "银色",      ID_COLOR_SILVER
+        MENUITEM "红色",         ID_COLOR_RED
+        MENUITEM "青柠色",        ID_COLOR_LIME
+        MENUITEM "黄色",      ID_COLOR_YELLOW
+        MENUITEM "蓝色",        ID_COLOR_BLUE
+        MENUITEM "洋红",     ID_COLOR_FUCHSIA /* =magenta? */
+        MENUITEM "水绿",        ID_COLOR_AQUA
+        MENUITEM "白色",       ID_COLOR_WHITE
+        MENUITEM "自动",   ID_COLOR_AUTOMATIC
     END
 END
 
@@ -359,8 +359,8 @@ BEGIN
         MENUITEM "複製(&C)", ID_EDIT_COPY
         MENUITEM "貼上(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "子彈點(&B)",      ID_BULLET
-        MENUITEM "段落(&P)...",       ID_PARAFORMAT
+        MENUITEM "子彈點(&B)",       ID_BULLET
+        MENUITEM "段落(&P)...",        ID_PARAFORMAT
     END
 END
 
@@ -487,7 +487,9 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "儲存改動到 '%s'?"
     STRING_SEARCH_FINISHED,      "檔案查找結束."
     STRING_LOAD_RICHED_FAILED,   "RichEdit 裝載失敗."
-    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, 這可能導致格式丟失. 你確定要這麼做嗎?"
+    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, " \
+                                 "這可能導致格式丟失. " \
+                                 "你確定要這麼做嗎?"
     STRING_INVALID_NUMBER,       "數字格式無效"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "不支援OLE 儲存檔案"
     STRING_WRITE_FAILED,              "不能儲存檔案."

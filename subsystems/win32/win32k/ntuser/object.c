@@ -220,7 +220,7 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 
    if (!(entry = handle_to_entry(ht, handle )) || entry->type != type)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return NULL;
    }
    return entry->ptr;

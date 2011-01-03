@@ -14,7 +14,7 @@
 /* GLOBALS ********************************************************************/
 
 PHW_DEVICE_EXTENSION VmxDeviceExtensionArray[SVGA_MAX_DISPLAYS];
-static PWCHAR AdapterString = L"VMware SVGA II";
+static WCHAR AdapterString[] = L"VMware SVGA II";
 
 /* FUNCTIONS ******************************************************************/
 
@@ -64,17 +64,17 @@ NTAPI
 VmxIsMultiMon(IN PHW_DEVICE_EXTENSION DeviceExtension)
 {
     ULONG Capabilities;
-    
+
     /* Get the caps */
     Capabilities = DeviceExtension->Capabilities;
-    
+
     /* Check for multi-mon support */
     if ((Capabilities & SVGA_CAP_MULTIMON) && (Capabilities & SVGA_CAP_PITCHLOCK))
     {
         /* Query the monitor count */
         if (VmxReadUlong(DeviceExtension, SVGA_REG_NUM_DISPLAYS) > 1) return TRUE;
     }
-    
+
     /* Either no support, or just one screen */
     return FALSE;
 }
@@ -90,10 +90,10 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
     VP_STATUS Status;
     PHW_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
     DPRINT1("VMX searching for adapter\n");
-    
+
     /* Zero out the fields */
     VideoPortZeroMemory(DeviceExtension, sizeof(HW_DEVICE_EXTENSION));
-    
+
     /* Validate the Config Info */
     if (ConfigInfo->Length < sizeof(VIDEO_PORT_CONFIG_INFO))
     {
@@ -101,21 +101,21 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
         DPRINT1("Invalid configuration info\n");
         return ERROR_INVALID_PARAMETER;
     }
-    
+
     /* Initialize the device extension and find the adapter */
     Status = VmxInitDevice(DeviceExtension);
     DPRINT1("Init status: %lx\n", Status);
     if (Status != NO_ERROR) return ERROR_DEV_NOT_EXIST;
-    
+
     /* Save this adapter extension */
     VmxDeviceExtensionArray[0] = DeviceExtension;
-    
+
     /* Create the sync event */
     VideoPortCreateEvent(DeviceExtension,
                          NOTIFICATION_EVENT,
                          NULL,
                          &DeviceExtension->SyncEvent);
-                         
+
     /* Check for multi-monitor configuration */
     if (VmxIsMultiMon(DeviceExtension))
     {
@@ -123,14 +123,14 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
         UNIMPLEMENTED;
         while (TRUE);
     }
-    
+
     /* Zero the frame buffer */
-    VideoPortZeroMemory((PVOID)DeviceExtension->FrameBuffer.LowPart, 
+    VideoPortZeroMemory((PVOID)DeviceExtension->FrameBuffer.LowPart,
                         DeviceExtension->VramSize.LowPart);
-                        
+
     /* Initialize the video modes */
     VmxInitModes(DeviceExtension);
-    
+
     /* Setup registry keys */
     VideoPortSetRegistryParameters(DeviceExtension,
                                    L"HardwareInformation.ChipType",
@@ -152,7 +152,7 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
                                    L"HardwareInformation.BiosString",
                                    AdapterString,
                                    sizeof(AdapterString));
-                                   
+
     /* No VDM support */
     ConfigInfo->NumEmulatorAccessEntries = 0;
     ConfigInfo->EmulatorAccessEntries = 0;
@@ -160,7 +160,7 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
     ConfigInfo->HardwareStateSize = 0;
     ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0;
     ConfigInfo->VdmPhysicalVideoMemoryLength = 0;
-    
+
     /* Write that this is Windows XP or higher */
     VmxWriteUlong(DeviceExtension, SVGA_REG_GUEST_ID, 0x5000 | 0x08);
     return NO_ERROR;
@@ -252,7 +252,7 @@ DriverEntry(IN PVOID Context1,
     DPRINT1("VMX-SVGAII Loading...\n");
     VideoPortZeroMemory(VmxDeviceExtensionArray, sizeof(VmxDeviceExtensionArray));
     VideoPortZeroMemory(&InitData, sizeof(InitData));
-    
+
     /* Setup the initialization structure with VideoPort */
     InitData.HwInitDataSize = sizeof(VIDEO_HW_INITIALIZATION_DATA);
     InitData.HwFindAdapter = VmxFindAdapter;

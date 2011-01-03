@@ -15,7 +15,7 @@ add_definitions(
 
 list(APPEND SOURCE
     dib/alphablend.c
-	dib/dib1bpp.c
+    dib/dib1bpp.c
     dib/dib4bpp.c
     dib/dib8bpp.c
     dib/dib16bpp.c
@@ -37,15 +37,15 @@ list(APPEND SOURCE
     eng/float.c
     eng/gradient.c
     eng/lineto.c
-	eng/ldevobj.c
+    eng/ldevobj.c
     eng/mapping.c
     eng/mem.c
     eng/engmisc.c
     eng/mouse.c
     eng/paint.c
-	eng/pdevobj.c
+    eng/pdevobj.c
     eng/perfcnt.c
-	eng/rlecomp.c
+    eng/rlecomp.c
     eng/semaphor.c
     eng/sort.c
     eng/string.c
@@ -56,7 +56,6 @@ list(APPEND SOURCE
     eng/xlate.c
     main/dllmain.c
     misc/driver.c
-    misc/err.c
     misc/file.c
     misc/math.c
     misc/rtlstr.c

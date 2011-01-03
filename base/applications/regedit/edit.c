@@ -22,8 +22,8 @@
 
 typedef enum _EDIT_MODE
 {
-  EDIT_MODE_DEC,
-  EDIT_MODE_HEX
+    EDIT_MODE_DEC,
+    EDIT_MODE_HEX
 } EDIT_MODE;
 
 
@@ -96,17 +96,18 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -140,8 +141,8 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                 }
                 else
                 {
-                  if (stringValueData)
-                    *stringValueData = 0;
+                    if (stringValueData)
+                        *stringValueData = 0;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -163,17 +164,18 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -207,8 +209,8 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                 }
                 else
                 {
-                  if (stringValueData)
-                    *stringValueData = 0;
+                    if (stringValueData)
+                        *stringValueData = 0;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -274,7 +276,8 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         dwordEditMode = EDIT_MODE_HEX;
 
@@ -290,9 +293,9 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         }
         else
         {
-	    TCHAR buffer[255];
-	    LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	    SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
         _stprintf (ValueString, _T("%lx"), dwordValueData);
@@ -359,8 +362,8 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 }
                 else
                 {
-                  EndDialog(hwndDlg, IDCANCEL);
-                  return TRUE;
+                    EndDialog(hwndDlg, IDCANCEL);
+                    return TRUE;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -382,17 +385,18 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
         HexEdit_LoadBuffer(hwndValue, binValueData, valueDataLen);
@@ -408,9 +412,9 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
             {
                 len = (UINT) HexEdit_GetBufferSize(hwndValue);
                 if (len > 0 && binValueData)
-                  binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
+                    binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
                 else
-                  binValueData = HeapAlloc(GetProcessHeap(), 0, len + 1);
+                    binValueData = HeapAlloc(GetProcessHeap(), 0, len + 1);
                 HexEdit_CopyBuffer(hwndValue, binValueData, len);
                 valueDataLen = len;
             }
@@ -439,11 +443,11 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
     lRet = RegQueryValueEx(hKey, valueName, 0, &type, 0, &valueDataLen);
     if (lRet != ERROR_SUCCESS && (!_tcscmp(valueName, _T("")) || valueName == NULL))
     {
-      lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
-      type = REG_SZ;
-      valueDataLen = 0;
-      stringValueData = NULL;
-      binValueData = NULL;
+        lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
+        type = REG_SZ;
+        valueDataLen = 0;
+        stringValueData = NULL;
+        binValueData = NULL;
     }
 
     if (lRet != ERROR_SUCCESS)
@@ -494,7 +498,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
             size_t llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
 
-	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+            if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
             {
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
                 goto done;
@@ -506,7 +510,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 goto done;
             }
 
-	    /* convert \0 to \r\n */
+            /* convert \0 to \r\n */
             src = stringValueData;
             nl_len = _tcslen(_T("\r\n")) * sizeof(TCHAR);
             listlen = sizeof(TCHAR);
@@ -515,12 +519,12 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
             {
                 llen = _tcslen(src);
                 if(llen == 0)
-                  break;
+                    break;
                 listlen += (llen * sizeof(TCHAR)) + nl_len;
-		lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, listlen);
-		_tcscat(lines, src);
-		_tcscat(lines, _T("\r\n"));
-		src += llen + 1;
+                lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, listlen);
+                _tcscat(lines, src);
+                _tcscat(lines, _T("\r\n"));
+                src += llen + 1;
             }
             HeapFree(GetProcessHeap(), 0, stringValueData);
             stringValueData = lines;
@@ -552,7 +556,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                         if(nl == src)
                         {
                             EmptyLines = TRUE;
-			    src = nl + c_nl;
+                            src = nl + c_nl;
                             continue;
                         }
                     }
@@ -562,7 +566,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     }
                     if(linechars > 0)
                     {
-			buflen += ((linechars + 1) * sizeof(TCHAR));
+                        buflen += ((linechars + 1) * sizeof(TCHAR));
                         lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, buflen);
                         memcpy((lines + dest), src, linechars * sizeof(TCHAR));
                         dest += linechars;
@@ -581,8 +585,8 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
-		HeapFree(GetProcessHeap(), 0, lines);
+                lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
+                HeapFree(GetProcessHeap(), 0, lines);
             }
             else
             {
@@ -614,44 +618,44 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
         LPWSTR u_valuename;
         int len_vname = lstrlen(valueName);
 
-	if(len_vname > 0)
+        if(len_vname > 0)
         {
-          if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
-          {
-            error(hwnd, IDS_TOO_BIG_VALUE, len_vname);
-            goto done;
-          }
-	  /* convert the ansi value name to an unicode string */
-          MultiByteToWideChar(CP_ACP, 0, valueName, -1, u_valuename, len_vname + 1);
-          valueDataLen *= sizeof(WCHAR);
+            if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, len_vname);
+                goto done;
+            }
+            /* convert the ansi value name to an unicode string */
+            MultiByteToWideChar(CP_ACP, 0, valueName, -1, u_valuename, len_vname + 1);
+            valueDataLen *= sizeof(WCHAR);
         }
         else
-          u_valuename = L"";
+            u_valuename = L"";
 #endif
-	if(valueDataLen > 0)
+        if(valueDataLen > 0)
         {
-	    if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + 1)))
+            if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + 1)))
             {
-              error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
-              goto done;
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
             }
 
-	    /* force to use the unicode version, so editing strings in binary mode is correct */
-	    lRet = RegQueryValueExW(hKey,
+            /* force to use the unicode version, so editing strings in binary mode is correct */
+            lRet = RegQueryValueExW(hKey,
 #ifndef UNICODE
-	                            u_valuename,
+                                    u_valuename,
 #else
-	                            valueName,
+                                    valueName,
 #endif
-				    0, 0, (LPBYTE)binValueData, &valueDataLen);
+                                    0, 0, (LPBYTE)binValueData, &valueDataLen);
             if (lRet != ERROR_SUCCESS)
             {
                 HeapFree(GetProcessHeap(), 0, binValueData);
 #ifndef UNICODE
                 if(len_vname > 0)
-                  HeapFree(GetProcessHeap(), 0, u_valuename);
+                    HeapFree(GetProcessHeap(), 0, u_valuename);
 #endif
-	        error(hwnd, IDS_BAD_VALUE, valueName);
+                error(hwnd, IDS_BAD_VALUE, valueName);
                 goto done;
             }
         }
@@ -662,22 +666,22 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
 
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_BIN_DATA), hwnd, modify_binary_dlgproc) == IDOK)
         {
-	    /* force to use the unicode version, so editing strings in binary mode is correct */
-	    lRet = RegSetValueExW(hKey,
+            /* force to use the unicode version, so editing strings in binary mode is correct */
+            lRet = RegSetValueExW(hKey,
 #ifndef UNICODE
-	                          u_valuename,
+                                  u_valuename,
 #else
-	                          valueName,
+                                  valueName,
 #endif
-				  0, type, (LPBYTE)binValueData, valueDataLen);
+                                  0, type, (LPBYTE)binValueData, valueDataLen);
             if (lRet == ERROR_SUCCESS)
                 result = TRUE;
         }
         if(binValueData != NULL)
-	  HeapFree(GetProcessHeap(), 0, binValueData);
+            HeapFree(GetProcessHeap(), 0, binValueData);
 #ifndef UNICODE
         if(len_vname > 0)
-          HeapFree(GetProcessHeap(), 0, u_valuename);
+            HeapFree(GetProcessHeap(), 0, u_valuename);
 #endif
     }
     else
@@ -717,7 +721,7 @@ static LONG CopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR l
 
     /* create the destination subkey */
     lResult = RegCreateKeyEx(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
-        &hDestSubKey, &dwDisposition);
+                             &hDestSubKey, &dwDisposition);
     if (lResult)
         goto done;
 
@@ -786,9 +790,10 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
     HKEY hKey;
 
     lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ|KEY_SET_VALUE, &hKey);
-    if (lRet != ERROR_SUCCESS) {
-	error_code_messagebox(hwnd, lRet);
-	return FALSE;
+    if (lRet != ERROR_SUCCESS)
+    {
+        error_code_messagebox(hwnd, lRet);
+        return FALSE;
     }
 
     LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
@@ -798,9 +803,10 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
         goto done;
 
     lRet = SHDeleteKey(hKeyRoot, keyPath);
-    if (lRet != ERROR_SUCCESS) {
-	error(hwnd, IDS_BAD_KEY, keyPath);
-	goto done;
+    if (lRet != ERROR_SUCCESS)
+    {
+        error(hwnd, IDS_BAD_KEY, keyPath);
+        goto done;
     }
     result = TRUE;
 

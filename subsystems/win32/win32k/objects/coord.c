@@ -194,13 +194,13 @@ NtGdiGetTransform(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (!XForm)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -267,14 +267,14 @@ NtGdiTransformPoints(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
     if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -285,7 +285,7 @@ NtGdiTransformPoints(
     if (!Points)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -324,7 +324,7 @@ NtGdiTransformPoints(
         {
             DC_UnlockDc(dc);
             ExFreePoolWithTag(Points, TAG_COORD);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
         }
     }
@@ -369,7 +369,7 @@ NtGdiModifyWorldTransform(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -410,7 +410,7 @@ NtGdiOffsetViewportOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -467,7 +467,7 @@ NtGdiOffsetWindowOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -523,7 +523,7 @@ NtGdiScaleViewportExtEx(
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pDC->pdcattr;
@@ -608,7 +608,7 @@ NtGdiScaleWindowExtEx(
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pDC->pdcattr;
@@ -766,7 +766,7 @@ NtGdiSetViewportOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -818,7 +818,7 @@ NtGdiSetWindowOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -948,7 +948,7 @@ NtGdiSetLayout(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     pdcattr = pdc->pdcattr;
@@ -973,7 +973,7 @@ NtGdiGetDeviceWidth(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
     Ret = dc->erclWindow.right - dc->erclWindow.left;
@@ -993,7 +993,7 @@ NtGdiMirrorWindowOrg(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     IntMirrorWindowOrg(dc);
@@ -1250,14 +1250,14 @@ NtGdiGetDCPoint(
 
     if (!Point)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -1293,7 +1293,7 @@ NtGdiGetDCPoint(
             break;
 
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
             break;
     }

@@ -2585,6 +2585,18 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     LB_DESCR *descr = (LB_DESCR *)GetWindowLongPtrW( hwnd, 0 );
     LPHEADCOMBO lphc = 0;
     LRESULT ret;
+#ifdef __REACTOS__
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hwnd, FNID_LISTBOX); // Could be FNID_COMBOLBOX by class.
+       }
+    }    
+#endif    
 
     if (!descr)
     {
@@ -2999,6 +3011,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
 
     case WM_DESTROY:
+#ifdef __REACTOS__
+        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
         return LISTBOX_Destroy( descr );
 
     case WM_ENABLE:

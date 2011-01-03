@@ -22,65 +22,63 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    ULONG i = 0, j, k = 0;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
     PAGED_CODE();
 
     ASSERT(!IgnoreCase || UpcaseTable);
 
-    while (i < Name->Length / sizeof(WCHAR) && k < Expression->Length / sizeof(WCHAR))
+    while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
     {
-      if ((Expression->Buffer[k] == (IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i])) ||
-          (Expression->Buffer[k] == L'?') || (Expression->Buffer[k] == DOS_QM) ||
-          (Expression->Buffer[k] == DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
-      {
-        i++;
-        k++;
-      }
-      else if (Expression->Buffer[k] == L'*')
-      {
-        if (k < (Expression->Length / sizeof(WCHAR) - 1))
+        if ((Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition])) ||
+            (Expression->Buffer[ExpressionPosition] == L'?') || (Expression->Buffer[ExpressionPosition] == DOS_QM) ||
+            (Expression->Buffer[ExpressionPosition] == DOS_DOT && Name->Buffer[NamePosition] == L'.'))
         {
-          if (Expression->Buffer[k+1] != L'*' && Expression->Buffer[k+1] != L'?' &&
-              Expression->Buffer[k+1] != DOS_DOT && Expression->Buffer[k+1] != DOS_QM &&
-              Expression->Buffer[k+1] != DOS_STAR)
-          {
-            while ((IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i]) != Expression->Buffer[k+1] &&
-                   i < Name->Length / sizeof(WCHAR)) i++;
-          }
-          else
-          {
-            if (!(Expression->Buffer[k+1] != DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
+            NamePosition++;
+            ExpressionPosition++;
+        }
+        else if (Expression->Buffer[ExpressionPosition] == L'*')
+        {
+            if (ExpressionPosition < (Expression->Length / sizeof(WCHAR) - 1))
             {
-              i++;
+                if (Expression->Buffer[ExpressionPosition+1] != L'*' && Expression->Buffer[ExpressionPosition+1] != L'?' &&
+                    Expression->Buffer[ExpressionPosition+1] != DOS_DOT && Expression->Buffer[ExpressionPosition+1] != DOS_QM &&
+                    Expression->Buffer[ExpressionPosition+1] != DOS_STAR)
+                {
+                    while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition+1] &&
+                           NamePosition < Name->Length / sizeof(WCHAR)) NamePosition++;
+                }
             }
-          }
+            else
+            {
+                NamePosition = Name->Length / sizeof(WCHAR);
+            }
+            ExpressionPosition++;
+        }
+        else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
+        {
+            MatchingChars = NamePosition;
+            while (MatchingChars < Name->Length / sizeof(WCHAR))
+            {
+                if (Name->Buffer[MatchingChars] == L'.')
+                {
+                    NamePosition = MatchingChars;
+                }
+                MatchingChars++;
+            }
+            ExpressionPosition++;
         }
         else
         {
-          i = Name->Length / sizeof(WCHAR);
+            NamePosition = Name->Length / sizeof(WCHAR);
         }
-        k++;
-      }
-      else if (Expression->Buffer[k] == DOS_STAR)
-      {
-        j = i;
-        while (j < Name->Length / sizeof(WCHAR))
-        {
-          if (Name->Buffer[j] == L'.')
-          {
-            i = j;
-          }
-          j++;
-        }
-        k++;
-      }
-      else
-      {
-        i = Name->Length / sizeof(WCHAR);
-      }
+    }
+    if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
+        Expression->Buffer[ExpressionPosition] == DOS_DOT)
+    {
+        ExpressionPosition++;
     }
 
-    return (k == Expression->Length / sizeof(WCHAR) && i == Name->Length / sizeof(WCHAR));
+    return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -795,6 +795,14 @@ interface ICreateObject : IUnknown
     );
 }
 
+cpp_quote("#define PKEY_PIDSTR_MAX 10")
+cpp_quote("#define GUIDSTRING_MAX 39")
+cpp_quote("#define PKEYSTR_MAX (GUIDSTRING_MAX + 1 + PKEY_PIDSTR_MAX)")
+
+cpp_quote("HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY,LPWSTR,UINT);")
+cpp_quote("HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR,PROPERTYKEY*);")
+cpp_quote("HRESULT WINAPI PSGetPropertyDescription(REFPROPERTYKEY,REFIID,void **);")
+
 /* TODO: Add remainder of the C api here */
 
 [

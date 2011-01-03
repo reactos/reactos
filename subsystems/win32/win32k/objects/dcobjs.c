@@ -352,7 +352,7 @@ NtGdiSelectClipPath(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
     pdcattr = pdc->pdcattr;
@@ -367,7 +367,7 @@ NtGdiSelectClipPath(
     /* Check that path is closed */
     if (pPath->state != PATH_Closed)
     {
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         DC_UnlockDc(pdc);
         return FALSE;
     }
@@ -404,7 +404,7 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
     if(!(pdc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     pdcattr = pdc->pdcattr;
@@ -449,7 +449,7 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
         default:
             SelObject = NULL;
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
     }
 

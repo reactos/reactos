@@ -1361,7 +1361,7 @@ VOID NTAPI MiniportHandleInterrupt(
             NICUpdateCounters(Adapter);
 
             Adapter->ReceiveError = TRUE;
-
+            break;
         case ISR_PRX:
             NDIS_DbgPrint(MID_TRACE, ("Receive interrupt.\n"));
 
@@ -1380,7 +1380,7 @@ VOID NTAPI MiniportHandleInterrupt(
             NICUpdateCounters(Adapter);
 
             Adapter->TransmitError = TRUE;
-
+            break;
         case ISR_PTX:
             NDIS_DbgPrint(MID_TRACE, ("Transmit interrupt.\n"));
 

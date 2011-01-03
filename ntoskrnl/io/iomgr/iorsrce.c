@@ -980,14 +980,13 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType OPTIONAL,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING RootRegKey;
    HANDLE RootRegHandle;
-   WCHAR RootRegString[] = L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM";
    IO_QUERY Query;
 
    /* Set up the String */
    RootRegKey.Length = 0;
    RootRegKey.MaximumLength = 2048;
    RootRegKey.Buffer = ExAllocatePoolWithTag(PagedPool, RootRegKey.MaximumLength, TAG_IO_RESOURCE);
-   RtlAppendUnicodeToString(&RootRegKey, RootRegString);
+   RtlAppendUnicodeToString(&RootRegKey, L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
    /* Open a handle to the Root Registry Key */
    InitializeObjectAttributes(

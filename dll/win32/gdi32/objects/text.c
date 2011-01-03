@@ -7,26 +7,27 @@
 BOOL
 WINAPI
 TextOutA(
-	HDC  hdc,
-	int  nXStart,
-	int  nYStart,
-	LPCSTR  lpString,
-	int  cchString)
+    HDC  hdc,
+    int  nXStart,
+    int  nYStart,
+    LPCSTR  lpString,
+    int  cchString)
 {
-        ANSI_STRING StringA;
-        UNICODE_STRING StringU;
-	BOOL ret;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringU;
+    BOOL ret;
 
-	if (NULL != lpString)
-	{
-		RtlInitAnsiString(&StringA, (LPSTR)lpString);
-		RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
-	} else
-		StringU.Buffer = NULL;
+    if (NULL != lpString)
+    {
+        RtlInitAnsiString(&StringA, (LPSTR)lpString);
+        RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+    }
+    else
+        StringU.Buffer = NULL;
 
-	ret = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cchString);
-	RtlFreeUnicodeString(&StringU);
-	return ret;
+    ret = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cchString);
+    RtlFreeUnicodeString(&StringU);
+    return ret;
 }
 
 
@@ -36,13 +37,13 @@ TextOutA(
 BOOL
 WINAPI
 TextOutW(
-	HDC  hdc,
-	int  nXStart,
-	int  nYStart,
-	LPCWSTR  lpString,
-	int  cchString)
+    HDC  hdc,
+    int  nXStart,
+    int  nYStart,
+    LPCWSTR  lpString,
+    int  cchString)
 {
-  return NtGdiExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL, 0);
+    return NtGdiExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL, 0);
 }
 
 
@@ -53,10 +54,10 @@ DWORD
 WINAPI
 GdiGetCodePage(HDC hdc)
 {
-  PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-  if (Dc_Attr->ulDirty_ & DIRTY_CHARSET) return LOWORD(NtGdiGetCharSet(hdc));
-  return LOWORD(Dc_Attr->iCS_CP);
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    if (Dc_Attr->ulDirty_ & DIRTY_CHARSET) return LOWORD(NtGdiGetCharSet(hdc));
+    return LOWORD(Dc_Attr->iCS_CP);
 }
 
 
@@ -66,13 +67,13 @@ GdiGetCodePage(HDC hdc)
 int
 WINAPI
 GetTextCharacterExtra(
-	HDC	hDc
-	)
+    HDC	hDc
+)
 {
-  PDC_ATTR Dc_Attr;
+    PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-  return Dc_Attr->lTextExtra;
+    if (!GdiGetHandleUserData((HGDIOBJ) hDc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    return Dc_Attr->lTextExtra;
 // return GetDCDWord( hDc, GdiGetTextCharExtra, 0);
 }
 
@@ -96,19 +97,19 @@ GetTextCharset(HDC hdc)
 BOOL
 WINAPI
 GetTextMetricsA(
-	HDC		hdc,
-	LPTEXTMETRICA	lptm
-	)
+    HDC		hdc,
+    LPTEXTMETRICA	lptm
+)
 {
-  TMW_INTERNAL tmwi;
+    TMW_INTERNAL tmwi;
 
-  if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
-  {
-    return FALSE;
-  }
+    if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
+    {
+        return FALSE;
+    }
 
-  FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
-  return TRUE;
+    FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
+    return TRUE;
 }
 
 
@@ -118,19 +119,19 @@ GetTextMetricsA(
 BOOL
 WINAPI
 GetTextMetricsW(
-	HDC		hdc,
-	LPTEXTMETRICW	lptm
-	)
+    HDC		hdc,
+    LPTEXTMETRICW	lptm
+)
 {
-  TMW_INTERNAL tmwi;
+    TMW_INTERNAL tmwi;
 
-  if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
-  {
-    return FALSE;
-  }
+    if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
+    {
+        return FALSE;
+    }
 
-  *lptm = tmwi.TextMetric;
-  return TRUE;
+    *lptm = tmwi.TextMetric;
+    return TRUE;
 }
 
 
@@ -140,24 +141,24 @@ GetTextMetricsW(
 BOOL
 APIENTRY
 GetTextExtentPointA(
-	HDC		hdc,
-	LPCSTR		lpString,
-	int		cchString,
-	LPSIZE		lpSize
-	)
+    HDC		hdc,
+    LPCSTR		lpString,
+    int		cchString,
+    LPSIZE		lpSize
+)
 {
-        ANSI_STRING StringA;
-        UNICODE_STRING StringU;
-	BOOL ret;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringU;
+    BOOL ret;
 
-	RtlInitAnsiString(&StringA, (LPSTR)lpString);
-	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = GetTextExtentPointW(hdc, StringU.Buffer, cchString, lpSize);
+    ret = GetTextExtentPointW(hdc, StringU.Buffer, cchString, lpSize);
 
-	RtlFreeUnicodeString(&StringU);
+    RtlFreeUnicodeString(&StringU);
 
-	return ret;
+    return ret;
 }
 
 
@@ -167,13 +168,13 @@ GetTextExtentPointA(
 BOOL
 APIENTRY
 GetTextExtentPointW(
-	HDC		hdc,
-	LPCWSTR		lpString,
-	int		cchString,
-	LPSIZE		lpSize
-	)
+    HDC		hdc,
+    LPCWSTR		lpString,
+    int		cchString,
+    LPSIZE		lpSize
+)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
+    return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 
@@ -183,24 +184,24 @@ GetTextExtentPointW(
 BOOL
 APIENTRY
 GetTextExtentExPointW(
-	HDC     hdc,
-	LPCWSTR lpszStr,
-	int     cchString,
-	int     nMaxExtent,
-	LPINT   lpnFit,
-	LPINT   alpDx,
-	LPSIZE  lpSize
-	)
+    HDC     hdc,
+    LPCWSTR lpszStr,
+    int     cchString,
+    int     nMaxExtent,
+    LPINT   lpnFit,
+    LPINT   alpDx,
+    LPSIZE  lpSize
+)
 {
 
-  if(nMaxExtent < -1)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if(nMaxExtent < -1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  return NtGdiGetTextExtentExW (
-    hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
+    return NtGdiGetTextExtentExW (
+               hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
 
 
@@ -210,37 +211,37 @@ GetTextExtentExPointW(
 BOOL
 APIENTRY
 GetTextExtentExPointA(
-	HDC		hdc,
-	LPCSTR		lpszStr,
-	int		cchString,
-	int		nMaxExtent,
-	LPINT		lpnFit,
-	LPINT		alpDx,
-	LPSIZE		lpSize
-	)
+    HDC		hdc,
+    LPCSTR		lpszStr,
+    int		cchString,
+    int		nMaxExtent,
+    LPINT		lpnFit,
+    LPINT		alpDx,
+    LPSIZE		lpSize
+)
 {
-  NTSTATUS Status;
-  LPWSTR lpszStrW;
-  BOOL rc = 0;
+    NTSTATUS Status;
+    LPWSTR lpszStrW;
+    BOOL rc = 0;
 
-  if(nMaxExtent < -1)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if(nMaxExtent < -1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    rc = NtGdiGetTextExtentExW (
-      hdc, lpszStrW, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
+    Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
+    if (!NT_SUCCESS (Status))
+        SetLastError (RtlNtStatusToDosError(Status));
+    else
+    {
+        rc = NtGdiGetTextExtentExW (
+                 hdc, lpszStrW, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 
-    HEAP_free ( lpszStrW );
-  }
+        HEAP_free ( lpszStrW );
+    }
 
-  return rc;
+    return rc;
 }
 
 
@@ -250,24 +251,24 @@ GetTextExtentExPointA(
 BOOL
 APIENTRY
 GetTextExtentPoint32A(
-	HDC		hdc,
-	LPCSTR		lpString,
-	int		cchString,
-	LPSIZE		lpSize
-	)
+    HDC		hdc,
+    LPCSTR		lpString,
+    int		cchString,
+    LPSIZE		lpSize
+)
 {
-  ANSI_STRING StringA;
-  UNICODE_STRING StringU;
-  BOOL ret;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringU;
+    BOOL ret;
 
-  RtlInitAnsiString(&StringA, (LPSTR)lpString);
-  RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-  ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cchString, lpSize);
+    ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cchString, lpSize);
 
-  RtlFreeUnicodeString(&StringU);
+    RtlFreeUnicodeString(&StringU);
 
-  return ret;
+    return ret;
 }
 
 
@@ -277,13 +278,13 @@ GetTextExtentPoint32A(
 BOOL
 APIENTRY
 GetTextExtentPoint32W(
-	HDC		hdc,
-	LPCWSTR		lpString,
-	int		cchString,
-	LPSIZE		lpSize
-	)
+    HDC		hdc,
+    LPCWSTR		lpString,
+    int		cchString,
+    LPSIZE		lpSize
+)
 {
-	return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
+    return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 /*
@@ -321,28 +322,28 @@ GetTextExtentPointI(HDC hdc,
 BOOL
 WINAPI
 ExtTextOutA(
-	HDC		hdc,
-	int		X,
-	int		Y,
-	UINT		fuOptions,
-	CONST RECT	*lprc,
-	LPCSTR		lpString,
-	UINT		cchString,
-	CONST INT	*lpDx
-	)
+    HDC		hdc,
+    int		X,
+    int		Y,
+    UINT		fuOptions,
+    CONST RECT	*lprc,
+    LPCSTR		lpString,
+    UINT		cchString,
+    CONST INT	*lpDx
+)
 {
-        ANSI_STRING StringA;
-        UNICODE_STRING StringU;
-	BOOL ret;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringU;
+    BOOL ret;
 
-	RtlInitAnsiString(&StringA, (LPSTR)lpString);
-	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = ExtTextOutW(hdc, X, Y, fuOptions, lprc, StringU.Buffer, cchString, lpDx);
+    ret = ExtTextOutW(hdc, X, Y, fuOptions, lprc, StringU.Buffer, cchString, lpDx);
 
-	RtlFreeUnicodeString(&StringU);
+    RtlFreeUnicodeString(&StringU);
 
-	return ret;
+    return ret;
 }
 
 
@@ -352,17 +353,17 @@ ExtTextOutA(
 BOOL
 WINAPI
 ExtTextOutW(
-	HDC		hdc,
-	int		X,
-	int		Y,
-	UINT		fuOptions,
-	CONST RECT	*lprc,
-	LPCWSTR		lpString,
-	UINT		cchString,
-	CONST INT	*lpDx
-	)
+    HDC		hdc,
+    int		X,
+    int		Y,
+    UINT		fuOptions,
+    CONST RECT	*lprc,
+    LPCWSTR		lpString,
+    UINT		cchString,
+    CONST INT	*lpDx
+)
 {
-  return NtGdiExtTextOutW(hdc, X, Y, fuOptions, (LPRECT)lprc, (LPWSTR)lpString, cchString, (LPINT)lpDx, 0);
+    return NtGdiExtTextOutW(hdc, X, Y, fuOptions, (LPRECT)lprc, (LPWSTR)lpString, cchString, (LPINT)lpDx, 0);
 }
 
 
@@ -436,12 +437,12 @@ GetTextFaceAliasW(HDC hdc,
                   int cChar,
                   LPWSTR pszOut)
 {
-   if ( pszOut && !cChar )
-   {
-      GdiSetLastError(ERROR_INVALID_PARAMETER);
-      return 0;
-   }
-   return NtGdiGetTextFaceW(hdc,cChar,pszOut,TRUE);
+    if ( pszOut && !cChar )
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    return NtGdiGetTextFaceW(hdc,cChar,pszOut,TRUE);
 }
 
 
@@ -452,7 +453,7 @@ GetFontResourceInfoW(
     DWORD *pdwBufSize,
     void* lpBuffer,
     DWORD dwType
-    )
+)
 {
     BOOL bRet;
     UNICODE_STRING NtFileName;
@@ -473,13 +474,13 @@ GetFontResourceInfoW(
     }
 
     bRet = NtGdiGetFontResourceInfoInternalW(
-        NtFileName.Buffer,
-        (NtFileName.Length / sizeof(WCHAR)) + 1,
-        1,
-        *pdwBufSize,
-        pdwBufSize,
-        lpBuffer,
-        dwType);
+               NtFileName.Buffer,
+               (NtFileName.Length / sizeof(WCHAR)) + 1,
+               1,
+               *pdwBufSize,
+               pdwBufSize,
+               lpBuffer,
+               dwType);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, NtFileName.Buffer);
 
@@ -498,37 +499,37 @@ GetFontResourceInfoW(
 int
 WINAPI
 SetTextCharacterExtra(
-	HDC	hDC,
-	int	CharExtra
-	)
+    HDC	hDC,
+    int	CharExtra
+)
 {
-  INT cExtra = 0x80000000;
-  PDC_ATTR Dc_Attr;
+    INT cExtra = 0x80000000;
+    PDC_ATTR Dc_Attr;
 
-  if (CharExtra == cExtra)
-  {
-     SetLastError(ERROR_INVALID_PARAMETER);
-     return cExtra;
-  }
+    if (CharExtra == cExtra)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return cExtra;
+    }
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-  {
-    return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
-  }
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+    {
+        return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
+    }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return cExtra;
+    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return cExtra;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
-  {
-     if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
-     {
-       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
-     }
-  }
-  cExtra = Dc_Attr->lTextExtra;
-  Dc_Attr->lTextExtra = CharExtra;
-  return cExtra;
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
+    {
+        if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+        {
+            NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+            Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+        }
+    }
+    cExtra = Dc_Attr->lTextExtra;
+    Dc_Attr->lTextExtra = CharExtra;
+    return cExtra;
 // return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
 }
 
@@ -540,9 +541,9 @@ UINT
 WINAPI
 GetTextAlign(HDC hdc)
 {
-  PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-  return Dc_Attr->lTextAlign;
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    return Dc_Attr->lTextAlign;
 }
 
 
@@ -554,9 +555,9 @@ COLORREF
 WINAPI
 GetTextColor(HDC hdc)
 {
-  PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-  return Dc_Attr->ulForegroundClr;
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    return Dc_Attr->ulForegroundClr;
 }
 
 
@@ -569,38 +570,38 @@ WINAPI
 SetTextAlign(HDC hdc,
              UINT fMode)
 {
-  PDC_ATTR Dc_Attr;
-  INT OldMode = 0;
+    PDC_ATTR Dc_Attr;
+    INT OldMode = 0;
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-      return MFDRV_SetTextAlign( hdc, fMode )
-    else
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
-      PLDC pLDC = Dc_Attr->pvLDC;
-      if ( !pLDC )
-      {
-         SetLastError(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-      if (pLDC->iType == LDC_EMFLDC)
-      {
-        if return EMFDRV_SetTextAlign( hdc, fMode )
-      }
-    }
-  }
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetTextAlign( hdc, fMode )
+                   else
+            {
+                PLDC pLDC = Dc_Attr->pvLDC;
+                if ( !pLDC )
+                {
+                    SetLastError(ERROR_INVALID_HANDLE);
+                    return FALSE;
+                }
+                if (pLDC->iType == LDC_EMFLDC)
+                {
+                    if return EMFDRV_SetTextAlign( hdc, fMode )
+                              }
+                      }
+              }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldMode;
+              if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldMode;
 
-  OldMode = Dc_Attr->lTextAlign;
-  Dc_Attr->lTextAlign = fMode; // Raw
-  if (Dc_Attr->dwLayout & LAYOUT_RTL)
-  {
-     if(!(fMode & TA_CENTER))  fMode |= TA_RIGHT;
-  }
-  Dc_Attr->flTextAlign = fMode & (TA_BASELINE|TA_UPDATECP|TA_CENTER);
-  return OldMode;
+    OldMode = Dc_Attr->lTextAlign;
+    Dc_Attr->lTextAlign = fMode; // Raw
+    if (Dc_Attr->dwLayout & LAYOUT_RTL)
+    {
+        if(!(fMode & TA_CENTER))  fMode |= TA_RIGHT;
+    }
+    Dc_Attr->flTextAlign = fMode & (TA_BASELINE|TA_UPDATECP|TA_CENTER);
+    return OldMode;
 
 }
 
@@ -611,43 +612,43 @@ SetTextAlign(HDC hdc,
 COLORREF
 WINAPI
 SetTextColor(
-	HDC hdc,
-	COLORREF crColor
+    HDC hdc,
+    COLORREF crColor
 )
 {
-  PDC_ATTR Dc_Attr;
-  COLORREF OldColor = CLR_INVALID;
+    PDC_ATTR Dc_Attr;
+    COLORREF OldColor = CLR_INVALID;
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-      return MFDRV_SetTextColor( hDC, crColor );
-    else
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
-      PLDC pLDC = Dc_Attr->pvLDC;
-      if ( !pLDC )
-      {
-         SetLastError(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-      if (pLDC->iType == LDC_EMFLDC)
-      {
-        if return EMFDRV_SetTextColor( hDC, crColor );
-      }
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetTextColor( hDC, crColor );
+        else
+        {
+            PLDC pLDC = Dc_Attr->pvLDC;
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if (pLDC->iType == LDC_EMFLDC)
+            {
+                if return EMFDRV_SetTextColor( hDC, crColor );
+            }
+        }
     }
-  }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
 
-  OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
-  Dc_Attr->ulForegroundClr = (ULONG) crColor;
+    OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
+    Dc_Attr->ulForegroundClr = (ULONG) crColor;
 
-  if ( Dc_Attr->crForegroundClr != crColor )
-  {
-     Dc_Attr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
-     Dc_Attr->crForegroundClr = crColor;
-  }
-  return OldColor;
+    if ( Dc_Attr->crForegroundClr != crColor )
+    {
+        Dc_Attr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
+        Dc_Attr->crForegroundClr = crColor;
+    }
+    return OldColor;
 }
 
 /*
@@ -656,34 +657,34 @@ SetTextColor(
 BOOL
 WINAPI
 SetTextJustification(
-	HDC	hdc,
-	int	extra,
-	int	breaks
-	)
+    HDC	hdc,
+    int	extra,
+    int	breaks
+)
 {
-  PDC_ATTR Dc_Attr;
+    PDC_ATTR Dc_Attr;
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-      return MFDRV_SetTextJustification( hdc, extra, breaks )
-    else
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetTextJustification( hdc, extra, breaks )
+                   else
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+        if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
-  {
-     if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
-     {
-       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
-     }
-  }
-  Dc_Attr->cBreak = breaks;
-  Dc_Attr->lBreakExtra = extra;
-  return TRUE;
-}
+        if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+        {
+            if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+            {
+                NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+                Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+            }
+        }
+        Dc_Attr->cBreak = breaks;
+        Dc_Attr->lBreakExtra = extra;
+        return TRUE;
+    }

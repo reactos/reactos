@@ -636,6 +636,127 @@ static BOOL application_octet_stream_filter(const BYTE *b, DWORD size)
     return TRUE;
 }
 
+static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *proposed_mime, WCHAR **ret_mime)
+{
+    LPCWSTR ret = NULL;
+    DWORD len, i;
+
+    static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
+    static const WCHAR text_richtextW[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
+    static const WCHAR audio_basicW[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
+    static const WCHAR audio_wavW[] = {'a','u','d','i','o','/','w','a','v',0};
+    static const WCHAR image_gifW[] = {'i','m','a','g','e','/','g','i','f',0};
+    static const WCHAR image_pjpegW[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
+    static const WCHAR image_tiffW[] = {'i','m','a','g','e','/','t','i','f','f',0};
+    static const WCHAR image_xpngW[] = {'i','m','a','g','e','/','x','-','p','n','g',0};
+    static const WCHAR image_bmpW[] = {'i','m','a','g','e','/','b','m','p',0};
+    static const WCHAR video_aviW[] = {'v','i','d','e','o','/','a','v','i',0};
+    static const WCHAR video_mpegW[] = {'v','i','d','e','o','/','m','p','e','g',0};
+    static const WCHAR app_postscriptW[] =
+        {'a','p','p','l','i','c','a','t','i','o','n','/','p','o','s','t','s','c','r','i','p','t',0};
+    static const WCHAR app_pdfW[] = {'a','p','p','l','i','c','a','t','i','o','n','/','p','d','f',0};
+    static const WCHAR app_xzipW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+        'x','-','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
+    static const WCHAR app_xgzipW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+        'x','-','g','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
+    static const WCHAR app_javaW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+        'j','a','v','a',0};
+    static const WCHAR app_xmsdownloadW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+        'x','-','m','s','d','o','w','n','l','o','a','d',0};
+    static const WCHAR text_plainW[] = {'t','e','x','t','/','p','l','a','i','n','\0'};
+    static const WCHAR app_octetstreamW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+        'o','c','t','e','t','-','s','t','r','e','a','m','\0'};
+
+    static const struct {
+        LPCWSTR mime;
+        BOOL (*filter)(const BYTE *,DWORD);
+    } mime_filters[] = {
+        {text_htmlW,       text_html_filter},
+        {text_richtextW,   text_richtext_filter},
+     /* {audio_xaiffW,     audio_xaiff_filter}, */
+        {audio_basicW,     audio_basic_filter},
+        {audio_wavW,       audio_wav_filter},
+        {image_gifW,       image_gif_filter},
+        {image_pjpegW,     image_pjpeg_filter},
+        {image_tiffW,      image_tiff_filter},
+        {image_xpngW,      image_xpng_filter},
+     /* {image_xbitmapW,   image_xbitmap_filter}, */
+        {image_bmpW,       image_bmp_filter},
+     /* {image_xjgW,       image_xjg_filter}, */
+     /* {image_xemfW,      image_xemf_filter}, */
+     /* {image_xwmfW,      image_xwmf_filter}, */
+        {video_aviW,       video_avi_filter},
+        {video_mpegW,      video_mpeg_filter},
+        {app_postscriptW,  application_postscript_filter},
+     /* {app_base64W,      application_base64_filter}, */
+     /* {app_macbinhex40W, application_macbinhex40_filter}, */
+        {app_pdfW,         application_pdf_filter},
+     /* {app_zcompressedW, application_xcompressed_filter}, */
+        {app_xzipW,        application_xzip_filter},
+        {app_xgzipW,       application_xgzip_filter},
+        {app_javaW,        application_java_filter},
+        {app_xmsdownloadW, application_xmsdownload},
+        {text_plainW,      text_plain_filter},
+        {app_octetstreamW, application_octet_stream_filter}
+    };
+
+    if(!buf || !size) {
+        if(!proposed_mime)
+            return E_FAIL;
+
+        len = strlenW(proposed_mime)+1;
+        *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
+        if(!*ret_mime)
+            return E_OUTOFMEMORY;
+
+        memcpy(*ret_mime, proposed_mime, len*sizeof(WCHAR));
+        return S_OK;
+    }
+
+    if(proposed_mime && strcmpW(proposed_mime, app_octetstreamW)) {
+        for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
+            if(!strcmpW(proposed_mime, mime_filters[i].mime))
+                break;
+        }
+
+        if(i == sizeof(mime_filters)/sizeof(*mime_filters) || mime_filters[i].filter(buf, size)) {
+            len = strlenW(proposed_mime)+1;
+            *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
+            if(!*ret_mime)
+                return E_OUTOFMEMORY;
+
+            memcpy(*ret_mime, proposed_mime, len*sizeof(WCHAR));
+            return S_OK;
+        }
+    }
+
+    i=0;
+    while(!ret) {
+        if(mime_filters[i].filter(buf, size))
+            ret = mime_filters[i].mime;
+        i++;
+    }
+
+    TRACE("found %s for %s\n", debugstr_w(ret), debugstr_an((const char*)buf, min(32, size)));
+
+    if(proposed_mime) {
+        if(i == sizeof(mime_filters)/sizeof(*mime_filters))
+            ret = proposed_mime;
+
+        /* text/html is a special case */
+        if(!strcmpW(proposed_mime, text_htmlW) && !strcmpW(ret, text_plainW))
+            ret = text_htmlW;
+    }
+
+    len = strlenW(ret)+1;
+    *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
+    if(!*ret_mime)
+        return E_OUTOFMEMORY;
+
+    memcpy(*ret_mime, ret, len*sizeof(WCHAR));
+    return S_OK;
+}
+
 /***********************************************************************
  *           FindMimeFromData (URLMON.@)
  *
@@ -658,128 +779,8 @@ HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
     if(!ppwzMimeOut || (!pwzUrl && !pBuffer))
         return E_INVALIDARG;
 
-    if(pwzMimeProposed && (!pBuffer || (pBuffer && !cbSize))) {
-        DWORD len;
-
-        if(!pwzMimeProposed)
-            return E_FAIL;
-
-        len = strlenW(pwzMimeProposed)+1;
-        *ppwzMimeOut = CoTaskMemAlloc(len*sizeof(WCHAR));
-        memcpy(*ppwzMimeOut, pwzMimeProposed, len*sizeof(WCHAR));
-        return S_OK;
-    }
-
-    if(pBuffer) {
-        const BYTE *buf = pBuffer;
-        DWORD len;
-        LPCWSTR ret = NULL;
-        unsigned int i;
-
-        static const WCHAR wszTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
-        static const WCHAR wszTextRichtext[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
-        static const WCHAR wszAudioBasic[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
-        static const WCHAR wszAudioWav[] = {'a','u','d','i','o','/','w','a','v',0};
-        static const WCHAR wszImageGif[] = {'i','m','a','g','e','/','g','i','f',0};
-        static const WCHAR wszImagePjpeg[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
-        static const WCHAR wszImageTiff[] = {'i','m','a','g','e','/','t','i','f','f',0};
-        static const WCHAR wszImageXPng[] = {'i','m','a','g','e','/','x','-','p','n','g',0};
-        static const WCHAR wszImageBmp[] = {'i','m','a','g','e','/','b','m','p',0};
-        static const WCHAR wszVideoAvi[] = {'v','i','d','e','o','/','a','v','i',0};
-        static const WCHAR wszVideoMpeg[] = {'v','i','d','e','o','/','m','p','e','g',0};
-        static const WCHAR wszAppPostscript[] =
-            {'a','p','p','l','i','c','a','t','i','o','n','/','p','o','s','t','s','c','r','i','p','t',0};
-        static const WCHAR wszAppPdf[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'p','d','f',0};
-        static const WCHAR wszAppXZip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'x','-','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-        static const WCHAR wszAppXGzip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'x','-','g','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-        static const WCHAR wszAppJava[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'j','a','v','a',0};
-        static const WCHAR wszAppXMSDownload[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'x','-','m','s','d','o','w','n','l','o','a','d',0};
-        static const WCHAR wszTextPlain[] = {'t','e','x','t','/','p','l','a','i','n','\0'};
-        static const WCHAR wszAppOctetStream[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-            'o','c','t','e','t','-','s','t','r','e','a','m','\0'};
-
-        static const struct {
-            LPCWSTR mime;
-            BOOL (*filter)(const BYTE *,DWORD);
-        } mime_filters[] = {
-            {wszTextHtml,       text_html_filter},
-            {wszTextRichtext,   text_richtext_filter},
-         /* {wszAudioXAiff,     audio_xaiff_filter}, */
-            {wszAudioBasic,     audio_basic_filter},
-            {wszAudioWav,       audio_wav_filter},
-            {wszImageGif,       image_gif_filter},
-            {wszImagePjpeg,     image_pjpeg_filter},
-            {wszImageTiff,      image_tiff_filter},
-            {wszImageXPng,      image_xpng_filter},
-         /* {wszImageXBitmap,   image_xbitmap_filter}, */
-            {wszImageBmp,       image_bmp_filter},
-         /* {wszImageXJg,       image_xjg_filter}, */
-         /* {wszImageXEmf,      image_xemf_filter}, */
-         /* {wszImageXWmf,      image_xwmf_filter}, */
-            {wszVideoAvi,       video_avi_filter},
-            {wszVideoMpeg,      video_mpeg_filter},
-            {wszAppPostscript,  application_postscript_filter},
-         /* {wszAppBase64,      application_base64_filter}, */
-         /* {wszAppMacbinhex40, application_macbinhex40_filter}, */
-            {wszAppPdf,         application_pdf_filter},
-         /* {wszAppXCompressed, application_xcompressed_filter}, */
-            {wszAppXZip,        application_xzip_filter},
-            {wszAppXGzip,       application_xgzip_filter},
-            {wszAppJava,        application_java_filter},
-            {wszAppXMSDownload, application_xmsdownload},
-            {wszTextPlain,      text_plain_filter},
-            {wszAppOctetStream, application_octet_stream_filter}
-        };
-
-        if(!cbSize)
-            return E_FAIL;
-
-        if(pwzMimeProposed && strcmpW(pwzMimeProposed, wszAppOctetStream)) {
-            for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
-                if(!strcmpW(pwzMimeProposed, mime_filters[i].mime))
-                    break;
-            }
-
-            if(i == sizeof(mime_filters)/sizeof(*mime_filters)
-                    || mime_filters[i].filter(buf, cbSize)) {
-                len = strlenW(pwzMimeProposed)+1;
-                *ppwzMimeOut = CoTaskMemAlloc(len*sizeof(WCHAR));
-                memcpy(*ppwzMimeOut, pwzMimeProposed, len*sizeof(WCHAR));
-                return S_OK;
-            }
-        }
-
-        i=0;
-        while(!ret) {
-            if(mime_filters[i].filter(buf, cbSize))
-                ret = mime_filters[i].mime;
-            i++;
-        }
-
-        TRACE("found %s for data\n"
-              "%02x %02x %02x %02x  %02x %02x %02x %02x  %02x %02x %02x %02x  %02x %02x %02x %02x\n",
-              debugstr_w(ret), buf[0],buf[1],buf[2],buf[3], buf[4],buf[5],buf[6],buf[7],
-              buf[8],buf[9],buf[10],buf[11], buf[12],buf[13],buf[14],buf[15]);
-
-        if(pwzMimeProposed) {
-            if(i == sizeof(mime_filters)/sizeof(*mime_filters))
-                ret = pwzMimeProposed;
-
-            /* text/html is a special case */
-            if(!strcmpW(pwzMimeProposed, wszTextHtml) && !strcmpW(ret, wszTextPlain))
-                ret = wszTextHtml;
-        }
-
-        len = strlenW(ret)+1;
-        *ppwzMimeOut = CoTaskMemAlloc(len*sizeof(WCHAR));
-        memcpy(*ppwzMimeOut, ret, len*sizeof(WCHAR));
-        return S_OK;
-    }
+    if(pwzMimeProposed || pBuffer)
+        return find_mime_from_buffer(pBuffer, cbSize, pwzMimeProposed, ppwzMimeOut);
 
     if(pwzUrl) {
         HKEY hkey;

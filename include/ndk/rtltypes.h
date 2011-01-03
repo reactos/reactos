@@ -144,6 +144,19 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #endif
 
 //
+// Native image architecture
+//
+#if defined(_M_IX86)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_I386
+#elif defined(_M_ARM)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_ARM
+#elif defined(_M_AMD64)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_AMD64
+#else
+#error Define these please!
+#endif
+
+//
 // Registry Keys
 //
 #define RTL_REGISTRY_ABSOLUTE                               0

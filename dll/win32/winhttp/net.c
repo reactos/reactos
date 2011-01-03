@@ -92,7 +92,7 @@ static CRITICAL_SECTION init_ssl_cs = { &init_ssl_cs_debug, -1, 0, 0, 0, 0 };
 static void *libssl_handle;
 static void *libcrypto_handle;
 
-#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER> 0x1000000)
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER > 0x10000000)
 static const SSL_METHOD *method;
 #else
 static SSL_METHOD *method;
@@ -277,7 +277,8 @@ static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, HCERTSTORE store,
     TRACE("verifying %s\n", debugstr_w( server ));
     chainPara.RequestedUsage.Usage.cUsageIdentifier = 1;
     chainPara.RequestedUsage.Usage.rgpszUsageIdentifier = server_auth;
-    if ((ret = CertGetCertificateChain( NULL, cert, NULL, store, &chainPara, 0,
+    if ((ret = CertGetCertificateChain( NULL, cert, NULL, store, &chainPara,
+                                        CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT,
                                         NULL, &chain )))
     {
         if (chain->TrustStatus.dwErrorStatus)
@@ -330,6 +331,7 @@ static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, HCERTSTORE store,
             sslExtraPolicyPara.u.cbSize = sizeof(sslExtraPolicyPara);
             sslExtraPolicyPara.dwAuthType = AUTHTYPE_SERVER;
             sslExtraPolicyPara.pwszServerName = server;
+            sslExtraPolicyPara.fdwChecks = security_flags;
             policyPara.cbSize = sizeof(policyPara);
             policyPara.dwFlags = 0;
             policyPara.pvExtraPolicyPara = &sslExtraPolicyPara;
@@ -342,10 +344,7 @@ static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, HCERTSTORE store,
             if (ret && policyStatus.dwError)
             {
                 if (policyStatus.dwError == CERT_E_CN_NO_MATCH)
-                {
-                    if (!(security_flags & SECURITY_FLAG_IGNORE_CERT_CN_INVALID))
-                        err = ERROR_WINHTTP_SECURE_CERT_CN_INVALID;
-                }
+                    err = ERROR_WINHTTP_SECURE_CERT_CN_INVALID;
                 else
                     err = ERROR_WINHTTP_SECURE_INVALID_CERT;
             }
@@ -876,10 +875,10 @@ BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
         return FALSE;
 #endif
     }
-    
+
     FD_ZERO(&infd);
     FD_SET(conn->socket, &infd);
-    
+
     while (recvd < *buflen)
     {
         int res;
@@ -890,7 +889,7 @@ BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
             ptv = &tv;
         else
             ptv = NULL;
-            
+
         if (select( 0, &infd, NULL, NULL, ptv ) > 0)
         {
             if ((res = recv( conn->socket, &buffer[recvd], 1, 0 )) <= 0)
@@ -1086,7 +1085,11 @@ const void *netconn_get_certificate( netconn_t *conn )
 int netconn_get_cipher_strength( netconn_t *conn )
 {
 #ifdef SONAME_LIBSSL
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER >= 0x0090707f)
+    const SSL_CIPHER *cipher;
+#else
     SSL_CIPHER *cipher;
+#endif
     int bits = 0;
 
     if (!conn->secure) return 0;

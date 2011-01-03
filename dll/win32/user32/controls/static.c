@@ -423,6 +423,18 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     LRESULT lResult = 0;
     LONG full_style = GetWindowLongPtrW( hwnd, GWL_STYLE );
     LONG style = full_style & SS_TYPEMASK;
+#ifdef __REACTOS__
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hwnd, FNID_STATIC);
+       }
+    }    
+#endif    
 
     switch (uMsg)
     {
@@ -437,6 +449,9 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         break;
 
     case WM_NCDESTROY:
+#ifdef __REACTOS__
+        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
         if (style == SS_ICON) {
 /*
  * FIXME

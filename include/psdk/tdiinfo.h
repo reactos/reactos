@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-typedef struct TDIEntityID {
+typedef struct _TDIEntityID {
   ULONG  tei_entity;
   ULONG  tei_instance;
 } TDIEntityID;

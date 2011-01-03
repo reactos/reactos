@@ -45,7 +45,8 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
     		prect->bottom -= rt.bottom+3;
     	}
      */
-    if (IsWindowVisible(hStatusBar)) {
+    if (IsWindowVisible(hStatusBar))
+    {
         SetupStatusBar(hWnd, TRUE);
         GetClientRect(hStatusBar, &rt);
         prect->bottom -= rt.bottom;
@@ -141,12 +142,15 @@ static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
     TCHAR str[100];
 
     _tcscpy(str, _T(""));
-    if (nFlags & MF_POPUP) {
-        if (hSysMenu != GetMenu(hWnd)) {
+    if (nFlags & MF_POPUP)
+    {
+        if (hSysMenu != GetMenu(hWnd))
+        {
             if (nItemID == 2) nItemID = 5;
         }
     }
-    if (LoadString(hInst, nItemID, str, 100)) {
+    if (LoadString(hInst, nItemID, str, 100))
+    {
         /* load appropriate string*/
         LPTSTR lpsz = str;
         /* first newline terminates actual string*/
@@ -171,8 +175,8 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-	NMHDR nmhdr;
-	ZeroMemory(&nmhdr, sizeof(NMHDR));
+    NMHDR nmhdr;
+    ZeroMemory(&nmhdr, sizeof(NMHDR));
     nmhdr.code = TVN_SELCHANGED;
     SendMessage(g_pChildWnd->hWnd, WM_NOTIFY, (WPARAM)TREE_WINDOW, (LPARAM)&nmhdr);
 }
@@ -191,7 +195,8 @@ static BOOL CheckCommDlgError(HWND hWnd)
 {
     DWORD dwErrorCode = CommDlgExtendedError();
     UNREFERENCED_PARAMETER(hWnd);
-    switch (dwErrorCode) {
+    switch (dwErrorCode)
+    {
     case CDERR_DIALOGFAILURE:
         break;
     case CDERR_FINDRESFAILURE:
@@ -233,24 +238,24 @@ TCHAR FileTitleBuffer[_MAX_PATH];
 
 typedef struct
 {
-  UINT DisplayID;
-  UINT FilterID;
+    UINT DisplayID;
+    UINT FilterID;
 } FILTERPAIR, *PFILTERPAIR;
 
 void
 BuildFilterStrings(TCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
 {
-  int i, c;
+    int i, c;
 
-  c = 0;
-  for(i = 0; i < PairCount; i++)
-  {
-    c += LoadString(hInst, Pairs[i].DisplayID, &Filter[c], 255 * sizeof(TCHAR));
+    c = 0;
+    for(i = 0; i < PairCount; i++)
+    {
+        c += LoadString(hInst, Pairs[i].DisplayID, &Filter[c], 255 * sizeof(TCHAR));
+        Filter[++c] = '\0';
+        c += LoadString(hInst, Pairs[i].FilterID, &Filter[c], 255 * sizeof(TCHAR));
+        Filter[++c] = '\0';
+    }
     Filter[++c] = '\0';
-    c += LoadString(hInst, Pairs[i].FilterID, &Filter[c], 255 * sizeof(TCHAR));
-    Filter[++c] = '\0';
-  }
-  Filter[++c] = '\0';
 }
 
 static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
@@ -288,18 +293,18 @@ static INT_PTR CALLBACK LoadHive_KeyNameInHookProc(HWND hWndDlg, UINT uMsg, WPAR
     static INT sLength = 0;
     switch(uMsg)
     {
-     case WM_INITDIALOG:
+    case WM_INITDIALOG:
         sKey = (LPTSTR)lParam;
         sLength = 128; /* FIXME: Ugly hack! */
-     case WM_COMMAND:
+    case WM_COMMAND:
         switch(LOWORD(wParam))
         {
-         case IDOK:
+        case IDOK:
             if(GetDlgItemText(hWndDlg, IDC_EDIT_KEY, sKey, sLength))
                 return EndDialog(hWndDlg, -1);
             else
                 return EndDialog(hWndDlg, 0);
-         case IDCANCEL:
+        case IDCANCEL:
             return EndDialog(hWndDlg, 0);
         }
         break;
@@ -349,7 +354,9 @@ static BOOL LoadHive(HWND hWnd)
                 return FALSE;
             }
         }
-    } else {
+    }
+    else
+    {
         CheckCommDlgError(hWnd);
     }
     return TRUE;
@@ -395,9 +402,11 @@ static BOOL ImportRegistryFile(HWND hWnd)
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
     /*    ofn.lCustData = ;*/
-    if (GetOpenFileName(&ofn)) {
+    if (GetOpenFileName(&ofn))
+    {
         FILE *fp = _wfopen(ofn.lpstrFile, L"r");
-        if (fp == NULL || !import_registry_file(fp)) {
+        if (fp == NULL || !import_registry_file(fp))
+        {
             LPSTR p = GetMultiByteString(ofn.lpstrFile);
             fprintf(stderr, "Can't open file \"%s\"\n", p);
             HeapFree(GetProcessHeap(), 0, p);
@@ -406,7 +415,9 @@ static BOOL ImportRegistryFile(HWND hWnd)
             return FALSE;
         }
         fclose(fp);
-    } else {
+    }
+    else
+    {
         CheckCommDlgError(hWnd);
     }
 
@@ -429,8 +440,9 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
 
     UNREFERENCED_PARAMETER(wParam);
 
-	switch(uiMsg) {
-	case WM_INITDIALOG:
+    switch(uiMsg)
+    {
+    case WM_INITDIALOG:
         pOfn = (OPENFILENAME *) lParam;
         pszSelectedKey = (LPTSTR) pOfn->lCustData;
 
@@ -447,7 +459,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
             SetWindowText(hwndExportBranchText, pszSelectedKey);
         break;
 
-	case WM_NOTIFY:
+    case WM_NOTIFY:
         if (((NMHDR *) lParam)->code == CDN_FILEOK)
         {
             pOfnNotify = (OFNOTIFY *) lParam;
@@ -456,15 +468,15 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
             hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
             hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
             if (hwndExportBranch && hwndExportBranchText
-                && (SendMessage(hwndExportBranch, BM_GETCHECK, 0, 0) == BST_CHECKED))
-			{
-			    GetWindowText(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
-			}
-			else
-			{
-			    pszSelectedKey[0] = '\0';
-			}
-		}
+                    && (SendMessage(hwndExportBranch, BM_GETCHECK, 0, 0) == BST_CHECKED))
+            {
+                GetWindowText(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
+            }
+            else
+            {
+                pszSelectedKey[0] = '\0';
+            }
+        }
         break;
     }
     return iResult;
@@ -494,7 +506,8 @@ BOOL ExportRegistryFile(HWND hWnd)
     ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_OVERWRITEPROMPT;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
-    if (GetSaveFileName(&ofn)) {
+    if (GetSaveFileName(&ofn))
+    {
         BOOL result;
         DWORD format;
 
@@ -503,13 +516,16 @@ BOOL ExportRegistryFile(HWND hWnd)
         else
             format = REG_FORMAT_4;
         result = export_registry_key(ofn.lpstrFile, ExportKeyPath, format);
-        if (!result) {
+        if (!result)
+        {
             LPSTR p = GetMultiByteString(ofn.lpstrFile);
             fprintf(stderr, "Can't open file \"%s\"\n", p);
             HeapFree(GetProcessHeap(), 0, p);
             return FALSE;
         }
-    } else {
+    }
+    else
+    {
         CheckCommDlgError(hWnd);
     }
     return TRUE;
@@ -532,7 +548,8 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     pd.nToPage     = 0xFFFF;
     pd.nMinPage    = 1;
     pd.nMaxPage    = 0xFFFF;
-    if (PrintDlg(&pd)) {
+    if (PrintDlg(&pd))
+    {
         /* GDI calls to render output. */
         DeleteDC(pd.hDC); /* Delete DC when done.*/
     }
@@ -541,8 +558,10 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     PRINTDLGEX pd;
 
     hResult = PrintDlgEx(&pd);
-    if (hResult == S_OK) {
-        switch (pd.dwResultAction) {
+    if (hResult == S_OK)
+    {
+        switch (pd.dwResultAction)
+        {
         case PD_RESULT_APPLY:
             /*The user clicked the Apply button and later clicked the Cancel button. This indicates that the user wants to apply the changes made in the property sheet, but does not yet want to print. The PRINTDLGEX structure contains the information specified by the user at the time the Apply button was clicked. */
             break;
@@ -555,8 +574,11 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
         default:
             break;
         }
-    } else {
-        switch (hResult) {
+    }
+    else
+    {
+        switch (hResult)
+        {
         case E_OUTOFMEMORY:
             /*Insufficient memory. */
             break;
@@ -664,9 +686,11 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
         wsprintf(szNewValue, szNewValueFormat, iIndex++);
         cbData = sizeof(data);
         lResult = RegQueryValueEx(hKey, szNewValue, NULL, &dwExistingType, data, &cbData);
-    } while(lResult == ERROR_SUCCESS);
+    }
+    while(lResult == ERROR_SUCCESS);
 
-    switch(dwType) {
+    switch(dwType)
+    {
     case REG_DWORD:
         cbData = sizeof(DWORD);
         break;
@@ -725,9 +749,9 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
             {
                 sizeof(DSOP_SCOPE_INIT_INFO),
                 DSOP_SCOPE_TYPE_USER_ENTERED_UPLEVEL_SCOPE | DSOP_SCOPE_TYPE_USER_ENTERED_DOWNLEVEL_SCOPE |
-                    DSOP_SCOPE_TYPE_GLOBAL_CATALOG | DSOP_SCOPE_TYPE_EXTERNAL_UPLEVEL_DOMAIN |
-                    DSOP_SCOPE_TYPE_EXTERNAL_DOWNLEVEL_DOMAIN | DSOP_SCOPE_TYPE_WORKGROUP |
-                    DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN | DSOP_SCOPE_TYPE_DOWNLEVEL_JOINED_DOMAIN,
+                DSOP_SCOPE_TYPE_GLOBAL_CATALOG | DSOP_SCOPE_TYPE_EXTERNAL_UPLEVEL_DOMAIN |
+                DSOP_SCOPE_TYPE_EXTERNAL_DOWNLEVEL_DOMAIN | DSOP_SCOPE_TYPE_WORKGROUP |
+                DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN | DSOP_SCOPE_TYPE_DOWNLEVEL_JOINED_DOMAIN,
                 0,
                 {
                     {
@@ -752,7 +776,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
         InitInfo.apwzAttributeNames = NULL;
 
         hRet = (*pDsObjectPicker)->lpVtbl->Initialize(*pDsObjectPicker,
-                                                      &InitInfo);
+                &InitInfo);
 
         if (FAILED(hRet))
         {
@@ -774,8 +798,8 @@ InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
     HRESULT hRet;
 
     hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
-                                                 hwndParent,
-                                                 &pdo);
+            hwndParent,
+            &pdo);
     if (hRet == S_OK)
     {
         STGMEDIUM stm;
@@ -857,7 +881,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(message);
 
-    switch (LOWORD(wParam)) {
+    switch (LOWORD(wParam))
+    {
     case ID_REGISTRY_LOADHIVE:
         LoadHive(hWnd);
         return TRUE;
@@ -926,9 +951,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         pts = pt;
         if(ClientToScreen(g_pChildWnd->hWnd, &pts))
         {
-          SetCursorPos(pts.x, pts.y);
-          SetCursor(LoadCursor(0, IDC_SIZEWE));
-          SendMessage(g_pChildWnd->hWnd, WM_LBUTTONDOWN, 0, MAKELPARAM(pt.x, pt.y));
+            SetCursorPos(pts.x, pts.y);
+            SetCursor(LoadCursor(0, IDC_SIZEWE));
+            SendMessage(g_pChildWnd->hWnd, WM_LBUTTONDOWN, 0, MAKELPARAM(pt.x, pt.y));
         }
         return TRUE;
     }
@@ -942,12 +967,14 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     valueName = GetValueName(g_pChildWnd->hListWnd, -1);
-    if (keyPath) {
+    if (keyPath)
+    {
         lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, regsam, &hKey);
         if (lRet != ERROR_SUCCESS) hKey = 0;
     }
 
-    switch (LOWORD(wParam)) {
+    switch (LOWORD(wParam))
+    {
     case ID_EDIT_MODIFY:
         if (valueName && ModifyValue(hWnd, hKey, valueName, FALSE))
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
@@ -980,49 +1007,49 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         if (GetFocus() == g_pChildWnd->hListWnd)
         {
-          UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
-          if(nSelected >= 1)
-          {
-            TCHAR msg[128], caption[128];
-            LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
-            LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
-            if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
+            UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
+            if(nSelected >= 1)
             {
-              int ni, errs;
-
-              item = -1;
-              errs = 0;
-              while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
-              {
-                valueName = GetValueName(g_pChildWnd->hListWnd, item);
-                if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+                TCHAR msg[128], caption[128];
+                LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
+                LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+                if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
                 {
-                  errs++;
-                }
-                item = ni;
-              }
+                    int ni, errs;
 
-              RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
-              if(errs > 0)
-              {
-                LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-                LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
-                MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
-              }
+                    item = -1;
+                    errs = 0;
+                    while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
+                    {
+                        valueName = GetValueName(g_pChildWnd->hListWnd, item);
+                        if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+                        {
+                            errs++;
+                        }
+                        item = ni;
+                    }
+
+                    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+                    if(errs > 0)
+                    {
+                        LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+                        LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+                        MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+                    }
+                }
             }
-          }
         }
         else if (GetFocus() == g_pChildWnd->hTreeWnd)
         {
-          if (keyPath == 0 || *keyPath == 0)
-          {
-             MessageBeep(MB_ICONHAND);
-          } else
-          if (DeleteKey(hWnd, hKeyRoot, keyPath))
-          {
-            DeleteNode(g_pChildWnd->hTreeWnd, 0);
-            RefreshTreeView(g_pChildWnd->hTreeWnd);
-          }
+            if (keyPath == 0 || *keyPath == 0)
+            {
+                MessageBeep(MB_ICONHAND);
+            }
+            else if (DeleteKey(hWnd, hKeyRoot, keyPath))
+            {
+                DeleteNode(g_pChildWnd->hTreeWnd, 0);
+                RefreshTreeView(g_pChildWnd->hTreeWnd);
+            }
         }
         break;
     }
@@ -1066,9 +1093,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         /*RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, NULL); */
         break;
-   /*case ID_OPTIONS_TOOLBAR:*/
-   /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
-   /*    break;*/
+        /*case ID_OPTIONS_TOOLBAR:*/
+        /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
+        /*    break;*/
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
@@ -1101,7 +1128,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     if(hKey)
-      RegCloseKey(hKey);
+        RegCloseKey(hKey);
     return result;
 }
 
@@ -1118,7 +1145,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) {
+    switch (message)
+    {
     case WM_CREATE:
         CreateWindowEx(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,

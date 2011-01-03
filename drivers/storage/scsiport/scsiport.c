@@ -2809,7 +2809,8 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION Stack;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PDUMP_POINTERS DumpPointers;
+    NTSTATUS Status;
 
     DPRINT("ScsiPortDeviceControl()\n");
 
@@ -2821,15 +2822,22 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
       case IOCTL_SCSI_GET_DUMP_POINTERS:
-	{
-	  PDUMP_POINTERS DumpPointers;
-	  DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
-	  DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
-	  DumpPointers->DeviceObject = DeviceObject;
+        DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
 
-	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
-	}
-	break;
+        if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DUMP_POINTERS))
+        {
+          Status = STATUS_BUFFER_OVERFLOW;
+          Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
+          break;
+        }
+
+        DumpPointers = Irp->AssociatedIrp.SystemBuffer;
+        DumpPointers->DeviceObject = DeviceObject;
+        /* More data.. ? */
+
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
+        break;
 
       case IOCTL_SCSI_GET_CAPABILITIES:
         DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
@@ -2865,16 +2873,18 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_SCSI_MINIPORT:
           DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
+          Status = STATUS_NOT_IMPLEMENTED;
           break;
 
       case IOCTL_SCSI_PASS_THROUGH:
           DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
+          Status = STATUS_NOT_IMPLEMENTED;
           break;
 
       default:
-	DPRINT1("  unknown ioctl code: 0x%lX\n",
-	       Stack->Parameters.DeviceIoControl.IoControlCode);
-	break;
+          DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          Status = STATUS_NOT_IMPLEMENTED;
+          break;
     }
 
     /* Complete the request with the given status */

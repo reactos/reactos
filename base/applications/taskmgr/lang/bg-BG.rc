@@ -392,13 +392,13 @@ BEGIN
                     WS_TABSTOP,125,94,115,10
     CONTROL         "GDI Objects",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,105,115,10
-    CONTROL         "I/O Writes",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "В/И писанета",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,116,115,10
-    CONTROL         "I/O Write Bytes",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "В/И байтове за писане",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,127,65,10
-    CONTROL         "I/O Other",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Други В/И",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,125,138,115,10
-    CONTROL         "I/O Other Bytes",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "Други В/И байтове",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,125,149,115,10
 END
 

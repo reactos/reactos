@@ -51,6 +51,7 @@ list(APPEND SOURCE
     mstask.idl
     msxml.idl
     msxml2.idl
+    msxml6.idl
     netcon.idl
     netfw.idl
     oaidl.idl
@@ -94,6 +95,7 @@ list(APPEND SOURCE
     wbemcli.idl
     wia_lh.idl
     wia_xp.idl
+    winsxs.idl
     wtypes.idl
     xmldom.idl
     xmldso.idl
@@ -101,7 +103,7 @@ list(APPEND SOURCE
     xmllite.idl)
 
 if(NOT MSVC)
-  LIST(APPEND SOURCE
+  list(APPEND SOURCE
     wincodec.idl
     wuapi.idl)
 endif()

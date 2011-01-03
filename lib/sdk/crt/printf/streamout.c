@@ -109,7 +109,7 @@ format_float(
             digits = digits_u;
         case _T('g'):
             if (exponent < -4 || exponent >= precision) goto case_e;
-            break;              
+            break;
 
         case _T('E'):
             digits = digits_u;
@@ -118,7 +118,7 @@ format_float(
             fpval /= pow(10., exponent);
             val32 = exponent >= 0 ? exponent : -exponent;
 
-            // FIXME: handle length of exponent field: 
+            // FIXME: handle length of exponent field:
             // http://msdn.microsoft.com/de-de/library/0fatw238%28VS.80%29.aspx
             num_digits = 3;
             while (num_digits--)
@@ -175,7 +175,7 @@ format_float(
     {
         fpval *= pow(10., precision);
         val64 = (__int64)(fpval + 0.5);
-        
+
         while (num_digits-- > 0)
         {
             *--(*string) = digits[val64 % 10];
@@ -297,11 +297,11 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if (chr == _T('\0')) break;
 
         /* Check for 'normal' character or double % */
-        if ((chr != _T('%')) || 
+        if ((chr != _T('%')) ||
             (chr = *format++) == _T('%'))
         {
             /* Write the character to the stream */
-            if ((written = streamout_char(stream, chr)) == -1) return -1;
+            if ((written = streamout_char(stream, chr)) == 0) return -1;
             written_all += written;
             continue;
         }
@@ -344,13 +344,13 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if (chr == '.')
         {
             chr = *format++;
-            
+
             if (chr == _T('*'))
             {
                 precision = va_arg(argptr, int);
                 chr = *format++;
             }
-            else 
+            else
             {
                 precision = 0;
                 while (chr >= _T('0') && chr <= _T('9'))
@@ -578,7 +578,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         {
             for (; padding > 0; padding--)
             {
-                if ((written = streamout_char(stream, _T(' '))) == -1) return -2;
+                if ((written = streamout_char(stream, _T(' '))) == 0) return -1;
                 written_all += written;
             }
         }
@@ -595,7 +595,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if ((flags & FLAG_ALIGN_LEFT) == 0) precision += padding;
         while (precision-- > 0)
         {
-            if ((written = streamout_char(stream, _T('0'))) == -1) return -4;
+            if ((written = streamout_char(stream, _T('0'))) == 0) return -1;
             written_all += written;
         }
 
@@ -611,7 +611,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         /* Optional right '0' padding */
         while (precision-- > 0)
         {
-            if ((written = streamout_char(stream, _T('0'))) == -1) return -6;
+            if ((written = streamout_char(stream, _T('0'))) == 0) return -1;
             written_all += written;
             len++;
         }
@@ -622,11 +622,11 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         {
             while (padding-- > 0)
             {
-                if ((written = streamout_char(stream, _T(' '))) == -1) return -7;
+                if ((written = streamout_char(stream, _T(' '))) == 0) return -1;
                 written_all += written;
             }
         }
-        
+
     }
 
     if (written == -1) return -8;

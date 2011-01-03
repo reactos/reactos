@@ -107,7 +107,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
 
   if( pPath->state != PATH_Closed )
   {
-    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+    EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     return FALSE;
   }
 
@@ -1078,7 +1078,7 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
   pNumPointsInStroke = ExAllocatePoolWithTag(PagedPool, sizeof(ULONG) * numStrokes, TAG_PATH);
   if(!pNumPointsInStroke)
   {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
 
@@ -1103,7 +1103,7 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
                                    nPolyFillMode);
   if(hrgn==(HRGN)0)
   {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
 
@@ -1375,7 +1375,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     if(!pLinePts)
     {
         DPRINT1("Can't allocate pool!\n");
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto end;
     }
     nLinePts = 0;
@@ -1520,7 +1520,7 @@ PATH_WidenPath(DC *dc)
     if(pPath->state == PATH_Open)
     {
        PATH_UnlockPath( pPath );
-       SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+       EngSetLastError(ERROR_CAN_NOT_COMPLETE);
        return FALSE;
     }
 
@@ -1530,7 +1530,7 @@ PATH_WidenPath(DC *dc)
     if (!size)
     {
         PATH_UnlockPath( pPath );
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return FALSE;
     }
 
@@ -1548,7 +1548,7 @@ PATH_WidenPath(DC *dc)
     }
     else
     {
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         ExFreePoolWithTag(elp, TAG_PATH);
         PATH_UnlockPath( pPath );
         return FALSE;
@@ -1565,7 +1565,7 @@ PATH_WidenPath(DC *dc)
     if(obj_type == GDI_OBJECT_TYPE_EXTPEN && penType == PS_COSMETIC)
     {
         PATH_UnlockPath( pPath );
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         return FALSE;
     }
 
@@ -2113,7 +2113,7 @@ NtGdiAbortPath(HDC  hDC)
   PDC dc = DC_LockDc ( hDC );
   if ( !dc )
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -2140,7 +2140,7 @@ NtGdiBeginPath( HDC  hDC )
   dc = DC_LockDc ( hDC );
   if ( !dc )
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -2171,7 +2171,7 @@ NtGdiBeginPath( HDC  hDC )
   pPath = PATH_AllocPathWithHandle();
   if (!pPath)
   {
-     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+     EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
      return FALSE;
   }
   dc->dclevel.flPath |= DCPATH_ACTIVE; // Set active ASAP!
@@ -2208,7 +2208,7 @@ NtGdiCloseFigure(HDC hDC)
   pDc = DC_LockDc(hDC);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
   pPath = PATH_LockPath( pDc->dclevel.hPath );
@@ -2226,7 +2226,7 @@ NtGdiCloseFigure(HDC hDC)
   else
   {
      // FIXME: check if lasterror is set correctly
-     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+     EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
 
   PATH_UnlockPath( pPath );
@@ -2244,7 +2244,7 @@ NtGdiEndPath(HDC  hDC)
 
   if ( !dc )
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -2258,7 +2258,7 @@ NtGdiEndPath(HDC  hDC)
   if ( (pPath->state != PATH_Open) || !(dc->dclevel.flPath & DCPATH_ACTIVE) )
   {
     DPRINT1("EndPath ERROR! 0x%x\n", dc->dclevel.hPath);
-    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+    EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     ret = FALSE;
   }
   /* Set flag to indicate that path is finished */
@@ -2284,7 +2284,7 @@ NtGdiFillPath(HDC  hDC)
 
   if ( !dc )
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
   pPath = PATH_LockPath( dc->dclevel.hPath );
@@ -2332,7 +2332,7 @@ NtGdiFlattenPath(HDC  hDC)
    pDc = DC_LockDc(hDC);
    if (!pDc)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
 
@@ -2363,7 +2363,7 @@ NtGdiGetMiterLimit(
 
   if (!(pDc = DC_LockDc(hdc)))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
 
@@ -2411,7 +2411,7 @@ NtGdiGetPath(
   if (!dc)
   {
      DPRINT1("Can't lock dc!\n");
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return -1;
   }
 
@@ -2424,7 +2424,7 @@ NtGdiGetPath(
 
   if (pPath->state != PATH_Closed)
   {
-     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+     EngSetLastError(ERROR_CAN_NOT_COMPLETE);
      goto done;
   }
 
@@ -2434,7 +2434,7 @@ NtGdiGetPath(
   }
   else if(nSize<pPath->numEntriesUsed)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      goto done;
   }
   else
@@ -2476,7 +2476,7 @@ NtGdiPathToRegion(HDC  hDC)
   pDc = DC_LockDc(hDC);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return NULL;
   }
 
@@ -2492,7 +2492,7 @@ NtGdiPathToRegion(HDC  hDC)
   if (pPath->state!=PATH_Closed)
   {
      //FIXME: check that setlasterror is being called correctly
-     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+     EngSetLastError(ERROR_CAN_NOT_COMPLETE);
   }
   else
   {
@@ -2519,7 +2519,7 @@ NtGdiSetMiterLimit(
 
   if (!(pDc = DC_LockDc(hdc)))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
 
@@ -2566,7 +2566,7 @@ NtGdiStrokeAndFillPath(HDC hDC)
 
   if (!(pDc = DC_LockDc(hDC)))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
   pPath = PATH_LockPath( pDc->dclevel.hPath );
@@ -2610,7 +2610,7 @@ NtGdiStrokePath(HDC hDC)
 
   if (!(pDc = DC_LockDc(hDC)))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
   pPath = PATH_LockPath( pDc->dclevel.hPath );
@@ -2646,7 +2646,7 @@ NtGdiWidenPath(HDC  hDC)
   PDC pdc = DC_LockDc ( hDC );
   if ( !pdc )
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
   Ret = PATH_WidenPath(pdc);

@@ -36,7 +36,7 @@ PWINSTATION_OBJECT gpwinstaCurrent = NULL;
 #define REQ_INTERACTIVE_WINSTA(err) \
     if (gpwinstaCurrent != InputWindowStation) \
     { \
-        SetLastWin32Error(err); \
+        EngSetLastError(err); \
         return 0; \
     }
 
@@ -1466,7 +1466,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         default:
             DPRINT1("Invalid SPI value: %d\n", uiAction);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
     }
 

@@ -551,7 +551,7 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    DPRINT1("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
+    DPRINT("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
             pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
 
     if (pustrDevice)
@@ -809,7 +809,7 @@ NtUserChangeDisplaySettings(
     if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
         (hwnd != NULL))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;
     }
 

@@ -18,6 +18,7 @@
 
 #include "urlmon_main.h"
 #include "winreg.h"
+#include "shlwapi.h"
 
 #include "wine/debug.h"
 
@@ -42,7 +43,7 @@ typedef struct {
 
     LONG ref;
 
-    IInternetProtocol *protocol;
+    IInternetProtocolEx *protocol;
 
     BYTE buf[1024*8];
     DWORD size;
@@ -76,6 +77,7 @@ typedef enum {
 #define BINDING_LOCKED    0x0001
 #define BINDING_STOPPED   0x0002
 #define BINDING_OBJAVAIL  0x0004
+#define BINDING_ABORTED   0x0008
 
 struct Binding {
     const IBindingVtbl               *lpBindingVtbl;
@@ -87,7 +89,7 @@ struct Binding {
     LONG ref;
 
     IBindStatusCallback *callback;
-    IInternetProtocol *protocol;
+    IInternetProtocolEx *protocol;
     IServiceProvider *service_provider;
 
     stgmed_buf_t *stgmed_buf;
@@ -426,7 +428,7 @@ static const IUnknownVtbl StgMedUnkVtbl = {
     StgMedUnk_Release
 };
 
-static stgmed_buf_t *create_stgmed_buf(IInternetProtocol *protocol)
+static stgmed_buf_t *create_stgmed_buf(IInternetProtocolEx *protocol)
 {
     stgmed_buf_t *ret = heap_alloc(sizeof(*ret));
 
@@ -631,8 +633,30 @@ static HRESULT WINAPI ProtocolStream_Stat(IStream *iface, STATSTG *pstatstg,
                                          DWORD dwStatFlag)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%p %08x)\n", This, pstatstg, dwStatFlag);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %08x)\n", This, pstatstg, dwStatFlag);
+
+    if(!pstatstg)
+        return E_FAIL;
+
+    memset(pstatstg, 0, sizeof(STATSTG));
+
+    if(!(dwStatFlag&STATFLAG_NONAME) && This->buf->cache_file) {
+        pstatstg->pwcsName = CoTaskMemAlloc((lstrlenW(This->buf->cache_file)+1)*sizeof(WCHAR));
+        if(!pstatstg->pwcsName)
+            return STG_E_INSUFFICIENTMEMORY;
+
+        lstrcpyW(pstatstg->pwcsName, This->buf->cache_file);
+    }
+
+    pstatstg->type = STGTY_STREAM;
+    if(This->buf->file != INVALID_HANDLE_VALUE) {
+        GetFileSizeEx(This->buf->file, (PLARGE_INTEGER)&pstatstg->cbSize);
+        GetFileTime(This->buf->file, &pstatstg->ctime, &pstatstg->atime, &pstatstg->mtime);
+        if(pstatstg->cbSize.QuadPart)
+            pstatstg->grfMode = GENERIC_READ;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ProtocolStream_Clone(IStream *iface, IStream **ppstm)
@@ -681,6 +705,10 @@ static HRESULT stgmed_stream_fill_stgmed(stgmed_obj_t *obj, STGMEDIUM *stgmed)
 static HRESULT stgmed_stream_get_result(stgmed_obj_t *obj, DWORD bindf, void **result)
 {
     ProtocolStream *stream = (ProtocolStream*)obj;
+
+    if(!(bindf & BINDF_ASYNCHRONOUS) && stream->buf->file == INVALID_HANDLE_VALUE
+       && (stream->buf->hres != S_FALSE || stream->buf->size))
+        return INET_E_DATA_NOT_AVAILABLE;
 
     IStream_AddRef(STREAM(stream));
     *result = STREAM(stream);
@@ -862,10 +890,9 @@ static ULONG WINAPI Binding_Release(IBinding *iface)
         ReleaseBindInfo(&This->bindinfo);
         This->section.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->section);
+        SysFreeString(This->url);
         heap_free(This->mime);
         heap_free(This->redirect_url);
-        heap_free(This->url);
-
         heap_free(This);
 
         URLMON_UnlockModule();
@@ -877,8 +904,19 @@ static ULONG WINAPI Binding_Release(IBinding *iface)
 static HRESULT WINAPI Binding_Abort(IBinding *iface)
 {
     Binding *This = BINDING_THIS(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    HRESULT hres;
+
+    TRACE("(%p)\n", This);
+
+    if(This->state & BINDING_ABORTED)
+        return E_FAIL;
+
+    hres = IInternetProtocol_Abort(This->protocol, E_ABORT, ERROR_SUCCESS);
+    if(FAILED(hres))
+        return hres;
+
+    This->state |= BINDING_ABORTED;
+    return S_OK;
 }
 
 static HRESULT WINAPI Binding_Suspend(IBinding *iface)
@@ -1048,7 +1086,7 @@ static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progres
 
     TRACE("(%p)->(%d %u %u)\n", This, bscf, progress, progress_max);
 
-    if(This->download_state == END_DOWNLOAD || (This->state & BINDING_STOPPED))
+    if(This->download_state == END_DOWNLOAD || (This->state & (BINDING_STOPPED|BINDING_ABORTED)))
         return;
 
     if(This->stgmed_buf->file != INVALID_HANDLE_VALUE)
@@ -1075,6 +1113,9 @@ static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progres
         IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
                 BINDSTATUS_DOWNLOADINGDATA, This->url);
     }
+
+    if(This->state & (BINDING_STOPPED|BINDING_ABORTED))
+        return;
 
     if(This->to_object) {
         if(!(This->state & BINDING_OBJAVAIL)) {
@@ -1223,7 +1264,7 @@ static HRESULT WINAPI InternetBindInfo_GetBindString(IInternetBindInfo *iface,
         return hres;
     }
     case BINDSTRING_URL: {
-        DWORD size = (strlenW(This->url)+1) * sizeof(WCHAR);
+        DWORD size = (SysStringLen(This->url)+1) * sizeof(WCHAR);
 
         if(!ppwzStr || !pcElFetched)
             return E_INVALIDARG;
@@ -1350,50 +1391,37 @@ static HRESULT get_callback(IBindCtx *pbc, IBindStatusCallback **callback)
     HRESULT hres;
 
     hres = IBindCtx_GetObjectParam(pbc, bscb_holderW, &unk);
-    if(SUCCEEDED(hres)) {
-        hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)callback);
-        IUnknown_Release(unk);
-    }
+    if(FAILED(hres))
+        return create_default_callback(callback);
 
-    return SUCCEEDED(hres) ? S_OK : INET_E_DATA_NOT_AVAILABLE;
+    hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)callback);
+    IUnknown_Release(unk);
+    return hres;
 }
 
-static BOOL is_urlmon_protocol(LPCWSTR url)
+static BOOL is_urlmon_protocol(IUri *uri)
 {
-    static const WCHAR wszCdl[] = {'c','d','l'};
-    static const WCHAR wszFile[] = {'f','i','l','e'};
-    static const WCHAR wszFtp[]  = {'f','t','p'};
-    static const WCHAR wszGopher[] = {'g','o','p','h','e','r'};
-    static const WCHAR wszHttp[] = {'h','t','t','p'};
-    static const WCHAR wszHttps[] = {'h','t','t','p','s'};
-    static const WCHAR wszMk[]   = {'m','k'};
+    DWORD scheme;
+    HRESULT hres;
 
-    static const struct {
-        LPCWSTR scheme;
-        int len;
-    } protocol_list[] = {
-        {wszCdl,    sizeof(wszCdl)   /sizeof(WCHAR)},
-        {wszFile,   sizeof(wszFile)  /sizeof(WCHAR)},
-        {wszFtp,    sizeof(wszFtp)   /sizeof(WCHAR)},
-        {wszGopher, sizeof(wszGopher)/sizeof(WCHAR)},
-        {wszHttp,   sizeof(wszHttp)  /sizeof(WCHAR)},
-        {wszHttps,  sizeof(wszHttps) /sizeof(WCHAR)},
-        {wszMk,     sizeof(wszMk)    /sizeof(WCHAR)}
-    };
+    hres = IUri_GetScheme(uri, &scheme);
+    if(FAILED(hres))
+        return FALSE;
 
-    unsigned int i;
-    int len = lstrlenW(url);
-
-    for(i=0; i < sizeof(protocol_list)/sizeof(protocol_list[0]); i++) {
-        if(len >= protocol_list[i].len
-           && !memcmp(url, protocol_list[i].scheme, protocol_list[i].len*sizeof(WCHAR)))
-            return TRUE;
+    switch(scheme) {
+    case URL_SCHEME_FILE:
+    case URL_SCHEME_FTP:
+    case URL_SCHEME_GOPHER:
+    case URL_SCHEME_HTTP:
+    case URL_SCHEME_HTTPS:
+    case URL_SCHEME_MK:
+        return TRUE;
     }
 
     return FALSE;
 }
 
-static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, IBindCtx *pbc,
+static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, IUri *uri, IBindCtx *pbc,
         BOOL to_obj, REFIID riid, Binding **binding)
 {
     Binding *ret;
@@ -1446,7 +1474,7 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
         ret->protocol = binding_ctx->protocol;
         IInternetProtocol_AddRef(ret->protocol);
     }else {
-        hres = create_binding_protocol(url, TRUE, &ret->protocol);
+        hres = create_binding_protocol(TRUE, &ret->protocol);
         if(FAILED(hres)) {
             WARN("Could not get protocol handler\n");
             IBinding_Release(BINDING(ret));
@@ -1471,11 +1499,15 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
     if(!(ret->bindf & BINDF_ASYNCHRONOUS)) {
         ret->bindf |= BINDF_NEEDFILE;
         ret->use_cache_file = TRUE;
-    }else if(!is_urlmon_protocol(url)) {
+    }else if(!is_urlmon_protocol(uri)) {
         ret->bindf |= BINDF_NEEDFILE;
     }
 
-    ret->url = heap_strdupW(url);
+    hres = IUri_GetDisplayUri(uri, &ret->url);
+    if(FAILED(hres)) {
+        IBinding_Release(BINDING(ret));
+        return hres;
+    }
 
     if(binding_ctx) {
         ret->stgmed_buf = binding_ctx->stgmed_buf;
@@ -1502,14 +1534,14 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
     return S_OK;
 }
 
-static HRESULT start_binding(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, IBindCtx *pbc,
+static HRESULT start_binding(IMoniker *mon, Binding *binding_ctx, IUri *uri, IBindCtx *pbc,
                              BOOL to_obj, REFIID riid, Binding **ret)
 {
     Binding *binding = NULL;
     HRESULT hres;
     MSG msg;
 
-    hres = Binding_Create(mon, binding_ctx, url, pbc, to_obj, riid, &binding);
+    hres = Binding_Create(mon, binding_ctx, uri, pbc, to_obj, riid, &binding);
     if(FAILED(hres))
         return hres;
 
@@ -1525,9 +1557,10 @@ static HRESULT start_binding(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, I
         set_binding_sink(binding->protocol, PROTSINK(binding), BINDINF(binding));
         if(binding_ctx->redirect_url)
             IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_REDIRECTING, binding_ctx->redirect_url);
-        report_data(binding, 0, 0, 0);
+        report_data(binding, BSCF_FIRSTDATANOTIFICATION | (binding_ctx->download_state == END_DOWNLOAD ? BSCF_LASTDATANOTIFICATION : 0),
+                0, 0);
     }else {
-        hres = IInternetProtocol_Start(binding->protocol, url, PROTSINK(binding),
+        hres = IInternetProtocolEx_StartEx(binding->protocol, uri, PROTSINK(binding),
                  BINDINF(binding), PI_APARTMENTTHREADED|PI_MIMEVERIFICATION, 0);
 
         TRACE("start ret %08x\n", hres);
@@ -1553,7 +1586,7 @@ static HRESULT start_binding(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, I
     return S_OK;
 }
 
-HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
+HRESULT bind_to_storage(IUri *uri, IBindCtx *pbc, REFIID riid, void **ppv)
 {
     Binding *binding = NULL, *binding_ctx;
     HRESULT hres;
@@ -1562,7 +1595,7 @@ HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
 
     binding_ctx = get_bctx_binding(pbc);
 
-    hres = start_binding(NULL, binding_ctx, url, pbc, FALSE, riid, &binding);
+    hres = start_binding(NULL, binding_ctx, uri, pbc, FALSE, riid, &binding);
     if(binding_ctx)
         IBinding_Release(BINDING(binding_ctx));
     if(FAILED(hres))
@@ -1573,8 +1606,10 @@ HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
             IInternetProtocol_UnlockRequest(binding->protocol);
 
         hres = binding->stgmed_obj->vtbl->get_result(binding->stgmed_obj, binding->bindf, ppv);
-    }else {
+    }else if(binding->bindf & BINDF_ASYNCHRONOUS) {
         hres = MK_S_ASYNCHRONOUS;
+    }else {
+        hres = FAILED(binding->hres) ? binding->hres : S_OK;
     }
 
     IBinding_Release(BINDING(binding));
@@ -1582,14 +1617,14 @@ HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
     return hres;
 }
 
-HRESULT bind_to_object(IMoniker *mon, LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
+HRESULT bind_to_object(IMoniker *mon, IUri *uri, IBindCtx *pbc, REFIID riid, void **ppv)
 {
     Binding *binding;
     HRESULT hres;
 
     *ppv = NULL;
 
-    hres = start_binding(mon, NULL, url, pbc, TRUE, riid, &binding);
+    hres = start_binding(mon, NULL, uri, pbc, TRUE, riid, &binding);
     if(FAILED(hres))
         return hres;
 

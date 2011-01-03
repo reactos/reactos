@@ -182,7 +182,6 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
             /* FIXME  ThisSurfaceMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop */
             ThisSurfMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop = 1;
             pDDraw->lpLcl->lpPrimary = ThisSurfInt;
-            Main_DirectDraw_AddRef(pDDraw);
         }
         else
         {

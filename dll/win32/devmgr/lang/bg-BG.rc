@@ -1,4 +1,4 @@
-// English language resource file (Sebastian Gasiorek, 2005-11-13)
+// Bulgarian resource file
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
@@ -91,15 +91,17 @@ BEGIN
     IDS_DEV_SETPROPERTIES_FAILED "РеактОС не успя да смени настройките на устройството."
 END
 
+
+/*Непреведен раздел*/
 STRINGTABLE
 BEGIN
     IDS_PROP_DEVICEID "Device Instance ID"
     IDS_PROP_HARDWAREIDS "Hardware IDs"
     IDS_PROP_COMPATIBLEIDS "Compatible IDs"
     IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
+    IDS_PROP_SERVICE "Услуга"
+    IDS_PROP_ENUMERATOR "Изброител"
+    IDS_PROP_CAPABILITIES "Способности"
     IDS_PROP_DEVNODEFLAGS "Devnode Flags"
     IDS_PROP_CONFIGFLAGS "Config Flags"
     IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
@@ -114,8 +116,8 @@ BEGIN
     IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
     IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
     IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
+    IDS_PROP_CURRENTPOWERSTATE "Текущо състояние на захранването"
+    IDS_PROP_POWERCAPABILITIES "Възможности на захранването"
     IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
 END
 
@@ -199,7 +201,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Подробности"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -212,7 +214,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Ресурси"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -221,7 +223,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Захранване"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

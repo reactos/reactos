@@ -75,7 +75,7 @@ NtGdiCreateMetafileDC(IN HDC hdc)
 	  {
           NtGdiDeleteObjectApp(tempHDC);
 	  }
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return NULL;
    }
 
@@ -96,7 +96,7 @@ NtGdiCreateMetafileDC(IN HDC hdc)
        {
            NtGdiDeleteObjectApp(tempHDC);
        }
-       SetLastWin32Error(ERROR_INVALID_HANDLE);
+       EngSetLastError(ERROR_INVALID_HANDLE);
        return NULL;
    }
 
@@ -173,7 +173,7 @@ NtGdiCreateMetafileDC(IN HDC hdc)
              NtGdiDeleteObjectApp(tempHDC);
          }
          DPRINT1("Can not Create EnhMetaFile\n");
-         SetLastWin32Error(ERROR_PATH_NOT_FOUND);
+         EngSetLastError(ERROR_PATH_NOT_FOUND);
          return NULL;
       }
 
@@ -194,11 +194,11 @@ NtGdiCreateMetafileDC(IN HDC hdc)
              NtGdiDeleteObjectApp(tempHDC);
          }
          DPRINT1("Create EnhMetaFile fail\n");
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         EngSetLastError(ERROR_INVALID_HANDLE);
          return NULL;
       }
 
-      SetLastWin32Error(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
+      EngSetLastError(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
 
       Status = NtWriteFile(Dc->hFile, NULL, NULL, NULL, &Iosb, (PVOID)&Dc->emh, Dc->emh->nSize, NULL, NULL);
       if (Status == STATUS_PENDING)
@@ -219,7 +219,7 @@ NtGdiCreateMetafileDC(IN HDC hdc)
       {
           Dc->hFile = NULL;
           DPRINT1("Write to EnhMetaFile fail\n");
-          SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+          EngSetLastError(ERROR_CAN_NOT_COMPLETE);
           ret = NULL;
           DC_UnlockDc(Dc);
           if (hDCRef == NULL)

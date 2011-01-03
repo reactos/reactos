@@ -1005,7 +1005,7 @@ static HICON CURSORICON_ExtCopy(HICON hIcon, UINT nType,
         && (iDesiredCX > 0 || iDesiredCY > 0))
         || nFlags & LR_MONOCHROME)
     {
-		FIXME("Copying from resource isn't implemented yet\n");
+		TRACE("Copying from resource isn't implemented yet\n");
 		hNew = CopyIcon(hIcon);
 
 #if 0

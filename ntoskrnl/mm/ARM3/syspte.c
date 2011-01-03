@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::SYSPTE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -36,22 +35,22 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     KIRQL OldIrql;
     PMMPTE PointerPte, NextPte, PreviousPte;
     ULONG_PTR ClusterSize;
-    
+
     //
     // Sanity check
     //
     ASSERT(Alignment <= PAGE_SIZE);
-    
+
     //
     // Lock the system PTE space
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueueSystemSpaceLock);
-    
+
     //
     // Get the first free cluster and make sure we have PTEs available
     //
     PointerPte = &MmFirstFreeSystemPte[SystemPtePoolType];
-    if (PointerPte->u.List.NextEntry == ((ULONG)0xFFFFF)) 
+    if (PointerPte->u.List.NextEntry == ((ULONG)0xFFFFF))
     {
         //
         // Fail
@@ -59,13 +58,13 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
         return NULL;
     }
-    
+
     //
     // Now move to the first free system PTE cluster
     //
-    PreviousPte = PointerPte;    
+    PreviousPte = PointerPte;
     PointerPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
-    
+
     //
     // Loop each cluster
     //
@@ -80,7 +79,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
             // Keep track of the next cluster in case we have to relink
             //
             NextPte = PointerPte + 1;
-            
+
             //
             // Can this cluster satisfy the request?
             //
@@ -104,7 +103,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                     //
                     NextPte->u.List.NextEntry = ClusterSize - NumberOfPtes;
                 }
-                
+
                 //
                 // Decrement the free count and move to the next starting PTE
                 //
@@ -112,7 +111,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                 PointerPte += (ClusterSize - NumberOfPtes);
                 break;
             }
-            
+
             //
             // Did we find exactly what you wanted?
             //
@@ -124,7 +123,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                 PreviousPte->u.List.NextEntry = PointerPte->u.List.NextEntry;
                 MmTotalFreeSystemPtes[SystemPtePoolType] -= NumberOfPtes;
                 break;
-            }            
+            }
         }
         else if (NumberOfPtes == 1)
         {
@@ -135,7 +134,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
             MmTotalFreeSystemPtes[SystemPtePoolType]--;
             break;
         }
-        
+
         //
         // We couldn't find what you wanted -- is this the last cluster?
         //
@@ -154,8 +153,8 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         PreviousPte = PointerPte;
         PointerPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
         ASSERT(PointerPte > PreviousPte);
-    }   
-    
+    }
+
     //
     // Release the lock, flush the TLB and return the first PTE
     //
@@ -202,30 +201,30 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     KIRQL OldIrql;
     ULONG_PTR ClusterSize, CurrentSize;
     PMMPTE CurrentPte, NextPte, PointerPte;
-    
+
     //
     // Check to make sure the PTE address is within bounds
     //
     ASSERT(NumberOfPtes != 0);
     ASSERT(StartingPte >= MmSystemPtesStart[SystemPtePoolType]);
     ASSERT(StartingPte <= MmSystemPtesEnd[SystemPtePoolType]);
-    
+
     //
     // Zero PTEs
     //
     RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
     CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPteBase);
-    
+
     //
     // Acquire the system PTE lock
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueueSystemSpaceLock);
-  
+
     //
     // Increase availability
     //
     MmTotalFreeSystemPtes[SystemPtePoolType] += NumberOfPtes;
-    
+
     //
     // Get the free cluster and start going through them
     //
@@ -243,12 +242,12 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
             //
             ASSERT(((StartingPte + NumberOfPtes) <= PointerPte) ||
                    (CurrentPte->u.List.NextEntry == ((ULONG)0xFFFFF)));
-            
+
             //
             // Get the next cluster in case it's the one
             //
             NextPte = CurrentPte + 1;
-            
+
             //
             // Check if this was actually a single-PTE entry
             //
@@ -266,7 +265,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                 //
                 ClusterSize = (ULONG_PTR)NextPte->u.List.NextEntry;
             }
-            
+
             //
             // So check if this cluster actually describes the entire mapping
             //
@@ -278,7 +277,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                 NumberOfPtes += ClusterSize;
                 NextPte->u.List.NextEntry = NumberOfPtes;
                 CurrentPte->u.List.OneEntry = 0;
-                
+
                 //
                 // Make another pass
                 //
@@ -291,7 +290,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                 //
                 StartingPte->u.List.NextEntry = CurrentPte->u.List.NextEntry;
                 CurrentPte->u.List.NextEntry = CurrentSize;
-                
+
                 //
                 // Is there just one page left?
                 //
@@ -312,7 +311,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                     NextPte->u.List.NextEntry = NumberOfPtes;
                 }
             }
-            
+
             //
             // Now check if we've arrived at yet another cluster
             //
@@ -324,7 +323,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                 StartingPte->u.List.NextEntry = PointerPte->u.List.NextEntry;
                 StartingPte->u.List.OneEntry = 0;
                 NextPte = StartingPte + 1;
-                
+
                 //
                 // Check if the cluster only had one page
                 //
@@ -343,20 +342,20 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                     PointerPte++;
                     ClusterSize = (ULONG_PTR)PointerPte->u.List.NextEntry;
                 }
-                
+
                 //
                 // And create the final combined cluster
                 //
                 NextPte->u.List.NextEntry = NumberOfPtes + ClusterSize;
             }
-            
+
             //
             // We released the PTEs into their cluster (and optimized the list)
             //
             KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
             break;
         }
-        
+
         //
         // Try the next cluster of PTEs...
         //
@@ -375,7 +374,7 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     // Sanity checks
     //
     ASSERT(NumberOfPtes >= 1);
-    
+
     //
     // Set the starting and ending PTE addresses for this space
     //
@@ -384,12 +383,12 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     MmSystemPtesEnd[PoolType] = StartingPte + NumberOfPtes - 1;
     DPRINT("System PTE space for %d starting at: %p and ending at: %p\n",
            PoolType, MmSystemPtesStart[PoolType], MmSystemPtesEnd[PoolType]);
-    
+
     //
     // Clear all the PTEs to start with
     //
     RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
-    
+
     //
     // Make the first entry free and link it
     //
@@ -397,19 +396,19 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     MmFirstFreeSystemPte[PoolType].u.Long = 0;
     MmFirstFreeSystemPte[PoolType].u.List.NextEntry = StartingPte -
                                                       MmSystemPteBase;
-    
+
     //
     // The second entry stores the size of this PTE space
     //
     StartingPte++;
     StartingPte->u.Long = 0;
     StartingPte->u.List.NextEntry = NumberOfPtes;
-    
+
     //
     // We also keep a global for it
     //
     MmTotalFreeSystemPtes[PoolType] = NumberOfPtes;
-    
+
     //
     // Check if this is the system PTE space
     //

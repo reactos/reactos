@@ -750,6 +750,8 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 #ifndef NEWCC
         /* Flush dirty cache pages */
         CcRosFlushDirtyPages(-1, &Dummy);
+#else
+        Dummy = 0;
 #endif
 
         /* Flush all volumes and the registry */

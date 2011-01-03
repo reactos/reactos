@@ -345,7 +345,7 @@ NtUserSetWinEventHook(
       GlobalEvents = ExAllocatePoolWithTag(PagedPool, sizeof(EVENTTABLE), TAG_HOOK);
       if (GlobalEvents == NULL)
       {
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
          goto SetEventExit;
       }
       GlobalEvents->Counts = 0;      
@@ -354,19 +354,19 @@ NtUserSetWinEventHook(
 
    if (eventMin > eventMax)
    {
-      SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
+      EngSetLastError(ERROR_INVALID_HOOK_FILTER);
       goto SetEventExit;
    }
 
    if (!lpfnWinEventProc)
    {
-      SetLastWin32Error(ERROR_INVALID_FILTER_PROC);
+      EngSetLastError(ERROR_INVALID_FILTER_PROC);
       goto SetEventExit;
    }
 
    if ((dwflags & WINEVENT_INCONTEXT) && !hmodWinEventProc)
    {
-      SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+      EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
       goto SetEventExit;
    }
 
@@ -375,7 +375,7 @@ NtUserSetWinEventHook(
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if (!NT_SUCCESS(Status))
       {   
-         SetLastWin32Error(ERROR_INVALID_THREAD_ID);
+         EngSetLastError(ERROR_INVALID_THREAD_ID);
          goto SetEventExit;
       }
    }

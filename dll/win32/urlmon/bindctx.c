@@ -460,9 +460,30 @@ static const IAuthenticateVtbl BSCAuthenticateVtbl = {
     BSCAuthenticate_Authenticate
 };
 
-static IBindStatusCallback *create_bsc(IBindStatusCallback *bsc)
+static void set_callback(BindStatusCallback *This, IBindStatusCallback *bsc)
 {
-    BindStatusCallback *ret = heap_alloc_zero(sizeof(BindStatusCallback));
+    IServiceProvider *serv_prov;
+    HRESULT hres;
+
+    if(This->callback)
+        IBindStatusCallback_Release(This->callback);
+    if(This->serv_prov)
+        IServiceProvider_Release(This->serv_prov);
+
+    IBindStatusCallback_AddRef(bsc);
+    This->callback = bsc;
+
+    hres = IBindStatusCallback_QueryInterface(bsc, &IID_IServiceProvider, (void**)&serv_prov);
+    This->serv_prov = hres == S_OK ? serv_prov : NULL;
+}
+
+HRESULT wrap_callback(IBindStatusCallback *bsc, IBindStatusCallback **ret_iface)
+{
+    BindStatusCallback *ret;
+
+    ret = heap_alloc_zero(sizeof(BindStatusCallback));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
     ret->lpBindStatusCallbackExVtbl = &BindStatusCallbackExVtbl;
     ret->lpServiceProviderVtbl    = &BSCServiceProviderVtbl;
@@ -470,13 +491,10 @@ static IBindStatusCallback *create_bsc(IBindStatusCallback *bsc)
     ret->lpAuthenticateVtbl       = &BSCAuthenticateVtbl;
 
     ret->ref = 1;
+    set_callback(ret, bsc);
 
-    IBindStatusCallback_AddRef(bsc);
-    ret->callback = bsc;
-
-    IBindStatusCallback_QueryInterface(bsc, &IID_IServiceProvider, (void**)&ret->serv_prov);
-
-    return STATUSCLB(ret);
+    *ret_iface = STATUSCLB(ret);
+    return S_OK;
 }
 
 /***********************************************************************
@@ -511,25 +529,33 @@ HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pb
     hres = IBindCtx_GetObjectParam(pbc, BSCBHolder, &unk);
     if(SUCCEEDED(hres)) {
         hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&bsc);
+        IUnknown_Release(unk);
         if(SUCCEEDED(hres)) {
             hres = IBindStatusCallback_QueryInterface(bsc, &IID_IBindStatusCallbackHolder, (void**)&holder);
             if(SUCCEEDED(hres)) {
-                prev = holder->callback;
-                IBindStatusCallback_AddRef(prev);
+                if(ppbscPrevious) {
+                    IBindStatusCallback_AddRef(holder->callback);
+                    *ppbscPrevious = holder->callback;
+                }
+
+                set_callback(holder, pbsc);
+
                 IBindStatusCallback_Release(bsc);
                 IBindStatusCallback_Release(STATUSCLB(holder));
+                return S_OK;
             }else {
                 prev = bsc;
             }
         }
 
-        IUnknown_Release(unk);
         IBindCtx_RevokeObjectParam(pbc, BSCBHolder);
     }
 
-    bsc = create_bsc(pbsc);
-    hres = IBindCtx_RegisterObjectParam(pbc, BSCBHolder, (IUnknown*)bsc);
-    IBindStatusCallback_Release(bsc);
+    hres = wrap_callback(pbsc, &bsc);
+    if(SUCCEEDED(hres)) {
+        hres = IBindCtx_RegisterObjectParam(pbc, BSCBHolder, (IUnknown*)bsc);
+        IBindStatusCallback_Release(bsc);
+    }
     if(FAILED(hres)) {
         if(prev)
             IBindStatusCallback_Release(prev);

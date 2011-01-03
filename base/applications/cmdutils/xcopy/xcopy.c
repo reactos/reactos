@@ -49,6 +49,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(xcopy);
 
 /* Prototypes */
+static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
+                                  WCHAR *supplieddestination, DWORD *flags);
 static int XCOPY_ProcessSourceParm(WCHAR *suppliedsource, WCHAR *stem,
                                    WCHAR *spec, DWORD flags);
 static int XCOPY_ProcessDestParm(WCHAR *supplieddestination, WCHAR *stem,
@@ -108,17 +110,6 @@ int wmain (int argc, WCHAR *argvW[])
     const WCHAR PROMPTSTR1[]  = {'/', 'Y', 0};
     const WCHAR PROMPTSTR2[]  = {'/', 'y', 0};
     const WCHAR COPYCMD[]  = {'C', 'O', 'P', 'Y', 'C', 'M', 'D', 0};
-    const WCHAR EXCLUDE[]  = {'E', 'X', 'C', 'L', 'U', 'D', 'E', ':', 0};
-
-    /*
-     * Parse the command line
-     */
-
-    /* Confirm at least one parameter */
-    if (argc < 2) {
-        XCOPY_wprintf(XCOPY_LoadMessage(STRING_INVPARMS));
-        return RC_INITERROR;
-    }
 
     /* Preinitialize flags based on COPYCMD */
     if (GetEnvironmentVariableW(COPYCMD, copyCmd, MAXSTRING)) {
@@ -135,125 +126,16 @@ int wmain (int argc, WCHAR *argvW[])
        lose                                                                   */
     flags |= OPT_COPYHIDSYS;
 
-    /* Skip first arg, which is the program name */
-    argvW++;
-
-    while (argc > 1)
-    {
-        argc--;
-        WINE_TRACE("Processing Arg: '%s'\n", wine_dbgstr_w(*argvW));
-
-        /* First non-switch parameter is source, second is destination */
-        if (*argvW[0] != '/') {
-            if (suppliedsource[0] == 0x00) {
-                lstrcpyW(suppliedsource, *argvW);
-            } else if (supplieddestination[0] == 0x00) {
-                lstrcpyW(supplieddestination, *argvW);
-            } else {
-                XCOPY_wprintf(XCOPY_LoadMessage(STRING_INVPARMS));
-                return RC_INITERROR;
-            }
-        } else {
-            /* Process all the switch options
-                 Note: Windows docs say /P prompts when dest is created
-                       but tests show it is done for each src file
-                       regardless of the destination                   */
-            switch (toupper(argvW[0][1])) {
-            case 'I': flags |= OPT_ASSUMEDIR;     break;
-            case 'S': flags |= OPT_RECURSIVE;     break;
-            case 'Q': flags |= OPT_QUIET;         break;
-            case 'F': flags |= OPT_FULL;          break;
-            case 'L': flags |= OPT_SIMULATE;      break;
-            case 'W': flags |= OPT_PAUSE;         break;
-            case 'T': flags |= OPT_NOCOPY | OPT_RECURSIVE; break;
-            case 'Y': flags |= OPT_NOPROMPT;      break;
-            case 'N': flags |= OPT_SHORTNAME;     break;
-            case 'U': flags |= OPT_MUSTEXIST;     break;
-            case 'R': flags |= OPT_REPLACEREAD;   break;
-            case 'H': flags |= OPT_COPYHIDSYS;    break;
-            case 'C': flags |= OPT_IGNOREERRORS;  break;
-            case 'P': flags |= OPT_SRCPROMPT;     break;
-            case 'A': flags |= OPT_ARCHIVEONLY;   break;
-            case 'M': flags |= OPT_ARCHIVEONLY |
-                               OPT_REMOVEARCH;    break;
-
-            /* E can be /E or /EXCLUDE */
-            case 'E': if (CompareStringW(LOCALE_USER_DEFAULT,
-                                         NORM_IGNORECASE | SORT_STRINGSORT,
-                                         &argvW[0][1], 8,
-                                         EXCLUDE, -1) == 2) {
-                        if (XCOPY_ProcessExcludeList(&argvW[0][9])) {
-                          XCOPY_FailMessage(ERROR_INVALID_PARAMETER);
-                          return RC_INITERROR;
-                        } else flags |= OPT_EXCLUDELIST;
-                      } else flags |= OPT_EMPTYDIR | OPT_RECURSIVE;
-                      break;
-
-            /* D can be /D or /D: */
-            case 'D': if ((argvW[0][2])==':' && isdigit(argvW[0][3])) {
-                          SYSTEMTIME st;
-                          WCHAR     *pos = &argvW[0][3];
-                          BOOL       isError = FALSE;
-                          memset(&st, 0x00, sizeof(st));
-
-                          /* Parse the arg : Month */
-                          st.wMonth = _wtol(pos);
-                          while (*pos && isdigit(*pos)) pos++;
-                          if (*pos++ != '-') isError = TRUE;
-
-                          /* Parse the arg : Day */
-                          if (!isError) {
-                              st.wDay = _wtol(pos);
-                              while (*pos && isdigit(*pos)) pos++;
-                              if (*pos++ != '-') isError = TRUE;
-                          }
-
-                          /* Parse the arg : Day */
-                          if (!isError) {
-                              st.wYear = _wtol(pos);
-                              if (st.wYear < 100) st.wYear+=2000;
-                          }
-
-                          if (!isError && SystemTimeToFileTime(&st, &dateRange)) {
-                              SYSTEMTIME st;
-                              WCHAR datestring[32], timestring[32];
-
-                              flags |= OPT_DATERANGE;
-
-                              /* Debug info: */
-                              FileTimeToSystemTime (&dateRange, &st);
-                              GetDateFormatW(0, DATE_SHORTDATE, &st, NULL, datestring,
-                                             sizeof(datestring)/sizeof(WCHAR));
-                              GetTimeFormatW(0, TIME_NOSECONDS, &st,
-                                             NULL, timestring, sizeof(timestring)/sizeof(WCHAR));
-
-                              WINE_TRACE("Date being used is: %s %s\n",
-                                         wine_dbgstr_w(datestring), wine_dbgstr_w(timestring));
-                          } else {
-                              XCOPY_FailMessage(ERROR_INVALID_PARAMETER);
-                              return RC_INITERROR;
-                          }
-                      } else {
-                          flags |= OPT_DATENEWER;
-                      }
-                      break;
-
-            case '-': if (toupper(argvW[0][2])=='Y')
-                          flags &= ~OPT_NOPROMPT; break;
-            case '?': XCOPY_wprintf(XCOPY_LoadMessage(STRING_HELP));
-                      return RC_OK;
-            default:
-                WINE_TRACE("Unhandled parameter '%s'\n", wine_dbgstr_w(*argvW));
-                XCOPY_wprintf(XCOPY_LoadMessage(STRING_INVPARM), *argvW);
-                return RC_INITERROR;
-            }
-        }
-        argvW++;
+    /*
+     * Parse the command line
+     */
+    if ((rc = XCOPY_ParseCommandLine(suppliedsource, supplieddestination,
+                                     &flags)) != RC_OK) {
+        if (rc == RC_HELP)
+            return RC_OK;
+        else
+            return rc;
     }
-
-    /* Default the destination if not supplied */
-    if (supplieddestination[0] == 0x00)
-        lstrcpyW(supplieddestination, wchr_dot);
 
     /* Trace out the supplied information */
     WINE_TRACE("Supplied parameters:\n");
@@ -308,6 +190,211 @@ int wmain (int argc, WCHAR *argvW[])
     if (rc == RC_OK && filesCopied == 0) rc = RC_NOFILES;
     return rc;
 
+}
+
+/* =========================================================================
+   XCOPY_ParseCommandLine - Parses the command line
+   ========================================================================= */
+static BOOL is_whitespace(WCHAR c)
+{
+    return c == ' ' || c == '\t';
+}
+
+static WCHAR *skip_whitespace(WCHAR *p)
+{
+    for (; *p && is_whitespace(*p); p++);
+    return p;
+}
+
+/* Windows XCOPY uses a simplified command line parsing algorithm
+   that lacks the escaped-quote logic of build_argv(), because
+   literal double quotes are illegal in any of its arguments.
+   Example: 'XCOPY "c:\DIR A" "c:DIR B\"' is OK. */
+static int find_end_of_word(const WCHAR *word, WCHAR **end)
+{
+    BOOL in_quotes = 0;
+    const WCHAR *ptr = word;
+    for (;;) {
+        for (; *ptr != '\0' && *ptr != '"' &&
+                 (in_quotes || !is_whitespace(*ptr)); ptr++);
+        if (*ptr == '"') {
+            in_quotes = !in_quotes;
+            ptr++;
+        }
+        /* Odd number of double quotes is illegal for XCOPY */
+        if (in_quotes && *ptr == '\0')
+            return RC_INITERROR;
+        if (*ptr == '\0' || (!in_quotes && is_whitespace(*ptr)))
+            break;
+    }
+    *end = (WCHAR*)ptr;
+    return RC_OK;
+}
+
+/* Remove all double quotes from a word */
+static void strip_quotes(WCHAR *word, WCHAR **end)
+{
+    WCHAR *rp, *wp;
+    for (rp = word, wp = word; *rp != '\0'; rp++) {
+        if (*rp == '"')
+            continue;
+        if (wp < rp)
+            *wp = *rp;
+        wp++;
+    }
+    *wp = '\0';
+    *end = wp;
+}
+
+static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
+                                  WCHAR *supplieddestination, DWORD *pflags)
+{
+    const WCHAR EXCLUDE[]  = {'E', 'X', 'C', 'L', 'U', 'D', 'E', ':', 0};
+    DWORD flags = *pflags;
+    WCHAR *cmdline, *word, *end, *next;
+    int rc = RC_INITERROR;
+
+    cmdline = _wcsdup(GetCommandLineW());
+    if (cmdline == NULL)
+        return rc;
+
+    /* Skip first arg, which is the program name */
+    if ((rc = find_end_of_word(cmdline, &word)) != RC_OK)
+        goto out;
+    word = skip_whitespace(word);
+
+    while (*word)
+    {
+        WCHAR first;
+        if ((rc = find_end_of_word(word, &end)) != RC_OK)
+            goto out;
+
+        next = skip_whitespace(end);
+        first = word[0];
+        *end = '\0';
+        strip_quotes(word, &end);
+        WINE_TRACE("Processing Arg: '%s'\n", wine_dbgstr_w(word));
+
+        /* First non-switch parameter is source, second is destination */
+        if (first != '/') {
+            if (suppliedsource[0] == 0x00) {
+                lstrcpyW(suppliedsource, word);
+            } else if (supplieddestination[0] == 0x00) {
+                lstrcpyW(supplieddestination, word);
+            } else {
+                XCOPY_wprintf(XCOPY_LoadMessage(STRING_INVPARMS));
+                goto out;
+            }
+        } else {
+            /* Process all the switch options
+                 Note: Windows docs say /P prompts when dest is created
+                       but tests show it is done for each src file
+                       regardless of the destination                   */
+            switch (toupper(word[1])) {
+            case 'I': flags |= OPT_ASSUMEDIR;     break;
+            case 'S': flags |= OPT_RECURSIVE;     break;
+            case 'Q': flags |= OPT_QUIET;         break;
+            case 'F': flags |= OPT_FULL;          break;
+            case 'L': flags |= OPT_SIMULATE;      break;
+            case 'W': flags |= OPT_PAUSE;         break;
+            case 'T': flags |= OPT_NOCOPY | OPT_RECURSIVE; break;
+            case 'Y': flags |= OPT_NOPROMPT;      break;
+            case 'N': flags |= OPT_SHORTNAME;     break;
+            case 'U': flags |= OPT_MUSTEXIST;     break;
+            case 'R': flags |= OPT_REPLACEREAD;   break;
+            case 'H': flags |= OPT_COPYHIDSYS;    break;
+            case 'C': flags |= OPT_IGNOREERRORS;  break;
+            case 'P': flags |= OPT_SRCPROMPT;     break;
+            case 'A': flags |= OPT_ARCHIVEONLY;   break;
+            case 'M': flags |= OPT_ARCHIVEONLY |
+                               OPT_REMOVEARCH;    break;
+
+            /* E can be /E or /EXCLUDE */
+            case 'E': if (CompareStringW(LOCALE_USER_DEFAULT,
+                                         NORM_IGNORECASE | SORT_STRINGSORT,
+                                         &word[1], 8,
+                                         EXCLUDE, -1) == 2) {
+                        if (XCOPY_ProcessExcludeList(&word[9])) {
+                          XCOPY_FailMessage(ERROR_INVALID_PARAMETER);
+                          goto out;
+                        } else flags |= OPT_EXCLUDELIST;
+                      } else flags |= OPT_EMPTYDIR | OPT_RECURSIVE;
+                      break;
+
+            /* D can be /D or /D: */
+            case 'D': if (word[2]==':' && isdigit(word[3])) {
+                          SYSTEMTIME st;
+                          WCHAR     *pos = &word[3];
+                          BOOL       isError = FALSE;
+                          memset(&st, 0x00, sizeof(st));
+
+                          /* Parse the arg : Month */
+                          st.wMonth = _wtol(pos);
+                          while (*pos && isdigit(*pos)) pos++;
+                          if (*pos++ != '-') isError = TRUE;
+
+                          /* Parse the arg : Day */
+                          if (!isError) {
+                              st.wDay = _wtol(pos);
+                              while (*pos && isdigit(*pos)) pos++;
+                              if (*pos++ != '-') isError = TRUE;
+                          }
+
+                          /* Parse the arg : Day */
+                          if (!isError) {
+                              st.wYear = _wtol(pos);
+                              while (*pos && isdigit(*pos)) pos++;
+                              if (st.wYear < 100) st.wYear+=2000;
+                          }
+
+                          if (!isError && SystemTimeToFileTime(&st, &dateRange)) {
+                              SYSTEMTIME st;
+                              WCHAR datestring[32], timestring[32];
+
+                              flags |= OPT_DATERANGE;
+
+                              /* Debug info: */
+                              FileTimeToSystemTime (&dateRange, &st);
+                              GetDateFormatW(0, DATE_SHORTDATE, &st, NULL, datestring,
+                                             sizeof(datestring)/sizeof(WCHAR));
+                              GetTimeFormatW(0, TIME_NOSECONDS, &st,
+                                             NULL, timestring, sizeof(timestring)/sizeof(WCHAR));
+
+                              WINE_TRACE("Date being used is: %s %s\n",
+                                         wine_dbgstr_w(datestring), wine_dbgstr_w(timestring));
+                          } else {
+                              XCOPY_FailMessage(ERROR_INVALID_PARAMETER);
+                              goto out;
+                          }
+                      } else {
+                          flags |= OPT_DATENEWER;
+                      }
+                      break;
+
+            case '-': if (toupper(word[2])=='Y')
+                          flags &= ~OPT_NOPROMPT; break;
+            case '?': XCOPY_wprintf(XCOPY_LoadMessage(STRING_HELP));
+                      rc = RC_HELP;
+                      goto out;
+            default:
+                WINE_TRACE("Unhandled parameter '%s'\n", wine_dbgstr_w(word));
+                XCOPY_wprintf(XCOPY_LoadMessage(STRING_INVPARM), word);
+                goto out;
+            }
+        }
+        word = next;
+    }
+
+    /* Default the destination if not supplied */
+    if (supplieddestination[0] == 0x00)
+        lstrcpyW(supplieddestination, wchr_dot);
+
+    *pflags = flags;
+    rc = RC_OK;
+
+ out:
+    free(cmdline);
+    return rc;
 }
 
 
@@ -432,8 +519,10 @@ static int XCOPY_ProcessDestParm(WCHAR *supplieddestination, WCHAR *stem, WCHAR 
     if (attribs == INVALID_FILE_ATTRIBUTES) {
 
         /* If /I supplied and wildcard copy, assume directory */
-        if (flags & OPT_ASSUMEDIR &&
-            (wcschr(srcspec, '?') || wcschr(srcspec, '*'))) {
+        /* Also if destination ends with backslash */
+        if ((flags & OPT_ASSUMEDIR &&
+            (wcschr(srcspec, '?') || wcschr(srcspec, '*'))) ||
+            (supplieddestination[lstrlenW(supplieddestination)-1] == '\\')) {
 
             isDir = TRUE;
 

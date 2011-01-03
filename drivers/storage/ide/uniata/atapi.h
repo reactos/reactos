@@ -952,7 +952,7 @@ AtapiSoftReset(
     AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_DISABLE_INTERRUPTS | IDE_DC_RESET_CONTROLLER );\
     ScsiPortStallExecution(50 * 1000);\
     AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_REENABLE_CONTROLLER);\
-     5 seconds for reset  \
+    // 5 seconds for reset \
     for (i = 0; i < 1000 * (1+11); i++) {\
         statusByte = AtapiReadPort1(&BaseIoAddress->AltStatus);\
         if (statusByte != IDE_STATUS_IDLE && statusByte != IDE_STATUS_SUCCESS) {\

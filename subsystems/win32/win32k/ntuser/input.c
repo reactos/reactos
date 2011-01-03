@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * FILE:             subsystems/win32/win32k/ntuser/input.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -81,7 +81,7 @@ NtUserGetLastInputInfo(PLASTINPUTINFO plii)
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             ret = FALSE;
             _SEH2_LEAVE;
         }
@@ -206,13 +206,6 @@ MouseThreadMain(PVOID StartContext)
    NTSTATUS Status;
    MOUSE_ATTRIBUTES MouseAttr;
 
-   Status = Win32kInitWin32Thread(PsGetCurrentThread());
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
-      return; //(Status);
-   }
-
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
 
@@ -246,7 +239,7 @@ MouseThreadMain(PVOID StartContext)
 
    ptiMouse = PsGetCurrentThreadWin32Thread();
    ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT1("\nMouse Thread 0x%x \n", ptiMouse);
+   DPRINT("Mouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -546,7 +539,7 @@ KeyboardThreadMain(PVOID StartContext)
 
    ptiKeyboard = PsGetCurrentThreadWin32Thread();
    ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT1("\nKeyboard Thread 0x%x \n", ptiKeyboard);
+   DPRINT("Keyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -909,7 +902,7 @@ RawInputThreadMain(PVOID StartContext)
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
   ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
-  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+  DPRINT("Raw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -1034,7 +1027,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1044,7 +1037,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    {
       if(OldBlock != W32Thread)
       {
-         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         EngSetLastError(ERROR_ACCESS_DENIED);
          return FALSE;
       }
       W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
@@ -1349,7 +1342,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
    /* All messages have to contain the cursor point. */
    Msg.pt = gpsi->ptCursor;
-   
+
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
    KbdHookData.flags = flags >> 8;
@@ -1399,8 +1392,9 @@ IntKeyboardInput(KEYBDINPUT *ki)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
-
-         MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
+      // Post to hardware queue, based on the first part of wine "some GetMessage tests"
+      // in test_PeekMessage()
+         MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
    {
@@ -1487,7 +1481,7 @@ NtUserSendInput(
 
    if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -1498,7 +1492,7 @@ NtUserSendInput(
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( 0);
    }
 

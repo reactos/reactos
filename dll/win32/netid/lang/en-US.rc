@@ -71,6 +71,7 @@ BEGIN
     1021 "Note: Only Administrators can change the identification of this computer."
     1022 "Note: The identification of the computer cannot be changed because:"
     1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+//Windows allows using these characters, although it displays a warning message. Forbidding the use of these characters means incompatibility with Windows.
     3210 "&Details >>"
     3220 "<< &Details"
     4000 "Information"

@@ -6,7 +6,7 @@
 @ stub MprAdminDeregisterConnectionNotification
 @ stub MprAdminDeviceEnum
 @ stub MprAdminEstablishDomainRasServer
-@ stub MprAdminGetErrorString
+@ stdcall MprAdminGetErrorString(long ptr)
 @ stub MprAdminGetPDCServer
 @ stub MprAdminInterfaceConnect
 @ stub MprAdminInterfaceCreate

@@ -44,8 +44,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         NpfsQueryVolumeInformation;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
-    //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-    //     NpfsDirectoryControl;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+        NpfsDirectoryControl;
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
         NpfsFileSystemControl;
     //   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
@@ -98,6 +98,56 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     Vcb->RootFcb = Fcb;
 
     return STATUS_SUCCESS;
+}
+
+
+FCB_TYPE
+NpfsGetFcb(PFILE_OBJECT FileObject,
+           PNPFS_FCB *Fcb)
+{
+    PNPFS_FCB LocalFcb = NULL;
+    FCB_TYPE FcbType = FCB_INVALID;
+
+    _SEH2_TRY
+    {
+        LocalFcb = (PNPFS_FCB)FileObject->FsContext;
+        FcbType = LocalFcb->Type;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        LocalFcb = NULL;
+        FcbType = FCB_INVALID;
+    }
+    _SEH2_END;
+
+    *Fcb = LocalFcb;
+
+    return FcbType;
+}
+
+
+CCB_TYPE
+NpfsGetCcb(PFILE_OBJECT FileObject,
+           PNPFS_CCB *Ccb)
+{
+    PNPFS_CCB LocalCcb = NULL;
+    CCB_TYPE CcbType = CCB_INVALID;
+
+    _SEH2_TRY
+    {
+        LocalCcb = (PNPFS_CCB)FileObject->FsContext2;
+        CcbType = LocalCcb->Type;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        LocalCcb = NULL;
+        CcbType = CCB_INVALID;
+    }
+    _SEH2_END;
+
+    *Ccb = LocalCcb;
+
+    return CcbType;
 }
 
 /* EOF */

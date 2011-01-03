@@ -782,7 +782,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     if (DCToDelete == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -846,7 +846,7 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
 
     if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 

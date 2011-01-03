@@ -10,8 +10,6 @@
 #define PCR_ENTRY            0
 #define PDR_ENTRY            2
 
-#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_ARM
-
 //
 // BKPT is 4 bytes long
 //
@@ -104,7 +102,7 @@ KiSystemService(IN PKTHREAD Thread,
 
 VOID
 KiApcInterrupt(
-    VOID                 
+    VOID
 );
 
 #include "mm.h"

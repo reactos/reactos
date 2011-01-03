@@ -3,9 +3,11 @@
 
 #include <ntifs.h>
 #include <ndk/iotypes.h>
+#include <pseh/pseh2.h>
 
 typedef enum _FCB_TYPE
 {
+    FCB_INVALID,
     FCB_DEVICE,
     FCB_DIRECTORY,
     FCB_PIPE
@@ -13,6 +15,7 @@ typedef enum _FCB_TYPE
 
 typedef enum _CCB_TYPE
 {
+    CCB_INVALID,
     CCB_DEVICE,
     CCB_DIRECTORY,
     CCB_PIPE
@@ -55,6 +58,14 @@ typedef struct _NPFS_FCB
     LARGE_INTEGER TimeOut;
 } NPFS_FCB, *PNPFS_FCB;
 
+
+typedef struct _NPFS_CCB_DIRECTORY_DATA
+{
+    UNICODE_STRING SearchPattern;
+    ULONG FileIndex;
+} NPFS_CCB_DIRECTORY_DATA, *PNPFS_CCB_DIRECTORY_DATA;
+
+
 typedef struct _NPFS_CCB
 {
     LIST_ENTRY CcbListEntry;
@@ -79,6 +90,12 @@ typedef struct _NPFS_CCB
     ULONG MaxDataLength;
 
     FAST_MUTEX DataListLock;    /* Data queue lock */
+
+    union
+    {
+        NPFS_CCB_DIRECTORY_DATA Directory;
+    } u;
+
 } NPFS_CCB, *PNPFS_CCB;
 
 typedef struct _NPFS_CONTEXT
@@ -130,6 +147,9 @@ NTSTATUS NTAPI NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 DRIVER_DISPATCH NpfsClose;
 NTSTATUS NTAPI NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+DRIVER_DISPATCH NpfsDirectoryControl;
+NTSTATUS NTAPI NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
 DRIVER_DISPATCH NpfsRead;
 NTSTATUS NTAPI NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
@@ -159,5 +179,12 @@ PNPFS_FCB
 NpfsFindPipe(PNPFS_VCB Vcb,
              PUNICODE_STRING PipeName);
 
+FCB_TYPE
+NpfsGetFcb(PFILE_OBJECT FileObject,
+           PNPFS_FCB *Fcb);
+
+CCB_TYPE
+NpfsGetCcb(PFILE_OBJECT FileObject,
+           PNPFS_CCB *Ccb);
 
 #endif /* __DRIVERS_FS_NP_NPFS_H */

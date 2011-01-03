@@ -53,7 +53,7 @@ IntGdiDeleteColorSpace(
   if ( hColorSpace != hStockColorSpace )
   {
      Ret = COLORSPACEOBJ_FreeCSByHandle(hColorSpace);
-     if ( !Ret ) SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     if ( !Ret ) EngSetLastError(ERROR_INVALID_PARAMETER);
   }
   return Ret;
 }
@@ -142,7 +142,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -150,7 +150,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
-      SetLastWin32Error(STATUS_NO_MEMORY);
+      EngSetLastError(STATUS_NO_MEMORY);
       return FALSE;
   }
 
@@ -196,7 +196,7 @@ NtGdiSetColorSpace(IN HDC hdc,
   pDC = DC_LockDc(hdc);
   if (!pDC)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
   pdcattr = pDC->pdcattr;
@@ -210,7 +210,7 @@ NtGdiSetColorSpace(IN HDC hdc,
   pCS = COLORSPACEOBJ_LockCS(hColorSpace);
   if (!pCS)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
   
@@ -373,7 +373,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -381,7 +381,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
-      SetLastWin32Error(STATUS_NO_MEMORY);
+      EngSetLastError(STATUS_NO_MEMORY);
       return FALSE;
   }
   _SEH2_TRY

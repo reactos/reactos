@@ -39,4 +39,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
+#include "Sr.rc"
 #include "Uk.rc"
+#include "Zh.rc"

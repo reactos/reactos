@@ -72,7 +72,7 @@ HalpInitializeClock(VOID)
     /* Disable interrupts */
     Flags = __readeflags();
     _disable();
-    
+
     /* Program the PIT for binary mode */
     TimerControl.BcdMode = FALSE;
 
@@ -85,13 +85,13 @@ HalpInitializeClock(VOID)
      */
     TimerControl.OperatingMode = PitOperatingMode2;
     TimerControl.Channel = PitChannel0;
-    
+
     /* Set the access mode that we'll use to program the reload value */
     TimerControl.AccessMode = PitAccessModeLowHigh;
-    
+
     /* Now write the programming bits */
     __outbyte(TIMER_CONTROL_PORT, TimerControl.Bits);
-    
+
     /* Next we write the reload value for channel 0 */
     __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver & 0xFF);
     __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver >> 8);
@@ -110,29 +110,29 @@ FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL Irql;
-    
+
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
-    
+
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
     {
         /* Update the performance counter */
         HalpPerfCounter.QuadPart += HalpCurrentRollOver;
         HalpPerfCounterCutoff = KiEnableTimerWatchdog;
-        
+
         /* Check if someone changed the time rate */
         if (HalpClockSetMSRate)
         {
             /* Not yet supported */
             UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE);
         }
-        
+
         /* Update the system time -- the kernel will exit this trap  */
         KeUpdateSystemTime(TrapFrame, HalpCurrentTimeIncrement, Irql);
     }
-    
+
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
@@ -142,18 +142,18 @@ FASTCALL
 HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL Irql;
-    
+
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
-    
+
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
     {
         /* Profiling isn't yet enabled */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
-    
+
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }

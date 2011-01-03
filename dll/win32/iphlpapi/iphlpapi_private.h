@@ -147,7 +147,7 @@ BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe );
 typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
 				     PWCHAR NameServer,
 				     PVOID Data );
-void EnumNameServers( HANDLE RegHandle, PWCHAR Interface, PVOID Data, EnumNameServersFunc cb );
+LSTATUS EnumNameServers( HKEY RegHandle, LPWSTR Interface, PVOID Data, EnumNameServersFunc cb );
 NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
                              char *name,
                              DWORD index,
