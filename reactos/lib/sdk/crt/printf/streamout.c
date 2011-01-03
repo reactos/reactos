@@ -108,7 +108,17 @@ format_float(
         case _T('G'):
             digits = digits_u;
         case _T('g'):
+            if (precision > 0) precision--;
             if (exponent < -4 || exponent >= precision) goto case_e;
+
+            /* Skip trailing 0s */
+            val64 = (__int64)(fpval * pow(10., precision) + 0.5);
+            while (precision && val64 % 10 == 0)
+            {
+                precision--;
+                val64 /= 10;
+            }
+
             break;
 
         case _T('E'):
@@ -128,7 +138,7 @@ format_float(
             }
 
             /* Sign for the exponent */
-            *--(*string) = exponent > 0 ? _T('+') : _T('-');
+            *--(*string) = exponent >= 0 ? _T('+') : _T('-');
 
             /* Add 'e' or 'E' separator */
             *--(*string) = digits[0xe];
@@ -173,9 +183,8 @@ format_float(
     }
     else
     {
-        fpval *= pow(10., precision);
-        val64 = (__int64)(fpval + 0.5);
-
+        /* Digits after the decimal point */
+        val64 = (__int64)(fpval * pow(10., precision) + 0.5);
         while (num_digits-- > 0)
         {
             *--(*string) = digits[val64 % 10];
@@ -183,7 +192,8 @@ format_float(
         }
     }
 
-    *--(*string) = _T('.');
+    if (precision > 0 || flags & FLAG_SPECIAL)
+        *--(*string) = _T('.');
 
     /* Digits before the decimal point */
     do
@@ -372,6 +382,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                  if (chr == _T('h')) flags |= FLAG_SHORT;
             else if (chr == _T('w')) flags |= FLAG_WIDECHAR;
             else if (chr == _T('L')) flags |= 0; // FIXME: long double
+            else if (chr == _T('F')) flags |= 0; // FIXME: what is that?
             else if (chr == _T('l'))
             {
                 flags |= FLAG_LONG;
@@ -483,6 +494,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 else
                     len = strlen((char*)string);
                 if (precision >= 0 && len > precision) len = precision;
+                precision = 0;
                 break;
 
             case _T('G'):
@@ -521,9 +533,12 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
             case _T('o'):
                 base = 8;
-                if (flags & FLAG_SPECIAL) prefix = _T("0");
+                if (flags & FLAG_SPECIAL)
+                {
+                    prefix = _T("0");
+                    if (precision > 0) precision--;
+                }
                 goto case_unsigned;
-                /* Fall through */
 
             case _T('p'):
                 precision = 2 * sizeof(void*);
