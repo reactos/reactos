@@ -72,6 +72,7 @@ enum
 #endif
 
 #define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
+#define round(x) floor((x) + 0.5)
 
 void
 #ifdef _LIBCNT
