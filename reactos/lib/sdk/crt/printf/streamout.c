@@ -199,10 +199,14 @@ static
 int
 streamout_char(FILE *stream, int chr)
 {
-    /* Flush the buffer if neccessary */
+    /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))
     {
-        return _flsbuf(chr, stream) != EOF;
+        /* Strings are done now */
+        if (stream->_flag & _IOSTRG) return _TEOF;
+
+        /* Flush buffer for files */
+        return _flsbuf(chr, stream) != _TEOF;
     }
 
     *(TCHAR*)stream->_ptr = chr;
@@ -587,7 +591,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if (prefix)
         {
             written = streamout_string(stream, prefix, prefixlen);
-            if (written == -1) return -3;
+            if (written == -1) return -1;
             written_all += written;
         }
 
@@ -604,7 +608,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             written = streamout_wstring(stream, (wchar_t*)string, len);
         else
             written = streamout_astring(stream, (char*)string, len);
-        if (written == -1) return -5;
+        if (written == -1) return -1;
         written_all += written;
 
 #if 0 && SUPPORT_FLOAT
@@ -629,7 +633,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
     }
 
-    if (written == -1) return -8;
+    if (written == -1) return -1;
 
     return written_all;
 }
