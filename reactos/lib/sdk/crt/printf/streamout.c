@@ -17,7 +17,7 @@
 #define streamout wstreamout
 #define format_float format_floatw
 #define _flsbuf _flswbuf
-int __cdecl _flwsbuf(int ch, FILE *stream);
+int __cdecl _flswbuf(int ch, FILE *stream);
 #endif
 
 #define MB_CUR_MAX 10
