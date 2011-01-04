@@ -3705,7 +3705,7 @@ NtGdiGetRandomRgn(
     }
     if (iCode == SYSRGN)
     {
-        IntGdiGetDCOrg(pDC, &org);
+        org = pDC->ptlDCOrig;
         NtGdiOffsetRgn(hDest, org.x, org.y );
     }
 

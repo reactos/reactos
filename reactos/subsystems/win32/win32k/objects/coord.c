@@ -1152,49 +1152,6 @@ IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
     return &pdc->dclevel.ptlBrushOrigin;
 }
 
-VOID
-APIENTRY
-GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
-{
-    PDC pdc;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc) return;
-
-    pdc->ptlDCOrig.x = Left;
-    pdc->ptlDCOrig.y = Top;
-
-    IntCalcFillOrigin(pdc);
-
-    if (prc) pdc->erclWindow = *prc;
-
-    DC_UnlockDc(pdc);
-}
-
-// FIXME: remove me
-BOOL FASTCALL
-IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
-{
-    *ppt = pDc->ptlDCOrig;
-    return TRUE;
-}
-
-// FIXME: remove me
-BOOL APIENTRY
-GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
-{
-    PDC pdc;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc) return FALSE;
-
-    *prc = pdc->erclWindow;
-    *ppt = pdc->ptlDCOrig;
-
-    DC_UnlockDc(pdc);
-    return TRUE;
-}
-
 static
 VOID FASTCALL
 DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
