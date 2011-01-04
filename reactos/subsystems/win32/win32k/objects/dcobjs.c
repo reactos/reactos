@@ -457,6 +457,79 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
     return SelObject;
 }
 
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
+
+   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+
+   The intersection of the clip with the meta region is not Rao it's API!
+   Go back and read 7.2 Clipping pages 418-19:
+   Rao = API & Vis:
+   1) The Rao region is the intersection of the API region and the system region,
+      named after the Microsoft engineer who initially proposed it.
+   2) The Rao region can be calculated from the API region and the system region.
+
+   API:
+      API region is the intersection of the meta region and the clipping region,
+      clearly named after the fact that it is controlled by GDI API calls.
+*/
+INT
+APIENTRY
+NtGdiGetRandomRgn(
+    HDC hdc,
+    HRGN hrgnDest,
+    INT iCode)
+{
+    INT ret = 0;
+    PDC pdc;
+    HRGN hrgnSrc = NULL;
+    POINTL ptlOrg;
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return -1;
+    }
+
+    switch (iCode)
+    {
+        case CLIPRGN:
+            hrgnSrc = pdc->rosdc.hClipRgn;
+//            if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            break;
+        case METARGN:
+            if (pdc->dclevel.prgnMeta)
+                hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case APIRGN:
+            if (pdc->prgnAPI) hrgnSrc = pdc->prgnAPI->BaseObject.hHmgr;
+//            else if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            else if (pdc->rosdc.hClipRgn) hrgnSrc = pdc->rosdc.hClipRgn;
+            else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case SYSRGN:
+            if (pdc->prgnVis) hrgnSrc = pdc->prgnVis->BaseObject.hHmgr;
+            break;
+        default:
+            hrgnSrc = NULL;
+    }
+
+    if (hrgnSrc)
+    {
+        ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+    }
+
+    if (iCode == SYSRGN)
+    {
+        ptlOrg = pdc->ptlDCOrig;
+        NtGdiOffsetRgn(hrgnDest, ptlOrg.x, ptlOrg.y );
+    }
+
+    DC_UnlockDc(pdc);
+
+    return ret;
+}
+
 ULONG
 APIENTRY
 NtGdiEnumObjects(
