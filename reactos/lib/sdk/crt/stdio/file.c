@@ -88,7 +88,7 @@ int *__p___mb_cur_max(void);
 typedef struct {
     HANDLE              handle;
     unsigned char       wxflag;
-    DWORD               unkn[7]; /* critical section and init flag */       
+    DWORD               unkn[7]; /* critical section and init flag */
 } ioinfo;
 
 ioinfo fdesc[MAX_FILES];
@@ -292,12 +292,12 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
     wxflag_ptr++; handle_ptr++;
-  } 
+  }
   return TRUE;
 }
 
-/* INTERNAL: Set up all file descriptors, 
- * as well as default streams (stdin, stderr and stdout) 
+/* INTERNAL: Set up all file descriptors,
+ * as well as default streams (stdin, stderr and stdout)
  */
 void msvcrt_init_io(void)
 {
@@ -342,7 +342,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
     DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_INPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[0].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[0].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[0].handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -355,7 +355,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
       DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_OUTPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[1].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[1].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[1].handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -368,7 +368,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
       DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_ERROR_HANDLE),
-                    GetCurrentProcess(), &fdesc[2].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[2].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[2].handle = GetStdHandle(STD_ERROR_HANDLE);
@@ -409,7 +409,7 @@ static int flush_buffer(FILE* file)
 }
 
 /* INTERNAL: Allocate stdio file buffer */
-static void alloc_buffer(FILE* file)
+void alloc_buffer(FILE* file)
 {
 	file->_base = calloc(BUFSIZ,1);
 	if(file->_base) {
@@ -722,7 +722,7 @@ int CDECL _dup2(int od, int nd)
 int CDECL _dup(int od)
 {
   int fd, ret;
- 
+
   LOCK_FILES();
   fd = fdstart;
   if (_dup2(od, fd) == 0)
@@ -1393,7 +1393,7 @@ int CDECL _sopen( const char *path, int oflags, int shflags, ... )
     else
       creation = OPEN_EXISTING;
   }
-  
+
   switch( shflags )
   {
     case _SH_DENYRW:
@@ -2030,12 +2030,12 @@ wint_t CDECL fgetwc(FILE* file)
       wcp = (char *)&wc;
       for(i=0; i<sizeof(wc); i++)
       {
-        if (file->_cnt>0) 
+        if (file->_cnt>0)
         {
           file->_cnt--;
           chp = file->_ptr++;
           wcp[i] = *chp;
-        } 
+        }
         else
         {
           j = _filbuf(file);
@@ -2050,7 +2050,7 @@ wint_t CDECL fgetwc(FILE* file)
       }
       return wc;
     }
-    
+
   c = fgetc(file);
   if ((*__p___mb_cur_max() > 1) && isleadbyte(c))
     {
@@ -2291,37 +2291,6 @@ int CDECL fputc(int c, FILE* file)
 }
 
 /*********************************************************************
- *		_flsbuf (MSVCRT.@)
- */
-int CDECL _flsbuf(int c, FILE* file)
-{
-  /* Flush output buffer */
-  if(file->_bufsiz == 0 && !(file->_flag & _IONBF)) {
-	alloc_buffer(file);
-  }
-  if(!(file->_flag & _IOWRT)) {
-	if(file->_flag & _IORW) {
-		file->_flag |= _IOWRT;
-	} else {
-		return EOF;
-	}
-  }
-  if(file->_bufsiz) {
-        int res=flush_buffer(file);
-    return res?res : fputc(c, file);
-  } else {
-    unsigned char cc=c;
-        int len;
-        /* set _cnt to 0 for unbuffered FILEs */
-        file->_cnt = 0;
-        len = _write(file->_file, &cc, 1);
-        if (len == 1) return c & 0xff;
-        file->_flag |= _IOERR;
-        return EOF;
-  }
-}
-
-/*********************************************************************
  *		_fputchar (MSVCRT.@)
  */
 int CDECL _fputchar(int c)
@@ -2487,7 +2456,7 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
   /* Discard buffered input */
   file->_cnt = 0;
   file->_ptr = file->_base;
-  
+
   /* Reset direction of i/o */
   if(file->_flag & _IORW) {
         file->_flag &= ~(_IOREAD|_IOWRT);
@@ -2560,7 +2529,7 @@ int CDECL fputs(const char *s, FILE* file)
     if (!(fdesc[file->_file].wxflag & WX_TEXT))
       return fwrite(s,sizeof(*s),len,file) == len ? 0 : EOF;
     for (i=0; i<len; i++)
-      if (fputc(s[i], file) == EOF) 
+      if (fputc(s[i], file) == EOF)
 	return EOF;
     return 0;
 }
@@ -2578,7 +2547,7 @@ int CDECL fputws(const wchar_t *s, FILE* file)
         if ((s[i] == '\n') && (fputc('\r', file) == EOF))
 	  return WEOF;
 	if (fputwc(s[i], file) == WEOF)
-	  return WEOF; 
+	  return WEOF;
       }
     return 0;
 }

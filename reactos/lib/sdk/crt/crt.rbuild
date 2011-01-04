@@ -354,6 +354,8 @@
 		<file>xcptinfo.c</file>
 	</directory>
 	<directory name="stdio">
+		<file>_flsbuf.c</file>
+		<file>_flswbuf.c</file>
 		<file>access.c</file>
 		<file>file.c</file>
 		<file>find.c</file>

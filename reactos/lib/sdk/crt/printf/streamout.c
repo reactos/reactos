@@ -16,6 +16,8 @@
 #ifdef _UNICODE
 #define streamout wstreamout
 #define format_float format_floatw
+#define _flsbuf _flswbuf
+int __cdecl _flwsbuf(int ch, FILE *stream);
 #endif
 
 #define MB_CUR_MAX 10
@@ -68,7 +70,8 @@ enum
     va_arg(argptr, double)
 
 #ifdef _LIBCNT_
-# define _flsbuf(chr, stream) 0
+# undef _flsbuf
+# define _flsbuf(chr, stream) _TEOF
 #endif
 
 #define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
