@@ -1057,7 +1057,7 @@ NtGdiSetVirtualResolution(
         cxVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, HORZSIZE);
         cyVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, VERTSIZE);
     }
-    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 || 
+    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 ||
              cxVirtualDeviceMm == 0 || cyVirtualDeviceMm == 0)
     {
         return FALSE;
@@ -1321,29 +1321,5 @@ NtGdiGetDCPoint(
     DC_UnlockDc(pdc);
     return Ret;
 }
-
-
-DWORD
-APIENTRY
-NtGdiGetBoundsRect(
-    IN HDC hdc,
-    OUT LPRECT prc,
-    IN DWORD f)
-{
-    DPRINT1("stub\n");
-    return  DCB_RESET;   /* bounding rectangle always empty */
-}
-
-DWORD
-APIENTRY
-NtGdiSetBoundsRect(
-    IN HDC hdc,
-    IN LPRECT prc,
-    IN DWORD f)
-{
-    DPRINT1("stub\n");
-    return  DCB_DISABLE;   /* bounding rectangle always empty */
-}
-
 
 /* EOF */

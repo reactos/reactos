@@ -464,3 +464,92 @@ NtGdiGetAndSetDCDword(
     DC_UnlockDc(pdc);
     return Ret;
 }
+
+DWORD
+APIENTRY
+NtGdiGetBoundsRect(
+    IN HDC hdc,
+    OUT LPRECT prc,
+    IN DWORD flags)
+{
+    DWORD ret;
+    PDC pdc;
+
+    /* Lock the DC */
+    if (!(pdc = DC_LockDc(hdc))) return 0;
+
+    /* Get the return value */
+    ret = pdc->fs & DC_ACCUM_APP ? DCB_ENABLE : DCB_DISABLE;
+    ret |= RECTL_bIsEmptyRect(&pdc->erclBoundsApp) ? DCB_RESET : DCB_SET;
+
+    /* Copy the rect to the caller */
+    _SEH2_TRY
+    {
+        ProbeForWrite(prc, sizeof(RECT), 1);
+        *prc = pdc->erclBoundsApp;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = 0;
+    }
+    _SEH2_END;
+
+    if (flags & DCB_RESET)
+    {
+        RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
+    }
+
+    DC_UnlockDc(pdc);
+    return ret;
+}
+
+
+DWORD
+APIENTRY
+NtGdiSetBoundsRect(
+    IN HDC hdc,
+    IN LPRECT prc,
+    IN DWORD flags)
+{
+    DWORD ret;
+    PDC pdc;
+    RECTL rcl;
+
+    /* Verify arguments */
+    if ((flags & DCB_ENABLE) && (flags & DCB_DISABLE)) return 0;
+
+    /* Lock the DC */
+    if (!(pdc = DC_LockDc(hdc))) return 0;
+
+    /* Get the return value */
+    ret = pdc->fs & DC_ACCUM_APP ? DCB_ENABLE : DCB_DISABLE;
+    ret |= RECTL_bIsEmptyRect(&pdc->erclBoundsApp) ? DCB_RESET : DCB_SET;
+
+    if (flags & DCB_RESET)
+    {
+        RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
+    }
+
+    if (flags & DCB_ACCUMULATE)
+    {
+        /* Capture the rect */
+        _SEH2_TRY
+        {
+            ProbeForRead(prc, sizeof(RECT), 1);
+            rcl = *prc;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return 0;)
+        }
+        _SEH2_END;
+
+        RECTL_vMakeWellOrdered(&rcl);
+        RECTL_bUnionRect(&pdc->erclBoundsApp, &pdc->erclBoundsApp, &rcl);
+    }
+
+    if (flags & DCB_ENABLE) pdc->fs |= DC_ACCUM_APP;
+    if (flags & DCB_DISABLE) pdc->fs &= ~DC_ACCUM_APP;
+    DC_UnlockDc( pdc );
+    return ret;
+}
