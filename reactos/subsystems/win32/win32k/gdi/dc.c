@@ -49,8 +49,8 @@ DC_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
-BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR device,
-                            LPCWSTR output, const DEVMODEW* initData )
+BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
+                            LPCWSTR output, const DEVMODEW* initData, ULONG dcType )
 {
     HGDIOBJ hNewDC;
     PDC pNewDC;
@@ -90,7 +90,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     pNewDC->dclevel.hpal = hStockPalette;
     pNewDC->dclevel.ppal = PALETTE_ShareLockPalette(pNewDC->dclevel.hpal);
 
-    if (dc->dwType == OBJ_MEMDC)
+    if (dcType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
         pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hStockBmp);

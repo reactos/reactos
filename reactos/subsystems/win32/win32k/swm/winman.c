@@ -56,15 +56,12 @@ VOID
 NTAPI
 SwmCreateScreenDc()
 {
-    ROS_DCINFO RosDc;
     PDC pDC;
     RECTL rcBounds;
 
     /* Create the display DC */
-    RtlZeroMemory(&RosDc, sizeof(ROS_DCINFO));
-    RosDc.dwType = OBJ_DC;
     SwmDc = (HDC)0;
-    RosGdiCreateDC(&RosDc, &SwmDc, NULL, NULL, NULL, NULL);
+    RosGdiCreateDC(&SwmDc, NULL, NULL, NULL, NULL, OBJ_DC);
 
     /* Set clipping to full screen */
     pDC = DC_LockDc(SwmDc);
