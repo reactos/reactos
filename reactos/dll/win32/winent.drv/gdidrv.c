@@ -18,171 +18,6 @@ HANDLE hStockBitmap;
 
 /* FUNCTIONS **************************************************************/
 
-BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop );
-
-/* get the rectangle in device coordinates, with optional mirroring */
-static RECT get_device_rect( HDC hdc, int left, int top, int right, int bottom )
-{
-    RECT rect;
-
-    rect.left   = left;
-    rect.top    = top;
-    rect.right  = right;
-    rect.bottom = bottom;
-    if (GetLayout( hdc ) & LAYOUT_RTL)
-    {
-        /* shift the rectangle so that the right border is included after mirroring */
-        /* it would be more correct to do this after LPtoDP but that's not what Windows does */
-        rect.left--;
-        rect.right--;
-    }
-    LPtoDP( hdc, (POINT *)&rect, 2 );
-    if (rect.left > rect.right)
-    {
-        int tmp = rect.left;
-        rect.left = rect.right;
-        rect.right = tmp;
-    }
-    if (rect.top > rect.bottom)
-    {
-        int tmp = rect.top;
-        rect.top = rect.bottom;
-        rect.bottom = tmp;
-    }
-    return rect;
-}
-
-BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
-                             NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
-                             BLENDFUNCTION blendfn)
-{
-    POINT pts[2], ptBrush;
-
-    /* map source coordinates */
-    if (physDevSrc)
-    {
-        pts[0].x = xSrc;
-        pts[0].y = ySrc;
-        pts[1].x = xSrc + widthSrc;
-        pts[1].y = ySrc + heightSrc;
-
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
-        widthSrc = pts[1].x - pts[0].x;
-        heightSrc = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
-    }
-
-    /* map dest coordinates */
-    pts[0].x = xDst;
-    pts[0].y = yDst;
-    pts[1].x = xDst + widthDst;
-    pts[1].y = yDst + heightDst;
-
-    LPtoDP(physDevDst->hUserDC, pts, 2);
-    widthDst = pts[1].x - pts[0].x;
-    heightDst = pts[1].y - pts[0].y;
-    xDst = pts[0].x;
-    yDst = pts[0].y;
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
-
-    return RosGdiAlphaBlend(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
-        physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, blendfn);
-
-}
-
-BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend )
-{
-    POINT pts[4];
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = right;
-    pts[1].y = bottom;
-    pts[2].x = xstart;
-    pts[2].y = ystart;
-    pts[3].x = xend;
-    pts[3].y = yend;
-
-    LPtoDP(physDev->hUserDC, pts, 4);
-
-    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
-        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeArc);
-}
-
-BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
-                    INT width, INT height, NTDRV_PDEVICE *physDevSrc,
-                    INT xSrc, INT ySrc, DWORD rop )
-{
-    BOOL useSrc;
-    POINT pts[2], ptBrush;
-
-    useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
-    if (!physDevSrc && useSrc) return FALSE;
-
-    /* Forward to PatBlt if src dev is missing */
-    if (!physDevSrc)
-        return RosDrv_PatBlt(physDevDst, xDst, yDst, width, height, rop);
-
-    /* map source coordinates */
-    if (physDevSrc)
-    {
-        pts[0].x = xSrc;
-        pts[0].y = ySrc;
-        pts[1].x = xSrc + width;
-        pts[1].y = ySrc + height;
-
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
-        width = pts[1].x - pts[0].x;
-        height = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
-    }
-
-    /* map dest coordinates */
-    pts[0].x = xDst;
-    pts[0].y = yDst;
-    LPtoDP(physDevDst->hUserDC, pts, 1);
-    xDst = pts[0].x;
-    yDst = pts[0].y;
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
-
-    //FIXME("xDst %d, yDst %d, widthDst %d, heightDst %d, src x %d y %d\n",
-    //    xDst, yDst, width, height, xSrc, ySrc);
-
-    return RosGdiBitBlt(physDevDst->hKernelDC, xDst, yDst, width, height,
-        physDevSrc->hKernelDC, xSrc, ySrc, rop);
-}
-
-BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
-              INT xstart, INT ystart, INT xend, INT yend )
-{
-    POINT pts[4];
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = right;
-    pts[1].y = bottom;
-    pts[2].x = xstart;
-    pts[2].y = ystart;
-    pts[3].x = xend;
-    pts[3].y = yend;
-
-    LPtoDP(physDev->hUserDC, pts, 4);
-
-    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
-        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeChord );
-}
-
 BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID bmBits )
 {
     BITMAP bitmap;
@@ -272,25 +107,6 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
     return bRet;
 }
 
-HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
-                                       const BITMAPINFO *bmi, UINT usage )
-{
-    DIBSECTION dib;
-    LONG height, width;
-    WORD infoBpp, compression;
-
-    GetObjectW( hbitmap, sizeof(dib), &dib );
-
-    /* Get parameters to check if it's topdown or not.
-       GetObject doesn't return this info */
-    DIB_GetBitmapInfo(&bmi->bmiHeader, &width, &height, &infoBpp, &compression);
-
-    // TODO: Should pass as a flag instead
-    if (height < 0) dib.dsBmih.biHeight *= -1;
-
-    return RosGdiCreateDIBSection(physDev->hKernelDC, hbitmap, bmi, usage, &dib);
-}
-
 BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
 {
     return RosGdiDeleteBitmap(hbitmap);
@@ -311,21 +127,6 @@ BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
 
     /* Return result */
     return res;
-}
-
-BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom )
-{
-    POINT pts[2];
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = right;
-    pts[1].y = bottom;
-
-    LPtoDP(physDev->hUserDC, pts, 2);
-
-    return RosGdiEllipse(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y);
 }
 
 BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
@@ -373,19 +174,6 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
     return 0;
 }
 
-BOOL CDECL RosDrv_ExtFloodFill( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF color,
-                     UINT fillType )
-{
-    POINT ptPixel;
-
-    /* Transform to device coordinates */
-    ptPixel.x = x; ptPixel.y = y;
-
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
-
-    return RosGdiExtFloodFill(physDev->hKernelDC, ptPixel.x, ptPixel.y, color, fillType);
-}
-
 BOOL CDECL RosDrv_ExtTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
                    const RECT *lprect, LPCWSTR wstr, UINT count,
                    const INT *lpDx )
@@ -409,19 +197,6 @@ BOOL CDECL RosDrv_GetCharWidth( NTDRV_PDEVICE *physDev, UINT firstChar, UINT las
     return FALSE;
 }
 
-INT CDECL RosDrv_GetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan, UINT lines,
-                            LPVOID bits, BITMAPINFO *info, UINT coloruse )
-{
-    size_t obj_size;
-    DIBSECTION dib;
-
-    /* Check if this bitmap has a DIB section */
-    if (!(obj_size = GetObjectW( hbitmap, sizeof(dib), &dib ))) return 0;
-
-    /* Perform GetDIBits */
-    return RosGdiGetDIBits(physDev->hKernelDC, hbitmap, startscan, lines, bits, info, coloruse, &dib);
-}
-
 INT CDECL RosDrv_GetDeviceCaps( NTDRV_PDEVICE *physDev, INT cap )
 {
     return RosGdiGetDeviceCaps(physDev->hKernelDC, cap);
@@ -433,33 +208,10 @@ BOOL CDECL RosDrv_GetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)
     return FALSE;
 }
 
-BOOL CDECL RosDrv_GetICMProfile( NTDRV_PDEVICE *physDev, LPDWORD size, LPWSTR filename )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-INT CDECL RosDrv_EnumICMProfiles( NTDRV_PDEVICE *physDev, ICMENUMPROCW proc, LPARAM lparam )
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 COLORREF CDECL RosDrv_GetNearestColor( NTDRV_PDEVICE *physDev, COLORREF color )
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-COLORREF CDECL RosDrv_GetPixel( NTDRV_PDEVICE *physDev, INT x, INT y )
-{
-    POINT ptPixel;
-
-    /* Transform to device coordinates */
-    ptPixel.x = x; ptPixel.y = y;
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
-
-    return RosGdiGetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y);
 }
 
 UINT CDECL RosDrv_GetSystemPaletteEntries( NTDRV_PDEVICE *physDev, UINT start, UINT count,
@@ -481,140 +233,6 @@ BOOL CDECL RosDrv_GetTextMetrics(NTDRV_PDEVICE *physDev, TEXTMETRICW *metrics)
     return FALSE;
 }
 
-BOOL CDECL RosDrv_LineTo( NTDRV_PDEVICE *physDev, INT x, INT y )
-{
-    POINT pt[2];
-
-    /* Get current cursor position */
-    GetCurrentPositionEx( physDev->hUserDC, &pt[0] );
-
-    /* Convert both points coordinates to device */
-    pt[1].x = x;
-    pt[1].y = y;
-    LPtoDP( physDev->hUserDC, pt, 2 );
-
-    /* Draw the line */
-    return RosGdiLineTo(physDev->hKernelDC, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
-}
-
-BOOL CDECL RosDrv_PaintRgn( NTDRV_PDEVICE *physDev, HRGN hrgn )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop )
-{
-    POINT pts[2], ptBrush;
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = left + width;
-    pts[1].y = top + height;
-
-    LPtoDP(physDev->hUserDC, pts, 2);
-    width = pts[1].x - pts[0].x;
-    height = pts[1].y - pts[0].y;
-    left = pts[0].x;
-    top = pts[0].y;
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
-
-    return RosGdiPatBlt(physDev->hKernelDC, left, top, width, height, rop);
-}
-
-BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend )
-{
-    POINT pts[4];
-
-    /* Map coordinates */
-    pts[0].x = left;
-    pts[0].y = top;
-    pts[1].x = right;
-    pts[1].y = bottom;
-    pts[2].x = xstart;
-    pts[2].y = ystart;
-    pts[3].x = xend;
-    pts[3].y = yend;
-
-    LPtoDP(physDev->hUserDC, pts, 4);
-
-    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
-        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypePie);
-}
-
-BOOL CDECL RosDrv_PolyPolygon( NTDRV_PDEVICE *physDev, const POINT* pt, const INT* counts, UINT polygons)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_PolyPolyline( NTDRV_PDEVICE *physDev, const POINT* pt, const DWORD* counts, DWORD polylines )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_Polygon( NTDRV_PDEVICE *physDev, const POINT* pt, INT count )
-{
-    register int i;
-    POINT *points;
-    POINT ptBrush;
-
-    if (!(points = HeapAlloc( GetProcessHeap(), 0, sizeof(POINT) * (count+1) )))
-    {
-        WARN("No memory to convert POINTs!\n");
-        return FALSE;
-    }
-    for (i = 0; i < count; i++)
-    {
-        POINT tmp = pt[i];
-        LPtoDP(physDev->hUserDC, &tmp, 1);
-        points[i].x = tmp.x;
-        points[i].y = tmp.y;
-    }
-    points[count] = points[0];
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
-
-    /* Call kernel mode */
-    RosGdiPolygon(physDev->hKernelDC, points, count+1);
-
-    HeapFree( GetProcessHeap(), 0, points );
-    return TRUE;
-}
-
-BOOL CDECL RosDrv_Polyline( NTDRV_PDEVICE *physDev, const POINT* pt, INT count )
-{
-    register int i;
-    POINT *points;
-
-    if (!(points = HeapAlloc( GetProcessHeap(), 0, sizeof(POINT) * count )))
-    {
-        WARN("No memory to convert POINTs!\n");
-        return FALSE;
-    }
-    for (i = 0; i < count; i++)
-    {
-        POINT tmp = pt[i];
-        LPtoDP(physDev->hUserDC, &tmp, 1);
-        points[i].x = tmp.x;
-        points[i].y = tmp.y;
-    }
-
-    /* Call kernel mode */
-    RosGdiPolyline(physDev->hKernelDC, points, count);
-
-    HeapFree( GetProcessHeap(), 0, points );
-    return TRUE;
-}
-
 UINT CDECL RosDrv_RealizeDefaultPalette( NTDRV_PDEVICE *physDev )
 {
     //UNIMPLEMENTED;
@@ -622,32 +240,6 @@ UINT CDECL RosDrv_RealizeDefaultPalette( NTDRV_PDEVICE *physDev )
 }
 
 UINT CDECL RosDrv_RealizePalette( NTDRV_PDEVICE *physDev, HPALETTE hpal, BOOL primary )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_Rectangle(NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom)
-{
-    POINT ptBrush;
-    RECT rc = get_device_rect( physDev->hUserDC, left, top, right, bottom );
-
-    if ((rc.left == rc.right) || (rc.top == rc.bottom)) return TRUE;
-
-    if (rc.right < rc.left) { INT tmp = rc.right; rc.right = rc.left; rc.left = tmp; }
-    if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
-
-    RosGdiRectangle(physDev->hKernelDC, &rc);
-
-    return TRUE;
-}
-
-BOOL CDECL RosDrv_RoundRect( NTDRV_PDEVICE *physDev, INT left, INT top, INT right,
-                  INT bottom, INT ell_width, INT ell_height )
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -736,11 +328,6 @@ LONG CDECL RosDrv_SetBitmapBits( HBITMAP hbitmap, const void *bits, LONG count )
     return 0;
 }
 
-COLORREF CDECL RosDrv_SetBkColor( NTDRV_PDEVICE *physDev, COLORREF color )
-{
-    return RosGdiSetBkColor(physDev->hKernelDC, color);
-}
-
 COLORREF CDECL RosDrv_SetDCBrushColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
 {
     UNIMPLEMENTED;
@@ -753,279 +340,16 @@ COLORREF CDECL RosDrv_SetDCPenColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
     return 0;
 }
 
-UINT CDECL RosDrv_SetDIBColorTable( NTDRV_PDEVICE *physDev, UINT start, UINT count, const RGBQUAD *colors )
-{
-    return RosGdiSetDIBColorTable(physDev->hKernelDC, start, count, colors);
-}
-
-INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan,
-                            UINT lines, LPCVOID bits, const BITMAPINFO *info, UINT coloruse )
-{
-    LONG height, width, tmpheight;
-    WORD infoBpp, compression;
-    PVOID safeBits = NULL;
-    INT result, bitsSize;
-
-    /* Perform extensive parameter checking */
-    if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,
-        &infoBpp, &compression ) == -1)
-        return 0;
-
-    tmpheight = height;
-    if (height < 0) height = -height;
-    if (!lines || (startscan >= height))
-        return 0;
-
-    if (startscan + lines > height) lines = height - startscan;
-
-    /* Create a safe copy of bits */
-    bitsSize = DIB_GetDIBWidthBytes( width, infoBpp ) * height;
-
-    if ( bits )
-    {
-        safeBits = HeapAlloc( GetProcessHeap(), 0, bitsSize );
-        if (safeBits)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory( safeBits, bits, bitsSize );
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                ERR("StretchDIBits failed to read bits 0x%p, size: %d\n", bits, bitsSize);
-            }
-            _SEH2_END
-        }
-    }
-
-    result = RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan,
-        lines, safeBits, info, coloruse);
-
-    /* Free safe copy of bits */
-    if ( safeBits )
-        HeapFree( GetProcessHeap(), 0, safeBits );
-
-    return result;
-}
-
-INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest, DWORD cx,
-                                    DWORD cy, INT xSrc, INT ySrc,
-                                    UINT startscan, UINT lines, LPCVOID bits,
-                                    const BITMAPINFO *info, UINT coloruse )
-{
-    BOOL top_down;
-    LONG height, width;
-    WORD infoBpp, compression;
-    POINT pt;
-
-    pt.x = xDest; pt.y = yDest;
-    LPtoDP(physDev->hUserDC, &pt, 1);
-
-    /* Perform extensive parameter checking */
-    if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,
-        &infoBpp, &compression ) == -1)
-        return 0;
-
-    top_down = (height < 0);
-    if (top_down) height = -height;
-
-    if (!lines || (startscan >= height)) return 0;
-    if (!top_down && startscan + lines > height) lines = height - startscan;
-
-    /* make xSrc,ySrc point to the upper-left corner, not the lower-left one,
-     * and clamp all values to fit inside [startscan,startscan+lines]
-     */
-    if (ySrc + cy <= startscan + lines)
-    {
-        UINT y = startscan + lines - (ySrc + cy);
-        if (ySrc < startscan) cy -= (startscan - ySrc);
-        if (!top_down)
-        {
-            /* avoid getting unnecessary lines */
-            ySrc = 0;
-            if (y >= lines) return 0;
-            lines -= y;
-        }
-        else
-        {
-            if (y >= lines) return lines;
-            ySrc = y;  /* need to get all lines in top down mode */
-        }
-    }
-    else
-    {
-        if (ySrc >= startscan + lines) return lines;
-        pt.y += ySrc + cy - (startscan + lines);
-        cy = startscan + lines - ySrc;
-        ySrc = 0;
-        if (cy > lines) cy = lines;
-    }
-    if (xSrc >= width) return lines;
-    if (xSrc + cx >= width) cx = width - xSrc;
-    if (!cx || !cy) return lines;
-
-    return RosGdiSetDIBitsToDevice(physDev->hKernelDC, pt.x, pt.y, cx, cy,
-        xSrc, ySrc, startscan, top_down ? -lines : lines, bits, info, coloruse);
-}
-
-void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn )
-{
-    RGNDATA *data;
-    DWORD size;
-
-    //FIXME("SetDeviceClipping hdc %x\n", physDev->hUserDC);
-
-    /* Update dc region to become a combined region */
-    CombineRgn( physDev->region, vis_rgn, clip_rgn, clip_rgn ? RGN_AND : RGN_COPY );
-
-    /* Get region data size */
-    if (!(size = GetRegionData( physDev->region, 0, NULL )))
-        return;
-
-    /* Allocate memory for it */
-    if (!(data = HeapAlloc( GetProcessHeap(), 0, size )))
-        return;
-
-    /* Get region data */
-    if (!GetRegionData( physDev->region, size, data ))
-    {
-        HeapFree( GetProcessHeap(), 0, data );
-        return;
-    }
-
-    /* Set clipping */
-    RosGdiSetDeviceClipping(physDev->hKernelDC, data->rdh.nCount, (RECTL *)data->Buffer, (RECTL *)&data->rdh.rcBound);
-
-    /* Free memory and delete clipping region */
-    HeapFree( GetProcessHeap(), 0, data );
-}
-
 BOOL CDECL RosDrv_SetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-COLORREF CDECL RosDrv_SetPixel( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF color )
-{
-    POINT ptPixel;
-
-    /* Transform to device coordinates */
-    ptPixel.x = x; ptPixel.y = y;
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
-
-    return RosGdiSetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y, color);
-}
-
-COLORREF CDECL RosDrv_SetTextColor( NTDRV_PDEVICE *physDev, COLORREF color )
-{
-    return RosGdiSetTextColor(physDev->hKernelDC, color);
-}
-
-BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
-                              INT widthDst, INT heightDst,
-                              NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc,
-                              INT widthSrc, INT heightSrc, DWORD rop )
-{
-    BOOL useSrc;
-    POINT pts[2], ptBrush;
-
-    useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
-    if (!physDevSrc && useSrc) return FALSE;
-
-    /* map source coordinates */
-    if (physDevSrc)
-    {
-        pts[0].x = xSrc;
-        pts[0].y = ySrc;
-        pts[1].x = xSrc + widthSrc;
-        pts[1].y = ySrc + heightSrc;
-
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
-        widthSrc = pts[1].x - pts[0].x;
-        heightSrc = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
-    }
-
-    /* map dest coordinates */
-    pts[0].x = xDst;
-    pts[0].y = yDst;
-    pts[1].x = xDst + widthDst;
-    pts[1].y = yDst + heightDst;
-    LPtoDP(physDevDst->hUserDC, pts, 2);
-    widthDst = pts[1].x - pts[0].x;
-    heightDst = pts[1].y - pts[0].y;
-    xDst = pts[0].x;
-    yDst = pts[0].y;
-
-    /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
-    RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
-
-    return RosGdiStretchBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
-        physDevSrc->hKernelDC, xSrc, ySrc, widthSrc, heightSrc, rop);
-}
-
 BOOL CDECL RosDrv_UnrealizePalette( HPALETTE hpal )
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-/***********************************************************************
- *           DIB_GetBitmapInfoEx
- *
- * Get the info from a bitmap header.
- * Return 1 for INFOHEADER, 0 for COREHEADER, -1 for error.
- */
-int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
-                                LONG *height, WORD *planes, WORD *bpp,
-                                WORD *compr, DWORD *size )
-{
-    if (header->biSize == sizeof(BITMAPCOREHEADER))
-    {
-        const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)header;
-        *width  = core->bcWidth;
-        *height = core->bcHeight;
-        *planes = core->bcPlanes;
-        *bpp    = core->bcBitCount;
-        *compr  = 0;
-        *size   = 0;
-        return 0;
-    }
-    if (header->biSize >= sizeof(BITMAPINFOHEADER))
-    {
-        *width  = header->biWidth;
-        *height = header->biHeight;
-        *planes = header->biPlanes;
-        *bpp    = header->biBitCount;
-        *compr  = header->biCompression;
-        *size   = header->biSizeImage;
-        return 1;
-    }
-    ERR("(%d): unknown/wrong size for header\n", header->biSize );
-    return -1;
-}
-
-/***********************************************************************
- *           DIB_GetBitmapInfo
- *
- * Get the info from a bitmap header.
- * Return 1 for INFOHEADER, 0 for COREHEADER, -1 for error.
- */
-int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
-                              LONG *height, WORD *bpp, WORD *compr )
-{
-    WORD planes;
-    DWORD size;
-
-    return DIB_GetBitmapInfoEx( header, width, height, &planes, bpp, compr, &size);    
-}
-
-INT DIB_GetDIBWidthBytes(INT width, INT depth)
-{
-    return ((width * depth + 31) & ~31) >> 3;
 }
 
 /* EOF */

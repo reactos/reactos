@@ -86,16 +86,11 @@ struct ntdrv_win_data
 void NTDRV_InitClipboard(void);
 
 /* gdidrv.c */
-int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
-                                LONG *height, WORD *planes, WORD *bpp,
-                                WORD *compr, DWORD *size );
-
-int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
-                              LONG *height, WORD *bpp, WORD *compr );
-
-INT DIB_GetDIBWidthBytes(INT width, INT depth);
-
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn );
+
+/* graphics.c */
+INT RosDrv_XWStoDS( NTDRV_PDEVICE *physDev, INT width );
+INT RosDrv_YWStoDS( NTDRV_PDEVICE *physDev, INT height );
 
 /* font.c */
 VOID

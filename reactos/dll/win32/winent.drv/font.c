@@ -47,44 +47,6 @@ static __inline USHORT get_be_word(USHORT s)
 
 /* FUNCTIONS **************************************************************/
 
-/***********************************************************************
- *           RosDrv_XWStoDS
- *
- * Performs a world-to-viewport transformation on the specified width.
- * Copyright 1993,1994 Alexandre Julliard
- * Copyright 1998 Huw Davies
- */
-INT RosDrv_XWStoDS( NTDRV_PDEVICE *physDev, INT width )
-{
-    POINT pt[2];
-
-    pt[0].x = 0;
-    pt[0].y = 0;
-    pt[1].x = width;
-    pt[1].y = 0;
-    LPtoDP( physDev->hUserDC, pt, 2 );
-    return pt[1].x - pt[0].x;
-}
-
-/***********************************************************************
- *           RosDrv_YWStoDS
- *
- * Performs a world-to-viewport transformation on the specified height.
- * Copyright 1993,1994 Alexandre Julliard
- * Copyright 1998 Huw Davies
- */
-INT RosDrv_YWStoDS( NTDRV_PDEVICE *physDev, INT height )
-{
-    POINT pt[2];
-
-    pt[0].x = 0;
-    pt[0].y = 0;
-    pt[1].x = 0;
-    pt[1].y = height;
-    LPtoDP( physDev->hUserDC, pt, 2 );
-    return pt[1].y - pt[0].y;
-}
-
 /* from winex11/xrender.c
  * Copyright 2001, 2002 Huw D M Davies for CodeWeavers
  */
