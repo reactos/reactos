@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS
- * LICENSE:         LGPL
+ * LICENSE:         GNU LGPL by FSF v2.1 or any later
  * FILE:            dll/win32/winent.drv/gdidrv.c
  * PURPOSE:         GDI driver stub for ReactOS/Windows
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -8,18 +8,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <stdarg.h>
-#include <stdio.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include <winddi.h>
-#include <win32k/ntgdityp.h>
-#include "ntrosgdi.h"
-#include "wine/list.h"
 #include "winent.h"
-#include <pseh/pseh2.h>
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);

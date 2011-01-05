@@ -6,13 +6,16 @@
 	<redefine name="_WIN32_WINNT">0x0501</redefine>
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
+	<file>bitblt.c</file>
 	<file>clipboard.c</file>
+	<file>dib.c</file>
 	<file>font.c</file>
 	<file>gdidrv.c</file>
+	<file>graphics.c</file>
 	<file>main.c</file>
 	<file>userdrv.c</file>
 	<file>mouse.c</file>
-	<file>wnd.c</file>
+	<file>window.c</file>
 	<file>ogldrv.c</file>
 
 	<file>winent.rc</file>

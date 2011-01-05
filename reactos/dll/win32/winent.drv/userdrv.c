@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS
- * LICENSE:         LGPL
+ * LICENSE:         GNU LGPL by FSF v2.1 or any later
  * FILE:            dll/win32/winent.drv/userdrv.c
  * PURPOSE:         User driver stub for ReactOS/Windows
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -8,22 +8,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <stdarg.h>
-#include <stdio.h>
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#define NTOS_USER_MODE
-#include <ndk/ntndk.h>
-#include <winddi.h>
-#include <win32k/ntgdityp.h>
-#include "ntrosgdi.h"
-#include "wine/rosuser.h"
-#include "wine/list.h"
 #include "winent.h"
-#include "wine/server.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS
- * LICENSE:         LGPL
+ * LICENSE:         GNU LGPL by FSF v2.1 or any later
  * FILE:            dll/win32/winent.drv/ogldrv.c
  * PURPOSE:         OpenGL driver for ReactOS/Windows
  * PROGRAMMERS:     Kamil Hornicek
@@ -8,11 +8,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include "windows.h"
-#include "wingdi.h"
-#include <winddi.h>
-#include <win32k/ntgdityp.h>
-#include "ntrosgdi.h"
+#include "winent.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosogldrv);

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS
- * LICENSE:         LGPL
+ * LICENSE:         GNU LGPL by FSF v2.1 or any later
  * FILE:            dll/win32/winent.drv/font.c
  * PURPOSE:         Font Engine support functions
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
@@ -8,20 +8,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include <winddi.h>
-#include <win32k/ntgdityp.h>
-#include "ntrosgdi.h"
-#include "wine/list.h"
 #include "winent.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
