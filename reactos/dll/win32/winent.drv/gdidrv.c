@@ -36,8 +36,7 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
                             LPCWSTR output, const DEVMODEW* initData )
 {
     BOOL bRet;
-    double scaleX, scaleY;
-    ROS_DCINFO dcInfo = {0};
+    DWORD dcType;
     NTDRV_PDEVICE *physDev;
     HDC hKernelDC;
 
@@ -45,50 +44,15 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
     physDev = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*physDev) );
     if (!physDev) return FALSE;
 
-    /* Fill in internal DCINFO structure */
-    dcInfo.dwType = GetObjectType(hdc);
-    GetWorldTransform(hdc, &dcInfo.xfWorld2Wnd);
-    GetViewportExtEx(hdc, &dcInfo.szVportExt);
-    GetViewportOrgEx(hdc, &dcInfo.ptVportOrg);
-    GetWindowExtEx(hdc, &dcInfo.szWndExt);
-    GetWindowOrgEx(hdc, &dcInfo.ptWndOrg);
-
-    /* Calculate xfWnd2Vport */
-    scaleX = (double)dcInfo.szVportExt.cx / (double)dcInfo.szWndExt.cx;
-    scaleY = (double)dcInfo.szVportExt.cy / (double)dcInfo.szWndExt.cy;
-    dcInfo.xfWnd2Vport.eM11 = scaleX;
-    dcInfo.xfWnd2Vport.eM12 = 0.0;
-    dcInfo.xfWnd2Vport.eM21 = 0.0;
-    dcInfo.xfWnd2Vport.eM22 = scaleY;
-    dcInfo.xfWnd2Vport.eDx  = (double)dcInfo.ptVportOrg.x -
-        scaleX * (double)dcInfo.ptWndOrg.x;
-    dcInfo.xfWnd2Vport.eDy  = (double)dcInfo.ptVportOrg.y -
-        scaleY * (double)dcInfo.ptWndOrg.y;
-
-     /* The following part is done in kernel mode */
-#if 0
-    /* Combine with the world transformation */
-    CombineTransform( &dc->xformWorld2Vport, &dc->xformWorld2Wnd,
-        &xformWnd2Vport );
-
-    /* Create inverse of world-to-viewport transformation */
-    dc->vport2WorldValid = DC_InvertXform( &dc->xformWorld2Vport,
-        &dc->xformVport2World );
-#endif
-
-    /* Save DC handle if it's a compatible one or set it to NULL for
-       a display DC */
-    if (*pdev)
-        hKernelDC = (*pdev)->hKernelDC;
-    else
-        hKernelDC = 0;
+    /* Get DC type */
+    dcType = GetObjectType(hdc);
 
     /* Save stock bitmap's handle */
-    if (dcInfo.dwType == OBJ_MEMDC && !hStockBitmap)
+    if (dcType == OBJ_MEMDC && !hStockBitmap)
         hStockBitmap = GetCurrentObject( hdc, OBJ_BITMAP );
 
     /* Call the win32 kernel */
-    bRet = RosGdiCreateDC(&dcInfo, &hKernelDC, driver, device, output, initData);
+    bRet = RosGdiCreateDC(&hKernelDC, driver, device, output, initData, dcType);
 
     /* Save newly created DC */
     physDev->hKernelDC = hKernelDC;
@@ -129,13 +93,6 @@ BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
     return res;
 }
 
-BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
-                                   FONTENUMPROCW proc, LPARAM lp )
-{
-    /* We're always using client-side fonts. */
-    return FALSE;
-}
-
 INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
@@ -174,17 +131,6 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
     return 0;
 }
 
-BOOL CDECL RosDrv_ExtTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
-                   const RECT *lprect, LPCWSTR wstr, UINT count,
-                   const INT *lpDx )
-{
-    //if (physDev->has_gdi_font)
-        return FeTextOut(physDev, x, y, flags, lprect, wstr, count, lpDx);
-
-    //UNIMPLEMENTED;
-    //return FALSE;
-}
-
 LONG CDECL RosDrv_GetBitmapBits( HBITMAP hbitmap, void *buffer, LONG count )
 {
     return RosGdiGetBitmapBits(hbitmap, buffer, count);
@@ -218,19 +164,6 @@ UINT CDECL RosDrv_GetSystemPaletteEntries( NTDRV_PDEVICE *physDev, UINT start, U
                                            LPPALETTEENTRY entries )
 {
     return RosGdiGetSystemPaletteEntries(physDev->hKernelDC, start, count, entries);
-}
-
-BOOL CDECL RosDrv_GetTextExtentExPoint( NTDRV_PDEVICE *physDev, LPCWSTR str, INT count,
-                                        INT maxExt, LPINT lpnFit, LPINT alpDx, LPSIZE size )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_GetTextMetrics(NTDRV_PDEVICE *physDev, TEXTMETRICW *metrics)
-{
-    /* Let GDI font engine do the work */
-    return FALSE;
 }
 
 UINT CDECL RosDrv_RealizeDefaultPalette( NTDRV_PDEVICE *physDev )
@@ -271,23 +204,6 @@ HBRUSH CDECL RosDrv_SelectBrush( NTDRV_PDEVICE *physDev, HBRUSH hbrush )
     RosGdiSelectBrush(physDev->hKernelDC, &logbrush);
 
     return hbrush;
-}
-
-HFONT CDECL RosDrv_SelectFont( NTDRV_PDEVICE *physDev, HFONT hfont, HANDLE gdiFont )
-{
-    /* We don't have a kernelmode font engine */
-    if (gdiFont == 0)
-    {
-        /*RosGdiSelectFont(physDev->hKernelDC, hfont, gdiFont);*/
-    }
-    else
-    {
-        /* Save information about the selected font */
-        FeSelectFont(physDev, hfont);
-    }
-
-    /* Indicate that gdiFont is good to use */
-    return 0;
 }
 
 HPEN CDECL RosDrv_SelectPen( NTDRV_PDEVICE *physDev, HPEN hpen )

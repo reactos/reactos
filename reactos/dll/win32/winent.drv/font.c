@@ -653,4 +653,52 @@ done_unlock:
     return retv;
 }
 
+BOOL CDECL RosDrv_ExtTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
+                   const RECT *lprect, LPCWSTR wstr, UINT count,
+                   const INT *lpDx )
+{
+    //if (physDev->has_gdi_font)
+        return FeTextOut(physDev, x, y, flags, lprect, wstr, count, lpDx);
+
+    //UNIMPLEMENTED;
+    //return FALSE;
+}
+
+BOOL CDECL RosDrv_GetTextExtentExPoint( NTDRV_PDEVICE *physDev, LPCWSTR str, INT count,
+                                        INT maxExt, LPINT lpnFit, LPINT alpDx, LPSIZE size )
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL CDECL RosDrv_GetTextMetrics(NTDRV_PDEVICE *physDev, TEXTMETRICW *metrics)
+{
+    /* Let GDI font engine do the work */
+    return FALSE;
+}
+
+BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
+                                   FONTENUMPROCW proc, LPARAM lp )
+{
+    /* We're always using client-side fonts. */
+    return FALSE;
+}
+
+HFONT CDECL RosDrv_SelectFont( NTDRV_PDEVICE *physDev, HFONT hfont, HANDLE gdiFont )
+{
+    /* We don't have a kernelmode font engine */
+    if (gdiFont == 0)
+    {
+        /*RosGdiSelectFont(physDev->hKernelDC, hfont, gdiFont);*/
+    }
+    else
+    {
+        /* Save information about the selected font */
+        FeSelectFont(physDev, hfont);
+    }
+
+    /* Indicate that gdiFont is good to use */
+    return 0;
+}
+
 /* EOF */
