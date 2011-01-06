@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         LGPL, see LGPL.txt in the top level directory
  * PROJECT:           ReactOS Win32 subsystem
  * PURPOSE:           FLOATOBJ floating point emulation functions for x86
@@ -98,7 +98,7 @@ PUBLIC _FLOATOBJ_SetFloat@8
 	jz SetFloat0				/* If it's all zero, ... */
 
 	shl ecx, 7					/* Put the bits for the mantissa in place */
-	
+
 	cdq							/* Fill edx with the sign from the FLOATL in eax */
 	and ecx, HEX(7fffffff)			/* Mask out invalid field in the mantissa */
 
@@ -818,7 +818,8 @@ PUBLIC _FLOATOBJ_DivLong@8
 	push [ebp + PARAM1]			/* Push the FLOATOBJ param on the stack */
 	call _FLOATOBJ_Div@8		/* Divide */
 
-	pop ebp						/* Cleanup and return */
+	mov esp, ebp				/* Cleanup and return */
+	pop ebp
 	ret 8
 
 
