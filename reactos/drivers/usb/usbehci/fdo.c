@@ -46,12 +46,12 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
         DPRINT("Asyn Complete!\n");
         ULONG CurrentAddr, OffSet;
         PQUEUE_HEAD CompletedQH, NextQH;
-        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD;
+        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD, NextTD;
         
-		/* AsyncListAddr Register will have the next QueueHead to execute */
+        /* AsyncListAddr Register will have the next QueueHead to execute */
         CurrentAddr = GetAsyncListQueueRegister(hcd);
 
-		/* Calculate the VA for the next QueueHead */
+        /* Calculate the VA for the next QueueHead */
         OffSet = CurrentAddr - (ULONG)FdoDeviceExtension->hcd.CommonBufferPA.LowPart;
         NextQH = (PQUEUE_HEAD)((ULONG)FdoDeviceExtension->hcd.CommonBufferVA + OffSet);
 
@@ -62,16 +62,15 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
         //DumpQueueHead(CompletedQH);
 
-		/* Free memory for the Descriptors */
+        /* Free memory for the Descriptors */
         CompletedTD = CompletedQH->TransferDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
-        FreeDescriptor(CompletedTD);
-        CompletedTD = CompletedTD->NextDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
-        FreeDescriptor(CompletedTD);
-        CompletedTD = CompletedTD->NextDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
-        FreeDescriptor(CompletedTD);
+        NextTD = CompletedTD;
+        while (NextTD)
+        {
+            CompletedTD = NextTD;
+            NextTD = NextTD->NextDescriptor;
+            FreeDescriptor(CompletedTD);
+        }
         
         /* If the Event is set then release waiter */
         if (CompletedQH->Event)
@@ -79,27 +78,25 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             KeSetEvent(CompletedQH->Event, IO_NO_INCREMENT, FALSE);
         }
 
-        /* Free the Mdl */
-        ASSERT(CompletedQH->MdlToFree);
-        IoFreeMdl(CompletedQH->MdlToFree);
+        /* Free the Mdl if there was one */
+        if(CompletedQH->MdlToFree)
+            IoFreeMdl(CompletedQH->MdlToFree);
 
         /* Is there an IRP that needs to be completed */
         if (CompletedQH->IrpToComplete)
         {
-            PIRP Irp; 
-    
+            PIRP Irp;     
+            PIO_STACK_LOCATION Stack;
+            PURB Urb;
+
             Irp = CompletedQH->IrpToComplete;            
+            Stack = IoGetCurrentIrpStackLocation(Irp);
+            ASSERT(Stack);
+            Urb = (PURB) Stack->Parameters.Others.Argument1;
 
             /* Check for error */
             if (CStatus & EHCI_ERROR_INT)
             {
-                PIO_STACK_LOCATION Stack;
-                PURB Urb;
-
-                Stack = IoGetCurrentIrpStackLocation(Irp);
-                ASSERT(Stack);
-                Urb = (PURB) Stack->Parameters.Others.Argument1;
-                ASSERT(FALSE);
                 /* Haled bit should be set */
                 if (CompletedQH->Token.Bits.Halted)
                 {
