@@ -274,20 +274,20 @@ GreAlphaBlend(PDC pDest, INT XDest, INT YDest,
     DestRect.right  = XDest+WidthDst;
     DestRect.bottom = YDest+HeightDst;
 
-    DestRect.left += pDest->rcVport.left + pDest->rcDcRect.left;
-    DestRect.top += pDest->rcVport.top + pDest->rcDcRect.top;
-    DestRect.right += pDest->rcVport.left + pDest->rcDcRect.left;
-    DestRect.bottom += pDest->rcVport.top + pDest->rcDcRect.top;
+    DestRect.left += pDest->rcVport.left;
+    DestRect.top += pDest->rcVport.top;
+    DestRect.right += pDest->rcVport.left;
+    DestRect.bottom += pDest->rcVport.top;
 
     SrcRect.left   = XSrc;
     SrcRect.top    = YSrc;
     SrcRect.right  = XSrc+WidthSrc;
     SrcRect.bottom = YSrc+HeightSrc;
 
-    SrcRect.left += pSrc->rcVport.left + pSrc->rcDcRect.left;
-    SrcRect.top += pSrc->rcVport.top + pSrc->rcDcRect.top;
-    SrcRect.right += pSrc->rcVport.left + pSrc->rcDcRect.left;
-    SrcRect.bottom += pSrc->rcVport.top + pSrc->rcDcRect.top;
+    SrcRect.left += pSrc->rcVport.left;
+    SrcRect.top += pSrc->rcVport.top;
+    SrcRect.right += pSrc->rcVport.left;
+    SrcRect.bottom += pSrc->rcVport.top;
 
     /* Create the XLATEOBJ. */
     EXLATEOBJ_vInitXlateFromDCs(&exlo, pSrc, pDest);
@@ -324,18 +324,18 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
     DestRect.right  = XDest+Width;
     DestRect.bottom = YDest+Height;
 
-    DestRect.left += pDest->rcVport.left + pDest->rcDcRect.left;
-    DestRect.top += pDest->rcVport.top + pDest->rcDcRect.top;
-    DestRect.right += pDest->rcVport.left + pDest->rcDcRect.left;
-    DestRect.bottom += pDest->rcVport.top + pDest->rcDcRect.top;
+    DestRect.left += pDest->rcVport.left;
+    DestRect.top += pDest->rcVport.top;
+    DestRect.right += pDest->rcVport.left;
+    DestRect.bottom += pDest->rcVport.top;
 
     SourcePoint.x = XSrc;
     SourcePoint.y = YSrc;
 
     if (pSrc)
     {
-        SourcePoint.x += pSrc->rcDcRect.left + pSrc->rcVport.left;
-        SourcePoint.y += pSrc->rcDcRect.top + pSrc->rcVport.top;
+        SourcePoint.x += pSrc->rcVport.left;
+        SourcePoint.y += pSrc->rcVport.top;
     }
 
     /* Create the XLATEOBJ. */
@@ -345,8 +345,8 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
         XlateObj = &exlo.xlo;
     }
 
-    BrushOrigin.x = pDest->dclevel.ptlBrushOrigin.x + pDest->rcDcRect.left;
-    BrushOrigin.y = pDest->dclevel.ptlBrushOrigin.y + pDest->rcDcRect.top;
+    BrushOrigin.x = pDest->dclevel.ptlBrushOrigin.x;
+    BrushOrigin.y = pDest->dclevel.ptlBrushOrigin.y;
 
     /* Perform the bitblt operation */
     bRet = GrepBitBltEx(
@@ -406,13 +406,13 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
             DestRect.bottom = YLeft + 1;
         }
 
-        DestRect.left += pDC->rcVport.left + pDC->rcDcRect.left;
-        DestRect.top += pDC->rcVport.top + pDC->rcDcRect.top;
-        DestRect.right += pDC->rcVport.left + pDC->rcDcRect.left;
-        DestRect.bottom += pDC->rcVport.top + pDC->rcDcRect.top;
+        DestRect.left += pDC->rcVport.left;
+        DestRect.top += pDC->rcVport.top;
+        DestRect.right += pDC->rcVport.left;
+        DestRect.bottom += pDC->rcVport.top;
 
-        BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
-        BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
+        BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x;
+        BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y;
 
         bRet = GrepBitBltEx(
             &pDC->dclevel.pSurface->SurfObj,
@@ -469,10 +469,10 @@ GreStretchBltMask(
     DestRect.right  = XOriginDest+WidthDest;
     DestRect.bottom = YOriginDest+HeightDest;
 
-    DestRect.left   += DCDest->rcVport.left + DCDest->rcDcRect.left;
-    DestRect.top    += DCDest->rcVport.top + DCDest->rcDcRect.top;
-    DestRect.right  += DCDest->rcVport.left + DCDest->rcDcRect.left;
-    DestRect.bottom += DCDest->rcVport.top + DCDest->rcDcRect.top;
+    DestRect.left   += DCDest->rcVport.left;
+    DestRect.top    += DCDest->rcVport.top;
+    DestRect.right  += DCDest->rcVport.left;
+    DestRect.bottom += DCDest->rcVport.top;
 
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
@@ -481,14 +481,14 @@ GreStretchBltMask(
 
     if (UsesSource)
     {
-        SourceRect.left   += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
-        SourceRect.top    += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
-        SourceRect.right  += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
-        SourceRect.bottom += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
+        SourceRect.left   += DCSrc->rcVport.left;
+        SourceRect.top    += DCSrc->rcVport.top;
+        SourceRect.right  += DCSrc->rcVport.left;
+        SourceRect.bottom += DCSrc->rcVport.top;
     }
 
-    BrushOrigin.x = DCDest->dclevel.ptlBrushOrigin.x + DCDest->rcDcRect.left;
-    BrushOrigin.y = DCDest->dclevel.ptlBrushOrigin.y + DCDest->rcDcRect.top;
+    BrushOrigin.x = DCDest->dclevel.ptlBrushOrigin.x;
+    BrushOrigin.y = DCDest->dclevel.ptlBrushOrigin.y;
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -1125,8 +1125,8 @@ GreSetDIBitsToDevice(
 
     rcDest.left = XDest;
     rcDest.top = YDest;
-    rcDest.left += pDC->rcVport.left + pDC->rcDcRect.left;
-    rcDest.top += pDC->rcVport.top + pDC->rcDcRect.top;
+    rcDest.left += pDC->rcVport.left;
+    rcDest.top += pDC->rcVport.top;
 
     rcDest.right = rcDest.left + Width;
     rcDest.bottom = rcDest.top + Height;

@@ -32,13 +32,13 @@ GreRectangle(PDC pDC,
     MIX Mix;
     POINTL BrushOrigin;
 
-    DestRect.left = LeftRect + pDC->rcDcRect.left + pDC->rcVport.left;
-    DestRect.right = RightRect + pDC->rcDcRect.left + pDC->rcVport.left;
-    DestRect.top = TopRect + pDC->rcDcRect.top + pDC->rcVport.top;
-    DestRect.bottom = BottomRect + pDC->rcDcRect.top + pDC->rcVport.top;
+    DestRect.left = LeftRect + pDC->rcVport.left;
+    DestRect.right = RightRect + pDC->rcVport.left;
+    DestRect.top = TopRect + pDC->rcVport.top;
+    DestRect.bottom = BottomRect + pDC->rcVport.top;
 
-    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
-    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
+    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x;
+    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y;
 
     /* Draw brush-based rectangle */
     if (pDC->dclevel.pbrFill)
@@ -107,8 +107,8 @@ GrePolygon(PDC pDC,
     INT i;
     POINTL BrushOrigin;
 
-    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
-    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
+    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x;
+    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y;
 
     /* Draw brush-based polygon */
     if (pDC->dclevel.pbrFill)

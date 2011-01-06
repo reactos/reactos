@@ -115,10 +115,10 @@ GrePolyline(PDC pDC,
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
-            ptLine[0].x = ptPoints[i].x + pDC->rcDcRect.left + pDC->rcVport.left;
-            ptLine[0].y = ptPoints[i].y + pDC->rcDcRect.top + pDC->rcVport.top;
-            ptLine[1].x = ptPoints[i+1].x + pDC->rcDcRect.left + pDC->rcVport.left;
-            ptLine[1].y = ptPoints[i+1].y + pDC->rcDcRect.top + pDC->rcVport.top;
+            ptLine[0].x = ptPoints[i].x + pDC->rcVport.left;
+            ptLine[0].y = ptPoints[i].y + pDC->rcVport.top;
+            ptLine[1].x = ptPoints[i+1].x + pDC->rcVport.left;
+            ptLine[1].y = ptPoints[i+1].y + pDC->rcVport.top;
 
             DestRect.left = min(ptLine[0].x, ptLine[1].x);
             DestRect.top = min(ptLine[0].y, ptLine[1].y);

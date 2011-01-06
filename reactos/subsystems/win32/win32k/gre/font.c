@@ -225,8 +225,8 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
 
         for(idx = 0; idx < count; idx++) {
             sharp_glyph_fn(pDC,
-                           pDC->rcDcRect.left + pDC->rcVport.left + x + offset.x,
-                           pDC->rcDcRect.top + pDC->rcVport.top + y + offset.y,
+                           pDC->rcVport.left + x + offset.x,
+                           pDC->rcVport.top + y + offset.y,
                 formatEntry->bitmaps[wstr[idx]],
                 &formatEntry->gis[wstr[idx]],
                 &pTextPen);

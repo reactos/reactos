@@ -142,6 +142,24 @@ ExReallocPool(PVOID OldPtr, ULONG NewSize, ULONG OldSize)
     return NewPtr;
 }
 
+char * __cdecl GdStrDup(const char *src)
+{
+    char *newstr = ExAllocatePool(PagedPool, strlen(src));
+    strcpy(newstr, src);
+    return newstr;
+}
+
+void *GdCalloc(size_t num, size_t size)
+{
+    PVOID Buf;
+    ULONG TotalSize = num * size;
+
+    Buf = ExAllocatePool(PagedPool, TotalSize);
+    RtlZeroMemory(Buf, TotalSize);
+
+    return Buf;
+}
+
 #define DIFFTIME 0x19db1ded53e8000ULL
 
 time_t

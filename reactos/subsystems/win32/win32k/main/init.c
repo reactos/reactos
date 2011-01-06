@@ -382,6 +382,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Initialize window manager */
     SwmInitialize();
+    //GrContextInit();
 
     return STATUS_SUCCESS;
 }

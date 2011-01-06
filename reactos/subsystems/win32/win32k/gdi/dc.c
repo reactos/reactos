@@ -96,9 +96,8 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hStockBmp);
 
         /* Set DC rectangles */
-        pNewDC->rcDcRect.left = 0; pNewDC->rcDcRect.top = 0;
-        pNewDC->rcDcRect.right = 1; pNewDC->rcDcRect.bottom = 1;
-        pNewDC->rcVport = pNewDC->rcDcRect;
+        pNewDC->rcVport.left = 0; pNewDC->rcVport.top = 0;
+        pNewDC->rcVport.right = 1; pNewDC->rcVport.bottom = 1;
     }
     else
     {
@@ -110,8 +109,6 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         pNewDC->rcVport.top = 0;
         pNewDC->rcVport.right = PrimarySurface.gdiinfo.ulHorzRes;
         pNewDC->rcVport.bottom = PrimarySurface.gdiinfo.ulVertRes;
-
-        pNewDC->rcDcRect = pNewDC->rcVport;
     }
 
     /* Create an empty combined clipping region */
@@ -194,7 +191,6 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
     pDC->rcVport.top = 0;
     pDC->rcVport.right = pSurface->SurfObj.sizlBitmap.cx;
     pDC->rcVport.bottom = pSurface->SurfObj.sizlBitmap.cy;
-    pDC->rcDcRect = pDC->rcVport;
 
     /* Release the DC object */
     DC_UnlockDc(pDC);
@@ -458,7 +454,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     PDC pDC;
     RECTL pStackBuf[8];
     RECTL *pSafeRects = pStackBuf;
-    RECTL rcSafeBounds, rcSurface;
+    RECTL rcSafeBounds;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -506,14 +502,14 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     for (i=0; i<count; i++)
     {
         RECTL_vOffsetRect(&pSafeRects[i],
-                          pDC->rcDcRect.left + pDC->rcVport.left,
-                          pDC->rcDcRect.top + pDC->rcVport.top);
+                          pDC->rcVport.left,
+                          pDC->rcVport.top);
     }
 
     /* Offset bounding rect */
     RECTL_vOffsetRect(&rcSafeBounds,
-                      pDC->rcDcRect.left + pDC->rcVport.left,
-                      pDC->rcDcRect.top + pDC->rcVport.top);
+                      pDC->rcVport.left,
+                      pDC->rcVport.top);
 
     /* Delete old clipping region */
     if (pDC->Clipping)
@@ -521,23 +517,12 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
 
     if (count == 0)
     {
-        /* Set unclipped mode (clip by dc rect) */
+        /* Set unclipped mode (underlying surface rectangle) */
         RECTL_vSetRect(&rcSafeBounds,
-                       pDC->rcDcRect.left,
-                       pDC->rcDcRect.top,
-                       pDC->rcDcRect.right,
-                       pDC->rcDcRect.bottom);
-
-        RECTL_vOffsetRect(&rcSafeBounds, pDC->rcVport.left, pDC->rcVport.top);
-
-        /* Intersect it with an underlying surface rectangle */
-        RECTL_vSetRect(&rcSurface,
                        0,
                        0,
                        pDC->dclevel.pSurface->SurfObj.sizlBitmap.cx,
                        pDC->dclevel.pSurface->SurfObj.sizlBitmap.cy);
-
-        RECTL_bIntersectRect(&rcSafeBounds, &rcSafeBounds, &rcSurface);
 
         /* Set the clipping object */
         pDC->Clipping = create_region_from_rects(&rcSafeBounds, 1);
@@ -607,10 +592,6 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
 
     _SEH2_TRY
     {
-        /* Set DC rectangle */
-        if (rcDcRect)
-            pDC->rcDcRect = *rcDcRect;
-
         /* Set viewport rectangle */
         if (rcVport)
             pDC->rcVport = *rcVport;

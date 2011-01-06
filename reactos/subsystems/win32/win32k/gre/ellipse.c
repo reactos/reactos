@@ -64,8 +64,8 @@ GreEllipse(PDC dc,
     DPRINT("Ellipse 2: XLeft: %d, YLeft: %d, Width: %d, Height: %d\n",
                CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
-    BrushOrigin.x = dc->dclevel.ptlBrushOrigin.x + dc->rcDcRect.left;
-    BrushOrigin.y = dc->dclevel.ptlBrushOrigin.y + dc->rcDcRect.top;
+    BrushOrigin.x = dc->dclevel.ptlBrushOrigin.x;
+    BrushOrigin.y = dc->dclevel.ptlBrushOrigin.y;
 
     /* Draw filled part */
     if (dc->dclevel.pbrFill && !(dc->dclevel.pbrFill->flAttrs & GDIBRUSH_IS_NULL))

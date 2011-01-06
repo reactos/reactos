@@ -14,6 +14,7 @@ typedef struct _SWM_WINDOW
 
 
 VOID NTAPI SwmInitialize();
+VOID NTAPI GrContextInit();
 PSWM_WINDOW NTAPI SwmFindByHwnd(HWND hWnd);
 VOID NTAPI SwmAcquire(VOID);
 VOID NTAPI SwmRelease(VOID);

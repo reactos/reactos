@@ -335,6 +335,22 @@ EngAssociateSurface(IN HSURF hSurf,
 
     DPRINT1("flHooks: 0x%x\n", flHooks);
 
+    /* 0x3a5fb for vmware
+       0x10000 HOOK_ALPHABLEND
+       0x20000 HOOK_GRADIENTFILL
+       0x08000 HOOK_TRANSPARENTBLT
+       0x02000 HOOK_STRETCHBLTROP
+       0x00400 HOOK_COPYBITS
+       0x00100 HOOK_LINETO
+       0x00010 HOOK_PAINT
+       0x00020 HOOK_STROKEPATH
+       0x00040 HOOK_FILLPATH
+       0x00080 HOOK_STROKEANDFILLPATH
+       0x00001 HOOK_BITBLT
+       0x00002 HOOK_STRETCHBLT
+       0x00008 HOOK_TEXTOUT
+    */
+
     /* Release the pointer */
     SURFACE_UnlockSurface(pSurface);
 

@@ -29,7 +29,6 @@ typedef struct _DC
     EBRUSHOBJ   eboLine;
 
     /* Origins and extents */
-    RECT         rcDcRect; /* Relative to Vport */
     RECT         rcVport;
 
     /* Combined clipping region */
