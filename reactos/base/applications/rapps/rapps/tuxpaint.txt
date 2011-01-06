@@ -2,13 +2,13 @@
 
 [Section]
 Name = TuxPaint
-Version = 0.9.21b
+Version = 0.9.21c
 Licence = GPL
 Description = An Open Source bitmap graphics editor geared towards young children.
 Size = 11MB
 Category = 3
 URLSite = http://tuxpaint.org/
-URLDownload = http://ovh.dl.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21b/tuxpaint-0.9.21b-win32-installer.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21c/tuxpaint-0.9.21c-win32-installer.exe
 CDPath = none
 
 [Section.0405]
