@@ -56,7 +56,7 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
 
     /* Save newly created DC */
     physDev->hKernelDC = hKernelDC;
-    physDev->hUserDC = hdc;
+    physDev->hdc = hdc;
 
     /* No font is selected */
     physDev->cache_index = -1;
@@ -108,7 +108,8 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                 {
                     const struct ntdrv_escape_set_drawable *data = in_data;
 
-                    RosGdiSetDcRects(physDev->hKernelDC, (RECT*)&data->dc_rect, (RECT*)&data->drawable_rect);
+                    physDev->dc_rect = data->dc_rect;
+                    RosGdiSetDcRects(physDev->hKernelDC, NULL, (RECT*)&data->drawable_rect);
 
                     if (!data->release)
                         RosGdiGetDC(physDev->hKernelDC, data->hwnd, data->clip_children);
@@ -116,7 +117,7 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                         RosGdiReleaseDC(physDev->hKernelDC);
 
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
-                           physDev->hUserDC, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
+                           physDev->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
                     return TRUE;
                 }
                 break;
@@ -226,7 +227,7 @@ HPEN CDECL RosDrv_SelectPen( NTDRV_PDEVICE *physDev, HPEN hpen )
 
     /* If it's a stock object, then use DC's color */
     if (hpen == GetStockObject( DC_PEN ))
-        logpen.lopnColor = GetDCPenColor(physDev->hUserDC);
+        logpen.lopnColor = GetDCPenColor(physDev->hdc);
 
     /* Call kernelmode */
     RosGdiSelectPen(physDev->hKernelDC, &logpen, elogpen);

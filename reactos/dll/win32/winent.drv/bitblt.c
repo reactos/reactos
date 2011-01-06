@@ -26,14 +26,16 @@ BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, 
     pts[1].x = left + width;
     pts[1].y = top + height;
 
-    LPtoDP(physDev->hUserDC, pts, 2);
+    LPtoDP(physDev->hdc, pts, 2);
     width = pts[1].x - pts[0].x;
     height = pts[1].y - pts[0].y;
-    left = pts[0].x;
-    top = pts[0].y;
+    left = pts[0].x + physDev->dc_rect.left;
+    top = pts[0].y + physDev->dc_rect.top;
 
     /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDev->hdc, &ptBrush);
+    ptBrush.x += physDev->dc_rect.left;
+    ptBrush.y += physDev->dc_rect.top;
     RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
 
     return RosGdiPatBlt(physDev->hKernelDC, left, top, width, height, rop);
@@ -61,22 +63,24 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
         pts[1].x = xSrc + width;
         pts[1].y = ySrc + height;
 
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
+        LPtoDP(physDevSrc->hdc, pts, 2);
         width = pts[1].x - pts[0].x;
         height = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
+        xSrc = pts[0].x + physDevSrc->dc_rect.left;
+        ySrc = pts[0].y + physDevSrc->dc_rect.top;
     }
 
     /* map dest coordinates */
     pts[0].x = xDst;
     pts[0].y = yDst;
-    LPtoDP(physDevDst->hUserDC, pts, 1);
-    xDst = pts[0].x;
-    yDst = pts[0].y;
+    LPtoDP(physDevDst->hdc, pts, 1);
+    xDst = pts[0].x + physDevDst->dc_rect.left;
+    yDst = pts[0].y + physDevDst->dc_rect.top;
 
     /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDevDst->hdc, &ptBrush);
+    ptBrush.x += physDevDst->dc_rect.left;
+    ptBrush.y += physDevDst->dc_rect.top;
     RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
 
     //FIXME("xDst %d, yDst %d, widthDst %d, heightDst %d, src x %d y %d\n",
@@ -105,11 +109,11 @@ BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
         pts[1].x = xSrc + widthSrc;
         pts[1].y = ySrc + heightSrc;
 
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
+        LPtoDP(physDevSrc->hdc, pts, 2);
         widthSrc = pts[1].x - pts[0].x;
         heightSrc = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
+        xSrc = pts[0].x + physDevSrc->dc_rect.left;
+        ySrc = pts[0].y + physDevSrc->dc_rect.top;
     }
 
     /* map dest coordinates */
@@ -117,14 +121,16 @@ BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
     pts[0].y = yDst;
     pts[1].x = xDst + widthDst;
     pts[1].y = yDst + heightDst;
-    LPtoDP(physDevDst->hUserDC, pts, 2);
+    LPtoDP(physDevDst->hdc, pts, 2);
     widthDst = pts[1].x - pts[0].x;
     heightDst = pts[1].y - pts[0].y;
-    xDst = pts[0].x;
-    yDst = pts[0].y;
+    xDst = pts[0].x + physDevDst->dc_rect.left;
+    yDst = pts[0].y + physDevDst->dc_rect.top;
 
     /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDevDst->hdc, &ptBrush);
+    ptBrush.x += physDevDst->dc_rect.left;
+    ptBrush.y += physDevDst->dc_rect.top;
     RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
 
     return RosGdiStretchBlt(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,
@@ -145,11 +151,11 @@ BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT 
         pts[1].x = xSrc + widthSrc;
         pts[1].y = ySrc + heightSrc;
 
-        LPtoDP(physDevSrc->hUserDC, pts, 2);
+        LPtoDP(physDevSrc->hdc, pts, 2);
         widthSrc = pts[1].x - pts[0].x;
         heightSrc = pts[1].y - pts[0].y;
-        xSrc = pts[0].x;
-        ySrc = pts[0].y;
+        xSrc = pts[0].x + physDevSrc->dc_rect.left;
+        ySrc = pts[0].y + physDevSrc->dc_rect.top;
     }
 
     /* map dest coordinates */
@@ -158,14 +164,16 @@ BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT 
     pts[1].x = xDst + widthDst;
     pts[1].y = yDst + heightDst;
 
-    LPtoDP(physDevDst->hUserDC, pts, 2);
+    LPtoDP(physDevDst->hdc, pts, 2);
     widthDst = pts[1].x - pts[0].x;
     heightDst = pts[1].y - pts[0].y;
-    xDst = pts[0].x;
-    yDst = pts[0].y;
+    xDst = pts[0].x + physDevDst->dc_rect.left;
+    yDst = pts[0].y + physDevDst->dc_rect.top;
 
     /* Update brush origin */
-    GetBrushOrgEx(physDevDst->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDevDst->hdc, &ptBrush);
+    ptBrush.x += physDevDst->dc_rect.left;
+    ptBrush.y += physDevDst->dc_rect.top;
     RosGdiSetBrushOrg(physDevDst->hKernelDC, ptBrush.x, ptBrush.y);
 
     return RosGdiAlphaBlend(physDevDst->hKernelDC, xDst, yDst, widthDst, heightDst,

@@ -10,22 +10,12 @@
 
 typedef struct _NTDRV_PDEVICE
 {
-    HDC  hUserDC;
+    HDC  hdc;
     HDC  hKernelDC;
+    RECT dc_rect;     /* DC rectangle relative to drawable */
     HRGN region;      /* Device region (visible region & clip region) */
     int  cache_index; /* cache of a currently selected font */
 } NTDRV_PDEVICE, *PNTDRV_PDEVICE;
-
-typedef struct _ROS_DCINFO
-{
-    WORD  dwType;
-    SIZE  szVportExt;
-    POINT ptVportOrg;
-    SIZE  szWndExt;
-    POINT ptWndOrg;
-    XFORM xfWorld2Wnd;
-    XFORM xfWnd2Vport;
-} ROS_DCINFO, *PROS_DCINFO;
 
 typedef struct
 {
@@ -97,8 +87,8 @@ BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,
                               INT widthSrc, INT heightSrc, DWORD rop );
 
 /* dc.c */
-BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR device,
-                              LPCWSTR output, const DEVMODEW* initData );
+BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
+                              LPCWSTR output, const DEVMODEW* initData, ULONG dcType );
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev );
 BOOL APIENTRY RosGdiGetDCOrgEx( HDC physDev, LPPOINT lpp );
 BOOL APIENTRY RosGdiPaintRgn( HDC physDev, HRGN hrgn );

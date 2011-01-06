@@ -82,7 +82,9 @@ INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest
     POINT pt;
 
     pt.x = xDest; pt.y = yDest;
-    LPtoDP(physDev->hUserDC, &pt, 1);
+    LPtoDP(physDev->hdc, &pt, 1);
+    pt.x += physDev->dc_rect.left;
+    pt.y += physDev->dc_rect.top;
 
     /* Perform extensive parameter checking */
     if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,

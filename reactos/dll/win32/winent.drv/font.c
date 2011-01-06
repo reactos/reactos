@@ -201,14 +201,14 @@ static BOOL get_gasp_flags(NTDRV_PDEVICE *physDev, WORD *flags)
 
     *flags = 0;
 
-    size = GetFontData(physDev->hUserDC, MS_GASP_TAG,  0, NULL, 0);
+    size = GetFontData(physDev->hdc, MS_GASP_TAG,  0, NULL, 0);
     if(size == GDI_ERROR)
         return FALSE;
 
     gasp = buffer = HeapAlloc(GetProcessHeap(), 0, size);
-    GetFontData(physDev->hUserDC, MS_GASP_TAG,  0, gasp, size);
+    GetFontData(physDev->hdc, MS_GASP_TAG,  0, gasp, size);
 
-    GetTextMetricsW(physDev->hUserDC, &tm);
+    GetTextMetricsW(physDev->hdc, &tm);
     ppem = abs(RosDrv_YWStoDS(physDev, tm.tmAscent + tm.tmDescent - tm.tmInternalLeading));
 
     gasp++;
@@ -389,13 +389,13 @@ static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
         break;
     }
 
-    buflen = GetGlyphOutlineW(physDev->hUserDC, glyph, ggo_format, &gm, 0, NULL, &identity);
+    buflen = GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
     if(buflen == GDI_ERROR) {
         if(format != AA_None) {
             format = AA_None;
             entry->aa_default = AA_None;
             ggo_format = GGO_GLYPH_INDEX | GGO_BITMAP;
-            buflen = GetGlyphOutlineW(physDev->hUserDC, glyph, ggo_format, &gm, 0, NULL, &identity);
+            buflen = GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
         }
         if(buflen == GDI_ERROR) {
             WARN("GetGlyphOutlineW failed\n");
@@ -446,7 +446,7 @@ static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
     }
 
     buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buflen);
-    GetGlyphOutlineW(physDev->hUserDC, glyph, ggo_format, &gm, buflen, buf, &identity);
+    GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, buflen, buf, &identity);
     formatEntry->realized[glyph] = TRUE;
 
     TRACE("buflen = %d. Got metrics: %dx%d adv=%d,%d origin=%d,%d\n",
@@ -515,7 +515,7 @@ FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hfont)
     lfsz.lf.lfWidth = abs( lfsz.lf.lfWidth );
     lfsz.devsize.cx = RosDrv_XWStoDS( physDev, lfsz.lf.lfWidth );
     lfsz.devsize.cy = RosDrv_YWStoDS( physDev, lfsz.lf.lfHeight );
-    GetWorldTransform( physDev->hUserDC, &lfsz.xform );
+    GetWorldTransform( physDev->hdc, &lfsz.xform );
     lfsz_calc_hash(&lfsz);
 
     /*EnterCriticalSection(&xrender_cs);*/
@@ -534,13 +534,14 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     gsCacheEntry *entry;
     gsCacheEntryFormat *formatEntry;
     BOOL retv = FALSE;
-    //HDC hdc = physDev->hUserDC;
+    //HDC hdc = physDev->hdc;
     //int textPixel, backgroundPixel;
     HRGN saved_region = 0;
     BOOL disable_antialias = FALSE;
     AA_Type aa_type = AA_None;
     //DIBSECTION bmp;
     unsigned int idx;
+    RECT rect;
     //enum drawable_depth_type depth_type = (physDev->depth == 1) ? mono_drawable : color_drawable;
     //Picture tile_pict = 0;
 
@@ -577,16 +578,18 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         HBRUSH brush, oldBrush;
         HPEN pen, oldPen;
 
-        brush = CreateSolidBrush(GetBkColor(physDev->hUserDC));
-        oldBrush = SelectObject(physDev->hUserDC, brush);
+        brush = CreateSolidBrush(GetBkColor(physDev->hdc));
+        oldBrush = SelectObject(physDev->hdc, brush);
 
         pen = CreatePen(PS_NULL, 0, 0);
-        oldPen = SelectObject(physDev->hUserDC, pen);
+        oldPen = SelectObject(physDev->hdc, pen);
 
-        RosGdiRectangle(physDev->hKernelDC, (RECT*)lprect);
+        CopyRect(&rect, lprect);
+        OffsetRect(&rect, physDev->dc_rect.left, physDev->dc_rect.top);
+        RosGdiRectangle(physDev->hKernelDC, &rect);
 
-        DeleteObject(SelectObject(physDev->hUserDC, oldBrush));
-        DeleteObject(SelectObject(physDev->hUserDC, oldPen));
+        DeleteObject(SelectObject(physDev->hdc, oldBrush));
+        DeleteObject(SelectObject(physDev->hdc, oldPen));
     }
 
     if(count == 0)
@@ -633,9 +636,9 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     }
 
     TRACE("Writing %s at %d,%d\n", debugstr_wn(wstr,count),
-        /*physDev->dc_rect.left +*/ x, /*physDev->dc_rect.top +*/ y);
+        physDev->dc_rect.left + x, physDev->dc_rect.top + y);
 
-    RosGdiExtTextOut(physDev->hKernelDC, x, y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
+    RosGdiExtTextOut(physDev->hKernelDC, physDev->dc_rect.left + x, physDev->dc_rect.top + y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
 
     //LeaveCriticalSection(&xrender_cs);
 

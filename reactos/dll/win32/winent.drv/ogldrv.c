@@ -60,7 +60,7 @@ INT CDECL RosDrv_ChoosePixelFormat(NTDRV_PDEVICE *physDev,
         if (!InitOGL())
             return 0;
 
-    return glChoosePixelFormat(physDev->hUserDC, ppfd);
+    return glChoosePixelFormat(physDev->hdc, ppfd);
 }
 
 INT CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
@@ -69,7 +69,7 @@ INT CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
         if (!InitOGL())
             return 0;
 
-    return glGetPixelFormat(physDev->hUserDC);
+    return glGetPixelFormat(physDev->hdc);
 }
 
 INT CDECL RosDrv_DescribePixelFormat(NTDRV_PDEVICE *physDev,
@@ -81,7 +81,7 @@ INT CDECL RosDrv_DescribePixelFormat(NTDRV_PDEVICE *physDev,
         if (!InitOGL())
             return 0;
 
-    return glDescribePixelFormat(physDev->hUserDC, iPixelFormat, nBytes, ppfd);
+    return glDescribePixelFormat(physDev->hdc, iPixelFormat, nBytes, ppfd);
 }
 
 BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,
@@ -92,7 +92,7 @@ BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,
         if (!InitOGL())
             return 0;
 
-    return glSetPixelFormat(physDev->hUserDC, iPixelFormat, ppfd);
+    return glSetPixelFormat(physDev->hdc, iPixelFormat, ppfd);
 }
 
 
@@ -102,7 +102,7 @@ BOOL CDECL RosDrv_SwapBuffers(NTDRV_PDEVICE *physDev)
         if (!InitOGL())
             return 0;
 
-    return glSwapBuffers(physDev->hUserDC);
+    return glSwapBuffers(physDev->hdc);
 }
 
 /* EOF */

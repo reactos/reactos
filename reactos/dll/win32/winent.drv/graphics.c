@@ -50,9 +50,10 @@ static RECT get_device_rect( HDC hdc, int left, int top, int right, int bottom )
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn )
 {
     RGNDATA *data;
-    DWORD size;
+    DWORD size, i;
+    RECT *pRects;
 
-    //FIXME("SetDeviceClipping hdc %x\n", physDev->hUserDC);
+    //FIXME("SetDeviceClipping hdc %x\n", physDev->hdc);
 
     /* Update dc region to become a combined region */
     CombineRgn( physDev->region, vis_rgn, clip_rgn, clip_rgn ? RGN_AND : RGN_COPY );
@@ -71,6 +72,14 @@ void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN 
         HeapFree( GetProcessHeap(), 0, data );
         return;
     }
+
+    /* Offset all rects */
+    pRects = (RECT *)data->Buffer;
+    for (i=0; i<data->rdh.nCount; i++)
+        OffsetRect(&pRects[i], physDev->dc_rect.left, physDev->dc_rect.top);
+
+    /* Offset bounding rect */
+    OffsetRect(&data->rdh.rcBound, physDev->dc_rect.left, physDev->dc_rect.top);
 
     /* Set clipping */
     RosGdiSetDeviceClipping(physDev->hKernelDC, data->rdh.nCount, (RECTL *)data->Buffer, (RECTL *)&data->rdh.rcBound);
@@ -93,7 +102,7 @@ INT RosDrv_XWStoDS( NTDRV_PDEVICE *physDev, INT width )
     pt[0].y = 0;
     pt[1].x = width;
     pt[1].y = 0;
-    LPtoDP( physDev->hUserDC, pt, 2 );
+    LPtoDP( physDev->hdc, pt, 2 );
     return pt[1].x - pt[0].x;
 }
 
@@ -110,7 +119,7 @@ INT RosDrv_YWStoDS( NTDRV_PDEVICE *physDev, INT height )
     pt[0].y = 0;
     pt[1].x = 0;
     pt[1].y = height;
-    LPtoDP( physDev->hUserDC, pt, 2 );
+    LPtoDP( physDev->hdc, pt, 2 );
     return pt[1].y - pt[0].y;
 }
 
@@ -119,21 +128,23 @@ BOOL CDECL RosDrv_LineTo( NTDRV_PDEVICE *physDev, INT x, INT y )
     POINT pt[2];
 
     /* Get current cursor position */
-    GetCurrentPositionEx( physDev->hUserDC, &pt[0] );
+    GetCurrentPositionEx( physDev->hdc, &pt[0] );
 
     /* Convert both points coordinates to device */
     pt[1].x = x;
     pt[1].y = y;
-    LPtoDP( physDev->hUserDC, pt, 2 );
+    LPtoDP( physDev->hdc, pt, 2 );
 
     /* Draw the line */
-    return RosGdiLineTo(physDev->hKernelDC, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
+    return RosGdiLineTo(physDev->hKernelDC, physDev->dc_rect.left + pt[0].x, physDev->dc_rect.top + pt[0].y,
+        physDev->dc_rect.left + pt[1].x,  physDev->dc_rect.top + pt[1].y);
 }
 
 BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
             INT xstart, INT ystart, INT xend, INT yend )
 {
     POINT pts[4];
+    DWORD i;
 
     /* Map coordinates */
     pts[0].x = left;
@@ -145,7 +156,13 @@ BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT
     pts[3].x = xend;
     pts[3].y = yend;
 
-    LPtoDP(physDev->hUserDC, pts, 4);
+    LPtoDP(physDev->hdc, pts, 4);
+
+    for (i=0; i<4; i++)
+    {
+        pts[i].x += physDev->dc_rect.left;
+        pts[i].y += physDev->dc_rect.top;
+    }
 
     return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
         pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeArc);
@@ -155,6 +172,7 @@ BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT
             INT xstart, INT ystart, INT xend, INT yend )
 {
     POINT pts[4];
+    DWORD i;
 
     /* Map coordinates */
     pts[0].x = left;
@@ -166,7 +184,13 @@ BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT
     pts[3].x = xend;
     pts[3].y = yend;
 
-    LPtoDP(physDev->hUserDC, pts, 4);
+    LPtoDP(physDev->hdc, pts, 4);
+
+    for (i=0; i<4; i++)
+    {
+        pts[i].x += physDev->dc_rect.left;
+        pts[i].y += physDev->dc_rect.top;
+    }
 
     return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
         pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypePie);
@@ -176,6 +200,7 @@ BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, I
               INT xstart, INT ystart, INT xend, INT yend )
 {
     POINT pts[4];
+    DWORD i;
 
     /* Map coordinates */
     pts[0].x = left;
@@ -187,7 +212,13 @@ BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, I
     pts[3].x = xend;
     pts[3].y = yend;
 
-    LPtoDP(physDev->hUserDC, pts, 4);
+    LPtoDP(physDev->hdc, pts, 4);
+
+    for (i=0; i<4; i++)
+    {
+        pts[i].x += physDev->dc_rect.left;
+        pts[i].y += physDev->dc_rect.top;
+    }
 
     return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
         pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeChord );
@@ -196,6 +227,7 @@ BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, I
 BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom )
 {
     POINT pts[2];
+    DWORD i;
 
     /* Map coordinates */
     pts[0].x = left;
@@ -203,7 +235,13 @@ BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right,
     pts[1].x = right;
     pts[1].y = bottom;
 
-    LPtoDP(physDev->hUserDC, pts, 2);
+    LPtoDP(physDev->hdc, pts, 2);
+
+    for (i=0; i<2; i++)
+    {
+        pts[i].x += physDev->dc_rect.left;
+        pts[i].y += physDev->dc_rect.top;
+    }
 
     return RosGdiEllipse(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y);
 }
@@ -211,7 +249,7 @@ BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right,
 BOOL CDECL RosDrv_Rectangle(NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom)
 {
     POINT ptBrush;
-    RECT rc = get_device_rect( physDev->hUserDC, left, top, right, bottom );
+    RECT rc = get_device_rect( physDev->hdc, left, top, right, bottom );
 
     if ((rc.left == rc.right) || (rc.top == rc.bottom)) return TRUE;
 
@@ -219,9 +257,12 @@ BOOL CDECL RosDrv_Rectangle(NTDRV_PDEVICE *physDev, INT left, INT top, INT right
     if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
 
     /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDev->hdc, &ptBrush);
+    ptBrush.x += physDev->dc_rect.left;
+    ptBrush.y += physDev->dc_rect.top;
     RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
 
+    OffsetRect(&rc, physDev->dc_rect.left, physDev->dc_rect.top);
     RosGdiRectangle(physDev->hKernelDC, &rc);
 
     return TRUE;
@@ -240,9 +281,9 @@ COLORREF CDECL RosDrv_SetPixel( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF c
 
     /* Transform to device coordinates */
     ptPixel.x = x; ptPixel.y = y;
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+    LPtoDP(physDev->hdc, &ptPixel, 1);
 
-    return RosGdiSetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y, color);
+    return RosGdiSetPixel(physDev->hKernelDC, physDev->dc_rect.left + ptPixel.x, physDev->dc_rect.top + ptPixel.y, color);
 }
 
 COLORREF CDECL RosDrv_GetPixel( NTDRV_PDEVICE *physDev, INT x, INT y )
@@ -251,9 +292,9 @@ COLORREF CDECL RosDrv_GetPixel( NTDRV_PDEVICE *physDev, INT x, INT y )
 
     /* Transform to device coordinates */
     ptPixel.x = x; ptPixel.y = y;
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+    LPtoDP(physDev->hdc, &ptPixel, 1);
 
-    return RosGdiGetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y);
+    return RosGdiGetPixel(physDev->hKernelDC, physDev->dc_rect.left + ptPixel.x, physDev->dc_rect.top + ptPixel.y);
 }
 
 BOOL CDECL RosDrv_PaintRgn( NTDRV_PDEVICE *physDev, HRGN hrgn )
@@ -275,9 +316,9 @@ BOOL CDECL RosDrv_Polyline( NTDRV_PDEVICE *physDev, const POINT* pt, INT count )
     for (i = 0; i < count; i++)
     {
         POINT tmp = pt[i];
-        LPtoDP(physDev->hUserDC, &tmp, 1);
-        points[i].x = tmp.x;
-        points[i].y = tmp.y;
+        LPtoDP(physDev->hdc, &tmp, 1);
+        points[i].x = physDev->dc_rect.left + tmp.x;
+        points[i].y = physDev->dc_rect.top + tmp.y;
     }
 
     /* Call kernel mode */
@@ -301,14 +342,16 @@ BOOL CDECL RosDrv_Polygon( NTDRV_PDEVICE *physDev, const POINT* pt, INT count )
     for (i = 0; i < count; i++)
     {
         POINT tmp = pt[i];
-        LPtoDP(physDev->hUserDC, &tmp, 1);
-        points[i].x = tmp.x;
-        points[i].y = tmp.y;
+        LPtoDP(physDev->hdc, &tmp, 1);
+        points[i].x = physDev->dc_rect.left + tmp.x;
+        points[i].y = physDev->dc_rect.top + tmp.y;
     }
     points[count] = points[0];
 
     /* Update brush origin */
-    GetBrushOrgEx(physDev->hUserDC, &ptBrush);
+    GetBrushOrgEx(physDev->hdc, &ptBrush);
+    ptBrush.x += physDev->dc_rect.left;
+    ptBrush.y += physDev->dc_rect.top;
     RosGdiSetBrushOrg(physDev->hKernelDC, ptBrush.x, ptBrush.y);
 
     /* Call kernel mode */
@@ -338,9 +381,9 @@ BOOL CDECL RosDrv_ExtFloodFill( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF c
     /* Transform to device coordinates */
     ptPixel.x = x; ptPixel.y = y;
 
-    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+    LPtoDP(physDev->hdc, &ptPixel, 1);
 
-    return RosGdiExtFloodFill(physDev->hKernelDC, ptPixel.x, ptPixel.y, color, fillType);
+    return RosGdiExtFloodFill(physDev->hKernelDC, physDev->dc_rect.left + ptPixel.x, physDev->dc_rect.top + ptPixel.y, color, fillType);
 }
 
 COLORREF CDECL RosDrv_SetBkColor( NTDRV_PDEVICE *physDev, COLORREF color )
