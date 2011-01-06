@@ -31,7 +31,6 @@ list(APPEND CRT_SOURCE
     except/cppexcept.c
     except/except.c
     except/matherr.c
-    except/${ARCH}/seh.s
     except/xcptfil.c
     float/chgsign.c
     float/copysign.c
@@ -141,7 +140,6 @@ list(APPEND CRT_SOURCE
     search/bsearch.c
     search/lfind.c
     search/lsearch.c
-    setjmp/${ARCH}/setjmp.s
     signal/signal.c
     signal/xcptinfo.c
     stdio/access.c
@@ -281,6 +279,11 @@ list(APPEND CRT_SOURCE
     wine/heap.c
     wine/undname.c)
 
+if(NOT ARCH MATCHES arm)
+list(APPEND CRT_SOURCE
+    except/${ARCH}/seh.s)
+endif()
+
 if(ARCH MATCHES i386)
 list(APPEND CRT_SOURCE
     except/i386/chkstk_asm.s
@@ -290,7 +293,8 @@ list(APPEND CRT_SOURCE
     float/i386/cntrlfp.c
     float/i386/fpreset.c
     float/i386/logb.c
-    float/i386/statfp.c)
+    float/i386/statfp.c
+    setjmp/i386/setjmp.s)
 elseif(ARCH MATCHES amd64)
 list(APPEND CRT_SOURCE
     except/amd64/chkstk_asm.s
@@ -298,8 +302,9 @@ list(APPEND CRT_SOURCE
     float/i386/cntrlfp.c
     float/i386/fpreset.c
     float/i386/logb.c
-    float/i386/statfp.c)
-endif(ARCH MATCHES i386)
+    float/i386/statfp.c
+    setjmp/amd64/setjmp.s)
+endif()
 
 if(ARCH MATCHES i386)
 list(APPEND CRT_SOURCE
@@ -384,7 +389,7 @@ list(APPEND CRT_SOURCE
     string/wcsncpy.c
     string/wcsnlen.c
     string/wcsrchr.c)
-endif(ARCH MATCHES i386)
+endif()
 
 if(ARCH MATCHES amd64)
 list(APPEND CRT_SOURCE
@@ -408,7 +413,7 @@ list(APPEND CRT_SOURCE
     math/amd64/sqrt.S
     math/amd64/sqrtf.S
     math/amd64/tan.S)
-endif(ARCH MATCHES amd64)
+endif()
 
 add_library(crt ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch ${CRT_SOURCE})
 
@@ -417,8 +422,6 @@ add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
 add_dependencies(crt psdk buildno_header asm)
 
 list(APPEND LIBCNTPR_SOURCE
-    except/${ARCH}/chkstk_asm.s
-    except/${ARCH}/seh.s
     math/abs.c
     math/div.c
     math/labs.c
@@ -428,7 +431,6 @@ list(APPEND LIBCNTPR_SOURCE
     mem/memicmp.c
     search/bsearch.c
     search/lfind.c
-    setjmp/${ARCH}/setjmp.s
     stdlib/qsort.c
     string/ctype.c
     string/scanf.c
@@ -467,6 +469,13 @@ list(APPEND LIBCNTPR_SOURCE
     wstring/wcscspn.c
     wstring/wcsspn.c
     wstring/wcsstr.c)
+
+if(NOT ARCH MATCHES arm)
+list(APPEND LIBCNTPR_SOURCE
+    except/${ARCH}/chkstk_asm.s
+    except/${ARCH}/seh.s
+    setjmp/${ARCH}/setjmp.s)
+endif()
 
 if(ARCH MATCHES i386)
 list(APPEND LIBCNTPR_SOURCE
@@ -512,7 +521,7 @@ list(APPEND LIBCNTPR_SOURCE
     math/amd64/pow.S
     math/amd64/sqrt.S
     math/amd64/tan.S)
-endif(ARCH MATCHES i386)
+endif()
 
 if(ARCH MATCHES i386)
 list(APPEND LIBCNTPR_SOURCE
@@ -565,7 +574,7 @@ list(APPEND LIBCNTPR_SOURCE
     string/wcsncpy.c
     string/wcsnlen.c
     string/wcsrchr.c)
-endif(ARCH MATCHES i386)
+endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
 set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)

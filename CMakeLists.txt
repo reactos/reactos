@@ -11,17 +11,18 @@ if(ARCH MATCHES i386)
     include(config.cmake)
 elseif(ARCH MATCHES amd64)
     include(config-amd64.cmake)
+elseif(ARCH MATCHES arm)
+    include(config-arm.cmake)
 endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
+    add_definitions(-DTARGET_${ARCH})
+
     if(ARCH MATCHES i386)
-        add_definitions(-DTARGET_i386)
         if(MSVC)
             add_definitions(-Dinline=__inline)
         endif()
-    elseif(ARCH MATCHES amd64)
-        add_definitions(-DTARGET_amd64)
     endif()
 
     include_directories(
@@ -117,6 +118,9 @@ if(CMAKE_CROSSCOMPILING)
         add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
     elseif(ARCH MATCHES amd64)
         add_definitions(-D_M_AMD64 -D_AMD64_ -D_M_AXP64 -D__x86_64__ -D_WIN64)
+    elseif(ARCH MATCHES arm)
+        # _M_ARM is already defined by toolchain
+        add_definitions(-D_ARM_ -D__arm__)
     endif()
 
     # Other
@@ -124,6 +128,8 @@ if(CMAKE_CROSSCOMPILING)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
     elseif(ARCH MATCHES amd64)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
+    elseif(ARCH MATCHES arm)
+        add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
 
     include_directories(
@@ -139,6 +145,10 @@ if(CMAKE_CROSSCOMPILING)
         include/ndk
         include/reactos
         include/reactos/libs)
+
+    if(ARCH MATCHES arm)
+        include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
+    endif()
 
     if(MSVC)
         include_directories(include/crt/msc)

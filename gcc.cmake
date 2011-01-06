@@ -26,7 +26,7 @@ add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unus
 # Tuning
 if(ARCH MATCHES i386)
     add_definitions(-march=${OARCH} -mtune=${TUNE})
-elseif(ARCH MATCHES amd64)
+else()
     add_definitions(-march=${OARCH})
 endif()
 
