@@ -29,7 +29,7 @@ void Test_AddFontResourceExW()
 	    SetLastError(_SEH2_GetExceptionCode());
 	}
 	_SEH2_END
-	ok(result == -1, "AddFontResourceExW should throw an exception!, result == %d", result);
+	ok(result == -1, "AddFontResourceExW should throw an exception!, result == %d\n", result);
 	ok(GetLastError() == 0xc0000005, "GetLastError()==%lx\n", GetLastError());
 
 	/* Test "" filename */
