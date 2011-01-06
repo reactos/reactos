@@ -4,7 +4,7 @@
 #include <ntifs.h>
 #include <ntddk.h>
 #include <stdio.h>
-#define	NDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <hubbusif.h>
 #include <usbioctl.h>
@@ -12,15 +12,16 @@
 
 #define USB_POOL_TAG (ULONG)'ebsu'
 
-#define	DEVICEINTIALIZED		0x01
-#define	DEVICESTARTED			0x02
-#define	DEVICEBUSY			0x04
-#define DEVICESTOPPED			0x08
-#define DEVICESTALLED          0x10
+#define DEVICEINTIALIZED        0x01
+#define DEVICESTARTED           0x02
+#define DEVICEBUSY              0x04
+#define DEVICESTOPPED           0x08
+#define DEVICESTALLED           0x10
+#define DEVICEREMOVED           0x20
 
 
-#define	MAX_USB_DEVICES			127
-#define	EHCI_MAX_SIZE_TRANSFER		0x100000
+#define	MAX_USB_DEVICES         127
+#define	EHCI_MAX_SIZE_TRANSFER  0x100000
 
 #define C_HUB_LOCAL_POWER   0
 #define C_HUB_OVER_CURRENT  1
@@ -71,6 +72,8 @@ typedef struct _USB_DEVICE
     BOOLEAN IsHub;
     USB_DEVICE_SPEED DeviceSpeed;
     USB_DEVICE_TYPE DeviceType;
+    ULONG DeviceState;
+    PDEVICE_OBJECT UsbDevicePdo;
     USB_DEVICE_DESCRIPTOR DeviceDescriptor;
     UNICODE_STRING LanguageIDs;
     UNICODE_STRING iManufacturer;

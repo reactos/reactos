@@ -31,7 +31,6 @@ AllocateMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Size, ULONG *PhysicalAddress)
 
     Size = ((Size + SMALL_ALLOCATION_SIZE - 1) / SMALL_ALLOCATION_SIZE) * SMALL_ALLOCATION_SIZE;
     BlocksNeeded = Size / SMALL_ALLOCATION_SIZE;
-
     do
     {
         if (MemoryPage->IsFull)
@@ -52,6 +51,11 @@ AllocateMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Size, ULONG *PhysicalAddress)
                 freeCount = 0;
             }
 
+            if ((i-freeCount+1 + BlocksNeeded) > sizeof(MemoryPage->Entry))
+            {
+                freeCount = 0;
+                continue;
+            }
             if (freeCount == BlocksNeeded)
             {
                 for (j = 0; j < freeCount; j++)
@@ -80,13 +84,13 @@ VOID
 ReleaseMemory(ULONG Address)
 {
     PMEM_HEADER MemoryPage;
-    ULONG Index, i;
+    ULONG Index, i, BlockSize;
 
     MemoryPage = (PMEM_HEADER)(Address & ~(PAGE_SIZE - 1));
 
     Index = (Address - ((ULONG)MemoryPage + sizeof(MEM_HEADER))) / SMALL_ALLOCATION_SIZE;
-
-    for (i = 0; i < MemoryPage->Entry[Index].Blocks; i++)
+    BlockSize = MemoryPage->Entry[Index].Blocks;
+    for (i = 0; i < BlockSize; i++)
     {
         MemoryPage->Entry[Index + i].InUse = 0;
         MemoryPage->Entry[Index + i].Blocks = 0;
