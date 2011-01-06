@@ -21,29 +21,29 @@ set_rc_compiler()
 set(NEWCC FALSE)
 
 if(NEWCC)
-add_definitions(-DNEWCC)
-list(APPEND SOURCE
-    cache/cachesub.c
-    cache/copysup.c
-    cache/fssup.c
-    cache/lazyrite.c
-    cache/logsup.c
-    cache/mdlsup.c
-    cache/pinsup.c
-    cache/section/data.c
-    cache/section/fault.c
-    cache/section/io.c
-    cache/section/reqtools.c
-    cache/section/sptab.c
-    cache/section/swapout.c)
+    add_definitions(-DNEWCC)
+    list(APPEND SOURCE
+        cache/cachesub.c
+        cache/copysup.c
+        cache/fssup.c
+        cache/lazyrite.c
+        cache/logsup.c
+        cache/mdlsup.c
+        cache/pinsup.c
+        cache/section/data.c
+        cache/section/fault.c
+        cache/section/io.c
+        cache/section/reqtools.c
+        cache/section/sptab.c
+        cache/section/swapout.c)
 else()
-list(APPEND SOURCE
-    cc/cacheman.c
-    cc/copy.c
-    cc/fs.c
-    cc/mdl.c
-    cc/pin.c
-    cc/view.c)
+    list(APPEND SOURCE
+        cc/cacheman.c
+        cc/copy.c
+        cc/fs.c
+        cc/mdl.c
+        cc/pin.c
+        cc/view.c)
 endif()
 
 list(APPEND SOURCE
@@ -271,171 +271,164 @@ list(APPEND SOURCE
     ntoskrnl.rc
     ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
-    
-set_source_files_properties(ntoskrnl_${ARCH}.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    config/i386/cmhardwr.c
-    ex/i386/interlck_asm.S
-    ex/i386/fastinterlck_asm.S
-    ex/i386/ioport.S
-    ke/freeldr.c
-    ke/i386/abios.c
-    ke/i386/cpu.c
-    ke/i386/context.c
-    ke/i386/ctxswitch.S
-    ke/i386/exp.c
-    ke/i386/irqobj.c
-    ke/i386/kiinit.c
-    ke/i386/ldt.c
-    ke/i386/mtrr.c
-    ke/i386/patpge.c
-    ke/i386/thrdini.c
-    ke/i386/trap.s
-    ke/i386/traphdlr.c
-    ke/i386/usercall_asm.S
-    ke/i386/usercall.c
-    ke/i386/v86vdm.c
-    mm/i386/page.c
-    mm/ARM3/i386/init.c
-    ps/i386/psctx.c
-    ps/i386/psldt.c
-    rtl/i386/stack.S
-    vdm/vdmmain.c
-    vdm/vdmexec.c)
+    list(APPEND SOURCE
+        config/i386/cmhardwr.c
+        ex/i386/interlck_asm.S
+        ex/i386/fastinterlck_asm.S
+        ex/i386/ioport.S
+        ke/freeldr.c
+        ke/i386/abios.c
+        ke/i386/cpu.c
+        ke/i386/context.c
+        ke/i386/ctxswitch.S
+        ke/i386/exp.c
+        ke/i386/irqobj.c
+        ke/i386/kiinit.c
+        ke/i386/ldt.c
+        ke/i386/mtrr.c
+        ke/i386/patpge.c
+        ke/i386/thrdini.c
+        ke/i386/trap.s
+        ke/i386/traphdlr.c
+        ke/i386/usercall_asm.S
+        ke/i386/usercall.c
+        ke/i386/v86vdm.c
+        mm/i386/page.c
+        mm/ARM3/i386/init.c
+        ps/i386/psctx.c
+        ps/i386/psldt.c
+        rtl/i386/stack.S
+        vdm/vdmmain.c
+        vdm/vdmexec.c)
 elseif(ARCH MATCHES amd64)
-list(APPEND SOURCE
-    config/i386/cmhardwr.c
-    ex/amd64/fastinterlck.c
-    ke/amd64/boot.S
-    ke/amd64/context.c
-    ke/amd64/cpu.c
-    ke/amd64/ctxswitch.S
-    ke/amd64/except.c
-    ke/amd64/interrupt.c
-    ke/amd64/irql.c
-    ke/amd64/kiinit.c
-    ke/amd64/spinlock.c
-    ke/amd64/stubs.c
-    ke/amd64/thrdini.c
-    ke/amd64/trap.S
-    mm/amd64/init.c
-    mm/amd64/page.c
-    ps/amd64/psctx.c)
+    list(APPEND SOURCE
+        config/i386/cmhardwr.c
+        ex/amd64/fastinterlck.c
+        ke/amd64/boot.S
+        ke/amd64/context.c
+        ke/amd64/cpu.c
+        ke/amd64/ctxswitch.S
+        ke/amd64/except.c
+        ke/amd64/interrupt.c
+        ke/amd64/irql.c
+        ke/amd64/kiinit.c
+        ke/amd64/spinlock.c
+        ke/amd64/stubs.c
+        ke/amd64/thrdini.c
+        ke/amd64/trap.S
+        mm/amd64/init.c
+        mm/amd64/page.c
+        ps/amd64/psctx.c)
 elseif(ARCH MATCHES arm)
-list(APPEND SOURCE
-    config/arm/cmhardwr.c
-    ke/arm/boot.s
-    ke/arm/cpu.c
-    ke/arm/ctxswtch.s
-    ke/arm/exp.c
-    ke/arm/kiinit.c
-    ke/arm/stubs_asm.s
-    ke/arm/thrdini.c
-    ke/arm/trap.s
-    ke/arm/trapc.c
-    ke/arm/usercall.c
-    mm/arm/page.c
-    mm/ARM3/arm/init.c
-    ps/arm/psctx.c
-    rtl/arm/rtlexcpt.c)
+    list(APPEND SOURCE
+        config/arm/cmhardwr.c
+        ke/arm/boot.s
+        ke/arm/cpu.c
+        ke/arm/ctxswtch.s
+        ke/arm/exp.c
+        ke/arm/kiinit.c
+        ke/arm/stubs_asm.s
+        ke/arm/thrdini.c
+        ke/arm/trap.s
+        ke/arm/trapc.c
+        ke/arm/usercall.c
+        mm/arm/page.c
+        mm/ARM3/arm/init.c
+        ps/arm/psctx.c
+        rtl/arm/rtlexcpt.c)
 elseif(ARCH MATCHES powerpc)
-list(APPEND SOURCE
-    config/powerpc/cmhardwr.c
-    ke/powerpc/main_asm.S
-    ke/powerpc/cpu.c
-    ke/powerpc/exp.c
-    ke/powerpc/kiinit.c
-    ke/powerpc/ppc_irq.c
-    ke/powerpc/stubs.c
-    ke/powerpc/systimer.c
-    ke/powerpc/thrdini.c
-    ke/powerpc/ctxswitch.c
-    ke/powerpc/ctxhelp.S
-    mm/powerpc/pfault.c
-    mm/powerpc/page.c)
-endif(ARCH MATCHES i386)
+    list(APPEND SOURCE
+        config/powerpc/cmhardwr.c
+        ke/powerpc/main_asm.S
+        ke/powerpc/cpu.c
+        ke/powerpc/exp.c
+        ke/powerpc/kiinit.c
+        ke/powerpc/ppc_irq.c
+        ke/powerpc/stubs.c
+        ke/powerpc/systimer.c
+        ke/powerpc/thrdini.c
+        ke/powerpc/ctxswitch.c
+        ke/powerpc/ctxhelp.S
+        mm/powerpc/pfault.c
+        mm/powerpc/page.c)
+endif()
 
 if(NOT _WINKD_)
+    if(ARCH MATCHES i386)
+        list(APPEND SOURCE
+            kd/i386/kdmemsup.c
+            kd/wrappers/gdbstub.c)
+        if(KDBG)
+            list(APPEND SOURCE
+                kdbg/i386/i386-dis.c
+                kdbg/i386/kdb_help.S)
+        endif()
+    elseif(ARCH MATCHES amd64)
+        list(APPEND SOURCE
+            kd/amd64/kd.c
+            kd/amd64/kdmemsup.c)
+        if(KDBG)
+            list(APPEND SOURCE
+                kdbg/amd64/i386-dis.c
+                kdbg/amd64/kdb_help.S
+                kdbg/amd64/kdb.c)
+        endif()
+    elseif(ARCH MATCHES powerpc)
+        list(APPEND SOURCE kd/wrappers/gdbstub_powerpc.c)
+    endif()
 
-if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    kd/i386/kdmemsup.c
-    kd/wrappers/gdbstub.c)
+    if(KDBG)
+        list(APPEND SOURCE
+            kdbg/kdb.c
+            kdbg/kdb_cli.c
+            kdbg/kdb_expr.c
+            kdbg/kdb_keyboard.c
+            kdbg/kdb_serial.c)
+    endif()
 
-if(KDBG)
-list(APPEND SOURCE
-    kdbg/i386/i386-dis.c
-    kdbg/i386/kdb_help.S)
-endif(KDBG)
+    if(DBG OR KDBG)
+        list(APPEND SOURCE kdbg/kdb_symbols.c)
+    endif()
 
-elseif(ARCH MATCHES amd64)
-list(APPEND SOURCE
-    kd/amd64/kd.c
-    kd/amd64/kdmemsup.c)
-
-if(KDBG)
-list(APPEND SOURCE
-    kdbg/amd64/i386-dis.c
-    kdbg/amd64/kdb_help.S
-    kdbg/amd64/kdb.c)
-endif(KDBG)
-
-elseif(ARCH MATCHES powerpc)
-list(APPEND SOURCE kd/wrappers/gdbstub_powerpc.c)
-
-endif(ARCH MATCHES i386)
-
-if(KDBG)
-list(APPEND SOURCE
-    kdbg/kdb.c
-    kdbg/kdb_cli.c
-    kdbg/kdb_expr.c
-    kdbg/kdb_keyboard.c
-    kdbg/kdb_serial.c)
-endif(KDBG)
-
-if(DBG OR KDBG)
-list(APPEND SOURCE kdbg/kdb_symbols.c)
-endif(DBG OR KDBG)
-
-list(APPEND SOURCE
-    kd/wrappers/bochs.c
-    kd/wrappers/kdbg.c
-    kd/kdinit.c
-    kd/kdio.c
-    kd/kdmain.c)
+    list(APPEND SOURCE
+        kd/wrappers/bochs.c
+        kd/wrappers/kdbg.c
+        kd/kdinit.c
+        kd/kdio.c
+        kd/kdmain.c)
 
 else() # _WINKD_
 
-list(APPEND SOURCE
-    kd64/kdapi.c
-    kd64/kdbreak.c
-    kd64/kddata.c
-    kd64/kdinit.c
-    kd64/kdlock.c
-    kd64/kdprint.c
-    kd64/kdtrap.c)
+    list(APPEND SOURCE
+        kd64/kdapi.c
+        kd64/kdbreak.c
+        kd64/kddata.c
+        kd64/kdinit.c
+        kd64/kdlock.c
+        kd64/kdprint.c
+        kd64/kdtrap.c)
 
-if(ARCH MATCHES i386)
-list(APPEND SOURCE kd64/i386/kdx86.c)
-elseif(ARCH MATCHES amd64)
-list(APPEND SOURCE kd64/amd64/kdx64.c)
-elseif(ARCH MATCHES arm)
-list(APPEND SOURCE kd64/arm/kdarm.c)
-endif(ARCH MATCHES i386)
+    if(ARCH MATCHES i386)
+        list(APPEND SOURCE kd64/i386/kdx86.c)
+    elseif(ARCH MATCHES amd64)
+        list(APPEND SOURCE kd64/amd64/kdx64.c)
+    elseif(ARCH MATCHES arm)
+        list(APPEND SOURCE kd64/arm/kdarm.c)
+    endif()
 
-endif(NOT _WINKD_)
+endif()
 
 add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SOURCE})
 
 set_entrypoint(ntoskrnl KiSystemStartup@4)
 set_subsystem(ntoskrnl native)
+
 if(MSVC)
-  set_image_base(ntoskrnl 0x00400000)
+    set_image_base(ntoskrnl 0x00400000)
 else()
-  set_image_base(ntoskrnl 0x80800000)
+    set_image_base(ntoskrnl 0x80800000)
 endif()
 
 target_link_libraries(ntoskrnl
