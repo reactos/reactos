@@ -329,16 +329,16 @@ SwmClipAllWindows()
 }
 
 
-VOID
+GR_WINDOW_ID
 NTAPI
-SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
+SwmNewWindow(GR_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style)
 {
     PSWM_WINDOW Win, FirstNonTop;
 
     DPRINT("SwmAddWindow %x\n", hWnd);
-    DPRINT("rect (%d,%d)-(%d,%d), style %x, ex_style %x\n",
+    DPRINT("rect (%d,%d)-(%d,%d), ex_style %x\n",
         WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom,
-        style, ex_style);
+        ex_style);
 
     /* Acquire the lock */
     SwmAcquire();
@@ -381,6 +381,8 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
 
     /* Release the lock */
     SwmRelease();
+
+    return (GR_WINDOW_ID)Win;
 }
 
 VOID
@@ -458,25 +460,20 @@ SwmFindByHwnd(HWND hWnd)
 
 VOID
 NTAPI
-SwmRemoveWindow(HWND hWnd)
+SwmDestroyWindow(GR_WINDOW_ID Wid)
 {
     PSWM_WINDOW Win;
+
+    /* Check for root window */
+    if (Wid == SWM_ROOT_WINDOW_ID) return;
 
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT("SwmRemoveWindow %x\n", hWnd);
-
     /* Allocate entry */
-    Win = SwmFindByHwnd(hWnd);
-    //ASSERT(Win != NULL);
-    if (!Win)
-    {
-        /* Release the lock */
-        SwmRelease();
+    Win = (PSWM_WINDOW)Wid;
 
-        return;
-    }
+    DPRINT("SwmRemoveWindow %x\n", Win->hwnd);
 
     /* Remove it from the zorder list */
     RemoveEntryList(&Win->Entry);
@@ -713,13 +710,7 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
 
 VOID
 NTAPI
-SwmPosChanging(HWND hWnd, const RECT *WindowRect)
-{
-}
-
-VOID
-NTAPI
-SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
+SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
 {
     PSWM_WINDOW SwmWin, SwmPrev;
     LONG Width, Height, OldWidth, OldHeight;
@@ -727,17 +718,13 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
     struct region *OldRegion, *DiffRegion;
     rectangle_t OldRectSafe;
 
+    /* Check for root window */
+    if (Wid == SWM_ROOT_WINDOW_ID) return;
+
     /* Acquire the lock */
     SwmAcquire();
 
-    /* Allocate entry */
-    SwmWin = SwmFindByHwnd(hWnd);
-    if (!SwmWin)
-    {
-        /* Release the lock */
-        SwmRelease();
-        return;
-    }
+    SwmWin = (PSWM_WINDOW)Wid;
 
     /* Save parameters */
     OldRectSafe.left = OldRect->left; OldRectSafe.top = OldRect->top;
@@ -770,7 +757,7 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
         return;
     }
 
-    DPRINT("SwmPosChanged hwnd %x, new rect (%d,%d)-(%d,%d)\n", hWnd,
+    DPRINT("SwmPosChanged hwnd %x, new rect (%d,%d)-(%d,%d)\n", SwmWin->hwnd,
         WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
 
     SwmWin->Window.left = WindowRect->left;
@@ -828,24 +815,20 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
 
 VOID
 NTAPI
-SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags)
+SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
 {
     PSWM_WINDOW Win;
     struct region *OldRegion;
 
+    /* Check for root window */
+    if (Wid == SWM_ROOT_WINDOW_ID) return;
+
     /* Acquire the lock */
     SwmAcquire();
 
-    DPRINT("SwmShowWindow %x, Show %d\n", hWnd, Show);
+    Win = (PSWM_WINDOW)Wid;
 
-    /* Allocate entry */
-    Win = SwmFindByHwnd(hWnd);
-    if (!Win)
-    {
-        /* Release the lock */
-        SwmRelease();
-        return;
-    }
+    DPRINT("SwmShowWindow %x, Show %d\n", Win->hwnd, Show);
 
     if (Show && Win->Hidden)
     {

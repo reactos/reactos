@@ -85,11 +85,10 @@ RosUserGetAsyncKeyState            1
 RosUserRegisterShellHookWindow     1
 RosUserDeRegisterShellHookWindow   1
 RosUserBuildShellHookHwndList      2
-SwmAddWindow                       4
+SwmNewWindow                       4
 SwmAddDesktopWindow                3
-SwmRemoveWindow                    1
+SwmDestroyWindow                   1
 SwmSetForeground                   1
-SwmPosChanging                     2
 SwmPosChanged                      5
 SwmGetWindowFromPoint              2
 SwmShowWindow                      3
