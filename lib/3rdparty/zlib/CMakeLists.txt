@@ -19,7 +19,7 @@ list(APPEND SOURCE
     zutil.c)
 
 if(CMAKE_CROSSCOMPILING)
-add_library(zlib ${SOURCE})
+    add_library(zlib ${SOURCE})
 else()
-add_library(zlibhost ${SOURCE})
+    add_library(zlibhost ${SOURCE})
 endif()

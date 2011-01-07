@@ -173,7 +173,7 @@ else()
 list(APPEND SOURCE
     dib/dib24bppc.c
     dib/dib32bppc.c)
-endif(ARCH MATCHES i386)
+endif()
 
 add_library(win32k SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/win32k_pch.h.gch
@@ -192,4 +192,3 @@ add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
 add_dependencies(win32k gendib_generated subsystem_napi)
 add_cab_target(win32k 1)
 add_importlib_target(win32k.spec win32k.sys)
-

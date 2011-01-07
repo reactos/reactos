@@ -66,39 +66,38 @@ list(APPEND SOURCE
     workitem.c)
 
 if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    i386/debug_asm.S
-    i386/except_asm.s
-    i386/except.c
-    i386/interlck.S
-    i386/rtlmem.s
-    i386/res_asm.s
-    i386/thread.c)
+    list(APPEND SOURCE
+        i386/debug_asm.S
+        i386/except_asm.s
+        i386/except.c
+        i386/interlck.S
+        i386/rtlmem.s
+        i386/res_asm.s
+        i386/thread.c)
 elseif(ARCH MATCHES amd64)
-list(APPEND SOURCE
-    amd64/debug_asm.S
-    amd64/except_asm.S
-    amd64/slist.S
-    amd64/unwind.c
-    amd64/stubs.c
-    mem.c
-    memgen.c)
+    list(APPEND SOURCE
+        amd64/debug_asm.S
+        amd64/except_asm.S
+        amd64/slist.S
+        amd64/unwind.c
+        amd64/stubs.c
+        mem.c
+        memgen.c)
 elseif(ARCH MATCHES arm)
-list(APPEND SOURCE
-    arm/debug_asm.S
-    mem.c
-    memgen.c)
+    list(APPEND SOURCE
+        arm/debug_asm.S
+        mem.c
+        memgen.c)
 elseif(ARCH MATCHES powerpc)
-list(APPEND SOURCE
-    powerpc/debug.c
-    powerpc/except.c
-    powerpc/interlocked.c
-    powerpc/rtlmem.s
-    powerpc/rtlswap.s
-    powerpc/thread.c)
-endif(ARCH MATCHES i386)
+    list(APPEND SOURCE
+        powerpc/debug.c
+        powerpc/except.c
+        powerpc/interlocked.c
+        powerpc/rtlmem.s
+        powerpc/rtlswap.s
+        powerpc/thread.c)
+endif()
 
 add_library(rtl ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch ${SOURCE})
 add_pch(rtl ${CMAKE_CURRENT_SOURCE_DIR}/rtl.h ${SOURCE})
 add_dependencies(rtl psdk asm)
-

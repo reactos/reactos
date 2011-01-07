@@ -1,22 +1,16 @@
 
-SET(GLOBAL_FILES infcore.c infget.c infput.c)
+set(GLOBAL_FILES infcore.c infget.c infput.c)
 
 if(CMAKE_CROSSCOMPILING)
-
-file(GLOB_RECURSE SOURCE "infros*.c")
-add_library(newinflib ${GLOBAL_FILES} ${SOURCE})
-add_dependencies(newinflib psdk)
-
+    file(GLOB_RECURSE SOURCE "infros*.c")
+    add_library(newinflib ${GLOBAL_FILES} ${SOURCE})
+    add_dependencies(newinflib psdk)
 else()
-
-file(GLOB_RECURSE SOURCE "infhost*.c")
-
-add_definitions(-DWINE_UNICODE_API= -D__NO_CTYPE_INLINES -DINFLIB_HOST -DUSE_HOST_WCSFUNCS)
-if(NOT MSVC)
-add_definitions(-Wpointer-arith -Wwrite-strings)
+    file(GLOB_RECURSE SOURCE "infhost*.c")
+    add_definitions(-DWINE_UNICODE_API= -D__NO_CTYPE_INLINES -DINFLIB_HOST -DUSE_HOST_WCSFUNCS)
+    if(NOT MSVC)
+        add_definitions(-Wpointer-arith -Wwrite-strings)
+    endif()
+    add_library(newinflibhost ${GLOBAL_FILES} ${SOURCE})
+    target_link_libraries(newinflibhost unicode)
 endif()
-add_library(newinflibhost ${GLOBAL_FILES} ${SOURCE})
-target_link_libraries(newinflibhost unicode)
-
-endif()
-

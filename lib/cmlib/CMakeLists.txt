@@ -13,13 +13,13 @@ list(APPEND SOURCE
     hivewrt.c)
 
 if(CMAKE_CROSSCOMPILING)
-add_library(cmlib ${SOURCE})
-add_dependencies(cmlib bugcodes)
+    add_library(cmlib ${SOURCE})
+    add_dependencies(cmlib bugcodes)
 else()
-add_definitions(
-    -DWINE_UNICODE_API=
-    -D__NO_CTYPE_INLINES
-    -DCMLIB_HOST)
-add_library(cmlibhost ${SOURCE})
-target_link_libraries(cmlibhost unicode)
+    add_definitions(
+        -DWINE_UNICODE_API=
+        -D__NO_CTYPE_INLINES
+        -DCMLIB_HOST)
+    add_library(cmlibhost ${SOURCE})
+    target_link_libraries(cmlibhost unicode)
 endif()

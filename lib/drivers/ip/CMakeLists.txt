@@ -6,7 +6,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
 
 if(ARCH MATCHES i386)
-list(APPEND SOURCE network/i386/checksum.S)
+    list(APPEND SOURCE network/i386/checksum.S)
 endif()
 
 list(APPEND SOURCE
