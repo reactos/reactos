@@ -1,5 +1,5 @@
 
-#add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
     RtlInitializeBitMap.c
@@ -7,13 +7,11 @@ list(APPEND SOURCE
     testlist.c)
 
 if(ARCH MATCHES i386)
-list(APPEND SOURCE i386/ZwContinue.asm)
+    list(APPEND SOURCE i386/ZwContinue.S)
 endif()
 
 add_executable(ntdll_apitest ${SOURCE})
-target_link_libraries(ntdll_apitest wine
- #${PSEH_LIB}
- )
+target_link_libraries(ntdll_apitest wine)
 set_module_type(ntdll_apitest win32cui)
-add_importlibs(ntdll_apitest ntdll)
+add_importlibs(ntdll_apitest msvcrt kernel32 ntdll)
 add_cab_target(ntdll_apitest 7)
