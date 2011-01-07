@@ -238,7 +238,7 @@ RtlpInsertFreeBlockHelper(PHEAP Heap,
     /* Check if PreviousSize of the next entry matches ours */
     if (!(FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
     {
-        ASSERT(((PHEAP_ENTRY)FreeEntry + BlockSize)->PreviousSize = BlockSize);
+        ASSERT(((PHEAP_ENTRY)FreeEntry + BlockSize)->PreviousSize == BlockSize);
     }
 
     /* Insert it either into dedicated or non-dedicated list */
@@ -2344,6 +2344,7 @@ BOOLEAN NTAPI RtlFreeHeap(
 
         /* Release the heap lock */
         if (Locked) RtlLeaveHeapLock(Heap->LockVariable);
+        DbgBreakPoint();
         return FALSE;
     }
 
