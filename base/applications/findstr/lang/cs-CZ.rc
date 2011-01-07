@@ -10,7 +10,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FIND: Zobrazí všechny øádky souboru obsahující hledaný øetìzec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"øetìzec\" [ soubor... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""øetìzec"" [ soubor... ]\n\
     /C  Zobrazí poèet øádkù obsahující øetìzec.\n\
     /I  Ignoruje velikost písmen.\n\
     /N  Èísluje zobrazené øádky, zaèíná od 1.\n\
