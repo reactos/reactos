@@ -27,7 +27,7 @@ static CRITICAL_SECTION wnd_data_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 static const char whole_window_prop[] = "__arwin_nt_whole_window";
 static const char client_window_prop[]= "__arwin_nt_client_window";
 
-GR_WINDOW_ID root_window = 2;
+GR_WINDOW_ID root_window = SWM_ROOT_WINDOW_ID;
 
 /* FUNCTIONS **************************************************************/
 
@@ -153,7 +153,7 @@ BOOL CDECL RosDrv_CreateWindow( HWND hwnd )
 {
     WARN("RosDrv_CreateWindow(%x)\n", hwnd);
 
-    if (hwnd == GetDesktopWindow() /*&& root_window != GR_ROOT_WINDOW_ID*/)
+    if (hwnd == GetDesktopWindow() /*&& root_window != SWM_ROOT_WINDOW_ID*/)
     {
         /* create desktop win data */
         if (!NTDRV_create_desktop_win_data( hwnd )) return FALSE;
@@ -244,8 +244,7 @@ static void destroy_whole_window( struct ntdrv_win_data *data, BOOL already_dest
     if (!data->whole_window) return;
 
     TRACE( "win %p xwin %lx/%lx\n", data->hwnd, data->whole_window, data->client_window );
-    //if (!already_destroyed) GrDestroyWindow( data->whole_window );
-    if (!already_destroyed) SwmRemoveWindow( data->hwnd );
+    if (!already_destroyed) SwmDestroyWindow( data->whole_window );
     data->whole_window = data->client_window = 0;
     //data->wm_state = WithdrawnState;
     //data->net_wm_state = 0;
@@ -288,8 +287,7 @@ void map_window( struct ntdrv_win_data *data, DWORD new_style )
     TRACE( "win %p/%lx\n", data->hwnd, data->whole_window );
 
     //sync_window_style( display, data );
-    //GrMapWindow( data->whole_window );
-    SwmShowWindow( data->hwnd, TRUE, 0 );
+    SwmShowWindow( data->whole_window, TRUE, 0 );
 
     data->mapped = TRUE;
     data->iconic = (new_style & WS_MINIMIZE) != 0;
@@ -303,8 +301,7 @@ void unmap_window( struct ntdrv_win_data *data )
 {
     TRACE( "win %p/%lx\n", data->hwnd, data->whole_window );
 
-    //GrUnmapWindow( data->whole_window );
-    SwmShowWindow( data->hwnd, FALSE, 0 );
+    SwmShowWindow( data->whole_window, FALSE, 0 );
 
     data->mapped = FALSE;
     //data->net_wm_state = 0;
@@ -325,7 +322,7 @@ void sync_window_position( struct ntdrv_win_data *data,
 
     if (data->iconic) return;
 
-    SwmPosChanged(data->hwnd, &data->whole_rect, old_whole_rect, NULL, swp_flags);
+    SwmPosChanged(data->whole_window, &data->whole_rect, old_whole_rect, NULL, swp_flags);
 
     width = data->whole_rect.right - data->whole_rect.left;
     height = data->whole_rect.bottom - data->whole_rect.top;
@@ -546,7 +543,7 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
     //DWORD layered_flags;
     HRGN win_rgn;
     //GR_WM_PROPERTIES props;
-    DWORD style, ex_style;
+    DWORD ex_style;
 
     if ((win_rgn = CreateRectRgn( 0, 0, 0, 0 )) &&
         GetWindowRgn( data->hwnd, win_rgn ) == ERROR)
@@ -565,20 +562,12 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
     if (!(cy = data->whole_rect.bottom - data->whole_rect.top)) cy = 1;
     else if (cy > 65535) cy = 65535;
 
-    //data->whole_window = GrNewWindow( root_window,
-    //                                  data->whole_rect.left,
-    //                                  data->whole_rect.top,
-    //                                  cx, cy, 0, RGB(255,255,255), 0 );
-    data->whole_window = (GR_WINDOW_ID)1;
-
-    /* Inform window manager about window rect in screen coords */
-    style = GetWindowLongW( data->hwnd, GWL_STYLE );
     ex_style = GetWindowLongW( data->hwnd, GWL_EXSTYLE );
-    SwmAddWindow(data->hwnd, &data->window_rect, style, ex_style);
+
+    data->whole_window = SwmNewWindow( root_window,
+                                       &data->whole_rect, data->hwnd, ex_style );
 
     //GrSelectEvents(data->whole_window, GR_EVENT_MASK_EXPOSURE);
-
-    //if (data->whole_window) GrSetHwnd( data->whole_window, data->hwnd );
 
     if (!data->whole_window) goto done;
 
@@ -589,7 +578,7 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
 
     if (!create_client_window( data ))
     {
-        //GrDestroyWindow( data->whole_window );
+        SwmDestroyWindow( data->whole_window );
         data->whole_window = 0;
         goto done;
     }
@@ -819,8 +808,6 @@ void CDECL RosDrv_WindowPosChanging( HWND hwnd, HWND insert_after, UINT swp_flag
         if (!(style & WS_VISIBLE) && !(swp_flags & SWP_SHOWWINDOW)) return;
         if (!(data = NTDRV_create_win_data( hwnd ))) return;
     }
-
-    //SwmPosChanging(hwnd, window_rect);
 
     //TRACE( "win %x pos is changing. vis rect %s, win rect %s\n",
     //       hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(window_rect) );
