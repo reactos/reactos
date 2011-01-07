@@ -9,6 +9,7 @@
 	<file>bitblt.c</file>
 	<file>clipboard.c</file>
 	<file>dib.c</file>
+	<file>event.c</file>
 	<file>font.c</file>
 	<file>gdidrv.c</file>
 	<file>graphics.c</file>

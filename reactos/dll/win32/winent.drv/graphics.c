@@ -4,6 +4,7 @@
  * FILE:            dll/win32/winent.drv/graphics.c
  * PURPOSE:         GDI high-level driver for ReactOS/Windows
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ *                  Some code is taken from winex11.drv (c) Wine project
  */
 
 /* INCLUDES ***************************************************************/

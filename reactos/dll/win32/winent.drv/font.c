@@ -4,6 +4,7 @@
  * FILE:            dll/win32/winent.drv/font.c
  * PURPOSE:         Font Engine support functions
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ *                  Some code is taken from winex11.drv (c) Wine project
  */
 
 /* INCLUDES ***************************************************************/

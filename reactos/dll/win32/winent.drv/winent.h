@@ -58,7 +58,8 @@ enum ntdrv_escape_codes
 
 struct ntdrv_escape_set_drawable
 {
-    enum ntdrv_escape_codes  code;         /* escape code (X11DRV_SET_DRAWABLE) */
+    enum ntdrv_escape_codes  code;         /* escape code (NTDRV_SET_DRAWABLE) */
+    GR_WINDOW_ID             drawable;
     BOOL                     clip_children;/* ClipByChildren or IncludeInferiors */
     RECT                     dc_rect;      /* DC rectangle relative to drawable */
     RECT                     drawable_rect;/* Drawable rectangle relative to screen */
@@ -70,17 +71,30 @@ struct ntdrv_escape_set_drawable
 /* ntdrv private window data */
 struct ntdrv_win_data
 {
-    struct list entry;          /* entry in the linked list of win data */
-    HWND        hwnd;           /* hwnd that this private data belongs to */
-    PVOID       whole_window;   /* SWM window for the complete window */
+    struct list  entry;          /* entry in the linked list of win data */
+    HWND         hwnd;           /* hwnd that this private data belongs to */
+    GR_WINDOW_ID whole_window;   /* SWM window for the complete window */
+    GR_WINDOW_ID client_window;  /* SWM window for the client area */
     RECT        window_rect;    /* USER window rectangle relative to parent */
-    RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
+    RECT        whole_rect;     /* SWM window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
     HCURSOR     cursor;         /* current cursor */
     BOOL        mapped : 1;     /* is window mapped? (in either normal or iconic state) */
     BOOL        iconic : 1;     /* is window in iconic state? */
     BOOL        shaped : 1;     /* is window using a custom region shape? */
 };
+
+//typedef void (*ntdrv_event_handler)( HWND hwnd, GR_EVENT *event );
+
+extern GR_WINDOW_ID root_window;
+
+static inline void mirror_rect( const RECT *window_rect, RECT *rect )
+{
+    int width = window_rect->right - window_rect->left;
+    int tmp = rect->left;
+    rect->left = width - rect->right;
+    rect->right = width - tmp;
+}
 
 /* clipboard.c */
 void NTDRV_InitClipboard(void);
@@ -116,7 +130,7 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
 
 BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );
 
-/* wnd.c */
+/* window.c */
 struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd );
 struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd );
 struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd );
@@ -128,3 +142,4 @@ BOOL is_window_rect_mapped( const RECT *rect );
 void sync_window_position( struct ntdrv_win_data *data,
                            UINT swp_flags, const RECT *old_window_rect,
                            const RECT *old_whole_rect, const RECT *old_client_rect );
+GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data );
