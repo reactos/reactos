@@ -78,5 +78,5 @@ _flsbuf(int ch, FILE *stream)
         return EOF;
     }
 
-    return (TCHAR)ch;
+    return ch & (sizeof(TCHAR) > sizeof(char) ? 0xffff : 0xff);
 }
