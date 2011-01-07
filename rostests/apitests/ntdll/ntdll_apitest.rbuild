@@ -12,7 +12,7 @@
 	<file>ZwContinue.c</file>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
-			<file>ZwContinue.asm</file>
+			<file>ZwContinue.S</file>
 		</directory>
 	</if>
 </module>
