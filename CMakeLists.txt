@@ -20,13 +20,13 @@ endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
-    add_definitions(-fshort-wchar)
-
     add_definitions(-DTARGET_${ARCH})
 
     if(ARCH MATCHES i386)
         if(MSVC)
             add_definitions(-Dinline=__inline)
+        else()
+            add_definitions(-fshort-wchar)
         endif()
     endif()
 
