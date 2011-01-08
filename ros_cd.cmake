@@ -9,6 +9,9 @@ foreach(ENTRY ${CAB_TARGET_ENTRIES})
     string(REGEX REPLACE "^(.*)\t.*" "\\1" _targetname ${ENTRY})
     string(REGEX REPLACE "^.*\t(.)" "\\1" _dir_num ${ENTRY})
     get_target_property(_FILENAME ${_targetname} LOCATION)
+    if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+        set(_FILENAME '\"${_FILENAME}\"')
+    endif()
     add_custom_command(
         OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.dff
         COMMAND ${CMAKE_COMMAND} -E echo ${_FILENAME} ${_dir_num} >> ${REACTOS_BINARY_DIR}/boot/reactos.dff
@@ -20,9 +23,14 @@ file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_cab.txt CAB_TARGET_ENTRIES)
 foreach(ENTRY ${CAB_TARGET_ENTRIES})
     string(REGEX REPLACE "^(.*)\t.*" "\\1" _FILENAME ${ENTRY})
     string(REGEX REPLACE "^.*\t(.)" "\\1" _dir_num ${ENTRY})
-        add_custom_command(
+    if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+        set(QUOTED_FILENAME '\"${_FILENAME}\"')
+    else()
+        set(QUOTED_FILENAME ${_FILENAME})
+    endif()
+    add_custom_command(
         OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.dff
-        COMMAND ${CMAKE_COMMAND} -E echo ${_FILENAME} ${_dir_num} >> ${REACTOS_BINARY_DIR}/boot/reactos.dff
+        COMMAND ${CMAKE_COMMAND} -E echo ${QUOTED_FILENAME} ${_dir_num} >> ${REACTOS_BINARY_DIR}/boot/reactos.dff
         DEPENDS ${_FILENAME}
         APPEND)
 endforeach()
@@ -30,11 +38,11 @@ endforeach()
 #reactos.cab
 add_custom_command(
     OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.inf
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot -I
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot -I -P ${REACTOS_SOURCE_DIR}
     DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.dff)
 add_custom_command(
     OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.cab
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/reactos.inf -L ${REACTOS_BINARY_DIR}/boot -N
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/reactos.inf -L ${REACTOS_BINARY_DIR}/boot -N -P ${REACTOS_SOURCE_DIR}
     DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.inf)
 
 #bootcd target
