@@ -292,7 +292,6 @@ int FASTCALL DocumentEventEx(PVOID,HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
 BOOL FASTCALL EndPagePrinterEx(PVOID,HANDLE);
 BOOL FASTCALL LoadTheSpoolerDrv(VOID);
 
-
 FORCEINLINE
 PVOID
 GdiAllocBatchCommand(
@@ -387,6 +386,35 @@ GdiGetDcAttr(HDC hdc)
 
     if (!GdiGetHandleUserData((HGDIOBJ)hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr)) return NULL;
     return pdcattr;
+}
+
+#ifdef _M_IX86
+FLOATL FASTCALL EFtoF(EFLOAT_S * efp);
+#define FOtoF(pfo) EFtoF((EFLOAT_S*)pfo)
+#else
+#define FOtoF(pfo) (*(pfo))
+#endif
+
+/* This is an inlined version of lrintf. */
+FORCEINLINE
+int
+_lrintf(float f)
+{
+#if defined(_M_IX86) && defined(__GNUC__)
+    int ret;
+    __asm__ __volatile__ ("fistpl %0" : "=m" (ret) : "t" (f) : "st");
+    return ret;
+#elif defined(_M_IX86) && defined(_MSC_VER)
+    int ret;
+    __asm
+    {
+        fld f;
+        fistp ret;
+    }
+#else
+    /* slow, but portable */
+    return (int)floor(x >= 0 ? x+0.5 : x-0.5);
+#endif
 }
 
 /* EOF */

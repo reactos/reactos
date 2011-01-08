@@ -32,7 +32,7 @@
 @ stdcall ColorCorrectPalette(ptr ptr long long)
 @ stdcall ColorMatchToTarget(ptr ptr long)
 @ stdcall CombineRgn(long long long long)
-@ stdcall CombineTransform(ptr ptr ptr) NtGdiCombineTransform
+@ stdcall CombineTransform(ptr ptr ptr)
 @ stdcall CopyEnhMetaFileA(long str)
 @ stdcall CopyEnhMetaFileW(long wstr)
 @ stdcall CopyMetaFileA(long str)
@@ -285,7 +285,7 @@
 @ stdcall GdiEntry9(ptr ptr ptr ptr ptr ptr)
 @ stdcall GdiFixUpHandle(ptr)
 @ stdcall GdiFlush()
-@ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl 
+@ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl
 @ stdcall GdiGetBatchLimit()
 @ stdcall GdiGetBitmapBitsSize(ptr)
 @ stdcall GdiGetCharDimensions(long ptr ptr)
@@ -299,7 +299,7 @@
 @ stdcall GdiGetPageHandle(ptr long ptr)
 @ stdcall GdiGetSpoolFileHandle(wstr ptr wstr)
 @ stdcall GdiGetSpoolMessage(ptr long ptr long) NtGdiGetSpoolMessage
-@ stdcall GdiGradientFill(long ptr long ptr long long) 
+@ stdcall GdiGradientFill(long ptr long ptr long long)
 @ stdcall GdiInitSpool() NtGdiInitSpool
 @ stdcall GdiInitializeLanguagePack(long)
 @ stdcall GdiIsMetaFileDC(long)

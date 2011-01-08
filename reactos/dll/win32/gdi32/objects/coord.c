@@ -1,145 +1,152 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS System Libraries
+ * FILE:            dll/gdi32/objects/coord.c
+ * PURPOSE:         Functions for coordinate transformation
+ * PROGRAMMER:
+ */
 #include "precomp.h"
 
-/* the following deal with IEEE single-precision numbers */
-#define EXCESS          126L
-#define SIGNBIT         0x80000000L
-#define SIGN(fp)        ((fp) & SIGNBIT)
-#define EXP(fp)         (((fp) >> 23L) & 0xFF)
-#define MANT(fp)        ((fp) & 0x7FFFFFL)
-#define PACK(s,e,m)     ((s) | ((e) << 23L) | (m))
-
-// Sames as lrintf.
-#ifdef __GNUC__
-#define FLOAT_TO_INT(in,out)  \
-           __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st");
-#else
-#define FLOAT_TO_INT(in,out) \
-          __asm fld in; \
-          __asm fistp out;
-#endif
-
-LONG
-FASTCALL
-EFtoF( EFLOAT_S * efp)
+/* Currently we use a MATRIX inside the DC_ATTR containing the
+   coordinate transformations, while we deal with XFORM structures
+   internally. If we move all coordinate transformation to gdi32,
+   we might as well have an XFORM structure in the DC_ATTR. */
+void
+MatrixToXForm(XFORM *pxform, const MATRIX *pmx)
 {
-    long Mant, Exp, Sign = 0;
-
-    if (!efp->lMant) return 0;
-
-    Mant = efp->lMant;
-    Exp = efp->lExp;
-    Sign = SIGN(Mant);
-
-//// M$ storage emulation
-    if( Sign ) Mant = -Mant;
-    Mant = ((Mant & 0x3fffffff) >> 7);
-    Exp += (EXCESS-1);
-////
-    Mant = MANT(Mant);
-    return PACK(Sign, Exp, Mant);
+    XFORML *pxforml = (XFORML*)pxform;
+    pxforml->eM11 = FOtoF(&pmx->efM11);
+    pxforml->eM12 = FOtoF(&pmx->efM12);
+    pxforml->eM21 = FOtoF(&pmx->efM21);
+    pxforml->eM22 = FOtoF(&pmx->efM22);
+    pxforml->eDx = FOtoF(&pmx->efDx);
+    pxforml->eDy = FOtoF(&pmx->efDy);
 }
 
-VOID
-FASTCALL
-FtoEF( EFLOAT_S * efp, FLOATL f)
+void
+GdiTransformPoints2(
+    XFORM *pxform,
+    PPOINT pptOut,
+    PPOINT pptIn,
+    ULONG nCount)
 {
-    long Mant, Exp, Sign = 0;
-    gxf_long worker;
-
-#ifdef _X86_
-    worker.l = f; // It's a float stored in a long.
-#else
-    worker.f = f;
-#endif
-
-    Exp = EXP(worker.l);
-    Mant = MANT(worker.l);
-    if (SIGN(worker.l)) Sign = -1;
-//// M$ storage emulation
-    Mant = ((Mant << 7) | 0x40000000);
-    Mant ^= Sign;
-    Mant -= Sign;
-    Exp -= (EXCESS-1);
-////
-    efp->lMant = Mant;
-    efp->lExp = Exp;
-}
-
-
-VOID FASTCALL
-CoordCnvP(MATRIX_S * mx, LPPOINT Point)
-{
+    ULONG i;
     FLOAT x, y;
-    gxf_long a, b, c;
 
-    x = (FLOAT)Point->x;
-    y = (FLOAT)Point->y;
-
-    a.l = EFtoF( &mx->efM11 );
-    b.l = EFtoF( &mx->efM21 );
-    c.l = EFtoF( &mx->efDx  );
-    x = x * a.f + y * b.f + c.f;
-
-    a.l = EFtoF( &mx->efM12 );
-    b.l = EFtoF( &mx->efM22 );
-    c.l = EFtoF( &mx->efDy  );
-    y = x * a.f + y * b.f + c.f;
-
-    FLOAT_TO_INT(x, Point->x );
-    FLOAT_TO_INT(y, Point->y );
+    for (i = 0; i < nCount; i++)
+    {
+        x = pptIn[i].x * pxform->eM11 + pptIn[i].y * pxform->eM12 + pxform->eDx;
+        pptOut[i].x = _lrintf(x);
+        y = pptIn[i].x * pxform->eM21 + pptIn[i].y * pxform->eM22 + pxform->eDy;
+        pptOut[i].y = _lrintf(y);
+    }
 }
 
+FORCEINLINE
+void
+GdiTransformPoints(
+    MATRIX *pmx,
+    PPOINT pptOut,
+    PPOINT pptIn,
+    ULONG nCount)
+{
+    XFORM xform;
+
+    MatrixToXForm(&xform, pmx);
+    GdiTransformPoints2(&xform, pptOut, pptIn, nCount);
+}
+
+#define MAX_OFFSET 4294967040.0
 
 BOOL
 WINAPI
-DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
+CombineTransform(
+    LPXFORM pxfResult,
+    const XFORM *pxf1,
+    const XFORM *pxf2)
 {
-#if 0
-    INT i;
-    PDC_ATTR Dc_Attr;
+    XFORM xformTmp;
 
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+    /* Do matrix multiplication */
+    xformTmp.eM11 = pxf1->eM11 * pxf2->eM11 + pxf1->eM12 * pxf2->eM21;
+    xformTmp.eM12 = pxf1->eM11 * pxf2->eM12 + pxf1->eM12 * pxf2->eM22;
+    xformTmp.eM21 = pxf1->eM21 * pxf2->eM11 + pxf1->eM22 * pxf2->eM21;
+    xformTmp.eM22 = pxf1->eM21 * pxf2->eM12 + pxf1->eM22 * pxf2->eM22;
+    xformTmp.eDx = pxf1->eDx * pxf2->eM11 + pxf1->eDy * pxf2->eM21 + pxf2->eDx;
+    xformTmp.eDy = pxf1->eDx * pxf2->eM12 + pxf1->eDy * pxf2->eM22 + pxf2->eDy;
 
-    if (Dc_Attr->flXform & ( DEVICE_TO_WORLD_INVALID | // Force a full recalibration!
-                             PAGE_XLATE_CHANGED      | // Changes or Updates have been made,
-                             PAGE_EXTENTS_CHANGED    | // do processing in kernel space.
-                             WORLD_XFORM_CHANGED ))
-#endif
-        return NtGdiTransformPoints( hDC, Points, Points, Count, GdiDpToLp); // DPtoLP mode.
+    *pxfResult = xformTmp;
 #if 0
-    else
+    /* windows compatibility fixups (needs more work) */
+    if (_isnan(xformTmp.eM12))
     {
-        for ( i = 0; i < Count; i++ )
-            CoordCnvP ( &Dc_Attr->mxDeviceToWorld, &Points[i] );
+        if (pxf1->eM11 == 0 || pxf2->eM12 == 0) pxfResult->eM12 = 0.;
     }
-    return TRUE;
 #endif
-}
+    /* Check for invalid offset ranges */
+    if (xformTmp.eDx > MAX_OFFSET || xformTmp.eDx < -MAX_OFFSET ||
+        xformTmp.eDy > MAX_OFFSET || xformTmp.eDy < -MAX_OFFSET)
+    {
+        return FALSE;
+    }
 
+    return TRUE;
+}
 
 BOOL
 WINAPI
-LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
+DPtoLP(HDC hdc, LPPOINT lpPoints, INT nCount)
 {
 #if 0
     INT i;
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
 
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
-
-    if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
-                             PAGE_EXTENTS_CHANGED |
-                             WORLD_XFORM_CHANGED ))
-#endif
-        return NtGdiTransformPoints( hDC, Points, Points, Count, GdiLpToDp); // LPtoDP mode
-#if 0
-    else
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
     {
-        for ( i = 0; i < Count; i++ )
-            CoordCnvP ( &Dc_Attr->mxWorldToDevice, &Points[i] );
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
+
+    if (pdcattr->flXform & ANY_XFORM_CHANGES)
+    {
+        GdiFixupTransforms(pdcattr);
+    }
+
+    // FIXME: can this fail on Windows?
+    GdiTransformPoints(&pdcattr->mxDeviceToWorld, lpPoints, lpPoints, nCount);
+
     return TRUE;
 #endif
+    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
+}
+
+BOOL
+WINAPI
+LPtoDP(HDC hdc, LPPOINT lpPoints, INT nCount)
+{
+#if 0
+    INT i;
+    PDC_ATTR pdcattr;
+
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (pdcattr->flXform & ANY_XFORM_CHANGES)
+    {
+        GdiFixupTransforms(pdcattr);
+    }
+
+    // FIXME: can this fail on Windows?
+    GdiTransformPoints(&pdcattr->mxWorldToDevice, lpPoints, lpPoints, nCount);
+
+    return TRUE;
+#endif
+    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
 }
 
 /*
@@ -185,9 +192,26 @@ GetCurrentPositionEx(HDC hdc,
  */
 BOOL
 WINAPI
-GetWorldTransform( HDC hDC, LPXFORM lpXform )
+GetWorldTransform(HDC hDC, LPXFORM lpXform)
 {
-    return NtGdiGetTransform( hDC, GdiWorldSpaceToPageSpace, lpXform);
+#if 0
+    PDC_ATTR pdcattr;
+
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (pdcattr->flXform & ANY_XFORM_INVALID)
+    {
+        GdiFixupTransforms(pdcattr);
+    }
+
+    MatrixToXForm(lpXform, &pdcattr->mxWorldToDevice);
+#endif
+    return NtGdiGetTransform(hDC, GdiWorldSpaceToPageSpace, lpXform);
 }
 
 
