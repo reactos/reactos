@@ -173,6 +173,8 @@ INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT starts
         }
     }
 
+    hbitmap = (HBITMAP)MapUserHandle(hbitmap);
+
     result = RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan,
         lines, safeBits, info, coloruse);
 
@@ -192,6 +194,8 @@ INT CDECL RosDrv_GetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT starts
     /* Check if this bitmap has a DIB section */
     if (!(obj_size = GetObjectW( hbitmap, sizeof(dib), &dib ))) return 0;
 
+    hbitmap = (HBITMAP)MapUserHandle(hbitmap);
+
     /* Perform GetDIBits */
     return RosGdiGetDIBits(physDev->hKernelDC, hbitmap, startscan, lines, bits, info, coloruse, &dib);
 }
@@ -202,6 +206,7 @@ HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
     DIBSECTION dib;
     LONG height, width;
     WORD infoBpp, compression;
+    HBITMAP hKbitmap;
 
     GetObjectW( hbitmap, sizeof(dib), &dib );
 
@@ -212,7 +217,11 @@ HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
     // TODO: Should pass as a flag instead
     if (height < 0) dib.dsBmih.biHeight *= -1;
 
-    return RosGdiCreateDIBSection(physDev->hKernelDC, hbitmap, bmi, usage, &dib);
+    hKbitmap = RosGdiCreateDIBSection(physDev->hKernelDC, bmi, usage, &dib);
+
+    AddHandleMapping(hKbitmap, hbitmap);
+
+    return hbitmap;
 }
 
 UINT CDECL RosDrv_SetDIBColorTable( NTDRV_PDEVICE *physDev, UINT start, UINT count, const RGBQUAD *colors )

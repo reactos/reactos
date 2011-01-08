@@ -101,9 +101,6 @@ Win32kProcessCallout(PEPROCESS Process,
         }
 
         UserLeave();
-
-        /* Destroy all user->kernel handle mapping */
-        GDI_CleanupHandleMapping();
     }
 
     DPRINT("Leave Win32kProcessCallback\n");
@@ -367,9 +364,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("Failed to initialize the GDI handle table.\n");
         return STATUS_UNSUCCESSFUL;
     }
-
-    /* Initialize handle-mapping */
-    GDI_InitHandleMapping();
 
     /* Create stock objects */
     CreateStockObjects();

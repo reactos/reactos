@@ -64,8 +64,8 @@ BOOL APIENTRY RosGdiAlphaBlend(HDC devDst, INT xDst, INT yDst, INT widthDst, INT
 BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
                     INT width, INT height, HDC physDevSrc,
                     INT xSrc, INT ySrc, DWORD rop );
-BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hBitmap, BITMAP *pBitmap, LPVOID bmBits );
-HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
+HBITMAP APIENTRY RosGdiCreateBitmap( HDC physDev, BITMAP *pBitmap, LPVOID bmBits );
+HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, 
                                        const BITMAPINFO *bmi, UINT usage, DIBSECTION *dib );
 BOOL APIENTRY RosGdiDeleteBitmap( HBITMAP hbitmap );
 LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG count );

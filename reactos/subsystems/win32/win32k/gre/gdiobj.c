@@ -984,6 +984,8 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
     HandleType = GDI_HANDLE_GET_TYPE(hObj);
     HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
+    //ASSERT(hObj);
+
     /* Check that the handle index is valid. */
     if (HandleIndex >= GDI_HANDLE_COUNT)
         return NULL;
@@ -993,6 +995,7 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
           HandleType != ExpectedType) ||
          HandleType == 0 )
     {
+        //ASSERT(FALSE);
         DPRINT1("Attempted to lock object 0x%x of wrong type (Handle: 0x%x, requested: 0x%x)\n",
                 hObj, HandleType, ExpectedType);
         return NULL;
@@ -1518,149 +1521,6 @@ GreDeleteObject(HGDIOBJ hObject)
     /* Free it */
     GDIOBJ_FreeObjByHandle(hObject, GDIOBJ_GetObjectType(hObject));
 
-}
-
-/* Usermode -> kernelmode handle mapping */
-LIST_ENTRY HandleMapping;
-KSPIN_LOCK HandleMappingLock;
-
-typedef struct _HMAPPING
-{
-    HGDIOBJ hUser;
-    HGDIOBJ hKernel;
-    HANDLE hProcessId;
-    LIST_ENTRY Entry;
-} HMAPPING, *PHMAPPING;
-
-VOID NTAPI
-GDI_InitHandleMapping()
-{
-    /* Initialize handles list and a spinlock */
-    InitializeListHead(&HandleMapping);
-    KeInitializeSpinLock(&HandleMappingLock);
-}
-
-VOID NTAPI
-GDI_AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
-{
-    HGDIOBJ hExisting;
-    PHMAPPING pMapping = ExAllocatePool(NonPagedPool, sizeof(HMAPPING));
-    if (!pMapping) return;
-
-    /* Set mapping */
-    pMapping->hUser = hUser;
-    pMapping->hKernel = hKernel;
-    pMapping->hProcessId = PsGetCurrentProcessId();
-
-    /* Debug check: see if we already have this mapping */
-    hExisting = GDI_MapUserHandle(hUser);
-    if (hExisting)
-        DPRINT1("Trying to map already existing mapping %x -> %x to %x!\n", hUser, hExisting, hKernel);
-
-    /* Add it to the list */
-    ExInterlockedInsertHeadList(&HandleMapping, &pMapping->Entry, &HandleMappingLock);
-}
-
-HGDIOBJ NTAPI
-GDI_MapUserHandle(HGDIOBJ hUser)
-{
-    KIRQL OldIrql;
-    PLIST_ENTRY Current;
-    PHMAPPING Mapping;
-    HGDIOBJ Found = 0;
-    HANDLE hProcessId = PsGetCurrentProcessId();
-
-    /* Acquire the lock and check if the list is empty */
-    KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
-
-    /* Traverse the list to find our mapping */
-    Current = HandleMapping.Flink;
-    while(Current != &HandleMapping)
-    {
-        Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
-
-        /* Check if it's our entry */
-        if (Mapping->hUser == hUser && Mapping->hProcessId == hProcessId)
-        {
-            /* Found it, save it and break out of the loop */
-            Found = Mapping->hKernel;
-            break;
-        }
-
-        /* Advance to the next pair */
-        Current = Current->Flink;
-    }
-
-    /* Release the lock and return the entry */
-    KeReleaseSpinLock(&HandleMappingLock, OldIrql);
-    return Found;
-}
-
-VOID NTAPI
-GDI_RemoveHandleMapping(HGDIOBJ hUser)
-{
-    KIRQL OldIrql;
-    PLIST_ENTRY Current;
-    PHMAPPING Mapping;
-    HANDLE hProcessId = PsGetCurrentProcessId();
-
-    /* Acquire the lock and check if the list is empty */
-    KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
-
-    /* Traverse the list to find our mapping */
-    Current = HandleMapping.Flink;
-    while(Current != &HandleMapping)
-    {
-        Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
-
-        /* Check if it's our entry */
-        if (Mapping->hUser == hUser && Mapping->hProcessId == hProcessId)
-        {
-            /* Remove and free it */
-            RemoveEntryList(Current);
-            ExFreePool(Mapping);
-            break;
-        }
-
-        /* Advance to the next pair */
-        Current = Current->Flink;
-    }
-
-    /* Release the lock and return the entry */
-    KeReleaseSpinLock(&HandleMappingLock, OldIrql);
-}
-
-VOID NTAPI
-GDI_CleanupHandleMapping()
-{
-    KIRQL OldIrql;
-    PLIST_ENTRY Current;
-    PHMAPPING Mapping;
-    HANDLE hProcessId = PsGetCurrentProcessId();
-
-    /* Acquire the lock and check if the list is empty */
-    KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
-
-    /* Traverse the list to find all handles of a current process */
-    Current = HandleMapping.Flink;
-    while(Current != &HandleMapping)
-    {
-        Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
-
-        /* Check if it's our entry */
-        if (Mapping->hProcessId == hProcessId)
-        {
-            /* Remove and free it */
-            RemoveEntryList(Current);
-            ExFreePool(Mapping);
-        }
-
-        /* Advance to the next pair */
-        Current = Current->Flink;
-    }
-
-    /* Release the lock and return the entry */
-    KeReleaseSpinLock(&HandleMappingLock, OldIrql);
 }
 
 /* EOF */

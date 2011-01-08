@@ -382,12 +382,12 @@ void CDECL RosDrv_SetCursor( HCURSOR handle )
     if(handle == NULL)
     {
         RosUserSetCursor(NULL);
-
-        // FIXME: Delete previously created (by GetIconInfo) bitmaps!
     }
     else
     {
         GetIconInfo(handle, &iconinfo);
+        iconinfo.hbmColor = (HBITMAP)MapUserHandle(iconinfo.hbmColor);
+        iconinfo.hbmMask  = (HBITMAP)MapUserHandle(iconinfo.hbmMask);
         RosUserSetCursor(&iconinfo);
     }
 }

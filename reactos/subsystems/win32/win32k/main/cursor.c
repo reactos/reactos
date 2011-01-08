@@ -123,11 +123,6 @@ VOID UserSetCursor(  ICONINFO* IconInfo )
         return;
     }
 
-    IconInfo->hbmMask = GDI_MapUserHandle(IconInfo->hbmMask);
-    IconInfo->hbmColor = GDI_MapUserHandle(IconInfo->hbmColor);
-
-    DPRINT("hbmMask = 0x%x, hbmColor = 0x%x\n", IconInfo->hbmMask, IconInfo->hbmColor);
-
     GreSetPointerShape( hDCscreen, 
                         IconInfo->hbmMask, 
                         IconInfo->hbmColor, 

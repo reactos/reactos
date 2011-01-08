@@ -98,6 +98,11 @@ static inline void mirror_rect( const RECT *window_rect, RECT *rect )
 
 /* clipboard.c */
 void NTDRV_InitClipboard(void);
+VOID InitHandleMapping();
+VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser);
+HGDIOBJ MapUserHandle(HGDIOBJ hUser);
+VOID RemoveHandleMapping(HGDIOBJ hUser);
+VOID CleanupHandleMapping();
 
 /* gdidrv.c */
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn );
@@ -105,6 +110,8 @@ void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN 
 /* graphics.c */
 INT RosDrv_XWStoDS( NTDRV_PDEVICE *physDev, INT width );
 INT RosDrv_YWStoDS( NTDRV_PDEVICE *physDev, INT height );
+
+HGDIOBJ MapHandle(HGDIOBJ hUser);
 
 /* font.c */
 VOID

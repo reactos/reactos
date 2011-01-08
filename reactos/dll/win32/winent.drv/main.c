@@ -69,12 +69,14 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     case DLL_PROCESS_ATTACH:
         InitializeCriticalSection(&NTDRV_CritSection);
         NTDRV_InitClipboard();
+        InitHandleMapping();
         //ret = process_attach();
         break;
     case DLL_THREAD_DETACH:
         //thread_detach();
         break;
     case DLL_PROCESS_DETACH:
+        CleanupHandleMapping();
         //process_detach();
         break;
     }

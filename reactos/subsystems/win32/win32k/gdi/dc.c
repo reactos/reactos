@@ -156,29 +156,24 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
 {
     PDC pDC;
     PSURFACE pSurface;
-    HGDIOBJ hBmpKern;
+
+    DPRINT("Selecting %x bitmap to hdc %x\n", hbitmap, physDev);
 
     if (bStock)
     {
         /* Selecting stock bitmap */
-        hBmpKern = hStockBmp;
-    }
-    else
-    {
-        /* Selecting usual bitmap */
-        hBmpKern = GDI_MapUserHandle(hbitmap);
-        if (!hBmpKern)
-        {
-            DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", hbitmap, physDev);
-            return FALSE;
-        }
+        hbitmap = hStockBmp;
     }
 
-    DPRINT("Selecting %x bitmap to hdc %x\n", hBmpKern, physDev);
+    pSurface = SURFACE_ShareLockSurface(hbitmap);
+    if(pSurface== NULL)
+    {
+        DPRINT1("SURFACE_ShareLockSurface failed\n");
+        return FALSE;
+    }
 
     /* Get a pointer to the DC and the bitmap*/
     pDC = DC_LockDc(physDev);
-    pSurface = SURFACE_ShareLockSurface(hBmpKern);
 
     /* Release the old bitmap */
     SURFACE_ShareUnlockSurface(pDC->dclevel.pSurface);
@@ -200,8 +195,6 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
 
 HBRUSH APIENTRY GreCreateBrush(LOGBRUSH *pLogBrush)
 {
-    HGDIOBJ hBmpKern;
-
     /* Create the brush */
     switch(pLogBrush->lbStyle)
     {
@@ -212,14 +205,8 @@ HBRUSH APIENTRY GreCreateBrush(LOGBRUSH *pLogBrush)
     case BS_HATCHED:
         return GreCreateHatchBrush(pLogBrush->lbHatch, pLogBrush->lbColor);
     case BS_PATTERN:
-        hBmpKern = GDI_MapUserHandle((HBITMAP)pLogBrush->lbHatch);
-        if (!hBmpKern)
-        {
-            DPRINT1("Trying to create a pattern brush with an unknown bitmap %x !\n", pLogBrush->lbHatch);
-            return NULL;
-        }
-        GDIOBJ_SetOwnership(hBmpKern, NULL);
-        return GreCreatePatternBrush(hBmpKern);
+        GDIOBJ_SetOwnership((HBITMAP)pLogBrush->lbHatch, NULL);
+        return GreCreatePatternBrush((HBITMAP)pLogBrush->lbHatch);
     case BS_DIBPATTERN:
     default:
         UNIMPLEMENTED;

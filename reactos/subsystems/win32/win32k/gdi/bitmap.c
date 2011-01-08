@@ -68,7 +68,7 @@ BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
     return bRes;
 }
 
-BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBitmap, LPVOID bmBits )
+HBITMAP APIENTRY RosGdiCreateBitmap( HDC physDev, BITMAP *pBitmap, LPVOID bmBits )
 {
     HBITMAP hBitmap;
     SIZEL slSize;
@@ -97,7 +97,7 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
                               NULL);
 
     /* Return failure if no bitmap was created */
-    if (!hBitmap) return FALSE;
+    if (!hBitmap) return 0;
 
     /* Set its bits if any */
     if (bmBits)
@@ -112,16 +112,13 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
         SURFACE_UnlockSurface(pSurface);
     }
 
-    /* Map handles */
-    GDI_AddHandleMapping(hBitmap, hUserBitmap);
-
-    DPRINT("Created bitmap %x (user handle %x)\n", hBitmap, hUserBitmap);
+    DPRINT("Created bitmap %x \n", hBitmap);
 
     /* Indicate success */
-    return TRUE;
+    return hBitmap;
 }
 
-HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
+HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, 
                                        const BITMAPINFO *bmi, UINT usage, DIBSECTION *dib )
 {
     SIZEL szSize;
@@ -192,27 +189,16 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
         ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
     }
 
-    /* Map handles */
-    GDI_AddHandleMapping(hbmDIB, hbitmap);
-
-    DPRINT("Created bitmap %x (user handle %x) for DIB section\n", hbmDIB, hbitmap);
+    DPRINT("Created bitmap %x for DIB section\n", hbmDIB);
 
     /* Return success */
-    return hbitmap;
+    return hbmDIB;
 }
 
 BOOL APIENTRY RosGdiDeleteBitmap( HBITMAP hbitmap )
 {
-    HGDIOBJ hKernel = GDI_MapUserHandle(hbitmap);
-
-    /* Fail if this object doesn't exist */
-    if (!hKernel) return FALSE;
-
-    /* Delete U->K mapping */
-    GDI_RemoveHandleMapping(hbitmap);
-
     /* Delete the bitmap */
-    GreDeleteObject(hKernel);
+    GreDeleteObject(hbitmap);
 
     /* Indicate success */
     return TRUE;
@@ -222,23 +208,13 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
 {
     PSURFACE psurf;
     LONG bmSize, ret;
-    HGDIOBJ hKernel;
 
     if (buffer != NULL && Bytes == 0)
     {
         return 0;
     }
 
-    /* Get kernelmode bitmap handle */
-    hKernel = GDI_MapUserHandle(hbitmap);
-
-    if (!hKernel)
-    {
-        DPRINT1("Trying to GetBitmapBits of an unkown bitmap (uhandle %x)\n", hbitmap);
-        return 0;
-    }
-
-    psurf = SURFACE_LockSurface(hKernel);
+    psurf = SURFACE_LockSurface(hbitmap);
     if (!psurf) return 0;
 
     bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx,
@@ -264,18 +240,16 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
     return ret;
 }
 
-INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hUserBitmap, UINT StartScan, UINT ScanLines,
+INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hBitmap, UINT StartScan, UINT ScanLines,
                             LPVOID Bits, BITMAPINFO *bmi, UINT ColorUse, DIBSECTION *dib )
 {
     PDC pDC;
 
-    HGDIOBJ hBitmap = GDI_MapUserHandle(hUserBitmap);
-
     /* Get a pointer to the DCs */
     pDC = DC_LockDc(physDev);
 
-    DPRINT("RosGdiGetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d, height %d\n",
-        hBitmap, hUserBitmap, StartScan, ScanLines, dib->dsBm.bmHeight);
+    DPRINT("RosGdiGetDIBits for bitmap %x , StartScan %d, ScanLines %d, height %d\n",
+        hBitmap, StartScan, ScanLines, dib->dsBm.bmHeight);
 
     /* Set the bits */
     GreGetDIBits(pDC,
@@ -365,18 +339,16 @@ UINT APIENTRY RosGdiSetDIBColorTable( HDC physDev, UINT StartIndex, UINT Entries
     return Entries;
 }
 
-INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
+INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hBitmap, UINT StartScan,
                             UINT ScanLines, LPCVOID Bits, const BITMAPINFO *bmi, UINT ColorUse)
 {
     PDC pDC;
 
-    HGDIOBJ hBitmap = GDI_MapUserHandle(hUserBitmap);
-
     /* Get a pointer to the DCs */
     pDC = DC_LockDc(physDev);
 
-    DPRINT("RosGdiSetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d\n",
-        hBitmap, hUserBitmap, StartScan, ScanLines);
+    DPRINT("RosGdiSetDIBits for bitmap %x, StartScan %d, ScanLines %d\n",
+        hBitmap, StartScan, ScanLines);
 
     /* Set the bits */
     ScanLines = GreSetDIBits(pDC,

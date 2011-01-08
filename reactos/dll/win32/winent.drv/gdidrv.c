@@ -15,12 +15,89 @@ WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
 
 /* GLOBALS ****************************************************************/
 HANDLE hStockBitmap;
+static struct list handle_mapping_list = LIST_INIT( handle_mapping_list );
+static CRITICAL_SECTION handle_mapping_cs;
+
+typedef struct _HMAPPING
+{
+    HGDIOBJ hUser;
+    HGDIOBJ hKernel;
+    struct list entry;
+} HMAPPING, *PHMAPPING;
 
 /* FUNCTIONS **************************************************************/
+
+VOID InitHandleMapping()
+{
+    InitializeCriticalSection(&handle_mapping_cs);
+}
+
+VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
+{
+    PHMAPPING mapping = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HMAPPING));
+    if(!mapping)
+        return;
+
+    mapping->hKernel = hKernel;
+    mapping->hUser = hUser;
+
+    EnterCriticalSection(&handle_mapping_cs);
+    list_add_tail(&handle_mapping_list, &mapping->entry);
+    LeaveCriticalSection(&handle_mapping_cs);
+}
+
+static PHMAPPING FindHandleMapping(HGDIOBJ hUser)
+{
+    PHMAPPING item;
+
+    LIST_FOR_EACH_ENTRY( item, &handle_mapping_list, HMAPPING, entry )
+    {
+        if (item->hUser == hUser)
+        {
+            return item;
+        }
+    }
+
+    return NULL;
+}
+
+HGDIOBJ MapUserHandle(HGDIOBJ hUser)
+{
+    PHMAPPING mapping;
+
+    mapping = FindHandleMapping(hUser);
+
+    return mapping ? mapping->hKernel : NULL;
+}
+
+VOID RemoveHandleMapping(HGDIOBJ hUser)
+{
+    PHMAPPING mapping;
+
+    mapping = FindHandleMapping(hUser);
+    if(mapping == NULL)
+        return;
+
+    EnterCriticalSection(&handle_mapping_cs);
+    list_remove(&mapping->entry);
+    LeaveCriticalSection(&handle_mapping_cs);
+}
+
+VOID CleanupHandleMapping()
+{
+    PHMAPPING mapping;
+
+    while(!list_empty(&handle_mapping_list))
+    {
+        mapping = LIST_ENTRY(list_head(&handle_mapping_list), HMAPPING, entry);
+        RemoveHandleMapping(mapping->hUser);
+    }
+}
 
 BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID bmBits )
 {
     BITMAP bitmap;
+    HBITMAP hKbitmap;
 
     /* Get the usermode object */
     if (!GetObjectW(hbitmap, sizeof(bitmap), &bitmap)) return FALSE;
@@ -29,7 +106,13 @@ BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID 
     if (bitmap.bmPlanes != 1) return FALSE;
 
     /* Create the kernelmode bitmap object */
-    return RosGdiCreateBitmap(physDev->hKernelDC, hbitmap, &bitmap, bmBits);
+    hKbitmap = RosGdiCreateBitmap(physDev->hKernelDC, &bitmap, bmBits);
+
+    if(!hKbitmap)
+        return FALSE;
+
+    AddHandleMapping(hKbitmap, hbitmap);
+    return TRUE;
 }
 
 BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWSTR device,
@@ -73,7 +156,14 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
 
 BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
 {
-    return RosGdiDeleteBitmap(hbitmap);
+    HBITMAP hKbitmap = (HBITMAP)MapUserHandle(hbitmap);
+
+    if(hKbitmap == NULL)
+        return FALSE;
+
+    RemoveHandleMapping(hbitmap);
+
+    return RosGdiDeleteBitmap(hKbitmap);
 }
 
 BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
@@ -134,6 +224,8 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
 
 LONG CDECL RosDrv_GetBitmapBits( HBITMAP hbitmap, void *buffer, LONG count )
 {
+    hbitmap = (HBITMAP)MapUserHandle(hbitmap);
+
     return RosGdiGetBitmapBits(hbitmap, buffer, count);
 }
 
@@ -184,7 +276,10 @@ HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
     BOOL bRes, bStock = FALSE;
 
     /* Check if it's a stock bitmap */
-    if (hbitmap == hStockBitmap) bStock = TRUE;
+    if (hbitmap == hStockBitmap)
+        bStock = TRUE;
+    else
+        hbitmap = (HBITMAP)MapUserHandle(hbitmap);
 
     /* Select the bitmap into the DC */
     bRes = RosGdiSelectBitmap(physDev->hKernelDC, hbitmap, bStock);
@@ -201,6 +296,9 @@ HBRUSH CDECL RosDrv_SelectBrush( NTDRV_PDEVICE *physDev, HBRUSH hbrush )
     LOGBRUSH logbrush;
 
     if (!GetObjectA( hbrush, sizeof(logbrush), &logbrush )) return 0;
+
+    if(logbrush.lbStyle == BS_PATTERN)
+        logbrush.lbHatch = (ULONG_PTR)MapUserHandle((HBITMAP)logbrush.lbHatch);
 
     RosGdiSelectBrush(physDev->hKernelDC, &logbrush);
 
