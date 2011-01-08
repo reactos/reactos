@@ -95,7 +95,12 @@ extern "C" {
 #    endif
 
 #    if defined (_STLP_NEW_PLATFORM_SDK) && !defined(_WDMDDK_)
+/* Define WIN32_NO_STATUS to prevent status codes redefinitions */
+#      if !defined(WIN32_NO_STATUS)
+#        define WIN32_NO_STATUS
+#      endif
 #      include <windef.h>
+
 #ifndef InterlockedIncrement
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedIncrement(IN OUT LONG volatile *);
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedDecrement(IN OUT LONG volatile *);
