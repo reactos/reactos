@@ -379,4 +379,14 @@ GdiAllocBatchCommand(
     return pHdr;
 }
 
+FORCEINLINE
+PDC_ATTR
+GdiGetDcAttr(HDC hdc)
+{
+    PDC_ATTR pdcattr;
+
+    if (!GdiGetHandleUserData((HGDIOBJ)hdc, GDI_OBJECT_TYPE_DC, (PVOID*)&pdcattr)) return NULL;
+    return pdcattr;
+}
+
 /* EOF */
