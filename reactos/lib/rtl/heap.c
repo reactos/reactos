@@ -2344,7 +2344,6 @@ BOOLEAN NTAPI RtlFreeHeap(
 
         /* Release the heap lock */
         if (Locked) RtlLeaveHeapLock(Heap->LockVariable);
-        DbgBreakPoint();
         return FALSE;
     }
 
