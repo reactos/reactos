@@ -13,9 +13,13 @@
 
 /* DEFINES *******************************************************************/
 
+#define SWM_ROOT_WINDOW_ID 1
+
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
+
+typedef ULONG_PTR GR_WINDOW_ID;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -173,28 +177,25 @@ RosUserDeRegisterShellHookWindow(HWND hWnd);
 BOOL NTAPI
 RosUserBuildShellHookHwndList(HWND *list, UINT *cbSize);
 
-VOID NTAPI
-SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style);
+GR_WINDOW_ID NTAPI
+SwmNewWindow(GR_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style);
 
 VOID NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);
 
 VOID NTAPI
-SwmRemoveWindow(HWND hWnd);
+SwmDestroyWindow(GR_WINDOW_ID Wid);
 
 VOID NTAPI
 SwmSetForeground(HWND hWnd);
 
 VOID NTAPI
-SwmPosChanging(HWND hWnd, const RECT *WindowRect);
-
-VOID NTAPI
-SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
+SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
 
 HWND NTAPI
 SwmGetWindowFromPoint(LONG x, LONG y);
 
 VOID NTAPI
-SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags);
+SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags);
 
 #endif /* __WIN32K_NTUSER_H */
