@@ -8,3 +8,5 @@ list(APPEND SOURCE
     recyclebin_v5_enumerator.c)
 
 add_library(recyclebin ${SOURCE})
+add_dependencies(recyclebin psdk)
+
