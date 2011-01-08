@@ -17,6 +17,8 @@ endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
 
+    add_definitions(-fshort-wchar)
+
     add_definitions(-DTARGET_${ARCH})
 
     if(ARCH MATCHES i386)
@@ -51,14 +53,14 @@ else()
     set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
     include(${IMPORT_EXECUTABLES})
 
-endif(NOT CMAKE_CROSSCOMPILING)
+endif()
 
 # Compiler specific definitions and macros
 if(MSVC)
     include(msc.cmake)
 else()
     include(gcc.cmake)
-endif(MSVC)
+endif()
 
 # Generic macros
 include(CMakeMacros.cmake)

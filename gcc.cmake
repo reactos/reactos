@@ -1,9 +1,5 @@
 
-if(NOT CMAKE_CROSSCOMPILING)
-
-add_definitions(-fshort-wchar)
-
-else()
+if(CMAKE_CROSSCOMPILING)
 
 # Linking
 link_directories("${REACTOS_SOURCE_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
