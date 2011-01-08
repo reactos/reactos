@@ -268,3 +268,19 @@ endmacro()
 macro(add_dependency_footer)
     file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
 endmacro()
+
+macro(add_message_headers)
+    foreach(_in_FILE ${ARGN})
+        get_filename_component(FILE ${_in_FILE} NAME_WE)
+        macro_mc(${FILE})
+        add_custom_command(
+            OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
+            COMMAND ${COMMAND_MC}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+        set_source_files_properties(
+            ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc
+            PROPERTIES GENERATED TRUE)
+        add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc)
+    endforeach()
+endmacro()
+

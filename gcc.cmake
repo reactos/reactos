@@ -273,6 +273,10 @@ macro(spec2def _dllname _spec_file)
     list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
 endmacro()
 
+macro(macro_mc FILE)
+    set(COMMAND_MC ${MINGW_PREFIX}windmc -A -b ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
+endmacro()
+
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
 

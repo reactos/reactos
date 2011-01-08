@@ -204,6 +204,10 @@ macro(set_export_spec _module _spec_file)
     spec2def(${_dllname} ${_spec_file})
 endmacro()
 
+macro(macro_mc FILE)
+    set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc)
+endmacro()
+
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
