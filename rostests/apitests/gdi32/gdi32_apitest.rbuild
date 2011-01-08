@@ -12,7 +12,7 @@
 	<file>AddFontResource.c</file>
 	<file>AddFontResourceEx.c</file>
 	<file>BeginPath.c</file>
-
+	<file>CombineTransform.c</file>
 	<file>CreateBitmapIndirect.c</file>
 	<file>CreateCompatibleDC.c</file>
 	<file>CreateFont.c</file>
@@ -43,6 +43,7 @@
 	<file>GetStockObject.c</file>
 	<file>GetTextExtentExPoint.c</file>
 	<file>GetTextFace.c</file>
+	<file>MaskBlt.c</file>
 	<file>SelectObject.c</file>
 	<file>SetDCPenColor.c</file>
 	<file>SetMapMode.c</file>

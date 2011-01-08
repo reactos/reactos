@@ -8,6 +8,7 @@
 extern void func_AddFontResource(void);
 extern void func_AddFontResourceEx(void);
 extern void func_BeginPath(void);
+extern void func_CombineTransform(void);
 extern void func_CreateBitmapIndirect(void);
 extern void func_CreateCompatibleDC(void);
 extern void func_CreateFont(void);
@@ -38,6 +39,7 @@ extern void func_GetObject(void);
 extern void func_GetStockObject(void);
 extern void func_GetTextExtentExPoint(void);
 extern void func_GetTextFace(void);
+extern void func_MaskBlt(void);
 extern void func_SelectObject(void);
 extern void func_SetDCPenColor(void);
 extern void func_SetMapMode(void);
@@ -50,6 +52,7 @@ const struct test winetest_testlist[] =
     { "AddFontResource", func_AddFontResource },
     { "AddFontResourceEx", func_AddFontResourceEx },
     { "BeginPath", func_BeginPath },
+    { "CombineTransform", func_CombineTransform },
     { "CreateBitmapIndirect", func_CreateBitmapIndirect },
     { "CreateCompatibleDC", func_CreateCompatibleDC },
     { "CreateFont", func_CreateFont },
@@ -80,6 +83,7 @@ const struct test winetest_testlist[] =
     { "GetStockObject", func_GetStockObject },
     { "GetTextExtentExPoint", func_GetTextExtentExPoint },
     { "GetTextFace", func_GetTextFace },
+    { "MaskBlt", func_MaskBlt },
     { "SelectObject", func_SelectObject },
     { "SetDCPenColor", func_SetDCPenColor },
     { "SetMapMode", func_SetMapMode },
