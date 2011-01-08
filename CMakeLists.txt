@@ -25,8 +25,6 @@ if(NOT CMAKE_CROSSCOMPILING)
     if(ARCH MATCHES i386)
         if(MSVC)
             add_definitions(-Dinline=__inline)
-        else()
-            add_definitions(-fshort-wchar)
         endif()
     endif()
 
@@ -37,6 +35,10 @@ if(NOT CMAKE_CROSSCOMPILING)
         include/reactos
         include/reactos/wine
         ${REACTOS_BINARY_DIR}/include)
+
+    if(NOT MSVC)
+       add_definitions(-fshort-wchar)
+    endif()
 
     add_subdirectory(tools)
     add_subdirectory(lib)
