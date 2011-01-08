@@ -2,6 +2,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(REACTOS)
 
+# Don't escape preprocessor definition values added via add_definitions
+cmake_policy(SET CMP0005 OLD)
+
 if(NOT ARCH)
     set(ARCH i386)
 endif()
