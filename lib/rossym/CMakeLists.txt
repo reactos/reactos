@@ -19,4 +19,4 @@ list(APPEND SOURCE
     pe.c
     zwfile.c)
 add_library(rossym ${SOURCE})
-add_dependencies(rossym psdk)
+add_dependencies(rossym psdk bugcodes)
