@@ -23,3 +23,4 @@ list(APPEND SOURCE
     utf8.c)
 
 add_library(dnslib ${SOURCE})
+add_dependencies(dnslib psdk)
