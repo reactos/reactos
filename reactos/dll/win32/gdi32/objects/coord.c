@@ -67,6 +67,9 @@ CombineTransform(
 {
     XFORM xformTmp;
 
+    /* Check paramters */
+    if (!pxfResult || !pxf1 || !pxf2) return FALSE;
+
     /* Do matrix multiplication */
     xformTmp.eM11 = pxf1->eM11 * pxf2->eM11 + pxf1->eM12 * pxf2->eM21;
     xformTmp.eM12 = pxf1->eM11 * pxf2->eM12 + pxf1->eM12 * pxf2->eM22;
