@@ -21,9 +21,16 @@ extern PDEVOBJ PrimarySurface;
 BOOL FASTCALL IntCreatePrimarySurface();
 
 /* GLOBALS *******************************************************************/
-HGDIOBJ hStockBmp;
-HGDIOBJ hStockPalette;
-HGDIOBJ hNullPen;
+HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
+
+static LOGPEN WhitePen =
+    { PS_SOLID, { 0, 0 }, RGB(255,255,255) };
+
+static LOGPEN BlackPen =
+    { PS_SOLID, { 0, 0 }, RGB(0,0,0) };
+
+static LOGPEN NullPen =
+    { PS_NULL, { 0, 0 }, 0 };
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -87,13 +94,13 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     EBRUSHOBJ_vInit(&pNewDC->eboFill, pNewDC->dclevel.pbrFill, pNewDC);
 
     /* Set the default palette */
-    pNewDC->dclevel.hpal = hStockPalette;
+    pNewDC->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
     pNewDC->dclevel.ppal = PALETTE_ShareLockPalette(pNewDC->dclevel.hpal);
 
     if (dcType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
-        pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hStockBmp);
+        pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
 
         /* Set DC rectangles */
         pNewDC->rcVport.left = 0; pNewDC->rcVport.top = 0;
@@ -117,7 +124,7 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     pNewDC->pWindow = NULL;
 
     /* Set default palette */
-    pNewDC->dclevel.hpal = hStockPalette;
+    pNewDC->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
 
     /* Give handle to the caller */
     *pdev = hNewDC;
@@ -152,19 +159,13 @@ BOOL APIENTRY RosGdiPaintRgn( HDC physDev, HRGN hrgn )
     return FALSE;
 }
 
-BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
+BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
 {
     PDC pDC;
     PSURFACE pSurface;
 
     DPRINT("Selecting %x bitmap to hdc %x\n", hbitmap, physDev);
-
-    if (bStock)
-    {
-        /* Selecting stock bitmap */
-        hbitmap = hStockBmp;
-    }
-
+    
     pSurface = SURFACE_ShareLockSurface(hbitmap);
     if(pSurface== NULL)
     {
@@ -684,12 +685,39 @@ IntCreateStockPen(DWORD dwPenStyle,
 
 VOID CreateStockObjects()
 {
-    hStockBmp = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
-    hStockPalette = (HGDIOBJ)PALETTE_Init();
-    hNullPen = IntCreateStockPen(PS_NULL, 0, BS_SOLID, 0);
+    UINT Object;
 
-    GDIOBJ_ConvertToStockObj(&hStockBmp);
-    GDIOBJ_ConvertToStockObj(&hStockPalette);
-    GDIOBJ_ConvertToStockObj(&hNullPen);
+    memset(StockObjects, 0, sizeof(StockObjects));
+
+    /* Create GDI Stock Objects from the logical structures we've defined */
+
+    StockObjects[DEFAULT_BITMAP] = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
+    StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)PALETTE_Init();
+    StockObjects[WHITE_PEN] = IntCreateStockPen(WhitePen.lopnStyle, WhitePen.lopnWidth.x, BS_SOLID, WhitePen.lopnColor);
+    StockObjects[BLACK_PEN] = IntCreateStockPen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor);
+    StockObjects[DC_PEN]    = IntCreateStockPen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor);
+    StockObjects[NULL_PEN]  = IntCreateStockPen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor);
+
+    for (Object = 0; Object < NB_STOCK_OBJECTS; Object++)
+    {
+        if (NULL != StockObjects[Object])
+        {
+            GDIOBJ_ConvertToStockObj(&StockObjects[Object]);
+        }
+    }
 }
+
+/*!
+ * Return stock object.
+ * \param	Object - stock object id.
+ * \return	Handle to the object.
+*/
+HGDIOBJ APIENTRY
+NtGdiGetStockObject(INT Object)
+{
+    DPRINT("NtGdiGetStockObject index %d\n", Object);
+
+    return ((Object < 0) || (NB_STOCK_OBJECTS <= Object)) ? NULL : StockObjects[Object];
+}
+
 /* EOF */

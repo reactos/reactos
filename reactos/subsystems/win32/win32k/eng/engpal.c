@@ -465,11 +465,7 @@ IntGdiRealizePalette(HDC hDC)
   dc = DC_LockDc(hDC);
   if (!dc) return 0;
 
-#if 0
   systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-#else
-  systemPalette = hStockPalette;
-#endif
   palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
 
   if (palGDI == NULL)

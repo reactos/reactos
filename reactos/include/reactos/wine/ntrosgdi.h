@@ -87,12 +87,13 @@ BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,
                               INT widthSrc, INT heightSrc, DWORD rop );
 
 /* dc.c */
+HGDIOBJ APIENTRY NtGdiGetStockObject(INT Object);
 BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
                               LPCWSTR output, const DEVMODEW* initData, ULONG dcType );
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev );
 BOOL APIENTRY RosGdiGetDCOrgEx( HDC physDev, LPPOINT lpp );
 BOOL APIENTRY RosGdiPaintRgn( HDC physDev, HRGN hrgn );
-BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL stock );
+BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap );
 VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush );
 HFONT APIENTRY RosGdiSelectFont( HDC physDev, HFONT hfont, HANDLE gdiFont );
 VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogPen );

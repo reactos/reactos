@@ -91,3 +91,5 @@ VOID UserLeave(VOID);
 VOID UserCleanup(VOID);
 VOID UserInitialize(VOID);
 
+extern HGDIOBJ StockObjects[];
+VOID CreateStockObjects();

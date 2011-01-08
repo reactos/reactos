@@ -14,9 +14,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
 
 /* GLOBALS ****************************************************************/
-HANDLE hStockBitmap;
 static struct list handle_mapping_list = LIST_INIT( handle_mapping_list );
 static CRITICAL_SECTION handle_mapping_cs;
+static BOOL StockObjectsInitialized = FALSE;
 
 typedef struct _HMAPPING
 {
@@ -64,6 +64,22 @@ static PHMAPPING FindHandleMapping(HGDIOBJ hUser)
 HGDIOBJ MapUserHandle(HGDIOBJ hUser)
 {
     PHMAPPING mapping;
+
+    /* Map stock objects if not mapped yet */
+    if(!StockObjectsInitialized)
+    {
+        HGDIOBJ hKernel, hUser;
+
+        hKernel = NtGdiGetStockObject(DEFAULT_BITMAP);
+        hUser = GetStockObject( STOCK_LAST+1 );
+
+        /* Make sure that both kernel mode and user mode objects are initialized */
+        if(hKernel && hUser)
+        {
+            AddHandleMapping(NtGdiGetStockObject(DEFAULT_BITMAP), GetStockObject( STOCK_LAST+1 ));
+            StockObjectsInitialized = TRUE;
+        }
+    }
 
     mapping = FindHandleMapping(hUser);
 
@@ -129,11 +145,7 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
 
     /* Get DC type */
     dcType = GetObjectType(hdc);
-
-    /* Save stock bitmap's handle */
-    if (dcType == OBJ_MEMDC && !hStockBitmap)
-        hStockBitmap = GetCurrentObject( hdc, OBJ_BITMAP );
-
+    
     /* Call the win32 kernel */
     bRet = RosGdiCreateDC(&hKernelDC, driver, device, output, initData, dcType);
 
@@ -273,16 +285,13 @@ UINT CDECL RosDrv_RealizePalette( NTDRV_PDEVICE *physDev, HPALETTE hpal, BOOL pr
 
 HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
 {
-    BOOL bRes, bStock = FALSE;
+    BOOL bRes;
 
     /* Check if it's a stock bitmap */
-    if (hbitmap == hStockBitmap)
-        bStock = TRUE;
-    else
-        hbitmap = (HBITMAP)MapUserHandle(hbitmap);
+    hbitmap = (HBITMAP)MapUserHandle(hbitmap);
 
     /* Select the bitmap into the DC */
-    bRes = RosGdiSelectBitmap(physDev->hKernelDC, hbitmap, bStock);
+    bRes = RosGdiSelectBitmap(physDev->hKernelDC, hbitmap);
 
     /* If there was an error, return 0 */
     if (!bRes) return 0;

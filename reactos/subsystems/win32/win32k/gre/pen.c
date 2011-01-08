@@ -73,11 +73,7 @@ IntGdiExtCreatePen(
 
    if ( (dwPenStyle & PS_STYLE_MASK) == PS_NULL)
    {
-#if 0
       return StockObjects[NULL_PEN];
-#else
-      return hNullPen;
-#endif
    }
 
    if (bOldStylePen)

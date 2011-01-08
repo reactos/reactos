@@ -1,4 +1,5 @@
 wine_server_call                   1
+NtGdiGetStockObject                1
 RosGdiAlphaBlend                  11
 RosGdiBitBlt                       9
 RosGdiCreateBitmap                 3
@@ -17,7 +18,7 @@ RosGdiCreateDC                     6
 RosGdiDeleteDC                     1
 RosGdiGetDCOrgEx                   2
 RosGdiPaintRgn                     2
-RosGdiSelectBitmap                 3
+RosGdiSelectBitmap                 2
 RosGdiSelectBrush                  2
 RosGdiSelectFont                   3
 RosGdiSelectPen                    3

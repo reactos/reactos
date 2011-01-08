@@ -120,12 +120,6 @@ GreSetDIBColorTable(
 INT FASTCALL
 BitsPerFormat(ULONG Format);
 
-/* bitmap.c */
-extern HGDIOBJ hStockBmp;
-extern HGDIOBJ hStockPalette;
-extern HGDIOBJ hNullPen;
-VOID CreateStockObjects();
-
 /* device.c */
 LONG FASTCALL GreChangeDisplaySettings(PUNICODE_STRING pDeviceName,
                                        LPDEVMODEW DevMode, DWORD dwflags,
