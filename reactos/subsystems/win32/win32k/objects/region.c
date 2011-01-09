@@ -3486,6 +3486,7 @@ NtGdiExtCreateRegion(
     DWORD dwSize = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     MATRIX matrix;
+    XFORMOBJ xo;
 
     DPRINT("NtGdiExtCreateRegion\n");
     _SEH2_TRY
@@ -3531,13 +3532,14 @@ NtGdiExtCreateRegion(
 
             /* Init the XFORMOBJ from the Xform struct */
             Status = STATUS_INVALID_PARAMETER;
-            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
+            XFORMOBJ_vInit(&xo, &matrix);
+            ret = XFORMOBJ_iSetXform(&xo, (XFORML*)Xform);
 
             /* Check for error, also no scale and shear allowed */
             if (ret != DDI_ERROR && ret != GX_GENERAL)
             {
                 /* Apply the coordinate transformation on the rects */
-                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
+                if (XFORMOBJ_bApplyXform(&xo,
                                          XF_LTOL,
                                          nCount * 2,
                                          RgnData->Buffer,
@@ -3563,6 +3565,9 @@ NtGdiExtCreateRegion(
     if (!NT_SUCCESS(Status))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
+        DbgPrint("Region == %p\n", Region);
+        __debugbreak();
+        ASSERT(FALSE);
         RGNOBJAPI_Unlock(Region);
         GreDeleteObject(hRgn);
         return NULL;
