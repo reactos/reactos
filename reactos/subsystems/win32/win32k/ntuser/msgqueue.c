@@ -121,7 +121,7 @@ ClearMsgBitsMask(PUSER_MESSAGE_QUEUE Queue, UINT MessageBits)
    pti = Queue->Thread->Tcb.Win32Thread;
 
    if (MessageBits & QS_KEY)
-   {  
+   {
       if (--Queue->nCntsQBits[QSRosKey] == 0) ClrMask |= QS_KEY;
    }
    if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
@@ -244,7 +244,7 @@ co_MsqInsertMouseMessage(MSG* Msg)
             pwnd != NULL;
             pwnd = pwnd->spwndNext )
        {
-           if((pwnd->style & WS_VISIBLE) && 
+           if((pwnd->style & WS_VISIBLE) &&
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
@@ -869,7 +869,7 @@ static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
         if (pwndParent == pwndDesktop) break;
         pt.x += pwnd->rcClient.left - pwndParent->rcClient.left;
         pt.y += pwnd->rcClient.top - pwndParent->rcClient.top;
-        
+
         pwnd = pwndParent;
         co_IntSendMessage( UserHMGetHandle(pwnd), WM_PARENTNOTIFY,
                       MAKEWPARAM( event, idChild ), MAKELPARAM( pt.x, pt.y ) );
@@ -911,7 +911,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     DPRINT("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
-    
+
     if (pwndMsg == NULL || pwndMsg->head.pti != pti)
     {
         /* Remove and ignore the message */
@@ -981,7 +981,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            }
         }
 
-        if (!((first ==  0 && last == 0) || (message >= first || message <= last))) 
+        if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
             DPRINT("Message out of range!!!\n");
             RETURN(FALSE);
@@ -1104,8 +1104,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
-                LONG ret = co_IntSendMessage( msg->hwnd, 
-                                              WM_MOUSEACTIVATE, 
+                LONG ret = co_IntSendMessage( msg->hwnd,
+                                              WM_MOUSEACTIVATE,
                                               (WPARAM)UserHMGetHandle(pwndTop),
                                               MAKELONG( hittest, msg->message));
                 switch(ret)
@@ -1259,7 +1259,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
     CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                           ListEntry);
-    do 
+    do
     {
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
@@ -1305,7 +1305,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
-   
+
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
 
@@ -1351,7 +1351,7 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
    ret = KeWaitForSingleObject(MessageQueue->NewMessages,
                               Executive,
                               UserMode,
-                              FALSE, 
+                              FALSE,
                               NULL);
    UserEnterCo();
    return ret;
@@ -1414,7 +1414,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
    PTHREADINFO pti;
-   
+
    pti = MessageQueue->Thread->Tcb.Win32Thread;
 
 
@@ -1437,7 +1437,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
       /* remove the message from the dispatching list if needed */
-      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
+      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
@@ -1539,7 +1539,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 
    MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(NonPagedPool,
                   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
-                  TAG_MSGQ);
+                  USERTAG_Q);
 
    if (!MessageQueue)
    {

@@ -372,7 +372,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         return 0;
     }
 
-    FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), TAG_FONTOBJ);
+    FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), GDITAG_RFONT);
     if (FontGDI == NULL)
     {
         FT_Done_Face(Face);
@@ -382,7 +382,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         return 0;
     }
 
-    FontGDI->Filename = ExAllocatePoolWithTag(PagedPool, FileName->Length + sizeof(WCHAR), TAG_PFF);
+    FontGDI->Filename = ExAllocatePoolWithTag(PagedPool, FileName->Length + sizeof(WCHAR), GDITAG_PFF);
     if (FontGDI->Filename == NULL)
     {
         EngFreeMem(FontGDI);
@@ -1019,7 +1019,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!Otm)
     {
         return;
@@ -1076,7 +1076,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
         Info->FontType |= RASTER_FONTTYPE;
 
-    ExFreePoolWithTag(Otm, TAG_GDITEXT);
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
     wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);
@@ -1548,7 +1548,7 @@ ftGdiGetGlyphOutline(
     orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation: 0;
 
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!potm)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1615,7 +1615,7 @@ ftGdiGetGlyphOutline(
     {
         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
         IntUnLockFreeType;
-        if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT);
+        if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT);
         return GDI_ERROR;
     }
     IntUnLockFreeType;
@@ -1693,7 +1693,7 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
-    if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT); /* It looks like we are finished with potm ATM.*/
+    if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT); /* It looks like we are finished with potm ATM.*/
 
     if (!needsTransform)
     {
@@ -2601,7 +2601,7 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
     }
 
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (NULL == Otm)
     {
         return Score;
@@ -3075,7 +3075,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Allocate space for a safe copy */
-    Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), TAG_GDITEXT);
+    Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), GDITAG_TEXT);
     if (NULL == Info)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3682,7 +3682,7 @@ NtGdiExtTextOutW(
         if (BufSize > STACK_TEXT_BUFFER_SIZE)
         {
             /* It's not, allocate a temp buffer */
-            Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, TAG_GDITEXT);
+            Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, GDITAG_TEXT);
             if (!Buffer)
             {
                 return FALSE;
@@ -3753,7 +3753,7 @@ cleanup:
     /* If we allocated a buffer, free it */
     if (Buffer != LocalBuffer)
     {
-        ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+        ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     }
 
     return Result;
@@ -3812,7 +3812,7 @@ NtGdiGetCharABCWidthsW(
     }
 
     BufferSize = Count * sizeof(ABC); // Same size!
-    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, GDITAG_TEXT);
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
@@ -3979,7 +3979,7 @@ NtGdiGetCharWidthW(
     }
 
     BufferSize = Count * sizeof(INT); // Same size!
-    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, GDITAG_TEXT);
     if (!fl) SafeBuffF = (PFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
@@ -4114,7 +4114,7 @@ GreGetGlyphIndicesW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), GDITAG_TEXT);
     if (!Buffer)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -4125,7 +4125,7 @@ GreGetGlyphIndicesW(
     else
     {
         Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
         if (!potm)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -4159,7 +4159,7 @@ GreGetGlyphIndicesW(
     RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
 
 ErrorRet:
-    if (Buffer) ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    if (Buffer) ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     return cwc;
 }
 
@@ -4210,7 +4210,7 @@ NtGdiGetGlyphIndicesW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), GDITAG_TEXT);
     if (!Buffer)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -4221,7 +4221,7 @@ NtGdiGetGlyphIndicesW(
     else
     {
         Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
         if (!potm)
         {
             Status = ERROR_NOT_ENOUGH_MEMORY;
@@ -4282,7 +4282,7 @@ NtGdiGetGlyphIndicesW(
     _SEH2_END;
 
 ErrorRet:
-    ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     if (NT_SUCCESS(Status)) return cwc;
     EngSetLastError(Status);
     return GDI_ERROR;

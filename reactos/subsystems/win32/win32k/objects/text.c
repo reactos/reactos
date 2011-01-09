@@ -3,9 +3,9 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/text.c
  * PURPOSE:         Text/Font
- * PROGRAMMER:      
+ * PROGRAMMER:
  */
-      
+
 /** Includes ******************************************************************/
 
 #include <win32k.h>
@@ -70,7 +70,7 @@ GreGetTextExtentW(
 
   DC_UnlockDc(pdc);
   return Result;
-} 
+}
 
 
 /*
@@ -103,10 +103,10 @@ GreGetTextExtentExW(
 
   if ( !Count )
   {
-     if ( Fit ) Fit = 0;  
+     if ( Fit ) Fit = 0;
      return TRUE;
   }
-      
+
   pdc = DC_LockDc(hDC);
   if (NULL == pdc)
   {
@@ -295,7 +295,7 @@ NtGdiGetTextExtentExW(
       return TRUE;
     }
 
-  String = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
+  String = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
   if (NULL == String)
     {
       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -304,10 +304,10 @@ NtGdiGetTextExtentExW(
 
   if (NULL != UnsafeDx)
     {
-      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
+      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
       if (NULL == Dx)
 	{
-	  ExFreePoolWithTag(String, TAG_GDITEXT);
+	  ExFreePoolWithTag(String, GDITAG_TEXT);
 	  EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
@@ -322,9 +322,9 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
+	  ExFreePoolWithTag(Dx, GDITAG_TEXT);
 	}
-      ExFreePoolWithTag(String, TAG_GDITEXT);
+      ExFreePoolWithTag(String, GDITAG_TEXT);
       SetLastNtError(Status);
       return FALSE;
     }
@@ -334,9 +334,9 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
+	  ExFreePoolWithTag(Dx, GDITAG_TEXT);
 	}
-      ExFreePoolWithTag(String, TAG_GDITEXT);
+      ExFreePoolWithTag(String, GDITAG_TEXT);
       EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
     }
@@ -359,12 +359,12 @@ NtGdiGetTextExtentExW(
     Result = FALSE;
   DC_UnlockDc(dc);
 
-  ExFreePoolWithTag(String, TAG_GDITEXT);
+  ExFreePoolWithTag(String, GDITAG_TEXT);
   if (! Result)
     {
       if (NULL != Dx)
 	{
-	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
+	  ExFreePoolWithTag(Dx, GDITAG_TEXT);
 	}
       return FALSE;
     }
@@ -376,7 +376,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
+	      ExFreePoolWithTag(Dx, GDITAG_TEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -390,7 +390,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
+	      ExFreePoolWithTag(Dx, GDITAG_TEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -398,7 +398,7 @@ NtGdiGetTextExtentExW(
     }
   if (NULL != Dx)
     {
-      ExFreePoolWithTag(Dx,TAG_GDITEXT);
+      ExFreePoolWithTag(Dx,GDITAG_TEXT);
     }
 
   Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
@@ -506,7 +506,7 @@ NtGdiGetTextFaceW(
    }
    else
    {
-      ret = fLen; 
+      ret = fLen;
    }
 
    TEXTOBJ_UnlockText(TextObj);

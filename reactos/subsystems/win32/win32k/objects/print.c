@@ -174,7 +174,7 @@ NtGdiExtEscape(
         return -1;
       }
 
-      SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, TAG_PRINT );
+      SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, GDITAG_TEMP );
       if ( !SafeInData )
       {
          DC_UnlockDc(pDC);
@@ -197,7 +197,7 @@ NtGdiExtEscape(
 
       if ( !NT_SUCCESS(Status) )
       {
-         ExFreePoolWithTag ( SafeInData, TAG_PRINT );
+         ExFreePoolWithTag ( SafeInData, GDITAG_TEMP );
          DC_UnlockDc(pDC);
          SetLastNtError(Status);
          return -1;
@@ -224,13 +224,13 @@ NtGdiExtEscape(
         goto freeout;
       }
 
-      SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, TAG_PRINT );
+      SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, GDITAG_TEMP );
       if ( !SafeOutData )
       {
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 freeout:
          if ( SafeInData )
-            ExFreePoolWithTag ( SafeInData, TAG_PRINT );
+            ExFreePoolWithTag ( SafeInData, GDITAG_TEMP );
          DC_UnlockDc(pDC);
          return -1;
       }
@@ -241,7 +241,7 @@ freeout:
    DC_UnlockDc(pDC);
 
    if ( SafeInData )
-      ExFreePoolWithTag ( SafeInData ,TAG_PRINT );
+      ExFreePoolWithTag ( SafeInData ,GDITAG_TEMP );
 
    if ( SafeOutData )
    {
@@ -258,7 +258,7 @@ freeout:
       }
       _SEH2_END;
 
-      ExFreePoolWithTag ( SafeOutData, TAG_PRINT );
+      ExFreePoolWithTag ( SafeOutData, GDITAG_TEMP );
       if ( !NT_SUCCESS(Status) )
       {
          SetLastNtError(Status);

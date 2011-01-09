@@ -5,7 +5,7 @@
  * PURPOSE:         Font
  * PROGRAMMER:
  */
-      
+
 /** Includes ******************************************************************/
 
 #include <win32k.h>
@@ -60,7 +60,7 @@ GreGetKerningPairs(
         EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
-     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -70,7 +70,7 @@ GreGetKerningPairs(
 
      RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
 
-     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+     ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
   return Count;
 }
@@ -449,7 +449,7 @@ NtGdiGetFontUnicodeRanges(
 
   hFont = pdcattr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
-        
+
   if ( TextObj == NULL)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
@@ -461,7 +461,7 @@ NtGdiGetFontUnicodeRanges(
 
   if (Size && pgs)
   {
-     pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+     pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
      if (!pgsSafe)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -472,7 +472,7 @@ NtGdiGetFontUnicodeRanges(
      Size = ftGetFontUnicodeRanges( FontGdi, pgsSafe);
 
      if (Size)
-     {     
+     {
         _SEH2_TRY
         {
             ProbeForWrite(pgs, Size, 1);
@@ -486,7 +486,7 @@ NtGdiGetFontUnicodeRanges(
 
         if (!NT_SUCCESS(Status)) Size = 0;
      }
-     ExFreePoolWithTag(pgsSafe, TAG_GDITEXT);
+     ExFreePoolWithTag(pgsSafe, GDITAG_TEXT);
   }
 Exit:
   TEXTOBJ_UnlockText(TextObj);
@@ -521,7 +521,7 @@ NtGdiGetGlyphOutline(
 
   if (UnsafeBuf && cjBuf)
   {
-     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
+     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, GDITAG_TEXT);
      if (!pvBuf)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -551,7 +551,7 @@ NtGdiGetGlyphOutline(
      }
      _SEH2_END
 
-     ExFreePoolWithTag(pvBuf, TAG_GDITEXT);
+     ExFreePoolWithTag(pvBuf, GDITAG_TEXT);
   }
 
   if (pgm)
@@ -622,7 +622,7 @@ NtGdiGetKerningPairs(HDC  hDC,
         EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
-     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -643,8 +643,8 @@ NtGdiGetKerningPairs(HDC  hDC,
      {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         Count = 0;
-     }     
-     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+     }
+     ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
   return Count;
 }
@@ -693,7 +693,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
       return 0;
   }
-  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
   if (!potm)
   {
       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -719,7 +719,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
         Size = 0;
      }
   }
-  ExFreePoolWithTag(potm,TAG_GDITEXT);
+  ExFreePoolWithTag(potm,GDITAG_TEXT);
   return Size;
 }
 

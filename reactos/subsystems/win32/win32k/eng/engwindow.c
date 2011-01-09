@@ -226,7 +226,7 @@ EngCreateWnd(
     }
 
   /* Create WNDOBJ */
-  WndObjInt = EngAllocMem(0, sizeof (WNDGDI), TAG_WNDOBJ);
+  WndObjInt = EngAllocMem(0, sizeof (WNDGDI), GDITAG_WNDOBJ);
   if (WndObjInt == NULL)
     {
       DPRINT1("Failed to allocate memory for a WND structure!\n");

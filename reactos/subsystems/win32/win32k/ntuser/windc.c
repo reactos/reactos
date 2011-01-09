@@ -82,14 +82,14 @@ DceAllocDCE(PWND Window OPTIONAL, DCE_TYPE Type)
 {
   PDCE pDce;
 
-  pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), TAG_PDCE);
+  pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), USERTAG_DCE);
   if(!pDce)
         return NULL;
 
   pDce->hDC = DceCreateDisplayDC();
   if (!pDce->hDC)
   {
-      ExFreePoolWithTag(pDce, TAG_PDCE);
+      ExFreePoolWithTag(pDce, USERTAG_DCE);
       return NULL;
   }
   DCECount++;
@@ -246,7 +246,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          }
          while (pLE != &LEDce );
       }
-#endif      
+#endif
    }
    return 1; // Released!
 }
@@ -461,7 +461,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
          if (!Dce) break;
 //
 // The way I understand this, you can have more than one DC per window.
-// Only one Owned if one was requested and saved and one Cached. 
+// Only one Owned if one was requested and saved and one Cached.
 //
          if ((Dce->DCXFlags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
          {
@@ -510,7 +510,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       KeLeaveCriticalRegion();
 
       if ( (Flags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) &&
-           (Dce->DCXFlags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) )          
+           (Dce->DCXFlags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) )
       {
           DceDeleteClipRgn(Dce);
       }
@@ -593,7 +593,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       NtGdiSetLayout(Dce->hDC, -1, LAYOUT_RTL);
    }
 
-   if (Dce->DCXFlags & DCX_PROCESSOWNED) 
+   if (Dce->DCXFlags & DCX_PROCESSOWNED)
    {
       ppi = PsGetCurrentProcessWin32Process();
       ppi->W32PF_flags |= W32PF_OWNDCCLEANUP;
@@ -657,7 +657,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
       return NULL;
   }
 
-  ExFreePoolWithTag(pdce, TAG_PDCE);
+  ExFreePoolWithTag(pdce, USERTAG_DCE);
 
   DCECount--;
   DPRINT("Freed DCE's! %d \n", DCECount);

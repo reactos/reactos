@@ -201,7 +201,7 @@ IntWinListChildren(PWND Window)
    for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
       ++NumChildren;
 
-   List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), TAG_WINLIST);
+   List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
    if(!List)
    {
       DPRINT1("Failed to allocate memory for children array\n");
@@ -297,7 +297,7 @@ UserFreeWindowInfo(PTHREADINFO ti, PWND Wnd)
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
     if (!Wnd) return;
-    
+
     if (ClientInfo->CallbackWnd.pWnd == DesktopHeapAddressToUser(Wnd))
     {
         ClientInfo->CallbackWnd.hWnd = NULL;
@@ -942,8 +942,8 @@ IntIsWindowVisible(PWND BaseWindow)
 }
 
 
-/* 
-   link the window into siblings list 
+/*
+   link the window into siblings list
    children and parent are kept in place.
 */
 VOID FASTCALL
@@ -975,14 +975,14 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
 {
     if (hWndPrev == HWND_NOTOPMOST)
     {
-        if (!(Wnd->ExStyle & WS_EX_TOPMOST) && 
+        if (!(Wnd->ExStyle & WS_EX_TOPMOST) &&
             (Wnd->ExStyle2 & WS_EX2_LINKED)) return;  /* nothing to do */
         Wnd->ExStyle &= ~WS_EX_TOPMOST;
         hWndPrev = HWND_TOP;  /* fallback to the HWND_TOP case */
     }
 
     IntUnlinkWindow(Wnd);  /* unlink it from the previous location */
-    
+
     if (hWndPrev == HWND_BOTTOM)
     {
         /* Link in the bottom of the list */
@@ -1042,7 +1042,7 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
         IntLinkWindow(Wnd, WndInsertAfter);
 
         /* Fix the WS_EX_TOPMOST flag */
-        if (!(WndInsertAfter->ExStyle & WS_EX_TOPMOST)) 
+        if (!(WndInsertAfter->ExStyle & WS_EX_TOPMOST))
         {
             Wnd->ExStyle &= ~WS_EX_TOPMOST;
         }
@@ -1253,13 +1253,13 @@ IntUnlinkWindow(PWND Wnd)
 {
    if (Wnd->spwndNext)
        Wnd->spwndNext->spwndPrev = Wnd->spwndPrev;
- 
+
    if (Wnd->spwndPrev)
        Wnd->spwndPrev->spwndNext = Wnd->spwndNext;
 
    if (Wnd->spwndParent && Wnd->spwndParent->spwndChild == Wnd)
        Wnd->spwndParent->spwndChild = Wnd->spwndNext;
- 
+
    Wnd->spwndPrev = Wnd->spwndNext = NULL;
 }
 
@@ -1556,7 +1556,7 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
         {
             co_IntSendMessage( pWindow->spwndParent->head.h,
                                WM_PARENTNOTIFY,
-                               MAKEWPARAM( msg, pWindow->IDMenu), 
+                               MAKEWPARAM( msg, pWindow->IDMenu),
                                (LPARAM)pWindow->head.h );
         }
     }
@@ -1645,8 +1645,8 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
 }
 
 /* Allocates and initializes a window*/
-PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs, 
-                                        PLARGE_STRING WindowName, 
+PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
+                                        PLARGE_STRING WindowName,
                                         PCLS Class,
                                         PWND ParentWindow,
                                         PWND OwnerWindow)
@@ -1670,7 +1670,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
             Cs->dwExStyle |= WS_EX_LAYOUTRTL;
       }
       else
-      {/* 
+      {/*
         Note from MSDN http://msdn.microsoft.com/en-us/library/aa913269.aspx :
 
         Dialog boxes and message boxes do not inherit layout, so you must
@@ -1684,7 +1684,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
             }
          }
-      }      
+      }
    }
 
    /* Automatically add WS_EX_WINDOWEDGE */
@@ -1762,7 +1762,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       if (bUnicodeWindow)
       {
          if (GETPFNCLIENTA(pWnd->pcls->fnid) == pWnd->lpfnWndProc)
-            pWnd->lpfnWndProc = GETPFNCLIENTW(pWnd->pcls->fnid);  
+            pWnd->lpfnWndProc = GETPFNCLIENTW(pWnd->pcls->fnid);
       }
       else
       {
@@ -1807,7 +1807,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
 
    /* BugBoy Comments: if the window being created is a edit control, ATOM 0xCxxx,
-      then my testing shows that windows (2k and XP) creates a CallProc for it immediately 
+      then my testing shows that windows (2k and XP) creates a CallProc for it immediately
       Dont understand why it does this. */
    if (Class->atomClassName == gpsi->atomSysClass[ICLS_EDIT])
    {
@@ -1916,7 +1916,7 @@ AllocError:
 
    if(pWnd)
       UserDereferenceObject(pWnd);
-   
+
    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
    return NULL;
 }
@@ -1995,17 +1995,17 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
         OwnerWindow = UserGetAncestor(OwnerWindow, GA_ROOT);
 
    /* Fix the position and the size of the window */
-   if (ParentWindow) 
+   if (ParentWindow)
    {
        UserRefObjectCo(ParentWindow, &ParentRef);
        IntFixWindowCoordinates(Cs, ParentWindow, &dwShowMode);
    }
 
    /* Allocate and initialize the new window */
-   Window = IntCreateWindow(Cs, 
-                            WindowName, 
-                            Class, 
-                            ParentWindow, 
+   Window = IntCreateWindow(Cs,
+                            WindowName,
+                            Class,
+                            ParentWindow,
                             OwnerWindow);
    if(!Window)
    {
@@ -2075,7 +2075,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
             pszName = UserHeapAlloc(UnicodeString.MaximumLength);
             RtlZeroMemory(pszName, UnicodeString.MaximumLength);
-            UnicodeString.Buffer = (PWSTR)pszName; 
+            UnicodeString.Buffer = (PWSTR)pszName;
             RtlCopyUnicodeString(&UnicodeString, &Name);
          }
          if (pszName) pCsw->lpszName = UserHeapAddressToUser(pszName);
@@ -2124,7 +2124,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Window->rcWindow.bottom = Cs->y + Size.cy;
    if (0 != (Window->style & WS_CHILD) && ParentWindow)
    {
-      RECTL_vOffsetRect(&Window->rcWindow, 
+      RECTL_vOffsetRect(&Window->rcWindow,
                         ParentWindow->rcClient.left,
                         ParentWindow->rcClient.top);
    }
@@ -2243,7 +2243,7 @@ CLEANUP:
    {
        DPRINT("co_UserCreateWindowEx(): Error Created window!\n");
        /* If the window was created, the class will be dereferenced by co_UserDestroyWindow */
-       if (Window) 
+       if (Window)
             co_UserDestroyWindow(Window);
        else if (Class)
            IntDereferenceClass(Class, pti->pDeskInfo, pti->ppi);
@@ -2434,7 +2434,7 @@ cleanup:
 
    return hwnd;
 }
-    
+
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 {
@@ -2661,7 +2661,7 @@ IntFindWindow(PWND Parent,
              CurrentWindowName.Buffer = Child->strName.Buffer;
              CurrentWindowName.Length = Child->strName.Length;
              CurrentWindowName.MaximumLength = Child->strName.MaximumLength;
-             if(!CheckWindowName || 
+             if(!CheckWindowName ||
                 (Child->strName.Length < 0xFFFF &&
                  !RtlCompareUnicodeString(WindowName, &CurrentWindowName, TRUE)))
              {
@@ -2838,8 +2838,8 @@ NtUserFindWindowEx(HWND hwndParent,
                 ustr.Buffer = TopLevelWindow->strName.Buffer;
                 ustr.Length = TopLevelWindow->strName.Length;
                 ustr.MaximumLength = TopLevelWindow->strName.MaximumLength;
-                WindowMatches = !CheckWindowName || 
-                                (TopLevelWindow->strName.Length < 0xFFFF && 
+                WindowMatches = !CheckWindowName ||
+                                (TopLevelWindow->strName.Length < 0xFFFF &&
                                  !RtlCompareUnicodeString(&WindowName, &ustr, TRUE));
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
                                ClassAtom == TopLevelWindow->pcls->atomClassName;
@@ -3073,7 +3073,7 @@ NtUserGetInternalWindowPos( HWND hWnd,
                         sizeof(POINT),
                         1);
        }
-       
+
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -3082,7 +3082,7 @@ NtUserGetInternalWindowPos( HWND hWnd,
    }
    _SEH2_END;
 
-   wndpl.length = sizeof(WINDOWPLACEMENT);   
+   wndpl.length = sizeof(WINDOWPLACEMENT);
 
    if (IntGetWindowPlacement(Window, &wndpl) && !Hit)
    {
@@ -3096,7 +3096,7 @@ NtUserGetInternalWindowPos( HWND hWnd,
           {
              RtlCopyMemory(ptIcon, &wndpl.ptMinPosition, sizeof(POINT));
           }
-       
+
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
@@ -3893,7 +3893,7 @@ NtUserSetWindowFNID(HWND hWnd,
          RETURN( FALSE);
       }
    }
-   
+
    Wnd->fnid |= fnID;
    RETURN( TRUE);
 

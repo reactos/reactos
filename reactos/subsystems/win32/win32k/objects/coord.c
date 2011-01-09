@@ -275,7 +275,7 @@ NtGdiTransformPoints(
     Size = Count * sizeof(POINT);
 
     // FIXME: It would be wise to have a small stack buffer as optimization
-    Points = ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
+    Points = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEMP);
     if (!Points)
     {
         DC_UnlockDc(pdc);
@@ -333,7 +333,7 @@ NtGdiTransformPoints(
 //
 leave:
     DC_UnlockDc(pdc);
-    ExFreePoolWithTag(Points, TAG_COORD);
+    ExFreePoolWithTag(Points, GDITAG_TEMP);
     return ret;
 }
 

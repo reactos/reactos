@@ -146,7 +146,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), GDITAG_ICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -174,7 +174,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   _SEH2_END;
 
   DC_UnlockDc(dc);
-  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
+  ExFreePoolWithTag(SafeRamp, GDITAG_ICM);
 
   if (!NT_SUCCESS(Status))
   {
@@ -204,16 +204,16 @@ NtGdiSetColorSpace(IN HDC hdc,
   if (pdcattr->hColorSpace == hColorSpace)
   {
      DC_UnlockDc(pDC);
-     return TRUE; 
+     return TRUE;
   }
-  
+
   pCS = COLORSPACEOBJ_LockCS(hColorSpace);
   if (!pCS)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
-  
+
   if (pDC->dclevel.pColorSpace)
   {
      GDIOBJ_ShareUnlockObjByPtr((POBJ) pDC->dclevel.pColorSpace);
@@ -345,7 +345,7 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
      // This way we have a record of the change in memory.
      if (!pGDev->pvGammaRamp && !(pGDev->flFlags & PDEV_GAMMARAMP_TABLE))
      {  // If the above is true and we have nothing allocated, create it.
-        pGDev->pvGammaRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
+        pGDev->pvGammaRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), GDITAG_ICM);
         pGDev->flFlags |= PDEV_GAMMARAMP_TABLE;
      }
      if (pGDev->pvGammaRamp)
@@ -377,7 +377,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), GDITAG_ICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -402,14 +402,14 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   if (!NT_SUCCESS(Status))
   {
      DC_UnlockDc(dc);
-     ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
+     ExFreePoolWithTag(SafeRamp, GDITAG_ICM);
      SetLastNtError(Status);
      return FALSE;
   }
 
   Ret = IntSetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp, TRUE);
   DC_UnlockDc(dc);
-  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
+  ExFreePoolWithTag(SafeRamp, GDITAG_ICM);
   return Ret;
 }
 

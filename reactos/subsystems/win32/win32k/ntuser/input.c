@@ -376,7 +376,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    Ret = ExAllocatePoolWithTag(PagedPool,
                                Size,
-                               TAG_KEYBOARD);
+                               USERTAG_KBDTABLE);
 
    while (Ret)
    {
@@ -392,13 +392,13 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
       if (Status != STATUS_BUFFER_TOO_SMALL)
          break;
 
-      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
+      ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
 
       Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
 
       Ret = ExAllocatePoolWithTag(PagedPool,
                                   Size,
-                                  TAG_KEYBOARD);
+                                  USERTAG_KBDTABLE);
    }
 
    if (!Ret)
@@ -406,7 +406,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    if (Status != STATUS_SUCCESS)
    {
-      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
+      ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
       return Status;
    }
 
@@ -942,7 +942,7 @@ InitInputImpl(VOID)
 
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
-   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), USERTAG_SYSTEM);
    if (!MasterTimer)
    {
       DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
@@ -1423,7 +1423,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
    /* If Attach set, allocate and link. */
    if ( fAttach )
    {
-      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), TAG_ATTACHINFO);
+      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), USERTAG_ATTACHINFO);
       if ( !pai ) return FALSE;
 
       pai->paiNext = gpai;
@@ -1451,7 +1451,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
 
       if (paiprev) paiprev->paiNext = pai->paiNext;
 
-      ExFreePoolWithTag(pai, TAG_ATTACHINFO);
+      ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
   }
 
   return TRUE;
