@@ -12,7 +12,7 @@ set(OARCH "pentium" CACHE STRING
 set(TUNE "i686" CACHE STRING
 "Which CPU ReactOS should be optimized for.")
 
-set (OPTIMIZE "1" CACHE STRING
+set(OPTIMIZE "1" CACHE STRING
 "What level of optimisation to use.
   0 = off
   1 = Default option, optimize for size (-Os) with some additional options

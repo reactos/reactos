@@ -27,18 +27,53 @@ else()
 endif()
 
 # Warnings
+
 add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value -Winvalid-pch)
 
+if(ARCH MATCHES amd64)
+    add_definitions(-Wno-format)
+elseif(ARCH MATCHES arm)
+    add_definitions(-Wno-attributes)
+endif()
+
 # Optimizations
+
+if(OPTIMIZE STREQUAL "1")
+    add_definitions(-Os)
+elseif(OPTIMIZE STREQUAL "2")
+    add_definitions(-Os)
+elseif(OPTIMIZE STREQUAL "3")
+    add_definitions(-O1)
+elseif(OPTIMIZE STREQUAL "4")
+    add_definitions(-O2)
+elseif(OPTIMIZE STREQUAL "5")
+    add_definitions(-O3)
+endif()
+
+add_definitions(-fno-strict-aliasing)
+
 if(ARCH MATCHES i386)
-    add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+    add_definitions(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+    if(OPTIMIZE STREQUAL "1")
+        add_definitions(-ftracer -momit-leaf-frame-pointer)
+    endif()
 elseif(ARCH MATCHES amd64)
-    add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=4)
+    add_definitions(-mpreferred-stack-boundary=4)
+    if(OPTIMIZE STREQUAL "1")
+        add_definitions(-ftracer -momit-leaf-frame-pointer)
+    endif()
+elseif(ARCH MATCHES arm)
+    if(OPTIMIZE STREQUAL "1")
+        add_definitions(-ftracer)
+    endif()
 endif()
 
 # Other
 if(ARCH MATCHES amd64)
-add_definitions(-U_X86_ -UWIN32)
+    add_definitions(-U_X86_ -UWIN32)
+elseif(ARCH MATCHES arm)
+    add_definitions(-U_UNICODE -UUNICODE)
+    add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
 
 # alternative arch name
@@ -280,4 +315,4 @@ endmacro()
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
 
-endif()
+endif(CMAKE_CROSSCOMPILING)
