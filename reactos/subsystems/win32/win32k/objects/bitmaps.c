@@ -107,6 +107,12 @@ GreCreateBitmapEx(
         sizl.cy = nHeight;
         pvCompressedBits = pvBits;
         pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
+        if (!pvBits)
+        {
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            SURFACE_FreeSurfaceByHandle(hbmp);
+            return NULL;
+        }
         DecompressBitmap(sizl, pvCompressedBits, pvBits, pso->lDelta, iFormat);
         fjBitmap |= BMF_RLE_HACK;
     }
@@ -119,6 +125,7 @@ GreCreateBitmapEx(
     {
         /* Bail out if that failed */
         DPRINT1("SURFACE_bSetBitmapBits failed.\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         SURFACE_FreeSurfaceByHandle(hbmp);
         return NULL;
     }
