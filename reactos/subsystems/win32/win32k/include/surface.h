@@ -125,7 +125,7 @@ SURFACE_bSetBitmapBits(
 #define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
-ULONG FASTCALL BitmapFormat (WORD Bits, DWORD Compression);
+ULONG FASTCALL BitmapFormat(ULONG cBits, ULONG iCompression);
 extern UCHAR gajBitsPerFormat[];
 #define BitsPerFormat(Format) gajBitsPerFormat[Format]
 

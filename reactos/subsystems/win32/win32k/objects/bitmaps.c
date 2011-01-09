@@ -161,60 +161,47 @@ NtGdiCreateBitmap(
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
     HBITMAP hbmp;
-    ULONG cjWidthBytes, iFormat;
+    ULONG cRealBpp, cjWidthBytes, iFormat;
+    ULONGLONG cjSize;
 
-    /* NOTE: Windows also doesn't store nr. of planes separately! */
-    cBitsPixel = BITMAP_GetRealBitsPixel(cBitsPixel * cPlanes);
+    /* Calculate bitmap format and real bits per pixel. */
+    iFormat = BitmapFormat(cBitsPixel * cPlanes, BI_RGB);
+    cRealBpp = gajBitsPerFormat[iFormat];
 
-    /* Calculate bitmap format */
-    iFormat = BitmapFormat(cBitsPixel, BI_RGB);
+    /* Calculate width and image size in bytes */
+    cjWidthBytes = WIDTH_BYTES_ALIGN16(nWidth, cRealBpp);
+    cjSize = cjWidthBytes * nHeight;
 
-    /* Check parameters */
-    if (iFormat == 0 || nWidth <= 0 || nHeight <= 0)
+    /* Check parameters (possible overflow of cjWidthBytes!) */
+    if (iFormat == 0 || nWidth <= 0 || nWidth >= 0x8000000 || nHeight <= 0 ||
+        cBitsPixel > 32 || cPlanes > 32 || cjSize >= 0x100000000ULL)
     {
-        DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
-                nWidth, nHeight, cBitsPixel);
+        DPRINT1("Invalid bitmap format! Width=%d, Height=%d, Bpp=%d, Planes=%d\n",
+                nWidth, nHeight, cBitsPixel, cPlanes);
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
-    if(WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel)*nHeight >= 0x8000000)
-    {
-        /* I just can't get enough, I just can't get enough */
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
+    /* Call internal function. */
+    hbmp = GreCreateBitmapEx(nWidth, nHeight, 0, iFormat, 0, 0, NULL, DDB_SURFACE);
 
-    /* Make sure that cjBits will not overflow */
-    cjWidthBytes = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
-    if ((ULONGLONG)cjWidthBytes * nHeight >= 0x100000000ULL)
+    if (pUnsafeBits && hbmp)
     {
-        DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
-                nWidth, nHeight, cBitsPixel);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-	/* cBitsPixel = cBitsPixel * cPlanes now! */
-	hbmp = GreCreateBitmap(nWidth, nHeight, 1, cBitsPixel, NULL);
-
-    if (pUnsafeBits)
-    {
-		PSURFACE psurf = SURFACE_LockSurface(hbmp);
+        PSURFACE psurf = SURFACE_LockSurface(hbmp);
         _SEH2_TRY
         {
-            ProbeForRead(pUnsafeBits, cjWidthBytes * nHeight, 1);
+            ProbeForRead(pUnsafeBits, cjSize, 1);
             UnsafeSetBitmapBits(psurf, 0, pUnsafeBits);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-			SURFACE_UnlockSurface(psurf);
+            SURFACE_UnlockSurface(psurf);
             SURFACE_FreeSurfaceByHandle(hbmp);
             _SEH2_YIELD(return NULL;)
         }
         _SEH2_END
 
-		SURFACE_UnlockSurface(psurf);
+        SURFACE_UnlockSurface(psurf);
     }
 
     return hbmp;
@@ -833,25 +820,6 @@ NtGdiSetPixel(
 
 
 /*  Internal Functions  */
-
-UINT FASTCALL
-BITMAP_GetRealBitsPixel(UINT nBitsPixel)
-{
-    if (nBitsPixel <= 1)
-        return 1;
-    if (nBitsPixel <= 4)
-        return 4;
-    if (nBitsPixel <= 8)
-        return 8;
-    if (nBitsPixel <= 16)
-        return 16;
-    if (nBitsPixel <= 24)
-        return 24;
-    if (nBitsPixel <= 32)
-        return 32;
-
-    return 0;
-}
 
 HBITMAP FASTCALL
 BITMAP_CopyBitmap(HBITMAP hBitmap)
