@@ -11,6 +11,7 @@ list(APPEND SOURCE
 add_library(drmk SHARED ${SOURCE})
 
 set_module_type(drmk kernelmodedriver)
+set_entrypoint(drmk 0)
 add_importlibs(drmk ntoskrnl)
 add_importlib_target(drmk.spec drmk.sys)
 
