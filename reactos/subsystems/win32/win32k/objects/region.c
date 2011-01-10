@@ -3565,9 +3565,6 @@ NtGdiExtCreateRegion(
     if (!NT_SUCCESS(Status))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        DbgPrint("Region == %p\n", Region);
-        __debugbreak();
-        ASSERT(FALSE);
         RGNOBJAPI_Unlock(Region);
         GreDeleteObject(hRgn);
         return NULL;
