@@ -75,6 +75,19 @@ GreGetKerningPairs(
   return Count;
 }
 
+/*
+ 
+  It is recommended that an application use the GetFontLanguageInfo function
+  to determine whether the GCP_DIACRITIC, GCP_DBCS, GCP_USEKERNING, GCP_LIGATE,
+  GCP_REORDER, GCP_GLYPHSHAPE, and GCP_KASHIDA values are valid for the
+  currently selected font. If not valid, GetCharacterPlacement ignores the
+  value.
+
+  M$ must use a preset "compiled in" support for each language based releases.
+  ReactOS uses FreeType, this will need to be supported. ATM this is hard coded
+  for GCPCLASS_LATIN!
+
+ */
 #if 0
 DWORD
 FASTCALL
@@ -86,16 +99,166 @@ GreGetCharacterPlacementW(
     LPGCP_RESULTSW pgcpw,
     DWORD dwFlags)
 {
+  GCP_RESULTSW gcpwSave;
+  UINT i, nSet, cSet;
+  INT *tmpDxCaretPos;
+  LONG Cx;
   SIZE Size = {0,0};
+ 
+  DPRINT1("GreGCPW Start\n");
 
-  if (!pgcpw)
+   if (!pgcpw)
+   {
+      if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+         return MAKELONG(Size.cx, Size.cy);
+      return 0;
+   }
+
+  DPRINT1("GreGCPW 1\n");
+
+  RtlCopyMemory(&gcpwSave, pgcpw, sizeof(GCP_RESULTSW));
+
+  cSet = nSet = nCount;
+
+  if ( nCount > gcpwSave.nGlyphs ) cSet = gcpwSave.nGlyphs;
+
+  /* GCP_JUSTIFY may only be used in conjunction with GCP_MAXEXTENT. */
+  if ( dwFlags & GCP_JUSTIFY) dwFlags |= GCP_MAXEXTENT;
+
+  if ( !gcpwSave.lpDx && gcpwSave.lpCaretPos )
+     tmpDxCaretPos = gcpwSave.lpCaretPos;
+  else
+     tmpDxCaretPos = gcpwSave.lpDx;  
+
+  if ( !GreGetTextExtentExW( hdc,
+                             pwsz,
+                             cSet,
+                             nMaxExtent,
+                            ((dwFlags & GCP_MAXEXTENT) ? (PULONG) &cSet : NULL),
+                            (PULONG) tmpDxCaretPos,
+                             &Size,
+                             0) )
   {
-     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 0))
-        return MAKELONG(Size.cx, Size.cy);
      return 0;
   }
-  UNIMPLEMENTED;
-  return 0;
+
+  DPRINT1("GreGCPW 2\n");
+
+  nSet = cSet;
+
+  if ( tmpDxCaretPos && nSet > 0)
+  {  
+      for (i = (nSet - 1); i > 0; i--)
+      {
+          tmpDxCaretPos[i] -= tmpDxCaretPos[i - 1];
+      }
+  }
+
+  if ( !(dwFlags & GCP_MAXEXTENT) || nSet )
+  {
+     if ( (dwFlags & GCP_USEKERNING) &&
+           ( gcpwSave.lpDx ||
+             gcpwSave.lpCaretPos ) &&
+           nSet >= 2 )
+     {
+        DWORD Count;
+        LPKERNINGPAIR pKP;
+        
+        Count = GreGetKerningPairs( hdc, 0, NULL);
+        if (Count)
+        {
+           pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
+           if (pKP)
+           {
+              if ( GreGetKerningPairs( hdc, Count, pKP) != Count)
+              {
+                 ExFreePoolWithTag( pKP, GDITAG_TEXT);
+                 return 0;
+              }
+
+              if ( (ULONG_PTR)(pKP) < ((ULONG_PTR)(pKP) + (ULONG_PTR)(Count * sizeof(KERNINGPAIR))) )
+              {
+                 DPRINT1("We Need to Do Something HERE!\n");
+              }
+
+              ExFreePoolWithTag( pKP, GDITAG_TEXT);
+
+              if ( dwFlags & GCP_MAXEXTENT )
+              {
+                 if ( Size.cx > nMaxExtent )
+                 {
+                    for (Cx = Size.cx; nSet > 0; nSet--)
+                    {
+                        Cx -= tmpDxCaretPos[nSet - 1];
+                        Size.cx = Cx;
+                        if ( Cx <= nMaxExtent ) break;
+                    }
+                 }
+                 if ( !nSet )
+                 {
+                    pgcpw->nGlyphs = 0;
+                    pgcpw->nMaxFit = 0;
+                    return 0;
+                 }
+              }
+           }
+        }
+     }
+
+     if ( (dwFlags & GCP_JUSTIFY) &&
+           ( gcpwSave.lpDx ||
+             gcpwSave.lpCaretPos ) &&
+           nSet )
+     {
+         DPRINT1("We Need to Do Something HERE 2!\n");
+     }
+
+     if ( gcpwSave.lpDx && gcpwSave.lpCaretPos )
+        RtlCopyMemory( gcpwSave.lpCaretPos, gcpwSave.lpDx, nSet * sizeof(LONG));
+
+     if ( gcpwSave.lpCaretPos )
+     {
+        int pos = 0;
+        i = 0;
+        if ( nSet > 0 )
+        {
+           do
+           {
+              Cx = gcpwSave.lpCaretPos[i];
+              gcpwSave.lpCaretPos[i] = pos;
+              pos += Cx;
+              ++i;
+           }
+           while ( i < nSet );
+        }
+     }
+
+     if ( gcpwSave.lpOutString )
+        RtlCopyMemory(gcpwSave.lpOutString, pwsz,  nSet * sizeof(WCHAR));
+
+     if ( gcpwSave.lpClass )
+        RtlFillMemory(gcpwSave.lpClass, nSet, GCPCLASS_LATIN);
+
+     if ( gcpwSave.lpOrder )
+     {
+        for (i = 0; i < nSet; i++)
+           gcpwSave.lpOrder[i] = i;
+     }
+
+     if ( gcpwSave.lpGlyphs )
+     {
+        if ( GreGetGlyphIndicesW( hdc, pwsz, nSet, gcpwSave.lpGlyphs, 0, 0) == GDI_ERROR )
+        {
+           nSet = 0;
+           Size.cx = 0;
+           Size.cy = 0;
+        }
+     }
+     pgcpw->nGlyphs = nSet;
+     pgcpw->nMaxFit = nSet;
+  }
+  DPRINT1("GreGCPW Exit\n");
+  return MAKELONG(Size.cx, Size.cy);
 }
 #endif
 
@@ -359,6 +522,14 @@ NtGdiGetCharacterPlacementW(
 {
     UNIMPLEMENTED;
     return 0;
+#if 0
+    return GreGetCharacterPlacementW( hdc,
+                                      pwsz,
+                                      nCount,
+                                      nMaxExtent,
+                                      pgcpw,
+                                      dwFlags);
+#endif
 }
 
 DWORD
