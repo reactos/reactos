@@ -5,6 +5,7 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
+	<library>user32_wsprintf</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>imm32</library>
@@ -44,7 +45,6 @@
 		<file>usrapihk.c</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
-		<file>wsprintf.c</file>
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>
