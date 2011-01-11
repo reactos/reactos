@@ -77,6 +77,8 @@ enum
 #define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
 #define round(x) floor((x) + 0.5)
 
+#ifndef _USER32_WSPRINTF
+
 void
 #ifdef _LIBCNT
 /* Due to restrictions in kernel mode regarding the use of floating point,
@@ -218,6 +220,7 @@ format_float(
     while ((unsigned __int64)fpval2);
 
 }
+#endif
 
 static
 int
@@ -226,11 +229,15 @@ streamout_char(FILE *stream, int chr)
     /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))
     {
+#ifdef _USER32_WSPRINTF
+        return _TEOF;
+#else
         /* Strings are done now */
         if (stream->_flag & _IOSTRG) return _TEOF;
 
         /* Flush buffer for files */
         return _flsbuf(chr, stream) != _TEOF;
+#endif
     }
 
     *(TCHAR*)stream->_ptr = chr;
@@ -298,6 +305,11 @@ streamout_wstring(FILE *stream, const wchar_t *string, int count)
 #define streamout_string streamout_astring
 #endif
 
+#ifdef _USER32_WSPRINTF
+# define USE_MULTISIZE 0
+#else
+# define USE_MULTISIZE 1
+#endif
 
 int
 _cdecl
@@ -391,7 +403,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         else precision = -1;
 
         /* Handle argument size prefix */
-        while (1)
+        do
         {
                  if (chr == _T('h')) flags |= FLAG_SHORT;
             else if (chr == _T('w')) flags |= FLAG_WIDECHAR;
@@ -399,14 +411,9 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             else if (chr == _T('F')) flags |= 0; // FIXME: what is that?
             else if (chr == _T('l'))
             {
-                flags |= FLAG_LONG;
-#if SUPPORT_LL
-                if (format[0] == _T('l'))
-                {
-                    format++;
-                    flags |= FLAG_INT64;
-                }
-#endif
+                /* Check if this is the 2nd 'l' in a row */
+                if (format[-2] == 'l') flags |= FLAG_INT64;
+                else flags |= FLAG_LONG;
             }
             else if (chr == _T('I'))
             {
@@ -430,6 +437,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             else break;
             chr = *format++;
         }
+        while (USE_MULTISIZE);
 
         /* Handle the format specifier */
         digits = digits_l;
@@ -511,6 +519,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 precision = 0;
                 break;
 
+#ifndef _USER32_WSPRINTF
             case _T('G'):
             case _T('E'):
             case _T('A'):
@@ -528,6 +537,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 len = _tcslen(string);
                 precision = 0;
                 break;
+#endif
 
             case _T('d'):
             case _T('i'):

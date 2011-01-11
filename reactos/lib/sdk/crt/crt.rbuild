@@ -548,4 +548,27 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+
+<module name="user32_wsprintf" type="staticlibrary">
+	<library>chkstk</library>
+	<include base="crt">.</include>
+	<include base="crt">include</include>
+	<define name="_USER32_WSPRINTF" />
+
+	<directory name="printf">
+		<file>streamout.c</file>
+		<file>wstreamout.c</file>
+		<file>wsprintfA.c</file>
+		<file>wsprintfW.c</file>
+		<file>wvsprintfA.c</file>
+		<file>wvsprintfW.c</file>
+		<file>wvsnprintfA.c</file>
+		<file>wvsnprintfW.c</file>
+	</directory>
+	<directory name="string">
+		<file>mbstowcs_nt.c</file>
+		<file>wcstombs_nt.c</file>
+	</directory>
+</module>
+
 </group>

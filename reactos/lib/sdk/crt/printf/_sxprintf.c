@@ -20,7 +20,11 @@
 int _cdecl _tstreamout(FILE *stream, const TCHAR *format, va_list argptr);
 
 int
+#if defined(USER32_WSPRINTF) && defined(_M_IX86)
+_stdcall
+#else
 _cdecl
+#endif
 _sxprintf(
     TCHAR *buffer,
 #if USE_COUNT
