@@ -14,10 +14,15 @@
 #include <float.h>
 
 #ifdef _UNICODE
-#define streamout wstreamout
-#define format_float format_floatw
-#define _flsbuf _flswbuf
+# define streamout wstreamout
+# define format_float format_floatw
+# define _flsbuf _flswbuf
 int __cdecl _flswbuf(int ch, FILE *stream);
+#endif
+
+#ifdef _LIBCNT_
+# undef _flsbuf
+# define _flsbuf(chr, stream) _TEOF
 #endif
 
 #define MB_CUR_MAX 10
@@ -68,11 +73,6 @@ enum
 #define va_arg_ffp(argptr, flags) \
     (flags & FLAG_LONGDOUBLE) ? va_arg(argptr, long double) : \
     va_arg(argptr, double)
-
-#ifdef _LIBCNT_
-# undef _flsbuf
-# define _flsbuf(chr, stream) _TEOF
-#endif
 
 #define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
 #define round(x) floor((x) + 0.5)
