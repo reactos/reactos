@@ -95,9 +95,7 @@
 	<file>security.c</file>
 	<file>slist.c</file>
 	<file>sid.c</file>
-	<file>sprintf.c</file>
 	<file>srw.c</file>
-	<file>swprintf.c</file>
 	<file>splaytree.c</file>
 	<file>thread.c</file>
 	<file>time.c</file>

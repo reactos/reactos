@@ -55,7 +55,6 @@
 
 	<directory name="conio">
 		<file>cgets.c</file>
-		<file>cprintf.c</file>
 		<file>cputs.c</file>
 		<file>getch.c</file>
 		<file>getche.c</file>
@@ -362,7 +361,6 @@
 		<file>find64.c</file>
 		<file>findi64.c</file>
 		<file>fmode.c</file>
-		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
 		<file>stat.c</file>

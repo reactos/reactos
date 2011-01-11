@@ -10,8 +10,6 @@
 	<define name="_CRTBLD" />
 	<define name="__CRT__NO_INLINE" />
 
-	<if property="NEWSPRINTF" value="1">
-	<define name="USE_NEW_SPRINTF" />
 	<directory name="printf">
 		<file>_snprintf.c</file>
 		<file>_snwprintf.c</file>
@@ -26,7 +24,6 @@
 		<file>vswprintf.c</file>
 		<file>wstreamout.c</file>
 	</directory>
-	</if>
 
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
