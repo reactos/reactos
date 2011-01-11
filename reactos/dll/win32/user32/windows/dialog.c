@@ -39,17 +39,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
-#define CW_USEDEFAULT16 ((short)0x8000)
 #define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
-#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define DIALOG_CLASS_ATOMA   MAKEINTATOMA(32770)  /* Dialog */
-#define DIALOG_CLASS_ATOMW   MAKEINTATOMW(32770)  /* Dialog */
-
 void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
@@ -118,7 +112,7 @@ typedef struct
  */
 const struct builtin_class_descr DIALOG_builtin_class =
 {
-    DIALOG_CLASS_ATOMW,       /* name */
+    WC_DIALOG,       /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
     (WNDPROC) DefDlgProcA,    /* procA */
     (WNDPROC) DefDlgProcW,    /* procW */
@@ -632,7 +626,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     switch(GET_WORD(p))
     {
         case 0x0000:
-            result->className = DIALOG_CLASS_ATOMW;
+            result->className = WC_DIALOG;
             p++;
             break;
         case 0xffff:

@@ -22,11 +22,6 @@
 
 #include <wine/debug.h>
 
-#ifdef __REACTOS__
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
-#endif
-
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
@@ -35,13 +30,13 @@ static HFONT hIconTitleFont;
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    (LPCWSTR)ICONTITLE_CLASS_ATOM, /* name */
-    0,                    /* style */
-    NULL,                 /* procA (winproc is Unicode only) */
-    IconTitleWndProc,     /* procW */
-    0,                    /* extra */
-    IDC_ARROW,            /* cursor */
-    0                     /* brush */
+    WC_ICONTITLE,     /* name */
+    0,                /* style */
+    NULL,             /* procA (winproc is Unicode only) */
+    IconTitleWndProc, /* procW */
+    0,                /* extra */
+    IDC_ARROW,        /* cursor */
+    0                 /* brush */
 };
 
 

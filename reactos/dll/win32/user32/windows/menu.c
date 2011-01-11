@@ -66,11 +66,6 @@ static BOOL fEndMenu = FALSE;
 #define SEPARATOR_HEIGHT (5)
 #define MENU_TAB_SPACE (8)
 
-#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define POPUPMENU_CLASS_ATOMA   MAKEINTATOMA(32768)  /* PopupMenu */
-#define POPUPMENU_CLASS_ATOMW   MAKEINTATOMW(32768)  /* PopupMenu */
-
 typedef struct
 {
   UINT  TrackFlags;
@@ -86,7 +81,7 @@ typedef struct
  */
 const struct builtin_class_descr POPUPMENU_builtin_class =
 {
-    POPUPMENU_CLASS_ATOMW,                     /* name */
+    WC_MENU,                     /* name */
     CS_SAVEBITS | CS_DBLCLKS,                  /* style  */
     (WNDPROC) NULL,                            /* FIXME - procA */
     (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
@@ -1626,7 +1621,7 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
     if( y < info.rcMonitor.top ) y = info.rcMonitor.top;
 
     /* NOTE: In Windows, top menu popup is not owned. */
-    MenuInfo.Wnd = CreateWindowExW( 0, POPUPMENU_CLASS_ATOMW, NULL,
+    MenuInfo.Wnd = CreateWindowExW( 0, WC_MENU, NULL,
                                   WS_POPUP, x, y, width, height,
                                   hwndOwner, 0, (HINSTANCE) GetWindowLongPtrW(hwndOwner, GWLP_HINSTANCE),
                                  (LPVOID) MenuInfo.Self);

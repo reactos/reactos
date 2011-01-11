@@ -15,9 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* dialog resources appear to pass this in 16 bits, handle them properly */
-#define CW_USEDEFAULT16 (0x8000)
-
 #define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
 
 /* PRIVATE FUNCTIONS **********************************************************/

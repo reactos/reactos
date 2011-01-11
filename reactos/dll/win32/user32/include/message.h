@@ -11,9 +11,6 @@
 BOOL FASTCALL MessageInit(VOID);
 VOID FASTCALL MessageCleanup(VOID);
 
-#define WM_ALTTABACTIVE         0x0029
-#define WM_SETVISIBLE           0x0009
-
 static __inline BOOL
 IsCallProcHandle(IN WNDPROC lpWndProc)
 {

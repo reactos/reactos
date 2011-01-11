@@ -38,17 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(listbox);
 
-/* Start of hack section -------------------------------- */
-
-#define WM_LBTRACKPOINT     0x0131
-#define WS_EX_DRAGDETECT    0x00000002L
-#define WM_BEGINDRAG        0x022C
-
-UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
-
-/* End of hack section -------------------------------- */
-
 /* Items array granularity */
 #define LB_ARRAY_GRANULARITY 16
 
