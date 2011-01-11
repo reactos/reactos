@@ -27,8 +27,6 @@
 	<define name="_MT" />
 	<define name="_CRTBLD" />
 
-	<if property="NEWSPRINTF" value="1">
-	<define name="USE_NEW_SPRINTF" />
 	<directory name="printf">
 		<file>_cprintf.c</file>
 		<file>_snprintf.c</file>
@@ -51,7 +49,6 @@
 		<file>wprintf.c</file>
 		<file>wstreamout.c</file>
 	</directory>
-	</if>
 
 	<directory name="conio">
 		<file>cgets.c</file>
