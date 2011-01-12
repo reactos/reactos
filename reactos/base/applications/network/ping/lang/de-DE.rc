@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_USAGE "\nSyntax: ping [-t] [-n Anzahl] [-l Größe] [-w Zeitlimit] Zielhost\n\n" \
                 "Optionen:\n" \
-                "    -t             Sendet forlaufend Pings an den angegebenen Host.\n" \
+                "    -t             Sendet fortlaufend Pings an den angegebenen Host.\n" \
                 "                   Drücken Sie STRG-C, um den Vorgang abzubrechen.\n" \
                 "    -n Anzahl      Anzahl der Echoanforderungen, die gesendet werden.\n" \
                 "    -l Größe       Größe des Sendepuffers.\n" \
@@ -20,7 +20,7 @@ BEGIN
     IDS_SETSOCKOPT_FAILED           "setsockopt ist fehlgeschlagen (%1!d!).\n\0"
     IDS_COULD_NOT_CREATE_SOCKET     "Konnte keinen Socket erzeugen (#%1!d!).\n\0"
     IDS_COULD_NOT_INIT_WINSOCK      "Die Winsock DLL konnte nicht initialisiert werden.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "Name oderr IP-Address des Zielhostes muss angegeben werden.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Name oder IP-Address des Zielhostes muss angegeben werden.\n\0"
     IDS_BAD_PARAMETER               "Ungültiger Parameter %1.\n\0"
     IDS_BAD_OPTION_FORMAT           "Ungültiges Options-Format %1.\n\0"
     IDS_BAD_OPTION                  "Ungültige Option %1.\n\0"
