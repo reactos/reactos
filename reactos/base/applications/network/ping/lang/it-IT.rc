@@ -1,0 +1,35 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nUso: ping [-t] [-n conteggio] [-l dimensione] [-w timeout] host-destinazione\n\n" \
+                "Opzioni:\n" \
+                "    -t             Esegue il ping dell'host specificato finchè non termina.\n" \
+                "                   Per fermare - digitare Control-C.\n" \
+                "    -n conteggio   Numero di richieste echo da inviare.\n" \
+                "    -l dimensione  Dimensione del buffer di invio.\n" \
+                "    -w timeout     Timeout in millisecondi per l'attesa di ogni risposta.\n\n\0"
+    
+    IDS_PING_WITH_BYTES             "\nPing in corso %1 [%2] con %3!d! bytes di dati:\n\n\0"
+    IDS_PING_STATISTICS             "\nStatistiche di Ping per %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pacchetti: Inviati = %1!d!, Ricevuti = %2!d!, Persi = %3!d! (%4!d!%% perdita),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Tempo approssimato di andata e ritorno in milli-secondi:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimo = %1, Massimo = %2, Media = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Risorse disponibili insufficienti.\n\0"
+    IDS_UNKNOWN_HOST                "Host sconosciuto%1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt fallito (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Impossibile creare il socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Impossibile inizializzare winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Il nome o l'IP dell'host deve essere specificato.\n\0"
+    IDS_BAD_PARAMETER               "Parametro errato %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Formato opzione errato %1.\n\0"
+    IDS_BAD_OPTION                  "Opzione errata %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Valore errato per il parametro -l, l'intervallo valido è tra 0 to %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Risposta da %1: bytes=%2!d! time%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Host destinazione irraggiungibile.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Impossibile trasmettere dati (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Impossibile ricevere dati (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Richiesta scaduta.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END
