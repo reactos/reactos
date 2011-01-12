@@ -4,7 +4,6 @@
 	<include base="ping">.</include>
 	<define name="__USE_W32_SOCKETS" />
 	<library>ws2_32</library>
-	<library>user32</library>
 	<file>ping.c</file>
 	<file>ping.rc</file>
 </module>

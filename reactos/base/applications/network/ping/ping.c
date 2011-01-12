@@ -109,6 +109,24 @@ static VOID DisplayBuffer(
 }
 #endif /* !NDEBUG */
 
+LPWSTR
+MyLoadString(UINT uID)
+{
+    HRSRC hres;
+    HGLOBAL hResData;
+    LPWSTR pwsz;
+
+    hres = FindResourceW(NULL, MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1), RT_STRING);
+    if (!hres) return NULL;
+
+    hResData = LoadResource(NULL, hres);
+    if (!hResData) return NULL;
+
+    pwsz = LockResource(hResData);
+    if (!pwsz) return NULL;
+    return pwsz + 1;
+}
+
 void FormatOutput(UINT uID, ...)
 {
     va_list valist;
@@ -121,8 +139,8 @@ void FormatOutput(UINT uID, ...)
 
     va_start(valist, uID);
 
-    if(!LoadString(NULL, uID, (LPWSTR)&Format, 0))
-        return;
+    Format = MyLoadString(uID);
+    if (!Format) return;
 
     DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING, Format, 0, 0, Buf,\
                   sizeof(Buf) / sizeof(WCHAR), &valist);
@@ -459,7 +477,7 @@ static VOID TimeToMsString(LPWSTR String, LARGE_INTEGER Time)
 
     _i64tow(LargeTime.QuadPart, Convstr, 10);
     wcscpy(String, Convstr);
-    LoadString(NULL, IDS_MS, (LPWSTR)&ms, 0);
+    ms = MyLoadString(IDS_MS);
     wcscat(String, ms);
 }
 
@@ -523,7 +541,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
         LPWSTR ms1;
 
         wcscpy(Sign, L"<");
-        LoadString(NULL, IDS_1MS, (LPWSTR)&ms1, 0);
+        ms1 = MyLoadString(IDS_1MS);
         wcscpy(Time, ms1);
     }
     else
