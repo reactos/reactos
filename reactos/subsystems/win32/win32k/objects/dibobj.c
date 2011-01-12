@@ -1541,6 +1541,7 @@ DIB_CreateDIBSection(
     bmp->dwOffset = offset;
     bmp->flags = API_BITMAP;
     bmp->biClrImportant = bi->biClrImportant;
+    bmp->SurfObj.fjBitmap &= ~BMF_DONT_FREE;
 
 	/* HACK */
 	if(hpal != (HPALETTE)0xFFFFFFFF)
