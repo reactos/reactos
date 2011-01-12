@@ -8,5 +8,6 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT  "Casper S. Hornstrup (chorns@users.sourceforge.net)\0"
 #include <reactos/version.rc>
 
-#include "lang/en-US.rc"
 #include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/pl-PL.rc"

@@ -1,0 +1,42 @@
+/*
+ *         translated by Caemyr (Olaf Siejka)
+ * 	  caemyr@gmail.com
+   *	  Jan, 2011
+ */
+
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nSposób u¿ycia: ping [-t] [-n iloœæ] [-l bajtów] [-w czas] host-docelowy\n\n" \
+                "Opcje:\n" \
+                "    -t             Pinguj wskazanego hosta w sposób ci¹g³y.\n" \
+                "                   Aby przerwaæ - wciœnij Control C.\n" \
+                "    -n iloœæ     Iloœæ prób pingowania.\n" \
+                "    -l bajtów   Rozmiar pakietu echo w bajtach     .\n" \
+                "    -w czas     OpóŸnienie oczekiwanej odpowiedzi, w milisekundach.\n\n\0"
+    
+    IDS_PING_WITH_BYTES             "\nPingowanie %1 [%2] przy u¿yciu %3!d! bajtów danych:\n\n\0"
+    IDS_PING_STATISTICS             "\nStatystyka wyników badania hosta %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakiety: Wys³ane = %1!d!, Odebrane = %2!d!, Utracone = %3!d! (%4!d!%% strat),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Ca³kowity, przybli¿ony czas podró¿y pakietu w millisekundach:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maksimum = %2, Uœredniony = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Brak dostêpnych zasobów.\n\0"
+    IDS_UNKNOWN_HOST                "Nieznany host %1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "B³¹d w setsockopt (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "B³¹d podczas tworzenia gniazda (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "B³¹d podczas inicjalizacji winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Brak nazwy hosta b¹dŸ adresu IP.\n\0"
+    IDS_BAD_PARAMETER               "Nieprawid³owy parametr %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Nieprawid³owy format opcji %1.\n\0"
+    IDS_BAD_OPTION                  "Nieprawid³owa opcja %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Nieprawid³owa wartoœæ dla opcji -l, wymagana liczba naturalna od 0 do %1!d!.\n\0"
+    IDS_REPLY_FROM                  "OdpowiedŸ z %1: bajtów=%2!d! czas%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Host docelowy nieosi¹galny.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "B³¹d podczas transmisji danych (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "B³¹d podczas odbioru danych (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Brak odpowiedzi.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END
