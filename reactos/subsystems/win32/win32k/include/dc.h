@@ -21,6 +21,7 @@ typedef struct _DC
     PPDEVOBJ     ppdev;
 
     DCLEVEL     dclevel;
+    ULONG       type;
 
     COLORREF     crForegroundClr;
     COLORREF     crBackgroundClr;
@@ -42,7 +43,7 @@ typedef struct _DC
 #define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr ((PBASEOBJECT)pDC)
 
-VOID APIENTRY RosGdiUpdateClipping(PDC pDC);
+VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility);
 
 
 BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);

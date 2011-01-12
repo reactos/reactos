@@ -31,8 +31,8 @@
 #include <ndk/ntndk.h>
 #include <winddi.h>
 #include <win32k/ntgdityp.h>
-#include "ntrosgdi.h"
 #include "wine/rosuser.h"
+#include "wine/ntrosgdi.h"
 #include "wine/list.h"
 #include "wine/unicode.h"
 #include "wine/server.h"

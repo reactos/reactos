@@ -213,10 +213,7 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                     physDev->dc_rect = data->dc_rect;
                     RosGdiSetDcRects(physDev->hKernelDC, NULL, (RECT*)&data->drawable_rect);
 
-                    if (!data->release)
-                        RosGdiGetDC(physDev->hKernelDC, data->hwnd, data->clip_children);
-                    else
-                        RosGdiReleaseDC(physDev->hKernelDC);
+                    RosGdiGetDC(physDev->hKernelDC, data->drawable, data->clip_children);
 
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
                            physDev->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );

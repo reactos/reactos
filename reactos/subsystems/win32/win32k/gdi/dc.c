@@ -97,6 +97,8 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     pNewDC->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
     pNewDC->dclevel.ppal = PALETTE_ShareLockPalette(pNewDC->dclevel.hpal);
 
+    pNewDC->type = dcType;
+
     if (dcType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
@@ -105,6 +107,8 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         /* Set DC rectangles */
         pNewDC->rcVport.left = 0; pNewDC->rcVport.top = 0;
         pNewDC->rcVport.right = 1; pNewDC->rcVport.bottom = 1;
+
+        pNewDC->pWindow = NULL;
     }
     else
     {
@@ -116,15 +120,19 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         pNewDC->rcVport.top = 0;
         pNewDC->rcVport.right = PrimarySurface.gdiinfo.ulHorzRes;
         pNewDC->rcVport.bottom = PrimarySurface.gdiinfo.ulVertRes;
+
+        pNewDC->pWindow = &SwmRoot;
     }
 
     /* Create an empty combined clipping region */
     pNewDC->CombinedClip = EngCreateClip();
-    pNewDC->Clipping = create_empty_region();
-    pNewDC->pWindow = NULL;
+    pNewDC->Clipping = NULL;
 
     /* Set default palette */
     pNewDC->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
+
+    /* Calculate new combined clipping region */
+    RosGdiUpdateClipping(pNewDC, FALSE);
 
     /* Give handle to the caller */
     *pdev = hNewDC;
@@ -407,34 +415,72 @@ COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor )
     return 0;
 }
 
-VOID APIENTRY RosGdiUpdateClipping(PDC pDC)
+VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility)
 {
-    struct region *inter;
-    if (!pDC->pWindow)
+    struct region *window, *surface;
+    rectangle_t surfrect = {0,0,0,0};
+
+    surface = create_empty_region();
+    surfrect.right = pDC->dclevel.pSurface->SurfObj.sizlBitmap.cx;
+    surfrect.bottom = pDC->dclevel.pSurface->SurfObj.sizlBitmap.cy;
+    set_region_rect(surface, &surfrect);
+
+    if (pDC->type == OBJ_MEMDC)
     {
-        /* Easy case, just copy the existing clipping region */
+        /* underlying surface rect X user clipping (if any)  */
         if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
-        pDC->CombinedClip = IntEngCreateClipRegionFromRegion(pDC->Clipping);
+
+        if (pDC->Clipping)
+            intersect_region(surface, surface, pDC->Clipping);
+
+        pDC->CombinedClip = IntEngCreateClipRegionFromRegion(surface);
     }
     else
     {
-        /* Intersect with window's visibility */
-        inter = create_empty_region();
-        copy_region(inter, pDC->Clipping);
+        if (!pDC->pWindow)
+        {
+            /* Drawing is forbidden */
+            if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+            pDC->CombinedClip = EngCreateClip();
+            return;
+        }
+
+        /* window visibility X user clipping (if any) X underlying surface */
 
         /* Acquire SWM lock */
         SwmAcquire();
 
-        /* Intersect current clipping region and window's visible region */
-        intersect_region(inter, inter, pDC->pWindow->Visible);
+        //window = SwmSetClipWindow(pDC->pWindow, NULL, pDC->ExcludeChildren);
+        window = pDC->pWindow->Visible;
 
-        /* Release SWM lock */
-        SwmRelease();
+        if (window)
+        {
+            /* Intersect window's visible region X underlying surface */
+            if (!IgnoreVisibility)
+                intersect_region(surface, surface, window);
 
-        if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
-        pDC->CombinedClip = IntEngCreateClipRegionFromRegion(inter);
-        free_region(inter);
+            /* Intersect result X user clipping (if any) */
+            if (pDC->Clipping)
+                intersect_region(surface, surface, pDC->Clipping);
+
+            /* Release SWM lock */
+            SwmRelease();
+
+            if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+            pDC->CombinedClip = IntEngCreateClipRegionFromRegion(surface);
+        }
+        else
+        {
+            /* Release SWM lock */
+            SwmRelease();
+
+            /* Drawing is forbidden */
+            if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+            pDC->CombinedClip = EngCreateClip();
+        }
     }
+
+    free_region(surface);
 }
 
 void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, PRECTL rcBounds )
@@ -442,7 +488,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     PDC pDC;
     RECTL pStackBuf[8];
     RECTL *pSafeRects = pStackBuf;
-    RECTL rcSafeBounds;
+    RECTL rcSafeBounds = {0};
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -503,19 +549,9 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     if (pDC->Clipping)
         free_region(pDC->Clipping);
 
-    if (count == 0)
-    {
-        /* Set unclipped mode (underlying surface rectangle) */
-        RECTL_vSetRect(&rcSafeBounds,
-                       0,
-                       0,
-                       pDC->dclevel.pSurface->SurfObj.sizlBitmap.cx,
-                       pDC->dclevel.pSurface->SurfObj.sizlBitmap.cy);
+    pDC->Clipping = NULL;
 
-        /* Set the clipping object */
-        pDC->Clipping = create_region_from_rects(&rcSafeBounds, 1);
-    }
-    else
+    if (count)
     {
         /* Set the clipping object */
         pDC->Clipping = create_region_from_rects(pSafeRects, count);
@@ -531,7 +567,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     }
 
     /* Update the combined clipping */
-    RosGdiUpdateClipping(pDC);
+    RosGdiUpdateClipping(pDC, FALSE);
 
     /* Release the object */
     DC_UnlockDc(pDC);
@@ -593,7 +629,7 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     DC_UnlockDc(pDC);
 }
 
-VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
+VOID APIENTRY RosGdiGetDC(HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren)
 {
     PDC pDC;
 
@@ -604,16 +640,16 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
     pDC = DC_LockDc(physDev);
 
     /* Get a pointer to this window */
-    if (hwnd)
-        pDC->pWindow = SwmFindByHwnd(hwnd);
-
-    /* Handle situation when drawing is forbidden */
-    if (!hwnd || !pDC->pWindow)
+    if (Wid)
     {
-        /* Make up a dummy window object which will have empty visibility */
-        pDC->pWindow = ExAllocatePool(PagedPool, sizeof(SWM_WINDOW));
-        RtlZeroMemory(pDC->pWindow, sizeof(SWM_WINDOW));
-        pDC->pWindow->Visible = create_empty_region();
+        pDC->pWindow = SwmGetWindowById(Wid);
+        DPRINT("hdc %x set window hwnd %x\n", physDev, pDC->pWindow->hwnd);
+    }
+    else
+    {
+        /* Handle situation when drawing is forbidden */
+        pDC->pWindow = NULL;
+        DPRINT("hdc %x, restricting any drawing\n", physDev);
     }
 
     /* Release the object */
@@ -623,6 +659,7 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
     SwmRelease();
 }
 
+//FIXME: to be deleted!
 VOID APIENTRY RosGdiReleaseDC(HDC physDev)
 {
     PDC pDC;

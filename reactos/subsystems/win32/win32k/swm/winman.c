@@ -31,6 +31,7 @@ VOID NTAPI SwmClipAllWindows();
 LIST_ENTRY SwmWindows;
 ERESOURCE SwmLock;
 HDC SwmDc; /* Screen DC for copying operations */
+SWM_WINDOW SwmRoot;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -56,24 +57,11 @@ VOID
 NTAPI
 SwmCreateScreenDc()
 {
-    PDC pDC;
-    RECTL rcBounds;
-
     /* Create the display DC */
     SwmDc = (HDC)0;
     RosGdiCreateDC(&SwmDc, NULL, NULL, NULL, NULL, OBJ_DC);
 
-    /* Set clipping to full screen */
-    pDC = DC_LockDc(SwmDc);
-    RECTL_vSetRect(&rcBounds,
-                   0,
-                   0,
-                   pDC->rcVport.right,
-                   pDC->rcVport.bottom);
-    IntEngDeleteClipRegion(pDC->CombinedClip);
-    pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
-    DC_UnlockDc(pDC);
-    //RosGdiSetDeviceClipping(SwmDc, 1, &rcBounds, &rcBounds);
+    DPRINT1("Screen hdc is %x\n", SwmDc);
 
     /* Make it global */
     GDIOBJ_SetOwnership(SwmDc, NULL);
@@ -85,6 +73,16 @@ HDC SwmGetScreenDC()
     if (!SwmDc) SwmCreateScreenDc();
 
     return SwmDc;
+}
+
+PSWM_WINDOW
+NTAPI
+SwmGetWindowById(GR_WINDOW_ID Wid)
+{
+    /* Right now, Wid is a pointer to SWM_WINDOW structure,
+       except for SWM_ROOT_WINDOW_ID which maps to a root window */
+    if (Wid == SWM_ROOT_WINDOW_ID) return &SwmRoot;
+    return (PSWM_WINDOW)Wid;
 }
 
 VOID
@@ -389,6 +387,7 @@ VOID
 NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height)
 {
+#if 0
     PSWM_WINDOW Desktop;
 
     /* Acquire the lock */
@@ -429,6 +428,10 @@ SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height)
 
     /* Release the lock */
     SwmRelease();
+#endif
+
+    SwmRoot.hwnd = hWnd;
+    SwmInvalidateRegion(&SwmRoot, SwmRoot.Visible, &SwmRoot.Window);
 }
 
 PSWM_WINDOW
@@ -470,8 +473,8 @@ SwmDestroyWindow(GR_WINDOW_ID Wid)
     /* Acquire the lock */
     SwmAcquire();
 
-    /* Allocate entry */
-    Win = (PSWM_WINDOW)Wid;
+    /* Get window pointer */
+    Win = SwmGetWindowById(Wid);
 
     DPRINT("SwmRemoveWindow %x\n", Win->hwnd);
 
@@ -565,36 +568,30 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
 
 VOID
 NTAPI
-SwmSetForeground(HWND hWnd)
+SwmSetForeground(GR_WINDOW_ID Wid)
 {
     PSWM_WINDOW SwmWin;
     extern struct window *shell_window;
+
+    /* Acquire the lock */
+    SwmAcquire();
+
+    /* Get the window pointer */
+    SwmWin = SwmGetWindowById(Wid);
 
     /* Check for a shell window */
     UserEnterExclusive();
 
     /* Don't allow the shell window to become foreground */
     if(shell_window &&
-       (get_window((UINT_PTR)hWnd) == shell_window))
+       (get_window((UINT_PTR)SwmWin->hwnd) == shell_window))
     {
+        SwmRelease();
         UserLeave();
         return;
     }
 
     UserLeave();
-
-    /* Acquire the lock */
-    SwmAcquire();
-
-    /* Allocate entry */
-    SwmWin = SwmFindByHwnd(hWnd);
-    //ASSERT(SwmWin != NULL);
-    if (!SwmWin)
-    {
-        /* Release the lock */
-        SwmRelease();
-        return;
-    }
 
     SwmBringToFront(SwmWin);
 
@@ -606,7 +603,7 @@ VOID
 NTAPI
 SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
 {
-    RECTL rcBounds;
+    //RECTL rcBounds;
     PDC pDC;
     PLIST_ENTRY Current;
     struct region *TempRegion, *ParentRegion, *WinRegion = NULL;
@@ -627,7 +624,10 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
         rcScreen.top = 0;
         rcScreen.right = pDC->rcVport.right;
         rcScreen.bottom = pDC->rcVport.bottom;
-        set_region_rect(pDC->Clipping, &rcScreen);
+
+        /* Free user clipping, if any */
+        if (pDC->Clipping) free_region(pDC->Clipping);
+        pDC->Clipping = NULL;
 
         ParentRegion = create_empty_region();
 
@@ -659,12 +659,17 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
             Current = Current->Blink;
         }
 
-        /* Remove parts clipped by parents from the window region */
+        /* Remove parts clipped by parents from the window region, and set result as a user clipping region */
         if (!is_region_empty(ParentRegion))
-            subtract_region(pDC->Clipping, pDC->Clipping, ParentRegion);
+        {
+            TempRegion = create_empty_region();
+            set_region_rect(TempRegion, &rcScreen);
+            subtract_region(TempRegion, TempRegion, ParentRegion);
+            pDC->Clipping = TempRegion;
+        }
 
         /* Set DC clipping */
-        RosGdiUpdateClipping(pDC);
+        RosGdiUpdateClipping(pDC, TRUE);
 
         /* Get the part which was previously hidden by parent area */
         WinRegion = create_empty_region();
@@ -691,14 +696,13 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
     }
     else
     {
-        /* Simple case, use whole viewport as a clipping rect */
-        RECTL_vSetRect(&rcBounds,
-                       0,
-                       0,
-                       pDC->rcVport.right,
-                       pDC->rcVport.bottom);
-        IntEngDeleteClipRegion(pDC->CombinedClip);
-        pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
+        /* Simple case, no clipping */
+
+        if (pDC->Clipping) free_region(pDC->Clipping);
+        pDC->Clipping = NULL;
+
+        /* Set DC clipping */
+        RosGdiUpdateClipping(pDC, TRUE);
     }
 
     DC_UnlockDc(pDC);
@@ -724,7 +728,7 @@ SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWN
     /* Acquire the lock */
     SwmAcquire();
 
-    SwmWin = (PSWM_WINDOW)Wid;
+    SwmWin = SwmGetWindowById(Wid);
 
     /* Save parameters */
     OldRectSafe.left = OldRect->left; OldRectSafe.top = OldRect->top;
@@ -826,7 +830,7 @@ SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
     /* Acquire the lock */
     SwmAcquire();
 
-    Win = (PSWM_WINDOW)Wid;
+    Win = SwmGetWindowById(Wid);
 
     DPRINT("SwmShowWindow %x, Show %d\n", Win->hwnd, Show);
 
@@ -935,6 +939,18 @@ SwmInitialize()
     {
         DPRINT1("Failure initializing SWM resource!\n");
     }
+
+    /* Initialize a root window */
+    SwmRoot.Window.left = 0;
+    SwmRoot.Window.top = 0;
+    SwmRoot.Window.right = 800; //FIXME!
+    SwmRoot.Window.bottom = 600; //FIXME!
+    SwmRoot.Hidden = FALSE;
+    SwmRoot.Topmost = FALSE;
+    SwmRoot.Visible = create_empty_region();
+    set_region_rect(SwmRoot.Visible, &SwmRoot.Window);
+
+    InsertHeadList(&SwmWindows, &SwmRoot.Entry);
 }
 
 /* EOF */

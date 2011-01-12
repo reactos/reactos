@@ -24,8 +24,8 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <wine/list.h>
 
 /* RosGdi syscalls */
-#include <wine/ntrosgdi.h>
 #include <wine/rosuser.h>
+#include <wine/ntrosgdi.h>
 
 /* CSR interaction */
 #include <csr.h>

@@ -355,7 +355,7 @@ void sync_window_position( struct ntdrv_win_data *data,
             //GrRaiseWindow(data->whole_window);
             //changes.stack_mode = Above;
             //mask |= CWStackMode;
-            SwmSetForeground(data->hwnd);
+            SwmSetForeground(data->whole_window);
         }
         /* should use stack_mode Below but most window managers don't get it right */
         /* and Above with a sibling doesn't work so well either, so we ignore it */
@@ -491,38 +491,31 @@ static GR_WINDOW_ID create_client_window( struct ntdrv_win_data *data )
 {
     int cx, cy;
     GR_WINDOW_ID client;
-
-    /*attr.bit_gravity = NorthWestGravity;
-    attr.win_gravity = NorthWestGravity;
-    attr.backing_store = NotUseful;
-    attr.event_mask = (ExposureMask | PointerMotionMask |
-                       ButtonPressMask | ButtonReleaseMask | EnterWindowMask);
-    mask = CWEventMask | CWBitGravity | CWWinGravity | CWBackingStore;*/
+    RECT winRect;
 
     if ((cx = data->client_rect.right - data->client_rect.left) <= 0) cx = 1;
     else if (cx > 65535) cx = 65535;
     if ((cy = data->client_rect.bottom - data->client_rect.top) <= 0) cy = 1;
     else if (cy > 65535) cy = 65535;
 
-    client = (GR_WINDOW_ID)1;//GrNewWindow( data->whole_window,
-             //             data->client_rect.left - data->whole_rect.left,
-             //             data->client_rect.top - data->whole_rect.top,
-             //             cx, cy, 0, RGB(255,255,255), 0 );
+    winRect.left = data->client_rect.left - data->whole_rect.left;
+    winRect.top = data->client_rect.top - data->whole_rect.top;
+    winRect.right = winRect.left + cx;
+    winRect.bottom = winRect.top + cy;
 
+    client = data->whole_window;//SwmNewWindow( data->whole_window, &winRect, data->hwnd, 0 );
     if (!client)
     {
         return 0;
     }
 
-    //GrSelectEvents(client, GR_EVENT_MASK_EXPOSURE);
-
     if (data->client_window)
     {
-        //GrDestroyWindow( data->client_window );
+        //SwmDestroyWindow( data->client_window );
     }
     data->client_window = client;
 
-    //GrMapWindow( data->client_window );
+    //SwmShowWindow( data->client_window, TRUE, 0 );
 
     SetPropA( data->hwnd, client_window_prop, (HANDLE)data->client_window );
     return data->client_window;
@@ -570,11 +563,6 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
     //GrSelectEvents(data->whole_window, GR_EVENT_MASK_EXPOSURE);
 
     if (!data->whole_window) goto done;
-
-    /* Set override_redirect */
-    //props.props = GR_WM_PROPS_NODECORATE;
-    //props.flags = GR_WM_FLAGS_PROPS;
-    //GrSetWMProperties(data->whole_window, &props);
 
     if (!create_client_window( data ))
     {
@@ -625,9 +613,8 @@ GR_WINDOW_ID NTDRV_get_whole_window( HWND hwnd )
 /***********************************************************************
  *		NTDRV_get_client_window
  *
- * Return the X window associated with the client area of a window
+ * Return the SWM window associated with the client area of a window
  */
-#if 0
 static GR_WINDOW_ID NTDRV_get_client_window( HWND hwnd )
 {
     struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
@@ -639,7 +626,7 @@ static GR_WINDOW_ID NTDRV_get_client_window( HWND hwnd )
     }
     return data->client_window;
 }
-#endif
+
 /***********************************************************************
  *		NTDRV_GetDC   (NTDRV.@)
  */
@@ -647,8 +634,8 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
                                  const RECT *top_rect, DWORD flags )
 {
     struct ntdrv_escape_set_drawable escape;
-    //struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
-    //HWND parent;
+    struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
+    HWND parent;
 
     escape.code        = NTDRV_SET_DRAWABLE;
     escape.clip_children = FALSE;
@@ -664,7 +651,7 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
     escape.drawable_rect.top    = top_rect->top;
     escape.drawable_rect.right  = top_rect->right;
     escape.drawable_rect.bottom = top_rect->bottom;
-#if GOOD_VERSION
+
     if (top == hwnd)
     {
         if (flags & DCX_WINDOW)
@@ -692,9 +679,6 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
 
         if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
     }
-#else
-        escape.hwnd = GetAncestor(hwnd, GA_ROOT);
-#endif
 
     TRACE("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s\n", hdc, hwnd, top,
         wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect));
@@ -788,8 +772,7 @@ void CDECL RosDrv_SetFocus( HWND hwnd )
     TRACE("SetFocus %x, desk %x\n", hwnd, GetDesktopWindow());
 
     /* Bring this window to foreground */
-    SwmSetForeground(hwnd);
-    //GrRaiseWindow(data->whole_window);
+    SwmSetForeground(data->whole_window);
 }
 
 /***********************************************************************

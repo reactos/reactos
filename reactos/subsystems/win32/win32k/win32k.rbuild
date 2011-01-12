@@ -133,6 +133,7 @@
 		</if>
 	</directory>
 	<directory name="swm">
+		<file>swmevent.c</file>
 		<file>winman.c</file>
 	</directory>
 	<directory name="wine">

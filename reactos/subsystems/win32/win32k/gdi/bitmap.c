@@ -304,6 +304,8 @@ BOOL APIENTRY RosGdiPatBlt( HDC physDev, INT left, INT top, INT width, INT heigh
     BOOLEAN bRet;
     PDC pDst;
 
+    DPRINT("PatBlt hdc %x, offs (%d,%d), w %d, h %d\n", physDev, left, top, width, height);
+
     /* Get a pointer to the DCs */
     pDst = DC_LockDc(physDev);
 
