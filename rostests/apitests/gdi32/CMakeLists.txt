@@ -5,6 +5,7 @@ list(APPEND SOURCE
     AddFontResource.c
     AddFontResourceEx.c
     BeginPath.c
+    CombineTransform.c
     CreateBitmapIndirect.c
     CreateCompatibleDC.c
     CreateFont.c
@@ -35,6 +36,7 @@ list(APPEND SOURCE
     GetStockObject.c
     GetTextExtentExPoint.c
     GetTextFace.c
+    MaskBlt.c
     SelectObject.c
     SetDCPenColor.c
     SetMapMode.c
