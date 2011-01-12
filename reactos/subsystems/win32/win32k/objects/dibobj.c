@@ -1424,7 +1424,7 @@ DIB_CreateDIBSection(
 
     // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
     // we're dealing with a compressed bitmap.  Otherwise, use width * height.
-    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
+    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB && bi->biCompression != BI_BITFIELDS
                 ? bi->biSizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
 
     if (section)
