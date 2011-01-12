@@ -26,6 +26,12 @@ HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
 DRAWCAPTEMP DrawCapTemp = NULL;
 
+typedef struct _LANGCODEPAGE
+{
+    WORD wLanguage;
+    WORD wCodePage;
+} LANGCODEPAGE, *PLANGCODEPAGE;
+
 /* undoc GUID */
 DEFINE_GUID(CLSID_RebarBandSite, 0xECD4FC4D, 0x521C, 0x11D0, 0xB7, 0x92, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
 
@@ -268,6 +274,80 @@ SetShellReadyEvent(IN LPCTSTR lpEventName)
     }
 
     return FALSE;
+}
+
+BOOL
+GetVersionInfoString(IN TCHAR *szFileName,
+                     IN TCHAR *szVersionInfo,
+                     OUT TCHAR *szBuffer,
+                     IN UINT cbBufLen)
+{
+    LPVOID lpData = NULL;
+    TCHAR szSubBlock[128];
+    TCHAR *lpszLocalBuf = NULL;
+    LANGID UserLangId;
+    PLANGCODEPAGE lpTranslate = NULL;
+    DWORD dwLen;
+    DWORD dwHandle;
+    UINT cbTranslate;
+    UINT cbLen;
+    BOOL bRet = FALSE;
+    unsigned int i;
+
+    dwLen = GetFileVersionInfoSize(szFileName,&dwHandle);
+
+    if (dwLen > 0)
+    {
+        lpData = HeapAlloc(hProcessHeap,0,dwLen);
+
+        if (lpData != NULL)
+        {
+            if (GetFileVersionInfo(szFileName,
+                                  0,
+                                  dwLen,
+                                  lpData) != 0)
+            {
+                UserLangId = GetUserDefaultLangID();
+
+                VerQueryValue(lpData,
+                    TEXT("\\VarFileInfo\\Translation"),
+                    (LPVOID *)&lpTranslate,
+                    &cbTranslate);
+
+                for (i = 0;i < (cbTranslate / sizeof(LANGCODEPAGE));i++)
+                {
+                    /* If the bottom eight bits of the language id's
+                    match, use this version information (since this
+                    means that the version information and the users
+                    default language are the same). */
+                    if ((lpTranslate[i].wLanguage & 0xFF) ==
+                        (UserLangId & 0xFF))
+                    {
+                        wnsprintf(szSubBlock,
+                            sizeof(szSubBlock) / sizeof(szSubBlock[0]),
+                            TEXT("\\StringFileInfo\\%04X%04X\\%s"),
+                            lpTranslate[i].wLanguage,
+                            lpTranslate[i].wCodePage,szVersionInfo);
+
+                        if (VerQueryValue(lpData,
+                            szSubBlock,
+                            (LPVOID *)&lpszLocalBuf,
+                            &cbLen) != 0)
+                        {
+                            wcsncpy(szBuffer,lpszLocalBuf,cbBufLen);
+
+                            bRet = TRUE;
+                            break;
+                        }
+                    }
+                }
+            }
+            HeapFree(hProcessHeap,0,lpData);
+            lpData = NULL;
+        }
+    }
+
+    return bRet;
 }
 
 INT WINAPI
