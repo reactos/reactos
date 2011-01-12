@@ -246,6 +246,51 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     return STATUS_SUCCESS;
 }
 
+/* IntResetMonitorSize
+ *
+ * Reset size of the monitor using atached device
+ *
+ * Arguments
+ *
+ *   PMONITOR
+ *      pGdiDevice  Pointer to the PDEVOBJ, which size has changed
+ *
+ * Return value
+ *   Returns a NTSTATUS
+ */
+NTSTATUS
+IntResetMonitorSize(IN PDEVOBJ *pGdiDevice)
+{
+	PMONITOR Monitor;
+
+    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
+    {
+        if (Monitor->GdiDevice == pGdiDevice)
+            break;
+    }
+
+    if (Monitor == NULL)
+    {
+        /* no monitor for given device found */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Monitor->rcMonitor.left  = 0;
+    Monitor->rcMonitor.top   = 0;
+    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
+    Monitor->rcWork = Monitor->rcMonitor;
+
+    if (Monitor->hrgnMonitor)
+        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+
+    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
+
+    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
+
+    return STATUS_SUCCESS;
+}
+
 /* IntGetPrimaryMonitor
  *
  * Returns a PMONITOR for the primary monitor
