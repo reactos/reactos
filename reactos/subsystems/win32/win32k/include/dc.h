@@ -20,6 +20,8 @@ typedef struct _DC
 
     PPDEVOBJ     ppdev;
 
+    PDC_ATTR    pdcattr;
+
     DCLEVEL     dclevel;
     ULONG       type;
 

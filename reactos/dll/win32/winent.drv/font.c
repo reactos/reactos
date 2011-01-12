@@ -192,7 +192,7 @@ static int AllocEntry(void)
   return mru;
 }
 
-static BOOL get_gasp_flags(NTDRV_PDEVICE *physDev, WORD *flags)
+static BOOL get_gasp_flags(PDC_ATTR pdcattr, WORD *flags)
 {
     DWORD size;
     WORD *gasp, *buffer;
@@ -202,15 +202,15 @@ static BOOL get_gasp_flags(NTDRV_PDEVICE *physDev, WORD *flags)
 
     *flags = 0;
 
-    size = GetFontData(physDev->hdc, MS_GASP_TAG,  0, NULL, 0);
+    size = GetFontData(pdcattr->hdc, MS_GASP_TAG,  0, NULL, 0);
     if(size == GDI_ERROR)
         return FALSE;
 
     gasp = buffer = HeapAlloc(GetProcessHeap(), 0, size);
-    GetFontData(physDev->hdc, MS_GASP_TAG,  0, gasp, size);
+    GetFontData(pdcattr->hdc, MS_GASP_TAG,  0, gasp, size);
 
-    GetTextMetricsW(physDev->hdc, &tm);
-    ppem = abs(RosDrv_YWStoDS(physDev, tm.tmAscent + tm.tmDescent - tm.tmInternalLeading));
+    GetTextMetricsW(pdcattr->hdc, &tm);
+    ppem = abs(RosDrv_YWStoDS(pdcattr, tm.tmAscent + tm.tmDescent - tm.tmInternalLeading));
 
     gasp++;
     num_recs = get_be_word(*gasp);
@@ -228,7 +228,7 @@ static BOOL get_gasp_flags(NTDRV_PDEVICE *physDev, WORD *flags)
     return TRUE;
 }
 
-static AA_Type get_antialias_type( NTDRV_PDEVICE *physDev, BOOL subpixel, BOOL hinter)
+static AA_Type get_antialias_type( PDC_ATTR pdcattr, BOOL subpixel, BOOL hinter)
 {
     AA_Type ret;
     WORD flags;
@@ -250,7 +250,7 @@ static AA_Type get_antialias_type( NTDRV_PDEVICE *physDev, BOOL subpixel, BOOL h
           But, Wine's subpixel rendering can support the portrait mode.
          */
     }
-    else if (!hinter || !get_gasp_flags(physDev, &flags) || flags & GASP_DOGRAY)
+    else if (!hinter || !get_gasp_flags(pdcattr, &flags) || flags & GASP_DOGRAY)
         ret = AA_Grey;
     else
         ret = AA_None;
@@ -258,7 +258,7 @@ static AA_Type get_antialias_type( NTDRV_PDEVICE *physDev, BOOL subpixel, BOOL h
     return ret;
 }
 
-static int GetCacheEntry(NTDRV_PDEVICE *physDev, LFANDSIZE *plfsz)
+static int GetCacheEntry(PDC_ATTR pdcattr, LFANDSIZE *plfsz)
 {
     int ret;
     int format;
@@ -289,11 +289,11 @@ static int GetCacheEntry(NTDRV_PDEVICE *physDev, LFANDSIZE *plfsz)
         switch (plfsz->lf.lfQuality)
         {
             case ANTIALIASED_QUALITY:
-                entry->aa_default = get_antialias_type( physDev, FALSE, hinter );
+                entry->aa_default = get_antialias_type( pdcattr, FALSE, hinter );
                 break;
             case CLEARTYPE_QUALITY:
             case CLEARTYPE_NATURAL_QUALITY:
-                entry->aa_default = get_antialias_type( physDev, subpixel, hinter );
+                entry->aa_default = get_antialias_type( pdcattr, subpixel, hinter );
                 break;
             case DEFAULT_QUALITY:
             case DRAFT_QUALITY:
@@ -302,7 +302,7 @@ static int GetCacheEntry(NTDRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                 if ( SystemParametersInfoW( SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0) &&
                      font_smoothing)
                 {
-                    entry->aa_default = get_antialias_type( physDev, subpixel, hinter );
+                    entry->aa_default = get_antialias_type( pdcattr, subpixel, hinter );
                 }
                 else
                     entry->aa_default = AA_None;
@@ -354,14 +354,14 @@ static void lfsz_calc_hash(LFANDSIZE *plfsz)
  *
  * Helper to ExtTextOut.  Must be called inside xrender_cs
  */
-static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
+static BOOL UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
 {
     unsigned int buflen;
     char *buf;
     //Glyph gid;
     GLYPHMETRICS gm;
     GlyphInfo gi;
-    gsCacheEntry *entry = glyphsetCache + physDev->cache_index;
+    gsCacheEntry *entry = glyphsetCache + pdcattr->cache_index;
     gsCacheEntryFormat *formatEntry;
     UINT ggo_format = GGO_GLYPH_INDEX;
     static const MAT2 identity = { {0,1},{0,0},{0,0},{0,1} };
@@ -390,13 +390,13 @@ static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
         break;
     }
 
-    buflen = GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
+    buflen = GetGlyphOutlineW(pdcattr->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
     if(buflen == GDI_ERROR) {
         if(format != AA_None) {
             format = AA_None;
             entry->aa_default = AA_None;
             ggo_format = GGO_GLYPH_INDEX | GGO_BITMAP;
-            buflen = GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
+            buflen = GetGlyphOutlineW(pdcattr->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
         }
         if(buflen == GDI_ERROR) {
             WARN("GetGlyphOutlineW failed\n");
@@ -447,7 +447,7 @@ static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
     }
 
     buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buflen);
-    GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, buflen, buf, &identity);
+    GetGlyphOutlineW(pdcattr->hdc, glyph, ggo_format, &gm, buflen, buf, &identity);
     formatEntry->realized[glyph] = TRUE;
 
     TRACE("buflen = %d. Got metrics: %dx%d adv=%d,%d origin=%d,%d\n",
@@ -505,7 +505,7 @@ static BOOL UploadGlyph(NTDRV_PDEVICE *physDev, int glyph, AA_Type format)
 
 
 VOID
-FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hfont)
+FeSelectFont(PDC_ATTR pdcattr, HFONT hfont)
 {
     LFANDSIZE lfsz;
 
@@ -514,19 +514,19 @@ FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hfont)
         lfsz.lf.lfHeight, lfsz.lf.lfWidth, lfsz.lf.lfWeight,
         lfsz.lf.lfItalic, lfsz.lf.lfCharSet, debugstr_w(lfsz.lf.lfFaceName));
     lfsz.lf.lfWidth = abs( lfsz.lf.lfWidth );
-    lfsz.devsize.cx = RosDrv_XWStoDS( physDev, lfsz.lf.lfWidth );
-    lfsz.devsize.cy = RosDrv_YWStoDS( physDev, lfsz.lf.lfHeight );
-    GetWorldTransform( physDev->hdc, &lfsz.xform );
+    lfsz.devsize.cx = RosDrv_XWStoDS( pdcattr, lfsz.lf.lfWidth );
+    lfsz.devsize.cy = RosDrv_YWStoDS( pdcattr, lfsz.lf.lfHeight );
+    GetWorldTransform( pdcattr->hdc, &lfsz.xform );
     lfsz_calc_hash(&lfsz);
 
     /*EnterCriticalSection(&xrender_cs);*/
-    if (physDev->cache_index != -1)
-        dec_ref_cache(physDev->cache_index);
-    physDev->cache_index = GetCacheEntry(physDev, &lfsz);
+    if (pdcattr->cache_index != -1)
+        dec_ref_cache(pdcattr->cache_index);
+    pdcattr->cache_index = GetCacheEntry(pdcattr, &lfsz);
     /*LeaveCriticalSection(&xrender_cs);*/
 }
 
-BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
+BOOL FeTextOut( PDC_ATTR pdcattr, INT x, INT y, UINT flags,
                const RECT *lprect, LPCWSTR wstr, UINT count,
                const INT *lpDx )
 {
@@ -535,7 +535,7 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     gsCacheEntry *entry;
     gsCacheEntryFormat *formatEntry;
     BOOL retv = FALSE;
-    //HDC hdc = physDev->hdc;
+    //HDC hdc = pdcattr->hdc;
     //int textPixel, backgroundPixel;
     HRGN saved_region = 0;
     BOOL disable_antialias = FALSE;
@@ -543,12 +543,12 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     //DIBSECTION bmp;
     unsigned int idx;
     RECT rect;
-    //enum drawable_depth_type depth_type = (physDev->depth == 1) ? mono_drawable : color_drawable;
+    //enum drawable_depth_type depth_type = (pdcattr->depth == 1) ? mono_drawable : color_drawable;
     //Picture tile_pict = 0;
 
     /* Do we need to disable antialiasing because of palette mode? */
 #if 0
-    if( !physDev->bitmap || GetObjectW( physDev->bitmap->hbitmap, sizeof(bmp), &bmp ) != sizeof(bmp) ) {
+    if( !pdcattr->bitmap || GetObjectW( pdcattr->bitmap->hbitmap, sizeof(bmp), &bmp ) != sizeof(bmp) ) {
         TRACE("bitmap is not a DIB\n");
     }
     else if (bmp.dsBmih.biBitCount <= 8) {
@@ -557,11 +557,11 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     }
 #endif
 
-    //RosDrv_LockDIBSection( physDev, DIB_Status_GdiMod );
+    //RosDrv_LockDIBSection( pdcattr, DIB_Status_GdiMod );
 
 #if 0
-    if(physDev->depth == 1) {
-        if((physDev->textPixel & 0xffffff) == 0) {
+    if(pdcattr->depth == 1) {
+        if((pdcattr->textPixel & 0xffffff) == 0) {
             textPixel = 0;
             backgroundPixel = 1;
         } else {
@@ -569,8 +569,8 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
             backgroundPixel = 0;
         }
     } else {
-        textPixel = physDev->textPixel;
-        backgroundPixel = physDev->backgroundPixel;
+        textPixel = pdcattr->textPixel;
+        backgroundPixel = pdcattr->backgroundPixel;
     }
 #endif
 
@@ -579,18 +579,18 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         HBRUSH brush, oldBrush;
         HPEN pen, oldPen;
 
-        brush = CreateSolidBrush(GetBkColor(physDev->hdc));
-        oldBrush = SelectObject(physDev->hdc, brush);
+        brush = CreateSolidBrush(GetBkColor(pdcattr->hdc));
+        oldBrush = SelectObject(pdcattr->hdc, brush);
 
         pen = CreatePen(PS_NULL, 0, 0);
-        oldPen = SelectObject(physDev->hdc, pen);
+        oldPen = SelectObject(pdcattr->hdc, pen);
 
         CopyRect(&rect, lprect);
-        OffsetRect(&rect, physDev->dc_rect.left, physDev->dc_rect.top);
-        RosGdiRectangle(physDev->hKernelDC, &rect);
+        OffsetRect(&rect, pdcattr->dc_rect.left, pdcattr->dc_rect.top);
+        RosGdiRectangle(pdcattr->hKernelDC, &rect);
 
-        DeleteObject(SelectObject(physDev->hdc, oldBrush));
-        DeleteObject(SelectObject(physDev->hdc, oldPen));
+        DeleteObject(SelectObject(pdcattr->hdc, oldBrush));
+        DeleteObject(SelectObject(pdcattr->hdc, oldPen));
     }
 
     if(count == 0)
@@ -606,27 +606,27 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         clip_region = CreateRectRgnIndirect( lprect );
         /* make a copy of the current device region */
         saved_region = CreateRectRgn( 0, 0, 0, 0 );
-        CombineRgn( saved_region, physDev->region, 0, RGN_COPY );
-        RosDrv_SetDeviceClipping( physDev, saved_region, clip_region );
+        CombineRgn( saved_region, pdcattr->region, 0, RGN_COPY );
+        RosDrv_SetDeviceClipping( pdcattr, saved_region, clip_region );
         DeleteObject( clip_region );
     }
 
     //EnterCriticalSection(&xrender_cs);
 
-    entry = glyphsetCache + physDev->cache_index;
+    entry = glyphsetCache + pdcattr->cache_index;
     if( disable_antialias == FALSE )
         aa_type = entry->aa_default;
     formatEntry = entry->format[aa_type];
 
     for(idx = 0; idx < count; idx++) {
         if( !formatEntry ) {
-            UploadGlyph(physDev, wstr[idx], aa_type);
+            UploadGlyph(pdcattr, wstr[idx], aa_type);
             /* re-evaluate antialias since aa_default may have changed */
             if( disable_antialias == FALSE )
                 aa_type = entry->aa_default;
             formatEntry = entry->format[aa_type];
         } else if( wstr[idx] >= formatEntry->nrealized || formatEntry->realized[wstr[idx]] == FALSE) {
-            UploadGlyph(physDev, wstr[idx], aa_type);
+            UploadGlyph(pdcattr, wstr[idx], aa_type);
         }
     }
     if (!formatEntry)
@@ -637,68 +637,68 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     }
 
     TRACE("Writing %s at %d,%d\n", debugstr_wn(wstr,count),
-        physDev->dc_rect.left + x, physDev->dc_rect.top + y);
+        pdcattr->dc_rect.left + x, pdcattr->dc_rect.top + y);
 
-    RosGdiExtTextOut(physDev->hKernelDC, physDev->dc_rect.left + x, physDev->dc_rect.top + y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
+    RosGdiExtTextOut(pdcattr->hKernelDC, pdcattr->dc_rect.left + x, pdcattr->dc_rect.top + y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
 
     //LeaveCriticalSection(&xrender_cs);
 
     if (flags & ETO_CLIPPED)
     {
         /* restore the device region */
-        RosDrv_SetDeviceClipping( physDev, saved_region, 0 );
+        RosDrv_SetDeviceClipping( pdcattr, saved_region, 0 );
         DeleteObject( saved_region );
     }
 
     retv = TRUE;
 
 done_unlock:
-    //RosDrv_UnlockDIBSection( physDev, TRUE );
+    //RosDrv_UnlockDIBSection( pdcattr, TRUE );
     return retv;
 }
 
-BOOL CDECL RosDrv_ExtTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
+BOOL CDECL RosDrv_ExtTextOut( PDC_ATTR pdcattr, INT x, INT y, UINT flags,
                    const RECT *lprect, LPCWSTR wstr, UINT count,
                    const INT *lpDx )
 {
-    //if (physDev->has_gdi_font)
-        return FeTextOut(physDev, x, y, flags, lprect, wstr, count, lpDx);
+    //if (pdcattr->has_gdi_font)
+        return FeTextOut(pdcattr, x, y, flags, lprect, wstr, count, lpDx);
 
     //UNIMPLEMENTED;
     //return FALSE;
 }
 
-BOOL CDECL RosDrv_GetTextExtentExPoint( NTDRV_PDEVICE *physDev, LPCWSTR str, INT count,
+BOOL CDECL RosDrv_GetTextExtentExPoint( PDC_ATTR pdcattr, LPCWSTR str, INT count,
                                         INT maxExt, LPINT lpnFit, LPINT alpDx, LPSIZE size )
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-BOOL CDECL RosDrv_GetTextMetrics(NTDRV_PDEVICE *physDev, TEXTMETRICW *metrics)
+BOOL CDECL RosDrv_GetTextMetrics(PDC_ATTR pdcattr, TEXTMETRICW *metrics)
 {
     /* Let GDI font engine do the work */
     return FALSE;
 }
 
-BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
+BOOL CDECL RosDrv_EnumDeviceFonts( PDC_ATTR pdcattr, LPLOGFONTW plf,
                                    FONTENUMPROCW proc, LPARAM lp )
 {
     /* We're always using client-side fonts. */
     return FALSE;
 }
 
-HFONT CDECL RosDrv_SelectFont( NTDRV_PDEVICE *physDev, HFONT hfont, HANDLE gdiFont )
+HFONT CDECL RosDrv_SelectFont( PDC_ATTR pdcattr, HFONT hfont, HANDLE gdiFont )
 {
     /* We don't have a kernelmode font engine */
     if (gdiFont == 0)
     {
-        /*RosGdiSelectFont(physDev->hKernelDC, hfont, gdiFont);*/
+        /*RosGdiSelectFont(pdcattr->hKernelDC, hfont, gdiFont);*/
     }
     else
     {
         /* Save information about the selected font */
-        FeSelectFont(physDev, hfont);
+        FeSelectFont(pdcattr, hfont);
     }
 
     /* Indicate that gdiFont is good to use */

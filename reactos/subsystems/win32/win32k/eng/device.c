@@ -1224,7 +1224,7 @@ GreGetDeviceCaps(PDC pDC, INT cap)
         return (pGdiInfo->cBitsPixel > 8) ? -1 : (1 << pGdiInfo->cBitsPixel);
         //return pGdiInfo->ulNumColors;
     case PDEVICESIZE:
-        return sizeof(NTDRV_PDEVICE);
+        return 0;
     case CURVECAPS:
         return (CC_CIRCLES | CC_PIE | CC_CHORD | CC_ELLIPSES | CC_WIDE |
                 CC_STYLED | CC_WIDESTYLED | CC_INTERIORS | CC_ROUNDRECT);

@@ -53,26 +53,26 @@ BOOL InitOGL(VOID)
     return TRUE;
 }
 
-INT CDECL RosDrv_ChoosePixelFormat(NTDRV_PDEVICE *physDev,
+INT CDECL RosDrv_ChoosePixelFormat(PDC_ATTR pdcattr,
                                    CONST PIXELFORMATDESCRIPTOR *ppfd)
 {
     if (!glChoosePixelFormat)
         if (!InitOGL())
             return 0;
 
-    return glChoosePixelFormat(physDev->hdc, ppfd);
+    return glChoosePixelFormat(pdcattr->hdc, ppfd);
 }
 
-INT CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
+INT CDECL RosDrv_GetPixelFormat(PDC_ATTR pdcattr)
 {
     if (!glGetPixelFormat)
         if (!InitOGL())
             return 0;
 
-    return glGetPixelFormat(physDev->hdc);
+    return glGetPixelFormat(pdcattr->hdc);
 }
 
-INT CDECL RosDrv_DescribePixelFormat(NTDRV_PDEVICE *physDev,
+INT CDECL RosDrv_DescribePixelFormat(PDC_ATTR pdcattr,
                                      INT iPixelFormat,
                                      UINT nBytes,
                                      PIXELFORMATDESCRIPTOR *ppfd)
@@ -81,10 +81,10 @@ INT CDECL RosDrv_DescribePixelFormat(NTDRV_PDEVICE *physDev,
         if (!InitOGL())
             return 0;
 
-    return glDescribePixelFormat(physDev->hdc, iPixelFormat, nBytes, ppfd);
+    return glDescribePixelFormat(pdcattr->hdc, iPixelFormat, nBytes, ppfd);
 }
 
-BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,
+BOOL CDECL RosDrv_SetPixelFormat(PDC_ATTR pdcattr,
                                  INT iPixelFormat,
                                  CONST PIXELFORMATDESCRIPTOR *ppfd)
 {
@@ -92,17 +92,17 @@ BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,
         if (!InitOGL())
             return 0;
 
-    return glSetPixelFormat(physDev->hdc, iPixelFormat, ppfd);
+    return glSetPixelFormat(pdcattr->hdc, iPixelFormat, ppfd);
 }
 
 
-BOOL CDECL RosDrv_SwapBuffers(NTDRV_PDEVICE *physDev)
+BOOL CDECL RosDrv_SwapBuffers(PDC_ATTR pdcattr)
 {
     if (!glSwapBuffers)
         if (!InitOGL())
             return 0;
 
-    return glSwapBuffers(physDev->hdc);
+    return glSwapBuffers(pdcattr->hdc);
 }
 
 /* EOF */

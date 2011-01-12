@@ -36,6 +36,7 @@
 #include "wine/list.h"
 #include "wine/unicode.h"
 #include "wine/server.h"
+#include "win32k/ntgdihdl.h"
 #include <pseh/pseh2.h>
 
 /* GDI escapes */
@@ -98,27 +99,31 @@ static inline void mirror_rect( const RECT *window_rect, RECT *rect )
 
 /* clipboard.c */
 void NTDRV_InitClipboard(void);
+
+/* gdidrv.c */
+void CDECL RosDrv_SetDeviceClipping( PDC_ATTR pdcattr, HRGN vis_rgn, HRGN clip_rgn );
+
+/* gdiobj.c */
 VOID InitHandleMapping();
 VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser);
 HGDIOBJ MapUserHandle(HGDIOBJ hUser);
 VOID RemoveHandleMapping(HGDIOBJ hUser);
 VOID CleanupHandleMapping();
 
-/* gdidrv.c */
-void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn );
+PDC_ATTR GdiGetDcAttr(HDC hdc);
 
 /* graphics.c */
-INT RosDrv_XWStoDS( NTDRV_PDEVICE *physDev, INT width );
-INT RosDrv_YWStoDS( NTDRV_PDEVICE *physDev, INT height );
+INT RosDrv_XWStoDS( PDC_ATTR pdcattr, INT width );
+INT RosDrv_YWStoDS( PDC_ATTR pdcattr, INT height );
 
 HGDIOBJ MapHandle(HGDIOBJ hUser);
 
 /* font.c */
 VOID
-FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hFont);
+FeSelectFont(PDC_ATTR pdcattr, HFONT hFont);
 
 BOOL
-FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
+FeTextOut( PDC_ATTR pdcattr, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
            const INT *lpDx );
 

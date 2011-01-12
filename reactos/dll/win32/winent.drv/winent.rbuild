@@ -12,6 +12,7 @@
 	<file>event.c</file>
 	<file>font.c</file>
 	<file>gdidrv.c</file>
+	<file>gdiobj.c</file>
 	<file>graphics.c</file>
 	<file>main.c</file>
 	<file>userdrv.c</file>

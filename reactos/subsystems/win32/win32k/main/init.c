@@ -77,6 +77,13 @@ Win32kProcessCallout(PEPROCESS Process,
         list_init(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
         connect_process_winstation(Win32Process);
+
+        if(Process->Peb != NULL)
+        {
+            /* map the gdi handle table to user land */
+            Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
+            Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
+        }
     }
     else
     {

@@ -56,6 +56,45 @@ DC_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
+VOID
+FASTCALL
+DC_AllocateDcAttr(HDC hDC)
+{
+  PVOID NewMem = NULL;
+  PDC pDC;
+  HANDLE Pid = NtCurrentProcess();
+  ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
+
+  NTSTATUS Status = ZwAllocateVirtualMemory(Pid,
+                                        &NewMem,
+                                              0,
+                                       &MemSize,
+                         MEM_COMMIT|MEM_RESERVE,
+                                 PAGE_READWRITE);
+  {
+    INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    // FIXME: dc could have been deleted!!! use GDIOBJ_InsertUserData
+    if (NT_SUCCESS(Status))
+    {
+      RtlZeroMemory(NewMem, MemSize);
+      Entry->UserData  = NewMem;
+      DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
+    }
+    else
+    {
+       DPRINT("DC_ATTR not allocated!\n");
+    }
+  }
+  pDC = DC_LockDc(hDC);
+
+  if(NewMem)
+  {
+     pDC->pdcattr = NewMem; // Store pointer
+  }
+  DC_UnlockDc(pDC);
+}
+
 BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
                             LPCWSTR output, const DEVMODEW* initData, ULONG dcType )
 {
@@ -75,6 +114,9 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
 
     /* Set physical device pointer */
     pNewDC->ppdev = (PVOID)&PrimarySurface;
+
+    /* Allocate dc shared memory */
+    DC_AllocateDcAttr(hNewDC);    
 
     /* Set default fg/bg colors */
     pNewDC->crBackgroundClr = RGB(255, 255, 255);

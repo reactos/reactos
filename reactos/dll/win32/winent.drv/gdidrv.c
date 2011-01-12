@@ -13,104 +13,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
 
-/* GLOBALS ****************************************************************/
-static struct list handle_mapping_list = LIST_INIT( handle_mapping_list );
-static CRITICAL_SECTION handle_mapping_cs;
-static BOOL StockObjectsInitialized = FALSE;
-
-typedef struct _HMAPPING
-{
-    HGDIOBJ hUser;
-    HGDIOBJ hKernel;
-    struct list entry;
-} HMAPPING, *PHMAPPING;
-
 /* FUNCTIONS **************************************************************/
 
-VOID InitHandleMapping()
-{
-    InitializeCriticalSection(&handle_mapping_cs);
-}
-
-VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
-{
-    PHMAPPING mapping = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HMAPPING));
-    if(!mapping)
-        return;
-
-    mapping->hKernel = hKernel;
-    mapping->hUser = hUser;
-
-    EnterCriticalSection(&handle_mapping_cs);
-    list_add_tail(&handle_mapping_list, &mapping->entry);
-    LeaveCriticalSection(&handle_mapping_cs);
-}
-
-static PHMAPPING FindHandleMapping(HGDIOBJ hUser)
-{
-    PHMAPPING item;
-
-    LIST_FOR_EACH_ENTRY( item, &handle_mapping_list, HMAPPING, entry )
-    {
-        if (item->hUser == hUser)
-        {
-            return item;
-        }
-    }
-
-    return NULL;
-}
-
-HGDIOBJ MapUserHandle(HGDIOBJ hUser)
-{
-    PHMAPPING mapping;
-
-    /* Map stock objects if not mapped yet */
-    if(!StockObjectsInitialized)
-    {
-        HGDIOBJ hKernel, hUser;
-
-        hKernel = NtGdiGetStockObject(DEFAULT_BITMAP);
-        hUser = GetStockObject( STOCK_LAST+1 );
-
-        /* Make sure that both kernel mode and user mode objects are initialized */
-        if(hKernel && hUser)
-        {
-            AddHandleMapping(NtGdiGetStockObject(DEFAULT_BITMAP), GetStockObject( STOCK_LAST+1 ));
-            StockObjectsInitialized = TRUE;
-        }
-    }
-
-    mapping = FindHandleMapping(hUser);
-
-    return mapping ? mapping->hKernel : NULL;
-}
-
-VOID RemoveHandleMapping(HGDIOBJ hUser)
-{
-    PHMAPPING mapping;
-
-    mapping = FindHandleMapping(hUser);
-    if(mapping == NULL)
-        return;
-
-    EnterCriticalSection(&handle_mapping_cs);
-    list_remove(&mapping->entry);
-    LeaveCriticalSection(&handle_mapping_cs);
-}
-
-VOID CleanupHandleMapping()
-{
-    PHMAPPING mapping;
-
-    while(!list_empty(&handle_mapping_list))
-    {
-        mapping = LIST_ENTRY(list_head(&handle_mapping_list), HMAPPING, entry);
-        RemoveHandleMapping(mapping->hUser);
-    }
-}
-
-BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID bmBits )
+BOOL CDECL RosDrv_CreateBitmap( PDC_ATTR pdcattr, HBITMAP hbitmap, LPVOID bmBits )
 {
     BITMAP bitmap;
     HBITMAP hKbitmap;
@@ -122,7 +27,7 @@ BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID 
     if (bitmap.bmPlanes != 1) return FALSE;
 
     /* Create the kernelmode bitmap object */
-    hKbitmap = RosGdiCreateBitmap(physDev->hKernelDC, &bitmap, bmBits);
+    hKbitmap = RosGdiCreateBitmap(pdcattr->hKernelDC, &bitmap, bmBits);
 
     if(!hKbitmap)
         return FALSE;
@@ -131,37 +36,46 @@ BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID 
     return TRUE;
 }
 
-BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWSTR device,
+BOOL CDECL RosDrv_CreateDC( HDC hdc, PDC_ATTR *ppdcattr, LPCWSTR driver, LPCWSTR device,
                             LPCWSTR output, const DEVMODEW* initData )
 {
     BOOL bRet;
     DWORD dcType;
-    NTDRV_PDEVICE *physDev;
+    PDC_ATTR pdcattr;
     HDC hKernelDC;
-
-    /* Allocate memory for two handles */
-    physDev = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*physDev) );
-    if (!physDev) return FALSE;
 
     /* Get DC type */
     dcType = GetObjectType(hdc);
     
     /* Call the win32 kernel */
     bRet = RosGdiCreateDC(&hKernelDC, driver, device, output, initData, dcType);
+    if(!bRet)
+    {
+        ERR("RosGdiCreateDC failed!!!\n");
+        return FALSE;
+    }
+
+    /* Retrieve the user mode part of the new handle */
+    pdcattr = GdiGetDcAttr(hKernelDC);
+    if(!pdcattr)
+    {
+        ERR("RosGdiCreateDC failed!!!\n");
+        return TRUE;
+    }
 
     /* Save newly created DC */
-    physDev->hKernelDC = hKernelDC;
-    physDev->hdc = hdc;
+    pdcattr->hKernelDC = hKernelDC;
+    pdcattr->hdc = hdc;
 
     /* No font is selected */
-    physDev->cache_index = -1;
+    pdcattr->cache_index = -1;
 
     /* Create a usermode clipping region (same as kernelmode one, just to reduce
        amount of syscalls) */
-    physDev->region = CreateRectRgn( 0, 0, 0, 0 );
+    pdcattr->region = CreateRectRgn( 0, 0, 0, 0 );
 
     /* Return allocated physical DC to the caller */
-    *pdev = physDev;
+    *ppdcattr = pdcattr;
 
     return bRet;
 }
@@ -178,24 +92,16 @@ BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
     return RosGdiDeleteBitmap(hKbitmap);
 }
 
-BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
+BOOL CDECL RosDrv_DeleteDC( PDC_ATTR pdcattr )
 {
-    BOOL res;
-
     /* Delete usermode copy of a clipping region */
-    DeleteObject( physDev->region );
+    DeleteObject( pdcattr->region );
 
     /* Delete kernel DC */
-    res = RosGdiDeleteDC(physDev->hKernelDC);
-
-    /* Free the um/km handle pair memory */
-    HeapFree( GetProcessHeap(), 0, physDev );
-
-    /* Return result */
-    return res;
+    return RosGdiDeleteDC(pdcattr->hKernelDC);
 }
 
-INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LPCVOID in_data,
+INT CDECL RosDrv_ExtEscape( PDC_ATTR pdcattr, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
     switch(escape)
@@ -210,13 +116,13 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                 {
                     const struct ntdrv_escape_set_drawable *data = in_data;
 
-                    physDev->dc_rect = data->dc_rect;
-                    RosGdiSetDcRects(physDev->hKernelDC, NULL, (RECT*)&data->drawable_rect);
+                    pdcattr->dc_rect = data->dc_rect;
+                    RosGdiSetDcRects(pdcattr->hKernelDC, NULL, (RECT*)&data->drawable_rect);
 
-                    RosGdiGetDC(physDev->hKernelDC, data->drawable, data->clip_children);
+                    RosGdiGetDC(pdcattr->hKernelDC, data->drawable, data->clip_children);
 
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
-                           physDev->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
+                           pdcattr->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
                     return TRUE;
                 }
                 break;
@@ -238,49 +144,49 @@ LONG CDECL RosDrv_GetBitmapBits( HBITMAP hbitmap, void *buffer, LONG count )
     return RosGdiGetBitmapBits(hbitmap, buffer, count);
 }
 
-BOOL CDECL RosDrv_GetCharWidth( NTDRV_PDEVICE *physDev, UINT firstChar, UINT lastChar,
+BOOL CDECL RosDrv_GetCharWidth( PDC_ATTR pdcattr, UINT firstChar, UINT lastChar,
                                   LPINT buffer )
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-INT CDECL RosDrv_GetDeviceCaps( NTDRV_PDEVICE *physDev, INT cap )
+INT CDECL RosDrv_GetDeviceCaps( PDC_ATTR pdcattr, INT cap )
 {
-    return RosGdiGetDeviceCaps(physDev->hKernelDC, cap);
+    return RosGdiGetDeviceCaps(pdcattr->hKernelDC, cap);
 }
 
-BOOL CDECL RosDrv_GetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)
+BOOL CDECL RosDrv_GetDeviceGammaRamp(PDC_ATTR pdcattr, LPVOID ramp)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-COLORREF CDECL RosDrv_GetNearestColor( NTDRV_PDEVICE *physDev, COLORREF color )
+COLORREF CDECL RosDrv_GetNearestColor( PDC_ATTR pdcattr, COLORREF color )
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-UINT CDECL RosDrv_GetSystemPaletteEntries( NTDRV_PDEVICE *physDev, UINT start, UINT count,
+UINT CDECL RosDrv_GetSystemPaletteEntries( PDC_ATTR pdcattr, UINT start, UINT count,
                                            LPPALETTEENTRY entries )
 {
-    return RosGdiGetSystemPaletteEntries(physDev->hKernelDC, start, count, entries);
+    return RosGdiGetSystemPaletteEntries(pdcattr->hKernelDC, start, count, entries);
 }
 
-UINT CDECL RosDrv_RealizeDefaultPalette( NTDRV_PDEVICE *physDev )
+UINT CDECL RosDrv_RealizeDefaultPalette( PDC_ATTR pdcattr )
 {
     //UNIMPLEMENTED;
     return FALSE;
 }
 
-UINT CDECL RosDrv_RealizePalette( NTDRV_PDEVICE *physDev, HPALETTE hpal, BOOL primary )
+UINT CDECL RosDrv_RealizePalette( PDC_ATTR pdcattr, HPALETTE hpal, BOOL primary )
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
+HBITMAP CDECL RosDrv_SelectBitmap( PDC_ATTR pdcattr, HBITMAP hbitmap )
 {
     BOOL bRes;
 
@@ -288,7 +194,7 @@ HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
     hbitmap = (HBITMAP)MapUserHandle(hbitmap);
 
     /* Select the bitmap into the DC */
-    bRes = RosGdiSelectBitmap(physDev->hKernelDC, hbitmap);
+    bRes = RosGdiSelectBitmap(pdcattr->hKernelDC, hbitmap);
 
     /* If there was an error, return 0 */
     if (!bRes) return 0;
@@ -297,7 +203,7 @@ HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
     return hbitmap;
 }
 
-HBRUSH CDECL RosDrv_SelectBrush( NTDRV_PDEVICE *physDev, HBRUSH hbrush )
+HBRUSH CDECL RosDrv_SelectBrush( PDC_ATTR pdcattr, HBRUSH hbrush )
 {
     LOGBRUSH logbrush;
 
@@ -306,12 +212,12 @@ HBRUSH CDECL RosDrv_SelectBrush( NTDRV_PDEVICE *physDev, HBRUSH hbrush )
     if(logbrush.lbStyle == BS_PATTERN)
         logbrush.lbHatch = (ULONG_PTR)MapUserHandle((HBITMAP)logbrush.lbHatch);
 
-    RosGdiSelectBrush(physDev->hKernelDC, &logbrush);
+    RosGdiSelectBrush(pdcattr->hKernelDC, &logbrush);
 
     return hbrush;
 }
 
-HPEN CDECL RosDrv_SelectPen( NTDRV_PDEVICE *physDev, HPEN hpen )
+HPEN CDECL RosDrv_SelectPen( PDC_ATTR pdcattr, HPEN hpen )
 {
     LOGPEN logpen;
     EXTLOGPEN *elogpen = NULL;
@@ -331,10 +237,10 @@ HPEN CDECL RosDrv_SelectPen( NTDRV_PDEVICE *physDev, HPEN hpen )
 
     /* If it's a stock object, then use DC's color */
     if (hpen == GetStockObject( DC_PEN ))
-        logpen.lopnColor = GetDCPenColor(physDev->hdc);
+        logpen.lopnColor = GetDCPenColor(pdcattr->hdc);
 
     /* Call kernelmode */
-    RosGdiSelectPen(physDev->hKernelDC, &logpen, elogpen);
+    RosGdiSelectPen(pdcattr->hKernelDC, &logpen, elogpen);
 
     /* Free ext logpen memory if it was allocated */
     if (elogpen) HeapFree( GetProcessHeap(), 0, elogpen );
@@ -349,19 +255,19 @@ LONG CDECL RosDrv_SetBitmapBits( HBITMAP hbitmap, const void *bits, LONG count )
     return 0;
 }
 
-COLORREF CDECL RosDrv_SetDCBrushColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
+COLORREF CDECL RosDrv_SetDCBrushColor( PDC_ATTR pdcattr, COLORREF crColor )
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-COLORREF CDECL RosDrv_SetDCPenColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
+COLORREF CDECL RosDrv_SetDCPenColor( PDC_ATTR pdcattr, COLORREF crColor )
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-BOOL CDECL RosDrv_SetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)
+BOOL CDECL RosDrv_SetDeviceGammaRamp(PDC_ATTR pdcattr, LPVOID ramp)
 {
     UNIMPLEMENTED;
     return FALSE;

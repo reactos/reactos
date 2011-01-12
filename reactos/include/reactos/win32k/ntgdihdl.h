@@ -242,6 +242,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE /* Must match win32k/include/gdiobj.h *
     DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
+#if 0
 typedef struct _RGN_ATTR
 {
     ULONG AttrFlags;
@@ -328,6 +329,19 @@ typedef struct _DC_ATTR
     POINTL ptlBrushOrigin;
     RGN_ATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
+
+#else
+
+typedef struct _DC_ATTR
+{
+    HDC  hdc;
+    HDC  hKernelDC;
+    RECT dc_rect;     /* DC rectangle relative to drawable */
+    HRGN region;      /* Device region (visible region & clip region) */
+    int  cache_index; /* cache of a currently selected font */
+} DC_ATTR, *PDC_ATTR;
+
+#endif
 
 typedef struct _BRUSH_ATTR /* Used with pen too. */
 {

@@ -8,15 +8,6 @@
 #define W32KAPI  DECLSPEC_ADDRSAFE
 #endif
 
-typedef struct _NTDRV_PDEVICE
-{
-    HDC  hdc;
-    HDC  hKernelDC;
-    RECT dc_rect;     /* DC rectangle relative to drawable */
-    HRGN region;      /* Device region (visible region & clip region) */
-    int  cache_index; /* cache of a currently selected font */
-} NTDRV_PDEVICE, *PNTDRV_PDEVICE;
-
 typedef struct
 {
     LOGFONTW lf;
