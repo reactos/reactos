@@ -147,15 +147,12 @@ UserSetCursor(
         if (OldCursor && CurInfo->ShowingCursor)
         {
             /* Remove the cursor */
-            //GreMovePointer(hdcScreen, -1, -1);
+            GreMovePointer(hdcScreen, -1, -1);
             DPRINT("Removing pointer!\n");
         }
 
         CurInfo->CurrentCursorObject = NULL;
         CurInfo->ShowingCursor = 0;
-
-        /* Unset the bitmaps */
-        GreSetPointerShape(hdcScreen, NULL, NULL, 0, 0, 0, 0);
     }
 
     /* Return the old cursor */
