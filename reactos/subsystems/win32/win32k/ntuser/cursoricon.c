@@ -99,7 +99,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     return CurIcon;
 }
 
-HCURSOR
+PCURICON_OBJECT
 FASTCALL
 UserSetCursor(
     PCURICON_OBJECT NewCursor,
@@ -107,22 +107,17 @@ UserSetCursor(
 {
     PSYSTEM_CURSORINFO CurInfo;
     PCURICON_OBJECT OldCursor;
-    HCURSOR hOldCursor = (HCURSOR)0;
     HDC hdcScreen;
 
 	CurInfo = IntGetSysCursorInfo();
 
     OldCursor = CurInfo->CurrentCursorObject;
-    if (OldCursor)
-    {
-        hOldCursor = (HCURSOR)OldCursor->Self;
-    }
 
     /* Is the new cursor the same as the old cursor? */
     if (OldCursor == NewCursor)
     {
         /* Nothing to to do in this case */
-        return hOldCursor;
+        return OldCursor;
     }
 
     /* Get the screen DC */
@@ -134,8 +129,6 @@ UserSetCursor(
     /* Do we have a new cursor? */
     if (NewCursor)
     {
-        UserReferenceObject(NewCursor);
-
         CurInfo->ShowingCursor = 1;
         CurInfo->CurrentCursorObject = NewCursor;
 
@@ -147,8 +140,6 @@ UserSetCursor(
                            NewCursor->IconInfo.yHotspot,
                            gpsi->ptCursor.x,
                            gpsi->ptCursor.y);
-
-
     }
     else
     {
@@ -156,22 +147,19 @@ UserSetCursor(
         if (OldCursor && CurInfo->ShowingCursor)
         {
             /* Remove the cursor */
-            GreMovePointer(hdcScreen, -1, -1);
+            //GreMovePointer(hdcScreen, -1, -1);
             DPRINT("Removing pointer!\n");
         }
 
         CurInfo->CurrentCursorObject = NULL;
         CurInfo->ShowingCursor = 0;
+
+        /* Unset the bitmaps */
+        GreSetPointerShape(hdcScreen, NULL, NULL, 0, 0, 0, 0);
     }
 
-    /* OldCursor is not in use anymore */
-    if (OldCursor)
-    {
-        UserDereferenceObject(OldCursor);
-    }
-
-    /* Return handle of the old cursor */
-    return hOldCursor;
+    /* Return the old cursor */
+    return OldCursor;
 }
 
 BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
@@ -734,7 +722,7 @@ NtUserClipCursor(
 
         prcl = &rclLocal;
     }
-	
+
 	UserEnterExclusive();
 
     /* Call the internal function */
@@ -873,38 +861,36 @@ APIENTRY
 NtUserSetCursor(
     HCURSOR hCursor)
 {
-    PCURICON_OBJECT CurIcon;
-    HICON OldCursor;
-    DECLARE_RETURN(HCURSOR);
+    PCURICON_OBJECT pcurOld, pcurNew;
+    HCURSOR hOldCursor = NULL;
 
     DPRINT("Enter NtUserSetCursor\n");
     UserEnterExclusive();
 
     if (hCursor)
     {
-        if (!(CurIcon = UserGetCurIconObject(hCursor)))
+        pcurNew = UserGetCurIconObject(hCursor);
+        if (!pcurNew)
         {
-            RETURN(NULL);
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            goto leave;
         }
     }
     else
     {
-        CurIcon = NULL;
+        pcurNew = NULL;
     }
 
-    OldCursor = UserSetCursor(CurIcon, FALSE);
-
-    if (CurIcon)
+    pcurOld = UserSetCursor(pcurNew, FALSE);
+    if (pcurOld)
     {
-        UserDereferenceObject(CurIcon);
+        hOldCursor = (HCURSOR)pcurOld->Self;
+        UserDereferenceObject(pcurOld);
     }
 
-    RETURN(OldCursor);
-
-CLEANUP:
-    DPRINT("Leave NtUserSetCursor, ret=%i\n",_ret_);
+leave:
     UserLeave();
-    END_CLEANUP;
+    return hOldCursor;
 }
 
 

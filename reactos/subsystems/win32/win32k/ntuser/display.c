@@ -739,15 +739,16 @@ UserChangeDisplaySettings(
     if (!(flags & CDS_NORESET))
     {
         ULONG ulResult;
+        PVOID pvOldCursor;
 
         /* Remove mouse pointer */
-        UserSetCursor(NULL, TRUE);
+        pvOldCursor = UserSetCursor(NULL, TRUE);
 
         /* Do the mode switch */
         ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
 
         /* Restore mouse pointer, no hooks called */
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
+        UserSetCursor(pvOldCursor, TRUE);
 
         /* Check for failure */
         if (!ulResult)
