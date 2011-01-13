@@ -20,6 +20,7 @@ using namespace std;
 /* Class includes */
 #include "auto_array_ptr.h"
 #include "CConfiguration.h"
+#include "CDialogSurpass.h"
 #include "CFatalException.h"
 #include "CInvalidParameterException.h"
 #include "CProcess.h"

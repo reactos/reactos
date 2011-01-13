@@ -8,6 +8,7 @@
 	<library>user32</library>
 	<library>wininet</library>
 	<file>CConfiguration.cpp</file>
+	<file>CDialogSurpass.cpp</file>
 	<file>CFatalException.cpp</file>
 	<file>CInvalidParameterException.cpp</file>
 	<file>CJournaledTestList.cpp</file>

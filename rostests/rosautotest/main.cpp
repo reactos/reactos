@@ -48,6 +48,7 @@ wmain(int argc, wchar_t* argv[])
 {
     CWineTest WineTest;
     int ReturnValue = 1;
+    CDialogSurpass s;
 
     try
     {
