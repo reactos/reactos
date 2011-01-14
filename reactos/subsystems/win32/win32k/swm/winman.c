@@ -95,6 +95,7 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     struct region *ClientRegion;
     int client_left = 0, client_top = 0;
     UINT i;
+    ULONG flags = RDW_INVALIDATE | RDW_ERASE;
 
     ClientRegion = create_empty_region();
     copy_region(ClientRegion, Region);
@@ -114,27 +115,33 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     //DPRINT1("rect (%d,%d)-(%d,%d)\n", TmpRect.left, TmpRect.top, TmpRect.right, TmpRect.bottom);
 
     /* Bring every rect in a region to front */
-    for (i=0; i<Region->num_rects; i++)
+    if (Window != &SwmRoot)
     {
+        for (i=0; i<Region->num_rects; i++)
+        {
 #if 0
-        DbgPrint("(%d,%d)-(%d,%d), and redraw coords (%d,%d)-(%d,%d); ", Region->rects[i].left, Region->rects[i].top,
-            Region->rects[i].right, Region->rects[i].bottom,
-            Region->rects[i].left - Window->Window.left, Region->rects[i].top - Window->Window.top,
-            Region->rects[i].right - Window->Window.left, Region->rects[i].bottom - Window->Window.top);
+            DbgPrint("(%d,%d)-(%d,%d), and redraw coords (%d,%d)-(%d,%d); ", Region->rects[i].left, Region->rects[i].top,
+                Region->rects[i].right, Region->rects[i].bottom,
+                Region->rects[i].left - Window->Window.left, Region->rects[i].top - Window->Window.top,
+                Region->rects[i].right - Window->Window.left, Region->rects[i].bottom - Window->Window.top);
 #endif
 
-        req.rect = Region->rects[i];
-        req.window = (UINT_PTR)Window->hwnd;
-        req_update_window_zorder(&req, &reply);
+            req.rect = Region->rects[i];
+            req.window = (UINT_PTR)Window->hwnd;
+            req_update_window_zorder(&req, &reply);
+        }
+        //DbgPrint("\n");
     }
-    //DbgPrint("\n");
 
     /* Convert region to client coordinates */
     client_to_screen( Win, &client_left, &client_top );
     offset_region(ClientRegion, -client_left, -client_top);
 
+    if (Window != &SwmRoot)
+        flags |= RDW_ALLCHILDREN;
+
     /* Redraw window */
-    redraw_window(Win, ClientRegion, 1, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN );
+    redraw_window(Win, ClientRegion, 1, flags | RDW_FRAME);
 
     UserLeave();
 
