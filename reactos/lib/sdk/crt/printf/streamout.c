@@ -115,14 +115,6 @@ format_float(
     exponent = get_exp(fpval);
     sign = fpval < 0 ? -1 : 1;
 
-    /* Shift the decimal point and round */
-    fpval2 = round(sign * fpval * pow(10., precision - exponent));
-    if (fpval2 >= (unsigned __int64)pow(10., precision + 1))
-    {
-        exponent++;
-        fpval2 = round(sign * fpval * pow(10., precision - exponent));
-    }
-
     switch (chr)
     {
         case _T('G'):
@@ -130,6 +122,9 @@ format_float(
         case _T('g'):
             if (precision > 0) precision--;
             if (exponent < -4 || exponent >= precision) goto case_e;
+
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision));
 
             /* Skip trailing zeroes */
             while (precision && (unsigned __int64)fpval2 % 10 == 0)
@@ -143,6 +138,16 @@ format_float(
             digits = digits_u;
         case _T('e'):
         case_e:
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision - exponent));
+
+            /* Compensate for changed exponent through rounding */
+            if (fpval2 >= (unsigned __int64)pow(10., precision + 1))
+            {
+                exponent++;
+                fpval2 = round(sign * fpval * pow(10., precision - exponent));
+            }
+
             val32 = exponent >= 0 ? exponent : -exponent;
 
             // FIXME: handle length of exponent field:
@@ -168,6 +173,8 @@ format_float(
             // FIXME: TODO
 
         case _T('f'):
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision));
             break;
     }
 
