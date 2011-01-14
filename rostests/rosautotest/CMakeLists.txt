@@ -4,7 +4,6 @@ set_cpp()
 
 list(APPEND SOURCE
     CConfiguration.cpp
-    CDialogSurpass.cpp
     CFatalException.cpp
     CInvalidParameterException.cpp
     CJournaledTestList.cpp
