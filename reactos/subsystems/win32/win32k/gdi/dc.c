@@ -169,6 +169,7 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     /* Create an empty combined clipping region */
     pNewDC->CombinedClip = EngCreateClip();
     pNewDC->Clipping = NULL;
+    pNewDC->ClipChildren = FALSE;
 
     /* Set default palette */
     pNewDC->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
@@ -487,6 +488,12 @@ VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility)
             return;
         }
 
+        /* Root window's visibility may be ignored */
+        if ((pDC->pWindow == &SwmRoot) && !pDC->ClipChildren)
+        {
+            //IgnoreVisibility = TRUE;
+        }
+
         /* window visibility X user clipping (if any) X underlying surface */
 
         /* Acquire SWM lock */
@@ -598,6 +605,10 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
         /* Set the clipping object */
         pDC->Clipping = create_region_from_rects(pSafeRects, count);
     }
+    else
+    {
+        pDC->Clipping = create_empty_region();
+    }
 
     DPRINT("RosGdiSetDeviceClipping() for DC %x, bounding rect (%d,%d)-(%d, %d)\n",
         physDev, rcSafeBounds.left, rcSafeBounds.top, rcSafeBounds.right, rcSafeBounds.bottom);
@@ -693,6 +704,10 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren)
         pDC->pWindow = NULL;
         DPRINT("hdc %x, restricting any drawing\n", physDev);
     }
+
+    pDC->ClipChildren = clipChildren;
+
+    RosGdiUpdateClipping(pDC, FALSE);
 
     /* Release the object */
     DC_UnlockDc(pDC);

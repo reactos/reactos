@@ -38,6 +38,7 @@ typedef struct _DC
     struct region *Clipping;
     CLIPOBJ      *CombinedClip;
     PSWM_WINDOW  pWindow;
+    BOOLEAN ClipChildren;
 } DC, *PDC;
 
 #define  DC_LockDc(hDC)  \
