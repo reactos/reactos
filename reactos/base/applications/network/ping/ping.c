@@ -114,7 +114,8 @@ MyLoadString(UINT uID)
 {
     HRSRC hres;
     HGLOBAL hResData;
-    LPWSTR pwsz;
+    WCHAR *pwsz;
+    UINT string_num, i;
 
     hres = FindResourceW(NULL, MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1), RT_STRING);
     if (!hres) return NULL;
@@ -124,6 +125,11 @@ MyLoadString(UINT uID)
 
     pwsz = LockResource(hResData);
     if (!pwsz) return NULL;
+    
+    string_num = uID & 15;
+    for (i = 0; i < string_num; i++)
+        pwsz += *pwsz + 1;
+
     return pwsz + 1;
 }
 
