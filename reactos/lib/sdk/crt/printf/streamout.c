@@ -173,6 +173,7 @@ format_float(
             // FIXME: TODO
 
         case _T('f'):
+        default:
             /* Shift the decimal point and round */
             fpval2 = round(sign * fpval * pow(10., precision));
             break;
