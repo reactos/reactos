@@ -680,8 +680,8 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
         if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
     }
 
-    TRACE("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s\n", hdc, hwnd, top,
-        wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect));
+    TRACE("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s, clipchildren %d\n", hdc, hwnd, top,
+        wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect), escape.clip_children);
 
     ExtEscape( hdc, NTDRV_ESCAPE, sizeof(escape), (LPSTR)&escape, 0, NULL );
 }
@@ -689,7 +689,7 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
 void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
 {
     struct ntdrv_escape_set_drawable escape;
-    RECTL virtual_screen_rect;
+    RECT virtual_screen_rect;
 
     escape.code        = NTDRV_SET_DRAWABLE;
     escape.drawable    = root_window;
@@ -701,6 +701,8 @@ void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
     virtual_screen_rect.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     virtual_screen_rect.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
     virtual_screen_rect.left = 0; virtual_screen_rect.top = 0; 
+
+    escape.drawable_rect = virtual_screen_rect;
 
     SetRect( &escape.dc_rect, 0, 0, virtual_screen_rect.right - virtual_screen_rect.left,
              virtual_screen_rect.bottom - virtual_screen_rect.top );
