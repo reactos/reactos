@@ -274,9 +274,8 @@ void NTDRV_destroy_win_data( HWND hwnd )
     if (!data) return;
 
     /* Remove property and free its data */
-    associate_destroy( data );
-
     destroy_whole_window( data, FALSE );
+    associate_destroy( data );
 }
 
 /***********************************************************************
