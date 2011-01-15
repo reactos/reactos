@@ -889,47 +889,6 @@ SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
     SwmRelease();
 }
 
-HWND
-NTAPI
-SwmGetWindowFromPoint(LONG x, LONG y)
-{
-    PLIST_ENTRY Current;
-    PSWM_WINDOW Window;
-
-    /* Acquire the lock */
-    SwmAcquire();
-
-    /* Traverse the list to find our window */
-    Current = SwmWindows.Flink;
-    while(Current != &SwmWindows)
-    {
-        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
-
-        /* Skip hidden windows */
-        if (Window->Hidden)
-        {
-            /* Advance to the next window */
-            Current = Current->Flink;
-            continue;
-        }
-
-        if (point_in_region(Window->Visible, x, y))
-        {
-            /* Release the lock */
-            SwmRelease();
-
-            return Window->hwnd;
-        }
-        /* Advance to the next window */
-        Current = Current->Flink;
-    }
-
-    /* Release the lock */
-    SwmRelease();
-
-    return 0;
-}
-
 VOID
 NTAPI
 SwmInitialize()

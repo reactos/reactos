@@ -178,7 +178,7 @@ void NTDRV_SendMouseInput( HWND hwnd, DWORD flags, DWORD x, DWORD y,
     }
 
     /* get the window handle from cursor position */
-    hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
+    hwnd = ChildWindowFromPointEx(GetDesktopWindow(), pt, CWP_SKIPINVISIBLE);
 
     if (flags & MOUSEEVENTF_MOVE)
     {

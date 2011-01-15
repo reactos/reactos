@@ -230,9 +230,6 @@ SwmSetForeground(GR_WINDOW_ID Wid);
 VOID NTAPI
 SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
 
-HWND NTAPI
-SwmGetWindowFromPoint(LONG x, LONG y);
-
 VOID NTAPI
 SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags);
 
