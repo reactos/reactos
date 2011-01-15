@@ -869,7 +869,7 @@ NtUserSetCursor(
         pcurNew = UserGetCurIconObject(hCursor);
         if (!pcurNew)
         {
-            EngSetLastError(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
             goto leave;
         }
     }
