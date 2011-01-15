@@ -127,7 +127,7 @@ PEPROCESS
 NTAPI
 PsGetNextProcess(IN PEPROCESS OldProcess)
 {
-    PLIST_ENTRY Entry, ListHead;
+    PLIST_ENTRY Entry;
     PEPROCESS FoundProcess = NULL;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG, "Process: %p\n", OldProcess);
@@ -147,11 +147,10 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
         Entry = PsActiveProcessHead.Flink;
     }
 
-    /* Set the list head and start looping */
-    ListHead = &PsActiveProcessHead;
-    while (ListHead != Entry)
+    /* Loop the process list */
+    while (Entry != &PsActiveProcessHead)
     {
-        /* Get the Thread */
+        /* Get the process */
         FoundProcess = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
 
         /* Reference the process */
@@ -165,7 +164,7 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     /* Release the lock */
     KeReleaseGuardedMutex(&PspActiveProcessMutex);
 
-    /* Reference the Process we had referenced earlier */
+    /* Dereference the Process we had referenced earlier */
     if (OldProcess) ObDereferenceObject(OldProcess);
     return FoundProcess;
 }
@@ -621,7 +620,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                                  SeAuditProcessCreationInfo.
                                                  ImageFileName);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
-        
+
         //
         // We need a PEB
         //
@@ -641,7 +640,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             ASSERTMSG("No support for cloning yet\n", FALSE);
         }
         else
-        {           
+        {
             /* This is the initial system process */
             Flags &= ~PS_LARGE_PAGES;
             Status = MmInitializeProcessAddressSpace(Process,
@@ -713,7 +712,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         RtlZeroMemory(&InitialPeb, sizeof(INITIAL_PEB));
         InitialPeb.Mutant = (HANDLE)-1;
         InitialPeb.ImageUsesLargePages = 0; // FIXME: Not yet supported
-        
+
         //
         // Create it only if we have an image section
         //
@@ -850,7 +849,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Run the Notification Routines */
     PspRunCreateProcessNotifyRoutines(Process, TRUE);
-    
+
     /* If 12 processes have been created, enough of user-mode is ready */
     if (++ProcessCount == 12) Ki386PerfEnd();
 
