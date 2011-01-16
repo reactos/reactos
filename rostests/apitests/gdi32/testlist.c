@@ -15,6 +15,7 @@ extern void func_CreateFont(void);
 extern void func_CreateFontIndirect(void);
 extern void func_CreatePen(void);
 extern void func_CreateRectRgn(void);
+extern void func_DPtoLP(void);
 extern void func_EngAcquireSemaphore(void);
 extern void func_EngCreateSemaphore(void);
 extern void func_EngDeleteSemaphore(void);
@@ -59,6 +60,7 @@ const struct test winetest_testlist[] =
     { "CreateFontIndirect", func_CreateFontIndirect },
     { "CreatePen", func_CreatePen },
     { "CreateRectRgn", func_CreateRectRgn },
+    { "DPtoLP", func_DPtoLP },
     { "EngAcquireSemaphore", func_EngAcquireSemaphore },
     { "EngCreateSemaphore", func_EngCreateSemaphore },
     { "EngDeleteSemaphore", func_EngDeleteSemaphore },

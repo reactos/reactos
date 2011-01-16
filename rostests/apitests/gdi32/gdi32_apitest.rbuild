@@ -19,6 +19,7 @@
 	<file>CreateFontIndirect.c</file>
 	<file>CreatePen.c</file>
 	<file>CreateRectRgn.c</file>
+	<file>DPtoLP.c</file>
 	<file>EngAcquireSemaphore.c</file>
 	<file>EngCreateSemaphore.c</file>
 	<file>EngDeleteSemaphore.c</file>

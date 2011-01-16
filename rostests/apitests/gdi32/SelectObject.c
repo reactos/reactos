@@ -113,6 +113,13 @@ void Test_SelectObject()
 	hOldObj = SelectObject(hDC, hOldObj);
 	RTEST(hOldObj == hNewObj);
 
+	/* Test invalid BITMAP */
+	hNewObj = CreateBitmap(2, 2, 1, 4, &bmBits);
+	ok(hNewObj != NULL, "CreateBitmap failed. Skipping tests.\n");
+	if (hNewObj == NULL) return;
+	hOldObj = SelectObject(hDC, hNewObj);
+	ok(hOldObj == NULL, "should fail\n");
+
 	/* Test CLIOBJ */
 
 	/* Test PATH */
