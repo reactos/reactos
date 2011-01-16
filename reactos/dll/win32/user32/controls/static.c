@@ -863,7 +863,15 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
     else
     {
         BITMAP bm;
-        if (!GetObjectW(info.hbmColor, sizeof(BITMAP), &bm)) return;
+	if (info.fIcon)
+	{
+            GetObjectW(info.hbmColor, sizeof(BITMAP), &bm);
+	}
+	else
+	{
+	    bm.bmWidth = GetSystemMetrics(SM_CXCURSOR);
+	    bm.bmHeight = GetSystemMetrics(SM_CYCURSOR);
+	}
         if (style & SS_CENTERIMAGE)
         {
             iconRect.left = (rc.right - rc.left) / 2 - bm.bmWidth / 2;
