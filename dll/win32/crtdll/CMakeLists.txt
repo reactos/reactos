@@ -1,4 +1,6 @@
 
+spec2def(crtdll.dll crtdll.spec)
+
 add_definitions(
     -DUSE_MSVCRT_PREFIX
     -D_MSVCRT_LIB_
@@ -13,7 +15,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 list(APPEND SOURCE
     dllmain.c
     crtdll.rc
-    crtdll.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def)
 
 if(NOT MSVC)
     set_source_files_properties(crtdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
