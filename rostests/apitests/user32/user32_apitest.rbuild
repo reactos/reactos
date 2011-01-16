@@ -14,6 +14,7 @@
 	<file>ScrollDC.c</file>
 	<file>ScrollWindowEx.c</file>
 	<file>GetSystemMetrics.c</file>
+	<file>GetIconInfo.c</file>
 
 </module>
 </group>

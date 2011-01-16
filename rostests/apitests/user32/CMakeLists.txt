@@ -7,6 +7,7 @@ list(APPEND SOURCE
     ScrollDC.c
     ScrollWindowEx.c
     GetSystemMetrics.c
+    GetIconInfo.c
     testlist.c)
 
 add_executable(user32_apitest ${SOURCE})

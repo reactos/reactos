@@ -10,6 +10,7 @@ extern void func_RealGetWindowClass(void);
 extern void func_ScrollDC(void);
 extern void func_ScrollWindowEx(void);
 extern void func_GetSystemMetrics(void);
+extern void func_GetIconInfo(void);
 
 const struct test winetest_testlist[] =
 {
@@ -18,6 +19,7 @@ const struct test winetest_testlist[] =
     { "ScrollDC", func_ScrollDC },
     { "ScrollWindowEx", func_ScrollWindowEx },
     { "GetSystemMetrics", func_GetSystemMetrics },
+    { "GetIconInfo", func_GetIconInfo },
 
     { 0, 0 }
 };
