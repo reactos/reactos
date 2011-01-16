@@ -845,35 +845,28 @@ static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style )
     DeleteObject( hBrush );
 }
 
-/* Modified for ReactOS */
 static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
 {
     RECT rc, iconRect;
     HBRUSH hbrush;
     HICON hIcon;
-    ICONINFO info;
+    SIZE size;
 
     GetClientRect( hwnd, &rc );
     hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
     hIcon = (HICON)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET );
-    if (!hIcon || (!GetIconInfo(hIcon, &info)))
+    if (!hIcon || !get_icon_size( hIcon, &size ))
     {
         FillRect(hdc, &rc, hbrush);
     }
     else
     {
-        BITMAP bm;
-        GetObjectW(info.hbmMask, sizeof(BITMAP), &bm);
-	if (!info.fIcon)
-	{
-	    bm.bmHeight /= 2;
-	}
         if (style & SS_CENTERIMAGE)
         {
-            iconRect.left = (rc.right - rc.left) / 2 - bm.bmWidth / 2;
-            iconRect.top = (rc.bottom - rc.top) / 2 - bm.bmHeight / 2;
-            iconRect.right = iconRect.left + bm.bmWidth;
-            iconRect.bottom = iconRect.top + bm.bmHeight;
+            iconRect.left = (rc.right - rc.left) / 2 - size.cx / 2;
+            iconRect.top = (rc.bottom - rc.top) / 2 - size.cy / 2;
+            iconRect.right = iconRect.left + size.cx;
+            iconRect.bottom = iconRect.top + size.cy;
         }
         else
             iconRect = rc;
@@ -970,3 +963,4 @@ static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style )
 	    break;
     }
 }
+

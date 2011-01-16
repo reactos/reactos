@@ -1477,8 +1477,9 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
                bmpXor.bmWidth, bmpXor.bmHeight, bmpXor.bmWidthBytes,
                bmpXor.bmPlanes, bmpXor.bmBitsPixel);
 
-        width = bmpXor.bmWidth;
-        height = bmpXor.bmHeight;
+        // the size of the mask bitmap always determines the icon size!
+        width = bmpAnd.bmWidth;
+        height = bmpAnd.bmHeight;
         if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
@@ -1497,7 +1498,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         }
         else 
 		{
-			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+			mask = CreateBitmap( width, height, 1, 1, NULL );
 			if(!mask)
 			{
 				ERR("Unable to create mask bitmap!\n");
@@ -2180,4 +2181,24 @@ User32SetupDefaultCursors(PVOID Arguments,
     }
 
     return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+}
+
+BOOL get_icon_size(HICON hIcon, SIZE *size)
+{
+    ICONINFO info;
+    BITMAP bitmap;
+
+    if (!GetIconInfo(hIcon, &info)) return FALSE;
+    if (!GetObject(info.hbmMask, sizeof(bitmap), &bitmap)) return FALSE;
+
+    size->cx = bitmap.bmWidth;
+    size->cy = bitmap.bmHeight;
+
+    /* Black and white icons store both the XOR and AND bitmap in hbmMask */
+    if (!info.hbmColor)
+    {
+        size->cy /= 2;
+    }
+
+    return TRUE;
 }
