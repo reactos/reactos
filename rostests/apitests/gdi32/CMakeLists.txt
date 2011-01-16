@@ -12,6 +12,7 @@ list(APPEND SOURCE
     CreateFontIndirect.c
     CreatePen.c
     CreateRectRgn.c
+    DPtoLP.c
     EngAcquireSemaphore.c
     EngCreateSemaphore.c
     EngDeleteSemaphore.c
