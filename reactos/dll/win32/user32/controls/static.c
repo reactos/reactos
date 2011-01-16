@@ -863,14 +863,10 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
     else
     {
         BITMAP bm;
-	if (info.fIcon)
+        GetObjectW(info.hbmMask, sizeof(BITMAP), &bm);
+	if (!info.fIcon)
 	{
-            GetObjectW(info.hbmColor, sizeof(BITMAP), &bm);
-	}
-	else
-	{
-	    bm.bmWidth = GetSystemMetrics(SM_CXCURSOR);
-	    bm.bmHeight = GetSystemMetrics(SM_CYCURSOR);
+	    bm.bmHeight /= 2;
 	}
         if (style & SS_CENTERIMAGE)
         {
