@@ -695,7 +695,7 @@ subsystems\ntvdm\ntvdm.exe                          1   optional
 subsystems\win32\win32k\win32k.sys                  1
 
 ; Optional/proprietary files
-;modules\optional\DroidSansFallback.ttf              3  optional
+modules\optional\DroidSansFallback.ttf              3  optional
 modules\optional\NOTICE_for_Droid_Font.txt          4  optional
 modules\optional\netkvm2k.inf                       6  optional
 modules\optional\netkvm2k.cat                       6  optional
