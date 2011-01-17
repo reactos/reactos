@@ -1398,7 +1398,7 @@
 @ cdecl wcstombs(ptr ptr long)
 # @ cdecl wcstombs_s(ptr ptr long wstr long)
 @ cdecl wcstoul(wstr ptr long)
-@ stub wcsxfrm #(ptr wstr long)
+@ cdecl wcsxfrm(ptr wstr long)
 # stub wctob
 @ cdecl wctomb(ptr long)
 # stub wctomb_s
