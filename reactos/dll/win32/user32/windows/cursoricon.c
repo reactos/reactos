@@ -1173,13 +1173,21 @@ HICON WINAPI CreateIcon(
     iinfo.fIcon = TRUE;
     iinfo.xHotspot = nWidth / 2;
     iinfo.yHotspot = nHeight / 2;
-    iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
-    iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
+    if (bPlanes * bBitsPixel > 1)
+    {
+        iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
+    }
+    else
+    {
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight * 2, 1, 1, lpANDbits );
+        iinfo.hbmColor = NULL;
+    }
 
     hIcon = CreateIconIndirect( &iinfo );
 
     DeleteObject( iinfo.hbmMask );
-    DeleteObject( iinfo.hbmColor );
+    if (iinfo.hbmColor) DeleteObject( iinfo.hbmColor );
 
     return hIcon;
 }
@@ -1498,7 +1506,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         }
         else 
 		{
-			mask = CreateBitmap( width, height, 1, 1, NULL );
+			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
 			if(!mask)
 			{
 				ERR("Unable to create mask bitmap!\n");
