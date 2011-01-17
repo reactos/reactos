@@ -28,12 +28,31 @@ typedef struct _HMAPPING
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
+HMAPPING GdiStockMapping[STOCK_LAST + 2];
 
 /* FUNCTIONS **************************************************************/
 
 VOID InitHandleMapping()
 {
     InitializeCriticalSection(&handle_mapping_cs);
+}
+
+VOID InitStockObjectsMapping()
+{
+    HGDIOBJ hKernel, hStockUser;
+
+    hKernel = NtGdiGetStockObject(DEFAULT_BITMAP);
+    hStockUser = GetStockObject( STOCK_LAST+1 );
+
+    TRACE("Adding hUser %x hKernel %x\n", hStockUser, hKernel);
+
+    /* Make sure that both kernel mode and user mode objects are initialized */
+    if(hKernel && hStockUser)
+    {
+        GdiStockMapping[STOCK_LAST+1].hKernel = hKernel;
+        GdiStockMapping[STOCK_LAST+1].hUser = hStockUser;
+        StockObjectsInitialized = TRUE;
+    }
 }
 
 VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
@@ -53,6 +72,11 @@ VOID AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
 static PHMAPPING FindHandleMapping(HGDIOBJ hUser)
 {
     PHMAPPING item;
+    DWORD i;
+
+    /* Check the static stock objects mapping first */
+    for (i=0; i<sizeof(GdiStockMapping)/sizeof(HMAPPING); i++)
+        if (GdiStockMapping[i].hUser == hUser) return &GdiStockMapping[i];
 
     LIST_FOR_EACH_ENTRY( item, &handle_mapping_list, HMAPPING, entry )
     {
@@ -69,23 +93,20 @@ HGDIOBJ MapUserHandle(HGDIOBJ hUser)
 {
     PHMAPPING mapping;
 
+    if (!hUser) return NULL;
+
     /* Map stock objects if not mapped yet */
     if(!StockObjectsInitialized)
-    {
-        HGDIOBJ hKernel, hUser;
+        InitStockObjectsMapping();
 
-        hKernel = NtGdiGetStockObject(DEFAULT_BITMAP);
-        hUser = GetStockObject( STOCK_LAST+1 );
-
-        /* Make sure that both kernel mode and user mode objects are initialized */
-        if(hKernel && hUser)
-        {
-            AddHandleMapping(NtGdiGetStockObject(DEFAULT_BITMAP), GetStockObject( STOCK_LAST+1 ));
-            StockObjectsInitialized = TRUE;
-        }
-    }
+    EnterCriticalSection(&handle_mapping_cs);
 
     mapping = FindHandleMapping(hUser);
+
+    if (!mapping)
+        ERR("Couldn't find a mapping for handle %x\n", hUser);
+
+    LeaveCriticalSection(&handle_mapping_cs);
 
     return mapping ? mapping->hKernel : NULL;
 }
@@ -94,11 +115,19 @@ VOID RemoveHandleMapping(HGDIOBJ hUser)
 {
     PHMAPPING mapping;
 
-    mapping = FindHandleMapping(hUser);
-    if(mapping == NULL)
-        return;
+    if (!hUser) return;
+
+    TRACE("Remove handle mapping %x\n", hUser);
 
     EnterCriticalSection(&handle_mapping_cs);
+
+    mapping = FindHandleMapping(hUser);
+    if(mapping == NULL)
+    {
+        LeaveCriticalSection(&handle_mapping_cs);
+        return;
+    }
+
     list_remove(&mapping->entry);
     LeaveCriticalSection(&handle_mapping_cs);
 }
@@ -168,7 +197,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
             else
             {
                 Result = FALSE; // Can not be zero.
-                ERR("Objct doesn't have user data handle 0x%x!\n", hGdiObj);
+                ERR("Object doesn't have user data handle 0x%x!\n", hGdiObj);
             }
             if (Result) *UserData = Entry->UserData;
             return Result;
