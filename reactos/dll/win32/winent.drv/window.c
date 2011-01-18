@@ -140,7 +140,6 @@ BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
         //if (win && win != root_window) NTDRV_init_desktop( win, width, height );
 
         // create a desktop window
-        //GrSelectEvents(GR_ROOT_WINDOW_ID, GR_EVENT_MASK_EXPOSURE);
     }
 
     return TRUE;
@@ -230,6 +229,7 @@ struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd )
     data->whole_window = data->client_window = root_window;
     SetPropA( data->hwnd, whole_window_prop, (HANDLE)root_window );
     SetPropA( data->hwnd, client_window_prop, (HANDLE)root_window );
+    //SetPropA( data->hwnd, "__wine_x11_managed", (HANDLE)1 );
 
     return data;
 }
@@ -559,8 +559,6 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
     data->whole_window = SwmNewWindow( root_window,
                                        &data->whole_rect, data->hwnd, ex_style );
 
-    //GrSelectEvents(data->whole_window, GR_EVENT_MASK_EXPOSURE);
-
     if (!data->whole_window) goto done;
 
     if (!create_client_window( data ))
@@ -574,6 +572,7 @@ GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
     //set_wm_hints( display, data );
 
     SetPropA( data->hwnd, whole_window_prop, (HANDLE)data->whole_window );
+    //SetPropA( data->hwnd, "__wine_x11_managed", (HANDLE)1 );
 
     /* set the window text */
     //if (!InternalGetWindowText( data->hwnd, text, sizeof(text)/sizeof(WCHAR) )) text[0] = 0;
