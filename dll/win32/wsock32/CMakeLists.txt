@@ -1,11 +1,8 @@
 
 set_unicode()
 
-add_library(wsock32 SHARED stubs.c wsock32.rc wsock32.def)
-
-if(NOT MSVC)
-    set_source_files_properties(wsock32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+spec2def(wsock32.dll wsock32.spec)
+add_library(wsock32 SHARED stubs.c wsock32.rc wsock32.def ${CMAKE_CURRENT_BINARY_DIR}/wsock32.def)
 
 set_module_type(wsock32 win32dll)
 
