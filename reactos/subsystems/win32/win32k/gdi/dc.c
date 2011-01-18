@@ -668,29 +668,7 @@ COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color )
     return color;
 }
 
-VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
-{
-    PDC pDC;
-
-    /* Get a pointer to the DC */
-    pDC = DC_LockDc(physDev);
-
-    _SEH2_TRY
-    {
-        /* Set viewport rectangle */
-        if (rcVport)
-            pDC->rcVport = *rcVport;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-    }
-    _SEH2_END;
-
-    /* Release the object */
-    DC_UnlockDc(pDC);
-}
-
-VOID APIENTRY RosGdiGetDC(HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren)
+VOID APIENTRY RosGdiSetWindow(HDC physDev, SWM_WINDOW_ID Wid, BOOL clipChildren)
 {
     PDC pDC;
 
@@ -704,6 +682,9 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren)
     if (Wid)
     {
         pDC->pWindow = SwmGetWindowById(Wid);
+        RECTL_vSetRect(&pDC->rcVport,
+                      pDC->pWindow->Window.left, pDC->pWindow->Window.top,
+                      pDC->pWindow->Window.right, pDC->pWindow->Window.bottom);
         DPRINT("hdc %x set window hwnd %x\n", physDev, pDC->pWindow->hwnd);
     }
     else
@@ -723,29 +704,6 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren)
     /* Release SWM lock */
     SwmRelease();
 }
-
-//FIXME: to be deleted!
-VOID APIENTRY RosGdiReleaseDC(HDC physDev)
-{
-    PDC pDC;
-
-    /* Get a pointer to the DC */
-    pDC = DC_LockDc(physDev);
-
-    /* Check if it was a dummy window */
-    if (!pDC->pWindow->hwnd)
-    {
-        /* Free it */
-        ExFreePool(pDC->pWindow);
-    }
-
-    /* No window clipping is to be performed */
-    pDC->pWindow = NULL;
-
-    /* Release the object */
-    DC_UnlockDc(pDC);
-}
-
 
 static
 HPEN

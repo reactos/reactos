@@ -32,7 +32,7 @@ typedef struct _DC
     EBRUSHOBJ   eboLine;
 
     /* Origins and extents */
-    RECT         rcVport;
+    RECTL        rcVport;
 
     /* Combined clipping region */
     struct region *Clipping;

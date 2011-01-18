@@ -100,9 +100,7 @@ BOOL APIENTRY RosGdiSetPixelFormat(HDC physDev,
                                    int iPixelFormat,
                                    const PIXELFORMATDESCRIPTOR *ppfd);
 COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color );
-VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport );
-VOID APIENTRY RosGdiGetDC( HDC physDev, GR_WINDOW_ID Wid, BOOL clipChildren );
-VOID APIENTRY RosGdiReleaseDC( HDC physDev );
+VOID APIENTRY RosGdiSetWindow( HDC physDev, SWM_WINDOW_ID Wid, BOOL clipChildren );
 
 /* enum.c */
 int APIENTRY RosGdiChoosePixelFormat(HDC physDev,

@@ -15,49 +15,11 @@
 
 #define SWM_ROOT_WINDOW_ID 1
 
-#define SWM_EVENT_TYPE_NONE     0
-#define SWM_EVENT_TYPE_EXPOSURE 1
-
-/* Event masks */
-#define SWM_EVENTMASK(n)    (((ULONG) 1) << (n))
-
-#define SWM_EVENT_MASK_NONE         SWM_EVENTMASK(SWM_EVENT_TYPE_NONE)
-#define SWM_EVENT_MASK_EXPOSURE     SWM_EVENTMASK(SWM_EVENT_TYPE_EXPOSURE)
-
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
 
-typedef ULONG_PTR GR_WINDOW_ID;
-typedef ULONG SWM_EVENT_TYPE;
-
-typedef struct
-{
-  SWM_EVENT_TYPE type;		/**< event type */
-  GR_WINDOW_ID wid;		/**< window id */
-  GR_WINDOW_ID otherid;		/**< new/old focus id for focus events*/
-  						/**< for mouse enter only the following are valid:*/
-  LONG rootx;		/**< root window x coordinate */
-  LONG rooty;		/**< root window y coordinate */
-  LONG x;			/**< window x coordinate of mouse */
-  LONG y;			/**< window y coordinate of mouse */
-} SWM_EVENT_GENERAL;
-
-typedef struct {
-  SWM_EVENT_TYPE type;		/**< event type */
-  GR_WINDOW_ID wid;		/**< window id */
-  LONG x;			/**< window x coordinate of exposure */
-  LONG y;			/**< window y coordinate of exposure */
-  LONG width;		/**< width of exposure */
-  LONG height;		/**< height of exposure */
-} SWM_EVENT_EXPOSURE;
-
-typedef union
-{
-  SWM_EVENT_TYPE type;			/**< event type */
-  SWM_EVENT_GENERAL general;		/**< general window events */
-  SWM_EVENT_EXPOSURE exposure;		/**< exposure events */
-} SWM_EVENT;
+typedef ULONG_PTR SWM_WINDOW_ID;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -215,28 +177,25 @@ RosUserDeRegisterShellHookWindow(HWND hWnd);
 BOOL NTAPI
 RosUserBuildShellHookHwndList(HWND *list, UINT *cbSize);
 
-GR_WINDOW_ID NTAPI
-SwmNewWindow(GR_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style);
+SWM_WINDOW_ID NTAPI
+SwmNewWindow(SWM_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style);
 
 VOID NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);
 
 VOID NTAPI
-SwmDestroyWindow(GR_WINDOW_ID Wid);
+SwmDestroyWindow(SWM_WINDOW_ID Wid);
 
 VOID NTAPI
-SwmSetForeground(GR_WINDOW_ID Wid);
+SwmSetForeground(SWM_WINDOW_ID Wid);
 
 VOID NTAPI
-SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
+SwmPosChanged(SWM_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags);
+
+HWND NTAPI
+SwmGetWindowFromPoint(LONG x, LONG y);
 
 VOID NTAPI
-SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags);
-
-int NTAPI
-SwmPeekEvent(SWM_EVENT *ep);
-
-VOID NTAPI
-SwmGetNextEvent(SWM_EVENT *ep);
+SwmShowWindow(SWM_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags);
 
 #endif /* __WIN32K_NTUSER_H */

@@ -117,9 +117,8 @@ INT CDECL RosDrv_ExtEscape( PDC_ATTR pdcattr, INT escape, INT in_count, LPCVOID 
                     const struct ntdrv_escape_set_drawable *data = in_data;
 
                     pdcattr->dc_rect = data->dc_rect;
-                    RosGdiSetDcRects(pdcattr->hKernelDC, NULL, (RECT*)&data->drawable_rect);
 
-                    RosGdiGetDC(pdcattr->hKernelDC, data->drawable, data->clip_children);
+                    RosGdiSetWindow(pdcattr->hKernelDC, data->drawable, data->clip_children);
 
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
                            pdcattr->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );

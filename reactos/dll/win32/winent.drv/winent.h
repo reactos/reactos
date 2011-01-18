@@ -60,7 +60,7 @@ enum ntdrv_escape_codes
 struct ntdrv_escape_set_drawable
 {
     enum ntdrv_escape_codes  code;         /* escape code (NTDRV_SET_DRAWABLE) */
-    GR_WINDOW_ID             drawable;
+    SWM_WINDOW_ID             drawable;
     BOOL                     clip_children;/* ClipByChildren or IncludeInferiors */
     RECT                     dc_rect;      /* DC rectangle relative to drawable */
     RECT                     drawable_rect;/* Drawable rectangle relative to screen */
@@ -74,8 +74,8 @@ struct ntdrv_win_data
 {
     struct list  entry;          /* entry in the linked list of win data */
     HWND         hwnd;           /* hwnd that this private data belongs to */
-    GR_WINDOW_ID whole_window;   /* SWM window for the complete window */
-    GR_WINDOW_ID client_window;  /* SWM window for the client area */
+    SWM_WINDOW_ID whole_window;   /* SWM window for the complete window */
+    SWM_WINDOW_ID client_window;  /* SWM window for the client area */
     RECT        window_rect;    /* USER window rectangle relative to parent */
     RECT        whole_rect;     /* SWM window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
@@ -87,7 +87,7 @@ struct ntdrv_win_data
 
 //typedef void (*ntdrv_event_handler)( HWND hwnd, GR_EVENT *event );
 
-extern GR_WINDOW_ID root_window;
+extern SWM_WINDOW_ID root_window;
 
 static inline void mirror_rect( const RECT *window_rect, RECT *rect )
 {
@@ -154,4 +154,4 @@ BOOL is_window_rect_mapped( const RECT *rect );
 void sync_window_position( struct ntdrv_win_data *data,
                            UINT swp_flags, const RECT *old_window_rect,
                            const RECT *old_whole_rect, const RECT *old_client_rect );
-GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data );
+SWM_WINDOW_ID create_whole_window( struct ntdrv_win_data *data );

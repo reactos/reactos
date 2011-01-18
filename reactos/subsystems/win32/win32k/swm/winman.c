@@ -77,7 +77,7 @@ HDC SwmGetScreenDC()
 
 PSWM_WINDOW
 NTAPI
-SwmGetWindowById(GR_WINDOW_ID Wid)
+SwmGetWindowById(SWM_WINDOW_ID Wid)
 {
     /* Right now, Wid is a pointer to SWM_WINDOW structure,
        except for SWM_ROOT_WINDOW_ID which maps to a root window */
@@ -334,9 +334,9 @@ SwmClipAllWindows()
 }
 
 
-GR_WINDOW_ID
+SWM_WINDOW_ID
 NTAPI
-SwmNewWindow(GR_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style)
+SwmNewWindow(SWM_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style)
 {
     PSWM_WINDOW Win, FirstNonTop;
 
@@ -387,7 +387,7 @@ SwmNewWindow(GR_WINDOW_ID parent, RECT *WindowRect, HWND hWnd, DWORD ex_style)
     /* Release the lock */
     SwmRelease();
 
-    return (GR_WINDOW_ID)Win;
+    return (SWM_WINDOW_ID)Win;
 }
 
 VOID
@@ -470,7 +470,7 @@ SwmFindByHwnd(HWND hWnd)
 
 VOID
 NTAPI
-SwmDestroyWindow(GR_WINDOW_ID Wid)
+SwmDestroyWindow(SWM_WINDOW_ID Wid)
 {
     PSWM_WINDOW Win;
 
@@ -575,7 +575,7 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
 
 VOID
 NTAPI
-SwmSetForeground(GR_WINDOW_ID Wid)
+SwmSetForeground(SWM_WINDOW_ID Wid)
 {
     PSWM_WINDOW SwmWin;
     extern struct window *shell_window;
@@ -721,7 +721,7 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
 
 VOID
 NTAPI
-SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
+SwmPosChanged(SWM_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
 {
     PSWM_WINDOW SwmWin, SwmPrev;
     LONG Width, Height, OldWidth, OldHeight;
@@ -826,7 +826,7 @@ SwmPosChanged(GR_WINDOW_ID Wid, const RECT *WindowRect, const RECT *OldRect, HWN
 
 VOID
 NTAPI
-SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
+SwmShowWindow(SWM_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
 {
     PSWM_WINDOW Win;
     struct region *OldRegion;
@@ -887,6 +887,47 @@ SwmShowWindow(GR_WINDOW_ID Wid, BOOLEAN Show, UINT SwpFlags)
 
     /* Release the lock */
     SwmRelease();
+}
+
+HWND
+NTAPI
+SwmGetWindowFromPoint(LONG x, LONG y)
+{
+    PLIST_ENTRY Current;
+    PSWM_WINDOW Window;
+
+    /* Acquire the lock */
+    SwmAcquire();
+
+    /* Traverse the list to find our window */
+    Current = SwmWindows.Flink;
+    while(Current != &SwmWindows)
+    {
+        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        /* Skip hidden windows */
+        if (Window->Hidden)
+        {
+            /* Advance to the next window */
+            Current = Current->Flink;
+            continue;
+        }
+
+        if (point_in_region(Window->Visible, x, y))
+        {
+            /* Release the lock */
+            SwmRelease();
+
+            return Window->hwnd;
+        }
+        /* Advance to the next window */
+        Current = Current->Flink;
+    }
+
+    /* Release the lock */
+    SwmRelease();
+
+    return 0;
 }
 
 VOID

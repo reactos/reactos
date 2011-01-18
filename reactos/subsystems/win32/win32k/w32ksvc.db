@@ -32,14 +32,13 @@ RosGdiSetDeviceGammaRamp           2
 RosGdiSetPixel                     4
 RosGdiSetPixelFormat               3
 RosGdiSetTextColor                 2
-RosGdiSetDcRects                   3
 RosGdiChoosePixelFormat            2
 RosGdiDescribePixelFormat          4
 RosGdiEnumDeviceFonts              4
 RosGdiGetCharWidth                 4
 RosGdiGetDeviceCaps                2
 RosGdiGetDeviceGammaRamp           2
-RosGdiGetDC                        3
+RosGdiSetWindow                    3
 RosGdiGetICMProfile                3
 RosGdiGetNearestColor              2
 RosGdiGetPixelFormat               1
@@ -59,7 +58,6 @@ RosGdiPolyline                     3
 RosGdiRealizeDefaultPalette        1
 RosGdiRealizePalette               3
 RosGdiRectangle                    2
-RosGdiReleaseDC                    1
 RosGdiRoundRect                    7
 RosGdiSwapBuffers                  1
 RosGdiUnrealizePalette             1
@@ -91,5 +89,6 @@ SwmAddDesktopWindow                3
 SwmDestroyWindow                   1
 SwmSetForeground                   1
 SwmPosChanged                      5
+SwmGetWindowFromPoint              2
 SwmShowWindow                      3
 NtUserInitialize                   3

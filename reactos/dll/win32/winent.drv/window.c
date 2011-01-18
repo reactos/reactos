@@ -27,7 +27,7 @@ static CRITICAL_SECTION wnd_data_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 static const char whole_window_prop[] = "__arwin_nt_whole_window";
 static const char client_window_prop[]= "__arwin_nt_client_window";
 
-GR_WINDOW_ID root_window = SWM_ROOT_WINDOW_ID;
+SWM_WINDOW_ID root_window = SWM_ROOT_WINDOW_ID;
 
 /* FUNCTIONS **************************************************************/
 
@@ -134,7 +134,7 @@ BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
     }
     else
     {
-        //GR_WINDOW_ID win = (GR_WINDOW_ID)GetPropA( hwnd, whole_window_prop );
+        //SWM_WINDOW_ID win = (SWM_WINDOW_ID)GetPropA( hwnd, whole_window_prop );
         //ERR("win %p, w %d h %d, hwnd %x\n", win, width, height, hwnd);
 
         //if (win && win != root_window) NTDRV_init_desktop( win, width, height );
@@ -486,10 +486,10 @@ BOOL is_window_rect_mapped( const RECT *rect )
 /***********************************************************************
  *              create_client_window
  */
-static GR_WINDOW_ID create_client_window( struct ntdrv_win_data *data )
+static SWM_WINDOW_ID create_client_window( struct ntdrv_win_data *data )
 {
     int cx, cy;
-    GR_WINDOW_ID client;
+    SWM_WINDOW_ID client;
     RECT winRect;
 
     if ((cx = data->client_rect.right - data->client_rect.left) <= 0) cx = 1;
@@ -525,7 +525,7 @@ static GR_WINDOW_ID create_client_window( struct ntdrv_win_data *data )
  *
  * Create the whole X window for a given window
  */
-GR_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
+SWM_WINDOW_ID create_whole_window( struct ntdrv_win_data *data )
 {
     int cx, cy;
     //int mask;
@@ -596,14 +596,14 @@ done:
  *
  * Return the X window associated with the full area of a window
  */
-GR_WINDOW_ID NTDRV_get_whole_window( HWND hwnd )
+SWM_WINDOW_ID NTDRV_get_whole_window( HWND hwnd )
 {
     struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
 
     if (!data)
     {
         if (hwnd == GetDesktopWindow()) return root_window;
-        return (GR_WINDOW_ID)GetPropA( hwnd, whole_window_prop );
+        return (SWM_WINDOW_ID)GetPropA( hwnd, whole_window_prop );
     }
     return data->whole_window;
 }
@@ -613,14 +613,14 @@ GR_WINDOW_ID NTDRV_get_whole_window( HWND hwnd )
  *
  * Return the SWM window associated with the client area of a window
  */
-static GR_WINDOW_ID NTDRV_get_client_window( HWND hwnd )
+static SWM_WINDOW_ID NTDRV_get_client_window( HWND hwnd )
 {
     struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
 
     if (!data)
     {
         if (hwnd == GetDesktopWindow()) return root_window;
-        return (GR_WINDOW_ID)GetPropA( hwnd, client_window_prop );
+        return (SWM_WINDOW_ID)GetPropA( hwnd, client_window_prop );
     }
     return data->client_window;
 }
