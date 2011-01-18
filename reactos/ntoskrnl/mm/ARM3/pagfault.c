@@ -683,7 +683,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Is the PDE valid?
         //
-        if (!PointerPde->u.Hard.Valid == 0)
+        if (PointerPde->u.Hard.Valid == 0)
         {
             //
             // Debug spew (eww!)
