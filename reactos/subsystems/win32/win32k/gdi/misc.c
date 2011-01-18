@@ -24,10 +24,10 @@ BOOL APIENTRY RosGdiEllipse( HDC physDev, INT left, INT top, INT right, INT bott
     pDC = DC_LockDc(physDev);
 
     /* Add DC origin */
-    left += pDC->rcVport.left;
-    top += pDC->rcVport.top;
-    right += pDC->rcVport.left;
-    bottom += pDC->rcVport.top;
+    left += pDC->ptlDCOrig.x;
+    top += pDC->ptlDCOrig.y;
+    right += pDC->ptlDCOrig.x;
+    bottom += pDC->ptlDCOrig.y;
 
     GreEllipse(pDC, left, top, right, bottom);
 
@@ -60,8 +60,8 @@ BOOL APIENTRY RosGdiExtFloodFill( HDC hDC, INT XStart, INT YStart, COLORREF Colo
     }
 
     /* Add DC origin */
-    Pt.x = XStart + dc->rcVport.left;
-    Pt.y = YStart + dc->rcVport.top;
+    Pt.x = XStart + dc->ptlDCOrig.x;
+    Pt.y = YStart + dc->ptlDCOrig.y;
 
     /* Call GRE routine */
     Ret = GreFloodFill(dc, &Pt, Color, FillType);
@@ -107,10 +107,10 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pt[1].x = x2; pt[1].y = y2;
 
     /* Add DC origin */
-    pt[0].x += pDC->rcVport.left;
-    pt[0].y += pDC->rcVport.top;
-    pt[1].x += pDC->rcVport.left;
-    pt[1].y += pDC->rcVport.top;
+    pt[0].x += pDC->ptlDCOrig.x;
+    pt[0].y += pDC->ptlDCOrig.y;
+    pt[1].x += pDC->ptlDCOrig.x;
+    pt[1].y += pDC->ptlDCOrig.y;
 
     GreLineTo(&pDC->dclevel.pSurface->SurfObj,
               pDC->CombinedClip,
@@ -135,14 +135,14 @@ BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
     pDC = DC_LockDc(physDev);
 
     /* Add DC origin */
-    left += pDC->rcVport.left;
-    top += pDC->rcVport.top;
-    right += pDC->rcVport.left;
-    bottom += pDC->rcVport.top;
-    xstart += pDC->rcVport.left;
-    ystart += pDC->rcVport.top;
-    xend += pDC->rcVport.left;
-    yend += pDC->rcVport.top;
+    left += pDC->ptlDCOrig.x;
+    top += pDC->ptlDCOrig.y;
+    right += pDC->ptlDCOrig.x;
+    bottom += pDC->ptlDCOrig.y;
+    xstart += pDC->ptlDCOrig.x;
+    ystart += pDC->ptlDCOrig.y;
+    xend += pDC->ptlDCOrig.x;
+    yend += pDC->ptlDCOrig.y;
 
     GrepArc(pDC, left, top, right, bottom, xstart, ystart, xend, yend, arc);
 
@@ -207,8 +207,8 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     }
 
     /* Calculate bounding rect and offset points data */
-    pPoints[0].x += pDC->rcVport.left;
-    pPoints[0].y += pDC->rcVport.top;
+    pPoints[0].x += pDC->ptlDCOrig.x;
+    pPoints[0].y += pDC->ptlDCOrig.y;
 
     rcBound.left   = pPoints[0].x;
     rcBound.right  = pPoints[0].x;
@@ -217,8 +217,8 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
 
     for (i=1; i<count; i++)
     {
-        pPoints[i].x += pDC->rcVport.left;
-        pPoints[i].y += pDC->rcVport.top;
+        pPoints[i].x += pDC->ptlDCOrig.x;
+        pPoints[i].y += pDC->ptlDCOrig.y;
 
         rcBound.left   = min(rcBound.left, pPoints[i].x);
         rcBound.right  = max(rcBound.right, pPoints[i].x);

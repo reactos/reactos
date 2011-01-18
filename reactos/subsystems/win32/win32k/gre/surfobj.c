@@ -825,8 +825,8 @@ GreGetPixel(
     SURFOBJ *pso;
 
     /* Offset coordinate by DC origin */
-    x += pDC->rcVport.left;
-    y += pDC->rcVport.top;
+    x += pDC->ptlDCOrig.x;
+    y += pDC->ptlDCOrig.y;
 
     /* If point is outside the combined clipping region - return error */
     if (!RECTL_bPointInRect(&pDC->CombinedClip->rclBounds, x, y))

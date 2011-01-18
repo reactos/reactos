@@ -627,10 +627,10 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
     if (SwmWin->Entry.Blink != &SwmWindows)
     {
         /* Create a whole screen region */
-        rcScreen.left = 0;
-        rcScreen.top = 0;
-        rcScreen.right = pDC->rcVport.right;
-        rcScreen.bottom = pDC->rcVport.bottom;
+        rcScreen.left = SwmRoot.Window.left;
+        rcScreen.top = SwmRoot.Window.top;
+        rcScreen.right = SwmRoot.Window.right;
+        rcScreen.bottom = SwmRoot.Window.bottom;
 
         /* Free user clipping, if any */
         if (pDC->Clipping) free_region(pDC->Clipping);

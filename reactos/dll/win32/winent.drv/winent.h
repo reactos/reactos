@@ -60,7 +60,7 @@ enum ntdrv_escape_codes
 struct ntdrv_escape_set_drawable
 {
     enum ntdrv_escape_codes  code;         /* escape code (NTDRV_SET_DRAWABLE) */
-    SWM_WINDOW_ID             drawable;
+    SWM_WINDOW_ID            drawable;
     BOOL                     clip_children;/* ClipByChildren or IncludeInferiors */
     RECT                     dc_rect;      /* DC rectangle relative to drawable */
     RECT                     drawable_rect;/* Drawable rectangle relative to screen */

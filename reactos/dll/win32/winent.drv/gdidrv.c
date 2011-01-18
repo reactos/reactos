@@ -104,6 +104,8 @@ BOOL CDECL RosDrv_DeleteDC( PDC_ATTR pdcattr )
 INT CDECL RosDrv_ExtEscape( PDC_ATTR pdcattr, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
+    POINTL ptOrigin;
+
     switch(escape)
     {
     case NTDRV_ESCAPE:
@@ -117,8 +119,10 @@ INT CDECL RosDrv_ExtEscape( PDC_ATTR pdcattr, INT escape, INT in_count, LPCVOID 
                     const struct ntdrv_escape_set_drawable *data = in_data;
 
                     pdcattr->dc_rect = data->dc_rect;
+                    ptOrigin.x = data->drawable_rect.left;
+                    ptOrigin.y = data->drawable_rect.top;
 
-                    RosGdiSetWindow(pdcattr->hKernelDC, data->drawable, data->clip_children);
+                    RosGdiSetWindow(pdcattr->hKernelDC, data->drawable, data->clip_children, ptOrigin);
 
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
                            pdcattr->hdc, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );

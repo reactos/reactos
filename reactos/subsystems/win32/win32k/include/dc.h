@@ -31,8 +31,7 @@ typedef struct _DC
     EBRUSHOBJ   eboFill;
     EBRUSHOBJ   eboLine;
 
-    /* Origins and extents */
-    RECTL        rcVport;
+    POINTL      ptlDCOrig;
 
     /* Combined clipping region */
     struct region *Clipping;

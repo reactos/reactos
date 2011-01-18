@@ -32,10 +32,10 @@ GreRectangle(PDC pDC,
     MIX Mix;
     POINTL BrushOrigin;
 
-    DestRect.left = LeftRect + pDC->rcVport.left;
-    DestRect.right = RightRect + pDC->rcVport.left;
-    DestRect.top = TopRect + pDC->rcVport.top;
-    DestRect.bottom = BottomRect + pDC->rcVport.top;
+    DestRect.left = LeftRect + pDC->ptlDCOrig.x;
+    DestRect.right = RightRect + pDC->ptlDCOrig.x;
+    DestRect.top = TopRect + pDC->ptlDCOrig.y;
+    DestRect.bottom = BottomRect + pDC->ptlDCOrig.y;
 
     BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x;
     BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y;

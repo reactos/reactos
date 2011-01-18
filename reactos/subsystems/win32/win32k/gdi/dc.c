@@ -150,9 +150,8 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         DPRINT("Creating a memory DC %x\n", hNewDC);
         pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
 
-        /* Set DC rectangles */
-        pNewDC->rcVport.left = 0; pNewDC->rcVport.top = 0;
-        pNewDC->rcVport.right = 1; pNewDC->rcVport.bottom = 1;
+        /* Set DC origin */
+        pNewDC->ptlDCOrig.x = 0; pNewDC->ptlDCOrig.y = 0;
 
         pNewDC->pWindow = NULL;
     }
@@ -161,11 +160,9 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
         DPRINT("Creating a display DC %x\n", hNewDC);
         pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(PrimarySurface.pSurface);
 
-        /* Set DC rectangles */
-        pNewDC->rcVport.left = 0;
-        pNewDC->rcVport.top = 0;
-        pNewDC->rcVport.right = PrimarySurface.gdiinfo.ulHorzRes;
-        pNewDC->rcVport.bottom = PrimarySurface.gdiinfo.ulVertRes;
+        /* Set DC origin */
+        pNewDC->ptlDCOrig.x = 0;
+        pNewDC->ptlDCOrig.y = 0;
 
         pNewDC->pWindow = &SwmRoot;
     }
@@ -237,11 +234,9 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
     /* Select it */
     pDC->dclevel.pSurface = pSurface;
 
-    /* Set DC rectangles */
-    pDC->rcVport.left = 0;
-    pDC->rcVport.top = 0;
-    pDC->rcVport.right = pSurface->SurfObj.sizlBitmap.cx;
-    pDC->rcVport.bottom = pSurface->SurfObj.sizlBitmap.cy;
+    /* Set DC origin */
+    pDC->ptlDCOrig.x = 0;
+    pDC->ptlDCOrig.y = 0;
 
     /* Update clipping to reflect changes in the surface */
     RosGdiUpdateClipping(pDC, FALSE);
@@ -593,14 +588,14 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     for (i=0; i<count; i++)
     {
         RECTL_vOffsetRect(&pSafeRects[i],
-                          pDC->rcVport.left,
-                          pDC->rcVport.top);
+                          pDC->ptlDCOrig.x,
+                          pDC->ptlDCOrig.y);
     }
 
     /* Offset bounding rect */
     RECTL_vOffsetRect(&rcSafeBounds,
-                      pDC->rcVport.left,
-                      pDC->rcVport.top);
+                      pDC->ptlDCOrig.x,
+                      pDC->ptlDCOrig.y);
 
     /* Delete old clipping region */
     if (pDC->Clipping)
@@ -668,7 +663,7 @@ COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color )
     return color;
 }
 
-VOID APIENTRY RosGdiSetWindow(HDC physDev, SWM_WINDOW_ID Wid, BOOL clipChildren)
+VOID APIENTRY RosGdiSetWindow(HDC physDev, SWM_WINDOW_ID Wid, BOOL clipChildren, POINTL ptOrigin)
 {
     PDC pDC;
 
@@ -682,9 +677,10 @@ VOID APIENTRY RosGdiSetWindow(HDC physDev, SWM_WINDOW_ID Wid, BOOL clipChildren)
     if (Wid)
     {
         pDC->pWindow = SwmGetWindowById(Wid);
-        RECTL_vSetRect(&pDC->rcVport,
-                      pDC->pWindow->Window.left, pDC->pWindow->Window.top,
-                      pDC->pWindow->Window.right, pDC->pWindow->Window.bottom);
+        //PDC->ptlDCOrig.x = pDC->pWindow->Window.left;
+        //PDC->ptlDCOrig.y = pDC->pWindow->Window.top
+        pDC->ptlDCOrig = ptOrigin;
+
         DPRINT("hdc %x set window hwnd %x\n", physDev, pDC->pWindow->hwnd);
     }
     else
