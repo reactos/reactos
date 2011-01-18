@@ -53,6 +53,10 @@ DC_Cleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pDC->eboFill);
     EBRUSHOBJ_vCleanup(&pDC->eboLine);
 
+    /* Delete clipping regions */
+    if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
+    if (pDC->Clipping) free_region(pDC->Clipping);
+
     return TRUE;
 }
 
@@ -167,7 +171,7 @@ BOOL APIENTRY RosGdiCreateDC( HDC *pdev, LPCWSTR driver, LPCWSTR device,
     }
 
     /* Create an empty combined clipping region */
-    pNewDC->CombinedClip = EngCreateClip();
+    pNewDC->CombinedClip = NULL;
     pNewDC->Clipping = NULL;
     pNewDC->ClipChildren = FALSE;
 
@@ -238,6 +242,9 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
     pDC->rcVport.top = 0;
     pDC->rcVport.right = pSurface->SurfObj.sizlBitmap.cx;
     pDC->rcVport.bottom = pSurface->SurfObj.sizlBitmap.cy;
+
+    /* Update clipping to reflect changes in the surface */
+    RosGdiUpdateClipping(pDC, FALSE);
 
     /* Release the DC object */
     DC_UnlockDc(pDC);
@@ -462,6 +469,7 @@ VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility)
 {
     struct region *window, *surface;
     rectangle_t surfrect = {0,0,0,0};
+    RECTL EmptyRect = {0,0,0,0};
 
     surface = create_empty_region();
     surfrect.right = pDC->dclevel.pSurface->SurfObj.sizlBitmap.cx;
@@ -484,14 +492,14 @@ VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility)
         {
             /* Drawing is forbidden */
             if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
-            pDC->CombinedClip = EngCreateClip();
+            pDC->CombinedClip = IntEngCreateClipRegion(1, &EmptyRect, &EmptyRect);
             return;
         }
 
         /* Root window's visibility may be ignored */
         if ((pDC->pWindow == &SwmRoot) && !pDC->ClipChildren)
         {
-            //IgnoreVisibility = TRUE;
+            IgnoreVisibility = TRUE;
         }
 
         /* window visibility X user clipping (if any) X underlying surface */
@@ -525,7 +533,7 @@ VOID APIENTRY RosGdiUpdateClipping(PDC pDC, BOOLEAN IgnoreVisibility)
 
             /* Drawing is forbidden */
             if (pDC->CombinedClip) EngDeleteClip(pDC->CombinedClip);
-            pDC->CombinedClip = EngCreateClip();
+            pDC->CombinedClip = IntEngCreateClipRegion(1, &EmptyRect, &EmptyRect);
         }
     }
 
