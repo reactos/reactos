@@ -38,7 +38,7 @@ RosGdiEnumDeviceFonts              4
 RosGdiGetCharWidth                 4
 RosGdiGetDeviceCaps                2
 RosGdiGetDeviceGammaRamp           2
-RosGdiSetWindow                    3
+RosGdiSetWindow                    5
 RosGdiGetICMProfile                3
 RosGdiGetNearestColor              2
 RosGdiGetPixelFormat               1
