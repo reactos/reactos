@@ -413,7 +413,7 @@ _lrintf(float f)
     }
 #else
     /* slow, but portable */
-    return (int)(x >= 0 ? x+0.5 : x-0.5);
+    return (int)(f >= 0 ? f+0.5 : f-0.5);
 #endif
 }
 
