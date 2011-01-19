@@ -324,4 +324,7 @@ RtlAssert(
 #define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
 #endif
 
+extern void CDECL __wine_make_gdi_object_system( HGDIOBJ handle, BOOL set );
+extern void CDECL __wine_set_visible_region( HDC hdc, HRGN hrgn, const RECT *vis_rect );
+
 #endif /* __WINE_USER_PRIVATE_H */
