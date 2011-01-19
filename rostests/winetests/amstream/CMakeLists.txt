@@ -1,5 +1,5 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(-D_DLL -D__USE_CRTIMP -D__WINESRC__)
 add_executable(amstream_winetest amstream.c testlist.c)
 target_link_libraries(amstream_winetest wine uuid)
 set_module_type(amstream_winetest win32cui)
