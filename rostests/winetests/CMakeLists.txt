@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-
 add_subdirectory(advapi32)
 add_subdirectory(advpack)
 add_subdirectory(amstream)
