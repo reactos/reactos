@@ -39,6 +39,7 @@
 
 #include "controls.h"
 #include "user_private.h"
+#include "rosuser.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -1731,6 +1732,7 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
 
         spi_idx = SPI_SETWORKAREA_IDX;
         CopyRect( &work_area, pvParam );
+        RosUserSetMonitorInfo( NULL, &work_area );
         spi_loaded[spi_idx] = TRUE;
         break;
     }

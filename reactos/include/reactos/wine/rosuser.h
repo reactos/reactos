@@ -168,6 +168,10 @@ BOOL
 APIENTRY
 RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
 
+VOID
+APIENTRY
+RosUserSetMonitorInfo(HMONITOR hMonitor, LPCRECT rcWorkArea);
+
 BOOL NTAPI
 RosUserRegisterShellHookWindow(HWND hWnd);
 

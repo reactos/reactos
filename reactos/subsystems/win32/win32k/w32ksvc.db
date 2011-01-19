@@ -81,6 +81,7 @@ RosUserGetKeyNameText              3
 RosUserToUnicodeEx                 7
 RosUserMapVirtualKeyEx             4
 RosUserGetAsyncKeyState            1
+RosUserSetMonitorInfo              2
 RosUserRegisterShellHookWindow     1
 RosUserDeRegisterShellHookWindow   1
 RosUserBuildShellHookHwndList      2

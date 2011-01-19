@@ -150,6 +150,15 @@ AttachMonitor(IN PDEVOBJ *pGdiDevice,
    }
 
    Monitor->GdiDevice = pGdiDevice;
+
+   /* Set monitor rects */
+   Monitor->rcMonitor.left = 0; /* FIXME: get origin */
+   Monitor->rcMonitor.top = 0; /* FIXME: get origin */
+   Monitor->rcMonitor.right = Monitor->rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+   Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
+
+   Monitor->rcWork = Monitor->rcMonitor;
+
    if (gMonitorList == NULL)
    {
       DPRINT("Primary monitor is beeing attached\n");
@@ -279,10 +288,10 @@ RosUserEnumDisplayMonitors(
    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
    {
 		safeHMonitorList[i] = Monitor->Handle;
-		safeRectList[i].left = 0; /* FIXME: get origin */
-		safeRectList[i].top = 0; /* FIXME: get origin */
-		safeRectList[i].right = safeRectList->left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
-		safeRectList[i].bottom = safeRectList->top + Monitor->GdiDevice->gdiinfo.ulVertRes;
+		safeRectList[i].left = Monitor->rcMonitor.left;
+		safeRectList[i].top = Monitor->rcMonitor.top;
+		safeRectList[i].right = Monitor->rcMonitor.right;
+		safeRectList[i].bottom = Monitor->rcMonitor.bottom;
 	
 		i++;
    }
@@ -407,11 +416,9 @@ RosUserGetMonitorInfo(
    }
 
    /* fill monitor info */
-   MonitorInfo.rcMonitor.left = 0; /* FIXME: get origin */
-   MonitorInfo.rcMonitor.top = 0; /* FIXME: get origin */
-   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
-   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
-   MonitorInfo.rcWork = MonitorInfo.rcMonitor; /* FIXME: use DEVMODE panning to calculate work area? */
+   MonitorInfo.rcMonitor = Monitor->rcMonitor;
+   MonitorInfo.rcWork = Monitor->rcWork; /* FIXME: use DEVMODE panning to calculate work area? */
+
    MonitorInfo.dwFlags = 0;
 
    if (Monitor->IsPrimary)
@@ -452,6 +459,43 @@ RosUserGetMonitorInfo(
    DPRINT("GetMonitorInfo: success\n");
 
    return TRUE;
-
-
 }
+
+VOID
+APIENTRY
+RosUserSetMonitorInfo(
+   IN HMONITOR hMonitor,
+   LPCRECT rcWorkArea)
+{
+    PMONITOR Monitor;
+
+    DPRINT("Enter RosUserSetMonitorInfo\n");
+
+    /* get monitor object */
+    if (hMonitor)
+    {
+        if (!(Monitor = UserGetMonitorObject(hMonitor)))
+        {
+            DPRINT1("Couldnt find monitor 0x%lx\n", hMonitor);
+            return;
+        }
+    }
+    else
+    {
+        /* Use a primary one if it exists */
+        if (!gMonitorList) return;
+        Monitor = gMonitorList;
+    }
+
+    /* Update monitor info */
+    _SEH2_TRY
+    {
+        Monitor->rcWork = *rcWorkArea;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Ignore the exception */
+    }
+    _SEH2_END;
+}
+
