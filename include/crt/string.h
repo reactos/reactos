@@ -82,6 +82,17 @@ extern "C" {
   _CRTIMP char *_strupr_l(char *_String,_locale_t _Locale);
   _CRTIMP size_t __cdecl strxfrm(char *_Dst,const char *_Src,size_t _MaxCount);
   _CRTIMP size_t __cdecl _strxfrm_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl _strset_s(char *_Dst,size_t _DstSize,int _Value);
+  _CRTIMP errno_t __cdecl _strerror_s(char *_Buf,size_t _SizeInBytes,const char *_ErrMsg);
+  _CRTIMP errno_t __cdecl _strlwr_s(char *_Str,size_t _Size);
+  _CRTIMP errno_t __cdecl _strlwr_s_l(char *_Str,size_t _Size,_locale_t _Locale);
+  _CRTIMP errno_t __cdecl _strnset_s(char *_Str,size_t _Size,int _Val,size_t _MaxCount);
+  _CRTIMP errno_t __cdecl _strupr_s(char *_Str,size_t _Size);
+  _CRTIMP errno_t __cdecl _strupr_s_l(char *_Str,size_t _Size,_locale_t _Locale);
+  _CRTIMP errno_t __cdecl strcpy_s(char *_Dst, size_t _Size, const char *_Src);
+  _CRTIMP errno_t __cdecl strcat_s(char *_Dst, size_t _Size, const char *_Src);
+#endif
 
 #ifndef	NO_OLDNAMES
   _CRTIMP _CRT_NONSTDC_DEPRECATE(_strdup) char *__cdecl strdup(const char *_Src);
@@ -102,27 +113,15 @@ extern "C" {
 
   _CRTIMP wchar_t *__cdecl _wcsdup(const wchar_t *_Str);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsat_s) wchar_t *__cdecl wcscat(wchar_t *_Dest,const wchar_t *_Source);
-#if __STDC_WANT_SECURE_LIB__
-  _CRTIMP errno_t __cdecl wcsat_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
-#endif
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcschr(const wchar_t *_Str,wchar_t _Ch);
   _CRTIMP int __cdecl wcscmp(const wchar_t *_Str1,const wchar_t *_Str2);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcscpy_s) wchar_t *__cdecl wcscpy(wchar_t *_Dest,const wchar_t *_Source);
-#if __STDC_WANT_SECURE_LIB__
-  _CRTIMP errno_t __cdecl wcscpy_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
-#endif
   _CRTIMP size_t __cdecl wcscspn(const wchar_t *_Str,const wchar_t *_Control);
   _CRTIMP wchar_t *wcsncat(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
   _CRTIMP size_t __cdecl wcslen(const wchar_t *_Str);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsnlen_s) size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
-#if __STDC_WANT_SECURE_LIB__
-  _CRTIMP errno_t __cdecl wcsnlen_s(wchar_t **_Src, size_t _MaxCount);
-#endif
   _CRTIMP int __cdecl wcsncmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsncpy_s) wchar_t *wcsncpy(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
-#if __STDC_WANT_SECURE_LIB__
-  _CRTIMP errno_t __cdecl wcsncpy_s(wchar_t *_Dest, size_t SizeInWords, const wchar_t *_Source ,size_t _Count);
-#endif
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcspbrk(const wchar_t *_Str,const wchar_t *_Control);
   _CRTIMP _CONST_RETURN wchar_t *__cdecl wcsrchr(const wchar_t *_Str,wchar_t _Ch);
   _CRTIMP size_t __cdecl wcsspn(const wchar_t *_Str,const wchar_t *_Control);
@@ -151,6 +150,20 @@ extern "C" {
   _CRTIMP int __cdecl _wcsncoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
   _CRTIMP int __cdecl _wcsnicoll(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
   _CRTIMP int __cdecl _wcsnicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
+#if __STDC_WANT_SECURE_LIB__
+  _CRTIMP errno_t __cdecl wcsat_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
+  _CRTIMP errno_t __cdecl wcscpy_s(wchar_t * Dest, size_t SizeInWords, const wchar_t * _Source);
+  _CRTIMP errno_t __cdecl wcsnlen_s(wchar_t **_Src, size_t _MaxCount);
+  _CRTIMP errno_t __cdecl wcsncpy_s(wchar_t *_Dest, size_t SizeInWords, const wchar_t *_Source ,size_t _Count);
+  _CRTIMP errno_t __cdecl _wcserror_s(wchar_t *_Buf,size_t _SizeInWords,int _ErrNum);
+  _CRTIMP errno_t __cdecl __wcserror_s(wchar_t *_Buffer,size_t _SizeInWords,const wchar_t *_ErrMsg);
+  _CRTIMP errno_t __cdecl _wcsnset_s(wchar_t *_Dst,size_t _DstSizeInWords,wchar_t _Val,size_t _MaxCount);
+  _CRTIMP errno_t __cdecl _wcsset_s(wchar_t *_Str,size_t _SizeInWords,wchar_t _Val);
+  _CRTIMP errno_t __cdecl _wcslwr_s(wchar_t *_Str,size_t _SizeInWords);
+  _CRTIMP errno_t __cdecl _wcslwr_s_l(wchar_t *_Str,size_t _SizeInWords,_locale_t _Locale);
+  _CRTIMP errno_t __cdecl _wcsupr_s(wchar_t *_Str,size_t _Size);
+  _CRTIMP errno_t __cdecl _wcsupr_s_l(wchar_t *_Str,size_t _Size,_locale_t _Locale);
+#endif
 
 #ifndef	NO_OLDNAMES
   _CRTIMP _CRT_NONSTDC_DEPRECATE(_wcsdup) wchar_t *__cdecl wcsdup(const wchar_t *_Str);
@@ -171,8 +184,6 @@ extern "C" {
 }
 #endif
 
-#include <sec_api/string_s.h>
-
 // HACK
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
@@ -180,3 +191,4 @@ extern "C" {
 #define wcsicmp _wcsicmp
 
 #endif
+
