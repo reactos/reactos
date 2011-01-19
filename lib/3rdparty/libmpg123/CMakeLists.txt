@@ -8,6 +8,7 @@ add_definitions(
     -Dlseek=_lseek
     -Dread=_read
     -Dstrdup=_strdup
+    -D_CRT_NONSTDC_NO_DEPRECATE
     -D_DLL -D__USE_CRTIMP)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
