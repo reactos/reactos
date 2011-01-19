@@ -1,6 +1,7 @@
 
 #include <stubs.h>
 
+#undef UNIMPLEMENTED
 #define UNIMPLEMENTED __wine_spec_unimplemented_stub("msvcrt.dll", __FUNCTION__)
 
 int __get_app_type()
