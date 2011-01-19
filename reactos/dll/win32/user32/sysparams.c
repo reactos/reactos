@@ -2679,12 +2679,8 @@ INT WINAPI GetSystemMetrics( INT index )
     case SM_CYMENU:
         return GetSystemMetrics(SM_CYMENUSIZE) + 1;
     case SM_CXFULLSCREEN:
-        /* see the remark for SM_CXMAXIMIZED, at least this formulation is
-         * correct */
         return GetSystemMetrics( SM_CXMAXIMIZED) - 2 * GetSystemMetrics( SM_CXFRAME);
     case SM_CYFULLSCREEN:
-        /* see the remark for SM_CYMAXIMIZED, at least this formulation is
-         * correct */
         return GetSystemMetrics( SM_CYMAXIMIZED) - GetSystemMetrics( SM_CYMIN);
     case SM_CYKANJIWINDOW:
         return 0;
@@ -2799,11 +2795,17 @@ INT WINAPI GetSystemMetrics( INT index )
     case SM_CYMAXTRACK:
         return GetSystemMetrics(SM_CYVIRTUALSCREEN) + 4 + 2 * GetSystemMetrics(SM_CYFRAME);
     case SM_CXMAXIMIZED:
-        /* FIXME: subtract the width of any vertical application toolbars*/
-        return GetSystemMetrics(SM_CXSCREEN) + 2 * GetSystemMetrics(SM_CXFRAME);
+   {
+        RECT workarea;
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &workarea, 0);
+        return workarea.right - workarea.left;
+   } 
     case SM_CYMAXIMIZED:
-        /* FIXME: subtract the width of any horizontal application toolbars*/
-        return GetSystemMetrics(SM_CYSCREEN) + 2 * GetSystemMetrics(SM_CYCAPTION);
+   {
+        RECT workarea;
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &workarea, 0);
+        return workarea.bottom - workarea.top;
+   }
     case SM_NETWORK:
         return 3;  /* FIXME */
     case SM_CLEANBOOT:
