@@ -1,6 +1,7 @@
 #ifndef __STRSAFE_H_
 #define __STRSAFE_H_
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 
