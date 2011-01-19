@@ -822,6 +822,13 @@ static POINT WINPOS_FindIconPos( HWND hwnd, POINT pt )
     int xspacing, yspacing;
 
     parent = GetAncestor( hwnd, GA_PARENT );
+    if (parent == GetDesktopWindow())
+    {
+       /* ReactOS doesn't support iconic minimize to desktop */
+       pt.x = pt.y = -32000;
+       return pt;
+    }
+
     GetClientRect( parent, &rectParent );
     if ((pt.x >= rectParent.left) && (pt.x + GetSystemMetrics(SM_CXICON) < rectParent.right) &&
         (pt.y >= rectParent.top) && (pt.y + GetSystemMetrics(SM_CYICON) < rectParent.bottom))
