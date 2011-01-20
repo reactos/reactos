@@ -558,10 +558,10 @@ static int run_test( const char *name )
     if (winetest_debug)
     {
         fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, (int)successes + failures + todo_successes + todo_failures,
-                 (int)todo_successes, (int)failures + todo_failures,
+                 test->name, (int)(successes + failures + todo_successes + todo_failures),
+                 (int)todo_successes, (int)(failures + todo_failures),
                  (failures + todo_failures != 1) ? "failures" : "failure",
-                 skipped );
+                 (int)skipped );
     }
     status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
     return status;
