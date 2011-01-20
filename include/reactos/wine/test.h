@@ -96,7 +96,7 @@ extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
 
-extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
+extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
