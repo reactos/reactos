@@ -319,8 +319,6 @@ void sync_window_position( struct ntdrv_win_data *data,
     LONG width, height;
     LONG x, y;
 
-    if (data->iconic) return;
-
     SwmPosChanged(data->whole_window, &data->whole_rect, old_whole_rect, NULL, swp_flags);
 
     width = data->whole_rect.right - data->whole_rect.left;
@@ -862,9 +860,6 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     if ((new_style & WS_VISIBLE) &&
         ((new_style & WS_MINIMIZE) || is_window_rect_mapped( window_rect )))
     {
-        //if (!data->mapped || (swp_flags & (SWP_FRAMECHANGED|SWP_STATECHANGED)))
-            //set_wm_hints( display, data );
-
         if (!data->mapped)
         {
             map_window( data, new_style );
@@ -872,11 +867,7 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
         else if ((swp_flags & SWP_STATECHANGED) && (!data->iconic != !(new_style & WS_MINIMIZE)))
         {
             data->iconic = (new_style & WS_MINIMIZE) != 0;
-            FIXME( "changing win %p iconic state to %u\n", data->hwnd, data->iconic );
-            //if (data->iconic)
-            //    XIconifyWindow( display, data->whole_window, DefaultScreen(display) );
-            //else if (is_window_rect_mapped( rectWindow ))
-            //    XMapWindow( display, data->whole_window );
+            TRACE( "changing win %p iconic state to %u\n", data->hwnd, data->iconic );
         }
     }
 }
