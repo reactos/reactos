@@ -37,6 +37,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     PFILE_DIRECTORY_INFORMATION DirectoryBuffer;
     PFILE_FULL_DIR_INFORMATION FullDirBuffer;
     PFILE_BOTH_DIR_INFORMATION BothDirBuffer;
+    ULONG InfoSize = 0;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -109,11 +110,36 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
 
     DPRINT("Buffer = %p  tofind = %wZ\n", Buffer, &Ccb->u.Directory.SearchPattern);
 
+    switch (FileInformationClass)
+    {
+        case FileDirectoryInformation:
+            InfoSize = sizeof(FILE_DIRECTORY_INFORMATION) - sizeof(WCHAR);
+            break;
+
+        case FileFullDirectoryInformation:
+            InfoSize = sizeof(FILE_FULL_DIR_INFORMATION) - sizeof(WCHAR);
+            break;
+
+        case FileBothDirectoryInformation:
+            InfoSize = sizeof(FILE_BOTH_DIR_INFORMATION) - sizeof(WCHAR);
+            break;
+
+        case FileNamesInformation:
+            InfoSize = sizeof(FILE_NAMES_INFORMATION) - sizeof(WCHAR);
+            break;
+
+        default:
+            DPRINT1("Invalid information class: %lu\n", FileInformationClass);
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
     PipeIndex = 0;
 
     Vcb = Ccb->Fcb->Vcb;
     CurrentEntry = Vcb->PipeListHead.Flink;
-    while (CurrentEntry != &Vcb->PipeListHead && Found == FALSE)
+    while (CurrentEntry != &Vcb->PipeListHead &&
+           Found == FALSE &&
+           Status == STATUS_SUCCESS)
     {
         /* Get the FCB of the next pipe */
         PipeFcb = CONTAINING_RECORD(CurrentEntry,
@@ -134,7 +160,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
 
             if (PipeIndex >= FileIndex)
             {
-                RtlZeroMemory(Buffer, BufferLength);
+                RtlZeroMemory(Buffer, InfoSize);
 
                 switch (FileInformationClass)
                 {
@@ -149,7 +175,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         RtlCopyMemory(DirectoryBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
                                       PipeFcb->PipeName.Length);
-                        *Size = sizeof(FILE_DIRECTORY_INFORMATION) + PipeFcb->PipeName.Length - sizeof(WCHAR);
+                        *Size = InfoSize + PipeFcb->PipeName.Length;
                         Status = STATUS_SUCCESS;
                         break;
 
@@ -164,7 +190,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         RtlCopyMemory(FullDirBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
                                       PipeFcb->PipeName.Length);
-                        *Size = sizeof(FILE_FULL_DIR_INFORMATION) + PipeFcb->PipeName.Length - sizeof(WCHAR);
+                        *Size = InfoSize + PipeFcb->PipeName.Length;
                         Status = STATUS_SUCCESS;
                         break;
 
@@ -179,7 +205,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         RtlCopyMemory(BothDirBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
                                       PipeFcb->PipeName.Length);
-                        *Size = sizeof(FILE_BOTH_DIR_INFORMATION) + PipeFcb->PipeName.Length - sizeof(WCHAR);
+                        *Size = InfoSize + PipeFcb->PipeName.Length;
                         Status = STATUS_SUCCESS;
                         break;
 
@@ -191,7 +217,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         RtlCopyMemory(NamesBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
                                       PipeFcb->PipeName.Length);
-                        *Size = sizeof(FILE_NAMES_INFORMATION) + PipeFcb->PipeName.Length - sizeof(WCHAR);
+                        *Size = InfoSize + PipeFcb->PipeName.Length;
                         Status = STATUS_SUCCESS;
                         break;
 
