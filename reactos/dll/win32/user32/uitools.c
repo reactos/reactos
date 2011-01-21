@@ -1493,31 +1493,37 @@ INT WINAPI FrameRect( HDC hdc, const RECT *rect, HBRUSH hbrush )
 
 /***********************************************************************
  *		DrawFocusRect (USER32.@)
- *
- * FIXME: PatBlt(PATINVERT) with background brush.
  */
-BOOL WINAPI DrawFocusRect( HDC hdc, const RECT* rc )
+BOOL WINAPI DrawFocusRect( HDC hdc, const RECT* rect )
 {
-    HBRUSH hOldBrush;
-    HPEN hOldPen, hNewPen;
-    INT oldDrawMode, oldBkMode;
-    LOGBRUSH lb;
+    static HBRUSH hFocusRectBrush = NULL;
+    HGDIOBJ OldObj;
+    UINT cx, cy;
 
-    hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-    lb.lbStyle = BS_SOLID;
-    lb.lbColor = GetSysColor(COLOR_WINDOWTEXT);
-    hNewPen = ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, NULL);
-    hOldPen = SelectObject(hdc, hNewPen);
-    oldDrawMode = SetROP2(hdc, R2_XORPEN);
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
+    if(!hFocusRectBrush)
+    {
+        static HBITMAP hFocusPattern = NULL;
+        const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
 
-    Rectangle(hdc, rc->left, rc->top, rc->right, rc->bottom);
+        hFocusPattern = CreateBitmap(8, 8, 1, 1, Pattern);
+        hFocusRectBrush = CreatePatternBrush(hFocusPattern);
+    }
 
-    SetBkMode(hdc, oldBkMode);
-    SetROP2(hdc, oldDrawMode);
-    SelectObject(hdc, hOldPen);
-    DeleteObject(hNewPen);
-    SelectObject(hdc, hOldBrush);
+    SystemParametersInfoW(SPI_GETFOCUSBORDERWIDTH, 0, &cx, 0);
+    SystemParametersInfoW(SPI_GETFOCUSBORDERHEIGHT, 0, &cy, 0);
+
+    OldObj = SelectObject(hdc, hFocusRectBrush);
+
+    /* top */
+    PatBlt(hdc, rect->left, rect->top, rect->right - rect->left, cy, PATINVERT);
+    /* bottom */
+    PatBlt(hdc, rect->left, rect->bottom - cy, rect->right - rect->left, cy, PATINVERT);
+    /* left */
+    PatBlt(hdc, rect->left, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
+    /* right */
+    PatBlt(hdc, rect->right - cx, rect->top + cy, cx, rect->bottom - rect->top - (2 * cy), PATINVERT);
+
+    SelectObject(hdc, OldObj);
 
     return TRUE;
 }
