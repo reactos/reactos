@@ -666,8 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Искате ли да презапуснете системата?"
 	IDS_SHUTDOWN_TITLE          "Изключване"
 	IDS_SHUTDOWN_PROMPT         "Искате ли да изключите компютъра?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_LOGOFF_TITLE            "Излизане"
+	IDS_LOGOFF_PROMPT           "Искате ли да излезете?"
 
 	// shell folder path default values 
 	IDS_PROGRAMS                "Пусков изборник\\Приложения"
@@ -751,9 +751,9 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Слагане на нов шрифт..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Подразбиран разпределителен размер"
-	IDS_COPY_OF                 "Copy of"
+	IDS_COPY_OF                 "Презапис на"
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	IDS_SHLEXEC_NOASSOC         "Няма приложение за Уиндоус, настроено да отваря този вид файлове."
 END
 
 

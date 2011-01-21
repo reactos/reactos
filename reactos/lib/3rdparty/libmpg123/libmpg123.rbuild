@@ -9,6 +9,10 @@
 	<define name="EOVERFLOW">75</define>
 	<include base="libmpg123">.</include>
 	<include base="ReactOS">include/reactos/libs/libmpg123</include>
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+    <define name="lseek">_lseek</define>
+    <define name="read">_read</define>
+    <define name="strdup">_strdup</define>
 	<file>compat.c</file>
 	<file>dct64.c</file>
 	<file>dct64_i386.c</file>

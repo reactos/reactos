@@ -110,8 +110,10 @@ DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
 
+    /* Timo : The text brush should never be changed.
+     * Jérôme : Yeah, but its palette must be updated anyway! */
     if(pdcattr->ulDirty_ & DIRTY_TEXT)
-        EBRUSHOBJ_vUpdate(&pdc->eboText, pdc->eboText.pbrush, pdc);
+        EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
 
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
@@ -127,7 +129,7 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     PDC_ATTR pdcattr = pdc->pdcattr;
 
     if(pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pdc->eboBackground.pbrush, pdc);
+        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Update the eboBackground's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
@@ -164,7 +166,7 @@ GdiSelectPalette(
 
     /* Is this a valid palette for this depth? */
 	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
-					&& ppal->Mode == PAL_INDEXED) ||
+					&& (ppal->flFlags & PAL_INDEXED)) ||
 			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
         /* Get old palette, set new one */
@@ -282,14 +284,24 @@ NtGdiSelectBitmap(
     }
 
     /* Get the handle for the old bitmap */
-    psurfOld = pDC->dclevel.pSurface;
-    hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
+    ASSERT(pDC->dclevel.pSurface);
+    hOrgBmp = pDC->dclevel.pSurface->BaseObject.hHmgr;
+
+	/* Lock it, to be sure while we mess with it*/
+	psurfOld = SURFACE_LockSurface(hOrgBmp);
+
+	/* Reset hdc, this surface isn't selected anymore */
+	psurfOld->hdc = NULL;
 
     /* Release the old bitmap, reference the new */
     DC_vSelectSurface(pDC, psurfBmp);
 
+	/* And unlock it, now we're done */
+	SURFACE_UnlockSurface(psurfOld);
+
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    psurfBmp->hDC = hDC;
+    psurfBmp->hdc = hDC;
+
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
@@ -340,7 +352,7 @@ NtGdiSelectClipPath(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
     pdcattr = pdc->pdcattr;
@@ -355,7 +367,8 @@ NtGdiSelectClipPath(
     /* Check that path is closed */
     if (pPath->state != PATH_Closed)
     {
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        DC_UnlockDc(pdc);
         return FALSE;
     }
 
@@ -391,7 +404,7 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
     if(!(pdc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     pdcattr = pdc->pdcattr;
@@ -436,12 +449,85 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
         default:
             SelObject = NULL;
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
     }
 
     DC_UnlockDc(pdc);
     return SelObject;
+}
+
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
+
+   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+
+   The intersection of the clip with the meta region is not Rao it's API!
+   Go back and read 7.2 Clipping pages 418-19:
+   Rao = API & Vis:
+   1) The Rao region is the intersection of the API region and the system region,
+      named after the Microsoft engineer who initially proposed it.
+   2) The Rao region can be calculated from the API region and the system region.
+
+   API:
+      API region is the intersection of the meta region and the clipping region,
+      clearly named after the fact that it is controlled by GDI API calls.
+*/
+INT
+APIENTRY
+NtGdiGetRandomRgn(
+    HDC hdc,
+    HRGN hrgnDest,
+    INT iCode)
+{
+    INT ret = 0;
+    PDC pdc;
+    HRGN hrgnSrc = NULL;
+    POINTL ptlOrg;
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return -1;
+    }
+
+    switch (iCode)
+    {
+        case CLIPRGN:
+            hrgnSrc = pdc->rosdc.hClipRgn;
+//            if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            break;
+        case METARGN:
+            if (pdc->dclevel.prgnMeta)
+                hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case APIRGN:
+            if (pdc->prgnAPI) hrgnSrc = pdc->prgnAPI->BaseObject.hHmgr;
+//            else if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            else if (pdc->rosdc.hClipRgn) hrgnSrc = pdc->rosdc.hClipRgn;
+            else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case SYSRGN:
+            if (pdc->prgnVis) hrgnSrc = pdc->prgnVis->BaseObject.hHmgr;
+            break;
+        default:
+            hrgnSrc = NULL;
+    }
+
+    if (hrgnSrc)
+    {
+        ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+    }
+
+    if (iCode == SYSRGN)
+    {
+        ptlOrg = pdc->ptlDCOrig;
+        NtGdiOffsetRgn(hrgnDest, ptlOrg.x, ptlOrg.y );
+    }
+
+    DC_UnlockDc(pdc);
+
+    return ret;
 }
 
 ULONG

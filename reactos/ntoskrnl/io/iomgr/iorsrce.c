@@ -1,11 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/resource.c
+ * FILE:            ntoskrnl/io/iorsrce.c
  * PURPOSE:         Hardware resource managment
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Alex Ionescu (alex@relsoft.net)
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -650,6 +651,184 @@ IopQueryBusDescription(
    return Status;
 }
 
+NTSTATUS
+NTAPI
+IopFetchConfigurationInformation(OUT PWSTR * SymbolicLinkList,
+                                 IN GUID Guid,
+                                 IN ULONG ExpectedInterfaces,
+                                 IN PULONG Interfaces)
+{
+    NTSTATUS Status;
+    ULONG IntInterfaces = 0;
+    PWSTR IntSymbolicLinkList;
+
+    /* Get the associated enabled interfaces with the given GUID */
+    Status = IoGetDeviceInterfaces(&Guid, NULL, 0, SymbolicLinkList);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Zero output and leave */
+        if (SymbolicLinkList != 0)
+        {
+            *SymbolicLinkList = 0;
+        }
+
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    IntSymbolicLinkList = *SymbolicLinkList;
+
+    /* Count the number of enabled interfaces by counting the number of symbolic links */
+    while (*IntSymbolicLinkList != UNICODE_NULL)
+    {
+        IntInterfaces++;
+        IntSymbolicLinkList += wcslen(IntSymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
+    }
+
+    /* Matching result will define the result */
+    Status = (IntInterfaces >= ExpectedInterfaces) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    /* Finally, give back to the caller the number of found interfaces */
+    *Interfaces = IntInterfaces;
+
+    return Status;
+}
+
+VOID
+NTAPI
+IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
+                                   IN PUNICODE_STRING OsLoaderPathName)
+{
+    NTSTATUS Status;
+    UNICODE_STRING LinkTarget, KeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE LinkHandle, RegistryHandle, KeyHandle;
+    WCHAR LinkTargetBuffer[256], KeyNameBuffer[sizeof("SystemPartition")];
+    UNICODE_STRING CmRegistryMachineSystemName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM");
+
+    ASSERT(NtSystemPartitionDeviceName->MaximumLength >= NtSystemPartitionDeviceName->Length + sizeof(WCHAR));
+    ASSERT(NtSystemPartitionDeviceName->Buffer[NtSystemPartitionDeviceName->Length / sizeof(WCHAR)] == UNICODE_NULL);
+    ASSERT(OsLoaderPathName->MaximumLength >= OsLoaderPathName->Length + sizeof(WCHAR));
+    ASSERT(OsLoaderPathName->Buffer[OsLoaderPathName->Length / sizeof(WCHAR)] == UNICODE_NULL);
+
+    /* First define needed stuff to open NtSystemPartitionDeviceName symbolic link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NtSystemPartitionDeviceName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    /* Open NtSystemPartitionDeviceName symbolic link */
+    Status = ZwOpenSymbolicLinkObject(&LinkHandle,
+                                      SYMBOLIC_LINK_QUERY,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening given symbolic link!\n");
+        return;
+    }
+
+    /* Prepare the string that will receive where symbolic link points to */
+    LinkTarget.Length = 0;
+    /* We will zero the end of the string after having received it */
+    LinkTarget.MaximumLength = sizeof(LinkTargetBuffer) - sizeof(UNICODE_NULL);
+    LinkTarget.Buffer = LinkTargetBuffer;
+
+    /* Query target */
+    Status = ZwQuerySymbolicLinkObject(LinkHandle,
+                                       &LinkTarget,
+                                       NULL);
+
+    /* We are done with symbolic link */
+    ObCloseHandle(LinkHandle, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed querying given symbolic link!\n");
+        return;
+    }
+
+    /* As promised, we zero the end */
+    LinkTarget.Buffer[LinkTarget.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Open registry to save data (HKLM\SYSTEM) */
+    Status = IopOpenRegistryKeyEx(&RegistryHandle,
+                                  NULL,
+                                  &CmRegistryMachineSystemName,
+                                  KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening registry!\n");
+        return;
+    }
+
+    /* We'll store in Setup subkey, and as we love fun, we use only one buffer for three writings... */
+    wcscpy(KeyNameBuffer, L"Setup");
+    KeyName.Length = sizeof(L"Setup") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"Setup");
+    KeyName.Buffer = KeyNameBuffer;
+
+    /* So, open or create the subkey */
+    Status = IopCreateRegistryKeyEx(&KeyHandle,
+                                    RegistryHandle,
+                                    &KeyName,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    NULL);
+
+    /* We're done with HKLM\SYSTEM */
+    ObCloseHandle(RegistryHandle, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening/creating Setup key!\n");
+        return;
+    }
+
+    /* Prepare first data writing... */
+    wcscpy(KeyNameBuffer, L"SystemPartition");
+    KeyName.Length = sizeof(L"SystemPartition") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"SystemPartition");
+
+    /* Write SystemPartition value which is the target of the symbolic link */
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyName,
+                           0,
+                           REG_SZ,
+                           LinkTarget.Buffer,
+                           LinkTarget.Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed writing SystemPartition value!\n");
+    }
+
+    /* Prepare for second data writing... */ 
+    wcscpy(KeyName.Buffer, L"OsLoaderPath");
+    KeyName.Length = sizeof(L"OsLoaderPath") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"OsLoaderPath");
+
+    /* Remove trailing slash if any (one slash only excepted) */
+    if (OsLoaderPathName->Length > sizeof(WCHAR) &&
+        OsLoaderPathName->Buffer[(OsLoaderPathName->Length / sizeof(WCHAR)) - 1] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        OsLoaderPathName->Length -= sizeof(WCHAR);
+        OsLoaderPathName->Buffer[OsLoaderPathName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* Then, write down data */
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyName,
+                           0,
+                           REG_SZ,
+                           OsLoaderPathName->Buffer,
+                           OsLoaderPathName->Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed writing OsLoaderPath value!\n");
+    }
+
+    /* We're finally done! */
+    ObCloseHandle(KeyHandle, KernelMode);
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -662,7 +841,7 @@ IoGetConfigurationInformation(VOID)
 }
 
 /*
- * @unimplemented
+ * @halfplemented
  */
 NTSTATUS NTAPI
 IoReportResourceUsage(PUNICODE_STRING DriverClassName,
@@ -697,13 +876,48 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       *       a conflict is detected with another driver.
       */
 {
-   UNIMPLEMENTED;
-   *ConflictDetected = FALSE;
-   return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PCM_RESOURCE_LIST ResourceList;
+    
+    DPRINT1("IoReportResourceUsage is halfplemented!\n");
+    
+    if (!DriverList && !DeviceList)
+        return STATUS_INVALID_PARAMETER;
+    
+    if (DeviceList)
+        ResourceList = DeviceList;
+    else
+        ResourceList = DriverList;
+    
+    Status = IopDetectResourceConflict(ResourceList, FALSE, NULL);
+    if (Status == STATUS_CONFLICTING_ADDRESSES)
+    {
+        *ConflictDetected = TRUE;
+        
+        if (!OverrideConflict)
+        {
+            DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
+            return STATUS_CONFLICTING_ADDRESSES;
+        }
+        else
+        {
+            DPRINT1("Proceeding with conflicting resources\n");
+        }
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* TODO: Claim resources in registry */
+    
+    *ConflictDetected = FALSE;
+    
+    return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @halfplemented
  */
 NTSTATUS NTAPI
 IoAssignResources(PUNICODE_STRING RegistryPath,
@@ -713,8 +927,23 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
 		  PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
 		  PCM_RESOURCE_LIST* AllocatedResources)
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+    NTSTATUS Status;
+    
+    DPRINT1("IoAssignResources is halfplemented!\n");
+    
+    Status = IopCreateResourceListFromRequirements(RequestedResources,
+                                                   AllocatedResources);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_CONFLICTING_ADDRESSES)
+            DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
+        
+        return Status;
+    }
+    
+    /* TODO: Claim resources in registry */
+    
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -751,14 +980,13 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType OPTIONAL,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING RootRegKey;
    HANDLE RootRegHandle;
-   WCHAR RootRegString[] = L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM";
    IO_QUERY Query;
 
    /* Set up the String */
    RootRegKey.Length = 0;
    RootRegKey.MaximumLength = 2048;
    RootRegKey.Buffer = ExAllocatePoolWithTag(PagedPool, RootRegKey.MaximumLength, TAG_IO_RESOURCE);
-   RtlAppendUnicodeToString(&RootRegKey, RootRegString);
+   RtlAppendUnicodeToString(&RootRegKey, L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
    /* Open a handle to the Root Registry Key */
    InitializeObjectAttributes(

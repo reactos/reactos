@@ -63,11 +63,11 @@ IntGdiExtCreatePen(
 {
    HPEN hPen;
    PBRUSH pbrushPen;
-   static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55};
-   static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0};
-   static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38};
-   static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0};
-   static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};
+   static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55, 0};
+   static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0, 0};
+   static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38, 0};
+   static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0, 0};
+   static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38, 0};
 
    dwWidth = abs(dwWidth);
 
@@ -87,7 +87,7 @@ IntGdiExtCreatePen(
 
    if (!pbrushPen)
    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       DPRINT("Can't allocate pen\n");
       return 0;
    }
@@ -125,27 +125,27 @@ IntGdiExtCreatePen(
 
       case PS_ALTERNATE:
          pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
-         pbrushPen->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
+         pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
 
       case PS_DOT:
          pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
-         pbrushPen->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
+         pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
          break;
 
       case PS_DASH:
          pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
-         pbrushPen->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
+         pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
          break;
 
       case PS_DASHDOT:
          pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
-         pbrushPen->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
+         pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
          break;
 
       case PS_DASHDOTDOT:
          pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
-         pbrushPen->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
+         pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
          break;
 
       case PS_INSIDEFRAME:
@@ -187,7 +187,7 @@ IntGdiExtCreatePen(
    return hPen;
 
 ExitCleanup:
-   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   EngSetLastError(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
    PEN_UnlockPen(pbrushPen);
    if (bOldStylePen)
@@ -228,10 +228,10 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
 
          if (cbCount < cbRetCount) return 0;
 
-         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL && 
+         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL &&
                cbCount == sizeof(EXTLOGPEN))
          {
-            pExtLogPen = (PEXTLOGPEN)pBuffer; 
+            pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
             pExtLogPen->elpWidth = 0;
             pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
@@ -287,7 +287,7 @@ NtGdiCreatePen(
 {
    if ( PenStyle < PS_SOLID || PenStyle > PS_INSIDEFRAME )
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
    }
 
@@ -325,13 +325,13 @@ NtGdiExtCreatePen(
    if ((int)dwStyleCount < 0) return 0;
    if (dwStyleCount > 16)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
    if (dwStyleCount > 0)
    {
-      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), TAG_PENSTYLES);
+      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), GDITAG_PENSTYLE);
       if (!pSafeStyle)
       {
          SetLastNtError(ERROR_NOT_ENOUGH_MEMORY);
@@ -352,7 +352,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -371,7 +371,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -390,7 +390,7 @@ NtGdiExtCreatePen(
 
    if (!hPen && pSafeStyle)
    {
-      ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+      ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
    }
    return hPen;
 }

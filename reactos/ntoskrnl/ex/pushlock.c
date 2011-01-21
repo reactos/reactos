@@ -41,6 +41,7 @@ ULONG ExPushLockSpinCount = 0;
  *--*/
 VOID
 NTAPI
+INIT_FUNCTION
 ExpInitializePushLocks(VOID)
 {
 #ifdef CONFIG_SMP

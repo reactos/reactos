@@ -33,6 +33,7 @@ static GENERIC_MAPPING LpcpPortMapping =
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 LpcInitSystem(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

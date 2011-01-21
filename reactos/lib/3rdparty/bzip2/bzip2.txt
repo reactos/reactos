@@ -1,6 +1,6 @@
 
 NAME
-       bzip2, bunzip2 - a block-sorting file compressor, v1.0.4
+       bzip2, bunzip2 - a block-sorting file compressor, v1.0.6
        bzcat - decompresses files to stdout
        bzip2recover - recovers data from damaged bzip2 files
 
@@ -345,11 +345,11 @@ CAVEATS
        but  the  details  of  what  the problem is sometimes seem
        rather misleading.
 
-       This manual page pertains to version 1.0.4 of bzip2.  Com-
+       This manual page pertains to version 1.0.6 of bzip2.  Com-
        pressed  data created by this version is entirely forwards
        and  backwards  compatible  with   the   previous   public
        releases,  versions  0.1pl2,  0.9.0,  0.9.5, 1.0.0, 1.0.1,
-       1.0.2 and 1.0.3, but with the  following  exception: 0.9.0
+       1.0.2 and above, but with the  following  exception: 0.9.0
        and above can  correctly decompress  multiple concatenated
        compressed files.  0.1pl2  cannot do this;  it  will  stop
        after  decompressing just the first file in the stream.

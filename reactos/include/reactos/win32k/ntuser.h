@@ -51,13 +51,15 @@ VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
 VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
 BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
 
+#define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
+
 typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
     struct _WND *spwnd;
     DWORD fsHooks;
-    struct tagHOOK * aphkStart[16];
+    LIST_ENTRY aphkStart[NB_HOOKS];
 
     HWND hTaskManWindow;
     HWND hProgmanWindow;
@@ -127,15 +129,23 @@ typedef struct _PROCMARKHEAD
 /* Window Client Information structure */
 struct  _ETHREAD;
 
+#define WEF_SETBYWNDPTI      0x0001
+
 typedef struct tagHOOK
 {
   THRDESKHEAD    head;
+  struct tagHOOK *phkNext;   /* This is for user space. */
+  int            HookId;     /* Hook table index */
+  ULONG_PTR      offPfn;
+  ULONG          flags;      /* Some internal flags */
+  INT            ihmod;
+  PTHREADINFO    ptiHooked;
+  struct _DESKTOP *rpdesk;
+  /* ReactOS */
   LIST_ENTRY     Chain;      /* Hook chain entry */
   struct _ETHREAD* Thread;   /* Thread owning the hook */
-  int            HookId;     /* Hook table index */
   HOOKPROC       Proc;       /* Hook function */
   BOOLEAN        Ansi;       /* Is it an Ansi hook? */
-  ULONG          Flags;      /* Some internal flags */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
 
@@ -173,7 +183,7 @@ typedef struct tagHOOK
 typedef struct _CALLBACKWND
 {
      HWND hWnd;
-     PVOID pvWnd;
+     struct _WND *pWnd;
 } CALLBACKWND, *PCALLBACKWND;
 
 #define CI_TRANSACTION       0x00000001
@@ -384,6 +394,12 @@ typedef struct _CLS
 } CLS, *PCLS;
 
 
+typedef struct _SBINFOEX
+{
+  SCROLLBARINFO ScrollBarInfo;
+  SCROLLINFO ScrollInfo;
+} SBINFOEX, *PSBINFOEX;
+
 // State Flags !Not Implemented!
 #define WNDS_HASMENU                 0X00000001
 #define WNDS_HASVERTICALSCROOLLBAR   0X00000002
@@ -450,19 +466,6 @@ typedef struct _CLS
 #define WNDS2_SHELLHOOKREGISTERED       0X40000000
 #define WNDS2_WMCREATEMSGPROCESSED      0X80000000
 
-/* Non SDK ExStyles */
-#define WS_EX_MAKEVISIBLEWHENUNGHOSTED 0x00000800
-#define WS_EX_FORCELEGACYRESIZENCMETR  0x00800000
-#define WS_EX_UISTATEACTIVE            0x04000000
-#define WS_EX_REDIRECTED               0X20000000
-#define WS_EX_UISTATEKBACCELHIDDEN     0X40000000
-#define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
-#define WS_EX_SETANSICREATOR           0x80000000 // For WNDS_ANSICREATOR
-
-/* Non SDK Styles */
-#define WS_MAXIMIZED  WS_MAXIMIZE
-#define WS_MINIMIZED  WS_MINIMIZE
-
 /* ExStyles2 */
 #define WS_EX2_CLIPBOARDLISTENER        0X00000001
 #define WS_EX2_LAYEREDINVALIDATE        0X00000002
@@ -526,6 +529,7 @@ typedef struct _WND
     struct _WND *spwndClipboardListener;
     DWORD ExStyle2;
 
+    /* ReactOS */
     struct
     {
         RECT NormalRect;
@@ -538,6 +542,11 @@ typedef struct _WND
     UINT InternalPosInitialized : 1;
     UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
     UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
+
+  /* Scrollbar info */
+  PSBINFOEX pSBInfoex; // convert to PSBINFO
+  /* Entry in the list of thread windows. */
+  LIST_ENTRY ThreadListEntry;
 } WND, *PWND;
 
 typedef struct _PFNCLIENT
@@ -838,29 +847,6 @@ typedef struct _USERCONNECT
   SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
 
-//
-// Non SDK Window Message types.
-//
-#define WM_CLIENTSHUTDOWN 59
-#define WM_COPYGLOBALDATA 73
-#define WM_SYSTIMER 280
-#define WM_POPUPSYSTEMMENU 787
-#define WM_CBT 1023 // ReactOS only.
-#define WM_MAXIMUM 0x0001FFFF
-
-//
-// Non SDK DCE types.
-//
-#define DCX_USESTYLE     0x00010000
-#define DCX_KEEPCLIPRGN  0x00040000
-#define DCX_KEEPLAYOUT   0x40000000
-#define DCX_PROCESSOWNED 0x80000000
-
-//
-// Non SDK Queue message types.
-//
-#define QS_SMRESULT      0x8000
-
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -943,7 +929,7 @@ UINT
 NTAPI
 NtUserGetMenuIndex(
   HMENU hMenu,
-  UINT wID);
+  HMENU hSubMenu);
 
 BOOL
 NTAPI
@@ -1013,13 +999,13 @@ NtUserSetSystemMenu(
   HWND hWnd,
   HMENU hMenu);
 
-DWORD
+BOOL
 NTAPI
 NtUserThunkedMenuInfo(
   HMENU hMenu,
   LPCMENUINFO lpcmi);
 
-DWORD
+BOOL
 NTAPI
 NtUserThunkedMenuItemInfo(
   HMENU hMenu,
@@ -1974,19 +1960,11 @@ NTAPI
 NtUserGetListBoxInfo(
   HWND hWnd);
 
-typedef struct tagNTUSERGETMESSAGEINFO
-{
-  MSG Msg;
-  ULONG LParamSize;
-} NTUSERGETMESSAGEINFO, *PNTUSERGETMESSAGEINFO;
-
-BOOL
-NTAPI
-NtUserGetMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax);
+BOOL APIENTRY
+NtUserGetMessage(PMSG pMsg,
+                 HWND hWnd,
+                 UINT MsgFilterMin,
+                 UINT MsgFilterMax);
 
 DWORD
 NTAPI
@@ -2082,7 +2060,8 @@ enum ThreadStateRoutines
     THREADSTATE_PROGMANWINDOW,
     THREADSTATE_TASKMANWINDOW,
     THREADSTATE_GETMESSAGETIME,
-    THREADSTATE_GETINPUTSTATE
+    THREADSTATE_GETINPUTSTATE,
+    THREADSTATE_UPTIMELASTREAD
 };
 
 DWORD_PTR
@@ -2232,6 +2211,15 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
+
+typedef struct tagDOSENDMESSAGE
+{
+  UINT uFlags;
+  UINT uTimeout;
+  ULONG_PTR Result;
+}
+DOSENDMESSAGE, *PDOSENDMESSAGE;
+
 BOOL
 NTAPI
 NtUserMessageCall(
@@ -2341,14 +2329,12 @@ NtUserPaintMenuBar(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-BOOL
-NTAPI
-NtUserPeekMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg);
+BOOL APIENTRY
+NtUserPeekMessage( PMSG pMsg,
+                   HWND hWnd,
+                   UINT MsgFilterMin,
+                   UINT MsgFilterMax,
+                   UINT RemoveMsg);
 
 BOOL
 NTAPI
@@ -3137,10 +3123,8 @@ typedef struct tagKMDDELPARAM
 #define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
 #define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0xfffe0008
-#define ONEPARAM_ROUTINE_ISWINDOWINDESTROY    0xfffe000c
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
-#define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0xfffe0027
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
 #define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
 #define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
@@ -3155,6 +3139,7 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
+#define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 
 DWORD
 NTAPI
@@ -3231,8 +3216,6 @@ NtUserMenuInfo(
  BOOL fsog
 );
 
-
-
 typedef struct tagROSMENUITEMINFO
 {
     /* ----------- MENUITEMINFOW ----------- */
@@ -3281,33 +3264,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-
-typedef struct tagNTUSERSENDMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-          PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessageTimeout(HWND hWnd,
-			 UINT Msg,
-			 WPARAM wParam,
-			 LPARAM lParam,
-			 UINT uFlags,
-			 UINT uTimeout,
-			 ULONG_PTR *uResult,
-             PNTUSERSENDMESSAGEINFO Info);
 
 typedef struct _SETSCROLLBARINFO
 {

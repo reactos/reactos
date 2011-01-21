@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl _tan
- 
-.intel_syntax noprefix
 
+#include <asm.inc>
+
+PUBLIC _tan
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _tan:
         push    ebp
@@ -50,3 +51,5 @@ _tan:
         mov     esp,ebp                 // Deallocate temporary space
         pop     ebp
         ret
+
+END

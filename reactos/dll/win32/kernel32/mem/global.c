@@ -101,7 +101,6 @@ GlobalAlloc(UINT uFlags,
         {
             /* All worked well, save our heap entry */
             RtlSetUserValueHeap(hProcessHeap, HEAP_NO_SERIALIZE, Ptr, hMemory);
-            RtlSetUserFlagsHeap(hProcessHeap, HEAP_NO_SERIALIZE, Ptr, Flags);
         }
     }
 
@@ -529,10 +528,6 @@ GlobalReAlloc(HGLOBAL hMem,
                                             HEAP_NO_SERIALIZE,
                                             Ptr,
                                             hMem);
-                        RtlSetUserFlagsHeap(hProcessHeap,
-                                            HEAP_NO_SERIALIZE,
-                                            Ptr,
-                                            Flags);
                     }
                 }
                 else
@@ -562,10 +557,6 @@ GlobalReAlloc(HGLOBAL hMem,
                                             HEAP_NO_SERIALIZE,
                                             Ptr,
                                             hMem);
-                        RtlSetUserFlagsHeap(hProcessHeap,
-                                            HEAP_NO_SERIALIZE,
-                                            Ptr,
-                                            Flags);
                     }
 
                 }
@@ -668,10 +659,6 @@ GlobalReAlloc(HGLOBAL hMem,
                                         HEAP_NO_SERIALIZE,
                                         HandleEntry->Object,
                                         hMem);
-                    RtlSetUserFlagsHeap(hProcessHeap,
-                                        HEAP_NO_SERIALIZE,
-                                        HandleEntry->Object,
-                                        Flags);
                 }
             }
         }

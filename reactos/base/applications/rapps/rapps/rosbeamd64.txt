@@ -11,6 +11,9 @@ URLSite = http://reactos.org/wiki/Build_Environment/
 URLDownload = http://dreimer.bplaced.net/rosbe/RosBE64-1.4b.exe
 CDPath = none
 
+[Section.0405]
+Description = Dovoluje zkompilovat zdrojový kód systému ReactOS AMD64. Pro další detaily viz. ReactOS wiki.
+
 [Section.0407]
 Description = Erlaubt es Ihnen den ReactOS AMD64 Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
 

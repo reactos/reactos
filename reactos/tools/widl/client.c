@@ -76,7 +76,6 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
 {
     const statement_t *stmt;
     const char *implicit_handle = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
-    const var_t *var;
     int method_count = 0;
 
     if (!implicit_handle)
@@ -297,15 +296,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         }
 
         /* update proc_offset */
-        if (args)
-        {
-            LIST_FOR_EACH_ENTRY( var, args, const var_t, entry )
-                *proc_offset += get_size_procformatstring_type(var->name, var->type, var->attrs);
-        }
-        if (!is_void(type_function_get_rettype(func->type)))
-            *proc_offset += get_size_procformatstring_type("return value", type_function_get_rettype(func->type), NULL);
-        else
-            *proc_offset += 2; /* FC_END and FC_PAD */
+        *proc_offset += get_size_procformatstring_func( func );
 
         indent--;
         print_client("}\n");
@@ -457,8 +448,6 @@ static void init_client(void)
     print_client( "#define DECLSPEC_HIDDEN\n");
     print_client( "#endif\n");
     print_client( "\n");
-    write_exceptions( client );
-    print_client( "\n");
 }
 
 
@@ -512,6 +501,9 @@ static void write_client_routines(const statement_list_t *stmts)
     unsigned int proc_offset = 0;
     int expr_eval_routines;
 
+    write_exceptions( client );
+    print_client( "\n");
+
     write_formatstringsdecl(client, indent, stmts, need_stub);
     expr_eval_routines = write_expr_eval_routines(client, client_token);
     if (expr_eval_routines)
@@ -539,7 +531,7 @@ void write_client(const statement_list_t *stmts)
 
     if (do_win32 && do_win64)
     {
-        fprintf(client, "\n#ifndef _WIN64\n\n");
+        fprintf(client, "#ifndef _WIN64\n\n");
         pointer_size = 4;
         write_client_routines( stmts );
         fprintf(client, "\n#else /* _WIN64 */\n\n");

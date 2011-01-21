@@ -1837,6 +1837,18 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
                                   WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
       LPHEADCOMBO lphc = (LPHEADCOMBO)GetWindowLongPtrW( hwnd, 0 );
+#ifdef __REACTOS__
+      PWND pWnd;
+
+      pWnd = ValidateHwnd(hwnd);
+      if (pWnd)
+      {
+         if (!pWnd->fnid)
+         {
+            NtUserSetWindowFNID(hwnd, FNID_COMBOBOX);
+         }
+      }    
+#endif    
 
       TRACE("[%p]: msg %s wp %08lx lp %08lx\n",
             hwnd, SPY_GetMsgName(message, hwnd), wParam, lParam );
@@ -1855,6 +1867,9 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 	}
      	case WM_NCDESTROY:
 		COMBO_NCDestroy(lphc);
+#ifdef __REACTOS__
+                NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
 		break;/* -> DefWindowProc */
 
      	case WM_CREATE:

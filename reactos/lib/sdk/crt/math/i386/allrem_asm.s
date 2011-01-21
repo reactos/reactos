@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl __allrem
- 
-.intel_syntax noprefix
 
+#include <asm.inc>
+
+PUBLIC __allrem
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 //
 // llrem - signed long remainder
@@ -227,3 +228,5 @@ __allrem :
         pop     ebx
 
         ret     16
+
+END

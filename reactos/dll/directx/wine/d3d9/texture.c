@@ -289,22 +289,26 @@ static HRESULT WINAPI IDirect3DTexture9Impl_GetLevelDesc(LPDIRECT3DTEXTURE9 ifac
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DTexture9Impl_GetSurfaceLevel(LPDIRECT3DTEXTURE9 iface, UINT Level, IDirect3DSurface9** ppSurfaceLevel) {
+static HRESULT WINAPI IDirect3DTexture9Impl_GetSurfaceLevel(IDirect3DTexture9 *iface,
+        UINT Level, IDirect3DSurface9 **ppSurfaceLevel)
+{
     IDirect3DTexture9Impl *This = (IDirect3DTexture9Impl *)iface;
-    HRESULT hrc = D3D_OK;
     IWineD3DSurface *mySurface = NULL;
+    HRESULT hr;
 
     TRACE("iface %p, level %u, surface %p.\n", iface, Level, ppSurfaceLevel);
 
     wined3d_mutex_lock();
-    hrc = IWineD3DTexture_GetSurfaceLevel(This->wineD3DTexture, Level, &mySurface);
-    if (hrc == D3D_OK && NULL != ppSurfaceLevel) {
-       IWineD3DSurface_GetParent(mySurface, (IUnknown **)ppSurfaceLevel);
-       IWineD3DSurface_Release(mySurface);
+    hr = IWineD3DTexture_GetSurfaceLevel(This->wineD3DTexture, Level, &mySurface);
+    if (SUCCEEDED(hr) && ppSurfaceLevel)
+    {
+        *ppSurfaceLevel = IWineD3DSurface_GetParent(mySurface);
+        IDirect3DSurface9_AddRef(*ppSurfaceLevel);
+        IWineD3DSurface_Release(mySurface);
     }
     wined3d_mutex_unlock();
 
-    return hrc;
+    return hr;
 }
 
 static HRESULT WINAPI IDirect3DTexture9Impl_LockRect(LPDIRECT3DTEXTURE9 iface, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) {
@@ -398,7 +402,7 @@ HRESULT texture_init(IDirect3DTexture9Impl *texture, IDirect3DDevice9Impl *devic
     wined3d_mutex_lock();
     hr = IWineD3DDevice_CreateTexture(device->WineD3DDevice, width, height, levels,
             usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool,
-            &texture->wineD3DTexture, (IUnknown *)texture, &d3d9_texture_wined3d_parent_ops);
+            texture, &d3d9_texture_wined3d_parent_ops, &texture->wineD3DTexture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {

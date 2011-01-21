@@ -15,6 +15,10 @@
 extern ULONG ExpInitializationPhase;
 extern BOOLEAN SysThreadCreated;
 
+PVOID KeUserPopEntrySListEnd;
+PVOID KeUserPopEntrySListFault;
+PVOID KeUserPopEntrySListResume;
+
 GENERIC_MAPPING PspProcessMapping =
 {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -61,6 +65,7 @@ BOOLEAN PspDoingGiveBacks;
 
 USHORT
 NTAPI
+INIT_FUNCTION
 NameToOrdinal(IN PCHAR Name,
               IN PVOID DllBase,
               IN ULONG NumberOfNames,
@@ -103,6 +108,7 @@ NameToOrdinal(IN PCHAR Name,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 LookupEntryPoint(IN PVOID DllBase,
                  IN PCHAR Name,
                  OUT PVOID *EntryPoint)
@@ -154,6 +160,7 @@ LookupEntryPoint(IN PVOID DllBase,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspLookupSystemDllEntryPoint(IN PCHAR Name,
                              IN PVOID *EntryPoint)
 {
@@ -163,6 +170,7 @@ PspLookupSystemDllEntryPoint(IN PCHAR Name,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
@@ -187,10 +195,24 @@ PspLookupKernelUserEntryPoints(VOID)
                                           &KeRaiseUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get user-mode SLIST exception functions for page fault rollback race hack */
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListEnd",
+                                          &KeUserPopEntrySListEnd);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListFault",
+                                          &KeUserPopEntrySListFault);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListResume",
+                                          &KeUserPopEntrySListResume);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+
+    /* On x86, there are multiple ways to do a system call, find the right stubs */
+#if defined(_X86_)
     /* Check if this is a machine that supports SYSENTER */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Get user-mode sysenter stub */
+        SharedUserData->SystemCall = (PsNtosImageBase >> (PAGE_SHIFT + 1));
         Status = PspLookupSystemDllEntryPoint("KiFastSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
@@ -213,6 +235,7 @@ PspLookupKernelUserEntryPoints(VOID)
 
     /* Set the test instruction */
     SharedUserData->TestRetInstruction = 0xC3;
+#endif
 
     /* Return the status */
     return Status;
@@ -220,6 +243,7 @@ PspLookupKernelUserEntryPoints(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspMapSystemDll(IN PEPROCESS Process,
                 IN PVOID *DllBase,
                 IN BOOLEAN UseLargePages)
@@ -253,6 +277,7 @@ PspMapSystemDll(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PsLocateSystemDll(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -338,6 +363,7 @@ PsLocateSystemDll(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspInitializeSystemDll(VOID)
 {
     NTSTATUS Status;
@@ -370,6 +396,7 @@ PspInitializeSystemDll(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PspInitPhase1()
 {
     /* Initialize the System DLL and return status of operation */
@@ -379,6 +406,7 @@ PspInitPhase1()
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;
@@ -597,6 +625,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Check the initialization phase */

@@ -16,13 +16,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-#ifndef WM_SETVISIBLE
-#define WM_SETVISIBLE 9
-#endif
-#ifndef WM_QUERYDROPOBJECT
-#define WM_QUERYDROPOBJECT  0x022B
-#endif
-
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
 LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
@@ -103,6 +96,7 @@ BOOL
 FASTCALL
 DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
 {
+  BOOL Ret;
   LARGE_STRING lsString;
 
   if ( String )
@@ -112,7 +106,12 @@ DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
      else
         RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&lsString, String, 0);
   }
-  return NtUserDefSetText(hWnd, (String ? &lsString : NULL));
+  Ret = NtUserDefSetText(hWnd, (String ? &lsString : NULL));
+
+  if (Ret)
+     IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
+
+  return Ret;
 }
 
 void
@@ -1969,7 +1968,6 @@ RealDefWindowProcA(HWND hWnd,
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
-
             Result = 1;
             break;
         }

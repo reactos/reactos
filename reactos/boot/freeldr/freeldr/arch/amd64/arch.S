@@ -1,6 +1,8 @@
-.intel_syntax noprefix
 
 #define ASM
+
+#include <asm.inc>
+
 #include <arch.h>
 
 .code16

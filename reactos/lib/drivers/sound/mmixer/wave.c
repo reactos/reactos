@@ -109,22 +109,7 @@ MMixerGetWaveInfoByIndexAndType(
 }
 
 
-VOID
-MMixerInitializePinConnect(
-    IN OUT PKSPIN_CONNECT PinConnect,
-    IN ULONG PinId)
-{
-    PinConnect->Interface.Set = KSINTERFACESETID_Standard;
-    PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
-    PinConnect->Interface.Flags = 0;
-    PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
-    PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
-    PinConnect->Medium.Flags = 0;
-    PinConnect->PinToHandle = NULL;
-    PinConnect->PinId = PinId;
-    PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
-    PinConnect->Priority.PrioritySubClass = 1;
-}
+
 
 VOID
 MMixerInitializeDataFormat(
@@ -345,7 +330,8 @@ MMixerInitializeWaveInfo(
     IN LPMIXER_DATA MixerData,
     IN LPWSTR DeviceName,
     IN ULONG bWaveIn,
-    IN ULONG PinId)
+    IN ULONG PinCount,
+    IN PULONG Pins)
 {
     MIXER_STATUS Status;
     PKSMULTIPLE_ITEM MultipleItem;
@@ -356,12 +342,19 @@ MMixerInitializeWaveInfo(
     if (!WaveInfo)
         return MM_STATUS_NO_MEMORY;
 
+    if (PinCount > 1)
+    {
+        /* FIXME support multiple pins for wave device */
+        DPRINT1("Implement support for multiple pins\n");
+        //ASSERT(PinCount == 1);
+    }
+
     /* initialize wave info */
     WaveInfo->DeviceId = MixerData->DeviceId;
-    WaveInfo->PinId = PinId;
+    WaveInfo->PinId = Pins[0];
 
-    // sanity check
-    ASSERT(wcslen(DeviceName) < MAXPNAMELEN);
+    /* sanity check */
+    ASSERT(wcslen(DeviceName) + 1 < MAXPNAMELEN);
 
     /* copy device name */
     if (bWaveIn)
@@ -388,7 +381,7 @@ MMixerInitializeWaveInfo(
     }
 
     /* get audio pin data ranges */
-    Status = MMixerGetAudioPinDataRanges(MixerContext, MixerData->hDevice, PinId, &MultipleItem);
+    Status = MMixerGetAudioPinDataRanges(MixerContext, MixerData->hDevice, Pins[0], &MultipleItem);
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to get audio pin data ranges */
@@ -451,21 +444,21 @@ MMixerOpenWave(
     LPWAVE_INFO WaveInfo;
     ACCESS_MASK DesiredAccess = 0;
 
-    // verify mixer context
+    /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
+        /* invalid context passed */
         return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
     {
-        // not implemented
+        /* not implemented */
         return MM_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -501,16 +494,16 @@ MMixerWaveInCapabilities(
     MIXER_STATUS Status;
     LPWAVE_INFO WaveInfo;
 
-    // verify mixer context
+    /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
+        /* invalid context passed */
         return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     /* find destination wave */
@@ -521,7 +514,7 @@ MMixerWaveInCapabilities(
         return MM_STATUS_UNSUCCESSFUL;
     }
 
-    //copy capabilities
+    /* copy capabilities */
     MixerContext->Copy(Caps, &WaveInfo->u.InCaps, sizeof(WAVEINCAPSW));
 
     return MM_STATUS_SUCCESS;
@@ -537,16 +530,16 @@ MMixerWaveOutCapabilities(
     MIXER_STATUS Status;
     LPWAVE_INFO WaveInfo;
 
-    // verify mixer context
+    /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
+        /* invalid context passed */
         return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     /* find destination wave */
@@ -557,7 +550,7 @@ MMixerWaveOutCapabilities(
         return MM_STATUS_UNSUCCESSFUL;
     }
 
-    //copy capabilities
+    /* copy capabilities */
     MixerContext->Copy(Caps, &WaveInfo->u.OutCaps, sizeof(WAVEOUTCAPSW));
 
     return MM_STATUS_SUCCESS;
@@ -570,16 +563,16 @@ MMixerGetWaveInCount(
     PMIXER_LIST MixerList;
     MIXER_STATUS Status;
 
-    // verify mixer context
+     /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
-        return 0;
+        /* invalid context passed */
+        return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     return MixerList->WaveInListCount;
@@ -592,16 +585,16 @@ MMixerGetWaveOutCount(
     PMIXER_LIST MixerList;
     MIXER_STATUS Status;
 
-    // verify mixer context
+    /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
-        return 0;
+        /* invalid context passed */
+        return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     return MixerList->WaveOutListCount;
@@ -637,16 +630,16 @@ MMixerGetWaveDevicePath(
     ULONG Length;
     MIXER_STATUS Status;
 
-    // verify mixer context
+    /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // invalid context passed
+        /* invalid context passed */
         return Status;
     }
 
-    // grab mixer list
+    /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     /* find destination wave */

@@ -8,7 +8,7 @@ Description = Atomix Clone using SDL libs.
 Size = 1.4MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LMarbles
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/lgames/binaries/lmarbles-1.0.6-win32.exe
 CDPath = none
 
 [Section.0407]

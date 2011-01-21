@@ -5,9 +5,6 @@
  * PURPOSE:     Indonesian Language File for Solitaire
  * TRANSLATOR:  Zaenal Mutaqin (ade999@gmail.com)
  */
-
-#include "resource.h"
-
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 

@@ -34,19 +34,31 @@ typedef struct {
 
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(GopherProtocol, base, iface)
 
-static HRESULT GopherProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
+static HRESULT GopherProtocol_open_request(Protocol *prot, IUri *uri, DWORD request_flags,
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     GopherProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    BSTR url;
+    HRESULT hres;
+
+    hres = IUri_GetAbsoluteUri(uri, &url);
+    if(FAILED(hres))
+        return hres;
 
     This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
             request_flags, (DWORD_PTR)&This->base);
+    SysFreeString(url);
     if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
         WARN("InternetOpenUrl failed: %d\n", GetLastError());
         return INET_E_RESOURCE_NOT_FOUND;
     }
 
     return S_OK;
+}
+
+static HRESULT GopherProtocol_end_request(Protocol *prot)
+{
+    return E_NOTIMPL;
 }
 
 static HRESULT GopherProtocol_start_downloading(Protocol *prot)
@@ -62,6 +74,7 @@ static void GopherProtocol_close_connection(Protocol *prot)
 
 static const ProtocolVtbl AsyncProtocolVtbl = {
     GopherProtocol_open_request,
+    GopherProtocol_end_request,
     GopherProtocol_start_downloading,
     GopherProtocol_close_connection
 };
@@ -125,11 +138,20 @@ static HRESULT WINAPI GopherProtocol_Start(IInternetProtocol *iface, LPCWSTR szU
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
     GopherProtocol *This = PROTOCOL_THIS(iface);
+    IUri *uri;
+    HRESULT hres;
 
     TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
           pOIBindInfo, grfPI, dwReserved);
 
-    return protocol_start(&This->base, PROTOCOL(This), szUrl, pOIProtSink, pOIBindInfo);
+    hres = CreateUri(szUrl, 0, 0, &uri);
+    if(FAILED(hres))
+        return hres;
+
+    hres = protocol_start(&This->base, PROTOCOL(This), uri, pOIProtSink, pOIBindInfo);
+
+    IUri_Release(uri);
+    return hres;
 }
 
 static HRESULT WINAPI GopherProtocol_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
@@ -145,8 +167,10 @@ static HRESULT WINAPI GopherProtocol_Abort(IInternetProtocol *iface, HRESULT hrR
         DWORD dwOptions)
 {
     GopherProtocol *This = PROTOCOL_THIS(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+
+    return protocol_abort(&This->base, hrReason);
 }
 
 static HRESULT WINAPI GopherProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)

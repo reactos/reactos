@@ -22,6 +22,12 @@
 import "oaidl.idl";
 import "oleidl.idl";
 
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 cpp_quote("#define TASK_SUNDAY 0x1")
 cpp_quote("#define TASK_MONDAY 0x2")
 cpp_quote("#define TASK_TUESDAY 0x4")
@@ -368,6 +374,7 @@ interface ITaskScheduler : IUnknown
 }
 
 [
+    threading(both),
     uuid(148BD52A-A2AB-11CE-B11F-00AA00530503)
 ]
 coclass CTaskScheduler
@@ -377,6 +384,7 @@ coclass CTaskScheduler
 
 
 [
+    threading(both),
     uuid(148BD520-A2AB-11CE-B11F-00AA00530503)
 ]
 coclass CTask

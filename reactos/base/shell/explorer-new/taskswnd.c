@@ -1715,6 +1715,64 @@ TaskSwitchWnd_HandleButtonClick(IN OUT PTASK_SWITCH_WND This,
     return FALSE;
 }
 
+
+static VOID
+TaskSwitchWnd_HandleTaskItemRightClick(IN OUT PTASK_SWITCH_WND This,
+                                  IN OUT PTASK_ITEM TaskItem)
+{
+
+    HMENU hmenu = GetSystemMenu(TaskItem->hWnd, FALSE);
+
+    if (hmenu) {
+        POINT pt;
+        GetCursorPos(&pt);
+        int cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, This->hWndToolbar, NULL);
+        if (cmd) {
+            SetForegroundWindow(TaskItem->hWnd);	// reactivate window after the context menu has closed
+            PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
+        }
+    }
+}
+
+static VOID
+TaskSwitchWnd_HandleTaskGroupRightClick(IN OUT PTASK_SWITCH_WND This,
+                                   IN OUT PTASK_GROUP TaskGroup)
+{
+    /* TODO: Show task group right click menu */
+}
+
+static BOOL
+TaskSwitchWnd_HandleButtonRightClick(IN OUT PTASK_SWITCH_WND This,
+                                IN WORD wIndex)
+{
+    PTASK_ITEM TaskItem;
+    PTASK_GROUP TaskGroup;
+     if (This->IsGroupingEnabled)
+    {
+       TaskGroup = FindTaskGroupByIndex(This,
+                                         (INT)wIndex);
+        if (TaskGroup != NULL && TaskGroup->IsCollapsed)
+        {
+            TaskSwitchWnd_HandleTaskGroupRightClick(This,
+                                               TaskGroup);
+            return TRUE;
+        }		
+    }
+
+    TaskItem = FindTaskItemByIndex(This,
+                                   (INT)wIndex);
+						   
+    if (TaskItem != NULL)
+    {
+        TaskSwitchWnd_HandleTaskItemRightClick(This,
+                                          TaskItem);
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
+
 static LRESULT
 TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                              IN OUT NMTBCUSTOMDRAW *nmtbcd)
@@ -2001,7 +2059,8 @@ TaskSwitchWndProc(IN HWND hwnd,
                                                 (LPARAM)&pt);
                     if (iBtn >= 0)
                     {
-                        /* FIXME: Display the system menu of the window */
+                        TaskSwitchWnd_HandleButtonRightClick(This,
+                                                    iBtn);
                     }
                     else
                         goto ForwardContextMenuMsg;

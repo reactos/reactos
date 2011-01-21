@@ -70,16 +70,13 @@ MAIN_MENU MENU
    MENUITEM "Ad�na da&vant", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "I&nfuormaziuns", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "Davart &Wine", MNID_HELP_WINE
-#endif
  }
 }
 
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP,         "WINE ag�d"
+STID_WINE_HELP,         "Wine ag�d"
 STID_WHERROR,           "SBAGL"
 STID_WARNING,           "ATTENZIUN"
 STID_INFO,              "INFUORMAZIUN"

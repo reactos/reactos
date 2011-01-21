@@ -395,7 +395,6 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
       {
          WCHAR szResult[128];
          LONGLONG Result;
-#ifdef IOCTL_DISK_GET_LENGTH_INFO_IMPLEMENTED
          HANDLE hVolume;
          DWORD BytesReturned = 0;
 
@@ -404,16 +403,13 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          if (hVolume != INVALID_HANDLE_VALUE)
          {
             ret = DeviceIoControl(hVolume, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, (LPVOID)&TotalNumberOfBytes, sizeof(ULARGE_INTEGER), &BytesReturned, NULL);
-            if (ret && StrFormatByteSizeW(LengthInformation.Length.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
+            if (ret && StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
                SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
 
             CloseHandle(hVolume);
          }
-         TRACE("szResult %s hVOlume %p ret %d LengthInformation %ul Bytesreturned %d\n", debugstr_w(szResult), hVolume, ret, LengthInformation.Length.QuadPart, BytesReturned);
-#else
-            if (ret && StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-               SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
-#endif
+
+         TRACE("szResult %s hVOlume %p ret %d LengthInformation %ul Bytesreturned %d\n", debugstr_w(szResult), hVolume, ret, TotalNumberOfBytes.QuadPart, BytesReturned);
 
          if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
              SendDlgItemMessageW(hwndDlg, 14003, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);

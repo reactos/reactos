@@ -113,13 +113,10 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
-       if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-          DC_vUpdateLineBrush(dc);
-
         psurf = dc->dclevel.pSurface;
         if (NULL == psurf)
         {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
 
@@ -250,6 +247,9 @@ IntGdiPolyline(DC      *dc,
     if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
@@ -262,7 +262,7 @@ IntGdiPolyline(DC      *dc,
 
     if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
-        Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
+        Points = EngAllocMem(0, Count * sizeof(POINT), GDITAG_TEMP);
         if (Points != NULL)
         {
             psurf = dc->dclevel.pSurface;
@@ -294,6 +294,8 @@ IntGdiPolyline(DC      *dc,
             Ret = FALSE;
         }
     }
+
+    DC_vFinishBlit(dc, NULL);
 
     return Ret;
 }
@@ -376,11 +378,12 @@ NtGdiLineTo(HDC  hDC,
 {
     DC *dc;
     BOOL Ret;
+    RECT rcLockRect ;
 
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -390,7 +393,27 @@ NtGdiLineTo(HDC  hDC,
         return TRUE;
     }
 
+    rcLockRect.left = dc->pdcattr->ptlCurrent.x;
+    rcLockRect.top = dc->pdcattr->ptlCurrent.y;
+    rcLockRect.right = XEnd;
+    rcLockRect.bottom = YEnd;
+
+    IntLPtoDP(dc, &rcLockRect, 2);
+
+    /* The DCOrg is in device coordinates */
+    rcLockRect.left += dc->ptlDCOrig.x;
+    rcLockRect.top += dc->ptlDCOrig.y;
+    rcLockRect.right += dc->ptlDCOrig.x;
+    rcLockRect.bottom += dc->ptlDCOrig.y;
+
+    DC_vPrepareDCsForBlit(dc, rcLockRect, NULL, rcLockRect);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
+
     Ret = IntGdiLineTo(dc, XEnd, YEnd);
+
+    DC_vFinishBlit(dc, NULL);
 
     DC_UnlockDc(dc);
     return Ret;

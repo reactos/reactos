@@ -1319,6 +1319,7 @@ INT CDECL wctomb( char *dst, wchar_t ch )
 }
 
 #endif
+
 /*********************************************************************
  *		wcscpy_s (MSVCRT.@)
  */

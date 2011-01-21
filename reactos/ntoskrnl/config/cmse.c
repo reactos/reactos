@@ -18,6 +18,7 @@
 
 PSECURITY_DESCRIPTOR
 NTAPI
+INIT_FUNCTION
 CmpHiveRootSecurityDescriptor(VOID)
 {
     NTSTATUS Status;

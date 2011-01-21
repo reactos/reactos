@@ -6,8 +6,6 @@
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  * TRANSLATORS: Vytis "CMan" Girdþijauskas (cman@cman.us)
  */
-#include "resource.h"
-
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 

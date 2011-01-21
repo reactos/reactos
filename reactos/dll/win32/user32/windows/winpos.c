@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/window.c
+ * FILE:            dll/win32/user32/windows/winpos.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -111,3 +110,135 @@ ArrangeIconicWindows(HWND hWnd)
 {
   return NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);
 }
+
+/*
+ * @implemented
+ */
+HWND WINAPI
+WindowFromPoint(POINT Point)
+{
+    //TODO: Determine what the actual parameters to
+    // NtUserWindowFromPoint are.
+    return NtUserWindowFromPoint(Point.x, Point.y);
+}
+
+
+/*
+ * @implemented
+ */
+int WINAPI
+MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
+{
+    PWND FromWnd = NULL, ToWnd = NULL;
+    BOOL mirror_from, mirror_to;
+    POINT Delta;
+    UINT i;
+
+    if (hWndFrom)
+    {
+       FromWnd = ValidateHwnd(hWndFrom);
+       if (!FromWnd)
+           return 0;
+    }
+    if (hWndTo)
+    {
+       ToWnd = ValidateHwnd(hWndTo);
+       if (!ToWnd)
+           return 0;
+    }
+
+    /* Note: Desktop Top and Left is always 0! */
+    Delta.x = Delta.y = 0;
+    mirror_from = mirror_to = FALSE;
+
+    if (FromWnd && FromWnd->fnid != FNID_DESKTOP)
+    {
+       if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
+       {
+          mirror_from = TRUE;
+          Delta.x = FromWnd->rcClient.right - FromWnd->rcClient.left;
+       }
+       else
+          Delta.x = FromWnd->rcClient.left;
+       Delta.y = FromWnd->rcClient.top;
+    }
+
+    if (ToWnd && ToWnd->fnid != FNID_DESKTOP)
+    {
+       if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
+       {
+          mirror_to = TRUE;
+          Delta.x -= ToWnd->rcClient.right - ToWnd->rcClient.left;
+       }
+       else
+          Delta.x -= ToWnd->rcClient.left;
+       Delta.y -= ToWnd->rcClient.top;
+    }
+
+    if (mirror_from) Delta.x = -Delta.x;
+
+    for (i = 0; i != cPoints; i++)
+    {
+        lpPoints[i].x += Delta.x;
+        lpPoints[i].y += Delta.y;
+        if (mirror_from || mirror_to) lpPoints[i].x = -lpPoints[i].x;
+    }
+
+    if ((mirror_from || mirror_to) && cPoints == 2)  /* special case for rectangle */
+    {
+       int tmp = lpPoints[0].x;
+       lpPoints[0].x = lpPoints[1].x;
+       lpPoints[1].x = tmp;
+    }
+
+    return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+ScreenToClient(HWND hWnd, LPPOINT lpPoint)
+{
+    PWND Wnd;
+    /* Note: Desktop Top and Left is always 0! */
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return FALSE;
+
+    if (Wnd->fnid != FNID_DESKTOP)
+    {
+       if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+          lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+       else
+          lpPoint->x -= Wnd->rcClient.left;
+       lpPoint->y -= Wnd->rcClient.top;
+    }
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+ClientToScreen(HWND hWnd, LPPOINT lpPoint)
+{
+    PWND Wnd;
+    /* Note: Desktop Top and Left is always 0! */
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return FALSE;
+
+    if (Wnd->fnid != FNID_DESKTOP)
+    {
+       if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+          lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+       else
+          lpPoint->x += Wnd->rcClient.left;
+       lpPoint->y += Wnd->rcClient.top;
+    }
+    return TRUE;
+}
+

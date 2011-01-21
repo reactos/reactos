@@ -250,7 +250,7 @@ typedef struct _DEVPROPKEY {
 } DEVPROPKEY;
 
 [
-  uuid (809F4e40-A03D-11CE-8F69-08003E30051B),
+  uuid (8D9F4E40-A03D-11CE-8F69-08003E30051B),
   version(1.0),
   pointer_default(unique)
   #ifndef __midl

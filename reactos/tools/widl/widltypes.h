@@ -21,9 +21,9 @@
 #ifndef __WIDL_WIDLTYPES_H
 #define __WIDL_WIDLTYPES_H
 
-#define S_OK           0 	 
-#define S_FALSE        1 	 
-#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL) 	 
+#define S_OK           0
+#define S_FALSE        1
+#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 #define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 
 #define max(a, b) ((a) > (b) ? a : b)
@@ -39,7 +39,9 @@
 typedef GUID UUID;
 #endif
 
+#ifndef TRUE
 #define TRUE 1
+#endif
 #define FALSE 0
 
 typedef struct _loc_info_t loc_info_t;
@@ -81,20 +83,29 @@ enum attr_type
     ATTR_CALLAS,
     ATTR_CALLCONV, /* calling convention pseudo-attribute */
     ATTR_CASE,
+    ATTR_CODE,
+    ATTR_COMMSTATUS,
     ATTR_CONST, /* const pseudo-attribute */
     ATTR_CONTEXTHANDLE,
     ATTR_CONTROL,
+    ATTR_DECODE,
     ATTR_DEFAULT,
+    ATTR_DEFAULTBIND,
     ATTR_DEFAULTCOLLELEM,
     ATTR_DEFAULTVALUE,
     ATTR_DEFAULTVTABLE,
+    ATTR_DISABLECONSISTENCYCHECK,
     ATTR_DISPINTERFACE,
     ATTR_DISPLAYBIND,
     ATTR_DLLNAME,
     ATTR_DUAL,
+    ATTR_ENABLEALLOCATE,
+    ATTR_ENCODE,
     ATTR_ENDPOINT,
     ATTR_ENTRY,
     ATTR_EXPLICIT_HANDLE,
+    ATTR_FAULTSTATUS,
+    ATTR_FORCEALLOCATE,
     ATTR_HANDLE,
     ATTR_HELPCONTEXT,
     ATTR_HELPFILE,
@@ -104,6 +115,7 @@ enum attr_type
     ATTR_HIDDEN,
     ATTR_ID,
     ATTR_IDEMPOTENT,
+    ATTR_IGNORE,
     ATTR_IIDIS,
     ATTR_IMMEDIATEBIND,
     ATTR_IMPLICIT_HANDLE,
@@ -112,24 +124,35 @@ enum attr_type
     ATTR_INPUTSYNC,
     ATTR_LENGTHIS,
     ATTR_LIBLCID,
+    ATTR_LICENSED,
     ATTR_LOCAL,
+    ATTR_MAYBE,
+    ATTR_MESSAGE,
+    ATTR_NOCODE,
     ATTR_NONBROWSABLE,
     ATTR_NONCREATABLE,
     ATTR_NONEXTENSIBLE,
+    ATTR_NOTIFY,
+    ATTR_NOTIFYFLAG,
     ATTR_OBJECT,
     ATTR_ODL,
     ATTR_OLEAUTOMATION,
+    ATTR_OPTIMIZE,
     ATTR_OPTIONAL,
     ATTR_OUT,
     ATTR_PARAMLCID,
+    ATTR_PARTIALIGNORE,
     ATTR_POINTERDEFAULT,
     ATTR_POINTERTYPE,
+    ATTR_PROGID,
     ATTR_PROPGET,
     ATTR_PROPPUT,
     ATTR_PROPPUTREF,
+    ATTR_PROXY,
     ATTR_PUBLIC,
     ATTR_RANGE,
     ATTR_READONLY,
+    ATTR_REPRESENTAS,
     ATTR_REQUESTEDIT,
     ATTR_RESTRICTED,
     ATTR_RETVAL,
@@ -139,11 +162,16 @@ enum attr_type
     ATTR_STRING,
     ATTR_SWITCHIS,
     ATTR_SWITCHTYPE,
+    ATTR_THREADING,
     ATTR_TRANSMITAS,
+    ATTR_UIDEFAULT,
+    ATTR_USERMARSHAL,
+    ATTR_USESGETLASTERROR,
     ATTR_UUID,
     ATTR_V1ENUM,
     ATTR_VARARG,
     ATTR_VERSION,
+    ATTR_VIPROGID,
     ATTR_WIREMARSHAL
 };
 
@@ -222,6 +250,15 @@ enum statement_type
     STMT_IMPORT,
     STMT_IMPORTLIB,
     STMT_CPPQUOTE
+};
+
+enum threading_type
+{
+    THREADING_APARTMENT = 1,
+    THREADING_NEUTRAL,
+    THREADING_SINGLE,
+    THREADING_FREE,
+    THREADING_BOTH
 };
 
 enum type_basic_type
@@ -404,6 +441,7 @@ struct _var_t {
   attr_list_t *attrs;
   expr_t *eval;
   enum storage_class stgclass;
+  unsigned int procstring_offset;
 
   struct _loc_info_t loc_info;
 

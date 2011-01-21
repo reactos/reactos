@@ -3,6 +3,7 @@
  */
 
 #include <win32k.h>
+#undef XFORMOBJ
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
@@ -146,18 +147,6 @@ EngFindResource(
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_7rjb.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
-LPWSTR
-APIENTRY
-EngGetDriverName ( IN HDEV hdev )
-{
-  // www.osr.com/ddk/graphics/gdifncs_2gx3.htm
   UNIMPLEMENTED;
   return NULL;
 }

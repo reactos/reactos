@@ -56,7 +56,9 @@ static GENERIC_MAPPING IntWindowStationMapping =
    };
 
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitWindowStationImpl(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -258,7 +260,7 @@ IntValidateWindowStationHandle(
    if (WindowStation == NULL)
    {
       //      DPRINT1("Invalid window station handle\n");
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return STATUS_INVALID_HANDLE;
    }
 
@@ -1004,7 +1006,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
    if(PsGetCurrentProcess() == CsrProcess)
    {
       DPRINT1("CSRSS is not allowed to change it's window station!!!\n");
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1056,7 +1058,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
       DPRINT1("Unauthorized process attempted to lock the window station!\n");
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1101,7 +1103,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
       DPRINT1("Unauthorized process attempted to unlock the window station!\n");
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1123,25 +1125,6 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
 
    ObDereferenceObject(Object);
    return Ret;
-}
-
-/*
- * NtUserSetWindowStationUser
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserSetWindowStationUser(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 static NTSTATUS FASTCALL

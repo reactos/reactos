@@ -11,12 +11,12 @@ APIENTRY
 EngCreateSemaphore ( VOID )
 {
   // www.osr.com/ddk/graphics/gdifncs_95lz.htm
-  PERESOURCE psem = ExAllocatePoolWithTag( NonPagedPool, sizeof(ERESOURCE), TAG_GSEM );
+  PERESOURCE psem = ExAllocatePoolWithTag( NonPagedPool, sizeof(ERESOURCE), GDITAG_SEMAPHORE );
   if ( !psem )
     return NULL;
   if ( !NT_SUCCESS(ExInitializeResourceLite ( psem )) )
   {
-    ExFreePoolWithTag ( psem, TAG_GSEM );
+    ExFreePoolWithTag ( psem, GDITAG_SEMAPHORE );
     return NULL;
   }
   return (HSEMAPHORE)psem;
@@ -69,6 +69,19 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   IntGdiReleaseSemaphore ( hsem );
 }
 
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    IN HSEMAPHORE hsem)
+{
+    PTHREADINFO pti;
+
+    ASSERT(hsem);
+    ExEnterCriticalRegionAndAcquireResourceShared((PERESOURCE)hsem);
+    pti = PsGetThreadWin32Thread(PsGetCurrentThread());
+    if (pti) ++pti->dwEngAcquireCount;
+}
+
 /*
  * @implemented
  */
@@ -81,7 +94,7 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 
   ExDeleteResourceLite((PERESOURCE)hsem);
 
-  ExFreePoolWithTag( (PVOID)hsem, TAG_GSEM);
+  ExFreePoolWithTag( (PVOID)hsem, GDITAG_SEMAPHORE);
 }
 
 /*

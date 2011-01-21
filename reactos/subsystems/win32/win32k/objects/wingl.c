@@ -69,7 +69,7 @@ NtGdiDescribePixelFormat(HDC  hDC,
   pdc = DC_LockDc(hDC);
   if (!pdc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -79,7 +79,7 @@ NtGdiDescribePixelFormat(HDC  hDC,
        PixelFormat < 1 ||
        PixelFormat > pdc->ipfdDevMax )
   {  
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
 
@@ -137,7 +137,7 @@ NtGdiSetPixelFormat(
   pdc = DC_LockDc(hdc);
   if (!pdc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -146,7 +146,7 @@ NtGdiSetPixelFormat(
   if ( ipfd < 1 ||
        ipfd > pdc->ipfdDevMax )
   {  
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
 
@@ -156,7 +156,7 @@ NtGdiSetPixelFormat(
 
   if (!hWnd)
   {
-     SetLastWin32Error(ERROR_INVALID_WINDOW_STYLE);
+     EngSetLastError(ERROR_INVALID_WINDOW_STYLE);
      goto Exit;
   }
 
@@ -168,7 +168,7 @@ NtGdiSetPixelFormat(
   if (pWndObj) pso = pWndObj->psoOwner;
   else
   {
-     SetLastWin32Error(ERROR_INVALID_PIXEL_FORMAT);
+     EngSetLastError(ERROR_INVALID_PIXEL_FORMAT);
      goto Exit;
   }
 

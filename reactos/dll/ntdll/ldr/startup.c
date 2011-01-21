@@ -71,11 +71,13 @@ LoadImageFileExecutionOptions(PPEB Peb)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Value = 0;
-    UNICODE_STRING ValueString;
     UNICODE_STRING ImageName;
     UNICODE_STRING ImagePathName;
-    WCHAR ValueBuffer[64];
     ULONG ValueSize;
+    extern ULONG RtlpPageHeapGlobalFlags, RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
+    extern ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
+    extern WCHAR RtlpPageHeapTargetDlls[512];
+    extern BOOLEAN RtlpPageHeapEnabled;
 
     if (Peb->ProcessParameters &&
         Peb->ProcessParameters->ImagePathName.Length > 0)
@@ -106,26 +108,84 @@ LoadImageFileExecutionOptions(PPEB Peb)
         /* global flag */
         Status = LdrQueryImageFileExecutionOptions(&ImageName,
                                                    L"GlobalFlag",
-                                                   REG_SZ,
-                                                   (PVOID)ValueBuffer,
-                                                   sizeof(ValueBuffer),
+                                                   REG_DWORD,
+                                                   (PVOID)&Value,
+                                                   sizeof(Value),
                                                    &ValueSize);
         if (NT_SUCCESS(Status))
         {
-            ValueString.Buffer = ValueBuffer;
-            ValueString.Length = ValueSize - sizeof(WCHAR);
-            ValueString.MaximumLength = sizeof(ValueBuffer);
-            Status = RtlUnicodeStringToInteger(&ValueString, 16, &Value);
-            if (NT_SUCCESS(Status))
+            Peb->NtGlobalFlag = Value;
+            DPRINT("GlobalFlag: Value=0x%lx\n", Value);
+        }
+        else
+        {
+            /* Add debugging flags if there is no GlobalFlags override */
+            if (Peb->BeingDebugged)
             {
-                Peb->NtGlobalFlag |= Value;
-                DPRINT("GlobalFlag: Key='%S', Value=0x%lx\n", ValueBuffer, Value);
+                Peb->NtGlobalFlag |= FLG_HEAP_VALIDATE_PARAMETERS |
+                                     FLG_HEAP_ENABLE_FREE_CHECK |
+                                     FLG_HEAP_ENABLE_TAIL_CHECK;
             }
         }
-        /*
-         *  FIXME:
-         *   read more options
-         */
+
+        /* Handle the case when page heap is enabled */
+        if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
+        {
+            /* Disable all heap debugging flags so that no heap call goes via page heap branch */
+            Peb->NtGlobalFlag &= ~(FLG_HEAP_VALIDATE_PARAMETERS |
+                                   FLG_HEAP_VALIDATE_ALL |
+                                   FLG_HEAP_ENABLE_FREE_CHECK |
+                                   FLG_HEAP_ENABLE_TAIL_CHECK |
+                                   FLG_USER_STACK_TRACE_DB |
+                                   FLG_HEAP_ENABLE_TAGGING |
+                                   FLG_HEAP_ENABLE_TAG_BY_DLL);
+
+            /* Get page heap flags without checking return value */
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapFlags",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapGlobalFlags,
+                                              sizeof(RtlpPageHeapGlobalFlags),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapSizeRangeStart",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapSizeRangeStart,
+                                              sizeof(RtlpPageHeapSizeRangeStart),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapSizeRangeEnd",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapSizeRangeEnd,
+                                              sizeof(RtlpPageHeapSizeRangeEnd),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapDllRangeStart",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapDllRangeStart,
+                                              sizeof(RtlpPageHeapDllRangeStart),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapDllRangeEnd",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapDllRangeEnd,
+                                              sizeof(RtlpPageHeapDllRangeEnd),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapTargetDlls",
+                                              REG_SZ,
+                                              (PVOID)RtlpPageHeapTargetDlls,
+                                              sizeof(RtlpPageHeapTargetDlls),
+                                              &ValueSize);
+
+            /* Now when all parameters are read, enable page heap */
+            RtlpPageHeapEnabled = TRUE;
+        }
     }
 }
 
@@ -284,11 +344,12 @@ LdrpInit2(PCONTEXT Context,
 
     /*  If MZ header exists  */
     PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
+    NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
     DPRINT("PEDosHeader %p\n", PEDosHeader);
 
     if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
         PEDosHeader->e_lfanew == 0L ||
-        *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
+        NTHeaders->Signature != IMAGE_NT_SIGNATURE)
     {
         DPRINT1("Image has bad header\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
@@ -303,8 +364,6 @@ LdrpInit2(PCONTEXT Context,
                      Peb->UnicodeCaseTableData,
                      &NlsTable);
     RtlResetRtlTranslations(&NlsTable);
-
-    NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
 
     /* Get number of processors */
     DPRINT("Here\n");
@@ -323,6 +382,9 @@ LdrpInit2(PCONTEXT Context,
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();
 
+    /* Load execution options */
+    LoadImageFileExecutionOptions(Peb);
+
     /* create process heap */
     RtlInitializeHeapManager();
     Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -335,6 +397,47 @@ LdrpInit2(PCONTEXT Context,
     {
         DPRINT1("Failed to create process heap\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    /* Check for correct machine type */
+    if (NTHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE)
+    {
+        ULONG_PTR HardErrorParameters[1];
+        UNICODE_STRING ImageNameU;
+        ANSI_STRING ImageNameA;
+        WCHAR *Ptr;
+        ULONG ErrorResponse;
+
+        DPRINT1("Image %wZ is for a foreign architecture (0x%x).\n",
+                &Peb->ProcessParameters->ImagePathName, NTHeaders->FileHeader.Machine);
+
+        /* Get the full image path name */
+        ImageNameU = Peb->ProcessParameters->ImagePathName;
+
+        /* Get the file name */
+        Ptr = Peb->ProcessParameters->ImagePathName.Buffer +
+              (Peb->ProcessParameters->ImagePathName.Length / sizeof(WCHAR)) -1;
+        while ((Ptr >= Peb->ProcessParameters->ImagePathName.Buffer) &&
+               (*Ptr != L'\\')) Ptr--;
+        ImageNameU.Buffer = Ptr + 1;
+        ImageNameU.Length = Peb->ProcessParameters->ImagePathName.Length -
+            (ImageNameU.Buffer - Peb->ProcessParameters->ImagePathName.Buffer) * sizeof(WCHAR);
+        ImageNameU.MaximumLength = ImageNameU.Length;
+
+        /*`Convert to ANSI, harderror message needs that */
+        RtlUnicodeStringToAnsiString(&ImageNameA, &ImageNameU, TRUE);
+
+        /* Raise harderror */
+        HardErrorParameters[0] = (ULONG_PTR)&ImageNameA;
+        NtRaiseHardError(STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE,
+                         1,
+                         1,
+                         HardErrorParameters,
+                         OptionOk,
+                         &ErrorResponse);
+
+        RtlFreeAnsiString(&ImageNameA);
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE);
     }
 
     /* initialized vectored exception handling */
@@ -387,9 +490,6 @@ LdrpInit2(PCONTEXT Context,
     /* Load compatibility settings */
     LoadCompatibilitySettings(Peb);
 
-    /* Load execution options */
-    LoadImageFileExecutionOptions(Peb);
-
     /* build full ntdll path */
     wcscpy(FullNtDllPath, SharedUserData->NtSystemRoot);
     wcscat(FullNtDllPath, L"\\system32\\ntdll.dll");
@@ -429,7 +529,7 @@ LdrpInit2(PCONTEXT Context,
     /* add entry for executable (becomes first list entry) */
     ExeModule = (PLDR_DATA_TABLE_ENTRY)
                  RtlAllocateHeap(Peb->ProcessHeap,
-                                 0,
+                                 HEAP_ZERO_MEMORY,
                                  sizeof(LDR_DATA_TABLE_ENTRY));
     if (ExeModule == NULL)
     {

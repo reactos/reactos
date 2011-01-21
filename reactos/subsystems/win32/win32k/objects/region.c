@@ -2336,20 +2336,20 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
            else if (src2Rgn == NULL)
            {
               DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
-              SetLastWin32Error(ERROR_INVALID_HANDLE);
+              EngSetLastError(ERROR_INVALID_HANDLE);
            }
         }
      }
      else
      {
         DPRINT("IntGdiCombineRgn: hSrc1 unavailable\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
      }
   }
   else
   {
      DPRINT("IntGdiCombineRgn: hDest unavailable\n");
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
   }
   return result;
 }
@@ -3231,14 +3231,14 @@ NtGdiCombineRgn(HRGN  hDest,
 
   if ( CombineMode > RGN_COPY && CombineMode < RGN_AND)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return ERROR;
   }
 
   destRgn = RGNOBJAPI_Lock(hDest, NULL);
   if (!destRgn)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return ERROR;
   }
 
@@ -3246,7 +3246,7 @@ NtGdiCombineRgn(HRGN  hDest,
   if (!src1Rgn)
   {
      RGNOBJAPI_Unlock(destRgn);
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return ERROR;
   }
 
@@ -3285,7 +3285,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
     /* Allocate region data structure with space for 1 RECTL */
     if (!(pRgn = REGION_AllocUserRgnWithHandle(1)))
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hRgn = pRgn->BaseObject.hHmgr;
@@ -3486,6 +3486,7 @@ NtGdiExtCreateRegion(
     DWORD dwSize = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     MATRIX matrix;
+    XFORMOBJ xo;
 
     DPRINT("NtGdiExtCreateRegion\n");
     _SEH2_TRY
@@ -3518,7 +3519,7 @@ NtGdiExtCreateRegion(
 
     if (Region == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
     hRgn = Region->BaseObject.hHmgr;
@@ -3531,13 +3532,14 @@ NtGdiExtCreateRegion(
 
             /* Init the XFORMOBJ from the Xform struct */
             Status = STATUS_INVALID_PARAMETER;
-            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
+            XFORMOBJ_vInit(&xo, &matrix);
+            ret = XFORMOBJ_iSetXform(&xo, (XFORML*)Xform);
 
             /* Check for error, also no scale and shear allowed */
             if (ret != DDI_ERROR && ret != GX_GENERAL)
             {
                 /* Apply the coordinate transformation on the rects */
-                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
+                if (XFORMOBJ_bApplyXform(&xo,
                                          XF_LTOL,
                                          nCount * 2,
                                          RgnData->Buffer,
@@ -3562,7 +3564,7 @@ NtGdiExtCreateRegion(
     _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         RGNOBJAPI_Unlock(Region);
         GreDeleteObject(hRgn);
         return NULL;
@@ -3637,83 +3639,6 @@ NtGdiFrameRgn(
 }
 
 
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
-
-   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
-
-   The intersection of the clip with the meta region is not Rao it's API!
-   Go back and read 7.2 Clipping pages 418-19:
-   Rao = API & Vis:
-   1) The Rao region is the intersection of the API region and the system region,
-      named after the Microsoft engineer who initially proposed it.
-   2) The Rao region can be calculated from the API region and the system region.
-
-   API:
-      API region is the intersection of the meta region and the clipping region,
-      clearly named after the fact that it is controlled by GDI API calls.
-*/
-INT APIENTRY
-NtGdiGetRandomRgn(
-    HDC hDC,
-    HRGN hDest,
-    INT iCode
-)
-{
-    INT ret = 0;
-    PDC pDC;
-    HRGN hSrc = NULL;
-    POINT org;
-
-    pDC = DC_LockDc(hDC);
-    if (pDC == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return -1;
-    }
-
-    switch (iCode)
-    {
-    case CLIPRGN:
-        hSrc = pDC->rosdc.hClipRgn;
-//        if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
-        break;
-    case METARGN:
-        if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
-        break;
-    case APIRGN:
-        if (pDC->prgnAPI) hSrc = ((PROSRGNDATA)pDC->prgnAPI)->BaseObject.hHmgr;
-//        else if (pDC->dclevel.prgnClip) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.hHmgr;
-        else if (pDC->rosdc.hClipRgn) hSrc = pDC->rosdc.hClipRgn;
-        else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
-        break;
-    case SYSRGN:
-        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
-        break;
-    default:
-        hSrc = 0;
-    }
-    if (hSrc)
-    {
-        if (NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
-        {
-            ret = -1;
-        }
-        else
-        {
-            ret = 1;
-        }
-    }
-    if (iCode == SYSRGN)
-    {
-        IntGdiGetDCOrg(pDC, &org);
-        NtGdiOffsetRgn(hDest, org.x, org.y );
-    }
-
-    DC_UnlockDc(pDC);
-
-    return ret;
-}
-
 INT APIENTRY
 NtGdiGetRgnBox(
     HRGN hRgn,
@@ -3768,7 +3693,7 @@ NtGdiInvertRgn(
 
     if (!(RgnData = RGNOBJAPI_Lock(hRgn, NULL)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -3921,7 +3846,7 @@ NtGdiUnionRectWithRgn(
 
     if (!(Rgn = RGNOBJAPI_Lock(hDest, NULL)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
 

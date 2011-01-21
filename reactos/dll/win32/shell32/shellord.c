@@ -685,6 +685,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     CHAR link_dir[MAX_PATH];
     CHAR new_lnk_filepath[MAX_PATH];
     CHAR new_lnk_name[MAX_PATH];
+    CHAR * ext;
     IMalloc *ppM;
     LPITEMIDLIST pidl;
     HWND hwnd = 0;       /* FIXME:  get real window handle */
@@ -818,9 +819,28 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     TRACE("full document name %s\n", debugstr_a(doc_name));
+
+    /* check if file is a shortcut */
+    ext = strrchr(doc_name, '.');
+    if (!lstrcmpiA(ext, ".lnk"))
+    {
+        IShellLinkA * ShellLink;
+
+        IShellLink_ConstructFromFile(NULL, &IID_IShellLinkA, (LPCITEMIDLIST)SHSimpleIDListFromPathA(doc_name), (LPVOID*)&ShellLink);
+        IShellLinkA_GetPath(ShellLink, doc_name, MAX_PATH, NULL, 0);
+
+        IShellLinkA_Release(ShellLink);
+    }
+
+    ext = strrchr(doc_name, '.');
+    if (!lstrcmpiA(ext, ".exe"))
+    {
+        /* executables are not added */
+        return;
+    }
+
     PathStripPathA(doc_name);
     TRACE("stripped document name %s\n", debugstr_a(doc_name));
-
 
     /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
 

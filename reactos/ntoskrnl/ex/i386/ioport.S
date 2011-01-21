@@ -8,54 +8,52 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
-.intel_syntax noprefix
+#include <asm.inc>
+#include <ks386.inc>
 
 /* GLOBALS *******************************************************************/
 
-.globl _READ_REGISTER_UCHAR@4
-.globl _READ_REGISTER_USHORT@4
-.globl _READ_REGISTER_ULONG@4
-.globl _READ_REGISTER_BUFFER_UCHAR@12
-.globl _READ_REGISTER_BUFFER_USHORT@12
-.globl _READ_REGISTER_BUFFER_ULONG@12
-.globl _WRITE_REGISTER_UCHAR@8
-.globl _WRITE_REGISTER_USHORT@8
-.globl _WRITE_REGISTER_ULONG@8
-.globl _WRITE_REGISTER_BUFFER_UCHAR@12
-.globl _WRITE_REGISTER_BUFFER_USHORT@12
-.globl _WRITE_REGISTER_BUFFER_ULONG@12
+PUBLIC _READ_REGISTER_UCHAR@4
+PUBLIC _READ_REGISTER_USHORT@4
+PUBLIC _READ_REGISTER_ULONG@4
+PUBLIC _READ_REGISTER_BUFFER_UCHAR@12
+PUBLIC _READ_REGISTER_BUFFER_USHORT@12
+PUBLIC _READ_REGISTER_BUFFER_ULONG@12
+PUBLIC _WRITE_REGISTER_UCHAR@8
+PUBLIC _WRITE_REGISTER_USHORT@8
+PUBLIC _WRITE_REGISTER_ULONG@8
+PUBLIC _WRITE_REGISTER_BUFFER_UCHAR@12
+PUBLIC _WRITE_REGISTER_BUFFER_USHORT@12
+PUBLIC _WRITE_REGISTER_BUFFER_ULONG@12
 
 /* FUNCTIONS *****************************************************************/
 
-.func READ_REGISTER_UCHAR@4
+.code
+
 _READ_REGISTER_UCHAR@4:
 
     /* Return the requested memory location */
     mov edx, [esp+4]
     mov al, [edx]
     ret 4
-.endfunc
 
-.func READ_REGISTER_USHORT@4
+
 _READ_REGISTER_USHORT@4:
 
     /* Return the requested memory location */
     mov edx, [esp+4]
     mov ax, [edx]
     ret 4
-.endfunc
 
-.func READ_REGISTER_ULONG@4
+
 _READ_REGISTER_ULONG@4:
 
     /* Return the requested memory location */
     mov edx, [esp+4]
     mov eax, [edx]
     ret 4
-.endfunc
 
-.func READ_REGISTER_BUFFER_UCHAR@12
+
 _READ_REGISTER_BUFFER_UCHAR@12:
 
     /* Save volatiles */
@@ -72,9 +70,8 @@ _READ_REGISTER_BUFFER_UCHAR@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
-.func READ_REGISTER_BUFFER_USHORT@12
+
 _READ_REGISTER_BUFFER_USHORT@12:
 
     /* Save volatiles */
@@ -91,9 +88,8 @@ _READ_REGISTER_BUFFER_USHORT@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
-.func READ_REGISTER_BUFFER_ULONG@12
+
 _READ_REGISTER_BUFFER_ULONG@12:
 
     /* Save volatiles */
@@ -110,9 +106,8 @@ _READ_REGISTER_BUFFER_ULONG@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
-.func WRITE_REGISTER_UCHAR@8
+
 _WRITE_REGISTER_UCHAR@8:
 
     /* Write to memory */
@@ -123,9 +118,8 @@ _WRITE_REGISTER_UCHAR@8:
     /* Flush posted write buffers and return */
     lock or [esp+4], edx
     ret 8
-.endfunc
 
-.func WRITE_REGISTER_USHORT@8
+
 _WRITE_REGISTER_USHORT@8:
 
     /* Write to memory */
@@ -136,9 +130,8 @@ _WRITE_REGISTER_USHORT@8:
     /* Flush posted write buffers and return */
     lock or [esp+4], edx
     ret 8
-.endfunc
 
-.func WRITE_REGISTER_ULONG@8
+
 _WRITE_REGISTER_ULONG@8:
 
     /* Write to memory */
@@ -149,9 +142,8 @@ _WRITE_REGISTER_ULONG@8:
     /* Flush posted write buffers and return */
     lock or [esp+4], edx
     ret 8
-.endfunc
 
-.func WRITE_REGISTER_BUFFER_UCHAR@12
+
 _WRITE_REGISTER_BUFFER_UCHAR@12:
 
     /* Save volatiles */
@@ -171,9 +163,8 @@ _WRITE_REGISTER_BUFFER_UCHAR@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
-.func WRITE_REGISTER_BUFFER_USHORT@12
+
 _WRITE_REGISTER_BUFFER_USHORT@12:
 
     /* Save volatiles */
@@ -193,9 +184,8 @@ _WRITE_REGISTER_BUFFER_USHORT@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
-.func WRITE_REGISTER_BUFFER_ULONG@12
+
 _WRITE_REGISTER_BUFFER_ULONG@12:
 
     /* Save volatiles */
@@ -215,6 +205,6 @@ _WRITE_REGISTER_BUFFER_ULONG@12:
     mov edi, edx
     mov esi, eax
     ret 12
-.endfunc
 
+END
 /* EOF */

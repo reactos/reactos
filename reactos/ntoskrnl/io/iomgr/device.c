@@ -1731,4 +1731,15 @@ IoStartPacket(IN PDEVICE_OBJECT DeviceObject,
     KeLowerIrql(OldIrql);
 }
 
+#if defined (_WIN64)
+ULONG
+NTAPI
+IoWMIDeviceObjectToProviderId(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+#endif
+
 /* EOF */

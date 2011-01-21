@@ -4,6 +4,9 @@
 	<directory name="cdrom">
 		<xi:include href="cdrom/cdrom.rbuild" />
 	</directory>
+	<directory name="cdrom_new">
+		<xi:include href="cdrom_new/cdrom_new.rbuild" />
+	</directory>
 	<directory name="class2">
 		<xi:include href="class2/class2.rbuild" />
 	</directory>

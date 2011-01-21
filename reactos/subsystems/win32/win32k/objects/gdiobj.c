@@ -81,6 +81,8 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 };
 
 static LARGE_INTEGER ShortDelay;
+PGDI_HANDLE_TABLE GdiHandleTable = NULL;
+PSECTION_OBJECT GdiTableSection = NULL;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -151,7 +153,9 @@ GDI_CleanupDummy(PVOID ObjectBody)
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
 */
-PGDI_HANDLE_TABLE INTERNAL_CALL
+INIT_FUNCTION
+PGDI_HANDLE_TABLE
+INTERNAL_CALL
 GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 {
     PGDI_HANDLE_TABLE HandleTable = NULL;
@@ -220,6 +224,23 @@ GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 
     return HandleTable;
 }
+
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitGdiHandleTable()
+{
+    /* Create the GDI handle table */
+    GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+    if (GdiHandleTable == NULL)
+    {
+        DPRINT1("Failed to initialize the GDI handle table.\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 static void FASTCALL
 LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
@@ -635,10 +656,7 @@ LockHandle:
                 PEPROCESS OldProcess;
                 Object->BaseFlags |= BASEFLAG_READY_TO_DIE;
                 DPRINT("Object %p, ulShareCount = %d\n", Object->hHmgr, Object->ulShareCount);
-                //GDIDBG_TRACECALLER();
-                //GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));
-                /* Set NULL owner. This will permit an other process to kill the object
-                 * Do the work here to avoid race conditions */
+                /* Set NULL owner. Do the work here to avoid race conditions */
                 Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
                 if (NT_SUCCESS(Status))
                 {
@@ -649,7 +667,7 @@ LockHandle:
                     }
                     ObDereferenceObject(OldProcess);
                 }
-                (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
+                (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, NULL);
                 /* Don't wait on shared locks */
                 return FALSE;
             }
@@ -660,7 +678,7 @@ LockHandle:
                  */
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
                 GDIDBG_TRACECALLER();
-                GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                GDIDBG_TRACELOCKER(hObj);
                 (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
                 /* do not assert here for it will call again from dxg.sys it being call twice */
 
@@ -702,7 +720,7 @@ LockHandle:
             }
             DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
             GDIDBG_TRACECALLER();
-            GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+            GDIDBG_TRACEALLOCATOR(hObj);
         }
     }
 
@@ -833,7 +851,7 @@ GreDeleteObject(HGDIOBJ hObject)
              break;
 
           case GDI_OBJECT_TYPE_DC:
-             DC_FreeDcAttr(hObject);
+//             DC_FreeDcAttr(hObject);
              break;
        }
 
@@ -970,12 +988,14 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     if(hObj == NULL)
         return NULL ;
 
+    GDIDBG_INITLOOPTRACE();
+
     HandleIndex = GDI_HANDLE_GET_INDEX(hObj);
     HandleType = GDI_HANDLE_GET_TYPE(hObj);
     HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
     /* Check that the handle index is valid. */
-    if (HandleIndex >= GDI_HANDLE_COUNT)
+    if (HandleIndex >= GDI_HANDLE_COUNT )
         return NULL;
 
     Entry = &GdiHandleTable->Entries[HandleIndex];
@@ -1001,7 +1021,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     {
         DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
         GDIDBG_TRACECALLER();
-        GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+        GDIDBG_TRACEALLOCATOR(hObj);
         return NULL;
     }
 
@@ -1077,6 +1097,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
             /*
              * The handle is currently locked, wait some time and try again.
              */
+            GDIDBG_TRACELOOP(hObj, PrevProcId, NULL);
 
             DelayExecution();
             continue;
@@ -1649,6 +1670,38 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     return MappedView;
 }
 
+/* Locks 2 or 3 objects at a time */
+VOID
+INTERNAL_CALL
+GDIOBJ_LockMultipleObjs(ULONG ulCount,
+                        IN HGDIOBJ* ahObj,
+                        OUT PGDIOBJ* apObj)
+{
+    UINT auiIndices[3] = {0,1,2};
+    UINT i, tmp ;
+    BOOL bUnsorted = TRUE;
+
+    /* First is greatest */
+    while(bUnsorted)
+    {
+        bUnsorted = FALSE;
+        for(i=1; i<ulCount; i++)
+        {
+            if((ULONG_PTR)ahObj[auiIndices[i-1]] < (ULONG_PTR)ahObj[auiIndices[i]])
+            {
+                tmp = auiIndices[i-1];
+                auiIndices[i-1] = auiIndices[i];
+                auiIndices[i] = tmp;
+                bUnsorted = TRUE;
+            }
+        }
+    }
+
+    for(i=0;i<ulCount;i++)
+        apObj[auiIndices[i]] = GDIOBJ_LockObj(ahObj[auiIndices[i]], GDI_OBJECT_TYPE_DONTCARE);
+}
+
+
 /** PUBLIC FUNCTIONS **********************************************************/
 
 BOOL
@@ -1741,9 +1794,8 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   {
      pDC = DC_LockDc ( hDC );
      MmCopyFromCaller(&pDC->dcattr, pDC->pdcattr, sizeof(DC_ATTR));
+     DC_vFreeDcAttr(pDC);
      DC_UnlockDc( pDC );
-
-     DC_FreeDcAttr( hDC );         // Free the dcattr!
 
      if (!DC_SetOwnership( hDC, NULL )) // This hDC is inaccessible!
         return Ret;
@@ -1852,7 +1904,7 @@ IntGdiGetObject(IN HANDLE Handle,
   pGdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
   if (!pGdiObject)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return 0;
     }
 

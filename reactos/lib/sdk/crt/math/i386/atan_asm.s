@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl _atan
- 
-.intel_syntax noprefix
 
+#include <asm.inc>
+
+PUBLIC _atan
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _atan:
         push    ebp
@@ -48,3 +49,5 @@ _atan:
         fpatan                          // Take the arctangent
         pop     ebp
         ret
+
+END

@@ -224,7 +224,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
     {
         RECTL *dest;
 
-        Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), TAG_CLIPOBJ);
+        Clip = EngAllocMem(0, sizeof(CLIPGDI) + ((count - 1) * sizeof(RECTL)), GDITAG_CLIPOBJ);
 
         if(Clip != NULL)
         {
@@ -245,7 +245,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
     }
     else
     {
-        Clip = EngAllocMem(0, sizeof(CLIPGDI), TAG_CLIPOBJ);
+        Clip = EngAllocMem(0, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
 
         if(Clip != NULL)
         {
@@ -274,7 +274,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 CLIPOBJ * APIENTRY
 EngCreateClip(VOID)
 {
-    CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), TAG_CLIPOBJ);
+    CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
     if(Clip != NULL)
     {
         return GDIToObj(Clip, CLIP);
@@ -409,7 +409,7 @@ ClipobjToSpans(
     *Count = Boundary->bottom - Boundary->top;
     if (*Count > 0)
     {
-        *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
+        *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), GDITAG_CLIPOBJ);
         if (NULL == *Spans)
         {
             *Count = 0;
@@ -444,12 +444,12 @@ ClipobjToSpans(
         }
         if (NewCount != *Count)
         {
-            NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), TAG_CLIP);
+            NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), GDITAG_CLIPOBJ);
             if (NULL == NewSpans)
             {
                 if (NULL != *Spans)
                 {
-                    ExFreePoolWithTag(*Spans, TAG_CLIP);
+                    ExFreePoolWithTag(*Spans, GDITAG_CLIPOBJ);
                     *Spans = NULL;
                 }
                 *Count = 0;
@@ -463,7 +463,7 @@ ClipobjToSpans(
                 {
                     *dest++ = *src++;
                 }
-                ExFreePoolWithTag(*Spans, TAG_CLIP);
+                ExFreePoolWithTag(*Spans, GDITAG_CLIPOBJ);
             }
             *Spans = NewSpans;
         }

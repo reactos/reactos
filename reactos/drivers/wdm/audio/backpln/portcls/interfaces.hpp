@@ -319,10 +319,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     DEFINE_ABSTRACT_UNKNOWN()
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
-        IN KSPIN_CONNECT *ConnectDetails,
+        IN PKSPIN_CONNECT ConnectDetails,
+        IN PKSPIN_DESCRIPTOR Descriptor,
         IN ULONG FrameSize,
         IN ULONG Alignment,
-        IN PVOID SilenceBuffer) PURE;
+        IN ULONG TagSupportEnabled) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PIRP Irp,
@@ -361,10 +362,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
 #define IMP_IIrpQueue                                  \
     STDMETHODIMP_(NTSTATUS) Init(THIS_                 \
-        IN KSPIN_CONNECT *ConnectDetails,              \
+        IN PKSPIN_CONNECT ConnectDetails,              \
+        IN PKSPIN_DESCRIPTOR Descriptor,               \
         IN ULONG FrameSize,                            \
         IN ULONG Alignment,                            \
-        IN PVOID SilenceBuffer);                       \
+        IN ULONG TagSupportEnabled);                   \
                                                        \
     STDMETHODIMP_(NTSTATUS) AddMapping(THIS_           \
         IN PIRP Irp,                                   \
@@ -599,6 +601,8 @@ DECLARE_INTERFACE_(IIrpStreamVirtual, IIrpStream)
 #undef INTERFACE
 #define INTERFACE IPortFilterWavePci
 
+struct IPortPinWavePci;
+
 DECLARE_INTERFACE_(IPortFilterWavePci, IIrpTarget)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -607,6 +611,9 @@ DECLARE_INTERFACE_(IPortFilterWavePci, IIrpTarget)
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN PPORTWAVEPCI Port)PURE;
+
+    STDMETHOD_(NTSTATUS, FreePin)(THIS_
+        IN struct IPortPinWavePci* Pin)PURE;
 };
 
 typedef IPortFilterWavePci *PPORTFILTERWAVEPCI;
@@ -614,7 +621,10 @@ typedef IPortFilterWavePci *PPORTFILTERWAVEPCI;
 #define IMP_IPortFilterPci           \
     IMP_IIrpTarget;                         \
     STDMETHODIMP_(NTSTATUS) Init(THIS_      \
-        IN PPORTWAVEPCI Port)
+        IN PPORTWAVEPCI Port);              \
+    STDMETHODIMP_(NTSTATUS) FreePin(THIS_   \
+        IN struct IPortPinWavePci* Pin)
+
 
 /*****************************************************************************
  * IPortPinWavePci

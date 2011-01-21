@@ -1012,6 +1012,13 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+PspIsProcessExiting(IN PEPROCESS Process)
+{
+	return Process->Flags & PSF_PROCESS_EXITING_BIT;
+}
+
 VOID
 NTAPI
 PspExitProcess(IN BOOLEAN LastThread,

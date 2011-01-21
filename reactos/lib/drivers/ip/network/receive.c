@@ -510,11 +510,10 @@ VOID IPDatagramReassemblyTimeout(
  *     to hold IP fragments that have taken too long to reassemble
  */
 {
-    KIRQL OldIrql;
     PLIST_ENTRY CurrentEntry, NextEntry;
     PIPDATAGRAM_REASSEMBLY CurrentIPDR;
 
-    TcpipAcquireSpinLock(&ReassemblyListLock, &OldIrql);
+    TcpipAcquireSpinLockAtDpcLevel(&ReassemblyListLock);
 
     CurrentEntry = ReassemblyListHead.Flink;
     while (CurrentEntry != &ReassemblyListHead)
@@ -539,7 +538,7 @@ VOID IPDatagramReassemblyTimeout(
        CurrentEntry = NextEntry;
     }
 
-    TcpipReleaseSpinLock(&ReassemblyListLock, OldIrql);
+    TcpipReleaseSpinLockFromDpcLevel(&ReassemblyListLock);
 }
 
 VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)

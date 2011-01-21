@@ -1,6 +1,6 @@
 /* $Id$
  */
 
-#include "tcschr.h"
+#include "tcschr.inc"
 
 /* EOF */

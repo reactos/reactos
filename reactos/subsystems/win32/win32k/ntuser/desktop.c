@@ -170,8 +170,9 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+INIT_FUNCTION
 NTSTATUS
-FASTCALL
+NTAPI
 InitDesktopImpl(VOID)
 {
     /* Set Desktop Object Attributes */
@@ -515,7 +516,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
    return pdo->DesktopWindow;
 }
 
-PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
+PWND FASTCALL UserGetDesktopWindow(VOID)
 {
    PDESKTOP pdo = IntGetActiveDesktop();
 
@@ -531,7 +532,7 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
    PDESKTOP pdo = IntGetActiveDesktop();
-   
+
    if (!pdo)
    {
       DPRINT("No active desktop\n");
@@ -571,7 +572,7 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
                                       QueryTable, NULL, NULL);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
+         DPRINT("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
                  Status);
          g_PaintDesktopVersion = FALSE;
          return FALSE;
@@ -593,11 +594,11 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 HDC FASTCALL
 UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 {
-    PWINDOW_OBJECT DesktopObject = 0;
+    PWND DesktopObject = 0;
     HDC DesktopHDC = 0;
 
     if (DcType == DC_TYPE_DIRECT)
-    {        
+    {
         DesktopObject = UserGetDesktopWindow();
         DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
     }
@@ -614,9 +615,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 VOID APIENTRY
 UserRedrawDesktop()
 {
-    PWINDOW_OBJECT Window = NULL;
-
-    UserEnterExclusive();
+    PWND Window = NULL;
 
     Window = UserGetDesktopWindow();
 
@@ -626,7 +625,6 @@ UserRedrawDesktop()
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
-    UserLeave();
 }
 
 
@@ -656,15 +654,13 @@ IntHideDesktop(PDESKTOP Desktop)
    return NotifyCsrss(&Request, &Reply);
 #else
 
-   PWINDOW_OBJECT DesktopWindow;
    PWND DesktopWnd;
 
-   DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
-   if (! DesktopWindow)
+   DesktopWnd = IntGetWindowObject(Desktop->DesktopWindow);
+   if (! DesktopWnd)
    {
       return ERROR_INVALID_WINDOW_HANDLE;
    }
-   DesktopWnd = DesktopWindow->Wnd;
    DesktopWnd->style &= ~WS_VISIBLE;
 
    return STATUS_SUCCESS;
@@ -712,23 +708,21 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
    PDESKTOP Desktop = IntGetActiveDesktop();
    HWND* HwndList;
 
-   static UINT MsgType = 0;
-
-   if (!MsgType)
+   if (!gpsi->uiShellMsg)
    {
 
       /* Too bad, this doesn't work.*/
 #if 0
       UNICODE_STRING Str;
       RtlInitUnicodeString(&Str, L"SHELLHOOK");
-      MsgType = UserRegisterWindowMessage(&Str);
+      gpsi->uiShellMsg = UserRegisterWindowMessage(&Str);
 #endif
 
-      MsgType = IntAddAtom(L"SHELLHOOK");
+      gpsi->uiShellMsg = IntAddAtom(L"SHELLHOOK");
 
-      DPRINT("MsgType = %x\n", MsgType);
-      if (!MsgType)
-         DPRINT1("LastError: %x\n", GetLastNtError());
+      DPRINT("MsgType = %x\n", gpsi->uiShellMsg);
+      if (!gpsi->uiShellMsg)
+         DPRINT1("LastError: %x\n", EngGetLastError());
    }
 
    if (!Desktop)
@@ -744,11 +738,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
       for (; *cursor; cursor++)
       {
-         DPRINT("Sending notify\n");
-         co_IntPostOrSendMessage(*cursor,
-                                 MsgType,
-                                 Message,
-                                 lParam);
+         UserPostMessage(*cursor, gpsi->uiShellMsg, Message, lParam);
       }
 
       ExFreePool(HwndList);
@@ -884,12 +874,23 @@ NtUserCreateDesktop(
    PUNICODE_STRING lpszDesktopName = NULL;
    UNICODE_STRING ClassName, MenuName;
    LARGE_STRING WindowName;
+   BOOL NoHooks = FALSE;
    PWND pWnd = NULL;
    CREATESTRUCTW Cs;
+   INT i;
+   PTHREADINFO ptiCurrent;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
+
+   ptiCurrent = PsGetCurrentThreadWin32Thread();
+   if (ptiCurrent)
+   {
+   /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
+      NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
+      ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
+   }
 
    _SEH2_TRY
    {
@@ -1028,14 +1029,23 @@ NtUserCreateDesktop(
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
    DesktopObject->ActiveMessageQueue = NULL;
+   /* Setup Global Hooks. */
+   for (i = 0; i < NB_HOOKS; i++)
+   {
+      InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
+   }
    ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
+//// why is this here?
+#if 0
    if (! NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create desktop handle\n");
       SetLastNtError(Status);
       RETURN( NULL);
    }
+#endif
+////
 
    /*
     * Create a handle for CSRSS and notify CSRSS for Creating Desktop Window.
@@ -1066,7 +1076,35 @@ NtUserCreateDesktop(
       SetLastNtError(Status);
       RETURN( NULL);
    }
+#if 0 // Turn on when server side proc is ready.
+   //
+   // Create desktop window.
+   //
+   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_DESKTOP])));
+   ClassName.Length = 0;
+   RtlZeroMemory(&MenuName, sizeof(MenuName));
+   RtlZeroMemory(&WindowName, sizeof(WindowName));
 
+   RtlZeroMemory(&Cs, sizeof(Cs));
+   Cs.x = UserGetSystemMetrics(SM_XVIRTUALSCREEN);
+   Cs.y = UserGetSystemMetrics(SM_YVIRTUALSCREEN);
+   Cs.cx = UserGetSystemMetrics(SM_CXVIRTUALSCREEN);
+   Cs.cy = UserGetSystemMetrics(SM_CYVIRTUALSCREEN);
+   Cs.style = WS_POPUP|WS_CLIPCHILDREN;
+   Cs.hInstance = hModClient; // Experimental mode... Move csr stuff to User32. hModuleWin; // Server side winproc!
+   Cs.lpszName = (LPCWSTR) &WindowName;
+   Cs.lpszClass = (LPCWSTR) &ClassName;
+
+   pWndDesktop = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName);
+   if (!pWnd)
+   {
+      DPRINT1("Failed to create Desktop window handle\n");
+   }
+   else
+   {
+      DesktopObject->pDeskInfo->spwnd = pWndDesktop;
+   }
+#endif
    W32Thread = PsGetCurrentThreadWin32Thread();
 
    if (!W32Thread->rpdesk) IntSetThreadDesktop(DesktopObject,FALSE);
@@ -1083,7 +1121,7 @@ NtUserCreateDesktop(
    RtlZeroMemory(&Cs, sizeof(Cs));
    Cs.cx = Cs.cy = 100;
    Cs.style = WS_POPUP|WS_CLIPCHILDREN;
-   Cs.hInstance = hModClient;
+   Cs.hInstance = hModClient; // hModuleWin; // Server side winproc! Leave it to Timo to not pass on notes!
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
@@ -1097,9 +1135,18 @@ NtUserCreateDesktop(
       DesktopObject->spwndMessage = pWnd;
    }
 
+   /* Now,,,
+      if !(WinStaObject->Flags & WSF_NOIO) is (not set) for desktop input output mode (see wiki)
+      Create Tooltip. Saved in DesktopObject->spwndTooltip.
+      Tooltip dwExStyle: WS_EX_TOOLWINDOW|WS_EX_TOPMOST
+      hWndParent are spwndMessage. Use hModuleWin for server side winproc!
+      The rest is same as message window.
+      http://msdn.microsoft.com/en-us/library/bb760250(VS.85).aspx
+   */
    RETURN( Desktop);
 
 CLEANUP:
+   if (!NoHooks && ptiCurrent) ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
    DPRINT("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1401,7 +1448,7 @@ NtUserPaintDesktop(HDC hDC)
    HBRUSH DesktopBrush, PreviousBrush;
    HWND hWndDesktop;
    BOOL doPatBlt = TRUE;
-   PWINDOW_OBJECT WndDesktop;
+   PWND WndDesktop;
    int len;
    COLORREF color_old;
    UINT align_old;
@@ -1423,7 +1470,7 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)WndDesktop->Wnd->pcls->hbrBackground;
+   DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
 
    /*
@@ -1432,7 +1479,7 @@ NtUserPaintDesktop(HDC hDC)
 
    if (WinSta->hbmWallpaper != NULL)
    {
-      PWINDOW_OBJECT DeskWin;
+      PWND DeskWin;
 
       DeskWin = UserGetWindowObject(hWndDesktop);
 
@@ -1442,8 +1489,8 @@ NtUserPaintDesktop(HDC hDC)
          int x, y;
          HDC hWallpaperDC;
 
-         sz.cx = DeskWin->Wnd->rcWindow.right - DeskWin->Wnd->rcWindow.left;
-         sz.cy = DeskWin->Wnd->rcWindow.bottom - DeskWin->Wnd->rcWindow.top;
+         sz.cx = DeskWin->rcWindow.right - DeskWin->rcWindow.left;
+         sz.cy = DeskWin->rcWindow.bottom - DeskWin->rcWindow.top;
 
          if (WinSta->WallpaperMode == wmStretch ||
              WinSta->WallpaperMode == wmTile)
@@ -1673,20 +1720,6 @@ CLEANUP:
 }
 
 /*
- * NtUserResolveDesktopForWOW
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserResolveDesktopForWOW(DWORD Unknown0)
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
-/*
  * NtUserGetThreadDesktop
  *
  * Status
@@ -1708,14 +1741,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 
    if(!dwThreadId)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN(0);
    }
 
    Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN(0);
    }
 
@@ -1822,7 +1855,6 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 static NTSTATUS
 IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
-    PTHREADINFO ti;
     PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     PVOID UserBase = NULL;
@@ -1885,19 +1917,6 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
 
     ObReferenceObject(DesktopObject);
 
-    /* create a W32THREADINFO structure if not already done, or update it */
-    ti = GetW32ThreadInfo();
-    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
-    if (ti != NULL)
-    {
-        if (GetWin32ClientInfo()->pDeskInfo == NULL)
-        {
-           GetWin32ClientInfo()->pDeskInfo = 
-                (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - 
-                                          GetWin32ClientInfo()->ulClientDelta);
-        }
-    }
-
     return STATUS_SUCCESS;
 }
 
@@ -1909,6 +1928,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
     PTHREADINFO W32Thread;
     NTSTATUS Status;
     BOOL MapHeap;
+    CLIENTTHREADINFO ctiSave;
 
     DPRINT("IntSetThreadDesktop() DO=%p, FOF=%d\n", DesktopObject, FreeOnFailure);
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
@@ -1921,7 +1941,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
         if (!IsListEmpty(&W32Thread->WindowListHead))
         {
             DPRINT1("Attempted to change thread desktop although the thread has windows!\n");
-            SetLastWin32Error(ERROR_BUSY);
+            EngSetLastError(ERROR_BUSY);
             return FALSE;
         }
 
@@ -1935,9 +1955,27 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
                 SetLastNtError(Status);
                 return FALSE;
             }
+            W32Thread->pDeskInfo = DesktopObject->pDeskInfo;
         }
 
-        /* Hack for system threads */
+        RtlZeroMemory(&ctiSave, sizeof(CLIENTTHREADINFO));
+
+        if (W32Thread->pcti && OldDesktop && NtCurrentTeb())
+        {
+           RtlCopyMemory(&ctiSave, W32Thread->pcti, sizeof(CLIENTTHREADINFO));
+           DPRINT("Free ClientThreadInfo\n");
+           DesktopHeapFree(OldDesktop, W32Thread->pcti);
+           W32Thread->pcti = NULL;
+        }
+
+        if (!W32Thread->pcti && DesktopObject && NtCurrentTeb())
+        {
+           DPRINT("Allocate ClientThreadInfo\n");
+           W32Thread->pcti = DesktopHeapAlloc( DesktopObject,
+                                               sizeof(CLIENTTHREADINFO));
+           RtlCopyMemory(W32Thread->pcti, &ctiSave, sizeof(CLIENTTHREADINFO));
+        }
+
         if (NtCurrentTeb())
         {
             PCLIENTINFO pci = GetWin32ClientInfo();
@@ -1945,6 +1983,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             if (DesktopObject)
             {
                 pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - pci->ulClientDelta);
+                if (W32Thread->pcti) pci->pClientThreadInfo = (PVOID)((ULONG_PTR)W32Thread->pcti - pci->ulClientDelta);
             }
         }
 

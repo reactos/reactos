@@ -63,9 +63,21 @@ PIP_PACKET IPInitializePacket(
 }
 
 
-void NTAPI IPTimeout( PVOID Context ) {
-    IpWorkItemQueued = FALSE;
-
+VOID NTAPI IPTimeoutDpcFn(PKDPC Dpc,
+                          PVOID DeferredContext,
+                          PVOID SystemArgument1,
+                          PVOID SystemArgument2)
+/*
+ * FUNCTION: Timeout DPC
+ * ARGUMENTS:
+ *     Dpc             = Pointer to our DPC object
+ *     DeferredContext = Pointer to context information (unused)
+ *     SystemArgument1 = Unused
+ *     SystemArgument2 = Unused
+ * NOTES:
+ *     This routine is dispatched once in a while to do maintainance jobs
+ */
+{
     /* Check if datagram fragments have taken too long to assemble */
     IPDatagramReassemblyTimeout();
 

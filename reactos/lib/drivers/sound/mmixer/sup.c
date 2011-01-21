@@ -31,6 +31,11 @@ const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, 
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSEVENTSETID_AudioControlChange      = {0xE85E9698L, 0xFA2F, 0x11D1, {0x95, 0xBD, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3}};
 
+const GUID KSDATAFORMAT_TYPE_MUSIC = {0xE725D360L, 0x62CC, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSDATAFORMAT_SUBTYPE_MIDI = {0x1D262760L, 0xE957, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSDATAFORMAT_SPECIFIER_NONE = {0x0F6417D6L, 0xC318, 0x11D0, {0xA4, 0x3F, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+
+
 MIXER_STATUS
 MMixerVerifyContext(
     IN PMIXER_CONTEXT MixerContext)
@@ -54,9 +59,10 @@ MMixerFreeMixerInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo)
 {
-    //UNIMPLEMENTED
-    // FIXME
-    // free all lines
+    /* UNIMPLEMENTED
+     * FIXME
+     * free all lines
+     */
 
     MixerContext->Free((PVOID)MixerInfo);
 }
@@ -71,7 +77,7 @@ MMixerGetMixerInfoByIndex(
     PMIXER_LIST MixerList;
     ULONG Index = 0;
 
-    // get mixer list
+    /* get mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     if (!MixerList->MixerListCount)
@@ -86,7 +92,7 @@ MMixerGetMixerInfoByIndex(
         if (Index == MixerIndex)
             return MixerInfo;
 
-        // move to next mixer entry
+        /* move to next mixer entry */
         Index++;
         Entry = Entry->Flink;
     }
@@ -141,42 +147,6 @@ MMixerGetSourceMixerLineByLineId(
     return NULL;
 }
 
-ULONG
-MMixerGetIndexOfGuid(
-    PKSMULTIPLE_ITEM MultipleItem,
-    LPCGUID NodeType)
-{
-    ULONG Index;
-    LPGUID Guid;
-
-    Guid = (LPGUID)(MultipleItem+1);
-
-    /* iterate through node type array */
-    for(Index = 0; Index < MultipleItem->Count; Index++)
-    {
-        if (IsEqualGUIDAligned(NodeType, Guid))
-        {
-            /* found matching guid */
-            return Index;
-        }
-        Guid++;
-    }
-    return MAXULONG;
-}
-
-PKSTOPOLOGY_CONNECTION
-MMixerGetConnectionByIndex(
-    IN PKSMULTIPLE_ITEM MultipleItem,
-    IN ULONG Index)
-{
-    PKSTOPOLOGY_CONNECTION Descriptor;
-
-    ASSERT(Index < MultipleItem->Count);
-
-    Descriptor = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
-    return &Descriptor[Index];
-}
-
 LPGUID
 MMixerGetNodeType(
     IN PKSMULTIPLE_ITEM MultipleItem,
@@ -188,183 +158,6 @@ MMixerGetNodeType(
 
     NodeType = (LPGUID)(MultipleItem + 1);
     return &NodeType[Index];
-}
-
-MIXER_STATUS
-MMixerGetNodeIndexes(
-    IN PMIXER_CONTEXT MixerContext,
-    IN PKSMULTIPLE_ITEM MultipleItem,
-    IN ULONG NodeIndex,
-    IN ULONG bNode,
-    IN ULONG bFrom,
-    OUT PULONG NodeReferenceCount,
-    OUT PULONG *NodeReference)
-{
-    ULONG Index, Count = 0;
-    PKSTOPOLOGY_CONNECTION Connection;
-    PULONG Refs;
-
-    // KSMULTIPLE_ITEM is followed by several KSTOPOLOGY_CONNECTION
-    Connection = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
-
-    // first count all referenced nodes
-    for(Index = 0; Index < MultipleItem->Count; Index++)
-    {
-        if (bNode)
-        {
-            if (bFrom)
-            {
-                if (Connection->FromNode == NodeIndex)
-                {
-                    // node id has a connection
-                    Count++;
-                }
-            }
-            else
-            {
-                if (Connection->ToNode == NodeIndex)
-                {
-                    // node id has a connection
-                    Count++;
-                }
-            }
-        }
-        else
-        {
-            if (bFrom)
-            {
-                if (Connection->FromNodePin == NodeIndex && Connection->FromNode == KSFILTER_NODE)
-                {
-                    // node id has a connection
-                    Count++;
-                }
-            }
-            else
-            {
-                if (Connection->ToNodePin == NodeIndex && Connection->ToNode == KSFILTER_NODE)
-                {
-                    // node id has a connection
-                    Count++;
-                }
-            }
-        }
-
-
-        // move to next connection
-        Connection++;
-    }
-
-    if (!Count)
-    {
-        *NodeReferenceCount = 0;
-        *NodeReference = NULL;
-        return MM_STATUS_SUCCESS;
-    }
-
-    ASSERT(Count != 0);
-
-    /* now allocate node index array */
-    Refs = (PULONG)MixerContext->Alloc(sizeof(ULONG) * Count);
-    if (!Refs)
-    {
-        // not enough memory
-        return MM_STATUS_NO_MEMORY;
-    }
-
-    Count = 0;
-    Connection = (PKSTOPOLOGY_CONNECTION)(MultipleItem + 1);
-    for(Index = 0; Index < MultipleItem->Count; Index++)
-    {
-        if (bNode)
-        {
-            if (bFrom)
-            {
-                if (Connection->FromNode == NodeIndex)
-                {
-                    /* node id has a connection */
-                    Refs[Count] = Index;
-                    Count++;
-                }
-            }
-            else
-            {
-                if (Connection->ToNode == NodeIndex)
-                {
-                    /* node id has a connection */
-                    Refs[Count] = Index;
-                    Count++;
-                }
-            }
-        }
-        else
-        {
-            if (bFrom)
-            {
-                if (Connection->FromNodePin == NodeIndex && Connection->FromNode == KSFILTER_NODE)
-                {
-                    /* node id has a connection */
-                    Refs[Count] = Index;
-                    Count++;
-                }
-            }
-            else
-            {
-                if (Connection->ToNodePin == NodeIndex && Connection->ToNode == KSFILTER_NODE)
-                {
-                    /* node id has a connection */
-                    Refs[Count] = Index;
-                    Count++;
-                }
-            }
-        }
-
-        /* move to next connection */
-        Connection++;
-    }
-
-    /* store result */
-    *NodeReference = Refs;
-    *NodeReferenceCount = Count;
-
-    return MM_STATUS_SUCCESS;
-}
-
-MIXER_STATUS
-MMixerGetTargetPins(
-    IN PMIXER_CONTEXT MixerContext,
-    IN PKSMULTIPLE_ITEM NodeTypes,
-    IN PKSMULTIPLE_ITEM NodeConnections,
-    IN ULONG NodeIndex,
-    IN ULONG bUpDirection,
-    OUT PULONG Pins,
-    IN ULONG PinCount)
-{
-    ULONG NodeConnectionCount, Index;
-    MIXER_STATUS Status;
-    PULONG NodeConnection;
-
-    // sanity check */
-    ASSERT(NodeIndex != (ULONG)-1);
-
-    /* get all node indexes referenced by that pin */
-    if (bUpDirection)
-        Status = MMixerGetNodeIndexes(MixerContext, NodeConnections, NodeIndex, TRUE, FALSE, &NodeConnectionCount, &NodeConnection);
-    else
-        Status = MMixerGetNodeIndexes(MixerContext, NodeConnections, NodeIndex, TRUE, TRUE, &NodeConnectionCount, &NodeConnection);
-
-    //DPRINT("NodeIndex %u Status %x Count %u\n", NodeIndex, Status, NodeConnectionCount);
-
-    if (Status == MM_STATUS_SUCCESS)
-    {
-        for(Index = 0; Index < NodeConnectionCount; Index++)
-        {
-            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], PinCount, Pins);
-            ASSERT(Status == STATUS_SUCCESS);
-        }
-        MixerContext->Free((PVOID)NodeConnection);
-    }
-
-    return Status;
 }
 
 LPMIXERLINE_EXT
@@ -445,10 +238,38 @@ MMixerGetVolumeControlIndex(
     return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
 }
 
+VOID
+MMixerNotifyControlChange(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NotificationType,
+    IN ULONG Value)
+{
+    PLIST_ENTRY Entry;
+    PEVENT_NOTIFICATION_ENTRY NotificationEntry;
+
+    /* enumerate list and add a notification entry */
+    Entry = MixerInfo->LineList.Flink;
+    while(Entry != &MixerInfo->EventList)
+    {
+        /* get notification entry offset */
+        NotificationEntry = (PEVENT_NOTIFICATION_ENTRY)CONTAINING_RECORD(Entry, EVENT_NOTIFICATION_ENTRY, Entry);
+
+        if (NotificationEntry->MixerEventRoutine)
+        {
+            /* now perform the callback */
+            NotificationEntry->MixerEventRoutine(NotificationEntry->MixerEventContext, (HANDLE)MixerInfo, NotificationType, Value);
+        }
+
+        /* move to next notification entry */
+        Entry = Entry->Flink;
+    }
+}
+
 MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
@@ -469,7 +290,7 @@ MMixerSetGetMuteControlDetails(
         Value = Input->fValue;
 
     /* set control details */
-    Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
+    Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
 
     if (Status != MM_STATUS_SUCCESS)
         return Status;
@@ -482,7 +303,8 @@ MMixerSetGetMuteControlDetails(
     }
     else
     {
-        // FIXME notify wdmaud clients MM_MIXM_LINE_CHANGE dwLineID
+        /* notify wdmaud clients MM_MIXM_LINE_CHANGE dwLineID */
+        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_LINE_CHANGE, dwLineID);
     }
 
     return Status;
@@ -491,7 +313,7 @@ MMixerSetGetMuteControlDetails(
 MIXER_STATUS
 MMixerSetGetVolumeControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
     LPMIXERCONTROLW MixerControl,
@@ -523,7 +345,6 @@ MMixerSetGetVolumeControlDetails(
         if (Index >= VolumeData->ValuesCount)
         {
             DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
-            DbgBreakPoint();
             return MM_STATUS_INVALID_PARAMETER;
         }
 
@@ -534,12 +355,12 @@ MMixerSetGetVolumeControlDetails(
     if (bSet)
     {
         /* TODO */
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
     }
     else
     {
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
     }
 
     if (!bSet)
@@ -551,6 +372,7 @@ MMixerSetGetVolumeControlDetails(
     else
     {
         /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
+        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->dwControlID);
     }
     return Status;
 }
@@ -590,7 +412,7 @@ MMixerGetDataByDeviceName(
         MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
         if (wcsicmp(&DeviceName[2], &MixerData->DeviceName[2]) == 0)
         {
-            // found entry
+            /* found entry */
             return MixerData;
         }
         Entry = Entry->Flink;
@@ -617,6 +439,7 @@ MMixerCreateMixerData(
     MixerData->DeviceName = DeviceName;
     MixerData->hDevice = hDevice;
     MixerData->hDeviceInterfaceKey = hKey;
+    MixerData->Topology = NULL;
 
     InsertTailList(&MixerList->MixerData, &MixerData->Entry);
     MixerList->MixerDataCount++;
@@ -626,7 +449,7 @@ MMixerCreateMixerData(
 MIXER_STATUS
 MMixerGetDeviceName(
     IN PMIXER_CONTEXT MixerContext,
-    IN LPMIXER_INFO MixerInfo,
+    OUT LPWSTR DeviceName,
     IN HANDLE hKey)
 {
     LPWSTR Name;
@@ -638,16 +461,16 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        // copy device name
-        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        /* copy device name */
+        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
-        // make sure its null terminated
-        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+        /* make sure its null terminated */
+        DeviceName[MAXPNAMELEN-1] = L'\0';
 
-        // free device name
+        /* free device name */
         MixerContext->Free(Name);
 
-        // done
+        /* done */
         return Status;
     }
 
@@ -655,19 +478,37 @@ MMixerGetDeviceName(
     if (Status != MM_STATUS_SUCCESS)
         return Status;
 
-    Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
+    Status = MixerContext->QueryKeyValue(hTemp, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        // copy device name
-        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        /* copy device name */
+        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
-        // make sure its null terminated
-        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+        /* make sure its null terminated */
+        DeviceName[MAXPNAMELEN-1] = L'\0';
 
-        // free device name
+        /* free device name */
         MixerContext->Free(Name);
     }
 
     MixerContext->CloseKey(hTemp);
     return Status;
 }
+
+VOID
+MMixerInitializePinConnect(
+    IN OUT PKSPIN_CONNECT PinConnect,
+    IN ULONG PinId)
+{
+    PinConnect->Interface.Set = KSINTERFACESETID_Standard;
+    PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
+    PinConnect->Interface.Flags = 0;
+    PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
+    PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
+    PinConnect->Medium.Flags = 0;
+    PinConnect->PinToHandle = NULL;
+    PinConnect->PinId = PinId;
+    PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
+    PinConnect->Priority.PrioritySubClass = 1;
+}
+

@@ -1,7 +1,7 @@
 /*
  * FILE:        base/shell/explorer-new/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-07-15
+ * UPDATED:     2010-05-31
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -126,7 +126,7 @@ BEGIN
     IDS_PROPERTIES        "Vl&astnosti"
     IDS_OPEN_ALL_USERS    "Ote&vøít složku All Users"
     IDS_EXPLORE_ALL_USERS "Pro&cházet složku All Users"
-    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_STARTUP_ERROR     "Systém nemohl spustit proces Explorer, protože registry jsou poškozené nebo nedostupné."
 END
 
 STRINGTABLE DISCARDABLE

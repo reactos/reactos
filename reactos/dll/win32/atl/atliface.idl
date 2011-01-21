@@ -19,7 +19,7 @@
 import "ocidl.idl";
 
 cpp_quote("#ifdef ATL_INITGUID")
-cpp_quote("#include \"initguid.h\"")
+cpp_quote("#include <initguid.h>")
 cpp_quote("#endif")
 
 [
@@ -68,7 +68,7 @@ interface IRegistrar : IUnknown
         [in] LPCOLESTR szType);
 }
 
-cpp_quote("DEFINE_GUID(CLSID_ATLRegistrar,0x44ec053a,0x400f,0x11d0,0x9d,0xcd,0x00,0xa0,0xc9,0x03,0x91,0xd3);")
+cpp_quote("DEFINE_GUID(CLSID_Registrar,0x44ec053a,0x400f,0x11d0,0x9d,0xcd,0x00,0xa0,0xc9,0x03,0x91,0xd3);")
 
 cpp_quote("HRESULT WINAPI AtlAxCreateControl(LPCOLESTR,HWND,IStream*,IUnknown**);")
 cpp_quote("HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR,HWND,IStream*,IUnknown**,IUnknown**,REFIID,IUnknown*);")

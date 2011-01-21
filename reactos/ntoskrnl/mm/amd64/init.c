@@ -752,9 +752,7 @@ MiBuildPagedPool_x(VOID)
     /* Save the first and last paged pool PTE */
     MmPagedPoolInfo.FirstPteForPagedPool = MiAddressToPte(MmPagedPoolStart);
     MmPagedPoolInfo.LastPteForPagedPool = MiAddressToPte(MmPagedPoolEnd);
-
-    MmPagedPoolInfo.NextPdeForPagedPoolExpansion = 
-        MiAddressToPde(MmPagedPoolStart) + 1;
+    MmPagedPoolInfo.NextPdeForPagedPoolExpansion = MiAddressToPde(MmPagedPoolStart) + 1;
 
     // We keep track of each page via a bit, so check how big the bitmap will
     // have to be (make sure to align our page count such that it fits nicely
@@ -857,9 +855,9 @@ MmArmInitSystem_x(IN ULONG Phase,
         //MiBuildPagedPool();
 
         // This is the old stuff:
-        MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);
-        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-        ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
+        //MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);
+        //MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+        //ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
 
         
         HalInitializeBios(0, LoaderBlock);

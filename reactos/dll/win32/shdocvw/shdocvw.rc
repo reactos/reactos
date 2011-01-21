@@ -34,4 +34,22 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: shdocvw.inf */
 REGINST REGINST shdocvw.inf
 
+/* @makedep: ietoolbar.bmp */
+IDB_IETOOLBAR BITMAP ietoolbar.bmp
+
+#include "De.rc"
 #include "En.rc"
+#include "Es.rc"
+#include "Fr.rc"
+#include "He.rc"
+#include "It.rc"
+#include "Ko.rc"
+#include "Lt.rc"
+#include "Nl.rc"
+//#include "Pl.rc"
+#include "Pt.rc"
+#include "Ro.rc"
+#include "Si.rc"
+#include "Sr.rc"
+#include "Sv.rc"
+#include "Uk.rc"

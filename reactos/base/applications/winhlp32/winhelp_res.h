@@ -23,7 +23,6 @@
 #define MNID_HELP_HELPON        0x141
 #define MNID_HELP_HELPTOP       0x142
 #define MNID_HELP_ABOUT         0x143
-#define MNID_HELP_WINE          0x144
 
 #define MNID_CTXT_ANNOTATE      0x200
 #define MNID_CTXT_COPY          0x201

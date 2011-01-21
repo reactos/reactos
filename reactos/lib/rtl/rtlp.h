@@ -27,10 +27,10 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #endif
 
 #define ROUND_DOWN(n, align) \
-    (((ULONG)n) & ~((align) - 1l))
+    (((ULONG)(n)) & ~((align) - 1l))
 
 #define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+    ROUND_DOWN(((ULONG)(n)) + (align) - 1, (align))
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
@@ -86,19 +86,19 @@ RtlpCaptureStackLimits(
 
 NTSTATUS
 NTAPI
-RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+RtlDeleteHeapLock(PHEAP_LOCK Lock);
 
 NTSTATUS
 NTAPI
-RtlEnterHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+RtlEnterHeapLock(PHEAP_LOCK Lock);
 
 NTSTATUS
 NTAPI
-RtlInitializeHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+RtlInitializeHeapLock(PHEAP_LOCK Lock);
 
 NTSTATUS
 NTAPI
-RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+RtlLeaveHeapLock(PHEAP_LOCK Lock);
 
 BOOLEAN
 NTAPI

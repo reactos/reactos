@@ -7,7 +7,7 @@ VOID FASTCALL IntIncrementSequenceNumber(VOID);
 
 typedef struct _ClipboardChainElement
 {
-    PWINDOW_OBJECT                 window;
+    PWND                 window;
     struct _ClipboardChainElement *next;
 } CLIPBOARDCHAINELEMENT, *PCLIPBOARDCHAINELEMENT;
 
@@ -23,9 +23,9 @@ typedef struct _CLIPBOARDSYSTEM
 {
     PTHREADINFO     ClipboardThread;
     PTHREADINFO     ClipboardOwnerThread;
-    PWINDOW_OBJECT  ClipboardWindow;
-    PWINDOW_OBJECT  ClipboardViewerWindow;
-    PWINDOW_OBJECT  ClipboardOwnerWindow;
+    PWND  ClipboardWindow;
+    PWND  ClipboardViewerWindow;
+    PWND  ClipboardOwnerWindow;
     BOOL            sendDrawClipboardMsg;
     BOOL            recentlySetClipboard;
     BOOL            delayedRender;
@@ -41,7 +41,7 @@ typedef struct _CLIPBOARDSYSTEM
 } CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
 
 VOID FASTCALL
-IntClipboardFreeWindow(PWINDOW_OBJECT window);
+IntClipboardFreeWindow(PWND window);
 
 UINT APIENTRY IntEnumClipboardFormats(UINT format);
 

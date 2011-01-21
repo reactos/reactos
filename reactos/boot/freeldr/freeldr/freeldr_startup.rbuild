@@ -16,5 +16,10 @@
 				<file>arch.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="arm">
+			<directory name="arm">
+				<file first="true">boot.s</file>
+			</directory>
+		</if>
 	</directory>
 </module>

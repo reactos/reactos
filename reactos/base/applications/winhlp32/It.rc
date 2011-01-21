@@ -21,9 +21,10 @@
 
 #include "winhelp_res.h"
 
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
+/* UTF-8 */
 #pragma code_page(65001)
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 /* Menu */
 
@@ -55,20 +56,17 @@ MAIN_MENU MENU
   MENUITEM "Cronologia",		MNID_OPTS_HISTORY
   POPUP    "Caratteri"
   BEGIN
-    MENUITEM "Piccolo",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Piccoli",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normali",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grandi",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Usa colori di sistema",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Usa i colori di sistema",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Aiuto" {
    MENUITEM "&Aiuto sulla guida", MNID_HELP_HELPON
    MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informazioni su...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Informazioni su WINE", MNID_HELP_WINE
-#endif
  }
 }
 
@@ -91,7 +89,7 @@ CAPTION "Cerca"
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Guida di WINE"
+STID_WINE_HELP, 	"Guida di Wine"
 STID_WHERROR, 		"ERRORE"
 STID_WARNING,  		"ATTENZIONE"
 STID_INFO,  		"Informazione"
@@ -101,7 +99,7 @@ STID_INDEX, 		"Indice"
 STID_CONTENTS,		"&Sommario"
 STID_BACK, 		"&Precedente"
 STID_ALL_FILES, 	"Tutti i file (*.*)"
-STID_HELP_FILES_HLP, 	"File della Guida (*.hlp)"
+STID_HELP_FILES_HLP, 	"File della guida (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Non è stato possibile trovare '%s'. Vuoi cercare questo file?"
 STID_NO_RICHEDIT	"Non è stato possibile trovare un'implementazione richedit... Annullando"
 STID_PSH_INDEX,		"Argomenti di aiuto: "
@@ -116,13 +114,13 @@ BEGIN
         MENUITEM "Stampa...",            MNID_CTXT_PRINT
         POPUP    "Caratteri"
         BEGIN
-            MENUITEM "Piccolo",       MNID_CTXT_FONTS_SMALL
-            MENUITEM "Normale",      MNID_CTXT_FONTS_NORMAL
-            MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
+            MENUITEM "Piccoli",       MNID_CTXT_FONTS_SMALL
+            MENUITEM "Normali",      MNID_CTXT_FONTS_NORMAL
+            MENUITEM "Grandi",       MNID_CTXT_FONTS_LARGE
         END
         POPUP   "Aiuto sempre visibile"
         BEGIN
-            MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
+            MENUITEM "Predefinito",     MNID_CTXT_HELP_DEFAULT
             MENUITEM "Visibile",     MNID_CTXT_HELP_VISIBLE
             MENUITEM "Non visibile", MNID_CTXT_HELP_NONVISIBLE
         END

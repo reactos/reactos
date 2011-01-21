@@ -214,6 +214,7 @@ umss_port_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
                     EXIT_DISPATCH(STATUS_SUCCESS, irp);
                 }
             }
+            break;
         }
         case IRP_MJ_CREATE:
         case IRP_MJ_CLOSE:

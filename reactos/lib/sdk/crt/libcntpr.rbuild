@@ -9,6 +9,22 @@
 	<define name="_LIBCNT_" />
 	<define name="_CRTBLD" />
 	<define name="__CRT__NO_INLINE" />
+
+	<directory name="printf">
+		<file>_snprintf.c</file>
+		<file>_snwprintf.c</file>
+		<file>_vcprintf.c</file>
+		<file>_vsnprintf.c</file>
+		<file>_vsnwprintf.c</file>
+		<file>sprintf.c</file>
+		<file>streamout.c</file>
+		<file>swprintf.c</file>
+		<file>vprintf.c</file>
+		<file>vsprintf.c</file>
+		<file>vswprintf.c</file>
+		<file>wstreamout.c</file>
+	</directory>
+
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 	</if>
@@ -33,6 +49,9 @@
 			</directory>
 		</if>
 	</directory>
+	<directory name="float">
+		<file>isnan.c</file>
+	</directory>
 	<directory name="math">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -54,6 +73,7 @@
 				<file>floor_asm.s</file>
 				<file>ftol_asm.s</file>
 				<file>log_asm.s</file>
+				<file>log10_asm.s</file>
 				<file>pow_asm.s</file>
 				<file>sin_asm.s</file>
 				<file>sqrt_asm.s</file>
@@ -203,6 +223,10 @@
 		<file>wtoi64.c</file>
 		<file>wtoi.c</file>
 		<file>wtol.c</file>
+	</directory>
+
+	<directory name="mbstring">
+		<file>mbstrlen.c</file>
 	</directory>
 
 	<directory name="wstring">

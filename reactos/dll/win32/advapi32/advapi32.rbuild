@@ -28,6 +28,7 @@
 	</directory>
 	<directory name="misc">
 			<file>dllmain.c</file>
+			<file>efs.c</file>
 			<file>hwprofiles.c</file>
 			<file>logon.c</file>
 			<file>msi.c</file>

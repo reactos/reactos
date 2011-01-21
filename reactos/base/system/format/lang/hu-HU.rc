@@ -39,7 +39,7 @@ STRING_DRIVE_PARM  "Hiányzik a meghajtó meghatározás.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Nem sikerült lekérdezni a meghajtó típusát"
 
-STRING_INSERT_DISK       "Helyezzen be új lemezt a következõ meghajtóba: %C:\Ha készen áll, nyomja meg az ENTER billenytût..."
+STRING_INSERT_DISK       "Helyezzen be új lemezt a következõ meghajtóba: %C:\\ Ha készen áll, nyomja meg az ENTER billenytût..."
 
 STRING_NO_VOLUME         "Nem sikerült megállapítani címkét"
 

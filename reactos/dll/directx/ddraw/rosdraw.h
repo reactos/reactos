@@ -34,7 +34,7 @@ extern IDirectDrawSurface4Vtbl DirectDrawSurface4_Vtable;
 extern IDirectDrawSurface3Vtbl DirectDrawSurface3_Vtable;
 extern IDirectDrawSurface2Vtbl DirectDrawSurface2_Vtable;
 extern IDirectDrawSurfaceVtbl DirectDrawSurface_Vtable;
-extern IDirectDrawPaletteVtbl DirectDrawPalette_Vtable;
+extern const IDirectDrawPaletteVtbl DirectDrawPalette_Vtable;
 extern IDirectDrawClipperVtbl DirectDrawClipper_Vtable;
 extern IDirectDrawColorControlVtbl DirectDrawColorControl_Vtable;
 extern IDirectDrawGammaControlVtbl DirectDrawGammaControl_Vtable;
@@ -92,6 +92,10 @@ Internal_CreateSurface(
                        LPDDSURFACEDESC2 pDDSD,
                        LPDDRAWI_DDRAWSURFACE_INT *ppSurf,
                        IUnknown *pUnkOuter);
+
+HRESULT
+Internal_CreatePalette( LPDDRAWI_DIRECTDRAW_INT pDDraw, DWORD dwFlags,
+                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter);
 
 /* convert DDSURFACEDESC to DDSURFACEDESC2 */
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc);

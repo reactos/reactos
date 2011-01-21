@@ -220,7 +220,7 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 
    if (!(entry = handle_to_entry(ht, handle )) || entry->type != type)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return NULL;
    }
    return entry->ptr;
@@ -328,10 +328,10 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
    switch (type)
    {
-//      case otWindow:
+      case otWindow:
 //      case otMenu:
-//      case otHook:
-//      case otCallProc:
+      case otHook:
+      case otCallProc:
       case otInputContext:
          Object = DesktopHeapAlloc(rpdesk, size);
          dt = TRUE;
@@ -418,10 +418,10 @@ UserDereferenceObject(PVOID object)
 
      switch (type)
      {
-//        case otWindow:
+        case otWindow:
 //        case otMenu:
-//        case otHook:
-//        case otCallProc:
+        case otHook:
+        case otCallProc:
         case otInputContext:
            return DesktopHeapFree(((PTHRDESKHEAD)object)->rpdesk, object);
 

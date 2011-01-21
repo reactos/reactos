@@ -550,7 +550,7 @@ SCSIPORTAPI
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-  IN ULONG UlongAddress);
+  IN ULONG_PTR UlongAddress);
 
 SCSIPORTAPI
 VOID

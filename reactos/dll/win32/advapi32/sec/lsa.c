@@ -16,59 +16,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-/* imported from wine 1.1.14 */
-static void* ADVAPI_GetDomainName(unsigned sz, unsigned ofs)
-{
-    HKEY key;
-    LONG ret;
-    BYTE* ptr = NULL;
-    UNICODE_STRING* ustr;
-
-    static const WCHAR wVNETSUP[] = {
-        'S','y','s','t','e','m','\\',
-        'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-        'S','e','r','v','i','c','e','s','\\',
-        'V','x','D','\\','V','N','E','T','S','U','P','\0'};
-
-    ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wVNETSUP, 0, KEY_READ, &key);
-    if (ret == ERROR_SUCCESS)
-    {
-        DWORD size = 0;
-        static const WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
-
-        ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
-        if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-        {
-            ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz + size);
-            if (!ptr) return NULL;
-            ustr = (UNICODE_STRING*)(ptr + ofs);
-            ustr->MaximumLength = size;
-            ustr->Buffer = (WCHAR*)(ptr + sz);
-            ret = RegQueryValueExW(key, wg, NULL, NULL, (LPBYTE)ustr->Buffer, &size);
-            if (ret != ERROR_SUCCESS)
-            {
-                HeapFree(GetProcessHeap(), 0, ptr);
-                ptr = NULL;
-            }   
-            else ustr->Length = size - sizeof(WCHAR);
-        }
-        RegCloseKey(key);
-    }
-    if (!ptr)
-    {
-        static const WCHAR wDomain[] = {'D','O','M','A','I','N','\0'};
-        ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        sz + sizeof(wDomain));
-        if (!ptr) return NULL;
-        ustr = (UNICODE_STRING*)(ptr + ofs);
-        ustr->MaximumLength = sizeof(wDomain);
-        ustr->Buffer = (WCHAR*)(ptr + sz);
-        ustr->Length = sizeof(wDomain) - sizeof(WCHAR);
-        memcpy(ustr->Buffer, wDomain, sizeof(wDomain));
-    }
-    return ptr;
-}
-
 
 static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
 {
@@ -148,8 +95,9 @@ PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
 /*
  * @implemented
  */
-NTSTATUS WINAPI
-LsaClose(LSA_HANDLE ObjectHandle)
+NTSTATUS
+WINAPI
+LsaClose(IN LSA_HANDLE ObjectHandle)
 {
     NTSTATUS Status;
 
@@ -172,8 +120,9 @@ LsaClose(LSA_HANDLE ObjectHandle)
 /*
  * @implemented
  */
-NTSTATUS WINAPI
-LsaDelete(LSA_HANDLE ObjectHandle)
+NTSTATUS
+WINAPI
+LsaDelete(IN LSA_HANDLE ObjectHandle)
 {
     NTSTATUS Status;
 
@@ -194,19 +143,129 @@ LsaDelete(LSA_HANDLE ObjectHandle)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaAddAccountRights(
-    LSA_HANDLE PolicyHandle,
-    PSID AccountSid,
-    PLSA_UNICODE_STRING UserRights,
-    ULONG CountOfRights)
+LsaAddAccountRights(IN LSA_HANDLE PolicyHandle,
+                    IN PSID AccountSid,
+                    IN PLSA_UNICODE_STRING UserRights,
+                    IN ULONG CountOfRights)
 {
-    FIXME("(%p,%p,%p,0x%08x) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    LSAPR_USER_RIGHT_SET UserRightSet;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p,0x%08x) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+
+    UserRightSet.Entries = CountOfRights;
+    UserRightSet.UserRights = (PRPC_UNICODE_STRING)UserRights;
+
+    RpcTryExcept
+    {
+        Status = LsarAddAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                      (PRPC_SID)AccountSid,
+                                      &UserRightSet);
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaAddPrivilegesToAccount(IN LSA_HANDLE AccountHandle,
+                          IN PPRIVILEGE_SET PrivilegeSet)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p) stub\n", AccountHandle, PrivilegeSet);
+
+    RpcTryExcept
+    {
+        Status = LsarAddPrivilegesToAccount((LSAPR_HANDLE)AccountHandle,
+                                            (PLSAPR_PRIVILEGE_SET)PrivilegeSet);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
+                 IN PSID AccountSid,
+                 IN ULONG Flags,
+                 OUT PLSA_HANDLE AccountHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarCreateAccount((LSAPR_HANDLE)PolicyHandle,
+                                   AccountSid,
+                                   Flags,
+                                   AccountHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaCreateTrustedDomain(IN LSA_HANDLE PolicyHandle,
+                       IN PLSA_TRUST_INFORMATION TrustedDomainInformation,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PLSA_HANDLE TrustedDomainHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, TrustedDomainInformation,
+          DesiredAccess, TrustedDomainHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarCreateTrustedDomain((LSAPR_HANDLE)PolicyHandle,
+                                         (PLSAPR_TRUST_INFORMATION)TrustedDomainInformation,
+                                         DesiredAccess,
+                                         (PLSAPR_HANDLE)TrustedDomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
 
 /*
  * @unimplemented
@@ -225,29 +284,43 @@ LsaCreateTrustedDomainEx(
     return STATUS_SUCCESS;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaDeleteTrustedDomain(
-    LSA_HANDLE PolicyHandle,
-    PSID TrustedDomainSid)
-{
-    FIXME("(%p,%p) stub\n", PolicyHandle, TrustedDomainSid);
-    return STATUS_SUCCESS;
-}
 
 /*
  * @implemented
  */
 NTSTATUS
 WINAPI
-LsaEnumerateAccountRights(
-    LSA_HANDLE PolicyHandle,
-    PSID AccountSid,
-    PLSA_UNICODE_STRING *UserRights,
-    PULONG CountOfRights)
+LsaDeleteTrustedDomain(IN LSA_HANDLE PolicyHandle,
+                       IN PSID TrustedDomainSid)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p)\n", PolicyHandle, TrustedDomainSid);
+
+    RpcTryExcept
+    {
+        Status = LsarDeleteTrustedDomain((LSAPR_HANDLE)PolicyHandle,
+                                         TrustedDomainSid);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
+                          IN PSID AccountSid,
+                          OUT PLSA_UNICODE_STRING *UserRights,
+                          OUT PULONG CountOfRights)
 {
     LSAPR_USER_RIGHT_SET UserRightsSet;
     NTSTATUS Status;
@@ -279,6 +352,7 @@ LsaEnumerateAccountRights(
 
     return Status;
 }
+
 
 /*
  * @unimplemented
@@ -332,16 +406,18 @@ LsaEnumerateTrustedDomainsEx(
     return STATUS_SUCCESS;
 }
 
+
 /*
  * @implemented
  */
 NTSTATUS
 WINAPI
-LsaFreeMemory(PVOID Buffer)
+LsaFreeMemory(IN PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);
     return RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 }
+
 
 /*
  * @implemented
@@ -393,6 +469,7 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
     return Status;
 }
 
+
 /*
  * @unimplemented
  */
@@ -417,8 +494,9 @@ LsaLookupNames2(
     return STATUS_NONE_MAPPED;
 }
 
+
 /*
- * @unmplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -451,6 +529,7 @@ LsaLookupPrivilegeName(IN LSA_HANDLE PolicyHandle,
     return Status;
 }
 
+
 /*
  * @implemented
  */
@@ -481,6 +560,7 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
 
     return Status;
 }
+
 
 /*
  * @implemented
@@ -538,6 +618,7 @@ LsaLookupSids(IN LSA_HANDLE PolicyHandle,
     return Status;
 }
 
+
 /******************************************************************************
  * LsaNtStatusToWinError
  *
@@ -546,12 +627,45 @@ LsaLookupSids(IN LSA_HANDLE PolicyHandle,
  *
  * @implemented
  */
-ULONG WINAPI
-LsaNtStatusToWinError(NTSTATUS Status)
+ULONG
+WINAPI
+LsaNtStatusToWinError(IN NTSTATUS Status)
 {
     TRACE("(%lx)\n", Status);
     return RtlNtStatusToDosError(Status);
 }
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
+               IN PSID AccountSid,
+               IN ULONG Flags,
+               OUT PLSA_HANDLE AccountHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarOpenAccount((LSAPR_HANDLE)PolicyHandle,
+                                 AccountSid,
+                                 Flags,
+                                 AccountHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
 
 /******************************************************************************
  * LsaOpenPolicy
@@ -562,15 +676,14 @@ LsaNtStatusToWinError(NTSTATUS Status)
  *   x3 []
  *   x4 []
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaOpenPolicy(
-    IN PLSA_UNICODE_STRING SystemName,
-    IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
-    IN ACCESS_MASK DesiredAccess,
-    IN OUT PLSA_HANDLE PolicyHandle)
+LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName,
+              IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
+              IN ACCESS_MASK DesiredAccess,
+              OUT PLSA_HANDLE PolicyHandle)
 {
     NTSTATUS Status;
 
@@ -604,19 +717,36 @@ LsaOpenPolicy(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaOpenTrustedDomainByName(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    ACCESS_MASK DesiredAccess,
-    PLSA_HANDLE TrustedDomainHandle)
+LsaOpenTrustedDomainByName(IN LSA_HANDLE PolicyHandle,
+                           IN PLSA_UNICODE_STRING TrustedDomainName,
+                           IN ACCESS_MASK DesiredAccess,
+                           OUT PLSA_HANDLE TrustedDomainHandle)
 {
-    FIXME("(%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainName, DesiredAccess, TrustedDomainHandle);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, TrustedDomainName,
+          DesiredAccess, TrustedDomainHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarOpenTrustedDomainByName((LSAPR_HANDLE)PolicyHandle,
+                                             (PRPC_UNICODE_STRING)TrustedDomainName,
+                                             DesiredAccess,
+                                             TrustedDomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
+
 
 /*
  * @unimplemented
@@ -646,120 +776,42 @@ LsaQueryForestTrustInformation(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS WINAPI
-LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
-              POLICY_INFORMATION_CLASS InformationClass,
-              PVOID *Buffer)
-{
-    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
-
-    if(!Buffer) return STATUS_INVALID_PARAMETER;
-    switch (InformationClass)
-    {
-        case PolicyAuditEventsInformation: /* 2 */
-        {
-            PPOLICY_AUDIT_EVENTS_INFO p = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                    sizeof(POLICY_AUDIT_EVENTS_INFO));
-            p->AuditingMode = FALSE; /* no auditing */
-            *Buffer = p;
-        }
-        break;
-        case PolicyPrimaryDomainInformation: /* 3 */
-        {
-            /* Only the domain name is valid for the local computer.
-             * All other fields are zero.
-             */
-            PPOLICY_PRIMARY_DOMAIN_INFO pinfo;
-
-            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_PRIMARY_DOMAIN_INFO, Name));
-
-            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
-
-            *Buffer = pinfo;
-        }
-        case PolicyAccountDomainInformation: /* 5 */
-        {
-            struct di
-            {
-                POLICY_ACCOUNT_DOMAIN_INFO info;
-                SID sid;
-                DWORD padding[3];
-                WCHAR domain[MAX_COMPUTERNAME_LENGTH + 1];
-            };
-
-            DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-            struct di * xdi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
-
-            xdi->info.DomainName.MaximumLength = dwSize * sizeof(WCHAR);
-            xdi->info.DomainName.Buffer = xdi->domain;
-            if (GetComputerNameW(xdi->info.DomainName.Buffer, &dwSize))
-                xdi->info.DomainName.Length = dwSize * sizeof(WCHAR);
-
-            TRACE("setting name to %s\n", debugstr_w(xdi->info.DomainName.Buffer));
-
-            xdi->info.DomainSid = &xdi->sid;
-
-            /* read the computer SID from the registry */
-            if (!ADVAPI_GetComputerSid(&xdi->sid))
-            {
-                HeapFree(GetProcessHeap(), 0, xdi);
-
-                WARN("Computer SID not found\n");
-
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            *Buffer = xdi;
-        }
-        break;
-        case  PolicyDnsDomainInformation:	/* 12 (0xc) */
-        {
-            /* Only the domain name is valid for the local computer.
-             * All other fields are zero.
-             */
-            PPOLICY_DNS_DOMAIN_INFO pinfo;
-
-            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_DNS_DOMAIN_INFO, Name));
-
-            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
-
-            *Buffer = pinfo;
-        }
-        break;
-        case PolicyAuditLogInformation:
-        case PolicyPdAccountInformation:
-        case PolicyLsaServerRoleInformation:
-        case PolicyReplicaSourceInformation:
-        case PolicyDefaultQuotaInformation:
-        case PolicyModificationInformation:
-        case PolicyAuditFullSetInformation:
-        case PolicyAuditFullQueryInformation:
-        case PolicyEfsInformation:
-        {
-            FIXME("category not implemented\n");
-            return STATUS_UNSUCCESSFUL;
-        }
-    }
-    return STATUS_SUCCESS;
-}
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaQueryTrustedDomainInfoByName(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    TRUSTED_INFORMATION_CLASS InformationClass,
-    PVOID *Buffer)
+LsaQueryInformationPolicy(IN LSA_HANDLE PolicyHandle,
+                          IN POLICY_INFORMATION_CLASS InformationClass,
+                          OUT PVOID *Buffer)
 {
-    FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    PLSAPR_POLICY_INFORMATION PolicyInformation = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = LsarQueryInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                            InformationClass,
+                                            &PolicyInformation);
+        *Buffer = PolicyInformation;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (PolicyInformation != NULL)
+            MIDL_user_free(PolicyInformation);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    TRACE("Done (Status: 0x%08x)\n", Status);
+
+    return Status;
 }
+
 
 /*
  * @unimplemented
@@ -776,21 +828,77 @@ LsaQueryTrustedDomainInfo(
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaRemoveAccountRights(
-    LSA_HANDLE PolicyHandle,
-    PSID AccountSid,
-    BOOLEAN AllRights,
-    PLSA_UNICODE_STRING UserRights,
-    ULONG CountOfRights)
+LsaQueryTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
+                                IN PLSA_UNICODE_STRING TrustedDomainName,
+                                IN TRUSTED_INFORMATION_CLASS InformationClass,
+                                OUT PVOID *Buffer)
 {
-    FIXME("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%d,%p)\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
+
+    if (InformationClass == TrustedDomainAuthInformationInternal ||
+        InformationClass == TrustedDomainFullInformationInternal)
+        return STATUS_INVALID_INFO_CLASS;
+
+    RpcTryExcept
+    {
+        Status = LsarQueryTrustedDomainInfoByName((LSAPR_HANDLE)PolicyHandle,
+                                                  (PRPC_UNICODE_STRING)TrustedDomainName,
+                                                  InformationClass,
+                                                  (unsigned long *)Buffer); // Shuld be: (PLSAPR_POLICY_INFORMATION *)Buffer
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
+                       IN PSID AccountSid,
+                       IN BOOLEAN AllRights,
+                       IN PLSA_UNICODE_STRING UserRights,
+                       IN ULONG CountOfRights)
+{
+    LSAPR_USER_RIGHT_SET UserRightSet;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
+
+    UserRightSet.Entries = CountOfRights;
+    UserRightSet.UserRights = (PRPC_UNICODE_STRING)UserRights;
+
+    RpcTryExcept
+    {
+        Status = LsarRemoveAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                         (PRPC_SID)AccountSid,
+                                         AllRights,
+                                         &UserRightSet);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
     return STATUS_SUCCESS;
 }
+
 
 /*
  * @unimplemented
@@ -820,19 +928,35 @@ LsaSetDomainInformationPolicy(
     return STATUS_UNSUCCESSFUL;
 }
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaSetInformationPolicy(
-    LSA_HANDLE PolicyHandle,
-    POLICY_INFORMATION_CLASS InformationClass,
-    PVOID Buffer)
+LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
+                        IN POLICY_INFORMATION_CLASS InformationClass,
+                        IN PVOID Buffer)
 {
-    FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+
+    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = LsarSetInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                          InformationClass,
+                                          (PLSAPR_POLICY_INFORMATION)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
+
 
 /*
  * @unimplemented

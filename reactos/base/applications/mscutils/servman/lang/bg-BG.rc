@@ -4,7 +4,7 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&Файл"
   BEGIN
-    MENUITEM "Износ...",   ID_EXPORT
+    MENUITEM "Изнасяне...",   ID_EXPORT
     MENUITEM SEPARATOR
     MENUITEM "Из&ход",       ID_EXIT
   END
@@ -194,8 +194,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
 /*  IDS_NUM_SERVICES "Num Services: %d" */
   IDS_NUM_SERVICES "Брой услуги: %d"
-  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
-  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_STOP_DEPENDS "При спирането на %s, ще спрат и следните услуги"
+  IDS_NO_DEPENDS "<Без зависимости>"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
@@ -226,7 +226,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+  /*IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"  */
+  IDS_HELP_OPTIONS "СЪЗДАВАНЕ НА ВЪЗМОЖНОСТ:\r\nБЕЛЕЖКА: Името на възможността включва знака за равенство.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (подразбирано = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (подразбирано = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (подразбирано = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (подразбирано = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
@@ -239,7 +240,7 @@ BEGIN
   IDS_HINT_CONNECT      " Управление на различен компютър."
   IDS_HINT_START        " Пускане на избраната услуга."
   IDS_HINT_STOP         " Спиране на избраната услуга."
-  IDS_HINT_PAUSE        " Задържане (pause) на избраната услуга."
+  IDS_HINT_PAUSE        " Задържане на избраната услуга."
   IDS_HINT_RESUME       " Продължаване на инбраната услуга."
   IDS_HINT_RESTART      " Спиране и пускане на избраната услуга"
   IDS_HINT_REFRESH      " Опресняване на списъка с услугите."
@@ -255,7 +256,7 @@ BEGIN
   IDS_HINT_CUST         " Нагаждане на изгледа."
 
   IDS_HINT_HELP         " Показва помощен прозорец."
-  IDS_HINT_ABOUT        " За управителя на устрйствата на РеактОС."
+  IDS_HINT_ABOUT        " За управителя на устройствата на РеактОС."
 
   IDS_HINT_SYS_RESTORE  " Възстановява прозореца до обичайния му рамер."
   IDS_HINT_SYS_MOVE     " Премества прозореца."

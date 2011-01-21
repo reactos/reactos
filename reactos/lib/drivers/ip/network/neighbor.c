@@ -97,12 +97,11 @@ VOID NBTimeout(VOID)
  */
 {
     UINT i;
-    KIRQL OldIrql;
     PNEIGHBOR_CACHE_ENTRY *PrevNCE;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
     for (i = 0; i <= NB_HASHMASK; i++) {
-        TcpipAcquireSpinLock(&NeighborCache[i].Lock, &OldIrql);
+        TcpipAcquireSpinLockAtDpcLevel(&NeighborCache[i].Lock);
 
         for (PrevNCE = &NeighborCache[i].Cache;
              (NCE = *PrevNCE) != NULL;) {
@@ -136,7 +135,7 @@ VOID NBTimeout(VOID)
             PrevNCE = &NCE->Next;
         }
 
-        TcpipReleaseSpinLock(&NeighborCache[i].Lock, OldIrql);
+        TcpipReleaseSpinLockFromDpcLevel(&NeighborCache[i].Lock);
     }
 }
 

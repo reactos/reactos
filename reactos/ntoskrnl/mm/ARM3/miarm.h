@@ -45,9 +45,7 @@
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
-
-/* The range 0x10000->0x7FEFFFFF is reserved for the ROSMM MAREA Allocator */
-#define MI_LOWEST_VAD_ADDRESS                   (PVOID)0x7FF00000
+#define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #endif /* !_M_AMD64 */
 
@@ -56,17 +54,27 @@
 #define _1MB (1024 * _1KB)
 #define _1GB (1024 * _1MB)
 
+/* Everyone loves 64K */
+#define _64K (64 * _1KB)
+
 /* Area mapped by a PDE */
 #define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
 
 /* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
+/* Size of a page directory */
+#define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
+
+/* Size of all page directories for a process */
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
 #ifdef _M_IX86
 #define PD_COUNT  1
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
+C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #elif defined(_M_AMD64)
 #define PD_COUNT  PPE_PER_PAGE
 #define PDE_COUNT PDE_PER_PAGE
@@ -79,32 +87,23 @@
 #error unknown architecture
 #endif
 
-#ifdef _M_IX86
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_I386
-#elif _M_ARM
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_ARM
-#elif _M_AMD64
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_AMD64
-#else
-#error Define these please!
-#endif
-
 //
 // Protection Bits part of the internal memory manager Protection Mask
 // Taken from http://www.reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
-#define MM_READONLY            1 
-#define MM_EXECUTE             2 
-#define MM_EXECUTE_READ        3 
+#define MM_READONLY            1
+#define MM_EXECUTE             2
+#define MM_EXECUTE_READ        3
 #define MM_READWRITE           4
-#define MM_WRITECOPY           5 
-#define MM_EXECUTE_READWRITE   6 
-#define MM_EXECUTE_WRITECOPY   7 
-#define MM_NOCACHE             8 
-#define MM_DECOMMIT            0x10 
+#define MM_WRITECOPY           5
+#define MM_EXECUTE_READWRITE   6
+#define MM_EXECUTE_WRITECOPY   7
+#define MM_NOCACHE             8
+#define MM_DECOMMIT            0x10
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+#define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
 // Specific PTE Definitions that map to the Memory Manager's Protection Mask Bits
@@ -115,7 +114,7 @@
 //
 // For example, in the logical attributes, we want to express read-only as a flag
 // but on x86, it is writability that must be set. On the other hand, on x86, just
-// like in the kernel, it is disabling the caches that requires a special flag, 
+// like in the kernel, it is disabling the caches that requires a special flag,
 // while on certain architectures such as ARM, it is enabling the cache which
 // requires a flag.
 //
@@ -123,12 +122,12 @@
 //
 // Access Flags
 //
-#define PTE_READONLY            0
+#define PTE_READONLY            0 // Doesn't exist on x86
 #define PTE_EXECUTE             0 // Not worrying about NX yet
 #define PTE_EXECUTE_READ        0 // Not worrying about NX yet
 #define PTE_READWRITE           0x2
 #define PTE_WRITECOPY           0x200
-#define PTE_EXECUTE_READWRITE   0x0
+#define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
 //
@@ -138,21 +137,36 @@
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
 #elif defined(_M_ARM)
+#define PTE_READONLY            0x200
+#define PTE_EXECUTE             0 // Not worrying about NX yet
+#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
+#define PTE_READWRITE           0 // Doesn't exist on ARM
+#define PTE_WRITECOPY           0 // Doesn't exist on ARM
+#define PTE_EXECUTE_READWRITE   0 // Not worrying about NX yet
+#define PTE_EXECUTE_WRITECOPY   0 // Not worrying about NX yet
+#define PTE_PROTOTYPE           0x400 // Using the Shared bit
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0
+#define PTE_DISABLE_CACHE       0x10
+#define PTE_WRITECOMBINED_CACHE 0x10
 #else
 #error Define these please!
 #endif
 
 extern const ULONG MmProtectToPteMask[32];
+extern const ULONG MmProtectToValue[32];
 
 //
 // Assertions for session images, addresses, and PTEs
 //
 #define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
     (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
-    
+
 #define MI_IS_SESSION_ADDRESS(Address) \
     (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
-        
+
 #define MI_IS_SESSION_PTE(Pte) \
     ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
 
@@ -164,14 +178,14 @@ extern const ULONG MmProtectToPteMask[32];
 
 #define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
     (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
-    
+
 //
 // Corresponds to MMPTE_SOFTWARE.Protection
 //
 #ifdef _M_IX86
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
 #elif _M_AMD64
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #else
@@ -196,15 +210,55 @@ extern const ULONG MmProtectToPteMask[32];
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
+#if defined(_M_IX86) || defined(_M_ARM)
 //
 // PFN List Sentinel
 //
 #define LIST_HEAD 0xFFFFFFFF
 
 //
+// Because GCC cannot automatically downcast 0xFFFFFFFF to lesser-width bits,
+// we need a manual definition suited to the number of bits in the PteFrame.
+// This is used as a LIST_HEAD for the colored list
+//
+#define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
+#elif defined(_M_AMD64)
+#define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
+#define COLORED_LIST_HEAD ((1 << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
+#else
+#error Define these please!
+#endif
+
+//
 // Special IRQL value (found in assertions)
 //
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
+
+//
+// Returns the color of a page
+//
+#define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
+#define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
+
+#ifndef _M_AMD64
+//
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiProtoPteToPte(x)                  \
+    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
+             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
+#endif
+
+//
+// Prototype PTEs that don't yet have a pagefile association
+//
+#define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+
+//
+// System views are binned into 64K chunks
+//
+#define MI_SYSTEM_VIEW_BUCKET_SIZE  _64K
 
 //
 // FIXFIX: These should go in ex.h after the pool merge
@@ -332,10 +386,30 @@ typedef struct _MI_LARGE_PAGE_RANGES
     PFN_NUMBER LastFrame;
 } MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
 
+typedef struct _MMVIEW
+{
+    ULONG_PTR Entry;
+    PCONTROL_AREA ControlArea;
+} MMVIEW, *PMMVIEW;
+
+typedef struct _MMSESSION
+{
+    KGUARDED_MUTEX SystemSpaceViewLock;
+    PKGUARDED_MUTEX SystemSpaceViewLockPointer;
+    PCHAR SystemSpaceViewStart;
+    PMMVIEW SystemSpaceViewTable;
+    ULONG SystemSpaceHashSize;
+    ULONG SystemSpaceHashEntries;
+    ULONG SystemSpaceHashKey;
+    ULONG BitmapFailures;
+    PRTL_BITMAP SystemSpaceBitMap;
+} MMSESSION, *PMMSESSION;
+
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
+extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
@@ -394,7 +468,7 @@ extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
 extern SIZE_T MmSizeOfPagedPoolInBytes;
-extern PMMPTE MmSystemPagePtes;
+extern PMMPDE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
@@ -445,35 +519,33 @@ extern PFN_NUMBER MiNumberOfFreePages;
 extern PFN_NUMBER MiEarlyAllocCount;
 extern PFN_NUMBER MiEarlyAllocBase;
 
-#define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
-#define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
-
 //
 // Figures out the hardware bits for a PTE
 //
 ULONG
 FORCEINLINE
-MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
+MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
-    
+
     /* Start fresh */
     TempPte.u.Long = 0;
-    
+
     /* Make it valid and accessed */
     TempPte.u.Hard.Valid = TRUE;
-    TempPte.u.Hard.Accessed = TRUE;
-    
+    MI_MAKE_ACCESSED_PAGE(&TempPte);
+
     /* Is this for user-mode? */
-    if ((PointerPte <= MiHighestUserPte) ||
-        ((PointerPte >= MiAddressToPde(NULL)) && (PointerPte <= MiHighestUserPde)))
+    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
+        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
+         (PointerPte <= (PVOID)MiHighestUserPde)))
     {
         /* Set the owner bit */
-        TempPte.u.Hard.Owner = TRUE;
+        MI_MAKE_OWNER_PAGE(&TempPte);
     }
-    
+
     /* FIXME: We should also set the global bit */
-    
+
     /* Return the protection */
     return TempPte.u.Long;
 }
@@ -492,10 +564,10 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     ASSERT(MappingPte > MiHighestUserPte);
     ASSERT(!MI_IS_SESSION_PTE(MappingPte));
     ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
-    
+
     /* Start fresh */
     *NewPte = ValidKernelPte;
-    
+
     /* Set the protection and page */
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -529,15 +601,43 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
 {
     /* Only valid for kernel, non-session PTEs */
     ASSERT(MappingPte <= MiHighestUserPte);
-    
+
     /* Start fresh */
     *NewPte = ValidKernelPte;
-    
+
     /* Set the protection and page */
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
+
+#ifndef _M_AMD64
+//
+// Builds a Prototype PTE for the address of the PTE
+//
+FORCEINLINE
+VOID
+MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
+                      IN PMMPTE PointerPte)
+{
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Proto.Prototype = 1;
+
+    /*
+     * Prototype PTEs are only valid in paged pool by design, this little trick
+     * lets us only use 28 bits for the adress of the PTE
+     */
+    Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
+
+    /* 7 bits go in the "low", and the other 21 bits go in the "high" */
+    NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
+    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
+    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+}
+#endif
 
 //
 // Returns if the page is physically resident (ie: a large page)
@@ -548,7 +648,7 @@ BOOLEAN
 MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 {
     PMMPDE PointerPde;
-    
+
     /* Large pages are never paged out, always physically resident */
     PointerPde = MiAddressToPde(Address);
     return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
@@ -579,6 +679,33 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Writes a valid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
+                   IN MMPDE TempPde)
+{
+    /* Write the valid PDE */
+    ASSERT(PointerPde->u.Hard.Valid == 0);
+    ASSERT(TempPde.u.Hard.Valid == 1);
+    *PointerPde = TempPde;
+}
+
+//
+// Writes an invalid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
+                     IN MMPDE InvalidPde)
+{
+    /* Write the invalid PDE */
+    ASSERT(InvalidPde.u.Hard.Valid == 0);
+    *PointerPde = InvalidPde;
 }
 
 //
@@ -648,11 +775,11 @@ MiUnlockProcessWorkingSet(IN PEPROCESS Process,
     ASSERT(MI_WS_OWNER(Process));
     /* This can't be checked because Vm is used by MAREAs) */
     //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
-    
+
     /* The thread doesn't own it anymore */
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
     Thread->OwnsProcessWorkingSetExclusive = FALSE;
-         
+
     /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
 
     /* Unblock APCs */
@@ -669,15 +796,15 @@ MiLockWorkingSet(IN PETHREAD Thread,
 {
     /* Block APCs */
     KeEnterGuardedRegion();
-    
+
     /* Working set should be in global memory */
     ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
-    
+
     /* Thread shouldn't already be owning something */
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
-    
+
     /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
-    
+
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
     {
@@ -711,7 +838,7 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
 {
     /* Working set should be in global memory */
     ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
-    
+
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
     {
@@ -733,14 +860,42 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
                (Thread->OwnsProcessWorkingSetShared));
         Thread->OwnsProcessWorkingSetExclusive = FALSE;
     }
-    
+
     /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
 
     /* Unblock APCs */
     KeLeaveGuardedRegion();
 }
 
-NTSTATUS
+//
+// Returns the ProtoPTE inside a VAD for the given VPN
+//
+FORCEINLINE
+PMMPTE
+MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
+                             IN ULONG_PTR Vpn)
+{
+    PMMPTE ProtoPte;
+
+    /* Find the offset within the VAD's prototype PTEs */
+    ProtoPte = Vad->FirstPrototypePte + (Vpn - Vad->StartingVpn);
+    ASSERT(ProtoPte <= Vad->LastContiguousPte);
+    return ProtoPte;
+}
+
+//
+// Returns the PFN Database entry for the given page number
+// Warning: This is not necessarily a valid PFN database entry!
+//
+FORCEINLINE
+PMMPFN
+MI_PFN_ELEMENT(IN PFN_NUMBER Pfn)
+{
+    /* Get the entry */
+    return &MmPfnDatabase[Pfn];
+};
+
+BOOLEAN
 NTAPI
 MmArmInitSystem(
     IN ULONG Phase,
@@ -782,7 +937,7 @@ NTAPI
 MiInitializeMemoryEvents(
     VOID
 );
-    
+
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
@@ -801,21 +956,21 @@ MmInitializeMemoryLimits(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PBOOLEAN IncludeType
 );
-                         
+
 PFN_NUMBER
 NTAPI
 MiPagesInLoaderBlock(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PBOOLEAN IncludeType
 );
-                     
+
 VOID
 FASTCALL
 MiSyncARM3WithROS(
     IN PVOID AddressStart,
     IN PVOID AddressEnd
 );
-                         
+
 NTSTATUS
 NTAPI
 MmArmAccessFault(
@@ -931,27 +1086,15 @@ MiUnmapLockedPagesInUserSpace(
 
 VOID
 NTAPI
-MiInsertInListTail(
+MiInsertPageInList(
     IN PMMPFNLIST ListHead,
-    IN PMMPFN Entry
-);
-
-VOID
-NTAPI
-MiInsertZeroListAtBack(
-    IN PFN_NUMBER PageIndex
+    IN PFN_NUMBER PageFrameIndex
 );
 
 VOID
 NTAPI
 MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
-);
-
-PMMPFN
-NTAPI
-MiRemoveHeadList(
-    IN PMMPFNLIST ListHead
 );
 
 PFN_NUMBER
@@ -980,6 +1123,13 @@ MiInitializePfnForOtherProcess(
 VOID
 NTAPI
 MiDecrementShareCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
+VOID
+NTAPI
+MiDecrementReferenceCount(
     IN PMMPFN Pfn1,
     IN PFN_NUMBER PageFrameIndex
 );
@@ -1016,7 +1166,7 @@ MiDeleteSystemPageableVm(
     IN ULONG Flags,
     OUT PPFN_NUMBER ValidPages
 );
-                         
+
 PLDR_DATA_TABLE_ENTRY
 NTAPI
 MiLookupDataTableEntry(
@@ -1072,6 +1222,23 @@ MiFindEmptyAddressRangeDownTree(
     OUT PMMADDRESS_NODE *Parent
 );
 
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeInTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *PreviousVad,
+    OUT PULONG_PTR Base
+);
+
+VOID
+NTAPI
+MiInsertVad(
+    IN PMMVAD Vad,
+    IN PEPROCESS Process
+);
+
 VOID
 NTAPI
 MiInsertNode(
@@ -1099,5 +1266,82 @@ NTAPI
 MiGetNextNode(
     IN PMMADDRESS_NODE Node
 );
+
+BOOLEAN
+NTAPI
+MiInitializeSystemSpaceMap(
+    IN PVOID InputSession OPTIONAL
+);
+
+ULONG
+NTAPI
+MiMakeProtectionMask(
+    IN ULONG Protect
+);
+
+VOID
+NTAPI
+MiDeleteVirtualAddresses(
+    IN ULONG_PTR Va,
+    IN ULONG_PTR EndingAddress,
+    IN PMMVAD Vad
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValid(
+    IN PVOID PageTableVirtualAddress,
+    IN PEPROCESS CurrentProcess
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValidPfn(
+    IN PVOID VirtualAddress,
+    IN KIRQL OldIrql
+);
+
+VOID
+NTAPI
+MiRemoveMappedView(
+    IN PEPROCESS CurrentProcess,
+    IN PMMVAD Vad
+);
+
+PSUBSECTION
+NTAPI
+MiLocateSubsection(
+    IN PMMVAD Vad,
+    IN ULONG_PTR Vpn
+);
+
+//
+// MiRemoveZeroPage will use inline code to zero out the page manually if only
+// free pages are available. In some scenarios, we don't/can't run that piece of
+// code and would rather only have a real zero page. If we can't have a zero page,
+// then we'd like to have our own code to grab a free page and zero it out, by
+// using MiRemoveAnyPage. This macro implements this.
+//
+PFN_NUMBER
+FORCEINLINE
+MiRemoveZeroPageSafe(IN ULONG Color)
+{
+    if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
+    return 0;
+}
+
+//
+// New ARM3<->RosMM PAGE Architecture
+//
+#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
+#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
+typedef struct _MMROSPFN
+{
+    PMM_RMAP_ENTRY RmapListHead;
+    SWAPENTRY SwapEntry;
+} MMROSPFN, *PMMROSPFN;
+
+#define RosMmData            AweReferenceCount
 
 /* EOF */

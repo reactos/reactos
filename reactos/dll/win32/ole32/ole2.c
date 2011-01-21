@@ -450,7 +450,9 @@ HRESULT WINAPI RegisterDragDrop(HWND hwnd, LPDROPTARGET pDropTarget)
   hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
   if(FAILED(hr)) return hr;
 
+  unk = NULL;
   hr = IDropTarget_QueryInterface(pDropTarget, &IID_IUnknown, (void**)&unk);
+  if (SUCCEEDED(hr) && !unk) hr = E_NOINTERFACE;
   if(FAILED(hr))
   {
       IStream_Release(stream);

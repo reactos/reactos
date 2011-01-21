@@ -25,6 +25,7 @@
 #define W32PF_SCREENSAVER             0x00200000
 #define W32PF_IDLESCREENSAVER         0x00400000
 #define W32PF_ICONTITLEREGISTERED     0x10000000
+#define W32PF_DPIAWARE                0x20000000
 // ReactOS
 #define W32PF_NOWINDOWGHOSTING       (0x01000000)
 #define W32PF_MANUALGUICHECK         (0x02000000)
@@ -74,6 +75,7 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
+    struct _USER_SENT_MESSAGE *pusmCurrent;
     LONG                timeLast;
     ULONG_PTR           idLast;
     INT                 exitCode;
@@ -93,7 +95,9 @@ typedef struct _THREADINFO
     HANDLE              hEventQueueClient;
     PKEVENT             pEventQueueServer;
     LIST_ENTRY          PtiLink;
+    POINT               ptLast;
 
+    LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
   /* ReactOS */
   LIST_ENTRY WindowListHead;
@@ -148,6 +152,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY    GDIBrushAttrFreeList;
 } W32PROCESS, *PW32PROCESS;
 
+#define CLIBS 32
+
 typedef struct _PROCESSINFO
 {
   W32PROCESS;
@@ -156,11 +162,16 @@ typedef struct _PROCESSINFO
   struct _DESKTOP* rpdeskStartup;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
-
+  INT cThreads;
+  DWORD dwhmodLibLoadedMask;
+  HANDLE ahmodLibLoaded[CLIBS];
+  struct _WINSTATION_OBJECT *prpwinsta;
+  HWINSTA hwinsta;
+  ACCESS_MASK amwinsta;
+  DWORD dwHotkey;
   HMONITOR hMonitor;
-
+  LUID luidSession;
   USERSTARTUPINFO usi;
-  ULONG Flags;
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */

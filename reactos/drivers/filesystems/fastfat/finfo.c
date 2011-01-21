@@ -152,7 +152,7 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
   ASSERT(NULL != DeviceExt);
   ASSERT(NULL != BasicInfo);
   /* Check volume label bit */
-  ASSERT(0 == (*FCB->Attributes & 0x08));
+  ASSERT(0 == (*FCB->Attributes & _A_VOLID));
 
   if (FCB->Flags & FCB_IS_FATX_ENTRY)
   {

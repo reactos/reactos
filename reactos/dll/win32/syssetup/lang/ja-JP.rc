@@ -102,14 +102,14 @@ BEGIN
           "", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "システム、ユーザーロケール設定変更には[カスタマイズ]をクリックします。",
-          IDC_STATIC, 53, 60, 196, 8
-    PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+          IDC_STATIC, 53, 50, 166, 25
+    PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 220, 52, 80, 14
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。",
-          IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+          IDC_STATIC, 53, 81, 253, 20
+    LTEXT "", IDC_LAYOUTTEXT, 53, 106, 250, 14
     LTEXT "キーボードレイアウト変更には[カスタマイズ]をクリックします。",
-          IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
+          IDC_STATIC, 53, 120, 166, 25
+    PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 220, 122, 80, 14
 END
 
 

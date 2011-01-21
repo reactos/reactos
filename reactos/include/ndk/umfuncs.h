@@ -295,13 +295,14 @@ LdrUnloadDll(
     IN PVOID BaseAddress
 );
 
+typedef VOID NTAPI (*PLDR_CALLBACK)(PVOID CallbackContext, PVOID Name);
 NTSTATUS
 NTAPI
 LdrVerifyImageMatchesChecksum(
     IN HANDLE FileHandle,
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3
+    IN PLDR_CALLBACK Callback,
+    IN PVOID CallbackContext,
+    OUT PUSHORT ImageCharacterstics
 );
 
 #endif

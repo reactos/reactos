@@ -1370,8 +1370,9 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
        InternetCrackUrlW should not include it                  */
   if (dwUrlLength == -1) nLength--;
 
-  lpwszUrl = HeapAlloc(GetProcessHeap(), 0, nLength * sizeof(WCHAR));
-  MultiByteToWideChar(CP_ACP,0,lpszUrl,dwUrlLength,lpwszUrl,nLength);
+  lpwszUrl = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(WCHAR));
+  MultiByteToWideChar(CP_ACP,0,lpszUrl,dwUrlLength,lpwszUrl,nLength + 1);
+  lpwszUrl[nLength] = '\0';
 
   memset(&UCW,0,sizeof(UCW));
   UCW.dwStructSize = sizeof(URL_COMPONENTSW);
@@ -1788,7 +1789,7 @@ BOOL WINAPI InternetCrackUrlW(LPCWSTR lpszUrl_orig, DWORD dwUrlLength_orig, DWOR
      */
     if (lpszcp != 0 && lpszcp - lpszUrl < dwUrlLength && (!lpszParam || lpszcp <= lpszParam))
     {
-        INT len;
+        DWORD len;
 
         /* Only truncate the parameter list if it's already been saved
          * in lpUC->lpszExtraInfo.
@@ -1806,8 +1807,46 @@ BOOL WINAPI InternetCrackUrlW(LPCWSTR lpszUrl_orig, DWORD dwUrlLength_orig, DWOR
             else
                 len = dwUrlLength-(lpszcp-lpszUrl);
         }
-        SetUrlComponentValueW(&lpUC->lpszUrlPath, &lpUC->dwUrlPathLength,
-                                   lpszcp, len);
+        if (lpUC->dwUrlPathLength && lpUC->lpszUrlPath &&
+                lpUC->nScheme == INTERNET_SCHEME_FILE)
+        {
+            WCHAR tmppath[MAX_PATH];
+            if (*lpszcp == '/')
+            {
+                len = MAX_PATH;
+                PathCreateFromUrlW(lpszUrl_orig, tmppath, &len, 0);
+            }
+            else
+            {
+                WCHAR *iter;
+                memcpy(tmppath, lpszcp, len * sizeof(WCHAR));
+                tmppath[len] = '\0';
+
+                iter = tmppath;
+                while (*iter) {
+                    if (*iter == '/')
+                        *iter = '\\';
+                    ++iter;
+                }
+            }
+            /* if ends in \. or \.. append a backslash */
+            if (tmppath[len - 1] == '.' &&
+                    (tmppath[len - 2] == '\\' ||
+                     (tmppath[len - 2] == '.' && tmppath[len - 3] == '\\')))
+            {
+                if (len < MAX_PATH - 1)
+                {
+                    tmppath[len] = '\\';
+                    tmppath[len+1] = '\0';
+                    ++len;
+                }
+            }
+            SetUrlComponentValueW(&lpUC->lpszUrlPath, &lpUC->dwUrlPathLength,
+                                       tmppath, len);
+        }
+        else
+            SetUrlComponentValueW(&lpUC->lpszUrlPath, &lpUC->dwUrlPathLength,
+                                       lpszcp, len);
     }
     else
     {
@@ -3569,8 +3608,8 @@ LPSTR INTERNET_GetResponseBuffer(void)
 
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
 {
-    struct timeval tv;
     fd_set infd;
+    struct timeval tv;
     BOOL bSuccess = FALSE;
     INT nRecv = 0;
     LPSTR lpszBuffer = INTERNET_GetResponseBuffer();
@@ -3578,13 +3617,13 @@ LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
     TRACE("\n");
 
     FD_ZERO(&infd);
-    FD_SET(nSocket, &infd);
-    tv.tv_sec=RESPONSE_TIMEOUT;
-    tv.tv_usec=0;
+    FD_SET(nSocket,&infd);
+    tv.tv_sec = RESPONSE_TIMEOUT;
+    tv.tv_usec = 0;
 
     while (nRecv < MAX_REPLY_LEN)
     {
-        if (select(nSocket+1,&infd,NULL,NULL,&tv) > 0)
+        if (select(0, &infd, NULL, NULL, &tv) > 0)
         {
             if (recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
             {

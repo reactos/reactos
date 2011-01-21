@@ -13,7 +13,9 @@ typedef struct _HOT_KEY_ITEM
   UINT vk;
 } HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitHotkeyImpl(VOID);
 
 //NTSTATUS FASTCALL
@@ -27,7 +29,7 @@ GetHotKey (UINT fsModifiers,
 	   int *id);
 
 VOID FASTCALL
-UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
+UnregisterWindowHotKeys(PWND Window);
 
 VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);

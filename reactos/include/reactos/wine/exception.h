@@ -83,7 +83,7 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGIST
 #else
     NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
     frame->Prev = teb->ExceptionList;
-    teb->ExceptionList = frame;
+    teb->ExceptionList = (PVOID)frame;
     return frame->Prev;
 #endif
 }
@@ -96,7 +96,7 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 #else
     NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
     frame->Prev = teb->ExceptionList;
-    teb->ExceptionList = frame;
+    teb->ExceptionList = (PVOID)frame;
     return frame->Prev;
 #endif
 }

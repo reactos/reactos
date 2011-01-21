@@ -189,6 +189,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
     
     (*Count) = 0;
     
+    KeEnterCriticalRegion();
     KeAcquireGuardedMutex(&ViewLock);
     
     WriteCount[0] = WriteCount[1];
@@ -278,6 +279,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
     }
     
     KeReleaseGuardedMutex(&ViewLock);
+    KeLeaveCriticalRegion();
     
     DPRINT("CcRosFlushDirtyPages() finished\n");
     return(STATUS_SUCCESS);
@@ -685,7 +687,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   MmLockAddressSpace(MmGetKernelAddressSpace());
   current->BaseAddress = NULL;
   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-			      MEMORY_AREA_CACHE_SEGMENT,
+			      0, // nothing checks for cache_segment mareas, so set to 0
 			      &current->BaseAddress,
 			      Bcb->CacheSegmentSize,
 			      PAGE_READWRITE,
@@ -701,6 +703,18 @@ CcRosCreateCacheSegment(PBCB Bcb,
 #endif
 
   /* Create a virtual mapping for this memory area */
+  MI_SET_USAGE(MI_USAGE_CACHE);
+#if MI_TRACE_PFNS
+  PWCHAR pos = NULL;
+  ULONG len = 0;
+  if ((Bcb->FileObject) && (Bcb->FileObject->FileName.Buffer))
+  {
+    pos = wcsrchr(Bcb->FileObject->FileName.Buffer, '\\');
+    len = wcslen(pos) * sizeof(WCHAR);
+    if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
+  }   
+#endif
+
   MmMapMemoryArea(current->BaseAddress, Bcb->CacheSegmentSize,
       MC_CACHE, PAGE_READWRITE);
 

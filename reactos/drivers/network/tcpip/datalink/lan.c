@@ -287,6 +287,7 @@ VOID LanReceiveWorker( PVOID Context ) {
     case ETYPE_ARP:
 	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
 	ARPReceive(Adapter->Context, &IPPacket);
+    break;
     default:
         IPPacket.Free(&IPPacket);
 	break;

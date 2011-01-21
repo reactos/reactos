@@ -31,14 +31,14 @@ PolyTextOutW( HDC hdc, const POLYTEXTW *pptxt, INT cStrings )
 BOOL
 WINAPI
 GetLogColorSpaceW(
-	HCOLORSPACE		a0,
-	LPLOGCOLORSPACEW	a1,
-	DWORD			a2
-	)
+    HCOLORSPACE		a0,
+    LPLOGCOLORSPACEW	a1,
+    DWORD			a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -48,16 +48,16 @@ GetLogColorSpaceW(
 BOOL
 WINAPI
 GetICMProfileW(
-	HDC		hdc,
-	LPDWORD		size,
-	LPWSTR		filename
-	)
+    HDC		hdc,
+    LPDWORD		size,
+    LPWSTR		filename
+)
 {
     if (!hdc || !size || !filename) return FALSE;
 
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -67,13 +67,13 @@ GetICMProfileW(
 BOOL
 WINAPI
 SetICMProfileW(
-	HDC	a0,
-	LPWSTR	a1
-	)
+    HDC	a0,
+    LPWSTR	a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -83,23 +83,23 @@ SetICMProfileW(
 int
 WINAPI
 EnumICMProfilesW(
-	HDC		hDC,
-	ICMENUMPROCW	lpEnumICMProfilesFunc,
-	LPARAM		lParam
-	)
+    HDC		hDC,
+    ICMENUMPROCW	lpEnumICMProfilesFunc,
+    LPARAM		lParam
+)
 {
-  /*
-   * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
-   * to find out how big a buffer we need. Then allocate that buffer
-   * and call NtGdiEnumICMProfiles again to have the buffer filled.
-   *
-   * Finally, step through the buffer ( MULTI-SZ recommended for format ),
-   * and call the user's callback function until we run out of strings or
-   * the user returns FALSE
-   */
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+    /*
+     * FIXME - call NtGdiEnumICMProfiles with NULL for lpstrBuffer
+     * to find out how big a buffer we need. Then allocate that buffer
+     * and call NtGdiEnumICMProfiles again to have the buffer filled.
+     *
+     * Finally, step through the buffer ( MULTI-SZ recommended for format ),
+     * and call the user's callback function until we run out of strings or
+     * the user returns FALSE
+     */
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -109,15 +109,15 @@ EnumICMProfilesW(
 BOOL
 WINAPI
 UpdateICMRegKeyW(
-	DWORD	a0,
-	LPWSTR	a1,
-	LPWSTR	a2,
-	UINT	a3
-	)
+    DWORD	a0,
+    LPWSTR	a1,
+    LPWSTR	a2,
+    UINT	a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -134,9 +134,9 @@ BOOL
 WINAPI
 EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -146,9 +146,9 @@ BOOL
 WINAPI
 EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -194,9 +194,9 @@ BOOL
 WINAPI
 bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -206,9 +206,9 @@ BOOL
 WINAPI
 bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -237,11 +237,11 @@ GetStringBitmapW(HDC hdc,
 BOOL
 WINAPI
 CreateScalableFontResourceW(
-	DWORD fdwHidden,
-	LPCWSTR lpszFontRes,
-	LPCWSTR lpszFontFile,
-	LPCWSTR lpszCurrentPath
-	)
+    DWORD fdwHidden,
+    LPCWSTR lpszFontRes,
+    LPCWSTR lpszFontFile,
+    LPCWSTR lpszCurrentPath
+)
 {
     HANDLE f;
 
@@ -253,13 +253,14 @@ CreateScalableFontResourceW(
      */
 
     /* If the output file already exists, return the ERROR_FILE_EXISTS error as specified in MSDN */
-    if ((f = CreateFileW(lpszFontRes, 0, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) != INVALID_HANDLE_VALUE) {
+    if ((f = CreateFileW(lpszFontRes, 0, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) != INVALID_HANDLE_VALUE)
+    {
         CloseHandle(f);
         SetLastError(ERROR_FILE_EXISTS);
         return FALSE;
     }
     return FALSE; /* create failed */
 }
-  
+
 
 /* EOF */

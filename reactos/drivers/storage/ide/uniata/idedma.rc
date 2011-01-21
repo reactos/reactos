@@ -1,6 +1,6 @@
 #include "uniata_ver.h"
 
-#define VERSION                         0,39,6,0
+#define VERSION                         UNIATA_VER_DOT_COMMA
 #define VERSION_STR                     "0." UNIATA_VER_STR
 
 #define REACTOS_FILETYPE                VFT_DRV
@@ -12,7 +12,7 @@
 #define REACTOS_STR_FILE_VERSION        VERSION_STR
 #define REACTOS_STR_INTERNAL_NAME       "uniata.sys"
 #define REACTOS_STR_ORIGINAL_FILENAME   "uniata.sys"
-#define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright 1999-2008 AlterWare, Copyright 2007 ReactOS Team"
+#define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright 1999-" UNIATA_VER_YEAR_STR " AlterWare, Copyright 2010 ReactOS Team"
 #define REACTOS_STR_PRODUCT_NAME        "UniATA Driver for ReactOS"
 #define REACTOS_STR_PRODUCT_VERSION     VERSION_STR
 

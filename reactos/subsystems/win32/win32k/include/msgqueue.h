@@ -8,11 +8,23 @@
 #define MSQ_ISEVENT     2
 #define MSQ_SENTNOWAIT  0x80000000
 
+#define QSIDCOUNTS 6
+
+typedef enum _QS_ROS_TYPES
+{
+    QSRosKey = 0,
+    QSRosMouseMove,
+    QSRosMouseButton,
+    QSRosPostMessage,
+    QSRosSendMessage,
+    QSRosHotKey,
+}QS_ROS_TYPES,*PQS_ROS_TYPES;
+
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
-  BOOLEAN FreeLParam;
   MSG Msg;
+  DWORD QS_Flags;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
 struct _USER_MESSAGE_QUEUE;
@@ -21,9 +33,12 @@ typedef struct _USER_SENT_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
+  DWORD QS_Flags;  // Original QS bits used to create this message.
   PKEVENT CompletionEvent;
   LRESULT* Result;
+  LRESULT lResult;
   struct _USER_MESSAGE_QUEUE* SenderQueue;
+  struct _USER_MESSAGE_QUEUE* CallBackSenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */
@@ -31,16 +46,6 @@ typedef struct _USER_SENT_MESSAGE
   INT HookMessage;
   BOOL HasPackedLParam;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
-
-typedef struct _USER_SENT_MESSAGE_NOTIFY
-{
-  SENDASYNCPROC CompletionCallback;
-  ULONG_PTR CompletionCallbackContext;
-  LRESULT Result;
-  HWND hWnd;
-  UINT Msg;
-  LIST_ENTRY ListEntry;
-} USER_SENT_MESSAGE_NOTIFY, *PUSER_SENT_MESSAGE_NOTIFY;
 
 typedef struct _USER_MESSAGE_QUEUE
 {
@@ -53,14 +58,16 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY SentMessagesListHead;
   /* Queue of messages posted to the queue. */
   LIST_ENTRY PostedMessagesListHead;
-  /* Queue of sent-message notifies for the queue. */
-  LIST_ENTRY NotifyMessagesListHead;
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
-  /* Pointer to the current WM_MOUSEMOVE message */
-  PUSER_MESSAGE MouseMoveMsg;
+  /* True if a WM_MOUSEMOVE is pending */
+  BOOLEAN MouseMoved;
+  /* Current WM_MOUSEMOVE message */
+  MSG MouseMoveMsg;
+  /* Last click message for translating double clicks */
+  MSG msgDblClk;
   /* True if a WM_QUIT message is pending. */
   BOOLEAN QuitPosted;
   /* The quit exit code. */
@@ -73,8 +80,6 @@ typedef struct _USER_MESSAGE_QUEUE
   ULONG LastMsgRead;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   HWND FocusWindow;
-  /* Count of paints pending. */
-  ULONG PaintCount;
   /* Current active window for this queue. */
   HWND ActiveWindow;
   /* Current capture window for this queue. */
@@ -88,13 +93,12 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Caret information for this queue */
   PTHRDCARETINFO CaretInfo;
 
-  /* Window hooks */
-  PHOOKTABLE Hooks;
-
   /* queue state tracking */
-  WORD WakeMask;
-  WORD QueueBits;
-  WORD ChangedBits;
+  // Send list QS_SENDMESSAGE
+  // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
+  // Hard list QS_MOUSE|QS_KEY only
+  // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
+  DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
   /* extra message information */
   LPARAM ExtraInfo;
@@ -116,22 +120,37 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                UINT uTimeout, BOOL Block, INT HookMessage,
                ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
+MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
+	       MSG* Msg, BOOLEAN HardwareMessage, DWORD MessageBits);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
-co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-	       IN BOOLEAN Hardware,
-	       IN BOOLEAN Remove,
-	       IN PWINDOW_OBJECT Window,
-	       IN UINT MsgFilterLow,
-	       IN UINT MsgFilterHigh,
-	       OUT PUSER_MESSAGE* Message);
+MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+	              IN BOOLEAN Remove,
+	              IN PWND Window,
+	              IN UINT MsgFilterLow,
+	              IN UINT MsgFilterHigh,
+	              IN UINT QSflags,
+	              OUT PMSG Message);
+BOOL APIENTRY
+co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+	                      IN BOOL Remove,
+	                      IN PWND Window,
+	                      IN UINT MsgFilterLow,
+	                      IN UINT MsgFilterHigh,
+	                      IN UINT QSflags,
+	                      OUT MSG* pMsg);
+BOOL APIENTRY
+co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
+                    IN BOOL Remove,
+                    IN PWND Window,
+                    IN UINT MsgFilterLow,
+                    IN UINT MsgFilterHigh,
+                    OUT MSG* pMsg);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
@@ -142,16 +161,15 @@ VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqGetHardwareMessageQueue(VOID);
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
-VOID FASTCALL
-MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
@@ -162,11 +180,6 @@ co_IntSendMessage(HWND hWnd,
 		WPARAM wParam,
 		LPARAM lParam);
 LRESULT FASTCALL
-co_IntPostOrSendMessage(HWND hWnd,
-		     UINT Msg,
-		     WPARAM wParam,
-		     LPARAM lParam);
-LRESULT FASTCALL
 co_IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
@@ -174,7 +187,7 @@ co_IntSendMessageTimeout(HWND hWnd,
                       UINT uFlags,
                       UINT uTimeout,
                       ULONG_PTR *uResult);
-
+BOOL FASTCALL UserSendNotifyMessage( HWND hWnd,UINT Msg,WPARAM wParam,LPARAM lParam );
 LRESULT FASTCALL co_IntSendMessageNoWait(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
@@ -198,7 +211,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg);
+co_MsqInsertMouseMessage(MSG* Msg);
 BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL
@@ -208,13 +221,9 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 
 __inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 __inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-__inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 BOOL APIENTRY IntInitMessagePumpHook();
 BOOL APIENTRY IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
-
-PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
-VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
@@ -238,7 +247,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
         ObDereferenceObject((MsgQueue)->NewMessages); \
       if ((MsgQueue)->NewMessagesHandle != NULL) \
         ZwClose((MsgQueue)->NewMessagesHandle); \
-      ExFreePool((MsgQueue)); \
+      ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)
 
@@ -273,5 +282,12 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 {
     return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
+
+VOID FASTCALL IdlePing(VOID);
+VOID FASTCALL IdlePong(VOID);
+BOOL FASTCALL co_MsqReplyMessage(LRESULT);
+UINT FASTCALL GetWakeMask(UINT, UINT);
+VOID FASTCALL MsqWakeQueue(PUSER_MESSAGE_QUEUE,DWORD,BOOL);
+VOID FASTCALL ClearMsgBitsMask(PUSER_MESSAGE_QUEUE,UINT);
 
 /* EOF */

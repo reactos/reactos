@@ -17,36 +17,10 @@
 
 /* GLOBALS *******************************************************************/
 
-PCHAR
-MemType[] =
-{
-    "ExceptionBlock    ",
-    "SystemBlock       ",
-    "Free              ",
-    "Bad               ",
-    "LoadedProgram     ",
-    "FirmwareTemporary ",
-    "FirmwarePermanent ",
-    "OsloaderHeap      ",
-    "OsloaderStack     ",
-    "SystemCode        ",
-    "HalCode           ",
-    "BootDriver        ",
-    "ConsoleInDriver   ",
-    "ConsoleOutDriver  ",
-    "StartupDpcStack   ",
-    "StartupKernelStack",
-    "StartupPanicStack ",
-    "StartupPcrPage    ",
-    "StartupPdrPage    ",
-    "RegistryData      ",
-    "MemoryData        ",
-    "NlsData           ",
-    "SpecialMemory     ",
-    "BBTMemory         ",
-    "LoaderReserve     ",
-    "LoaderXIPRom      "
-};
+VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+
+HANDLE MpwThreadHandle;
+KEVENT MpwThreadEvent;
 
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
@@ -56,12 +30,6 @@ ULONG MmReadClusterSize;
 UCHAR MmDisablePagingExecutive = 1; // Forced to off
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
-BOOLEAN MiDbgEnableMdDump =
-#ifdef _ARM_
-TRUE;
-#else
-FALSE;
-#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -213,22 +181,6 @@ MiInitSystemMemoryAreas()
     ASSERT(Status == STATUS_SUCCESS);
     
     //
-    // And now, ReactOS paged pool
-    //
-    BaseAddress = MmPagedPoolBase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_PAGED_POOL | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmPagedPoolSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    ASSERT(Status == STATUS_SUCCESS);
-    
-#ifndef _M_AMD64
-    //
     // Next, the KPCR
     //
     BaseAddress = (PVOID)PCR;
@@ -276,7 +228,7 @@ MiInitSystemMemoryAreas()
 
 #if defined(_X86_)
     //
-    // Finally, reserve the 2  pages we currently make use of for HAL mappings
+    // Finally, reserve the 2 pages we currently make use of for HAL mappings
     //
     BaseAddress = (PVOID)0xFFC00000;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -294,6 +246,7 @@ MiInitSystemMemoryAreas()
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiDbgDumpAddressSpace(VOID)
 {
     //
@@ -303,10 +256,6 @@ MiDbgDumpAddressSpace(VOID)
             KSEG0_BASE,
             (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
             "Boot Loaded Image");
-    DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmPagedPoolBase,
-            (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
-            "Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
             (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
@@ -344,31 +293,98 @@ MiDbgDumpAddressSpace(VOID)
             "Non Paged Pool Expansion PTE Space");
 }
 
-VOID
-NTAPI
-MiDbgDumpMemoryDescriptors(VOID)
+NTSTATUS NTAPI
+MmMpwThreadMain(PVOID Ignored)
 {
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    ULONG TotalPages = 0;
-    
-    DPRINT1("Base\t\tLength\t\tType\n");
-    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-        DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
-        TotalPages += Md->PageCount;
-    }
+   NTSTATUS Status;
+   ULONG PagesWritten;
+   LARGE_INTEGER Timeout;
 
-    DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+   Timeout.QuadPart = -50000000;
+
+   for(;;)
+   {
+      Status = KeWaitForSingleObject(&MpwThreadEvent,
+                                     0,
+                                     KernelMode,
+                                     FALSE,
+                                     &Timeout);
+      if (!NT_SUCCESS(Status))
+      {
+         DbgPrint("MpwThread: Wait failed\n");
+         KeBugCheck(MEMORY_MANAGEMENT);
+         return(STATUS_UNSUCCESSFUL);
+      }
+
+      PagesWritten = 0;
+
+#ifndef NEWCC
+	  // XXX arty -- we flush when evicting pages or destorying cache
+	  // sections.
+      CcRosFlushDirtyPages(128, &PagesWritten);
+#endif
+   }
 }
 
-VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+NTSTATUS
+NTAPI
+INIT_FUNCTION
+MmInitMpwThread(VOID)
+{
+   KPRIORITY Priority;
+   NTSTATUS Status;
+   CLIENT_ID MpwThreadId;
+   
+   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+
+   Status = PsCreateSystemThread(&MpwThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &MpwThreadId,
+                                 (PKSTART_ROUTINE) MmMpwThreadMain,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
+   }
+
+   Priority = 27;
+   NtSetInformationThread(MpwThreadHandle,
+                          ThreadPriority,
+                          &Priority,
+                          sizeof(Priority));
+
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+NTAPI
+INIT_FUNCTION
+MmInitBsmThread(VOID)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ThreadHandle;
+
+    /* Create the thread */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = PsCreateSystemThread(&ThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  NULL,
+                                  NULL,
+                                  KeBalanceSetManager,
+                                  NULL);
+
+    /* Close the handle and return status */
+    ZwClose(ThreadHandle);
+    return Status;
+}
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -377,81 +393,65 @@ MmInitSystem(IN ULONG Phase,
     MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameNumber;
     
-    if (Phase == 0)
-    {
-        /* Initialize the kernel address space */
-        KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
-        MmKernelAddressSpace = MmGetCurrentAddressSpace();
-        MmInitGlobalKernelPageDirectory();
-        
-        /* Dump memory descriptors */
-        if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-        
-        /* Initialize ARM³ in phase 0 */
-        MmArmInitSystem(0, KeLoaderBlock);    
-        
-        /* Put the paged pool after the loaded modules */
-        MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
-                                               MmBootImageSize);
-        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-        
-        /* Intialize system memory areas */
-        MiInitSystemMemoryAreas();
+    /* Initialize the kernel address space */
+    ASSERT(Phase == 1);
+    KeInitializeGuardedMutex(&PsIdleProcess->AddressCreationLock);
+    MmKernelAddressSpace = &PsIdleProcess->Vm;
 
-        /* Dump the address space */
-        MiDbgDumpAddressSpace();
-    }
-    else if (Phase == 1)
-    {
-        MmInitializePagedPool();
-        MiInitializeUserPfnBitmap();
-        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
-        MmInitializeRmapList();
-        MmInitializePageOp();
-        MmInitSectionImplementation();
-        MmInitPagingFile();
-        
-        //
-        // Create a PTE to double-map the shared data section. We allocate it
-        // from paged pool so that we can't fault when trying to touch the PTE
-        // itself (to map it), since paged pool addresses will already be mapped
-        // by the fault handler.
-        //
-        MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
-                                                    sizeof(MMPTE),
-                                                    '  mM');
-        if (!MmSharedUserDataPte) return FALSE;
-        
-        //
-        // Now get the PTE for shared data, and read the PFN that holds it
-        //
-        PointerPte = MiAddressToPte((PVOID)KI_USER_SHARED_DATA);
-        ASSERT(PointerPte->u.Hard.Valid == 1);
-        PageFrameNumber = PFN_FROM_PTE(PointerPte);
-        
-        /* Build the PTE and write it */
-        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte,
-                                    PointerPte,
-                                    MM_READONLY,
-                                    PageFrameNumber);
-        *MmSharedUserDataPte = TempPte;
-        
-        /* Setup the memory threshold events */
-        if (!MiInitializeMemoryEvents()) return FALSE;
-        
-        /*
-         * Unmap low memory
-         */
-        MiInitBalancerThread();
-        
-        /*
-         * Initialise the modified page writer.
-         */
-        MmInitMpwThread();
-        
-        /* Initialize the balance set manager */
-        MmInitBsmThread();
-    }
+    /* Intialize system memory areas */
+    MiInitSystemMemoryAreas();
+
+    /* Dump the address space */
+    MiDbgDumpAddressSpace();
+
+    MmInitGlobalKernelPageDirectory();
+    MiInitializeUserPfnBitmap();
+    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
+    MmInitializeRmapList();
+    MmInitializePageOp();
+    MmInitSectionImplementation();
+    MmInitPagingFile();
+    
+    //
+    // Create a PTE to double-map the shared data section. We allocate it
+    // from paged pool so that we can't fault when trying to touch the PTE
+    // itself (to map it), since paged pool addresses will already be mapped
+    // by the fault handler.
+    //
+    MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
+                                                sizeof(MMPTE),
+                                                '  mM');
+    if (!MmSharedUserDataPte) return FALSE;
+    
+    //
+    // Now get the PTE for shared data, and read the PFN that holds it
+    //
+    PointerPte = MiAddressToPte((PVOID)KI_USER_SHARED_DATA);
+    ASSERT(PointerPte->u.Hard.Valid == 1);
+    PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    
+    /* Build the PTE and write it */
+    MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte,
+                                PointerPte,
+                                MM_READONLY,
+                                PageFrameNumber);
+    *MmSharedUserDataPte = TempPte;
+    
+    /* Setup the memory threshold events */
+    if (!MiInitializeMemoryEvents()) return FALSE;
+    
+    /*
+     * Unmap low memory
+     */
+    MiInitBalancerThread();
+    
+    /*
+     * Initialise the modified page writer.
+     */
+    MmInitMpwThread();
+    
+    /* Initialize the balance set manager */
+    MmInitBsmThread();
 
     return TRUE;
 }

@@ -144,6 +144,19 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #endif
 
 //
+// Native image architecture
+//
+#if defined(_M_IX86)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_I386
+#elif defined(_M_ARM)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_ARM
+#elif defined(_M_AMD64)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_AMD64
+#else
+#error Define these please!
+#endif
+
+//
 // Registry Keys
 //
 #define RTL_REGISTRY_ABSOLUTE                               0
@@ -367,6 +380,15 @@ typedef enum _RTL_PATH_TYPE
 } RTL_PATH_TYPE;
 
 #ifndef NTOS_MODE_USER
+
+//
+// Heap Information Class
+//
+typedef enum _HEAP_INFORMATION_CLASS
+{
+    HeapCompatibilityInformation,
+    HeapEnableTerminationOnCorruption
+} HEAP_INFORMATION_CLASS;
 
 //
 // Callback function for RTL Timers or Registered Waits
@@ -1038,6 +1060,21 @@ typedef struct _RTL_CRITICAL_SECTION
 } RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
 #endif
+
+//
+// RTL Private Heap Structures
+//
+typedef struct _HEAP_LOCK
+{
+    union
+    {
+        RTL_CRITICAL_SECTION CriticalSection;
+#ifndef NTOS_MODE_USER
+        ERESOURCE Resource;
+#endif
+        UCHAR Padding[0x68]; /* Max ERESOURCE size for x64 build. Needed because RTL is built only once */
+    };
+} HEAP_LOCK, *PHEAP_LOCK;
 
 //
 // RTL Range List Structures

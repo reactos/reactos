@@ -1549,6 +1549,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
             /* Information about all types */
             case ObjectTypesInformation:
                 DPRINT1("NOT IMPLEMENTED!\n");
+                InfoLength = Length;
                 Status = STATUS_NOT_IMPLEMENTED;
                 break;
 
@@ -1580,6 +1581,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
             default:
 
                 /* Fail it */
+                InfoLength = Length;
                 Status = STATUS_INVALID_INFO_CLASS;
                 break;
         }
@@ -1588,7 +1590,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
         if (ResultLength)
         {
             /* Write the length */
-            *ResultLength = Length;
+            *ResultLength = InfoLength;
         }
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())

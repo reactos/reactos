@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston
- * UPDATED:     2010-05-25
+ * UPDATED:     2010-12-12
  */
 
 #pragma once
@@ -993,13 +993,13 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Nainstalovat zavadØŸ na pevnì disk (MBR a VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Nainstalovat zavadØŸ na pevnì disk (pouze VBR).",
         TEXT_STYLE_NORMAL
     },
     {

@@ -26,9 +26,12 @@
 #include "winsta.h"
 #include "ntwrapper.h"
 
+#define IS_ATOM(x) \
+  (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
+
 /* One/Two Param Functions */
 #define NtUserMsqSetWakeMask(dwWaitMask) \
-  (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_MSQSETWAKEMASK)
+  (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_GETINPUTEVENT)
 
 #define NtUserMsqClearWakeMask() \
   NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK)
@@ -83,9 +86,6 @@
 #define NtUserGetCursorPos(lpPoint) \
   (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION)
 
-#define NtUserIsWindowInDestroy(hWnd) \
-  (BOOL)NtUserCallOneParam((DWORD_PTR)hWnd, ONEPARAM_ROUTINE_ISWINDOWINDESTROY)
-
 #define NtUserEnableProcessWindowGhosting(bEnable) \
   NtUserCallOneParam((DWORD_PTR)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 
@@ -119,7 +119,6 @@ typedef struct _USER32_TRACKINGLIST {
 
 typedef struct _USER32_THREAD_DATA
 {
-    MSG LastMessage;
     USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
 } USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
 

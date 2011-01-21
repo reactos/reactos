@@ -72,8 +72,8 @@ KdpServiceDispatcher(ULONG Service,
                     DbgBreakPoint();
                     break;
                     
-                case ThatsWhatSheSaid:
-                    MmDumpPfnDatabase();
+                case KdSpare3:
+                    MmDumpArmPfnDatabase(FALSE);
                     break;
 
                 default:

@@ -6,6 +6,11 @@
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
 	<include base="rtl">.</include>
+
+	<if property="NEWSPRINTF" value="1">
+		<define name="USE_NEW_SPRINTF" />
+	</if>
+
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>debug_asm.S</file>
@@ -68,6 +73,7 @@
 	<file>generictable.c</file>
 	<file>handle.c</file>
 	<file>heap.c</file>
+	<file>heapdbg.c</file>
 	<file>image.c</file>
 	<file>interlck.c</file>
 	<file>message.c</file>
@@ -89,9 +95,7 @@
 	<file>security.c</file>
 	<file>slist.c</file>
 	<file>sid.c</file>
-	<file>sprintf.c</file>
 	<file>srw.c</file>
-	<file>swprintf.c</file>
 	<file>splaytree.c</file>
 	<file>thread.c</file>
 	<file>time.c</file>

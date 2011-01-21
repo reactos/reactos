@@ -65,6 +65,33 @@ midMessage(
             break;
         }
 
+        case MIDM_OPEN :
+        {
+            Result = MmeOpenDevice(MIDI_IN_DEVICE_TYPE,
+                                   DeviceId,
+                                   (LPWAVEOPENDESC) Parameter1,
+                                   Parameter2,
+                                   (DWORD_PTR*) PrivateHandle);
+            break;
+        }
+
+        case MIDM_CLOSE :
+        {
+            Result = MmeCloseDevice(PrivateHandle);
+            break;
+        }
+
+       case MIDM_START :
+        {
+            Result = MmeSetState(PrivateHandle, TRUE);
+            break;
+        }
+
+        case MIDM_STOP :
+        {
+            Result = MmeSetState(PrivateHandle, FALSE);
+            break;
+        }
     }
 
     SND_TRACE(L"midMessage returning MMRESULT %d\n", Result);

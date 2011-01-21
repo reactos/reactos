@@ -462,11 +462,21 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
     case COND_LHS:
     	return 0 == strncmpW( a, b, lstrlenW( b ) );
     case COND_RHS:
-    	return 0 == lstrcmpW( a + (lstrlenW( a ) - lstrlenW( b )), b );
+    {
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
+        if (r > l) return 0;
+        return 0 == lstrcmpW( a + (l - r), b );
+    }
     case COND_ILHS:
     	return 0 == strncmpiW( a, b, lstrlenW( b ) );
     case COND_IRHS:
-        return 0 == lstrcmpiW( a + (lstrlenW( a ) - lstrlenW( b )), b );
+    {
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
+        if (r > l) return 0;
+        return 0 == lstrcmpiW( a + (l - r), b );
+    }
     default:
     	ERR("invalid substring operator\n");
         return 0;

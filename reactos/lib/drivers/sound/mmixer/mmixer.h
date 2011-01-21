@@ -48,7 +48,10 @@ typedef MIXER_STATUS(*PMIXER_CLOSEKEY)(
     IN HANDLE hKey);
 
 typedef VOID (*PMIXER_EVENT)(
-    IN PVOID MixerEvent);
+    IN PVOID MixerEventContext,
+    IN HANDLE hMixer,
+    IN ULONG NotificationType,
+    IN ULONG Value);
 
 typedef VOID (*PMIXER_COPY)(
     IN PVOID Dst,
@@ -119,6 +122,15 @@ ULONG
 MMixerGetWaveOutCount(
     IN PMIXER_CONTEXT MixerContext);
 
+ULONG
+MMixerGetMidiInCount(
+    IN PMIXER_CONTEXT MixerContext);
+
+ULONG
+MMixerGetMidiOutCount(
+    IN PMIXER_CONTEXT MixerContext);
+
+
 
 MIXER_STATUS
 MMixerGetCapabilities(
@@ -130,7 +142,7 @@ MIXER_STATUS
 MMixerOpen(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG MixerId,
-    IN PVOID MixerEvent,
+    IN PVOID MixerEventContext,
     IN PMIXER_EVENT MixerEventRoutine,
     OUT PHANDLE MixerHandle);
 
@@ -196,3 +208,37 @@ MMixerGetWaveDevicePath(
     IN ULONG bWaveIn,
     IN ULONG DeviceId,
     OUT LPWSTR * DevicePath);
+
+MIXER_STATUS
+MMixerMidiOutCapabilities(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    OUT LPMIDIOUTCAPSW Caps);
+
+MIXER_STATUS
+MMixerMidiInCapabilities(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    OUT LPMIDIINCAPSW Caps);
+
+MIXER_STATUS
+MMixerGetMidiDevicePath(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG bMidiIn,
+    IN ULONG DeviceId,
+    OUT LPWSTR * DevicePath);
+
+MIXER_STATUS
+MMixerSetMidiStatus(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN KSSTATE State);
+
+MIXER_STATUS
+MMixerOpenMidi(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG DeviceIndex,
+    IN ULONG bMidiIn,
+    IN PIN_CREATE_CALLBACK CreateCallback,
+    IN PVOID Context,
+    OUT PHANDLE PinHandle);

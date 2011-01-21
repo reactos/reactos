@@ -277,7 +277,7 @@ kbd_irq(PURB purb, PVOID pcontext)
     }
 
     // Save old keyboard data
-    RtlCopyMemory(pdev_ext->kbd_old, data, sizeof(data));
+    RtlCopyMemory(pdev_ext->kbd_old, data, 8);
 
     // resubmit the urb
     status = usb_submit_urb(pdev_ext->dev_mgr, purb);

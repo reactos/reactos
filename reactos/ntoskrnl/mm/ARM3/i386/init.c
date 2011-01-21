@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::INIT:X86"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../../ARM3/miarm.h"
 
@@ -24,18 +23,20 @@ MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1,
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
+MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
 
 /* Template PTE for prototype page */
-MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | 0xFFFFF000};
-                       
+MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiComputeNonPagedPoolVa(IN ULONG FreePages)
 {
     IN PFN_NUMBER PoolPages;
-    
+
     /* Check if this is a machine with less than 256MB of RAM, and no overide */
     if ((MmNumberOfPhysicalPages <= MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING) &&
         !(MmSizeOfNonPagedPoolInBytes))
@@ -43,14 +44,14 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
         /* Force the non paged pool to be 2MB so we can reduce RAM usage */
         MmSizeOfNonPagedPoolInBytes = 2 * _1MB;
     }
-    
+
     /* Check if the user gave a ridicuously large nonpaged pool RAM size */
     if ((MmSizeOfNonPagedPoolInBytes >> PAGE_SHIFT) > (FreePages * 7 / 8))
     {
         /* More than 7/8ths of RAM was dedicated to nonpaged pool, ignore! */
         MmSizeOfNonPagedPoolInBytes = 0;
     }
-    
+
     /* Check if no registry setting was set, or if the setting was too low */
     if (MmSizeOfNonPagedPoolInBytes < MmMinimumNonPagedPoolSize)
     {
@@ -58,30 +59,30 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
         MmSizeOfNonPagedPoolInBytes = MmMinimumNonPagedPoolSize;
         MmSizeOfNonPagedPoolInBytes += (FreePages - 1024) / 256 * MmMinAdditionNonPagedPoolPerMb;
     }
-    
+
     /* Check if the registy setting or our dynamic calculation was too high */
     if (MmSizeOfNonPagedPoolInBytes > MI_MAX_INIT_NONPAGED_POOL_SIZE)
     {
         /* Set it to the maximum */
         MmSizeOfNonPagedPoolInBytes = MI_MAX_INIT_NONPAGED_POOL_SIZE;
     }
-    
+
     /* Check if a percentage cap was set through the registry */
     if (MmMaximumNonPagedPoolPercent) UNIMPLEMENTED;
-    
+
     /* Page-align the nonpaged pool size */
     MmSizeOfNonPagedPoolInBytes &= ~(PAGE_SIZE - 1);
-    
+
     /* Now, check if there was a registry size for the maximum size */
     if (!MmMaximumNonPagedPoolInBytes)
     {
         /* Start with the default (1MB) */
         MmMaximumNonPagedPoolInBytes = MmDefaultMaximumNonPagedPool;
-        
+
         /* Add space for PFN database */
         MmMaximumNonPagedPoolInBytes += (ULONG)
             PAGE_ALIGN((MmHighestPhysicalPage +  1) * sizeof(MMPFN));
-            
+
         /* Check if the machine has more than 512MB of free RAM */
         if (FreePages >= 0x1F000)
         {
@@ -101,7 +102,7 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
                                             MmMaxAdditionNonPagedPoolPerMb;
         }
     }
-    
+
     /* Make sure there's at least 16 pages + the PFN available for expansion */
     PoolPages = MmSizeOfNonPagedPoolInBytes + (PAGE_SIZE * 16) +
                 ((ULONG)PAGE_ALIGN(MmHighestPhysicalPage + 1) * sizeof(MMPFN));
@@ -110,17 +111,17 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
         /* The maximum should be at least high enough to cover all the above */
         MmMaximumNonPagedPoolInBytes = PoolPages;
     }
-    
+
     /* Systems with 2GB of kernel address space get double the size */
     PoolPages = MI_MAX_NONPAGED_POOL_SIZE * 2;
-    
+
     /* On the other hand, make sure that PFN + nonpaged pool doesn't get too big */
     if (MmMaximumNonPagedPoolInBytes > PoolPages)
     {
         /* Trim it down to the maximum architectural limit (256MB) */
         MmMaximumNonPagedPoolInBytes = PoolPages;
     }
-    
+
     /* Check if this is a system with > 128MB of non paged pool */
     if (MmMaximumNonPagedPoolInBytes > MI_MAX_NONPAGED_POOL_SIZE)
     {
@@ -129,7 +130,7 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
                                            MI_MAX_NONPAGED_POOL_SIZE))
         {
             /* FIXME: Should check if the initial pool can be expanded */
-            
+
             /* Assume no expansion possible, check ift he maximum is too large */
             if (MmMaximumNonPagedPoolInBytes > (MmSizeOfNonPagedPoolInBytes +
                                                 MI_MAX_NONPAGED_POOL_SIZE))
@@ -137,13 +138,14 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
                 /* Set it to the initial value plus the boost */
                 MmMaximumNonPagedPoolInBytes = MmSizeOfNonPagedPoolInBytes +
                                                MI_MAX_NONPAGED_POOL_SIZE;
-            }    
+            }
         }
     }
 }
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PFN_NUMBER PageFrameIndex;
@@ -151,6 +153,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
     KIRQL OldIrql;
+    PMMPFN Pfn1;
+    ULONG Flags;
 
     /* Check for global bit */
 #if 0
@@ -164,26 +168,26 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Now templates are ready */
     TempPte = ValidKernelPte;
     TempPde = ValidKernelPde;
-     
+
     //
     // Set CR3 for the system process
     //
-    PointerPte = MiAddressToPde(PTE_BASE);
+    PointerPte = MiAddressToPde(PDE_BASE);
     PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
-    
+
     //
     // Blow away user-mode
     //
     StartPde = MiAddressToPde(0);
     EndPde = MiAddressToPde(KSEG0_BASE);
     RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
-    
+
     //
-        
+
     /* Compute non paged pool limits and size */
     MiComputeNonPagedPoolVa(MiNumberOfFreePages);
-    
+
     //
     // Now calculate the nonpaged pool expansion VA region
     //
@@ -194,7 +198,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NonPagedPoolExpansionVa = MmNonPagedPoolStart;
     DPRINT("NP Pool has been tuned to: %d bytes and %d bytes\n",
            MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
-    
+
     //
     // Now calculate the nonpaged system VA region, which includes the
     // nonpaged pool expansion (above) and the system PTEs. Note that it is
@@ -204,7 +208,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                     (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
-    
+
     //
     // Don't let it go below the minimum
     //
@@ -214,7 +218,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         // This is a hard-coded limit in the Windows NT address space
         //
         MmNonPagedSystemStart = (PVOID)0xEB000000;
-        
+
         //
         // Reduce the amount of system PTEs to reach this point
         //
@@ -224,7 +228,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         MmNumberOfSystemPtes--;
         ASSERT(MmNumberOfSystemPtes > 1000);
     }
-    
+
     //
     // Check if we are in a situation where the size of the paged pool
     // is so large that it overflows into nonpaged pool
@@ -250,7 +254,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MmPfnDatabase = (PVOID)0xB0000000;
     ASSERT(((ULONG_PTR)MmPfnDatabase & (PDE_MAPPED_VA - 1)) == 0);
-            
+
     //
     // Non paged pool comes after the PFN database
     //
@@ -283,13 +287,13 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         TempPde.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
         MI_WRITE_VALID_PTE(StartPde, TempPde);
-        
+
         //
         // Zero out the page table
         //
         PointerPte = MiPteToAddress(StartPde);
         RtlZeroMemory(PointerPte, PAGE_SIZE);
-        
+
         //
         // Next
         //
@@ -315,7 +319,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         PointerPte = MiPteToAddress(StartPde);
         RtlZeroMemory(PointerPte, PAGE_SIZE);
-        
+
         //
         // Next
         //
@@ -347,7 +351,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex++;
         MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     }
-    
+
     //
     // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
     //
@@ -357,18 +361,18 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNumberOfSystemPtes--;
     DPRINT("Final System PTE count: %d (%d bytes)\n",
            MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
-    
+
     /* Get the PDE For hyperspace */
     StartPde = MiAddressToPde(HYPER_SPACE);
-    
+
     /* Allocate a page for hyperspace and create it */
     TempPde.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     MI_WRITE_VALID_PTE(StartPde, TempPde);
-    
+
     /* Flush the TLB */
     KeFlushCurrentTb();
-    
+
     /* Zero out the page table now */
     PointerPte = MiAddressToPte(HYPER_SPACE);
     RtlZeroMemory(PointerPte, PAGE_SIZE);

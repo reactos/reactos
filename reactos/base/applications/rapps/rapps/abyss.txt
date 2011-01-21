@@ -14,5 +14,10 @@ CDPath = none
 [Section.0407]
 Description = Abyss Web Server ermöglicht es Webseiten auf Ihrem Computer zu hosten. Er unterstützt sichere SSL/TLS Verbindungen (HTTPS) sowie eine Vielfalt an Web Technologien. Er kann ebenfalls PHP, Perl, Python, ASP, ASP.NET, und Ruby on Rails Web Anwendungen ausführen, welche von Datenbanken, wie MySQL, SQLite, MS SQL Server, MS Access, oder Oracle unterstützt werden können.
 
+[Section.0415]
+Description = Abyss Web Server pozwala Ci na stworzenie serwera WWW na własnym komputerze. Ten program obsługuje zabezpieczone połączenia typu SSL/TLS (HTTPS) i wiele technologii Sieci.
+Może także uruchamiać zaawansowane aplikacje internetowe takie jak PHP, Perl, Python, ASP, ASP.NET, i Ruby on Rails.
+Mogą one zostać oparte o MySQL, SQLite, MS SQL Server, MS Access, lub Oracle.
+
 [Section.0422]
 Description = Abyss Web Server дозволить вам утримувати веб-сайти на вашому комп'ютері. Від підтримує безпечні SSL/TLS з'єднання (HTTPS) та великий ряд веб-технологій. Він також запускає PHP, Perl, Python, ASP, ASP.NET, та Ruby on Rails веб-додатки, які можуть підтримуватись такими базами даних, як MySQL, SQLite, MS SQL Server, MS Access, чи Oracle.

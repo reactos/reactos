@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  13-12-2009
- * LAST UPDATE:  xx-xx-xxxx
+ * LAST UPDATE:  26-07-2010
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -45,4 +45,15 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "reactOS_sndrec32"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "PozÌcia: %.2f s"
+    IDS_STRDUR              "DÂûka: %.2f s"
+    IDS_STRBUF              "Buffer: %.2f kb" //Vyrovn·vacia pam‰ù
+    IDS_STRFMT              "%.1f kHz %u bitov"
+    IDS_STRMONO             "mono"
+    IDS_STRSTEREO           "stereo"
+    IDS_STRCHAN             "%s"
 END

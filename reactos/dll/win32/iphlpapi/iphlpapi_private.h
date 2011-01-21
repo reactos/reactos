@@ -147,7 +147,7 @@ BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe );
 typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
 				     PWCHAR NameServer,
 				     PVOID Data );
-void EnumNameServers( HANDLE RegHandle, PWCHAR Interface, PVOID Data, EnumNameServersFunc cb );
+LSTATUS EnumNameServers( HKEY RegHandle, LPWSTR Interface, PVOID Data, EnumNameServersFunc cb );
 NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
                              char *name,
                              DWORD index,
@@ -158,11 +158,6 @@ NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
 #if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
 BOOL WINAPI
 GetComputerNameExA(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
-#endif
-
-#ifdef FORCE_DEBUG
-#undef DPRINT
-#define DPRINT(fmt,x...) DbgPrint("%s:%d:%s: " fmt, __FILE__, __LINE__, __FUNCTION__, ## x)
 #endif
 
 #endif/*IPPRIVATE_H*/

@@ -67,7 +67,7 @@
 @ stdcall GdipCombineRegionRegion(ptr ptr long)
 @ stdcall GdipComment(ptr long ptr)
 @ stdcall GdipConvertToEmfPlus(ptr ptr ptr long ptr ptr)
-@ stub GdipConvertToEmfPlusToFile
+@ stdcall GdipConvertToEmfPlusToFile(ptr ptr ptr ptr long ptr ptr)
 @ stub GdipConvertToEmfPlusToStream
 @ stdcall GdipCreateAdjustableArrowCap(long long long ptr)
 @ stub GdipCreateBitmapFromDirectDrawSurface
@@ -215,8 +215,8 @@
 @ stub GdipEnumerateMetafileSrcRectDestRectI
 @ stdcall GdipFillClosedCurve2(ptr ptr ptr long long long)
 @ stdcall GdipFillClosedCurve2I(ptr ptr ptr long long long)
-@ stub GdipFillClosedCurve
-@ stub GdipFillClosedCurveI
+@ stdcall GdipFillClosedCurve(ptr ptr ptr long)
+@ stdcall GdipFillClosedCurveI(ptr ptr ptr long)
 @ stdcall GdipFillEllipse(ptr ptr long long long long)
 @ stdcall GdipFillEllipseI(ptr ptr long long long long)
 @ stdcall GdipFillPath(ptr ptr ptr)
@@ -315,10 +315,10 @@
 @ stdcall GdipGetLogFontW(ptr ptr ptr)
 @ stdcall GdipGetMatrixElements(ptr ptr)
 @ stub GdipGetMetafileDownLevelRasterizationLimit
-@ stub GdipGetMetafileHeaderFromEmf
-@ stub GdipGetMetafileHeaderFromFile
+@ stdcall GdipGetMetafileHeaderFromEmf(ptr ptr)
+@ stdcall GdipGetMetafileHeaderFromFile(wstr ptr)
 @ stdcall GdipGetMetafileHeaderFromMetafile(ptr ptr)
-@ stub GdipGetMetafileHeaderFromStream
+@ stdcall GdipGetMetafileHeaderFromStream(ptr ptr)
 @ stub GdipGetMetafileHeaderFromWmf
 @ stdcall GdipGetNearestColor(ptr ptr)
 @ stdcall GdipGetPageScale(ptr ptr)
@@ -334,13 +334,13 @@
 @ stdcall GdipGetPathGradientGammaCorrection(ptr ptr)
 @ stub GdipGetPathGradientPath
 @ stdcall GdipGetPathGradientPointCount(ptr ptr)
-@ stub GdipGetPathGradientPresetBlend
-@ stub GdipGetPathGradientPresetBlendCount
+@ stdcall GdipGetPathGradientPresetBlend(ptr ptr ptr long)
+@ stdcall GdipGetPathGradientPresetBlendCount(ptr ptr)
 @ stdcall GdipGetPathGradientRect(ptr ptr)
 @ stdcall GdipGetPathGradientRectI(ptr ptr)
 @ stdcall GdipGetPathGradientSurroundColorCount(ptr ptr)
 @ stdcall GdipGetPathGradientSurroundColorsWithCount(ptr ptr ptr)
-@ stub GdipGetPathGradientTransform
+@ stdcall GdipGetPathGradientTransform(ptr ptr)
 @ stdcall GdipGetPathGradientWrapMode(ptr ptr)
 @ stdcall GdipGetPathLastPoint(ptr ptr)
 @ stdcall GdipGetPathPoints(ptr ptr long)
@@ -351,7 +351,7 @@
 @ stdcall GdipGetPenBrushFill(ptr ptr)
 @ stdcall GdipGetPenColor(ptr ptr)
 @ stub GdipGetPenCompoundArray
-@ stub GdipGetPenCompoundCount
+@ stdcall GdipGetPenCompoundCount(ptr ptr)
 @ stdcall GdipGetPenCustomEndCap(ptr ptr)
 @ stdcall GdipGetPenCustomStartCap(ptr ptr)
 @ stdcall GdipGetPenDashArray(ptr ptr long)
@@ -365,7 +365,7 @@
 @ stdcall GdipGetPenMiterLimit(ptr ptr)
 @ stdcall GdipGetPenMode(ptr ptr)
 @ stdcall GdipGetPenStartCap(ptr ptr)
-@ stub GdipGetPenTransform
+@ stdcall GdipGetPenTransform(ptr ptr)
 @ stdcall GdipGetPenUnit(ptr ptr)
 @ stdcall GdipGetPenWidth(ptr ptr)
 @ stdcall GdipGetPixelOffsetMode(ptr ptr)
@@ -380,9 +380,9 @@
 @ stdcall GdipGetRegionData(ptr ptr long ptr)
 @ stdcall GdipGetRegionDataSize(ptr ptr)
 @ stdcall GdipGetRegionHRgn(ptr ptr ptr)
-@ stub GdipGetRegionScans
+@ stdcall GdipGetRegionScans(ptr ptr ptr ptr)
 @ stdcall GdipGetRegionScansCount(ptr ptr ptr)
-@ stub GdipGetRegionScansI
+@ stdcall GdipGetRegionScansI(ptr ptr ptr ptr)
 @ stdcall GdipGetRenderingOrigin(ptr ptr ptr)
 @ stdcall GdipGetSmoothingMode(ptr ptr)
 @ stdcall GdipGetSolidFillColor(ptr ptr)
@@ -444,8 +444,8 @@
 @ stdcall GdipMeasureString(ptr wstr long ptr ptr ptr ptr ptr ptr)
 @ stdcall GdipMultiplyLineTransform(ptr ptr long)
 @ stdcall GdipMultiplyMatrix(ptr ptr long)
-@ stub GdipMultiplyPathGradientTransform
-@ stub GdipMultiplyPenTransform
+@ stdcall GdipMultiplyPathGradientTransform(ptr ptr long)
+@ stdcall GdipMultiplyPenTransform(ptr ptr long)
 @ stdcall GdipMultiplyTextureTransform(ptr ptr long)
 @ stdcall GdipMultiplyWorldTransform(ptr ptr long)
 @ stdcall GdipNewInstalledFontCollection(ptr)
@@ -466,11 +466,11 @@
 @ stub GdipPlayTSClientRecord
 @ stdcall GdipPrivateAddFontFile(ptr wstr)
 @ stdcall GdipPrivateAddMemoryFont(ptr ptr long)
-@ stub GdipRecordMetafile
+@ stdcall GdipRecordMetafile(long long ptr long wstr ptr)
 @ stdcall GdipRecordMetafileFileName(wstr long long ptr long wstr ptr)
 @ stdcall GdipRecordMetafileFileNameI(wstr long long ptr long wstr ptr)
 @ stdcall GdipRecordMetafileI(long long ptr long wstr ptr)
-@ stub GdipRecordMetafileStream
+@ stdcall GdipRecordMetafileStream(ptr long long ptr long wstr ptr)
 @ stub GdipRecordMetafileStreamI
 @ stdcall GdipReleaseDC(ptr ptr)
 @ stdcall GdipRemovePropertyItem(ptr long)
@@ -487,8 +487,8 @@
 @ stdcall GdipReversePath(ptr)
 @ stdcall GdipRotateLineTransform(ptr long long)
 @ stdcall GdipRotateMatrix(ptr long long)
-@ stub GdipRotatePathGradientTransform
-@ stub GdipRotatePenTransform
+@ stdcall GdipRotatePathGradientTransform(ptr long long)
+@ stdcall GdipRotatePenTransform(ptr long long)
 @ stdcall GdipRotateTextureTransform(ptr long long)
 @ stdcall GdipRotateWorldTransform(ptr long long)
 @ stub GdipSaveAdd
@@ -498,7 +498,7 @@
 @ stdcall GdipSaveImageToStream(ptr ptr ptr ptr)
 @ stdcall GdipScaleLineTransform(ptr long long long)
 @ stdcall GdipScaleMatrix(ptr long long long)
-@ stub GdipScalePathGradientTransform
+@ stdcall GdipScalePathGradientTransform(ptr long long long)
 @ stdcall GdipScalePenTransform(ptr long long long)
 @ stdcall GdipScaleTextureTransform(ptr long long long)
 @ stdcall GdipScaleWorldTransform(ptr long long long)
@@ -554,12 +554,12 @@
 @ stdcall GdipSetPathGradientCenterPointI(ptr ptr)
 @ stdcall GdipSetPathGradientFocusScales(ptr long long)
 @ stdcall GdipSetPathGradientGammaCorrection(ptr long)
-@ stub GdipSetPathGradientLinearBlend
+@ stdcall GdipSetPathGradientLinearBlend(ptr long long)
 @ stub GdipSetPathGradientPath
 @ stdcall GdipSetPathGradientPresetBlend(ptr ptr ptr long)
 @ stdcall GdipSetPathGradientSigmaBlend(ptr long long)
 @ stdcall GdipSetPathGradientSurroundColorsWithCount(ptr ptr ptr)
-@ stub GdipSetPathGradientTransform
+@ stdcall GdipSetPathGradientTransform(ptr ptr)
 @ stdcall GdipSetPathGradientWrapMode(ptr long)
 @ stdcall GdipSetPathMarker(ptr)
 @ stdcall GdipSetPenBrushFill(ptr ptr)
@@ -577,7 +577,7 @@
 @ stdcall GdipSetPenMiterLimit(ptr long)
 @ stdcall GdipSetPenMode(ptr long)
 @ stdcall GdipSetPenStartCap(ptr long)
-@ stub GdipSetPenTransform
+@ stdcall GdipSetPenTransform(ptr ptr)
 @ stub GdipSetPenUnit
 @ stdcall GdipSetPenWidth(ptr long)
 @ stdcall GdipSetPixelOffsetMode(ptr long)
@@ -613,8 +613,8 @@
 @ stdcall GdipTranslateClipI(ptr long long)
 @ stdcall GdipTranslateLineTransform(ptr long long long)
 @ stdcall GdipTranslateMatrix(ptr long long long)
-@ stub GdipTranslatePathGradientTransform
-@ stub GdipTranslatePenTransform
+@ stdcall GdipTranslatePathGradientTransform(ptr long long long)
+@ stdcall GdipTranslatePenTransform(ptr long long long)
 @ stdcall GdipTranslateRegion(ptr long long)
 @ stdcall GdipTranslateRegionI(ptr long long)
 @ stdcall GdipTranslateTextureTransform(ptr long long long)
@@ -623,8 +623,8 @@
 @ stdcall GdipVectorTransformMatrixPointsI(ptr ptr long)
 @ stdcall GdipWarpPath(ptr ptr ptr long long long long long long long)
 @ stdcall GdipWidenPath(ptr ptr ptr long)
-@ stub GdipWindingModeOutline
+@ stdcall GdipWindingModeOutline(ptr ptr long)
 @ stdcall GdiplusNotificationHook(ptr)
 @ stdcall GdiplusNotificationUnhook(ptr)
-@ stdcall GdiplusShutdown(ptr)
+@ stdcall GdiplusShutdown(ptr) GdiplusShutdown_wrapper
 @ stdcall GdiplusStartup(ptr ptr ptr)

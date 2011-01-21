@@ -16,7 +16,7 @@
 #endif
 
 ULONG   WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7);
-ULONG   WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7);
+ULONG   WINAPI Main_DDrawSurface_Release4(LPDIRECTDRAWSURFACE7);
 HRESULT WINAPI Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7, REFIID, LPVOID*);
 HRESULT WINAPI Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7, HDC);
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX);
@@ -72,7 +72,7 @@ IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable =
 {
     Main_DDrawSurface_QueryInterface,
     Main_DDrawSurface_AddRef,                        /* (Compact done) */
-    Main_DDrawSurface_Release,
+    Main_DDrawSurface_Release4,
     Main_DDrawSurface_AddAttachedSurface,
     Main_DDrawSurface_AddOverlayDirtyRect,
     Main_DDrawSurface_Blt,

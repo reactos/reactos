@@ -1,34 +1,19 @@
 /*
- * KSUSER.DLL - ReactOS 
- *
- * Copyright 2008 Magnus Olsen and Dmitry Chapyshev
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            dll/directx/ksuser/ksuser.c
+ * PURPOSE:         KS USER functions
+ * PROGRAMMER:      Magnus Olsen and Dmitry Chapyshev and Johannes Anderwald
  */
-
 
 #include "ksuser.h"
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS NTAPI  KsiCreateObjectType( HANDLE hHandle, PVOID guidstr, PVOID Buffer, ULONG BufferSize, ACCESS_MASK DesiredAccess, PHANDLE phHandle);
-
 NTSTATUS
 NTAPI
 KsiCreateObjectType( HANDLE hHandle,
-                     PVOID IID,
+                     LPWSTR ObjectType,
                      PVOID Buffer,
                      ULONG BufferSize,
                      ACCESS_MASK DesiredAccess,
@@ -42,31 +27,56 @@ KsiCreateObjectType( HANDLE hHandle,
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
 
-    Length = wcslen(IID);
+    /* get length of object type */
+    Length = wcslen(ObjectType);
 
-    TotalSize = (Length * sizeof(WCHAR)) + BufferSize + 4 * sizeof(WCHAR);
+    /* get length for request */
+    TotalSize = (Length * sizeof(WCHAR)) + BufferSize;
 
+    /* append space for '\\'*/
+    TotalSize += sizeof(WCHAR);
+
+    /* allocate buffer */
     pStr = HeapAlloc(GetProcessHeap(), 0, TotalSize);
     if (!pStr)
-        return STATUS_INSUFFICIENT_RESOURCES;
-    pStr[0] = L'\\';
-    wcscpy(&pStr[1], (LPWSTR)IID);
-    pStr[Length+1] = L'\\';
-    memcpy(&pStr[Length+2], Buffer, BufferSize);
-    pStr[Length+3+(BufferSize/sizeof(WCHAR))] = L'\0';
+    {
+        /* out of memory */
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
-    RtlInitUnicodeString(&ObjectName, pStr);
+    /* copy object type */
+    wcscpy(pStr, ObjectType);
+
+    /* append slash */
+    pStr[Length] = L'\\';
+
+    /* append parameters */
+    memcpy(&pStr[Length+1], Buffer, BufferSize);
+
+    /* initialize object name */
+    ObjectName.Buffer = pStr;
     ObjectName.Length = ObjectName.MaximumLength = TotalSize;
 
+    /* initialize object attributes */
     InitializeObjectAttributes(&ObjectAttributes, &ObjectName, OBJ_CASE_INSENSITIVE, hHandle, NULL);
 
+    /* create the object */
     Status = NtCreateFile(phHandle, DesiredAccess, &ObjectAttributes, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, 0, 1, 0, NULL, 0);
+
+    /* free buffer */
     HeapFree(GetProcessHeap(), 0, pStr);
+
+    /* check for success */
     if (!NT_SUCCESS(Status))
     {
+        /* failed zero handle */
         *phHandle = INVALID_HANDLE_VALUE;
+
+        /* convert error code */
         Status = RtlNtStatusToDosError(Status);
     }
+
+    /* done */
     return Status;
 }
 

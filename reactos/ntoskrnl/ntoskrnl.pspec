@@ -112,7 +112,7 @@
 @ FASTCALL ExInterlockedAddLargeStatistic(ptr long)
 #endif
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
-#ifndef __x86_64__
+#ifdef __x86__
 @ FASTCALL ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall ExInterlockedDecrementLong(ptr ptr)
 @ stdcall ExInterlockedExchangeUlong(ptr long ptr)
@@ -454,6 +454,7 @@
 @ stdcall IoInitializeTimer(ptr ptr ptr)
 @ stdcall IoInvalidateDeviceRelations(ptr long)
 @ stdcall IoInvalidateDeviceState(ptr)
+@ stdcall -arch=x86_64 IoIs32bitProcess(ptr)
 @ stdcall IoIsFileOriginRemote(ptr)
 @ stdcall IoIsOperationSynchronous(ptr)
 @ stdcall IoIsSystemThread(ptr)
@@ -533,6 +534,7 @@
 @ stdcall IoVolumeDeviceToDosName(ptr ptr)
 @ stdcall IoWMIAllocateInstanceIds(ptr long ptr)
 @ stdcall IoWMIDeviceObjectToInstanceName(ptr ptr ptr)
+@ stdcall -arch=x86_64 IoWMIDeviceObjectToProviderId(ptr)
 @ stdcall IoWMIExecuteMethod(ptr ptr long long ptr ptr)
 @ stdcall IoWMIHandleToInstanceName(ptr ptr ptr)
 @ stdcall IoWMIOpenBlock(ptr long ptr)
@@ -1399,7 +1401,7 @@
 @ stdcall VerSetConditionMask(long long long long)
 @ cdecl VfFailDeviceNode(ptr long long long ptr ptr ptr)
 ;VfFailDriver
-;VfFailSystemBIOS
+@ cdecl VfFailSystemBIOS(long long long ptr ptr ptr)
 @ stdcall VfIsVerificationEnabled(long ptr)
 #ifndef __x86_64__
 @ stdcall WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)

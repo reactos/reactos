@@ -166,7 +166,7 @@ acpi_extract_package (
 	}
 
 	head = buffer->Pointer;
-	tail = buffer->Pointer + tail_offset;
+	tail = ((PUCHAR)buffer->Pointer) + tail_offset;
 
 	/*
 	 * Extract package data.

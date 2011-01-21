@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * FILE:             subsystems/win32/win32k/ntuser/input.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -22,6 +22,8 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
+PTHREADINFO ptiKeyboard;
+PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
@@ -79,7 +81,7 @@ NtUserGetLastInputInfo(PLASTINPUTINFO plii)
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             ret = FALSE;
             _SEH2_LEAVE;
         }
@@ -204,13 +206,6 @@ MouseThreadMain(PVOID StartContext)
    NTSTATUS Status;
    MOUSE_ATTRIBUTES MouseAttr;
 
-   Status = Win32kInitWin32Thread(PsGetCurrentThread());
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
-      return; //(Status);
-   }
-
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
 
@@ -233,6 +228,18 @@ MouseThreadMain(PVOID StartContext)
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
    } while (!NT_SUCCESS(Status));
+
+ /* Need to setup basic win32k for this thread to process WH_MOUSE_LL messages. */
+   Status = Win32kInitWin32Thread(PsGetCurrentThread());
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed making mouse thread a win32 thread.\n");
+      return; //(Status);
+   }
+
+   ptiMouse = PsGetCurrentThreadWin32Thread();
+   ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT("Mouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -369,7 +376,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    Ret = ExAllocatePoolWithTag(PagedPool,
                                Size,
-                               TAG_KEYBOARD);
+                               USERTAG_KBDTABLE);
 
    while (Ret)
    {
@@ -385,13 +392,13 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
       if (Status != STATUS_BUFFER_TOO_SMALL)
          break;
 
-      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
+      ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
 
       Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
 
       Ret = ExAllocatePoolWithTag(PagedPool,
                                   Size,
-                                  TAG_KEYBOARD);
+                                  USERTAG_KBDTABLE);
    }
 
    if (!Ret)
@@ -399,7 +406,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    if (Status != STATUS_SUCCESS)
    {
-      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
+      ExFreePoolWithTag(Ret, USERTAG_KBDTABLE);
       return Status;
    }
 
@@ -453,7 +460,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
 static VOID APIENTRY
 IntKeyboardSendWinKeyMsg()
 {
-   PWINDOW_OBJECT Window;
+   PWND Window;
    MSG Mesg;
 
    if (!(Window = UserGetWindowObject(InputWindowStation->ShellWindow)))
@@ -468,7 +475,7 @@ IntKeyboardSendWinKeyMsg()
    Mesg.lParam = 0;
 
    /* The QS_HOTKEY is just a guess */
-   MsqPostMessage(Window->pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 static VOID APIENTRY
@@ -529,6 +536,10 @@ KeyboardThreadMain(PVOID StartContext)
       DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
    }
+
+   ptiKeyboard = PsGetCurrentThreadWin32Thread();
+   ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT("Keyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -890,8 +901,8 @@ RawInputThreadMain(PVOID StartContext)
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
-  DPRINT("\nRaw Input Thread 0x%x \n", ptiRawInput);
-
+  ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
+  DPRINT("Raw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -922,14 +933,16 @@ RawInputThreadMain(PVOID StartContext)
   DPRINT1("Raw Input Thread Exit!\n");
 }
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitInputImpl(VOID)
 {
    NTSTATUS Status;
 
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
-   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), USERTAG_SYSTEM);
    if (!MasterTimer)
    {
       DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
@@ -992,16 +1005,6 @@ CleanupInputImp(VOID)
    return(STATUS_SUCCESS);
 }
 
-BOOL
-APIENTRY
-NtUserDragDetect(
-   HWND hWnd,
-   POINT pt) // Just like the User call.
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
 BOOL FASTCALL
 IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
 {
@@ -1024,7 +1027,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1034,7 +1037,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    {
       if(OldBlock != W32Thread)
       {
-         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         EngSetLastError(ERROR_ACCESS_DENIED);
          return FALSE;
       }
       W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
@@ -1136,7 +1139,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
    {
@@ -1144,7 +1147,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
    {
@@ -1152,7 +1155,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
    {
@@ -1160,7 +1163,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
    {
@@ -1168,7 +1171,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
    {
@@ -1176,7 +1179,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
 
    if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
@@ -1194,14 +1197,14 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         MsqInsertSystemMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         MsqInsertSystemMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg);
       }
    }
    else if(mi->dwFlags & MOUSEEVENTF_XUP)
@@ -1212,21 +1215,21 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         MsqInsertSystemMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         MsqInsertSystemMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg);
       }
    }
    if(mi->dwFlags & MOUSEEVENTF_WHEEL)
    {
       Msg.message = WM_MOUSEWHEEL;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
-      MsqInsertSystemMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg);
    }
 
    return TRUE;
@@ -1339,7 +1342,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
    /* All messages have to contain the cursor point. */
    Msg.pt = gpsi->ptCursor;
-   
+
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
    KbdHookData.flags = flags >> 8;
@@ -1347,7 +1350,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
    KbdHookData.dwExtraInfo = ki->dwExtraInfo;
    if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
    {
-      DPRINT("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, vk_hook, Msg.lParam);
       if (Entered) UserLeave();
       return FALSE;
@@ -1389,8 +1392,9 @@ IntKeyboardInput(KEYBDINPUT *ki)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
-
-         MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
+      // Post to hardware queue, based on the first part of wine "some GetMessage tests"
+      // in test_PeekMessage()
+         MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
    {
@@ -1419,7 +1423,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
    /* If Attach set, allocate and link. */
    if ( fAttach )
    {
-      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), TAG_ATTACHINFO);
+      pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), USERTAG_ATTACHINFO);
       if ( !pai ) return FALSE;
 
       pai->paiNext = gpai;
@@ -1447,7 +1451,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
 
       if (paiprev) paiprev->paiNext = pai->paiNext;
 
-      ExFreePoolWithTag(pai, TAG_ATTACHINFO);
+      ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
   }
 
   return TRUE;
@@ -1477,7 +1481,7 @@ NtUserSendInput(
 
    if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -1488,7 +1492,7 @@ NtUserSendInput(
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( 0);
    }
 

@@ -75,7 +75,7 @@ BEGIN
     25 "Puede cambiar el nombre y la pertenencia de este grupo. Los cambios pueden afectar el acceso a los recursos de red."
     1021 "Nota: Sólo los Administradores pueden cambiar la identificación de este equipo."
     1022 "Nota: La identificación de este equipo no puede ser cambiada porque:"
-    1030 "El nuevo nombre de equipo ""%s"" contiene caracteres no permitidos. Estos caracteres no permitidos incluyen ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / y ?"
+    1030 "El nuevo nombre de equipo ""%s"" contiene caracteres no permitidos. Estos caracteres no permitidos incluyen ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / y ?"
     3210 "&Detalles >>"
     3220 "<< &Detalles"
     4000 "Información"

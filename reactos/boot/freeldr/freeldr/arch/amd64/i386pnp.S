@@ -17,6 +17,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <asm.inc>
+
+
+	.text
+	.code16
+
 #define ASM
 #include <arch.h>
 
@@ -256,4 +262,5 @@ EXTERN(PnpBiosGetDeviceNode)
 x86_16_SwitchToLong_ptr:
     .quad x86_16_SwitchToLong
 
+END
 /* EOF */

@@ -65,8 +65,13 @@ DtbgWindowProc(HWND Wnd,
         return (LRESULT)TRUE;
 
     case WM_CREATE:
+        NtUserSetWindowFNID(Wnd, FNID_DESKTOP); // Anti-ReactOS hack!
     case WM_CLOSE:
         return 0;
+
+    case WM_DISPLAYCHANGE:
+        MoveWindow(Wnd, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
+        break;
 
     case WM_NOTIFY:
     {

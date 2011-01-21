@@ -105,10 +105,22 @@ RDMSR(IN ULONG Register)
     return __readmsr(Register);
 }
 
+/* NSC/Cyrix CPU configuration register index */
+#define CX86_CCR1 0xc1
+
+/* NSC/Cyrix CPU indexed register access macros */
+#define getCx86(reg) ({ WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23); })
+
+#define setCx86(reg, data) do { \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23,(data)); \
+} while (0)
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiSetProcessorType(VOID)
 {
     ULONG EFlags, NewEFlags;
@@ -175,6 +187,7 @@ KiSetProcessorType(VOID)
 
 ULONG
 NTAPI
+INIT_FUNCTION
 KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -236,12 +249,13 @@ KiGetCpuVendor(VOID)
 
 ULONG
 NTAPI
+INIT_FUNCTION
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy;
+    ULONG Reg[4], Dummy, Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -352,7 +366,22 @@ KiGetFeatureBits(VOID)
         /* Cyrix CPUs */
         case CPU_CYRIX:
 
-            /* FIXME: CMPXCGH8B */
+            /* Workaround the "COMA" bug on 6x family of Cyrix CPUs */
+            if (Prcb->CpuType == 6 &&
+                Prcb->CpuStep <= 1)
+            {
+                /* Get CCR1 value */
+                Ccr1 = getCx86(CX86_CCR1);
+
+                /* Enable the NO_LOCK bit */
+                Ccr1 |= 0x10;
+
+                /* Set the new CCR1 value */
+                setCx86(CX86_CCR1, Ccr1);
+            }
+
+            /* Set the current features */
+            CpuFeatures = Reg[3];
 
             break;
 
@@ -446,6 +475,7 @@ KiGetFeatureBits(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -748,6 +778,7 @@ KiGetCacheInformation(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiSetCR0Bits(VOID)
 {
     ULONG Cr0;
@@ -764,6 +795,7 @@ KiSetCR0Bits(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitializeTSS2(IN PKTSS Tss,
                  IN PKGDTENTRY TssEntry OPTIONAL)
 {
@@ -817,6 +849,7 @@ KiInitializeTSS(IN PKTSS Tss)
 
 VOID
 FASTCALL
+INIT_FUNCTION
 Ki386InitializeTss(IN PKTSS Tss,
                    IN PKIDTENTRY Idt,
                    IN PKGDTENTRY Gdt)
@@ -976,6 +1009,7 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitializeMachineType(VOID)
 {
     /* Set the Machine Type we got from NTLDR */
@@ -984,6 +1018,7 @@ KiInitializeMachineType(VOID)
 
 ULONG_PTR
 NTAPI
+INIT_FUNCTION
 KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
@@ -997,6 +1032,7 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiRestoreFastSyscallReturnState(VOID)
 {
     /* Check if the CPU Supports fast system call */
@@ -1030,6 +1066,7 @@ KiRestoreFastSyscallReturnState(VOID)
 
 ULONG_PTR
 NTAPI
+INIT_FUNCTION
 Ki386EnableDE(IN ULONG_PTR Context)
 {
     /* Enable DE */
@@ -1039,6 +1076,7 @@ Ki386EnableDE(IN ULONG_PTR Context)
 
 ULONG_PTR
 NTAPI
+INIT_FUNCTION
 Ki386EnableFxsr(IN ULONG_PTR Context)
 {
     /* Enable FXSR */
@@ -1048,6 +1086,7 @@ Ki386EnableFxsr(IN ULONG_PTR Context)
 
 ULONG_PTR
 NTAPI
+INIT_FUNCTION
 Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
     PKIDTENTRY IdtEntry;
@@ -1070,6 +1109,7 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiI386PentiumLockErrataFixup(VOID)
 {
     KDESCRIPTOR IdtDescriptor;
@@ -1161,6 +1201,7 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 KiIsNpxPresent(VOID)
 {
     ULONG Cr0;
@@ -1201,6 +1242,7 @@ KiIsNpxPresent(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 KiIsNpxErrataPresent(VOID)
 {
     BOOLEAN ErrataPresent;

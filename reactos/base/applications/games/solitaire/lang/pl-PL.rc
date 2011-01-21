@@ -5,8 +5,6 @@
  * updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 

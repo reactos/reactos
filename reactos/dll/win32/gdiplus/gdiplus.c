@@ -121,6 +121,14 @@ void WINAPI GdiplusShutdown(ULONG_PTR token)
     /* FIXME: no object tracking */
 }
 
+/* "bricksntiles" expects a return value of 0, which native coincidentally gives */
+ULONG WINAPI GdiplusShutdown_wrapper(ULONG_PTR token)
+{
+    GdiplusShutdown(token);
+
+    return 0;
+}
+
 /*****************************************************
  *      GdipAlloc [GDIPLUS.@]
  */
@@ -314,18 +322,18 @@ GpStatus hresult_to_status(HRESULT res)
 }
 
 /* converts a given unit to its value in pixels */
-REAL convert_unit(HDC hdc, GpUnit unit)
+REAL convert_unit(REAL logpixels, GpUnit unit)
 {
     switch(unit)
     {
         case UnitInch:
-            return (REAL) GetDeviceCaps(hdc, LOGPIXELSX);
+            return logpixels;
         case UnitPoint:
-            return ((REAL)GetDeviceCaps(hdc, LOGPIXELSX)) / 72.0;
+            return logpixels / 72.0;
         case UnitDocument:
-            return ((REAL)GetDeviceCaps(hdc, LOGPIXELSX)) / 300.0;
+            return logpixels / 300.0;
         case UnitMillimeter:
-            return ((REAL)GetDeviceCaps(hdc, LOGPIXELSX)) / 25.4;
+            return logpixels / 25.4;
         case UnitWorld:
             ERR("cannot convert UnitWorld\n");
             return 0.0;

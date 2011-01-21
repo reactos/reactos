@@ -78,7 +78,7 @@ BEGIN
     25 "Sie können den Namen und die Zugehörigkeit dieses Computers ändern. Änderungen können sich auf den Zugriff auf Netzwerkressourcen auswirken."
     1021 "Hinweis: Nur Administratoren können die Identifikation des Computers ändern."
     1022 "Hinweis: Die Identifikation des Computers kann aus folgendem Grund nicht geändert werden:"
-    1030 "Der Computername ""%s"" enthält unerlaubte Zeichen. Unerlaubte Zeichen sind ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / und ?"
+    1030 "Der Computername ""%s"" enthält unerlaubte Zeichen. Unerlaubte Zeichen sind ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / und ?"
     3210 "&Details >>"
     3220 "<< &Details"
     4000 "Information"

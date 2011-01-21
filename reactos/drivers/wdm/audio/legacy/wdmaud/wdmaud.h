@@ -18,6 +18,14 @@
 
 typedef struct
 {
+    PMDL Mdl;
+    ULONG Length;
+    ULONG Function;
+}WDMAUD_COMPLETION_CONTEXT, *PWDMAUD_COMPLETION_CONTEXT;
+
+
+typedef struct
+{
     HANDLE Handle;
     SOUND_DEVICE_TYPE Type;
     ULONG FilterId;
@@ -34,6 +42,14 @@ typedef struct
 
     LIST_ENTRY MixerEventList;
 }WDMAUD_CLIENT, *PWDMAUD_CLIENT;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ULONG NotificationType;
+    ULONG Value;
+    HANDLE hMixer;
+}EVENT_ENTRY, *PEVENT_ENTRY;
 
 typedef struct
 {
@@ -122,6 +138,12 @@ WdmAudControlOpenWave(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo);
 
+NTSTATUS
+WdmAudControlOpenMidi(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
 
 ULONG
 GetNumOfMixerDevices(
@@ -156,6 +178,13 @@ WdmAudWaveCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+WdmAudMidiCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN PWDMAUD_CLIENT ClientInfo,
     IN PWDMAUD_DEVICE_EXTENSION DeviceExtension);
 
 NTSTATUS
@@ -259,10 +288,11 @@ WdmAudGetWaveInDeviceCount();
 ULONG
 WdmAudGetWaveOutDeviceCount();
 
-NTSTATUS
-WdmAudGetMixerPnpNameByIndex(
-    IN  ULONG DeviceIndex,
-    OUT LPWSTR * Device);
+ULONG
+WdmAudGetMidiInDeviceCount();
+
+ULONG
+WdmAudGetMidiOutDeviceCount();
 
 NTSTATUS
 WdmAudGetPnpNameByIndexAndType(

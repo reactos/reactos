@@ -8,7 +8,6 @@ struct _EPROCESS;
 
 extern PFN_NUMBER MiFreeSwapPages;
 extern PFN_NUMBER MiUsedSwapPages;
-extern SIZE_T MmPagedPoolSize;
 extern SIZE_T MmTotalPagedPoolQuota;
 extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
@@ -19,9 +18,6 @@ extern PFN_NUMBER MmHighestPhysicalPage;
 extern PFN_NUMBER MmAvailablePages;
 extern PFN_NUMBER MmResidentAvailablePages;
 extern ULONG_PTR MmNumberOfSystemPtes;
-
-extern PVOID MmPagedPoolBase;
-extern SIZE_T MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
@@ -77,20 +73,8 @@ typedef ULONG SWAPENTRY;
 #define MI_STATIC_MEMORY_AREAS              (13)
 #endif
 
-#define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
-#define MEMORY_AREA_CONTINUOUS_MEMORY       (2)
-#define MEMORY_AREA_NO_CACHE                (3)
-#define MEMORY_AREA_IO_MAPPING              (4)
-#define MEMORY_AREA_SYSTEM                  (5)
-#define MEMORY_AREA_MDL_MAPPING             (7)
 #define MEMORY_AREA_VIRTUAL_MEMORY          (8)
-#define MEMORY_AREA_CACHE_SEGMENT           (9)
-#define MEMORY_AREA_SHARED_DATA             (10)
-#define MEMORY_AREA_KERNEL_STACK            (11)
-#define MEMORY_AREA_PAGED_POOL              (12)
-#define MEMORY_AREA_NO_ACCESS               (13)
-#define MEMORY_AREA_PEB_OR_TEB              (14)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
@@ -131,10 +115,8 @@ typedef ULONG SWAPENTRY;
 
 #define MC_CACHE                            (0)
 #define MC_USER                             (1)
-#define MC_PPOOL                            (2)
-#define MC_NPPOOL                           (3)
-#define MC_SYSTEM                           (4)
-#define MC_MAXIMUM                          (5)
+#define MC_SYSTEM                           (2)
+#define MC_MAXIMUM                          (3)
 
 #define PAGED_POOL_MASK                     1
 #define MUST_SUCCEED_POOL_MASK              2
@@ -268,6 +250,8 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
+struct _MM_CACHE_SECTION_SEGMENT;
+
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -280,6 +264,7 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG PageOpCount;
+    PVOID Vad;
     union
     {
         struct
@@ -287,15 +272,67 @@ typedef struct _MEMORY_AREA
             ROS_SECTION_OBJECT* Section;
             ULONG ViewOffset;
             PMM_SECTION_SEGMENT Segment;
-            BOOLEAN WriteCopyView;
             LIST_ENTRY RegionListHead;
         } SectionData;
+		struct
+		{
+            LARGE_INTEGER ViewOffset;
+            struct _MM_CACHE_SECTION_SEGMENT *Segment;
+		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
         } VirtualMemoryData;
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
+
+typedef struct _MM_RMAP_ENTRY
+{
+   struct _MM_RMAP_ENTRY* Next;
+   PEPROCESS Process;
+   PVOID Address;
+#if DBG
+   PVOID Caller;
+#endif
+}
+MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
+
+#if MI_TRACE_PFNS
+extern ULONG MI_PFN_CURRENT_USAGE;
+extern CHAR MI_PFN_CURRENT_PROCESS_NAME[16];
+#define MI_SET_USAGE(x)     MI_PFN_CURRENT_USAGE = x
+#define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, 16)
+#else
+#define MI_SET_USAGE(x)
+#define MI_SET_PROCESS2(x)
+#endif
+
+typedef enum _MI_PFN_USAGES
+{
+    MI_USAGE_NOT_SET = 0,
+    MI_USAGE_PAGED_POOL,
+    MI_USAGE_NONPAGED_POOL,
+    MI_USAGE_NONPAGED_POOL_EXPANSION,
+    MI_USAGE_KERNEL_STACK,
+    MI_USAGE_KERNEL_STACK_EXPANSION,
+    MI_USAGE_SYSTEM_PTE,
+    MI_USAGE_VAD,
+    MI_USAGE_PEB_TEB,
+    MI_USAGE_SECTION,
+    MI_USAGE_PAGE_TABLE,
+    MI_USAGE_PAGE_DIRECTORY,
+    MI_USAGE_LEGACY_PAGE_DIRECTORY,
+    MI_USAGE_DRIVER_PAGE,
+    MI_USAGE_CONTINOUS_ALLOCATION,
+    MI_USAGE_MDL,
+    MI_USAGE_DEMAND_ZERO,
+    MI_USAGE_ZERO_LOOP,
+    MI_USAGE_CACHE,
+    MI_USAGE_PFN_DATABASE,
+    MI_USAGE_BOOT_DRIVER,
+    MI_USAGE_INIT_MEMORY,
+    MI_USAGE_FREE_PAGE
+} MI_PFN_USAGES;
 
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
@@ -308,30 +345,30 @@ typedef struct _MMPFNENTRY
     USHORT Modified:1;
     USHORT ReadInProgress:1;                 // StartOfAllocation
     USHORT WriteInProgress:1;                // EndOfAllocation
-    USHORT PrototypePte:1;                   // Zero
-    USHORT PageColor:4;                      // LockCount
-    USHORT PageLocation:3;                   // Consumer
+    USHORT PrototypePte:1;
+    USHORT PageColor:4;
+    USHORT PageLocation:3;
     USHORT RemovalRequested:1;
-    USHORT CacheAttribute:2;                 // Type
+    USHORT CacheAttribute:2;
     USHORT Rom:1;
-    USHORT ParityError:1;
+    USHORT ParityError:1;                    // HasRmap
 } MMPFNENTRY;
 
 typedef struct _MMPFN
 {
     union
     {
-        PFN_NUMBER Flink;                    // ListEntry.Flink
-        ULONG WsIndex;
+        PFN_NUMBER Flink;
+        ULONG WsIndex;                       // SavedSwapEntry
         PKEVENT Event;
         NTSTATUS ReadStatus;
         SINGLE_LIST_ENTRY NextStackPfn;
     } u1;
-    PMMPTE PteAddress;                       // ListEntry.Blink
+    PMMPTE PteAddress;
     union
     {
         PFN_NUMBER Blink;
-        ULONG_PTR ShareCount;                // MapCount
+        ULONG_PTR ShareCount;
     } u2;
     union
     {
@@ -356,7 +393,7 @@ typedef struct _MMPFN
     };
     union
     {
-        ULONG_PTR EntireFrame;               // SavedSwapEntry
+        ULONG_PTR EntireFrame;
         struct
         {
             ULONG_PTR PteFrame: 8*sizeof(PVOID)-7;
@@ -367,6 +404,10 @@ typedef struct _MMPFN
             ULONG_PTR MustBeCached:1;
         };
     } u4;
+#if MI_TRACE_PFNS
+    MI_PFN_USAGES PfnUsage;
+    CHAR ProcessName[16];
+#endif
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
@@ -450,7 +491,7 @@ typedef struct _MM_PAGED_POOL_INFO
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
     PMMPTE LastPteForPagedPool;
-    PMMPTE NextPdeForPagedPoolExpansion;
+    PMMPDE NextPdeForPagedPoolExpansion;
     ULONG PagedPoolHint;
     SIZE_T PagedPoolCommit;
     SIZE_T AllocatedPagedPool;
@@ -741,6 +782,10 @@ MmFreeSwapPage(SWAPENTRY Entry);
 VOID
 NTAPI
 MmInitPagingFile(VOID);
+
+BOOLEAN
+NTAPI
+MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject);
 
 NTSTATUS
 NTAPI
@@ -1155,8 +1200,8 @@ MmInitializePageList(
 
 VOID
 NTAPI
-MmDumpPfnDatabase(
-   VOID
+MmDumpArmPfnDatabase(
+   IN BOOLEAN StatusOnly
 );
 
 PFN_NUMBER
@@ -1169,10 +1214,10 @@ MmGetContinuousPages(
     BOOLEAN ZeroPages
 );
 
-NTSTATUS
+VOID
 NTAPI
-MmZeroPageThreadMain(
-    PVOID Context
+MmZeroPageThread(
+    VOID
 );
 
 /* hypermap.c *****************************************************************/
@@ -1211,13 +1256,6 @@ MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 {
     HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
     return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
-}
-
-FORCEINLINE
-PVOID
-MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
-{
-    return MiMapPagesToZeroInHyperSpace(&Page, 1);
 }
 
 #define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
@@ -1304,6 +1342,14 @@ MmEnableVirtualMapping(
 VOID
 NTAPI
 MmRawDeleteVirtualMapping(PVOID Address);
+
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+	struct _EPROCESS *Process, 
+	PVOID Address,
+	SWAPENTRY* SwapEntry);
 
 VOID
 NTAPI
@@ -1527,7 +1573,7 @@ MmFindRegion(
 PFILE_OBJECT
 NTAPI
 MmGetFileObjectForSection(
-    IN PROS_SECTION_OBJECT Section
+    IN PVOID Section
 );
 NTSTATUS
 NTAPI
@@ -1539,7 +1585,7 @@ MmGetFileNameForAddress(
 NTSTATUS
 NTAPI
 MmGetFileNameForSection(
-    IN PROS_SECTION_OBJECT Section,
+    IN PVOID Section,
     OUT POBJECT_NAME_INFORMATION *ModuleName
 );
 
@@ -1702,20 +1748,6 @@ NTAPI
 MmCallDllInitialize(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     IN PLIST_ENTRY ListHead
-);
-
-/* ReactOS Mm Hacks */
-VOID
-FASTCALL
-MiSyncForProcessAttach(
-    IN PKTHREAD NextThread,
-    IN PEPROCESS Process
-);
-
-VOID
-FASTCALL
-MiSyncForContextSwitch(
-    IN PKTHREAD Thread
 );
 
 extern PMMSUPPORT MmKernelAddressSpace;

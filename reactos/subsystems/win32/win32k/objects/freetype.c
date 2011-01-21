@@ -368,28 +368,28 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     {
         FT_Done_Face(Face);
         ObDereferenceObject(SectionObject);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), TAG_FONTOBJ);
+    FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), GDITAG_RFONT);
     if (FontGDI == NULL)
     {
         FT_Done_Face(Face);
         ObDereferenceObject(SectionObject);
         ExFreePoolWithTag(Entry, TAG_FONT);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    FontGDI->Filename = ExAllocatePoolWithTag(PagedPool, FileName->Length + sizeof(WCHAR), TAG_PFF);
+    FontGDI->Filename = ExAllocatePoolWithTag(PagedPool, FileName->Length + sizeof(WCHAR), GDITAG_PFF);
     if (FontGDI->Filename == NULL)
     {
         EngFreeMem(FontGDI);
         FT_Done_Face(Face);
         ObDereferenceObject(SectionObject);
         ExFreePoolWithTag(Entry, TAG_FONT);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
     RtlCopyMemory(FontGDI->Filename, FileName->Buffer, FileName->Length);
@@ -1019,7 +1019,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!Otm)
     {
         return;
@@ -1076,7 +1076,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
         Info->FontType |= RASTER_FONTTYPE;
 
-    ExFreePoolWithTag(Otm, TAG_GDITEXT);
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
     wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);
@@ -1347,7 +1347,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
         lprs->nLanguageID = gusLanguageID;
         return TRUE;
     }
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    EngSetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
 
@@ -1538,7 +1538,7 @@ ftGdiGetGlyphOutline(
 
     if (!TextObj)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -1548,10 +1548,10 @@ ftGdiGetGlyphOutline(
     orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation: 0;
 
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!potm)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         TEXTOBJ_UnlockText(TextObj);
         return GDI_ERROR;
     }
@@ -1615,7 +1615,7 @@ ftGdiGetGlyphOutline(
     {
         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
         IntUnLockFreeType;
-        if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT);
+        if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT);
         return GDI_ERROR;
     }
     IntUnLockFreeType;
@@ -1693,7 +1693,7 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
-    if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT); /* It looks like we are finished with potm ATM.*/
+    if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT); /* It looks like we are finished with potm ATM.*/
 
     if (!needsTransform)
     {
@@ -2249,7 +2249,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     Size->cx = (TotalWidth + 32) >> 6;
     Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
-    Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
+    Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
 }
@@ -2280,7 +2280,7 @@ ftGdiGetTextCharsetInfo(
 
     if (!TextObj)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return Ret;
     }
     FontGdi = ObjToGDI(TextObj->Font, FONT);
@@ -2452,13 +2452,13 @@ ftGdiGetTextMetricsW(
 
     if (!ptmwi)
     {
-        SetLastWin32Error(STATUS_INVALID_PARAMETER);
+        EngSetLastError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
     if (!(dc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -2601,7 +2601,7 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
     }
 
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-    Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+    Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (NULL == Otm)
     {
         return Score;
@@ -2890,7 +2890,7 @@ IntGdiGetFontResourceInfo(
     NameInfo1 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
     if (!NameInfo1)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -2906,7 +2906,7 @@ IntGdiGetFontResourceInfo(
     if (!NameInfo2)
     {
         ExFreePool(NameInfo1);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -3070,15 +3070,15 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
     if (! NT_SUCCESS(Status))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
 
     /* Allocate space for a safe copy */
-    Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), TAG_GDITEXT);
+    Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), GDITAG_TEXT);
     if (NULL == Info)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return -1;
     }
 
@@ -3120,7 +3120,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
         if (! NT_SUCCESS(Status))
         {
             ExFreePool(Info);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return -1;
         }
     }
@@ -3160,7 +3160,7 @@ GreExtTextOutW(
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
-    RECTL DestRect, MaskRect;
+    RECTL DestRect, MaskRect, DummyRect = {0, 0, 0, 0};
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
@@ -3175,8 +3175,6 @@ GreExtTextOutW(
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
-    HPALETTE hDestPalette;
-    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3184,7 +3182,7 @@ GreExtTextOutW(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -3196,9 +3194,6 @@ GreExtTextOutW(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DIRTY_TEXT)
-        DC_vUpdateTextBrush(dc);
-
     if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
@@ -3208,7 +3203,7 @@ GreExtTextOutW(
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         goto fail;
     }
 
@@ -3231,13 +3226,6 @@ GreExtTextOutW(
     {
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
-
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
-    {
-        goto fail;
-    }
-    SurfObj = &psurf->SurfObj;
 
     Start.x = XStart;
     Start.y = YStart;
@@ -3267,8 +3255,13 @@ GreExtTextOutW(
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
 
+        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+
         IntEngBitBlt(
-            &psurf->SurfObj,
+            &dc->dclevel.pSurface->SurfObj,
             NULL,
             NULL,
             dc->rosdc.CombinedClip,
@@ -3280,6 +3273,7 @@ GreExtTextOutW(
             &BrushOrigin,
             ROP3_TO_ROP4(PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
+        DC_vFinishBlit(dc, NULL);
     }
     else
     {
@@ -3444,19 +3438,24 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
-    /* Create the xlateobj */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
-    ppalDst = PALETTE_LockPalette(hDestPalette);
-    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
-    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
-    PALETTE_UnlockPalette(ppalDst);
+    /* Lock blit with a dummy rect */
+    DC_vPrepareDCsForBlit(dc, DummyRect, NULL, DummyRect);
 
+    psurf = dc->dclevel.pSurface ;
+    SurfObj = &psurf->SurfObj ;
+
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
+
+	if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+        DC_vUpdateBackgroundBrush(dc) ;
+
+    if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(dc) ;
 
     /*
      * The main rendering loop.
      */
-
     for (i = 0; i < Count; i++)
     {
         if (fuOptions & ETO_GLYPH_INDEX)
@@ -3505,6 +3504,7 @@ GreExtTextOutW(
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
@@ -3517,7 +3517,9 @@ GreExtTextOutW(
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
+            MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
+
         }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
@@ -3570,7 +3572,7 @@ GreExtTextOutW(
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
         }
-
+        MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
         IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
@@ -3581,6 +3583,7 @@ GreExtTextOutW(
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
+        MouseSafetyOnDrawEnd(dc->ppdev) ;
 
         EngUnlockSurface(SourceGlyphSurf);
         EngDeleteSurface((HSURF)HSourceGlyph);
@@ -3610,9 +3613,9 @@ GreExtTextOutW(
 
         String++;
     }
-
     IntUnLockFreeType;
 
+    DC_vFinishBlit(dc, NULL) ;
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
     EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
@@ -3628,6 +3631,7 @@ fail2:
 fail:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
+
     DC_UnlockDc(dc);
 
     return FALSE;
@@ -3659,7 +3663,7 @@ NtGdiExtTextOutW(
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -3678,7 +3682,7 @@ NtGdiExtTextOutW(
         if (BufSize > STACK_TEXT_BUFFER_SIZE)
         {
             /* It's not, allocate a temp buffer */
-            Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, TAG_GDITEXT);
+            Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, GDITAG_TEXT);
             if (!Buffer)
             {
                 return FALSE;
@@ -3749,7 +3753,7 @@ cleanup:
     /* If we allocated a buffer, free it */
     if (Buffer != LocalBuffer)
     {
-        ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+        ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     }
 
     return Result;
@@ -3797,22 +3801,22 @@ NtGdiGetCharABCWidthsW(
     }
     if (!NT_SUCCESS(Status))
     {
-        SetLastWin32Error(Status);
+        EngSetLastError(Status);
         return FALSE;
     }
 
     if (!Buffer)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     BufferSize = Count * sizeof(ABC); // Same size!
-    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, GDITAG_TEXT);
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -3820,7 +3824,7 @@ NtGdiGetCharABCWidthsW(
     if (dc == NULL)
     {
         ExFreePool(SafeBuff);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -3831,7 +3835,7 @@ NtGdiGetCharABCWidthsW(
     if (TextObj == NULL)
     {
         ExFreePool(SafeBuff);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -3854,7 +3858,7 @@ NtGdiGetCharABCWidthsW(
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
             ExFreePool(SafeBuff);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
 
@@ -3970,16 +3974,16 @@ NtGdiGetCharWidthW(
     }
     if (!NT_SUCCESS(Status))
     {
-        SetLastWin32Error(Status);
+        EngSetLastError(Status);
         return FALSE;
     }
 
     BufferSize = Count * sizeof(INT); // Same size!
-    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, GDITAG_TEXT);
     if (!fl) SafeBuffF = (PFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -3987,7 +3991,7 @@ NtGdiGetCharWidthW(
     if (dc == NULL)
     {
         ExFreePool(SafeBuff);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -3998,7 +4002,7 @@ NtGdiGetCharWidthW(
     if (TextObj == NULL)
     {
         ExFreePool(SafeBuff);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -4021,7 +4025,7 @@ NtGdiGetCharWidthW(
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
             ExFreePool(SafeBuff);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
 
@@ -4094,7 +4098,7 @@ GreGetGlyphIndicesW(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     pdcattr = dc->pdcattr;
@@ -4103,17 +4107,17 @@ GreGetGlyphIndicesW(
     DC_UnlockDc(dc);
     if (!TextObj)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), GDITAG_TEXT);
     if (!Buffer)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return GDI_ERROR;
     }
 
@@ -4121,10 +4125,10 @@ GreGetGlyphIndicesW(
     else
     {
         Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
         if (!potm)
         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             cwc = GDI_ERROR;
             goto ErrorRet;
         }
@@ -4155,7 +4159,7 @@ GreGetGlyphIndicesW(
     RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
 
 ErrorRet:
-    if (Buffer) ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    if (Buffer) ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     return cwc;
 }
 
@@ -4190,7 +4194,7 @@ NtGdiGetGlyphIndicesW(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     pdcattr = dc->pdcattr;
@@ -4199,17 +4203,17 @@ NtGdiGetGlyphIndicesW(
     DC_UnlockDc(dc);
     if (!TextObj)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), GDITAG_TEXT);
     if (!Buffer)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return GDI_ERROR;
     }
 
@@ -4217,7 +4221,7 @@ NtGdiGetGlyphIndicesW(
     else
     {
         Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
         if (!potm)
         {
             Status = ERROR_NOT_ENOUGH_MEMORY;
@@ -4278,9 +4282,9 @@ NtGdiGetGlyphIndicesW(
     _SEH2_END;
 
 ErrorRet:
-    ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     if (NT_SUCCESS(Status)) return cwc;
-    SetLastWin32Error(Status);
+    EngSetLastError(Status);
     return GDI_ERROR;
 }
 

@@ -3,6 +3,7 @@
  *
  * Copyright 2002-2004, Mike McCormack for CodeWeavers
  * Copyright 2007 Robert Shearman for CodeWeavers
+ * Copyright 2010 Hans Leidekker for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,8 +40,6 @@
 #include "query.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
-
-#define LONG_STR_BYTES 3
 
 typedef struct _msistring
 {
@@ -564,7 +563,7 @@ end:
     return st;
 }
 
-UINT msi_save_string_table( const string_table *st, IStorage *storage )
+UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *bytes_per_strref )
 {
     UINT i, datasize = 0, poolsize = 0, sz, used, r, codepage, n;
     UINT ret = ERROR_FUNCTION_FAILED;
@@ -593,8 +592,16 @@ UINT msi_save_string_table( const string_table *st, IStorage *storage )
 
     used = 0;
     codepage = st->codepage;
-    pool[0]=codepage&0xffff;
-    pool[1]=(codepage>>16);
+    pool[0] = codepage & 0xffff;
+    pool[1] = codepage >> 16;
+    if (st->maxcount > 0xffff)
+    {
+        pool[1] |= 0x8000;
+        *bytes_per_strref = LONG_STR_BYTES;
+    }
+    else
+        *bytes_per_strref = sizeof(USHORT);
+
     n = 1;
     for( i=1; i<st->maxcount; i++ )
     {

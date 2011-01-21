@@ -33,6 +33,9 @@
 #include <win32k/ntuser.h>
 #include <win32k/callback.h>
 
+/* Undocumented user definitions*/
+#include <undocuser.h>
+
 /* WINE Headers */
 #include <wine/unicode.h>
 
@@ -43,63 +46,13 @@
 #include <pseh/pseh2.h>
 
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
-#define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId))
+#define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId) ||\
+                           (GetWin32ClientInfo()->pDeskInfo && GetWin32ClientInfo()->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId)))
 
 /* Temporarily in here for now. */
-typedef struct _USERAPIHOOKINFO
-{
-  DWORD m_size;
-  LPCWSTR m_dllname1;
-  LPCWSTR m_funname1;
-  LPCWSTR m_dllname2;
-  LPCWSTR m_funname2;
-} USERAPIHOOKINFO,*PUSERAPIHOOKINFO;
-
-typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
-
-typedef struct _UAHOWP
-{
-  BYTE*  MsgBitArray;
-  DWORD  Size;
-} UAHOWP, *PUAHOWP;
-
-typedef struct tagUSERAPIHOOK
-{
-  DWORD   size;
-  WNDPROC DefWindowProcA;
-  WNDPROC DefWindowProcW;
-  UAHOWP  DefWndProcArray;
-  FARPROC GetScrollInfo;
-  FARPROC SetScrollInfo;
-  FARPROC EnableScrollBar;
-  FARPROC AdjustWindowRectEx;
-  FARPROC SetWindowRgn;
-  WNDPROC_OWP PreWndProc;
-  WNDPROC_OWP PostWndProc;
-  UAHOWP  WndProcArray;
-  WNDPROC_OWP PreDefDlgProc;
-  WNDPROC_OWP PostDefDlgProc;
-  UAHOWP  DlgProcArray;
-  FARPROC GetSystemMetrics;
-  FARPROC SystemParametersInfoA;
-  FARPROC SystemParametersInfoW;
-  FARPROC ForceResetUserApiHook;
-  FARPROC DrawFrameControl;
-  FARPROC DrawCaption;
-  FARPROC MDIRedrawFrame;
-  FARPROC GetRealWindowOwner;
-} USERAPIHOOK, *PUSERAPIHOOK;
-
-typedef enum _UAPIHK
-{
-  uahLoadInit,
-  uahStop,
-  uahShutdown
-} UAPIHK, *PUAPIHK;
 
 extern RTL_CRITICAL_SECTION gcsUserApiHook;
 extern USERAPIHOOK guah;
-typedef DWORD (CALLBACK * USERAPIHOOKPROC)(UAPIHK State, ULONG_PTR Info);
 BOOL FASTCALL BeginIfHookedUserApiHook(VOID);
 BOOL FASTCALL EndUserApiHook(VOID);
 BOOL FASTCALL IsInsideUserApiHook(VOID);
@@ -168,7 +121,7 @@ SharedPtrToKernel(PVOID Ptr)
 static __inline BOOL
 IsThreadHooked(PCLIENTINFO pci)
 {
-    return pci->fsHooks != 0;
+    return (pci->fsHooks|pci->pDeskInfo->fsHooks) != 0;
 }
 
 static __inline PDESKTOPINFO
@@ -194,3 +147,4 @@ VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
 BOOL FASTCALL TestWindowProcess(PWND);
 VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);
+VOID FASTCALL IntNotifyWinEvent(DWORD, HWND, LONG, LONG, DWORD);

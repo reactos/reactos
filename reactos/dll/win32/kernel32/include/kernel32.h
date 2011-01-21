@@ -9,6 +9,13 @@
 #define resource                203
 #define kernel32session         204
 
+
+#if DBG
+#define DEBUG_CHANNEL(ch) static ULONG gDebugChannel = ch;
+#else
+#define DEBUG_CHANNEL(ch)
+#endif
+
 #define TRACE(fmt, ...)         TRACE__(gDebugChannel, fmt, ##__VA_ARGS__)
 #define WARN(fmt, ...)          WARN__(gDebugChannel, fmt, ##__VA_ARGS__)
 #define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)

@@ -24,13 +24,6 @@ Main_DirectDraw_CreateClipper(LPDDRAWI_DIRECTDRAW_INT This,
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
-                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
 HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDDRAWI_DIRECTDRAW_INT This, LPDIRECTDRAWSURFACE7 src,
                  LPDIRECTDRAWSURFACE7* dst)
 {

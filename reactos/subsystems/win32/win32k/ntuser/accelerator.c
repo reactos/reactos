@@ -56,7 +56,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitAcceleratorImpl(VOID)
 {
    return(STATUS_SUCCESS);
@@ -75,14 +77,14 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 
    if (!hAccel)
    {
-      SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+      EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
       return NULL;
    }
 
    Accel= UserGetObject(gHandleTable, hAccel,  otAccel);
    if (!Accel)
    {
-      SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+      EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
       return NULL;
    }
 
@@ -95,7 +97,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 static
 BOOLEAN FASTCALL
 co_IntTranslateAccelerator(
-   PWINDOW_OBJECT Window,
+   PWND Window,
    UINT message,
    WPARAM wParam,
    LPARAM lParam,
@@ -108,7 +110,7 @@ co_IntTranslateAccelerator(
    ASSERT_REFS_CO(Window);
 
    DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
-          Window->hSelf, message, wParam, lParam, fVirt, key, cmd);
+          Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    if (wParam != key)
    {
@@ -162,7 +164,7 @@ co_IntTranslateAccelerator(
    }
 
    DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = FALSE\n",
-          Window->hSelf, message, wParam, lParam, fVirt, key, cmd);
+          Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return FALSE;
 
@@ -250,12 +252,12 @@ found:
    if (mesg == WM_COMMAND)
    {
       DPRINT(", sending WM_COMMAND, wParam=%0x\n", 0x10000 | cmd);
-      co_IntSendMessage(Window->hSelf, mesg, 0x10000 | cmd, 0L);
+      co_IntSendMessage(Window->head.h, mesg, 0x10000 | cmd, 0L);
    }
    else if (mesg == WM_SYSCOMMAND)
    {
       DPRINT(", sending WM_SYSCOMMAND, wParam=%0x\n", cmd);
-      co_IntSendMessage(Window->hSelf, mesg, cmd, 0x00010000L);
+      co_IntSendMessage(Window->head.h, mesg, cmd, 0x00010000L);
    }
    else
    {
@@ -276,7 +278,7 @@ found:
    }
 
    DPRINT("IntTranslateAccelerator(hWnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x) = TRUE\n",
-          Window->hSelf, message, wParam, lParam, fVirt, key, cmd);
+          Window->head.h, message, wParam, lParam, fVirt, key, cmd);
 
    return TRUE;
 }
@@ -368,7 +370,7 @@ NtUserCreateAcceleratorTable(
    Accel->Count = EntriesCount;
    if (Accel->Count > 0)
    {
-      Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
+      Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), USERTAG_ACCEL);
       if (Accel->Table == NULL)
       {
          UserDereferenceObject(Accel);
@@ -386,10 +388,10 @@ NtUserCreateAcceleratorTable(
           }
           else
           {
-             RtlMultiByteToUnicodeN(&Accel->Table[Index].key, 
-                                    sizeof(WCHAR), 
-                                    NULL, 
-                                    (PCSTR)&Entries[Index].key, 
+             RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
+                                    sizeof(WCHAR),
+                                    NULL,
+                                    (PCSTR)&Entries[Index].key,
                                     sizeof(CHAR));
           }
 
@@ -436,7 +438,7 @@ NtUserDestroyAcceleratorTable(
 
    if (Accel->Table != NULL)
    {
-      ExFreePoolWithTag(Accel->Table, TAG_ACCEL);
+      ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
       Accel->Table = NULL;
    }
 
@@ -458,7 +460,7 @@ NtUserTranslateAccelerator(
    HACCEL hAccel,
    LPMSG Message)
 {
-   PWINDOW_OBJECT Window = NULL;
+   PWND Window = NULL;
    PACCELERATOR_TABLE Accel = NULL;
    ULONG i;
    USER_REFERENCE_ENTRY AccelRef, WindowRef;

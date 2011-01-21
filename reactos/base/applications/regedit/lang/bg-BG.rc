@@ -1,3 +1,4 @@
+//Недовършен
 /*
  * Regedit resources
  *
@@ -135,8 +136,8 @@ BEGIN
             MENUITEM "&Низова стойност",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двоична стойност",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&Стойност на двойна дума",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Многонизова стойност",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Разширима многонизова стойност",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -149,8 +150,8 @@ BEGIN
             MENUITEM "&Низова стойност",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двоична стойност",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&Стойност на двойна дума",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Многонизова стойност",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Разширима многонизова стойност",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Търсене",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -165,11 +166,11 @@ BEGIN
   POPUP ""
   BEGIN
         MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "За&помняне", ID_HEXEDIT_COPY
+        MENUITEM "&Поставяне", ID_HEXEDIT_PASTE
+        MENUITEM "Из&триване", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Избор на вси&чки", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -177,6 +178,16 @@ END
 /*
  * Dialog
  */
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Клавиш:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "Добре", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Отказ", IDCANCEL, 89, 17, 50, 14
+}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -276,6 +287,10 @@ BEGIN
     ID_REGISTRY_IMPORTREGISTRYFILE "Внася словесен файл в регистъра"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Изнася целия регистър или части от него в словесен файл"
+    ID_REGISTRY_LOADHIVE
+                            "Loads a hive file into the registry"
+    ID_REGISTRY_UNLOADHIVE
+                            "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Свързва се с регистъра на далечен компютър"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -332,6 +347,8 @@ BEGIN
     IDS_MY_COMPUTER         "Моят компютър"
     IDS_IMPORT_REG_FILE     "Внос на регистърен файл"
     IDS_EXPORT_REG_FILE     "Износ на регистърен файл"
+    IDS_LOAD_HIVE           "Load Hive"
+    IDS_UNLOAD_HIVE         "Unload Hive"
     IDS_INVALID_DWORD       "(самостоятелна стойност на двойна дума)"
 END
 

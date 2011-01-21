@@ -57,6 +57,7 @@
 	<file>shobjidl.idl</file>
 	<file>shtypes.idl</file>
 	<file>strmif.idl</file>
+	<file>structuredquerycondition.idl</file>
 	<file>textstor.idl</file>
 	<file>tuner.idl</file>
 	<file>tom.idl</file>
@@ -67,7 +68,9 @@
 	<file>mimeole.idl</file>
 	<file>mscoree.idl</file>
 	<file>mshtmhst.idl</file>
+	<file>msxml6.idl</file>
 	<file>exdisp.idl</file>
+	<file>winsxs.idl</file>
 	<file>wtypes.idl</file>
 	<file>wuapi.idl</file>
 	<file>comcat.idl</file>

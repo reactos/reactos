@@ -28,6 +28,7 @@
 void *xmalloc(size_t);
 void *xrealloc(void *, size_t);
 char *xstrdup(const char *str);
+int strendswith(const char* str, const char* end);
 
 #ifndef __GNUC__
 #define __attribute__(X)
@@ -48,10 +49,35 @@ size_t widl_getline(char **linep, size_t *lenp, FILE *fp);
 UUID *parse_uuid(const char *u);
 int is_valid_uuid(const char *s);
 
+/* buffer management */
+
+extern int byte_swapped;
+extern unsigned char *output_buffer;
+extern size_t output_buffer_pos;
+extern size_t output_buffer_size;
+
+extern void init_output_buffer(void);
+extern void flush_output_buffer( const char *name );
+extern void put_data( const void *data, size_t size );
+extern void put_byte( unsigned char val );
+extern void put_word( unsigned short val );
+extern void put_dword( unsigned int val );
+extern void put_qword( unsigned int val );
+extern void put_pword( unsigned int val );
+extern void put_str( int indent, const char *format, ... ) __attribute__((format (printf, 2, 3)));
+extern void align_output( unsigned int align );
+
 /* typelibs expect the minor version to be stored in the higher bits and
  * major to be stored in the lower bits */
 #define MAKEVERSION(major, minor) ((((minor) & 0xffff) << 16) | ((major) & 0xffff))
 #define MAJORVERSION(version) ((version) & 0xffff)
 #define MINORVERSION(version) (((version) >> 16) & 0xffff)
+
+#ifndef max
+#define max(a,b)   (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b)   (((a) < (b)) ? (a) : (b))
+#endif
 
 #endif

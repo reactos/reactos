@@ -6,8 +6,6 @@
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  * ACTUALIZADO: Javier Remacha - 13/01/09
  */
-#include "resource.h"
-
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 

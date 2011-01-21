@@ -11,7 +11,7 @@
 #include <reactos/buildno.h>
 #define NDEBUG
 #include <debug.h>
-static ULONG gDebugChannel = kernel32ver;
+DEBUG_CHANNEL(kernel32ver);
 
 #define UNICODIZE1(x) L##x
 #define UNICODIZE(x) UNICODIZE1(x)

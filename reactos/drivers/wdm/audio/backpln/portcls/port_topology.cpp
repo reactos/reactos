@@ -251,7 +251,7 @@ CPortTopology::Init(
     // create the subdevice descriptor
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          2,
-                                         InterfaceGuids, 
+                                         InterfaceGuids,
                                          0, 
                                          NULL,
                                          2, 

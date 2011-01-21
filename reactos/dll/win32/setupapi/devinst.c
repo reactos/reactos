@@ -1103,7 +1103,7 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
     if (MachineName)
         MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
     ret = SetupDiClassNameFromGuidExW(ClassGuid, ClassNameW, MAX_CLASS_NAME_LEN,
-     NULL, MachineNameW, Reserved);
+     RequiredSize, MachineNameW, Reserved);
     if (ret)
     {
         int len = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
@@ -1113,8 +1113,6 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             ret = FALSE;
         }
-        else if (RequiredSize)
-            *RequiredSize = len;
     }
     MyFree(MachineNameW);
     return ret;
@@ -1135,73 +1133,77 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
     DWORD dwLength;
     DWORD dwRegType;
     LONG rc;
+    PWSTR Buffer;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassName,
         ClassNameSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
-    hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
-                                     KEY_QUERY_VALUE,
-                                     DIOCR_INSTALLER,
-                                     MachineName,
-                                     Reserved);
+    /* Make sure there's a GUID */
+    if (ClassGuid == NULL)
+    {
+        SetLastError(ERROR_INVALID_CLASS);  /* On Vista: ERROR_INVALID_USER_BUFFER */
+        return FALSE;
+    }
+
+    /* Make sure there's a real buffer when there's a size */
+    if ((ClassNameSize > 0) && (ClassName == NULL))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);  /* On Vista: ERROR_INVALID_USER_BUFFER */
+        return FALSE;
+    }
+
+    /* Open the key for the GUID */
+    hKey = SetupDiOpenClassRegKeyExW(ClassGuid, KEY_QUERY_VALUE, DIOCR_INSTALLER, MachineName, Reserved);
+
     if (hKey == INVALID_HANDLE_VALUE)
-    {
-	return FALSE;
-    }
-
-    if (RequiredSize != NULL)
-    {
-	dwLength = 0;
-	if (RegQueryValueExW(hKey,
-			     Class,
-			     NULL,
-			     NULL,
-			     NULL,
-			     &dwLength))
-	{
-	    RegCloseKey(hKey);
-	    return FALSE;
-	}
-
-	*RequiredSize = dwLength / sizeof(WCHAR) + 1;
-    }
-
-    if (!ClassGuid)
-    {
-        SetLastError(ERROR_INVALID_CLASS);
-        RegCloseKey(hKey);
         return FALSE;
-    }
-    if (!ClassName && ClassNameSize > 0)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        RegCloseKey(hKey);
-        return FALSE;
-    }
 
-    dwLength = ClassNameSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
-    rc = RegQueryValueExW(hKey,
-			 Class,
-			 NULL,
-			 &dwRegType,
-			 (LPBYTE)ClassName,
-			 &dwLength);
+    /* Retrieve the class name data and close the key */
+    rc = QueryRegistryValue(hKey, Class, (LPBYTE *) &Buffer, &dwRegType, &dwLength);
+    RegCloseKey(hKey);
+
+    /* Make sure we got the data */
     if (rc != ERROR_SUCCESS)
     {
-	SetLastError(rc);
-	RegCloseKey(hKey);
-	return FALSE;
-    }
-    if (dwRegType != REG_SZ)
-    {
-        SetLastError(ERROR_GEN_FAILURE);
-        RegCloseKey(hKey);
+        SetLastError(rc);
         return FALSE;
     }
-    
-    if (ClassNameSize > 1)
-        ClassName[ClassNameSize] = UNICODE_NULL;
-    RegCloseKey(hKey);
+
+    /* Make sure the data is a string */
+    if (dwRegType != REG_SZ)
+    {
+        MyFree(Buffer);
+        SetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
+
+    /* Determine the length of the class name */
+    dwLength /= sizeof(WCHAR);
+
+    if ((dwLength == 0) || (Buffer[dwLength - 1] != UNICODE_NULL))
+        /* Count the null-terminator */
+        dwLength++;
+
+    /* Inform the caller about the class name */
+    if ((ClassName != NULL) && (dwLength <= ClassNameSize))
+    {
+        memcpy(ClassName, Buffer, (dwLength - 1) * sizeof(WCHAR));
+        ClassName[dwLength - 1] = UNICODE_NULL;
+    }
+
+    /* Inform the caller about the required size */
+    if (RequiredSize != NULL)
+        *RequiredSize = dwLength;
+
+    /* Clean up the buffer */
+    MyFree(Buffer);
+
+    /* Make sure the buffer was large enough */
+    if ((ClassName == NULL) || (dwLength > ClassNameSize))
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -1734,7 +1736,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
                  */
                 SetLastError(ERROR_DEVINST_ALREADY_EXISTS);
             }
-            else if (GetLastError() == ERROR_FILE_NOT_FOUND)
+            else if (GetLastError() == ERROR_NO_SUCH_DEVINST)
             {
                 struct DeviceInfo *deviceInfo;
 
@@ -2175,69 +2177,82 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
     DWORD dwLength;
     DWORD dwRegType;
     LONG rc;
+    PWSTR Buffer;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassDescription,
         ClassDescriptionSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
+    /* Make sure there's a GUID */
     if (!ClassGuid)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    else if (!ClassDescription && ClassDescriptionSize > 0)
+
+    /* Make sure there's a real buffer when there's a size */
+    if (!ClassDescription && ClassDescriptionSize > 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
+    /* Open the key for the GUID */
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
                                      KEY_QUERY_VALUE,
                                      DIOCR_INSTALLER,
                                      MachineName,
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
-    {
-	WARN("SetupDiOpenClassRegKeyExW() failed (Error %u)\n", GetLastError());
-	return FALSE;
-    }
+        return FALSE;
 
-    if (ClassDescriptionSize < sizeof(UNICODE_NULL) || !ClassDescription)
-        dwLength = 0;
-    else
-        dwLength = ClassDescriptionSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
-
-    rc = RegQueryValueExW(hKey,
-                          NULL,
-                          NULL,
-                          &dwRegType,
-                          (LPBYTE)ClassDescription,
-                          &dwLength);
+    /* Retrieve the class description data and close the key */
+    rc = QueryRegistryValue(hKey, NULL, (LPBYTE *) &Buffer, &dwRegType, &dwLength);
     RegCloseKey(hKey);
-    if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
+
+    /* Make sure we got the data */
+    if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
         return FALSE;
     }
-    else if (dwRegType != REG_SZ)
+
+    /* Make sure the data is a string */
+    if (dwRegType != REG_SZ)
     {
+        MyFree(Buffer);
         SetLastError(ERROR_GEN_FAILURE);
         return FALSE;
     }
 
-    if (RequiredSize)
-        *RequiredSize = dwLength / sizeof(WCHAR) + 1;
+    /* Determine the length of the class description */
+    dwLength /= sizeof(WCHAR);
 
-    if (ClassDescriptionSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_NULL))
+    /* Count the null-terminator if none is present */
+    if ((dwLength == 0) || (Buffer[dwLength - 1] != UNICODE_NULL))
+        dwLength++;
+
+    /* Inform the caller about the class description */
+    if ((ClassDescription != NULL) && (dwLength <= ClassDescriptionSize))
     {
-        if (ClassDescriptionSize > sizeof(UNICODE_NULL))
-            ClassDescription[ClassDescriptionSize / sizeof(WCHAR)] = UNICODE_NULL;
-        return TRUE;
+        memcpy(ClassDescription, Buffer, (dwLength - 1) * sizeof(WCHAR));
+        ClassDescription[dwLength - 1] = UNICODE_NULL;
     }
-    else
+
+    /* Inform the caller about the required size */
+    if (RequiredSize != NULL)
+        *RequiredSize = dwLength;
+
+    /* Clean up the buffer */
+    MyFree(Buffer);
+
+    /* Make sure the buffer was large enough */
+    if ((ClassDescription == NULL) || (dwLength > ClassDescriptionSize))
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
+
+    return TRUE;
 }
 
 /***********************************************************************
@@ -2334,7 +2349,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
     if (!(flags & DIGCF_ALLCLASSES) && !class)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
+        return INVALID_HANDLE_VALUE;
     }
 
     /* Create the deviceset if not set */

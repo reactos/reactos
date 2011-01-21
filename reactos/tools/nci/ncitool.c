@@ -50,16 +50,15 @@
  * This stubs calls into KUSER_SHARED_DATA where either a
  * sysenter or interrupt is performed, depending on CPU support.
  */
-#if defined(__GNUC__)
-#define UserModeStub_x86    "    movl $0x%x, %%eax\n" \
-                            "    movl $KUSER_SHARED_SYSCALL, %%ecx\n" \
-                            "    call *(%%ecx)\n" \
-                            "    ret $0x%x\n\n"
+#define UserModeStub_x86    "    mov eax, %d\n" \
+                            "    mov ecx, KUSER_SHARED_SYSCALL\n" \
+                            "    call dword ptr [ecx]\n" \
+                            "    ret %d\n\n"
 
-#define UserModeStub_amd64  "    movl $0x%x, %%eax\n" \
-                            "    movq %%rcx, %%r10\n" \
+#define UserModeStub_amd64  "    mov eax, %d\n" \
+                            "    mov r10, rcx\n" \
                             "    syscall\n" \
-                            "    ret $0x%x\n\n"
+                            "    ret %d\n\n"
 
 #define UserModeStub_ppc    "    stwu 1,-16(1)\n" \
                             "    mflr 0\n\t" \
@@ -79,32 +78,21 @@
 #define UserModeStub_arm    "    swi #0x%x\n"      \
                             "    bx lr\n\n"
 
-#elif defined(_MSC_VER)
-#define UserModeStub_x86    "    asm { \n" \
-                            "        mov eax, %xh\n" \
-                            "        mov ecx, KUSER_SHARED_SYSCALL\n" \
-                            "        call [ecx]\n" \
-                            "        ret %xh\n" \
-                            "    }\n"
-#else
-#error Unknown compiler for inline assembler
-#endif
 
 /*
  * This stub calls KiSystemService directly with a fake INT2E stack.
  * Because EIP is pushed during the call, the handler will return here.
  */
-#if defined(__GNUC__)
-#define KernelModeStub_x86  "    movl $0x%x, %%eax\n" \
-                            "    leal 4(%%esp), %%edx\n" \
-                            "    pushfl\n" \
-                            "    pushl $KGDT_R0_CODE\n" \
+#define KernelModeStub_x86  "    mov eax, %d\n" \
+                            "    lea edx, [esp + 4]\n" \
+                            "    pushf\n" \
+                            "    push KGDT_R0_CODE\n" \
                             "    call _KiSystemService\n" \
-                            "    ret $0x%x\n\n"
+                            "    ret %d\n\n"
 
-#define KernelModeStub_amd64 "    movl $0x%x, %%eax\n" \
+#define KernelModeStub_amd64 "    mov eax, %d\n" \
                             "    call KiSystemService\n" \
-                            "    ret $0x%x\n\n"
+                            "    ret %d\n\n"
 
 /* For now, use the usermode stub.  We'll optimize later */
 #define KernelModeStub_ppc  UserModeStub_ppc
@@ -115,19 +103,6 @@
 #define KernelModeStub_arm  "    mov ip, lr\n"      \
                             "    swi #0x%x\n"      \
                             "    bx ip\n\n"
-
-#elif defined(_MSC_VER)
-#define KernelModeStub_x86  "    asm { \n" \
-                            "        mov eax, %xh\n" \
-                            "        lea edx, [esp+4]\n" \
-                            "        pushf\n" \
-                            "        push KGDT_R0_CODE\n" \
-                            "        call _KiSystemService\n" \
-                            "        ret %xh\n" \
-                            "    }\n"
-#else
-#error Unknown compiler for inline assembler
-#endif
 
 /***** Arch Dependent Stuff ******/
 struct ncitool_data_t {
@@ -141,9 +116,9 @@ struct ncitool_data_t {
 
 struct ncitool_data_t ncitool_data[] = {
     { "i386", 4, KernelModeStub_x86, UserModeStub_x86,
-      ".global _%s@%d\n", "_%s@%d:\n" },
+      "PUBLIC _%s@%d\n", "_%s@%d:\n" },
     { "amd64", 4, KernelModeStub_amd64, UserModeStub_amd64,
-      ".global %s\n", "%s:\n" },
+      "PUBLIC %s\n", "%s:\n" },
     { "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
       "\t.globl %s\n", "%s:\n" },
     { "mips", 4, KernelModeStub_mips, UserModeStub_mips,
@@ -192,14 +167,14 @@ WriteFileHeader(FILE * StubFile,
             " * PURPOSE:         %s\n"
             " * PROGRAMMER:      Computer Generated File. See tools/nci/ncitool.c\n"
             " * REMARK:          DO NOT EDIT OR COMMIT MODIFICATIONS TO THIS FILE\n"
-            " */\n\n\n"
-            "#include <ndk/asm.h>\n\n",
+            " */\n\n\n",
+
             FileDescription,
             FileLocation);
 }
 
 /*++
- * WriteFileHeader
+ * WriteStubHeader
  *
  *     Prints out the File Header for a Stub File.
  *
@@ -393,6 +368,7 @@ CreateStubs(FILE * SyscallDb,
     char *SyscallArguments;
     int SyscallId;
     unsigned StackBytes;
+    unsigned int i;
 
     /* We loop, incrementing the System Call Index, until the end of the file  */
     for (SyscallId = 0; ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL));) {
@@ -408,26 +384,23 @@ CreateStubs(FILE * SyscallDb,
         if (NtSyscallName) {
 
             /* Create Usermode Stubs for Nt/Zw syscalls in each Usermode file */
-            int i;
             for (i= 0; i < UserFiles; i++) {
 
-                /* Write the Nt Version */
-                WriteUserModeStub(UserModeFiles[i],
-                                  NtSyscallName,
-                                  StackBytes,
-                                  SyscallId | Index);
+                /* Write the Stub Header and export the Function */
+                WriteStubHeader(UserModeFiles[i], NtSyscallName, StackBytes);
 
                 /* If a Zw Version is needed (was specified), write it too */
                 if (NeedsZw) {
 
                     NtSyscallName[0] = 'Z';
                     NtSyscallName[1] = 'w';
-                    WriteUserModeStub(UserModeFiles[i],
-                                      NtSyscallName,
-                                      StackBytes,
-                                      SyscallId | Index);
+
+                    /* Write the Stub Header and export the Function */
+                    WriteStubHeader(UserModeFiles[i], NtSyscallName, StackBytes);
                 }
 
+                /* Write the Stub Code */
+                fprintf(UserModeFiles[i], UserModeStub, SyscallId | Index, StackBytes);
             }
 
             /* Create the Kernel coutnerparts (only Zw*, Nt* are the real functions!) */
@@ -445,6 +418,11 @@ CreateStubs(FILE * SyscallDb,
             SyscallId++;
         }
     }
+    
+#if defined(_MSC_VER)
+    for (i= 0; i < UserFiles; i++) fprintf(UserModeFiles[i], "END\n");
+    fprintf(KernelModeFile, "END\n");
+#endif
 }
 
 /*++
@@ -627,7 +605,7 @@ CreateSpec(FILE * SyscallDb,
         /* Make sure we really extracted something */
         if (NtSyscallName) {
 
-            int i;
+            unsigned int i;
             for (i= 0; i < CountFiles; i++) {
 
                 if (!UseZw) {
@@ -670,7 +648,7 @@ void usage(char * argv0)
 
 int main(int argc, char* argv[])
 {
-    FILE * Files[Arguments] = { };
+    FILE * Files[Arguments] = {0};
     int FileNumber, ArgOffset = 1;
     char * OpenType = "r";
 
@@ -710,15 +688,24 @@ int main(int argc, char* argv[])
     WriteFileHeader(Files[NtosUserStubs],
                     "System Call Stubs for Native API",
                     argv[NtosUserStubs + ArgOffset]);
+    fputs("#include <asm.inc>\n"
+          "#include <ks386.inc>\n"
+          ".code\n\n", Files[NtosUserStubs]);
 
     WriteFileHeader(Files[NtosKernelStubs],
                     "System Call Stubs for Native API",
                     argv[NtosKernelStubs + ArgOffset]);
-    fputs("#include <ndk/asm.h>\n\n", Files[NtosKernelStubs]);
+    fputs("#include <asm.inc>\n"
+          "#include <ks386.inc>\n"
+          ".code\n"
+          "EXTERN _KiSystemService:PROC\n\n", Files[NtosKernelStubs]);
 
     WriteFileHeader(Files[Win32kStubs],
                     "System Call Stubs for Native API",
                     argv[Win32kStubs + ArgOffset]);
+    fputs("#include <asm.inc>\n"
+          "#include <ks386.inc>\n"
+          ".code\n\n", Files[Win32kStubs]);
 
     /* Create the System Stubs */
     CreateStubs(Files[NativeSystemDb],
@@ -772,3 +759,4 @@ int main(int argc, char* argv[])
 
     return(0);
 }
+

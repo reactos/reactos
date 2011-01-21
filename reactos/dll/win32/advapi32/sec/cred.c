@@ -103,16 +103,22 @@ static DWORD registry_read_credential(HKEY hkey, PCREDENTIALW credential,
         credential->TargetName = (LPWSTR)buffer;
         ret = RegQueryValueExW(hkey, NULL, 0, &type, (LPVOID)credential->TargetName,
                                &count);
-        if (ret != ERROR_SUCCESS || type != REG_SZ) return ret;
+        if (ret != ERROR_SUCCESS)
+            return ret;
+        else if (type != REG_SZ)
+            return ERROR_REGISTRY_CORRUPT;
         buffer += count;
     }
 
     ret = RegQueryValueExW(hkey, wszCommentValue, 0, &type, NULL, &count);
-    if (ret != ERROR_FILE_NOT_FOUND && ret != ERROR_SUCCESS)
-        return ret;
-    else if (type != REG_SZ)
-        return ERROR_REGISTRY_CORRUPT;
-    *len += count;
+    if (ret != ERROR_FILE_NOT_FOUND)
+    {
+        if (ret != ERROR_SUCCESS)
+            return ret;
+        else if (type != REG_SZ)
+            return ERROR_REGISTRY_CORRUPT;
+        *len += count;
+    }
     if (credential)
     {
         credential->Comment = (LPWSTR)buffer;
@@ -129,11 +135,14 @@ static DWORD registry_read_credential(HKEY hkey, PCREDENTIALW credential,
     }
 
     ret = RegQueryValueExW(hkey, wszTargetAliasValue, 0, &type, NULL, &count);
-    if (ret != ERROR_FILE_NOT_FOUND && ret != ERROR_SUCCESS)
-        return ret;
-    else if (type != REG_SZ)
-        return ERROR_REGISTRY_CORRUPT;
-    *len += count;
+    if (ret != ERROR_FILE_NOT_FOUND)
+    {
+        if (ret != ERROR_SUCCESS)
+            return ret;
+        else if (type != REG_SZ)
+            return ERROR_REGISTRY_CORRUPT;
+        *len += count;
+    }
     if (credential)
     {
         credential->TargetAlias = (LPWSTR)buffer;
@@ -150,11 +159,14 @@ static DWORD registry_read_credential(HKEY hkey, PCREDENTIALW credential,
     }
 
     ret = RegQueryValueExW(hkey, wszUserNameValue, 0, &type, NULL, &count);
-    if (ret != ERROR_FILE_NOT_FOUND && ret != ERROR_SUCCESS)
-        return ret;
-    else if (type != REG_SZ)
-        return ERROR_REGISTRY_CORRUPT;
-    *len += count;
+    if (ret != ERROR_FILE_NOT_FOUND)
+    {
+        if (ret != ERROR_SUCCESS)
+            return ret;
+        else if (type != REG_SZ)
+            return ERROR_REGISTRY_CORRUPT;
+        *len += count;
+    }
     if (credential)
     {
         credential->UserName = (LPWSTR)buffer;
@@ -171,9 +183,12 @@ static DWORD registry_read_credential(HKEY hkey, PCREDENTIALW credential,
     }
 
     ret = read_credential_blob(hkey, key_data, NULL, &count);
-    if (ret != ERROR_FILE_NOT_FOUND && ret != ERROR_SUCCESS)
-        return ret;
-    *len += count;
+    if (ret != ERROR_FILE_NOT_FOUND)
+    {
+        if (ret != ERROR_SUCCESS)
+            return ret;
+        *len += count;
+    }
     if (credential)
     {
         credential->CredentialBlob = (LPBYTE)buffer;

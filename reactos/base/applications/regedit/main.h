@@ -43,7 +43,8 @@ extern HINSTANCE hInst;
 
 /******************************************************************************/
 
-enum OPTION_FLAGS {
+enum OPTION_FLAGS
+{
     OPTIONS_AUTO_REFRESH            	   = 0x01,
     OPTIONS_READ_ONLY_MODE          	   = 0x02,
     OPTIONS_CONFIRM_ON_DELETE       	   = 0x04,
@@ -53,11 +54,13 @@ enum OPTION_FLAGS {
     OPTIONS_VIEW_DATA_ONLY      	   = 0x40,
 };
 
-typedef struct {
+typedef struct
+{
     HWND    hWnd;
     HWND    hTreeWnd;
     HWND    hListWnd;
-	HWND    hAddressBarWnd;
+    HWND    hAddressBarWnd;
+    HWND    hAddressBtnWnd;
     int     nFocusPanel;      /* 0: left  1: right */
     int	    nSplitPos;
     WINDOWPLACEMENT pos;
@@ -87,6 +90,9 @@ extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+
+/* error.c */
+extern void ErrorMessageBox(HWND hWnd, LPCTSTR title, DWORD code);
 
 /* find.c */
 extern void FindDialog(HWND hWnd);
@@ -124,3 +130,10 @@ extern void DestroyMainMenu( void );
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
 extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath);
+extern LONG RenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
+extern LONG RenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue);
+extern LONG QueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen);
+extern BOOL GetKeyName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
+
+/* security.c */
+extern BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);

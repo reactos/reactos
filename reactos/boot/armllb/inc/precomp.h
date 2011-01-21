@@ -17,11 +17,7 @@
 #include "video.h"
 #include "keyboard.h"
 #include "envir.h"
-
-VOID
-DbgPrint(
-    const char *fmt,
-    ...
-);
+#include "../../freeldr/freeldr/include/keycodes.h"
+#include "debug.h"
 
 /* EOF */

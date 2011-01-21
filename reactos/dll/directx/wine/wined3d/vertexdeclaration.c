@@ -79,13 +79,11 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
    IWineD3DVertexDeclaration parts follow
    ******************************************* */
 
-static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetParent(IWineD3DVertexDeclaration *iface, IUnknown** parent){
-    IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
+static void * WINAPI IWineD3DVertexDeclarationImpl_GetParent(IWineD3DVertexDeclaration *iface)
+{
+    TRACE("iface %p.\n", iface);
 
-    *parent= This->parent;
-    IUnknown_AddRef(*parent);
-    TRACE("(%p) : returning %p\n", This, *parent);
-    return WINED3D_OK;
+    return ((IWineD3DVertexDeclarationImpl *)iface)->parent;
 }
 
 static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
@@ -188,7 +186,7 @@ static const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
 
 HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWineD3DDeviceImpl *device,
         const WINED3DVERTEXELEMENT *elements, UINT element_count,
-        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+        void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     WORD preloaded = 0; /* MAX_STREAMS, 16 */
@@ -221,7 +219,7 @@ HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWine
     {
         struct wined3d_vertex_declaration_element *e = &declaration->elements[i];
 
-        e->format_desc = getFormatDescEntry(elements[i].format, gl_info);
+        e->format = wined3d_get_format(gl_info, elements[i].format);
         e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
         e->input_slot = elements[i].input_slot;
         e->offset = elements[i].offset;
@@ -236,7 +234,7 @@ HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWine
          * to be loaded when drawing, but filter tesselation pseudo streams. */
         if (e->input_slot >= MAX_STREAMS) continue;
 
-        if (!e->format_desc->gl_vtx_format)
+        if (!e->format->gl_vtx_format)
         {
             FIXME("The application tries to use an unsupported format (%s), returning E_FAIL.\n",
                     debug_d3dformat(elements[i].format));

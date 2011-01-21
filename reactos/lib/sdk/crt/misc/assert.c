@@ -67,6 +67,6 @@ void _assert(const char *exp, const char *file, unsigned line)
     /* Does the user want to debug? */
     if (iResult == IDRETRY)
     {
-        __debugbreak();
+        DbgRaiseAssertionFailure();
     }
 }

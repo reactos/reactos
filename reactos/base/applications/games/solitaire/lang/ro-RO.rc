@@ -5,8 +5,6 @@
  * PURPOSE:     Romanian Language File for Solitaire
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)

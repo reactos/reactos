@@ -823,7 +823,6 @@ int decl_indirect(const type_t *t)
 }
 
 static unsigned int write_procformatstring_type(FILE *file, int indent,
-                                                const char *name,
                                                 const type_t *type,
                                                 const attr_list_t *attrs,
                                                 int is_return)
@@ -873,13 +872,44 @@ static unsigned int write_procformatstring_type(FILE *file, int indent,
             print_file(file, indent, "0x4d,    /* FC_IN_PARAM */\n");
 
         print_file(file, indent, "0x01,\n");
-        print_file(file, indent, "NdrFcShort(0x%hx),\n", type->typestring_offset);
+        print_file(file, indent, "NdrFcShort(0x%x),	/* type offset = %u */\n",
+                   type->typestring_offset, type->typestring_offset);
         size = 4; /* includes param type prefix */
     }
     return size;
 }
 
-static void write_procformatstring_stmts(FILE *file, int indent, const statement_list_t *stmts, type_pred_t pred)
+static void write_procformatstring_func( FILE *file, int indent,
+                                         const var_t *func, unsigned int *offset )
+{
+    /* emit argument data */
+    if (type_get_function_args(func->type))
+    {
+        const var_t *var;
+        LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
+        {
+            print_file( file, 0, "/* %u (parameter %s) */\n", *offset, var->name );
+            *offset += write_procformatstring_type(file, indent, var->type, var->attrs, FALSE);
+        }
+    }
+
+    /* emit return value data */
+    if (is_void(type_function_get_rettype(func->type)))
+    {
+        print_file(file, 0, "/* %u (void) */\n", *offset);
+        print_file(file, indent, "0x5b,    /* FC_END */\n");
+        print_file(file, indent, "0x5c,    /* FC_PAD */\n");
+        *offset += 2;
+    }
+    else
+    {
+        print_file( file, 0, "/* %u (return value) */\n", *offset );
+        *offset += write_procformatstring_type(file, indent, type_function_get_rettype(func->type), NULL, TRUE);
+    }
+}
+
+static void write_procformatstring_stmts(FILE *file, int indent, const statement_list_t *stmts,
+                                         type_pred_t pred, unsigned int *offset)
 {
     const statement_t *stmt;
     if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, const statement_t, entry )
@@ -893,32 +923,18 @@ static void write_procformatstring_stmts(FILE *file, int indent, const statement
             {
                 const var_t *func = stmt_func->u.var;
                 if (is_local(func->attrs)) continue;
-                /* emit argument data */
-                if (type_get_function_args(func->type))
-                {
-                    const var_t *var;
-                    LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-                        write_procformatstring_type(file, indent, var->name, var->type, var->attrs, FALSE);
-                }
-
-                /* emit return value data */
-                if (is_void(type_function_get_rettype(func->type)))
-                {
-                    print_file(file, indent, "0x5b,    /* FC_END */\n");
-                    print_file(file, indent, "0x5c,    /* FC_PAD */\n");
-                }
-                else
-                    write_procformatstring_type(file, indent, "return value", type_function_get_rettype(func->type), NULL, TRUE);
+                write_procformatstring_func( file, indent, func, offset );
             }
         }
         else if (stmt->type == STMT_LIBRARY)
-            write_procformatstring_stmts(file, indent, stmt->u.lib->stmts, pred);
+            write_procformatstring_stmts(file, indent, stmt->u.lib->stmts, pred, offset);
     }
 }
 
 void write_procformatstring(FILE *file, const statement_list_t *stmts, type_pred_t pred)
 {
     int indent = 0;
+    unsigned int offset = 0;
 
     print_file(file, indent, "static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =\n");
     print_file(file, indent, "{\n");
@@ -927,7 +943,7 @@ void write_procformatstring(FILE *file, const statement_list_t *stmts, type_pred
     print_file(file, indent, "{\n");
     indent++;
 
-    write_procformatstring_stmts(file, indent, stmts, pred);
+    write_procformatstring_stmts(file, indent, stmts, pred, &offset);
 
     print_file(file, indent, "0x0\n");
     indent--;
@@ -935,6 +951,25 @@ void write_procformatstring(FILE *file, const statement_list_t *stmts, type_pred
     indent--;
     print_file(file, indent, "};\n");
     print_file(file, indent, "\n");
+}
+
+void write_procformatstring_offsets( FILE *file, const type_t *iface )
+{
+    const statement_t *stmt;
+    int indent = 0;
+
+    print_file( file, indent,  "static const unsigned short %s_FormatStringOffsetTable[] =\n",
+                iface->name );
+    print_file( file, indent,  "{\n" );
+    indent++;
+    STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
+    {
+        var_t *func = stmt->u.var;
+        if (is_local( func->attrs )) continue;
+        print_file( file, indent,  "%u,  /* %s */\n", func->procstring_offset, func->name );
+    }
+    indent--;
+    print_file( file, indent,  "};\n\n" );
 }
 
 static int write_base_type(FILE *file, const type_t *type, int convert_to_signed_type, unsigned int *typestring_offset)
@@ -1137,7 +1172,7 @@ static unsigned int write_conf_or_var_desc(FILE *file, const type_t *structure,
         print_file(file, 2, "0x%x, /* %s */\n", operator_type,
                    operator_type ? string_of_type(operator_type) : "no operators");
         print_file(file, 2, "NdrFcShort(0x%hx),\t/* offset = %d */\n",
-                   offset, offset);
+                   (unsigned short)offset, offset);
     }
     else
     {
@@ -1172,7 +1207,7 @@ static unsigned int write_conf_or_var_desc(FILE *file, const type_t *structure,
 
         print_file(file, 2, "0x%x, /* Corr desc: %s */\n", conftype, conftype_string);
         print_file(file, 2, "0x%x, /* %s */\n", RPC_FC_CALLBACK, "FC_CALLBACK");
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", callback_offset, callback_offset);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)callback_offset, callback_offset);
     }
     return 4;
 }
@@ -1654,8 +1689,8 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
     print_file(file, 2, "0x%x,\t/* Alignment= %d, Flags= %02x */\n",
                flags | (ualign - 1), ualign - 1, flags);
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* Function offset= %hu */\n", funoff, funoff);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", size, size);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", usize, usize);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)size, size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)usize, usize);
     *tfsoff += 8;
     reloff = absoff - *tfsoff;
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %hd (%u) */\n", reloff, reloff, absoff);
@@ -1786,8 +1821,8 @@ static int write_pointer_description_offsets(
              * note that MSDN states that for pointer layouts in structures,
              * this is a negative offset from the end of the structure, but
              * this statement is incorrect. all offsets are positive */
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Memory offset = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Buffer offset = %d */\n", *offset_in_buffer, *offset_in_buffer);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Memory offset = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Buffer offset = %d */\n", (unsigned short)*offset_in_buffer, *offset_in_buffer);
 
             memsize = type_memsize(type);
             *offset_in_memory += memsize;
@@ -1940,10 +1975,10 @@ static int write_fixed_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_FIXED_REPEAT */\n", RPC_FC_FIXED_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_PAD */\n", RPC_FC_PAD);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Iterations = %d */\n", type_array_get_dim(type), type_array_get_dim(type));
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Iterations = %d */\n", (unsigned short)type_array_get_dim(type), type_array_get_dim(type));
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 10;
 
             pointer_count = write_pointer_description_offsets(
@@ -2014,9 +2049,9 @@ static int write_conformant_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_REPEAT */\n", RPC_FC_VARIABLE_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_FIXED_OFFSET */\n", RPC_FC_FIXED_OFFSET);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", offset_in_memory, offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)offset_in_memory, offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 8;
 
             pointer_count = write_pointer_description_offsets(
@@ -2056,9 +2091,9 @@ static int write_varying_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_REPEAT */\n", RPC_FC_VARIABLE_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_OFFSET */\n", RPC_FC_VARIABLE_OFFSET);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 8;
 
             pointer_count = write_pointer_description_offsets(
@@ -2221,7 +2256,7 @@ static unsigned int write_string_tfs(FILE *file, const attr_list_t *attrs,
         print_file(file, 2, "0x%x, /* FC_PAD */\n", RPC_FC_PAD);
         *typestring_offset += 2;
 
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", dim, dim);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)dim, dim);
         *typestring_offset += 2;
 
         return start_offset;
@@ -2298,7 +2333,7 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
         }
         else
         {
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", size, size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)size, size);
             *typestring_offset += 2;
         }
 
@@ -2319,11 +2354,11 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
             }
             else
             {
-                print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", dim, dim);
+                print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)dim, dim);
                 *typestring_offset += 2;
             }
 
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", elsize, elsize);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)elsize, elsize);
             *typestring_offset += 2;
         }
 
@@ -2349,7 +2384,7 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
     else
     {
         unsigned int dim = size_is ? 0 : type_array_get_dim(type);
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", dim, dim);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)dim, dim);
         *typestring_offset += 2;
         *typestring_offset
             += write_conf_or_var_desc(file, current_structure, baseoff,
@@ -2487,7 +2522,7 @@ static unsigned int write_struct_tfs(FILE *file, type_t *type,
     print_start_tfs_comment(file, type, start_offset);
     print_file(file, 2, "0x%x,\t/* %s */\n", fc, string_of_type(fc));
     print_file(file, 2, "0x%x,\t/* %d */\n", align - 1, align - 1);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", total_size, total_size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)total_size, total_size);
     *tfsoff += 4;
 
     if (array)
@@ -2513,7 +2548,7 @@ static unsigned int write_struct_tfs(FILE *file, type_t *type,
         int reloff = absoff - *tfsoff;
         assert( reloff >= 0 );
         print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %d (%u) */\n",
-                   reloff, reloff, absoff);
+                   (unsigned short)reloff, reloff, absoff);
         *tfsoff += 2;
     }
     else if ((fc == RPC_FC_PSTRUCT) ||
@@ -2713,8 +2748,8 @@ static unsigned int write_union_tfs(FILE *file, type_t *type, unsigned int *tfso
         print_file(file, 0, "/* %u */\n", *tfsoff);
     }
 
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", size, size);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", nbranch, nbranch);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)size, size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)nbranch, nbranch);
     *tfsoff += 4;
 
     if (fields) LIST_FOR_EACH_ENTRY(f, fields, var_t, entry)
@@ -3857,29 +3892,11 @@ void write_remoting_arguments(FILE *file, int indent, const var_t *func, const c
 }
 
 
-unsigned int get_size_procformatstring_type(const char *name, const type_t *type, const attr_list_t *attrs)
-{
-    return write_procformatstring_type(NULL, 0, name, type, attrs, FALSE);
-}
-
-
 unsigned int get_size_procformatstring_func(const var_t *func)
 {
-    const var_t *var;
-    unsigned int size = 0;
-
-    /* argument list size */
-    if (type_get_function_args(func->type))
-        LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-            size += get_size_procformatstring_type(var->name, var->type, var->attrs);
-
-    /* return value size */
-    if (is_void(type_function_get_rettype(func->type)))
-        size += 2; /* FC_END and FC_PAD */
-    else
-        size += get_size_procformatstring_type("return value", type_function_get_rettype(func->type), NULL);
-
-    return size;
+    unsigned int offset = 0;
+    write_procformatstring_func( NULL, 0, func, &offset );
+    return offset;
 }
 
 unsigned int get_size_procformatstring(const statement_list_t *stmts, type_pred_t pred)

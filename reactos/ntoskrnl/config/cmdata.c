@@ -65,7 +65,7 @@ ULONG CmpTypeCount[MaximumType + 1];
 
 HANDLE CmpRegistryRootHandle;
 
-UNICODE_STRING CmClassName[MaximumClass + 1] =
+INIT_FUNCTION UNICODE_STRING CmClassName[MaximumClass + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),
     RTL_CONSTANT_STRING(L"Processor"),
@@ -77,7 +77,7 @@ UNICODE_STRING CmClassName[MaximumClass + 1] =
     RTL_CONSTANT_STRING(L"Undefined")
 };
 
-UNICODE_STRING CmTypeName[MaximumType + 1] =
+INIT_FUNCTION UNICODE_STRING CmTypeName[MaximumType + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),
     RTL_CONSTANT_STRING(L"CentralProcessor"),
@@ -123,7 +123,7 @@ UNICODE_STRING CmTypeName[MaximumType + 1] =
     RTL_CONSTANT_STRING(L"Undefined")
 };
 
-CMP_MF_TYPE CmpMultifunctionTypes[] =
+INIT_FUNCTION CMP_MF_TYPE CmpMultifunctionTypes[] =
 {
     {"ISA", Isa, 0},
     {"MCA", MicroChannel, 0},
@@ -136,7 +136,7 @@ CMP_MF_TYPE CmpMultifunctionTypes[] =
     {NULL, Internal, 0}
 };
 
-CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
+INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
 {
     {
         L"Session Manager",

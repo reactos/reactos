@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 16 "ARM³::DEBUGSUP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -47,7 +46,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
     PVOID MappingBaseAddress;
 
     //
-    // Check if we are called too early 
+    // Check if we are called too early
     //
     if (MmDebugPte == NULL)
     {
@@ -133,7 +132,7 @@ MiDbgUnTranslatePhysicalAddress(VOID)
     //
     ASSERT(MmIsAddressValid(MappingBaseAddress));
 
-    // 
+    //
     // Clear the mapping PTE and invalidate its TLB entry
     //
     MmDebugPte->u.Long = 0;

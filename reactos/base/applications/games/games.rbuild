@@ -7,7 +7,7 @@
 <directory name="spider">
 	<xi:include href="spider/spider.rbuild" />
 </directory>
-<directory name="winemine">
-	<xi:include href="winemine/winemine.rbuild" />
+<directory name="winmine">
+	<xi:include href="winmine/winmine.rbuild" />
 </directory>
 </group>

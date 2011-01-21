@@ -21,6 +21,7 @@
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
 				<file>hwpci.c</file>
+				<file>i386bug.c</file>
 				<file>i386disk.c</file>
 				<file>i386rtl.c</file>
 				<file>i386vid.c</file>
@@ -63,7 +64,6 @@
 		</directory>
 		<directory name="arm">
 			<if property="ARCH" value="arm">
-				<file first="true">boot.s</file>
 				<file>macharm.c</file>
 			</if>
 		</directory>

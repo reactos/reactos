@@ -32,7 +32,8 @@ IntUserHeapCommitRoutine(IN PVOID Base,
     PW32HEAP_USER_MAPPING Mapping;
     PVOID UserBase = NULL;
     NTSTATUS Status;
-    SIZE_T Delta = (SIZE_T)((ULONG_PTR)(*CommitAddress) - (ULONG_PTR)Base);
+    SIZE_T Delta;
+    PVOID UserCommitAddress;
 
     W32Process = PsGetCurrentProcessWin32Process();
 
@@ -79,18 +80,23 @@ IntUserHeapCommitRoutine(IN PVOID Base,
             return Status;
     }
 
-    /* commit! */
-    UserBase = (PVOID)((ULONG_PTR)UserBase + Delta);
+    /* Apply the commit address offset to the user base address */
+    Delta = (SIZE_T) ((ULONG_PTR) (*CommitAddress) - (ULONG_PTR) (Base));
+    UserCommitAddress = (PVOID) ((ULONG_PTR) (UserBase) + Delta);
 
+    /* Perform the actual commit */
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     &UserBase,
+                                     &UserCommitAddress,
                                      0,
                                      CommitSize,
                                      MEM_COMMIT,
                                      PAGE_EXECUTE_READ);
+
     if (NT_SUCCESS(Status))
     {
-        *CommitAddress = (PVOID)((ULONG_PTR)UserBase + Delta);
+        /* Determine the address to return */
+        Delta = (SIZE_T) ((ULONG_PTR) (UserCommitAddress) - (ULONG_PTR) (UserBase));
+        *CommitAddress = (PVOID) ((ULONG_PTR) (Base) + Delta);
     }
 
     if (W32Process == NULL)

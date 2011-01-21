@@ -56,7 +56,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     {
     /* Driver needs to support DrvCopyBits, else we can't do anything */
     SURFACE *psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-    if (!(psurfDest->flHooks & HOOK_COPYBITS))
+    if (!(psurfDest->flags & HOOK_COPYBITS))
     {
       return FALSE;
     }
@@ -64,7 +64,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     /* Allocate a temporary bitmap */
     BitmapSize.cx = DestRect->right - DestRect->left;
     BitmapSize.cy = DestRect->bottom - DestRect->top;
-    Width = DIB_GetDIBWidthBytes(BitmapSize.cx, BitsPerFormat(psoDest->iBitmapFormat));
+    Width = WIDTH_BYTES_ALIGN32(BitmapSize.cx, BitsPerFormat(psoDest->iBitmapFormat));
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
                                                psoDest->iBitmapFormat,
                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
@@ -127,7 +127,6 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
                                         &ClippedDestRect, &SrcPoint))
       {
           EngDeleteClip(EnterLeave->TrivialClipObj);
-          EngFreeMem((*ppsoOutput)->pvBits);
           EngUnlockSurface(*ppsoOutput);
           EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
           return FALSE;
@@ -149,7 +148,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   if (NULL != *ppsoOutput)
   {
     SURFACE* psurfOutput = CONTAINING_RECORD(*ppsoOutput, SURFACE, SurfObj);
-    if (0 != (psurfOutput->flHooks & HOOK_SYNCHRONIZE))
+    if (0 != (psurfOutput->flags & HOOK_SYNCHRONIZE))
     {
       if (NULL != GDIDEVFUNCS(*ppsoOutput).SynchronizeSurface)
         {
@@ -219,7 +218,6 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
           Result = TRUE;
         }
       }
-    EngFreeMem(EnterLeave->OutputObj->pvBits);
     EngUnlockSurface(EnterLeave->OutputObj);
     EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
     EngDeleteClip(EnterLeave->TrivialClipObj);

@@ -1,6 +1,6 @@
 
 .macro TEXTAREA
-    .section text, "rx"
+    .section .text, "rx"
     .align 2
 .endm
 

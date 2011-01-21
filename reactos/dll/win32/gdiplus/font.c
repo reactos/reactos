@@ -452,12 +452,16 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
         GDIPCONST GpGraphics *graphics, REAL *height)
 {
     REAL dpi;
+    GpStatus stat;
 
     TRACE("%p %p %p\n", font, graphics, height);
 
-    dpi = GetDeviceCaps(graphics->hdc, LOGPIXELSY);
+    stat = GdipGetDpiY((GpGraphics*)graphics, &dpi);
 
-    return GdipGetFontHeightGivenDPI(font, dpi, height);
+    if (stat == Ok)
+        stat = GdipGetFontHeightGivenDPI(font, dpi, height);
+
+    return stat;
 }
 
 /*******************************************************************************

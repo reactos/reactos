@@ -10,6 +10,7 @@
 	<file>hash.c</file>
 	<file>header.c</file>
 	<file>proxy.c</file>
+	<file>register.c</file>
 	<file>server.c</file>
 	<file>typegen.c</file>
 	<file>typelib.c</file>

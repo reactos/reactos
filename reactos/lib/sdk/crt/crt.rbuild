@@ -26,9 +26,32 @@
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<define name="_CRTBLD" />
+
+	<directory name="printf">
+		<file>_cprintf.c</file>
+		<file>_snprintf.c</file>
+		<file>_snwprintf.c</file>
+		<file>_vcprintf.c</file>
+		<file>_vsnprintf.c</file>
+		<file>_vsnwprintf.c</file>
+		<file>fprintf.c</file>
+		<file>fwprintf.c</file>
+		<file>printf.c</file>
+		<file>sprintf.c</file>
+		<file>streamout.c</file>
+		<file>swprintf.c</file>
+		<file>vfprintf.c</file>
+		<file>vfwprintf.c</file>
+		<file>vprintf.c</file>
+		<file>vsprintf.c</file>
+		<file>vswprintf.c</file>
+		<file>vwprintf.c</file>
+		<file>wprintf.c</file>
+		<file>wstreamout.c</file>
+	</directory>
+
 	<directory name="conio">
 		<file>cgets.c</file>
-		<file>cprintf.c</file>
 		<file>cputs.c</file>
 		<file>getch.c</file>
 		<file>getche.c</file>
@@ -123,12 +146,13 @@
 		<file>ldiv.c</file>
 		<file>logf.c</file>
 		<file>modf.c</file>
+		<file>powf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
 		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
-		<file>pow_asm.c</file>
+		<file>powl.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -282,9 +306,9 @@
 	<directory name="misc">
 		<file>amsg.c</file>
 		<file>assert.c</file>
-		<file>crtmain.c</file>
 		<file>environ.c</file>
 		<file>getargs.c</file>
+		<file>i10output.c</file>
 		<file>initterm.c</file>
 		<file>lock.c</file>
 		<file>purecall.c</file>
@@ -329,13 +353,14 @@
 		<file>xcptinfo.c</file>
 	</directory>
 	<directory name="stdio">
+		<file>_flsbuf.c</file>
+		<file>_flswbuf.c</file>
 		<file>access.c</file>
 		<file>file.c</file>
 		<file>find.c</file>
 		<file>find64.c</file>
 		<file>findi64.c</file>
 		<file>fmode.c</file>
-		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
 		<file>stat.c</file>
@@ -347,6 +372,7 @@
 		<file>wpopen.c</file>
 		<file>wstat.c</file>
 		<file>wstat64.c</file>
+		<file>lock_file.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
@@ -525,4 +551,27 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+
+<module name="user32_wsprintf" type="staticlibrary">
+	<library>chkstk</library>
+	<include base="crt">.</include>
+	<include base="crt">include</include>
+	<define name="_USER32_WSPRINTF" />
+
+	<directory name="printf">
+		<file>streamout.c</file>
+		<file>wstreamout.c</file>
+		<file>wsprintfA.c</file>
+		<file>wsprintfW.c</file>
+		<file>wvsprintfA.c</file>
+		<file>wvsprintfW.c</file>
+		<file>wvsnprintfA.c</file>
+		<file>wvsnprintfW.c</file>
+	</directory>
+	<directory name="string">
+		<file>mbstowcs_nt.c</file>
+		<file>wcstombs_nt.c</file>
+	</directory>
+</module>
+
 </group>

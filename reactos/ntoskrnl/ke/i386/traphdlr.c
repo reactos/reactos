@@ -1176,14 +1176,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     /* Save CR2 */
     Cr2 = __readcr2();
     
-    /* Check for Pentium LOCK errata */
-    if (KiI386PentiumLockErrataPresent)
-    {
-        /* Not yet implemented */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
-    
     /* HACK: Check if interrupts are disabled and enable them */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
     {

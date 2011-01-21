@@ -14,6 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
+extern BOOLEAN HalpPciLockSettings;
 ULONG HalpBusType;
 
 PCI_TYPE1_CFG_CYCLE_BITS HalpPciDebuggingDevice[2] = {{{{0}}}};
@@ -558,13 +559,48 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
                       IN PCI_SLOT_NUMBER PciSlot,
                       OUT PSUPPORTED_RANGE *Range)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    PCI_COMMON_HEADER PciData;
+    
+    /* Read PCI configuration data */
+    HalGetBusData(PCIConfiguration,
+                  BusHandler->BusNumber,
+                  PciSlot.u.AsULONG,
+                  &PciData,
+                  PCI_COMMON_HDR_LENGTH);
+                
+    /* Make sure it's a real device */
+    if (PciData.VendorID == PCI_INVALID_VENDORID) return STATUS_UNSUCCESSFUL;
+    
+    /* Allocate the supported range structure */
+    *Range = ExAllocatePoolWithTag(PagedPool, sizeof(SUPPORTED_RANGE), 'Hal ');
+    if (!*Range) return STATUS_INSUFFICIENT_RESOURCES;
+    
+    /* Set it up */
+    RtlZeroMemory(*Range, sizeof(SUPPORTED_RANGE));
+    (*Range)->Base = 1;
+    
+    /* If the PCI device has no IRQ, nothing to do */
+    if (!PciData.u.type0.InterruptPin) return STATUS_SUCCESS;
+    
+    /* FIXME: The PCI IRQ Routing Miniport should be called */
+    
+    /* Also if the INT# seems bogus, nothing to do either */
+    if ((PciData.u.type0.InterruptLine == 0) ||
+        (PciData.u.type0.InterruptLine == 255))
+    {
+        /* Fake success */
+        return STATUS_SUCCESS;
+    }
+    
+    /* Otherwise, the INT# should be valid, return it to the caller */
+    (*Range)->Base = PciData.u.type0.InterruptLine;
+    (*Range)->Limit = PciData.u.type0.InterruptLine;
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
                                IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
@@ -574,6 +610,7 @@ HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
     DPRINT1("Unimplemented!\n");
@@ -582,6 +619,7 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpRegisterPciDebuggingDeviceInfo(VOID)
 {
     BOOLEAN Found = FALSE;
@@ -622,10 +660,40 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
                           IN PBUS_HANDLER RootHandler,
                           IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList)
 {
-    /* Not yet supported */
-    DbgPrint("HAL: PCI Resource List Adjustment not implemented!");
-    while (TRUE);
-    return STATUS_UNSUCCESSFUL;
+    PPCIPBUSDATA BusData;
+    PCI_SLOT_NUMBER SlotNumber;
+    PSUPPORTED_RANGE Interrupt;
+    NTSTATUS Status;
+    
+    /* Get PCI bus data */
+    BusData = BusHandler->BusData;
+    SlotNumber.u.AsULONG = (*pResourceList)->SlotNumber;
+    
+    /* Get the IRQ supported range */
+    Status = BusData->GetIrqRange(BusHandler, RootHandler, SlotNumber, &Interrupt);
+    if (!NT_SUCCESS(Status)) return Status;
+#ifndef _MINIHAL_
+    /* Handle the /PCILOCK feature */
+    if (HalpPciLockSettings)
+    {
+        /* /PCILOCK is not yet supported */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+#endif
+    /* Now create the correct resource list based on the supported bus ranges */
+#if 0
+    Status = HaliAdjustResourceListRange(BusHandler->BusAddresses,
+                                         Interrupt,
+                                         pResourceList);
+#else
+    DPRINT1("HAL: No PCI Resource Adjustment done! Hardware may malfunction\n");
+    Status = STATUS_SUCCESS;
+#endif
+
+    /* Return to caller */
+    ExFreePool(Interrupt);
+    return Status;
 }
 
 NTSTATUS
@@ -688,7 +756,9 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
     }
 
     /* Interrupt resource */
-    if (0 != PciConfig.u.type0.InterruptLine)
+    if (0 != PciConfig.u.type0.InterruptPin &&
+        0 != PciConfig.u.type0.InterruptLine &&
+        0xFF != PciConfig.u.type0.InterruptLine)
         ResourceCount++;
 
     /* Allocate output buffer and initialize */
@@ -741,7 +811,9 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         }
     }
 
-    if (0 != PciConfig.u.type0.InterruptLine)
+    if (0 != PciConfig.u.type0.InterruptPin &&
+        0 != PciConfig.u.type0.InterruptLine &&
+        0xFF != PciConfig.u.type0.InterruptLine)
     {
         Descriptor->Type = CmResourceTypeInterrupt;
         Descriptor->ShareDisposition = CmResourceShareShared;          /* FIXME Just a guess */
@@ -784,6 +856,7 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
 
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
+INIT_FUNCTION
 HalpQueryPciRegistryInfo(VOID)
 {
 #ifndef _MINIHAL_
@@ -1016,6 +1089,7 @@ HalpQueryPciRegistryInfo(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpInitializePciStubs(VOID)
 {
     PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo;

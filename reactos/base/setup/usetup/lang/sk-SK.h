@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  31-05-2010
+ * LastChange:  05-09-2010
  */
 
 #pragma once
@@ -993,13 +993,13 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (MBR a VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (iba VBR).",
         TEXT_STYLE_NORMAL
     },
     {

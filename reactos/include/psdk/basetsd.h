@@ -64,6 +64,17 @@
  typedef unsigned long POINTER_64_INT;
 #endif
 
+#if 0 /* Not supported yet */
+#define POINTER_SIGNED __sptr
+#define POINTER_UNSIGNED __uptr
+#else
+#define POINTER_SIGNED
+#define POINTER_UNSIGNED
+#endif
+
+#define SPOINTER_32 POINTER_SIGNED POINTER_32
+#define UPOINTER_32 POINTER_UNSIGNED POINTER_32
+
 #if defined(_WIN64)
 #define __int3264   __int64
 #define ADDRESS_TAG_BIT 0x40000000000UI64

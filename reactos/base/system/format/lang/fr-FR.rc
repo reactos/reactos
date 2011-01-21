@@ -49,7 +49,8 @@ STRING_LABEL_NAME_EDIT  "Donner un nom pour le disque %C : "
 
 STRING_ERROR_LABEL     "Le nom pour le disque n'est pas correct.\n"
 
-STRING_YN_FORMAT       "\nATTENTION, TOUTES LES DONNÉES SUR LE DISQUE %C: SERONT\n\PERDUES !\nContinuer avec le formatage ? (O/N) ?"
+STRING_YN_FORMAT       "\nATTENTION, TOUTES LES DONNÉES SUR LE DISQUE %C: SERONT\n\
+PERDUES !\nContinuer avec le formatage ? (O/N) ?"
 
 STRING_YES_NO_FAQ      "ON"
 

@@ -138,16 +138,8 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     /* Loading the kernel interface of directx for win32k */
 
-    DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
-    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys");
-    if ( ghDxGraphics == NULL)
-    {
-        DPRINT1("Warning: dxkrnl.sys not found\n");
-        /* try loading vista dx kernel */
-        DPRINT1("Warning: trying loading xp/2003/reactos dxg.sys\n");
-        ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
-    }
-
+    DPRINT1("Warning: trying loading xp/2003/windows7/reactos dxg.sys\n");
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
     if ( ghDxGraphics == NULL)
     {
         Status = STATUS_DLL_NOT_FOUND;

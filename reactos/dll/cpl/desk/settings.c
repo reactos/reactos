@@ -11,38 +11,38 @@
 #include "desk.h"
 #include "monslctl.h"
 
-typedef struct _GLOBAL_DATA
+typedef struct _DATA
 {
 	PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
 	PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
 	HBITMAP hSpectrumBitmaps[NUM_SPECTRUM_BITMAPS];
 	int cxSource[NUM_SPECTRUM_BITMAPS];
 	int cySource[NUM_SPECTRUM_BITMAPS];
-} GLOBAL_DATA, *PGLOBAL_DATA;
+} DATA, *PDATA;
 
 
 static VOID
-UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
+UpdateDisplay(IN HWND hwndDlg, PDATA pData, IN BOOL bUpdateThumb)
 {
 	TCHAR Buffer[64];
 	TCHAR Pixel[64];
 	DWORD index;
 
 	LoadString(hApplet, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
-	_stprintf(Buffer, Pixel, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
+	_stprintf(Buffer, Pixel, pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
 
-	for (index = 0; index < pGlobalData->CurrentDisplayDevice->ResolutionsCount; index++)
+	for (index = 0; index < pData->CurrentDisplayDevice->ResolutionsCount; index++)
 	{
-		if (pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
-		    pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
+		if (pData->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
+		    pData->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
 		{
 			if (bUpdateThumb)
 				SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETPOS, TRUE, index);
 			break;
 		}
 	}
-	if (LoadString(hApplet, (2900 + pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
+	if (LoadString(hApplet, (2900 + pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SELECTSTRING, (WPARAM)-1, (LPARAM)Buffer);
 }
 
@@ -140,7 +140,7 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 }
 
 static BOOL
-AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN const DISPLAY_DEVICE *DisplayDevice)
+AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
 {
 	PDISPLAY_DEVICE_ENTRY newEntry = NULL;
 	LPTSTR description = NULL;
@@ -216,8 +216,8 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN const DISPLAY_DEVICE *DisplayDe
 	newEntry->DeviceKey = key;
 	newEntry->DeviceID = devid;
 	newEntry->DeviceStateFlags = DisplayDevice->StateFlags;
-	newEntry->Flink = pGlobalData->DisplayDeviceList;
-	pGlobalData->DisplayDeviceList = newEntry;
+	newEntry->Flink = pData->DisplayDeviceList;
+	pData->DisplayDeviceList = newEntry;
 	return TRUE;
 
 ByeBye:
@@ -247,12 +247,12 @@ ByeBye:
 }
 
 static VOID
-OnDisplayDeviceChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
+OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDATA pData, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
 {
 	PSETTINGS_ENTRY Current;
 	DWORD index;
 
-	pGlobalData->CurrentDisplayDevice = pDeviceEntry; /* Update global variable */
+	pData->CurrentDisplayDevice = pDeviceEntry; /* Update variable */
 
 	/* Fill color depths combo box */
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_RESETCONTENT, 0, 0);
@@ -274,7 +274,7 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN PDISPLAY
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_CLEARTICS, TRUE, 0);
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETRANGE, TRUE, MAKELONG(0, pDeviceEntry->ResolutionsCount - 1));
 
-	UpdateDisplay(hwndDlg, pGlobalData, TRUE);
+	UpdateDisplay(hwndDlg, pData, TRUE);
 }
 
 static VOID
@@ -285,22 +285,22 @@ OnInitDialog(IN HWND hwndDlg)
 	DWORD iDevNum = 0;
 	DWORD i;
 	DISPLAY_DEVICE displayDevice;
-	PGLOBAL_DATA pGlobalData;
+	PDATA pData;
 
-	pGlobalData = HeapAlloc(GetProcessHeap(), 0, sizeof(GLOBAL_DATA));
-	if (pGlobalData == NULL)
+	pData = HeapAlloc(GetProcessHeap(), 0, sizeof(DATA));
+	if (pData == NULL)
 		return;
 
-	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
 
 	/* Get video cards list */
-	pGlobalData->DisplayDeviceList = NULL;
+	pData->DisplayDeviceList = NULL;
 	displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
 	while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
 	{
 		if ((displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0)
 		{
-			if (AddDisplayDevice(pGlobalData, &displayDevice))
+			if (AddDisplayDevice(pData, &displayDevice))
 				Result++;
 		}
 		iDevNum++;
@@ -316,7 +316,7 @@ OnInitDialog(IN HWND hwndDlg)
 		ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM), SW_HIDE);
 
 		/* Do not initialize the color spectrum bitmaps */
-		memset(pGlobalData->hSpectrumBitmaps, 0, sizeof(pGlobalData->hSpectrumBitmaps));
+		memset(pData->hSpectrumBitmaps, 0, sizeof(pData->hSpectrumBitmaps));
 		return;
 	}
 	else if (Result == 1)
@@ -324,12 +324,12 @@ OnInitDialog(IN HWND hwndDlg)
 		MONSL_MONINFO monitors;
 
 		/* Single video adapter */
-		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
-		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
+		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pData->DisplayDeviceList->DeviceDescription);
+		OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
 
 		monitors.Position.x = monitors.Position.y = 0;
-		monitors.Size.cx = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
-		monitors.Size.cy = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+		monitors.Size.cx = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+		monitors.Size.cy = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
 		monitors.Flags = 0;
 		SendDlgItemMessage(hwndDlg,
 				   IDC_SETTINGS_MONSEL,
@@ -342,8 +342,8 @@ OnInitDialog(IN HWND hwndDlg)
 		PMONSL_MONINFO pMonitors;
 		DWORD i;
 
-		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
-		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
+		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pData->DisplayDeviceList->DeviceDescription);
+		OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
 
 		pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
 		if (pMonitors)
@@ -353,8 +353,8 @@ OnInitDialog(IN HWND hwndDlg)
 			{
 				pMonitors[i].Position.x = hack * i;
 				pMonitors[i].Position.y = 0;
-				pMonitors[i].Size.cx = pGlobalData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
-				pMonitors[i].Size.cy = pGlobalData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
+				pMonitors[i].Size.cx = pData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
+				pMonitors[i].Size.cy = pData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
 				pMonitors[i].Flags = 0;
 			}
 
@@ -371,27 +371,27 @@ OnInitDialog(IN HWND hwndDlg)
 	/* Initialize the color spectrum bitmaps */
 	for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
 	{
-		pGlobalData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+		pData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-		if (pGlobalData->hSpectrumBitmaps[i] != NULL)
+		if (pData->hSpectrumBitmaps[i] != NULL)
 		{
-			if (GetObjectW(pGlobalData->hSpectrumBitmaps[i], sizeof(BITMAP), &bitmap) != 0)
+			if (GetObjectW(pData->hSpectrumBitmaps[i], sizeof(BITMAP), &bitmap) != 0)
 			{
-				pGlobalData->cxSource[i] = bitmap.bmWidth;
-				pGlobalData->cySource[i] = bitmap.bmHeight;
+				pData->cxSource[i] = bitmap.bmWidth;
+				pData->cySource[i] = bitmap.bmHeight;
 			}
 			else
 			{
-				pGlobalData->cxSource[i] = 0;
-				pGlobalData->cySource[i] = 0;
+				pData->cxSource[i] = 0;
+				pData->cySource[i] = 0;
 			}
 		}
 	}
 }
 
-/* Get the ID for GLOBAL_DATA::hSpectrumBitmaps */
+/* Get the ID for DATA::hSpectrumBitmaps */
 static VOID
-ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_DATA pGlobalData)
+ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PDATA pData)
 {
 	HDC hdcMem;
 	INT iBitmap;
@@ -408,22 +408,22 @@ ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_
 		default: iBitmap = 2;
 	}
 
-	if (SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]))
+	if (SelectObject(hdcMem, pData->hSpectrumBitmaps[iBitmap]))
 	{
 		StretchBlt(hDC,
 			   client->left, client->top,
 			   client->right - client->left,
 			   client->bottom - client->top,
 			   hdcMem, 0, 0,
-			   pGlobalData->cxSource[iBitmap],
-			   pGlobalData->cySource[iBitmap], SRCCOPY);
+			   pData->cxSource[iBitmap],
+			   pData->cySource[iBitmap], SRCCOPY);
 	}
 
 	DeleteDC(hdcMem);
 }
 
 static VOID
-OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
+OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 {
 	/* if new BPP is not compatible with resolution:
 	 * 1) try to find the nearest smaller matching resolution
@@ -443,10 +443,10 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 	hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
 	hSpectrumDC = GetDC(hSpectrumControl);
 	GetClientRect(hSpectrumControl, &client);
-	ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pGlobalData);
+	ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pData);
 
 	/* find if new parameters are valid */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings;
+	Current = pData->CurrentDisplayDevice->CurrentSettings;
 	if (dmNewBitsPerPel == Current->dmBitsPerPel)
 	{
 		/* no change */
@@ -461,11 +461,11 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 		while (Current != NULL)
 		{
 			if (Current->dmBitsPerPel == dmNewBitsPerPel
-			 && Current->dmPelsHeight == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight
-			 && Current->dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
+			 && Current->dmPelsHeight == pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight
+			 && Current->dmPelsWidth == pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
 			{
-				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData, TRUE);
+				pData->CurrentDisplayDevice->CurrentSettings = Current;
+				UpdateDisplay(hwndDlg, pData, TRUE);
 				return;
 			}
 			Current = Current->Blink;
@@ -477,11 +477,11 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 		while (Current != NULL)
 		{
 			if (Current->dmBitsPerPel == dmNewBitsPerPel
-			 && Current->dmPelsHeight == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight
-			 && Current->dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
+			 && Current->dmPelsHeight == pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight
+			 && Current->dmPelsWidth == pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth)
 			{
-				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData, TRUE);
+				pData->CurrentDisplayDevice->CurrentSettings = Current;
+				UpdateDisplay(hwndDlg, pData, TRUE);
 				return;
 			}
 			Current = Current->Flink;
@@ -489,26 +489,26 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 	}
 
 	/* search smaller resolution compatible with current color depth */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings->Blink;
+	Current = pData->CurrentDisplayDevice->CurrentSettings->Blink;
 	while (Current != NULL)
 	{
 		if (Current->dmBitsPerPel == dmNewBitsPerPel)
 		{
-			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData, TRUE);
+			pData->CurrentDisplayDevice->CurrentSettings = Current;
+			UpdateDisplay(hwndDlg, pData, TRUE);
 			return;
 		}
 		Current = Current->Blink;
 	}
 
 	/* search bigger resolution compatible with current color depth */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings->Flink;
+	Current = pData->CurrentDisplayDevice->CurrentSettings->Flink;
 	while (Current != NULL)
 	{
 		if (Current->dmBitsPerPel == dmNewBitsPerPel)
 		{
-			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData, TRUE);
+			pData->CurrentDisplayDevice->CurrentSettings = Current;
+			UpdateDisplay(hwndDlg, pData, TRUE);
 			return;
 		}
 		Current = Current->Flink;
@@ -518,7 +518,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 }
 
 static VOID
-OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPosition,
+OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
                     IN BOOL bUpdateThumb)
 {
 	/* if new resolution is not compatible with color depth:
@@ -526,11 +526,11 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 	 * 2) otherwise, get the nearest smaller color depth
 	 */
 	PSETTINGS_ENTRY Current;
-	DWORD dmNewPelsHeight = pGlobalData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsHeight;
-	DWORD dmNewPelsWidth = pGlobalData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsWidth;
+	DWORD dmNewPelsHeight = pData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsHeight;
+	DWORD dmNewPelsWidth = pData->CurrentDisplayDevice->Resolutions[NewPosition].dmPelsWidth;
 
 	/* find if new parameters are valid */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings;
+	Current = pData->CurrentDisplayDevice->CurrentSettings;
 	if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 	{
 		/* no change */
@@ -546,10 +546,10 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 		{
 			if (Current->dmPelsHeight == dmNewPelsHeight
 			 && Current->dmPelsWidth == dmNewPelsWidth
-			 && Current->dmBitsPerPel == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
+			 && Current->dmBitsPerPel == pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
 			{
-				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
+				pData->CurrentDisplayDevice->CurrentSettings = Current;
+				UpdateDisplay(hwndDlg, pData, bUpdateThumb);
 				return;
 			}
 			Current = Current->Blink;
@@ -562,10 +562,10 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 		{
 			if (Current->dmPelsHeight == dmNewPelsHeight
 			 && Current->dmPelsWidth == dmNewPelsWidth
-			 && Current->dmBitsPerPel == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
+			 && Current->dmBitsPerPel == pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel)
 			{
-				pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-				UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
+				pData->CurrentDisplayDevice->CurrentSettings = Current;
+				UpdateDisplay(hwndDlg, pData, bUpdateThumb);
 				return;
 			}
 			Current = Current->Flink;
@@ -573,26 +573,26 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 	}
 
 	/* search bigger color depth compatible with current resolution */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings->Flink;
+	Current = pData->CurrentDisplayDevice->CurrentSettings->Flink;
 	while (Current != NULL)
 	{
 		if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 		{
-			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
+			pData->CurrentDisplayDevice->CurrentSettings = Current;
+			UpdateDisplay(hwndDlg, pData, bUpdateThumb);
 			return;
 		}
 		Current = Current->Flink;
 	}
 
 	/* search smaller color depth compatible with current resolution */
-	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings->Blink;
+	Current = pData->CurrentDisplayDevice->CurrentSettings->Blink;
 	while (Current != NULL)
 	{
 		if (dmNewPelsHeight == Current->dmPelsHeight && dmNewPelsWidth == Current->dmPelsWidth)
 		{
-			pGlobalData->CurrentDisplayDevice->CurrentSettings = Current;
-			UpdateDisplay(hwndDlg, pGlobalData, bUpdateThumb);
+			pData->CurrentDisplayDevice->CurrentSettings = Current;
+			UpdateDisplay(hwndDlg, pData, bUpdateThumb);
 			return;
 		}
 		Current = Current->Blink;
@@ -625,10 +625,10 @@ SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
 INT_PTR CALLBACK
 SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
 {
-	PGLOBAL_DATA pGlobalData;
+	PDATA pData;
 	TCHAR Message[1024], Title[256];
 
-	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+	pData = (PDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
 	switch(uMsg)
 	{
@@ -643,7 +643,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
 
 			if (lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
-				ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
+				ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pData);
 			break;
 		}
 		case WM_COMMAND:
@@ -652,9 +652,9 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			DWORD command   = HIWORD(wParam);
 
 			if (controlId == IDC_SETTINGS_ADVANCED && command == BN_CLICKED)
-				DisplayAdvancedSettings(hwndDlg, pGlobalData->CurrentDisplayDevice);
+				DisplayAdvancedSettings(hwndDlg, pData->CurrentDisplayDevice);
 			else if (controlId == IDC_SETTINGS_BPP && command == CBN_SELCHANGE)
-				OnBPPChanged(hwndDlg, pGlobalData);
+				OnBPPChanged(hwndDlg, pData);
 			break;
 		}
 		case WM_HSCROLL:
@@ -670,12 +670,12 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				case TB_ENDTRACK:
 				{
 					DWORD newPosition = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_GETPOS, 0, 0);
-					OnResolutionChanged(hwndDlg, pGlobalData, newPosition, TRUE);
+					OnResolutionChanged(hwndDlg, pData, newPosition, TRUE);
 					break;
 				}
 
 				case TB_THUMBTRACK:
-					OnResolutionChanged(hwndDlg, pGlobalData, HIWORD(wParam), FALSE);
+					OnResolutionChanged(hwndDlg, pData, HIWORD(wParam), FALSE);
 					break;
 			}
 			break;
@@ -685,9 +685,9 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			LPNMHDR lpnm = (LPNMHDR)lParam;
 			if (lpnm->code == (UINT)PSN_APPLY)
 			{
-				if (pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth != pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsWidth
-				 || pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight != pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsHeight
-				 || pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel != pGlobalData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel)
+				if (pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth != pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth
+				 || pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight != pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight
+				 || pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel != pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel)
 				{
 					/* FIXME: Need to test changes */
 					/* Apply new settings */
@@ -695,13 +695,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 					DEVMODE devmode;
 					RtlZeroMemory(&devmode, sizeof(DEVMODE));
 					devmode.dmSize = (WORD)sizeof(DEVMODE);
-					devmode.dmPelsWidth = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
-					devmode.dmPelsHeight = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
-					devmode.dmBitsPerPel = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
-					devmode.dmDisplayFrequency = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency;
+					devmode.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+					devmode.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+					devmode.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
+					devmode.dmDisplayFrequency = pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency;
 					devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
 					rc = ChangeDisplaySettingsEx(
-						pGlobalData->CurrentDisplayDevice->DeviceName,
+						pData->CurrentDisplayDevice->DeviceName,
 						&devmode,
 						NULL,
 						CDS_UPDATEREGISTRY,
@@ -709,9 +709,9 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 					switch (rc)
 					{
 						case DISP_CHANGE_SUCCESSFUL:
-							pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
-							pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
-							pGlobalData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
+							pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+							pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+							pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
 							break;
 						case DISP_CHANGE_RESTART:
 							LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
@@ -833,7 +833,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 		case WM_DESTROY:
 		{
 			DWORD i;
-			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
+			PDISPLAY_DEVICE_ENTRY Current = pData->DisplayDeviceList;
 
 			while (Current != NULL)
 			{
@@ -851,11 +851,11 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			for (i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
 			{
-				if (pGlobalData->hSpectrumBitmaps[i])
-					DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
+				if (pData->hSpectrumBitmaps[i])
+					DeleteObject(pData->hSpectrumBitmaps[i]);
 			}
 
-			HeapFree(GetProcessHeap(), 0, pGlobalData);
+			HeapFree(GetProcessHeap(), 0, pData);
 		}
 	}
 	return FALSE;

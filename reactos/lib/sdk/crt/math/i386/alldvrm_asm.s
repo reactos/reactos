@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl __alldvrm
- 
-.intel_syntax noprefix
 
+#include <asm.inc>
+
+PUBLIC __alldvrm
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 __alldvrm:
         push    edi
@@ -88,7 +89,7 @@ __alldvrm:
 
         mov     eax,DVNDHI // hi word of a
         or      eax,eax         // test to see if signed
-        jge     short ....L1        // skip rest if a is already positive
+        jge     short .L1        // skip rest if a is already positive
         inc     edi             // complement result sign flag
         inc     ebp             // complement result sign flag
         mov     edx,DVNDLO // lo word of a
@@ -97,10 +98,10 @@ __alldvrm:
         sbb     eax,0
         mov     DVNDHI,eax // save positive value
         mov     DVNDLO,edx
-....L1:
+.L1:
         mov     eax,DVSRHI // hi word of b
         or      eax,eax         // test to see if signed
-        jge     short ....L2        // skip rest if b is already positive
+        jge     short .L2        // skip rest if b is already positive
         inc     edi             // complement the result sign flag
         mov     edx,DVSRLO // lo word of a
         neg     eax             // make b positive
@@ -108,7 +109,7 @@ __alldvrm:
         sbb     eax,0
         mov     DVSRHI,eax // save positive value
         mov     DVSRLO,edx
-....L2:
+.L2:
 
 //
 // Now do the divide.  First look to see if the divisor is less than 4194304K.
@@ -119,7 +120,7 @@ __alldvrm:
 //
 
         or      eax,eax         // check to see if divisor < 4194304K
-        jnz     short ....L3        // nope, gotta do this the hard way
+        jnz     short .L3        // nope, gotta do this the hard way
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
@@ -137,24 +138,24 @@ __alldvrm:
         mov     eax,esi         // set up low word of quotient
         mul     dword ptr DVSRLO // LOWORD(QUOT) * DVSR
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jmp     short ....L4        // complete remainder calculation
+        jmp     short .L4        // complete remainder calculation
 
 //
 // Here we do it the hard way.  Remember, eax contains the high word of DVSR
 //
 
-....L3:
+.L3:
         mov     ebx,eax         // ebx:ecx <- divisor
         mov     ecx,DVSRLO
         mov     edx,DVNDHI // edx:eax <- dividend
         mov     eax,DVNDLO
-....L5:
+.L5:
         shr     ebx,1           // shift divisor right one bit
         rcr     ecx,1
         shr     edx,1           // shift dividend right one bit
         rcr     eax,1
         or      ebx,ebx
-        jnz     short ....L5        // loop until divisor < 4194304K
+        jnz     short .L5        // loop until divisor < 4194304K
         div     ecx             // now divide, ignore remainder
         mov     esi,eax         // save quotient
 
@@ -170,7 +171,7 @@ __alldvrm:
         mov     eax,DVSRLO
         mul     esi             // QUOT * DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jc      short ....L6        // carry means Quotient is off by 1
+        jc      short .L6        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
@@ -179,18 +180,18 @@ __alldvrm:
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
-        ja      short ....L6        // if result > original, do subtract
-        jb      short ....L7        // if result < original, we are ok
+        ja      short .L6        // if result > original, do subtract
+        jb      short .L7        // if result < original, we are ok
         cmp     eax,DVNDLO // hi words are equal, compare lo words
-        jbe     short ....L7        // if less or equal we are ok, else subtract
-....L6:
+        jbe     short .L7        // if less or equal we are ok, else subtract
+.L6:
         dec     esi             // subtract 1 from quotient
         sub     eax,DVSRLO // subtract divisor from result
         sbb     edx,DVSRHI
-....L7:
+.L7:
         xor     ebx,ebx         // ebx:esi <- quotient
 
-....L4:
+.L4:
 //
 // Calculate remainder by subtracting the result from the original dividend.
 // Since the result is already in a register, we will do the subtract in the
@@ -208,7 +209,7 @@ __alldvrm:
 //
 
         dec     ebp             // check result sign flag
-        jns     short ....L9        // result is ok, set up the quotient
+        jns     short .L9        // result is ok, set up the quotient
         neg     edx             // otherwise, negate the result
         neg     eax
         sbb     edx,0
@@ -216,7 +217,7 @@ __alldvrm:
 //
 // Now we need to get the quotient into edx:eax and the remainder into ebx:ecx.
 //
-....L9:
+.L9:
         mov     ecx,edx
         mov     edx,ebx
         mov     ebx,ecx
@@ -229,7 +230,7 @@ __alldvrm:
 //
 
         dec     edi             // check to see if result is negative
-        jnz     short ....L8        // if EDI == 0, result should be negative
+        jnz     short .L8        // if EDI == 0, result should be negative
         neg     edx             // otherwise, negate the result
         neg     eax
         sbb     edx,0
@@ -238,9 +239,11 @@ __alldvrm:
 // Restore the saved registers and return.
 //
 
-....L8:
+.L8:
         pop     ebp
         pop     esi
         pop     edi
 
         ret     16
+
+END

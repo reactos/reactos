@@ -290,36 +290,30 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
                                        NULL, /* PhysicalDeviceObject OPTIONAL */
                                        0, /* Flags */
                                        &SymbolicLinkList);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            DPRINT("IoGetDeviceInterfaces() failed with status 0x%08lx\n",
-              Status);
-            ExFreePoolWithTag(Entry, TAG_PNP_NOTIFY);
-            ObDereferenceObject(DriverObject);
-            return Status;
+            /* Enumerate SymbolicLinkList */
+            NotificationInfos.Version = 1;
+            NotificationInfos.Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
+            RtlCopyMemory(&NotificationInfos.Event,
+                          &GUID_DEVICE_INTERFACE_ARRIVAL,
+                          sizeof(GUID));
+            RtlCopyMemory(&NotificationInfos.InterfaceClassGuid,
+                          EventCategoryData,
+                          sizeof(GUID));
+            NotificationInfos.SymbolicLinkName = &SymbolicLinkU;
+
+            for (SymbolicLink = SymbolicLinkList;
+                 *SymbolicLink;
+                 SymbolicLink += wcslen(SymbolicLink) + 1)
+            {
+                RtlInitUnicodeString(&SymbolicLinkU, SymbolicLink);
+                DPRINT("Calling callback routine for %S\n", SymbolicLink);
+                (*CallbackRoutine)(&NotificationInfos, Context);
+            }
+
+            ExFreePool(SymbolicLinkList);
         }
-
-        /* Enumerate SymbolicLinkList */
-        NotificationInfos.Version = 1;
-        NotificationInfos.Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
-        RtlCopyMemory(&NotificationInfos.Event,
-                      &GUID_DEVICE_INTERFACE_ARRIVAL,
-                      sizeof(GUID));
-        RtlCopyMemory(&NotificationInfos.InterfaceClassGuid,
-                      EventCategoryData,
-                      sizeof(GUID));
-        NotificationInfos.SymbolicLinkName = &SymbolicLinkU;
-
-        for (SymbolicLink = SymbolicLinkList;
-             *SymbolicLink;
-             SymbolicLink += wcslen(SymbolicLink) + 1)
-        {
-            RtlInitUnicodeString(&SymbolicLinkU, SymbolicLink);
-            DPRINT("Calling callback routine for %S\n", SymbolicLink);
-            (*CallbackRoutine)(&NotificationInfos, Context);
-        }
-
-        ExFreePool(SymbolicLinkList);
     }
 
     Entry->PnpNotificationProc = CallbackRoutine;

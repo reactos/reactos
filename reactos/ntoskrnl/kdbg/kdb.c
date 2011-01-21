@@ -1737,6 +1737,7 @@ continue_execution:
 
 VOID
 NTAPI
+INIT_FUNCTION
 KdbpGetCommandLineSettings(
     PCHAR p1)
 {

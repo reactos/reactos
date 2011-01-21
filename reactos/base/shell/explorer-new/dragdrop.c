@@ -152,7 +152,7 @@ CreateDropTarget(IN HWND hwndTarget,
         {
             CopyMemory(&This->Callbacks,
                        Callbacks,
-                       sizeof(Callbacks));
+                       sizeof(*Callbacks));
         }
 
         hr = CoCreateInstance(&CLSID_DragDropHelper,

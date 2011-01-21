@@ -515,6 +515,24 @@ typedef struct _PCI_IPI_CONTEXT
 } PCI_IPI_CONTEXT, *PPCI_IPI_CONTEXT;
 
 //
+// PCI Legacy Device Location Cache
+//
+typedef struct _PCI_LEGACY_DEVICE
+{
+    struct _PCI_LEGACY_DEVICE *Next;
+    PDEVICE_OBJECT DeviceObject;
+    ULONG BusNumber;
+    ULONG SlotNumber;
+    UCHAR InterruptLine;
+    UCHAR InterruptPin;
+    UCHAR BaseClass;
+    UCHAR SubClass;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    ROUTING_TOKEN RoutingToken;
+    PPCI_PDO_EXTENSION PdoExtension;
+} PCI_LEGACY_DEVICE, *PPCI_LEGACY_DEVICE;
+
+//
 // IRP Dispatch Routines
 //
 NTSTATUS
@@ -1560,6 +1578,14 @@ PciSetResources(
     IN BOOLEAN SomethingSomethingDarkSide
 );
 
+NTSTATUS
+NTAPI
+PciBuildRequirementsList(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData,
+    OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer
+);
+
 //
 // Identification Functions
 //
@@ -1732,6 +1758,33 @@ NTAPI
 PPBridge_ChangeResourceSettings(
     IN PPCI_PDO_EXTENSION PdoExtension,
     IN PPCI_COMMON_HEADER PciData
+);
+
+//
+// Bus Number Routines
+//
+BOOLEAN
+NTAPI
+PciAreBusNumbersConfigured(
+    IN PPCI_PDO_EXTENSION PdoExtension
+);
+
+//
+// Routine Interface
+//
+NTSTATUS
+NTAPI
+PciCacheLegacyDeviceRouting(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN UCHAR InterruptLine, 
+    IN UCHAR InterruptPin, 
+    IN UCHAR BaseClass, 
+    IN UCHAR SubClass, 
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    OUT PDEVICE_OBJECT *pFoundDeviceObject
 );
 
 //

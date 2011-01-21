@@ -228,7 +228,7 @@ IntRegisterClassAtom(IN PUNICODE_STRING ClassName,
         /* FIXME - Don't limit to 64 characters! use SEH when allocating memory! */
         if (ClassName->Length / sizeof(WCHAR) >= sizeof(szBuf) / sizeof(szBuf[0]))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return (RTL_ATOM)0;
         }
 
@@ -557,7 +557,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
         }
         else
         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         }
     }
     return Class;
@@ -832,7 +832,7 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
     if (!Ret)
     {
         DPRINT1("Failed to move process classes from desktop 0x%p to the shared heap!\n", Desktop);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
 
     return Ret;
@@ -1034,7 +1034,7 @@ NoMem:
 
         IntDeregisterClassAtom(Atom);
 
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
 
     return Class;
@@ -1088,7 +1088,7 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
             /* FIXME - Don't limit to 64 characters! use SEH when allocating memory! */
             if (ClassName->Length / sizeof(WCHAR) >= sizeof(szBuf) / sizeof(szBuf[0]))
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return (RTL_ATOM)0;
             }
 
@@ -1117,7 +1117,7 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
         {
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
             {
-                SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+                EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             }
             else
             {
@@ -1194,7 +1194,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              Link);
         if (Class == NULL)
         {
-            SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+            EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
         }else{DPRINT("Step 4: 0x%x\n",Class );}
 
@@ -1240,7 +1240,7 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
          DPRINT1("Class \"%wZ\" not found\n", ClassName);
       }
 
-      SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
+      EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
       return NULL;
    }
    DPRINT("ClassAtom %x\n", ClassAtom);
@@ -1289,7 +1289,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
        {
           // local class already exists
           DPRINT("Local Class 0x%p does already exist!\n", ClassAtom);
-          SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
+          EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
           return (RTL_ATOM)0;
        }
 
@@ -1303,7 +1303,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
           if (Class != NULL && Class->Global)
           {
              DPRINT("Global Class 0x%p does already exist!\n", ClassAtom);
-             SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
+             EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
              return (RTL_ATOM)0;
           }
        }
@@ -1373,7 +1373,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
         Class->pclsClone != NULL)
     {
         DPRINT("UserUnregisterClass: Class has a Window. Ct %d : Clone 0x%x\n", Class->cWndReferenceCount, Class->pclsClone);
-        SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
+        EngSetLastError(ERROR_CLASS_HAS_WINDOWS);
         return FALSE;
     }
 
@@ -1445,7 +1445,7 @@ UserGetClassName(IN PCLS Class,
                                                USERTAG_CLASS);
                 if (szTemp == NULL)
                 {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                     _SEH2_LEAVE;
                 }
 
@@ -1589,7 +1589,7 @@ IntSetClassMenuName(IN PCLS Class,
             }
         }
         else
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
     else
     {
@@ -1640,7 +1640,7 @@ UserSetClassLongPtr(IN PCLS Class,
         if (Index + sizeof(ULONG_PTR) < Index ||
             Index + sizeof(ULONG_PTR) > Class->cbclsExtra)
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
         }
 
@@ -1680,7 +1680,7 @@ UserSetClassLongPtr(IN PCLS Class,
             break;
 
         case GCL_CBCLSEXTRA:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
 
         case GCLP_HBRBACKGROUND:
@@ -1803,7 +1803,7 @@ UserSetClassLongPtr(IN PCLS Class,
         }
 
         default:
-            SetLastWin32Error(ERROR_INVALID_INDEX);
+            EngSetLastError(ERROR_INVALID_INDEX);
             break;
     }
 
@@ -1982,7 +1982,7 @@ NtUserRegisterClassExWOW(
     if (Flags & ~(CSF_ANSIPROC))
     {
         DPRINT1("NtUserRegisterClassExWOW Bad Flags!\n");
-        SetLastWin32Error(ERROR_INVALID_FLAGS);
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return Ret;
     }
 
@@ -2059,7 +2059,7 @@ NtUserRegisterClassExWOW(
         {
             DPRINT1("NtUserRegisterClassExWOW MenuName Error!\n");
 InvalidParameter:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             _SEH2_LEAVE;
         }
 
@@ -2102,7 +2102,7 @@ NtUserSetClassLong(HWND hWnd,
                    BOOL Ansi)
 {
     PPROCESSINFO pi;
-    PWINDOW_OBJECT Window;
+    PWND Window;
     ULONG_PTR Ret = 0;
 
     UserEnterExclusive();
@@ -2112,9 +2112,9 @@ NtUserSetClassLong(HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        if (Window->pti->ppi != pi)
+        if (Window->head.pti->ppi != pi)
         {
-            SetLastWin32Error(ERROR_ACCESS_DENIED);
+            EngSetLastError(ERROR_ACCESS_DENIED);
             goto Cleanup;
         }
 
@@ -2146,7 +2146,7 @@ NtUserSetClassLong(HWND hWnd,
                     else if (Offset == GCLP_MENUNAME && !IS_INTRESOURCE(Value.Buffer))
                     {
 InvalidParameter:
-                        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                        EngSetLastError(ERROR_INVALID_PARAMETER);
                         _SEH2_LEAVE;
                     }
                 }
@@ -2154,7 +2154,7 @@ InvalidParameter:
                 dwNewLong = (ULONG_PTR)&Value;
             }
 
-            Ret = UserSetClassLongPtr(Window->Wnd->pcls,
+            Ret = UserSetClassLongPtr(Window->pcls,
                                       Offset,
                                       dwNewLong,
                                       Ansi);
@@ -2215,7 +2215,7 @@ NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
             if (!IS_ATOM(CapturedClassName.Buffer))
             {
 InvalidParameter:
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 _SEH2_LEAVE;
             }
         }
@@ -2274,7 +2274,9 @@ NtUserGetClassInfo(
 
       if (CapturedClassName.Length & 1)
       {
-         goto InvalidParameter;
+         EngSetLastError(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+         _SEH2_LEAVE;
       }
 
       if (CapturedClassName.Length != 0)
@@ -2297,20 +2299,14 @@ NtUserGetClassInfo(
          if (!IS_ATOM(CapturedClassName.Buffer))
          {
             ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
-            goto InvalidParameter;
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            Ret = FALSE;
+            _SEH2_LEAVE;
          }
 
          SafeClassName.Buffer = CapturedClassName.Buffer;
          SafeClassName.Length = 0;
          SafeClassName.MaximumLength = 0;
-      }
-
-      if (ProbeForReadUint(&lpWndClassEx->cbSize) != sizeof(WNDCLASSEXW))
-      {
-InvalidParameter:
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         Ret = FALSE;
-         _SEH2_LEAVE;
       }
 
       ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
@@ -2319,7 +2315,7 @@ InvalidParameter:
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      SetLastNtError(_SEH2_GetExceptionCode());
       Ret = FALSE;
    }
    _SEH2_END;
@@ -2346,7 +2342,7 @@ InvalidParameter:
       }
       else
       {
-         SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+         EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
          Ret = FALSE;
       }
    }
@@ -2367,7 +2363,7 @@ InvalidParameter:
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
       Ret = FALSE;
    }
    _SEH2_END;
@@ -2383,7 +2379,7 @@ NtUserGetClassName (IN HWND hWnd,
                     OUT PUNICODE_STRING ClassName,
                     IN BOOL Ansi)
 {
-    PWINDOW_OBJECT Window;
+    PWND Window;
     UNICODE_STRING CapturedClassName;
     INT Ret = 0;
 
@@ -2398,7 +2394,7 @@ NtUserGetClassName (IN HWND hWnd,
             CapturedClassName = *ClassName;
 
             /* get the class name */
-            Ret = UserGetClassName(Window->Wnd->pcls,
+            Ret = UserGetClassName(Window->pcls,
                                    &CapturedClassName,
                                    Ansi);
 
@@ -2469,7 +2465,7 @@ NtUserGetWOWClass(HINSTANCE hInstance,
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+     EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
      Hit = TRUE;
   }
   _SEH2_END;
@@ -2483,7 +2479,7 @@ NtUserGetWOWClass(HINSTANCE hInstance,
                                    NULL);
      if (!ClassAtom)
      {
-        SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+        EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
      }
   }
 

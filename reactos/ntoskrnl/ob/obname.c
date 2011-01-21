@@ -33,6 +33,7 @@ UNICODE_STRING ObpDosDevicesShortName =
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 ObpCreateDosDevicesDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;

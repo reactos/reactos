@@ -683,14 +683,12 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
                             REG_SZ,
                             (PVOID)(LanguageId + 4),
                             8 * sizeof(PWCHAR));
+    NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
         return FALSE;
     }
-
-    NtClose(KeyHandle);
 
     return TRUE;
 }
@@ -989,11 +987,11 @@ SetGeoID(PWCHAR Id)
                                    0,
                                    REG_SZ,
                                    (PVOID)Id,
-                                   (wcslen(Id) * sizeof(WCHAR)));
+                                   (wcslen(Id) + 1) * sizeof(WCHAR));
+    NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
          DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
-         NtClose(KeyHandle);
          return FALSE;
     }
 

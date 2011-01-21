@@ -367,18 +367,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return TRUE;
 }
 
-VOID
-NTAPI
-MmUpdatePageDir(IN PEPROCESS Process,
-                IN PVOID Address,
-                IN ULONG Size)
-{
-    //
-    // Nothing to do
-    //
-    return;
-}
-
 NTSTATUS
 NTAPI
 Mmi386ReleaseMmInfo(IN PEPROCESS Process)
@@ -389,30 +377,6 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
     UNIMPLEMENTED;
     while (TRUE);
     return 0;
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG DirectoryTableBase)
-{
-    //
-    // Share the directory base with the idle process
-    //
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-    
-    //
-    // Initialize the Addresss Space
-    //
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
-    
-    //
-    // The process now has an address space
-    //
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
 }
 
 PULONG
@@ -870,7 +834,7 @@ MiInitPageDirectoryMap(VOID)
     BoundaryAddressMultiple.QuadPart = 0;
     BaseAddress = (PVOID)PTE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 0x1000000,
                                 PAGE_READWRITE,
@@ -885,7 +849,7 @@ MiInitPageDirectoryMap(VOID)
     //
     BaseAddress = (PVOID)PDE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 0x100000,
                                 PAGE_READWRITE,
@@ -900,7 +864,7 @@ MiInitPageDirectoryMap(VOID)
     //
     BaseAddress = (PVOID)HYPER_SPACE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 PAGE_SIZE,
                                 PAGE_READWRITE,

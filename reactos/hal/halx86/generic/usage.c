@@ -63,6 +63,7 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 #ifndef _MINIHAL_
 VOID
 NTAPI
+INIT_FUNCTION
 HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
                          OUT PULONG Scale,
                          OUT PLARGE_INTEGER Value)
@@ -102,6 +103,7 @@ HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpBuildPartialFromIdt(IN ULONG Entry,
                         IN PCM_PARTIAL_RESOURCE_DESCRIPTOR RawDescriptor,
                         IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor)
@@ -139,6 +141,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
                             IN PADDRESS_USAGE CurrentAddress,
                             IN ULONG Element,
@@ -206,6 +209,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpReportResourceUsage(IN PUNICODE_STRING HalName,
                         IN INTERFACE_TYPE InterfaceType)
 {
@@ -235,8 +239,9 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         if (!HalpGetInfoFromACPI)
         {
             /* No, so use our local table */
-            Port = HalpComPortIrqMapping[0][0];
-            for (i = 0; Port; i++)
+            for (i = 0, Port = HalpComPortIrqMapping[i][0];
+                 Port;
+                 i++, Port = HalpComPortIrqMapping[i][0])
             {
                 /* Is this the port we want? */
                 if (Port == (ULONG_PTR)KdComPortInUse)
@@ -248,9 +253,6 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
                                        PRIMARY_VECTOR_BASE,
                                        HIGH_LEVEL);
                 }
-                
-                /* Next port */
-                Port = HalpComPortIrqMapping[i][0];
             }
         }
     }
@@ -486,6 +488,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpRegisterVector(IN UCHAR Flags,
                    IN ULONG BusVector,
                    IN ULONG SystemVector,
@@ -502,6 +505,7 @@ HalpRegisterVector(IN UCHAR Flags,
 #ifndef _MINIHAL_
 VOID
 NTAPI
+INIT_FUNCTION
 HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN ULONG BusVector,
                            IN ULONG SystemVector,
@@ -509,6 +513,9 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN PVOID Handler,
                            IN KINTERRUPT_MODE Mode)
 {
+    /* Set the IDT_LATCHED flag for latched interrupts */
+    if (Mode == Latched) Flags |= IDT_LATCHED;
+    
     /* Register the vector */
     HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
 
@@ -521,6 +528,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpGetNMICrashFlag(VOID)
 {
     UNICODE_STRING ValueName;

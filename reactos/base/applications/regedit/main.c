@@ -20,7 +20,7 @@
 
 #include <regedit.h>
 
-BOOL ProcessCmdLine(LPSTR lpCmdLine);
+BOOL ProcessCmdLine(LPWSTR lpCmdLine);
 
 
 /*******************************************************************************
@@ -88,9 +88,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
     wcChild.hCursor = LoadCursor(0, IDC_ARROW),
-    wcChild.lpszClassName =  szChildClass,
-    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+            wcChild.lpszClassName =  szChildClass,
+                    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
+                                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
     RegisterClassEx(&wcChild); /* register child windows class */
 
@@ -107,13 +107,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     AclUiAvailable = InitializeAclUiDll();
     if(!AclUiAvailable)
     {
-      /* hide the Edit/Permissions... menu entry */
-      if(hEditMenu != NULL)
-      {
-        RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
-        /* remove the separator after the menu item */
-        RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
-      }
+        /* hide the Edit/Permissions... menu entry */
+        if(hEditMenu != NULL)
+        {
+            RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
+            /* remove the separator after the menu item */
+            RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
+        }
     }
 
     if(hEditMenu != NULL)
@@ -129,23 +129,24 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
-    if (!hFrameWnd) {
+    if (!hFrameWnd)
+    {
         return FALSE;
     }
 
     /* Create the status bar */
     hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS,
                                     _T(""), hFrameWnd, STATUS_WINDOW);
-    if (hStatusBar) {
+    if (hStatusBar)
+    {
         /* Create the status bar panes */
         SetupStatusBar(hFrameWnd, FALSE);
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
 
     /* Restore position */
-    if (RegQueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey,
-        _T("LastKey"),
-        szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+    if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"),
+                         szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
     {
         SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
     }
@@ -160,8 +161,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 /* we need to destroy the main menu before destroying the main window
    to avoid a memory leak */
 
-void DestroyMainMenu() {
-	DestroyMenu(hMenuFrame);
+void DestroyMainMenu()
+{
+    DestroyMenu(hMenuFrame);
 }
 
 /******************************************************************************/
@@ -176,39 +178,25 @@ void ExitInstance(HINSTANCE hInstance)
 
 BOOL TranslateChildTabMessage(MSG *msg)
 {
-  if (msg->message != WM_KEYDOWN) return FALSE;
-  if (msg->wParam != VK_TAB) return FALSE;
-  if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
-  PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
-  return TRUE;
+    if (msg->message != WM_KEYDOWN) return FALSE;
+    if (msg->wParam != VK_TAB) return FALSE;
+    if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
+    PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
+    return TRUE;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance,
+                      HINSTANCE hPrevInstance,
+                      LPWSTR    lpCmdLine,
+                      int       nCmdShow)
 {
     MSG msg;
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    /*
-        int hCrt;
-        FILE *hf;
-        AllocConsole();
-        hCrt = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-        hf = _fdopen(hCrt, "w");
-        *stdout = *hf;
-        setvbuf(stdout, NULL, _IONBF, 0);
-
-    	wprintf(L"command line exit, hInstance = %d\n", hInstance);
-    	getch();
-    	FreeConsole();
-        return 0;
-     */
-
-    if (ProcessCmdLine(lpCmdLine)) {
+    if (ProcessCmdLine(lpCmdLine))
+    {
         return 0;
     }
 
@@ -221,15 +209,18 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     hInst = hInstance;
 
     /* Perform application initialization */
-    if (!InitInstance(hInstance, nCmdShow)) {
+    if (!InitInstance(hInstance, nCmdShow))
+    {
         return FALSE;
     }
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
     /* Main message loop */
-    while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
+    while (GetMessage(&msg, (HWND)NULL, 0, 0))
+    {
         if (!TranslateAccelerator(hFrameWnd, hAccel, &msg)
-            && !TranslateChildTabMessage(&msg)) {
+                && !TranslateChildTabMessage(&msg))
+        {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

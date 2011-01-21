@@ -514,6 +514,21 @@ IopAssignDeviceResources(
     IN PDEVICE_NODE DeviceNode
 );
 
+NTSTATUS
+NTAPI
+IopCreateResourceListFromRequirements(
+    IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
+    OUT PCM_RESOURCE_LIST *ResourceList
+);
+
+NTSTATUS
+NTAPI
+IopDetectResourceConflict(
+     IN PCM_RESOURCE_LIST ResourceList,
+     IN BOOLEAN Silent,
+     OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor
+);
+
 //
 // PNP Routines
 //
@@ -739,6 +754,14 @@ BOOLEAN
 NTAPI
 IoInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+BOOLEAN
+NTAPI
+IopVerifyDiskSignature(
+    IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
+    IN PARC_DISK_SIGNATURE ArcDiskSignature,
+    OUT PULONG Signature
 );
 
 //
@@ -1132,6 +1155,20 @@ IopCloseFile(
     IN ULONG SystemHandleCount
 );
 
+PVOID
+NTAPI
+IoGetFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject
+);
+
+NTSTATUS
+NTAPI
+IoChangeFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject,
+    IN PVOID FilterContext,
+    IN BOOLEAN Define
+);
+
 //
 // I/O Timer Routines
 //
@@ -1163,6 +1200,23 @@ NTSTATUS
 NTAPI
 IopStartRamdisk(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+//
+// Configuration Routines
+//
+NTSTATUS
+NTAPI
+IopFetchConfigurationInformation(OUT PWSTR * SymbolicLinkList,
+                                 IN GUID Guid,
+                                 IN ULONG ExpectedInterfaces,
+                                 IN PULONG Interfaces
+);
+
+VOID
+NTAPI
+IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
+                                   IN PUNICODE_STRING OsLoaderPathName
 );
 
 //

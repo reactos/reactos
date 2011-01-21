@@ -13,10 +13,10 @@
 #include <include/window.h>
 
 HRGN FASTCALL
-VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
+VIS_ComputeVisibleRegion(PWND Window, BOOLEAN ClientArea,
    BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
 
 VOID FASTCALL
-co_VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
+co_VIS_WindowLayoutChanged(PWND Window, HRGN UncoveredRgn);
 
 /* EOF */

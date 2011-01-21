@@ -123,41 +123,41 @@ ClbWndProc(IN HWND hwnd,
     LRESULT Ret = 0;
 
     DPRINT1("ClbWndProc(0x%p, 0x%x, 0x%p, 0x%p)\n", hwnd, uMsg, wParam, lParam);
-    
+
     PrivData = (PCLB_PRIVATEDATA)GetWindowLongPtr(hwnd,
-                                                  0);
+               0);
     if (PrivData == NULL && uMsg != WM_CREATE)
     {
         goto HandleDefMsg;
     }
-    
+
     switch (uMsg)
     {
-        case WM_CREATE:
-            PrivData = HeapAlloc(GetProcessHeap(),
-                                 0,
-                                 sizeof(CLB_PRIVATEDATA));
-            if (PrivData == NULL)
-            {
-                Ret = (LRESULT)-1;
-                break;
-            }
-            PrivData->hwnd = hwnd;
+    case WM_CREATE:
+        PrivData = HeapAlloc(GetProcessHeap(),
+                             0,
+                             sizeof(CLB_PRIVATEDATA));
+        if (PrivData == NULL)
+        {
+            Ret = (LRESULT)-1;
             break;
+        }
+        PrivData->hwnd = hwnd;
+        break;
 
-        case WM_DESTROY:
-            HeapFree(GetProcessHeap(),
-                     0,
-                     PrivData);
-            break;
+    case WM_DESTROY:
+        HeapFree(GetProcessHeap(),
+                 0,
+                 PrivData);
+        break;
 
-        default:
+    default:
 HandleDefMsg:
-            Ret = DefWindowProc(hwnd,
-                                uMsg,
-                                wParam,
-                                lParam);
-            break;
+        Ret = DefWindowProc(hwnd,
+                            uMsg,
+                            wParam,
+                            lParam);
+        break;
     }
 
     return Ret;
@@ -171,32 +171,32 @@ ClbpStyleDlgProc(IN HWND hwndDlg,
                  IN LPARAM lParam)
 {
     INT_PTR Ret = FALSE;
-    
+
     DPRINT1("ClbpStyleDlgProc(0x%p, 0x%x, 0x%p, 0x%p)\n", hwndDlg, uMsg, wParam, lParam);
-    
+
     switch (uMsg)
     {
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                case IDCANCEL:
-                    EndDialog(hwndDlg,
-                              (INT_PTR)LOWORD(wParam));
-                    break;
-            }
-            break;
-
-        case WM_CLOSE:
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
             EndDialog(hwndDlg,
-                      IDCANCEL);
+                      (INT_PTR)LOWORD(wParam));
             break;
+        }
+        break;
 
-        case WM_INITDIALOG:
-            Ret = TRUE;
-            break;
+    case WM_CLOSE:
+        EndDialog(hwndDlg,
+                  IDCANCEL);
+        break;
+
+    case WM_INITDIALOG:
+        Ret = TRUE;
+        break;
     }
-    
+
     return Ret;
 }
 
@@ -230,7 +230,7 @@ CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo  OPTIONAL)
                ClbClassName);
 
         CustomControlInfo->Zero1 = 0;
-        
+
         wcscpy(CustomControlInfo->ClassName2,
                ClbClassName);
 
@@ -240,15 +240,15 @@ CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo  OPTIONAL)
 
         CustomControlInfo->Zero2 = 0;
         CustomControlInfo->Zero3 = 0;
-        
+
         CustomControlInfo->StylesCount = sizeof(ClbsSupportedStyles) / sizeof(ClbsSupportedStyles[0]);
         CustomControlInfo->SupportedStyles = ClbsSupportedStyles;
-        
+
         wcscpy(CustomControlInfo->Columns,
                ClbColumns);
 
         CustomControlInfo->ClbStyleW = ClbStyleW;
-        
+
         CustomControlInfo->Zero4 = 0;
         CustomControlInfo->Zero5 = 0;
         CustomControlInfo->Zero6 = 0;
@@ -267,43 +267,43 @@ DllMain(IN HINSTANCE hinstDLL,
 
     switch (dwReason)
     {
-        case DLL_PROCESS_ATTACH:
-        {
-            WNDCLASS ClbWndClass;
+    case DLL_PROCESS_ATTACH:
+    {
+        WNDCLASS ClbWndClass;
 
-            hDllInstance = hinstDLL;
-            
-            InitCommonControls();
-            
-            /* register the control's window class */
-            ClbWndClass.style = CS_GLOBALCLASS | CS_OWNDC;
-            ClbWndClass.lpfnWndProc = ClbWndProc;
-            ClbWndClass.cbClsExtra = 0;
-            ClbWndClass.cbWndExtra = sizeof(PCLB_PRIVATEDATA);
-            ClbWndClass.hInstance = hinstDLL,
-            ClbWndClass.hIcon = NULL;
-            ClbWndClass.hCursor = LoadCursor(NULL,
-                                             (LPWSTR)IDC_ARROW);
-            ClbWndClass.hbrBackground = NULL;
-            ClbWndClass.lpszMenuName = NULL;
-            ClbWndClass.lpszClassName = ClbClassName;
-            
-            if (!RegisterClass(&ClbWndClass))
-            {
-                Ret = FALSE;
-                break;
-            }
+        hDllInstance = hinstDLL;
+
+        InitCommonControls();
+
+        /* register the control's window class */
+        ClbWndClass.style = CS_GLOBALCLASS | CS_OWNDC;
+        ClbWndClass.lpfnWndProc = ClbWndProc;
+        ClbWndClass.cbClsExtra = 0;
+        ClbWndClass.cbWndExtra = sizeof(PCLB_PRIVATEDATA);
+        ClbWndClass.hInstance = hinstDLL,
+                    ClbWndClass.hIcon = NULL;
+        ClbWndClass.hCursor = LoadCursor(NULL,
+                                         (LPWSTR)IDC_ARROW);
+        ClbWndClass.hbrBackground = NULL;
+        ClbWndClass.lpszMenuName = NULL;
+        ClbWndClass.lpszClassName = ClbClassName;
+
+        if (!RegisterClass(&ClbWndClass))
+        {
+            Ret = FALSE;
             break;
         }
+        break;
+    }
 
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-            break;
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+        break;
 
-        case DLL_PROCESS_DETACH:
-            UnregisterClass(ClbClassName,
-                            hinstDLL);
-            break;
+    case DLL_PROCESS_DETACH:
+        UnregisterClass(ClbClassName,
+                        hinstDLL);
+        break;
     }
     return Ret;
 }

@@ -526,7 +526,7 @@
 @ stdcall PostQuitMessage(long)
 @ stdcall PostThreadMessageA(long long long long)
 @ stdcall PostThreadMessageW(long long long long)
-; @ stub PrintWindow
+@ stdcall PrintWindow(ptr ptr long) NtUserPrintWindow
 @ stdcall PrivateExtractIconExA(str long ptr ptr long)
 @ stdcall PrivateExtractIconExW(wstr long ptr ptr long)
 @ stdcall PrivateExtractIconsA(str long long long ptr ptr long long)
@@ -747,9 +747,6 @@
 @ varargs wsprintfW(wstr wstr)
 @ stdcall wvsprintfA(ptr str ptr)
 @ stdcall wvsprintfW(ptr wstr ptr)
-
-; ROS specific exports
-@ stdcall PrivateCsrssManualGuiCheck(long)
 
 ; Functions exported by Win Vista
 @ stdcall SetProcessDPIAware()

@@ -62,19 +62,6 @@ VideoPortGetMdl(
     return 0;
 }
 
-BOOLEAN
-NTAPI
-VideoPortLockPages(
-    IN PVOID HwDeviceExtension,
-    IN OUT PVIDEO_REQUEST_PACKET pVrp,
-    IN PEVENT pUEvent,
-    IN PEVENT pDisplayEvent,
-    IN DMA_FLAGS DmaFlags)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 LONG
 NTAPI
 VideoPortReadStateEvent(

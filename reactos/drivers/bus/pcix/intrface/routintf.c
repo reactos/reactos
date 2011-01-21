@@ -14,6 +14,8 @@
 
 /* GLOBALS ********************************************************************/
 
+PPCI_LEGACY_DEVICE PciLegacyDeviceHead;
+
 PCI_INTERFACE PciRoutingInterface =
 {
     &GUID_INT_ROUTE_INTERFACE_STANDARD,
@@ -53,6 +55,94 @@ routeintrf_Constructor(IN PVOID DeviceExtension,
     /* Not yet implemented */
     UNIMPLEMENTED;
     while (TRUE);
+}
+
+NTSTATUS
+NTAPI
+PciCacheLegacyDeviceRouting(IN PDEVICE_OBJECT DeviceObject,
+                            IN ULONG BusNumber,
+                            IN ULONG SlotNumber,
+                            IN UCHAR InterruptLine,
+                            IN UCHAR InterruptPin,
+                            IN UCHAR BaseClass,
+                            IN UCHAR SubClass,
+                            IN PDEVICE_OBJECT PhysicalDeviceObject,
+                            IN PPCI_PDO_EXTENSION PdoExtension,
+                            OUT PDEVICE_OBJECT *pFoundDeviceObject)
+{
+    PPCI_LEGACY_DEVICE *Link;
+    PPCI_LEGACY_DEVICE LegacyDevice;
+    PDEVICE_OBJECT FoundDeviceObject;
+    PAGED_CODE();
+
+    /* Scan current registered devices */
+    LegacyDevice = PciLegacyDeviceHead;
+    Link = &PciLegacyDeviceHead;
+    while (LegacyDevice)
+    {
+        /* Find a match */
+        if ((BusNumber == LegacyDevice->BusNumber) &&
+            (SlotNumber == LegacyDevice->SlotNumber))
+        {
+            /* We already know about this routing */
+            break;
+        }
+
+        /* We know about device already, but for a different location */
+        if (LegacyDevice->DeviceObject == DeviceObject)
+        {
+            /* Free the existing structure, move to the next one */
+            *Link = LegacyDevice->Next;
+            ExFreePoolWithTag(LegacyDevice, 0);
+            LegacyDevice = *Link;
+        }
+        else
+        {
+            /* Keep going */
+            Link = &LegacyDevice->Next;
+            LegacyDevice = LegacyDevice->Next;
+        }
+    }
+
+    /* Did we find a match? */
+    if (!LegacyDevice)
+    {
+        /* Allocate a new cache structure */
+        LegacyDevice = ExAllocatePoolWithTag(PagedPool,
+                                             sizeof(PCI_LEGACY_DEVICE),
+                                             'PciR');
+        if (!LegacyDevice) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Save all the data in it */
+        RtlZeroMemory(LegacyDevice, sizeof(PCI_LEGACY_DEVICE));
+        LegacyDevice->BusNumber = BusNumber;
+        LegacyDevice->SlotNumber = SlotNumber;
+        LegacyDevice->InterruptLine = InterruptLine;
+        LegacyDevice->InterruptPin = InterruptPin;
+        LegacyDevice->BaseClass = BaseClass;
+        LegacyDevice->SubClass = SubClass;
+        LegacyDevice->PhysicalDeviceObject = PhysicalDeviceObject;
+        LegacyDevice->DeviceObject = DeviceObject;
+        LegacyDevice->PdoExtension = PdoExtension;
+
+        /* Link it in the list */
+        LegacyDevice->Next = PciLegacyDeviceHead;
+        PciLegacyDeviceHead = LegacyDevice;
+    }
+
+    /* Check if we found, or created, a matching caching structure */
+    FoundDeviceObject = LegacyDevice->DeviceObject;
+    if (FoundDeviceObject == DeviceObject)
+    {
+        /* Return the device object and success */
+        if (pFoundDeviceObject) *pFoundDeviceObject = DeviceObject;
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, this is a new device object for this location */
+    LegacyDevice->DeviceObject = DeviceObject;
+    if (pFoundDeviceObject) *pFoundDeviceObject = FoundDeviceObject;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

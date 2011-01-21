@@ -13,6 +13,62 @@
 #include <msvctarget.h>
 #endif
 
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+#ifndef NONAMELESSUNION
+#ifdef __GNUC__
+#define _ANONYMOUS_UNION __extension__
+#define _ANONYMOUS_STRUCT __extension__
+#elif defined(__WATCOMC__) || defined(_MSC_VER)
+#define _ANONYMOUS_UNION
+#define _ANONYMOUS_STRUCT
+#endif /* __GNUC__/__WATCOMC__ */
+#endif /* NONAMELESSUNION */
+#ifndef _ANONYMOUS_UNION
+#define _ANONYMOUS_UNION
+#define _UNION_NAME(x) x
+#define DUMMYUNIONNAME	u
+#define DUMMYUNIONNAME1	u1
+#define DUMMYUNIONNAME2	u2
+#define DUMMYUNIONNAME3	u3
+#define DUMMYUNIONNAME4	u4
+#define DUMMYUNIONNAME5	u5
+#define DUMMYUNIONNAME6	u6
+#define DUMMYUNIONNAME7	u7
+#define DUMMYUNIONNAME8	u8
+#else
+#define _UNION_NAME(x)
+#define DUMMYUNIONNAME
+#define DUMMYUNIONNAME1
+#define DUMMYUNIONNAME2
+#define DUMMYUNIONNAME3
+#define DUMMYUNIONNAME4
+#define DUMMYUNIONNAME5
+#define DUMMYUNIONNAME6
+#define DUMMYUNIONNAME7
+#define DUMMYUNIONNAME8
+#endif
+#ifndef _ANONYMOUS_STRUCT
+#define _ANONYMOUS_STRUCT
+#define _STRUCT_NAME(x) x
+#define DUMMYSTRUCTNAME	s
+#define DUMMYSTRUCTNAME1 s1
+#define DUMMYSTRUCTNAME2 s2
+#define DUMMYSTRUCTNAME3 s3
+#define DUMMYSTRUCTNAME4 s4
+#define DUMMYSTRUCTNAME5 s5
+#else
+#define _STRUCT_NAME(x)
+#define DUMMYSTRUCTNAME
+#define DUMMYSTRUCTNAME1
+#define DUMMYSTRUCTNAME2
+#define DUMMYSTRUCTNAME3
+#define DUMMYSTRUCTNAME4
+#define DUMMYSTRUCTNAME5
+#endif
+#endif /* __ANONYMOUS_DEFINED */
+
+
 #ifndef DECLSPEC_ALIGN
 # if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
 #  define DECLSPEC_ALIGN(x) __declspec(align(x))
@@ -151,8 +207,8 @@ typedef void* __ptr64 PVOID64;
 #endif
 
 typedef wchar_t WCHAR;
-typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR;
-typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR;
+typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR,*PZZWSTR;
+typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR,*PCZZWSTR;
 typedef CHAR *PCHAR,*LPCH,*PCH,*NPSTR,*LPSTR,*PSTR;
 typedef CONST CHAR *LPCCH,*PCCH,*PCSTR,*LPCSTR;
 typedef PWSTR *PZPWSTR;
@@ -163,6 +219,7 @@ typedef CONST WCHAR UNALIGNED *LPCUWSTR,*PCUWSTR;
 typedef PSTR *PZPSTR;
 typedef CONST PSTR *PCZPSTR;
 typedef PCSTR *PZPCSTR;
+
 
 #ifdef UNICODE
 #ifndef _TCHAR_DEFINED
@@ -1307,6 +1364,8 @@ typedef enum {
 #define SEC_RESERVE	0x04000000
 #define SEC_COMMIT	0x08000000
 #define SEC_NOCACHE	0x10000000
+#define SEC_WRITECOMBINE 0x40000000     
+#define SEC_LARGE_PAGES  0x80000000
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
 #define SECTION_MAP_WRITE 2
@@ -4958,50 +5017,6 @@ typedef enum _HEAP_INFORMATION_CLASS {
   HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
 
-NTSYSAPI
-DWORD
-NTAPI
-RtlSetHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    IN PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL
-    );
-
-NTSYSAPI
-DWORD
-NTAPI
-RtlQueryHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    OUT PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL,
-    OUT PSIZE_T ReturnLength OPTIONAL
-    );
-
-//
-//  Multiple alloc-free APIS
-//
-
-DWORD
-NTAPI
-RtlMultipleAllocateHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN SIZE_T Size,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
-
-DWORD
-NTAPI
-RtlMultipleFreeHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
-
 typedef enum _PROCESSOR_CACHE_TYPE {
   CacheUnified,
   CacheInstruction,
@@ -5130,43 +5145,6 @@ static __inline__ PVOID GetCurrentFiber(void)
 }
 #endif
 
-#if defined(_M_IX86)
-extern __inline__ struct _TEB * NtCurrentTeb(void)
-{
-    struct _TEB *ret;
-
-    __asm__ __volatile__ (
-        "movl %%fs:0x18, %0\n"
-        : "=r" (ret)
-        : /* no inputs */
-    );
-
-    return ret;
-}
-#elif defined(_M_ARM)
-
-//
-// NT-ARM is not documented
-//
-#include <armddk.h>
-
-#elif defined(_M_AMD64)
-FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
-{
-    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
-}
-#elif defined(_M_PPC)
-extern __inline__ struct _TEB * NtCurrentTeb(void)
-{
-    return __readfsdword_winnt(0x18);
-}
-#else
-extern __inline__ struct _TEB * NtCurrentTeb(void)
-{
-    return __readfsdword_winnt(0x18);
-}
-#endif
-
 #elif defined(__WATCOMC__)
 
 extern PVOID GetCurrentFiber(void);
@@ -5175,18 +5153,11 @@ extern PVOID GetCurrentFiber(void);
         value [eax] \
         modify [eax];
 
-extern struct _TEB * NtCurrentTeb(void);
-#pragma aux NtCurrentTeb = \
-        "mov	eax, dword ptr fs:0x18" \
-        value [eax] \
-        modify [eax];
-
 #elif defined(_MSC_VER)
 
 #if (_MSC_FULL_VER >= 13012035)
 
 __inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
-__inline struct _TEB * NtCurrentTeb(void) { return (struct _TEB *)(ULONG_PTR)__readfsdword(0x18); }
 
 #else
 
@@ -5198,17 +5169,11 @@ static __inline PVOID GetCurrentFiber(void)
     return p;
 }
 
-static __inline struct _TEB * NtCurrentTeb(void)
-{
-    struct _TEB *p;
-	__asm mov eax, fs:[18h]
-	__asm mov [p], eax
-    return p;
-}
-
 #endif /* _MSC_FULL_VER */
 
 #endif /* __GNUC__/__WATCOMC__/_MSC_VER */
+
+#include "inline_ntcurrentteb.h"
 
 static __inline PVOID GetFiberData(void)
 {
@@ -5303,12 +5268,24 @@ MemoryBarrier(VOID)
 #endif
 
 #if defined(_M_IX86)
+
 #ifdef _MSC_VER
+#pragma intrinsic(__int2c)
 #pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
 #else
 #define YieldProcessor() __asm__ __volatile__("pause");
+#define __int2c() __asm__ __volatile__("int $0x2c");
 #endif
+
+
+FORCEINLINE
+VOID
+DbgRaiseAssertionFailure(VOID)
+{
+    __int2c();
+}
+
 #elif defined (_M_AMD64)
 #ifdef _MSC_VER
 #pragma intrinsic(_mm_pause)

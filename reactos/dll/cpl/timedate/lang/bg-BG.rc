@@ -64,5 +64,5 @@ BEGIN
     IDS_INETTIMESUCSYNC "Времето бе успешно сверено с %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Следващо сверяване: %s at %s"
     IDS_INETTIMESYNCING "Почакайте, докато РеактОС сверява времето с %s"
-    IDS_INETTIMEERROR "Възникна грешка, при сверяване на времето %s"
+    IDS_INETTIMEERROR "Възникна грешка при сверяване на времето %s"
 END

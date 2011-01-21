@@ -35,7 +35,7 @@ IntCbAllocateMemory(ULONG Size)
    PTHREADINFO W32Thread;
 
    if(!(Mem = ExAllocatePoolWithTag(PagedPool, Size + sizeof(INT_CALLBACK_HEADER),
-                                    TAG_CALLBACK)))
+                                    USERTAG_CALLBACK)))
    {
       return NULL;
    }
@@ -67,7 +67,7 @@ IntCbFreeMemory(PVOID Data)
    RemoveEntryList(&Mem->ListEntry);
 
    /* free memory */
-   ExFreePoolWithTag(Mem, TAG_CALLBACK);
+   ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
 }
 
 VOID FASTCALL
@@ -93,26 +93,26 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
 // This will help user space programs speed up read access with the window object.
 //
 static VOID
-IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
+IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
 {
   HWND hWndS = *hWnd;
-  PWINDOW_OBJECT Window = UserGetWindowObject(*hWnd);
+  PWND Window = UserGetWindowObject(*hWnd);
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   *hWnd = ClientInfo->CallbackWnd.hWnd;
-  *pWnd = ClientInfo->CallbackWnd.pvWnd;
+  *pWnd = ClientInfo->CallbackWnd.pWnd;
 
   ClientInfo->CallbackWnd.hWnd  = hWndS;
-  ClientInfo->CallbackWnd.pvWnd = DesktopHeapAddressToUser(Window->Wnd);
+  ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
 }
 
 static VOID
-IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
+IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
 {
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->CallbackWnd.hWnd = hWnd;
-  ClientInfo->CallbackWnd.pvWnd = pWnd;
+  ClientInfo->CallbackWnd.pWnd = pWnd;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -125,7 +125,8 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer, pWnd;
+   PVOID ResultPointer;
+   PWND pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
 
@@ -168,7 +169,8 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer, pWnd;
+   PVOID ResultPointer;
+   PWND pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
    LRESULT Result;
@@ -322,20 +324,21 @@ co_IntCallHookProc(INT HookId,
                    PUNICODE_STRING ModuleName)
 {
    ULONG ArgumentLength;
-   PVOID Argument;
+   PVOID Argument = NULL;
    LRESULT Result = 0;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
    PHOOKPROC_CALLBACK_ARGUMENTS Common;
-   CBT_CREATEWNDW *CbtCreateWnd =NULL;
+   CBT_CREATEWNDW *CbtCreateWnd = NULL;
    PCHAR Extra;
    PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
-   UNICODE_STRING WindowName;
-   UNICODE_STRING ClassName;
-   PANSI_STRING asWindowName;
-   PANSI_STRING asClassName;
    PTHREADINFO pti;
+   PWND pWnd;
+   PMSG pMsg = NULL;
+   BOOL Hit = FALSE;
+
+   ASSERT(Proc);
 
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->TIF_flags & TIF_INCLEANUP)
@@ -344,44 +347,27 @@ co_IntCallHookProc(INT HookId,
       return 0;
    }
 
-   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
-                    + ModuleName->Length;
+   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
+
    switch(HookId)
    {
       case WH_CBT:
+         DPRINT("WH_CBT: Code %d\n", Code);
          switch(Code)
          {
             case HCBT_CREATEWND:
+               pWnd = UserGetWindowObject((HWND) wParam);
+               if (!pWnd)
+               {
+                  DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
+                  goto Fault_Exit;
+               }
+               DPRINT("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
+              // Due to KsStudio.exe, just pass the callers original pointers
+              // except class which point to kernel space if not an atom.
+              // Found by, Olaf Siejka
                CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
                ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
-
-               asWindowName = (PANSI_STRING)&WindowName;
-               asClassName = (PANSI_STRING)&ClassName;
-
-               if (Ansi)
-               {
-                  RtlInitAnsiString(asWindowName, (PCSZ)CbtCreateWnd->lpcs->lpszName);
-                  ArgumentLength += WindowName.Length + sizeof(CHAR);
-               }
-               else
-               {
-                  RtlInitUnicodeString(&WindowName, CbtCreateWnd->lpcs->lpszName);
-                  ArgumentLength += WindowName.Length + sizeof(WCHAR);
-               }
-
-               if (! IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
-               {
-                  if (Ansi)
-                  {
-                     RtlInitAnsiString(asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
-                     ArgumentLength += ClassName.Length + sizeof(CHAR);
-                  }
-                  else
-                  {
-                     RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
-                     ArgumentLength += ClassName.Length + sizeof(WCHAR);
-                  }
-               }
                break;
 
             case HCBT_MOVESIZE:
@@ -404,7 +390,7 @@ co_IntCallHookProc(INT HookId,
                break;
             default:
                DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
-               return 0;
+               goto Fault_Exit;
          }
          break;
       case WH_KEYBOARD_LL:
@@ -433,14 +419,14 @@ co_IntCallHookProc(INT HookId,
          break;
       default:
          DPRINT1("Trying to call unsupported window hook %d\n", HookId);
-         return 0;
+         goto Fault_Exit;
    }
 
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
       DPRINT1("HookProc callback failed: out of memory\n");
-      return 0;
+      goto Fault_Exit;
    }
    Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Argument;
    Common->HookId = HookId;
@@ -449,48 +435,20 @@ co_IntCallHookProc(INT HookId,
    Common->lParam = lParam;
    Common->Proc = Proc;
    Common->Ansi = Ansi;
-   Common->ModuleNameLength = ModuleName->Length;
-   memcpy(Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
-   Extra = (PCHAR) Common->ModuleName + Common->ModuleNameLength;
+   Extra = (PCHAR) Common + sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
 
    switch(HookId)
    {
       case WH_CBT:
          switch(Code)
-         {
+         { // Need to remember this is not the first time through! Call Next Hook?
             case HCBT_CREATEWND:
-               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
                RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
-               Extra = (PCHAR) (CbtCreatewndExtra + 1);
-               RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
-               CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-               CbtCreatewndExtra->Cs.lpszClass = ClassName.Buffer;
-               Extra += WindowName.Length;
-               if (Ansi)
-               {
-                 *((CHAR *) Extra) = '\0';
-                 Extra += sizeof(CHAR);
-               }
-               else
-               {
-                 *((WCHAR *) Extra) = L'\0';
-                 Extra += sizeof(WCHAR);
-               }
-
-               if (! IS_ATOM(ClassName.Buffer))
-               {
-                  RtlCopyMemory(Extra, ClassName.Buffer, ClassName.Length);
-                  CbtCreatewndExtra->Cs.lpszClass =
-                     (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
-                  Extra += ClassName.Length;
-
-                  if (Ansi)
-                     *((CHAR *) Extra) = '\0';
-                  else
-                     *((WCHAR *) Extra) = L'\0';
-               }
+               CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass;
+               CbtCreatewndExtra->Cs.lpszName = CbtCreateWnd->lpcs->lpszName;
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                break;
             case HCBT_CLICKSKIPPED:
                RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
@@ -517,26 +475,26 @@ co_IntCallHookProc(INT HookId,
       case WH_MOUSE:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_CALLWNDPROC:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_CALLWNDPROCRET:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPRETSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:
-         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSG));
+         pMsg = (PMSG)lParam;
+         RtlCopyMemory(Extra, (PVOID) pMsg, sizeof(MSG));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-//         DPRINT1("KHOOK Memory: %x\n",Common);
          break;
       case WH_FOREGROUNDIDLE:
       case WH_KEYBOARD:
       case WH_SHELL:
-         break;         
+         break;
    }
 
    ResultPointer = NULL;
@@ -561,37 +519,48 @@ co_IntCallHookProc(INT HookId,
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       Result = 0;
+      Hit = TRUE;
    }
    _SEH2_END;
 
    if (!NT_SUCCESS(Status))
    {
-      return 0;
+      DPRINT1("Failure to make Callback! Status 0x%x",Status);
+      goto Fault_Exit;
    }
-
-   if (HookId == WH_CBT && Code == HCBT_CREATEWND)
+   /* Support write backs... SEH is in UserCallNextHookEx. */
+   switch (HookId)
    {
-      if (CbtCreatewndExtra)
-      {
-         _SEH2_TRY
-         { /*
-              The parameters could have been changed, include the coordinates
-              and dimensions of the window. We copy it back.
-            */
-            CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
-            CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
-            CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
-            CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
-            CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
-         }
-         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      case WH_CBT:
+         if (Code == HCBT_CREATEWND)
          {
-            Result = 0;
+            if (CbtCreatewndExtra)
+            {/*
+               The parameters could have been changed, include the coordinates
+               and dimensions of the window. We copy it back.
+              */
+               CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+               CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
+               CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
+               CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
+               CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
+            }
          }
-         _SEH2_END;
-      }
+         break;
+      // "The GetMsgProc hook procedure can examine or modify the message."
+      case WH_GETMESSAGE:
+         if (pMsg)
+         {
+            RtlCopyMemory((PVOID) pMsg, Extra, sizeof(MSG));
+         }
+         break;
    }
 
+Fault_Exit:
+   if (Hit)
+   {
+      DPRINT1("Exception CallHookProc HookId %d Code %d\n",HookId,Code);
+   }
    if (Argument) IntCbFreeMemory(Argument);
 
    return Result;
@@ -649,7 +618,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    UserEnterCo();
 
    IntCbFreeMemory(Argument);
-  
+
    if (!NT_SUCCESS(Status))
    {
       return 0;
@@ -685,7 +654,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
 
    // Help Intersource check and MenuName is now 4 bytes + so zero it.
-   RtlZeroMemory(Common, ArgumentLength); 
+   RtlZeroMemory(Common, ArgumentLength);
 
    Common->hModule = hModule;
    if (pMenuName->Length)

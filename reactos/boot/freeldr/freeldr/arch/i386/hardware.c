@@ -1004,6 +1004,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
 
         /* Calculate the MBR checksum */
         for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
+        Checksum = ~Checksum + 1;
         DPRINTM(DPRINT_HWDETECT, "Checksum: %x\n", Checksum);
 
         /* Fill out the ARC disk block */

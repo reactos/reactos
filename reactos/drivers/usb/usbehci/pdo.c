@@ -55,7 +55,7 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
     0x00       /* MaxPower; */
 };
 
-const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] = 
+const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] =
 {
     /* one interface */
     0x09,       /* bLength: Interface; */
@@ -79,31 +79,6 @@ const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
     0x08, 0x00, /* wMaxPacketSize; 1 + (MAX_ROOT_PORTS / 8) */
     0xFF        /* bInterval; (255ms -- usb 2.0 spec) */
 };
-
-/* FIXME: Do something better */
-VOID NTAPI
-UrbWorkerThread(PVOID Context)
-{
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Context;
-    NTSTATUS Status;
-    LARGE_INTEGER DueTime;
-    PVOID PollEvents[] = { (PVOID) &PdoDeviceExtension->QueueDrainedEvent, (PVOID) &PdoDeviceExtension->Timer };
-
-    DueTime.QuadPart = 0;
-    KeInitializeTimerEx(&PdoDeviceExtension->Timer, SynchronizationTimer);
-    KeSetTimerEx(&PdoDeviceExtension->Timer, DueTime, 100, NULL);
-
-    while (TRUE)
-    {
-        Status = KeWaitForMultipleObjects(2, PollEvents, WaitAll, Executive, KernelMode, FALSE, NULL, NULL);
-
-        if (!PdoDeviceExtension->HaltQueue)
-            KeResetEvent(&PdoDeviceExtension->QueueDrainedEvent);
-        CompletePendingURBRequest(PdoDeviceExtension);
-    }
-
-    DPRINT1("Thread terminated\n");
-}
 
 NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -139,7 +114,8 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if ((Urb->UrbHeader.Function == URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER) &&
                 (UsbDevice == PdoDeviceExtension->UsbDevices[0]))
             {
-                if (Urb->UrbBulkOrInterruptTransfer.PipeHandle == &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor)
+                DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER on SCE\n");
+                if (Urb->UrbBulkOrInterruptTransfer.PipeHandle != &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor)
                 {
                     DPRINT1("PipeHandle doesnt match SCE PipeHandle\n");
                 }
@@ -171,6 +147,10 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 IoMarkIrpPending(Irp);
                 Status = STATUS_PENDING;
                 break;
+            }
+            else
+            {
+                DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB send to device %x\n", UsbDevice);
             }
 
             Status = HandleUrbRequest(PdoDeviceExtension, Irp);
@@ -419,10 +399,10 @@ PdoDispatchPnp(
 
             for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
             {
-                PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_HIGH_SPEED | 0x8000;
+                PdoDeviceExtension->Ports[i].PortStatus = 0x8000;
                 PdoDeviceExtension->Ports[i].PortChange = 0;
 
-                if (!FdoDeviceExtension->ECHICaps.HCSParams.PortPowerControl)
+                if (!FdoDeviceExtension->hcd.ECHICaps.HCSParams.PortPowerControl)
                     PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_POWER;
             }
 
@@ -470,19 +450,6 @@ PdoDispatchPnp(
 
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
-            /* Create a thread to handle the URB's */
-/*
-            Status = PsCreateSystemThread(&PdoDeviceExtension->ThreadHandle,
-                                          THREAD_ALL_ACCESS,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          UrbWorkerThread,
-                                          (PVOID)PdoDeviceExtension);
-
-            if (!NT_SUCCESS(Status))
-                DPRINT1("Failed Thread Creation with Status: %x\n", Status);
-*/
             Status = IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_HUB, NULL, &InterfaceSymLinkName);
             if (!NT_SUCCESS(Status))
             {

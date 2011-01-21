@@ -2,10 +2,10 @@ HKCR
 {
     ATL.Registrar = s 'Registrar Class'
     {
-        CLSID = s '%CLSID_ATLRegistrar%'
+        CLSID = s '%CLSID_Registrar%'
     }
     NoRemove CLSID {
-        ForceRemove '%CLSID_ATLRegistrar%' = s 'Registrar Class'
+        ForceRemove '%CLSID_Registrar%' = s 'Registrar Class'
         {
             ProgID = s 'ATL.Registrar'
             InprocServer32 = s '%MODULE%'

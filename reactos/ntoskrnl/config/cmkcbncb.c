@@ -22,6 +22,7 @@ PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 
 VOID
 NTAPI
+INIT_FUNCTION
 CmpInitializeCache(VOID)
 {
     ULONG Length, i;

@@ -47,14 +47,6 @@ static LONG MiBalancerWork = 0;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID MmPrintMemoryStatistic(VOID)
-{
-   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MmAvailablePages %d\n",
-            MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed,
-            MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
-            MmAvailablePages);
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -80,13 +72,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     {
         MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;        
     }
-   MiMemoryConsumers[MC_USER].PagesTarget =
-      NrAvailablePages - MiMinimumAvailablePages;
-   MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
-   MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
-   MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
-   MiMemoryConsumers[MC_SYSTEM].PagesTarget = 0xFFFFFFFF;
-   MiMemoryConsumers[MC_SYSTEM].PagesUsed = 0;
+   MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
 
 VOID
@@ -98,6 +84,12 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 {
    MiMemoryConsumers[Consumer].Trim = Trim;
 }
+
+VOID
+NTAPI
+MiZeroPhysicalPage(
+    IN PFN_NUMBER PageFrameIndex
+);
 
 NTSTATUS
 NTAPI
@@ -131,7 +123,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
          Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
          if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
-         MiZeroPage(Page);
+         MiZeroPhysicalPage(Page);
          Request->Page = Page;
          KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
       }
@@ -228,8 +220,6 @@ MiIsBalancerThread(VOID)
           PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
-VOID NTAPI MiSetConsumer(IN PFN_NUMBER Pfn, IN ULONG Consumer);
-
 NTSTATUS
 NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
@@ -257,7 +247,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Allocate always memory for the non paged pool and for the pager thread.
     */
-   if ((Consumer == MC_NPPOOL) || (Consumer == MC_SYSTEM) || MiIsBalancerThread())
+   if ((Consumer == MC_SYSTEM) || MiIsBalancerThread())
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       Page = MmAllocPage(Consumer);
@@ -315,7 +305,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
       /* Update the Consumer and make the page active */
-      MiSetConsumer(Page, Consumer);
       if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);

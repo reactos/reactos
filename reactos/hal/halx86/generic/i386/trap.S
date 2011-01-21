@@ -8,12 +8,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/i386/asm.h>
+#include <asm.inc>
+
+#include <ks386.inc>
 #include <internal/i386/asmmacro.S>
 
-.code32
-.text
+.code
 
 TRAP_ENTRY HalpTrap0D, 0
 TRAP_ENTRY HalpApcInterrupt, KI_SOFTWARE_TRAP
@@ -42,4 +42,6 @@ _HalpRealModeStart:
 .space 2048
 _HalpRealModeEnd:
 PUBLIC _HalpRealModeEnd
+.endcode16
 
+END

@@ -760,7 +760,49 @@ VideoPortLockBuffer(
 }
 
 /*
- * @unimplemented
+ * @implemented
+ */
+
+BOOLEAN
+NTAPI
+VideoPortLockPages(
+    IN PVOID HwDeviceExtension,
+    IN OUT PVIDEO_REQUEST_PACKET pVrp,
+    IN PEVENT pUEvent,
+    IN PEVENT pDisplayEvent,
+    IN DMA_FLAGS DmaFlags)
+{
+    PVOID Buffer;
+
+    /* clear output buffer */
+    pVrp->OutputBuffer = NULL;
+
+    if (DmaFlags != VideoPortDmaInitOnly)
+    {
+        /* VideoPortKeepPagesLocked / VideoPortUnlockAfterDma is no-op */
+        return FALSE;
+    }
+
+    /* lock the buffer */
+    Buffer = VideoPortLockBuffer(HwDeviceExtension, pVrp->InputBuffer, pVrp->InputBufferLength, IoModifyAccess);
+
+    if (Buffer)
+    {
+        /* store result buffer & length */
+        pVrp->OutputBuffer = Buffer;
+        pVrp->OutputBufferLength = pVrp->InputBufferLength;
+
+        /* operation succeeded */
+        return TRUE;
+    }
+
+    /* operation failed */
+    return FALSE;
+}
+
+
+/*
+ * @implemented
  */
 
 VOID NTAPI

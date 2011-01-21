@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Misc User funcs
- * FILE:             subsystem/win32/win32k/ntuser/misc.c
+ * FILE:             subsystems/win32/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY:
  *       2003/05/22  Created
@@ -102,30 +102,45 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_INSENDMESSAGE:
          {
-           PUSER_MESSAGE_QUEUE MessageQueue = 
-                ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
+           PUSER_SENT_MESSAGE Message = 
+                ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
            DPRINT1("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
-           if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+           if (Message)
            {
-             ret = ISMEX_SEND;
+             if (Message->SenderQueue)
+                ret = ISMEX_SEND;
+             else
+             {
+                if (Message->CompletionCallback)
+                   ret = ISMEX_CALLBACK;
+                else
+                   ret = ISMEX_NOTIFY;
+             }
+             /* if ReplyMessage */
+             if (Message->QS_Flags & QS_SMRESULT) ret |= ISMEX_REPLIED;
            }
-           else if (!IsListEmpty(&MessageQueue->NotifyMessagesListHead))
-           {
-           /* FIXME Need to set message flag when in callback mode with notify */
-             ret = ISMEX_NOTIFY;
-           }
-           /* FIXME Need to set message flag if replied to or ReplyMessage */
+
            break;         
          }
-      case THREADSTATE_GETMESSAGETIME: 
-         /* FIXME Needs more work! */
+      case THREADSTATE_GETMESSAGETIME:
          ret = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast;
          break;
 
+      case THREADSTATE_UPTIMELASTREAD:
+         {
+           PTHREADINFO pti;
+           LARGE_INTEGER LargeTickCount;
+           pti = PsGetCurrentThreadWin32Thread();
+           KeQueryTickCount(&LargeTickCount);
+           pti->MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
+           pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+         }
+         break;
+
       case THREADSTATE_GETINPUTSTATE:
-         ret = HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON);
+         ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
          break;
    }
 
@@ -179,7 +194,7 @@ NtUserGetGUIThreadInfo(
 
    if(SafeGui.cbSize != sizeof(GUITHREADINFO))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( FALSE);
    }
 
@@ -188,7 +203,7 @@ NtUserGetGUIThreadInfo(
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if(!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         EngSetLastError(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
       Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk;
@@ -212,7 +227,7 @@ NtUserGetGUIThreadInfo(
    {
       if(idThread && Thread)
          ObDereferenceObject(Thread);
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( FALSE);
    }
 
@@ -290,7 +305,7 @@ NtUserGetGuiResources(
    if(!W32Process)
    {
       ObDereferenceObject(Process);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -308,7 +323,7 @@ NtUserGetGuiResources(
          }
       default:
          {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
          }
    }
@@ -472,8 +487,6 @@ GetW32ThreadInfo(VOID)
     /* initialize it */
     pti->ppi = ppi = GetW32ProcessInfo();
 
-    pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
-
     if (pti->rpdesk != NULL)
     {
        pti->pDeskInfo = pti->rpdesk->pDeskInfo;
@@ -494,7 +507,6 @@ GetW32ThreadInfo(VOID)
 
         Teb->Win32ThreadInfo = (PW32THREAD) pti;
 
-        pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
         pci->ppi = ppi;
         pci->fsHooks = pti->fsHooks;
         if (pti->KeyboardLayout) pci->hKL = pti->KeyboardLayout->hkl;
@@ -506,6 +518,11 @@ GetW32ThreadInfo(VOID)
 
            pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
         }
+        if (pti->pcti && pci->pDeskInfo)
+           pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
+        else
+           pci->pClientThreadInfo = NULL;
+
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

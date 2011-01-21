@@ -4,6 +4,16 @@
 
 #pragma once
 
+#define PLACE_IN_SECTION(s)	__attribute__((section (s)))
+#ifdef __GNUC__
+#define INIT_FUNCTION
+#define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
+#define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#else
+#define INIT_FUNCTION
+#define PAGE_LOCKED_FUNCTION	
+#define PAGE_UNLOCKED_FUNCTION	
+#endif
 
 #ifdef _MSC_VER
 #define REGISTERCALL FASTCALL
@@ -48,8 +58,11 @@ ATTRIB_NORETURN
 #define CMOS_CONTROL_PORT       (PUCHAR)0x70
 #define CMOS_DATA_PORT          (PUCHAR)0x71
 #define RTC_REGISTER_A          0x0A
+#define   RTC_REG_A_UIP         0x80
 #define RTC_REGISTER_B          0x0B
-#define RTC_REG_A_UIP           0x80
+#define   RTC_REG_B_PI          0x40
+#define RTC_REGISTER_C          0x0C
+#define RTC_REGISTER_D          0x0D
 #define RTC_REGISTER_CENTURY    0x32
 
 /* Usage flags */
@@ -683,12 +696,25 @@ HaliHaltSystem(
 );
 
 //
-// CMOS initialization
+// CMOS Routines
 //
 VOID
 NTAPI
 HalpInitializeCmos(
     VOID
+);
+
+UCHAR
+NTAPI
+HalpReadCmos(
+    IN UCHAR Reg
+);
+
+VOID
+NTAPI
+HalpWriteCmos(
+    IN UCHAR Reg,
+    IN UCHAR Value
 );
 
 //

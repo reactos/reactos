@@ -68,7 +68,7 @@ widMessage(
         }
         case WIDM_OPEN :
         {
-            Result = MmeOpenWaveDevice(WAVE_IN_DEVICE_TYPE,
+            Result = MmeOpenDevice(WAVE_IN_DEVICE_TYPE,
                                        DeviceId,
                                        (LPWAVEOPENDESC) Parameter1,
                                        Parameter2,

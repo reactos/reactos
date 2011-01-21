@@ -28,6 +28,7 @@ BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 
 PVOID
 NTAPI
+INIT_FUNCTION
 FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                    IN ULONG ResourceId)
 {
@@ -73,11 +74,15 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         if (NT_SUCCESS(Status))
         {
             /* Access the resource */
+            ULONG Size = 0;
             Status = LdrAccessResource(LdrEntry->DllBase,
                                        ResourceDataEntry,
                                        &Data,
-                                       NULL);
-            if (Data) KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, PAGE_SIZE);
+                                       &Size);
+            if ((Data) && (ResourceId < 3))
+            {
+                KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, Size);
+            }
             if (!NT_SUCCESS(Status)) Data = NULL;
         }
     }
@@ -88,6 +93,7 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN ULONG Count)
 {
@@ -115,8 +121,8 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         VidResetDisplay(CustomLogo);
         
         /* Find bitmap resources in the kernel */
-        ResourceCount = Count;
-        for (i = 0; i < Count; i++)
+        ResourceCount = min(IDB_CLUSTER_SERVER, Count);
+        for (i = 1; i <= Count; i++)
         {
             /* Do the lookup */
             ResourceList[i] = FindBitmapResource(LoaderBlock, i);
@@ -170,6 +176,7 @@ InbvReleaseLock(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
     /* Check if we're installed */
@@ -404,6 +411,7 @@ InbvSolidColorFill(IN ULONG Left,
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvUpdateProgressBar(IN ULONG Progress)
 {
     ULONG FillCount, BoundedProgress;
@@ -519,6 +527,7 @@ InbvSetProgressBarSubset(IN ULONG Floor,
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvIndicateProgress(VOID)
 {
     ULONG Percentage;
@@ -566,6 +575,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 
 VOID
 NTAPI
+INIT_FUNCTION
 DisplayBootBitmap(IN BOOLEAN SosMode)
 {
     PVOID Header, Band, Text, Screen;
@@ -701,6 +711,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
 
 VOID
 NTAPI
+INIT_FUNCTION
 FinalizeBootLogo(VOID)
 {
     /* Acquire lock and check the display state */

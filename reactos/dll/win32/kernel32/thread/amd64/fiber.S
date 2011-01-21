@@ -7,11 +7,13 @@
  *              KJK::Hyperion <noog@libero.it>
  */
 
-#include <ndk/asm.h>
+#include <asm.inc>
 
-.globl SwitchToFiber
-.intel_syntax noprefix
+
+PUBLIC SwitchToFiber
 
 SwitchToFiber:
     /* FIXME: TODO */
     ret 4
+
+END

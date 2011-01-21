@@ -512,6 +512,15 @@ struct BlockChainRun
   ULONG lastOffset;
 };
 
+typedef struct BlockChainBlock
+{
+  ULONG index;
+  ULONG sector;
+  int read;
+  int dirty;
+  BYTE data[MAX_BIG_BLOCK_SIZE];
+} BlockChainBlock;
+
 struct BlockChainStream
 {
   StorageImpl* parentStorage;
@@ -520,6 +529,8 @@ struct BlockChainStream
   struct BlockChainRun* indexCache;
   ULONG        indexCacheLen;
   ULONG        indexCacheSize;
+  BlockChainBlock cachedBlocks[2];
+  ULONG        blockToEvict;
   ULONG        tailIndex;
   ULONG        numBlocks;
 };
@@ -552,6 +563,9 @@ HRESULT BlockChainStream_WriteAt(
 BOOL BlockChainStream_SetSize(
 		BlockChainStream* This,
 		ULARGE_INTEGER    newSize);
+
+HRESULT BlockChainStream_Flush(
+                BlockChainStream* This);
 
 /****************************************************************************
  * SmallBlockChainStream definitions.

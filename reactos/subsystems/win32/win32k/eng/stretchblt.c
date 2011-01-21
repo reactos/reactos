@@ -462,25 +462,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     /* No success yet */
     ret = FALSE;
-    SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
-                           OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
         psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-        if (psoSource != psoDest)
-        {
-            SURFACE_LockBitmapBits(psurfSource);
-        }
-        MouseSafetyOnDrawStart(psoSource, InputRect.left, InputRect.top,
-                               InputRect.right, InputRect.bottom);
     }
 
     /* Prepare color adjustment */
 
     /* Call the driver's DrvStretchBlt if available */
-    if (psurfDest->flHooks & HOOK_STRETCHBLTROP)
+    if (psurfDest->flags & HOOK_STRETCHBLTROP)
     {
         /* Drv->StretchBltROP (look at http://www.osronline.com/ddkx/graphics/ddifncs_0z3b.htm ) */
         ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest,
@@ -513,17 +504,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                                pbo,
                                ROP);
     }
-
-    if (UsesSource)
-    {
-        MouseSafetyOnDrawEnd(psoSource);
-        if (psoSource != psoDest)
-        {
-            SURFACE_UnlockBitmapBits(psurfSource);
-        }
-    }
-    MouseSafetyOnDrawEnd(psoDest);
-    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

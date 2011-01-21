@@ -33,13 +33,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_draw);
 #include <math.h>
 
 /* GL locking is done by the caller */
-static void drawStridedFast(IWineD3DDevice *iface, GLenum primitive_type,
-        UINT count, UINT idx_size, const void *idx_data, UINT start_idx)
+static void drawStridedFast(GLenum primitive_type, UINT count, UINT idx_size, const void *idx_data, UINT start_idx)
 {
     if (idx_size)
     {
-        TRACE("(%p) : glElements(%x, %d, ...)\n", iface, primitive_type, count);
-
         glDrawElements(primitive_type, count,
                 idx_size == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
                 (const char *)idx_data + (idx_size * start_idx));
@@ -47,8 +44,6 @@ static void drawStridedFast(IWineD3DDevice *iface, GLenum primitive_type,
     }
     else
     {
-        TRACE("(%p) : glDrawArrays(%#x, %d, %d)\n", iface, primitive_type, start_idx, count);
-
         glDrawArrays(primitive_type, start_idx, count);
         checkGLcall("glDrawArrays");
     }
@@ -69,9 +64,10 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     const DWORD               *pIdxBufL     = NULL;
     UINT vx_index;
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    const UINT *streamOffset = This->stateBlock->streamOffset;
-    LONG                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
-    BOOL                      pixelShader = use_ps(This->stateBlock);
+    const struct wined3d_state *state = &This->stateBlock->state;
+    const struct wined3d_stream_state *streams = state->streams;
+    LONG SkipnStrides = startIdx + state->load_base_vertex_index;
+    BOOL pixelShader = use_ps(state);
     BOOL specular_fog = FALSE;
     const BYTE *texCoords[WINED3DDP_MAXTEXCOORD];
     const BYTE *diffuse = NULL, *specular = NULL, *normal = NULL, *position = NULL;
@@ -91,7 +87,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
          * supported or other reason), or with user pointer drawing idxData
          * will be non-NULL. */
         if (!idxData)
-            idxData = buffer_get_sysmem((struct wined3d_buffer *)This->stateBlock->pIndexData, gl_info);
+            idxData = buffer_get_sysmem(state->index_buffer, gl_info);
 
         if (idxSize == 2) pIdxBufS = idxData;
         else pIdxBufL = idxData;
@@ -106,13 +102,13 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     if (si->use_map & (1 << WINED3D_FFP_POSITION))
     {
         element = &si->elements[WINED3D_FFP_POSITION];
-        position = element->data + streamOffset[element->stream_idx];
+        position = element->data + streams[element->stream_idx].offset;
     }
 
     if (si->use_map & (1 << WINED3D_FFP_NORMAL))
     {
         element = &si->elements[WINED3D_FFP_NORMAL];
-        normal = element->data + streamOffset[element->stream_idx];
+        normal = element->data + streams[element->stream_idx].offset;
     }
     else
     {
@@ -123,10 +119,10 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     if (si->use_map & (1 << WINED3D_FFP_DIFFUSE))
     {
         element = &si->elements[WINED3D_FFP_DIFFUSE];
-        diffuse = element->data + streamOffset[element->stream_idx];
+        diffuse = element->data + streams[element->stream_idx].offset;
 
-        if (num_untracked_materials && element->format_desc->format != WINED3DFMT_B8G8R8A8_UNORM)
-            FIXME("Implement diffuse color tracking from %s\n", debug_d3dformat(element->format_desc->format));
+        if (num_untracked_materials && element->format->id != WINED3DFMT_B8G8R8A8_UNORM)
+            FIXME("Implement diffuse color tracking from %s\n", debug_d3dformat(element->format->id));
     }
     else
     {
@@ -136,18 +132,18 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     if (si->use_map & (1 << WINED3D_FFP_SPECULAR))
     {
         element = &si->elements[WINED3D_FFP_SPECULAR];
-        specular = element->data + streamOffset[element->stream_idx];
+        specular = element->data + streams[element->stream_idx].offset;
 
         /* special case where the fog density is stored in the specular alpha channel */
-        if (This->stateBlock->renderState[WINED3DRS_FOGENABLE]
-                && (This->stateBlock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE
-                    || si->elements[WINED3D_FFP_POSITION].format_desc->format == WINED3DFMT_R32G32B32A32_FLOAT)
-                && This->stateBlock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE)
+        if (state->render_states[WINED3DRS_FOGENABLE]
+                && (state->render_states[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE
+                    || si->elements[WINED3D_FFP_POSITION].format->id == WINED3DFMT_R32G32B32A32_FLOAT)
+                && state->render_states[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE)
         {
             if (gl_info->supported[EXT_FOG_COORD])
             {
-                if (element->format_desc->format == WINED3DFMT_B8G8R8A8_UNORM) specular_fog = TRUE;
-                else FIXME("Implement fog coordinates from %s\n", debug_d3dformat(element->format_desc->format));
+                if (element->format->id == WINED3DFMT_B8G8R8A8_UNORM) specular_fog = TRUE;
+                else FIXME("Implement fog coordinates from %s\n", debug_d3dformat(element->format->id));
             }
             else
             {
@@ -169,7 +165,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
 
     for (textureNo = 0; textureNo < texture_stages; ++textureNo)
     {
-        int coordIdx = This->stateBlock->textureState[textureNo][WINED3DTSS_TEXCOORDINDEX];
+        int coordIdx = state->texture_states[textureNo][WINED3DTSS_TEXCOORDINDEX];
         DWORD texture_idx = This->texUnitMap[textureNo];
 
         if (!gl_info->supported[ARB_MULTITEXTURE] && textureNo > 0)
@@ -178,7 +174,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
             continue;
         }
 
-        if (!pixelShader && !This->stateBlock->textures[textureNo]) continue;
+        if (!pixelShader && !state->textures[textureNo]) continue;
 
         if (texture_idx == WINED3D_UNMAPPED_STAGE) continue;
 
@@ -196,7 +192,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         if (si->use_map & (1 << (WINED3D_FFP_TEXCOORD0 + coordIdx)))
         {
             element = &si->elements[WINED3D_FFP_TEXCOORD0 + coordIdx];
-            texCoords[coordIdx] = element->data + streamOffset[element->stream_idx];
+            texCoords[coordIdx] = element->data + streams[element->stream_idx].offset;
             tex_mask |= (1 << textureNo);
         }
         else
@@ -221,13 +217,13 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
          */
 
         /* For indexed data, we need to go a few more strides in */
-        if (idxData != NULL) {
-
+        if (idxData)
+        {
             /* Indexed so work out the number of strides to skip */
             if (idxSize == 2)
-                SkipnStrides = pIdxBufS[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
+                SkipnStrides = pIdxBufS[startIdx + vx_index] + state->load_base_vertex_index;
             else
-                SkipnStrides = pIdxBufL[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
+                SkipnStrides = pIdxBufL[startIdx + vx_index] + state->load_base_vertex_index;
         }
 
         tmp_tex_mask = tex_mask;
@@ -239,11 +235,11 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
 
             if (!(tmp_tex_mask & 1)) continue;
 
-            coord_idx = This->stateBlock->textureState[texture][WINED3DTSS_TEXCOORDINDEX];
+            coord_idx = state->texture_states[texture][WINED3DTSS_TEXCOORDINDEX];
             ptr = texCoords[coord_idx] + (SkipnStrides * si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].stride);
 
             texture_idx = This->texUnitMap[texture];
-            multi_texcoord_funcs[si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].format_desc->emit_idx](
+            multi_texcoord_funcs[si->elements[WINED3D_FFP_TEXCOORD0 + coord_idx].format->emit_idx](
                     GL_TEXTURE0_ARB + texture_idx, ptr);
         }
 
@@ -251,7 +247,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         if (diffuse) {
             const void *ptrToCoords = diffuse + SkipnStrides * si->elements[WINED3D_FFP_DIFFUSE].stride;
 
-            diffuse_funcs[si->elements[WINED3D_FFP_DIFFUSE].format_desc->emit_idx](ptrToCoords);
+            diffuse_funcs[si->elements[WINED3D_FFP_DIFFUSE].format->emit_idx](ptrToCoords);
             if (num_untracked_materials)
             {
                 DWORD diffuseColor = ((const DWORD *)ptrToCoords)[0];
@@ -274,7 +270,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         if (specular) {
             const void *ptrToCoords = specular + SkipnStrides * si->elements[WINED3D_FFP_SPECULAR].stride;
 
-            specular_funcs[si->elements[WINED3D_FFP_SPECULAR].format_desc->emit_idx](ptrToCoords);
+            specular_funcs[si->elements[WINED3D_FFP_SPECULAR].format->emit_idx](ptrToCoords);
 
             if (specular_fog)
             {
@@ -284,21 +280,20 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         }
 
         /* Normal -------------------------------- */
-        if (normal != NULL) {
+        if (normal)
+        {
             const void *ptrToCoords = normal + SkipnStrides * si->elements[WINED3D_FFP_NORMAL].stride;
-            normal_funcs[si->elements[WINED3D_FFP_NORMAL].format_desc->emit_idx](ptrToCoords);
+            normal_funcs[si->elements[WINED3D_FFP_NORMAL].format->emit_idx](ptrToCoords);
         }
 
         /* Position -------------------------------- */
         if (position) {
             const void *ptrToCoords = position + SkipnStrides * si->elements[WINED3D_FFP_POSITION].stride;
-            position_funcs[si->elements[WINED3D_FFP_POSITION].format_desc->emit_idx](ptrToCoords);
+            position_funcs[si->elements[WINED3D_FFP_POSITION].format->emit_idx](ptrToCoords);
         }
 
         /* For non indexed mode, step onto next parts */
-        if (idxData == NULL) {
-            ++SkipnStrides;
-        }
+        if (!idxData) ++SkipnStrides;
     }
 
     glEnd();
@@ -306,10 +301,9 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
 }
 
 /* GL locking is done by the caller */
-static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format, const UINT index, const void *ptr)
+static inline void send_attribute(const struct wined3d_gl_info *gl_info,
+        enum wined3d_format_id format, const UINT index, const void *ptr)
 {
-    const struct wined3d_gl_info *gl_info = &This->adapter->gl_info;
-
     switch(format)
     {
         case WINED3DFMT_R32_FLOAT:
@@ -417,17 +411,15 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
 }
 
 /* GL locking is done by the caller */
-static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream_info *si, UINT numberOfVertices,
-        GLenum glPrimitiveType, const void *idxData, UINT idxSize, UINT startIdx)
+static void drawStridedSlowVs(const struct wined3d_gl_info *gl_info, const struct wined3d_state *state,
+        const struct wined3d_stream_info *si, UINT numberOfVertices, GLenum glPrimitiveType,
+        const void *idxData, UINT idxSize, UINT startIdx)
 {
-    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    const struct wined3d_gl_info *gl_info = &This->adapter->gl_info;
-    LONG                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
-    const WORD                *pIdxBufS     = NULL;
-    const DWORD               *pIdxBufL     = NULL;
+    LONG SkipnStrides = startIdx + state->load_base_vertex_index;
+    const DWORD *pIdxBufL = NULL;
+    const WORD *pIdxBufS = NULL;
     UINT vx_index;
     int i;
-    IWineD3DStateBlockImpl *stateblock = This->stateBlock;
     const BYTE *ptr;
 
     if (idxSize)
@@ -437,7 +429,7 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
          * supported or other reason), or with user pointer drawing idxData
          * will be non-NULL. */
         if (!idxData)
-            idxData = buffer_get_sysmem((struct wined3d_buffer *)This->stateBlock->pIndexData, gl_info);
+            idxData = buffer_get_sysmem(state->index_buffer, gl_info);
 
         if (idxSize == 2) pIdxBufS = idxData;
         else pIdxBufL = idxData;
@@ -449,25 +441,25 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
     /* Start drawing in GL */
     glBegin(glPrimitiveType);
 
-    for (vx_index = 0; vx_index < numberOfVertices; ++vx_index) {
-        if (idxData != NULL) {
-
+    for (vx_index = 0; vx_index < numberOfVertices; ++vx_index)
+    {
+        if (idxData)
+        {
             /* Indexed so work out the number of strides to skip */
             if (idxSize == 2)
-                SkipnStrides = pIdxBufS[startIdx + vx_index] + stateblock->loadBaseVertexIndex;
+                SkipnStrides = pIdxBufS[startIdx + vx_index] + state->load_base_vertex_index;
             else
-                SkipnStrides = pIdxBufL[startIdx + vx_index] + stateblock->loadBaseVertexIndex;
+                SkipnStrides = pIdxBufL[startIdx + vx_index] + state->load_base_vertex_index;
         }
 
         for (i = MAX_ATTRIBS - 1; i >= 0; i--)
         {
             if (!(si->use_map & (1 << i))) continue;
 
-            ptr = si->elements[i].data +
-                  si->elements[i].stride * SkipnStrides +
-                  stateblock->streamOffset[si->elements[i].stream_idx];
+            ptr = si->elements[i].data + si->elements[i].stride * SkipnStrides
+                    + state->streams[si->elements[i].stream_idx].offset;
 
-            send_attribute(This, si->elements[i].format_desc->format, i, ptr);
+            send_attribute(gl_info, si->elements[i].format->id, i, ptr);
         }
         SkipnStrides++;
     }
@@ -476,17 +468,16 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
 }
 
 /* GL locking is done by the caller */
-static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wined3d_stream_info *si,
-        UINT numberOfVertices, GLenum glPrimitiveType, const void *idxData, UINT idxSize,
-        UINT startIdx)
+static void drawStridedInstanced(const struct wined3d_gl_info *gl_info, const struct wined3d_state *state,
+        const struct wined3d_stream_info *si, UINT numberOfVertices, GLenum glPrimitiveType,
+        const void *idxData, UINT idxSize, UINT startIdx)
 {
     UINT numInstances = 0, i;
     int numInstancedAttribs = 0, j;
     UINT instancedData[sizeof(si->elements) / sizeof(*si->elements) /* 16 */];
-    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    IWineD3DStateBlockImpl *stateblock = This->stateBlock;
 
-    if (idxSize == 0) {
+    if (!idxSize)
+    {
         /* This is a nasty thing. MSDN says no hardware supports that and apps have to use software vertex processing.
          * We don't support this for now
          *
@@ -497,19 +488,19 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
         return;
     }
 
-    TRACE("(%p) : glElements(%x, %d, ...)\n", This, glPrimitiveType, numberOfVertices);
-
     /* First, figure out how many instances we have to draw */
-    for(i = 0; i < MAX_STREAMS; i++) {
+    for (i = 0; i < MAX_STREAMS; ++i)
+    {
         /* Look at the streams and take the first one which matches */
-        if(((stateblock->streamFlags[i] & WINED3DSTREAMSOURCE_INSTANCEDATA) || (stateblock->streamFlags[i] & WINED3DSTREAMSOURCE_INDEXEDDATA)) && stateblock->streamSource[i]) {
-            /* D3D9 could set streamFreq 0 with (INSTANCEDATA or INDEXEDDATA) and then it is handled as 1. See d3d9/tests/visual.c-> stream_test() */
-            if(stateblock->streamFreq[i] == 0){
-                numInstances = 1;
-            } else {
-                numInstances = stateblock->streamFreq[i]; /* use the specified number of instances from the first matched stream. See d3d9/tests/visual.c-> stream_test() */
-            }
-            break; /* break, because only the first suitable value is interesting */
+        if (state->streams[i].buffer
+                && ((state->streams[i].flags & WINED3DSTREAMSOURCE_INSTANCEDATA)
+                || (state->streams[i].flags & WINED3DSTREAMSOURCE_INDEXEDDATA)))
+        {
+            /* Use the specified number of instances from the first matched
+             * stream. A streamFreq of 0 (with INSTANCEDATA or INDEXEDDATA)
+             * is handled as 1. See d3d9/tests/visual.c-> stream_test(). */
+            numInstances = state->streams[i].frequency ? state->streams[i].frequency : 1;
+            break;
         }
     }
 
@@ -517,7 +508,7 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
     {
         if (!(si->use_map & (1 << i))) continue;
 
-        if (stateblock->streamFlags[si->elements[i].stream_idx] & WINED3DSTREAMSOURCE_INSTANCEDATA)
+        if (state->streams[si->elements[i].stream_idx].flags & WINED3DSTREAMSOURCE_INSTANCEDATA)
         {
             instancedData[numInstancedAttribs] = i;
             numInstancedAttribs++;
@@ -528,17 +519,16 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
     for(i = 0; i < numInstances; i++) {
         /* Specify the instanced attributes using immediate mode calls */
         for(j = 0; j < numInstancedAttribs; j++) {
-            const BYTE *ptr = si->elements[instancedData[j]].data +
-                        si->elements[instancedData[j]].stride * i +
-                        stateblock->streamOffset[si->elements[instancedData[j]].stream_idx];
+            const BYTE *ptr = si->elements[instancedData[j]].data
+                    + si->elements[instancedData[j]].stride * i
+                    + state->streams[si->elements[instancedData[j]].stream_idx].offset;
             if (si->elements[instancedData[j]].buffer_object)
             {
-                struct wined3d_buffer *vb =
-                        (struct wined3d_buffer *)stateblock->streamSource[si->elements[instancedData[j]].stream_idx];
-                ptr += (ULONG_PTR)buffer_get_sysmem(vb, &This->adapter->gl_info);
+                struct wined3d_buffer *vb = state->streams[si->elements[instancedData[j]].stream_idx].buffer;
+                ptr += (ULONG_PTR)buffer_get_sysmem(vb, gl_info);
             }
 
-            send_attribute(This, si->elements[instancedData[j]].format_desc->format, instancedData[j], ptr);
+            send_attribute(gl_info, si->elements[instancedData[j]].format->id, instancedData[j], ptr);
         }
 
         glDrawElements(glPrimitiveType, numberOfVertices, idxSize == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
@@ -547,8 +537,8 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
     }
 }
 
-static inline void remove_vbos(IWineD3DDeviceImpl *This, const struct wined3d_gl_info *gl_info,
-        struct wined3d_stream_info *s)
+static void remove_vbos(const struct wined3d_gl_info *gl_info,
+        const struct wined3d_state *state, struct wined3d_stream_info *s)
 {
     unsigned int i;
 
@@ -561,7 +551,7 @@ static inline void remove_vbos(IWineD3DDeviceImpl *This, const struct wined3d_gl
         e = &s->elements[i];
         if (e->buffer_object)
         {
-            struct wined3d_buffer *vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
+            struct wined3d_buffer *vb = state->streams[e->stream_idx].buffer;
             e->buffer_object = 0;
             e->data = (BYTE *)((ULONG_PTR)e->data + (ULONG_PTR)buffer_get_sysmem(vb, gl_info));
         }
@@ -573,21 +563,22 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 {
 
     IWineD3DDeviceImpl           *This = (IWineD3DDeviceImpl *)iface;
+    const struct wined3d_state *state = &This->stateBlock->state;
     struct wined3d_context *context;
     unsigned int i;
 
     if (!index_count) return;
 
-    if (This->stateBlock->renderState[WINED3DRS_COLORWRITEENABLE])
+    if (state->render_states[WINED3DRS_COLORWRITEENABLE])
     {
         /* Invalidate the back buffer memory so LockRect will read it the next time */
         for (i = 0; i < This->adapter->gl_info.limits.buffers; ++i)
         {
-            IWineD3DSurface *target = (IWineD3DSurface *)This->render_targets[i];
+            IWineD3DSurfaceImpl *target = This->render_targets[i];
             if (target)
             {
-                IWineD3DSurface_LoadLocation(target, SFLAG_INDRAWABLE, NULL);
-                IWineD3DSurface_ModifyLocation(target, SFLAG_INDRAWABLE, TRUE);
+                surface_load_location(target, SFLAG_INDRAWABLE, NULL);
+                surface_modify_location(target, SFLAG_INDRAWABLE, TRUE);
             }
         }
     }
@@ -613,8 +604,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
          * depthstencil for D3DCMP_NEVER and D3DCMP_ALWAYS as well. Also note
          * that we never copy the stencil data.*/
         DWORD location = context->render_offscreen ? SFLAG_DS_OFFSCREEN : SFLAG_DS_ONSCREEN;
-        if (This->stateBlock->renderState[WINED3DRS_ZWRITEENABLE]
-                || This->stateBlock->renderState[WINED3DRS_ZENABLE])
+        if (state->render_states[WINED3DRS_ZWRITEENABLE] || state->render_states[WINED3DRS_ZENABLE])
         {
             RECT current_rect, draw_rect, r;
 
@@ -634,28 +624,37 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
             if (!EqualRect(&r, &draw_rect))
                 surface_load_ds_location(This->depth_stencil, context, location);
 
-            if (This->stateBlock->renderState[WINED3DRS_ZWRITEENABLE])
+            if (state->render_states[WINED3DRS_ZWRITEENABLE])
             {
                 surface_modify_ds_location(This->depth_stencil, location,
                         This->depth_stencil->ds_current_size.cx,
                         This->depth_stencil->ds_current_size.cy);
-                IWineD3DSurface_ModifyLocation((IWineD3DSurface *)This->depth_stencil, SFLAG_INDRAWABLE, TRUE);
+                surface_modify_location(This->depth_stencil, SFLAG_INDRAWABLE, TRUE);
             }
         }
+    }
+
+    if ((!context->gl_info->supported[WINED3D_GL_VERSION_2_0]
+            || (!glPointParameteri && !context->gl_info->supported[NV_POINT_SPRITE]))
+            && context->render_offscreen
+            && state->render_states[WINED3DRS_POINTSPRITEENABLE]
+            && state->gl_primitive_type == GL_POINTS)
+    {
+        FIXME("Point sprite coordinate origin switching not supported.\n");
     }
 
     /* Ok, we will be updating the screen from here onwards so grab the lock */
     ENTER_GL();
     {
-        GLenum glPrimType = This->stateBlock->gl_primitive_type;
+        GLenum glPrimType = state->gl_primitive_type;
         BOOL emulation = FALSE;
         const struct wined3d_stream_info *stream_info = &This->strided_streams;
         struct wined3d_stream_info stridedlcl;
 
-        if (!use_vs(This->stateBlock))
+        if (!use_vs(state))
         {
             if (!This->strided_streams.position_transformed && context->num_untracked_materials
-                    && This->stateBlock->renderState[WINED3DRS_LIGHTING])
+                    && state->render_states[WINED3DRS_LIGHTING])
             {
                 static BOOL warned;
                 if (!warned) {
@@ -666,7 +665,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
                 }
                 emulation = TRUE;
             }
-            else if (context->fog_coord && This->stateBlock->renderState[WINED3DRS_FOGENABLE])
+            else if (context->fog_coord && state->render_states[WINED3DRS_FOGENABLE])
             {
                 /* Either write a pipeline replacement shader or convert the specular alpha from unsigned byte
                  * to a float in the vertex buffer
@@ -684,13 +683,14 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
             if(emulation) {
                 stream_info = &stridedlcl;
                 memcpy(&stridedlcl, &This->strided_streams, sizeof(stridedlcl));
-                remove_vbos(This, context->gl_info, &stridedlcl);
+                remove_vbos(context->gl_info, state, &stridedlcl);
             }
         }
 
-        if (This->useDrawStridedSlow || emulation) {
+        if (This->useDrawStridedSlow || emulation)
+        {
             /* Immediate mode drawing */
-            if (use_vs(This->stateBlock))
+            if (use_vs(state))
             {
                 static BOOL warned;
                 if (!warned) {
@@ -699,17 +699,24 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
                 } else {
                     TRACE("Using immediate mode with vertex shaders for half float emulation\n");
                 }
-                drawStridedSlowVs(iface, stream_info, index_count, glPrimType, idxData, idxSize, StartIdx);
-            } else {
+                drawStridedSlowVs(context->gl_info, state, stream_info,
+                        index_count, glPrimType, idxData, idxSize, StartIdx);
+            }
+            else
+            {
                 drawStridedSlow(iface, context, stream_info, index_count,
                         glPrimType, idxData, idxSize, StartIdx);
             }
-        } else if(This->instancedDraw) {
+        }
+        else if (This->instancedDraw)
+        {
             /* Instancing emulation with mixing immediate mode and arrays */
-            drawStridedInstanced(iface, &This->strided_streams, index_count,
-                    glPrimType, idxData, idxSize, StartIdx);
-        } else {
-            drawStridedFast(iface, glPrimType, index_count, idxSize, idxData, StartIdx);
+            drawStridedInstanced(context->gl_info, state, stream_info,
+                    index_count, glPrimType, idxData, idxSize, StartIdx);
+        }
+        else
+        {
+            drawStridedFast(glPrimType, index_count, idxSize, idxData, StartIdx);
         }
     }
 
@@ -727,46 +734,6 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 
     TRACE("Done all gl drawing\n");
 
-    /* Diagnostics */
-#ifdef SHOW_FRAME_MAKEUP
-    {
-        static LONG primCounter = 0;
-        /* NOTE: set primCounter to the value reported by drawprim
-           before you want to to write frame makeup to /tmp */
-        if (primCounter >= 0) {
-            WINED3DLOCKED_RECT r;
-            char buffer[80];
-            IWineD3DSurface_LockRect(This->render_targets[0], &r, NULL, WINED3DLOCK_READONLY);
-            sprintf(buffer, "/tmp/backbuffer_%d.tga", primCounter);
-            TRACE("Saving screenshot %s\n", buffer);
-            IWineD3DSurface_SaveSnapshot(This->render_targets[0], buffer);
-            IWineD3DSurface_UnlockRect(This->render_targets[0]);
-
-#ifdef SHOW_TEXTURE_MAKEUP
-           {
-            IWineD3DSurface *pSur;
-            int textureNo;
-            for (textureNo = 0; textureNo < MAX_COMBINED_SAMPLERS; ++textureNo) {
-                if (This->stateBlock->textures[textureNo] != NULL) {
-                    sprintf(buffer, "/tmp/texture_%p_%d_%d.tga", This->stateBlock->textures[textureNo], primCounter, textureNo);
-                    TRACE("Saving texture %s\n", buffer);
-                    if (IWineD3DBaseTexture_GetType(This->stateBlock->textures[textureNo]) == WINED3DRTYPE_TEXTURE) {
-                            IWineD3DTexture_GetSurfaceLevel(This->stateBlock->textures[textureNo], 0, &pSur);
-                            IWineD3DSurface_SaveSnapshot(pSur, buffer);
-                            IWineD3DSurface_Release(pSur);
-                    } else  {
-                        FIXME("base Texture isn't of type texture %d\n", IWineD3DBaseTexture_GetType(This->stateBlock->textures[textureNo]));
-                    }
-                }
-            }
-           }
-#endif
-        }
-        TRACE("drawprim #%d\n", primCounter);
-        ++primCounter;
-    }
-#endif
-
     /* Control goes back to the device, stateblock values may change again */
     This->isInDraw = FALSE;
 }
@@ -774,7 +741,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 static void normalize_normal(float *n) {
     float length = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
     if (length == 0.0f) return;
-    length = sqrt(length);
+    length = sqrtf(length);
     n[0] = n[0] / length;
     n[1] = n[1] / length;
     n[2] = n[2] / length;
@@ -829,8 +796,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     e = &stream_info.elements[WINED3D_FFP_POSITION];
     if (e->buffer_object)
     {
-        struct wined3d_buffer *vb;
-        vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
+        struct wined3d_buffer *vb = This->stateBlock->state.streams[e->stream_idx].buffer;
         e->data = (BYTE *)((ULONG_PTR)e->data + (ULONG_PTR)buffer_get_sysmem(vb, context->gl_info));
     }
     vtxStride = e->stride;
@@ -859,9 +825,9 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     for(j = 0; j < info->Height; j++) {
         for(i = 0; i < info->Width; i++) {
             const float *v = (const float *)(data + vtxStride * i + vtxStride * info->Stride * j);
-            if(fabs(v[0]) > max_x) max_x = fabs(v[0]);
-            if(fabs(v[1]) > max_y) max_y = fabs(v[1]);
-            if(fabs(v[2]) > max_z) max_z = fabs(v[2]);
+            if(fabs(v[0]) > max_x) max_x = fabsf(v[0]);
+            if(fabs(v[1]) > max_y) max_y = fabsf(v[1]);
+            if(fabs(v[2]) > max_z) max_z = fabsf(v[2]);
             if(v[2] < neg_z) neg_z = v[2];
         }
     }

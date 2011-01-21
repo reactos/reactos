@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::MMSUP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -122,7 +121,7 @@ NTAPI
 MmIsRecursiveIoFault(VOID)
 {
     PETHREAD Thread = PsGetCurrentThread();
-    
+
     //
     // If any of these is true, this is a recursive fault
     //

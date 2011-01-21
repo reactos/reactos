@@ -985,31 +985,31 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         6,
         8,
-        "Встановлювач встановлює boot loader",
+        "Встановлювач встановлює завантажувач",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Встановити завантажувач на жорсткий диск (MBR i VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Встановити завантажувач на жорсткий диск (лише VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Встановити bootloader на дискету.",
+        "Встановити завантажувач на дискету.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Не встановлювати bootloader.",
+        "Не встановлювати завантажувач.",
         TEXT_STYLE_NORMAL
     },
     {

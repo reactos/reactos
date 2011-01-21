@@ -14,66 +14,66 @@ BOOL
 MF_CreateMFDC ( HGDIOBJ hMDC,
                 PMETAFILEDC pmfDC )
 {
-  PMF_ENTRY pMFME;
+    PMF_ENTRY pMFME;
 
-  pMFME = LocalAlloc(LMEM_ZEROINIT, sizeof(MF_ENTRY));
-  if (!pMFME)
-  {
-    return FALSE;
-  }
+    pMFME = LocalAlloc(LMEM_ZEROINIT, sizeof(MF_ENTRY));
+    if (!pMFME)
+    {
+        return FALSE;
+    }
 
-  if (hMF_List == NULL)
-  {
-    hMF_List = pMFME;
-    InitializeListHead(&hMF_List->List);
-  }
-  else
-    InsertTailList(&hMF_List->List, &pMFME->List);
+    if (hMF_List == NULL)
+    {
+        hMF_List = pMFME;
+        InitializeListHead(&hMF_List->List);
+    }
+    else
+        InsertTailList(&hMF_List->List, &pMFME->List);
 
-  pMFME->hmDC  = hMDC;
-  pMFME->pmfDC = pmfDC;
+    pMFME->hmDC  = hMDC;
+    pMFME->pmfDC = pmfDC;
 
-  hMFCount++;
-  return TRUE;
+    hMFCount++;
+    return TRUE;
 }
 
 
 PMETAFILEDC
 MF_GetMFDC ( HGDIOBJ hMDC )
 {
-  PMF_ENTRY pMFME = hMF_List;
+    PMF_ENTRY pMFME = hMF_List;
 
-  do
-  {
-    if ( pMFME->hmDC == hMDC ) return pMFME->pmfDC;
-    pMFME = (PMF_ENTRY) pMFME->List.Flink;
-  }
-  while ( pMFME != hMF_List );
+    do
+    {
+        if ( pMFME->hmDC == hMDC ) return pMFME->pmfDC;
+        pMFME = (PMF_ENTRY) pMFME->List.Flink;
+    }
+    while ( pMFME != hMF_List );
 
-  return NULL;
+    return NULL;
 }
 
 
 BOOL
 MF_DeleteMFDC ( HGDIOBJ hMDC )
 {
-  PMF_ENTRY pMFME = hMF_List;
+    PMF_ENTRY pMFME = hMF_List;
 
-  do
-  {
-    if ( pMFME->hmDC == hMDC)
+    do
     {
-       RemoveEntryList(&pMFME->List);
-       LocalFree ( pMFME );
-       hMFCount--;
-       if (!hMFCount) hMF_List = NULL;
-       return TRUE;
+        if ( pMFME->hmDC == hMDC)
+        {
+            RemoveEntryList(&pMFME->List);
+            LocalFree ( pMFME );
+            hMFCount--;
+            if (!hMFCount) hMF_List = NULL;
+            return TRUE;
+        }
+        pMFME = (PMF_ENTRY) pMFME->List.Flink;
     }
-    pMFME = (PMF_ENTRY) pMFME->List.Flink;
-  }
-  while ( pMFME != hMF_List );
+    while ( pMFME != hMF_List );
 
-  return FALSE;
+    return FALSE;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -84,10 +84,10 @@ MF_DeleteMFDC ( HGDIOBJ hMDC )
 HMETAFILE
 WINAPI
 CloseMetaFile(
-	HDC	a0
-	)
+    HDC	a0
+)
 {
-	return 0;
+    return 0;
 }
 
 
@@ -97,11 +97,11 @@ CloseMetaFile(
 HMETAFILE
 WINAPI
 CopyMetaFileW(
-	HMETAFILE	hmfSrc,
-	LPCWSTR		lpszFile
-	)
+    HMETAFILE	hmfSrc,
+    LPCWSTR		lpszFile
+)
 {
-  return NULL;
+    return NULL;
 }
 
 
@@ -111,24 +111,24 @@ CopyMetaFileW(
 HMETAFILE
 WINAPI
 CopyMetaFileA(
-	HMETAFILE	hmfSrc,
-	LPCSTR		lpszFile
-	)
+    HMETAFILE	hmfSrc,
+    LPCSTR		lpszFile
+)
 {
-  NTSTATUS Status;
-  PWSTR lpszFileW;
-  HMETAFILE rc = 0;
+    NTSTATUS Status;
+    PWSTR lpszFileW;
+    HMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    rc = CopyMetaFileW( hmfSrc, lpszFileW );
-    HEAP_free ( lpszFileW );
-  }
+    Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
+    if (!NT_SUCCESS (Status))
+        SetLastError (RtlNtStatusToDosError(Status));
+    else
+    {
+        rc = CopyMetaFileW( hmfSrc, lpszFileW );
+        HEAP_free ( lpszFileW );
+    }
 
-  return rc;
+    return rc;
 }
 
 
@@ -138,59 +138,59 @@ CopyMetaFileA(
 HDC
 WINAPI
 CreateMetaFileW(
-	LPCWSTR		lpszFile
-	)
+    LPCWSTR		lpszFile
+)
 {
-  HANDLE hFile;
-  HDC hmDC;
-  PMETAFILEDC pmfDC = LocalAlloc(LMEM_ZEROINIT, sizeof(METAFILEDC));
-  if (!pmfDC) return NULL;
+    HANDLE hFile;
+    HDC hmDC;
+    PMETAFILEDC pmfDC = LocalAlloc(LMEM_ZEROINIT, sizeof(METAFILEDC));
+    if (!pmfDC) return NULL;
 
-  pmfDC->mh.mtHeaderSize   = sizeof(METAHEADER) / sizeof(WORD);
-  pmfDC->mh.mtVersion      = 0x0300;
-  pmfDC->mh.mtSize         = pmfDC->mh.mtHeaderSize;
+    pmfDC->mh.mtHeaderSize   = sizeof(METAHEADER) / sizeof(WORD);
+    pmfDC->mh.mtVersion      = 0x0300;
+    pmfDC->mh.mtSize         = pmfDC->mh.mtHeaderSize;
 
-  pmfDC->hPen = GetStockObject(BLACK_PEN);
-  pmfDC->hBrush = GetStockObject(WHITE_BRUSH);
-  pmfDC->hFont = GetStockObject(DEVICE_DEFAULT_FONT);
-  pmfDC->hBitmap = GetStockObject(DEFAULT_BITMAP);
-  pmfDC->hPalette = GetStockObject(DEFAULT_PALETTE);
+    pmfDC->hPen = GetStockObject(BLACK_PEN);
+    pmfDC->hBrush = GetStockObject(WHITE_BRUSH);
+    pmfDC->hFont = GetStockObject(DEVICE_DEFAULT_FONT);
+    pmfDC->hBitmap = GetStockObject(DEFAULT_BITMAP);
+    pmfDC->hPalette = GetStockObject(DEFAULT_PALETTE);
 
-  if (lpszFile)  /* disk based metafile */
-  {
-    pmfDC->mh.mtType = METAFILE_DISK;
-
-    if(!GetFullPathName(  lpszFile,
-                          MAX_PATH,
-         (LPTSTR) &pmfDC->Filename,
-               (LPTSTR*) &lpszFile))
+    if (lpszFile)  /* disk based metafile */
     {
-       LocalFree(pmfDC);
-       return NULL;
+        pmfDC->mh.mtType = METAFILE_DISK;
+
+        if(!GetFullPathName(  lpszFile,
+                              MAX_PATH,
+                              (LPTSTR) &pmfDC->Filename,
+                              (LPTSTR*) &lpszFile))
+        {
+            LocalFree(pmfDC);
+            return NULL;
+        }
+
+        if ((hFile = CreateFileW(pmfDC->Filename, GENERIC_WRITE, 0, NULL,
+                                 CREATE_ALWAYS, 0, 0)) == INVALID_HANDLE_VALUE)
+        {
+            LocalFree(pmfDC);
+            return NULL;
+        }
+
+        if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), &pmfDC->dwWritten, NULL ))
+        {
+            LocalFree(pmfDC);
+            return NULL;
+        }
+        pmfDC->hFile = hFile;
     }
+    else  /* memory based metafile */
+        pmfDC->mh.mtType = METAFILE_MEMORY;
 
-    if ((hFile = CreateFileW(pmfDC->Filename, GENERIC_WRITE, 0, NULL,
-				CREATE_ALWAYS, 0, 0)) == INVALID_HANDLE_VALUE)
-    {
-       LocalFree(pmfDC);
-       return NULL;
-    }
+    hmDC = NtGdiCreateClientObj ( GDI_OBJECT_TYPE_METADC );
 
-    if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), &pmfDC->dwWritten, NULL ))
-    {
-       LocalFree(pmfDC);
-       return NULL;
-    }
-      pmfDC->hFile = hFile;
-  }
-  else  /* memory based metafile */
-    pmfDC->mh.mtType = METAFILE_MEMORY;
+    MF_CreateMFDC ( hmDC, pmfDC );
 
-  hmDC = NtGdiCreateClientObj ( GDI_OBJECT_TYPE_METADC );
-
-  MF_CreateMFDC ( hmDC, pmfDC );
-
-  return hmDC;
+    return hmDC;
 }
 
 
@@ -200,22 +200,22 @@ CreateMetaFileW(
 HDC
 WINAPI
 CreateMetaFileA(
-	LPCSTR		lpszFile
-	)
+    LPCSTR		lpszFile
+)
 {
-  NTSTATUS Status;
-  PWSTR lpszFileW;
-  HDC rc = 0;
+    NTSTATUS Status;
+    PWSTR lpszFileW;
+    HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
+    Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
+    if (!NT_SUCCESS (Status))
+        SetLastError (RtlNtStatusToDosError(Status));
+    else
     {
-      rc = CreateMetaFileW( lpszFileW );
-      HEAP_free ( lpszFileW );
+        rc = CreateMetaFileW( lpszFileW );
+        HEAP_free ( lpszFileW );
     }
-  return rc;
+    return rc;
 }
 
 
@@ -225,10 +225,10 @@ CreateMetaFileA(
 BOOL
 WINAPI
 DeleteMetaFile(
-	HMETAFILE	a0
-	)
+    HMETAFILE	a0
+)
 {
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -238,10 +238,10 @@ DeleteMetaFile(
 HMETAFILE
 WINAPI
 GetMetaFileW(
-	LPCWSTR	lpszMetaFile
-	)
+    LPCWSTR	lpszMetaFile
+)
 {
-  return NULL;
+    return NULL;
 }
 
 
@@ -251,23 +251,23 @@ GetMetaFileW(
 HMETAFILE
 WINAPI
 GetMetaFileA(
-	LPCSTR	lpszMetaFile
-	)
+    LPCSTR	lpszMetaFile
+)
 {
-  NTSTATUS Status;
-  LPWSTR lpszMetaFileW;
-  HMETAFILE rc = 0;
+    NTSTATUS Status;
+    LPWSTR lpszMetaFileW;
+    HMETAFILE rc = 0;
 
-  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
+    Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
+    if (!NT_SUCCESS (Status))
+        SetLastError (RtlNtStatusToDosError(Status));
+    else
     {
-      rc = GetMetaFileW( lpszMetaFileW );
-      HEAP_free ( lpszMetaFileW );
+        rc = GetMetaFileW( lpszMetaFileW );
+        HEAP_free ( lpszMetaFileW );
     }
 
-  return rc;
+    return rc;
 }
 
 

@@ -47,7 +47,7 @@ BEGIN
     LTEXT           "РеактОС е лицензиран според GPL и ако искате да го използвате или разпространявате "\
                     "(части от него), трябва да спазвате GPL.",
                     IDC_STATIC,15,110,227,20
-    PUSHBUTTON      "&Виж GPL...",IDC_VIEWGPL,251,110,50,19
+    PUSHBUTTON      "&Вижте GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Натиснете „Напред“ за продължаване на настройката.",IDC_STATIC,15,136,
                     195,17
 END
@@ -226,7 +226,7 @@ BEGIN
     IDS_GAMES		"Игри"
     IDS_CMT_SOLITAIRE	"Пасианс"
     IDS_CMT_WINEMINE	"Минички"
-	IDS_CMT_SPIDER      "Spider Solitaire"
+	IDS_CMT_SPIDER      "Пасианс „Паяк“"
 END
 
 STRINGTABLE
@@ -248,7 +248,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Забавление"
     IDS_CMT_MPLAY32             "Пускане на мултимедийния възпроизводител"
     IDS_CMT_SNDVOL32            "Пускане на упрвлението на силата на звука"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
+    IDS_CMT_SNDREC32            "Пускане на Звукозаписвача"
 END
 
 STRINGTABLE
@@ -268,7 +268,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Команден прозорец.lnk"
     IDS_SHORT_EXPLORER   "Изследователят на РеактОС.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
+    IDS_SHORT_DOWNLOADER "Управител на приложенията за РеактОС.lnk"
     IDS_SHORT_SERVICE    "Управител на услугите.lnk"
     IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
     IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
@@ -286,10 +286,10 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Преглед на събития.lnk"
     IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
     IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
+    IDS_SHORT_SNDREC32   "Звукозаписвач.lnk"
     IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
     IDS_SHORT_PAINT      "Рисунък.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
+	IDS_SHORT_SPIDER     "Пасианс „Паяк“.lnk"
 END
 
 

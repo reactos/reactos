@@ -1,7 +1,6 @@
 #ifndef _WINDOWSX_H
 #define _WINDOWSX_H
 
-#define WM_CTLCOLOR 25
 #define Button_Enable(hwndCtl,fEnable) EnableWindow((hwndCtl),(fEnable))
 #define Button_GetCheck(hwndCtl) ((int)(DWORD)SendMessage((hwndCtl),BM_GETCHECK,0,0))
 #define Button_GetState(hwndCtl) ((int)(DWORD)SendMessage((hwndCtl),BM_GETSTATE,0,0))

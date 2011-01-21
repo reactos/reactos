@@ -1,7 +1,9 @@
-#include <reactos/asm.h>
-#include <ndk/amd64/asm.h>
 
-.globl KdbEnter
+#include <asm.inc>
+
+#include <ksamd64.inc>
+
+PUBLIC KdbEnter
 KdbEnter:
 
     /* save flags */
@@ -150,3 +152,5 @@ KdbpStackSwitchAndCall:
 
     /* Return */
     ret
+
+END

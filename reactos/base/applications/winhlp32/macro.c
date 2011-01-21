@@ -151,7 +151,11 @@ void CALLBACK MACRO_JumpContents(LPCSTR lpszPath, LPCSTR lpszWindow)
 
 void CALLBACK MACRO_About(void)
 {
-    WINE_FIXME("()\n");
+    WCHAR name[256];
+    HICON icon = LoadImageW( Globals.hInstance, MAKEINTRESOURCEW(IDI_WINHELP),
+                             IMAGE_ICON, 48, 48, LR_SHARED );
+    LoadStringW( Globals.hInstance, STID_WINE_HELP, name, sizeof(name)/sizeof(WCHAR) );
+    ShellAboutW( MACRO_CurrentWindow()->hMainWnd, name, NULL, icon );
 }
 
 static void CALLBACK MACRO_AddAccelerator(LONG u1, LONG u2, LPCSTR str)

@@ -77,6 +77,7 @@ static VOID UpdatePreviewTheme(HWND hwnd, PPREVIEW_DATA pPreviewData, THEME *the
     pPreviewData->hbrScrollbar = CreateSolidBrush(theme->crColor[COLOR_SCROLLBAR]);
     if (pPreviewData->hbrDesktop != NULL)
         DeleteObject(pPreviewData->hbrDesktop);
+
     pPreviewData->hbrDesktop = CreateSolidBrush(theme->crColor[COLOR_DESKTOP]);
     if (pPreviewData->hbrWindow != NULL)
         DeleteObject(pPreviewData->hbrWindow);

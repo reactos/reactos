@@ -4,6 +4,7 @@
  * FILE:            hal/halx86/generic/profil.c
  * PURPOSE:         System Profiling
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -15,14 +16,28 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 HalStopProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
 {
-    UNIMPLEMENTED;
-    return;
+    UCHAR StatusB;
+
+    /* Acquire the CMOS lock */
+    HalpAcquireSystemHardwareSpinLock();
+
+    /* Read Status Register B */
+    StatusB = HalpReadCmos(RTC_REGISTER_B);
+
+    /* Disable periodic interrupts */
+    StatusB = StatusB & ~RTC_REG_B_PI;
+
+    /* Write new value into Status Register B */
+    HalpWriteCmos(RTC_REGISTER_B, StatusB);
+
+    /* Release the CMOS lock */
+    HalpReleaseCmosSpinLock();
 }
 
 /*

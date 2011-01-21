@@ -95,7 +95,7 @@ typedef struct
 // Detect old GCC
 //
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303) 
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303)
 
 #define DEFINE_WAIT_BLOCK(x)                                \
     struct _AlignHack                                       \
@@ -119,15 +119,9 @@ typedef struct
 
 #endif
 
-#ifdef _WIN64
-#define ExpChangeRundown(x, y, z) InterlockedCompareExchange64((PLONGLONG)x, y, z)
+#define ExpChangeRundown(x, y, z) (ULONG_PTR)InterlockedCompareExchangePointer(&x->Ptr, (PVOID)y, (PVOID)z)
 #define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
-#define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
-#else
-#define ExpChangeRundown(x, y, z) PtrToUlong(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
-#define ExpChangePushlock(x, y, z) LongToPtr(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
-#define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
-#endif
+#define ExpSetRundown(x, y) InterlockedExchangePointer(&x->Ptr, (PVOID)y)
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
@@ -496,7 +490,7 @@ ExInitializeFastReference(OUT PEX_FAST_REF FastRef,
 {
     /* Sanity check */
     ASSERT((((ULONG_PTR)Object) & MAX_FAST_REFS) == 0);
-    
+
     /* Check if an object is being set */
     if (!Object)
     {
@@ -515,7 +509,7 @@ EX_FAST_REF
 ExAcquireFastReference(IN OUT PEX_FAST_REF FastRef)
 {
     EX_FAST_REF OldValue, NewValue;
-    
+
     /* Start reference loop */
     for (;;)
     {
@@ -530,11 +524,11 @@ ExAcquireFastReference(IN OUT PEX_FAST_REF FastRef)
                                                 OldValue.Object);
             if (NewValue.Object != OldValue.Object) continue;
         }
-        
+
         /* We are done */
         break;
     }
-    
+
     /* Return the old value */
     return OldValue;
 }
@@ -545,16 +539,16 @@ ExInsertFastReference(IN OUT PEX_FAST_REF FastRef,
                       IN PVOID Object)
 {
     EX_FAST_REF OldValue, NewValue;
-    
+
     /* Sanity checks */
     ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-    
+
     /* Start update loop */
     for (;;)
     {
         /* Get the current reference count */
         OldValue = *FastRef;
-        
+
         /* Check if the current count is too high or if the pointer changed */
         if (((OldValue.RefCnt + MAX_FAST_REFS) > MAX_FAST_REFS) ||
             ((OldValue.Value &~ MAX_FAST_REFS) != (ULONG_PTR)Object))
@@ -562,20 +556,20 @@ ExInsertFastReference(IN OUT PEX_FAST_REF FastRef,
             /* Fail */
             return FALSE;
         }
-        
+
         /* Update the reference count */
         NewValue.Value = OldValue.Value + MAX_FAST_REFS;
         NewValue.Object = ExpChangePushlock(&FastRef->Object,
                                             NewValue.Object,
                                             OldValue.Object);
         if (NewValue.Object != OldValue.Object) continue;
-        
+
         /* We are done */
         break;
     }
-    
+
     /* Return success */
-    return TRUE;   
+    return TRUE;
 }
 
 FORCEINLINE
@@ -584,31 +578,31 @@ ExReleaseFastReference(IN PEX_FAST_REF FastRef,
                        IN PVOID Object)
 {
     EX_FAST_REF OldValue, NewValue;
-    
+
     /* Sanity checks */
     ASSERT(Object != NULL);
     ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
-    
+
     /* Start reference loop */
     for (;;)
     {
         /* Get the current reference count */
         OldValue = *FastRef;
-        
+
         /* Check if we're full if if the pointer changed */
         if ((OldValue.Value ^ (ULONG_PTR)Object) >= MAX_FAST_REFS) return FALSE;
-            
+
         /* Decrease the reference count */
         NewValue.Value = OldValue.Value + 1;
         NewValue.Object = ExpChangePushlock(&FastRef->Object,
                                             NewValue.Object,
                                             OldValue.Object);
         if (NewValue.Object != OldValue.Object) continue;
-        
+
         /* We are done */
         break;
     }
-    
+
     /* Return success */
     return TRUE;
 }
@@ -619,10 +613,10 @@ ExSwapFastReference(IN PEX_FAST_REF FastRef,
                     IN PVOID Object)
 {
     EX_FAST_REF NewValue, OldValue;
-    
+
     /* Sanity check */
     ASSERT((((ULONG_PTR)Object) & MAX_FAST_REFS) == 0);
-    
+
     /* Check if an object is being set */
     if (!Object)
     {
@@ -634,7 +628,7 @@ ExSwapFastReference(IN PEX_FAST_REF FastRef,
         /* Otherwise, we assume the object was referenced and is ready */
         NewValue.Value = (ULONG_PTR)Object | MAX_FAST_REFS;
     }
-    
+
     /* Update the object */
     OldValue.Object = InterlockedExchangePointer(&FastRef->Object, NewValue.Object);
     return OldValue;
@@ -647,17 +641,17 @@ ExCompareSwapFastReference(IN PEX_FAST_REF FastRef,
                            IN PVOID OldObject)
 {
     EX_FAST_REF OldValue, NewValue;
-    
+
     /* Sanity check and start swap loop */
     ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
     for (;;)
     {
         /* Get the current value */
         OldValue = *FastRef;
-        
+
         /* Make sure there's enough references to swap */
         if (!((OldValue.Value ^ (ULONG_PTR)OldObject) <= MAX_FAST_REFS)) break;
-        
+
         /* Check if we have an object to swap */
         if (Object)
         {
@@ -669,17 +663,17 @@ ExCompareSwapFastReference(IN PEX_FAST_REF FastRef,
             /* Write the object address itself (which is empty) */
             NewValue.Value = (ULONG_PTR)Object;
         }
-        
+
         /* Do the actual compare exchange */
         NewValue.Object = ExpChangePushlock(&FastRef->Object,
                                             NewValue.Object,
                                             OldValue.Object);
         if (NewValue.Object != OldValue.Object) continue;
-        
+
         /* All done */
         break;
     }
-    
+
     /* Return the old value */
     return OldValue;
 }
@@ -849,7 +843,7 @@ _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Mark the counter as active */
-    ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
+    ExpSetRundown(RunRef, EX_RUNDOWN_ACTIVE);
 }
 
 /* PUSHLOCKS *****************************************************************/
@@ -1221,21 +1215,21 @@ VOID
 _ExAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
 {
     PKTHREAD Thread = KeGetCurrentThread();
-    
+
     /* Sanity check */
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (Thread->CombinedApcDisable != 0) ||
            (Thread->Teb == NULL) ||
            (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
     ASSERT(FastMutex->Owner != Thread);
-    
+
     /* Decrease the count */
     if (InterlockedDecrement(&FastMutex->Count))
     {
         /* Someone is still holding it, use slow path */
         KiAcquireFastMutex(FastMutex);
     }
-    
+
     /* Set the owner */
     FastMutex->Owner = Thread;
 }
@@ -1249,10 +1243,10 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
            (KeGetCurrentThread()->Teb == NULL) ||
            (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
     ASSERT(FastMutex->Owner == KeGetCurrentThread());
-    
+
     /* Erase the owner */
     FastMutex->Owner = NULL;
-    
+
     /* Increase the count */
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
@@ -1267,17 +1261,17 @@ _ExAcquireFastMutex(IN PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    
+
     /* Raise IRQL to APC */
     KeRaiseIrql(APC_LEVEL, &OldIrql);
-    
+
     /* Decrease the count */
     if (InterlockedDecrement(&FastMutex->Count))
     {
         /* Someone is still holding it, use slow path */
         KiAcquireFastMutex(FastMutex);
     }
-    
+
     /* Set the owner and IRQL */
     FastMutex->Owner = KeGetCurrentThread();
     FastMutex->OldIrql = OldIrql;
@@ -1289,18 +1283,18 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() == APC_LEVEL);
-    
+
     /* Erase the owner */
     FastMutex->Owner = NULL;
     OldIrql = (KIRQL)FastMutex->OldIrql;
-    
+
     /* Increase the count */
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
         KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
-    
+
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
 }
@@ -1311,10 +1305,10 @@ _ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    
+
     /* Raise to APC_LEVEL */
     KeRaiseIrql(APC_LEVEL, &OldIrql);
-    
+
     /* Check if we can quickly acquire it */
     if (InterlockedCompareExchange(&FastMutex->Count, 0, 1) == 1)
     {

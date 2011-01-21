@@ -63,6 +63,12 @@ typedef struct _USB_DEVICE
     USB_CONFIGURATION **Configs;
 } USB_DEVICE, *PUSB_DEVICE;
 
+typedef struct _WORKITEMDATA
+{
+    WORK_QUEUE_ITEM WorkItem;
+    PVOID Context;
+} WORKITEMDATA, *PWORKITEMDATA;
+
 typedef struct _HUB_CHILDDEVICE_EXTENSION
 {
     BOOLEAN IsFDO;
@@ -93,6 +99,7 @@ typedef struct _HUB_DEVICE_EXTENSION
     ULONG HubCount;
 
     USHORT PortStatus[256];
+    URB Urb;
 
     USB_BUS_INTERFACE_HUB_V5 HubInterface;
     USB_BUS_INTERFACE_USBDI_V2 UsbDInterface;
@@ -106,8 +113,6 @@ typedef struct _HUB_DEVICE_EXTENSION
 
     USB_EXTHUB_INFORMATION_0 UsbExtHubInfo;
     USB_DEVICE_INFORMATION_0 DeviceInformation;
-
-    WORK_QUEUE_ITEM WorkItem;
 
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;
     USBD_PIPE_HANDLE PipeHandle;

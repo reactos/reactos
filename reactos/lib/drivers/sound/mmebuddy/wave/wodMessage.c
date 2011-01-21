@@ -65,11 +65,11 @@ wodMessage(
 
         case WODM_OPEN :
         {
-            Result = MmeOpenWaveDevice(WAVE_OUT_DEVICE_TYPE,
-                                       DeviceId,
-                                       (LPWAVEOPENDESC) Parameter1,
-                                       Parameter2,
-                                       (DWORD_PTR*)PrivateHandle);
+            Result = MmeOpenDevice(WAVE_OUT_DEVICE_TYPE,
+                                   DeviceId,
+                                   (LPWAVEOPENDESC) Parameter1,
+                                   Parameter2,
+                                   (DWORD_PTR*)PrivateHandle);
             break;
         }
 

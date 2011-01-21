@@ -5,7 +5,6 @@
  * PURPOSE:     Ukraianian Language File for Solitaire
  * TRANSLATOR:  Artem Reznikov
  */
-#include "resource.h"
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 

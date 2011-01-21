@@ -118,54 +118,46 @@ SepPrivilegeCheck(PTOKEN Token,
 {
     ULONG i;
     ULONG j;
-    ULONG k;
+    ULONG Required;
 
     DPRINT("SepPrivilegeCheck() called\n");
 
     PAGED_CODE();
 
     if (PreviousMode == KernelMode)
-    {
         return TRUE;
-    }
 
-    k = 0;
-    if (PrivilegeCount > 0)
+    /* Get the number of privileges that are required to match */
+    Required = (PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) ? PrivilegeCount : 1;
+
+    /* Loop all requested privileges until we found the required ones */
+    for (i = 0; i < PrivilegeCount && Required > 0; i++)
     {
-        for (i = 0; i < Token->PrivilegeCount; i++)
+        /* Loop the privileges of the token */
+        for (j = 0; j < Token->PrivilegeCount; j++)
         {
-            for (j = 0; j < PrivilegeCount; j++)
+            /* Check if the LUIDs match */
+            if (Token->Privileges[j].Luid.LowPart == Privileges[i].Luid.LowPart &&
+                Token->Privileges[j].Luid.HighPart == Privileges[i].Luid.HighPart)
             {
-                if (Token->Privileges[i].Luid.LowPart == Privileges[j].Luid.LowPart &&
-                    Token->Privileges[i].Luid.HighPart == Privileges[j].Luid.HighPart)
-                {
-                    DPRINT("Found privilege\n");
-                    DPRINT("Privilege attributes %lx\n",
-                           Token->Privileges[i].Attributes);
+                DPRINT("Found privilege. Attributes: %lx\n",
+                       Token->Privileges[j].Attributes);
 
-                    if (Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)
-                    {
-                        Privileges[j].Attributes |= SE_PRIVILEGE_USED_FOR_ACCESS;
-                        k++;
-                    }
+                /* Check if the privilege is enabled */
+                if (Token->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED)
+                {
+                    Privileges[i].Attributes |= SE_PRIVILEGE_USED_FOR_ACCESS;
+                    Required--;
                 }
+
+                /* Leave the inner loop */
+                break;
             }
         }
     }
 
-    if ((PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY) &&
-        PrivilegeCount == k)
-    {
-        return TRUE;
-    }
-
-    if (k > 0 &&
-        !(PrivilegeControl & PRIVILEGE_SET_ALL_NECESSARY))
-    {
-        return TRUE;
-    }
-
-    return FALSE;
+    /* Return whether we found all required privileges */
+    return (Required == 0);
 }
 
 NTSTATUS

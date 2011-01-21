@@ -42,9 +42,12 @@
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-    IN ULONG  UlongAddress)
+    IN ULONG_PTR UlongAddress)
 {
-    return RtlConvertUlongToLargeInteger(UlongAddress);
+    SCSI_PHYSICAL_ADDRESS Address;
+
+    Address.QuadPart = UlongAddress;
+    return Address;
 }
 
 VOID

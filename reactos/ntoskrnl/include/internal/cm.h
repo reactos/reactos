@@ -1501,6 +1501,13 @@ CmUnloadKey(
     IN ULONG Flags
 );
 
+ULONG
+NTAPI
+CmCountOpenSubKeys(
+    IN PCM_KEY_CONTROL_BLOCK RootKcb,
+    IN BOOLEAN RemoveEmptyCacheEntries
+);
+
 //
 // Startup and Shutdown
 //

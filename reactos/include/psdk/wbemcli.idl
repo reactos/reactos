@@ -24,6 +24,10 @@ import "objidl.idl";
 interface IWbemContext;
 interface IWbemServices;
 interface IWbemStatusCodeText;
+interface IWbemCallResult;
+interface IWbemObjectSink;
+interface IWbemClassObject;
+interface IEnumWbemClassObject;
 
 typedef [v1_enum] enum tag_WBEMSTATUS
 {
@@ -208,4 +212,184 @@ interface IWbemStatusCodeText : IUnknown
         [in] LCID LocaleId,
         [in] LONG lFlags,
         [out] BSTR *MessageText);
+};
+
+[
+    object,
+    restricted,
+    uuid(9556dc99-828c-11cf-a37e-00aa003240c7),
+    pointer_default(unique)
+]
+interface IWbemServices : IUnknown
+{
+    HRESULT OpenNamespace(
+        [in] const BSTR strNamespace,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemServices **ppWorkingNamespace,
+        [out] IWbemCallResult **ppResult);
+
+    HRESULT CancelAsyncCall(
+        [in] IWbemObjectSink *pSink);
+
+    HRESULT QueryObjectSink(
+        [in] long lFlags,
+        [out] IWbemObjectSink **ppResponseHandler);
+
+    HRESULT GetObject(
+        [in] const BSTR strObjectPath,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemClassObject **ppObject,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT GetObjectAsync(
+        [in] const BSTR strObjectPath,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT PutClass(
+        [in] IWbemClassObject *pObject,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT PutClassAsync(
+        [in] IWbemClassObject *pObject,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT DeleteClass(
+        [in] const BSTR strClass,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT DeleteClassAsync(
+        [in] const BSTR strClass,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT CreateClassEnum(
+        [in] const BSTR strSuperclass,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IEnumWbemClassObject **ppEnum);
+
+    HRESULT CreateClassEnumAsync(
+        [in] const BSTR strSuperclass,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT PutInstance(
+        [in] IWbemClassObject *pInst,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT PutInstanceAsync(
+        [in] IWbemClassObject *pInst,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT DeleteInstance(
+        [in] const BSTR strObjectPath,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT DeleteInstanceAsync(
+        [in] const BSTR strObjectPath,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT CreateInstanceEnum(
+        [in] const BSTR strFilter,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IEnumWbemClassObject **ppEnum);
+
+    HRESULT CreateInstanceEnumAsync(
+        [in] const BSTR strFilter,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT ExecQuery(
+        [in] const BSTR strQueryLanguage,
+        [in] const BSTR strQuery,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IEnumWbemClassObject **ppEnum);
+
+    HRESULT ExecQueryAsync(
+        [in] const BSTR strQueryLanguage,
+        [in] const BSTR strQuery,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT ExecNotificationQuery(
+        [in] const BSTR strQueryLanguage,
+        [in] const BSTR strQuery,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [out] IEnumWbemClassObject **ppEnum);
+
+    HRESULT ExecNotificationQueryAsync(
+        [in] const BSTR strQueryLanguage,
+        [in] const BSTR strQuery,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemObjectSink *pResponseHandler);
+
+    HRESULT ExecMethod(
+        [in] const BSTR strObjectPath,
+        [in] const BSTR strMethodName,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemClassObject *pInParams,
+        [out] IWbemClassObject **ppOutParams,
+        [out] IWbemCallResult **ppCallResult);
+
+    HRESULT ExecMethodAsync(
+        [in] const BSTR strObjectPath,
+        [in] const BSTR strMethodName,
+        [in] long lFlags,
+        [in] IWbemContext *pCtx,
+        [in] IWbemClassObject *pInParams,
+        [in] IWbemObjectSink *pResponseHandler);
+};
+
+[
+    object,
+    restricted,
+    uuid(027947e1-d731-11ce-a357-000000000001)
+]
+interface IEnumWbemClassObject : IUnknown
+{
+    HRESULT Reset();
+
+    HRESULT Next(
+        [in] long lTimeout,
+        [in] ULONG uCount,
+        [out, size_is(uCount), length_is(*puReturned)] IWbemClassObject **apObjects,
+        [out] ULONG *puReturned);
+
+    HRESULT NextAsync(
+        [in] ULONG uCount,
+        [in] IWbemObjectSink *pSink);
+
+    HRESULT Clone(
+        [out] IEnumWbemClassObject **ppEnum);
+
+    HRESULT Skip(
+        [in] long lTimeout,
+        [in] ULONG nCount);
 };

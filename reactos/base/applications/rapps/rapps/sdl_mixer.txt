@@ -11,6 +11,9 @@ URLSite = http://www.libsdl.org/projects/SDL_mixer/
 URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.11-win32.zip
 CDPath = none
 
+[Section.0405]
+Description = Nutný pro spuštění některých open source her. K rozbalení je nutný 7-zip nebo podobný nástroj.
+
 [Section.0407]
 Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
 

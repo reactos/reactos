@@ -251,7 +251,7 @@ $(2): $${$(1)_precondition}
 
 ${call RBUILD_intermediate_path_noext,$(2)}.h: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
-	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H $$@ $$<
+	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -o $$@ $$<
 
 endef
 
@@ -310,7 +310,7 @@ $(2): $${$(1)_precondition}
 
 ${call RBUILD_intermediate_path_noext,$(2)}_i.c: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
-	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -u -U $$@ $$<
+	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -u -o $$@ $$<
 
 ${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_i.c,,,${call RBUILD_intermediate_path_noext,$(2)}_i.o}
 
@@ -322,7 +322,7 @@ define RBUILD_WIDL_DLLDATA_RULE
 
 $(2): $(3) ${$(1)_precondition} $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
-	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4)} --dlldata-only --dlldata=$(2) $(5)
+	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4)} --dlldata-only -o $(2) $(5)
 
 ${call RBUILD_CC,$(1),$(2),,,${call RBUILD_intermediate_path_noext,$(2)}.o}
 
@@ -335,7 +335,7 @@ $(2): $${$(1)_precondition}
 
 ${call RBUILD_intermediate_dir,$(2)}$$(SEP)$(1).tlb: $(2) $(3) $$(widl_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_WIDL)
-	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -t -T $$@ $$<
+	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -t -o $$@ $$<
 
 endef
 

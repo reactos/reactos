@@ -157,36 +157,35 @@ RtlGetCurrentPeb(VOID)
 NTSTATUS
 NTAPI
 RtlDeleteHeapLock(
-    PRTL_CRITICAL_SECTION CriticalSection)
+    PHEAP_LOCK Lock)
 {
-    ASSERT(FALSE);
+    ExDeleteResource(&Lock->Resource);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 RtlEnterHeapLock(
-    PRTL_CRITICAL_SECTION CriticalSection)
+    PHEAP_LOCK Lock)
 {
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
+    return ExAcquireResourceExclusive(&Lock->Resource, TRUE);
 }
 
 NTSTATUS
 NTAPI
 RtlInitializeHeapLock(
-    PRTL_CRITICAL_SECTION CriticalSection)
+    PHEAP_LOCK Lock)
 {
-   ASSERT(FALSE);
-   return STATUS_SUCCESS;
+    ExInitializeResource(&Lock->Resource);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 RtlLeaveHeapLock(
-    PRTL_CRITICAL_SECTION CriticalSection)
+    PHEAP_LOCK Lock)
 {
-    ASSERT(FALSE);
+    ExReleaseResource(&Lock->Resource);
     return STATUS_SUCCESS;
 }
 

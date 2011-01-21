@@ -36,7 +36,7 @@ FatiRead(PFAT_IRP_CONTEXT IrpContext)
         FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
         return STATUS_SUCCESS;
     }
-    
+
     OpenType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
     DPRINT("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",

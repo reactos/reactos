@@ -49,7 +49,7 @@ IntGdiPolygon(PDC    dc,
 
     if (!Points || Count < 2 )
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -110,7 +110,7 @@ IntGdiPolygon(PDC    dc,
                                   psurf,
                                   &dc->eboFill.BrushObject,
                                   Points,
-                                  Count, 
+                                  Count,
                                   DestRect,
                                   &BrushOrigin);
         }
@@ -214,7 +214,7 @@ NtGdiEllipse(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-       SetLastWin32Error(ERROR_INVALID_HANDLE);
+       EngSetLastError(ERROR_INVALID_HANDLE);
        return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -253,7 +253,7 @@ NtGdiEllipse(
     {
         DPRINT1("Ellipse Fail 1\n");
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -271,15 +271,15 @@ NtGdiEllipse(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrush->ptPenWidth.x = PenWidth;  
+    pbrush->ptPenWidth.x = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
     RectBounds.top    = Top;
     RectBounds.bottom = Bottom;
-                
+
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
- 
+
     RectBounds.left += dc->ptlDCOrig.x;
     RectBounds.right += dc->ptlDCOrig.x;
     RectBounds.top += dc->ptlDCOrig.y;
@@ -298,10 +298,10 @@ NtGdiEllipse(
                CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
     pFillBrushObj = BRUSH_LockBrush(pdcattr->hbrush);
-    if (NULL == pFillBrushObj)   
+    if (NULL == pFillBrushObj)
     {
         DPRINT1("FillEllipse Fail\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         ret = FALSE;
     }
     else
@@ -418,7 +418,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     if (nInvalid != 0)
     {
         /* If at least one poly count is 0 or 1, fail */
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -428,7 +428,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
                                   TAG_SHAPE);
     if (!pTemp)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -465,7 +465,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         ExFreePool(pTemp);
         return FALSE;
     }
@@ -477,6 +477,15 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
+
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     /* Perform the actual work */
     switch (iFunc)
@@ -497,11 +506,12 @@ NtGdiPolyPolyDraw( IN HDC hDC,
             Ret = IntGdiPolyBezierTo(dc, SafePoints, *SafeCounts);
             break;
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
     }
 
     /* Cleanup and return */
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
     ExFreePool(pTemp);
 
@@ -529,19 +539,6 @@ IntRectangle(PDC dc,
 
     pdcattr = dc->pdcattr;
 
-    /* Do we rotate or shear? */
-    if (!(dc->dclevel.mxWorldToDevice.flAccel & MX_SCALE))
-    {
-
-        POINTL DestCoords[4];
-        ULONG  PolyCounts = 4;
-        DestCoords[0].x = DestCoords[3].x = LeftRect;
-        DestCoords[0].y = DestCoords[1].y = TopRect;
-        DestCoords[1].x = DestCoords[2].x = RightRect;
-        DestCoords[2].y = DestCoords[3].y = BottomRect;
-        // Use IntGdiPolyPolygon so to support PATH.
-        return IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
-    }
     // Rectangle Path only.
     if ( PATH_IsPathOpen(dc->dclevel) )
     {
@@ -567,6 +564,8 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
+    DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
@@ -580,6 +579,7 @@ IntRectangle(PDC dc,
         ret = FALSE;
         goto cleanup;
     }
+
     psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
@@ -645,6 +645,8 @@ IntRectangle(PDC dc,
     }
 
 cleanup:
+    DC_vFinishBlit(dc, NULL);
+
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
 
@@ -665,7 +667,7 @@ NtGdiRectangle(HDC  hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -675,8 +677,25 @@ NtGdiRectangle(HDC  hDC,
         return TRUE;
     }
 
-    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    DC_UnlockDc ( dc );
+    /* Do we rotate or shear? */
+    if (!(dc->dclevel.mxWorldToDevice.flAccel & MX_SCALE))
+    {
+        POINTL DestCoords[4];
+        ULONG PolyCounts = 4;
+
+        DestCoords[0].x = DestCoords[3].x = LeftRect;
+        DestCoords[0].y = DestCoords[1].y = TopRect;
+        DestCoords[1].x = DestCoords[2].x = RightRect;
+        DestCoords[2].y = DestCoords[3].y = BottomRect;
+        // Use IntGdiPolyPolygon so to support PATH.
+        ret = IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
+    }
+    else
+    {
+        ret = IntRectangle(dc, LeftRect, TopRect, RightRect, BottomRect );
+    }
+
+    DC_UnlockDc(dc);
 
     return ret;
 }
@@ -732,7 +751,7 @@ IntRoundRect(
     if (!pbrushLine)
     {
         /* Nothing to do, as we don't have a bitmap */
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -750,7 +769,7 @@ IntRoundRect(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrushLine->ptPenWidth.x = PenWidth;  
+    pbrushLine->ptPenWidth.x = PenWidth;
 
     RectBounds.left = Left;
     RectBounds.top = Top;
@@ -765,12 +784,12 @@ IntRoundRect(
     RectBounds.bottom += dc->ptlDCOrig.y;
 
     pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-    if (NULL == pbrushFill)   
+    if (NULL == pbrushFill)
     {
         DPRINT1("FillRound Fail\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         ret = FALSE;
-    } 
+    }
     else
     {
         RtlCopyMemory(&brushTemp, pbrushFill, sizeof(brushTemp));
@@ -820,7 +839,7 @@ NtGdiRoundRect(
     if ( !dc )
     {
         DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
     }
     else if (dc->dctype == DC_TYPE_INFO)
     {
@@ -849,16 +868,14 @@ GreGradientFill(
 {
     PDC pdc;
     SURFACE *psurf;
-    PPALETTE ppal;
     EXLATEOBJ exlo;
     RECTL rclExtent;
     POINTL ptlDitherOrg;
     ULONG i;
     BOOL bRet;
-    HPALETTE hDestPalette;
 
-    /* Check parameters */
-    if (ulMode == GRADIENT_FILL_TRIANGLE)
+    /* check parameters */
+    if (ulMode & GRADIENT_FILL_TRIANGLE)
     {
         PGRADIENT_TRIANGLE pTriangle = (PGRADIENT_TRIANGLE)pMesh;
 
@@ -868,7 +885,7 @@ GreGradientFill(
                 pTriangle->Vertex2 >= nVertex ||
                 pTriangle->Vertex3 >= nVertex)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
         }
@@ -880,7 +897,7 @@ GreGradientFill(
         {
             if (pRect->UpperLeft >= nVertex || pRect->LowerRight >= nVertex)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
         }
@@ -888,13 +905,13 @@ GreGradientFill(
 
     /* Lock the output DC */
     pdc = DC_LockDc(hdc);
-    if (!pdc)
+    if(!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    if (pdc->dctype == DC_TYPE_INFO)
+    if(pdc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pdc);
         /* Yes, Windows really returns TRUE in this case */
@@ -902,11 +919,11 @@ GreGradientFill(
     }
 
     psurf = pdc->dclevel.pSurface;
-    if (!psurf)
+    if(!psurf)
     {
         /* Memory DC with no surface selected */
         DC_UnlockDc(pdc);
-        return TRUE; // CHECKME
+        return TRUE; //CHECKME
     }
 
     /* calculate extent */
@@ -919,8 +936,8 @@ GreGradientFill(
         rclExtent.top = min(rclExtent.top, (pVertex + i)->y);
         rclExtent.bottom = max(rclExtent.bottom, (pVertex + i)->y);
     }
-
     IntLPtoDP(pdc, (LPPOINT)&rclExtent, 2);
+
     rclExtent.left   += pdc->ptlDCOrig.x;
     rclExtent.right  += pdc->ptlDCOrig.x;
     rclExtent.top    += pdc->ptlDCOrig.y;
@@ -928,33 +945,29 @@ GreGradientFill(
 
     ptlDitherOrg.x = ptlDitherOrg.y = 0;
     IntLPtoDP(pdc, (LPPOINT)&ptlDitherOrg, 1);
+
     ptlDitherOrg.x += pdc->ptlDCOrig.x;
     ptlDitherOrg.y += pdc->ptlDCOrig.y;
 
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
-
-    ppal = PALETTE_LockPalette(hDestPalette);
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0, 0);
 
     ASSERT(pdc->rosdc.CombinedClip);
 
+    DC_vPrepareDCsForBlit(pdc, rclExtent, NULL, rclExtent);
+
     bRet = IntEngGradientFill(&psurf->SurfObj,
-                              pdc->rosdc.CombinedClip,
-                              &exlo.xlo,
-                              pVertex,
-                              nVertex,
-                              pMesh,
-                              nMesh,
-                              &rclExtent,
-                              &ptlDitherOrg,
-                              ulMode);
+                             pdc->rosdc.CombinedClip,
+                             &exlo.xlo,
+                             pVertex,
+                             nVertex,
+                             pMesh,
+                             nMesh,
+                             &rclExtent,
+                             &ptlDitherOrg,
+                             ulMode);
 
     EXLATEOBJ_vCleanup(&exlo);
-
-    if (ppal)
-        PALETTE_UnlockPalette(ppal);
-
+    DC_vFinishBlit(pdc, NULL);
     DC_UnlockDc(pdc);
 
     return bRet;
@@ -978,7 +991,7 @@ NtGdiGradientFill(
     /* Validate parameters */
     if (!pVertex || !nVertex || !pMesh || !nMesh)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -992,22 +1005,22 @@ NtGdiGradientFill(
             cbMesh = nMesh * sizeof(GRADIENT_TRIANGLE);
             break;
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
-    cbVertex = nVertex * sizeof(TRIVERTEX);
-    if (cbVertex + cbMesh <= cbVertex)
+    cbVertex = nVertex * sizeof(TRIVERTEX) ;
+    if(cbVertex + cbMesh <= cbVertex)
     {
         /* Overflow */
-        return FALSE;
+        return FALSE ;
     }
 
     /* Allocate a kernel mode buffer */
     SafeVertex = ExAllocatePoolWithTag(PagedPool, cbVertex + cbMesh, TAG_SHAPE);
-    if (!SafeVertex)
+    if(!SafeVertex)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -1048,8 +1061,6 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR   pdcattr;
     SURFACE    *psurf = NULL;
-    HPALETTE   hpal;
-    PPALETTE   ppal;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
@@ -1059,7 +1070,7 @@ NtGdiExtFloodFill(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -1094,11 +1105,7 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    hpal = dc->dclevel.pSurface->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
-    ppal = PALETTE_ShareLockPalette(hpal);
-    
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
 
     /* Only solid fills supported for now
      * How to support pattern brushes and non standard surfaces (not offering dib functions):
@@ -1108,7 +1115,6 @@ NtGdiExtFloodFill(
     Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
 
     EXLATEOBJ_vCleanup(&exlo);
-    PALETTE_ShareUnlockPalette(ppal);
 
 cleanup:
     DC_UnlockDc(dc);

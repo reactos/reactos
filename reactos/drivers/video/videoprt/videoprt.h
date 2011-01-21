@@ -95,6 +95,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG DeviceOpened;
    AGP_BUS_INTERFACE_STANDARD AgpInterface;
    KMUTEX DeviceLock;
+   LIST_ENTRY DmaAdapterList;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
@@ -106,11 +107,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 
 typedef struct _VIDEO_PORT_EVENT
 {
-    /* Public part */
     ENG_EVENT;
-
-    /* Private part */
-    KEVENT Event;
 } VIDEO_PORT_EVENT, *PVIDEO_PORT_EVENT;
 
 /* agp.c */

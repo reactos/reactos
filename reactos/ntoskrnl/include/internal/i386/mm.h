@@ -35,7 +35,7 @@ PULONG MmGetPageDirectory(VOID);
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
 #define MiAddressToPte(x) \
     ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
 #define MiAddressToPteOffset(x) \
@@ -60,9 +60,11 @@ PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
+#define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.CacheDisable = 1)
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.WriteThrough = 1)
 #define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.WriteThrough = 0)
+#define MI_IS_PAGE_LARGE(x)        ((x)->u.Hard.LargePage == 1)
 #if !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
 #else
@@ -92,9 +94,13 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_ZERO_PTES                        (32)
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
 #define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
-                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
-                                             PAGE_SIZE)
+	                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
+#define MI_DUMMY_PTE                        (PMMPTE)(MI_MAPPING_RANGE_END + \
+	                                              PAGE_SIZE)
+#define MI_VAD_BITMAP                       (PMMPTE)(MI_DUMMY_PTE + \
+	                                              PAGE_SIZE)
+#define MI_WORKING_SET_LIST                 (PMMPTE)(MI_VAD_BITMAP + \
+	                                              PAGE_SIZE)
 
 /* On x86, these two are the same */
 #define MMPDE MMPTE

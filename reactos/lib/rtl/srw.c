@@ -131,7 +131,7 @@ RtlpReleaseWaitBlockLockExclusive(IN OUT PRTL_SRWLOCK SRWLock,
         }
     }
 
-    (void)_InterlockedExchange((PLONG)&SRWLock->Ptr, NewValue);
+    (void)_InterlockedExchangePointer(&SRWLock->Ptr, (PVOID)NewValue);
 
     if (FirstWaitBlock->Exclusive)
     {
@@ -186,7 +186,7 @@ RtlpReleaseWaitBlockLockLastShared(IN OUT PRTL_SRWLOCK SRWLock,
         NewValue = RTL_SRWLOCK_OWNED;
     }
 
-    (void)_InterlockedExchange((PLONG)&SRWLock->Ptr, NewValue);
+    (void)_InterlockedExchangePointer(&SRWLock->Ptr, (PVOID)NewValue);
 
     (void)InterlockedOr(&FirstWaitBlock->Wake,
                         TRUE);
@@ -420,9 +420,9 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                 NewValue = (CurrentValue >> RTL_SRWLOCK_BITS) + 1;
                 NewValue = (NewValue << RTL_SRWLOCK_BITS) | (CurrentValue & RTL_SRWLOCK_MASK);
 
-                if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                NewValue,
-                                                CurrentValue) == CurrentValue)
+                if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                 (PVOID)NewValue,
+                                                                 (PVOID)CurrentValue) == CurrentValue)
                 {
                     /* Successfully incremented the shared count, we acquired the lock */
                     break;
@@ -499,9 +499,9 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                     ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
 
                     NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_OWNED | RTL_SRWLOCK_CONTENDED;
-                    if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                    NewValue,
-                                                    CurrentValue) == CurrentValue)
+                    if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                     (PVOID)NewValue,
+                                                                     (PVOID)CurrentValue) == CurrentValue)
                     {
                         RtlpAcquireSRWLockSharedWait(SRWLock,
                                                      &StackWaitBlock,
@@ -521,9 +521,9 @@ RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                    RTL_SRWLOCK_SHARED nor the RTL_SRWLOCK_OWNED bit is set */
                 ASSERT(!(CurrentValue & RTL_SRWLOCK_CONTENDED));
 
-                if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                NewValue,
-                                                CurrentValue) == CurrentValue)
+                if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                 (PVOID)NewValue,
+                                                                 (PVOID)CurrentValue) == CurrentValue)
                 {
                     /* Successfully set the shared count, we acquired the lock */
                     break;
@@ -580,9 +580,9 @@ RtlReleaseSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock)
                     NewValue = (NewValue << RTL_SRWLOCK_BITS) | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
                 }
 
-                if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                NewValue,
-                                                CurrentValue) == CurrentValue)
+                if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                 (PVOID)NewValue,
+                                                                 (PVOID)CurrentValue) == CurrentValue)
                 {
                     /* Successfully released the lock */
                     break;
@@ -639,9 +639,9 @@ RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock)
 
                     NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENDED | RTL_SRWLOCK_OWNED;
 
-                    if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                    NewValue,
-                                                    CurrentValue) == CurrentValue)
+                    if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                     (PVOID)NewValue,
+                                                                     (PVOID)CurrentValue) == CurrentValue)
                     {
                         RtlpAcquireSRWLockExclusiveWait(SRWLock,
                                                         &StackWaitBlock);
@@ -697,9 +697,9 @@ AddWaitBlock:
                         ASSERT_SRW_WAITBLOCK(&StackWaitBlock);
 
                         NewValue = (ULONG_PTR)&StackWaitBlock | RTL_SRWLOCK_OWNED | RTL_SRWLOCK_CONTENDED;
-                        if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                        NewValue,
-                                                        CurrentValue) == CurrentValue)
+                        if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                         (PVOID)NewValue,
+                                                                         (PVOID)CurrentValue) == CurrentValue)
                         {
                             RtlpAcquireSRWLockExclusiveWait(SRWLock,
                                                             &StackWaitBlock);
@@ -767,9 +767,9 @@ RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock)
                 ASSERT(!(CurrentValue & ~RTL_SRWLOCK_OWNED));
 
                 NewValue = 0;
-                if (_InterlockedCompareExchange((PLONG)&SRWLock->Ptr,
-                                                NewValue,
-                                                CurrentValue) == CurrentValue)
+                if ((LONG_PTR)_InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                                 (PVOID)NewValue,
+                                                                 (PVOID)CurrentValue) == CurrentValue)
                 {
                     /* We released the lock */
                     break;

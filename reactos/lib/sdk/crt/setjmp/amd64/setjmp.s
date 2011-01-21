@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/amd64/asm.h>
+#include <asm.inc>
+#include <ksamd64.inc>
 
 #define JUMP_BUFFER_Frame 0x00
 #define JUMP_BUFFER_Rbx   0x08
@@ -156,3 +156,5 @@ PUBLIC longjmp
     inc rax
 2:  jmp r8
 .endp longjmp
+
+END

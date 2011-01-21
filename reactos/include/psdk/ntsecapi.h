@@ -318,7 +318,9 @@ typedef enum _TRUSTED_INFORMATION_CLASS {
   TrustedDomainInformationBasic,
   TrustedDomainInformationEx,
   TrustedDomainAuthInformation,
-  TrustedDomainFullInformation
+  TrustedDomainFullInformation,
+  TrustedDomainAuthInformationInternal,
+  TrustedDomainFullInformationInternal
 } TRUSTED_INFORMATION_CLASS, *PTRUSTED_INFORMATION_CLASS;
 typedef enum _LSA_FOREST_TRUST_RECORD_TYPE {
   ForestTrustTopLevelName,
@@ -671,14 +673,16 @@ typedef struct _TRUSTED_DOMAIN_FULL_INFORMATION {
 BOOLEAN WINAPI RtlGenRandom(PVOID,ULONG);
 
 NTSTATUS NTAPI LsaAddAccountRights(LSA_HANDLE,PSID,PLSA_UNICODE_STRING,ULONG);
+NTSTATUS NTAPI LsaAddPrivilegesToAccount(LSA_HANDLE, PPRIVILEGE_SET);
 NTSTATUS NTAPI LsaCallAuthenticationPackage(HANDLE,ULONG,PVOID,ULONG,PVOID*,
                             PULONG,PNTSTATUS);
 NTSTATUS NTAPI LsaClose(LSA_HANDLE);
 NTSTATUS NTAPI LsaConnectUntrusted(PHANDLE);
-NTSTATUS NTAPI LsaCreateTrustedDomainEx(LSA_HANDLE,
-                            PTRUSTED_DOMAIN_INFORMATION_EX,
-                            PTRUSTED_DOMAIN_AUTH_INFORMATION,ACCESS_MASK,
-                            PLSA_HANDLE);
+NTSTATUS NTAPI LsaCreateAccount(LSA_HANDLE, PSID, ULONG, PLSA_HANDLE);
+NTSTATUS NTAPI LsaCreateTrustedDomain(LSA_HANDLE, PLSA_TRUST_INFORMATION,
+                            ACCESS_MASK, PLSA_HANDLE);
+NTSTATUS NTAPI LsaCreateTrustedDomainEx(LSA_HANDLE, PTRUSTED_DOMAIN_INFORMATION_EX,
+                            PTRUSTED_DOMAIN_AUTH_INFORMATION, ACCESS_MASK, PLSA_HANDLE);
 NTSTATUS NTAPI LsaDeleteTrustedDomain(LSA_HANDLE,PSID);
 NTSTATUS NTAPI LsaDeregisterLogonProcess(HANDLE);
 NTSTATUS NTAPI LsaEnumerateAccountRights(LSA_HANDLE,PSID,PLSA_UNICODE_STRING*,PULONG);
@@ -703,8 +707,11 @@ NTSTATUS NTAPI LsaLookupPrivilegeValue(LSA_HANDLE, PLSA_UNICODE_STRING, PLUID);
 NTSTATUS NTAPI LsaLookupSids(LSA_HANDLE,ULONG,PSID*,
                             PLSA_REFERENCED_DOMAIN_LIST*,PLSA_TRANSLATED_NAME*);
 ULONG NTAPI LsaNtStatusToWinError(NTSTATUS);
+NTSTATUS NTAPI LsaOpenAccount(LSA_HANDLE, PSID, ULONG, PLSA_HANDLE);
 NTSTATUS NTAPI LsaOpenPolicy(PLSA_UNICODE_STRING,PLSA_OBJECT_ATTRIBUTES,
                             ACCESS_MASK,PLSA_HANDLE);
+NTSTATUS NTAPI LsaOpenTrustedDomainByName(LSA_HANDLE, PLSA_UNICODE_STRING,
+                            ACCESS_MASK, PLSA_HANDLE);
 NTSTATUS NTAPI LsaQueryDomainInformationPolicy(LSA_HANDLE,
                             POLICY_DOMAIN_INFORMATION_CLASS,PVOID*);
 NTSTATUS NTAPI LsaQueryInformationPolicy(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);

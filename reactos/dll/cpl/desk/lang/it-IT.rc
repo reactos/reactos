@@ -6,7 +6,7 @@ CAPTION "Sfondo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
-                    70, 10, 105, 70, WS_EX_STATICEDGE
+                    70, 10, 105, 80, 0
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 122, 174, 78
@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON      "&Colore...", IDC_COLOR_BUTTON, 188, 185, 50, 15
     LTEXT           "Posizione:", IDC_STATIC, 188, 146, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 157, 50, 54,
-                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
@@ -201,8 +201,8 @@ BEGIN
     IDS_CPLDESCRIPTION "Adatta la visualizzazione del desktop e dello screen saver."
     IDS_NONE "(Niente)"
     IDS_CENTER "Al centro"
-    IDS_STRETCH "Affiancata"
-    IDS_TILE "Estesa"
+    IDS_STRETCH "Estesa"
+    IDS_TILE "Affiancata"
 END
 
 STRINGTABLE DISCARDABLE

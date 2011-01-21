@@ -961,7 +961,9 @@ CreateWindowStationAndDesktops(
 	DWORD SidSize, AclSize;
 	PACL pDefaultAcl = NULL;
 	PACL pUserDesktopAcl = NULL;
+	SECURITY_DESCRIPTOR DefaultSecurityDescriptor;
 	SECURITY_ATTRIBUTES DefaultSecurity;
+	SECURITY_DESCRIPTOR UserDesktopSecurityDescriptor;
 	SECURITY_ATTRIBUTES UserDesktopSecurity;
 	BOOL ret = FALSE;
 
@@ -1008,8 +1010,24 @@ CreateWindowStationAndDesktops(
 		ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
 		goto cleanup;
 	}
+
+	/*
+	 * Create the default security descriptor
+	 */
+	if (!InitializeSecurityDescriptor(&DefaultSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
+	{
+		ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
+	if (!SetSecurityDescriptorDacl(&DefaultSecurityDescriptor, TRUE, pDefaultAcl, FALSE))
+	{
+		ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
 	DefaultSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
-	DefaultSecurity.lpSecurityDescriptor = pDefaultAcl;
+	DefaultSecurity.lpSecurityDescriptor = &DefaultSecurityDescriptor;
 	DefaultSecurity.bInheritHandle = TRUE;
 
 	/*
@@ -1021,8 +1039,24 @@ CreateWindowStationAndDesktops(
 		ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
 		goto cleanup;
 	}
+
+	/*
+	 * Create the user desktop security descriptor
+	 */
+	if (!InitializeSecurityDescriptor(&UserDesktopSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
+	{
+		ERR("WL: InitializeSecurityDescriptor() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
+	if (!SetSecurityDescriptorDacl(&UserDesktopSecurityDescriptor, TRUE, pUserDesktopAcl, FALSE))
+	{
+		ERR("WL: SetSecurityDescriptorDacl() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
 	UserDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
-	UserDesktopSecurity.lpSecurityDescriptor = pUserDesktopAcl;
+	UserDesktopSecurity.lpSecurityDescriptor = &UserDesktopSecurityDescriptor;
 	UserDesktopSecurity.bInheritHandle = TRUE;
 
 	/*

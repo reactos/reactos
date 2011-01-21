@@ -18,7 +18,6 @@ extern "C" {
 #endif
 
 
-#define WC_DIALOG MAKEINTATOM(0x8002)
 #define FALT	16
 #define FCONTROL	8
 #define FNOINVERT	2
@@ -300,9 +299,6 @@ extern "C" {
 #define ES_LOWERCASE 16
 #define ES_MULTILINE 4
 #define ES_NOHIDESEL 256
-#ifdef _WINE
-#define ES_COMBO 0x200   /* Undocumented. Parent is a combobox */
-#endif
 #define ES_NUMBER 0x2000
 #define ES_OEMCONVERT 0x400
 #define ES_PASSWORD 32
@@ -390,7 +386,6 @@ extern "C" {
 #define WS_EX_COMPOSITED 0x2000000 /* XP */
 #define WS_EX_CONTEXTHELP 0x400
 #define WS_EX_CONTROLPARENT 0x10000
-#define WS_EX_DRAGDETECT 0x00000002L
 #define WS_EX_DLGMODALFRAME 1
 #define WS_EX_LAYERED 0x80000   /* w2k */
 #define WS_EX_LAYOUTRTL 0x400000 /* w98, w2k */
@@ -870,8 +865,6 @@ extern "C" {
 #endif
 #define QS_SENDMESSAGE 64
 #define QS_TIMER 16
-/* Extra (undocumented) queue wake bits - see "Undoc. Windows" */
-#define QS_SMRESULT 0x8000
 
 #define USER_TIMER_MAXIMUM  2147483647
 #define USER_TIMER_MINIMUM  10
@@ -1213,10 +1206,6 @@ extern "C" {
 #define SWP_NOSENDCHANGING 1024
 #define SWP_DEFERERASE 8192
 #define SWP_ASYNCWINDOWPOS  16384
-/* undocumented SWP flags - from SDK 3.1 */
-#define SWP_NOCLIENTSIZE 0x0800
-#define SWP_NOCLIENTMOVE 0x1000
-#define SWP_STATECHANGED 0x8000
 
 #define HSHELL_WINDOWCREATED 1
 #define HSHELL_WINDOWDESTROYED 2
@@ -1617,8 +1606,6 @@ extern "C" {
 #define WM_GETFONT 49
 #define WM_SETHOTKEY 50
 #define WM_GETHOTKEY 51
-#define WM_ISACTIVEICON 53
-#define WM_QUERYPARKICON 54
 #define WM_QUERYDRAGICON 55
 #define WM_COMPAREITEM 57
 #if (WINVER >= 0x0500)
@@ -1673,7 +1660,6 @@ extern "C" {
 #define WM_NCXBUTTONDBLCLK 173
 #endif /* (_WIN32_WINNT >= 0x0500) */
 
-#define WM_KEYF1 0x004d
 #define WM_KEYFIRST 256
 #define WM_KEYDOWN 256
 #define WM_KEYUP 257
@@ -1707,7 +1693,6 @@ extern "C" {
 #define WM_VSCROLL 277
 #define WM_INITMENU 278
 #define WM_INITMENUPOPUP 279
-#define WM_SYSTIMER 280
 #define WM_MENUSELECT 287
 #define WM_MENUCHAR 288
 #define WM_ENTERIDLE 289
@@ -1727,15 +1712,6 @@ extern "C" {
 #endif /* _WIN32_WCE */
 #endif /* (WINVER >= 0x0500) */
 
-/* D&D messages */
-#define WM_DROPOBJECT	    0x022A
-#define WM_QUERYDROPOBJECT  0x022B
-#define WM_BEGINDRAG	    0x022C
-#define WM_DRAGLOOP	    0x022D
-#define WM_DRAGSELECT	    0x022E
-#define WM_DRAGMOVE	    0x022F
-
-#define WM_CTLCOLOR 25
 #define WM_CTLCOLORMSGBOX 306
 #define WM_CTLCOLOREDIT 307
 #define WM_CTLCOLORLISTBOX 308
@@ -1746,7 +1722,6 @@ extern "C" {
 #define MN_GETHMENU 481
 #define WM_MOUSEFIRST 512
 #define WM_MOUSEMOVE 512
-#define WM_LBTRACKPOINT 0x0131
 #define WM_LBUTTONDOWN 513
 #define WM_LBUTTONUP 514
 #define WM_LBUTTONDBLCLK 515
@@ -2340,6 +2315,15 @@ extern "C" {
 #define TPM_HORNEGANIMATION 0x0800
 #define TPM_VERPOSANIMATION 0x1000
 #define TPM_VERNEGANIMATION 0x2000
+#endif
+#if(_WIN32_WINNT >= 0x0500)
+#define TPM_NOANIMATION 16384
+#endif
+#if (_WIN32_WINNT >= 0x0501)
+#define TPM_LAYOUTRTL 32768
+#endif
+#if (_WIN32_WINNT >= 0x0601)
+#define TPM_WORKAREA 65536
 #endif
 #define HELP_COMMAND 0x102
 #define HELP_CONTENTS 3
@@ -3050,6 +3034,32 @@ typedef struct _ICONINFO {
 	HBITMAP hbmMask;
 	HBITMAP hbmColor;
 } ICONINFO,*PICONINFO;
+
+typedef struct _ICONINFOEXA
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	CHAR      szModName[MAX_PATH];
+	CHAR      szResName[MAX_PATH];
+} ICONINFOEXA, *PICONINFOEXA;
+
+typedef struct _ICONINFOEXW
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	WCHAR     szModName[MAX_PATH];
+	WCHAR     szResName[MAX_PATH];
+} ICONINFOEXW, *PICONINFOEXW;
 
 typedef struct tagNMHDR {
 	HWND hwndFrom;
@@ -4103,6 +4113,8 @@ HWND WINAPI GetForegroundWindow(void);
 DWORD WINAPI GetGuiResources(HANDLE,DWORD);
 #endif
 BOOL WINAPI GetIconInfo(HICON,PICONINFO);
+BOOL WINAPI GetIconInfoExA(HICON,ICONINFOEXA*);
+BOOL WINAPI GetIconInfoExW(HICON,ICONINFOEXW*);
 BOOL WINAPI GetInputState(void);
 UINT WINAPI GetKBCodePage(void);
 HKL WINAPI GetKeyboardLayout(DWORD);

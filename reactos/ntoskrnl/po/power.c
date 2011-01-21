@@ -9,6 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include "initguid.h"
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
@@ -127,6 +128,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PoInitSystem(IN ULONG BootPhase)
 {
     PVOID NotificationEntry;
@@ -216,6 +218,7 @@ PopIdle0(IN PPROCESSOR_POWER_STATE PowerState)
 
 VOID
 NTAPI
+INIT_FUNCTION
 PoInitializePrcb(IN PKPRCB Prcb)
 {
     /* Initialize the Power State */
@@ -659,6 +662,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     POP_POWER_ACTION Action = {0};
     NTSTATUS Status;
+    ULONG Dummy;
 
     /* Check for invalid parameter combinations */
     if ((MinSystemState >= PowerSystemMaximum) ||
@@ -742,9 +746,16 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 
         /* Check if we're still in an invalid status */
         if (!NT_SUCCESS(Status)) break;
+        
+#ifndef NEWCC
+        /* Flush dirty cache pages */
+        CcRosFlushDirtyPages(-1, &Dummy);
+#else
+        Dummy = 0;
+#endif
 
         /* Flush all volumes and the registry */
-        DPRINT1("Flushing volumes\n");
+        DPRINT1("Flushing volumes, cache flushed %d pages\n", Dummy);
         PopFlushVolumes(PopAction.Shutdown);
 
         /* Set IRP for drivers */

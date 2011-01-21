@@ -1,0 +1,94 @@
+/*
+ * WineMine
+ * Bulgarian Language Support
+ *
+ * Copyright 2000 Joshua Thielen
+ * Copyright 2003 Marcelo Duarte
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE BEGIN
+     IDS_APPNAME, "Минички"
+     IDS_NOBODY,  "Никой"
+     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+END
+
+MENU_WINEMINE MENU
+BEGIN
+    POPUP "На&стройки" BEGIN
+        MENUITEM "&Нов\tF2",       IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Слагане на &питанка", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "На&чинаещ",      IDM_BEGINNER
+        MENUITEM "&Напреднал",      IDM_ADVANCED
+        MENUITEM "&Вещ",        IDM_EXPERT
+        MENUITEM "&Нагаждане...",     IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Из&ход\tAlt+X",   IDM_EXIT
+    END
+    POPUP "&Сведения" BEGIN
+        MENUITEM "Най-&бързи...", IDM_TIMES
+        MENUITEM "&За",         IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Най-бързи"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Най-бързи", -1,  10,  10, 140,  45
+    LTEXT           "Начинаещ",      -1,  20,  20,  40,   8
+    LTEXT           "Разширени",      -1,  20,  30,  40,   8
+    LTEXT           "Разбирач",        -1,  20,  40,  40,   8
+    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "Добре",                IDOK,  55,  60,  50,  15
+END
+
+DLG_CONGRATS DIALOGEX  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Поздравления!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Въведете името си", -1,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "Добре",                         IDOK,  60,  40,  40,  15
+END
+
+DLG_CUSTOM DIALOGEX  0, 0, 100, 110
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Нагодена игра"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Редове",   -1,   5,   5,  30,  10
+    LTEXT           "Стълбове",   -1,   5,  35,  30,  10
+    LTEXT           "Мини",  -1,   5,  65,  30,  10
+    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "Добре",     IDOK,      50,  30,  50,  15
+    PUSHBUTTON      "Отказ", IDCANCEL,  50,  50,  50,  15
+END

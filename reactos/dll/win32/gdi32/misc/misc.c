@@ -39,36 +39,36 @@ DWORD GDI_BatchLimit = 1;
 BOOL
 WINAPI
 GdiAlphaBlend(
-            HDC hDCDst,
-            int DstX,
-            int DstY,
-            int DstCx,
-            int DstCy,
-            HDC hDCSrc,
-            int SrcX,
-            int SrcY,
-            int SrcCx,
-            int SrcCy,
-            BLENDFUNCTION BlendFunction
-            )
+    HDC hDCDst,
+    int DstX,
+    int DstY,
+    int DstCx,
+    int DstCy,
+    HDC hDCSrc,
+    int SrcX,
+    int SrcY,
+    int SrcCx,
+    int SrcCy,
+    BLENDFUNCTION BlendFunction
+)
 {
-   if ( hDCSrc == NULL ) return FALSE;
+    if ( hDCSrc == NULL ) return FALSE;
 
-   if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
+    if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
 
-   return NtGdiAlphaBlend(
-                      hDCDst,
-                        DstX,
-                        DstY,
-                       DstCx,
-                       DstCy,
-                      hDCSrc,
-                        SrcX,
-                        SrcY,
-                       SrcCx,
-                       SrcCy,
+    return NtGdiAlphaBlend(
+               hDCDst,
+               DstX,
+               DstY,
+               DstCx,
+               DstCy,
+               hDCSrc,
+               SrcX,
+               SrcY,
+               SrcCx,
+               SrcCy,
                BlendFunction,
-                           0 );
+               0 );
 }
 
 /*
@@ -89,7 +89,7 @@ GdiFixUpHandle(HGDIOBJ hGdiObj)
 
     Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
 
-   /* Rebuild handle for Object */
+    /* Rebuild handle for Object */
     return hGdiObj = (HGDIOBJ)(((LONG_PTR)(hGdiObj)) | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
 }
 
@@ -100,99 +100,99 @@ PVOID
 WINAPI
 GdiQueryTable(VOID)
 {
-  return (PVOID)GdiHandleTable;
+    return (PVOID)GdiHandleTable;
 }
 
 BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 {
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
 // We are only looking for TYPE not the rest here, and why is FullUnique filled up with CRAP!?
 // DPRINT1("FullUnique -> %x\n", Entry->FullUnique);
-  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
-     ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                   GDI_HANDLE_GET_TYPE(hGdiObj))
-  {
-    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-    if(pid == NULL || pid == CurrentProcessId)
+    if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
+            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
+            GDI_HANDLE_GET_TYPE(hGdiObj))
     {
-      return TRUE;
+        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+        if(pid == NULL || pid == CurrentProcessId)
+        {
+            return TRUE;
+        }
     }
-  }
-  return FALSE;
+    return FALSE;
 }
 
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
-    ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                GDI_HANDLE_GET_TYPE(hGdiObj))
-  {
-    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-    if(pid == NULL || pid == CurrentProcessId)
+    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+    if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
+            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
+            GDI_HANDLE_GET_TYPE(hGdiObj))
     {
-    //
-    // Need to test if we have Read & Write access to the VM address space.
-    //
-      BOOL Result = TRUE;
-      if(Entry->UserData)
-      {
-         volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-         _SEH2_TRY
-         {
-           *Current = *Current;
-         }
-         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-         {
-           Result = FALSE;
-         }
-         _SEH2_END
-      }
-      else
-         Result = FALSE; // Can not be zero.
-      if (Result) *UserData = Entry->UserData;
-      return Result;
+        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+        if(pid == NULL || pid == CurrentProcessId)
+        {
+            //
+            // Need to test if we have Read & Write access to the VM address space.
+            //
+            BOOL Result = TRUE;
+            if(Entry->UserData)
+            {
+                volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+                _SEH2_TRY
+                {
+                    *Current = *Current;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Result = FALSE;
+                }
+                _SEH2_END
+            }
+            else
+                Result = FALSE; // Can not be zero.
+            if (Result) *UserData = Entry->UserData;
+            return Result;
+        }
     }
-  }
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return FALSE;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
 }
 
 PLDC
 FASTCALL
 GdiGetLDC(HDC hDC)
 {
-  PDC_ATTR Dc_Attr;
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
-  HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-  // Don't check the mask, just the object type.
-  if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
-       (pid == NULL || pid == CurrentProcessId) )
-  {
-     BOOL Result = TRUE;
-     if (Entry->UserData)
-     {
-        volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-        _SEH2_TRY
+    PDC_ATTR Dc_Attr;
+    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    // Don't check the mask, just the object type.
+    if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
+            (pid == NULL || pid == CurrentProcessId) )
+    {
+        BOOL Result = TRUE;
+        if (Entry->UserData)
         {
-          *Current = *Current;
+            volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+            _SEH2_TRY
+            {
+                *Current = *Current;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Result = FALSE;
+            }
+            _SEH2_END
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-          Result = FALSE;
-        }
-        _SEH2_END
-     }
-     else
-        Result = FALSE;
+        else
+            Result = FALSE;
 
-     if (Result)
-     {
-        Dc_Attr = (PDC_ATTR)Entry->UserData;
-        return Dc_Attr->pvLDC;
-     }
-  }
-  return NULL;
+        if (Result)
+        {
+            Dc_Attr = (PDC_ATTR)Entry->UserData;
+            return Dc_Attr->pvLDC;
+        }
+    }
+    return NULL;
 }
 
 VOID GdiSAPCallback(PLDC pldc)
@@ -207,8 +207,8 @@ VOID GdiSAPCallback(PLDC pldc)
 
     if ( !pldc->pAbortProc(pldc->hDC, 0) )
     {
-       CancelDC(pldc->hDC);
-       AbortDoc(pldc->hDC);
+        CancelDC(pldc->hDC);
+        AbortDoc(pldc->hDC);
     }
 }
 
@@ -222,7 +222,7 @@ GdiSetBatchLimit(DWORD	Limit)
     DWORD OldLimit = GDI_BatchLimit;
 
     if ( (!Limit) ||
-         (Limit >= GDI_BATCH_LIMIT))
+            (Limit >= GDI_BATCH_LIMIT))
     {
         return Limit;
     }
@@ -289,40 +289,40 @@ HGDIOBJ
 FASTCALL
 hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 {
-   int Number;
-   HANDLE Lock;
-   HGDIOBJ Handle = NULL;
+    int Number;
+    HANDLE Lock;
+    HGDIOBJ Handle = NULL;
 
-   Lock = InterlockedCompareExchangePointer( (PVOID*)&GdiHandleCache->ulLock,
-                                              NtCurrentTeb(),
-                                              NULL );
-   
-   if (Lock) return Handle;
+    Lock = InterlockedCompareExchangePointer( (PVOID*)&GdiHandleCache->ulLock,
+            NtCurrentTeb(),
+            NULL );
 
-   Number = GdiHandleCache->ulNumHandles[Type];
+    if (Lock) return Handle;
 
-   if ( Number && Number <= CACHE_REGION_ENTRIES )
-   {
-      if ( Type == hctRegionHandle)
-      {
-         PRGN_ATTR pRgn_Attr;
-         HGDIOBJ *hPtr;
-         hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
-         Handle = hPtr[Number - 1];
+    Number = GdiHandleCache->ulNumHandles[Type];
 
-         if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-         {
-            if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+    if ( Number && Number <= CACHE_REGION_ENTRIES )
+    {
+        if ( Type == hctRegionHandle)
+        {
+            PRGN_ATTR pRgn_Attr;
+            HGDIOBJ *hPtr;
+            hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+            Handle = hPtr[Number - 1];
+
+            if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
             {
-               DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
-               pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
-               hPtr[Number - 1] = NULL;
-               GdiHandleCache->ulNumHandles[Type]--;
+                if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+                {
+                    DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+                    pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
+                    hPtr[Number - 1] = NULL;
+                    GdiHandleCache->ulNumHandles[Type]--;
+                }
             }
-         }
-      }
-   }
-   (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
-   return Handle;
+        }
+    }
+    (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
+    return Handle;
 }
 

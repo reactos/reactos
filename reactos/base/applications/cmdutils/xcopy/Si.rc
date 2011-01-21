@@ -32,9 +32,9 @@ STRINGTABLE
     STRING_PAUSE,    "Za začetek kopiranja pritisnite <enter>\n"
     STRING_SIMCOPY,  "Prekopiral bom %d datotek\n"
     STRING_COPY,     "Prekopiral sem %d datotek\n"
-    STRING_QISDIR,   "Ali je '%s' ime ciljne datoteke\n" \
-                     "ali mape?\n" \
-                     "(D - Datoteka, M - Mapa)\n"
+    STRING_QISDIR,   "Ali je '%s' ime ciljne datoteke\n\
+                     ali mape?\n\
+                     (D - Datoteka, M - Mapa)\n"
     STRING_SRCPROMPT,"%s? (Da|Ne)\n"
     STRING_OVERWRITE,"Ali naj prepišem %s? (Da|Ne|Vse)\n"
     STRING_COPYFAIL, "Kopiranje '%s' v '%s' ni uspelo (koda napake: %d)\n"
@@ -56,7 +56,7 @@ XCOPY izvor [cilj] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 Where:\n\
 \n\
 [/I]  Če cilj ne obstaja in gre za kopiranje dveh ali več datotek, predpostavi,\n\
-\da je cilj mapa\n\
+\tda je cilj mapa\n\
 [/S]  Kopiraj mape in podmape\n\
 [/E]  Kopiraj mape in podmape, vključno s praznimi mapami\n\
 [/Q]  Ne izpisuj imen med kopiranjem (tiho).\n\

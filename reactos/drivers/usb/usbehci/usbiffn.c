@@ -10,6 +10,7 @@
 #include "usbehci.h"
 #include <hubbusif.h>
 #include <usbbusif.h>
+#include "transfer.h"
 
 PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
 {
@@ -30,8 +31,8 @@ PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent
         DPRINT1("This is the root hub\n");
     }
 
-    UsbDevicePointer->Address = 0;// DeviceNumber;
-    UsbDevicePointer->Port = Port;
+    UsbDevicePointer->Address = 0;//DeviceNumber;
+    UsbDevicePointer->Port = Port - 1;
     UsbDevicePointer->ParentDevice = Parent;
 
     UsbDevicePointer->IsHub = Hub;
@@ -55,6 +56,7 @@ InterfaceDereference(PVOID BusContext)
 
 /* Bus Interface Hub V5 Functions */
 
+
 NTSTATUS
 USB_BUSIFFN
 CreateUsbDevice(PVOID BusContext,
@@ -65,6 +67,7 @@ CreateUsbDevice(PVOID BusContext,
     PPDO_DEVICE_EXTENSION PdoDeviceExtension;
     PUSB_DEVICE UsbDevice;
     LONG i = 0;
+
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     DPRINT1("Ehci: CreateUsbDevice: HubDeviceHandle %x, PortStatus %x, PortNumber %x\n", HubDeviceHandle, PortStatus, PortNumber);
 
@@ -97,8 +100,6 @@ CreateUsbDevice(PVOID BusContext,
     return STATUS_SUCCESS;
 }
 
-/* Called when SCE reports a change */
-/* FIXME: Do something better for memory */
 NTSTATUS
 USB_BUSIFFN
 InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
@@ -110,12 +111,10 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     PUSB_INTERFACE_DESCRIPTOR InterfaceDesc;
     PUSB_ENDPOINT_DESCRIPTOR EndpointDesc;
     PUSB_DEVICE UsbDevice;
-    BOOLEAN ResultOk;
     PVOID Buffer;
     PUCHAR Ptr;
     LONG i, j, k;
 
-    DPRINT1("Ehci: InitializeUsbDevice called, device %x\n", DeviceHandle);
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
@@ -125,6 +124,42 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     {
         DPRINT1("Invalid DeviceHandle or device not connected\n");
         return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+    CtrlSetup.wValue.LowByte = 0;
+    CtrlSetup.wValue.HiByte = USB_DEVICE_DESCRIPTOR_TYPE;
+    CtrlSetup.wIndex.W = 0;
+    CtrlSetup.wLength = sizeof(USB_DEVICE_DESCRIPTOR);    
+    CtrlSetup.bmRequestType.B = 0x80;
+
+    SubmitControlTransfer(&FdoDeviceExtension->hcd,
+                          &CtrlSetup,
+                          &UsbDevice->DeviceDescriptor,
+                          sizeof(USB_DEVICE_DESCRIPTOR),
+                          NULL);
+
+    //DumpDeviceDescriptor(&UsbDevice->DeviceDescriptor);
+
+    if (UsbDevice->DeviceDescriptor.bLength != 0x12)
+    {
+        DPRINT1("Failed to get Device Descriptor from device connected on port %d\n", UsbDevice->Port);
+        return STATUS_DEVICE_DATA_ERROR;
+    }
+
+    if (UsbDevice->DeviceDescriptor.bNumConfigurations == 0)
+    {
+        DPRINT1("Device on port %d has no configurations!\n", UsbDevice->Port);
+        return STATUS_DEVICE_DATA_ERROR;
+    }
+    UsbDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
+                                               sizeof(PVOID) * UsbDevice->DeviceDescriptor.bNumConfigurations,
+                                               USB_POOL_TAG);
+
+    if (!UsbDevice->Configs)
+    {
+        DPRINT1("Out of memory\n");
+        return STATUS_NO_MEMORY;
     }
 
     Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, USB_POOL_TAG);
@@ -137,64 +172,12 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
 
     Ptr = Buffer;
 
-    /* Set the device address */
-/*
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
-    CtrlSetup.bmRequestType._BM.Reserved = 0;
-    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_HOST_TO_DEVICE;
-    CtrlSetup.bRequest = USB_REQUEST_SET_ADDRESS;
-    CtrlSetup.wValue.W = UsbDevice->Address;
-    CtrlSetup.wIndex.W = 0;
-    CtrlSetup.wLength = 0;
-
-    DPRINT1("Setting Address to %x\n", UsbDevice->Address);
-    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, 0, UsbDevice->Port, NULL, 0);
-
-*/
-
-    /* Get the Device Descriptor */
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
-    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
-    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
-    CtrlSetup.wValue.LowByte = 0;
-    CtrlSetup.wValue.HiByte = USB_DEVICE_DESCRIPTOR_TYPE;
-    CtrlSetup.wIndex.W = 0;
-    CtrlSetup.wLength = sizeof(USB_DEVICE_DESCRIPTOR);
-
-    DPRINT1("Requesting Descriptor\n");
-    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port,
-                                     &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
-
-
-    DPRINT1("bLength %x\n", UsbDevice->DeviceDescriptor.bLength);
-    DPRINT1("bDescriptorType %x\n", UsbDevice->DeviceDescriptor.bDescriptorType);
-    DPRINT1("idVendor %x\n", UsbDevice->DeviceDescriptor.idVendor);
-    DPRINT1("idProduct %x\n", UsbDevice->DeviceDescriptor.idProduct);
-    DPRINT1("bNumDescriptors %x\n", UsbDevice->DeviceDescriptor.bNumConfigurations);
-
-    if (UsbDevice->DeviceDescriptor.bNumConfigurations == 0)
-    {
-        DPRINT1("No Configurations. That cant be good!\n");
-        return STATUS_DEVICE_DATA_ERROR;
-    }
-
-    UsbDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
-                                               sizeof(PVOID) * UsbDevice->DeviceDescriptor.bNumConfigurations,
-                                               USB_POOL_TAG);
-
-    if (!UsbDevice->Configs)
-    {
-        DPRINT1("Out of memory\n");
-        return STATUS_NO_MEMORY;
-    }
-
     for (i = 0; i < UsbDevice->DeviceDescriptor.bNumConfigurations; i++)
     {
         /* Get the Device Configuration Descriptor */
         CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
         CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+        CtrlSetup.bmRequestType._BM.Reserved = 0;
         CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
         CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
         CtrlSetup.wValue.LowByte = 0;
@@ -202,10 +185,15 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
         CtrlSetup.wIndex.W = 0;
         CtrlSetup.wLength = PAGE_SIZE;
 
-        ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port, Buffer, PAGE_SIZE);
+        SubmitControlTransfer(&FdoDeviceExtension->hcd,
+                              &CtrlSetup,
+                              Buffer,
+                              PAGE_SIZE,
+                              NULL);
 
         ConfigDesc = (PUSB_CONFIGURATION_DESCRIPTOR)Ptr;
 
+        //DumpFullConfigurationDescriptor(ConfigDesc);
         ASSERT(ConfigDesc->wTotalLength <= PAGE_SIZE);
 
         UsbDevice->Configs[i] = ExAllocatePoolWithTag(NonPagedPool,
@@ -235,14 +223,34 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
                 UsbDevice->Configs[i]->Interfaces[j]->EndPoints[k] = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_ENDPOINT), USB_POOL_TAG);
                 RtlCopyMemory(&UsbDevice->Configs[i]->Interfaces[j]->EndPoints[k]->EndPointDescriptor,
                               EndpointDesc, sizeof(USB_ENDPOINT_DESCRIPTOR));
+                Ptr += sizeof(USB_ENDPOINT_DESCRIPTOR);
             }
-
         }
     }
 
     UsbDevice->ActiveConfig = UsbDevice->Configs[0];
     UsbDevice->ActiveInterface = UsbDevice->Configs[0]->Interfaces[0];
+    return STATUS_SUCCESS;
 
+    /* Set the device address */
+    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+    CtrlSetup.bmRequestType._BM.Reserved = 0;
+    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_HOST_TO_DEVICE;
+    CtrlSetup.bRequest = USB_REQUEST_SET_ADDRESS;
+    CtrlSetup.wValue.W = UsbDevice->Address;
+    CtrlSetup.wIndex.W = 0;
+    CtrlSetup.wLength = 0;
+
+    DPRINT1("Setting Address to %x\n", UsbDevice->Address);
+
+    SubmitControlTransfer(&FdoDeviceExtension->hcd,
+                          &CtrlSetup,
+                          NULL,
+                          0,
+                          NULL);
+
+    PdoDeviceExtension->UsbDevices[i]->DeviceState = DEVICEINTIALIZED;
     return STATUS_SUCCESS;
 }
 
@@ -256,7 +264,8 @@ GetUsbDescriptors(PVOID BusContext,
                   PULONG ConfigDescriptorBufferLength)
 {
     PUSB_DEVICE UsbDevice;
-    DPRINT1("Ehci: GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength, ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
+    DPRINT1("Ehci: GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength,
+                                                       ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
 
     UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
 
@@ -325,15 +334,12 @@ RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
             }
 
             ExFreePool(UsbDevice);
-
-            /* DeConfig Device */
             break;
-       case USBD_KEEP_DEVICE_DATA:
-            DPRINT1("USBD_KEEP_DEVICE_DATA Not implemented!\n");
-            break;
-
         case USBD_MARK_DEVICE_BUSY:
-            DPRINT1("USBD_MARK_DEVICE_BUSY Not implemented!\n");
+            UsbDevice->DeviceState |= DEVICEBUSY;
+            /* Fall through */
+        case USBD_KEEP_DEVICE_DATA:
+            UsbDevice->DeviceState |= DEVICEREMOVED;
             break;
         default:
             DPRINT1("Unknown Remove Flags %x\n", Flags);
@@ -345,15 +351,67 @@ NTSTATUS
 USB_BUSIFFN
 RestoreUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE OldDeviceHandle, PUSB_DEVICE_HANDLE NewDeviceHandle)
 {
-    DPRINT1("Ehci: RestoreUsbDevice called\n");
-    return STATUS_NOT_SUPPORTED;
+    PUSB_DEVICE OldUsbDevice;
+    PUSB_DEVICE NewUsbDevice;
+
+    DPRINT1("Ehci: RestoreUsbDevice %x, %x, %x\n", BusContext, OldDeviceHandle, NewDeviceHandle);
+
+    OldUsbDevice = DeviceHandleToUsbDevice(BusContext, OldDeviceHandle);
+    NewUsbDevice = DeviceHandleToUsbDevice(BusContext, NewDeviceHandle);
+
+    if (!OldUsbDevice)
+    {
+        DPRINT1("OldDeviceHandle is invalid\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    if (!(OldUsbDevice->DeviceState & DEVICEREMOVED))
+    {
+        DPRINT1("UsbDevice is not marked as Removed!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (!NewUsbDevice)
+    {
+        DPRINT1("NewDeviceHandle is invalid\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    if ((OldUsbDevice->DeviceDescriptor.idVendor == NewUsbDevice->DeviceDescriptor.idVendor) &&
+        (OldUsbDevice->DeviceDescriptor.idProduct == NewUsbDevice->DeviceDescriptor.idProduct))
+    {
+        PUSB_CONFIGURATION ConfigToDelete;
+        int i;
+
+        NewUsbDevice->DeviceState &= ~DEVICEBUSY;
+        NewUsbDevice->DeviceState &= ~DEVICEREMOVED;
+
+        NewUsbDevice->ActiveConfig = OldUsbDevice->ActiveConfig;
+        NewUsbDevice->ActiveInterface = OldUsbDevice->ActiveInterface;
+
+        for (i = 0; i < NewUsbDevice->DeviceDescriptor.bNumConfigurations; i++)
+        {
+            ConfigToDelete = NewUsbDevice->Configs[i];
+            ASSERT(OldUsbDevice->Configs[i]);
+            NewUsbDevice->Configs[i] = OldUsbDevice->Configs[i];
+            OldUsbDevice->Configs[i] = ConfigToDelete;
+        }
+
+        RemoveUsbDevice(BusContext, OldDeviceHandle, 0);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("VendorId or ProductId did not match!\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 }
 
 NTSTATUS
 USB_BUSIFFN
 GetPortHackFlags(PVOID BusContext, PULONG Flags)
 {
-    DPRINT1("Ehci: GetPortHackFlags called\n");
+    DPRINT1("Ehci: GetPortHackFlags not implemented. %x, %x\n", BusContext, Flags);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -370,7 +428,8 @@ QueryDeviceInformation(PVOID BusContext,
     ULONG SizeNeeded;
     LONG i;
 
-    DPRINT1("Ehci: QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer, DeviceInformationBufferLength, LengthReturned);
+    DPRINT1("Ehci: QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer,
+                                                                  DeviceInformationBufferLength, LengthReturned);
 
     UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
 
@@ -397,19 +456,32 @@ QueryDeviceInformation(PVOID BusContext,
         return STATUS_INVALID_PARAMETER;
     }
 
-    DeviceInfo->PortNumber = UsbDevice->Port;
-    DeviceInfo->HubAddress = 1;
+    DeviceInfo->HubAddress = 0;
     DeviceInfo->DeviceAddress = UsbDevice->Address;
     DeviceInfo->DeviceSpeed = UsbDevice->DeviceSpeed;
     DeviceInfo->DeviceType = UsbDevice->DeviceType;
-    DeviceInfo->CurrentConfigurationValue = UsbDevice->ActiveConfig->ConfigurationDescriptor.bConfigurationValue;
-    DeviceInfo->NumberOfOpenPipes = UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints;
+
+    if (!UsbDevice->DeviceState)
+    {
+        DeviceInfo->CurrentConfigurationValue = 0;
+        DeviceInfo->NumberOfOpenPipes = 0;
+        DeviceInfo->PortNumber = 0;
+    }
+    else
+    {
+        DeviceInfo->CurrentConfigurationValue = UsbDevice->ActiveConfig->ConfigurationDescriptor.bConfigurationValue;
+        /* FIXME: Use correct number of open pipes instead of all available */
+        DeviceInfo->NumberOfOpenPipes = UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints;
+        DeviceInfo->PortNumber = UsbDevice->Port;
+    }
 
     RtlCopyMemory(&DeviceInfo->DeviceDescriptor, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
 
     for (i = 0; i < UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints; i++)
     {
-        RtlCopyMemory(&DeviceInfo->PipeList[i].EndpointDescriptor, &UsbDevice->ActiveInterface->EndPoints[i]->EndPointDescriptor, sizeof(USB_ENDPOINT_DESCRIPTOR));
+        RtlCopyMemory(&DeviceInfo->PipeList[i].EndpointDescriptor,
+                      &UsbDevice->ActiveInterface->EndPoints[i]->EndPointDescriptor,
+                      sizeof(USB_ENDPOINT_DESCRIPTOR));
     }
     return STATUS_SUCCESS;
 }
@@ -452,7 +524,7 @@ NTSTATUS
 USB_BUSIFFN
 ControllerSelectiveSuspend(PVOID BusContext, BOOLEAN Enable)
 {
-    DPRINT1("Ehci: ControllerSelectiveSuspend called\n");
+    DPRINT1("Ehci: ControllerSelectiveSuspend not implemented\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -469,11 +541,13 @@ GetExtendedHubInformation(PVOID BusContext,
     PPDO_DEVICE_EXTENSION PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     PFDO_DEVICE_EXTENSION FdoDeviceExntension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
     LONG i;
-    DPRINT1("Ehci: GetExtendedHubInformation BusContext %x, PDO %x\n", BusContext, HubPhysicalDeviceObject);
+    DPRINT1("Ehci: GetExtendedHubInformation BusContext %x, PDO %x, InformationBuffer %x\n", 
+            BusContext, HubPhysicalDeviceObject, HubInformationBuffer);
+
     /* Set the default return value */
     *LengthReturned = 0;
 
-    DPRINT1("InformationLevel %x\n", UsbExtHubInfo->InformationLevel);
+    DPRINT("InformationLevel %x\n", UsbExtHubInfo->InformationLevel);
 
     /* Caller is suppose to have set InformationLevel to 0. However usbehci from MS seems to ignore this */
     if (UsbExtHubInfo->InformationLevel != 0)
@@ -481,15 +555,15 @@ GetExtendedHubInformation(PVOID BusContext,
         DPRINT1("InformationLevel should really be set to 0. Ignoring\n");
     }
 
-    UsbExtHubInfo->NumberOfPorts = 8;
+    UsbExtHubInfo->NumberOfPorts = FdoDeviceExntension->hcd.ECHICaps.HCSParams.PortCount;
 
     for (i=0; i < UsbExtHubInfo->NumberOfPorts; i++)
     {
         UsbExtHubInfo->Port[i].PhysicalPortNumber = i + 1;
-        UsbExtHubInfo->Port[i].PortLabelNumber = FdoDeviceExntension->ECHICaps.HCSParams.PortCount;
+        UsbExtHubInfo->Port[i].PortLabelNumber = i + 1;
         UsbExtHubInfo->Port[i].VidOverride = 0;
         UsbExtHubInfo->Port[i].PidOverride = 0;
-        UsbExtHubInfo->Port[i].PortAttributes = USB_PORTATTR_SHARED_USB2;
+        UsbExtHubInfo->Port[i].PortAttributes = USB_PORTATTR_SHARED_USB2;// | USB_PORTATTR_OWNED_BY_CC;
     }
 
     *LengthReturned = FIELD_OFFSET(USB_EXTHUB_INFORMATION_0, Port[8]);
@@ -536,7 +610,7 @@ NTSTATUS
 USB_BUSIFFN
 Initialize20Hub(PVOID BusContext, PUSB_DEVICE_HANDLE HubDeviceHandle, ULONG TtCount)
 {
-    DPRINT1("Ehci: Initialize20Hub called, HubDeviceHandle: %x\n", HubDeviceHandle);
+    DPRINT1("Ehci: Initialize20Hub called, HubDeviceHandle: %x, TtCount %x\n", HubDeviceHandle, TtCount);
     /* FIXME: */
     /* Create the Irp Queue for SCE */
     /* Should queue be created for each device or each enpoint??? */
@@ -586,7 +660,17 @@ VOID
 USB_BUSIFFN
 SetDeviceHandleData(PVOID BusContext, PVOID DeviceHandle, PDEVICE_OBJECT UsbDevicePdo)
 {
-    DPRINT1("Ehci: SetDeviceHandleData called\n");
+    PUSB_DEVICE UsbDevice;
+    
+    DPRINT1("Ehci: SetDeviceHandleData %x, %x, %x\n", BusContext, DeviceHandle, UsbDevicePdo);
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        return;
+    }    
+    
+    UsbDevice->UsbDevicePdo = UsbDevicePdo;
 }
 
 
@@ -640,6 +724,6 @@ NTSTATUS
 USB_BUSIFFN
 EnumLogEntry(PVOID BusContext, ULONG DriverTag, ULONG EnumTag, ULONG P1, ULONG P2)
 {
-    DPRINT1("Ehci: EnumLogEntry called\n");
+    DPRINT1("Ehci: EnumLogEntry called %x, %x, %x, %x\n", DriverTag, EnumTag, P1, P2);
     return STATUS_SUCCESS;
 }

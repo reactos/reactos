@@ -108,11 +108,11 @@ FailProcParams:
 			__FUNCTION__, Status);
 		return Status;
 	}
-#ifdef ROS_DOESNT_SUCK
+
 	/* Reserve lower 1Mb, if requested */
 	if (Flags & SM_CREATE_FLAG_RESERVE_1MB)
 		ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
-#endif
+
 	/* Create the user process */
 	Status = RtlCreateUserProcess (& ImagePathString,
 				       OBJ_CASE_INSENSITIVE,
