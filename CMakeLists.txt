@@ -2,6 +2,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(REACTOS)
 
+#versioning
+include(include/reactos/version.cmake)
+
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 
@@ -44,9 +47,9 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl nci gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS nci gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -220,11 +223,6 @@ if(CMAKE_CROSSCOMPILING)
     add_custom_target(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
-
-    add_custom_command(
-        OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-        COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-        DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h)
 
     add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
 
