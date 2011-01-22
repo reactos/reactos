@@ -7,12 +7,13 @@ rem Detect build environment (Mingw, VS, WDK, ...)
 if not "%ROS_ARCH%" == "" (
     echo Detected RosBE for %ROS_ARCH%
     set BUILD_ENVIRONMENT=MINGW
+    set ARCH=%ROS_ARCH%
 )
 if not "%DDK_TARGET_OS%" == "" (
     echo Detected DDK/WDK for %_BUILDARCH%
-    set ROS_ARCH=%_BUILDARCH%
+    set ARCH=%_BUILDARCH%
     if "%_BUILDARCH%" == "x86" (
-        set ROS_ARCH=i386
+        set ARCH=i386
     )
     set BUILD_ENVIRONMENT=WDK
 )
@@ -24,12 +25,13 @@ if not exist host-tools (
     mkdir host-tools
 )
 cd host-tools
+del CMakeCache.txt /q
 set REACTOS_BUILD_TOOLS_DIR=%CD%
 if "%BUILD_ENVIRONMENT%" == "MINGW" (
-	cmake -G "MinGW Makefiles" -DARCH=%ROS_ARCH% %ROS_SOURCE_DIR%
+	cmake -G "MinGW Makefiles" -DARCH=%ARCH% %ROS_SOURCE_DIR%
 )
 if "%BUILD_ENVIRONMENT%" == "WDK" (
-	cmake -G "NMake Makefiles" -DARCH=%_BUILDARCH% %ROS_SOURCE_DIR%
+	cmake -G "NMake Makefiles" -DARCH=%ARCH% %ROS_SOURCE_DIR%
 )
 cd..
 
@@ -39,11 +41,12 @@ if not exist reactos (
 )
 
 cd reactos
+del CMakeCache.txt /q
 if "%BUILD_ENVIRONMENT%" == "MINGW" (
-    cmake -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=%ROS_ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
+    cmake -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
 )
 if "%BUILD_ENVIRONMENT%" == "WDK" (
-    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ROS_ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
+    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
 )
 cd..
 
