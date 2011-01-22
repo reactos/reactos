@@ -11,6 +11,7 @@ cmake_policy(SET CMP0005 OLD)
 if(NOT ARCH)
     set(ARCH i386)
 endif()
+string(TOLOWER ${ARCH} ARCH)
 
 # Compile options
 if(ARCH MATCHES i386)
@@ -25,10 +26,10 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})
 
-    if(ARCH MATCHES i386)
-        if(MSVC)
-            add_definitions(-Dinline=__inline)
-        endif()
+    if(MSVC)
+        add_definitions(-Dinline=__inline)
+    else()
+       add_definitions(-fshort-wchar)
     endif()
 
     include_directories(
@@ -38,10 +39,6 @@ if(NOT CMAKE_CROSSCOMPILING)
         include/reactos
         include/reactos/wine
         ${REACTOS_BINARY_DIR}/include)
-
-    if(NOT MSVC)
-       add_definitions(-fshort-wchar)
-    endif()
 
     add_subdirectory(tools)
     add_subdirectory(lib)
