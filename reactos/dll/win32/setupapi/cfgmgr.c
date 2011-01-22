@@ -2044,7 +2044,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExW(
     RpcTryExcept
     {
         ret = PNP_GetDeviceList(BindingHandle,
-                                pszFilter,
+                                (LPWSTR)pszFilter,
                                 Buffer,
                                 &BufferLen,
                                 ulFlags);
