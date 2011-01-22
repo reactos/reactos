@@ -463,7 +463,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the first PTE in expansion space
             //
             PointerPde = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
-            BaseVa = MiPdeToAddress(PointerPde);
+            BaseVa = MiPdeToPte(PointerPde);
             BaseVaStart = BaseVa;
 
             //
