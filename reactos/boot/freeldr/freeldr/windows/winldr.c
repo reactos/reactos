@@ -155,7 +155,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		ArcDiskInfo->ArcName = (PCHAR)PaToVa(ArcDiskInfo->ArcName);
 
 		/* Mark partition table as valid */
-		ArcDiskInfo->ValidPartitionTable = TRUE; 
+		ArcDiskInfo->ValidPartitionTable = TRUE;
 
 		/* Insert into the list */
 		InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
@@ -203,8 +203,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		/* See KiRosFrldrLpbToNtLpb for details */
 		Extension->AcpiTable = (PVOID)1;
 	}
-    
-#ifndef _M_ARM
+
+#ifdef _M_IX86
     /* Set headless block pointer */
     extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
     extern BOOLEAN WinLdrTerminalConnected;
@@ -534,8 +534,8 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
-    
-#ifndef _M_ARM
+
+#ifdef _M_IX86
    	/* Setup redirection support */
 	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
