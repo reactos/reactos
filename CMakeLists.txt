@@ -124,7 +124,7 @@ if(CMAKE_CROSSCOMPILING)
     if(ARCH MATCHES i386)
         add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
     elseif(ARCH MATCHES amd64)
-        add_definitions(-D_M_AMD64 -D_AMD64_ -D_M_AXP64 -D__x86_64__ -D_WIN64)
+        add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH MATCHES arm)
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__)
