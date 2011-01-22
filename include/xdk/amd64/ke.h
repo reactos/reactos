@@ -67,7 +67,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
 {
   KIRQL OldIrql;
 
-  OldIrql = __readcr8();
+  OldIrql = (KIRQL)__readcr8();
   //ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;

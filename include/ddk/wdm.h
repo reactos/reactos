@@ -7897,7 +7897,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
 {
   KIRQL OldIrql;
 
-  OldIrql = __readcr8();
+  OldIrql = (KIRQL)__readcr8();
   //ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;
@@ -9309,7 +9309,7 @@ RtlExtendedMagicDivide(
   ret64 = UnsignedMultiplyHigh(Pos ? Dividend.QuadPart : -Dividend.QuadPart,
                                MagicDivisor.QuadPart);
   ret64 >>= ShiftCount;
-  ret.QuadPart = Pos ? ret64 : -ret64;
+  ret.QuadPart = Pos ? ret64 : -(LONG64)ret64;
   return ret;
 }
 #endif
