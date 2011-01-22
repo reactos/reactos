@@ -10,6 +10,10 @@ if not "%ROS_ARCH%" == "" (
 )
 if not "%DDK_TARGET_OS%" == "" (
     echo Detected DDK/WDK for %_BUILDARCH%
+    set ROS_ARCH=%_BUILDARCH%
+    if "%_BUILDARCH%" == "x86" (
+        set ROS_ARCH=i386
+    )
     set BUILD_ENVIRONMENT=WDK
 )
 
@@ -39,7 +43,7 @@ if "%BUILD_ENVIRONMENT%" == "MINGW" (
     cmake -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=%ROS_ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
 )
 if "%BUILD_ENVIRONMENT%" == "WDK" (
-    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%_BUILDARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
+    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ROS_ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
 )
 cd..
 
