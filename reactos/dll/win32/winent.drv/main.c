@@ -57,6 +57,13 @@ int CDECL wine_notify_icon( DWORD msg, NOTIFYICONDATAW *data )
     return FALSE;
 }
 
+static void process_detach()
+{
+    CleanupHandleMapping();
+    NTDRV_Font_Finalize();
+    DeleteCriticalSection( &NTDRV_CritSection );
+}
+
 /***********************************************************************
  *           NTDRV initialisation routine
  */
@@ -76,8 +83,7 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         //thread_detach();
         break;
     case DLL_PROCESS_DETACH:
-        CleanupHandleMapping();
-        //process_detach();
+        process_detach();
         break;
     }
     return ret;

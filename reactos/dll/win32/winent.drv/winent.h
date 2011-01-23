@@ -127,6 +127,8 @@ FeTextOut( PDC_ATTR pdcattr, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
            const INT *lpDx );
 
+void NTDRV_Font_Finalize(void);
+
 /* mouse.c */
 void set_window_cursor( HWND hwnd, HCURSOR handle );
 
@@ -155,3 +157,20 @@ void sync_window_position( struct ntdrv_win_data *data,
                            UINT swp_flags, const RECT *old_window_rect,
                            const RECT *old_whole_rect, const RECT *old_client_rect );
 SWM_WINDOW_ID create_whole_window( struct ntdrv_win_data *data );
+
+/* assert() stuff to avoid linking anything more */
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+);
+
+#ifdef assert
+#undef assert
+#endif
+#define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+

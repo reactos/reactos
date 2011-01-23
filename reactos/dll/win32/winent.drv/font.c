@@ -130,11 +130,11 @@ static int AllocEntry(void)
   int best = -1, prev_best = -1, i, prev_i = -1;
 
   if(lastfree >= 0) {
-    //assert(glyphsetCache[lastfree].count == -1);
+    assert(glyphsetCache[lastfree].count == -1);
     glyphsetCache[lastfree].count = 1;
     best = lastfree;
     lastfree = glyphsetCache[lastfree].next;
-    //assert(best != mru);
+    assert(best != mru);
     glyphsetCache[best].next = mru;
     mru = best;
 
@@ -159,7 +159,7 @@ static int AllocEntry(void)
       glyphsetCache[best].next = mru;
       mru = best;
     } else {
-      //assert(mru == best);
+      assert(mru == best);
     }
     return mru;
   }
@@ -273,7 +273,7 @@ static int GetCacheEntry(PDC_ATTR pdcattr, LFANDSIZE *plfsz)
     entry = glyphsetCache + ret;
     entry->lfsz = *plfsz;
     for( format = 0; format < AA_MAXVALUE; format++ ) {
-        //assert( !entry->format[format] );
+        assert( !entry->format[format] );
     }
 
     if(antialias && plfsz->lf.lfQuality != NONANTIALIASED_QUALITY)
@@ -290,6 +290,7 @@ static int GetCacheEntry(PDC_ATTR pdcattr, LFANDSIZE *plfsz)
         {
             case ANTIALIASED_QUALITY:
                 entry->aa_default = get_antialias_type( pdcattr, FALSE, hinter );
+                return ret;  /* ignore further configuration */
                 break;
             case CLEARTYPE_QUALITY:
             case CLEARTYPE_NATURAL_QUALITY:
@@ -317,9 +318,9 @@ static int GetCacheEntry(PDC_ATTR pdcattr, LFANDSIZE *plfsz)
 
 static void dec_ref_cache(int index)
 {
-    //assert(index >= 0);
+    assert(index >= 0);
     TRACE("dec'ing entry %d to %d\n", index, glyphsetCache[index].count - 1);
-    //assert(glyphsetCache[index].count > 0);
+    assert(glyphsetCache[index].count > 0);
     glyphsetCache[index].count--;
 }
 
@@ -349,12 +350,25 @@ static void lfsz_calc_hash(LFANDSIZE *plfsz)
   return;
 }
 
+/***********************************************************************
+ *   NTDRV_Font_Finalize
+ */
+void NTDRV_Font_Finalize(void)
+{
+    int i;
+
+    //EnterCriticalSection(&xrender_cs);
+    for(i = mru; i >= 0; i = glyphsetCache[i].next)
+	FreeEntry(i);
+    //LeaveCriticalSection(&xrender_cs);
+}
+
 /************************************************************************
  *   UploadGlyph
  *
  * Helper to ExtTextOut.  Must be called inside xrender_cs
  */
-static BOOL UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
+static void UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
 {
     unsigned int buflen;
     char *buf;
@@ -399,8 +413,16 @@ static BOOL UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
             buflen = GetGlyphOutlineW(pdcattr->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
         }
         if(buflen == GDI_ERROR) {
-            WARN("GetGlyphOutlineW failed\n");
-            return FALSE;
+            WARN("GetGlyphOutlineW failed using default glyph\n");
+            buflen = GetGlyphOutlineW(pdcattr->hdc, 0, ggo_format, &gm, 0, NULL, &identity);
+            if(buflen == GDI_ERROR) {
+                WARN("GetGlyphOutlineW failed for default glyph trying for space\n");
+                buflen = GetGlyphOutlineW(pdcattr->hdc, 0x20, ggo_format, &gm, 0, NULL, &identity);
+                if(buflen == GDI_ERROR) {
+                    ERR("GetGlyphOutlineW for all attempts unable to upload a glyph\n");
+                    return;
+                }
+            }
         }
         TRACE("Turning off antialiasing for this monochrome font\n");
     }
@@ -408,8 +430,8 @@ static BOOL UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
     /* If there is nothing for the current type, we create the entry. */
     if( !entry->format[format] ) {
         entry->format[format] = HeapAlloc(GetProcessHeap(),
-            HEAP_ZERO_MEMORY,
-            sizeof(gsCacheEntryFormat));
+                                          HEAP_ZERO_MEMORY,
+                                          sizeof(gsCacheEntryFormat));
     }
     formatEntry = entry->format[format];
 
@@ -499,8 +521,6 @@ static BOOL UploadGlyph(PDC_ATTR pdcattr, int glyph, AA_Type format)
 
     formatEntry->bitmaps[glyph] = buf;
     formatEntry->gis[glyph] = gi;
-
-    return TRUE;
 }
 
 
@@ -517,6 +537,9 @@ FeSelectFont(PDC_ATTR pdcattr, HFONT hfont)
     lfsz.devsize.cx = RosDrv_XWStoDS( pdcattr, lfsz.lf.lfWidth );
     lfsz.devsize.cy = RosDrv_YWStoDS( pdcattr, lfsz.lf.lfHeight );
     GetWorldTransform( pdcattr->hdc, &lfsz.xform );
+    /* Not used fields, would break hashing */
+    lfsz.xform.eDx = lfsz.xform.eDy = 0;
+
     lfsz_calc_hash(&lfsz);
 
     /*EnterCriticalSection(&xrender_cs);*/
