@@ -497,7 +497,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
 
                 /* Write the actual PDE now */
-                MI_WRITE_VALID_PDE(PointerPde, TempPde);
+//                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #endif
                 //
                 // Move on to the next expansion address
