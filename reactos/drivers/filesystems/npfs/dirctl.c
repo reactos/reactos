@@ -38,6 +38,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     PFILE_FULL_DIR_INFORMATION FullDirBuffer;
     PFILE_BOTH_DIR_INFORMATION BothDirBuffer;
     ULONG InfoSize = 0;
+    ULONG NameLength;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -160,6 +161,19 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
 
             if (PipeIndex >= FileIndex)
             {
+                /* Determine whether or not the full pipe name fits into the buffer */
+                if (InfoSize + PipeFcb->PipeName.Length > BufferLength)
+                {
+                    NameLength = BufferLength - InfoSize;
+                    Status = STATUS_BUFFER_OVERFLOW;
+                }
+                else
+                {
+                    NameLength = PipeFcb->PipeName.Length;
+                    Status = STATUS_SUCCESS;
+                }
+
+                /* Initialize the information struct */
                 RtlZeroMemory(Buffer, InfoSize);
 
                 switch (FileInformationClass)
@@ -171,12 +185,10 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         DirectoryBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         DirectoryBuffer->EndOfFile.QuadPart = PipeFcb->CurrentInstances;
                         DirectoryBuffer->AllocationSize.LowPart = PipeFcb->MaximumInstances;
-                        DirectoryBuffer->FileNameLength = PipeFcb->PipeName.Length;
+                        DirectoryBuffer->FileNameLength = NameLength;
                         RtlCopyMemory(DirectoryBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
-                                      PipeFcb->PipeName.Length);
-                        *Size = InfoSize + PipeFcb->PipeName.Length;
-                        Status = STATUS_SUCCESS;
+                                      NameLength);
                         break;
 
                     case FileFullDirectoryInformation:
@@ -186,12 +198,10 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         FullDirBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         FullDirBuffer->EndOfFile.QuadPart = PipeFcb->CurrentInstances;
                         FullDirBuffer->AllocationSize.LowPart = PipeFcb->MaximumInstances;
-                        FullDirBuffer->FileNameLength = PipeFcb->PipeName.Length;
+                        FullDirBuffer->FileNameLength = NameLength;
                         RtlCopyMemory(FullDirBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
-                                      PipeFcb->PipeName.Length);
-                        *Size = InfoSize + PipeFcb->PipeName.Length;
-                        Status = STATUS_SUCCESS;
+                                      NameLength);
                         break;
 
                     case FileBothDirectoryInformation:
@@ -201,31 +211,29 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         BothDirBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         BothDirBuffer->EndOfFile.QuadPart = PipeFcb->CurrentInstances;
                         BothDirBuffer->AllocationSize.LowPart = PipeFcb->MaximumInstances;
-                        BothDirBuffer->FileNameLength = PipeFcb->PipeName.Length;
+                        BothDirBuffer->FileNameLength = NameLength;
                         RtlCopyMemory(BothDirBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
-                                      PipeFcb->PipeName.Length);
-                        *Size = InfoSize + PipeFcb->PipeName.Length;
-                        Status = STATUS_SUCCESS;
+                                      NameLength);
                         break;
 
                     case FileNamesInformation:
                         NamesBuffer = (PFILE_NAMES_INFORMATION)Buffer;
                         NamesBuffer->NextEntryOffset = 0;
                         NamesBuffer->FileIndex = PipeIndex;
-                        NamesBuffer->FileNameLength = PipeFcb->PipeName.Length;
+                        NamesBuffer->FileNameLength = NameLength;
                         RtlCopyMemory(NamesBuffer->FileName,
                                       PipeFcb->PipeName.Buffer,
-                                      PipeFcb->PipeName.Length);
-                        *Size = InfoSize + PipeFcb->PipeName.Length;
-                        Status = STATUS_SUCCESS;
+                                      NameLength);
                         break;
 
                     default:
-                        DPRINT1("Invalid information class: %lu\n", FileInformationClass);
-                        Status = STATUS_INVALID_INFO_CLASS;
+                        /* Should never happen! */
+                        ASSERT(FALSE);
                         break;
                 }
+
+                *Size = InfoSize + NameLength;
 
                 Ccb->u.Directory.FileIndex = PipeIndex;
                 Found = TRUE;
