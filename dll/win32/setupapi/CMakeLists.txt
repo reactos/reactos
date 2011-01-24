@@ -40,7 +40,7 @@ add_library(setupapi SHARED ${SOURCE})
 set_module_type(setupapi win32dll)
 
 target_link_libraries(setupapi
-    pnp_client
+    pnprpc
     uuid
     wine
     ${PSEH_LIB})

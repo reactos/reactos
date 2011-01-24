@@ -12,7 +12,7 @@ add_library(wlanapi SHARED ${SOURCE})
 set_entrypoint(wlanapi 0)
 
 target_link_libraries(wlanapi
-    wlansvc_client
+    wlansvcrpc
     wine
     ${PSEH_LIB})
 

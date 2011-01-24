@@ -1,4 +1,5 @@
 
+if(NOT MSVC)
 add_definitions(-D_NTSYSTEM_)
 list(APPEND SOURCE
     delete.c
@@ -20,3 +21,4 @@ list(APPEND SOURCE
     zwfile.c)
 add_library(rossym ${SOURCE})
 add_dependencies(rossym psdk bugcodes)
+endif()

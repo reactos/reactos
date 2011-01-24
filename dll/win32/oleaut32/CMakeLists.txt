@@ -46,13 +46,14 @@ include_directories(
 
 spec2def(oleaut32.dll oleaut32.spec)
 
-rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
+add_rpcproxy_library(oleaut32proxy oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 add_library(oleaut32 SHARED ${SOURCE})
 
 set_module_type(oleaut32 win32dll)
 
 target_link_libraries(oleaut32
+    oleaut32proxy
     wine
     wineldr
     uuid

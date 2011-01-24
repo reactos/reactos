@@ -52,9 +52,9 @@ add_library(advapi32 SHARED
 set_module_type(advapi32 win32dll)
 
 target_link_libraries(advapi32
-    svcctl_client
-    lsa_client
-    eventlogrpc_client
+    svcctlrpc
+    lsarpc
+    eventlogrpc
     wine
     ${PSEH_LIB})
 

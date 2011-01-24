@@ -11,9 +11,11 @@ if not "%ROS_ARCH%" == "" (
 )
 if not "%DDK_TARGET_OS%" == "" (
     echo Detected DDK/WDK for %_BUILDARCH%
-    set ARCH=%_BUILDARCH%
     if "%_BUILDARCH%" == "x86" (
         set ARCH=i386
+    )
+    if "%_BUILDARCH%" == "AMD64" (
+        set ARCH=amd64
     )
     set BUILD_ENVIRONMENT=WDK
 )
@@ -25,7 +27,9 @@ if not exist host-tools (
     mkdir host-tools
 )
 cd host-tools
-del CMakeCache.txt /q
+if EXIST CMakeCache.txt (
+    del CMakeCache.txt /q
+)
 set REACTOS_BUILD_TOOLS_DIR=%CD%
 if "%BUILD_ENVIRONMENT%" == "MINGW" (
 	cmake -G "MinGW Makefiles" -DARCH=%ARCH% %ROS_SOURCE_DIR%
@@ -41,7 +45,9 @@ if not exist reactos (
 )
 
 cd reactos
-del CMakeCache.txt /q
+if EXIST CMakeCache.txt (
+    del CMakeCache.txt /q
+)
 if "%BUILD_ENVIRONMENT%" == "MINGW" (
     cmake -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %ROS_SOURCE_DIR%
 )

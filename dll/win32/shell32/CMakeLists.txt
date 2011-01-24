@@ -12,7 +12,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/recyclebin
     ${REACTOS_SOURCE_DIR})
 
-add_idl_interface(shobjidl_local.idl)
+generate_idl_iids(shobjidl_local.idl)
 
 spec2def(shell32.dll shell32.spec)
 

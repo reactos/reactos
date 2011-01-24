@@ -23,7 +23,7 @@ add_library(lsasrv SHARED ${SOURCE})
 set_entrypoint(lsasrv 0)
 
 target_link_libraries(lsasrv
-    lsa_server
+    lsarpc
     wine
     ${PSEH_LIB})
 

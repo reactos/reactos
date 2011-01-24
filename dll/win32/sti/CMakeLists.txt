@@ -18,13 +18,14 @@ list(APPEND SOURCE
     sti_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
-rpcproxy(sti sti_wia.idl)
+add_rpcproxy_library(stiproxy sti_wia.idl)
 
 add_library(sti SHARED ${SOURCE})
 
 set_entrypoint(sti 0)
 
 target_link_libraries(sti
+    stiproxy
     wine
     uuid
     ${PSEH_LIB})

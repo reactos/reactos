@@ -1,15 +1,12 @@
 
 include_directories(.)
 
-list(APPEND SOURCE
-    eventlogrpc.idl
-    lsa.idl
-    svcctl.idl
-    wlansvc.idl)
-
-idl_files(${SOURCE})
+add_rpc_library(eventlogrpc eventlogrpc.idl)
+add_rpc_library(lsarpc lsa.idl)
+add_rpc_library(svcctlrpc svcctl.idl)
+add_rpc_library(wlansvcrpc wlansvc.idl)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-idl_files(pnp.idl)
+add_rpc_library(pnprpc pnp.idl)

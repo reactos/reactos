@@ -24,4 +24,4 @@ list(APPEND SOURCE
     #vmrender.idl
 )
 
-add_interface_definitions(dxsdk ${SOURCE})
+add_idl_headers(dxsdk ${SOURCE})

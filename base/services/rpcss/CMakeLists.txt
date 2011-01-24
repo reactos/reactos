@@ -12,7 +12,7 @@ include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
 
 add_executable(rpcss ${SOURCE})
 
-target_link_libraries(rpcss epm_server irot_server ${PSEH_LIB} wine)
+target_link_libraries(rpcss epmrpc irotrpc ${PSEH_LIB} wine)
 
 set_module_type(rpcss win32cui)
 

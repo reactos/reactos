@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(urlmon.dll urlmon.spec)
 
-rpcproxy(urlmon urlmon_urlmon.idl)
+add_rpcproxy_library(urlmonproxy urlmon_urlmon.idl)
 
 list(APPEND SOURCE
     bindctx.c
@@ -42,6 +42,7 @@ add_library(urlmon SHARED ${SOURCE})
 set_module_type(urlmon win32dll)
 
 target_link_libraries(urlmon
+    urlmonproxy
     uuid
     wine
     ${PSEH_LIB})

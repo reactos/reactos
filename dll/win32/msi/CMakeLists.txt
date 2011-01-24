@@ -7,7 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 spec2def(msi.dll msi.spec)
 
-add_idl_interface(msiserver.idl)
+generate_idl_iids(msiserver.idl)
 
 list(APPEND SOURCE
     action.c
@@ -60,7 +60,7 @@ list(APPEND SOURCE
 
 add_library(msi SHARED ${SOURCE})
 
-add_interface_definitions(msi_idlheader msiserver.idl)
+add_idl_Headers(msi_idlheader msiserver.idl)
 
 add_typelib(msi_tlb msiserver.idl)
 

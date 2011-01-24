@@ -8,6 +8,14 @@ include(include/reactos/version.cmake)
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
+set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
+set(CMAKE_COLOR_MAKEFILE OFF)
+set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+
 if(NOT ARCH)
     set(ARCH i386)
 endif()
@@ -21,6 +29,8 @@ elseif(ARCH MATCHES amd64)
 elseif(ARCH MATCHES arm)
     include(config-arm.cmake)
 endif()
+
+add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
@@ -51,41 +61,7 @@ if(NOT CMAKE_CROSSCOMPILING)
 
 else()
 
-    if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-        set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
-    endif()
-
-    set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
-    include(${IMPORT_EXECUTABLES})
-
-endif()
-
-# Compiler specific definitions and macros
-if(MSVC)
-    include(msc.cmake)
-else()
-    include(gcc.cmake)
-endif()
-
-# Generic macros
-include(CMakeMacros.cmake)
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-
-set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
-set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
-
-set(CMAKE_COLOR_MAKEFILE OFF)
-
-set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
-
-add_definitions(-D__REACTOS__)
-
-if(CMAKE_CROSSCOMPILING)
-
-    #Some cleanup
+    # Do some cleanup
     file(REMOVE
         ${REACTOS_BINARY_DIR}/dependencies.graphml
         ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
@@ -94,6 +70,26 @@ if(CMAKE_CROSSCOMPILING)
         ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt
         ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
         ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
+
+    if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
+        set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+    endif()
+
+    set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+    include(${IMPORT_EXECUTABLES})
+
+    # Compiler specific definitions and macros
+    if(MSVC)
+        include(msc.cmake)
+    else()
+        include(gcc.cmake)
+    endif()
+
+    # Generic macros
+    include(CMakeMacros.cmake)
+
+    # IDL macros for widl/midl
+    include(cmake/idl-support.cmake)
 
     #Some useful variables
     set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
@@ -118,7 +114,11 @@ if(CMAKE_CROSSCOMPILING)
     endif()
 
     # Version Options
-    add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
+    add_definitions(-DWINVER=0x502
+                    -D_WIN32_IE=0x600
+                    -D_WIN32_WINNT=0x502
+                    -D_WIN32_WINDOWS=0x502
+                    -D_SETUPAPI_VER=0x502)
 
     # Arch Options
     if(ARCH MATCHES i386)

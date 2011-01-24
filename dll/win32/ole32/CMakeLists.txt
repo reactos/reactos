@@ -54,9 +54,9 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_interface_definitions(ole32idl dcom.idl irot.idl)
+add_idl_headers(ole32idl dcom.idl irot.idl)
 
-rpcproxy(ole32
+add_rpcproxy_library(ole32proxy
     dcom.idl
     ole32_unknwn.idl
     ole32_objidl.idl
@@ -69,8 +69,9 @@ add_library(ole32 SHARED ${SOURCE})
 set_module_type(ole32 win32dll)
 
 target_link_libraries(ole32
+    ole32proxy
     wine
-    irot_client
+    irotrpc
     uuid
     ${PSEH_LIB})
     

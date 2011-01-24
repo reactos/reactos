@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_idl_interface(qmgr_local.idl)
+generate_idl_iids(qmgr_local.idl)
 
 spec2def(qmgr.dll qmgr.spec)
 
@@ -21,7 +21,7 @@ list(APPEND SOURCE
 
 add_library(qmgr SHARED ${SOURCE})
 
-add_interface_definitions(qmgr_idlheader qmgr_local.idl)
+add_idl_headers(qmgr_idlheader qmgr_local.idl)
 
 set_module_type(qmgr win32dll)
 target_link_libraries(qmgr uuid wine)

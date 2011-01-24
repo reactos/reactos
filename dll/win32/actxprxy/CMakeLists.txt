@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(actxprxy.dll actxprxy.spec)
 
-rpcproxy(actxprxy
+add_rpcproxy_library(actxprxylib
     actxprxy_activscp.idl
     actxprxy_comcat.idl
     actxprxy_docobj.idl
@@ -25,6 +25,7 @@ add_library(actxprxy SHARED ${SOURCE})
 set_entrypoint(actxprxy 0)
 
 target_link_libraries(actxprxy
+    actxprxylib
     uuid
     wine
     ${PSEH_LIB})

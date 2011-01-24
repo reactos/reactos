@@ -92,7 +92,6 @@ list(APPEND SOURCE
     urlmon.idl
     vmr9.idl
 #   vmrender.idl
-    wbemcli.idl
     wia_lh.idl
     wia_xp.idl
     winsxs.idl
@@ -104,10 +103,11 @@ list(APPEND SOURCE
 
 if(NOT MSVC)
   list(APPEND SOURCE
+    wbemcli.idl
     wincodec.idl
     wuapi.idl)
 endif()
 
-add_interface_definitions(psdk ${SOURCE})
+add_idl_headers(psdk ${SOURCE})
 
 add_typelib(stdole2 stdole2.idl)

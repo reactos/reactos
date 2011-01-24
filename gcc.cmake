@@ -1,6 +1,4 @@
 
-if(CMAKE_CROSSCOMPILING)
-
 # Linking
 if(ARCH MATCHES i386)
 link_directories("${REACTOS_SOURCE_DIR}/importlibs")
@@ -317,5 +315,3 @@ endmacro()
 
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
-
-endif(CMAKE_CROSSCOMPILING)

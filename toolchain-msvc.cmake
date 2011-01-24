@@ -6,12 +6,14 @@ set(CMAKE_SYSTEM_PROCESSOR i686)
 # which compilers to use for C and C++
 set(CMAKE_C_COMPILER cl)
 set(CMAKE_CXX_COMPILER cl)
-SET(CMAKE_RC_COMPILER rc)
-SET(CMAKE_ASM_COMPILER ml)
-SET(CMAKE_IDL_COMPILER midl)
+set(CMAKE_RC_COMPILER rc)
+if(${ARCH} MATCHES amd64)
+  set(CMAKE_ASM_COMPILER ml64)
+else()
+  set(CMAKE_ASM_COMPILER ml)
+endif()
 
-SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
-SET(CMAKE_IDL_COMPILE_OBJECT "<CMAKE_IDL_COMPILER> <FLAGS> <DEFINES> /win32 /Dstrict_context_handle= /h <OBJECT> <SOURCE>")
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 
 SET(CMAKE_ASM_COMPILE_OBJECT
     "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
@@ -29,3 +31,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_BUILD_TYPE "RelwithDebInfo" CACHE STRING "Build Type")
 
 set(CMAKE_C_STANDARD_LIBRARIES "" CACHE INTERNAL "")
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
+    add_definitions(-D__i386__)
+endif()

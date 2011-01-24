@@ -1,12 +1,4 @@
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
-    add_definitions(-D__i386__)
-endif()
-
-add_definitions(-Dinline=__inline)
-
-if(CMAKE_CROSSCOMPILING)
-
 if(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -26,6 +18,10 @@ if(${_MACHINE_ARCH_FLAG} MATCHES X86)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO")
+endif()
+
+if(${ARCH} MATCHES amd64)
+    add_definitions(-D__x86_64)
 endif()
 
 link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
@@ -137,16 +133,6 @@ macro(set_rc_compiler)
 # dummy, this workaround is only needed in mingw due to lack of RC support in cmake
 endmacro()
 
-#idl files support
-set(IDL_COMPILER midl)
-set(IDL_FLAGS /win32)
-set(IDL_HEADER_ARG /h) #.h
-set(IDL_TYPELIB_ARG /tlb) #.tlb
-set(IDL_SERVER_ARG /sstub) #.c for stub server library
-set(IDL_CLIENT_ARG /cstub) #.c for stub client library
-set(IDL_PROXY_ARG /proxy)
-set(IDL_DLLDATA_ARG /dlldata )
-
 # Thanks MS for creating a stupid linker
 macro(add_importlib_target _exports_file)
     get_filename_component(_name ${_exports_file} NAME_WE)
@@ -154,7 +140,7 @@ macro(add_importlib_target _exports_file)
     # Generate the asm stub file and the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def -@ -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+        COMMAND native-spec2def --kill-at -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     # Assemble the stub file
@@ -180,7 +166,7 @@ macro(add_importlib_target _exports_file)
     add_custom_target(
         lib${_name}
         DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib)
-    
+
     add_dependencies(lib${_name} asm ${_dependencies})
 endmacro()
 
@@ -195,7 +181,7 @@ macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -@ -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --kill-at -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         PROPERTIES GENERATED TRUE)
@@ -221,6 +207,4 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
 set(PSEH_LIB "")
-
-endif(CMAKE_CROSSCOMPILING)
 
