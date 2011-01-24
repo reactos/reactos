@@ -1,24 +1,24 @@
 
-;@ stdcall A_SHAFinal ; 6.0 and higher 
-;@ stdcall A_SHAInit ; 6.0 and higher 
-;@ stdcall A_SHAUpdate ; 6.0 and higher 
-;@ stdcall AitFireParentUsageEvent ; 6.1 and higher 
-;@ stdcall AitLogFeatureUsageByApp ; 6.1 and higher 
-;@ stdcall AlpcAdjustCompletionListConcurrencyCount ; 6.0 and higher 
-;@ stdcall AlpcFreeCompletionListMessage ; 6.0 and higher 
-;@ stdcall AlpcGetCompletionListLastMessageInformation ; 6.0 and higher 
-;@ stdcall AlpcGetCompletionListMessageAttributes ; 6.0 and higher 
-;@ stdcall AlpcGetHeaderSize ; 6.0 and higher 
-;@ stdcall AlpcGetMessageAttribute ; 6.0 and higher 
-;@ stdcall AlpcGetMessageFromCompletionList ; 6.0 and higher 
-;@ stdcall AlpcGetOutstandingCompletionListMessageCount ; 6.0 and higher 
-;@ stdcall AlpcInitializeMessageAttribute ; 6.0 and higher 
-;@ stdcall AlpcMaxAllowedMessageLength ; 6.0 and higher 
-;@ stdcall AlpcRegisterCompletionList ; 6.0 and higher 
-;@ stdcall AlpcRegisterCompletionListWorkerThread ; 6.0 and higher 
-;@ stdcall AlpcRundownCompletionList ; 6.1 and higher 
-;@ stdcall AlpcUnregisterCompletionList ; 6.0 and higher 
-;@ stdcall AlpcUnregisterCompletionListWorkerThread ; 6.0 and higher 
+;@ stdcall A_SHAFinal ; 6.0 and higher
+;@ stdcall A_SHAInit ; 6.0 and higher
+;@ stdcall A_SHAUpdate ; 6.0 and higher
+;@ stdcall AitFireParentUsageEvent ; 6.1 and higher
+;@ stdcall AitLogFeatureUsageByApp ; 6.1 and higher
+;@ stdcall AlpcAdjustCompletionListConcurrencyCount ; 6.0 and higher
+;@ stdcall AlpcFreeCompletionListMessage ; 6.0 and higher
+;@ stdcall AlpcGetCompletionListLastMessageInformation ; 6.0 and higher
+;@ stdcall AlpcGetCompletionListMessageAttributes ; 6.0 and higher
+;@ stdcall AlpcGetHeaderSize ; 6.0 and higher
+;@ stdcall AlpcGetMessageAttribute ; 6.0 and higher
+;@ stdcall AlpcGetMessageFromCompletionList ; 6.0 and higher
+;@ stdcall AlpcGetOutstandingCompletionListMessageCount ; 6.0 and higher
+;@ stdcall AlpcInitializeMessageAttribute ; 6.0 and higher
+;@ stdcall AlpcMaxAllowedMessageLength ; 6.0 and higher
+;@ stdcall AlpcRegisterCompletionList ; 6.0 and higher
+;@ stdcall AlpcRegisterCompletionListWorkerThread ; 6.0 and higher
+;@ stdcall AlpcRundownCompletionList ; 6.1 and higher
+;@ stdcall AlpcUnregisterCompletionList ; 6.0 and higher
+;@ stdcall AlpcUnregisterCompletionListWorkerThread ; 6.0 and higher
 @ stdcall CsrAllocateCaptureBuffer(long long)
 ;@ stdcall CsrAllocateCapturePointer ; NT3, NT4 only
 @ stdcall CsrAllocateMessagePointer(ptr long ptr)
@@ -116,7 +116,7 @@
 @ stdcall NtAccessCheckByTypeResultListAndAuditAlarmByHandle(ptr ptr ptr ptr ptr ptr ptr long long long ptr long ptr long ptr ptr ptr)
 @ stdcall NtAddAtom(ptr long ptr)
 @ stdcall NtAddBootEntry(ptr long)
-@ stdcall NtAddDriverEntry(ptr long) ; 5.2 and higher 
+@ stdcall NtAddDriverEntry(ptr long) ; 5.2 and higher
 @ stdcall NtAdjustGroupsToken(long long ptr long ptr ptr)
 @ stdcall NtAdjustPrivilegesToken(long long long long long long)
 @ stdcall NtAlertResumeThread(long ptr)
@@ -590,7 +590,7 @@
 @ stdcall RtlEnumerateGenericTableLikeADirectory(ptr ptr ptr long ptr ptr ptr)
 @ stdcall RtlEnumerateGenericTableWithoutSplaying(ptr ptr)
 @ stdcall RtlEnumerateGenericTableWithoutSplayingAvl(ptr ptr)
-;@ stdcall RtlEnumerateProperties ; 4.0 only 
+;@ stdcall RtlEnumerateProperties ; 4.0 only
 @ stdcall RtlEqualComputerName(ptr ptr)
 @ stdcall RtlEqualDomainName(ptr ptr)
 @ stdcall RtlEqualLuid(ptr ptr)
@@ -629,7 +629,7 @@
 ;@ stdcall RtlFindSetRuns(ptr ptr long long)
 @ stdcall RtlFirstEntrySList(ptr)
 @ stdcall RtlFirstFreeAce(ptr ptr)
-;@ stdcall RtlFlushPropertySet ; 4.0 only 
+;@ stdcall RtlFlushPropertySet ; 4.0 only
 @ stdcall RtlFlushSecureMemoryCache(ptr ptr)
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
 @ stdcall RtlFormatMessage(ptr long long long long ptr ptr long)
@@ -684,7 +684,7 @@
 ;@ stdcall RtlGetUnloadEventTrace
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
-;@ stdcall RtlGuidToPropertySetName ; 4.0 only 
+;@ stdcall RtlGuidToPropertySetName ; 4.0 only
 @ stdcall RtlHashUnicodeString(ptr long long ptr)
 @ stdcall RtlIdentifierAuthoritySid(ptr)
 @ stdcall RtlImageDirectoryEntryToData(long long long ptr)
@@ -924,8 +924,8 @@
 ;@ stdcall RtlTraceDatabaseUnlock
 ;@ stdcall RtlTraceDatabaseValidate
 @ stdcall RtlTryEnterCriticalSection(ptr)
-@ stdcall -arch=i386 @RtlUlongByteSwap(long)
-@ stdcall -ret64 @RtlUlonglongByteSwap(double)
+@ fastcall -arch=i386 RtlUlongByteSwap(long)
+@ fastcall -ret64 RtlUlonglongByteSwap(double)
 ;@ stdcall RtlUnhandledExceptionFilter2
 @ stdcall RtlUnhandledExceptionFilter(ptr)
 ;@ stdcall RtlUnicodeStringToAnsiSize(ptr)
@@ -956,7 +956,7 @@
 @ stdcall RtlUpperChar(long)
 @ stdcall RtlUpperString(ptr ptr)
 @ stdcall RtlUsageHeap(ptr long ptr)
-@ stdcall -arch=i386 @RtlUshortByteSwap(long)
+@ fastcall -arch=i386 RtlUshortByteSwap(long)
 @ stdcall RtlValidAcl(ptr)
 @ stdcall RtlValidRelativeSecurityDescriptor(ptr long long)
 @ stdcall RtlValidSecurityDescriptor(ptr)
