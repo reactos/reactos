@@ -17,7 +17,6 @@ extern "C" {
 #define WINUSERAPI
 #endif
 
-
 #define FALT	16
 #define FCONTROL	8
 #define FNOINVERT	2
@@ -1564,9 +1563,6 @@ extern "C" {
 #define WM_ACTIVATE 6
 #define WM_SETFOCUS 7
 #define WM_KILLFOCUS 8
-#ifdef _WINE
-#define WM_SETVISIBLE 9
-#endif
 #define WM_ENABLE 10
 #define WM_SETREDRAW 11
 #define WM_SETTEXT 12
@@ -1953,10 +1949,6 @@ extern "C" {
 #define EN_VSCROLL 1538
 #define LB_ADDFILE 406
 #define LB_ADDSTRING 384
-#ifdef _WINE
-#define LB_CARETON 419
-#define LB_CARETOFF 420
-#endif
 #define LB_DELETESTRING 386
 #define LB_DIR 397
 #define LB_FINDSTRING 399
@@ -2050,9 +2042,6 @@ extern "C" {
 #define DCX_INTERSECTRGN 128
 #define DCX_VALIDATE 0x200000
 #define DCX_EXCLUDEUPDATE   0x100
-#ifdef _WINE
-#define DCX_USESTYLE     0x10000
-#endif
 #define GMDI_GOINTOPOPUPS 2
 #define GMDI_USEDISABLED 1
 #define FKF_AVAILABLE 2
@@ -4916,6 +4905,10 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #endif /* NOGDI */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
+
+#ifdef _WINE
+#include "reactos/undocuser.h"
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)
