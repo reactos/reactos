@@ -6,7 +6,7 @@ add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
 
-idl_files(server.idl)
+add_rpc_library(serverrpc server.idl)
 
 list(APPEND SOURCE
     cstub.c
@@ -22,8 +22,7 @@ add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest
     uuid
     wine
-    server_server
-    server_client
+    serverrpc
     ${PSEH_LIB})
 
 set_module_type(rpcrt4_winetest win32cui)

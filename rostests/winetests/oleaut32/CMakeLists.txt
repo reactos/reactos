@@ -8,8 +8,8 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_typelib(oleaut32_typelibs test_reg.idl test_tlb.idl tmarshal.idl)
 add_dependencies(oleaut32_typelibs stdole2)
 
-add_interface_definitions(oleaut32_idlheaders test_reg.idl tmarshal.idl)
-add_idl_interface(tmarshal.idl)
+add_idl_Headers(oleaut32_idlheaders test_reg.idl tmarshal.idl)
+generate_idl_iids(tmarshal.idl)
 
 list(APPEND SOURCE
     dispatch.c
