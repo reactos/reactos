@@ -11,10 +11,8 @@
 #endif
 #endif
 
-#ifdef __GNUC__
 #ifndef RC_INVOKED
 #include  <pseh/pseh2.h>
-#endif
 #endif
 
 #ifndef __RPC_H__
