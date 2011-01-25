@@ -16,4 +16,14 @@ if(NOT MSVC)
     add_library(pseh ${SOURCE})
     add_dependencies(pseh psdk)
 
+else()
+
+    list(APPEND SOURCE
+        dummy.c
+        i386/seh.s
+        i386/seh_prolog.s)
+
+    add_library(pseh ${SOURCE})
+    add_dependencies(pseh asm)
+
 endif()
