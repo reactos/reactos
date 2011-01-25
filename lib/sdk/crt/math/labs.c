@@ -2,7 +2,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4164)
-#pragma function(abs)
+#pragma function(labs)
 #endif
 
 /*
