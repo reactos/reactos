@@ -460,7 +460,7 @@ _FUNCTION_ {
 			    if ((*(format - 1)) < *(format + 1))
 				RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
 			    else
-				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));			      
+				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));
 			    format++;
 			} else
 			    RtlSetBits(&bitMask, *format, 1);
