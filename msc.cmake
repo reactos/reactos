@@ -1,4 +1,5 @@
 
+if(0) # Fixme redefinition warning
 if(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
 elseif(OPTIMIZE STREQUAL "2")
@@ -9,6 +10,7 @@ elseif(OPTIMIZE STREQUAL "4")
     add_definitions(/Os /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "5")
     add_definitions(/GF /Gy /Ob2 /Os /Ox /GS-)
+endif()
 endif()
 
 add_definitions(/GS- /Zl /Zi)
@@ -189,7 +191,7 @@ macro(spec2def _dllname _spec_file)
 endmacro()
 
 macro(macro_mc FILE)
-    set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc)
+    set(COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
