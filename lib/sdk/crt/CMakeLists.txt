@@ -279,15 +279,12 @@ list(APPEND CRT_SOURCE
     wine/heap.c
     wine/undname.c)
 
-if(NOT ARCH MATCHES arm)
-    list(APPEND CRT_SOURCE
-        except/${ARCH}/seh.s)
-endif()
-
 if(ARCH MATCHES i386)
     list(APPEND CRT_SOURCE
         except/i386/chkstk_asm.s
         except/i386/prolog.s
+        except/i386/seh.s
+        except/i386/seh_prolog.s
         except/i386/unwind.c
         float/i386/clearfp.c
         float/i386/cntrlfp.c
@@ -298,6 +295,7 @@ if(ARCH MATCHES i386)
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
         except/amd64/chkstk_asm.s
+        except/amd64/seh.s
         float/i386/clearfp.c
         float/i386/cntrlfp.c
         float/i386/fpreset.c
@@ -470,15 +468,12 @@ list(APPEND LIBCNTPR_SOURCE
     wstring/wcsspn.c
     wstring/wcsstr.c)
 
-if(NOT ARCH MATCHES arm)
-    list(APPEND LIBCNTPR_SOURCE
-        except/${ARCH}/chkstk_asm.s
-        except/${ARCH}/seh.s
-        setjmp/${ARCH}/setjmp.s)
-endif()
-
 if(ARCH MATCHES i386)
     list(APPEND LIBCNTPR_SOURCE
+        except/i386/chkstk_asm.s
+        except/i386/seh.s
+        except/i386/seh_prolog.s
+        setjmp/i386/setjmp.s
         math/i386/alldiv_asm.s
         math/i386/alldvrm_asm.s
         math/i386/allmul_asm.s
@@ -505,6 +500,9 @@ if(ARCH MATCHES i386)
         misc/i386/readcr4.S)
 elseif(ARCH MATCHES amd64)
     list(APPEND LIBCNTPR_SOURCE
+        except/amd64/chkstk_asm.s
+        except/amd64/seh.s
+        setjmp/amd64/setjmp.s
         math/cos.c
         math/sin.c
         math/amd64/alldiv.S
