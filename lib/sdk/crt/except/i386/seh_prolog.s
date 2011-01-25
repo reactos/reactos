@@ -103,21 +103,50 @@ __SEH_prolog:
     /* Safe SEH table, overwriting OLDFRAME.ReturnAddress */
     mov [ebp - SEH_FRAME_OriginalEbp + SEH_FRAME_SEHTable], eax
 
-    /* Save registers */
-    mov [esp + SAFE_AREA_Edi], edi
-    mov [esp + SAFE_AREA_Esi], esi
-    mov [esp + SAFE_AREA_Ebx], ebx
+    /* Safe the disable value, overwriting OLDFRAME.SEHTable */
+    mov dword ptr [ebp - SEH_FRAME_OriginalEbp + SEH_FRAME_Disable], -1
 
     /* Load the address of the new registration record */
     lea eax, [ebp - SEH_FRAME_OriginalEbp + SEH_FRAME_PreviousRecord]
 
-    /* Safe the disable value, overwriting OLDFRAME.SEHTable */
-    mov dword ptr [ebp - SEH_FRAME_OriginalEbp + SEH_FRAME_Disable], -1
+    /* Save registers */
+    mov [esp + SAFE_AREA_Edi], edi
+    mov [esp + SAFE_AREA_Esi], esi
+    mov [esp + SAFE_AREA_Ebx], ebx
 
     /* Enqueue the new record */
     mov fs:[0], eax
 
     /* Return to the caller */
     ret
+
+
+PUBLIC __SEH_epilog
+__SEH_epilog:
+
+    /* Restore the previous exception registration record */
+    mov ecx, [ebp - SEH_FRAME_OriginalEbp + SEH_FRAME_PreviousRecord]
+    mov fs:[0], ecx
+
+    /* Restore saved registers */
+    mov edi, [esp + 4 + SAFE_AREA_Edi]
+    mov esi, [esp + 4 + SAFE_AREA_Esi]
+    mov ebx, [esp + 4 + SAFE_AREA_Ebx]
+
+    /* Get the return address */
+    mov ecx, [esp]
+
+    /* Clean up stack */
+    mov esp, ebp
+
+    /* Get previous ebp */
+    mov ebp, [esp]
+
+    /* Save return address */
+    mov [esp], ecx
+
+    /* Return to the caller */
+    ret
+
 
 END
