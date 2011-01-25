@@ -39,6 +39,10 @@ extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
 
+extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+extern BOOLEAN WinLdrTerminalConnected;
+extern void WinLdrSetupEms(IN PCHAR BootOptions);
+
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -155,7 +159,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		ArcDiskInfo->ArcName = (PCHAR)PaToVa(ArcDiskInfo->ArcName);
 
 		/* Mark partition table as valid */
-		ArcDiskInfo->ValidPartitionTable = TRUE; 
+		ArcDiskInfo->ValidPartitionTable = TRUE;
 
 		/* Insert into the list */
 		InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
@@ -203,11 +207,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		/* See KiRosFrldrLpbToNtLpb for details */
 		Extension->AcpiTable = (PVOID)1;
 	}
-    
+
 #ifndef _M_ARM
     /* Set headless block pointer */
-    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
-    extern BOOLEAN WinLdrTerminalConnected;
     if (WinLdrTerminalConnected)
     {
         Extension->HeadlessLoaderBlock = MmHeapAlloc(sizeof(HEADLESS_LOADER_BLOCK));
@@ -535,10 +537,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
-    
+
 #ifndef _M_ARM
    	/* Setup redirection support */
-	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
 #endif
 	/* Detect hardware */
