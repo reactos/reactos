@@ -39,6 +39,8 @@
 #define InterlockedDecrement _InterlockedDecrement
 #define InterlockedExchangeAdd _InterlockedExchangeAdd
 #define InterlockedExchange _InterlockedExchange
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
 #endif
 
 #endif /* RTL_H */
