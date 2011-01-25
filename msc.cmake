@@ -140,7 +140,7 @@ macro(add_importlib_target _exports_file)
     # Generate the asm stub file and the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def --kill-at -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+        COMMAND native-spec2def --ms --kill-at -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     # Assemble the stub file
@@ -181,22 +181,11 @@ macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --kill-at -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms --kill-at -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         PROPERTIES GENERATED TRUE)
     list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
-endmacro()
-
-# Optional 3rd parameter: dllname
-macro(set_export_spec _module _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
-    if (${ARGC} GREATER 2)
-        set(_dllname ${ARGV2})
-    else()
-        set(_dllname ${_file}.dll)
-    endif()
-    spec2def(${_dllname} ${_spec_file})
 endmacro()
 
 macro(macro_mc FILE)
@@ -206,5 +195,5 @@ endmacro()
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
-set(PSEH_LIB "")
+set(PSEH_LIB "pseh")
 
