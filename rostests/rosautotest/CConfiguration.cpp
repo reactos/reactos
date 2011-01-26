@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Class for managing all the configuration parameters
- * COPYRIGHT:   Copyright 2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2009-2011 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -183,11 +183,11 @@ CConfiguration::GetConfigurationFromFile()
             EXCEPTION("Missing \"" CONFIGURATION_FILENAMEA "\" configuration file!\n");
 
         /* Get the user name */
-        m_AuthenticationRequestString = "&username=";
-        Value = GetINIValue(L"Login", L"UserName", ConfigFile);
+        m_AuthenticationRequestString = "&sourceid=";
+        Value = GetINIValue(L"Login", L"SourceID", ConfigFile);
 
         if(Value.empty())
-            EXCEPTION("UserName is missing in the configuration file\n");
+            EXCEPTION("SourceID is missing in the configuration file\n");
 
         m_AuthenticationRequestString += EscapeString(Value);
 
