@@ -2051,7 +2051,7 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
         sinEsc = 0;
     }
 
-    IntGdiGetDCOrg(dc, &org);
+    org = dc->ptlDCOrig;
 
     for (idx = 0; idx < count; idx++)
     {

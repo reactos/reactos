@@ -1,0 +1,35 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n" \
+                "Options:\n" \
+                "    -t             Ping the specified host until stopped.\n" \
+                "                   To stop - type Control-C.\n" \
+                "    -n count       Number of echo requests to send.\n" \
+                "    -l size        Send buffer size.\n" \
+                "    -w timeout     Timeout in milliseconds to wait for each reply.\n\n\0"
+    
+    IDS_PING_WITH_BYTES             "\nPinging %1 [%2] with %3!d! bytes of data:\n\n\0"
+    IDS_PING_STATISTICS             "\nPing statistics for %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Packets: Sent = %1!d!, Received = %2!d!, Lost = %3!d! (%4!d!%% loss),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Approximate round trip times in milli-seconds:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Average = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Not enough free resources available.\n\0"
+    IDS_UNKNOWN_HOST                "Unknown host %1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt failed (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Could not create socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Could not initialize winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Name or IP address of destination host must be specified.\n\0"
+    IDS_BAD_PARAMETER               "Bad parameter %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Bad option format %1.\n\0"
+    IDS_BAD_OPTION                  "Bad option %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Bad value for option -l, valid range is from 0 to %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Reply from %1: bytes=%2!d! time%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Destination host unreachable.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Could not transmit data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Could not receive data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Request timed out.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END

@@ -489,8 +489,8 @@ SwapROP3_SrcDst(BYTE bRop3)
  *  1  0  1     0  1101xax = 111ax = 11x = 0
  *  1  1  0     1  0110xax = 011ax = 01x = 1
  *  1  1  1     1  1111xax = 110ax = 10x = 1
- * 
- * Operation index = 11001010 = 0xCA = PSaDPnao = DPSDxax 
+ *
+ * Operation index = 11001010 = 0xCA = PSaDPnao = DPSDxax
  *                                     ^ no, this is not random letters, its reverse Polish notation
  */
 
@@ -1062,7 +1062,7 @@ NtGdiPolyPatBlt(
 
     if (cRects > 0)
     {
-        rb = ExAllocatePoolWithTag(PagedPool, sizeof(PATRECT) * cRects, TAG_PATBLT);
+        rb = ExAllocatePoolWithTag(PagedPool, sizeof(PATRECT) * cRects, GDITAG_PLGBLT_DATA);
         if (!rb)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1085,7 +1085,7 @@ NtGdiPolyPatBlt(
 
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(rb, TAG_PATBLT);
+            ExFreePoolWithTag(rb, GDITAG_PLGBLT_DATA);
             SetLastNtError(Status);
             return FALSE;
         }
@@ -1094,7 +1094,7 @@ NtGdiPolyPatBlt(
     Ret = IntGdiPolyPatBlt(hDC, dwRop, rb, cRects, Mode);
 
     if (cRects > 0)
-        ExFreePoolWithTag(rb, TAG_PATBLT);
+        ExFreePoolWithTag(rb, GDITAG_PLGBLT_DATA);
 
     return Ret;
 }

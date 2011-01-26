@@ -1,4 +1,5 @@
 
+set_unicode()
 add_definitions(-D__USE_W32_SOCKETS)
 
 add_executable(ping ping.c ping.rc)

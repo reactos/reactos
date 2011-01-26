@@ -192,7 +192,7 @@ NtUserRegisterHotKey(HWND hWnd,
       RETURN( FALSE);
    }
 
-   HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), TAG_HOTKEY);
+   HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), USERTAG_HOTKEY);
    if (HotKeyItem == NULL)
    {
       RETURN( FALSE);
@@ -235,7 +235,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
       if (HotKeyItem->hWnd == hWnd && HotKeyItem->id == id)
       {
          RemoveEntryList (&HotKeyItem->ListEntry);
-         ExFreePool (HotKeyItem);
+         ExFreePoolWithTag(HotKeyItem, USERTAG_HOTKEY);
 
          RETURN( TRUE);
       }

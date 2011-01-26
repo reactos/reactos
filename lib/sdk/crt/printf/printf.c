@@ -22,6 +22,7 @@ printf(const char *format, ...)
     va_start(argptr, format);
     result = streamout(stdout, format, argptr);
     va_end(argptr);
+
     return result;
 }
 

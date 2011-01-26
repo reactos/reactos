@@ -219,7 +219,7 @@ ReadDirectoryChangesW(
       EventHandle,
       IoApcRoutine,
       CompletionRoutine, /* ApcContext */
-      lpOverlapped ? (PIO_STATUS_BLOCK)lpOverlapped->Internal : &IoStatus,
+      lpOverlapped ? (PIO_STATUS_BLOCK) lpOverlapped : &IoStatus,
       lpBuffer,
       nBufferLength,
       dwNotifyFilter,

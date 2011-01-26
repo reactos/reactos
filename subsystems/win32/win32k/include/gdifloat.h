@@ -4,6 +4,7 @@
 #include <reactos/win32k/ntgdihdl.h>
 #include "dc.h"
 #include "math.h"
+#include "xformobj.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 

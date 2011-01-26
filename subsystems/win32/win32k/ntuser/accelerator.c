@@ -370,7 +370,7 @@ NtUserCreateAcceleratorTable(
    Accel->Count = EntriesCount;
    if (Accel->Count > 0)
    {
-      Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
+      Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), USERTAG_ACCEL);
       if (Accel->Table == NULL)
       {
          UserDereferenceObject(Accel);
@@ -388,10 +388,10 @@ NtUserCreateAcceleratorTable(
           }
           else
           {
-             RtlMultiByteToUnicodeN(&Accel->Table[Index].key, 
-                                    sizeof(WCHAR), 
-                                    NULL, 
-                                    (PCSTR)&Entries[Index].key, 
+             RtlMultiByteToUnicodeN(&Accel->Table[Index].key,
+                                    sizeof(WCHAR),
+                                    NULL,
+                                    (PCSTR)&Entries[Index].key,
                                     sizeof(CHAR));
           }
 
@@ -438,7 +438,7 @@ NtUserDestroyAcceleratorTable(
 
    if (Accel->Table != NULL)
    {
-      ExFreePoolWithTag(Accel->Table, TAG_ACCEL);
+      ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
       Accel->Table = NULL;
    }
 

@@ -31,6 +31,7 @@ add_importlibs(explorer_new
     oleaut32
     shell32
     shlwapi
+    version
     msvcrt
     kernel32
     ntdll)

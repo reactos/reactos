@@ -76,8 +76,8 @@ typedef struct _DCLEVEL
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
   LINEATTRS         laPath; /* 0x20 bytes */
-  PVOID             prgnClip; /* PROSRGNDATA */
-  PVOID             prgnMeta;
+  PREGION           prgnClip;
+  PREGION           prgnMeta;
   COLORADJUSTMENT   ca;
   FLONG             flFontState;
   UNIVERSAL_FONT_ID ufi;
@@ -126,9 +126,9 @@ typedef struct _DC
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
-  PROSRGNDATA prgnAPI; /* PROSRGNDATA */
-  PROSRGNDATA prgnVis; /* Visible region (must never be 0) */
-  PROSRGNDATA prgnRao;
+  PREGION     prgnAPI;
+  PREGION     prgnVis; /* Visible region (must never be 0) */
+  PREGION     prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
   EBRUSHOBJ   eboLine;

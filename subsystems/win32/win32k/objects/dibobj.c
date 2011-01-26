@@ -1028,9 +1028,10 @@ NtGdiStretchDIBitsInternal(
     WORD planes, bpp;
     DWORD compr, size;
     HBITMAP hBitmap;
-    BOOL fastpath = FALSE;
-    NTSTATUS Status = STATUS_SUCCESS;
-	PBYTE safeBits ;
+    HBITMAP hOldBitmap;
+    HDC hdcMem;
+    PVOID pvBits;
+    PBYTE safeBits;
 
     if (!Bits || !BitsInfo)
         return 0;
@@ -1053,24 +1054,19 @@ NtGdiStretchDIBitsInternal(
     {
         ProbeForRead(BitsInfo, cjMaxInfo, 1);
         ProbeForRead(Bits, cjMaxBits, 1);
-        if (DIB_GetBitmapInfo( &BitsInfo->bmiHeader, &width, &height, &planes, &bpp, &compr, &size ) == -1)
+        if (DIB_GetBitmapInfo(&BitsInfo->bmiHeader, &width, &height, &planes, &bpp, &compr, &size) == -1)
         {
             DPRINT1("Invalid bitmap\n");
-            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_YIELD(goto cleanup;)
         }
 		RtlCopyMemory(safeBits, Bits, cjMaxBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Error, failed to read the DIB bits\n");
+        _SEH2_YIELD(goto cleanup;)
     }
     _SEH2_END
-
-    if(!NT_SUCCESS(Status))
-    {
-        DPRINT1("Error, failed to read the DIB bits\n");
-        goto cleanup;
-    }
 
     if (width < 0)
     {
@@ -1086,30 +1082,22 @@ NtGdiStretchDIBitsInternal(
         ROP == SRCCOPY)
     {
         BITMAP bmp;
-        if (IntGdiGetObject(hBitmap, sizeof(bmp), &bmp) == sizeof(bmp))
-        {
-            if (bmp.bmBitsPixel == bpp &&
+        ret = IntGdiGetObject(hBitmap, sizeof(bmp), &bmp) == sizeof(bmp);
+        if (ret &&
+            bmp.bmBitsPixel == bpp &&
                 bmp.bmWidth == SrcWidth &&
                 bmp.bmHeight == SrcHeight &&
                 bmp.bmPlanes == planes)
-                fastpath = TRUE;
-        }
-    }
-
-    if (fastpath)
     {
         /* fast path */
-        DPRINT1("using fast path\n");
-        ret = IntSetDIBits( pdc, hBitmap, 0, height, safeBits, BitsInfo, Usage);
+            ret = IntSetDIBits(pdc, hBitmap, 0, height, safeBits, BitsInfo, Usage);
+            goto cleanup;
     }
-    else
-    {
-        /* slow path - need to use StretchBlt */
-        HBITMAP hOldBitmap;
-        HDC hdcMem;
-        PVOID pvBits;
+    }
 
-        hdcMem = NtGdiCreateCompatibleDC( hDC );
+        /* slow path - need to use StretchBlt */
+
+    hdcMem = NtGdiCreateCompatibleDC(hDC);
         hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
 		if(!hBitmap)
 		{
@@ -1117,21 +1105,22 @@ NtGdiStretchDIBitsInternal(
 			NtGdiDeleteObjectApp(hdcMem);
 			goto cleanup;
 		}
+
         RtlCopyMemory(pvBits, safeBits, cjMaxBits);
-        hOldBitmap = NtGdiSelectBitmap( hdcMem, hBitmap );
+    hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
 
         /* Origin for DIBitmap may be bottom left (positive biHeight) or top
            left (negative biHeight) */
-        ret = NtGdiStretchBlt( hDC, XDest, YDest, DestWidth, DestHeight,
+    ret = NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
                              hdcMem, XSrc, abs(height) - SrcHeight - YSrc,
-                             SrcWidth, SrcHeight, ROP, 0 );
-        
+                         SrcWidth, SrcHeight, ROP, 0);
+
 		if(ret)
             ret = SrcHeight;
-        NtGdiSelectBitmap( hdcMem, hOldBitmap );
-        NtGdiDeleteObjectApp( hdcMem );
-        GreDeleteObject( hBitmap );
-    }
+    NtGdiSelectBitmap(hdcMem, hOldBitmap);
+    NtGdiDeleteObjectApp(hdcMem);
+    GreDeleteObject(hBitmap);
+
 cleanup:
 	ExFreePoolWithTag(safeBits, TAG_DIB);
     DC_UnlockDc(pdc);
@@ -1435,7 +1424,7 @@ DIB_CreateDIBSection(
 
     // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
     // we're dealing with a compressed bitmap.  Otherwise, use width * height.
-    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
+    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB && bi->biCompression != BI_BITFIELDS
                 ? bi->biSizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
 
     if (section)
@@ -1552,6 +1541,7 @@ DIB_CreateDIBSection(
     bmp->dwOffset = offset;
     bmp->flags = API_BITMAP;
     bmp->biClrImportant = bi->biClrImportant;
+    bmp->SurfObj.fjBitmap &= ~BMF_DONT_FREE;
 
 	/* HACK */
 	if(hpal != (HPALETTE)0xFFFFFFFF)

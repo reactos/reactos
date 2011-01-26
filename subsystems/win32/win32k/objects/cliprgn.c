@@ -483,13 +483,13 @@ IntGdiSetMetaRgn(PDC pDC)
                                    RGN_AND);
            if ( Ret )
            {
-              GDIOBJ_ShareUnlockObjByPtr(pDC->dclevel.prgnMeta);
+              GDIOBJ_ShareUnlockObjByPtr(&pDC->dclevel.prgnMeta->BaseObject);
               if (!((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.ulShareCount)
                  REGION_Delete(pDC->dclevel.prgnMeta);
 
               pDC->dclevel.prgnMeta = TempRgn;
 
-              GDIOBJ_ShareUnlockObjByPtr(pDC->dclevel.prgnClip);
+              GDIOBJ_ShareUnlockObjByPtr(&pDC->dclevel.prgnClip->BaseObject);
               if (!((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.ulShareCount)
                  REGION_Delete(pDC->dclevel.prgnClip);
 

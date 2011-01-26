@@ -566,10 +566,10 @@ IdlePing(VOID)
 
    if (ForegroundQueue)
       ptiForeground = ForegroundQueue->Thread->Tcb.Win32Thread;
-     
+
    pti = PsGetCurrentThreadWin32Thread();
 
-   if ( pti ) 
+   if ( pti )
    {
       pti->pClientInfo->cSpins = 0; // Reset spins.
 
@@ -696,7 +696,7 @@ IntDispatchMessage(PMSG pMsg)
                                               (LPARAM)Time,
                                               0);
             }
-            return retval;        
+            return retval;
         }
         else
         {
@@ -713,7 +713,7 @@ IntDispatchMessage(PMSG pMsg)
     // Need a window!
     if ( !Window ) return 0;
 
-    /* Since we are doing a callback on the same thread right away, there is 
+    /* Since we are doing a callback on the same thread right away, there is
        no need to copy the lparam to kernel mode and then back to usermode.
        We just pretend it isn't a pointer */
 
@@ -842,12 +842,12 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         if ((ProcessMask & QS_INPUT) &&
-            co_MsqPeekHardwareMessage( ThreadQueue, 
-                                       RemoveMessages, 
-                                       Window, 
-                                       MsgFilterMin, 
+            co_MsqPeekHardwareMessage( ThreadQueue,
+                                       RemoveMessages,
+                                       Window,
+                                       MsgFilterMin,
                                        MsgFilterMax,
-                                       ProcessMask, 
+                                       ProcessMask,
                                        Msg))
         {
             return TRUE;
@@ -1124,9 +1124,9 @@ UserPostMessage( HWND Wnd,
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
         }
-        co_IntSendMessageNoWait(KernelModeMsg.hwnd, 
-                                KernelModeMsg.message, 
-                                KernelModeMsg.wParam, 
+        co_IntSendMessageNoWait(KernelModeMsg.hwnd,
+                                KernelModeMsg.message,
+                                KernelModeMsg.wParam,
                                 KernelModeMsg.lParam);
 
         if (MsgMemoryEntry && KernelModeMsg.lParam)
@@ -1164,7 +1164,7 @@ UserPostMessage( HWND Wnd,
             {
                 UserPostMessage(List[i], Msg, wParam, lParam);
             }
-            ExFreePoolWithTag(List,TAG_WINLIST);//ExFreePool(List);
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
         }
     }
     else
@@ -1190,13 +1190,13 @@ UserPostMessage( HWND Wnd,
             /* FIXME - last error code? */
             return FALSE;
         }
-		
+
         if (WM_QUIT == Msg)
         {
             MsqPostQuitMessage(Window->head.pti->MessageQueue, wParam);
         }
         else
-        { 
+        {
             MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
         }
     }
@@ -1401,7 +1401,7 @@ co_IntSendMessageTimeout( HWND hWnd,
     return (LRESULT) TRUE;
 }
 
-LRESULT FASTCALL 
+LRESULT FASTCALL
 co_IntSendMessageNoWait(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
@@ -1538,7 +1538,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     Message->QS_Flags = QS_SENDMESSAGE;
     MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, FALSE);
-    
+
     InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
     IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
@@ -1689,9 +1689,9 @@ IntGetQueueStatus(DWORD Changes)
 // wine:
     Changes &= (QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT);
 
-    /* High word, types of messages currently in the queue. 
+    /* High word, types of messages currently in the queue.
        Low  word, types of messages that have been added to the queue and that
-                  are still in the queue 
+                  are still in the queue
      */
     Result = MAKELONG(pti->pcti->fsChangeBits & Changes, pti->pcti->fsWakeBits & Changes);
 
@@ -1762,7 +1762,7 @@ NtUserPostThreadMessage(DWORD idThread,
     ret = UserPostThreadMessage( idThread, Msg, wParam, lParam);
 
     UserLeave();
-    
+
     return ret;
 }
 
@@ -1776,7 +1776,7 @@ NtUserWaitMessage(VOID)
     ret = co_IntWaitMessage(NULL, 0, 0);
     DPRINT("NtUserWaitMessage Leave\n");
     UserLeave();
-    
+
     return ret;
 }
 
@@ -1859,7 +1859,7 @@ NtUserPeekMessage( PMSG pMsg,
         }
         _SEH2_END;
     }
-    
+
     return Ret;
 }
 
@@ -1963,7 +1963,7 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
 
 BOOL APIENTRY
 NtUserMessageCall( HWND hWnd,
-                   UINT Msg, 
+                   UINT Msg,
                    WPARAM wParam,
                    LPARAM lParam,
                    ULONG_PTR ResultInfo,
@@ -2076,7 +2076,7 @@ NtUserMessageCall( HWND hWnd,
         {
             CALL_BACK_INFO CallBackInfo;
             ULONG_PTR uResult;
-            
+
             _SEH2_TRY
             {
                 ProbeForRead((PVOID)ResultInfo, sizeof(CALL_BACK_INFO), 1);
@@ -2133,7 +2133,7 @@ NtUserMessageCall( HWND hWnd,
                 }
                 _SEH2_END;
             }
-            
+
             Ret = co_IntDoSendMessage( hWnd, Msg, wParam, lParam, &dsm );
 
             if (pdsm)

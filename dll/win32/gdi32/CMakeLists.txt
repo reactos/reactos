@@ -9,6 +9,11 @@ include_directories(include)
 
 spec2def(gdi32.dll gdi32.spec)
 
+if(ARCH MATCHES i386)
+list(APPEND SOURCE
+    objects/efloat.c)
+endif()
+
 list(APPEND SOURCE
     main/dllmain.c
     misc/heap.c

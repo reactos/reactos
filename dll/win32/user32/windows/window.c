@@ -18,8 +18,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
 
-#define CW_USEDEFAULT16 0x00008000
-
 /* FUNCTIONS *****************************************************************/
 
 

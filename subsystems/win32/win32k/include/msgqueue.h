@@ -247,7 +247,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
         ObDereferenceObject((MsgQueue)->NewMessages); \
       if ((MsgQueue)->NewMessagesHandle != NULL) \
         ZwClose((MsgQueue)->NewMessagesHandle); \
-      ExFreePool((MsgQueue)); \
+      ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)
 

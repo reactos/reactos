@@ -46,7 +46,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
         DPRINT("Asyn Complete!\n");
         ULONG CurrentAddr, OffSet;
         PQUEUE_HEAD CompletedQH, NextQH;
-        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD;
+        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD, NextTD;
         
 		/* AsyncListAddr Register will have the next QueueHead to execute */
         CurrentAddr = GetAsyncListQueueRegister(hcd);
@@ -64,14 +64,13 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
 		/* Free memory for the Descriptors */
         CompletedTD = CompletedQH->TransferDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
+        NextTD = CompletedTD;
+        while (NextTD)
+        {
+            CompletedTD = NextTD;
+            NextTD = NextTD->NextDescriptor;
         FreeDescriptor(CompletedTD);
-        CompletedTD = CompletedTD->NextDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
-        FreeDescriptor(CompletedTD);
-        CompletedTD = CompletedTD->NextDescriptor;
-        //DumpTransferDescriptor(CompletedTD);
-        FreeDescriptor(CompletedTD);
+        }
         
         /* If the Event is set then release waiter */
         if (CompletedQH->Event)
@@ -79,27 +78,25 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             KeSetEvent(CompletedQH->Event, IO_NO_INCREMENT, FALSE);
         }
 
-        /* Free the Mdl */
-        ASSERT(CompletedQH->MdlToFree);
+        /* Free the Mdl if there was one */
+        if(CompletedQH->MdlToFree)
         IoFreeMdl(CompletedQH->MdlToFree);
 
         /* Is there an IRP that needs to be completed */
         if (CompletedQH->IrpToComplete)
         {
             PIRP Irp; 
-    
+                PIO_STACK_LOCATION Stack;
+                PURB Urb;
+
             Irp = CompletedQH->IrpToComplete;            
+                Stack = IoGetCurrentIrpStackLocation(Irp);
+                ASSERT(Stack);
+                Urb = (PURB) Stack->Parameters.Others.Argument1;
 
             /* Check for error */
             if (CStatus & EHCI_ERROR_INT)
             {
-                PIO_STACK_LOCATION Stack;
-                PURB Urb;
-
-                Stack = IoGetCurrentIrpStackLocation(Irp);
-                ASSERT(Stack);
-                Urb = (PURB) Stack->Parameters.Others.Argument1;
-                ASSERT(FALSE);
                 /* Haled bit should be set */
                 if (CompletedQH->Token.Bits.Halted)
                 {

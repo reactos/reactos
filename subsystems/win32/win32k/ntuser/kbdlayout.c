@@ -196,7 +196,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
    ULONG hKl;
    LANGID langid;
 
-   NewKbl = ExAllocatePoolWithTag(PagedPool, sizeof(KBL), TAG_KEYBOARD);
+   NewKbl = ExAllocatePoolWithTag(PagedPool, sizeof(KBL), USERTAG_KBDLAYOUT);
 
    if(!NewKbl)
    {
@@ -209,7 +209,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
    if(!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
    {
       DPRINT("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
-      ExFreePoolWithTag(NewKbl, TAG_KEYBOARD);
+      ExFreePoolWithTag(NewKbl, USERTAG_KBDLAYOUT);
       return NULL;
    }
 
@@ -398,7 +398,7 @@ BOOL UserUnloadKbl(PKBL pKbl)
       //Unload the layout
       EngUnloadImage(pKbl->hModule);
       RemoveEntryList(&pKbl->List);
-      ExFreePoolWithTag(pKbl, TAG_KEYBOARD);
+      ExFreePoolWithTag(pKbl, USERTAG_KBDLAYOUT);
    }
 
    return TRUE;

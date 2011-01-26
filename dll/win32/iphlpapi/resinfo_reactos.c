@@ -47,6 +47,8 @@
 #include "iphlpapi.h"
 #include "wine/debug.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
+
 typedef struct _NAME_SERVER_LIST_PRIVATE {
     UINT NumServers;
     IP_ADDR_STRING * pCurrent;
@@ -74,7 +76,7 @@ QueryNameServer(
     if (Status != ERROR_SUCCESS)
     {
         /* failed to retrieve size */
-        DbgPrint("Status %x\n", Status);
+        TRACE("Status %x\n", Status);
         return Status;
     }
 

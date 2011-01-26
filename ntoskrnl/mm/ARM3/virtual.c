@@ -1127,7 +1127,7 @@ MiQueryAddressState(IN PVOID Va,
         if (!PointerPde->u.Long)
         {
             /* No address in this range used yet, move to the next PDE range */
-            *NextVa = MiPteToAddress(MiPdeToAddress(PointerPde + 1));
+            *NextVa = MiPdeToAddress(PointerPde + 1);
             break;
         }
 
@@ -1135,7 +1135,7 @@ MiQueryAddressState(IN PVOID Va,
         if (!PointerPde->u.Hard.Valid)
         {
             /* It isn't, go ahead and do the fault */
-            LockChange = MiMakeSystemAddressValid(MiPdeToAddress(PointerPde),
+            LockChange = MiMakeSystemAddressValid(MiPdeToPte(PointerPde),
                                                   TargetProcess);
         }
 

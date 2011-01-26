@@ -11,7 +11,8 @@ typedef struct _MEM_ENTRY
 typedef struct _MEM_HEADER
 {
     UCHAR IsFull;
-    MEM_ENTRY Entry[127];    
+    MEM_ENTRY Entry[124];
+    UCHAR Reserved[3];
 } MEM_HEADER, *PMEM_HEADER;
 
 VOID

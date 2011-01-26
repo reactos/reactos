@@ -262,7 +262,7 @@ IntGdiPolyline(DC      *dc,
 
     if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
-        Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
+        Points = EngAllocMem(0, Count * sizeof(POINT), GDITAG_TEMP);
         if (Points != NULL)
         {
             psurf = dc->dclevel.pSurface;

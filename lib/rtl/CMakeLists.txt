@@ -50,9 +50,7 @@ list(APPEND SOURCE
     security.c
     slist.c
     sid.c
-    sprintf.c
     srw.c
-    swprintf.c
     splaytree.c
     thread.c
     time.c

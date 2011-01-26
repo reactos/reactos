@@ -5,7 +5,6 @@ add_definitions(-D_CRTBLD)
 
 list(APPEND CRT_SOURCE
     conio/cgets.c
-    conio/cprintf.c
     conio/cputs.c
     conio/getch.c
     conio/getche.c
@@ -54,6 +53,7 @@ list(APPEND CRT_SOURCE
     math/ldiv.c
     math/logf.c
     math/modf.c
+    math/powf.c
     math/rand.c
     math/sqrtf.c
     math/s_modf.c
@@ -128,6 +128,26 @@ list(APPEND CRT_SOURCE
     misc/purecall.c
     misc/stubs.c
     misc/tls.c
+    printf/_cprintf.c
+    printf/_snprintf.c
+    printf/_snwprintf.c
+    printf/_vcprintf.c
+    printf/_vsnprintf.c
+    printf/_vsnwprintf.c
+    printf/fprintf.c
+    printf/fwprintf.c
+    printf/printf.c
+    printf/sprintf.c
+    printf/streamout.c
+    printf/swprintf.c
+    printf/vfprintf.c
+    printf/vfwprintf.c
+    printf/vprintf.c
+    printf/vsprintf.c
+    printf/vswprintf.c
+    printf/vwprintf.c
+    printf/wprintf.c
+    printf/wstreamout.c
     process/_cwait.c
     process/_system.c
     process/dll.c
@@ -142,13 +162,15 @@ list(APPEND CRT_SOURCE
     search/lsearch.c
     signal/signal.c
     signal/xcptinfo.c
+    stdio/_flsbuf.c
+    stdio/_flswbuf.c
     stdio/access.c
     stdio/file.c
     stdio/find.c
     stdio/find64.c
     stdio/findi64.c
     stdio/fmode.c
-    stdio/lnx_sprintf.c
+    stdio/lock_file.c
     stdio/perror.c
     stdio/popen.c
     stdio/stat.c
@@ -427,6 +449,18 @@ list(APPEND LIBCNTPR_SOURCE
     mem/memccpy.c
     mem/memcmp.c
     mem/memicmp.c
+    printf/_snprintf.c
+    printf/_snwprintf.c
+    printf/_vcprintf.c
+    printf/_vsnprintf.c
+    printf/_vsnwprintf.c
+    printf/sprintf.c
+    printf/streamout.c
+    printf/swprintf.c
+    printf/vprintf.c
+    printf/vsprintf.c
+    printf/vswprintf.c
+    printf/wstreamout.c
     search/bsearch.c
     search/lfind.c
     stdlib/qsort.c
@@ -588,3 +622,16 @@ if(MSVC)
     add_library(msvcsup ${MSVCSUP_SOURCE})
     add_dependencies(msvcsup psdk buildno_header asm)
 endif()
+
+add_definitions(-D_USER32_WSPRINTF)
+add_library(user32_wsprintf
+    printf/streamout.c
+    printf/wstreamout.c
+    printf/wsprintfA.c
+    printf/wsprintfW.c
+    printf/wvsprintfA.c
+    printf/wvsprintfW.c
+    printf/wvsnprintfA.c
+    printf/wvsnprintfW.c
+    string/mbstowcs_nt.c
+    string/wcstombs_nt.c)

@@ -20,7 +20,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #if 0 // Kept for referencing.
 const struct builtin_class_descr DESKTOP_builtin_class =
 {
-  (LPCWSTR) DESKTOP_CLASS_ATOM,   /* name */
+  WC_DESKTOP,           /* name */
   CS_DBLCLKS,           /* style */
   NULL,                 /* procA (winproc is Unicode only) */
   (WNDPROC) DesktopWndProc,       /* procW */

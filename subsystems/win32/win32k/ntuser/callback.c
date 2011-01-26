@@ -35,7 +35,7 @@ IntCbAllocateMemory(ULONG Size)
    PTHREADINFO W32Thread;
 
    if(!(Mem = ExAllocatePoolWithTag(PagedPool, Size + sizeof(INT_CALLBACK_HEADER),
-                                    TAG_CALLBACK)))
+                                    USERTAG_CALLBACK)))
    {
       return NULL;
    }
@@ -67,7 +67,7 @@ IntCbFreeMemory(PVOID Data)
    RemoveEntryList(&Mem->ListEntry);
 
    /* free memory */
-   ExFreePoolWithTag(Mem, TAG_CALLBACK);
+   ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
 }
 
 VOID FASTCALL
@@ -475,15 +475,15 @@ co_IntCallHookProc(INT HookId,
       case WH_MOUSE:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_CALLWNDPROC:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_CALLWNDPROCRET:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPRETSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         break;         
+         break;
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:
@@ -494,7 +494,7 @@ co_IntCallHookProc(INT HookId,
       case WH_FOREGROUNDIDLE:
       case WH_KEYBOARD:
       case WH_SHELL:
-         break;         
+         break;
    }
 
    ResultPointer = NULL;
@@ -618,7 +618,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    UserEnterCo();
 
    IntCbFreeMemory(Argument);
-  
+
    if (!NT_SUCCESS(Status))
    {
       return 0;
@@ -654,7 +654,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
 
    // Help Intersource check and MenuName is now 4 bytes + so zero it.
-   RtlZeroMemory(Common, ArgumentLength); 
+   RtlZeroMemory(Common, ArgumentLength);
 
    Common->hModule = hModule;
    if (pMenuName->Length)

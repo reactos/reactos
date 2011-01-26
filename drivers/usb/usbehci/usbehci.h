@@ -17,6 +17,7 @@
 #define	DEVICEBUSY			0x04
 #define DEVICESTOPPED			0x08
 #define DEVICESTALLED          0x10
+#define DEVICEREMOVED           0x20
 
 
 #define	MAX_USB_DEVICES			127
@@ -71,6 +72,8 @@ typedef struct _USB_DEVICE
     BOOLEAN IsHub;
     USB_DEVICE_SPEED DeviceSpeed;
     USB_DEVICE_TYPE DeviceType;
+    ULONG DeviceState;
+    PDEVICE_OBJECT UsbDevicePdo;
     USB_DEVICE_DESCRIPTOR DeviceDescriptor;
     UNICODE_STRING LanguageIDs;
     UNICODE_STRING iManufacturer;

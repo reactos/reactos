@@ -5,6 +5,8 @@
  * PURPOSE:         ASM macros for for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
+#ifndef _ASM_INC_
+#define _ASM_INC_
 
 #ifdef _USE_ML
 
@@ -52,10 +54,6 @@ ENDM
 #define lgdt lgdt fword ptr ds:
 
 #define lidt lidt fword ptr ds:
-
-ljmp MACRO segment, offset
-    DB 0
-ENDM
 
 .code64 MACRO
     .code
@@ -115,9 +113,9 @@ ENDM
 // FIXME
 ENDM
 
-ljmp MACRO segment, offset
+//ljmp MACRO segment, offset
 // FIXME
-ENDM
+//ENDM
 
 UNIMPLEMENTED MACRO name
 ENDM
@@ -176,9 +174,9 @@ ENDM
 #define REPEAT .rept
 #define ENDR .endr
 
-.macro ljmp segment, offset
-    jmp far ptr \segment:\offset
-.endm
+//.macro ljmp segment, offset
+//    jmp far ptr \segment:\offset
+//.endm
 
 /* MASM compatible EXTERN */
 .macro EXTERN name
@@ -260,3 +258,5 @@ code = 1
 #define elseif .elseif
 
 #endif
+
+#endif /* _ASM_INC_ */

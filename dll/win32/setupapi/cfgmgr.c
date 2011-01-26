@@ -180,6 +180,34 @@ CONFIGRET WINAPI CMP_Report_LogOn(
 
 
 /***********************************************************************
+ * CMP_WaitServicesAvailable [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_WaitServicesAvailable(HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    WORD Version;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetVersion(BindingHandle, &Version);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Add_Empty_Log_Conf [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Add_Empty_Log_Conf(
@@ -1825,7 +1853,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExA(
     WCHAR szBufferW[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    FIXME("%lx %p %ld %ld %lx\n",
+    TRACE("%lx %p %ld %ld %lx\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
 
     if (Buffer == NULL)
@@ -1931,7 +1959,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExA(
     LPWSTR pszFilterW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    FIXME("%p %p %ld %ld %lx\n",
+    TRACE("%p %p %ld %ld %lx\n",
           pszFilter, Buffer, BufferLen, ulFlags, hMachine);
 
     BufferW = MyMalloc(BufferLen * sizeof(WCHAR));
@@ -2016,7 +2044,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExW(
     RpcTryExcept
     {
         ret = PNP_GetDeviceList(BindingHandle,
-                                pszFilter,
+                                (LPWSTR)pszFilter,
                                 Buffer,
                                 &BufferLen,
                                 ulFlags);
@@ -2264,6 +2292,8 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
     if (ret != CR_SUCCESS)
         return ret;
 
+    if (plcLogConf)
+    {
     pLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
     if (pLogConfInfo == NULL)
         return CR_OUT_OF_MEMORY;
@@ -2274,6 +2304,7 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
     pLogConfInfo->ulTag = ulTag;
 
     *plcLogConf = (LOG_CONF)pLogConfInfo;
+    }
 
     return CR_SUCCESS;
 }

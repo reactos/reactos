@@ -26,6 +26,9 @@
 #include "winsta.h"
 #include "ntwrapper.h"
 
+#define IS_ATOM(x) \
+  (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
+
 /* One/Two Param Functions */
 #define NtUserMsqSetWakeMask(dwWaitMask) \
   (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_GETINPUTEVENT)

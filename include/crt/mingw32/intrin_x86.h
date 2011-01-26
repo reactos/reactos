@@ -79,21 +79,36 @@ extern "C" {
 #define _alloca(s) __builtin_alloca(s)
 #endif
 
-/*** Atomic operations ***/
+/*** Memory barriers ***/
 
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
-#define _ReadWriteBarrier() __sync_synchronize()
-#else
-__INTRIN_INLINE void _MemoryBarrier(void)
+#ifdef _x86_64
+__INTRIN_INLINE void __faststorefence(void)
+{
+    long local;
+	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
+}
+#endif
+
+__INTRIN_INLINE void _mm_lfence(void)
+{
+	__asm__ __volatile__("lfence");
+}
+
+__INTRIN_INLINE void _mm_sfence(void)
+{
+	__asm__ __volatile__("sfence");
+}
+
+__INTRIN_INLINE void _ReadWriteBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
 }
-#define _ReadWriteBarrier() _MemoryBarrier()
-#endif
 
-/* BUGBUG: GCC only supports full barriers */
+/* GCC only supports full barriers */
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
+
+/*** Atomic operations ***/
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 

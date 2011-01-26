@@ -446,7 +446,7 @@ EXLATEOBJ_vInitialize(
         {
             pexlo->xlo.pulXlate = EngAllocMem(0,
                                               cEntries * sizeof(ULONG),
-                                              TAG_XLATEOBJ);
+                                              GDITAG_PXLATE);
             if (!pexlo->xlo.pulXlate)
             {
                 DPRINT1("Could not allocate pulXlate buffer.\n");

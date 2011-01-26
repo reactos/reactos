@@ -228,10 +228,10 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
 
          if (cbCount < cbRetCount) return 0;
 
-         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL && 
+         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL &&
                cbCount == sizeof(EXTLOGPEN))
          {
-            pExtLogPen = (PEXTLOGPEN)pBuffer; 
+            pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
             pExtLogPen->elpWidth = 0;
             pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
@@ -331,7 +331,7 @@ NtGdiExtCreatePen(
 
    if (dwStyleCount > 0)
    {
-      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), TAG_PENSTYLES);
+      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), GDITAG_PENSTYLE);
       if (!pSafeStyle)
       {
          SetLastNtError(ERROR_NOT_ENOUGH_MEMORY);
@@ -352,7 +352,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -371,7 +371,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -390,7 +390,7 @@ NtGdiExtCreatePen(
 
    if (!hPen && pSafeStyle)
    {
-      ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+      ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
    }
    return hPen;
 }

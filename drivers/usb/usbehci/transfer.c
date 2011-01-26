@@ -77,6 +77,9 @@ BuildSetupPacketFromURB(PEHCI_HOST_CONTROLLER hcd, PURB Urb, PUSB_DEFAULT_PIPE_S
     /* SET CONFIG */
         case URB_FUNCTION_SELECT_CONFIGURATION:
             CtrlSetup->bRequest = USB_REQUEST_SET_CONFIGURATION;
+            CtrlSetup->wValue.W = Urb->UrbSelectConfiguration.ConfigurationDescriptor->bConfigurationValue;
+            CtrlSetup->wIndex.W = 0;
+            CtrlSetup->wLength = 0;            
             CtrlSetup->bmRequestType.B = 0x00;
             break;
 
@@ -111,7 +114,11 @@ BuildSetupPacketFromURB(PEHCI_HOST_CONTROLLER hcd, PURB Urb, PUSB_DEFAULT_PIPE_S
 
     /* SET INTERFACE*/
         case URB_FUNCTION_SELECT_INTERFACE:
-            DPRINT1("Not implemented\n");
+            CtrlSetup->bRequest = USB_REQUEST_SET_INTERFACE;
+            CtrlSetup->wValue.W = Urb->UrbSelectInterface.Interface.AlternateSetting;
+            CtrlSetup->wIndex.W = Urb->UrbSelectInterface.Interface.InterfaceNumber;
+            CtrlSetup->wLength = 0;
+            CtrlSetup->bmRequestType.B = 0x01;
             break;
 
     /* SYNC FRAME */
@@ -150,6 +157,8 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
         KeInitializeEvent(Event, NotificationEvent, FALSE);
     }
 
+    if (TransferBuffer)
+    {
     /* Allocate Mdl for Buffer */
     pMdl = IoAllocateMdl(TransferBuffer,
                          TransferBufferLength,
@@ -162,6 +171,7 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
     //MmProbeAndLockPages(pMdl, KernelMode, IoReadAccess);
 
     MdlPhysicalAddr = MmGetPhysicalAddress((PVOID)TransferBuffer).LowPart;
+    }
 
     QueueHead = CreateQueueHead(hcd);
 
@@ -175,9 +185,12 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
     /* Save the first descriptor */
     QueueHead->TransferDescriptor = Descriptor[0];
 
+    if (TransferBuffer)
+    {
     Descriptor[1] = CreateDescriptor(hcd,
                                      PID_CODE_IN_TOKEN,
-                                     TransferBufferLength);
+                                         TransferBufferLength);        
+    }
 
     Descriptor[2] = CreateDescriptor(hcd,
                                      PID_CODE_OUT_TOKEN,
@@ -186,17 +199,34 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
     Descriptor[1]->Token.Bits.InterruptOnComplete = FALSE;
 
     /* Link the descriptors */
+
+    if (TransferBuffer)
+    {
     Descriptor[0]->NextDescriptor = Descriptor[1];
     Descriptor[1]->NextDescriptor = Descriptor[2];
     Descriptor[1]->PreviousDescriptor = Descriptor[0];
     Descriptor[2]->PreviousDescriptor = Descriptor[1];
-
+    }
+    else
+    {
+        Descriptor[0]->NextDescriptor = Descriptor[2];
+        Descriptor[2]->PreviousDescriptor = Descriptor[0];
+    }
+    
     /* Assign the descritors buffers */
     Descriptor[0]->BufferPointer[0] = (ULONG)CtrlPhysicalPA;
-    Descriptor[1]->BufferPointer[0] = MdlPhysicalAddr;
 
+    if (TransferBuffer)
+    {        
+    Descriptor[1]->BufferPointer[0] = MdlPhysicalAddr;
     Descriptor[0]->NextPointer = Descriptor[1]->PhysicalAddr;
-    Descriptor[1]->NextPointer = Descriptor[2]->PhysicalAddr;
+        Descriptor[1]->NextPointer = Descriptor[2]->PhysicalAddr;   
+    }
+    else
+    {
+        Descriptor[0]->NextPointer = Descriptor[2]->PhysicalAddr;
+    }
+    
     QueueHead->NextPointer = Descriptor[0]->PhysicalAddr;
 
     QueueHead->IrpToComplete = IrpToComplete;

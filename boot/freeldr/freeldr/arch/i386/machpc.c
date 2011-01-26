@@ -23,7 +23,7 @@ VOID
 PcMachInit(const char *CmdLine)
 {
     EnableA20();
-    
+
     /* Setup vtbl */
     MachVtbl.ConsPutChar = PcConsPutChar;
     MachVtbl.ConsKbHit = PcConsKbHit;
@@ -32,7 +32,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
-    MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
     MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
     MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = PcVideoPutChar;

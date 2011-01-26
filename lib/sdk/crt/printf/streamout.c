@@ -14,8 +14,15 @@
 #include <float.h>
 
 #ifdef _UNICODE
-#define streamout wstreamout
-#define format_float format_floatw
+# define streamout wstreamout
+# define format_float format_floatw
+# define _flsbuf _flswbuf
+int __cdecl _flswbuf(int ch, FILE *stream);
+#endif
+
+#ifdef _LIBCNT_
+# undef _flsbuf
+# define _flsbuf(chr, stream) _TEOF
 #endif
 
 #define MB_CUR_MAX 10
@@ -67,11 +74,10 @@ enum
     (flags & FLAG_LONGDOUBLE) ? va_arg(argptr, long double) : \
     va_arg(argptr, double)
 
-#ifdef _LIBCNT_
-# define _flsbuf(chr, stream) 0
-#endif
+#define get_exp(f) floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
+#define round(x) floor((x) + 0.5)
 
-#define get_exp(f) floor(f > 0 ? log10(f) : log10(-f))
+#ifndef _USER32_WSPRINTF
 
 void
 #ifdef _LIBCNT
@@ -92,30 +98,56 @@ format_float(
     static const TCHAR _nan[] = _T("#QNAN");
     static const TCHAR _infinity[] = _T("#INF");
     const TCHAR *digits = digits_l;
-    int exponent = 0;
-    long double fpval;
-    int num_digits, val32, base = 10;
-    __int64 val64;
+    int exponent = 0, sign;
+    long double fpval, fpval2;
+    int padding = 0, num_digits, val32, base = 10;
 
+    /* Normalize the precision */
     if (precision < 0) precision = 6;
-    else if (precision > 512) precision = 512;
+    else if (precision > 17)
+    {
+        padding = precision - 17;
+        precision = 17;
+    }
 
+    /* Get the float value and calculate the exponent */
     fpval = va_arg_ffp(*argptr, flags);
     exponent = get_exp(fpval);
+    sign = fpval < 0 ? -1 : 1;
 
     switch (chr)
     {
         case _T('G'):
             digits = digits_u;
         case _T('g'):
+            if (precision > 0) precision--;
             if (exponent < -4 || exponent >= precision) goto case_e;
+
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision));
+
+            /* Skip trailing zeroes */
+            while (precision && (unsigned __int64)fpval2 % 10 == 0)
+            {
+                precision--;
+                fpval2 /= 10;
+            }
             break;
 
         case _T('E'):
             digits = digits_u;
         case _T('e'):
         case_e:
-            fpval /= pow(10., exponent);
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision - exponent));
+
+            /* Compensate for changed exponent through rounding */
+            if (fpval2 >= (unsigned __int64)pow(10., precision + 1))
+            {
+                exponent++;
+                fpval2 = round(sign * fpval * pow(10., precision - exponent));
+            }
+
             val32 = exponent >= 0 ? exponent : -exponent;
 
             // FIXME: handle length of exponent field:
@@ -128,7 +160,7 @@ format_float(
             }
 
             /* Sign for the exponent */
-            *--(*string) = exponent > 0 ? _T('+') : _T('-');
+            *--(*string) = exponent >= 0 ? _T('+') : _T('-');
 
             /* Add 'e' or 'E' separator */
             *--(*string) = digits[0xe];
@@ -141,16 +173,15 @@ format_float(
             // FIXME: TODO
 
         case _T('f'):
+        default:
+            /* Shift the decimal point and round */
+            fpval2 = round(sign * fpval * pow(10., precision));
             break;
     }
-
-    /* CHECKME: Windows seems to handle a max of 17 digits(?) */
-    num_digits = precision <= 17 ? precision: 17;
 
     /* Handle sign */
     if (fpval < 0)
     {
-        fpval = -fpval;
         *prefix = _T("-");
     }
     else if (flags & FLAG_FORCE_SIGN)
@@ -163,46 +194,58 @@ format_float(
     {
         (*string) -= sizeof(_nan) / sizeof(TCHAR) - 1;
         _tcscpy((*string), _nan);
-        val64 = 1;
+        fpval2 = 1;
     }
     else if (!_finite(fpval))
     {
         (*string) -= sizeof(_infinity) / sizeof(TCHAR) - 1;
         _tcscpy((*string), _infinity);
-        val64 = 1;
+        fpval2 = 1;
     }
     else
     {
-        fpval *= pow(10., precision);
-        val64 = (__int64)(fpval + 0.5);
+        /* Zero padding */
+        while (padding-- > 0) *--(*string) = _T('0');
 
+        /* Digits after the decimal point */
+        num_digits = precision;
         while (num_digits-- > 0)
         {
-            *--(*string) = digits[val64 % 10];
-            val64 /= 10;
+            *--(*string) = digits[(unsigned __int64)fpval2 % 10];
+            fpval2 /= base;
         }
     }
 
+    if (precision > 0 || flags & FLAG_SPECIAL)
     *--(*string) = _T('.');
 
     /* Digits before the decimal point */
     do
     {
-        *--(*string) = digits[val64 % base];
-        val64 /= base;
+        *--(*string) = digits[(unsigned __int64)fpval2 % base];
+        fpval2 /= base;
     }
-    while (val64);
+    while ((unsigned __int64)fpval2);
 
 }
+#endif
 
 static
 int
 streamout_char(FILE *stream, int chr)
 {
-    /* Flush the buffer if neccessary */
+    /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))
     {
-        return _flsbuf(chr, stream) != EOF;
+#ifdef _USER32_WSPRINTF
+        return _TEOF;
+#else
+        /* Strings are done now */
+        if (stream->_flag & _IOSTRG) return _TEOF;
+
+        /* Flush buffer for files */
+        return _flsbuf(chr, stream) != _TEOF;
+#endif
     }
 
     *(TCHAR*)stream->_ptr = chr;
@@ -270,6 +313,11 @@ streamout_wstring(FILE *stream, const wchar_t *string, int count)
 #define streamout_string streamout_astring
 #endif
 
+#ifdef _USER32_WSPRINTF
+# define USE_MULTISIZE 0
+#else
+# define USE_MULTISIZE 1
+#endif
 
 int
 _cdecl
@@ -363,22 +411,18 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         else precision = -1;
 
         /* Handle argument size prefix */
-        while (1)
+        do
         {
                  if (chr == _T('h')) flags |= FLAG_SHORT;
             else if (chr == _T('w')) flags |= FLAG_WIDECHAR;
             else if (chr == _T('L')) flags |= 0; // FIXME: long double
+            else if (chr == _T('F')) flags |= 0; // FIXME: what is that?
             else if (chr == _T('l'))
             {
-                flags |= FLAG_LONG;
-#if SUPPORT_LL
-                if (format[0] == _T('l'))
-                {
-                    format++;
-                    flags |= FLAG_INT64;
+                /* Check if this is the 2nd 'l' in a row */
+                if (format[-2] == 'l') flags |= FLAG_INT64;
+                else flags |= FLAG_LONG;
                 }
-#endif
-            }
             else if (chr == _T('I'))
             {
                 if (format[0] == _T('3') && format[1] == _T('2'))
@@ -401,6 +445,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             else break;
             chr = *format++;
         }
+        while (USE_MULTISIZE);
 
         /* Handle the format specifier */
         digits = digits_l;
@@ -479,8 +524,10 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 else
                     len = strlen((char*)string);
                 if (precision >= 0 && len > precision) len = precision;
+                precision = 0;
                 break;
 
+#ifndef _USER32_WSPRINTF
             case _T('G'):
             case _T('E'):
             case _T('A'):
@@ -498,6 +545,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 len = _tcslen(string);
                 precision = 0;
                 break;
+#endif
 
             case _T('d'):
             case _T('i'):
@@ -517,9 +565,12 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
             case _T('o'):
                 base = 8;
-                if (flags & FLAG_SPECIAL) prefix = _T("0");
+                if (flags & FLAG_SPECIAL)
+                {
+                    prefix = _T("0");
+                    if (precision > 0) precision--;
+                }
                 goto case_unsigned;
-                /* Fall through */
 
             case _T('p'):
                 precision = 2 * sizeof(void*);
@@ -587,7 +638,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if (prefix)
         {
             written = streamout_string(stream, prefix, prefixlen);
-            if (written == -1) return -3;
+            if (written == -1) return -1;
             written_all += written;
         }
 
@@ -604,7 +655,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             written = streamout_wstring(stream, (wchar_t*)string, len);
         else
             written = streamout_astring(stream, (char*)string, len);
-        if (written == -1) return -5;
+        if (written == -1) return -1;
         written_all += written;
 
 #if 0 && SUPPORT_FLOAT
@@ -629,7 +680,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
     }
 
-    if (written == -1) return -8;
+    if (written == -1) return -1;
 
     return written_all;
 }

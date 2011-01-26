@@ -339,27 +339,11 @@ IntGetWndProc(PWND pWnd, BOOL Ansi)
   return (gcpd ? gcpd : Ret);
 }
 
-/*
- * @implemented
- */
-DWORD WINAPI
-GetClassLongA(HWND hWnd, int nIndex)
+static ULONG_PTR FASTCALL
+IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
 {
-    PWND Wnd;
-    PCLS Class;
     ULONG_PTR Ret = 0;
 
-    TRACE("%p %d\n", hWnd, nIndex);
-
-    Wnd = ValidateHwnd(hWnd);
-    if (!Wnd)
-        return 0;
-
-    _SEH2_TRY
-    {
-        Class = DesktopPtrToUser(Wnd->pcls);
-        if (Class != NULL)
-        {
             if (nIndex >= 0)
             {
                 if (nIndex + sizeof(ULONG_PTR) < nIndex ||
@@ -429,42 +413,15 @@ GetClassLongA(HWND hWnd, int nIndex)
                         break;
                 }
             }
-        }
-        else
-        {
-            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Ret = 0;
-    }
-    _SEH2_END;
 
     return Ret;
 }
 
-/*
- * @implemented
- */
-DWORD WINAPI
-GetClassLongW ( HWND hWnd, int nIndex )
+static ULONG_PTR FASTCALL
+IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
 {
-    PWND Wnd;
-    PCLS Class;
     ULONG_PTR Ret = 0;
 
-    TRACE("%p %d\n", hWnd, nIndex);
-
-    Wnd = ValidateHwnd(hWnd);
-    if (!Wnd)
-        return 0;
-
-    _SEH2_TRY
-    {
-        Class = DesktopPtrToUser(Wnd->pcls);
-        if (Class != NULL)
-        {
             if (nIndex >= 0)
             {
                 if (nIndex + sizeof(ULONG_PTR) < nIndex ||
@@ -487,7 +444,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         Ret = (ULONG_PTR)Class->cbclsExtra;
                         break;
 
-                    case GCL_HBRBACKGROUND:
+            case GCLP_HBRBACKGROUND:
                         Ret = (ULONG_PTR)Class->hbrBackground;
                         if (Ret != 0 && Ret < 0x4000)
                             Ret = (ULONG_PTR)GetSysColorBrush((ULONG)Ret - 1);
@@ -497,7 +454,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         Ret = (ULONG_PTR)Class->hModule;
                         break;
 
-                    case GCL_MENUNAME:
+            case GCLP_MENUNAME:
                         Ret = (ULONG_PTR)Class->lpszClientUnicodeMenuName;
                         break;
 
@@ -533,6 +490,51 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         break;
                 }
             }
+
+	return Ret;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+GetClassLongA(HWND hWnd, int nIndex)
+{
+    PWND Wnd;
+    PCLS Class;
+    ULONG_PTR Ret = 0;
+
+    TRACE("%p %d\n", hWnd, nIndex);
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
+
+    _SEH2_TRY
+    {
+        Class = DesktopPtrToUser(Wnd->pcls);
+        if (Class != NULL)
+        {
+#ifdef _WIN64
+			switch (nIndex)
+			{
+				case GCLP_HBRBACKGROUND:
+				case GCLP_HCURSOR:
+				case GCLP_HICON:
+				case GCLP_HICONSM:
+				case GCLP_HMODULE:
+				case GCLP_MENUNAME:
+				case GCLP_WNDPROC:
+					SetLastError(ERROR_INVALID_INDEX);
+					break;
+
+				default:
+					Ret = IntGetClassLongA(Wnd, Class, nIndex);
+					break;
+        }
+#else
+			Ret = IntGetClassLongA(Wnd, Class, nIndex);
+#endif
         }
         else
         {
@@ -541,35 +543,146 @@ GetClassLongW ( HWND hWnd, int nIndex )
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        Ret = 0;
     }
     _SEH2_END;
 
-    return Ret;
+    return (DWORD)Ret;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+GetClassLongW ( HWND hWnd, int nIndex )
+{
+    PWND Wnd;
+    PCLS Class;
+    ULONG_PTR Ret = 0;
+
+    TRACE("%p %d\n", hWnd, nIndex);
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
+
+    _SEH2_TRY
+    {
+        Class = DesktopPtrToUser(Wnd->pcls);
+        if (Class != NULL)
+        {
+#ifdef _WIN64
+			switch (nIndex)
+			{
+				case GCLP_HBRBACKGROUND:
+				case GCLP_HCURSOR:
+				case GCLP_HICON:
+				case GCLP_HICONSM:
+				case GCLP_HMODULE:
+				case GCLP_MENUNAME:
+				case GCLP_WNDPROC:
+					SetLastError(ERROR_INVALID_INDEX);
+					break;
+
+				default:
+					Ret = IntGetClassLongW(Wnd, Class, nIndex);
+					break;
+			}
+#else
+			Ret = IntGetClassLongW(Wnd, Class, nIndex);
+#endif
+        }
+        else
+        {
+            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = 0;
+    }
+    _SEH2_END;
+
+    return (DWORD)Ret;
 }
 
 #ifdef _WIN64
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG_PTR
 WINAPI
 GetClassLongPtrA(HWND hWnd,
                  INT nIndex)
 {
-    UNIMPLEMENTED;
+    PWND Wnd;
+    PCLS Class;
+    ULONG_PTR Ret = 0;
+
+    TRACE("%p %d\n", hWnd, nIndex);
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
     return 0;
+
+    _SEH2_TRY
+    {
+        Class = DesktopPtrToUser(Wnd->pcls);
+        if (Class != NULL)
+        {
+			Ret = IntGetClassLongA(Wnd, Class, nIndex);
+        }
+        else
+        {
+            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = 0;
+    }
+    _SEH2_END;
+
+    return Ret;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG_PTR
 WINAPI
 GetClassLongPtrW(HWND hWnd,
                  INT nIndex)
 {
-    UNIMPLEMENTED;
+    PWND Wnd;
+    PCLS Class;
+    ULONG_PTR Ret = 0;
+
+    TRACE("%p %d\n", hWnd, nIndex);
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
     return 0;
+
+    _SEH2_TRY
+    {
+        Class = DesktopPtrToUser(Wnd->pcls);
+        if (Class != NULL)
+        {
+			Ret = IntGetClassLongW(Wnd, Class, nIndex);
+        }
+        else
+        {
+            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = 0;
+    }
+    _SEH2_END;
+
+    return Ret;
 }
 #endif
 

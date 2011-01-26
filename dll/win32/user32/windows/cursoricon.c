@@ -1173,13 +1173,21 @@ HICON WINAPI CreateIcon(
     iinfo.fIcon = TRUE;
     iinfo.xHotspot = nWidth / 2;
     iinfo.yHotspot = nHeight / 2;
+    if (bPlanes * bBitsPixel > 1)
+    {
+        iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
     iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
-    iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
+    }
+    else
+    {
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight * 2, 1, 1, lpANDbits );
+        iinfo.hbmColor = NULL;
+    }
 
     hIcon = CreateIconIndirect( &iinfo );
 
     DeleteObject( iinfo.hbmMask );
-    DeleteObject( iinfo.hbmColor );
+    if (iinfo.hbmColor) DeleteObject( iinfo.hbmColor );
 
     return hIcon;
 }
@@ -1477,8 +1485,9 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
                bmpXor.bmWidth, bmpXor.bmHeight, bmpXor.bmWidthBytes,
                bmpXor.bmPlanes, bmpXor.bmBitsPixel);
 
-        width = bmpXor.bmWidth;
-        height = bmpXor.bmHeight;
+        // the size of the mask bitmap always determines the icon size!
+        width = bmpAnd.bmWidth;
+        height = bmpAnd.bmHeight;
         if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
@@ -2180,4 +2189,24 @@ User32SetupDefaultCursors(PVOID Arguments,
     }
 
     return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+}
+
+BOOL get_icon_size(HICON hIcon, SIZE *size)
+{
+    ICONINFO info;
+    BITMAP bitmap;
+
+    if (!GetIconInfo(hIcon, &info)) return FALSE;
+    if (!GetObject(info.hbmMask, sizeof(bitmap), &bitmap)) return FALSE;
+
+    size->cx = bitmap.bmWidth;
+    size->cy = bitmap.bmHeight;
+
+    /* Black and white icons store both the XOR and AND bitmap in hbmMask */
+    if (!info.hbmColor)
+    {
+        size->cy /= 2;
+    }
+
+    return TRUE;
 }

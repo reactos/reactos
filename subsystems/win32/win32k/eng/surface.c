@@ -37,28 +37,19 @@ gajBitsPerFormat[11] =
 };
 
 
-ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
+ULONG FASTCALL BitmapFormat(ULONG cBits, ULONG iCompression)
 {
-    switch (Compression)
+    switch (iCompression)
     {
         case BI_RGB:
             /* Fall through */
         case BI_BITFIELDS:
-            switch (Bits)
-            {
-                case 1:
-                    return BMF_1BPP;
-                case 4:
-                    return BMF_4BPP;
-                case 8:
-                    return BMF_8BPP;
-                case 16:
-                    return BMF_16BPP;
-                case 24:
-                    return BMF_24BPP;
-                case 32:
-                    return BMF_32BPP;
-            }
+            if (cBits <= 1) return BMF_1BPP;
+            if (cBits <= 4) return BMF_4BPP;
+            if (cBits <= 8) return BMF_8BPP;
+            if (cBits <= 16) return BMF_16BPP;
+            if (cBits <= 24) return BMF_24BPP;
+            if (cBits <= 32) return BMF_32BPP;
             return 0;
 
         case BI_RLE4:

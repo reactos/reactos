@@ -39,7 +39,6 @@ list(APPEND SOURCE
     misc/usrapihk.c
     misc/winhelp.c
     misc/winsta.c
-    misc/wsprintf.c
     windows/accel.c
     windows/caret.c
     windows/class.c
@@ -74,6 +73,7 @@ add_library(user32 SHARED
 set_module_type(user32 win32dll)
 
 target_link_libraries(user32
+    user32_wsprintf
     wine
     win32ksys
     ${PSEH_LIB})

@@ -10,3 +10,6 @@ HICON CreateCursorIconFromData(PVOID ImageData,
                                int yHotspot,
                                BOOL fIcon);
 
+
+BOOL get_icon_size(HICON hIcon, SIZE *size);
+

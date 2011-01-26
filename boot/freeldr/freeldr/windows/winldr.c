@@ -208,7 +208,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		Extension->AcpiTable = (PVOID)1;
 	}
 
-#ifndef _M_ARM
+#ifdef _M_IX86
     /* Set headless block pointer */
     if (WinLdrTerminalConnected)
     {
@@ -538,7 +538,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
 
-#ifndef _M_ARM
+#ifdef _M_IX86
    	/* Setup redirection support */
 	WinLdrSetupEms(BootOptions);
 #endif

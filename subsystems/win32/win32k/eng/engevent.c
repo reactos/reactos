@@ -14,9 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* Dfsm - <unknown>    - Eng event allocation (ENG_KEVENTALLOC,ENG_ALLOC) in ntgdi\gre */
-#define TAG_GRE_EVENT 'msfD'
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOL
@@ -29,7 +26,7 @@ EngCreateEvent(OUT PEVENT* Event)
     /* Allocate memory for the event structure */
     EngEvent = ExAllocatePoolWithTag(NonPagedPool,
                                      sizeof(ENG_EVENT) + sizeof(KEVENT),
-                                     TAG_GRE_EVENT);
+                                     GDITAG_ENG_EVENT);
     if (EngEvent)
     {
         /* Set KEVENT pointer */
@@ -48,7 +45,7 @@ EngCreateEvent(OUT PEVENT* Event)
     else
     {
         /* Out of memory */
-        DPRINT("EngCreateEvent() failed\n");    
+        DPRINT("EngCreateEvent() failed\n");
         Result = FALSE;
     }
 
@@ -117,13 +114,13 @@ EngMapEvent(IN HDEV hDev,
     /* Allocate memory for the event structure */
     EngEvent = ExAllocatePoolWithTag(NonPagedPool,
                                      sizeof(ENG_EVENT),
-                                     TAG_GRE_EVENT);
+                                     GDITAG_ENG_EVENT);
     if (!EngEvent) return NULL;
-    
+
     /* Zero it out */
     EngEvent->fFlags = 0;
     EngEvent->pKEvent = NULL;
-    
+
     /* Create a handle, and have Ob fill out the pKEvent field */
     Status = ObReferenceObjectByHandle(EngEvent,
                                        EVENT_ALL_ACCESS,
@@ -143,7 +140,7 @@ EngMapEvent(IN HDEV hDev,
         ExFreePool(EngEvent);
         EngEvent = NULL;
     }
-    
+
     /* Support legacy interface */
     if (Reserved1) *(PVOID*)Reserved1 = EngEvent;
     return EngEvent;
@@ -155,10 +152,10 @@ EngUnmapEvent(IN PEVENT Event)
 {
     /* Must be a usermapped event */
     if (!(Event->fFlags & ENG_EVENT_USERMAPPED)) return FALSE;
-    
+
     /* Dereference the object, destroying it */
     ObDereferenceObject(Event->pKEvent);
-    
+
     /* Free the Eng object */
     ExFreePool(Event);
     return TRUE;
