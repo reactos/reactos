@@ -20,6 +20,7 @@
 	<file>tmpfile.c</file>
 	<file>wavfile.c</file>
 	<file>rsrc.rc</file>
+	<file>rsrc-utf8.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>msacm32</library>
