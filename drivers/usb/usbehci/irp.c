@@ -538,7 +538,8 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                     }
 
                     if (!(PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus & 0x8000))
-                    CompletePendingURBRequest(PdoDeviceExtension);
+                        CompletePendingURBRequest(PdoDeviceExtension);
+
 
                     break;
                 }
@@ -635,19 +636,19 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
         KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
         return;
     }
-        NextIrp = RemoveHeadList(&DeviceExtension->IrpQueue);
-        Irp = CONTAINING_RECORD(NextIrp, IRP, Tail.Overlay.ListEntry);
+    NextIrp = RemoveHeadList(&DeviceExtension->IrpQueue);
+    Irp = CONTAINING_RECORD(NextIrp, IRP, Tail.Overlay.ListEntry);
 
-        if (!Irp)
-        {
+    if (!Irp)
+    {
         DPRINT1("No Irp\n");
         return;
-        }
+    }
 
-        IoSetCancelRoutine(Irp, NULL);
-        KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
+    IoSetCancelRoutine(Irp, NULL);
+    KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
 
-        HandleUrbRequest(DeviceExtension, Irp);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    HandleUrbRequest(DeviceExtension, Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 

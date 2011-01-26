@@ -194,7 +194,7 @@ NtGdiCreateBitmap(
 
     if (pUnsafeBits && hbmp)
     {
-		PSURFACE psurf = SURFACE_LockSurface(hbmp);
+        PSURFACE psurf = SURFACE_LockSurface(hbmp);
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, cjSize, 1);
@@ -202,13 +202,13 @@ NtGdiCreateBitmap(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-			SURFACE_UnlockSurface(psurf);
+            SURFACE_UnlockSurface(psurf);
             SURFACE_FreeSurfaceByHandle(hbmp);
             _SEH2_YIELD(return NULL;)
         }
         _SEH2_END
 
-		SURFACE_UnlockSurface(psurf);
+        SURFACE_UnlockSurface(psurf);
     }
 
     return hbmp;

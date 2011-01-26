@@ -145,16 +145,16 @@ SepPrivilegeCheck(PTOKEN Token,
 
                 /* Check if the privilege is enabled */
                 if (Token->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED)
-                    {
+                {
                     Privileges[i].Attributes |= SE_PRIVILEGE_USED_FOR_ACCESS;
                     Required--;
-                    }
+                }
 
                 /* Leave the inner loop */
                 break;
-                }
             }
         }
+    }
 
     /* Return whether we found all required privileges */
     return (Required == 0);

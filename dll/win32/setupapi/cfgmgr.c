@@ -2294,16 +2294,16 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
 
     if (plcLogConf)
     {
-    pLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
-    if (pLogConfInfo == NULL)
-        return CR_OUT_OF_MEMORY;
+        pLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
+        if (pLogConfInfo == NULL)
+            return CR_OUT_OF_MEMORY;
 
-    pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
-    pLogConfInfo->dnDevInst = dnDevInst;
-    pLogConfInfo->ulFlags = ulFlags;
-    pLogConfInfo->ulTag = ulTag;
+        pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
+        pLogConfInfo->dnDevInst = dnDevInst;
+        pLogConfInfo->ulFlags = ulFlags;
+        pLogConfInfo->ulTag = ulTag;
 
-    *plcLogConf = (LOG_CONF)pLogConfInfo;
+        *plcLogConf = (LOG_CONF)pLogConfInfo;
     }
 
     return CR_SUCCESS;

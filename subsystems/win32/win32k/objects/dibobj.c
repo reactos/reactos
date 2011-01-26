@@ -1036,19 +1036,19 @@ NtGdiStretchDIBitsInternal(
     if (!Bits || !BitsInfo)
         return 0;
 
-	safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
-	if(!safeBits)
-	{
-		EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return 0;
-	}
+    safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
+    if(!safeBits)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
 
     if (!(pdc = DC_LockDc(hDC)))
-	{
-		ExFreePoolWithTag(safeBits, TAG_DIB);
-		EngSetLastError(ERROR_INVALID_HANDLE);
-		return 0;
-	}
+    {
+        ExFreePoolWithTag(safeBits, TAG_DIB);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
 
     _SEH2_TRY
     {
@@ -1059,7 +1059,7 @@ NtGdiStretchDIBitsInternal(
             DPRINT1("Invalid bitmap\n");
             _SEH2_YIELD(goto cleanup;)
         }
-		RtlCopyMemory(safeBits, Bits, cjMaxBits);
+        RtlCopyMemory(safeBits, Bits, cjMaxBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1085,44 +1085,44 @@ NtGdiStretchDIBitsInternal(
         ret = IntGdiGetObject(hBitmap, sizeof(bmp), &bmp) == sizeof(bmp);
         if (ret &&
             bmp.bmBitsPixel == bpp &&
-                bmp.bmWidth == SrcWidth &&
-                bmp.bmHeight == SrcHeight &&
-                bmp.bmPlanes == planes)
-    {
-        /* fast path */
+            bmp.bmWidth == SrcWidth &&
+            bmp.bmHeight == SrcHeight &&
+            bmp.bmPlanes == planes)
+        {
+            /* fast path */
             ret = IntSetDIBits(pdc, hBitmap, 0, height, safeBits, BitsInfo, Usage);
             goto cleanup;
-    }
+        }
     }
 
-        /* slow path - need to use StretchBlt */
+    /* slow path - need to use StretchBlt */
 
     hdcMem = NtGdiCreateCompatibleDC(hDC);
-        hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
-		if(!hBitmap)
-		{
-			DPRINT1("Error, failed to create a DIB section\n");
-			NtGdiDeleteObjectApp(hdcMem);
-			goto cleanup;
-		}
+    hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
+    if(!hBitmap)
+    {
+        DPRINT1("Error, failed to create a DIB section\n");
+        NtGdiDeleteObjectApp(hdcMem);
+        goto cleanup;
+    }
 
-        RtlCopyMemory(pvBits, safeBits, cjMaxBits);
+    RtlCopyMemory(pvBits, safeBits, cjMaxBits);
     hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
 
-        /* Origin for DIBitmap may be bottom left (positive biHeight) or top
-           left (negative biHeight) */
+    /* Origin for DIBitmap may be bottom left (positive biHeight) or top
+       left (negative biHeight) */
     ret = NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
-                             hdcMem, XSrc, abs(height) - SrcHeight - YSrc,
+                         hdcMem, XSrc, abs(height) - SrcHeight - YSrc,
                          SrcWidth, SrcHeight, ROP, 0);
 
-		if(ret)
-            ret = SrcHeight;
+    if(ret)
+        ret = SrcHeight;
     NtGdiSelectBitmap(hdcMem, hOldBitmap);
     NtGdiDeleteObjectApp(hdcMem);
     GreDeleteObject(hBitmap);
 
 cleanup:
-	ExFreePoolWithTag(safeBits, TAG_DIB);
+    ExFreePoolWithTag(safeBits, TAG_DIB);
     DC_UnlockDc(pdc);
     return ret;
 }

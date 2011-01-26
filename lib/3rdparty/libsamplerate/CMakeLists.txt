@@ -1,8 +1,4 @@
 
-add_definitions(
-    -DHAVE_LRINT
-    -DHAVE_LRINTF)
-
 list(APPEND SOURCE
     samplerate.c
     src_linear.c

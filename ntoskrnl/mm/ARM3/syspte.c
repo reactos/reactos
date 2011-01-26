@@ -109,43 +109,43 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         NextPte = MmSystemPteBase + PreviousPte->u.List.NextEntry;
         ClusterSize = MI_GET_CLUSTER_SIZE(NextPte);
 
-    //
+        //
         // Check if this cluster contains enough PTEs
-    //
+        //
         if (NumberOfPtes <= ClusterSize)
             break;
 
-    //
+        //
         // On to the next cluster
-    //
+        //
         PreviousPte = NextPte;
     }
 
-        //
+    //
     // Make sure we didn't reach the end of the cluster list
-        //
+    //
     if (PreviousPte->u.List.NextEntry == MM_EMPTY_LIST)
-        {
-            //
+    {
+        //
         // Release the System PTE lock and return failure
-            //
+        //
         KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
         return NULL;
     }
 
-            //
+    //
     // Unlink the cluster
-            //
+    //
     PreviousPte->u.List.NextEntry = NextPte->u.List.NextEntry;
 
-                //
+    //
     // Check if the reservation spans the whole cluster
-                //
+    //
     if (ClusterSize == NumberOfPtes)
-                {
-                    //
+    {
+        //
         // Return the first PTE of this cluster
-                    //
+        //
         ReturnPte = NextPte;
 
         //
@@ -155,41 +155,41 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         {
             NextPte->u.Long = 0;
             NextPte++;
-                }
+        }
         NextPte->u.Long = 0;
     }
-                else
-                {
-                    //
+    else
+    {
+        //
         // Divide the cluster into two parts
-                    //
+        //
         ClusterSize -= NumberOfPtes;
         ReturnPte = NextPte + ClusterSize;
 
-                //
+        //
         // Set the size of the first cluster, zero the second if needed
-                //
+        //
         if (ClusterSize == 1)
         {
             NextPte->u.List.OneEntry = 1;
             ReturnPte->u.Long = 0;
-            }
+        }
         else
         {
             NextPte++;
             NextPte->u.List.NextEntry = ClusterSize;
         }
 
-            //
+        //
         // Step through the cluster list to find out where to insert the first
-            //
+        //
         PreviousPte = &MmFirstFreeSystemPte[SystemPtePoolType];
 
         while (PreviousPte->u.List.NextEntry != MM_EMPTY_LIST)
-            {
-                //
+        {
+            //
             // Get the next cluster
-                //
+            //
             NextPte = MmSystemPteBase + PreviousPte->u.List.NextEntry;
 
             //
@@ -202,30 +202,30 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
             // On to the next cluster
             //
             PreviousPte = NextPte;
-            }
+        }
 
-            //
+        //
         // Retrieve the first cluster and link it back into the cluster list
-            //
+        //
         NextPte = ReturnPte - ClusterSize;
 
         NextPte->u.List.NextEntry = PreviousPte->u.List.NextEntry;
         PreviousPte->u.List.NextEntry = NextPte - MmSystemPteBase;
-        }
+    }
 
-        //
+    //
     // Decrease availability
-        //
+    //
     MmTotalFreeSystemPtes[SystemPtePoolType] -= NumberOfPtes;
 
-            //
+    //
     // Release the System PTE lock
-            //
-            KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
+    //
+    KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
 
-        //
+    //
     // Flush the TLB
-        //
+    //
     KeFlushProcessTb();
 
     //
@@ -309,23 +309,23 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
         NextPte = MmSystemPteBase + PreviousPte->u.List.NextEntry;
         ClusterSize = MI_GET_CLUSTER_SIZE(NextPte);
 
-            //
+        //
         // Check if this cluster is adjacent to the PTEs being released
-            //
+        //
         if ((NextPte + ClusterSize == StartingPte) ||
             (StartingPte + NumberOfPtes == NextPte))
-            {
-                //
+        {
+            //
             // Add the PTEs in the cluster to the PTEs being released
-                //
+            //
             NumberOfPtes += ClusterSize;
 
             if (NextPte < StartingPte)
                 StartingPte = NextPte;
 
-                //
+            //
             // Unlink this cluster and zero it
-                //
+            //
             PreviousPte->u.List.NextEntry = NextPte->u.List.NextEntry;
 
             if (NextPte->u.List.OneEntry == 0)
@@ -335,55 +335,55 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
             }
             NextPte->u.Long = 0;
 
-                //
+            //
             // Invalidate the previously found insertion location, if any
-                //
+            //
             InsertPte = NULL;
-            }
-            else
-            {
-                //
+        }
+        else
+        {
+            //
             // Check if the insertion location is right before this cluster
-                //
+            //
             if ((InsertPte == NULL) && (NumberOfPtes <= ClusterSize))
                 InsertPte = PreviousPte;
 
-                //
+            //
             // On to the next cluster
-                //
+            //
             PreviousPte = NextPte;
-                }
+        }
     }
 
-                    //
+    //
     // If no insertion location was found, use the tail of the list
-                    //
+    //
     if (InsertPte == NULL)
         InsertPte = PreviousPte;
 
-            //
+    //
     // Create a new cluster using the PTEs being released
-            //
+    //
     if (NumberOfPtes != 1)
-            {
-                StartingPte->u.List.OneEntry = 0;
+    {
+        StartingPte->u.List.OneEntry = 0;
 
-                NextPte = StartingPte + 1;
+        NextPte = StartingPte + 1;
         NextPte->u.List.NextEntry = NumberOfPtes;
-                }
-                else
+    }
+    else
         StartingPte->u.List.OneEntry = 1;
 
-                //
+    //
     // Link the new cluster into the cluster list at the insertion location
-                //
+    //
     StartingPte->u.List.NextEntry = InsertPte->u.List.NextEntry;
     InsertPte->u.List.NextEntry = StartingPte - MmSystemPteBase;
 
-            //
+    //
     // Release the System PTE lock
-            //
-            KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
+    //
+    KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
 }
 
 VOID

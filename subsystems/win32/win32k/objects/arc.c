@@ -1,4 +1,6 @@
 #include <win32k.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #define NDEBUG
 #include <debug.h>

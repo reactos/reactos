@@ -338,7 +338,7 @@ RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
         case USBD_MARK_DEVICE_BUSY:
             UsbDevice->DeviceState |= DEVICEBUSY;
             /* Fall through */
-       case USBD_KEEP_DEVICE_DATA:
+        case USBD_KEEP_DEVICE_DATA:
             UsbDevice->DeviceState |= DEVICEREMOVED;
             break;
         default:
@@ -469,9 +469,9 @@ QueryDeviceInformation(PVOID BusContext,
     }
     else
     {
-    DeviceInfo->CurrentConfigurationValue = UsbDevice->ActiveConfig->ConfigurationDescriptor.bConfigurationValue;
+        DeviceInfo->CurrentConfigurationValue = UsbDevice->ActiveConfig->ConfigurationDescriptor.bConfigurationValue;
         /* FIXME: Use correct number of open pipes instead of all available */
-    DeviceInfo->NumberOfOpenPipes = UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints;
+        DeviceInfo->NumberOfOpenPipes = UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints;
         DeviceInfo->PortNumber = UsbDevice->Port;
     }
 

@@ -1176,7 +1176,7 @@ HICON WINAPI CreateIcon(
     if (bPlanes * bBitsPixel > 1)
     {
         iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
-    iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
     }
     else
     {

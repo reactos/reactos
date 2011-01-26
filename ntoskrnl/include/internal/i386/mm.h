@@ -43,9 +43,9 @@ PULONG MmGetPageDirectory(VOID);
 #define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
 #define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
 
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
+#define ADDR_TO_PAGE_TABLE(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+#define ADDR_TO_PTE_OFFSET(v) ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
 
 #define MiGetPdeOffset ADDR_TO_PDE_OFFSET
 

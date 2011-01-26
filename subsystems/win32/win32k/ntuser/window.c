@@ -1681,7 +1681,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
             }
          }
-   }
+      }
    }
 
    /* Automatically add WS_EX_WINDOWEDGE */

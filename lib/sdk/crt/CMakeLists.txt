@@ -442,10 +442,12 @@ add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
 add_dependencies(crt psdk buildno_header asm)
 
 list(APPEND LIBCNTPR_SOURCE
+    float/isnan.c
     math/abs.c
     math/div.c
     math/labs.c
     math/rand_nt.c
+    mbstring/mbstrlen.c
     mem/memccpy.c
     mem/memcmp.c
     mem/memicmp.c
@@ -526,6 +528,7 @@ if(ARCH MATCHES i386)
         math/i386/ftol_asm.s
         math/i386/ftol2_asm.s
         math/i386/log_asm.s
+        math/i386/log10_asm.s
         math/i386/pow_asm.s
         math/i386/sin_asm.s
         math/i386/sqrt_asm.s

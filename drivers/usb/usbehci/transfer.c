@@ -159,18 +159,18 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
 
     if (TransferBuffer)
     {
-    /* Allocate Mdl for Buffer */
-    pMdl = IoAllocateMdl(TransferBuffer,
-                         TransferBufferLength,
-                         FALSE,
-                         FALSE,
-                         NULL);
+        /* Allocate Mdl for Buffer */
+        pMdl = IoAllocateMdl(TransferBuffer,
+                             TransferBufferLength,
+                             FALSE,
+                             FALSE,
+                             NULL);
 
-    /* Lock Physical Pages */
-    MmBuildMdlForNonPagedPool(pMdl);
-    //MmProbeAndLockPages(pMdl, KernelMode, IoReadAccess);
+        /* Lock Physical Pages */
+        MmBuildMdlForNonPagedPool(pMdl);
+        //MmProbeAndLockPages(pMdl, KernelMode, IoReadAccess);
 
-    MdlPhysicalAddr = MmGetPhysicalAddress((PVOID)TransferBuffer).LowPart;
+        MdlPhysicalAddr = MmGetPhysicalAddress((PVOID)TransferBuffer).LowPart;
     }
 
     QueueHead = CreateQueueHead(hcd);
@@ -187,8 +187,8 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
 
     if (TransferBuffer)
     {
-    Descriptor[1] = CreateDescriptor(hcd,
-                                     PID_CODE_IN_TOKEN,
+        Descriptor[1] = CreateDescriptor(hcd,
+                                         PID_CODE_IN_TOKEN,
                                          TransferBufferLength);        
     }
 
@@ -202,10 +202,10 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
 
     if (TransferBuffer)
     {
-    Descriptor[0]->NextDescriptor = Descriptor[1];
-    Descriptor[1]->NextDescriptor = Descriptor[2];
-    Descriptor[1]->PreviousDescriptor = Descriptor[0];
-    Descriptor[2]->PreviousDescriptor = Descriptor[1];
+        Descriptor[0]->NextDescriptor = Descriptor[1];
+        Descriptor[1]->NextDescriptor = Descriptor[2];
+        Descriptor[1]->PreviousDescriptor = Descriptor[0];
+        Descriptor[2]->PreviousDescriptor = Descriptor[1];
     }
     else
     {
@@ -218,8 +218,8 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
 
     if (TransferBuffer)
     {        
-    Descriptor[1]->BufferPointer[0] = MdlPhysicalAddr;
-    Descriptor[0]->NextPointer = Descriptor[1]->PhysicalAddr;
+        Descriptor[1]->BufferPointer[0] = MdlPhysicalAddr;
+        Descriptor[0]->NextPointer = Descriptor[1]->PhysicalAddr;
         Descriptor[1]->NextPointer = Descriptor[2]->PhysicalAddr;   
     }
     else

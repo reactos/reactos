@@ -381,7 +381,7 @@ static BOOL Setup(VOID)
                    sizeof(DontFragment)) == SOCKET_ERROR)
     {
         FormatOutput(IDS_SETSOCKOPT_FAILED, WSAGetLastError());
-         return FALSE;
+        return FALSE;
     }
 
     if (setsockopt(IcmpSock,
@@ -391,7 +391,7 @@ static BOOL Setup(VOID)
                    sizeof(TTLValue)) == SOCKET_ERROR)
     {
         FormatOutput(IDS_SETSOCKOPT_FAILED, WSAGetLastError());
-         return FALSE;
+        return FALSE;
     }
 
 
@@ -736,7 +736,8 @@ int wmain(int argc, LPWSTR argv[])
         /* Print statistics */
         FormatOutput(IDS_PING_STATISTICS, TargetIP);
         FormatOutput(IDS_PACKETS_SENT_RECEIVED_LOST,\
-            SentCount, SentCount - LostCount, LostCount, Count);
+                     SentCount, SentCount - LostCount, LostCount, Count);
+
 
         /* Print approximate times or NO approximate times if 100% loss */
         if ((SentCount - LostCount) > 0)

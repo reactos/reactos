@@ -97,14 +97,14 @@ HintFromAccel(ULONG flAccel)
 {
     switch (flAccel & (MX_NOTRANSLATE |  MX_IDENTITYSCALE | MX_SCALE))
     {
-    case (MX_SCALE | MX_IDENTITYSCALE | MX_NOTRANSLATE):
-        return GX_IDENTITY;
-    case (MX_SCALE | MX_IDENTITYSCALE):
-        return GX_OFFSET;
-    case MX_SCALE:
-        return GX_SCALE;
-    default:
-        return GX_GENERAL;
+        case (MX_SCALE | MX_IDENTITYSCALE | MX_NOTRANSLATE):
+            return GX_IDENTITY;
+        case (MX_SCALE | MX_IDENTITYSCALE):
+            return GX_OFFSET;
+        case MX_SCALE:
+            return GX_SCALE;
+        default:
+            return GX_GENERAL;
     }
 }
 
@@ -124,25 +124,25 @@ XFORMOBJ_UpdateAccel(
     pmx->flAccel = 0;
 
     if (FLOATOBJ_Equal0(&pmx->efDx) &&
-            FLOATOBJ_Equal0(&pmx->efDy))
+        FLOATOBJ_Equal0(&pmx->efDy))
     {
         pmx->flAccel |= MX_NOTRANSLATE;
     }
 
     if (FLOATOBJ_Equal0(&pmx->efM12) &&
-            FLOATOBJ_Equal0(&pmx->efM21))
+        FLOATOBJ_Equal0(&pmx->efM21))
     {
         pmx->flAccel |= MX_SCALE;
     }
 
     if (FLOATOBJ_Equal1(&pmx->efM11) &&
-            FLOATOBJ_Equal1(&pmx->efM22))
+        FLOATOBJ_Equal1(&pmx->efM22))
     {
         pmx->flAccel |= MX_IDENTITYSCALE;
     }
 
     if (FLOATOBJ_IsLong(&pmx->efM11) && FLOATOBJ_IsLong(&pmx->efM12) &&
-            FLOATOBJ_IsLong(&pmx->efM21) && FLOATOBJ_IsLong(&pmx->efM22))
+        FLOATOBJ_IsLong(&pmx->efM21) && FLOATOBJ_IsLong(&pmx->efM22))
     {
         pmx->flAccel |= MX_INTEGER;
     }
@@ -308,42 +308,42 @@ XFORMOBJ_bXformFixPoints(
     {
         if (flAccel & MX_IDENTITYSCALE)
         {
-        /* 1-scale integer transform */
-        i = cPoints - 1;
-        do
-        {
-            LONG x = pptIn[i].x + pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-            LONG y = pptIn[i].y + pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
-            pptOut[i].y = y;
-            pptOut[i].x = x;
-        }
-        while (--i >= 0);
+            /* 1-scale integer transform */
+            i = cPoints - 1;
+            do
+            {
+                LONG x = pptIn[i].x + pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
+                LONG y = pptIn[i].y + pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                pptOut[i].y = y;
+                pptOut[i].x = x;
+            }
+            while (--i >= 0);
         }
         else if (flAccel & MX_SCALE)
         {
-        /* Diagonal integer transform */
-        i = cPoints - 1;
-        do
-        {
-            pptOut[i].x = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-            pptOut[i].y = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
-        }
-        while (--i >= 0);
+            /* Diagonal integer transform */
+            i = cPoints - 1;
+            do
+            {
+                pptOut[i].x = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
+                pptOut[i].y = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+            }
+            while (--i >= 0);
         }
         else
         {
-        /* Full integer transform */
-        i = cPoints - 1;
-        do
-        {
-            LONG x;
-            x  = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-            x += pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-            pptOut[i].y  = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
-            pptOut[i].y += pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
-            pptOut[i].x = x;
-        }
-        while (--i >= 0);
+            /* Full integer transform */
+            i = cPoints - 1;
+            do
+            {
+                LONG x;
+                x  = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
+                x += pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
+                pptOut[i].y  = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+                pptOut[i].y += pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                pptOut[i].x = x;
+            }
+            while (--i >= 0);
         }
     }
     else if (flAccel & MX_IDENTITYSCALE)
@@ -468,11 +468,11 @@ XFORMOBJ_iGetFloatObjXform(
 BOOL
 APIENTRY
 XFORMOBJ_bApplyXform(
-    IN XFORMOBJ  *pxo,
-    IN ULONG  iMode,
-    IN ULONG  cPoints,
-    IN PVOID  pvIn,
-    OUT PVOID  pvOut)
+    IN XFORMOBJ *pxo,
+    IN ULONG iMode,
+    IN ULONG cPoints,
+    IN PVOID pvIn,
+    OUT PVOID pvOut)
 {
     MATRIX mx;
     XFORMOBJ xoInv;

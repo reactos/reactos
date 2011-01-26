@@ -217,7 +217,7 @@ format_float(
     }
 
     if (precision > 0 || flags & FLAG_SPECIAL)
-    *--(*string) = _T('.');
+        *--(*string) = _T('.');
 
     /* Digits before the decimal point */
     do
@@ -422,7 +422,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 /* Check if this is the 2nd 'l' in a row */
                 if (format[-2] == 'l') flags |= FLAG_INT64;
                 else flags |= FLAG_LONG;
-                }
+            }
             else if (chr == _T('I'))
             {
                 if (format[0] == _T('3') && format[1] == _T('2'))

@@ -107,12 +107,12 @@ GreGetCharacterPlacementW(
  
   DPRINT1("GreGCPW Start\n");
 
-  if (!pgcpw)
-  {
+   if (!pgcpw)
+   {
       if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
-        return MAKELONG(Size.cx, Size.cy);
-     return 0;
-  }
+         return MAKELONG(Size.cx, Size.cy);
+      return 0;
+   }
 
   DPRINT1("GreGCPW 1\n");
 
@@ -139,7 +139,7 @@ GreGetCharacterPlacementW(
                              &Size,
                              0) )
   {
-  return 0;
+     return 0;
   }
 
   DPRINT1("GreGCPW 2\n");
@@ -814,7 +814,7 @@ NtGdiGetKerningPairs(HDC  hDC,
      {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         Count = 0;
-  }
+     }
      ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
   return Count;

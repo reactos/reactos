@@ -149,9 +149,9 @@ IntGdiCombineTransform(
 BOOL
 APIENTRY
 NtGdiCombineTransform(
-    LPXFORM  UnsafeXFormResult,
-    LPXFORM  Unsafexform1,
-    LPXFORM  Unsafexform2)
+    LPXFORM UnsafeXFormResult,
+    LPXFORM Unsafexform1,
+    LPXFORM Unsafexform2)
 {
     BOOL Ret;
 

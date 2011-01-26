@@ -2,6 +2,8 @@
 set_unicode()
 add_definitions(-D__USE_W32_SOCKETS)
 
+set_unicode()
+
 add_executable(ping ping.c ping.rc)
 
 set_module_type(ping win32cui)
