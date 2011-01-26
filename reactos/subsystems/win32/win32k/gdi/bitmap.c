@@ -310,7 +310,7 @@ BOOL APIENTRY RosGdiPatBlt( HDC physDev, INT left, INT top, INT width, INT heigh
     pDst = DC_LockDc(physDev);
 
     /* Call the internal helper */
-    bRet = GrePatBlt(pDst, left, top, width, height, rop, pDst->dclevel.pbrLine);
+    bRet = GrePatBlt(pDst, left, top, width, height, rop, pDst->dclevel.pbrFill);
 
     /* Release DC objects */
     DC_UnlockDc(pDst);
