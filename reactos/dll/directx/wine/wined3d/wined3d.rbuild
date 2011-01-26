@@ -5,6 +5,7 @@
 	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_USE_MATH_DEFINES" />
 	<define name="USE_WIN32_OPENGL" />
 
 	<library>wine</library>
