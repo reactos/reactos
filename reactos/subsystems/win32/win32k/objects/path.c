@@ -33,7 +33,8 @@
  */
 
 #include <win32k.h>
-#include "math.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #define NDEBUG
 #include <debug.h>

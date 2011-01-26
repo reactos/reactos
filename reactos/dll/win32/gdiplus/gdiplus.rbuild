@@ -6,6 +6,7 @@
 	<include base="gdiplus">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_USE_MATH_DEFINES" />
 	<file>brush.c</file>
 	<file>customlinecap.c</file>
 	<file>font.c</file>

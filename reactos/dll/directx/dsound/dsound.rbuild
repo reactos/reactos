@@ -6,6 +6,7 @@
 	<include base="dsound">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WINE" />
+	<define name="_USE_MATH_DEFINES" />
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
