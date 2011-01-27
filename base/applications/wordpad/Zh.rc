@@ -487,9 +487,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "儲存改動到 '%s'?"
     STRING_SEARCH_FINISHED,      "檔案查找結束."
     STRING_LOAD_RICHED_FAILED,   "RichEdit 裝載失敗."
-    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, " \
-                                 "這可能導致格式丟失. " \
-                                 "你確定要這麼做嗎?"
+    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, 這可能導致格式丟失. 你確定要這麼做嗎?"
     STRING_INVALID_NUMBER,       "數字格式無效"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "不支援OLE 儲存檔案"
     STRING_WRITE_FAILED,              "不能儲存檔案."
