@@ -10,7 +10,7 @@ add_library(getuname SHARED
     getuname.rc
     ${CMAKE_CURRENT_BINARY_DIR}/getuname.def)
 
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/getuname.def)
+add_importlib_target(getuname.spec)
 set_module_type(getuname win32dll)
 add_importlibs(getuname msvcrt kernel32 ntdll)
 add_cab_target(getuname 1)
