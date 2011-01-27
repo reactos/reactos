@@ -13,7 +13,7 @@ add_library(class2 SHARED ${SOURCE})
 set_module_type(class2 kernelmodedriver)
 
 add_importlibs(class2 scsiport ntoskrnl hal)
-add_importlib_target(class2.spec class2.sys)
+add_importlib_target(class2.spec)
 
 add_minicd_target(class2 reactos class2.sys)
 add_livecd_target(class2 reactos/system32/drivers)

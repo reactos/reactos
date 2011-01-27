@@ -12,4 +12,4 @@ set_module_type(battc kernelmodedriver)
 add_importlibs(battc ntoskrnl hal)
 
 add_cab_target(battc 2)
-add_importlib_target(battc.spec batc.sys)
+add_importlib_target(battc.spec)

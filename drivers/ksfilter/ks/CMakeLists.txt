@@ -44,4 +44,4 @@ add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 
 add_cab_target(ks 2)
-add_importlib_target(ks.spec ks.sys)
+add_importlib_target(ks.spec)
