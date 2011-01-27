@@ -1,5 +1,7 @@
 
-if(NOT MSVC)
+if(MSVC)
+add_library(rossym dummy.c)
+else()
 add_definitions(-D_NTSYSTEM_)
 list(APPEND SOURCE
     delete.c
