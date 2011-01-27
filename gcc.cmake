@@ -268,21 +268,18 @@ macro(add_importlib_target _exports_file)
 
     get_filename_component(_name ${_exports_file} NAME_WE)
     get_filename_component(_extension ${_exports_file} EXT)
+    get_target_property(_suffix ${_name} SUFFIX)
 
     if (${_extension} STREQUAL ".spec")
-        if (${ARGC} GREATER 1)
-            set(DLLNAME_OPTION "-n=${ARGV1}")
-        else()
-            set(DLLNAME_OPTION "")
-        endif()
 
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def ${DLLNAME_OPTION} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND native-spec2def -n=${_name}.${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     elseif(${_extension} STREQUAL ".def")
+        message("Use of def files for import libs is deprecated: ${_exports_file}")
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
