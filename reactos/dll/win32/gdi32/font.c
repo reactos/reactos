@@ -1553,6 +1553,31 @@ UINT WINAPI GetOutlineTextMetricsW(
     return ret;
 }
 
+static LPSTR FONT_GetCharsByRangeA(UINT firstChar, UINT lastChar, PINT pByteLen)
+{
+    INT i, count = lastChar - firstChar + 1;
+    UINT c;
+    LPSTR str;
+
+    if (count <= 0)
+        return NULL;
+
+    str = HeapAlloc(GetProcessHeap(), 0, count * 2 + 1);
+    if (str == NULL)
+        return NULL;
+
+    for(i = 0, c = firstChar; c <= lastChar; i++, c++)
+    {
+        if (c > 0xff)
+            str[i++] = (BYTE)(c >> 8);
+        str[i] = (BYTE)c;
+    }
+    str[i] = '\0';
+
+    *pByteLen = i;
+
+    return str;
+}
 
 /***********************************************************************
  *           GetCharWidthW      (GDI32.@)
@@ -1590,18 +1615,16 @@ BOOL WINAPI GetCharWidth32W( HDC hdc, UINT firstChar, UINT lastChar,
 BOOL WINAPI GetCharWidth32A( HDC hdc, UINT firstChar, UINT lastChar,
                                LPINT buffer )
 {
-    INT i, wlen, count = (INT)(lastChar - firstChar + 1);
+    INT i, wlen;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    if(count <= 0) return FALSE;
+    str = FONT_GetCharsByRangeA(firstChar, lastChar, &i);
+    if(str == NULL)
+        return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-    for(i = 0; i < count; i++)
-	str[i] = (BYTE)(firstChar + i);
-
-    wstr = FONT_mbtowc(hdc, str, count, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, i, &wlen, NULL);
 
     for(i = 0; i < wlen; i++)
     {
@@ -2296,18 +2319,21 @@ BOOL WINAPI GetAspectRatioFilterEx( HDC hdc, LPSIZE pAspectRatio )
 BOOL WINAPI GetCharABCWidthsA(HDC hdc, UINT firstChar, UINT lastChar,
                                   LPABC abc )
 {
-    INT i, wlen, count = (INT)(lastChar - firstChar + 1);
+    INT i, wlen;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    if(count <= 0) return FALSE;
+    str = FONT_GetCharsByRangeA(firstChar, lastChar, &i);
+    if (str == NULL)
+        return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-    for(i = 0; i < count; i++)
-	str[i] = (BYTE)(firstChar + i);
-
-    wstr = FONT_mbtowc(hdc, str, count, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, i, &wlen, NULL);
+    if (wstr == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, str);
+        return FALSE;
+    }
 
     for(i = 0; i < wlen; i++)
     {
@@ -2979,19 +3005,16 @@ GetCharacterPlacementW(
  */
 BOOL WINAPI GetCharABCWidthsFloatA( HDC hdc, UINT first, UINT last, LPABCFLOAT abcf )
 {
-    INT i, wlen, count = (INT)(last - first + 1);
+    INT i, wlen;
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    if (count <= 0) return FALSE;
+    str = FONT_GetCharsByRangeA(first, last, &i);
+    if (str == NULL)
+        return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-
-    for(i = 0; i < count; i++)
-        str[i] = (BYTE)(first + i);
-
-    wstr = FONT_mbtowc( hdc, str, count, &wlen, NULL );
+    wstr = FONT_mbtowc( hdc, str, i, &wlen, NULL );
 
     for (i = 0; i < wlen; i++)
     {

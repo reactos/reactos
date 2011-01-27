@@ -1298,7 +1298,7 @@ static inline void KEYBOARD_UpdateOneState ( WORD vkey, WORD scan, int state, DW
 
         if (!state) flags |= KEYEVENTF_KEYUP;
 
-        TRACE("Adjusting state for vkey %#.2X. State before %#.2x\n",
+        TRACE("Adjusting state for vkey %#.2x. State before %#.2x\n",
               vkey, key_state_table[vkey & 0xff]);
 
         /* Fake key being pressed inside wine */
