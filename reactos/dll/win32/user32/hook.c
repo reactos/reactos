@@ -419,7 +419,8 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
         UINT cbListSize = sizeof(hook_windows);
         if (!RosUserBuildShellHookHwndList(hook_windows, &cbListSize))
         {
-            ERR("Not enough hook windows array size!\n");
+            if (cbListSize > sizeof(hook_windows)) ERR("Not enough hook windows array size!\n");
+            /* otherwise the list is just empty */
         }
         else
         {
