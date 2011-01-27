@@ -2,14 +2,14 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nUtilisation : ping [-t] [-n nombre] [-l taille] [-w délai] hôte-destination\n\n" \
-                "Options :\n" \
-                "    -t             Ping l'hôte spécifié jusqu'à l'arrêt.\n" \
-                "                   Pour l'arrêter, tapez Ctrl+c.\n" \
-                "    -n nombre      Nombre de requêtes echo à envoyer.\n" \
-                "    -l taille      Taille du tampon d'envoi.\n" \
-                "    -w délai       Délai d'attente en millisecondes pour chaque réponse.\n\n\0"
-    
+    IDS_USAGE "\nUtilisation : ping [-t] [-n nombre] [-l taille] [-w délai] hôte-destination\n\n\
+Options :\n\
+    -t             Ping l'hôte spécifié jusqu'à l'arrêt.\n\
+                   Pour l'arrêter, tapez Ctrl+c.\n\
+    -n nombre      Nombre de requêtes echo à envoyer.\n\
+    -l taille      Taille du tampon d'envoi.\n\
+    -w délai       Délai d'attente en millisecondes pour chaque réponse.\n\n\0"
+
     IDS_PING_WITH_BYTES             "\nPing de %1 [%2] avec %3!d! octets de données :\n\n\0"
     IDS_PING_STATISTICS             "\nStatistiques du ping de %1 :\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST  "    Paquets : Envoyés = %1!d!, Reçus = %2!d!, Perdus = %3!d! (%4!d!%% de perte),\n\0"

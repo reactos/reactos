@@ -2,14 +2,14 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nUso: ping [-t] [-n conteggio] [-l dimensione] [-w timeout] host-destinazione\n\n" \
-                "Opzioni:\n" \
-                "    -t             Esegue il ping dell'host specificato finchè non termina.\n" \
-                "                   Per fermare - digitare Control-C.\n" \
-                "    -n conteggio   Numero di richieste echo da inviare.\n" \
-                "    -l dimensione  Dimensione del buffer di invio.\n" \
-                "    -w timeout     Timeout in millisecondi per l'attesa di ogni risposta.\n\n\0"
-    
+    IDS_USAGE "\nUso: ping [-t] [-n conteggio] [-l dimensione] [-w timeout] host-destinazione\n\n\
+Opzioni:\n\
+    -t             Esegue il ping dell'host specificato finchè non termina.\n\
+                   Per fermare - digitare Control-C.\n\
+    -n conteggio   Numero di richieste echo da inviare.\n\
+    -l dimensione  Dimensione del buffer di invio.\n\
+    -w timeout     Timeout in millisecondi per l'attesa di ogni risposta.\n\n\0"
+
     IDS_PING_WITH_BYTES             "\nPing in corso %1 [%2] con %3!d! bytes di dati:\n\n\0"
     IDS_PING_STATISTICS             "\nStatistiche di Ping per %1:\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST  "    Pacchetti: Inviati = %1!d!, Ricevuti = %2!d!, Persi = %3!d! (%4!d!%% perdita),\n\0"

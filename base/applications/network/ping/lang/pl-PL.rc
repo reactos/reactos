@@ -9,14 +9,14 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nSposób u¿ycia: ping [-t] [-n iloœæ] [-l bajtów] [-w czas] host-docelowy\n\n" \
-                "Opcje:\n" \
-                "    -t             Pinguj wskazanego hosta w sposób ci¹g³y.\n" \
-                "                   Aby przerwaæ - wciœnij Control C.\n" \
-                "    -n iloœæ     Iloœæ prób pingowania.\n" \
-                "    -l bajtów   Rozmiar pakietu echo w bajtach     .\n" \
-                "    -w czas     OpóŸnienie oczekiwanej odpowiedzi, w milisekundach.\n\n\0"
-    
+    IDS_USAGE "\nSposób u¿ycia: ping [-t] [-n iloœæ] [-l bajtów] [-w czas] host-docelowy\n\n\
+Opcje:\n\
+    -t             Pinguj wskazanego hosta w sposób ci¹g³y.\n\
+                   Aby przerwaæ - wciœnij Control C.\n\
+    -n iloœæ     Iloœæ prób pingowania.\n\
+    -l bajtów   Rozmiar pakietu echo w bajtach     .\n\
+    -w czas     OpóŸnienie oczekiwanej odpowiedzi, w milisekundach.\n\n\0"
+
     IDS_PING_WITH_BYTES             "\nPingowanie %1 [%2] przy u¿yciu %3!d! bajtów danych:\n\n\0"
     IDS_PING_STATISTICS             "\nStatystyka wyników badania hosta %1:\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakiety: Wys³ane = %1!d!, Odebrane = %2!d!, Utracone = %3!d! (%4!d!%% strat),\n\0"
