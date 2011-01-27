@@ -11,8 +11,7 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
-/* FUNCTIONS ****************************************************************/
-
+/* CODE **********************************************************************/
 .code64
 
 PUBLIC ceil
@@ -20,3 +19,4 @@ ceil:
     UNIMPLEMENTED ceil
     ret
 
+END

@@ -11,11 +11,12 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
-/* FUNCTIONS ****************************************************************/
-
+/* CODE **********************************************************************/
 .code64
 
 PUBLIC atan2
 atan2:
     UNIMPLEMENTED atan2
     ret
+
+END

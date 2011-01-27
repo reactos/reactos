@@ -17,42 +17,43 @@
 
 /* GLOBALS *******************************************************************/
 
-.globl _global_unwind2
-.globl _local_unwind2
-.globl _abnormal_termination
-.globl _except_handler2
-.globl _except_handler3
+PUBLIC _global_unwind2
+PUBLIC _local_unwind2
+PUBLIC _abnormal_termination
+PUBLIC _except_handler2
+PUBLIC _except_handler3
 
-/* FUNCTIONS *****************************************************************/
+/* CODE **********************************************************************/
+.code64
 
-.func _unwind_handler
-_unwind_handler:
+FUNC _unwind_handler
+    .endprolog
     ret
-.endfunc
+ENDFUNC _unwind_handler
 
-.func _global_unwind2
-_global_unwind2:
+FUNC _global_unwind2
+    .endprolog
     ret
-.endfunc
+ENDFUNC _global_unwind2
 
-.func _abnormal_termination
-_abnormal_termination:
+FUNC _abnormal_termination
+    .endprolog
     ret
-.endfunc
+ENDFUNC _abnormal_termination
 
-.func _local_unwind2
-_local_unwind2:
+FUNC _local_unwind2
+    .endprolog
     ret
-.endfunc
+ENDFUNC _local_unwind2
 
-.func _except_handler2
-_except_handler2:
+FUNC _except_handler2
+    .endprolog
     ret
-.endfunc
+ENDFUNC _except_handler2
 
-.func _except_handler3
-_except_handler3:
+FUNC _except_handler3
+    .endprolog
     ret
-.endfunc
+ENDFUNC _except_handler3
 
 END

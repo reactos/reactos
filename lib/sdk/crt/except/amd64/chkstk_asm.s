@@ -10,21 +10,25 @@
 
 #include <asm.inc>
 
+/* CODE **********************************************************************/
+.code64
 
 PUBLIC MsgUnimplemented
 MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
 
-.proc _chkstk
+FUNC _chkstk
+    .endprolog
     UNIMPLEMENTED chkstk
     ret
-.endp
+ENDFUNC _chkstk
 
-.proc _alloca_probe
+FUNC _alloca_probe
+    .endprolog
     UNIMPLEMENTED alloca_probe
     ret
-.endp
+ENDFUNC _alloca_probe
 
 END
 /* EOF */
