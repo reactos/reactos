@@ -626,15 +626,4 @@ if(MSVC)
     add_dependencies(msvcsup psdk buildno_header asm)
 endif()
 
-add_definitions(-D_USER32_WSPRINTF)
-add_library(user32_wsprintf
-    printf/streamout.c
-    printf/wstreamout.c
-    printf/wsprintfA.c
-    printf/wsprintfW.c
-    printf/wvsprintfA.c
-    printf/wvsprintfW.c
-    printf/wvsnprintfA.c
-    printf/wvsnprintfW.c
-    string/mbstowcs_nt.c
-    string/wcstombs_nt.c)
+add_subdirectory(printf)
