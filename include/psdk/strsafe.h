@@ -239,7 +239,11 @@ STRSAFEAPI StringCxxVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPT
 #else // !STRSAFE_LIB
 
 /* Create inlined versions */
+#ifdef __GNUC__
 #define STRSAFEAPI HRESULT static __inline__
+#else
+#define STRSAFEAPI HRESULT __inline
+#endif
 
 #define STRSAFE_MAX_CXX STRSAFE_CCHtoCXX(STRSAFE_MAX_CCH)
 
@@ -497,7 +501,7 @@ StringCxxVPrintfEx(
 
     if (SUCCEEDED(hr))
     {
-        if ((dwFlags & STRSAFE_FILL_BEHIND_NULL) && (iResult + 1 < cchMax))
+        if ((dwFlags & STRSAFE_FILL_BEHIND_NULL) && ((size_t)iResult + 1 < cchMax))
         {
             memset(pszDest + iResult + 1,
                    dwFlags & 0xff,
