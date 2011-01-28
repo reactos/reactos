@@ -232,6 +232,8 @@ CompleteIO(
 
 	}while(dwNumberOfBytesTransferred);
 
+    // AUDIO-BRANCH DIFF
+    // completion callback is performed in a thread
     DoWaveStreaming(SoundDeviceInstance);
 
     //CompleteWavePortion(SoundDeviceInstance, dwNumberOfBytesTransferred);
@@ -277,8 +279,62 @@ StopStreamingInSoundThread(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
-    /* TODO */
-    return MMSYSERR_NOTSUPPORTED;
+    MMDEVICE_TYPE DeviceType;
+    PMMFUNCTION_TABLE FunctionTable;
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+
+    /* set state reset in progress */
+    SoundDeviceInstance->ResetInProgress = TRUE;
+
+    /* Get sound device */
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Obtain the function table */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Obtain device instance type */
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Check if reset function is supported */
+    if (FunctionTable->ResetStream)
+    {
+         /* cancel all current audio buffers */
+         FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, TRUE);
+    }
+
+    /* complete all current headers */
+    while( SoundDeviceInstance->HeadWaveHeader )
+    {
+        SND_TRACE(L"StopStreamingInSoundThread: Completing Header %p\n", SoundDeviceInstance->HeadWaveHeader);
+        CompleteWaveHeader( SoundDeviceInstance, SoundDeviceInstance->HeadWaveHeader );
+    }
+
+    /* there should be no oustanding buffers now */
+    SND_ASSERT(SoundDeviceInstance->OutstandingBuffers == 0);
+
+    while(SoundDeviceInstance->OutstandingBuffers)
+    {
+        SND_ERR("StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
+        /* my hack of doom */
+        Sleep(10);
+    }
+
+    /* Check if reset function is supported */
+    if (FunctionTable->ResetStream)
+    {
+        /* finish the reset */
+        FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, FALSE);
+    }
+
+    /* clear state reset in progress */
+    SoundDeviceInstance->ResetInProgress = FALSE;
+
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT

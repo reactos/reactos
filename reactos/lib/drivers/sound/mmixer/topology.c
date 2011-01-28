@@ -264,7 +264,9 @@ MMixerHandleNodeToNodeConnection(
 {
     PTOPOLOGY_NODE InNode, OutNode;
     PTOPOLOGY_NODE * NewNodes;
+    PULONG NewLogicalPinNodeConnectedFrom;
     ULONG Count;
+    ULONG LogicalPinId;
 
     /* sanity checks */
     ASSERT(Topology->TopologyNodesCount > Connection->ToNode);
@@ -273,6 +275,9 @@ MMixerHandleNodeToNodeConnection(
     /* get node */
     InNode = &Topology->TopologyNodes[Connection->FromNode];
     OutNode = &Topology->TopologyNodes[Connection->ToNode];
+
+    /* get logical pin node id */
+    LogicalPinId = Connection->ToNodePin;
 
     /* get existing count */
     Count = OutNode->NodeConnectedFromCount;
@@ -286,20 +291,41 @@ MMixerHandleNodeToNodeConnection(
         return MM_STATUS_NO_MEMORY;
     }
 
+    /* allocate logical pin nodes array */
+    NewLogicalPinNodeConnectedFrom = MixerContext->Alloc((Count + 1) * sizeof(ULONG));
+    if (!NewLogicalPinNodeConnectedFrom)
+    {
+        /* out of memory */
+        MixerContext->Free(NewNodes);
+        return MM_STATUS_NO_MEMORY;
+    }
+
     if (Count)
     {
         /* copy existing nodes */
         MixerContext->Copy(NewNodes, OutNode->NodeConnectedFrom, sizeof(PTOPOLOGY) * Count);
 
+        /* copy existing logical pin node array */
+        MixerContext->Copy(NewLogicalPinNodeConnectedFrom, OutNode->LogicalPinNodeConnectedFrom, sizeof(ULONG) * Count);
+
         /* release old nodes array */
         MixerContext->Free(OutNode->NodeConnectedFrom);
+
+        /* release old logical pin node array */
+        MixerContext->Free(OutNode->LogicalPinNodeConnectedFrom);
     }
 
     /* add new topology node */
     NewNodes[OutNode->NodeConnectedFromCount] = InNode;
 
+    /* add logical node id */
+    NewLogicalPinNodeConnectedFrom[OutNode->NodeConnectedFromCount] = LogicalPinId;
+
     /* replace old nodes array */
     OutNode->NodeConnectedFrom = NewNodes;
+
+    /* replace old logical pin node array */
+    OutNode->LogicalPinNodeConnectedFrom = NewLogicalPinNodeConnectedFrom;
 
     /* increment nodes count */
     OutNode->NodeConnectedFromCount++;
@@ -745,16 +771,15 @@ MMixerGetUpOrDownstreamNodes(
         /* node should not have been visited */
         ASSERT(Node->Visited == FALSE);
 
+        /* mark node as visited */
+        TopologyNode->Visited = TRUE;
+
         /* add them to node array */
         MMixerAddPinIndexToArray(MixerContext, Node->NodeIndex, Topology->TopologyNodesCount, OutNodeCount, OutNodes);
 
         /* recursively visit them */
         MMixerGetUpOrDownstreamNodes(MixerContext, Topology, TopologyNodes[Index], bUpStream, OutNodeCount, OutNodes);
     }
-
-    /* mark node as visited */
-    TopologyNode->Visited = TRUE;
-
 }
 
 MIXER_STATUS
@@ -1137,6 +1162,32 @@ MMixerIsNodeConnectedToPin(
     return MM_STATUS_SUCCESS;
 }
 
+VOID
+MMixerGetConnectedFromLogicalTopologyPins(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    OUT PULONG OutPinCount,
+    OUT PULONG OutPins)
+{
+    ULONG Index;
+    PTOPOLOGY_NODE Node;
+
+    /* sanity check */
+    ASSERT(NodeIndex < Topology->TopologyNodesCount);
+
+    /* get node */
+    Node = &Topology->TopologyNodes[NodeIndex];
+
+    for(Index = 0; Index < Node->NodeConnectedFromCount; Index++)
+    {
+        /* copy logical pin id */
+        OutPins[Index] = Node->LogicalPinNodeConnectedFrom[Index];
+    }
+
+    /* store pin count */
+    *OutPinCount = Node->NodeConnectedFromCount;
+}
+
 LPGUID
 MMixerGetNodeTypeFromTopology(
     IN PTOPOLOGY Topology,
@@ -1146,6 +1197,31 @@ MMixerGetNodeTypeFromTopology(
     ASSERT(NodeIndex < Topology->TopologyNodesCount);
 
     return &Topology->TopologyNodes[NodeIndex].NodeType;
+}
+
+VOID
+MMixerSetTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId)
+{
+    /* sanity check */
+    ASSERT(PinId < Topology->TopologyPinsCount);
+
+    /* set reserved */
+    Topology->TopologyPins[PinId].Reserved = TRUE;
+}
+
+VOID
+MMixerIsTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId,
+    OUT PULONG bReserved)
+{
+    /* sanity check */
+    ASSERT(PinId < Topology->TopologyPinsCount);
+
+    /* get reserved status */
+    *bReserved = Topology->TopologyPins[PinId].Reserved;
 }
 
 VOID

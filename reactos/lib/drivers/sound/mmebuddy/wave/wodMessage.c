@@ -109,6 +109,13 @@ wodMessage(
         case WODM_RESTART :
         {
             /* Continue playback when paused */
+            Result = MmeSetState(PrivateHandle, TRUE);
+            break;
+        }
+        case WODM_PAUSE :
+        {
+            /* pause playback */
+            Result = MmeSetState(PrivateHandle, FALSE);
             break;
         }
 

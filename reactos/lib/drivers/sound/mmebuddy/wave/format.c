@@ -65,8 +65,6 @@ SetWaveDeviceFormat(
     SND_TRACE(L"Setting wave format\n");
 
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
-    VALIDATE_MMSYS_PARAMETER( Format );
-    VALIDATE_MMSYS_PARAMETER( FormatSize >= sizeof(WAVEFORMATEX) );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     if ( ! MMSUCCESS(Result) )
@@ -74,9 +72,14 @@ SetWaveDeviceFormat(
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        VALIDATE_MMSYS_PARAMETER( Format );
+        VALIDATE_MMSYS_PARAMETER( FormatSize >= sizeof(WAVEFORMATEX) );
+    }
 
     /* Ensure we have a wave device (TODO: check if this applies to wavein as well) */
-    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) || IS_MIDI_DEVICE_TYPE(DeviceType) || IS_MIXER_DEVICE_TYPE(DeviceType));
 
     /* Obtain the function table */
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
