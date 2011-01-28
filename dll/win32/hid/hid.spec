@@ -1,44 +1,44 @@
-@ stub HidD_FlushQueue
-@ stub HidD_FreePreparsedData
-@ stub HidD_GetAttributes
-@ stub HidD_GetConfiguration
-@ stub HidD_GetFeature
+@ stdcall HidD_FlushQueue(ptr)
+@ stdcall HidD_FreePreparsedData(ptr)
+@ stdcall HidD_GetAttributes(ptr ptr)
+@ stdcall HidD_GetConfiguration(ptr ptr long)
+@ stdcall HidD_GetFeature(ptr ptr long)
 @ stdcall HidD_GetHidGuid(ptr)
-@ stub HidD_GetIndexedString
-@ stub HidD_GetInputReport
-@ stub HidD_GetManufacturerString
-@ stub HidD_GetMsGenreDescriptor
-@ stub HidD_GetNumInputBuffers
-@ stub HidD_GetPhysicalDescriptor
-@ stub HidD_GetPreparsedData
-@ stub HidD_GetProductString
-@ stub HidD_GetSerialNumberString
-@ stub HidD_Hello
-@ stub HidD_SetConfiguration
-@ stub HidD_SetFeature
-@ stub HidD_SetNumInputBuffers
-@ stub HidD_SetOutputReport
-@ stub HidP_GetButtonCaps
-@ stub HidP_GetCaps
-@ stub HidP_GetData
-@ stub HidP_GetExtendedAttributes
-@ stub HidP_GetLinkCollectionNodes
-@ stub HidP_GetScaledUsageValue
-@ stub HidP_GetSpecificButtonCaps
-@ stub HidP_GetSpecificValueCaps
-@ stub HidP_GetUsageValue
-@ stub HidP_GetUsageValueArray
-@ stub HidP_GetUsages
-@ stub HidP_GetUsagesEx
-@ stub HidP_GetValueCaps
-@ stub HidP_InitializeReportForID
-@ stub HidP_MaxDataListLength
-@ stub HidP_MaxUsageListLength
-@ stub HidP_SetData
-@ stub HidP_SetScaledUsageValue
-@ stub HidP_SetUsageValue
-@ stub HidP_SetUsageValueArray
-@ stub HidP_SetUsages
-@ stub HidP_TranslateUsagesToI8042ScanCodes
-@ stub HidP_UnsetUsages
-@ stub HidP_UsageListDifference
+@ stdcall HidD_GetIndexedString(ptr long ptr long)
+@ stdcall HidD_GetInputReport(ptr ptr long)
+@ stdcall HidD_GetManufacturerString(ptr ptr long)
+@ stdcall HidD_GetMsGenreDescriptor(ptr ptr long)
+@ stdcall HidD_GetNumInputBuffers(ptr ptr)
+@ stdcall HidD_GetPhysicalDescriptor(ptr ptr long)
+@ stdcall HidD_GetPreparsedData(ptr ptr)
+@ stdcall HidD_GetProductString(ptr ptr long)
+@ stdcall HidD_GetSerialNumberString(ptr ptr long)
+@ stdcall HidD_Hello(ptr long)
+@ stdcall HidD_SetConfiguration(ptr ptr long)
+@ stdcall HidD_SetFeature(ptr ptr long)
+@ stdcall HidD_SetNumInputBuffers(ptr long)
+@ stdcall HidD_SetOutputReport(ptr ptr long)
+@ stdcall HidP_GetButtonCaps(long ptr ptr ptr)
+@ stdcall HidP_GetCaps(ptr ptr)
+@ stdcall HidP_GetData(long ptr ptr ptr ptr long)
+@ stdcall HidP_GetExtendedAttributes(long long ptr ptr ptr)
+@ stdcall HidP_GetLinkCollectionNodes(ptr ptr ptr)
+@ stdcall HidP_GetScaledUsageValue(long long long long ptr ptr ptr long)
+@ stdcall HidP_GetSpecificButtonCaps(long long long long ptr ptr ptr)
+@ stdcall HidP_GetSpecificValueCaps(long long long long ptr ptr ptr)
+@ stdcall HidP_GetUsageValue(long long long long ptr ptr ptr long)
+@ stdcall HidP_GetUsageValueArray(long long long long ptr long ptr ptr long)
+@ stdcall HidP_GetUsages(long long long ptr ptr ptr ptr long)
+@ stdcall HidP_GetUsagesEx(long long ptr ptr ptr ptr long)
+@ stdcall HidP_GetValueCaps(long ptr ptr ptr)
+@ stdcall HidP_InitializeReportForID(long long ptr ptr long)
+@ stdcall HidP_MaxDataListLength(long ptr)
+@ stdcall HidP_MaxUsageListLength(long long ptr)
+@ stdcall HidP_SetData(long ptr ptr ptr ptr long)
+@ stdcall HidP_SetScaledUsageValue(long long long long long ptr ptr long)
+@ stdcall HidP_SetUsageValue(long long long long long ptr ptr long)
+@ stdcall HidP_SetUsageValueArray(long long long long ptr long ptr ptr long)
+@ stdcall HidP_SetUsages(long long long ptr ptr ptr ptr long)
+@ stdcall HidP_TranslateUsagesToI8042ScanCodes(ptr long long ptr ptr ptr)
+@ stdcall HidP_UnsetUsages(long long long ptr ptr ptr ptr long)
+@ stdcall HidP_UsageListDifference(ptr ptr ptr ptr long)
