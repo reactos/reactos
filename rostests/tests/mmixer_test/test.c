@@ -6,415 +6,214 @@
 #include <ksmedia.h>
 #include <mmsystem.h>
 #include <mmreg.h>
-#include "mmixer.h"
 
-MIXER_CONTEXT MixerContext;
-GUID CategoryGuid = {STATIC_KSCATEGORY_AUDIO};
+HMIXER hMixer;
+HANDLE hThread;
+HWND hwnd;
 
-PVOID Alloc(ULONG NumBytes)
+DWORD
+WINAPI
+MixerThread(LPVOID Parameter)
 {
-    //printf("Alloc: %lu\n", NumBytes);
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, NumBytes);
-}
 
-MIXER_STATUS
-Close(HANDLE hDevice)
-{
-    //printf("Close: Handle %p\n", hDevice);
-    if (CloseHandle(hDevice))
-        return MM_STATUS_SUCCESS;
-    else
-        return MM_STATUS_UNSUCCESSFUL;
-}
+    MSG msg;
 
-VOID
-Free(PVOID Block)
-{
-    //printf("Free: %p\n", Block);
-    HeapFree(GetProcessHeap(), 0, Block);
+	printf("hMixer %p\n", hMixer);
+
+	while(GetMessage(&msg, NULL, 0, 0))
+	{
+			if (msg.message == MM_MIXM_CONTROL_CHANGE)
+				printf("got MM_MIXM_CONTROL_CHANGE wParam %x lParam %lx\n", msg.wParam, msg.lParam);
+			else if (msg.message == MM_MIXM_LINE_CHANGE)
+				printf("got MM_MIXM_LINE_CHANGE wParam %x lParam %lx\n", msg.wParam, msg.lParam);
+	}
+	return 1;
 }
 
 VOID
-Copy(PVOID Src, PVOID Dst, ULONG NumBytes)
+test()
 {
-    //printf("Copy: Src %p Dst %p NumBytes %lu\n", Src, Dst, NumBytes);
-    CopyMemory(Src, Dst, NumBytes);
+
+ 
+    hwnd = CreateWindowExA(0, "static", "winmm test", WS_POPUP, 0,0,100,100,
+                           0, 0, 0, NULL);
+
+
+	if (!hwnd) {
+		printf("failed to create window\n");
+		exit(-1);
+	}
+
+	printf("window created\n");
+
+	if (mixerOpen(&hMixer, 0, (DWORD_PTR)hwnd, 0, CALLBACK_WINDOW | MIXER_OBJECTF_MIXER) != MMSYSERR_NOERROR)
+	{
+		printf("failed to create mixer\n");
+		exit(-2);
+	}
+
+	hThread = CreateThread(NULL, 0, MixerThread, NULL, 0, NULL);
+
+	if (hThread == NULL)
+	{
+		printf("failed to create thread\n");
+		exit(-3);
+	}
 }
 
-MIXER_STATUS
-Open(
-    IN LPWSTR DevicePath,
-    OUT PHANDLE hDevice)
+
+
+
+
+
+void
+printMixerLine(LPMIXERLINEW MixerLine, IN ULONG MixerIndex)
 {
-     DevicePath[1] = L'\\';
-    *hDevice = CreateFileW(DevicePath,
-                           GENERIC_READ | GENERIC_WRITE,
-                           0,
-                           NULL,
-                           OPEN_EXISTING,
-                           FILE_FLAG_OVERLAPPED,
-                           NULL);
-    if (*hDevice == INVALID_HANDLE_VALUE)
+    MIXERLINECONTROLSW MixerLineControls;
+    LPMIXERCONTROLDETAILS_LISTTEXTW ListText;
+    MIXERCONTROLDETAILS MixerControlDetails;
+    ULONG Index, SubIndex;
+    MMRESULT Result;
+
+    printf("\n");
+    printf("cChannels %lu\n", MixerLine->cChannels);
+    printf("cConnections %lu\n", MixerLine->cConnections);
+    printf("cControls %lu\n", MixerLine->cControls);
+    printf("dwComponentType %lx\n", MixerLine->dwComponentType);
+    printf("dwDestination %lu\n", MixerLine->dwDestination);
+    printf("dwLineID %lx\n", MixerLine->dwLineID);
+    printf("dwSource %lx\n", MixerLine->dwSource);
+    printf("dwUser %lu\n", MixerLine->dwUser);
+    printf("fdwLine %lu\n", MixerLine->fdwLine);
+    printf("szName %S\n", MixerLine->szName);
+    printf("szShortName %S\n", MixerLine->szShortName);
+    printf("Target.dwDeviceId %lu\n", MixerLine->Target.dwDeviceID);
+    printf("Target.dwType %lu\n", MixerLine->Target.dwType);
+    printf("Target.szName %S\n", MixerLine->Target.szPname);
+    printf("Target.vDriverVersion %x\n", MixerLine->Target.vDriverVersion);
+    printf("Target.wMid %x\n", MixerLine->Target.wMid );
+    printf("Target.wPid %x\n", MixerLine->Target.wPid);
+
+    MixerLineControls.cbStruct = sizeof(MixerLineControls);
+    MixerLineControls.dwLineID = MixerLine->dwLineID;
+    MixerLineControls.cControls = MixerLine->cControls;
+    MixerLineControls.cbmxctrl= sizeof(MIXERCONTROLW);
+    MixerLineControls.pamxctrl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MixerLineControls.cControls * sizeof(MIXERCONTROLW));
+
+    Result = mixerGetLineControlsW((HMIXEROBJ)MixerIndex, &MixerLineControls, MIXER_GETLINECONTROLSF_ALL | MIXER_OBJECTF_MIXER);
+
+    printf("Result %u\n", Result);
+
+    for(Index = 0; Index < MixerLine->cControls; Index++)
     {
-        //wprintf(L" Failed to open %s Error %lu\n", DevicePath, GetLastError());
-        return MM_STATUS_UNSUCCESSFUL;
-    }
-    wprintf(L"Open: %s hDevice %p\n", DevicePath, *hDevice);
+        printf("\n");
+        printf("Control Index: %lu\n", Index);
+        printf("\n");
+        printf("cbStruct %lu\n", MixerLineControls.pamxctrl[Index].cbStruct);
+        printf("dwControlID %lu\n", MixerLineControls.pamxctrl[Index].dwControlID);
+        printf("dwControlType %lx\n", MixerLineControls.pamxctrl[Index].dwControlType);
+        printf("fdwControl %lu\n", MixerLineControls.pamxctrl[Index].fdwControl);
+        printf("cMultipleItems %lu\n", MixerLineControls.pamxctrl[Index].cMultipleItems);
+        printf("szShortName %S\n", MixerLineControls.pamxctrl[Index].szShortName);
+        printf("szName %S\n", MixerLineControls.pamxctrl[Index].szName);
+        printf("Bounds.dwMinimum %lu\n", MixerLineControls.pamxctrl[Index].Bounds.dwMinimum);
+        printf("Bounds.dwMaximum %lu\n", MixerLineControls.pamxctrl[Index].Bounds.dwMaximum);
 
-    return MM_STATUS_SUCCESS;
-}
+        printf("Metrics.Reserved[0] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[0]);
+        printf("Metrics.Reserved[1] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[1]);
+        printf("Metrics.Reserved[2] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[2]);
+        printf("Metrics.Reserved[3] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[3]);
+        printf("Metrics.Reserved[4] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[4]);
+        printf("Metrics.Reserved[5] %lu\n", MixerLineControls.pamxctrl[Index].Metrics.dwReserved[5]);
 
-MIXER_STATUS
-Control(
-    IN HANDLE hMixer,
-    IN ULONG dwIoControlCode,
-    IN PVOID lpInBuffer,
-    IN ULONG nInBufferSize,
-    OUT PVOID lpOutBuffer,
-    ULONG nOutBufferSize,
-    PULONG lpBytesReturned)
-{
-    OVERLAPPED Overlapped;
-    BOOLEAN IoResult;
-    DWORD Transferred = 0;
-
-    //printf("hMixer %p dwIoControlCode %lx lpInBuffer %p nInBufferSize %lu lpOutBuffer %p nOutBufferSize %lu lpBytesReturned %p\n",
-    //        hMixer, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned);
-
-    /* Overlapped I/O is done here - this is used for waiting for completion */
-    ZeroMemory(&Overlapped, sizeof(OVERLAPPED));
-    Overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    if ( ! Overlapped.hEvent )
-        return MM_STATUS_NO_MEMORY;
-
-    /* Talk to the device */
-    IoResult = DeviceIoControl(hMixer,
-                               dwIoControlCode,
-                               lpInBuffer,
-                               nInBufferSize,
-                               lpOutBuffer,
-                               nOutBufferSize,
-                               &Transferred,
-                               &Overlapped);
-
-    /* If failure occurs, make sure it's not just due to the overlapped I/O */
-    if ( ! IoResult )
-    {
-        if ( GetLastError() != ERROR_IO_PENDING )
+        if (MixerLineControls.pamxctrl[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_MUX)
         {
-            CloseHandle(Overlapped.hEvent);
+            ZeroMemory(&MixerControlDetails, sizeof(MixerControlDetails));
+            MixerControlDetails.cbStruct = sizeof(MIXERCONTROLDETAILS);
+            MixerControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_LISTTEXTW);
+            MixerControlDetails.cChannels = 1;
+            MixerControlDetails.cMultipleItems = MixerLineControls.pamxctrl[Index].Metrics.dwReserved[0];
+            MixerControlDetails.dwControlID = MixerLineControls.pamxctrl[Index].dwControlID;
+            MixerControlDetails.paDetails = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MixerControlDetails.cbDetails * MixerControlDetails.cChannels * MixerControlDetails.cMultipleItems);
 
-            printf("Control: Failed with %lu Transferred %lu\n", GetLastError(), Transferred);
+            Result = mixerGetControlDetailsW((HMIXEROBJ)MixerIndex, &MixerControlDetails, MIXER_GETCONTROLDETAILSF_LISTTEXT | MIXER_OBJECTF_MIXER);
 
-            if (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            printf("Result %x\n", Result);
+            ListText = (LPMIXERCONTROLDETAILS_LISTTEXTW)MixerControlDetails.paDetails;
+            for(SubIndex = 0; SubIndex < MixerControlDetails.cMultipleItems; SubIndex++)
             {
-                if ( lpBytesReturned )
-                    *lpBytesReturned = Transferred;
-                return MM_STATUS_MORE_ENTRIES;
+                printf("dwParam1 %lx\n", ListText[SubIndex].dwParam1);
+                printf("dwParam1 %lx\n", ListText[SubIndex].dwParam2);
+                printf("szName %S\n", ListText[SubIndex].szName);
             }
 
-            return MM_STATUS_UNSUCCESSFUL;
+			MixerControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_BOOLEAN);
+			MixerControlDetails.paDetails = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROLDETAILS_BOOLEAN) * MixerControlDetails.cMultipleItems);
+             ((LPMIXERCONTROLDETAILS_BOOLEAN)MixerControlDetails.paDetails)->fValue = TRUE;
+
+			Result = mixerSetControlDetails((HMIXEROBJ)hMixer, &MixerControlDetails, MIXER_SETCONTROLDETAILSF_VALUE | MIXER_OBJECTF_HANDLE);
+			printf("Result %x hMixer %p\n", Result, hMixer);
         }
     }
-
-    /* Wait for the I/O to complete */
-    IoResult = GetOverlappedResult(hMixer,
-                                   &Overlapped,
-                                   &Transferred,
-                                   TRUE);
-
-    /* Don't need this any more */
-    CloseHandle(Overlapped.hEvent);
-
-    if ( ! IoResult )
-        return MM_STATUS_UNSUCCESSFUL;
-
-    //printf("Transferred %lu bytes in Sync overlapped I/O\n", Transferred);
-
-    if ( lpBytesReturned )
-        *lpBytesReturned = Transferred;
-
-    return MM_STATUS_SUCCESS;
-}
-
-MIXER_STATUS
-Enum(
-    IN  PVOID EnumContext,
-    IN  ULONG DeviceIndex,
-    OUT LPWSTR * DeviceName,
-    OUT PHANDLE OutHandle,
-    OUT PHANDLE OutKey)
-{
-    SP_DEVICE_INTERFACE_DATA InterfaceData;
-    SP_DEVINFO_DATA DeviceData;
-    PSP_DEVICE_INTERFACE_DETAIL_DATA_W DetailData;
-    BOOL Result;
-    DWORD Length;
-    MIXER_STATUS Status;
-
-    //printf("Enum EnumContext %p DeviceIndex %lu OutHandle %p\n", EnumContext, DeviceIndex, OutHandle);
-
-    InterfaceData.cbSize = sizeof(InterfaceData);
-    InterfaceData.Reserved = 0;
-
-    Result = SetupDiEnumDeviceInterfaces(EnumContext,
-                                NULL,
-                                &CategoryGuid,
-                                DeviceIndex,
-                                &InterfaceData);
-
-    if (!Result)
-    {
-        if (GetLastError() == ERROR_NO_MORE_ITEMS)
-        {
-            printf("LastDevice\n");
-            return MM_STATUS_NO_MORE_DEVICES;
-        }
-        printf("SetupDiEnumDeviceInterfaces failed with %lu\n", GetLastError());
-        return MM_STATUS_UNSUCCESSFUL;
-    }
-
-    Length = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W) + MAX_PATH * sizeof(WCHAR);
-    DetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(),
-                                                             0,
-                                                             Length);
-    DetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
-    DeviceData.cbSize = sizeof(DeviceData);
-    DeviceData.Reserved = 0;
-
-    Result = SetupDiGetDeviceInterfaceDetailW(EnumContext,
-                                    &InterfaceData,
-                                    DetailData,
-                                    Length,
-                                    NULL,
-                                    &DeviceData);
-
-    if (!Result)
-    {
-        printf("SetupDiGetDeviceInterfaceDetailW failed with %lu\n", GetLastError());
-        return MM_STATUS_UNSUCCESSFUL;
-    }
-
-
-    *OutKey = SetupDiOpenDeviceInterfaceRegKey(EnumContext, &InterfaceData, 0, KEY_READ);
-     if ((HKEY)*OutKey == INVALID_HANDLE_VALUE)
-     {
-        printf("SetupDiOpenDeviceInterfaceRegKey failed with %lx\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, DetailData);
-        return MM_STATUS_UNSUCCESSFUL;
-    }
-
-    Status = Open(DetailData->DevicePath, OutHandle);
-
-    if (Status != MM_STATUS_SUCCESS)
-    {
-        RegCloseKey((HKEY)*OutKey);
-        HeapFree(GetProcessHeap(), 0, DetailData);
-        return Status;
-    }
-
-    *DeviceName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(DetailData->DevicePath)+1) * sizeof(WCHAR));
-    if (*DeviceName == NULL)
-    {
-        CloseHandle(*OutHandle);
-        RegCloseKey((HKEY)*OutKey);
-        HeapFree(GetProcessHeap(), 0, DetailData);
-        return MM_STATUS_NO_MEMORY;
-    }
-
-    wcscpy(*DeviceName, DetailData->DevicePath);
-    HeapFree(GetProcessHeap(), 0, DetailData);
-
-    return Status;
-}
-
-MIXER_STATUS
-QueryKeyValue(
-    IN HANDLE hKey,
-    IN LPWSTR KeyName,
-    OUT PVOID * ResultBuffer,
-    OUT PULONG ResultLength,
-    OUT PULONG KeyType)
-{
-    if (RegQueryValueExW((HKEY)hKey, KeyName, NULL, KeyType, NULL, ResultLength) == ERROR_FILE_NOT_FOUND)
-        return MM_STATUS_UNSUCCESSFUL;
-
-    *ResultBuffer = HeapAlloc(GetProcessHeap(), 0, *ResultLength);
-    if (*ResultBuffer == NULL)
-        return MM_STATUS_NO_MEMORY;
-
-    if (RegQueryValueExW((HKEY)hKey, KeyName, NULL, KeyType, *ResultBuffer, ResultLength) != ERROR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, *ResultBuffer);
-        return MM_STATUS_UNSUCCESSFUL;
-    }
-    return MM_STATUS_SUCCESS;
-}
-
-MIXER_STATUS
-OpenKey(
-    IN HANDLE hKey,
-    IN LPWSTR SubKey,
-    IN ULONG DesiredAccess,
-    OUT PHANDLE OutKey)
-{
-    if (RegOpenKeyExW((HKEY)hKey, SubKey, 0, DesiredAccess, (PHKEY)OutKey) == ERROR_SUCCESS)
-        return MM_STATUS_SUCCESS;
-
-    return MM_STATUS_UNSUCCESSFUL;
-}
-
-MIXER_STATUS
-CloseKey(
-    IN HANDLE hKey)
-{
-    RegCloseKey((HKEY)hKey);
-    return MM_STATUS_SUCCESS;
-}
-
-PVOID
-AllocEventData(
-    IN ULONG ExtraSize)
-{
-    PKSEVENTDATA Data = (PKSEVENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSEVENTDATA) + ExtraSize);
-    if (!Data)
-        return NULL;
-
-    Data->EventHandle.Event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!Data->EventHandle.Event)
-    {
-        HeapFree(GetProcessHeap(), 0, Data);
-        return NULL;
-    }
-
-    Data->NotificationType = KSEVENTF_EVENT_HANDLE;
-    return Data;
-}
-
-VOID
-FreeEventData(IN PVOID EventData)
-{
-    PKSEVENTDATA Data = (PKSEVENTDATA)EventData;
-
-    CloseHandle(Data->EventHandle.Event);
-    HeapFree(GetProcessHeap(), 0, Data);
 }
 
 int main(int argc, char**argv)
 {
-    MIXER_STATUS Status;
-    HDEVINFO DeviceHandle;
-    MIXERCAPSW MixCaps1, MixCaps2;
-    ULONG Index, SubIndex;
-    HANDLE hMixer2;
-    HMIXER hMixer1;
-    MIXERLINEW MixerLine1, MixerLine2;
-    MIXERLINECONTROLSW Controls1, Controls2;
+    DWORD MixerCount, MixerIndex, DestinationIndex, SrcIndex;
+    MIXERCAPSW MixerCaps;
+    MIXERLINEW DstMixerLine, SrcLine;
+    MMRESULT Result;
 
-    ZeroMemory(&MixerContext, sizeof(MIXER_CONTEXT));
 
-    DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
-                                       NULL,
-                                       NULL,
-                                       DIGCF_DEVICEINTERFACE/*|DIGCF_PRESENT */);
-    if (DeviceHandle == INVALID_HANDLE_VALUE)
+test();
+
+    MixerCount = mixerGetNumDevs();
+
+    printf("MixerCount %lu\n", MixerCount);
+
+    for(MixerIndex = 0; MixerIndex < MixerCount; MixerIndex++)
     {
-        printf("SetupDiGetClassDevs failed with %lx\n", GetLastError());
-        return 0;
-    }
+        Result = mixerGetDevCapsW((UINT_PTR)MixerIndex, &MixerCaps, sizeof(MixerCaps));
 
-    printf("DeviceHandle %p\n", DeviceHandle);
+        printf("\n");
+        printf("Index %lu Result %x\n", MixerIndex, Result);
+        printf("Name :%S\n", MixerCaps.szPname);
+        printf("cDestinations: %lu\n", MixerCaps.cDestinations);
+        printf("fdwSupport %lx\n", MixerCaps.fdwSupport);
+        printf("vDriverVersion %x\n", MixerCaps.vDriverVersion);
+        printf("wMid %x\n", MixerCaps.wMid);
+        printf("wPid %x\n", MixerCaps.wPid);
 
-    MixerContext.SizeOfStruct = sizeof(MIXER_CONTEXT);
-    MixerContext.Alloc = Alloc;
-    MixerContext.Close = Close;
-    MixerContext.Control = Control;
-    MixerContext.Copy = Copy;
-    MixerContext.Free = Free;
-    MixerContext.Open = Open;
-    MixerContext.OpenKey = OpenKey;
-    MixerContext.CloseKey = CloseKey;
-    MixerContext.QueryKeyValue = QueryKeyValue;
-    MixerContext.AllocEventData = AllocEventData;
-    MixerContext.FreeEventData = FreeEventData;
-
-    Status = MMixerInitialize(&MixerContext, Enum, (PVOID)DeviceHandle);
-
-    printf("Status %x\n", Status);
-    printf("NumberOfMixers %lu mixerGetNumDevs %u\n", MMixerGetCount(&MixerContext), mixerGetNumDevs());
-
-    for(Index = 0; Index < MMixerGetCount(&MixerContext); Index++)
-    {
-        mixerGetDevCapsW(Index, &MixCaps1, sizeof(MIXERCAPSW));
-        wprintf(L"WINM: cDestination %u fdwSupport %lx szPname %s vDriverVersion %u wMid %x wPid %x\n", MixCaps1.cDestinations, MixCaps1.fdwSupport, MixCaps1.szPname, MixCaps1.vDriverVersion, MixCaps1.wMid, MixCaps1.wPid);
-        MMixerGetCapabilities(&MixerContext, Index, &MixCaps2);
-        wprintf(L"MMIX: cDestination %u fdwSupport %lx szPname %s vDriverVersion %u wMid %x wPid %x\n", MixCaps2.cDestinations, MixCaps2.fdwSupport, MixCaps2.szPname, MixCaps2.vDriverVersion, MixCaps2.wMid, MixCaps2.wPid);
-
-        mixerOpen(&hMixer1, Index, 0, 0, MIXER_OBJECTF_HMIXER);
-        MMixerOpen(&MixerContext, Index, NULL, NULL, &hMixer2);
-
-        ZeroMemory(&MixerLine1, sizeof(MIXERLINEW));
-        ZeroMemory(&MixerLine2, sizeof(MIXERLINEW));
-        MixerLine1.cbStruct = sizeof(MIXERLINEW);
-        MixerLine2.cbStruct = sizeof(MIXERLINEW);
-        mixerGetLineInfoW((HMIXEROBJ)hMixer1, &MixerLine1, MIXER_GETLINEINFOF_DESTINATION);
-        MMixerGetLineInfo(&MixerContext, hMixer2, MIXER_GETLINEINFOF_DESTINATION, &MixerLine2);
-
-        wprintf(L"WINM: dwDestination %lx dwSource %lx dwLineID %lx dwUser %lx dwComponentType %lx cChannels %lx cConnections %lx cControls %lx szShortName %s szName %s\n\n",
-                MixerLine1.dwDestination, MixerLine1.dwSource, MixerLine1.dwLineID, MixerLine1.dwUser, MixerLine1.dwComponentType, MixerLine1.cChannels, MixerLine1.cConnections, MixerLine1.cControls, MixerLine1.szShortName, MixerLine1.szName);
-
-        wprintf(L"MMIX: dwDestination %lx dwSource %lx dwLineID %lx dwUser %lx dwComponentType %lx cChannels %lx cConnections %lx cControls %lx szShortName %s szName %s\n\n",
-                MixerLine2.dwDestination, MixerLine2.dwSource, MixerLine2.dwLineID, MixerLine2.dwUser, MixerLine2.dwComponentType, MixerLine2.cChannels, MixerLine2.cConnections, MixerLine2.cControls, MixerLine2.szShortName, MixerLine2.szName);
-
-        Controls1.cbStruct = sizeof(MIXERLINECONTROLSW);
-        Controls2.cbStruct = sizeof(MIXERLINECONTROLSW);
-
-        Controls1.cbmxctrl = sizeof(MIXERCONTROL);
-        Controls2.cbmxctrl = sizeof(MIXERCONTROL);
-
-        Controls1.cControls = MixerLine1.cControls;
-        Controls2.cControls = MixerLine2.cControls;
-
-        Controls1.dwLineID = MixerLine1.dwLineID;
-        Controls2.dwLineID = MixerLine2.dwLineID;
-
-
-
-        Controls1.pamxctrl = (LPMIXERCONTROLW)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROLW) * Controls1.cControls);
-        Controls2.pamxctrl = (LPMIXERCONTROLW)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIXERCONTROLW) * Controls2.cControls);
-
-        for(SubIndex = 0; SubIndex < Controls1.cControls; SubIndex++)
-            Controls1.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROLW);
-
-        for(SubIndex = 0; SubIndex < Controls2.cControls; SubIndex++)
-            Controls2.pamxctrl[SubIndex].cbStruct = sizeof(MIXERCONTROLW);
-
-        mixerGetLineControlsW((HMIXEROBJ)hMixer1, &Controls1, MIXER_GETLINECONTROLSF_ALL);
-        MMixerGetLineControls(&MixerContext, hMixer2, MIXER_GETLINECONTROLSF_ALL, &Controls2);
-
-        wprintf(L"----------------------------------------\n");
-        for(SubIndex = 0; SubIndex < Controls1.cControls || SubIndex  < Controls2.cControls; SubIndex++)
+        for(DestinationIndex = 0; DestinationIndex < MixerCaps.cDestinations; DestinationIndex++)
         {
-            if (SubIndex < Controls1.cControls)
-            {
-                wprintf(L"WINM: Index %d dwControlID %lx dwControlType %lx fdwControl %lx cMultipleItems %lx szName %s szShortName %s \n", SubIndex, Controls1.pamxctrl[SubIndex].dwControlID, Controls1.pamxctrl[SubIndex].dwControlType, Controls1.pamxctrl[SubIndex].fdwControl, Controls1.pamxctrl[SubIndex].cMultipleItems, Controls1.pamxctrl[SubIndex].szName, Controls1.pamxctrl[SubIndex].szShortName);
-            }
+            ZeroMemory(&DstMixerLine, sizeof(DstMixerLine));
+            DstMixerLine.dwDestination = DestinationIndex;
+            DstMixerLine.cbStruct = sizeof(DstMixerLine);
 
-            if (SubIndex < Controls2.cControls)
+            Result = mixerGetLineInfoW((HMIXEROBJ)MixerIndex, &DstMixerLine, MIXER_GETLINEINFOF_DESTINATION | MIXER_OBJECTF_MIXER);
+            printf("\n");
+            printf("Destination Index %lu\n", DestinationIndex);
+            printMixerLine(&DstMixerLine, MixerIndex);
+            for(SrcIndex = 0; SrcIndex < DstMixerLine.cConnections; SrcIndex++)
             {
-                wprintf(L"MMIX: Index %d dwControlID %lx dwControlType %lx fdwControl %lx cMultipleItems %lx szName %s szShortName %s \n", SubIndex, Controls2.pamxctrl[SubIndex].dwControlID, Controls2.pamxctrl[SubIndex].dwControlType, Controls2.pamxctrl[SubIndex].fdwControl, Controls2.pamxctrl[SubIndex].cMultipleItems, Controls2.pamxctrl[SubIndex].szName, Controls2.pamxctrl[SubIndex].szShortName);
-            }
+                ZeroMemory(&SrcLine, sizeof(SrcLine));
+                SrcLine.dwDestination = DestinationIndex;
+                SrcLine.dwSource = SrcIndex;
+                SrcLine.cbStruct = sizeof(SrcLine);
 
+                Result = mixerGetLineInfoW((HMIXEROBJ)MixerIndex, &SrcLine, MIXER_GETLINEINFOF_SOURCE  | MIXER_OBJECTF_MIXER);
+
+                if (Result == MMSYSERR_NOERROR)
+                {
+                    printf("\n");
+                    printf("SrcLineIndex %lu\n", SrcIndex);
+                    printMixerLine(&SrcLine, MixerIndex);
+                }
+            }
         }
-        wprintf(L"----------------------------------------\n");
-
-
-        wprintf(L"=======================\n");
     }
+WaitForSingleObject(hThread, INFINITE);
+CloseHandle(hThread);
 
-	wprintf(L"//////////////////////\n");
-	wprintf(L"NumWaveOut %lu NumWaveIn %lu\n", MMixerGetWaveOutCount(&MixerContext), MMixerGetWaveInCount(&MixerContext));
-	wprintf(L"waveOut    %lu waveIn    %lu\n", waveOutGetNumDevs(), waveInGetNumDevs());
     return 0;
 }

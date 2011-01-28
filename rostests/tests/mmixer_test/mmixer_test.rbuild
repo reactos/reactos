@@ -8,5 +8,6 @@
 	<library>winmm</library>
 	<library>mmixer</library>
 	<library>ksuser</library>
+	<library>user32</library>
 	<file>test.c</file>
 </module>
