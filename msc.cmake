@@ -120,6 +120,7 @@ macro(set_module_type MODULE TYPE)
         set_image_base(${MODULE} 0x00010000)
         add_linkerflag(${MODULE} "/DRIVER")
         add_dependencies(${MODULE} bugcodes)
+        target_link_libraries(${MODULE} msvcsup)
     endif()
 endmacro()
 
@@ -157,7 +158,7 @@ macro(add_importlib_target _exports_file)
     # Assemble the stub file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
-        COMMAND ${CMAKE_ASM_COMPILER} /nologo /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
         DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm")
 
     # Add neccessary importlibs for redirections
