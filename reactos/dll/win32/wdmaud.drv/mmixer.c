@@ -9,6 +9,18 @@
 
 #include "wdmaud.h"
 
+typedef struct
+{
+    KSSTREAM_HEADER Header;
+    HANDLE hDevice;
+    PSOUND_OVERLAPPED Overlap;
+    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
+    DWORD IoCtl;
+}IO_PACKET, *LPIO_PACKET;
+
+BOOL MMixerLibraryInitialized = FALSE;
+
+
 
 PVOID Alloc(ULONG NumBytes);
 MIXER_STATUS Close(HANDLE hDevice);
@@ -110,7 +122,7 @@ Free(PVOID Block)
 VOID
 Copy(PVOID Src, PVOID Dst, ULONG NumBytes)
 {
-    CopyMemory(Src, Dst, NumBytes);
+    RtlMoveMemory(Src, Dst, NumBytes);
 }
 
 MIXER_STATUS
@@ -282,7 +294,6 @@ Enum(
         HeapFree(GetProcessHeap(), 0, DetailData);
         return MM_STATUS_NO_MEMORY;
     }
-	DPRINT1("DeviceName %S\n", DetailData->DevicePath);
     wcscpy(*DeviceName, DetailData->DevicePath);
     HeapFree(GetProcessHeap(), 0, DetailData);
 
@@ -324,6 +335,13 @@ WdmAudInitUserModeMixer()
     HDEVINFO DeviceHandle;
     MIXER_STATUS Status;
 
+    if (MMixerLibraryInitialized)
+    {
+        /* library is already initialized */
+        return TRUE;
+    }
+
+
     /* create a device list */
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
@@ -350,6 +368,9 @@ WdmAudInitUserModeMixer()
         return FALSE;
     }
 
+    /* library is now initialized */
+    MMixerLibraryInitialized = TRUE;
+
     /* completed successfully */
     return TRUE;
 }
@@ -363,7 +384,7 @@ WdmAudCleanupByMMixer()
 
 MMRESULT
 WdmAudGetMixerCapabilties(
-    IN ULONG DeviceId, 
+    IN ULONG DeviceId,
     LPMIXERCAPSW Capabilities)
 {
     if (MMixerGetCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
@@ -375,10 +396,11 @@ WdmAudGetMixerCapabilties(
 MMRESULT
 WdmAudGetLineInfo(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINEW MixLine,
     IN ULONG Flags)
 {
-    if (MMixerGetLineInfo(&MixerContext, hMixer, Flags, MixLine)  == MM_STATUS_SUCCESS)
+    if (MMixerGetLineInfo(&MixerContext, hMixer, MixerId, Flags, MixLine)  == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -387,10 +409,11 @@ WdmAudGetLineInfo(
 MMRESULT
 WdmAudGetLineControls(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINECONTROLSW MixControls,
     IN ULONG Flags)
 {
-    if (MMixerGetLineControls(&MixerContext, hMixer, Flags, MixControls) == MM_STATUS_SUCCESS)
+    if (MMixerGetLineControls(&MixerContext, hMixer, MixerId, Flags, MixControls) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -399,10 +422,11 @@ WdmAudGetLineControls(
 MMRESULT
 WdmAudSetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags)
 {
-    if (MMixerSetControlDetails(&MixerContext, hMixer, Flags, MixDetails) == MM_STATUS_SUCCESS)
+    if (MMixerSetControlDetails(&MixerContext, hMixer, MixerId, Flags, MixDetails) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -412,10 +436,11 @@ WdmAudSetControlDetails(
 MMRESULT
 WdmAudGetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags)
 {
-    if (MMixerGetControlDetails(&MixerContext, hMixer, Flags, MixDetails) == MM_STATUS_SUCCESS)
+    if (MMixerGetControlDetails(&MixerContext, hMixer, MixerId, Flags, MixDetails) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -589,6 +614,7 @@ WdmAudGetNumWdmDevsByMMixer(
 MMRESULT
 WdmAudQueryMixerInfoByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD MixerId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags)
@@ -596,6 +622,7 @@ WdmAudQueryMixerInfoByMMixer(
     LPMIXERLINEW MixLine;
     LPMIXERLINECONTROLSW MixControls;
     LPMIXERCONTROLDETAILS MixDetails;
+    HANDLE hMixer = NULL;
 
     MixLine = (LPMIXERLINEW)Parameter;
     MixControls = (LPMIXERLINECONTROLSW)Parameter;
@@ -603,19 +630,23 @@ WdmAudQueryMixerInfoByMMixer(
 
     /* FIXME param checks */
 
+    if (SoundDeviceInstance)
+    {
+        hMixer = SoundDeviceInstance->Handle;
+    }
+
     switch(uMsg)
     {
         case MXDM_GETLINEINFO:
-            return WdmAudGetLineInfo(SoundDeviceInstance->Handle, MixLine, Flags);
+            return WdmAudGetLineInfo(hMixer, MixerId, MixLine, Flags);
         case MXDM_GETLINECONTROLS:
-            return WdmAudGetLineControls(SoundDeviceInstance->Handle, MixControls, Flags);
+            return WdmAudGetLineControls(hMixer, MixerId, MixControls, Flags);
        case MXDM_SETCONTROLDETAILS:
-            return WdmAudSetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
-            break;
+            return WdmAudSetControlDetails(hMixer, MixerId, MixDetails, Flags);
        case MXDM_GETCONTROLDETAILS:
-            return WdmAudGetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
-            break;
+            return WdmAudGetControlDetails(hMixer, MixerId, MixDetails, Flags);
        default:
+           DPRINT1("MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
            SND_ASSERT(0);
            return MMSYSERR_NOTSUPPORTED;
     }
@@ -633,6 +664,25 @@ WdmAudGetDeviceInterfaceStringByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+VOID
+CALLBACK
+MixerEventCallback(
+    IN PVOID MixerEventContext,
+    IN HANDLE hMixer,
+    IN ULONG NotificationType,
+    IN ULONG Value)
+{
+    PSOUND_DEVICE_INSTANCE Instance = (PSOUND_DEVICE_INSTANCE)MixerEventContext;
+
+    DriverCallback(Instance->WinMM.ClientCallback,
+                   HIWORD(Instance->WinMM.Flags),
+                   Instance->WinMM.Handle,
+                   NotificationType,
+                   Instance->WinMM.ClientCallbackInstanceData,
+                   (DWORD_PTR)Value,
+                   0);
+}
+
 MMRESULT
 WdmAudSetMixerDeviceFormatByMMixer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
@@ -640,11 +690,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize)
 {
-    Instance->hNotifyEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if ( ! Instance->hNotifyEvent )
-        return MMSYSERR_NOMEM;
-
-    if (MMixerOpen(&MixerContext, DeviceId, Instance->hNotifyEvent, NULL /* FIXME */, &Instance->Handle) == MM_STATUS_SUCCESS)
+    if (MMixerOpen(&MixerContext, DeviceId, (PVOID)Instance, MixerEventCallback, &Instance->Handle) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_BADDEVICEID;
@@ -706,7 +752,19 @@ WdmAudResetStreamByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     IN  BOOLEAN bStartReset)
 {
-    /* FIXME */
+    MIXER_STATUS Status;
+
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Status = MMixerSetWaveResetState(&MixerContext, SoundDeviceInstance->Handle, bStartReset);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* completed successfully */
+            return MMSYSERR_NOERROR;
+        }
+    }
+
+
     return MMSYSERR_NOTSUPPORTED;
 }
 
@@ -719,6 +777,29 @@ WdmAudGetWavePositionByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+DWORD
+WINAPI
+IoStreamingThread(
+    LPVOID lpParameter)
+{
+    DWORD Length;
+    MMRESULT Result;
+    LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
+
+    Result =  SyncOverlappedDeviceIoControl(Packet->hDevice,
+                    Packet->IoCtl,
+                    NULL,
+                    0,
+                    &Packet->Header,
+                    sizeof(KSSTREAM_HEADER),
+                    &Length);
+
+    Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
+
+    HeapFree(GetProcessHeap(), 0, Packet);
+    return 0;
+}
+
 MMRESULT
 WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -727,10 +808,11 @@ WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
 {
-    KSSTREAM_HEADER Packet;
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
     MMRESULT Result;
+    LPIO_PACKET Packet;
+    HANDLE hThread;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
@@ -742,31 +824,37 @@ WdmAudCommitWaveBufferByMMixer(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
+    Packet = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IO_PACKET));
+    if ( ! Packet )
+    {
+        /* no memory */
+        return MMSYSERR_NOMEM;
+    }
+
     /* setup stream packet */
-    ZeroMemory(&Packet, sizeof(KSSTREAM_HEADER));
-    Packet.Size = sizeof(KSSTREAM_HEADER);
-    Packet.PresentationTime.Numerator = 1;
-    Packet.PresentationTime.Denominator = 1;
-    Packet.Data = OffsetPtr;
-    Packet.FrameExtent = Length;
+    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
+    Packet->Header.PresentationTime.Numerator = 1;
+    Packet->Header.PresentationTime.Denominator = 1;
+    Packet->Header.Data = OffsetPtr;
+    Packet->Header.FrameExtent = Length;
+    Packet->hDevice = SoundDeviceInstance->Handle;
+    Packet->Overlap = Overlap;
+    Packet->CompletionRoutine = CompletionRoutine;
+    Packet->IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Packet.DataUsed = Length;
+        Packet->Header.DataUsed = Length;
     }
 
-    Result =  SyncOverlappedDeviceIoControl(SoundDeviceInstance->Handle,
-                    IOCTL_KS_WRITE_STREAM,
-                    NULL,
-                    0,
-                    &Packet,
-                    sizeof(KSSTREAM_HEADER),
-                    &Length);
+    hThread = CreateThread(NULL, 0, IoStreamingThread, (LPVOID)Packet, 0, NULL);
+    if (hThread == NULL)
+    {
+        /* error */
+        return MMSYSERR_ERROR;
+    }
 
-    /* HACK:
-     * don't call completion routine directly
-     */
-    CompletionRoutine(ERROR_SUCCESS, Length, (LPOVERLAPPED)Overlap);
+    CloseHandle(hThread);
 
     return MMSYSERR_NOERROR;
 }
