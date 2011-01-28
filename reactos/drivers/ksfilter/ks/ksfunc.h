@@ -6,6 +6,13 @@
 #define TAG_KSDEVICE 'DESK'
 #define TAG_KSOBJECT_TAG 'HOSK'
 
+VOID
+CompleteRequest(
+    PIRP Irp,
+    CCHAR PriorityBoost);
+
+
+
 NTSTATUS
 NTAPI
 KspCreateObjectType(

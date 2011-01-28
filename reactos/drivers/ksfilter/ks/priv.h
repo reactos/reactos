@@ -19,6 +19,8 @@
 
 #include "ksmedia.h"
 #include "bdamedia.h"
+#include <swenum.h>
+
 
 #define TAG_DEVICE_HEADER 'KSDH'
 #define REG_PINFLAG_B_MANY 0x4 /* strmif.h */

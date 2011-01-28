@@ -34,7 +34,7 @@ KsDispatchQuerySecurity(
     {
         /* no create item */
         Irp->IoStatus.Status = STATUS_NO_SECURITY_ON_OBJECT;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NO_SECURITY_ON_OBJECT;
     }
 
@@ -50,7 +50,7 @@ KsDispatchQuerySecurity(
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Length;
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
@@ -80,7 +80,7 @@ KsDispatchSetSecurity(
     {
         /* no create item */
         Irp->IoStatus.Status = STATUS_NO_SECURITY_ON_OBJECT;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NO_SECURITY_ON_OBJECT;
     }
 
@@ -109,7 +109,7 @@ KsDispatchSetSecurity(
 
     /* store result */
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 }
@@ -1154,7 +1154,7 @@ KsDispatchInvalidDeviceRequest(
     IN  PIRP Irp)
 {
     Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_INVALID_DEVICE_REQUEST;
 }
@@ -1198,7 +1198,7 @@ KsDefaultDeviceIoCompletion(
 
     /* complete request */
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
 
     return Status;
@@ -1643,14 +1643,15 @@ KsAddIrpToCancelableQueue(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
+    DPRINT1("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
 
     // HACK for ms portcls
     if (IoStack->MajorFunction == IRP_MJ_CREATE)
     {
         // complete the request
+        DPRINT1("MS HACK\n");
         Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
 
         return;
     }
@@ -1736,7 +1737,7 @@ KsCancelRoutine(
     {
         /* let's complete it */
         Irp->IoStatus.Status = STATUS_CANCELLED;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 }
 
@@ -1795,14 +1796,12 @@ FindMatchingCreateItem(
             continue;
         }
 
-        ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
-
         DPRINT("CreateItem %S Length %u Request %wZ %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
                                                            CreateItemEntry->CreateItem->ObjectClass.Length,
                                                            &RefString,
-                                                           BufferSize);
+                                                           RefString.Length);
 
-        if (CreateItemEntry->CreateItem->ObjectClass.Length > BufferSize)
+        if (CreateItemEntry->CreateItem->ObjectClass.Length > RefString.Length)
         {
             /* create item doesnt match in length */
             Entry = Entry->Flink;
@@ -1853,7 +1852,7 @@ KspCreate(
         Irp->IoStatus.Information = 0;
         /* set return status */
         Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_SUCCESS;
     }
 
@@ -1893,7 +1892,7 @@ KspCreate(
     Irp->IoStatus.Information = 0;
     /* set return status */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1929,7 +1928,7 @@ KspDispatchIrp(
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         /* complete and forget */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_SUCCESS;
     }
 
@@ -2036,6 +2035,7 @@ KsDispatchIrp(
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
