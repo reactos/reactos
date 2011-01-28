@@ -1573,11 +1573,6 @@ typedef struct
     Properties
 */
 
-#define KSPROPERTY_MEMBER_RANGES        0x00000001
-#define KSPROPERTY_MEMBER_STEPPEDRANGES 0x00000002
-#define KSPROPERTY_MEMBER_VALUES        0x00000003
-#define KSPROPERTY_MEMBER_FLAG_DEFAULT  KSPROPERTY_MEMBER_RANGES
-
 typedef struct
 {
     GUID            PropertySet;
@@ -1662,6 +1657,17 @@ typedef struct {
     KSPROPERTY_MEMBERSHEADER    MembersHeader;
     const VOID*                 Members;
 } KSPROPERTY_MEMBERSLIST, *PKSPROPERTY_MEMBERSLIST;
+
+#define KSPROPERTY_MEMBER_RANGES            0x00000001
+#define KSPROPERTY_MEMBER_STEPPEDRANGES     0x00000002
+#define KSPROPERTY_MEMBER_VALUES            0x00000003
+
+#define KSPROPERTY_MEMBER_FLAG_DEFAULT                      0x00000001
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#define KSPROPERTY_MEMBER_FLAG_BASICSUPPORT_MULTICHANNEL    0x00000002
+#define KSPROPERTY_MEMBER_FLAG_BASICSUPPORT_UNIFORM         0x00000004
+#endif
+
 
 typedef struct {
     KSIDENTIFIER                    PropTypeSet;
@@ -2922,6 +2928,232 @@ typedef struct
     XP / DX8
 */
 #if defined(_NTDDK_)
+
+typedef struct _KSGATE KSGATE, *PKSGATE;
+
+struct _KSGATE {
+    LONG Count;
+    PKSGATE NextGate;
+};
+
+#ifndef _NTOS_
+
+static
+void
+__inline
+KsGateTurnInputOn(
+    IN PKSGATE Gate OPTIONAL)
+{
+    while (Gate && (InterlockedIncrement(&Gate->Count) == 1))
+    {
+        Gate = Gate->NextGate;
+    }
+}
+
+static
+void
+__inline
+KsGateTurnInputOff(
+    IN PKSGATE Gate OPTIONAL)
+{
+    while (Gate && (InterlockedDecrement(&Gate->Count) == 0))
+    {
+        Gate = Gate->NextGate;
+    }
+}
+
+static
+BOOLEAN
+__inline
+KsGateGetStateUnsafe(
+    IN PKSGATE Gate)
+{
+    ASSERT(Gate);
+    return((BOOLEAN)(Gate->Count > 0));
+}
+
+static
+BOOLEAN
+__inline
+KsGateCaptureThreshold(
+    IN PKSGATE Gate)
+{
+    BOOLEAN captured;
+
+    ASSERT(Gate);
+
+    captured = (BOOLEAN)(InterlockedCompareExchange(&Gate->Count,0,1) == 1);
+
+    if (captured)
+    {
+        KsGateTurnInputOff(Gate->NextGate);
+    }
+
+    return captured;
+}
+
+static
+void
+__inline
+KsGateInitialize(
+    IN PKSGATE Gate,
+    IN LONG InitialCount,
+    IN PKSGATE NextGate OPTIONAL,
+    IN BOOLEAN StateToPropagate
+    )
+{
+    ASSERT(Gate);
+    Gate->Count = InitialCount;
+    Gate->NextGate = NextGate;
+
+    if (NextGate)
+    {
+        if (InitialCount > 0)
+        {
+            if (StateToPropagate)
+            {
+                KsGateTurnInputOn(NextGate);
+            }
+        }
+        else
+        {
+            if (!StateToPropagate)
+            {
+                KsGateTurnInputOff(NextGate);
+            }
+        }
+    }
+}
+
+static
+void
+__inline
+KsGateInitializeAnd(
+    IN PKSGATE AndGate,
+    IN PKSGATE NextOrGate OPTIONAL)
+{
+    KsGateInitialize(AndGate,1,NextOrGate,TRUE);
+}
+
+static
+void
+__inline
+KsGateInitializeOr(
+    IN PKSGATE OrGate,
+    IN PKSGATE NextAndGate OPTIONAL)
+{
+    KsGateInitialize(OrGate,0,NextAndGate,FALSE);
+}
+
+static
+void
+__inline
+KsGateAddOnInputToAnd(
+    IN PKSGATE AndGate)
+{
+    UNREFERENCED_PARAMETER (AndGate);
+}
+
+static
+void
+__inline
+KsGateAddOffInputToAnd(
+    IN PKSGATE AndGate)
+{
+    KsGateTurnInputOff(AndGate);
+}
+
+static
+void
+__inline
+KsGateRemoveOnInputFromAnd(
+    IN PKSGATE AndGate)
+{
+    UNREFERENCED_PARAMETER (AndGate);
+}
+
+static
+void
+__inline
+KsGateRemoveOffInputFromAnd(
+    IN PKSGATE AndGate)
+{
+    KsGateTurnInputOn(AndGate);
+}
+
+static
+void
+__inline
+KsGateAddOnInputToOr(
+    IN PKSGATE OrGate)
+{
+    KsGateTurnInputOn(OrGate);
+}
+
+static
+void
+__inline
+KsGateAddOffInputToOr(
+    IN PKSGATE OrGate)
+{
+    UNREFERENCED_PARAMETER (OrGate);
+}
+
+static
+void
+__inline
+KsGateRemoveOnInputFromOr(
+    IN PKSGATE OrGate) 
+{
+    KsGateTurnInputOff(OrGate);
+}
+
+static
+void
+__inline
+KsGateRemoveOffInputFromOr(
+    IN PKSGATE OrGate)
+{
+    UNREFERENCED_PARAMETER (OrGate);
+}
+
+static
+void
+__inline
+KsGateTerminateAnd(
+    IN PKSGATE AndGate)
+{
+    ASSERT(AndGate);
+    if (KsGateGetStateUnsafe(AndGate))
+    {
+        KsGateRemoveOnInputFromOr(AndGate->NextGate);
+    }
+    else
+    {
+        KsGateRemoveOffInputFromOr(AndGate->NextGate);
+    }
+}
+
+static
+void
+__inline
+KsGateTerminateOr(
+    IN PKSGATE OrGate)
+{
+    ASSERT(OrGate);
+    if (KsGateGetStateUnsafe(OrGate))
+    {
+        KsGateRemoveOnInputFromAnd(OrGate->NextGate);
+    }
+    else
+    {
+        KsGateRemoveOffInputFromAnd(OrGate->NextGate);
+    }
+}
+
+#endif
+
+
 struct _KSMAPPING {
     PHYSICAL_ADDRESS PhysicalAddress;
     ULONG ByteCount;
@@ -2934,13 +3166,7 @@ typedef enum {
     KSSTREAM_POINTER_STATE_LOCKED
 } KSSTREAM_POINTER_STATE;
 
-typedef struct _KSGATE KSGATE, *PKSGATE;
 typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
-
-struct _KSGATE {
-    LONG Count;
-    PKSGATE NextGate;
-};
 
 struct _KSSTREAM_POINTER_OFFSET
 {
