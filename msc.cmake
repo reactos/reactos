@@ -139,6 +139,14 @@ endmacro()
 macro(add_importlib_target _exports_file)
     get_filename_component(_name ${_exports_file} NAME_WE)
     get_target_property(_suffix ${_name} SUFFIX)
+    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
+        get_target_property(_type ${_name} TYPE)
+        if(${_type} MATCHES EXECUTABLE)
+            set(_suffix ".exe")
+        else()
+            set(_suffix ".dll")
+        endif()
+    endif()
 
     # Generate the asm stub file and the export def file
     add_custom_command(
