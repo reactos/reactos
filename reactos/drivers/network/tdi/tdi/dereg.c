@@ -1,8 +1,5 @@
-/* $Id$
- *
- */
 #include <ntddk.h>
-#include <tdi.h>
+#include <tdikrnl.h>
 
 /* De-/Register Action IDs for TdiDeRegister */
 
@@ -21,18 +18,6 @@ enum
 } TDI_OBJECT_ACTION;
 
 
-static
-NTSTATUS
-NTAPI
-TdiDeRegister (
-	IN	TDI_OBJECT_ACTION	Action,
-	IN OUT	PVOID			Object
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-
 /* ADDRESS_CHANGE_HANDLER */
 
 /*
@@ -40,20 +25,11 @@ TdiDeRegister (
  */
 NTSTATUS
 NTAPI
-TdiRegisterAddressChangeHandler (
-	ULONG	Unknown0,
-	ULONG	Unknown1,
-	ULONG	Unknown2
-	)
+TdiRegisterAddressChangeHandler(IN TDI_ADD_ADDRESS_HANDLER AddHandler,
+                                IN TDI_DEL_ADDRESS_HANDLER DeleteHandler,
+                                OUT HANDLE *BindingHandle)
 {
-#if 0
-	NTSTATUS	Status = STATUS_SUCCESS;
-	Status = TdiDeRegister (
-			R_ADDRESS_CHANGE_HANDLER,
-			AddressChangeHandler
-			);
-#endif
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -62,14 +38,9 @@ TdiRegisterAddressChangeHandler (
  */
 NTSTATUS
 NTAPI
-TdiDeregisterAddressChangeHandler (
-	IN	PVOID	AddressChangeHandler
-	)
+TdiDeregisterAddressChangeHandler(IN HANDLE BindingHandle)
 {
-	return TdiDeRegister (
-			D_ADDRESS_CHANGE_HANDLER,
-			AddressChangeHandler
-			);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -80,19 +51,10 @@ TdiDeregisterAddressChangeHandler (
  */
 NTSTATUS
 NTAPI
-TdiRegisterDeviceObject (
-	ULONG	Unknown0,
-	ULONG	Unknown1
-	)
+TdiRegisterDeviceObject(IN PUNICODE_STRING DeviceName,
+                        OUT HANDLE *RegistrationHandle)
 {
-#if 0
-	NTSTATUS	Status = STATUS_SUCCESS;
-	Status = TdiDeRegister (
-			R_DEVICE_OBJECT,
-			DeviceObject
-			);
-#endif
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -101,14 +63,9 @@ TdiRegisterDeviceObject (
  */
 NTSTATUS
 NTAPI
-TdiDeregisterDeviceObject (
-	IN	PVOID	DeviceObject
-	)
+TdiDeregisterDeviceObject(IN HANDLE RegistrationHandle)
 {
-	return TdiDeRegister (
-			D_DEVICE_OBJECT,
-			DeviceObject
-			);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -119,19 +76,12 @@ TdiDeregisterDeviceObject (
  */
 NTSTATUS
 NTAPI
-TdiRegisterNetAddress (
-	ULONG	Unknown0,
-	ULONG	Unknown1
-	)
+TdiRegisterNetAddress(IN PTA_ADDRESS Address,
+                      IN PUNICODE_STRING DeviceName,
+                      IN PTDI_PNP_CONTEXT Context,
+                      OUT HANDLE *RegistrationHandle)
 {
-#if 0
-	NTSTATUS	Status = STATUS_SUCCESS;
-	Status = TdiDeRegister (
-			R_NET_ADDRESS,
-			NetAddress
-			);
-#endif
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -140,14 +90,9 @@ TdiRegisterNetAddress (
  */
 NTSTATUS
 NTAPI
-TdiDeregisterNetAddress (
-	IN	PVOID	NetAddress
-	)
+TdiDeregisterNetAddress(IN HANDLE RegistrationHandle)
 {
-	return TdiDeRegister (
-			D_NET_ADDRESS,
-			NetAddress
-			);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -158,20 +103,11 @@ TdiDeregisterNetAddress (
  */
 NTSTATUS
 NTAPI
-TdiRegisterNotificationHandler (
-	ULONG	Unknown0,
-	ULONG	Unknown1,
-	ULONG	Unknown2
-	)
+TdiRegisterNotificationHandler(IN TDI_BIND_HANDLER BindHandler,
+                               IN TDI_UNBIND_HANDLER UnbindHandler,
+                               OUT HANDLE *BindingHandle)
 {
-#if 0
-	NTSTATUS	Status = STATUS_SUCCESS;
-	Status = TdiDeRegister (
-			R_NOTIFICATION_HANDLER,
-			NotificationHandler
-			);
-#endif
-	return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -180,15 +116,9 @@ TdiRegisterNotificationHandler (
  */
 NTSTATUS
 NTAPI
-TdiDeregisterNotificationHandler (
-	IN	PVOID	NotificationHandler
-	)
+TdiDeregisterNotificationHandler(IN HANDLE BindingHandle)
 {
-	return	TdiDeRegister (
-			DT_NOTIFICATION_HANDLER,
-			NotificationHandler
-			);
+    return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */
