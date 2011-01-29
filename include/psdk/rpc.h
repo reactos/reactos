@@ -1,14 +1,8 @@
 
 #if !defined( RPC_NO_WINDOWS_H ) && !defined( MAC ) && !defined( _MAC )
-#if defined (_OLE32_)
-#ifndef RC_INVOKED
-#include <stdarg.h>
-#endif
-#include <windef.h>
-#include <winbase.h>
-#else
+#ifndef _INC_WINDOWS
 #include <windows.h>
-#endif
+#endif /* _INC_WINDOWS */
 #endif
 
 #ifndef RC_INVOKED
