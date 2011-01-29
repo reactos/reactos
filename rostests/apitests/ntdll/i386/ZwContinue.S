@@ -4,9 +4,9 @@
 
 
 // cpu 486
-.text
+.code
 
-extern _check
+EXTERN _check:PROC
 
 PUBLIC _continuePoint
 _continuePoint:
