@@ -9,8 +9,12 @@ add_definitions(
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
 
-if(NOT MSVC)
-    add_definitions(-mrtd -fno-builtin -w)
+if(ARCH MATCHES i386)
+    if(MSVC)
+        add_definitions(/Gz)
+    else()
+        add_definitions(-mrtd -fno-builtin -w)
+    endif()
 endif()
 
 spec2def(classpnp.sys class.spec)
