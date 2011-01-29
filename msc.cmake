@@ -13,7 +13,7 @@ elseif(OPTIMIZE STREQUAL "5")
 endif()
 endif()
 
-add_definitions(/GS- /Zl /Zi)
+add_definitions(/X /GS- /Zl /Zi)
 add_definitions(-Dinline=__inline -D__STDC__=1)
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
