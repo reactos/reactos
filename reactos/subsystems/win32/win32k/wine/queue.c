@@ -19,6 +19,7 @@
  */
 
 #include <win32k.h>
+#include <undocuser.h>
 
 #include <limits.h>
 #include "object.h"
