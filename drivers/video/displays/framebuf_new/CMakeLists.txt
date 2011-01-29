@@ -13,7 +13,9 @@ list(APPEND SOURCE
 add_library(framebuf_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new_driver.h.gch ${SOURCE})
 
 if(ARCH MATCHES i386)
-    if(NOT MSVC)
+    if(MSVC)
+        set_target_properties(framebuf_new PROPERTIES COMPILE_FLAGS "/Gz")
+    else()
         set_target_properties(framebuf_new PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
     endif()
 endif()
