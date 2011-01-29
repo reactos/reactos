@@ -111,3 +111,20 @@ endif()
 add_idl_headers(psdk ${SOURCE})
 
 add_typelib(stdole2 stdole2.idl)
+
+# These don't contain iids or only duplicates
+list(REMOVE_ITEM SOURCE
+    activaut.idl
+    devenum.idl
+    icftypes.idl
+    msinkaut.idl
+    msxml2.idl
+    msxml6.idl
+    shdeprecated.idl
+    shtypes.idl
+    structuredquerycondition.idl
+    wia_lh.idl
+    winsxs.idl
+    wtypes.idl)
+
+add_iid_library(iidlib ${SOURCE})
