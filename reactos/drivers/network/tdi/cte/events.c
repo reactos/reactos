@@ -1,15 +1,14 @@
 /*
  * PROJECT:         ReactOS TDI driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/network/tdi/stubs.c
- * PURPOSE:         TDI misc support routines
+ * FILE:            drivers/network/tdi/cte/events.c
+ * PURPOSE:         CTE events support
  * PROGRAMMERS:     Oleg Baikalow (obaikalow@gmail.com)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntddk.h>
-
 
 typedef struct _CTEBLOCK_EVENT
 {
@@ -28,7 +27,6 @@ typedef struct _CTE_DELAYED_EVENT
     PVOID Context;
     WORK_QUEUE_ITEM WorkItem;
 } CTE_DELAYED_EVENT, *PCTE_DELAYED_EVENT;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -87,33 +85,6 @@ CTEInitEvent(PCTE_DELAYED_EVENT Event,
     Event->WorkerRoutine = Routine;
     ExInitializeWorkItem(&Event->WorkItem, InternalWorker, Event);
 }
-
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-CTEInitTimer (
-	ULONG	Unknown0
-	)
-{
-}
-
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-CTEInitialize (
-	VOID
-	)
-{
-	/* FIXME: what should it initialize? */
-	return TRUE;
-}
-
 
 /*
  * @unimplemented
@@ -181,35 +152,6 @@ CTESignal(PCTEBLOCK_EVENT Block, NTSTATUS Status)
 
     /* Set the event */
     return KeSetEvent(&Block->Event, IO_NO_INCREMENT, FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-CTEStartTimer (
-	ULONG	Unknown0,
-	ULONG	Unknown1,
-	ULONG	Unknown2,
-	ULONG	Unknown3
-	)
-{
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-ULONG
-NTAPI
-CTESystemUpTime (
-	VOID
-	)
-{
-	return 0;
 }
 
 /* EOF */
