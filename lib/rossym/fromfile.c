@@ -67,6 +67,13 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
 
   SymbolTable = NtHeaders.FileHeader.PointerToSymbolTable;
   NumSymbols = NtHeaders.FileHeader.NumberOfSymbols;
+
+  if (!NumSymbols)
+    {
+      DPRINT1("Image doesn't have debug symbols\n");
+      return FALSE;
+    }
+
   DPRINT("SymbolTable %x NumSymbols %x\n", SymbolTable, NumSymbols);
 
   /* Load section headers */
