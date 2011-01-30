@@ -59,6 +59,7 @@ typedef struct
 
     DWORD Position;
     HMONITOR Monitor;
+    HMONITOR PreviousMonitor;
     DWORD DraggingPosition;
     HMONITOR DraggingMonitor;
 
@@ -230,7 +231,7 @@ ITrayWindowImpl_GetScreenRect(IN OUT ITrayWindowImpl *This,
         MONITORINFO mi;
 
         mi.cbSize = sizeof(mi);
-        if (!GetMonitorInfo(This->Monitor,
+        if (!GetMonitorInfo(hMonitor,
                             &mi))
         {
             /* Hm, the monitor is gone? Try to find a monitor where it
@@ -640,6 +641,57 @@ ITrayWindowImpl_ApplyClipping(IN OUT ITrayWindowImpl *This,
 }
 
 static VOID
+ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
+{
+    RECT rcTray,rcWorkArea;
+    
+    /* If monitor has changed then fix the previous monitors work area */
+    if(This->PreviousMonitor!=This->Monitor)
+    {
+        ITrayWindowImpl_GetScreenRect(This,
+                                    This->PreviousMonitor,
+                                    &rcWorkArea);
+        SystemParametersInfo(SPI_SETWORKAREA,
+                             1,
+                             &rcWorkArea,
+                             SPIF_SENDCHANGE);
+    }
+
+    rcTray = This->rcTrayWnd[This->Position];
+
+    ITrayWindowImpl_GetScreenRect(This,
+                                  This->Monitor,
+                                  &rcWorkArea);
+    This->PreviousMonitor=This->Monitor;
+
+    /* If AutoHide is false then change the workarea to exclude the area that
+       the taskbar covers. */
+    if(!This->AutoHide)
+    {
+        switch(This->Position)
+        {
+            case ABE_TOP:
+                rcWorkArea.top=rcTray.bottom;
+                break;
+            case ABE_LEFT:
+                rcWorkArea.left=rcTray.right;
+                break;
+            case ABE_RIGHT:
+                rcWorkArea.right=rcTray.left;
+                break;
+            case ABE_BOTTOM:
+                rcWorkArea.bottom=rcTray.top;
+                break;
+        }
+    }
+
+    SystemParametersInfo(SPI_SETWORKAREA,
+                         1,
+                         &rcWorkArea,
+                         SPIF_SENDCHANGE);
+}
+
+static VOID
 ITrayWindowImpl_CheckTrayWndPosition(IN OUT ITrayWindowImpl *This)
 {
     RECT rcTray;
@@ -655,6 +707,8 @@ ITrayWindowImpl_CheckTrayWndPosition(IN OUT ITrayWindowImpl *This)
                  rcTray.right - rcTray.left,
                  rcTray.bottom - rcTray.top,
                  SWP_NOZORDER);
+
+    ITrayWindowImpl_ResizeWorkArea(This);
 
     ITrayWindowImpl_ApplyClipping(This,
                                   TRUE);
@@ -1954,6 +2008,7 @@ TrayWndProc(IN HWND hwnd,
 
                 if (wParam == SIZE_RESTORED && lParam == 0)
                 {
+                    ITrayWindowImpl_ResizeWorkArea(This);
                     /* Clip the tray window on multi monitor systems so the edges can't
                        overlap into another monitor */
                     ITrayWindowImpl_ApplyClipping(This,
