@@ -5,6 +5,12 @@
 #include <ndk/iotypes.h>
 #include <pseh/pseh2.h>
 
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
 typedef enum _FCB_TYPE
 {
     FCB_INVALID,
