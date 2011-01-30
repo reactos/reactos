@@ -1,7 +1,7 @@
 
 list(APPEND IDL_SOURCES
 # These are the ones that MS uuid contains:
-    activaut.idl
+#    activaut.idl
     activdbg.idl
     activscp.idl
 #    alg.idl
@@ -162,7 +162,6 @@ list(APPEND IDL_SOURCES
     propsys.idl
     pstore.idl
     richole.idl
-    stdole2.idl
     strmif.idl
     tom.idl
     tuner.idl
@@ -211,6 +210,12 @@ list(APPEND SOURCE
     wdmguids.c
     otherguids.c
     undoc.c)
+
+if(MSVC)
+    # Disable warning about duplicate symbols. MS uuid lib contains them as well.
+    # Cmake doesn't handle LINK_FLAGS here
+    set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_LINKER> /lib ${CMAKE_CL_NOLOGO} <LINK_FLAGS> /ignore:4006 /out:<TARGET> <OBJECTS> ")
+endif()
 
 add_library(uuid ${SOURCE})
 add_dependencies(uuid psdk)
