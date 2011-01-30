@@ -142,13 +142,19 @@ macro(add_rpc_library TARGET)
 endmacro()
 
 macro(generate_idl_iids IDL_FILE)
+    get_filename_component(FILE ${IDL_FILE} NAME)
+    if(FILE STREQUAL "${IDL_FILE}")
+        set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
+    else()
+        set(IDL_FILE_FULL ${IDL_FILE})
+    endif()
     get_includes(INCLUDES)
     get_defines(DEFINES)
     get_filename_component(NAME ${IDL_FILE} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
-        COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_INTERFACE_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE})
+        COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_INTERFACE_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
+        DEPENDS ${IDL_FILE_FULL})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
 endmacro()
 

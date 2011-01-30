@@ -24,14 +24,9 @@ add_library(actxprxy SHARED ${SOURCE})
 
 set_entrypoint(actxprxy 0)
 
-if(MSVC)
-    target_link_libraries(actxprxy iidlib)
-else()
-    target_link_libraries(actxprxy uuid)
-endif()
-
 target_link_libraries(actxprxy
     actxprxylib
+    uuid
     wine
     ${PSEH_LIB})
 

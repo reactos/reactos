@@ -76,10 +76,6 @@ target_link_libraries(ole32
     uuid
     ${PSEH_LIB})
 
-if(MSVC)
-    target_link_libraries(ole32 iidlib)
-endif()
-
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
 
 add_dependencies(ole32 ole32idl)

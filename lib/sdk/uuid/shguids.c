@@ -1,0 +1,51 @@
+
+#include <initguid.h>
+
+#include <shlguid.h>
+#include <isguids.h>
+
+#if 0
+IID_IDsQueryColumnHandler
+CLSID_DsFindFrsMembers
+CLSID_DsFindDomainController
+CLSID_DsFindAdvanced
+CLSID_DsFindContainer
+CLSID_DsFindVolume
+CLSID_DsFindComputer
+CLSID_DsFindPrinter
+CLSID_DsFindPeople
+CLSID_DsFindObjects
+CLSID_DsQuery
+IID_IQueryHandler
+IID_IQueryFrame
+IID_ICommonQuery
+CLSID_CommonQuery
+IID_IPersistQuery
+IID_IQueryForm
+CLSID_DsFolderProperties
+CLSID_DsDisplaySpecifier
+IID_IDsBrowseDomainTree
+CLSID_DsDomainTreeBrowser
+CLSID_DsPropertyPages
+CLSID_MicrosoftDS
+IID_IPrintDialogServices
+IID_IPrintDialogCallback
+CLSID_FolderItemsFDF
+IID_IDragSourceHelper in shobjidl
+IID_IDropTargetHelper
+IID_IMountedVolume
+CLSID_MountedVolume
+IID_INamedPropertyBag
+CLSID_FileSysColumnProvider
+CLSID_DocFileColumnProvider
+IID_IShellDetails3
+IID_IAutoCompList
+IID_IEnumShellImageStore
+IID_IRunnableTask in shobjidl
+IID_IPersistFolder3 in shobjidl
+CLSID_StgFolder
+IID_IShellTaskScheduler
+CLSID_ShellTaskScheduler
+IID_IResolveShellLink
+IID_IShellLinkDataList in shobjidl
+#endif
