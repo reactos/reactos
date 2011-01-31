@@ -19,7 +19,6 @@ endif()
 
 spec2def(classpnp.sys class.spec)
 
-list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_BINARY_DIR}/class_stubs.c)
 list(APPEND SOURCE
     autorun.c
     class.c
