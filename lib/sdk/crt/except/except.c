@@ -96,6 +96,57 @@ static inline int call_unwind_func( int (*func)(void), void *ebp )
                           : "ecx", "edx", "memory" );
     return ret;
 }
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4731) // Don't complain about changing ebp
+void __inline call_finally_block( void *code_block, void *base_ptr )
+{
+    __asm
+    {
+        mov eax, code_block
+        mov ebp, base_ptr
+        call [eax]
+    }
+}
+
+int __inline call_filter( int (*func)(PEXCEPTION_POINTERS), void *arg, void *_ebp )
+{
+    int _ret;
+    __asm
+    {
+        push ebp
+        mov eax, arg
+        push eax
+        mov ebp, _ebp
+        mov eax, func
+        call [eax]
+        mov _ret, eax
+        pop ebp
+        pop ebp
+    }
+    return _ret;
+}
+int __inline call_unwind_func( int (*func)(void), void *_ebp )
+{
+    int _ret;
+
+    __asm
+    {
+        push ebp
+        push ebx
+        push esi
+        push edi
+        mov ebp, _ebp
+        call dword ptr [func]
+        mov _ret, eax
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+    }
+    return _ret;
+}
+#pragma warning(pop)
 #endif
 
 static DWORD MSVCRT_nested_handler(PEXCEPTION_RECORD rec,
