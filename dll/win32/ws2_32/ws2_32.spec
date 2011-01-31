@@ -111,7 +111,7 @@
 @ stdcall WSCInstallNameSpace(wstr wstr long long ptr)
 @ stdcall WSCInstallProvider(ptr wstr ptr long ptr)
 @ stdcall WSCUnInstallNameSpace(ptr)
-@ stdcall WSCUpdateProvider(ptr ptr long ptr)
+@ stdcall WSCUpdateProvider(ptr ptr ptr long ptr)
 @ stdcall WSCWriteNameSpaceOrder(ptr long)
 @ stdcall WSCWriteProviderOrder(ptr long)
 @ stdcall freeaddrinfo(ptr)
