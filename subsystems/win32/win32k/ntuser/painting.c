@@ -692,13 +692,18 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 {
    PDESKTOP Desktop;
    PTHRDCARETINFO CaretInfo;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ActiveMessageQueue;
    HWND hWndCaret;
    PWND WndCaret;
 
    ASSERT_REFS_CO(Window);
 
-   Desktop = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->rpdesk;
-   CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
+   pti = PsGetCurrentThreadWin32Thread();
+   Desktop = pti->rpdesk;
+   ActiveMessageQueue = Desktop->ActiveMessageQueue;
+   if (!ActiveMessageQueue) return 0;
+   CaretInfo = ActiveMessageQueue->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 
    WndCaret = UserGetWindowObject(hWndCaret);

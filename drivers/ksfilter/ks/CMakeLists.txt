@@ -27,6 +27,7 @@ list(APPEND SOURCE
     unknown.c
     worker.c
     kcom.c
+    swenum.c
     ks.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
 

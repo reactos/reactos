@@ -136,12 +136,6 @@ typedef struct
 
 typedef struct
 {
-    PIRP Irp;
-    KEVENT Event;
-}KSREMOVE_BUS_INTERFACE_CTX, *PKSREMOVE_BUS_INTERFACE_CTX;
-
-typedef struct
-{
     PLIST_ENTRY List;
     PFILE_OBJECT FileObject;
     PKSEVENT_ENTRY EventEntry;
@@ -150,19 +144,96 @@ typedef struct
 
 typedef BOOLEAN (NTAPI *PKSEVENT_SYNCHRONIZED_ROUTINE)(PKSEVENT_CTX Context);
 
+struct __BUS_ENUM_DEVICE_EXTENSION__;
+struct __BUS_DEVICE_ENTRY__;
+
 typedef struct
 {
-    BOOLEAN Enabled;
+    LIST_ENTRY Entry;
+    ULONG IsBus;
+    union
+    {
+        PDEVICE_OBJECT DeviceObject;
+        ULONG DeviceReferenceCount;
+    };
+    union
+    {
+        struct __BUS_DEVICE_ENTRY__* DeviceEntry;
+        ULONG Dummy1;
+    };
+    struct __BUS_ENUM_DEVICE_EXTENSION__ *BusDeviceExtension;
+    ULONG DeviceObjectReferenceCount;
+}COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
-    PDEVICE_OBJECT PnpDeviceObject;
+typedef struct
+{
+    PCOMMON_DEVICE_EXTENSION Ext;
+}DEV_EXTENSION, *PDEV_EXTENSION;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    GUID InterfaceGuid;
+    UNICODE_STRING SymbolicLink;
+}BUS_INSTANCE_ENTRY, *PBUS_INSTANCE_ENTRY;
+
+
+
+typedef enum
+{
+    NotStarted = 0,         // Not started yet
+    Started,                // Device has received the START_DEVICE IRP
+    StopPending,            // Device has received the QUERY_STOP IRP
+    Stopped,                // Device has received the STOP_DEVICE IRP
+    RemovePending,          // Device has received the QUERY_REMOVE IRP
+    SurpriseRemovePending,  // Device has received the SURPRISE_REMOVE IRP
+    Deleted 
+}DEVICE_STATE;
+
+
+typedef struct __BUS_DEVICE_ENTRY__
+{
+    LIST_ENTRY Entry;
+    LIST_ENTRY DeviceInterfaceList;
+    LIST_ENTRY IrpPendingList;
+    PDEVICE_OBJECT PDO;
+    DEVICE_STATE DeviceState;
+    GUID DeviceGuid;
+    LPWSTR PDODeviceName;
+    LPWSTR DeviceName;
+    LPWSTR BusId;
+    LARGE_INTEGER TimeCreated;
+    LARGE_INTEGER TimeExpired;
+    LPWSTR Instance;
+}BUS_DEVICE_ENTRY, *PBUS_DEVICE_ENTRY;
+
+typedef struct __BUS_ENUM_DEVICE_EXTENSION__
+{
+    COMMON_DEVICE_EXTENSION Common;
+    KSPIN_LOCK Lock;
+    KEVENT Event;
+    UNICODE_STRING DeviceInterfaceLink;
     PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT PnpDeviceObject;
     PDEVICE_OBJECT BusDeviceObject;
-
+    ULONG PdoCreated;
+    KTIMER Timer;
+    KDPC Dpc;
+    WORK_QUEUE_ITEM WorkItem;
+    ULONG DeviceAttached;
     UNICODE_STRING ServicePath;
-    UNICODE_STRING SymbolicLinkName;
 
     WCHAR BusIdentifier[1];
 }BUS_ENUM_DEVICE_EXTENSION, *PBUS_ENUM_DEVICE_EXTENSION;
+
+typedef struct
+{
+    PIRP Irp;
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    KEVENT Event;
+    NTSTATUS Status;
+    WORK_QUEUE_ITEM WorkItem;
+}BUS_INSTALL_ENUM_CONTEXT, *PBUS_INSTALL_ENUM_CONTEXT;
 
 typedef struct
 {

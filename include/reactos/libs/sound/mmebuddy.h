@@ -135,7 +135,7 @@
     { \
         if ( ! (parameter_condition) ) \
         { \
-            SND_ERR(L"FAILED parameter check: %hS\n", #parameter_condition); \
+            SND_ERR(L"FAILED parameter check: %hS at File %S Line %lu\n", #parameter_condition, __FILE__, __LINE__); \
             return MMSYSERR_INVALPARAM; \
         } \
     }
@@ -199,10 +199,10 @@ typedef MMRESULT (*WAVE_COMMIT_FUNC)(
 
 typedef MMRESULT (*MMMIXERQUERY_FUNC) (
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);
-
 
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
     IN  struct _SOUND_DEVICE* Device,

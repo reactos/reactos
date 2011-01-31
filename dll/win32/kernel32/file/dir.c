@@ -599,12 +599,6 @@ GetFullPathNameA (
    TRACE("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
         "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-   if (!lpFileName)
-   {
-     SetLastError(ERROR_INVALID_PARAMETER);
-     return 0;
-   }
-
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return 0;
 
@@ -661,6 +655,14 @@ GetFullPathNameW (
 
     TRACE("GetFullPathNameW ret: lpBuffer %S lpFilePart %S Length %ld\n",
            lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
+
+    if (!lpFileName)
+    {
+#if (WINVER >= _WIN32_WINNT_WIN7)
+        SetLastError(ERROR_INVALID_PARAMETER);
+#endif
+        return 0;
+    }
 
     return Length/sizeof(WCHAR);
 }

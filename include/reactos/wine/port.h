@@ -147,6 +147,9 @@ struct statfs;
 #define M_PI_2 1.570796326794896619
 #endif
 
+#ifndef M_PI_4
+#define M_PI_4 0.785398163397448309616
+#endif
 
 /* Constructor functions */
 

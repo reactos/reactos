@@ -54,6 +54,63 @@ MMixerVerifyContext(
     return MM_STATUS_SUCCESS;
 }
 
+LPMIXERLINE_EXT
+MMixerGetMixerLineContainingNodeId(
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeID)
+{
+    PLIST_ENTRY Entry, ControlEntry;
+    LPMIXERLINE_EXT MixerLineSrc;
+    LPMIXERCONTROL_EXT MixerControl;
+
+    /* get first entry */
+    Entry = MixerInfo->LineList.Flink;
+
+    while(Entry != &MixerInfo->LineList)
+    {
+        MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
+
+        ControlEntry = MixerLineSrc->ControlsList.Flink;
+        while(ControlEntry != &MixerLineSrc->ControlsList)
+        {
+            MixerControl = (LPMIXERCONTROL_EXT)CONTAINING_RECORD(ControlEntry, MIXERCONTROL_EXT, Entry);
+            if (MixerControl->NodeID == NodeID)
+            {
+                return MixerLineSrc;
+            }
+            ControlEntry = ControlEntry->Flink;
+        }
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+VOID
+MMixerGetLowestLogicalTopologyPinOffsetFromArray(
+    IN ULONG LogicalPinArrayCount,
+    IN PULONG LogicalPinArray,
+    OUT PULONG PinOffset)
+{
+    ULONG Index;
+    ULONG LowestId = 0;
+
+    for(Index = 1; Index < LogicalPinArrayCount; Index++)
+    {
+        if (LogicalPinArray[Index] != MAXULONG)
+        {
+            /* sanity check: logical pin id must be unique */
+            ASSERT(LogicalPinArray[Index] != LogicalPinArray[LowestId]);
+        }
+
+        if (LogicalPinArray[Index] < LogicalPinArray[LowestId])
+            LowestId = Index;
+    }
+
+    /* store result */
+    *PinOffset = LowestId;
+}
+
 VOID
 MMixerFreeMixerInfo(
     IN PMIXER_CONTEXT MixerContext,
@@ -66,6 +123,38 @@ MMixerFreeMixerInfo(
 
     MixerContext->Free((PVOID)MixerInfo);
 }
+
+
+LPMIXER_DATA
+MMixerGetMixerDataByDeviceHandle(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hDevice)
+{
+    LPMIXER_DATA MixerData;
+    PLIST_ENTRY Entry;
+    PMIXER_LIST MixerList;
+
+    /* get mixer list */
+    MixerList = (PMIXER_LIST)MixerContext->MixerContext;
+
+    if (!MixerList->MixerDataCount)
+        return NULL;
+
+    Entry = MixerList->MixerData.Flink;
+
+    while(Entry != &MixerList->MixerData)
+    {
+        MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
+
+        if (MixerData->hDevice == hDevice)
+            return MixerData;
+
+        /* move to next mixer entry */
+        Entry = Entry->Flink;
+    }
+    return NULL;
+}
+
 
 LPMIXER_INFO
 MMixerGetMixerInfoByIndex(
@@ -100,27 +189,31 @@ MMixerGetMixerInfoByIndex(
     return NULL;
 }
 
-LPMIXERCONTROL_DATA
-MMixerGetMixerControlDataById(
-    PLIST_ENTRY ListHead,
-    DWORD dwControlId)
+MIXER_STATUS
+MMixerGetMixerByName(
+    IN PMIXER_LIST MixerList,
+    IN LPWSTR MixerName,
+    OUT LPMIXER_INFO *OutMixerInfo)
 {
+    LPMIXER_INFO MixerInfo;
     PLIST_ENTRY Entry;
-    LPMIXERCONTROL_DATA Control;
 
-    /* get first entry */
-    Entry = ListHead->Flink;
-
-    while(Entry != ListHead)
+    Entry = MixerList->MixerList.Flink;
+    while(Entry != &MixerList->MixerList)
     {
-        Control = (LPMIXERCONTROL_DATA)CONTAINING_RECORD(Entry, MIXERCONTROL_DATA, Entry);
-        DPRINT("dwSource %x dwSource %x\n", Control->dwControlID, dwControlId);
-        if (Control->dwControlID == dwControlId)
-            return Control;
+        MixerInfo = (LPMIXER_INFO)CONTAINING_RECORD(Entry, MIXER_INFO, Entry);
 
+        DPRINT1("MixerName %S MixerName %S\n", MixerInfo->MixCaps.szPname, MixerName);
+        if (wcsicmp(MixerInfo->MixCaps.szPname, MixerName) == 0)
+        {
+            *OutMixerInfo = MixerInfo;
+            return MM_STATUS_SUCCESS;
+        }
+        /* move to next mixer entry */
         Entry = Entry->Flink;
     }
-    return NULL;
+
+    return MM_STATUS_UNSUCCESSFUL;
 }
 
 LPMIXERLINE_EXT
@@ -187,13 +280,13 @@ MIXER_STATUS
 MMixerGetMixerControlById(
     LPMIXER_INFO MixerInfo,
     DWORD dwControlID,
-    LPMIXERLINE_EXT *MixerLine,
-    LPMIXERCONTROLW *MixerControl,
+    LPMIXERLINE_EXT *OutMixerLine,
+    LPMIXERCONTROL_EXT *OutMixerControl,
     PULONG NodeId)
 {
-    PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry, ControlEntry;
     LPMIXERLINE_EXT MixerLineSrc;
-    ULONG Index;
+    LPMIXERCONTROL_EXT MixerControl;
 
     /* get first entry */
     Entry = MixerInfo->LineList.Flink;
@@ -202,18 +295,21 @@ MMixerGetMixerControlById(
     {
         MixerLineSrc = (LPMIXERLINE_EXT)CONTAINING_RECORD(Entry, MIXERLINE_EXT, Entry);
 
-        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
+        ControlEntry = MixerLineSrc->ControlsList.Flink;
+        while(ControlEntry != &MixerLineSrc->ControlsList)
         {
-            if (MixerLineSrc->LineControls[Index].dwControlID == dwControlID)
+            MixerControl = (LPMIXERCONTROL_EXT)CONTAINING_RECORD(ControlEntry, MIXERCONTROL_EXT, Entry);
+            if (MixerControl->Control.dwControlID == dwControlID)
             {
-                if (MixerLine)
-                    *MixerLine = MixerLineSrc;
-                if (MixerControl)
-                    *MixerControl = &MixerLineSrc->LineControls[Index];
+                if (OutMixerLine)
+                    *OutMixerLine = MixerLineSrc;
+                if (OutMixerControl)
+                    *OutMixerControl = MixerControl;
                 if (NodeId)
-                    *NodeId = MixerLineSrc->NodeIds[Index];
+                    *NodeId = MixerControl->NodeID;
                 return MM_STATUS_SUCCESS;
             }
+            ControlEntry = ControlEntry->Flink;
         }
         Entry = Entry->Flink;
     }
@@ -248,8 +344,8 @@ MMixerNotifyControlChange(
     PLIST_ENTRY Entry;
     PEVENT_NOTIFICATION_ENTRY NotificationEntry;
 
-    /* enumerate list and add a notification entry */
-    Entry = MixerInfo->LineList.Flink;
+    /* enumerate list and perform notification */
+    Entry = MixerInfo->EventList.Flink;
     while(Entry != &MixerInfo->EventList)
     {
         /* get notification entry offset */
@@ -270,7 +366,7 @@ MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
-    IN ULONG NodeId,
+    IN LPMIXERCONTROL_EXT MixerControl,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
     IN ULONG bSet)
@@ -290,7 +386,7 @@ MMixerSetGetMuteControlDetails(
         Value = Input->fValue;
 
     /* set control details */
-    Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
+    Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, MixerControl->NodeID, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
 
     if (Status != MM_STATUS_SUCCESS)
         return Status;
@@ -311,12 +407,261 @@ MMixerSetGetMuteControlDetails(
 }
 
 MIXER_STATUS
+MMixerSetGetMuxControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    IN ULONG Flags,
+    IN LPMIXERCONTROL_EXT MixerControl,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    IN LPMIXERLINE_EXT MixerLine)
+{
+    MIXER_STATUS Status;
+    PULONG LogicalNodes, ConnectedNodes;
+    ULONG LogicalNodesCount, ConnectedNodesCount, Index, CurLogicalPinOffset, BytesReturned, OldLogicalPinOffset;
+    LPMIXER_DATA MixerData;
+    LPMIXERCONTROLDETAILS_LISTTEXTW ListText;
+    LPMIXERCONTROLDETAILS_BOOLEAN Values;
+    LPMIXERLINE_EXT SourceLine;
+    KSNODEPROPERTY Request;
+
+    DPRINT("MixerControlDetails %p\n", MixerControlDetails);
+    DPRINT("bSet %lx\n", bSet);
+    DPRINT("Flags %lx\n", Flags);
+    DPRINT("NodeId %lu\n", MixerControl->NodeID);
+    DPRINT("MixerControlDetails dwControlID %lu\n", MixerControlDetails->dwControlID);
+    DPRINT("MixerControlDetails cChannels %lu\n", MixerControlDetails->cChannels);
+    DPRINT("MixerControlDetails cMultipleItems %lu\n", MixerControlDetails->cMultipleItems);
+    DPRINT("MixerControlDetails cbDetails %lu\n", MixerControlDetails->cbDetails);
+    DPRINT("MixerControlDetails paDetails %p\n", MixerControlDetails->paDetails);
+
+    if (MixerControl->Control.fdwControl & MIXERCONTROL_CONTROLF_UNIFORM)
+    {
+        /* control acts uniform */
+        if (MixerControlDetails->cChannels != 1)
+        {
+            /* expected 1 channel */
+            DPRINT1("Expected 1 channel but got %lu\n", MixerControlDetails->cChannels);
+            return MM_STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    /* check if multiple items match */
+    if (MixerControlDetails->cMultipleItems != MixerControl->Control.cMultipleItems)
+    {
+        DPRINT1("MultipleItems mismatch %lu expected %lu\n", MixerControlDetails->cMultipleItems, MixerControl->Control.cMultipleItems);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
+    if (bSet)
+    {
+        if ((Flags & MIXER_SETCONTROLDETAILSF_QUERYMASK) == MIXER_SETCONTROLDETAILSF_CUSTOM)
+        {
+            /* tell me when this is hit */
+            ASSERT(FALSE);
+        }
+        else if ((Flags & (MIXER_SETCONTROLDETAILSF_VALUE | MIXER_SETCONTROLDETAILSF_CUSTOM)) == MIXER_SETCONTROLDETAILSF_VALUE)
+        {
+            /* sanity check */
+            ASSERT(bSet == TRUE);
+            ASSERT(MixerControlDetails->cbDetails == sizeof(MIXERCONTROLDETAILS_BOOLEAN));
+
+            Values = (LPMIXERCONTROLDETAILS_BOOLEAN)MixerControlDetails->paDetails;
+            CurLogicalPinOffset = MAXULONG;
+            for(Index = 0; Index < MixerControlDetails->cMultipleItems; Index++)
+            {
+                if (Values[Index].fValue)
+                {
+                    /* mux can only activate one line at a time */
+                    ASSERT(CurLogicalPinOffset == MAXULONG);
+                    CurLogicalPinOffset = Index;
+                }
+            }
+
+            /* setup request */
+            Request.NodeId = NodeId;
+            Request.Reserved = 0;
+            Request.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_GET;
+            Request.Property.Id = KSPROPERTY_AUDIO_MUX_SOURCE;
+            Request.Property.Set = KSPROPSETID_Audio;
+
+            /* perform getting source */
+            Status = MixerContext->Control(MixerControl->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSNODEPROPERTY), &OldLogicalPinOffset, sizeof(ULONG), &BytesReturned);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* failed to get source */
+                return Status;
+            }
+
+            DPRINT("OldLogicalPinOffset %lu CurLogicalPinOffset %lu\n", OldLogicalPinOffset, CurLogicalPinOffset);
+
+            if (OldLogicalPinOffset == CurLogicalPinOffset)
+            {
+                /* cannot be unselected */
+                return MM_STATUS_UNSUCCESSFUL;
+            }
+
+            /* perform setting source */
+            Request.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
+            Status = MixerContext->Control(MixerControl->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSNODEPROPERTY), &CurLogicalPinOffset, sizeof(ULONG), &BytesReturned);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* failed to set source */
+                return Status;
+            }
+
+            /* notify control change */
+            MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->Control.dwControlID );
+
+            return Status;
+        }
+    }
+    else
+    {
+        if ((Flags & MIXER_GETCONTROLDETAILSF_QUERYMASK) == MIXER_GETCONTROLDETAILSF_VALUE)
+        {
+            /* setup request */
+            Request.NodeId = NodeId;
+            Request.Reserved = 0;
+            Request.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_GET;
+            Request.Property.Id = KSPROPERTY_AUDIO_MUX_SOURCE;
+            Request.Property.Set = KSPROPSETID_Audio;
+
+            /* perform getting source */
+            Status = MixerContext->Control(MixerControl->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSNODEPROPERTY), &OldLogicalPinOffset, sizeof(ULONG), &BytesReturned);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* failed to get source */
+                return Status;
+            }
+
+            /* gets the corresponding mixer data */
+            MixerData = MMixerGetMixerDataByDeviceHandle(MixerContext, MixerControl->hDevice);
+
+            /* sanity check */
+            ASSERT(MixerData);
+            ASSERT(MixerData->Topology);
+            ASSERT(MixerData->MixerInfo == MixerInfo);
+
+            /* get logical pin nodes */
+            MMixerGetConnectedFromLogicalTopologyPins(MixerData->Topology, MixerControl->NodeID, &LogicalNodesCount, LogicalNodes);
+
+            /* sanity check */
+            ASSERT(LogicalNodesCount == MixerControlDetails->cMultipleItems);
+            ASSERT(LogicalNodesCount == MixerControl->Control.Metrics.dwReserved[0]);
+
+            Values = (LPMIXERCONTROLDETAILS_BOOLEAN)MixerControlDetails->paDetails;
+            for(Index = 0; Index < ConnectedNodesCount; Index++)
+            {
+                /* getting logical pin offset */
+                MMixerGetLowestLogicalTopologyPinOffsetFromArray(LogicalNodesCount, LogicalNodes, &CurLogicalPinOffset);
+
+                if (CurLogicalPinOffset == OldLogicalPinOffset)
+                {
+                    /* mark index as active */
+                    Values[Index].fValue = TRUE;
+                }
+                else
+                {
+                    /* index not active */
+                    Values[Index].fValue = FALSE;
+                }
+
+                /* mark offset as consumed */
+                LogicalNodes[CurLogicalPinOffset] = MAXULONG;
+            }
+
+            /* cleanup */
+            MixerContext->Free(LogicalNodes);
+
+            /* done */
+            return MM_STATUS_SUCCESS;
+        }
+        else if ((Flags & MIXER_GETCONTROLDETAILSF_QUERYMASK) == MIXER_GETCONTROLDETAILSF_LISTTEXT)
+        {
+            /* sanity check */
+            ASSERT(bSet == FALSE);
+
+            /* gets the corresponding mixer data */
+            MixerData = MMixerGetMixerDataByDeviceHandle(MixerContext, MixerControl->hDevice);
+
+            /* sanity check */
+            ASSERT(MixerData);
+            ASSERT(MixerData->Topology);
+            ASSERT(MixerData->MixerInfo == MixerInfo);
+
+            /* now allocate logical pin array */
+            Status = MMixerAllocateTopologyNodeArray(MixerContext, MixerData->Topology, &LogicalNodes);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* no memory */
+                return MM_STATUS_NO_MEMORY;
+            }
+
+            /* allocate connected node array */
+            Status = MMixerAllocateTopologyNodeArray(MixerContext, MixerData->Topology, &ConnectedNodes);
+            if (Status != MM_STATUS_SUCCESS)
+            {
+                /* no memory */
+                MixerContext->Free(LogicalNodes);
+                return MM_STATUS_NO_MEMORY;
+            }
+
+            /* get logical pin nodes */
+            MMixerGetConnectedFromLogicalTopologyPins(MixerData->Topology, MixerControl->NodeID, &LogicalNodesCount, LogicalNodes);
+
+            /* get connected nodes */
+            MMixerGetNextNodesFromNodeIndex(MixerContext, MixerData->Topology, MixerControl->NodeID, TRUE, &ConnectedNodesCount, ConnectedNodes);
+
+            /* sanity check */
+            ASSERT(ConnectedNodesCount == LogicalNodesCount);
+            ASSERT(ConnectedNodesCount == MixerControlDetails->cMultipleItems);
+            ASSERT(ConnectedNodesCount == MixerControl->Control.Metrics.dwReserved[0]);
+
+            ListText = (LPMIXERCONTROLDETAILS_LISTTEXTW)MixerControlDetails->paDetails;
+
+            for(Index = 0; Index < ConnectedNodesCount; Index++)
+            {
+                /* getting logical pin offset */
+                MMixerGetLowestLogicalTopologyPinOffsetFromArray(LogicalNodesCount, LogicalNodes, &CurLogicalPinOffset);
+
+                /* get mixer line with that node */
+                SourceLine = MMixerGetMixerLineContainingNodeId(MixerInfo, ConnectedNodes[CurLogicalPinOffset]);
+
+                /* sanity check */
+                ASSERT(SourceLine);
+
+                DPRINT1("PinOffset %lu LogicalPin %lu NodeId %lu LineName %S\n", CurLogicalPinOffset, LogicalNodes[CurLogicalPinOffset], ConnectedNodes[CurLogicalPinOffset], SourceLine->Line.szName);
+
+                /* copy details */
+                ListText[Index].dwParam1 = SourceLine->Line.dwLineID;
+                ListText[Index].dwParam2 = SourceLine->Line.dwComponentType;
+                MixerContext->Copy(ListText[Index].szName, SourceLine->Line.szName, (wcslen(SourceLine->Line.szName) + 1) * sizeof(WCHAR));
+
+                /* mark offset as consumed */
+                LogicalNodes[CurLogicalPinOffset] = MAXULONG;
+            }
+
+            /* cleanup */
+            MixerContext->Free(LogicalNodes);
+            MixerContext->Free(ConnectedNodes);
+
+            /* done */
+            return MM_STATUS_SUCCESS;
+        }
+    }
+
+    return MM_STATUS_NOT_IMPLEMENTED;
+}
+
+MIXER_STATUS
 MMixerSetGetVolumeControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
-    LPMIXERCONTROLW MixerControl,
+    LPMIXERCONTROL_EXT MixerControl,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
     LPMIXERLINE_EXT MixerLine)
 {
@@ -329,7 +674,7 @@ MMixerSetGetVolumeControlDetails(
     if (MixerControlDetails->cbDetails != sizeof(MIXERCONTROLDETAILS_SIGNED))
         return MM_STATUS_INVALID_PARAMETER;
 
-    VolumeData = (LPMIXERVOLUME_DATA)MMixerGetMixerControlDataById(&MixerLine->LineControlsExtraData, MixerControl->dwControlID);
+    VolumeData = (LPMIXERVOLUME_DATA)MixerControl->ExtraData;
     if (!VolumeData)
         return MM_STATUS_UNSUCCESSFUL;
 
@@ -355,12 +700,12 @@ MMixerSetGetVolumeControlDetails(
     if (bSet)
     {
         /* TODO */
-        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
-        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
     }
     else
     {
-        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
     }
 
     if (!bSet)
@@ -372,7 +717,7 @@ MMixerSetGetVolumeControlDetails(
     else
     {
         /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
-        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->dwControlID);
+        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->Control.dwControlID);
     }
     return Status;
 }

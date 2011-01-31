@@ -9,6 +9,19 @@
 
 #include "priv.h"
 
+VOID
+CompleteRequest(
+    PIRP Irp,
+    CCHAR PriorityBoost)
+{
+    DPRINT("Completing IRP %p Status %x\n", Irp, Irp->IoStatus.Status);
+
+    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
+
+
+    IoCompleteRequest(Irp, PriorityBoost);
+}
+
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,

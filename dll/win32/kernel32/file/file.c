@@ -72,6 +72,9 @@ FilenameU2A_FitOrFail(
 {
    DWORD ret;
 
+   /* destLen should never exceed MAX_PATH */
+   if (destLen > MAX_PATH) destLen = MAX_PATH;
+
    ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
    /* ret incl. nullchar */
 

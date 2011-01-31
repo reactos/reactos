@@ -307,7 +307,7 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	theme->Effects.bTooltipAnimation  = theme->Effects.bMenuAnimation;
 	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
 	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, theme->Effects.bDragFullWindows, (PVOID)&theme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	UPDATE_USERPREF(KEYBOARDCUES, &theme->Effects.bKeyboardCues);
+	SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(theme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	//UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &theme->Effects.bActiveWindowTracking);
 	//UPDATE_USERPREF(MENUANIMATION, &theme->Effects.bMenuAnimation);
 	//UPDATE_USERPREF(COMBOBOXANIMATION, &theme->Effects.bComboBoxAnimation);

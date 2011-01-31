@@ -5,13 +5,15 @@ include_directories(
 
 add_definitions(
     -DNDIS40
-    -D_NTDRIVER_)
+    -D_NTDRIVER_
+    -D_TDI_)
 
 spec2def(tdi.sys misc/tdi.spec)
 
 list(APPEND SOURCE
+    cte/events.c
     cte/string.c
-    cte/stubs.c
+    cte/timer.c
     misc/main.c
     misc/tdi.rc
     tdi/dereg.c

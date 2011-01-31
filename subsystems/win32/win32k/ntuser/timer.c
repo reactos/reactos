@@ -19,7 +19,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static PTIMER FirstpTmr = NULL;
+static LIST_ENTRY TimersListHead;
 static LONG TimeLast = 0;
 
 #define MAX_ELAPSE_TIME 0x7FFFFFFF
@@ -62,26 +62,13 @@ CreateTimer(VOID)
   HANDLE Handle;
   PTIMER Ret = NULL;
 
-  if (!FirstpTmr)
+  Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
+  if (Ret)
   {
-      ExInitializeResourceLite(&TimerLock);
-      FirstpTmr = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
-      if (FirstpTmr)
-      {
-         FirstpTmr->head.h = Handle;
-         InitializeListHead(&FirstpTmr->ptmrList);
-      }
-      Ret = FirstpTmr;
+     Ret->head.h = Handle;
+     InsertTailList(&TimersListHead, &Ret->ptmrList);
   }
-  else
-  {
-      Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
-      if (Ret)
-      {
-         Ret->head.h = Handle;
-         InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
-      }
-  }
+
   return Ret;
 }
 
@@ -118,12 +105,13 @@ FindTimer(PWND Window,
           UINT_PTR nID,
           UINT flags)
 {
-  PLIST_ENTRY pLE;
-  PTIMER pTmr = FirstpTmr, RetTmr = NULL;
+  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PTIMER pTmr, RetTmr = NULL;
+
   TimerEnterExclusive();
-  do
+  while (pLE != &TimersListHead)
   {
-    if (!pTmr) break;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
 
     if ( pTmr->nID == nID &&
          pTmr->pWnd == Window &&
@@ -133,9 +121,8 @@ FindTimer(PWND Window,
        break;
     }
 
-    pLE = pTmr->ptmrList.Flink;
-    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-  } while (pTmr != FirstpTmr);
+    pLE = pLE->Flink;
+  }
   TimerLeave();
 
   return RetTmr;
@@ -145,20 +132,20 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
-  PLIST_ENTRY pLE;
-  PTIMER pTmr = FirstpTmr;
+  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PTIMER pTmr = NULL;
+
   TimerEnterExclusive();
-  do
+  while (pLE != &TimersListHead)
   {
-    if (!pTmr) break;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
 
     if ( pMsg->lParam == (LPARAM)pTmr->pfn &&
          (pTmr->flags & TMRF_SYSTEM) )
        break;
 
-    pLE = pTmr->ptmrList.Flink;
-    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-  } while (pTmr != FirstpTmr);
+    pLE = pLE->Flink;
+  }
   TimerLeave();
 
   return pTmr;
@@ -169,15 +156,14 @@ FASTCALL
 ValidateTimerCallback(PTHREADINFO pti,
                       LPARAM lParam)
 {
-  PLIST_ENTRY pLE;
+  PLIST_ENTRY pLE = TimersListHead.Flink;
   BOOL Ret = FALSE;
-  PTIMER pTmr = FirstpTmr;
-
-  if (!pTmr) return FALSE;
+  PTIMER pTmr;
 
   TimerEnterExclusive();
-  do
+  while (pLE != &TimersListHead)
   {
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
     if ( (lParam == (LPARAM)pTmr->pfn) &&
         !(pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
          (pTmr->pti->ppi == pti->ppi) )
@@ -185,9 +171,8 @@ ValidateTimerCallback(PTHREADINFO pti,
        Ret = TRUE;
        break;
     }
-    pLE = pTmr->ptmrList.Flink;
-    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-  } while (pTmr != FirstpTmr);
+    pLE = pLE->Flink;
+  }
   TimerLeave();
 
   return Ret;
@@ -286,7 +271,7 @@ IntSetTimer( PWND Window,
 
   ASSERT(MasterTimer != NULL);
   // Start the timer thread!
-  if (pTmr == FirstpTmr)
+  if (TimersListHead.Flink == TimersListHead.Blink) // There is only one timer
      KeSetTimer(MasterTimer, DueTime, NULL);
 
   return Ret;
@@ -334,22 +319,21 @@ BOOL
 FASTCALL
 PostTimerMessages(PWND Window)
 {
-  PLIST_ENTRY pLE;
+  PLIST_ENTRY pLE = TimersListHead.Flink;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
   BOOL Hit = FALSE;
-  PTIMER pTmr = FirstpTmr;
-
-  if (!pTmr) return FALSE;
+  PTIMER pTmr;
 
   pti = PsGetCurrentThreadWin32Thread();
   ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
 
-  do
+  while(pLE != &TimersListHead)
   {
+     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
      if ( (pTmr->flags & TMRF_READY) &&
           (pTmr->pti == pti) &&
           ((pTmr->pWnd == Window) || (Window == NULL)) )
@@ -366,9 +350,8 @@ PostTimerMessages(PWND Window)
            break;
         }
 
-     pLE = pTmr->ptmrList.Flink;
-     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-  } while (pTmr != FirstpTmr);
+     pLE = pLE->Flink;
+  }
 
   TimerLeave();
 
@@ -381,11 +364,9 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
-  PLIST_ENTRY pLE;
-  PTIMER pTmr = FirstpTmr;
+  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PTIMER pTmr;
   LONG TimerCount = 0;
-
-  if (!pTmr) return;
 
   TimerEnterExclusive();
 
@@ -394,8 +375,9 @@ ProcessTimers(VOID)
 
   DueTime.QuadPart = (LONGLONG)(-500000);
 
-  do
+  while(pLE != &TimersListHead)
   {
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
     TimerCount++;
     if (pTmr->flags & TMRF_WAITING)
     {
@@ -440,9 +422,8 @@ ProcessTimers(VOID)
           pTmr->cmsCountdown -= Time - TimeLast;
     }
 
-    pLE = pTmr->ptmrList.Flink;
-    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-  } while (pTmr != FirstpTmr);
+    pLE = pLE->Flink;
+  }
 
   // Restart the timer thread!
   ASSERT(MasterTimer != NULL);
@@ -457,24 +438,24 @@ ProcessTimers(VOID)
 BOOL FASTCALL
 DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
 {
-   PLIST_ENTRY pLE;
-   PTIMER pTmr = FirstpTmr;
+   PLIST_ENTRY pLE = TimersListHead.Flink;
+   PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
 
-   if ((FirstpTmr == NULL) || (Window == NULL))
+   if ((Window == NULL))
       return FALSE;
 
    TimerEnterExclusive();
 
-   do
+   while(pLE != &TimersListHead)
    {
+      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
+      pLE = pLE->Flink; /* get next timer list entry before current timer is removed */
       if ((pTmr) && (pTmr->pti == pti) && (pTmr->pWnd == Window))
       {
          TimersRemoved = RemoveTimer(pTmr);
       }
-      pLE = pTmr->ptmrList.Flink;
-      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-   } while (pTmr != FirstpTmr);
+   }
 
    TimerLeave();
 
@@ -484,24 +465,21 @@ DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
 BOOL FASTCALL
 DestroyTimersForThread(PTHREADINFO pti)
 {
-   PLIST_ENTRY pLE;
-   PTIMER pTmr = FirstpTmr;
+   PLIST_ENTRY pLE = TimersListHead.Flink;
+   PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
-
-   if (FirstpTmr == NULL)
-      return FALSE;
 
    TimerEnterExclusive();
 
-   do
+   while(pLE != &TimersListHead)
    {
+      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
+      pLE = pLE->Flink; /* get next timer list entry before current timer is removed */
       if ((pTmr) && (pTmr->pti == pti))
       {
          TimersRemoved = RemoveTimer(pTmr);
       }
-      pLE = pTmr->ptmrList.Flink;
-      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
-   } while (pTmr != FirstpTmr);
+   }
 
    TimerLeave();
 
@@ -549,6 +527,9 @@ InitTimerImpl(VOID)
 
    /* yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
+
+   ExInitializeResourceLite(&TimerLock);
+   InitializeListHead(&TimersListHead);
 
    return STATUS_SUCCESS;
 }

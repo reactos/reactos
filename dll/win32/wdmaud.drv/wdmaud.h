@@ -70,24 +70,28 @@ WdmAudCloseSoundDeviceByMMixer(
 MMRESULT
 WdmAudGetLineInfo(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINEW MixLine,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudGetLineControls(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINECONTROLSW MixControls,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudSetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags);
 
 MMRESULT
 WdmAudGetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags);
 
@@ -116,6 +120,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
 MMRESULT
 WdmAudQueryMixerInfoByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);
@@ -185,6 +190,7 @@ WdmAudSetMixerDeviceFormatByLegacy(
 MMRESULT
 WdmAudQueryMixerInfoByLegacy(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);

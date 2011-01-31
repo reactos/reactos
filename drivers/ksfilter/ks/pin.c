@@ -1875,7 +1875,7 @@ IKsPin_DispatchKsStream(
         DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
 
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
 
@@ -1888,7 +1888,7 @@ IKsPin_DispatchKsStream(
     {
         DPRINT("NoHeader Canceling Irp %p\n", Irp);
         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
 
@@ -1911,7 +1911,7 @@ IKsPin_DispatchKsStream(
         {
             DPRINT("NoHeader->Data Canceling Irp %p\n", Irp);
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
 
@@ -1960,7 +1960,7 @@ IKsPin_DispatchKsStream(
             /* invalid device request */
             DPRINT("Filter Centric Processing No Process Routine\n");
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_UNSUCCESSFUL;
         }
 
@@ -2095,7 +2095,7 @@ IKsPin_DispatchDeviceIoControl(
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -2135,7 +2135,7 @@ IKsPin_Close(
         {
             /* abort closing */
             Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
 
@@ -2145,7 +2145,7 @@ IKsPin_Close(
         if (Status != STATUS_PENDING)
         {
             Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            CompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
     }
@@ -2162,7 +2162,7 @@ IKsPin_DispatchCreateAllocator(
     UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2244,7 +2244,7 @@ IKsPin_DispatchCreateClock(
 
     /* done */
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
@@ -2257,7 +2257,7 @@ IKsPin_DispatchCreateNode(
     UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
 

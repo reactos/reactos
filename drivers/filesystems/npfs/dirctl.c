@@ -31,7 +31,6 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     PNPFS_VCB Vcb;
     PNPFS_FCB PipeFcb;
     ULONG PipeIndex;
-    BOOLEAN Found = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_NAMES_INFORMATION NamesBuffer;
     PFILE_DIRECTORY_INFORMATION DirectoryBuffer;
@@ -39,6 +38,9 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     PFILE_BOTH_DIR_INFORMATION BothDirBuffer;
     ULONG InfoSize = 0;
     ULONG NameLength;
+    ULONG CurrentOffset = 0;
+    ULONG LastOffset = 0;
+    PULONG NextEntryOffset;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -103,7 +105,8 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     if (First || (Stack->Flags & SL_RESTART_SCAN))
     {
         FileIndex = 0;
-    } else if ((Stack->Flags & SL_INDEX_SPECIFIED) == 0)
+    }
+    else if ((Stack->Flags & SL_INDEX_SPECIFIED) == 0)
     {
         FileIndex = Ccb->u.Directory.FileIndex + 1;
     }
@@ -139,7 +142,6 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     Vcb = Ccb->Fcb->Vcb;
     CurrentEntry = Vcb->PipeListHead.Flink;
     while (CurrentEntry != &Vcb->PipeListHead &&
-           Found == FALSE &&
            Status == STATUS_SUCCESS)
     {
         /* Get the FCB of the next pipe */
@@ -174,13 +176,12 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                 }
 
                 /* Initialize the information struct */
-                RtlZeroMemory(Buffer, InfoSize);
+                RtlZeroMemory(&Buffer[CurrentOffset], InfoSize);
 
                 switch (FileInformationClass)
                 {
                     case FileDirectoryInformation:
-                        DirectoryBuffer = (PFILE_DIRECTORY_INFORMATION)Buffer;
-                        DirectoryBuffer->NextEntryOffset = 0;
+                        DirectoryBuffer = (PFILE_DIRECTORY_INFORMATION)&Buffer[CurrentOffset];
                         DirectoryBuffer->FileIndex = PipeIndex;
                         DirectoryBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         DirectoryBuffer->EndOfFile.QuadPart = PipeFcb->CurrentInstances;
@@ -192,8 +193,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         break;
 
                     case FileFullDirectoryInformation:
-                        FullDirBuffer = (PFILE_FULL_DIR_INFORMATION)Buffer;
-                        FullDirBuffer->NextEntryOffset = 0;
+                        FullDirBuffer = (PFILE_FULL_DIR_INFORMATION)&Buffer[CurrentOffset];
                         FullDirBuffer->FileIndex = PipeIndex;
                         FullDirBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         FullDirBuffer->EndOfFile.QuadPart = PipeFcb->CurrentInstances;
@@ -205,7 +205,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         break;
 
                     case FileBothDirectoryInformation:
-                        BothDirBuffer = (PFILE_BOTH_DIR_INFORMATION)Buffer;
+                        BothDirBuffer = (PFILE_BOTH_DIR_INFORMATION)&Buffer[CurrentOffset];
                         BothDirBuffer->NextEntryOffset = 0;
                         BothDirBuffer->FileIndex = PipeIndex;
                         BothDirBuffer->FileAttributes = FILE_ATTRIBUTE_NORMAL;
@@ -218,8 +218,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         break;
 
                     case FileNamesInformation:
-                        NamesBuffer = (PFILE_NAMES_INFORMATION)Buffer;
-                        NamesBuffer->NextEntryOffset = 0;
+                        NamesBuffer = (PFILE_NAMES_INFORMATION)&Buffer[CurrentOffset];
                         NamesBuffer->FileIndex = PipeIndex;
                         NamesBuffer->FileNameLength = NameLength;
                         RtlCopyMemory(NamesBuffer->FileName,
@@ -233,15 +232,33 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                         break;
                 }
 
-                *Size = InfoSize + NameLength;
+                DPRINT("CurrentOffset: %lu\n", CurrentOffset);
 
+                /* Store the current pipe index in the CCB */
                 Ccb->u.Directory.FileIndex = PipeIndex;
-                Found = TRUE;
 
-//                if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
-//                    return STATUS_SUCCESS;
+                /* Get the pointer to the previous entries NextEntryOffset */
+                NextEntryOffset = (PULONG)&Buffer[LastOffset];
 
-                break;
+                /* Set the previous entries NextEntryOffset */
+                *NextEntryOffset = CurrentOffset - LastOffset;
+
+                /* Return the used buffer size */
+                *Size = CurrentOffset + InfoSize + NameLength;
+
+                /* Leave, if there is no space left in the buffer */
+                if (Status == STATUS_BUFFER_OVERFLOW)
+                    return Status;
+
+                /* Leave, if we should return only one entry */
+                if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+                    return STATUS_SUCCESS;
+
+                /* Store the current offset for the next round */
+                LastOffset = CurrentOffset;
+
+                /* Set the offset for the next entry */
+                CurrentOffset += ROUND_UP(InfoSize + NameLength, sizeof(ULONG));
             }
 
             PipeIndex++;
@@ -250,7 +267,8 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
         CurrentEntry = CurrentEntry->Flink;
     }
 
-    if (Found == FALSE)
+    /* Return STATUS_NO_MORE_FILES if no matching pipe name was found */
+    if (CurrentOffset == 0)
         Status = STATUS_NO_MORE_FILES;
 
     return Status;

@@ -800,6 +800,7 @@ WdmAudResetStreamByLegacy(
 MMRESULT
 WdmAudQueryMixerInfoByLegacy(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD DeviceId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags)
@@ -819,6 +820,7 @@ WdmAudQueryMixerInfoByLegacy(
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceIndex = DeviceId;
     DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
     DeviceInfo.Flags = Flags;
 
