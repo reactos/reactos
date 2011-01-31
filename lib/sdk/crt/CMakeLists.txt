@@ -346,6 +346,7 @@ if(ARCH MATCHES i386)
         math/i386/floor_asm.s
         math/i386/floorf.S
         math/i386/ftol_asm.s
+        math/i386/ftol2_asm.s
         math/i386/log_asm.s
         math/i386/log10_asm.s
         math/i386/pow_asm.s
@@ -620,6 +621,7 @@ if(MSVC)
     list(APPEND MSVCSUP_SOURCE
         misc/fltused.c
         except/i386/chkstk_asm.s
+        math/i386/ci.c
         math/i386/ftol2_asm.S)
 
     add_library(msvcsup ${MSVCSUP_SOURCE})
