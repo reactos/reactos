@@ -11,6 +11,7 @@ list(APPEND SOURCE
     media.c
     query.c
     fmifs.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/fmifs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})

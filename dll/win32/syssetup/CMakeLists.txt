@@ -12,6 +12,7 @@ list(APPEND SOURCE
     logfile.c
     wizard.c
     syssetup.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
 
 add_library(syssetup SHARED ${SOURCE})

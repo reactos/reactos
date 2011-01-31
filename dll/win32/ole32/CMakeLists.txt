@@ -63,6 +63,7 @@ list(APPEND SOURCE
     usrmarshal.c
     ole32res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dcom_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ole32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
 
 add_library(ole32 SHARED ${SOURCE})

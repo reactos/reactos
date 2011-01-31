@@ -8,6 +8,7 @@ spec2def(icmp.dll icmp.spec)
 list(APPEND SOURCE
     icmp_main.c
     icmp.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/icmp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/icmp.def)
 
 add_library(icmp SHARED ${SOURCE})

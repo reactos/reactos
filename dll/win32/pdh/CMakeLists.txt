@@ -10,6 +10,7 @@ spec2def(pdh.dll pdh.spec)
 
 list(APPEND SOURCE
     pdh_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/pdh_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
 add_library(pdh SHARED ${SOURCE})

@@ -6,6 +6,7 @@ spec2def(url.dll url.spec)
 
 list(APPEND SOURCE
     url_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/url_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/url.def)
 
 add_library(url SHARED ${SOURCE})

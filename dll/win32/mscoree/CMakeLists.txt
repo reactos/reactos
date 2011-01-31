@@ -7,6 +7,7 @@ spec2def(mscoree.dll mscoree.spec)
 list(APPEND SOURCE
     corruntimehost.c
     mscoree_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mscoree_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mscoree.def)
 
 add_library(mscoree SHARED ${SOURCE})

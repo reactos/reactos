@@ -6,6 +6,7 @@ spec2def(cryptnet.dll cryptnet.spec)
 
 list(APPEND SOURCE
     cryptnet_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptnet_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptnet.def)
 
 add_library(cryptnet SHARED ${SOURCE})

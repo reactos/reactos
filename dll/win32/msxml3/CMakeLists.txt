@@ -49,6 +49,7 @@ list(APPEND SOURCE
     domimpl.c
     entityref.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
 add_library(msxml3 SHARED ${SOURCE})

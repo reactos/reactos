@@ -6,6 +6,7 @@ spec2def(wtsapi32.dll wtsapi32.spec)
 
 list(APPEND SOURCE
     wtsapi32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wtsapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wtsapi32.def)
 
 add_library(wtsapi32 SHARED ${SOURCE})

@@ -20,6 +20,7 @@ list(APPEND SOURCE
     resinfo_reactos.c
     route_reactos.c
     iphlpapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def)
 
 add_library(iphlpapi SHARED ${SOURCE})

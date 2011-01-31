@@ -11,8 +11,9 @@ spec2def(snmpapi.dll snmpapi.spec)
 list(APPEND SOURCE
     main.c
     snmpapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/snmpapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/snmpapi.def)
-    
+
 add_library(snmpapi SHARED ${SOURCE})
 
 set_module_type(snmpapi win32dll)

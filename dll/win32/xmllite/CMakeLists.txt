@@ -7,6 +7,7 @@ spec2def(xmllite.dll xmllite.spec)
 list(APPEND SOURCE
     reader.c
     xmllite_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)
 
 add_library(xmllite SHARED ${SOURCE})

@@ -13,6 +13,7 @@ list(APPEND SOURCE
     integrity.c
     modify.c
     imagehlp.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/imagehlp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imagehlp.def)
 
 add_library(imagehlp SHARED 

@@ -17,6 +17,7 @@ list(APPEND SOURCE
     protocol.c
     storage.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
 
 add_library(itss SHARED ${SOURCE})

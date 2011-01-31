@@ -8,6 +8,7 @@ list(APPEND SOURCE
     clictx.c
     resman.c
     authz.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/authz_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/authz.def)
 
 add_library(authz SHARED

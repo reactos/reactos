@@ -15,6 +15,7 @@ list(APPEND SOURCE
     localspl_main.c
     provider.c
     localspl.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/localspl_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/localspl.def)
 
 add_library(localspl SHARED ${SOURCE})

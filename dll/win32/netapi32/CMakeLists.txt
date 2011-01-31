@@ -17,6 +17,7 @@ list(APPEND SOURCE
     netbios.c
     share.c
     wksta.c
+    ${CMAKE_CURRENT_BINARY_DIR}/netapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
 
 add_library(netapi32 SHARED ${SOURCE})

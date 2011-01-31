@@ -6,6 +6,7 @@ spec2def(itircl.dll itircl.spec)
 
 list(APPEND SOURCE
     itircl_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/itircl_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itircl.def)
 
 add_library(itircl SHARED ${SOURCE})

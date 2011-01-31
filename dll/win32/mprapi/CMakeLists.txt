@@ -6,6 +6,7 @@ spec2def(mprapi.dll mprapi.spec)
 
 list(APPEND SOURCE
     mprapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mprapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mprapi.def)
 
 add_library(mprapi SHARED ${SOURCE})

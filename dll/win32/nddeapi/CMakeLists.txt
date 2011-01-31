@@ -6,6 +6,7 @@ spec2def(nddeapi.dll nddeapi.spec)
 
 list(APPEND SOURCE
     nddeapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/nddeapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/nddeapi.def)
 
 add_library(nddeapi SHARED ${SOURCE})

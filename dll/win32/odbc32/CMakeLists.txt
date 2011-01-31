@@ -8,6 +8,7 @@ spec2def(odbc32.dll odbc32.spec)
 
 list(APPEND SOURCE
     proxyodbc.c
+    ${CMAKE_CURRENT_BINARY_DIR}/odbc32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/odbc32.def)
 
 add_library(odbc32 SHARED ${SOURCE})

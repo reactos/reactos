@@ -9,6 +9,7 @@ spec2def(inetmib1.dll inetmib1.spec)
 
 list(APPEND SOURCE
     main.c 
+    ${CMAKE_CURRENT_BINARY_DIR}/inetmib1_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
 
 add_library(inetmib1 SHARED ${SOURCE})

@@ -19,6 +19,7 @@ list(APPEND SOURCE
     variant.c
     vartype.c
     oleaut32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

@@ -7,6 +7,7 @@ spec2def(spoolss.dll spoolss.spec)
 list(APPEND SOURCE
     spoolss_main.c
     router.c
+    ${CMAKE_CURRENT_BINARY_DIR}/spoolss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
 
 add_library(spoolss SHARED ${SOURCE})

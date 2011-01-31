@@ -8,6 +8,7 @@ spec2def(pidgen.dll pidgen.spec)
 list(APPEND SOURCE
     main.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/pidgen_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/pidgen.def)
 
 add_library(pidgen SHARED ${SOURCE})

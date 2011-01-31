@@ -41,6 +41,7 @@ list(APPEND SOURCE
     str.c
     crypt32.rc
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
 add_library(crypt32 SHARED ${SOURCE})

@@ -41,10 +41,10 @@ list(APPEND SOURCE
     service/sctrl.c
     token/privilege.c
     token/token.c
-    advapi32_stubs.c
     advapi32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
-    
+
 add_library(advapi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_advapi32.h.gch
     ${SOURCE})

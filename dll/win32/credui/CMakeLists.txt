@@ -10,6 +10,7 @@ spec2def(credui.dll credui.spec)
 list(APPEND SOURCE
     credui_main.c
     credui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/credui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/credui.def)
 
 add_library(credui SHARED ${SOURCE})

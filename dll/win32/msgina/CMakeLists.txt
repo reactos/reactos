@@ -13,6 +13,7 @@ list(APPEND SOURCE
     stubs.c
     tui.c
     msgina.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msgina_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msgina.def)
 
 add_library(msgina SHARED ${SOURCE})

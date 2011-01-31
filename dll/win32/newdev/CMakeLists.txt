@@ -8,6 +8,7 @@ list(APPEND SOURCE
     stubs.c
     wizard.c
     newdev.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/newdev_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
 
 add_library(newdev SHARED ${SOURCE})

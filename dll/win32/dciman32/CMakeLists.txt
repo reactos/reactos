@@ -9,6 +9,7 @@ spec2def(dciman32.dll dciman32.spec)
 
 list(APPEND SOURCE
     dciman_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dciman32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dciman32.def)
 
 add_library(dciman32 SHARED ${SOURCE})

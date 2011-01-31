@@ -13,6 +13,7 @@ spec2def(imm32.dll imm32.spec)
 list(APPEND SOURCE
     imm.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)
 
 add_library(imm32 SHARED ${SOURCE})

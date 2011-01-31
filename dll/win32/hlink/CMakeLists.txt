@@ -9,6 +9,7 @@ list(APPEND SOURCE
     extserv.c
     hlink_main.c
     link.c
+    ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
 
 add_library(hlink SHARED ${SOURCE})

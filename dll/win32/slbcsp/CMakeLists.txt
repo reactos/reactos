@@ -6,6 +6,7 @@ spec2def(slbcsp.dll slbcsp.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/slbcsp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/slbcsp.def)
 
 add_library(slbcsp SHARED ${SOURCE})

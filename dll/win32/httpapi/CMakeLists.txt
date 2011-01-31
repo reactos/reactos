@@ -7,6 +7,7 @@ spec2def(httpapi.dll httpapi.spec)
 
 list(APPEND SOURCE
     httpapi_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/httpapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/httpapi.def)
 
 add_library(httpapi SHARED ${SOURCE})

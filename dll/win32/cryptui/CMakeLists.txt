@@ -12,6 +12,7 @@ spec2def(cryptui.dll cryptui.spec)
 list(APPEND SOURCE
     main.c
     cryptui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui.def)
 
 add_library(cryptui SHARED ${SOURCE})

@@ -14,6 +14,7 @@ list(APPEND SOURCE
     util.c
     stubs.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mapi32.def)
 
 add_library(mapi32 SHARED ${SOURCE})

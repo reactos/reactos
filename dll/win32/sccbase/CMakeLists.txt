@@ -6,6 +6,7 @@ spec2def(sccbase.dll sccbase.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sccbase_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
 
 add_library(sccbase SHARED ${SOURCE})

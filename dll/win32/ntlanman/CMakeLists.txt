@@ -6,6 +6,7 @@ spec2def(ntlanman.dll ntlanman.spec)
 list(APPEND SOURCE
     ntlanman.c
     ntlanman.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntlanman_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntlanman.def)
 
 add_library(ntlanman SHARED ${SOURCE})

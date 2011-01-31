@@ -8,6 +8,7 @@ spec2def(oleacc.dll oleacc.spec)
 list(APPEND SOURCE
     main.c
     oleacc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/oleacc_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleacc.def)
 
 add_library(oleacc SHARED ${SOURCE})

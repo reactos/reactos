@@ -78,6 +78,7 @@ list(APPEND SOURCE
     txtrange.c
     view.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 add_library(mshtml SHARED ${SOURCE})

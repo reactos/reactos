@@ -9,6 +9,7 @@ list(APPEND SOURCE
     schannel_main.c
     usermode.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/schannel_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/schannel.def)
 
 add_library(schannel SHARED ${SOURCE})

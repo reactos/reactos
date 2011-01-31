@@ -8,6 +8,7 @@ spec2def(bcrypt.dll bcrypt.spec)
 list(APPEND SOURCE
     bcrypt_main.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/bcrypt_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/bcrypt.def)
 
 add_library(bcrypt SHARED ${SOURCE})

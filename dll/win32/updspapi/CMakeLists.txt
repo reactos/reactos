@@ -6,6 +6,7 @@ spec2def(updspapi.dll updspapi.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/updspapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/updspapi.def)
 
 add_library(updspapi SHARED ${SOURCE})

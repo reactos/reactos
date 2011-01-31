@@ -17,6 +17,7 @@ list(APPEND SOURCE
     time.c
     winmm.c
     winmm_res.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winmm_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
 
 add_library(winmm SHARED ${SOURCE})

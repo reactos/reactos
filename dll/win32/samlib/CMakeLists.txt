@@ -9,6 +9,7 @@ list(APPEND SOURCE
     dllmain.c
     samlib.c
     samlib.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/samlib_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)
 
 add_library(samlib SHARED ${SOURCE})

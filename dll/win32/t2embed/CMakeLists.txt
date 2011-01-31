@@ -8,6 +8,7 @@ spec2def(t2embed.dll t2embed.spec)
 list(APPEND SOURCE
     t2embed.c
     t2embed.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/t2embed_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/t2embed.def)
 
 add_library(t2embed SHARED ${SOURCE})

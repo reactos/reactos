@@ -20,6 +20,7 @@ list(APPEND SOURCE
     dhcp/util.c
     dhcpcsvc.c
     dhcpcsvc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
 
 add_library(dhcpcsvc SHARED

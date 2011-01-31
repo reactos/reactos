@@ -7,6 +7,7 @@ list(APPEND SOURCE
     autodial.c
     init.c
     winsock.c
+    ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp.def)
 
 add_library(rasadhlp SHARED ${SOURCE})

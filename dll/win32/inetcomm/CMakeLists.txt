@@ -17,6 +17,7 @@ list(APPEND SOURCE
     pop3transport.c
     regsvr.c
     smtptransport.c
+    ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
 
 add_library(inetcomm SHARED ${SOURCE})

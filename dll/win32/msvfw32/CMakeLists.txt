@@ -12,6 +12,7 @@ list(APPEND SOURCE
     msvideo_main.c
     drawdib.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msvfw32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvfw32.def)
 
 add_library(msvfw32 SHARED ${SOURCE})

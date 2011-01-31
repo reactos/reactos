@@ -6,6 +6,7 @@ spec2def(security.dll security.spec)
 
 list(APPEND SOURCE
     security.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/security_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/security.def)
 
 add_library(security SHARED ${SOURCE})

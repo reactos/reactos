@@ -16,6 +16,7 @@ list(APPEND SOURCE
     msacm32_main.c
     pcmconverter.c
     stream.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msacm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
 
 add_library(msacm32 SHARED ${SOURCE})

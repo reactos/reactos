@@ -6,6 +6,7 @@ spec2def(resutils.dll resutils.spec)
 
 list(APPEND SOURCE
     resutils.c
+    ${CMAKE_CURRENT_BINARY_DIR}/resutils_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/resutils.def)
 
 add_library(resutils SHARED ${SOURCE})

@@ -35,6 +35,7 @@ list(APPEND SOURCE
     tiffformat.c
     ungif.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
 add_library(windowscodecs SHARED ${SOURCE})

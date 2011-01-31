@@ -4,6 +4,7 @@ spec2def(rasdlg.dll rasdlg.spec)
 list(APPEND SOURCE
     rasdlg.c
     rasdlg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rasdlg_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rasdlg.def)
 
 add_library(rasdlg SHARED ${SOURCE})

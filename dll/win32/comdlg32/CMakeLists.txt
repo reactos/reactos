@@ -20,6 +20,7 @@ list(APPEND SOURCE
     fontdlg.c
     printdlg.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/comdlg32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
 
 add_library(comdlg32 SHARED ${SOURCE})

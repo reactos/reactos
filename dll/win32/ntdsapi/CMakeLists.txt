@@ -6,6 +6,7 @@ spec2def(ntdsapi.dll ntdsapi.spec)
 
 list(APPEND SOURCE
     ntdsapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
 
 add_library(ntdsapi SHARED ${SOURCE})

@@ -12,6 +12,7 @@ list(APPEND SOURCE
     setup.c
     userenv.c
     userenv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/userenv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/userenv.def)
 
 add_library(userenv SHARED

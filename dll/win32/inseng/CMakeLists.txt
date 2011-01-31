@@ -11,6 +11,7 @@ spec2def(inseng.dll inseng.spec)
 list(APPEND SOURCE
     inseng_main.c
     regsvr.c
+    ${CMAKE_CURRENT_BINARY_DIR}/inseng_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
 
 add_library(inseng SHARED ${SOURCE})

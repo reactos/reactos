@@ -64,8 +64,9 @@ list(APPEND SOURCE
     windows/window.c
     windows/winpos.c
     user32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
-    
+
 add_library(user32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch
     ${SOURCE})
@@ -77,7 +78,7 @@ target_link_libraries(user32
     wine
     win32ksys
     ${PSEH_LIB})
-                      
+
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
 add_importlibs(user32 gdi32 advapi32 imm32 msvcrt kernel32 ntdll)
 add_cab_target(user32 1)

@@ -25,6 +25,7 @@ list(APPEND SOURCE
     regsvr.c
     threadmgr.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
 
 add_library(msctf SHARED ${SOURCE})

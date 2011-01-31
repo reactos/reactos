@@ -7,6 +7,7 @@ spec2def(rasapi32.dll rasapi32.spec)
 
 list(APPEND SOURCE
     rasapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/rasapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rasapi32.def)
 
 add_library(rasapi32 SHARED ${SOURCE})

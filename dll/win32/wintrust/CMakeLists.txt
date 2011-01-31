@@ -12,6 +12,7 @@ list(APPEND SOURCE
     asn.c
     softpub.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/wintrust_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
 
 add_library(wintrust SHARED ${SOURCE})

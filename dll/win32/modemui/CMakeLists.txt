@@ -6,6 +6,7 @@ spec2def(modemui.dll modemui.spec)
 list(APPEND SOURCE
     modemui.c
     modemui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/modemui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/modemui.def)
 
 add_library(modemui SHARED ${SOURCE})

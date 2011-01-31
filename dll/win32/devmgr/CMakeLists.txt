@@ -10,6 +10,7 @@ list(APPEND SOURCE
     hwpage.c
     misc.c
     stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/devmgr_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
 
 add_library(devmgr SHARED ${CMAKE_CURRENT_BINARY_DIR}/devmgr_precomp.h.gch ${SOURCE})

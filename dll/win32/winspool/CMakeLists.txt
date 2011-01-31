@@ -11,6 +11,7 @@ list(APPEND SOURCE
     info.c
     stubs.c
     winspool.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winspool_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool.def)
 
 add_library(winspool SHARED ${SOURCE})

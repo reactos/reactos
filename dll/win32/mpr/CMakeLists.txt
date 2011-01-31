@@ -17,6 +17,7 @@ list(APPEND SOURCE
     pwcache.c
     wnet.c
     mpr.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mpr_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)
 
 add_library(mpr SHARED ${SOURCE})

@@ -6,6 +6,7 @@ spec2def(traffic.dll traffic.spec)
 
 list(APPEND SOURCE
     traffic_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/traffic_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/traffic.def)
 
 add_library(traffic SHARED ${SOURCE})

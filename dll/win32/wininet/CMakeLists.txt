@@ -23,6 +23,7 @@ list(APPEND SOURCE
     wininet_main.c
     rsrc.rc
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/wininet_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
 
 add_library(wininet SHARED ${SOURCE})

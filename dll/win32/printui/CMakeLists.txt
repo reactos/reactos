@@ -8,6 +8,7 @@ spec2def(printui.dll printui.spec)
 list(APPEND SOURCE
     printui.c
     printui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/printui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/printui.def)
 
 add_library(printui SHARED ${SOURCE})

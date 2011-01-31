@@ -311,7 +311,6 @@ macro(spec2def _dllname _spec_file)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
 endmacro()
 
 macro(macro_mc FILE)

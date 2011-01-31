@@ -6,6 +6,7 @@ spec2def(mssign32.dll mssign32.spec)
 
 list(APPEND SOURCE
     mssign32_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mssign32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mssign32.def)
 
 add_library(mssign32 SHARED ${SOURCE})

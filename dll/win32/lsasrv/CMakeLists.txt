@@ -16,6 +16,7 @@ list(APPEND SOURCE
     privileges.c
     sids.c
     lsasrv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def)
 
 add_library(lsasrv SHARED ${SOURCE})

@@ -10,7 +10,7 @@ add_definitions(
 
 spec2def(dnsapi.dll dnsapi.spec)
 
-list(APPEND SOURCE 
+list(APPEND SOURCE
     dnsapi/adns.c
     dnsapi/context.c
     dnsapi/memory.c
@@ -28,6 +28,9 @@ add_library(dnsapi SHARED
 set_entrypoint(dnsapi 0)
 
 target_link_libraries(dnsapi adns)
+if(MSVC)
+    target_link_libraries(dnsapi msvcsup)
+endif()
 
 add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_pch(dnsapi ${CMAKE_CURRENT_SOURCE_DIR}/dnsapi/precomp.h ${SOURCE})

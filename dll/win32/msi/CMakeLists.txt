@@ -56,6 +56,7 @@ list(APPEND SOURCE
     where.c
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
 
 add_library(msi SHARED ${SOURCE})

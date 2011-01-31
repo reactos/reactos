@@ -27,6 +27,7 @@ list(APPEND SOURCE
     view.c
     webbrowser.c
     shdocvw.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
 add_library(shdocvw SHARED ${SOURCE})

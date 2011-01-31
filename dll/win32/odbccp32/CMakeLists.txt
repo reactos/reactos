@@ -9,6 +9,7 @@ spec2def(odbccp32.dll odbccp32.spec)
 
 list(APPEND SOURCE
     odbccp32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/odbccp32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/odbccp32.def)
 
 add_library(odbccp32 SHARED ${SOURCE})

@@ -7,6 +7,7 @@ spec2def(olecli32.dll olecli32.spec)
 
 list(APPEND SOURCE
     olecli_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/olecli32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32.def)
 
 add_library(olecli32 SHARED ${SOURCE})

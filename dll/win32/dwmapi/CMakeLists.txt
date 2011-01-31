@@ -10,6 +10,7 @@ spec2def(dwmapi.dll dwmapi.spec)
 list(APPEND SOURCE
     dwmapi_main.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dwmapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dwmapi.def)
 
 add_library(dwmapi SHARED ${SOURCE})

@@ -14,6 +14,7 @@ list(APPEND SOURCE
     connectmanager.c
     lanconnectui.c
     lanstatusui.c
+    ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
 add_library(netshell SHARED

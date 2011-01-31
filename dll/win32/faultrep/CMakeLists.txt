@@ -9,6 +9,7 @@ spec2def(faultrep.dll faultrep.spec)
 
 list(APPEND SOURCE
     faultrep.c
+    ${CMAKE_CURRENT_BINARY_DIR}/faultrep_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/faultrep.def)
     
 add_library(faultrep SHARED ${SOURCE})

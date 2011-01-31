@@ -8,6 +8,7 @@ spec2def(clusapi.dll clusapi.spec)
 
 list(APPEND SOURCE
     clusapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/clusapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/clusapi.def)
 
 add_library(clusapi SHARED ${SOURCE})

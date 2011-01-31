@@ -33,6 +33,7 @@ list(APPEND SOURCE
     stubs.c
     rpc.c
     setupapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
 
 add_library(setupapi SHARED ${SOURCE})

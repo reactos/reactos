@@ -34,10 +34,11 @@ list(APPEND SOURCE
     urlmon_main.c
     usrmarshal.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/urlmon_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
 add_library(urlmon SHARED ${SOURCE})
-    
+
 
 set_module_type(urlmon win32dll)
 

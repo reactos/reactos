@@ -6,6 +6,7 @@ spec2def(mssip32.dll mssip32.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mssip32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def)
 
 add_library(mssip32 SHARED ${SOURCE})

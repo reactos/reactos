@@ -7,6 +7,7 @@ spec2def(ntprint.dll ntprint.spec)
 list(APPEND SOURCE
     ntprint.c
     ntprint.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntprint_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntprint.def)
 
 add_library(ntprint SHARED ${SOURCE})

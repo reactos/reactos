@@ -9,6 +9,7 @@ spec2def(cryptdlg.dll cryptdlg.spec)
 list(APPEND SOURCE
     main.c
     cryptdlg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg.def)
 
 add_library(cryptdlg SHARED ${SOURCE})

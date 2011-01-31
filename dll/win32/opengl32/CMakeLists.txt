@@ -10,6 +10,7 @@ list(APPEND SOURCE
     gl.c
     opengl32.c
     wgl.c
+    ${CMAKE_CURRENT_BINARY_DIR}/opengl32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/opengl32.def)
 
 add_library(opengl32 SHARED

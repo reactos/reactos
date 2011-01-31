@@ -6,6 +6,7 @@ spec2def(query.dll query.spec)
 
 list(APPEND SOURCE
     query_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/query_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/query.def)
 
 add_library(query SHARED ${SOURCE})

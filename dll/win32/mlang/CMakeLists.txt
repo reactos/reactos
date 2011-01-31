@@ -11,6 +11,7 @@ spec2def(mlang.dll mlang.spec)
 list(APPEND SOURCE
     mlang.c
     regsvr.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mlang_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mlang.def)
 
 add_library(mlang SHARED ${SOURCE})

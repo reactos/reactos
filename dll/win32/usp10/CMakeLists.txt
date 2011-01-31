@@ -10,6 +10,7 @@ list(APPEND SOURCE
     mirror.c
     shape.c
     shaping.c
+    ${CMAKE_CURRENT_BINARY_DIR}/usp10_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/usp10.def)
 
 add_library(usp10 SHARED ${SOURCE})

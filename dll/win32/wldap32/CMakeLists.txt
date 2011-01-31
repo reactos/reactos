@@ -27,6 +27,7 @@ list(APPEND SOURCE
     search.c
     value.c
     wldap32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/wldap32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def)
 
 add_library(wldap32 SHARED ${SOURCE})

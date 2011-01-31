@@ -21,6 +21,7 @@ list(APPEND SOURCE
     task_trigger.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_local_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mstask_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)
 
 add_library(mstask SHARED ${SOURCE})

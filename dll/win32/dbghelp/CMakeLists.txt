@@ -42,6 +42,7 @@ list(APPEND SOURCE
     symbol.c
     type.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
 add_library(dbghelp SHARED ${SOURCE})

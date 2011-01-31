@@ -4,6 +4,7 @@ spec2def(shimgvw.dll shimgvw.spec)
 list(APPEND SOURCE
     shimgvw.c
     shimgvw.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shimgvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
 
 add_library(shimgvw SHARED ${SOURCE})

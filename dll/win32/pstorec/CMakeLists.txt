@@ -10,6 +10,7 @@ spec2def(pstorec.dll pstorec.spec)
 list(APPEND SOURCE
     pstorec.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/pstorec_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
 
 add_library(pstorec SHARED ${SOURCE})

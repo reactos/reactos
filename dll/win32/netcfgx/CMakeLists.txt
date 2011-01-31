@@ -11,6 +11,7 @@ list(APPEND SOURCE
     inetcfgcomp_iface.c
     tcpipconf_notify.c
     netcfgx.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/netcfgx_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netcfgx.def)
 
 add_library(netcfgx SHARED ${SOURCE})

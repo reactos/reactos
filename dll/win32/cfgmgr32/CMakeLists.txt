@@ -3,6 +3,7 @@ spec2def(cfgmgr32.dll cfgmgr32.spec)
 
 list(APPEND SOURCE 
     cfgmgr32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32.def)
 
 add_library(cfgmgr32 SHARED ${SOURCE})

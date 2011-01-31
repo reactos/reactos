@@ -9,6 +9,7 @@ spec2def(msftedit.dll msftedit.spec)
 list(APPEND SOURCE
     msftedit_main.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msftedit_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msftedit.def)
 
 add_library(msftedit SHARED ${SOURCE})

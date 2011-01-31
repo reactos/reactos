@@ -20,6 +20,7 @@ list(APPEND SOURCE
     rpc_server.c
     rpc_transport.c
     unix_func.c
+    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

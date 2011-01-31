@@ -5,6 +5,7 @@ spec2def(wlanapi.dll wlanapi.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wlanapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def)
 
 add_library(wlanapi SHARED ${SOURCE})

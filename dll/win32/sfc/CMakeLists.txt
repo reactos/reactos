@@ -3,6 +3,7 @@ spec2def(sfc.dll sfc.spec)
 
 list(APPEND SOURCE
     sfc.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sfc_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sfc.def)
 
 add_library(sfc SHARED

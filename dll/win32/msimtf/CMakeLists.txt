@@ -10,6 +10,7 @@ list(APPEND SOURCE
     activeimmapp.c
     main.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msimtf_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msimtf.def)
 
 add_library(msimtf SHARED ${SOURCE})

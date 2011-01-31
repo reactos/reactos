@@ -6,6 +6,7 @@ spec2def(msisip.dll msisip.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msisip_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msisip.def)
 
 add_library(msisip SHARED ${SOURCE})

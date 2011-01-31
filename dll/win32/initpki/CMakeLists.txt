@@ -7,6 +7,7 @@ spec2def(initpki.dll initpki.spec)
 
 list(APPEND SOURCE
     main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/initpki_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/initpki.def)
 
 add_library(initpki SHARED ${SOURCE})

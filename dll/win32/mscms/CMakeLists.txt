@@ -14,6 +14,7 @@ list(APPEND SOURCE
     stub.c
     transform.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mscms_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mscms.def)
 
 add_library(mscms SHARED ${SOURCE})

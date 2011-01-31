@@ -72,6 +72,7 @@ list(APPEND SOURCE
     folder_options.c
     shell32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shobjidl_local_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 add_pch(shell32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
@@ -84,7 +85,7 @@ target_link_libraries(shell32
     wine
     uuid
     recyclebin)
-    
+
 add_importlibs(shell32
     advapi32
     gdi32

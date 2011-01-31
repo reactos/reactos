@@ -24,6 +24,7 @@ list(APPEND SOURCE
     pen.c
     region.c
     stringformat.c
+    ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
 add_library(gdiplus SHARED ${SOURCE})

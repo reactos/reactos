@@ -23,6 +23,7 @@ list(APPEND SOURCE
     url.c
     wsprintf.c
     shlwapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
 add_library(shlwapi SHARED ${SOURCE})

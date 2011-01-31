@@ -6,6 +6,7 @@ spec2def(olesvr32.dll olesvr32.spec)
 
 list(APPEND SOURCE
     olesvr_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/olesvr32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olesvr32.def)
 
 add_library(olesvr32 SHARED ${SOURCE})

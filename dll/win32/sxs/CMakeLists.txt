@@ -6,6 +6,7 @@ spec2def(sxs.dll sxs.spec)
 
 list(APPEND SOURCE
     sxs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sxs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)
 
 add_library(sxs SHARED ${SOURCE})

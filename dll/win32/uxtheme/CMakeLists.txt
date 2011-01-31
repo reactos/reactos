@@ -16,6 +16,7 @@ list(APPEND SOURCE
     system.c
     uxini.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
 
 add_library(uxtheme SHARED ${SOURCE})
