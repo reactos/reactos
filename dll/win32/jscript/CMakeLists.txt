@@ -9,7 +9,9 @@ add_definitions(
     -D__WINESRC__
     -D_USE_MATH_DEFINES
     -D_DLL
-    -D__USE_CRTIMP)
+    -D__USE_CRTIMP
+    -Disinf=!_finite
+    -Disnan=_isnan)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -43,6 +45,9 @@ add_library(jscript SHARED ${SOURCE})
 set_module_type(jscript win32dll)
 
 target_link_libraries(jscript wine)
+if(MSVC)
+    target_link_libraries(jscript uuid)
+endif()
 
 add_importlibs(jscript
     msvcrt
