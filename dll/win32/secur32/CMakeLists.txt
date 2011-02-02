@@ -9,6 +9,7 @@ list(APPEND SOURCE
     secext.c
     sspi.c
     secur32.rc
+    stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/secur32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/secur32.def
 )
