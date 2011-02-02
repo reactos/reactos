@@ -64,7 +64,6 @@ list(APPEND SOURCE
     windows/window.c
     windows/winpos.c
     user32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
 add_library(user32 SHARED

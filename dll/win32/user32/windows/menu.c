@@ -777,7 +777,7 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
         mis.itemWidth  = 0;
         SendMessageW( hwndOwner, WM_MEASUREITEM, 0, (LPARAM)&mis );
         /* Tests reveal that Windows ( Win95 thru WinXP) adds twice the average
-         * width of a menufont character to the width of an owner-drawn menu. 
+         * width of a menufont character to the width of an owner-drawn menu.
          */
         lpitem->Rect.right += mis.itemWidth + 2 * MenuCharSize.cx;
 
@@ -857,7 +857,7 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
         }
         if (menuBar) {
             txtheight = DrawTextW( hdc, lpitem->dwTypeData, -1, &rc,
-                    DT_SINGLELINE|DT_CALCRECT); 
+                    DT_SINGLELINE|DT_CALCRECT);
             lpitem->Rect.right  += rc.right - rc.left;
             itemheight = max( max( itemheight, txtheight),
                     GetSystemMetrics( SM_CYMENU) - 1);
@@ -1159,7 +1159,7 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
 
     SystemParametersInfoW (SPI_GETFLATMENU, 0, &flat_menu, 0);
     bkgnd = (menuBar && flat_menu) ? COLOR_MENUBAR : COLOR_MENU;
-  
+
     /* Setup colors */
 
     if (lpitem->fState & MF_HILITE)
@@ -1319,7 +1319,7 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
          * Custom checkmark bitmaps are monochrome but not always 1bpp.
          */
         if( !(MenuInfo->dwStyle & MNS_NOCHECK)) {
-            bm = (lpitem->fState & MF_CHECKED) ? lpitem->hbmpChecked : 
+            bm = (lpitem->fState & MF_CHECKED) ? lpitem->hbmpChecked :
                 lpitem->hbmpUnchecked;
             if (bm)  /* we have a custom bitmap */
             {
@@ -1490,7 +1490,7 @@ static void FASTCALL MenuDrawPopupMenu(HWND hwnd, HDC hdc, HMENU hmenu )
             if (MenuGetRosMenuInfo(&MenuInfo, hmenu) && MenuInfo.MenuItemCount)
             {
                 UINT u;
-                
+
 				MenuInitRosMenuItemInfo(&ItemInfo);
 
                 for (u = 0; u < MenuInfo.MenuItemCount; u++)
@@ -1855,7 +1855,7 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
       break;
 
     case MM_GETMENUHANDLE:
-    case MN_GETHMENU: 
+    case MN_GETHMENU:
       return GetWindowLongPtrA(Wnd, 0);
 
     default:
@@ -3480,7 +3480,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT wFlags)
 {
     ROSMENUINFO MenuInfo;
-    
+
     TRACE("hwnd=%p hmenu=%p\n", hWnd, hMenu);
 
     HideCaret(0);
@@ -3651,7 +3651,7 @@ BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
     BOOL ret = FALSE;
     ROSMENUINFO MenuInfo;
 
-    if (!IsMenu(Menu))    
+    if (!IsMenu(Menu))
     {
       SetLastError( ERROR_INVALID_MENU_HANDLE );
       return FALSE;
@@ -3838,10 +3838,10 @@ NTSTATUS WINAPI
 User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PLOADMENU_CALLBACK_ARGUMENTS Common;
-  LRESULT Result;  
+  LRESULT Result;
 
   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
-  
+
   Result = (LRESULT)LoadMenuW( Common->hModule,
                                IS_INTRESOURCE(Common->MenuName[0]) ?
                                   MAKEINTRESOURCE(Common->MenuName[0]) :
@@ -4122,25 +4122,6 @@ EndMenu(VOID)
   return TRUE;
 }
 
-// So this one maybe one day it will be a callback!
-BOOL WINAPI HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
-                                UINT wHilite )
-{
-    ROSMENUINFO MenuInfo;
-    ROSMENUITEMINFO mii;
-    TRACE("(%p, %p, %04x, %04x);\n", hWnd, hMenu, wItemID, wHilite);
-    if (!hWnd)
-    {
-       SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-       return FALSE;
-    }
-    if (!NtUserMenuItemInfo(hMenu, wItemID, wHilite, &mii, FALSE)) return FALSE;
-    if (!NtUserMenuInfo(hMenu, &MenuInfo, FALSE)) return FALSE;
-    if (MenuInfo.FocusedItem == wItemID) return TRUE;
-    MenuHideSubPopups( hWnd, &MenuInfo, FALSE, 0 );
-    MenuSelectItem( hWnd, &MenuInfo, wItemID, TRUE, 0 );
-    return TRUE;
-}
 
 /*
  * @implemented

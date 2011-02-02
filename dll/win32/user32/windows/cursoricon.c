@@ -1245,19 +1245,6 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 }
 
 /***********************************************************************
- *		SetCursor (USER32.@)
- *
- * Set the cursor shape.
- *
- * RETURNS
- *	A handle to the previous cursor shape.
- */
-HCURSOR WINAPI /*DECLSPEC_HOTPATCH*/ SetCursor( HCURSOR hCursor /* [in] Handle of cursor to show */ )
-{
-    return NtUserSetCursor(hCursor);
-}
-
-/***********************************************************************
  *		ShowCursor (USER32.@)
  */
 INT WINAPI /*DECLSPEC_HOTPATCH*/ ShowCursor( BOOL bShow )
@@ -1278,23 +1265,6 @@ HCURSOR WINAPI GetCursor(void)
         return (HCURSOR)0;
 }
 
-
-/***********************************************************************
- *		ClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ ClipCursor( const RECT *rect )
-{
-    return NtUserClipCursor((RECT *)rect);
-}
-
-
-/***********************************************************************
- *		GetClipCursor (USER32.@)
- */
-BOOL WINAPI /*DECLSPEC_HOTPATCH*/ GetClipCursor( RECT *rect )
-{
-    return NtUserGetClipCursor(rect);
-}
 
 
 /***********************************************************************
@@ -1504,7 +1474,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 				return NULL;
 			}
         }
-        else 
+        else
 		{
 			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
 			if(!mask)
@@ -1775,7 +1745,7 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
         if (is_dib_monochrome(fix_info))
             hbitmap = CreateBitmap(new_width, new_height, 1, 1, NULL);
         else
-            hbitmap = CreateCompatibleBitmap(screen_dc, new_width, new_height);        
+            hbitmap = CreateCompatibleBitmap(screen_dc, new_width, new_height);
     }
 
     orig_bm = SelectObject(screen_mem_dc, hbitmap);
@@ -1985,7 +1955,7 @@ HANDLE WINAPI CopyImage( HANDLE hnd, UINT type, INT desiredx,
                     {
                         /* Look if the colors of the DIB are black and white */
 
-                        monochrome = 
+                        monochrome =
                               (bi->bmiColors[0].rgbRed == 0xff
                             && bi->bmiColors[0].rgbGreen == 0xff
                             && bi->bmiColors[0].rgbBlue == 0xff
