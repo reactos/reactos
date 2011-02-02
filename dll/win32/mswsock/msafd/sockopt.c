@@ -213,7 +213,8 @@ WSPIoctl(IN SOCKET Handle,
     PSOCKET_INFORMATION Socket;
     INT ErrorCode;
     PWINSOCK_TEB_DATA ThreadData;
-	BOOLEAN Blocking, NeedsCompletion;
+	BOOLEAN Blocking;
+	BOOL NeedsCompletion;
 	
     /* Enter prolog */
     ErrorCode = SockEnterApiFast(&ThreadData);
@@ -294,7 +295,7 @@ WSPIoctl(IN SOCKET Handle,
 													 lpcbBytesReturned,
 													 lpOverlapped,
 													 lpCompletionRoutine,
-													 (LPBOOL)&NeedsCompletion);
+													 &NeedsCompletion);
 			break;
     }
 	
