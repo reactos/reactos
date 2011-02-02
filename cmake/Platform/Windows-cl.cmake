@@ -44,7 +44,7 @@ IF(CMAKE_USE_WDK_ENV)
                    ${KMDF_LIB_PATH}
                    ${MFC_LIB_PATH}
                    ${SDK_LIB_PATH})
-  
+
   # Add environment variables
   IF(NOT CMAKE_CROSSCOMPILING)
     SET(ENV{INCLUDE} "$ENV{CRT_INC_PATH};$ENV{SDK_INC_PATH};$ENV{SDK_INC_PATH}\\crt\\stl60")
@@ -68,7 +68,7 @@ IF(CMAKE_GENERATOR MATCHES "Visual Studio 6")
 ENDIF(CMAKE_GENERATOR MATCHES "Visual Studio 6")
 IF(NOT CMAKE_NO_BUILD_TYPE AND CMAKE_GENERATOR MATCHES "Visual Studio")
   SET (CMAKE_NO_BUILD_TYPE 1)
-  SET (CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING 
+  SET (CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING
      "Semicolon separated list of supported configuration types, only supports Debug, Release, MinSizeRel, and RelWithDebInfo, anything else will be ignored.")
   MARK_AS_ADVANCED(CMAKE_CONFIGURATION_TYPES)
 ENDIF(NOT CMAKE_NO_BUILD_TYPE AND CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -102,13 +102,13 @@ IF(CMAKE_GENERATOR MATCHES "Makefiles")
     IF (NOT CMAKE_C_COMPILER)
       SET(CMAKE_TEST_COMPILER ${CMAKE_CXX_COMPILER})
     ENDIF(NOT CMAKE_C_COMPILER)
-    EXEC_PROGRAM(${CMAKE_TEST_COMPILER} 
-      ARGS /nologo -EP \"${testNmakeCLVersionFile}\" 
-      OUTPUT_VARIABLE CMAKE_COMPILER_OUTPUT 
+    EXEC_PROGRAM(${CMAKE_TEST_COMPILER}
+      ARGS /nologo -EP \"${testNmakeCLVersionFile}\"
+      OUTPUT_VARIABLE CMAKE_COMPILER_OUTPUT
       RETURN_VALUE CMAKE_COMPILER_RETURN
       )
     IF(NOT CMAKE_COMPILER_RETURN)
-      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log 
+      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
         "Determining the version of compiler passed with the following output:\n"
         "${CMAKE_COMPILER_OUTPUT}\n\n")
       STRING(REGEX REPLACE "\n" " " compilerVersion "${CMAKE_COMPILER_OUTPUT}")
@@ -145,7 +145,7 @@ IF(CMAKE_GENERATOR MATCHES "Makefiles")
       SET(MSVC_VERSION "${compilerVersion}")
     ELSE(NOT CMAKE_COMPILER_RETURN)
       MESSAGE(STATUS "Check for CL compiler version - failed")
-      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log 
+      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
         "Determining the version of compiler failed with the following output:\n"
         "${CMAKE_COMPILER_OUTPUT}\n\n")
     ENDIF(NOT CMAKE_COMPILER_RETURN)
@@ -160,17 +160,17 @@ IF(CMAKE_GENERATOR MATCHES "Makefiles")
     EXEC_PROGRAM(${CMAKE_TEST_COMPILER} ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp2
       ARGS /nologo /EHsc
       \"${testForFreeVCFile}\"
-      OUTPUT_VARIABLE CMAKE_COMPILER_OUTPUT 
+      OUTPUT_VARIABLE CMAKE_COMPILER_OUTPUT
       RETURN_VALUE CMAKE_COMPILER_RETURN
       )
     IF(CMAKE_COMPILER_RETURN)
-      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log 
+      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
         "Determining if this is a free VC compiler failed with the following output:\n"
         "${CMAKE_COMPILER_OUTPUT}\n\n")
-      MESSAGE(STATUS "Check if this is a free VC compiler - yes1")
+      MESSAGE(STATUS "Check if this is a free VC compiler - yes")
       SET(CMAKE_USING_VC_FREE_TOOLS 1)
     ELSE(CMAKE_COMPILER_RETURN)
-      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log 
+      FILE(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeOutput.log
         "Determining if this is a free VC compiler passed with the following output:\n"
         "${CMAKE_COMPILER_OUTPUT}\n\n")
       MESSAGE(STATUS "Check if this is a free VC compiler - no")
@@ -301,11 +301,11 @@ SET (CMAKE_MODULE_LINKER_FLAGS_MINSIZEREL_INIT ${CMAKE_EXE_LINKER_FLAGS_MINSIZER
 
 # save computed information for this platform
 IF(NOT EXISTS "${CMAKE_PLATFORM_ROOT_BIN}/CMakeCPlatform.cmake")
-  CONFIGURE_FILE(${CMAKE_ROOT}/Modules/Platform/Windows-cl.cmake.in 
+  CONFIGURE_FILE(${CMAKE_ROOT}/Modules/Platform/Windows-cl.cmake.in
     ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeCPlatform.cmake IMMEDIATE)
 ENDIF(NOT EXISTS "${CMAKE_PLATFORM_ROOT_BIN}/CMakeCPlatform.cmake")
 
 IF(NOT EXISTS "${CMAKE_PLATFORM_ROOT_BIN}/CMakeCXXPlatform.cmake")
-  CONFIGURE_FILE(${CMAKE_ROOT}/Modules/Platform/Windows-cl.cmake.in 
+  CONFIGURE_FILE(${CMAKE_ROOT}/Modules/Platform/Windows-cl.cmake.in
                ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeCXXPlatform.cmake IMMEDIATE)
 ENDIF(NOT EXISTS "${CMAKE_PLATFORM_ROOT_BIN}/CMakeCXXPlatform.cmake")
