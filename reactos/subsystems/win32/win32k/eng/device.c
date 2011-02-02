@@ -534,6 +534,7 @@ IntCreatePrimarySurface()
     SurfaceRect.left = SurfaceRect.top = 0;
     SurfaceRect.right = SurfObj->sizlBitmap.cx;
     SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
+    SwmUpdateRootWindow(SurfObj);
     //EngEraseSurface(SurfObj, &SurfaceRect, 0);
 
     /* Give the PDEV a MovePointer function */
@@ -552,6 +553,7 @@ IntCreatePrimarySurface()
                         (SurfaceRect.bottom - SurfaceRect.top) / 2);
 
     EngUnlockSurface(SurfObj);
+    CsrNotifyShowDesktop(NULL, SurfSize.cx, SurfSize.cy);
 
     // Init Primary Displays Device Capabilities.
     //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);

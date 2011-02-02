@@ -15,7 +15,7 @@ typedef struct _SWM_WINDOW
 extern SWM_WINDOW SwmRoot;
 
 VOID NTAPI SwmInitialize();
-VOID NTAPI GrContextInit();
+VOID NTAPI SwmUpdateRootWindow(SURFOBJ *SurfObj);
 PSWM_WINDOW NTAPI SwmFindByHwnd(HWND hWnd);
 VOID NTAPI SwmAcquire(VOID);
 VOID NTAPI SwmRelease(VOID);

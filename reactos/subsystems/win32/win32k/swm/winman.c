@@ -932,6 +932,21 @@ SwmGetWindowFromPoint(LONG x, LONG y)
 
 VOID
 NTAPI
+SwmUpdateRootWindow(SURFOBJ *SurfObj)
+{
+    /* Initialize a root window */
+    SwmRoot.Window.left = 0;
+    SwmRoot.Window.top = 0;
+    SwmRoot.Window.right = SurfObj->sizlBitmap.cx;
+    SwmRoot.Window.bottom = SurfObj->sizlBitmap.cy;
+    SwmRoot.Hidden = FALSE;
+    SwmRoot.Topmost = FALSE;
+
+    set_region_rect(SwmRoot.Visible, &SwmRoot.Window);
+}
+
+VOID
+NTAPI
 SwmInitialize()
 {
     NTSTATUS Status;
@@ -950,12 +965,11 @@ SwmInitialize()
     /* Initialize a root window */
     SwmRoot.Window.left = 0;
     SwmRoot.Window.top = 0;
-    SwmRoot.Window.right = 800; //FIXME!
-    SwmRoot.Window.bottom = 600; //FIXME!
+    SwmRoot.Window.right = 0;
+    SwmRoot.Window.bottom = 0;
     SwmRoot.Hidden = FALSE;
     SwmRoot.Topmost = FALSE;
     SwmRoot.Visible = create_empty_region();
-    set_region_rect(SwmRoot.Visible, &SwmRoot.Window);
 
     InsertHeadList(&SwmWindows, &SwmRoot.Entry);
 }
