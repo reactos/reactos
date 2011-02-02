@@ -1,7 +1,7 @@
 
 spec2def(cfgmgr32.dll cfgmgr32.spec)
 
-list(APPEND SOURCE 
+list(APPEND SOURCE
     cfgmgr32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32.def)
@@ -9,6 +9,6 @@ list(APPEND SOURCE
 add_library(cfgmgr32 SHARED ${SOURCE})
 
 set_entrypoint(cfgmgr32 0)
-add_importlibs(cfgmgr32 kernel32 ntdll)
+add_importlibs(cfgmgr32 setupapi kernel32 ntdll)
 add_dependencies(cfgmgr32 psdk buildno_header)
 add_cab_target(cfgmgr32 1)
