@@ -5,6 +5,7 @@ add_definitions(
     -D__USE_CRTIMP
     -D_WINE
     -DHAVE_REGEX_H
+    -DHAVE_ALLOCA_H
     -D_IMAGEHLP_SOURCE_)
 
 if(ARCH MATCHES amd64)
