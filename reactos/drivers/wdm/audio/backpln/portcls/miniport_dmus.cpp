@@ -278,7 +278,7 @@ public:
         IN      PVOID   SystemArgument1,
         IN      PVOID   SystemArgument2
     );
-    friend NTSTATUS PropertyHandler_Synth(IN PPCPROPERTY_REQUEST);
+    friend NTSTATUS NTAPI PropertyHandler_Synth(IN PPCPROPERTY_REQUEST);
     friend STDMETHODIMP_(NTSTATUS) SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream);
 };
 
@@ -692,6 +692,7 @@ NTSTATUS CMiniportDMusUART::InitializeHardware(PINTERRUPTSYNC interruptSync,PUCH
  * Synchronized routine to initialize the MPU401.
  */
 NTSTATUS
+NTAPI
 InitMPU
 (
     IN      PINTERRUPTSYNC  InterruptSync,
