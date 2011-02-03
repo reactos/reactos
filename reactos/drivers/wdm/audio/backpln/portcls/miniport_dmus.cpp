@@ -181,9 +181,9 @@ public:
      * Friends 
      */
     friend class CMiniportDMusUARTStream;
-    friend NTSTATUS 
+    friend NTSTATUS NTAPI
         DMusMPUInterruptServiceRoutine(PINTERRUPTSYNC InterruptSync,PVOID DynamicContext);
-    friend NTSTATUS 
+    friend NTSTATUS NTAPI
         SynchronizedDMusMPUWrite(PINTERRUPTSYNC InterruptSync,PVOID syncWriteContext);
     friend VOID NTAPI 
         DMusUARTTimerDPC(PKDPC Dpc,PVOID DeferredContext,PVOID SystemArgument1,PVOID SystemArgument2);
@@ -861,6 +861,7 @@ Write
  * Writes outgoing MIDI data.
  */
 NTSTATUS
+NTAPI
 SynchronizedDMusMPUWrite
 (
     IN      PINTERRUPTSYNC  InterruptSync,
@@ -1132,6 +1133,7 @@ CMiniportDMusUARTStream::SourceEvtsToPort()
  * ISR.
  */
 NTSTATUS
+NTAPI
 DMusMPUInterruptServiceRoutine
 (
     IN      PINTERRUPTSYNC  InterruptSync,
@@ -2458,7 +2460,9 @@ DMusUARTTimerDPC
 const WCHAR wszDescOut[] = L"DMusic MPU-401 Out ";
 const WCHAR wszDescIn[] = L"DMusic MPU-401 In ";
 
-NTSTATUS PropertyHandler_Synth
+NTSTATUS
+NTAPI
+PropertyHandler_Synth
 (
     IN      PPCPROPERTY_REQUEST     pRequest
 )
