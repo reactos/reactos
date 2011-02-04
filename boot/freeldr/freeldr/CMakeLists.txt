@@ -199,7 +199,9 @@ if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     list(APPEND SETUPLDR_MAIN_SOURCE windows/setupldr2.c)
 endif()
 
-set_source_files_properties(${SETUPLDR_MAIN_SOURCE} PROPERTIES COMPILE_FLAGS "-ffreestanding -fno-builtin -fno-inline -fno-zero-initialized-in-bss")
+if(NOT MSVC)
+    set_source_files_properties(${SETUPLDR_MAIN_SOURCE} PROPERTIES COMPILE_FLAGS "-ffreestanding -fno-builtin -fno-inline -fno-zero-initialized-in-bss")
+endif()
 
 list(APPEND SETUPLDR_SOURCE
     ${FREELDR_STARTUP_SOURCE}
