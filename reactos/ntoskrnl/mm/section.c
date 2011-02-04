@@ -690,9 +690,6 @@ l_ReadHeaderFromFile:
 	    DIE(("The image is larger than 4GB\n"));
     }
 
-    /* spare our caller some work in validating the segments */
-    *Flags = EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED | EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP;
-
     if(nSectionAlignment >= PAGE_SIZE)
 	*Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
 
