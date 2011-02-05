@@ -477,15 +477,21 @@ EnableUserModePnpManager(VOID)
     SC_HANDLE hService = NULL;
     BOOL ret = FALSE;
 
-    hSCManager = OpenSCManager(NULL, NULL, 0);
+    hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
+    {
+        DPRINT1("Unable to open the service control manager.\n");
         goto cleanup;
+    }
 
     hService = OpenServiceW(hSCManager,
                             L"PlugPlay",
                             SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
+    {
+        DPRINT1("Unable to open PlugPlay service\n");
         goto cleanup;
+    }
 
     ret = ChangeServiceConfigW(hService,
                                SERVICE_NO_CHANGE,
@@ -494,11 +500,17 @@ EnableUserModePnpManager(VOID)
                                NULL, NULL, NULL,
                                NULL, NULL, NULL, NULL);
     if (!ret)
+    {
+        DPRINT1("Unable to change the service configuration\n");
         goto cleanup;
+    }
 
     ret = StartServiceW(hService, 0, NULL);
     if (!ret)
+    {
+        DPRINT("Unable to start service\n");
         goto cleanup;
+    }
 
     ret = TRUE;
 
