@@ -44,7 +44,7 @@ NTAPI
 CPUID(IN ULONG CpuInfo[4],
       IN ULONG InfoType)
 {
-    RtlZeroMemory(CpuInfo, sizeof(CpuInfo));
+    RtlZeroMemory(CpuInfo, sizeof(CpuInfo) * sizeof(ULONG));
 }
 
 VOID
