@@ -890,7 +890,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
 
     RtlInitAnsiString(&AnsiString, Search->File->FileName);
     wcscpy(DestName, DestPath);
-    UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName);
+    UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName) * sizeof(WCHAR);
     UnicodeString.Buffer = DestName + wcslen(DestName);
     UnicodeString.Length = 0;
     RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
