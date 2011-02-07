@@ -235,6 +235,8 @@ RtlMultiByteToUnicodeN(
    ULONG Size = 0;
    ULONG i;
 
+   PAGED_CODE_RTL();
+
    if (NlsMbCodePageTag == FALSE)
    {
       /* single-byte code page */
@@ -299,6 +301,8 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
                           ULONG MbSize)
 {
     ULONG Length = 0;
+
+    PAGED_CODE_RTL();
 
     if (!NlsMbCodePageTag)
     {
@@ -503,6 +507,8 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
 {
    ULONG Size = 0;
    ULONG i;
+
+   PAGED_CODE_RTL();
 
    if (NlsMbCodePageTag == FALSE)
    {
