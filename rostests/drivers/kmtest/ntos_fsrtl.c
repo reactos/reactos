@@ -135,6 +135,10 @@ VOID FsRtlIsNameInExpressionTest()
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Name, L"ntoskrnl.exe.");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitUnicodeString(&Expression, L"*.c.d");
+    RtlInitUnicodeString(&Name, L"a.b.c.d");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
 }
 
 VOID FsRtlIsDbcsInExpressionTest()
@@ -242,6 +246,10 @@ VOID FsRtlIsDbcsInExpressionTest()
     RtlInitAnsiString(&Name, "ntoskrnl.exe");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     RtlInitAnsiString(&Name, "ntoskrnl.exe.");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "*.c.d");
+    RtlInitAnsiString(&Name, "a.b.c.d");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
 }
 
