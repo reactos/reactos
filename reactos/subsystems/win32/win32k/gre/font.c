@@ -128,8 +128,8 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
 #endif
 }
 
-static void SharpGlyphGray(PDC physDev, INT x, INT y,
-                           void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
+void SharpGlyphGray(PDC physDev, INT x, INT y,
+                    void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
 {
     unsigned char   *srcLine = bitmap, *src, bits;
     int             width = gi->width;
@@ -191,6 +191,136 @@ static void SharpGlyphGray(PDC physDev, INT x, INT y,
     }
 }
 
+/*static*/ void SmoothGlyphGray(PDC physDev, INT x, INT y,
+                            void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
+{
+    unsigned char   *srcLine = bitmap, *src, bits;
+    int             width = gi->width;
+    int             stride = ((width + 3) & ~3);
+    int             height = gi->height;
+    int             w,h;
+    RECTL           rcBounds;
+    COLORREF        srcColor;
+    BYTE            rVal, gVal, bVal;
+    PFN_DIB_PutPixel DibPutPixel;
+    PFN_DIB_GetPixel DibGetPixel;
+    SIZEL           slSize;
+    HBITMAP         charBitmap;
+    PSURFACE        pCharSurf;
+    POINTL          BrushOrigin = {0,0};
+    POINTL          SourcePoint;
+    BOOLEAN         bRet;
+    HPALETTE        hDestPalette;
+    PPALETTE        ppalDst;
+    EXLATEOBJ       exloRGB2Dst, exloDst2RGB;
+    ULONG           xlBrushColor;
+
+    /* Create a 24bpp bitmap for the glyph + background */
+    slSize.cx = gi->width;
+    slSize.cy = gi->height;
+    if (height == 0) return;
+    charBitmap = GreCreateBitmap(slSize, 0, BMF_24BPP, 0, NULL);
+
+    /* Get the object pointer */
+    pCharSurf = SURFACE_LockSurface(charBitmap);
+
+    /* Create XLATE objects */
+    /* (the following 3 lines is the old way of doing that,
+       until yarotows is merged) */
+    hDestPalette = physDev->dclevel.pSurface->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    ppalDst = PALETTE_LockPalette(hDestPalette);
+
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, /*psurf->ppal*/ppalDst, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, /*psurf->ppal*/ppalDst, &gpalRGB, 0, 0, 0);
+
+    PALETTE_UnlockPalette(ppalDst);
+
+    /* Translate the brush color */
+    xlBrushColor = XLATEOBJ_iXlate(&exloDst2RGB.xlo, pTextBrush->BrushObject.iSolidColor);
+
+    /* Get pixel routines address */
+    DibPutPixel = DibFunctionsForBitmapFormat[pCharSurf->SurfObj.iBitmapFormat].DIB_PutPixel;
+    DibGetPixel = DibFunctionsForBitmapFormat[pCharSurf->SurfObj.iBitmapFormat].DIB_GetPixel;
+
+    /* Blit background into this bitmap */
+    rcBounds.left = 0; rcBounds.top = 0;
+    rcBounds.right = width; rcBounds.bottom = height;
+
+    x -= gi->x;
+    y -= gi->y;
+
+    SourcePoint.x = x; SourcePoint.y = y;
+
+    bRet = GrepBitBltEx(
+        &pCharSurf->SurfObj,
+        &physDev->dclevel.pSurface->SurfObj,
+        NULL,
+        NULL,
+        &exloDst2RGB.xlo,
+        &rcBounds,
+        &SourcePoint,
+        NULL,
+        &physDev->eboFill.BrushObject,
+        &BrushOrigin,
+        ROP3_TO_ROP4(SRCCOPY),
+        TRUE);
+
+    for (h=0; h<height; h++)
+    {
+        src = srcLine;
+        srcLine += stride;
+        bits = *src++;
+
+        for (w=0;w<width;w++)
+        {
+            if (bits == 0xff)
+            {
+                DibPutPixel(&pCharSurf->SurfObj, w, h, xlBrushColor);
+            }
+            else
+            {
+                srcColor = DibGetPixel(&pCharSurf->SurfObj, w, h);
+                rVal = ((UCHAR)~bits * (USHORT)GetRValue(srcColor) + bits * (USHORT)GetRValue(xlBrushColor)) >> 8;
+                gVal = ((UCHAR)~bits * (USHORT)GetGValue(srcColor) + bits * (USHORT)GetGValue(xlBrushColor)) >> 8;
+                bVal = ((UCHAR)~bits * (USHORT)GetBValue(srcColor) + bits * (USHORT)GetBValue(xlBrushColor)) >> 8;
+                DibPutPixel(&pCharSurf->SurfObj, w, h, RGB(rVal, gVal, bVal));
+            }
+
+            bits = *src++;
+        }
+    }
+
+    /* Blit the modified bitmap back */
+    rcBounds.left = x; rcBounds.top = y;
+    rcBounds.right = rcBounds.left + width; rcBounds.bottom = rcBounds.top + height;
+
+    SourcePoint.x = 0; SourcePoint.y = 0;
+
+    bRet = GrepBitBltEx(
+        &physDev->dclevel.pSurface->SurfObj,
+        &pCharSurf->SurfObj,
+        NULL,
+        physDev->CombinedClip,
+        &exloRGB2Dst.xlo,
+        &rcBounds,
+        &SourcePoint,
+        NULL,
+        &physDev->eboFill.BrushObject,
+        &BrushOrigin,
+        ROP3_TO_ROP4(SRCCOPY),
+        TRUE);
+
+    SURFACE_UnlockSurface(pCharSurf);
+
+    /* Cleanup exlate objects */
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
+
+    /* Release the surface and delete the bitmap */
+    GreDeleteObject(charBitmap);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 VOID NTAPI
@@ -204,6 +334,7 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
     EBRUSHOBJ pTextPen;
     PBRUSH ppen;
     HPEN hpen;
+    void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, EBRUSHOBJ *);
 
     /* Create pen for text output */
     hpen  = GreCreatePen(PS_SOLID, 1, pDC->crForegroundClr, NULL);
@@ -214,152 +345,34 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
         return;
     EBRUSHOBJ_vInit(&pTextPen, ppen, pDC);
 
-    if(aa_type == AA_None || pDC->dclevel.pSurface->SurfObj.iBitmapFormat == BMF_1BPP)
-    {
-        void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, EBRUSHOBJ *);
+    if(aa_type == AA_None)
+        sharp_glyph_fn = SharpGlyphMono;
+    else
+        sharp_glyph_fn = SmoothGlyphGray;
 
-        if(aa_type == AA_None)
-            sharp_glyph_fn = SharpGlyphMono;
-        else
-            sharp_glyph_fn = SharpGlyphGray;
-
-        for(idx = 0; idx < count; idx++) {
-            sharp_glyph_fn(pDC,
-                           pDC->ptlDCOrig.x + x + offset.x,
-                           pDC->ptlDCOrig.y + y + offset.y,
-                formatEntry->bitmaps[wstr[idx]],
-                &formatEntry->gis[wstr[idx]],
-                &pTextPen);
-            if(lpDx)
+    for(idx = 0; idx < count; idx++) {
+        sharp_glyph_fn(pDC,
+                       pDC->ptlDCOrig.x + x + offset.x,
+                       pDC->ptlDCOrig.y + y + offset.y,
+                       formatEntry->bitmaps[wstr[idx]],
+                       &formatEntry->gis[wstr[idx]],
+                       &pTextPen);
+        if(lpDx)
+        {
+            if(flags & ETO_PDY)
             {
-                if(flags & ETO_PDY)
-                {
-                    offset.x += lpDx[idx * 2];
-                    offset.y += lpDx[idx * 2 + 1];
+                offset.x += lpDx[idx * 2];
+                offset.y += lpDx[idx * 2 + 1];
             }
-                else
-                    offset.x += lpDx[idx];
-        }
             else
-            {
-                offset.x += formatEntry->gis[wstr[idx]].xOff;
-                offset.y += formatEntry->gis[wstr[idx]].yOff;
-            }
+                offset.x += lpDx[idx];
         }
-    } else {
-        UNIMPLEMENTED;
-#if 0
-        OUTDATED (need to merge 47289 and higher)
-        XImage *image;
-        int image_x, image_y, image_off_x, image_off_y, image_w, image_h;
-        RECT extents = {0, 0, 0, 0};
-        POINT cur = {0, 0};
-        int w = physDev->drawable_rect.right - physDev->drawable_rect.left;
-        int h = physDev->drawable_rect.bottom - physDev->drawable_rect.top;
-
-        TRACE("drawable %dx%d\n", w, h);
-
-        for(idx = 0; idx < count; idx++) {
-            if(extents.left > cur.x - formatEntry->gis[wstr[idx]].x)
-                extents.left = cur.x - formatEntry->gis[wstr[idx]].x;
-            if(extents.top > cur.y - formatEntry->gis[wstr[idx]].y)
-                extents.top = cur.y - formatEntry->gis[wstr[idx]].y;
-            if(extents.right < cur.x - formatEntry->gis[wstr[idx]].x + formatEntry->gis[wstr[idx]].width)
-                extents.right = cur.x - formatEntry->gis[wstr[idx]].x + formatEntry->gis[wstr[idx]].width;
-            if(extents.bottom < cur.y - formatEntry->gis[wstr[idx]].y + formatEntry->gis[wstr[idx]].height)
-                extents.bottom = cur.y - formatEntry->gis[wstr[idx]].y + formatEntry->gis[wstr[idx]].height;
-            if(lpDx) {
-                offset += lpDx[idx];
-                cur.x = offset * cosEsc;
-                cur.y = offset * -sinEsc;
-            } else {
-                cur.x += formatEntry->gis[wstr[idx]].xOff;
-                cur.y += formatEntry->gis[wstr[idx]].yOff;
-            }
-        }
-        TRACE("glyph extents %d,%d - %d,%d drawable x,y %d,%d\n", extents.left, extents.top,
-            extents.right, extents.bottom, physDev->dc_rect.left + x, physDev->dc_rect.top + y);
-
-        if(physDev->dc_rect.left + x + extents.left >= 0) {
-            image_x = physDev->dc_rect.left + x + extents.left;
-            image_off_x = 0;
-        } else {
-            image_x = 0;
-            image_off_x = physDev->dc_rect.left + x + extents.left;
-        }
-        if(physDev->dc_rect.top + y + extents.top >= 0) {
-            image_y = physDev->dc_rect.top + y + extents.top;
-            image_off_y = 0;
-        } else {
-            image_y = 0;
-            image_off_y = physDev->dc_rect.top + y + extents.top;
-        }
-        if(physDev->dc_rect.left + x + extents.right < w)
-            image_w = physDev->dc_rect.left + x + extents.right - image_x;
         else
-            image_w = w - image_x;
-        if(physDev->dc_rect.top + y + extents.bottom < h)
-            image_h = physDev->dc_rect.top + y + extents.bottom - image_y;
-        else
-            image_h = h - image_y;
-
-        if(image_w <= 0 || image_h <= 0) goto no_image;
-
-        X11DRV_expect_error(gdi_display, XRenderErrorHandler, NULL);
-        image = XGetImage(gdi_display, physDev->drawable,
-            image_x, image_y, image_w, image_h,
-            AllPlanes, ZPixmap);
-        X11DRV_check_error();
-
-        TRACE("XGetImage(%p, %x, %d, %d, %d, %d, %lx, %x) depth = %d rets %p\n",
-            gdi_display, (int)physDev->drawable, image_x, image_y,
-            image_w, image_h, AllPlanes, ZPixmap,
-            physDev->depth, image);
-        if(!image) {
-            Pixmap xpm = XCreatePixmap(gdi_display, root_window, image_w, image_h,
-                physDev->depth);
-            GC gc;
-            XGCValues gcv;
-
-            gcv.graphics_exposures = False;
-            gc = XCreateGC(gdi_display, xpm, GCGraphicsExposures, &gcv);
-            XCopyArea(gdi_display, physDev->drawable, xpm, gc, image_x, image_y,
-                image_w, image_h, 0, 0);
-            XFreeGC(gdi_display, gc);
-            X11DRV_expect_error(gdi_display, XRenderErrorHandler, NULL);
-            image = XGetImage(gdi_display, xpm, 0, 0, image_w, image_h, AllPlanes,
-                ZPixmap);
-            X11DRV_check_error();
-            XFreePixmap(gdi_display, xpm);
+        {
+            offset.x += formatEntry->gis[wstr[idx]].xOff;
+            offset.y += formatEntry->gis[wstr[idx]].yOff;
         }
-        if(!image) goto no_image;
-
-        image->red_mask = visual->red_mask;
-        image->green_mask = visual->green_mask;
-        image->blue_mask = visual->blue_mask;
-
-        offset = xoff = yoff = 0;
-        for(idx = 0; idx < count; idx++) {
-            SmoothGlyphGray(image, xoff + image_off_x - extents.left,
-                yoff + image_off_y - extents.top,
-                formatEntry->bitmaps[wstr[idx]],
-                &formatEntry->gis[wstr[idx]],
-                physDev->textPixel);
-            if(lpDx) {
-                offset += lpDx[idx];
-                xoff = offset * cosEsc;
-                yoff = offset * -sinEsc;
-            } else {
-                xoff += formatEntry->gis[wstr[idx]].xOff;
-                yoff += formatEntry->gis[wstr[idx]].yOff;
-            }
-        }
-        XPutImage(gdi_display, physDev->drawable, physDev->gc, image, 0, 0,
-            image_x, image_y, image_w, image_h);
-        XDestroyImage(image);
-#endif
     }
-//no_image:
 
     //Cleanup the temporary pen
     EBRUSHOBJ_vCleanup(&pTextPen);
