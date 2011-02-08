@@ -70,7 +70,4 @@
 	<directory name="tdilib">
 		<xi:include href="tdilib/tdilib.rbuild" />
 	</directory>
-	<directory name="win32ksys">
-		<xi:include href="win32ksys/win32ksys.rbuild" />
-	</directory>
 </group>

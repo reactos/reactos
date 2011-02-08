@@ -204,4 +204,8 @@
 		<file>umpdstubs.c</file>
 	</directory>
 </module>
+<module name="win32ksys" type="staticlibrary">
+	<include base="ReactOS">include/reactos</include>
+	<file>sys-stubs.S</file>
+</module>
 </group>
