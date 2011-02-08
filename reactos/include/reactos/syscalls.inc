@@ -80,14 +80,15 @@ ENDM
 
 MACRO(STUB_U, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
-    MAKE_LABEL &Name, %Stackbytes
+    MAKE_LABEL Zw&Name, %Stackbytes
+    MAKE_LABEL Nt&Name, %Stackbytes
     STUBCODE_U SyscallId, %Stackbytes
     SyscallId = SyscallId + 1
 ENDM
 
 MACRO(STUB_K, Name, ArgCount)
     Stackbytes = 4 * &ArgCount
-    MAKE_LABEL &Name, %Stackbytes
+    MAKE_LABEL Zw&Name, %Stackbytes
     STUBCODE_K SyscallId, %Stackbytes
     SyscallId = SyscallId + 1
 ENDM

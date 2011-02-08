@@ -215,7 +215,7 @@
 		<file>dbgkutil.c</file>
 		<file>dbgkobj.c</file>
 	</directory>
-	<directory name="ex" root="intermediate">
+	<directory name="ex">
 		<file>zw.S</file>
 	</directory>
 	<directory name="ex">
