@@ -191,7 +191,7 @@ void SharpGlyphGray(PDC physDev, INT x, INT y,
     }
 }
 
-/*static*/ void SmoothGlyphGray(PDC physDev, INT x, INT y,
+static void SmoothGlyphGray(PDC physDev, INT x, INT y,
                             void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
 {
     unsigned char   *srcLine = bitmap, *src, bits;
@@ -321,6 +321,144 @@ void SharpGlyphGray(PDC physDev, INT x, INT y,
     GreDeleteObject(charBitmap);
 }
 
+static void SmoothGlyphColor(PDC physDev, INT x, INT y,
+                            void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
+{
+    unsigned char   *srcLine = bitmap, *src, bits_r, bits_g, bits_b;
+    int             width = gi->width;
+    int             stride = width * 4;
+    int             height = gi->height;
+    int             w,h;
+    RECTL           rcBounds;
+    COLORREF        srcColor;
+    BYTE            rVal, gVal, bVal;
+    PFN_DIB_PutPixel DibPutPixel;
+    PFN_DIB_GetPixel DibGetPixel;
+    SIZEL           slSize;
+    HBITMAP         charBitmap;
+    PSURFACE        pCharSurf;
+    POINTL          BrushOrigin = {0,0};
+    POINTL          SourcePoint;
+    BOOLEAN         bRet;
+    HPALETTE        hDestPalette;
+    PPALETTE        ppalDst;
+    EXLATEOBJ       exloRGB2Dst, exloDst2RGB;
+    ULONG           xlBrushColor;
+
+    /* Create a 24bpp bitmap for the glyph + background */
+    slSize.cx = gi->width;
+    slSize.cy = gi->height;
+    if (height == 0) return;
+    charBitmap = GreCreateBitmap(slSize, 0, BMF_24BPP, 0, NULL);
+
+    /* Get the object pointer */
+    pCharSurf = SURFACE_LockSurface(charBitmap);
+
+    /* Create XLATE objects */
+    /* (the following 3 lines is the old way of doing that,
+       until yarotows is merged) */
+    hDestPalette = physDev->dclevel.pSurface->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    ppalDst = PALETTE_LockPalette(hDestPalette);
+
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, /*psurf->ppal*/ppalDst, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, /*psurf->ppal*/ppalDst, &gpalRGB, 0, 0, 0);
+
+    PALETTE_UnlockPalette(ppalDst);
+
+    /* Translate the brush color */
+    xlBrushColor = XLATEOBJ_iXlate(&exloDst2RGB.xlo, pTextBrush->BrushObject.iSolidColor);
+
+    /* Get pixel routines address */
+    DibPutPixel = DibFunctionsForBitmapFormat[pCharSurf->SurfObj.iBitmapFormat].DIB_PutPixel;
+    DibGetPixel = DibFunctionsForBitmapFormat[pCharSurf->SurfObj.iBitmapFormat].DIB_GetPixel;
+
+    /* Blit background into this bitmap */
+    rcBounds.left = 0; rcBounds.top = 0;
+    rcBounds.right = width; rcBounds.bottom = height;
+
+    x -= gi->x;
+    y -= gi->y;
+
+    SourcePoint.x = x; SourcePoint.y = y;
+
+    bRet = GrepBitBltEx(
+        &pCharSurf->SurfObj,
+        &physDev->dclevel.pSurface->SurfObj,
+        NULL,
+        NULL,
+        &exloDst2RGB.xlo,
+        &rcBounds,
+        &SourcePoint,
+        NULL,
+        &physDev->eboFill.BrushObject,
+        &BrushOrigin,
+        ROP3_TO_ROP4(SRCCOPY),
+        TRUE);
+
+    for (h=0; h<height; h++)
+    {
+        src = srcLine;
+        srcLine += stride;
+        bits_r = *src++;
+        bits_g = *src++;
+        bits_b = *src++;
+        src++;
+
+        for (w=0;w<width;w++)
+        {
+            if (bits_r == 0xff &&
+                bits_g == 0xff &&
+                bits_b == 0xff)
+            {
+                DibPutPixel(&pCharSurf->SurfObj, w, h, xlBrushColor);
+            }
+            else
+            {
+                srcColor = DibGetPixel(&pCharSurf->SurfObj, w, h);
+                rVal = ((UCHAR)~bits_r * (USHORT)GetRValue(srcColor) + bits_r * (USHORT)GetRValue(xlBrushColor)) >> 8;
+                gVal = ((UCHAR)~bits_g * (USHORT)GetGValue(srcColor) + bits_g * (USHORT)GetGValue(xlBrushColor)) >> 8;
+                bVal = ((UCHAR)~bits_b * (USHORT)GetBValue(srcColor) + bits_b * (USHORT)GetBValue(xlBrushColor)) >> 8;
+                DibPutPixel(&pCharSurf->SurfObj, w, h, RGB(rVal, gVal, bVal));
+            }
+
+            bits_r = *src++;
+            bits_g = *src++;
+            bits_b = *src++;
+            src++;
+        }
+    }
+
+    /* Blit the modified bitmap back */
+    rcBounds.left = x; rcBounds.top = y;
+    rcBounds.right = rcBounds.left + width; rcBounds.bottom = rcBounds.top + height;
+
+    SourcePoint.x = 0; SourcePoint.y = 0;
+
+    bRet = GrepBitBltEx(
+        &physDev->dclevel.pSurface->SurfObj,
+        &pCharSurf->SurfObj,
+        NULL,
+        physDev->CombinedClip,
+        &exloRGB2Dst.xlo,
+        &rcBounds,
+        &SourcePoint,
+        NULL,
+        &physDev->eboFill.BrushObject,
+        &BrushOrigin,
+        ROP3_TO_ROP4(SRCCOPY),
+        TRUE);
+
+    SURFACE_UnlockSurface(pCharSurf);
+
+    /* Cleanup exlate objects */
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
+
+    /* Release the surface and delete the bitmap */
+    GreDeleteObject(charBitmap);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 VOID NTAPI
@@ -347,8 +485,10 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
 
     if(aa_type == AA_None)
         sharp_glyph_fn = SharpGlyphMono;
-    else
+    else if(aa_type == AA_Grey)
         sharp_glyph_fn = SmoothGlyphGray;
+    else
+        sharp_glyph_fn = SmoothGlyphColor;
 
     for(idx = 0; idx < count; idx++) {
         sharp_glyph_fn(pDC,
