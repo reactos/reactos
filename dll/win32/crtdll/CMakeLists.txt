@@ -17,10 +17,6 @@ list(APPEND SOURCE
     crtdll.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def)
 
-if(NOT MSVC)
-    set_source_files_properties(crtdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
-
 add_library(crtdll SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll_precomp.h.gch
     ${SOURCE})
