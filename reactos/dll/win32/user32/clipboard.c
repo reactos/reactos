@@ -291,7 +291,7 @@ BOOL WINAPI CloseClipboard(void)
 {
     BOOL bRet = FALSE;
 
-    TRACE("(%d)\n", bCBHasChanged);
+    TRACE("() Changed=%d\n", bCBHasChanged);
 
     if (CLIPBOARD_CloseClipboard())
     {
@@ -301,10 +301,10 @@ BOOL WINAPI CloseClipboard(void)
 
             USER_Driver->pEndClipboardUpdate();
 
+            bCBHasChanged = FALSE;
+
             if (hWndViewer)
                 SendMessageW(hWndViewer, WM_DRAWCLIPBOARD, (WPARAM) GetClipboardOwner(), 0);
-
-            bCBHasChanged = FALSE;
         }
 
         bRet = TRUE;

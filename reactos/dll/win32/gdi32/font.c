@@ -1553,7 +1553,7 @@ UINT WINAPI GetOutlineTextMetricsW(
     return ret;
 }
 
-static LPSTR FONT_GetCharsByRangeA(UINT firstChar, UINT lastChar, PINT pByteLen)
+static LPSTR FONT_GetCharsByRangeA(HDC hdc, UINT firstChar, UINT lastChar, PINT pByteLen)
 {
     INT i, count = lastChar - firstChar + 1;
     UINT c;
@@ -1561,6 +1561,24 @@ static LPSTR FONT_GetCharsByRangeA(UINT firstChar, UINT lastChar, PINT pByteLen)
 
     if (count <= 0)
         return NULL;
+
+    switch (GdiGetCodePage(hdc))
+    {
+    case 932:
+    case 936:
+    case 949:
+    case 950:
+    case 1361:
+        if (lastChar > 0xffff)
+            return NULL;
+        if ((firstChar ^ lastChar) > 0xff)
+            return NULL;
+        break;
+    default:
+        if (lastChar > 0xff)
+            return NULL;
+        break;
+    }
 
     str = HeapAlloc(GetProcessHeap(), 0, count * 2 + 1);
     if (str == NULL)
@@ -1620,7 +1638,7 @@ BOOL WINAPI GetCharWidth32A( HDC hdc, UINT firstChar, UINT lastChar,
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    str = FONT_GetCharsByRangeA(firstChar, lastChar, &i);
+    str = FONT_GetCharsByRangeA(hdc, firstChar, lastChar, &i);
     if(str == NULL)
         return FALSE;
 
@@ -2014,7 +2032,16 @@ BOOL WINAPI ExtTextOutW( HDC hdc, INT x, INT y, UINT flags,
                 rc.right = x + width.x;
                 rc.top = y - tm.tmAscent;
                 rc.bottom = y + tm.tmDescent;
-                dc->funcs->pExtTextOut(dc->physDev, 0, 0, ETO_OPAQUE, &rc, NULL, 0, NULL);
+
+                if(flags & ETO_CLIPPED)
+                {
+                    rc.left = max(lprect->left, rc.left);
+                    rc.right = min(lprect->right, rc.right);
+                    rc.top = max(lprect->top, rc.top);
+                    rc.bottom = min(lprect->bottom, rc.bottom);
+                }
+                if(rc.left < rc.right && rc.top < rc.bottom)
+                    dc->funcs->pExtTextOut(dc->physDev, 0, 0, ETO_OPAQUE, &rc, NULL, 0, NULL);
             }
         }
     }
@@ -2324,7 +2351,7 @@ BOOL WINAPI GetCharABCWidthsA(HDC hdc, UINT firstChar, UINT lastChar,
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    str = FONT_GetCharsByRangeA(firstChar, lastChar, &i);
+    str = FONT_GetCharsByRangeA(hdc, firstChar, lastChar, &i);
     if (str == NULL)
         return FALSE;
 
@@ -2468,16 +2495,15 @@ DWORD WINAPI GetGlyphOutlineA( HDC hdc, UINT uChar, UINT fuFormat,
                                  LPGLYPHMETRICS lpgm, DWORD cbBuffer,
                                  LPVOID lpBuffer, const MAT2 *lpmat2 )
 {
-    LPWSTR p = NULL;
-    DWORD ret;
-    UINT c;
-
     if (!lpmat2) return GDI_ERROR;
 
     if(!(fuFormat & GGO_GLYPH_INDEX)) {
+        UINT cp;
         int len;
         char mbchs[2];
-        if(uChar > 0xff) { /* but, 2 bytes character only */
+
+        cp = GdiGetCodePage(hdc);
+        if (IsDBCSLeadByteEx(cp, uChar >> 8)) {
             len = 2;
             mbchs[0] = (uChar & 0xff00) >> 8;
             mbchs[1] = (uChar & 0xff);
@@ -2485,14 +2511,11 @@ DWORD WINAPI GetGlyphOutlineA( HDC hdc, UINT uChar, UINT fuFormat,
             len = 1;
             mbchs[0] = (uChar & 0xff);
         }
-        p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
-	c = p[0];
-    } else
-        c = uChar;
-    ret = GetGlyphOutlineW(hdc, c, fuFormat, lpgm, cbBuffer, lpBuffer,
-			   lpmat2);
-    HeapFree(GetProcessHeap(), 0, p);
-    return ret;
+        MultiByteToWideChar(cp, 0, mbchs, len, (LPWSTR)&uChar, 1);
+    }
+
+    return GetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, cbBuffer, lpBuffer,
+                            lpmat2);
 }
 
 /***********************************************************************
@@ -3010,7 +3033,7 @@ BOOL WINAPI GetCharABCWidthsFloatA( HDC hdc, UINT first, UINT last, LPABCFLOAT a
     LPWSTR wstr;
     BOOL ret = TRUE;
 
-    str = FONT_GetCharsByRangeA(first, last, &i);
+    str = FONT_GetCharsByRangeA(hdc, first, last, &i);
     if (str == NULL)
         return FALSE;
 

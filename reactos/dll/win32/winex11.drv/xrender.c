@@ -1066,7 +1066,11 @@ BOOL X11DRV_XRender_SelectFont(X11DRV_PDEVICE *physDev, HFONT hfont)
     lfsz.lf.lfWidth = abs( lfsz.lf.lfWidth );
     lfsz.devsize.cx = X11DRV_XWStoDS( physDev, lfsz.lf.lfWidth );
     lfsz.devsize.cy = X11DRV_YWStoDS( physDev, lfsz.lf.lfHeight );
-    GetWorldTransform( physDev->hdc, &lfsz.xform );
+
+    GetTransform( physDev->hdc, 0x204, &lfsz.xform );
+    TRACE("font transform %f %f %f %f\n", lfsz.xform.eM11, lfsz.xform.eM12,
+          lfsz.xform.eM21, lfsz.xform.eM22);
+
     /* Not used fields, would break hashing */
     lfsz.xform.eDx = lfsz.xform.eDy = 0;
 

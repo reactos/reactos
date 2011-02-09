@@ -4728,6 +4728,24 @@ static XImage *X11DRV_XShmCreateImage( int width, int height, int bpp,
 }
 #endif /* HAVE_LIBXXSHM */
 
+static Bool X11DRV_DIB_QueryXShm( Bool *pixmaps )
+{
+    static Bool have_xshm, have_xshm_pixmaps;
+    static BOOL initialized;
+
+    if (!initialized)
+    {
+#ifdef HAVE_LIBXXSHM
+        int major, minor;
+
+        have_xshm = XShmQueryVersion( gdi_display, &major, &minor, &have_xshm_pixmaps );
+#endif
+        initialized = TRUE;
+    }
+
+    *pixmaps = have_xshm_pixmaps;
+    return have_xshm;
+}
 
 /***********************************************************************
  *           X11DRV_CreateDIBSection   (X11DRV.@)
@@ -4740,7 +4758,6 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
     WORD bpp, compr;
     LONG w, h;
 #ifdef HAVE_LIBXXSHM
-    int major, minor;
     Bool pixmaps;
 #endif
 
@@ -4780,7 +4797,7 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
 #ifdef HAVE_LIBXXSHM
     physBitmap->shminfo.shmid = -1;
 
-    if (XShmQueryVersion( gdi_display, &major, &minor, &pixmaps )
+    if (X11DRV_DIB_QueryXShm( &pixmaps )
             && (physBitmap->image = X11DRV_XShmCreateImage( dib.dsBm.bmWidth, dib.dsBm.bmHeight,
                                                             physBitmap->pixmap_depth, &physBitmap->shminfo )))
     {

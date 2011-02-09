@@ -536,7 +536,11 @@ FeSelectFont(PDC_ATTR pdcattr, HFONT hfont)
     lfsz.lf.lfWidth = abs( lfsz.lf.lfWidth );
     lfsz.devsize.cx = RosDrv_XWStoDS( pdcattr, lfsz.lf.lfWidth );
     lfsz.devsize.cy = RosDrv_YWStoDS( pdcattr, lfsz.lf.lfHeight );
-    GetWorldTransform( pdcattr->hdc, &lfsz.xform );
+
+    GetTransform( pdcattr->hdc, 0x204, &lfsz.xform );
+    TRACE("font transform %f %f %f %f\n", lfsz.xform.eM11, lfsz.xform.eM12,
+          lfsz.xform.eM21, lfsz.xform.eM22);
+
     /* Not used fields, would break hashing */
     lfsz.xform.eDx = lfsz.xform.eDy = 0;
 
