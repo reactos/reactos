@@ -54,9 +54,9 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl nci gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS nci gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -184,40 +184,6 @@ else()
     add_subdirectory(modules)
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
-
-    # nci generated intermediate files
-
-    list(APPEND nci_output
-        ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
-        ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
-        ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
-        ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
-        ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
-
-    list(APPEND nci_folders
-        ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
-        ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
-        ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
-        ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
-        ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
-        ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include)
-
-    file(MAKE_DIRECTORY ${nci_folders})
-
-    add_custom_command(
-        OUTPUT ${nci_output}
-        COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
-        DEPENDS native-nci ${nci_folders})
-
-    set_source_files_properties(${nci_output} PROPERTIES GENERATED TRUE)
-
-    add_custom_target(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
-    add_custom_target(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
-    add_custom_target(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
-    add_custom_target(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
-    add_custom_target(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
-    add_custom_target(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 

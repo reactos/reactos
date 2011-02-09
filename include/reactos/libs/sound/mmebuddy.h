@@ -185,8 +185,8 @@ typedef struct _SOUND_OVERLAPPED
     PWAVEHDR Header;
     BOOL PerformCompletion;
 
-    DWORD OriginalBufferSize;
     LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+    PVOID CompletionContext;
 
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 

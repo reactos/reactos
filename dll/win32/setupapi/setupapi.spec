@@ -137,8 +137,8 @@
 @ stub CM_Invert_Range_List
 @ stdcall CM_Is_Dock_Station_Present(ptr)
 @ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
-@ stub CM_Is_Version_Available
-@ stub CM_Is_Version_Available_Ex
+@ stdcall CM_Is_Version_Available(long)
+@ stdcall CM_Is_Version_Available_Ex(long long)
 @ stdcall CM_Locate_DevNodeA(ptr str long)
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)

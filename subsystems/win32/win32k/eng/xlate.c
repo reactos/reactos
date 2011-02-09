@@ -91,7 +91,7 @@ EXLATEOBJ_iXlateRGBto555(PEXLATEOBJ pxlo, ULONG iColor)
     iColor >>= 13;
     iNewColor |= iColor & 0x3E0;
 
-    /* Copy green */
+    /* Copy blue */
     iColor >>= 13;
     iNewColor |= iColor & 0x1F;
 
@@ -417,11 +417,11 @@ EXLATEOBJ_vInitialize(
             pexlo->aulXlate[0] =
                 PALETTE_ulGetNearestPaletteIndex(ppalSrc, crSrcBackColor);
         }
-        else if (ppalSrc->flFlags & PAL_BGR)
+        else if (ppalSrc->flFlags & PAL_RGB)
         {
             pexlo->aulXlate[0] = crSrcBackColor;
         }
-        else if (ppalSrc->flFlags & PAL_RGB)
+        else if (ppalSrc->flFlags & PAL_BGR)
         {
             pexlo->aulXlate[0] = RGB(GetBValue(crSrcBackColor),
                                      GetGValue(crSrcBackColor),

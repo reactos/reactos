@@ -272,64 +272,51 @@ ULONG
 FASTCALL
 InterlockedPopFreeEntry(VOID)
 {
-    ULONG idxFirst, idxNext, idxPrev;
+    ULONG iFirst, iNext, iPrev;
     PGDI_TABLE_ENTRY pEntry;
-    DWORD PrevProcId;
 
     DPRINT("Enter InterLockedPopFreeEntry\n");
 
-    while (TRUE)
+    do
     {
-        idxFirst = GdiHandleTable->FirstFree;
+        /* Get the index and sequence number of the first free entry */
+        iFirst = GdiHandleTable->FirstFree;
 
-        if (!idxFirst)
+        /* Check if we have a free entry */
+        if (!(iFirst & GDI_HANDLE_INDEX_MASK))
         {
             /* Increment FirstUnused and get the new index */
-            idxFirst = InterlockedIncrement((LONG*)&GdiHandleTable->FirstUnused) - 1;
+            iFirst = InterlockedIncrement((LONG*)&GdiHandleTable->FirstUnused) - 1;
 
-            /* Check if we have entries left */
-            if (idxFirst >= GDI_HANDLE_COUNT)
+            /* Check if we have unused entries left */
+            if (iFirst >= GDI_HANDLE_COUNT)
             {
                 DPRINT1("No more gdi handles left!\n");
                 return 0;
             }
 
             /* Return the old index */
-            return idxFirst;
+            return iFirst;
         }
 
         /* Get a pointer to the first free entry */
-        pEntry = GdiHandleTable->Entries + idxFirst;
+        pEntry = GdiHandleTable->Entries + (iFirst & GDI_HANDLE_INDEX_MASK);
 
-        /* Try to lock the entry */
-        PrevProcId = InterlockedCompareExchange((LONG*)&pEntry->ProcessId, 1, 0);
-        if (PrevProcId != 0)
-        {
-            /* The entry was locked or not free, wait and start over */
-            DelayExecution();
-            continue;
-        }
-
-        /* Sanity check: is entry really free? */
-        ASSERT(((ULONG_PTR)pEntry->KernelData & ~GDI_HANDLE_INDEX_MASK) == 0);
+        /* Create a new value with an increased sequence number */
+        iNext = (USHORT)(ULONG_PTR)pEntry->KernelData;
+        iNext |= (iFirst & ~GDI_HANDLE_INDEX_MASK) + 0x10000;
 
         /* Try to exchange the FirstFree value */
-        idxNext = (ULONG_PTR)pEntry->KernelData;
-        idxPrev = InterlockedCompareExchange((LONG*)&GdiHandleTable->FirstFree,
-                                             idxNext,
-                                             idxFirst);
-
-        /* Unlock the free entry */
-        (void)InterlockedExchange((LONG*)&pEntry->ProcessId, 0);
-
-        /* If we succeeded, break out of the loop */
-        if (idxPrev == idxFirst)
-        {
-            break;
-        }
+        iPrev = InterlockedCompareExchange((LONG*)&GdiHandleTable->FirstFree,
+                                           iNext,
+                                           iFirst);
     }
+    while (iPrev != iFirst);
 
-    return idxFirst;
+    /* Sanity check: is entry really free? */
+    ASSERT(((ULONG_PTR)pEntry->KernelData & ~GDI_HANDLE_INDEX_MASK) == 0);
+
+    return iFirst & GDI_HANDLE_INDEX_MASK;
 }
 
 /* Pushes an entry of the handle table to the free list,
@@ -338,7 +325,7 @@ VOID
 FASTCALL
 InterlockedPushFreeEntry(ULONG idxToFree)
 {
-    ULONG idxFirstFree, idxPrev;
+    ULONG iToFree, iFirst, iPrev;
     PGDI_TABLE_ENTRY pFreeEntry;
 
     DPRINT("Enter InterlockedPushFreeEntry\n");
@@ -346,18 +333,26 @@ InterlockedPushFreeEntry(ULONG idxToFree)
     pFreeEntry = GdiHandleTable->Entries + idxToFree;
     ASSERT((pFreeEntry->Type & GDI_ENTRY_BASETYPE_MASK) == 0);
     ASSERT(pFreeEntry->ProcessId == 0);
-    pFreeEntry->UserData = NULL;
+    pFreeEntry->UserData = NULL; // FIXME
+    ASSERT(pFreeEntry->UserData == NULL);
 
     do
     {
-        idxFirstFree = GdiHandleTable->FirstFree;
-        pFreeEntry->KernelData = (PVOID)(ULONG_PTR)idxFirstFree;
+        /* Get the current first free index and sequence number */
+        iFirst = GdiHandleTable->FirstFree;
 
-        idxPrev = InterlockedCompareExchange((LONG*)&GdiHandleTable->FirstFree,
-                                             idxToFree,
-                                             idxFirstFree);
+        /* Set the KernelData member to the index of the first free entry */
+        pFreeEntry->KernelData = UlongToPtr(iFirst & GDI_HANDLE_INDEX_MASK);
+
+        /* Combine new index and increased sequence number in iToFree */
+        iToFree = idxToFree | ((iFirst & ~GDI_HANDLE_INDEX_MASK) + 0x10000);
+
+        /* Try to atomically update the first free entry */
+        iPrev = InterlockedCompareExchange((LONG*)&GdiHandleTable->FirstFree,
+                                           iToFree,
+                                           iFirst);
     }
-    while (idxPrev != idxFirstFree);
+    while (iPrev != iFirst);
 }
 
 

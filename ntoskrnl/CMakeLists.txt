@@ -107,6 +107,7 @@ list(APPEND SOURCE
     ex/work.c
     ex/xipdisp.c
     ex/zone.c
+    ex/zw.S
     fsrtl/dbcsname.c
     fsrtl/fastio.c
     fsrtl/faulttol.c
@@ -269,7 +270,6 @@ list(APPEND SOURCE
     vf/driver.c
     wmi/wmi.c
     ntoskrnl.rc
-    ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 
 if(ARCH MATCHES i386)
@@ -451,3 +451,5 @@ add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi asm)
 add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
 add_livecd_target(ntoskrnl reactos/system32)
 add_importlib_target(ntoskrnl.spec)
+
+add_library(ntdllsys ntdll.S)

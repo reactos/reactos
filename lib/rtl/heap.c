@@ -235,12 +235,6 @@ RtlpInsertFreeBlockHelper(PHEAP Heap,
         FreeEntry->Flags &= HEAP_ENTRY_LAST_ENTRY;
     }
 
-    /* Check if PreviousSize of the next entry matches ours */
-    if (!(FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
-    {
-        ASSERT(((PHEAP_ENTRY)FreeEntry + BlockSize)->PreviousSize == BlockSize);
-    }
-
     /* Insert it either into dedicated or non-dedicated list */
     if (BlockSize < HEAP_FREELISTS)
     {

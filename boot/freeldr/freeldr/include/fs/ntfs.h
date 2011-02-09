@@ -1,6 +1,7 @@
 /*
  *  FreeLoader NTFS support
  *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
+ *  Copyright (C) 2011  Pierre Schweitzer <pierre.schweitzer@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,16 +31,22 @@
 #define NTFS_FILE_BADCLUS			8
 #define NTFS_FILE_QUOTA				9
 #define NTFS_FILE_UPCASE			10
+#define NTFS_FILE_EXTEND			11
 
 #define NTFS_ATTR_TYPE_STANDARD_INFORMATION	0x10
 #define NTFS_ATTR_TYPE_ATTRIBUTE_LIST		0x20
 #define NTFS_ATTR_TYPE_FILENAME			0x30
+#define NTFS_ATTR_TYPE_OBJECT_ID		0x40
 #define NTFS_ATTR_TYPE_SECURITY_DESCRIPTOR	0x50
+#define NTFS_ATTR_TYPE_VOLUME_NAME		0x60
+#define NTFS_ATTR_TYPE_VOLUME_INFORMATION	0x70
 #define NTFS_ATTR_TYPE_DATA			0x80
 #define NTFS_ATTR_TYPE_INDEX_ROOT		0x90
 #define NTFS_ATTR_TYPE_INDEX_ALLOCATION		0xa0
 #define NTFS_ATTR_TYPE_BITMAP			0xb0
-#define NTFS_ATTR_TYPE_SYMLINK			0xc0
+#define NTFS_ATTR_TYPE_REPARSE_POINT	0xc0
+#define NTFS_ATTR_TYPE_EA_INFORMATION	0xd0
+#define NTFS_ATTR_TYPE_EA			0xe0
 #define NTFS_ATTR_TYPE_END			0xffffffff
 
 #define NTFS_ATTR_NORMAL			0
@@ -126,7 +133,8 @@ typedef struct
 		{
 			ULONG		ValueLength;
 			USHORT		ValueOffset;
-			USHORT		Flags;
+			UCHAR		Flags;
+			UCHAR		Reserved;
 		} Resident;
 		// Non-resident attributes
 		struct
@@ -134,8 +142,8 @@ typedef struct
 			ULONGLONG		LowestVCN;
 			ULONGLONG		HighestVCN;
 			USHORT		MappingPairsOffset;
-			UCHAR		CompressionUnit;
-			UCHAR		Reserved[5];
+			USHORT		CompressionUnit;
+			UCHAR		Reserved[4];
 			LONGLONG		AllocatedSize;
 			LONGLONG		DataSize;
 			LONGLONG		InitializedSize;
@@ -180,7 +188,20 @@ typedef struct
 	WCHAR		FileName[0];
 } NTFS_FILE_NAME_ATTR, *PNTFS_FILE_NAME_ATTR;
 
-typedef struct {
+typedef struct
+{
+	ULONG		Type;
+	USHORT		RecLength;
+	UCHAR		NameLength;
+	UCHAR		NameOffset;
+	ULONGLONG	StartingVCN;
+	ULONGLONG	BaseFileRef;
+	USHORT		AttrId;
+	PWCHAR		Name;
+} NTFS_ATTR_LIST_ATTR, *PNTFS_ATTR_LIST_ATTR;
+
+typedef struct
+{
 	union
 	{
 		struct

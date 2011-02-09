@@ -192,3 +192,5 @@ add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
 add_dependencies(win32k gendib_generated subsystem_napi)
 add_cab_target(win32k 1)
 add_importlib_target(win32k.spec)
+
+add_library(win32ksys sys-stubs.S)

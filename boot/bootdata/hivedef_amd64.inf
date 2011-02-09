@@ -97,7 +97,7 @@ HKCU,"Control Panel\Desktop","ScreenSaverIsSecure",2,"1"
 HKCU,"Control Panel\Desktop","ScreenSaveTimeOut",0,"600"
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",2,"20000"
 HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
-HKCU,"Control Panel\Desktop","FontSmoothing",2,"0"
+HKCU,"Control Panel\Desktop","FontSmoothing",0,"0"
 HKCU,"Control Panel\Desktop","FontSmoothingOrientation",0x00010003,0x00000001
 HKCU,"Control Panel\Desktop","FontSmoothingType",0x00010003,0x00000001
 HKCU,"Control Panel\Desktop","ForegroundFlashCount",0x00010003,0x00000003

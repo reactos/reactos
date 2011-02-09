@@ -2919,6 +2919,61 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
 
 
 /***********************************************************************
+ * CM_Is_Version_Available_Ex [SETUPAPI.@]
+ */
+BOOL WINAPI CM_Is_Version_Available(
+     WORD wVersion)
+{
+    TRACE("%hu\n", wVersion);
+    return CM_Is_Version_Available_Ex(wVersion, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Is_Version_Available_Ex [SETUPAPI.@]
+ */
+BOOL WINAPI CM_Is_Version_Available_Ex(
+    WORD wVersion, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WORD wServerVersion;
+    CONFIGRET ret;
+
+    TRACE("%hu %lx\n", wVersion, hMachine);
+
+    if (wVersion <= 0x400)
+        return TRUE;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return FALSE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return FALSE;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_GetVersion(BindingHandle, &wServerVersion);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret != CR_SUCCESS)
+        return FALSE;
+
+    return (wServerVersion >= wVersion);
+}
+
+
+/***********************************************************************
  * CM_Locate_DevNodeA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Locate_DevNodeA(

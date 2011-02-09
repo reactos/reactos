@@ -544,6 +544,25 @@ WdmAudSetWaveDeviceFormatByLegacy(
     return MMSYSERR_NOERROR;
 }
 
+VOID
+CALLBACK
+LegacyCompletionRoutine(
+    IN  DWORD dwErrorCode,
+    IN  DWORD dwNumberOfBytesTransferred,
+    IN  LPOVERLAPPED lpOverlapped)
+{
+    PSOUND_OVERLAPPED Overlap;
+    PWDMAUD_DEVICE_INFO DeviceInfo;
+
+    Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
+    DeviceInfo = (PWDMAUD_DEVICE_INFO)Overlap->CompletionContext;
+
+    /* Call mmebuddy overlap routine */
+    Overlap->OriginalCompletionRoutine(dwErrorCode, DeviceInfo->Header.DataUsed, lpOverlapped);
+
+    HeapFree(GetProcessHeap(), 0, DeviceInfo);
+}
+
 MMRESULT
 WdmAudCommitWaveBufferByLegacy(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -554,7 +573,7 @@ WdmAudCommitWaveBufferByLegacy(
 {
     HANDLE Handle;
     MMRESULT Result;
-    WDMAUD_DEVICE_INFO DeviceInfo;
+    PWDMAUD_DEVICE_INFO DeviceInfo;
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
     BOOL Ret;
@@ -577,36 +596,52 @@ WdmAudCommitWaveBufferByLegacy(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
-
-    DeviceInfo.Header.FrameExtent = Length;
-    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    DeviceInfo = (PWDMAUD_DEVICE_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WDMAUD_DEVICE_INFO));
+    if (!DeviceInfo)
     {
-        DeviceInfo.Header.DataUsed = Length;
+        // no memory
+        return MMSYSERR_NOMEM;
     }
-    DeviceInfo.Header.Data = OffsetPtr;
-    DeviceInfo.Header.Size = sizeof(WDMAUD_DEVICE_INFO);
-    DeviceInfo.Header.PresentationTime.Numerator = 1;
-    DeviceInfo.Header.PresentationTime.Denominator = 1;
-    DeviceInfo.hDevice = Handle;
-    DeviceInfo.DeviceType = DeviceType;
+
+    DeviceInfo->Header.FrameExtent = Length;
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        DeviceInfo->Header.DataUsed = Length;
+    }
+    DeviceInfo->Header.Data = OffsetPtr;
+    DeviceInfo->Header.Size = sizeof(WDMAUD_DEVICE_INFO);
+    DeviceInfo->Header.PresentationTime.Numerator = 1;
+    DeviceInfo->Header.PresentationTime.Denominator = 1;
+    DeviceInfo->hDevice = Handle;
+    DeviceInfo->DeviceType = DeviceType;
 
 
-
+    // create completion event
     Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (Overlap->Standard.hEvent == NULL)
+    {
+        // no memory
+        return MMSYSERR_NOMEM;
+    }
+
+    Overlap->OriginalCompletionRoutine = CompletionRoutine;
+    Overlap->CompletionContext = (PVOID)DeviceInfo;
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Ret = WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
+        Ret = WriteFileEx(KernelHandle, DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, LegacyCompletionRoutine);
         if (Ret)
             WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
     else if (DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        Ret = ReadFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
-        //if (Ret)
-        //    WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+        Ret = ReadFileEx(KernelHandle, DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, LegacyCompletionRoutine);
+        if (Ret)
+            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
     }
+
+    // close event handle
+    CloseHandle(Overlap->Standard.hEvent);
 
     return MMSYSERR_NOERROR;
 }
