@@ -14,5 +14,5 @@ add_library(cryptdll SHARED ${SOURCE})
 
 set_module_type(cryptdll win32dll)
 target_link_libraries(cryptdll wine)
-add_importlibs(cryptdll msvcrt kernel32 ntdll)
+add_importlibs(cryptdll advapi32 msvcrt kernel32 ntdll)
 add_cab_target(cryptdll 1)
