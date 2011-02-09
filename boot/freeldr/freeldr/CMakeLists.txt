@@ -168,7 +168,7 @@ if(NOT MSVC)
     set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" SUFFIX ".sys")
 set_image_base(freeldr 0x8000)
 else()
-    set_target_properties(freeldr PROPERTIES LINK_FLAGS "/DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" SUFFIX ".sys")
+    set_target_properties(freeldr PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" SUFFIX ".sys")
 set_image_base(freeldr 0x10000)
 endif()
 
