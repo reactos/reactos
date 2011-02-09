@@ -5,7 +5,7 @@
 .code
 
 SyscallId = 0
-#define SVC_(name, argcount) STUB_K name, argcount
+#define SVC_(name, argcount) STUB_U name, argcount
 
 #include <sysfuncs.h>
 

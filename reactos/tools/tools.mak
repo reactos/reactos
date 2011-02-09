@@ -45,7 +45,6 @@ include tools/buildno/buildno.mak
 include tools/gendib/gendib.mak
 include tools/log2lines/log2lines.mak
 include tools/pipetools/pipetools.mak
-include tools/nci/nci.mak
 ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak
 endif

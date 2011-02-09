@@ -5,3 +5,7 @@
 		<xi:include href="ntoskrnl-generic.rbuild" />
 	</module>
 </group>
+<module name="ntdllsys" type="staticlibrary">
+	<include base="ntoskrnl">include</include>
+	<file>ntdll.S</file>
+</module>

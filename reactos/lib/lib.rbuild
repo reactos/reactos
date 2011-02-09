@@ -46,9 +46,6 @@
 	<directory name="nls">
 		<xi:include href="nls/nls.rbuild" />
 	</directory>
-	<directory name="ntdllsys">
-		<xi:include href="ntdllsys/ntdllsys.rbuild" />
-	</directory>
 	<directory name="ppcmmu">
 		<xi:include href="ppcmmu/ppcmmu.rbuild" />
 	</directory>
