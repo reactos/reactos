@@ -1585,6 +1585,7 @@ extern ULONG CmDefaultLanguageIdType;
 extern WCHAR CmInstallUILanguageId[];
 extern ULONG CmInstallUILanguageIdLength;
 extern ULONG CmInstallUILanguageIdType;
+extern ULONG CmNtGlobalFlag;
 extern LANGID PsInstallUILanguageId;
 extern LANGID PsDefaultUILanguageId;
 extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
