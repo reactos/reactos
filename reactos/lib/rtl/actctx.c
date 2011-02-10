@@ -575,12 +575,12 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 
 static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 {
-    _InterlockedExchangeAdd( &actctx->ref_count, 1 );
+    InterlockedExchangeAdd( &actctx->ref_count, 1 );
 }
 
 static void actctx_release( ACTIVATION_CONTEXT *actctx )
 {
-    if (_InterlockedExchangeAdd( &actctx->ref_count, -1 ) == 1)
+    if (InterlockedExchangeAdd( &actctx->ref_count, -1 ) == 1)
     {
         unsigned int i, j;
 

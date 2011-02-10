@@ -372,7 +372,7 @@ static struct timer_queue *get_timer_queue(HANDLE TimerQueue)
             NTSTATUS status = RtlCreateTimerQueue(&q);
             if (status == STATUS_SUCCESS)
             {
-                PVOID p = _InterlockedCompareExchangePointer(
+                PVOID p = InterlockedCompareExchangePointer(
                     (void **) &default_timer_queue, q, NULL);
                 if (p)
                     /* Got beat to the punch.  */

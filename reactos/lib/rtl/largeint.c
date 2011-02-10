@@ -14,6 +14,40 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#undef RtlUlonglongByteSwap
+#undef RtlUlongByteSwap
+#undef RtlUshortByteSwap
+
+/*
+ * @implemented
+ */
+USHORT
+FASTCALL
+RtlUshortByteSwap(IN USHORT Source)
+{
+    return _byteswap_ushort(Source);
+}
+
+/*
+ * @implemented
+ */
+ULONG
+FASTCALL
+RtlUlongByteSwap(IN ULONG Source)
+{
+    return _byteswap_ulong(Source);
+}
+
+/*
+ * @implemented
+ */
+ULONGLONG
+FASTCALL
+RtlUlonglongByteSwap(IN ULONGLONG Source)
+{
+    return _byteswap_uint64(Source);
+}
+    
 /*
  * @implemented
  */

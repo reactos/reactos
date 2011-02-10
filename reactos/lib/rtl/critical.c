@@ -59,15 +59,15 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
 
                 /* We failed, this is bad... */
                 DPRINT1("Failed to Create Event!\n");
-                _InterlockedDecrement(&CriticalSection->LockCount);
+                InterlockedDecrement(&CriticalSection->LockCount);
                 RtlRaiseStatus(Status);
                 return;
         }
         DPRINT("Created Event: %p \n", hNewEvent);
 
-        if (_InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
-                                               (PVOID)hNewEvent,
-                                                0)) {
+        if (InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
+                                              (PVOID)hNewEvent,
+                                               0)) {
 
             /* Some just created an event */
             DPRINT("Closing already created event: %p\n", hNewEvent);
@@ -437,7 +437,7 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     HANDLE Thread = (HANDLE)NtCurrentTeb()->ClientId.UniqueThread;
 
     /* Try to Lock it */
-    if (_InterlockedIncrement(&CriticalSection->LockCount) != 0) {
+    if (InterlockedIncrement(&CriticalSection->LockCount) != 0) {
 
         /*
          * We've failed to lock it! Does this thread
@@ -621,7 +621,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     if (--CriticalSection->RecursionCount) {
 
         /* Someone still owns us, but we are free. This needs to be done atomically. */
-        _InterlockedDecrement(&CriticalSection->LockCount);
+        InterlockedDecrement(&CriticalSection->LockCount);
 
     } else {
 
@@ -630,7 +630,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         CriticalSection->OwningThread = 0;
 
         /* Was someone wanting us? This needs to be done atomically. */
-        if (-1 != _InterlockedDecrement(&CriticalSection->LockCount)) {
+        if (-1 != InterlockedDecrement(&CriticalSection->LockCount)) {
 
             /* Let him have us */
             RtlpUnWaitCriticalSection(CriticalSection);
@@ -662,7 +662,7 @@ NTAPI
 RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     /* Try to take control */
-    if (_InterlockedCompareExchange(&CriticalSection->LockCount,
+    if (InterlockedCompareExchange(&CriticalSection->LockCount,
                                     0,
                                     -1) == -1) {
 
@@ -674,7 +674,7 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
    } else if (CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread) {
 
         /* It's already ours */
-        _InterlockedIncrement(&CriticalSection->LockCount);
+        InterlockedIncrement(&CriticalSection->LockCount);
         CriticalSection->RecursionCount++;
         return TRUE;
     }
