@@ -41,7 +41,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "새 작업(&N)"
         {
-            MENUITEM "창(&W)"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "창(&W)",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "열기(&O)...",                    ID_BROWSE_OPEN
         MENUITEM "저장(&S)",                       ID_BROWSE_SAVE
@@ -57,13 +57,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "도구바(&T)"
         {
-            MENUITEM "표준 바(&S)"            ID_BROWSE_BAR_STD
-            MENUITEM "주소 바(&A)"             ID_BROWSE_BAR_ADDR
+            MENUITEM "표준 바(&S)",           ID_BROWSE_BAR_STD
+            MENUITEM "주소 바(&A)",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "즐겨찾기(&F)"
     {
-        MENUITEM "즐겨찾기 추가(&A)..."         ID_BROWSE_ADDFAV
+        MENUITEM "즐겨찾기 추가(&A)...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "도움말(&H)"

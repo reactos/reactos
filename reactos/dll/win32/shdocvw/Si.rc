@@ -40,7 +40,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Nov"
         {
-            MENUITEM "&Okno"                        ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Okno",                       ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Odpri ...",                      ID_BROWSE_OPEN
         MENUITEM "&Shrani",                         ID_BROWSE_SAVE
@@ -57,18 +57,18 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "Oro&dne vrstice"
         {
-            MENUITEM "&Statusna vrstica"            ID_BROWSE_BAR_STD
-            MENUITEM "&Naslovna vrstica"            ID_BROWSE_BAR_ADDR
+            MENUITEM "&Statusna vrstica",           ID_BROWSE_BAR_STD
+            MENUITEM "&Naslovna vrstica",           ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Priljubljene"
     {
-        MENUITEM "&Dodaj med priljubljene ..."      ID_BROWSE_ADDFAV
+        MENUITEM "&Dodaj med priljubljene ...",     ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Pomoč"
     {
-        MENUITEM "O programu Internet Explorer ...",ID_BROWSE_ABOUT
+        MENUITEM "O programu Internet Explorer ...", ID_BROWSE_ABOUT
     }
 }
 

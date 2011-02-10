@@ -40,7 +40,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Nytt"
         {
-            MENUITEM "&Fönster"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Fönster",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Öppna...",                    ID_BROWSE_OPEN
         MENUITEM "&Spara",                       ID_BROWSE_SAVE
@@ -57,13 +57,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "Verktygs&fält"
         {
-            MENUITEM "&Standardfält"            ID_BROWSE_BAR_STD
-            MENUITEM "&Adressfält"             ID_BROWSE_BAR_ADDR
+            MENUITEM "&Standardfält",           ID_BROWSE_BAR_STD
+            MENUITEM "&Adressfält",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Favoriter"
     {
-        MENUITEM "&Lägg till favoriter..."         ID_BROWSE_ADDFAV
+        MENUITEM "&Lägg till favoriter...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Hjälp"

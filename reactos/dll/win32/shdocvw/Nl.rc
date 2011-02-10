@@ -38,7 +38,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Nieuw"
         {
-            MENUITEM "&Venster"                 ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Venster",                ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Openen...",                  ID_BROWSE_OPEN
         MENUITEM "Op&slaan",                    ID_BROWSE_SAVE
@@ -55,13 +55,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Werkbalken"
         {
-            MENUITEM "&Standaardbalk"           ID_BROWSE_BAR_STD
-            MENUITEM "&Adresbalk"               ID_BROWSE_BAR_ADDR
+            MENUITEM "&Standaardbalk",          ID_BROWSE_BAR_STD
+            MENUITEM "&Adresbalk",              ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Favorieten"
     {
-        MENUITEM "&Toevoegen aan Favorieten..." ID_BROWSE_ADDFAV
+        MENUITEM "&Toevoegen aan Favorieten...", ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Help"

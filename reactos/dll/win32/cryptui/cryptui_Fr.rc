@@ -428,7 +428,7 @@ BEGIN
     IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Standard de syntaxe de message cryptographique - Messages PKCS #7 (.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
-  CHECKBOX "&Inclure tous les certificats dans le chemin de certification si possible"
+  CHECKBOX "&Inclure tous les certificats dans le chemin de certification si possible",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,230,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "Échange d'informations &Personnelles - PKCS #12 (.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
