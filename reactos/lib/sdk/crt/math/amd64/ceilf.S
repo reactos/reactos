@@ -11,8 +11,7 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
-/* FUNCTIONS ****************************************************************/
-
+/* CODE **********************************************************************/
 .code64
 
 PUBLIC ceilf
@@ -39,7 +38,7 @@ ceilf:
 
     fstp dword ptr [rsp]
     movss xmm0, [rsp]
-    
+
     add rsp, 16
     ret
 

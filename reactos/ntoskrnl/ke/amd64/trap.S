@@ -76,7 +76,7 @@ ENDM
 #define TRAPFLAG_SYSTEMSERVICE (TRAPFLAG_VOLATILES|TRAPFLAG_DEBUG)
 #define TRAPFLAG_ALL HEX(ff)
 
-/* 
+/*
  * Stack Layout:
  * |-------------------|
  * | KTRAP_FRAME       |
@@ -89,7 +89,7 @@ ENDM
  */
 
 /*
- * ENTER_TRAP_FRAME - Allocate SIZE_KTRAP_FRAME and save registers to it
+ * ENTER_TRAP_FRAME - Allocate KTRAP_FRAME_LENGTH and save registers to it
  */
 MACRO(ENTER_TRAP_FRAME, Flags)
 LOCAL dont_swap
@@ -107,8 +107,8 @@ else
 endif
 
     /* Make room for a KTRAP_FRAME */
-    sub rsp, (SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME)
-    .allocstack (SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME)
+    sub rsp, (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
+    .allocstack (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
     .endprolog
 
     /* Save rbp */
@@ -278,12 +278,12 @@ ENDR
 .PROC InternalDispatchException
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
-    sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
-    .allocstack (SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME)
+    sub rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
+    .allocstack (EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH)
     .endprolog
 
     /* Set up EXCEPTION_RECORD */
-    lea rcx, [rsp + SIZE_KEXCEPTION_FRAME]
+    lea rcx, [rsp + KEXCEPTION_FRAME_LENGTH]
     mov [rcx + EXCEPTION_RECORD_ExceptionCode], eax
     xor rax, rax
     mov [rcx + EXCEPTION_RECORD_ExceptionFlags], eax
@@ -341,7 +341,7 @@ ENDR
     movdqa xmm14, [rsp + KEXCEPTION_FRAME_Xmm14]
     movdqa xmm15, [rsp + KEXCEPTION_FRAME_Xmm15]
 
-    add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
+    add rsp, EXCEPTION_RECORD_LENGTH + KEXCEPTION_FRAME_LENGTH
     ret
 .ENDP InternalDispatchException
 
@@ -516,7 +516,7 @@ PUBLIC KiInvalidOpcodeFault
 
 KiInvalidOpcodeKernel:
     /* Kernel mode fault */
-    
+
     /* Dispatch the exception */
     mov eax, STATUS_ILLEGAL_INSTRUCTION
     mov edx, 3
@@ -837,7 +837,7 @@ PUBLIC KiRaiseAssertion
     mov r10, 0
     mov r11, 0
     call InternalDispatchException
- 
+
     LEAVE_TRAP_FRAME
     iretq
 .ENDP KiRaiseAssertion

@@ -12,24 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _KSWITCHFRAME
-{
-    PVOID ExceptionList;
-    BOOLEAN ApcBypassDisable;
-    PVOID RetAddr;
-} KSWITCHFRAME, *PKSWITCHFRAME;
-
-typedef struct _KSTART_FRAME
-{
-    PKSYSTEM_ROUTINE SystemRoutine;
-    PKSTART_ROUTINE StartRoutine;
-    PVOID StartContext;
-    BOOLEAN UserThread;
-} KSTART_FRAME, *PKSTART_FRAME;
-
 typedef struct _KUINIT_FRAME
 {
-    KSWITCHFRAME CtxSwitchFrame;
+    KSWITCH_FRAME CtxSwitchFrame;
     KSTART_FRAME StartFrame;
     KTRAP_FRAME TrapFrame;
     //FX_SAVE_AREA FxSaveArea;
@@ -37,7 +22,7 @@ typedef struct _KUINIT_FRAME
 
 typedef struct _KKINIT_FRAME
 {
-    KSWITCHFRAME CtxSwitchFrame;
+    KSWITCH_FRAME CtxSwitchFrame;
     KSTART_FRAME StartFrame;
     //FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
@@ -55,7 +40,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     //PFX_SAVE_AREA FxSaveArea;
     //PFXSAVE_FORMAT FxSaveFormat;
     PKSTART_FRAME StartFrame;
-    PKSWITCHFRAME CtxSwitchFrame;
+    PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
     CONTEXT LocalContext;
     PCONTEXT Context = NULL;
@@ -140,7 +125,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         Thread->PreviousMode = UserMode;
 
         /* Tell KiThreadStartup of that too */
-        StartFrame->UserThread = TRUE;
+//        StartFrame->UserThread = TRUE;
     }
     else
     {
@@ -170,18 +155,18 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         Thread->PreviousMode = KernelMode;
 
         /* Tell KiThreadStartup of that too */
-        StartFrame->UserThread = FALSE;
+//        StartFrame->UserThread = FALSE;
     }
 
     /* Now setup the remaining data for KiThreadStartup */
-    StartFrame->StartContext = StartContext;
-    StartFrame->StartRoutine = StartRoutine;
-    StartFrame->SystemRoutine = SystemRoutine;
+//    StartFrame->StartContext = StartContext;
+//    StartFrame->StartRoutine = StartRoutine;
+//    StartFrame->SystemRoutine = SystemRoutine;
 
     /* And set up the Context Switch Frame */
-    CtxSwitchFrame->RetAddr = KiThreadStartup;
-    CtxSwitchFrame->ApcBypassDisable = TRUE;
-    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;;
+//    CtxSwitchFrame->RetAddr = KiThreadStartup;
+//    CtxSwitchFrame->ApcBypassDisable = TRUE;
+//    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;;
 
     /* Save back the new value of the kernel stack. */
     Thread->KernelStack = (PVOID)CtxSwitchFrame;

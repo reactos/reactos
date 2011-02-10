@@ -11,41 +11,45 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
-#define JUMP_BUFFER_Frame 0x00
-#define JUMP_BUFFER_Rbx   0x08
-#define JUMP_BUFFER_Rsp   0x10
-#define JUMP_BUFFER_Rbp   0x18
-#define JUMP_BUFFER_Rsi   0x20
-#define JUMP_BUFFER_Rdi   0x28
-#define JUMP_BUFFER_R12   0x30
-#define JUMP_BUFFER_R13   0x38
-#define JUMP_BUFFER_R14   0x40
-#define JUMP_BUFFER_R15   0x48
-#define JUMP_BUFFER_Rip   0x50
-#define JUMP_BUFFER_Spare 0x58
-#define JUMP_BUFFER_Xmm6  0x60
-#define JUMP_BUFFER_Xmm7  0x70
-#define JUMP_BUFFER_Xmm8  0x80
-#define JUMP_BUFFER_Xmm9  0x90
-#define JUMP_BUFFER_Xmm10 0xa0
-#define JUMP_BUFFER_Xmm11 0xb0
-#define JUMP_BUFFER_Xmm12 0xc0
-#define JUMP_BUFFER_Xmm13 0xd0
-#define JUMP_BUFFER_Xmm14 0xe0
-#define JUMP_BUFFER_Xmm15 0xf0
+#define JUMP_BUFFER_Frame   0 /* 0x00 */
+#define JUMP_BUFFER_Rbx     8 /* 0x08 */
+#define JUMP_BUFFER_Rsp    16 /* 0x10 */
+#define JUMP_BUFFER_Rbp    24 /* 0x18 */
+#define JUMP_BUFFER_Rsi    32 /* 0x20 */
+#define JUMP_BUFFER_Rdi    40 /* 0x28 */
+#define JUMP_BUFFER_R12    48 /* 0x30 */
+#define JUMP_BUFFER_R13    56 /* 0x38 */
+#define JUMP_BUFFER_R14    64 /* 0x40 */
+#define JUMP_BUFFER_R15    72 /* 0x48 */
+#define JUMP_BUFFER_Rip    80 /* 0x50 */
+#define JUMP_BUFFER_Spare  88 /* 0x58 */
+#define JUMP_BUFFER_Xmm6   96 /* 0x60 */
+#define JUMP_BUFFER_Xmm7  112 /* 0x70 */
+#define JUMP_BUFFER_Xmm8  128 /* 0x80 */
+#define JUMP_BUFFER_Xmm9  144 /* 0x90 */
+#define JUMP_BUFFER_Xmm10 160 /* 0xa0 */
+#define JUMP_BUFFER_Xmm11 176 /* 0xb0 */
+#define JUMP_BUFFER_Xmm12 192 /* 0xc0 */
+#define JUMP_BUFFER_Xmm13 208 /* 0xd0 */
+#define JUMP_BUFFER_Xmm14 224 /* 0xe0 */
+#define JUMP_BUFFER_Xmm15 240 /* 0xf0 */
 
 
 /* FUNCTIONS ******************************************************************/
+.code64
 
-/*
+/*!
  * int _setjmp(jmp_buf env);
  *
- * Parameters: <rcx> - jmp_buf env
- * Returns:    0
- * Notes:      Sets up the jmp_buf
+ * \param   <rcx> - jmp_buf env
+ * \return  0
+ * \note    Sets up the jmp_buf
  */
 PUBLIC _setjmp
-.proc _setjmp
+FUNC _setjmp
+
+    .endprolog
+
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -73,18 +77,21 @@ PUBLIC _setjmp
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp setjmp
+ENDFUNC _setjmp
 
-/*
+/*!
  * int _setjmpex(jmp_buf _Buf,void *_Ctx);
  *
- * Parameters: <rcx> - jmp_buf env
- *             <rdx> - frame
- * Returns:    0
- * Notes:      Sets up the jmp_buf
+ * \param   <rcx> - jmp_buf env
+ * \param   <rdx> - frame
+ * \return  0
+ * \note    Sets up the jmp_buf
  */
 PUBLIC _setjmpex
-.proc _setjmpex
+FUNC _setjmpex
+
+    .endprolog
+
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -112,19 +119,21 @@ PUBLIC _setjmpex
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp setjmpex
+ENDFUNC _setjmpex
 
 
-/*
+/*!
  * void longjmp(jmp_buf env, int value);
  *
- * Parameters: <rcx> - jmp_buf setup by _setjmp
- *             <rdx> - int     value to return
- * Returns:    Doesn't return
- * Notes:      Non-local goto
+ * \param    <rcx> - jmp_buf setup by _setjmp
+ * \param    <rdx> - int     value to return
+ * \return   Doesn't return
+ * \note     Non-local goto
  */
 PUBLIC longjmp
-.proc longjmp
+FUNC longjmp
+
+    .endprolog
 
     // FIXME: handle frame
 
@@ -152,9 +161,9 @@ PUBLIC longjmp
     /* return param2 or 1 if it was 0 */
     mov rax, rdx
     test rax, rax
-    jnz 2f
+    jnz l2
     inc rax
-2:  jmp r8
-.endp longjmp
+l2: jmp r8
+ENDFUNC longjmp
 
 END

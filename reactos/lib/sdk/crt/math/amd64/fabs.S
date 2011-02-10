@@ -10,12 +10,12 @@
 
 #include <asm.inc>
 
-/* FUNCTIONS ****************************************************************/
-
+/* CODE **********************************************************************/
 .code64
 
-PUBLIC fabs
-fabs:
+PUBLIC _fabs
+_fabs:
     UNIMPLEMENTED fabs
     ret
 
+END
