@@ -74,6 +74,7 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>heapdbg.c</file>
+	<file>heappage.c</file>
 	<file>image.c</file>
 	<file>interlck.c</file>
 	<file>message.c</file>
