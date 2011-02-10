@@ -18,7 +18,6 @@
 #define DEVICESTOPPED           0x08
 #define DEVICESTALLED           0x10
 #define DEVICEREMOVED           0x20
-#define DEVICEREMOVED           0x20
 
 
 #define	MAX_USB_DEVICES         127
