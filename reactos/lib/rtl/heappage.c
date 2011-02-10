@@ -36,4 +36,73 @@ RtlpPageHeapCreate(ULONG Flags,
     return NULL;
 }
 
+PVOID NTAPI
+RtlpPageHeapDestroy(HANDLE HeapPtr)
+{
+    return FALSE;
+}
+
+PVOID NTAPI
+RtlpPageHeapAllocate(IN PVOID HeapPtr,
+                     IN ULONG Flags,
+                     IN SIZE_T Size)
+{
+    return NULL;
+}
+
+BOOLEAN NTAPI
+RtlpPageHeapFree(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr)
+{
+    return FALSE;
+}
+
+PVOID NTAPI
+RtlpPageHeapReAllocate(HANDLE HeapPtr,
+                       ULONG Flags,
+                       PVOID Ptr,
+                       SIZE_T Size)
+{
+    return NULL;
+}
+
+BOOLEAN NTAPI
+RtlpPageHeapGetUserInfo(PVOID HeapHandle,
+                        ULONG Flags,
+                        PVOID BaseAddress,
+                        PVOID *UserValue,
+                        PULONG UserFlags)
+{
+    return FALSE;
+}
+
+BOOLEAN NTAPI
+RtlpPageHeapSetUserValue(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         PVOID UserValue)
+{
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+RtlpPageHeapSetUserFlags(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         ULONG UserFlagsReset,
+                         ULONG UserFlagsSet)
+{
+    return FALSE;
+}
+
+SIZE_T NTAPI
+RtlpPageHeapSize(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr)
+{
+    return 0;
+}
+
 /* EOF */

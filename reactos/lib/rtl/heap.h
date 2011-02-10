@@ -385,6 +385,8 @@ RtlDebugSizeHeap(HANDLE HeapPtr,
                  ULONG Flags,
                  PVOID Ptr);
 
+/* heappage.c */
+
 HANDLE NTAPI
 RtlpPageHeapCreate(ULONG Flags,
                    PVOID Addr,
@@ -392,5 +394,50 @@ RtlpPageHeapCreate(ULONG Flags,
                    SIZE_T CommitSize,
                    PVOID Lock,
                    PRTL_HEAP_PARAMETERS Parameters);
+
+PVOID NTAPI
+RtlpPageHeapDestroy(HANDLE HeapPtr);
+
+PVOID NTAPI
+RtlpPageHeapAllocate(IN PVOID HeapPtr,
+                     IN ULONG Flags,
+                     IN SIZE_T Size);
+
+BOOLEAN NTAPI
+RtlpPageHeapFree(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
+
+PVOID NTAPI
+RtlpPageHeapReAllocate(HANDLE HeapPtr,
+                       ULONG Flags,
+                       PVOID Ptr,
+                       SIZE_T Size);
+
+BOOLEAN NTAPI
+RtlpPageHeapGetUserInfo(PVOID HeapHandle,
+                        ULONG Flags,
+                        PVOID BaseAddress,
+                        PVOID *UserValue,
+                        PULONG UserFlags);
+
+BOOLEAN NTAPI
+RtlpPageHeapSetUserValue(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         PVOID UserValue);
+
+BOOLEAN
+NTAPI
+RtlpPageHeapSetUserFlags(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         ULONG UserFlagsReset,
+                         ULONG UserFlagsSet);
+
+SIZE_T NTAPI
+RtlpPageHeapSize(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
 
 #endif

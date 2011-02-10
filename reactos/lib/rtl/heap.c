@@ -1364,6 +1364,10 @@ RtlCreateHeap(ULONG Flags,
 
         //ASSERT(FALSE);
         DPRINT1("Enabling page heap failed\n");
+
+        /* Reset a special Parameters == -1 hack */
+        if ((ULONG_PTR)Parameters == (ULONG_PTR)-1)
+            Parameters = NULL;
     }
 
     /* Check validation flags */
@@ -1715,6 +1719,9 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
     PHEAP_SEGMENT Segment;
 
     if (!HeapPtr) return NULL;
+
+    /* Call page heap routine if required */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS) return RtlpPageHeapDestroy(HeapPtr);
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Heap->Flags))
