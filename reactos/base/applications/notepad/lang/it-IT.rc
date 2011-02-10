@@ -90,7 +90,7 @@ BEGIN
         MENUITEM "&Trova...",                   CMD_HELP_SEARCH
         MENUITEM "&Aiuto sulla Guida",          CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni &su blocco note" CMD_ABOUT
+        MENUITEM "Informazioni &su blocco note",CMD_ABOUT
         MENUITEM "Inf&o...",                    CMD_ABOUT_WINE
     END
 END

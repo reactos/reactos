@@ -87,7 +87,7 @@ BEGIN
         MENUITEM "&Căutare...",    CMD_HELP_SEARCH
         MENUITEM "&Ajutor despre ajutor", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre"         CMD_ABOUT
+        MENUITEM "&Despre",        CMD_ABOUT
         MENUITEM "Inf&o",         CMD_ABOUT_WINE
     END
 END

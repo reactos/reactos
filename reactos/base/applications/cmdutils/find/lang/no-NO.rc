@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FINN: Skriv alle linjene for filen som inneholder en streng.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"streng\" [ fil... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""streng"" [ fil... ]\n\
     /C  Teller nummer av linjer som inneholder strenger\n\
     /I  Ignorere sak\n\
     /N  Nummer viste linjer, start med 1\n\

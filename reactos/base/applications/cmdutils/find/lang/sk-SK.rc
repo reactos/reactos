@@ -8,7 +8,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FIND: Zobraz¡ vçetky riadky s£boru obsahuj£ce h–adanì reœazec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"reœazec\" [ s£bor... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""reœazec"" [ s£bor... ]\n\
     /C  Zobraz¡ poŸet riadkov, ktor‚ obsahuj£ reœazec.\n\
     /I  Ignoruje ve–kosœ p¡smen.\n\
     /N  ¬¡sluje zobrazen‚ riadky, zaŸ¡na od 1.\n\

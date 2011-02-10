@@ -2,13 +2,13 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nSyntax: ping [-t] [-n Anzahl] [-l Größe] [-w Zeitlimit] Zielhost\n\n" \
-                "Optionen:\n" \
-                "    -t             Sendet fortlaufend Pings an den angegebenen Host.\n" \
-                "                   Drücken Sie STRG-C, um den Vorgang abzubrechen.\n" \
-                "    -n Anzahl      Anzahl der Echoanforderungen, die gesendet werden.\n" \
-                "    -l Größe       Größe des Sendepuffers.\n" \
-                "    -w Zeitlimit   Zeitlimit in Millisekunden für eine Antwort.\n\n\0"
+    IDS_USAGE "\nSyntax: ping [-t] [-n Anzahl] [-l Größe] [-w Zeitlimit] Zielhost\n\n\
+Optionen:\n\
+    -t             Sendet fortlaufend Pings an den angegebenen Host.\n\
+                   Drücken Sie STRG-C, um den Vorgang abzubrechen.\n\
+    -n Anzahl      Anzahl der Echoanforderungen, die gesendet werden.\n\
+    -l Größe       Größe des Sendepuffers.\n\
+    -w Zeitlimit   Zeitlimit in Millisekunden für eine Antwort.\n\n\0"
 
     IDS_PING_WITH_BYTES             "\nPinging %1 [%2] with %3!d! bytes Data:\n\n\0"
     IDS_PING_STATISTICS             "\nPing Statistik für %1:\n\0"

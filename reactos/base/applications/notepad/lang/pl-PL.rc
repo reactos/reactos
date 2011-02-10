@@ -94,7 +94,7 @@ BEGIN
         MENUITEM "&Szukaj...",            CMD_HELP_SEARCH
         MENUITEM "Pomo&c",                CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Notatnik - informacje" CMD_ABOUT
+        MENUITEM "&Notatnik - informacje",CMD_ABOUT
         MENUITEM "&ReactOS - informacje", CMD_ABOUT_WINE
     END
 END

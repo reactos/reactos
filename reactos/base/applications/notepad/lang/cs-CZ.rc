@@ -89,7 +89,7 @@ BEGIN
         MENUITEM "&Najít...",         CMD_HELP_SEARCH
         MENUITEM "Pomoc k ná&povìdì", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&O programu..."     CMD_ABOUT
+        MENUITEM "&O programu...",    CMD_ABOUT
         MENUITEM "In&fo...",          CMD_ABOUT_WINE
     END
 END

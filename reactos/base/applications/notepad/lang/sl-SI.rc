@@ -85,7 +85,7 @@ BEGIN
         MENUITEM "&Najdi ...",       CMD_HELP_SEARCH
         MENUITEM "&O pomoèi",        CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About"            CMD_ABOUT
+        MENUITEM "&About",           CMD_ABOUT
         MENUITEM "Inf&ormacije ...", CMD_ABOUT_WINE
     END
 END

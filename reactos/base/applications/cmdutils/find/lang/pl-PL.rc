@@ -11,7 +11,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FIND: Wyœwietla wszystkie linie danego pliku, zawieraj¹ce szukany ci¹g znaków.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"ci¹g znaków\" [ plik... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ci¹g znaków"" [ plik... ]\n\
     /C  Oblicza w ilu liniach pojawi³ siê szukany ci¹g znaków\n\
     /I  Ignoruje wielkoœæ liter\n\
     /N  Numeruje wyœwietlane linie, zaczynaj¹c od 1\n\

@@ -2,14 +2,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n" \
-                "Options:\n" \
-                "    -t             Ping the specified host until stopped.\n" \
-                "                   To stop - type Control-C.\n" \
-                "    -n count       Number of echo requests to send.\n" \
-                "    -l size        Send buffer size.\n" \
-                "    -w timeout     Timeout in milliseconds to wait for each reply.\n\n\0"
-    
+    IDS_USAGE "\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n\
+Options:\n\
+    -t             Ping the specified host until stopped.\n\
+                   To stop - type Control-C.\n\
+    -n count       Number of echo requests to send.\n\
+    -l size        Send buffer size.\n\
+    -w timeout     Timeout in milliseconds to wait for each reply.\n\n\0"
+
     IDS_PING_WITH_BYTES             "\nPinging %1 [%2] with %3!d! bytes of data:\n\n\0"
     IDS_PING_STATISTICS             "\nPing statistics for %1:\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST  "    Packets: Sent = %1!d!, Received = %2!d!, Lost = %3!d! (%4!d!%% loss),\n\0"

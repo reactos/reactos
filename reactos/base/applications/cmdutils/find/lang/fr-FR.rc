@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FIND: Affiche toutes les lignes d'un fichier qui contiennent un morceau de texte.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"texte\" [ fichier... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""texte"" [ fichier... ]\n\
     /C  Compte le nombre de lignes qui contiennent le texte\n\
     /I  Insensible à la casse\n\
     /N  Numérote les lignes affichées en commençant à 1\n\

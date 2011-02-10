@@ -73,7 +73,7 @@ BEGIN
         MENUITEM "&Hæadaù...",             CMD_HELP_SEARCH
         MENUITEM "&Pomoc",                CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "»&o je Pozn·mkov˝ blok" CMD_ABOUT
+        MENUITEM "»&o je Pozn·mkov˝ blok",CMD_ABOUT
         MENUITEM "»o je &VÌno (Wine)",    CMD_ABOUT_WINE
   END
  END

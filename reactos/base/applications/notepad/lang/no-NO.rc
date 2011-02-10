@@ -87,7 +87,7 @@ BEGIN
         MENUITEM "&Søk",            CMD_HELP_SEARCH
         MENUITEM "&Hjelp om hjelp", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Om"              CMD_ABOUT
+        MENUITEM "&Om",             CMD_ABOUT
         MENUITEM "&Infomasjon",     CMD_ABOUT_WINE
     END
 END

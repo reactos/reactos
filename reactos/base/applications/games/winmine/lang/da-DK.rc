@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "Ny&begynder",     IDM_BEGINNER
         MENUITEM "&Avanceret",      IDM_ADVANCED
         MENUITEM "&Ekspert",        IDM_EXPERT
-        MENUITEM "B&rugerdefineret" IDM_CUSTOM
+        MENUITEM "B&rugerdefineret", IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "Afslut&t\tAlt+X", IDM_EXIT
     END
