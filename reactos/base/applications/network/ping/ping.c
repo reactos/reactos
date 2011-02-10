@@ -738,6 +738,7 @@ int wmain(int argc, LPWSTR argv[])
         FormatOutput(IDS_PACKETS_SENT_RECEIVED_LOST,\
                      SentCount, SentCount - LostCount, LostCount, Count);
 
+
         /* Print approximate times or NO approximate times if 100% loss */
         if ((SentCount - LostCount) > 0)
         {

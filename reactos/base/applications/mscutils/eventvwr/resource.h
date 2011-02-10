@@ -60,3 +60,4 @@
 #define IDS_COLUMNUSER                  306
 #define IDS_COLUMNCOMPUTER              307
 #define IDS_COLUMNEVENTDATA             308
+

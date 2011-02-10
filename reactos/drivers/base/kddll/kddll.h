@@ -12,14 +12,14 @@
 #include <ntifs.h>
 #define NDEBUG
 #include <halfuncs.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <debug.h>
 #include "arc/arc.h"
 #include "windbgkd.h"
 
 #include <wdbgexts.h>
 #include <ioaccess.h> /* port intrinsics */
+
+long atol(const char *str);
 
 typedef UCHAR BYTE, *PBYTE;
 

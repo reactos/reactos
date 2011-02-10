@@ -12,9 +12,6 @@
 #include "dhcpcapi.h"
 #include <assert.h>
 
-#define NDEBUG
-#include "debug.h"
-
 DWORD APIENTRY DhcpRosGetAdapterInfo(DWORD AdapterIndex,
                                      PBOOL DhcpEnabled,
                                      PDWORD DhcpServer,

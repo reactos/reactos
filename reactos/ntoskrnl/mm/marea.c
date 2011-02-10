@@ -374,8 +374,9 @@ MmInsertMemoryArea(
    /* Build a lame VAD if this is a user-space allocation */
    if ((marea->EndingAddress < MmSystemRangeStart) && (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
    {
-       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW);
        PMMVAD Vad;
+
+       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW);
        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'Fake');
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));

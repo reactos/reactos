@@ -1,12 +1,3 @@
-;
-; Created by : Marc Piulachs.
-; This source code is offered for use in the public domain.
-;
-
-;
-; ntoskrnl.exe bug codes 
-;
-
 MessageIdTypedef=ULONG
 
 SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
@@ -23,9 +14,6 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 
 LanguageNames=(English=0x409:MSG00409)
 
-;
-; message definitions
-;
 MessageId=0x7E
 Severity=Informational
 Facility=System
@@ -1528,5 +1516,3 @@ SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
 Language=English
 An attempt was made to execute to non-executable memory.
 .
-
-; EOF

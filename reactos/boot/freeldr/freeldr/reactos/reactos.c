@@ -606,6 +606,8 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     //
     if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
     {
+        PCHAR File;
+
         //
         // Append boot-time options
         //
@@ -614,7 +616,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
         //
         // Check if a ramdisk file was given
         //
-        PCHAR File;
         File = strstr(value, "/RDIMAGEPATH=");
         if (File)
         {

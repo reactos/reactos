@@ -31,11 +31,6 @@ extern BOOLEAN PnpSystemInit;
 PDRIVER_OBJECT IopRootDriverObject;
 PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList = NULL;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, PnpInit)
-#pragma alloc_text(INIT, PnpInit2)
-#endif
-
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 {
     PDEVICE_OBJECT DeviceObject;

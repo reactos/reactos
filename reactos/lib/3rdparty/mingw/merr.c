@@ -50,4 +50,3 @@ _matherr (struct _exception *pexcept)
 	  type, pexcept->name, pexcept->arg1, pexcept->arg2, pexcept->retval);
   return 0;
 }
-

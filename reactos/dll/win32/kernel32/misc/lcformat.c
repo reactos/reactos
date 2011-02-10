@@ -3,7 +3,7 @@
  *
  * Copyright 1995 Martin von Loewis
  * Copyright 1998 David Lee Lambert
- * Copyright 2000 Julio CÃ©sar GÃ¡zquez
+ * Copyright 2000 Julio César Gázquez
  * Copyright 2003 Jon Griffiths
  * Copyright 2005 Dmitry Timoshkov
  *

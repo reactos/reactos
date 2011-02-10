@@ -540,6 +540,7 @@ NTSTATUS HandleUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp)
                     if (!(PdoDeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus & 0x8000))
                         CompletePendingURBRequest(PdoDeviceExtension);
 
+
                     break;
                 }
                 case USB_REQUEST_SET_ADDRESS:

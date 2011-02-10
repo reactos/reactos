@@ -20,7 +20,6 @@ SXS=0x15:FACILITY_SXS_ERROR_CODE
 )
 LanguageNames=(English=0x409:MSG00409)
 
-;#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
 MessageId=0x00
 Severity=Success
 Facility=System

@@ -11,7 +11,9 @@
 #error FIXME: Unsupported __ImageBase implementation.
 #else
 /* Hack, for bug in ld.  Will be removed soon.  */
+#ifndef _MSC_VER
 #define __ImageBase __MINGW_LSYMBOL(_image_base__)
+#endif
 /* This symbol is defined by the linker.  */
 extern IMAGE_DOS_HEADER __ImageBase;
 #endif
