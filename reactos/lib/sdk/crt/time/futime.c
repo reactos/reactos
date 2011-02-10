@@ -6,6 +6,7 @@
  * PROGRAMERS:  Timo Kreuzer
  */
 #include <precomp.h>
+#define RC_INVOKED 1 // to prevent inline functions
 #include <time.h>
 #include <sys/utime.h>
 #include "bitsfixup.h"

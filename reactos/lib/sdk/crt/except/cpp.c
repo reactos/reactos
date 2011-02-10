@@ -63,6 +63,10 @@ typedef struct _rtti_object_locator
 
 #define THISCALL(func) __thiscall_ ## func
 #define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
+
+#ifdef _MSC_VER
+#include <internal/wine_msc.h>
+#else
 #define DEFINE_THISCALL_WRAPPER(func,args) \
     extern void THISCALL(func)(void); \
     __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
@@ -70,6 +74,8 @@ typedef struct _rtti_object_locator
                       "pushl %ecx\n\t" \
                       "pushl %eax\n\t" \
                       "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#endif /* _MSC_VER */
+
 #else /* __i386__ */
 
 #define THISCALL(func) func
@@ -658,6 +664,7 @@ void * __stdcall MSVCRT_type_info_vector_dtor(type_info * _this, unsigned int fl
 
 /* vtables */
 
+#ifdef __GNUC__
 #ifdef _WIN64
 
 #define __ASM_VTABLE(name,funcs) \
@@ -700,6 +707,16 @@ __ASM_EXCEPTION_VTABLE(__non_rtti_object)
 
 #ifndef __GNUC__
 }
+#endif
+#endif
+
+#ifdef _MSC_VER
+#pragma message ("HAXX!")
+const vtable_ptr MSVCRT_exception_vtable;
+const vtable_ptr MSVCRT_bad_typeid_vtable;
+const vtable_ptr MSVCRT_bad_cast_vtable;
+const vtable_ptr MSVCRT___non_rtti_object_vtable;
+const vtable_ptr MSVCRT_type_info_vtable;
 #endif
 
 /* Static RTTI for exported objects */

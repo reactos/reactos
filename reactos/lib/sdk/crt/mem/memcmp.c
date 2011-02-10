@@ -4,6 +4,11 @@
 
 #include <string.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4164)
+#pragma function(memcmp)
+#endif
+
 int memcmp(const void *s1, const void *s2, size_t n)
 {
     if (n != 0) {

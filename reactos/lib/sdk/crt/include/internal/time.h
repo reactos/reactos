@@ -20,9 +20,9 @@ FileTimeToUnixTime(const FILETIME *FileTime, USHORT *millitm)
     ULargeInt.HighPart = FileTime->dwHighDateTime;
     ULargeInt.QuadPart -= DIFFTIME;
 
-    time = ULargeInt.QuadPart / 10000000;
+    time = (time_t)(ULargeInt.QuadPart / 10000000);
     if (millitm)
-        *millitm = (ULargeInt.QuadPart % 10000000) / 10000;
+        *millitm = (USHORT)((ULargeInt.QuadPart % 10000000) / 10000);
 
     return time;
 }

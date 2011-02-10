@@ -10,6 +10,10 @@
 
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#pragma function(_rotr, _rotl, _rotr, _lrotl, _lrotr)
+#endif
+
 unsigned int _rotr( unsigned int value, int shift );
 /*
  * @implemented

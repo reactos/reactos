@@ -3,7 +3,8 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
-#include <math.h>
+
+double __cdecl pow(double x, double y);
 
 float powf(float x, float y)
 {

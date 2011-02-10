@@ -9,8 +9,9 @@
  * is preserved.
  * ====================================================
  */
-
+#define modfl _dummy_modfl
 #include <precomp.h>
+#undef modfl
 
 //static const double one = 1.0;
 
