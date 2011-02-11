@@ -2,6 +2,8 @@
 #include <asm.inc>
 #include <syscalls.inc>
 
+EXTERN _KiSystemService
+
 .code
 
 SyscallId = 0
