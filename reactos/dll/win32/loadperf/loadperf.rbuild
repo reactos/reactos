@@ -6,6 +6,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>loadperf_main.c</file>
+	<file>stubs.c</file>
 	<library>wine</library>
 	<library>ntdll</library>
 </module>

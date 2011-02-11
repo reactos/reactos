@@ -6,5 +6,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<file>activeds_main.c</file>
+	<file>stubs.c</file>
 </module>
 </group>

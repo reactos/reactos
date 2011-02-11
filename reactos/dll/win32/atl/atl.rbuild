@@ -12,6 +12,7 @@
 	<file>atl_main.c</file>
 	<file>registrar.c</file>
 	<file>rsrc.rc</file>
+	<file>stubs.c</file>
 	<include base="atl" root="intermediate">.</include>
 	<library>wine</library>
 	<library>uuid</library>

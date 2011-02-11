@@ -46,6 +46,7 @@
 	<file>trackbar.c</file>
 	<file>treeview.c</file>
 	<file>updown.c</file>
+	<file>stubs.c</file>
 	<file>rsrc.rc</file>
 	<library>uuid</library>
 	<library>wine</library>

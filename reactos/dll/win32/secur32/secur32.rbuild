@@ -9,6 +9,7 @@
 	<file>dllmain.c</file>
 	<file>secext.c</file>
 	<file>sspi.c</file>
+	<file>stubs.c</file>
 	<file>secur32.rc</file>
 	<pch>precomp.h</pch>
 </module>
