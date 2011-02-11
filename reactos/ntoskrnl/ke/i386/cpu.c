@@ -109,7 +109,13 @@ RDMSR(IN ULONG Register)
 #define CX86_CCR1 0xc1
 
 /* NSC/Cyrix CPU indexed register access macros */
-#define getCx86(reg) ({ WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23); })
+static __inline
+ULONG
+getCx86(UCHAR reg)
+{
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22, reg);
+    return READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23);
+}
 
 #define setCx86(reg, data) do { \
    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \

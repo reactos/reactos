@@ -128,6 +128,14 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
+
+//
+// State Flags
+//
+#define PTE_VALID               0x1
+#define PTE_ACCESSED            0x20
+#define PTE_DIRTY               0x40
+
 //
 // Cache flags
 //

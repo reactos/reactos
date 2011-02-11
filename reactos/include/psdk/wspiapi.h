@@ -45,6 +45,12 @@ char (&__wspiapi_countof_helper(__CountofType (&_Array)[_N]))[_N];
 #define getnameinfo WspiapiGetNameInfo
 #define freeaddrinfo WspiapiFreeAddrInfo
 
+#if _MSC_VER
+#define WSPIAPI_INLINE __inline
+#else
+#define WSPIAPI_INLINE static inline
+#endif
+
 typedef int
 (WINAPI *WSPIAPI_PGETADDRINFO)(
   IN const char *nodename,
@@ -436,12 +442,12 @@ typedef struct {
 } WSPIAPI_FUNCTION;
 
 #define WSPIAPI_FUNCTION_ARRAY {                         \
-  "getaddrinfo", (FARPROC) WspiapiLegacyGetAddrInfo,     \
-  "getnameinfo", (FARPROC) WspiapiLegacyGetNameInfo,     \
-  "freeaddrinfo", (FARPROC) WspiapiLegacyFreeAddrInfo,   \
+  {"getaddrinfo", (FARPROC) WspiapiLegacyGetAddrInfo},   \
+  {"getnameinfo", (FARPROC) WspiapiLegacyGetNameInfo},   \
+  {"freeaddrinfo", (FARPROC) WspiapiLegacyFreeAddrInfo}  \
 }
 
-FORCEINLINE
+WSPIAPI_INLINE
 FARPROC
 WINAPI
 WspiapiLoad(
@@ -503,7 +509,7 @@ WspiapiLoad(
   return (rgtGlobal[wFunction].pfAddress);
 }
 
-FORCEINLINE
+WSPIAPI_INLINE
 int
 WINAPI
 WspiapiGetAddrInfo(
@@ -522,7 +528,7 @@ WspiapiGetAddrInfo(
   return iError;
 }
 
-FORCEINLINE
+WSPIAPI_INLINE
 int
 WINAPI
 WspiapiGetNameInfo(
@@ -544,7 +550,7 @@ WspiapiGetNameInfo(
   return iError;
 }
 
-FORCEINLINE
+WSPIAPI_INLINE
 void
 WINAPI
 WspiapiFreeAddrInfo(

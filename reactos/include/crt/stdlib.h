@@ -134,13 +134,7 @@ extern "C" {
   _invalid_parameter_handler __cdecl _set_invalid_parameter_handler(_invalid_parameter_handler _Handler);
   _invalid_parameter_handler __cdecl _get_invalid_parameter_handler(void);
 
-#ifndef _CRT_ERRNO_DEFINED
-#define _CRT_ERRNO_DEFINED
-  _CRTIMP extern int *__cdecl _errno(void);
-#define errno (*_errno())
-  errno_t __cdecl _set_errno(int _Value);
-  errno_t __cdecl _get_errno(int *_Value);
-#endif
+#include <errno.h>
   _CRTIMP unsigned long *__cdecl __doserrno(void);
 #define _doserrno (*__doserrno())
   errno_t __cdecl _set_doserrno(unsigned long _Value);
@@ -447,10 +441,10 @@ extern "C" {
   _CRTIMP void __cdecl _wsplitpath(const wchar_t *_FullPath,wchar_t *_Drive,wchar_t *_Dir,wchar_t *_Filename,wchar_t *_Ext);
 #endif
 
-  _CRTIMP void __cdecl _beep(unsigned _Frequency,unsigned _Duration) __MINGW_ATTRIB_DEPRECATED;
+  _CRTIMP __MINGW_ATTRIB_DEPRECATED void __cdecl _beep(unsigned _Frequency,unsigned _Duration);
   /* Not to be confused with  _set_error_mode (int).  */
-  _CRTIMP void __cdecl _seterrormode(int _Mode) __MINGW_ATTRIB_DEPRECATED;
-  _CRTIMP void __cdecl _sleep(unsigned long _Duration) __MINGW_ATTRIB_DEPRECATED;
+  _CRTIMP __MINGW_ATTRIB_DEPRECATED void __cdecl _seterrormode(int _Mode);
+  _CRTIMP __MINGW_ATTRIB_DEPRECATED void __cdecl _sleep(unsigned long _Duration);
 #endif
 
 #ifndef	NO_OLDNAMES

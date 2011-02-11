@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
-#include <string.h>
 
 #define WINE_UNICODE_INLINE  /* nothing */
 #include "wine/unicode.h"
@@ -465,7 +464,7 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
                     *fmta = '\0';
                     if (*iter == 'a' || *iter == 'A' ||
                         *iter == 'e' || *iter == 'E' ||
-                        *iter == 'f' || *iter == 'F' || 
+                        *iter == 'f' || *iter == 'F' ||
                         *iter == 'g' || *iter == 'G')
                         sprintf(bufaiter, fmtbufa, va_arg(valist, double));
                     else

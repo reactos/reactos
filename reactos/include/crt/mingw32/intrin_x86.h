@@ -1128,6 +1128,39 @@ __INTRIN_INLINE void __outdwordstring(unsigned short const Port, const unsigned 
 	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
 }
 
+__INTRIN_INLINE int _inp(unsigned short Port)
+{
+	return __inbyte(Port);
+}
+
+__INTRIN_INLINE unsigned short _inpw(unsigned short Port)
+{
+	return __inword(Port);
+}
+
+__INTRIN_INLINE unsigned long _inpd(unsigned short Port)
+{
+	return __indword(Port);
+}
+
+__INTRIN_INLINE int _outp(unsigned short Port, int databyte)
+{
+	__outbyte(Port, databyte);
+	return databyte;
+}
+
+__INTRIN_INLINE unsigned short _outpw(unsigned short Port, unsigned short dataword)
+{
+	__outword(Port, dataword);
+	return dataword;
+}
+
+__INTRIN_INLINE unsigned long _outpd(unsigned short Port, unsigned long dataword)
+{
+	__outdword(Port, dataword);
+	return dataword;
+}
+
 
 /*** System information ***/
 __INTRIN_INLINE void __cpuid(int CPUInfo[], const int InfoType)
