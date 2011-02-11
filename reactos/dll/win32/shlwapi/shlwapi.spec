@@ -417,7 +417,7 @@
 417 stub -noname SHWinHelpOnDemandA
 418 stdcall -noname MLFreeLibrary(long)
 419 stdcall -noname SHFlushSFCacheWrap()
-420 stub @ # CMemStream::Commit
+420 stub SHLWAPI_420 # CMemStream::Commit
 421 stub -noname SHLoadPersistedDataObject
 422 stdcall -noname SHGlobalCounterCreateNamedA(str long)
 423 stdcall -noname SHGlobalCounterCreateNamedW(wstr long)

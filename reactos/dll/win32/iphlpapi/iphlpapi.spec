@@ -10,7 +10,7 @@
 @ stub AllocateAndGetUdpExTable2FromStack
 @ stub AllocateAndGetUdpExTableFromStack
 @ stdcall AllocateAndGetUdpTableFromStack( ptr long long long )
-@ stub CancelIPChangeNotify
+@ stdcall CancelIPChangeNotify(ptr)
 @ stub CancelSecurityHealthChangeNotify
 @ stdcall CreateIpForwardEntry( ptr )
 @ stdcall CreateIpNetEntry( ptr )
@@ -19,16 +19,16 @@
 @ stdcall DeleteIpForwardEntry( ptr )
 @ stdcall DeleteIpNetEntry( ptr )
 @ stdcall DeleteProxyArpEntry( long long long )
-@ stub DisableMediaSense
+@ stdcall DisableMediaSense(ptr ptr)
 @ stdcall EnableRouter( ptr ptr )
 @ stdcall FlushIpNetTable( long )
 @ stub FlushIpNetTableFromStack
 @ stdcall GetAdapterIndex( wstr ptr )
-@ stub GetAdapterOrderMap
+@ stdcall GetAdapterOrderMap()
 @ stdcall GetAdaptersAddresses( long long ptr ptr ptr )
 @ stdcall GetAdaptersInfo( ptr ptr )
 @ stdcall GetBestInterface( long ptr )
-@ stub GetBestInterfaceEx
+@ stdcall GetBestInterfaceEx(ptr ptr)
 @ stub GetBestInterfaceFromStack
 @ stdcall GetBestRoute( long long long )
 @ stub GetBestRouteFromStack
@@ -36,7 +36,7 @@
 @ stub GetExtendedUdpTable
 @ stdcall GetFriendlyIfIndex( long )
 @ stdcall GetIcmpStatistics( ptr )
-@ stub GetIcmpStatisticsEx
+@ stdcall GetIcmpStatisticsEx(ptr long)
 @ stub GetIcmpStatsFromStack
 @ stub GetIcmpStatsFromStackEx
 @ stdcall GetIfEntry( ptr )
@@ -49,13 +49,13 @@
 @ stdcall GetInterfaceInfo( ptr ptr )
 @ stdcall GetIpAddrTable( ptr ptr long )
 @ stub GetIpAddrTableFromStack
-@ stub GetIpErrorString
+@ stdcall GetIpErrorString(long ptr ptr)
 @ stdcall GetIpForwardTable( ptr ptr long )
 @ stub GetIpForwardTableFromStack
 @ stdcall GetIpNetTable( ptr ptr long )
 @ stub GetIpNetTableFromStack
 @ stdcall GetIpStatistics( ptr )
-@ stub GetIpStatisticsEx
+@ stdcall GetIpStatisticsEx(ptr long)
 @ stub GetIpStatsFromStack
 @ stub GetIpStatsFromStackEx
 @ stdcall GetNetworkParams( ptr ptr )
@@ -68,14 +68,14 @@
 @ stdcall GetRTTAndHopCount( long ptr long ptr )
 @ stub GetTcpExTable2FromStack
 @ stdcall GetTcpStatistics( ptr )
-@ stub GetTcpStatisticsEx
+@ stdcall GetTcpStatisticsEx(ptr long)
 @ stub GetTcpStatsFromStack
 @ stub GetTcpStatsFromStackEx
 @ stdcall GetTcpTable( ptr ptr long )
 @ stub GetTcpTableFromStack
 @ stub GetUdpExTable2FromStack
 @ stdcall GetUdpStatistics( ptr )
-@ stub GetUdpStatisticsEx
+@ stdcall GetUdpStatisticsEx(ptr long)
 @ stub GetUdpStatsFromStack
 @ stub  GetUdpStatsFromStackEx
 @ stdcall GetUdpTable( ptr ptr long )
@@ -112,14 +112,14 @@
 @ stub NhGetGuidFromInterfaceName
 @ stdcall NhGetInterfaceNameFromDeviceGuid(long long long long long)
 @ stub NhGetInterfaceNameFromGuid
-@ stub NhpAllocateAndGetInterfaceInfoFromStack
+@ stdcall NhpAllocateAndGetInterfaceInfoFromStack(ptr ptr long ptr long)
 @ stub NhpGetInterfaceIndexFromStack
 @ stdcall NotifyAddrChange( ptr ptr )
 @ stdcall NotifyRouteChange( ptr ptr )
 @ stub NotifyRouteChangeEx
 @ stub NotifySecurityHealthChange
-@ stub RestoreMediaSense
-@ stub SendARP
+@ stdcall RestoreMediaSense(ptr ptr)
+@ stdcall SendARP(long long ptr ptr)
 @ stub SetAdapterIpAddress
 @ stub SetBlockRoutes
 @ stdcall SetIfEntry( ptr )

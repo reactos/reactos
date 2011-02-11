@@ -1,11 +1,11 @@
 @ stdcall DMOEnum(ptr long long ptr long ptr ptr)
 @ stdcall DMOGetName(ptr wstr)
 @ stdcall DMOGetTypes(ptr long ptr ptr long ptr ptr)
-@ stub    DMOGuidToStrA
-@ stub    DMOGuidToStrW
+@ stdcall DMOGuidToStrA(long long)
+@ stdcall DMOGuidToStrW(long long)
 @ stdcall DMORegister(wstr ptr ptr long long ptr long ptr)
-@ stub    DMOStrToGuidA
-@ stub    DMOStrToGuidW
+@ stdcall DMOStrToGuidA(long long)
+@ stdcall DMOStrToGuidW(long long)
 @ stdcall DMOUnregister(ptr ptr)
 @ stdcall MoCopyMediaType(ptr ptr)
 @ stdcall MoCreateMediaType(ptr long)

@@ -541,3 +541,94 @@ DWORD WINAPI UserRegisterWowHandlers(PVOID Unknown1, PVOID Unknown2)
   return 0;
 }
 
+BOOL
+WINAPI
+BuildReasonArray(PVOID Pointer)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+VOID
+WINAPI
+CreateSystemThreads(DWORD dwUnknown)
+{
+    NtUserCallOneParam(dwUnknown, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+}
+
+BOOL
+WINAPI
+DestroyReasons(PVOID Pointer)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+DeviceEventWorker(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetCursorFrameInfo(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetReasonTitleFromReasonCode(DWORD dw1, DWORD dw2, DWORD dw3)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+RecordShutdownReason(DWORD dw0)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+UserLpkPSMTextOut(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+UserLpkTabbedTextOut(
+    DWORD dw1,
+    DWORD dw2,
+    DWORD dw3,
+    DWORD dw4,
+    DWORD dw5,
+    DWORD dw6,
+    DWORD dw7,
+    DWORD dw8,
+    DWORD dw9,
+    DWORD dw10,
+    DWORD dw11,
+    DWORD dw12)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+Win32PoolAllocationStats(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+

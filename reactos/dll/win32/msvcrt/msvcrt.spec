@@ -137,14 +137,14 @@
 @ extern __badioinfo __badioinfo
 @ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
-@ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfo
+@ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfoW
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno() __doserrno
 @ cdecl __fpecode()
-@ stub __get_app_type
+@ cdecl __get_app_type()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
 @ extern __initenv __initenv
 @ cdecl __iob_func() __p__iob
@@ -152,7 +152,7 @@
 @ cdecl __iscsym(long) __iscsym
 @ cdecl __iscsymf(long) __iscsymf
 @ extern __lc_codepage MSVCRT___lc_codepage
-@ stub __lc_collate
+# @ stub __lc_collate # not in XP / 7
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
@@ -190,15 +190,15 @@
 @ cdecl -arch=i386 __p__daylight()
 @ cdecl -arch=i386 __p__dstbias()
 @ cdecl -arch=i386 __p__environ()
-@ stub -arch=i386 __p__fileinfo #()
+@ cdecl -arch=i386 __p__fileinfo()
 @ cdecl -arch=i386 __p__fmode()
 @ cdecl -arch=i386 __p__iob()
-@ stub -arch=i386 __p__mbcasemap #()
+@ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
 @ cdecl -arch=i386 __p__pctype() __pctype_func
 @ cdecl -arch=i386 __p__pgmptr()
-@ stub -arch=i386 __p__pwctype #()
+@ cdecl -arch=i386 __p__pwctype()
 @ cdecl -arch=i386 __p__timezone() __p__timezone
 @ cdecl -arch=i386 __p__tzname()
 @ cdecl -arch=i386 __p__wcmdln()
@@ -210,7 +210,7 @@
 @ cdecl __pctype_func() __pctype_func
 @ extern __pioinfo __pioinfo
 # stub __pwctype_func
-@ stub __pxcptinfoptrs #()
+@ cdecl __pxcptinfoptrs()
 @ cdecl __set_app_type(long)
 @ extern __setlc_active
 @ cdecl __setusermatherr(ptr)
@@ -260,7 +260,7 @@
 # stub _aligned_realloc_dbg
 @ cdecl _amsg_exit(long)
 @ cdecl _assert(str str long)
-@ stub _atodbl #(ptr str)
+@ cdecl _atodbl(ptr str)
 # stub _atodbl_l
 # @ cdecl _atof_l(str ptr)
 # stub _atoflt_l
@@ -365,7 +365,7 @@
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
 @ cdecl _filbuf(ptr)
-# extern _fileinfo
+@ extern _fileinfo
 @ cdecl _filelength(long)
 @ cdecl -ret64 _filelengthi64(long)
 @ cdecl _fileno(ptr)
@@ -381,7 +381,7 @@
 @ cdecl _flushall()
 @ extern _fmode
 @ cdecl _fpclass(double)
-@ stub _fpieee_flt #(long ptr ptr)
+@ cdecl _fpieee_flt(long ptr ptr)
 @ cdecl _fpreset()
 # stub _fprintf_l
 # stub _fprintf_p
@@ -439,8 +439,8 @@
 # stub _get_winminor
 # stub _get_winver
 # stub _get_wpgmptr
-@ stub _get_terminate
-@ stub _get_unexpected
+# @ stub _get_terminate # not in XP / 7
+# @ stub _get_unexpected # not in XP / 7
 @ cdecl _getch()
 @ cdecl _getche()
 @ cdecl _getcwd(str long)
@@ -452,7 +452,7 @@
 @ cdecl _getmaxstdio()
 @ cdecl _getmbcp()
 @ cdecl _getpid() kernel32.GetCurrentProcessId
-@ stub _getsystime #(ptr)
+@ cdecl _getsystime(ptr)
 @ cdecl _getw(ptr)
 # stub _getwch
 # stub _getwche
@@ -466,7 +466,7 @@
 @ cdecl _heapchk()
 @ cdecl _heapmin()
 @ cdecl _heapset(long)
-@ stub _heapused #(ptr ptr)
+# @ stub _heapused #(ptr ptr) # not in XP / 7
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
@@ -475,10 +475,10 @@
 # stub _i64tow_s
 @ cdecl _initterm(ptr ptr)
 # stub _initterm_e
-@ stub _inp #(long) -i386
-@ stub _inpd #(long) -i386
-@ stub _inpw #(long) -i386
-# @ cdecl _invalid_parameter(wstr wstr wstr long long)
+@ cdecl -arch=i386 _inp(long) MSVCRT__inp
+@ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
+@ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
+@ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob
 # stub _isalnum_l
 # stub _isalpha_l
@@ -490,25 +490,25 @@
 # stub _isgraph_l
 # stub _isleadbyte_l
 # stub _islower_l
-@ stub _ismbbalnum #(long)
+@ cdecl _ismbbalnum(long)
 # stub _ismbbalnum_l
 @ stub _ismbbalpha #(long)
 # stub _ismbbalpha_l
-@ stub _ismbbgraph #(long)
+@ cdecl _ismbbgraph(long)
 # stub _ismbbgraph_l
-@ stub _ismbbkalnum #(long)
+@ cdecl _ismbbkalnum(long)
 # stub _ismbbkalnum_l
 @ cdecl _ismbbkana(long)
 # stub _ismbbkana_l
-@ stub _ismbbkprint #(long)
+@ cdecl _ismbbkprint(long)
 # stub _ismbbkprint_l
-@ stub _ismbbkpunct #(long)
+@ cdecl _ismbbkpunct(long)
 # stub _ismbbkpunct_l
 @ cdecl _ismbblead(long)
 # stub _ismbblead_l
 @ stub _ismbbprint #(long)
 # stub _ismbbprint_l
-@ stub _ismbbpunct #(long)
+@ cdecl _ismbbpunct(long)
 # stub _ismbbpunct_l
 @ cdecl _ismbbtrail(long)
 # stub _ismbbtrail_l
@@ -524,11 +524,11 @@
 # stub _ismbchira_l
 @ cdecl _ismbckata(long)
 # stub _ismbckata_l
-@ stub _ismbcl0 #(long)
+@ cdecl _ismbcl0(long)
 # stub _ismbcl0_l
-@ stub _ismbcl1 #(long)
+@ cdecl _ismbcl1(long)
 # stub _ismbcl1_l
-@ stub _ismbcl2 #(long)
+@ cdecl _ismbcl2(long)
 # stub _ismbcl2_l
 @ cdecl _ismbclegal(long)
 # stub _ismbclegal_l
@@ -602,20 +602,20 @@
 @ cdecl _mbbtombc(long)
 # stub _mbbtombc_l
 @ cdecl _mbbtype(long long)
-# extern _mbcasemap
+@ extern _mbcasemap
 @ cdecl _mbccpy (str str)
 # stub _mbccpy_l
 # stub _mbccpy_s
 # stub _mbccpy_s_l
 @ cdecl _mbcjistojms (long)
 # stub _mbcjistojms_l
-@ stub _mbcjmstojis #(long)
+@ cdecl _mbcjmstojis(long)
 # stub _mbcjmstojis_l
 @ cdecl _mbclen(ptr)
 # stub _mbclen_l
-@ stub _mbctohira #(long)
+@ cdecl _mbctohira(long)
 # stub _mbctohira_l
-@ stub _mbctokata #(long)
+@ cdecl _mbctokata(long)
 # stub _mbctokata_l
 @ cdecl _mbctolower(long)
 # stub _mbctolower_l
@@ -665,7 +665,7 @@
 # stub _mbsnbcmp_l
 @ cdecl _mbsnbcnt(ptr long)
 # stub _mbsnbcnt_l
-@ stub _mbsnbcoll #(str str long)
+@ cdecl _mbsnbcoll(str str long)
 # stub _mbsnbcoll_l
 @ cdecl _mbsnbcpy(ptr str long)
 # stub _mbsnbcpy_l
@@ -673,7 +673,7 @@
 # stub _mbsnbcpy_s_l
 @ cdecl _mbsnbicmp(str str long)
 # stub _mbsnbicmp_l
-@ stub _mbsnbicoll #(str str long)
+@ cdecl _mbsnbicoll(str str long)
 # stub _mbsnbicoll_l
 @ cdecl _mbsnbset(str long long)
 # stub _mbsnbset_l
@@ -687,7 +687,7 @@
 # stub _mbsnccnt_l
 @ cdecl _mbsncmp(str str long)
 # stub _mbsncmp_l
-@ stub _mbsncoll #(str str long)
+@ cdecl _mbsncoll(str str long)
 # stub _mbsncoll_l
 @ cdecl _mbsncpy(str str long)
 # stub _mbsncpy_l
@@ -697,7 +697,7 @@
 # stub _mbsnextc_l
 @ cdecl _mbsnicmp(str str long)
 # stub _mbsnicmp_l
-@ stub _mbsnicoll #(str str long)
+@ cdecl _mbsnicoll(str str long)
 # stub _mbsnicoll_l
 @ cdecl _mbsninc(str long)
 # stub _mbsninc_l
@@ -757,9 +757,9 @@
 @ cdecl _open_osfhandle(long long)
 @ extern _osplatform _osplatform
 @ extern _osver _osver
-@ stub _outp #(long long)
-@ stub _outpd #(long long)
-@ stub _outpw #(long long)
+@ cdecl _outp(long long) MSVCRT__outp
+@ cdecl _outpd(long long) MSVCRT__outpd
+@ cdecl _outpw(long long) MSVCRT__outpw
 @ cdecl _pclose (ptr)
 @ extern _pctype _pctype
 @ extern _pgmptr _pgmptr
@@ -819,7 +819,7 @@
 @ cdecl _setmaxstdio(long)
 @ cdecl _setmbcp(long)
 @ cdecl _setmode(long long)
-@ stub _setsystime #(ptr long)
+@ cdecl _setsystime(ptr long)
 @ cdecl _sleep(long)
 @ varargs _snprintf(ptr long str)
 # stub _snprintf_c
@@ -876,11 +876,11 @@
 # stub _strlwr_l
 # stub _strlwr_s
 # stub _strlwr_s_l
-@ stub _strncoll #(str str long)
+@ cdecl _strncoll(str str long)
 # stub _strncoll_l
 @ cdecl _strnicmp(str str long)
 # stub _strnicmp_l
-@ stub _strnicoll #(str str long)
+@ cdecl _strnicoll(str str long)
 # stub _strnicoll_l
 @ cdecl _strnset(str long long)
 # stub _strnset_s
@@ -1021,11 +1021,11 @@
 # stub _wcslwr_l
 # stub _wcslwr_s
 # stub _wcslwr_s_l
-@ stub _wcsncoll #(wstr wstr long)
+@ cdecl _wcsncoll(wstr wstr long)
 # stub _wcsncoll_l
 @ cdecl _wcsnicmp(wstr wstr long)
 # stub _wcsnicmp_l
-@ stub _wcsnicoll #(wstr wstr long)
+@ cdecl _wcsnicoll(wstr wstr long)
 # stub _wcsnicoll_l
 @ cdecl _wcsnset(wstr long long)
 # stub _wcsnset_s
@@ -1091,7 +1091,7 @@
 # stub _wmktemp_s
 @ varargs _wopen(wstr long)
 # stub _woutput_s
-@ stub _wperror #(wstr)
+@ cdecl _wperror(wstr)
 @ extern _wpgmptr
 @ cdecl _wpopen (wstr wstr)
 # stub _wprintf_l
@@ -1131,7 +1131,7 @@
 @ cdecl _wsystem(wstr)
 @ cdecl _wtempnam(wstr wstr)
 # stub _wtempnam_dbg
-@ stub _wtmpnam #(ptr)
+@ cdecl _wtmpnam(ptr)
 # stub _wtmpnam_s
 # @ cdecl _wtof(wstr)
 # @ cdecl _wtof_l(wstr ptr)
