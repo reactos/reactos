@@ -2203,7 +2203,7 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
                                      MachineName,
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
-	return FALSE;
+        return FALSE;
 
     /* Retrieve the class description data and close the key */
     rc = QueryRegistryValue(hKey, NULL, (LPBYTE *) &Buffer, &dwRegType, &dwLength);
