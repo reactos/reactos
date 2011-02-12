@@ -1285,6 +1285,18 @@ typedef struct _STACK_TRACE_DATABASE
     RTL_CRITICAL_SECTION CriticalSection;
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
 
+typedef struct _RTL_TRACE_BLOCK
+{
+    ULONG Magic;
+    ULONG Count;
+    ULONG Size;
+    ULONG UserCount;
+    ULONG UserSize;
+    PVOID UserContext;
+    struct _RTL_TRACE_BLOCK *Next;
+    PVOID *Trace;
+} RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
+
 #ifndef NTOS_MODE_USER
 
 //
