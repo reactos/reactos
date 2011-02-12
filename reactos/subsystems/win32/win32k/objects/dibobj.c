@@ -1750,9 +1750,19 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
     else if (bmi->bmiHeader.biCompression == BI_BITFIELDS)
     {
         paletteType = PAL_BITFIELDS;
-        RedMask = pdwColors[0];
-        GreenMask = pdwColors[1];
-        BlueMask = pdwColors[2];
+        if (bmi->bmiHeader.biSize >= sizeof(BITMAPV4HEADER))
+        {
+            PBITMAPV4HEADER pV4Header = (PBITMAPV4HEADER)&bmi->bmiHeader;
+            RedMask = pV4Header->bV4RedMask;
+            GreenMask = pV4Header->bV4GreenMask;
+            BlueMask = pV4Header->bV4BlueMask;
+        }
+        else
+        {
+            RedMask = pdwColors[0];
+            GreenMask = pdwColors[1];
+            BlueMask = pdwColors[2];
+        }
     }
     else
     {

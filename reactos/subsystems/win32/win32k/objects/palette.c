@@ -197,6 +197,8 @@ PALETTE_AllocPalette(ULONG Mode,
             PalGDI->flFlags |= PAL_RGB16_565;
         else if (Red == 0xFF0000 && Green == 0xFF00 && Blue == 0xFF)
             PalGDI->flFlags |= PAL_BGR;
+        else if (Red == 0xFF && Green == 0xFF00 && Blue == 0xFF0000)
+            PalGDI->flFlags |= PAL_RGB;
     }
 
     PALETTE_UnlockPalette(PalGDI);
