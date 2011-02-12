@@ -1156,11 +1156,11 @@ KspBusWorkerRoutine(
     BOOLEAN DoInvalidate = FALSE;
     KIRQL OldLevel;
 
-    /* acquire lock */
-    KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
-
     /* get device extension */
     BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)Parameter;
+
+    /* acquire lock */
+    KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
 
     /* get current time */
     KeQuerySystemTime(&Time);
