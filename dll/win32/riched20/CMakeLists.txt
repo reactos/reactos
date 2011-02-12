@@ -30,13 +30,14 @@ list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc-thiscall.c)
+    set_source_files_properties(txthost.c txtsrv.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
+endif()
+
 add_library(riched20 SHARED ${SOURCE})
 set_module_type(riched20 win32dll)
 target_link_libraries(riched20 wine uuid)
-
-if(MSVC)
-    set_target_properties(riched20 PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
-endif(MSVC)
 
 add_importlibs(riched20
     msvcrt
