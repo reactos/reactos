@@ -14,8 +14,8 @@
 @ stdcall CM_Add_ID_ExA(ptr str long ptr)
 @ stdcall CM_Add_ID_ExW(ptr wstr long ptr)
 @ stub CM_Add_Range
-@ stub CM_Add_Res_Des
-@ stub CM_Add_Res_Des_Ex
+@ stdcall CM_Add_Res_Des(ptr ptr long ptr long long)
+@ stdcall CM_Add_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Connect_MachineA(str ptr)
 @ stdcall CM_Connect_MachineW(wstr ptr)
 @ stdcall CM_Create_DevNodeA(ptr str long long)
@@ -48,9 +48,9 @@
 @ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
 @ stub CM_Free_Range_List
-@ stub CM_Free_Res_Des
-@ stub CM_Free_Res_Des_Ex
-@ stub CM_Free_Res_Des_Handle
+@ stdcall CM_Free_Res_Des(ptr ptr long)
+@ stdcall CM_Free_Res_Des_Ex(ptr ptr long long)
+@ stdcall CM_Free_Res_Des_Handle(ptr)
 @ stub CM_Free_Resource_Conflict_Handle
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long long)
@@ -118,14 +118,14 @@
 @ stdcall CM_Get_Log_Conf_Priority_Ex(ptr ptr long long)
 @ stdcall CM_Get_Next_Log_Conf(ptr ptr long)
 @ stdcall CM_Get_Next_Log_Conf_Ex(ptr ptr long long)
-@ stub CM_Get_Next_Res_Des
-@ stub CM_Get_Next_Res_Des_Ex
+@ stdcall CM_Get_Next_Res_Des(ptr ptr long ptr long)
+@ stdcall CM_Get_Next_Res_Des_Ex(ptr ptr long ptr long long)
 @ stdcall CM_Get_Parent(ptr long long)
 @ stdcall CM_Get_Parent_Ex(ptr long long long)
-@ stub CM_Get_Res_Des_Data
-@ stub CM_Get_Res_Des_Data_Ex
-@ stub CM_Get_Res_Des_Data_Size
-@ stub CM_Get_Res_Des_Data_Size_Ex
+@ stdcall CM_Get_Res_Des_Data(ptr ptr long long)
+@ stdcall CM_Get_Res_Des_Data_Ex(ptr ptr long long long)
+@ stdcall CM_Get_Res_Des_Data_Size(ptr ptr long)
+@ stdcall CM_Get_Res_Des_Data_Size_Ex(ptr ptr long long)
 @ stub CM_Get_Resource_Conflict_Count
 @ stub CM_Get_Resource_Conflict_DetailsA
 @ stub CM_Get_Resource_Conflict_DetailsW
@@ -144,8 +144,8 @@
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
 @ stdcall CM_Locate_DevNode_ExW(ptr wstr long long)
 @ stub CM_Merge_Range_List
-@ stub CM_Modify_Res_Des
-@ stub CM_Modify_Res_Des_Ex
+@ stdcall CM_Modify_Res_Des(ptr ptr long ptr long long)
+@ stdcall CM_Modify_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Move_DevNode(long long long)
 @ stdcall CM_Move_DevNode_Ex(long long long long)
 @ stub CM_Next_Range

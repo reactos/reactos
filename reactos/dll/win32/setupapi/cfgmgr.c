@@ -414,6 +414,34 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
 
 
 /***********************************************************************
+ * CM_Add_Res_Des [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_Res_Des(
+    PRES_DES prdResDes, LOG_CONF lcLogConf, RESOURCEID ResourceID,
+    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags)
+{
+    TRACE("%p %p %lu %p %lu %lx\n", prdResDes, lcLogConf, ResourceID,
+          ResourceData, ResourceLen, ulFlags);
+    return CM_Add_Res_Des_Ex(prdResDes, lcLogConf, ResourceID, ResourceData,
+                             ResourceLen, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Add_Res_Des_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_Res_Des_Ex(
+    PRES_DES prdResDes, LOG_CONF lcLogConf, RESOURCEID ResourceID,
+    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %p %lu %p %lu %lx %p\n", prdResDes, lcLogConf, ResourceID,
+          ResourceData, ResourceLen, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Connect_MachineA(
@@ -1169,6 +1197,42 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
     HeapFree(GetProcessHeap(), 0, pLogConfInfo);
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Free_Res_Des [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Res_Des(
+   PRES_DES prdResDes, RES_DES rdResDes, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", prdResDes, rdResDes, ulFlags);
+    return CM_Free_Res_Des_Ex(prdResDes, rdResDes, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Free_Res_Des_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Res_Des_Ex(
+    PRES_DES prdResDes, RES_DES rdResDes, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%p %p %lx %lx\n", prdResDes, rdResDes, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Free_Res_Des_Handle [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Res_Des_Handle(
+    RES_DES rdResDes)
+{
+    FIXME("%p\n", rdResDes);
+
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -2641,6 +2705,34 @@ CONFIGRET WINAPI CM_Get_Next_Log_Conf_Ex(
 
 
 /***********************************************************************
+ * CM_Get_Next_Re_Des [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Next_Res_Des(
+    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ForResource,
+    PRESOURCEID pResourceID, ULONG ulFlags)
+{
+    TRACE("%p %p %lu %p %lx\n", prdResDes, rdResDes, ForResource,
+          pResourceID, ulFlags);
+    return CM_Get_Next_Res_Des_Ex(prdResDes, rdResDes, ForResource,
+                                  pResourceID, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Next_Re_Des_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Next_Res_Des_Ex(
+    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ForResource,
+    PRESOURCEID pResourceID, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %p %lu %p %lx %lx\n", prdResDes, rdResDes, ForResource,
+          pResourceID, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Get_Parent [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Parent(
@@ -2724,6 +2816,51 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
     *pdnDevInst = dwIndex;
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Res_Des_Data [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Res_Des_Data(
+    RES_DES rdResDes, PVOID Buffer, ULONG BufferLen, ULONG ulFlags)
+{
+    TRACE("%p %p %l %lx\n", rdResDes, Buffer, BufferLen, ulFlags);
+    return CM_Get_Res_Des_Data_Ex(rdResDes, Buffer, BufferLen, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Res_Des_Data_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Res_Des_Data_Ex(
+    RES_DES rdResDes, PVOID Buffer, ULONG BufferLen, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%p %p %l %lx %lx\n", rdResDes, Buffer, BufferLen, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_Res_Des_Size [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Res_Des_Data_Size(
+    PULONG pulSize, RES_DES rdResDes, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", pulSize, rdResDes, ulFlags);
+    return CM_Get_Res_Des_Data_Size_Ex(pulSize, rdResDes, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Res_Des_Size_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Res_Des_Data_Size_Ex(
+    PULONG pulSize, RES_DES rdResDes, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%p %p %lx %lx\n", pulSize, rdResDes, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -3101,6 +3238,33 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     }
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Modify_Res_Des [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Modify_Res_Des(
+    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ResourceID,
+    PCVOID ResourceData, ULONG ResourceLen, ULONG ulFlags)
+{
+    TRACE("%p %p %lx %p %lu %lx", prdResDes, rdResDes, ResourceID, ResourceData,
+          ResourceLen, ulFlags);
+    return CM_Modify_Res_Des_Ex(prdResDes, rdResDes, ResourceID, ResourceData,
+                                ResourceLen, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Modify_Res_Des_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Modify_Res_Des_Ex(
+    PRES_DES prdResDes, RES_DES rdResDes, RESOURCEID ResourceID, PCVOID ResourceData,
+    ULONG ResourceLen, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %p %lx %p %lu %lx %lx", prdResDes, rdResDes, ResourceID, ResourceData,
+          ResourceLen, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
