@@ -74,9 +74,9 @@ LoadImageFileExecutionOptions(PPEB Peb)
     UNICODE_STRING ImageName;
     UNICODE_STRING ImagePathName;
     ULONG ValueSize;
-    extern ULONG RtlpPageHeapGlobalFlags, RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
+    extern ULONG RtlpDphGlobalFlags, RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
     extern ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
-    extern WCHAR RtlpPageHeapTargetDlls[512];
+    extern WCHAR RtlpDphTargetDlls[512];
     extern BOOLEAN RtlpPageHeapEnabled;
 
     if (Peb->ProcessParameters &&
@@ -144,8 +144,8 @@ LoadImageFileExecutionOptions(PPEB Peb)
             LdrQueryImageFileExecutionOptions(&ImageName,
                                               L"PageHeapFlags",
                                               REG_DWORD,
-                                              (PVOID)&RtlpPageHeapGlobalFlags,
-                                              sizeof(RtlpPageHeapGlobalFlags),
+                                              (PVOID)&RtlpDphGlobalFlags,
+                                              sizeof(RtlpDphGlobalFlags),
                                               &ValueSize);
 
             LdrQueryImageFileExecutionOptions(&ImageName,
@@ -179,8 +179,8 @@ LoadImageFileExecutionOptions(PPEB Peb)
             LdrQueryImageFileExecutionOptions(&ImageName,
                                               L"PageHeapTargetDlls",
                                               REG_SZ,
-                                              (PVOID)RtlpPageHeapTargetDlls,
-                                              sizeof(RtlpPageHeapTargetDlls),
+                                              (PVOID)RtlpDphTargetDlls,
+                                              sizeof(RtlpDphTargetDlls),
                                               &ValueSize);
 
             /* Now when all parameters are read, enable page heap */
