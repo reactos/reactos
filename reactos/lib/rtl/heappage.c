@@ -270,14 +270,156 @@ RtlpDphProtectVm(PVOID Base, SIZE_T Size, ULONG Protection)
 VOID NTAPI
 RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtual, SIZE_T Size, BOOLEAN Add)
 {
+    PDPH_HEAP_BLOCK DphNode, DphStartNode;
+    ULONG NodeCount;
+
+    NodeCount = (Size >> 6) - 1;
+    DphStartNode = Virtual;
+
+    /* Set pNextAlloc for all blocks */
+    for (DphNode = Virtual; NodeCount > 0; DphNode++, NodeCount--)
+        DphNode->pNextAlloc = DphNode + 1;
+
+    /* and the last one */
+    DphNode->pNextAlloc = NULL;
+
+    /* Add it to the tail of unused node list */
+    if (DphRoot->pUnusedNodeListTail)
+        DphRoot->pUnusedNodeListTail->pNextAlloc = DphStartNode;
+    else
+        DphRoot->pUnusedNodeListHead = DphStartNode;
+
+    DphRoot->pUnusedNodeListTail = DphNode;
+
+    /* Increase counters */
+    DphRoot->nUnusedNodes += NodeCount;
+
+    if (Add)
+    {
+        UNIMPLEMENTED;
+    }
+}
+
+PDPH_HEAP_BLOCK NTAPI
+RtlpDphFindAvailableMemory(PDPH_HEAP_ROOT DphRoot,
+                           SIZE_T Size,
+                           PDPH_HEAP_BLOCK *Prev)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+PDPH_HEAP_BLOCK NTAPI
+RtlpDphTakeNodeFromUnusedList(PDPH_HEAP_ROOT DphRoot)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+VOID NTAPI
+RtlpDphReturnNodeToUnusedList(PDPH_HEAP_ROOT DphRoot,
+                               PDPH_HEAP_BLOCK Node)
+{
+}
+
+VOID NTAPI
+RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
+                               PDPH_HEAP_BLOCK Node)
+{
+    UNIMPLEMENTED;
+}
+
+VOID NTAPI
+RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
+                                 PDPH_HEAP_BLOCK Node)
+{
     UNIMPLEMENTED;
 }
 
 PDPH_HEAP_BLOCK NTAPI
 RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PDPH_HEAP_BLOCK Node;
+    NTSTATUS Status;
+    ULONG Size = DPH_POOL_SIZE;
+    PVOID Ptr;
+
+    /* Check for the easy case */
+    if (DphRoot->pUnusedNodeListHead)
+    {
+        /* Just take a node from this list */
+        Node = RtlpDphTakeNodeFromUnusedList(DphRoot);
+        ASSERT(Node);
+        return Node;
+    }
+
+    /* There is a need to make free space */
+    Node = RtlpDphFindAvailableMemory(DphRoot, DPH_POOL_SIZE, NULL);
+
+    if (!DphRoot->pUnusedNodeListHead && !Node)
+    {
+        /* Retry with a smaller request */
+        Size = PAGE_SIZE;
+        Node = RtlpDphFindAvailableMemory(DphRoot, PAGE_SIZE, NULL);
+    }
+
+    if (!DphRoot->pUnusedNodeListHead)
+    {
+        if (Node)
+        {
+            RtlpDphRemoveFromAvailableList(DphRoot, Node);
+            Ptr = Node->pVirtualBlock;
+        }
+        else
+        {
+            /* No free space, need to alloc a new VM block */
+            Size = DPH_POOL_SIZE;
+            Status = RtlpDphAllocateVm(&Ptr, DPH_RESERVE_SIZE, MEM_COMMIT, PAGE_NOACCESS);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* Retry with a smaller size */
+                Status = RtlpDphAllocateVm(&Ptr, 0x10000, MEM_COMMIT, PAGE_NOACCESS);
+                if (!NT_SUCCESS(Status)) return NULL;
+            }
+        }
+
+        /* VM is allocated at this point, set protection */
+        Status = RtlpDphProtectVm(Ptr, Size, PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            ASSERT(FALSE);
+            return NULL;
+        }
+
+        /* Zero the memory */
+        if (Node) RtlZeroMemory(Ptr, Size);
+
+        /* Add a new pool based on this VM */
+        RtlpDphAddNewPool(DphRoot, Node, Ptr, Size, TRUE);
+
+        if (!Node)
+        {
+            ASSERT(FALSE);
+        }
+        else
+        {
+            if (Node->nVirtualBlockSize > Size)
+            {
+                Node->pVirtualBlock += Size;
+                Node->nVirtualBlockSize -= Size;
+
+                RtlpDphCoalesceNodeIntoAvailable(DphRoot, Node);
+            }
+            else
+            {
+                RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+            }
+        }
+    }
+
+    return RtlpDphTakeNodeFromUnusedList(DphRoot);
 }
 
 VOID NTAPI
@@ -288,12 +430,6 @@ RtlpDphPlaceOnPoolList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
 
 VOID NTAPI
 RtlpDphPlaceOnVirtualList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
-{
-    UNIMPLEMENTED;
-}
-
-VOID NTAPI
-RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
 {
     UNIMPLEMENTED;
 }
