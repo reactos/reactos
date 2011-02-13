@@ -174,6 +174,45 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             NamePosition++;
             ExpressionPosition++;
         }
+        else if (StarFound != MAXUSHORT && (Expression->Buffer[StarFound + 1] == '*' ||
+                 Expression->Buffer[StarFound + 1] == '?' || Expression->Buffer[StarFound + 1] == ANSI_DOS_DOT))
+        {
+            ExpressionPosition = StarFound + 1;
+            switch (Expression->Buffer[ExpressionPosition])
+            {
+                case '*':
+                    StarFound = ExpressionPosition++;
+                    break;
+
+                case '?':
+                    ExpressionPosition++;
+                    MatchingChars = NamePosition;
+                    while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
+                           NamePosition < Name->Length)
+                    {
+                        NamePosition++;
+                    }
+
+                    if (NamePosition - MatchingChars > 0)
+                    {
+                        StarFound = MAXUSHORT;
+                    }
+                    break;
+
+                case ANSI_DOS_DOT:
+                    while (Name->Buffer[NamePosition] != '.' && NamePosition < Name->Length)
+                    {
+                        NamePosition++;
+                    }
+                    ExpressionPosition++;
+                    StarFound = MAXUSHORT;
+                    break;
+
+                default:
+                    /* Should never happen */
+                    ASSERT(FALSE);                   
+            }
+        }
         else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
                  (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
         {
@@ -206,15 +245,10 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         else if (StarFound != MAXUSHORT)
         {
             ExpressionPosition = StarFound + 1;
-            if (Expression->Buffer[ExpressionPosition] != '*' && Expression->Buffer[ExpressionPosition] != '?' &&
-                Expression->Buffer[ExpressionPosition] != ANSI_DOS_DOT && Expression->Buffer[ExpressionPosition] != ANSI_DOS_QM &&
-                Expression->Buffer[ExpressionPosition] != ANSI_DOS_STAR)
+            while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
+                   NamePosition < Name->Length)
             {
-                while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
-                       NamePosition < Name->Length)
-                {
-                    NamePosition++;
-                }
+                NamePosition++;
             }
         }
         else
