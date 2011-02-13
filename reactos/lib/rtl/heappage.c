@@ -143,6 +143,11 @@ LONG RtlpDphProtectFails;
 /* Signatures */
 #define DPH_SIGNATURE 0xFFEEDDCC
 
+/* Biased pointer macros */
+#define IS_BIASED_POINTER(ptr) ((ULONG_PTR)(ptr) & 1)
+#define POINTER_REMOVE_BIAS(ptr) ((ULONG_PTR)(ptr) & ~(ULONG_PTR)1)
+#define POINTER_ADD_BIAS(ptr) ((ULONG_PTR)(ptr) & 1)
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS NTAPI
@@ -268,7 +273,99 @@ RtlpDphProtectVm(PVOID Base, SIZE_T Size, ULONG Protection)
 }
 
 VOID NTAPI
-RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtual, SIZE_T Size, BOOLEAN Add)
+RtlpDphPlaceOnPoolList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
+{
+    /* DphNode is being added to the tail of the list */
+    DphNode->pNextAlloc = NULL;
+
+    /* Add it to the tail of the linked list */
+    if (DphRoot->pNodePoolListTail)
+        DphRoot->pNodePoolListTail->pNextAlloc = DphNode;
+    else
+        DphRoot->pNodePoolListHead = DphNode;
+    DphRoot->pNodePoolListTail = DphNode;
+
+    /* Update byte counts taking in account this new node */
+    DphRoot->nNodePools++;
+    DphRoot->nNodePoolBytes += DphNode->nVirtualBlockSize;
+}
+
+VOID NTAPI
+RtlpDphPlaceOnVirtualList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
+{
+    /* Add it to the head of the virtual list */
+    DphNode->pNextAlloc = DphRoot->pVirtualStorageListHead;
+    if (!DphRoot->pVirtualStorageListHead)
+        DphRoot->pVirtualStorageListTail = DphNode;
+    DphRoot->pVirtualStorageListHead = DphNode;
+
+    /* Update byte counts taking in account this new node */
+    DphRoot->nVirtualStorageRanges++;
+    DphRoot->nVirtualStorageBytes += DphNode->nVirtualBlockSize;
+}
+
+PDPH_HEAP_BLOCK NTAPI
+RtlpDphTakeNodeFromUnusedList(PDPH_HEAP_ROOT DphRoot)
+{
+    PDPH_HEAP_BLOCK Node = DphRoot->pUnusedNodeListHead;
+    PDPH_HEAP_BLOCK Next;
+
+    /* Take the first entry */
+    if (!Node) return NULL;
+
+    /* Remove that entry (Node) from the list */
+    Next = Node->pNextAlloc;
+    if (DphRoot->pUnusedNodeListHead == Node) DphRoot->pUnusedNodeListHead = Next;
+    if (DphRoot->pUnusedNodeListTail == Node) DphRoot->pUnusedNodeListTail = NULL;
+
+    /* Decrease amount of unused nodes */
+    DphRoot->nUnusedNodes--;
+
+    return Node;
+}
+
+VOID NTAPI
+RtlpDphReturnNodeToUnusedList(PDPH_HEAP_ROOT DphRoot,
+                              PDPH_HEAP_BLOCK Node)
+{
+    /* Add it back to the head of the unused list */
+    Node->pNextAlloc = DphRoot->pUnusedNodeListHead;
+    if (!DphRoot->pUnusedNodeListHead) DphRoot->pUnusedNodeListTail = Node;
+    DphRoot->pUnusedNodeListHead = Node;
+
+    /* Increase amount of unused nodes */
+    DphRoot->nUnusedNodes++;
+}
+
+VOID NTAPI
+RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
+                               PDPH_HEAP_BLOCK Node)
+{
+    /* Make sure Adjacency list pointers are biased */
+    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
+    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
+
+    /* Remove it from the list */
+    RemoveEntryList(&Node->AvailableEntry);
+
+    /* Decrease heap counters */
+    DphRoot->nAvailableAllocations--;
+    DphRoot->nAvailableAllocationBytesCommitted -= Node->nVirtualBlockSize;
+
+    /* Remove bias from the AdjacencyEntry pointer */
+    POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Flink);
+    POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Blink);
+}
+
+VOID NTAPI
+RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
+                                 PDPH_HEAP_BLOCK Node)
+{
+    UNIMPLEMENTED;
+}
+
+VOID NTAPI
+RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtual, SIZE_T Size, BOOLEAN PlaceOnPool)
 {
     PDPH_HEAP_BLOCK DphNode, DphStartNode;
     ULONG NodeCount;
@@ -294,9 +391,19 @@ RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtu
     /* Increase counters */
     DphRoot->nUnusedNodes += NodeCount;
 
-    if (Add)
+    /* Check if we need to place it on the pool list */
+    if (PlaceOnPool)
     {
-        UNIMPLEMENTED;
+        /* Get a node from the unused list */
+        DphNode = RtlpDphTakeNodeFromUnusedList(DphRoot);
+        ASSERT(DphNode);
+
+        /* Set its virtual block values */
+        DphNode->pVirtualBlock = Virtual;
+        DphNode->nVirtualBlockSize = Size;
+
+        /* Place it on the pool list */
+        RtlpDphPlaceOnPoolList(DphRoot, DphNode);
     }
 }
 
@@ -307,34 +414,6 @@ RtlpDphFindAvailableMemory(PDPH_HEAP_ROOT DphRoot,
 {
     UNIMPLEMENTED;
     return NULL;
-}
-
-
-PDPH_HEAP_BLOCK NTAPI
-RtlpDphTakeNodeFromUnusedList(PDPH_HEAP_ROOT DphRoot)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-VOID NTAPI
-RtlpDphReturnNodeToUnusedList(PDPH_HEAP_ROOT DphRoot,
-                               PDPH_HEAP_BLOCK Node)
-{
-}
-
-VOID NTAPI
-RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
-                               PDPH_HEAP_BLOCK Node)
-{
-    UNIMPLEMENTED;
-}
-
-VOID NTAPI
-RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
-                                 PDPH_HEAP_BLOCK Node)
-{
-    UNIMPLEMENTED;
 }
 
 PDPH_HEAP_BLOCK NTAPI
@@ -420,18 +499,6 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
     }
 
     return RtlpDphTakeNodeFromUnusedList(DphRoot);
-}
-
-VOID NTAPI
-RtlpDphPlaceOnPoolList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
-{
-    UNIMPLEMENTED;
-}
-
-VOID NTAPI
-RtlpDphPlaceOnVirtualList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
-{
-    UNIMPLEMENTED;
 }
 
 RTL_GENERIC_COMPARE_RESULTS
