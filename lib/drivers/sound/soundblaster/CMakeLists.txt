@@ -3,7 +3,7 @@ add_definitions(
     -D__NTDRIVER__
     -DKERNEL)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
 list(APPEND SOURCE
     dsp_io.c
