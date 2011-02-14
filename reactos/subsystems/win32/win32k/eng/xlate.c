@@ -361,9 +361,7 @@ EXLATEOBJ_vInitialize(
 
     EXLATEOBJ_vInitTrivial(pexlo);
 
-    if (ppalDst == ppalSrc || !ppalSrc || !ppalDst ||
-        ((ppalDst->flFlags == PAL_RGB || ppalDst->flFlags == PAL_BGR) &&
-         ppalDst->flFlags == ppalSrc->flFlags))
+    if (!ppalSrc || !ppalDst)
     {
         return;
     }
@@ -372,6 +370,13 @@ EXLATEOBJ_vInitialize(
     pexlo->ppalDst = ppalDst;
     pexlo->xlo.iSrcType = ppalSrc->flFlags;
     pexlo->xlo.iDstType = ppalDst->flFlags;
+    
+    if (ppalDst == ppalSrc ||
+        ((ppalDst->flFlags == PAL_RGB || ppalDst->flFlags == PAL_BGR) &&
+         ppalDst->flFlags == ppalSrc->flFlags))
+    {
+        return;
+    }
 
     /* Chack if both of the pallettes are indexed */
     if (!(ppalSrc->flFlags & PAL_INDEXED) || !(ppalDst->flFlags & PAL_INDEXED))
@@ -606,13 +611,6 @@ EXLATEOBJ_vInitXlateFromDCs(
 
     psurfDst = pdcDst->dclevel.pSurface;
     psurfSrc = pdcSrc->dclevel.pSurface;
-
-    /* Check for trivial color translation */
-    if (psurfDst == psurfSrc)
-    {
-        EXLATEOBJ_vInitTrivial(pexlo);
-        return;
-    }
 
     /* Normal initialisation. No surface means DEFAULT_BITMAP */
     EXLATEOBJ_vInitialize(pexlo,
