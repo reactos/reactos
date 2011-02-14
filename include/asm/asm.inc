@@ -11,10 +11,12 @@
 /* Allow ".name" identifiers */
 OPTION DOTNAME
 
+#ifdef _M_IX86
 .686P
 .XMM
 .MODEL FLAT
 ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
+#endif
 
 /* Hex numbers need to be in 01ABh format */
 #define HEX(x) 0##x##h
@@ -68,11 +70,11 @@ ENDM
 
 .code16 MACRO
     ASSUME nothing
-    .text SEGMENT use16
+    .text16 SEGMENT use16
 ENDM
 
 .endcode16 MACRO
-    .text ENDS
+    .text16 ENDS
 ENDM
 
 .bss MACRO
@@ -111,12 +113,33 @@ ENDM
     ORG value
 ENDM
 
-.fill MACRO repeat, size, value
-// FIXME
+.fill MACRO count, size, value
+    REPEAT count
+        if (size == 1)
+            DB value
+        elseif (size == 2)
+            DW value
+        elseif (size == 4)
+            DD value
+        else
+        endif
+    ENDM
+ENDM
+
+.space MACRO count
+    DB 0 DUP (count)
 ENDM
 
 ljmp MACRO segment, offset
-// FIXME
+    DB 0EAh
+    DD offset
+    DW segment
+ENDM
+
+ljmp16 MACRO segment, offset
+    DB 0EAh
+    DW offset
+    DW segment
 ENDM
 
 UNIMPLEMENTED MACRO name
@@ -177,6 +200,10 @@ ENDM
 #define ENDR .endr
 
 .macro ljmp segment, offset
+    jmp far ptr \segment:\offset
+.endm
+
+.macro ljmp16 segment, offset
     jmp far ptr \segment:\offset
 .endm
 
