@@ -1,6 +1,7 @@
 
-if(0) # Fixme redefinition warning
-if(OPTIMIZE STREQUAL "1")
+if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+    # no optimitation
+elseif(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
 elseif(OPTIMIZE STREQUAL "2")
     add_definitions(/O2)
@@ -10,7 +11,6 @@ elseif(OPTIMIZE STREQUAL "4")
     add_definitions(/Os /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "5")
     add_definitions(/GF /Gy /Ob2 /Os /Ox /GS-)
-endif()
 endif()
 
 add_definitions(/X /GR- /GS- /Zl)
