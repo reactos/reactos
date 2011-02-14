@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
- 
+
 // Arguments for idt
 #define INT_32_DPL0                 HEX(08E00)
 #define INT_32_DPL3                 HEX(0EE00)
@@ -43,7 +43,7 @@
 #else
 #define LOCK
 #define ACQUIRE_SPINLOCK(x, y)
-#define RELEASE_SPINLOCK(x) 
+#define RELEASE_SPINLOCK(x)
 #endif
 
 //
@@ -138,7 +138,7 @@ MACRO(KiEnterTrap, Flags)
     if (Flags AND KI_DONT_SAVE_SEGS)
 
         /* Initialize TrapFrame segment registers with sane values */
-        mov eax, 0x23
+        mov eax, KGDT_R3_DATA OR 3
         mov ecx, fs
         mov [esp + KTRAP_FRAME_DS], eax
         mov [esp + KTRAP_FRAME_ES], eax
