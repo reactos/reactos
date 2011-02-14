@@ -13,7 +13,7 @@ elseif(OPTIMIZE STREQUAL "5")
 endif()
 endif()
 
-add_definitions(/X /GR- /GS- /Zl /Zi)
+add_definitions(/X /GR- /GS- /Zl)
 add_definitions(-Dinline=__inline -D__STDC__=1)
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
@@ -129,9 +129,6 @@ macro(set_unicode)
    add_definitions(-DUNICODE -D_UNICODE)
    set(IS_UNICODE 1)
 endmacro()
-
-set(CMAKE_C_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi  /Ob0 /Od")
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi /Ob0 /Od")
 
 macro(set_rc_compiler)
 # dummy, this workaround is only needed in mingw due to lack of RC support in cmake
