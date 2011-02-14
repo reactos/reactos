@@ -17,8 +17,6 @@
 /** Globals *******************************************************************/
 
 ULONG giUniqueXlate = 0;
-EXLATEOBJ gexloTrivial;
-XLATEOBJ* gpxloTrivial = &gexloTrivial.xlo;
 
 const BYTE gajXlate5to8[32] =
 {  0,  8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99,107,115,123,
@@ -331,23 +329,6 @@ EXLATEOBJ_iXlateBitfieldsToPal(PEXLATEOBJ pexlo, ULONG iColor)
 
 VOID
 NTAPI
-EXLATEOBJ_vInitTrivial(PEXLATEOBJ pexlo)
-{
-    pexlo->xlo.iUniq = InterlockedIncrement((LONG*)&giUniqueXlate);
-    pexlo->xlo.flXlate = XO_TRIVIAL;
-    pexlo->xlo.iSrcType = PAL_RGB;
-    pexlo->xlo.iDstType = PAL_RGB;
-    pexlo->xlo.cEntries = 0;
-    pexlo->xlo.pulXlate = pexlo->aulXlate;
-    pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
-    pexlo->ppalSrc = &gpalRGB;
-    pexlo->ppalDst = &gpalRGB;
-    pexlo->ppalDstDc = &gpalRGB;
-    pexlo->hColorTransform = NULL;
-}
-
-VOID
-NTAPI
 EXLATEOBJ_vInitialize(
     PEXLATEOBJ pexlo,
     PALETTE *ppalSrc,
@@ -359,22 +340,24 @@ EXLATEOBJ_vInitialize(
     ULONG cEntries;
     ULONG i, ulColor;
 
-    EXLATEOBJ_vInitTrivial(pexlo);
+    if (!ppalSrc) ppalSrc = &gpalRGB;
+    if (!ppalDst) ppalDst = &gpalRGB;
 
-    if (!ppalSrc || !ppalDst)
-    {
-        return;
-    }
-
+    pexlo->xlo.iUniq = InterlockedIncrement((LONG*)&giUniqueXlate);
+    pexlo->xlo.cEntries = 0;
+    pexlo->xlo.flXlate = 0;
+    pexlo->xlo.pulXlate = pexlo->aulXlate;
+    pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
+    pexlo->hColorTransform = NULL;
     pexlo->ppalSrc = ppalSrc;
     pexlo->ppalDst = ppalDst;
     pexlo->xlo.iSrcType = ppalSrc->flFlags;
     pexlo->xlo.iDstType = ppalDst->flFlags;
-    
-    if (ppalDst == ppalSrc ||
-        ((ppalDst->flFlags == PAL_RGB || ppalDst->flFlags == PAL_BGR) &&
-         ppalDst->flFlags == ppalSrc->flFlags))
+    pexlo->ppalDstDc = &gpalRGB;
+
+    if (ppalDst == ppalSrc)
     {
+        pexlo->xlo.flXlate |= XO_TRIVIAL;
         return;
     }
 
@@ -460,12 +443,14 @@ EXLATEOBJ_vInitialize(
                 return;
             }
         }
-        pexlo->xlo.cEntries = cEntries;
 
         pexlo->pfnXlate = EXLATEOBJ_iXlateTable;
+        pexlo->xlo.cEntries = cEntries;
+        pexlo->xlo.flXlate |= XO_TABLE;
+
         if (ppalDst->flFlags & PAL_INDEXED)
         {
-            pexlo->xlo.flXlate |= XO_TABLE;
+            ULONG cDiff = 0;
 
             for (i = 0; i < cEntries; i++)
             {
@@ -476,11 +461,11 @@ EXLATEOBJ_vInitialize(
                 pexlo->xlo.pulXlate[i] =
                     PALETTE_ulGetNearestPaletteIndex(ppalDst, ulColor);
 
-                if (pexlo->xlo.pulXlate[i] != i)
-                    pexlo->xlo.flXlate &= ~XO_TRIVIAL;
+                if (pexlo->xlo.pulXlate[i] != i) cDiff++;
             }
 
-            if (pexlo->xlo.flXlate & XO_TRIVIAL)
+            /* Check if we have only trivial mappings */
+            if (cDiff == 0)
             {
                 if (pexlo->xlo.pulXlate != pexlo->aulXlate)
                 {
@@ -489,6 +474,7 @@ EXLATEOBJ_vInitialize(
                 }
                 pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
                 pexlo->xlo.flXlate = XO_TRIVIAL;
+                pexlo->xlo.cEntries = 0;
                 return;
             }
         }
@@ -619,6 +605,8 @@ EXLATEOBJ_vInitXlateFromDCs(
                           pdcSrc->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crForegroundClr);
+
+    pexlo->ppalDstDc = pdcDst->dclevel.ppal;
 }
 
 VOID
@@ -637,7 +625,6 @@ NTSTATUS
 NTAPI
 InitXlateImpl(VOID)
 {
-    EXLATEOBJ_vInitTrivial(&gexloTrivial);
     return STATUS_SUCCESS;
 }
 
