@@ -99,7 +99,7 @@
 # stub _CrtSetReportHook
 # stub _CrtSetReportHook2
 # stub _CrtSetReportMode
-@ cdecl _CxxThrowException(long long)
+@ stdcall _CxxThrowException(long long)
 @ cdecl -i386 -norelay _EH_prolog()
 @ cdecl _Getdays()
 @ cdecl _Getmonths()
