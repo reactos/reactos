@@ -12,6 +12,13 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+NTAPI
+DriverEntry (
+    PDRIVER_OBJECT  DriverObject,
+    PUNICODE_STRING RegistryPath
+    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (INIT, DriverEntry)
 #pragma alloc_text (PAGE, Bus_AddDevice)

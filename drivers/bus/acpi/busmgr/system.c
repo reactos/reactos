@@ -48,13 +48,13 @@ static int acpi_system_remove (struct acpi_device *device, int type);
 ACPI_STATUS acpi_suspend (UINT32 state);
 
 static struct acpi_driver acpi_system_driver = {
-	.name =		ACPI_SYSTEM_DRIVER_NAME,
-	.class =	ACPI_SYSTEM_CLASS,
-	.ids =		ACPI_SYSTEM_HID,
-	.ops =		{
-				.add =		acpi_system_add,
-				.remove =	acpi_system_remove
-			},
+    {0,0},
+    ACPI_SYSTEM_DRIVER_NAME,
+    ACPI_SYSTEM_CLASS,
+    0,
+    0,
+    ACPI_SYSTEM_HID,
+    {acpi_system_add, acpi_system_remove}
 };
 
 struct acpi_system
