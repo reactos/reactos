@@ -9,8 +9,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff
-    ${REACTOS_BINARY_DIR}/include/psdk)
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
 set_rc_compiler()
 
 spec2def(windowscodecs.dll windowscodecs.spec)
