@@ -7,6 +7,7 @@
 
 /* Useful references:
     http://msdn.microsoft.com/en-us/library/ms220938(VS.80).aspx
+    http://blogs.msdn.com/b/jiangyue/archive/2010/03/16/windows-heap-overrun-monitoring.aspx
 */
 
 /* INCLUDES *****************************************************************/
@@ -125,6 +126,7 @@ LONG RtlpDphProtectFails;
 
 #define DPH_RESERVE_SIZE 0x100000
 #define DPH_POOL_SIZE 0x4000
+#define DPH_FREE_LIST_MINIMUM 8
 
 /* RtlpDphBreakOptions */
 #define DPH_BREAK_ON_RESERVE_FAIL 0x01
@@ -149,6 +151,9 @@ LONG RtlpDphProtectFails;
 #define POINTER_ADD_BIAS(ptr) ((ULONG_PTR)(ptr) & 1)
 
 /* FUNCTIONS ******************************************************************/
+
+BOOLEAN NTAPI
+RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot, SIZE_T Size);
 
 NTSTATUS NTAPI
 RtlpSecMemFreeVirtualMemory(HANDLE Process, PVOID *Base, PSIZE_T Size, ULONG Type)
@@ -361,6 +366,75 @@ VOID NTAPI
 RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
                                  PDPH_HEAP_BLOCK Node)
 {
+    PDPH_HEAP_BLOCK NodeEntry, PrevNode = NULL, NextNode;
+    PLIST_ENTRY AvailListHead;
+    PLIST_ENTRY CurEntry;
+
+    /* Update heap counters */
+    DphRoot->nAvailableAllocationBytesCommitted += Node->nVirtualBlockSize;
+    DphRoot->nAvailableAllocations++;
+
+    /* Find where to put this node according to its virtual address */
+    AvailListHead = &DphRoot->AvailableAllocationHead;
+    CurEntry = AvailListHead->Flink;
+
+    while (CurEntry != AvailListHead)
+    {
+        NodeEntry = CONTAINING_RECORD(CurEntry, DPH_HEAP_BLOCK, AvailableEntry);
+
+        if (NodeEntry->pVirtualBlock >= Node->pVirtualBlock)
+        {
+            PrevNode = NodeEntry;
+            break;
+        }
+        CurEntry = CurEntry->Flink;
+    }
+
+    /* Did we find a node to insert our one after? */
+    if (!PrevNode)
+    {
+        /* No, just add to the head of the list then */
+        InsertHeadList(AvailListHead, &Node->AvailableEntry);
+    }
+    else
+    {
+        /* Check the previous node and merge if possible */
+        if (PrevNode->pVirtualBlock + PrevNode->nVirtualBlockSize == Node->pVirtualBlock)
+        {
+            /* They are adjacent - merge! */
+            PrevNode->nVirtualBlockSize += Node->nVirtualBlockSize;
+            RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+            DphRoot->nAvailableAllocations--;
+
+            Node = PrevNode;
+        }
+        else
+        {
+            /* Insert after PrevNode */
+            InsertTailList(&PrevNode->AvailableEntry, &Node->AvailableEntry);
+        }
+    }
+
+    /* Now check the next entry after our one */
+    if (Node->AvailableEntry.Flink != AvailListHead)
+    {
+        NextNode = CONTAINING_RECORD(Node->AvailableEntry.Flink, DPH_HEAP_BLOCK, AvailableEntry);;
+        /* Node is not at the tail of the list, check if it's adjacent */
+        if (Node->pVirtualBlock + Node->nVirtualBlockSize == NextNode->pVirtualBlock)
+        {
+            /* They are adjacent - merge! */
+            Node->nVirtualBlockSize += NextNode->nVirtualBlockSize;
+            Node->pNextAlloc = NextNode->pNextAlloc;
+            RtlpDphReturnNodeToUnusedList(DphRoot, NextNode);
+            DphRoot->nAvailableAllocations--;
+        }
+    }
+}
+
+VOID NTAPI
+RtlpDphCoalesceFreeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
+                                 ULONG Size)
+{
     UNIMPLEMENTED;
 }
 
@@ -408,12 +482,90 @@ RtlpDphAddNewPool(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK NodeBlock, PVOID Virtu
 }
 
 PDPH_HEAP_BLOCK NTAPI
+RtlpDphSearchAvailableMemoryListForBestFit(PDPH_HEAP_ROOT DphRoot,
+                                           SIZE_T Size)
+{
+    PLIST_ENTRY CurEntry;
+    PDPH_HEAP_BLOCK Node;
+
+    CurEntry = DphRoot->AvailableAllocationHead.Flink;
+
+    while (TRUE)
+    {
+        /* If we reached end of the list - return right away */
+        if (CurEntry == &DphRoot->AvailableAllocationHead) return NULL;
+
+        /* Get the current available node */
+        Node = CONTAINING_RECORD(CurEntry, DPH_HEAP_BLOCK, AvailableEntry);
+
+        /* Check its size */
+        if (Node->nVirtualBlockSize >= Size) break;
+
+        /* Move to the next available entry */
+        CurEntry = CurEntry->Flink;
+    }
+
+    /* Make sure Adjacency list pointers are biased */
+    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
+    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
+
+    return Node;
+}
+
+PDPH_HEAP_BLOCK NTAPI
 RtlpDphFindAvailableMemory(PDPH_HEAP_ROOT DphRoot,
                            SIZE_T Size,
-                           PDPH_HEAP_BLOCK *Prev)
+                           BOOLEAN Grow)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PDPH_HEAP_BLOCK Node;
+    ULONG NewSize;
+
+    /* Find an available best fitting node */
+    Node = RtlpDphSearchAvailableMemoryListForBestFit(DphRoot, Size);
+
+    /* If that didn't work, try to search a smaller one in the loop */
+    while (!Node)
+    {
+        /* Break if the free list becomes too small */
+        if (DphRoot->nFreeAllocations <= DPH_FREE_LIST_MINIMUM) break;
+
+        /* Calculate a new free list size */
+        NewSize = DphRoot->nFreeAllocations >> 1;
+        if (NewSize < DPH_FREE_LIST_MINIMUM) NewSize = DPH_FREE_LIST_MINIMUM;
+
+        /* Coalesce free into available */
+        RtlpDphCoalesceFreeIntoAvailable(DphRoot, NewSize);
+
+        /* Try to find an available best fitting node again */
+        Node = RtlpDphSearchAvailableMemoryListForBestFit(DphRoot, Size);
+    }
+
+    /* If Node is NULL, then we could fix the situation only by
+       growing the available VM size */
+    if (!Node && Grow)
+    {
+        /* Grow VM size, if it fails - return failure directly */
+        if (!RtlpDphGrowVirtual(DphRoot, Size)) return NULL;
+
+        /* Try to find an available best fitting node again */
+        Node = RtlpDphSearchAvailableMemoryListForBestFit(DphRoot, Size);
+
+        if (!Node)
+        {
+            /* Do the last attempt: coalesce all free into available (if Size fits there) */
+            if (DphRoot->nFreeAllocationBytesCommitted + DphRoot->nAvailableAllocationBytesCommitted >= Size)
+            {
+                /* Coalesce free into available */
+                RtlpDphCoalesceFreeIntoAvailable(DphRoot, 0);
+
+                /* Try to find an available best fitting node again */
+                Node = RtlpDphSearchAvailableMemoryListForBestFit(DphRoot, Size);
+            }
+        }
+    }
+
+    /* Return node we found */
+    return Node;
 }
 
 PDPH_HEAP_BLOCK NTAPI
@@ -434,13 +586,13 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
     }
 
     /* There is a need to make free space */
-    Node = RtlpDphFindAvailableMemory(DphRoot, DPH_POOL_SIZE, NULL);
+    Node = RtlpDphFindAvailableMemory(DphRoot, DPH_POOL_SIZE, FALSE);
 
     if (!DphRoot->pUnusedNodeListHead && !Node)
     {
         /* Retry with a smaller request */
         Size = PAGE_SIZE;
-        Node = RtlpDphFindAvailableMemory(DphRoot, PAGE_SIZE, NULL);
+        Node = RtlpDphFindAvailableMemory(DphRoot, PAGE_SIZE, FALSE);
     }
 
     if (!DphRoot->pUnusedNodeListHead)
@@ -499,6 +651,56 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
     }
 
     return RtlpDphTakeNodeFromUnusedList(DphRoot);
+}
+
+BOOLEAN NTAPI
+RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot,
+                   SIZE_T Size)
+{
+    PDPH_HEAP_BLOCK Node, AvailableNode;
+    PVOID Base;
+    SIZE_T VirtualSize;
+    NTSTATUS Status;
+
+    /* Start with allocating a couple of nodes */
+    Node = RtlpDphAllocateNode(DphRoot);
+    if (!Node) return FALSE;
+
+    AvailableNode = RtlpDphAllocateNode(DphRoot);
+    if (!AvailableNode)
+    {
+        /* Free the allocated node and return failure */
+        RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+        return FALSE;
+    }
+
+    /* Calculate size of VM to allocate by rounding it up */
+    VirtualSize = (Size + 0xFFFF) & 0xFFFF0000;
+    if (VirtualSize < DPH_RESERVE_SIZE)
+        VirtualSize = DPH_RESERVE_SIZE;
+
+    /* Allocate the virtual memory */
+    Status = RtlpDphAllocateVm(&Base, VirtualSize, MEM_RESERVE, PAGE_NOACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Free the allocated node and return failure */
+        RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+        RtlpDphReturnNodeToUnusedList(DphRoot, AvailableNode);
+        return FALSE;
+    }
+
+    /* Set up our two nodes describing this VM */
+    Node->pVirtualBlock = Base;
+    Node->nVirtualBlockSize = VirtualSize;
+    AvailableNode->pVirtualBlock = Base;
+    AvailableNode->nVirtualBlockSize = VirtualSize;
+
+    /* Add them to virtual and available lists respectively */
+    RtlpDphPlaceOnVirtualList(DphRoot, Node);
+    RtlpDphCoalesceNodeIntoAvailable(DphRoot, AvailableNode);
+
+    /* Return success */
+    return TRUE;
 }
 
 RTL_GENERIC_COMPARE_RESULTS
