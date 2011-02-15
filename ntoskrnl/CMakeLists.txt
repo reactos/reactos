@@ -441,7 +441,7 @@ target_link_libraries(ntoskrnl
     libcntpr
     wdmguid
     ioevent)
-    
+
 add_importlibs(ntoskrnl hal kdcom bootvid)
 
 add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
@@ -452,3 +452,4 @@ add_livecd_target(ntoskrnl reactos/system32)
 add_importlib_target(ntoskrnl.spec)
 
 add_library(ntdllsys ntdll.S)
+set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE C)
