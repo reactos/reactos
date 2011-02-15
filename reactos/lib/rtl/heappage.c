@@ -139,8 +139,21 @@ LONG RtlpDphProtectFails;
 #define DPH_DEBUG_INTERNAL_VALIDATE 0x01
 #define DPH_DEBUG_VERBOSE           0x04
 
+/* DPH ExtraFlags */
+#define DPH_EXTRA_CHECK_CORRUPTED_BLOCKS 0x10
+
 /* Fillers */
 #define DPH_FILL 0xEEEEEEEE
+#define DPH_FILL_START_STAMP_1 0xABCDBBBB
+#define DPH_FILL_START_STAMP_2 0xABCDBBBA
+#define DPH_FILL_END_STAMP_1   0xDCBABBBB
+#define DPH_FILL_BLOCK_END     0xD0
+
+/* Validation info flags */
+#define DPH_VALINFO_BAD_START_STAMP 0x01
+#define DPH_VALINFO_BAD_END_STAMP   0x02
+#define DPH_VALINFO_BAD_POINTER     0x04
+#define DPH_VALINFO_BAD_END_FILL    0x10
 
 /* Signatures */
 #define DPH_SIGNATURE 0xFFEEDDCC
@@ -154,6 +167,67 @@ LONG RtlpDphProtectFails;
 
 BOOLEAN NTAPI
 RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot, SIZE_T Size);
+
+PVOID NTAPI
+RtlpDphPointerFromHandle(PVOID Handle)
+{
+    PHEAP NormalHeap = (PHEAP)Handle;
+    PDPH_HEAP_ROOT DphHeap = (PDPH_HEAP_ROOT)((PUCHAR)Handle + PAGE_SIZE);
+
+    if (NormalHeap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+    {
+        if (DphHeap->Signature == DPH_SIGNATURE)
+            return DphHeap;
+    }
+
+    DPRINT1("heap handle with incorrect signature\n");
+    DbgBreakPoint();
+    return NULL;
+}
+
+VOID NTAPI
+RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
+{
+    if (Flags & HEAP_NO_SERIALIZE)
+    {
+        /* More complex scenario */
+        if (!RtlTryEnterCriticalSection(DphRoot->HeapCritSect))
+        {
+            if (!DphRoot->nRemoteLockAcquired)
+            {
+                DPRINT1("multithreaded access in HEAP_NO_SERIALIZE heap\n");
+                DbgBreakPoint();
+
+                /* Clear out the no serialize flag */
+                DphRoot->HeapFlags &= ~HEAP_NO_SERIALIZE;
+            }
+
+            /* Enter the heap's critical section */
+            RtlEnterCriticalSection(DphRoot->HeapCritSect);
+        }
+    }
+    else
+    {
+        /* Just enter the heap's critical section */
+        RtlEnterCriticalSection(DphRoot->HeapCritSect);
+    }
+}
+
+VOID NTAPI
+RtlpDphLeaveCriticalSection(PDPH_HEAP_ROOT DphRoot)
+{
+    /* Just leave the heap's critical section */
+    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
+}
+
+
+VOID NTAPI
+RtlpDphPreProcessing(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
+{
+    RtlpDphEnterCriticalSection(DphRoot, Flags);
+
+    /* FIXME: Validate integrity, internal lists if necessary */
+}
 
 NTSTATUS NTAPI
 RtlpSecMemFreeVirtualMemory(HANDLE Process, PVOID *Base, PSIZE_T Size, ULONG Type)
@@ -218,7 +292,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
 }
 
 NTSTATUS NTAPI
-RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type, ULONG Protection)
+RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 {
     NTSTATUS Status;
 
@@ -363,6 +437,28 @@ RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
 }
 
 VOID NTAPI
+RtlpDphRemoveFromFreeList(PDPH_HEAP_ROOT DphRoot,
+                          PDPH_HEAP_BLOCK Node,
+                          PDPH_HEAP_BLOCK Prev)
+{
+    PDPH_HEAP_BLOCK Next;
+
+    /* Detach it from the list */
+    Next = Node->pNextAlloc;
+    if (DphRoot->pFreeAllocationListHead == Node)
+        DphRoot->pFreeAllocationListHead = Next;
+    if (DphRoot->pFreeAllocationListTail == Node)
+        DphRoot->pFreeAllocationListTail = Prev;
+    if (Prev) Prev->pNextAlloc = Next;
+
+    /* Decrease heap counters */
+    DphRoot->nFreeAllocations--;
+    DphRoot->nFreeAllocationBytesCommitted -= Node->nVirtualBlockSize;
+
+    Node->StackTrace = NULL;
+}
+
+VOID NTAPI
 RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
                                  PDPH_HEAP_BLOCK Node)
 {
@@ -433,9 +529,30 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
 
 VOID NTAPI
 RtlpDphCoalesceFreeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
-                                 ULONG Size)
+                                 ULONG LeaveOnFreeList)
 {
-    UNIMPLEMENTED;
+    PDPH_HEAP_BLOCK Node = DphRoot->pFreeAllocationListHead, Next;
+    SIZE_T FreeAllocations = DphRoot->nFreeAllocations;
+
+    /* Make sure requested size is not too big */
+    ASSERT(FreeAllocations >= LeaveOnFreeList);
+
+    while (Node)
+    {
+        FreeAllocations--;
+        if (FreeAllocations <= LeaveOnFreeList) break;
+
+        /* Get the next pointer, because it may be changed after following two calls */
+        Next = Node->pNextAlloc;
+
+        /* Remove it from the free list */
+        RtlpDphRemoveFromFreeList(DphRoot, Node, NULL);
+
+        /* And put into the available */
+        RtlpDphCoalesceNodeIntoAvailable(DphRoot, Node);
+
+        Node = Next;
+    }
 }
 
 VOID NTAPI
@@ -573,7 +690,7 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
 {
     PDPH_HEAP_BLOCK Node;
     NTSTATUS Status;
-    ULONG Size = DPH_POOL_SIZE;
+    SIZE_T Size = DPH_POOL_SIZE, SizeVirtual;
     PVOID Ptr;
 
     /* Check for the easy case */
@@ -601,17 +718,20 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
         {
             RtlpDphRemoveFromAvailableList(DphRoot, Node);
             Ptr = Node->pVirtualBlock;
+            SizeVirtual = Node->nVirtualBlockSize;
         }
         else
         {
             /* No free space, need to alloc a new VM block */
             Size = DPH_POOL_SIZE;
-            Status = RtlpDphAllocateVm(&Ptr, DPH_RESERVE_SIZE, MEM_COMMIT, PAGE_NOACCESS);
+            SizeVirtual = DPH_RESERVE_SIZE;
+            Status = RtlpDphAllocateVm(&Ptr, SizeVirtual, MEM_COMMIT, PAGE_NOACCESS);
 
             if (!NT_SUCCESS(Status))
             {
                 /* Retry with a smaller size */
-                Status = RtlpDphAllocateVm(&Ptr, 0x10000, MEM_COMMIT, PAGE_NOACCESS);
+                SizeVirtual = 0x10000;
+                Status = RtlpDphAllocateVm(&Ptr, SizeVirtual, MEM_COMMIT, PAGE_NOACCESS);
                 if (!NT_SUCCESS(Status)) return NULL;
             }
         }
@@ -620,7 +740,16 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
         Status = RtlpDphProtectVm(Ptr, Size, PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
-            ASSERT(FALSE);
+            if (Node)
+            {
+                RtlpDphCoalesceNodeIntoAvailable(DphRoot, Node);
+            }
+            else
+            {
+                //RtlpDphFreeVm();
+                ASSERT(FALSE);
+            }
+
             return NULL;
         }
 
@@ -630,11 +759,7 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
         /* Add a new pool based on this VM */
         RtlpDphAddNewPool(DphRoot, Node, Ptr, Size, TRUE);
 
-        if (!Node)
-        {
-            ASSERT(FALSE);
-        }
-        else
+        if (Node)
         {
             if (Node->nVirtualBlockSize > Size)
             {
@@ -647,6 +772,23 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
             {
                 RtlpDphReturnNodeToUnusedList(DphRoot, Node);
             }
+        }
+        else
+        {
+            /* The new VM block was just allocated a few code lines ago,
+               so initialize it */
+            Node = RtlpDphTakeNodeFromUnusedList(DphRoot);
+            Node->pVirtualBlock = Ptr;
+            Node->nVirtualBlockSize = SizeVirtual;
+            RtlpDphPlaceOnVirtualList(DphRoot, Node);
+
+            Node = RtlpDphTakeNodeFromUnusedList(DphRoot);
+            Node->pVirtualBlock = (PUCHAR)Ptr + Size;
+            Node->nVirtualBlockSize = SizeVirtual - Size;
+            RtlpDphPlaceOnVirtualList(DphRoot, Node);
+
+            /* Coalesce them into available list */
+            RtlpDphCoalesceNodeIntoAvailable(DphRoot, Node);
         }
     }
 
@@ -709,7 +851,7 @@ RtlpDphCompareNodeForTable(IN PRTL_AVL_TABLE Table,
                            IN PVOID FirstStruct,
                            IN PVOID SecondStruct)
 {
-    /* FIXME: TODO */
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return 0;
 }
@@ -719,7 +861,7 @@ NTAPI
 RtlpDphAllocateNodeForTable(IN PRTL_AVL_TABLE Table,
                             IN CLONG ByteSize)
 {
-    /* FIXME: TODO */
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return NULL;
 }
@@ -729,7 +871,7 @@ NTAPI
 RtlpDphFreeNodeForTable(IN PRTL_AVL_TABLE Table,
                         IN PVOID Buffer)
 {
-    /* FIXME: TODO */
+    UNIMPLEMENTED;
     ASSERT(FALSE);
 }
 
@@ -738,6 +880,13 @@ RtlpDphInitializeDelayedFreeQueue()
 {
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
+}
+
+VOID NTAPI
+RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
+                                 PHEAP NormalHeap)
+{
+    UNIMPLEMENTED;
 }
 
 NTSTATUS NTAPI
@@ -751,6 +900,78 @@ VOID NTAPI
 RtlpDphInternalValidatePageHeap(PDPH_HEAP_ROOT DphRoot, PVOID Address, ULONG Value)
 {
     UNIMPLEMENTED;
+}
+
+VOID NTAPI
+RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot,
+                            ULONG Reserved,
+                            PVOID Block,
+                            ULONG ValidationInfo)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN NTAPI
+RtlpDphIsPageHeapBlock(PDPH_HEAP_ROOT DphRoot,
+                       PVOID Block,
+                       PULONG ValidationInformation,
+                       BOOLEAN CheckFillers)
+{
+    PDPH_BLOCK_INFORMATION BlockInfo;
+    BOOLEAN SomethingWrong = FALSE;
+    PUCHAR Byte, Start, End;
+
+    ASSERT(ValidationInformation != NULL);
+    *ValidationInformation = 0;
+
+    // _SEH2_TRY {
+    BlockInfo = (PDPH_BLOCK_INFORMATION)Block - 1;
+
+    /* Check stamps */
+    if (BlockInfo->StartStamp != DPH_FILL_START_STAMP_1)
+    {
+        *ValidationInformation |= DPH_VALINFO_BAD_START_STAMP;
+        SomethingWrong = TRUE;
+
+        /* Check if it has an alloc/free mismatch */
+        if (BlockInfo->StartStamp == DPH_FILL_START_STAMP_2)
+        {
+            /* Notify respectively */
+            *ValidationInformation = 0x101;
+        }
+    }
+
+    if (BlockInfo->EndStamp != DPH_FILL_END_STAMP_1)
+    {
+        *ValidationInformation |= DPH_VALINFO_BAD_END_STAMP;
+        SomethingWrong = TRUE;
+    }
+
+    /* Check root heap pointer */
+    if (BlockInfo->Heap != DphRoot)
+    {
+        *ValidationInformation |= DPH_VALINFO_BAD_POINTER;
+        SomethingWrong = TRUE;
+    }
+
+    /* Check other fillers if requested */
+    if (CheckFillers)
+    {
+        /* Check space after the block */
+        Start = (PUCHAR)Block + BlockInfo->RequestedSize;
+        End = (PUCHAR)ROUND_UP(Start, PAGE_SIZE);
+        for (Byte = Start; Byte < End; Byte++)
+        {
+            if (*Byte != DPH_FILL_BLOCK_END)
+            {
+                *ValidationInformation |= DPH_VALINFO_BAD_END_FILL;
+                SomethingWrong = TRUE;
+                break;
+            }
+        }
+    }
+
+    return (SomethingWrong == FALSE);
 }
 
 NTSTATUS NTAPI
@@ -926,7 +1147,82 @@ RtlpPageHeapCreate(ULONG Flags,
 PVOID NTAPI
 RtlpPageHeapDestroy(HANDLE HeapPtr)
 {
-    return FALSE;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node, Next;
+    PHEAP NormalHeap;
+    ULONG Value;
+
+    /* Check if it's not a process heap */
+    if (HeapPtr == RtlGetProcessHeap())
+    {
+        DbgBreakPoint();
+        return NULL;
+    }
+
+    /* Get pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return NULL;
+
+    RtlpDphPreProcessing(DphRoot, DphRoot->HeapFlags);
+
+    /* Get the pointer to the normal heap */
+    NormalHeap = DphRoot->NormalHeap;
+
+    /* Free the delayed-free blocks */
+    RtlpDphFreeDelayedBlocksFromHeap(DphRoot, NormalHeap);
+
+    /* Go through the busy blocks */
+    Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, TRUE);
+
+    while (Node)
+    {
+        if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_CORRUPTED_BLOCKS))
+        {
+            if (!RtlpDphIsPageHeapBlock(DphRoot, Node->pUserAllocation, &Value, TRUE))
+            {
+                RtlpDphReportCorruptedBlock(DphRoot, 3, Node->pUserAllocation, Value);
+            }
+        }
+
+        /* FIXME: Call AV notification */
+        //AVrfInternalHeapFreeNotification();
+
+        /* Go to the next node */
+        Node = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
+    }
+
+    /* Acquire the global heap list lock */
+    RtlEnterCriticalSection(&RtlpDphPageHeapListLock);
+
+    /* Remove the entry and decrement the global counter */
+    RemoveEntryList(&DphRoot->NextHeap);
+    RtlpDphPageHeapListLength--;
+
+    /* Release the global heap list lock */
+    RtlLeaveCriticalSection(&RtlpDphPageHeapListLock);
+
+    /* Leave and delete this heap's critical section */
+    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
+    RtlDeleteCriticalSection(DphRoot->HeapCritSect);
+
+    /* Now go through all virtual list nodes and release the VM */
+    Node = DphRoot->pVirtualStorageListHead;
+    while (Node)
+    {
+        Next = Node->pNextAlloc;
+        /* Release the memory without checking result */
+        RtlpDphFreeVm(Node->pVirtualBlock, 0, MEM_RELEASE);
+        Node = Next;
+    }
+
+    /* Destroy the normal heap */
+    RtlDestroyHeap(NormalHeap);
+
+    /* Report success */
+    if (RtlpDphDebugOptions & DPH_DEBUG_VERBOSE)
+        DPRINT1("Page heap: process 0x%X destroyed heap @ %p (%p)\n", NtCurrentTeb()->ClientId.UniqueProcess, HeapPtr, NormalHeap);
+
+    return NULL;
 }
 
 PVOID NTAPI
