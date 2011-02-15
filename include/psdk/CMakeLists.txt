@@ -94,6 +94,7 @@ list(APPEND SOURCE
 #   vmrender.idl
     wia_lh.idl
     wia_xp.idl
+    wincodec.idl
     winsxs.idl
     wtypes.idl
     xmldom.idl
@@ -104,7 +105,6 @@ list(APPEND SOURCE
 if(NOT MSVC)
   list(APPEND SOURCE
     wbemcli.idl
-    wincodec.idl
     wuapi.idl)
 endif()
 
