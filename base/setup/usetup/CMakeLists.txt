@@ -38,6 +38,10 @@ target_link_libraries(usetup
     vfatlib
     mingw_common)
 
+if(MSVC)
+    target_link_libraries(usetup msvcsup)
+endif()
+
 set_module_type(usetup nativecui)
 add_importlibs(usetup kernel32 ntdll)
 add_minicd_target(usetup reactos/system32 smss.exe)
