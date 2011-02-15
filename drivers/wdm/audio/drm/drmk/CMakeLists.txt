@@ -10,8 +10,8 @@ list(APPEND SOURCE
 
 add_library(drmk SHARED ${SOURCE})
 
-set_module_type(drmk kernelmodedriver)
 set_entrypoint(drmk 0)
+set_target_properties(drmk PROPERTIES SUFFIX ".sys")
 add_importlibs(drmk ntoskrnl)
 add_importlib_target(drmk.spec)
 
