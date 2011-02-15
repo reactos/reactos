@@ -36,11 +36,10 @@ if(MSVC)
 else()
     #FIXME : can't build if this is enabled, check if this is needed
     #set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+    target_link_libraries(ksproxy -lsupc++ -lgcc -lmingw32 -lcoldname)
 endif(MSVC)
 
-target_link_libraries(ksproxy 
-    stlport -lsupc++ -lgcc -lmingw32 -lcoldname
-    strmiids)
+target_link_libraries(ksproxy stlport  strmiids)
     
 add_importlibs(ksproxy
     advapi32
