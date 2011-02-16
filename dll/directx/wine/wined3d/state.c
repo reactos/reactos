@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Direct3D state management
  *
  * Copyright 2002 Lionel Ulmer
@@ -1027,7 +1027,7 @@ void state_fogstartend(DWORD state, IWineD3DStateBlockImpl *stateblock, struct w
             fogend = tmpvalue.f;
             /* In GL, fogstart == fogend disables fog, in D3D everything's fogged.*/
             if(fogstart == fogend) {
-                fogstart = -1.0f / 0.0f;
+                fogstart = -INFINITY;
                 fogend = 0.0f;
             }
             break;

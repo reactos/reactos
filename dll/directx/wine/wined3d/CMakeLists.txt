@@ -46,6 +46,7 @@ list(APPEND SOURCE
     volumetexture.c
     wined3d_main.c
     version.rc
+    ${REACTOS_BINARY_DIR}/include/reactos/wine/wined3d_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
 if(ARCH MATCHES amd64)

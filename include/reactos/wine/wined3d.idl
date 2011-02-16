@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2002-2003 The wine-d3d team
  * Copyright 2002-2003 Jason Edmeades
  * Copyright 2002-2003 Raphael Junqueira
@@ -3374,7 +3374,7 @@ interface IWineD3DDevice : IUnknown
     );
 }
 
-IWineD3D *WineDirect3DCreate(UINT dxVersion, void *parent);
-IWineD3DClipper *WineDirect3DCreateClipper(void);
-void wined3d_mutex_lock(void);
-void wined3d_mutex_unlock(void);
+IWineD3D * __stdcall WineDirect3DCreate(UINT dxVersion, void *parent);
+IWineD3DClipper * __stdcall WineDirect3DCreateClipper(void);
+void __stdcall wined3d_mutex_lock(void);
+void __stdcall wined3d_mutex_unlock(void);
