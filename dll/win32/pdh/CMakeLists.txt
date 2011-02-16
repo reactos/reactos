@@ -18,7 +18,7 @@ set_entrypoint(pdh 0)
 
 target_link_libraries(pdh wine)
 
-add_importlibs(pdh kernel32 ntdll)
+add_importlibs(pdh kernel32 ntdll msvcrt)
 add_importlib_target(pdh.spec)
 
 add_cab_target(pdh 1)
