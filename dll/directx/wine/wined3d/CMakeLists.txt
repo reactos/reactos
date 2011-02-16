@@ -4,7 +4,7 @@ add_definitions(
     -D_USE_MATH_DEFINES
     -DUSE_WIN32_OPENGL)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
