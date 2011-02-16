@@ -7,6 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_idl_headers(atl_atliface_header atliface.idl)
+generate_idl_iids(atliface.idl)
 
 set_rc_compiler()
 spec2def(atl.dll atl.spec)
@@ -17,7 +18,7 @@ list(APPEND SOURCE
     registrar.c
     stubs.c
     rsrc.rc
-    #${CMAKE_CURRENT_BINARY_DIR}/atliface_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/atliface_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
 
 add_library(atl SHARED ${SOURCE})
