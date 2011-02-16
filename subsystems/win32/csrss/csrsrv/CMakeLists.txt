@@ -19,6 +19,11 @@ target_link_libraries(csrsrv ${PSEH_LIB})
 
 set_module_type(csrsrv nativedll)
 
+if(MSVC)
+set_entrypoint(csrsrv DllMainCRTStartup)
+endif()
+
+
 add_importlibs(csrsrv ntdll smdll)
 
 add_pch(csrsrv ${CMAKE_CURRENT_SOURCE_DIR}/srv.h ${SOURCE})
