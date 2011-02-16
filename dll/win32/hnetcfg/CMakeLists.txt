@@ -23,7 +23,7 @@ add_library(hnetcfg SHARED ${SOURCE})
 
 set_module_type(hnetcfg win32dll)
 
-target_link_libraries(hnetcfg wine)
+target_link_libraries(hnetcfg wine uuid)
 
 add_importlibs(hnetcfg
     ole32
