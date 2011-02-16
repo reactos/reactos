@@ -46,8 +46,6 @@ if(NOT CMAKE_CROSSCOMPILING)
         ${REACTOS_SOURCE_DIR}/tools/unicode
         include
         include/host
-        include/reactos
-        include/reactos/wine
         ${REACTOS_BINARY_DIR}/include)
 
     add_subdirectory(tools)
