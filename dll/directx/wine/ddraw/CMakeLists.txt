@@ -30,6 +30,7 @@ list(APPEND SOURCE
     vertexbuffer.c
     viewport.c
     version.rc
+    ${REACTOS_BINARY_DIR}/include/reactos/wine/wined3d_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
 
