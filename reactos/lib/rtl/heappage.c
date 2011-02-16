@@ -117,6 +117,12 @@ RTL_CRITICAL_SECTION RtlpDphPageHeapListLock;
 ULONG RtlpDphPageHeapListLength;
 UNICODE_STRING RtlpDphTargetDllsUnicode;
 
+RTL_CRITICAL_SECTION RtlpDphDelayedFreeQueueLock;
+LIST_ENTRY RtlpDphDelayedFreeQueue;
+SLIST_HEADER RtlpDphDelayedTemporaryPushList;
+ULONG RtlpDphMemoryUsedByDelayedFreeBlocks;
+ULONG RtlpDphNumberOfDelayedFreeBlocks;
+
 /* Counters */
 LONG RtlpDphCounter;
 LONG RtlpDphAllocFails;
@@ -173,6 +179,13 @@ LONG RtlpDphProtectFails;
 
 BOOLEAN NTAPI
 RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot, SIZE_T Size);
+
+BOOLEAN NTAPI
+RtlpDphIsNormalFreeHeapBlock(PVOID Block, PULONG ValidationInformation, BOOLEAN CheckFillers);
+
+VOID NTAPI
+RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot, ULONG Reserved, PVOID Block, ULONG ValidationInfo);
+
 
 PVOID NTAPI
 RtlpDphPointerFromHandle(PVOID Handle)
@@ -884,15 +897,78 @@ RtlpDphFreeNodeForTable(IN PRTL_AVL_TABLE Table,
 NTSTATUS NTAPI
 RtlpDphInitializeDelayedFreeQueue()
 {
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+
+    Status = RtlInitializeCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    if (!NT_SUCCESS(Status))
+    {
+        // TODO: Log this error!
+        DPRINT1("Failure initializing delayed free queue critical section\n");
+        return Status;
+    }
+
+    /* Initialize lists */
+    InitializeListHead(&RtlpDphDelayedFreeQueue);
+    RtlInitializeSListHead(&RtlpDphDelayedTemporaryPushList);
+
+    /* Reset counters */
+    RtlpDphMemoryUsedByDelayedFreeBlocks = 0;
+    RtlpDphNumberOfDelayedFreeBlocks = 0;
+
+    return Status;
 }
 
 VOID NTAPI
 RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
                                  PHEAP NormalHeap)
 {
-    UNIMPLEMENTED;
+    PLIST_ENTRY Current, Next;
+    PDPH_BLOCK_INFORMATION BlockInfo;
+    ULONG ValidationInfo;
+
+    /* The original routine seems to use a temporary SList to put blocks to be freed,
+       then it releases the lock and frees the blocks. But let's make it simple for now */
+
+    /* Acquire the delayed free queue lock */
+    RtlEnterCriticalSection(&RtlpDphDelayedFreeQueueLock);
+
+    /* Traverse the list */
+    Current = RtlpDphDelayedFreeQueue.Flink;
+    while (Current != &RtlpDphDelayedFreeQueue);
+    {
+        /* Get the next entry pointer */
+        Next = Current->Flink;
+
+        BlockInfo = CONTAINING_RECORD(Current, DPH_BLOCK_INFORMATION, FreeQueue);
+
+        /* Check if it belongs to the same heap */
+        if (BlockInfo->Heap == DphRoot)
+        {
+            /* Remove it from the list */
+            RemoveEntryList(Current);
+
+            /* Reset its heap to NULL */
+            BlockInfo->Heap = NULL;
+
+            if (!RtlpDphIsNormalFreeHeapBlock(BlockInfo + 1, &ValidationInfo, TRUE))
+            {
+                RtlpDphReportCorruptedBlock(DphRoot, 10, BlockInfo + 1, ValidationInfo);
+            }
+
+            /* Decrement counters */
+            RtlpDphMemoryUsedByDelayedFreeBlocks -= BlockInfo->ActualSize;
+            RtlpDphNumberOfDelayedFreeBlocks--;
+
+            /* Free the normal heap */
+            RtlFreeHeap (NormalHeap, 0, BlockInfo);
+        }
+
+        /* Move to the next one */
+        Current = Next;
+    }
+
+    /* Release the delayed free queue lock */
+    RtlLeaveCriticalSection(&RtlpDphDelayedFreeQueueLock);
 }
 
 NTSTATUS NTAPI
@@ -1025,6 +1101,18 @@ RtlpDphIsPageHeapBlock(PDPH_HEAP_ROOT DphRoot,
     }
 
     return (SomethingWrong == FALSE);
+}
+
+BOOLEAN NTAPI
+RtlpDphIsNormalFreeHeapBlock(PVOID Block,
+                             PULONG ValidationInformation,
+                             BOOLEAN CheckFillers)
+{
+    ASSERT(ValidationInformation != NULL);
+
+    UNIMPLEMENTED;
+    *ValidationInformation = 0;
+    return TRUE;
 }
 
 NTSTATUS NTAPI

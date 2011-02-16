@@ -136,8 +136,8 @@ RtlDebugAllocateHeap(PVOID HeapPtr,
     BOOLEAN HeapLocked = FALSE;
     PVOID Result;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlpPageHeapAllocateHeap(HeapPtr, Flags, Size);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapAllocate(HeapPtr, Flags, Size);
 
     if (Heap->Signature != HEAP_SIGNATURE)
     {
@@ -203,8 +203,8 @@ RtlDebugReAllocateHeap(HANDLE HeapPtr,
     PVOID Result = NULL;
     PHEAP_ENTRY HeapEntry;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlpPageHeapReAllocateHeap(HeapPtr, Flags, Size);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapReAllocate(HeapPtr, Flags, Ptr, Size);
 
     if (Heap->Signature != HEAP_SIGNATURE)
     {
@@ -273,8 +273,8 @@ RtlDebugFreeHeap(HANDLE HeapPtr,
     PHEAP_ENTRY HeapEntry;
     BOOLEAN Result = FALSE;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlpPageHeapFreeHeap(HeapPtr, Flags, Size);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapFree(HeapPtr, Flags, Ptr);
 
     if (Heap->Signature != HEAP_SIGNATURE)
     {
@@ -330,8 +330,8 @@ RtlDebugGetUserInfoHeap(PVOID HeapHandle,
     PHEAP_ENTRY HeapEntry;
     BOOLEAN Result = FALSE;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlpPageHeapGetUserInfoHeap(HeapPtr, Flags, Size);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapGetUserInfo(HeapHandle, Flags, BaseAddress, UserValue, UserFlags);
 
     if (Heap->Signature != HEAP_SIGNATURE)
     {
@@ -382,8 +382,8 @@ RtlDebugSetUserValueHeap(PVOID HeapHandle,
     PHEAP_ENTRY HeapEntry;
     BOOLEAN Result = FALSE;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlpPageHeapSetUserValueHeap(HeapPtr, Flags, Size);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapSetUserValue(HeapHandle, Flags, BaseAddress, UserValue);
 
     if (Heap->Signature != HEAP_SIGNATURE)
     {
@@ -439,8 +439,8 @@ RtlDebugSetUserFlagsHeap(PVOID HeapHandle,
     PHEAP_ENTRY HeapEntry;
     BOOLEAN Result = FALSE;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlPageHeapSetUserFlagsHeap(HeapPtr, Flags, BaseAddress, UserFlagsReset, UserFlagsSet);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapSetUserFlags(HeapHandle, Flags, BaseAddress, UserFlagsReset, UserFlagsSet);
 
     /* Check if this heap allows flags to be set at all */
     if (UserFlagsSet & ~HEAP_SETTABLE_USER_FLAGS ||
@@ -500,8 +500,8 @@ RtlDebugSizeHeap(HANDLE HeapPtr,
     PHEAP_ENTRY HeapEntry;
     SIZE_T Result = ~(SIZE_T)0;
 
-    //if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
-        //return RtlPageHeapSizeHeap(HeapPtr, Flags, Ptr);
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpPageHeapSize(HeapPtr, Flags, Ptr);
 
     /* Check heap signature */
     if (Heap->Signature != HEAP_SIGNATURE)
