@@ -11,6 +11,7 @@ add_library(msdmo SHARED
     dmort.c
     stubs.c
     rsrc.rc
+    ${REACTOS_BINARY_DIR}/include/dxsdk/mediaobj_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
 set_entrypoint(msdmo 0)
