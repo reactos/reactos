@@ -17,6 +17,7 @@ list(APPEND SOURCE
     registrar.c
     stubs.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/atliface_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
 
 add_library(atl SHARED ${SOURCE})
