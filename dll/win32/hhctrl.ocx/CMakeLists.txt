@@ -19,7 +19,7 @@ add_library(hhctrl SHARED
     stream.c
     webbrowser.c
     hhctrl.rc    
-    ${REACTOS_BINARY_DIR}/include/reactos/wine/itss_i.c
+    #${REACTOS_BINARY_DIR}/include/reactos/wine/itss_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
 
 set_module_type(hhctrl win32ocx)
