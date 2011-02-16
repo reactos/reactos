@@ -17,6 +17,7 @@ list(APPEND SOURCE
     protocol.c
     storage.c
     rsrc.rc
+    ${REACTOS_BINARY_DIR}/include/reactos/wine/itss_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
 
