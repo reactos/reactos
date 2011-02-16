@@ -12,6 +12,6 @@ add_library(mciseq SHARED ${SOURCE})
 
 set_entrypoint(mciseq 0)
 target_link_libraries(mciseq wine)
-add_importlibs(mciseq winmm user32 kernel32 ntdll)
+add_importlibs(mciseq winmm user32 kernel32 ntdll msvcrt)
 add_dependencies(mciseq psdk buildno_header)
 add_cab_target(mciseq 1)
