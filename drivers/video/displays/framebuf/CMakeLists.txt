@@ -13,7 +13,7 @@ add_library(framebuf SHARED
 set_entrypoint(framebuf DrvEnableDriver@12)
 set_subsystem(framebuf native)
 set_image_base(framebuf 0x00010000)
-
+target_link_libraries(framebuf libcntpr)
 add_importlibs(framebuf win32k)
 add_dependencies(framebuf psdk bugcodes)
 add_cab_target(framebuf 1)
