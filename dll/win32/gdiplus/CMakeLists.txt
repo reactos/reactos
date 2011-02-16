@@ -24,6 +24,7 @@ list(APPEND SOURCE
     pen.c
     region.c
     stringformat.c
+    ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
