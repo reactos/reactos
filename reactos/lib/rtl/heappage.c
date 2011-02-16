@@ -150,10 +150,16 @@ LONG RtlpDphProtectFails;
 #define DPH_FILL_BLOCK_END     0xD0
 
 /* Validation info flags */
-#define DPH_VALINFO_BAD_START_STAMP 0x01
-#define DPH_VALINFO_BAD_END_STAMP   0x02
-#define DPH_VALINFO_BAD_POINTER     0x04
-#define DPH_VALINFO_BAD_END_FILL    0x10
+#define DPH_VALINFO_BAD_START_STAMP      0x01
+#define DPH_VALINFO_BAD_END_STAMP        0x02
+#define DPH_VALINFO_BAD_POINTER          0x04
+#define DPH_VALINFO_BAD_PREFIX_PATTERN   0x08
+#define DPH_VALINFO_BAD_SUFFIX_PATTERN   0x10
+#define DPH_VALINFO_EXCEPTION            0x20
+#define DPH_VALINFO_1                    0x40
+#define DPH_VALINFO_BAD_INFIX_PATTERN    0x80
+#define DPH_VALINFO_ALREADY_FREED        0x100
+#define DPH_VALINFO_CORRUPTED_AFTER_FREE 0x200
 
 /* Signatures */
 #define DPH_SIGNATURE 0xFFEEDDCC
@@ -908,7 +914,54 @@ RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot,
                             PVOID Block,
                             ULONG ValidationInfo)
 {
-    UNIMPLEMENTED;
+    //RtlpDphGetBlockSizeFromCorruptedBlock();
+
+    if (ValidationInfo & DPH_VALINFO_CORRUPTED_AFTER_FREE)
+    {
+        DPRINT1("block corrupted after having been freed\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_ALREADY_FREED)
+    {
+        DPRINT1("block already freed\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_INFIX_PATTERN)
+    {
+        DPRINT1("corrupted infix pattern for freed block\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_POINTER)
+    {
+        DPRINT1("corrupted heap pointer or using wrong heap\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_SUFFIX_PATTERN)
+    {
+        DPRINT1("corrupted suffix pattern\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_PREFIX_PATTERN)
+    {
+        DPRINT1("corrupted prefix pattern\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_START_STAMP)
+    {
+        DPRINT1("corrupted start stamp\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_BAD_END_STAMP)
+    {
+        DPRINT1("corrupted end stamp\n");
+    }
+
+    if (ValidationInfo & DPH_VALINFO_EXCEPTION)
+    {
+        DPRINT1("exception raised while verifying block\n");
+    }
+
+    DPRINT1("Corrupted heap block %p\n", Block);
 }
 
 BOOLEAN NTAPI
@@ -964,7 +1017,7 @@ RtlpDphIsPageHeapBlock(PDPH_HEAP_ROOT DphRoot,
         {
             if (*Byte != DPH_FILL_BLOCK_END)
             {
-                *ValidationInformation |= DPH_VALINFO_BAD_END_FILL;
+                *ValidationInformation |= DPH_VALINFO_BAD_SUFFIX_PATTERN;
                 SomethingWrong = TRUE;
                 break;
             }
