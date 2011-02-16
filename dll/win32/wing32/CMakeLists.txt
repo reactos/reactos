@@ -11,6 +11,6 @@ add_library(wing32 SHARED ${SOURCE})
 
 set_entrypoint(wing32 0)
 
-add_importlibs(wing32 user32 gdi32)
+add_importlibs(wing32 user32 gdi32 msvcrt)
 add_dependencies(wing32 psdk)
 add_cab_target(wing32 1)
