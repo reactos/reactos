@@ -10,7 +10,7 @@ list(APPEND SOURCE
 add_library(beepmidi SHARED ${SOURCE})
 
 set_entrypoint(beepmidi 0)
-add_importlibs(beepmidi winmm kernel32 ntdll)
+add_importlibs(beepmidi winmm kernel32 ntdll msvcrt)
 add_importlib_target(beepmidi.spec)
 
 add_dependencies(beepmidi psdk)
