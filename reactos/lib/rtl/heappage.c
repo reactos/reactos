@@ -434,6 +434,7 @@ RtlpDphPlaceOnBusyList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
     PVOID AddressUserData;
 
     /* Add it to the AVL busy nodes table */
+    DphRoot->NodeToAllocate = DphNode;
     AddressUserData = RtlInsertElementGenericTableAvl(&DphRoot->BusyNodesTable,
                                                       &DphNode->pUserAllocation,
                                                       sizeof(ULONG_PTR),
@@ -518,8 +519,8 @@ RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
                                PDPH_HEAP_BLOCK Node)
 {
     /* Make sure Adjacency list pointers are biased */
-    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
-    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
+    //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
+    //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
 
     /* Remove it from the list */
     RemoveEntryList(&Node->AvailableEntry);
@@ -529,8 +530,8 @@ RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
     DphRoot->nAvailableAllocationBytesCommitted -= Node->nVirtualBlockSize;
 
     /* Remove bias from the AdjacencyEntry pointer */
-    POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Flink);
-    POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Blink);
+    Node->AdjacencyEntry.Flink = (PLIST_ENTRY)POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Flink);
+    Node->AdjacencyEntry.Blink = (PLIST_ENTRY)POINTER_REMOVE_BIAS(Node->AdjacencyEntry.Blink);
 }
 
 VOID NTAPI
@@ -720,8 +721,8 @@ RtlpDphSearchAvailableMemoryListForBestFit(PDPH_HEAP_ROOT DphRoot,
     }
 
     /* Make sure Adjacency list pointers are biased */
-    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
-    ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
+    //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
+    //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
 
     return Node;
 }
@@ -997,7 +998,6 @@ RtlpDphAllocateNodeForTable(IN PRTL_AVL_TABLE Table,
     /* Get pointer to the containing heap root record */
     DphRoot = CONTAINING_RECORD(Table, DPH_HEAP_ROOT, BusyNodesTable);
     pBlock = DphRoot->NodeToAllocate;
-    ASSERT(pBlock == (PDPH_HEAP_BLOCK)(Table+1)); // FIXME: Delete once confirmed
 
     DphRoot->NodeToAllocate = NULL;
     ASSERT(pBlock);
@@ -1348,6 +1348,7 @@ RtlpPageHeapCreate(ULONG Flags,
     DphRoot->Seed = PerfCounter.LowPart;
 
     RtlInitializeCriticalSection(DphRoot->HeapCritSect);
+    InitializeListHead(&DphRoot->AvailableAllocationHead);
 
     /* Create a normal heap for this paged heap */
     DphRoot->NormalHeap = RtlCreateHeap(Flags, NULL, TotalSize, CommitSize, NULL, (PRTL_HEAP_PARAMETERS)-1);
