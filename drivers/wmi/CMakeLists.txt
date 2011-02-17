@@ -8,6 +8,18 @@ list(APPEND SOURCE
 
 add_library(wmilib SHARED ${SOURCE})
 
+if(NOT MSVC)
+	set_module_type(wmilib kernelmodedriver)
+else()
+	set_target_properties(wmilib PROPERTIES SUFFIX ".sys")
+	set_subsystem(wmilib native)
+    set_image_base(wmilib 0x00010000)
+    add_linkerflag(wmilib "/DRIVER")
+    add_dependencies(wmilib bugcodes)
+    target_link_libraries(wmilib msvcsup)
+	add_dependencies(wmilib psdk buildno_header)
+endif()
+
 set_entrypoint(wmilib 0)
 set_target_properties(wmilib PROPERTIES SUFFIX ".sys")
 add_importlibs(wmilib ntoskrnl)
