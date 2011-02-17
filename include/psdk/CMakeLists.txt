@@ -97,6 +97,7 @@ list(APPEND SOURCE
     wincodec.idl
     winsxs.idl
     wtypes.idl
+    wuapi.idl
     xmldom.idl
     xmldso.idl
     ctfutb.idl
@@ -104,8 +105,7 @@ list(APPEND SOURCE
 
 if(NOT MSVC)
   list(APPEND SOURCE
-    wbemcli.idl
-    wuapi.idl)
+    wbemcli.idl)
 endif()
 
 add_idl_headers(psdk ${SOURCE})

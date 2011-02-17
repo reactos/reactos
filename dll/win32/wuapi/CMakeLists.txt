@@ -4,7 +4,10 @@ add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_BINARY_DIR}/include/psdk)
+
 
 spec2def(wuapi.dll wuapi.spec)
 
@@ -16,6 +19,7 @@ list(APPEND SOURCE
     searcher.c
     session.c
     updates.c
+    #${REACTOS_BINARY_DIR}/include/psdk/wuapi_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
 
 add_library(wuapi SHARED ${SOURCE})
