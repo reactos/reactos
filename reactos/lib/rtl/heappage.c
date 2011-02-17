@@ -419,7 +419,7 @@ RtlpDphWritePageHeapBlockInformation(PDPH_HEAP_ROOT DphRoot, PVOID UserAllocatio
 
     /* Fill with a pattern */
     FillPtr = (PUCHAR)UserAllocation + Size;
-    RtlFillMemory(FillPtr, ROUND_UP(FillPtr, PAGE_SIZE) - FillPtr, DPH_FILL_SUFFIX);
+    RtlFillMemory(FillPtr, ROUND_UP(FillPtr, PAGE_SIZE) - (ULONG_PTR)FillPtr, DPH_FILL_SUFFIX);
 
     /* FIXME: Check if logging stack traces is turned on */
     //if (DphRoot->ExtraFlags & 
@@ -1216,7 +1216,7 @@ RtlpDphIsPageHeapBlock(PDPH_HEAP_ROOT DphRoot,
         End = (PUCHAR)ROUND_UP(Start, PAGE_SIZE);
         for (Byte = Start; Byte < End; Byte++)
         {
-            if (*Byte != DPH_FILL_BLOCK_END)
+            if (*Byte != DPH_FILL_SUFFIX)
             {
                 *ValidationInformation |= DPH_VALINFO_BAD_SUFFIX_PATTERN;
                 SomethingWrong = TRUE;
