@@ -43,7 +43,7 @@ static inline unsigned short float_32_to_16(const float *in)
 
     /* Deal with special numbers */
     if (*in == 0.0f) return 0x0000;
-    if(_isnan(*in)) return 0x7C01;
+    if(isnan(*in)) return 0x7C01;
     if (isinf(*in)) return (*in < 0.0f ? 0xFC00 : 0x7c00);
 
     if(tmp < powf(2, 10)) {

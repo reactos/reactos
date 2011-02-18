@@ -8,6 +8,10 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
+if(MSVC)
+    add_definitions(-Disnan=_isnan)
+endif()
+
 spec2def(wined3.dll wined3d.spec)
 
 list(APPEND SOURCE
