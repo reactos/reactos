@@ -510,7 +510,7 @@ NtQueueApcThread(IN HANDLE ThreadHandle,
                                        ExGetPreviousMode(),
                                        (PVOID)&Thread,
                                        NULL);
-    if (NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if this is a System Thread */
     if (Thread->SystemThread)
