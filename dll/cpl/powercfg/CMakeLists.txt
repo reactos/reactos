@@ -21,6 +21,7 @@ add_importlibs(powercfg
     comctl32
     shell32
     advapi32
-    kernel32)
+    kernel32
+    ntdll)
 
 add_cab_target(powercfg 1)
