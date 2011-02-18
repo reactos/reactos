@@ -97,7 +97,6 @@ list(APPEND SOURCE
     wincodec.idl
     winsxs.idl
     wtypes.idl
-    wuapi.idl
     xmldom.idl
     xmldso.idl
     ctfutb.idl
@@ -109,5 +108,7 @@ if(NOT MSVC)
 endif()
 
 add_idl_headers(psdk ${SOURCE})
+
+add_iid_library(wuapi_idl_header wuapi.idl)
 
 add_typelib(stdole2 stdole2.idl)

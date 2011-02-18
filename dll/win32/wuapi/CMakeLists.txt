@@ -18,12 +18,12 @@ list(APPEND SOURCE
     searcher.c
     session.c
     updates.c
-    #${REACTOS_BINARY_DIR}/include/psdk/wuapi_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
 
 add_library(wuapi SHARED ${SOURCE})
 
 set_module_type(wuapi win32dll)
-target_link_libraries(wuapi uuid wine)
+target_link_libraries(wuapi uuid wine wuapi_idl_header)
 add_importlibs(wuapi ole32 advapi32 msvcrt kernel32 ntdll)
 add_cab_target(wuapi 1)
+ 
