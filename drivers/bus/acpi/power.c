@@ -224,7 +224,7 @@ Bus_PDO_Power (
     return status;
 }
 
-#if !defined(NDEBUG) && !defined(_MSC_VER)
+#if !defined(NDEBUG) || defined(_MSC_VER)
 
 PCHAR
 PowerMinorFunctionString (
