@@ -11,6 +11,7 @@ list(APPEND SOURCE
 
 add_library(xinput1_3 SHARED ${SOURCE})
 
+add_importlib_target(xinput1_3.spec)
 set_module_type(xinput1_3 win32dll)
 target_link_libraries(xinput1_3 wine)
 add_importlibs(xinput1_3 msvcrt kernel32 ntdll)

@@ -12,5 +12,5 @@ list(APPEND SOURCE
 add_library(xinput9_1_0 SHARED ${SOURCE})
 
 set_module_type(xinput9_1_0 win32dll)
-add_importlibs(xinput9_1_0 msvcrt kernel32)
+add_importlibs(xinput9_1_0 msvcrt kernel32 xinput1_3)
 add_cab_target(xinput9_1_0 1)
