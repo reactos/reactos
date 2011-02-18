@@ -438,7 +438,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 
     XPos += dc->ptlDCOrig.x;
     YPos += dc->ptlDCOrig.y;
-    if (RECTL_bPointInRect(&dc->rosdc.CombinedClip->rclBounds, XPos, YPos))
+    if ((dc->rosdc.CombinedClip == NULL) ||
+        (RECTL_bPointInRect(&dc->rosdc.CombinedClip->rclBounds, XPos, YPos)))
     {
         bInRect = TRUE;
         psurf = dc->dclevel.pSurface;
