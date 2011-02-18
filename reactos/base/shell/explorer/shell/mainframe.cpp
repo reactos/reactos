@@ -873,7 +873,7 @@ HWND MDIMainFrame::Create()
 	HMENU hMenuFrame = LoadMenu(g_Globals._hInstance, MAKEINTRESOURCE(IDM_MDIFRAME));
 
 	return Window::Create(WINDOW_CREATOR(MDIMainFrame), 0,
-				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
+				(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 				CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 				0/*hwndDesktop*/, hMenuFrame);
 }
