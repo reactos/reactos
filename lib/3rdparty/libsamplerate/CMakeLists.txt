@@ -6,3 +6,4 @@ list(APPEND SOURCE
     src_zoh.c)
 
 add_library(libsamplerate ${SOURCE})
+add_dependencies(libsamplerate psdk)
