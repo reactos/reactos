@@ -33,7 +33,8 @@ add_importlibs(sysdm
     shlwapi
     ole32
     powrprof
-    kernel32)
+    kernel32
+    ntdll)
 
 add_pch(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_cab_target(sysdm 1)
