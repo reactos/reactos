@@ -23,7 +23,6 @@ list(APPEND SOURCE
 add_library(wuapi SHARED ${SOURCE})
 
 set_module_type(wuapi win32dll)
-target_link_libraries(wuapi uuid wine wuapi_idl_header)
+target_link_libraries(wuapi uuid wine)
 add_importlibs(wuapi ole32 advapi32 msvcrt kernel32 ntdll)
 add_cab_target(wuapi 1)
-add_dependencies(wuapi wuapi_idl_header) 
