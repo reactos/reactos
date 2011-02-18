@@ -108,9 +108,6 @@ ULONG RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
 ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
 WCHAR RtlpDphTargetDlls[512];
 
-ULONG RtlpDphBreakOptions;
-ULONG RtlpDphDebugOptions;
-
 LIST_ENTRY RtlpDphPageHeapList;
 BOOLEAN RtlpDphPageHeapListInitialized;
 RTL_CRITICAL_SECTION RtlpDphPageHeapListLock;
@@ -176,6 +173,10 @@ LONG RtlpDphProtectFails;
 #define IS_BIASED_POINTER(ptr) ((ULONG_PTR)(ptr) & 1)
 #define POINTER_REMOVE_BIAS(ptr) ((ULONG_PTR)(ptr) & ~(ULONG_PTR)1)
 #define POINTER_ADD_BIAS(ptr) ((ULONG_PTR)(ptr) & 1)
+
+
+ULONG RtlpDphBreakOptions = 0;//0xFFFFFFFF;
+ULONG RtlpDphDebugOptions;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -312,7 +313,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
                                      &Size,
                                      Type,
                                      Protection);
-
+    DPRINT1("Page heap: AllocVm (%p, %p, %x) status %x \n", Base, Size, Type, Status);
     /* Check for failures */
     if (!NT_SUCCESS(Status))
     {
@@ -348,7 +349,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-
+    DPRINT1("Page heap: FreeVm (%p, %p, %x) status %x \n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
@@ -811,7 +812,7 @@ RtlpDphAllocateNode(PDPH_HEAP_ROOT DphRoot)
     PDPH_HEAP_BLOCK Node;
     NTSTATUS Status;
     SIZE_T Size = DPH_POOL_SIZE, SizeVirtual;
-    PVOID Ptr;
+    PVOID Ptr = NULL;
 
     /* Check for the easy case */
     if (DphRoot->pUnusedNodeListHead)
@@ -920,7 +921,7 @@ RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot,
                    SIZE_T Size)
 {
     PDPH_HEAP_BLOCK Node, AvailableNode;
-    PVOID Base;
+    PVOID Base = NULL;
     SIZE_T VirtualSize;
     NTSTATUS Status;
 
@@ -937,18 +938,26 @@ RtlpDphGrowVirtual(PDPH_HEAP_ROOT DphRoot,
     }
 
     /* Calculate size of VM to allocate by rounding it up */
-    VirtualSize = (Size + 0xFFFF) & 0xFFFF0000;
-    if (VirtualSize < DPH_RESERVE_SIZE)
+    Size = ROUND_UP(Size, 0xFFFF);
+    VirtualSize = Size;
+    if (Size < DPH_RESERVE_SIZE)
         VirtualSize = DPH_RESERVE_SIZE;
 
     /* Allocate the virtual memory */
-    Status = RtlpDphAllocateVm(&Base, VirtualSize, MEM_RESERVE, PAGE_NOACCESS);
+    // FIXME: Shouldn't it be MEM_RESERVE with later committing?
+    Status = RtlpDphAllocateVm(&Base, VirtualSize, MEM_COMMIT, PAGE_NOACCESS);
     if (!NT_SUCCESS(Status))
     {
-        /* Free the allocated node and return failure */
-        RtlpDphReturnNodeToUnusedList(DphRoot, Node);
-        RtlpDphReturnNodeToUnusedList(DphRoot, AvailableNode);
-        return FALSE;
+        /* Retry again with a smaller size */
+        VirtualSize = Size;
+        Status = RtlpDphAllocateVm(&Base, VirtualSize, MEM_COMMIT, PAGE_NOACCESS);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Free the allocated node and return failure */
+            RtlpDphReturnNodeToUnusedList(DphRoot, Node);
+            RtlpDphReturnNodeToUnusedList(DphRoot, AvailableNode);
+            return FALSE;
+        }
     }
 
     /* Set up our two nodes describing this VM */
@@ -1287,7 +1296,7 @@ RtlpPageHeapCreate(ULONG Flags,
                    PVOID Lock,
                    PRTL_HEAP_PARAMETERS Parameters)
 {
-    PVOID Base;
+    PVOID Base = NULL;
     PHEAP HeapPtr;
     PDPH_HEAP_ROOT DphRoot;
     PDPH_HEAP_BLOCK DphNode;
