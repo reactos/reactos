@@ -25,3 +25,5 @@ list(APPEND SOURCE
 )
 
 add_idl_headers(dxsdk ${SOURCE})
+
+add_iid_library(mediaobj_guid mediaobj.idl)

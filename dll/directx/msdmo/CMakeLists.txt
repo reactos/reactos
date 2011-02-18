@@ -11,14 +11,11 @@ add_library(msdmo SHARED
     dmort.c
     stubs.c
     rsrc.rc
-    #${REACTOS_BINARY_DIR}/include/dxsdk/mediaobj_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
 set_entrypoint(msdmo 0)
 
-target_link_libraries(msdmo
-    uuid
-    wine)
+target_link_libraries(msdmo uuid wine mediaobj_guid)
 
 add_importlibs(msdmo
     user32
