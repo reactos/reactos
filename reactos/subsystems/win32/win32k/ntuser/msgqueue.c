@@ -1093,7 +1093,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
         /* Activate the window if needed */
 
-        if (msg->hwnd != MessageQueue->ActiveWindow)
+        if (msg->hwnd != UserGetForegroundWindow())
         {
             PWND pwndTop = pwndMsg;
             while (pwndTop)
