@@ -1005,16 +1005,6 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     }
 
     ProcessId = (HANDLE)((ULONG_PTR)PsGetCurrentProcessId() & ~1);
-    HandleProcessId = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~1);
-
-    /* Check for invalid owner. */
-    if (ProcessId != HandleProcessId && HandleProcessId != NULL)
-    {
-        DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
-        GDIDBG_TRACECALLER();
-        GDIDBG_TRACEALLOCATOR(hObj);
-        return NULL;
-    }
 
     /*
      * Prevent the thread from being terminated during the locking process.
@@ -1031,6 +1021,17 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
 
     for (;;)
     {
+        HandleProcessId = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~1);
+
+        /* Check for invalid owner. */
+        if (ProcessId != HandleProcessId && HandleProcessId != NULL)
+        {
+            DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
+            GDIDBG_TRACECALLER();
+            GDIDBG_TRACEALLOCATOR(hObj);
+            break;
+        }
+
         /* Lock the handle table entry. */
         LockedProcessId = (HANDLE)((ULONG_PTR)HandleProcessId | 0x1);
         PrevProcId = InterlockedCompareExchangePointer((PVOID*)&Entry->ProcessId,
