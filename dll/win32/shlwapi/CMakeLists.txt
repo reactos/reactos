@@ -34,6 +34,7 @@ target_link_libraries(shlwapi wine uuid)
 
 add_importlibs(shlwapi
     user32
+    user32env
     gdi32
     advapi32
     oleaut32
