@@ -25,7 +25,6 @@
 
 /* Non SDK Window Message types. */
 #define WM_SETVISIBLE      0x00000009
-#define WM_CTLCOLOR        0x00000019
 #define WM_ALTTABACTIVE    0x00000029
 #define WM_ISACTIVEICON    0x00000035
 #define WM_QUERYPARKICON   0x00000036
