@@ -1,7 +1,21 @@
-#ifdef GDI_DEBUG
+/*
+ * PROJECT:         ReactOS win32 kernel mode subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/objects/gdidbg.c
+ * PURPOSE:         Special debugging functions for gdi
+ * PROGRAMMERS:     Timo Kreuzer
+ */
 
-#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
-NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
+/** INCLUDES ******************************************************************/
+
+#include <win32k.h>
+#define NDEBUG
+#include <debug.h>
+
+
+ULONG gulDebugChannels = 0;
+
+#ifdef GDI_DEBUG
 
 #define GDI_STACK_LEVELS 20
 static ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
@@ -36,9 +50,6 @@ CompareBacktraces(ULONG idx1, ULONG idx2)
 
     return TRUE;
 }
-
-#define IS_HANDLE_VALID(idx) \
-    ((GdiHandleTable->Entries[idx].Type & GDI_ENTRY_BASETYPE_MASK) != 0)
 
 void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 {
@@ -110,8 +121,8 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
     for (i = 0; i < nTraces && AllocatorTable[i].count > 1; i++)
     {
         /* Print out the allocation count */
-        DbgPrint(" %i allocs, type = 0x%lx:\n", 
-                 AllocatorTable[i].count, 
+        DbgPrint(" %i allocs, type = 0x%lx:\n",
+                 AllocatorTable[i].count,
                  GdiHandleTable->Entries[AllocatorTable[i].idx].Type);
 
         /* Dump the frames */
@@ -272,39 +283,6 @@ GdiDbgHTIntegrityCheck()
 	return r;
 }
 
-#define GDIDBG_TRACECALLER() \
-  DPRINT1("-> called from:\n"); \
-  KeRosDumpStackFrames(NULL, 20);
-#define GDIDBG_TRACEALLOCATOR(handle) \
-  DPRINT1("-> allocated from:\n"); \
-  KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACELOCKER(handle) \
-  DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACESHARELOCKER(handle) \
-  DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACEDELETER(handle) \
-  DPRINT1("-> deleted from:\n"); \
-  KeRosDumpStackFrames(GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREALLOCATOR(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURELOCKER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURESHARELOCKER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREDELETER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_DUMPHANDLETABLE() \
-  IntDumpHandleTable(GdiHandleTable)
-#define GDIDBG_INITLOOPTRACE() \
-  ULONG Attempts = 0;
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread) \
-  if ((++Attempts % 20) == 0) \
-  { \
-    DPRINT1("[%d] Handle 0x%p Locked by 0x%x (we're 0x%x)\n", Attempts, Handle, PrevThread, Thread); \
-  }
-
 ULONG
 FASTCALL
 GDIOBJ_IncrementShareCount(POBJ Object)
@@ -314,21 +292,6 @@ GDIOBJ_IncrementShareCount(POBJ Object)
     ASSERT(cLocks >= 1);
     return cLocks;
 }
-
-#else
-
-#define GDIDBG_TRACECALLER()
-#define GDIDBG_TRACEALLOCATOR(index)
-#define GDIDBG_TRACELOCKER(index)
-#define GDIDBG_TRACESHARELOCKER(index)
-#define GDIDBG_CAPTUREALLOCATOR(index)
-#define GDIDBG_CAPTURELOCKER(index)
-#define GDIDBG_CAPTURESHARELOCKER(index)
-#define GDIDBG_CAPTUREDELETER(handle)
-#define GDIDBG_DUMPHANDLETABLE()
-#define GDIDBG_INITLOOPTRACE()
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread)
-#define GDIDBG_TRACEDELETER(handle)
 
 #endif /* GDI_DEBUG */
 

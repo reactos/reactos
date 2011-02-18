@@ -87,3 +87,4 @@
 #include <include/ldevobj.h>
 #include <include/device.h>
 #include <dib/dib.h>
+#include <include/gdidebug.h>

@@ -8,8 +8,6 @@
 
 /** INCLUDES ******************************************************************/
 
-//#define GDI_DEBUG
-
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>
@@ -27,8 +25,6 @@
 #define DelayExecution() \
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
-
-#include "gdidbg.c"
 
 static
 BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
