@@ -88,7 +88,7 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
     }
 
     /* Return status */
-    if (NewElement) *NewElement = (SearchResult == TableFoundNode);
+    if (NewElement) *NewElement = (SearchResult != TableFoundNode);
 
     /* Return pointer to user data */
     return UserData;
