@@ -890,36 +890,7 @@ BOOL
 WINAPI
 MessageBeep(UINT uType)
 {
-#if 0
-  LPWSTR EventName;
-
-  switch(uType)
-  {
-    case 0xFFFFFFFF:
-      if(waveOutGetNumDevs() == 0)
-        return Beep(500, 100);    // Beep through speaker
-      /* fall through */
-    case MB_OK:
-      EventName = L"SystemDefault";
-      break;
-    case MB_ICONASTERISK:
-      EventName = L"SystemAsterisk";
-      break;
-    case MB_ICONEXCLAMATION:
-      EventName = L"SystemExclamation";
-      break;
-    case MB_ICONHAND:
-      EventName = L"SystemHand";
-      break;
-    case MB_ICONQUESTION:
-      EventName = L"SystemQuestion";
-      break;
-  }
-
-  return PlaySoundW((LPCWSTR)EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
-#else
-  return Beep(500, 100);    // Beep through speaker
-#endif
+    return (BOOL)NtUserCallOneParam(ONEPARAM_ROUTINE_MESSAGEBEEP, uType);
 }
 
 

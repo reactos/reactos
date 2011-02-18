@@ -1275,17 +1275,6 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 /*
  * @unimplemented
  */
-BOOL APIENTRY
-NtUserSetLogonNotifyWindow(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtUserUpdateLayeredWindow(

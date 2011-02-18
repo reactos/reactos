@@ -72,7 +72,7 @@ SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
       return(FALSE);
     }
 
-  return(TRUE);
+  return NtUserSetLogonNotifyWindow(Wnd);
 }
 
 /*

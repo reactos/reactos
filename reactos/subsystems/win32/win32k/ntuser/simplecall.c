@@ -341,6 +341,9 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
+      case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
+		  /* TODO: Implement sound sentry */
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
