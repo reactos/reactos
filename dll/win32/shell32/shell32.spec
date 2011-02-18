@@ -113,16 +113,16 @@
 113 stdcall Control_RunDLLA(ptr ptr str long)
 114 stdcall Control_RunDLLAsUserW(ptr ptr wstr long)
 115 stdcall Control_RunDLLW(ptr ptr wstr long)
-116 stdcall DllCanUnloadNow()
-117 stdcall DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
 118 stdcall DllGetVersion(ptr)
 119 stdcall IsLFNDrive(ptr) IsLFNDriveAW
-120 stdcall DllInstall(long wstr)
+@ stdcall -private DllInstall(long wstr)
 121 stdcall SHFlushClipboard()
 122 stdcall -noname RunDLL_CallEntry16(long long long str long) # Fixme #name wrong?
 123 stdcall -noname SHFreeUnusedLibraries()
-124 stdcall DllRegisterServer()
-125 stdcall DllUnregisterServer()
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 126 stdcall -noname SHOutOfMemoryMessageBox(long long long) # Fixme
 127 stdcall -noname SHWinHelp(long long long long)
 128 stdcall -noname SHDllGetClassObject(ptr ptr ptr) DllGetClassObject
