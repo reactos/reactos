@@ -5,8 +5,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_BINARY_DIR}/include/psdk)
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 
 spec2def(wuapi.dll wuapi.spec)
