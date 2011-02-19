@@ -2,6 +2,12 @@
 
 extern ULONG gulDebugChannels;
 
+#define GDI_STACK_LEVELS 20
+extern ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+extern ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+extern ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+extern ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+
 enum _DEBUGCHANNELS
 {
     DbgCustom = 1,
@@ -10,6 +16,10 @@ enum _DEBUGCHANNELS
     DbgXlate = 8,
     DbgModeSwitch = 16,
 };
+
+void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable);
+ULONG CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture);
+BOOL GdiDbgHTIntegrityCheck();
 
 #define DBGENABLE(ch) gulDebugChannels |= (ch);
 #define DBGDISABLE(ch) gulDebugChannels &= ~(ch);
@@ -72,4 +82,32 @@ NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN
 #define GDIDBG_TRACEDELETER(handle)
 
 #endif /* GDI_DEBUG */
+
+#if DBG
+void
+NTAPI
+DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
+
+ULONG_PTR
+NTAPI
+DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
+
+#define ID_Win32PreServiceHook 'WSH0'
+#define ID_Win32PostServiceHook 'WSH1'
+
+FORCEINLINE void
+DbgAssertNoGdiLocks(char * pszFile, ULONG nLine)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti && pti->cExclusiveLocks != 0)
+    {
+        DbgPrint("(%s:%ld) There are %ld exclusive locks!\n",
+                 pszFile, nLine, pti->cExclusiveLocks);
+        ASSERT(FALSE);
+    }
+}
+#define ASSERT_NOGDILOCKS() DbgAssertNoGdiLocks(__FILE__,__LINE__)
+#else
+#define ASSERT_NOGDILOCKS()
+#endif
 

@@ -17,11 +17,10 @@ ULONG gulDebugChannels = 0;
 
 #ifdef GDI_DEBUG
 
-#define GDI_STACK_LEVELS 20
-static ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 struct DbgOpenGDIHandle
 {
     ULONG idx;
@@ -172,44 +171,42 @@ GdiDbgHTIntegrityCheck()
 	/* FIXME: check reserved entries */
 
 	/* Now go through the deleted objects */
-	i = GdiHandleTable->FirstFree;
-	if (i)
+	i = GdiHandleTable->FirstFree & 0xffff;
+	while (i)
 	{
 		pEntry = &GdiHandleTable->Entries[i];
-		for (;;)
+		if (i > GDI_HANDLE_COUNT)
 		{
-			nDeleted++;
-
-			/* Check the entry */
-			if ((pEntry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
-			{
-				r = 0;
-				DPRINT1("Deleted Entry has a type != 0\n");
-			}
-			if ((ULONG_PTR)pEntry->KernelData >= GDI_HANDLE_COUNT)
-			{
-				r = 0;
-				DPRINT1("Deleted entries KernelPointer too big\n");
-			}
-			if (pEntry->UserData != NULL)
-			{
-				r = 0;
-				DPRINT1("Deleted entry has UserData != 0\n");
-			}
-			if (pEntry->ProcessId != 0)
-			{
-				r = 0;
-				DPRINT1("Deleted entry has ProcessId != 0\n");
-			}
-
-			i = (ULONG_PTR)pEntry->KernelData;
-			if (!i)
-			{
-				break;
-			}
-			pEntry = &GdiHandleTable->Entries[i];
+		    DPRINT1("nDeleted=%ld\n", nDeleted);
+		    ASSERT(FALSE);
 		}
-	}
+
+        nDeleted++;
+
+        /* Check the entry */
+        if ((pEntry->Type & GDI_ENTRY_BASETYPE_MASK) != 0)
+        {
+            r = 0;
+            DPRINT1("Deleted Entry has a type != 0\n");
+        }
+        if ((ULONG_PTR)pEntry->KernelData >= GDI_HANDLE_COUNT)
+        {
+            r = 0;
+            DPRINT1("Deleted entries KernelPointer too big\n");
+        }
+        if (pEntry->UserData != NULL)
+        {
+            r = 0;
+            DPRINT1("Deleted entry has UserData != 0\n");
+        }
+        if (pEntry->ProcessId != 0)
+        {
+            r = 0;
+            DPRINT1("Deleted entry has ProcessId != 0\n");
+        }
+
+        i = (ULONG_PTR)pEntry->KernelData & 0xffff;
+	};
 
 	for (i = GdiHandleTable->FirstUnused;
 	     i < GDI_HANDLE_COUNT;
@@ -294,4 +291,32 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 }
 
 #endif /* GDI_DEBUG */
+
+void
+NTAPI
+DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti && pti->cExclusiveLocks != 0)
+    {
+        DbgPrint("FATAL: Win32DbgPreServiceHook(%ld): There are %ld exclusive locks!\n",
+                 ulSyscallId, pti->cExclusiveLocks);
+        ASSERT(FALSE);
+    }
+
+}
+
+ULONG_PTR
+NTAPI
+DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
+{
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti && pti->cExclusiveLocks != 0)
+    {
+        DbgPrint("FATAL: Win32DbgPostServiceHook(%ld): There are %ld exclusive locks!\n",
+                 ulSyscallId, pti->cExclusiveLocks);
+        ASSERT(FALSE);
+    }
+    return ulResult;
+}
 
