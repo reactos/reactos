@@ -1119,7 +1119,7 @@ static void CBDropDown( LPHEADCOMBO lphc )
    if( (rect.bottom + nDroppedHeight) >= mon_info.rcWork.bottom )
       rect.bottom = rect.top - nDroppedHeight;
 
-   SetWindowPos( lphc->hWndLBox, HWND_TOP, rect.left, rect.bottom,
+   SetWindowPos( lphc->hWndLBox, HWND_TOPMOST, rect.left, rect.bottom,
 		 lphc->droppedRect.right - lphc->droppedRect.left,
 		 nDroppedHeight,
 		 SWP_NOACTIVATE | SWP_SHOWWINDOW);
