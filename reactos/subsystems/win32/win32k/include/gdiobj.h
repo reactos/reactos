@@ -9,6 +9,9 @@
 #include <win32k/ntgdihdl.h>
 #include "win32.h"
 
+/* apparently the first 10 entries are never used in windows as they are empty */
+#define RESERVE_ENTRIES_COUNT 10
+
 typedef struct _GDI_HANDLE_TABLE
 {
 /* The table must be located at the beginning of this structure so it can be
@@ -105,6 +108,19 @@ ULONG
 FORCEINLINE
 GDIOBJ_UnlockObjByPtr(POBJ Object)
 {
+#if DBG
+    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    if (pti)
+    {
+        if (pti->cExclusiveLocks < 1)
+        {
+            DbgPrint("cExclusiveLocks = %ld, object: %ld\n",
+                    pti->cExclusiveLocks, Object->cExclusiveLock);
+            ASSERT(FALSE);
+        }
+        pti->cExclusiveLocks--;
+    }
+#endif
     INT cLocks = InterlockedDecrement((PLONG)&Object->cExclusiveLock);
     ASSERT(cLocks >= 0);
     return cLocks;
@@ -120,6 +136,7 @@ GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
     ASSERT(cLocks >= 0);
     if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
     {
+        ASSERT(Object->cExclusiveLock == 0);
         GDIOBJ_SetOwnership(hobj, PsGetCurrentProcess());
         GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
     }

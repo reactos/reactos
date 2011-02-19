@@ -17,9 +17,6 @@
 #define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
   (&(HandleTable)->Entries[GDI_HANDLE_GET_INDEX((h))])
 
-/* apparently the first 10 entries are never used in windows as they are empty */
-#define RESERVE_ENTRIES_COUNT 10
-
 #define BASE_OBJTYPE_COUNT 32
 
 #define DelayExecution() \
@@ -483,6 +480,9 @@ LockHandle:
             newObject->ulShareCount = 0;
             newObject->cExclusiveLock = 1;
             newObject->Tid = Thread;
+#if DBG
+            if (Thread) Thread->cExclusiveLocks++;
+#endif
 
             AllocTypeDataDump(TypeInfo);
 
@@ -603,11 +603,11 @@ LockHandle:
              ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == (HandleUpper & GDI_ENTRY_BASETYPE_MASK)) )
         {
             POBJ Object;
+            PTHREADINFO Thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
 
             Object = Entry->KernelData;
 
-            if ((Object->cExclusiveLock == 0 ||
-                Object->Tid == (PTHREADINFO)PsGetCurrentThreadWin32Thread()) &&
+            if ((Object->cExclusiveLock == 0 || Object->Tid == Thread) &&
                  Object->ulShareCount == 0)
             {
                 BOOL Ret;
@@ -623,6 +623,18 @@ LockHandle:
                 InterlockedPushFreeEntry(GDI_ENTRY_TO_INDEX(GdiHandleTable, Entry));
 
                 Object->hHmgr = NULL;
+#if DBG
+                if (Thread)
+                {
+                    if (Thread->cExclusiveLocks < Object->cExclusiveLock)
+                    {
+                        DPRINT1("cExclusiveLocks = %ld, object: %ld\n",
+                                Thread->cExclusiveLocks, Object->cExclusiveLock);
+                        ASSERT(FALSE);
+                    }
+                    Thread->cExclusiveLocks -= Object->cExclusiveLock;
+                }
+#endif
 
                 if (W32Process != NULL)
                 {
@@ -1056,6 +1068,9 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
                     Object->Tid = Thread;
                     Object->cExclusiveLock = 1;
                     GDIDBG_CAPTURELOCKER(GDI_HANDLE_GET_INDEX(hObj))
+#if DBG
+                    if (Thread) Thread->cExclusiveLocks++;
+#endif
                 }
                 else
                 {
@@ -1068,6 +1083,9 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
                         continue;
                     }
                     InterlockedIncrement((PLONG)&Object->cExclusiveLock);
+#if DBG
+                     if (Thread) Thread->cExclusiveLocks++;
+#endif
                 }
             }
             else
