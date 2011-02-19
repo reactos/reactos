@@ -163,7 +163,7 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;
     BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
-    ULONG i;
+    USHORT i;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -255,8 +255,8 @@ FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
                  OUT PUNICODE_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */

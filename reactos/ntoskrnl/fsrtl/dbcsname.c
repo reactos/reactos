@@ -46,8 +46,8 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
                  OUT PANSI_STRING FirstPart,
                  OUT PANSI_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */
@@ -116,7 +116,7 @@ BOOLEAN
 NTAPI
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Check every character */
@@ -300,7 +300,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
     BOOLEAN LastDot;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -437,7 +437,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                      IN BOOLEAN LeadingBackslashPermissible)
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
-    ULONG i;
+    USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
@@ -490,7 +490,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                 i++;
             }
             /* Then check for bad characters */
-            else if (!!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
+            else if (!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
             {
                 return FALSE;
             }
