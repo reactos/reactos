@@ -203,7 +203,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                 /* Returns a string containing the requested substituted environment variable. */
                 ExpandEnvironmentStringsW((LPCWSTR)szModuleName, ExpandedName, MAX_PATH);
 
-                /* Succesfull */
+                /* Successful */
                 bReturn = TRUE;
             }
         }
