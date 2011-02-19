@@ -2285,6 +2285,109 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
 
 
 /***********************************************************************
+ * CM_Get_Device_Interface_AliasA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_AliasA(
+    LPCSTR pszDeviceInterface, LPGUID AliasInterfaceGuid,
+    LPSTR pszAliasDeviceInterface, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %p %lu\n", pszDeviceInterface, AliasInterfaceGuid,
+          pszAliasDeviceInterface, pulLength, ulFlags);
+
+    return CM_Get_Device_Interface_Alias_ExA(pszDeviceInterface,
+        AliasInterfaceGuid, pszAliasDeviceInterface, pulLength,
+        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Device_Interface_AliasW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_AliasW(
+    LPCWSTR pszDeviceInterface, LPGUID AliasInterfaceGuid,
+    LPWSTR pszAliasDeviceInterface, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %p %lu\n", pszDeviceInterface, AliasInterfaceGuid,
+          pszAliasDeviceInterface, pulLength, ulFlags);
+
+    return CM_Get_Device_Interface_Alias_ExW(pszDeviceInterface,
+        AliasInterfaceGuid, pszAliasDeviceInterface, pulLength,
+        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Device_Interface_Alias_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExA(
+    LPCSTR pszDeviceInterface, LPGUID AliasInterfaceGuid, LPSTR pszAliasDeviceInterface,
+    PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %p %p %p %lu %lx\n", pszDeviceInterface, AliasInterfaceGuid,
+          pszAliasDeviceInterface, pulLength, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_Device_Interface_Alias_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExW(
+    LPCWSTR pszDeviceInterface, LPGUID AliasInterfaceGuid, LPWSTR pszAliasDeviceInterface,
+    PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    ULONG ulTransferLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%p %p %p %p %lu %lx\n", pszDeviceInterface, AliasInterfaceGuid,
+          pszAliasDeviceInterface, pulLength, ulFlags, hMachine);
+
+    if (pszDeviceInterface == NULL ||
+        AliasInterfaceGuid == NULL ||
+        pszAliasDeviceInterface == NULL ||
+        pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetInterfaceDeviceAlias(BindingHandle,
+                                          (LPWSTR)pszDeviceInterface,
+                                          AliasInterfaceGuid,
+                                          pszAliasDeviceInterface,
+                                          pulLength,
+                                          &ulTransferLength,
+                                          0);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Get_First_Log_Conf [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_First_Log_Conf(
@@ -3535,6 +3638,32 @@ CONFIGRET WINAPI CM_Open_DevNode_Key_Ex(
 
 
 /***********************************************************************
+ * CM_Query_Remove_SubTree [SETUPAPI.@]
+ *
+ * This function is obsolete in Windows XP and above.
+ */
+CONFIGRET WINAPI CM_Query_Remove_SubTree(
+    DEVINST dnAncestor, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", dnAncestor, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Query_Remove_SubTree_Ex [SETUPAPI.@]
+ *
+ * This function is obsolete in Windows XP and above.
+ */
+CONFIGRET WINAPI CM_Query_Remove_SubTree_Ex(
+    DEVINST dnAncestor, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%lx %lx %lx\n", dnAncestor, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Reenumerate_DevNode [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Reenumerate_DevNode(
@@ -3600,6 +3729,32 @@ CM_Reenumerate_DevNode_Ex(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Remove_SubTree [SETUPAPI.@]
+ *
+ * This function is obsolete in Windows XP and above.
+ */
+CONFIGRET WINAPI CM_Remove_SubTree(
+    DEVINST dnAncestor, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", dnAncestor, ulFlags);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Remove_SubTree_Ex [SETUPAPI.@]
+ *
+ * This function is obsolete in Windows XP and above.
+ */
+CONFIGRET WINAPI CM_Remove_SubTree_Ex(
+    DEVINST dnAncestor, ULONG ulFlags, HMACHINE hMachine)
+{
+    TRACE("%lx %lx %lx\n", dnAncestor, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 

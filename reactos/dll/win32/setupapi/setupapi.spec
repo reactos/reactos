@@ -90,10 +90,10 @@
 @ stdcall CM_Get_Device_ID_List_Size_ExW(ptr wstr long long)
 @ stdcall CM_Get_Device_ID_Size(ptr long long)
 @ stdcall CM_Get_Device_ID_Size_Ex(ptr long long long)
-@ stub CM_Get_Device_Interface_AliasA
-@ stub CM_Get_Device_Interface_AliasW
-@ stub CM_Get_Device_Interface_Alias_ExA
-@ stub CM_Get_Device_Interface_Alias_ExW
+@ stdcall CM_Get_Device_Interface_AliasA(str ptr str ptr long)
+@ stdcall CM_Get_Device_Interface_AliasW(wstr ptr wstr ptr long)
+@ stdcall CM_Get_Device_Interface_Alias_ExA(str ptr str ptr long long)
+@ stdcall CM_Get_Device_Interface_Alias_ExW(wstr ptr wstr ptr long long)
 @ stub CM_Get_Device_Interface_ListA
 @ stub CM_Get_Device_Interface_ListW
 @ stub CM_Get_Device_Interface_List_ExA
@@ -163,8 +163,8 @@
 @ stub CM_Query_Arbitrator_Free_Data_Ex
 @ stub CM_Query_Arbitrator_Free_Size
 @ stub CM_Query_Arbitrator_Free_Size_Ex
-@ stub CM_Query_Remove_SubTree
-@ stub CM_Query_Remove_SubTree_Ex
+@ stdcall CM_Query_Remove_SubTree(long long)
+@ stdcall CM_Query_Remove_SubTree_Ex(long long long)
 @ stub CM_Query_Resource_Conflict_List
 @ stdcall CM_Reenumerate_DevNode(long long)
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long)
@@ -174,8 +174,8 @@
 @ stub CM_Register_Device_InterfaceW
 @ stub CM_Register_Device_Interface_ExA
 @ stub CM_Register_Device_Interface_ExW
-@ stub CM_Remove_SubTree
-@ stub CM_Remove_SubTree_Ex
+@ stdcall CM_Remove_SubTree(long long)
+@ stdcall CM_Remove_SubTree_Ex(long long long)
 @ stub CM_Request_Device_EjectA
 @ stub CM_Request_Device_EjectW
 @ stub CM_Request_Device_Eject_ExA
