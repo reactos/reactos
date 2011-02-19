@@ -46,6 +46,10 @@ UCHAR KiTrapIoTable[] =
 };
 
 PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
+#if DBG
+PKDBG_PRESERVICEHOOK KeWin32PreServiceHook = NULL;
+PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
+#endif
 
 
 /* TRAP EXIT CODE *************************************************************/
@@ -1443,6 +1447,28 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
 }
 
+
+FORCEINLINE
+VOID
+KiDbgPreServiceHook(ULONG SystemCallNumber, PULONG_PTR Arguments)
+{
+#if DBG
+    if (SystemCallNumber >= 0x1000 && KeWin32PreServiceHook)
+        KeWin32PreServiceHook(SystemCallNumber, Arguments);
+#endif
+}
+
+FORCEINLINE
+ULONG_PTR
+KiDbgPostServiceHook(ULONG SystemCallNumber, ULONG_PTR Result)
+{
+#if DBG
+    if (SystemCallNumber >= 0x1000 && KeWin32PostServiceHook)
+        return KeWin32PostServiceHook(SystemCallNumber, Result);
+#endif
+    return Result;
+}
+
 DECLSPEC_NORETURN
 VOID
 FORCEINLINE
@@ -1553,10 +1579,16 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
     
+    /* Call pre-service debug hook */
+    KiDbgPreServiceHook(SystemCallNumber, Arguments);
+
     /* Get the handler and make the system call */
     Handler = (PVOID)DescriptorTable->Base[Id];
     Result = KiSystemCallTrampoline(Handler, Arguments, StackBytes);
     
+    /* Call post-service debug hook */
+    Result = KiDbgPostServiceHook(SystemCallNumber, Result);
+
     /* Make sure we're exiting correctly */
     KiExitSystemCallDebugChecks(Id, TrapFrame);
     
