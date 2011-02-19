@@ -69,7 +69,6 @@
   
 #define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
 #define GetLastError()          NtCurrentTeb()->LastErrorValue
-#define SetLastError(x)         NtCurrentTeb()->LastErrorValue = (x)
 
 typedef struct _CODEPAGE_ENTRY
 {
@@ -192,7 +191,7 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
                                    
 PUNICODE_STRING
 WINAPI
-Basep8BitStringToCachedUnicodeString(IN LPCSTR String);
+Basep8BitStringToStaticUnicodeString(IN LPCSTR AnsiString);
 
 NTSTATUS
 WINAPI
@@ -225,3 +224,7 @@ GetDllLoadPath(LPCWSTR lpModule);
 VOID
 WINAPI
 InitCommandLines(VOID);
+
+VOID
+WINAPI
+BaseSetLastNTError(IN NTSTATUS Status);
