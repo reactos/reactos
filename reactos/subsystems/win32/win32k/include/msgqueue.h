@@ -180,6 +180,11 @@ co_IntSendMessage(HWND hWnd,
 		WPARAM wParam,
 		LPARAM lParam);
 LRESULT FASTCALL
+co_IntPostOrSendMessage(HWND hWnd,
+		     UINT Msg,
+		     WPARAM wParam,
+		     LPARAM lParam);
+LRESULT FASTCALL
 co_IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
@@ -187,7 +192,7 @@ co_IntSendMessageTimeout(HWND hWnd,
                       UINT uFlags,
                       UINT uTimeout,
                       ULONG_PTR *uResult);
-BOOL FASTCALL UserSendNotifyMessage( HWND hWnd,UINT Msg,WPARAM wParam,LPARAM lParam );
+
 LRESULT FASTCALL co_IntSendMessageNoWait(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
