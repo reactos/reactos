@@ -1043,13 +1043,6 @@ NtGdiStretchDIBitsInternal(
         return 0;
     }
 
-    if (!(pdc = DC_LockDc(hDC)))
-    {
-        ExFreePoolWithTag(safeBits, TAG_DIB);
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return 0;
-    }
-
     _SEH2_TRY
     {
         ProbeForRead(BitsInfo, cjMaxInfo, 1);
@@ -1076,6 +1069,13 @@ NtGdiStretchDIBitsInternal(
 
     hBitmap = NtGdiGetDCObject(hDC, OBJ_BITMAP);
 
+    if (!(pdc = DC_LockDc(hDC)))
+    {
+        ExFreePoolWithTag(safeBits, TAG_DIB);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
     if (XDest == 0 && YDest == 0 && XSrc == 0 && XSrc == 0 &&
         DestWidth == SrcWidth && DestHeight == SrcHeight &&
         compr == BI_RGB &&
@@ -1091,14 +1091,17 @@ NtGdiStretchDIBitsInternal(
         {
             /* fast path */
             ret = IntSetDIBits(pdc, hBitmap, 0, height, safeBits, BitsInfo, Usage);
+            DC_UnlockDc(pdc);
             goto cleanup;
         }
     }
 
     /* slow path - need to use StretchBlt */
 
-    hdcMem = NtGdiCreateCompatibleDC(hDC);
     hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
+    DC_UnlockDc(pdc);
+
+    hdcMem = NtGdiCreateCompatibleDC(hDC);
     if(!hBitmap)
     {
         DPRINT1("Error, failed to create a DIB section\n");
@@ -1123,7 +1126,6 @@ NtGdiStretchDIBitsInternal(
 
 cleanup:
     ExFreePoolWithTag(safeBits, TAG_DIB);
-    DC_UnlockDc(pdc);
     return ret;
 }
 
