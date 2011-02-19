@@ -755,7 +755,7 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Port.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate port resource (Start: 0xI64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
+                  DPRINT1("Failed to translate port resource (Start: 0x%I64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
                break;
