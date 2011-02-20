@@ -268,7 +268,7 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -392,7 +392,7 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -508,18 +508,18 @@ CONFIGRET WINAPI CM_Connect_MachineW(
         }
         lstrcpyW(pMachine->szMachineName, UNCServerName);
 
-        pMachine->StringTable = StringTableInitialize();
+        pMachine->StringTable = pSetupStringTableInitialize();
         if (pMachine->StringTable == NULL)
         {
             HeapFree(GetProcessHeap(), 0, pMachine);
             return CR_FAILURE;
         }
 
-        StringTableAddString(pMachine->StringTable, L"PLT", 1);
+        pSetupStringTableAddString(pMachine->StringTable, L"PLT", 1);
 
         if (!PnpBindRpc(UNCServerName, &pMachine->BindingHandle))
         {
-            StringTableDestroy(pMachine->StringTable);
+            pSetupStringTableDestroy(pMachine->StringTable);
             HeapFree(GetProcessHeap(), 0, pMachine);
             return CR_INVALID_MACHINENAME;
         }
@@ -630,7 +630,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
             return CR_FAILURE;
     }
 
-    lpParentDevInst = StringTableStringFromId(StringTable, dnParent);
+    lpParentDevInst = pSetupStringTableStringFromId(StringTable, dnParent);
     if (lpParentDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -650,7 +650,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
 
     if (ret == CR_SUCCESS)
     {
-        *pdnDevInst = StringTableAddString(StringTable, pDeviceID, 1);
+        *pdnDevInst = pSetupStringTableAddString(StringTable, pDeviceID, 1);
         if (*pdnDevInst == 0)
             ret = CR_NO_SUCH_DEVNODE;
     }
@@ -794,7 +794,7 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -832,7 +832,7 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
     if (pMachine->bLocal == FALSE)
     {
         if (pMachine->StringTable != NULL)
-            StringTableDestroy(pMachine->StringTable);
+            pSetupStringTableDestroy(pMachine->StringTable);
 
         if (!PnpUnbindRpc(pMachine->BindingHandle))
             return CR_ACCESS_DENIED;
@@ -893,7 +893,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1161,7 +1161,7 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1289,7 +1289,7 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1313,7 +1313,7 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
 
     TRACE("szRelatedDevInst: %s\n", debugstr_w(szRelatedDevInst));
 
-    dwIndex = StringTableAddString(StringTable, szRelatedDevInst, 1);
+    dwIndex = pSetupStringTableAddString(StringTable, szRelatedDevInst, 1);
     if (dwIndex == -1)
         return CR_FAILURE;
 
@@ -1596,7 +1596,7 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1773,7 +1773,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1861,7 +1861,7 @@ CM_Get_DevNode_Status_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -1978,10 +1978,10 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExW(
             return CR_FAILURE;
     }
 
-    if (!StringTableStringFromIdEx(StringTable,
-                                   dnDevInst,
-                                   Buffer,
-                                   &BufferLen))
+    if (!pSetupStringTableStringFromIdEx(StringTable,
+                                         dnDevInst,
+                                         Buffer,
+                                         &BufferLen))
         return CR_FAILURE;
 
     return CR_SUCCESS;
@@ -2271,7 +2271,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
             return CR_FAILURE;
     }
 
-    DeviceId = StringTableStringFromId(StringTable, dnDevInst);
+    DeviceId = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (DeviceId == NULL)
     {
         *pulLen = 0;
@@ -2438,7 +2438,7 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -2798,7 +2798,7 @@ CONFIGRET WINAPI CM_Get_Log_Conf_Priority_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -2875,7 +2875,7 @@ CONFIGRET WINAPI CM_Get_Next_Log_Conf_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -2996,7 +2996,7 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -3020,7 +3020,7 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
 
     TRACE("szRelatedDevInst: %s\n", debugstr_w(szRelatedDevInst));
 
-    dwIndex = StringTableAddString(StringTable, szRelatedDevInst, 1);
+    dwIndex = pSetupStringTableAddString(StringTable, szRelatedDevInst, 1);
     if (dwIndex == -1)
         return CR_FAILURE;
 
@@ -3128,7 +3128,7 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -3152,7 +3152,7 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
 
     TRACE("szRelatedDevInst: %s\n", debugstr_w(szRelatedDevInst));
 
-    dwIndex = StringTableAddString(StringTable, szRelatedDevInst, 1);
+    dwIndex = pSetupStringTableAddString(StringTable, szRelatedDevInst, 1);
     if (dwIndex == -1)
         return CR_FAILURE;
 
@@ -3443,7 +3443,7 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
 
     if (ret == CR_SUCCESS)
     {
-        *pdnDevInst = StringTableAddString(StringTable, DeviceIdBuffer, 1);
+        *pdnDevInst = pSetupStringTableAddString(StringTable, DeviceIdBuffer, 1);
         if (*pdnDevInst == -1)
             ret = CR_FAILURE;
     }
@@ -3531,11 +3531,11 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpFromDevInst = StringTableStringFromId(StringTable, dnFromDevInst);
+    lpFromDevInst = pSetupStringTableStringFromId(StringTable, dnFromDevInst);
     if (lpFromDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    lpToDevInst = StringTableStringFromId(StringTable, dnToDevInst);
+    lpToDevInst = pSetupStringTableStringFromId(StringTable, dnToDevInst);
     if (lpToDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -3856,7 +3856,7 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExW(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnAncestor);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnAncestor);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -3952,7 +3952,7 @@ CM_Reenumerate_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -4109,7 +4109,7 @@ CONFIGRET WINAPI CM_Request_Device_Eject_ExW(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -4280,7 +4280,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Problem_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -4508,7 +4508,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -4798,7 +4798,7 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
@@ -4866,7 +4866,7 @@ CONFIGRET WINAPI CM_Uninstall_DevNode_Ex(
             return CR_FAILURE;
     }
 
-    lpDevInst = StringTableStringFromId(StringTable, dnPhantom);
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnPhantom);
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 

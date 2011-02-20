@@ -584,19 +584,19 @@
 @ stub pSetupSetSystemSourcePath
 @ stub pSetupShouldDeviceBeExcluded
 @ stdcall pSetupStringFromGuid(ptr wstr long)
-@ stdcall pSetupStringTableAddString(ptr wstr long) StringTableAddString
-@ stdcall pSetupStringTableAddStringEx(ptr wstr long ptr long) StringTableAddStringEx
-@ stdcall pSetupStringTableDestroy(ptr) StringTableDestroy
-@ stdcall pSetupStringTableDuplicate(ptr) StringTableDuplicate
+@ stdcall pSetupStringTableAddString(ptr wstr long)
+@ stdcall pSetupStringTableAddStringEx(ptr wstr long ptr long)
+@ stdcall pSetupStringTableDestroy(ptr)
+@ stdcall pSetupStringTableDuplicate(ptr)
 @ stub pSetupStringTableEnum
-@ stdcall pSetupStringTableGetExtraData(ptr long ptr long) StringTableGetExtraData
-@ stdcall pSetupStringTableInitialize() StringTableInitialize
-@ stdcall pSetupStringTableInitializeEx(long long) StringTableInitializeEx
-@ stdcall pSetupStringTableLookUpString(ptr wstr long) StringTableLookUpString
-@ stdcall pSetupStringTableLookUpStringEx(ptr wstr long ptr ptr) StringTableLookUpStringEx
-@ stdcall pSetupStringTableSetExtraData(ptr long ptr long) StringTableSetExtraData
-@ stdcall pSetupStringTableStringFromId(ptr long) StringTableStringFromId
-@ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr) StringTableStringFromIdEx
+@ stdcall pSetupStringTableGetExtraData(ptr long ptr long)
+@ stdcall pSetupStringTableInitialize()
+@ stdcall pSetupStringTableInitializeEx(long long)
+@ stdcall pSetupStringTableLookUpString(ptr wstr long)
+@ stdcall pSetupStringTableLookUpStringEx(ptr wstr long ptr ptr)
+@ stdcall pSetupStringTableSetExtraData(ptr long ptr long)
+@ stdcall pSetupStringTableStringFromId(ptr long)
+@ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr)
 @ stdcall pSetupUnicodeToMultiByte(wstr long) UnicodeToMultiByte
 @ stdcall pSetupUnmapAndCloseFile(long long ptr) UnmapAndCloseFile
 @ stub pSetupVerifyCatalogFile
@@ -627,7 +627,6 @@
 @ stdcall RetreiveFileSecurity(wstr ptr)
 @ stub SearchForInfFile
 @ stdcall StampFileSecurity(wstr ptr)
-@ stdcall StringTableTrim(ptr)
 @ stdcall TakeOwnershipOfFile(wstr)
 @ stub pSetupDirectoryIdToPath
 @ stub pSetupGetOsLoaderDriveAndPath
