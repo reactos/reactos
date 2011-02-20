@@ -192,15 +192,12 @@ PUNICODE_STRING
 WINAPI
 Basep8BitStringToStaticUnicodeString(IN LPCSTR AnsiString);
 
-NTSTATUS
+BOOLEAN
 WINAPI
-Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
-                                   IN LPCSTR String);
-
-NTSTATUS
-WINAPI
-Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
-                                   IN LPCSTR String);
+Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                      IN LPCSTR String);
+ 
+#define BasepUnicodeStringTo8BitString RtlUnicodeStringToAnsiString
 
 typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
                                               IN PANSI_STRING AnsiString,

@@ -1563,8 +1563,8 @@ CreateProcessInternalA(HANDLE hToken,
         else
         {
             /* Use a dynamic version */
-            Basep8BitStringToHeapUnicodeString(&LiveCommandLine,
-                                               lpCommandLine);
+            Basep8BitStringToDynamicUnicodeString(&LiveCommandLine,
+                                                  lpCommandLine);
         }
     }
     else
@@ -1576,13 +1576,13 @@ CreateProcessInternalA(HANDLE hToken,
     /* Convert the Name and Directory */
     if (lpApplicationName)
     {
-        Basep8BitStringToHeapUnicodeString(&ApplicationName,
-                                           lpApplicationName);
+        Basep8BitStringToDynamicUnicodeString(&ApplicationName,
+                                              lpApplicationName);
     }
     if (lpCurrentDirectory)
     {
-        Basep8BitStringToHeapUnicodeString(&CurrentDirectory,
-                                           lpCurrentDirectory);
+        Basep8BitStringToDynamicUnicodeString(&CurrentDirectory,
+                                              lpCurrentDirectory);
     }
 
     /* Now convert Startup Strings */

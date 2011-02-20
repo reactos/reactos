@@ -251,7 +251,7 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
     UNICODE_STRING NameU;
 
     /* Convert the name to Unicode */
-    Basep8BitStringToHeapUnicodeString(&NameU, lpNamedPipeName);
+    Basep8BitStringToDynamicUnicodeString(&NameU, lpNamedPipeName);
 
     /* Call the Unicode API */
     r = WaitNamedPipeW(NameU.Buffer, nTimeOut);

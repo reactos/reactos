@@ -4,6 +4,7 @@
  * FILE:            lib/kernel32/misc/utils.c
  * PURPOSE:         Utility and Support Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES ****************************************************************/
@@ -23,33 +24,6 @@
 PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
 /* FUNCTIONS ****************************************************************/
-
-/*
- * Converts an ANSI or OEM String to the specified Unicode String
- */
-NTSTATUS
-WINAPI
-Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
-                                   IN LPCSTR String)
-{
-    ANSI_STRING AnsiString;
-    NTSTATUS Status;
-    
-    DPRINT("Basep8BitStringToLiveUnicodeString\n");
-    
-    /* Create the ANSI String */
-    RtlInitAnsiString(&AnsiString, String);
-    
-    /* Convert from OEM or ANSI */
-    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, FALSE);
-    
-    /* Return Status */
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastErrorByStatus(Status);
-    }
-    return Status;
-}
 
 
 /*
@@ -81,29 +55,38 @@ Basep8BitStringToStaticUnicodeString(IN LPCSTR String)
     return StaticString;
 }
 
-NTSTATUS
+/*
+ * Allocates space from the Heap and converts an Unicode String into it
+ */
+BOOLEAN
 WINAPI
-Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
-                                   IN LPCSTR String)
+Basep8BitStringToDynamicUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                      IN LPCSTR String)
 {
     ANSI_STRING AnsiString;
     NTSTATUS Status;
     
-    DPRINT("Basep8BitStringToCachedUnicodeString\n");
-    
+    DPRINT("Basep8BitStringToDynamicUnicodeString\n");
+
     /* Initialize an ANSI String */
-    RtlInitAnsiString(&AnsiString, String);
-    
+    if (!NT_SUCCESS(RtlInitAnsiStringEx(&AnsiString, String)))
+    {
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+        return FALSE;
+    }
+     
     /* Convert it */
-    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);
-    
+    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);    
+
     /* Handle failure */
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);
+        return FALSE;
     }
+
     /* Return Status */
-    return Status;
+    return TRUE;
 }
 
 /*
