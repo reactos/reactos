@@ -1287,7 +1287,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     static const WCHAR Ext[] = { L'.', 't', 'm', 'p', UNICODE_NULL };
 
     RtlInitUnicodeString(&PathNameString, lpPathName);
-    if (PathNameString.Length == 0 || PathNameString.Buffer[PathNameString.Length - sizeof(WCHAR)] != L'\\')
+    if (PathNameString.Length == 0 || PathNameString.Buffer[(PathNameString.Length / sizeof(WCHAR)) - 1] != L'\\')
     {
         PathNameString.Length += sizeof(WCHAR);
     }
@@ -1306,15 +1306,15 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     {
         memmove(lpTempFileName, PathNameString.Buffer, PathNameString.Length);
     }
- 
+
     /* PathName MUST BE a path. Check it */
-    lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = UNICODE_NULL;
+    lpTempFileName[(PathNameString.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
     FileAttributes = GetFileAttributesW(lpTempFileName);
     if (FileAttributes == INVALID_FILE_ATTRIBUTES)
     {
         /* Append a '\' if necessary */
-        lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = L'\\';
-        lpTempFileName[PathNameString.Length] = UNICODE_NULL;
+        lpTempFileName[(PathNameString.Length / sizeof(WCHAR)) - 1] = L'\\';
+        lpTempFileName[PathNameString.Length / sizeof(WCHAR)] = UNICODE_NULL;
         FileAttributes = GetFileAttributesW(lpTempFileName);
         if (FileAttributes == INVALID_FILE_ATTRIBUTES)
         {
@@ -1329,7 +1329,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     }
  
     /* Make sure not to mix path & prefix */
-    lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = L'\\';
+    lpTempFileName[(PathNameString.Length / sizeof(WCHAR)) - 1] = L'\\';
     RtlInitUnicodeString(&PrefixString, lpPrefixString);
     if (PrefixString.Length > 3 * sizeof(WCHAR))
     {
@@ -1337,7 +1337,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     }
  
     /* Append prefix to path */
-    TempFileName = lpTempFileName + PathNameString.Length / sizeof(WCHAR) - 1;
+    TempFileName = lpTempFileName + PathNameString.Length / sizeof(WCHAR);
     memmove(TempFileName, PrefixString.Buffer, PrefixString.Length);
     TempFileName += PrefixString.Length / sizeof(WCHAR);
  
@@ -1364,8 +1364,8 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         /* Convert that ID to wchar */
         RtlIntegerToChar(ID, 0x10, sizeof(IDString), IDString);
         Let = IDString;
-         do
-         {
+        do
+        {
             *(TempFileName++) = RtlAnsiCharToUnicodeChar(&Let);
         } while (*Let != 0);
  
