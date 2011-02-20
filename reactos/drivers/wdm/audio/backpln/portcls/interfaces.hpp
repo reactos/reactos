@@ -903,8 +903,7 @@ typedef IPortPinDMus *PPORTPINDMUS;
         IN  ULONG BufferSize);                                            \
                                                                           \
     STDMETHODIMP_(PVOID) SystemAddress(void);                             \
-    STDMETHODIMP_(PHYSICAL_ADDRESS) PhysicalAddress(                      \
-        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);        \
+    STDMETHODIMP_(PHYSICAL_ADDRESS) PhysicalAddress();                    \
     STDMETHODIMP_(PADAPTER_OBJECT) GetAdapterObject(void);                \
                                                                           \
     STDMETHODIMP_(void) CopyTo(                                           \
@@ -950,8 +949,7 @@ typedef IPortPinDMus *PPORTPINDMUS;
         IN  ULONG BufferSize) PURE; \
 \
     STDMETHOD_(PVOID, SystemAddress)( THIS ) PURE; \
-    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS_       \
-        IN PPHYSICAL_ADDRESS Address) PURE; \
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS) PURE;  \
     STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)( THIS ) PURE; \
 \
     STDMETHOD_(void, CopyTo)( THIS_ \
