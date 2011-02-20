@@ -24,6 +24,7 @@
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
+	<file>file.c</file>
 	<file>guiconsole.c</file>
 	<file>handle.c</file>
 	<file>harderror.c</file>
