@@ -178,7 +178,6 @@ typedef struct _PROCESSINFO
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */
-  LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;

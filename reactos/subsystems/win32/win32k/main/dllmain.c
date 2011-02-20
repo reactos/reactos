@@ -89,8 +89,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
 
-        InitializeListHead(&Win32Process->ClassList);
-
         InitializeListHead(&Win32Process->MenuListHead);
 
         InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
@@ -133,6 +131,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         /* no process windows should exist at this point, or the function will assert! */
         DestroyProcessClasses(Win32Process);
+        Win32Process->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
 
         GDI_CleanupForProcess(Process);
 
