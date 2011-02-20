@@ -1011,7 +1011,7 @@ WINAPI
 IsWow64Process(HANDLE hProcess,
                PBOOL Wow64Process)
 {
-    ULONG pbi;
+    ULONG_PTR pbi;
     NTSTATUS Status;
 
     Status = NtQueryInformationProcess(hProcess,
