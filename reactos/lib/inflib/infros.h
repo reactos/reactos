@@ -14,7 +14,6 @@ extern "C" {
 
 #include <infcommon.h>
 
-extern VOID InfSetHeap(PVOID Heap);
 extern NTSTATUS InfOpenBufferedFile(PHINF InfHandle,
                                     PVOID Buffer,
                                     ULONG BufferSize,
@@ -25,13 +24,10 @@ extern NTSTATUS InfOpenFile(PHINF InfHandle,
 extern NTSTATUS InfWriteFile(HINF InfHandle,
                              PUNICODE_STRING FileName,
                              PUNICODE_STRING HeaderComment);
-extern VOID InfCloseFile(HINF InfHandle);
 extern BOOLEAN InfFindFirstLine(HINF InfHandle,
                                 PCWSTR Section,
                                 PCWSTR Key,
                                 PINFCONTEXT *Context);
-extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
-                               PINFCONTEXT ContextOut);
 extern BOOLEAN InfFindFirstMatchLine(PINFCONTEXT ContextIn,
                                      PCWSTR Key,
                                      PINFCONTEXT ContextOut);
@@ -41,24 +37,9 @@ extern BOOLEAN InfFindNextMatchLine(PINFCONTEXT ContextIn,
 extern LONG InfGetLineCount(HINF InfHandle,
                             PCWSTR Section);
 extern LONG InfGetFieldCount(PINFCONTEXT Context);
-extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PUCHAR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
 extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
                               PINT IntegerValue);
-extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  PWSTR ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  PULONG RequiredSize);
-extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PWSTR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
 extern BOOLEAN InfGetData(PINFCONTEXT Context,
                           PWCHAR *Key,
                           PWCHAR *Data);

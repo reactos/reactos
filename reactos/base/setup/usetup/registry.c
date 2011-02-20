@@ -646,7 +646,7 @@ ImportRegistryFile(PWSTR Filename,
       DPRINT1("registry_callback() failed\n");
     }
 
-  SetupCloseInfFile (hInf);
+  InfCloseFile (hInf);
 
   return TRUE;
 }

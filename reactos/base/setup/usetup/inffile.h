@@ -34,14 +34,9 @@
 
 #include <infcommon.h>
 
-#define SetupCloseInfFile InfpCloseInfFile
 #define SetupFindFirstLineW InfpFindFirstLineW
-#define SetupFindNextLine InfFindNextLine
-#define SetupGetBinaryField InfGetBinaryField
 #define SetupGetFieldCount InfGetFieldCount
 #define SetupGetIntField InfGetIntField
-#define SetupGetMultiSzFieldW InfpGetMultiSzFieldW
-#define SetupGetStringFieldW InfpGetStringFieldW
 #define SetupOpenInfFileW InfpOpenInfFileW
 
 #define INF_STYLE_WIN4 0x00000002
@@ -55,32 +50,12 @@ typedef struct _INFCONTEXT
 	PVOID Line;
 } INFCONTEXT;
 
-VOID WINAPI
-InfpCloseInfFile(
-	IN HINF InfHandle);
-
 BOOL WINAPI
 InfpFindFirstLineW(
 	IN HINF InfHandle,
 	IN PCWSTR Section,
 	IN PCWSTR Key,
 	IN OUT PINFCONTEXT Context);
-
-BOOL WINAPI
-InfpGetMultiSzFieldW(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	IN OUT PWSTR ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize);
-
-BOOL WINAPI
-InfpGetStringFieldW(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	IN OUT PWSTR ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize);
 
 HINF WINAPI
 InfpOpenInfFileW(
@@ -112,8 +87,5 @@ INF_OpenBufferedFileA(
 	IN DWORD InfStyle,
 	IN LCID LocaleId,
 	OUT PUINT ErrorLine);
-
-VOID INF_SetHeap(
-	IN PVOID Heap);
 
 /* EOF */
