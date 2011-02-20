@@ -33,13 +33,23 @@ extern USHORT NlsUnicodeDefaultChar;
 */
 WCHAR
 NTAPI
-RtlAnsiCharToUnicodeChar(IN PUCHAR *AnsiChar)
+RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar)
 {
     ULONG Size;
     NTSTATUS Status;
     WCHAR UnicodeChar = L' ';
 
-    Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    PAGED_CODE_RTL();
+
+    if (NlsLeadByteInfo)
+    {
+        Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    }
+    else
+    {
+        DPRINT1("HACK::Shouldn't have happened! Consider fixing Usetup and registry entries it creates on install\n");
+        Size = 1;
+    }
 
     Status = RtlMultiByteToUnicodeN(&UnicodeChar,
                                     sizeof(WCHAR),
