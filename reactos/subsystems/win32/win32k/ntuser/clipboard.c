@@ -601,7 +601,7 @@ NtUserEmptyClipboard(VOID)
     if (ret && ClipboardOwnerWindow)
     {
         DPRINT("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->head.h);
-        co_IntSendMessage( ClipboardOwnerWindow->head.h, WM_DESTROYCLIPBOARD, 0, 0);
+        co_IntSendMessageNoWait( ClipboardOwnerWindow->head.h, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
     UserLeave();

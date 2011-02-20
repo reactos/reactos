@@ -1957,7 +1957,7 @@ UserRealizePalette(HDC hdc)
       hWnd = IntWindowFromDC(hdc);
       if (hWnd) // Send broadcast if dc is associated with a window.
       {  // FYI: Thread locked in CallOneParam.
-         co_IntSendMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
+         UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
   return Ret;
