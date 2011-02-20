@@ -22,12 +22,12 @@ UINT CsrGetTempFileUnique;
 
 CSR_API(CsrGetTempFile)
 {
-    DPRINT1("CsrGetTempFile entered\n");
+    DPRINT("CsrGetTempFile entered\n");
 
     /* Return 16-bits ID */
     Request->Data.GetTempFile.UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
 
-    DPRINT1("Returning: %u\n", Request->Data.GetTempFile.UniqueID);
+    DPRINT("Returning: %u\n", Request->Data.GetTempFile.UniqueID);
 
     return STATUS_SUCCESS;
 }
