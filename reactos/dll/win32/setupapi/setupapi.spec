@@ -110,10 +110,10 @@
 @ stdcall CM_Get_HW_Prof_FlagsW(wstr long ptr long)
 @ stdcall CM_Get_HW_Prof_Flags_ExA(str long ptr long long)
 @ stdcall CM_Get_HW_Prof_Flags_ExW(wstr long ptr long long)
-@ stub CM_Get_Hardware_Profile_InfoA
-@ stub CM_Get_Hardware_Profile_InfoW
-@ stub CM_Get_Hardware_Profile_Info_ExA
-@ stub CM_Get_Hardware_Profile_Info_ExW
+@ stdcall CM_Get_Hardware_Profile_InfoA(long ptr long)
+@ stdcall CM_Get_Hardware_Profile_InfoW(long ptr long)
+@ stdcall CM_Get_Hardware_Profile_Info_ExA(long ptr long long)
+@ stdcall CM_Get_Hardware_Profile_Info_ExW(long ptr long long)
 @ stdcall CM_Get_Log_Conf_Priority(ptr ptr long)
 @ stdcall CM_Get_Log_Conf_Priority_Ex(ptr ptr long long)
 @ stdcall CM_Get_Next_Log_Conf(ptr ptr long)

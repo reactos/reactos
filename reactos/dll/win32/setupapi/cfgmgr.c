@@ -2639,6 +2639,114 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
 
 
 /***********************************************************************
+ * CM_Get_Hardware_Profile_InfoA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Hardware_Profile_InfoA(
+    ULONG ulIndex, PHWPROFILEINFO_A pHWProfileInfo, ULONG ulFlags)
+{
+    TRACE("%lu %p %lx\n", ulIndex, pHWProfileInfo, ulFlags);
+
+    return CM_Get_Hardware_Profile_Info_ExA(ulIndex, pHWProfileInfo,
+                                            ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Hardware_Profile_InfoW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Hardware_Profile_InfoW(
+    ULONG ulIndex, PHWPROFILEINFO_W pHWProfileInfo, ULONG ulFlags)
+{
+    TRACE("%lu %p %lx\n", ulIndex, pHWProfileInfo, ulFlags);
+
+    return CM_Get_Hardware_Profile_Info_ExW(ulIndex, pHWProfileInfo,
+                                            ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Hardware_Profile_Info_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Hardware_Profile_Info_ExA(
+    ULONG ulIndex, PHWPROFILEINFO_A pHWProfileInfo, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    HWPROFILEINFO_W LocalProfileInfo;
+    CONFIGRET ret;
+
+    TRACE("%lu %p %lx %lx\n", ulIndex, pHWProfileInfo, ulFlags, hMachine);
+
+    if (pHWProfileInfo == NULL)
+        return CR_INVALID_POINTER;
+
+    ret = CM_Get_Hardware_Profile_Info_ExW(ulIndex, &LocalProfileInfo,
+                                           ulFlags, hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        pHWProfileInfo->HWPI_ulHWProfile = LocalProfileInfo.HWPI_ulHWProfile;
+        pHWProfileInfo->HWPI_dwFlags = LocalProfileInfo.HWPI_dwFlags;
+
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                LocalProfileInfo.HWPI_szFriendlyName,
+                                lstrlenW(LocalProfileInfo.HWPI_szFriendlyName) + 1,
+                                pHWProfileInfo->HWPI_szFriendlyName,
+                                MAX_PROFILE_LEN,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Get_Hardware_Profile_Info_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Hardware_Profile_Info_ExW(
+    ULONG ulIndex, PHWPROFILEINFO_W pHWProfileInfo, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret;
+
+    TRACE("%lu %p %lx %lx\n", ulIndex, pHWProfileInfo, ulFlags, hMachine);
+
+    if (pHWProfileInfo == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_GetHwProfInfo(BindingHandle, ulIndex, pHWProfileInfo,
+                                sizeof(HWPROFILEINFO_W), 0);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Get_Log_Conf_Priority [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Log_Conf_Priority(
