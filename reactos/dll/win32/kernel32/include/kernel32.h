@@ -68,7 +68,6 @@
 #define STARTF_SHELLPRIVATE         0x400
   
 #define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
-#define GetLastError()          NtCurrentTeb()->LastErrorValue
 
 typedef struct _CODEPAGE_ENTRY
 {

@@ -16,6 +16,9 @@ DWORD g_dwLastErrorToBreakOn;
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+ * @implemented
+ */
 VOID
 WINAPI
 SetLastError(
@@ -34,12 +37,25 @@ SetLastError(
     NtCurrentTeb()->LastErrorValue = dwErrCode;
 }
 
+/*
+ * @implemented
+ */
 VOID
 WINAPI
 BaseSetLastNTError(
     IN NTSTATUS Status)
 {
     SetLastError(RtlNtStatusToDosError(Status));
+}
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetLastError()
+{
+    return NtCurrentTeb()->LastErrorValue;
 }
 
 /* EOF */

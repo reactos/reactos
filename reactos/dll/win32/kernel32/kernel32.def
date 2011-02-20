@@ -539,7 +539,7 @@
 @ stub GetSCallbackTemplate ; missing in XP SP3 and Win 7
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
-@ stdcall GetLastError() ntdll.RtlGetLastWin32Error
+@ stdcall GetLastError()
 @ stdcall GetLinguistLangSize(ptr) ; missing in Win 7
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
