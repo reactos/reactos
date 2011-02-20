@@ -529,6 +529,9 @@ MapWndProc(HWND hwnd,
             return infoPtr->pActiveCell->ch;
         }
 
+        case FM_GETHFONT:
+            return (LRESULT)infoPtr->hFont;
+
         case WM_PAINT:
         {
             OnPaint(infoPtr,
