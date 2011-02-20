@@ -5,7 +5,7 @@
  * FILE:            lib/kernel32/file/file.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -1212,83 +1212,205 @@ SetFileAttributesW(LPCWSTR lpFileName,
 /***********************************************************************
  *           GetTempFileNameA   (KERNEL32.@)
  */
-UINT WINAPI GetTempFileNameA( LPCSTR path, LPCSTR prefix, UINT unique, LPSTR buffer)
+UINT WINAPI
+GetTempFileNameA(IN LPCSTR lpPathName,
+                 IN LPCSTR lpPrefixString,
+                 IN UINT uUnique,
+                 OUT LPSTR lpTempFileName)
 {
-   WCHAR BufferW[MAX_PATH];
-   PWCHAR PathW;
-   WCHAR PrefixW[3+1];
-   UINT ret;
+    UINT ID;
+    NTSTATUS Status;
+    LPWSTR lpTempFileNameW;
+    PUNICODE_STRING lpPathNameW;
+    ANSI_STRING TempFileNameStringA;
+    UNICODE_STRING lpPrefixStringW, TempFileNameStringW;
 
-   if (!(PathW = FilenameA2W(path, FALSE)))
-      return 0;
-
-   if (prefix)
-      FilenameA2W_N(PrefixW, 3+1, prefix, -1);
-
-   ret = GetTempFileNameW(PathW, prefix ? PrefixW : NULL, unique, BufferW);
-
-   if (ret)
-      FilenameW2A_N(buffer, MAX_PATH, BufferW, -1);
-
-   return ret;
-}
-
-/***********************************************************************
- *           GetTempFileNameW   (KERNEL32.@)
- */
-UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR buffer )
-{
-    static const WCHAR formatW[] = L"%x.tmp";
-
-    int i;
-    LPWSTR p;
-
-    if ( !path || !buffer )
+    /* Convert strings */
+    lpPathNameW = Basep8BitStringToStaticUnicodeString(lpPathName);
+    if (!lpPathNameW)
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
 
-    wcscpy( buffer, path );
-    p = buffer + wcslen(buffer);
-
-    /* add a \, if there isn't one  */
-    if ((p == buffer) || (p[-1] != '\\')) *p++ = '\\';
-
-    if ( prefix )
-        for (i = 3; (i > 0) && (*prefix); i--) *p++ = *prefix++;
-
-    unique &= 0xffff;
-
-    if (unique) swprintf( p, formatW, unique );
-    else
+    if (!Basep8BitStringToDynamicUnicodeString(&lpPrefixStringW, lpPrefixString))
     {
-        /* get a "random" unique number and try to create the file */
-        HANDLE handle;
-        UINT num = GetTickCount() & 0xffff;
-
-        if (!num) num = 1;
-        unique = num;
-        do
-        {
-            swprintf( p, formatW, unique );
-            handle = CreateFileW( buffer, GENERIC_WRITE, 0, NULL,
-                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
-            if (handle != INVALID_HANDLE_VALUE)
-            {  /* We created it */
-                TRACE("created %S\n", buffer);
-                CloseHandle( handle );
-                break;
-            }
-            if (GetLastError() != ERROR_FILE_EXISTS &&
-                GetLastError() != ERROR_SHARING_VIOLATION)
-                break;  /* No need to go on */
-            if (!(++unique & 0xffff)) unique = 1;
-        } while (unique != num);
+        return 0;
     }
 
-    TRACE("returning %S\n", buffer);
-    return unique;
+    lpTempFileNameW = RtlAllocateHeap(RtlGetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+    if (!lpTempFileNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        RtlFreeUnicodeString(&lpPrefixStringW);
+        return 0;
+    }
+
+    /* Call Unicode */
+    ID = GetTempFileNameW(lpPathNameW->Buffer, lpPrefixStringW.Buffer, uUnique, lpTempFileNameW);
+    if (ID)
+    {
+        RtlInitUnicodeString(&TempFileNameStringW, lpTempFileNameW);
+        TempFileNameStringA.Buffer = lpTempFileName;
+        TempFileNameStringA.MaximumLength = MAX_PATH;
+ 
+        Status = BasepUnicodeStringTo8BitString(&TempFileNameStringA, &TempFileNameStringW, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+            ID = 0;
+        }
+    }
+
+    /* Cleanup */
+    RtlFreeUnicodeString(&lpPrefixStringW);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, lpTempFileNameW);
+    return ID;
+ }
+ 
+ /***********************************************************************
+  *           GetTempFileNameW   (KERNEL32.@)
+  */
+UINT WINAPI
+GetTempFileNameW(IN LPCWSTR lpPathName,
+                 IN LPCWSTR lpPrefixString,
+                 IN UINT uUnique,
+                 OUT LPWSTR lpTempFileName)
+{
+    CHAR * Let;
+    HANDLE TempFile;
+    UINT ID, Num = 0;
+    CHAR IDString[5];
+    WCHAR * TempFileName;
+    CSR_API_MESSAGE ApiMessage;
+    DWORD FileAttributes, LastError;
+    UNICODE_STRING PathNameString, PrefixString;
+    static const WCHAR Ext[] = { L'.', 't', 'm', 'p', UNICODE_NULL };
+
+    RtlInitUnicodeString(&PathNameString, lpPathName);
+    if (PathNameString.Length == 0 || PathNameString.Buffer[PathNameString.Length - sizeof(WCHAR)] != L'\\')
+    {
+        PathNameString.Length += sizeof(WCHAR);
+    }
+
+    /* lpTempFileName must be able to contain: PathName, Prefix (3), number(4), .tmp(4) & \0(1)
+     * See: http://msdn.microsoft.com/en-us/library/aa364991%28v=vs.85%29.aspx
+     */
+    if (PathNameString.Length > (MAX_PATH - 3 - 4 - 4 - 1) * sizeof(WCHAR))
+    {
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+        return 0;
+    }
+ 
+    /* If PathName and TempFileName aren't the same buffer, move PathName to TempFileName */
+    if (lpPathName != lpTempFileName)
+    {
+        memmove(lpTempFileName, PathNameString.Buffer, PathNameString.Length);
+    }
+ 
+    /* PathName MUST BE a path. Check it */
+    lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = UNICODE_NULL;
+    FileAttributes = GetFileAttributesW(lpTempFileName);
+    if (FileAttributes == INVALID_FILE_ATTRIBUTES)
+    {
+        /* Append a '\' if necessary */
+        lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = L'\\';
+        lpTempFileName[PathNameString.Length] = UNICODE_NULL;
+        FileAttributes = GetFileAttributesW(lpTempFileName);
+        if (FileAttributes == INVALID_FILE_ATTRIBUTES)
+        {
+            SetLastError(ERROR_DIRECTORY);
+            return 0;
+        }
+    }
+    if (!(FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        SetLastError(ERROR_DIRECTORY);
+        return 0;
+    }
+ 
+    /* Make sure not to mix path & prefix */
+    lpTempFileName[PathNameString.Length - sizeof(WCHAR)] = L'\\';
+    RtlInitUnicodeString(&PrefixString, lpPrefixString);
+    if (PrefixString.Length > 3 * sizeof(WCHAR))
+    {
+        PrefixString.Length = 3 * sizeof(WCHAR);
+    }
+ 
+    /* Append prefix to path */
+    TempFileName = lpTempFileName + PathNameString.Length / sizeof(WCHAR) - 1;
+    memmove(TempFileName, PrefixString.Buffer, PrefixString.Length);
+    TempFileName += PrefixString.Length / sizeof(WCHAR);
+ 
+    /* Then, generate filename */
+    do
+    {
+        /* If user didn't gave any ID, ask Csrss to give one */
+        if (!uUnique)
+        {
+            CsrClientCallServer(&ApiMessage, NULL, MAKE_CSR_API(GET_TEMP_FILE, CSR_NATIVE), sizeof(CSR_API_MESSAGE));
+            if (ApiMessage.Data.GetTempFile.UniqueID == 0)
+            {
+                Num++;
+                continue;
+            }
+ 
+            ID = ApiMessage.Data.GetTempFile.UniqueID;
+        }
+        else
+        {
+            ID = uUnique;
+        }
+ 
+        /* Convert that ID to wchar */
+        RtlIntegerToChar(ID, 0x10, sizeof(IDString), IDString);
+        Let = IDString;
+         do
+         {
+            *(TempFileName++) = RtlAnsiCharToUnicodeChar(&Let);
+        } while (*Let != 0);
+ 
+        /* Append extension & UNICODE_NULL */
+        memmove(TempFileName, Ext, sizeof(Ext) + sizeof(WCHAR));
+
+        /* If user provided its ID, just return */
+        if (uUnique)
+        {
+            return uUnique;
+        }
+
+        /* Then, try to create file */
+        if (!RtlIsDosDeviceName_U(lpTempFileName))
+        {
+            TempFile = CreateFileW(lpTempFileName,
+                                   GENERIC_READ,
+                                   0,
+                                   NULL,
+                                   CREATE_NEW,
+                                   FILE_ATTRIBUTE_NORMAL,
+                                   0);
+            if (TempFile != INVALID_HANDLE_VALUE)
+            {
+                NtClose(TempFile);
+                DPRINT("Temp file: %S\n", lpTempFileName);
+                return ID;
+            }
+
+            LastError = GetLastError();
+            /* There is no need to recover from those errors, they would hit next step */
+            if (LastError == ERROR_INVALID_PARAMETER || LastError == ERROR_CANNOT_MAKE ||
+                LastError == ERROR_WRITE_PROTECT || LastError == ERROR_NETWORK_ACCESS_DENIED ||
+                LastError == ERROR_DISK_FULL || LastError == ERROR_INVALID_NAME ||
+                LastError == ERROR_BAD_PATHNAME || LastError == ERROR_NO_INHERITANCE ||
+                LastError == ERROR_DISK_CORRUPT ||
+                (LastError == ERROR_ACCESS_DENIED && NtCurrentTeb()->LastStatusValue != STATUS_FILE_IS_A_DIRECTORY))
+            {
+                break;
+            }
+        }
+        Num++;
+    } while (Num & 0xFFFF);
+ 
+    return 0;
 }
 
 

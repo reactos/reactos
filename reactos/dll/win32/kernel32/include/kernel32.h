@@ -224,3 +224,6 @@ InitCommandLines(VOID);
 VOID
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status);
+
+/* FIXME */
+WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
