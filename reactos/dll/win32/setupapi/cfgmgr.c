@@ -3746,6 +3746,140 @@ CONFIGRET WINAPI CM_Open_DevNode_Key_Ex(
 
 
 /***********************************************************************
+ * CM_Query_And_Remove_SubTreeA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_And_Remove_SubTreeA(
+    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags)
+{
+    TRACE("%lx %p %s %lu %lx\n", dnAncestor, pVetoType, pszVetoName,
+          ulNameLength, ulFlags);
+
+    return CM_Query_And_Remove_SubTree_ExA(dnAncestor, pVetoType, pszVetoName,
+                                           ulNameLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Query_And_Remove_SubTreeW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_And_Remove_SubTreeW(
+    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags)
+{
+    TRACE("%lx %p %s %lu %lx\n", dnAncestor, pVetoType,
+          debugstr_w(pszVetoName), ulNameLength, ulFlags);
+
+    return CM_Query_And_Remove_SubTree_ExW(dnAncestor, pVetoType, pszVetoName,
+                                           ulNameLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Query_And_Remove_SubTree_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExA(
+    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    LPWSTR lpLocalVetoName;
+    CONFIGRET ret;
+
+    TRACE("%lx %p %s %lu %lx %lx\n", dnAncestor, pVetoType, pszVetoName,
+          ulNameLength, ulFlags, hMachine);
+
+    if (pszVetoName == NULL && ulNameLength == 0)
+        return CR_INVALID_POINTER;
+
+    lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+    if (lpLocalVetoName == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    ret = CM_Query_And_Remove_SubTree_ExW(dnAncestor, pVetoType, lpLocalVetoName,
+                                          ulNameLength, ulFlags, hMachine);
+    if (ret == CR_REMOVE_VETOED)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpLocalVetoName,
+                                ulNameLength,
+                                pszVetoName,
+                                ulNameLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+    }
+
+    HeapFree(GetProcessHeap(), 0, lpLocalVetoName);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Query_And_Remove_SubTree_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExW(
+    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
+    TRACE("%lx %p %s %lu %lx %lx\n", dnAncestor, pVetoType,
+          debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+
+    if (dnAncestor == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_REMOVE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pszVetoName == NULL && ulNameLength == 0)
+        return CR_INVALID_POINTER;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnAncestor);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    RpcTryExcept
+    {
+        ret = PNP_QueryRemove(BindingHandle,
+                              lpDevInst,
+                              pVetoType,
+                              pszVetoName,
+                              ulNameLength,
+                              ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Query_Remove_SubTree [SETUPAPI.@]
  *
  * This function is obsolete in Windows XP and above.
@@ -3863,6 +3997,138 @@ CONFIGRET WINAPI CM_Remove_SubTree_Ex(
 {
     TRACE("%lx %lx %lx\n", dnAncestor, ulFlags, hMachine);
     return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_EjectA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Device_EjectA(
+    DEVINST dnDevInst, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags)
+{
+    TRACE("%lx %p %s %lu %lx\n", dnDevInst, pVetoType, pszVetoName,
+          ulNameLength, ulFlags);
+    return CM_Request_Device_Eject_ExA(dnDevInst, pVetoType, pszVetoName,
+                                       ulNameLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_EjectW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Device_EjectW(
+    DEVINST dnDevInst, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags)
+{
+    TRACE("%lx %p %s %lu %lx\n", dnDevInst, pVetoType, debugstr_w(pszVetoName),
+          ulNameLength, ulFlags);
+    return CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, pszVetoName,
+                                       ulNameLength, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_Eject_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Device_Eject_ExA(
+    DEVINST dnDevInst, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    LPWSTR lpLocalVetoName;
+    CONFIGRET ret;
+
+    TRACE("%lx %p %s %lu %lx %lx\n", dnDevInst, pVetoType, pszVetoName,
+          ulNameLength, ulFlags, hMachine);
+
+    if (pszVetoName == NULL && ulNameLength == 0)
+        return CR_INVALID_POINTER;
+
+    lpLocalVetoName = HeapAlloc(GetProcessHeap(), 0, ulNameLength * sizeof(WCHAR));
+    if (lpLocalVetoName == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    ret = CM_Request_Device_Eject_ExW(dnDevInst, pVetoType, lpLocalVetoName,
+                                      ulNameLength, ulFlags, hMachine);
+    if (ret == CR_REMOVE_VETOED)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpLocalVetoName,
+                                ulNameLength,
+                                pszVetoName,
+                                ulNameLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+    }
+
+    HeapFree(GetProcessHeap(), 0, lpLocalVetoName);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Request_Device_Eject_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Device_Eject_ExW(
+    DEVINST dnDevInst, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
+    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
+    TRACE("%lx %p %s %lu %lx %lx\n", dnDevInst, pVetoType,
+          debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pszVetoName == NULL && ulNameLength == 0)
+        return CR_INVALID_POINTER;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    RpcTryExcept
+    {
+        ret = PNP_RequestDeviceEject(BindingHandle,
+                                     lpDevInst,
+                                     pVetoType,
+                                     pszVetoName,
+                                     ulNameLength,
+                                     ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
 }
 
 

@@ -155,10 +155,10 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long)
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long)
-@ stub CM_Query_And_Remove_SubTreeA
-@ stub CM_Query_And_Remove_SubTreeW
-@ stub CM_Query_And_Remove_SubTree_ExA
-@ stub CM_Query_And_Remove_SubTree_ExW
+@ stdcall CM_Query_And_Remove_SubTreeA(long ptr str long long)
+@ stdcall CM_Query_And_Remove_SubTreeW(long ptr wstr long long)
+@ stdcall CM_Query_And_Remove_SubTree_ExA(long ptr str long long long)
+@ stdcall CM_Query_And_Remove_SubTree_ExW(long ptr wstr long long long)
 @ stub CM_Query_Arbitrator_Free_Data
 @ stub CM_Query_Arbitrator_Free_Data_Ex
 @ stub CM_Query_Arbitrator_Free_Size
@@ -176,10 +176,10 @@
 @ stub CM_Register_Device_Interface_ExW
 @ stdcall CM_Remove_SubTree(long long)
 @ stdcall CM_Remove_SubTree_Ex(long long long)
-@ stub CM_Request_Device_EjectA
-@ stub CM_Request_Device_EjectW
-@ stub CM_Request_Device_Eject_ExA
-@ stub CM_Request_Device_Eject_ExW
+@ stdcall CM_Request_Device_EjectA(long ptr str long long)
+@ stdcall CM_Request_Device_EjectW(long ptr wstr long long)
+@ stdcall CM_Request_Device_Eject_ExA(long ptr str long long long)
+@ stdcall CM_Request_Device_Eject_ExW(long ptr wstr long long long)
 @ stdcall CM_Request_Eject_PC()
 @ stdcall CM_Request_Eject_PC_Ex(long)
 @ stdcall CM_Run_Detection(long)
