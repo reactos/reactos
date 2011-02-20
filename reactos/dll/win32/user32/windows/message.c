@@ -296,26 +296,6 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
         }
         break;
 
-      case WM_MDICREATE:
-        {
-          MDICREATESTRUCTW *mCs = (MDICREATESTRUCTW *) KMMsg->lParam;
-          PCHAR Class;
-          mCs->szTitle = (LPCWSTR) ((PCHAR) mCs + (DWORD_PTR) mCs->szTitle);
-          Class = (PCHAR) mCs + (DWORD_PTR) mCs->szClass;
-          if (L'A' == *((WCHAR *) Class))
-            {
-              Class += sizeof(WCHAR);
-              mCs->szClass = (LPCWSTR)(DWORD_PTR) (*((ATOM *) Class));
-            }
-          else
-            {
-              ASSERT(L'S' == *((WCHAR *) Class));
-              Class += sizeof(WCHAR);
-              mCs->szClass = (LPCWSTR) Class;
-            }
-        }
-        break;
-
       case WM_DDE_ACK:
         {
           PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;

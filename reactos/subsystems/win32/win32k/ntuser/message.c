@@ -139,7 +139,6 @@ static MSGMEMORY MsgMemory[] =
     { WM_COPYGLOBALDATA, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
-    { WM_MDICREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
 };
 
 static PMSGMEMORY FASTCALL
@@ -165,7 +164,6 @@ static UINT FASTCALL
 MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
     CREATESTRUCTW *Cs;
-    MDICREATESTRUCTW *mCs;
     PUNICODE_STRING WindowName;
     PUNICODE_STRING ClassName;
     UINT Size = 0;
@@ -194,21 +192,6 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 WindowName = (PUNICODE_STRING) Cs->lpszName;
                 ClassName = (PUNICODE_STRING) Cs->lpszClass;
                 Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
-                if (IS_ATOM(ClassName->Buffer))
-                {
-                    Size += sizeof(WCHAR) + sizeof(ATOM);
-                }
-                else
-                {
-                    Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
-                }
-                break;
-
-            case WM_MDICREATE:
-                mCs = (MDICREATESTRUCTW *)lParam;
-                WindowName = (PUNICODE_STRING) mCs->szTitle;
-                ClassName = (PUNICODE_STRING) mCs->szClass;
-                Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
                 if (IS_ATOM(ClassName->Buffer))
                 {
                     Size += sizeof(WCHAR) + sizeof(ATOM);
@@ -254,7 +237,6 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
     NCCALCSIZE_PARAMS *PackedNcCalcsize;
     CREATESTRUCTW *UnpackedCs;
     CREATESTRUCTW *PackedCs;
-    MDICREATESTRUCTW *UnpackedmCs, *PackedmCs;
     PLARGE_STRING WindowName;
     PUNICODE_STRING ClassName;
     POOL_TYPE PoolType;
@@ -333,53 +315,6 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         ASSERT(CsData == (PCHAR) PackedCs + Size);
         *lParamPacked = (LPARAM) PackedCs;
     }
-    else if (WM_MDICREATE == Msg)
-    {
-        UnpackedmCs = (MDICREATESTRUCTW *) lParam;
-        WindowName = (PLARGE_STRING) UnpackedmCs->szTitle;
-        ClassName = (PUNICODE_STRING) UnpackedmCs->szClass;
-        Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
-        if (IS_ATOM(ClassName->Buffer))
-        {
-            Size += sizeof(WCHAR) + sizeof(ATOM);
-        }
-        else
-        {
-            Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
-        }
-        PackedmCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
-        if (NULL == PackedmCs)
-        {
-            DPRINT1("Not enough memory to pack lParam\n");
-            return STATUS_NO_MEMORY;
-        }
-        RtlCopyMemory(PackedmCs, UnpackedmCs, sizeof(MDICREATESTRUCTW));
-        CsData = (PCHAR) (PackedmCs + 1);
-        PackedmCs->szTitle = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
-        RtlCopyMemory(CsData, WindowName->Buffer, WindowName->Length);
-        CsData += WindowName->Length;
-        *((WCHAR *) CsData) = L'\0';
-        CsData += sizeof(WCHAR);
-        PackedmCs->szClass = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
-        if (IS_ATOM(ClassName->Buffer))
-        {
-            *((WCHAR *) CsData) = L'A';
-            CsData += sizeof(WCHAR);
-            *((ATOM *) CsData) = (ATOM)(DWORD_PTR) ClassName->Buffer;
-            CsData += sizeof(ATOM);
-        }
-        else
-        {
-            *((WCHAR *) CsData) = L'S';
-            CsData += sizeof(WCHAR);
-            RtlCopyMemory(CsData, ClassName->Buffer, ClassName->Length);
-            CsData += ClassName->Length;
-            *((WCHAR *) CsData) = L'\0';
-            CsData += sizeof(WCHAR);
-        }
-        ASSERT(CsData == (PCHAR) PackedmCs + Size);
-        *lParamPacked = (LPARAM) PackedmCs;
-    }
     else if (PoolType == NonPagedPool)
     {
         PMSGMEMORY MsgMemoryEntry;
@@ -428,11 +363,6 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     {
         ExFreePool((PVOID) lParamPacked);
 
-        return STATUS_SUCCESS;
-    }
-    else if (WM_MDICREATE == Msg)
-    {
-        ExFreePool((PVOID) lParamPacked);
         return STATUS_SUCCESS;
     }
     else if (NonPagedPoolUsed)
