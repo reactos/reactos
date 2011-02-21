@@ -70,11 +70,12 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
             if (NewElement) *NewElement = FALSE;
             return NULL;
         }
-        
+
         /* Data to return to user */
         UserData = &((PTABLE_ENTRY_HEADER)NewNode)->UserData;
 
         /* Insert the node in the tree */
+        RtlZeroMemory(NewNode, sizeof(RTL_BALANCED_LINKS));
         RtlpInsertAvlTreeNode(Table, NewNode, NodeOrParent, SearchResult);
 
         /* Copy user buffer */
