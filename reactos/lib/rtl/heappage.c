@@ -137,20 +137,22 @@ LONG RtlpDphProtectFails;
 #define DPH_BREAK_ON_RELEASE_FAIL 0x04
 #define DPH_BREAK_ON_FREE_FAIL    0x08
 #define DPH_BREAK_ON_PROTECT_FAIL 0x10
+#define DPH_BREAK_ON_NULL_FREE    0x80
 
 /* RtlpDphDebugOptions */
 #define DPH_DEBUG_INTERNAL_VALIDATE 0x01
 #define DPH_DEBUG_VERBOSE           0x04
 
 /* DPH ExtraFlags */
-#define DPH_EXTRA_CHECK_UNDERRUN 0x10
-#define DPH_LOG_STACK_TRACES 0x0 //FIXME: Get correct value
+#define DPH_EXTRA_LOG_STACK_TRACES 0x02
+#define DPH_EXTRA_CHECK_UNDERRUN   0x10
 
 /* Fillers */
 #define DPH_FILL 0xEEEEEEEE
 #define DPH_FILL_START_STAMP_1 0xABCDBBBB
 #define DPH_FILL_START_STAMP_2 0xABCDBBBA
 #define DPH_FILL_END_STAMP_1   0xDCBABBBB
+#define DPH_FILL_END_STAMP_2   0xDCBABBBA
 #define DPH_FILL_SUFFIX        0xD0
 #define DPH_FILL_INFIX         0xC0
 
@@ -453,9 +455,31 @@ RtlpDphPlaceOnBusyList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK DphNode)
 }
 
 VOID NTAPI
+RtlpDphPlaceOnFreeList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK Node)
+{
+    DPRINT("RtlpDphPlaceOnFreeList(%p %p)\n", DphRoot, Node);
+
+    /* Node is being added to the tail of the list */
+    Node->pNextAlloc = NULL;
+
+    /* Add it to the tail of the linked list */
+    if (DphRoot->pFreeAllocationListTail)
+        DphRoot->pFreeAllocationListTail->pNextAlloc = Node;
+    else
+        DphRoot->pFreeAllocationListHead = Node;
+    DphRoot->pFreeAllocationListTail = Node;
+
+    /* Update byte counts taking in account this new node */
+    DphRoot->nFreeAllocations++;
+    DphRoot->nFreeAllocationBytesCommitted += Node->nVirtualBlockSize;
+}
+
+VOID NTAPI
 RtlpDphPlaceOnPoolList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK Node)
 {
-    /* DphNode is being added to the tail of the list */
+    DPRINT("RtlpDphPlaceOnPoolList(%p %p)\n", DphRoot, Node);
+
+    /* Node is being added to the tail of the list */
     Node->pNextAlloc = NULL;
 
     /* Add it to the tail of the linked list */
@@ -473,6 +497,8 @@ RtlpDphPlaceOnPoolList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK Node)
 VOID NTAPI
 RtlpDphPlaceOnVirtualList(PDPH_HEAP_ROOT DphRoot, PDPH_HEAP_BLOCK Node)
 {
+    DPRINT("RtlpDphPlaceOnVirtualList(%p %p)\n", DphRoot, Node);
+
     /* Add it to the head of the virtual list */
     Node->pNextAlloc = DphRoot->pVirtualStorageListHead;
     if (!DphRoot->pVirtualStorageListHead)
@@ -489,6 +515,8 @@ RtlpDphTakeNodeFromUnusedList(PDPH_HEAP_ROOT DphRoot)
 {
     PDPH_HEAP_BLOCK Node = DphRoot->pUnusedNodeListHead;
     PDPH_HEAP_BLOCK Next;
+
+    DPRINT("RtlpDphTakeNodeFromUnusedList(%p), ret %p\n", DphRoot, Node);
 
     /* Take the first entry */
     if (!Node) return NULL;
@@ -508,6 +536,8 @@ VOID NTAPI
 RtlpDphReturnNodeToUnusedList(PDPH_HEAP_ROOT DphRoot,
                               PDPH_HEAP_BLOCK Node)
 {
+    DPRINT("RtlpDphReturnNodeToUnusedList(%p, %p)\n", DphRoot, Node);
+
     /* Add it back to the head of the unused list */
     Node->pNextAlloc = DphRoot->pUnusedNodeListHead;
     if (!DphRoot->pUnusedNodeListHead)
@@ -528,6 +558,37 @@ RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
 
     DPRINT("RtlpDphRemoveFromAvailableList(%p %p)\n", DphRoot, Node);
 
+    /* Check if it is in the list */
+#if 0
+    {
+        PLIST_ENTRY CurEntry;
+        PDPH_HEAP_BLOCK NodeEntry;
+        BOOLEAN Found = FALSE;
+
+        /* Find where to put this node according to its virtual address */
+        CurEntry = DphRoot->AvailableAllocationHead.Flink;
+
+        while (CurEntry != &DphRoot->AvailableAllocationHead)
+        {
+            NodeEntry = CONTAINING_RECORD(CurEntry, DPH_HEAP_BLOCK, AvailableEntry);
+
+            if (NodeEntry == Node)
+            {
+                Found = TRUE;
+                break;
+            }
+
+            CurEntry = CurEntry->Flink;
+        }
+
+        if (!Found)
+        {
+            DPRINT1("Trying to remove non-existing in availlist node!\n");
+            DbgBreakPoint();
+        }
+    }
+#endif
+
     /* Remove it from the list */
     RemoveEntryList(&Node->AvailableEntry);
 
@@ -541,11 +602,31 @@ RtlpDphRemoveFromAvailableList(PDPH_HEAP_ROOT DphRoot,
 }
 
 VOID NTAPI
+RtlpDphRemoveFromBusyList(PDPH_HEAP_ROOT DphRoot,
+                          PDPH_HEAP_BLOCK Node)
+{
+    BOOLEAN ElementPresent;
+
+    DPRINT("RtlpDphRemoveFromBusyList(%p %p)\n", DphRoot, Node);
+
+    /* Delete it from busy nodes table */
+    ElementPresent = RtlDeleteElementGenericTableAvl(&DphRoot->BusyNodesTable, &Node->pUserAllocation);
+    ASSERT(ElementPresent == TRUE);
+
+    /* Update counters */
+    DphRoot->nBusyAllocations--;
+    DphRoot->nBusyAllocationBytesCommitted -= Node->nVirtualBlockSize;
+    DphRoot->nBusyAllocationBytesAccessible -= Node->nVirtualAccessSize;
+}
+
+VOID NTAPI
 RtlpDphRemoveFromFreeList(PDPH_HEAP_ROOT DphRoot,
                           PDPH_HEAP_BLOCK Node,
                           PDPH_HEAP_BLOCK Prev)
 {
     PDPH_HEAP_BLOCK Next;
+
+    DPRINT("RtlpDphRemoveFromFreeList(%p %p %p)\n", DphRoot, Node, Prev);
 
     /* Detach it from the list */
     Next = Node->pNextAlloc;
@@ -578,12 +659,13 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
 
     /* Find where to put this node according to its virtual address */
     AvailListHead = &DphRoot->AvailableAllocationHead;
+
+    /* Find a point where to insert an available node */
     CurEntry = AvailListHead->Flink;
 
     while (CurEntry != AvailListHead)
     {
         NodeEntry = CONTAINING_RECORD(CurEntry, DPH_HEAP_BLOCK, AvailableEntry);
-
         if (NodeEntry->pVirtualBlock >= Node->pVirtualBlock)
         {
             PrevNode = NodeEntry;
@@ -592,10 +674,9 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
         CurEntry = CurEntry->Flink;
     }
 
-    /* Did we find a node to insert our one after? */
     if (!PrevNode)
     {
-        /* No, just add to the head of the list then */
+        /* That means either this list is empty, or we should add to the head of it */
         InsertHeadList(AvailListHead, &Node->AvailableEntry);
     }
     else
@@ -615,20 +696,22 @@ RtlpDphCoalesceNodeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
             /* Insert after PrevNode */
             InsertTailList(&PrevNode->AvailableEntry, &Node->AvailableEntry);
         }
-    }
 
-    /* Now check the next entry after our one */
-    if (Node->AvailableEntry.Flink != AvailListHead)
-    {
-        NextNode = CONTAINING_RECORD(Node->AvailableEntry.Flink, DPH_HEAP_BLOCK, AvailableEntry);;
-        /* Node is not at the tail of the list, check if it's adjacent */
-        if (Node->pVirtualBlock + Node->nVirtualBlockSize == NextNode->pVirtualBlock)
+        /* Now check the next entry after our one */
+        if (Node->AvailableEntry.Flink != AvailListHead)
         {
-            /* They are adjacent - merge! */
-            Node->nVirtualBlockSize += NextNode->nVirtualBlockSize;
-            Node->pNextAlloc = NextNode->pNextAlloc;
-            RtlpDphReturnNodeToUnusedList(DphRoot, NextNode);
-            DphRoot->nAvailableAllocations--;
+            NextNode = CONTAINING_RECORD(Node->AvailableEntry.Flink, DPH_HEAP_BLOCK, AvailableEntry);
+            /* Node is not at the tail of the list, check if it's adjacent */
+            if (Node->pVirtualBlock + Node->nVirtualBlockSize == NextNode->pVirtualBlock)
+            {
+                /* They are adjacent - merge! */
+                Node->nVirtualBlockSize += NextNode->nVirtualBlockSize;
+
+                /* Remove next entry from the list and put it into unused entries list */
+                RemoveEntryList(&NextNode->AvailableEntry);
+                RtlpDphReturnNodeToUnusedList(DphRoot, NextNode);
+                DphRoot->nAvailableAllocations--;
+            }
         }
     }
 }
@@ -643,10 +726,12 @@ RtlpDphCoalesceFreeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
     /* Make sure requested size is not too big */
     ASSERT(FreeAllocations >= LeaveOnFreeList);
 
+    DPRINT("RtlpDphCoalesceFreeIntoAvailable(%p %d)\n", DphRoot, LeaveOnFreeList);
+
     while (Node)
     {
         FreeAllocations--;
-        if (FreeAllocations <= LeaveOnFreeList) break;
+        if (FreeAllocations < LeaveOnFreeList) break;
 
         /* Get the next pointer, because it may be changed after following two calls */
         Next = Node->pNextAlloc;
@@ -657,6 +742,7 @@ RtlpDphCoalesceFreeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
         /* And put into the available */
         RtlpDphCoalesceNodeIntoAvailable(DphRoot, Node);
 
+        /* Go to the next node */
         Node = Next;
     }
 }
@@ -713,20 +799,21 @@ RtlpDphSearchAvailableMemoryListForBestFit(PDPH_HEAP_ROOT DphRoot,
                                            SIZE_T Size)
 {
     PLIST_ENTRY CurEntry;
-    PDPH_HEAP_BLOCK Node;
+    PDPH_HEAP_BLOCK Node, NodeFound = NULL;
 
     CurEntry = DphRoot->AvailableAllocationHead.Flink;
 
-    while (TRUE)
+    while (CurEntry != &DphRoot->AvailableAllocationHead)
     {
-        /* If we reached end of the list - return right away */
-        if (CurEntry == &DphRoot->AvailableAllocationHead) return NULL;
-
         /* Get the current available node */
         Node = CONTAINING_RECORD(CurEntry, DPH_HEAP_BLOCK, AvailableEntry);
 
         /* Check its size */
-        if (Node->nVirtualBlockSize >= Size) break;
+        if (Node->nVirtualBlockSize >= Size)
+        {
+            NodeFound = Node;
+            break;
+        }
 
         /* Move to the next available entry */
         CurEntry = CurEntry->Flink;
@@ -736,7 +823,7 @@ RtlpDphSearchAvailableMemoryListForBestFit(PDPH_HEAP_ROOT DphRoot,
     //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Flink));
     //ASSERT(IS_BIASED_POINTER(Node->AdjacencyEntry.Blink));
 
-    return Node;
+    return NodeFound;
 }
 
 PDPH_HEAP_BLOCK NTAPI
@@ -757,7 +844,7 @@ RtlpDphFindAvailableMemory(PDPH_HEAP_ROOT DphRoot,
         if (DphRoot->nFreeAllocations <= DPH_FREE_LIST_MINIMUM) break;
 
         /* Calculate a new free list size */
-        NewSize = DphRoot->nFreeAllocations >> 1;
+        NewSize = DphRoot->nFreeAllocations >> 2;
         if (NewSize < DPH_FREE_LIST_MINIMUM) NewSize = DPH_FREE_LIST_MINIMUM;
 
         /* Coalesce free into available */
@@ -795,6 +882,23 @@ RtlpDphFindAvailableMemory(PDPH_HEAP_ROOT DphRoot,
     return Node;
 }
 
+PDPH_HEAP_BLOCK NTAPI
+RtlpDphFindBusyMemory(PDPH_HEAP_ROOT DphRoot,
+                      PVOID pUserMem)
+{
+    PDPH_HEAP_BLOCK Node;
+    PVOID Ptr;
+
+    /* Lookup busy block in AVL */
+    Ptr = RtlLookupElementGenericTableAvl(&DphRoot->BusyNodesTable, &pUserMem);
+    if (!Ptr) return NULL;
+
+    /* Restore pointer to the heap block */
+    Node = CONTAINING_RECORD(Ptr, DPH_HEAP_BLOCK, pUserAllocation);
+    ASSERT(Node->pUserAllocation == pUserMem);
+    return Node;
+}
+
 NTSTATUS NTAPI
 RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG UserSize)
 {
@@ -815,6 +919,20 @@ RtlpDphSetProtectionBeforeUse(PDPH_HEAP_ROOT DphRoot, PUCHAR VirtualBlock, ULONG
     Protection = PAGE_READWRITE;
 
     return RtlpDphProtectVm(Base, UserSize, Protection);
+}
+
+NTSTATUS NTAPI
+RtlpDphSetProtectionAfterUse(PDPH_HEAP_ROOT DphRoot, /*PUCHAR VirtualBlock*/PDPH_HEAP_BLOCK Node)
+{
+    // FIXME: Bring stuff here
+    if (DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN)
+    {
+    }
+    else
+    {
+    }
+
+    return STATUS_SUCCESS;
 }
 
 PDPH_HEAP_BLOCK NTAPI
@@ -1685,8 +1803,91 @@ RtlpPageHeapFree(HANDLE HeapPtr,
                  ULONG Flags,
                  PVOID Ptr)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node;
+    ULONG ValidationInfo;
+    PDPH_BLOCK_INFORMATION Info;
+
+    /* Check for a NULL pointer freeing */
+    if (!HeapPtr)
+    {
+        if (RtlpDphBreakOptions & DPH_BREAK_ON_NULL_FREE)
+        {
+            DPRINT1("Page heap: freeing a null pointer \n");
+            DbgBreakPoint();
+        }
+        return TRUE;
+    }
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return FALSE;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Perform internal validation if specified by flags */
+    if (RtlpDphDebugOptions & DPH_DEBUG_INTERNAL_VALIDATE)
+        RtlpDphInternalValidatePageHeap(DphRoot, NULL, 0);
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Find busy memory */
+    Node = RtlpDphFindBusyMemory(DphRoot, Ptr);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapFree();
+        ASSERT(FALSE);
+    }
+
+    if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
+    {
+        /* Check and report corrupted block */
+        if (!RtlpDphIsPageHeapBlock(DphRoot, Ptr, &ValidationInfo, TRUE))
+        {
+            RtlpDphReportCorruptedBlock(DphRoot, 1, Ptr, ValidationInfo);
+        }
+
+        // FIXME: Should go inside RtlpDphSetProtectionAfterUse
+        if (Node->nVirtualAccessSize != 0)
+        {
+            /* Set stamps */
+            Info = (PDPH_BLOCK_INFORMATION)Node->pUserAllocation - 1;
+            Info->StartStamp = DPH_FILL_START_STAMP_2;
+            Info->EndStamp = DPH_FILL_END_STAMP_2;
+
+            RtlpDphProtectVm(Node->pVirtualBlock, Node->nVirtualAccessSize, PAGE_NOACCESS);
+        }
+    }
+    else
+    {
+        // FIXME: Should go inside RtlpDphSetProtectionAfterUse
+        if (Node->nVirtualAccessSize != 0)
+            RtlpDphProtectVm(Node->pVirtualBlock + PAGE_SIZE, Node->nVirtualAccessSize, PAGE_NOACCESS);
+    }
+
+    /* Set new protection */
+    RtlpDphSetProtectionAfterUse(DphRoot, Node);
+
+    /* Remove it from the list of busy nodes */
+    RtlpDphRemoveFromBusyList(DphRoot, Node);
+
+    /* And put it into the list of free nodes */
+    RtlpDphPlaceOnFreeList(DphRoot, Node);
+
+    //if (DphRoot->ExtraFlags & DPH_EXTRA_LOG_STACK_TRACES)
+    //    Node->StackTrace = RtlpDphLogStackTrace(3);
+    //else
+        Node->StackTrace = NULL;
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return success */
+    return TRUE;
 }
 
 PVOID NTAPI
