@@ -1624,11 +1624,6 @@ UserSendNotifyMessage( HWND hWnd,
             for (i = 0; List[i]; i++)
             {
                 Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
-                if (!Ret)
-                {
-                   DPRINT1("SendNotifyMessage: Failed in Broadcast!\n");
-                   break;
-                }
             }
             ExFreePool(List);
         }
