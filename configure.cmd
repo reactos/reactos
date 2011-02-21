@@ -1,7 +1,8 @@
-@echo off
+::@echo off
 
 :: Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
+set USE_NMAKE=
 
 :: Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
@@ -16,6 +17,7 @@ if defined ROS_ARCH (
         set ARCH=amd64
     )
     set BUILD_ENVIRONMENT=WDK
+    set USE_NMAKE=1
     echo Detected DDK/WDK for %DDK_TARGET_OS%-%ARCH%
 )else if defined VCINSTALLDIR (
 :: VS command prompt does not put this in enviroment vars
@@ -29,6 +31,10 @@ if defined ROS_ARCH (
         exit /b	
     )
     echo Detected Visual Studio Environment %BUILD_ENVIRONMENT%-%ARCH%
+    if not "%1" == "VSSolution" (
+        set USE_NMAKE=1
+        echo This script defaults to nmake. To use Visual Studio GUI specify "VSSolution" as a parameter.
+    )
 ) else if defined sdkdir (
     if "%TARGET_CPU%" == "x86" (
         set ARCH=i386
@@ -37,6 +43,7 @@ if defined ROS_ARCH (
         set ARCH=amd64
     )
     set BUILD_ENVIRONMENT=SDK
+    set USE_NMAKE=1
     echo Detected Windows SDK %TARGET_PLATFORM%-%ARCH%
 )
 
@@ -44,15 +51,14 @@ if defined ARCH if defined BUILD_ENVIRONMENT (
     goto createdirs
 )
 
-echo Error: Critical variable missing. Configure script failure.
+echo Error: Unable to detect a build environment. Configure script failure.
 exit /b
 
 :: Create directories
 :createdirs
 
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH% 
-if "%REACTOS_SOURCE_DIR%" == "%CD%" (
-    echo test
+if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
     if not exist %REACTOS_OUTPUT_PATH% (
@@ -78,9 +84,7 @@ set REACTOS_BUILD_TOOLS_DIR=%CD%
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G "MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
-) else if "%BUILD_ENVIRONMENT%" == "WDK" (
-    cmake -G "NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
-) else if "%BUILD_ENVIRONMENT%" == "SDK" (
+) else if defined USE_NMAKE (
     cmake -G "NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
@@ -113,9 +117,7 @@ if EXIST CMakeCache.txt (
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
-) else if "%BUILD_ENVIRONMENT%" == "WDK" (
-    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
-) else if "%BUILD_ENVIRONMENT%" == "SDK" (
+) else if defined USE_NMAKE (
     cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
@@ -138,9 +140,6 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 )
 
 cd..
-if not ERRORLEVEL  == 0 (
-    echo Warning: errors occured.
-)
 
 echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, nmake, etc...).
 
