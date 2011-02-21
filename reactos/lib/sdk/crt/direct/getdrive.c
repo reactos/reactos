@@ -20,9 +20,12 @@
 int _getdrive(void)
 {
     WCHAR buffer[MAX_PATH];
-    if (GetCurrentDirectoryW( MAX_PATH, buffer ) &&
-        buffer[0] >= 'A' && buffer[0] <= 'z' && buffer[1] == ':')
-        return towupper(buffer[0]) - 'A' + 1;
+    if (GetCurrentDirectoryW( MAX_PATH, buffer )>=2)
+    {
+        buffer[0]=towupper(buffer[0]);
+        if (buffer[0] >= L'A' && buffer[0] <= L'Z' && buffer[1] == L':')
+            return buffer[0] - L'A' + 1;
+    }
     return 0;
 }
 
