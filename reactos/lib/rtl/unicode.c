@@ -47,7 +47,7 @@ RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar)
     }
     else
     {
-        DPRINT1("HACK::Shouldn't have happened! Consider fixing Usetup and registry entries it creates on install\n");
+        DPRINT("HACK::Shouldn't have happened! Consider fixing Usetup and registry entries it creates on install\n");
         Size = 1;
     }
 
