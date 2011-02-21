@@ -60,7 +60,7 @@ DoWaveStreaming(
     }
 
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
-            ( Header ) )
+            ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
@@ -175,8 +175,6 @@ CompleteIO(
 
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
-
-    SND_ASSERT( ERROR_SUCCESS == dwErrorCode );
 
     HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
     SND_ASSERT( HdrExtension );
@@ -305,6 +303,12 @@ StopStreamingInSoundThread(
          /* cancel all current audio buffers */
          FunctionTable->ResetStream(SoundDeviceInstance, DeviceType, TRUE);
     }
+    while(SoundDeviceInstance->OutstandingBuffers)
+    {
+        SND_TRACE(L"StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
+        /* wait until pending i/o has completed */
+        SleepEx(10, TRUE);
+    }
 
     /* complete all current headers */
     while( SoundDeviceInstance->HeadWaveHeader )
@@ -316,12 +320,6 @@ StopStreamingInSoundThread(
     /* there should be no oustanding buffers now */
     SND_ASSERT(SoundDeviceInstance->OutstandingBuffers == 0);
 
-    while(SoundDeviceInstance->OutstandingBuffers)
-    {
-        SND_ERR("StopStreamingInSoundThread OutStandingBufferCount %lu\n", SoundDeviceInstance->OutstandingBuffers);
-        /* my hack of doom */
-        Sleep(10);
-    }
 
     /* Check if reset function is supported */
     if (FunctionTable->ResetStream)
