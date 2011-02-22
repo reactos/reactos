@@ -767,12 +767,7 @@ CcUnpinData(IN PVOID Bcb)
     CcpUnlock();
 
 	if (!Released) {
-		// Note: I thought this flush was needed based on the unwritten pages I had
-		// seen post-install, but realized that the installer is using sections to
-		// write files and we weren't pushing section pages.  
-		// I corrected that seperately and this probably isn't needed anymore.
-		//if (RealBcb->Dirty)
-		//MiFlushMappedSection(RealBcb->BaseAddress, &RealBcb->FileOffset, &RealBcb->Map->FileSizes.FileSize, RealBcb->Dirty);
+		MiFlushMappedSection(RealBcb->BaseAddress, &RealBcb->FileOffset, &RealBcb->Map->FileSizes.FileSize, RealBcb->Dirty);
 		CcpLock();
 		CcpUnpinData(RealBcb, TRUE);
 		CcpUnlock();
