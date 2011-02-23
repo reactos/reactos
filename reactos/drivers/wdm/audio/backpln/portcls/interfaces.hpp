@@ -106,7 +106,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
-    STDMETHOD_(NTSTATUS, Close)(THIS_                      \
+    virtual NTSTATUS Close(                      \
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
@@ -888,6 +888,8 @@ typedef IPortPinDMus *PPORTPINDMUS;
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
+
 #define IMP_IDmaChannelEx                                                 \
     STDMETHODIMP_(NTSTATUS) AllocateBuffer(                               \
         IN  ULONG BufferSize,                                             \
@@ -916,6 +918,42 @@ typedef IPortPinDMus *PPORTPINDMUS;
         IN  PVOID Source,                                                 \
         IN  ULONG ByteCount)
 
+#else
+
+#define IMP_IDmaChannelEx                                                 \
+    STDMETHODIMP_(NTSTATUS) AllocateBuffer(                               \
+        IN  ULONG BufferSize,                                             \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);        \
+                                                                          \
+    STDMETHODIMP_(void) FreeBuffer(void);                                 \
+    STDMETHODIMP_(ULONG) TransferCount(void);                             \
+    STDMETHODIMP_(ULONG) MaximumBufferSize(void);                         \
+    STDMETHODIMP_(ULONG) AllocatedBufferSize(void);                       \
+    STDMETHODIMP_(ULONG) BufferSize(void);                                \
+                                                                          \
+    STDMETHODIMP_(void) SetBufferSize(                                    \
+        IN  ULONG BufferSize);                                            \
+                                                                          \
+    STDMETHODIMP_(PVOID) SystemAddress(void);                             \
+    STDMETHODIMP_(PHYSICAL_ADDRESS) PhysicalAddress(                      \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);        \
+    STDMETHODIMP_(PADAPTER_OBJECT) GetAdapterObject(void);                \
+                                                                          \
+    STDMETHODIMP_(void) CopyTo(                                           \
+        IN  PVOID Destination,                                            \
+        IN  PVOID Source,                                                 \
+        IN  ULONG ByteCount);                                             \
+                                                                          \
+    STDMETHODIMP_(void) CopyFrom(                                         \
+        IN  PVOID Destination,                                            \
+        IN  PVOID Source,                                                 \
+        IN  ULONG ByteCount)
+
+
+
+#endif
+
+
 #define IMP_IDmaChannelSlaveEx                 \
     IMP_IDmaChannelEx;                         \
     STDMETHODIMP_(NTSTATUS) Start(             \
@@ -933,6 +971,8 @@ typedef IPortPinDMus *PPORTPINDMUS;
     STDMETHODIMP_(NTSTATUS) Init( \
         IN  PDEVICE_DESCRIPTION DeviceDescription, \
         IN  PDEVICE_OBJECT DeviceObject)
+
+#ifdef _MSC_VER
 
 #define DEFINE_ABSTRACT_DMACHANNEL_EX() \
     STDMETHOD_(NTSTATUS, AllocateBuffer)( THIS_ \
@@ -961,7 +1001,38 @@ typedef IPortPinDMus *PPORTPINDMUS;
         IN  PVOID Destination, \
         IN  PVOID Source, \
         IN  ULONG ByteCount) PURE;
+#else
 
+#define DEFINE_ABSTRACT_DMACHANNEL_EX() \
+    STDMETHOD_(NTSTATUS, AllocateBuffer)( THIS_ \
+        IN  ULONG BufferSize, \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL) PURE; \
+\
+    STDMETHOD_(void, FreeBuffer)( THIS ) PURE; \
+    STDMETHOD_(ULONG, TransferCount)( THIS ) PURE; \
+    STDMETHOD_(ULONG, MaximumBufferSize)( THIS ) PURE; \
+    STDMETHOD_(ULONG, AllocatedBufferSize)( THIS ) PURE; \
+    STDMETHOD_(ULONG, BufferSize)( THIS ) PURE; \
+\
+    STDMETHOD_(void, SetBufferSize)( THIS_ \
+        IN  ULONG BufferSize) PURE; \
+\
+    STDMETHOD_(PVOID, SystemAddress)( THIS ) PURE; \
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS_       \
+        IN PPHYSICAL_ADDRESS Address) PURE; \
+    STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)( THIS ) PURE; \
+\
+    STDMETHOD_(void, CopyTo)( THIS_ \
+        IN  PVOID Destination, \
+        IN  PVOID Source, \
+        IN  ULONG ByteCount) PURE; \
+\
+    STDMETHOD_(void, CopyFrom)( THIS_ \
+        IN  PVOID Destination, \
+        IN  PVOID Source, \
+        IN  ULONG ByteCount) PURE;
+
+#endif
 #undef INTERFACE
 #define INTERFACE IDmaChannelInit
 
