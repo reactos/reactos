@@ -2281,13 +2281,15 @@ NtGdiFillPath(HDC  hDC)
   BOOL ret = FALSE;
   PPATH pPath;
   PDC_ATTR pdcattr;
-  PDC dc = DC_LockDc ( hDC );
+  PDC dc;
 
-  if ( !dc )
+  dc = DC_LockDc(hDC);
+  if (!dc)
   {
      EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
+
   pPath = PATH_LockPath( dc->dclevel.hPath );
   if (!pPath)
   {
