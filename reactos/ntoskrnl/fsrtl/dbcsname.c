@@ -181,7 +181,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             switch (Expression->Buffer[ExpressionPosition])
             {
                 case '*':
-                    StarFound = ExpressionPosition++;
+                    StarFound = MAXUSHORT;
                     break;
 
                 case '?':
@@ -226,6 +226,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             if (ExpressionPosition == Expression->Length)
             {
                 NamePosition = Name->Length;
+                break;
             }
         }
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
@@ -253,7 +254,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         }
         else
         {
-            NamePosition = Name->Length;
+            break;
         }
     }
     if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
