@@ -616,15 +616,19 @@ VOID APIENTRY
 UserRedrawDesktop()
 {
     PWND Window = NULL;
-
+    HRGN hRgn;
+    
     Window = UserGetDesktopWindow();
+    hRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
 
     IntInvalidateWindows( Window,
-              Window->hrgnUpdate,
+                            hRgn,
                        RDW_FRAME |
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
+    
+    REGION_FreeRgnByHandle(hRgn);
 }
 
 

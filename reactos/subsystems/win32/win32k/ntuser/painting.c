@@ -307,9 +307,9 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 /*
  * IntInvalidateWindows
  *
- * Internal function used by IntRedrawWindow.
+ * Internal function used by IntRedrawWindow, UserRedrawDesktop, 
+ * co_WinPosSetWindowPos, IntValidateParent, co_UserRedrawWindow.
  */
-
 VOID FASTCALL
 IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 {
