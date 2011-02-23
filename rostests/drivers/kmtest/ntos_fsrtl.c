@@ -161,6 +161,22 @@ VOID FsRtlIsNameInExpressionTest()
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Name, L"aaaa");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+    /* Tests from #5923 */
+    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\**");
+    RtlInitUnicodeString(&Name, L"C:\\ReactOS\\dings.bmp");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\***");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Expression, L"C:\\Windows\\*a*");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\*.bmp");
+    RtlInitUnicodeString(&Name, L"C:\\Windows\\explorer.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"*.bmp;*.dib");
+    RtlInitUnicodeString(&Name, L"winhlp32.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
 }
 
 VOID FsRtlIsDbcsInExpressionTest()
@@ -295,6 +311,22 @@ VOID FsRtlIsDbcsInExpressionTest()
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
     RtlInitAnsiString(&Name, "aaaa");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    /* Tests from #5923 */
+    RtlInitAnsiString(&Expression, "C:\\ReactOS\\**");
+    RtlInitAnsiString(&Name, "C:\\ReactOS\\dings.bmp");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Expression, "C:\\ReactOS\\***");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Expression, "C:\\Windows\\*a*");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "C:\\ReactOS\\*.bmp");
+    RtlInitAnsiString(&Name, "C:\\Windows\\explorer.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "*.bmp;*.dib");
+    RtlInitAnsiString(&Name, "winhlp32.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
