@@ -41,7 +41,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             switch (Expression->Buffer[ExpressionPosition])
             {
                 case L'*':
-                    StarFound = ExpressionPosition++;
+                    StarFound = MAXUSHORT;
                     break;
 
                 case L'?':
@@ -88,6 +88,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
             {
                 NamePosition = Name->Length / sizeof(WCHAR);
+                break;
             }
         }
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
@@ -109,14 +110,14 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             ExpressionPosition = StarFound + 1;
             while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
                     Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition] &&
-                   NamePosition < Name->Length / sizeof(WCHAR))
+                    NamePosition < Name->Length / sizeof(WCHAR))
             {
                 NamePosition++;
             }
         }
         else
         {
-            NamePosition = Name->Length / sizeof(WCHAR);
+            break;
         }
     }
     if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
