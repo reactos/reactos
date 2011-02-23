@@ -106,7 +106,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
-    virtual NTSTATUS Close(                      \
+    STDMETHOD_(NTSTATUS, Close)(                           \
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
