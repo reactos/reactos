@@ -384,6 +384,7 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
     CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -466,6 +467,7 @@ GetConsoleAliasW(LPWSTR lpSource,
     CaptureBuffer = CsrAllocateCaptureBuffer(1, TargetBufferLength);
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         RtlFreeHeap(GetProcessHeap(), 0, Request);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -594,6 +596,7 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
     CaptureBuffer = CsrAllocateCaptureBuffer(1, ExeNameBufferLength);
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
@@ -849,6 +852,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
                                                 HistoryLength);
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
@@ -927,6 +931,7 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
     CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
@@ -1318,6 +1323,7 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
     CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
     if (!CaptureBuffer)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -1696,6 +1702,7 @@ IntReadConsole(HANDLE hConsoleInput,
     CaptureBuffer = CsrAllocateCaptureBuffer(1, nNumberOfCharsToRead * CharSize);
     if (CaptureBuffer == NULL)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -2052,6 +2059,12 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     /* Allocate a Capture Buffer */
     DPRINT("IntPeekConsoleInput: %lx %p\n", Size, lpNumberOfEventsRead);
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Allocate space in the Buffer */
     CsrCaptureMessageBuffer(CaptureBuffer,
@@ -2281,6 +2294,12 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     /* Allocate a Capture Buffer */
     DPRINT("IntWriteConsoleInput: %lx %p\n", Size, lpNumberOfEventsWritten);
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Allocate space in the Buffer */
     CsrCaptureMessageBuffer(CaptureBuffer,
@@ -2389,6 +2408,12 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     /* Allocate a Capture Buffer */
     DPRINT("IntReadConsoleOutput: %lx %p\n", Size, lpReadRegion);
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed with size 0x%x!\n", Size);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Allocate space in the Buffer */
     CsrCaptureMessageBuffer(CaptureBuffer,
@@ -2505,6 +2530,12 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     /* Allocate a Capture Buffer */
     DPRINT("IntWriteConsoleOutput: %lx %p\n", Size, lpWriteRegion);
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Allocate space in the Buffer */
     CsrCaptureMessageBuffer(CaptureBuffer,
@@ -3561,6 +3592,7 @@ IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD nSize, BOOL bUnicode)
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Request.Data.GetTitleRequest.Length);
     if (CaptureBuffer == NULL)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
@@ -3652,6 +3684,7 @@ SetConsoleTitleW(LPCWSTR lpConsoleTitle)
     CaptureBuffer = CsrAllocateCaptureBuffer(1, Request.Data.SetTitleRequest.Length);
     if (CaptureBuffer == NULL)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -3866,6 +3899,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
     CaptureBuffer = CsrAllocateCaptureBuffer(1, dwProcessCount * sizeof(DWORD));
     if (CaptureBuffer == NULL)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
