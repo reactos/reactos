@@ -174,7 +174,7 @@ LONG RtlpDphProtectFails;
 /* Biased pointer macros */
 #define IS_BIASED_POINTER(ptr) ((ULONG_PTR)(ptr) & 1)
 #define POINTER_REMOVE_BIAS(ptr) ((ULONG_PTR)(ptr) & ~(ULONG_PTR)1)
-#define POINTER_ADD_BIAS(ptr) ((ULONG_PTR)(ptr) & 1)
+#define POINTER_ADD_BIAS(ptr) ((ULONG_PTR)(ptr) | 1)
 
 
 ULONG RtlpDphBreakOptions = 0;//0xFFFFFFFF;
@@ -1896,8 +1896,167 @@ RtlpPageHeapReAllocate(HANDLE HeapPtr,
                        PVOID Ptr,
                        SIZE_T Size)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node = NULL, AllocatedNode;
+    BOOLEAN Biased = FALSE, UseNormalHeap = FALSE, OldBlockPageHeap = TRUE;
+    ULONG DataSize, ValidationInfo;
+    PVOID NewAlloc = NULL;
+
+    /* Check requested size */
+    if (Size > 0x7FF00000)
+    {
+        DPRINT1("extreme size request\n");
+
+        /* Generate an exception if needed */
+        if (Flags & HEAP_GENERATE_EXCEPTIONS) RtlpDphRaiseException(STATUS_NO_MEMORY);
+
+        return NULL;
+    }
+
+    /* Unbias the pointer if necessary */
+    if (IS_BIASED_POINTER(HeapPtr))
+    {
+        HeapPtr = (PVOID)POINTER_REMOVE_BIAS(HeapPtr);
+        Biased = TRUE;
+    }
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapPtr);
+    if (!DphRoot) return NULL;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Perform internal validation if specified by flags */
+    if (RtlpDphDebugOptions & DPH_DEBUG_INTERNAL_VALIDATE)
+    {
+        RtlpDphInternalValidatePageHeap(DphRoot, NULL, 0);
+    }
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Exit with NULL right away if inplace is specified */
+    if (Flags & HEAP_REALLOC_IN_PLACE_ONLY)
+    {
+        /* Release the lock */
+        RtlpDphPostProcessing(DphRoot);
+
+        /* Generate an exception if needed */
+        if (Flags & HEAP_GENERATE_EXCEPTIONS) RtlpDphRaiseException(STATUS_NO_MEMORY);
+
+        return NULL;
+    }
+
+    /* Try to get node of the allocated block */
+    AllocatedNode = RtlpDphFindBusyMemory(DphRoot, Ptr);
+
+    if (!AllocatedNode)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapFree();
+        ASSERT(FALSE);
+        OldBlockPageHeap = FALSE;
+    }
+
+    /* Check the block */
+    if (!(DphRoot->ExtraFlags & DPH_EXTRA_CHECK_UNDERRUN))
+    {
+        if (!RtlpDphIsPageHeapBlock(DphRoot, AllocatedNode->pUserAllocation, &ValidationInfo, TRUE))
+        {
+            RtlpDphReportCorruptedBlock(DphRoot, 3, AllocatedNode->pUserAllocation, ValidationInfo);
+        }
+    }
+
+    /* Remove old one from the busy list */
+    RtlpDphRemoveFromBusyList(DphRoot, AllocatedNode);
+
+    if (!Biased && !RtlpDphShouldAllocateInPageHeap(DphRoot, Size))
+    {
+        // FIXME: Use normal heap
+        ASSERT(FALSE);
+        UseNormalHeap = TRUE;
+    }
+    else
+    {
+        /* Now do a trick: bias the pointer and call our allocate routine */
+        NewAlloc = RtlpPageHeapAllocate((PVOID)POINTER_ADD_BIAS(HeapPtr), Flags, Size);
+    }
+
+    if (!NewAlloc)
+    {
+        /* New allocation failed, put the block back (if it was found in page heap) */
+        RtlpDphPlaceOnBusyList(DphRoot, AllocatedNode);
+
+        /* Release the lock */
+        RtlpDphPostProcessing(DphRoot);
+
+        /* Perform validation again if required */
+        if (RtlpDphDebugOptions & DPH_DEBUG_INTERNAL_VALIDATE)
+        {
+            RtlpDphInternalValidatePageHeap(DphRoot, NULL, 0);
+        }
+
+        /* Generate an exception if needed */
+        if (Flags & HEAP_GENERATE_EXCEPTIONS) RtlpDphRaiseException(STATUS_NO_MEMORY);
+
+        return NULL;
+    }
+
+    /* Copy contents of the old block */
+    if (AllocatedNode->nUserRequestedSize > Size)
+        DataSize = Size;
+    else
+        DataSize = AllocatedNode->nUserRequestedSize;
+
+    if (DataSize != 0) RtlCopyMemory(NewAlloc, Ptr, DataSize);
+
+    /* Copy user flags and values */
+    if (!UseNormalHeap)
+    {
+        /* Get the node of the new block */
+        Node = RtlpDphFindBusyMemory(DphRoot, NewAlloc);
+        ASSERT(Node != NULL);
+
+        /* Set its values/flags */
+        Node->UserValue = AllocatedNode->UserValue;
+        if (Flags & HEAP_SETTABLE_USER_FLAGS)
+            Node->UserFlags = Flags & HEAP_SETTABLE_USER_FLAGS;
+        else
+            Node->UserFlags = AllocatedNode->UserFlags;
+    }
+
+    if (!OldBlockPageHeap)
+    {
+        /* Weird scenario, investigate */
+        ASSERT(FALSE);
+    }
+
+    /* Mark the old block as no access */
+    if (AllocatedNode->nVirtualAccessSize != 0)
+    {
+        RtlpDphProtectVm(AllocatedNode->pVirtualBlock, AllocatedNode->nVirtualAccessSize, PAGE_NOACCESS);
+    }
+
+    /* And place it on the free list */
+    RtlpDphPlaceOnFreeList(DphRoot, AllocatedNode);
+
+    // FIXME: Capture stack traces if needed
+    AllocatedNode->StackTrace = NULL;
+
+    /* Finally allocation is done, perform validation again if required */
+    if (RtlpDphDebugOptions & DPH_DEBUG_INTERNAL_VALIDATE && !Biased)
+    {
+        RtlpDphInternalValidatePageHeap(DphRoot, NULL, 0);
+    }
+
+    /* Release the lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    DPRINT("Allocated new user block pointer: %p\n", NewAlloc);
+
+    /* Return pointer to user allocation */
+    return NewAlloc;
 }
 
 BOOLEAN NTAPI

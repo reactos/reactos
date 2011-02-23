@@ -1362,12 +1362,11 @@ RtlCreateHeap(ULONG Flags,
         Heap = RtlpPageHeapCreate(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
         if (Heap) return Heap;
 
-        //ASSERT(FALSE);
-        DPRINT1("Enabling page heap failed\n");
-
         /* Reset a special Parameters == -1 hack */
         if ((ULONG_PTR)Parameters == (ULONG_PTR)-1)
             Parameters = NULL;
+        else
+            DPRINT1("Enabling page heap failed\n");
     }
 
     /* Check validation flags */
