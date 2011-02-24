@@ -3248,8 +3248,6 @@ GreExtTextOutW(
         DestRect.right  = lprc->right;
         DestRect.bottom = lprc->bottom;
 
-        IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
-
         DestRect.left   += dc->ptlDCOrig.x;
         DestRect.top    += dc->ptlDCOrig.y;
         DestRect.right  += dc->ptlDCOrig.x;
