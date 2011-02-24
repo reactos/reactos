@@ -3024,8 +3024,8 @@ extern "C" {
 #endif
 #if(_WIN32_IE >= 0x0600)
 #define TVIF_STATEEX 0x100
-#define TVIF_EXPANDEDIMAGE 0x200
 #endif
+#define TVIF_EXPANDEDIMAGE 0x200
 #define TVIS_SELECTED 0x2
 #define TVIS_CUT 0x4
 #define TVIS_DROPHILITED 0x8
@@ -3084,7 +3084,10 @@ extern "C" {
     int cChildren;
     LPARAM lParam;
     int iIntegral;
-  } TVITEMEXA,*LPTVITEMEXA;
+    UINT uStateEx;        /* _WIN32_IE >= 0x600 */
+    HWND hwnd;            /* _WIN32_IE >= 0x600 */
+    int iExpandedImage;   /* _WIN32_IE >= 0x600 */
+  } TVITEMEXA, *LPTVITEMEXA;
 
   typedef struct tagTVITEMEXW {
     UINT mask;
@@ -3098,14 +3101,9 @@ extern "C" {
     int cChildren;
     LPARAM lParam;
     int iIntegral;
-#if(_WIN32_IE >= 0x0600)
-    UINT uStateEx;
-    HWND hwnd;
-    int iExpandedImage;
-#endif
-#if(NTDDI_VERSION >= NTDDI_WIN7)
-    int iReserved;
-#endif
+    UINT uStateEx;        /* _WIN32_IE >= 0x600 */
+    HWND hwnd;            /* _WIN32_IE >= 0x600 */
+    int iExpandedImage;   /* _WIN32_IE >= 0x600 */
   } TVITEMEXW, *LPTVITEMEXW;
 
   __MINGW_TYPEDEF_AW(TVITEMEX)
@@ -4018,6 +4016,8 @@ typedef struct {
 #define MonthCal_SetUnicodeFormat(hwnd,fUnicode) (WINBOOL)SNDMSG((hwnd),MCM_SETUNICODEFORMAT,(WPARAM)(fUnicode),0)
 #define MCM_GETUNICODEFORMAT CCM_GETUNICODEFORMAT
 #define MonthCal_GetUnicodeFormat(hwnd) (WINBOOL)SNDMSG((hwnd),MCM_GETUNICODEFORMAT,0,0)
+#define MCM_SETCALENDARBORDER (MCM_FIRST + 30)
+#define MCM_GETCALENDARBORDER (MCM_FIRST + 31)
 
   typedef struct tagNMSELCHANGE {
     NMHDR nmhdr;
