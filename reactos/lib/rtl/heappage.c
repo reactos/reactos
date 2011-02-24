@@ -2066,8 +2066,39 @@ RtlpPageHeapGetUserInfo(PVOID HeapHandle,
                         PVOID *UserValue,
                         PULONG UserFlags)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node;
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapHandle);
+    if (!DphRoot) return FALSE;
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Find busy memory */
+    Node = RtlpDphFindBusyMemory(DphRoot, BaseAddress);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapGetUserInfo();
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
+    /* Get user values and flags and store them in user provided pointers */
+    if (UserValue) *UserValue = Node->UserValue;
+    if (UserFlags) *UserFlags = Node->UserFlags;
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return success */
+    return TRUE;
 }
 
 BOOLEAN NTAPI
@@ -2076,8 +2107,38 @@ RtlpPageHeapSetUserValue(PVOID HeapHandle,
                          PVOID BaseAddress,
                          PVOID UserValue)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node;
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapHandle);
+    if (!DphRoot) return FALSE;
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Find busy memory */
+    Node = RtlpDphFindBusyMemory(DphRoot, BaseAddress);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapSetUserValue();
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
+    /* Get user values and flags and store them in user provided pointers */
+    Node->UserValue = UserValue;
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return success */
+    return TRUE;
 }
 
 BOOLEAN
@@ -2088,17 +2149,79 @@ RtlpPageHeapSetUserFlags(PVOID HeapHandle,
                          ULONG UserFlagsReset,
                          ULONG UserFlagsSet)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node;
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapHandle);
+    if (!DphRoot) return FALSE;
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Find busy memory */
+    Node = RtlpDphFindBusyMemory(DphRoot, BaseAddress);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapSetUserFlags();
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
+    /* Get user values and flags and store them in user provided pointers */
+    Node->UserFlags &= ~(UserFlagsReset);
+    Node->UserFlags |= UserFlagsSet;
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return success */
+    return TRUE;
 }
 
 SIZE_T NTAPI
-RtlpPageHeapSize(HANDLE HeapPtr,
+RtlpPageHeapSize(HANDLE HeapHandle,
                  ULONG Flags,
-                 PVOID Ptr)
+                 PVOID BaseAddress)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node;
+    SIZE_T Size;
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapHandle);
+    if (!DphRoot) return -1;
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Find busy memory */
+    Node = RtlpDphFindBusyMemory(DphRoot, BaseAddress);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, try a normal heap instead */
+        //RtlpDphNormalHeapSize();
+        ASSERT(FALSE);
+        return -1;
+    }
+
+    /* Get heap block size */
+    Size = Node->nUserRequestedSize;
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return user requested size */
+    return Size;
 }
 
 /* EOF */
