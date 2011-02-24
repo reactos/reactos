@@ -99,11 +99,7 @@ PAGER_GetButtonRects(const PAGER_INFO* infoPtr, RECT* prcTopLeft, RECT* prcBotto
     GetWindowRect (infoPtr->hwndSelf, &rcWindow);
 
     if (bClientCoords)
-    {
-        POINT pt = {rcWindow.left, rcWindow.top};
-        ScreenToClient(infoPtr->hwndSelf, &pt);
-        OffsetRect(&rcWindow, -(rcWindow.left-pt.x), -(rcWindow.top-pt.y));
-    }
+        MapWindowPoints( 0, infoPtr->hwndSelf, (POINT *)&rcWindow, 2 );
     else
         OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
 

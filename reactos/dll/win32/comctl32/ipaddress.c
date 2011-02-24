@@ -149,7 +149,6 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
 {
     static const WCHAR dotW[] = { '.', 0 };
     RECT rect, rcPart;
-    POINT pt;
     COLORREF bgCol, fgCol;
     int i;
 
@@ -173,13 +172,11 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
 
     for (i = 0; i < 3; i++) {
         GetWindowRect (infoPtr->Part[i].EditHwnd, &rcPart);
-	pt.x = rcPart.right;
-	ScreenToClient(infoPtr->Self, &pt);
-	rect.left = pt.x;
+        MapWindowPoints( 0, infoPtr->Self, (POINT *)&rcPart, 2 );
+	rect.left = rcPart.right;
 	GetWindowRect (infoPtr->Part[i+1].EditHwnd, &rcPart);
-	pt.x = rcPart.left;
-	ScreenToClient(infoPtr->Self, &pt);
-	rect.right = pt.x;
+        MapWindowPoints( 0, infoPtr->Self, (POINT *)&rcPart, 2 );
+	rect.right = rcPart.left;
 	DrawTextW(hdc, dotW, 1, &rect, DT_SINGLELINE | DT_CENTER | DT_BOTTOM);
     }
 
