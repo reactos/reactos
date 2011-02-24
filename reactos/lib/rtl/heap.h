@@ -435,6 +435,12 @@ RtlpPageHeapSetUserFlags(PVOID HeapHandle,
                          ULONG UserFlagsReset,
                          ULONG UserFlagsSet);
 
+BOOLEAN
+NTAPI
+RtlpDebugPageHeapValidate(PVOID HeapPtr,
+                          ULONG Flags,
+                          PVOID Block);
+
 SIZE_T NTAPI
 RtlpPageHeapSize(HANDLE HeapPtr,
                  ULONG Flags,

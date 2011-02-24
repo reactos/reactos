@@ -191,6 +191,10 @@ RtlpDphIsNormalFreeHeapBlock(PVOID Block, PULONG ValidationInformation, BOOLEAN 
 VOID NTAPI
 RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot, ULONG Reserved, PVOID Block, ULONG ValidationInfo);
 
+BOOLEAN NTAPI
+RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
+
+
 VOID NTAPI
 RtlpDphRaiseException(NTSTATUS Status)
 {
@@ -2222,6 +2226,70 @@ RtlpPageHeapSize(HANDLE HeapHandle,
 
     /* Return user requested size */
     return Size;
+}
+
+BOOLEAN
+NTAPI
+RtlpDebugPageHeapValidate(PVOID HeapHandle,
+                          ULONG Flags,
+                          PVOID BaseAddress)
+{
+    PDPH_HEAP_ROOT DphRoot;
+    PDPH_HEAP_BLOCK Node = NULL;
+    BOOLEAN Valid = FALSE;
+
+    /* Get a pointer to the heap root */
+    DphRoot = RtlpDphPointerFromHandle(HeapHandle);
+    if (!DphRoot) return -1;
+
+    /* Add heap flags */
+    Flags |= DphRoot->HeapFlags;
+
+    /* Acquire the heap lock */
+    RtlpDphPreProcessing(DphRoot, Flags);
+
+    /* Find busy memory */
+    if (BaseAddress)
+        Node = RtlpDphFindBusyMemory(DphRoot, BaseAddress);
+
+    if (!Node)
+    {
+        /* This block was not found in page heap, or the request is to validate all normal heap */
+        Valid = RtlpDphNormalHeapValidate(DphRoot, Flags, BaseAddress);
+    }
+
+    /* Leave the heap lock */
+    RtlpDphPostProcessing(DphRoot);
+
+    /* Return result of a normal heap validation */
+    if (BaseAddress && !Node)
+        return Valid;
+
+    /* Otherwise return our own result */
+    if (!BaseAddress || Node) Valid = TRUE;
+
+    return Valid;
+}
+
+BOOLEAN
+NTAPI
+RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot,
+                          ULONG Flags,
+                          PVOID BaseAddress)
+{
+    PDPH_BLOCK_INFORMATION BlockInfo = (PDPH_BLOCK_INFORMATION)BaseAddress - 1;
+    if (!BaseAddress)
+    {
+        /* Validate all normal heap */
+        return RtlValidateHeap(DphRoot->NormalHeap, Flags, NULL);
+    }
+
+    // FIXME: Check is this a normal heap block
+    /*if (!RtlpDphIsNormalHeapBlock(DphRoot, BaseAddress, &ValidationInfo))
+    {
+    }*/
+
+    return RtlValidateHeap(DphRoot->NormalHeap, Flags, BlockInfo);
 }
 
 /* EOF */

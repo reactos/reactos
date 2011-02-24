@@ -3707,7 +3707,9 @@ BOOLEAN NTAPI RtlValidateHeap(
     BOOLEAN HeapLocked = FALSE;
     BOOLEAN HeapValid;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpDebugPageHeapValidate(HeapPtr, Flags, Block);
 
     /* Check signature */
     if (Heap->Signature != HEAP_SIGNATURE)
