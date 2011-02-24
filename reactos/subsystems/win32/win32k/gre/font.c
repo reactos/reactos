@@ -270,10 +270,11 @@ static void SmoothGlyphGray(PDC physDev, INT x, INT y,
     {
         src = srcLine;
         srcLine += stride;
-        bits = *src++;
 
         for (w=0;w<width;w++)
         {
+            bits = *src++;
+
             if (bits == 0xff)
             {
                 DibPutPixel(&pCharSurf->SurfObj, w, h, xlBrushColor);
@@ -286,8 +287,6 @@ static void SmoothGlyphGray(PDC physDev, INT x, INT y,
                 bVal = ((UCHAR)~bits * (USHORT)GetBValue(srcColor) + bits * (USHORT)GetBValue(xlBrushColor)) >> 8;
                 DibPutPixel(&pCharSurf->SurfObj, w, h, RGB(rVal, gVal, bVal));
             }
-
-            bits = *src++;
         }
     }
 
