@@ -528,18 +528,18 @@ WdmAudSetWaveDeviceFormatByLegacy(
         Instance->BufferCount = 100;
     }
 
-    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
-    {
-        /* Now start the stream */
-        DeviceInfo.u.State = KSSTATE_RUN;
-        SyncOverlappedDeviceIoControl(KernelHandle,
-                                      IOCTL_SETDEVICE_STATE,
-                                      (LPVOID) &DeviceInfo,
-                                      sizeof(WDMAUD_DEVICE_INFO),
-                                      (LPVOID) &DeviceInfo,
-                                      sizeof(WDMAUD_DEVICE_INFO),
-                                      NULL);
-    }
+    /* Now acquire resources */
+    DeviceInfo.u.State = KSSTATE_ACQUIRE;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
+    /* pause the pin */
+    DeviceInfo.u.State = KSSTATE_PAUSE;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
+    /* start the pin */
+    DeviceInfo.u.State = KSSTATE_RUN;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
 
     return MMSYSERR_NOERROR;
 }
