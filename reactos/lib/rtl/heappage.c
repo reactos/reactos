@@ -1813,7 +1813,7 @@ RtlpPageHeapFree(HANDLE HeapPtr,
     PDPH_BLOCK_INFORMATION Info;
 
     /* Check for a NULL pointer freeing */
-    if (!HeapPtr)
+    if (!Ptr)
     {
         if (RtlpDphBreakOptions & DPH_BREAK_ON_NULL_FREE)
         {
