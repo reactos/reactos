@@ -842,7 +842,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         return 0;
     }
 
-    Bitmap = SURFACE_LockSurface(hBitmap);
+    Bitmap = SURFACE_ShareLockSurface(hBitmap);
     if (Bitmap == NULL)
     {
         return 0;
@@ -867,11 +867,14 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
 
     if (res)
     {
-        resBitmap = SURFACE_LockSurface(res);
+        resBitmap = SURFACE_ShareLockSurface(res);
         if (resBitmap)
         {
             IntSetBitmapBits(resBitmap, Bitmap->SurfObj.cjBits, Bitmap->SurfObj.pvBits);
-			SURFACE_UnlockSurface(resBitmap);
+            GDIOBJ_IncrementShareCount(&Bitmap->ppal->BaseObject);
+            GDIOBJ_ShareUnlockObjByPtr(&resBitmap->ppal->BaseObject);
+            resBitmap->ppal = Bitmap->ppal;
+            SURFACE_ShareUnlockSurface(resBitmap);
         }
         else
         {
@@ -880,7 +883,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         }
     }
 
-    SURFACE_UnlockSurface(Bitmap);
+    SURFACE_ShareUnlockSurface(Bitmap);
 
     return  res;
 }
