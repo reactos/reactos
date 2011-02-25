@@ -6059,8 +6059,10 @@ START_TEST(win)
     test_capture_2();
     test_capture_3(hwndMain, hwndMain2);
 
-    skip("skipping test_capture_4, that hangs on reactos\n");
-    //test_capture_4();
+    if(!winetest_interactive)
+        skip("skipping test_capture_4, that hangs on reactos\n");
+    else
+        test_capture_4();
 
     test_CreateWindow();
     test_parent_owner();
@@ -6101,7 +6103,10 @@ START_TEST(win)
     test_layered_window();
 
     test_SetForegroundWindow(hwndMain);
-    test_shell_window();
+    if(!winetest_interactive)
+        skip("bug 5957: skipping test_shell_window, it crashes ros/win7 explorer\n");
+    else
+        test_shell_window();
     test_handles( hwndMain );
     test_winregion();
 
