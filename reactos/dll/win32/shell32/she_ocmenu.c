@@ -1219,8 +1219,8 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
         ERR("no mem\n");
         return E_OUTOFMEMORY;
     }
-    if (_ILIsDesktop(pidl_child) || _ILIsMyDocuments(pidl_child) || _ILIsControlPanel(pidl_child) || _ILIsNetHood(pidl_child) ||
-        _ILIsBitBucket(pidl_child) || _ILIsDrive(pidl_child) || _ILIsCPanelStruct(pidl_child) || _ILIsFolder(pidl_child) || _ILIsControlPanel(pidl_folder))
+    if (_ILIsDesktop(pidl) || _ILIsMyDocuments(pidl) || _ILIsControlPanel(pidl) || _ILIsNetHood(pidl) ||
+        _ILIsBitBucket(pidl) || _ILIsDrive(pidl) || _ILIsCPanelStruct(pidl) || _ILIsFolder(pidl) || _ILIsControlPanel(pidl))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
