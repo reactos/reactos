@@ -361,3 +361,37 @@ StopStreaming(
                            StopStreamingInSoundThread,
                            NULL);
 }
+
+MMRESULT
+PerformWaveStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    DoWaveStreaming(SoundDeviceInstance);
+
+    return MMSYSERR_NOERROR;
+}
+
+DWORD
+WINAPI
+WaveActivateSoundStreaming(
+    IN PVOID lpParameter)
+{
+    CallSoundThread((PSOUND_DEVICE_INSTANCE)lpParameter,
+                    PerformWaveStreaming,
+                    NULL);
+
+    ExitThread(0);
+}
+
+VOID
+InitiateSoundStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    HANDLE hThread;
+
+    hThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
+
+    if (hThread != NULL)
+        CloseHandle(hThread);
+}
