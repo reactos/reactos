@@ -185,10 +185,15 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     break;
 
                 case '?':
-                    ExpressionPosition++;
+                    if (++ExpressionPosition == Expression->Length)
+                    {
+                        NamePosition = Name->Length;
+                        break;
+                    }
+
                     MatchingChars = NamePosition;
-                    while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
-                           NamePosition < Name->Length)
+                    while (NamePosition < Name->Length &&
+                           Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
                     {
                         NamePosition++;
                     }
@@ -200,7 +205,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     break;
 
                 case ANSI_DOS_DOT:
-                    while (Name->Buffer[NamePosition] != '.' && NamePosition < Name->Length)
+                    while (NamePosition < Name->Length && Name->Buffer[NamePosition] != '.')
                     {
                         NamePosition++;
                     }
@@ -246,8 +251,8 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         else if (StarFound != MAXUSHORT)
         {
             ExpressionPosition = StarFound + 1;
-            while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition] &&
-                   NamePosition < Name->Length)
+            while (NamePosition < Name->Length &&
+                   Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition])
             {
                 NamePosition++;
             }

@@ -45,11 +45,16 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                     break;
 
                 case L'?':
-                    ExpressionPosition++;
+                    if (++ExpressionPosition == Expression->Length / sizeof(WCHAR))
+                    {
+                        NamePosition = Name->Length / sizeof(WCHAR);
+                        break;
+                    }
+
                     MatchingChars = NamePosition;
-                    while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition] &&
-                           NamePosition < Name->Length / sizeof(WCHAR))
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
                     {
                         NamePosition++;
                     }
@@ -61,8 +66,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                     break;
 
                 case DOS_DOT:
-                    while (Name->Buffer[NamePosition] != L'.' &&
-                           NamePosition < Name->Length / sizeof(WCHAR))
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           Name->Buffer[NamePosition] != L'.')
                     {
                         NamePosition++;
                     }
@@ -108,9 +113,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         else if (StarFound != MAXUSHORT)
         {
             ExpressionPosition = StarFound + 1;
-            while ((IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition] &&
-                    NamePosition < Name->Length / sizeof(WCHAR))
+            while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                   (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
             {
                 NamePosition++;
             }
