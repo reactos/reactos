@@ -431,10 +431,10 @@ GetModuleFileNameA (
 				                             &Module->FullDllName,
 				                             FALSE);
 				
-			if (nSize < Length)
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			else
+			if (Length < nSize)
 				lpFilename[Length] = '\0';
+			else
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 			return Length;
@@ -489,10 +489,10 @@ GetModuleFileNameW (
 
 			RtlCopyUnicodeString (&FileName,
 			                      &Module->FullDllName);
-			if (nSize < Length)
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			else
+			if (Length < nSize)
 				lpFilename[Length] = L'\0';
+			else
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 
