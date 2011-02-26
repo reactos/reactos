@@ -2394,7 +2394,6 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
             RtlFreeUnicodeString (&(*Module)->FullDllName);
             RtlFreeUnicodeString (&(*Module)->BaseDllName);
             RemoveEntryList (&(*Module)->InLoadOrderLinks);
-            RtlFreeHeap (RtlGetProcessHeap (), 0, Module);
             return Status;
         }
 
