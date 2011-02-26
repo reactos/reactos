@@ -2243,7 +2243,7 @@ SetupGetInfFileListA(
 
     if (DirectoryPath != NULL)
     {
-        DirectoryPathW = MultiByteToUnicode(DirectoryPath, CP_ACP);
+        DirectoryPathW = pSetupMultiByteToUnicode(DirectoryPath, CP_ACP);
         if (DirectoryPathW == NULL) goto Cleanup;
     }
 
@@ -2318,7 +2318,7 @@ BOOL WINAPI SetupDiGetINFClassA(
 
     if (InfName != NULL)
     {
-        InfNameW = MultiByteToUnicode(InfName, CP_ACP);
+        InfNameW = pSetupMultiByteToUnicode(InfName, CP_ACP);
         if (InfNameW == NULL) goto Cleanup;
     }
 

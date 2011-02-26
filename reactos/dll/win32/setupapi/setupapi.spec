@@ -213,7 +213,7 @@
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
 @ stdcall InstallHinfSectionA(long long str long)
 @ stdcall InstallHinfSectionW(long long wstr long)
-@ stdcall IsUserAdmin()
+@ stdcall IsUserAdmin() pSetupIsUserAdmin
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
@@ -532,32 +532,32 @@
 @ stdcall SetupUninstallOEMInfW(wstr long ptr)
 @ stub SetupVerifyInfFileA
 @ stub SetupVerifyInfFileW
-@ stdcall UnicodeToMultiByte(wstr long)
+@ stdcall UnicodeToMultiByte(wstr long) pSetupUnicodeToMultiByte
 @ stub VerifyCatalogFile
 @ stub pSetupAccessRunOnceNodeList
 @ stub pSetupAcquireSCMLock
 @ stub pSetupAddMiniIconToList
 @ stub pSetupAddTagToGroupOrderListEntry
 @ stub pSetupAppendStringToMultiSz
-@ stdcall pSetupCaptureAndConvertAnsiArg(str ptr) CaptureAndConvertAnsiArg
-@ stdcall pSetupCenterWindowRelativeToParent(long) CenterWindowRelativeToParent
-@ stdcall pSetupConcatenatePaths(wstr wstr long ptr) ConcatenatePaths
+@ stdcall pSetupCaptureAndConvertAnsiArg(str ptr)
+@ stdcall pSetupCenterWindowRelativeToParent(long)
+@ stdcall pSetupConcatenatePaths(wstr wstr long ptr)
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDiGetDeviceInfoContext
 @ stub pSetupDiSetDeviceInfoContext
 @ stub pSetupDoesUserHavePrivilege
-@ stdcall pSetupDuplicateString(wstr) DuplicateString
-@ stdcall pSetupEnablePrivilege(wstr long) EnablePrivilege
+@ stdcall pSetupDuplicateString(wstr)
+@ stdcall pSetupEnablePrivilege(wstr long)
 @ stub pSetupFree
 @ stub pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
-@ stdcall pSetupGetFileTitle(wstr) MyGetFileTitle
+@ stdcall pSetupGetFileTitle(wstr)
 @ stdcall pSetupGetGlobalFlags()
 @ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
 @ stub pSetupGetRealSystemTime
-@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr) GetVersionInfoFromImage
+@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr)
 @ stdcall pSetupGuidFromString(wstr ptr)
 @ stub pSetupHandleFailedVerification
 @ stub pSetupInfCacheBuild
@@ -566,16 +566,16 @@
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupIsLocalSystem
-@ stdcall pSetupIsUserAdmin() IsUserAdmin
+@ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
 @ stub pSetupModifyGlobalFlags
-@ stdcall pSetupMultiByteToUnicode(str long) MultiByteToUnicode
-@ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr) OpenAndMapFileForRead
+@ stdcall pSetupMultiByteToUnicode(str long)
+@ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory
 @ stub pSetupQueryMultiSzValueToArray
 @ stub pSetupRealloc
-@ stdcall pSetupRegistryDelnode(long long) RegistryDelnode
+@ stdcall pSetupRegistryDelnode(long long)
 @ stub pSetupRetrieveServiceConfig
 @ stub pSetupSetArrayToMultiSzValue
 @ stdcall pSetupSetGlobalFlags(long)
@@ -597,8 +597,8 @@
 @ stdcall pSetupStringTableSetExtraData(ptr long ptr long)
 @ stdcall pSetupStringTableStringFromId(ptr long)
 @ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr)
-@ stdcall pSetupUnicodeToMultiByte(wstr long) UnicodeToMultiByte
-@ stdcall pSetupUnmapAndCloseFile(long long ptr) UnmapAndCloseFile
+@ stdcall pSetupUnicodeToMultiByte(wstr long)
+@ stdcall pSetupUnmapAndCloseFile(long long ptr)
 @ stub pSetupVerifyCatalogFile
 @ stub pSetupVerifyFile
 @ stub pSetupVerifyQueuedCatalogs

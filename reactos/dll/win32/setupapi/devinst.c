@@ -156,10 +156,10 @@ CheckSectionValid(
 
     *ScorePlatform = *ScoreMajorVersion = *ScoreMinorVersion = *ScoreProductType = *ScoreSuiteMask = 0;
 
-    Section = DuplicateString(SectionName);
+    Section = pSetupDuplicateString(SectionName);
     if (!Section)
     {
-        TRACE("DuplicateString() failed\n");
+        TRACE("pSetupDuplicateString() failed\n");
         goto cleanup;
     }
 
@@ -687,7 +687,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExA(
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL) return FALSE;
     }
 
@@ -910,13 +910,13 @@ BOOL WINAPI SetupDiClassGuidsFromNameExA(
         return FALSE;
     }
 
-    ClassNameW = MultiByteToUnicode(ClassName, CP_ACP);
+    ClassNameW = pSetupMultiByteToUnicode(ClassName, CP_ACP);
     if (ClassNameW == NULL)
         return FALSE;
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL)
         {
             MyFree(ClassNameW);
@@ -1101,7 +1101,7 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
     BOOL ret;
 
     if (MachineName)
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
     ret = SetupDiClassNameFromGuidExW(ClassGuid, ClassNameW, MAX_CLASS_NAME_LEN,
      RequiredSize, MachineNameW, Reserved);
     if (ret)
@@ -1235,7 +1235,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL)
             return INVALID_HANDLE_VALUE;
     }
@@ -1381,7 +1381,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyA(
         }
         else
         {
-            InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+            InfSectionNameW = pSetupMultiByteToUnicode(InfSectionName, CP_ACP);
             if (InfSectionNameW == NULL) return INVALID_HANDLE_VALUE;
         }
     }
@@ -1635,12 +1635,12 @@ BOOL WINAPI SetupDiCreateDeviceInfoA(
 
     if (DeviceName)
     {
-        DeviceNameW = MultiByteToUnicode(DeviceName, CP_ACP);
+        DeviceNameW = pSetupMultiByteToUnicode(DeviceName, CP_ACP);
         if (DeviceNameW == NULL) return FALSE;
     }
     if (DeviceDescription)
     {
-        DeviceDescriptionW = MultiByteToUnicode(DeviceDescription, CP_ACP);
+        DeviceDescriptionW = pSetupMultiByteToUnicode(DeviceDescription, CP_ACP);
         if (DeviceDescriptionW == NULL)
         {
             MyFree(DeviceNameW);
@@ -2038,7 +2038,7 @@ SetupDiGetActualSectionToInstallExA(
 
     if (InfSectionName)
     {
-        InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+        InfSectionNameW = pSetupMultiByteToUnicode(InfSectionName, CP_ACP);
         if (InfSectionNameW == NULL)
             goto cleanup;
     }
@@ -2135,7 +2135,7 @@ BOOL WINAPI SetupDiGetClassDescriptionExA(
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (!MachineNameW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2285,7 +2285,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
 
     if (enumstr)
     {
-        enumstrW = MultiByteToUnicode(enumstr, CP_ACP);
+        enumstrW = pSetupMultiByteToUnicode(enumstr, CP_ACP);
         if (!enumstrW)
         {
             ret = INVALID_HANDLE_VALUE;
@@ -2294,7 +2294,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(
     }
     if (machine)
     {
-        machineW = MultiByteToUnicode(machine, CP_ACP);
+        machineW = pSetupMultiByteToUnicode(machine, CP_ACP);
         if (!machineW)
         {
             MyFree(enumstrW);
@@ -2540,7 +2540,7 @@ BOOL WINAPI SetupDiCreateDeviceInterfaceA(
 
     if (ReferenceString)
     {
-        ReferenceStringW = MultiByteToUnicode(ReferenceString, CP_ACP);
+        ReferenceStringW = pSetupMultiByteToUnicode(ReferenceString, CP_ACP);
         if (ReferenceStringW == NULL) return FALSE;
     }
 
@@ -2621,7 +2621,7 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyA(
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
         }
-        InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+        InfSectionNameW = pSetupMultiByteToUnicode(InfSectionName, CP_ACP);
         if (!InfSectionNameW)
             return INVALID_HANDLE_VALUE;
     }
@@ -3462,7 +3462,7 @@ SetupDiInstallClassExA(
     }
     else
     {
-        InfFileNameW = MultiByteToUnicode(InfFileName, CP_ACP);
+        InfFileNameW = pSetupMultiByteToUnicode(InfFileName, CP_ACP);
         if (InfFileNameW == NULL)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3592,7 +3592,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExA(
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL)
             return INVALID_HANDLE_VALUE;
     }
@@ -3934,7 +3934,7 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceA(
 
     TRACE("%p %s %08lx %p\n", DeviceInfoSet, debugstr_a(DevicePath), OpenFlags, DeviceInterfaceData);
 
-    DevicePathW = MultiByteToUnicode(DevicePath, CP_ACP);
+    DevicePathW = pSetupMultiByteToUnicode(DevicePath, CP_ACP);
     if (DevicePathW == NULL)
         return FALSE;
 
@@ -4667,7 +4667,7 @@ SetupDiOpenDeviceInfoA(
 
     TRACE("%p %s %p %lx %p\n", DeviceInfoSet, DeviceInstanceId, hwndParent, OpenFlags, DeviceInfoData);
 
-    DeviceInstanceIdW = MultiByteToUnicode(DeviceInstanceId, CP_ACP);
+    DeviceInstanceIdW = pSetupMultiByteToUnicode(DeviceInstanceId, CP_ACP);
     if (DeviceInstanceIdW == NULL)
         return FALSE;
 

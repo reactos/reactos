@@ -42,9 +42,9 @@ DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
 }
 
 /***********************************************************************
- *		RegistryDelnode(SETUPAPI.@)
+ *		pSetupRegistryDelnode(SETUPAPI.@)
  */
-BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
+BOOL WINAPI pSetupRegistryDelnode(DWORD x, DWORD y)
 {
     FIXME("%08x %08x: stub\n", x, y);
     return FALSE;

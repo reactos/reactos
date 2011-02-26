@@ -153,7 +153,7 @@ CONFIGRET WINAPI CMP_Report_LogOn(
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
         return CR_FAILURE;
 
-    bAdmin = IsUserAdmin();
+    bAdmin = pSetupIsUserAdmin();
 
     for (i = 0; i < 30; i++)
     {
@@ -237,7 +237,7 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
     FIXME("%p %p %lu %lx %p\n",
           plcLogConf, dnDevInst, Priority, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (plcLogConf == NULL)
@@ -340,7 +340,7 @@ CONFIGRET WINAPI CM_Add_ID_ExA(
 
     TRACE("%p %s %lx %p\n", dnDevInst, pszID, ulFlags, hMachine);
 
-    if (CaptureAndConvertAnsiArg(pszID, &pszIDW))
+    if (pSetupCaptureAndConvertAnsiArg(pszID, &pszIDW))
         return CR_INVALID_DATA;
 
     ret = CM_Add_ID_ExW(dnDevInst, pszIDW, ulFlags, hMachine);
@@ -364,7 +364,7 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
 
     TRACE("%p %s %lx %p\n", dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
@@ -455,7 +455,7 @@ CONFIGRET WINAPI CM_Connect_MachineA(
     if (UNCServerName == NULL || *UNCServerName == 0)
         return CM_Connect_MachineW(NULL, phMachine);
 
-    if (CaptureAndConvertAnsiArg(UNCServerName, &pServerNameW))
+    if (pSetupCaptureAndConvertAnsiArg(UNCServerName, &pServerNameW))
         return CR_INVALID_DATA;
 
     ret = CM_Connect_MachineW(pServerNameW, phMachine);
@@ -572,7 +572,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExA(
     TRACE("%p %s %p %lx %p\n",
           pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags, hMachine);
 
-    if (CaptureAndConvertAnsiArg(pDeviceID, &pDeviceIDW))
+    if (pSetupCaptureAndConvertAnsiArg(pDeviceID, &pDeviceIDW))
         return CR_INVALID_DATA;
 
     ret = CM_Create_DevNode_ExW(pdnDevInst, pDeviceIDW, dnParent, ulFlags,
@@ -599,7 +599,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     FIXME("%p %s %p %lx %p\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (pdnDevInst == NULL)
@@ -769,7 +769,7 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
 
     FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
@@ -868,7 +868,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
 
     TRACE("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
@@ -1135,7 +1135,7 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
 
     TRACE("%lx %lx %lx\n", lcLogConfToBeFreed, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConfToBeFreed;
@@ -2040,7 +2040,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExA(
     }
     else
     {
-        if (CaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
+        if (pSetupCaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
         {
             ret = CR_INVALID_DEVICE_ID;
             goto Done;
@@ -2165,7 +2165,7 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
     }
     else
     {
-        if (CaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
+        if (pSetupCaptureAndConvertAnsiArg(pszFilter, &pszFilterW))
             return CR_INVALID_DEVICE_ID;
 
         ret = CM_Get_Device_ID_List_Size_ExW(pulLen,
@@ -2576,7 +2576,7 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExA(
 
     if (szDevInstName != NULL)
     {
-       if (CaptureAndConvertAnsiArg(szDevInstName, &pszDevIdW))
+       if (pSetupCaptureAndConvertAnsiArg(szDevInstName, &pszDevIdW))
          return CR_INVALID_DEVICE_ID;
     }
 
@@ -3356,7 +3356,7 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExA(
 
     if (pDeviceID != NULL)
     {
-       if (CaptureAndConvertAnsiArg(pDeviceID, &pDevIdW))
+       if (pSetupCaptureAndConvertAnsiArg(pDeviceID, &pDevIdW))
          return CR_INVALID_DEVICE_ID;
     }
 
@@ -3506,7 +3506,7 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     FIXME("%lx %lx %lx %lx\n",
           dnFromDevInst, dnToDevInst, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (dnFromDevInst == 0 || dnToDevInst == 0)
@@ -3606,7 +3606,7 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExA(
 
     if (pszClassName != NULL)
     {
-       if (CaptureAndConvertAnsiArg(pszClassName, &pszClassNameW))
+       if (pSetupCaptureAndConvertAnsiArg(pszClassName, &pszClassNameW))
          return CR_INVALID_DATA;
     }
 
@@ -4201,7 +4201,7 @@ CONFIGRET WINAPI CM_Run_Detection_Ex(
 
     TRACE("%lx %lx\n", ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (ulFlags & ~CM_DETECT_BITS)
@@ -4612,7 +4612,7 @@ CONFIGRET WINAPI CM_Set_HW_Prof_Ex(
 
     TRACE("%lu %lu %lx\n", ulHardwareProfile, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (ulFlags != 0)
@@ -4687,7 +4687,7 @@ CONFIGRET WINAPI CM_Set_HW_Prof_Flags_ExA(
 
     if (szDevInstName != NULL)
     {
-       if (CaptureAndConvertAnsiArg(szDevInstName, &pszDevIdW))
+       if (pSetupCaptureAndConvertAnsiArg(szDevInstName, &pszDevIdW))
          return CR_INVALID_DEVICE_ID;
     }
 
@@ -4773,7 +4773,7 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
 
     FIXME("%lx %lx %lx\n", dnDevInst, ulFlags, hMachine);
 
-    if (!IsUserAdmin())
+    if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
