@@ -517,6 +517,11 @@ static void test_apm(void)
     BOOL keep;
     short type;
 
+    if(!winetest_interactive) {
+        skip("Bug 5000: oleaut_winetest:olepicture crashes with Page Fault.\n");
+        return;
+    }
+
     hglob = GlobalAlloc (0, sizeof(apmdata));
     data = GlobalLock(hglob);
     memcpy(data, apmdata, sizeof(apmdata));
