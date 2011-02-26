@@ -46,7 +46,7 @@ UCHAR KiTrapIoTable[] =
 };
 
 PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
-#if DBG
+#if DBG && !defined(_WINKD_)
 PKDBG_PRESERVICEHOOK KeWin32PreServiceHook = NULL;
 PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
 #endif
@@ -1452,7 +1452,7 @@ FORCEINLINE
 VOID
 KiDbgPreServiceHook(ULONG SystemCallNumber, PULONG_PTR Arguments)
 {
-#if DBG
+#if DBG && !defined(_WINKD_)
     if (SystemCallNumber >= 0x1000 && KeWin32PreServiceHook)
         KeWin32PreServiceHook(SystemCallNumber, Arguments);
 #endif
@@ -1462,7 +1462,7 @@ FORCEINLINE
 ULONG_PTR
 KiDbgPostServiceHook(ULONG SystemCallNumber, ULONG_PTR Result)
 {
-#if DBG
+#if DBG && !defined(_WINKD_)
     if (SystemCallNumber >= 0x1000 && KeWin32PostServiceHook)
         return KeWin32PostServiceHook(SystemCallNumber, Result);
 #endif
