@@ -941,7 +941,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
                     break;
 
                 case BMF_32BPP:
-                    if (psurf->ppal->flFlags & PAL_RGB)
+                    if (psurf->ppal->flFlags & (PAL_RGB|PAL_BGR))
                         pds->dsBmih.biCompression = BI_RGB;
                     else
                         pds->dsBmih.biCompression = BI_BITFIELDS;

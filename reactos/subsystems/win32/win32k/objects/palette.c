@@ -725,58 +725,39 @@ UINT
 FASTCALL
 IntGdiRealizePalette(HDC hDC)
 {
-  /*
-   * This function doesn't do any real work now and there's plenty
-   * of bugs in it.
-   */
+    UINT i, realize = 0;
+    PDC pdc;
+    PALETTE *ppalSurf, *ppalDC;
 
-  PPALETTE palGDI, sysGDI;
-  int realized = 0;
-  PDC dc;
-  HPALETTE systemPalette;
+    pdc = DC_LockDc(hDC);
+    if(!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
 
-  dc = DC_LockDc(hDC);
-  if (!dc) return 0;
+    ppalSurf = pdc->dclevel.pSurface->ppal;
+    ppalDC = pdc->dclevel.ppal;
 
-  systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
-  palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
+    if(!(ppalSurf->flFlags & PAL_INDEXED))
+    {
+        // FIXME : set error?
+        goto cleanup;
+    }
 
-  if (palGDI == NULL)
-  {
-    DPRINT1("IntGdiRealizePalette(): palGDI is NULL, exiting\n");
-    DC_UnlockDc(dc);
-    return 0;
-  }
+    ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
-  sysGDI = PALETTE_LockPalette(systemPalette);
+    // FIXME : should we resize ppalSurf if it's too small?
+    realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
-  if (sysGDI == NULL)
-  {
-    DPRINT1("IntGdiRealizePalette(): sysGDI is NULL, exiting\n");
-    PALETTE_UnlockPalette(palGDI);
-    DC_UnlockDc(dc);
-    return 0;
-  }
+    for(i=0; i<realize; i++)
+    {
+        InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
+    }
 
-  // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
-  // device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device
-  // context is a display DC, the physical palette for that device is modified.
-  if(dc->dctype == DC_TYPE_MEMORY)
-  {
-    // Memory managed DC
-    DPRINT1("RealizePalette unimplemented for memory managed DCs\n");
-  } else
-  {
-    DPRINT1("RealizePalette unimplemented for device DCs\n");
-  }
-
-  // need to pass this to IntEngCreateXlate with palettes unlocked
-  PALETTE_UnlockPalette(sysGDI);
-  PALETTE_UnlockPalette(palGDI);
-
-  DC_UnlockDc(dc);
-
-  return realized;
+cleanup:
+    DC_UnlockDc(pdc);
+    return realize;
 }
 
 UINT APIENTRY

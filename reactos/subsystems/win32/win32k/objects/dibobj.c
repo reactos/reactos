@@ -193,9 +193,8 @@ IntGetDIBColorTable(
 {
     PDC dc;
     PSURFACE psurf;
-    PPALETTE PalGDI;
+    PPALETTE ppal;
     UINT Index, Count = 0;
-    ULONG biBitCount;
 
     if (!(dc = DC_LockDc(hDC))) return 0;
     if (dc->dctype == DC_TYPE_INFO)
@@ -219,33 +218,22 @@ IntGetDIBColorTable(
         return 0;
     }
 
-    biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-    if (biBitCount <= 8 &&
-            StartIndex < (1 << biBitCount))
+    ppal = psurf->ppal;
+    ASSERT(ppal);
+
+    if (ppal->flFlags & PAL_INDEXED)
     {
-        if (StartIndex + Entries > (1 << biBitCount))
-            Entries = (1 << biBitCount) - StartIndex;
-
-        if (psurf->ppal == NULL)
-        {
-            DC_UnlockDc(dc);
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return 0;
-        }
-
-        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
 
         for (Index = StartIndex;
-             Index < StartIndex + Entries && Index < PalGDI->NumColors;
+             Index < StartIndex + Entries && Index < ppal->NumColors;
              Index++)
         {
-            Colors[Index - StartIndex].rgbRed = PalGDI->IndexedColors[Index].peRed;
-            Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
-            Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
+            Colors[Index - StartIndex].rgbRed = ppal->IndexedColors[Index].peRed;
+            Colors[Index - StartIndex].rgbGreen = ppal->IndexedColors[Index].peGreen;
+            Colors[Index - StartIndex].rgbBlue = ppal->IndexedColors[Index].peBlue;
             Colors[Index - StartIndex].rgbReserved = 0;
             Count++;
         }
-        PALETTE_UnlockPalette(PalGDI);
     }
 
     DC_UnlockDc(dc);

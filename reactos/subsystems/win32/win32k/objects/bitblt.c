@@ -562,8 +562,8 @@ NtGdiMaskBlt(
     NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, BKGND_ROP3(dwRop), 0, 0);
 
     /* 2.4 Erase the foreground pixels */
-    IntGdiSetBkColor(hdcBack, 0xffffffff);
-    IntGdiSetTextColor(hdcBack, 0);
+    IntGdiSetBkColor(hdcBack, RGB(0xFF, 0xFF, 0xFF));
+    IntGdiSetTextColor(hdcBack, RGB(0, 0, 0));
     NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcMask, xMask, yMask, SRCAND, 0, 0);
 
     /* 3. Create masked Foreground bitmap */
@@ -583,8 +583,8 @@ NtGdiMaskBlt(
     NtGdiBitBlt(hdcFore, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop), 0,0);
 
     /* 2.4 Erase the background pixels */
-    IntGdiSetBkColor(hdcFore, 0);
-    IntGdiSetTextColor(hdcFore, 0xffffffff);
+    IntGdiSetBkColor(hdcFore, RGB(0, 0, 0));
+    IntGdiSetTextColor(hdcFore, RGB(0xFF, 0xFF, 0xFF));
     NtGdiBitBlt(hdcFore, 0, 0, nWidth, nHeight, hdcMask, xMask, yMask, SRCAND, 0, 0);
 
     /* 3. Combine the fore and background into the background bitmap */
