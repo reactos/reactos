@@ -67,6 +67,9 @@
 	<directory name="icmp">
 		<xi:include href="icmp/icmp.rbuild" />
 	</directory>
+	<directory name="imagehlp">
+		<xi:include href="imagehlp/imagehlp.rbuild" />
+	</directory>
 	<directory name="imm32">
 		<xi:include href="imm32/imm32.rbuild" />
 	</directory>
