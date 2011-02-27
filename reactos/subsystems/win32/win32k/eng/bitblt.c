@@ -541,8 +541,6 @@ IntEngBitBlt(
     BOOL bResult;
     RECTL rclClipped;
     RECTL rclSrc;
-//    INTENG_ENTER_LEAVE EnterLeaveSource;
-//    INTENG_ENTER_LEAVE EnterLeaveDest;
     PFN_DrvBitBlt pfnBitBlt;
 
     ASSERT(psoTrg);
@@ -552,9 +550,9 @@ IntEngBitBlt(
     rclClipped = *prclTrg;
     RECTL_vMakeWellOrdered(&rclClipped);
 
-    /* Clip target rect against the bounds of the clipping region */
     if (pco)
     {
+        /* Clip target rect against the bounds of the clipping region */
         if (!RECTL_bIntersectRect(&rclClipped, &rclClipped, &pco->rclBounds))
         {
             /* Nothing left */

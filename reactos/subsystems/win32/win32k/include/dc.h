@@ -213,7 +213,10 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
 {
     PSURFACE psurfOld = pdc->dclevel.pSurface;
     if (psurfOld)
+    {
+        psurfOld->hdc = NULL;
         SURFACE_ShareUnlockSurface(psurfOld);
+    }
     if (psurfNew)
         GDIOBJ_IncrementShareCount((POBJ)psurfNew);
     pdc->dclevel.pSurface = psurfNew;
