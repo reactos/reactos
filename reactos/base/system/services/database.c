@@ -922,8 +922,6 @@ ScmStartUserModeService(PSERVICE Service,
         return Status;
     }
 
-    EnterCriticalSection(&StartServiceCriticalSection);
-
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
@@ -938,7 +936,6 @@ ScmStartUserModeService(PSERVICE Service,
     if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to create control pipe!\n");
-        LeaveCriticalSection(&StartServiceCriticalSection);
         return GetLastError();
     }
 
@@ -970,7 +967,6 @@ ScmStartUserModeService(PSERVICE Service,
         Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
         DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
-        LeaveCriticalSection(&StartServiceCriticalSection);
         return dwError;
     }
 
@@ -1030,8 +1026,6 @@ ScmStartUserModeService(PSERVICE Service,
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
 
-    LeaveCriticalSection(&StartServiceCriticalSection);
-
     return dwError;
 }
 
@@ -1041,6 +1035,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
+
+    EnterCriticalSection(&StartServiceCriticalSection);
 
     DPRINT("ScmStartService() called\n");
 
@@ -1072,6 +1068,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     }
 
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
+    LeaveCriticalSection(&StartServiceCriticalSection);
 
     if (dwError == ERROR_SUCCESS)
     {
