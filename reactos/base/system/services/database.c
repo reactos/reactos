@@ -30,6 +30,8 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD dwResumeCount = 1;
 
+static CRITICAL_SECTION NamedPipeCriticalSection;
+static CRITICAL_SECTION StartServiceCriticalSection;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -704,6 +706,8 @@ ScmControlService(PSERVICE Service,
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
 
+    EnterCriticalSection(&NamedPipeCriticalSection);
+
     /* Send the control packet */
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
@@ -717,6 +721,8 @@ ScmControlService(PSERVICE Service,
              sizeof(SCM_REPLY_PACKET),
              &dwReadCount,
              NULL);
+
+    LeaveCriticalSection(&NamedPipeCriticalSection);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
@@ -795,6 +801,8 @@ ScmSendStartCommand(PSERVICE Service,
     /* Terminate the argument list */
     *Ptr = 0;
 
+    EnterCriticalSection(&NamedPipeCriticalSection);
+
     /* Send the start command */
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
@@ -808,6 +816,8 @@ ScmSendStartCommand(PSERVICE Service,
              sizeof(SCM_REPLY_PACKET),
              &dwReadCount,
              NULL);
+
+    LeaveCriticalSection(&NamedPipeCriticalSection);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
@@ -912,6 +922,8 @@ ScmStartUserModeService(PSERVICE Service,
         return Status;
     }
 
+    EnterCriticalSection(&StartServiceCriticalSection);
+
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
@@ -926,6 +938,7 @@ ScmStartUserModeService(PSERVICE Service,
     if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to create control pipe!\n");
+        LeaveCriticalSection(&StartServiceCriticalSection);
         return GetLastError();
     }
 
@@ -957,6 +970,7 @@ ScmStartUserModeService(PSERVICE Service,
         Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
         DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
+        LeaveCriticalSection(&StartServiceCriticalSection);
         return dwError;
     }
 
@@ -1015,6 +1029,8 @@ ScmStartUserModeService(PSERVICE Service,
     /* Close process and thread handle */
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
+
+    LeaveCriticalSection(&StartServiceCriticalSection);
 
     return dwError;
 }
@@ -1255,6 +1271,22 @@ VOID
 ScmUnlockDatabase(VOID)
 {
     RtlReleaseResource(&DatabaseLock);
+}
+
+
+VOID
+ScmInitNamedPipeCriticalSection(VOID)
+{
+    InitializeCriticalSection(&NamedPipeCriticalSection);
+    InitializeCriticalSection(&StartServiceCriticalSection);
+}
+
+
+VOID
+ScmDeleteNamedPipeCriticalSection(VOID)
+{
+    DeleteCriticalSection(&StartServiceCriticalSection);
+    DeleteCriticalSection(&NamedPipeCriticalSection);
 }
 
 /* EOF */
