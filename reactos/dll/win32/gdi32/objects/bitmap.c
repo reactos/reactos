@@ -413,13 +413,15 @@ CreateCompatibleBitmap(
 void
 ConvertBackBitmapInfo(PBITMAPINFO pbmi, PBITMAPINFO pbmiConverted)
 {
+    INT i;
+
     /* Check if we converted from PBITMAPCOREINFO */
     if (pbmiConverted != pbmi)
     {
         PBITMAPCOREINFO pbci = (PBITMAPCOREINFO)pbmi;
 
         /* Convert back header */
-        pbci->bmciHeader.biSize = sizeof(BITMAPCOREHEADER);
+        pbci->bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
         pbci->bmciHeader.bcWidth = pbmiConverted->bmiHeader.biWidth;
         pbci->bmciHeader.bcHeight = pbmiConverted->bmiHeader.biHeight;
         pbci->bmciHeader.bcPlanes = 1;
@@ -428,9 +430,9 @@ ConvertBackBitmapInfo(PBITMAPINFO pbmi, PBITMAPINFO pbmiConverted)
         /* Convert back colors */
         for (i = 0; i < pbmiConverted->bmiHeader.biClrUsed; i++)
         {
-            pbci->bmciColors.rgbtRed = pbmiConverted->bmiColors.rgbRed;
-            pbci->bmciColors.rgbtGreen = pbmiConverted->bmiColors.rgbGreen;
-            pbci->bmciColors.rgbtBlue = pbmiConverted->bmiColors.rgbBlue;
+            pbci->bmciColors[i].rgbtRed = pbmiConverted->bmiColors[i].rgbRed;
+            pbci->bmciColors[i].rgbtGreen = pbmiConverted->bmiColors[i].rgbGreen;
+            pbci->bmciColors[i].rgbtBlue = pbmiConverted->bmiColors[i].rgbBlue;
         }
 
         /* Free memory */
