@@ -15,24 +15,20 @@
 #define TEST(x) ok(x, #x"\n")
 #define RTEST(x) ok(x, #x"\n")
 
-void Test_SelectObject()
+#define ok_err(dwErr) ok(GetLastError() == dwErr, "Wrong LastError, expected %d, got %ld\n", dwErr, GetLastError())
+
+HDC hdc1, hdc2;
+
+static void
+Test_SelectObject()
 {
 	HGDIOBJ hOldObj, hNewObj;
-	HDC hScreenDC, hDC, hDC2;
 //	PGDI_TABLE_ENTRY pEntry;
 //	PDC_ATTR pDc_Attr;
 //	HANDLE hcmXform;
-	BYTE bmBits[4] = {0};
-
-	hScreenDC = GetDC(NULL);
-	ok(hScreenDC != NULL, "GetDC failed. Skipping tests.\n");
-	if (hScreenDC == NULL) return;
-	hDC = CreateCompatibleDC(hScreenDC);
-	ok(hDC != NULL, "CreateCompatibleDC failed. Skipping tests.\n");
-	if (hDC == NULL) return;
 
 	/* Get the Dc_Attr for later testing */
-//	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(hDC)];
+//	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(hdc1)];
 //	pDc_Attr = pEntry->UserData;
 //	ok(pDc_Attr != NULL, "Skipping tests.\n");
 //	if (pDc_Attr == NULL) return;
@@ -40,27 +36,27 @@ void Test_SelectObject()
 	/* Test incomplete dc handle doesn't work */
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = GetStockObject(GRAY_BRUSH);
-	hOldObj = SelectObject((HDC)GDI_HANDLE_GET_INDEX(hDC), hNewObj);
-	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
-	RTEST(hOldObj == NULL);
-//	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
-	SelectObject(hDC, hOldObj);
+	hOldObj = SelectObject((HDC)GDI_HANDLE_GET_INDEX(hdc1), hNewObj);
+	ok_err(ERROR_INVALID_HANDLE);
+	ok(hOldObj == NULL, "\n");
+//	ok(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH), "\n");
+	SelectObject(hdc1, hOldObj);
 
 	/* Test incomplete hobj handle works */
 	hNewObj = GetStockObject(GRAY_BRUSH);
-	hOldObj = SelectObject(hDC, (HGDIOBJ)GDI_HANDLE_GET_INDEX(hNewObj));
-	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
-//	RTEST(pDc_Attr->hbrush == hNewObj);
-	SelectObject(hDC, hOldObj);
+	hOldObj = SelectObject(hdc1, (HGDIOBJ)GDI_HANDLE_GET_INDEX(hNewObj));
+	ok(hOldObj == GetStockObject(WHITE_BRUSH), "\n");
+//	ok(pDc_Attr->hbrush == hNewObj, "\n");
+	SelectObject(hdc1, hOldObj);
 
 	/* Test wrong hDC handle type */
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = GetStockObject(GRAY_BRUSH);
-	hDC2 = (HDC)((UINT_PTR)hDC & ~GDI_HANDLE_TYPE_MASK);
-	hDC2 = (HDC)((UINT_PTR)hDC2 | GDI_OBJECT_TYPE_PEN);
-	hOldObj = SelectObject(hDC2, hNewObj);
-	RTEST(GetLastError() == ERROR_INVALID_HANDLE);
-	RTEST(hOldObj == NULL);
+	hdc2 = (HDC)((UINT_PTR)hdc1 & ~GDI_HANDLE_TYPE_MASK);
+	hdc2 = (HDC)((UINT_PTR)hdc2 | GDI_OBJECT_TYPE_PEN);
+	hOldObj = SelectObject(hdc2, hNewObj);
+	ok_err(ERROR_INVALID_HANDLE);
+	ok(hOldObj == NULL, "\n");
 //	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 
 	/* Test wrong hobj handle type */
@@ -68,57 +64,24 @@ void Test_SelectObject()
 	hNewObj = GetStockObject(GRAY_BRUSH);
 	hNewObj = (HGDIOBJ)((UINT_PTR)hNewObj & ~GDI_HANDLE_TYPE_MASK);
 	hNewObj = (HGDIOBJ)((UINT_PTR)hNewObj | GDI_OBJECT_TYPE_PEN);
-	hOldObj = SelectObject(hDC, hNewObj);
-	RTEST(GetLastError() == ERROR_SUCCESS);
-	RTEST(hOldObj == NULL);
+	hOldObj = SelectObject(hdc1, hNewObj);
+	ok_err(ERROR_SUCCESS);
+	ok(hOldObj == NULL, "\n");
 //	RTEST(pDc_Attr->hbrush == GetStockObject(WHITE_BRUSH));
 
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = (HGDIOBJ)0x00761234;
-	hOldObj = SelectObject(hDC, hNewObj);
-	RTEST(hOldObj == NULL);
-	RTEST(GetLastError() == ERROR_SUCCESS);
-	SelectObject(hDC, hOldObj);
+	hOldObj = SelectObject(hdc1, hNewObj);
+	ok(hOldObj == NULL, "\n");
+	ok_err(ERROR_SUCCESS);
+	SelectObject(hdc1, hOldObj);
 
 	/* Test DC */
 	SetLastError(ERROR_SUCCESS);
-	hOldObj = SelectObject(hDC, hScreenDC);
-	RTEST(hOldObj == NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
+	hOldObj = SelectObject(hdc1, GetDC(NULL));
+	ok(hOldObj == NULL, "\n");
+	ok_err(ERROR_SUCCESS);
 
-	/* Test REGION */
-	SetLastError(ERROR_SUCCESS);
-	hNewObj = CreateRectRgn(0,0,0,0);
-	hOldObj = SelectObject(hDC, hNewObj);
-	RTEST((UINT_PTR)hOldObj == NULLREGION);
-	DeleteObject(hNewObj);
-
-	hNewObj = CreateRectRgn(0,0,10,10);
-	RTEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION);
-	hOldObj = CreateRectRgn(5,5,20,20);
-	RTEST(CombineRgn(hNewObj, hNewObj, hOldObj, RGN_OR) == COMPLEXREGION);
-	DeleteObject(hOldObj);
-	RTEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION); // ??? Why this?
-	DeleteObject(hNewObj);
-//	TEST(IsHandleValid(hNewObj) == TRUE);
-
-	RTEST(GetLastError() == ERROR_SUCCESS);
-
-	/* Test BITMAP */
-	hNewObj = CreateBitmap(2, 2, 1, 1, &bmBits);
-	ok(hNewObj != NULL, "CreateBitmap failed. Skipping tests.\n");
-	if (hNewObj == NULL) return;
-	hOldObj = SelectObject(hDC, hNewObj);
-	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BITMAP);
-	hOldObj = SelectObject(hDC, hOldObj);
-	RTEST(hOldObj == hNewObj);
-
-	/* Test invalid BITMAP */
-	hNewObj = CreateBitmap(2, 2, 1, 4, &bmBits);
-	ok(hNewObj != NULL, "CreateBitmap failed. Skipping tests.\n");
-	if (hNewObj == NULL) return;
-	hOldObj = SelectObject(hDC, hNewObj);
-	ok(hOldObj == NULL, "should fail\n");
 
 	/* Test CLIOBJ */
 
@@ -127,9 +90,9 @@ void Test_SelectObject()
 	/* Test PALETTE */
 	SetLastError(ERROR_SUCCESS);
 	hNewObj = GetStockObject(DEFAULT_PALETTE);
-	hOldObj = SelectObject(hDC, hNewObj);
+	hOldObj = SelectObject(hdc1, hNewObj);
 	RTEST(hOldObj == NULL);
-	RTEST(GetLastError() == ERROR_INVALID_FUNCTION);
+	ok_err(ERROR_INVALID_FUNCTION);
 
 	/* Test COLORSPACE */
 
@@ -139,17 +102,17 @@ void Test_SelectObject()
 
 	/* Test BRUSH */
 	hNewObj = GetStockObject(GRAY_BRUSH);
-	hOldObj = SelectObject(hDC, hNewObj);
+	hOldObj = SelectObject(hdc1, hNewObj);
 	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
 //	RTEST(pDc_Attr->hbrush == hNewObj);
 	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
-	SelectObject(hDC, hOldObj);
+	SelectObject(hdc1, hOldObj);
 
 	/* Test DC_BRUSH */
 	hNewObj = GetStockObject(DC_BRUSH);
-	hOldObj = SelectObject(hDC, hNewObj);
+	hOldObj = SelectObject(hdc1, hNewObj);
 //	RTEST(pDc_Attr->hbrush == hNewObj);
-	SelectObject(hDC, hOldObj);
+	SelectObject(hdc1, hOldObj);
 
 	/* Test BRUSH color xform */
 //	hcmXform = (HANDLE)pDc_Attr->hcmXform;
@@ -161,22 +124,107 @@ void Test_SelectObject()
 
 	/* Test ENHMETAFILE */
 
-	/* Test PEN */
-	hNewObj = GetStockObject(GRAY_BRUSH);
-	hOldObj = SelectObject(hDC, hNewObj);
-	RTEST(hOldObj == GetStockObject(WHITE_BRUSH));
-//	RTEST(pDc_Attr->hbrush == hNewObj);
-	RTEST(GDI_HANDLE_GET_TYPE(hOldObj) == GDI_OBJECT_TYPE_BRUSH);
-	SelectObject(hDC, hOldObj);
-
-
 	/* Test EXTPEN */
 
 	/* Test METADC */
 }
 
+static void
+Test_Bitmap()
+{
+    HBITMAP hbmp, hbmpInvalid, hbmpOld;
+	BYTE bmBits[4] = {0};
+	HDC hdcTmp;
+
+	hbmp = CreateBitmap(2, 2, 1, 1, &bmBits);
+	hbmpInvalid = CreateBitmap(2, 2, 1, 4, &bmBits);
+	if (!hbmp || !hbmpInvalid)
+	{
+	    printf("couldn't create bitmaps, skipping\n");
+	    return;
+	}
+
+    hbmpOld = SelectObject(hdc1, hbmp);
+    ok(GDI_HANDLE_GET_TYPE(hbmpOld) == GDI_OBJECT_TYPE_BITMAP, "wrong type\n");
+
+	/* Test invalid BITMAP */
+    ok(SelectObject(hdc1, hbmpInvalid) == NULL, "should fail\n");
+
+    /* Test if we get the right bitmap back */
+    hbmpOld = SelectObject(hdc1, hbmpOld);
+    ok(hbmpOld == hbmp, "didn't get the right bitmap back.\n");
+
+    /* Test selecting bitmap into 2 DCs */
+    hbmpOld = SelectObject(hdc1, hbmp);
+    ok(SelectObject(hdc2, hbmp) == NULL, "Should fail.\n");
+
+    /* Test selecting same bitmap twice */
+    hbmpOld = SelectObject(hdc1, hbmp);
+    ok(hbmpOld == hbmp, "didn't get the right bitmap back.\n");
+    SelectObject(hdc1, GetStockObject(DEFAULT_BITMAP));
+
+    /* Test selecting and then deleting the DC */
+    hdcTmp = CreateCompatibleDC(NULL);
+    hbmpOld = SelectObject(hdcTmp, hbmp);
+    ok(hbmpOld == GetStockObject(DEFAULT_BITMAP), "didn't get the right bitmap back.\n");
+    DeleteDC(hdcTmp);
+    hbmpOld = SelectObject(hdc1, hbmp);
+    ok(hbmpOld == GetStockObject(DEFAULT_BITMAP), "didn't get the right bitmap back.\n");
+
+    DeleteObject(hbmp);
+    DeleteObject(hbmpInvalid);
+}
+
+static void
+Test_Pen()
+{
+    HPEN hpen, hpenOld;
+
+	/* Test PEN */
+	hpen = GetStockObject(GRAY_BRUSH);
+	hpenOld = SelectObject(hdc1, hpen);
+	ok(hpenOld == GetStockObject(WHITE_BRUSH), "Got wrong pen.\n");
+//	RTEST(pDc_Attr->hbrush == hpen);
+	ok(GDI_HANDLE_GET_TYPE(hpenOld) == GDI_OBJECT_TYPE_BRUSH, "wrong type.\n");
+	SelectObject(hdc1, hpenOld);
+}
+
+static void
+Test_Region()
+{
+    HRGN hrgn, hrgnOld;
+
+	/* Test REGION */
+	SetLastError(ERROR_SUCCESS);
+	hrgn = CreateRectRgn(0,0,0,0);
+	hrgnOld = SelectObject(hdc1, hrgn);
+	ok((UINT_PTR)hrgnOld == NULLREGION, "\n");
+	DeleteObject(hrgn);
+
+	hrgn = CreateRectRgn(0,0,10,10);
+	ok((UINT_PTR)SelectObject(hdc1, hrgn) == SIMPLEREGION, "\n");
+	hrgnOld = CreateRectRgn(5,5,20,20);
+	ok(CombineRgn(hrgn, hrgn, hrgnOld, RGN_OR) == COMPLEXREGION, "\n");
+	DeleteObject(hrgnOld);
+	ok((UINT_PTR)SelectObject(hdc1, hrgn) == SIMPLEREGION, "\n"); // ??? Why this?
+	DeleteObject(hrgn);
+//	ok(IsHandleValid(hrgn) == TRUE, "\n");
+	ok_err(ERROR_SUCCESS);
+}
+
 START_TEST(SelectObject)
 {
+	hdc1 = CreateCompatibleDC(NULL);
+	hdc2 = CreateCompatibleDC(NULL);
+	if (!hdc1 || !hdc2)
+	{
+	    printf("couldn't create DCs, skipping all tests\n");
+	    return;
+	}
+
     Test_SelectObject();
+    Test_Bitmap();
+    Test_Pen();
+    Test_Region();
 }
 
