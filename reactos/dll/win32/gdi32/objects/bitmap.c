@@ -410,6 +410,33 @@ CreateCompatibleBitmap(
     return CreateDIBSection(hDC, (CONST BITMAPINFO *)&dibs.dsBmih, 0, NULL, NULL, 0);
 }
 
+void
+ConvertBackBitmapInfo(PBITMAPINFO pbmi, PBITMAPINFO pbmiConverted)
+{
+    /* Check if we converted from PBITMAPCOREINFO */
+    if (pbmiConverted != pbmi)
+    {
+        PBITMAPCOREINFO pbci = (PBITMAPCOREINFO)pbmi;
+
+        /* Convert back header */
+        pbci->bmciHeader.biSize = sizeof(BITMAPCOREHEADER);
+        pbci->bmciHeader.bcWidth = pbmiConverted->bmiHeader.biWidth;
+        pbci->bmciHeader.bcHeight = pbmiConverted->bmiHeader.biHeight;
+        pbci->bmciHeader.bcPlanes = 1;
+        pbci->bmciHeader.bcBitCount = pbmiConverted->bmiHeader.biBitCount;
+
+        /* Convert back colors */
+        for (i = 0; i < pbmiConverted->bmiHeader.biClrUsed; i++)
+        {
+            pbci->bmciColors.rgbtRed = pbmiConverted->bmiColors.rgbRed;
+            pbci->bmciColors.rgbtGreen = pbmiConverted->bmiColors.rgbGreen;
+            pbci->bmciColors.rgbtBlue = pbmiConverted->bmiColors.rgbBlue;
+        }
+
+        /* Free memory */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pbmiConverted);
+    }
+}
 
 INT
 WINAPI
@@ -422,8 +449,9 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-    UINT cjBmpScanSize;
-    UINT cjInfoSize;
+    PBITMAPINFO pbmiConverted;
+    UINT cjBmpScanSize, cjInfoSize;
+    INT iResult;
 
     if (!hDC || !GdiIsHandleValid((HGDIOBJ)hDC) || !lpbmi)
     {
@@ -431,15 +459,22 @@ GetDIBits(
         return 0;
     }
 
-    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
-    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage);
-
-    if ( lpvBits )
+    /* Convert BITMAPINFO to a proper format */
+    pbmiConverted = ConvertBitmapInfo(lpbmi, uUsage, &cjInfoSize, FALSE);
+    if (!pbmiConverted)
     {
-        if ( lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+
+    if (lpvBits)
+    {
+        if (lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
         {
-            if ( lpbmi->bmiHeader.biCompression == BI_JPEG ||
-                    lpbmi->bmiHeader.biCompression == BI_PNG )
+            if (lpbmi->bmiHeader.biCompression == BI_JPEG ||
+                lpbmi->bmiHeader.biCompression == BI_PNG)
             {
                 SetLastError(ERROR_INVALID_PARAMETER);
                 return 0;
@@ -447,16 +482,21 @@ GetDIBits(
         }
     }
 
-    return NtGdiGetDIBitsInternal(hDC,
-                                  hbmp,
-                                  uStartScan,
-                                  cScanLines,
-                                  lpvBits,
-                                  lpbmi,
-                                  uUsage,
-                                  cjBmpScanSize,
-                                  cjInfoSize);
+    iResult = NtGdiGetDIBitsInternal(hDC,
+                                     hbmp,
+                                     uStartScan,
+                                     cScanLines,
+                                     lpvBits,
+                                     pbmiConverted,
+                                     uUsage,
+                                     cjBmpScanSize,
+                                     cjInfoSize);
+
+    ConvertBackBitmapInfo(lpbmi, pbmiConverted);
+
+    return iResult;
 }
+
 
 /*
  * @implemented
