@@ -649,7 +649,7 @@ NtGdiGetDIBitsInternal(
     }
 
     /* Get a pointer to the source bitmap object */
-    psurf = SURFACE_LockSurface(hBitmap);
+    psurf = SURFACE_ShareLockSurface(hBitmap);
     if (psurf == NULL)
     {
         ScanLines = 0;
@@ -944,7 +944,7 @@ NtGdiGetDIBitsInternal(
 			goto done ;
 		}
 
-		psurfDest = SURFACE_LockSurface(hBmpDest);
+		psurfDest = SURFACE_ShareLockSurface(hBmpDest);
 
 		rcDest.left = 0;
 		rcDest.top = 0;
@@ -955,7 +955,7 @@ NtGdiGetDIBitsInternal(
 		srcPoint.y = height < 0 ?
 			psurf->SurfObj.sizlBitmap.cy - (StartScan + ScanLines) : StartScan;
 
-		EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0, 0, 0);
+		EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
 
 		ret = IntEngCopyBits(&psurfDest->SurfObj,
 							 &psurf->SurfObj,
@@ -963,6 +963,8 @@ NtGdiGetDIBitsInternal(
 							 &exlo.xlo,
 							 &rcDest,
 							 &srcPoint);
+
+        SURFACE_ShareUnlockSurface(psurfDest);
 
 		if(!ret)
 			ScanLines = 0;
@@ -994,7 +996,7 @@ NtGdiGetDIBitsInternal(
 done:
 
 	if(pDC) DC_UnlockDc(pDC);
-	if(psurf) SURFACE_UnlockSurface(psurf);
+	if(psurf) SURFACE_ShareUnlockSurface(psurf);
 	if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci);
 
 	return ScanLines;
@@ -1101,13 +1103,13 @@ NtGdiStretchDIBitsInternal(
     hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
     DC_UnlockDc(pdc);
 
-    hdcMem = NtGdiCreateCompatibleDC(hDC);
     if(!hBitmap)
     {
         DPRINT1("Error, failed to create a DIB section\n");
-        NtGdiDeleteObjectApp(hdcMem);
         goto cleanup;
     }
+
+    hdcMem = NtGdiCreateCompatibleDC(hDC);
 
     RtlCopyMemory(pvBits, safeBits, cjMaxBits);
     hOldBitmap = NtGdiSelectBitmap(hdcMem, hBitmap);
@@ -1771,17 +1773,10 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
         paletteType = PAL_BITFIELDS;
         switch (bits)
         {
-            case 15:
+            case 16:
                 paletteType |= PAL_RGB16_555;
                 RedMask = 0x7C00;
                 GreenMask = 0x03E0;
-                BlueMask = 0x001F;
-                break;
-
-            case 16:
-                paletteType |= PAL_RGB16_565;
-                RedMask = 0xF800;
-                GreenMask = 0x07E0;
                 BlueMask = 0x001F;
                 break;
 
