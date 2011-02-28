@@ -551,7 +551,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       ClipRegion = Wnd->hrgnUpdate;
    }
 
-   if (ClipRegion == (HRGN) 1)
+   if (ClipRegion == HRGN_WINDOW)
    {
       if (!(Flags & DCX_WINDOW))
       {

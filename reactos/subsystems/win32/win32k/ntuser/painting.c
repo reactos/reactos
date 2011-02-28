@@ -141,7 +141,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
    UINT RgnType;
 
    if (Window->hrgnUpdate != NULL &&
-       Window->hrgnUpdate != (HRGN)1)
+       Window->hrgnUpdate != HRGN_WINDOW)
    {
       hRgnNonClient = IntCalcWindowRgn(Window, FALSE);
 
@@ -151,14 +151,14 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
        */
       if (hRgnNonClient == NULL)
       {
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
 
       hRgnWindow = IntCalcWindowRgn(Window, TRUE);
       if (hRgnWindow == NULL)
       {
          REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
 
       RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient,
@@ -167,7 +167,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
       {
          REGION_FreeRgnByHandle(hRgnWindow);
          REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
       else if (RgnType == NULLREGION)
       {
@@ -1049,7 +1049,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    else
    {
       /* Get the update region bounding box. */
-      if (Window->hrgnUpdate == (HRGN)1)
+      if (Window->hrgnUpdate == HRGN_WINDOW)
       {
          Rect = Window->rcClient;
       }

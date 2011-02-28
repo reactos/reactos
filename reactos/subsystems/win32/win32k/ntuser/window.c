@@ -4017,6 +4017,7 @@ CLEANUP:
 }
 
 
+// This should be in user32!
 INT FASTCALL
 IntGetWindowRgn(PWND Window, HRGN hRgn)
 {
@@ -4055,6 +4056,7 @@ IntGetWindowRgn(PWND Window, HRGN hRgn)
    return Ret;
 }
 
+// This should be in user32!
 INT FASTCALL
 IntGetWindowRgnBox(PWND Window, RECTL *Rect)
 {
@@ -4104,6 +4106,8 @@ NtUserSetWindowRgn(
 {
    HRGN hrgnCopy;
    PWND Window;
+   INT flags = (SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
+   BOOLEAN Ret = FALSE;
    DECLARE_RETURN(INT);
 
    DPRINT("Enter NtUserSetWindowRgn\n");
@@ -4119,32 +4123,31 @@ NtUserSetWindowRgn(
       if (GDIOBJ_ValidateHandle(hRgn, GDI_OBJECT_TYPE_REGION))
       {
          hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
+
+         /* Set public ownership */
+         IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
+
          NtGdiCombineRgn(hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
          RETURN( 0);
    }
    else
-      hrgnCopy = (HRGN) 1;
+   {
+      hrgnCopy = IntSysCreateRectRgnIndirect(&Window->rcWindow); //HRGN_WINDOW;
+   }
 
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
       GreDeleteObject(Window->hrgnClip);
    }
+
    Window->hrgnClip = hrgnCopy;
 
-   /* FIXME - send WM_WINDOWPOSCHANGING and WM_WINDOWPOSCHANGED messages to the window */
+   Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
 
-   if(bRedraw)
-   {
-      USER_REFERENCE_ENTRY Ref;
-      UserRefObjectCo(Window, &Ref);
-      co_UserRedrawWindow(Window, NULL, NULL, RDW_INVALIDATE);
-      UserDerefObjectCo(Window);
-   }
-
-   RETURN( (INT)hRgn);
+   RETURN( (INT)Ret);
 
 CLEANUP:
    DPRINT("Leave NtUserSetWindowRgn, ret=%i\n",_ret_);
