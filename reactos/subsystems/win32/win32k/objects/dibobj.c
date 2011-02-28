@@ -939,9 +939,26 @@ NtGdiGetDIBitsInternal(
 		rcDest.bottom = ScanLines;
 		rcDest.right = psurf->SurfObj.sizlBitmap.cx;
 
-		srcPoint.x = 0;
-		srcPoint.y = height < 0 ?
-			psurf->SurfObj.sizlBitmap.cy - (StartScan + ScanLines) : StartScan;
+        srcPoint.x = 0;
+
+        if(height < 0)
+        {
+            srcPoint.y = 0;
+
+            if(ScanLines <= StartScan)
+            {
+                ScanLines = 1;
+                SURFACE_ShareUnlockSurface(psurfDest);
+                GreDeleteObject(hBmpDest);
+                goto done;
+            }
+
+            ScanLines -= StartScan;
+        }
+        else
+        {
+            srcPoint.y = StartScan;
+        }
 
 		EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
 
