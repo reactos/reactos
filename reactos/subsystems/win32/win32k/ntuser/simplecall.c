@@ -367,7 +367,6 @@ NtUserCallTwoParam(
    DWORD_PTR Param2,
    DWORD Routine)
 {
-   NTSTATUS Status;
    PWND Window;
    DECLARE_RETURN(DWORD_PTR);
 
@@ -376,22 +375,6 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
-      case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
-         {
-            DWORD_PTR Ret;
-            RECTL rcRect;
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            Ret = (DWORD_PTR)IntGetWindowRgnBox(Window, &rcRect);
-            Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               RETURN( ERROR);
-            }
-            RETURN( Ret);
-         }
       case TWOPARAM_ROUTINE_GETWINDOWRGN:
          {
             Window = UserGetWindowObject((HWND)Param1);

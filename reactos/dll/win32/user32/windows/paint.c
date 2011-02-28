@@ -278,7 +278,7 @@ GetWindowRgn(
 
   pWnd = ValidateHwnd(hWnd);
 
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+  if (!pWnd) // || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
      return ERROR;
 /*
   Ret = CombineRgn(hRgn, pWnd->hrgnClip, NULL, RGN_COPY);
@@ -314,21 +314,19 @@ GetWindowRgnBox(
 
   pWnd = ValidateHwnd(hWnd);
 
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+  if (!pWnd || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
      return ERROR;
-/*
+
   Ret = GetRgnBox(pWnd->hrgnClip, lprc);
 
   if (!Ret)
      return ERROR;
 
   if (pWnd->fnid != FNID_DESKTOP)
-     Ret = OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
+     OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorWindowRect(pWnd, lprc);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 
   return Ret;
 }

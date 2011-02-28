@@ -4056,45 +4056,6 @@ IntGetWindowRgn(PWND Window, HRGN hRgn)
    return Ret;
 }
 
-// This should be in user32!
-INT FASTCALL
-IntGetWindowRgnBox(PWND Window, RECTL *Rect)
-{
-   INT Ret;
-   HRGN VisRgn;
-   ROSRGNDATA *pRgn;
-
-   if(!Window)
-   {
-      return ERROR;
-   }
-   if(!Rect)
-   {
-      return ERROR;
-   }
-
-   /* Create a new window region using the window rectangle */
-   VisRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
-   NtGdiOffsetRgn(VisRgn, -Window->rcWindow.left, -Window->rcWindow.top);
-   /* if there's a region assigned to the window, combine them both */
-   if(Window->hrgnClip && !(Window->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
-
-   if((pRgn = RGNOBJAPI_Lock(VisRgn, NULL)))
-   {
-      Ret = REGION_Complexity(pRgn);
-      *Rect = pRgn->rdh.rcBound;
-      RGNOBJAPI_Unlock(pRgn);
-   }
-   else
-      Ret = ERROR;
-
-   REGION_FreeRgnByHandle(VisRgn);
-
-   return Ret;
-}
-
-
 /*
  * @implemented
  */
@@ -4142,6 +4103,12 @@ NtUserSetWindowRgn(
       /* Delete no longer needed region handle */
       GreDeleteObject(Window->hrgnClip);
    }
+
+   if (Window->fnid != FNID_DESKTOP)
+      NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
+
+   /* Set public ownership */
+   IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
 
    Window->hrgnClip = hrgnCopy;
 
