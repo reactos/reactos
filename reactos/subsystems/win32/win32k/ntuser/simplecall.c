@@ -375,13 +375,6 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
-      case TWOPARAM_ROUTINE_GETWINDOWRGN:
-         {
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            RETURN( (DWORD_PTR)IntGetWindowRgn(Window, (HRGN)Param2));
-         }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;

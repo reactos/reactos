@@ -278,9 +278,9 @@ GetWindowRgn(
 
   pWnd = ValidateHwnd(hWnd);
 
-  if (!pWnd) // || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+  if (!pWnd || !pWnd->hrgnClip || pWnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
      return ERROR;
-/*
+
   Ret = CombineRgn(hRgn, pWnd->hrgnClip, NULL, RGN_COPY);
 
   if (!Ret)
@@ -291,8 +291,6 @@ GetWindowRgn(
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
      MirrorRgn(hWnd, hRgn);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 
   return Ret;
 }

@@ -4016,46 +4016,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-// This should be in user32!
-INT FASTCALL
-IntGetWindowRgn(PWND Window, HRGN hRgn)
-{
-   INT Ret;
-   HRGN VisRgn;
-   ROSRGNDATA *pRgn;
-
-   if(!Window)
-   {
-      return ERROR;
-   }
-   if(!hRgn)
-   {
-      return ERROR;
-   }
-
-   /* Create a new window region using the window rectangle */
-   VisRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
-   NtGdiOffsetRgn(VisRgn, -Window->rcWindow.left, -Window->rcWindow.top);
-   /* if there's a region assigned to the window, combine them both */
-   if(Window->hrgnClip && !(Window->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
-   /* Copy the region into hRgn */
-   NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
-
-   if((pRgn = RGNOBJAPI_Lock(hRgn, NULL)))
-   {
-      Ret = REGION_Complexity(pRgn);
-      RGNOBJAPI_Unlock(pRgn);
-   }
-   else
-      Ret = ERROR;
-
-   REGION_FreeRgnByHandle(VisRgn);
-
-   return Ret;
-}
-
 /*
  * @implemented
  */
@@ -4084,9 +4044,6 @@ NtUserSetWindowRgn(
       if (GDIOBJ_ValidateHandle(hRgn, GDI_OBJECT_TYPE_REGION))
       {
          hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
-
-         /* Set public ownership */
-         IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
 
          NtGdiCombineRgn(hrgnCopy, hRgn, 0, RGN_COPY);
       }
