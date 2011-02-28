@@ -140,8 +140,8 @@ START_TEST(MaskBlt)
     Test_MaskBlt_1bpp();
     switch (GetDeviceCaps(GetDC(NULL), BITSPIXEL))
     {
-        case 16: Test_MaskBlt_16bpp();
-        case 32: Test_MaskBlt_32bpp();
+        case 16: Test_MaskBlt_16bpp(); break;
+        case 32: Test_MaskBlt_32bpp(); break;
     }
     
 }
