@@ -179,7 +179,7 @@ static const ULONG ExpandDest[16] =
   Rop |= (Rop << 24) | (Rop << 16) | (Rop << 8);
   /* Do the operation on four bits simultaneously. */
   Result = 0;
-  for (i = 0; i < 6; i++)
+  for (i = 0; i < 8; i++)
   {
     ResultNibble = Rop & ExpandDest[Dest & 0xF] & ExpandSource[Source & 0xF] & ExpandPattern[Pattern & 0xF];
     Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) |
