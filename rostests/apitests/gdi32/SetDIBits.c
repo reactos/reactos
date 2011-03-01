@@ -15,7 +15,7 @@ void Test_SetDIBits()
     char buffer[sizeof(BITMAPINFOHEADER)+2*sizeof(RGBQUAD)];
     ULONG* dibBuffer;
     BITMAPINFO* pBMI = (BITMAPINFO*)buffer;
-    DWORD bits1bpp[2] = {0, 1};
+    char bits1bpp[] = {0x80, 0, 0, 0};
     HBITMAP hbmp;
     int ret;
 
@@ -38,14 +38,14 @@ void Test_SetDIBits()
 
     pBMI->bmiHeader.biBitCount = 1;
     pBMI->bmiColors[0].rgbBlue = 0xFF;
-    pBMI->bmiColors[0].rgbGreen = 0xFF;
+    pBMI->bmiColors[0].rgbGreen = 0;
     pBMI->bmiColors[0].rgbRed = 0xFF;
 
     ret = SetDIBits(NULL, hbmp, 0, 1, bits1bpp, pBMI, DIB_RGB_COLORS);
     ok(ret == 1, "Copied %i scanlines\n", ret);
 
-    ok(dibBuffer[0] = 0xFFFFFF, "Wrong color 0x%08x after SetDIBits\n", (unsigned int)dibBuffer[0]);
-    ok(dibBuffer[1] = 0xFFFFFF, "Wrong color 0x%08x after SetDIBits\n", (unsigned int)dibBuffer[1]);
+    ok(dibBuffer[0] == 0, "Wrong color 0x%08x after SetDIBits\n", (unsigned int)dibBuffer[0]);
+    ok(dibBuffer[1] == 0xFF00FF, "Wrong color 0x%08x after SetDIBits\n", (unsigned int)dibBuffer[1]);
 
     DeleteObject(hbmp);
 }
