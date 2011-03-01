@@ -336,7 +336,7 @@ NtGdiSetDIBits(
     CONST BITMAPINFO  *bmi,
     UINT  ColorUse)
 {
-    PDC Dc;
+    PDC Dc = NULL;
     INT Ret;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -364,21 +364,25 @@ NtGdiSetDIBits(
         return 0;
     }
 
-    Dc = DC_LockDc(hDC);
-    if (NULL == Dc)
+    /* Lock DC if asked to */
+    if(ColorUse == DIB_PAL_COLORS)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return 0;
-    }
-    if (Dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(Dc);
-        return 0;
+        Dc = DC_LockDc(hDC);
+        if (NULL == Dc)
+        {
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            return 0;
+        }
+        if (Dc->dctype == DC_TYPE_INFO)
+        {
+            DC_UnlockDc(Dc);
+            return 0;
+        }
     }
 
     Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 
-    DC_UnlockDc(Dc);
+    if(Dc) DC_UnlockDc(Dc);
 
     return Ret;
 }
