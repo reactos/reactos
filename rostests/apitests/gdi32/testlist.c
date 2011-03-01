@@ -43,6 +43,7 @@ extern void func_GetTextFace(void);
 extern void func_MaskBlt(void);
 extern void func_SelectObject(void);
 extern void func_SetDCPenColor(void);
+extern void func_SetDIBits(void);
 extern void func_SetMapMode(void);
 extern void func_SetSysColors(void);
 extern void func_SetWindowExtEx(void);
@@ -88,6 +89,7 @@ const struct test winetest_testlist[] =
     { "MaskBlt", func_MaskBlt },
     { "SelectObject", func_SelectObject },
     { "SetDCPenColor", func_SetDCPenColor },
+    { "SetDIBits", func_SetDIBits },
     { "SetMapMode", func_SetMapMode },
     { "SetSysColors", func_SetSysColors },
     { "SetWindowExtEx", func_SetWindowExtEx },

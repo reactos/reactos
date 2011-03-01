@@ -40,6 +40,7 @@ list(APPEND SOURCE
     MaskBlt.c
     SelectObject.c
     SetDCPenColor.c
+    SetDIBits.c
     SetMapMode.c
     SetSysColors.c
     SetWindowExtEx.c

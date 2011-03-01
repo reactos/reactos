@@ -47,6 +47,7 @@
 	<file>MaskBlt.c</file>
 	<file>SelectObject.c</file>
 	<file>SetDCPenColor.c</file>
+	<file>SetDIBits.c</file>
 	<file>SetMapMode.c</file>
 	<file>SetSysColors.c</file>
 	<file>SetWindowExtEx.c</file>
