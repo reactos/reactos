@@ -2154,7 +2154,7 @@ NtGdiBeginPath( HDC  hDC )
 
   if ( dc->dclevel.hPath )
   {
-     DPRINT1("BeginPath 1 0x%x\n", dc->dclevel.hPath);
+     DPRINT("BeginPath 1 0x%x\n", dc->dclevel.hPath);
      if ( !(dc->dclevel.flPath & DCPATH_SAVE) )
      {  // Remove previous handle.
         if (!PATH_Delete(dc->dclevel.hPath))
@@ -2179,7 +2179,7 @@ NtGdiBeginPath( HDC  hDC )
 
   dc->dclevel.hPath = pPath->BaseObject.hHmgr;
 
-  DPRINT1("BeginPath 2 h 0x%x p 0x%x\n", dc->dclevel.hPath, pPath);
+  DPRINT("BeginPath 2 h 0x%x p 0x%x\n", dc->dclevel.hPath, pPath);
   // Path handles are shared. Also due to recursion with in the same thread.
   GDIOBJ_UnlockObjByPtr((POBJ)pPath);       // Unlock
   pPath = PATH_LockPath(dc->dclevel.hPath); // Share Lock.
@@ -2265,7 +2265,7 @@ NtGdiEndPath(HDC  hDC)
   /* Set flag to indicate that path is finished */
   else
   {
-     DPRINT1("EndPath 0x%x\n", dc->dclevel.hPath);
+     DPRINT("EndPath 0x%x\n", dc->dclevel.hPath);
      pPath->state = PATH_Closed;
      dc->dclevel.flPath &= ~DCPATH_ACTIVE;
   }
