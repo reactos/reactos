@@ -27,11 +27,11 @@ typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
 
 static BOOLEAN APIENTRY
 BltMask(SURFOBJ* psoDest,
-        SURFOBJ* psoSource, // unused
+        SURFOBJ* psoSource,
         SURFOBJ* psoMask,
-        XLATEOBJ* ColorTranslation,  // unused
+        XLATEOBJ* ColorTranslation,
         RECTL* prclDest,
-        POINTL* pptlSource, // unused
+        POINTL* pptlSource,
         POINTL* pptlMask,
         BRUSHOBJ* pbo,
         POINTL* pptlBrush,
@@ -46,19 +46,21 @@ BltMask(SURFOBJ* psoDest,
     PSURFACE psurfPattern;
     ULONG PatternWidth = 0, PatternHeight = 0;
     LONG PatternX0 = 0, PatternX = 0, PatternY = 0;
+    LONG SrcX = 0, SrcY = 0;
     PFN_DIB_PutPixel fnDest_PutPixel = NULL;
-    PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
-    ULONG Pattern = 0;
+    PFN_DIB_GetPixel fnPattern_GetPixel = NULL, fnSrc_GetPixel = NULL, fnDest_GetPixel;
+    ULONG Pattern = 0, Source = 0, Dest = 0;
     HBITMAP hbmPattern;
+    DWORD fgndRop, bkgndRop;
 
-    ASSERT(psoSource == NULL);
-    ASSERT(pptlSource == NULL);
+    ASSERT(IS_VALID_ROP4(Rop4));
 
-    if (psoMask == NULL)
-    {
-        return FALSE;
-    }
+    fgndRop = ROP4_FGND(Rop4);
+    bkgndRop = ROP4_BKGND(Rop4);
 
+    //DPRINT1("Rop4 : 0x%08x\n", Rop4);
+
+    /* Determine pattern */
     if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
         pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
@@ -80,6 +82,18 @@ BltMask(SURFOBJ* psoDest,
     fjMaskBit0 = 0x80 >> (pptlMask->x & 0x07);
 
     fnDest_PutPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel;
+    fnDest_GetPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_GetPixel;
+
+    /* Do we have a source */
+    if(psoSource)
+    {
+        /* Sanity check */
+        ASSERT(ROP4_USES_SOURCE(Rop4));
+        fnSrc_GetPixel = DibFunctionsForBitmapFormat[psoSource->iBitmapFormat].DIB_GetPixel;
+        SrcY = pptlSource->y;
+        SrcX = pptlSource->x;
+    }
+
     if (psurfPattern)
     {
         PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
@@ -92,48 +106,64 @@ BltMask(SURFOBJ* psoDest,
         {
             PatternX0 += PatternWidth;
         }
-
-        for (y = prclDest->top; y < prclDest->bottom; y++)
-        {
-            pjMskCurrent = pjMskLine;
-            fjMaskBit = fjMaskBit0;
-            PatternX = PatternX0;
-
-            for (x = prclDest->left; x < prclDest->right; x++)
-            {
-                if (*pjMskCurrent & fjMaskBit)
-                {
-                    fnDest_PutPixel(psoDest, x, y,
-                        fnPattern_GetPixel(psoPattern, PatternX, PatternY));
-                }
-                fjMaskBit = _rotr8(fjMaskBit, 1);
-                pjMskCurrent += (fjMaskBit >> 7);
-                PatternX++;
-                PatternX %= PatternWidth;
-            }
-            pjMskLine += psoMask->lDelta;
-            PatternY++;
-            PatternY %= PatternHeight;
-        }
+        PatternX = PatternX0;
     }
     else
     {
         Pattern = pbo ? pbo->iSolidColor : 0;
-        for (y = prclDest->top; y < prclDest->bottom; y++)
-        {
-            pjMskCurrent = pjMskLine;
-            fjMaskBit = fjMaskBit0;
+    }
 
-            for (x = prclDest->left; x < prclDest->right; x++)
+    for (y = prclDest->top; y < prclDest->bottom; y++)
+    {
+        pjMskCurrent = pjMskLine;
+        fjMaskBit = fjMaskBit0;
+
+        for (x = prclDest->left; x < prclDest->right; x++)
+        {
+            Rop4 = (*pjMskCurrent & fjMaskBit) ? fgndRop : bkgndRop;
+
+            if(psurfPattern)
             {
-                if (*pjMskCurrent & fjMaskBit)
-                {
-                     fnDest_PutPixel(psoDest, x, y, Pattern);
-                }
-                fjMaskBit = _rotr8(fjMaskBit, 1);
-                pjMskCurrent += (fjMaskBit >> 7);
+                if(ROP4_USES_PATTERN(Rop4))
+                    Pattern = fnPattern_GetPixel(psoPattern, PatternX, PatternY);
+                PatternX++;
+                PatternX %= PatternWidth;
             }
-            pjMskLine += psoMask->lDelta;
+
+            if(psoSource)
+            {
+                if(ROP4_USES_SOURCE(Rop4))
+                {
+                    Source = XLATEOBJ_iXlate(ColorTranslation,
+                                             fnSrc_GetPixel(psoSource, SrcX, SrcY));
+                }
+                SrcX++;
+            }
+
+            if(ROP4_USES_DEST(Rop4))
+                Dest = fnDest_GetPixel(psoDest, x, y);
+
+            fnDest_PutPixel(psoDest,
+                            x,
+                            y,
+                            DIB_DoRop(Rop4,
+                                      Dest,
+                                      Source,
+                                      Pattern));
+            fjMaskBit = _rotr8(fjMaskBit, 1);
+            pjMskCurrent += (fjMaskBit >> 7);
+        }
+        pjMskLine += psoMask->lDelta;
+        if(psurfPattern)
+        {
+            PatternY++;
+            PatternY %= PatternHeight;
+            PatternX = PatternX0;
+        }
+        if(psoSource)
+        {
+            SrcY++;
+            SrcX = pptlSource->x;
         }
     }
 
@@ -153,7 +183,7 @@ BltPatCopy(SURFOBJ* Dest,
            POINTL* MaskPoint,
            BRUSHOBJ* pbo,
            POINTL* BrushPoint,
-           ROP4 Rop4)
+           DWORD Rop4)
 {
     // These functions are assigned if we're working with a DIB
     // The assigned functions depend on the bitsPerPixel of the DIB
@@ -188,7 +218,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     BltInfo.DestRect = *OutputRect;
     BltInfo.SourcePoint = *InputPoint;
 
-    if (ROP3_TO_ROP4(SRCCOPY) == Rop4)
+    if ((Rop4 & 0xFF) == R3_OPINDEX_SRCCOPY)
         return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
     BltInfo.Brush = pbo;
@@ -244,7 +274,7 @@ NtGdiEngBitBlt(
                 IN POINTL  *pptlMask,
                 IN BRUSHOBJ  *pbo,
                 IN POINTL  *pptlBrush,
-                IN ROP4  rop4    )
+                IN ROP4 Rop4)
 {
     RECTL  rclTrg;
     POINTL ptlSrc;
@@ -272,7 +302,7 @@ NtGdiEngBitBlt(
     }
     _SEH2_END;
 
-    return  EngBitBlt(psoTrg, psoSrc, psoMask, pco, pxlo, &rclTrg, &ptlSrc, &ptlMask, pbo, &ptlBrush, rop4);
+    return  EngBitBlt(psoTrg, psoSrc, psoMask, pco, pxlo, &rclTrg, &ptlSrc, &ptlMask, pbo, &ptlBrush, Rop4);
 }
 
 /*
@@ -289,7 +319,7 @@ EngBitBlt(SURFOBJ *DestObj,
           POINTL *MaskOrigin,
           BRUSHOBJ *pbo,
           POINTL *BrushOrigin,
-          ROP4 rop4)
+          ROP4 Rop4)
 {
     BYTE               clippingType;
     RECTL              CombinedRect;
@@ -306,15 +336,19 @@ EngBitBlt(SURFOBJ *DestObj,
     unsigned           i;
     POINTL             Pt;
     ULONG              Direction;
-    BOOL               UsesSource;
+    BOOL               UsesSource, UsesMask;
     POINTL             AdjustedBrushOrigin;
 
-    UsesSource = ROP4_USES_SOURCE(rop4);
-    if (R4_NOOP == rop4)
+    UsesSource = ROP4_USES_SOURCE(Rop4);
+    UsesMask = ROP4_USES_MASK(Rop4);
+
+    if (Rop4 == ROP4_NOOP)
     {
         /* Copy destination onto itself: nop */
         return TRUE;
     }
+
+    //DPRINT1("Rop4 : 0x%08x\n", Rop4);
 
     OutputRect = *DestRect;
     if (OutputRect.right < OutputRect.left)
@@ -434,11 +468,11 @@ EngBitBlt(SURFOBJ *DestObj,
         clippingType = ClipRegion->iDComplexity;
     }
 
-    if (R4_MASK == rop4)
+    if (UsesMask)
     {
         BltRectFunc = BltMask;
     }
-    else if (ROP3_TO_ROP4(PATCOPY) == rop4)
+    else if ((Rop4 & 0xFF) == R3_OPINDEX_PATCOPY)
     {
         if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
             BltRectFunc = CallDibBitBlt;
@@ -456,7 +490,7 @@ EngBitBlt(SURFOBJ *DestObj,
         case DC_TRIVIAL:
             Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                                  &OutputRect, &InputPoint, MaskOrigin, pbo,
-                                 &AdjustedBrushOrigin, rop4);
+                                 &AdjustedBrushOrigin, Rop4);
             break;
         case DC_RECT:
             /* Clip the blt to the clip rectangle */
@@ -470,7 +504,7 @@ EngBitBlt(SURFOBJ *DestObj,
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
                 Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
                                      &CombinedRect, &Pt, MaskOrigin, pbo,
-                                     &AdjustedBrushOrigin, rop4);
+                                     &AdjustedBrushOrigin, Rop4);
             }
             break;
         case DC_COMPLEX:
@@ -511,7 +545,7 @@ EngBitBlt(SURFOBJ *DestObj,
                         Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
                                              ColorTranslation, &CombinedRect, &Pt,
                                              MaskOrigin, pbo, &AdjustedBrushOrigin,
-                                             rop4) && Ret;
+                                             Rop4) && Ret;
                     }
                 }
             }
@@ -534,7 +568,7 @@ IntEngBitBlt(
     POINTL *pptlMask,
     BRUSHOBJ *pbo,
     POINTL *pptlBrush,
-    ROP4 rop4)
+    ROP4 Rop4)
 {
     SURFACE *psurfTrg;
     SURFACE *psurfSrc = NULL;
@@ -550,6 +584,11 @@ IntEngBitBlt(
     rclClipped = *prclTrg;
     RECTL_vMakeWellOrdered(&rclClipped);
 
+    //DPRINT1("Rop4 : 0x%08x\n", Rop4);
+
+    /* Sanity check */
+    ASSERT(IS_VALID_ROP4(Rop4));
+
     if (pco)
     {
         /* Clip target rect against the bounds of the clipping region */
@@ -564,7 +603,7 @@ IntEngBitBlt(
             pco = NULL;
     }
 
-    if (ROP4_USES_SOURCE(rop4))
+    if (ROP4_USES_SOURCE(Rop4))
     {
         ASSERT(psoSrc);
         psurfSrc = CONTAINING_RECORD(psoSrc, SURFACE, SurfObj);
@@ -614,7 +653,7 @@ IntEngBitBlt(
                         pptlMask,
                         pbo,
                         pptlBrush,
-                        rop4);
+                        Rop4);
 
     // FIXME: cleanup temp surface!
 
@@ -820,7 +859,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
             else
                 Ret = BltMask(psoOutput, NULL, psoInput, DestColorTranslation,
                               &OutputRect, NULL, &InputPoint, pbo, &AdjustedBrushOrigin,
-                              R4_MASK);
+                              ROP4_MASK);
             break;
         case DC_RECT:
             // Clip the blt to the clip rectangle
@@ -840,7 +879,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
                 else
                 {
                     Ret = BltMask(psoOutput, NULL, psoInput, DestColorTranslation,
-                                  &CombinedRect, NULL, &Pt, pbo, &AdjustedBrushOrigin, R4_MASK);
+                                  &CombinedRect, NULL, &Pt, pbo, &AdjustedBrushOrigin, ROP4_MASK);
                 }
             }
             break;
@@ -889,7 +928,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
                             Ret = BltMask(psoOutput, NULL, psoInput,
                                           DestColorTranslation, &CombinedRect, NULL,
                                           &Pt, pbo, &AdjustedBrushOrigin,
-                                          R4_MASK) && Ret;
+                                          ROP4_MASK) && Ret;
                         }
                     }
                 }
@@ -954,7 +993,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
        but the VMware driver doesn't hook that call. */
     IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP);
+                   ROP4_NOOP);
 
     ret = EngMaskBitBlt(psoDest, psoMask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                         &OutputRect, &InputPoint, pbo, BrushOrigin);
@@ -962,7 +1001,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     /* Dummy BitBlt to let driver know that something has changed. */
     IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP);
+                   ROP4_NOOP);
 
     return ret;
 }

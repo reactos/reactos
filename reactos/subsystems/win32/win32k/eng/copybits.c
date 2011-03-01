@@ -92,7 +92,7 @@ EngCopyBits(SURFOBJ *psoDest,
         // If CopyBits wasn't hooked, BitBlt must be
         ret = IntEngBitBlt(psoDest, psoSource,
                            NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                           NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
+                           NULL, NULL, NULL, ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 
         goto cleanup;
     }
@@ -111,7 +111,7 @@ EngCopyBits(SURFOBJ *psoDest,
     BltInfo.SourceSurface = psoSource;
     BltInfo.PatternSurface = NULL;
     BltInfo.XlateSourceToDest = ColorTranslation;
-    BltInfo.Rop4 = SRCCOPY;
+    BltInfo.Rop4 = ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY);
 
     switch (clippingType)
     {

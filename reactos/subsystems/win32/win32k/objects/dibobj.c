@@ -531,7 +531,7 @@ NtGdiSetDIBitsToDeviceInternal(
                           NULL,
                           NULL,
                           NULL,
-                          ROP3_TO_ROP4(SRCCOPY));
+                          ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 
     /* Cleanup EXLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);

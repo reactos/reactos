@@ -307,7 +307,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 /*
  * IntInvalidateWindows
  *
- * Internal function used by IntRedrawWindow, UserRedrawDesktop, 
+ * Internal function used by IntRedrawWindow, UserRedrawDesktop,
  * co_WinPosSetWindowPos, IntValidateParent, co_UserRedrawWindow.
  */
 VOID FASTCALL
@@ -759,7 +759,7 @@ IntPrintWindow(
        xSrc = 0;
        ySrc = 0;
     }
-    
+
     // TODO: Setup Redirection for Print.
     return FALSE;
 
@@ -1951,7 +1951,11 @@ UserRealizePalette(HDC hdc)
   HWND hWnd;
   DWORD Ret;
 
-  Ret = IntGdiRealizePalette(hdc);
+  PDC pdc = DC_LockDc(hdc);
+  if(!pdc)
+    return 0;
+
+  Ret = IntGdiRealizePalette(pdc);
   if (Ret) // There was a change.
   {
       hWnd = IntWindowFromDC(hdc);
@@ -1960,6 +1964,7 @@ UserRealizePalette(HDC hdc)
          UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
+  DC_UnlockDc(pdc);
   return Ret;
 }
 
@@ -2065,7 +2070,7 @@ NtUserPrintWindow(
     HDC  hdcBlt,
     UINT nFlags)
 {
-    PWND Window;   
+    PWND Window;
     BOOL Ret = FALSE;
 
     UserEnterExclusive();
@@ -2075,7 +2080,7 @@ NtUserPrintWindow(
        Window = UserGetWindowObject(hwnd);
        // TODO: Add Desktop and MessageBox check via FNID's.
        if ( Window )
-       { 
+       {
           /* Validate flags and check it as a mask for 0 or 1. */
           if ( (nFlags & PW_CLIENTONLY) == nFlags)
              Ret = IntPrintWindow( Window, hdcBlt, nFlags);

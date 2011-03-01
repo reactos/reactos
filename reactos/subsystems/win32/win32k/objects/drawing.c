@@ -1249,7 +1249,7 @@ IntFillRect( DC *dc,
              PBRUSH pbrush,
              BOOL Pen)
 {
-    DWORD ROP = PATCOPY;
+    DWORD ROP = ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY);
     RECTL DestRect;
     SURFACE *psurf;
     POINTL BrushOrigin;
@@ -1291,7 +1291,7 @@ IntFillRect( DC *dc,
         BrushOrigin.y = pbrush->ptOrigin.y;
 
         if (pdcattr->jROP2 == R2_XORPEN)
-            ROP = PATINVERT;
+            ROP = ROP4_FROM_INDEX(R3_OPINDEX_PATINVERT);
 
         Ret = IntEngBitBlt(
                   &psurf->SurfObj,
@@ -1304,7 +1304,7 @@ IntFillRect( DC *dc,
                   NULL,
                   Pen ? &dc->eboLine.BrushObject : &dc->eboFill.BrushObject,
                   &BrushOrigin,
-                  ROP3_TO_ROP4(ROP));
+                  ROP);
     }
 
     return (int)Ret;

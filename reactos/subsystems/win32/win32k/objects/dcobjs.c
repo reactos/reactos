@@ -179,6 +179,11 @@ GdiSelectPalette(
                                   DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
+    if(pdc->dctype == DCTYPE_MEMORY)
+    {
+        IntGdiRealizePalette(pdc);
+    }
+
     PALETTE_ShareUnlockPalette(ppal);
     DC_UnlockDc(pdc);
 

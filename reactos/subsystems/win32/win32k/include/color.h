@@ -27,7 +27,7 @@ typedef struct _COLORSPACE
 typedef struct _COLORTRANSFORMOBJ
 {
   BASEOBJECT BaseObject;
-  HANDLE     hColorTransform; 
+  HANDLE     hColorTransform;
 } GDICLRXFORM, COLORTRANSFORMOBJ, *PCOLORTRANSFORMOBJ;
 
 extern HCOLORSPACE hStockColorSpace;
@@ -36,6 +36,6 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate (VOID);
 COLORREF APIENTRY COLOR_LookupNearestColor (PALETTEENTRY* palPalEntry, INT size, COLORREF color);
 INT APIENTRY COLOR_PaletteLookupExactIndex (PALETTEENTRY* palPalEntry, INT size, COLORREF col);
 INT APIENTRY COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size, XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved);
-UINT FASTCALL IntGdiRealizePalette (HDC);
+UINT FASTCALL IntGdiRealizePalette (PDC);
 HCOLORSPACE FASTCALL IntGdiCreateColorSpace(PLOGCOLORSPACEEXW);
 BOOL FASTCALL IntGdiDeleteColorSpace(HCOLORSPACE);

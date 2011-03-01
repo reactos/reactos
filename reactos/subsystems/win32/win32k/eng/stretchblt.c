@@ -104,7 +104,7 @@ EngStretchBltROP(
     IN POINTL  *MaskOrigin,
     IN ULONG  Mode,
     IN BRUSHOBJ *pbo,
-    IN DWORD ROP4)
+    IN ROP4 Rop4)
 {
     RECTL              InputRect;
     RECTL              OutputRect;
@@ -116,7 +116,7 @@ EngStretchBltROP(
     PSTRETCHRECTFUNC   BltRectFunc;
     BOOLEAN            Ret = TRUE;
     POINTL             AdjustedBrushOrigin;
-    BOOL               UsesSource = ROP4_USES_SOURCE(ROP4);
+    BOOL               UsesSource = ROP4_USES_SOURCE(Rop4);
 
     BYTE               clippingType;
     RECTL              ClipRect;
@@ -132,6 +132,13 @@ EngStretchBltROP(
     LONG SrcHeight;
     LONG SrcWidth;
 
+    if (Rop4 == ROP4_NOOP)
+    {
+        /* Copy destination onto itself: nop */
+        return TRUE;
+    }
+
+
     /* Determine clipping type */
     if (ClipRegion == (CLIPOBJ *) NULL)
     {
@@ -140,12 +147,6 @@ EngStretchBltROP(
     else
     {
         clippingType = ClipRegion->iDComplexity;
-    }
-
-    if (ROP4 == R4_NOOP)
-    {
-        /* Copy destination onto itself: nop */
-        return TRUE;
     }
 
     OutputRect = *prclDest;
@@ -257,7 +258,7 @@ EngStretchBltROP(
         case DC_TRIVIAL:
             Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
-                         pbo, &AdjustedBrushOrigin, ROP4);
+                         pbo, &AdjustedBrushOrigin, Rop4);
             break;
         case DC_RECT:
             // Clip the blt to the clip rectangle
@@ -278,7 +279,7 @@ EngStretchBltROP(
                            MaskOrigin,
                            pbo,
                            &AdjustedBrushOrigin,
-                           ROP4);
+                           Rop4);
             }
             break;
         case DC_COMPLEX:
@@ -323,7 +324,7 @@ EngStretchBltROP(
                            MaskOrigin,
                            pbo,
                            &AdjustedBrushOrigin,
-                           ROP4);
+                           Rop4);
                     }
                 }
             }
@@ -371,7 +372,7 @@ EngStretchBlt(
         MaskOrigin,
         Mode,
         NULL,
-        ROP3_TO_ROP4(SRCCOPY));
+        ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 }
 
 BOOL APIENTRY
@@ -385,7 +386,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                  POINTL *pMaskOrigin,
                  BRUSHOBJ *pbo,
                  POINTL *BrushOrigin,
-                 ROP4 ROP)
+                 DWORD Rop4)
 {
     BOOLEAN ret;
     COLORADJUSTMENT ca;
@@ -395,13 +396,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     RECTL InputClippedRect;
     RECTL InputRect;
     RECTL OutputRect;
-    BOOL UsesSource = ROP4_USES_SOURCE(ROP);
+    BOOL UsesSource = ROP4_USES_SOURCE(Rop4);
     LONG InputClWidth, InputClHeight, InputWidth, InputHeight;
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
     ASSERT(psurfDest);
     ASSERT(DestRect);
+
+    /* Sanity check */
+    ASSERT(IS_VALID_ROP4(Rop4));
 
     InputClippedRect = *DestRect;
     if (InputClippedRect.right < InputClippedRect.left)
@@ -485,7 +489,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                                                  &MaskOrigin,
                                                  COLORONCOLOR,
                                                  pbo,
-                                                 ROP);
+                                                 Rop4);
     }
 
     if (! ret)
@@ -502,7 +506,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                                &MaskOrigin,
                                COLORONCOLOR,
                                pbo,
-                               ROP);
+                               Rop4);
     }
 
     return ret;

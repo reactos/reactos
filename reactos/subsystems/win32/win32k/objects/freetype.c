@@ -3269,7 +3269,7 @@ GreExtTextOutW(
             &SourcePoint,
             &dc->eboBackground.BrushObject,
             &BrushOrigin,
-            ROP3_TO_ROP4(PATCOPY));
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
         DC_vFinishBlit(dc, NULL);
     }
@@ -3514,7 +3514,7 @@ GreExtTextOutW(
                 &SourcePoint,
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
-                ROP3_TO_ROP4(PATCOPY));
+                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
             MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
 

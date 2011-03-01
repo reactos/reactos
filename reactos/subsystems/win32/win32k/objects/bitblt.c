@@ -23,7 +23,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
+#define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
 
+#define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
+#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
 BOOL APIENTRY
 NtGdiAlphaBlend(
@@ -169,144 +173,21 @@ NtGdiBitBlt(
     IN DWORD crBackColor,
     IN FLONG fl)
 {
-    PDC DCDest;
-    PDC DCSrc = NULL;
-    HDC ahDC[2];
-    PGDIOBJ apObj[2];
-    PDC_ATTR pdcattr = NULL;
-    SURFACE *BitmapDest, *BitmapSrc = NULL;
-    RECTL DestRect, SourceRect;
-    POINTL SourcePoint;
-    BOOL Status = FALSE;
-    EXLATEOBJ exlo;
-    XLATEOBJ *XlateObj = NULL;
-    BOOL UsesSource = ROP3_USES_SOURCE(ROP);
-
-    DPRINT("Locking DCs\n");
-    ahDC[0] = hDCDest;
-    ahDC[1] = hDCSrc ;
-    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
-    DCDest = apObj[0];
-    DCSrc = apObj[1];
-
-    if (NULL == DCDest)
-    {
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
-        return FALSE;
-    }
-
-    if (DCDest->dctype == DC_TYPE_INFO)
-    {
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
-
-    if (UsesSource)
-    {
-        if (NULL == DCSrc)
-        {
-            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
-            return FALSE;
-        }
-        if (DCSrc->dctype == DC_TYPE_INFO)
-        {
-            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-            GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-            /* Yes, Windows really returns TRUE in this case */
-            return TRUE;
-        }
-    }
-    else if(DCSrc)
-    {
-        DPRINT1("Getting a valid Source handle without using source!!!\n");
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        DCSrc = NULL ;
-    }
-
-    pdcattr = DCDest->pdcattr;
-
-    DestRect.left   = XDest;
-    DestRect.top    = YDest;
-    DestRect.right  = XDest+Width;
-    DestRect.bottom = YDest+Height;
-    IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
-
-    DestRect.left   += DCDest->ptlDCOrig.x;
-    DestRect.top    += DCDest->ptlDCOrig.y;
-    DestRect.right  += DCDest->ptlDCOrig.x;
-    DestRect.bottom += DCDest->ptlDCOrig.y;
-
-    SourcePoint.x = XSrc;
-    SourcePoint.y = YSrc;
-
-    if (UsesSource)
-    {
-        IntLPtoDP(DCSrc, (LPPOINT)&SourcePoint, 1);
-
-        SourcePoint.x += DCSrc->ptlDCOrig.x;
-        SourcePoint.y += DCSrc->ptlDCOrig.y;
-        /* Calculate Source Rect */
-        SourceRect.left = SourcePoint.x;
-        SourceRect.top = SourcePoint.y;
-        SourceRect.right = SourcePoint.x + DestRect.right - DestRect.left;
-        SourceRect.bottom = SourcePoint.y + DestRect.bottom - DestRect.top ;
-    }
-
-    /* Prepare blit */
-    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
-
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(DCDest);
-
-    /* Determine surfaces to be used in the bitblt */
-    BitmapDest = DCDest->dclevel.pSurface;
-    if (!BitmapDest)
-        goto cleanup;
-
-    if (UsesSource)
-    {
-        {
-            BitmapSrc = DCSrc->dclevel.pSurface;
-            if (!BitmapSrc)
-                goto cleanup;
-        }
-    }
-
-    /* Create the XLATEOBJ. */
-    if (UsesSource)
-    {
-        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
-        XlateObj = &exlo.xlo;
-    }
-
-    /* Perform the bitblt operation */
-    Status = IntEngBitBlt(&BitmapDest->SurfObj,
-                          BitmapSrc ? &BitmapSrc->SurfObj : NULL,
-                          NULL,
-                          DCDest->rosdc.CombinedClip,
-                          XlateObj,
-                          &DestRect,
-                          &SourcePoint,
-                          NULL,
-                          &DCDest->eboFill.BrushObject,
-                          &DCDest->dclevel.pbrFill->ptOrigin,
-                          ROP3_TO_ROP4(ROP));
-
-    if (UsesSource)
-        EXLATEOBJ_vCleanup(&exlo);
-cleanup:
-    DC_vFinishBlit(DCDest, DCSrc);
-    if (UsesSource)
-    {
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-    }
-    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-
-    return Status;
+    /* Forward to NtGdiMaskBlt */
+    // TODO : what's fl for?
+    return NtGdiMaskBlt(hDCDest,
+                        XDest,
+                        YDest,
+                        Width,
+                        Height,
+                        hDCSrc,
+                        XSrc,
+                        YSrc,
+                        NULL,
+                        0,
+                        0,
+                        ROP,
+                        crBackColor);
 }
 
 BOOL APIENTRY
@@ -414,86 +295,6 @@ done:
     return Ret;
 }
 
-/***********************************************************************
-* MaskBlt
-* Ported from WINE by sedwards 11-4-03
-*
-* Someone thought it would be faster to do it here and then switch back
-* to GDI32. I dunno. Write a test and let me know.
-* A. It should be in here!
-*/
-
-static const DWORD ROP3Table[256] =
-{
-  0x000042, 0x010289, 0x020C89, 0x0300AA, 0x040C88, 0x0500A9, 0x060865, 0x0702C5,
-  0x080F08, 0x090245, 0x0A0329, 0x0B0B2A, 0x0C0324, 0x0D0B25, 0x0E08A5, 0x0F0001,
-  0x100C85, 0x1100A6, 0x120868, 0x1302C8, 0x140869, 0x1502C9, 0x165CCA, 0x171D54,
-  0x180D59, 0x191CC8, 0x1A06C5, 0x1B0768, 0x1C06CA, 0x1D0766, 0x1E01A5, 0x1F0385,
-  0x200F09, 0x210248, 0x220326, 0x230B24, 0x240D55, 0x251CC5, 0x2606C8, 0x271868,
-  0x280369, 0x2916CA, 0x2A0CC9, 0x2B1D58, 0x2C0784, 0x2D060A, 0x2E064A, 0x2F0E2A,
-  0x30032A, 0x310B28, 0x320688, 0x330008, 0x3406C4, 0x351864, 0x3601A8, 0x370388,
-  0x38078A, 0x390604, 0x3A0644, 0x3B0E24, 0x3C004A, 0x3D18A4, 0x3E1B24, 0x3F00EA,
-  0x400F0A, 0x410249, 0x420D5D, 0x431CC4, 0x440328, 0x450B29, 0x4606C6, 0x47076A,
-  0x480368, 0x4916C5, 0x4A0789, 0x4B0605, 0x4C0CC8, 0x4D1954, 0x4E0645, 0x4F0E25,
-  0x500325, 0x510B26, 0x5206C9, 0x530764, 0x5408A9, 0x550009, 0x5601A9, 0x570389,
-  0x580785, 0x590609, 0x5A0049, 0x5B18A9, 0x5C0649, 0x5D0E29, 0x5E1B29, 0x5F00E9,
-  0x600365, 0x6116C6, 0x620786, 0x630608, 0x640788, 0x650606, 0x660046, 0x6718A8,
-  0x6858A6, 0x690145, 0x6A01E9, 0x6B178A, 0x6C01E8, 0x6D1785, 0x6E1E28, 0x6F0C65,
-  0x700CC5, 0x711D5C, 0x720648, 0x730E28, 0x740646, 0x750E26, 0x761B28, 0x7700E6,
-  0x7801E5, 0x791786, 0x7A1E29, 0x7B0C68, 0x7C1E24, 0x7D0C69, 0x7E0955, 0x7F03C9,
-  0x8003E9, 0x810975, 0x820C49, 0x831E04, 0x840C48, 0x851E05, 0x8617A6, 0x8701C5,
-  0x8800C6, 0x891B08, 0x8A0E06, 0x8B0666, 0x8C0E08, 0x8D0668, 0x8E1D7C, 0x8F0CE5,
-  0x900C45, 0x911E08, 0x9217A9, 0x9301C4, 0x9417AA, 0x9501C9, 0x960169, 0x97588A,
-  0x981888, 0x990066, 0x9A0709, 0x9B07A8, 0x9C0704, 0x9D07A6, 0x9E16E6, 0x9F0345,
-  0xA000C9, 0xA11B05, 0xA20E09, 0xA30669, 0xA41885, 0xA50065, 0xA60706, 0xA707A5,
-  0xA803A9, 0xA90189, 0xAA0029, 0xAB0889, 0xAC0744, 0xAD06E9, 0xAE0B06, 0xAF0229,
-  0xB00E05, 0xB10665, 0xB21974, 0xB30CE8, 0xB4070A, 0xB507A9, 0xB616E9, 0xB70348,
-  0xB8074A, 0xB906E6, 0xBA0B09, 0xBB0226, 0xBC1CE4, 0xBD0D7D, 0xBE0269, 0xBF08C9,
-  0xC000CA, 0xC11B04, 0xC21884, 0xC3006A, 0xC40E04, 0xC50664, 0xC60708, 0xC707AA,
-  0xC803A8, 0xC90184, 0xCA0749, 0xCB06E4, 0xCC0020, 0xCD0888, 0xCE0B08, 0xCF0224,
-  0xD00E0A, 0xD1066A, 0xD20705, 0xD307A4, 0xD41D78, 0xD50CE9, 0xD616EA, 0xD70349,
-  0xD80745, 0xD906E8, 0xDA1CE9, 0xDB0D75, 0xDC0B04, 0xDD0228, 0xDE0268, 0xDF08C8,
-  0xE003A5, 0xE10185, 0xE20746, 0xE306EA, 0xE40748, 0xE506E5, 0xE61CE8, 0xE70D79,
-  0xE81D74, 0xE95CE6, 0xEA02E9, 0xEB0849, 0xEC02E8, 0xED0848, 0xEE0086, 0xEF0A08,
-  0xF00021, 0xF10885, 0xF20B05, 0xF3022A, 0xF40B0A, 0xF50225, 0xF60265, 0xF708C5,
-  0xF802E5, 0xF90845, 0xFA0089, 0xFB0A09, 0xFC008A, 0xFD0A0A, 0xFE02A9, 0xFF0062,
-};
-
-static __inline BYTE
-SwapROP3_SrcDst(BYTE bRop3)
-{
-    return (bRop3 & 0x99) | ((bRop3 & 0x22) << 1) | ((bRop3 & 0x44) >> 1);
-}
-
-#define FRGND_ROP3(ROP4)    ((ROP4) & 0x00FFFFFF)
-#define BKGND_ROP3(ROP4)    (ROP3Table[(SwapROP3_SrcDst((ROP4)>>24)) & 0xFF])
-#define DSTCOPY    0x00AA0029
-#define DSTERASE    0x00220326 /* dest = dest & (~src) : DSna */
-
-/* NOTE: An alternative algorithm could use a pattern brush, created from
- * the mask bitmap and then use raster operation 0xCA to combine the fore
- * and background bitmaps. In this case erasing the bits beforehand would be
- * unneccessary. On the other hand the Operation does not provide an optimized
- * version in the DIB code, while SRCAND and SRCPAINT do.
- * A fully correct implementation would call Eng/DrvBitBlt, but our
- * EngBitBlt completely ignores the mask surface.
- *
- * Msk Fg Bk => x
- *  P  S  D        DPSDxax
- * ------------------------------------------
- *  0  0  0     0  0000xax = 000ax = 00x = 0
- *  0  0  1     1  1001xax = 101ax = 10x = 1
- *  0  1  0     0  0010xax = 001ax = 00x = 0
- *  0  1  1     1  1011xax = 100ax = 10x = 1
- *  1  0  0     0  0100xax = 010ax = 00x = 0
- *  1  0  1     0  1101xax = 111ax = 11x = 0
- *  1  1  0     1  0110xax = 011ax = 01x = 1
- *  1  1  1     1  1111xax = 110ax = 10x = 1
- *
- * Operation index = 11001010 = 0xCA = PSaDPnao = DPSDxax
- *                                     ^ no, this is not random letters, its reverse Polish notation
- */
-
 BOOL APIENTRY
 NtGdiMaskBlt(
     HDC hdcDest,
@@ -510,97 +311,188 @@ NtGdiMaskBlt(
     DWORD dwRop,
     IN DWORD crBackColor)
 {
-    HBITMAP hbmFore, hbmBack;
-    HDC hdcMask, hdcFore, hdcBack;
-    PDC pdc;
-    HBRUSH hbr;
-    COLORREF crFore, crBack;
+    PDC DCDest;
+    PDC DCSrc = NULL;
+    HDC ahDC[2];
+    PGDIOBJ apObj[2];
+    PDC_ATTR pdcattr = NULL;
+    SURFACE *BitmapDest, *BitmapSrc = NULL, *psurfMask = NULL;
+    RECTL DestRect, SourceRect;
+    POINTL SourcePoint, MaskPoint;
+    BOOL Status = FALSE;
+    EXLATEOBJ exlo;
+    XLATEOBJ *XlateObj = NULL;
+    BOOL UsesSource = ROP_USES_SOURCE(dwRop);
+    BOOL UsesMask;
 
-    if (!hbmMask)
-        return NtGdiBitBlt(hdcDest,
-                           nXDest,
-                           nYDest,
-                           nWidth,
-                           nHeight,
-                           hdcSrc,
-                           nXSrc,
-                           nYSrc,
-                           FRGND_ROP3(dwRop),
-                           crBackColor,
-                           0);
+    FIXUP_ROP(dwRop);
 
-    /* Lock the dest DC */
-    pdc = DC_LockDc(hdcDest);
-    if (!pdc) return FALSE;
+    UsesMask = ROP_USES_MASK(dwRop);
 
-    /* Get brush and colors from dest dc */
-    hbr = pdc->pdcattr->hbrush;
-    crFore = pdc->pdcattr->crForegroundClr;
-    crBack = pdc->pdcattr->crBackgroundClr;
+    //DPRINT1("dwRop : 0x%08x\n", dwRop);
 
-    /* Unlock the DC */
-    DC_UnlockDc(pdc);
+    /* Take care of mask bitmap */
+    if(hbmMask)
+    {
+        psurfMask = SURFACE_LockSurface(hbmMask);
+        if(!psurfMask)
+        {
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+    }
 
-    /* 1. Create mask bitmap's dc */
-    hdcMask = NtGdiCreateCompatibleDC(hdcDest);
-    NtGdiSelectBitmap(hdcMask, hbmMask);
+    if(UsesMask)
+    {
+        if(!psurfMask)
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+        if(gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            SURFACE_UnlockSurface(psurfMask);
+            return FALSE;
+        }
+    }
+    else if(psurfMask)
+    {
+        DPRINT1("Getting Mask bitmap without needing it?\n");
+        SURFACE_UnlockSurface(psurfMask);
+        psurfMask = NULL;
+    }
+    MaskPoint.x = xMask;
+    MaskPoint.y = yMask;
 
-    /* 2. Create masked Background bitmap */
+    /* Take care of source and destination bitmap */
+    DPRINT("Locking DCs\n");
+    ahDC[0] = hdcDest;
+    ahDC[1] = hdcSrc ;
+    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
 
-    /* 2.1 Create bitmap */
-    hdcBack = NtGdiCreateCompatibleDC(hdcDest);
-    hbmBack = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
-    NtGdiSelectBitmap(hdcBack, hbmBack);
+    if (NULL == DCDest)
+    {
+        if(DCSrc) DC_UnlockDc(DCSrc);
+        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hdcDest);
+        return FALSE;
+    }
 
-    /* 2.2 Copy source bitmap */
-    NtGdiSelectBrush(hdcBack, hbr);
-    IntGdiSetBkColor(hdcBack, crBack);
-    IntGdiSetTextColor(hdcBack, crFore);
-    NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY, 0, 0);
+    if (DCDest->dctype == DC_TYPE_INFO)
+    {
+        if(DCSrc) DC_UnlockDc(DCSrc);
+        DC_UnlockDc(DCDest);
+        /* Yes, Windows really returns TRUE in this case */
+        return TRUE;
+    }
 
-    /* 2.3 Do the background rop */
-    NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, BKGND_ROP3(dwRop), 0, 0);
+    if (UsesSource)
+    {
+        if (NULL == DCSrc)
+        {
+            DC_UnlockDc(DCDest);
+            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hdcSrc);
+            return FALSE;
+        }
+        if (DCSrc->dctype == DC_TYPE_INFO)
+        {
+            DC_UnlockDc(DCDest);
+            DC_UnlockDc(DCSrc);
+            /* Yes, Windows really returns TRUE in this case */
+            return TRUE;
+        }
+    }
+    else if(DCSrc)
+    {
+        DPRINT("Getting a valid Source handle without using source!!!\n");
+        DC_UnlockDc(DCSrc);
+        DCSrc = NULL ;
+    }
 
-    /* 2.4 Erase the foreground pixels */
-    IntGdiSetBkColor(hdcBack, RGB(0xFF, 0xFF, 0xFF));
-    IntGdiSetTextColor(hdcBack, RGB(0, 0, 0));
-    NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcMask, xMask, yMask, SRCAND, 0, 0);
+    pdcattr = DCDest->pdcattr;
 
-    /* 3. Create masked Foreground bitmap */
+    DestRect.left   = nXDest;
+    DestRect.top    = nYDest;
+    DestRect.right  = nXDest + nWidth;
+    DestRect.bottom = nYDest + nHeight;
+    IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
-    /* 3.1 Create bitmap */
-    hdcFore = NtGdiCreateCompatibleDC(hdcDest);
-    hbmFore = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
-    NtGdiSelectBitmap(hdcFore, hbmFore);
+    DestRect.left   += DCDest->ptlDCOrig.x;
+    DestRect.top    += DCDest->ptlDCOrig.y;
+    DestRect.right  += DCDest->ptlDCOrig.x;
+    DestRect.bottom += DCDest->ptlDCOrig.y;
 
-    /* 3.2 Copy the dest bitmap */
-    NtGdiSelectBrush(hdcFore, hbr);
-    IntGdiSetBkColor(hdcFore, crBack);
-    IntGdiSetTextColor(hdcFore, crFore);
-    NtGdiBitBlt(hdcFore, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY, 0, 0);
+    SourcePoint.x = nXSrc;
+    SourcePoint.y = nYSrc;
 
-    /* 2.3 Do the foreground rop */
-    NtGdiBitBlt(hdcFore, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop), 0,0);
+    if (UsesSource)
+    {
+        IntLPtoDP(DCSrc, (LPPOINT)&SourcePoint, 1);
 
-    /* 2.4 Erase the background pixels */
-    IntGdiSetBkColor(hdcFore, RGB(0, 0, 0));
-    IntGdiSetTextColor(hdcFore, RGB(0xFF, 0xFF, 0xFF));
-    NtGdiBitBlt(hdcFore, 0, 0, nWidth, nHeight, hdcMask, xMask, yMask, SRCAND, 0, 0);
+        SourcePoint.x += DCSrc->ptlDCOrig.x;
+        SourcePoint.y += DCSrc->ptlDCOrig.y;
+        /* Calculate Source Rect */
+        SourceRect.left = SourcePoint.x;
+        SourceRect.top = SourcePoint.y;
+        SourceRect.right = SourcePoint.x + DestRect.right - DestRect.left;
+        SourceRect.bottom = SourcePoint.y + DestRect.bottom - DestRect.top ;
+    }
 
-    /* 3. Combine the fore and background into the background bitmap */
-    NtGdiBitBlt(hdcBack, 0, 0, nWidth, nHeight, hdcFore, 0, 0, SRCPAINT, 0, 0);
+    /* Prepare blit */
+    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
 
-    /* 4. Copy the result to hdcDest */
-    NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcBack, 0, 0, SRCCOPY, 0, 0);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
-    /* 5. delete all temp objects */
-    NtGdiDeleteObjectApp(hdcBack);
-    NtGdiDeleteObjectApp(hdcFore);
-    NtGdiDeleteObjectApp(hdcMask);
-    GreDeleteObject(hbmFore);
-    GreDeleteObject(hbmBack);
+    /* Determine surfaces to be used in the bitblt */
+    BitmapDest = DCDest->dclevel.pSurface;
+    if (!BitmapDest)
+        goto cleanup;
 
-    return TRUE;
+    if (UsesSource)
+    {
+        {
+            BitmapSrc = DCSrc->dclevel.pSurface;
+            if (!BitmapSrc)
+                goto cleanup;
+        }
+    }
+
+    /* Create the XLATEOBJ. */
+    if (UsesSource)
+    {
+        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        XlateObj = &exlo.xlo;
+    }
+
+
+    /* Perform the bitblt operation */
+    Status = IntEngBitBlt(&BitmapDest->SurfObj,
+                          BitmapSrc ? &BitmapSrc->SurfObj : NULL,
+                          psurfMask ? &psurfMask->SurfObj : NULL,
+                          DCDest->rosdc.CombinedClip,
+                          XlateObj,
+                          &DestRect,
+                          &SourcePoint,
+                          &MaskPoint,
+                          &DCDest->eboFill.BrushObject,
+                          &DCDest->dclevel.pbrFill->ptOrigin,
+                          ROP_TO_ROP4(dwRop));
+
+    if (UsesSource)
+        EXLATEOBJ_vCleanup(&exlo);
+cleanup:
+    DC_vFinishBlit(DCDest, DCSrc);
+    if (UsesSource)
+    {
+        DC_UnlockDc(DCSrc);
+    }
+    DC_UnlockDc(DCDest);
+    if(psurfMask) SURFACE_UnlockSurface(psurfMask);
+
+    return Status;
 }
 
 BOOL
@@ -655,7 +547,9 @@ GreStretchBltMask(
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
-    BOOL UsesSource = ROP3_USES_SOURCE(ROP);
+    BOOL UsesSource = ROP_USES_SOURCE(ROP);
+
+    FIXUP_ROP(ROP);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -803,7 +697,7 @@ GreStretchBltMask(
                               BitmapMask ? &MaskPoint : NULL,
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
-                              ROP3_TO_ROP4(ROP));
+                              ROP_TO_ROP4(ROP));
     if (UsesSource)
     {
         EXLATEOBJ_vCleanup(&exlo);
@@ -877,6 +771,8 @@ IntPatBlt(
 
     ASSERT(pbrush);
 
+    FIXUP_ROP(dwRop);
+
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
         return TRUE;
@@ -934,7 +830,7 @@ IntPatBlt(
         NULL,
         &eboFill.BrushObject,
         &BrushOrigin,
-        ROP3_TO_ROP4(dwRop));
+        ROP_TO_ROP4(dwRop));
 
     DC_vFinishBlit(pdc, NULL);
 
@@ -1007,7 +903,7 @@ NtGdiPatBlt(
     PDC_ATTR pdcattr;
     BOOL ret;
 
-    BOOL UsesSource = ROP3_USES_SOURCE(ROP);
+    BOOL UsesSource = ROP_USES_SOURCE(ROP);
     if (UsesSource)
     {
         /* in this case we call on GdiMaskBlt */

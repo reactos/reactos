@@ -87,11 +87,12 @@ DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
   }
 };
 
+
 ULONG
 DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
 {
   ULONG ResultNibble;
-  ULONG Result;
+  ULONG Result = 0;
   ULONG i;
 static const ULONG ExpandDest[16] =
     {
@@ -151,31 +152,34 @@ static const ULONG ExpandDest[16] =
       0xF0F0F0F0 /* 1111 */,
     };
 
-  /* Optimized code for the various named rop codes. */
-  switch (Rop)
+    Rop &=0xFF;
+    switch(Rop)
     {
-    case ROP3_TO_ROP4(BLACKNESS):   return(0);
-    case ROP3_TO_ROP4(NOTSRCERASE): return(~(Dest | Source));
-    case ROP3_TO_ROP4(NOTSRCCOPY):  return(~Source);
-    case ROP3_TO_ROP4(SRCERASE):    return((~Dest) & Source);
-    case ROP3_TO_ROP4(DSTINVERT):   return(~Dest);
-    case ROP3_TO_ROP4(PATINVERT):   return(Dest ^ Pattern);
-    case ROP3_TO_ROP4(SRCINVERT):   return(Dest ^ Source);
-    case ROP3_TO_ROP4(SRCAND):      return(Dest & Source);
-    case ROP3_TO_ROP4(MERGEPAINT):  return(Dest | (~Source));
-    case ROP3_TO_ROP4(SRCPAINT):    return(Dest | Source);
-    case ROP3_TO_ROP4(MERGECOPY):   return(Source & Pattern);
-    case ROP3_TO_ROP4(SRCCOPY):     return(Source);
-    case ROP3_TO_ROP4(PATCOPY):     return(Pattern);
-    case ROP3_TO_ROP4(PATPAINT):    return(Dest | (~Source) | Pattern);
-    case ROP3_TO_ROP4(WHITENESS):   return(0xFFFFFFFF);
+
+        /* Optimized code for the various named rop codes. */
+        case R3_OPINDEX_NOOP:        return(Dest);
+        case R3_OPINDEX_BLACKNESS:   return(0);
+        case R3_OPINDEX_NOTSRCERASE: return(~(Dest | Source));
+        case R3_OPINDEX_NOTSRCCOPY:  return(~Source);
+        case R3_OPINDEX_SRCERASE:    return((~Dest) & Source);
+        case R3_OPINDEX_DSTINVERT:   return(~Dest);
+        case R3_OPINDEX_PATINVERT:   return(Dest ^ Pattern);
+        case R3_OPINDEX_SRCINVERT:   return(Dest ^ Source);
+        case R3_OPINDEX_SRCAND:      return(Dest & Source);
+        case R3_OPINDEX_MERGEPAINT:  return(Dest | (~Source));
+        case R3_OPINDEX_SRCPAINT:    return(Dest | Source);
+        case R3_OPINDEX_MERGECOPY:   return(Source & Pattern);
+        case R3_OPINDEX_SRCCOPY:     return(Source);
+        case R3_OPINDEX_PATCOPY:     return(Pattern);
+        case R3_OPINDEX_PATPAINT:    return(Dest | (~Source) | Pattern);
+        case R3_OPINDEX_WHITENESS:   return(0xFFFFFFFF);
     }
+
   /* Expand the ROP operation to all four bytes */
-  Rop &= 0xFF;
   Rop |= (Rop << 24) | (Rop << 16) | (Rop << 8);
   /* Do the operation on four bits simultaneously. */
   Result = 0;
-  for (i = 0; i < 8; i++)
+  for (i = 0; i < 6; i++)
   {
     ResultNibble = Rop & ExpandDest[Dest & 0xF] & ExpandSource[Source & 0xF] & ExpandPattern[Pattern & 0xF];
     Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) |

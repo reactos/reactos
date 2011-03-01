@@ -723,18 +723,10 @@ NtGdiGetNearestPaletteIndex(
 
 UINT
 FASTCALL
-IntGdiRealizePalette(HDC hDC)
+IntGdiRealizePalette(PDC pdc)
 {
     UINT i, realize = 0;
-    PDC pdc;
     PALETTE *ppalSurf, *ppalDC;
-
-    pdc = DC_LockDc(hDC);
-    if(!pdc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return 0;
-    }
 
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
@@ -742,7 +734,7 @@ IntGdiRealizePalette(HDC hDC)
     if(!(ppalSurf->flFlags & PAL_INDEXED))
     {
         // FIXME : set error?
-        goto cleanup;
+        return 0;
     }
 
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
@@ -755,8 +747,6 @@ IntGdiRealizePalette(HDC hDC)
         InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
     }
 
-cleanup:
-    DC_UnlockDc(pdc);
     return realize;
 }
 
@@ -810,11 +800,9 @@ IntAnimatePalette(HPALETTE hPal,
         {
             if (dc->dclevel.hpal == hPal)
             {
-                DC_UnlockDc(dc);
-                IntGdiRealizePalette(hDC);
+                IntGdiRealizePalette(dc);
             }
-            else
-                DC_UnlockDc(dc);
+            DC_UnlockDc(dc);
         }
         UserReleaseDC(Wnd,hDC, FALSE);
     }
