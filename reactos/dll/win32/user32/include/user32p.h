@@ -106,6 +106,7 @@
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
+#define user32_module User32Instance
 extern HINSTANCE hImmInstance;
 
 /* Critical Section*/
