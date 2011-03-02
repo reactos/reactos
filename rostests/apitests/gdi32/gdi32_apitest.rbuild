@@ -41,6 +41,7 @@
 	<file>GetCurrentObject.c</file>
 	<file>GetDIBits.c</file>
 	<file>GetObject.c</file>
+	<file>GetPixel.c</file>
 	<file>GetStockObject.c</file>
 	<file>GetTextExtentExPoint.c</file>
 	<file>GetTextFace.c</file>

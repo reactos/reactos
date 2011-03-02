@@ -34,6 +34,7 @@ list(APPEND SOURCE
     GetCurrentObject.c
     GetDIBits.c
     GetObject.c
+    GetPixel.c
     GetStockObject.c
     GetTextExtentExPoint.c
     GetTextFace.c

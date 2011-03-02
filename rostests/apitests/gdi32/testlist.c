@@ -36,6 +36,7 @@ extern void func_GdiSetAttrs(void);
 extern void func_GetClipRgn(void);
 extern void func_GetCurrentObject(void);
 extern void func_GetDIBits(void);
+extern void func_GetPixel(void);
 extern void func_GetObject(void);
 extern void func_GetStockObject(void);
 extern void func_GetTextExtentExPoint(void);
@@ -82,6 +83,7 @@ const struct test winetest_testlist[] =
     { "GetClipRgn", func_GetClipRgn },
     { "GetCurrentObject", func_GetCurrentObject },
     { "GetDIBits", func_GetDIBits },
+    { "GetPixel", func_GetPixel },
     { "GetObject", func_GetObject },
     { "GetStockObject", func_GetStockObject },
     { "GetTextExtentExPoint", func_GetTextExtentExPoint },
