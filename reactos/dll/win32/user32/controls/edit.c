@@ -2771,13 +2771,13 @@ static void EDIT_EM_SetPasswordChar(EDITSTATE *es, WCHAR c)
 	if (es->password_char == c)
 		return;
 
-        style = GetWindowLongPtrW( es->hwndSelf, GWL_STYLE );
+        style = GetWindowLongW( es->hwndSelf, GWL_STYLE );
 	es->password_char = c;
 	if (c) {
-            SetWindowLongPtrW( es->hwndSelf, GWL_STYLE, style | ES_PASSWORD );
+            SetWindowLongW( es->hwndSelf, GWL_STYLE, style | ES_PASSWORD );
             es->style |= ES_PASSWORD;
 	} else {
-            SetWindowLongPtrW( es->hwndSelf, GWL_STYLE, style & ~ES_PASSWORD );
+            SetWindowLongW( es->hwndSelf, GWL_STYLE, style & ~ES_PASSWORD );
             es->style &= ~ES_PASSWORD;
 	}
 	EDIT_UpdateText(es, NULL, TRUE);
@@ -3930,7 +3930,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 	case SB_THUMBPOSITION:
 		TRACE("SB_THUMBPOSITION %d\n", pos);
 		es->flags &= ~EF_HSCROLL_TRACK;
-		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
+		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
 		    dx = pos - es->x_offset;
 		else
 		{
@@ -3960,7 +3960,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 	case EM_GETTHUMB: /* this one is used by NT notepad */
 	{
 		LRESULT ret;
-		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
+		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
 		    ret = GetScrollPos(es->hwndSelf, SB_HORZ);
 		else
 		{
@@ -4083,7 +4083,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 	case EM_GETTHUMB: /* this one is used by NT notepad */
 	{
 		LRESULT ret;
-		if(GetWindowLongPtrW( es->hwndSelf, GWL_STYLE ) & WS_VSCROLL)
+		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_VSCROLL)
 		    ret = GetScrollPos(es->hwndSelf, SB_VERT);
 		else
 		{
@@ -4362,7 +4362,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 	if (lpcs->dwExStyle & WS_EX_CLIENTEDGE)
 		es->style &= ~WS_BORDER;
         else if (es->style & WS_BORDER)
-		SetWindowLongPtrW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
+		SetWindowLongW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
 
 	return TRUE;
 
@@ -4666,12 +4666,12 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		DWORD old_style = es->style;
 
 		if (wParam) {
-                    SetWindowLongPtrW( hwnd, GWL_STYLE,
-                                       GetWindowLongPtrW( hwnd, GWL_STYLE ) | ES_READONLY );
+                    SetWindowLongW( hwnd, GWL_STYLE,
+                                    GetWindowLongW( hwnd, GWL_STYLE ) | ES_READONLY );
                     es->style |= ES_READONLY;
 		} else {
-                    SetWindowLongPtrW( hwnd, GWL_STYLE,
-                                       GetWindowLongPtrW( hwnd, GWL_STYLE ) & ~ES_READONLY );
+                    SetWindowLongW( hwnd, GWL_STYLE,
+                                    GetWindowLongW( hwnd, GWL_STYLE ) & ~ES_READONLY );
                     es->style &= ~ES_READONLY;
 		}
 
