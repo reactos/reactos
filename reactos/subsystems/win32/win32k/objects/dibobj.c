@@ -295,7 +295,8 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, psurfDst->ppal, 0, 0, 0);
+    /* 1bpp bitmaps have 0 for white, 1 for black */
+    EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, psurfDst->ppal, 0xFFFFFF, 0, 0);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,

@@ -81,6 +81,7 @@ INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
 ULONG NTAPI PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor);
 ULONG NTAPI PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG iColor);
+ULONG NTAPI PALETTE_ulGetNearestBitFieldsIndex(PALETTE* ppal, ULONG ulColor);
 VOID NTAPI PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
