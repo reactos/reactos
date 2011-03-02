@@ -1951,11 +1951,7 @@ UserRealizePalette(HDC hdc)
   HWND hWnd;
   DWORD Ret;
 
-  PDC pdc = DC_LockDc(hdc);
-  if(!pdc)
-    return 0;
-
-  Ret = IntGdiRealizePalette(pdc);
+  Ret = IntGdiRealizePalette(hdc);
   if (Ret) // There was a change.
   {
       hWnd = IntWindowFromDC(hdc);
@@ -1964,7 +1960,6 @@ UserRealizePalette(HDC hdc)
          UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
-  DC_UnlockDc(pdc);
   return Ret;
 }
 
