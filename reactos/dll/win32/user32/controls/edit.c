@@ -4721,7 +4721,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_NCDESTROY:
 		result = EDIT_WM_NCDestroy(es);
-		es = NULL;
+//		es = NULL; reactos
 #ifdef __REACTOS__
                 NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 #endif
@@ -5009,7 +5009,9 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 	}
 
-	if (IsWindow(hwnd) && es) EDIT_UnlockBuffer(es, FALSE);
+	/* reactos: check GetWindowLong in case es has been destroyed during processing */
+	if (IsWindow(hwnd) && es && GetWindowLongPtrW(hwnd, 0))
+		EDIT_UnlockBuffer(es, FALSE);
 
         TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 
