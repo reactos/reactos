@@ -4472,7 +4472,8 @@ static inline LRESULT DefWindowProcT(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
  *	The messages are in the order of the actual integer values
  *	(which can be found in include/windows.h)
  */
-LRESULT EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
+                                   WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
