@@ -1653,8 +1653,8 @@ static LRESULT EDIT_EM_Scroll(EDITSTATE *es, INT action)
 	    /* Notification is done in EDIT_EM_LineScroll */
 	    if(dy) {
 		EDIT_EM_LineScroll(es, 0, dy);
-	        return MAKELONG((SHORT)dy, (BOOL)TRUE);
-            }
+		return MAKELONG(dy, TRUE);
+	    }
 
 	}
 	return (LRESULT)FALSE;
@@ -3090,6 +3090,7 @@ static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
 }
 #endif
 
+
 /*********************************************************************
  *
  *	WM_CONTEXTMENU
@@ -3238,14 +3239,14 @@ static BOOL EDIT_CheckCombo(EDITSTATE *es, UINT msg, INT key)
             nEUI = 2;
          }
 
-         SendMessageW(hLBox, WM_KEYDOWN, (WPARAM)key, 0);
+         SendMessageW(hLBox, WM_KEYDOWN, key, 0);
          break;
 
       case WM_SYSKEYDOWN: /* Handle Alt+up/down arrows */
          if (nEUI)
             SendMessageW(hCombo, CB_SHOWDROPDOWN, bDropped ? FALSE : TRUE, 0);
          else
-            SendMessageW(hLBox, WM_KEYDOWN, (WPARAM)VK_F4, 0);
+            SendMessageW(hLBox, WM_KEYDOWN, VK_F4, 0);
          break;
    }
 
@@ -3359,17 +3360,17 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 	    /* If the edit doesn't want the return send a message to the default object */
 	    if(!(es->style & ES_MULTILINE) || !(es->style & ES_WANTRETURN))
 	    {
-		DWORD dw;
+                DWORD dw;
 
                 if (!EDIT_IsInsideDialog(es)) break;
                 if (control) break;
-                dw = SendMessageW( es->hwndParent, DM_GETDEFID, 0, 0 );
+                dw = SendMessageW(es->hwndParent, DM_GETDEFID, 0, 0);
                 if (HIWORD(dw) == DC_HASDEFID)
                 {
                     HWND hwDefCtrl = GetDlgItem(es->hwndParent, LOWORD(dw));
                     if (hwDefCtrl)
                     {
-                        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, (WPARAM)hwDefCtrl, (LPARAM)TRUE);
+                        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, (WPARAM)hwDefCtrl, TRUE);
                         PostMessageW(hwDefCtrl, WM_KEYDOWN, VK_RETURN, 0);
                     }
                 }
@@ -3384,7 +3385,7 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
                 SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
             break;
 	}
-	return TRUE;
+        return TRUE;
 }
 
 
@@ -3839,7 +3840,7 @@ static LRESULT EDIT_WM_SysKeyDown(EDITSTATE *es, INT key, DWORD key_data)
 		if (EDIT_CheckCombo(es, WM_SYSKEYDOWN, key))
 			return 0;
 	}
-	return DefWindowProcW(es->hwndSelf, WM_SYSKEYDOWN, (WPARAM)key, (LPARAM)key_data);
+	return DefWindowProcW(es->hwndSelf, WM_SYSKEYDOWN, key, key_data);
 }
 
 
@@ -3970,10 +3971,10 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		TRACE("EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
-        case EM_LINESCROLL:
-                TRACE("EM_LINESCROLL16\n");
-                dx = pos;
-                break;
+	case EM_LINESCROLL:
+		TRACE("EM_LINESCROLL16\n");
+		dx = pos;
+		break;
 
 	default:
 		ERR("undocumented WM_HSCROLL action %d (0x%04x), please report\n",
@@ -4094,7 +4095,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		return ret;
 	}
 	case EM_LINESCROLL:
-		TRACE("EM_LINESCROLL16 %d\n", pos);
+		TRACE("EM_LINESCROLL %d\n", pos);
 		dy = pos;
 		break;
 
@@ -4121,7 +4122,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 static LRESULT EDIT_EM_GetThumb(EDITSTATE *es)
 {
 	return MAKELONG(EDIT_WM_VScroll(es, EM_GETTHUMB, 0),
-		        EDIT_WM_HScroll(es, EM_GETTHUMB, 0));
+                        EDIT_WM_HScroll(es, EM_GETTHUMB, 0));
 }
 
 
@@ -4366,12 +4367,12 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 	return TRUE;
 
 cleanup:
-        SetWindowLongPtrW(es->hwndSelf, 0, 0);
-        HeapFree(GetProcessHeap(), 0, es->first_line_def);
-        HeapFree(GetProcessHeap(), 0, es->undo_text);
-        if (es->hloc32W) LocalFree(es->hloc32W);
-        HeapFree(GetProcessHeap(), 0, es);
-        return FALSE;
+	SetWindowLongPtrW(es->hwndSelf, 0, 0);
+	HeapFree(GetProcessHeap(), 0, es->first_line_def);
+	HeapFree(GetProcessHeap(), 0, es->undo_text);
+	if (es->hloc32W) LocalFree(es->hloc32W);
+	HeapFree(GetProcessHeap(), 0, es);
+	return FALSE;
 }
 
 
@@ -4448,8 +4449,8 @@ static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 		pc = pp;
 	}
 
-        SetWindowLongPtrW( es->hwndSelf, 0, 0 );
-        HeapFree(GetProcessHeap(), 0, es->undo_text);
+	SetWindowLongPtrW( es->hwndSelf, 0, 0 );
+	HeapFree(GetProcessHeap(), 0, es->undo_text);
 	HeapFree(GetProcessHeap(), 0, es);
 
 	return 0;
@@ -4471,8 +4472,7 @@ static inline LRESULT DefWindowProcT(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
  *	The messages are in the order of the actual integer values
  *	(which can be found in include/windows.h)
  */
-LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
-                                   WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
@@ -4595,8 +4595,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		{
 		    LPSTR textA = (LPSTR)lParam;
 		    INT countW = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
-		    if(!(textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR)))) break;
-		    MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
+		    if (!(textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR)))) break;
+                    MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
 		}
 
 		EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, TRUE, TRUE);
@@ -4908,7 +4908,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		break;
 
 	case WM_MBUTTONDOWN:
-  		result = EDIT_WM_MButtonDown(es);
+		result = EDIT_WM_MButtonDown(es);
 		break;
 
 	case WM_MOUSEMOVE:
@@ -4985,8 +4985,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
                 }
                 break;
 
-            
-	/* IME messages to make the edit control IME aware */           
+
+	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
 		break;
 
