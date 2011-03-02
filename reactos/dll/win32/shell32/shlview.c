@@ -1475,7 +1475,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 
 	  case LVN_ENDLABELEDITW:
 	    {
-	      TRACE("-- LVN_ENDLABELEDITA %p\n",This);
+	      TRACE("-- LVN_ENDLABELEDITW %p\n",This);
 	      if (lpdi->item.pszText)
 	      {
 	        HRESULT hr;
