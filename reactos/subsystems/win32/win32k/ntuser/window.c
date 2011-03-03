@@ -4052,7 +4052,7 @@ NtUserSetWindowRgn(
    }
    else
    {
-      hrgnCopy = IntSysCreateRectRgnIndirect(&Window->rcWindow); //HRGN_WINDOW;
+      hrgnCopy = NULL;
    }
 
    if (Window->hrgnClip)
@@ -4061,12 +4061,14 @@ NtUserSetWindowRgn(
       GreDeleteObject(Window->hrgnClip);
    }
 
-   if (Window->fnid != FNID_DESKTOP)
-      NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
+   if (hrgnCopy)
+   {
+      if (Window->fnid != FNID_DESKTOP)
+         NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
 
-   /* Set public ownership */
-   IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
-
+      /* Set public ownership */
+      IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
+   }
    Window->hrgnClip = hrgnCopy;
 
    Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
