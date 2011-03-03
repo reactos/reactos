@@ -8,6 +8,7 @@
 	<library>user32</library>
 	<library>pseh</library>
 	<file>testlist.c</file>
+	<file>user32_apitest.rc</file>
 
 	<file>InitializeLpkHooks.c</file>
 	<file>RealGetWindowClass.c</file>

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <windows.h>
-
+#include "resource.h"
 
 // FIXME user32
 
@@ -144,12 +144,21 @@ START_TEST(GetIconInfo)
     Test_GetIconInfo(0);
     Test_GetIconInfo(1);
 
-    hcursor = LoadCursor(NULL, IDC_APPSTARTING);
-    ok(hcursor != 0, "should not fail\n");
+    hcursor = LoadCursor(GetModuleHandle(NULL), "TESTCURSOR");
+    ok(hcursor != 0, "should not fail, error %ld\n", GetLastError());
     ok(GetIconInfo(hcursor, &iconinfo2), "\n");
     ok(iconinfo2.fIcon == 0, "\n");
-    ok(iconinfo2.xHotspot == 0, "%ld\n", iconinfo2.xHotspot);
-    ok(iconinfo2.yHotspot == 8, "%ld\n", iconinfo2.yHotspot);
+    ok(iconinfo2.xHotspot == 8, "%ld\n", iconinfo2.xHotspot);
+    ok(iconinfo2.yHotspot == 29, "%ld\n", iconinfo2.yHotspot);
+    ok(iconinfo2.hbmMask != NULL, "\n");
+    ok(iconinfo2.hbmColor != NULL, "\n");
+
+    hcursor = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_TEST));
+    ok(hcursor != 0, "should not fail\n");
+    ok(GetIconInfo(hcursor, &iconinfo2), "\n");
+    ok(iconinfo2.fIcon == 1, "\n");
+    ok(iconinfo2.xHotspot == 16, "%ld\n", iconinfo2.xHotspot);
+    ok(iconinfo2.yHotspot == 16, "%ld\n", iconinfo2.yHotspot);
     ok(iconinfo2.hbmMask != NULL, "\n");
     ok(iconinfo2.hbmColor != NULL, "\n");
 

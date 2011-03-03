@@ -9,7 +9,8 @@ list(APPEND SOURCE
     GetSystemMetrics.c
     GetIconInfo.c
     GetPeekMessage.c
-    testlist.c)
+    testlist.c
+    user32_apitest.rc)
 
 add_executable(user32_apitest ${SOURCE})
 target_link_libraries(user32_apitest wine)
