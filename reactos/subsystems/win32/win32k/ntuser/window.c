@@ -472,6 +472,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    if(Window->hrgnClip)
    {
       GreDeleteObject(Window->hrgnClip);
+      Window->hrgnClip = NULL;
    }
 
 //   ASSERT(Window != NULL);
