@@ -63,7 +63,7 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)lParam;
 
     if (IS_INTRESOURCE(lpszName))
-        swprintf(szName, L"%u\n", lpszName);
+        swprintf(szName, L"%u", lpszName);
     else
         wcscpy(szName, (WCHAR*)lpszName);
 
@@ -105,7 +105,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     LPMEASUREITEMSTRUCT lpmis; 
     LPDRAWITEMSTRUCT lpdis; 
     HICON hIcon;
-    INT index;
+    INT index, count;
     WCHAR szText[MAX_PATH], szTitle[100], szFilter[100];
     OPENFILENAMEW ofn = {0};
 
@@ -123,18 +123,21 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         else
             SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)pIconContext->szName);
 
-        swprintf(szText, L"%u", pIconContext->Index);
-        index = SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRING, -1, (LPARAM)szText);
-        if (index != LB_ERR)
-            SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, index, 0);
+        count = SendMessage(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
+        if (count != LB_ERR)
+        {
+            if (count > pIconContext->Index)
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
+            else
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
+        }
         return TRUE;
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
         case IDOK:
             index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
-            SendMessageW(pIconContext->hDlgCtrl, LB_GETTEXT, index, (LPARAM)szText);
-            pIconContext->Index = _wtoi(szText);
+            pIconContext->Index = index;
             SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_GETTEXT, MAX_PATH, (LPARAM)pIconContext->szName);
             DestroyIconList(pIconContext->hDlgCtrl);
             EndDialog(hwndDlg, 1);
