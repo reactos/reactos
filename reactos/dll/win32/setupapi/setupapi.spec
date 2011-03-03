@@ -170,10 +170,10 @@
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long)
 @ stub CM_Register_Device_Driver
 @ stub CM_Register_Device_Driver_Ex
-@ stub CM_Register_Device_InterfaceA
-@ stub CM_Register_Device_InterfaceW
-@ stub CM_Register_Device_Interface_ExA
-@ stub CM_Register_Device_Interface_ExW
+@ stdcall CM_Register_Device_InterfaceA(long ptr str str ptr long)
+@ stdcall CM_Register_Device_InterfaceW(long ptr wstr wstr ptr long)
+@ stdcall CM_Register_Device_Interface_ExA(long ptr str str ptr long long)
+@ stdcall CM_Register_Device_Interface_ExW(long ptr wstr wstr ptr long long)
 @ stdcall CM_Remove_SubTree(long long)
 @ stdcall CM_Remove_SubTree_Ex(long long long)
 @ stdcall CM_Request_Device_EjectA(long ptr str long long)
@@ -203,10 +203,10 @@
 @ stub CM_Test_Range_Available
 @ stdcall CM_Uninstall_DevNode(long long)
 @ stdcall CM_Uninstall_DevNode_Ex(long long long)
-@ stub CM_Unregister_Device_InterfaceA
-@ stub CM_Unregister_Device_InterfaceW
-@ stub CM_Unregister_Device_Interface_ExA
-@ stub CM_Unregister_Device_Interface_ExW
+@ stdcall CM_Unregister_Device_InterfaceA(str long)
+@ stdcall CM_Unregister_Device_InterfaceW(wstr long)
+@ stdcall CM_Unregister_Device_Interface_ExA(str long long)
+@ stdcall CM_Unregister_Device_Interface_ExW(wstr long long)
 @ stdcall DoesUserHavePrivilege(wstr)
 @ stub ExtensionPropSheetPageProc
 @ stdcall InstallCatalog(str str ptr)
