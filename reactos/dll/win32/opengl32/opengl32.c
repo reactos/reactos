@@ -72,7 +72,7 @@ static void
 OPENGL32_ThreadDetach( void )
 {
     GLTHREADDATA* lpData = NULL;
-    PROC *dispatchTable = NULL;
+	TEB* teb = NtCurrentTeb();
 
     rosglMakeCurrent( NULL, NULL );
 
@@ -85,12 +85,15 @@ OPENGL32_ThreadDetach( void )
         lpData = NULL;
     }
 
-    dispatchTable = NtCurrentTeb()->glTable;
-    if (dispatchTable != NULL)
+    if (teb->glTable != NULL)
     {
-        if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
+        if (!HeapFree( GetProcessHeap(), 0, teb->glTable ))
+		{
             DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
                       GetLastError() );
+		}
+		/* NULL-ify it. Even if something went wrong, it's not a good idea to keep it non NULL */
+		teb->glTable = NULL;
     }
 }
 
