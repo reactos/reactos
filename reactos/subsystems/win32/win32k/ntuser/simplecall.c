@@ -716,7 +716,7 @@ NtUserCallHwndParamLock(
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
-   DPRINT1("Enter NtUserCallHwndParamLock\n");
+   DPRINT("Enter NtUserCallHwndParamLock\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -737,7 +737,7 @@ NtUserCallHwndParamLock(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT1("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 
