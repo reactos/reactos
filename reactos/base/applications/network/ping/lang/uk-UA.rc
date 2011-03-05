@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/network/ping/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Ping
- * TRANSLATORS: Sakara Eugene
+ * TRANSLATORS: Sakara Eugene (vzov@yandex.ua)
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -18,11 +18,11 @@ BEGIN
     -l size        Розмір буфера відправки.\n\
     -w timeout     Час очікування кожної відповіді в мілісекундах.\n\n\0"
 
-    IDS_PING_WITH_BYTES             "\nОбмін пакетами з %1 [%2] по %3!d! байт:\n\n\0"
+    IDS_PING_WITH_BYTES             "\nОбмін пакетами з %1 [%2] по %3!d! байта:\n\n\0"
     IDS_PING_STATISTICS             "\nСтатистика Ping для %1:\n\0"
     IDS_PACKETS_SENT_RECEIVED_LOST  "    Пакетів: відправлено = %1!d!, отримано = %2!d!, втрачено = %3!d! (%4!d!%% втрат),\n\0"
     IDS_APPROXIMATE_ROUND_TRIP      "Приблизний час прийому-передачі:\n\0"
-    IDS_MIN_MAX_AVERAGE             "    Мінімальне = %1, Максимальне = %2, Середнє = %3\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Мінімальний = %1, Максимальний = %2, Середній = %3\n\0"
     IDS_NOT_ENOUGH_RESOURCES        "Недостатньо вільних ресурсів.\n\0"
     IDS_UNKNOWN_HOST                "Невідомий хост %1.\n\0"
     IDS_SETSOCKOPT_FAILED           "setsockopt невдалий (%1!d!).\n\0"
