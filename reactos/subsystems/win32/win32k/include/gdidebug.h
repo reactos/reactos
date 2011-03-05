@@ -20,6 +20,7 @@ enum _DEBUGCHANNELS
 void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable);
 ULONG CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture);
 BOOL GdiDbgHTIntegrityCheck();
+void GdiDbgDumpLockedHandles();
 
 #define DBGENABLE(ch) gulDebugChannels |= (ch);
 #define DBGDISABLE(ch) gulDebugChannels &= ~(ch);
@@ -96,17 +97,19 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 #define ID_Win32PostServiceHook 'WSH1'
 
 FORCEINLINE void
-DbgAssertNoGdiLocks(char * pszFile, ULONG nLine)
+GdiDbgAssertNoLocks(char * pszFile, ULONG nLine)
 {
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
         DbgPrint("(%s:%ld) There are %ld exclusive locks!\n",
                  pszFile, nLine, pti->cExclusiveLocks);
+        GdiDbgDumpLockedHandles();
         ASSERT(FALSE);
     }
 }
-#define ASSERT_NOGDILOCKS() DbgAssertNoGdiLocks(__FILE__,__LINE__)
+
+#define ASSERT_NOGDILOCKS() GdiDbgAssertNoLocks(__FILE__,__LINE__)
 #else
 #define ASSERT_NOGDILOCKS()
 #endif

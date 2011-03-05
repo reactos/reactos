@@ -293,6 +293,30 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 #endif /* GDI_DEBUG */
 
 void
+GdiDbgDumpLockedHandles()
+{
+    ULONG i;
+
+    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
+    {
+        PGDI_TABLE_ENTRY pEntry = &GdiHandleTable->Entries[i];
+
+        if (pEntry->Type & GDI_ENTRY_BASETYPE_MASK)
+        {
+            BASEOBJECT *pObject = pEntry->KernelData;
+            if (pObject->cExclusiveLock > 0)
+            {
+                DPRINT1("Locked object: %lx, type = %lx. allocated from:\n",
+                        i, pEntry->Type);
+                GDIDBG_TRACEALLOCATOR(i);
+                DPRINT1("Locked from:\n");
+                GDIDBG_TRACELOCKER(i);
+            }
+        }
+    }
+}
+
+void
 NTAPI
 DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
 {
