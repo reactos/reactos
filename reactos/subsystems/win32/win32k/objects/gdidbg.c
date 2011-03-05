@@ -325,6 +325,7 @@ DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
     {
         DbgPrint("FATAL: Win32DbgPreServiceHook(%ld): There are %ld exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
+        GdiDbgDumpLockedHandles();
         ASSERT(FALSE);
     }
 
@@ -339,6 +340,7 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
     {
         DbgPrint("FATAL: Win32DbgPostServiceHook(%ld): There are %ld exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
+        GdiDbgDumpLockedHandles();
         ASSERT(FALSE);
     }
     return ulResult;
