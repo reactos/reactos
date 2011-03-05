@@ -30,8 +30,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD dwResumeCount = 1;
 
-static CRITICAL_SECTION NamedPipeCriticalSection;
-static CRITICAL_SECTION StartServiceCriticalSection;
+static CRITICAL_SECTION ControlServiceCriticalSection;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -693,6 +692,8 @@ ScmControlService(PSERVICE Service,
 
     DPRINT("ScmControlService() called\n");
 
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
     TotalLength = wcslen(Service->lpServiceName) + 1;
 
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
@@ -705,8 +706,6 @@ ScmControlService(PSERVICE Service,
     ControlPacket->dwSize = TotalLength;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
-
-    EnterCriticalSection(&NamedPipeCriticalSection);
 
     /* Send the control packet */
     WriteFile(Service->ControlPipeHandle,
@@ -722,8 +721,6 @@ ScmControlService(PSERVICE Service,
              &dwReadCount,
              NULL);
 
-    LeaveCriticalSection(&NamedPipeCriticalSection);
-
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
@@ -733,6 +730,8 @@ ScmControlService(PSERVICE Service,
     {
         dwError = ReplyPacket.dwError;
     }
+
+    LeaveCriticalSection(&ControlServiceCriticalSection);
 
     DPRINT("ScmControlService() done\n");
 
@@ -801,8 +800,6 @@ ScmSendStartCommand(PSERVICE Service,
     /* Terminate the argument list */
     *Ptr = 0;
 
-    EnterCriticalSection(&NamedPipeCriticalSection);
-
     /* Send the start command */
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
@@ -816,8 +813,6 @@ ScmSendStartCommand(PSERVICE Service,
              sizeof(SCM_REPLY_PACKET),
              &dwReadCount,
              NULL);
-
-    LeaveCriticalSection(&NamedPipeCriticalSection);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
@@ -924,6 +919,9 @@ ScmStartUserModeService(PSERVICE Service,
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
+
+    DPRINT1("Service: %p  ImagePath: %wZ  PipeName: %S\n", Service, &ImagePath, NtControlPipeName);
+
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
                                                   PIPE_ACCESS_DUPLEX,
                                                   PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -1036,9 +1034,18 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
 
-    EnterCriticalSection(&StartServiceCriticalSection);
-
     DPRINT("ScmStartService() called\n");
+
+    DPRINT1("Start Service %p (%S)\n", Service, Service->lpServiceName);
+
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
+    if (Service->Status.dwCurrentState != SERVICE_STOPPED)
+    {
+        DPRINT1("Service %S is already running!\n", Service->lpServiceName);
+        LeaveCriticalSection(&ControlServiceCriticalSection);
+        return ERROR_SERVICE_ALREADY_RUNNING;
+    }
 
     Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
@@ -1067,8 +1074,9 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         }
     }
 
+    LeaveCriticalSection(&ControlServiceCriticalSection);
+
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
-    LeaveCriticalSection(&StartServiceCriticalSection);
 
     if (dwError == ERROR_SUCCESS)
     {
@@ -1274,16 +1282,14 @@ ScmUnlockDatabase(VOID)
 VOID
 ScmInitNamedPipeCriticalSection(VOID)
 {
-    InitializeCriticalSection(&NamedPipeCriticalSection);
-    InitializeCriticalSection(&StartServiceCriticalSection);
+    InitializeCriticalSection(&ControlServiceCriticalSection);
 }
 
 
 VOID
 ScmDeleteNamedPipeCriticalSection(VOID)
 {
-    DeleteCriticalSection(&StartServiceCriticalSection);
-    DeleteCriticalSection(&NamedPipeCriticalSection);
+    DeleteCriticalSection(&ControlServiceCriticalSection);
 }
 
 /* EOF */
