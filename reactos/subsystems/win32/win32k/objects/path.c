@@ -2041,6 +2041,7 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
     if ( !TextObj ) return FALSE;
 
     FontGetObject( TextObj, sizeof(lf), &lf);
+    TEXTOBJ_UnlockText(TextObj);
 
     if (lf.lfEscapement != 0)
     {
