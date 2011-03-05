@@ -2388,6 +2388,264 @@ CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExW(
 
 
 /***********************************************************************
+ *      CM_Get_Device_Interface_ListA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_ListA(
+    LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceID, PCHAR Buffer,
+    ULONG BufferLen, ULONG ulFlags)
+{
+    TRACE("%s %s %p %lu 0x%08lx\n", debugstr_guid(InterfaceClassGuid),
+          pDeviceID, Buffer, BufferLen, ulFlags);
+
+    return CM_Get_Device_Interface_List_ExA(InterfaceClassGuid, pDeviceID,
+                                            Buffer, BufferLen, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_ListW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_ListW(
+    LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PWCHAR Buffer,
+    ULONG BufferLen, ULONG ulFlags)
+{
+    TRACE("%s %s %p %lu 0x%08lx\n", debugstr_guid(InterfaceClassGuid),
+          debugstr_w(pDeviceID), Buffer, BufferLen, ulFlags);
+
+    return CM_Get_Device_Interface_List_ExW(InterfaceClassGuid, pDeviceID,
+                                            Buffer, BufferLen, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_ExA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_ExA(
+    LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceID, PCHAR Buffer,
+    ULONG BufferLen, ULONG ulFlags, HMACHINE hMachine)
+{
+    DEVINSTID_W pDeviceIdW = NULL;
+    PWCHAR BufferW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%s %s %p %lu 0x%08lx %p\n", debugstr_guid(InterfaceClassGuid),
+          pDeviceID, Buffer, BufferLen, ulFlags, hMachine);
+
+    if (Buffer == NULL ||
+        BufferLen == 0)
+        return CR_INVALID_POINTER;
+
+    if (pDeviceID != NULL)
+    {
+        if (!pSetupCaptureAndConvertAnsiArg(pDeviceID, &pDeviceIdW))
+            return CR_INVALID_DEVICE_ID;
+    }
+
+    BufferW = MyMalloc(BufferLen * sizeof(WCHAR));
+    if (BufferW == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto Done;
+    }
+
+    ret = CM_Get_Device_Interface_List_ExW(InterfaceClassGuid, pDeviceIdW,
+                                           BufferW, BufferLen, ulFlags,
+                                           hMachine);
+    if (ret != CR_SUCCESS)
+        goto Done;
+
+    if (WideCharToMultiByte(CP_ACP,
+                            0,
+                            BufferW,
+                            lstrlenW(BufferW) + 1,
+                            Buffer,
+                            BufferLen,
+                            NULL,
+                            NULL) == 0)
+        ret = CR_FAILURE;
+
+Done:
+    if (BufferW != NULL)
+        MyFree(BufferW);
+
+    if (pDeviceIdW != NULL)
+        MyFree(pDeviceIdW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_ExW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_ExW(
+    LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PWCHAR Buffer,
+    ULONG BufferLen, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    PNP_RPC_BUFFER_SIZE BufferSize = 0;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%s %s %p %lu 0x%08lx %p\n", debugstr_guid(InterfaceClassGuid),
+          debugstr_w(pDeviceID), Buffer, BufferLen, ulFlags, hMachine);
+
+    if (Buffer == NULL ||
+        BufferLen == 0)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GET_DEVICE_INTERFACE_LIST_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    *Buffer = 0;
+    BufferSize = BufferLen;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetInterfaceDeviceList(BindingHandle,
+                                         InterfaceClassGuid,
+                                         pDeviceID,
+                                         (LPBYTE)Buffer,
+                                         &BufferSize,
+                                         ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_SizeA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_SizeA(
+    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceId,
+    ULONG ulFlags)
+{
+    TRACE("%p %p %s 0x%08lx\n", pulLen, InterfaceClassGuid,
+          pDeviceId, ulFlags);
+
+    return CM_Get_Device_Interface_List_Size_ExA(pulLen, InterfaceClassGuid,
+                                                 pDeviceId, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_SizeW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_SizeW(
+    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceId,
+    ULONG ulFlags)
+{
+    TRACE("%p %p %s 0x%08lx\n", pulLen, InterfaceClassGuid,
+          debugstr_w(pDeviceId), ulFlags);
+
+    return CM_Get_Device_Interface_List_Size_ExW(pulLen, InterfaceClassGuid,
+                                                 pDeviceId, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(
+    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceId,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    DEVINSTID_W pDeviceIdW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%p %p %s 0x%08lx %p\n", pulLen, InterfaceClassGuid,
+          pDeviceId, ulFlags, hMachine);
+
+    if (pulLen == NULL)
+        return CR_INVALID_POINTER;
+
+    if (pDeviceId != NULL)
+    {
+        if (!pSetupCaptureAndConvertAnsiArg(pDeviceId, &pDeviceIdW))
+            return CR_INVALID_DEVICE_ID;
+    }
+
+    *pulLen = 0;
+
+    ret = CM_Get_Device_Interface_List_Size_ExW(pulLen, InterfaceClassGuid,
+                                                pDeviceIdW, ulFlags, hMachine);
+
+    if (pDeviceIdW != NULL)
+        MyFree(pDeviceIdW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(
+    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceId,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%p %p %s 0x%08lx %p\n", pulLen, InterfaceClassGuid,
+          debugstr_w(pDeviceId), ulFlags, hMachine);
+
+    if (pulLen == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GET_DEVICE_INTERFACE_LIST_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    *pulLen = 0;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetInterfaceDeviceListSize(BindingHandle,
+                                             pulLen,
+                                             InterfaceClassGuid,
+                                             pDeviceId,
+                                             ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Get_First_Log_Conf [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_First_Log_Conf(
