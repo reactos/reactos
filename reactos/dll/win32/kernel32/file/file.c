@@ -1421,40 +1421,51 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
  * @implemented
  */
 BOOL WINAPI
-GetFileTime(HANDLE hFile,
-	    LPFILETIME lpCreationTime,
-	    LPFILETIME lpLastAccessTime,
-	    LPFILETIME lpLastWriteTime)
+GetFileTime(IN HANDLE hFile,
+            OUT LPFILETIME lpCreationTime OPTIONAL,
+            OUT LPFILETIME lpLastAccessTime OPTIONAL,
+            OUT LPFILETIME lpLastWriteTime OPTIONAL)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   FILE_BASIC_INFORMATION FileBasic;
-   NTSTATUS Status;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileBasic;
 
-   if(IsConsoleHandle(hFile))
-   {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
+    if(IsConsoleHandle(hFile))
+    {
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
+        return FALSE;
+    }
 
-   Status = NtQueryInformationFile(hFile,
-				   &IoStatusBlock,
-				   &FileBasic,
-				   sizeof(FILE_BASIC_INFORMATION),
-				   FileBasicInformation);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    Status = NtQueryInformationFile(hFile,
+                                    &IoStatusBlock,
+                                    &FileBasic,
+                                    sizeof(FILE_BASIC_INFORMATION),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-   if (lpCreationTime)
-     memcpy(lpCreationTime, &FileBasic.CreationTime, sizeof(FILETIME));
-   if (lpLastAccessTime)
-     memcpy(lpLastAccessTime, &FileBasic.LastAccessTime, sizeof(FILETIME));
-   if (lpLastWriteTime)
-     memcpy(lpLastWriteTime, &FileBasic.LastWriteTime, sizeof(FILETIME));
+    if (lpCreationTime)
+    {
+        lpCreationTime->dwLowDateTime = FileBasic.CreationTime.LowPart;
+        lpCreationTime->dwHighDateTime = FileBasic.CreationTime.HighPart;
+    }
 
-   return TRUE;
+    if (lpLastAccessTime)
+    {
+        lpLastAccessTime->dwLowDateTime = FileBasic.LastAccessTime.LowPart;
+        lpLastAccessTime->dwHighDateTime = FileBasic.LastAccessTime.HighPart;
+    }
+
+    if (lpLastWriteTime)
+    {
+        lpLastWriteTime->dwLowDateTime = FileBasic.LastWriteTime.LowPart;
+        lpLastWriteTime->dwHighDateTime = FileBasic.LastWriteTime.HighPart;
+    }
+
+    return TRUE;
 }
 
 
@@ -1462,53 +1473,53 @@ GetFileTime(HANDLE hFile,
  * @implemented
  */
 BOOL WINAPI
-SetFileTime(HANDLE hFile,
-	    CONST FILETIME *lpCreationTime,
-	    CONST FILETIME *lpLastAccessTime,
-	    CONST FILETIME *lpLastWriteTime)
+SetFileTime(IN HANDLE hFile,
+            CONST FILETIME *lpCreationTime OPTIONAL,
+            CONST FILETIME *lpLastAccessTime OPTIONAL,
+            CONST FILETIME *lpLastWriteTime OPTIONAL)
 {
-   FILE_BASIC_INFORMATION FileBasic;
-   IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileBasic;
 
-   if(IsConsoleHandle(hFile))
-   {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
+    if(IsConsoleHandle(hFile))
+    {
+        BaseSetLastNTError(STATUS_INVALID_HANDLE);
+        return FALSE;
+    }
 
-   Status = NtQueryInformationFile(hFile,
-				   &IoStatusBlock,
-				   &FileBasic,
-				   sizeof(FILE_BASIC_INFORMATION),
-				   FileBasicInformation);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    memset(&FileBasic, 0, sizeof(FILE_BASIC_INFORMATION));
 
-   if (lpCreationTime)
-     memcpy(&FileBasic.CreationTime, lpCreationTime, sizeof(FILETIME));
-   if (lpLastAccessTime)
-     memcpy(&FileBasic.LastAccessTime, lpLastAccessTime, sizeof(FILETIME));
-   if (lpLastWriteTime)
-     memcpy(&FileBasic.LastWriteTime, lpLastWriteTime, sizeof(FILETIME));
+    if (lpCreationTime)
+    {
+        FileBasic.CreationTime.LowPart = lpCreationTime->dwLowDateTime;
+        FileBasic.CreationTime.HighPart = lpCreationTime->dwHighDateTime;
+    }
 
-   // should i initialize changetime ???
+    if (lpLastAccessTime)
+    {
+        FileBasic.LastAccessTime.LowPart = lpLastAccessTime->dwLowDateTime;
+        FileBasic.LastAccessTime.HighPart = lpLastAccessTime->dwHighDateTime;
+    }
 
-   Status = NtSetInformationFile(hFile,
-				 &IoStatusBlock,
-				 &FileBasic,
-				 sizeof(FILE_BASIC_INFORMATION),
-				 FileBasicInformation);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    if (lpLastWriteTime)
+    {
+        FileBasic.LastWriteTime.LowPart = lpLastWriteTime->dwLowDateTime;
+        FileBasic.LastWriteTime.HighPart = lpLastWriteTime->dwHighDateTime;
+    }
 
-   return TRUE;
+    Status = NtSetInformationFile(hFile,
+                                  &IoStatusBlock,
+                                  &FileBasic,
+                                  sizeof(FILE_BASIC_INFORMATION),
+                                  FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
