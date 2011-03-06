@@ -414,7 +414,7 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
     if (IsListEmpty(&Heap->UCRList))
     {
         /* Get a pointer to the first UCR segment */
-        UcrSegment = CONTAINING_RECORD(&Heap->UCRSegments.Flink, HEAP_UCR_SEGMENT, ListEntry);
+        UcrSegment = CONTAINING_RECORD(Heap->UCRSegments.Flink, HEAP_UCR_SEGMENT, ListEntry);
 
         /* Check the list of UCR segments */
         if (IsListEmpty(&Heap->UCRSegments) ||
@@ -539,8 +539,11 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
             Address = (ULONG_PTR)UcrDescriptor->Address;
             Size += UcrDescriptor->Size;
 
-            /* Remove it from the list and destroy it */
-            RemoveEntryList(Current);
+            /* Advance to the next descriptor */
+            Current = Current->Flink;
+
+            /* Remove the current descriptor from the list and destroy it */
+            RemoveEntryList(&UcrDescriptor->SegmentEntry);
             RtlpDestroyUnCommittedRange(Segment, UcrDescriptor);
 
             Segment->NumberOfUnCommittedRanges--;
