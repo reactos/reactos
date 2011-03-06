@@ -5,7 +5,8 @@
  * PURPOSE:         Provides name parsing and other support routines for FSDs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
- *                  Pierre Schweitzer (pierre.schweitzer@reactos.org) 
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -23,9 +24,78 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
+    UNICODE_STRING IntExpression;
     PAGED_CODE();
 
+    /* Check if we were given strings at all */
+    if (!Name->Length || !Expression->Length)
+    {
+        /* Return TRUE if both strings are empty, otherwise FALSE */
+        if (Name->Length == 0 && Expression->Length == 0)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /* Check for a shortcut: just one wildcard */
+    if (Expression->Length == 2)
+    {
+        if (Expression->Buffer[0] == L'*')
+            return TRUE;
+    }
+
     ASSERT(!IgnoreCase || UpcaseTable);
+
+    /* Another shortcut, wildcard followed by some string */
+    if (Expression->Buffer[0] == L'*')
+    {
+        /* Copy Expression to our local variable */
+        IntExpression = *Expression;
+
+        /* Skip the first char */
+        IntExpression.Buffer++;
+        IntExpression.Length -= sizeof(WCHAR);
+
+        /* Continue only if the rest of the expression does NOT contain
+           any more wildcards */
+        if (!FsRtlDoesNameContainWildCards(&IntExpression))
+        {
+            /* Check for a degenerate case */
+            if (Name->Length < (Expression->Length - sizeof(WCHAR)))
+                return FALSE;
+
+            /* Calculate position */
+            NamePosition = (Name->Length - IntExpression.Length) / sizeof(WCHAR);
+
+            /* Compare */
+            if (!IgnoreCase)
+            {
+                /* We can just do a byte compare */
+                return RtlEqualMemory(IntExpression.Buffer,
+                                      Name->Buffer + NamePosition,
+                                      IntExpression.Length);
+            }
+            else
+            {
+                /* Not so easy, need to upcase and check char by char */
+                for (ExpressionPosition = 0; ExpressionPosition < (IntExpression.Length / sizeof(WCHAR)); ExpressionPosition++)
+                {
+                    /* Assert that expression is already upcased! */
+                    ASSERT(IntExpression.Buffer[ExpressionPosition] == UpcaseTable[IntExpression.Buffer[ExpressionPosition]]);
+
+                    /* Now compare upcased name char with expression */
+                    if (UpcaseTable[Name->Buffer[NamePosition + ExpressionPosition]] !=
+                        UpcaseTable[IntExpression.Buffer[ExpressionPosition]])
+                    {
+                        return FALSE;
+                    }
+                }
+
+                /* It matches */
+                return TRUE;
+            }
+        }
+    }
 
     while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
     {
@@ -385,7 +455,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
     if (IgnoreCase && !UpcaseTable)
     {
         Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status))
         {
             ExRaiseStatus(Status);
         }
