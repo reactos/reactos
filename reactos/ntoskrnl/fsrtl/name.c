@@ -38,7 +38,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     }
 
     /* Check for a shortcut: just one wildcard */
-    if (Expression->Length == 2)
+    if (Expression->Length == sizeof(WCHAR))
     {
         if (Expression->Buffer[0] == L'*')
             return TRUE;
