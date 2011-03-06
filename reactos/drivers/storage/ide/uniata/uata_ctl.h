@@ -43,9 +43,9 @@ extern "C" {
 #endif //__cplusplus
 
 #define AHCI_MAX_PORT                   32
-#define IDE_MAX_CHAN          8
+#define IDE_MAX_CHAN          16
 // Thanks to SATA Port Multipliers:
-#define IDE_MAX_LUN_PER_CHAN  16
+#define IDE_MAX_LUN_PER_CHAN  2
 #define IDE_MAX_LUN           (AHCI_MAX_PORT*IDE_MAX_LUN_PER_CHAN)
 
 #define MAX_QUEUE_STAT        8

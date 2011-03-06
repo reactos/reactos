@@ -95,6 +95,8 @@ Revision History:
 
 #define AHCI_MAX_PORT                   32
 
+#define SATA_MAX_PM_UNITS               16
+
 typedef struct _BUSMASTER_CTX {
     PBUSMASTER_CONTROLLER_INFORMATION* BMListPtr;
     ULONG* BMListLen;
@@ -178,6 +180,7 @@ typedef struct _IDE_AHCI_REGISTERS {
     } CAP;
 
 #define AHCI_CAP_NOP_MASK    0x0000001f
+#define AHCI_CAP_SPM         0x00010000
 #define AHCI_CAP_S64A        0x80000000
 
     // Global HBA Control
@@ -793,7 +796,10 @@ typedef struct _HW_CHANNEL {
 //    KIRQL               QueueOldIrql;
 #endif
     struct _HW_DEVICE_EXTENSION* DeviceExtension;
-    struct _HW_LU_EXTENSION* lun[2];
+    struct _HW_LU_EXTENSION* lun[IDE_MAX_LUN_PER_CHAN];
+
+    ULONG   NumberLuns;
+    ULONG   PmLunMap;
 
     // Double-buffering support
     PVOID   DB_PRD;
@@ -898,7 +904,8 @@ typedef struct _HW_LU_EXTENSION {
     // Controller-specific LUN options
     union {
         /* for tricky controllers, those can change Logical-to-Physical LUN mapping.
-           mainly for mapping SATA ports to compatible PATA registers */
+           Treated as PHYSICAL port number, regardless of logical mapping.
+         */
         ULONG          SATA_lun_map; 
     };
 
@@ -1493,6 +1500,14 @@ AtapiReadBuffer2(
 #define GET_LDEV2(P, T, L)  (T | ((P)<<1))
 #define GET_CDEV(Srb)  (Srb->TargetId)
 
+VOID
+NTAPI
+AtapiSetupLunPtrs(
+    IN PHW_CHANNEL chan,
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG c
+    );
+/*
 #define AtapiSetupLunPtrs(chan, deviceExtension, c) \
 { \
         chan->DeviceExtension = deviceExtension; \
@@ -1504,7 +1519,7 @@ AtapiReadBuffer2(
         chan->lun[0]->DeviceExtension = deviceExtension; \
         chan->lun[1]->DeviceExtension = deviceExtension; \
 }
-
+*/
 BOOLEAN
 NTAPI
 AtapiReadChipConfig(

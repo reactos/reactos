@@ -31,9 +31,12 @@ Revision History:
 
 --*/
 
-#define IDE_MAX_CHAN          8
+#define IDE_MAX_CHAN          16
+#define IDE_DEFAULT_MAX_CHAN  2
 // Thanks to SATA Port Multipliers:
-#define IDE_MAX_LUN_PER_CHAN  16
+//#define IDE_MAX_LUN_PER_CHAN  SATA_MAX_PM_UNITS
+#define IDE_MAX_LUN_PER_CHAN  2
+
 #define IDE_MAX_LUN           (AHCI_MAX_PORT*IDE_MAX_LUN_PER_CHAN)
 
 #define MAX_QUEUE_STAT        8
@@ -113,6 +116,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
     ULONG      Isr2Vector;
     PKINTERRUPT Isr2InterruptObject;
     CHAR    AltInitMasterDev;       // 0xff - uninitialized,  0x00 - normal,  0x01 - change ISA to PCI
+	CHAR    NeedAltInit;            // 0x01 - try change ISA to PCI
 #endif
 
 }BUSMASTER_CONTROLLER_INFORMATION, *PBUSMASTER_CONTROLLER_INFORMATION;

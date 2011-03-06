@@ -380,32 +380,64 @@ UniataAhciInit(
     ULONG BaseMemAddress;
     ULONG PI;
     ULONG CAP;
+    ULONG GHC;
     BOOLEAN MemIo;
     ULONGLONG base;
 
     /* reset AHCI controller */
-    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC,
-        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_HR);
-    AtapiStallExecution(1000000);
-    if(AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) & AHCI_GHC_HR) {
+    GHC = AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC);
+    KdPrint2((PRINT_PREFIX "  reset AHCI controller, GHC %x\n", GHC));
+    AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC,
+        GHC | AHCI_GHC_HR);
+
+    for(i=0; i<1000; i++) {
+        AtapiStallExecution(1000);
+        GHC = AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC);
+        KdPrint2((PRINT_PREFIX "  AHCI GHC %x\n", GHC));
+        if(!(GHC & AHCI_GHC_HR)) {
+            break;
+        }
+    }
+    if(GHC & AHCI_GHC_HR) {
         KdPrint2((PRINT_PREFIX "  AHCI reset failed\n"));
         return FALSE;
     }
 
     /* enable AHCI mode */
-    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC,
-        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_AE);
+    GHC = AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC);
+    KdPrint2((PRINT_PREFIX "  enable AHCI mode, GHC %x\n", GHC));
+    AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC,
+        GHC | AHCI_GHC_AE);
+    GHC = AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC);
+    KdPrint2((PRINT_PREFIX "  AHCI GHC %x\n", GHC));
+
 
     CAP = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_CAP);
     PI = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_PI);
-    /* get the number of HW channels */
-    for(i=PI, n=0; i; n++, i=i>>1);
-    deviceExtension->NumberChannels =
-        max((CAP & AHCI_CAP_NOP_MASK)+1, n);
+    KdPrint2((PRINT_PREFIX "  AHCI CAP %x\n", CAP));
     if(CAP & AHCI_CAP_S64A) {
         KdPrint2((PRINT_PREFIX "  AHCI 64bit\n"));
         deviceExtension->Host64 = TRUE;
     }
+    /* get the number of HW channels */
+    PI = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_PI);
+    KdPrint2((PRINT_PREFIX "  AHCI PI %x\n", PI));
+    for(i=PI, n=0; i; n++, i=i>>1);
+    deviceExtension->NumberChannels =
+        max((CAP & AHCI_CAP_NOP_MASK)+1, n);
+
+    switch(deviceExtension->DevID) {
+    case ATA_M88SX6111:
+        deviceExtension->NumberChannels = 1;
+        break;
+    case ATA_M88SX6121:
+        deviceExtension->NumberChannels = 2;
+        break;
+    case ATA_M88SX6141:
+    case ATA_M88SX6145:
+        deviceExtension->NumberChannels = 4;
+        break;
+    } // switch()
 
     /* clear interrupts */
     AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_IS,
@@ -416,10 +448,13 @@ UniataAhciInit(
         AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_IE);
 
     version = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_VS);
-    KdPrint2((PRINT_PREFIX "  AHCI version %x%x.%x%x controller with %d ports (mask %x) detected\n",
-		  (version >> 24) & 0xff, (version >> 16) & 0xff,
-		  (version >> 8) & 0xff, version & 0xff, deviceExtension->NumberChannels, PI));
+        KdPrint2((PRINT_PREFIX "  AHCI version %x.%02x controller with %d ports (mask %x) detected\n",
+		  ((version >> 20) & 0xf0) + ((version >> 16) & 0x0f),
+		  ((version >> 4) & 0xf0) + (version & 0x0f),
+		  deviceExtension->NumberChannels, PI));
 
+    KdPrint2((PRINT_PREFIX "  PM%s supported\n",
+		  CAP & AHCI_CAP_SPM ? "" : " not"));
 
     deviceExtension->HwFlags |= UNIATA_SATA;
     deviceExtension->HwFlags |= UNIATA_AHCI;

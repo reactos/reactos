@@ -2976,8 +2976,8 @@ ContinueSearch:
 
     kptr = KeyWord;
     while ((*cptr == *kptr) ||
-           (*cptr <= 'Z' && *cptr + ('a' - 'A') == *kptr) ||
-           (*cptr >= 'a' && *cptr - ('a' - 'A') == *kptr)) {
+           (*cptr >= 'A' && *cptr <= 'Z' && *cptr + ('a' - 'A') == *kptr) ||
+           (*cptr >= 'a' && *cptr <= 'z' && *cptr - ('a' - 'A') == *kptr)) {
         cptr++;
         kptr++;
 
@@ -8589,6 +8589,16 @@ DriverEntry(
                                                &hwInitializationData.comm,
                                                (PVOID)(i | (alt ? 0x80000000 : 0)));
                 KdPrint2((PRINT_PREFIX "ScsiPortInitialize Status %#x\n", newStatus));
+                if(newStatus == (ULONG)STATUS_DEVICE_DOES_NOT_EXIST && BMList[i].NeedAltInit) {
+                    KdPrint2((PRINT_PREFIX "STATUS_DEVICE_DOES_NOT_EXIST, try workaround\n"));
+                    hwInitializationData.comm.AdapterInterfaceType = Isa;
+                    newStatus = ScsiPortInitialize(DriverObject,
+                                               Argument2,
+                                               &hwInitializationData.comm,
+                                               (PVOID)(i | 0x80000000));
+                    KdPrint2((PRINT_PREFIX "ScsiPortInitialize Status %#x (2)\n", newStatus));
+				}
+
                 if (newStatus < statusToReturn) {
                     statusToReturn = newStatus;
                 }
@@ -9090,7 +9100,7 @@ AtapiRegCheckParameterValue(
 
     status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE /*| RTL_REGISTRY_OPTIONAL*/,
                                     paramPath.Buffer, parameters, NULL, NULL);
-    //KdPrint(( "AtapiCheckRegValue: %ws -> %ws is %#x\n", PathSuffix, Name, doRun));
+    KdPrint(( "AtapiCheckRegValue: %ws -> %ws is %#x\n", PathSuffix, Name, doRun));
 
     ExFreePool(paramPath.Buffer);
 
