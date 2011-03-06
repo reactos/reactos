@@ -408,24 +408,24 @@ OpenFile(LPCSTR lpFileName,
 BOOL WINAPI
 FlushFileBuffers(HANDLE hFile)
 {
-   NTSTATUS errCode;
-   IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS errCode;
+    IO_STATUS_BLOCK IoStatusBlock;
 
-   hFile = TranslateStdHandle(hFile);
+    hFile = TranslateStdHandle(hFile);
 
-   if (IsConsoleHandle(hFile))
-   {
-      return FALSE;
-   }
+    if (IsConsoleHandle(hFile))
+    {
+        return FALSE;
+    }
 
-   errCode = NtFlushBuffersFile(hFile,
-				&IoStatusBlock);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return(FALSE);
-     }
-   return(TRUE);
+    errCode = NtFlushBuffersFile(hFile,
+                                 &IoStatusBlock);
+    if (!NT_SUCCESS(errCode))
+    {
+        SetLastErrorByStatus(errCode);
+        return(FALSE);
+    }
+    return(TRUE);
 }
 
 
