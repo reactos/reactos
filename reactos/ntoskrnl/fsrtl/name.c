@@ -85,7 +85,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
 
                     /* Now compare upcased name char with expression */
                     if (UpcaseTable[Name->Buffer[NamePosition + ExpressionPosition]] !=
-                        UpcaseTable[IntExpression.Buffer[ExpressionPosition]])
+                        IntExpression.Buffer[ExpressionPosition])
                     {
                         return FALSE;
                     }
