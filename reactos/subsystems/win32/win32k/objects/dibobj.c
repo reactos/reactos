@@ -463,7 +463,7 @@ NtGdiSetDIBitsToDeviceInternal(
     rcDest.top = YDest;
     if (bTransformCoordinates)
     {
-        CoordLPtoDP(pDC, (LPPOINT)&rcDest);
+        IntLPtoDP(pDC, (LPPOINT)&rcDest, 2);
     }
     rcDest.left += pDC->ptlDCOrig.x;
     rcDest.top += pDC->ptlDCOrig.y;
@@ -479,12 +479,16 @@ NtGdiSetDIBitsToDeviceInternal(
 
     DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
-    hSourceBitmap = EngCreateBitmap(SourceSize,
-                                    DIBWidth,
-                                    BitmapFormat(bmi->bmiHeader.biBitCount,
-                                            bmi->bmiHeader.biCompression),
-                                    bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
-                                    (PVOID) Bits);
+    hSourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
+                                      ScanLines,
+                                      0,
+                                      BitmapFormat(bmi->bmiHeader.biBitCount,
+                                                   bmi->bmiHeader.biCompression),
+                                      bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                      bmi->bmiHeader.biSizeImage,
+                                      Bits,
+                                      0);
+
     if (!hSourceBitmap)
     {
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
@@ -520,7 +524,12 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Initialize EXLATEOBJ */
-    EXLATEOBJ_vInitialize(&exlo, ppalDIB, pSurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo,
+                          ppalDIB,
+                          pSurf->ppal,
+                          RGB(0xff, 0xff, 0xff),
+                          pDC->pdcattr->crBackgroundClr,
+                          pDC->pdcattr->crForegroundClr);
 
     /* Copy the bits */
     DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
@@ -1433,6 +1442,7 @@ DIB_CreateDIBSection(
     /* CreateDIBSection should fail for compressed formats */
     if (bi->biCompression == BI_RLE4 || bi->biCompression == BI_RLE8)
     {
+        DPRINT1("no compressed format allowed\n");
         return (HBITMAP)NULL;
     }
 
@@ -1465,6 +1475,7 @@ DIB_CreateDIBSection(
                                           0);
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("ZwQuerySystemInformation failed (0x%lx)\n", Status);
             return NULL;
         }
 
@@ -1486,6 +1497,7 @@ DIB_CreateDIBSection(
                                     PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("ZwMapViewOfSection failed (0x%lx)\n", Status);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return NULL;
         }
@@ -1498,7 +1510,11 @@ DIB_CreateDIBSection(
     {
         offset = 0;
         bm.bmBits = EngAllocUserMem(totalSize, 0);
-        if(!bm.bmBits) goto cleanup;
+        if(!bm.bmBits)
+        {
+            DPRINT1("Failed to allocate memory\n");
+            goto cleanup;
+        }
     }
 
 //  hSecure = MmSecureVirtualMemory(bm.bmBits, totalSize, PAGE_READWRITE);
@@ -1546,12 +1562,14 @@ DIB_CreateDIBSection(
                             0);
     if (!res)
     {
+        DPRINT1("GreCreateBitmapEx failed\n");
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         goto cleanup;
     }
     bmp = SURFACE_LockSurface(res);
     if (NULL == bmp)
     {
+        DPRINT1("SURFACE_LockSurface failed\n");
         EngSetLastError(ERROR_INVALID_HANDLE);
         goto cleanup;
     }
