@@ -159,10 +159,10 @@
 @ stdcall CM_Query_And_Remove_SubTreeW(long ptr wstr long long)
 @ stdcall CM_Query_And_Remove_SubTree_ExA(long ptr str long long long)
 @ stdcall CM_Query_And_Remove_SubTree_ExW(long ptr wstr long long long)
-@ stub CM_Query_Arbitrator_Free_Data
-@ stub CM_Query_Arbitrator_Free_Data_Ex
-@ stub CM_Query_Arbitrator_Free_Size
-@ stub CM_Query_Arbitrator_Free_Size_Ex
+@ stdcall CM_Query_Arbitrator_Free_Data(ptr long long long long)
+@ stdcall CM_Query_Arbitrator_Free_Data_Ex(ptr long long long long ptr)
+@ stdcall CM_Query_Arbitrator_Free_Size(ptr long long long)
+@ stdcall CM_Query_Arbitrator_Free_Size_Ex(ptr long long long ptr)
 @ stdcall CM_Query_Remove_SubTree(long long)
 @ stdcall CM_Query_Remove_SubTree_Ex(long long long)
 @ stub CM_Query_Resource_Conflict_List

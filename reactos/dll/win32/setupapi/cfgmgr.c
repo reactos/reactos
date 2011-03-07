@@ -4138,6 +4138,163 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExW(
 
 
 /***********************************************************************
+ * CM_Query_Arbitrator_Free_Data [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data(
+    PVOID pData, ULONG DataLen, DEVINST dnDevInst, RESOURCEID ResourceID,
+    ULONG ulFlags)
+{
+    TRACE("%p %lu %lx %lu 0x%08lx\n", pData, DataLen, dnDevInst,
+          ResourceID, ulFlags);
+
+    return CM_Query_Arbitrator_Free_Data_Ex(pData, DataLen, dnDevInst,
+                                            ResourceID, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Query_Arbitrator_Free_Data_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data_Ex(
+  OUT PVOID pData,
+  IN ULONG DataLen,
+  IN DEVINST dnDevInst,
+  IN RESOURCEID ResourceID,
+  IN ULONG ulFlags,
+  IN HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
+    TRACE("%p %lu %lx %lu 0x%08lx %p\n", pData, DataLen, dnDevInst,
+          ResourceID, ulFlags, hMachine);
+
+    if (pData == NULL || DataLen == 0)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags & ~CM_QUERY_ARBITRATOR_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    RpcTryExcept
+    {
+        ret = PNP_QueryArbitratorFreeData(BindingHandle,
+                                          pData,
+                                          DataLen,
+                                          lpDevInst,
+                                          ResourceID,
+                                          ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Query_Arbitrator_Free_Size [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size(
+    PULONG pulSize, DEVINST dnDevInst, RESOURCEID ResourceID, ULONG ulFlags)
+{
+    TRACE("%p %lu %lx 0x%08lx\n", pulSize, dnDevInst,ResourceID, ulFlags);
+
+    return CM_Query_Arbitrator_Free_Size_Ex(pulSize, dnDevInst, ResourceID,
+                                            ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Query_Arbitrator_Free_Size_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size_Ex(
+      PULONG pulSize, DEVINST dnDevInst, RESOURCEID ResourceID,
+      ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
+    TRACE("%p %lu %lx 0x%08lx %p\n", pulSize, dnDevInst,ResourceID, ulFlags,
+          hMachine);
+
+    if (pulSize == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags & ~CM_QUERY_ARBITRATOR_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    RpcTryExcept
+    {
+        ret = PNP_QueryArbitratorFreeSize(BindingHandle,
+                                          pulSize,
+                                          lpDevInst,
+                                          ResourceID,
+                                          ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Query_Remove_SubTree [SETUPAPI.@]
  *
  * This function is obsolete in Windows XP and above.
