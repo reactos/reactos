@@ -82,8 +82,6 @@ GreCreateBitmapEx(
     PSURFACE psurf;
     SURFOBJ *pso;
     HBITMAP hbmp;
-    PVOID pvCompressedBits;
-    SIZEL sizl;
 
     /* Verify format */
     if (iFormat < BMF_1BPP || iFormat > BMF_PNG) return NULL;
@@ -103,22 +101,31 @@ GreCreateBitmapEx(
     /* The infamous RLE hack */
     if (iFormat == BMF_4RLE || iFormat == BMF_8RLE)
     {
+        PVOID pvCompressedBits;
+        SIZEL sizl;
+        LONG lDelta;
+
         sizl.cx = nWidth;
         sizl.cy = nHeight;
+        lDelta = WIDTH_BYTES_ALIGN32(nWidth, gajBitsPerFormat[iFormat]);
+
         pvCompressedBits = pvBits;
-        pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
+        pvBits = EngAllocMem(FL_ZERO_MEMORY, lDelta * nHeight, TAG_DIB);
         if (!pvBits)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             SURFACE_FreeSurfaceByHandle(hbmp);
             return NULL;
         }
-        DecompressBitmap(sizl, pvCompressedBits, pvBits, pso->lDelta, iFormat);
+        DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
         fjBitmap |= BMF_RLE_HACK;
+        
+        iFormat = iFormat == BMF_4RLE ? BMF_4BPP : BMF_8BPP;
+        psurf->SurfObj.iBitmapFormat = iFormat;
     }
 
-	/* Mark as API bitmap */
-	psurf->flags |= (flags | API_BITMAP);
+    /* Mark as API bitmap */
+    psurf->flags |= (flags | API_BITMAP);
 
     /* Set the bitmap bits */
     if (!SURFACE_bSetBitmapBits(psurf, fjBitmap, cjWidthBytes, pvBits))
