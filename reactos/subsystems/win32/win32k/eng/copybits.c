@@ -49,12 +49,28 @@ EngCopyBits(SURFOBJ *psoDest,
     BLTINFO   BltInfo;
     SURFACE *psurfDest;
     SURFACE *psurfSource;
+    RECTL rclDest = *DestRect;
+    POINTL ptlSrc = *SourcePoint;
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
     psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
+    /* Clip dest rect against source surface size / source point */
+    if (psoSource->sizlBitmap.cx - ptlSrc.x < rclDest.right - rclDest.left)
+        rclDest.right = rclDest.left + psoSource->sizlBitmap.cx - ptlSrc.x;
+    if (psoSource->sizlBitmap.cy - ptlSrc.y < rclDest.bottom - rclDest.top)
+        rclDest.bottom = rclDest.top + psoSource->sizlBitmap.cy - ptlSrc.y;
+
+    /* Clip dest rect against target surface size */
+    if (rclDest.right > psoDest->sizlBitmap.cx)
+        rclDest.right = psoDest->sizlBitmap.cx;
+    if (rclDest.bottom > psoDest->sizlBitmap.cy)
+        rclDest.bottom = psoDest->sizlBitmap.cy;
+    if (RECTL_bIsEmptyRect(&rclDest)) return TRUE;
+    DestRect = &rclDest;
+    
     // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
     //        mark the copy block function to be DrvCopyBits instead of the
     //        GDI's copy bit function so as to remove clipping from the
