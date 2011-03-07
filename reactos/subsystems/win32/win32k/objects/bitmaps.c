@@ -233,116 +233,111 @@ IntCreateCompatibleBitmap(
     /* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
     if (0 == Width || 0 == Height)
     {
-        Bmp = NtGdiGetStockObject(DEFAULT_BITMAP);
+        return NtGdiGetStockObject(DEFAULT_BITMAP);
+    }
+
+    if (Dc->dctype != DC_TYPE_MEMORY)
+    {
+        PSURFACE psurf;
+
+        Bmp = GreCreateBitmap(abs(Width),
+                              abs(Height),
+                              1,
+                              Dc->ppdev->gdiinfo.cBitsPixel,
+                              NULL);
+        psurf = SURFACE_ShareLockSurface(Bmp);
+        ASSERT(psurf);
+        /* Set palette */
+        psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+        /* Set flags */
+        psurf->flags = API_BITMAP;
+        psurf->hdc = NULL; // Fixme
+        SURFACE_ShareUnlockSurface(psurf);
     }
     else
     {
-        if (Dc->dctype != DC_TYPE_MEMORY)
+        DIBSECTION dibs;
+        INT Count;
+        PSURFACE psurf = Dc->dclevel.pSurface;
+        Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
+
+        if (Count == sizeof(BITMAP))
         {
-            PSURFACE psurf;
+            PSURFACE psurfBmp;
 
             Bmp = GreCreateBitmap(abs(Width),
-                                  abs(Height),
-                                  1,
-                                  Dc->ppdev->gdiinfo.cBitsPixel,
-                                  NULL);
-            psurf = SURFACE_LockSurface(Bmp);
-            ASSERT(psurf);
-            /* Set palette */
-            psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+                          abs(Height),
+                          1,
+                          dibs.dsBm.bmBitsPixel,
+                          NULL);
+            psurfBmp = SURFACE_LockSurface(Bmp);
+            ASSERT(psurfBmp);
+            /* Assign palette */
+            psurfBmp->ppal = psurf->ppal;
+            GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
             /* Set flags */
-            psurf->flags = API_BITMAP;
-            psurf->hdc = NULL; // Fixme
-            SURFACE_UnlockSurface(psurf);
+            psurfBmp->flags = API_BITMAP;
+            psurfBmp->hdc = NULL; // Fixme
+            SURFACE_UnlockSurface(psurfBmp);
         }
-        else
+        else if (Count == sizeof(DIBSECTION))
         {
-            DIBSECTION dibs;
-            INT Count;
-            PSURFACE psurf = Dc->dclevel.pSurface;
-            Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
+            /* A DIB section is selected in the DC */
+            BYTE buf[sizeof(BITMAPINFOHEADER) + 256*sizeof(RGBQUAD)] = {0};
+            PVOID Bits;
+            BITMAPINFO* bi = (BITMAPINFO*)buf;
 
-            if (Count)
+            bi->bmiHeader.biSize          = sizeof(bi->bmiHeader);
+            bi->bmiHeader.biWidth         = Width;
+            bi->bmiHeader.biHeight        = Height;
+            bi->bmiHeader.biPlanes        = dibs.dsBmih.biPlanes;
+            bi->bmiHeader.biBitCount      = dibs.dsBmih.biBitCount;
+            bi->bmiHeader.biCompression   = dibs.dsBmih.biCompression;
+            bi->bmiHeader.biSizeImage     = 0;
+            bi->bmiHeader.biXPelsPerMeter = dibs.dsBmih.biXPelsPerMeter;
+            bi->bmiHeader.biYPelsPerMeter = dibs.dsBmih.biYPelsPerMeter;
+            bi->bmiHeader.biClrUsed       = dibs.dsBmih.biClrUsed;
+            bi->bmiHeader.biClrImportant  = dibs.dsBmih.biClrImportant;
+
+            if (bi->bmiHeader.biCompression == BI_BITFIELDS)
             {
-                if (Count == sizeof(BITMAP))
-                {
-                    PSURFACE psurfBmp;
-
-                    Bmp = GreCreateBitmap(abs(Width),
-                                  abs(Height),
-                                  1,
-                                  dibs.dsBm.bmBitsPixel,
-                                  NULL);
-                    psurfBmp = SURFACE_LockSurface(Bmp);
-                    ASSERT(psurfBmp);
-                    /* Assign palette */
-                    psurfBmp->ppal = psurf->ppal;
-                    GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
-                    /* Set flags */
-                    psurfBmp->flags = API_BITMAP;
-                    psurfBmp->hdc = NULL; // Fixme
-                    SURFACE_UnlockSurface(psurfBmp);
-                }
-                else
-                {
-                    /* A DIB section is selected in the DC */
-					BYTE buf[sizeof(BITMAPINFOHEADER) + 256*sizeof(RGBQUAD)] = {0};
-                    PVOID Bits;
-					BITMAPINFO* bi = (BITMAPINFO*)buf;
-
-                    bi->bmiHeader.biSize          = sizeof(bi->bmiHeader);
-                    bi->bmiHeader.biWidth         = Width;
-                    bi->bmiHeader.biHeight        = Height;
-                    bi->bmiHeader.biPlanes        = dibs.dsBmih.biPlanes;
-                    bi->bmiHeader.biBitCount      = dibs.dsBmih.biBitCount;
-                    bi->bmiHeader.biCompression   = dibs.dsBmih.biCompression;
-                    bi->bmiHeader.biSizeImage     = 0;
-                    bi->bmiHeader.biXPelsPerMeter = dibs.dsBmih.biXPelsPerMeter;
-                    bi->bmiHeader.biYPelsPerMeter = dibs.dsBmih.biYPelsPerMeter;
-                    bi->bmiHeader.biClrUsed       = dibs.dsBmih.biClrUsed;
-                    bi->bmiHeader.biClrImportant  = dibs.dsBmih.biClrImportant;
-
-                    if (bi->bmiHeader.biCompression == BI_BITFIELDS)
-                    {
-                        /* Copy the color masks */
-                        RtlCopyMemory(bi->bmiColors, dibs.dsBitfields, 3*sizeof(RGBQUAD));
-                    }
-                    else if (bi->bmiHeader.biBitCount <= 8)
-                    {
-                        /* Copy the color table */
-                        UINT Index;
-                        PPALETTE PalGDI;
-
-                        if (!psurf->ppal)
-                        {
-                            EngSetLastError(ERROR_INVALID_HANDLE);
-                            return 0;
-                        }
-
-                        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
-
-                        for (Index = 0;
-                                Index < 256 && Index < PalGDI->NumColors;
-                                Index++)
-                        {
-                            bi->bmiColors[Index].rgbRed   = PalGDI->IndexedColors[Index].peRed;
-                            bi->bmiColors[Index].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
-                            bi->bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
-                            bi->bmiColors[Index].rgbReserved = 0;
-                        }
-                        PALETTE_UnlockPalette(PalGDI);
-
-                        Bmp = DIB_CreateDIBSection(Dc,
-                                                   bi,
-                                                   DIB_RGB_COLORS,
-                                                   &Bits,
-                                                   NULL,
-                                                   0,
-                                                   0);
-                        return Bmp;
-                    }
-                }
+                /* Copy the color masks */
+                RtlCopyMemory(bi->bmiColors, dibs.dsBitfields, 3*sizeof(RGBQUAD));
             }
+            else if (bi->bmiHeader.biBitCount <= 8)
+            {
+                /* Copy the color table */
+                UINT Index;
+                PPALETTE PalGDI;
+
+                if (!psurf->ppal)
+                {
+                    EngSetLastError(ERROR_INVALID_HANDLE);
+                    return 0;
+                }
+
+                PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
+
+                for (Index = 0;
+                        Index < 256 && Index < PalGDI->NumColors;
+                        Index++)
+                {
+                    bi->bmiColors[Index].rgbRed   = PalGDI->IndexedColors[Index].peRed;
+                    bi->bmiColors[Index].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
+                    bi->bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
+                    bi->bmiColors[Index].rgbReserved = 0;
+                }
+                PALETTE_UnlockPalette(PalGDI);
+            }
+
+            Bmp = DIB_CreateDIBSection(Dc,
+                                       bi,
+                                       DIB_RGB_COLORS,
+                                       &Bits,
+                                       NULL,
+                                       0,
+                                       0);
+            return Bmp;
         }
     }
     return Bmp;
