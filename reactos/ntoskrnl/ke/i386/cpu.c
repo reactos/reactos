@@ -311,7 +311,8 @@ KiGetFeatureBits(VOID)
                 Reg[3] |= 0x800;
             }
 
-            /* Check if the CPU is too old to support SYSENTER */
+            /* Check if the CPU is too old to support SYSENTER,
+             * See Intel CPUID instruction manual for details*/
             if ((Reg[0] & 0x0FFF3FFF) < 0x00000633)
             {
                 /* Disable it */
@@ -483,7 +484,7 @@ KiGetFeatureBits(VOID)
     
     DPRINT1("Supported CPU features :\n");
 #define print_supported(kf_value) \
-    if(FeatureBits & kf_value) DPRINT1("\t" #kf_value "\n")
+    if(FeatureBits & kf_value) DPRINT1("\t" #kf_value)
     print_supported(KF_V86_VIS);
     print_supported(KF_RDTSC);
     print_supported(KF_CR4);
@@ -506,6 +507,7 @@ KiGetFeatureBits(VOID)
     print_supported(KF_NX_DISABLED);
     print_supported(KF_NX_ENABLED);
 #undef print_supported
+    DPRINT1("\n");
 
     /* Return the Feature Bits */
     return FeatureBits;
