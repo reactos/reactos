@@ -511,7 +511,8 @@ DC_vPrepareDCsForBlit(PDC pdc1,
     {
         pdcFirst = pdc1 ;
         prcFirst = &rc1;
-        pdcSecond = NULL ;
+        pdcSecond = NULL;
+        prcSecond = NULL;
     }
 
     if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
