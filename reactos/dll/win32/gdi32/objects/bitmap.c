@@ -531,7 +531,6 @@ CreateDIBitmap( HDC hDC,
     return hBmp;
 }
 
-#if 0 // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
 /*
  * @implemented
  */
@@ -621,60 +620,6 @@ SetDIBits(HDC hDC,
     else
         RestoreDC(SavehDC, -1);
 
-    return LinesCopied;
-}
-#endif
-
-INT
-WINAPI
-SetDIBits(HDC hdc,
-          HBITMAP hbmp,
-          UINT uStartScan,
-          UINT cScanLines,
-          CONST VOID *lpvBits,
-          CONST BITMAPINFO *lpbmi,
-          UINT fuColorUse)
-{
-    PBITMAPINFO pConvertedInfo;
-    UINT ConvertedInfoSize;
-    INT LinesCopied = 0;
-    UINT cjBmpScanSize = 0;
-    PVOID pvSafeBits = (PVOID)lpvBits;
-
-// This needs to be almost the sames as SetDIBitsToDevice
-
-    if ( !cScanLines || !lpbmi || !lpvBits || (GDI_HANDLE_GET_TYPE(hbmp) != GDI_OBJECT_TYPE_BITMAP))
-        return 0;
-
-    if ( fuColorUse && fuColorUse != DIB_PAL_COLORS && fuColorUse != DIB_PAL_COLORS+1 )
-        return 0;
-
-    pConvertedInfo = ConvertBitmapInfo(lpbmi, fuColorUse,
-                                       &ConvertedInfoSize, FALSE);
-    if (!pConvertedInfo)
-        return 0;
-
-    cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, cScanLines);
-
-    if ( lpvBits )
-    {
-        pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
-        if (pvSafeBits)
-            RtlCopyMemory( pvSafeBits, lpvBits, cjBmpScanSize);
-    }
-
-    LinesCopied = NtGdiSetDIBits( hdc,
-                                  hbmp,
-                                  uStartScan,
-                                  cScanLines,
-                                  pvSafeBits,
-                                  pConvertedInfo,
-                                  fuColorUse);
-
-    if ( lpvBits != pvSafeBits)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
-    if (lpbmi != pConvertedInfo)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
     return LinesCopied;
 }
 
