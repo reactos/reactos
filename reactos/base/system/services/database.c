@@ -700,7 +700,10 @@ ScmControlService(PSERVICE Service,
                                                    HEAP_ZERO_MEMORY,
                                                    sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
     if (ControlPacket == NULL)
+    {
+        LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
     ControlPacket->dwControl = dwControl;
     ControlPacket->dwSize = TotalLength;
