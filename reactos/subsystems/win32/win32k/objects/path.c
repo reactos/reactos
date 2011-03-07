@@ -1858,7 +1858,7 @@ PATH_WidenPath(DC *dc)
         PATH_DestroyGdiPath(pDownPath);
         ExFreePoolWithTag(pDownPath, TAG_PATH);
     }
-    ExFreePoolWithTag(pStrokes, TAG_PATH);
+    if (pStrokes) ExFreePoolWithTag(pStrokes, TAG_PATH);
 
     pNewPath->state = PATH_Closed;
     if (!(ret = PATH_AssignGdiPath(pPath, pNewPath)))
