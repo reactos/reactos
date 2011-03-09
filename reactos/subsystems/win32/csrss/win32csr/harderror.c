@@ -118,7 +118,7 @@ CsrpCaptureStringParameters(
     ULONG nParam, UnicodeStringParameterMask, Size = 0;
     NTSTATUS Status;
     UNICODE_STRING TempStringU;
-    PWSTR ParamString;
+    CHAR *ParamString;
 
     UnicodeStringParameterMask = HardErrorMessage->UnicodeStringParameterMask;
 
@@ -166,7 +166,8 @@ CsrpCaptureStringParameters(
             }
 
             /* Zero terminate the string */
-            ParamString[TempStringU.Length / sizeof(WCHAR)] = 0;
+            ParamString[TempStringU.Length] = 0;
+            ParamString[TempStringU.Length + 1] = 0;
             DPRINT("ParamString=\'%S\'\n", ParamString);
 
             Parameters[nParam] = (ULONG_PTR)ParamString;
