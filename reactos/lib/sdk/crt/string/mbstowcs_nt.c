@@ -4,26 +4,35 @@
 #include <ndk/rtlfuncs.h>
 #include <string.h>
 
+WCHAR NTAPI RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar);
+#undef MB_CUR_MAX
+#define MB_CUR_MAX 2
+
 /*
  * @implemented
  */
 int mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
 {
-	NTSTATUS Status;
-	ULONG Size;
+	UCHAR mbarr[MB_CUR_MAX] = { 0 };
+	PUCHAR mbs = mbarr;
+	WCHAR wc;
+
+	if (mbchar == NULL)
+		return 0;
 
 	if (wchar == NULL)
 		return 0;
 
-	Status = RtlMultiByteToUnicodeN (wchar,
-	                                 sizeof(WCHAR),
-	                                 &Size,
-	                                 mbchar,
-	                                 count);
-	if (!NT_SUCCESS(Status))
+	memcpy(mbarr, mbchar, min(count, sizeof mbarr));
+
+	wc = RtlAnsiCharToUnicodeChar(&mbs);
+
+	if (wc == L' ' && mbarr[0] != ' ')
 		return -1;
 
-	return (int)Size;
+	*wchar = wc;
+
+	return mbs - mbarr;
 }
 
 /*
