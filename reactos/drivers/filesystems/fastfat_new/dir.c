@@ -248,7 +248,7 @@ FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* Set the file object */
-    Ccb = FatCreateCcb(IrpContext);
+    Ccb = FatCreateCcb();
     FatSetFileObject(FileObject,
                      UserDirectoryOpen,
                      Dcb,
