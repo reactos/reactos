@@ -117,7 +117,7 @@ VOID ShowLastError(void)
  */
 static void UpdateWindowCaption(void)
 {
-  TCHAR szCaption[MAX_STRING_LEN];
+  TCHAR szCaption[MAX_STRING_LEN] = _T("");
   TCHAR szNotepad[MAX_STRING_LEN];
 
   LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, SIZEOF(szNotepad));
