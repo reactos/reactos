@@ -71,6 +71,16 @@ xHalVectorToIDTEntry(
     IN ULONG Vector
 );
 
+NTSTATUS
+NTAPI
+xHalGetInterruptTranslator(IN INTERFACE_TYPE ParentInterfaceType,
+                           IN ULONG ParentBusNumber,
+                           IN INTERFACE_TYPE BridgeInterfaceType,
+                           IN USHORT Size,
+                           IN USHORT Version,
+                           OUT PTRANSLATOR_INTERFACE Translator,
+                           OUT PULONG BridgeBusNumber);
+
 
 //
 // Various offsets in the boot record

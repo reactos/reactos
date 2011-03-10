@@ -285,6 +285,7 @@
 		<file>disksup.c</file>
 		<file>fstubex.c</file>
 		<file>halstub.c</file>
+		<file>translate.c</file>
 	</directory>
 	<directory name="inbv">
 		<file>inbv.c</file>

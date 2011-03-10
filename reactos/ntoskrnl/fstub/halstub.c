@@ -32,7 +32,7 @@ HAL_DISPATCH HalDispatchTable =
     (pHalInitPnpDriver)NULL,
     (pHalInitPowerManagement)NULL,
     (pHalGetDmaAdapter) NULL,
-    (pHalGetInterruptTranslator)NULL,
+    xHalGetInterruptTranslator,
     (pHalStartMirroring)NULL,
     (pHalEndMirroring)NULL,
     (pHalMirrorPhysicalMemory)NULL,
