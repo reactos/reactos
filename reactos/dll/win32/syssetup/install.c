@@ -506,7 +506,7 @@ EnableUserModePnpManager(VOID)
     }
 
     ret = StartServiceW(hService, 0, NULL);
-    if (!ret)
+    if ((!ret) && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
     {
         DPRINT1("Unable to start service\n");
         goto cleanup;
