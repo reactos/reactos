@@ -907,7 +907,7 @@ WSPSelect(IN int nfds,
     }
 
     PollInfo->HandleCount = j;
-    PollBufferSize = ((PCHAR)&PollInfo->Handles[j+1]) - ((PCHAR)PollInfo);
+	PollBufferSize = sizeof(AFD_POLL_INFO) + (PollInfo->HandleCount > 1 ? sizeof(HANDLE) * ( PollInfo->HandleCount - 1) : 0);
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)PollInfo->Handles[0].Handle,
