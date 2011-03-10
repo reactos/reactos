@@ -12,11 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define GDI_ENTRY_TO_INDEX(ht, e)                                              \
-  (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
-#define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
-  (&(HandleTable)->Entries[GDI_HANDLE_GET_INDEX((h))])
-
 #define BASE_OBJTYPE_COUNT 32
 
 #define DelayExecution() \

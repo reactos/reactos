@@ -160,3 +160,7 @@ INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
 
 #define GDIOBJ_GetKernelObj(Handle) \
   ((PGDI_TABLE_ENTRY)&GdiHandleTable->Entries[GDI_HANDLE_GET_INDEX(Handle)])->KernelData
+#define GDI_ENTRY_TO_INDEX(ht, e)                                              \
+  (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
+#define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
+  (&(HandleTable)->Entries[GDI_HANDLE_GET_INDEX((h))])

@@ -2073,14 +2073,12 @@ FASTCALL
 REGION_AllocUserRgnWithHandle(INT nRgn)
 {
     PROSRGNDATA pRgn;
-    INT Index;
     PGDI_TABLE_ENTRY Entry;
 
     pRgn = REGION_AllocRgnWithHandle(nRgn);
     if (pRgn)
     {
-       Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
-       Entry = &GdiHandleTable->Entries[Index];
+       Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, pRgn->BaseObject.hHmgr);
        Entry->UserData = AllocateObjectAttr();
     }
     return pRgn;
@@ -2090,23 +2088,18 @@ PROSRGNDATA
 FASTCALL
 RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
 {
-  INT Index;
   PGDI_TABLE_ENTRY Entry;
-  PROSRGNDATA pRgn;
   PRGN_ATTR pRgn_Attr;
-  HANDLE pid;
+  PROSRGNDATA pRgn = NULL;
 
   pRgn = REGION_LockRgn(hRgn);
 
-  if (pRgn)
+  if (pRgn && GDIOBJ_OwnedByCurrentProcess(hRgn))
   {
-     Index = GDI_HANDLE_GET_INDEX(hRgn);
-     Entry = &GdiHandleTable->Entries[Index];
+     Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, hRgn);
      pRgn_Attr = Entry->UserData;
-     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
 
-     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
-          pRgn_Attr )
+     if ( pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2151,20 +2144,15 @@ VOID
 FASTCALL
 RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
 {
-  INT Index;
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
-  HANDLE pid;
 
-  if (pRgn)
+  if (pRgn && GDIOBJ_OwnedByCurrentProcess(pRgn->BaseObject.hHmgr))
   {
-     Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
-     Entry = &GdiHandleTable->Entries[Index];
+     Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, pRgn->BaseObject.hHmgr);
      pRgn_Attr = Entry->UserData;
-     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
 
-     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
-          pRgn_Attr )
+     if ( pRgn_Attr )
      {
         _SEH2_TRY
         {
