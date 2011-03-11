@@ -348,8 +348,6 @@ CreateCompatibleBitmap(
     INT  Height)
 {
     PDC_ATTR pDc_Attr;
-    HBITMAP hBmp = NULL;
-    DIBSECTION dibs;
 
     if (!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
         return NULL;
@@ -361,19 +359,26 @@ CreateCompatibleBitmap(
     {
         return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
     }
+    else
+    {
+        HBITMAP hBmp = NULL;
+        char buffer[sizeof(DIBSECTION) + 256*sizeof(RGBQUAD)];
+        DIBSECTION* pDIBs = (DIBSECTION*)buffer;
 
-    hBmp = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_BITMAP);
+        hBmp = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_BITMAP);
 
-    if ( GetObjectA(hBmp, sizeof(DIBSECTION), &dibs) != sizeof(DIBSECTION) )
-        return NULL;
+        if ( GetObjectA(hBmp, sizeof(DIBSECTION), pDIBs) != sizeof(DIBSECTION) )
+            return NULL;
 
-    if ( dibs.dsBm.bmBitsPixel <= 8 )
-        GetDIBColorTable(hDC, 0, 256, (RGBQUAD *)&dibs.dsBitfields);
+        if ( pDIBs->dsBm.bmBitsPixel <= 8 )
+            GetDIBColorTable(hDC, 0, 256, (RGBQUAD *)&pDIBs->dsBitfields[0]);
 
-    dibs.dsBmih.biWidth = Width;
-    dibs.dsBmih.biHeight = Height;
+        pDIBs->dsBmih.biWidth = Width;
+        pDIBs->dsBmih.biHeight = Height;
 
-    return CreateDIBSection(hDC, (CONST BITMAPINFO *)&dibs.dsBmih, 0, NULL, NULL, 0);
+        return CreateDIBSection(hDC, (CONST BITMAPINFO *)&pDIBs->dsBmih, 0, NULL, NULL, 0);
+    }
+    return NULL;
 }
 
 
