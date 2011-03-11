@@ -34,7 +34,7 @@ OPENGL32_ThreadAttach( void )
 
     dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
                                       HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-                                      sizeof (((ICDTable *)(0))->dispatch_table) );
+                                      DISPATCH_TABLE_SIZE );
     if (dispatchTable == NULL)
     {
         DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
@@ -84,6 +84,7 @@ OPENGL32_ThreadDetach( void )
                       GetLastError() );
         lpData = NULL;
     }
+    TlsSetValue( OPENGL32_tls, NULL );
 
     if (teb->glTable != NULL)
     {
