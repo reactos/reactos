@@ -4,7 +4,6 @@
  * FILE:            ntoskrnl/include/hal.h
  * PURPOSE:         Internal header for the I/O HAL Functions (Fstub)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 #pragma once
@@ -74,167 +73,13 @@ xHalVectorToIDTEntry(
 
 NTSTATUS
 NTAPI
-xHalGetInterruptTranslator(
-    IN INTERFACE_TYPE ParentInterfaceType,
-    IN ULONG ParentBusNumber,
-    IN INTERFACE_TYPE BridgeInterfaceType,
-    IN USHORT Size,
-    IN USHORT Version,
-    OUT PTRANSLATOR_INTERFACE Translator,
-    OUT PULONG BridgeBusNumber
-);
-
-PBUS_HANDLER
-FASTCALL
-xHalHandlerForBus(
-    IN INTERFACE_TYPE InterfaceType,
-    IN ULONG BusNumber
-);
-
-VOID
-FASTCALL
-xHalReferenceHandler(
-    IN PBUS_HANDLER BusHandler
-);
-
-NTSTATUS
-NTAPI
-xHalInitPnpDriver(
-    VOID
-);
-
-NTSTATUS
-NTAPI
-xHalInitPowerManagement(
-    IN PPM_DISPATCH_TABLE PmDriverDispatchTable,
-    OUT PPM_DISPATCH_TABLE *PmHalDispatchTable
-);
-
-NTSTATUS
-NTAPI
-xHalStartMirroring(
-    VOID
-);
-
-NTSTATUS
-NTAPI
-xHalEndMirroring(
-    IN ULONG PassNumber
-);
-
-NTSTATUS
-NTAPI
-xHalMirrorPhysicalMemory(
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN LARGE_INTEGER NumberOfBytes
-);
-
-NTSTATUS
-NTAPI
-xHalQueryBusSlots(
-    IN PBUS_HANDLER BusHandler,
-    IN ULONG BufferSize,
-    OUT PULONG SlotNumbers,
-    OUT PULONG ReturnedLength
-);
-
-NTSTATUS
-NTAPI
-xHalSetSystemInformation(
-    IN HAL_SET_INFORMATION_CLASS InformationClass,
-    IN ULONG BufferSize,
-    IN PVOID Buffer
-);
-
-NTSTATUS
-NTAPI
-xHalQuerySystemInformation(
-    IN HAL_QUERY_INFORMATION_CLASS InformationClass,
-    IN ULONG BufferSize,
-    IN OUT PVOID Buffer,
-    OUT PULONG ReturnedLength
-);
-
-VOID
-NTAPI
-xHalLocateHiberRanges(
-    IN PVOID MemoryMap
-);
-
-NTSTATUS
-NTAPI
-xHalRegisterBusHandler(
-    IN INTERFACE_TYPE InterfaceType,
-    IN BUS_DATA_TYPE ConfigSpace,
-    IN ULONG BusNumber,
-    IN INTERFACE_TYPE ParentInterfaceType,
-    IN ULONG ParentBusNumber,
-    IN ULONG ContextSize,
-    IN PINSTALL_BUS_HANDLER InstallCallback,
-    OUT PBUS_HANDLER *BusHandler
-);
-
-VOID
-NTAPI
-xHalSetWakeAlarm(
-    IN ULONGLONG AlartTime,
-    IN PTIME_FIELDS TimeFields
-);
-
-BOOLEAN
-NTAPI
-xHalTranslateBusAddress(
-    IN INTERFACE_TYPE InterfaceType,
-    IN ULONG BusNumber,
-    IN PHYSICAL_ADDRESS BusAddress,
-    IN OUT PULONG AddressSpace,
-    OUT PPHYSICAL_ADDRESS TranslatedAddress
-);
-
-NTSTATUS
-NTAPI
-xHalAllocateMapRegisters(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN ULONG Unknown,
-    IN ULONG Unknown2,
-    PMAP_REGISTER_ENTRY Registers
-);
-
-NTSTATUS
-NTAPI
-xKdSetupPciDeviceForDebugging(
-    IN PVOID LoaderBlock OPTIONAL,
-    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
-);
-
-NTSTATUS
-NTAPI
-xKdReleasePciDeviceForDebugging(
-    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
-);
-
-PVOID
-NTAPI
-xKdGetAcpiTablePhase(
-    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-    IN ULONG Signature
-);
-
-PVOID
-NTAPI
-MatchAll(
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG NumberPages,
-    IN BOOLEAN FlushCurrentTLB
-);
-
-VOID
-NTAPI
-xKdUnmapVirtualAddress(
-    IN PVOID VirtualAddress,
-    IN ULONG NumberPages,
-    IN BOOLEAN FlushCurrentTLB
-);
+xHalGetInterruptTranslator(IN INTERFACE_TYPE ParentInterfaceType,
+                           IN ULONG ParentBusNumber,
+                           IN INTERFACE_TYPE BridgeInterfaceType,
+                           IN USHORT Size,
+                           IN USHORT Version,
+                           OUT PTRANSLATOR_INTERFACE Translator,
+                           OUT PULONG BridgeBusNumber);
 
 
 //
