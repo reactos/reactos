@@ -168,8 +168,8 @@
 @ stub CM_Query_Resource_Conflict_List
 @ stdcall CM_Reenumerate_DevNode(long long)
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long)
-@ stub CM_Register_Device_Driver
-@ stub CM_Register_Device_Driver_Ex
+@ stdcall CM_Register_Device_Driver(long long)
+@ stdcall CM_Register_Device_Driver_Ex(long long ptr)
 @ stdcall CM_Register_Device_InterfaceA(long ptr str str ptr long)
 @ stdcall CM_Register_Device_InterfaceW(long ptr wstr wstr ptr long)
 @ stdcall CM_Register_Device_Interface_ExA(long ptr str str ptr long long)
