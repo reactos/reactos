@@ -46,6 +46,7 @@
 	<file>GetTextExtentExPoint.c</file>
 	<file>GetTextFace.c</file>
 	<file>MaskBlt.c</file>
+    <file>Rectangle.c</file>
 	<file>SelectObject.c</file>
 	<file>SetDCPenColor.c</file>
 	<file>SetDIBits.c</file>

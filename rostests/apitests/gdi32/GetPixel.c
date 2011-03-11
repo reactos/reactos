@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for SetDIBits
+ * PURPOSE:         Test for GetPixel
  * PROGRAMMERS:     Jérôme Gardou
  */
 

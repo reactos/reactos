@@ -42,6 +42,7 @@ extern void func_GetStockObject(void);
 extern void func_GetTextExtentExPoint(void);
 extern void func_GetTextFace(void);
 extern void func_MaskBlt(void);
+extern void func_Rectangle(void);
 extern void func_SelectObject(void);
 extern void func_SetDCPenColor(void);
 extern void func_SetDIBits(void);
@@ -89,6 +90,7 @@ const struct test winetest_testlist[] =
     { "GetTextExtentExPoint", func_GetTextExtentExPoint },
     { "GetTextFace", func_GetTextFace },
     { "MaskBlt", func_MaskBlt },
+    { "Rectangle", func_Rectangle },
     { "SelectObject", func_SelectObject },
     { "SetDCPenColor", func_SetDCPenColor },
     { "SetDIBits", func_SetDIBits },

@@ -39,6 +39,7 @@ list(APPEND SOURCE
     GetTextExtentExPoint.c
     GetTextFace.c
     MaskBlt.c
+    Rectangle.c
     SelectObject.c
     SetDCPenColor.c
     SetDIBits.c
