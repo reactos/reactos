@@ -88,7 +88,7 @@ VOID
 );
 
 typedef
-BOOLEAN
+NTSTATUS
 (NTAPI *pHalAllocateMapRegisters)(
     IN PADAPTER_OBJECT AdapterObject,
     IN ULONG Unknown,
