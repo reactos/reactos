@@ -702,7 +702,7 @@ void Pane::set_header()
 	item.mask = HDI_WIDTH;
 	item.cxy = 0;
 
-	for(; x+_widths[i]<scroll_pos && i<COLUMNS; i++) {
+	for(; i<COLUMNS && x+_widths[i]<scroll_pos; i++) {
 		x += _widths[i];
 		Header_SetItem(_hwndHeader, i, &item);
 	}
