@@ -6,8 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-int mirrorRotateDlg();
+int mirrorRotateDlg(void);
 
-int attributesDlg();
+int attributesDlg(void);
 
 int changeSizeDlg();

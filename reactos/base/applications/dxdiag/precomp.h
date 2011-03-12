@@ -43,10 +43,10 @@ INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* DirectDraw tests */
-VOID DDTests();
+VOID DDTests(VOID);
 
 /* Direct3D tests */
-VOID D3DTests();
+VOID D3DTests(VOID);
 
 /* DirectSound initialization */
 void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext);

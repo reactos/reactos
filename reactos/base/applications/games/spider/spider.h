@@ -25,7 +25,7 @@ extern DWORD dwDifficulty;
 extern TCHAR MsgDeal[];
 extern TCHAR MsgWin[];
 
-void CreateSpider();
+void CreateSpider(void);
 void NewGame(void);
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);
