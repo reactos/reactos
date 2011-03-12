@@ -534,29 +534,23 @@ CLEANUP:
    END_CLEANUP;
 }
 
-/*
- * @implemented
- */
-HWND APIENTRY
-NtUserSetCapture(HWND hWnd)
+
+HWND FASTCALL
+co_UserSetCapture(HWND hWnd)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWND Window, pWnd;
    HWND hWndPrev;
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
-   UserEnterExclusive();
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if((Window = UserGetWindowObject(hWnd)))
+   if ((Window = UserGetWindowObject(hWnd)))
    {
-      if(Window->head.pti->MessageQueue != ThreadQueue)
+      if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         RETURN(NULL);
+         return NULL;
       }
    }
 
@@ -582,7 +576,21 @@ NtUserSetCapture(HWND hWnd)
    co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    ThreadQueue->CaptureWindow = hWnd;
 
-   RETURN( hWndPrev);
+   return hWndPrev;
+}
+
+/*
+ * @implemented
+ */
+HWND APIENTRY
+NtUserSetCapture(HWND hWnd)
+{
+   DECLARE_RETURN(HWND);
+
+   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
+   UserEnterExclusive();
+
+   RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
    DPRINT("Leave NtUserSetCapture, ret=%i\n",_ret_);

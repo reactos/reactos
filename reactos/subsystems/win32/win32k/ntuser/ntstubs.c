@@ -1338,16 +1338,6 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
    return 0;
 }
 
-BOOL
-APIENTRY
-NtUserDragDetect(
-   HWND hWnd,
-   POINT pt) // Just like the User call.
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
 /*
  * @unimplemented
  */

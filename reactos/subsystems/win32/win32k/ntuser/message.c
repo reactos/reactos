@@ -16,6 +16,7 @@
 #include <debug.h>
 
 BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
+HWND FASTCALL co_UserSetCapture(HWND hWnd);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
@@ -1697,6 +1698,76 @@ IntUninitMessagePumpHook()
 }
 
 /** Functions ******************************************************************/
+
+BOOL
+APIENTRY
+NtUserDragDetect(
+   HWND hWnd,
+   POINT pt) // Just like the User call.
+{
+    MSG msg;
+    RECT rect;
+    WORD wDragWidth, wDragHeight;
+    DECLARE_RETURN(BOOL);
+
+    DPRINT("Enter NtUserDragDetect(%x)\n", hWnd);
+    UserEnterExclusive();
+
+    wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
+    wDragHeight= UserGetSystemMetrics(SM_CYDRAG);
+
+    rect.left = pt.x - wDragWidth;
+    rect.right = pt.x + wDragWidth;
+
+    rect.top = pt.y - wDragHeight;
+    rect.bottom = pt.y + wDragHeight;
+
+    co_UserSetCapture(hWnd);
+
+    for (;;)
+    {
+        while (co_IntGetPeekMessage( &msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, FALSE ) ||
+               co_IntGetPeekMessage( &msg, 0, WM_QUEUESYNC,  WM_QUEUESYNC, PM_REMOVE, FALSE ) ||
+               co_IntGetPeekMessage( &msg, 0, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE, FALSE ) )
+        {
+            if ( msg.message == WM_LBUTTONUP )
+            {
+                co_UserSetCapture(NULL);
+                RETURN( FALSE);
+            }
+            if ( msg.message == WM_MOUSEMOVE )
+            {
+                POINT tmp;
+                tmp.x = (short)LOWORD(msg.lParam);
+                tmp.y = (short)HIWORD(msg.lParam);
+                if( !IntPtInRect( &rect, tmp ) )
+                {
+                    co_UserSetCapture(NULL);
+                    RETURN( TRUE);
+                }
+            }
+            if ( msg.message == WM_KEYDOWN )
+            {
+                if ( msg.wParam == VK_ESCAPE )
+                {
+                   co_UserSetCapture(NULL);
+                   RETURN( TRUE);
+                }
+            }
+            if ( msg.message == WM_QUEUESYNC )
+            {
+                co_HOOK_CallHooks( WH_CBT, HCBT_QS, 0, 0 );
+            }
+        }
+        co_IntWaitMessage(NULL, 0, 0);
+    }
+    RETURN( FALSE);
+
+CLEANUP:
+   DPRINT("Leave NtUserDragDetect, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
 
 BOOL APIENTRY
 NtUserPostMessage(HWND hWnd,
