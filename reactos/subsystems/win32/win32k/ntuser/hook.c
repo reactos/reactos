@@ -77,7 +77,6 @@ IntCallLowLevelHook( PHOOK Hook,
        case WH_KEYBOARD:
           uTimeout = 200;
           Block = TRUE;
-          Size = sizeof(KBDLLHOOKSTRUCT);
           break;
     }
 
