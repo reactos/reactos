@@ -15,19 +15,19 @@
 #include <debug.h>
 
 BOOL
-WdmAudInitUserModeMixer();
+WdmAudInitUserModeMixer(VOID);
 
 ULONG
-WdmAudGetWaveOutCount();
+WdmAudGetWaveOutCount(VOID);
 
 ULONG
-WdmAudGetWaveInCount();
+WdmAudGetWaveInCount(VOID);
 
 ULONG
-WdmAudGetMixerCount();
+WdmAudGetMixerCount(VOID);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudOpenSoundDeviceByLegacy(VOID);
 
 MMRESULT
 WdmAudGetNumWdmDevsByMMixer(
@@ -150,12 +150,12 @@ WdmAudCommitWaveBufferByMMixer(
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 MMRESULT
-WdmAudCleanupByMMixer();
+WdmAudCleanupByMMixer(VOID);
 
 /* legacy.c */
 
 MMRESULT
-WdmAudCleanupByLegacy();
+WdmAudCleanupByLegacy(VOID);
 
 MMRESULT
 WdmAudGetCapabilitiesByLegacy(
@@ -165,7 +165,7 @@ WdmAudGetCapabilitiesByLegacy(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy();
+WdmAudOpenSoundDeviceByLegacy(VOID);
 
 MMRESULT
 WdmAudCloseSoundDeviceByLegacy(

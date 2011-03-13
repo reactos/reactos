@@ -123,7 +123,7 @@ typedef struct _USER32_THREAD_DATA
     USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
 } USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
 
-PUSER32_THREAD_DATA User32GetThreadData();
+PUSER32_THREAD_DATA User32GetThreadData(VOID);
 
 /* FIXME: Belongs to some header. */
 BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
