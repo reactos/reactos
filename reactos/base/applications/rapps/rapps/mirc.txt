@@ -2,7 +2,7 @@
 
 [Section]
 Name = mIRC
-Version = 7.17
+Version = 7.19
 Licence = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 1.9M

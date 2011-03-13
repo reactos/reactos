@@ -481,6 +481,7 @@ EnableUserModePnpManager(VOID)
     if (hSCManager == NULL)
     {
         DPRINT1("Unable to open the service control manager.\n");
+        DPRINT1("Last Error %d\n", GetLastError());
         goto cleanup;
     }
 
