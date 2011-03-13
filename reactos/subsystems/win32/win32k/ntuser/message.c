@@ -1447,7 +1447,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
     {
         DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        RETURN( FALSE);
     }
 
     Message->Msg.hwnd = hWnd;
@@ -1459,19 +1459,21 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->lResult = 0;
     Message->QS_Flags = 0;
     Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
+    IntReferenceMessageQueue(Win32Thread->MessageQueue);
     Message->CallBackSenderQueue = Win32Thread->MessageQueue;
-
-    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
-    Message->HookMessage = MSQ_NORMAL | MSQ_SENTNOWAIT;
+    Message->HookMessage = MSQ_NORMAL; // | MSQ_SENTNOWAIT
     Message->HasPackedLParam = (lParamBufferSize > 0);
-
+    Message->DispatchingListEntry.Flink = NULL;
     Message->QS_Flags = QS_SENDMESSAGE;
+    
+    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
+    
     MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, FALSE);
 
     InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
-    IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
+    //IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
     RETURN(TRUE);
 
