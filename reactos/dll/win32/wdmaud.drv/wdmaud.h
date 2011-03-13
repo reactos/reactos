@@ -27,9 +27,6 @@ ULONG
 WdmAudGetMixerCount(VOID);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy(VOID);
-
-MMRESULT
 WdmAudGetNumWdmDevsByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     OUT DWORD* DeviceCount);
@@ -165,7 +162,10 @@ WdmAudGetCapabilitiesByLegacy(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy(VOID);
+WdmAudOpenSoundDeviceByLegacy(
+    IN PSOUND_DEVICE SoundDevice,
+    OUT PVOID *Handle
+);
 
 MMRESULT
 WdmAudCloseSoundDeviceByLegacy(
