@@ -11,17 +11,17 @@ BEGIN
 	POPUP "&Programmes"
 	BEGIN
 		MENUITEM "&Installer",  ID_INSTALL
-		MENUITEM "&DÃ©sinstaller",ID_UNINSTALL
+		MENUITEM "&Désinstaller",ID_UNINSTALL
 		MENUITEM "&Modifier",   ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Supprimer du registre", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&RafraÃ®chir",  ID_REFRESH
+		MENUITEM "&Rafraîchir",  ID_REFRESH
 	END
 	POPUP "Aide"
 	BEGIN
 		MENUITEM "Aide",      ID_HELP, GRAYED
-		MENUITEM "Ã€ propos",     ID_ABOUT
+		MENUITEM "À propos",     ID_ABOUT
 	END
 END
 
@@ -39,12 +39,12 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "&Installer",   ID_INSTALL
-		MENUITEM "&DÃ©sinstaller", ID_UNINSTALL
+		MENUITEM "&Désinstaller", ID_UNINSTALL
 		MENUITEM "&Modifier",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Supprimer du registre", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&RafraÃ®chir",   ID_REFRESH
+		MENUITEM "&Rafraîchir",   ID_REFRESH
 	END
 END
 
@@ -53,18 +53,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "GÃ©nÃ©ral", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Enregistrer la position de la fenÃªtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Mettre Ã  jour la liste des programmes accessibles au dÃ©marage", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	GROUPBOX "Général", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Enregistrer la position de la fenêtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarage", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Journal de l'installation de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "TÃ©lÃ©chargement", -1, 4, 65, 240, 51
-	LTEXT "Fichier des tÃ©lÃ©chargements :", -1, 16, 75, 100, 9
+	GROUPBOX "Téléchargement", -1, 4, 65, 240, 51
+	LTEXT "Fichier des téléchargements :", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&SÃ©lectionner", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Supprimer l'installateur du programme aprÃ¨s l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&Sélectionner", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Supprimer l'installateur du programme après l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Par dÃ©faut", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "Accepter", IDOK, 116, 124, 60, 14
 	PUSHBUTTON "Annuler", IDCANCEL, 181, 124, 60, 14
 END
@@ -76,8 +76,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installer Ã  partir d'un disque (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&TÃ©lÃ©charger et installer", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Installer à partir d'un disque (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Télécharger et installer", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "Accepter", IDOK, 86, 78, 60, 14
 	PUSHBUTTON "Annuler", IDCANCEL, 150, 78, 60, 14
@@ -85,7 +85,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "TÃ©lÃ©charger..."
+CAPTION "Télécharger..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -95,7 +95,7 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Ã€ propos"
+CAPTION "À propos"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\npar Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
@@ -106,10 +106,10 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_TOOLTIP_INSTALL "Installer"
-	IDS_TOOLTIP_UNINSTALL "DÃ©sinstaller"
+	IDS_TOOLTIP_UNINSTALL "Désinstaller"
 	IDS_TOOLTIP_MODIFY "Modifier"
 	IDS_TOOLTIP_SETTINGS "Configuration"
-	IDS_TOOLTIP_REFRESH "RafraÃ®chir"
+	IDS_TOOLTIP_REFRESH "Rafraîchir"
 	IDS_TOOLTIP_EXIT "Sortir"
 END
 
@@ -126,18 +126,18 @@ BEGIN
 	IDS_INFO_DESCRIPTION "\nDescription : "
 	IDS_INFO_PUBLISHER "\nAuteur : "
 	IDS_INFO_HELPLINK "\nLien d'aide : "
-	IDS_INFO_HELPPHONE "\nTÃ©lÃ©phone d'aide : "
+	IDS_INFO_HELPPHONE "\nTéléphone d'aide : "
 	IDS_INFO_README "\nLisez-moi : "
-	IDS_INFO_REGOWNER "\nUtilisateur enregistrÃ© : "
+	IDS_INFO_REGOWNER "\nUtilisateur enregistré : "
 	IDS_INFO_PRODUCTID "\nID du produit : "
 	IDS_INFO_CONTACT "\nContact : "
-	IDS_INFO_UPDATEINFO "\nInformation de mise Ã  jour : "
-	IDS_INFO_INFOABOUT "\nInformation Ã  propos : "
+	IDS_INFO_UPDATEINFO "\nInformation de mise à jour : "
+	IDS_INFO_INFOABOUT "\nInformation à propos : "
 	IDS_INFO_COMMENTS "\nCommentaires : "
 	IDS_INFO_INSTLOCATION "\Emplacement de l'installation : "
 	IDS_INFO_INSTALLSRC "\nSource de l'installation : "
-	IDS_INFO_UNINSTALLSTR "\nCommande de dÃ©sinstallation : "
-	IDS_INFO_MODIFYPATH "\nModifier le chemin d'accÃ¨s : "
+	IDS_INFO_UNINSTALLSTR "\nCommande de désinstallation : "
+	IDS_INFO_MODIFYPATH "\nModifier le chemin d'accès : "
 	IDS_INFO_INSTALLDATE "\nDate d'installation : "
 END
 
@@ -153,20 +153,20 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_CAT_AUDIO "Audio"
-	IDS_CAT_DEVEL "DÃ©veloppement"
+	IDS_CAT_DEVEL "Développement"
 	IDS_CAT_DRIVERS "Pilotes"
-	IDS_CAT_EDU "Ã‰ducation"
-	IDS_CAT_ENGINEER "IngÃ©nierie"
+	IDS_CAT_EDU "Éducation"
+	IDS_CAT_ENGINEER "Ingénierie"
 	IDS_CAT_FINANCE "Finance"
-	IDS_CAT_GAMES "Jeux & dÃ©tente"
+	IDS_CAT_GAMES "Jeux & détente"
 	IDS_CAT_GRAPHICS "Graphismes"
-	IDS_CAT_INTERNET "Internet & rÃ©saux"
-	IDS_CAT_LIBS "BibliothÃ¨ques"
+	IDS_CAT_INTERNET "Internet & résaux"
+	IDS_CAT_LIBS "Bibliothèques"
 	IDS_CAT_OFFICE "Bureautique"
 	IDS_CAT_OTHER "Autres"
 	IDS_CAT_SCIENCE "Sciences"
 	IDS_CAT_TOOLS "Outils"
-	IDS_CAT_VIDEO "VidÃ©o"
+	IDS_CAT_VIDEO "Vidéo"
 END
 
 STRINGTABLE DISCARDABLE
@@ -174,20 +174,20 @@ BEGIN
 	IDS_APPTITLE "ReactOS Applications Manager"
 	IDS_SEARCH_TEXT "Chercher..."
 	IDS_INSTALL "Installer"
-	IDS_UNINSTALL "DÃ©sinstaller"
+	IDS_UNINSTALL "Désinstaller"
 	IDS_MODIFY "Modifier"
 	IDS_APPS_COUNT "Nombre d'applications : %d"
-	IDS_WELCOME_TITLE "Bienvenue Ã  ReactOS Applications Manager!\n\n"
-	IDS_WELCOME_TEXT "Choisisez une catÃ©gorie Ã  gauche, ensuite choisisez une application Ã  installer ou dÃ©sinstaller.\nSite internet de ReactOS : "
+	IDS_WELCOME_TITLE "Bienvenue à ReactOS Applications Manager!\n\n"
+	IDS_WELCOME_TEXT "Choisisez une catégorie à gauche, ensuite choisisez une application à installer ou désinstaller.\nSite internet de ReactOS : "
 	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "InstallÃ©"
+	IDS_INSTALLED "Installé"
 	IDS_AVAILABLEFORINST "Disponible pour installation"
-	IDS_UPDATES "Mises Ã  jour"
+	IDS_UPDATES "Mises à jour"
 	IDS_APPLICATIONS "Applications"
-	IDS_CHOOSE_FOLDER_TEXT "Choisisez un dossier dans lequel seront tÃ©lÃ©chargÃ©s les programmes :"
-	IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spÃ©cifiÃ© n'existe pas. Le crÃ©er ?"
-	IDS_USER_NOT_ADMIN "Vous devez Ãªtre un administrateur pour dÃ©marrer ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Etes-vous sÃ»r de vouloir supprimer les donnÃ©es du programme installÃ© du registre ?"
+	IDS_CHOOSE_FOLDER_TEXT "Choisisez un dossier dans lequel seront téléchargés les programmes :"
+	IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
+	IDS_USER_NOT_ADMIN "Vous devez être un administrateur pour démarrer ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"
 	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Impossible de supprimer les donnÃ©es du programme du registre !"
+	IDS_UNABLE_TO_REMOVE "Impossible de supprimer les données du programme du registre !"
 END
