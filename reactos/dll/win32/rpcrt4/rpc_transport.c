@@ -219,13 +219,20 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
     if (pipe != INVALID_HANDLE_VALUE) break;
     err = GetLastError();
     if (err == ERROR_PIPE_BUSY) {
-      TRACE("connection failed, error=%x\n", err);
+      ERR("connection to %s failed, error=%x\n", pname, err);
       return RPC_S_SERVER_TOO_BUSY;
     }
-    if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
-      err = GetLastError();
-      WARN("connection failed, error=%x\n", err);
-      return RPC_S_SERVER_UNAVAILABLE;
+    if (wait) ERR("Waiting for Pipe Instance\n");
+    if (wait) {
+        if (!WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
+          err = GetLastError();
+          ERR("connection to %s failed, error=%x, wait %x\n", pname, err, wait);
+          return RPC_S_SERVER_UNAVAILABLE;
+        }
+        else
+        {
+            ERR("Pipe Instance Ready!!!!!!!!!!!!!!!!!!\n");
+        }
     }
   }
 
@@ -314,7 +321,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
   /* protseq=ncacn_np: named pipes */
   pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
   strcat(strcpy(pname, prefix), Connection->Endpoint);
-  r = rpcrt4_conn_open_pipe(Connection, pname, FALSE);
+  r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
   I_RpcFree(pname);
 
   return r;
