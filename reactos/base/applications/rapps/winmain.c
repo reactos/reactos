@@ -144,8 +144,11 @@ EnumAvailableAppProc(APPLICATION_INFO Info)
     PAPPLICATION_INFO ItemInfo;
     INT Index;
 
-    if (!IsInstalledApplication(Info.szRegName, FALSE) &&
-        !IsInstalledApplication(Info.szRegName, TRUE))
+    /* Only add a ListView entry if...
+         - no RegName was supplied (so we cannot determine whether the application is installed or not) or
+         - a RegName was supplied and the application is not installed
+    */
+    if (!*Info.szRegName || (!IsInstalledApplication(Info.szRegName, FALSE) && !IsInstalledApplication(Info.szRegName, TRUE)))
     {
         ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_INFO));
         if (!ItemInfo) return FALSE;
