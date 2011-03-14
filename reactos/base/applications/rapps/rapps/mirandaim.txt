@@ -17,6 +17,9 @@ Description = Open source Multiprotokoll Instant Messaging Anwendung - funktioni
 [Section.040a]
 Description = Aplicación de mensajería instantánea multiprotocolo de código abierto - Puede no funcionar en su totalidad.
 
+[Section.040c]
+Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
+
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 

@@ -21,6 +21,11 @@ Name = Visor OLE y Microsoft Foundation Classes Version 4
 Licence = Desconocida
 Description = MFC 4 es necesario para varias aplicaciones.
 
+[Section.040c]
+Name = Visionneur OLE et Microsoft Foundation Classes version 4
+Licence = Inconnue
+Description = MFC 4 est nécessaire pour certaines applications.
+
 [Section.0415]
 Name = Przeglądarka OLE oraz MFC (Microsoft Foundation Classes) wersja 4
 Licence = Nieznana

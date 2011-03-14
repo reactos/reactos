@@ -17,6 +17,9 @@ Description = Dieses Werkzeug erlaubt den Zugriff auf Windows' gemeinsame Verzei
 [Section.040a]
 Description = Esta utilidad le permite acceder a sus carpetas e impresoras compartidas en Windows con ReactOS.
 
+[Section.040c]
+Description = Cet outil vous permet d'accéder à vos répertoire/imprimantes partagés Windows avec ReactOS.
+
 [Section.0415]
 Description = Narzędzie pozwalające na dostęp z poziomu ReactOSa do współdzielonych folderów/drukarek Windows.
 

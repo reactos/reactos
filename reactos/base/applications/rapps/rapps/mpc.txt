@@ -17,6 +17,9 @@ Description = Ein Mediaplayer.
 [Section.040a]
 Description = Reproductor multimedia.
 
+[Section.040c]
+Description = Un lecteur media.
+
 [Section.0419]
 Description = Мультимедийный проигрыватель.
 

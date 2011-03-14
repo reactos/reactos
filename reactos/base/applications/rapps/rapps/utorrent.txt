@@ -20,6 +20,10 @@ Description = Kleiner und schneller BitTorrent Client.
 Licence = Gratuito para uso no comercial
 Description = Pequeño y rápido cliente BitTorrent.
 
+[Section.040c]
+Licence = Gratuit pour une utilisation non-commerciale
+Description = Client BitTorrent petit et rapide.
+
 [Section.0415]
 Licence = Freeware (do użytku domowego)
 Description = Mały i szybki klient BitTorrent.

@@ -17,6 +17,9 @@ Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBA
 [Section.040a]
 Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatible con QBASIC.
 
+[Section.040c]
+Description = Compilateur BASIC open source. La syntaxe du BASIC est compatible avec le QBASIC.
+
 [Section.0415]
 Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
 

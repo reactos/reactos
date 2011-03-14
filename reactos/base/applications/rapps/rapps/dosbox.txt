@@ -17,6 +17,9 @@ Description = DOSBox ist ein DOS Emulator.
 [Section.040a]
 Description = DOSBox es un emulador de DOS.
 
+[Section.040c]
+Description = DOSBox est un émulateur DOS.
+
 [Section.0415]
 Description = DOSBox - emulator DOSa.
 
