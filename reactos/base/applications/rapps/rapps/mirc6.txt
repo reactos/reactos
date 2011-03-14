@@ -1,14 +1,14 @@
 ﻿; UTF-8
 
 [Section]
-Name = mIRC 7
-Version = 7.19
+Name = mIRC 6
+Version = 6.35
 Licence = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 1.9M
 Category = 5
 URLSite = http://www.mirc.com/
-URLDownload = http://download.mirc.com/mirc719.exe
+URLDownload = http://download.mirc.com/mirc635.exe
 CDPath = none
 
 [Section.0407]
