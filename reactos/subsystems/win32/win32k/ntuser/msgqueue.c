@@ -406,42 +406,6 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
    ExFreeToPagedLookasideList(&MessageLookasideList, Message);
 }
 
-VOID FASTCALL
-MsqDestroySentMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_SENT_MESSAGE SentMessage)
-{
-   /* remove the message from the dispatching list if needed */
-   if (SentMessage->DispatchingListEntry.Flink != NULL)
-   {
-      RemoveEntryList(&SentMessage->DispatchingListEntry);
-   }
-
-   /* wake the sender's thread */
-   if (SentMessage->CompletionEvent != NULL)
-   {
-      KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
-   }
-   
-   /* dereference message queues */
-   IntDereferenceMessageQueue(MessageQueue);
-   if (SentMessage->SenderQueue)
-   {
-      IntDereferenceMessageQueue(SentMessage->SenderQueue);
-   }
-   if (SentMessage->CallBackSenderQueue)
-   {
-      IntDereferenceMessageQueue(SentMessage->CallBackSenderQueue);
-   }
-
-   /* free lParam if needed */
-   if (SentMessage->HasPackedLParam == TRUE && SentMessage->Msg.lParam)
-   {
-      ExFreePool((PVOID)SentMessage->Msg.lParam);
-   }
-
-   /* free the message */
-   ExFreePoolWithTag(SentMessage, TAG_USRMSG);
-}
-
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
@@ -505,10 +469,13 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    RemoveEntryList(&Message->ListEntry);
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (Message->DispatchingListEntry.Flink != NULL)
+   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
    {
-       RemoveEntryList(&Message->DispatchingListEntry);
-       Message->DispatchingListEntry.Flink = NULL;
+      if (Message->DispatchingListEntry.Flink != NULL)
+      {
+         /* only remove it from the dispatching list if not already removed by a timeout */
+         RemoveEntryList(&Message->DispatchingListEntry);
+      }
    }
    /* still keep the sender's message queue locked, so the sender can't exit the
       MsqSendMessage() function (if timed out) */
@@ -524,11 +491,16 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       *Message->Result = Result;
    }
 
+   if (Message->HasPackedLParam == TRUE)
+   {
+      if (Message->Msg.lParam)
+         ExFreePool((PVOID)Message->Msg.lParam);
+   }
+
    /* Notify the sender. */
    if (Message->CompletionEvent != NULL)
    {
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
-      Message->CompletionEvent = NULL; /* prevent MsqDestroySentMessage from setting this event again */
    }
 
    /* Call the callback if the message was sent with SendMessageCallback */
@@ -541,7 +513,15 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Result);
    }
 
-   MsqDestroySentMessage(MessageQueue, Message);
+   /* Only if it is not a no wait message */
+   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   {
+      IntDereferenceMessageQueue(Message->SenderQueue);
+      IntDereferenceMessageQueue(MessageQueue);
+   }
+
+   /* free the message */
+   ExFreePoolWithTag(Message, TAG_USRMSG);
 
    /* do not hangup on the user if this is reentering */
    if (!SaveMsg) pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
@@ -571,14 +551,16 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
    {
       PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                         ListEntry);
-      /* set CurrentEntry to next before destroying message */
-      CurrentEntry = CurrentEntry->Flink;
-      
       if (PostedMessage->Msg.hwnd == Window->head.h)
       {
          RemoveEntryList(&PostedMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, PostedMessage->QS_Flags);
          MsqDestroyMessage(PostedMessage);
+         CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
+      }
+      else
+      {
+         CurrentEntry = CurrentEntry->Flink;
       }
    }
 
@@ -589,9 +571,6 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
    {
       SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                       ListEntry);
-      /* set CurrentEntry to next before destroying message */
-      CurrentEntry = CurrentEntry->Flink;
-      
       if(SentMessage->Msg.hwnd == Window->head.h)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
@@ -599,7 +578,41 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
-         MsqDestroySentMessage(MessageQueue, SentMessage);
+         /* remove the message from the dispatching list if neede */
+         if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+            && (SentMessage->DispatchingListEntry.Flink != NULL))
+         {
+            RemoveEntryList(&SentMessage->DispatchingListEntry);
+         }
+
+         /* wake the sender's thread */
+         if (SentMessage->CompletionEvent != NULL)
+         {
+            KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+         }
+
+         if (SentMessage->HasPackedLParam == TRUE)
+         {
+            if (SentMessage->Msg.lParam)
+               ExFreePool((PVOID)SentMessage->Msg.lParam);
+         }
+
+         /* Only if it is not a no wait message */
+         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         {
+            /* dereference our and the sender's message queue */
+            IntDereferenceMessageQueue(MessageQueue);
+            IntDereferenceMessageQueue(SentMessage->SenderQueue);
+         }
+
+         /* free the message */
+         ExFreePoolWithTag(SentMessage, TAG_USRMSG);
+
+         CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
+      }
+      else
+      {
+         CurrentEntry = CurrentEntry->Flink;
       }
    }
 }
@@ -633,7 +646,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
-   /* FIXME - increase reference counter of sender's message queue here - isn't it done? */
+   /* FIXME - increase reference counter of sender's message queue here */
 
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
@@ -643,9 +656,9 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Message->Result = &Result;
    Message->lResult = 0;
    Message->QS_Flags = 0;
-   IntReferenceMessageQueue(ThreadQueue);
    Message->SenderQueue = ThreadQueue;
    Message->CallBackSenderQueue = NULL;
+   IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
    Message->CompletionCallbackContext = 0;
    Message->HookMessage = HookMessage;
@@ -1414,7 +1427,35 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
-      MsqDestroySentMessage(MessageQueue, CurrentSentMessage);
+      /* remove the message from the dispatching list if needed */
+      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+         && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
+      {
+         RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+      }
+
+      /* wake the sender's thread */
+      if (CurrentSentMessage->CompletionEvent != NULL)
+      {
+         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      }
+
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
+
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
+
+      /* free the message */
+      ExFreePool(CurrentSentMessage);
    }
 
    /* notify senders of dispatching messages. This needs to be cleaned up if e.g.
@@ -1425,9 +1466,36 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
 
+      /* remove the message from the dispatching list */
+      if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
+      {
+         RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+      }
+
       DPRINT("Notify the sender, the thread has been terminated while dispatching a message!\n");
 
-      MsqDestroySentMessage(MessageQueue, CurrentSentMessage);
+      /* wake the sender's thread */
+      if (CurrentSentMessage->CompletionEvent != NULL)
+      {
+         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
+      }
+
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
+
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
+
+      /* free the message */
+      ExFreePool(CurrentSentMessage);
    }
 
    /* tell other threads not to bother returning any info to us */
@@ -1438,7 +1506,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
                                              DispatchingListEntry);
       CurrentSentMessage->CompletionEvent = NULL;
       CurrentSentMessage->Result = NULL;
-      CurrentSentMessage->DispatchingListEntry.Flink = NULL; // yeah!
 
       /* do NOT dereference our message queue as it might get attempted to be
          locked later */
