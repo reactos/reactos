@@ -23,6 +23,12 @@ URLSite = http://es.openoffice.org/
 Size = 132.0MB
 URLDownload = http://ftp.gwdg.de/pub/openoffice/localized/es/3.3.0/OOo_3.3.0_Win_x86_install_es.exe
 
+[Section.040c]
+Description = LA suite bureautique open source.
+URLSite = http://fr.openoffice.org/
+Size = 132.0MB
+URLDownload = http://ftp.gwdg.de/pub/openoffice/localized/fr/3.3.0/OOo_3.3.0_Win_x86_install_fr.exe
+
 [Section.0415]
 Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org/

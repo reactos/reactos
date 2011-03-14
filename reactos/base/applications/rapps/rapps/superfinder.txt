@@ -4,7 +4,7 @@
 Name = Super Finder XT
 Version = 1.6.2.1
 Licence = Freeware
-Description = A fast and feature rich search Aapplication.
+Description = A fast and feature rich search Application.
 Size = 4.5MB
 Category = 12
 URLSite = http://fsl.sytes.net/ssearchxt.html
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Eine schnelle und effektive Suchanwendung.
+
+[Section.040c]
+Description = Une application de recherche rapide et riche en fonctionnalités.
 
 [Section.0415]
 Description = Szybka i bogata w opcje aplikacja szukająca.

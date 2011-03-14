@@ -19,6 +19,10 @@ Description = MSXML3 wird von einige MSI Installern benötigt.
 Licence = Desconocida
 Description = MSXML3 para varios instaladores MSI.
 
+[Section.040c]
+Licence = Inconnue
+Description = MSXML3 est nécessaire pour certains installateurs MSI.
+
 [Section.0415]
 Licence = Nieznana
 Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera MSXML3.

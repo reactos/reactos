@@ -17,6 +17,9 @@ Licence = Unbekannt
 [Section.040a]
 Licence = Desconocida
 
+[Section.040a]
+Licence = Inconnue
+
 [Section.0415]
 Licence = Nieznana
 

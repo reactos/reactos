@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Die STEAM Spieleplattform, die von viele Spielen verwendet wird.
 
+[Section.040c]
+Description = La plateforme de jeu STEAM utilisée par beaucoup de jeux de nos jours.
+
 [Section.0415]
 Description = STEAM - platforma, którą używa obecnie wiele gier.
 

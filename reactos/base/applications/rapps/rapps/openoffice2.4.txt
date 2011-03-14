@@ -23,6 +23,13 @@ URLSite = http://es.openoffice.org/
 Size = 113.9MB
 URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/es/2.4.3/OOo_2.4.3_Win32Intel_install_es.exe
 
+[Section.040c]
+Version = 2.4.2
+Description = LA suite bureautique open source.
+URLSite = http://fr.openoffice.org/
+Size = 113.9MB
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/fr/2.4.2/OOo_2.4.2_Win32Intel_install_fr.exe
+
 [Section.0415]
 URLSite = http://pl.openoffice.org/
 Description = Otwarty pakiet biurowy.

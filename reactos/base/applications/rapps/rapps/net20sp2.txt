@@ -11,5 +11,8 @@ URLSite = http://www.microsoft.com/downloads/details.aspx?familyid=5B2C0358-915B
 URLDownload = http://download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe
 CDPath = none
 
+[Section.040c]
+Description = Microsoft .NET Framework version 2.0 Service Pack 2.
+
 [Section.0415]
 Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
