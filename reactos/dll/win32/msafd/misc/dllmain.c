@@ -27,7 +27,7 @@ CRITICAL_SECTION SocketListLock;
 LIST_ENTRY SockHelpersListHead = { NULL, NULL };
 ULONG SockAsyncThreadRefCount;
 HANDLE SockAsyncHelperAfdHandle;
-HANDLE SockAsyncCompletionPort;
+HANDLE SockAsyncCompletionPort = NULL;
 BOOLEAN SockAsyncSelectCalled;
 
 
@@ -562,12 +562,11 @@ WSPCloseSocket(IN SOCKET Handle,
     }
     LeaveCriticalSection(&SocketListLock);
 
-    HeapFree(GlobalHeap, 0, Socket);
-
     /* Close the handle */
     NtClose((HANDLE)Handle);
     NtClose(SockEvent);
 
+    HeapFree(GlobalHeap, 0, Socket);
     return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
 
@@ -2420,6 +2419,7 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
     /* Check if the Thread Already Exists */
     if (SockAsyncThreadRefCount)
     {
+        ASSERT(SockAsyncCompletionPort);
         return TRUE;
     }
 
@@ -2430,7 +2430,11 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
                                       IO_COMPLETION_ALL_ACCESS,
                                       NULL,
                                       2); // Allow 2 threads only
-
+        if (!NT_SUCCESS(Status))
+        {
+             AFD_DbgPrint(MID_TRACE,("Failed to create completion port\n"));
+             return FALSE;
+        }
         /* Protect Handle */	
         HandleFlags.ProtectFromClose = TRUE;
         HandleFlags.Inherit = FALSE;
