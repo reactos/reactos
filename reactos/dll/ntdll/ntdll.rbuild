@@ -48,6 +48,7 @@
 		</directory>
 		<directory name="ldr">
 			<file>ldrinit.c</file>
+			<file>ldrutils.c</file>
 			<file>startup.c</file>
 			<file>utils.c</file>
 			<file>actctx.c</file>
