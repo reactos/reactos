@@ -47,26 +47,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 {
 	UINT i;
-	int rootlen = 0,size = 0;
-	WCHAR wszRootPath[MAX_PATH];
+	int size = 0;
 	WCHAR wszFileName[MAX_PATH];
 	HGLOBAL hGlobal;
 	DROPFILES *pDropFiles;
 	int offset;
+	LPITEMIDLIST *pidls;
 
 	TRACE("(%p,%p,%u)\n", pidlRoot, apidl, cidl);
+
+	pidls = HeapAlloc(GetProcessHeap(), 0, cidl * sizeof *pidls);
+	if (!pidls) return NULL;
 
 	/* get the size needed */
 	size = sizeof(DROPFILES);
 
-	SHGetPathFromIDListW(pidlRoot, wszRootPath);
-	PathAddBackslashW(wszRootPath);
-	rootlen = wcslen(wszRootPath);
-
 	for (i=0; i<cidl;i++)
 	{
-	  _ILSimpleGetTextW(apidl[i], wszFileName, MAX_PATH);
-	  size += (rootlen + wcslen(wszFileName) + 1) * sizeof(WCHAR);
+	  pidls[i] = ILCombine(pidlRoot, apidl[i]);
+	  SHGetPathFromIDListW(pidls[i], wszFileName);
+	  size += (wcslen(wszFileName) + 1) * sizeof(WCHAR);
 	}
 
 	size += sizeof(WCHAR);
@@ -80,18 +80,18 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
         pDropFiles->pFiles = offset * sizeof(WCHAR);
         pDropFiles->fWide = TRUE;
 
-	wcscpy(wszFileName, wszRootPath);
-
 	for (i=0; i<cidl;i++)
 	{
-
-	  _ILSimpleGetTextW(apidl[i], wszFileName + rootlen, MAX_PATH - rootlen);
+	  SHGetPathFromIDListW(pidls[i], wszFileName);
 	  wcscpy(((WCHAR*)pDropFiles)+offset, wszFileName);
 	  offset += wcslen(wszFileName) + 1;
+	  ILFree(pidls[i]);
 	}
 
 	((WCHAR*)pDropFiles)[offset] = 0;
 	GlobalUnlock(hGlobal);
+
+	HeapFree(GetProcessHeap(), 0, pidls);
 
 	return hGlobal;
 }
