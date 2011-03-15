@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  xx-xx-2007
- * LAST UPDATE:  03-12-2008
+ * LAST UPDATE:  02-11-2010
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -94,8 +94,9 @@ BEGIN
 
     CONTROL "Inötal·cia zav·dzaËa systÈmu", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
 
-    CONTROL "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Nenainötalovaù zav·dzaË systÈmu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
+    CONTROL "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (MBR a VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (iba VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Nenainötalovaù zav·dzaË systÈmu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
     PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Zruöiù", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
 END
