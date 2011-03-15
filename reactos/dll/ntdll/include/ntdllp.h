@@ -21,6 +21,8 @@ typedef BOOL
                        ULONG ul_reason_for_call,
                        LPVOID lpReserved);
 
+/* Global data */
+extern RTL_CRITICAL_SECTION LdrpLoaderLock;
 
 /* ldrinit.c */
 NTSTATUS NTAPI LdrpInitializeTls(VOID);

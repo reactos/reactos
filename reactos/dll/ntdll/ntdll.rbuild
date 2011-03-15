@@ -47,6 +47,7 @@
 			<pch>ntdll.h</pch>
 		</directory>
 		<directory name="ldr">
+			<file>ldrapi.c</file>
 			<file>ldrinit.c</file>
 			<file>ldrutils.c</file>
 			<file>startup.c</file>

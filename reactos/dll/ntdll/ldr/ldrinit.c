@@ -28,6 +28,8 @@ LIST_ENTRY LdrpTlsList;
 ULONG LdrpNumberOfTlsEntries;
 ULONG LdrpNumberOfProcessors;
 
+RTL_CRITICAL_SECTION LdrpLoaderLock;
+
 BOOLEAN ShowSnaps;
 
 /* FUNCTIONS *****************************************************************/
