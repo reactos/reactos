@@ -20,6 +20,25 @@
 
 /* FUNCTIONS *****************************************************************/
 
+USHORT
+FORCEINLINE
+ChkSum(ULONG Sum, PUSHORT Src, ULONG Len)
+{
+    ULONG i;
+
+    for (i=0; i<Len; i++)
+    {
+        /* Sum up the current word */
+        Sum += Src[i];
+
+        /* Sum up everything above the low word as a carry */
+        Sum = (Sum & 0xFFFF) + (Sum >> 16);
+    }
+
+    /* Apply carry one more time and clamp to the USHORT */
+    return (Sum + (Sum >> 16)) & 0xFFFF;
+}
+
 BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
@@ -34,8 +53,11 @@ LdrVerifyMappedImageMatchesChecksum(
     ULONG HeaderSum;
     ULONG i;
 
+    // HACK: Ignore calls with ImageSize=0. Should be fixed by new MM.
+    if (ImageSize == 0) return TRUE;
+
     /* Get NT header to check if it's an image at all */
-    Header = RtlImageNtHeader (BaseAddress);
+    Header = RtlImageNtHeader(BaseAddress);
     if (!Header) return FALSE;
 
     /* Get checksum to match */
@@ -93,7 +115,7 @@ LdrVerifyMappedImageMatchesChecksum(
     CalcSum += ImageSize;
 
     if (CalcSum != HeaderSum)
-        DPRINT1("Image %p checksum mismatches! 0x%x != 0x%x\n", BaseAddress, CalcSum, HeaderSum);
+        DPRINT1("Image %p checksum mismatches! 0x%x != 0x%x, ImageSize %x, FileLen %x\n", BaseAddress, CalcSum, HeaderSum, ImageSize, FileLength);
 
     return (BOOLEAN)(CalcSum == HeaderSum);
 }
