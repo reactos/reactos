@@ -246,4 +246,136 @@ Quickie:
     return Status;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
+                              IN PLDR_CALLBACK Callback,
+                              IN PVOID CallbackContext,
+                              OUT PUSHORT ImageCharacteristics)
+{
+    FILE_STANDARD_INFORMATION FileStandardInfo;
+    PIMAGE_IMPORT_DESCRIPTOR ImportData;
+    PIMAGE_SECTION_HEADER LastSection;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIMAGE_NT_HEADERS NtHeader;
+    HANDLE SectionHandle;
+    SIZE_T ViewSize = 0;
+    PVOID ViewBase = NULL;
+    BOOLEAN Result;
+    NTSTATUS Status;
+    PVOID ImportName;
+    ULONG Size;
+
+    DPRINT("LdrVerifyImageMatchesChecksum() called\n");
+
+    /* Create the section */
+    Status = NtCreateSection(&SectionHandle,
+                             SECTION_MAP_EXECUTE,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE,
+                             SEC_COMMIT,
+                             FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1 ("NtCreateSection() failed (Status 0x%x)\n", Status);
+        return Status;
+    }
+
+    /* Map the section */
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &ViewBase,
+                                0,
+                                0,
+                                NULL,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_EXECUTE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtMapViewOfSection() failed (Status 0x%x)\n", Status);
+        NtClose(SectionHandle);
+        return Status;
+    }
+
+    /* Get the file information */
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    &FileStandardInfo,
+                                    sizeof(FILE_STANDARD_INFORMATION),
+                                    FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtMapViewOfSection() failed (Status 0x%x)\n", Status);
+        NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+        NtClose(SectionHandle);
+        return Status;
+    }
+
+    /* Protect with SEH */
+    _SEH2_TRY
+    {
+        /* Verify the checksum */
+        Result = LdrVerifyMappedImageMatchesChecksum(ViewBase,
+                                                     ViewSize,
+                                                     FileStandardInfo.EndOfFile.LowPart);
+
+        /* Check if a callback was supplied */
+        if (Result && Callback)
+        {
+            /* Get the NT Header */
+            NtHeader = RtlImageNtHeader(ViewBase);
+
+            /* Check if caller requested this back */
+            if (ImageCharacteristics)
+            {
+                /* Return to caller */
+                *ImageCharacteristics = NtHeader->FileHeader.Characteristics;
+            }
+
+            /* Get the Import Directory Data */
+            ImportData = RtlImageDirectoryEntryToData(ViewBase,
+                                                      FALSE,
+                                                      IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                                      &Size);
+
+            /* Make sure there is one */
+            if (ImportData)
+            {
+                /* Loop the imports */
+                while (ImportData->Name)
+                {
+                    /* Get the name */
+                    ImportName = RtlImageRvaToVa(NtHeader,
+                                                 ViewBase,
+                                                 ImportData->Name,
+                                                 &LastSection);
+
+                    /* Notify the callback */
+                    Callback(CallbackContext, ImportName);
+                    ImportData++;
+                }
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Fail the request returning STATUS_IMAGE_CHECKSUM_MISMATCH */
+        Result = FALSE;
+    }
+    _SEH2_END;
+
+    /* Unmap file and close handle */
+    NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+    NtClose(SectionHandle);
+
+    /* Return status */
+    return !Result ? STATUS_IMAGE_CHECKSUM_MISMATCH : Status;
+}
+
 /* EOF */
