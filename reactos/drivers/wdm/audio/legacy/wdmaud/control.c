@@ -402,28 +402,6 @@ IoCompletion (
     /* sanity check */
     ASSERT(Header);
 
-    /* iterate through all stream headers and collect size */
-    do
-    {
-        if (Context->Function == IOCTL_KS_READ_STREAM)
-        {
-            /* length is stored in DataUsed */
-            Length += Header->DataUsed;
-        }
-        else
-        {
-            /* length stored in frameextend */
-            Length += Header->FrameExtent;
-        }
-
-        /* subtract size */
-        Context->Length -= Header->Size;
-
-        /* move to next stream header */
-        Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
-
-    }while(Context->Length);
-
     /* time to free all allocated mdls */
     Mdl = Irp->MdlAddress;
 
@@ -454,12 +432,7 @@ IoCompletion (
 
     DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx Length %lu\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information, Length);
 
-    if (Irp->IoStatus.Status == STATUS_SUCCESS)
-    {
-        /* store the length */
-        Irp->IoStatus.Information = Length;
-    }
-    else
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
         /* failed */
         Irp->IoStatus.Information = 0;
@@ -470,7 +443,6 @@ IoCompletion (
 
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 NTAPI
