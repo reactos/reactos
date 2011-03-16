@@ -227,8 +227,8 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 
 __inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 __inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-BOOL APIENTRY IntInitMessagePumpHook();
-BOOL APIENTRY IntUninitMessagePumpHook();
+BOOL APIENTRY IntInitMessagePumpHook(VOID);
+BOOL APIENTRY IntUninitMessagePumpHook(VOID);
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);

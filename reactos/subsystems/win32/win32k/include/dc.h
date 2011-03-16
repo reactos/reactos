@@ -156,9 +156,9 @@ typedef struct _DC
 
 extern PDC defaultDCstate;
 
-INIT_FUNCTION NTSTATUS NTAPI InitDcImpl();
+INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
-PDC NTAPI DC_AllocDcWithHandle();
+PDC NTAPI DC_AllocDcWithHandle(VOID);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
 VOID FASTCALL DC_AllocateDcAttr(HDC);
 VOID FASTCALL DC_FreeDcAttr(HDC);

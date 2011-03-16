@@ -58,7 +58,7 @@ typedef struct _PAGE_DIRECTORY_AMD64
 } PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
 
 
-VOID FrLdrSetupGdtIdt();
+VOID FrLdrSetupGdtIdt(VOID);
 
 #endif
 

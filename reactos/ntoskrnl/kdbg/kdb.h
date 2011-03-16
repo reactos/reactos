@@ -96,7 +96,7 @@ KdbpStackSwitchAndCall(
 extern PCHAR KdbInitFileBuffer;
 
 VOID
-KdbpCliInit();
+KdbpCliInit(VOID);
 
 VOID
 KdbpCliMainLoop(
@@ -107,7 +107,7 @@ KdbpCliModuleLoaded(
    IN PUNICODE_STRING Name);
 
 VOID
-KdbpCliInterpretInitFile();
+KdbpCliInterpretInitFile(VOID);
 
 VOID
 KdbpPrint(
@@ -260,6 +260,6 @@ DbgEnableFile(PCH Filename);
 VOID
 DbgDisableFile(PCH Filename);
 VOID
-KbdDisableMouse();
+KbdDisableMouse(VOID);
 VOID
-KbdEnableMouse();
+KbdEnableMouse(VOID);

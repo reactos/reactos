@@ -41,7 +41,7 @@ extern void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine=NULL);
 extern void explorer_about(HWND hwndParent);
 
  // test for already running desktop instance
-extern BOOL IsAnyDesktopRunning();
+extern BOOL IsAnyDesktopRunning(void);
 
  // show shutdown dialog
 extern void ShowExitWindowsDialog(HWND hwndOwner);

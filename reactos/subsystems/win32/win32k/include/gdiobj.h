@@ -83,7 +83,7 @@ PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCES
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitGdiHandleTable();
+InitGdiHandleTable(VOID);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)

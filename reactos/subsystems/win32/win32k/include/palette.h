@@ -74,7 +74,7 @@ HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   GDIOBJ_ShareUnlockObjByPtr(&ppal->BaseObject)
 
 BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
-INIT_FUNCTION NTSTATUS NTAPI InitPaletteImpl();
+INIT_FUNCTION NTSTATUS NTAPI InitPaletteImpl(VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 

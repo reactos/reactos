@@ -20,7 +20,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
 
 HMENU APIENTRY
-co_IntLoadSysMenuTemplate();
+co_IntLoadSysMenuTemplate(VOID);
 
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID);

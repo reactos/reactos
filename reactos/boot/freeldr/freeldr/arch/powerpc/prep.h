@@ -7,8 +7,8 @@ struct _pci_bar {
     unsigned long data;
 };
 
-void sync();
-void PpcPrepInit();
+void sync( void );
+void PpcPrepInit( void );
 void ide_seek( void *extension, int low, int high );
 int  ide_read( void *extension, char *buffer, int bytes );
 void ide_setup( void *extension );
