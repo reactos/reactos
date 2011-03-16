@@ -23,14 +23,42 @@ typedef BOOL
 
 /* Global data */
 extern RTL_CRITICAL_SECTION LdrpLoaderLock;
+extern BOOLEAN LdrpInLdrInit;
 
 /* ldrinit.c */
+NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
 NTSTATUS NTAPI LdrpAllocateTls(VOID);
 VOID NTAPI LdrpFreeTls(VOID);
 VOID NTAPI LdrpTlsCallback(PVOID BaseAddress, ULONG Reason);
 BOOLEAN NTAPI LdrpCallDllEntry(PDLLMAIN_FUNC EntryPoint, PVOID BaseAddress, ULONG Reason, PVOID Context);
 
+/* ldrpe.c */
+NTSTATUS
+NTAPI
+LdrpSnapThunk(IN PVOID ExportBase,
+              IN PVOID ImportBase,
+              IN PIMAGE_THUNK_DATA OriginalThunk,
+              IN OUT PIMAGE_THUNK_DATA Thunk,
+              IN PIMAGE_EXPORT_DIRECTORY ExportEntry,
+              IN ULONG ExportSize,
+              IN BOOLEAN Static,
+              IN LPSTR DllName);
+
+/* ldrutils.c */
+NTSTATUS NTAPI
+LdrpGetProcedureAddress(IN PVOID BaseAddress,
+                        IN PANSI_STRING Name,
+                        IN ULONG Ordinal,
+                        OUT PVOID *ProcedureAddress,
+                        IN BOOLEAN ExecuteInit);
+NTSTATUS NTAPI
+LdrpLoadDll(IN BOOLEAN Redirected,
+            IN PWSTR DllPath OPTIONAL,
+            IN PULONG DllCharacteristics OPTIONAL,
+            IN PUNICODE_STRING DllName,
+            OUT PVOID *BaseAddress,
+            IN BOOLEAN CallInit);
 
 /* FIXME: Cleanup this mess */
 typedef NTSTATUS (NTAPI *PEPFUNC)(PPEB);

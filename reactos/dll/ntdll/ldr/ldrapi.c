@@ -109,8 +109,7 @@ LdrLockLoaderLock(IN ULONG Flags,
 {
     LONG OldCount;
     NTSTATUS Status = STATUS_SUCCESS;
-    BOOLEAN InInit = FALSE; // FIXME
-    //BOOLEAN InInit = LdrpInLdrInit;
+    BOOLEAN InInit = LdrpInLdrInit;
 
     DPRINT("LdrLockLoaderLock(%x %p %p)\n", Flags, Result, Cookie);
 
@@ -376,6 +375,159 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 
     /* Return status */
     return !Result ? STATUS_IMAGE_CHECKSUM_MISMATCH : Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrGetProcedureAddress_(IN PVOID BaseAddress,
+                       IN PANSI_STRING Name,
+                       IN ULONG Ordinal,
+                       OUT PVOID *ProcedureAddress)
+{
+    /* Call the internal routine and tell it to execute DllInit */
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
+}
+
+
+NTSTATUS
+NTAPI
+LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
+                                   IN ULONG Reserved,
+                                   IN PRTL_PROCESS_MODULES ModuleInformation,
+                                   IN ULONG Size,
+                                   OUT PULONG ReturnedSize OPTIONAL)
+{
+    PLIST_ENTRY ModuleListHead, InitListHead;
+    PLIST_ENTRY Entry, InitEntry;
+    PLDR_DATA_TABLE_ENTRY Module, InitModule;
+    PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG UsedSize = sizeof(ULONG);
+    ANSI_STRING AnsiString;
+    PCHAR p;
+
+    DPRINT("LdrQueryProcessModuleInformation() called\n");
+
+    /* Acquire loader lock */
+    RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
+
+    /* Check if we were given enough space */
+    if (Size < UsedSize)
+    {
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+    else
+    {
+        ModuleInformation->NumberOfModules = 0;
+        ModulePtr = &ModuleInformation->Modules[0];
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Traverse the list of modules */
+    _SEH2_TRY
+    {
+        ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+        Entry = ModuleListHead->Flink;
+
+        while (Entry != ModuleListHead)
+        {
+            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+            DPRINT("  Module %wZ\n", &Module->FullDllName);
+
+            /* Increase the used size */
+            UsedSize += sizeof(RTL_PROCESS_MODULE_INFORMATION);
+
+            if (UsedSize > Size)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+            else
+            {
+                ModulePtr->ImageBase = Module->DllBase;
+                ModulePtr->ImageSize = Module->SizeOfImage;
+                ModulePtr->Flags = Module->Flags;
+                ModulePtr->LoadCount = Module->LoadCount;
+                ModulePtr->MappedBase = NULL;
+                ModulePtr->InitOrderIndex = 0;
+                ModulePtr->LoadOrderIndex = ModuleInformation->NumberOfModules;
+
+                /* Now get init order index by traversing init list */
+                InitListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+                InitEntry = InitListHead->Flink;
+
+                while (InitEntry != InitListHead)
+                {
+                    InitModule = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+
+                    /* Increase the index */
+                    ModulePtr->InitOrderIndex++;
+
+                    /* Quit the loop if our module is found */
+                    if (InitModule == Module) break;
+
+                    /* Advance to the next entry */
+                    InitEntry = InitEntry->Flink;
+                }
+
+                /* Prepare ANSI string with the module's name */
+                AnsiString.Length = 0;
+                AnsiString.MaximumLength = sizeof(ModulePtr->FullPathName);
+                AnsiString.Buffer = ModulePtr->FullPathName;
+                RtlUnicodeStringToAnsiString(&AnsiString,
+                                             &Module->FullDllName,
+                                             FALSE);
+
+                /* Calculate OffsetToFileName field */
+                p = strrchr(ModulePtr->FullPathName, '\\');
+                if (p != NULL)
+                    ModulePtr->OffsetToFileName = p - ModulePtr->FullPathName + 1;
+                else
+                    ModulePtr->OffsetToFileName = 0;
+
+                /* Advance to the next module in the output list */
+                ModulePtr++;
+
+                /* Increase number of modules */
+                if (ModuleInformation)
+                    ModuleInformation->NumberOfModules++;
+            }
+
+            /* Go to the next entry in the modules list */
+            Entry = Entry->Flink;
+        }
+
+        /* Set returned size if it was provided */
+        if (ReturnedSize)
+            *ReturnedSize = UsedSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Ignoring the exception */
+    } _SEH2_END;
+
+    /* Release the lock */
+    RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
+
+    DPRINT("LdrQueryProcessModuleInformation() done\n");
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
+                                 IN ULONG Size,
+                                 OUT PULONG ReturnedSize OPTIONAL)
+{
+    /* Call Ex version of the API */
+    return LdrQueryProcessModuleInformationEx(0, 0, ModuleInformation, Size, ReturnedSize);
 }
 
 /* EOF */

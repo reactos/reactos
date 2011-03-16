@@ -20,6 +20,10 @@ HKEY Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 
+BOOLEAN LdrpInLdrInit;
+
+PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
+
 //RTL_BITMAP TlsBitMap;
 //RTL_BITMAP TlsExpansionBitMap;
 //RTL_BITMAP FlsBitMap;
@@ -327,6 +331,267 @@ LdrQueryImageFileExecutionOptions(IN PUNICODE_STRING SubKey,
                                                BufferSize,
                                                ReturnedLength,
                                                FALSE);
+}
+
+NTSTATUS
+NTAPI
+LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
+{
+#if 0
+    PLDR_DATA_TABLE_ENTRY LocalArray[16];
+    PLIST_ENTRY ListHead;
+    PLIST_ENTRY NextEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry, *LdrRootEntry, OldInitializer;
+    PVOID EntryPoint;
+    ULONG Count, i;
+    //ULONG BreakOnInit;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PPEB Peb = NtCurrentPeb();
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
+    ULONG BreakOnDllLoad;
+    PTEB OldTldTeb;
+
+    DPRINT1("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+
+    /* Check the Loader Lock */
+    LdrpEnsureLoaderLockIsHeld();
+
+     /* Get the number of entries to call */
+    if ((Count = LdrpClearLoadInProgress()))
+    {
+        /* Check if we can use our local buffer */
+        if (Count > 16)
+        {
+            /* Allocate space for all the entries */
+            LdrRootEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           Count * sizeof(LdrRootEntry));
+            if (!LdrRootEntry) return STATUS_NO_MEMORY;
+        }
+        else
+        {
+            /* Use our local array */
+            LdrRootEntry = LocalArray;
+        }
+    }
+    else
+    {
+        /* Don't need one */
+        LdrRootEntry = NULL;
+    }
+
+    /* Show debug message */
+    if (ShowSnaps)
+    {
+        DPRINT1("[%x,%x] LDR: Real INIT LIST for Process %wZ pid %u %0x%x\n",
+                NtCurrentTeb()->RealClientId.UniqueThread,
+                NtCurrentTeb()->RealClientId.UniqueProcess,
+                Peb->ProcessParameters->ImagePathName,
+                NtCurrentTeb()->RealClientId.UniqueThread,
+                NtCurrentTeb()->RealClientId.UniqueProcess);
+    }
+
+    /* Loop in order */
+    ListHead = &Peb->Ldr->InInitializationOrderModuleList;
+    NextEntry = ListHead->Flink;
+    i = 0;
+    while (NextEntry != ListHead)
+    {
+        /* Get the Data Entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+
+        /* Check if we have a Root Entry */
+        if (LdrRootEntry)
+        {
+            /* Check flags */
+            if (!(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
+            {
+                /* Setup the Cookie for the DLL */
+                //LdrpInitSecurityCookie(LdrEntry);
+                UNIMPLEMENTED;
+
+                /* Check for valid entrypoint */
+                if (LdrEntry->EntryPoint)
+                {
+                    /* Write in array */
+                    LdrRootEntry[i] = LdrEntry;
+
+                    /* Display debug message */
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("[%x,%x] LDR: %wZ init routine %p\n",
+                                NtCurrentTeb()->RealClientId.UniqueThread,
+                                NtCurrentTeb()->RealClientId.UniqueProcess,
+                                &LdrEntry->FullDllName,
+                                LdrEntry->EntryPoint);
+                    }
+                    i++;
+                }
+            }
+        }
+
+        /* Set the flag */
+        LdrEntry->Flags |= LDRP_ENTRY_PROCESSED;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* If we got a context, then we have to call Kernel32 for TS support */
+    if (Context)
+    {
+        /* Check if we have one */
+        //if (Kernel32ProcessInitPostImportfunction)
+        //{
+            /* Call it */
+            //Kernel32ProcessInitPostImportfunction();
+        //}
+
+        /* Clear it */
+        //Kernel32ProcessInitPostImportfunction = NULL;
+        UNIMPLEMENTED;
+    }
+
+    /* No root entry? return */
+    if (!LdrRootEntry) return STATUS_SUCCESS;
+
+    /* Set the TLD TEB */
+    OldTldTeb = LdrpTopLevelDllBeingLoadedTeb;
+    LdrpTopLevelDllBeingLoadedTeb = NtCurrentTeb();
+
+    /* Loop */
+    i = 0;
+    while (i < Count)
+    {
+        /* Get an entry */
+        LdrEntry = LdrRootEntry[i];
+
+        /* FIXME: Verifiy NX Compat */
+
+        /* Move to next entry */
+        i++;
+
+        /* Get its entrypoint */
+        EntryPoint = LdrEntry->EntryPoint;
+
+        /* Are we being debugged? */
+        BreakOnDllLoad = 0;
+        if (Peb->BeingDebugged || Peb->ReadImageFileExecOptions)
+        {
+            /* Check if we should break on load */
+            Status = LdrQueryImageFileExecutionOptions(&LdrEntry->BaseDllName,
+                                                       L"BreakOnDllLoad",
+                                                       REG_DWORD,
+                                                       &BreakOnDllLoad,
+                                                       sizeof(ULONG),
+                                                       NULL);
+            if (!NT_SUCCESS(Status)) BreakOnDllLoad = 0;
+        }
+
+        /* Break if aksed */
+        if (BreakOnDllLoad)
+        {
+            /* Check if we should show a message */
+            if (ShowSnaps)
+            {
+                DPRINT1("LDR: %wZ loaded.", &LdrEntry->BaseDllName);
+                DPRINT1(" - About to call init routine at %lx\n", EntryPoint);
+            }
+
+            /* Break in debugger */
+            DbgBreakPoint();
+        }
+
+        /* Make sure we have an entrypoint */
+        if (EntryPoint)
+        {
+            /* Save the old Dll Initializer and write the current one */
+            OldInitializer = LdrpCurrentDllInitializer;
+            LdrpCurrentDllInitializer = LdrEntry;
+
+            /* Set up the Act Ctx */
+            ActCtx.Size = sizeof(ActCtx);
+            ActCtx.Frame.Flags = ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID;
+            RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+
+            /* Activate the ActCtx */
+            RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                                   LdrEntry->EntryPointActivationContext);
+
+            /* Check if it has TLS */
+            if (LdrEntry->TlsIndex && Context)
+            {
+                /* Call TLS */
+                LdrpTlsCallback(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
+            }
+
+            /* Call the Entrypoint */
+            DPRINT1("%wZ - Calling entry point at %x for thread attaching\n",
+                    &LdrEntry->BaseDllName, EntryPoint);
+            LdrpCallDllEntry(EntryPoint,
+                             LdrEntry->DllBase,
+                             DLL_PROCESS_ATTACH,
+                             Context);
+
+            /* Deactivate the ActCtx */
+            RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+
+            /* Save the Current DLL Initializer */
+            LdrpCurrentDllInitializer = OldInitializer;
+
+            /* Mark the entry as processed */
+            LdrEntry->Flags |= LDRP_PROCESS_ATTACH_CALLED;
+        }
+    }
+
+    /* Loop in order */
+    ListHead = &Peb->Ldr->InInitializationOrderModuleList;
+    NextEntry = NextEntry->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the Data Entrry */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+
+        /* FIXME: Verify NX Compat */
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check for TLS */
+    if (LdrpImageHasTls && Context)
+    {
+        /* Set up the Act Ctx */
+        ActCtx.Size = sizeof(ActCtx);
+        ActCtx.Frame.Flags = ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID;
+        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+
+        /* Activate the ActCtx */
+        RtlActivateActivationContextUnsafeFast(&ActCtx,
+                                               LdrpImageEntry->EntryPointActivationContext);
+
+        /* Do TLS callbacks */
+        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+
+        /* Deactivate the ActCtx */
+        RtlDeactivateActivationContextUnsafeFast(&ActCtx);
+    }
+
+    /* Restore old TEB */
+    LdrpTopLevelDllBeingLoadedTeb = OldTldTeb;
+
+    /* Check if the array is in the heap */
+    if (LdrRootEntry != LocalArray)
+    {
+        /* Free the array */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LdrRootEntry);
+    }
+
+    /* Return to caller */
+    DPRINT("LdrpAttachProcess() done\n");
+    return Status;
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 NTSTATUS
