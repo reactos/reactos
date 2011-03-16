@@ -866,4 +866,4 @@ modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   o
 modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
 modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional
 
-modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
+modules\wallpaper\clouds-clt2011.bmp                                       4   optional
