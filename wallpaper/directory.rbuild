@@ -1,3 +1,3 @@
 <group>
-	<installfile>Angelus_02_ROSWP.bmp</installfile>
+	<installfile>clouds-clt2011.bmp</installfile>
 </group>
