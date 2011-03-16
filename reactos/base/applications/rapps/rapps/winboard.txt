@@ -8,7 +8,7 @@ Description = WinBoard is a graphical chessboard for the Windows/ReactOS that ca
 Size = 5.9MB
 Category = 4
 URLSite = http://www.gnu.org/software/xboard/
-URLDownload = ftp://ftp.gnu.org/old-gnu/xboard/winboard/winboard-4_2_7b.exe
+URLDownload = http://ftp.gnu.org/old-gnu/xboard/winboard/winboard-4_2_7b.exe
 CDPath = none
 
 [Section.0407]
