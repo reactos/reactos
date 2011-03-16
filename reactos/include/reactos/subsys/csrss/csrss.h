@@ -22,7 +22,7 @@ typedef ULONG CSR_API_NUMBER;
 #define MAKE_CSR_API(Number, Server) \
     ((Server) << 16) + Number
 
-#define CSR_CSRSS_SECTION_SIZE          (65536)
+#define CSR_CSRSS_SECTION_SIZE          (131072) //(65536)
 
 typedef VOID (CALLBACK *PCONTROLDISPATCHER)(DWORD);
 
