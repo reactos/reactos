@@ -49,15 +49,16 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	UINT i;
 	int size = 0;
 	WCHAR wszFileName[MAX_PATH];
-	HGLOBAL hGlobal;
+	HGLOBAL hGlobal = NULL;
 	DROPFILES *pDropFiles;
 	int offset;
 	LPITEMIDLIST *pidls;
 
 	TRACE("(%p,%p,%u)\n", pidlRoot, apidl, cidl);
 
-	pidls = HeapAlloc(GetProcessHeap(), 0, cidl * sizeof *pidls);
-	if (!pidls) return NULL;
+	pidls = HeapAlloc(GetProcessHeap(), 0, cidl * sizeof(*pidls));
+	if (!pidls)
+		goto cleanup;
 
 	/* get the size needed */
 	size = sizeof(DROPFILES);
@@ -73,7 +74,8 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 
 	/* Fill the structure */
 	hGlobal = GlobalAlloc(GHND|GMEM_SHARE, size);
-	if(!hGlobal) return hGlobal;
+	if(!hGlobal)
+		goto cleanup;
 
         pDropFiles = (DROPFILES *)GlobalLock(hGlobal);
 	offset = (sizeof(DROPFILES) + sizeof(WCHAR) - 1) / sizeof(WCHAR);
@@ -91,7 +93,9 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	((WCHAR*)pDropFiles)[offset] = 0;
 	GlobalUnlock(hGlobal);
 
-	HeapFree(GetProcessHeap(), 0, pidls);
+cleanup:
+	if(pidls)
+		HeapFree(GetProcessHeap(), 0, pidls);
 
 	return hGlobal;
 }
