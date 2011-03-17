@@ -35,7 +35,7 @@ static BOOLEAN LdrpDllShutdownInProgress = FALSE;
 static HANDLE LdrpKnownDllsDirHandle = NULL;
 static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
 static PLDR_DATA_TABLE_ENTRY LdrpLastModule = NULL;
-extern PLDR_DATA_TABLE_ENTRY ExeModule;
+extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 
 /* PROTOTYPES ****************************************************************/
 
@@ -222,7 +222,7 @@ LdrpInitLoader(VOID)
     ULONG Length;
     NTSTATUS Status;
 
-    DPRINT("LdrpInitLoader() called for %wZ\n", &ExeModule->BaseDllName);
+    DPRINT("LdrpInitLoader() called for %wZ\n", &LdrpImageEntry->BaseDllName);
 
     /* Get handle to the 'KnownDlls' directory */
     RtlInitUnicodeString(&Name,
@@ -865,7 +865,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
     // NULL is the current process
     if (Name == NULL)
     {
-        *Module = ExeModule;
+        *Module = LdrpImageEntry;
         RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
         return(STATUS_SUCCESS);
     }
@@ -2416,7 +2416,7 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
     /* NULL is the current executable */
     if (DllName == NULL)
     {
-        *DllHandle = ExeModule->DllBase;
+        *DllHandle = LdrpImageEntry->DllBase;
         DPRINT("BaseAddress 0x%lx\n", *DllHandle);
         return STATUS_SUCCESS;
     }
@@ -2560,7 +2560,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
     static ULONG CallingCount = 0;
 
     DPRINT("LdrpDetachProcess() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     if (UnloadAll)
         LdrpDllShutdownInProgress = TRUE;
@@ -2672,7 +2672,7 @@ LdrpAttachProcess(VOID)
     NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("LdrpAttachProcess() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
     Entry = ModuleListHead->Flink;
@@ -2752,7 +2752,7 @@ LdrpAttachThread (VOID)
     NTSTATUS Status;
 
     DPRINT("LdrpAttachThread() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
@@ -2810,7 +2810,7 @@ LdrShutdownThread (VOID)
     PLDR_DATA_TABLE_ENTRY Module;
 
     DPRINT("LdrShutdownThread() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 

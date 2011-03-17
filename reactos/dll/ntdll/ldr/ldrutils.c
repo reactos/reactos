@@ -326,4 +326,35 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+ULONG
+NTAPI
+LdrpClearLoadInProgress()
+{
+    PLIST_ENTRY ListHead;
+    PLIST_ENTRY Entry;
+    PLDR_DATA_TABLE_ENTRY Module;
+    ULONG ModulesCount = 0;
+
+    /* Traverse the init list */
+    ListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+    Entry = ListHead->Flink;
+
+    while (Entry != ListHead)
+    {
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+
+        /* Clear load in progress flag */
+        Module->Flags &= ~LDRP_LOAD_IN_PROGRESS;
+
+        /* Increase counter for modules with entry point count but not processed yet */
+        if (Module->EntryPoint &&
+            !(Module->Flags & LDRP_ENTRY_PROCESSED)) ModulesCount++;
+
+        /* Advance to the next entry */
+        Entry = Entry->Flink;
+    }
+
+    return ModulesCount;
+}
+
 /* EOF */

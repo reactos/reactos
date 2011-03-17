@@ -461,7 +461,7 @@ LdrQueryProcessModuleInformationEx(IN ULONG ProcessId,
 
                 while (InitEntry != InitListHead)
                 {
-                    InitModule = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+                    InitModule = CONTAINING_RECORD(InitEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
 
                     /* Increase the index */
                     ModulePtr->InitOrderIndex++;

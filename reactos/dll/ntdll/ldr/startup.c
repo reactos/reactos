@@ -23,7 +23,7 @@ extern PTEB LdrpTopLevelDllBeingLoadedTeb;
 
 /* GLOBALS *******************************************************************/
 
-PLDR_DATA_TABLE_ENTRY ExeModule;
+extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 static RTL_CRITICAL_SECTION PebLock;
 static RTL_BITMAP TlsBitMap;
 static RTL_BITMAP TlsExpansionBitMap;
@@ -526,17 +526,17 @@ LdrpInit2(PCONTEXT Context,
                    &NtModule->InInitializationOrderModuleList);
 
     /* add entry for executable (becomes first list entry) */
-    ExeModule = (PLDR_DATA_TABLE_ENTRY)
+    LdrpImageEntry = (PLDR_DATA_TABLE_ENTRY)
                  RtlAllocateHeap(Peb->ProcessHeap,
                                  HEAP_ZERO_MEMORY,
                                  sizeof(LDR_DATA_TABLE_ENTRY));
-    if (ExeModule == NULL)
+    if (LdrpImageEntry == NULL)
     {
         DPRINT1("Failed to create loader module infomation\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
     }
 
-    ExeModule->DllBase = Peb->ImageBaseAddress;
+    LdrpImageEntry->DllBase = Peb->ImageBaseAddress;
 
     if ((Peb->ProcessParameters == NULL) ||
         (Peb->ProcessParameters->ImagePathName.Length == 0))
@@ -545,32 +545,32 @@ LdrpInit2(PCONTEXT Context,
         ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
     }
 
-    RtlCreateUnicodeString(&ExeModule->FullDllName,
+    RtlCreateUnicodeString(&LdrpImageEntry->FullDllName,
                            Peb->ProcessParameters->ImagePathName.Buffer);
-    RtlCreateUnicodeString(&ExeModule->BaseDllName,
-                           wcsrchr(ExeModule->FullDllName.Buffer, L'\\') + 1);
+    RtlCreateUnicodeString(&LdrpImageEntry->BaseDllName,
+                           wcsrchr(LdrpImageEntry->FullDllName.Buffer, L'\\') + 1);
 
-    DPRINT("BaseDllName '%wZ'  FullDllName '%wZ'\n", &ExeModule->BaseDllName, &ExeModule->FullDllName);
+    DPRINT("BaseDllName '%wZ'  FullDllName '%wZ'\n", &LdrpImageEntry->BaseDllName, &LdrpImageEntry->FullDllName);
 
-    ExeModule->Flags = LDRP_ENTRY_PROCESSED;
-    ExeModule->LoadCount = -1;      /* don't unload */
-    ExeModule->TlsIndex = -1;
-    ExeModule->SectionPointer = NULL;
-    ExeModule->CheckSum = 0;
+    LdrpImageEntry->Flags = LDRP_ENTRY_PROCESSED;
+    LdrpImageEntry->LoadCount = -1;      /* don't unload */
+    LdrpImageEntry->TlsIndex = -1;
+    LdrpImageEntry->SectionPointer = NULL;
+    LdrpImageEntry->CheckSum = 0;
 
-    NTHeaders = RtlImageNtHeader(ExeModule->DllBase);
-    ExeModule->SizeOfImage = LdrpGetResidentSize(NTHeaders);
-    ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
+    NTHeaders = RtlImageNtHeader(LdrpImageEntry->DllBase);
+    LdrpImageEntry->SizeOfImage = LdrpGetResidentSize(NTHeaders);
+    LdrpImageEntry->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
     LdrpTopLevelDllBeingLoadedTeb = NtCurrentTeb();
 
     InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
-                   &ExeModule->InLoadOrderLinks);
+                   &LdrpImageEntry->InLoadOrderLinks);
 
     LdrpInitLoader();
 
     EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL, NULL, NULL);
-    ExeModule->EntryPoint = EntryPoint;
+    LdrpImageEntry->EntryPoint = EntryPoint;
 
     /* all required dlls are loaded now */
     Peb->Ldr->Initialized = TRUE;

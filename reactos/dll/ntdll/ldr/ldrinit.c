@@ -23,6 +23,9 @@ UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 BOOLEAN LdrpInLdrInit;
 
 PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
+PUNICODE_STRING LdrpTopLevelDllBeingLoaded;
+extern PTEB LdrpTopLevelDllBeingLoadedTeb; // defined in rtlsupp.c!
+PLDR_DATA_TABLE_ENTRY LdrpCurrentDllInitializer;
 
 //RTL_BITMAP TlsBitMap;
 //RTL_BITMAP TlsExpansionBitMap;
@@ -333,11 +336,17 @@ LdrQueryImageFileExecutionOptions(IN PUNICODE_STRING SubKey,
                                                FALSE);
 }
 
+VOID
+NTAPI
+LdrpEnsureLoaderLockIsHeld()
+{
+    // Ignored atm
+}
+
 NTSTATUS
 NTAPI
 LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
 {
-#if 0
     PLDR_DATA_TABLE_ENTRY LocalArray[16];
     PLIST_ENTRY ListHead;
     PLIST_ENTRY NextEntry;
@@ -350,6 +359,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
     ULONG BreakOnDllLoad;
     PTEB OldTldTeb;
+    BOOLEAN DllStatus;
 
     DPRINT1("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
 
@@ -493,7 +503,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             if (ShowSnaps)
             {
                 DPRINT1("LDR: %wZ loaded.", &LdrEntry->BaseDllName);
-                DPRINT1(" - About to call init routine at %lx\n", EntryPoint);
+                DPRINT1(" - About to call init routine at %p\n", EntryPoint);
             }
 
             /* Break in debugger */
@@ -526,10 +536,10 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             /* Call the Entrypoint */
             DPRINT1("%wZ - Calling entry point at %x for thread attaching\n",
                     &LdrEntry->BaseDllName, EntryPoint);
-            LdrpCallDllEntry(EntryPoint,
-                             LdrEntry->DllBase,
-                             DLL_PROCESS_ATTACH,
-                             Context);
+            DllStatus = LdrpCallDllEntry(EntryPoint,
+                                         LdrEntry->DllBase,
+                                         DLL_PROCESS_ATTACH,
+                                         Context);
 
             /* Deactivate the ActCtx */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -539,6 +549,16 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
 
             /* Mark the entry as processed */
             LdrEntry->Flags |= LDRP_PROCESS_ATTACH_CALLED;
+
+            /* Fail if DLL init failed */
+            if (!DllStatus)
+            {
+                DPRINT1("LDR: DLL_PROCESS_ATTACH for dll \"%wZ\" (InitRoutine: %p) failed\n",
+                    &LdrEntry->BaseDllName, EntryPoint);
+
+                Status = STATUS_DLL_INIT_FAILED;
+                goto Quickie;
+            }
         }
     }
 
@@ -551,6 +571,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
 
         /* FIXME: Verify NX Compat */
+        // LdrpCheckNXCompatibility()
 
         /* Next entry */
         NextEntry = NextEntry->Flink;
@@ -569,12 +590,13 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                                                LdrpImageEntry->EntryPointActivationContext);
 
         /* Do TLS callbacks */
-        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+        LdrpTlsCallback(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
     }
 
+Quickie:
     /* Restore old TEB */
     LdrpTopLevelDllBeingLoadedTeb = OldTldTeb;
 
@@ -586,12 +608,8 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     }
 
     /* Return to caller */
-    DPRINT("LdrpAttachProcess() done\n");
+    DPRINT("LdrpRunInitializeRoutines() done\n");
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 NTSTATUS
