@@ -343,6 +343,62 @@ LdrpEnsureLoaderLockIsHeld()
     // Ignored atm
 }
 
+PVOID
+NTAPI
+LdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
+{
+    PIMAGE_LOAD_CONFIG_DIRECTORY ConfigDir;
+    ULONG DirSize;
+    PVOID Cookie = NULL;
+
+    /* Check NT header first */
+    if (!RtlImageNtHeader(BaseAddress)) return NULL;
+
+    /* Get the pointer to the config directory */
+    ConfigDir = RtlImageDirectoryEntryToData(BaseAddress,
+                                             TRUE,
+                                             IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                             &DirSize);
+
+    /* Check for sanity */
+    if (!ConfigDir ||
+        (DirSize != 64 && ConfigDir->Size != DirSize) ||
+        (ConfigDir->Size < 0x48))
+        return NULL;
+
+    /* Now get the cookie */
+    Cookie = (PVOID)ConfigDir->SecurityCookie;
+
+    /* Check this cookie */
+    if (Cookie == NULL ||
+        (PCHAR)Cookie <= (PCHAR)BaseAddress ||
+        (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage)
+    {
+        Cookie = NULL;
+    }
+
+    /* Return validated security cookie */
+    return Cookie;
+}
+
+PVOID
+NTAPI
+LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PVOID Cookie;
+
+    /* Fetch address of the cookie */
+    Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+
+    if (Cookie)
+    {
+        UNIMPLEMENTED;
+        Cookie = NULL;
+    }
+
+    return Cookie;
+}
+
 NTSTATUS
 NTAPI
 LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
@@ -361,7 +417,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     PTEB OldTldTeb;
     BOOLEAN DllStatus;
 
-    DPRINT1("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
+    DPRINT("LdrpRunInitializeRoutines() called for %wZ\n", &LdrpImageEntry->BaseDllName);
 
     /* Check the Loader Lock */
     LdrpEnsureLoaderLockIsHeld();
@@ -417,8 +473,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             if (!(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
             {
                 /* Setup the Cookie for the DLL */
-                //LdrpInitSecurityCookie(LdrEntry);
-                UNIMPLEMENTED;
+                LdrpInitSecurityCookie(LdrEntry);
 
                 /* Check for valid entrypoint */
                 if (LdrEntry->EntryPoint)
@@ -474,7 +529,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         /* Get an entry */
         LdrEntry = LdrRootEntry[i];
 
-        /* FIXME: Verifiy NX Compat */
+        /* FIXME: Verify NX Compat */
 
         /* Move to next entry */
         i++;
@@ -534,8 +589,11 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             }
 
             /* Call the Entrypoint */
-            DPRINT1("%wZ - Calling entry point at %x for thread attaching\n",
-                    &LdrEntry->BaseDllName, EntryPoint);
+            if (ShowSnaps)
+            {
+                DPRINT1("%wZ - Calling entry point at %p for DLL_PROCESS_ATTACH\n",
+                        &LdrEntry->BaseDllName, EntryPoint);
+            }
             DllStatus = LdrpCallDllEntry(EntryPoint,
                                          LdrEntry->DllBase,
                                          DLL_PROCESS_ATTACH,
