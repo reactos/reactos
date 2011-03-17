@@ -60,6 +60,9 @@ LdrpLoadDll(IN BOOLEAN Redirected,
             OUT PVOID *BaseAddress,
             IN BOOLEAN CallInit);
 
+ULONG NTAPI
+LdrpClearLoadInProgress();
+
 /* FIXME: Cleanup this mess */
 typedef NTSTATUS (NTAPI *PEPFUNC)(PPEB);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
