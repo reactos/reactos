@@ -47,7 +47,6 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                IN PUNICODE_STRING Name,
                                OUT PLDR_DATA_TABLE_ENTRY *Module,
                                OUT PVOID *BaseAddress OPTIONAL);
-static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 static NTSTATUS LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Unload);
 
@@ -745,7 +744,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
         if (!(Module->Flags & LDRP_PROCESS_ATTACH_CALLED))
         {
             RtlEnterCriticalSection(Peb->LoaderLock);
-            Status = LdrpAttachProcess();
+            Status = LdrpRunInitializeRoutines(NULL);
             RtlLeaveCriticalSection(Peb->LoaderLock);
         }
         if (Module->EntryPointActivationContext) RtlDeactivateActivationContext(0, cookie);
@@ -2036,7 +2035,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
     Status = LdrpInitializeTls();
     if (NT_SUCCESS(Status))
     {
-        Status = LdrpAttachProcess();
+        Status = LdrpRunInitializeRoutines(NULL);
     }
     if (NT_SUCCESS(Status))
     {
@@ -2641,83 +2640,6 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
     }
     CallingCount--;
     DPRINT("LdrpDetachProcess() done\n");
-}
-
-/**********************************************************************
- * NAME                                                         LOCAL
- *      LdrpAttachProcess
- *
- * DESCRIPTION
- *      Initialize all dll's which are prepered for loading
- *
- * ARGUMENTS
- *      none
- *
- * RETURN VALUE
- *      status
- *
- * REVISIONS
- *
- * NOTE
- *      The loader lock must be held on entry.
- *
- */
-static NTSTATUS
-LdrpAttachProcess(VOID)
-{
-    PLIST_ENTRY ModuleListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
-    BOOLEAN Result;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("LdrpAttachProcess() called for %wZ\n",
-           &LdrpImageEntry->BaseDllName);
-
-    ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
-    Entry = ModuleListHead->Flink;
-    while (Entry != ModuleListHead)
-    {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-        if (!(Module->Flags & (LDRP_LOAD_IN_PROGRESS|LDRP_UNLOAD_IN_PROGRESS|LDRP_ENTRY_PROCESSED)))
-        {
-            Module->Flags |= LDRP_LOAD_IN_PROGRESS;
-            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
-                      &Module->BaseDllName, Module->EntryPoint);
-
-            /* Check if it has TLS */
-            if (Module->TlsIndex && FALSE/*Context*/)
-            {
-                /* Call TLS */
-                LdrpTlsCallback(Module->DllBase, DLL_PROCESS_ATTACH);
-            }
-
-            if ((Module->Flags & LDRP_IMAGE_DLL) && Module->EntryPoint)
-                Result = LdrpCallDllEntry(Module->EntryPoint, Module->DllBase, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
-            else
-                Result = TRUE;
-
-            if (!Result)
-            {
-                Status = STATUS_DLL_INIT_FAILED;
-                break;
-            }
-            if (Module->Flags & LDRP_IMAGE_DLL && Module->EntryPoint != 0)
-            {
-                Module->Flags |= LDRP_PROCESS_ATTACH_CALLED|LDRP_ENTRY_PROCESSED;
-            }
-            else
-            {
-                Module->Flags |= LDRP_ENTRY_PROCESSED;
-            }
-            Module->Flags &= ~LDRP_LOAD_IN_PROGRESS;
-        }
-        Entry = Entry->Flink;
-    }
-
-    DPRINT("LdrpAttachProcess() done\n");
-
-    return Status;
 }
 
 /*
