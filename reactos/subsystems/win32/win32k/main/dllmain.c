@@ -237,26 +237,11 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
             if (hDesk != NULL)
             {
-                PDESKTOP DesktopObject;
                 Win32Thread->rpdesk = NULL;
-                Status = ObReferenceObjectByHandle(hDesk,
-                                                   0,
-                                                   ExDesktopObjectType,
-                                                   KernelMode,
-                                                   (PVOID*)&DesktopObject,
-                                                   NULL);
-                NtClose(hDesk);
-                if(NT_SUCCESS(Status))
+                Win32Thread->hdesk = NULL;
+                if (!IntSetThreadDesktop(hDesk, FALSE))
                 {
-                    if (!IntSetThreadDesktop(DesktopObject,
-                                             FALSE))
-                    {
                         DPRINT1("Unable to set thread desktop\n");
-                    }
-                }
-                else
-                {
-                    DPRINT1("Unable to reference thread desktop handle 0x%x\n", hDesk);
                 }
             }
         }
