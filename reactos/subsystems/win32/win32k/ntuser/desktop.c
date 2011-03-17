@@ -859,15 +859,12 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 
 HDESK APIENTRY
 NtUserCreateDesktop(
-   POBJECT_ATTRIBUTES poa,
+   POBJECT_ATTRIBUTES ObjectAttributes,
    PUNICODE_STRING lpszDesktopDevice,
    LPDEVMODEW lpdmw,
    DWORD dwFlags,
    ACCESS_MASK dwDesiredAccess)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   PTHREADINFO W32Thread;
-   PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject;
    UNICODE_STRING DesktopName;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -875,12 +872,9 @@ NtUserCreateDesktop(
    CSR_API_MESSAGE Request;
    PVOID DesktopHeapSystemBase = NULL;
    SIZE_T DesktopInfoSize;
-   UNICODE_STRING SafeDesktopName;
    ULONG DummyContext;
    ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
-   HWINSTA hWindowStation = NULL ;
-   PUNICODE_STRING lpszDesktopName = NULL;
-   UNICODE_STRING ClassName, MenuName;
+   UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;
    PWND pWnd = NULL;
@@ -889,7 +883,7 @@ NtUserCreateDesktop(
    PTHREADINFO ptiCurrent;
    DECLARE_RETURN(HDESK);
 
-   DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
+   DPRINT("Enter NtUserCreateDesktop\n");
    UserEnterExclusive();
 
    ptiCurrent = PsGetCurrentThreadWin32Thread();
@@ -899,19 +893,38 @@ NtUserCreateDesktop(
       NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
       ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
    }
+   DesktopName.Buffer = NULL;
 
+   /*
+    * Try to open already existing desktop
+    */
+
+   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
+
+   Status = ObOpenObjectByName(
+               ObjectAttributes,
+               ExDesktopObjectType,
+               UserMode,
+               NULL,
+               dwDesiredAccess,
+               (PVOID)&DummyContext,
+               (HANDLE*)&Desktop);
+   if (!NT_SUCCESS(Status)) RETURN(NULL);
+   if (Status == STATUS_OBJECT_NAME_EXISTS)
+   {
+      RETURN( Desktop);
+   }
+
+   /* Capture desktop name */
    _SEH2_TRY
    {
-      ProbeForRead( poa,
-                    sizeof(OBJECT_ATTRIBUTES),
-                    1);
+      ProbeForRead( ObjectAttributes, sizeof(OBJECT_ATTRIBUTES),  1);
 
-      hWindowStation = poa->RootDirectory;
-      lpszDesktopName = poa->ObjectName;
+      Status = IntSafeCopyUnicodeString(&DesktopName, ObjectAttributes->ObjectName);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status =_SEH2_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END
 
@@ -920,75 +933,6 @@ NtUserCreateDesktop(
       DPRINT1("Failed reading Object Attributes from user space.\n");
       SetLastNtError(Status);
       RETURN( NULL);
-   }
-
-   Status = IntValidateWindowStationHandle(
-               hWindowStation,
-               KernelMode,
-               0, /* FIXME - WINSTA_CREATEDESKTOP */
-               &WinStaObject);
-
-   if (! NT_SUCCESS(Status))
-   {
-      DPRINT1("Failed validation of window station handle (0x%X), cannot create desktop %wZ\n",
-              hWindowStation, lpszDesktopName);
-      SetLastNtError(Status);
-      RETURN( NULL);
-   }
-   if(lpszDesktopName != NULL)
-   {
-      Status = IntSafeCopyUnicodeString(&SafeDesktopName, lpszDesktopName);
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN( NULL);
-	  }
-   }
-   else
-   {
-      RtlInitUnicodeString(&SafeDesktopName, NULL);
-   }
-
-   if (! IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
-                                     &SafeDesktopName))
-   {
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      ObDereferenceObject(WinStaObject);
-      if (lpszDesktopName)
-         ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
-      RETURN( NULL);
-   }
-   if (lpszDesktopName)
-      ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
-   ObDereferenceObject(WinStaObject);
-
-   /*
-    * Try to open already existing desktop
-    */
-
-   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
-
-   /* Initialize ObjectAttributes for the desktop object */
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &DesktopName,
-      0,
-      NULL,
-      NULL);
-
-   Status = ObOpenObjectByName(
-               &ObjectAttributes,
-               ExDesktopObjectType,
-               KernelMode,
-               NULL,
-               dwDesiredAccess,
-               (PVOID)&DummyContext,
-               (HANDLE*)&Desktop);
-   if (!NT_SUCCESS(Status)) RETURN(NULL);
-   if (Status == STATUS_OBJECT_NAME_EXISTS)
-   {
-      ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
-      RETURN( Desktop);
    }
 
    /* Reference the desktop */
@@ -1011,12 +955,11 @@ NtUserCreateDesktop(
        RETURN(NULL);
    }
 
-   DesktopInfoSize = FIELD_OFFSET(DESKTOPINFO,
-                                  szDesktopName[(lpszDesktopName->Length / sizeof(WCHAR)) + 1]);
+   DesktopInfoSize = sizeof(DESKTOPINFO) + DesktopName.Length;
 
    DesktopObject->pDeskInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
-                                                HEAP_NO_SERIALIZE,
-                                                DesktopInfoSize);
+                                              HEAP_NO_SERIALIZE,
+                                              DesktopInfoSize);
 
    if (DesktopObject->pDeskInfo == NULL)
    {
@@ -1031,8 +974,8 @@ NtUserCreateDesktop(
    DesktopObject->pDeskInfo->pvDesktopBase = DesktopHeapSystemBase;
    DesktopObject->pDeskInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
    RtlCopyMemory(DesktopObject->pDeskInfo->szDesktopName,
-                 lpszDesktopName->Buffer,
-                 lpszDesktopName->Length);
+                 DesktopName.Buffer,
+                 DesktopName.Length);
 
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
@@ -1042,7 +985,6 @@ NtUserCreateDesktop(
    {
       InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
    }
-   ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
 //// why is this here?
 #if 0
@@ -1090,7 +1032,6 @@ NtUserCreateDesktop(
    //
    ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_DESKTOP])));
    ClassName.Length = 0;
-   RtlZeroMemory(&MenuName, sizeof(MenuName));
    RtlZeroMemory(&WindowName, sizeof(WindowName));
 
    RtlZeroMemory(&Cs, sizeof(Cs));
@@ -1113,9 +1054,8 @@ NtUserCreateDesktop(
       DesktopObject->pDeskInfo->spwnd = pWndDesktop;
    }
 #endif
-   W32Thread = PsGetCurrentThreadWin32Thread();
 
-   if (!W32Thread->rpdesk) IntSetThreadDesktop(DesktopObject,FALSE);
+   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(DesktopObject,FALSE);
 
   /*
      Based on wine/server/window.c in get_desktop_window.
@@ -1123,7 +1063,6 @@ NtUserCreateDesktop(
 
    ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_HWNDMESSAGE])));
    ClassName.Length = 0;
-   RtlZeroMemory(&MenuName, sizeof(MenuName));
    RtlZeroMemory(&WindowName, sizeof(WindowName));
 
    RtlZeroMemory(&Cs, sizeof(Cs));
@@ -1154,6 +1093,10 @@ NtUserCreateDesktop(
    RETURN( Desktop);
 
 CLEANUP:
+   if(DesktopName.Buffer != NULL)
+   {
+       ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
+   }
    if (!NoHooks && ptiCurrent) ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
    DPRINT("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
    UserLeave();
@@ -1184,85 +1127,17 @@ CLEANUP:
 
 HDESK APIENTRY
 NtUserOpenDesktop(
-   PUNICODE_STRING lpszDesktopName,
+   POBJECT_ATTRIBUTES ObjectAttributes,
    DWORD dwFlags,
    ACCESS_MASK dwDesiredAccess)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   HWINSTA WinSta;
-   PWINSTATION_OBJECT WinStaObject;
-   UNICODE_STRING DesktopName;
-   UNICODE_STRING SafeDesktopName;
    NTSTATUS Status;
    HDESK Desktop;
-   BOOL Result;
-   DECLARE_RETURN(HDESK);
-
-   DPRINT("Enter NtUserOpenDesktop: %wZ\n", lpszDesktopName);
-   UserEnterExclusive();
-
-   /*
-    * Validate the window station handle and compose the fully
-    * qualified desktop name
-    */
-
-   WinSta = UserGetProcessWindowStation();
-   Status = IntValidateWindowStationHandle(
-               WinSta,
-               KernelMode,
-               0,
-               &WinStaObject);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Failed validation of window station handle (0x%X)\n", WinSta);
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   if(lpszDesktopName != NULL)
-   {
-      Status = IntSafeCopyUnicodeString(&SafeDesktopName, lpszDesktopName);
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN( NULL);
-	  }
-   }
-   else
-   {
-      RtlInitUnicodeString(&SafeDesktopName, NULL);
-   }
-
-   Result = IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
-                                        &SafeDesktopName);
-
-   if (lpszDesktopName)
-      ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
-   ObDereferenceObject(WinStaObject);
-
-
-   if (!Result)
-   {
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      RETURN( 0);
-   }
-
-
-   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
-
-   /* Initialize ObjectAttributes for the desktop object */
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &DesktopName,
-      0,
-      NULL,
-      NULL);
 
    Status = ObOpenObjectByName(
-               &ObjectAttributes,
+               ObjectAttributes,
                ExDesktopObjectType,
-               KernelMode,
+               UserMode,
                NULL,
                dwDesiredAccess,
                NULL,
@@ -1271,19 +1146,10 @@ NtUserOpenDesktop(
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      ExFreePool(DesktopName.Buffer);
-      RETURN( 0);
+      return 0;
    }
 
-   DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
-   ExFreePool(DesktopName.Buffer);
-
-   RETURN( Desktop);
-
-CLEANUP:
-   DPRINT("Leave NtUserOpenDesktop, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+   return Desktop;
 }
 
 /*

@@ -1462,7 +1462,7 @@ NtUserCreateLocalMemHandle(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
+  DWORD dwExStyle,
   PLARGE_STRING plstrClassName,
   PLARGE_STRING plstrClsVersion,
   PLARGE_STRING plstrWindowName,
@@ -1481,9 +1481,9 @@ NtUserCreateWindowEx(
 HWINSTA
 NTAPI
 NtUserCreateWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
+  DWORD Unknown2,
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5,
@@ -2301,9 +2301,9 @@ NtUserOpenClipboard(
 HDESK
 NTAPI
 NtUserOpenDesktop(
-  PUNICODE_STRING lpszDesktopName,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess);
+   POBJECT_ATTRIBUTES ObjectAttributes,
+   DWORD dwFlags,
+   ACCESS_MASK dwDesiredAccess);
 
 HDESK
 NTAPI
@@ -2315,7 +2315,7 @@ NtUserOpenInputDesktop(
 HWINSTA
 NTAPI
 NtUserOpenWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess);
 
 BOOL
