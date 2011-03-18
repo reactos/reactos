@@ -65,17 +65,7 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 HDWP WINAPI
 BeginDeferWindowPos(int nNumWindows)
 {
-    if (nNumWindows < 0)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-#if 0
-    UNIMPLEMENTED;
-    return (HDWP)0;
-#else
-    return (HDWP)1;
-#endif
+    return (HDWP)NtUserCallOneParam((DWORD_PTR)nNumWindows, ONEPARAM_ROUTINE_BEGINDEFERWNDPOS);
 }
 
 
@@ -567,12 +557,7 @@ DeferWindowPos(HDWP hWinPosInfo,
                int cy,
                UINT uFlags)
 {
-#if 0
     return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-#else
-    SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-    return hWinPosInfo;
-#endif
 }
 
 
@@ -582,12 +567,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 BOOL WINAPI
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
-#if 0
-    UNIMPLEMENTED;
-    return FALSE;
-#else
-    return TRUE;
-#endif
+    return NtUserEndDeferWindowPosEx(hWinPosInfo, 0);
 }
 
 

@@ -1631,10 +1631,10 @@ NtUserEnableScrollBar(
   UINT wSBflags,
   UINT wArrows);
 
-DWORD
+BOOL
 NTAPI
 NtUserEndDeferWindowPosEx(
-  DWORD Unknown0,
+  HDWP WinPosInfo,
   DWORD Unknown1);
 
 BOOL NTAPI

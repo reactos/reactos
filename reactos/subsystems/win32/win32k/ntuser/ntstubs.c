@@ -1169,18 +1169,6 @@ NtUserDrawMenuBarTemp(
 }
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserEndDeferWindowPosEx(DWORD Unknown0,
-                          DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
  * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
  */
 /*
@@ -1205,7 +1193,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
 
-   return 0;
+   return 1;
 }
 
 /*
@@ -1304,25 +1292,6 @@ NtUserWindowFromPhysicalPoint(POINT Point)
 
    return NULL;
 }
-
-/*
- * @unimplemented
- */
-HDWP APIENTRY
-NtUserDeferWindowPos(HDWP WinPosInfo,
-                     HWND Wnd,
-                     HWND WndInsertAfter,
-                     int x,
-                     int y,
-                     int cx,
-                     int cy,
-                     UINT Flags)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 
 /*
  * NtUserResolveDesktopForWOW
