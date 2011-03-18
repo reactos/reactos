@@ -53,7 +53,7 @@ int main (int argc, char **argv)
 	hConsoleIn = GetStdHandle(STD_INPUT_HANDLE);
 	hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	if (_tcsncmp (argv[1], _T("/?"), 2) == 0)
+	if (argc == 2 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
 	{
 		ConOutPuts(_T("copy stdin to stdout and then files to stdout\n"
 		              "\n"
@@ -115,7 +115,7 @@ int main (int argc, char **argv)
 		}
 		while(FindNextFile(hFind,&FindData));
 
-		FindClose(hFile);
+		FindClose(hFind);
 	}
 
 	return 0;
