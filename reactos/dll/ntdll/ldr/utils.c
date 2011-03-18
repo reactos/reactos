@@ -2664,9 +2664,9 @@ LdrShutdownProcess (VOID)
 /*
  * @implemented
  */
-
 NTSTATUS
-LdrpAttachThread (VOID)
+NTAPI
+LdrpInitializeThread(IN PCONTEXT Context)
 {
     PLIST_ENTRY ModuleListHead;
     PLIST_ENTRY Entry;

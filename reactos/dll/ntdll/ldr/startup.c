@@ -16,9 +16,6 @@
 
 VOID RtlInitializeHeapManager(VOID);
 VOID LdrpInitLoader(VOID);
-VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
-NTSTATUS LdrpAttachThread(VOID);
-VOID RtlpInitializeVectoredExceptionHandling(VOID);
 extern PTEB LdrpTopLevelDllBeingLoadedTeb;
 
 /* GLOBALS *******************************************************************/
@@ -27,8 +24,6 @@ extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 static RTL_CRITICAL_SECTION PebLock;
 static RTL_BITMAP TlsBitMap;
 static RTL_BITMAP TlsExpansionBitMap;
-static volatile BOOLEAN LdrpInitialized = FALSE;
-static LONG LdrpInitLock = 0;
 
 #define VALUE_BUFFER_SIZE 256
 
@@ -312,11 +307,10 @@ finish:
     return FALSE;
 }
 
-static
-VOID
-LdrpInit2(PCONTEXT Context,
-          PVOID SystemArgument1,
-          PVOID SystemArgument2)
+NTSTATUS
+NTAPI
+LdrpInitializeProcess(PCONTEXT Context,
+                      PVOID SystemArgument1)
 {
     PIMAGE_NT_HEADERS NTHeaders;
     PEPFUNC EntryPoint;
@@ -378,9 +372,6 @@ LdrpInit2(PCONTEXT Context,
 
     Peb->NumberOfProcessors = SystemInformation.NumberOfProcessors;
 
-    /* Initialize Critical Section Data */
-    RtlpInitDeferedCriticalSection();
-
     /* Load execution options */
     LoadImageFileExecutionOptions(Peb);
 
@@ -438,9 +429,6 @@ LdrpInit2(PCONTEXT Context,
         RtlFreeAnsiString(&ImageNameA);
         ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE);
     }
-
-    /* initialized vectored exception handling */
-    RtlpInitializeVectoredExceptionHandling();
 
     /* initalize peb lock support */
     RtlInitializeCriticalSection(&PebLock);
@@ -585,37 +573,8 @@ LdrpInit2(PCONTEXT Context,
     /* Break into debugger */
     if (Peb->BeingDebugged)
         DbgBreakPoint();
-}
 
-VOID
-NTAPI
-LdrpInit(PCONTEXT Context,
-         PVOID SystemArgument1,
-         PVOID SystemArgument2)
-{
-    if (!LdrpInitialized)
-    {
-        if (!_InterlockedExchange(&LdrpInitLock, 1))
-        {
-            LdrpInit2(Context, SystemArgument1, SystemArgument2);
-            LdrpInitialized = TRUE;
-        }
-        else
-        {
-            LARGE_INTEGER Interval = {{-200000, -1}};
-
-            do
-            {
-                NtDelayExecution(FALSE, &Interval);
-            }
-            while (!LdrpInitialized);
-        }
-    }
-
-    /* attach the thread */
-    RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
-    LdrpAttachThread();
-    RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

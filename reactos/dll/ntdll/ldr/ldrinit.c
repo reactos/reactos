@@ -21,6 +21,7 @@ UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machin
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 
 BOOLEAN LdrpInLdrInit;
+LONG LdrpProcessInitialized;
 
 PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 PUNICODE_STRING LdrpTopLevelDllBeingLoaded;
@@ -38,6 +39,11 @@ ULONG LdrpNumberOfProcessors;
 RTL_CRITICAL_SECTION LdrpLoaderLock;
 
 BOOLEAN ShowSnaps;
+
+ULONG LdrpFatalHardErrorCount;
+
+VOID RtlpInitializeVectoredExceptionHandling(VOID);
+VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -832,5 +838,148 @@ LdrpFreeTls(VOID)
                 TlsVector);
 }
 
+VOID
+NTAPI
+LdrpInitFailure(NTSTATUS Status)
+{
+    ULONG Response;
+
+    /* Print a debug message */
+    DPRINT1("LDR: Process initialization failure; NTSTATUS = %08lx\n", Status);
+
+    /* Raise a hard error */
+    if (!LdrpFatalHardErrorCount)
+    {
+        ZwRaiseHardError(STATUS_APP_INIT_FAILURE, 1, 0, (PULONG_PTR)&Status, OptionOk, &Response);
+    }
+}
+
+VOID
+NTAPI
+LdrpInit(PCONTEXT Context,
+         PVOID SystemArgument1,
+         PVOID SystemArgument2)
+{
+    LARGE_INTEGER Timeout;
+    PTEB Teb = NtCurrentTeb();
+    NTSTATUS Status, LoaderStatus = STATUS_SUCCESS;
+    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
+    PPEB Peb = NtCurrentPeb();
+
+    DPRINT("LdrpInit()\n");
+
+    /* Check if we have a deallocation stack */
+    if (!Teb->DeallocationStack)
+    {
+        /* We don't, set one */
+        Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                      Teb->NtTib.StackLimit,
+                                      MemoryBasicInformation,
+                                      &MemoryBasicInfo,
+                                      sizeof(MEMORY_BASIC_INFORMATION),
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            LdrpInitFailure(Status);
+            RtlRaiseStatus(Status);
+            return;
+        }
+
+        /* Set the stack */
+        Teb->DeallocationStack = MemoryBasicInfo.AllocationBase;
+    }
+
+    /* Now check if the process is already being initialized */
+    while (_InterlockedCompareExchange(&LdrpProcessInitialized,
+                                      1,
+                                      0) == 1)
+    {
+        /* Set the timeout to 30 seconds */
+        Timeout.QuadPart = Int32x32To64(30, -10000);
+
+        /* Make sure the status hasn't changed */
+        while (!LdrpProcessInitialized)
+        {
+            /* Do the wait */
+            ZwDelayExecution(FALSE, &Timeout);
+        }
+    }
+
+    /* Check if we have already setup LDR data */
+    if (!Peb->Ldr)
+    {
+        /* Setup the Loader Lock */
+        Peb->LoaderLock = &LdrpLoaderLock;
+
+        /* Let other code know we're initializing */
+        LdrpInLdrInit = TRUE;
+
+        /* Initialize Critical Section Data */
+        RtlpInitDeferedCriticalSection();
+
+        /* Initialize VEH Call lists */
+        RtlpInitializeVectoredExceptionHandling();
+
+        /* Protect with SEH */
+        _SEH2_TRY
+        {
+            /* Initialize the Process */
+            LoaderStatus = LdrpInitializeProcess(Context,
+                                                 SystemArgument1);
+
+            /* Check for success and if MinimumStackCommit was requested */
+            if (NT_SUCCESS(LoaderStatus) && Peb->MinimumStackCommit)
+            {
+                /* Enforce the limit */
+                //LdrpTouchThreadStack(Peb->MinimumStackCommit);
+                UNIMPLEMENTED;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail with the SEH error */
+            LoaderStatus = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        /* We're not initializing anymore */
+        LdrpInLdrInit = FALSE;
+
+        /* Check if init worked */
+        if (NT_SUCCESS(LoaderStatus))
+        {
+            /* Set the process as Initialized */
+            _InterlockedIncrement(&LdrpProcessInitialized);
+        }
+    }
+    else
+    {
+        /* Loader data is there... is this a fork() ? */
+        if(Peb->InheritedAddressSpace)
+        {
+            /* Handle the fork() */
+            //LoaderStatus = LdrpForkProcess();
+            LoaderStatus = STATUS_NOT_IMPLEMENTED;
+            UNIMPLEMENTED;
+        }
+        else
+        {
+            /* This is a new thread initializing */
+            LdrpInitializeThread(Context);
+        }
+    }
+
+    /* All done, test alert the thread */
+    NtTestAlert();
+
+    /* Return */
+    if (!NT_SUCCESS(LoaderStatus))
+    {
+        /* Fail */
+        LdrpInitFailure(LoaderStatus);
+        RtlRaiseStatus(LoaderStatus);
+    }
+}
 
 /* EOF */
