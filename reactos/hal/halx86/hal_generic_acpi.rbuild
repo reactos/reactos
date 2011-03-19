@@ -18,6 +18,9 @@
     				<file>pcibus.c</file>
     			</directory>
     		</directory>
+			<if property="ARCH" value="i386">
+				<file>halinit.c</file>
+			</if>
 		</directory>
 	</module>
 </group>
