@@ -122,7 +122,7 @@ BEGIN
     CONTROL         "Pok&a¿ cienie pod menu",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Poka¿ za&wartoœæ okna podczas przeci¹gania",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "U&kryj podkreœlenie liter do nawigacji klawiatur¹ dopóki nie nacisnê klawisza Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Anuluj", IDCANCEL, 226, 165, 50, 14

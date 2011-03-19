@@ -112,7 +112,7 @@ BEGIN
     CONTROL         "Отображать &тени, отбрасываемые меню",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "&Отображать содержимое окна при перетаскивании",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Отмена", IDCANCEL, 226, 165, 50, 14

@@ -120,7 +120,7 @@ BEGIN
     CONTROL         "Відображати тіні від меню",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Показати &вміст вікна під час перетягування",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "&Приховувати покажчики виклику з клавіатури до натиснення <Alt>",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Скасувати", IDCANCEL, 226, 165, 50, 14
