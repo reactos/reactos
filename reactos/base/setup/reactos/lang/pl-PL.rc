@@ -4,6 +4,7 @@
  * https://sourceforge.net/projects/reactospl
  * http://rogers.cyberdusk.pl/
  * update - niski (bjauy@o2.pl)
+ * updated by Caemyr (Olaf Siejka), Mar 2011
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -97,7 +98,8 @@ BEGIN
 
     CONTROL "Instalacja bootloadera", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
 
-    CONTROL "Wgraj bootloader na dysk twardy (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Wgraj bootloader na dysk twardy (MBR i VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Wgraj bootloader na dysk twardy (tylko VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
     CONTROL "Pomiñ wgrywanie bootloadera", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
     PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Anuluj", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
