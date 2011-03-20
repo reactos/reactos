@@ -162,13 +162,15 @@ NtUserCallOneParam(
          {
              PSMWP psmwp;
              HDWP hDwp = NULL;
-             if (Param < 0)
+             INT count = (INT)Param;
+
+             if (count < 0)
              {
                 EngSetLastError(ERROR_INVALID_PARAMETER);
                 RETURN(0);
              }
              /* Windows allows zero count, in which case it allocates context for 8 moves */
-             if (Param == 0) Param = 8;
+             if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
                                                NULL,
@@ -176,13 +178,13 @@ NtUserCallOneParam(
                                                otSMWP,
                                                sizeof(SMWP));
              if (!psmwp) RETURN(0);
-             psmwp->acvr = ExAllocatePoolWithTag(PagedPool, Param * sizeof(CVR), USERTAG_SWP);
+             psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
              if (!psmwp->acvr)
              {
                 UserDeleteObject(hDwp, otSMWP);
                 RETURN(0);
              }
-             RtlZeroMemory(psmwp->acvr, Param * sizeof(CVR));
+             RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
              psmwp->bHandle = TRUE;
              psmwp->ccvr = 0;          // actualCount
              psmwp->ccvrAlloc = Param; // suggestedCount             
