@@ -17,6 +17,7 @@
 	<file>GetSystemMetrics.c</file>
 	<file>GetIconInfo.c</file>
 	<file>GetPeekMessage.c</file>
+	<file>DeferWindowPos.c</file>
 
 </module>
 </group>

@@ -9,6 +9,7 @@ list(APPEND SOURCE
     GetSystemMetrics.c
     GetIconInfo.c
     GetPeekMessage.c
+    DeferWindowPos.c
     testlist.c
     user32_apitest.rc)
 

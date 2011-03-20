@@ -12,6 +12,7 @@ extern void func_ScrollWindowEx(void);
 extern void func_GetSystemMetrics(void);
 extern void func_GetIconInfo(void);
 extern void func_GetPeekMessage(void);
+extern void func_DeferWindowPos(void);
 
 const struct test winetest_testlist[] =
 {
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
     { "GetSystemMetrics", func_GetSystemMetrics },
     { "GetIconInfo", func_GetIconInfo },
     { "GetPeekMessage", func_GetPeekMessage },
+    { "DeferWindowPos", func_DeferWindowPos },
 
     { 0, 0 }
 };
