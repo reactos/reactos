@@ -1798,7 +1798,7 @@ BOOL
 IntSetThreadDesktop(IN HDESK hDesktop,
                     IN BOOL FreeOnFailure)
 {
-    PDESKTOP DesktopObject, OldDesktop;
+    PDESKTOP DesktopObject = NULL, OldDesktop;
     HDESK hOldDesktop;
     PTHREADINFO W32Thread;
     NTSTATUS Status;
@@ -1809,24 +1809,28 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
     W32Thread = PsGetCurrentThreadWin32Thread();
     
-    /* Validate the new desktop. */
-    Status = IntValidateDesktopHandle(
-                hDesktop,
-                UserMode,
-                0,
-                &DesktopObject);
-
-    if (!NT_SUCCESS(Status))
+    if(hDesktop != NULL)
     {
-        DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
-        return FALSE;
-    }
+        /* Validate the new desktop. */
+        Status = IntValidateDesktopHandle(
+                    hDesktop,
+                    UserMode,
+                    0,
+                    &DesktopObject);
 
-    if (W32Thread->rpdesk == DesktopObject)
-    {
-        /* Nothing to do */
-        ObDereferenceObject(DesktopObject);
-        return TRUE;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Validation of desktop handle (0x%X) failed\n", hDesktop);
+            return FALSE;
+        }
+
+        if (W32Thread->rpdesk == DesktopObject)
+        {
+            /* Nothing to do */
+            ObDereferenceObject(DesktopObject);
+            return TRUE;
+        }
+
     }
 
     if (!IsListEmpty(&W32Thread->WindowListHead))
