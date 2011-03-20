@@ -817,8 +817,45 @@ NtUserMinMaximize(
     UINT cmd, // Wine SW_ commands
     BOOL Hide)
 {
-    UNIMPLEMENTED;
-    return 0;
+  RECTL NewPos;
+  UINT SwFlags;
+  PWND pWnd;
+
+  DPRINT("Enter NtUserMinMaximize\n");
+  UserEnterExclusive();
+
+  pWnd = UserGetWindowObject(hWnd);
+  if ( !pWnd ||                          // FIXME:
+        pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+        pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+  {
+     goto Exit;
+  }
+
+  if ( cmd > SW_MAX || pWnd->state2 & WNDS2_INDESTROY)
+  {
+     EngSetLastError(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
+
+  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
+
+  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
+
+  co_WinPosSetWindowPos( pWnd,
+                         NULL,
+                         NewPos.left,
+                         NewPos.top,
+                         NewPos.right,
+                         NewPos.bottom,
+                         SwFlags);
+
+  co_WinPosShowWindow(pWnd, cmd);
+
+Exit:
+  DPRINT("Leave NtUserMinMaximize\n");
+  UserLeave();
+  return 0; // Always NULL?
 }
 
 DWORD
