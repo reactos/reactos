@@ -187,7 +187,7 @@ NtUserCallOneParam(
              RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
              psmwp->bHandle = TRUE;
              psmwp->ccvr = 0;          // actualCount
-             psmwp->ccvrAlloc = Param; // suggestedCount             
+             psmwp->ccvrAlloc = count; // suggestedCount             
              RETURN((DWORD_PTR)hDwp);
          }
 
