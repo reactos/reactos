@@ -813,6 +813,9 @@ static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style )
     GetClientRect( hwnd, &rc);
 
     /* FIXME: send WM_CTLCOLORSTATIC */
+#ifdef __REACTOS__
+    hBrush = STATIC_SendWmCtlColorStatic(hwnd, hdc); // Always sent....
+#endif
     switch (style & SS_TYPEMASK)
     {
     case SS_BLACKRECT:

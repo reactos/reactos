@@ -1792,9 +1792,24 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
   MenuCleanupRosMenuItemInfo(&ItemInfo);
 }
 
+//
+// This breaks some test results. Should handle A2U if called!
+//
 LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
   TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
+#ifdef __REACTOS__
+  PWND pWnd;
+
+  pWnd = ValidateHwnd(Wnd);
+  if (pWnd)
+  {
+     if (!pWnd->fnid)
+     {
+        NtUserSetWindowFNID(Wnd, FNID_MENU);
+     }
+  }    
+#endif    
 
   switch(Message)
     {
@@ -1834,6 +1849,9 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
+#ifdef __REACTOS__
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+#endif
       break;
 
     case WM_SHOWWINDOW:
@@ -1868,6 +1886,18 @@ LRESULT WINAPI
 PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
   TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
+#ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
+  PWND pWnd;
+
+  pWnd = ValidateHwnd(Wnd);
+  if (pWnd)
+  {
+     if (!pWnd->fnid)
+     {
+        NtUserSetWindowFNID(Wnd, FNID_MENU);
+     }
+  }    
+#endif    
 
   switch(Message)
     {
@@ -1907,6 +1937,9 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
           top_popup = NULL;
           top_popup_hmenu = NULL;
         }
+#ifdef __REACTOS__
+      NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+#endif
       break;
 
     case WM_SHOWWINDOW:
