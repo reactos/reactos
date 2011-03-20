@@ -90,22 +90,18 @@ static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name, msi_dialog *pare
 static UINT ControlEvent_EndDialog(MSIPACKAGE* package, LPCWSTR argument, 
                                    msi_dialog* dialog)
 {
-    static const WCHAR szExit[] = {
-    'E','x','i','t',0};
-    static const WCHAR szRetry[] = {
-    'R','e','t','r','y',0};
-    static const WCHAR szIgnore[] = {
-    'I','g','n','o','r','e',0};
-    static const WCHAR szReturn[] = {
-    'R','e','t','u','r','n',0};
+    static const WCHAR szExit[] = {'E','x','i','t',0};
+    static const WCHAR szRetry[] = {'R','e','t','r','y',0};
+    static const WCHAR szIgnore[] = {'I','g','n','o','r','e',0};
+    static const WCHAR szReturn[] = {'R','e','t','u','r','n',0};
 
-    if (lstrcmpW(argument,szExit)==0)
+    if (!strcmpW( argument, szExit ))
         package->CurrentInstallState = ERROR_INSTALL_USEREXIT;
-    else if (lstrcmpW(argument, szRetry) == 0)
+    else if (!strcmpW( argument, szRetry ))
         package->CurrentInstallState = ERROR_INSTALL_SUSPEND;
-    else if (lstrcmpW(argument, szIgnore) == 0)
+    else if (!strcmpW( argument, szIgnore ))
         package->CurrentInstallState = ERROR_SUCCESS;
-    else if (lstrcmpW(argument, szReturn) == 0)
+    else if (!strcmpW( argument, szReturn ))
     {
         msi_dialog *parent = msi_dialog_get_parent(dialog);
         msi_free(package->next_dialog);
@@ -167,58 +163,50 @@ static UINT ControlEvent_DoAction(MSIPACKAGE* package, LPCWSTR argument,
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument, 
-                                  msi_dialog* dialog)
+static UINT ControlEvent_AddLocal( MSIPACKAGE *package, LPCWSTR argument, msi_dialog *dialog )
 {
-    MSIFEATURE *feature = NULL;
+    MSIFEATURE *feature;
 
-    if (lstrcmpW(szAll,argument))
+    LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        MSI_SetFeatureStateW(package,argument,INSTALLSTATE_LOCAL);
-    }
-    else
-    {
-        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-            msi_feature_set_state(package, feature, INSTALLSTATE_LOCAL);
-
-        ACTION_UpdateComponentStates(package,argument);
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_LOCAL)
+                msi_set_property( package->db, szPreselected, szOne );
+            MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_LOCAL );
+        }
     }
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument, 
-                                msi_dialog* dialog)
+static UINT ControlEvent_Remove( MSIPACKAGE *package, LPCWSTR argument, msi_dialog *dialog )
 {
-    MSIFEATURE *feature = NULL;
+    MSIFEATURE *feature;
 
-    if (lstrcmpW(szAll,argument))
+    LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        MSI_SetFeatureStateW(package,argument,INSTALLSTATE_ABSENT);
-    }
-    else
-    {
-        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-            msi_feature_set_state(package, feature, INSTALLSTATE_ABSENT);
-
-        ACTION_UpdateComponentStates(package,argument);
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+                msi_set_property( package->db, szPreselected, szOne );
+            MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_ABSENT );
+        }
     }
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument, 
-                                   msi_dialog* dialog)
+static UINT ControlEvent_AddSource( MSIPACKAGE *package, LPCWSTR argument, msi_dialog *dialog )
 {
-    MSIFEATURE *feature = NULL;
+    MSIFEATURE *feature;
 
-    if (lstrcmpW(szAll,argument))
+    LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        MSI_SetFeatureStateW(package,argument,INSTALLSTATE_SOURCE);
-    }
-    else
-    {
-        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-            msi_feature_set_state(package, feature, INSTALLSTATE_SOURCE);
-        ACTION_UpdateComponentStates(package,argument);
+        if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
+        {
+            if (feature->ActionRequest != INSTALLSTATE_SOURCE)
+                msi_set_property( package->db, szPreselected, szOne );
+            MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_SOURCE );
+        }
     }
     return ERROR_SUCCESS;
 }
@@ -284,10 +272,9 @@ VOID ControlEvent_FireSubscribedEvent( MSIPACKAGE *package, LPCWSTR event,
 
     LIST_FOR_EACH_ENTRY( sub, &package->subscriptions, struct subscriber, entry )
     {
-        if (lstrcmpiW(sub->event, event))
+        if (strcmpiW( sub->event, event ))
             continue;
-        msi_dialog_handle_event( sub->dialog, sub->control,
-                                 sub->attribute, rec );
+        msi_dialog_handle_event( sub->dialog, sub->control, sub->attribute, rec );
     }
 }
 
@@ -300,7 +287,7 @@ VOID ControlEvent_CleanupDialogSubscriptions(MSIPACKAGE *package, LPWSTR dialog)
     {
         sub = LIST_ENTRY( i, struct subscriber, entry );
 
-        if ( lstrcmpW( msi_dialog_get_name( sub->dialog ), dialog ))
+        if (strcmpW( msi_dialog_get_name( sub->dialog ), dialog ))
             continue;
 
         list_remove( &sub->entry );
@@ -441,7 +428,7 @@ UINT ControlEvent_HandleControlEvent(MSIPACKAGE *package, LPCWSTR event,
     while( Events[i].event != NULL)
     {
         LPWSTR wevent = strdupAtoW(Events[i].event);
-        if (lstrcmpW(wevent,event)==0)
+        if (!strcmpW( wevent, event ))
         {
             msi_free(wevent);
             rc = Events[i].handler(package,argument,dialog);

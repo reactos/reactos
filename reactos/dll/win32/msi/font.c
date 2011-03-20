@@ -52,6 +52,9 @@ typedef struct _tagTT_NAME_TABLE_HEADER {
                             * from start of the table */
 } TT_NAME_TABLE_HEADER;
 
+#define NAME_ID_FULL_FONT_NAME  4
+#define NAME_ID_VERSION         5
+
 typedef struct _tagTT_NAME_RECORD {
     USHORT uPlatformID;
     USHORT uEncodingID;
@@ -80,10 +83,8 @@ static const WCHAR regfont2[] =
 /*
  * Code based off of code located here
  * http://www.codeproject.com/gdi/fontnamefromfile.asp
- *
- * Using string index 4 (full font name) instead of 1 (family name)
  */
-static LPWSTR load_ttfname_from(LPCWSTR filename)
+WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
 {
     TT_TABLE_DIRECTORY tblDir;
     BOOL bFound = FALSE;
@@ -142,30 +143,24 @@ static LPWSTR load_ttfname_from(LPCWSTR filename)
             break;
 
         ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
-        /* 4 is the Full Font Name */
-        if(ttRecord.uNameID == 4)
+        if (ttRecord.uNameID == id)
         {
             int nPos;
             LPSTR buf;
-            static const char tt[] = " (TrueType)";
 
             ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
             ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
             nPos = SetFilePointer(handle, 0, NULL, FILE_CURRENT);
-            SetFilePointer(handle, tblDir.uOffset +
-                            ttRecord.uStringOffset +
-                            ttNTHeader.uStorageOffset,
-                            NULL, FILE_BEGIN);
-            buf = msi_alloc_zero( ttRecord.uStringLength + 1 + strlen(tt) );
+            SetFilePointer(handle, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset,
+                           NULL, FILE_BEGIN);
+            buf = msi_alloc_zero( ttRecord.uStringLength + 1 );
             ReadFile(handle, buf, ttRecord.uStringLength, &dwRead, NULL);
             if (strlen(buf) > 0)
             {
-                strcat(buf,tt);
                 ret = strdupAtoW(buf);
                 msi_free(buf);
                 break;
             }
-
             msi_free(buf);
             SetFilePointer(handle,nPos, NULL, FILE_BEGIN);
         }
@@ -173,8 +168,36 @@ static LPWSTR load_ttfname_from(LPCWSTR filename)
 
 end:
     CloseHandle(handle);
+    TRACE("Returning %s\n", debugstr_w(ret));
+    return ret;
+}
 
-    TRACE("Returning fontname %s\n",debugstr_w(ret));
+static WCHAR *font_name_from_file( const WCHAR *filename )
+{
+    static const WCHAR truetypeW[] = {' ','(','T','r','u','e','T','y','p','e',')',0};
+    WCHAR *name, *ret = NULL;
+
+    if ((name = load_ttf_name_id( filename, NAME_ID_FULL_FONT_NAME )))
+    {
+        ret = msi_alloc( (strlenW( name ) + strlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
+        strcpyW( ret, name );
+        strcatW( ret, truetypeW );
+        msi_free( name );
+    }
+    return ret;
+}
+
+WCHAR *font_version_from_file( const WCHAR *filename )
+{
+    WCHAR *version, *p, *ret = NULL;
+
+    if ((p = version = load_ttf_name_id( filename, NAME_ID_VERSION )))
+    {
+        while (*p && !isdigitW( *p )) p++;
+        ret = msi_alloc( (strlenW( p ) + 1) * sizeof(WCHAR) );
+        strcpyW( ret, p );
+        msi_free( version );
+    }
     return ret;
 }
 
@@ -212,7 +235,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont2,&hkey2);
 
     if (MSI_RecordIsNull(row,2))
-        name = load_ttfname_from( file->TargetPath );
+        name = font_name_from_file( file->TargetPath );
     else
         name = msi_dup_record_field(row,2);
 
@@ -296,7 +319,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont2, &hkey2 );
 
     if (MSI_RecordIsNull( row, 2 ))
-        name = load_ttfname_from( file->TargetPath );
+        name = font_name_from_file( file->TargetPath );
     else
         name = msi_dup_record_field( row, 2 );
 

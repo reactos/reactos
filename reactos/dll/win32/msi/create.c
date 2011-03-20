@@ -24,6 +24,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -153,7 +154,7 @@ static UINT check_columns( const column_info *col_info )
     /* check for two columns with the same name */
     for( c1 = col_info; c1; c1 = c1->next )
         for( c2 = c1->next; c2; c2 = c2->next )
-            if (!lstrcmpW(c1->column, c2->column))
+            if (!strcmpW( c1->column, c2->column ))
                 return ERROR_BAD_QUERY_SYNTAX;
 
     return ERROR_SUCCESS;

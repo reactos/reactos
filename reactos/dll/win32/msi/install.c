@@ -282,7 +282,7 @@ done:
         return r;
     }
 
-    path = resolve_folder( package, szFolder, FALSE, FALSE, TRUE, NULL );
+    path = resolve_target_folder( package, szFolder, FALSE, TRUE, NULL );
     msiobj_release( &package->hdr );
 
     if (!path)
@@ -336,7 +336,7 @@ UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder,
 }
 
 /***********************************************************************
- * MsiGetSourcePath   (internal)
+ * MSI_GetSourcePath   (internal)
  */
 static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
                                awstring *szPathBuf, LPDWORD pcchPathBuf )
@@ -413,10 +413,10 @@ done:
         return ERROR_INVALID_PARAMETER;
     }
 
-    path = resolve_folder(package, szFolder, TRUE, FALSE, TRUE, NULL);
+    path = resolve_source_folder( package, szFolder, NULL );
     msiobj_release( &package->hdr );
 
-    TRACE("path = %s\n",debugstr_w(path));
+    TRACE("path = %s\n", debugstr_w(path));
     if (!path)
         return ERROR_DIRECTORY;
 
@@ -512,14 +512,14 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
            attrib & FILE_ATTRIBUTE_READONLY))
         return ERROR_FUNCTION_FAILED;
 
-    path = resolve_folder(package,szFolder,FALSE,FALSE,FALSE,&folder);
+    path = resolve_target_folder( package, szFolder, FALSE, FALSE, &folder );
     if (!path)
         return ERROR_DIRECTORY;
 
     msi_free(folder->Property);
     folder->Property = build_directory_name(2, szFolderPath, NULL);
 
-    if (lstrcmpiW(path, folder->Property) == 0)
+    if (!strcmpiW( path, folder->Property ))
     {
         /*
          *  Resolved Target has not really changed, so just 
@@ -527,7 +527,7 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
          */
         msi_free(folder->ResolvedTarget);
         folder->ResolvedTarget = NULL;
-        path2 = resolve_folder(package,szFolder,FALSE,TRUE,FALSE,NULL);
+        path2 = resolve_target_folder( package, szFolder, TRUE, FALSE, NULL );
         msi_free(path2);
     }
     else
@@ -542,23 +542,23 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
 
         LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
         {
-            path2 = resolve_folder(package, f->Directory, FALSE, TRUE, FALSE, NULL);
+            path2 = resolve_target_folder( package, f->Directory, TRUE, FALSE, NULL );
             msi_free(path2);
         }
 
         LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
         {
             MSICOMPONENT *comp = file->Component;
-            LPWSTR p;
+            LPWSTR dir;
 
-            if (!comp)
+            if (!comp->Enabled || (comp->assembly && !comp->assembly->application))
                 continue;
 
-            p = resolve_folder(package, comp->Directory, FALSE, FALSE, FALSE, NULL);
+            dir = resolve_target_folder( package, comp->Directory, FALSE, FALSE, NULL );
             msi_free(file->TargetPath);
 
-            file->TargetPath = build_directory_name(2, p, file->FileName);
-            msi_free(p);
+            file->TargetPath = build_directory_name(2, dir, file->FileName);
+            msi_free(dir);
         }
     }
     msi_free(path);
@@ -716,6 +716,10 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         r = package->need_reboot;
         break;
 
+    case MSIRUNMODE_LOGENABLED:
+        r = (package->log_file != INVALID_HANDLE_VALUE);
+        break;
+
     default:
         FIXME("unimplemented run mode: %d\n", iRunMode);
         r = TRUE;
@@ -821,14 +825,14 @@ UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
         feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
         return ERROR_FUNCTION_FAILED;
 
-    msi_feature_set_state(package, feature, iState);
+    feature->ActionRequest = iState;
 
-    ACTION_UpdateComponentStates(package,szFeature);
+    ACTION_UpdateComponentStates( package, feature );
 
     /* update all the features that are children of this feature */
     LIST_FOR_EACH_ENTRY( child, &package->features, MSIFEATURE, entry )
     {
-        if (lstrcmpW(szFeature, child->Feature_Parent) == 0)
+        if (child->Feature_Parent && !strcmpW( szFeature, child->Feature_Parent ))
             MSI_SetFeatureStateW(package, child->Feature, iState);
     }
     
@@ -917,9 +921,9 @@ UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPCWSTR szFeature,
         *piInstalled = feature->Installed;
 
     if (piAction)
-        *piAction = feature->Action;
+        *piAction = feature->ActionRequest;
 
-    TRACE("returning %i %i\n", feature->Installed, feature->Action);
+    TRACE("returning %i %i\n", feature->Installed, feature->ActionRequest);
 
     return ERROR_SUCCESS;
 }
@@ -1158,7 +1162,8 @@ static UINT MSI_SetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
     if (!comp)
         return ERROR_UNKNOWN_COMPONENT;
 
-    comp->Installed = iState;
+    if (comp->Enabled)
+        comp->Action = iState;
 
     return ERROR_SUCCESS;
 }
@@ -1176,13 +1181,22 @@ UINT MSI_GetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
         return ERROR_UNKNOWN_COMPONENT;
 
     if (piInstalled)
-        *piInstalled = comp->Installed;
+    {
+        if (comp->Enabled)
+            *piInstalled = comp->Installed;
+        else
+            *piInstalled = INSTALLSTATE_UNKNOWN;
+    }
 
     if (piAction)
-        *piAction = comp->Action;
+    {
+        if (comp->Enabled)
+            *piAction = comp->Action;
+        else
+            *piAction = INSTALLSTATE_UNKNOWN;
+    }
 
     TRACE("states (%i, %i)\n", comp->Installed, comp->Action );
-
     return ERROR_SUCCESS;
 }
 

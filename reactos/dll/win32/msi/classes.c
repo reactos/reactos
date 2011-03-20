@@ -87,7 +87,7 @@ static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
     /* check for appids already loaded */
     LIST_FOR_EACH_ENTRY( appid, &package->appids, MSIAPPID, entry )
     {
-        if (lstrcmpiW( appid->AppID, name )==0)
+        if (!strcmpiW( appid->AppID, name ))
         {
             TRACE("found appid %s %p\n", debugstr_w(name), appid);
             return appid;
@@ -192,7 +192,7 @@ static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
     /* check for progids already loaded */
     LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
-        if (strcmpiW( progid->ProgID,name )==0)
+        if (!strcmpiW( progid->ProgID, name ))
         {
             TRACE("found progid %s (%p)\n",debugstr_w(name), progid );
             return progid;
@@ -323,7 +323,7 @@ static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
     /* check for classes already loaded */
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
-        if (lstrcmpiW( cls->clsid, classid )==0)
+        if (!strcmpiW( cls->clsid, classid ))
         {
             TRACE("found class %s (%p)\n",debugstr_w(classid), cls);
             return cls;
@@ -384,7 +384,7 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
     /* check for mime already loaded */
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
-        if (strcmpiW(mt->ContentType,mime)==0)
+        if (!strcmpiW( mt->ContentType, mime ))
         {
             TRACE("found mime %s (%p)\n",debugstr_w(mime), mt);
             return mt;
@@ -458,7 +458,7 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
     /* check for extensions already loaded */
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
-        if (strcmpiW( ext->Extension, name )==0)
+        if (!strcmpiW( ext->Extension, name ))
         {
             TRACE("extension %s already loaded %p\n", debugstr_w(name), ext);
             return ext;
@@ -578,7 +578,7 @@ static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
 
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
-        if (strcmpiW(extension,ext->Extension))
+        if (strcmpiW(extension, ext->Extension))
             continue;
         if (comp == ext->Component)
         {
@@ -850,8 +850,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         }
         feature->Action = feature->ActionRequest;
 
-        file = get_loaded_file( package, comp->KeyPath );
-        if (!file)
+        if (!comp->KeyPath || !(file = get_loaded_file( package, comp->KeyPath )))
         {
             TRACE("COM server not provided, skipping class %s\n", debugstr_w(cls->clsid));
             continue;

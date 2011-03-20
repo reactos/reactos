@@ -28,7 +28,9 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "oleauto.h"
+#include "rpcproxy.h"
 #include "msipriv.h"
+#include "msiserver.h"
 
 #include "wine/debug.h"
 
@@ -44,7 +46,7 @@ INSTALLUI_HANDLERW       gUIHandlerW      = NULL;
 INSTALLUI_HANDLER_RECORD gUIHandlerRecord = NULL;
 DWORD                    gUIFilter        = 0;
 LPVOID                   gUIContext       = NULL;
-WCHAR gszLogFile[MAX_PATH];
+WCHAR                   *gszLogFile       = NULL;
 HINSTANCE msi_hInstance;
 
 static WCHAR msi_path[MAX_PATH];
@@ -78,6 +80,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if (msi_typelib) ITypeLib_Release( msi_typelib );
         msi_dialog_unregister_class();
         msi_free_handle_table();
+        msi_free( gszLogFile );
         break;
     }
     return TRUE;
@@ -117,14 +120,19 @@ ITypeLib *get_msi_typelib( LPWSTR *path )
 }
 
 typedef struct tagIClassFactoryImpl {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     HRESULT (*create_object)( IUnknown*, LPVOID* );
 } IClassFactoryImpl;
+
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
 
 static HRESULT WINAPI MsiCF_QueryInterface(LPCLASSFACTORY iface,
                 REFIID riid,LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("%p %s %p\n",This,debugstr_guid(riid),ppobj);
 
@@ -153,7 +161,7 @@ static ULONG WINAPI MsiCF_Release(LPCLASSFACTORY iface)
 static HRESULT WINAPI MsiCF_CreateInstance(LPCLASSFACTORY iface,
     LPUNKNOWN pOuter, REFIID riid, LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     IUnknown *unk = NULL;
     HRESULT r;
 
@@ -189,9 +197,9 @@ static const IClassFactoryVtbl MsiCF_Vtbl =
     MsiCF_LockServer
 };
 
-static IClassFactoryImpl MsiServer_CF = { &MsiCF_Vtbl, create_msiserver };
-static IClassFactoryImpl WineMsiCustomRemote_CF = { &MsiCF_Vtbl, create_msi_custom_remote };
-static IClassFactoryImpl WineMsiRemotePackage_CF = { &MsiCF_Vtbl, create_msi_remote_package };
+static IClassFactoryImpl MsiServer_CF = { { &MsiCF_Vtbl }, create_msiserver };
+static IClassFactoryImpl WineMsiCustomRemote_CF = { { &MsiCF_Vtbl }, create_msi_custom_remote };
+static IClassFactoryImpl WineMsiRemotePackage_CF = { { &MsiCF_Vtbl }, create_msi_remote_package };
 
 /******************************************************************
  * DllGetClassObject          [MSI.@]
@@ -200,28 +208,28 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     TRACE("%s %s %p\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
-    if ( IsEqualCLSID (rclsid, &CLSID_IMsiServerX2) )
+    if ( IsEqualCLSID (rclsid, &CLSID_MsiInstaller) )
     {
         *ppv = &MsiServer_CF;
         return S_OK;
     }
 
-    if ( IsEqualCLSID (rclsid, &CLSID_IWineMsiRemoteCustomAction) )
+    if ( IsEqualCLSID (rclsid, &CLSID_WineMsiRemoteCustomAction) )
     {
         *ppv = &WineMsiCustomRemote_CF;
         return S_OK;
     }
 
-    if ( IsEqualCLSID (rclsid, &CLSID_IWineMsiRemotePackage) )
+    if ( IsEqualCLSID (rclsid, &CLSID_WineMsiRemotePackage) )
     {
         *ppv = &WineMsiRemotePackage_CF;
         return S_OK;
     }
 
-    if( IsEqualCLSID (rclsid, &CLSID_IMsiServerMessage) ||
-        IsEqualCLSID (rclsid, &CLSID_IMsiServer) ||
-        IsEqualCLSID (rclsid, &CLSID_IMsiServerX1) ||
-        IsEqualCLSID (rclsid, &CLSID_IMsiServerX3) )
+    if( IsEqualCLSID (rclsid, &CLSID_MsiServerMessage) ||
+        IsEqualCLSID (rclsid, &CLSID_MsiServer) ||
+        IsEqualCLSID (rclsid, &CLSID_PSFactoryBuffer) ||
+        IsEqualCLSID (rclsid, &CLSID_MsiServerX3) )
     {
         FIXME("create %s object\n", debugstr_guid( rclsid ));
     }

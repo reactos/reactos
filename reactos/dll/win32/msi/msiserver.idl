@@ -86,6 +86,99 @@ interface IWineMsiRemoteCustomAction : IUnknown
                            [out] BSTR *function, [out] IWineMsiRemotePackage **package );
 }
 
+[
+    uuid(000c101c-0000-0000-c000-000000000046),
+    oleautomation,
+    object
+]
+interface IMsiServer : IUnknown
+{
+    /* FIXME: methods */
+}
+
+[
+    uuid(000c101d-0000-0000-c000-000000000046),
+    oleautomation,
+    object
+]
+interface IMsiMessage : IUnknown
+{
+    /* FIXME: methods */
+}
+
+[
+    uuid(000c1025-0000-0000-c000-000000000046),
+    oleautomation,
+    object
+]
+interface IMsiCustomAction : IUnknown
+{
+    /* FIXME: methods */
+}
+
+[
+    uuid(000c1033-0000-0000-c000-000000000046),
+    oleautomation,
+    object
+]
+interface IMsiRemoteAPI : IUnknown
+{
+    /* FIXME: methods */
+}
+
+[
+    helpstring("Msi install server"),
+    progid("IMsiServer"),
+    uuid(000c101c-0000-0000-c000-000000000046)
+]
+coclass MsiServer { interface IMsiServer; }
+
+[
+    helpstring("Microsoft Windows Installer Message RPC"),
+    progid("WindowsInstaller.Message"),
+    uuid(000c101d-0000-0000-c000-000000000046)
+]
+coclass MsiServerMessage { interface IMsiMessage; }
+
+[
+    threading(both),
+    uuid(000c103e-0000-0000-c000-000000000046)
+]
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
+
+[
+    uuid(000c1082-0000-0000-c000-000000000046)
+]
+coclass MsiTransform { }
+
+[
+    uuid(000c1084-0000-0000-c000-000000000046)
+]
+coclass MsiDatabase { }
+
+[
+    uuid(000c1086-0000-0000-c000-000000000046)
+]
+coclass MsiPatch { }
+
+[
+    threading(apartment),
+    uuid(000c1094-0000-0000-c000-000000000046)
+]
+/* FIXME: unidentified class */
+coclass MsiServerX3 { interface IMsiServer; }
+
+[
+    uuid(ba26e6fa-4f27-4f56-953a-3f90272018aa)
+]
+coclass WineMsiRemoteCustomAction { interface WineMsiRemoteCustomAction; }
+
+[
+    uuid(902b3592-9d08-4dfd-a593-d07c52546421)
+]
+coclass WineMsiRemotePackage { interface WineMsiRemotePackage; }
+
+
 [ uuid(000C1092-0000-0000-C000-000000000046), version(1.0) ]
 library WindowsInstaller
 {
@@ -452,4 +545,12 @@ library WindowsInstaller
         properties:
         methods:
     }
+
+    [
+       helpstring("Microsoft Windows Installer"),
+       threading(apartment),
+       progid("WindowsInstaller.Installer"),
+       uuid(000c1090-0000-0000-c000-000000000046)
+    ]
+    coclass MsiInstaller { interface Installer; }
 }
