@@ -367,7 +367,7 @@ NtGdiSelectBitmap(
         REGION_FreeRgnByHandle(hVisRgn);
     }
 
-    /* Return the old bitmp handle */
+    /* Return the old bitmap handle */
     return hbmpOld;
 }
 
@@ -522,7 +522,7 @@ NtGdiGetRandomRgn(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
 
