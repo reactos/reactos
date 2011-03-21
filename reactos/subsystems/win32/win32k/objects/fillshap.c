@@ -545,10 +545,11 @@ IntRectangle(PDC dc,
         return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
 
-    DestRect.left = LeftRect;
-    DestRect.right = RightRect;
-    DestRect.top = TopRect;
-    DestRect.bottom = BottomRect;
+	/* Make sure rectangle is not inverted */
+    DestRect.left   = min(LeftRect, RightRect);
+    DestRect.right  = max(LeftRect, RightRect);
+    DestRect.top    = min(TopRect,  BottomRect);
+    DestRect.bottom = max(TopRect,  BottomRect);
 
     IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
 
