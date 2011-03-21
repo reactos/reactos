@@ -156,8 +156,8 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 
 /* Stock objects */
 
-BOOL FASTCALL
-IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
+VOID FASTCALL
+IntSetSysColors(UINT nColors, CONST INT *Elements, CONST COLORREF *Colors);
 
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object);

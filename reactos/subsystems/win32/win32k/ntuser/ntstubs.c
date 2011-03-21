@@ -538,36 +538,40 @@ NtUserSetSysColors(
    IN CONST COLORREF *lpaRgbValues,
    FLONG Flags)
 {
-  DWORD Ret = FALSE;
-  NTSTATUS Status = STATUS_SUCCESS;
-  UserEnterExclusive();
-  _SEH2_TRY
-  {
-     ProbeForRead(lpaElements,
+   DWORD Ret = TRUE;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   if (cElements == 0)
+      return TRUE;
+
+   UserEnterExclusive();
+   _SEH2_TRY
+   {
+      ProbeForRead(lpaElements,
                    sizeof(INT),
                    1);
-     ProbeForRead(lpaRgbValues,
-                   sizeof(INT),
+      ProbeForRead(lpaRgbValues,
+                   sizeof(COLORREF),
                    1);
 // Developers: We are thread locked and calling gdi.
-     Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
+      IntSetSysColors(cElements, lpaElements, lpaRgbValues);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
       Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
-  if (!NT_SUCCESS(Status))
-  {
+   }
+   _SEH2_END;
+   if (!NT_SUCCESS(Status))
+   {
       SetLastNtError(Status);
       Ret = FALSE;
-  }
-  if (Ret)
-  {
-     UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
-  }
-  UserLeave();
-  return Ret;
+   }
+   if (Ret)
+   {
+      UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
+   }
+   UserLeave();
+   return Ret;
 }
 
 DWORD
