@@ -310,6 +310,12 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 	FARPROC fnExp = NULL;
 	NTSTATUS Status;
 
+	if (!hModule)
+	{
+		SetLastError(ERROR_PROC_NOT_FOUND);
+		return NULL;
+	}
+
 	if (HIWORD(lpProcName) != 0)
 	{
 		RtlInitAnsiString (&ProcedureName,
@@ -354,8 +360,7 @@ BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
     {
         /* this is a LOAD_LIBRARY_AS_DATAFILE module */
         char *ptr = (char *)hLibModule - 1;
-        UnmapViewOfFile(ptr);
-        return TRUE;
+        return UnmapViewOfFile(ptr);
     }
 
     Status = LdrUnloadDll(hLibModule);
