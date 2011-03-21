@@ -14,6 +14,7 @@ void Test_GetClipRgn()
 	HWND hWnd;
 	HDC hDC;
 	HRGN hrgn;//, hrgn2;
+	int ret;
 
 	/* Create a window */
 	hWnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -25,13 +26,15 @@ void Test_GetClipRgn()
 
 	/* Test invalid DC */
 	SetLastError(ERROR_SUCCESS);
-	ok(GetClipRgn((HDC)0x12345, hrgn) == -1, "\n");
-	ok(GetLastError() == ERROR_INVALID_PARAMETER, "\n");
+	ret = GetClipRgn((HDC)0x12345, hrgn);
+	ok(ret == -1, "Expected -1, got %d\n", ret);
+	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
 	/* Test invalid hrgn */
 	SetLastError(ERROR_SUCCESS);
-	ok(GetClipRgn(hDC, (HRGN)0x12345) == 0, "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "\n");
+	ret = GetClipRgn(hDC, (HRGN)0x12345);
+	ok(ret == 0, "Expected 0, got %d\n", ret);
+	ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
 
 	ReleaseDC(hWnd, hDC);
 	DestroyWindow(hWnd);
