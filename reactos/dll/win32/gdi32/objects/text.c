@@ -194,11 +194,9 @@ GetTextExtentExPointW(
 )
 {
 
+    /* Windows doesn't check nMaxExtent validity in unicode version */
     if(nMaxExtent < -1)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+        DPRINT("nMaxExtent is invalid: %d\n", nMaxExtent);
 
     return NtGdiGetTextExtentExW (
                hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
