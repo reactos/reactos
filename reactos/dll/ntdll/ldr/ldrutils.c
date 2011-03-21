@@ -17,6 +17,8 @@
 
 PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache;
 
+#define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -80,6 +82,85 @@ LdrpTlsCallback(PVOID BaseAddress, ULONG Reason)
         /* Do nothing */
     }
     _SEH2_END;
+}
+
+PVOID
+NTAPI
+LdrpFetchAddressOfEntryPoint(PVOID ImageBase)
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    ULONG_PTR EntryPoint;
+
+    /* Get entry point offset from NT headers */
+    NtHeaders = RtlImageNtHeader(ImageBase);
+    EntryPoint = NtHeaders->OptionalHeader.AddressOfEntryPoint;
+
+    /* If it's 0 - return so */
+    if (!EntryPoint) return NULL;
+
+    /* Add image base */
+    EntryPoint += (ULONG_PTR)ImageBase;
+
+    /* Return calculated pointer */
+    return (PVOID)EntryPoint;
+}
+
+NTSTATUS
+NTAPI
+LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
+           IN PWSTR DllPath2,
+           IN PWSTR DllName OPTIONAL,
+           IN PULONG DllCharacteristics,
+           IN BOOLEAN Static,
+           IN BOOLEAN Redirect,
+           OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
+}
+
+PLDR_DATA_TABLE_ENTRY
+NTAPI
+LdrpAllocateDataTableEntry(IN PVOID BaseAddress)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
+    PIMAGE_NT_HEADERS NtHeader = RtlImageNtHeader(BaseAddress);
+
+    /* Make sure the header is valid */
+    if (NtHeader)
+    {
+        /* Allocate an entry */
+        LdrEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   sizeof(LDR_DATA_TABLE_ENTRY));
+
+        /* Make sure we got one */
+        if (LdrEntry)
+        {
+            /* Set it up */
+            LdrEntry->DllBase = BaseAddress;
+            LdrEntry->SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
+            LdrEntry->TimeDateStamp = NtHeader->FileHeader.TimeDateStamp;
+        }
+    }
+
+    /* Return the entry */
+    return LdrEntry;
+}
+
+VOID
+NTAPI
+LdrpInsertMemoryTableEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PPEB_LDR_DATA PebData = NtCurrentPeb()->Ldr;
+    ULONG i;
+
+    /* Get the Hash entry */
+    i = LDR_GET_HASH_ENTRY(LdrEntry->BaseDllName.Buffer[0]);
+
+    InsertTailList(&LdrpHashTable[i], &LdrEntry->HashLinks);
+    InsertTailList(&PebData->InLoadOrderModuleList, &LdrEntry->InLoadOrderLinks);
+    InsertTailList(&PebData->InMemoryOrderModuleList, &LdrEntry->InMemoryOrderModuleList);
 }
 
 BOOLEAN
