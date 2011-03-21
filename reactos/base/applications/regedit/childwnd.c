@@ -65,7 +65,7 @@ static void draw_splitbar(HWND hWnd, int x)
     ReleaseDC(hWnd, hdc);
 }
 
-static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
+static void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(3);
     RECT rt, rs, rb;
@@ -77,12 +77,12 @@ static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
         GetWindowRect(hStatusBar, &rs);
         cy = rs.bottom - rs.top;
     }
-    GetWindowRect(pChildWnd->hAddressBtnWnd, &rb);
-    cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
+    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
 }
 
@@ -111,7 +111,7 @@ static void finish_splitbar(HWND hWnd, int x)
     last_split = -1;
     GetClientRect(hWnd, &rt);
     g_pChildWnd->nSplitPos = x;
-    ResizeWnd(g_pChildWnd, rt.right, rt.bottom);
+    ResizeWnd(rt.right, rt.bottom);
     ReleaseCapture();
 }
 
@@ -125,7 +125,6 @@ static void finish_splitbar(HWND hWnd, int x)
 
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    ChildWnd* pChildWnd = g_pChildWnd;
     HTREEITEM hSelection;
     HKEY hRootKey;
     LPCTSTR keyPath, s;
@@ -143,18 +142,18 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* TODO */
         break;
     case ID_TREE_EXPANDBRANCH:
-        (void)TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_EXPAND);
+        (void)TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
         break;
     case ID_TREE_COLLAPSEBRANCH:
-        (void)TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        (void)TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
         break;
     case ID_TREE_RENAME:
-        SetFocus(pChildWnd->hTreeWnd);
-        (void)TreeView_EditLabel(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        SetFocus(g_pChildWnd->hTreeWnd);
+        (void)TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
     case ID_TREE_DELETE:
-        hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
-        keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
+        hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hSelection, &hRootKey);
 
         if (keyPath == 0 || *keyPath == 0)
         {
@@ -164,18 +163,18 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DeleteNode(g_pChildWnd->hTreeWnd, 0);
         break;
     case ID_TREE_EXPORT:
-        ExportRegistryFile(pChildWnd->hTreeWnd);
+        ExportRegistryFile(g_pChildWnd->hTreeWnd);
         break;
     case ID_EDIT_FIND:
         FindDialog(hWnd);
         break;
     case ID_EDIT_COPYKEYNAME:
-        hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
-        keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
+        hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hSelection, &hRootKey);
         CopyKeyName(hWnd, hRootKey, keyPath);
         break;
     case ID_EDIT_NEW_KEY:
-        CreateNewKey(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
     case ID_EDIT_NEW_STRINGVALUE:
     case ID_EDIT_NEW_BINARYVALUE:
@@ -183,8 +182,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         SendMessage(hFrameWnd, WM_COMMAND, wParam, lParam);
         break;
     case ID_SWITCH_PANELS:
-        pChildWnd->nFocusPanel = !pChildWnd->nFocusPanel;
-        SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
+        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
+        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
         break;
     default:
         if ((wID >= ID_TREE_SUGGESTION_MIN) && (wID <= ID_TREE_SUGGESTION_MAX))
@@ -196,7 +195,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     s += _tcslen(s) + 1;
                 wID--;
             }
-            SelectNode(pChildWnd->hTreeWnd, s);
+            SelectNode(g_pChildWnd->hTreeWnd, s);
             break;
         }
         return FALSE;
@@ -317,7 +316,6 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     BOOL Result;
-    ChildWnd* pChildWnd = g_pChildWnd;
 
     switch (message)
     {
@@ -329,45 +327,45 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
 
-        g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
+        g_pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
+        if (!g_pChildWnd) return 0;
 
-        if (!pChildWnd) return 0;
-        _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
-        pChildWnd->nSplitPos = 250;
-        pChildWnd->hWnd = hWnd;
-        pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
+        _tcsncpy(g_pChildWnd->szPath, buffer, MAX_PATH);
+        g_pChildWnd->nSplitPos = 250;
+        g_pChildWnd->hWnd = hWnd;
+        g_pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                     hWnd, (HMENU)0, hInst, 0);
-        pChildWnd->hAddressBtnWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Button"), _T("»"), WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_DEFPUSHBUTTON,
+        g_pChildWnd->hAddressBtnWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Button"), _T("»"), WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_DEFPUSHBUTTON,
                                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                     hWnd, (HMENU)0, hInst, 0);
-        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
-        pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, pChildWnd->szPath*/);
-        SetFocus(pChildWnd->hTreeWnd);
+        g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
+        g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, g_pChildWnd->szPath*/);
+        SetFocus(g_pChildWnd->hTreeWnd);
 
         /* set the address bar and button font */
-        if ((pChildWnd->hAddressBarWnd) && (pChildWnd->hAddressBtnWnd))
+        if ((g_pChildWnd->hAddressBarWnd) && (g_pChildWnd->hAddressBtnWnd))
         {
             hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-            SendMessage(pChildWnd->hAddressBarWnd,
+            SendMessage(g_pChildWnd->hAddressBarWnd,
                         WM_SETFONT,
                         (WPARAM)hFont,
                         0);
-            SendMessage(pChildWnd->hAddressBtnWnd,
+            SendMessage(g_pChildWnd->hAddressBtnWnd,
                         WM_SETFONT,
                         (WPARAM)hFont,
                         0);
         }
         /* Subclass the AddressBar */
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC);
-        SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
-        SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC, (DWORD_PTR)AddressBarProc);
+        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_WNDPROC);
+        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
+        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_WNDPROC, (DWORD_PTR)AddressBarProc);
         break;
     }
     case WM_COMMAND:
         if(HIWORD(wParam) == BN_CLICKED)
         {
-            PostMessage(pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
+            PostMessage(g_pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
         }
         else if (!_CmdWndProc(hWnd, message, wParam, lParam))
         {
@@ -383,7 +381,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             POINT pt;
             GetCursorPos(&pt);
             ScreenToClient(hWnd, &pt);
-            if (pt.x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && pt.x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
+            if (pt.x>=g_pChildWnd->nSplitPos-SPLIT_WIDTH/2 && pt.x<g_pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
             {
                 SetCursor(LoadCursor(0, IDC_SIZEWE));
                 return TRUE;
@@ -392,10 +390,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         goto def;
     case WM_DESTROY:
         DestroyTreeView();
-        DestroyListView(pChildWnd->hListWnd);
+        DestroyListView(g_pChildWnd->hListWnd);
         DestroyMainMenu();
-        HeapFree(GetProcessHeap(), 0, pChildWnd);
-        pChildWnd = NULL;
+        HeapFree(GetProcessHeap(), 0, g_pChildWnd);
+        g_pChildWnd = NULL;
         PostQuitMessage(0);
         break;
     case WM_LBUTTONDOWN:
@@ -403,9 +401,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         RECT rt;
         int x = (short)LOWORD(lParam);
         GetClientRect(hWnd, &rt);
-        if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
+        if (x>=g_pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<g_pChildWnd->nSplitPos+SPLIT_WIDTH/2+1)
         {
-            last_split = pChildWnd->nSplitPos;
+            last_split = g_pChildWnd->nSplitPos;
             draw_splitbar(hWnd, last_split);
             SetCapture(hWnd);
         }
@@ -432,7 +430,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 RECT rt;
                 draw_splitbar(hWnd, last_split);
                 GetClientRect(hWnd, &rt);
-                ResizeWnd(pChildWnd, rt.right, rt.bottom);
+                ResizeWnd(rt.right, rt.bottom);
                 last_split = -1;
                 ReleaseCapture();
                 SetCursor(LoadCursor(0, IDC_ARROW));
@@ -476,9 +474,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_SETFOCUS:
-        if (pChildWnd != NULL)
+        if (g_pChildWnd != NULL)
         {
-            SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
+            SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
         }
         break;
 
@@ -486,22 +484,22 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_NOTIFY:
-        if ((int)wParam == TREE_WINDOW)
+        if ((int)wParam == TREE_WINDOW && g_pChildWnd != NULL)
         {
             switch (((LPNMHDR)lParam)->code)
             {
             case TVN_ITEMEXPANDING:
-                return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
+                return !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             case TVN_SELCHANGED:
             {
                 LPCTSTR keyPath, rootName;
                 LPTSTR fullPath;
                 HKEY hRootKey;
 
-                keyPath = GetItemPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, &hRootKey);
+                keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, &hRootKey);
                 if (keyPath)
                 {
-                    RefreshListView(pChildWnd->hListWnd, hRootKey, keyPath);
+                    RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
                     rootName = get_root_key_name(hRootKey);
                     fullPath = HeapAlloc(GetProcessHeap(), 0, (_tcslen(rootName) + 1 + _tcslen(keyPath) + 1) * sizeof(TCHAR));
                     if (fullPath)
@@ -512,7 +510,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         else
                             fullPath = _tcscpy(fullPath, rootName);
                         SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)fullPath);
-                        SendMessage(pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
+                        SendMessage(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
                         HeapFree(GetProcessHeap(), 0, fullPath);
                         /* disable hive manipulation items temporarily (enable only if necessary) */
                         EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
@@ -547,15 +545,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
             break;
             case NM_SETFOCUS:
-                pChildWnd->nFocusPanel = 0;
+                g_pChildWnd->nFocusPanel = 0;
                 break;
             case TVN_BEGINLABELEDIT:
             {
                 LPNMTVDISPINFO ptvdi;
                 /* cancel label edit for rootkeys  */
                 ptvdi = (LPNMTVDISPINFO) lParam;
-                if (!TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
-                        !TreeView_GetParent(pChildWnd->hTreeWnd, TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem)))
+                if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
+                        !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
                     return TRUE;
                 break;
             }
@@ -571,14 +569,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 ptvdi = (LPNMTVDISPINFO) lParam;
                 if (ptvdi->item.pszText)
                 {
-                    keyPath = GetItemPath(pChildWnd->hTreeWnd, TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
+                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
                     _sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("%s\\%s"), keyPath, ptvdi->item.pszText);
-                    keyPath = GetItemPath(pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
+                    keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
                     if (RegOpenKeyEx(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
                     {
                         lResult = FALSE;
                         RegCloseKey(hKey);
-                        (void)TreeView_EditLabel(pChildWnd->hTreeWnd, ptvdi->item.hItem);
+                        (void)TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
                     }
                     else
                     {
@@ -594,15 +592,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         else
         {
-            if ((int)wParam == LIST_WINDOW)
+            if ((int)wParam == LIST_WINDOW && g_pChildWnd != NULL)
             {
                 switch (((LPNMHDR)lParam)->code)
                 {
                 case NM_SETFOCUS:
-                    pChildWnd->nFocusPanel = 1;
+                    g_pChildWnd->nFocusPanel = 1;
                     break;
                 default:
-                    if(!ListWndNotifyProc(pChildWnd->hListWnd, wParam, lParam, &Result))
+                    if(!ListWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
                     {
                         goto def;
                     }
@@ -616,27 +614,27 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_CONTEXTMENU:
     {
         POINT pt;
-        if((HWND)wParam == pChildWnd->hListWnd)
+        if((HWND)wParam == g_pChildWnd->hListWnd)
         {
             int i, cnt;
             BOOL IsDefault;
             pt.x = (short) LOWORD(lParam);
             pt.y = (short) HIWORD(lParam);
-            cnt = ListView_GetSelectedCount(pChildWnd->hListWnd);
-            i = ListView_GetNextItem(pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+            cnt = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
+            i = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
             if (pt.x == -1 && pt.y == -1)
             {
                 RECT rc;
                 if (i != -1)
                 {
                     rc.left = LVIR_BOUNDS;
-                    SendMessage(pChildWnd->hListWnd, LVM_GETITEMRECT, i, (LPARAM) &rc);
+                    SendMessage(g_pChildWnd->hListWnd, LVM_GETITEMRECT, i, (LPARAM) &rc);
                     pt.x = rc.left + 8;
                     pt.y = rc.top + 8;
                 }
                 else
                     pt.x = pt.y = 0;
-                ClientToScreen(pChildWnd->hListWnd, &pt);
+                ClientToScreen(g_pChildWnd->hListWnd, &pt);
             }
             if(i == -1)
             {
@@ -646,7 +644,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 HMENU mnu = GetSubMenu(hPopupMenus, PM_MODIFYVALUE);
                 SetMenuDefaultItem(mnu, ID_EDIT_MODIFY, MF_BYCOMMAND);
-                IsDefault = IsDefaultValue(pChildWnd->hListWnd, i);
+                IsDefault = IsDefaultValue(g_pChildWnd->hListWnd, i);
                 if(cnt == 1)
                     EnableMenuItem(mnu, ID_EDIT_RENAME, MF_BYCOMMAND | (IsDefault ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
                 else
@@ -657,7 +655,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 TrackPopupMenu(mnu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
             }
         }
-        else if ((HWND)wParam == pChildWnd->hTreeWnd)
+        else if ((HWND)wParam == g_pChildWnd->hTreeWnd)
         {
             TVHITTESTINFO hti;
             HMENU hContextMenu;
@@ -677,13 +675,13 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             if (pt.x == -1 && pt.y == -1)
             {
                 RECT rc;
-                hti.hItem = TreeView_GetSelection(pChildWnd->hTreeWnd);
+                hti.hItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
                 if (hti.hItem != NULL)
                 {
-                    TreeView_GetItemRect(pChildWnd->hTreeWnd, hti.hItem, &rc, TRUE);
+                    TreeView_GetItemRect(g_pChildWnd->hTreeWnd, hti.hItem, &rc, TRUE);
                     pt.x = rc.left + 8;
                     pt.y = rc.top + 8;
-                    ClientToScreen(pChildWnd->hTreeWnd, &pt);
+                    ClientToScreen(g_pChildWnd->hTreeWnd, &pt);
                     hti.flags = TVHT_ONITEM;
                 }
                 else
@@ -693,19 +691,19 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 hti.pt.x = pt.x;
                 hti.pt.y = pt.y;
-                ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
-                (void)TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
+                ScreenToClient(g_pChildWnd->hTreeWnd, &hti.pt);
+                (void)TreeView_HitTest(g_pChildWnd->hTreeWnd, &hti);
             }
 
             if (hti.flags & TVHT_ONITEM)
             {
                 hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
-                (void)TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
+                (void)TreeView_SelectItem(g_pChildWnd->hTreeWnd, hti.hItem);
 
                 memset(&item, 0, sizeof(item));
                 item.mask = TVIF_STATE | TVIF_CHILDREN;
                 item.hItem = hti.hItem;
-                (void)TreeView_GetItem(pChildWnd->hTreeWnd, &item);
+                (void)TreeView_GetItem(g_pChildWnd->hTreeWnd, &item);
 
                 /* Set the Expand/Collapse menu item appropriately */
                 LoadString(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, sizeof(buffer) / sizeof(buffer[0]));
@@ -734,7 +732,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 }
 
                 /* Come up with suggestions */
-                keyPath = GetItemPath(pChildWnd->hTreeWnd, NULL, &hRootKey);
+                keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
                 SuggestKeys(hRootKey, keyPath, Suggestions, sizeof(Suggestions) / sizeof(Suggestions[0]));
                 if (Suggestions[0])
                 {
@@ -758,16 +756,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         s += _tcslen(s) + 1;
                     }
                 }
-                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, pChildWnd->hWnd, NULL);
+                TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, g_pChildWnd->hWnd, NULL);
             }
         }
         break;
     }
 
     case WM_SIZE:
-        if (wParam != SIZE_MINIMIZED && pChildWnd != NULL)
+        if (wParam != SIZE_MINIMIZED && g_pChildWnd != NULL)
         {
-            ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
+            ResizeWnd(LOWORD(lParam), HIWORD(lParam));
         }
         /* fall through */
     default:

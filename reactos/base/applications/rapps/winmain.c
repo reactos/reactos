@@ -10,7 +10,6 @@
 
 HWND hMainWnd;
 HINSTANCE hInst;
-HIMAGELIST hImageListView = NULL;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 SETTINGS_INFO SettingsInfo;
@@ -168,8 +167,8 @@ UpdateApplicationsList(INT EnumType)
 {
     WCHAR szBuffer1[MAX_STR_LEN], szBuffer2[MAX_STR_LEN];
     HICON hIcon;
+    HIMAGELIST hImageListView;
 
-    if (hImageListView) ImageList_Destroy(hImageListView);
     (VOID) ListView_DeleteAllItems(hListView);
 
     /* Create image list */
@@ -208,7 +207,11 @@ UpdateApplicationsList(INT EnumType)
     }
 
     /* Set image list for ListView */
-    (VOID) ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
+    hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
+
+    /* Destroy old image list */
+    if (hImageListView)
+		ImageList_Destroy(hImageListView);
 
     SelectedEnumType = EnumType;
 
@@ -725,7 +728,6 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 FreeAvailableAppList();
             if (IS_INSTALLED_ENUM(SelectedEnumType))
                 FreeInstalledAppList();
-            if (hImageListView) ImageList_Destroy(hImageListView);
             if (hImageTreeView) ImageList_Destroy(hImageTreeView);
 
             PostQuitMessage(0);
