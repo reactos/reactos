@@ -303,17 +303,10 @@ KiGetFeatureBits(VOID)
                 /* Remove support for correct PTE support. */
                 FeatureBits &= ~KF_WORKING_PTE;
             }
-            
-            /* Virtualbox claims to have no SYSENTER support,
-             * which is false for processors >= Pentium Pro */
-            if(Prcb->CpuType >= 6)
-            {
-                Reg[3] |= 0x800;
-            }
 
-            /* Check if the CPU is too old to support SYSENTER,
-             * See Intel CPUID instruction manual for details*/
-            if ((Reg[0] & 0x0FFF3FFF) < 0x00000633)
+            /* Check if the CPU is too old to support SYSENTER */
+            if ((Prcb->CpuType < 6) ||
+                ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
             {
                 /* Disable it */
                 Reg[3] &= ~0x800;
