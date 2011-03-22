@@ -341,18 +341,9 @@ RtlpRemoveFreeBlock(PHEAP Heap,
                     BOOLEAN NoFill)
 {
     SIZE_T Result, RealSize;
-    PLIST_ENTRY OldBlink, OldFlink;
 
-    // FIXME: Maybe use RemoveEntryList?
-
-    /* Remove the free block */
-    OldFlink = FreeEntry->FreeList.Flink;
-    OldBlink = FreeEntry->FreeList.Blink;
-    OldBlink->Flink = OldFlink;
-    OldFlink->Blink = OldBlink;
-
-    /* Update the freelists bitmap */
-    if ((OldFlink == OldBlink) &&
+    /* Remove the free block and update the freelists bitmap */
+    if (RemoveEntryList(&FreeEntry->FreeList) &&
         (Dedicated || (!Dedicated && FreeEntry->Size < HEAP_FREELISTS)))
     {
         RtlpClearFreeListsBit(Heap, FreeEntry);
