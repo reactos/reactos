@@ -19,31 +19,69 @@ HKEY ImageExecOptionsKey;
 HKEY Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
+UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
 
 BOOLEAN LdrpInLdrInit;
 LONG LdrpProcessInitialized;
+BOOLEAN LdrpLoaderLockInit;
+BOOLEAN LdrpLdrDatabaseIsSetup;
+
+BOOLEAN LdrpDllValidation;
 
 PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 PUNICODE_STRING LdrpTopLevelDllBeingLoaded;
 extern PTEB LdrpTopLevelDllBeingLoadedTeb; // defined in rtlsupp.c!
 PLDR_DATA_TABLE_ENTRY LdrpCurrentDllInitializer;
+PLDR_DATA_TABLE_ENTRY LdrpNtDllDataTableEntry;
 
-//RTL_BITMAP TlsBitMap;
-//RTL_BITMAP TlsExpansionBitMap;
-//RTL_BITMAP FlsBitMap;
+RTL_BITMAP TlsBitMap;
+RTL_BITMAP TlsExpansionBitMap;
+RTL_BITMAP FlsBitMap;
 BOOLEAN LdrpImageHasTls;
 LIST_ENTRY LdrpTlsList;
 ULONG LdrpNumberOfTlsEntries;
 ULONG LdrpNumberOfProcessors;
+PVOID NtDllBase;
+LARGE_INTEGER RtlpTimeout;
+BOOLEAN RtlpTimeoutDisable;
+LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
+LIST_ENTRY LdrpDllNotificationList;
+HANDLE LdrpKnownDllObjectDirectory;
+UNICODE_STRING LdrpKnownDllPath;
+WCHAR LdrpKnownDllPathBuffer[128];
+UNICODE_STRING LdrpDefaultPath;
 
-RTL_CRITICAL_SECTION LdrpLoaderLock;
+PEB_LDR_DATA PebLdr;
+
+RTL_CRITICAL_SECTION_DEBUG LdrpLoaderLockDebug;
+RTL_CRITICAL_SECTION LdrpLoaderLock =
+{
+    &LdrpLoaderLockDebug,
+    -1,
+    0,
+    0,
+    0,
+    0
+};
+RTL_CRITICAL_SECTION FastPebLock;
 
 BOOLEAN ShowSnaps;
 
 ULONG LdrpFatalHardErrorCount;
 
+//extern LIST_ENTRY RtlCriticalSectionList;
+
 VOID RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
+VOID RtlInitializeHeapManager(VOID);
+extern BOOLEAN RtlpPageHeapEnabled;
+extern ULONG RtlpDphGlobalFlags;
+
+NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
+NTSTATUS NTAPI
+LdrpInitializeProcess_(PCONTEXT Context,
+                      PVOID SystemArgument1);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -455,12 +493,10 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     /* Show debug message */
     if (ShowSnaps)
     {
-        DPRINT1("[%x,%x] LDR: Real INIT LIST for Process %wZ pid %u %0x%x\n",
+        DPRINT1("[%x,%x] LDR: Real INIT LIST for Process %wZ\n",
                 NtCurrentTeb()->RealClientId.UniqueThread,
                 NtCurrentTeb()->RealClientId.UniqueProcess,
-                Peb->ProcessParameters->ImagePathName,
-                NtCurrentTeb()->RealClientId.UniqueThread,
-                NtCurrentTeb()->RealClientId.UniqueProcess);
+                &Peb->ProcessParameters->ImagePathName);
     }
 
     /* Loop in order */
@@ -838,6 +874,644 @@ LdrpFreeTls(VOID)
                 TlsVector);
 }
 
+NTSTATUS
+NTAPI
+LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PULONG Options)
+{
+    UNIMPLEMENTED;
+    *Options = 0;
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
+{
+    UNIMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrpInitializeProcess(IN PCONTEXT Context,
+                      IN PVOID SystemArgument1)
+{
+    RTL_HEAP_PARAMETERS HeapParameters;
+    ULONG ComSectionSize;
+    //ANSI_STRING FunctionName = RTL_CONSTANT_STRING("BaseQueryModuleData");
+    PVOID OldShimData;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    //UNICODE_STRING LocalFileName, FullImageName;
+    HANDLE SymLinkHandle;
+    //ULONG DebugHeapOnly;
+    UNICODE_STRING CommandLine, NtSystemRoot, ImagePathName, FullPath, ImageFileName, KnownDllString;
+    PPEB Peb = NtCurrentPeb();
+    BOOLEAN IsDotNetImage = FALSE;
+    BOOLEAN FreeCurDir = FALSE;
+    //HKEY CompatKey;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+    //LPWSTR ImagePathBuffer;
+    ULONG ConfigSize;
+    UNICODE_STRING CurrentDirectory;
+    ULONG ExecuteOptions;
+    ULONG HeapFlags;
+    PIMAGE_NT_HEADERS NtHeader;
+    LPWSTR NtDllName = NULL;
+    NTSTATUS Status;
+    NLSTABLEINFO NlsTable;
+    PIMAGE_LOAD_CONFIG_DIRECTORY LoadConfig;
+    PTEB Teb = NtCurrentTeb();
+    PLIST_ENTRY ListHead;
+    PLIST_ENTRY NextEntry;
+    ULONG i;
+    PWSTR ImagePath;
+    ULONG DebugProcessHeapOnly = 0;
+    WCHAR FullNtDllPath[MAX_PATH];
+    PLDR_DATA_TABLE_ENTRY NtLdrEntry;
+    PWCHAR Current;
+
+    /* Set a NULL SEH Filter */
+    RtlSetUnhandledExceptionFilter(NULL);
+
+    /* Get the image path */
+    ImagePath = Peb->ProcessParameters->ImagePathName.Buffer;
+
+    /* Check if it's normalized */
+    if (Peb->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED)
+    {
+        /* Normalize it*/
+        ImagePath = (PWSTR)((ULONG_PTR)ImagePath + (ULONG_PTR)Peb->ProcessParameters);
+    }
+
+    /* Create a unicode string for the Image Path */
+    ImagePathName.Length = Peb->ProcessParameters->ImagePathName.Length;
+    ImagePathName.MaximumLength = ImagePathName.Length + sizeof(WCHAR);
+    ImagePathName.Buffer = ImagePath;
+
+    /* Get the NT Headers */
+    NtHeader = RtlImageNtHeader(Peb->ImageBaseAddress);
+
+    /* Get the execution options */
+    Status = LdrpInitializeExecutionOptions(&ImagePathName, Peb, &ExecuteOptions);
+
+    /* Check if this is a .NET executable */
+    if (RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
+                                     &ComSectionSize))
+    {
+        /* Remeber this for later */
+        IsDotNetImage = TRUE;
+    }
+
+    /* Save the NTDLL Base address */
+    NtDllBase = SystemArgument1;
+
+    /* If this is a Native Image */
+    if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_NATIVE)
+    {
+        /* Then do DLL Validation */
+        LdrpDllValidation = TRUE;
+    }
+
+    /* Save the old Shim Data */
+    OldShimData = Peb->pShimData;
+
+    /* Clear it */
+    Peb->pShimData = NULL;
+
+    /* Save the number of processors and CS Timeout */
+    LdrpNumberOfProcessors = Peb->NumberOfProcessors;
+    RtlpTimeout = Peb->CriticalSectionTimeout;
+
+    /* Normalize the parameters */
+    ProcessParameters = RtlNormalizeProcessParams(Peb->ProcessParameters);
+    ProcessParameters = Peb->ProcessParameters;
+    if (ProcessParameters)
+    {
+        /* Save the Image and Command Line Names */
+        ImageFileName = ProcessParameters->ImagePathName;
+        CommandLine = ProcessParameters->CommandLine;
+    }
+    else
+    {
+        /* It failed, initialize empty strings */
+        RtlInitUnicodeString(&ImageFileName, NULL);
+        RtlInitUnicodeString(&CommandLine, NULL);
+    }
+
+    /* Initialize NLS data */
+    RtlInitNlsTables(Peb->AnsiCodePageData,
+                     Peb->OemCodePageData,
+                     Peb->UnicodeCaseTableData,
+                     &NlsTable);
+
+    /* Reset NLS Translations */
+    RtlResetRtlTranslations(&NlsTable);
+
+    /* Get the Image Config Directory */
+    LoadConfig = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
+                                              TRUE,
+                                              IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                              &ConfigSize);
+
+    /* Setup the Heap Parameters */
+    RtlZeroMemory(&HeapParameters, sizeof(RTL_HEAP_PARAMETERS));
+    HeapFlags = HEAP_GROWABLE;
+    HeapParameters.Length = sizeof(RTL_HEAP_PARAMETERS);
+
+    /* Check if we have Configuration Data */
+    if ((LoadConfig) && (ConfigSize == sizeof(IMAGE_LOAD_CONFIG_DIRECTORY)))
+    {
+        /* FIXME: Custom heap settings and misc. */
+        DPRINT1("We don't support LOAD_CONFIG data yet\n");
+    }
+
+    /* Check for custom affinity mask */
+    if (Peb->ImageProcessAffinityMask)
+    {
+        /* Set it */
+        Status = NtSetInformationProcess(NtCurrentProcess(),
+                                         ProcessAffinityMask,
+                                         &Peb->ImageProcessAffinityMask,
+                                         sizeof(Peb->ImageProcessAffinityMask));
+    }
+
+    /* Check if verbose debugging (ShowSnaps) was requested */
+    ShowSnaps = TRUE;//Peb->NtGlobalFlag & FLG_SHOW_LDR_SNAPS;
+
+    /* Start verbose debugging messages right now if they were requested */
+    if (ShowSnaps)
+    {
+        DPRINT1("LDR: PID: 0x%x started - '%wZ'\n",
+                Teb->ClientId.UniqueProcess,
+                &CommandLine);
+    }
+
+    /* If the timeout is too long */
+    if (RtlpTimeout.QuadPart < Int32x32To64(3600, -10000000))
+    {
+        /* Then disable CS Timeout */
+        RtlpTimeoutDisable = TRUE;
+    }
+
+    /* Initialize Critical Section Data */
+    RtlpInitDeferedCriticalSection();
+
+    /* Initialize VEH Call lists */
+    RtlpInitializeVectoredExceptionHandling();
+
+    /* Set TLS/FLS Bitmap data */
+    Peb->FlsBitmap = &FlsBitMap;
+    Peb->TlsBitmap = &TlsBitMap;
+    Peb->TlsExpansionBitmap = &TlsExpansionBitMap;
+
+    /* Initialize FLS Bitmap */
+    RtlInitializeBitMap(&FlsBitMap,
+                        Peb->FlsBitmapBits,
+                        FLS_MAXIMUM_AVAILABLE);
+    RtlSetBit(&FlsBitMap, 0);
+
+    /* Initialize TLS Bitmap */
+    RtlInitializeBitMap(&TlsBitMap,
+                        Peb->TlsBitmapBits,
+                        TLS_MINIMUM_AVAILABLE);
+    RtlSetBit(&TlsBitMap, 0);
+    RtlInitializeBitMap(&TlsExpansionBitMap,
+                        Peb->TlsExpansionBitmapBits,
+                        TLS_EXPANSION_SLOTS);
+    RtlSetBit(&TlsExpansionBitMap, 0);
+
+    /* Initialize the Hash Table */
+    for (i = 0; i < LDR_HASH_TABLE_ENTRIES; i++)
+    {
+        InitializeListHead(&LdrpHashTable[i]);
+    }
+
+    /* Initialize the Loader Lock */
+    //InsertTailList(&RtlCriticalSectionList, &LdrpLoaderLock.DebugInfo->ProcessLocksList);
+    //LdrpLoaderLock.DebugInfo->CriticalSection = &LdrpLoaderLock;
+    UNIMPLEMENTED;
+    LdrpLoaderLockInit = TRUE;
+
+    /* Check if User Stack Trace Database support was requested */
+    if (Peb->NtGlobalFlag & FLG_USER_STACK_TRACE_DB)
+    {
+        DPRINT1("We don't support user stack trace databases yet\n");
+    }
+
+    /* Setup Fast PEB Lock */
+    RtlInitializeCriticalSection(&FastPebLock);
+    Peb->FastPebLock = &FastPebLock;
+    //Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
+    //Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
+
+    /* Setup Callout Lock and Notification list */
+    //RtlInitializeCriticalSection(&RtlpCalloutEntryLock);
+    InitializeListHead(&LdrpDllNotificationList);
+
+    /* For old executables, use 16-byte aligned heap */
+    if ((NtHeader->OptionalHeader.MajorSubsystemVersion <= 3) &&
+        (NtHeader->OptionalHeader.MinorSubsystemVersion < 51))
+    {
+        HeapFlags |= HEAP_CREATE_ALIGN_16;
+    }
+
+    /* Setup the Heap */
+    RtlInitializeHeapManager();
+    Peb->ProcessHeap = RtlCreateHeap(HeapFlags,
+                                     NULL,
+                                     NtHeader->OptionalHeader.SizeOfHeapReserve,
+                                     NtHeader->OptionalHeader.SizeOfHeapCommit,
+                                     NULL,
+                                     &HeapParameters);
+
+    if (!Peb->ProcessHeap)
+    {
+        DPRINT1("Failed to create process heap\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Allocate an Activation Context Stack */
+    Status = RtlAllocateActivationContextStack((PVOID *)&Teb->ActivationContextStackPointer);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    // FIXME: Loader private heap is missing
+    DPRINT1("Loader private heap is missing\n");
+
+    /* Check for Debug Heap */
+    DPRINT1("Check for a debug heap is missing\n");
+    if (FALSE)
+    {
+        /* Query the setting */
+        Status = LdrQueryImageFileKeyOption(NULL,//hKey
+                                            L"DebugProcessHeapOnly",
+                                            REG_DWORD,
+                                            &DebugProcessHeapOnly,
+                                            sizeof(ULONG),
+                                            NULL);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Reset DPH if requested */
+            if (RtlpPageHeapEnabled && DebugProcessHeapOnly)
+            {
+                RtlpDphGlobalFlags &= ~0x40;
+                RtlpPageHeapEnabled = FALSE;
+            }
+        }
+    }
+
+    /* Build the NTDLL Path */
+    FullPath.Buffer = FullNtDllPath;
+    FullPath.Length = 0;
+    FullPath.MaximumLength = sizeof(FullNtDllPath);
+    RtlInitUnicodeString(&NtSystemRoot, SharedUserData->NtSystemRoot);
+    RtlAppendUnicodeStringToString(&FullPath, &NtSystemRoot);
+    RtlAppendUnicodeToString(&FullPath, L"\\System32\\");
+
+    /* Open the Known DLLs directory */
+    RtlInitUnicodeString(&KnownDllString, L"\\KnownDlls");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KnownDllString,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenDirectoryObject(&LdrpKnownDllObjectDirectory,
+                                   DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
+                                   &ObjectAttributes);
+
+    /* Check if it exists */
+    if (!NT_SUCCESS(Status))
+    {
+        /* It doesn't, so assume System32 */
+        LdrpKnownDllObjectDirectory = NULL;
+        RtlInitUnicodeString(&LdrpKnownDllPath, FullPath.Buffer);
+        LdrpKnownDllPath.Length -= sizeof(WCHAR);
+    }
+    else
+    {
+        /* Open the Known DLLs Path */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KnownDllString,
+                                   OBJ_CASE_INSENSITIVE,
+                                   LdrpKnownDllObjectDirectory,
+                                   NULL);
+        Status = NtOpenSymbolicLinkObject(&SymLinkHandle,
+                                          SYMBOLIC_LINK_QUERY,
+                                          &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Query the path */
+            LdrpKnownDllPath.Length = 0;
+            LdrpKnownDllPath.MaximumLength = sizeof(LdrpKnownDllPathBuffer);
+            LdrpKnownDllPath.Buffer = LdrpKnownDllPathBuffer;
+            Status = ZwQuerySymbolicLinkObject(SymLinkHandle, &LdrpKnownDllPath, NULL);
+            NtClose(SymLinkHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("LDR: %s - failed call to ZwQuerySymbolicLinkObject with status %x\n", "", Status);
+                return Status;
+            }
+        }
+    }
+
+    /* If we have process parameters, get the default path and current path */
+    if (ProcessParameters)
+    {
+        /* Check if we have a Dll Path */
+        if (ProcessParameters->DllPath.Length)
+        {
+            /* Get the path */
+            LdrpDefaultPath = *(PUNICODE_STRING)&ProcessParameters->DllPath;
+        }
+        else
+        {
+            /* We need a valid path */
+            LdrpInitFailure(STATUS_INVALID_PARAMETER);
+        }
+
+        /* Set the current directory */
+        CurrentDirectory = ProcessParameters->CurrentDirectory.DosPath;
+
+        /* Check if it's empty or invalid */
+        if ((!CurrentDirectory.Buffer) ||
+            (CurrentDirectory.Buffer[0] == UNICODE_NULL) ||
+            (!CurrentDirectory.Length))
+        {
+            /* Allocate space for the buffer */
+            CurrentDirectory.Buffer = RtlAllocateHeap(Peb->ProcessHeap,
+                                                      0,
+                                                      3 * sizeof(WCHAR) +
+                                                      sizeof(UNICODE_NULL));
+
+            /* Copy the drive of the system root */
+            RtlMoveMemory(CurrentDirectory.Buffer,
+                          SharedUserData->NtSystemRoot,
+                          3 * sizeof(WCHAR));
+            CurrentDirectory.Buffer[3] = UNICODE_NULL;
+            CurrentDirectory.Length = 3 * sizeof(WCHAR);
+            CurrentDirectory.MaximumLength = CurrentDirectory.Length + sizeof(WCHAR);
+
+            FreeCurDir = TRUE;
+        }
+        else
+        {
+            /* Use the local buffer */
+            CurrentDirectory.Length = NtSystemRoot.Length;
+            CurrentDirectory.Buffer = NtSystemRoot.Buffer;
+        }
+    }
+
+    /* Setup Loader Data */
+    Peb->Ldr = &PebLdr;
+    InitializeListHead(&PebLdr.InLoadOrderModuleList);
+    InitializeListHead(&PebLdr.InMemoryOrderModuleList);
+    InitializeListHead(&PebLdr.InInitializationOrderModuleList);
+    PebLdr.Length = sizeof(PEB_LDR_DATA);
+    PebLdr.Initialized = TRUE;
+
+    /* Allocate a data entry for the Image */
+    LdrpImageEntry = NtLdrEntry = LdrpAllocateDataTableEntry(Peb->ImageBaseAddress);
+
+    /* Set it up */
+    NtLdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(NtLdrEntry->DllBase);
+    NtLdrEntry->LoadCount = -1;
+    NtLdrEntry->EntryPointActivationContext = 0;
+    NtLdrEntry->FullDllName.Length = ImageFileName.Length;
+    NtLdrEntry->FullDllName.Buffer = ImageFileName.Buffer;
+    if (IsDotNetImage)
+        NtLdrEntry->Flags = LDRP_COR_IMAGE;
+    else
+        NtLdrEntry->Flags = 0;
+
+    /* Check if the name is empty */
+    if (!ImageFileName.Buffer[0])
+    {
+        /* Use the same Base name */
+        NtLdrEntry->BaseDllName = NtLdrEntry->BaseDllName;
+    }
+    else
+    {
+        /* Find the last slash */
+        Current = ImageFileName.Buffer;
+        while (*Current)
+        {
+            if (*Current++ == '\\')
+            {
+                /* Set this path */
+                NtDllName = Current;
+            }
+        }
+
+        /* Did we find anything? */
+        if (!NtDllName)
+        {
+            /* Use the same Base name */
+            NtLdrEntry->BaseDllName = NtLdrEntry->FullDllName;
+        }
+        else
+        {
+            /* Setup the name */
+            NtLdrEntry->BaseDllName.Length = (USHORT)((ULONG_PTR)ImageFileName.Buffer + ImageFileName.Length - (ULONG_PTR)NtDllName);
+            NtLdrEntry->BaseDllName.MaximumLength = NtLdrEntry->BaseDllName.Length + sizeof(WCHAR);
+            NtLdrEntry->BaseDllName.Buffer = (PWSTR)((ULONG_PTR)ImageFileName.Buffer +
+                                                     (ImageFileName.Length - NtLdrEntry->BaseDllName.Length));
+        }
+    }
+
+    /* Processing done, insert it */
+    LdrpInsertMemoryTableEntry(NtLdrEntry);
+    NtLdrEntry->Flags |= LDRP_ENTRY_PROCESSED;
+
+    /* Now add an entry for NTDLL */
+    NtLdrEntry = LdrpAllocateDataTableEntry(SystemArgument1);
+    NtLdrEntry->Flags = LDRP_IMAGE_DLL;
+    NtLdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(NtLdrEntry->DllBase);
+    NtLdrEntry->LoadCount = -1;
+    NtLdrEntry->EntryPointActivationContext = 0;
+    //NtLdrEntry->BaseDllName.Length = NtSystemRoot.Length;
+    //RtlAppendUnicodeStringToString(&NtSystemRoot, &NtDllString);
+    NtLdrEntry->BaseDllName.Length = NtDllString.Length;
+    NtLdrEntry->BaseDllName.MaximumLength = NtDllString.MaximumLength;
+    NtLdrEntry->BaseDllName.Buffer = NtDllString.Buffer;
+
+    // FIXME: Full DLL name?!
+
+    /* Processing done, insert it */
+    LdrpNtDllDataTableEntry = NtLdrEntry;
+    LdrpInsertMemoryTableEntry(NtLdrEntry);
+
+    /* Let the world know */
+    if (ShowSnaps)
+    {
+        DPRINT1("LDR: NEW PROCESS\n");
+        DPRINT1("     Image Path: %wZ (%wZ)\n", &LdrpImageEntry->FullDllName, &LdrpImageEntry->BaseDllName);
+        DPRINT1("     Current Directory: %wZ\n", &CurrentDirectory);
+        DPRINT1("     Search Path: %wZ\n", &LdrpDefaultPath);
+    }
+
+    /* Link the Init Order List */
+    InsertHeadList(&Peb->Ldr->InInitializationOrderModuleList,
+                   &LdrpNtDllDataTableEntry->InInitializationOrderModuleList);
+
+    /* Set the current directory */
+    Status = RtlSetCurrentDirectory_U(&CurrentDirectory);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, check if we should free it */
+        if (FreeCurDir) RtlFreeUnicodeString(&CurrentDirectory);
+
+        /* Set it to the NT Root */
+        CurrentDirectory = NtSystemRoot;
+        RtlSetCurrentDirectory_U(&CurrentDirectory);
+    }
+    else
+    {
+        /* We're done with it, free it */
+        if (FreeCurDir) RtlFreeUnicodeString(&CurrentDirectory);
+    }
+
+    /* Check if we should look for a .local file */
+    if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH)
+    {
+        /* FIXME */
+        DPRINT1("We don't support .local overrides yet\n");
+    }
+
+    /* Check if the Application Verifier was enabled */
+    if (Peb->NtGlobalFlag & FLG_POOL_ENABLE_TAIL_CHECK)
+    {
+        /* FIXME */
+        DPRINT1("We don't support Application Verifier yet\n");
+    }
+
+    if (IsDotNetImage)
+    {
+        /* FIXME */
+        DPRINT1("We don't support .NET applications yet\n");
+    }
+
+    /* FIXME: Load support for Terminal Services */
+    if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+    {
+        /* Load kernel32 and call BasePostImportInit... */
+        DPRINT1("Unimplemented codepath!\n");
+    }
+
+    /* Walk the IAT and load all the DLLs */
+    LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
+
+    /* Check if relocation is needed */
+    if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
+    {
+        DPRINT("LDR: Performing relocations\n");
+        Status = LdrPerformRelocations(NtHeader, Peb->ImageBaseAddress);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("LdrPerformRelocations() failed\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+    }
+
+    /* Lock the DLLs */
+    ListHead = &Peb->Ldr->InLoadOrderModuleList;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        NtLdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        NtLdrEntry->LoadCount = -1;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Phase 0 is done */
+    LdrpLdrDatabaseIsSetup = TRUE;
+
+    /* Initialize TLS */
+    Status = LdrpInitializeTls();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LDR: LdrpProcessInitialization failed to initialize TLS slots; status %x\n",
+                Status);
+        return Status;
+    }
+
+    /* FIXME Mark the DLL Ranges for Stack Traces later */
+
+    /* Notify the debugger now */
+    if (Peb->BeingDebugged)
+    {
+        /* Break */
+        DbgBreakPoint();
+
+        /* Update show snaps again */
+        ShowSnaps = Peb->NtGlobalFlag & FLG_SHOW_LDR_SNAPS;
+    }
+
+    /* Validate the Image for MP Usage */
+    if (LdrpNumberOfProcessors > 1) LdrpValidateImageForMp(LdrpImageEntry);
+
+    /* Check NX Options */
+    if (SharedUserData->NXSupportPolicy == 1)
+    {
+        ExecuteOptions = 0xD;
+    }
+    else if (!SharedUserData->NXSupportPolicy)
+    {
+        ExecuteOptions = 0xA;
+    }
+
+    /* Let Mm know */
+    ZwSetInformationProcess(NtCurrentProcess(),
+                            ProcessExecuteFlags,
+                            &ExecuteOptions,
+                            sizeof(ULONG));
+
+    /* Check if we had Shim Data */
+    if (OldShimData)
+    {
+        /* Load the Shim Engine */
+        Peb->AppCompatInfo = NULL;
+        //LdrpLoadShimEngine(OldShimData, ImagePathName, OldShimData);
+        DPRINT1("We do not support shims yet\n");
+    }
+    else
+    {
+        /* Check for Application Compatibility Goo */
+        //LdrQueryApplicationCompatibilityGoo(hKey);
+        DPRINT1("Querying app compat hacks is missing!\n");
+    }
+
+    /*
+     * FIXME: Check for special images, SecuROM, SafeDisc and other NX-
+     * incompatible images.
+     */
+
+    /* Now call the Init Routines */
+    Status = LdrpRunInitializeRoutines(Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LDR: LdrpProcessInitialization failed running initialization routines; status %x\n",
+                Status);
+        return Status;
+    }
+
+    /* FIXME: Unload the Shim Engine if it was loaded */
+
+    /* Check if we have a user-defined Post Process Routine */
+    if (NT_SUCCESS(Status) && Peb->PostProcessInitRoutine)
+    {
+        DPRINT1("CP\n");
+        /* Call it */
+        Peb->PostProcessInitRoutine();
+    }
+
+    ///* Close the key if we have one opened */
+    //if (hKey) NtClose(hKey);
+DbgBreakPoint();
+    /* Return status */
+    return Status;
+}
+
 VOID
 NTAPI
 LdrpInitFailure(NTSTATUS Status)
@@ -915,17 +1589,11 @@ LdrpInit(PCONTEXT Context,
         /* Let other code know we're initializing */
         LdrpInLdrInit = TRUE;
 
-        /* Initialize Critical Section Data */
-        RtlpInitDeferedCriticalSection();
-
-        /* Initialize VEH Call lists */
-        RtlpInitializeVectoredExceptionHandling();
-
         /* Protect with SEH */
         _SEH2_TRY
         {
             /* Initialize the Process */
-            LoaderStatus = LdrpInitializeProcess(Context,
+            LoaderStatus = LdrpInitializeProcess_(Context,
                                                  SystemArgument1);
 
             /* Check for success and if MinimumStackCommit was requested */

@@ -17,13 +17,15 @@
 VOID RtlInitializeHeapManager(VOID);
 VOID LdrpInitLoader(VOID);
 extern PTEB LdrpTopLevelDllBeingLoadedTeb;
+VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
+VOID RtlpInitializeVectoredExceptionHandling(VOID);
 
 /* GLOBALS *******************************************************************/
 
 extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
-static RTL_CRITICAL_SECTION PebLock;
-static RTL_BITMAP TlsBitMap;
-static RTL_BITMAP TlsExpansionBitMap;
+extern RTL_CRITICAL_SECTION FastPebLock;
+extern RTL_BITMAP TlsBitMap;
+extern RTL_BITMAP TlsExpansionBitMap;
 
 #define VALUE_BUFFER_SIZE 256
 
@@ -309,7 +311,7 @@ finish:
 
 NTSTATUS
 NTAPI
-LdrpInitializeProcess(PCONTEXT Context,
+LdrpInitializeProcess_(PCONTEXT Context,
                       PVOID SystemArgument1)
 {
     PIMAGE_NT_HEADERS NTHeaders;
@@ -372,6 +374,9 @@ LdrpInitializeProcess(PCONTEXT Context,
 
     Peb->NumberOfProcessors = SystemInformation.NumberOfProcessors;
 
+    /* Initialize Critical Section Data */
+    RtlpInitDeferedCriticalSection();
+
     /* Load execution options */
     LoadImageFileExecutionOptions(Peb);
 
@@ -430,9 +435,12 @@ LdrpInitializeProcess(PCONTEXT Context,
         ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE);
     }
 
+    /* initialized vectored exception handling */
+    RtlpInitializeVectoredExceptionHandling();
+
     /* initalize peb lock support */
-    RtlInitializeCriticalSection(&PebLock);
-    Peb->FastPebLock = &PebLock;
+    RtlInitializeCriticalSection(&FastPebLock);
+    Peb->FastPebLock = &FastPebLock;
 
     /* initialize tls bitmaps */
     RtlInitializeBitMap(&TlsBitMap, Peb->TlsBitmapBits, TLS_MINIMUM_AVAILABLE);

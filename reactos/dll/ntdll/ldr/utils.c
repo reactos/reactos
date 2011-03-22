@@ -32,8 +32,8 @@
 #endif
 
 static BOOLEAN LdrpDllShutdownInProgress = FALSE;
-static HANDLE LdrpKnownDllsDirHandle = NULL;
-static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
+extern HANDLE LdrpKnownDllObjectDirectory;
+extern UNICODE_STRING LdrpKnownDllPath;
 static PLDR_DATA_TABLE_ENTRY LdrpLastModule = NULL;
 extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 
@@ -231,13 +231,13 @@ LdrpInitLoader(VOID)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtOpenDirectoryObject(&LdrpKnownDllsDirHandle,
+    Status = NtOpenDirectoryObject(&LdrpKnownDllObjectDirectory,
                                    DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
                                    &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
-        LdrpKnownDllsDirHandle = NULL;
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -249,8 +249,8 @@ LdrpInitLoader(VOID)
                                         MAX_PATH * sizeof(WCHAR));
     if (LinkTarget.Buffer == NULL)
     {
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -259,7 +259,7 @@ LdrpInitLoader(VOID)
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
-                               LdrpKnownDllsDirHandle,
+                               LdrpKnownDllObjectDirectory,
                                NULL);
     Status = NtOpenSymbolicLinkObject(&LinkHandle,
                                       SYMBOLIC_LINK_ALL_ACCESS,
@@ -267,8 +267,8 @@ LdrpInitLoader(VOID)
     if (!NT_SUCCESS(Status))
     {
         RtlFreeUnicodeString(&LinkTarget);
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -279,8 +279,8 @@ LdrpInitLoader(VOID)
     if (!NT_SUCCESS(Status))
     {
         RtlFreeUnicodeString(&LinkTarget);
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
     }
 
     RtlCreateUnicodeString(&LdrpKnownDllPath,
@@ -431,7 +431,7 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
 
     DPRINT("LdrpMapKnownDll() called\n");
 
-    if (LdrpKnownDllsDirHandle == NULL)
+    if (LdrpKnownDllObjectDirectory == NULL)
     {
         DPRINT("Invalid 'KnownDlls' directory\n");
         return STATUS_UNSUCCESSFUL;
@@ -442,7 +442,7 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
     InitializeObjectAttributes(&ObjectAttributes,
                                DllName,
                                OBJ_CASE_INSENSITIVE,
-                               LdrpKnownDllsDirHandle,
+                               LdrpKnownDllObjectDirectory,
                                NULL);
     Status = NtOpenSection(SectionHandle,
                            SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE,
@@ -1189,7 +1189,7 @@ LdrGetExportByName(PVOID BaseAddress,
  * NOTE
  *
  */
-static NTSTATUS
+NTSTATUS
 LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                       PVOID ImageBase)
 {
