@@ -1110,20 +1110,12 @@ BuildWindowStationNameList(
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    HANDLE DirectoryHandle;
-   UNICODE_STRING DirectoryName;
+   UNICODE_STRING DirectoryName = RTL_CONSTANT_STRING(WINSTA_ROOT_NAME);
    char InitialBuffer[256], *Buffer;
    ULONG Context, ReturnLength, BufferSize;
    DWORD EntryCount;
    POBJECT_DIRECTORY_INFORMATION DirEntry;
    WCHAR NullWchar;
-
-   /*
-    * Generate name of window station directory
-    */
-   if (!IntGetFullWindowStationName(&DirectoryName, NULL, NULL))
-   {
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
 
    /*
     * Try to open the directory.
@@ -1139,8 +1131,6 @@ BuildWindowStationNameList(
                &DirectoryHandle,
                DIRECTORY_QUERY,
                &ObjectAttributes);
-
-   ExFreePool(DirectoryName.Buffer);
 
    if (!NT_SUCCESS(Status))
    {
