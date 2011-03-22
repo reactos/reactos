@@ -16,6 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache;
+LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 
 #define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
 
