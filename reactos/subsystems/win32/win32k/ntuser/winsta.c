@@ -187,6 +187,21 @@ IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
     return STATUS_OBJECT_TYPE_MISMATCH;
 }
 
+NTSTATUS NTAPI 
+IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
+{
+    PPROCESSINFO ppi;
+
+    ppi = PsGetCurrentProcessWin32Process();
+
+    if(Parameters->Handle == ppi->hwinsta)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*
@@ -915,6 +930,57 @@ IntGetWinStaObj(VOID)
    return WinStaObj;
 }
 
+BOOL FASTCALL
+UserSetProcessWindowStation(HWINSTA hWindowStation)
+{
+    PPROCESSINFO ppi;
+    NTSTATUS Status;
+    HWINSTA hwinstaOld;
+    PWINSTATION_OBJECT NewWinSta = NULL, OldWinSta;
+
+    ppi = PsGetCurrentProcessWin32Process();
+
+    if(hWindowStation !=NULL)
+    {
+        Status = IntValidateWindowStationHandle( hWindowStation,
+                                                 KernelMode,
+                                                 0,
+                                                 &NewWinSta);
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT("Validation of window station handle (0x%X) failed\n",
+                 hWindowStation);
+          SetLastNtError(Status);
+          return FALSE;
+       }
+    }
+
+   OldWinSta = ppi->prpwinsta;
+   hwinstaOld = ppi->hwinsta;
+
+   /*
+    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
+    */
+
+   InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
+
+   ppi->prpwinsta = NewWinSta;
+   ppi->hwinsta = hWindowStation;
+
+
+   if(OldWinSta != NULL)
+   {
+       ObDereferenceObject(OldWinSta);
+   }
+
+   if(hwinstaOld != NULL)
+   {
+       ZwClose(hwinstaOld);
+   }
+
+   return TRUE;
+}
+
 /*
  * NtUserSetProcessWindowStation
  *
@@ -934,44 +1000,15 @@ IntGetWinStaObj(VOID)
 BOOL APIENTRY
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
-   PWINSTATION_OBJECT NewWinSta;
-   NTSTATUS Status;
+    BOOL ret;
 
-   DPRINT("About to set process window station with handle (0x%X)\n",
-          hWindowStation);
+    UserEnterExclusive();
 
-   if(PsGetCurrentProcess() == CsrProcess)
-   {
-      DPRINT1("CSRSS is not allowed to change it's window station!!!\n");
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      return FALSE;
-   }
+    ret = UserSetProcessWindowStation(hWindowStation);
 
-   Status = IntValidateWindowStationHandle(
-               hWindowStation,
-               KernelMode,
-               0,
-               &NewWinSta);
+    UserLeave();
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-             hWindowStation);
-      SetLastNtError(Status);
-      return FALSE;
-   }
-
-   /*
-    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
-    */
-
-   /* FIXME - dereference the old window station, etc... */
-   InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
-
-   DPRINT("PsGetCurrentProcess()->Win32WindowStation 0x%X\n",
-          PsGetCurrentProcess()->Win32WindowStation);
-
-   return TRUE;
+    return ret;
 }
 
 /*

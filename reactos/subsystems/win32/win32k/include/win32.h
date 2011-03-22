@@ -166,6 +166,7 @@ typedef struct _PROCESSINFO
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
   INT cThreads;
+  HDESK hdeskStartup;
   DWORD dwhmodLibLoadedMask;
   HANDLE ahmodLibLoaded[CLIBS];
   struct _WINSTATION_OBJECT *prpwinsta;

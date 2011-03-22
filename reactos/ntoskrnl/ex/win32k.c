@@ -37,9 +37,45 @@ GENERIC_MAPPING ExpDesktopMapping =
 
 PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse = NULL;
 PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete = NULL;
+PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose = NULL;
+PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose = NULL;
 PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+NTAPI
+ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
+                     IN PVOID Object,
+                     IN HANDLE Handle,
+                     IN KPROCESSOR_MODE AccessMode)
+{
+    WIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters;
+
+    Parameters.Process = Process;
+    Parameters.Object = Object;
+    Parameters.Handle = Handle;
+    Parameters.PreviousMode = AccessMode;
+
+    return ExpDesktopObjectOkToClose(&Parameters);
+}
+
+NTSTATUS
+NTAPI
+ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
+                     IN PVOID Object,
+                     IN HANDLE Handle,
+                     IN KPROCESSOR_MODE AccessMode)
+{
+    WIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters;
+
+    Parameters.Process = Process;
+    Parameters.Object = Object;
+    Parameters.Handle = Handle;
+    Parameters.PreviousMode = AccessMode;
+
+    return ExpWindowStationObjectOkToClose(&Parameters);
+}
 
 VOID
 NTAPI
@@ -114,6 +150,7 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
+    ObjectTypeInitializer.OkayToCloseProcedure = ExpWindowStationOkToClose;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,
@@ -124,6 +161,7 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;
     ObjectTypeInitializer.ParseProcedure = NULL;
+    ObjectTypeInitializer.OkayToCloseProcedure = ExpDesktopOkToClose;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,

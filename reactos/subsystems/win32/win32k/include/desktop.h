@@ -69,6 +69,9 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
+NTSTATUS NTAPI 
+IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

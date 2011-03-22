@@ -82,6 +82,9 @@ NTSTATUS
 APIENTRY
 IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
 
+NTSTATUS NTAPI 
+IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
    HWINSTA WindowStation,
@@ -105,5 +108,8 @@ IntGetFullWindowStationName(
    IN OPTIONAL PUNICODE_STRING DesktopName);
 
 PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
+
+BOOL FASTCALL
+UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 /* EOF */

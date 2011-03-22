@@ -119,6 +119,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
         Win32Process->W32PF_flags |= W32PF_TERMINATED;
+
         if (Win32Process->InputIdleEvent)
         {
            EngFreeMem((PVOID)Win32Process->InputIdleEvent);
@@ -144,6 +145,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         {
             LogonProcess = NULL;
         }
+
+        UserSetProcessWindowStation(NULL);
+
     }
 
     RETURN( STATUS_SUCCESS);
@@ -220,25 +224,14 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         {
             if(hWinSta != NULL)
             {
-                if(Process != CsrProcess)
+                if(!UserSetProcessWindowStation(hWinSta))
                 {
-                    HWINSTA hProcessWinSta = (HWINSTA)InterlockedCompareExchangePointer((PVOID)&Process->Win32WindowStation, (PVOID)hWinSta, NULL);
-                    if(hProcessWinSta != NULL)
-                    {
-                        /* our process is already assigned to a different window station, we don't need the handle anymore */
-                        NtClose(hWinSta);
-                    }
-                }
-                else
-                {
-                    NtClose(hWinSta);
+                    DPRINT1("Failed to set process window station\n");
                 }
             }
 
             if (hDesk != NULL)
             {
-                Win32Thread->rpdesk = NULL;
-                Win32Thread->hdesk = NULL;
                 if (!IntSetThreadDesktop(hDesk, FALSE))
                 {
                         DPRINT1("Unable to set thread desktop\n");
@@ -441,6 +434,8 @@ DriverEntry(
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
+    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
+    CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
 
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);

@@ -168,6 +168,29 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
    IntFreeDesktopHeap(Desktop);
 }
 
+NTSTATUS NTAPI 
+IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
+{
+    PTHREADINFO pti;
+
+    pti = PsGetCurrentThreadWin32Thread();
+
+    if( pti == NULL)
+    {
+        /* This happens when we leak desktop handles */
+        return TRUE;
+    }
+
+    /* Do not allow the current desktop or the initial desktop to be closed */
+    if( Parameters->Handle == pti->ppi->hdeskStartup ||
+        Parameters->Handle == pti->hdesk)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 INIT_FUNCTION
