@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <windef.h> /* we need DWORD */
 
 //
 // Maximum limits: allow overriding the maximum
@@ -26,6 +25,11 @@
 #define NTSTRSAFE_MAX_CCH       2147483647
 #endif
 #define NTSTRSAFE_MAX_LENGTH    (NTSTRSAFE_MAX_CCH - 1)
+
+//
+// Typedefs
+//
+typedef unsigned long DWORD;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -40,39 +44,6 @@ RtlStringLengthWorkerA(IN LPCSTR String,
     SIZE_T LocalMax = MaxLength;
 
     while (MaxLength && (*String != ANSI_NULL))
-    {
-        String++;
-        MaxLength--;
-    }
-
-    if (!MaxLength) Status = STATUS_INVALID_PARAMETER;
-
-    if (ReturnLength)
-    {
-        if (NT_SUCCESS(Status))
-        {
-            *ReturnLength = LocalMax - MaxLength;
-        }
-        else
-        {
-            *ReturnLength = 0;
-        }
-    }
-
-    return Status;
-}
-
-static __inline
-NTSTATUS
-NTAPI
-RtlStringLengthWorkerW(IN LPCWSTR String,
-                       IN SIZE_T MaxLength,
-                       OUT PSIZE_T ReturnLength OPTIONAL)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    SIZE_T LocalMax = MaxLength;
-
-    while (MaxLength && (*String != UNICODE_NULL))
     {
         String++;
         MaxLength--;
@@ -127,35 +98,6 @@ RtlStringValidateDestA(IN LPSTR Destination,
 static __inline
 NTSTATUS
 NTAPI
-RtlStringValidateDestW(IN LPWSTR Destination,
-                       IN SIZE_T Length,
-                       OUT PSIZE_T ReturnLength OPTIONAL,
-                       IN SIZE_T MaxLength)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Length) || (Length > MaxLength)) Status = STATUS_INVALID_PARAMETER;
-
-    if (ReturnLength)
-    {
-        if (NT_SUCCESS(Status))
-        {
-            Status = RtlStringLengthWorkerW(Destination,
-                                            Length,
-                                            ReturnLength);
-        }
-        else
-        {
-            *ReturnLength = 0;
-        }
-    }
-
-    return Status;
-}
-
-static __inline
-NTSTATUS
-NTAPI
 RtlStringExValidateDestA(IN OUT LPSTR *Destination,
                          IN OUT PSIZE_T DestinationLength,
                          OUT PSIZE_T ReturnLength OPTIONAL,
@@ -172,42 +114,7 @@ RtlStringExValidateDestA(IN OUT LPSTR *Destination,
 static __inline
 NTSTATUS
 NTAPI
-RtlStringExValidateDestW(IN OUT LPWSTR *Destination,
-                         IN OUT PSIZE_T DestinationLength,
-                         OUT PSIZE_T ReturnLength OPTIONAL,
-                         IN SIZE_T MaxLength,
-                         IN DWORD Flags)
-{
-    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
-    return RtlStringValidateDestW(*Destination,
-                                  *DestinationLength,
-                                  ReturnLength,
-                                  MaxLength);
-}
-
-static __inline
-NTSTATUS
-NTAPI
 RtlStringExValidateSrcA(IN OUT LPCSTR *Source OPTIONAL,
-                        IN OUT PSIZE_T ReturnLength OPTIONAL,
-                        IN SIZE_T MaxLength,
-                        IN DWORD Flags)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
-
-    if ((ReturnLength) && (*ReturnLength >= MaxLength))
-    {
-        Status = STATUS_INVALID_PARAMETER;
-    }
-
-    return Status;
-}
-
-static __inline
-NTSTATUS
-NTAPI
-RtlStringExValidateSrcW(IN OUT LPCWSTR *Source OPTIONAL,
                         IN OUT PSIZE_T ReturnLength OPTIONAL,
                         IN SIZE_T MaxLength,
                         IN DWORD Flags)
@@ -299,41 +206,6 @@ RtlStringCopyWorkerA(OUT LPSTR Destination,
     return Status;
 }
 
-static __inline
-NTSTATUS
-NTAPI
-RtlStringCopyWorkerW(OUT LPWSTR Destination,
-                     IN SIZE_T Length,
-                     OUT PSIZE_T NewLength OPTIONAL,
-                     IN LPCWSTR Source,
-                     IN SIZE_T CopyLength)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    SIZE_T LocalNewLength = 0;
-
-    while ((Length) && (CopyLength) && (*Source != UNICODE_NULL))
-    {
-        *Destination++ = *Source++;
-        Length--;
-        CopyLength--;
-
-        LocalNewLength++;
-    }
-
-    if (!Length)
-    {
-        Destination--;
-        LocalNewLength--;
-
-        Status = STATUS_BUFFER_OVERFLOW;
-    }
-
-    *Destination = UNICODE_NULL;
-
-    if (NewLength) *NewLength = LocalNewLength;
-    return Status;
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 static __inline
@@ -342,17 +214,6 @@ NTAPI
 RtlStringCchCopyA(IN LPSTR Destination,
                   IN SIZE_T cchDest,
                   IN LPCSTR pszSrc)
-{
-    ASSERTMSG("RtlStringCchCopyA is UNIMPLEMENTED!\n", FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-static __inline
-NTSTATUS
-NTAPI
-RtlStringCchCopyW(IN LPWSTR Destination,
-                  IN SIZE_T cchDest,
-                  IN LPCWSTR pszSrc)
 {
     ASSERTMSG("RtlStringCchCopyA is UNIMPLEMENTED!\n", FALSE);
     return STATUS_NOT_IMPLEMENTED;
@@ -633,80 +494,6 @@ RtlStringCbCatExA(IN OUT LPSTR Destination,
 static __inline
 NTSTATUS
 NTAPI
-RtlStringCbCatExW(IN OUT LPWSTR Destination,
-                  IN SIZE_T Length,
-                  IN LPCWSTR Source,
-                  OUT LPWSTR *DestinationEnd OPTIONAL,
-                  OUT PSIZE_T RemainingSize OPTIONAL,
-                  IN DWORD Flags)
-{
-    NTSTATUS Status;
-    SIZE_T CharLength = Length / sizeof(WCHAR);
-    SIZE_T DestinationLength, Remaining, Copied = 0;
-    PWCHAR LocalDestinationEnd;
-    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
-
-    Status = RtlStringExValidateDestW(&Destination,
-                                      &CharLength,
-                                      &DestinationLength,
-                                      NTSTRSAFE_MAX_CCH,
-                                      Flags);
-    if (NT_SUCCESS(Status))
-    {
-        LocalDestinationEnd = Destination + DestinationLength;
-        Remaining = CharLength - DestinationLength;
-
-        Status = RtlStringExValidateSrcW(&Source,
-                                         NULL,
-                                         NTSTRSAFE_MAX_CCH,
-                                         Flags);
-        if (NT_SUCCESS(Status))
-        {
-            if (Remaining <= 1)
-            {
-                if (*Source != UNICODE_NULL)
-                {
-                    if (!Destination)
-                    {
-                        Status = STATUS_INVALID_PARAMETER;
-                    }
-                    else
-                    {
-                        Status = STATUS_BUFFER_OVERFLOW;
-                    }
-                }
-            }
-            else
-            {
-                Status = RtlStringCopyWorkerW(LocalDestinationEnd,
-                                              Remaining,
-                                              &Copied,
-                                              Source,
-                                              NTSTRSAFE_MAX_LENGTH);
-
-                LocalDestinationEnd = LocalDestinationEnd + Copied;
-                Remaining = Remaining - Copied;
-            }
-        }
-
-        if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
-        {
-            if (DestinationEnd) *DestinationEnd = LocalDestinationEnd;
-
-            if (RemainingSize)
-            {
-                *RemainingSize = (Remaining * sizeof(WCHAR)) +
-                                 (Length % sizeof(WCHAR));
-            }
-        }
-    }
-
-    return Status;
-}
-
-static __inline
-NTSTATUS
-NTAPI
 RtlStringCbCopyA(OUT LPSTR Destination,
                  IN SIZE_T Length,
                  IN LPCSTR Source)
@@ -721,32 +508,6 @@ RtlStringCbCopyA(OUT LPSTR Destination,
     if (NT_SUCCESS(Status))
     {
         Status = RtlStringCopyWorkerA(Destination,
-                                      CharLength,
-                                      NULL,
-                                      Source,
-                                      NTSTRSAFE_MAX_LENGTH);
-    }
-
-    return Status;
-}
-
-static __inline
-NTSTATUS
-NTAPI
-RtlStringCbCopyW(OUT LPWSTR Destination,
-                 IN SIZE_T Length,
-                 IN LPCWSTR Source)
-{
-    NTSTATUS Status;
-    SIZE_T CharLength = Length / sizeof(WCHAR);
-
-    Status = RtlStringValidateDestW(Destination,
-                                    CharLength,
-                                    NULL,
-                                    NTSTRSAFE_MAX_CCH);
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlStringCopyWorkerW(Destination,
                                       CharLength,
                                       NULL,
                                       Source,
