@@ -537,8 +537,8 @@ SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
 void
 BrowseForApplication(HWND hwndDlg)
 {
-    WCHAR szBuffer[30] = {0};
-    WCHAR szFilter[30] = {0};
+    WCHAR szBuffer[64] = {0};
+    WCHAR szFilter[256] = {0};
     WCHAR szPath[MAX_PATH];
     OPENFILENAMEW ofn;
     OPEN_WITH_CONTEXT Context;

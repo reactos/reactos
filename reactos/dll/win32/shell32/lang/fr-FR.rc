@@ -672,6 +672,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Se déconnecter"
 	IDS_LOGOFF_PROMPT           "Voulez-vous vous déconnecter ?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Démarrer\\Programmes"
 	IDS_PERSONAL                "Mes documents"
@@ -721,8 +727,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Espace disponible"
 	IDS_EMPTY_BITBUCKET         "Vider la Corbeille"
 	IDS_PICK_ICON_TITLE         "Choisir une icône"
-	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Fichiers exécutables\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Fichiers exécutables (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Dossier"
 	IDS_VIRTUAL_DRIVER          "Pilote de périphérique virtuel"
 	IDS_BAT_FILE                "Fichier Batch ReactOS"

@@ -668,6 +668,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "スタート メニュー\\プログラム"
 	IDS_PERSONAL                "My Documents"
@@ -717,8 +723,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "利用できる領域"
 	IDS_EMPTY_BITBUCKET         "ごみ箱を空にする"
 	IDS_PICK_ICON_TITLE         "アイコンの選択"
-	IDS_PICK_ICON_FILTER        "アイコンファイル(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "実行可能\ ファイル\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "アイコンファイル (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "実行可能\ ファイル (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "フォルダ"
 	IDS_VIRTUAL_DRIVER          "仮想 デバイス ドライバ"
 	IDS_BAT_FILE                "ReactOS バッチ ファイル"
