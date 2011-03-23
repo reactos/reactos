@@ -221,9 +221,6 @@ IntSetSysColors(UINT nColors, CONST INT *Elements, CONST COLORREF *Colors)
 {
     UINT i;
 
-    ASSERT(Elements);
-    ASSERT(Colors);
-
     for (i = 0; i < nColors; i++)
     {
         if ((UINT)(*Elements) < NUM_SYSCOLORS)

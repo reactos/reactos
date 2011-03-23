@@ -104,7 +104,6 @@ ProbeForRead(IN CONST VOID *Address,
              IN ULONG Alignment)
 {
 	ULONG_PTR Last, Current = (ULONG_PTR)Address;
-	CHAR Temp;
     PAGED_CODE();
 
     /* Only probe if we have a valid length */
@@ -132,16 +131,7 @@ ProbeForRead(IN CONST VOID *Address,
             ExRaiseAccessViolation();
         }
 
-        /* Round down to the last page */
-        Last = PAGE_ROUND_DOWN(Last) + PAGE_SIZE;
-        do
-        {
-            /* Attempt a read */
-            Temp = *(volatile CHAR*)Current;
-
-            /* Go to the next address */
-            Current = PAGE_ROUND_DOWN(Current) + PAGE_SIZE;
-        } while (Current != Last);
+        /* ProbeForRead doesn't check if memory pages are readable! */
     }
 }
 
