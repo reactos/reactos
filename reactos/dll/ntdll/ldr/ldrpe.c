@@ -44,13 +44,15 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
     ULONG IatSize;
     //PPEB Peb = NtCurrentPeb();
     NTSTATUS Status;
-    PIMAGE_THUNK_DATA Thunk, OriginalThunk, FirstThunk;
+    PIMAGE_THUNK_DATA OriginalThunk, FirstThunk;
     LPSTR ImportName;
     ULONG ForwarderChain;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER SectionHeader;
     ULONG i, Rva;
     ULONG OldProtect;
+
+    DPRINT("LdrpSnapIAT(%wZ %wZ %p %d)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
 
     /* Get export directory */
     ExportDirectory = RtlImageDirectoryEntryToData(ExportLdrEntry->DllBase,
@@ -101,13 +103,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
                     {
                         IatSize = SectionHeader->SizeOfRawData;
                     }
-                    
+
                     /* Found it, get out */
                     break;
                 }
 
                 /* No match, move to the next section */
-                ++SectionHeader;
+                SectionHeader++;
             }
         }
 
@@ -154,17 +156,24 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             ForwarderChain = (ULONG)FirstThunk->u1.Ordinal;
 
             /* Snap the thunk */
-            Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
-                                   ImportLdrEntry->DllBase,
-                                   OriginalThunk,
-                                   FirstThunk,
-                                   ExportDirectory,
-                                   ExportSize,
-                                   TRUE,
-                                   ImportName);
+            _SEH2_TRY
+            {
+                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                                       ImportLdrEntry->DllBase,
+                                       OriginalThunk,
+                                       FirstThunk,
+                                       ExportDirectory,
+                                       ExportSize,
+                                       TRUE,
+                                       ImportName);
 
-            /* Move to the next thunk */
-            FirstThunk++;
+                /* Move to the next thunk */
+                FirstThunk++;
+            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Fail with the SEH error */
+                Status = _SEH2_GetExceptionCode();
+            } _SEH2_END;
 
             /* If we messed up, exit */
             if (!NT_SUCCESS(Status)) break;
@@ -184,7 +193,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         if ((IatEntry->Characteristics < NtHeader->OptionalHeader.SizeOfHeaders) ||
             (IatEntry->Characteristics >= NtHeader->OptionalHeader.SizeOfImage))
         {
-            /* Reuse it, this is a strange linked file */
+            /* Refuse it, this is a strange linked file */
             OriginalThunk = FirstThunk;
         }
         else
@@ -203,18 +212,25 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         while (OriginalThunk->u1.AddressOfData)
         {
             /* Snap the Thunk */
-            Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
-                                   ImportLdrEntry->DllBase,
-                                   OriginalThunk,
-                                   FirstThunk,
-                                   ExportDirectory,
-                                   ExportSize,
-                                   TRUE,
-                                   ImportName);
+            _SEH2_TRY
+            {
+                Status = LdrpSnapThunk(ExportLdrEntry->DllBase,
+                                       ImportLdrEntry->DllBase,
+                                       OriginalThunk,
+                                       FirstThunk,
+                                       ExportDirectory,
+                                       ExportSize,
+                                       TRUE,
+                                       ImportName);
 
-            /* Next thunks */
-            OriginalThunk++;
-            Thunk++;
+                /* Next thunks */
+                OriginalThunk++;
+                FirstThunk++;
+            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Fail with the SEH error */
+                Status = _SEH2_GetExceptionCode();
+            } _SEH2_END;
 
             /* If we failed the snap, break out */
             if (!NT_SUCCESS(Status)) break;
@@ -498,7 +514,7 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     //ULONG IatSize, i;
     LPSTR ImportName;
     NTSTATUS Status;
-    BOOLEAN AlreadyLoaded = FALSE, StaticEntriesValid = FALSE, SkipSnap = TRUE;
+    BOOLEAN AlreadyLoaded = FALSE, StaticEntriesValid = FALSE, SkipSnap = FALSE;
     PLDR_DATA_TABLE_ENTRY DllLdrEntry;
     PIMAGE_THUNK_DATA FirstThunk;
     PPEB Peb = NtCurrentPeb();
