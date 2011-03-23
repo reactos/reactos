@@ -12,7 +12,6 @@
 	<library>win32ksys</library>
 	<library>pseh</library>
 	<library>ntdll</library>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>

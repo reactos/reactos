@@ -16,7 +16,6 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<compilerflag compilerset="msc">/wd4276</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />

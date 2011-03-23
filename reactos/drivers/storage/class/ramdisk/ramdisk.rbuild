@@ -6,5 +6,4 @@
 	<library>hal</library>
 	<file>ramdisk.c</file>
 	<file>ramdisk.rc</file>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 </module>
