@@ -1940,7 +1940,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    DWORD dwShowMode = SW_SHOW;
    CREATESTRUCTW *pCsw = NULL;
    PVOID pszClass = NULL, pszName = NULL;
-   DECLARE_RETURN(PWND);
+   PWND ret = NULL;
 
    /* Get the current window station and reference it */
    pti = GetW32ThreadInfo();
@@ -1960,7 +1960,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if(!Class)
    {
        DPRINT1("Failed to find class %wZ\n", ClassName);
-       RETURN(NULL);
+       goto cleanup;
    }
 
    /* Now find the parent and the owner window */
@@ -1982,7 +1982,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     {
          DPRINT1("Cannot create a child window without a parrent!\n");
          EngSetLastError(ERROR_TLW_WITH_WSCHILD);
-         RETURN(NULL);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
+         goto cleanup;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
     ParentWindow = hWndParent ? UserGetWindowObject(hWndParent): NULL;
@@ -2008,7 +2008,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if(!Window)
    {
        DPRINT1("IntCreateWindow failed!\n");
-       RETURN(0);
+       goto cleanup;
    }
 
    hWnd = UserHMGetHandle(Window);
@@ -2023,6 +2023,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       // Allocate the calling structures Justin Case this goes Global.
       pCsw = ExAllocatePoolWithTag(NonPagedPool, sizeof(CREATESTRUCTW), TAG_HOOK);
       pCbtCreate = ExAllocatePoolWithTag(NonPagedPool, sizeof(CBT_CREATEWNDW), TAG_HOOK);
+      if (!pCsw || !pCbtCreate)
+      {
+      	 DPRINT1("UserHeapAlloc() failed!\n");
+      	 goto cleanup;
+      }
 
       /* Fill the new CREATESTRUCTW */
       RtlCopyMemory(pCsw, Cs, sizeof(CREATESTRUCTW));
@@ -2036,6 +2041,11 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             ANSI_STRING AnsiString;
             AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
             pszClass = UserHeapAlloc(AnsiString.MaximumLength);
+            if (!pszClass)
+            {
+               DPRINT1("UserHeapAlloc() failed!\n");
+               goto cleanup;
+            }
             RtlZeroMemory(pszClass, AnsiString.MaximumLength);
             AnsiString.Buffer = (PCHAR)pszClass;
             RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
@@ -2045,11 +2055,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             UNICODE_STRING UnicodeString;
             UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
             pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
+            if (!pszClass)
+            {
+               DPRINT1("UserHeapAlloc() failed!\n");
+               goto cleanup;
+            }
             RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
             UnicodeString.Buffer = (PWSTR)pszClass;
             RtlCopyUnicodeString(&UnicodeString, ClassName);
          }
-         if (pszClass) pCsw->lpszClass = UserHeapAddressToUser(pszClass);
+         pCsw->lpszClass = UserHeapAddressToUser(pszClass);
       }
       if (WindowName->Length)
       {
@@ -2061,8 +2076,13 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
          if (Window->state & WNDS_ANSICREATOR)
          {
             ANSI_STRING AnsiString;
-            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name)+sizeof(CHAR);
+            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name) + sizeof(CHAR);
             pszName = UserHeapAlloc(AnsiString.MaximumLength);
+            if (!pszName)
+            {
+               DPRINT1("UserHeapAlloc() failed!\n");
+               goto cleanup;
+            }
             RtlZeroMemory(pszName, AnsiString.MaximumLength);
             AnsiString.Buffer = (PCHAR)pszName;
             RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
@@ -2072,11 +2092,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
             UNICODE_STRING UnicodeString;
             UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
             pszName = UserHeapAlloc(UnicodeString.MaximumLength);
+            if (!pszName)
+            {
+               DPRINT1("UserHeapAlloc() failed!\n");
+               goto cleanup;
+            }
             RtlZeroMemory(pszName, UnicodeString.MaximumLength);
             UnicodeString.Buffer = (PWSTR)pszName;
             RtlCopyUnicodeString(&UnicodeString, &Name);
          }
-         if (pszName) pCsw->lpszName = UserHeapAddressToUser(pszName);
+         pCsw->lpszName = UserHeapAddressToUser(pszName);
       }
 
       pCbtCreate->lpcs = pCsw;
@@ -2087,7 +2112,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       if (Result != 0)
       {
          DPRINT1("WH_CBT HCBT_CREATEWND hook failed! 0x%x\n", Result);
-         RETURN( (PWND) NULL);
+         goto cleanup;
       }
       // Write back changes.
       Cs->cx = pCsw->cx;
@@ -2143,7 +2168,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (!Result)
    {
       DPRINT1("co_UserCreateWindowEx(): NCCREATE message failed\n");
-      RETURN((PWND)0);
+      goto cleanup;
    }
 
    /* Send the WM_NCCALCSIZE message */
@@ -2161,7 +2186,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (Result == (LRESULT)-1)
    {
       DPRINT1("co_UserCreateWindowEx(): WM_CREATE message failed\n");
-      RETURN((PWND)0);
+      goto cleanup;
    }
 
    /* Send the EVENT_OBJECT_CREATE event*/
@@ -2234,10 +2259,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    DPRINT("co_UserCreateWindowEx(): Created window %X\n", hWnd);
-   RETURN( Window);
+   ret = Window;
 
-CLEANUP:
-   if (!_ret_)
+cleanup:
+   if (!ret)
    {
        DPRINT("co_UserCreateWindowEx(): Error Created window!\n");
        /* If the window was created, the class will be dereferenced by co_UserDestroyWindow */
@@ -2258,8 +2283,8 @@ CLEANUP:
       UserDereferenceObject(Window);
    }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
-
-   END_CLEANUP;
+   
+   return ret;
 }
 
 NTSTATUS
