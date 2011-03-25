@@ -84,12 +84,13 @@ EngpRegisterGraphicsDevice(
     pGraphicsDevice->FileObject = pFileObject;
 
     /* Copy device name */
-    wcsncpy(pGraphicsDevice->szNtDeviceName,
-            pustrDeviceName->Buffer,
-            sizeof(pGraphicsDevice->szNtDeviceName) / sizeof(WCHAR));
+    RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
+                     sizeof(pGraphicsDevice->szNtDeviceName),
+                     pustrDeviceName->Buffer,
+                     pustrDeviceName->Length);
 
     /* Create a win device name (FIXME: virtual devices!) */
-    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\VIDEO%d", (CHAR)giDevNum);
+    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\VIDEO%d", (int)giDevNum);
 
     /* Allocate a buffer for the strings */
     cj = pustrDiplayDrivers->Length + pustrDescription->Length + sizeof(WCHAR);
@@ -98,6 +99,8 @@ EngpRegisterGraphicsDevice(
     {
         DPRINT1("Could not allocate string buffer\n");
         ASSERT(FALSE); // FIXME
+        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
+        return NULL;
     }
 
     /* Copy display driver names */
@@ -160,7 +163,7 @@ EngpRegisterGraphicsDevice(
     if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
     {
         DPRINT1("No devmodes\n");
-        ExFreePool(pGraphicsDevice);
+        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
 
@@ -172,7 +175,7 @@ EngpRegisterGraphicsDevice(
     if (!pGraphicsDevice->pDevModeList)
     {
         DPRINT1("No devmode list\n");
-        ExFreePool(pGraphicsDevice);
+        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
 
