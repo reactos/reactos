@@ -710,9 +710,9 @@ MiSnapThunk(IN PVOID DllBase,
         NameImport = (PIMAGE_IMPORT_BY_NAME)Name->u1.AddressOfData;
 
         /* Copy the procedure name */
-        strncpy(*MissingApi,
-                (PCHAR)&NameImport->Name[0],
-                MAXIMUM_FILENAME_LENGTH - 1);
+        RtlStringCbCopyA(*MissingApi,
+                         MAXIMUM_FILENAME_LENGTH,
+						 (PCHAR)&NameImport->Name[0]);
 
         /* Setup name tables */
         DPRINT("Import name: %s\n", NameImport->Name);
@@ -3000,8 +3000,8 @@ Quickie:
     /* If we have a file handle, close it */
     if (FileHandle) ZwClose(FileHandle);
 
-    /* Check if we had a prefix */
-    if (NamePrefix) ExFreePool(PrefixName.Buffer);
+    /* Check if we had a prefix (not supported yet - PrefixName == *FileName now) */
+    /* if (NamePrefix) ExFreePool(PrefixName.Buffer); */
 
     /* Free the name buffer and return status */
     ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);

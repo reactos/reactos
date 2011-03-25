@@ -947,6 +947,8 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     WCHAR PathSetup[] = L"\\SystemRoot\\";
     CHAR DriverNameLow[256];
     ULONG Base;
+    size_t Remaining;
+    WCHAR *StringEnd;
 #if defined(_PPC_)
     ULONG KernelBase = RosLoaderBlock->ModsAddr[0].ModStart;
 #endif
@@ -1123,7 +1125,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
         /* Construct a correct full name */
         BldrModuleStringsFull[i][0] = 0;
-        LdrEntry->FullDllName.MaximumLength = 260 * sizeof(WCHAR);
+        LdrEntry->FullDllName.MaximumLength = sizeof(BldrModuleStringsFull[i]);
         LdrEntry->FullDllName.Length = 0;
         LdrEntry->FullDllName.Buffer = BldrModuleStringsFull[i];
 
@@ -1256,25 +1258,26 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Find the first \, separating the ARC path from NT path */
     BootPath = strchr(CommandLine, '\\');
     *BootPath = ANSI_NULL;
-    strncpy(BldrArcBootPath, CommandLine, 63);
+    RtlStringCbCopyA(BldrArcBootPath, sizeof(BldrArcBootPath), CommandLine);
     LoaderBlock->ArcBootDeviceName = BldrArcBootPath;
 
     /* The rest of the string is the NT path */
     HalPath = strchr(BootPath + 1, ' ');
     *HalPath = ANSI_NULL;
-    BldrNtBootPath[0] = '\\';
-    strncat(BldrNtBootPath, BootPath + 1, 61);
-    strcat(BldrNtBootPath,"\\");
+    Remaining = sizeof(BldrNtBootPath);
+    RtlStringCbCopyExA(BldrNtBootPath, Remaining, "\\", &StringEnd, &Remaining, 0);
+    RtlStringCbCopyExA(StringEnd, Remaining, BootPath + 1, &StringEnd, &Remaining, 0);
+    RtlStringCbCopyA(StringEnd, Remaining, "\\");
     LoaderBlock->NtBootPathName = BldrNtBootPath;
 
     /* Set the HAL paths */
-    strncpy(BldrArcHalPath, BldrArcBootPath, 63);
+    RtlStringCbCopyA(BldrArcHalPath, sizeof(BldrArcHalPath), BldrArcBootPath);
     LoaderBlock->ArcHalDeviceName = BldrArcHalPath;
     strcpy(BldrNtHalPath, "\\");
     LoaderBlock->NtHalPathName = BldrNtHalPath;
 
     /* Use this new command line */
-    strncpy(LoaderBlock->LoadOptions, HalPath + 2, 255);
+    RtlStringCbCopyA(LoaderBlock->LoadOptions, 255, HalPath + 2);
 
     /* Parse it and change every slash to a space */
     BootPath = LoaderBlock->LoadOptions;
