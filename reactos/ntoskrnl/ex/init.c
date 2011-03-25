@@ -12,7 +12,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "ntstrsafe.h"
 
 /* Temporary hack */
 BOOLEAN
@@ -44,7 +43,7 @@ ULONG NtBuildNumber = VER_PRODUCTBUILD;
 #endif
 
 /* NT System Info */
-ULONG NtGlobalFlag;
+ULONG NtGlobalFlag = 0;
 ULONG ExSuiteMask;
 
 /* Cm Version Info */
@@ -894,7 +893,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PMESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
-    SIZE_T Remaining = 0;
+    size_t Remaining = 0;
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
@@ -1311,6 +1310,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     ANSI_STRING TempString;
     ULONG LastTzBias, Length, YearHack = 0, Disposition, MessageCode = 0;
     SIZE_T Size;
+    size_t Remaining;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName, DebugString;
@@ -1390,14 +1390,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     StringBuffer = InitBuffer->VersionBuffer;
     BeginBuffer = StringBuffer;
     EndBuffer = StringBuffer;
-    Size = 256;
+    Remaining = sizeof(InitBuffer->VersionBuffer);
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
         Status = RtlStringCbPrintfExA(StringBuffer,
-                                      255,
+                                      Remaining,
                                       &EndBuffer,
-                                      &Size,
+                                      &Remaining,
                                       0,
                                       ": %wZ",
                                       &CmCSDVersionString);
@@ -1410,16 +1410,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* No version */
-        Size = 255;
+        *EndBuffer++ = ANSI_NULL; /* Null-terminate the string */
+        --Remaining;
     }
-
-    /* Null-terminate the string */
-    *EndBuffer++ = ANSI_NULL;
 
     /* Build the version number */
     StringBuffer = InitBuffer->VersionNumber;
     Status = RtlStringCbPrintfA(StringBuffer,
-                                24,
+                                sizeof(InitBuffer->VersionNumber),
                                 "%u.%u",
                                 VER_PRODUCTMAJORVERSION,
                                 VER_PRODUCTMINORVERSION);
@@ -1434,7 +1432,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     {
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
-                                    Size,
+                                    Remaining,
                                     (PCHAR)MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
@@ -1448,7 +1446,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Size, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Remaining, "REACTOS (R)\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
@@ -1548,7 +1546,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Create the string */
     StringBuffer = InitBuffer->VersionBuffer;
     Status = RtlStringCbPrintfA(StringBuffer,
-                                256,
+                                sizeof(InitBuffer->VersionBuffer),
                                 NT_SUCCESS(MsgStatus) ?
                                 (PCHAR)MsgEntry->Text :
                                 "%u System Processor [%u MB Memory] %Z\n",
