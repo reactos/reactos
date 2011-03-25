@@ -1078,12 +1078,16 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
-    wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
-    wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);
+    RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
+                     sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
+                     FaceName);
+    RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
+                     sizeof(Info->EnumLogFontEx.elfFullName),
+                     FaceName);
     RtlInitAnsiString(&StyleA, FontGDI->face->style_name);
-    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, TRUE);
-    wcsncpy(Info->EnumLogFontEx.elfStyle, StyleW.Buffer, LF_FACESIZE);
-    RtlFreeUnicodeString(&StyleW);
+    StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
+    StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
+    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
 
     Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
     Info->EnumLogFontEx.elfScript[0] = L'\0';
@@ -1267,8 +1271,10 @@ FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
             if (InfoContext->Count < InfoContext->Size)
             {
                 InfoContext->Info[InfoContext->Count] = InfoContext->Info[Existing];
-                wcsncpy(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
-                        RegistryName.Buffer, LF_FACESIZE);
+                RtlStringCbCopyNW(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
+                                  sizeof(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName),
+                                  RegistryName.Buffer,
+                                  RegistryName.Length);
             }
             InfoContext->Count++;
             return STATUS_SUCCESS;
@@ -2643,7 +2649,7 @@ FindBestFontFromList(FONTOBJ **FontObj, UINT *MatchScore, LOGFONTW *LogFont,
     PFONT_ENTRY CurrentEntry;
     FONTGDI *FontGDI;
     UINT Score;
-
+ASSERT(FontObj && MatchScore && LogFont && FaceName && Head);
     Entry = Head->Flink;
     while (Entry != Head)
     {
