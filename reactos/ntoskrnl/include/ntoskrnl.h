@@ -36,6 +36,7 @@
 #undef TEXT
 #define TEXT(s) L##s
 #include <regstr.h>
+#include <ntstrsafe.h>
 
 /* FIXME: Temporary until Winldr is used */
 #include <rosldr.h>
