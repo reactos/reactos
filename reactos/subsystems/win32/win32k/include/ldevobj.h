@@ -5,9 +5,6 @@
 #endif
 extern IMAGE_DOS_HEADER __ImageBase;
 
-
-#define TAG_LDEV 'Gldv'
-
 #define GDI_ENGINE_VERSION DDI_DRIVER_VERSION_NT5_01
 
 typedef enum
