@@ -261,7 +261,8 @@ GetTextExtentPoint32A(
     UNICODE_STRING StringU;
     BOOL ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpString);
+    StringA.Buffer = (LPSTR)lpString;
+    StringA.Length = cchString;
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
     ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cchString, lpSize);
