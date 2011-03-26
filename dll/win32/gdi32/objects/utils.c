@@ -214,7 +214,7 @@ ConvertBitmapInfo(
 
     if (FollowedByData)
     {
-        DataSize = DIB_BitmapBitsSize((PBITMAPINFO)BitmapInfo );
+        DataSize = GdiGetBitmapBitsSize((PBITMAPINFO)BitmapInfo );
     }
 
     /*

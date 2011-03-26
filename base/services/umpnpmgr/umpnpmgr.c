@@ -1855,7 +1855,12 @@ DWORD PNP_SetHwProf(
 
 /* Function 56 */
 DWORD PNP_QueryArbitratorFreeData(
-    handle_t hBinding)
+    handle_t hBinding,
+    BYTE *pData,
+    DWORD DataLen,
+    LPWSTR pDeviceID,
+    RESOURCEID ResourceID,
+    DWORD ulFlags)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
@@ -1864,7 +1869,11 @@ DWORD PNP_QueryArbitratorFreeData(
 
 /* Function 57 */
 DWORD PNP_QueryArbitratorFreeSize(
-    handle_t hBinding)
+    handle_t hBinding,
+    DWORD *pulSize,
+    LPWSTR pDeviceID,
+    RESOURCEID ResourceID,
+    DWORD ulFlags)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;

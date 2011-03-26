@@ -414,7 +414,7 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
     if (IsListEmpty(&Heap->UCRList))
     {
         /* Get a pointer to the first UCR segment */
-        UcrSegment = CONTAINING_RECORD(&Heap->UCRSegments.Flink, HEAP_UCR_SEGMENT, ListEntry);
+        UcrSegment = CONTAINING_RECORD(Heap->UCRSegments.Flink, HEAP_UCR_SEGMENT, ListEntry);
 
         /* Check the list of UCR segments */
         if (IsListEmpty(&Heap->UCRSegments) ||
@@ -539,8 +539,11 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
             Address = (ULONG_PTR)UcrDescriptor->Address;
             Size += UcrDescriptor->Size;
 
-            /* Remove it from the list and destroy it */
-            RemoveEntryList(Current);
+            /* Advance to the next descriptor */
+            Current = Current->Flink;
+
+            /* Remove the current descriptor from the list and destroy it */
+            RemoveEntryList(&UcrDescriptor->SegmentEntry);
             RtlpDestroyUnCommittedRange(Segment, UcrDescriptor);
 
             Segment->NumberOfUnCommittedRanges--;
@@ -1362,8 +1365,11 @@ RtlCreateHeap(ULONG Flags,
         Heap = RtlpPageHeapCreate(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
         if (Heap) return Heap;
 
-        //ASSERT(FALSE);
-        DPRINT1("Enabling page heap failed\n");
+        /* Reset a special Parameters == -1 hack */
+        if ((ULONG_PTR)Parameters == (ULONG_PTR)-1)
+            Parameters = NULL;
+        else
+            DPRINT1("Enabling page heap failed\n");
     }
 
     /* Check validation flags */
@@ -1715,6 +1721,9 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
     PHEAP_SEGMENT Segment;
 
     if (!HeapPtr) return NULL;
+
+    /* Call page heap routine if required */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS) return RtlpPageHeapDestroy(HeapPtr);
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Heap->Flags))
@@ -3701,7 +3710,9 @@ BOOLEAN NTAPI RtlValidateHeap(
     BOOLEAN HeapLocked = FALSE;
     BOOLEAN HeapValid;
 
-    // FIXME Check for special heap
+    /* Check for page heap */
+    if (Heap->ForceFlags & HEAP_FLAG_PAGE_ALLOCS)
+        return RtlpDebugPageHeapValidate(HeapPtr, Flags, Block);
 
     /* Check signature */
     if (Heap->Signature != HEAP_SIGNATURE)

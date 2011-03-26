@@ -80,7 +80,7 @@ EnumerateSecurityPackagesW (
     SECURITY_STATUS ret = SEC_E_OK;
 
     *pcPackages = 0;
-
+    *ppPackageInfo = NULL;
     /*
     if (packageTable)
     {
@@ -113,7 +113,7 @@ EnumerateSecurityPackagesA(
         } */
         FreeContextBuffer(info);
     }
-
+    *ppPackageInfo = NULL;
 	UNIMPLEMENTED;
 
     return ret;

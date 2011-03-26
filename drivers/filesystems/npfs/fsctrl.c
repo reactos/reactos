@@ -317,9 +317,105 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     return Status;
 }
 
-
 static NTSTATUS
 NpfsWaitPipe(PIRP Irp,
+             PNPFS_CCB Ccb)
+{
+    PLIST_ENTRY current_entry;
+    PNPFS_FCB Fcb;
+    PNPFS_CCB ServerCcb;
+    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
+    PLARGE_INTEGER TimeOut;
+    NTSTATUS Status;
+    PEXTENDED_IO_STACK_LOCATION IoStack;
+    PFILE_OBJECT FileObject;
+    PNPFS_VCB Vcb;
+
+    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack);
+    FileObject = IoStack->FileObject;
+    ASSERT(FileObject);
+
+    DPRINT1("Waiting on Pipe %wZ\n", &FileObject->FileName);
+
+    WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+
+    ASSERT(Ccb->Fcb);
+    ASSERT(Ccb->Fcb->Vcb);
+
+    /* Get the VCB */
+    Vcb = Ccb->Fcb->Vcb;
+
+    /* Lock the pipe list */
+    KeLockMutex(&Vcb->PipeListLock);
+
+    /* File a pipe with the given name */
+    Fcb = NpfsFindPipe(Vcb,
+                       &FileObject->FileName);
+
+    /* Unlock the pipe list */
+    KeUnlockMutex(&Vcb->PipeListLock);
+
+    /* Fail if not pipe was found */
+    if (Fcb == NULL)
+    {
+        DPRINT1("No pipe found!\n", Fcb);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    /* search for listening server */
+    current_entry = Fcb->ServerCcbListHead.Flink;
+    while (current_entry != &Fcb->ServerCcbListHead)
+    {
+        ServerCcb = CONTAINING_RECORD(current_entry,
+                                      NPFS_CCB,
+                                      CcbListEntry);
+
+        if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
+        {
+            /* found a listening server CCB */
+            DPRINT("Listening server CCB found -- connecting\n");
+
+            return STATUS_SUCCESS;
+        }
+
+        current_entry = current_entry->Flink;
+    }
+
+    /* No listening server fcb found, so wait for one */
+
+    /* If a timeout specified */
+    if (WaitPipe->TimeoutSpecified)
+    {
+        /* NMPWAIT_USE_DEFAULT_WAIT = 0 */
+        if (WaitPipe->Timeout.QuadPart == 0)
+        {
+            TimeOut = &Fcb->TimeOut;
+        }
+        else
+        {
+            TimeOut = &WaitPipe->Timeout;
+        }
+    }
+    else
+    {
+        /* Wait forever */
+        TimeOut = NULL;
+    }
+
+     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
+                                    UserRequest,
+                                    KernelMode,
+                                    TRUE,
+                                    TimeOut);
+
+    DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
+
+    return Status;
+}
+
+NTSTATUS
+NpfsWaitPipe2(PIRP Irp,
              PNPFS_CCB Ccb)
 {
     PLIST_ENTRY current_entry;

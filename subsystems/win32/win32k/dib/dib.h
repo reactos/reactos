@@ -31,7 +31,7 @@ typedef struct _BLTINFO
   POINTL SourcePoint;
   BRUSHOBJ *Brush;
   POINTL BrushOrigin;
-  ULONG Rop4;
+  ROP4 Rop4;
 } BLTINFO, *PBLTINFO;
 
 typedef VOID (*PFN_DIB_PutPixel)(SURFOBJ*,LONG,LONG,ULONG);

@@ -29,6 +29,7 @@ list(APPEND SOURCE
     handle.c
     heap.c
     heapdbg.c
+	heappage.c
     image.c
     interlck.c
     message.c

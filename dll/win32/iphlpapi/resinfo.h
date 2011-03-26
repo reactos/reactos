@@ -28,7 +28,7 @@ typedef struct _IPHLP_RES_INFO {
 
 /* Get resolver info.  This currently is limited to a list of IP addresses
  * that name our DNS server list. */
-PIPHLP_RES_INFO getResInfo();
+PIPHLP_RES_INFO getResInfo(VOID);
 /* Release any resources used in acquiring the resolver information */
 VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr );
 

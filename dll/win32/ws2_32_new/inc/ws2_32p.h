@@ -858,14 +858,14 @@ WsAsyncGlobalInitialize(VOID);
 
 FORCEINLINE
 PWSPROCESS
-WsGetProcess()
+WsGetProcess(VOID)
 {
     return CurrentWsProcess;
 }
 
 FORCEINLINE
 DWORD
-WsQuickProlog()
+WsQuickProlog(VOID)
 {
     /* Try to see if we're initialized. If not, do the full prolog */
     return WsGetProcess() ? ERROR_SUCCESS : WsSlowProlog();

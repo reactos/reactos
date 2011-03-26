@@ -1727,7 +1727,7 @@ SetWindowTextA(HWND hWnd,
 
         if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
         }
         return TRUE;
     }
@@ -1757,7 +1757,7 @@ SetWindowTextW(HWND hWnd,
 
         if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
         }
         return TRUE;
     }

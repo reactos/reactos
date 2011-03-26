@@ -2,13 +2,13 @@
 
 [Section]
 Name = Opera
-Version = 11.00
+Version = 11.01
 Licence = Freeware
 Description = The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.
 Size = 8.9M
 Category = 5
 URLSite = http://www.opera.com/
-URLDownload = http://get4.opera.com/pub/opera/win/1100/int/Opera_1100_int_Setup.exe
+URLDownload = http://get4.opera.com/pub/opera/win/1101/int/Opera_1101_int_Setup.exe
 CDPath = none
 
 [Section.0405]
@@ -19,6 +19,9 @@ Description = Der populäre Opera Browser mit vielen fortschrittlichen Eigenscha
 
 [Section.040a]
 Description = Popular navegador web con muchas características avanzadas e incluye un cliente de correo y BitTorrent.
+
+[Section.040c]
+Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités avancées, incluant un client mail et BitTorrent.
 
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.

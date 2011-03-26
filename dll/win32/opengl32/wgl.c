@@ -454,13 +454,12 @@ ROSGL_SetContextCallBack( const ICDTable *table )
         /* save table */
         size = sizeof (PROC) * table->num_funcs;
         memcpy( tebTable, table->dispatch_table, size );
-        memset( tebTable + table->num_funcs, 0,
-                sizeof (table->dispatch_table) - size );
+        memset( tebTable + table->num_funcs, 0, DISPATCH_TABLE_SIZE - size );
     }
     else
     {
         DBGPRINT( "Unsetting current context" );
-        memset( tebTable, 0, sizeof (table->dispatch_table) );
+        memset( tebTable, 0, DISPATCH_TABLE_SIZE );
     }
 
     /* put in empty functions as long as we dont have a fallback */

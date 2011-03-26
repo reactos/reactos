@@ -141,7 +141,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
    UINT RgnType;
 
    if (Window->hrgnUpdate != NULL &&
-       Window->hrgnUpdate != (HRGN)1)
+       Window->hrgnUpdate != HRGN_WINDOW)
    {
       hRgnNonClient = IntCalcWindowRgn(Window, FALSE);
 
@@ -151,14 +151,14 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
        */
       if (hRgnNonClient == NULL)
       {
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
 
       hRgnWindow = IntCalcWindowRgn(Window, TRUE);
       if (hRgnWindow == NULL)
       {
          REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
 
       RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient,
@@ -167,7 +167,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
       {
          REGION_FreeRgnByHandle(hRgnWindow);
          REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
       else if (RgnType == NULLREGION)
       {
@@ -307,9 +307,9 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 /*
  * IntInvalidateWindows
  *
- * Internal function used by IntRedrawWindow.
+ * Internal function used by IntRedrawWindow, UserRedrawDesktop,
+ * co_WinPosSetWindowPos, IntValidateParent, co_UserRedrawWindow.
  */
-
 VOID FASTCALL
 IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 {
@@ -759,7 +759,7 @@ IntPrintWindow(
        xSrc = 0;
        ySrc = 0;
     }
-    
+
     // TODO: Setup Redirection for Print.
     return FALSE;
 
@@ -1049,7 +1049,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    else
    {
       /* Get the update region bounding box. */
-      if (Window->hrgnUpdate == (HRGN)1)
+      if (Window->hrgnUpdate == HRGN_WINDOW)
       {
          Rect = Window->rcClient;
       }
@@ -2065,7 +2065,7 @@ NtUserPrintWindow(
     HDC  hdcBlt,
     UINT nFlags)
 {
-    PWND Window;   
+    PWND Window;
     BOOL Ret = FALSE;
 
     UserEnterExclusive();
@@ -2075,7 +2075,7 @@ NtUserPrintWindow(
        Window = UserGetWindowObject(hwnd);
        // TODO: Add Desktop and MessageBox check via FNID's.
        if ( Window )
-       { 
+       {
           /* Validate flags and check it as a mask for 0 or 1. */
           if ( (nFlags & PW_CLIENTONLY) == nFlags)
              Ret = IntPrintWindow( Window, hdcBlt, nFlags);

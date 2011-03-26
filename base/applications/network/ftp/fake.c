@@ -35,7 +35,7 @@ void blkfree(char **av0)
         free(*av++);
 }
 
-char **glob(register char *v)
+char **glob(const char *v)
 {
    return NULL;
 }

@@ -226,9 +226,9 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
  */
 NTSTATUS NTAPI
 RtlMultiByteToUnicodeN(
-   IN PWCHAR UnicodeString,
+   OUT PWCHAR UnicodeString,
    IN ULONG UnicodeSize,
-   IN PULONG ResultSize,
+   OUT PULONG ResultSize,
    IN PCSTR MbString,
    IN ULONG MbSize)
 {
@@ -286,7 +286,7 @@ RtlMultiByteToUnicodeN(
          *ResultSize = i * sizeof(WCHAR);
    }
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 

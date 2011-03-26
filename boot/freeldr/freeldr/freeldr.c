@@ -64,3 +64,16 @@ long _ftol2_sse(double f)
     return _ftol(f);
 }
 #endif
+
+// We need to emulate these, because the original ones don't work in freeldr
+int __cdecl wctomb(char *mbchar, wchar_t wchar)
+{
+    *mbchar = wchar;
+    return 1;
+}
+
+int __cdecl mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
+{
+    *wchar = *mbchar;
+    return 1;
+}

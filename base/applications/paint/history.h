@@ -6,16 +6,16 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void newReversible();
+void newReversible(void);
 
-void undo();
+void undo(void);
 
-void redo();
+void redo(void);
 
-void resetToU1();
+void resetToU1(void);
 
-void clearHistory();
+void clearHistory(void);
 
-void insertReversible();
+void insertReversible(HBITMAP hbm);
 
 void cropReversible(int width, int height, int xOffset, int yOffset);

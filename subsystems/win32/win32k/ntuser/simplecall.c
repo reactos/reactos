@@ -341,6 +341,9 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
+      case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
+		  /* TODO: Implement sound sentry */
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -364,7 +367,6 @@ NtUserCallTwoParam(
    DWORD_PTR Param2,
    DWORD Routine)
 {
-   NTSTATUS Status;
    PWND Window;
    DECLARE_RETURN(DWORD_PTR);
 
@@ -373,29 +375,6 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
-      case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
-         {
-            DWORD_PTR Ret;
-            RECTL rcRect;
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            Ret = (DWORD_PTR)IntGetWindowRgnBox(Window, &rcRect);
-            Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               RETURN( ERROR);
-            }
-            RETURN( Ret);
-         }
-      case TWOPARAM_ROUTINE_GETWINDOWRGN:
-         {
-            Window = UserGetWindowObject((HWND)Param1);
-            if (!Window) RETURN(ERROR);
-
-            RETURN( (DWORD_PTR)IntGetWindowRgn(Window, (HRGN)Param2));
-         }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
             DWORD_PTR Ret;
@@ -737,7 +716,7 @@ NtUserCallHwndParamLock(
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
-   DPRINT1("Enter NtUserCallHwndParamLock\n");
+   DPRINT("Enter NtUserCallHwndParamLock\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -758,7 +737,7 @@ NtUserCallHwndParamLock(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT1("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 

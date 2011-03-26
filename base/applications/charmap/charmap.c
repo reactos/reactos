@@ -133,57 +133,96 @@ ChangeMapFont(HWND hDlg)
     }
 }
 
+// Copy collected characters into the clipboard
+static
+void
+CopyCharacters(HWND hDlg)
+{
+    HWND hText = GetDlgItem(hDlg, IDC_TEXTBOX);
+    DWORD dwStart, dwEnd;
 
+    // Acquire selection limits
+    SendMessage(hText, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
+    // Test if the whose text is unselected
+    if(dwStart == dwEnd) {
+        
+        // Select the whole text
+        SendMessageW(hText, EM_SETSEL, 0, -1);
+
+        // Copy text
+        SendMessageW(hText, WM_COPY, 0, 0);
+
+        // Restore previous values
+        SendMessageW(hText, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
+
+    } else {
+
+        // Copy text
+        SendMessageW(hText, WM_COPY, 0, 0);
+    }
+}
+
+// Recover charset for the given font
+static
+BYTE
+GetFontMetrics(HWND hWnd, HFONT hFont)
+{
+    TEXTMETRIC tmFont;
+    HGDIOBJ    hOldObj;
+    HDC        hDC;
+
+    hDC = GetDC(hWnd);
+    hOldObj = SelectObject(hDC, hFont);
+    GetTextMetrics(hDC, &tmFont);
+    SelectObject(hDC, hOldObj);
+    ReleaseDC(hWnd, hDC);
+
+    return tmFont.tmCharSet;
+}
+
+// Select a new character
 static
 VOID
-AddCharToSelection(HWND hText,
-                   WCHAR ch)
+AddCharToSelection(HWND hDlg, WCHAR ch)
 {
-    LPWSTR lpText;
-    INT Len = GetWindowTextLength(hText);
+    HWND    hMap = GetDlgItem(hDlg, IDC_FONTMAP);
+    HWND    hText = GetDlgItem(hDlg, IDC_TEXTBOX);
+    HFONT   hFont;
+    LOGFONT lFont;
+    CHARFORMAT cf;
 
-    if (Len != 0)
+    // Retrieve current character selected
+    if (ch == 0)
     {
-        lpText = HeapAlloc(GetProcessHeap(),
-                           0,
-                           (Len + 2) * sizeof(WCHAR));
-
-        if (lpText)
-        {
-            LPWSTR lpStr = lpText;
-
-            SendMessageW(hText,
-                         WM_GETTEXT,
-                         Len + 1,
-                         (LPARAM)lpStr);
-
-            lpStr += Len;
-            *lpStr = ch;
-            lpStr++;
-            *lpStr = L'\0';
-
-            SendMessageW(hText,
-                         WM_SETTEXT,
-                         0,
-                         (LPARAM)lpText);
-
-            HeapFree(GetProcessHeap(),
-                     0,
-                     lpText);
-        }
+        ch = (WCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
+        if (!ch)
+            return;
     }
-    else
-    {
-        WCHAR szText[2];
 
-        szText[0] = ch;
-        szText[1] = L'\0';
+    // Retrieve current selected font
+    hFont = (HFONT)SendMessage(hMap, FM_GETHFONT, 0, 0);
 
-        SendMessageW(hText,
-                     WM_SETTEXT,
-                     0,
-                     (LPARAM)szText);
-    }
+    // Recover LOGFONT structure from hFont
+    if (!GetObject(hFont, sizeof(LOGFONT), &lFont))
+        return;
+
+    // Recover font properties of Richedit control
+    ZeroMemory(&cf, sizeof(cf));
+    cf.cbSize = sizeof(cf);
+    SendMessage(hText, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    // Apply properties of the new font
+    cf.bCharSet = GetFontMetrics(hText, hFont);
+
+    // Update font name
+    wcscpy(cf.szFaceName, lFont.lfFaceName);
+
+    // Update font properties
+    SendMessage(hText, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    // Send selected character to Richedit
+    SendMessage(hText, WM_CHAR, (WPARAM)ch, 0);
 }
 
 
@@ -204,6 +243,7 @@ DlgProc(HWND hDlg,
         case WM_INITDIALOG:
         {
             HMENU hSysMenu;
+            DWORD evMask;
 
             hSmIcon = LoadImageW(hInstance,
                                  MAKEINTRESOURCEW(IDI_ICON),
@@ -256,6 +296,12 @@ DlgProc(HWND hDlg,
                                 lpAboutText);
                 }
             }
+
+            // Configure Richedi control for sending notification changes.
+            evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
+            evMask |= ENM_CHANGE;
+            SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_SETEVENTMASK, 0, (LPARAM)evMask);
+
             return TRUE;
         }
 
@@ -264,41 +310,39 @@ DlgProc(HWND hDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_FONTMAP:
-                {
                     switch (HIWORD(wParam))
                     {
                         case FM_SETCHAR:
-                            AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                               LOWORD(lParam));
+                            AddCharToSelection(hDlg, LOWORD(lParam));
                             break;
                     }
-                }
-                break;
+                    break;
 
                 case IDC_FONTCOMBO:
-                {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         ChangeMapFont(hDlg);
                     }
-                }
-                break;
+                    break;
 
                 case IDC_SELECT:
-                {
-                    WCHAR ch;
-                    HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
-
-                    ch = (WCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
-
-                    if (ch)
-                    {
-                        AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                           ch);
-                    }
-
+                    AddCharToSelection(hDlg, 0);
                     break;
-                }
+
+                case IDC_TEXTBOX:
+                    switch (HIWORD(wParam)) {
+                    case EN_CHANGE:
+                        if (GetWindowTextLength(GetDlgItem(hDlg, IDC_TEXTBOX)) == 0)
+                            EnableWindow(GetDlgItem(hDlg, IDC_COPY), FALSE);
+                        else
+                            EnableWindow(GetDlgItem(hDlg, IDC_COPY), TRUE);
+                        break;
+                    }
+                    break;
+
+                case IDC_COPY:
+                    CopyCharacters(hDlg);
+                    break;
 
                 case IDOK:
                     if (hSmIcon)
@@ -306,7 +350,7 @@ DlgProc(HWND hDlg,
                     if (hBgIcon)
                         DestroyIcon(hBgIcon);
                     EndDialog(hDlg, 0);
-                break;
+                    break;
             }
         }
         break;
@@ -347,6 +391,7 @@ wWinMain(HINSTANCE hInst,
 {
     INITCOMMONCONTROLSEX iccx;
     INT Ret = 1;
+    HMODULE hRichEd20;
 
     hInstance = hInst;
 
@@ -356,11 +401,17 @@ wWinMain(HINSTANCE hInst,
 
     if (RegisterMapClasses(hInstance))
     {
-        Ret = DialogBoxW(hInstance,
-                         MAKEINTRESOURCEW(IDD_CHARMAP),
-                         NULL,
-                         DlgProc) >= 0;
+        hRichEd20 = LoadLibraryW(L"RICHED20.DLL");
 
+        if (hRichEd20 != NULL)
+        {
+            Ret = DialogBoxW(hInstance,
+                             MAKEINTRESOURCEW(IDD_CHARMAP),
+                             NULL,
+                             DlgProc) >= 0;
+
+            FreeLibrary(hRichEd20);
+        }
         UnregisterMapClasses(hInstance);
     }
 

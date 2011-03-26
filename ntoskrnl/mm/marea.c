@@ -458,7 +458,7 @@ MmFindGapBottomUp(
 {
    PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
    PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
-                          (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
+                            MmHighestUserAddress : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
    PMEMORY_AREA FirstNode;

@@ -9,6 +9,9 @@
     NtGdiPtInRegion((WndObject)->hrgnClip, (INT)((x) - (WndObject)->rcWindow.left), \
                     (INT)((y) - (WndObject)->rcWindow.top))))
 
+#define IntPtInRect(lprc,pt) \
+    ((pt.x >= (lprc)->left) && (pt.x < (lprc)->right) && (pt.y >= (lprc)->top) && (pt.y < (lprc)->bottom))
+
 UINT
 FASTCALL co_WinPosArrangeIconicWindows(PWND parent);
 BOOL FASTCALL

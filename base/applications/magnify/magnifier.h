@@ -32,5 +32,5 @@ extern BOOL bInvertColors;
 extern BOOL bStartMinimized;
 extern BOOL bShowMagnifier;
 
-void LoadSettings();
-void SaveSettings();
+void LoadSettings(void);
+void SaveSettings(void);

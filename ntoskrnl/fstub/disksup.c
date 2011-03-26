@@ -24,6 +24,8 @@ const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
 #define PARTITION_MAGIC    0xaa55
 
+#define EFI_PMBR_OSTYPE_EFI 0xEE
+
 #include <pshpack1.h>
 
 typedef struct _REG_DISK_MOUNT_INFO
@@ -1358,6 +1360,24 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
+VOID
+NTAPI
+FstubFixupEfiPartition(IN PPARTITION_DESCRIPTOR PartitionDescriptor,
+                       IN ULONGLONG MaxOffset)
+{
+    ULONG PartitionLength;
+    PAGED_CODE();
+
+    /* Compute partition length (according to MBR entry) */
+    PartitionLength = PartitionDescriptor->StartingSectorLsb0 + PartitionDescriptor->PartitionLengthLsb0;
+    /* In case the partition length goes beyond disk size... */
+    if (PartitionLength > MaxOffset)
+    {
+        /* Resize partition to its maximum real length */
+        PartitionDescriptor->PartitionLengthLsb0 = MaxOffset - PartitionDescriptor->StartingSectorLsb0;
+    }
+}
+
 NTSTATUS
 FASTCALL
 xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
@@ -1425,7 +1445,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             MaxOffset, MaxSector);
 
     /* Allocate our buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, InputSize, TAG_FILE_SYSTEM);
     if (!Buffer)
     {
         /* Fail, free the input buffer */
@@ -1503,9 +1523,6 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         PartitionDescriptor = (PPARTITION_DESCRIPTOR)
                                &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
 
-        /* Get the partition type */
-        PartitionType = PartitionDescriptor->PartitionType;
-
         /* Start looping partitions */
         j++;
         DPRINT("FSTUB: Partition Table %d:\n", j);
@@ -1523,6 +1540,14 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             DPRINT("\tOffset %#08lx for %#08lx Sectors\n",
                     GET_STARTING_SECTOR(PartitionDescriptor),
                     GET_PARTITION_LENGTH(PartitionDescriptor));
+
+            /* Check whether we're facing a protective MBR */
+            if (PartitionType == EFI_PMBR_OSTYPE_EFI)
+            {
+                /* Partition length might be bigger than disk size */
+                FstubFixupEfiPartition(PartitionDescriptor,
+                                       MaxOffset);
+            }
 
             /* Make sure that the partition is valid, unless it's the first */
             if (!(HalpIsValidPartitionEntry(PartitionDescriptor,

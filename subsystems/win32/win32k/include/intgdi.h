@@ -232,8 +232,6 @@ IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            LPPALETTEENTRY  pe);
-UINT APIENTRY
-IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
 
 UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);

@@ -604,7 +604,7 @@ NTAPI
 RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
 #ifndef NDEBUG
-    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    HANDLE Thread = (HANDLE)NtCurrentTeb()->ClientId.UniqueThread;
 
     /* In win this case isn't checked. However it's a valid check so it should only
        be performed in debug builds! */

@@ -1,10 +1,10 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = ReMooD
 Version = 0.8a
 Licence = GPL
-Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy Experience with new features and more stability. This supports Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x and higher; and Linux (x86 and x86_64).
+Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy Experience with new features and more stability.
 Size = 1.2M
 Category = 4
 URLSite = http://remood.sourceforge.net/
@@ -12,10 +12,13 @@ URLDownload = http://ovh.dl.sourceforge.net/project/remood/ReMooD/0.8a/remoodset
 CDPath = none
 
 [Section.0407]
-Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilit�t zu bieten. Unterst�tzt werden Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x und h�her; und Linux (x86 und x86_64).
+Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
+
+[Section.040c]
+Description = ReMood est un portage du source de Doom Legacy. Son but est de fournir l'expérience classique de Legacy avec de nouvelles fonctionnalités et plus de stabilité.
 
 [Section.0415]
-Description = �r�d�owy port Doom. Jego celem jest zapewnienie rozrywki znanej z klasycznej wersji z nowymi funkcjami, i lepsz� stabilno�ci�. Obs�uguje Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x i wy�sze; i Linux (x86 i x86_64).
+Description = Źródłowy port Doom. Jego celem jest zapewnienie rozrywki znanej z klasycznej wersji z nowymi funkcjami i lepszą stabilnością.
 
 [Section.0422]
-Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy. Він підтримує Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x та новіші; а також Linux (x86 та x86_64).
+Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy.

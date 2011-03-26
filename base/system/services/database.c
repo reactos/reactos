@@ -30,6 +30,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD dwResumeCount = 1;
 
+static CRITICAL_SECTION ControlServiceCriticalSection;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -691,13 +692,18 @@ ScmControlService(PSERVICE Service,
 
     DPRINT("ScmControlService() called\n");
 
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
     TotalLength = wcslen(Service->lpServiceName) + 1;
 
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
                                                    sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
     if (ControlPacket == NULL)
+    {
+        LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
     ControlPacket->dwControl = dwControl;
     ControlPacket->dwSize = TotalLength;
@@ -727,6 +733,8 @@ ScmControlService(PSERVICE Service,
     {
         dwError = ReplyPacket.dwError;
     }
+
+    LeaveCriticalSection(&ControlServiceCriticalSection);
 
     DPRINT("ScmControlService() done\n");
 
@@ -914,6 +922,9 @@ ScmStartUserModeService(PSERVICE Service,
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
+
+    DPRINT1("Service: %p  ImagePath: %wZ  PipeName: %S\n", Service, &ImagePath, NtControlPipeName);
+
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
                                                   PIPE_ACCESS_DUPLEX,
                                                   PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -1028,6 +1039,17 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 
     DPRINT("ScmStartService() called\n");
 
+    DPRINT1("Start Service %p (%S)\n", Service, Service->lpServiceName);
+
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
+    if (Service->Status.dwCurrentState != SERVICE_STOPPED)
+    {
+        DPRINT1("Service %S is already running!\n", Service->lpServiceName);
+        LeaveCriticalSection(&ControlServiceCriticalSection);
+        return ERROR_SERVICE_ALREADY_RUNNING;
+    }
+
     Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
 
@@ -1054,6 +1076,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 #endif
         }
     }
+
+    LeaveCriticalSection(&ControlServiceCriticalSection);
 
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
 
@@ -1255,6 +1279,20 @@ VOID
 ScmUnlockDatabase(VOID)
 {
     RtlReleaseResource(&DatabaseLock);
+}
+
+
+VOID
+ScmInitNamedPipeCriticalSection(VOID)
+{
+    InitializeCriticalSection(&ControlServiceCriticalSection);
+}
+
+
+VOID
+ScmDeleteNamedPipeCriticalSection(VOID)
+{
+    DeleteCriticalSection(&ControlServiceCriticalSection);
 }
 
 /* EOF */

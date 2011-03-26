@@ -823,7 +823,7 @@ CPortPinWaveCyclic::RequestService()
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    if (m_State == KSSTATE_RUN)
+    if (m_State == KSSTATE_RUN && m_ResetState == KSRESET_END)
     {
         Status = m_Stream->GetPosition(&Position);
 
@@ -904,13 +904,19 @@ CPortPinWaveCyclic::DeviceIoControl(
         /* check for success */
         if (NT_SUCCESS(Status))
         {
+            //determine state of reset request
             if (ResetValue == KSRESET_BEGIN)
             {
-                m_IrpQueue->CancelBuffers();
+                // start reset procress
+                // incoming read/write requests will be rejected
                 m_ResetState = KSRESET_BEGIN;
+
+                // cancel existing buffers
+                m_IrpQueue->CancelBuffers();
             }
             else if (ResetValue == KSRESET_END)
             {
+                // end of reset process
                 m_ResetState = KSRESET_END;
             }
         }

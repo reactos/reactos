@@ -55,9 +55,6 @@ typedef struct _ROS_DC_INFO
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
   CLIPOBJ     *CombinedClip;
-
-  UNICODE_STRING    DriverName;
-
 } ROS_DC_INFO;
 
 typedef struct _DCLEVEL
@@ -213,7 +210,10 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
 {
     PSURFACE psurfOld = pdc->dclevel.pSurface;
     if (psurfOld)
+    {
+        psurfOld->hdc = NULL;
         SURFACE_ShareUnlockSurface(psurfOld);
+    }
     if (psurfNew)
         GDIOBJ_IncrementShareCount((POBJ)psurfNew);
     pdc->dclevel.pSurface = psurfNew;

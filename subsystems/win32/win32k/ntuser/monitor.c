@@ -282,7 +282,10 @@ IntResetMonitorSize(IN PDEVOBJ *pGdiDevice)
     Monitor->rcWork = Monitor->rcMonitor;
 
     if (Monitor->hrgnMonitor)
+    {
+        GDIOBJ_SetOwnership(Monitor->hrgnMonitor, PsGetCurrentProcess());
         REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+    }
 
     Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
 

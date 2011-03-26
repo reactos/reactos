@@ -4068,13 +4068,9 @@ DrawMenuBar(HWND hWnd)
   MenuGetRosMenuInfo(&MenuInfo, hMenu);
   MenuInfo.Height = 0; // make sure to recalc size
   MenuSetRosMenuInfo(&MenuInfo);
-  /* The wine method doesn't work and I suspect it's more effort
-     then hackfix solution
+  
   SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                   SWP_NOZORDER | SWP_FRAMECHANGED );
-  return TRUE;*/
-  // FIXME: hackfix
-  DefWndNCPaint(hWnd,(HRGN)-1,-1);
   return TRUE;
 }
 

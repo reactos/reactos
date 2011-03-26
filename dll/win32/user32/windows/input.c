@@ -48,9 +48,8 @@ DragDetect(
   HWND hWnd,
   POINT pt)
 {
-#if 0
   return NtUserDragDetect(hWnd, pt);
-#else
+#if 0
   MSG msg;
   RECT rect;
   POINT tmp;

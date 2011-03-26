@@ -636,7 +636,8 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
             if (!(style & TTS_BALLOON))
                 rect.top  -= (size.cy / 2);
         }
-        infoPtr->bToolBelow = TRUE;
+        if (!(infoPtr->bToolBelow = (infoPtr->yTrackPos + size.cy <= GetSystemMetrics(SM_CYSCREEN))))
+            rect.top -= size.cy;
 
         if (!(toolPtr->uFlags & TTF_ABSOLUTE))
         {
@@ -1430,7 +1431,7 @@ TOOLTIPS_HitTestT (const TOOLTIPS_INFO *infoPtr, LPTTHITTESTINFOW lptthit,
 
 
 static LRESULT
-TOOLTIPS_NewToolRectT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
+TOOLTIPS_NewToolRectT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti)
 {
     INT nTool;
 
@@ -1840,15 +1841,7 @@ TOOLTIPS_UpdateTipTextT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW
 
 
 static LRESULT
-TOOLTIPS_WindowFromPoint (HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-    return (LRESULT)WindowFromPoint (*((LPPOINT)lParam));
-}
-
-
-
-static LRESULT
-TOOLTIPS_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
+TOOLTIPS_Create (HWND hwnd)
 {
     TOOLTIPS_INFO *infoPtr;
 
@@ -1944,7 +1937,7 @@ TOOLTIPS_MouseMessage (TOOLTIPS_INFO *infoPtr)
 
 
 static LRESULT
-TOOLTIPS_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
+TOOLTIPS_NCCreate (HWND hwnd)
 {
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
     DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
@@ -1986,7 +1979,32 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
+    TTTOOL_INFO *toolPtr = infoPtr->tools;
+    LRESULT nResult;
+
+    TRACE("infoPtr=%p wParam=%lx lParam=%p\n", infoPtr, wParam, (PVOID)lParam);
+
+    if (lParam == NF_QUERY) {
+        if (toolPtr->bNotifyUnicode) {
+            return NFR_UNICODE;
+        } else {
+            return NFR_ANSI;
+        }
+    }
+    else if (lParam == NF_REQUERY) {
+        nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
+                    (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
+        if (nResult == NFR_ANSI) {
+            toolPtr->bNotifyUnicode = FALSE;
+            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
+        } else if (nResult == NFR_UNICODE) {
+            toolPtr->bNotifyUnicode = TRUE;
+            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
+        } else {
+            TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
+        }
+        return nResult;
+    }
 
     return 0;
 }
@@ -2220,8 +2238,8 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                       uMsg == TTM_HITTESTW);
 	case TTM_NEWTOOLRECTA:
 	case TTM_NEWTOOLRECTW:
-	    return TOOLTIPS_NewToolRectT (infoPtr, (LPTTTOOLINFOW)lParam,
-                                          uMsg == TTM_NEWTOOLRECTW);
+	    return TOOLTIPS_NewToolRectT (infoPtr, (LPTTTOOLINFOW)lParam);
+
 	case TTM_POP:
 	    return TOOLTIPS_Pop (infoPtr);
 
@@ -2268,11 +2286,10 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                             uMsg == TTM_UPDATETIPTEXTW);
 
 	case TTM_WINDOWFROMPOINT:
-	    return TOOLTIPS_WindowFromPoint (hwnd, wParam, lParam);
-
+	    return (LRESULT)WindowFromPoint (*((LPPOINT)lParam));
 
 	case WM_CREATE:
-	    return TOOLTIPS_Create (hwnd, (LPCREATESTRUCTW)lParam);
+	    return TOOLTIPS_Create (hwnd);
 
 	case WM_DESTROY:
 	    return TOOLTIPS_Destroy (infoPtr);
@@ -2300,7 +2317,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_MouseMessage (infoPtr);
 
 	case WM_NCCREATE:
-	    return TOOLTIPS_NCCreate (hwnd, (LPCREATESTRUCTW)lParam);
+	    return TOOLTIPS_NCCreate (hwnd);
 
 	case WM_NCHITTEST:
 	    return TOOLTIPS_NCHitTest (infoPtr, wParam, lParam);

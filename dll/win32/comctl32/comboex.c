@@ -431,18 +431,13 @@ static void COMBOEX_ReSize (const COMBOEX_INFO *infoPtr)
     if (infoPtr->hwndCombo) {
         SendMessageW (infoPtr->hwndCombo, CB_SETITEMHEIGHT, 0, cy);
 	if ( !(infoPtr->flags & CBES_EX_NOSIZELIMIT)) {
-	    RECT comboRect;
-	    if (GetWindowRect(infoPtr->hwndCombo, &comboRect)) {
-		RECT ourRect;
-		if (GetWindowRect(infoPtr->hwndSelf, &ourRect)) {
-		    if (comboRect.bottom > ourRect.bottom) {
-			POINT pt = { ourRect.left, ourRect.top };
-			if (ScreenToClient(infoPtr->hwndSelf, &pt))
-			    MoveWindow( infoPtr->hwndSelf, pt.x, pt.y, ourRect.right - ourRect.left,
-					comboRect.bottom - comboRect.top, FALSE);
-		    }
-		}
-	    }
+	    RECT comboRect, ourRect;
+	    GetWindowRect(infoPtr->hwndCombo, &comboRect);
+            GetWindowRect(infoPtr->hwndSelf, &ourRect);
+            if (comboRect.bottom > ourRect.bottom)
+                SetWindowPos( infoPtr->hwndSelf, 0, 0, 0, ourRect.right - ourRect.left,
+                              comboRect.bottom - comboRect.top,
+                              SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW );
 	}
     }
 }
@@ -758,7 +753,7 @@ static HIMAGELIST COMBOEX_SetImageList (COMBOEX_INFO *infoPtr, HIMAGELIST himl)
     return himlTemp;
 }
 
-static BOOL COMBOEX_SetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
+static BOOL COMBOEX_SetItemW (const COMBOEX_INFO *infoPtr, const COMBOBOXEXITEMW *cit)
 {
     INT_PTR index = cit->iItem;
     CBE_ITEMDATA *item;
@@ -1698,7 +1693,7 @@ static LRESULT COMBOEX_WindowPosChanging (const COMBOEX_INFO *infoPtr, WINDOWPOS
     height =   (cb_wrect.bottom-cb_wrect.top)
 	     + (cbx_wrect.bottom-cbx_wrect.top)
              - (cbx_crect.bottom-cbx_crect.top);
-    if (wp->cy < height) wp->cy = height;
+    wp->cy = height;
     if (infoPtr->hwndEdit) {
 	COMBOEX_AdjustEditPos (infoPtr);
 	InvalidateRect (infoPtr->hwndCombo, 0, TRUE);

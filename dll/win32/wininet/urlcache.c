@@ -527,6 +527,7 @@ void URLCacheContainers_CreateDefaults(void)
     static const WCHAR HistoryPrefix[] = {'V','i','s','i','t','e','d',':',0};
     static const WCHAR CookieSuffix[] = {0};
     static const WCHAR CookiePrefix[] = {'C','o','o','k','i','e',':',0};
+    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
         int nFolder; /* CSIDL_* constant */
@@ -539,6 +540,12 @@ void URLCacheContainers_CreateDefaults(void)
         { CSIDL_COOKIES, CookieSuffix, CookiePrefix },
     };
     DWORD i;
+
+    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+    {
+        TRACE("Environment variable 'USERPROFILE' does not exist!\n");
+        return;
+    }
 
     for (i = 0; i < sizeof(DefaultContainerData) / sizeof(DefaultContainerData[0]); i++)
     {

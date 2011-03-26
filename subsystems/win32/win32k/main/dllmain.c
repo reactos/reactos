@@ -89,8 +89,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
 
-        InitializeListHead(&Win32Process->ClassList);
-
         InitializeListHead(&Win32Process->MenuListHead);
 
         InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
@@ -133,6 +131,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         /* no process windows should exist at this point, or the function will assert! */
         DestroyProcessClasses(Win32Process);
+        Win32Process->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
 
         GDI_CleanupForProcess(Process);
 
@@ -460,6 +459,12 @@ DriverEntry(
 
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
+
+#if 0 // DBG
+    /* Register service hook callbacks */
+    KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
+    KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
+#endif
 
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,

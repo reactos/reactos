@@ -130,6 +130,7 @@ list(APPEND SOURCE
     objects/font.c
     objects/freetype.c
     objects/gdibatch.c
+	objects/gdidbg.c
     objects/gdiobj.c
     objects/icm.c
     objects/line.c

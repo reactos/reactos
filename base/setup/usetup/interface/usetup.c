@@ -3978,7 +3978,7 @@ NtProcessStartup(PPEB Peb)
     RtlNormalizeProcessParams(Peb->ProcessParameters);
 
     ProcessHeap = Peb->ProcessHeap;
-    INF_SetHeap(ProcessHeap);
+    InfSetHeap(ProcessHeap);
     RunUSetup();
 }
 #endif /* __REACTOS__ */

@@ -314,37 +314,36 @@ CopyFileExW (
  */
 BOOL
 WINAPI
-CopyFileExA (
-	LPCSTR			lpExistingFileName,
-	LPCSTR			lpNewFileName,
-	LPPROGRESS_ROUTINE	lpProgressRoutine,
-	LPVOID			lpData,
-	BOOL			*pbCancel,
-	DWORD			dwCopyFlags
-	)
+CopyFileExA(IN LPCSTR lpExistingFileName,
+            IN LPCSTR lpNewFileName,
+            IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
+            IN LPVOID lpData OPTIONAL,
+            IN LPBOOL pbCancel OPTIONAL,
+            IN DWORD dwCopyFlags)
 {
-	PWCHAR ExistingFileNameW;
-   PWCHAR NewFileNameW;
-	BOOL Result;
+    BOOL Result = FALSE;
+    UNICODE_STRING lpNewFileNameW;
+    PUNICODE_STRING lpExistingFileNameW;
 
-   if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, FALSE)))
-      return FALSE;
+    lpExistingFileNameW = Basep8BitStringToStaticUnicodeString(lpExistingFileName);
+    if (!lpExistingFileName)
+    {
+        return FALSE;
+    }
 
-   if (!(NewFileNameW = FilenameA2W(lpNewFileName, TRUE)))
-      return FALSE;
+    if (Basep8BitStringToDynamicUnicodeString(&lpNewFileNameW, lpNewFileName))
+    {
+        Result = CopyFileExW(lpExistingFileNameW->Buffer,
+                             lpNewFileNameW.Buffer,
+                             lpProgressRoutine,
+                             lpData,
+                             pbCancel,
+                             dwCopyFlags);
 
-   Result = CopyFileExW (ExistingFileNameW ,
-                         NewFileNameW ,
-	                      lpProgressRoutine,
-	                      lpData,
-	                      pbCancel,
-	                      dwCopyFlags);
+        RtlFreeUnicodeString(&lpNewFileNameW);
+    }
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-                NewFileNameW);
-
-	return Result;
+    return Result;
 }
 
 

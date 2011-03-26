@@ -998,7 +998,7 @@ profile_items_callback(
     }
     else
     {
-        FullIconName = DuplicateString(FullFileName);
+        FullIconName = pSetupDuplicateString(FullFileName);
         if (!FullIconName)
             goto cleanup;
     }
@@ -2177,9 +2177,9 @@ BOOL WINAPI SetupCopyOEMInfA(
 
     if (!DestinationInfFileName && DestinationInfFileNameSize > 0)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (!(SourceInfFileNameW = MultiByteToUnicode(SourceInfFileName, CP_ACP)))
+    else if (!(SourceInfFileNameW = pSetupMultiByteToUnicode(SourceInfFileName, CP_ACP)))
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (OEMSourceMediaType != SPOST_NONE && !(OEMSourceMediaLocationW = MultiByteToUnicode(OEMSourceMediaLocation, CP_ACP)))
+    else if (OEMSourceMediaType != SPOST_NONE && !(OEMSourceMediaLocationW = pSetupMultiByteToUnicode(OEMSourceMediaLocation, CP_ACP)))
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {

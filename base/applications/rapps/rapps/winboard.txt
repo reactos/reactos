@@ -17,8 +17,11 @@ Description = WinBoard ist ein grafisches Schachbrett für Windows/ReactOS welch
 [Section.040a]
 Description = Tablero de ajedrez para Windows/ReactOS que puede ser utilizado como interfaz para GNU Chess, Crafty, y otros motores de ajedrez, para servidores de ajedrez en internet, y para partidas por correo electrónico.
 
+[Section.040c]
+Description = WinBoard est un jeu d'échec graphique pour Windows/ReactOS qui peut servir d'interface utilisateur pour GNU Chess, Crafty et d'autres moteurs d'échecs, pour les serveurs d'échec internet et pour le jeu d'échec par courriel.
+
 [Section.0415]
-Description = Graficzna szachownica dla systemu Windows/ReactOS, która może służyć jako graficzna nakładka dla GNU Chess, Crafty, lub innych programów szachowych(w tym internetowych serwerów szachowych) lub szachów korespondencyjnych.
+Description = Graficzna szachownica dla systemu Windows/ReactOS, która może służyć jako graficzna nakładka dla GNU Chess, Crafty, lub innych programów szachowych (w tym internetowych serwerów szachowych) lub szachów korespondencyjnych.
 
 [Section.0422]
 Description = Графічна шахматна дошка для Windows/ReactOS, що може слугувати графічним інтерфейсом для GNU Chess, Crafty, та інших шахматних двигунів, для серверів інтернет-шахмат та для шахматної переписки по е-мейл.

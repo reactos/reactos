@@ -203,7 +203,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                 /* Returns a string containing the requested substituted environment variable. */
                 ExpandEnvironmentStringsW((LPCWSTR)szModuleName, ExpandedName, MAX_PATH);
 
-                /* Succesfull */
+                /* Successful */
                 bReturn = TRUE;
             }
         }
@@ -503,11 +503,12 @@ QueryEventMessages(LPWSTR lpMachineName,
     HWND hwndDlg;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
-    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
+    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags, dwMaxLength;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
-    LPWSTR lpData;
+    LPSTR lpData;
     BOOL bResult = TRUE; /* Read succeeded. */
+    int i;
 
     WCHAR szWindowTitle[MAX_PATH];
     WCHAR szStatusText[MAX_PATH];
@@ -519,6 +520,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     WCHAR szUsername[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_FILE_BUFFER];
     WCHAR szCategory[MAX_PATH];
+    WCHAR szData[MAX_PATH];
 
     SYSTEMTIME time;
     LVITEMW lviEventItem;
@@ -606,7 +608,7 @@ QueryEventMessages(LPWSTR lpMachineName,
             lpComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpSourceName) + 1) * sizeof(WCHAR));
 
             // This ist the data section of the current event
-            lpData = (LPWSTR)((LPBYTE)pevlr + pevlr->DataOffset);
+            lpData = (LPSTR)((LPBYTE)pevlr + pevlr->DataOffset);
 
             // Compute the event type
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -665,7 +667,13 @@ QueryEventMessages(LPWSTR lpMachineName,
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 5, szEventID);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, szUsername); //User
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpComputerName); //Computer
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 8, lpData); //Event Text
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                lpData,
+                                pevlr->DataLength,
+                                szData,
+                                MAX_PATH);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 8, szData); //Event Text
 
             dwRead -= pevlr->Length;
             pevlr = (EVENTLOGRECORD *)((LPBYTE) pevlr + pevlr->Length);
@@ -678,7 +686,15 @@ QueryEventMessages(LPWSTR lpMachineName,
     // All events loaded
     EndDialog(hwndDlg, 0);
 
-    swprintf(szWindowTitle, L"%s - %s Log on \\\\%s", szTitle, lpLogName, lpComputerName);
+
+    i = swprintf(szWindowTitle, L"%s - %s Log on \\\\", szTitle, lpLogName); /* i = number of characters written */
+    /* lpComputerName can be NULL here if no records was read */
+    dwMaxLength = sizeof(szWindowTitle)/sizeof(WCHAR)-i;
+    if(!lpComputerName)
+        GetComputerNameW(szWindowTitle+i, &dwMaxLength);
+    else
+        _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
+
     swprintf(szStatusText, L"%s has %d event(s)", lpLogName, dwTotalRecords);
 
     // Update the status bar

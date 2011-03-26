@@ -6,7 +6,7 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void placeSelWin();
+void placeSelWin(void);
 
 void startPaintingL(HDC hdc, short x, short y, int fg, int bg);
 

@@ -17,6 +17,9 @@ Description = Open Source Office Suite, basierend auf Open Office, aber viel bes
 [Section.040a]
 Description = La suite de ofimática de código abierto.
 
+[Section.040c]
+Description = Suite bureautique open source basée sur Open Office, mais bien meilleure.
+
 [Section.0415]
 Description = Otwarty pakiet biurowy, bazujący na Open Office, ale znacznie lepszy.
 

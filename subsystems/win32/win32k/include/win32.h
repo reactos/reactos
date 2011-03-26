@@ -99,10 +99,13 @@ typedef struct _THREADINFO
 
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
-  /* ReactOS */
-  LIST_ENTRY WindowListHead;
-  LIST_ENTRY W32CallbackListHead;
-  SINGLE_LIST_ENTRY  ReferencesList;
+
+    /* ReactOS */
+    LIST_ENTRY WindowListHead;
+    LIST_ENTRY W32CallbackListHead;
+    SINGLE_LIST_ENTRY  ReferencesList;
+    ULONG cExclusiveLocks;
+
 } THREADINFO;
 
 #include <poppack.h>
@@ -175,7 +178,6 @@ typedef struct _PROCESSINFO
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */
-  LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;

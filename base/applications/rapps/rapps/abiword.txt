@@ -17,6 +17,9 @@ Description = Textverarbeitung.
 [Section.040a]
 Description = Procesador de textos.
 
+[Section.040c]
+Description = Éditeur de texte.
+
 [Section.0415]
 Description = Edytor tekstu.
 

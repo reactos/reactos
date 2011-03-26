@@ -1275,17 +1275,6 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 /*
  * @unimplemented
  */
-BOOL APIENTRY
-NtUserSetLogonNotifyWindow(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtUserUpdateLayeredWindow(
@@ -1344,16 +1333,6 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 
 DWORD APIENTRY
 NtUserResolveDesktopForWOW(DWORD Unknown0)
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
-BOOL
-APIENTRY
-NtUserDragDetect(
-   HWND hWnd,
-   POINT pt) // Just like the User call.
 {
    UNIMPLEMENTED
    return 0;

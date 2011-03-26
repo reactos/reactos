@@ -29,6 +29,12 @@ Licence = Desconocida
 Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
 URLSite = Desconocida
 
+[Section.040c]
+Name = Pilote SoundBlaster pour VMWare
+Licence = Inconnue
+Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois.
+URLSite = Inconnue
+
 [Section.0415]
 Name = Sterownik SoundBlaster dla VMWare
 Licence = Nieznana

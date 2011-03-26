@@ -156,43 +156,68 @@ VfatSetBasicInformation(PFILE_OBJECT FileObject,
 
   if (FCB->Flags & FCB_IS_FATX_ENTRY)
   {
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->CreationTime,
-                             &FCB->entry.FatX.CreationDate,
-                             &FCB->entry.FatX.CreationTime);
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->LastAccessTime,
-                             &FCB->entry.FatX.AccessDate,
-                             &FCB->entry.FatX.AccessTime);
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->LastWriteTime,
-                             &FCB->entry.FatX.UpdateDate,
-                             &FCB->entry.FatX.UpdateTime);
+    if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->CreationTime,
+                                 &FCB->entry.FatX.CreationDate,
+                                 &FCB->entry.FatX.CreationTime);
+    }
+
+    if (BasicInfo->LastAccessTime.QuadPart != 0 && BasicInfo->LastAccessTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->LastAccessTime,
+                                 &FCB->entry.FatX.AccessDate,
+                                 &FCB->entry.FatX.AccessTime);
+    }
+
+    if (BasicInfo->LastWriteTime.QuadPart != 0 && BasicInfo->LastWriteTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->LastWriteTime,
+                                 &FCB->entry.FatX.UpdateDate,
+                                 &FCB->entry.FatX.UpdateTime);
+    }
   }
   else
   {
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->CreationTime,
-                             &FCB->entry.Fat.CreationDate,
-                             &FCB->entry.Fat.CreationTime);
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->LastAccessTime,
-                             &FCB->entry.Fat.AccessDate,
-                             NULL);
-    FsdSystemTimeToDosDateTime(DeviceExt,
-                             &BasicInfo->LastWriteTime,
-                             &FCB->entry.Fat.UpdateDate,
-                             &FCB->entry.Fat.UpdateTime);
+    if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->CreationTime,
+                                 &FCB->entry.Fat.CreationDate,
+                                 &FCB->entry.Fat.CreationTime);
+    }
+
+    if (BasicInfo->LastAccessTime.QuadPart != 0 && BasicInfo->LastAccessTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->LastAccessTime,
+                                 &FCB->entry.Fat.AccessDate,
+                                 NULL);
+    }
+
+    if (BasicInfo->LastWriteTime.QuadPart != 0 && BasicInfo->LastWriteTime.QuadPart != -1)
+    {
+      FsdSystemTimeToDosDateTime(DeviceExt,
+                                 &BasicInfo->LastWriteTime,
+                                 &FCB->entry.Fat.UpdateDate,
+                                 &FCB->entry.Fat.UpdateTime);
+    }
   }
 
-  *FCB->Attributes = (unsigned char)((*FCB->Attributes &
-                       (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
-                      (BasicInfo->FileAttributes &
-                       (FILE_ATTRIBUTE_ARCHIVE |
-                        FILE_ATTRIBUTE_SYSTEM |
-                        FILE_ATTRIBUTE_HIDDEN |
-                        FILE_ATTRIBUTE_READONLY)));
-  DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
+  if (BasicInfo->FileAttributes)
+  {
+    *FCB->Attributes = (unsigned char)((*FCB->Attributes &
+                        (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
+                        (BasicInfo->FileAttributes &
+                         (FILE_ATTRIBUTE_ARCHIVE |
+                          FILE_ATTRIBUTE_SYSTEM |
+                          FILE_ATTRIBUTE_HIDDEN |
+                          FILE_ATTRIBUTE_READONLY)));
+    DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
+  }
 
   VfatUpdateEntry(FCB);
 

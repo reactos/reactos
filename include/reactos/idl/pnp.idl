@@ -731,11 +731,20 @@ interface pnp
 
     /* Function 56 */
     DWORD PNP_QueryArbitratorFreeData(
-        [in] handle_t hBinding);
+        [in] handle_t hBinding,
+        [out,size_is(DataLen)] BYTE *pData,
+        [in] DWORD DataLen,
+        [in, string, ref] LPWSTR pDeviceID,
+        [in] RESOURCEID ResourceID,
+        [in] DWORD ulFlags);
 
     /* Function 57 */
     DWORD PNP_QueryArbitratorFreeSize(
-        [in] handle_t hBinding);
+        [in] handle_t hBinding,
+        [out] DWORD *pulSize,
+        [in, string, ref] LPWSTR pDeviceID,
+        [in] RESOURCEID ResourceID,
+        [in] DWORD ulFlags);
 
     /* Function 58 */
     DWORD PNP_RunDetection(

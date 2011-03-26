@@ -480,6 +480,15 @@ DC_vPrepareDCsForBlit(PDC pdc1,
 {
     PDC pdcFirst, pdcSecond;
     PRECT prcFirst, prcSecond;
+
+    /* Update brushes */
+    if (pdc1->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc1);
+    if (pdc1->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(pdc1);
+    if(pdc1->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(pdc1);
+
     /* Lock them in good order */
     if(pdc2)
     {
@@ -502,7 +511,8 @@ DC_vPrepareDCsForBlit(PDC pdc1,
     {
         pdcFirst = pdc1 ;
         prcFirst = &rc1;
-        pdcSecond = NULL ;
+        pdcSecond = NULL;
+        prcSecond = NULL;
     }
 
     if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)

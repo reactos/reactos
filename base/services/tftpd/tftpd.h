@@ -146,16 +146,16 @@ struct data15
 };
 
 //Functions
-void runProg();
+void runProg(void);
 void processRequest(LPVOID lpParam);
 char* myGetToken(char*, BYTE);
-void init();
+void init(void);
 bool cleanReq(request*);
 bool getSection(const char*, char*, BYTE, char*);
 bool isIP(char*s);
 char* myLower(char*);
 char* myUpper(char*);
 char* IP2String(char*, DWORD);
-void printWindowsError();
+void printWindowsError(void);
 void logMess(request*, BYTE);
 void logMess(char*, BYTE);

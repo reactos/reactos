@@ -38,7 +38,7 @@ InitUserAtoms(VOID)
   gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
   gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
   gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
-  
+
   /* System Message Atom */
   AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
   gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
@@ -112,7 +112,7 @@ UserInitialize(
 // {
 
     GetW32ThreadInfo();
-   
+
 //    Callback to User32 Client Thread Setup
 
     co_IntClientThreadSetup();
@@ -208,12 +208,14 @@ VOID FASTCALL UserEnterShared(VOID)
 
 VOID FASTCALL UserEnterExclusive(VOID)
 {
+   ASSERT_NOGDILOCKS();
    KeEnterCriticalRegion();
    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
 }
 
 VOID FASTCALL UserLeave(VOID)
 {
+   ASSERT_NOGDILOCKS();
    ExReleaseResourceLite(&UserLock);
    KeLeaveCriticalRegion();
 }

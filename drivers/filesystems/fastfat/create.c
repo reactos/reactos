@@ -433,7 +433,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	NTSTATUS Status = STATUS_SUCCESS;
 	PDEVICE_EXTENSION DeviceExt;
 	ULONG RequestedDisposition, RequestedOptions;
-	PVFATCCB pCcb;
 	PVFATFCB pFcb = NULL;
 	PVFATFCB ParentFcb = NULL;
 	PWCHAR c, last;
@@ -468,9 +467,8 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	if (FileObject->FileName.Length == 0 &&
 		(FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
 	{
-		if (RequestedDisposition == FILE_CREATE ||
-			RequestedDisposition == FILE_OVERWRITE_IF ||
-			RequestedDisposition == FILE_SUPERSEDE)
+		if (RequestedDisposition != FILE_OPEN ||
+			RequestedDisposition != FILE_OPEN_IF)
 		{
 			return(STATUS_ACCESS_DENIED);
 		}
@@ -481,16 +479,9 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 			return(STATUS_NOT_A_DIRECTORY);
 		}
 #endif
+
 		pFcb = DeviceExt->VolumeFcb;
-		pCcb = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
-		if (pCcb == NULL)
-		{
-			return (STATUS_INSUFFICIENT_RESOURCES);
-		}
-		RtlZeroMemory(pCcb, sizeof(VFATCCB));
-		FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
-		FileObject->FsContext = pFcb;
-		FileObject->FsContext2 = pCcb;
+		vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
 		pFcb->RefCount++;
 
 		Irp->IoStatus.Information = FILE_OPENED;

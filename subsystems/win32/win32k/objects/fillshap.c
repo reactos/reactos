@@ -604,7 +604,7 @@ IntRectangle(PDC dc,
                                NULL,
                                &dc->eboFill.BrushObject,
                                &BrushOrigin,
-                               ROP3_TO_ROP4(PATCOPY));
+                               ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
         }
     }
 

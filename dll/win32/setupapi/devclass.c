@@ -446,7 +446,7 @@ SetupDiGetClassImageListExA(
 
     if (MachineName)
     {
-        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        MachineNameW = pSetupMultiByteToUnicode(MachineName, CP_ACP);
         if (MachineNameW == NULL)
             return FALSE;
     }

@@ -15,9 +15,10 @@ list(APPEND SOURCE
     csr/capture.c
     csr/connect.c
     dbg/dbgui.c
+	ldr/actctx.c
+	ldr/ldrinit.c
     ldr/startup.c
     ldr/utils.c
-    ldr/actctx.c
     rtl/libsupp.c
     rtl/version.c
     def/ntdll.rc

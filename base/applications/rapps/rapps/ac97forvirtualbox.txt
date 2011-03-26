@@ -29,6 +29,12 @@ Licence = Desconocida
 Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
 URLSite = Desconocida
 
+[Section.040c]
+Name = Pilote AC97 pour VirtualBox
+Licence = Inconnue
+Description = Décompresser dans le dossier "ReactOS" puis redémarrer ReactOS deux fois.
+URLSite = Inconnue
+
 [Section.0415]
 Name = Sterownik AC97 dla VirtualBox
 Licence = Nieznana

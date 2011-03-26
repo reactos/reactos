@@ -112,31 +112,27 @@ VOID ShowLastError(void)
 
 /**
  * Sets the caption of the main window according to Globals.szFileTitle:
- *    Notepad - (untitled)      if no file is open
- *    Notepad - [filename]      if a file is given
+ *    (untitled) - Notepad      if no file is open
+ *    [filename] - Notepad      if a file is given
  */
 static void UpdateWindowCaption(void)
 {
-  TCHAR szCaption[MAX_STRING_LEN];
-  TCHAR szUntitled[MAX_STRING_LEN];
+  TCHAR szCaption[MAX_STRING_LEN] = _T("");
+  TCHAR szNotepad[MAX_STRING_LEN];
 
-  LoadString(Globals.hInstance, STRING_NOTEPAD, szCaption, SIZEOF(szCaption));
+  LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, SIZEOF(szNotepad));
 
-  if (Globals.szFileTitle[0] != '\0') {
-      static const TCHAR bracket_l[] = _T(" - [");
-      static const TCHAR bracket_r[] = _T("]");
-      _tcscat(szCaption, bracket_l);
-      _tcscat(szCaption, Globals.szFileTitle);
-      _tcscat(szCaption, bracket_r);
+  if (Globals.szFileTitle[0] != '\0')
+  {
+      StringCchCat(szCaption, MAX_STRING_LEN, Globals.szFileTitle);
   }
   else
   {
-      static const TCHAR hyphen[] = _T(" - ");
-      LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, SIZEOF(szUntitled));
-      _tcscat(szCaption, hyphen);
-      _tcscat(szCaption, szUntitled);
+      LoadString(Globals.hInstance, STRING_UNTITLED, szCaption, SIZEOF(szCaption));
   }
-
+  
+  StringCchCat(szCaption, MAX_STRING_LEN, _T(" - "));
+  StringCchCat(szCaption, MAX_STRING_LEN, szNotepad);
   SetWindowText(Globals.hMainWnd, szCaption);
 }
 
@@ -684,7 +680,7 @@ VOID DIALOG_EditTimeDate(VOID)
     _tcscat(szText, _T(" "));
     GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, szDate, MAX_STRING_LEN);
     _tcscat(szText, szDate);
-    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
+    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szText);
 }
 
 VOID DoCreateStatusBar(VOID)
@@ -766,7 +762,7 @@ VOID DoCreateEditWindow(VOID)
 {
     DWORD  dwStyle;
     int    iSize;
-    LPTSTR pTemp;
+    LPTSTR pTemp = NULL;
 
     iSize = 0;
 

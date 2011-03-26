@@ -25,8 +25,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
-extern BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
-
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
@@ -843,6 +841,40 @@ CheckForShutdownPrivilege(
 	return STATUS_SUCCESS;
 }
 
+BOOL
+WINAPI
+HandleMessageBeep(UINT uType)
+{
+	LPWSTR EventName;
+
+	switch(uType)
+	{
+	case 0xFFFFFFFF:
+		EventName = NULL;
+		break;
+	case MB_OK:
+		EventName = L"SystemDefault";
+		break;
+	case MB_ICONASTERISK:
+		EventName = L"SystemAsterisk";
+		break;
+	case MB_ICONEXCLAMATION:
+		EventName = L"SystemExclamation";
+		break;
+	case MB_ICONHAND:
+		EventName = L"SystemHand";
+		break;
+	case MB_ICONQUESTION:
+		EventName = L"SystemQuestion";
+		break;
+	default:
+		WARN("Unhandled type %d\n", uType);
+		EventName = L"SystemDefault";
+	}
+
+	return PlaySoundRoutine(EventName, FALSE, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+}
+
 static LRESULT CALLBACK
 SASWindowProc(
 	IN HWND hwndDlg,
@@ -902,6 +934,21 @@ SASWindowProc(
 			}
 			return TRUE;
 		}
+        case WM_LOGONNOTIFY:
+        {
+            switch(wParam)
+            {
+                case LN_MESSAGE_BEEP:
+                {
+                    return HandleMessageBeep(lParam);
+                }
+                default:
+                {
+                    ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);
+                }
+            }
+            return 0;
+        }
 		case WLX_WM_SAS:
 		{
 			DispatchSAS(Session, (DWORD)wParam);

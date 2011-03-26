@@ -481,6 +481,7 @@ EnableUserModePnpManager(VOID)
     if (hSCManager == NULL)
     {
         DPRINT1("Unable to open the service control manager.\n");
+        DPRINT1("Last Error %d\n", GetLastError());
         goto cleanup;
     }
 
@@ -506,9 +507,9 @@ EnableUserModePnpManager(VOID)
     }
 
     ret = StartServiceW(hService, 0, NULL);
-    if (!ret)
+    if ((!ret) && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
     {
-        DPRINT("Unable to start service\n");
+        DPRINT1("Unable to start service\n");
         goto cleanup;
     }
 

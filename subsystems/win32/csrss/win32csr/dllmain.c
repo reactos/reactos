@@ -87,6 +87,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(SET_HISTORY_NUMBER_COMMANDS,  CsrSetHistoryNumberCommands),
     CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
     CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
+    CSRSS_DEFINE_API(GET_TEMP_FILE,                CsrGetTempFile),
     { 0, 0, NULL }
 };
 

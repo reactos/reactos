@@ -68,6 +68,11 @@ UniataChipDetectChannels(
         deviceExtension->NumberChannels = 1;
     }
 
+    if(ChipFlags & (UNIATA_SATA | UNIATA_AHCI)) {
+        KdPrint2((PRINT_PREFIX "SATA/AHCI -> possible PM, max luns %d\n", SATA_MAX_PM_UNITS));
+        //deviceExtension->NumberLuns = SATA_MAX_PM_UNITS;
+    }
+
     switch(VendorID) {
     case ATA_ACER_LABS_ID:
         switch(deviceExtension->DevID) {
@@ -102,8 +107,8 @@ UniataChipDetectChannels(
     case ATA_ATI_ID:
         KdPrint2((PRINT_PREFIX "ATI\n"));
         switch(deviceExtension->DevID) {
-        case 0x438c1002: 
-        case 0x439c1002:
+        case ATA_ATI_IXP600:    
+        case ATA_ATI_IXP700:
             /* IXP600 & IXP700 only have 1 PATA channel */
             if(BMList[deviceExtension->DevIndex].channel) {
                 KdPrint2((PRINT_PREFIX "New ATI no 2nd PATA chan\n"));
@@ -141,6 +146,12 @@ UniataChipDetectChannels(
            deviceExtension->HwFlags & VIABAR) {
             deviceExtension->NumberChannels = 3;
             KdPrint2((PRINT_PREFIX "VIA 3 chan\n"));
+        }
+        if(ChipFlags & VIASATA) {
+            /* 2 SATA without SATA registers on first channel + 1 PATA on second */
+            // do nothing, generic PATA INIT
+            KdPrint2((PRINT_PREFIX "VIA SATA without SATA regs -> no PM\n"));
+            deviceExtension->NumberLuns = SATA_MAX_PM_UNITS;
         }
         break;
     case ATA_ITE_ID:
@@ -981,32 +992,14 @@ for_ugly_chips:
                 IsPata = FALSE;
                 if(ChipFlags & ICH5) {
                     if ((tmp8 & 0x04) == 0) {
-                        //ch->flags |= ATA_SATA;
-                        //ch->flags |= ATA_NO_SLAVE;
-                        //smap[0] = (map & 0x01) ^ ch->unit;
-                        //smap[1] = 0;
                         chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
-                        chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ^ c;
-                        chan->lun[1]->SATA_lun_map = 0;
                     } else if ((tmp8 & 0x02) == 0) {
-                        	//ch->flags |= ATA_SATA;
-                        	//smap[0] = (map & 0x01) ? 1 : 0;
-                        	//smap[1] = (map & 0x01) ? 0 : 1;
-                        if(c == 0) {
-                            chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ? 1 : 0;
-                            chan->lun[1]->SATA_lun_map = (tmp8 & 0x01) ? 0 : 1;
-                        } else {
+                        if(c != 0) {
                             IsPata = TRUE;
                             //chan->ChannelCtrlFlags |= CTRFLAGS_PATA;
                         }
                     } else if ((tmp8 & 0x02) != 0) {
-                        	//ch->flags |= ATA_SATA;
-                        	//smap[0] = (map & 0x01) ? 1 : 0;
-                        	//smap[1] = (map & 0x01) ? 0 : 1;
-                        if(c == 1) {
-                            chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ? 1 : 0;
-                            chan->lun[1]->SATA_lun_map = (tmp8 & 0x01) ? 0 : 1;
-                        } else {
+                        if(c != 1) {
                             IsPata = TRUE;
                             //chan->ChannelCtrlFlags |= CTRFLAGS_PATA;
                         }
@@ -1014,28 +1007,16 @@ for_ugly_chips:
                 } else
                 if(ChipFlags & I6CH2) {
                     chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
-                    chan->lun[0]->SATA_lun_map = c ? 4 : 5;
-                    chan->lun[1]->SATA_lun_map = 0;
                 } else {
                     switch(tmp8 & 0x03) {
-                    case 0:
-                        chan->lun[0]->SATA_lun_map = 0+c;
-                        chan->lun[1]->SATA_lun_map = 2+c;
-                        break;
                     case 2:
-                        if(c==0) {
-                            chan->lun[0]->SATA_lun_map = 0;
-                            chan->lun[1]->SATA_lun_map = 2;
-                        } else {
+						if(c!=0) {
                             // PATA
                             IsPata = TRUE;
                         }
                         break;
                     case 1:
-                        if(c==1) {
-                            chan->lun[0]->SATA_lun_map = 1;
-                            chan->lun[1]->SATA_lun_map = 3;
-                        } else {
+                        if(c!=1) {
                             // PATA
                             IsPata = TRUE;
                         }
@@ -1045,9 +1026,11 @@ for_ugly_chips:
 
                 if(IsPata) {
                     chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA5);
+                    KdPrint2((PRINT_PREFIX "PATA part\n"));
                 } else {
 
                     if((ChipFlags & ICH5) && BaseMemAddress) {
+                        KdPrint2((PRINT_PREFIX "ICH5 indexed\n"));
                         chan->RegTranslation[IDX_INDEXED_ADDR].Addr        = BaseMemAddress + 0;
                         chan->RegTranslation[IDX_INDEXED_ADDR].MemIo       = MemIo;
                         chan->RegTranslation[IDX_INDEXED_DATA].Addr        = BaseMemAddress + 4;
@@ -1055,6 +1038,7 @@ for_ugly_chips:
                     }
                     if((ChipFlags & ICH5) || BaseMemAddress) {
 
+                        KdPrint2((PRINT_PREFIX "i indexed\n"));
                         // Rather interesting way of register access...
                         ChipType = INTEL_IDX;
                         deviceExtension->HwFlags &= ~CHIPTYPE_MASK;
@@ -1085,6 +1069,10 @@ for_ugly_chips:
     }
 
     if(ChipFlags & UNIATA_AHCI) {
+        if(AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreAhci", 1)) {
+            KdPrint(("  AHCI excluded\n"));
+            return STATUS_UNSUCCESSFUL;
+        }
         return UniataAhciInit(HwDeviceExtension) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
     }
 
@@ -1395,8 +1383,8 @@ UniAtaReadLunConfig(
     c = channel - deviceExtension->Channel; // logical channel
 
     chan = &deviceExtension->chan[c];
-    ldev &= 0x01;
-    LunExt = &(deviceExtension->lun[c*2+ldev]);
+    ldev &= (deviceExtension->NumberLuns-1);
+    LunExt = &(deviceExtension->lun[c*deviceExtension->NumberLuns+ldev]);
 
     tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, ldev, L"ReadCacheEnable", 1);
     LunExt->opt_ReadCacheEnable = tmp32 ? TRUE : FALSE;
@@ -1441,6 +1429,7 @@ AtapiReadChipConfig(
     PHW_CHANNEL chan;
     ULONG  tmp32;
     ULONG  c; // logical channel (for Compatible Mode controllers)
+    ULONG  i;
 
     KdPrint2((PRINT_PREFIX "AtapiReadChipConfig: devExt %#x\n", deviceExtension ));
     ASSERT(deviceExtension);
@@ -1504,8 +1493,9 @@ AtapiReadChipConfig(
         tmp32 = AtapiRegCheckDevValue(deviceExtension, c, DEVNUM_NOT_SPECIFIED, L"ReorderEnable", TRUE);
         chan->UseReorder = tmp32 ? TRUE : FALSE;
 
-        UniAtaReadLunConfig(deviceExtension, channel, 0);
-        UniAtaReadLunConfig(deviceExtension, channel, 1);
+        for(i=0; i<deviceExtension->NumberLuns; i++) {
+            UniAtaReadLunConfig(deviceExtension, channel, i);
+        }
     }
 
     return TRUE;
@@ -1656,25 +1646,104 @@ AtapiChipInit(
         }
         break;
     case ATA_INTEL_ID: {
+        BOOLEAN IsPata;
         USHORT reg54;
+        UCHAR tmp8;
         if(ChipFlags & UNIATA_SATA) {
 
-            if(ChipFlags & UNIATA_AHCI)
+            KdPrint2((PRINT_PREFIX "Intel SATA\n"));
+            if(ChipFlags & UNIATA_AHCI) {
+                KdPrint2((PRINT_PREFIX "Skip AHCI\n"));
                 break;
+            }
             if(c == CHAN_NOT_SPECIFIED) {
+                KdPrint2((PRINT_PREFIX "Base init\n"));
                 /* force all ports active "the legacy way" */
                 ChangePciConfig2(0x92, (a | 0x0f));
                 /* enable PCI interrupt */
                 ChangePciConfig2(/*PCIR_COMMAND*/0x04, (a & ~0x0400));
+
             } else {
+
+                KdPrint2((PRINT_PREFIX "channel init\n"));
+
+                GetPciConfig1(0x90, tmp8);
+                KdPrint2((PRINT_PREFIX "reg 90: %x, init lun map\n", tmp8));
+
+                KdPrint2((PRINT_PREFIX "chan %d\n", c));
+                chan = &deviceExtension->chan[c];
+                IsPata = FALSE;
+                if(ChipFlags & ICH5) {
+                    KdPrint2((PRINT_PREFIX "ICH5\n"));
+                    if ((tmp8 & 0x04) == 0) {
+                        chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
+                        chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ^ c;
+                        chan->lun[1]->SATA_lun_map = 0;
+                    } else if ((tmp8 & 0x02) == 0) {
+                        if(c == 0) {
+                            chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ? 1 : 0;
+                            chan->lun[1]->SATA_lun_map = (tmp8 & 0x01) ? 0 : 1;
+                        } else {
+                            IsPata = TRUE;
+                            //chan->ChannelCtrlFlags |= CTRFLAGS_PATA;
+                        }
+                    } else if ((tmp8 & 0x02) != 0) {
+                        if(c == 1) {
+                            chan->lun[0]->SATA_lun_map = (tmp8 & 0x01) ? 1 : 0;
+                            chan->lun[1]->SATA_lun_map = (tmp8 & 0x01) ? 0 : 1;
+                        } else {
+                            IsPata = TRUE;
+                            //chan->ChannelCtrlFlags |= CTRFLAGS_PATA;
+                        }
+                    }
+                } else
+                if(ChipFlags & I6CH2) {
+                    KdPrint2((PRINT_PREFIX "I6CH2\n"));
+                    chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
+                    chan->lun[0]->SATA_lun_map = c ? 4 : 5;
+                    chan->lun[1]->SATA_lun_map = 0;
+                } else {
+                    KdPrint2((PRINT_PREFIX "other Intel\n"));
+                    switch(tmp8 & 0x03) {
+                    case 0:
+                        chan->lun[0]->SATA_lun_map = 0+c;
+                        chan->lun[1]->SATA_lun_map = 2+c;
+                        break;
+                    case 2:
+                        if(c==0) {
+                            chan->lun[0]->SATA_lun_map = 0;
+                            chan->lun[1]->SATA_lun_map = 2;
+                        } else {
+                            // PATA
+                            IsPata = TRUE;
+                        }
+                        break;
+                    case 1:
+                        if(c==1) {
+                            chan->lun[0]->SATA_lun_map = 1;
+                            chan->lun[1]->SATA_lun_map = 3;
+                        } else {
+                            // PATA
+                            IsPata = TRUE;
+                        }
+                        break;
+                    }
+                }
+
+                if(IsPata) {
+                    KdPrint2((PRINT_PREFIX "PATA part\n"));
+                    chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA5);
+                }
+
                 if(ChipType == INTEL_IDX) {
-                    for(c=0; c<deviceExtension->NumberChannels; c++) {
+                    KdPrint2((PRINT_PREFIX "i indexed\n"));
+                    //for(c=0; c<deviceExtension->NumberChannels; c++) {
                         chan = &deviceExtension->chan[c];
                         UniataSataWritePort4(chan, IDX_SATA_SError, 0xffffffff, 0);
                         if(!(chan->ChannelCtrlFlags & CTRFLAGS_NO_SLAVE)) {
                             UniataSataWritePort4(chan, IDX_SATA_SError, 0xffffffff, 1);
                         }
-                    }
+                    //}
                 }
             }
 
@@ -2141,3 +2210,30 @@ UniataInitSyncBaseIO(
     RtlCopyMemory(&chan->RegTranslation[IDX_IO1_o], &chan->RegTranslation[IDX_IO1], IDX_IO1_SZ*sizeof(chan->RegTranslation[0]));
     RtlCopyMemory(&chan->RegTranslation[IDX_IO2_o], &chan->RegTranslation[IDX_IO2], IDX_IO2_SZ*sizeof(chan->RegTranslation[0]));
 } // end UniataInitSyncBaseIO()
+
+VOID
+NTAPI
+AtapiSetupLunPtrs(
+    IN PHW_CHANNEL chan,
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG c
+    )
+{
+    ULONG i;
+
+    if(!deviceExtension->NumberLuns) {
+        deviceExtension->NumberLuns = IDE_MAX_LUN_PER_CHAN;
+    }
+    chan->DeviceExtension = deviceExtension;
+    chan->lChannel        = c;
+    chan->NumberLuns      = deviceExtension->NumberLuns;
+    for(i=0; i<deviceExtension->NumberLuns; i++) {
+        chan->lun[i] = &(deviceExtension->lun[c*deviceExtension->NumberLuns+i]);
+    }
+    chan->AltRegMap       = deviceExtension->AltRegMap;
+    chan->NextDpcChan     = -1;
+    for(i=0; i<deviceExtension->NumberLuns; i++) {
+        chan->lun[i]->DeviceExtension = deviceExtension;
+    }
+} // end AtapiSetupLunPtrs()
+

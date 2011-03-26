@@ -102,19 +102,18 @@ GetDllLoadPath(LPCWSTR lpModule)
  */
 BOOL
 WINAPI
-DisableThreadLibraryCalls (
-	HMODULE	hLibModule
-	)
+DisableThreadLibraryCalls(
+    IN HMODULE hLibModule)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = LdrDisableThreadCalloutsForDll ((PVOID)hLibModule);
-	if (!NT_SUCCESS (Status))
-	{
-		SetLastErrorByStatus (Status);
-		return FALSE;
-	}
-	return TRUE;
+    Status = LdrDisableThreadCalloutsForDll((PVOID)hLibModule);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 
@@ -136,18 +135,17 @@ LoadLibraryA (
  */
 HINSTANCE
 WINAPI
-LoadLibraryExA (
-	LPCSTR	lpLibFileName,
-	HANDLE	hFile,
-	DWORD	dwFlags
-	)
+LoadLibraryExA(
+    LPCSTR lpLibFileName,
+    HANDLE hFile,
+    DWORD dwFlags)
 {
-   PWCHAR FileNameW;
+   PUNICODE_STRING FileNameW;
 
-   if (!(FileNameW = FilenameA2W(lpLibFileName, FALSE)))
-      return FALSE;
+    if (!(FileNameW = Basep8BitStringToStaticUnicodeString(lpLibFileName)))
+        return NULL;
 
-   return LoadLibraryExW(FileNameW, hFile, dwFlags);
+    return LoadLibraryExW(FileNameW->Buffer, hFile, dwFlags);
 }
 
 
@@ -433,10 +431,10 @@ GetModuleFileNameA (
 				                             &Module->FullDllName,
 				                             FALSE);
 				
-			if (nSize < Length)
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			else
+			if (Length < nSize)
 				lpFilename[Length] = '\0';
+			else
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 			return Length;
@@ -491,10 +489,10 @@ GetModuleFileNameW (
 
 			RtlCopyUnicodeString (&FileName,
 			                      &Module->FullDllName);
-			if (nSize < Length)
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			else
+			if (Length < nSize)
 				lpFilename[Length] = L'\0';
+			else
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 

@@ -2372,7 +2372,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        TRACE("RStartServiceA() failed (Error %lu)\n", dwError);
+        ERR("RStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2407,7 +2407,7 @@ StartServiceW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        TRACE("RStartServiceW() failed (Error %lu)\n", dwError);
+        ERR("RStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

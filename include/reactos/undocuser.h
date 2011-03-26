@@ -25,7 +25,6 @@
 
 /* Non SDK Window Message types. */
 #define WM_SETVISIBLE      0x00000009
-#define WM_CTLCOLOR        0x00000019
 #define WM_ALTTABACTIVE    0x00000029
 #define WM_ISACTIVEICON    0x00000035
 #define WM_QUERYPARKICON   0x00000036
@@ -92,7 +91,7 @@
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
-
+BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 DWORD_PTR WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD_PTR);

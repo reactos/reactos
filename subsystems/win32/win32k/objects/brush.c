@@ -394,7 +394,7 @@ IntGdiCreateSolidBrush(
 
     pbrush->flAttrs |= GDIBRUSH_IS_SOLID;
 
-    pbrush->BrushAttr.lbColor = Color;
+    pbrush->BrushAttr.lbColor = Color & 0x00FFFFFF;
     /* FIXME: Fill in the rest of fields!!! */
 
     BRUSH_UnlockBrush(pbrush);

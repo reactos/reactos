@@ -123,6 +123,9 @@ BOOL ScmLockDatabaseExclusive(VOID);
 BOOL ScmLockDatabaseShared(VOID);
 VOID ScmUnlockDatabase(VOID);
 
+VOID ScmInitNamedPipeCriticalSection(VOID);
+VOID ScmDeleteNamedPipeCriticalSection(VOID);
+
 
 /* driver.c */
 

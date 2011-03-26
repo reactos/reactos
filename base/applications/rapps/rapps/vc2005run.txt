@@ -19,6 +19,10 @@ Description = Visual Studio 2005 Laufzeitsystem.
 Licence = Desconocida
 Description = Librerias Visual Studio 2005.
 
+[Section.040c]
+Licence = Inconnue
+Description = Bibliothèque Visual Studio 2005.
+
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 2005.

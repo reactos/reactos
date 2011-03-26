@@ -61,6 +61,7 @@ typedef struct _WINSTATION_OBJECT
 
 extern WINSTATION_OBJECT *InputWindowStation;
 extern PPROCESSINFO LogonProcess;
+extern HWND hwndSAS;
 
 INIT_FUNCTION
 NTSTATUS

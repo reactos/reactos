@@ -1189,7 +1189,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCOLORCHANGE:
         {
             /* force to redraw non-client area */
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             /* Use InvalidateRect to redraw client area, enable
              * erase to redraw all subcontrols otherwise send the
              * WM_SYSCOLORCHANGE to child windows/controls is required
@@ -1966,7 +1966,7 @@ RealDefWindowProcA(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1, -1);
+                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             }
             Result = 1;
             break;
@@ -2112,7 +2112,7 @@ RealDefWindowProcW(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1, -1);
+                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             }
             Result = 1;
             break;

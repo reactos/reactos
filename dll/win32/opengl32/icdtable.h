@@ -18,6 +18,8 @@ typedef struct tagICDTable
     PROC	dispatch_table[812]; /*!< Table containing \a num_funcs pointers to OpenGL functions */
 } ICDTable, *PICDTable;
 
+#define DISPATCH_TABLE_SIZE 812*sizeof(PROC)
+
 #endif /* OPENGL32_PRIVATE_ICDTABLE_H */
 
 /* EOF */

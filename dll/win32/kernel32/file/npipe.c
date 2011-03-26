@@ -251,7 +251,7 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
     UNICODE_STRING NameU;
 
     /* Convert the name to Unicode */
-    Basep8BitStringToHeapUnicodeString(&NameU, lpNamedPipeName);
+    Basep8BitStringToDynamicUnicodeString(&NameU, lpNamedPipeName);
 
     /* Call the Unicode API */
     r = WaitNamedPipeW(NameU.Buffer, nTimeOut);
@@ -501,19 +501,19 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     }
 
     /* Check what timeout we got */
-    if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
+    if (nTimeOut == NMPWAIT_WAIT_FOREVER)
     {
         /* Don't use a timeout */
         WaitPipe.TimeoutSpecified = FALSE;
     }
     else
     {
-        /* Check if we should wait forever */
-        if (nTimeOut == NMPWAIT_WAIT_FOREVER)
+        /* Check if default */
+        if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
         {
-            /* Set the max */
+            /* Set it to 0 */
             WaitPipe.Timeout.LowPart = 0;
-            WaitPipe.Timeout.HighPart = 0x80000000;
+            WaitPipe.Timeout.HighPart = 0;
         }
         else
         {

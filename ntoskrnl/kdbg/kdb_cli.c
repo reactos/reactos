@@ -877,6 +877,8 @@ KdbpCmdBackTrace(
         else
             KdbpPrint("\n");
 
+        if (KdbOutputAborted) break;
+
         if (Address == 0)
             break;
 
@@ -2707,6 +2709,7 @@ KdbpCliMainLoop(
 
         /* Call the command */
         Continue = KdbpDoCommand(Command);
+        KdbOutputAborted = FALSE;
     }
     while (Continue);
 }

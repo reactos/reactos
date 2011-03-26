@@ -18,6 +18,7 @@
 #include <conio.h>
 #include <csrplugin.h>
 #include <desktopbg.h>
+#include "file.h"
 #include "guiconsole.h"
 #include "tuiconsole.h"
 #include <win32csr.h>

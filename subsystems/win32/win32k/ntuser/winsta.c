@@ -43,6 +43,9 @@
 /* Currently active window station */
 PWINSTATION_OBJECT InputWindowStation = NULL;
 
+/* Winlogon sas window*/
+HWND hwndSAS = NULL;
+
 /* INITALIZATION FUNCTIONS ****************************************************/
 
 static GENERIC_MAPPING IntWindowStationMapping =
@@ -1453,6 +1456,27 @@ NtUserBuildNameList(
       different ways. Call the appropriate function */
    return NULL == hWindowStation ? BuildWindowStationNameList(dwSize, lpBuffer, pRequiredSize) :
           BuildDesktopNameList(hWindowStation, dwSize, lpBuffer, pRequiredSize);
+}
+
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserSetLogonNotifyWindow(HWND hWnd)
+{
+    if(LogonProcess != PsGetCurrentProcessWin32Process())
+    {
+        return FALSE;
+    }
+
+    if(!IntIsWindow(hWnd))
+    {
+        return FALSE;
+    }
+
+    hwndSAS = hWnd;
+
+    return TRUE;
 }
 
 /* EOF */

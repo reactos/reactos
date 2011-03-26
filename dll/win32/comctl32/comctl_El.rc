@@ -66,24 +66,3 @@ BEGIN
   LTEXT         "&Κουμπιά μπάρας εργαλείων:", -1,182,5,78,10
   LISTBOX       IDC_TOOLBARBTN_LBOX, 182,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END
-
-STRINGTABLE
-{
-    IDS_CLOSE    "Κλείσιμο"
-}
-
-STRINGTABLE
-{
-    IDM_TODAY    "Σήμερα:"
-    IDM_GOTODAY  "Μετάβαση στα σημερινά"
-}
-
-STRINGTABLE
-{
-    IDS_SEPARATOR "Διαχωριστής"
-}
-
-STRINGTABLE
-{
-    HKY_NONE "Κανένα"
-}

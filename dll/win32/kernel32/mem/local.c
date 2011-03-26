@@ -441,8 +441,62 @@ BOOL
 NTAPI
 LocalUnlock(HLOCAL hMem)
 {
-    /* This is the same as a Global Unlock */
-    return GlobalUnlock(hMem);
+    PBASE_HEAP_HANDLE_ENTRY HandleEntry;
+    BOOL RetVal = TRUE;
+
+    /* Check if this was a simple allocated heap entry */
+    if (!((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY))
+    {
+       /* Fail, because LocalUnlock is not supported on LMEM_FIXED allocations */
+       SetLastError(ERROR_NOT_LOCKED);
+       return FALSE;
+    }
+
+    /* Otherwise, lock the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Get the handle entry */
+    HandleEntry = BaseHeapGetEntry(hMem);
+    BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+    _SEH2_TRY
+    {
+        /* Make sure it's valid */
+        if (!BaseHeapValidateEntry(HandleEntry))
+        {
+            /* It's not, fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+            RetVal = FALSE;
+        }
+        else
+        {
+            /* Otherwise, decrement lock count, unless we're already at 0*/
+            if (!HandleEntry->LockCount--)
+            {
+                /* In which case we simply lock it back and fail */
+                HandleEntry->LockCount++;
+                SetLastError(ERROR_NOT_LOCKED);
+                RetVal = FALSE;
+            }
+            else if (!HandleEntry->LockCount)
+            {
+                /* Nothing to unlock */
+                SetLastError(NO_ERROR);
+                RetVal = FALSE;
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        RetVal = FALSE;
+    }
+    _SEH2_END
+
+    /* All done. Unlock the heap and return the pointer */
+    RtlUnlockHeap(hProcessHeap);
+    return RetVal;
 }
 
 /* EOF */

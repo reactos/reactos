@@ -1215,7 +1215,7 @@ HEADER_GetOrderArray(const HEADER_INFO *infoPtr, INT size, LPINT order)
 
 /* Returns index of first duplicate 'value' from [0,to) range,
    or -1 if there isn't any */
-static INT has_duplicate(INT *array, INT to, INT value)
+static INT has_duplicate(const INT *array, INT to, INT value)
 {
     INT i;
     for(i = 0; i < to; i++)
@@ -1224,7 +1224,7 @@ static INT has_duplicate(INT *array, INT to, INT value)
 }
 
 /* returns next available value from [0,max] not to duplicate in [0,to) */
-static INT get_nextvalue(INT *array, INT to, INT max)
+static INT get_nextvalue(const INT *array, INT to, INT max)
 {
     INT i;
     for(i = 0; i < max; i++)

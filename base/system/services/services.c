@@ -385,6 +385,8 @@ wWinMain(HINSTANCE hInstance,
     /* Acquire privileges to load drivers */
     AcquireLoadDriverPrivilege();
 
+    ScmInitNamedPipeCriticalSection();
+
     /* Start auto-start services */
     ScmAutoStartServices();
 
@@ -403,6 +405,8 @@ wWinMain(HINSTANCE hInstance,
         NtYieldExecution();
     }
 #endif
+
+    ScmDeleteNamedPipeCriticalSection();
 
     CloseHandle(hScmStartEvent);
 

@@ -34,7 +34,7 @@ OPENGL32_ThreadAttach( void )
 
     dispatchTable = (PROC*)HeapAlloc( GetProcessHeap(),
                                       HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-                                      sizeof (((ICDTable *)(0))->dispatch_table) );
+                                      DISPATCH_TABLE_SIZE );
     if (dispatchTable == NULL)
     {
         DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
@@ -72,7 +72,7 @@ static void
 OPENGL32_ThreadDetach( void )
 {
     GLTHREADDATA* lpData = NULL;
-    PROC *dispatchTable = NULL;
+	TEB* teb = NtCurrentTeb();
 
     rosglMakeCurrent( NULL, NULL );
 
@@ -84,13 +84,17 @@ OPENGL32_ThreadDetach( void )
                       GetLastError() );
         lpData = NULL;
     }
+    TlsSetValue( OPENGL32_tls, NULL );
 
-    dispatchTable = NtCurrentTeb()->glTable;
-    if (dispatchTable != NULL)
+    if (teb->glTable != NULL)
     {
-        if (!HeapFree( GetProcessHeap(), 0, dispatchTable ))
+        if (!HeapFree( GetProcessHeap(), 0, teb->glTable ))
+		{
             DBGPRINT( "Warning: HeapFree() on dispatch table failed (%d)",
                       GetLastError() );
+		}
+		/* NULL-ify it. Even if something went wrong, it's not a good idea to keep it non NULL */
+		teb->glTable = NULL;
     }
 }
 

@@ -20,6 +20,7 @@ list(APPEND SOURCE
     desktopbg.c
     dllmain.c
     exitros.c
+	file.c
     guiconsole.c
     handle.c
     harderror.c

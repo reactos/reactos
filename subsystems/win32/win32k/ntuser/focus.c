@@ -77,7 +77,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
-      if (co_IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
          UserSendNotifyMessage( HWND_BROADCAST,
                                 WM_PALETTEISCHANGING,
@@ -166,7 +166,7 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
    if (hWndPrev)
    {
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessageNoWait(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -177,7 +177,7 @@ co_IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    {
       PWND pWnd = UserGetWindowObject(hWnd);
       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
-      co_IntSendMessageNoWait(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      co_IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -534,29 +534,23 @@ CLEANUP:
    END_CLEANUP;
 }
 
-/*
- * @implemented
- */
-HWND APIENTRY
-NtUserSetCapture(HWND hWnd)
+
+HWND FASTCALL
+co_UserSetCapture(HWND hWnd)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PWND Window, pWnd;
    HWND hWndPrev;
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
-   UserEnterExclusive();
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
-   if((Window = UserGetWindowObject(hWnd)))
+   if ((Window = UserGetWindowObject(hWnd)))
    {
-      if(Window->head.pti->MessageQueue != ThreadQueue)
+      if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         RETURN(NULL);
+         return NULL;
       }
    }
 
@@ -579,10 +573,24 @@ NtUserSetCapture(HWND hWnd)
    if (Window)
       IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
-   co_IntSendMessageNoWait(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    ThreadQueue->CaptureWindow = hWnd;
 
-   RETURN( hWndPrev);
+   return hWndPrev;
+}
+
+/*
+ * @implemented
+ */
+HWND APIENTRY
+NtUserSetCapture(HWND hWnd)
+{
+   DECLARE_RETURN(HWND);
+
+   DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
+   UserEnterExclusive();
+
+   RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
    DPRINT("Leave NtUserSetCapture, ret=%i\n",_ret_);

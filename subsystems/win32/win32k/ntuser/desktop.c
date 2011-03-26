@@ -616,15 +616,19 @@ VOID APIENTRY
 UserRedrawDesktop()
 {
     PWND Window = NULL;
-
+    HRGN hRgn;
+    
     Window = UserGetDesktopWindow();
+    hRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
 
     IntInvalidateWindows( Window,
-              Window->hrgnUpdate,
+                            hRgn,
                        RDW_FRAME |
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
+    
+    REGION_FreeRgnByHandle(hRgn);
 }
 
 
@@ -738,7 +742,11 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
       for (; *cursor; cursor++)
       {
-         UserPostMessage(*cursor, gpsi->uiShellMsg, Message, lParam);
+         DPRINT("Sending notify\n");
+         co_IntPostOrSendMessage(*cursor,
+                                 gpsi->uiShellMsg,
+                                 Message,
+                                 lParam);
       }
 
       ExFreePool(HwndList);

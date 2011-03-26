@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <windows.h>
 
-void help();
-int unimplemented();
+void help(void);
+int unimplemented(void);
 
 
 INT cmdHelp(INT argc, CHAR **argv);

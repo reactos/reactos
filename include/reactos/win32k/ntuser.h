@@ -231,6 +231,10 @@ C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
+#define HRGN_NULL    ( (HRGN) 0) // NULL empty region
+#define HRGN_WINDOW  ( (HRGN) 1) // region from window rcWindow
+#define HRGN_MONITOR ( (HRGN) 2) // region from monitor region.
+
 /* Menu Item fType. */
 #define MFT_RTOL 0x6000
 
@@ -3126,8 +3130,6 @@ typedef struct tagKMDDELPARAM
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
-#define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
-#define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
 #define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0xfffd0050
 #define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0xfffd0052
   #define MSQ_STATE_CAPTURE	0x1

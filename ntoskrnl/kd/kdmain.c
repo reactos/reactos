@@ -71,13 +71,30 @@ KdpServiceDispatcher(ULONG Service,
                 case EnterDebugger:
                     DbgBreakPoint();
                     break;
-                    
+
                 case KdSpare3:
                     MmDumpArmPfnDatabase(FALSE);
                     break;
 
                 default:
                     break;
+            }
+            break;
+        }
+
+        /* Register a debug callback */
+        case 'CsoR':
+        {
+            switch (Buffer1Length)
+            {
+                case ID_Win32PreServiceHook:
+                    KeWin32PreServiceHook = Buffer1;
+                    break;
+
+                case ID_Win32PostServiceHook:
+                    KeWin32PostServiceHook = Buffer1;
+                    break;
+
             }
             break;
         }

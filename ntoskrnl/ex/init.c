@@ -1061,6 +1061,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= 1830 << 16;
     }
 
+    /* Add loaded CmNtGlobalFlag value */
+    NtGlobalFlag |= CmNtGlobalFlag;
+
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 

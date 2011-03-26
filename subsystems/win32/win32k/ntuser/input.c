@@ -708,6 +708,7 @@ KeyboardThreadMain(PVOID StartContext)
 
                   if (ModifierState == 0)
                   {
+                     UserEnterExclusive();
                      if (fsModifiers == MOD_WIN)
                         IntKeyboardSendWinKeyMsg();
                      else if (fsModifiers == MOD_ALT)
@@ -723,6 +724,7 @@ KeyboardThreadMain(PVOID StartContext)
                         }
                         co_IntKeyboardSendAltKeyMsg();
                      }
+                     UserLeave();
                      continue;
                   }
 
@@ -730,6 +732,8 @@ KeyboardThreadMain(PVOID StartContext)
                }
             }
          }
+
+         UserEnterExclusive();
 
          for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
                NumKeys--)
@@ -860,6 +864,8 @@ KeyboardThreadMain(PVOID StartContext)
              */
             co_MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
          }
+
+         UserLeave();
       }
 
 KeyboardEscape:
@@ -1243,17 +1249,11 @@ IntKeyboardInput(KEYBDINPUT *ki)
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
    WORD flags, wVkStripped, wVkL, wVkR, wVk = ki->wVk, vk_hook = ki->wVk;
-   BOOLEAN Entered = FALSE;
 
    Msg.lParam = 0;
 
-  // Condition may arise when calling MsqPostMessage and waiting for an event.
-   if (!UserIsEntered())
-   {
-         // Fixme: Not sure ATM if this thread is locked.
-         UserEnterExclusive();
-         Entered = TRUE;
-   }
+   // Condition may arise when calling MsqPostMessage and waiting for an event.
+   ASSERT (UserIsEntered());
 
    wVk = LOBYTE(wVk);
    Msg.wParam = wVk;
@@ -1352,7 +1352,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
    {
       DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, vk_hook, Msg.lParam);
-      if (Entered) UserLeave();
+
       return FALSE;
    }
 
@@ -1380,7 +1380,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");
-         if (Entered) UserLeave();
+
          return FALSE;
    }
 
@@ -1400,8 +1400,6 @@ IntKeyboardInput(KEYBDINPUT *ki)
    {
          DPRINT("Invalid focus window handle\n");
    }
-
-   if (Entered) UserLeave();
 
    return TRUE;
 }

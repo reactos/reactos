@@ -44,7 +44,7 @@
 @ stdcall BaseProcessInitPostImport() ; missing in Win 7
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
 ;@ stdcall BaseThreadInitThunk ; Win 7
-;@ stdcall BaseSetLastNTError ; Win 7, not 64 bit
+;@ stdcall BaseSetLastNTError ; Win 7, not 64 bit (present on w2k3 but not exported)
 @ stdcall BaseUpdateAppcompatCache(long long long)
 ;@ stdcall BaseVerifyUnicodeString ; Win 7
 ;@ stdcall Basep8BitStringToDynamicUnicodeString ; Win 7

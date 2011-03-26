@@ -6,6 +6,7 @@
 #include <tchar.h>
 #include <richedit.h>
 #include <malloc.h>
+#include <strsafe.h>
 
 #include "main.h"
 #include "dialog.h"

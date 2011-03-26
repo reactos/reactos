@@ -489,7 +489,8 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    }
 
    ReleaseDC(hWnd, hDC);
-   DeleteObject(hRgn); // We use DCX_KEEPCLIPRGN
+   if (hRgn != HRGN_WINDOW)
+      DeleteObject(hRgn); // We use DCX_KEEPCLIPRGN
 
    return 0;
 }
@@ -650,7 +651,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 LRESULT
 DefWndNCActivate(HWND hWnd, WPARAM wParam)
 {
-   DefWndNCPaint(hWnd, (HRGN)1, wParam);
+   DefWndNCPaint(hWnd, HRGN_WINDOW, wParam);
    return TRUE;
 }
 

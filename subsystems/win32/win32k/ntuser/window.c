@@ -472,6 +472,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    if(Window->hrgnClip)
    {
       GreDeleteObject(Window->hrgnClip);
+      Window->hrgnClip = NULL;
    }
 
 //   ASSERT(Window != NULL);
@@ -4016,83 +4017,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-INT FASTCALL
-IntGetWindowRgn(PWND Window, HRGN hRgn)
-{
-   INT Ret;
-   HRGN VisRgn;
-   ROSRGNDATA *pRgn;
-
-   if(!Window)
-   {
-      return ERROR;
-   }
-   if(!hRgn)
-   {
-      return ERROR;
-   }
-
-   /* Create a new window region using the window rectangle */
-   VisRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
-   NtGdiOffsetRgn(VisRgn, -Window->rcWindow.left, -Window->rcWindow.top);
-   /* if there's a region assigned to the window, combine them both */
-   if(Window->hrgnClip && !(Window->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
-   /* Copy the region into hRgn */
-   NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
-
-   if((pRgn = RGNOBJAPI_Lock(hRgn, NULL)))
-   {
-      Ret = REGION_Complexity(pRgn);
-      RGNOBJAPI_Unlock(pRgn);
-   }
-   else
-      Ret = ERROR;
-
-   REGION_FreeRgnByHandle(VisRgn);
-
-   return Ret;
-}
-
-INT FASTCALL
-IntGetWindowRgnBox(PWND Window, RECTL *Rect)
-{
-   INT Ret;
-   HRGN VisRgn;
-   ROSRGNDATA *pRgn;
-
-   if(!Window)
-   {
-      return ERROR;
-   }
-   if(!Rect)
-   {
-      return ERROR;
-   }
-
-   /* Create a new window region using the window rectangle */
-   VisRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
-   NtGdiOffsetRgn(VisRgn, -Window->rcWindow.left, -Window->rcWindow.top);
-   /* if there's a region assigned to the window, combine them both */
-   if(Window->hrgnClip && !(Window->style & WS_MINIMIZE))
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
-
-   if((pRgn = RGNOBJAPI_Lock(VisRgn, NULL)))
-   {
-      Ret = REGION_Complexity(pRgn);
-      *Rect = pRgn->rdh.rcBound;
-      RGNOBJAPI_Unlock(pRgn);
-   }
-   else
-      Ret = ERROR;
-
-   REGION_FreeRgnByHandle(VisRgn);
-
-   return Ret;
-}
-
-
 /*
  * @implemented
  */
@@ -4104,6 +4028,8 @@ NtUserSetWindowRgn(
 {
    HRGN hrgnCopy;
    PWND Window;
+   INT flags = (SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE);
+   BOOLEAN Ret = FALSE;
    DECLARE_RETURN(INT);
 
    DPRINT("Enter NtUserSetWindowRgn\n");
@@ -4119,32 +4045,36 @@ NtUserSetWindowRgn(
       if (GDIOBJ_ValidateHandle(hRgn, GDI_OBJECT_TYPE_REGION))
       {
          hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
+
          NtGdiCombineRgn(hrgnCopy, hRgn, 0, RGN_COPY);
       }
       else
          RETURN( 0);
    }
    else
-      hrgnCopy = (HRGN) 1;
+   {
+      hrgnCopy = NULL;
+   }
 
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
       GreDeleteObject(Window->hrgnClip);
    }
+
+   if (hrgnCopy)
+   {
+      if (Window->fnid != FNID_DESKTOP)
+         NtGdiOffsetRgn(hrgnCopy, Window->rcWindow.left, Window->rcWindow.top);
+
+      /* Set public ownership */
+      IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
+   }
    Window->hrgnClip = hrgnCopy;
 
-   /* FIXME - send WM_WINDOWPOSCHANGING and WM_WINDOWPOSCHANGED messages to the window */
+   Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
 
-   if(bRedraw)
-   {
-      USER_REFERENCE_ENTRY Ref;
-      UserRefObjectCo(Window, &Ref);
-      co_UserRedrawWindow(Window, NULL, NULL, RDW_INVALIDATE);
-      UserDerefObjectCo(Window);
-   }
-
-   RETURN( (INT)hRgn);
+   RETURN( (INT)Ret);
 
 CLEANUP:
    DPRINT("Leave NtUserSetWindowRgn, ret=%i\n",_ret_);

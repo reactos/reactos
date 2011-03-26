@@ -587,6 +587,9 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 if (flags & FLAG_SPECIAL)
                 {
                     prefix = &digits[16];
+#ifdef _USER32_WSPRINTF
+                    fieldwidth += 2;
+#endif
                 }
 
             case _T('u'):

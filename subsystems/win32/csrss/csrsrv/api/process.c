@@ -145,6 +145,8 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
   ULONG hash;
   PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
   HANDLE Process;
+  PLIST_ENTRY NextEntry;
+  PCSR_THREAD Thread;
 
   hash = ((ULONG_PTR)Pid >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
   pPrevLink = &ProcessData[hash];
@@ -161,14 +163,27 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
       Process = pProcessData->Process;
       CallProcessDeleted(pProcessData);
+
+      /* Dereference all process threads */
+      NextEntry = pProcessData->ThreadList.Flink;
+      while (NextEntry != &pProcessData->ThreadList)
+      {
+        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+        NextEntry = NextEntry->Flink;
+
+        CsrThreadRefcountZero(Thread);
+      }
+
       if (pProcessData->CsrSectionViewBase)
         {
           NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
         }
+
       if (pProcessData->ServerCommunicationPort)
         {
           NtClose(pProcessData->ServerCommunicationPort);
         }
+
       *pPrevLink = pProcessData->next;
 
       RtlFreeHeap(CsrssApiHeap, 0, pProcessData);

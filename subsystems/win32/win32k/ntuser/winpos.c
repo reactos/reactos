@@ -1120,7 +1120,7 @@ co_WinPosSetWindowPos(
       Window->style |= WS_VISIBLE;
    }
 
-   if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != (HRGN)1)
+   if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != HRGN_WINDOW)
    {
       NtGdiOffsetRgn(Window->hrgnUpdate,
                      NewWindowRect.left - OldWindowRect.left,

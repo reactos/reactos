@@ -27,7 +27,7 @@ typedef struct _COLORSPACE
 typedef struct _COLORTRANSFORMOBJ
 {
   BASEOBJECT BaseObject;
-  HANDLE     hColorTransform; 
+  HANDLE     hColorTransform;
 } GDICLRXFORM, COLORTRANSFORMOBJ, *PCOLORTRANSFORMOBJ;
 
 extern HCOLORSPACE hStockColorSpace;
