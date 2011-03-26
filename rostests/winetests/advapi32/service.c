@@ -1323,11 +1323,16 @@ static void test_enum_svc(void)
     }
     HeapFree(GetProcessHeap(), 0, services);
 
+#if 0
+    /* These tests don't make sense on a real system because no test can determine
+     * how many service should be active or inactive.
+     */
     todo_wine
     {
     ok(servicecountactive == 0, "Active services mismatch %u\n", servicecountactive);
     ok(servicecountinactive == 0, "Inactive services mismatch %u\n", servicecountinactive);
     }
+#endif
 
     CloseServiceHandle(scm_handle);
 
@@ -1681,8 +1686,13 @@ static void test_enum_svc(void)
     }
     HeapFree(GetProcessHeap(), 0, exservices);
 
+#if 0
+    /* These tests don't make sense on a real system because no test can determine
+     * how many service should be active or inactive.
+     */
     ok(servicecountactive == 0, "Active services mismatch %u\n", servicecountactive);
     ok(servicecountinactive == 0, "Inactive services mismatch %u\n", servicecountinactive);
+#endif
 
     CloseServiceHandle(scm_handle);
 }
