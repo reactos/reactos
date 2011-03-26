@@ -12,7 +12,7 @@ if(MSVC)
     add_definitions(-Disnan=_isnan)
 endif()
 
-spec2def(wined3.dll wined3d.spec)
+spec2def(wined3d.dll wined3d.spec)
 
 list(APPEND SOURCE
     ati_fragment_shader.c
