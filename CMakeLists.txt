@@ -1,5 +1,11 @@
 
 cmake_minimum_required(VERSION 2.6)
+
+if(${CMAKE_VERSION} VERSION_GREATER "2.8.2")
+    # Shadow cmake provided modules
+    cmake_policy(SET CMP0017 OLD)
+endif()
+
 project(REACTOS)
 
 #versioning
@@ -7,8 +13,6 @@ include(include/reactos/version.cmake)
 
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
-# Shadow cmake provided modules
-cmake_policy(SET CMP0017 OLD)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
