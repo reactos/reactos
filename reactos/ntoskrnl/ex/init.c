@@ -1410,9 +1410,12 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* No version */
-        *EndBuffer++ = ANSI_NULL; /* Null-terminate the string */
-        --Remaining;
+        *EndBuffer = ANSI_NULL; /* Null-terminate the string */
     }
+
+    /* Skip over the null-terminator to start a new string */
+    ++EndBuffer;
+    --Remaining;
 
     /* Build the version number */
     StringBuffer = InitBuffer->VersionNumber;
