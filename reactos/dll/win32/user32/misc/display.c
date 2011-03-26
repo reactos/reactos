@@ -1,29 +1,8 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
  * PURPOSE:         DDE
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      09-05-2001  CSH  Created
  */
 
 /* INCLUDES ******************************************************************/
@@ -47,49 +26,52 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  */
 BOOL WINAPI
 EnumDisplayDevicesA(
-  LPCSTR lpDevice,
-  DWORD iDevNum,
-  PDISPLAY_DEVICEA lpDisplayDevice,
-  DWORD dwFlags)
+    LPCSTR lpDevice,
+    DWORD iDevNum,
+    PDISPLAY_DEVICEA lpDisplayDevice,
+    DWORD dwFlags)
 {
-  BOOL rc;
-  UNICODE_STRING Device;
-  DISPLAY_DEVICEW DisplayDeviceW;
+    BOOL rc;
+    UNICODE_STRING Device;
+    DISPLAY_DEVICEW DisplayDeviceW;
 
-  if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
+    if (!RtlCreateUnicodeStringFromAsciiz(&Device, (PCSZ)lpDevice))
     {
-      SetLastError ( ERROR_OUTOFMEMORY );
-      return FALSE;
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
     }
 
-  RtlZeroMemory(&DisplayDeviceW, sizeof(DISPLAY_DEVICEW));
-  DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);
-  rc = NtUserEnumDisplayDevices (
-    &Device,
-    iDevNum,
-    &DisplayDeviceW,
-    dwFlags );
-  if (rc)
+    RtlZeroMemory(&DisplayDeviceW, sizeof(DISPLAY_DEVICEW));
+    DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);
+    rc = NtUserEnumDisplayDevices(&Device,
+                                  iDevNum,
+                                  &DisplayDeviceW,
+                                  dwFlags);
+    if (rc)
     {
-      /* Copy result from DisplayDeviceW to lpDisplayDevice. Buffers have the same size so result is always NULL terminated. */
-      lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
-      WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceName, -1,
-        lpDisplayDevice->DeviceName, sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
-        NULL, NULL);
-      WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceString, -1,
-        lpDisplayDevice->DeviceString, sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
-        NULL, NULL);
-      WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceID, -1,
-        lpDisplayDevice->DeviceID, sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
-        NULL, NULL);
-      WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceKey, -1,
-        lpDisplayDevice->DeviceKey, sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
-        NULL, NULL);
+        /* Copy result from DisplayDeviceW to lpDisplayDevice. Buffers have the same size so result is always NULL terminated. */
+        lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
+        WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceName, -1,
+                            lpDisplayDevice->DeviceName,
+                            sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
+                            NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceString, -1,
+                            lpDisplayDevice->DeviceString,
+                            sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
+                            NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceID, -1,
+                            lpDisplayDevice->DeviceID,
+                            sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
+                            NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, DisplayDeviceW.DeviceKey, -1,
+                            lpDisplayDevice->DeviceKey,
+                            sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
+                            NULL, NULL);
     }
 
-  RtlFreeUnicodeString ( &Device );
+    RtlFreeUnicodeString(&Device);
 
-  return rc;
+    return rc;
 }
 
 
@@ -99,23 +81,23 @@ EnumDisplayDevicesA(
 BOOL
 WINAPI
 EnumDisplayDevicesW(
-  LPCWSTR lpDevice,
-  DWORD iDevNum,
-  PDISPLAY_DEVICE lpDisplayDevice,
-  DWORD dwFlags)
+    LPCWSTR lpDevice,
+    DWORD iDevNum,
+    PDISPLAY_DEVICE lpDisplayDevice,
+    DWORD dwFlags)
 {
-  UNICODE_STRING Device;
-  BOOL rc;
+    UNICODE_STRING Device;
+    BOOL rc;
 
-  RtlInitUnicodeString ( &Device, lpDevice );
+    RtlInitUnicodeString(&Device, lpDevice);
 
-  rc = NtUserEnumDisplayDevices (
-    &Device,
-    iDevNum,
-    lpDisplayDevice,
-    dwFlags );
+    rc = NtUserEnumDisplayDevices(
+             &Device,
+             iDevNum,
+             lpDisplayDevice,
+             dwFlags);
 
-  return rc;
+    return rc;
 }
 
 
@@ -125,71 +107,71 @@ EnumDisplayDevicesW(
 BOOL
 WINAPI
 EnumDisplayMonitors(
-  HDC hdc,
-  LPCRECT lprcClip,
-  MONITORENUMPROC lpfnEnum,
-  LPARAM dwData)
+    HDC hdc,
+    LPCRECT lprcClip,
+    MONITORENUMPROC lpfnEnum,
+    LPARAM dwData)
 {
-  INT iCount, i;
-  HMONITOR *hMonitorList;
-  LPRECT pRectList;
-  HANDLE hHeap;
+    INT iCount, i;
+    HMONITOR *hMonitorList;
+    LPRECT pRectList;
+    HANDLE hHeap;
 
-  /* get list of monitors/rects */
-  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, NULL, NULL, 0);
-  if (iCount < 0)
+    /* get list of monitors/rects */
+    iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, NULL, NULL, 0);
+    if (iCount < 0)
     {
-      /* FIXME: SetLastError() */
-      return FALSE;
+        /* FIXME: SetLastError() */
+        return FALSE;
     }
-  if (iCount == 0)
+    if (iCount == 0)
     {
-      return TRUE;
-    }
-
-  hHeap = GetProcessHeap();
-  hMonitorList = HeapAlloc(hHeap, 0, sizeof (HMONITOR) * iCount);
-  if (hMonitorList == NULL)
-    {
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-  pRectList = HeapAlloc(hHeap, 0, sizeof (RECT) * iCount);
-  if (pRectList == NULL)
-    {
-      HeapFree(hHeap, 0, hMonitorList);
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
+        return TRUE;
     }
 
-  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, hMonitorList, pRectList, iCount);
-  if (iCount <= 0)
+    hHeap = GetProcessHeap();
+    hMonitorList = HeapAlloc(hHeap, 0, sizeof (HMONITOR) * iCount);
+    if (hMonitorList == NULL)
     {
-      /* FIXME: SetLastError() */
-      HeapFree(hHeap, 0, hMonitorList);
-      HeapFree(hHeap, 0, pRectList);
-      return FALSE;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    pRectList = HeapAlloc(hHeap, 0, sizeof (RECT) * iCount);
+    if (pRectList == NULL)
+    {
+        HeapFree(hHeap, 0, hMonitorList);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
 
-  /* enumerate list */
-  for (i = 0; i < iCount; i++)
+    iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, hMonitorList, pRectList, iCount);
+    if (iCount <= 0)
     {
-      HMONITOR hMonitor = hMonitorList[i];
-      LPRECT pMonitorRect = pRectList + i;
-      HDC hMonitorDC = NULL;
+        /* FIXME: SetLastError() */
+        HeapFree(hHeap, 0, hMonitorList);
+        HeapFree(hHeap, 0, pRectList);
+        return FALSE;
+    }
 
-      if (hdc != NULL)
+    /* enumerate list */
+    for (i = 0; i < iCount; i++)
+    {
+        HMONITOR hMonitor = hMonitorList[i];
+        LPRECT pMonitorRect = pRectList + i;
+        HDC hMonitorDC = NULL;
+
+        if (hdc != NULL)
         {
-          /* make monitor DC */
-          hMonitorDC = hdc;
+            /* make monitor DC */
+            hMonitorDC = hdc;
         }
 
-      if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
-        break;
+        if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
+            break;
     }
-  HeapFree(hHeap, 0, hMonitorList);
-  HeapFree(hHeap, 0, pRectList);
-  return TRUE;
+    HeapFree(hHeap, 0, hMonitorList);
+    HeapFree(hHeap, 0, pRectList);
+    return TRUE;
 }
 
 
@@ -240,13 +222,13 @@ EnumDisplaySettingsExA(
     COPYN(dmDriverVersion);
     switch (lpDevMode->dmSize)
     {
-        case SIZEOF_DEVMODEA_300:
-        case SIZEOF_DEVMODEA_400:
-        case SIZEOF_DEVMODEA_500:
-             break;
-        default:
-            lpDevMode->dmSize = SIZEOF_DEVMODEA_300;
-            break;
+    case SIZEOF_DEVMODEA_300:
+    case SIZEOF_DEVMODEA_400:
+    case SIZEOF_DEVMODEA_500:
+        break;
+    default:
+        lpDevMode->dmSize = SIZEOF_DEVMODEA_300;
+        break;
     }
     COPYN(dmDriverExtra);
     COPYN(dmFields);
@@ -295,11 +277,11 @@ EnumDisplaySettingsExA(
 BOOL
 WINAPI
 EnumDisplaySettingsA(
-  LPCSTR lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEA lpDevMode)
+    LPCSTR lpszDeviceName,
+    DWORD iModeNum,
+    LPDEVMODEA lpDevMode)
 {
-  return EnumDisplaySettingsExA ( lpszDeviceName, iModeNum, lpDevMode, 0 );
+    return EnumDisplaySettingsExA ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
@@ -335,11 +317,11 @@ EnumDisplaySettingsExW(
 BOOL
 WINAPI
 EnumDisplaySettingsW(
-  LPCWSTR lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEW lpDevMode)
+    LPCWSTR lpszDeviceName,
+    DWORD iModeNum,
+    LPDEVMODEW lpDevMode)
 {
-  return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
+    return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
@@ -349,40 +331,40 @@ EnumDisplaySettingsW(
 BOOL
 WINAPI
 GetMonitorInfoA(
-  HMONITOR hMonitor,
-  LPMONITORINFO lpmi)
+    HMONITOR hMonitor,
+    LPMONITORINFO lpmi)
 {
-  if (lpmi->cbSize == sizeof (MONITORINFO))
+    if (lpmi->cbSize == sizeof (MONITORINFO))
     {
-      return NtUserGetMonitorInfo(hMonitor, lpmi);
+        return NtUserGetMonitorInfo(hMonitor, lpmi);
     }
-  else if (lpmi->cbSize != sizeof (MONITORINFOEXA))
+    else if (lpmi->cbSize != sizeof (MONITORINFOEXA))
     {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-  else
+    else
     {
-      MONITORINFOEXW miExW;
-      INT res;
+        MONITORINFOEXW miExW;
+        INT res;
 
-      miExW.cbSize = sizeof (MONITORINFOEXW);
-      if (!NtUserGetMonitorInfo(hMonitor, (LPMONITORINFO)&miExW))
+        miExW.cbSize = sizeof (MONITORINFOEXW);
+        if (!NtUserGetMonitorInfo(hMonitor, (LPMONITORINFO)&miExW))
         {
-          return FALSE;
+            return FALSE;
         }
-      memcpy(lpmi, &miExW, sizeof (MONITORINFO));
-      res = WideCharToMultiByte(CP_THREAD_ACP, 0, miExW.szDevice, -1,
-                                ((LPMONITORINFOEXA)lpmi)->szDevice, CCHDEVICENAME,
-                                NULL, NULL);
-      if (res == 0)
+        memcpy(lpmi, &miExW, sizeof (MONITORINFO));
+        res = WideCharToMultiByte(CP_THREAD_ACP, 0, miExW.szDevice, -1,
+                                  ((LPMONITORINFOEXA)lpmi)->szDevice, CCHDEVICENAME,
+                                  NULL, NULL);
+        if (res == 0)
         {
-          WARN("WideCharToMultiByte() failed!\n");
-          return FALSE;
+            WARN("WideCharToMultiByte() failed!\n");
+            return FALSE;
         }
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -392,10 +374,10 @@ GetMonitorInfoA(
 BOOL
 WINAPI
 GetMonitorInfoW(
-  HMONITOR hMonitor,
-  LPMONITORINFO lpmi)
+    HMONITOR hMonitor,
+    LPMONITORINFO lpmi)
 {
-  return NtUserGetMonitorInfo(hMonitor, lpmi);
+    return NtUserGetMonitorInfo(hMonitor, lpmi);
 }
 
 
@@ -405,10 +387,10 @@ GetMonitorInfoW(
 HMONITOR
 WINAPI
 MonitorFromPoint(
-	IN POINT ptPoint,
-	IN DWORD dwFlags )
+    IN POINT ptPoint,
+    IN DWORD dwFlags )
 {
-  return NtUserMonitorFromPoint(ptPoint, dwFlags);
+    return NtUserMonitorFromPoint(ptPoint, dwFlags);
 }
 
 
@@ -418,10 +400,10 @@ MonitorFromPoint(
 HMONITOR
 WINAPI
 MonitorFromRect(
-	IN LPCRECT lpcRect,
-	IN DWORD dwFlags )
+    IN LPCRECT lpcRect,
+    IN DWORD dwFlags )
 {
-  return NtUserMonitorFromRect(lpcRect, dwFlags);
+    return NtUserMonitorFromRect(lpcRect, dwFlags);
 }
 
 
@@ -431,10 +413,10 @@ MonitorFromRect(
 HMONITOR
 WINAPI
 MonitorFromWindow(
-	IN HWND hWnd,
-	IN DWORD dwFlags )
+    IN HWND hWnd,
+    IN DWORD dwFlags )
 {
-  return NtUserMonitorFromWindow(hWnd, dwFlags);
+    return NtUserMonitorFromWindow(hWnd, dwFlags);
 }
 
 
@@ -444,46 +426,46 @@ MonitorFromWindow(
 LONG
 WINAPI
 ChangeDisplaySettingsExA(
-  LPCSTR lpszDeviceName,
-  LPDEVMODEA lpDevMode,
-  HWND hwnd,
-  DWORD dwflags,
-  LPVOID lParam)
+    LPCSTR lpszDeviceName,
+    LPDEVMODEA lpDevMode,
+    HWND hwnd,
+    DWORD dwflags,
+    LPVOID lParam)
 {
-  LONG rc;
-  UNICODE_STRING DeviceName;
-  PUNICODE_STRING pDeviceName = &DeviceName;
+    LONG rc;
+    UNICODE_STRING DeviceName;
+    PUNICODE_STRING pDeviceName = &DeviceName;
 
-  if (lpszDeviceName != NULL)
+    if (lpszDeviceName != NULL)
     {
-      if ( !RtlCreateUnicodeStringFromAsciiz ( pDeviceName, (PCSZ)lpszDeviceName ) )
+        if (!RtlCreateUnicodeStringFromAsciiz(pDeviceName, (PCSZ)lpszDeviceName))
         {
-          SetLastError ( ERROR_OUTOFMEMORY );
-          return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
+            SetLastError(ERROR_OUTOFMEMORY);
+            return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
         }
     }
-  else
-    pDeviceName = NULL;
+    else
+        pDeviceName = NULL;
 
-  if (lpDevMode != NULL)
-  {
-    LPDEVMODEW pDevModeW;
-    pDevModeW = GdiConvertToDevmodeW(lpDevMode);
-    if(pDevModeW)
+    if (lpDevMode != NULL)
     {
-      rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
-      RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
+        LPDEVMODEW pDevModeW;
+        pDevModeW = GdiConvertToDevmodeW(lpDevMode);
+        if(pDevModeW)
+        {
+            rc = NtUserChangeDisplaySettings(pDeviceName, pDevModeW, hwnd, dwflags, lParam);
+            RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
+        }
+        else
+            rc = DISP_CHANGE_SUCCESSFUL;
     }
     else
-      rc = DISP_CHANGE_SUCCESSFUL;
-  }
-  else
-    rc = NtUserChangeDisplaySettings ( pDeviceName, NULL, hwnd, dwflags, lParam );
+        rc = NtUserChangeDisplaySettings(pDeviceName, NULL, hwnd, dwflags, lParam);
 
-  if (lpszDeviceName != NULL)
-    RtlFreeUnicodeString ( &DeviceName );
+    if (lpszDeviceName != NULL)
+        RtlFreeUnicodeString(&DeviceName);
 
-  return rc;
+    return rc;
 }
 
 
@@ -493,12 +475,12 @@ ChangeDisplaySettingsExA(
 LONG
 WINAPI
 ChangeDisplaySettingsA(
-  LPDEVMODEA lpDevMode,
-  DWORD dwflags)
+    LPDEVMODEA lpDevMode,
+    DWORD dwflags)
 {
-  if(lpDevMode)
-    lpDevMode->dmDriverExtra = 0;
-  return ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
+    if(lpDevMode)
+        lpDevMode->dmDriverExtra = 0;
+    return ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
 }
 
 
@@ -508,24 +490,24 @@ ChangeDisplaySettingsA(
 LONG
 WINAPI
 ChangeDisplaySettingsExW(
-  LPCWSTR lpszDeviceName,
-  LPDEVMODEW lpDevMode,
-  HWND hwnd,
-  DWORD dwflags,
-  LPVOID lParam)
+    LPCWSTR lpszDeviceName,
+    LPDEVMODEW lpDevMode,
+    HWND hwnd,
+    DWORD dwflags,
+    LPVOID lParam)
 {
-  LONG rc;
-  UNICODE_STRING DeviceName;
-  PUNICODE_STRING pDeviceName = &DeviceName;
+    LONG rc;
+    UNICODE_STRING DeviceName;
+    PUNICODE_STRING pDeviceName = &DeviceName;
 
-  if (lpszDeviceName != NULL)
-    RtlInitUnicodeString ( pDeviceName, lpszDeviceName );
-  else
-    pDeviceName = NULL;
+    if (lpszDeviceName != NULL)
+        RtlInitUnicodeString(pDeviceName, lpszDeviceName);
+    else
+        pDeviceName = NULL;
 
-  rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, hwnd, dwflags, lParam );
+    rc = NtUserChangeDisplaySettings(pDeviceName, lpDevMode, hwnd, dwflags, lParam);
 
-  return rc;
+    return rc;
 }
 
 
@@ -535,10 +517,10 @@ ChangeDisplaySettingsExW(
 LONG
 WINAPI
 ChangeDisplaySettingsW(
-  LPDEVMODEW lpDevMode,
-  DWORD dwflags)
+    LPDEVMODEW lpDevMode,
+    DWORD dwflags)
 {
-  if(lpDevMode)
-    lpDevMode->dmDriverExtra = 0;
-  return ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
+    if(lpDevMode)
+        lpDevMode->dmDriverExtra = 0;
+    return ChangeDisplaySettingsExW(NULL, lpDevMode, NULL, dwflags, 0);
 }
