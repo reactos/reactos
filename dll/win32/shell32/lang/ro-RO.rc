@@ -671,6 +671,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Meniu Start\\Programe"
 	IDS_PERSONAL                "Documentele mele"
@@ -720,8 +726,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Spațiu disponibil"
 	IDS_EMPTY_BITBUCKET         "Golire Coș de gunoi"
 	IDS_PICK_ICON_TITLE         "Alegere pictogramă"
-	IDS_PICK_ICON_FILTER        "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Fișiere executabile\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Fișiere executabile (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Dosar"
 	IDS_VIRTUAL_DRIVER          "Driver dispozitiv virtual"
 	IDS_BAT_FILE                "Fișier serie de comenzi ReactOS"

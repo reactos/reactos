@@ -16,13 +16,6 @@
 #ifdef _UNICODE
 # define streamout wstreamout
 # define format_float format_floatw
-# define _flsbuf _flswbuf
-int __cdecl _flswbuf(int ch, FILE *stream);
-#endif
-
-#ifdef _LIBCNT_
-# undef _flsbuf
-# define _flsbuf(chr, stream) _TEOF
 #endif
 
 #define MB_CUR_MAX 10
@@ -234,25 +227,19 @@ static
 int
 streamout_char(FILE *stream, int chr)
 {
+#if defined(_USER32_WSPRINTF) || defined(_LIBCNT_)
     /* Check if the buffer is full */
     if (stream->_cnt < sizeof(TCHAR))
-    {
-#ifdef _USER32_WSPRINTF
-        return _TEOF;
-#else
-        /* Strings are done now */
-        if (stream->_flag & _IOSTRG) return _TEOF;
-
-        /* Flush buffer for files */
-        return _flsbuf(chr, stream) != _TEOF;
-#endif
-    }
+        return 0;
 
     *(TCHAR*)stream->_ptr = chr;
     stream->_ptr += sizeof(TCHAR);
     stream->_cnt -= sizeof(TCHAR);
 
     return 1;
+#else
+    return _fputtc((TCHAR)chr, stream) != _TEOF;
+#endif
 }
 
 static

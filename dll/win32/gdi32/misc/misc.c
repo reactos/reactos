@@ -124,38 +124,24 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
     PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-    if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
-            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
-            GDI_HANDLE_GET_TYPE(hGdiObj))
+
+    /* Check if twe have the correct type */
+    if (GDI_HANDLE_GET_TYPE(hGdiObj) != ObjectType ||
+        ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK) != ObjectType ||
+        (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != (ObjectType & GDI_ENTRY_BASETYPE_MASK))
     {
-        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-        if(pid == NULL || pid == CurrentProcessId)
-        {
-            //
-            // Need to test if we have Read & Write access to the VM address space.
-            //
-            BOOL Result = TRUE;
-            if(Entry->UserData)
-            {
-                volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-                _SEH2_TRY
-                {
-                    *Current = *Current;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Result = FALSE;
-                }
-                _SEH2_END
-            }
-            else
-                Result = FALSE; // Can not be zero.
-            if (Result) *UserData = Entry->UserData;
-            return Result;
-        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
+
+    /* Check if we are the owner */
+    if ((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) != CurrentProcessId)
+    {
+        return FALSE;
+    }
+
+    *UserData = Entry->UserData;
+    return TRUE;
 }
 
 PLDC

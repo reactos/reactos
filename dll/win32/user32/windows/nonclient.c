@@ -161,7 +161,7 @@ UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL Down)
  * - Center the buttons verticaly in the rect
  */
 VOID
-UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDown, ULONG Type)
+UserDrawCaptionButton(HWND hWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDown, ULONG Type)
 {
    RECT TempRect;
 
@@ -214,6 +214,9 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
       }
       case DFCS_CAPTIONCLOSE:
       {
+          HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
+          UINT MenuState = GetMenuState(hSysMenu, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+          
          /* FIXME: A tool window has a smaller Close button */
 
          if (ExStyle & WS_EX_TOOLWINDOW)
@@ -231,7 +234,7 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
                           (DFCS_CAPTIONCLOSE | (bDown ? DFCS_PUSHED : 0) |
-                          ((Style & WS_SYSMENU) ? 0 : DFCS_INACTIVE)));
+                          ((!(MenuState & (MF_GRAYED|MF_DISABLED)) && !(GetClassLong(hWnd, GCL_STYLE) & CS_NOCLOSE)) ? 0 : DFCS_INACTIVE)));
          break;
       }
    }
@@ -252,7 +255,7 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
    UserGetWindowBorders(Style, ExStyle, &WindowBorder, FALSE);
    InflateRect(&WindowRect, -WindowBorder.cx, -WindowBorder.cy);
-   UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
+   UserDrawCaptionButton(hWnd, &WindowRect, Style, ExStyle, hDC, bDown, Type);
 }
 
 // Note from Wine:
@@ -419,11 +422,11 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
       /* Draw buttons */
       if (Style & WS_SYSMENU)
       {
-         UserDrawCaptionButton(&TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONCLOSE);
+         UserDrawCaptionButton(hWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONCLOSE);
          if ((Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(ExStyle & WS_EX_TOOLWINDOW))
          {
-            UserDrawCaptionButton(&TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMIN);
-            UserDrawCaptionButton(&TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMAX);
+            UserDrawCaptionButton(hWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMIN);
+            UserDrawCaptionButton(hWnd, &TempRect, Style, ExStyle, hDC, FALSE, DFCS_CAPTIONMAX);
          }
       }
       if(!(Style & WS_MINIMIZE))
@@ -665,8 +668,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    RECT WindowRect, ClientRect, OrigWndRect;
    POINT ClientPoint;
    SIZE WindowBorders;
-   ULONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-   ULONG ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+   DWORD Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+   DWORD ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
 
    GetWindowRect(hWnd, &WindowRect);
    if (!PtInRect(&WindowRect, Point))
@@ -787,8 +790,6 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
    if(!(Style & WS_MINIMIZE))
    {
-     HMENU menu;
-
      ClientPoint = Point;
      ScreenToClient(hWnd, &ClientPoint);
      GetClientRect(hWnd, &ClientRect);
@@ -798,7 +799,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         return HTCLIENT;
      }
 
-     if ((menu = GetMenu(hWnd)) && !(Style & WS_CHILD))
+     if (GetMenu(hWnd) && !(Style & WS_CHILD))
      {
         if (Point.x > 0 && Point.x < WindowRect.right && ClientPoint.y < 0)
            return HTMENU;
@@ -878,13 +879,18 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    HDC WindowDC;
    BOOL Pressed = TRUE, OldState;
    WPARAM SCMsg;
-   ULONG ButtonType, Style;
+   HMENU hSysMenu;
+   ULONG ButtonType;
+   DWORD Style;
+   UINT MenuState;
 
    Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
    switch (wParam)
    {
       case HTCLOSE:
-         if (!(Style & WS_SYSMENU))
+         hSysMenu = GetSystemMenu(hWnd, FALSE);
+         MenuState = GetMenuState(hSysMenu, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+         if (!(Style & WS_SYSMENU) || (MenuState & (MF_GRAYED|MF_DISABLED)) || (GetClassLongPtrW(hWnd, GCL_STYLE) & CS_NOCLOSE))
             return;
          ButtonType = DFCS_CAPTIONCLOSE;
          SCMsg = SC_CLOSE;

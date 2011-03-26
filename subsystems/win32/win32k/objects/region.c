@@ -3204,6 +3204,27 @@ IntCreatePolyPolygonRgn(
     return hrgn;
 }
 
+BOOL
+FASTCALL
+IntRectInRegion(
+    HRGN  hRgn,
+    LPRECTL rc
+)
+{
+    PROSRGNDATA Rgn;
+    BOOL Ret;
+
+    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
+    {
+        return ERROR;
+    }
+
+    Ret = REGION_RectInRegion(Rgn, rc);
+    RGNOBJAPI_Unlock(Rgn);
+    return Ret;
+}
+
+
 //
 // NtGdi Exported Functions
 //
@@ -3765,15 +3786,8 @@ NtGdiRectInRegion(
     LPRECTL unsaferc
 )
 {
-    PROSRGNDATA Rgn;
     RECTL rc = {0};
-    BOOL Ret;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    if (!(Rgn = RGNOBJAPI_Lock(hRgn, NULL)))
-    {
-        return ERROR;
-    }
 
     _SEH2_TRY
     {
@@ -3788,15 +3802,12 @@ NtGdiRectInRegion(
 
     if (!NT_SUCCESS(Status))
     {
-        RGNOBJAPI_Unlock(Rgn);
         SetLastNtError(Status);
         DPRINT1("NtGdiRectInRegion: bogus rc\n");
         return ERROR;
     }
 
-    Ret = REGION_RectInRegion(Rgn, &rc);
-    RGNOBJAPI_Unlock(Rgn);
-    return Ret;
+    return IntRectInRegion(hRgn, &rc);
 }
 
 BOOL

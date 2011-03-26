@@ -157,6 +157,40 @@ NtUserCallOneParam(
                 MsqPostQuitMessage(pti->MessageQueue, Param);
                 RETURN(TRUE);
           }
+
+      case ONEPARAM_ROUTINE_BEGINDEFERWNDPOS:
+         {
+             PSMWP psmwp;
+             HDWP hDwp = NULL;
+             INT count = (INT)Param;
+
+             if (count < 0)
+             {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                RETURN(0);
+             }
+             /* Windows allows zero count, in which case it allocates context for 8 moves */
+             if (count == 0) count = 8;
+
+             psmwp = (PSMWP) UserCreateObject( gHandleTable,
+                                               NULL,
+                                              (PHANDLE)&hDwp,
+                                               otSMWP,
+                                               sizeof(SMWP));
+             if (!psmwp) RETURN(0);
+             psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
+             if (!psmwp->acvr)
+             {
+                UserDeleteObject(hDwp, otSMWP);
+                RETURN(0);
+             }
+             RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
+             psmwp->bHandle = TRUE;
+             psmwp->ccvr = 0;          // actualCount
+             psmwp->ccvrAlloc = count; // suggestedCount             
+             RETURN((DWORD_PTR)hDwp);
+         }
+
       case ONEPARAM_ROUTINE_SHOWCURSOR:
          RETURN( (DWORD_PTR)UserShowCursor((BOOL)Param) );
 

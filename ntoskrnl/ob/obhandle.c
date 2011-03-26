@@ -1752,7 +1752,6 @@ ObpCloseHandle(IN HANDLE Handle,
 
         /* Detach and return success */
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
-        Status = STATUS_SUCCESS;
     }
     else
     {

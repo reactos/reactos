@@ -19,15 +19,15 @@
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
-/*  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
+  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL,
     0,
     IDC_ARROW,
-    (HBRUSH)(COLOR_BACKGROUND+1),
+    (HBRUSH)(COLOR_BACKGROUND + 1),
     FNID_DESKTOP,
     ICLS_DESKTOP
-  },*/
+  },
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8003))),
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs

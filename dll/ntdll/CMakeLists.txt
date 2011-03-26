@@ -16,7 +16,10 @@ list(APPEND SOURCE
     csr/connect.c
     dbg/dbgui.c
 	ldr/actctx.c
+	ldr/ldrapi.c
 	ldr/ldrinit.c
+	ldr/ldrpe.c
+	ldr/ldrutils.c
     ldr/startup.c
     ldr/utils.c
     rtl/libsupp.c

@@ -68,7 +68,7 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
         return FALSE;
     }
 
-    return !lstrcmpW(mi->volume_label, volume_name);
+    return !strcmpW( mi->volume_label, volume_name );
 }
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
@@ -331,7 +331,7 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
         goto done;
     }
 
-    if (lstrcmpiW(mi->cabinet, cab))
+    if (strcmpiW( mi->cabinet, cab ))
     {
         ERR("Continuous cabinet does not match the next cabinet in the Media table\n");
         goto done;
@@ -656,7 +656,7 @@ static UINT get_drive_type(const WCHAR *path)
     return GetDriveTypeW(root);
 }
 
-static UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
+UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
     LPWSTR source_dir;
@@ -748,23 +748,44 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     if (r != ERROR_SUCCESS)
         return r;
 
-    index = 0;
-    volumesz = MAX_PATH;
-    promptsz = MAX_PATH;
-
     if (last_type[0] == 'n')
     {
-        while (MsiSourceListEnumSourcesW(package->ProductCode, NULL,
-                                        package->Context,
-                                        MSISOURCETYPE_NETWORK, index++,
-                                        volume, &volumesz) == ERROR_SUCCESS)
+        WCHAR cabinet_file[MAX_PATH];
+        BOOL check_all = FALSE;
+
+        while(TRUE)
         {
-            if (!strncmpiW(source, volume, strlenW(source)))
+            index = 0;
+            volumesz = MAX_PATH;
+            while (MsiSourceListEnumSourcesW(package->ProductCode, NULL,
+                                             package->Context,
+                                             MSISOURCETYPE_NETWORK, index++,
+                                             volume, &volumesz) == ERROR_SUCCESS)
             {
-                lstrcpyW(mi->sourcedir, source);
-                TRACE("Found network source %s\n", debugstr_w(mi->sourcedir));
-                return ERROR_SUCCESS;
+                if (check_all || !strncmpiW(source, volume, strlenW(source)))
+                {
+                    lstrcpyW(cabinet_file, volume);
+                    PathAddBackslashW(cabinet_file);
+                    lstrcatW(cabinet_file, mi->cabinet);
+
+                    if (GetFileAttributesW(cabinet_file) == INVALID_FILE_ATTRIBUTES)
+                    {
+                        volumesz = MAX_PATH;
+                        if(!check_all)
+                            break;
+                        continue;
+                    }
+
+                    lstrcpyW(mi->sourcedir, volume);
+                    TRACE("Found network source %s\n", debugstr_w(mi->sourcedir));
+                    return ERROR_SUCCESS;
+                }
             }
+
+            if (!check_all)
+                check_all = TRUE;
+            else
+                break;
         }
     }
 
@@ -803,13 +824,6 @@ UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
     if (mi->is_continuous)
         return ERROR_SUCCESS;
 
-    rc = msi_load_media_info(package, file, mi);
-    if (rc != ERROR_SUCCESS)
-    {
-        ERR("Unable to load media info %u\n", rc);
-        return ERROR_FUNCTION_FAILED;
-    }
-
     /* cabinet is internal, no checks needed */
     if (!mi->cabinet || mi->cabinet[0] == '#')
         return ERROR_SUCCESS;
@@ -841,7 +855,7 @@ UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 
     /* check volume matches, change media if not */
     if (mi->volume_label && mi->disk_id > 1 &&
-        lstrcmpW(mi->first_volume, mi->volume_label))
+        strcmpW( mi->first_volume, mi->volume_label ))
     {
         LPWSTR source = msi_dup_property(package->db, cszSourceDir);
         BOOL matches;

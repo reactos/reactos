@@ -58,7 +58,7 @@ RegQueryValue(
     ULONG cbInfoSize, cbDataSize;
 
     /* Check if the local buffer is sufficient */
-    cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + *pcbValue;
+    cbInfoSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + *pcbValue;
     if (cbInfoSize <= sizeof(ajBuffer))
     {
         pInfo = (PVOID)ajBuffer;
@@ -89,8 +89,11 @@ RegQueryValue(
         /* Did we get the right type */
         if (pInfo->Type == ulType)
         {
-            /* Copy the contents to the caller */
-            RtlCopyMemory(pvData, pInfo->Data, min(*pcbValue, cbDataSize));
+            /* Copy the contents to the caller. Make sure strings are null terminated */
+            if (ulType == REG_SZ || ulType == REG_MULTI_SZ || ulType == REG_EXPAND_SZ)
+                RtlStringCbCopyNW((LPWSTR)pvData, *pcbValue, (LPWSTR)pInfo->Data, cbDataSize);
+            else
+                RtlCopyMemory(pvData, pInfo->Data, cbDataSize);
         }
         else
             Status = STATUS_OBJECT_TYPE_MISMATCH;

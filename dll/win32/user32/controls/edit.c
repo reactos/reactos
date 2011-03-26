@@ -4477,8 +4477,8 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
            {
               NtUserSetWindowFNID(hwnd, FNID_EDIT);
            }
-        }    
-#endif    
+        }
+#endif
 
         TRACE("hwnd=%p msg=%x (%s) wparam=%lx lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
 

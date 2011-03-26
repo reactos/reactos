@@ -1049,7 +1049,7 @@ PLARGE_INTEGER	clicks
 );
 
 VOID
-usb_cal_cpu_freq();
+usb_cal_cpu_freq(VOID);
 
 NTSTATUS
 usb_reset_pipe_ex(

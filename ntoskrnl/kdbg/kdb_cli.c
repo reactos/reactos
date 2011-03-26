@@ -2490,14 +2490,12 @@ KdbpReadCommand(
              */
             if (Buffer == Orig)
             {
-                strncpy(Buffer, LastCommand, Size);
-                Buffer[Size - 1] = '\0';
+                RtlStringCbCopyA(Buffer, Size, LastCommand);
             }
             else
             {
                 *Buffer = '\0';
-                strncpy(LastCommand, Orig, sizeof (LastCommand));
-                LastCommand[sizeof (LastCommand) - 1] = '\0';
+                RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
             }
 
             return;
@@ -2614,8 +2612,7 @@ KdbpDoCommand(
     static PCH Argv[256];
     static CHAR OrigCommand[1024];
 
-    strncpy(OrigCommand, Command, sizeof(OrigCommand) - 1);
-    OrigCommand[sizeof(OrigCommand) - 1] = '\0';
+    RtlStringCbCopyA(OrigCommand, sizeof(OrigCommand), Command);
 
     Argc = 0;
     p = Command;

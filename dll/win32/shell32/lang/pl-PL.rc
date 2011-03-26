@@ -675,6 +675,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Wyloguj"
 	IDS_LOGOFF_PROMPT           "Czy chcesz siê wylogowaæ z systemu?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Nie mogê wyœwietliæ okna Uruchom (b³¹d wewnêtrzny)"
+	IDS_RUNDLG_BROWSE_ERROR     "Nie mogê wyœwietliæ okna Przegl¹daj (b³¹d wewnêtrzny)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Przegl¹daj"
+	IDS_RUNDLG_BROWSE_FILTER    "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Start\\Programy"
 	IDS_PERSONAL                "Moje dokumenty"
@@ -724,8 +730,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Pozosta³o wolnego miejsca"
 	IDS_EMPTY_BITBUCKET         "Opró¿nij Kosz"
 	IDS_PICK_ICON_TITLE         "Wybierz ikonê"
-	IDS_PICK_ICON_FILTER        "Pliki ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Programy\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Pliki ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Wszystkie pliki (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Katalog"
 	IDS_VIRTUAL_DRIVER          "Sterownik urz¹dzenia wirtualnego"
 	IDS_BAT_FILE                "Plik wsadowy ReactOS"
@@ -759,5 +765,5 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Domyœlny rozmiar jednostki alokacji"
 	IDS_COPY_OF                 "Kopia"
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	IDS_SHLEXEC_NOASSOC         "¯aden program nie jest skonfigurowane by otwieraæ pliki tego typu."
 END

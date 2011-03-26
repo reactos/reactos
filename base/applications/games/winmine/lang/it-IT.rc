@@ -29,7 +29,7 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE BEGIN
-     IDS_APPNAME, "WineMine"
+     IDS_APPNAME, "WinMine"
      IDS_NOBODY,  "Nessuno"
      IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
 END

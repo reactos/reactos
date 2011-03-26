@@ -16,3 +16,6 @@ Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprog
 
 [Section.0410]
 Description = Sumatra PDF è un visualizzatore di file PDF. E' molto leggero ed è open source.
+
+[Section.0415]
+Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.

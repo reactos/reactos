@@ -2735,7 +2735,12 @@ NTAPI
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
-    UNIMPLEMENTED;
+    static int i;
+
+    if (i == 0)
+        UNIMPLEMENTED;
+    i++;
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -2743,7 +2748,12 @@ NTSTATUS
 NTAPI
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    UNIMPLEMENTED;
+    static int i;
+
+    if (i == 0)
+        UNIMPLEMENTED;
+    i++;
+
     return STATUS_NOT_IMPLEMENTED;
 }
 

@@ -136,7 +136,7 @@ DtbgInit(VOID)
      * Create the desktop window class
      */
     Class.cbSize = sizeof(WNDCLASSEXW);
-    Class.style = CS_GLOBALCLASS;
+    Class.style = 0; // Local Class
     Class.lpfnWndProc = DtbgWindowProc;
     Class.cbClsExtra = 0;
     Class.cbWndExtra = 0;

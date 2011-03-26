@@ -1,0 +1,79 @@
+/*
+ *  German language file by Daniel Reimer <EmuandCo> 2006-06-15
+ */
+
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Ændringer fil-ACL'er (Access Control List) eller viser dem.\n\n\
+CACLS Filenavn [/T] [/E] [/C] [/G Bruger:Adgang] [/R Bruger [...]]\n\
+                [/P Bruger:Adgang [...]] [/D Bruger [...]]\n\
+  Filnavn              Viser ACL'er for angivet filer.\n\
+  /T                   Ændre ACL'er for angivene filer i mapper\n\
+                       og alle undermapper.\n\
+  /E                   Bearbejde ACL i stedet for at erstatte.\n\
+  /C                   Forandre ACL'er ved adgangfejl videre.\n\
+  /G Bruger:Adgang     Tillade angivene adgangsformer.\n\
+                       Adgang kan være:   R  læse\n\
+                                          W  skrive\n\
+                                          C  ændre (At skrive)\n\
+                                          F  Fuld adgang\n\
+  /R Bruger            Fjerne adgangsrette af brugeren (kun gyldig med /E).\n\
+  /P Bruger:Adgang     Erstatte adgangsretterne af brugeren.\n\
+                       Adgang kan være:   N  Ingen\n\
+                                          R  Læse\n\
+                                          W  Skrive\n\
+                                          C  ændre (Skrive)\n\
+                                          F  fuld adgang\n\
+   /D Bruger           Forbyde adgang for brugeren.\n\
+Mellemrum(Wildcards) bliver understøttet i filenavn.\n\
+Man kan angive flere bruger i en kommando.\n\n\
+Forkortninger:\n\
+   CI - Container overtagelse.\n\
+        ACE-Bidragen bliver overtaget fra mapperne.\n\
+   OI - Objekt overtagelse.\n\
+        ACE-Bidragen bliver overtaget fra filerne.\n\
+   IO - Kun overtagelse.\n\
+        ACE'ens egenskab passer ikke sammen med\n\
+        de aktuelle filer/mapper.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(special access:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+END

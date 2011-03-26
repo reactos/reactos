@@ -20,15 +20,104 @@
 
 /* FUNCTIONS *****************************************************************/
 
+USHORT
+FORCEINLINE
+ChkSum(ULONG Sum, PUSHORT Src, ULONG Len)
+{
+    ULONG i;
+
+    for (i=0; i<Len; i++)
+    {
+        /* Sum up the current word */
+        Sum += Src[i];
+
+        /* Sum up everything above the low word as a carry */
+        Sum = (Sum & 0xFFFF) + (Sum >> 16);
+    }
+
+    /* Apply carry one more time and clamp to the USHORT */
+    return (Sum + (Sum >> 16)) & 0xFFFF;
+}
+
 BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
     IN PVOID BaseAddress,
-    IN ULONG NumberOfBytes,
+    IN ULONG ImageSize,
     IN ULONG FileLength)
 {
-    /* FIXME: TODO */
-    return TRUE;
+    PIMAGE_NT_HEADERS Header;
+    PUSHORT Ptr;
+    ULONG Sum;
+    ULONG CalcSum;
+    ULONG HeaderSum;
+    ULONG i;
+
+    // HACK: Ignore calls with ImageSize=0. Should be fixed by new MM.
+    if (ImageSize == 0) return TRUE;
+
+    /* Get NT header to check if it's an image at all */
+    Header = RtlImageNtHeader(BaseAddress);
+    if (!Header) return FALSE;
+
+    /* Get checksum to match */
+    HeaderSum = Header->OptionalHeader.CheckSum;
+
+    /* Zero checksum seems to be accepted */
+    if (HeaderSum == 0) return TRUE;
+
+    /* Calculate the checksum */
+    Sum = 0;
+    Ptr = (PUSHORT) BaseAddress;
+    for (i = 0; i < ImageSize / sizeof (USHORT); i++)
+    {
+        Sum += (ULONG)*Ptr;
+        if (HIWORD(Sum) != 0)
+        {
+            Sum = LOWORD(Sum) + HIWORD(Sum);
+        }
+        Ptr++;
+    }
+
+    if (ImageSize & 1)
+    {
+        Sum += (ULONG)*((PUCHAR)Ptr);
+        if (HIWORD(Sum) != 0)
+        {
+            Sum = LOWORD(Sum) + HIWORD(Sum);
+        }
+    }
+
+    CalcSum = (USHORT)(LOWORD(Sum) + HIWORD(Sum));
+
+    /* Subtract image checksum from calculated checksum. */
+    /* fix low word of checksum */
+    if (LOWORD(CalcSum) >= LOWORD(HeaderSum))
+    {
+        CalcSum -= LOWORD(HeaderSum);
+    }
+    else
+    {
+        CalcSum = ((LOWORD(CalcSum) - LOWORD(HeaderSum)) & 0xFFFF) - 1;
+    }
+
+    /* Fix high word of checksum */
+    if (LOWORD(CalcSum) >= HIWORD(HeaderSum))
+    {
+        CalcSum -= HIWORD(HeaderSum);
+    }
+    else
+    {
+        CalcSum = ((LOWORD(CalcSum) - HIWORD(HeaderSum)) & 0xFFFF) - 1;
+    }
+
+    /* Add file length */
+    CalcSum += ImageSize;
+
+    if (CalcSum != HeaderSum)
+        DPRINT1("Image %p checksum mismatches! 0x%x != 0x%x, ImageSize %x, FileLen %x\n", BaseAddress, CalcSum, HeaderSum, ImageSize, FileLength);
+
+    return (BOOLEAN)(CalcSum == HeaderSum);
 }
 
 /*

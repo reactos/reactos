@@ -87,8 +87,23 @@ LRESULT
 WINAPI
 MsgWindowProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hwnd, FNID_MESSAGEWND);
+       }
+    }
+
     if (message == WM_NCCREATE) return TRUE;
-    return 0;
+
+    if (message == WM_DESTROY)
+       NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+
+    return DefWindowProc(hwnd, message, wParam, lParam );
 }
 
 LRESULT

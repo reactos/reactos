@@ -6,6 +6,7 @@
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
+#include "lang/es-ES.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/ko-KR.rc"

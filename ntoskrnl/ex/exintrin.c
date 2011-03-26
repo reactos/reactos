@@ -103,6 +103,7 @@ ProbeForRead(IN CONST VOID *Address,
              IN SIZE_T Length,
              IN ULONG Alignment)
 {
+	ULONG_PTR Last, Current = (ULONG_PTR)Address;
     PAGED_CODE();
 
     /* Only probe if we have a valid length */
@@ -115,18 +116,22 @@ ProbeForRead(IN CONST VOID *Address,
                (Alignment == 8) ||
                (Alignment == 16));
 
-        /* Check for correct alignment */
-        if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
+        /* Check the alignment */
+        if ((Current & (Alignment - 1)) != 0)
         {
             /* Incorrect alignment */
             ExRaiseDatatypeMisalignment();
         }
-        else if (((ULONG_PTR)Address + Length) < (ULONG_PTR)Address ||
-                 ((ULONG_PTR)Address + Length) > (ULONG_PTR)MmUserProbeAddress)
+        
+        /* Get the end address */
+        Last = Current + Length - 1;
+        if ((Last < Current) || (Last >= (ULONG_PTR)MmUserProbeAddress))
         {
-            /* Attempt a read */
-            *(volatile CHAR* const)MmUserProbeAddress = 0;
+            /* Raise an access violation */
+            ExRaiseAccessViolation();
         }
+
+        /* ProbeForRead doesn't check if memory pages are readable! */
     }
 }
 

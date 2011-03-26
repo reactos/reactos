@@ -2232,6 +2232,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 	case CB_LIMITTEXT:
 		if( lphc->wState & CBF_EDIT )
 			return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
+                break; // ReactOS!!! removed at revision 38715
 
     case WM_UPDATEUISTATE:
         if (unicode)

@@ -7,7 +7,7 @@
 NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 				  ULONG Type,
 				  PULONG Address );
-UINT CountInterfaces();
+UINT CountInterfaces(VOID);
 UINT CountInterfaceAddresses( PIP_INTERFACE Interface );
 NTSTATUS GetInterfaceSpeed( PIP_INTERFACE Interface, PUINT Speed );
 NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, PCHAR NameBuffer,

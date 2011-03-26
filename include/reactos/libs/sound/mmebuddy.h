@@ -382,10 +382,10 @@ typedef struct _WAVEHDR_EXTENSION
 */
 
 MMRESULT
-InitEntrypointMutexes();
+InitEntrypointMutexes(VOID);
 
 VOID
-CleanupEntrypointMutexes();
+CleanupEntrypointMutexes(VOID);
 
 VOID
 AcquireEntrypointMutex(
@@ -502,7 +502,7 @@ UnlistSoundDevices(
     IN  MMDEVICE_TYPE DeviceType);
 
 VOID
-UnlistAllSoundDevices();
+UnlistAllSoundDevices(VOID);
 
 MMRESULT
 GetSoundDevice(
@@ -608,7 +608,7 @@ FreeMemory(
     IN  PVOID Pointer);
 
 UINT
-GetMemoryAllocationCount();
+GetMemoryAllocationCount(VOID);
 
 UINT
 GetDigitCount(

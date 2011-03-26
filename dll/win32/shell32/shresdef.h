@@ -142,6 +142,11 @@
 #define IDS_FILE_TYPES              174
 #define IDS_FILE_DETAILS            175
 
+#define IDS_RUNDLG_ERROR            180
+#define IDS_RUNDLG_BROWSE_ERROR     181
+#define IDS_RUNDLG_BROWSE_CAPTION   182
+#define IDS_RUNDLG_BROWSE_FILTER    183
+
 #define IDS_OPEN_VERB               300
 #define IDS_RUNAS_VERB              301
 #define IDS_EDIT_VERB               302
@@ -194,6 +199,13 @@
 #define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
 #define OPEN_WITH_PROGRAMM_DLG      0x4001
 #define IDD_SH_FILE_COPY            0x4002
+
+/* run dialog */
+#define IDC_RUNDLG_DESCRIPTION  12289
+#define IDC_RUNDLG_BROWSE       12288
+#define IDC_RUNDLG_ICON         12297
+#define IDC_RUNDLG_EDITPATH     12298
+#define IDC_RUNDLG_LABEL        12305
 
 /* ID's of the ShellAbout controls */
 // Part 1 - ID's identical to Windows Server 2003 SP1's shell32.dll

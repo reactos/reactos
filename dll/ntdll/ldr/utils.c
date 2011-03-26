@@ -31,23 +31,11 @@
 #define TRACE_LDR(...) if (RtlGetNtGlobalFlags() & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(__VA_ARGS__); }
 #endif
 
-typedef struct _TLS_DATA
-{
-    PVOID StartAddressOfRawData;
-    DWORD TlsDataSize;
-    DWORD TlsZeroSize;
-    PIMAGE_TLS_CALLBACK *TlsAddressOfCallBacks;
-    PLDR_DATA_TABLE_ENTRY Module;
-} TLS_DATA, *PTLS_DATA;
-
 static BOOLEAN LdrpDllShutdownInProgress = FALSE;
-static PTLS_DATA LdrpTlsArray = NULL;
-static ULONG LdrpTlsCount = 0;
-static ULONG LdrpTlsSize = 0;
-static HANDLE LdrpKnownDllsDirHandle = NULL;
-static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
+extern HANDLE LdrpKnownDllObjectDirectory;
+extern UNICODE_STRING LdrpKnownDllPath;
 static PLDR_DATA_TABLE_ENTRY LdrpLastModule = NULL;
-extern PLDR_DATA_TABLE_ENTRY ExeModule;
+extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 
 /* PROTOTYPES ****************************************************************/
 
@@ -59,7 +47,6 @@ static NTSTATUS LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                IN PUNICODE_STRING Name,
                                OUT PLDR_DATA_TABLE_ENTRY *Module,
                                OUT PVOID *BaseAddress OPTIONAL);
-static NTSTATUS LdrpAttachProcess(VOID);
 static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 static NTSTATUS LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module, BOOLEAN Unload);
 
@@ -116,51 +103,6 @@ static __inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
         RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
     }
     return LoadCount;
-}
-
-static __inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size, BOOLEAN Locked)
-{
-    if (!Locked)
-    {
-        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
-    }
-    Module->TlsIndex = (SHORT)LdrpTlsCount;
-    LdrpTlsCount++;
-    LdrpTlsSize += Size;
-    if (!Locked)
-    {
-        RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
-    }
-}
-
-static __inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
-{
-    PIMAGE_TLS_CALLBACK *TlsCallback;
-    if (Module->TlsIndex != 0xFFFF && Module->LoadCount == LDRP_PROCESS_CREATION_TIME)
-    {
-        TlsCallback = LdrpTlsArray[Module->TlsIndex].TlsAddressOfCallBacks;
-        if (TlsCallback)
-        {
-            while (*TlsCallback)
-            {
-                TRACE_LDR("%wZ - Calling tls callback at %x\n",
-                          &Module->BaseDllName, *TlsCallback);
-                (*TlsCallback)(Module->DllBase, dwReason, NULL);
-                TlsCallback++;
-            }
-        }
-    }
-}
-
-static BOOLEAN LdrpCallDllEntry(PLDR_DATA_TABLE_ENTRY Module, DWORD dwReason, PVOID lpReserved)
-{
-    if (!(Module->Flags & LDRP_IMAGE_DLL) ||
-            Module->EntryPoint == 0)
-    {
-        return TRUE;
-    }
-    LdrpTlsCallback(Module, dwReason);
-    return  ((PDLLMAIN_FUNC)Module->EntryPoint)(Module->DllBase, dwReason, lpReserved);
 }
 
 static PWSTR
@@ -269,127 +211,6 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
     return Path;
 }
 
-static NTSTATUS
-LdrpInitializeTlsForThread(VOID)
-{
-    PVOID* TlsPointers;
-    PTLS_DATA TlsInfo;
-    PVOID TlsData;
-    ULONG i;
-    PTEB Teb = NtCurrentTeb();
-
-    DPRINT("LdrpInitializeTlsForThread() called for %wZ\n", &ExeModule->BaseDllName);
-
-    Teb->StaticUnicodeString.Length = 0;
-    Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
-    Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
-
-    if (LdrpTlsCount > 0)
-    {
-        TlsPointers = RtlAllocateHeap(RtlGetProcessHeap(),
-                                      0,
-                                      LdrpTlsCount * sizeof(PVOID) + LdrpTlsSize);
-        if (TlsPointers == NULL)
-        {
-            DPRINT1("failed to allocate thread tls data\n");
-            return STATUS_NO_MEMORY;
-        }
-
-        TlsData = (PVOID)((ULONG_PTR)TlsPointers + LdrpTlsCount * sizeof(PVOID));
-        Teb->ThreadLocalStoragePointer = TlsPointers;
-
-        TlsInfo = LdrpTlsArray;
-        for (i = 0; i < LdrpTlsCount; i++, TlsInfo++)
-        {
-            TRACE_LDR("Initialize tls data for %wZ\n", &TlsInfo->Module->BaseDllName);
-            TlsPointers[i] = TlsData;
-            if (TlsInfo->TlsDataSize)
-            {
-                memcpy(TlsData, TlsInfo->StartAddressOfRawData, TlsInfo->TlsDataSize);
-                TlsData = (PVOID)((ULONG_PTR)TlsData + TlsInfo->TlsDataSize);
-            }
-            if (TlsInfo->TlsZeroSize)
-            {
-                memset(TlsData, 0, TlsInfo->TlsZeroSize);
-                TlsData = (PVOID)((ULONG_PTR)TlsData + TlsInfo->TlsZeroSize);
-            }
-        }
-    }
-
-    DPRINT("LdrpInitializeTlsForThread() done\n");
-    return STATUS_SUCCESS;
-}
-
-static NTSTATUS
-LdrpInitializeTlsForProccess(VOID)
-{
-    PLIST_ENTRY ModuleListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
-    PIMAGE_TLS_DIRECTORY TlsDirectory;
-    PTLS_DATA TlsData;
-    ULONG Size;
-
-    DPRINT("LdrpInitializeTlsForProccess() called for %wZ\n", &ExeModule->BaseDllName);
-
-    if (LdrpTlsCount > 0)
-    {
-        LdrpTlsArray = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       0,
-                                       LdrpTlsCount * sizeof(TLS_DATA));
-        if (LdrpTlsArray == NULL)
-        {
-            DPRINT1("Failed to allocate global tls data\n");
-            return STATUS_NO_MEMORY;
-        }
-
-        ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-        Entry = ModuleListHead->Flink;
-        while (Entry != ModuleListHead)
-        {
-            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-            if (Module->LoadCount == LDRP_PROCESS_CREATION_TIME &&
-                    Module->TlsIndex != 0xFFFF)
-            {
-                TlsDirectory = (PIMAGE_TLS_DIRECTORY)
-                               RtlImageDirectoryEntryToData(Module->DllBase,
-                                       TRUE,
-                                       IMAGE_DIRECTORY_ENTRY_TLS,
-                                       &Size);
-                ASSERT(Module->TlsIndex < LdrpTlsCount);
-                TlsData = &LdrpTlsArray[Module->TlsIndex];
-                TlsData->StartAddressOfRawData = (PVOID)TlsDirectory->StartAddressOfRawData;
-                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
-                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
-                if (TlsDirectory->AddressOfCallBacks)
-                    TlsData->TlsAddressOfCallBacks = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks;
-                else
-                    TlsData->TlsAddressOfCallBacks = NULL;
-                TlsData->Module = Module;
-#if 0
-                DbgPrint("TLS directory for %wZ\n", &Module->BaseDllName);
-                DbgPrint("StartAddressOfRawData: %x\n", TlsDirectory->StartAddressOfRawData);
-                DbgPrint("EndAddressOfRawData:   %x\n", TlsDirectory->EndAddressOfRawData);
-                DbgPrint("SizeOfRawData:         %d\n", TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData);
-                DbgPrint("AddressOfIndex:        %x\n", TlsDirectory->AddressOfIndex);
-                DbgPrint("AddressOfCallBacks:    %x\n", TlsDirectory->AddressOfCallBacks);
-                DbgPrint("SizeOfZeroFill:        %d\n", TlsDirectory->SizeOfZeroFill);
-                DbgPrint("Characteristics:       %x\n", TlsDirectory->Characteristics);
-#endif
-                /*
-                 * FIXME:
-                 *   Is this region allways writable ?
-                 */
-                *(PULONG)TlsDirectory->AddressOfIndex = Module->TlsIndex;
-            }
-            Entry = Entry->Flink;
-        }
-    }
-
-    DPRINT("LdrpInitializeTlsForProccess() done\n");
-    return STATUS_SUCCESS;
-}
-
 VOID
 LdrpInitLoader(VOID)
 {
@@ -400,7 +221,7 @@ LdrpInitLoader(VOID)
     ULONG Length;
     NTSTATUS Status;
 
-    DPRINT("LdrpInitLoader() called for %wZ\n", &ExeModule->BaseDllName);
+    DPRINT("LdrpInitLoader() called for %wZ\n", &LdrpImageEntry->BaseDllName);
 
     /* Get handle to the 'KnownDlls' directory */
     RtlInitUnicodeString(&Name,
@@ -410,13 +231,13 @@ LdrpInitLoader(VOID)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtOpenDirectoryObject(&LdrpKnownDllsDirHandle,
+    Status = NtOpenDirectoryObject(&LdrpKnownDllObjectDirectory,
                                    DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
                                    &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
-        LdrpKnownDllsDirHandle = NULL;
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -428,8 +249,8 @@ LdrpInitLoader(VOID)
                                         MAX_PATH * sizeof(WCHAR));
     if (LinkTarget.Buffer == NULL)
     {
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -438,7 +259,7 @@ LdrpInitLoader(VOID)
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
-                               LdrpKnownDllsDirHandle,
+                               LdrpKnownDllObjectDirectory,
                                NULL);
     Status = NtOpenSymbolicLinkObject(&LinkHandle,
                                       SYMBOLIC_LINK_ALL_ACCESS,
@@ -446,8 +267,8 @@ LdrpInitLoader(VOID)
     if (!NT_SUCCESS(Status))
     {
         RtlFreeUnicodeString(&LinkTarget);
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
         return;
     }
 
@@ -458,8 +279,8 @@ LdrpInitLoader(VOID)
     if (!NT_SUCCESS(Status))
     {
         RtlFreeUnicodeString(&LinkTarget);
-        NtClose(LdrpKnownDllsDirHandle);
-        LdrpKnownDllsDirHandle = NULL;
+        NtClose(LdrpKnownDllObjectDirectory);
+        LdrpKnownDllObjectDirectory = NULL;
     }
 
     RtlCreateUnicodeString(&LdrpKnownDllPath,
@@ -610,7 +431,7 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
 
     DPRINT("LdrpMapKnownDll() called\n");
 
-    if (LdrpKnownDllsDirHandle == NULL)
+    if (LdrpKnownDllObjectDirectory == NULL)
     {
         DPRINT("Invalid 'KnownDlls' directory\n");
         return STATUS_UNSUCCESSFUL;
@@ -621,7 +442,7 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
     InitializeObjectAttributes(&ObjectAttributes,
                                DllName,
                                OBJ_CASE_INSENSITIVE,
-                               LdrpKnownDllsDirHandle,
+                               LdrpKnownDllObjectDirectory,
                                NULL);
     Status = NtOpenSection(SectionHandle,
                            SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE,
@@ -923,7 +744,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
         if (!(Module->Flags & LDRP_PROCESS_ATTACH_CALLED))
         {
             RtlEnterCriticalSection(Peb->LoaderLock);
-            Status = LdrpAttachProcess();
+            Status = LdrpRunInitializeRoutines(NULL);
             RtlLeaveCriticalSection(Peb->LoaderLock);
         }
         if (Module->EntryPointActivationContext) RtlDeactivateActivationContext(0, cookie);
@@ -1043,7 +864,7 @@ LdrFindEntryForName(PUNICODE_STRING Name,
     // NULL is the current process
     if (Name == NULL)
     {
-        *Module = ExeModule;
+        *Module = LdrpImageEntry;
         RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
         return(STATUS_SUCCESS);
     }
@@ -1368,7 +1189,7 @@ LdrGetExportByName(PVOID BaseAddress,
  * NOTE
  *
  */
-static NTSTATUS
+NTSTATUS
 LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
                       PVOID ImageBase)
 {
@@ -2093,11 +1914,6 @@ Success:
         }
     }
 
-    if (TlsDirectory && TlsSize > 0)
-    {
-        LdrpAcquireTlsSlot(Module, TlsSize, FALSE);
-    }
-
     if (Module->EntryPointActivationContext) RtlDeactivateActivationContext( 0, cookie );
 
     return STATUS_SUCCESS;
@@ -2216,14 +2032,14 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
     }
     DPRINT("Fixup done\n");
     RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
-    Status = LdrpInitializeTlsForProccess();
+    Status = LdrpInitializeTls();
     if (NT_SUCCESS(Status))
     {
-        Status = LdrpAttachProcess();
+        Status = LdrpRunInitializeRoutines(NULL);
     }
     if (NT_SUCCESS(Status))
     {
-        LdrpTlsCallback(*Module, DLL_PROCESS_ATTACH);
+        LdrpTlsCallback((*Module)->DllBase, DLL_PROCESS_ATTACH);
     }
 
 
@@ -2599,7 +2415,7 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
     /* NULL is the current executable */
     if (DllName == NULL)
     {
-        *DllHandle = ExeModule->DllBase;
+        *DllHandle = LdrpImageEntry->DllBase;
         DPRINT("BaseAddress 0x%lx\n", *DllHandle);
         return STATUS_SUCCESS;
     }
@@ -2743,7 +2559,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
     static ULONG CallingCount = 0;
 
     DPRINT("LdrpDetachProcess() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     if (UnloadAll)
         LdrpDllShutdownInProgress = TRUE;
@@ -2768,9 +2584,21 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
             {
                 TRACE_LDR("Unload %wZ - Calling entry point at %x\n",
                           &Module->BaseDllName, Module->EntryPoint);
-                LdrpCallDllEntry(Module,
-                                 DLL_PROCESS_DETACH,
-                                 (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
+
+                /* Check if it has TLS */
+                if (Module->TlsIndex)
+                {
+                    /* Call TLS */
+                    LdrpTlsCallback(Module->DllBase, DLL_PROCESS_ATTACH);
+                }
+
+               if ((Module->Flags & LDRP_IMAGE_DLL) && Module->EntryPoint)
+               {
+                    LdrpCallDllEntry(Module->EntryPoint,
+                                     Module->DllBase,
+                                     DLL_PROCESS_DETACH,
+                                     (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
+               }
             }
             else
             {
@@ -2814,71 +2642,6 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
     DPRINT("LdrpDetachProcess() done\n");
 }
 
-/**********************************************************************
- * NAME                                                         LOCAL
- *      LdrpAttachProcess
- *
- * DESCRIPTION
- *      Initialize all dll's which are prepered for loading
- *
- * ARGUMENTS
- *      none
- *
- * RETURN VALUE
- *      status
- *
- * REVISIONS
- *
- * NOTE
- *      The loader lock must be held on entry.
- *
- */
-static NTSTATUS
-LdrpAttachProcess(VOID)
-{
-    PLIST_ENTRY ModuleListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
-    BOOLEAN Result;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("LdrpAttachProcess() called for %wZ\n",
-           &ExeModule->BaseDllName);
-
-    ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
-    Entry = ModuleListHead->Flink;
-    while (Entry != ModuleListHead)
-    {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-        if (!(Module->Flags & (LDRP_LOAD_IN_PROGRESS|LDRP_UNLOAD_IN_PROGRESS|LDRP_ENTRY_PROCESSED)))
-        {
-            Module->Flags |= LDRP_LOAD_IN_PROGRESS;
-            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
-                      &Module->BaseDllName, Module->EntryPoint);
-            Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == LDRP_PROCESS_CREATION_TIME ? 1 : 0));
-            if (!Result)
-            {
-                Status = STATUS_DLL_INIT_FAILED;
-                break;
-            }
-            if (Module->Flags & LDRP_IMAGE_DLL && Module->EntryPoint != 0)
-            {
-                Module->Flags |= LDRP_PROCESS_ATTACH_CALLED|LDRP_ENTRY_PROCESSED;
-            }
-            else
-            {
-                Module->Flags |= LDRP_ENTRY_PROCESSED;
-            }
-            Module->Flags &= ~LDRP_LOAD_IN_PROGRESS;
-        }
-        Entry = Entry->Flink;
-    }
-
-    DPRINT("LdrpAttachProcess() done\n");
-
-    return Status;
-}
-
 /*
  * @implemented
  */
@@ -2901,9 +2664,9 @@ LdrShutdownProcess (VOID)
 /*
  * @implemented
  */
-
 NTSTATUS
-LdrpAttachThread (VOID)
+NTAPI
+LdrpInitializeThread(IN PCONTEXT Context)
 {
     PLIST_ENTRY ModuleListHead;
     PLIST_ENTRY Entry;
@@ -2911,11 +2674,11 @@ LdrpAttachThread (VOID)
     NTSTATUS Status;
 
     DPRINT("LdrpAttachThread() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
-    Status = LdrpInitializeTlsForThread();
+    Status = LdrpAllocateTls();
 
     if (NT_SUCCESS(Status))
     {
@@ -2931,14 +2694,23 @@ LdrpAttachThread (VOID)
             {
                 TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
                           &Module->BaseDllName, Module->EntryPoint);
-                LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
+
+                /* Check if it has TLS */
+                if (Module->TlsIndex)
+                {
+                    /* Call TLS */
+                    LdrpTlsCallback(Module->DllBase, DLL_THREAD_ATTACH);
+                }
+
+               if ((Module->Flags & LDRP_IMAGE_DLL) && Module->EntryPoint)
+                   LdrpCallDllEntry(Module->EntryPoint, Module->DllBase, DLL_THREAD_ATTACH, NULL);
             }
             Entry = Entry->Flink;
         }
 
         Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
         Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-        LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
+        LdrpTlsCallback(Module->DllBase, DLL_THREAD_ATTACH);
     }
 
     RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
@@ -2960,7 +2732,7 @@ LdrShutdownThread (VOID)
     PLDR_DATA_TABLE_ENTRY Module;
 
     DPRINT("LdrShutdownThread() called for %wZ\n",
-           &ExeModule->BaseDllName);
+           &LdrpImageEntry->BaseDllName);
 
     RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
@@ -2976,193 +2748,26 @@ LdrShutdownThread (VOID)
         {
             TRACE_LDR("%wZ - Calling entry point at %x for thread detaching\n",
                       &Module->BaseDllName, Module->EntryPoint);
-            LdrpCallDllEntry(Module, DLL_THREAD_DETACH, NULL);
+            /* Check if it has TLS */
+            if (Module->TlsIndex)
+            {
+                /* Call TLS */
+                LdrpTlsCallback(Module->DllBase, DLL_THREAD_DETACH);
+            }
+
+            if ((Module->Flags & LDRP_IMAGE_DLL) && Module->EntryPoint)
+                LdrpCallDllEntry(Module->EntryPoint, Module->DllBase, DLL_THREAD_DETACH, NULL);
         }
         Entry = Entry->Blink;
     }
 
+    /* Free TLS */
+    LdrpFreeTls();
     RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
-
-    if (LdrpTlsArray)
-    {
-        RtlFreeHeap (RtlGetProcessHeap(),  0, NtCurrentTeb()->ThreadLocalStoragePointer);
-    }
 
     DPRINT("LdrShutdownThread() done\n");
 
     return STATUS_SUCCESS;
-}
-
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      LdrQueryProcessModuleInformation
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *
- * @implemented
- */
-NTSTATUS NTAPI
-LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
-                                 IN ULONG Size OPTIONAL,
-                                 OUT PULONG ReturnedSize)
-{
-    PLIST_ENTRY ModuleListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
-    PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG UsedSize = sizeof(ULONG);
-    ANSI_STRING AnsiString;
-    PCHAR p;
-
-    DPRINT("LdrQueryProcessModuleInformation() called\n");
-// FIXME: This code is ultra-duplicated. see lib\rtl\dbgbuffer.c
-    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
-
-    if (ModuleInformation == NULL || Size == 0)
-    {
-        Status = STATUS_INFO_LENGTH_MISMATCH;
-    }
-    else
-    {
-        ModuleInformation->NumberOfModules = 0;
-        ModulePtr = &ModuleInformation->Modules[0];
-        Status = STATUS_SUCCESS;
-    }
-
-    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-    Entry = ModuleListHead->Flink;
-
-    while (Entry != ModuleListHead)
-    {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        DPRINT("  Module %wZ\n",
-               &Module->FullDllName);
-
-        if (UsedSize > Size)
-        {
-            Status = STATUS_INFO_LENGTH_MISMATCH;
-        }
-        else if (ModuleInformation != NULL)
-        {
-            ModulePtr->Section = 0;
-            ModulePtr->MappedBase = NULL;      // FIXME: ??
-            ModulePtr->ImageBase = Module->DllBase;
-            ModulePtr->ImageSize = Module->SizeOfImage;
-            ModulePtr->Flags = Module->Flags;
-            ModulePtr->LoadOrderIndex = 0;      // FIXME:  ??
-            ModulePtr->InitOrderIndex = 0;      // FIXME: ??
-            ModulePtr->LoadCount = Module->LoadCount;
-
-            AnsiString.Length = 0;
-            AnsiString.MaximumLength = 256;
-            AnsiString.Buffer = ModulePtr->FullPathName;
-            RtlUnicodeStringToAnsiString(&AnsiString,
-                                         &Module->FullDllName,
-                                         FALSE);
-
-            p = strrchr(ModulePtr->FullPathName, '\\');
-            if (p != NULL)
-                ModulePtr->OffsetToFileName = p - ModulePtr->FullPathName + 1;
-            else
-                ModulePtr->OffsetToFileName = 0;
-
-            ModulePtr++;
-            ModuleInformation->NumberOfModules++;
-        }
-        UsedSize += sizeof(RTL_PROCESS_MODULE_INFORMATION);
-
-        Entry = Entry->Flink;
-    }
-
-    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
-
-    if (ReturnedSize != 0)
-        *ReturnedSize = UsedSize;
-
-    DPRINT("LdrQueryProcessModuleInformation() done\n");
-
-    return(Status);
-}
-
-
-static BOOLEAN
-LdrpCheckImageChecksum (IN PVOID BaseAddress,
-                        IN ULONG ImageSize)
-{
-    PIMAGE_NT_HEADERS Header;
-    PUSHORT Ptr;
-    ULONG Sum;
-    ULONG CalcSum;
-    ULONG HeaderSum;
-    ULONG i;
-
-    Header = RtlImageNtHeader (BaseAddress);
-    if (Header == NULL)
-        return FALSE;
-
-    HeaderSum = Header->OptionalHeader.CheckSum;
-    if (HeaderSum == 0)
-        return TRUE;
-
-    Sum = 0;
-    Ptr = (PUSHORT) BaseAddress;
-    for (i = 0; i < ImageSize / sizeof (USHORT); i++)
-    {
-        Sum += (ULONG)*Ptr;
-        if (HIWORD(Sum) != 0)
-        {
-            Sum = LOWORD(Sum) + HIWORD(Sum);
-        }
-        Ptr++;
-    }
-
-    if (ImageSize & 1)
-    {
-        Sum += (ULONG)*((PUCHAR)Ptr);
-        if (HIWORD(Sum) != 0)
-        {
-            Sum = LOWORD(Sum) + HIWORD(Sum);
-        }
-    }
-
-    CalcSum = (USHORT)(LOWORD(Sum) + HIWORD(Sum));
-
-    /* Subtract image checksum from calculated checksum. */
-    /* fix low word of checksum */
-    if (LOWORD(CalcSum) >= LOWORD(HeaderSum))
-    {
-        CalcSum -= LOWORD(HeaderSum);
-    }
-    else
-    {
-        CalcSum = ((LOWORD(CalcSum) - LOWORD(HeaderSum)) & 0xFFFF) - 1;
-    }
-
-    /* fix high word of checksum */
-    if (LOWORD(CalcSum) >= HIWORD(HeaderSum))
-    {
-        CalcSum -= HIWORD(HeaderSum);
-    }
-    else
-    {
-        CalcSum = ((LOWORD(CalcSum) - HIWORD(HeaderSum)) & 0xFFFF) - 1;
-    }
-
-    /* add file length */
-    CalcSum += ImageSize;
-
-    return (BOOLEAN)(CalcSum == HeaderSum);
 }
 
 /*
@@ -3194,100 +2799,6 @@ LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders)
     return ResidentSize;
 }
 
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      LdrVerifyImageMatchesChecksum
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *
- * @implemented
- */
-NTSTATUS NTAPI
-LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
-                               IN PLDR_CALLBACK Callback,
-                               IN PVOID CallbackContext,
-                               OUT PUSHORT ImageCharacterstics)
-{
-    FILE_STANDARD_INFORMATION FileInfo;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE SectionHandle;
-    SIZE_T ViewSize;
-    PVOID BaseAddress;
-    BOOLEAN Result;
-    NTSTATUS Status;
-
-    DPRINT ("LdrVerifyImageMatchesChecksum() called\n");
-
-    Status = NtCreateSection (&SectionHandle,
-                              SECTION_MAP_READ,
-                              NULL,
-                              NULL,
-                              PAGE_READONLY,
-                              SEC_COMMIT,
-                              FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("NtCreateSection() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    ViewSize = 0;
-    BaseAddress = NULL;
-    Status = NtMapViewOfSection (SectionHandle,
-                                 NtCurrentProcess (),
-                                 &BaseAddress,
-                                 0,
-                                 0,
-                                 NULL,
-                                 &ViewSize,
-                                 ViewShare,
-                                 0,
-                                 PAGE_READONLY);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);
-        NtClose (SectionHandle);
-        return Status;
-    }
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof (FILE_STANDARD_INFORMATION),
-                                    FileStandardInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("NtMapViewOfSection() failed (Status %lx)\n", Status);
-        NtUnmapViewOfSection (NtCurrentProcess(),
-                              BaseAddress);
-        NtClose (SectionHandle);
-        return Status;
-    }
-
-    Result = LdrpCheckImageChecksum(BaseAddress,
-                                    FileInfo.EndOfFile.u.LowPart);
-    if (Result == FALSE)
-    {
-        Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
-    }
-
-    NtUnmapViewOfSection (NtCurrentProcess(),
-                          BaseAddress);
-
-    NtClose(SectionHandle);
-
-    return Status;
-}
-
 PIMAGE_BASE_RELOCATION
 NTAPI
 LdrProcessRelocationBlock(
@@ -3297,79 +2808,6 @@ LdrProcessRelocationBlock(
     IN LONG_PTR Delta)
 {
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
-}
-
-NTSTATUS
-NTAPI
-LdrLockLoaderLock(IN ULONG Flags,
-                  OUT PULONG Disposition OPTIONAL,
-                  OUT PULONG Cookie OPTIONAL)
-{
-    NTSTATUS Status;
-    BOOLEAN Ret;
-    BOOLEAN CookieSet = FALSE;
-
-    if ((Flags != 0x01) && (Flags != 0x02))
-        return STATUS_INVALID_PARAMETER_1;
-
-    if (!Cookie) return STATUS_INVALID_PARAMETER_3;
-
-    /* Set some defaults for failure while verifying params */
-    _SEH2_TRY
-    {
-        *Cookie = 0;
-        CookieSet = TRUE;
-        if (Disposition) *Disposition = 0;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        if (CookieSet)
-            Status = STATUS_INVALID_PARAMETER_3;
-        else
-            Status =  STATUS_INVALID_PARAMETER_2;
-    }
-    _SEH2_END;
-
-    if (Flags == 0x01)
-    {
-        DPRINT1("Warning: Reporting errors with exception not supported yet!\n");
-        RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
-        Status = STATUS_SUCCESS;
-
-    }
-    else
-    {
-        if (!Disposition) return STATUS_INVALID_PARAMETER_2;
-
-        Ret = RtlTryEnterCriticalSection(NtCurrentPeb()->LoaderLock);
-
-        if (Ret)
-            *Disposition = 0x01;
-        else
-            *Disposition = 0x02;
-
-        Status = STATUS_SUCCESS;
-    }
-
-    /* FIXME: Cookie is based on part of the thread id */
-    *Cookie = (ULONG)NtCurrentTeb()->RealClientId.UniqueThread;
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-LdrUnlockLoaderLock(IN ULONG Flags,
-                    IN ULONG Cookie OPTIONAL)
-{
-    if (Flags != 0x01)
-        return STATUS_INVALID_PARAMETER_1;
-
-    if (Cookie != (ULONG)NtCurrentTeb()->RealClientId.UniqueThread)
-        return STATUS_INVALID_PARAMETER_2;
-
-    RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
-
-    return STATUS_SUCCESS;
 }
 
 BOOLEAN

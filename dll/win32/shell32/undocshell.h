@@ -70,6 +70,15 @@ HRESULT WINAPI SHILCreateFromPathW (
 BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
+
+/****************************************************************************
+* SHChangeNotifyRegister API
+*/
+#define SHCNRF_InterruptLevel		0x0001
+#define SHCNRF_ShellLevel		0x0002
+#define SHCNRF_RecursiveInterrupt	0x1000	/* Must be combined with SHCNRF_InterruptLevel */
+#define SHCNRF_NewDelivery		0x8000	/* Messages use shared memory */
+
 /****************************************************************************
  * Shell Common Dialogs
  */
@@ -100,9 +109,9 @@ typedef struct
 void WINAPI RunFileDlg(
 	HWND hwndOwner,
 	HICON hIcon,
-	LPCSTR lpstrDirectory,
-	LPCSTR lpstrTitle,
-	LPCSTR lpstrDescription,
+	LPCWSTR lpstrDirectory,
+	LPCWSTR lpstrTitle,
+	LPCWSTR lpstrDescription,
 	UINT uFlags);
 
 void WINAPI ExitWindowsDialog(HWND hwndOwner);

@@ -381,7 +381,7 @@ extern "C" {
 #define ILCF_SWAP 0x1
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Copy(HIMAGELIST himlDst,int iDst,HIMAGELIST himlSrc,int iSrc,UINT uFlags);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_BeginDrag(HIMAGELIST himlTrack,int iTrack,int dxHotspot,int dyHotspot);
-  WINCOMMCTRLAPI void WINAPI ImageList_EndDrag();
+  WINCOMMCTRLAPI void WINAPI ImageList_EndDrag(void);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragEnter(HWND hwndLock,int x,int y);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragLeave(HWND hwndLock);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragMove(int x,int y);

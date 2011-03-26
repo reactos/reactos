@@ -538,36 +538,40 @@ NtUserSetSysColors(
    IN CONST COLORREF *lpaRgbValues,
    FLONG Flags)
 {
-  DWORD Ret = FALSE;
-  NTSTATUS Status = STATUS_SUCCESS;
-  UserEnterExclusive();
-  _SEH2_TRY
-  {
-     ProbeForRead(lpaElements,
+   DWORD Ret = TRUE;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   if (cElements == 0)
+      return TRUE;
+
+   UserEnterExclusive();
+   _SEH2_TRY
+   {
+      ProbeForRead(lpaElements,
                    sizeof(INT),
                    1);
-     ProbeForRead(lpaRgbValues,
-                   sizeof(INT),
+      ProbeForRead(lpaRgbValues,
+                   sizeof(COLORREF),
                    1);
 // Developers: We are thread locked and calling gdi.
-     Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
+      IntSetSysColors(cElements, lpaElements, lpaRgbValues);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
       Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
-  if (!NT_SUCCESS(Status))
-  {
+   }
+   _SEH2_END;
+   if (!NT_SUCCESS(Status))
+   {
       SetLastNtError(Status);
       Ret = FALSE;
-  }
-  if (Ret)
-  {
-     UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
-  }
-  UserLeave();
-  return Ret;
+   }
+   if (Ret)
+   {
+      UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
+   }
+   UserLeave();
+   return Ret;
 }
 
 DWORD
@@ -817,8 +821,45 @@ NtUserMinMaximize(
     UINT cmd, // Wine SW_ commands
     BOOL Hide)
 {
-    UNIMPLEMENTED;
-    return 0;
+  RECTL NewPos;
+  UINT SwFlags;
+  PWND pWnd;
+
+  DPRINT("Enter NtUserMinMaximize\n");
+  UserEnterExclusive();
+
+  pWnd = UserGetWindowObject(hWnd);
+  if ( !pWnd ||                          // FIXME:
+        pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+        pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+  {
+     goto Exit;
+  }
+
+  if ( cmd > SW_MAX || pWnd->state2 & WNDS2_INDESTROY)
+  {
+     EngSetLastError(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
+
+  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
+
+  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
+
+  co_WinPosSetWindowPos( pWnd,
+                         NULL,
+                         NewPos.left,
+                         NewPos.top,
+                         NewPos.right,
+                         NewPos.bottom,
+                         SwFlags);
+
+  co_WinPosShowWindow(pWnd, cmd);
+
+Exit:
+  DPRINT("Leave NtUserMinMaximize\n");
+  UserLeave();
+  return 0; // Always NULL?
 }
 
 DWORD
@@ -1169,18 +1210,6 @@ NtUserDrawMenuBarTemp(
 }
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserEndDeferWindowPosEx(DWORD Unknown0,
-                          DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
  * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
  */
 /*
@@ -1205,7 +1234,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
 
-   return 0;
+   return 1;
 }
 
 /*
@@ -1304,25 +1333,6 @@ NtUserWindowFromPhysicalPoint(POINT Point)
 
    return NULL;
 }
-
-/*
- * @unimplemented
- */
-HDWP APIENTRY
-NtUserDeferWindowPos(HDWP WinPosInfo,
-                     HWND Wnd,
-                     HWND WndInsertAfter,
-                     int x,
-                     int y,
-                     int cx,
-                     int cy,
-                     UINT Flags)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 
 /*
  * NtUserResolveDesktopForWOW

@@ -62,10 +62,10 @@ typedef struct _Cvtvec {
   unsigned int _Page;
 } _Cvtvec;
 
-_CRTIMP _Collvec __cdecl _Getcoll();
-_CRTIMP _Ctypevec __cdecl _Getctype();
-_CRTIMP _Cvtvec __cdecl _Getcvt();
-_CRTIMP int __cdecl _Getdateorder();
+_CRTIMP _Collvec __cdecl _Getcoll(void);
+_CRTIMP _Ctypevec __cdecl _Getctype(void);
+_CRTIMP _Cvtvec __cdecl _Getcvt(void);
+_CRTIMP int __cdecl _Getdateorder(void);
 _CRTIMP int __cdecl _Mbrtowc(wchar_t *,const char *,size_t,mbstate_t *,const _Cvtvec *);
 _CRTIMP float __cdecl _Stof(const char *,char **,long);
 _CRTIMP double __cdecl _Stod(const char *,char **,long);
@@ -85,9 +85,9 @@ _END_C_LIB_DECL
 _C_STD_END
 
 _C_LIB_DECL
-_CRTIMP void *__cdecl _Gettnames();
-_CRTIMP char *__cdecl _Getdays();
-_CRTIMP char *__cdecl _Getmonths();
+_CRTIMP void *__cdecl _Gettnames(void);
+_CRTIMP char *__cdecl _Getdays(void);
+_CRTIMP char *__cdecl _Getmonths(void);
 _CRTIMP size_t __cdecl _Strftime(char *,size_t _Maxsize,const char *,const struct tm *,void *);
 _END_C_LIB_DECL
 

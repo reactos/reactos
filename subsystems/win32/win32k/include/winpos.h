@@ -1,5 +1,32 @@
 #pragma once
 
+typedef struct _CVR // Tag Ussw
+{
+  WINDOWPOS   pos;
+  LONG        xClientNew;
+  LONG        yClientNew;
+  LONG        cxClientNew;
+  LONG        cyClientNew;
+  RECT        rcBlt;
+  LONG        dxBlt;
+  LONG        dyBlt;
+  UINT        fsRE;
+  HRGN        hrgnVisOld;
+  PTHREADINFO pti;
+  HRGN        hrgnClip;
+  HRGN        hrgnInterMonitor;
+} CVR, *PCVR;
+
+typedef struct _SMWP
+{
+  HEAD head;
+  UINT bShellNotify:1;
+  UINT bHandle:1;
+  INT  ccvr;
+  INT  ccvrAlloc;
+  PCVR acvr;
+} SMWP, *PSMWP;
+
 #define IntPtInWindow(WndObject,x,y) \
   ((x) >= (WndObject)->rcWindow.left && \
    (x) < (WndObject)->rcWindow.right && \
@@ -36,3 +63,5 @@ VOID FASTCALL co_WinPosActivateOtherWindow(PWND Window);
 
 VOID FASTCALL WinPosInitInternalPos(PWND WindowObject,
                                     POINT *pt, RECTL *RestoreRect);
+BOOL FASTCALL IntEndDeferWindowPosEx(HDWP);
+HDWP FASTCALL IntDeferWindowPos(HDWP,HWND,HWND,INT,INT,INT,INT,UINT);

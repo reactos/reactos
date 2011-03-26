@@ -1,3 +1,7 @@
+#ifndef STRSAFE_NO_DEPRECATE
+#define STRSAFE_NO_DEPRECATE
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <windows.h>

@@ -681,6 +681,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Вихід з системи"
 	IDS_LOGOFF_PROMPT           "Ви хочете вийти з системи?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
 	IDS_PERSONAL                "Мої документи"
@@ -730,8 +736,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Доступний простір"
 	IDS_EMPTY_BITBUCKET         "Очистити Кошик"
 	IDS_PICK_ICON_TITLE         "Вибрати значок"
-	IDS_PICK_ICON_FILTER        "Файли значків(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Виконувані файли\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Виконувані файли (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Папка"
 	IDS_VIRTUAL_DRIVER          "Драйвер віртуального пристрою"
 	IDS_BAT_FILE                "Пакетний файл ReactOS"

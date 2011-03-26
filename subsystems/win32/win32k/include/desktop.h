@@ -69,6 +69,9 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
+NTSTATUS NTAPI 
+IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -102,7 +105,7 @@ IntHideDesktop(PDESKTOP Desktop);
 HDESK FASTCALL
 IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
 
-BOOL IntSetThreadDesktop(IN PDESKTOP DesktopObject,
+BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
 NTSTATUS FASTCALL

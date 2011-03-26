@@ -77,8 +77,8 @@ VOID MachInit(const char *CmdLine);
 extern MACHVTBL MachVtbl;
 
 VOID MachConsPutChar(int Ch);
-BOOLEAN MachConsKbHit();
-int MachConsGetCh();
+BOOLEAN MachConsKbHit(VOID);
+int MachConsGetCh(VOID);
 VOID MachVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);

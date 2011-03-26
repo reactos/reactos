@@ -13,6 +13,7 @@ list(APPEND SOURCE
     action.c
     alter.c
     appsearch.c
+	assembly.c
     automation.c
     classes.c
     cond.tab.c

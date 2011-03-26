@@ -24,6 +24,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -306,7 +307,7 @@ static UINT STRCMP_Evaluate( MSIWHEREVIEW *wv, UINT row, const struct expr *cond
     else if( r_str && ! l_str )
         sr = -1;
     else
-        sr = lstrcmpW( l_str, r_str );
+        sr = strcmpW( l_str, r_str );
 
     *val = ( cond->u.expr.op == OP_EQ && ( sr == 0 ) ) ||
            ( cond->u.expr.op == OP_NE && ( sr != 0 ) );
@@ -327,11 +328,15 @@ static UINT WHERE_evaluate( MSIWHEREVIEW *wv, UINT row,
     {
     case EXPR_COL_NUMBER:
         r = wv->table->ops->fetch_int( wv->table, row, cond->u.col_number, &tval );
+        if( r != ERROR_SUCCESS )
+            return r;
         *val = tval - 0x8000;
         return ERROR_SUCCESS;
 
     case EXPR_COL_NUMBER32:
         r = wv->table->ops->fetch_int( wv->table, row, cond->u.col_number, &tval );
+        if( r != ERROR_SUCCESS )
+            return r;
         *val = tval - 0x80000000;
         return r;
 

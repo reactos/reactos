@@ -14,7 +14,6 @@
 #include "input.h"
 
 static HWND MainDlgWnd;
-static HIMAGELIST hImgList;
 // for SaveInputLang()
 static INT OldLayoutNum;
 
@@ -299,7 +298,7 @@ AddListColumn(HWND hWnd)
 }
 
 static VOID
-InitLangList(HWND hWnd)
+InitLangList(HWND hWnd, HIMAGELIST hImgList)
 {
     HKEY hKey, hSubKey;
     TCHAR szBuf[MAX_PATH], szPreload[CCH_LAYOUT_ID + 1], szSub[CCH_LAYOUT_ID + 1];
@@ -370,11 +369,19 @@ InitLangList(HWND hWnd)
 VOID
 UpdateLayoutsList(VOID)
 {
-    (VOID) ImageList_Destroy(hImgList);
+    HIMAGELIST hImgList;
+
+    /* Clear the list */
     (VOID) ListView_DeleteAllItems(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST));
+
+    /* Crate new list */
     hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
-    InitLangList(MainDlgWnd);
-    (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
+    InitLangList(MainDlgWnd, hImgList);
+    hImgList = ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
+
+    /* Destroy old image list */
+    if(hImgList)
+        (VOID) ImageList_Destroy(hImgList);
 }
 
 typedef struct _REG_KB_ENTRY_
@@ -728,12 +735,14 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
+        	HIMAGELIST hImgList;
+
             MainDlgWnd = hwndDlg;
             AddListColumn(hwndDlg);
             (VOID) ListView_SetExtendedListViewStyle(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST),
                                                      LVS_EX_FULLROWSELECT);
             hImgList = ImageList_Create(16, 16, ILC_COLOR8 | ILC_MASK, 0, 1);
-            InitLangList(hwndDlg);
+            InitLangList(hwndDlg, hImgList);
             (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
         }
             break;
@@ -781,7 +790,6 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
             }
             break;
         case WM_DESTROY:
-            (VOID) ImageList_Destroy(hImgList);
             break;
     }
 

@@ -114,7 +114,7 @@ BEGIN
     CONTROL         "Vis sk&ygger under menyer",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Vis &vindu innholdet ved flytting",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "&Skjul visning av understrekning for tastatur hurtigtast til jeg trykker på Alt tasten",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Avbryt", IDCANCEL, 226, 165, 50, 14

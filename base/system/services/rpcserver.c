@@ -4558,42 +4558,40 @@ DWORD RQueryServiceConfig2A(
         LPSERVICE_DESCRIPTIONA lpServiceDescription = (LPSERVICE_DESCRIPTIONA)lpBuffer;
         LPSTR lpStr;
 
-        *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
-
         dwError = ScmReadString(hServiceKey,
                                 L"Description",
                                 &lpDescriptionW);
+        if (dwError != ERROR_SUCCESS && dwError != ERROR_FILE_NOT_FOUND)
+            goto done;
+
+        *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONA);
         if (dwError == ERROR_SUCCESS)
-        {
             *pcbBytesNeeded += ((wcslen(lpDescriptionW) + 1) * sizeof(WCHAR));
+
+        if (cbBufSize < *pcbBytesNeeded)
+        {
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+            goto done;
         }
 
-        if (cbBufSize >= *pcbBytesNeeded)
+        if (dwError == ERROR_SUCCESS)
         {
+            lpStr = (LPSTR)(lpServiceDescription + 1);
 
-            if (dwError == ERROR_SUCCESS)
-            {
-                lpStr = (LPSTR)(lpServiceDescription + 1);
-
-                WideCharToMultiByte(CP_ACP,
-                                    0,
-                                    lpDescriptionW,
-                                    -1,
-                                    lpStr,
-                                    wcslen(lpDescriptionW),
-                                    NULL,
-                                    NULL);
-                lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
-            }
-            else
-            {
-                lpServiceDescription->lpDescription = NULL;
-                goto done;
-            }
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpDescriptionW,
+                                -1,
+                                lpStr,
+                                wcslen(lpDescriptionW),
+                                NULL,
+                                NULL);
+            lpServiceDescription->lpDescription = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
         }
         else
         {
-            dwError = ERROR_INSUFFICIENT_BUFFER;
+            lpServiceDescription->lpDescription = NULL;
+            dwError = ERROR_SUCCESS;
             goto done;
         }
     }
@@ -4681,21 +4679,30 @@ DWORD RQueryServiceConfig2W(
         dwError = ScmReadString(hServiceKey,
                                 L"Description",
                                 &lpDescription);
-        if (dwError != ERROR_SUCCESS)
+        if (dwError != ERROR_SUCCESS && dwError != ERROR_FILE_NOT_FOUND)
             goto done;
 
-        dwRequiredSize = sizeof(SERVICE_DESCRIPTIONW) + ((wcslen(lpDescription) + 1) * sizeof(WCHAR));
+        *pcbBytesNeeded = sizeof(SERVICE_DESCRIPTIONW);
+        if (dwError == ERROR_SUCCESS)
+            *pcbBytesNeeded += ((wcslen(lpDescription) + 1) * sizeof(WCHAR));
 
-        if (cbBufSize < dwRequiredSize)
+        if (cbBufSize < *pcbBytesNeeded)
         {
-            *pcbBytesNeeded = dwRequiredSize;
             dwError = ERROR_INSUFFICIENT_BUFFER;
             goto done;
         }
 
-        lpStr = (LPWSTR)(lpServiceDescription + 1);
-        wcscpy(lpStr, lpDescription);
-        lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
+        if (dwError == ERROR_SUCCESS)
+        {
+            lpStr = (LPWSTR)(lpServiceDescription + 1);
+            wcscpy(lpStr, lpDescription);
+            lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
+        }
+        else
+        {
+            lpServiceDescription->lpDescription = NULL;
+            dwError = ERROR_SUCCESS;
+        }
     }
     else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {

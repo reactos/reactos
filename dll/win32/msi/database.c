@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -79,7 +80,7 @@ static UINT find_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
             continue;
         }
 
-        if( !lstrcmpW( name, stat.pwcsName ) )
+        if( !strcmpW( name, stat.pwcsName ) )
         {
             TRACE("found %s\n", debugstr_w(name));
             *stm = stream->stm;
@@ -888,6 +889,8 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 
     static const WCHAR suminfo[] =
         {'_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
+    static const WCHAR forcecodepage[] =
+        {'_','F','o','r','c','e','C','o','d','e','p','a','g','e',0};
 
     TRACE("%p %s %s\n", db, debugstr_w(folder), debugstr_w(file) );
 
@@ -909,6 +912,13 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     msi_parse_line( &ptr, &columns, &num_columns );
     msi_parse_line( &ptr, &types, &num_types );
     msi_parse_line( &ptr, &labels, &num_labels );
+
+    if (num_columns == 1 && !columns[0][0] && num_labels == 1 && !labels[0][0] &&
+        num_types == 2 && !strcmpW( types[1], forcecodepage ))
+    {
+        r = msi_set_string_table_codepage( db->strings, atoiW( types[0] ) );
+        goto done;
+    }
 
     if (num_columns != num_types)
     {
@@ -1087,13 +1097,13 @@ static UINT msi_export_row( MSIRECORD *row, void *arg )
     return msi_export_record( arg, row, 1 );
 }
 
-static UINT msi_export_forcecodepage( HANDLE handle )
+static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
 {
+    static const char fmt[] = "\r\n\r\n%u\t_ForceCodepage\r\n";
+    char data[sizeof(fmt) + 10];
     DWORD sz;
 
-    static const char data[] = "\r\n\r\n0\t_ForceCodepage\r\n";
-
-    FIXME("Read the codepage from the strings table!\n");
+    sprintf( data, fmt, codepage );
 
     sz = lstrlenA(data) + 1;
     if (!WriteFile(handle, data, sz, &sz, NULL))
@@ -1136,9 +1146,10 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
     if (handle == INVALID_HANDLE_VALUE)
         return ERROR_FUNCTION_FAILED;
 
-    if (!lstrcmpW( table, forcecodepage ))
+    if (!strcmpW( table, forcecodepage ))
     {
-        r = msi_export_forcecodepage( handle );
+        UINT codepage = msi_get_string_table_codepage( db->strings );
+        r = msi_export_forcecodepage( handle, codepage );
         goto done;
     }
 
@@ -1319,7 +1330,7 @@ static BOOL merge_type_match(LPCWSTR type1, LPCWSTR type2)
         ((type2[0] == 'L') || (type2[0] == 'S')))
         return TRUE;
 
-    return !lstrcmpW(type1, type2);
+    return !strcmpW( type1, type2 );
 }
 
 static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
@@ -1341,8 +1352,7 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
         if (!MSI_RecordGetString(mergerec, i))
             break;
 
-        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
-                     MSI_RecordGetString(mergerec, i)))
+        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1405,8 +1415,7 @@ static UINT merge_verify_primary_keys(MSIDATABASE *db, MSIDATABASE *mergedb,
 
     for (i = 1; i <= count; i++)
     {
-        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
-                     MSI_RecordGetString(mergerec, i)))
+        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1434,7 +1443,7 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
     do
     {
         str = msi_dup_record_field(colnames, ++i);
-        cmp = lstrcmpW(key, str);
+        cmp = strcmpW( key, str );
         msi_free(str);
     } while (cmp);
 
@@ -2029,14 +2038,14 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
 }
 
 typedef struct _msi_remote_database_impl {
-    const IWineMsiRemoteDatabaseVtbl *lpVtbl;
+    IWineMsiRemoteDatabase IWineMsiRemoteDatabase_iface;
     MSIHANDLE database;
     LONG refs;
 } msi_remote_database_impl;
 
-static inline msi_remote_database_impl* mrd_from_IWineMsiRemoteDatabase( IWineMsiRemoteDatabase* iface )
+static inline msi_remote_database_impl *impl_from_IWineMsiRemoteDatabase( IWineMsiRemoteDatabase *iface )
 {
-    return (msi_remote_database_impl *)iface;
+    return CONTAINING_RECORD(iface, msi_remote_database_impl, IWineMsiRemoteDatabase_iface);
 }
 
 static HRESULT WINAPI mrd_QueryInterface( IWineMsiRemoteDatabase *iface,
@@ -2055,14 +2064,14 @@ static HRESULT WINAPI mrd_QueryInterface( IWineMsiRemoteDatabase *iface,
 
 static ULONG WINAPI mrd_AddRef( IWineMsiRemoteDatabase *iface )
 {
-    msi_remote_database_impl* This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
 
     return InterlockedIncrement( &This->refs );
 }
 
 static ULONG WINAPI mrd_Release( IWineMsiRemoteDatabase *iface )
 {
-    msi_remote_database_impl* This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
     ULONG r;
 
     r = InterlockedDecrement( &This->refs );
@@ -2077,7 +2086,7 @@ static ULONG WINAPI mrd_Release( IWineMsiRemoteDatabase *iface )
 static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
                                              LPCWSTR table, MSICONDITION *persistent )
 {
-    msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
     *persistent = MsiDatabaseIsTablePersistentW(This->database, table);
     return S_OK;
 }
@@ -2085,7 +2094,7 @@ static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
 static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
                                           LPCWSTR table, MSIHANDLE *keys )
 {
-    msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseGetPrimaryKeysW(This->database, table, keys);
     return HRESULT_FROM_WIN32(r);
 }
@@ -2093,7 +2102,7 @@ static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
 static HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
                                                 UINT updatecount, MSIHANDLE *suminfo )
 {
-    msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiGetSummaryInformationW(This->database, NULL, updatecount, suminfo);
     return HRESULT_FROM_WIN32(r);
 }
@@ -2101,14 +2110,14 @@ static HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
 static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
                                     LPCWSTR query, MSIHANDLE *view )
 {
-    msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseOpenViewW(This->database, query, view);
     return HRESULT_FROM_WIN32(r);
 }
 
 static HRESULT WINAPI mrd_SetMsiHandle( IWineMsiRemoteDatabase *iface, MSIHANDLE handle )
 {
-    msi_remote_database_impl* This = mrd_from_IWineMsiRemoteDatabase( iface );
+    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
     This->database = handle;
     return S_OK;
 }
@@ -2133,7 +2142,7 @@ HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj )
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &msi_remote_database_vtbl;
+    This->IWineMsiRemoteDatabase_iface.lpVtbl = &msi_remote_database_vtbl;
     This->database = 0;
     This->refs = 1;
 

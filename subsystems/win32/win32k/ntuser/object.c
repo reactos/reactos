@@ -177,6 +177,7 @@ UserHandleOwnerByType(USER_OBJECT_TYPE type)
         case otHook:
         case otCallProc:
         case otAccel:
+        case otSMWP:
             pi = GetW32ProcessInfo();
             break;
 
