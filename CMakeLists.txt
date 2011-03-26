@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-if(${CMAKE_VERSION} VERSION_GREATER "2.8.2")
+if(${CMAKE_VERSION} VERSION_GREATER "2.8.3")
     # Shadow cmake provided modules
     cmake_policy(SET CMP0017 OLD)
 endif()
