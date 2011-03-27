@@ -275,7 +275,7 @@ HGDIOBJ
 FASTCALL
 hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 {
-    int Number;
+    int Number, Count, MaxNum, GdiType;
     HANDLE Lock;
     HGDIOBJ Handle = NULL;
 
@@ -287,26 +287,54 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 
     Number = GdiHandleCache->ulNumHandles[Type];
 
-    if ( Number && Number <= CACHE_REGION_ENTRIES )
+    if (Type == hctBrushHandle)
     {
-        if ( Type == hctRegionHandle)
-        {
-            PRGN_ATTR pRgn_Attr;
-            HGDIOBJ *hPtr;
-            hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
-            Handle = hPtr[Number - 1];
+       Count = 0;
+       MaxNum = CACHE_BRUSH_ENTRIES;
+       GdiType = GDILoObjType_LO_BRUSH_TYPE;
+    }
+    else if (Type == hctPenHandle)
+    {
+       Count = CACHE_BRUSH_ENTRIES;
+       MaxNum = CACHE_PEN_ENTRIES;
+       GdiType = GDILoObjType_LO_PEN_TYPE;
+    }
+    else if (Type == hctRegionHandle)
+    {
+       Count = CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+       MaxNum = CACHE_REGION_ENTRIES;
+       GdiType = GDILoObjType_LO_REGION_TYPE;
+    }
+    else // Font is not supported here.
+    {
+       return Handle;
+    }
 
-            if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-            {
-                if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+    if ( Number && Number <= MaxNum )
+    {
+       PBRUSH_ATTR pBrush_Attr;
+       HGDIOBJ *hPtr;
+       hPtr = GdiHandleCache->Handle + Count;
+       Handle = hPtr[Number - 1];
+
+       if (GdiGetHandleUserData( Handle, GdiType, (PVOID) &pBrush_Attr))
+       {
+          if (pBrush_Attr->AttrFlags & ATTR_CACHED)
+          {
+             DPRINT("Get Handle! Type %d Count %d PEB 0x%x\n", Type, GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+             pBrush_Attr->AttrFlags &= ~ATTR_CACHED;
+             hPtr[Number - 1] = NULL;
+             GdiHandleCache->ulNumHandles[Type]--;
+             if ( Type == hctBrushHandle ) // Handle only brush.
+             {
+                if ( pBrush_Attr->lbColor != cr )
                 {
-                    DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
-                    pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
-                    hPtr[Number - 1] = NULL;
-                    GdiHandleCache->ulNumHandles[Type]--;
+                   pBrush_Attr->lbColor = cr ;
+                   pBrush_Attr->AttrFlags |= ATTR_NEW_COLOR;
                 }
-            }
-        }
+             }
+          }
+       }
     }
     (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
     return Handle;
