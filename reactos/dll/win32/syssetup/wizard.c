@@ -1916,11 +1916,30 @@ ProcessPageDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetupIsActive( DWORD dw )
+SetInstallationCompleted(VOID)
 {
   HKEY hKey = 0;
-  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
-    RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
+  DWORD InProgress = 0;
+  DWORD InstallDate;
+  
+  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
+                     L"SYSTEM\\Setup",
+                     0,
+                     KEY_WRITE,
+                     &hKey ) == ERROR_SUCCESS)
+  {
+    RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
+    RegCloseKey( hKey );
+  }
+  
+  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
+                     L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                     0,
+                     KEY_WRITE,
+                     &hKey ) == ERROR_SUCCESS)
+  {
+    InstallDate = (DWORD)time(NULL);
+    RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
     RegCloseKey( hKey );
   }
 }
@@ -1951,7 +1970,7 @@ FinishDlgProc(HWND hwndDlg,
           if (SetupData->UnattendSetup)
           {
             KillTimer(hwndDlg, 1);
-            SetupIsActive(0);
+            SetInstallationCompleted();
             PostQuitMessage(0);
           }
         }
@@ -1959,7 +1978,7 @@ FinishDlgProc(HWND hwndDlg,
 
       case WM_DESTROY:
          {
-           SetupIsActive(0);
+           SetInstallationCompleted();
            PostQuitMessage(0);
            return TRUE;
          }
