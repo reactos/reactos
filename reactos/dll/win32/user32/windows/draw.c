@@ -1565,19 +1565,28 @@ INT WINAPI
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
     HBRUSH prevhbr;
+    BOOL Ret;
 
-    if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
+    /* Select brush if specified */
+    if (hbr)
     {
-        hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
+        /* Handle system colors */
+        if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
+            hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
+        
+        prevhbr = SelectObject(hDC, hbr);
+        if (prevhbr == NULL)
+            return (INT)FALSE;
     }
-    if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
-    {
-        return FALSE;
-    }
-    PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
-                lprc->bottom - lprc->top, PATCOPY);
-    SelectObject(hDC, prevhbr);
-    return TRUE;
+
+    Ret = PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+                 lprc->bottom - lprc->top, PATCOPY);
+
+    /* Select old brush */
+    if (hbr)
+        SelectObject(hDC, prevhbr);
+
+    return (INT)Ret;
 }
 
 /*
