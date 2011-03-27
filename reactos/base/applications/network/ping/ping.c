@@ -59,7 +59,6 @@ typedef struct _ICMP_ECHO_PACKET
 
 #pragma pack(1)
 
-BOOL                InvalidOption;
 BOOL                NeverStop;
 BOOL                ResolveAddresses;
 UINT                PingCount;
@@ -213,84 +212,71 @@ static VOID Reset(VOID)
     }
 }
 
-/* Return ULONG in a string */
-static ULONG GetULONG(LPWSTR String)
-{
-    UINT i, Length;
-    ULONG Value;
-    LPWSTR StopString;
-    i = 0;
-    Length = (UINT)wcslen(String);
-    while ((i < Length) && ((String[i] < L'0') || (String[i] > L'9'))) i++;
-    if ((i >= Length) || ((String[i] < L'0') || (String[i] > L'9')))
-    {
-        InvalidOption = TRUE;
-        return 0;
-    }
-    Value = wcstoul(&String[i], &StopString, 10);
-
-    return Value;
-}
-
-/* Return ULONG in a string. Try next paramter if not successful */
-static ULONG GetULONG2(LPWSTR String1, LPWSTR String2, PINT i)
-{
-    ULONG Value;
-
-    Value = GetULONG(String1);
-    if (InvalidOption)
-    {
-        InvalidOption = FALSE;
-        if (String2[0] != L'-')
-        {
-            Value = GetULONG(String2);
-            if (!InvalidOption)
-                *i += 1;
-        }
-    }
-
-    return Value;
-}
-
 /* Parse command line parameters */
 static BOOL ParseCmdline(int argc, LPWSTR argv[])
 {
     INT i;
-    BOOL ShowUsage;
-    BOOL FoundTarget;
+    BOOL FoundTarget = FALSE, InvalidOption = FALSE;
+
     if (argc < 2)
-        ShowUsage = TRUE;
-    else
-        ShowUsage = FALSE;
-    FoundTarget = FALSE;
-    InvalidOption = FALSE;
+    {
+        Usage();
+        return FALSE;
+    }
 
     for (i = 1; i < argc; i++)
     {
-        if (argv[i][0] == L'-')
+        if (argv[i][0] == L'-' || argv[i][0] == L'/')
         {
             switch (argv[i][1])
             {
                 case L't': NeverStop = TRUE; break;
                 case L'a': ResolveAddresses = TRUE; break;
-                case L'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                case L'n':
+                    if (i + 1 < argc)
+                        PingCount = wcstoul(argv[++i], NULL, 0);
+                    else
+                        InvalidOption = TRUE;
+                    break;
                 case L'l':
-                    DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
-                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
+                    if (i + 1 < argc)
                     {
-                        FormatOutput(IDS_BAD_VALUE_OPTION_L, ICMP_MAXSIZE - \
-                                     (int)sizeof(ICMP_ECHO_PACKET) - \
-                                     (int)sizeof(IPv4_HEADER));
-                        return FALSE;
-                   }
+                        DataSize = wcstoul(argv[++i], NULL, 0);
+                        
+                        if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
+                        {
+                            FormatOutput(IDS_BAD_VALUE_OPTION_L, ICMP_MAXSIZE - \
+                                         (int)sizeof(ICMP_ECHO_PACKET) - \
+                                         (int)sizeof(IPv4_HEADER));
+                            return FALSE;
+                        }
+                    } else
+                        InvalidOption = TRUE;
                     break;
                 case L'f': DontFragment = TRUE; break;
-                case L'i': TTLValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-                case L'v': TOSValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-                case L'w': Timeout  = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                case L'i':
+                    if (i + 1 < argc)
+                        TTLValue = wcstoul(argv[++i], NULL, 0);
+                    else
+                        InvalidOption = TRUE;
+                    break;
+                case L'v':
+                    if (i + 1 < argc)
+                        TOSValue = wcstoul(argv[++i], NULL, 0);
+                    else
+                        InvalidOption = TRUE;
+                    break;
+                case L'w':
+                    if (i + 1 < argc)
+                        Timeout = wcstoul(argv[++i], NULL, 0);
+                    else
+                        InvalidOption = TRUE;
+                    break;
+                case '?':
+                    Usage();
+                    return FALSE;
                 default:
                     FormatOutput(IDS_BAD_OPTION, argv[i]);
-                    Usage();
                     return FALSE;
             }
             if (InvalidOption)
@@ -314,17 +300,12 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
         }
     }
 
-    if ((!ShowUsage) && (!FoundTarget))
+    if (!FoundTarget)
     {
         FormatOutput(IDS_DEST_MUST_BE_SPECIFIED);
         return FALSE;
     }
 
-    if (ShowUsage)
-    {
-        Usage();
-        return FALSE;
-    }
     return TRUE;
 }
 
