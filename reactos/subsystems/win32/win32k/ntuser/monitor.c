@@ -157,16 +157,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
     }
 
     Monitor->GdiDevice = pGdiDevice;
-    Monitor->rcMonitor.left  = 0;
-    Monitor->rcMonitor.top   = 0;
-    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
-    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
-    Monitor->rcWork = Monitor->rcMonitor;
     Monitor->cWndStack = 0;
-
-    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
-
-    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
     if (gMonitorList == NULL)
     {
@@ -184,6 +175,8 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
         }
         Monitor->Prev = p;
     }
+    
+    IntUpdateMonitorSize(pGdiDevice);
 
     return STATUS_SUCCESS;
 }
@@ -246,7 +239,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     return STATUS_SUCCESS;
 }
 
-/* IntResetMonitorSize
+/* IntUpdateMonitorSize
  *
  * Reset size of the monitor using atached device
  *
@@ -259,7 +252,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
  *   Returns a NTSTATUS
  */
 NTSTATUS
-IntResetMonitorSize(IN PDEVOBJ *pGdiDevice)
+IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
 {
 	PMONITOR Monitor;
 
@@ -701,13 +694,10 @@ NtUserGetMonitorInfo(
     /* fill device name */
     if (MonitorInfo.cbSize == sizeof (MONITORINFOEXW))
     {
-        WCHAR nul = L'\0';
-        INT len = Monitor->DeviceName.Length;
-        if (len >= CCHDEVICENAME * sizeof (WCHAR))
-            len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
-
-        memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
-        memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
+        RtlStringCbCopyNW(MonitorInfo.szDevice,
+                          sizeof(MonitorInfo.szDevice),
+                          Monitor->DeviceName.Buffer,
+                          Monitor->DeviceName.Length);
     }
 
     /* output data */

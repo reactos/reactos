@@ -116,6 +116,7 @@ EnumDisplayMonitors(
     HMONITOR *hMonitorList;
     LPRECT pRectList;
     HANDLE hHeap;
+    BOOL ret = FALSE;
 
     /* get list of monitors/rects */
     iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, NULL, NULL, 0);
@@ -139,18 +140,15 @@ EnumDisplayMonitors(
     pRectList = HeapAlloc(hHeap, 0, sizeof (RECT) * iCount);
     if (pRectList == NULL)
     {
-        HeapFree(hHeap, 0, hMonitorList);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        goto cleanup;
     }
 
     iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, hMonitorList, pRectList, iCount);
     if (iCount <= 0)
     {
         /* FIXME: SetLastError() */
-        HeapFree(hHeap, 0, hMonitorList);
-        HeapFree(hHeap, 0, pRectList);
-        return FALSE;
+        goto cleanup;
     }
 
     /* enumerate list */
@@ -167,11 +165,17 @@ EnumDisplayMonitors(
         }
 
         if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
-            break;
+            goto cleanup; /* return FALSE */
     }
-    HeapFree(hHeap, 0, hMonitorList);
-    HeapFree(hHeap, 0, pRectList);
-    return TRUE;
+    
+    ret = TRUE;
+    
+cleanup:
+    if(hMonitorList)
+        HeapFree(hHeap, 0, hMonitorList);
+    if(pRectList)
+        HeapFree(hHeap, 0, pRectList);
+    return ret;
 }
 
 
