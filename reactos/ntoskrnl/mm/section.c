@@ -4571,6 +4571,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    PMMSUPPORT AddressSpace;
    ULONG ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
+   BOOLEAN NotAtBase = FALSE;
 
    if ((ULONG_PTR)SectionObject & 1)
    {
@@ -4652,6 +4653,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
             MmUnlockAddressSpace(AddressSpace);
             return(STATUS_UNSUCCESSFUL);
          }
+         /* Remember that we loaded image at a different base address */
+         NotAtBase = TRUE;
       }
 
       for (i = 0; i < NrSegments; i++)
@@ -4756,7 +4759,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    MmUnlockAddressSpace(AddressSpace);
 
-   return(STATUS_SUCCESS);
+   if (NotAtBase)
+       Status = STATUS_IMAGE_NOT_AT_BASE;
+   else
+       Status = STATUS_SUCCESS;
+
+   return Status;
 }
 
 /*
