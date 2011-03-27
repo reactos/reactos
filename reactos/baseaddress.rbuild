@@ -244,13 +244,13 @@
 	<property name="BASEADDRESS_OLE32"		value="0x77a50000" />
 	<property name="BASEADDRESS_OLEPRO32"		value="0x77b20000" />
 	<property name="BASEADDRESS_ACTIVEDS"		value="0x77cb0000" />
-	<property name="BASEADDRESS_ADVAPI32"		value="0x77dc0000" />
-	<property name="BASEADDRESS_USER32"		value="0x77e50000" />
-	<property name="BASEADDRESS_GDI32"		value="0x77f70000" />
-	<property name="BASEADDRESS_DNSAPI"		value="0x77fb0000" />
-	<property name="BASEADDRESS_MSVCRT"		value="0x78000000" />
-	<property name="BASEADDRESS_MSVCRT20"		value="0x78500000" />
-	<property name="BASEADDRESS_MSVCRT40"		value="0x78700000" />
+	<property name="BASEADDRESS_ADVAPI32"		value="0x77db0000" />
+	<property name="BASEADDRESS_USER32"		value="0x77e70000" />
+	<property name="BASEADDRESS_GDI32"		value="0x77fd0000" />
+	<property name="BASEADDRESS_DNSAPI"		value="0x78020000" />
+	<property name="BASEADDRESS_MSVCRT"		value="0x78050000" />
+	<property name="BASEADDRESS_MSVCRT20"		value="0x781E0000" />
+	<property name="BASEADDRESS_MSVCRT40"		value="0x78200000" />
 	<property name="BASEADDRESS_MSCOREE"		value="0x79000000" />
 	<property name="BASEADDRESS_FUSION"		value="0x79040000" />
 	<property name="BASEADDRESS_KERNEL32"		value="0x7c700000" />
