@@ -4,7 +4,7 @@
 Name = Microsoft Visual Basic 6.0 Common Controls
 Version = 6.0
 Licence = Unknown
-Description = File needed by some applications.
+Description = File needed by some applications. Contains: comctl32.ocx, mscomctl.ocx, advpack.dll. 
 Size = 914kB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=25437D98-51D0-41C1-BB14-64662F5F62FE&displaylang=en

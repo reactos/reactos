@@ -4,7 +4,7 @@
 Name = Microsoft Visual C++ 6 Redistributable Package
 Version = 6.0
 Licence = Unknown
-Description = Visual Studio 6 Runtime.
+Description = Visual Studio 6 Runtime. Contains: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1.7MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/259403/
