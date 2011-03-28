@@ -2,6 +2,12 @@
 #include <asm.inc>
 #include <syscalls.inc>
 
+#ifdef _M_IX86
+EXTERN _KiSystemService:PROC
+#elif defined(_M_AMD64)
+EXTERN KiSystemService:PROC
+#endif
+
 .code
 
 SyscallId = 0

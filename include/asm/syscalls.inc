@@ -1,6 +1,5 @@
 
 #ifdef _M_IX86
-EXTERN _KiSystemService:PROC
 #define KUSER_SHARED_SYSCALL HEX(7ffe0300)
 #define KGDT_R0_CODE 8
 MACRO(STUBCODE_U, SyscallId, StackBytes)
@@ -18,7 +17,6 @@ MACRO(STUBCODE_K, SyscallId, StackBytes)
     ret StackBytes
 ENDM
 #elif defined(_M_AMD64)
-EXTERN KiSystemService:PROC
 MACRO(STUBCODE_U, SyscallId, StackBytes)
     mov eax, SyscallId
     mov r10, rcx
