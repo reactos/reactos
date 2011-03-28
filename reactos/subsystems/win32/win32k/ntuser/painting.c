@@ -1248,6 +1248,7 @@ UserScrollDC(
          hrgnOwn = hrgnUpdate;
          if (!NtGdiSetRectRgn(hrgnOwn, rcDst.left, rcDst.top, rcDst.right, rcDst.bottom))
          {
+            DC_UnlockDc(pDC);
             return ERROR;
          }
       }
@@ -1265,8 +1266,8 @@ UserScrollDC(
       NtGdiOffsetRgn(hrgnTmp, dx, dy);
       Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
 
-	  /* DO NOT Unlock DC while messing with prgnVis! */
-	  DC_UnlockDc(pDC);
+      /* DO NOT Unlock DC while messing with prgnVis! */
+      DC_UnlockDc(pDC);
 
       REGION_FreeRgnByHandle(hrgnTmp);
 

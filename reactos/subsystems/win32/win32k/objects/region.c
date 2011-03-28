@@ -2080,6 +2080,7 @@ REGION_AllocUserRgnWithHandle(INT nRgn)
     {
        Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, pRgn->BaseObject.hHmgr);
        Entry->UserData = AllocateObjectAttr();
+       RtlZeroMemory(Entry->UserData, sizeof(RGN_ATTR));
     }
     return pRgn;
 }
@@ -2090,6 +2091,7 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
 {
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
+  BOOL Hit = FALSE;
   PROSRGNDATA pRgn = NULL;
 
   pRgn = REGION_LockRgn(hRgn);
@@ -2103,11 +2105,12 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
      {
         _SEH2_TRY
         {
-           if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) &&
-                 pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
+           if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) )
            {
-              switch (pRgn_Attr->Flags)
+              if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
               {
+                 switch (pRgn_Attr->Flags)
+                 {
                   case NULLREGION:
                      EMPTY_REGION( pRgn );
                      break;
@@ -2119,8 +2122,13 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
                                         pRgn_Attr->Rect.right,
                                         pRgn_Attr->Rect.bottom );
                      break;
+                 }
+                 pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
               }
-              pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
+           }
+           else
+           { // This object is cached an waiting for it's resurrection by the users.
+              Hit = TRUE;
            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2128,6 +2136,11 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
         }
         _SEH2_END;
 
+        if (Hit)
+        {
+           REGION_UnlockRgn(pRgn);
+           return NULL;
+        }
         if (ppRgn_Attr)
            *ppRgn_Attr = pRgn_Attr;
      }

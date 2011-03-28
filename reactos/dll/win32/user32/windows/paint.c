@@ -107,19 +107,19 @@ GetUpdateRect(
   pWnd = ValidateHwnd(Wnd);
   if (!pWnd)
      return FALSE;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
+  {
      return NtUserGetUpdateRect(Wnd, Rect, Erase);
-/*  }
+  }
 
   if (Rect)
   { // Did the Rgn update? No! Back set and shutup!
      Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
   }
   return FALSE;  // msdn: "If there is no update region, the return value is zero."
-*/
+
 }
 
 
@@ -144,14 +144,14 @@ GetUpdateRgn(
   pWnd = ValidateHwnd(hWnd);
   if (!pWnd)
      return ERROR;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
+  {
      return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
-/*  }
+  }
   SetRectRgn(hRgn, 0, 0, 0, 0);
-  return NULLREGION;*/
+  return NULLREGION;
 }
 
 
@@ -239,14 +239,14 @@ UpdateWindow(
 
   if (!pWnd)
      return FALSE;
-/*
+
   if ( pWnd->hrgnUpdate ||
        pWnd->state & WNDS_INTERNALPAINT ||
        pWnd->spwndChild )
-  {*/
+  {
      return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
-/*  }
-  return TRUE;*/
+  }
+  return TRUE;
 }
 
 /*
@@ -286,7 +286,7 @@ GetWindowRgn(
   if (!Ret)
      return ERROR;
 
-  if (pWnd->fnid != FNID_DESKTOP)
+  if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
@@ -320,7 +320,7 @@ GetWindowRgnBox(
   if (!Ret)
      return ERROR;
 
-  if (pWnd->fnid != FNID_DESKTOP)
+  if (hWnd != GetDesktopWindow()) // pWnd->fnid != FNID_DESKTOP)
      OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
 
   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)

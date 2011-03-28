@@ -275,7 +275,7 @@ HGDIOBJ
 FASTCALL
 hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 {
-    int Number, Count, MaxNum, GdiType;
+    int Number, Offset, MaxNum, GdiType;
     HANDLE Lock;
     HGDIOBJ Handle = NULL;
 
@@ -289,19 +289,19 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
 
     if (Type == hctBrushHandle)
     {
-       Count = 0;
+       Offset = 0;
        MaxNum = CACHE_BRUSH_ENTRIES;
        GdiType = GDILoObjType_LO_BRUSH_TYPE;
     }
     else if (Type == hctPenHandle)
     {
-       Count = CACHE_BRUSH_ENTRIES;
+       Offset = CACHE_BRUSH_ENTRIES;
        MaxNum = CACHE_PEN_ENTRIES;
        GdiType = GDILoObjType_LO_PEN_TYPE;
     }
     else if (Type == hctRegionHandle)
     {
-       Count = CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+       Offset = CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
        MaxNum = CACHE_REGION_ENTRIES;
        GdiType = GDILoObjType_LO_REGION_TYPE;
     }
@@ -314,7 +314,7 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
     {
        PBRUSH_ATTR pBrush_Attr;
        HGDIOBJ *hPtr;
-       hPtr = GdiHandleCache->Handle + Count;
+       hPtr = GdiHandleCache->Handle + Offset;
        Handle = hPtr[Number - 1];
 
        if (GdiGetHandleUserData( Handle, GdiType, (PVOID) &pBrush_Attr))
@@ -334,6 +334,10 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
                 }
              }
           }
+       }
+       else
+       {
+          Handle = NULL;
        }
     }
     (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
