@@ -23,7 +23,6 @@ add_library(avifil32 SHARED
     tmpfile.c
     wavfile.c
     rsrc.rc
-    rsrc-utf8.rc
     ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
