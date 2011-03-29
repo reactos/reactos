@@ -3942,4 +3942,32 @@ NtGdiGetRegionData(
     return size + sizeof(RGNDATAHEADER);
 }
 
+BOOL
+FASTCALL
+IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
+{
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+/*
+  System Regions:
+     These regions do not use attribute sections and when allocated, use gdiobj
+     level functions.
+ */
+  // FIXME! HAX!!! Remove this once we get everything right!
+  Index = GDI_HANDLE_GET_INDEX(hRgn);
+  Entry = &GdiHandleTable->Entries[Index];
+  if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+  Entry->UserData = NULL;
+  //
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     return GDIOBJ_SetOwnership(hRgn, NULL);
+  }
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     return GDIOBJ_SetOwnership((HGDIOBJ) hRgn, PsGetCurrentProcess() );
+  }
+  return FALSE;
+}
+
 /* EOF */

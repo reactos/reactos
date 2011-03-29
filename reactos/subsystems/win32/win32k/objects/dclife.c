@@ -836,7 +836,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
         DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n", hDC);
     }
-    
+
     return TRUE;
 }
 
@@ -973,3 +973,45 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
     return hDC;
 }
 
+BOOL
+FASTCALL
+IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
+{
+  PDC pDC;
+  BOOL Ret = FALSE;
+
+  if (!hDC || (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)) return FALSE;
+
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     pDC = DC_LockDc ( hDC );
+     MmCopyFromCaller(&pDC->dcattr, pDC->pdcattr, sizeof(DC_ATTR));
+     DC_vFreeDcAttr(pDC);
+     DC_UnlockDc( pDC );
+
+     if (!DC_SetOwnership( hDC, NULL )) // This hDC is inaccessible!
+        return Ret;
+  }
+
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     pDC = DC_LockDc ( hDC );
+     ASSERT(pDC->pdcattr == &pDC->dcattr);
+     DC_UnlockDc( pDC );
+
+     if (!DC_SetOwnership( hDC, PsGetCurrentProcess() )) return Ret;
+
+     DC_AllocateDcAttr( hDC );      // Allocate new dcattr
+
+     DCU_SynchDcAttrtoUser( hDC );  // Copy data from dc to dcattr
+  }
+
+  if ((OwnerMask != GDI_OBJ_HMGR_NONE) && !NoSetBrush)
+  {
+     pDC = DC_LockDc ( hDC );
+     if (IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrFill, OwnerMask))
+         IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrLine, OwnerMask);
+     DC_UnlockDc( pDC );
+  }
+  return TRUE;
+}

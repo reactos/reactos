@@ -573,4 +573,53 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
     return TRUE;
 }
 
+BOOL
+FASTCALL
+IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
+{
+  HBRUSH hBR;
+  PEPROCESS Owner = NULL;
+  PGDI_TABLE_ENTRY pEntry = NULL;
+
+  if (!pbr) return FALSE;
+
+  hBR = pbr->BaseObject.hHmgr;
+
+  if (!hBR || (GDI_HANDLE_GET_TYPE(hBR) != GDI_OBJECT_TYPE_BRUSH))
+     return FALSE;
+  else
+  {
+     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hBR);
+     pEntry = &GdiHandleTable->Entries[Index];
+  }
+
+  if (pbr->flAttrs & GDIBRUSH_IS_GLOBAL)
+  {
+     GDIOBJ_ShareUnlockObjByPtr((POBJ)pbr);
+     return TRUE;
+  }
+
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     // Set this Brush to inaccessible mode and to an Owner of NONE.
+//     if (OwnerMask == GDI_OBJ_HMGR_NONE) Owner = OwnerMask;
+
+     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, Owner))
+        return FALSE;
+
+     // Deny user access to User Data.
+     pEntry->UserData = NULL; // This hBR is inaccessible!
+  }
+
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, PsGetCurrentProcess() ))
+        return FALSE;
+
+     // Allow user access to User Data.
+     pEntry->UserData = pbr->pBrushAttr;
+  }
+  return TRUE;
+}
+
 /* EOF */
