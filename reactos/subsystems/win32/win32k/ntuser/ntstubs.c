@@ -539,37 +539,34 @@ NtUserSetSysColors(
    FLONG Flags)
 {
    DWORD Ret = TRUE;
-   NTSTATUS Status = STATUS_SUCCESS;
 
    if (cElements == 0)
       return TRUE;
 
+   if ((ULONG)cElements >= 0x40000000)
+      return FALSE;
+
    UserEnterExclusive();
+
    _SEH2_TRY
    {
-      ProbeForRead(lpaElements,
-                   sizeof(INT),
-                   1);
-      ProbeForRead(lpaRgbValues,
-                   sizeof(COLORREF),
-                   1);
-// Developers: We are thread locked and calling gdi.
+      ProbeForRead(lpaElements, cElements * sizeof(INT), 1);
+      ProbeForRead(lpaRgbValues, cElements * sizeof(COLORREF), 1);
+
       IntSetSysColors(cElements, lpaElements, lpaRgbValues);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
+      SetLastNtError(_SEH2_GetExceptionCode());
       Ret = FALSE;
    }
+   _SEH2_END;
+
    if (Ret)
    {
       UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
    }
+
    UserLeave();
    return Ret;
 }
