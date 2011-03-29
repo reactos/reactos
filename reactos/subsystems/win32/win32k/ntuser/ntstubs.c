@@ -84,11 +84,11 @@ NtUserBitBltSysBmp(
    Ret = NtGdiBitBlt( hdc,
                    nXDest,
                    nYDest,
-                   nWidth, 
-                  nHeight, 
+                   nWidth,
+                  nHeight,
                 hSystemBM,
-                    nXSrc, 
-                    nYSrc, 
+                    nXSrc,
+                    nYSrc,
                     dwRop,
                         0,
                         0);
@@ -255,7 +255,7 @@ HBRUSH
 APIENTRY
 NtUserGetControlColor(
    HWND hwndParent,
-   HWND hwnd, 
+   HWND hwnd,
    HDC hdc,
    UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
 {
@@ -380,7 +380,7 @@ NtUserInitializeClientPfnArrays(
       DPRINT1("Failed reading Client Pfns from user space.\n");
       SetLastNtError(Status);
    }
-   
+
    UserLeave();
    return Status;
 }
@@ -543,8 +543,12 @@ NtUserSetSysColors(
    if (cElements == 0)
       return TRUE;
 
+   /* We need this check to prevent overflow later */
    if ((ULONG)cElements >= 0x40000000)
+   {
+      EngSetLastError(ERROR_NOACCESS);
       return FALSE;
+   }
 
    UserEnterExclusive();
 
