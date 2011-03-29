@@ -593,7 +593,7 @@ QueueFile(
     /* get current file */
     from = &Context->from->feFiles[Context->Index];
 
-    if (Context->op->req->fFlags != FO_DELETE)
+    if (Context->op->req->wFunc != FO_DELETE)
         to = &Context->to->feFiles[Context->Index];
 
     /* update status */
