@@ -107,7 +107,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         if(Process->Peb != NULL)
         {
             /* map the gdi handle table to user land */
-            Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
+            Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
             Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
         }
 
@@ -264,7 +264,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
            if (Win32Thread->KeyboardLayout) pci->hKL = Win32Thread->KeyboardLayout->hkl;
            pci->dwTIFlags = Win32Thread->TIF_flags;
            /* CI may not have been initialized. */
-           if (!pci->pDeskInfo && Win32Thread->pDeskInfo) 
+           if (!pci->pDeskInfo && Win32Thread->pDeskInfo)
            {
               if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
 
@@ -440,7 +440,7 @@ DriverEntry(
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
 
-#if 0 // DBG
+#if 1 // DBG
     /* Register service hook callbacks */
     KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);

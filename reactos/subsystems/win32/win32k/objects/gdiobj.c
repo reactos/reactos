@@ -70,7 +70,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 
 static LARGE_INTEGER ShortDelay;
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
-PSECTION_OBJECT GdiTableSection = NULL;
+static PSECTION_OBJECT GdiTableSection = NULL;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -1663,7 +1663,7 @@ LockHandleFrom:
 }
 
 PVOID INTERNAL_CALL
-GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
+GDI_MapHandleTable(PEPROCESS Process)
 {
     PVOID MappedView = NULL;
     NTSTATUS Status;
@@ -1672,10 +1672,10 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
     Offset.QuadPart = 0;
 
-    ASSERT(SectionObject != NULL);
+    ASSERT(GdiTableSection != NULL);
     ASSERT(Process != NULL);
 
-    Status = MmMapViewOfSection(SectionObject,
+    Status = MmMapViewOfSection(GdiTableSection,
                                 Process,
                                 &MappedView,
                                 0,
