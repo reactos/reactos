@@ -20,6 +20,7 @@
 #include <shlobj.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <time.h>
 
 #include <syssetup/syssetup.h>
 
