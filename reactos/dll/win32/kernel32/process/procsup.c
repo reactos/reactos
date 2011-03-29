@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
+UNICODE_STRING BaseDefaultPath;
+
 #define CMD_STRING L"cmd /c "
 
 extern __declspec(noreturn)
@@ -354,11 +357,44 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
 
 LPWSTR
 WINAPI
+BasepGetProcessPath(DWORD Reserved,
+                    LPWSTR FullPath,
+                    PVOID Environment)
+{
+    return NULL;
+}
+
+LPWSTR
+WINAPI
 BasepGetDllPath(LPWSTR FullPath,
                 PVOID Environment)
 {
-    /* FIXME: Not yet implemented */
-    return NULL;
+    LPWSTR DllPath = NULL;
+
+    /* Acquire DLL directory lock */
+    RtlEnterCriticalSection(&BaseDllDirectoryLock);
+
+    /* Check if we have a base dll directory */
+    if (BaseDllDirectory.Buffer)
+    {
+        /* Then get process path */
+        DllPath = BasepGetProcessPath(0, FullPath, Environment);
+
+        /* Release DLL directory lock */
+        RtlLeaveCriticalSection(&BaseDllDirectoryLock);
+
+        /* Return dll path */
+        return DllPath;
+    }
+
+    /* Release DLL directory lock */
+    RtlLeaveCriticalSection(&BaseDllDirectoryLock);
+
+    /* There is no base DLL directory */
+    UNIMPLEMENTED;
+
+    /* Return dll path */
+    return DllPath;
 }
 
 VOID

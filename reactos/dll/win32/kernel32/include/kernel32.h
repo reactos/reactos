@@ -91,9 +91,9 @@ extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
 extern HMODULE hCurrentModule;
 
-extern RTL_CRITICAL_SECTION DllLock;
+extern RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 
-extern UNICODE_STRING DllDirectory;
+extern UNICODE_STRING BaseDllDirectory;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
@@ -210,6 +210,12 @@ WINAPI
 BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
              IN PUNICODE_STRING ApplicationName);
+
+LPWSTR
+WINAPI
+BasepGetDllPath(LPWSTR FullPath,
+                PVOID Environment);
+
 
 PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage);

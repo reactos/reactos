@@ -5,6 +5,7 @@
  * FILE:            lib/kernel32/misc/dllmain.c
  * PURPOSE:         Initialization
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -20,6 +21,10 @@
 
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
+extern UNICODE_STRING BaseDefaultPath;
+extern UNICODE_STRING BaseDefaultPathAppend;
+
+WCHAR BaseDefaultPathBuffer[6140];
 
 HANDLE hProcessHeap = NULL;
 HMODULE hCurrentModule = NULL;
@@ -36,7 +41,7 @@ DllMain(HANDLE hInst,
 	LPVOID lpReserved);
 
 /* Critical section for various kernel32 data structures */
-RTL_CRITICAL_SECTION DllLock;
+RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 RTL_CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
@@ -275,6 +280,9 @@ DllMain(HANDLE hDll,
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);
 
+        /* Initialize default path to NULL */
+        RtlInitUnicodeString(&BaseDefaultPath, NULL);
+
         /* Setup the right Object Directory path */
         if (!SessionId)
         {
@@ -332,10 +340,24 @@ DllMain(HANDLE hDll,
                                                  SystemDirectory.MaximumLength);
         if(SystemDirectory.Buffer == NULL)
         {
+           DPRINT1("Failure allocating SystemDirectory buffer\n");
            return FALSE;
         }
         wcscpy(SystemDirectory.Buffer, WindowsDirectory.Buffer);
         wcscat(SystemDirectory.Buffer, L"\\System32");
+
+        /* Construct the default path (using the static buffer) */
+        _snwprintf(BaseDefaultPathBuffer, sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
+            L".;%wZ;%wZ\\system;%wZ;", &SystemDirectory, &WindowsDirectory, &WindowsDirectory);
+
+        BaseDefaultPath.Buffer = BaseDefaultPathBuffer;
+        BaseDefaultPath.Length = wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
+        BaseDefaultPath.MaximumLength = sizeof(BaseDefaultPathBuffer);
+
+        /* Use remaining part of the default path buffer for the append path */
+        BaseDefaultPathAppend.Buffer = (PWSTR)((ULONG_PTR)BaseDefaultPathBuffer + BaseDefaultPath.Length);
+        BaseDefaultPathAppend.Length = 0;
+        BaseDefaultPathAppend.MaximumLength = BaseDefaultPath.MaximumLength - BaseDefaultPath.Length;
 
         /* Initialize command line */
         InitCommandLines();
@@ -349,7 +371,7 @@ DllMain(HANDLE hDll,
         }
 
         /* Initialize the DLL critical section */
-        RtlInitializeCriticalSection(&DllLock);
+        RtlInitializeCriticalSection(&BaseDllDirectoryLock);
 
         /* Initialize the National Language Support routines */
         if (!NlsInit())
@@ -395,7 +417,7 @@ DllMain(HANDLE hDll,
                     ConsoleInitialized = FALSE;
                     RtlDeleteCriticalSection (&ConsoleLock);
                 }
-                RtlDeleteCriticalSection (&DllLock);
+                RtlDeleteCriticalSection (&BaseDllDirectoryLock);
 
                 /* Close object base directory */
                 NtClose(hBaseDir);
