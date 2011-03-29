@@ -696,22 +696,20 @@ GetClassNameA(
   LPSTR lpClassName,
   int nMaxCount)
 {
-    ANSI_STRING ClassName;
-    int Result;
-
-    ClassName.MaximumLength = nMaxCount;
-    ClassName.Buffer = lpClassName;
-
-    Result = NtUserGetClassName(hWnd,
-                                (PUNICODE_STRING)&ClassName,
-                                TRUE);
+    WCHAR tmpbuf[MAX_ATOM_LEN + 1];
+    int len;
+  
+    if (nMaxCount <= 0) return 0;
+    if (!GetClassNameW( hWnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
+    RtlUnicodeToMultiByteN( lpClassName, nMaxCount - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
+    lpClassName[len] = 0;
 
     TRACE("%p class/atom: %s/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
         IS_ATOM(lpClassName) ? lpClassName : 0,
         nMaxCount);
 
-    return Result;
+    return len;
 }
 
 
@@ -732,8 +730,8 @@ GetClassNameW(
     ClassName.Buffer = lpClassName;
 
     Result = NtUserGetClassName(hWnd,
-                                &ClassName,
-                                FALSE);
+                                FALSE,
+                                &ClassName);
 
     TRACE("%p class/atom: %S/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
@@ -914,8 +912,11 @@ RealGetWindowClassW(
   LPWSTR pszType,
   UINT  cchType)
 {
-	/* FIXME: Implement correct functionality of RealGetWindowClass */
-	return GetClassNameW(hwnd,pszType,cchType);
+    UNICODE_STRING ClassName;
+    ClassName.MaximumLength = cchType * sizeof(WCHAR);
+    ClassName.Buffer = (PWSTR)pszType;
+
+    return NtUserGetClassName(hwnd,TRUE,&ClassName);
 }
 
 
@@ -929,8 +930,14 @@ RealGetWindowClassA(
   LPSTR pszType,
   UINT  cchType)
 {
-	/* FIXME: Implement correct functionality of RealGetWindowClass */
-	return GetClassNameA(hwnd,pszType,cchType);
+    WCHAR tmpbuf[MAX_ATOM_LEN + 1];
+    UINT len;
+  
+    if (cchType <= 0) return 0;
+    if (!RealGetWindowClassW( hwnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
+    RtlUnicodeToMultiByteN( pszType, cchType - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
+    pszType[len] = 0;
+    return len;
 }
 
 /*
