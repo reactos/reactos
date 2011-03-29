@@ -741,16 +741,22 @@ IsObjectDead(HGDIOBJ hObject)
     }
 }
 
-
+/*
+ *  Process Environment Cached GDI Handles
+ *
+ *  What types of GDI handle objects that are cached in the GDI handle buffer?
+ *  Brushes set to BS_SOLID, Pens with widths of zero or set to PS_SOLID, and
+ *  Regions that are set to NULLREGION or SIMPLEREGION.
+ */
 BOOL
 FASTCALL
 bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 {
   PGDIHANDLECACHE GdiHandleCache;
   HGDIOBJ *hPtr;
-  BOOL Ret = FALSE;
-  int Offset = 0, Number;
   HANDLE Lock;
+  int Number, Offset, MaxNum = CACHE_PEN_ENTRIES;
+  BOOL Ret = FALSE;
 
   GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
 
@@ -758,6 +764,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
   {
      case hctBrushHandle:
         Offset = 0;
+        MaxNum = CACHE_BRUSH_ENTRIES;
         break;
 
      case hctPenHandle:
@@ -783,10 +790,10 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 
      hPtr = GdiHandleCache->Handle + Offset;
 
-     if ( pAttr && oType == hctRegionHandle)
+     if ( pAttr )
      {
-        if ( Number < CACHE_REGION_ENTRIES )
-        {
+        if ( Number < MaxNum )
+        { // This object is cached and waiting for it's resurrection by the users.
            ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
            hPtr[Number] = Handle;
            GdiHandleCache->ulNumHandles[oType]++;
@@ -817,6 +824,7 @@ GreDeleteObject(HGDIOBJ hObject)
     INT Index;
     PGDI_TABLE_ENTRY Entry;
     DWORD dwObjectType;
+    INT ihct;
     PVOID pAttr = NULL;
 
     DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
@@ -831,14 +839,27 @@ GreDeleteObject(HGDIOBJ hObject)
        switch (dwObjectType)
        {
           case GDI_OBJECT_TYPE_BRUSH:
+             ihct = hctBrushHandle;
+             break;
+
+          case GDI_OBJECT_TYPE_PEN:
+             ihct = hctPenHandle;
              break;
 
           case GDI_OBJECT_TYPE_REGION:
-             /* If pAttr NULL, the probability is high for System Region. */
+             ihct = hctRegionHandle;
+             break;
+       }
+
+       switch (dwObjectType)
+       {
+//          case GDI_OBJECT_TYPE_BRUSH:
+//          case GDI_OBJECT_TYPE_PEN:
+          case GDI_OBJECT_TYPE_REGION:
+             /* If pAttr NULL, the probability is high for System GDI handle object. */
              if ( pAttr &&
-                  bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
-             {
-                /* User space handle only! */
+                  bPEBCacheHandle(hObject, ihct, pAttr) )
+             {  /* User space handle only! */
                 return TRUE;
              }
              if (pAttr)
@@ -846,10 +867,6 @@ GreDeleteObject(HGDIOBJ hObject)
                 FreeObjectAttr(pAttr);
                 Entry->UserData = NULL;
              }
-             break;
-
-          case GDI_OBJECT_TYPE_DC:
-//             DC_FreeDcAttr(hObject);
              break;
        }
 
