@@ -1564,8 +1564,8 @@ FlashWindow(HWND hWnd, BOOL bInvert)
 INT WINAPI
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
-    HBRUSH prevhbr;
     BOOL Ret;
+    HBRUSH prevhbr = NULL;
 
     /* Select brush if specified */
     if (hbr)
@@ -1583,7 +1583,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
                  lprc->bottom - lprc->top, PATCOPY);
 
     /* Select old brush */
-    if (hbr)
+    if (prevhbr)
         SelectObject(hDC, prevhbr);
 
     return (INT)Ret;
