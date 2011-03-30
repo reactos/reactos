@@ -530,4 +530,66 @@ LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
     return LdrQueryProcessModuleInformationEx(0, 0, ModuleInformation, Size, ReturnedSize);
 }
 
+NTSTATUS
+NTAPI
+LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, ULONG Context)
+{
+    PLIST_ENTRY ListHead, ListEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    NTSTATUS Status;
+    ULONG Cookie;
+    BOOLEAN Stop = FALSE;
+
+    /* Check parameters */
+    if (ReservedFlag || !EnumProc) return STATUS_INVALID_PARAMETER;
+
+    /* Acquire the loader lock */
+    Status = LdrLockLoaderLock(0, NULL, &Cookie);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Loop all the modules and call enum proc */
+    ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    ListEntry = ListHead->Flink;
+    while (ListHead != ListEntry)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        /* Call the enumeration proc inside SEH */
+        _SEH2_TRY
+        {
+            EnumProc(LdrEntry, Context, &Stop);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignoring the exception */
+        } _SEH2_END;
+
+        /* Break if we were asked to stop enumeration */
+        if (Stop)
+        {
+            /* Release loader lock */
+            Status = LdrUnlockLoaderLock(0, Cookie);
+
+            /* Reset any successful status to STATUS_SUCCESS, but leave
+               failure to the caller */
+            if (NT_SUCCESS(Status))
+                Status = STATUS_SUCCESS;
+
+            /* Return any possible failure status */
+            return Status;
+        }
+
+        /* Advance to the next module */
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Release loader lock, it must succeed this time */
+    Status = LdrUnlockLoaderLock(0, Cookie);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

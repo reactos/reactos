@@ -77,7 +77,7 @@
 //@ stdcall LdrDestroyOutOfProcessImage
 @ stdcall LdrDisableThreadCalloutsForDll(long)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
-//@ stdcall LdrEnumerateLoadedModules
+@ stdcall LdrEnumerateLoadedModules(long ptr long)
 //@ stdcall LdrFindCreateProcessManifest // 5.1 and 5.2 only
 @ stdcall LdrFindEntryForAddress(ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(long ptr long ptr)
