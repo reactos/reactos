@@ -7,6 +7,7 @@
 * Use ReactOS forum PM or IRC to contact me
 * http://www.reactos.org
 * IRC: irc.freenode.net #reactos-pl;
+* update by Saibamen saibamenppl@gmail.com (29.03.2011)
 */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -217,11 +218,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_COLOR_4BIT "16 kolorów (4 Bity)"
-    IDS_COLOR_8BIT "256 kolorów (8 Bitów)"
-    IDS_COLOR_16BIT "65,536 kolorów (16 Bitów)"
-    IDS_COLOR_24BIT "16,777,216 kolorów (24 Bitów)"
-    IDS_COLOR_32BIT "16,777,216 kolorów (32 Bity)"
+    IDS_COLOR_4BIT "16 kolorów"
+    IDS_COLOR_8BIT "256 kolorów"
+    IDS_COLOR_16BIT "High Color (16 Bitów)"
+    IDS_COLOR_24BIT "True Color (24 Bitów)"
+    IDS_COLOR_32BIT "True Color (32 Bity)"
     IDS_PIXEL "%lux%lu pikseli"
 END
 

@@ -381,8 +381,8 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "W³aœciwoœci pulpitu"
     IDS_DESKTOP             "Pulpit"
     IDS_TASKBAR             "Pasek zadañ"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
+    IDS_NAMECOLUMN          "Nazwa"
+    IDS_PATHCOLUMN          "Œcie¿ka"
     IDS_MENUCOLUMN          "Menu path"
 END
 

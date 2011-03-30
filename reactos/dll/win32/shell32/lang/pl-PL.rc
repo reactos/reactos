@@ -223,7 +223,7 @@ BEGIN
 	LTEXT "", 14011, 68, 93, 160, 10
 	LTEXT "Utworzony:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Tylko-do-odczytu", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Tylko do odczytu", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Ukryty", 14022, 126, 150, 50, 10
 END
 
