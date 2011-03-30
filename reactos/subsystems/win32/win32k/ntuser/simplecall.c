@@ -436,8 +436,7 @@ NtUserCallTwoParam(
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:
-         UNIMPLEMENTED
-         RETURN( 0);
+         RETURN( IntEnableWindow((HWND)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
       {

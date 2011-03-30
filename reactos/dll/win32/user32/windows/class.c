@@ -933,7 +933,7 @@ RealGetWindowClassA(
     WCHAR tmpbuf[MAX_ATOM_LEN + 1];
     UINT len;
   
-    if (cchType <= 0) return 0;
+    if ((INT)cchType <= 0) return 0;
     if (!RealGetWindowClassW( hwnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
     RtlUnicodeToMultiByteN( pszType, cchType - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
     pszType[len] = 0;

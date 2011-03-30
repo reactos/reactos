@@ -176,6 +176,50 @@ IntGetParent(PWND Wnd)
    return NULL;
 }
 
+BOOL
+FASTCALL
+IntEnableWindow( HWND hWnd, BOOL bEnable )
+{
+   BOOL Update;
+   PWND pWnd;
+   UINT bIsDisabled;
+
+   if(!(pWnd = UserGetWindowObject(hWnd)))
+   {
+      return FALSE;
+   }
+
+   /* check if updating is needed */
+   bIsDisabled = (pWnd->style & WS_DISABLED);
+   Update = bIsDisabled;
+
+    if (bEnable)
+    {
+       pWnd->style &= ~WS_DISABLED;
+    }
+    else
+    {
+       Update = !bIsDisabled;
+
+       co_IntSendMessage( hWnd, WM_CANCELMODE, 0, 0);
+
+       /* Remove keyboard focus from that window if it had focus */
+       if (hWnd == IntGetThreadFocusWindow())
+       {
+          co_UserSetFocus(NULL);
+       }
+       pWnd->style |= WS_DISABLED;
+    }
+    
+    if (Update)
+    {
+        IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, 0);
+        co_IntSendMessage(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
+    }
+    // Return nonzero if it was disabled, or zero if it wasn't:
+    return bIsDisabled;
+}
+
 /*
  * IntWinListChildren
  *
