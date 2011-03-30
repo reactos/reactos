@@ -188,4 +188,10 @@ typedef struct _ALT_RESOURCE_MODULE
 #endif
 } ALT_RESOURCE_MODULE, *PALT_RESOURCE_MODULE;
 
+//
+// Callback function for LdrEnumerateLoadedModules
+//
+typedef NTSTATUS (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, IN ULONG Parameter, OUT BOOLEAN *Stop);
+typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
+
 #endif

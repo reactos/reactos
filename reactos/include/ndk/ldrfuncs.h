@@ -118,4 +118,12 @@ LdrProcessRelocationBlockLongLong(
     IN LONGLONG Delta
 );
 
+NTSTATUS
+NTAPI
+LdrEnumerateLoadedModules(
+    IN BOOLEAN ReservedFlag,
+    IN PLDR_ENUM_CALLBACK EnumProc,
+    IN ULONG Context
+);
+
 #endif
