@@ -2404,28 +2404,28 @@ NtUserQueryWindow(
   HWND hWnd,
   DWORD Index);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6);
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG);
 
-DWORD
+HWND
 NTAPI
 NtUserRealChildWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+    HWND Parent,
+    LONG x,
+    LONG y);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    DWORD dwWakeMask,
+    UINT uTimeout);
 
 BOOL
 NTAPI

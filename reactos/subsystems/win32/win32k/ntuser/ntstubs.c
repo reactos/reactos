@@ -935,25 +935,25 @@ NtUserQueryInputContext(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6)
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    DWORD dwWakeMask,
+    UINT uTimeout)
 {
     UNIMPLEMENTED;
     return 0;
@@ -1252,10 +1252,10 @@ NtUserLockWindowUpdate(HWND hWnd)
 /*
  * @unimplemented
  */
-DWORD APIENTRY
-NtUserRealChildWindowFromPoint(DWORD Unknown0,
-                               DWORD Unknown1,
-                               DWORD Unknown2)
+HWND APIENTRY
+NtUserRealChildWindowFromPoint(HWND Parent,
+                               LONG x,
+                               LONG y)
 {
    UNIMPLEMENTED
 
