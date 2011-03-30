@@ -2491,11 +2491,13 @@ BOOL WINAPI SetMessageQueue(int cMessagesMax)
 }
 typedef DWORD (WINAPI * RealGetQueueStatusProc)(UINT flags);
 typedef DWORD (WINAPI * RealMsgWaitForMultipleObjectsExProc)(DWORD nCount, CONST HANDLE *lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags);
+typedef BOOL (WINAPI * RealInternalGetMessageProc)(LPMSG,HWND,UINT,UINT,UINT,BOOL);
+typedef BOOL (WINAPI * RealWaitMessageExProc)(DWORD,UINT);
 
 typedef struct _USER_MESSAGE_PUMP_ADDRESSES {
 	DWORD cbSize;
-	//NtUserRealInternalGetMessageProc NtUserRealInternalGetMessage;
-	//NtUserRealWaitMessageExProc NtUserRealWaitMessageEx;
+	RealInternalGetMessageProc NtUserRealInternalGetMessage;
+	RealWaitMessageExProc NtUserRealWaitMessageEx;
 	RealGetQueueStatusProc RealGetQueueStatus;
 	RealMsgWaitForMultipleObjectsExProc RealMsgWaitForMultipleObjectsEx;
 } USER_MESSAGE_PUMP_ADDRESSES, * PUSER_MESSAGE_PUMP_ADDRESSES;
@@ -2515,8 +2517,8 @@ CRITICAL_SECTION gcsMPH;
 MESSAGEPUMPHOOKPROC gpfnInitMPH;
 DWORD gcLoadMPH = 0;
 USER_MESSAGE_PUMP_ADDRESSES gmph = {sizeof(USER_MESSAGE_PUMP_ADDRESSES),
-	//NtUserRealInternalGetMessage,
-	//NtUserRealInternalWaitMessageEx,
+	NtUserRealInternalGetMessage,
+	NtUserRealWaitMessageEx,
 	RealGetQueueStatus,
 	RealMsgWaitForMultipleObjectsEx
 };
@@ -2532,8 +2534,8 @@ BOOL WINAPI IsInsideMessagePumpHook()
 void WINAPI ResetMessagePumpHook(PUSER_MESSAGE_PUMP_ADDRESSES Addresses)
 {
 	Addresses->cbSize = sizeof(USER_MESSAGE_PUMP_ADDRESSES);
-	//Addresses->NtUserRealInternalGetMessage = (NtUserRealInternalGetMessageProc)NtUserRealInternalGetMessage;
-	//Addresses->NtUserRealWaitMessageEx = (NtUserRealWaitMessageExProc)NtUserRealInternalWaitMessageEx;
+	Addresses->NtUserRealInternalGetMessage = NtUserRealInternalGetMessage;
+	Addresses->NtUserRealWaitMessageEx = NtUserRealWaitMessageEx;
 	Addresses->RealGetQueueStatus = RealGetQueueStatus;
 	Addresses->RealMsgWaitForMultipleObjectsEx = RealMsgWaitForMultipleObjectsEx;
 }
