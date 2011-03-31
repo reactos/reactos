@@ -78,12 +78,16 @@ typedef struct _USER_MESSAGE_QUEUE
   HANDLE NewMessagesHandle;
   /* Last time PeekMessage() was called. */
   ULONG LastMsgRead;
-  /* Current window with focus (ie. receives keyboard input) for this queue. */
-  HWND FocusWindow;
-  /* Current active window for this queue. */
-  HWND ActiveWindow;
   /* Current capture window for this queue. */
   HWND CaptureWindow;
+  PWND spwndCapture;
+  /* Current window with focus (ie. receives keyboard input) for this queue. */
+  HWND FocusWindow;
+  PWND spwndFocus;
+  /* Current active window for this queue. */
+  HWND ActiveWindow;
+  PWND spwndActive;
+  PWND spwndActivePrev;
   /* Current move/size window for this queue */
   HWND MoveSize;
   /* Current menu owner window for this queue */
@@ -92,6 +96,8 @@ typedef struct _USER_MESSAGE_QUEUE
   BYTE MenuState;
   /* Caret information for this queue */
   PTHRDCARETINFO CaretInfo;
+  /* Message Queue Flags */
+  DWORD QF_flags;
 
   /* queue state tracking */
   // Send list QS_SENDMESSAGE
@@ -112,8 +118,28 @@ typedef struct _USER_MESSAGE_QUEUE
   struct _DESKTOP *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
+#define QF_UPDATEKEYSTATE         0x00000001
+#define QF_FMENUSTATUSBREAK       0x00000004
+#define QF_FMENUSTATUS            0x00000008
+#define QF_FF10STATUS             0x00000010
+#define QF_MOUSEMOVED             0x00000020 // See MouseMoved.
+#define QF_ACTIVATIONCHANGE       0x00000040
+#define QF_TABSWITCHING           0x00000080
+#define QF_KEYSTATERESET          0x00000100
+#define QF_INDESTROY              0x00000200
+#define QF_LOCKNOREMOVE           0x00000400
+#define QF_FOCUSNULLSINCEACTIVE   0x00000800
+#define QF_DIALOGACTIVE           0x00004000
+#define QF_EVENTDEACTIVATEREMOVED 0x00008000
+#define QF_TRACKMOUSELEAVE        0x00020000
+#define QF_TRACKMOUSEHOVER        0x00040000
+#define QF_TRACKMOUSEFIRING       0x00080000
+#define QF_CAPTURELOCKED          0x00100000
+#define QF_ACTIVEWNDTRACKING      0x00200000
+
 BOOL FASTCALL
 MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
+VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
 NTSTATUS FASTCALL
 co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,

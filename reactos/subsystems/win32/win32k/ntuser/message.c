@@ -1233,6 +1233,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti->MessageQueue))
     {
+        // FIXME - Set window hung and add to a list.
         /* FIXME - Set a LastError? */
         RETURN( FALSE);
     }
@@ -1258,7 +1259,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti->MessageQueue));
+           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME - Set window hung and add to a list.
 
     IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1348,7 +1349,13 @@ co_IntSendMessageNoWait(HWND hWnd,
                                   &Result);
     return Result;
 }
-
+/* MSDN:
+   If you send a message in the range below WM_USER to the asynchronous message
+   functions (PostMessage, SendNotifyMessage, and SendMessageCallback), its
+   message parameters cannot include pointers. Otherwise, the operation will fail.
+   The functions will return before the receiving thread has had a chance to
+   process the message and the sender will free the memory before it is used.
+*/
 LRESULT FASTCALL
 co_IntSendMessageWithCallBack( HWND hWnd,
                               UINT Msg,
@@ -2014,24 +2021,23 @@ NtUserMessageCall( HWND hWnd,
 
     UserEnterExclusive();
 
-    /* Validate input */
-    if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
-    {
-        Window = UserGetWindowObject(hWnd);
-        if (!Window)
-        {
-            UserLeave();
-            return FALSE;
-        }
-    }
-
     switch(dwType)
     {
     case FNID_DEFWINDOWPROC:
-        if (Window) UserRefObjectCo(Window, &Ref);
+        /* Validate input */
+        if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
+        {
+           Window = UserGetWindowObject(hWnd);
+           if (!Window)
+           {
+               UserLeave();
+               return FALSE;
+           }
+        }
+        UserRefObjectCo(Window, &Ref);
         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
         Ret = TRUE;
-        if (Window) UserDerefObjectCo(Window);
+        UserDerefObjectCo(Window);
         break;
     case FNID_SENDNOTIFYMESSAGE:
         Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);
@@ -2050,7 +2056,6 @@ NtUserMessageCall( HWND hWnd,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Ret = FALSE;
                     _SEH2_YIELD(break);
                 }
                 _SEH2_END;
@@ -2121,13 +2126,18 @@ NtUserMessageCall( HWND hWnd,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Ret = FALSE;
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
 
-            if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
-                        CallBackInfo.CallBack, CallBackInfo.Context, &uResult))
+            if (is_pointer_message(Msg))
+            {
+               EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
+               break;
+            }
+
+            if (!(Ret = co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
+                        CallBackInfo.CallBack, CallBackInfo.Context, &uResult)))
             {
                 DPRINT1("Callback failure!\n");
             }
@@ -2165,7 +2175,6 @@ NtUserMessageCall( HWND hWnd,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Ret = FALSE;
                     _SEH2_YIELD(break);
                 }
                 _SEH2_END;
