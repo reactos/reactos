@@ -20,13 +20,13 @@ IDS_USAGE, "SYSTEMINFO [/S система [/U користувач [/P [пароль]]]] [/FO формат] [
   /U      [домен\\]корист. Визначає контекст користувача, в якому має\n\
                            виконуватися ця команда.\n\n\
   /P      [пароль]         Визначає пароль для цього користувацького контексту.\n\
-	                   Запрошує введення пароля, якщо він не заданий.\n\n\
+                           Запрошує введення пароля, якщо він не заданий.\n\n\
   /FO     формат           Визначає формат, в якому відображаються\n\
-	                   вихідні дані.\n\
-	                   Допустимі формати: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+                           вихідні дані.\n\
+                           Допустимі формати: ""TABLE"", ""LIST"", ""CSV"".\n\n\
   /NH                      Не відображати заголовки стовпців\n\
-	                   вихідних даних.\n\
-	                   Допускається для форматів ""TABLE"" and ""CSV"".\n\n\
+                           вихідних даних.\n\
+                           Допускається для форматів ""TABLE"" and ""CSV"".\n\n\
   /?                       Показує цю довідку.\n\n\
 Приклади:\n\
   SYSTEMINFO\n\
@@ -37,36 +37,38 @@ IDS_USAGE, "SYSTEMINFO [/S система [/U користувач [/P [пароль]]]] [/FO формат] [
   SYSTEMINFO /S система /FO LIST\n\
   SYSTEMINFO /S система /FO CSV /NH\n"
 
-IDS_OS_NAME, 				"Ім'я ОС:			%s\n"
-IDS_OS_VERSION, 			"Версія ОС:			%u.%u.%u %s Збірка %u\n"
-IDS_OS_BUILD_TYPE, 			"Тип збірки ОС:			%s\n"
-IDS_REG_OWNER, 				"Зареєстрований власник:		%s\n"
-IDS_REG_ORG, 				"Зареєстрована організація:	%s\n"
-IDS_UP_TIME, 				"System Up Time:			%u Days, %u Hours, %u, Minutes, %u Seconds\n"
-IDS_PRODUCT_ID, 			"ID продукта:			%s\n"
-IDS_INST_DATE, 				"Дата установки:			%s, "
-IDS_INST_TIME, 				"%s\n"
-IDS_SYS_TYPE_UNKNOWN, 		"Тип системи:			Невідома\n"
-IDS_SYS_TYPE_X86, 			"Тип системи:			X86-based PC\n"
-IDS_SYS_TYPE_IA64, 			"Тип системи:			IA64-based PC\n"
-IDS_SYS_TYPE_AMD64, 		"Тип системи:			AMD64-based PC\n"
-IDS_PROCESSORS, 			"Процесор(и):			%u процесор(а,ів) встановлено.\n"
-IDS_ROS_DIR, 				"Папка ReactOS:		%s\n"
-IDS_SYS_DIR, 				"Системна папка:		%s\n"
-IDS_BOOT_DEV, 				"Пристрій завантаження:			%s\n"
-IDS_SYS_LOCALE, 			"Мова системи:			%s\n"
-IDS_INPUT_LOCALE, 			"Мова вводу:			%s\n"
-IDS_TOTAL_PHYS_MEM, 		"Всього фізичної пам'яті:		%ld МБ (%ld КБ)\n"
-IDS_AVAIL_PHISICAL_MEM, 	"Доступно фізичної пам'яті:	%ld МБ (%ld КБ)\n"
-IDS_VIRT_MEM_MAX, 			"Віртуальна пам'ять: Макс. розмір:	%ld МБ (%ld КБ)\n"
-IDS_VIRT_MEM_AVAIL, 		"Віртуальна пам'ять: Доступно:	%ld МБ (%ld КБ)\n"
-IDS_VIRT_MEM_INUSE, 		"Віртуальна пам'ять: Використ.:		%ld МБ (%ld КБ)\n"
-IDS_HOST_NAME,				"Ім'я комп'ютера:			%s\n"
-IDS_PAGEFILE_LOC,			"Розташування файлу довантаження 		%s\n"
-IDS_TIME_ZONE,				"Часовий пояс: 			%s\n"
-IDS_DOMINE,					"Домен:				%s\n"
-IDS_BIOS_DATE,				"Дата BIOS:			%s\n"
-IDS_BIOS_VERSION,			"Версія BIOS:			%s\n"
-IDS_NETWORK_CARDS,			"Мережна карта(и)			%u Installed.\n"
+IDS_HOST_NAME,              "Ім'я комп'ютера:           %s\n"
+IDS_OS_NAME,                "Ім'я ОС:                   %s\n"
+IDS_OS_VERSION,             "Версія ОС:                 %u.%u.%u %s Збірка %u\n"
+IDS_OS_BUILD_TYPE,          "Тип збірки ОС:             %s\n"
+IDS_REG_OWNER,              "Зареєстрований власник:    %s\n"
+IDS_REG_ORG,                "Зареєстрована організація: %s\n"
+IDS_PRODUCT_ID,             "ID продукта:               %s\n"
+IDS_INST_DATE,              "Дата установки:            %s, "
+IDS_INST_TIME,              "%s\n"
+IDS_UP_TIME,                "System Up Time:            %u Days, %u Hours, %u, Minutes, %u Seconds\n"
+IDS_SYS_MANUFACTURER,       "System Manufacturer:       %s\n"
+IDS_SYS_MODEL,              "System Model:              %s\n"
+IDS_SYS_TYPE_UNKNOWN,       "Тип системи:               Невідома\n"
+IDS_SYS_TYPE_X86,           "Тип системи:               X86-based PC\n"
+IDS_SYS_TYPE_IA64,          "Тип системи:               IA64-based PC\n"
+IDS_SYS_TYPE_AMD64,         "Тип системи:               AMD64-based PC\n"
+IDS_PROCESSORS,             "Процесор(и):               %u процесор(а,ів) встановлено.\n"
+IDS_BIOS_DATE,              "Дата BIOS:                 %s\n"
+IDS_BIOS_VERSION,           "Версія BIOS:               %s\n"
+IDS_ROS_DIR,                "Папка ReactOS:             %s\n"
+IDS_SYS_DIR,                "Системна папка:            %s\n"
+IDS_BOOT_DEV,               "Пристрій завантаження:     %s\n"
+IDS_SYS_LOCALE,             "Мова системи:              %s\n"
+IDS_INPUT_LOCALE,           "Мова вводу:                %s\n"
+IDS_TOTAL_PHYS_MEM,         "Всього фізичної пам'яті:          %ld МБ (%ld КБ)\n"
+IDS_AVAIL_PHISICAL_MEM,     "Доступно фізичної пам'яті:        %ld МБ (%ld КБ)\n"
+IDS_VIRT_MEM_MAX,           "Віртуальна пам'ять: Макс. розмір: %ld МБ (%ld КБ)\n"
+IDS_VIRT_MEM_AVAIL,         "Віртуальна пам'ять: Доступно:     %ld МБ (%ld КБ)\n"
+IDS_VIRT_MEM_INUSE,         "Віртуальна пам'ять: Використ.:    %ld МБ (%ld КБ)\n"
+IDS_PAGEFILE_LOC,           "Розташування файлу довантаження   %s\n"
+IDS_TIME_ZONE,              "Часовий пояс:             %s\n"
+IDS_DOMINE,                 "Домен:                    %s\n"
+IDS_NETWORK_CARDS,          "Мережна карта(и)          %u Installed.\n"
 
 END

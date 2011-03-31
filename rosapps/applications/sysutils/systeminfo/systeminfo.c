@@ -180,7 +180,8 @@ AllSysInfo(VOID)
                             Buf,
                             sizeof(Buf)/sizeof(Buf[0]),
                             Tmp);
-    printf("System Manufacturer:\t\t%s\n", Buf);
+    if (GetOemStrings(IDS_SYS_MANUFACTURER, Msg))
+        printf(Msg, Buf);
 
     //getting System Model
     GetPrivateProfileString(TEXT("General"),
@@ -189,7 +190,8 @@ AllSysInfo(VOID)
                             Buf,
                             sizeof(Buf)/sizeof(Buf[0]),
                             Tmp);
-    printf("System Model:\t\t\t%s\n", Buf);
+    if (GetOemStrings(IDS_SYS_MODEL, Msg))
+        printf(Msg, Buf);
 
     //getting System type
     switch (SysInfo.wProcessorArchitecture)
