@@ -532,7 +532,7 @@ LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
 
 NTSTATUS
 NTAPI
-LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, ULONG Context)
+LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, PVOID Context)
 {
     PLIST_ENTRY ListHead, ListEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;

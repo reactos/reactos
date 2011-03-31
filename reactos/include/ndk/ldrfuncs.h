@@ -123,7 +123,7 @@ NTAPI
 LdrEnumerateLoadedModules(
     IN BOOLEAN ReservedFlag,
     IN PLDR_ENUM_CALLBACK EnumProc,
-    IN ULONG Context
+    IN PVOID Context
 );
 
 #endif
