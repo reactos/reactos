@@ -34,11 +34,11 @@ Examples:\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
 IDS_OS_NAME, 				"N zov OS:			%s\n"
-IDS_OS_VERSION, 			"Verzia OS:			%d.%d.%d %s"
-IDS_OS_BUILD, 				" Build %s\n"
+IDS_OS_VERSION, 			"Verzia OS:			%u.%u.%u %s Build %u\n"
 IDS_OS_BUILD_TYPE, 			"OS Build typ:			%s\n"
 IDS_REG_OWNER, 				"Registovanì vlastn¡k:		%s\n"
 IDS_REG_ORG, 				"Registrovan  organiz cia:	%s\n"
+IDS_UP_TIME, 				"System Up Time:			%u Days, %u Hours, %u, Minutes, %u Seconds\n"
 IDS_PRODUCT_ID, 			"ID produktu:			%s\n"
 IDS_INST_DATE, 				"D tum inçtal cie:			%s, "
 IDS_INST_TIME, 				"%s\n"

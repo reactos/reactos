@@ -30,11 +30,11 @@ Examples:\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
 IDS_OS_NAME, 				"OS Name:			%s\n"
-IDS_OS_VERSION, 			"OS Version:			%d.%d.%d %s"
-IDS_OS_BUILD, 				" Build %s\n"
+IDS_OS_VERSION, 			"OS Version:			%u.%u.%u %s Build %u\n"
 IDS_OS_BUILD_TYPE, 			"OS Build Type:			%s\n"
 IDS_REG_OWNER, 				"Registered Owner:		%s\n"
 IDS_REG_ORG, 				"Registered Organization:	%s\n"
+IDS_UP_TIME, 				"System Up Time:			%u Days, %u Hours, %u, Minutes, %u Seconds\n"
 IDS_PRODUCT_ID, 			"Product ID:			%s\n"
 IDS_INST_DATE, 				"Install Date:			%s, "
 IDS_INST_TIME, 				"%s\n"

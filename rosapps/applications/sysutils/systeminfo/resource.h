@@ -2,13 +2,13 @@
 
 #define IDS_OS_NAME 			100
 #define IDS_OS_VERSION 			101
-#define IDS_OS_BUILD 			102
-#define IDS_OS_BUILD_TYPE 		103
-#define IDS_REG_OWNER 			104
-#define IDS_REG_ORG 			105
-#define IDS_PRODUCT_ID 			106
-#define IDS_INST_DATE 			107
-#define IDS_INST_TIME 			108
+#define IDS_OS_BUILD_TYPE 		102
+#define IDS_REG_OWNER 			103
+#define IDS_REG_ORG 			104
+#define IDS_PRODUCT_ID 			105
+#define IDS_INST_DATE 			106
+#define IDS_INST_TIME 			107
+#define IDS_UP_TIME             108
 #define IDS_SYS_TYPE_UNKNOWN 	109
 #define IDS_SYS_TYPE_X86 		110
 #define IDS_SYS_TYPE_IA64 		111

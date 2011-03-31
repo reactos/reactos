@@ -38,11 +38,11 @@ IDS_USAGE, "SYSTEMINFO [/S система [/U користувач [/P [пароль]]]] [/FO формат] [
   SYSTEMINFO /S система /FO CSV /NH\n"
 
 IDS_OS_NAME, 				"Ім'я ОС:			%s\n"
-IDS_OS_VERSION, 			"Версія ОС:			%d.%d.%d %s"
-IDS_OS_BUILD, 				" Збірка %s\n"
+IDS_OS_VERSION, 			"Версія ОС:			%u.%u.%u %s Збірка %u\n"
 IDS_OS_BUILD_TYPE, 			"Тип збірки ОС:			%s\n"
 IDS_REG_OWNER, 				"Зареєстрований власник:		%s\n"
 IDS_REG_ORG, 				"Зареєстрована організація:	%s\n"
+IDS_UP_TIME, 				"System Up Time:			%u Days, %u Hours, %u, Minutes, %u Seconds\n"
 IDS_PRODUCT_ID, 			"ID продукта:			%s\n"
 IDS_INST_DATE, 				"Дата установки:			%s, "
 IDS_INST_TIME, 				"%s\n"
