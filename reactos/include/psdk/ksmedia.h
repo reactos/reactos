@@ -753,6 +753,10 @@ typedef struct
    ULONG                    ChannelMask;
 } KSDATARANGE_MUSIC, *PKSDATARANGE_MUSIC;
 
+#ifndef _SPEAKER_POSITIONS_
+#define _SPEAKER_POSITIONS_
+
+
 #define SPEAKER_FRONT_LEFT              0x1
 #define SPEAKER_FRONT_RIGHT             0x2
 #define SPEAKER_FRONT_CENTER            0x4
@@ -775,6 +779,7 @@ typedef struct
 #define SPEAKER_RESERVED                0x7FFC0000
 #define SPEAKER_ALL                     0x80000000
 
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #define KSAUDIO_SPEAKER_DIRECTOUT       0
