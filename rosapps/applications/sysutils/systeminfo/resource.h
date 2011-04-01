@@ -8,11 +8,10 @@
 #define IDS_REG_ORG             105
 #define IDS_PRODUCT_ID          106
 #define IDS_INST_DATE           107
-#define IDS_INST_TIME           108
 #define IDS_UP_TIME             109
 #define IDS_SYS_MANUFACTURER    110
 #define IDS_SYS_MODEL           111
-#define IDS_SYS_TYPE_UNKNOWN    112
+#define IDS_SYS_TYPE            112
 #define IDS_PROCESSORS          113
 #define IDS_BIOS_DATE           114
 #define IDS_BIOS_VERSION        115
@@ -30,6 +29,3 @@
 #define IDS_TIME_ZONE           127
 #define IDS_DOMINE              128
 #define IDS_NETWORK_CARDS       130
-#define IDS_SYS_TYPE_X86        140
-#define IDS_SYS_TYPE_IA64       141
-#define IDS_SYS_TYPE_AMD64      142
