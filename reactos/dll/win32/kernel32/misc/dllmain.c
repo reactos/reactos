@@ -21,8 +21,6 @@
 
 extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
-extern UNICODE_STRING BaseDefaultPath;
-extern UNICODE_STRING BaseDefaultPathAppend;
 
 WCHAR BaseDefaultPathBuffer[6140];
 

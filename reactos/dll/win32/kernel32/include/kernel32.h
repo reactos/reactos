@@ -94,6 +94,8 @@ extern HMODULE hCurrentModule;
 extern RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 
 extern UNICODE_STRING BaseDllDirectory;
+extern UNICODE_STRING BaseDefaultPath;
+extern UNICODE_STRING BaseDefaultPathAppend;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
