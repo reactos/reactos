@@ -68,6 +68,6 @@ endif()
 
 add_importlibs(libjpeg msvcrt kernel32)
 
-add_dependencies(libjpeg psdk buildno_header)
+add_dependencies(libjpeg psdk)
 
 add_cab_target(libjpeg 1)

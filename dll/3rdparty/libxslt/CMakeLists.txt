@@ -41,6 +41,6 @@ if(MSVC)
 add_importlibs(libxslt ntdll)
 endif()
 
-add_dependencies(libxslt psdk buildno_header)
+add_dependencies(libxslt psdk)
 
 add_cab_target(libxslt 1)

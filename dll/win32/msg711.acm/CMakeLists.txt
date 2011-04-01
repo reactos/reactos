@@ -18,5 +18,5 @@ set_target_properties(msg711.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(msg711.acm wine)
 add_importlibs(msg711.acm winmm user32 msvcrt kernel32 ntdll)
-add_dependencies(msg711.acm psdk buildno_header)
+add_dependencies(msg711.acm psdk)
 add_cab_target(msg711.acm 1)

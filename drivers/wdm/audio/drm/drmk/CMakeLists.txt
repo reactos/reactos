@@ -19,7 +19,7 @@ else()
     add_linkerflag(drmk "/DRIVER")
     add_dependencies(drmk bugcodes)
     target_link_libraries(drmk msvcsup)
-	add_dependencies(drmk psdk buildno_header)
+	add_dependencies(drmk psdk)
 endif()
 
 set_entrypoint(drmk 0)

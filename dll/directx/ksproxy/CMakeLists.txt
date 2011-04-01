@@ -50,6 +50,6 @@ add_importlibs(ksproxy
     kernel32
     ntdll)
 
-add_dependencies(ksproxy psdk buildno_header)
+add_dependencies(ksproxy psdk)
 
 add_cab_target(ksproxy 1)

@@ -7,4 +7,4 @@ set_entrypoint(normaliz 0)
 
 add_importlibs(normaliz kernel32)
 
-add_dependencies(normaliz psdk buildno_header)
+add_dependencies(normaliz psdk)

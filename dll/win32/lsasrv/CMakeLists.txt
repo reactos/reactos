@@ -29,6 +29,6 @@ target_link_libraries(lsasrv
     ${PSEH_LIB})
 
 add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
-add_dependencies(lsasrv psdk buildno_header)
+add_dependencies(lsasrv psdk)
 add_cab_target(lsasrv 1)
 add_importlib_target(lsasrv.spec)

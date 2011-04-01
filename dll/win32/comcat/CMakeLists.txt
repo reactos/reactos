@@ -21,5 +21,5 @@ target_link_libraries(comcat uuid wine)
 
 add_importlibs(comcat ole32 user32 advapi32 ntdll)
 
-add_dependencies(comcat psdk buildno_header)
+add_dependencies(comcat psdk)
 add_cab_target(comcat 1)

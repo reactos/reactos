@@ -17,6 +17,6 @@ set_entrypoint(version 0)
 
 target_link_libraries(version wine)
 add_importlibs(version lz32 kernel32 ntdll)
-add_dependencies(version psdk buildno_header)
+add_dependencies(version psdk)
 add_cab_target(version 1)
 add_importlib_target(version.spec)

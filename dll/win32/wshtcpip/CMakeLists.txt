@@ -16,5 +16,5 @@ set_entrypoint(wshtcpip 0)
 
 target_link_libraries(wshtcpip tdilib)
 add_importlibs(wshtcpip ws2_32 kernel32 ntdll)
-add_dependencies(wshtcpip psdk buildno_header)
+add_dependencies(wshtcpip psdk)
 add_cab_target(wshtcpip 1)

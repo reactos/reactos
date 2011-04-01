@@ -72,6 +72,6 @@ add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 olea
 
 set_image_base(explorer 0x00400000)
 
-add_dependencies(explorer psdk buildno_header)
+add_dependencies(explorer psdk)
 add_cab_target(explorer 4)
 add_cab(${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml 4)

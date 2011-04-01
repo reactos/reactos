@@ -57,6 +57,6 @@ target_link_libraries(libtiff mingw_common zlib getopt)
 
 add_importlibs(libtiff user32 msvcrt kernel32)
 
-add_dependencies(libtiff psdk buildno_header)
+add_dependencies(libtiff psdk)
 
 add_cab_target(libtiff 1)

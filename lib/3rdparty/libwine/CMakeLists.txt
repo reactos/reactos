@@ -11,5 +11,3 @@ list(APPEND SOURCE
 add_library(wine ${SOURCE})
 
 add_library(wineldr loader.c)
-
-add_dependencies(wine buildno_header)

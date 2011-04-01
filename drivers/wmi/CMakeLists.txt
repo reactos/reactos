@@ -17,7 +17,7 @@ else()
     add_linkerflag(wmilib "/DRIVER")
     add_dependencies(wmilib bugcodes)
     target_link_libraries(wmilib msvcsup)
-	add_dependencies(wmilib psdk buildno_header)
+	add_dependencies(wmilib psdk)
 endif()
 
 set_entrypoint(wmilib 0)

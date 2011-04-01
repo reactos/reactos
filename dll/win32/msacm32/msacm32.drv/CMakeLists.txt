@@ -14,5 +14,5 @@ set_target_properties(msacm32.drv PROPERTIES SUFFIX "")
 target_link_libraries(msacm32.drv wine)
 
 add_importlibs(msacm32.drv msacm32 user32 winmm advapi32 kernel32 ntdll)
-add_dependencies(msacm32.drv psdk buildno_header)
+add_dependencies(msacm32.drv psdk)
 add_cab_target(msacm32.drv 1)

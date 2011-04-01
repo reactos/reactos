@@ -440,7 +440,7 @@ add_library(crt ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch ${CRT_SOURCE})
 
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
 add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
-add_dependencies(crt psdk buildno_header asm)
+add_dependencies(crt psdk asm)
 
 list(APPEND LIBCNTPR_SOURCE
     float/isnan.c
@@ -614,7 +614,7 @@ endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
 set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
-add_dependencies(libcntpr psdk buildno_header asm)
+add_dependencies(libcntpr psdk asm)
 
 if(MSVC)
 # This is a temporary solution until we have proper crt libs
@@ -625,7 +625,7 @@ if(MSVC)
         math/i386/ftol2_asm.S)
 
     add_library(msvcsup ${MSVCSUP_SOURCE})
-    add_dependencies(msvcsup psdk buildno_header asm)
+    add_dependencies(msvcsup psdk asm)
 endif()
 
 add_library(user32_wsprintf

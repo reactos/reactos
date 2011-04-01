@@ -198,8 +198,6 @@ else()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
-    add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
-
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
     #bootcd and livecd

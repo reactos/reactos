@@ -7,6 +7,6 @@ add_library(kbdaze SHARED kbdaze.c kbdaze.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdaze.
 
 set_entrypoint(kbdaze 0)
 
-add_dependencies(kbdaze psdk buildno_header)
+add_dependencies(kbdaze psdk)
 
 add_cab_target(kbdaze 1)

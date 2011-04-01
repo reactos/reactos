@@ -267,6 +267,6 @@ set_entrypoint(mesa32 0)
 
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 
-add_dependencies(mesa32 psdk buildno_header)
+add_dependencies(mesa32 psdk)
 
 add_cab_target(mesa32 1)

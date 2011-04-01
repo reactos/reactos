@@ -18,5 +18,5 @@ target_link_libraries(olesvr32
     mingw_common)
 
 add_importlibs(olesvr32 kernel32 ntdll)
-add_dependencies(olesvr32 psdk buildno_header)
+add_dependencies(olesvr32 psdk)
 add_cab_target(olesvr32 1)

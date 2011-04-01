@@ -30,5 +30,5 @@ add_importlibs(mlang
     ntdll)
 
 add_importlib_target(mlang.spec)
-add_dependencies(mlang psdk buildno_header)
+add_dependencies(mlang psdk)
 add_cab_target(mlang 1)

@@ -22,5 +22,5 @@ target_link_libraries(cabinet wine)
 add_importlibs(cabinet kernel32 ntdll)
 add_importlib_target(cabinet.spec)
 
-add_dependencies(cabinet psdk buildno_header)
+add_dependencies(cabinet psdk)
 add_cab_target(cabinet 1)

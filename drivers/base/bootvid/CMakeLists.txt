@@ -24,7 +24,7 @@ set_image_base(bootvid 0x00010000)
 
 add_importlibs(bootvid ntoskrnl hal)
 add_pch(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(bootvid psdk buildno_header bugcodes)
+add_dependencies(bootvid psdk bugcodes)
 add_minicd_target(bootvid reactos bootvid.dll)
 add_cab_target(bootvid 1)
 add_importlib_target(bootvid.spec)

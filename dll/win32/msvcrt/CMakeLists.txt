@@ -29,7 +29,7 @@ if (NOT MSVC)
 set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
 endif()
 
-add_dependencies(msvcrt psdk buildno_header)
+add_dependencies(msvcrt psdk)
 set_entrypoint(msvcrt DllMain@12)
 set_image_base(msvcrt ${baseaddress_msvcrt})
 

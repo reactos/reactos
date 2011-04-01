@@ -7,6 +7,6 @@ add_library(kbdtuf SHARED kbdtuf.c kbdtuf.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtuf.
 
 set_entrypoint(kbdtuf 0)
 
-add_dependencies(kbdtuf psdk buildno_header)
+add_dependencies(kbdtuf psdk)
 
 add_cab_target(kbdtuf 1)

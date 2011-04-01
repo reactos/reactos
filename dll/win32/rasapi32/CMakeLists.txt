@@ -16,5 +16,5 @@ set_entrypoint(rasapi32 0)
 target_link_libraries(rasapi32 wine)
 
 add_importlibs(rasapi32 kernel32 ntdll)
-add_dependencies(rasapi32 psdk buildno_header)
+add_dependencies(rasapi32 psdk)
 add_cab_target(rasapi32 1)
