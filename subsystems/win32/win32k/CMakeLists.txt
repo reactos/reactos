@@ -13,6 +13,17 @@ add_definitions(
     -DLANGPACK
     -D_WIN32K_)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dib)
+
+list(APPEND GENDIB_FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib16gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib32gen.c)
+
+add_custom_command(
+    OUTPUT ${GENDIB_FILES}
+    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib)
+
 list(APPEND SOURCE
     dib/alphablend.c
     dib/dib1bpp.c
@@ -149,15 +160,8 @@ list(APPEND SOURCE
     stubs/stubs.c
     stubs/umpdstubs.c
     win32k.rc)
-    
-list(APPEND GENDIB_GENERATED
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib16gen.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib32gen.c)
 
-set_source_files_properties(${GENDIB_GENERATED} PROPERTIES GENERATED TRUE)
-
-list(APPEND SOURCE ${GENDIB_GENERATED})
+list(APPEND SOURCE ${GENDIB_FILES})
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE

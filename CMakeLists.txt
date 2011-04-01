@@ -200,20 +200,6 @@ else()
 
     add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
 
-    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib)
-
-    list(APPEND OUTPUT_FILES
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib8gen.c
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib16gen.c
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib32gen.c)
-
-    add_custom_command(
-        OUTPUT ${OUTPUT_FILES}
-        COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
-        DEPENDS native-gendib)
-
-    add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
-
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
     #bootcd and livecd
