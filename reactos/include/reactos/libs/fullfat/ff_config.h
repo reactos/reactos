@@ -121,8 +121,8 @@
 
 //---------- MALLOC
 										// These should map on to platform specific memory allocators.
-#define	FF_MALLOC(aSize)				malloc(aSize)
-#define	FF_FREE(apPtr)	 				free(apPtr)
+#define	FF_MALLOC(aSize)				FF_Malloc(aSize)
+#define	FF_FREE(apPtr)	 				FF_Free(apPtr)
 
 
 //---------- IN-LINE FUNCTIONS

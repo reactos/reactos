@@ -41,6 +41,12 @@
 #include "ff_config.h"
 #include "ff_types.h"
 
+#ifdef __REACTOS__
+// defined in fullfat.c
+void *FF_Malloc(FF_T_UINT32 allocSize);
+void FF_Free(void *pBuffer);
+#endif
+
 /*
 	HT changed type of aOffset to u32
 */
