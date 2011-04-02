@@ -154,7 +154,7 @@ INT main (int argc,char **p)
 		//l=0;
 		hFile[i] = CreateFile(files[i],GENERIC_WRITE,
 			0,NULL,
-			OPEN_ALWAYS,
+			CREATE_ALWAYS,
 			FILE_ATTRIBUTE_NORMAL,NULL);
 
 		if (hFile[i] == INVALID_HANDLE_VALUE)
