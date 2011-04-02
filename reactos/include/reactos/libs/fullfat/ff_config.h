@@ -51,7 +51,7 @@
 
 
 //---------- UNICODE SUPPORT
-//#define FF_UNICODE_SUPPORT			// If this is defined, then all of FullFAT's API's will expect to receive UTF-16 formatted strings.
+#define FF_UNICODE_SUPPORT			// If this is defined, then all of FullFAT's API's will expect to receive UTF-16 formatted strings.
 										// FF_FindFirst() and FF_FindNext() will also return Filenames in UTF-16 format.
 										// NOTE: This option may cause FullFAT to not "Clean-compile" when using GCC. This is because
 										// pedantically GCC refuses to accept C99 library functions, unless the -std=c99 flag is used.
