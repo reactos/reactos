@@ -261,12 +261,14 @@ FF_T_UINT32 FF_FindEntryInDir(FF_IOMAN *pIoman, FF_T_UINT32 DirCluster, const FF
 #else
 	FF_T_INT8	*lastPtr = pDirent->FileName + sizeof(pDirent->FileName);
 #endif
-	FF_T_UINT8	CheckSum;
+	FF_T_UINT8	CheckSum = 0;
 	FF_T_UINT8	lastAttrib;
 	FF_T_INT8	totalLFNs = 0;
 	FF_T_INT8	numLFNs = 0;
 	FF_T_INT32	i;
 	FF_T_UINT16	lfnItem = 0;
+
+	pError = NULL;
 
 	pDirent->CurrentItem = 0;
 	pDirent->Attrib = 0;
@@ -1095,8 +1097,8 @@ FF_ERROR FF_PopulateLongDirent(FF_IOMAN *pIoman, FF_DIRENT *pDirent, FF_T_UINT16
 	FF_ERROR	Error;
 	FF_T_UINT	uiNumLFNs;
 	FF_T_UINT	uiLfnLength = 0;
-	FF_T_UINT	i,y;
 #ifdef FF_UNICODE_UTF8_SUPPORT
+	FF_T_UINT	i,y;
 //	FF_T_SINT32	slRetVal;
 	FF_T_UINT16 nLfnBegin;
 	FF_T_UINT16	usUtf8Len = 0;

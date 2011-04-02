@@ -48,10 +48,8 @@
 #include <string.h>
 
 #ifdef WIN32
-#define stricmp stricmp
 #define FF_stricmp	stricmp
 #else
-#define strcasecmp strcasecmp
 #define FF_stricmp strcasecmp
 #endif
 
