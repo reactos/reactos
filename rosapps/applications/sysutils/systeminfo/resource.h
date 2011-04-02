@@ -27,5 +27,5 @@
 #define IDS_VIRT_MEM_INUSE      125
 #define IDS_PAGEFILE_LOC        126
 #define IDS_TIME_ZONE           127
-#define IDS_DOMINE              128
+#define IDS_DOMAIN              128
 #define IDS_NETWORK_CARDS       130
