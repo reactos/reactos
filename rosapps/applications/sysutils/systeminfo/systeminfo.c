@@ -18,13 +18,12 @@
 
 #include <wchar.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <windows.h>
 #include <time.h>
 #include <locale.h>
 #include <lm.h>
+#include <shlwapi.h>
 
 #include "resource.h"
 
@@ -56,7 +55,7 @@ RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR Buf)
                                   KEY_QUERY_VALUE,
                                   &hKey) != ERROR_SUCCESS)
     {
-        //wprintf("Warning! Cannot open %s. Last error: %lu.\n", lpSubKey, GetLastError());
+        wprintf(L"Warning! Cannot open %s. Last error: %lu.\n", lpSubKey, GetLastError());
         return FALSE;
     }
 
@@ -67,7 +66,7 @@ RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR Buf)
                          (LPBYTE)Buf,
                          &dwBytes) != ERROR_SUCCESS || (dwType != REG_SZ && dwType != REG_MULTI_SZ))
     {
-        //wprintf("Warning! Cannot query %s. Last error: %lu, type: %lu.\n", lpValueName, GetLastError(), dwType);
+        wprintf(L"Warning! Cannot query %s. Last error: %lu, type: %lu.\n", lpValueName, GetLastError(), dwType);
         dwBytes = 0;
         bRet = FALSE;
     }
@@ -96,6 +95,7 @@ RegGetDWORD(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpData)
                                  KEY_QUERY_VALUE,
                                  &hKey) != ERROR_SUCCESS)
     {
+        wprintf(L"Warning! Cannot open %s. Last error: %lu.\n", lpSubKey, GetLastError());
         return FALSE;
     }
 
@@ -106,7 +106,7 @@ RegGetDWORD(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpData)
                          (LPBYTE)lpData,
                          &dwBytes) != ERROR_SUCCESS || dwType != REG_DWORD)
     {
-        //wprintf("Warning! Cannot query %s. Last err: %lu, type: %lu\n", lpValueName, GetLastError(), dwType);
+        wprintf(L"Warning! Cannot query %s. Last err: %lu, type: %lu\n", lpValueName, GetLastError(), dwType);
         *lpData = 0;
         bRet = FALSE;
     }
@@ -186,7 +186,7 @@ AllSysInfo(VOID)
     SYSTEM_INFO SysInfo;
     WCHAR Buf[BUFFER_SIZE], Tmp[BUFFER_SIZE], Msg[BUFFER_SIZE], szSystemDir[MAX_PATH];
     const WCHAR *lpcszSysType;
-    LPWSTR lpNetBuffer;
+    LPWSTR lpBuffer;
     NETSETUP_JOIN_STATUS NetJoinStatus;
     MEMORYSTATUS MemoryStatus;
     unsigned int cSeconds;
@@ -325,7 +325,7 @@ AllSysInfo(VOID)
             swprintf(Tmp, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%u", i);
 
             RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"Identifier", Buf);
-            wprintf(L"                       [%02u]: %s", i+1, Buf);
+            wprintf(L"                        [%02u]: %s", i+1, Buf);
 
             RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"VendorIdentifier", Buf);
             wprintf(L" %s\n", Buf);
@@ -367,35 +367,39 @@ AllSysInfo(VOID)
         wprintf(Msg, Buf);
 
     //getting System Locale
-    if (RegGetSZ(HKEY_CURRENT_USER,
-                 L"Control Panel\\International",
-                 L"Locale",
-                 Tmp))
+    if (GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Tmp, BUFFER_SIZE))
         if (RegGetSZ(HKEY_CLASSES_ROOT,
                      L"MIME\\Database\\Rfc1766",
                      Tmp,
                      Buf))
+        {
+            /* get rid of @filename,resource */
+            lpBuffer = wcschr(Buf, L';');
+            if (lpBuffer)
+                SHLoadIndirectString(lpBuffer+1, lpBuffer+1, BUFFER_SIZE - (lpBuffer-Buf) - 1, NULL);
+
             if (GetOemStrings(IDS_SYS_LOCALE, Msg))
                 wprintf(Msg, Buf);
+        }
 
     //getting Input Locale
     if (RegGetSZ(HKEY_CURRENT_USER,
                  L"Keyboard Layout\\Preload",
                  L"1",
-                 Buf))
-    {
-        int i, j;
-
-        for(j = 0, i = 4; i <= 8; j++, i++)
-            Tmp[j] = Buf[i];
-
+                 Tmp) && wcslen(Tmp) > 4)
         if (RegGetSZ(HKEY_CLASSES_ROOT,
                      L"MIME\\Database\\Rfc1766",
-                     Tmp,
+                     Tmp + 4,
                      Buf))
+        {
+            /* get rid of @filename,resource */
+            lpBuffer = wcschr(Buf, L';');
+            if (lpBuffer)
+                SHLoadIndirectString(lpBuffer+1, lpBuffer+1, BUFFER_SIZE - (lpBuffer-Buf) - 1, NULL);
+
             if (GetOemStrings(IDS_INPUT_LOCALE, Msg))
                 wprintf(Msg, Buf);
-    }
+        }
 
     //getting Time Zone
     GetTimeZoneInformation(&TimeZoneInfo);
@@ -476,12 +480,12 @@ AllSysInfo(VOID)
     }
 
     //getting Domain
-    if (NetGetJoinInformation (NULL, &lpNetBuffer, &NetJoinStatus) == NERR_Success)
+    if (NetGetJoinInformation (NULL, &lpBuffer, &NetJoinStatus) == NERR_Success)
     {
         if(GetOemStrings(IDS_DOMAIN, Msg))
-            wprintf(Msg, lpNetBuffer);
+            wprintf(Msg, lpBuffer);
 
-        NetApiBufferFree(lpNetBuffer);
+        NetApiBufferFree(lpBuffer);
     }
 
     //getting Logon Server
