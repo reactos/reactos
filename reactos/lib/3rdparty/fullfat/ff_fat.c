@@ -110,7 +110,7 @@ FF_T_UINT32 FF_LBA2Cluster(FF_IOMAN *pIoman, FF_T_UINT32 Address) {
 /**
  *	@private
  **/
-FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
+FF_T_UINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_ERROR *pError) {
 
 	FF_BUFFER 	*pBuffer;
 	FF_T_UINT32 FatOffset;
@@ -148,7 +148,8 @@ FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 			pBuffer = FF_GetBuffer(pIoman, FatSector + LBAadjust, FF_MODE_READ);
 			{
 				if(!pBuffer) {
-					return FF_ERR_DEVICE_DRIVER_FAILED;
+					*pError = FF_ERR_DEVICE_DRIVER_FAILED;
+					return 0;
 				}
 				F12short[0] = FF_getChar(pBuffer->pBuffer, (FF_T_UINT16)(pIoman->BlkSize - 1));				
 			}
@@ -157,7 +158,8 @@ FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 			pBuffer = FF_GetBuffer(pIoman, FatSector + LBAadjust + 1, FF_MODE_READ);
 			{
 				if(!pBuffer) {
-					return FF_ERR_DEVICE_DRIVER_FAILED;
+					*pError = FF_ERR_DEVICE_DRIVER_FAILED;
+					return 0;
 				}
 				F12short[1] = FF_getChar(pBuffer->pBuffer, 0);				
 			}
@@ -176,7 +178,8 @@ FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 	pBuffer = FF_GetBuffer(pIoman, FatSector + LBAadjust, FF_MODE_READ);
 	{
 		if(!pBuffer) {
-			return FF_ERR_DEVICE_DRIVER_FAILED;
+			*pError = FF_ERR_DEVICE_DRIVER_FAILED;
+			return 0;
 		}
 		
 		switch(pIoman->pPartition->Type) {
@@ -208,11 +211,10 @@ FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 	return (FF_T_SINT32) FatEntry;
 }
 
-FF_T_SINT8 FF_ClearCluster(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
+FF_ERROR FF_ClearCluster(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 	FF_BUFFER *pBuffer;
 	FF_T_UINT16 i;
 	FF_T_UINT32	BaseLBA;
-	FF_T_SINT8	RetVal = 0;
 
 	BaseLBA = FF_Cluster2LBA(pIoman, nCluster);
 	BaseLBA = FF_getRealLBA(pIoman, BaseLBA);
@@ -220,16 +222,15 @@ FF_T_SINT8 FF_ClearCluster(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 	for(i = 0; i < pIoman->pPartition->SectorsPerCluster; i++) {
 		pBuffer = FF_GetBuffer(pIoman, BaseLBA++, FF_MODE_WRITE);
 		{
-			if(pBuffer) {
-				memset(pBuffer->pBuffer, 0x00, 512);
-			} else {
-				RetVal = FF_ERR_DEVICE_DRIVER_FAILED;
+			if(!pBuffer) {
+				return FF_ERR_DEVICE_DRIVER_FAILED;
 			}
+			memset(pBuffer->pBuffer, 0x00, 512);
 		}
 		FF_ReleaseBuffer(pIoman, pBuffer);
 	}
 
-	return RetVal;
+	return FF_ERR_NONE;
 }
 
 /**
@@ -240,17 +241,19 @@ FF_T_SINT8 FF_ClearCluster(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
  *	@param	Start		Cluster address of the first cluster in the chain.
  *	@param	Count		Number of Cluster in the chain, 
  *
- *	@return	FF_TRUE if it is an end of chain, otherwise FF_FALSE.
+ *	
  *
  **/
-FF_T_UINT32 FF_TraverseFAT(FF_IOMAN *pIoman, FF_T_UINT32 Start, FF_T_UINT32 Count) {
+FF_T_UINT32 FF_TraverseFAT(FF_IOMAN *pIoman, FF_T_UINT32 Start, FF_T_UINT32 Count, FF_ERROR *pError) {
 	
 	FF_T_UINT32 i;
 	FF_T_UINT32 fatEntry = Start, currentCluster = Start;
 
+	*pError = FF_ERR_NONE;
+
 	for(i = 0; i < Count; i++) {
-		fatEntry = FF_getFatEntry(pIoman, currentCluster);
-		if(fatEntry == (FF_T_UINT32) FF_ERR_DEVICE_DRIVER_FAILED) {
+		fatEntry = FF_getFatEntry(pIoman, currentCluster, pError);
+		if(*pError) {
 			return 0;
 		}
 
@@ -264,13 +267,14 @@ FF_T_UINT32 FF_TraverseFAT(FF_IOMAN *pIoman, FF_T_UINT32 Start, FF_T_UINT32 Coun
 	return fatEntry;
 }
 
-FF_T_UINT32 FF_FindEndOfChain(FF_IOMAN *pIoman, FF_T_UINT32 Start) {
+FF_T_UINT32 FF_FindEndOfChain(FF_IOMAN *pIoman, FF_T_UINT32 Start, FF_ERROR *pError) {
 
 	FF_T_UINT32 fatEntry = Start, currentCluster = Start;
+	*pError = FF_ERR_NONE;
 
 	while(!FF_isEndOfChain(pIoman, fatEntry)) {
-		fatEntry = FF_getFatEntry(pIoman, currentCluster);
-		if(fatEntry == (FF_T_UINT32) FF_ERR_DEVICE_DRIVER_FAILED) {
+		fatEntry = FF_getFatEntry(pIoman, currentCluster, pError);
+		if(*pError) {
 			return 0;
 		}
 
@@ -325,7 +329,7 @@ FF_T_BOOL FF_isEndOfChain(FF_IOMAN *pIoman, FF_T_UINT32 fatEntry) {
  *	@param	nCluster	Cluster Number to be modified.
  *	@param	Value		The Value to store.
  **/
-FF_T_SINT8 FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Value) {
+FF_ERROR FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Value) {
 
 	FF_BUFFER 	*pBuffer;
 	FF_T_UINT32 FatOffset;
@@ -439,7 +443,7 @@ FF_T_SINT8 FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Va
 	}
 	FF_ReleaseBuffer(pIoman, pBuffer);
 
-	return 0;
+	return FF_ERR_NONE;
 }
 
 
@@ -454,12 +458,17 @@ FF_T_SINT8 FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Va
  *	@return 0 on error.
  **/
 #ifdef FF_FAT12_SUPPORT
-FF_T_UINT32 FF_FindFreeClusterOLD(FF_IOMAN *pIoman) {
+static FF_T_UINT32 FF_FindFreeClusterOLD(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_T_UINT32 nCluster;
 	FF_T_UINT32 fatEntry;
 
+	*pError = FF_ERR_NONE;
+
 	for(nCluster = pIoman->pPartition->LastFreeCluster; nCluster < pIoman->pPartition->NumClusters; nCluster++) {
-		fatEntry = FF_getFatEntry(pIoman, nCluster);
+		fatEntry = FF_getFatEntry(pIoman, nCluster, pError);
+		if(*pError) {
+			return 0;
+		}
 		if(fatEntry == 0x00000000) {
 			pIoman->pPartition->LastFreeCluster = nCluster;
 			return nCluster;
@@ -469,7 +478,7 @@ FF_T_UINT32 FF_FindFreeClusterOLD(FF_IOMAN *pIoman) {
 }
 #endif
 
-FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman) {
+FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_BUFFER	*pBuffer;
 	FF_T_UINT32	i, x, nCluster = pIoman->pPartition->LastFreeCluster;
 	FF_T_UINT32	FatOffset;
@@ -478,9 +487,11 @@ FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman) {
 	FF_T_UINT32	EntriesPerSector;
 	FF_T_UINT32 FatEntry = 1;
 
+	*pError = FF_ERR_NONE;
+
 #ifdef FF_FAT12_SUPPORT
 	if(pIoman->pPartition->Type == FF_T_FAT12) {	// FAT12 tables are too small to optimise, and would make it very complicated!
-		return FF_FindFreeClusterOLD(pIoman);
+		return FF_FindFreeClusterOLD(pIoman, pError);
 	}
 #endif
 
@@ -491,15 +502,20 @@ FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman) {
 		EntriesPerSector = pIoman->BlkSize / 2;
 		FatOffset = nCluster * 2;
 	}
+	
+	// HT addition: don't use non-existing clusters
+	if (nCluster >= pIoman->pPartition->NumClusters) {
+		*pError = FF_ERR_FAT_NO_FREE_CLUSTERS;
+		return 0;
+	}
 
 	FatSector = (FatOffset / pIoman->pPartition->BlkSize);
 	
 	for(i = FatSector; i < pIoman->pPartition->SectorsPerFAT; i++) {
 		pBuffer = FF_GetBuffer(pIoman, pIoman->pPartition->FatBeginLBA + i, FF_MODE_READ);
 		{
-			// HT addition: don't use non-existing clusters
-			if (nCluster >= pIoman->pPartition->NumClusters) {
-				FF_ReleaseBuffer(pIoman, pBuffer);
+			if(!pBuffer) {
+				*pError = FF_ERR_DEVICE_DRIVER_FAILED;
 				return 0;
 			}
 			for(x = nCluster % EntriesPerSector; x < EntriesPerSector; x++) {
@@ -533,24 +549,54 @@ FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman) {
  * @private
  * @brief	Create's a Cluster Chain
  **/
-FF_T_UINT32 FF_CreateClusterChain(FF_IOMAN *pIoman) {
+FF_T_UINT32 FF_CreateClusterChain(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_T_UINT32	iStartCluster;
+	FF_ERROR	Error;
+	*pError = FF_ERR_NONE;
+
 	FF_lockFAT(pIoman);
 	{
-		iStartCluster = FF_FindFreeCluster(pIoman);
-		FF_putFatEntry(pIoman, iStartCluster, 0xFFFFFFFF); // Mark the cluster as EOC
+		iStartCluster = FF_FindFreeCluster(pIoman, &Error);
+		if(Error) {
+			*pError = Error;
+			FF_unlockFAT(pIoman);
+			return 0;
+		}
+
+		if(iStartCluster) {
+			Error = FF_putFatEntry(pIoman, iStartCluster, 0xFFFFFFFF); // Mark the cluster as End-Of-Chain
+			if(Error) {
+				*pError = Error;
+				FF_unlockFAT(pIoman);
+				return 0;
+			}
+		}
 	}
 	FF_unlockFAT(pIoman);
+
+	if(iStartCluster) {
+		Error = FF_DecreaseFreeClusters(pIoman, 1);
+		if(Error) {
+			*pError = Error;
+			return 0;
+		}
+	}
+
 	return iStartCluster;
 }
 
-FF_T_UINT32 FF_GetChainLength(FF_IOMAN *pIoman, FF_T_UINT32 pa_nStartCluster, FF_T_UINT32 *piEndOfChain) {
+FF_T_UINT32 FF_GetChainLength(FF_IOMAN *pIoman, FF_T_UINT32 pa_nStartCluster, FF_T_UINT32 *piEndOfChain, FF_ERROR *pError) {
 	FF_T_UINT32 iLength = 0;
+
+	*pError = FF_ERR_NONE;
 	
 	FF_lockFAT(pIoman);
 	{
 		while(!FF_isEndOfChain(pIoman, pa_nStartCluster)) {
-			pa_nStartCluster = FF_getFatEntry(pIoman, pa_nStartCluster);
+			pa_nStartCluster = FF_getFatEntry(pIoman, pa_nStartCluster, pError);
+			if(*pError) {
+				return 0;
+			}
 			iLength++;
 		}
 		if(piEndOfChain) {
@@ -612,12 +658,13 @@ FF_T_UINT32 FF_ExtendClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF
  *	@return	-1 If the device driver failed to provide access.
  *
  **/
-FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_T_UINT16 Count) {
+FF_ERROR FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_T_UINT16 Count) {
 	
 	FF_T_UINT32 fatEntry;
 	FF_T_UINT32 currentCluster, chainLength = 0;
 	FF_T_UINT32	iLen = 0;
 	FF_T_UINT32 lastFree = StartCluster;	/* HT addition : reset LastFreeCluster */
+	FF_ERROR	Error;
 
 	fatEntry = StartCluster;
 
@@ -626,8 +673,15 @@ FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_
 		currentCluster = StartCluster;
 		fatEntry = currentCluster;
         do {
-			fatEntry = FF_getFatEntry(pIoman, fatEntry);
-			FF_putFatEntry(pIoman, currentCluster, 0x00000000);
+			fatEntry = FF_getFatEntry(pIoman, fatEntry, &Error);
+			if(Error) {
+				return Error;
+			}
+			Error = FF_putFatEntry(pIoman, currentCluster, 0x00000000);
+			if(Error) {
+				return Error;
+			}
+
 			if (lastFree > currentCluster) {
 				lastFree = currentCluster;
 			}
@@ -637,11 +691,17 @@ FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_
 		if (pIoman->pPartition->LastFreeCluster > lastFree) {
 			pIoman->pPartition->LastFreeCluster = lastFree;
 		}
-		FF_IncreaseFreeClusters(pIoman, iLen);
+		Error = FF_IncreaseFreeClusters(pIoman, iLen);
+		if(Error) {
+			return Error;
+		}
 	} else {
 		// Truncation - This is quite hard, because we can only do it backwards.
 		do {
-			fatEntry = FF_getFatEntry(pIoman, fatEntry);
+			fatEntry = FF_getFatEntry(pIoman, fatEntry, &Error);
+			if(Error) {
+				return Error;
+			}
 			chainLength++;
 		}while(!FF_isEndOfChain(pIoman, fatEntry));
 	}
@@ -650,14 +710,19 @@ FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_
 }
 
 #ifdef FF_FAT12_SUPPORT
-FF_T_UINT32 FF_CountFreeClustersOLD(FF_IOMAN *pIoman) {
+FF_T_UINT32 FF_CountFreeClustersOLD(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_T_UINT32 i;
 	FF_T_UINT32 TotalClusters = pIoman->pPartition->DataSectors / pIoman->pPartition->SectorsPerCluster;
 	FF_T_UINT32 FatEntry;
 	FF_T_UINT32 FreeClusters = 0;
 
+	*pError = FF_ERR_NONE;
+
 	for(i = 0; i < TotalClusters; i++) {
-		FatEntry = FF_getFatEntry(pIoman, i);
+		FatEntry = FF_getFatEntry(pIoman, i, pError);
+		if(*pError) {
+			return 0;
+		}
 		if(!FatEntry) {
 			FreeClusters++;
 		}
@@ -668,7 +733,7 @@ FF_T_UINT32 FF_CountFreeClustersOLD(FF_IOMAN *pIoman) {
 #endif
 
 
-FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
+FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_BUFFER	*pBuffer;
 	FF_T_UINT32	i, x, nCluster = 0;
 	FF_T_UINT32	FatOffset;
@@ -678,9 +743,14 @@ FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
 	FF_T_UINT32 FatEntry = 1;
 	FF_T_UINT32	FreeClusters = 0;
 
+	*pError = FF_ERR_NONE;
+
 #ifdef FF_FAT12_SUPPORT
 	if(pIoman->pPartition->Type == FF_T_FAT12) {	// FAT12 tables are too small to optimise, and would make it very complicated!
-		return FF_CountFreeClustersOLD(pIoman);
+		FreeClusters = FF_CountFreeClustersOLD(pIoman, pError);
+		if(*pError) {
+			return 0;
+		}
 	}
 #endif
 
@@ -697,6 +767,10 @@ FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
 	for(i = 0; i < pIoman->pPartition->SectorsPerFAT; i++) {
 		pBuffer = FF_GetBuffer(pIoman, pIoman->pPartition->FatBeginLBA + i, FF_MODE_READ);
 		{
+			if(!pBuffer) {
+				*pError = FF_ERR_DEVICE_DRIVER_FAILED;
+				return 0;
+			}
 			for(x = nCluster % EntriesPerSector; x < EntriesPerSector; x++) {
 				if(pIoman->pPartition->Type == FF_T_FAT32) {
 					FatOffset = x * 4;
@@ -722,15 +796,23 @@ FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
 }
 
 #ifdef FF_64_NUM_SUPPORT
-FF_T_UINT64 FF_GetFreeSize(FF_IOMAN *pIoman) {
+FF_T_UINT64 FF_GetFreeSize(FF_IOMAN *pIoman, FF_ERROR *pError) {
 	FF_T_UINT32 FreeClusters;
 	FF_T_UINT64 FreeSize;
+	FF_ERROR	Error;
 	
 	if(pIoman) {
 		FF_lockFAT(pIoman);
 		{	
 			if(!pIoman->pPartition->FreeClusterCount) {
-				pIoman->pPartition->FreeClusterCount = FF_CountFreeClusters(pIoman);
+				pIoman->pPartition->FreeClusterCount = FF_CountFreeClusters(pIoman, &Error);
+				if(Error) {
+					if(pError) {
+						*pError = Error;
+					}
+					FF_unlockFAT(pIoman);
+					return 0;
+				}
 			}
 			FreeClusters = pIoman->pPartition->FreeClusterCount;
 		}

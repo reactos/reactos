@@ -45,6 +45,7 @@ extern "C" {
 #include "ff_crc.h"
 #include "ff_hash.h"
 #include "ff_string.h"
+#include "ff_unicode.h"
 //#include "ff_format.h"
 
 #ifdef	__cplusplus

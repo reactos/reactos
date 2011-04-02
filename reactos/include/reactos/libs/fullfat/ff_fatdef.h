@@ -86,5 +86,20 @@
 #define FF_FAT_ATTR_ARCHIVE			0x20
 #define FF_FAT_ATTR_LFN				0x0F
 
+/**
+ * -- Hein_Tibosch additions for mixed case in shortnames --
+ *
+ * Specifically, bit 4 means lowercase extension and bit 3 lowercase basename,
+ * which allows for combinations such as "example.TXT" or "HELLO.txt" but not "Mixed.txt"
+ */
+
+#define FF_FAT_CASE_OFFS			0x0C	///< After NT/XP : 2 case bits
+#define FF_FAT_CASE_ATTR_BASE		0x08
+#define FF_FAT_CASE_ATTR_EXT		0x10
+
+#if defined(FF_LFN_SUPPORT) && defined(FF_INCLUDE_SHORT_NAME)
+#define FF_FAT_ATTR_IS_LFN			0x40	///< artificial attribute, for debugging only
+#endif
+
 #endif
 

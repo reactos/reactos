@@ -87,8 +87,8 @@ typedef FF_T_SINT32 (*FF_READ_BLOCKS)	(FF_T_UINT8 *pBuffer, FF_T_UINT32 SectorAd
  *	@brief	Describes the block device driver interface to FullFAT.
  **/
 typedef struct {
-	FF_WRITE_BLOCKS	fnWriteBlocks;	///< Function Pointer, to write a block(s) from a block device.
-	FF_READ_BLOCKS	fnReadBlocks;	///< Function Pointer, to read a block(s) from a block device.
+	FF_WRITE_BLOCKS	fnpWriteBlocks;	///< Function Pointer, to write a block(s) from a block device.
+	FF_READ_BLOCKS	fnpReadBlocks;	///< Function Pointer, to read a block(s) from a block device.
 	FF_T_UINT16		devBlkSize;		///< Block size that the driver deals with.
 	void			*pParam;		///< Pointer to some parameters e.g. for a Low-Level Driver Handle
 } FF_BLK_DEVICE;
@@ -110,13 +110,22 @@ typedef struct {
 } FF_BUFFER;
 
 typedef struct {
+#ifdef FF_UNICODE_SUPPORT
+	FF_T_WCHAR	Path[FF_MAX_PATH];
+#else
 	FF_T_INT8	Path[FF_MAX_PATH];
-	FF_T_UINT32	DirCluster;
-#ifdef FF_HASH_TABLE_SUPPORT
-	FF_HASH_TABLE pHashTable;
-	FF_T_BOOL	bHashed;
 #endif
+	FF_T_UINT32	DirCluster;
 } FF_PATHCACHE;
+
+#ifdef FF_HASH_CACHE
+typedef struct {
+	FF_T_UINT32		ulDirCluster;	///< The Starting Cluster of the dir that the hash represents.
+	FF_HASH_TABLE	pHashTable;		///< Pointer to the Hash Table object.
+	FF_T_UINT32		ulNumHandles;	///< Number of active Handles using this hash table.
+	FF_T_UINT32		ulMisses;		///< Number of times this Hash Table was missed, (i.e. how redundant it is).
+} FF_HASHCACHE;
+#endif
 
 /**
  *	@private
@@ -183,6 +192,9 @@ typedef struct {
 	FF_PARTITION	*pPartition;		///< Pointer to a partition description.
 	FF_BUFFER		*pBuffers;			///< Pointer to the first buffer description.
 	void			*pSemaphore;		///< Pointer to a Semaphore object. (For buffer description modifications only!).
+#ifdef FF_BLKDEV_USES_SEM
+	void			*pBlkDevSemaphore;	///< Semaphore to guarantee Atomic access to the underlying block device, if required.
+#endif
 	void			*FirstFile;			///< Pointer to the first File object.
 	FF_T_UINT8		*pCacheMem;			///< Pointer to a block of memory for the cache.
 	FF_T_UINT32		LastReplaced;		///< Marks which sector was last replaced in the cache.
@@ -191,6 +203,9 @@ typedef struct {
 	FF_T_UINT8		PreventFlush;		///< Flushing to disk only allowed when 0
 	FF_T_UINT8		MemAllocation;		///< Bit-Mask identifying allocated pointers.
 	FF_T_UINT8		Locks;				///< Lock Flag for FAT & DIR Locking etc (This must be accessed via a semaphore).
+#ifdef FF_HASH_CACHE
+	FF_HASHCACHE	HashCache[FF_HASH_CACHE_DEPTH];
+#endif
 } FF_IOMAN;
 
 // Bit-Masks for Memory Allocation testing.
@@ -220,6 +235,8 @@ FF_T_UINT32 FF_GetVolumeSize(FF_IOMAN *pIoman);
 #endif
 
 // PUBLIC  (To FullFAT Only):
+FF_T_SINT32 FF_BlockRead			(FF_IOMAN *pIoman, FF_T_UINT32 ulSectorLBA, FF_T_UINT32 ulNumSectors, void *pBuffer);
+FF_T_SINT32 FF_BlockWrite			(FF_IOMAN *pIoman, FF_T_UINT32 ulSectorLBA, FF_T_UINT32 ulNumSectors, void *pBuffer);
 FF_ERROR	FF_IncreaseFreeClusters	(FF_IOMAN *pIoman, FF_T_UINT32 Count);
 FF_ERROR	FF_DecreaseFreeClusters	(FF_IOMAN *pIoman, FF_T_UINT32 Count);
 FF_BUFFER	*FF_GetBuffer			(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_UINT8 Mode);
