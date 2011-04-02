@@ -19,6 +19,7 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <windows.h>
 #include <time.h>
 #include <locale.h>
@@ -42,11 +43,11 @@ GetOemStrings(UINT rcID, LPWSTR OutMsg)
 
 /* Load data from registry */
 static
-BOOL
-RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR Buf)
+unsigned
+RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR lpBuf, DWORD cchBuf)
 {
-    DWORD dwBytes = BUFFER_SIZE*sizeof(WCHAR), dwType;
-    BOOL bRet = TRUE;
+    DWORD dwBytes = cchBuf*sizeof(WCHAR), dwType;
+    unsigned cChars;
 
     /* If SubKy is specified open it */
     if (lpSubKey && RegOpenKeyExW(hKey,
@@ -56,29 +57,34 @@ RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR Buf)
                                   &hKey) != ERROR_SUCCESS)
     {
         wprintf(L"Warning! Cannot open %s. Last error: %lu.\n", lpSubKey, GetLastError());
-        return FALSE;
+        return 0;
     }
 
     if (RegQueryValueExW(hKey,
                          lpValueName,
                          NULL,
                          &dwType,
-                         (LPBYTE)Buf,
+                         (LPBYTE)lpBuf,
                          &dwBytes) != ERROR_SUCCESS || (dwType != REG_SZ && dwType != REG_MULTI_SZ))
     {
         wprintf(L"Warning! Cannot query %s. Last error: %lu, type: %lu.\n", lpValueName, GetLastError(), dwType);
         dwBytes = 0;
-        bRet = FALSE;
     }
 
     /* Close key if we opened it */
     if (lpSubKey)
         RegCloseKey(hKey);
 
-    /* NULL-terminate string */
-    Buf[min(BUFFER_SIZE-1, dwBytes/sizeof(WCHAR))] = L'\0';
+    cChars = dwBytes/sizeof(WCHAR);
 
-    return bRet;
+    /* NULL-terminate string */
+    lpBuf[min(cchBuf-1, cChars)] = L'\0';
+    
+    /* Don't count NULL characters */
+    while(cChars && !lpBuf[cChars-1])
+        --cChars;
+
+    return cChars;
 }
 
 static
@@ -119,11 +125,12 @@ RegGetDWORD(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpData)
 }
 
 static
-void
-FormatBytes(LPWSTR Buf, unsigned cBytes)
+VOID
+FormatBytes(LPWSTR lpBuf, unsigned cBytes)
 {
     WCHAR szMB[32];
     NUMBERFMTW fmt;
+    unsigned i;
 
     _itow(cBytes / (1024*1024), szMB, 10);
 
@@ -134,15 +141,17 @@ FormatBytes(LPWSTR Buf, unsigned cBytes)
     fmt.lpThousandSep = L" ";
     fmt.NegativeOrder = 0;
 
-    if(!GetNumberFormatW(LOCALE_SYSTEM_DEFAULT, 0, szMB, &fmt, Buf, BUFFER_SIZE))
-        wprintf(L"Error! GetNumberFormat failed.\n");
+    i = GetNumberFormatW(LOCALE_SYSTEM_DEFAULT, 0, szMB, &fmt, lpBuf, BUFFER_SIZE - 3);
+    if (i)
+        --i; /* don't count NULL character */
+    wcscpy(lpBuf + i, L" MB");
 }
 
 static
-void
+VOID
 FormatDateTime(time_t Time, LPWSTR lpBuf)
 {
-    unsigned cchBuf = BUFFER_SIZE, i;
+    unsigned i;
     SYSTEMTIME SysTime;
     const struct tm *lpTm;
 
@@ -156,14 +165,15 @@ FormatDateTime(time_t Time, LPWSTR lpBuf)
     SysTime.wSecond = (WORD)lpTm->tm_sec;
     SysTime.wMilliseconds = 0;
 
-    /* Time first */
-    i = GetDateFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf, cchBuf);
+    /* Copy date first */
+    i = GetDateFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf, BUFFER_SIZE - 2);
     if (i)
         --i; /* don't count NULL character */
 
-    /* Time now */
+    /* Copy time now */
     i += swprintf(lpBuf + i, L", ");
-    GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf + i, cchBuf - i);
+    i += 2;
+    GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf + i, BUFFER_SIZE - i);
 }
 
 /* Show usage */
@@ -175,6 +185,32 @@ Usage(VOID)
 
     if(GetOemStrings(IDS_USAGE, Buf))
         wprintf(L"%s", Buf);
+}
+
+static
+VOID
+PrintRow(UINT nTitleID, unsigned cxOffset, LPWSTR lpFormat, ...)
+{
+    WCHAR Buf[BUFFER_SIZE];
+    va_list Args;
+    unsigned c;
+    
+    if (nTitleID)
+    {
+        c = LoadStringW(GetModuleHandle(NULL), nTitleID, Buf, BUFFER_SIZE);
+        if (!c)
+            return;
+        
+        wcscpy(Buf + c, L":");
+    } else
+        Buf[0] = L'\0';
+    wprintf(L"%-32s ", Buf);
+
+    va_start(Args, lpFormat);
+    vwprintf(lpFormat, Args);
+    va_end(Args);
+
+    wprintf(L"\n");
 }
 
 /* Print all system information */
@@ -189,7 +225,7 @@ AllSysInfo(VOID)
     LPWSTR lpBuffer;
     NETSETUP_JOIN_STATUS NetJoinStatus;
     MEMORYSTATUS MemoryStatus;
-    unsigned int cSeconds;
+    unsigned int cSeconds, i, j;
     TIME_ZONE_INFORMATION TimeZoneInfo;
     HKEY hKey;
 
@@ -205,8 +241,8 @@ AllSysInfo(VOID)
     dwCharCount = BUFFER_SIZE;
     if (!GetComputerNameW(Buf, &dwCharCount))
         wprintf(L"Error! GetComputerName failed.\n");
-    else if (GetOemStrings(IDS_HOST_NAME, Msg))
-        wprintf(Msg, Buf);
+    else
+        PrintRow(IDS_HOST_NAME, 0, L"%s", Buf);
 
     // open CurrentVersion key
     if(RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -220,60 +256,60 @@ AllSysInfo(VOID)
     }
 
     //getting OS Name
-    RegGetSZ(hKey, NULL, L"ProductName", Buf);
-    if (GetOemStrings(IDS_OS_NAME, Msg))
-        wprintf(Msg, Buf);
+    RegGetSZ(hKey, NULL, L"ProductName", Buf, BUFFER_SIZE);
+    PrintRow(IDS_OS_NAME, 0, L"%s", Buf);
 
     //getting OS Version
     ZeroMemory(&VersionInfo, sizeof(VersionInfo));
     VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
     GetVersionExW(&VersionInfo);
 
-    if (GetOemStrings(IDS_OS_VERSION, Msg))
-        wprintf(Msg,
-               (unsigned)VersionInfo.dwMajorVersion,
-               (unsigned)VersionInfo.dwMinorVersion,
-               (unsigned)VersionInfo.dwBuildNumber,
-               VersionInfo.szCSDVersion,
-               (unsigned)VersionInfo.dwBuildNumber);
+    if (!LoadStringW(GetModuleHandle(NULL), IDS_BUILD, Tmp, BUFFER_SIZE))
+        Tmp[0] = L'\0';
+    PrintRow(IDS_OS_VERSION,
+             0,
+             L"%u.%u.%u %s %s %u",
+             (unsigned)VersionInfo.dwMajorVersion,
+             (unsigned)VersionInfo.dwMinorVersion,
+             (unsigned)VersionInfo.dwBuildNumber,
+             VersionInfo.szCSDVersion,
+             Tmp,
+             (unsigned)VersionInfo.dwBuildNumber);
 
     //getting OS Manufacturer
 
     //getting OS Configuration
 
     //getting OS Build Type
-    RegGetSZ(hKey, NULL, L"CurrentType", Buf);
-    if (GetOemStrings(IDS_OS_BUILD_TYPE, Msg))
-        wprintf(Msg, Buf);
+    RegGetSZ(hKey, NULL, L"CurrentType", Buf, BUFFER_SIZE);
+    PrintRow(IDS_OS_BUILD_TYPE, 0, L"%s", Buf);
 
     //getting Registered Owner
-    RegGetSZ(hKey, NULL, L"RegisteredOwner", Buf);
-    if (GetOemStrings(IDS_REG_OWNER, Msg))
-        wprintf(Msg, Buf);
+    RegGetSZ(hKey, NULL, L"RegisteredOwner", Buf, BUFFER_SIZE);
+    PrintRow(IDS_REG_OWNER, 0, L"%s", Buf);
 
     //getting Registered Organization
-    RegGetSZ(hKey, NULL, L"RegisteredOrganization", Buf);
-    if (GetOemStrings(IDS_REG_ORG, Msg))
-        wprintf(Msg, Buf);
+    RegGetSZ(hKey, NULL, L"RegisteredOrganization", Buf, BUFFER_SIZE);
+    PrintRow(IDS_REG_ORG, 0, L"%s", Buf);
 
     //getting Product ID
-    RegGetSZ(hKey, NULL, L"ProductId", Buf);
-    if (GetOemStrings(IDS_PRODUCT_ID, Msg))
-        wprintf(Msg, Buf);
+    RegGetSZ(hKey, NULL, L"ProductId", Buf, BUFFER_SIZE);
+    PrintRow(IDS_PRODUCT_ID, 0, L"%s", Buf);
 
     //getting Install Date
     RegGetDWORD(hKey, NULL, L"InstallDate", &dwTimestamp);
     FormatDateTime((time_t)dwTimestamp, Buf);
-    if (GetOemStrings(IDS_INST_DATE, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_INST_DATE, 0, L"%s", Buf);
 
     // close Current Version key now
     RegCloseKey(hKey);
 
     //getting System Up Time
     cSeconds = GetTickCount() / 1000;
-    if (GetOemStrings(IDS_UP_TIME, Msg))
-        wprintf(Msg, cSeconds / (60*60*24), (cSeconds / (60*60)) % 24, (cSeconds / 60) % 60, cSeconds % 60);
+    if (!LoadStringW(GetModuleHandle(NULL), IDS_UP_TIME_FORMAT, Tmp, BUFFER_SIZE))
+        Tmp[0] = L'\0';
+    swprintf(Buf, Tmp, cSeconds / (60*60*24), (cSeconds / (60*60)) % 24, (cSeconds / 60) % 60, cSeconds % 60);
+    PrintRow(IDS_UP_TIME, 0, L"%s", Buf);
 
     //getting System Manufacturer; HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation\Manufacturer for Win >= 6.0
     swprintf(Tmp, L"%s\\oeminfo.ini", szSystemDir);
@@ -283,8 +319,7 @@ AllSysInfo(VOID)
                              Buf,
                              sizeof(Buf)/sizeof(Buf[0]),
                              Tmp);
-    if (GetOemStrings(IDS_SYS_MANUFACTURER, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_SYS_MANUFACTURER, 0, L"%s", Buf);
 
     //getting System Model; HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation\Model for Win >= 6.0
     GetPrivateProfileStringW(L"General",
@@ -293,8 +328,7 @@ AllSysInfo(VOID)
                              Buf,
                              sizeof(Buf)/sizeof(Buf[0]),
                              Tmp);
-    if (GetOemStrings(IDS_SYS_MODEL, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_SYS_MODEL, 0, L"%s", Buf);
 
     //getting System type
     switch (SysInfo.wProcessorArchitecture)
@@ -312,93 +346,93 @@ AllSysInfo(VOID)
             lpcszSysType = L"Unknown";
             break;
     }
-    if (GetOemStrings(IDS_SYS_TYPE, Msg))
-        wprintf(Msg, lpcszSysType);
+    PrintRow(IDS_SYS_TYPE, 0, L"%s", lpcszSysType);
 
     //getting Processor(s)
-    if (GetOemStrings(IDS_PROCESSORS, Msg))
+    if (!LoadStringW(GetModuleHandle(NULL), IDS_PROCESSORS_FORMAT, Tmp, BUFFER_SIZE))
+        Tmp[0] = L'\0';
+    swprintf(Buf, Tmp, (unsigned)SysInfo.dwNumberOfProcessors);
+    PrintRow(IDS_PROCESSORS, 0, L"%s", Buf);
+    for(i = 0; i < (unsigned int)SysInfo.dwNumberOfProcessors; i++)
     {
-        unsigned int i;
-        wprintf(Msg, (unsigned int)SysInfo.dwNumberOfProcessors);
-        for(i = 0; i < (unsigned int)SysInfo.dwNumberOfProcessors; i++)
-        {
-            swprintf(Tmp, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%u", i);
-
-            RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"Identifier", Buf);
-            wprintf(L"                        [%02u]: %s", i+1, Buf);
-
-            RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"VendorIdentifier", Buf);
-            wprintf(L" %s\n", Buf);
-        }
+        swprintf(Tmp, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%u", i);
+        j = swprintf(Buf, L"[%02u]: ", i + 1);
+        
+        j += RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"Identifier", Buf + j, BUFFER_SIZE - j);
+        if(j + 1 < BUFFER_SIZE)
+            Buf[j++] = L' ';
+        RegGetSZ(HKEY_LOCAL_MACHINE, Tmp, L"VendorIdentifier", Buf + j, BUFFER_SIZE - j);
+        
+        PrintRow(0, 0, L"%s", Buf);
     }
 
     //getting BIOS Version
     RegGetSZ(HKEY_LOCAL_MACHINE,
              L"HARDWARE\\DESCRIPTION\\System",
              L"SystemBiosVersion",
-             Buf);
-    if (GetOemStrings(IDS_BIOS_VERSION, Msg))
-        wprintf(Msg, Buf);
+             Buf,
+             BUFFER_SIZE);
+    PrintRow(IDS_BIOS_VERSION, 0, L"%s", Buf);
 
     //gettings BIOS date
     RegGetSZ(HKEY_LOCAL_MACHINE,
              L"HARDWARE\\DESCRIPTION\\System",
              L"SystemBiosDate",
-             Buf);
-    if (GetOemStrings(IDS_BIOS_DATE, Msg))
-        wprintf(Msg, Buf);
+             Buf,
+             BUFFER_SIZE);
+    PrintRow(IDS_BIOS_DATE, 0, L"%s", Buf);
 
     //getting ReactOS Directory
     if (!GetWindowsDirectoryW(Buf, BUFFER_SIZE))
         wprintf(L"Error! GetWindowsDirectory failed.");
-    else if (GetOemStrings(IDS_ROS_DIR, Msg))
-        wprintf(Msg, Buf);
+    else
+        PrintRow(IDS_ROS_DIR, 0, L"%s", Buf);
 
     //getting System Directory
-    if (GetOemStrings(IDS_SYS_DIR, Msg))
-        wprintf(Msg, szSystemDir);
+    PrintRow(IDS_SYS_DIR, 0, L"%s", szSystemDir);
 
     //getting Boot Device
     RegGetSZ(HKEY_LOCAL_MACHINE,
              L"SYSTEM\\Setup",
              L"SystemPartition",
-             Buf);
-    if (GetOemStrings(IDS_BOOT_DEV, Msg))
-        wprintf(Msg, Buf);
+             Buf,
+             BUFFER_SIZE);
+    PrintRow(IDS_BOOT_DEV, 0, L"%s", Buf);
 
     //getting System Locale
     if (GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Tmp, BUFFER_SIZE))
         if (RegGetSZ(HKEY_CLASSES_ROOT,
                      L"MIME\\Database\\Rfc1766",
                      Tmp,
-                     Buf))
+                     Buf,
+                     BUFFER_SIZE))
         {
             /* get rid of @filename,resource */
             lpBuffer = wcschr(Buf, L';');
             if (lpBuffer)
                 SHLoadIndirectString(lpBuffer+1, lpBuffer+1, BUFFER_SIZE - (lpBuffer-Buf) - 1, NULL);
 
-            if (GetOemStrings(IDS_SYS_LOCALE, Msg))
-                wprintf(Msg, Buf);
+            PrintRow(IDS_SYS_LOCALE, 0, L"%s", Buf);
         }
 
     //getting Input Locale
     if (RegGetSZ(HKEY_CURRENT_USER,
                  L"Keyboard Layout\\Preload",
                  L"1",
-                 Tmp) && wcslen(Tmp) > 4)
+                 Tmp,
+                 BUFFER_SIZE) && wcslen(Tmp) > 4)
         if (RegGetSZ(HKEY_CLASSES_ROOT,
                      L"MIME\\Database\\Rfc1766",
                      Tmp + 4,
-                     Buf))
+                     Buf,
+                     BUFFER_SIZE))
         {
             /* get rid of @filename,resource */
             lpBuffer = wcschr(Buf, L';');
             if (lpBuffer)
                 SHLoadIndirectString(lpBuffer+1, lpBuffer+1, BUFFER_SIZE - (lpBuffer-Buf) - 1, NULL);
 
-            if (GetOemStrings(IDS_INPUT_LOCALE, Msg))
-                wprintf(Msg, Buf);
+            PrintRow(IDS_INPUT_LOCALE, 0, L"%s", Buf);
         }
 
     //getting Time Zone
@@ -417,14 +451,13 @@ AllSysInfo(VOID)
         dwCharCount = 256; // Windows seems to have a bug - it doesnt accept BUFFER_SIZE here
         for(i = 0; RegEnumKeyExW(hKey, i, Tmp, &dwCharCount, NULL, NULL, NULL, NULL) == ERROR_SUCCESS; ++i, dwCharCount = 255)
         {
-            RegGetSZ(hKey, Tmp, L"Std", Buf);
+            RegGetSZ(hKey, Tmp, L"Std", Buf, BUFFER_SIZE);
 
             if(!wcscmp(Buf, TimeZoneInfo.StandardName))
             {
-                RegGetSZ(hKey, Tmp, L"Display", Buf);
+                RegGetSZ(hKey, Tmp, L"Display", Buf, BUFFER_SIZE);
 
-                if (GetOemStrings(IDS_TIME_ZONE, Msg))
-                    wprintf(Msg, Buf);
+                PrintRow(IDS_TIME_ZONE, 0, L"%s", Buf);
 
                 break;
             }
@@ -435,55 +468,49 @@ AllSysInfo(VOID)
     //getting Total Physical Memory
     GlobalMemoryStatus(&MemoryStatus);
     FormatBytes(Buf, MemoryStatus.dwTotalPhys);
-    if (GetOemStrings(IDS_TOTAL_PHYS_MEM, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_TOTAL_PHYS_MEM, 0, L"%s", Buf);
 
     //getting Available Physical Memory
     FormatBytes(Buf, MemoryStatus.dwAvailPhys);
-    if (GetOemStrings(IDS_AVAIL_PHISICAL_MEM,Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_AVAIL_PHISICAL_MEM, 0, L"%s", Buf);
 
     //getting Virtual Memory: Max Size
     FormatBytes(Buf, MemoryStatus.dwTotalVirtual);
-    if (GetOemStrings(IDS_VIRT_MEM_MAX, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_VIRT_MEM_MAX, 0, L"%s", Buf);
 
     //getting Virtual Memory: Available
     FormatBytes(Buf, MemoryStatus.dwAvailVirtual);
-    if (GetOemStrings(IDS_VIRT_MEM_AVAIL, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_VIRT_MEM_AVAIL, 0, L"%s", Buf);
 
     //getting Virtual Memory: In Use
     FormatBytes(Buf, MemoryStatus.dwTotalVirtual-MemoryStatus.dwAvailVirtual);
-    if (GetOemStrings(IDS_VIRT_MEM_INUSE, Msg))
-        wprintf(Msg, Buf);
+    PrintRow(IDS_VIRT_MEM_INUSE, 0, L"%s", Buf);
 
     //getting Page File Location(s)
     if (RegGetSZ(HKEY_LOCAL_MACHINE,
                  L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
                  L"PagingFiles",
-                 Buf))
+                 Buf,
+                 BUFFER_SIZE))
     {
         int i;
 
-        for(i = 0; i < strlen((char*)Buf); i++)
+        for(i = 0; Buf[i]; i++)
         {
-            if (Buf[i] == TEXT(' '))
+            if (Buf[i] == L' ')
             {
-                Buf[i] = TEXT('\0');
+                Buf[i] = L'\0';
                 break;
             }
         }
 
-        if(GetOemStrings(IDS_PAGEFILE_LOC, Msg))
-            wprintf(Msg, Buf);
+        PrintRow(IDS_PAGEFILE_LOC, 0, L"%s", Buf);
     }
 
     //getting Domain
     if (NetGetJoinInformation (NULL, &lpBuffer, &NetJoinStatus) == NERR_Success)
     {
-        if(GetOemStrings(IDS_DOMAIN, Msg))
-            wprintf(Msg, lpBuffer);
+        PrintRow(IDS_DOMAIN, 0, L"%s", lpBuffer);
 
         NetApiBufferFree(lpBuffer);
     }
