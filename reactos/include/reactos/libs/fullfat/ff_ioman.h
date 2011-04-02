@@ -100,10 +100,10 @@ typedef struct {
  **/
 typedef struct {
 	FF_T_UINT32		Sector;			///< The LBA of the Cached sector.
-	FF_T_UINT8		Mode;			///< Read or Write mode.
+	FF_T_UINT32		LRU;			///< For the Least Recently Used algorithm.
 	FF_T_UINT16		NumHandles;		///< Number of objects using this buffer.
 	FF_T_UINT16		Persistance;	///< For the persistance algorithm.
-	FF_T_UINT32		LRU;			///< For the Least Recently Used algorithm.
+	FF_T_UINT8		Mode;			///< Read or Write mode.
 	FF_T_BOOL		Modified;		///< If the sector was modified since read.
 	FF_T_BOOL		Valid;			///< Initially FALSE.
 	FF_T_UINT8		*pBuffer;		///< Pointer to the cache block.
@@ -129,7 +129,7 @@ typedef struct {
 	FF_T_UINT16		BlkSize;			///< Size of a Sector Block in bytes.
 	FF_T_UINT8      BlkFactor;			///< Scale Factor for blocksizes above 512!
 	//FF_T_INT8		Name[FF_MAX_PARTITION_NAME];	///< Partition Identifier e.g. c: sd0: etc.
-	//FF_T_INT8		VolLabel[12];		///< Volume Label of the partition.
+	FF_T_INT8		VolLabel[12];		///< Volume Label of the partition.
 	FF_T_UINT32		BeginLBA;			///< LBA start address of the partition.
 	FF_T_UINT32		PartSize;			///< Size of Partition in number of sectors.
 	FF_T_UINT32		FatBeginLBA;		///< LBA of the FAT tables.
@@ -182,14 +182,15 @@ typedef struct {
 	FF_BLK_DEVICE	*pBlkDevice;		///< Pointer to a Block device description.
 	FF_PARTITION	*pPartition;		///< Pointer to a partition description.
 	FF_BUFFER		*pBuffers;			///< Pointer to the first buffer description.
-	FF_T_UINT32		LastReplaced;		///< Marks which sector was last replaced in the cache.
-	FF_T_UINT16		BlkSize;			///< The Block size that IOMAN is configured to.
-	FF_T_UINT8		*pCacheMem;			///< Pointer to a block of memory for the cache.
-	FF_T_UINT16		CacheSize;			///< Size of the cache in number of Sectors.
-	FF_T_UINT8		MemAllocation;		///< Bit-Mask identifying allocated pointers.
-	FF_T_UINT8		Locks;				///< Lock Flag for FAT & DIR Locking etc (This must be accessed via a semaphore).
 	void			*pSemaphore;		///< Pointer to a Semaphore object. (For buffer description modifications only!).
 	void			*FirstFile;			///< Pointer to the first File object.
+	FF_T_UINT8		*pCacheMem;			///< Pointer to a block of memory for the cache.
+	FF_T_UINT32		LastReplaced;		///< Marks which sector was last replaced in the cache.
+	FF_T_UINT16		BlkSize;			///< The Block size that IOMAN is configured to.
+	FF_T_UINT16		CacheSize;			///< Size of the cache in number of Sectors.
+	FF_T_UINT8		PreventFlush;		///< Flushing to disk only allowed when 0
+	FF_T_UINT8		MemAllocation;		///< Bit-Mask identifying allocated pointers.
+	FF_T_UINT8		Locks;				///< Lock Flag for FAT & DIR Locking etc (This must be accessed via a semaphore).
 } FF_IOMAN;
 
 // Bit-Masks for Memory Allocation testing.

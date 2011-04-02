@@ -74,13 +74,24 @@
 								// within the same path. E.g. a copy \dir1\*.* \dir2\*.* command.
 								// This command requires FF_MAX_PATH number of bytes of memory. (Defined below, default 2600).
 
+//---------- BLKDEV USES SEMAPHORE
+#define FF_BLKDEV_USES_SEM		// When defined, each call to fnReadBlocks and fnWriteBlocks will be done while semaphore is locked
+								// See also ff_safety.c
+								// (HT addition)
+
 
 #define FF_PATH_CACHE_DEPTH	2	// The Number of PATH's to Cache.
 
 //---------- DON'T USE MALLOC
 //#define FF_NO_MALLOC
 
-//---------- DON'T 
+#define	FF_MALLOC(aSize)		malloc(aSize)
+#define	FF_FREE(apPtr)			free(apPtr)
+
+//#define FF_INLINE_MEMORY_ACCESS
+
+//#define FF_INLINE static __forceinline	// Keywords to inline functions (Windows)
+#define FF_INLINE static inline				// Standard for GCC
 
 
 //---------- Hash Table Support
@@ -117,7 +128,7 @@
 //---------- AUTOMATIC SETTINGS DO NOT EDIT -- These configure your options from above, and check sanity!
 
 #ifdef FF_LFN_SUPPORT
-#define FF_MAX_FILENAME		260
+#define FF_MAX_FILENAME		(129)
 #else
 #define	FF_MAX_FILENAME		13
 #endif

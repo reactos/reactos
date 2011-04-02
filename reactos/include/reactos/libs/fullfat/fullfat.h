@@ -32,6 +32,10 @@
 #ifndef _FULLFAT_H_
 #define _FULLFAT_H_
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #include "ff_config.h"
 #include "ff_ioman.h"
 #include "ff_fat.h"
@@ -41,6 +45,10 @@
 #include "ff_crc.h"
 #include "ff_hash.h"
 #include "ff_string.h"
+//#include "ff_format.h"
 
+#ifdef	__cplusplus
+}	// extern "C"
+#endif
 
 #endif

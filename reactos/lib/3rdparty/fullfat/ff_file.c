@@ -163,7 +163,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 		}
 		return (FF_FILE *)NULL;
 	}
-	pFile = FF_Malloc(sizeof(FF_FILE));
+	pFile = FF_MALLOC(sizeof(FF_FILE));
 	if(!pFile) {
 		if(pError) {
 			*pError = FF_ERR_NOT_ENOUGH_MEMORY;
@@ -222,7 +222,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 			if(Object.Attrib == FF_FAT_ATTR_DIR) {
 				if(!(pFile->Mode & FF_MODE_DIR)) {
 					// Not the object, File Not Found!
-					FF_Free(pFile);
+					FF_FREE(pFile);
 					if(pError) {
 						*pError = FF_ERR_FILE_OBJECT_IS_A_DIR;
 					}
@@ -233,7 +233,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 			//---------- Ensure Read-Only files don't get opened for Writing.
 			if((pFile->Mode & FF_MODE_WRITE) || (pFile->Mode & FF_MODE_APPEND)) {
 				if((Object.Attrib & FF_FAT_ATTR_READONLY)) {
-					FF_Free(pFile);
+					FF_FREE(pFile);
 					if(pError) {
 						*pError = FF_ERR_FILE_IS_READ_ONLY;
 					}
@@ -276,7 +276,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 						if(pFileChain->ObjectCluster == pFile->ObjectCluster) {
 							// File is already open! DON'T ALLOW IT!
 							FF_ReleaseSemaphore(pIoman->pSemaphore);
-							FF_Free(pFile);
+							FF_FREE(pFile);
 							if(pError) {
 								*pError = FF_ERR_FILE_ALREADY_OPEN;
 							}
@@ -294,7 +294,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 
 			return pFile;
 		}else {
-			FF_Free(pFile);
+			FF_FREE(pFile);
 			if(pError) {
 				*pError = FF_ERR_FILE_NOT_FOUND;
 			}
@@ -305,7 +305,7 @@ FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ER
 		*pError = FF_ERR_FILE_INVALID_PATH;
 	}
 
-	FF_Free(pFile);
+	FF_FREE(pFile);
 
 	return (FF_FILE *)NULL;
 }
@@ -600,7 +600,14 @@ static FF_T_SINT32 FF_ReadClusters(FF_FILE *pFile, FF_T_UINT32 Count, FF_T_UINT8
 
 		do {
 			if(pFile->pIoman->pBlkDevice->fnReadBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+				FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
+				// Called from FF_Read, sem not claimed
 				RetVal = pFile->pIoman->pBlkDevice->fnReadBlocks(buffer, nItemLBA, Sectors, pFile->pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+				FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
 					FF_Sleep(FF_DRIVER_BUSY_SLEEP);
@@ -703,7 +710,14 @@ static FF_T_SINT32 FF_WriteClusters(FF_FILE *pFile, FF_T_UINT32 Count, FF_T_UINT
 
 		do {
 			if(pFile->pIoman->pBlkDevice->fnWriteBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+				FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
+				// Called from FF_Write, sem not claimed
 				RetVal = pFile->pIoman->pBlkDevice->fnWriteBlocks(buffer, nItemLBA, Sectors, pFile->pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+				FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
 					FF_Sleep(FF_DRIVER_BUSY_SLEEP);
@@ -832,7 +846,13 @@ FF_T_SINT32 FF_Read(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count, 
 			
 			do {
 				if(pIoman->pBlkDevice->fnReadBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
 					RetVal = pFile->pIoman->pBlkDevice->fnReadBlocks(buffer, nItemLBA, sSectors, pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				}
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
@@ -887,7 +907,13 @@ FF_T_SINT32 FF_Read(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count, 
 			
 			do {
 				if(pIoman->pBlkDevice->fnReadBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
 					RetVal = pFile->pIoman->pBlkDevice->fnReadBlocks(buffer, nItemLBA, sSectors, pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				}
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
@@ -1116,7 +1142,13 @@ FF_T_SINT32 FF_Write(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count,
 			
 			do {
 				if(pIoman->pBlkDevice->fnWriteBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
 					RetVal = pFile->pIoman->pBlkDevice->fnWriteBlocks(buffer, nItemLBA, sSectors, pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				}
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
@@ -1174,7 +1206,13 @@ FF_T_SINT32 FF_Write(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count,
 			
 			do {
 				if(pIoman->pBlkDevice->fnWriteBlocks) {
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_PendSemaphore(pFile->pIoman->pSemaphore);
+#endif
 					RetVal = pFile->pIoman->pBlkDevice->fnWriteBlocks(buffer, nItemLBA, sSectors, pIoman->pBlkDevice->pParam);
+#ifdef	FF_BLKDEV_USES_SEM
+					FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
+#endif
 				}
 				if(RetVal == FF_ERR_DRIVER_BUSY) {
 					FF_Yield();
@@ -1405,7 +1443,7 @@ FF_ERROR FF_Close(FF_FILE *pFile) {
 	FF_ReleaseSemaphore(pFile->pIoman->pSemaphore);
 
 	// If file written, flush to disk
-	FF_Free(pFile);
+	FF_FREE(pFile);
 	// Simply free the pointer!
 	return FF_ERR_NONE;
 }

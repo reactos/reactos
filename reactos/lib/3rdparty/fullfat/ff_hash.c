@@ -53,7 +53,7 @@ struct _FF_HASH_TABLE {
  *
  **/
 FF_HASH_TABLE FF_CreateHashTable() {
-	FF_HASH_TABLE pHash = (FF_HASH_TABLE) FF_Malloc(sizeof(struct _FF_HASH_TABLE));
+	FF_HASH_TABLE pHash = (FF_HASH_TABLE) FF_MALLOC(sizeof(struct _FF_HASH_TABLE));
 
 	if(pHash) {
 		FF_ClearHashTable(pHash);
@@ -110,7 +110,7 @@ FF_T_BOOL FF_isHashSet(FF_HASH_TABLE pHash, FF_T_UINT32 nHash) {
 
 FF_ERROR FF_DestroyHashTable(FF_HASH_TABLE pHash) {
 	if(pHash) {
-		free(pHash);
+		FF_FREE(pHash);
 		return FF_ERR_NONE;
 	}
 	return FF_ERR_NULL_POINTER;

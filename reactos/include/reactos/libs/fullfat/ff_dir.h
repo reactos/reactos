@@ -43,7 +43,7 @@
 #include "ff_ioman.h"
 #include "ff_blk.h"
 #include "ff_fat.h"
-#include "fat.h"
+#include "ff_fatdef.h"
 #include "ff_memory.h"
 #include "ff_time.h"
 #include "ff_hash.h"

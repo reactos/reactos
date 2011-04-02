@@ -39,7 +39,7 @@
 #define _FF_FAT_H_
 
 #include "ff_config.h"
-#include "fat.h"
+#include "ff_fatdef.h"
 #include "ff_ioman.h"
 #include "ff_blk.h"
 #include "ff_types.h"

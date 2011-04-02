@@ -136,13 +136,13 @@ FF_T_SINT32 FF_getFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster) {
 	FatSectorEntry	= FatOffset % pIoman->pPartition->BlkSize;
 	
 	LBAadjust		= (FF_T_UINT8)	(FatSectorEntry / pIoman->BlkSize);
-	relClusterEntry = (FF_T_UINT16) (FatSectorEntry % pIoman->BlkSize);
+	relClusterEntry = (FF_T_UINT32) (FatSectorEntry % pIoman->BlkSize);
 	
 	FatSector = FF_getRealLBA(pIoman, FatSector);
 	
 #ifdef FF_FAT12_SUPPORT
 	if(pIoman->pPartition->Type == FF_T_FAT12) {
-		if(relClusterEntry == (pIoman->BlkSize - 1)) {
+		if(relClusterEntry == (FF_T_UINT32)(pIoman->BlkSize - 1)) {
 			// Fat Entry SPANS a Sector!
 			// First Buffer get the last Byte in buffer (first byte of our address)!
 			pBuffer = FF_GetBuffer(pIoman, FatSector + LBAadjust, FF_MODE_READ);
@@ -333,7 +333,7 @@ FF_T_SINT8 FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Va
 	FF_T_UINT32 FatSectorEntry;
 	FF_T_UINT32 FatEntry;
 	FF_T_UINT8	LBAadjust;
-	FF_T_UINT16 relClusterEntry;
+	FF_T_UINT32 relClusterEntry;
 #ifdef FF_FAT12_SUPPORT	
 	FF_T_UINT8	F12short[2];		// For FAT12 FAT Table Across sector boundary traversal.
 #endif
@@ -350,13 +350,13 @@ FF_T_SINT8 FF_putFatEntry(FF_IOMAN *pIoman, FF_T_UINT32 nCluster, FF_T_UINT32 Va
 	FatSectorEntry = FatOffset % pIoman->pPartition->BlkSize;
 	
 	LBAadjust = (FF_T_UINT8) (FatSectorEntry / pIoman->BlkSize);
-	relClusterEntry = (FF_T_UINT16)(FatSectorEntry % pIoman->BlkSize);
+	relClusterEntry = (FF_T_UINT32)(FatSectorEntry % pIoman->BlkSize);
 	
 	FatSector = FF_getRealLBA(pIoman, FatSector);
 
 #ifdef FF_FAT12_SUPPORT	
 	if(pIoman->pPartition->Type == FF_T_FAT12) {
-		if(relClusterEntry == (FF_T_UINT16) (pIoman->BlkSize - 1)) {
+		if(relClusterEntry == (FF_T_UINT32)(pIoman->BlkSize - 1)) {
 			// Fat Entry SPANS a Sector!
 			// First Buffer get the last Byte in buffer (first byte of our address)!
 			pBuffer = FF_GetBuffer(pIoman, FatSector + LBAadjust, FF_MODE_READ);
@@ -497,6 +497,11 @@ FF_T_UINT32 FF_FindFreeCluster(FF_IOMAN *pIoman) {
 	for(i = FatSector; i < pIoman->pPartition->SectorsPerFAT; i++) {
 		pBuffer = FF_GetBuffer(pIoman, pIoman->pPartition->FatBeginLBA + i, FF_MODE_READ);
 		{
+			// HT addition: don't use non-existing clusters
+			if (nCluster >= pIoman->pPartition->NumClusters) {
+				FF_ReleaseBuffer(pIoman, pBuffer);
+				return 0;
+			}
 			for(x = nCluster % EntriesPerSector; x < EntriesPerSector; x++) {
 				if(pIoman->pPartition->Type == FF_T_FAT32) {
 					FatOffset = x * 4;
@@ -612,6 +617,7 @@ FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_
 	FF_T_UINT32 fatEntry;
 	FF_T_UINT32 currentCluster, chainLength = 0;
 	FF_T_UINT32	iLen = 0;
+	FF_T_UINT32 lastFree = StartCluster;	/* HT addition : reset LastFreeCluster */
 
 	fatEntry = StartCluster;
 
@@ -622,9 +628,15 @@ FF_T_SINT8 FF_UnlinkClusterChain(FF_IOMAN *pIoman, FF_T_UINT32 StartCluster, FF_
         do {
 			fatEntry = FF_getFatEntry(pIoman, fatEntry);
 			FF_putFatEntry(pIoman, currentCluster, 0x00000000);
+			if (lastFree > currentCluster) {
+				lastFree = currentCluster;
+			}
 			currentCluster = fatEntry;
 			iLen ++;
 		}while(!FF_isEndOfChain(pIoman, fatEntry));
+		if (pIoman->pPartition->LastFreeCluster > lastFree) {
+			pIoman->pPartition->LastFreeCluster = lastFree;
+		}
 		FF_IncreaseFreeClusters(pIoman, iLen);
 	} else {
 		// Truncation - This is quite hard, because we can only do it backwards.
@@ -694,7 +706,7 @@ FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
 				} else {
 					FatOffset = x * 2;
 					FatSectorEntry	= FatOffset % pIoman->pPartition->BlkSize;
-					FatEntry = (FF_T_UINT32) FF_getShort(pBuffer->pBuffer, (FF_T_UINT16)FatSectorEntry);
+					FatEntry = (FF_T_UINT32) FF_getShort(pBuffer->pBuffer, FatSectorEntry);
 				}
 				if(FatEntry == 0x00000000) {
 					FreeClusters += 1;
@@ -706,7 +718,7 @@ FF_T_UINT32 FF_CountFreeClusters(FF_IOMAN *pIoman) {
 		FF_ReleaseBuffer(pIoman, pBuffer);
 	}
 
-	return FreeClusters;
+	return FreeClusters <= pIoman->pPartition->NumClusters ? FreeClusters : pIoman->pPartition->NumClusters;
 }
 
 #ifdef FF_64_NUM_SUPPORT

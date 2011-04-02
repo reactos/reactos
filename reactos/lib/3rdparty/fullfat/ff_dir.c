@@ -1769,4 +1769,3 @@ void FF_RmLFNs(FF_IOMAN *pIoman, FF_T_UINT32 DirCluster, FF_T_UINT16 DirEntry) {
 	}while(FF_getChar(EntryBuffer, (FF_T_UINT16)(FF_FAT_DIRENT_ATTRIB)) == FF_FAT_ATTR_LFN);
 
 }
-

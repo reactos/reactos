@@ -42,8 +42,10 @@
  *	Destroying a FullFAT IO object.
  **/
 
+#include <string.h>
+
 #include "ff_ioman.h"	// Includes ff_types.h, ff_safety.h, <stdio.h>
-#include "fat.h"
+#include "ff_fatdef.h"
 
 extern FF_T_UINT32 FF_FindFreeCluster		(FF_IOMAN *pIoman);
 extern FF_T_UINT32 FF_CountFreeClusters		(FF_IOMAN *pIoman);
@@ -89,7 +91,7 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 		return NULL;	// Memory Size not a multiple of BlkSize > 0
 	}
 
-	pIoman = (FF_IOMAN *) FF_Malloc(sizeof(FF_IOMAN));
+	pIoman = (FF_IOMAN *) FF_MALLOC(sizeof(FF_IOMAN));
 
 	if(!pIoman) {		// Ensure malloc() succeeded.
 		if(pError) {
@@ -98,62 +100,68 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 		return NULL;
 	}
 
+	memset (pIoman, '\0', sizeof(FF_IOMAN));
+
 	// This is just a bit-mask, to use a byte to keep track of memory.
 	// pIoman->MemAllocation = 0x00;	// Unset all allocation identifiers.
-	pIoman->pBlkDevice	= NULL;
-	pIoman->pBuffers	= NULL;
-	pIoman->pCacheMem	= NULL;
-	pIoman->pPartition	= NULL;
-	pIoman->pSemaphore	= NULL;
-
-	pIoman->pPartition	= (FF_PARTITION  *) FF_Malloc(sizeof(FF_PARTITION));
-	if(pIoman->pPartition) {	// If succeeded, flag that allocation.
-		pIoman->MemAllocation |= FF_IOMAN_ALLOC_PART;
-		pIoman->pPartition->LastFreeCluster = 0;
-		pIoman->pPartition->PartitionMounted = FF_FALSE;	// This should be checked by FF_Open();
-#ifdef FF_PATH_CACHE
-		pIoman->pPartition->PCIndex = 0;
-		for(i = 0; i < FF_PATH_CACHE_DEPTH; i++) {
-			pIoman->pPartition->PathCache[i].DirCluster = 0;
-			pIoman->pPartition->PathCache[i].Path[0] = '\0';
-#ifdef FF_HASH_TABLE_SUPPORT
-			pIoman->pPartition->PathCache[i].pHashTable = FF_CreateHashTable();
-			pIoman->pPartition->PathCache[i].bHashed = FF_FALSE;
-#endif
+	pIoman->pPartition	= (FF_PARTITION  *) FF_MALLOC(sizeof(FF_PARTITION));
+	if(!pIoman->pPartition) {
+		if(pError) {
+			*pError = FF_ERR_NOT_ENOUGH_MEMORY;
 		}
+		FF_DestroyIOMAN(pIoman);
+		return NULL;
+	}
+	memset (pIoman->pPartition, '\0', sizeof(FF_PARTITION));
+
+	pIoman->MemAllocation |= FF_IOMAN_ALLOC_PART;	// If succeeded, flag that allocation.
+	pIoman->pPartition->LastFreeCluster = 0;
+	pIoman->pPartition->PartitionMounted = FF_FALSE;	// This should be checked by FF_Open();
+#ifdef FF_PATH_CACHE
+	pIoman->pPartition->PCIndex = 0;
+	for(i = 0; i < FF_PATH_CACHE_DEPTH; i++) {
+		pIoman->pPartition->PathCache[i].DirCluster = 0;
+		pIoman->pPartition->PathCache[i].Path[0] = '\0';
+#ifdef FF_HASH_TABLE_SUPPORT
+		pIoman->pPartition->PathCache[i].pHashTable = FF_CreateHashTable();
+		pIoman->pPartition->PathCache[i].bHashed = FF_FALSE;
 #endif
-	} else {
+	}
+#endif
+
+	pIoman->pBlkDevice	= (FF_BLK_DEVICE *) FF_MALLOC(sizeof(FF_BLK_DEVICE));
+	if(!pIoman->pBlkDevice) {	// If succeeded, flag that allocation.
+		if(pError) {
+			*pError = FF_ERR_NOT_ENOUGH_MEMORY;
+		}
 		FF_DestroyIOMAN(pIoman);
 		return NULL;
 	}
+	memset (pIoman->pBlkDevice, '\0', sizeof(FF_BLK_DEVICE));
+	pIoman->MemAllocation |= FF_IOMAN_ALLOC_BLKDEV;
 
-	pIoman->pBlkDevice	= (FF_BLK_DEVICE *) FF_Malloc(sizeof(FF_BLK_DEVICE));
-	if(pIoman->pBlkDevice) {	// If succeeded, flag that allocation.
-		pIoman->MemAllocation |= FF_IOMAN_ALLOC_BLKDEV;
-
-		// Make sure all pointers are NULL
-		pIoman->pBlkDevice->fnReadBlocks = NULL;
-		pIoman->pBlkDevice->fnWriteBlocks = NULL;
-		pIoman->pBlkDevice->pParam = NULL;
-
-	} else {
-		FF_DestroyIOMAN(pIoman);
-		return NULL;
-	}
+	// Make sure all pointers are NULL
+	pIoman->pBlkDevice->fnReadBlocks = NULL;
+	pIoman->pBlkDevice->fnWriteBlocks = NULL;
+	pIoman->pBlkDevice->pParam = NULL;
 
 	// Organise the memory provided, or create our own!
 	if(pCacheMem) {
 		pIoman->pCacheMem = pCacheMem;
 	}else {	// No-Cache buffer provided (malloc)
-		pLong = (FF_T_UINT32 *) FF_Malloc(Size);
+		pLong = (FF_T_UINT32 *) FF_MALLOC(Size);
 		pIoman->pCacheMem = (FF_T_UINT8 *) pLong;
 		if(!pIoman->pCacheMem) {
-			pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFFERS;
+			if(pError) {
+				*pError = FF_ERR_NOT_ENOUGH_MEMORY;
+			}
 			FF_DestroyIOMAN(pIoman);
 			return NULL;
 		}
+		pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFFERS;
 
 	}
+	memset (pIoman->pCacheMem, '\0', Size);
 
 	pIoman->BlkSize		 = BlkSize;
 	pIoman->CacheSize	 = (FF_T_UINT16) (Size / BlkSize);
@@ -163,14 +171,19 @@ FF_IOMAN *FF_CreateIOMAN(FF_T_UINT8 *pCacheMem, FF_T_UINT32 Size, FF_T_UINT16 Bl
 	/*	Malloc() memory for buffer objects. (FullFAT never refers to a buffer directly
 		but uses buffer objects instead. Allows us to provide thread safety.
 	*/
-	pIoman->pBuffers = (FF_BUFFER *) FF_Malloc(sizeof(FF_BUFFER) * pIoman->CacheSize);
+	pIoman->pBuffers = (FF_BUFFER *) FF_MALLOC(sizeof(FF_BUFFER) * pIoman->CacheSize);
 
-	if(pIoman->pBuffers) {
-		pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFDESCR;
-		FF_IOMAN_InitBufferDescriptors(pIoman);
-	} else {
+	if(!pIoman->pBuffers) {
+		if(pError) {
+			*pError = FF_ERR_NOT_ENOUGH_MEMORY;
+		}
 		FF_DestroyIOMAN(pIoman);
+		return NULL;	// HT added
 	}
+	memset (pIoman->pBuffers, '\0', sizeof(FF_BUFFER) * pIoman->CacheSize);
+
+	pIoman->MemAllocation |= FF_IOMAN_ALLOC_BUFDESCR;
+	FF_IOMAN_InitBufferDescriptors(pIoman);
 
 	// Finally create a Semaphore for Buffer Description modifications.
 	pIoman->pSemaphore = FF_CreateSemaphore();
@@ -196,22 +209,22 @@ FF_ERROR FF_DestroyIOMAN(FF_IOMAN *pIoman) {
 
 	// Ensure pPartition pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_PART)) {
-		FF_Free(pIoman->pPartition);
+		FF_FREE(pIoman->pPartition);
 	}
 
 	// Ensure pBlkDevice pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BLKDEV)) {
-		FF_Free(pIoman->pBlkDevice);
+		FF_FREE(pIoman->pBlkDevice);
 	}
 
 	// Ensure pBuffers pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BUFDESCR)) {
-		FF_Free(pIoman->pBuffers);
+		FF_FREE(pIoman->pBuffers);
 	}
 
 	// Ensure pCacheMem pointer was allocated.
 	if((pIoman->MemAllocation & FF_IOMAN_ALLOC_BUFFERS)) {
-		FF_Free(pIoman->pCacheMem);
+		FF_FREE(pIoman->pCacheMem);
 	}
 
 	// Destroy any Semaphore that was created.
@@ -220,7 +233,7 @@ FF_ERROR FF_DestroyIOMAN(FF_IOMAN *pIoman) {
 	}
 
 	// Finally free the FF_IOMAN object.
-	FF_Free(pIoman);
+	FF_FREE(pIoman);
 
 	return FF_ERR_NONE;
 }
@@ -236,15 +249,9 @@ static void FF_IOMAN_InitBufferDescriptors(FF_IOMAN *pIoman) {
 	FF_T_UINT16 i;
 	FF_BUFFER *pBuffer = pIoman->pBuffers;
 	pIoman->LastReplaced = 0;
+	// HT : it is assmued that pBuffer was cleared by memset ()
 	for(i = 0; i < pIoman->CacheSize; i++) {
-		pBuffer->Mode			= 0;
-		pBuffer->NumHandles 	= 0;
-		pBuffer->Persistance 	= 0;
-		pBuffer->LRU			= 0;
-		pBuffer->Sector 		= 0;
 		pBuffer->pBuffer 		= (FF_T_UINT8 *)((pIoman->pCacheMem) + (pIoman->BlkSize * i));
-		pBuffer->Modified		= FF_FALSE;
-		pBuffer->Valid			= FF_FALSE;
 		pBuffer++;
 	}
 }
@@ -273,12 +280,15 @@ static void FF_IOMAN_InitBufferDescriptors(FF_IOMAN *pIoman) {
  *	@param	Sector	LBA address of the sector to fetch.
  *	@param	pBuffer	Pointer to a byte-wise buffer to store the fetched data.
  *
+ *	HT Note: will be called while semaphore claimed (by FF_GetBuffer)
+ *
  *	@return	FF_TRUE when valid, else FF_FALSE.
  **/
 static FF_ERROR FF_IOMAN_FillBuffer(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_UINT8 *pBuffer) {
 	FF_T_SINT32 retVal = 0;
 	if(pIoman->pBlkDevice->fnReadBlocks) {	// Make sure we don't execute a NULL.
 		 do{
+			// Called from FF_GetBuffer with semaphore claimed
 			retVal = pIoman->pBlkDevice->fnReadBlocks(pBuffer, Sector, 1, pIoman->pBlkDevice->pParam);
 			if(retVal == FF_ERR_DRIVER_BUSY) {
 				FF_Sleep(FF_DRIVER_BUSY_SLEEP);
@@ -306,9 +316,13 @@ static FF_ERROR FF_IOMAN_FillBuffer(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_U
  *	@param	Sector	LBA address of the sector to fetch.
  *	@param	pBuffer	Pointer to a byte-wise buffer to store the fetched data.
  *
+ *
+ *  HT made it a globally accesible function to be used by new module ff_format.c
+ *  Note that this function is called when semaphore is already locked
+ *
  *	@return	FF_TRUE when valid, else FF_FALSE.
  **/
-static FF_ERROR FF_IOMAN_FlushBuffer(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_UINT8 *pBuffer) {
+/* static */ FF_ERROR FF_IOMAN_FlushBuffer(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_UINT8 *pBuffer) {
 	FF_T_SINT32 retVal = 0;
 	if(pIoman->pBlkDevice->fnWriteBlocks) {	// Make sure we don't execute a NULL.
 		 do{
@@ -481,7 +495,7 @@ FF_BUFFER *FF_GetBuffer(FF_IOMAN *pIoman, FF_T_UINT32 Sector, FF_T_UINT8 Mode) {
 			}
 		}
 		FF_ReleaseSemaphore(pIoman->pSemaphore);
-		FF_Yield();
+		FF_Yield();	// Better to go asleep to give low-priority task a chance to release buffer(s)
 	}
 
 	return pBufMatch;	// Return the Matched Buffer!
@@ -500,7 +514,11 @@ void FF_ReleaseBuffer(FF_IOMAN *pIoman, FF_BUFFER *pBuffer) {
 	// Protect description changes with a semaphore.
 	FF_PendSemaphore(pIoman->pSemaphore);
 	{
-		pBuffer->NumHandles--;
+		if (pBuffer->NumHandles) {
+			pBuffer->NumHandles--;
+		} else {
+			//printf ("FF_ReleaseBuffer: buffer not claimed\n");
+		}
 	}
 	FF_ReleaseSemaphore(pIoman->pSemaphore);
 }
@@ -630,6 +648,34 @@ static FF_ERROR FF_DetermineFatType(FF_IOMAN *pIoman) {
 
 	return FF_ERR_IOMAN_NOT_FAT_FORMATTED;
 }
+
+static FF_T_SINT8 FF_PartitionCount (FF_T_UINT8 *pBuffer)
+{
+	FF_T_SINT8 count = 0;
+	FF_T_SINT8 part;
+	// Check PBR or MBR signature
+	if (FF_getChar(pBuffer, FF_FAT_MBR_SIGNATURE) != 0x55 &&
+		FF_getChar(pBuffer, FF_FAT_MBR_SIGNATURE) != 0xAA ) {
+		// No MBR, but is it a PBR ?
+		if (FF_getChar(pBuffer, 0) == 0xEB &&          // PBR Byte 0
+		    FF_getChar(pBuffer, 2) == 0x90 &&          // PBR Byte 2
+		    (FF_getChar(pBuffer, 21) & 0xF0) == 0xF0) {// PBR Byte 21 : Media byte
+			return 1;	// No MBR but PBR exist then only one partition
+		}
+		return 0;   // No MBR and no PBR then no partition found
+	}
+	for (part = 0; part < 4; part++)  {
+		FF_T_UINT8 active = FF_getChar(pBuffer, FF_FAT_PTBL + FF_FAT_PTBL_ACTIVE + (16 * part));
+		FF_T_UINT8 part_id = FF_getChar(pBuffer, FF_FAT_PTBL + FF_FAT_PTBL_ID + (16 * part));
+		// The first sector must be a MBR, then check the partition entry in the MBR
+		if (active != 0x80 && (active != 0 || part_id == 0)) {
+			break;
+		}
+		count++;
+	}
+	return count;
+}
+
 /**
  *	@public
  *	@brief	Mounts the Specified partition, the volume specified by the FF_IOMAN object provided.
@@ -651,6 +697,7 @@ static FF_ERROR FF_DetermineFatType(FF_IOMAN *pIoman) {
 FF_ERROR FF_MountPartition(FF_IOMAN *pIoman, FF_T_UINT8 PartitionNumber) {
 	FF_PARTITION	*pPart;
 	FF_BUFFER		*pBuffer = 0;
+	int partCount;
 
 	if(!pIoman) {
 		return FF_ERR_NULL_POINTER;
@@ -662,18 +709,27 @@ FF_ERROR FF_MountPartition(FF_IOMAN *pIoman, FF_T_UINT8 PartitionNumber) {
 
 	pPart = pIoman->pPartition;
 
+	memset (pIoman->pBuffers, '\0', sizeof(FF_BUFFER) * pIoman->CacheSize);
+	memset (pIoman->pCacheMem, '\0', pIoman->BlkSize * pIoman->CacheSize);
+
+	FF_IOMAN_InitBufferDescriptors(pIoman);
+	pIoman->FirstFile = 0;
+
 	pBuffer = FF_GetBuffer(pIoman, 0, FF_MODE_READ);
 	if(!pBuffer) {
 		return FF_ERR_DEVICE_DRIVER_FAILED;
 	}
+
+	partCount = FF_PartitionCount (pBuffer->pBuffer);
+
 	pPart->BlkSize = FF_getShort(pBuffer->pBuffer, FF_FAT_BYTES_PER_SECTOR);
 
-	if((pPart->BlkSize % 512) == 0 && pPart->BlkSize > 0) {
+	if (partCount == 0) { //(pPart->BlkSize % 512) == 0 && pPart->BlkSize > 0) {
 		// Volume is not partitioned (MBR Found)
 		pPart->BeginLBA = 0;
 	} else {
 		// Primary Partitions to deal with!
-		pPart->BeginLBA = FF_getLong(pBuffer->pBuffer, (FF_T_UINT16)(FF_FAT_PTBL + FF_FAT_PTBL_LBA + (16 * PartitionNumber)));
+		pPart->BeginLBA = FF_getLong(pBuffer->pBuffer, FF_FAT_PTBL + FF_FAT_PTBL_LBA + (16 * PartitionNumber));
 		FF_ReleaseBuffer(pIoman, pBuffer);
 
 		if(!pPart->BeginLBA) {
@@ -690,6 +746,7 @@ FF_ERROR FF_MountPartition(FF_IOMAN *pIoman, FF_T_UINT8 PartitionNumber) {
 			return FF_ERR_IOMAN_INVALID_FORMAT;
 		}
 	}
+
 	// Assume FAT16, then we'll adjust if its FAT32
 	pPart->ReservedSectors = FF_getShort(pBuffer->pBuffer, FF_FAT_RESERVED_SECTORS);
 	pPart->FatBeginLBA = pPart->BeginLBA + pPart->ReservedSectors;
@@ -709,6 +766,7 @@ FF_ERROR FF_MountPartition(FF_IOMAN *pIoman, FF_T_UINT8 PartitionNumber) {
 		if(pPart->TotalSectors == 0) {
 			pPart->TotalSectors = FF_getLong(pBuffer->pBuffer, FF_FAT_32_TOTAL_SECTORS);
 		}
+		memcpy (pPart->VolLabel, pBuffer->pBuffer + FF_FAT_32_VOL_LABEL, sizeof pPart->VolLabel);
 	} else {	// FAT16
 		pPart->ClusterBeginLBA	= pPart->BeginLBA + pPart->ReservedSectors + (pPart->NumFATS * pPart->SectorsPerFAT);
 		pPart->TotalSectors		= (FF_T_UINT32) FF_getShort(pBuffer->pBuffer, FF_FAT_16_TOTAL_SECTORS);
@@ -716,6 +774,7 @@ FF_ERROR FF_MountPartition(FF_IOMAN *pIoman, FF_T_UINT8 PartitionNumber) {
 		if(pPart->TotalSectors == 0) {
 			pPart->TotalSectors = FF_getLong(pBuffer->pBuffer, FF_FAT_32_TOTAL_SECTORS);
 		}
+		memcpy (pPart->VolLabel, pBuffer->pBuffer + FF_FAT_16_VOL_LABEL, sizeof pPart->VolLabel);
 	}
 
 	FF_ReleaseBuffer(pIoman, pBuffer);	// Release the buffer finally!
