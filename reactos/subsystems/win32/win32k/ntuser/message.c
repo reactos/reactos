@@ -850,15 +850,15 @@ co_IntWaitMessage( PWND Window,
                                            Window,
                                            MsgFilterMin,
                                            MsgFilterMax);
-    }
-    while ( (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) ||
-            STATUS_TIMEOUT == Status );
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DPRINT1("Exit co_IntWaitMessage on error!\n");
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DPRINT1("Exit co_IntWaitMessage on error!\n");
+            return FALSE;
+        }
     }
+    while ( TRUE );
 
     return FALSE;
 }
@@ -874,6 +874,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     PWND Window;
     PTHREADINFO pti;
     BOOL Present = FALSE;
+    NTSTATUS Status;
 
     if ( hWnd == HWND_TOPMOST || hWnd == HWND_BROADCAST )
         hWnd = HWND_BOTTOM;
@@ -941,7 +942,11 @@ co_IntGetPeekMessage( PMSG pMsg,
 
         if ( bGMSG )
         {
-           if ( !co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax) )
+            Status = co_MsqWaitForNewMessages( pti->MessageQueue,
+                                               Window,
+                                               MsgFilterMin,
+                                               MsgFilterMax);
+           if ( !NT_SUCCESS(Status) )
            {
               Present = -1;
               break;
