@@ -857,6 +857,10 @@ co_IntWaitMessage( PWND Window,
 
             return FALSE;
         }
+        if (Status == STATUS_USER_APC || Status == STATUS_TIMEOUT)
+        {
+           return FALSE;
+        }
     }
     while ( TRUE );
 
@@ -946,7 +950,9 @@ co_IntGetPeekMessage( PMSG pMsg,
                                                Window,
                                                MsgFilterMin,
                                                MsgFilterMax);
-           if ( !NT_SUCCESS(Status) )
+           if ( !NT_SUCCESS(Status) ||
+                Status == STATUS_USER_APC ||
+                Status == STATUS_TIMEOUT )
            {
               Present = -1;
               break;

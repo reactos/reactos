@@ -193,6 +193,7 @@ co_MsqInsertMouseMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
+   PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
 
    KeQueryTickCount(&LargeTickCount);
@@ -254,6 +255,9 @@ co_MsqInsertMouseMessage(MSG* Msg)
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
+               pDesk = pwnd->head.rpdesk;
+               pDesk->htEx = HTCLIENT;
+               pDesk->spwndTrack = pwnd;
                break;
            }
        }
@@ -1031,8 +1035,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
     /* message is accepted now (but may still get dropped) */
 
-    pti->rpdesk->htEx = hittest; /* Now set the capture hit. */
-
     event.message = msg->message;
     event.time    = msg->time;
     event.hwnd    = msg->hwnd;
@@ -1351,8 +1353,20 @@ NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
-   NTSTATUS ret;
+   PTHREADINFO pti;
+   NTSTATUS ret = STATUS_SUCCESS;
+   
+   pti = MessageQueue->Thread->Tcb.Win32Thread;
 
+   while ( co_MsqDispatchOneSentMessage(MessageQueue) );
+
+   if (pti->pcti->fsWakeBits & pti->pcti->fsChangeBits )
+   {
+      return ret;
+   }
+
+   pti->pClientInfo->cSpins = 0;
+   IdlePing();
    UserLeaveCo();
    ret = KeWaitForSingleObject(MessageQueue->NewMessages,
                               Executive,
@@ -1360,6 +1374,7 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                               FALSE, 
                               NULL);
    UserEnterCo();
+   IdlePong();
    return ret;
 }
 
