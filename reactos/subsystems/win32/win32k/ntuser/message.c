@@ -320,6 +320,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
     {
         PMSGMEMORY MsgMemoryEntry;
         PVOID PackedData;
+        SIZE_T size;
 
         MsgMemoryEntry = FindMsgMemory(Msg);
 
@@ -328,7 +329,13 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
             /* Keep previous behavior */
             return STATUS_SUCCESS;
         }
-        PackedData = ExAllocatePoolWithTag(NonPagedPool, MsgMemorySize(MsgMemoryEntry, wParam, lParam), TAG_MSG);
+        size = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+        if (!size)
+        {
+           DPRINT1("No size for lParamPacked\n");
+           return STATUS_SUCCESS;
+        }
+        PackedData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_MSG);
         RtlCopyMemory(PackedData, (PVOID)lParam, MsgMemorySize(MsgMemoryEntry, wParam, lParam));
         *lParamPacked = (LPARAM)PackedData;
     }
@@ -937,11 +944,7 @@ co_IntGetPeekMessage( PMSG pMsg,
 
            co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)pMsg);
 
-           if ( bGMSG )
-           {
-              Present = (WM_QUIT != pMsg->message);
-              break;
-           }
+           if ( bGMSG ) break;
         }
 
         if ( bGMSG )
@@ -1044,7 +1047,6 @@ UserPostMessage( HWND Wnd,
     PTHREADINFO pti;
     MSG Message, KernelModeMsg;
     LARGE_INTEGER LargeTickCount;
-    PMSGMEMORY MsgMemoryEntry;
 
     Message.hwnd = Wnd;
     Message.message = Msg;
@@ -1054,11 +1056,18 @@ UserPostMessage( HWND Wnd,
     KeQueryTickCount(&LargeTickCount);
     Message.time = MsqCalculateMessageTime(&LargeTickCount);
 
-    MsgMemoryEntry = FindMsgMemory(Message.message);
+    if (is_pointer_message(Message.message))
+    {
+        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
+        return FALSE;
+    }
 
     if( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
     {
         NTSTATUS Status;
+        PMSGMEMORY MsgMemoryEntry;
+
+        MsgMemoryEntry = FindMsgMemory(Message.message);
 
         Status = CopyMsgToKernelMem(&KernelModeMsg, &Message, MsgMemoryEntry);
         if (! NT_SUCCESS(Status))
@@ -1075,12 +1084,6 @@ UserPostMessage( HWND Wnd,
             ExFreePool((PVOID) KernelModeMsg.lParam);
 
         return TRUE;
-    }
-
-    if (is_pointer_message(Message.message))
-    {
-        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
-        return FALSE;
     }
 
     if (!Wnd)
@@ -1276,8 +1279,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (STATUS_TIMEOUT == Status)
     {
-        /*
-MSDN says:
+/*
+    MSDN says:
     Microsoft Windows 2000: If GetLastError returns zero, then the function
     timed out.
     XP+ : If the function fails or times out, the return value is zero.
@@ -1873,7 +1876,7 @@ NtUserGetMessage(PMSG pMsg,
         _SEH2_END;
     }
 
-    return Ret;
+    return Ret ? (WM_QUIT != pMsg->message) : FALSE;
 }
 
 BOOL APIENTRY
