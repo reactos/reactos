@@ -1,10 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
  * MODULE   : kernel32.dll
- * FILE     : reactos/lib/kernel32/misc/ldr.c
- * AUTHOR   : Ariadne
+ * FILE     : reactos/dll/win32/kernel32/misc/ldr.c
+ * AUTHOR   : Aleksey Bragin <aleksey@reactos.org>
+ *            Ariadne
  */
 
 #include <k32.h>
@@ -22,7 +22,52 @@ typedef struct tagLOADPARMS32 {
 extern BOOLEAN InWindows;
 extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL     1
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
+
 /* FUNCTIONS ****************************************************************/
+
+DWORD
+WINAPI
+BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
+                                          LPCWSTR lpwModuleName,
+                                          HMODULE *phModule)
+{
+    /* Set phModule to 0 if it's not a NULL pointer */
+    if (phModule) *phModule = 0;
+
+    /* Check for invalid flags combination */
+    if (dwFlags & ~(GET_MODULE_HANDLE_EX_FLAG_PIN |
+                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT |
+                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS) ||
+        (dwFlags & GET_MODULE_HANDLE_EX_FLAG_PIN &&
+         dwFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT) ||
+         (!lpwModuleName && (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS))
+        )
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER_1);
+        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL;
+    }
+
+    /* Check 2nd parameter */
+    if (!phModule)
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER_2);
+        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL;
+    }
+
+    /* Return what we have according to the module name */
+    if (lpwModuleName)
+    {
+        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE;
+    }
+
+    /* No name given, so put ImageBaseAddress there */
+    *phModule = (HMODULE)NtCurrentPeb()->ImageBaseAddress;
+
+    return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS;
+}
 
 /**
  * @name GetDllLoadPath
@@ -220,7 +265,7 @@ LoadLibraryExW (
 	HINSTANCE hInst;
 	NTSTATUS Status;
 	PWSTR SearchPath;
-    ULONG DllCharacteristics;
+    ULONG DllCharacteristics = 0;
 	BOOL FreeString = FALSE;
 
         (void)hFile;
@@ -350,26 +395,37 @@ BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
 {
     NTSTATUS Status;
 
-    if (!hLibModule)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
     if ((ULONG_PTR)hLibModule & 1)
     {
-        /* this is a LOAD_LIBRARY_AS_DATAFILE module */
-        char *ptr = (char *)hLibModule - 1;
-        return UnmapViewOfFile(ptr);
+        /* This is a LOAD_LIBRARY_AS_DATAFILE module */
+        if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
+        {
+            /* Unmap view */
+            Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
+
+            /* Unload alternate resource module */
+            LdrUnloadAlternateResourceModule(hLibModule);
+        }
+        else
+            Status = STATUS_INVALID_IMAGE_FORMAT;
+    }
+    else
+    {
+        /* Just unload it */
+        Status = LdrUnloadDll((PVOID)hLibModule);
     }
 
-    Status = LdrUnloadDll(hLibModule);
+    /* Check what kind of status we got */
     if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus(Status);
+        /* Set last error */
+        BaseSetLastNTError(Status);
+
+        /* Return failure */
         return FALSE;
     }
 
+    /* Return success */
     return TRUE;
 }
 
@@ -379,12 +435,30 @@ BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
  */
 VOID
 WINAPI
-FreeLibraryAndExitThread (
-	HMODULE	hLibModule,
-	DWORD	dwExitCode
-	)
+FreeLibraryAndExitThread(HMODULE hLibModule,
+                         DWORD dwExitCode)
 {
-    FreeLibrary(hLibModule);
+    NTSTATUS Status;
+
+    if ((ULONG_PTR)hLibModule & 1)
+    {
+        /* This is a LOAD_LIBRARY_AS_DATAFILE module */
+        if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
+        {
+            /* Unmap view */
+            Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
+
+            /* Unload alternate resource module */
+            LdrUnloadAlternateResourceModule(hLibModule);
+        }
+    }
+    else
+    {
+        /* Just unload it */
+        Status = LdrUnloadDll((PVOID)hLibModule);
+    }
+
+    /* Exit thread */
     ExitThread(dwExitCode);
 }
 
@@ -394,123 +468,287 @@ FreeLibraryAndExitThread (
  */
 DWORD
 WINAPI
-GetModuleFileNameA (
-	HINSTANCE	hModule,
-	LPSTR		lpFilename,
-	DWORD		nSize
-	)
+GetModuleFileNameA(HINSTANCE hModule,
+                   LPSTR lpFilename,
+                   DWORD nSize)
 {
-	ANSI_STRING FileName;
-	PLIST_ENTRY ModuleListHead;
-	PLIST_ENTRY Entry;
-	PLDR_DATA_TABLE_ENTRY Module;
-	PPEB Peb;
-	ULONG Length = 0;
+    UNICODE_STRING filenameW;
+    ANSI_STRING FilenameA;
+    NTSTATUS Status;
+    DWORD Length = 0;
 
-	Peb = NtCurrentPeb ();
-	RtlEnterCriticalSection (Peb->LoaderLock);
+    /* Allocate a unicode buffer */
+    filenameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nSize * sizeof(WCHAR));
+    if (!filenameW.Buffer)
+    {
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return 0;
+    }
 
-	if (hModule == NULL)
-		hModule = Peb->ImageBaseAddress;
+    /* Call unicode API */
+    filenameW.Length = GetModuleFileNameW(hModule, filenameW.Buffer, nSize) * sizeof(WCHAR);
+    filenameW.MaximumLength = filenameW.Length + sizeof(WCHAR);
 
-	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
-	Entry = ModuleListHead->Flink;
+    if (filenameW.Length)
+    {
+        /* Convert to ansi string */
+        Status = BasepUnicodeStringTo8BitString(&FilenameA, &filenameW, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Set last error, free string and retun failure */
+            BaseSetLastNTError(Status);
+            RtlFreeUnicodeString(&filenameW);
+            return 0;
+        }
 
-	while (Entry != ModuleListHead)
-	{
-		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-		if (Module->DllBase == (PVOID)hModule)
-		{
-			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
-			FileName.Length = 0;
-			FileName.MaximumLength = (USHORT)Length * sizeof(WCHAR);
-			FileName.Buffer = lpFilename;
+        /* Calculate size to copy */
+        Length = min(nSize, FilenameA.Length);
 
-			/* convert unicode string to ansi (or oem) */
-			if (bIsFileApiAnsi)
-				RtlUnicodeStringToAnsiString (&FileName,
-				                              &Module->FullDllName,
-				                              FALSE);
-			else
-				RtlUnicodeStringToOemString (&FileName,
-				                             &Module->FullDllName,
-				                             FALSE);
-				
-			if (Length < nSize)
-				lpFilename[Length] = '\0';
-			else
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+        /* Remove terminating zero */
+        if (Length == FilenameA.Length)
+            Length--;
 
-			RtlLeaveCriticalSection (Peb->LoaderLock);
-			return Length;
-		}
+        /* Now copy back to the caller amount he asked */
+        RtlMoveMemory(lpFilename, FilenameA.Buffer, Length);
 
-		Entry = Entry->Flink;
-	}
+        /* Free ansi filename */
+        RtlFreeAnsiString(&FilenameA);
+    }
 
-	SetLastErrorByStatus (STATUS_DLL_NOT_FOUND);
-	RtlLeaveCriticalSection (Peb->LoaderLock);
+    /* Free unicode filename */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, filenameW.Buffer);
 
-	return 0;
+    /* Return length copied */
+    return Length;
 }
-
 
 /*
  * @implemented
  */
 DWORD
 WINAPI
-GetModuleFileNameW (
-	HINSTANCE	hModule,
-	LPWSTR		lpFilename,
-	DWORD		nSize
-	)
+GetModuleFileNameW(HINSTANCE hModule,
+                   LPWSTR lpFilename,
+                   DWORD nSize)
 {
-	UNICODE_STRING FileName;
-	PLIST_ENTRY ModuleListHead;
-	PLIST_ENTRY Entry;
-	PLDR_DATA_TABLE_ENTRY Module;
-	PPEB Peb;
-	ULONG Length = 0;
+    PLIST_ENTRY ModuleListHead, Entry;
+    PLDR_DATA_TABLE_ENTRY Module;
+    ULONG Length = 0;
+    ULONG Cookie;
+    PPEB Peb;
 
-	Peb = NtCurrentPeb ();
-	RtlEnterCriticalSection (Peb->LoaderLock);
+    /* Upscale nSize from chars to bytes */
+    nSize *= sizeof(WCHAR);
 
-	if (hModule == NULL)
-		hModule = Peb->ImageBaseAddress;
+    _SEH2_TRY
+    {
+        /* We don't use per-thread cur dir now */
+        //PRTL_PERTHREAD_CURDIR PerThreadCurdir = (PRTL_PERTHREAD_CURDIR)teb->NtTib.SubSystemTib;
 
-	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
-	Entry = ModuleListHead->Flink;
-	while (Entry != ModuleListHead)
-	{
-		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        Peb = NtCurrentPeb ();
 
-		if (Module->DllBase == (PVOID)hModule)
-		{
-			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
-			FileName.Length = 0;
-			FileName.MaximumLength = (USHORT) Length * sizeof(WCHAR);
-			FileName.Buffer = lpFilename;
+        /* Acquire a loader lock */
+        LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS, NULL, &Cookie);
 
-			RtlCopyUnicodeString (&FileName,
-			                      &Module->FullDllName);
-			if (Length < nSize)
-				lpFilename[Length] = L'\0';
-			else
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+        /* Traverse the module list */
+        ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
+        Entry = ModuleListHead->Flink;
+        while (Entry != ModuleListHead)
+        {
+            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-			RtlLeaveCriticalSection (Peb->LoaderLock);
+            /* Check if this is the requested module */
+            if (Module->DllBase == (PVOID)hModule)
+            {
+                /* Calculate size to copy */
+                Length = min(nSize, Module->FullDllName.MaximumLength);
 
-			return Length;
-		}
+                /* Copy contents */
+                RtlMoveMemory(lpFilename, Module->FullDllName.Buffer, Length);
 
-		Entry = Entry->Flink;
-	}
+                /* Subtract a terminating zero */
+                if (Length == Module->FullDllName.MaximumLength)
+                    Length -= sizeof(WCHAR);
 
-	SetLastErrorByStatus (STATUS_DLL_NOT_FOUND);
-	RtlLeaveCriticalSection (Peb->LoaderLock);
+                /* Break out of the loop */
+                break;
+            }
 
-	return 0;
+            /* Advance to the next entry */
+            Entry = Entry->Flink;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        BaseSetLastNTError(_SEH2_GetExceptionCode());
+        Length = 0;
+    } _SEH2_END
+
+    /* Release the loader lock */
+    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS, Cookie);
+
+    return Length;
+}
+
+HMODULE
+WINAPI
+GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
+{
+    NTSTATUS Status;
+    PVOID Module;
+    LPWSTR DllPath;
+
+    /* Try to get a handle with a magic value of 1 for DllPath */
+    Status = LdrGetDllHandle((LPWSTR)1, NULL, ModuleName, &Module);
+
+    /* If that succeeded - we're done */
+    if (NT_SUCCESS(Status)) return Module;
+
+    /* If not, then the path should be computed */
+    DllPath = BasepGetDllPath(NULL, 0);
+
+    /* Call LdrGetHandle() again providing the computed DllPath
+       and wrapped into SEH */
+    _SEH2_TRY
+    {
+        Status = LdrGetDllHandle(DllPath, NULL, ModuleName, &Module);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Fail with the SEH error */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Free the DllPath */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);
+
+    /* In case of error set last win32 error and return NULL */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failure acquiring DLL module '%wZ' handle, Status 0x%08X\n", ModuleName, Status);
+        SetLastErrorByStatus(Status);
+        Module = 0;
+    }
+
+    /* Return module */
+    return (HMODULE)Module;
+}
+
+BOOLEAN
+WINAPI
+BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleName, HMODULE *phModule)
+{
+    DWORD Cookie;
+    NTSTATUS Status = STATUS_SUCCESS, Status2;
+    HANDLE hModule = 0;
+    UNICODE_STRING ModuleNameU;
+    DWORD dwValid;
+    BOOLEAN Redirected = FALSE; // FIXME
+
+    /* Validate parameters */
+    dwValid = BasepGetModuleHandleExParameterValidation(dwPublicFlags, lpwModuleName, phModule);
+    ASSERT(dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE);
+
+    /* Acquire lock if necessary */
+    if (!NoLock)
+    {
+        Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            SetLastErrorByStatus(Status);
+            if (phModule) *phModule = 0;
+            return Status;
+        }
+    }
+
+    if (!(dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS))
+    {
+        /* Create a unicode string out of module name */
+        RtlInitUnicodeString(&ModuleNameU, lpwModuleName);
+
+        // FIXME: Do some redirected DLL stuff?
+        if (Redirected)
+        {
+            UNIMPLEMENTED;
+        }
+
+        if (!hModule)
+        {
+            hModule = GetModuleHandleForUnicodeString(&ModuleNameU);
+            if (!hModule)
+            {
+                // FIXME: Status?!
+                goto quickie;
+            }
+        }
+    }
+    else
+    {
+        /* Perform Pc to file header to get module instance */
+        hModule = (HMODULE)RtlPcToFileHeader((PVOID)lpwModuleName,
+                                             (PVOID*)&hModule);
+
+        /* Check if it succeeded */
+        if (!hModule)
+        {
+            /* Set "dll not found" status and quit */
+            Status = STATUS_DLL_NOT_FOUND;
+            goto quickie;
+        }
+    }
+
+    /* Check if changing reference is not forbidden */
+    if (!(dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT))
+    {
+        /* Add reference to this DLL */
+        Status = LdrAddRefDll((dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) ? LDR_PIN_MODULE : 0,
+                              hModule);
+    }
+
+quickie:
+    /* Unlock loader lock if it was acquired */
+    if (!NoLock)
+    {
+        Status2 = LdrUnlockLoaderLock(0, Cookie);
+        ASSERT(NT_SUCCESS(Status2));
+    }
+
+    /* Set last error in case of failure */
+    if (!NT_SUCCESS(Status))
+        SetLastErrorByStatus(Status);
+
+    /* Set the module handle to the caller */
+    if (phModule) *phModule = hModule;
+
+    /* Return TRUE on success and FALSE otherwise */
+    return NT_SUCCESS(Status);
+}
+
+/*
+ * @implemented
+ */
+HMODULE
+WINAPI
+GetModuleHandleA(LPCSTR lpModuleName)
+{
+    PUNICODE_STRING ModuleNameW;
+    PTEB pTeb = NtCurrentTeb();
+
+    /* Check if we have no name to convert */
+    if (!lpModuleName)
+        return ((HMODULE)pTeb->ProcessEnvironmentBlock->ImageBaseAddress);
+
+    /* Convert module name to unicode */
+    ModuleNameW = Basep8BitStringToStaticUnicodeString(lpModuleName);
+
+    /* Call W version if conversion was successful */
+    if (ModuleNameW)
+        return GetModuleHandleW(ModuleNameW->Buffer);
+
+    /* Return failure */
+    return 0;
 }
 
 
@@ -519,61 +757,26 @@ GetModuleFileNameW (
  */
 HMODULE
 WINAPI
-GetModuleHandleA ( LPCSTR lpModuleName )
+GetModuleHandleW(LPCWSTR lpModuleName)
 {
-	ANSI_STRING ModuleName;
-	NTSTATUS Status;
-	PTEB pTeb = NtCurrentTeb();
+    HMODULE hModule;
+    NTSTATUS Status;
 
-	if (lpModuleName == NULL)
-	{
-		return ((HMODULE)pTeb->ProcessEnvironmentBlock->ImageBaseAddress);
-	}
+    /* If current module is requested - return it right away */
+    if (!lpModuleName)
+        return ((HMODULE)NtCurrentPeb()->ImageBaseAddress);
 
-	RtlInitAnsiString(&ModuleName, lpModuleName);
+    /* Use common helper routine */
+    Status = BasepGetModuleHandleExW(TRUE,
+                                     GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                     lpModuleName,
+                                     &hModule);
 
-	Status = RtlAnsiStringToUnicodeString(&pTeb->StaticUnicodeString,
-	                                      &ModuleName,
-	                                      FALSE);
+    /* If it wasn't successful - return 0 */
+    if (!NT_SUCCESS(Status)) hModule = 0;
 
-	if (NT_SUCCESS(Status))
-	{
-		return GetModuleHandleW(pTeb->StaticUnicodeString.Buffer);
-	}
-
-	SetLastErrorByStatus(Status);
-	return FALSE;
-}
-
-
-/*
- * @implemented
- */
-HMODULE
-WINAPI
-GetModuleHandleW (LPCWSTR lpModuleName)
-{
-	UNICODE_STRING ModuleName;
-	PVOID BaseAddress;
-	NTSTATUS Status;
-
-	if (lpModuleName == NULL)
-		return ((HMODULE)NtCurrentPeb()->ImageBaseAddress);
-
-	RtlInitUnicodeString (&ModuleName,
-			      (LPWSTR)lpModuleName);
-
-	Status = LdrGetDllHandle (0,
-				  0,
-				  &ModuleName,
-				  &BaseAddress);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return NULL;
-	}
-
-	return ((HMODULE)BaseAddress);
+    /* Return the handle */
+    return hModule;
 }
 
 
@@ -583,64 +786,31 @@ GetModuleHandleW (LPCWSTR lpModuleName)
 BOOL
 WINAPI
 GetModuleHandleExW(IN DWORD dwFlags,
-                   IN LPCWSTR lpModuleName  OPTIONAL,
+                   IN LPCWSTR lpwModuleName  OPTIONAL,
                    OUT HMODULE* phModule)
 {
-    HMODULE hModule;
     NTSTATUS Status;
+    DWORD dwValid;
     BOOL Ret = FALSE;
 
-    if (phModule == NULL ||
-        ((dwFlags & (GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT)) ==
-         (GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT)))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    /* Validate parameters */
+    dwValid = BasepGetModuleHandleExParameterValidation(dwFlags, lpwModuleName, phModule);
 
-    if (lpModuleName == NULL)
-    {
-        hModule = NtCurrentPeb()->ImageBaseAddress;
-    }
-    else
-    {
-        if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS)
-        {
-            hModule = (HMODULE)RtlPcToFileHeader((PVOID)lpModuleName,
-                                                 (PVOID*)&hModule);
-            if (hModule == NULL)
-            {
-                SetLastErrorByStatus(STATUS_DLL_NOT_FOUND);
-            }
-        }
-        else
-        {
-            hModule = GetModuleHandleW(lpModuleName);
-        }
-    }
+    /* If result is invalid parameter - return failure */
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL) return FALSE;
 
-    if (hModule != NULL)
-    {
-        if (!(dwFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT))
-        {
-            Status = LdrAddRefDll((dwFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) ? LDR_PIN_MODULE : 0,
-                                  hModule);
+    /* If result is 2, there is no need to do anything - return success. */
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS) return TRUE;
 
-            if (NT_SUCCESS(Status))
-            {
-                Ret = TRUE;
-            }
-            else
-            {
-                SetLastErrorByStatus(Status);
-                hModule = NULL;
-            }
-        }
-        else
-            Ret = TRUE;
-    }
+    /* Use common helper routine */
+    Status = BasepGetModuleHandleExW(FALSE,
+                                     dwFlags,
+                                     lpwModuleName,
+                                     phModule);
 
-    *phModule = hModule;
+    /* Return TRUE in case of success */
+    if (NT_SUCCESS(Status)) Ret = TRUE;
+
     return Ret;
 }
 
@@ -650,41 +820,45 @@ GetModuleHandleExW(IN DWORD dwFlags,
 BOOL
 WINAPI
 GetModuleHandleExA(IN DWORD dwFlags,
-                   IN LPCSTR lpModuleName  OPTIONAL,
+                   IN LPCSTR lpModuleName OPTIONAL,
                    OUT HMODULE* phModule)
 {
-    ANSI_STRING ModuleName;
-    LPCWSTR lpModuleNameW;
-    NTSTATUS Status;
+    PUNICODE_STRING lpModuleNameW;
+    DWORD dwValid;
     BOOL Ret;
 
-    PTEB pTeb = NtCurrentTeb();
+    /* Validate parameters */
+    dwValid = BasepGetModuleHandleExParameterValidation(dwFlags, (LPCWSTR)lpModuleName, phModule);
 
+    /* If result is invalid parameter - return failure */
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL) return FALSE;
+
+    /* If result is 2, there is no need to do anything - return success. */
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS) return TRUE;
+
+    /* Check if we don't need to convert the name */
     if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS)
     {
-        lpModuleNameW = (LPCWSTR)lpModuleName;
+        /* Call the W version of the API without conversion */
+        Ret = GetModuleHandleExW(dwFlags,
+                                 (LPCWSTR)lpModuleName,
+                                 phModule);
     }
     else
     {
-        RtlInitAnsiString(&ModuleName, lpModuleName);
+        /* Convert module name to unicode */
+        lpModuleNameW = Basep8BitStringToStaticUnicodeString(lpModuleName);
 
-        Status = RtlAnsiStringToUnicodeString(&pTeb->StaticUnicodeString,
-                                              &ModuleName,
-                                              FALSE);
+        /* Return FALSE if conversion failed */
+        if (!lpModuleNameW) return FALSE;
 
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastErrorByStatus(Status);
-            return FALSE;
-        }
-
-        lpModuleNameW = pTeb->StaticUnicodeString.Buffer;
+        /* Call the W version of the API */
+        Ret = GetModuleHandleExW(dwFlags,
+                                 lpModuleNameW->Buffer,
+                                 phModule);
     }
 
-    Ret = GetModuleHandleExW(dwFlags,
-                             lpModuleNameW,
-                             phModule);
-
+    /* Return result */
     return Ret;
 }
 

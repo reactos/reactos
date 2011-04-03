@@ -452,7 +452,7 @@ secondattempt:
         if (!BasepExeLdrEntry)
             LdrEnumerateLoadedModules(0, BasepLocateExeLdrEntry, Peb->ImageBaseAddress);
 
-        DPRINT1("Found BasepExeLdrEntry %wZ\n", &BasepExeLdrEntry->FullDllName);
+        DPRINT("Found BasepExeLdrEntry %wZ\n", &BasepExeLdrEntry->FullDllName);
 
         /* Set name pointer to the full dll path */
         NamePtr = BasepExeLdrEntry->FullDllName.Buffer;
@@ -542,9 +542,7 @@ secondattempt:
     /* Null terminate the string */
     NamePtr[DefaultLength / sizeof(WCHAR)] = 0;
 
-    DPRINT("Path: %S\n", NamePtr);
-
-    return NULL;
+    return PathBuffer;
 }
 
 LPWSTR
