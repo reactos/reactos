@@ -1226,7 +1226,7 @@ Module::GetDefaultModuleCRT () const
 			return "static";
 		case Win32DLL:
 		case Win32OCX:
-			return "ntdll";
+			return "msvcrt";
 		case NativeDLL:
 		case NativeCUI:
 			return "ntdll";
