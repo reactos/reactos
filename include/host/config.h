@@ -8,6 +8,9 @@
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1
 
+/* Define to 1 if you have the `getpagesize' function. */
+#define HAVE_GETPAGESIZE 1
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 

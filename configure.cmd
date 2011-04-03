@@ -1,4 +1,4 @@
-::@echo off
+@echo off
 
 :: Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
