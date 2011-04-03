@@ -1861,7 +1861,7 @@ NtUserGetMessage(PMSG pMsg,
 
     UserLeave();
 
-    if (Ret)
+    if (Ret == TRUE)
     {
         _SEH2_TRY
         {
@@ -1876,7 +1876,10 @@ NtUserGetMessage(PMSG pMsg,
         _SEH2_END;
     }
 
-    return Ret ? (WM_QUIT != pMsg->message) : FALSE;
+    if ((INT)Ret != -1)
+       Ret = Ret ? (WM_QUIT != pMsg->message) : FALSE;
+
+    return Ret;
 }
 
 BOOL APIENTRY
