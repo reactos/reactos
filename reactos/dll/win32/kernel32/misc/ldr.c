@@ -41,8 +41,8 @@ BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
     if (dwFlags & ~(GET_MODULE_HANDLE_EX_FLAG_PIN |
                     GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT |
                     GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS) ||
-        (dwFlags & GET_MODULE_HANDLE_EX_FLAG_PIN &&
-         dwFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT) ||
+        ((dwFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) &&
+         (dwFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT)) ||
          (!lpwModuleName && (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS))
         )
     {
@@ -67,6 +67,21 @@ BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
     *phModule = (HMODULE)NtCurrentPeb()->ImageBaseAddress;
 
     return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS;
+}
+
+PVOID
+WINAPI
+BasepMapModuleHandle(HMODULE hModule, BOOLEAN AsDataFile)
+{
+    /* If no handle is provided - use current image base address */
+    if (!hModule) return NtCurrentPeb()->ImageBaseAddress;
+
+    /* Check if it's a normal or a datafile one */
+    if (LDR_IS_DATAFILE(hModule) && !AsDataFile)
+        return NULL;
+
+    /* It'a a normal DLL, just return its handle */
+    return hModule;
 }
 
 /**
@@ -394,11 +409,22 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
 {
     NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeaders;
 
-    if ((ULONG_PTR)hLibModule & 1)
+    if (LDR_IS_DATAFILE(hLibModule))
     {
-        /* This is a LOAD_LIBRARY_AS_DATAFILE module */
-        if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
+        // FIXME: This SEH should go inside RtlImageNtHeader instead
+        _SEH2_TRY
+        {
+            /* This is a LOAD_LIBRARY_AS_DATAFILE module, check if it's a valid one */
+            NtHeaders = RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            NtHeaders = NULL;
+        } _SEH2_END
+
+        if (NtHeaders)
         {
             /* Unmap view */
             Status = NtUnmapViewOfSection(NtCurrentProcess(), (PVOID)((ULONG_PTR)hLibModule & ~1));
@@ -440,7 +466,7 @@ FreeLibraryAndExitThread(HMODULE hLibModule,
 {
     NTSTATUS Status;
 
-    if ((ULONG_PTR)hLibModule & 1)
+    if (LDR_IS_DATAFILE(hLibModule))
     {
         /* This is a LOAD_LIBRARY_AS_DATAFILE module */
         if (RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1)))
@@ -472,51 +498,53 @@ GetModuleFileNameA(HINSTANCE hModule,
                    LPSTR lpFilename,
                    DWORD nSize)
 {
-    UNICODE_STRING filenameW;
+    UNICODE_STRING FilenameW;
     ANSI_STRING FilenameA;
     NTSTATUS Status;
-    DWORD Length = 0;
+    DWORD Length = 0, LengthToCopy;
 
     /* Allocate a unicode buffer */
-    filenameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nSize * sizeof(WCHAR));
-    if (!filenameW.Buffer)
+    FilenameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nSize * sizeof(WCHAR));
+    if (!FilenameW.Buffer)
     {
         BaseSetLastNTError(STATUS_NO_MEMORY);
         return 0;
     }
 
     /* Call unicode API */
-    filenameW.Length = GetModuleFileNameW(hModule, filenameW.Buffer, nSize) * sizeof(WCHAR);
-    filenameW.MaximumLength = filenameW.Length + sizeof(WCHAR);
+    FilenameW.Length = GetModuleFileNameW(hModule, FilenameW.Buffer, nSize) * sizeof(WCHAR);
+    FilenameW.MaximumLength = FilenameW.Length + sizeof(WCHAR);
 
-    if (filenameW.Length)
+    if (FilenameW.Length)
     {
         /* Convert to ansi string */
-        Status = BasepUnicodeStringTo8BitString(&FilenameA, &filenameW, TRUE);
+        Status = BasepUnicodeStringTo8BitString(&FilenameA, &FilenameW, TRUE);
         if (!NT_SUCCESS(Status))
         {
             /* Set last error, free string and retun failure */
             BaseSetLastNTError(Status);
-            RtlFreeUnicodeString(&filenameW);
+            RtlFreeUnicodeString(&FilenameW);
             return 0;
         }
 
         /* Calculate size to copy */
         Length = min(nSize, FilenameA.Length);
 
-        /* Remove terminating zero */
-        if (Length == FilenameA.Length)
-            Length--;
+        /* Include terminating zero */
+        if (nSize > Length)
+            LengthToCopy = Length + 1;
+        else
+            LengthToCopy = nSize;
 
         /* Now copy back to the caller amount he asked */
-        RtlMoveMemory(lpFilename, FilenameA.Buffer, Length);
+        RtlMoveMemory(lpFilename, FilenameA.Buffer, LengthToCopy);
 
         /* Free ansi filename */
         RtlFreeAnsiString(&FilenameA);
     }
 
     /* Free unicode filename */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, filenameW.Buffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FilenameW.Buffer);
 
     /* Return length copied */
     return Length;
@@ -536,6 +564,8 @@ GetModuleFileNameW(HINSTANCE hModule,
     ULONG Length = 0;
     ULONG Cookie;
     PPEB Peb;
+
+    hModule = BasepMapModuleHandle(hModule, FALSE);
 
     /* Upscale nSize from chars to bytes */
     nSize *= sizeof(WCHAR);
@@ -587,7 +617,7 @@ GetModuleFileNameW(HINSTANCE hModule,
     /* Release the loader lock */
     LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS, Cookie);
 
-    return Length;
+    return Length / sizeof(WCHAR);
 }
 
 HMODULE

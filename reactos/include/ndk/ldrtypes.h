@@ -80,6 +80,13 @@ Author:
 #define IMAGE_SCN_TYPE_NOLOAD                   0x00000002
 
 //
+// Loader datafile/imagemapping macros
+//
+#define LDR_IS_DATAFILE(handle)     (((ULONG_PTR)(handle)) & (ULONG_PTR)1)
+#define LDR_IS_IMAGEMAPPING(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR)2)
+#define LDR_IS_RESOURCE(handle)     (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
+
+//
 // Loader Data stored in the PEB
 //
 typedef struct _PEB_LDR_DATA
