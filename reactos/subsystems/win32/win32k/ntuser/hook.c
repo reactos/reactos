@@ -88,19 +88,15 @@ IntCallLowLevelHook( PHOOK Hook,
 
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-    Status = co_MsqSendMessage( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue,
-                                pti->MessageQueue,
+    Status = co_MsqSendMessage( pti->MessageQueue,
                                 IntToPtr(Code), // hWnd
                                 Hook->HookId,   // Msg
                                 wParam,
-                                (LPARAM)pHP,
-                                FALSE,
-                                NULL,
-                                0,
+                               (LPARAM)pHP,
                                 uTimeout,
                                 Block,
                                 MSQ_ISHOOK,
-                                &uResult);
+                               &uResult);
     if (!NT_SUCCESS(Status))
     {
        DPRINT1("Error Hook Call SendMsg. %d Status: 0x%x\n", Hook->HookId, Status);

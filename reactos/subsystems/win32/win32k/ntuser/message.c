@@ -1261,15 +1261,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     do
     {
-        Status = co_MsqSendMessage(((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue,
-                                    Window->head.pti->MessageQueue,
+        Status = co_MsqSendMessage( Window->head.pti->MessageQueue,
                                     hWnd,
                                     Msg,
                                     wParam,
                                     lParam,
-                                    FALSE,
-                                    NULL,
-                                    0,
                                     uTimeout,
                                     (uFlags & SMTO_BLOCK),
                                     MSQ_NORMAL,
@@ -1358,7 +1354,6 @@ co_IntSendMessageNoWait(HWND hWnd,
                         LPARAM lParam)
 {
     ULONG_PTR Result = 0;
-    /* Piggyback off CallBack */
     co_IntSendMessageWithCallBack(hWnd,
                                   Msg,
                                   wParam,
@@ -1377,12 +1372,12 @@ co_IntSendMessageNoWait(HWND hWnd,
 */
 LRESULT FASTCALL
 co_IntSendMessageWithCallBack( HWND hWnd,
-                               UINT Msg,
-                               WPARAM wParam,
-                               LPARAM lParam,
-                               SENDASYNCPROC CompletionCallback,
-                               ULONG_PTR CompletionCallbackContext,
-                               ULONG_PTR *uResult)
+                              UINT Msg,
+                              WPARAM wParam,
+                              LPARAM lParam,
+                              SENDASYNCPROC CompletionCallback,
+                              ULONG_PTR CompletionCallbackContext,
+                              ULONG_PTR *uResult)
 {
     ULONG_PTR Result;
     PWND Window = NULL;
@@ -1442,7 +1437,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     }
 
     /* If this is not a callback and it can be sent now, then send it. */
-    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
     {
         ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
@@ -1457,20 +1452,11 @@ co_IntSendMessageWithCallBack( HWND hWnd,
             *uResult = Result;
         }
         ObDereferenceObject(Win32Thread->pEThread);
-
-        if (CompletionCallback)
-        {
-            co_IntCallSentMessageCallback(CompletionCallback,
-                                          hWnd,
-                                          Msg,
-                                          CompletionCallbackContext,
-                                          Result);
-        }
     }
 
     IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
@@ -1494,21 +1480,18 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->lResult = 0;
     Message->QS_Flags = 0;
     Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
-    if (CompletionCallback)
-       Message->CallBackSenderQueue = Win32Thread->MessageQueue;
-    else
-       Message->CallBackSenderQueue = NULL;
+    Message->CallBackSenderQueue = Win32Thread->MessageQueue;
+
     IntReferenceMessageQueue(Window->head.pti->MessageQueue);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
-    Message->HookMessage = MSQ_NORMAL;
-    Message->HasPackedLParam = (lParamBufferSize > -1);
+    Message->HookMessage = MSQ_NORMAL | MSQ_SENTNOWAIT;
+    Message->HasPackedLParam = (lParamBufferSize > 0);
 
     Message->QS_Flags = QS_SENDMESSAGE;
-    if (CompletionCallback)
-       InsertTailList(&Win32Thread->MessageQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
-    InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
     MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, FALSE);
+
+    InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
     IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
     RETURN(TRUE);
@@ -2129,7 +2112,7 @@ NtUserMessageCall( HWND hWnd,
                     {
                         co_IntSendMessageTimeout( HWND_BROADCAST,
                                                   Msg,
-                                                  wParam,
+			                          wParam,
                                                   lParam,
                                                   SMTO_NORMAL,
                                                   2000,
