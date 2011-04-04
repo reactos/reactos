@@ -3174,6 +3174,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
     BOOL fRemove;
     INT executedMenuId = -1;
     MTRACKER mt;
+    HWND capture_win;
     BOOL enterIdleSent = FALSE;
 
     mt.TrackFlags = 0;
