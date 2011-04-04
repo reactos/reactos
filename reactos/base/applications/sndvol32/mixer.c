@@ -189,7 +189,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
                                   MIXER_GETLINEINFOF_SOURCE);
         if (Result == MMSYSERR_NOERROR)
         {
-            LPMIXERCONTROL Controls;
+            LPMIXERCONTROL Controls = NULL;
             PSND_MIXER_CONNECTION Con;
 
             DPRINT("++ Source: %ws\n", LineInfo.szName);
