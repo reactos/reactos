@@ -22,7 +22,7 @@ typedef struct tagLOADPARMS32 {
 extern BOOLEAN InWindows;
 extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 
-#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL     1
+#define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR    1
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
 
@@ -47,14 +47,14 @@ BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
         )
     {
         BaseSetLastNTError(STATUS_INVALID_PARAMETER_1);
-        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL;
+        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR;
     }
 
     /* Check 2nd parameter */
     if (!phModule)
     {
         BaseSetLastNTError(STATUS_INVALID_PARAMETER_2);
-        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL;
+        return BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR;
     }
 
     /* Return what we have according to the module name */
@@ -578,7 +578,7 @@ GetModuleFileNameW(HINSTANCE hModule,
         Peb = NtCurrentPeb ();
 
         /* Acquire a loader lock */
-        LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS, NULL, &Cookie);
+        LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
 
         /* Traverse the module list */
         ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
@@ -615,7 +615,7 @@ GetModuleFileNameW(HINSTANCE hModule,
     } _SEH2_END
 
     /* Release the loader lock */
-    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS, Cookie);
+    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
 
     return Length / sizeof(WCHAR);
 }
@@ -709,7 +709,8 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
             hModule = GetModuleHandleForUnicodeString(&ModuleNameU);
             if (!hModule)
             {
-                // FIXME: Status?!
+                /* Last error is already set, so just return failure by setting status */
+                Status = STATUS_DLL_NOT_FOUND;
                 goto quickie;
             }
         }
@@ -737,6 +738,10 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
                               hModule);
     }
 
+    /* Set last error in case of failure */
+    if (!NT_SUCCESS(Status))
+        SetLastErrorByStatus(Status);
+
 quickie:
     /* Unlock loader lock if it was acquired */
     if (!NoLock)
@@ -744,10 +749,6 @@ quickie:
         Status2 = LdrUnlockLoaderLock(0, Cookie);
         ASSERT(NT_SUCCESS(Status2));
     }
-
-    /* Set last error in case of failure */
-    if (!NT_SUCCESS(Status))
-        SetLastErrorByStatus(Status);
 
     /* Set the module handle to the caller */
     if (phModule) *phModule = hModule;
@@ -827,7 +828,7 @@ GetModuleHandleExW(IN DWORD dwFlags,
     dwValid = BasepGetModuleHandleExParameterValidation(dwFlags, lpwModuleName, phModule);
 
     /* If result is invalid parameter - return failure */
-    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL) return FALSE;
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR) return FALSE;
 
     /* If result is 2, there is no need to do anything - return success. */
     if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS) return TRUE;
@@ -855,13 +856,14 @@ GetModuleHandleExA(IN DWORD dwFlags,
 {
     PUNICODE_STRING lpModuleNameW;
     DWORD dwValid;
-    BOOL Ret;
+    BOOL Ret = FALSE;
+    NTSTATUS Status;
 
     /* Validate parameters */
     dwValid = BasepGetModuleHandleExParameterValidation(dwFlags, (LPCWSTR)lpModuleName, phModule);
 
     /* If result is invalid parameter - return failure */
-    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_FAIL) return FALSE;
+    if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_ERROR) return FALSE;
 
     /* If result is 2, there is no need to do anything - return success. */
     if (dwValid == BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS) return TRUE;
@@ -869,10 +871,11 @@ GetModuleHandleExA(IN DWORD dwFlags,
     /* Check if we don't need to convert the name */
     if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS)
     {
-        /* Call the W version of the API without conversion */
-        Ret = GetModuleHandleExW(dwFlags,
-                                 (LPCWSTR)lpModuleName,
-                                 phModule);
+        /* Call the extended version of the API without conversion */
+        Status = BasepGetModuleHandleExW(FALSE,
+                                         dwFlags,
+                                         (LPCWSTR)lpModuleName,
+                                         phModule);
     }
     else
     {
@@ -882,11 +885,16 @@ GetModuleHandleExA(IN DWORD dwFlags,
         /* Return FALSE if conversion failed */
         if (!lpModuleNameW) return FALSE;
 
-        /* Call the W version of the API */
-        Ret = GetModuleHandleExW(dwFlags,
-                                 lpModuleNameW->Buffer,
-                                 phModule);
+        /* Call the extended version of the API */
+        Status = BasepGetModuleHandleExW(FALSE,
+                                         dwFlags,
+                                         lpModuleNameW->Buffer,
+                                         phModule);
     }
+
+    /* If result was successful - return true */
+    if (NT_SUCCESS(Status))
+        Ret = TRUE;
 
     /* Return result */
     return Ret;
