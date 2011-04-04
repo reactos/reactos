@@ -1529,10 +1529,10 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
     {
         if (pWindow->spwndParent && pWindow->spwndParent != UserGetDesktopWindow())
         {
-            co_IntSendMessage( pWindow->spwndParent->head.h,
-                               WM_PARENTNOTIFY,
-                               MAKEWPARAM( msg, pWindow->IDMenu),
-                               (LPARAM)pWindow->head.h );
+            co_IntSendMessageNoWait( pWindow->spwndParent->head.h,
+                                     WM_PARENTNOTIFY,
+                                     MAKEWPARAM( msg, pWindow->IDMenu),
+                                     (LPARAM)pWindow->head.h );
         }
     }
 }
