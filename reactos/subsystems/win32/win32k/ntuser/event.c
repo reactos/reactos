@@ -115,15 +115,19 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
+   Status = co_MsqSendMessage( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue,
+                               pEH->head.pti->MessageQueue,
                                hwnd,
                                event,
                                0,
-                              (LPARAM)pEP,
+                               (LPARAM)pEP,
+                               FALSE,
+                               NULL,
+                               0,
                                300,
                                TRUE,
                                MSQ_ISEVENT,
-                              &uResult);
+                               &uResult);
    if (!NT_SUCCESS(Status))
    { 
       ExFreePoolWithTag(pEP, TAG_HOOK);

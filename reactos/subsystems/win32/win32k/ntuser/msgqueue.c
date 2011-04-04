@@ -423,7 +423,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PLIST_ENTRY Entry;
    LRESULT Result;
    PTHREADINFO pti;
-
+   
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
       return(FALSE);
@@ -466,6 +466,18 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Message->Msg.wParam,
                                     Message->Msg.lParam);
    }
+   else if ((Message->CompletionCallback)
+       && (Message->CallBackSenderQueue == MessageQueue))
+   {   /* Call the callback routine */
+      ASSERT(Message->QS_Flags & QS_SMRESULT);
+      co_IntCallSentMessageCallback(Message->CompletionCallback,
+                                    Message->Msg.hwnd,
+                                    Message->Msg.message,
+                                    Message->CompletionCallbackContext,
+                                    Message->lResult);
+      /* Set callback to NULL to prevent reentry */
+      Message->CompletionCallback = NULL;
+   }
    else
    {  /* Call the window procedure. */
       Result = co_IntSendMessage( Message->Msg.hwnd,
@@ -478,8 +490,23 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       to be cleaned up on thread termination anymore */
    RemoveEntryList(&Message->ListEntry);
 
-   /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   if (Message->CompletionCallback)
+   {
+      if (Message->CallBackSenderQueue)
+      {
+         Message->lResult = Result;
+         Message->QS_Flags |= QS_SMRESULT;
+
+         /* queue it in the callers message queue */
+         InsertTailList(&Message->CallBackSenderQueue->SentMessagesListHead, &Message->ListEntry);
+         MsqWakeQueue(Message->CallBackSenderQueue, QS_SENDMESSAGE, TRUE);
+         IntDereferenceMessageQueue(Message->CallBackSenderQueue);         
+      }
+      return (TRUE);
+   }
+
+   /* remove the message from the dispatching list if there is a SenderQueue, so lock the sender's message queue */
+   if ((Message->SenderQueue) || (Message->CallBackSenderQueue))
    {
       if (Message->DispatchingListEntry.Flink != NULL)
       {
@@ -513,18 +540,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Call the callback if the message was sent with SendMessageCallback */
-   if (Message->CompletionCallback != NULL)
-   {
-      co_IntCallSentMessageCallback(Message->CompletionCallback,
-                                    Message->Msg.hwnd,
-                                    Message->Msg.message,
-                                    Message->CompletionCallbackContext,
-                                    Result);
-   }
-
-   /* Only if it is not a no wait message */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   /* If SenderQueue then SenderQueue and MessageQueue was referenced, dereference them here */
+   if (Message->SenderQueue)
    {
       IntDereferenceMessageQueue(Message->SenderQueue);
       IntDereferenceMessageQueue(MessageQueue);
@@ -588,10 +605,11 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
-         /* remove the message from the dispatching list if neede */
-         if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* If there was a SenderQueue then remove the message from this threads dispatching list */
+         if (((SentMessage->SenderQueue) || (SentMessage->CallBackSenderQueue))
             && (SentMessage->DispatchingListEntry.Flink != NULL))
          {
+            SentMessage->CallBackSenderQueue = NULL;
             RemoveEntryList(&SentMessage->DispatchingListEntry);
          }
 
@@ -607,8 +625,8 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                ExFreePool((PVOID)SentMessage->Msg.lParam);
          }
 
-         /* Only if it is not a no wait message */
-         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* If SenderQueue then SenderQueue and MessageQueue was referenced, dereference them here */
+         if (SentMessage->SenderQueue)
          {
             /* dereference our and the sender's message queue */
             IntDereferenceMessageQueue(MessageQueue);
@@ -628,8 +646,9 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
 }
 
 NTSTATUS FASTCALL
-co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-                  HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
+co_MsqSendMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PUSER_MESSAGE_QUEUE MessageQueue,
+                  HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL HasPackedLParam,
+                  SENDASYNCPROC CompletionCallback, ULONG_PTR CompletionCallbackContext,
                   UINT uTimeout, BOOL Block, INT HookMessage,
                   ULONG_PTR *uResult)
 {
@@ -637,55 +656,100 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    PUSER_SENT_MESSAGE Message;
    KEVENT CompletionEvent;
    NTSTATUS WaitStatus;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
    LARGE_INTEGER Timeout;
    PLIST_ENTRY Entry;
+   BOOL WaitForCompletion;
    LRESULT Result = 0;   //// Result could be trashed. ////
 
+   /* Notification messages and some internal messages sent from the subsystem must not block current 
+      thread and therefore pass NULL as ThreadQueue. Callbacks also do not block */
+   WaitForCompletion = ((ThreadQueue) && (!CompletionCallback));
+   
    if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
    {
       DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
-   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
+   /* Initialize event if calling thread will wait on completion */
+   if (WaitForCompletion)
+       KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
    pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
    ptirec = MessageQueue->Thread->Tcb.Win32Thread;
    ASSERT(ThreadQueue != MessageQueue);
    ASSERT(ptirec->pcti); // Send must have a client side to receive it!!!!
    
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
-   /* FIXME - increase reference counter of sender's message queue here */
-
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
    Message->Msg.wParam = wParam;
    Message->Msg.lParam = lParam;
-   Message->CompletionEvent = &CompletionEvent;
-   Message->Result = &Result;
    Message->lResult = 0;
    Message->QS_Flags = 0;
-   Message->SenderQueue = ThreadQueue;
-   Message->CallBackSenderQueue = NULL;
-   IntReferenceMessageQueue(ThreadQueue);
-   Message->CompletionCallback = NULL;
-   Message->CompletionCallbackContext = 0;
-   Message->HookMessage = HookMessage;
-   Message->HasPackedLParam = FALSE;
 
+   if (WaitForCompletion)
+   {
+      /* Normal SendMessage that will block until the Windows Procedure handles the message */
+      Message->SenderQueue = ThreadQueue;
+      Message->CompletionEvent = &CompletionEvent;
+      Message->Result = &Result;
+   }
+   else
+   {
+      /* Either a SendMessageCallback, Notify Message or Internal Message from Win32k */
+      Message->SenderQueue = NULL;
+      Message->CompletionEvent = NULL;
+      Message->Result = NULL;
+   }
+
+   if (CompletionCallback)
+   {
+      Message->CallBackSenderQueue = ThreadQueue;
+   }
+   else
+   {
+      Message->CallBackSenderQueue = NULL;
+   }
+
+   /* Reference the ThreadQueue if there was one. For normal messages
+      the thread is dereferenced when the messages is processed by windows procedure.
+      For callbacks it dereferenced once the callback message is processed and placed back
+      into the sending message queue */
+   if (ThreadQueue != NULL)
+      IntReferenceMessageQueue(ThreadQueue);
+
+   Message->CompletionCallback = CompletionCallback;
+   Message->CompletionCallbackContext = CompletionCallbackContext;
+   Message->HookMessage = HookMessage;
+   Message->HasPackedLParam = HasPackedLParam;
+
+   if (HasPackedLParam)
+   {
+      ASSERT(Message->SenderQueue == NULL);
+   }
+   
    IntReferenceMessageQueue(MessageQueue);
 
-   /* add it to the list of pending messages */
-   InsertTailList(&ThreadQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
+   /* Add it to the list of pending messages if waiting on completion or if message is callback.
+      This is done for callbacks as if the Sender terminates it will set the CallBackSenderQueue member to NULL,
+      informing the windows procedure handling the message to discard the callback procedure */
+   if (ThreadQueue != NULL)
+      InsertTailList(&ThreadQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
 
    /* queue it in the destination's message queue */
    InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
 
    Message->QS_Flags = QS_SENDMESSAGE;
    MsqWakeQueue(MessageQueue, QS_SENDMESSAGE, TRUE);
+
+   /* If not waiting on completion, dereference the MessageQueue and return */
+   if (!WaitForCompletion)
+   {
+      IntDereferenceMessageQueue(MessageQueue);
+      return STATUS_SUCCESS;
+   }
 
    /* we can't access the Message anymore since it could have already been deleted! */
 
@@ -854,7 +918,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
  * Send a WM_PARENTNOTIFY to all ancestors of the given window, unless
  * the window has the WS_EX_NOPARENTNOTIFY style.
  */
-static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
+void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
 {
     PWND pwndDesktop = UserGetWindowObject(IntGetDesktopWindow());
 
@@ -1466,8 +1530,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
-      /* remove the message from the dispatching list if needed */
-      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
+      /* remove the message from the dispatching list if there was a SenderQueue */
+      if (((CurrentSentMessage->SenderQueue) || (CurrentSentMessage->CallBackSenderQueue))
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
@@ -1485,8 +1549,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* If SenderQueue then SenderQueue and MessageQueue was referenced, dereference them here */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
@@ -1525,8 +1589,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* If SenderQueue then SenderQueue and MessageQueue was referenced, dereference them here */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
