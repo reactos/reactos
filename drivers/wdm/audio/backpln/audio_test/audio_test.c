@@ -42,7 +42,8 @@ TestKs()
     SP_DEVINFO_DATA DeviceData;
     PSP_DEVICE_INTERFACE_DETAIL_DATA DetailData;
     HDEVINFO DeviceHandle;
-    PKSDATAFORMAT_WAVEFORMATEX DataFormat;
+    PKSDATAFORMAT DataFormat;
+    PWAVEFORMATEXTENSIBLE WaveFormat;
     PKSPIN_CONNECT PinConnect;
     PKSSTREAM_HEADER Packet;
     PKSPROPERTY Property;
@@ -61,7 +62,7 @@ TestKs()
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
                                        NULL,
-                                       DIGCF_DEVICEINTERFACE); //DIGCF_PRESENT
+                                       DIGCF_DEVICEINTERFACE |DIGCF_PRESENT);
 
    printf("DeviceHandle %p\n", DeviceHandle);
 
@@ -83,7 +84,7 @@ TestKs()
     //
     Length = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) + MAX_PATH * sizeof(WCHAR);
     DetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)HeapAlloc(GetProcessHeap(),
-                                                             0,
+                                                             HEAP_ZERO_MEMORY,
                                                              Length);
     DetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
     DeviceData.cbSize = sizeof(DeviceData);
@@ -118,14 +119,15 @@ TestKs()
     //
     // Allocate a KS Pin Connection Request Structure
     //
-    Length = sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT_WAVEFORMATEX);
-	printf("Length %ld KSPIN %u DATAFORMAT %u\n", Length, sizeof(KSPIN_CONNECT), sizeof(KSDATAFORMAT_WAVEFORMATEX));
-    PinConnect = (PKSPIN_CONNECT)HeapAlloc(GetProcessHeap(), 0, Length);
-    DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)(PinConnect + 1);
+    Length = sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(WAVEFORMATEXTENSIBLE)-sizeof(WAVEFORMATEX);
+    PinConnect = (PKSPIN_CONNECT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+    DataFormat = (PKSDATAFORMAT)(PinConnect + 1);
+    WaveFormat = (PWAVEFORMATEXTENSIBLE)(DataFormat + 1);
 
     //
     // Setup the KS Pin Data
     //
+
     PinConnect->Interface.Set = KSINTERFACESETID_Standard;
     PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
     PinConnect->Interface.Flags = 0;
@@ -140,23 +142,30 @@ TestKs()
     //
     // Setup the KS Data Format Information
     //
-    DataFormat->WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-    DataFormat->WaveFormatEx.nChannels = 2;
-    DataFormat->WaveFormatEx.nSamplesPerSec = 48000;
-    DataFormat->WaveFormatEx.nBlockAlign = 4;
-    DataFormat->WaveFormatEx.nAvgBytesPerSec = 48000 * 4;
-    DataFormat->WaveFormatEx.wBitsPerSample = 16;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) +
-                                        sizeof(WAVEFORMATEX);
-    DataFormat->DataFormat.Flags = KSDATAFORMAT_ATTRIBUTES;
-    DataFormat->DataFormat.Reserved = 0;
-    DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-    DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-    DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
-    DataFormat->DataFormat.SampleSize = 4;
+    printf("DataFormat %p %p\n", DataFormat,(PVOID)((((ULONG_PTR)DataFormat + 7)) & ~7));
 
-    //
+    DataFormat->Flags = 0;
+    DataFormat->Reserved = 0;
+    DataFormat->MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+    DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    DataFormat->Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+    DataFormat->SampleSize = 4;
+    DataFormat->FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEXTENSIBLE);
+
+    WaveFormat->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+    WaveFormat->Format.nChannels = 2;
+    WaveFormat->Format.nSamplesPerSec = 48000;
+    WaveFormat->Format.nBlockAlign = 4;
+    WaveFormat->Format.nAvgBytesPerSec = WaveFormat->Format.nSamplesPerSec * WaveFormat->Format.nBlockAlign;
+    WaveFormat->Format.wBitsPerSample = 16;
+    WaveFormat->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
+    WaveFormat->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+    WaveFormat->Samples.wValidBitsPerSample = 16;
+    WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+
+    printf("Creating pin\n");
+
+	//
     // Create the pin
     //
     Status = KsCreatePin(FilterHandle, PinConnect, GENERIC_WRITE, &PinHandle);
