@@ -3207,8 +3207,10 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         fEndMenu = !fRemove;
     }
 
-    SetCapture(mt.OwnerWnd);
-    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, mt.OwnerWnd);
+    /* owner may not be visible when tracking a popup, so use the menu itself */
+    capture_win = (wFlags & TPM_POPUPMENU) ? MenuInfo.Wnd : mt.OwnerWnd;
+    (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
+    SetCapture(capture_win);                                          // 2
 
     FIXME("MenuTrackMenu 1\n");
     while (! fEndMenu)
