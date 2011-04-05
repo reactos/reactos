@@ -66,5 +66,11 @@ IDS_PAGEFILE_LOC,            "Umiestnenie(a) str nkovacieho s£boru"
 IDS_DOMAIN,                  "Dom‚na"
 IDS_NETWORK_CARDS,           "Sieœov  karta(y)"
 IDS_NETWORK_CARDS_FORMAT,    "%u nainçtalovan."
+IDS_CONNECTION_NAME,         "Connection Name"
+IDS_STATUS,                  "Status"
+IDS_MEDIA_DISCONNECTED,      "Media disconnected"
+IDS_DHCP_ENABLED,            "DHCP Enabled"
+IDS_NO,                      "No"
+IDS_IP_ADDRESSES,            "IP address(es)"
 
 END

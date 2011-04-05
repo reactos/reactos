@@ -62,5 +62,11 @@ IDS_PAGEFILE_LOC,            "Sidevekslingsfil lokalsjon(er)"
 IDS_DOMAIN,                  "Domene"
 IDS_NETWORK_CARDS,           "Nettverkskort(er)"
 IDS_NETWORK_CARDS_FORMAT,    "%u installert."
+IDS_CONNECTION_NAME,         "Connection Name"
+IDS_STATUS,                  "Status"
+IDS_MEDIA_DISCONNECTED,      "Media disconnected"
+IDS_DHCP_ENABLED,            "DHCP Enabled"
+IDS_NO,                      "No"
+IDS_IP_ADDRESSES,            "IP address(es)"
 
 END

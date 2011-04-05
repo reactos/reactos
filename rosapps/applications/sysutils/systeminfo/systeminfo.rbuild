@@ -4,6 +4,8 @@
 	<library>advapi32</library>
 	<library>netapi32</library>
 	<library>shlwapi</library>
+	<library>iphlpapi</library>
+	<library>ws2_32</library>
 	<file>systeminfo.c</file>
 	<file>systeminfo.rc</file>
 	<file>rsrc.rc</file>

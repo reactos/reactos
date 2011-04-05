@@ -69,5 +69,11 @@ IDS_PAGEFILE_LOC,            "Lokalizacja pliku wymiany"
 IDS_DOMAIN,                  "Domena"
 IDS_NETWORK_CARDS,           "Karty sieciowe"
 IDS_NETWORK_CARDS_FORMAT,    "Zainstalowane karty NIC: %u."
+IDS_CONNECTION_NAME,         "Nazwa po³¹czenia"
+IDS_STATUS,                  "Stan"
+IDS_MEDIA_DISCONNECTED,      "Noœnik od³¹czony"
+IDS_DHCP_ENABLED,            "DHCP w³¹czone"
+IDS_NO,                      "Nie"
+IDS_IP_ADDRESSES,            "Adresy IP"
 
 END

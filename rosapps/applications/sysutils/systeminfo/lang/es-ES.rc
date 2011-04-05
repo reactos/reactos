@@ -67,5 +67,11 @@ IDS_PAGEFILE_LOC,            "Ruta(s) Archivo Paginación"
 IDS_DOMAIN,                  "Dominio"
 IDS_NETWORK_CARDS,           "Tarjeta(s) de Red"
 IDS_NETWORK_CARDS_FORMAT,    "%u No Instalada."
+IDS_CONNECTION_NAME,         "Connection Name"
+IDS_STATUS,                  "Status"
+IDS_MEDIA_DISCONNECTED,      "Media disconnected"
+IDS_DHCP_ENABLED,            "DHCP Enabled"
+IDS_NO,                      "No"
+IDS_IP_ADDRESSES,            "IP address(es)"
 
 END
