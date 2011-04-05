@@ -441,7 +441,7 @@ UpdateUsersList(HWND hwndListView)
                                 pBuffer[i].usri20_comment);
         }
 
-        NetApiBufferFree(&pBuffer);
+        NetApiBufferFree(pBuffer);
 
         /* No more data left */
         if (netStatus != ERROR_MORE_DATA)

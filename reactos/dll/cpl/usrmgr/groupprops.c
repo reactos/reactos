@@ -139,7 +139,7 @@ InitGroupMembersList(HWND hwndDlg,
                                 pUserBuffer[i].usri20_comment);
         }
 
-        NetApiBufferFree(&pUserBuffer);
+        NetApiBufferFree(pUserBuffer);
 
         /* No more data left */
         if (netStatus != ERROR_MORE_DATA)
