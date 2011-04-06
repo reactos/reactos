@@ -1529,10 +1529,14 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
     {
         if (pWindow->spwndParent && pWindow->spwndParent != UserGetDesktopWindow())
         {
+            USER_REFERENCE_ENTRY Ref;
+            UserRefObjectCo(pWindow->spwndParent, &Ref); // Fix explorer minimize hang.
+            // Should be co_IntSendMessage please retest, Ref to Chg, revision 51254...
             co_IntSendMessageNoWait( pWindow->spwndParent->head.h,
                                      WM_PARENTNOTIFY,
                                      MAKEWPARAM( msg, pWindow->IDMenu),
                                      (LPARAM)pWindow->head.h );
+            UserDerefObjectCo(pWindow->spwndParent);
         }
     }
 }
