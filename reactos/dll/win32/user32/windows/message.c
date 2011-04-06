@@ -2380,9 +2380,7 @@ GetCapture(VOID)
 BOOL WINAPI
 ReleaseCapture(VOID)
 {
-  HWND hwndPrev = NtUserSetCapture(NULL);
-  return(hwndPrev ? TRUE : FALSE);
-// return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
+  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
 }
 
 

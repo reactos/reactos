@@ -1576,6 +1576,11 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
         MenuInfo.FocusedItem = NO_SELECTED_ITEM;
     }
 
+    /* ReactOS Check */
+    if (!ValidateHwnd(hwndOwner))
+    {  // This window maybe already DEAD!!!
+       return FALSE;
+    }
     /* store the owner for DrawItem */
     MenuInfo.WndOwner = hwndOwner;
     MenuSetRosMenuInfo(&MenuInfo);
@@ -3208,14 +3213,16 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         fEndMenu = !fRemove;
     }
 
+    if (wFlags & TF_ENDMENU) fEndMenu = TRUE;
+
     /* owner may not be visible when tracking a popup, so use the menu itself */
     capture_win = (wFlags & TPM_POPUPMENU) ? MenuInfo.Wnd : mt.OwnerWnd;
     (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, capture_win); // 1
     SetCapture(capture_win);                                          // 2
 
-    FIXME("MenuTrackMenu 1\n");
     while (! fEndMenu)
     {
+        BOOL ErrorExit = FALSE;
         PVOID menu = ValidateHandle(mt.CurrentMenu, VALIDATE_TYPE_MENU);
         if (!menu) /* sometimes happens if I do a window manager close */
            break;
@@ -3233,6 +3240,12 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
             }
             else
             {
+                /* ReactOS Check */
+                if (!ValidateHwnd(mt.OwnerWnd) || !ValidateHwnd(MenuInfo.Wnd))
+                {
+                   ErrorExit = TRUE; // Do not wait on dead windows, now test_capture_4 works.
+                   break;
+                }
                 if (!enterIdleSent)
                 {
                   HWND win = MenuInfo.Flags & MF_POPUP ? MenuInfo.Wnd : NULL;
@@ -3241,8 +3254,9 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                 }
                 WaitMessage();
             }
-            //FIXME("MenuTrackMenu loop 1\n");
         }
+
+        if (ErrorExit) break; // Gracefully dropout.
 
         /* check if EndMenu() tried to cancel us, by posting this message */
         if (msg.message == WM_CANCELMODE)
@@ -3449,7 +3463,6 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         {
             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
             DispatchMessageW( &msg );
-            //FIXME("MenuTrackMenu loop 2\n");
             continue;
         }
 
@@ -3460,9 +3473,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         if (fRemove && !(mt.TrackFlags & TF_SKIPREMOVE) )
             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
         else mt.TrackFlags &= ~TF_SKIPREMOVE;
-        //FIXME("MenuTrackMenu loop 3\n");
     }
-    FIXME("MenuTrackMenu 2\n");
 
     (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
     SetCapture(NULL);  /* release the capture */
@@ -3521,12 +3532,11 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
 
     HideCaret(0);
 
-    MenuGetRosMenuInfo(&MenuInfo, hMenu);
     /* This makes the menus of applications built with Delphi work.
      * It also enables menus to be displayed in more than one window,
      * but there are some bugs left that need to be fixed in this case.
      */
-    if(MenuInfo.Self == hMenu)
+    if (MenuGetRosMenuInfo(&MenuInfo, hMenu))
     {
         MenuInfo.Wnd = hWnd;
         MenuSetRosMenuInfo(&MenuInfo);
@@ -3658,13 +3668,7 @@ VOID MenuTrackKbdMenuBar(HWND hwnd, UINT wParam, WCHAR wChar)
 
     MenuSelectItem( hwnd, &MenuInfo, uItem, TRUE, 0 );
 
-    if (wParam & HTSYSMENU)
-    {
-        /* prevent sysmenu activation for managed windows on Alt down/up */
-//        if (GetPropA( hwnd, "__wine_x11_managed" ))
-            wFlags |= TF_ENDMENU; /* schedule end of menu tracking */
-    }
-    else
+    if (!(wParam & HTSYSMENU) || wChar == ' ')
     {
         if( uItem == NO_SELECTED_ITEM )
             MenuMoveSelection( hwnd, &MenuInfo, ITEM_NEXT );
@@ -3691,6 +3695,12 @@ BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
     {
       SetLastError( ERROR_INVALID_MENU_HANDLE );
       return FALSE;
+    }
+
+    /* ReactOS Check */
+    if (!ValidateHwnd(Wnd))
+    {
+       return FALSE;
     }
 
     MenuGetRosMenuInfo(&MenuInfo, Menu);

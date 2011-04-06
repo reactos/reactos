@@ -16,7 +16,6 @@
 #include <debug.h>
 
 BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
-HWND FASTCALL co_UserSetCapture(HWND hWnd);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
@@ -861,7 +860,6 @@ co_IntWaitMessage( PWND Window,
         {
             SetLastNtError(Status);
             DPRINT1("Exit co_IntWaitMessage on error!\n");
-
             return FALSE;
         }
         if (Status == STATUS_USER_APC || Status == STATUS_TIMEOUT)

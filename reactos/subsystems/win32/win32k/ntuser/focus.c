@@ -580,15 +580,42 @@ co_UserSetCapture(HWND hWnd)
 
    ThreadQueue->CaptureWindow = hWnd;
 
-   /// These are hacks!
-   /* also remove other windows if not capturing anymore */
-   if (hWnd == NULL)
+   if (hWnd == NULL) // Release mode.
    {
+      MOUSEINPUT mi;
+   /// These are hacks!
+      /* also remove other windows if not capturing anymore */
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
-   }
    ///
+      /* Somebody may have missed some mouse movements */
+      mi.dx = 0;
+      mi.dy = 0;
+      mi.mouseData = 0;
+      mi.dwFlags = MOUSEEVENTF_MOVE;
+      mi.time = 0;
+      mi.dwExtraInfo = 0;      
+      IntMouseInput(&mi);
+   }
    return hWndPrev;
+}
+
+BOOL
+FASTCALL
+IntReleaseCapture(VOID)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+
+   // Can not release inside WM_CAPTURECHANGED!!
+   if (ThreadQueue->QF_flags & QF_CAPTURELOCKED) return FALSE;
+
+   co_UserSetCapture(NULL);
+
+   return TRUE;
 }
 
 /*
