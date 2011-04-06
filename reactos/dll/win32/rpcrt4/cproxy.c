@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * 
+ *
  * TODO: Handle non-i386 architectures
  */
 
@@ -96,7 +96,7 @@ HRESULT WINAPI ObjectStubless(DWORD *args)
     args[0] = *(const WORD*)(fs + 8);
     TRACE("(%p)->(%d)([%d bytes]) ret=%08x\n", iface, index, args[0], args[1]);
 
-    return NdrClientCall2(stubless->pStubDesc, fs, args + 2);
+    return NdrClientCall2(stubless->pStubDesc, fs, args + 2).Simple;
 }
 
 #define BLOCK_SIZE 1024
