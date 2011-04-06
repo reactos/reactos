@@ -15,7 +15,8 @@
 typedef struct tagLOADPARMS32 {
   LPSTR lpEnvAddress;
   LPSTR lpCmdLine;
-  LPSTR lpCmdShow;
+  WORD  wMagicValue;
+  WORD  wCmdShow;
   DWORD dwReserved;
 } LOADPARMS32;
 
@@ -167,12 +168,17 @@ DisableThreadLibraryCalls(
 {
     NTSTATUS Status;
 
+    /* Disable thread library calls */
     Status = LdrDisableThreadCalloutsForDll((PVOID)hLibModule);
+
+    /* If it wasn't success - set last error and return failure */
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
+
+    /* Return success */
     return TRUE;
 }
 
@@ -182,43 +188,74 @@ DisableThreadLibraryCalls(
  */
 HINSTANCE
 WINAPI
-LoadLibraryA (
-	LPCSTR	lpLibFileName
-	)
+LoadLibraryA(LPCSTR lpLibFileName)
 {
-	return LoadLibraryExA (lpLibFileName, 0, 0);
-}
+    LPSTR PathBuffer;
+    UINT Len;
+    HINSTANCE Result;
 
+    /* Treat twain_32.dll in a special way (what a surprise...) */
+    if (lpLibFileName && !_strcmpi(lpLibFileName, "twain_32.dll"))
+    {
+        /* Allocate space for the buffer */
+        PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, MAX_PATH);
+        if (PathBuffer)
+        {
+            /* Get windows dir in this buffer */
+            Len = GetWindowsDirectoryA(PathBuffer, MAX_PATH - 13); /* 13 is sizeof of '\\twain_32.dll' */
+            if (Len && Len < (MAX_PATH - 13))
+            {
+                /* We successfully got windows directory. Concatenate twain_32.dll to it */
+                strncat(PathBuffer, "\\twain_32.dll", 13);
+
+                /* And recursively call ourselves with a new string */
+                Result = LoadLibraryA(PathBuffer);
+
+                /* If it was successful -  free memory and return result */
+                if (Result)
+                {
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+                    return Result;
+                }
+            }
+
+            /* Free allocated buffer */
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+        }
+    }
+
+    /* Call the Ex version of the API */
+    return LoadLibraryExA(lpLibFileName, 0, 0);
+}
 
 /*
  * @implemented
  */
 HINSTANCE
 WINAPI
-LoadLibraryExA(
-    LPCSTR lpLibFileName,
-    HANDLE hFile,
-    DWORD dwFlags)
+LoadLibraryExA(LPCSTR lpLibFileName,
+               HANDLE hFile,
+               DWORD dwFlags)
 {
-   PUNICODE_STRING FileNameW;
+    PUNICODE_STRING FileNameW;
 
+    /* Convert file name to unicode */
     if (!(FileNameW = Basep8BitStringToStaticUnicodeString(lpLibFileName)))
         return NULL;
 
+    /* And call W version of the API */
     return LoadLibraryExW(FileNameW->Buffer, hFile, dwFlags);
 }
-
 
 /*
  * @implemented
  */
 HINSTANCE
 WINAPI
-LoadLibraryW (
-	LPCWSTR	lpLibFileName
-	)
+LoadLibraryW(LPCWSTR lpLibFileName)
 {
-	return LoadLibraryExW (lpLibFileName, 0, 0);
+    /* Call Ex version of the API */
+    return LoadLibraryExW (lpLibFileName, 0, 0);
 }
 
 
@@ -364,42 +401,56 @@ done:
  */
 FARPROC
 WINAPI
-GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
+GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
-	ANSI_STRING ProcedureName;
-	FARPROC fnExp = NULL;
-	NTSTATUS Status;
+    ANSI_STRING ProcedureName, *ProcNamePtr = NULL;
+    FARPROC fnExp = NULL;
+    NTSTATUS Status;
+    PVOID hMapped;
+    ULONG Ordinal = 0;
 
-	if (!hModule)
-	{
-		SetLastError(ERROR_PROC_NOT_FOUND);
-		return NULL;
-	}
+    if (HIWORD(lpProcName) != 0)
+    {
+        /* Look up by name */
+        RtlInitAnsiString(&ProcedureName, (LPSTR)lpProcName);
+        ProcNamePtr = &ProcedureName;
+    }
+    else
+    {
+        /* Look up by ordinal */
+        Ordinal = (ULONG)lpProcName;
+    }
 
-	if (HIWORD(lpProcName) != 0)
-	{
-		RtlInitAnsiString (&ProcedureName,
-		                   (LPSTR)lpProcName);
-		Status = LdrGetProcedureAddress ((PVOID)hModule,
-		                        &ProcedureName,
-		                        0,
-		                        (PVOID*)&fnExp);
-	}
-	else
-	{
-		Status = LdrGetProcedureAddress ((PVOID)hModule,
-		                        NULL,
-		                        (ULONG)lpProcName,
-		                        (PVOID*)&fnExp);
-	}
+    /* Map provided handle */
+    hMapped = BasepMapModuleHandle(hModule, FALSE);
 
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus(Status);
-		fnExp = NULL;
-	}
+    /* Get the proc address */
+    Status = LdrGetProcedureAddress(hMapped,
+                                    ProcNamePtr,
+                                    Ordinal,
+                                    (PVOID*)&fnExp);
 
-	return fnExp;
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return NULL;
+    }
+
+    /* Check for a special case when returned pointer is
+       the same as iamge's base address */
+    if (fnExp == hMapped)
+    {
+        /* Set correct error code */
+        if (HIWORD(lpProcName) != 0)
+            BaseSetLastNTError(STATUS_ENTRYPOINT_NOT_FOUND);
+        else
+            BaseSetLastNTError(STATUS_ORDINAL_NOT_FOUND);
+
+        return NULL;
+    }
+
+    /* All good, return procedure pointer */
+    return fnExp;
 }
 
 
@@ -906,87 +957,137 @@ GetModuleHandleExA(IN DWORD dwFlags,
  */
 DWORD
 WINAPI
-LoadModule (
-    LPCSTR  lpModuleName,
-    LPVOID  lpParameterBlock
-    )
+LoadModule(LPCSTR lpModuleName,
+           LPVOID lpParameterBlock)
 {
-  STARTUPINFOA StartupInfo;
-  PROCESS_INFORMATION ProcessInformation;
-  LOADPARMS32 *LoadParams;
-  char FileName[MAX_PATH];
-  char *CommandLine, *t;
-  BYTE Length;
+    STARTUPINFOA StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+    LOADPARMS32 *LoadParams;
+    char FileName[MAX_PATH];
+    LPSTR CommandLine;
+    DWORD Length, Error;
+    BOOL ProcessStatus;
+    ANSI_STRING AnsiStr;
+    UNICODE_STRING UnicStr;
+    RTL_PATH_TYPE PathType;
+    HANDLE Handle;
 
-  LoadParams = (LOADPARMS32*)lpParameterBlock;
-  if(!lpModuleName || !LoadParams || (((WORD*)LoadParams->lpCmdShow)[0] != 2))
-  {
-    /* windows doesn't check parameters, we do */
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+    LoadParams = (LOADPARMS32*)lpParameterBlock;
 
-  if(!SearchPathA(NULL, lpModuleName, ".exe", MAX_PATH, FileName, NULL) &&
-     !SearchPathA(NULL, lpModuleName, NULL, MAX_PATH, FileName, NULL))
-  {
-    return ERROR_FILE_NOT_FOUND;
-  }
-
-  Length = (BYTE)LoadParams->lpCmdLine[0];
-  if(!(CommandLine = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                               strlen(lpModuleName) + Length + 2)))
-  {
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-
-  /* Create command line string */
-  strcpy(CommandLine, lpModuleName);
-  t = CommandLine + strlen(CommandLine);
-  *(t++) = ' ';
-  memcpy(t, LoadParams->lpCmdLine + 1, Length);
-
-  /* Build StartupInfo */
-  RtlZeroMemory(&StartupInfo, sizeof(STARTUPINFOA));
-  StartupInfo.cb = sizeof(STARTUPINFOA);
-  StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-  StartupInfo.wShowWindow = ((WORD*)LoadParams->lpCmdShow)[1];
-
-  if(!CreateProcessA(FileName, CommandLine, NULL, NULL, FALSE, 0, LoadParams->lpEnvAddress,
-                     NULL, &StartupInfo, &ProcessInformation))
-  {
-    DWORD Error;
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
-    /* return the right value */
-    Error = GetLastError();
-    switch(Error)
+    /* Check load parameters */
+    if (LoadParams->dwReserved || LoadParams->wMagicValue != 2)
     {
-      case ERROR_BAD_EXE_FORMAT:
-      {
-        return ERROR_BAD_FORMAT;
-      }
-      case ERROR_FILE_NOT_FOUND:
-      case ERROR_PATH_NOT_FOUND:
-      {
-        return Error;
-      }
+        /* Fail with invalid param error */
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        return 0;
     }
-    return 0;
-  }
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
+    /* Search path */
+    Length = SearchPathA(NULL, lpModuleName, ".exe", MAX_PATH, FileName, NULL);
 
-  /* Wait up to 15 seconds for the process to become idle */
-  if (NULL != lpfnGlobalRegisterWaitForInputIdle)
-  {
-    lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 15000);
-  }
+    /* Check if path was found */
+    if (Length && Length < MAX_PATH)
+    {
+        /* Build StartupInfo */
+        RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
 
-  NtClose(ProcessInformation.hThread);
-  NtClose(ProcessInformation.hProcess);
+        StartupInfo.cb = sizeof(STARTUPINFOA);
+        StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+        StartupInfo.wShowWindow = LoadParams->wCmdShow;
 
-  return 33;
+        /* Allocate command line buffer */
+        CommandLine = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      (ULONG)LoadParams->lpCmdLine[0] + Length + 2);
+
+        /* Put module name there, then a space, and then copy provided command line,
+           and null-terminate it */
+        RtlCopyMemory(CommandLine, FileName, Length);
+        CommandLine[Length] = ' ';
+        RtlCopyMemory(&CommandLine[Length + 1], &LoadParams->lpCmdLine[1], (ULONG)LoadParams->lpCmdLine[0]);
+        CommandLine[Length + 1 + (ULONG)LoadParams->lpCmdLine[0]] = 0;
+
+        /* Create the process */
+        ProcessStatus = CreateProcessA(FileName,
+                                       CommandLine,
+                                       NULL,
+                                       NULL,
+                                       FALSE,
+                                       0,
+                                       LoadParams->lpEnvAddress,
+                                       NULL,
+                                       &StartupInfo,
+                                       &ProcessInformation);
+
+        /* Free the command line buffer */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
+
+        if (!ProcessStatus)
+        {
+            /* Creating process failed, return right error code */
+            Error = GetLastError();
+            switch(Error)
+            {
+            case ERROR_BAD_EXE_FORMAT:
+               return ERROR_BAD_FORMAT;
+
+            case ERROR_FILE_NOT_FOUND:
+            case ERROR_PATH_NOT_FOUND:
+                return Error;
+            }
+
+            /* Return 0 otherwise */
+            return 0;
+        }
+
+        /* Wait up to 30 seconds for the process to become idle */
+        if (lpfnGlobalRegisterWaitForInputIdle)
+        {
+            lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 30000);
+        }
+
+        /* Close handles */
+        NtClose(ProcessInformation.hThread);
+        NtClose(ProcessInformation.hProcess);
+
+        /* Return magic success value (33) */
+        return 33;
+    }
+
+    /* The path was not found, create an ansi string from
+        the module name and convert it to unicode */
+    RtlInitAnsiString(&AnsiStr, lpModuleName);
+    if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicStr,&AnsiStr,TRUE)))
+        return ERROR_FILE_NOT_FOUND;
+
+    /* Determine path type */
+    PathType = RtlDetermineDosPathNameType_U(UnicStr.Buffer);
+
+    /* Free the unicode module name */
+    RtlFreeUnicodeString(&UnicStr);
+
+    /* If it's a relative path, return file not found */
+    if (PathType == RtlPathTypeRelative)
+        return ERROR_FILE_NOT_FOUND;
+
+    /* If not, try to open it */
+    Handle = CreateFile(lpModuleName,
+                        GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
+
+    if (Handle != INVALID_HANDLE_VALUE)
+    {
+        /* Opening file succeeded for some reason, close the handle and return file not found anyway */
+        CloseHandle(Handle);
+        return ERROR_FILE_NOT_FOUND;
+    }
+
+    /* Return last error which CreateFile set during an attempt to open it */
+    return GetLastError();
 }
 
 /* EOF */
