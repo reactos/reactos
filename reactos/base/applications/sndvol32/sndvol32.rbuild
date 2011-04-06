@@ -11,6 +11,7 @@
 	<library>shell32</library>
 	<library>winmm</library>
 	<pch>sndvol32.h</pch>
+	<file>dialog.c</file>
 	<file>misc.c</file>
 	<file>mixer.c</file>
 	<file>sndvol32.c</file>

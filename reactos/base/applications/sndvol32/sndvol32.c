@@ -23,13 +23,14 @@
  * FILE:        subsys/system/sndvol32/sndvol32.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
-#include <sndvol32.h>
+#include "sndvol32.h"
 
 HINSTANCE hAppInstance;
 ATOM MainWindowClass;
 HWND hMainWnd;
 HANDLE hAppHeap;
 LPTSTR lpAppTitle;
+PREFERENCES_CONTEXT Preferences;
 
 #define GetDialogData(hwndDlg, type) \
     ( P##type )GetWindowLongPtr((hwndDlg), DWLP_USER)
@@ -38,21 +39,7 @@ LPTSTR lpAppTitle;
 
 /******************************************************************************/
 
-typedef struct _PREFERENCES_CONTEXT
-{
-    PMIXER_WINDOW MixerWindow;
-    PSND_MIXER Mixer;
-    HWND hwndDlg;
 
-    UINT Selected;
-    DWORD SelectedLine;
-    DWORD PlaybackID;
-    DWORD RecordingID;
-    UINT OtherLines;
-    TCHAR DeviceName[128];
-
-    DWORD tmp;
-} PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 
 typedef struct _PREFERENCES_FILL_DEVICES
 {
@@ -546,18 +533,36 @@ DlgPreferencesProc(HWND hwndDlg,
     return 0;
 }
 
+
 /******************************************************************************/
 
 static VOID
 DeleteMixerWindowControls(PMIXER_WINDOW MixerWindow)
 {
-    UNREFERENCED_PARAMETER(MixerWindow);
+    DWORD Index;
+
+    for(Index = 0; Index < MixerWindow->WindowCount; Index++)
+    {
+        /* destroys the window */
+        DestroyWindow(MixerWindow->Window[Index]);
+    }
+
+    /* free memory */
+    HeapFree(GetProcessHeap(), 0, MixerWindow->Window);
+
+    /* set to null */
+    MixerWindow->Window = NULL;
+    MixerWindow->WindowCount = 0;
 }
 
 static BOOL
-RebuildMixerWindowControls(PMIXER_WINDOW MixerWindow)
+RebuildMixerWindowControls(PPREFERENCES_CONTEXT PrefContext)
 {
-    DeleteMixerWindowControls(MixerWindow);
+    /* delete existing mixer controls */
+    DeleteMixerWindowControls(PrefContext->MixerWindow);
+
+    /* load new mixer controls */
+    LoadDialogCtrls(PrefContext);
 
     return TRUE;
 }
@@ -637,44 +642,56 @@ MainWindowProc(HWND hwnd,
                              GWL_USERDATA,
                              (LONG_PTR)MixerWindow);
             MixerWindow->hWnd = hwnd;
-            MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
-                                                         NULL,
-                                                         hwnd,
-                                                         0);
-            if (MixerWindow->hStatusBar != NULL)
+            MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd);
+            if (MixerWindow->Mixer != NULL)
             {
-                MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd);
-                if (MixerWindow->Mixer != NULL)
+                TCHAR szProduct[MAXPNAMELEN];
+
+                /* get mixer product name */
+                if (SndMixerGetProductName(MixerWindow->Mixer,
+                                           szProduct,
+                                           sizeof(szProduct) / sizeof(szProduct[0])) == -1)
                 {
-                    TCHAR szProduct[MAXPNAMELEN];
-
-                    if (SndMixerGetProductName(MixerWindow->Mixer,
-                                               szProduct,
-                                               sizeof(szProduct) / sizeof(szProduct[0])) > 0)
-                    {
-                        SendMessage(MixerWindow->hStatusBar,
-                                    WM_SETTEXT,
-                                    0,
-                                    (LPARAM)szProduct);
-                    }
-
-                    if (!RebuildMixerWindowControls(MixerWindow))
-                    {
-                        DPRINT("Rebuilding mixer window controls failed!\n");
-                        SndMixerDestroy(MixerWindow->Mixer);
-                        MixerWindow->Mixer = NULL;
-                        Result = -1;
-                    }
+                    /* failed to get name */
+                    szProduct[0] = L'\0';
                 }
-                else
+
+
+                /* initialize perferences */
+                ZeroMemory(&Preferences, sizeof(Preferences));
+
+                /* store mixer */
+                Preferences.Mixer = MixerWindow->Mixer;
+
+                /* store mixer window */
+                Preferences.MixerWindow = MixerWindow;
+
+                /* first destination line id */
+                Preferences.SelectedLine = 0xFFFF0000;
+
+                /* copy product */
+                wcscpy(Preferences.DeviceName, szProduct);
+
+                if (!RebuildMixerWindowControls(&Preferences))
                 {
+                    DPRINT("Rebuilding mixer window controls failed!\n");
+                    SndMixerDestroy(MixerWindow->Mixer);
+                    MixerWindow->Mixer = NULL;
                     Result = -1;
                 }
-            }
-            else
-            {
-                DPRINT("Failed to create status window!\n");
-                Result = -1;
+
+                /* create status window */
+                MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
+                                                             NULL,
+                                                             hwnd,
+                                                             0);
+                if (MixerWindow->hStatusBar)
+                {
+                    SendMessage(MixerWindow->hStatusBar,
+                                WM_SETTEXT,
+                                0,
+                                (LPARAM)szProduct);
+                }
             }
             break;
         }
@@ -746,7 +763,7 @@ CreateApplicationWindow(VOID)
     HWND hWnd;
 
     PMIXER_WINDOW MixerWindow = HeapAlloc(hAppHeap,
-                                          0,
+                                          HEAP_ZERO_MEMORY,
                                           sizeof(MIXER_WINDOW));
     if (MixerWindow == NULL)
     {
@@ -758,8 +775,8 @@ CreateApplicationWindow(VOID)
         hWnd = CreateWindowEx(WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT,
                               SZ_APP_CLASS,
                               lpAppTitle,
-                              WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
-                              CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                              WS_OVERLAPPEDWINDOW | WS_VISIBLE, //WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, 
+                              0, 0, 300, 315,
                               NULL,
                               LoadMenu(hAppInstance,
                                        MAKEINTRESOURCE(IDM_MAINMENU)),
@@ -805,6 +822,7 @@ _tWinMain(HINSTANCE hInstance,
 {
     MSG Msg;
     int Ret = 1;
+    INITCOMMONCONTROLSEX Controls;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpszCmdLine);
@@ -823,7 +841,10 @@ _tWinMain(HINSTANCE hInstance,
             lpAppTitle = NULL;
         }
 
-        InitCommonControls();
+        Controls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        Controls.dwICC = ICC_BAR_CLASSES | ICC_STANDARD_CLASSES;
+
+        InitCommonControlsEx(&Controls);
 
         if (RegisterApplicationClasses())
         {

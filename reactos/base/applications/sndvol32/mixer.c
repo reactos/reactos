@@ -23,7 +23,7 @@
  * FILE:        subsys/system/sndvol32/mixer.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
-#include <sndvol32.h>
+#include "sndvol32.h"
 
 #define NO_MIXER_SELECTED ((UINT)(~0))
 

@@ -9,6 +9,7 @@
 #include <tchar.h>
 #include <string.h>
 #include "resources.h"
+#include <assert.h>
 
 typedef struct _MIXER_WINDOW
 {
@@ -16,6 +17,10 @@ typedef struct _MIXER_WINDOW
   HWND hStatusBar;
   struct _SND_MIXER *Mixer;
   UINT SelectedLine;
+  UINT WindowCount;
+  HWND * Window;
+
+
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -26,7 +31,8 @@ extern HANDLE hAppHeap;
 #define SZ_APP_CLASS TEXT("Volume Control")
 
 ULONG DbgPrint(PCH , ...);
-#define DPRINT DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
+#define DPRINT 
+//DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
 
 
 /*
@@ -61,6 +67,24 @@ typedef struct _SND_MIXER
   PSND_MIXER_DESTINATION Lines;
 } SND_MIXER, *PSND_MIXER;
 
+typedef struct _PREFERENCES_CONTEXT
+{
+    PMIXER_WINDOW MixerWindow;
+    PSND_MIXER Mixer;
+    HWND hwndDlg;
+
+    UINT Selected;
+    DWORD SelectedLine;
+    DWORD PlaybackID;
+    DWORD RecordingID;
+    UINT OtherLines;
+    TCHAR DeviceName[128];
+
+    DWORD Count;
+    DWORD tmp;
+} PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
+
+
 typedef BOOL (CALLBACK *PFNSNDMIXENUMLINES)(PSND_MIXER Mixer, LPMIXERLINE Line, UINT DisplayControls, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMCONNECTIONS)(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMPRODUCTS)(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context);
@@ -77,6 +101,12 @@ INT SndMixerGetDestinationCount(PSND_MIXER Mixer);
 BOOL SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context);
 BOOL SndMixerEnumConnections(PSND_MIXER Mixer, DWORD LineID, PFNSNDMIXENUMCONNECTIONS EnumProc, PVOID Context);
 BOOL SndMixerIsDisplayControl(PSND_MIXER Mixer, LPMIXERCONTROL Control);
+
+/*
+ * dialog.c
+ */
+VOID
+LoadDialogCtrls(PPREFERENCES_CONTEXT PrefContext);
 
 /*
  * MISC
