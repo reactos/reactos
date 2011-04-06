@@ -1353,28 +1353,14 @@ NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
-   PTHREADINFO pti;
-   NTSTATUS ret = STATUS_SUCCESS;
-   
-   pti = MessageQueue->Thread->Tcb.Win32Thread;
-
-   while ( co_MsqDispatchOneSentMessage(MessageQueue) );
-
-   if (pti->pcti->fsWakeBits & pti->pcti->fsChangeBits )
-   {
-      return ret;
-   }
-
-   pti->pClientInfo->cSpins = 0;
-   IdlePing();
+   NTSTATUS ret;
    UserLeaveCo();
-   ret = KeWaitForSingleObject(MessageQueue->NewMessages,
-                              Executive,
-                              UserMode,
-                              FALSE, 
-                              NULL);
+   ret = KeWaitForSingleObject( MessageQueue->NewMessages,
+                                UserRequest,
+                                UserMode,
+                                FALSE, 
+                                NULL );
    UserEnterCo();
-   IdlePong();
    return ret;
 }
 
