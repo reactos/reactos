@@ -1800,6 +1800,72 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp )
 /*
  * @implemented
  */
+HWND APIENTRY
+NtUserChildWindowFromPointEx(HWND hwndParent,
+                             LONG x,
+                             LONG y,
+                             UINT uiFlags)
+{
+   PWND Parent;
+   POINTL Pt;
+   HWND Ret;
+   HWND *List, *phWnd;
+
+   if(!(Parent = UserGetWindowObject(hwndParent)))
+   {
+      return NULL;
+   }
+
+   Pt.x = x;
+   Pt.y = y;
+
+   if(Parent->head.h != IntGetDesktopWindow())
+   {
+      Pt.x += Parent->rcClient.left;
+      Pt.y += Parent->rcClient.top;
+   }
+
+   if(!IntPtInWindow(Parent, Pt.x, Pt.y))
+   {
+      return NULL;
+   }
+
+   Ret = Parent->head.h;
+   if((List = IntWinListChildren(Parent)))
+   {
+      for(phWnd = List; *phWnd; phWnd++)
+      {
+         PWND Child;
+         if((Child = UserGetWindowObject(*phWnd)))
+         {
+            if(!(Child->style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
+            {
+               continue;
+            }
+            if((Child->style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
+            {
+               continue;
+            }
+            if((Child->ExStyle & WS_EX_TRANSPARENT) && (uiFlags & CWP_SKIPTRANSPARENT))
+            {
+               continue;
+            }
+            if(IntPtInWindow(Child, Pt.x, Pt.y))
+            {
+               Ret = Child->head.h;
+               break;
+            }
+         }
+      }
+      ExFreePool(List);
+   }
+
+   return Ret;
+}
+
+/*
+ * @implemented
+ */
 BOOL APIENTRY
 NtUserEndDeferWindowPosEx(HDWP WinPosInfo,
                           DWORD Unknown1)

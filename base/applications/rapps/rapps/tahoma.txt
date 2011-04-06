@@ -4,7 +4,7 @@
 Name = Microsoft Tahoma Font
 Version = 1.0
 Licence = Unknown
-Description = Tahoma Font pack needed by some apps (Steam).
+Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.tff, Tahomabd.ttf.
 Size = 305kB
 Category = 14
 URLSite = http://support.microsoft.com/

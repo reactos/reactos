@@ -4,6 +4,7 @@
  * https://sourceforge.net/projects/reactospl
  *
  * updated by Caemyr - Olaf Siejka (Jan, 2008)
+ * updated by Saibamen - Adam Stachowicz (Mar, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -46,7 +47,7 @@ BEGIN
   POPUP "Pomoc"
   BEGIN
     MENUITEM "Pomoc",        ID_HELP
-    MENUITEM "Servman - informacje",       ID_ABOUT
+    MENUITEM "O programie",       ID_ABOUT
   END
 END
 
@@ -72,11 +73,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Service Manager - informacje"
+CAPTION "Mened¿er Us³ug - informacje"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Service Manager v0.5.1\nCopyright (C) 2005-2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 135, 26
+  LTEXT "Mened¿er Us³ug v0.5.1\nCopyright (C) 2005-2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 135, 26
   PUSHBUTTON "Zamknij", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -198,8 +199,8 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Numer us³ugi: %d"
-  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
-  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_STOP_DEPENDS "Kiedy %s siê zatrzyma, inne us³ugi równie¿ siê zatrzymaj¹"
+  IDS_NO_DEPENDS "<Brak zale¿noœci>"
   IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug Twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 

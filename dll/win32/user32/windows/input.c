@@ -100,7 +100,6 @@ DragDetect(
 #endif
 }
 
-
 /*
  * @implemented
  */
@@ -108,42 +107,8 @@ BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
-    // This will soon be moved to win32k.
-    BOOL Update;
-    LONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-    /* check if updating is needed */
-    UINT bIsDisabled = (Style & WS_DISABLED);
-    Update = bIsDisabled;
-
-    if (bEnable)
-    {
-       Style &= ~WS_DISABLED;
-    }
-    else
-    {
-       Update = !bIsDisabled;
-
-       SendMessageW( hWnd, WM_CANCELMODE, 0, 0);
-
-       /* Remove keyboard focus from that window if it had focus */
-       if (hWnd == GetFocus())
-       {
-          SetFocus(NULL);
-       }
-       Style |= WS_DISABLED;
-    }
-
-    NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
-    
-    if (Update)
-    {
-        IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
-        SendMessageW(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
-    }
-    // Return nonzero if it was disabled, or zero if it wasn't:
-    return bIsDisabled;
+  return NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bEnable, TWOPARAM_ROUTINE_ENABLEWINDOW);
 }
-
 
 /*
  * @implemented

@@ -70,7 +70,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 
 static LARGE_INTEGER ShortDelay;
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
-PSECTION_OBJECT GdiTableSection = NULL;
+static PSECTION_OBJECT GdiTableSection = NULL;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -741,16 +741,22 @@ IsObjectDead(HGDIOBJ hObject)
     }
 }
 
-
+/*
+ *  Process Environment Cached GDI Handles
+ *
+ *  What types of GDI handle objects that are cached in the GDI handle buffer?
+ *  Brushes set to BS_SOLID, Pens with widths of zero or set to PS_SOLID, and
+ *  Regions that are set to NULLREGION or SIMPLEREGION.
+ */
 BOOL
 FASTCALL
 bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 {
   PGDIHANDLECACHE GdiHandleCache;
   HGDIOBJ *hPtr;
-  BOOL Ret = FALSE;
-  int Offset = 0, Number;
   HANDLE Lock;
+  int Number, Offset, MaxNum = CACHE_PEN_ENTRIES;
+  BOOL Ret = FALSE;
 
   GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
 
@@ -758,6 +764,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
   {
      case hctBrushHandle:
         Offset = 0;
+        MaxNum = CACHE_BRUSH_ENTRIES;
         break;
 
      case hctPenHandle:
@@ -783,10 +790,10 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 
      hPtr = GdiHandleCache->Handle + Offset;
 
-     if ( pAttr && oType == hctRegionHandle)
+     if ( pAttr )
      {
-        if ( Number < CACHE_REGION_ENTRIES )
-        {
+        if ( Number < MaxNum )
+        { // This object is cached and waiting for it's resurrection by the users.
            ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
            hPtr[Number] = Handle;
            GdiHandleCache->ulNumHandles[oType]++;
@@ -817,6 +824,7 @@ GreDeleteObject(HGDIOBJ hObject)
     INT Index;
     PGDI_TABLE_ENTRY Entry;
     DWORD dwObjectType;
+    INT ihct;
     PVOID pAttr = NULL;
 
     DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
@@ -831,14 +839,27 @@ GreDeleteObject(HGDIOBJ hObject)
        switch (dwObjectType)
        {
           case GDI_OBJECT_TYPE_BRUSH:
+             ihct = hctBrushHandle;
+             break;
+
+          case GDI_OBJECT_TYPE_PEN:
+             ihct = hctPenHandle;
              break;
 
           case GDI_OBJECT_TYPE_REGION:
-             /* If pAttr NULL, the probability is high for System Region. */
+             ihct = hctRegionHandle;
+             break;
+       }
+
+       switch (dwObjectType)
+       {
+//          case GDI_OBJECT_TYPE_BRUSH:
+//          case GDI_OBJECT_TYPE_PEN:
+          case GDI_OBJECT_TYPE_REGION:
+             /* If pAttr NULL, the probability is high for System GDI handle object. */
              if ( pAttr &&
-                  bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
-             {
-                /* User space handle only! */
+                  bPEBCacheHandle(hObject, ihct, pAttr) )
+             {  /* User space handle only! */
                 return TRUE;
              }
              if (pAttr)
@@ -846,10 +867,6 @@ GreDeleteObject(HGDIOBJ hObject)
                 FreeObjectAttr(pAttr);
                 Entry->UserData = NULL;
              }
-             break;
-
-          case GDI_OBJECT_TYPE_DC:
-//             DC_FreeDcAttr(hObject);
              break;
        }
 
@@ -1646,7 +1663,7 @@ LockHandleFrom:
 }
 
 PVOID INTERNAL_CALL
-GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
+GDI_MapHandleTable(PEPROCESS Process)
 {
     PVOID MappedView = NULL;
     NTSTATUS Status;
@@ -1655,10 +1672,10 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
     Offset.QuadPart = 0;
 
-    ASSERT(SectionObject != NULL);
+    ASSERT(GdiTableSection != NULL);
     ASSERT(Process != NULL);
 
-    Status = MmMapViewOfSection(SectionObject,
+    Status = MmMapViewOfSection(GdiTableSection,
                                 Process,
                                 &MappedView,
                                 0,
@@ -1708,126 +1725,6 @@ GDIOBJ_LockMultipleObjs(ULONG ulCount,
 
 
 /** PUBLIC FUNCTIONS **********************************************************/
-
-BOOL
-FASTCALL
-IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
-{
-  INT Index;
-  PGDI_TABLE_ENTRY Entry;
-/*
-  System Regions:
-     These regions do not use attribute sections and when allocated, use gdiobj
-     level functions.
- */
-  // FIXME! HAX!!! Remove this once we get everything right!
-  Index = GDI_HANDLE_GET_INDEX(hRgn);
-  Entry = &GdiHandleTable->Entries[Index];
-  if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-  Entry->UserData = NULL;
-  //
-  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
-  {
-     return GDIOBJ_SetOwnership(hRgn, NULL);
-  }
-  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
-  {
-     return GDIOBJ_SetOwnership((HGDIOBJ) hRgn, PsGetCurrentProcess() );
-  }
-  return FALSE;
-}
-
-BOOL
-FASTCALL
-IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
-{
-  HBRUSH hBR;
-  PEPROCESS Owner = NULL;
-  PGDI_TABLE_ENTRY pEntry = NULL;
-
-  if (!pbr) return FALSE;
-
-  hBR = pbr->BaseObject.hHmgr;
-
-  if (!hBR || (GDI_HANDLE_GET_TYPE(hBR) != GDI_OBJECT_TYPE_BRUSH))
-     return FALSE;
-  else
-  {
-     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hBR);
-     pEntry = &GdiHandleTable->Entries[Index];
-  }
-
-  if (pbr->flAttrs & GDIBRUSH_IS_GLOBAL)
-  {
-     GDIOBJ_ShareUnlockObjByPtr((POBJ)pbr);
-     return TRUE;
-  }
-
-  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
-  {
-     // Set this Brush to inaccessible mode and to an Owner of NONE.
-//     if (OwnerMask == GDI_OBJ_HMGR_NONE) Owner = OwnerMask;
-
-     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, Owner))
-        return FALSE;
-
-     // Deny user access to User Data.
-     pEntry->UserData = NULL; // This hBR is inaccessible!
-  }
-
-  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
-  {
-     if (!GDIOBJ_SetOwnership((HGDIOBJ) hBR, PsGetCurrentProcess() ))
-        return FALSE;
-
-     // Allow user access to User Data.
-     pEntry->UserData = pbr->pBrushAttr;
-  }
-  return TRUE;
-}
-
-BOOL
-FASTCALL
-IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
-{
-  PDC pDC;
-  BOOL Ret = FALSE;
-
-  if (!hDC || (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)) return FALSE;
-
-  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
-  {
-     pDC = DC_LockDc ( hDC );
-     MmCopyFromCaller(&pDC->dcattr, pDC->pdcattr, sizeof(DC_ATTR));
-     DC_vFreeDcAttr(pDC);
-     DC_UnlockDc( pDC );
-
-     if (!DC_SetOwnership( hDC, NULL )) // This hDC is inaccessible!
-        return Ret;
-  }
-
-  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
-  {
-     pDC = DC_LockDc ( hDC );
-     ASSERT(pDC->pdcattr == &pDC->dcattr);
-     DC_UnlockDc( pDC );
-
-     if (!DC_SetOwnership( hDC, PsGetCurrentProcess() )) return Ret;
-
-     DC_AllocateDcAttr( hDC );      // Allocate new dcattr
-
-     DCU_SynchDcAttrtoUser( hDC );  // Copy data from dc to dcattr
-  }
-
-  if ((OwnerMask != GDI_OBJ_HMGR_NONE) && !NoSetBrush)
-  {
-     pDC = DC_LockDc ( hDC );
-     if (IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrFill, OwnerMask))
-         IntGdiSetBrushOwner((PBRUSH)pDC->dclevel.pbrLine, OwnerMask);
-     DC_UnlockDc( pDC );
-  }
-  return TRUE;
-}
 
 INT
 FASTCALL

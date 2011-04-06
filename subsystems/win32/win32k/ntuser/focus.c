@@ -546,6 +546,9 @@ co_UserSetCapture(HWND hWnd)
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
 
+   if (ThreadQueue->QF_flags & QF_CAPTURELOCKED)
+      return NULL;
+
    if ((Window = UserGetWindowObject(hWnd)))
    {
       if (Window->head.pti->MessageQueue != ThreadQueue)
@@ -553,7 +556,7 @@ co_UserSetCapture(HWND hWnd)
          return NULL;
       }
    }
-
+   
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
 
    if (hWndPrev)
@@ -563,20 +566,56 @@ co_UserSetCapture(HWND hWnd)
          IntNotifyWinEvent(EVENT_SYSTEM_CAPTUREEND, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
 
-   /* also remove other windows if not capturing anymore */
-   if (hWnd == NULL)
-   {
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
-   }
-
    if (Window)
       IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
-   co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   if (hWndPrev && hWndPrev != hWnd)
+   {
+      if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
+
+      co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+
+      ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
+   }
+
    ThreadQueue->CaptureWindow = hWnd;
 
+   if (hWnd == NULL) // Release mode.
+   {
+      MOUSEINPUT mi;
+   /// These are hacks!
+      /* also remove other windows if not capturing anymore */
+      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
+      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
+   ///
+      /* Somebody may have missed some mouse movements */
+      mi.dx = 0;
+      mi.dy = 0;
+      mi.mouseData = 0;
+      mi.dwFlags = MOUSEEVENTF_MOVE;
+      mi.time = 0;
+      mi.dwExtraInfo = 0;      
+      IntMouseInput(&mi);
+   }
    return hWndPrev;
+}
+
+BOOL
+FASTCALL
+IntReleaseCapture(VOID)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+
+   // Can not release inside WM_CAPTURECHANGED!!
+   if (ThreadQueue->QF_flags & QF_CAPTURELOCKED) return FALSE;
+
+   co_UserSetCapture(NULL);
+
+   return TRUE;
 }
 
 /*

@@ -121,7 +121,7 @@ ClearMsgBitsMask(PUSER_MESSAGE_QUEUE Queue, UINT MessageBits)
    pti = Queue->Thread->Tcb.Win32Thread;
 
    if (MessageBits & QS_KEY)
-   {
+   {  
       if (--Queue->nCntsQBits[QSRosKey] == 0) ClrMask |= QS_KEY;
    }
    if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
@@ -193,6 +193,7 @@ co_MsqInsertMouseMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
+   PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
 
    KeQueryTickCount(&LargeTickCount);
@@ -244,10 +245,19 @@ co_MsqInsertMouseMessage(MSG* Msg)
             pwnd != NULL;
             pwnd = pwnd->spwndNext )
        {
-           if((pwnd->style & WS_VISIBLE) &&
+           if ( pwnd->state2 & WNDS2_INDESTROY || pwnd->state & WNDS_DESTROYED )
+           {
+              DPRINT("The Window is in DESTROY!\n");
+              continue;
+           }
+
+           if((pwnd->style & WS_VISIBLE) && 
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
+               pDesk = pwnd->head.rpdesk;
+               pDesk->htEx = HTCLIENT;
+               pDesk->spwndTrack = pwnd;
                break;
            }
        }
@@ -623,7 +633,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   UINT uTimeout, BOOL Block, INT HookMessage,
                   ULONG_PTR *uResult)
 {
-   PTHREADINFO pti;
+   PTHREADINFO pti, ptirec;
    PUSER_SENT_MESSAGE Message;
    KEVENT CompletionEvent;
    NTSTATUS WaitStatus;
@@ -642,8 +652,10 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
+   ptirec = MessageQueue->Thread->Tcb.Win32Thread;
    ASSERT(ThreadQueue != MessageQueue);
-
+   ASSERT(ptirec->pcti); // Send must have a client side to receive it!!!!
+   
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
    /* FIXME - increase reference counter of sender's message queue here */
@@ -727,7 +739,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
             Entry = Entry->Flink;
          }
 
-         DPRINT("MsqSendMessage (blocked) timed out\n");
+         DPRINT("MsqSendMessage (blocked) timed out 1\n");
       }
       while (co_MsqDispatchOneSentMessage(ThreadQueue))
          ;
@@ -787,7 +799,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                Entry = Entry->Flink;
             }
 
-            DPRINT("MsqSendMessage timed out\n");
+            DPRINT("MsqSendMessage timed out 2\n");
             break;
          }
          while (co_MsqDispatchOneSentMessage(ThreadQueue))
@@ -860,7 +872,7 @@ static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
         if (pwndParent == pwndDesktop) break;
         pt.x += pwnd->rcClient.left - pwndParent->rcClient.left;
         pt.y += pwnd->rcClient.top - pwndParent->rcClient.top;
-
+        
         pwnd = pwndParent;
         co_IntSendMessage( UserHMGetHandle(pwnd), WM_PARENTNOTIFY,
                       MAKEWPARAM( event, idChild ), MAKELPARAM( pt.x, pt.y ) );
@@ -902,7 +914,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     DPRINT("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
-
+    
     if (pwndMsg == NULL || pwndMsg->head.pti != pti)
     {
         /* Remove and ignore the message */
@@ -972,7 +984,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            }
         }
 
-        if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
+        if (!((first ==  0 && last == 0) || (message >= first || message <= last))) 
         {
             DPRINT("Message out of range!!!\n");
             RETURN(FALSE);
@@ -1022,8 +1034,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     /* message is accepted now (but may still get dropped) */
-
-    pti->rpdesk->htEx = hittest; /* Now set the capture hit. */
 
     event.message = msg->message;
     event.time    = msg->time;
@@ -1095,8 +1105,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
-                LONG ret = co_IntSendMessage( msg->hwnd,
-                                              WM_MOUSEACTIVATE,
+                LONG ret = co_IntSendMessage( msg->hwnd, 
+                                              WM_MOUSEACTIVATE, 
                                               (WPARAM)UserHMGetHandle(pwndTop),
                                               MAKELONG( hittest, msg->message));
                 switch(ret)
@@ -1250,7 +1260,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
     CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                           ListEntry);
-    do
+    do 
     {
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
@@ -1296,7 +1306,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
-
+   
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
 
@@ -1309,8 +1319,15 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
       if (IsListEmpty(CurrentEntry)) break;
       if (!CurrentMessage) break;
       CurrentEntry = CurrentEntry->Flink;
-
-      if ( ( !Window || Window == HWND_BOTTOM || Window->head.h == CurrentMessage->Msg.hwnd ) &&
+/*
+ MSDN:
+ 1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.
+ 2: retrieves only messages on the current thread's message queue whose hwnd value is NULL.
+ 3: handle to the window whose messages are to be retrieved.
+ */
+      if ( ( !Window || // 1
+            ( Window == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
@@ -1337,13 +1354,12 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
    NTSTATUS ret;
-
    UserLeaveCo();
-   ret = KeWaitForSingleObject(MessageQueue->NewMessages,
-                              Executive,
-                              UserMode,
-                              FALSE,
-                              NULL);
+   ret = KeWaitForSingleObject( MessageQueue->NewMessages,
+                                UserRequest,
+                                UserMode,
+                                FALSE, 
+                                NULL );
    UserEnterCo();
    return ret;
 }
@@ -1355,6 +1371,15 @@ MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue)
 
    KeQueryTickCount(&LargeTickCount);
    return ((LargeTickCount.u.LowPart - MessageQueue->LastMsgRead) > MSQ_HUNG);
+}
+
+VOID
+CALLBACK
+HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+   //DoTheScreenSaver();
+   DPRINT("HungAppSysTimerProc\n");
+   // Process list of windows that are hung and waiting.
 }
 
 BOOLEAN FASTCALL
@@ -1405,7 +1430,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
    PTHREADINFO pti;
-
+   
    pti = MessageQueue->Thread->Tcb.Win32Thread;
 
 
@@ -1428,7 +1453,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
       /* remove the message from the dispatching list if needed */
-      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
@@ -1554,6 +1579,8 @@ VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
    PDESKTOP desk;
+
+   MessageQueue->QF_flags |= QF_INDESTROY;
 
    /* remove the message queue from any desktops */
    if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))

@@ -4,7 +4,7 @@
 Name = Visual Basic 5 Runtime
 Version = 5.0
 Licence = Unknown
-Description = Visual Basic 5 Runtime.
+Description = Visual Basic 5 Runtime. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
 Size = 970kB
 Category = 14
 URLSite = http://support.microsoft.com/kb/180071/

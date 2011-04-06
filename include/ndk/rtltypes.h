@@ -1012,13 +1012,20 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
-typedef struct RTL_DRIVE_LETTER_CURDIR
+typedef struct _RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;
     USHORT Length;
     ULONG TimeStamp;
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+typedef struct _RTL_PERTHREAD_CURDIR
+{
+    PRTL_DRIVE_LETTER_CURDIR CurrentDirectories;
+    PUNICODE_STRING ImageName;
+    PVOID Environment;
+} RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
 
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege

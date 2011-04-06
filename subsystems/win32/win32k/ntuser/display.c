@@ -766,7 +766,7 @@ UserChangeDisplaySettings(
         //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
 
         /* Set new size of the monitor */
-        IntResetMonitorSize(ppdev);
+        IntUpdateMonitorSize(ppdev);
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);

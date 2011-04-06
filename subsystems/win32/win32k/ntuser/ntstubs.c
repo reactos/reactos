@@ -84,11 +84,11 @@ NtUserBitBltSysBmp(
    Ret = NtGdiBitBlt( hdc,
                    nXDest,
                    nYDest,
-                   nWidth, 
-                  nHeight, 
+                   nWidth,
+                  nHeight,
                 hSystemBM,
-                    nXSrc, 
-                    nYSrc, 
+                    nXSrc,
+                    nYSrc,
                     dwRop,
                         0,
                         0);
@@ -255,7 +255,7 @@ HBRUSH
 APIENTRY
 NtUserGetControlColor(
    HWND hwndParent,
-   HWND hwnd, 
+   HWND hwnd,
    HDC hdc,
    UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
 {
@@ -380,7 +380,7 @@ NtUserInitializeClientPfnArrays(
       DPRINT1("Failed reading Client Pfns from user space.\n");
       SetLastNtError(Status);
    }
-   
+
    UserLeave();
    return Status;
 }
@@ -539,37 +539,38 @@ NtUserSetSysColors(
    FLONG Flags)
 {
    DWORD Ret = TRUE;
-   NTSTATUS Status = STATUS_SUCCESS;
 
    if (cElements == 0)
       return TRUE;
 
+   /* We need this check to prevent overflow later */
+   if ((ULONG)cElements >= 0x40000000)
+   {
+      EngSetLastError(ERROR_NOACCESS);
+      return FALSE;
+   }
+
    UserEnterExclusive();
+
    _SEH2_TRY
    {
-      ProbeForRead(lpaElements,
-                   sizeof(INT),
-                   1);
-      ProbeForRead(lpaRgbValues,
-                   sizeof(COLORREF),
-                   1);
-// Developers: We are thread locked and calling gdi.
+      ProbeForRead(lpaElements, cElements * sizeof(INT), 1);
+      ProbeForRead(lpaRgbValues, cElements * sizeof(COLORREF), 1);
+
       IntSetSysColors(cElements, lpaElements, lpaRgbValues);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
+      SetLastNtError(_SEH2_GetExceptionCode());
       Ret = FALSE;
    }
+   _SEH2_END;
+
    if (Ret)
    {
       UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
    }
+
    UserLeave();
    return Ret;
 }
@@ -934,25 +935,25 @@ NtUserQueryInputContext(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6)
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    DWORD dwWakeMask,
+    UINT uTimeout)
 {
     UNIMPLEMENTED;
     return 0;
@@ -1251,10 +1252,10 @@ NtUserLockWindowUpdate(HWND hWnd)
 /*
  * @unimplemented
  */
-DWORD APIENTRY
-NtUserRealChildWindowFromPoint(DWORD Unknown0,
-                               DWORD Unknown1,
-                               DWORD Unknown2)
+HWND APIENTRY
+NtUserRealChildWindowFromPoint(HWND Parent,
+                               LONG x,
+                               LONG y)
 {
    UNIMPLEMENTED
 

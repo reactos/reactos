@@ -125,7 +125,7 @@ ScmWriteDependencies(HKEY hServiceKey,
         lpDst = lpGroupDeps;
         while (*lpSrc != 0)
         {
-            dwLength = wcslen(lpSrc);
+            dwLength = wcslen(lpSrc) + 1;
             if (*lpSrc == SC_GROUP_IDENTIFIERW)
             {
                 lpSrc++;
@@ -157,21 +157,37 @@ ScmWriteDependencies(HKEY hServiceKey,
         *lpDst = 0;
         dwServiceLength++;
 
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"DependOnGroup",
-                                 0,
-                                 REG_MULTI_SZ,
-                                 (LPBYTE)lpGroupDeps,
-                                 dwGroupLength * sizeof(WCHAR));
+        if (dwGroupLength > 1)
+        {
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"DependOnGroup",
+                                     0,
+                                     REG_MULTI_SZ,
+                                     (LPBYTE)lpGroupDeps,
+                                     dwGroupLength * sizeof(WCHAR));
+        }
+        else
+        {
+            RegDeleteValueW(hServiceKey,
+                            L"DependOnGroup");
+        }
 
         if (dwError == ERROR_SUCCESS)
         {
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"DependOnService",
-                                     0,
-                                     REG_MULTI_SZ,
-                                     (LPBYTE)lpServiceDeps,
-                                     dwServiceLength * sizeof(WCHAR));
+            if (dwServiceLength > 1)
+            {
+                dwError = RegSetValueExW(hServiceKey,
+                                         L"DependOnService",
+                                         0,
+                                         REG_MULTI_SZ,
+                                         (LPBYTE)lpServiceDeps,
+                                         dwServiceLength * sizeof(WCHAR));
+            }
+            else
+            {
+                RegDeleteValueW(hServiceKey,
+                                L"DependOnService");
+            }
         }
 
         HeapFree(GetProcessHeap(), 0, lpGroupDeps);

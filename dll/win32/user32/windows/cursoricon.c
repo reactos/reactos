@@ -458,16 +458,10 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     void *color_bits, *mask_bits;
     BOOL ret = FALSE;
     HDC hdc = 0;
-	static HDC hScreenDC = 0;
 
     if (!(info = HeapAlloc( GetProcessHeap(), 0, max( size, FIELD_OFFSET( BITMAPINFO, bmiColors[2] )))))
         return FALSE;
-	if(!hScreenDC)
-	{
-		hScreenDC = GetDC(0);
-		if(!hScreenDC) goto done;
-	}
-    if (!(hdc = CreateCompatibleDC(hScreenDC))) goto done;
+    if (!(hdc = CreateCompatibleDC(NULL))) goto done;
 
     memcpy( info, bmi, size );
     info->bmiHeader.biHeight /= 2;
@@ -491,8 +485,8 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     else
     {
         if (!(*mask = CreateBitmap( width, height, 1, 1, NULL ))) goto done;
-        if (!(*color = CreateBitmap( width, height, GetDeviceCaps(hScreenDC, PLANES),
-                                     GetDeviceCaps(hScreenDC, BITSPIXEL), NULL )))
+        if (!(*color = CreateBitmap( width, height, GetDeviceCaps(hdc, PLANES),
+                                     GetDeviceCaps(hdc, BITSPIXEL), NULL )))
         {
             DeleteObject( *mask );
             goto done;

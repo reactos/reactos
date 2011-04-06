@@ -680,10 +680,10 @@ FormatTime(TCHAR *lpTime, LPSYSTEMTIME dt)
 	{
 		case 0: /* 12 hour format */
 		default:
-			return _stprintf(lpTime,_T("%02d%c%02u%c"),
+			return _stprintf(lpTime,_T("%02d%c%02u %cM"),
 					(dt->wHour == 0 ? 12 : (dt->wHour <= 12 ? dt->wHour : dt->wHour - 12)),
 					cTimeSeparator,
-					 dt->wMinute, (dt->wHour <= 11 ? _T('a') : _T('p')));
+					 dt->wMinute, (dt->wHour <= 11 ? _T('A') : _T('P')));
 			break;
 
 		case 1: /* 24 hour format */

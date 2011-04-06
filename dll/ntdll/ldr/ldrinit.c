@@ -786,8 +786,8 @@ LdrpAllocateTls(VOID)
     PVOID *TlsVector;
 
     /* Check if we have any entries */
-    if (LdrpNumberOfTlsEntries)
-        return 0;
+    if (!LdrpNumberOfTlsEntries)
+        return STATUS_SUCCESS;
 
     /* Allocate the vector array */
     TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),

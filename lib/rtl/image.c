@@ -46,6 +46,7 @@ LdrVerifyMappedImageMatchesChecksum(
     IN ULONG ImageSize,
     IN ULONG FileLength)
 {
+#if 0
     PIMAGE_NT_HEADERS Header;
     PUSHORT Ptr;
     ULONG Sum;
@@ -118,6 +119,9 @@ LdrVerifyMappedImageMatchesChecksum(
         DPRINT1("Image %p checksum mismatches! 0x%x != 0x%x, ImageSize %x, FileLen %x\n", BaseAddress, CalcSum, HeaderSum, ImageSize, FileLength);
 
     return (BOOLEAN)(CalcSum == HeaderSum);
+#else
+    return TRUE;
+#endif
 }
 
 /*

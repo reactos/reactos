@@ -3524,7 +3524,7 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 {
     BOOL Ret;
 
-    RtlEnterCriticalSection(&DllLock);
+    RtlEnterCriticalSection(&BaseDllDirectoryLock);
     if (Add)
     {
         Ret = AddConsoleCtrlHandler(HandlerRoutine);
@@ -3534,7 +3534,7 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
         Ret = RemoveConsoleCtrlHandler(HandlerRoutine);
     }
 
-    RtlLeaveCriticalSection(&DllLock);
+    RtlLeaveCriticalSection(&BaseDllDirectoryLock);
     return(Ret);
 }
 

@@ -119,6 +119,9 @@ NtUserCallNoParam(DWORD Routine)
          RETURN( (DWORD_PTR)MAKELONG(pti->ptLast.x, pti->ptLast.y));
       }
 
+      case NOPARAM_ROUTINE_RELEASECAPTURE:
+         RETURN( (DWORD_PTR)IntReleaseCapture());
+
       default:
          DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -251,7 +254,6 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:
          {
              BOOL ret = TRUE;
-
 
             _SEH2_TRY
             {
@@ -436,8 +438,7 @@ NtUserCallTwoParam(
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:
-         UNIMPLEMENTED
-         RETURN( 0);
+         RETURN( IntEnableWindow((HWND)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
       {

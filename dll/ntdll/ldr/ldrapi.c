@@ -15,9 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define LDR_LOCK_HELD 0x2
-#define LDR_LOCK_FREE 0x1
-
 LONG LdrpLoaderLockAcquisitonCount;
 
 /* FUNCTIONS *****************************************************************/
@@ -38,7 +35,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
     if (Flags & ~1)
     {
         /* Flags are invalid, check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_1);
@@ -60,7 +57,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
         DPRINT1("LdrUnlockLoaderLock() called with an invalid cookie!\n");
 
         /* Invalid cookie, check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_2);
@@ -73,7 +70,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
     }
 
     /* Ready to release the lock */
-    if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+    if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
     {
         /* Do a direct leave */
         RtlLeaveCriticalSection(&LdrpLoaderLock);
@@ -118,11 +115,11 @@ LdrLockLoaderLock(IN ULONG Flags,
     if (Cookie) *Cookie = 0;
 
     /* Validate the flags */
-    if (Flags & ~(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS |
+    if (Flags & ~(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS |
                   LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY))
     {
         /* Flags are invalid, check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_1);
@@ -136,7 +133,7 @@ LdrLockLoaderLock(IN ULONG Flags,
     if (!Cookie)
     {
         /* No cookie check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_3);
@@ -150,7 +147,7 @@ LdrLockLoaderLock(IN ULONG Flags,
     if ((Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY) && !(Result))
     {
         /* No pointer to return the data to */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_2);
@@ -164,7 +161,7 @@ LdrLockLoaderLock(IN ULONG Flags,
     if (InInit) return STATUS_SUCCESS;
 
     /* Check what locking semantic to use */
-    if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS)
+    if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
     {
         /* Check if we should enter or simply try */
         if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY)
@@ -173,13 +170,13 @@ LdrLockLoaderLock(IN ULONG Flags,
             if (!RtlTryEnterCriticalSection(&LdrpLoaderLock))
             {
                 /* It's locked */
-                *Result = LDR_LOCK_HELD;
+                *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
                 goto Quickie;
             }
             else
             {
                 /* It worked */
-                *Result = LDR_LOCK_FREE;
+                *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
             }
         }
         else
@@ -188,7 +185,7 @@ LdrLockLoaderLock(IN ULONG Flags,
             RtlEnterCriticalSection(&LdrpLoaderLock);
 
             /* See if result was requested */
-            if (Result) *Result = LDR_LOCK_FREE;
+            if (Result) *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
         }
 
         /* Increase the acquisition count */
@@ -209,13 +206,13 @@ LdrLockLoaderLock(IN ULONG Flags,
                 if (!RtlTryEnterCriticalSection(&LdrpLoaderLock))
                 {
                     /* It's locked */
-                    *Result = LDR_LOCK_HELD;
+                    *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
                     _SEH2_YIELD(return STATUS_SUCCESS);
                 }
                 else
                 {
                     /* It worked */
-                    *Result = LDR_LOCK_FREE;
+                    *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
                 }
             }
             else
@@ -224,7 +221,7 @@ LdrLockLoaderLock(IN ULONG Flags,
                 RtlEnterCriticalSection(&LdrpLoaderLock);
 
                 /* See if result was requested */
-                if (Result) *Result = LDR_LOCK_FREE;
+                if (Result) *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
             }
 
             /* Increase the acquisition count */
@@ -528,6 +525,68 @@ LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation,
 {
     /* Call Ex version of the API */
     return LdrQueryProcessModuleInformationEx(0, 0, ModuleInformation, Size, ReturnedSize);
+}
+
+NTSTATUS
+NTAPI
+LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, PVOID Context)
+{
+    PLIST_ENTRY ListHead, ListEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    NTSTATUS Status;
+    ULONG Cookie;
+    BOOLEAN Stop = FALSE;
+
+    /* Check parameters */
+    if (ReservedFlag || !EnumProc) return STATUS_INVALID_PARAMETER;
+
+    /* Acquire the loader lock */
+    Status = LdrLockLoaderLock(0, NULL, &Cookie);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Loop all the modules and call enum proc */
+    ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    ListEntry = ListHead->Flink;
+    while (ListHead != ListEntry)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        /* Call the enumeration proc inside SEH */
+        _SEH2_TRY
+        {
+            EnumProc(LdrEntry, Context, &Stop);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignoring the exception */
+        } _SEH2_END;
+
+        /* Break if we were asked to stop enumeration */
+        if (Stop)
+        {
+            /* Release loader lock */
+            Status = LdrUnlockLoaderLock(0, Cookie);
+
+            /* Reset any successful status to STATUS_SUCCESS, but leave
+               failure to the caller */
+            if (NT_SUCCESS(Status))
+                Status = STATUS_SUCCESS;
+
+            /* Return any possible failure status */
+            return Status;
+        }
+
+        /* Advance to the next module */
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Release loader lock, it must succeed this time */
+    Status = LdrUnlockLoaderLock(0, Cookie);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

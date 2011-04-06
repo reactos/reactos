@@ -2416,6 +2416,9 @@ typedef PCACTCTXW PCACTCTX;
 #define GetCommandLine GetCommandLineW
 #define GetCompressedFileSize GetCompressedFileSizeW
 #define GetComputerName GetComputerNameW
+#if (_WIN32_WINNT >= 0x0500)
+#define GetComputerNameEx GetComputerNameExW
+#endif
 #define GetCurrentDirectory GetCurrentDirectoryW
 #define GetDefaultCommConfig GetDefaultCommConfigW
 #define GetDiskFreeSpace GetDiskFreeSpaceW
@@ -2619,6 +2622,9 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define GetBinaryType GetBinaryTypeA
 #define GetCommandLine GetCommandLineA
 #define GetComputerName GetComputerNameA
+#if (_WIN32_WINNT >= 0x0500)
+#define GetComputerNameEx GetComputerNameExA
+#endif
 #define GetCompressedFileSize GetCompressedFileSizeA
 #define GetCurrentDirectory GetCurrentDirectoryA
 #define GetDefaultCommConfig GetDefaultCommConfigA

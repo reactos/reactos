@@ -4,7 +4,7 @@
 Name = Visual Basic 6 Runtime
 Version = 6.0
 Licence = Unknown
-Description = Visual Basic 6 Runtime.
+Description = Visual Basic 6 Runtime. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 Size = 1.0MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/192461/

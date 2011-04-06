@@ -28,51 +28,78 @@
  *  See http://worm.me.uk/fullfat for more information.                      *
  *  Or  http://fullfat.googlecode.com/ for latest releases and the wiki.     *
  *****************************************************************************/
+#ifndef _FF_FATDEF_H_
+#define _FF_FATDEF_H_
+
+/*
+	This file defines offsets to various data for the FAT specification.
+*/
+
+// MBR / PBR Offsets
+
+#define FF_FAT_BYTES_PER_SECTOR		0x00B
+#define FF_FAT_SECTORS_PER_CLUS		0x00D
+#define FF_FAT_RESERVED_SECTORS		0x00E
+#define FF_FAT_NUMBER_OF_FATS		0x010
+#define FF_FAT_ROOT_ENTRY_COUNT		0x011
+#define FF_FAT_16_TOTAL_SECTORS		0x013
+#define FF_FAT_32_TOTAL_SECTORS		0x020
+#define FF_FAT_16_SECTORS_PER_FAT	0x016
+#define FF_FAT_32_SECTORS_PER_FAT	0x024
+#define FF_FAT_ROOT_DIR_CLUSTER		0x02C
+
+#define FF_FAT_16_VOL_LABEL			0x02B
+#define FF_FAT_32_VOL_LABEL			0x047
+
+#define FF_FAT_PTBL					0x1BE
+#define FF_FAT_PTBL_LBA				0x008
+#define FF_FAT_PTBL_ACTIVE          0x000
+#define FF_FAT_PTBL_ID              0x004
+
+#define FF_FAT_MBR_SIGNATURE        0x1FE
+
+#define FF_FAT_DELETED				0xE5
+
+// Directory Entry Offsets
+#define FF_FAT_DIRENT_SHORTNAME		0x000
+#define FF_FAT_DIRENT_ATTRIB		0x00B
+#define FF_FAT_DIRENT_CREATE_TIME	0x00E	///< Creation Time.
+#define FF_FAT_DIRENT_CREATE_DATE	0x010	///< Creation Date.
+#define FF_FAT_DIRENT_LASTACC_DATE	0x012	///< Date of Last Access.
+#define FF_FAT_DIRENT_CLUS_HIGH		0x014
+#define FF_FAT_DIRENT_LASTMOD_TIME	0x016	///< Time of Last modification.
+#define FF_FAT_DIRENT_LASTMOD_DATE	0x018	///< Date of Last modification.
+#define FF_FAT_DIRENT_CLUS_LOW		0x01A
+#define FF_FAT_DIRENT_FILESIZE		0x01C
+#define FF_FAT_LFN_ORD				0x000
+#define FF_FAT_LFN_NAME_1			0x001
+#define	FF_FAT_LFN_CHECKSUM			0x00D
+#define FF_FAT_LFN_NAME_2			0x00E
+#define FF_FAT_LFN_NAME_3			0x01C
+
+// Dirent Attributes
+#define FF_FAT_ATTR_READONLY		0x01
+#define FF_FAT_ATTR_HIDDEN			0x02
+#define FF_FAT_ATTR_SYSTEM			0x04
+#define FF_FAT_ATTR_VOLID			0x08
+#define FF_FAT_ATTR_DIR				0x10
+#define FF_FAT_ATTR_ARCHIVE			0x20
+#define FF_FAT_ATTR_LFN				0x0F
 
 /**
- *	@file		ff_string.c
- *	@author		James Walmsley
- *	@ingroup	STRING
+ * -- Hein_Tibosch additions for mixed case in shortnames --
  *
- *	@defgroup	STRING	FullFAT String Library
- *	@brief		Portable String Library for FullFAT
- *
- *
- **/
+ * Specifically, bit 4 means lowercase extension and bit 3 lowercase basename,
+ * which allows for combinations such as "example.TXT" or "HELLO.txt" but not "Mixed.txt"
+ */
 
-#ifndef _FF_STRING_H_
-#define _FF_STRING_H_
+#define FF_FAT_CASE_OFFS			0x0C	///< After NT/XP : 2 case bits
+#define FF_FAT_CASE_ATTR_BASE		0x08
+#define FF_FAT_CASE_ATTR_EXT		0x10
 
-#include "ff_types.h"
-#include "ff_config.h"
-#include <string.h>
-
-#ifdef WIN32
-#define FF_stricmp	stricmp
-#else
-#define FF_stricmp strcasecmp
-#endif
-
-#ifdef FF_UNICODE_SUPPORT
-void			FF_tolower		(FF_T_WCHAR *string, FF_T_UINT32 strLen);
-void			FF_toupper		(FF_T_WCHAR *string, FF_T_UINT32 strLen);
-FF_T_BOOL		FF_strmatch		(const FF_T_WCHAR *str1, const FF_T_WCHAR *str2, FF_T_UINT16 len);
-FF_T_WCHAR		*FF_strtok		(const FF_T_WCHAR *string, FF_T_WCHAR *token, FF_T_UINT16 *tokenNumber, FF_T_BOOL *last, FF_T_UINT16 Length);
-FF_T_BOOL		FF_wildcompare	(const FF_T_WCHAR *pszWildCard, const FF_T_WCHAR *pszString);
-
-// ASCII to UTF16 and UTF16 to ASCII routines. -- These are lossy routines, and are only for converting ASCII to UTF-16
-// and the equivalent back to ASCII. Do not use them for international text.
-void FF_cstrtowcs(FF_T_WCHAR *wcsDest, const FF_T_INT8 *szpSource);
-void FF_wcstocstr(FF_T_INT8 *szpDest, const FF_T_WCHAR *wcsSource);
-void FF_cstrntowcs(FF_T_WCHAR *wcsDest, const FF_T_INT8 *szpSource, FF_T_UINT32 len);
-void FF_wcsntocstr(FF_T_INT8 *szpDest, const FF_T_WCHAR *wcsSource, FF_T_UINT32 len);
-
-#else
-void			FF_tolower		(FF_T_INT8 *string, FF_T_UINT32 strLen);
-void			FF_toupper		(FF_T_INT8 *string, FF_T_UINT32 strLen);
-FF_T_BOOL		FF_strmatch		(const FF_T_INT8 *str1, const FF_T_INT8 *str2, FF_T_UINT16 len);
-FF_T_INT8		*FF_strtok		(const FF_T_INT8 *string, FF_T_INT8 *token, FF_T_UINT16 *tokenNumber, FF_T_BOOL *last, FF_T_UINT16 Length);
-FF_T_BOOL		FF_wildcompare	(const FF_T_INT8 *pszWildCard, const FF_T_INT8 *pszString);
+#if defined(FF_LFN_SUPPORT) && defined(FF_INCLUDE_SHORT_NAME)
+#define FF_FAT_ATTR_IS_LFN			0x40	///< artificial attribute, for debugging only
 #endif
 
 #endif
+

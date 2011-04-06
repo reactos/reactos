@@ -176,6 +176,50 @@ IntGetParent(PWND Wnd)
    return NULL;
 }
 
+BOOL
+FASTCALL
+IntEnableWindow( HWND hWnd, BOOL bEnable )
+{
+   BOOL Update;
+   PWND pWnd;
+   UINT bIsDisabled;
+
+   if(!(pWnd = UserGetWindowObject(hWnd)))
+   {
+      return FALSE;
+   }
+
+   /* check if updating is needed */
+   bIsDisabled = (pWnd->style & WS_DISABLED);
+   Update = bIsDisabled;
+
+    if (bEnable)
+    {
+       pWnd->style &= ~WS_DISABLED;
+    }
+    else
+    {
+       Update = !bIsDisabled;
+
+       co_IntSendMessage( hWnd, WM_CANCELMODE, 0, 0);
+
+       /* Remove keyboard focus from that window if it had focus */
+       if (hWnd == IntGetThreadFocusWindow())
+       {
+          co_UserSetFocus(NULL);
+       }
+       pWnd->style |= WS_DISABLED;
+    }
+    
+    if (Update)
+    {
+        IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, 0);
+        co_IntSendMessage(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
+    }
+    // Return nonzero if it was disabled, or zero if it wasn't:
+    return bIsDisabled;
+}
+
 /*
  * IntWinListChildren
  *
@@ -1478,73 +1522,6 @@ NtUserBuildHwndList(
    return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
- */
-HWND APIENTRY
-NtUserChildWindowFromPointEx(HWND hwndParent,
-                             LONG x,
-                             LONG y,
-                             UINT uiFlags)
-{
-   PWND Parent;
-   POINTL Pt;
-   HWND Ret;
-   HWND *List, *phWnd;
-
-   if(!(Parent = UserGetWindowObject(hwndParent)))
-   {
-      return NULL;
-   }
-
-   Pt.x = x;
-   Pt.y = y;
-
-   if(Parent->head.h != IntGetDesktopWindow())
-   {
-      Pt.x += Parent->rcClient.left;
-      Pt.y += Parent->rcClient.top;
-   }
-
-   if(!IntPtInWindow(Parent, Pt.x, Pt.y))
-   {
-      return NULL;
-   }
-
-   Ret = Parent->head.h;
-   if((List = IntWinListChildren(Parent)))
-   {
-      for(phWnd = List; *phWnd; phWnd++)
-      {
-         PWND Child;
-         if((Child = UserGetWindowObject(*phWnd)))
-         {
-            if(!(Child->style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
-            {
-               continue;
-            }
-            if((Child->style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
-            {
-               continue;
-            }
-            if((Child->ExStyle & WS_EX_TRANSPARENT) && (uiFlags & CWP_SKIPTRANSPARENT))
-            {
-               continue;
-            }
-            if(IntPtInWindow(Child, Pt.x, Pt.y))
-            {
-               Ret = Child->head.h;
-               break;
-            }
-         }
-      }
-      ExFreePool(List);
-   }
-
-   return Ret;
-}
-
 static void IntSendParentNotify( PWND pWindow, UINT msg )
 {
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
@@ -1552,10 +1529,14 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
     {
         if (pWindow->spwndParent && pWindow->spwndParent != UserGetDesktopWindow())
         {
-            co_IntSendMessage( pWindow->spwndParent->head.h,
-                               WM_PARENTNOTIFY,
-                               MAKEWPARAM( msg, pWindow->IDMenu),
-                               (LPARAM)pWindow->head.h );
+            USER_REFERENCE_ENTRY Ref;
+            UserRefObjectCo(pWindow->spwndParent, &Ref);
+            // Should be co_IntSendMessage please retest, Ref to Chg, revision 51254...
+            co_IntSendMessageNoWait( pWindow->spwndParent->head.h,
+                                     WM_PARENTNOTIFY,
+                                     MAKEWPARAM( msg, pWindow->IDMenu),
+                                     (LPARAM)pWindow->head.h );
+            UserDerefObjectCo(pWindow->spwndParent);
         }
     }
 }

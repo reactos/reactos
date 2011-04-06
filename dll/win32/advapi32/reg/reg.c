@@ -3988,7 +3988,7 @@ RegQueryValueExA(HKEY hKey,
                  LPDWORD lpcbData)
 {
     UNICODE_STRING ValueName;
-    UNICODE_STRING ValueData;
+    LPWSTR lpValueBuffer;
     LONG ErrorCode;
     DWORD Length;
     DWORD Type;
@@ -4003,39 +4003,42 @@ RegQueryValueExA(HKEY hKey,
         return ERROR_INVALID_PARAMETER;
     }
 
+    Length = (lpcbData == NULL || lpData == NULL) ? 0 : *lpcbData * sizeof(WCHAR);
+
     if (lpData)
     {
-        ValueData.Length = 0;
-        ValueData.MaximumLength = (*lpcbData + 1) * sizeof(WCHAR);
-        ValueData.Buffer = RtlAllocateHeap(ProcessHeap,
-                                           0,
-                                           ValueData.MaximumLength);
-        if (!ValueData.Buffer)
+        lpValueBuffer = RtlAllocateHeap(ProcessHeap,
+                                        0,
+                                        Length + sizeof(WCHAR));
+        if (!lpValueBuffer)
         {
             return ERROR_OUTOFMEMORY;
         }
     }
     else
     {
-        ValueData.Buffer = NULL;
-        ValueData.Length = 0;
-        ValueData.MaximumLength = 0;
+        lpValueBuffer = NULL;
 
         if (lpcbData)
             *lpcbData = 0;
     }
 
-    RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                     (LPSTR)lpValueName);
+    if(!RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                         (LPSTR)lpValueName))
+    {
+        ERR("RtlCreateUnicodeStringFromAsciiz failed!\n");
+        ErrorCode = ERROR_OUTOFMEMORY;
+        goto cleanup;
+    }
 
-    Length = (lpcbData == NULL) ? 0 : *lpcbData * sizeof(WCHAR);
     ErrorCode = RegQueryValueExW(hKey,
                                  ValueName.Buffer,
                                  lpReserved,
                                  &Type,
-                                 (lpData == NULL) ? NULL : (LPBYTE)ValueData.Buffer,
+                                 (LPBYTE)lpValueBuffer,
                                  &Length);
     TRACE("ErrorCode %lu\n", ErrorCode);
+
     RtlFreeUnicodeString(&ValueName);
 
     if (ErrorCode == ERROR_SUCCESS ||
@@ -4044,9 +4047,9 @@ RegQueryValueExA(HKEY hKey,
 
         if (is_string(Type))
         {
-            if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+            if (ErrorCode == ERROR_SUCCESS && lpValueBuffer != NULL)
             {
-                Status = RtlUnicodeToMultiByteN((PCHAR)lpData, *lpcbData, &Index, (PWCHAR)ValueData.Buffer, Length);
+                Status = RtlUnicodeToMultiByteN((PCHAR)lpData, *lpcbData, &Index, (PWCHAR)lpValueBuffer, Length);
                 if (NT_SUCCESS(Status))
                 {
                     PCHAR szData = (PCHAR)lpData;
@@ -4063,7 +4066,7 @@ RegQueryValueExA(HKEY hKey,
 
             Length = Length / sizeof(WCHAR);
         }
-        else if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+        else if (ErrorCode == ERROR_SUCCESS && lpValueBuffer != NULL)
         {
             if (*lpcbData < Length)
             {
@@ -4071,7 +4074,7 @@ RegQueryValueExA(HKEY hKey,
             }
             else
             {
-                RtlMoveMemory(lpData, ValueData.Buffer, Length);
+                RtlMoveMemory(lpData, lpValueBuffer, Length);
             }
         }
 
@@ -4086,9 +4089,10 @@ RegQueryValueExA(HKEY hKey,
         *lpType = Type;
     }
 
-    if (ValueData.Buffer != NULL)
+cleanup:
+    if (lpValueBuffer != NULL)
     {
-        RtlFreeHeap(ProcessHeap, 0, ValueData.Buffer);
+        RtlFreeHeap(ProcessHeap, 0, lpValueBuffer);
     }
 
     return ErrorCode;

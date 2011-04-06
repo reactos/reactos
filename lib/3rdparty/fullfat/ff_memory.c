@@ -48,87 +48,55 @@
 #include "ff_memory.h"
 #include "ff_config.h"
 
-#ifdef FF_LITTLE_ENDIAN
-
-/**
- *	@public
- *	@brief	8 bit memory access routines. 
- **/
 /*
-	These functions swap the byte-orders of shorts and longs. A getChar function is provided
-	incase there is a system that doesn't have byte-wise access to all memory.
+ * HT inlined these functions
+ *
+ * Not much left for the C-module
+ */
 
-	These functions can be replaced with your own platform specific byte-order swapping routines
-	for more efficiency.
 
-	The provided functions should work on almost all platforms.
-*/
-FF_T_UINT8 FF_getChar(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-	return (FF_T_UINT8) (pBuffer[offset]);
+#ifndef FF_INLINE_MEMORY_ACCESS
+FF_T_UINT8 FF_getChar(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset) {
+	return (FF_T_UINT8) (pBuffer[aOffset]);
 }
 
-FF_T_UINT16 FF_getShort(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-	return (FF_T_UINT16) (pBuffer[offset] & 0x00FF) | ((FF_T_UINT16) (pBuffer[offset+1] << 8) & 0xFF00);
+FF_T_UINT16 FF_getShort(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset) {
+	FF_T_UN16 u16;
+	pBuffer += aOffset;
+	u16.bytes.u8_1 = pBuffer[1];
+	u16.bytes.u8_0 = pBuffer[0];
+	return u16.u16;
 }
 
-FF_T_UINT32 FF_getLong(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-	return (FF_T_UINT32) (pBuffer[offset] & 0x000000FF) | ((FF_T_UINT32) (pBuffer[offset+1] << 8) & 0x0000FF00) | ((FF_T_UINT32) (pBuffer[offset+2] << 16) & 0x00FF0000) | ((FF_T_UINT32) (pBuffer[offset+3] << 24) & 0xFF000000);
+FF_T_UINT32 FF_getLong(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset) {
+	FF_T_UN32 u32;
+	pBuffer += aOffset;
+	u32.bytes.u8_3 = pBuffer[3];
+	u32.bytes.u8_2 = pBuffer[2];
+	u32.bytes.u8_1 = pBuffer[1];
+	u32.bytes.u8_0 = pBuffer[0];
+	return u32.u32;
 }
 
-void FF_putChar(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT8 Value) {
-	pBuffer[offset] = Value;
+void FF_putChar(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset, FF_T_UINT8 Value) {
+	pBuffer[aOffset] = Value;
 }
 
-void FF_putShort(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT16 Value) {
-	FF_T_UINT8 *Val		= (FF_T_UINT8 *) &Value;
-	pBuffer[offset]		= Val[0];
-	pBuffer[offset + 1] = Val[1];
+void FF_putShort(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset, FF_T_UINT16 Value) {
+	FF_T_UN16 u16;
+	u16.u16 = Value;
+	pBuffer += aOffset;
+	pBuffer[0] = u16.bytes.u8_0;
+	pBuffer[1] = u16.bytes.u8_1;
 }
 
-void FF_putLong(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT32 Value) {
-	FF_T_UINT8 *Val		= (FF_T_UINT8 *) &Value;
-	pBuffer[offset]		= Val[0];
-	pBuffer[offset + 1] = Val[1];
-	pBuffer[offset + 2] = Val[2];
-	pBuffer[offset + 3] = Val[3];
-}
-
-#endif
-
-#ifdef FF_BIG_ENDIAN
-/*
-	These haven't been tested or checked. They should work in theory :)
-	Please contact james@worm.me.uk if they don't work, and also any fix.
-*/
-FF_T_UINT8 FF_getChar(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-        return (FF_T_UINT8) (pBuffer[offset]);
-}
-
-FF_T_UINT16 FF_getShort(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-        return (FF_T_UINT16) ((pBuffer[offset] & 0xFF00)  << 8) | ((FF_T_UINT16) (pBuffer[offset+1]) & 0x00FF);
-}
-
-FF_T_UINT32 FF_getLong(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset) {
-        return (FF_T_UINT32) ((pBuffer[offset] << 24) & 0xFF0000) | ((FF_T_UINT32) (pBuffer[offset+1] << 16) & 0x00FF0000) | ((FF_T_UINT32) (pBuffer[offset+2] << 8) & 0x0000FF00) | ((FF_T_UINT32) (pBuffer[offset+3]) & 0x000000FF);
-}
-
-void FF_putChar(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT8 Value) {
-	pBuffer[offset] = Value;
-}
-
-void FF_putShort(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT16 Value) {
-	FF_T_UINT8 *Val		= (FF_T_UINT8 *) &Value;
-	pBuffer[offset]		= Val[1];
-	pBuffer[offset + 1] = Val[0];
-}
-
-void FF_putLong(FF_T_UINT8 *pBuffer, FF_T_UINT16 offset, FF_T_UINT32 Value) {
-    FF_T_UINT8 *Val		= (FF_T_UINT8 *) &Value;
-	pBuffer[offset]		= Val[3];
-	pBuffer[offset + 1] = Val[2];
-	pBuffer[offset + 2] = Val[1];
-	pBuffer[offset + 3] = Val[0];
+void FF_putLong(FF_T_UINT8 *pBuffer, FF_T_UINT32 aOffset, FF_T_UINT32 Value) {
+	FF_T_UN32 u32;
+	u32.u32 = Value;
+	pBuffer += aOffset;
+	pBuffer[0] = u32.bytes.u8_0;
+	pBuffer[1] = u32.bytes.u8_1;
+	pBuffer[2] = u32.bytes.u8_2;
+	pBuffer[3] = u32.bytes.u8_3;
 }
 #endif
-
-

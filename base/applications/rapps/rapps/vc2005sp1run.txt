@@ -4,7 +4,7 @@
 Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
 Version = 7.1
 Licence = Unknown
-Description = Visual Studio 2005 Runtime SP1.
+Description = Visual Studio 2005 Runtime SP1. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2.6MB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en

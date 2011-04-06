@@ -90,7 +90,7 @@ EngpRegisterGraphicsDevice(
                      pustrDeviceName->Length);
 
     /* Create a win device name (FIXME: virtual devices!) */
-    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\VIDEO%d", (int)giDevNum);
+    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\DISPLAY%d", (int)giDevNum);
 
     /* Allocate a buffer for the strings */
     cj = pustrDiplayDrivers->Length + pustrDescription->Length + sizeof(WCHAR);

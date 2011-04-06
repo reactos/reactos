@@ -1350,7 +1350,7 @@ RtlpRaiseImportNotFound(CHAR *FuncName, ULONG Ordinal, PUNICODE_STRING DllName)
     ULONG ErrorResponse;
     ULONG_PTR ErrorParameters[2];
     ANSI_STRING ProcNameAnsi;
-    UNICODE_STRING ProcName;
+    ANSI_STRING DllNameAnsi;
     CHAR Buffer[8];
 
     if (!FuncName)
@@ -1360,16 +1360,16 @@ RtlpRaiseImportNotFound(CHAR *FuncName, ULONG Ordinal, PUNICODE_STRING DllName)
     }
 
     RtlInitAnsiString(&ProcNameAnsi, FuncName);
-    RtlAnsiStringToUnicodeString(&ProcName, &ProcNameAnsi, TRUE);
-    ErrorParameters[0] = (ULONG_PTR)&ProcName;
-    ErrorParameters[1] = (ULONG_PTR)DllName;
+    RtlUnicodeStringToAnsiString(&DllNameAnsi, DllName, TRUE);
+    ErrorParameters[0] = (ULONG_PTR)&ProcNameAnsi;
+    ErrorParameters[1] = (ULONG_PTR)&DllNameAnsi;
     NtRaiseHardError(STATUS_ENTRYPOINT_NOT_FOUND,
                      2,
                      3,
                      ErrorParameters,
                      OptionOk,
                      &ErrorResponse);
-    RtlFreeUnicodeString(&ProcName);
+    RtlFreeAnsiString(&DllNameAnsi);
 }
 
 static NTSTATUS
