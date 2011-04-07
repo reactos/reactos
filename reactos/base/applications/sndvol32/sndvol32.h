@@ -84,6 +84,22 @@ typedef struct _PREFERENCES_CONTEXT
     DWORD tmp;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 
+typedef struct
+{
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+    UINT SliderPos;
+    BOOL bVertical;
+    BOOL bSwitch;
+
+}SET_VOLUME_CONTEXT, *PSET_VOLUME_CONTEXT;
+
+/* NOTE: do NOT modify SNDVOL_REG_LINESTATE for binary compatibility with XP! */
+typedef struct _SNDVOL_REG_LINESTATE
+{
+    DWORD Flags;
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+} SNDVOL_REG_LINESTATE, *PSNDVOL_REG_LINESTATE;
+
 
 typedef BOOL (CALLBACK *PFNSNDMIXENUMLINES)(PSND_MIXER Mixer, LPMIXERLINE Line, UINT DisplayControls, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMCONNECTIONS)(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context);
@@ -94,6 +110,8 @@ VOID SndMixerDestroy(PSND_MIXER Mixer);
 VOID SndMixerClose(PSND_MIXER Mixer);
 BOOL SndMixerSelect(PSND_MIXER Mixer, UINT MixerId);
 UINT SndMixerGetSelection(PSND_MIXER Mixer);
+INT SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails);
+INT SndMixerGetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails);
 INT SndMixerGetProductName(PSND_MIXER Mixer, LPTSTR lpBuffer, UINT uSize);
 INT SndMixerGetLineName(PSND_MIXER Mixer, DWORD LineID, LPTSTR lpBuffer, UINT uSize, BOOL LongName);
 BOOL SndMixerEnumProducts(PSND_MIXER Mixer, PFNSNDMIXENUMPRODUCTS EnumProc, PVOID Context);
@@ -101,12 +119,14 @@ INT SndMixerGetDestinationCount(PSND_MIXER Mixer);
 BOOL SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context);
 BOOL SndMixerEnumConnections(PSND_MIXER Mixer, DWORD LineID, PFNSNDMIXENUMCONNECTIONS EnumProc, PVOID Context);
 BOOL SndMixerIsDisplayControl(PSND_MIXER Mixer, LPMIXERCONTROL Control);
+BOOL SndMixerQueryControls(PSND_MIXER Mixer, PUINT DisplayControls, LPMIXERLINE LineInfo, LPMIXERCONTROL *Controls);
 
 /*
  * dialog.c
  */
-VOID
-LoadDialogCtrls(PPREFERENCES_CONTEXT PrefContext);
+VOID LoadDialogCtrls(PPREFERENCES_CONTEXT PrefContext);
+VOID UpdateDialogLineSliderControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, DWORD dwControlID, DWORD DialogID, DWORD Position);
+VOID UpdateDialogLineSwitchControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, LONG fValue);
 
 /*
  * MISC
@@ -136,5 +156,11 @@ ReadLineConfig(IN LPTSTR szDeviceName,
                IN LPTSTR szLineName,
                IN LPTSTR szControlName,
                OUT DWORD *Flags);
+
+BOOL
+WriteLineConfig(IN LPTSTR szDeviceName,
+                IN LPTSTR szLineName,
+                IN LPTSTR szControlName,
+                IN DWORD Flags);
 
 #endif /* __SNDVOL32_H */

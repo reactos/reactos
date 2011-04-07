@@ -159,7 +159,11 @@ AddDialogControl(
         SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM) 1);
 
         /* set available range */
-        SendMessage(hwnd, TBM_SETSEL, (WPARAM) FALSE, (LPARAM) MAKELONG(0, 5)); 
+        //SendMessage(hwnd, TBM_SETSEL, (WPARAM) FALSE, (LPARAM) MAKELONG(0, 5));
+
+        /* set position */
+        SendMessage(hwnd, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 0);
+
     }
     else if (!wcsicmp(ClassName, L"static") || !wcsicmp(ClassName, L"button"))
     {
@@ -328,12 +332,15 @@ EnumConnectionsCallback(
     DWORD Flags;
     DWORD wID;
     RECT rect;
+    UINT ControlCount = 0, Index;
+    LPMIXERCONTROL Control = NULL;
+    HWND hDlgCtrl;
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
 
     if (Line->cControls != 0)
     {
       /* get line name */
-      if (SndMixerGetLineName(PrefContext->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, FALSE) == -1)
+      if (SndMixerGetLineName(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, FALSE) == -1)
       {
           /* failed to get line name */
           LineName[0] = L'\0';
@@ -357,6 +364,74 @@ EnumConnectionsCallback(
               /* set line name */
               SetDlgItemTextW(PrefContext->MixerWindow->hWnd, wID, Line->szName);
 
+              /* query controls */
+              if (SndMixerQueryControls(Mixer, &ControlCount, Line, &Control) == TRUE)
+              {
+                  /* now go through all controls and update their states */
+                  for(Index = 0; Index < ControlCount; Index++)
+                  {
+                     if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
+                     {
+                         MIXERCONTROLDETAILS_BOOLEAN Details;
+
+                         /* get volume control details */
+                         if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
+                         {
+                             /* update dialog control */
+                             wID = (PrefContext->Count + 1) * IDC_LINE_SWITCH;
+
+                            /* get dialog control */
+                            hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+                            if (hDlgCtrl != NULL)
+                            {
+                                /* check state */
+                                if (SendMessageW(hDlgCtrl, BM_GETCHECK, 0, 0) != Details.fValue)
+                                {
+                                    /* update control state */
+                                    SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)Details.fValue, 0);
+                                }
+                            }
+                         }
+                     }
+                     else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
+                     {
+                         MIXERCONTROLDETAILS_UNSIGNED Details;
+
+                         /* get volume control details */
+                         if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
+                         {
+                             /* update dialog control */
+                             DWORD Position;
+                             DWORD Step = 0x10000 / 5;
+
+                             /* FIXME: give me granularity */
+                             Position = 5 - (Details.dwValue / Step);
+
+                             /* FIXME support left - right slider */
+                             wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
+
+                             /* get dialog control */
+                             hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+                             if (hDlgCtrl != NULL)
+                             {
+                                 /* check state */
+                                 LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+                                 if (OldPosition != Position)
+                                 {
+                                     /* update control state */
+                                     SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
+                                 }
+                             }
+                        }
+                     }
+                  }
+
+                  /* free controls */
+                  HeapFree(GetProcessHeap(), 0, Control);
+              }
+
               /* increment dialog count */
               PrefContext->Count++;
 
@@ -365,7 +440,6 @@ EnumConnectionsCallback(
 
               /* now move the window */
               MoveWindow(PrefContext->MixerWindow->hWnd, rect.left, rect.top, (PrefContext->Count * DIALOG_VOLUME_SIZE), rect.bottom, TRUE);
-
           }
       }
     }
@@ -376,9 +450,117 @@ VOID
 LoadDialogCtrls(
     PPREFERENCES_CONTEXT PrefContext)
 {
-    /* set dialog count to one */
+    HWND hDlgCtrl;
+
+    /* set dialog count to zero */
     PrefContext->Count = 0;
 
     /* enumerate controls */
-    SndMixerEnumConnections(PrefContext->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
+    SndMixerEnumConnections(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
+
+    /* get last line seperator */
+    hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, IDC_LINE_SEP * PrefContext->Count);
+
+    if (hDlgCtrl != NULL)
+    {
+        /* hide last seperator */
+        ShowWindow(hDlgCtrl, SW_HIDE);
+    }
+
 }
+
+VOID
+UpdateDialogLineSwitchControl(
+    PPREFERENCES_CONTEXT PrefContext,
+    LPMIXERLINE Line,
+    LONG fValue)
+{
+    DWORD Index;
+    DWORD wID;
+    HWND hDlgCtrl;
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+
+    /* find the index of this line */
+    for(Index = 0; Index < PrefContext->Count; Index++)
+    {
+        /* get id */
+        wID = (Index + 1) * IDC_LINE_NAME;
+
+        if (GetDlgItemText(PrefContext->MixerWindow->hWnd, wID, LineName, MIXER_LONG_NAME_CHARS) == 0)
+        {
+            /* failed to retrieve id */
+            continue;
+        }
+
+        /* check if the line name matches */
+        if (!wcsicmp(LineName, Line->szName))
+        {
+            /* found matching line name */
+            wID = (Index + 1) * IDC_LINE_SWITCH;
+
+            /* get dialog control */
+            hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+            if (hDlgCtrl != NULL)
+            {
+                /* check state */
+                if (SendMessageW(hDlgCtrl, BM_GETCHECK, 0, 0) != fValue)
+                {
+                    /* update control state */
+                    SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)fValue, 0);
+                }
+            }
+            break;
+        }
+    }
+}
+
+VOID
+UpdateDialogLineSliderControl(
+    PPREFERENCES_CONTEXT PrefContext,
+    LPMIXERLINE Line,
+    DWORD dwControlID,
+    DWORD dwDialogID,
+    DWORD Position)
+{
+    DWORD Index;
+    DWORD wID;
+    HWND hDlgCtrl;
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+
+    /* find the index of this line */
+    for(Index = 0; Index < PrefContext->Count; Index++)
+    {
+        /* get id */
+        wID = (Index + 1) * IDC_LINE_NAME;
+
+        if (GetDlgItemText(PrefContext->MixerWindow->hWnd, wID, LineName, MIXER_LONG_NAME_CHARS) == 0)
+        {
+            /* failed to retrieve id */
+            continue;
+        }
+
+        /* check if the line name matches */
+        if (!wcsicmp(LineName, Line->szName))
+        {
+            /* found matching line name */
+            wID = (Index + 1) * dwDialogID;
+
+            /* get dialog control */
+            hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+            if (hDlgCtrl != NULL)
+            {
+                /* check state */
+                LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+                if (OldPosition != Position)
+                {
+                    /* update control state */
+                    SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
+                }
+            }
+            break;
+        }
+    }
+}
+
