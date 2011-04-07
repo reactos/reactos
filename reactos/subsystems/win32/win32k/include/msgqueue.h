@@ -6,7 +6,6 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
-#define MSQ_SENTNOWAIT  0x80000000
 
 #define QSIDCOUNTS 6
 
@@ -277,8 +276,6 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
       DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
       if ((MsgQueue)->NewMessages != NULL) \
         ObDereferenceObject((MsgQueue)->NewMessages); \
-      if ((MsgQueue)->NewMessagesHandle != NULL) \
-        ZwClose((MsgQueue)->NewMessagesHandle); \
       ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)

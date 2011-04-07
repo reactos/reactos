@@ -1483,13 +1483,13 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     IntReferenceMessageQueue(Window->head.pti->MessageQueue);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
-    Message->HookMessage = MSQ_NORMAL | MSQ_SENTNOWAIT;
+    Message->HookMessage = MSQ_NORMAL;
     Message->HasPackedLParam = (lParamBufferSize > 0);
-
     Message->QS_Flags = QS_SENDMESSAGE;
-    MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, FALSE);
 
     InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, TRUE);
+
     IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
     RETURN(TRUE);

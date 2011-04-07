@@ -1531,11 +1531,10 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
         {
             USER_REFERENCE_ENTRY Ref;
             UserRefObjectCo(pWindow->spwndParent, &Ref);
-            // Should be co_IntSendMessage please retest, Ref to Chg, revision 51254...
-            co_IntSendMessageNoWait( pWindow->spwndParent->head.h,
-                                     WM_PARENTNOTIFY,
-                                     MAKEWPARAM( msg, pWindow->IDMenu),
-                                     (LPARAM)pWindow->head.h );
+            co_IntSendMessage( pWindow->spwndParent->head.h,
+                               WM_PARENTNOTIFY,
+                               MAKEWPARAM( msg, pWindow->IDMenu),
+                               (LPARAM)pWindow->head.h );
             UserDerefObjectCo(pWindow->spwndParent);
         }
     }

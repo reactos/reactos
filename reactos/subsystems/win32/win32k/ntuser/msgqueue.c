@@ -479,7 +479,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    RemoveEntryList(&Message->ListEntry);
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   if (Message->SenderQueue)
    {
       if (Message->DispatchingListEntry.Flink != NULL)
       {
@@ -523,8 +523,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Result);
    }
 
-   /* Only if it is not a no wait message */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   /* Only if the message has a sender was the queue referenced */
+   if (Message->SenderQueue)
    {
       IntDereferenceMessageQueue(Message->SenderQueue);
       IntDereferenceMessageQueue(MessageQueue);
@@ -588,8 +588,8 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
-         /* remove the message from the dispatching list if neede */
-         if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* Only if the message has a sender was the queue referenced */
+         if ((SentMessage->SenderQueue)
             && (SentMessage->DispatchingListEntry.Flink != NULL))
          {
             RemoveEntryList(&SentMessage->DispatchingListEntry);
@@ -607,8 +607,8 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                ExFreePool((PVOID)SentMessage->Msg.lParam);
          }
 
-         /* Only if it is not a no wait message */
-         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* Only if the message has a sender was the queue referenced */
+         if (SentMessage->SenderQueue)
          {
             /* dereference our and the sender's message queue */
             IntDereferenceMessageQueue(MessageQueue);
@@ -1451,9 +1451,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
                                              ListEntry);
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
-
-      /* remove the message from the dispatching list if needed */
-      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
+      /* Only if the message has a sender was the queue referenced */
+      if ((CurrentSentMessage->SenderQueue) 
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
@@ -1471,8 +1470,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* Only if the message has a sender was the queue referenced */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
@@ -1511,8 +1510,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* Only if the message has a sender was the queue referenced */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
@@ -1592,6 +1591,9 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    /* clean it up */
    MsqCleanupMessageQueue(MessageQueue);
 
+   if (MessageQueue->NewMessagesHandle != NULL)
+      ZwClose(MessageQueue->NewMessagesHandle);
+   MessageQueue->NewMessagesHandle = NULL;
    /* decrease the reference counter, if it hits zero, the queue will be freed */
    IntDereferenceMessageQueue(MessageQueue);
 }
