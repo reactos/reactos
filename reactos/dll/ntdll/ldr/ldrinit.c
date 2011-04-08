@@ -616,8 +616,8 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
 
             /* Set up the Act Ctx */
             ActCtx.Size = sizeof(ActCtx);
-            ActCtx.Frame.Flags = ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID;
-            RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+            ActCtx.Format = 1;
+            RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
             /* Activate the ActCtx */
             RtlActivateActivationContextUnsafeFast(&ActCtx,
@@ -682,8 +682,8 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     {
         /* Set up the Act Ctx */
         ActCtx.Size = sizeof(ActCtx);
-        ActCtx.Frame.Flags = ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID;
-        RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+        ActCtx.Format = 1;
+        RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
         /* Activate the ActCtx */
         RtlActivateActivationContextUnsafeFast(&ActCtx,

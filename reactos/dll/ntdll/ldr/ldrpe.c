@@ -660,8 +660,8 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
 DPRINT1("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
     /* Set up the Act Ctx */
     ActCtx.Size = sizeof(ActCtx);
-    ActCtx.Frame.Flags = ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID;
-    RtlZeroMemory(&ActCtx, sizeof(ActCtx));
+    ActCtx.Frame.Flags = 1;
+    RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
     /* Check if we have a manifest prober routine */
     if (LdrpManifestProberRoutine)

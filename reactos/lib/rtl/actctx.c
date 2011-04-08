@@ -22,6 +22,8 @@
 
 #include <wine/unicode.h>
 
+BOOLEAN RtlpNotAllowingMultipleActivation;
+
 #define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
 
 #define ACTCTX_FLAGS_ALL (\
@@ -2730,31 +2732,75 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
+PRTL_ACTIVATION_CONTEXT_STACK_FRAME
+FASTCALL
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
-    static int i;
+#if NEW_NTDLL_LOADER
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
 
-    if (i == 0)
-        UNIMPLEMENTED;
-    i++;
+    /* Get the curren active frame */
+    ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT1("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
+
+    /* Actually activate it */
+    Frame->Frame.Previous = ActiveFrame;
+    Frame->Frame.ActivationContext = Context;
+    Frame->Frame.Flags = 0;
+
+    /* Check if we can activate this context */
+    if ((ActiveFrame && (ActiveFrame->ActivationContext != Context)) ||
+        Context)
+    {
+        /* Set new active frame */
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
+        return &Frame->Frame;
+    }
+
+    /* We can get here only one way: it was already activated */
+    DPRINT1("Trying to activate improper activation context\n");
+
+    /* Activate only if we are allowing multiple activation */
+    if (!RtlpNotAllowingMultipleActivation)
+    {
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
+    }
+    else
+    {
+        /* Set flag */
+        Frame->Frame.Flags = 0x30;
+    }
+
+    /* Return pointer to the activation frame */
+    return &Frame->Frame;
+#else
+    return NULL;
+#endif
 }
 
-NTSTATUS
-NTAPI
+PRTL_ACTIVATION_CONTEXT_STACK_FRAME
+FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    static int i;
+#if NEW_NTDLL_LOADER
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
-    if (i == 0)
-        UNIMPLEMENTED;
-    i++;
+    /* find the right frame */
+    top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame = &Frame->Frame;
 
-    return STATUS_NOT_IMPLEMENTED;
+    if (!frame)
+        RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
+
+    /* pop everything up to and including frame */
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
+
+    return frame;
+#else
+    return NULL;
+#endif
 }
 
 
