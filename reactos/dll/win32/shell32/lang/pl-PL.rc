@@ -21,6 +21,7 @@
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
+ * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -445,10 +446,10 @@ BEGIN
 	PUSHBUTTON "&Nie", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "Anuluj", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Ten katalog ju¿ zawiera plik o nazwie '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "Ten katalog ju¿ zawiera plik tylko do odczytu, o nazwie '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Ten katalog ju¿ zawiera plik systemowy o nazwie '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Czy chcia³byœ zast¹piæ istniej¹cy plik?", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik o nazwie '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik tylko do odczytu, o nazwie '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Ten katalog zawiera ju¿ plik systemowy o nazwie '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Czy chcesz zast¹piæ istniej¹cy plik?", -1, 44, 35, 228, 10, SS_NOPREFIX
 	LTEXT "(data i rozmiar nieznane)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
 	LTEXT "nowym plikiem?", -1, 44, 75, 228, 10, SS_NOPREFIX
@@ -541,9 +542,9 @@ CAPTION "Zamknij ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "Co chcesz by komputer zrobi³?", -1, 39, 7, 167, 10
+	LTEXT "Co chcesz, aby zrobi³ komputer?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Zachowuje sesje, utrzymuj¹c komputer w ruchu na ma³ym stopniu zasilania, z danymi wci¹¿ w pamiêci. Komputer wróci do normalnego trybu pracy przy poruszeniu myszki albo naciœniêciu klawisza.", 8225, 39, 40, 167, 37
+	LTEXT "Zachowuje sesjê, podtrzymuje komputer na niskim poziomie poboru energii. Komputer wróci do normalnego trybu po poruszeniu myszk¹ lub naciœniêciu klawisza. Dane znajduj¹ce siê w pamiêci zostan¹ zachowane.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
 	PUSHBUTTON "Anuluj", IDCANCEL, 75, 82, 60, 14
 	PUSHBUTTON "&Pomoc", IDHELP, 144, 82, 60, 14
@@ -660,9 +661,9 @@ BEGIN
 	IDS_TRASHFOLDER_TEXT        "Czy jesteœ pewien, ¿e chcesz umieœciæ folder '%1' i ca³¹ jego zawartoœæ w koszu"
 	IDS_TRASHMULTIPLE_TEXT      "Elementów: %1 - czy na pewno chcesz je umieœciæ w Koszu?"
 	IDS_CANTTRASH_TEXT          "Nie mogê przenieœæ elementu '%1' do Kosza. Czy chcesz go zamiast tego usun¹æ?"
-	IDS_OVERWRITEFILE_TEXT      "Ten folder ju¿ zawiera plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
+	IDS_OVERWRITEFILE_TEXT      "Ten folder zawiera ju¿ plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
 	IDS_OVERWRITEFILE_CAPTION   "PotwierdŸ zast¹pienie pliku"
-	IDS_OVERWRITEFOLDER_TEXT    "Ten folder ju¿ zawiera folder o nazwie '%1'.\n\n"\
+	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\n"\
 		"Je¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\n"\
 		"w wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\n"\
 		"lub skopiowaæ folder?"
@@ -765,5 +766,5 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Domyœlny rozmiar jednostki alokacji"
 	IDS_COPY_OF                 "Kopia"
 
-	IDS_SHLEXEC_NOASSOC         "¯aden program nie jest skonfigurowane by otwieraæ pliki tego typu."
+	IDS_SHLEXEC_NOASSOC         "¯aden program nie jest skonfigurowany, by otwieraæ pliki tego typu."
 END

@@ -383,7 +383,7 @@ BEGIN
     IDS_TASKBAR             "Pasek zadañ"
     IDS_NAMECOLUMN          "Nazwa"
     IDS_PATHCOLUMN          "Œcie¿ka"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_MENUCOLUMN          "Œcie¿ka menu"
 END
 
 #endif    // Polish (PL) resources

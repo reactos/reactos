@@ -15,7 +15,7 @@ BEGIN
   MORE [Napêd:][Œcie¿ka]Nazwa pliku\n\n\
   [Napêd:][Œcie¿ka]Nazwa pliku    Plik, którego zawartoœæ ma byæ wyœwietlona.\n\
   Polecenie\t\t     Polecenie, którego wynik ma byæ wyœwietlony.\n\n\
-  Po wyœwietleniu ""-- Kontynuuj --"" mo¿esz nacisn¹æ dowolny klawisz by przejœæ na nastêpn¹ stronê.\n"
+  Po wyœwietleniu ""-- Kontynuuj --"" mo¿esz nacisn¹æ dowolny klawisz, aby przejœæ na nastêpn¹ stronê.\n"
 
   IDS_CONTINUE, " -- Kontynuuj (100%) -- "
   IDS_FILE_ACCESS, "Brak dostêpu do pliku: %s."

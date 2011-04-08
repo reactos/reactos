@@ -97,7 +97,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Podgl¹d zdarzeñ"
-	IDC_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta³ odnaleziony w Ÿródle: ( %s ). Ten komputer mo¿e nie miec wystarczaj¹cych informacji w rejestrze albo bibliotek DLL by wyœwietliæ wiadomoœci z komputera zdalnego."
+	IDC_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta³ odnaleziony w Ÿródle: ( %s ). Ten komputer mo¿e nie miec wystarczaj¹cych informacji w rejestrze albo bibliotek DLL, aby wyœwietliæ wiadomoœci z komputera zdalnego."
 	IDC_EVENTLOG_ERROR_TYPE        "B³¹d"
 	IDC_EVENTLOG_WARNING_TYPE      "Ostrze¿enie"
 	IDC_EVENTLOG_INFORMATION_TYPE  "Informacja"

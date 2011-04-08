@@ -1,0 +1,34 @@
+/*
+ *      translated by Saibamen - Adam Stachowicz (Apr,2011)
+ *      Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl
+ */
+ 
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Zarz¹dza ustawieniami linii komend, historii i makr.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=rozmiar]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=plik] [macroname=[tekst]]\n\
+\n\
+  /INSERT             W³¹cza tryb wstawiania tekstu.\n\
+  /OVERSTRIKE         Wy³¹cza tryb nadpisywania tekstu.\n\
+  /EXENAME=exename    Ustawia nazwê programu do przegl¹dania/zmiany historii\n\
+                      i makra. Domyœlnie jest to cmd.exe.\n\
+  /HISTORY            Wyœwietla historiê komend.\n\
+  /LISTSIZE=rozmiar   Ustawia iloœæ wyœwietlanych komend dla buforu historii.\n\
+  /REINSTALL          Czyœci historiê komend.\n\
+  /MACROS             Wyœwietla definicje makro.\n\
+  /MACROS:exename     Wyœwietla definicje makro dla okreœlonego programu.\n\
+  /MACROS:ALL         Wyœwietla definicje makro dla wszystkich programów.\n\
+  /MACROFILE=plik     £aduje definicje makro z pliku.\n\
+  macroname           Nazwa dla tworzonego makro.\n\
+  tekst               Okreœla zastêpczy tekst dla makro.\n"
+
+IDS_INVALID_MACRO_DEF, "Nieprawid³owa definicja makro: %s\n"
+
+END

@@ -14,7 +14,7 @@ BEGIN
         MENUITEM "Za&koñcz\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Help"
+    POPUP "&Pomoc"
     BEGIN
         MENUITEM "Konsola Zarz¹dzania ReactOS - i&nformacje...", ID_HELP_ABOUT
     END

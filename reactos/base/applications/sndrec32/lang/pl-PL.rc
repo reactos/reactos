@@ -1,0 +1,61 @@
+/*
+ *      translated by Saibamen - Adam Stachowicz (Apr,2011)
+ *      Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl;
+ */
+ 
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Informacje o reactOS_sndrec32"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            128,IDC_REACTOS_SNDREC32,19,14,21,20
+    LTEXT           "ReactOS_sndrec32, wersja 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "OK",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "Plik"
+    BEGIN
+        MENUITEM "Nowy",                         ID_NEW
+        MENUITEM "Otwórz...",                     ID_FILE_OPEN
+        MENUITEM "Zapisz",                        ID_FILE_SAVE, GRAYED
+        MENUITEM "Zapisz jako...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Wyjœcie",                        ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "?"
+    BEGIN
+        MENUITEM "O programie...",                    ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "Rejestrator dŸwiêku"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "Pozycja: %.2f s"
+    IDS_STRDUR              "D³ugoœæ: %.2f s"
+    IDS_STRBUF              "Bufor: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u bits"
+    IDS_STRMONO             "mono"
+    IDS_STRSTEREO           "stereo"
+    IDS_STRCHAN             "%s"
+END

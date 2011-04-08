@@ -123,7 +123,7 @@ BEGIN
     IDS_PROPERTIES        "W³aœ&ciwoœci"
     IDS_OPEN_ALL_USERS    "&Otwórz - wszyscy u¿ytkownicy"
     IDS_EXPLORE_ALL_USERS "&Eksploruj - wszyscy u¿ytkownicy"
-    IDS_STARTUP_ERROR     "System nie mo¿e uruchomiæ eksploratora poniewa¿ rejestr jest niedostêpny lub uszkodzony."
+    IDS_STARTUP_ERROR     "System nie mo¿e uruchomiæ eksploratora, poniewa¿ rejestr jest niedostêpny lub uszkodzony."
 END
 
 STRINGTABLE DISCARDABLE

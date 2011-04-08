@@ -3,6 +3,7 @@
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  * updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
+ * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -53,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Pasjans"
-    IDS_SOL_ABOUT   "Solitaire by J. Brown\n\nCardLib version 1.0."
+    IDS_SOL_ABOUT   "Pasjans by J. Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Zakoñczyæ aktualn¹ grê?"
     IDS_SOL_WIN     "Gratulacje, wygra³eœ!"
     IDS_SOL_DEAL    "Nowe rozdanie?"
@@ -76,7 +77,7 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "&Spis treœci\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "Solit&aire - informacje",        IDM_HELP_ABOUT
+        MENUITEM "Pasj&ans - informacje",        IDM_HELP_ABOUT
     END
 END
 

@@ -2,7 +2,7 @@
  *         translated by TestamenT
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
- *
+ * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -13,7 +13,7 @@ BEGIN
 IDS_HELP, "Poka¿ lub modyfikuj listê kontroli dostêpu (Access Control List) plików\n\n\
 CACLS nazwa pliku [/T] [/E] [/C] [/G u¿ytkownik:dostêp [...]] [/R u¿ytkownik [...]]\n\
                [/P u¿ytkownik:dostêp [...]] [/D u¿ytkownik [...]]\n\
-   filename      Poka¿ ACL.\n\
+   nazwa pliku   Poka¿ ACL.\n\
    /T            Zmiana ACL okreœlonych plików w\n\
                  aktualnym katalogu i wszystkich podkatalogach.\n\
    /E            Umo¿liwia edycjê listy ACL zamiast jej zamiany.\n\

@@ -64,7 +64,7 @@ BEGIN
     \n \
     Przyk³ady:\n \
         > ipconfig                   ... Pokazuje informacje.\n \
-        > ipconfig /all              ... Pokazuje informacje szczegó³owe.\n \
+        > ipconfig /all              ... Pokazuje szczegó³owe informacje.\n \
         > ipconfig /renew            ... Odnawia wszystkie karty.\n \
         > ipconfig /renew EL*        ... Odnawia ka¿de po³¹czenie o nazwie\n \
                                          zaczynaj¹cej siê od EL\n \

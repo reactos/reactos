@@ -15,7 +15,7 @@ IDS_USAGE, "FIND: Wyœwietla wszystkie linie danego pliku, zawieraj¹ce szukany ci
     /C  Oblicza w ilu liniach pojawi³ siê szukany ci¹g znaków\n\
     /I  Ignoruje wielkoœæ liter\n\
     /N  Numeruje wyœwietlane linie, zaczynaj¹c od 1\n\
-    /V  Wyœwietla te linie które nie zawieraj¹ szukanego ci¹gu znaków"
+    /V  Wyœwietla te linie, które nie zawieraj¹ szukanego ci¹gu znaków"
 
 IDS_NO_SUCH_FILE, "FIND: %s: Plik nie zosta³ znaleziony\n"
 

@@ -1,4 +1,5 @@
 // * translated by Caemyr - Olaf Siejka (Aug, 2009)
+// * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -41,7 +42,7 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "&Instaluj",   ID_INSTALL
-		MENUITEM "&odinstaluj", ID_UNINSTALL
+		MENUITEM "&Odinstaluj", ID_UNINSTALL
 		MENUITEM "&Modyfikuj",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Usuñ z rejestru", ID_REGREMOVE
@@ -78,7 +79,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Zainstaluj z dysku (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Zainstaluj z dysku (CD lub DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON "&Pobierz i zainstaluj", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -100,7 +101,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "O programie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	LTEXT "Mened¿er aplikacji ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
 	PUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -180,15 +181,15 @@ BEGIN
 	IDS_MODIFY "Modyfikuj"
 	IDS_APPS_COUNT "Licznik aplikacji: %d"
 	IDS_WELCOME_TITLE "Witamy w Mened¿erze aplikacji ReactOS!\n\n"
-	IDS_WELCOME_TEXT "Z listy po lewej wybierz kategoriê, a nastêpnie aplikacjê by j¹ zainstalowaæ lub odinstalowaæ.\nStrona projektu ReactOS: "
+	IDS_WELCOME_TEXT "Z listy po lewej wybierz kategoriê, a nastêpnie aplikacjê, by j¹ zainstalowaæ lub odinstalowaæ.\nStrona projektu ReactOS: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Zainstalowane"
 	IDS_AVAILABLEFORINST "Dostêpne"
 	IDS_UPDATES "Uaktualnienia"
 	IDS_APPLICATIONS "Aplikacje"
-	IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog w którym bêda zapisywane pobrane programy:"
+	IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym bêda zapisywane pobrane programy:"
 	IDS_CHOOSE_FOLDER_ERROR "Wybra³eœ nieistniej¹cy katalog! Czy chcesz utworzyæ nowy?"
-	IDS_USER_NOT_ADMIN "Musisz mieæ uprawnienia administratora aby uruchomiæ ""ReactOS Applications Manager""!"
+	IDS_USER_NOT_ADMIN "Musisz mieæ uprawnienia administratora, aby uruchomiæ ""Mened¿er aplikacji ReactOS""!"
 	IDS_APP_REG_REMOVE "Czy na pewno chcesz usun¹æ wpis tego programu z rejestru?"
 	IDS_INFORMATION "Informacja"
 	IDS_UNABLE_TO_REMOVE "Nie mo¿na by³o usun¹æ wpisu z rejestru!"

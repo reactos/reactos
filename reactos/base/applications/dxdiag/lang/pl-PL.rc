@@ -1,5 +1,6 @@
 /*
  *      translated by Caemyr - Olaf Siejka (Apr,2008)
+ *      updated by Saibamen - Adam Stachowicz (Apr, 2011)
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl
@@ -25,7 +26,7 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 190
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ten program dostarcza szczegó³owych danych o komponentach ReactX i sterownikach, zainstalowanych na twoim systemie..", -1, 10, 10, 443, 17
+    LTEXT "Ten program dostarcza szczegó³owe dane o komponentach ReactX i sterownikach, zainstalowanych na twoim systemie..", -1, 10, 10, 443, 17
     LTEXT "Jeœli wiesz ju¿, gdzie tkwi b³¹d, kliknij na odpowiedni¹ zak³adkê. W innym wypadku mo¿esz przejœæ przez wszystkie zak³adki przyciskiem Nastêpna", -1, 10, 30, 443, 25
     GROUPBOX "Informacje o systemie", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Data i czas:", -1, 70, 70, 80, 10, SS_RIGHT
@@ -138,7 +139,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX-", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Przyspiesznie sprzêtowe\nPoziom:", -1, 20, 135, 90, 20
+    RTEXT "Przyspieszenie sprzêtowe\nPoziom:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testuj DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Uwagi", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
