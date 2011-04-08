@@ -159,7 +159,7 @@ UserSetCursor(
     return OldCursor;
 }
 
-BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
+BOOL UserSetCursorPos( INT x, INT y)
 {
     PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
@@ -194,21 +194,17 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
     pt.x = x;
     pt.y = y;
 
+    /* 3. Generate a mouse move message, this sets the htEx. */
+    Msg.message = WM_MOUSEMOVE;
+    Msg.wParam = CurInfo->ButtonsDown;
+    Msg.lParam = MAKELPARAM(x, y);
+    Msg.pt = pt;
+    co_MsqInsertMouseMessage(&Msg, 0, 0);
 
-    if (SendMouseMoveMsg)
-    {
-        /* Generate a mouse move message */
-        Msg.message = WM_MOUSEMOVE;
-        Msg.wParam = CurInfo->ButtonsDown;
-        Msg.lParam = MAKELPARAM(x, y);
-        Msg.pt = pt;
-        co_MsqInsertMouseMessage(&Msg);
-    }
-
-    /* Store the new cursor position */
+    /* 1. Store the new cursor position */
     gpsi->ptCursor = pt;
 
-    /* Move the mouse pointer */
+    /* 2. Move the mouse pointer */
     GreMovePointer(hDC, x, y);
 
     return TRUE;
@@ -681,7 +677,7 @@ UserClipCursor(
     {
         CurInfo->bClipped = TRUE;
         RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
     }
     else
     {

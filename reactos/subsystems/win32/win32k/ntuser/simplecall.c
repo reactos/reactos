@@ -473,7 +473,7 @@ NtUserCallTwoParam(
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SETCURSORPOS:
-         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, FALSE));
+         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2));
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));

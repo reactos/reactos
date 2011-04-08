@@ -17,6 +17,8 @@
 #define NDEBUG
 #include <debug.h>
 
+WORD FASTCALL get_key_state(void);
+
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY TimersListHead;
@@ -82,7 +84,7 @@ RemoveTimer(PTIMER pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
-     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
+     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM))) // System timers are reusable.
      {
         UINT_PTR IDEvent;
 
@@ -287,7 +289,73 @@ SystemTimerProc(HWND hwnd,
          UINT_PTR idEvent,
              DWORD dwTime)
 {
-  DPRINT( "Timer Running!\n" );
+  PDESKTOP pDesk;
+  PWND pWnd = NULL;
+
+  if (hwnd)
+  {
+     pWnd = UserGetWindowObject(hwnd);
+     if (!pWnd)
+     {
+        DPRINT1( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
+        return;
+     }
+  }
+  else
+  {
+     DPRINT( "Windowless Timer Running!\n" );
+     return;
+  }
+
+  switch (idEvent)
+  {
+/*
+   Used in NtUserTrackMouseEvent.
+ */
+     case ID_EVENT_SYSTIMER_MOUSEHOVER:
+       {
+          POINT Point;
+          UINT Msg;
+          WPARAM wParam;
+
+          pDesk = pWnd->head.rpdesk;
+          if ( pDesk->dwDTFlags & DF_TME_HOVER &&
+               pWnd == pDesk->spwndTrack )
+          {
+             Point = gpsi->ptCursor;
+             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             {
+                if (pDesk->htEx == HTCLIENT) // In a client area.
+                {
+                   wParam = get_key_state();
+                   Msg = WM_MOUSEHOVER;
+
+                   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
+                   {
+                      Point.x = pWnd->rcClient.right - Point.x - 1;
+                   }
+                   else
+                      Point.x -= pWnd->rcClient.left;
+                   Point.y -= pWnd->rcClient.top;
+                }
+                else
+                {
+                   wParam = pDesk->htEx; // Need to support all HTXYZ hits.
+                   Msg = WM_NCMOUSEHOVER;
+                }
+                UserPostMessage(hwnd, Msg, wParam, MAKELPARAM(Point.x, Point.y));
+                pDesk->dwDTFlags &= ~DF_TME_HOVER;
+                break; // Kill this timer.
+             }
+          }
+       }
+       return; // Not this window so just return.
+
+     default:
+       DPRINT1( "System Timer Proc invalid id %d!\n", idEvent );
+       break;
+  }
+  IntKillTimer(pWnd, idEvent, TRUE);
 }
 
 VOID
@@ -296,7 +364,9 @@ StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
   // that calles Idle process so the screen savers will know to run......    
-  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
+  IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
+// Test Timers
+//  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
 }
 
 UINT_PTR
@@ -347,6 +417,13 @@ PostTimerMessages(PWND Window)
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;
+           // Now move this entry to the end of the list so it will not be
+           // called again in the next msg loop.
+           if (pLE != &TimersListHead)
+           {
+              RemoveEntryList(&pTmr->ptmrList);
+              InsertTailList(&TimersListHead, &pTmr->ptmrList);
+           }
            break;
         }
 

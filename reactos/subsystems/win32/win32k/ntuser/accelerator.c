@@ -1,27 +1,8 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * PURPOSE:          Window accelerator
+ * FILE:             subsystems/win32/win32k/ntuser/accelerator.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -105,9 +86,13 @@ co_IntTranslateAccelerator(
    WORD key,
    WORD cmd)
 {
+   INT mask = 0;
    UINT mesg = 0;
+   HWND hWnd;
 
    ASSERT_REFS_CO(Window);
+
+   hWnd = Window->head.h;
 
    DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
           Window->head.h, message, wParam, lParam, fVirt, key, cmd);
@@ -117,37 +102,33 @@ co_IntTranslateAccelerator(
       return FALSE;
    }
 
-   if (message == WM_CHAR)
+   DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
+          UserGetKeyState(VK_SHIFT));
+   DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
+          UserGetKeyState(VK_CONTROL));
+   DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
+          UserGetKeyState(VK_MENU));
+
+   if (UserGetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
+   if (UserGetKeyState(VK_MENU) & 0x8000) mask |= FALT;
+   if (UserGetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
+
+   if (message == WM_CHAR || message == WM_SYSCHAR)
    {
-      if (!(fVirt & FALT) && !(fVirt & FVIRTKEY))
+      if ( !(fVirt & FVIRTKEY) && (mask & FALT) == (fVirt & FALT) )
       {
-         DPRINT("found accel for WM_CHAR: ('%c')\n", wParam & 0xff);
+         DPRINT("found accel for WM_CHAR: ('%c')\n", LOWORD(wParam) & 0xff);
          goto found;
       }
    }
    else
    {
-      if ((fVirt & FVIRTKEY) > 0)
+      if (fVirt & FVIRTKEY)
       {
-         INT mask = 0;
          DPRINT("found accel for virt_key %04x (scan %04x)\n",
-                wParam, 0xff & HIWORD(lParam));
+                 wParam, 0xff & HIWORD(lParam));
 
-         DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
-                UserGetKeyState(VK_SHIFT));
-         DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
-                UserGetKeyState(VK_CONTROL));
-         DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
-                UserGetKeyState(VK_MENU));
-
-         if (UserGetKeyState(VK_SHIFT) & 0x8000)
-            mask |= FSHIFT;
-         if (UserGetKeyState(VK_CONTROL) & 0x8000)
-            mask |= FCONTROL;
-         if (UserGetKeyState(VK_MENU) & 0x8000)
-            mask |= FALT;
-         if (mask == (fVirt & (FSHIFT | FCONTROL | FALT)))
-            goto found;
+         if (mask == (fVirt & (FSHIFT | FCONTROL | FALT))) goto found;
          DPRINT("but incorrect SHIFT/CTRL/ALT-state\n");
       }
       else
@@ -156,7 +137,7 @@ co_IntTranslateAccelerator(
          {
             if ((fVirt & FALT) && (lParam & 0x20000000))
             {                            /* ^^ ALT pressed */
-               DPRINT("found accel for Alt-%c\n", wParam & 0xff);
+               DPRINT("found accel for Alt-%c\n", LOWORD(wParam) & 0xff);
                goto found;
             }
          }
@@ -173,80 +154,120 @@ found:
       mesg = 1;
    else if (IntGetCaptureWindow())
       mesg = 2;
-   else if (!IntIsWindowVisible(Window)) /* FIXME: WINE IsWindowEnabled == IntIsWindowVisible? */
+   else if (Window->style & WS_DISABLED)
       mesg = 3;
    else
    {
 #if 0
       HMENU hMenu, hSubMenu, hSysMenu;
       UINT uSysStat = (UINT)-1, uStat = (UINT)-1, nPos;
+      PMENU_OBJECT MenuObject, SubMenu;
+      MENU_ITEM MenuItem;
 
-      hMenu = (UserGetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ? 0 : GetMenu(hWnd);
-      hSysMenu = get_win_sys_menu(hWnd);
+//      hMenu = (UserGetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ? 0 : GetMenu(hWnd);
+//      hSysMenu = get_win_sys_menu(hWnd);
+      hMenu = (Window->style & WS_CHILD) ? 0 : (HMENU)Window->IDMenu;
+      hSysMenu = Window->SystemMenu;
+      MenuObject = IntGetMenuObject(Window->SystemMenu);
 
       /* find menu item and ask application to initialize it */
       /* 1. in the system menu */
       hSubMenu = hSysMenu;
-      nPos = cmd;
-      if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
+//      nPos = cmd;
+//      if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
+      nPos = IntGetMenuItemByFlag( MenuObject,
+                                   cmd,
+                                   MF_BYCOMMAND,
+                                  &SubMenu,
+                                  &MenuItem,
+                                   NULL);
+
+      if (MenuItem && (nPos != (UINT)-1))
       {
-         co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
-         if(hSubMenu != hSysMenu)
-         {
-            nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
-            TRACE_(accel)("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
-            co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
+         hSubMenu = MenuItem.hSubMenu;
+
+         if (IntGetCaptureWindow())
+             mesg = 2;
+         if (Window->style & WS_DISABLED)
+             mesg = 3;
+         else
+         {                                               
+            co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hSysMenu, 0L);
+            if(hSubMenu != hSysMenu)
+            {
+               nPos = MENU_FindSubMenu(&hSysMenu, hSubMenu);
+               DPRINT("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hSysMenu, hSubMenu, nPos);
+               co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
+            }
+            uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
          }
-         uSysStat = GetMenuState(GetSubMenu(hSysMenu, 0), cmd, MF_BYCOMMAND);
       }
       else /* 2. in the window's menu */
       {
+         MenuObject = IntGetMenuObject(hMenu);
          hSubMenu = hMenu;
-         nPos = cmd;
-         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
+//         nPos = cmd;
+//         if(MENU_FindItem(&hSubMenu, &nPos, MF_BYCOMMAND))
+         nPos = IntGetMenuItemByFlag( MenuObject,
+                                      cmd,
+                                      MF_BYCOMMAND,
+                                     &SubMenu,
+                                     &MenuItem,
+                                      NULL);
+
+         if (MenuItem && (nPos != (UINT)-1))
          {
-            co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
-            if(hSubMenu != hMenu)
+            if (IntGetCaptureWindow())
+                mesg = 2;
+            if (Window->style & WS_DISABLED)
+                mesg = 3;
+            else
             {
-               nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
-               TRACE_(accel)("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
-               co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+               co_IntSendMessage(hWnd, WM_INITMENU, (WPARAM)hMenu, 0L);
+               if(hSubMenu != hMenu)
+               {
+                  nPos = MENU_FindSubMenu(&hMenu, hSubMenu);
+                  DPRINT("hMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
+                  co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, FALSE));
+               }
+               uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
             }
-            uStat = GetMenuState(hMenu, cmd, MF_BYCOMMAND);
          }
       }
 
-      if (uSysStat != (UINT)-1)
+      if (mesg == 0)
       {
-         if (uSysStat & (MF_DISABLED|MF_GRAYED))
-            mesg=4;
-         else
-            mesg=WM_SYSCOMMAND;
-      }
-      else
-      {
-         if (uStat != (UINT)-1)
+         if (uSysStat != (UINT)-1)
          {
-            if (IsIconic(hWnd))
-               mesg=5;
+            if (uSysStat & (MF_DISABLED|MF_GRAYED))
+               mesg=4;
             else
-            {
-               if (uStat & (MF_DISABLED|MF_GRAYED))
-                  mesg=6;
-               else
-                  mesg=WM_COMMAND;
-            }
+               mesg=WM_SYSCOMMAND;
          }
          else
          {
-            mesg=WM_COMMAND;
+            if (uStat != (UINT)-1)
+            {
+               if (Window->style & WS_MINIMIZE)
+                  mesg=5;
+               else
+               {
+                  if (uStat & (MF_DISABLED|MF_GRAYED))
+                     mesg=6;
+                  else
+                     mesg=WM_COMMAND;
+               }
+            }
+            else
+            {
+               mesg=WM_COMMAND;
+            }
          }
       }
 #else
       DPRINT1("Menu search not implemented\n");
       mesg = WM_COMMAND;
 #endif
-
    }
 
    if (mesg == WM_COMMAND)

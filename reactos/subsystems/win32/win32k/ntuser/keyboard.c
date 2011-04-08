@@ -400,7 +400,30 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
    return ret;
 }
 
+/***********************************************************************
+ *           get_key_state
+ */
+WORD FASTCALL get_key_state(void)
+{
+    WORD ret = 0;
 
+    if (gpsi->aiSysMet[SM_SWAPBUTTON])
+    {
+        if (UserGetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_LBUTTON;
+        if (UserGetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_RBUTTON;
+    }
+    else
+    {
+        if (UserGetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_LBUTTON;
+        if (UserGetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_RBUTTON;
+    }
+    if (UserGetAsyncKeyState(VK_MBUTTON) & 0x80)  ret |= MK_MBUTTON;
+    if (UserGetAsyncKeyState(VK_SHIFT) & 0x80)    ret |= MK_SHIFT;
+    if (UserGetAsyncKeyState(VK_CONTROL) & 0x80)  ret |= MK_CONTROL;
+    if (UserGetAsyncKeyState(VK_XBUTTON1) & 0x80) ret |= MK_XBUTTON1;
+    if (UserGetAsyncKeyState(VK_XBUTTON2) & 0x80) ret |= MK_XBUTTON2;
+    return ret;
+}
 
 SHORT
 APIENTRY

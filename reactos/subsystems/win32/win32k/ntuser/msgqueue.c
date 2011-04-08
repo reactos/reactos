@@ -20,6 +20,8 @@
 /* GLOBALS *******************************************************************/
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
+MOUSEMOVEPOINT MouseHistoryOfMoves[64];
+INT gcur_count = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -189,7 +191,7 @@ MsqPostMouseMove(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
 }
 
 VOID FASTCALL
-co_MsqInsertMouseMessage(MSG* Msg)
+co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo)
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
@@ -219,9 +221,9 @@ co_MsqInsertMouseMessage(MSG* Msg)
          break;
    }
 
-   MouseHookData.flags = 0;
+   MouseHookData.flags = flags; // LLMHF_INJECTED
    MouseHookData.time = Msg->time;
-   MouseHookData.dwExtraInfo = 0;
+   MouseHookData.dwExtraInfo = dwExtraInfo;
 
    /* If the hook procedure returned non zero, dont send the message */
    if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
@@ -232,11 +234,22 @@ co_MsqInsertMouseMessage(MSG* Msg)
    if(!pwndDesktop)
        return;
 
+   /* Set hit somewhere on the desktop */
+   pDesk = pwndDesktop->head.rpdesk;
+   pDesk->htEx = HTNOWHERE;
+   pDesk->spwndTrack = pwndDesktop;
+
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
    if(Msg->hwnd != NULL)
    {
        pwnd = UserGetWindowObject(Msg->hwnd);
+       if ((pwnd->style & WS_VISIBLE) && 
+            IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
+       {
+          pDesk->htEx = HTCLIENT;
+          pDesk->spwndTrack = pwnd;
+       }
    }
    else
    {
@@ -255,7 +268,6 @@ co_MsqInsertMouseMessage(MSG* Msg)
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
-               pDesk = pwnd->head.rpdesk;
                pDesk->htEx = HTCLIENT;
                pDesk->spwndTrack = pwnd;
                break;
@@ -277,6 +289,13 @@ co_MsqInsertMouseMessage(MSG* Msg)
            MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
        }
    }
+
+   /* Do GetMouseMovePointsEx FIFO. */
+   MouseHistoryOfMoves[gcur_count].x = Msg->pt.x;
+   MouseHistoryOfMoves[gcur_count].y = Msg->pt.y;
+   MouseHistoryOfMoves[gcur_count].time = Msg->time;
+   MouseHistoryOfMoves[gcur_count].dwExtraInfo = 0; // need to be passed from IntMouseInput mi.dwExtraInfo.
+   if (gcur_count++ == 64) gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 }
 
 //
@@ -1276,7 +1295,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
            if (Remove)
            {
                RemoveEntryList(&CurrentMessage->ListEntry);
-               ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
+               ClearMsgBitsMask(MessageQueue, QS_INPUT);
                MsqDestroyMessage(CurrentMessage);
            }
 
@@ -1336,7 +1355,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
          if (Remove)
          {
              RemoveEntryList(&CurrentMessage->ListEntry);
-             ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
+             ClearMsgBitsMask(MessageQueue, QS_POSTMESSAGE);
              MsqDestroyMessage(CurrentMessage);
          }
          return(TRUE);

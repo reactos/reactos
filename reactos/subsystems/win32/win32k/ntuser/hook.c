@@ -1003,6 +1003,10 @@ co_HOOK_CallHooks( INT HookId,
 
        ClientInfo = pti->pClientInfo;
        SaveHook = pti->sphkCurrent;
+       /* Note: Setting pti->sphkCurrent will also lock the next hook to this
+        *       hook ID. So, the CallNextHookEx will only call to that hook ID
+        *       chain anyway. For Thread Hooks....
+        */
 
        /* Load it for the next call. */
        pti->sphkCurrent = Hook;
@@ -1042,7 +1046,7 @@ co_HOOK_CallHooks( INT HookId,
        ObDereferenceObject(Hook->Thread);
     }
 
-    if ( Global )
+    if ( Global && !pti->sphkCurrent)
     {
        PTHREADINFO ptiHook;
 
@@ -1057,6 +1061,7 @@ co_HOOK_CallHooks( INT HookId,
        * hook ID, this will have to post to each of the thread message queues
        * or make a direct call.
        */
+       pti->sphkCurrent = Hook; // Prevent recursion within this thread.
        do
        {
          /* Hook->Thread is null, we hax around this with Hook->head.pti. */
@@ -1104,6 +1109,7 @@ co_HOOK_CallHooks( INT HookId,
        }
        while ( Hook );
        DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
+       pti->sphkCurrent = NULL;
     }
 Exit:
     return Result;

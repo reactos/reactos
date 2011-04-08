@@ -595,7 +595,7 @@ co_UserSetCapture(HWND hWnd)
       mi.dwFlags = MOUSEEVENTF_MOVE;
       mi.time = 0;
       mi.dwExtraInfo = 0;      
-      IntMouseInput(&mi);
+      IntMouseInput(&mi,FALSE);
    }
    return hWndPrev;
 }

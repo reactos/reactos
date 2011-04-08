@@ -709,14 +709,14 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    {
       return FALSE;
    }
-   if( lpmii->fType & ~fTypeMask)
+   if (lpmii->fType & ~fTypeMask)
    {
      DbgPrint("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
      lpmii->fMask &= ~(MIIM_TYPE | MIIM_FTYPE);
    }
-   if(lpmii->fMask &  MIIM_TYPE)
+   if (lpmii->fMask &  MIIM_TYPE)
    {
-      if(lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
+      if (lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
       {
          DbgPrint("IntSetMenuItemInfo: Invalid combination of fMask bits used\n");
          /* this does not happen on Win9x/ME */
@@ -2056,11 +2056,13 @@ NtUserHiliteMenuItem(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       RETURN(FALSE);
    }
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
       RETURN(FALSE);
    }
 
@@ -2228,6 +2230,9 @@ UserMenuItemInfo(
                             NULL, &MenuItem, NULL) < 0)
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
+// This will crash menu (line 80) correct_behavior test!
+// "NT4 and below can't handle a bigger MENUITEMINFO struct" 
+      //EngSetLastError(ERROR_MENU_ITEM_NOT_FOUND);
       return( FALSE);
    }
 

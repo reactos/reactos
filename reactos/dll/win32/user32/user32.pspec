@@ -690,7 +690,7 @@
 @ stdcall ToAsciiEx(long long ptr ptr long long)
 @ stdcall ToUnicode(long long ptr ptr long long)
 @ stdcall ToUnicodeEx(long long ptr ptr long long long)
-@ stdcall TrackMouseEvent(ptr) ; Direct call NtUserTrackMouseEvent
+@ stdcall TrackMouseEvent(ptr) NtUserTrackMouseEvent
 @ stdcall TrackPopupMenu(long long long long long long ptr)
 @ stdcall TrackPopupMenuEx(long long long long long ptr) ; Direct call NtUserTrackPopupMenuEx
 @ stdcall TranslateAccelerator(long long ptr) TranslateAcceleratorA
