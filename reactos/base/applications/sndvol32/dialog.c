@@ -130,11 +130,11 @@ AddDialogControl(
 
     }
     /* now create the window */
-    hwnd = CreateWindowExW(DialogItem->dwExtendedStyle, 
-                           ClassName, 
-                           WindowName, 
-                           DialogItem->style, 
-                           rect.left, 
+    hwnd = CreateWindowExW(DialogItem->dwExtendedStyle,
+                           ClassName,
+                           WindowName,
+                           DialogItem->style,
+                           rect.left,
                            rect.top,
                            rect.right,
                            rect.bottom,
@@ -187,7 +187,7 @@ AddDialogControl(
         Offset++;
     }
 
-    /* check if there is additional data */ 
+    /* check if there is additional data */
     if (*Offset == 0)
     {
         /* no additional data */
@@ -323,8 +323,8 @@ LoadDialog(
 BOOL
 CALLBACK
 EnumConnectionsCallback(
-    PSND_MIXER Mixer, 
-    DWORD LineID, 
+    PSND_MIXER Mixer,
+    DWORD LineID,
     LPMIXERLINE Line,
     PVOID Context)
 {
@@ -439,7 +439,7 @@ EnumConnectionsCallback(
               GetWindowRect(PrefContext->MixerWindow->hWnd, &rect);
 
               /* now move the window */
-              MoveWindow(PrefContext->MixerWindow->hWnd, rect.left, rect.top, (PrefContext->Count * DIALOG_VOLUME_SIZE), rect.bottom, TRUE);
+              MoveWindow(PrefContext->MixerWindow->hWnd, rect.left, rect.top, (PrefContext->Count * DIALOG_VOLUME_SIZE), rect.bottom - rect.top, TRUE);
           }
       }
     }
