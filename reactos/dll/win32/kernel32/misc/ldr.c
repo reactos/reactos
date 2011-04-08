@@ -274,13 +274,15 @@ BasepLoadLibraryAsDatafile(PWSTR Path, LPCWSTR Name, HMODULE *hModule)
     HANDLE hFile = INVALID_HANDLE_VALUE;
     HANDLE hMapping;
     NTSTATUS Status;
-    PVOID lpBaseAddress;
+    PVOID lpBaseAddress = NULL;
     SIZE_T ViewSize;
     //PUNICODE_STRING OriginalName;
     //UNICODE_STRING dotDLL = RTL_CONSTANT_STRING(L".DLL");
 
     /* Zero out handle value */
     *hModule = 0;
+
+    DPRINT("BasepLoadLibraryAsDatafile(%S %S %p)\n", Path, Name, hModule);
 
     /*Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
                                                       Name,
@@ -470,7 +472,7 @@ done:
     if (FreeString) RtlFreeUnicodeString(&DllName);
 
     /* Set last error in failure case */
-    if ( !NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return NULL;
