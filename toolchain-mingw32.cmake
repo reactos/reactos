@@ -10,6 +10,7 @@ if(ARCH MATCHES i386)
         set(MINGW_PREFIX "" CACHE STRING "MinGW Prefix")
     else()
         set(MINGW_PREFIX "mingw32-" CACHE STRING "MinGW Prefix")
+        set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crs <TARGET> <LINK_FLAGS> <OBJECTS>")
     endif(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 
 elseif(ARCH MATCHES amd64)
