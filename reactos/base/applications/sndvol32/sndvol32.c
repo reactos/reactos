@@ -347,6 +347,7 @@ WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
     WCHAR LineName[MIXER_LONG_NAME_CHARS];
     WCHAR DestinationName[MIXER_LONG_NAME_CHARS];
     DWORD Flags;
+    PSNDVOL_REG_LINESTATE LineStates;
 
     /* get list view */
     hwndControls = GetDlgItem(hwndDlg, IDC_CONTROLS);
@@ -364,6 +365,14 @@ WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
     }
 
     /* allocate line states array */
+    LineStates = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SNDVOL_REG_LINESTATE) * Count);
+    if (LineStates == NULL)
+    {
+        /* failed to allocate line states array */
+        return;
+    }
+
+
     for(Index = 0; Index < Count; Index++)
     {
         /* set to empty */
@@ -378,11 +387,18 @@ WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
         /* get check state */
         Flags = (ListView_GetCheckState(hwndControls, Index) == 0 ? 0x4 : 0);
 
-        /* write configuration */
-        WriteLineConfig(Preferences.DeviceName, DestinationName, LineName, Flags);
+        /* copy line name */
+        wcscpy(LineStates[Index].LineName, LineName);
+
+        /* store flags */
+        LineStates[Index].Flags = Flags;
     }
 
+    /* now write the line config */
+    WriteLineConfig(Preferences.DeviceName, DestinationName, LineStates, sizeof(SNDVOL_REG_LINESTATE) * Count);
 
+    /* free line states */
+    HeapFree(GetProcessHeap(), 0, LineStates);
 }
 
 static INT_PTR CALLBACK

@@ -160,7 +160,7 @@ ReadLineConfig(IN LPTSTR szDeviceName,
 BOOL
 WriteLineConfig(IN LPTSTR szDeviceName,
                 IN LPTSTR szLineName,
-                IN LPTSTR szControlName,
-                IN DWORD Flags);
+                IN PSNDVOL_REG_LINESTATE LineState,
+                IN DWORD cbSize);
 
 #endif /* __SNDVOL32_H */

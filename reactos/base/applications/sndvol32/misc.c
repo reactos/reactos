@@ -160,13 +160,10 @@ CloseAppConfig(VOID)
 BOOL
 WriteLineConfig(IN LPTSTR szDeviceName,
                 IN LPTSTR szLineName,
-                IN LPTSTR szControlName,
-                IN DWORD Flags)
+                IN PSNDVOL_REG_LINESTATE LineState,
+                IN DWORD cbSize)
 {
     HKEY hLineKey;
-    DWORD Type;
-    DWORD i, Size = 0;
-    PSNDVOL_REG_LINESTATE LineStates = NULL;
     TCHAR szDevRegKey[MAX_PATH];
     BOOL Ret = FALSE;
 
@@ -185,67 +182,14 @@ WriteLineConfig(IN LPTSTR szDeviceName,
                        &hLineKey,
                        NULL) == ERROR_SUCCESS)
     {
-        if (RegQueryValueEx(hLineKey,
-                            LineStatesValue,
-                            NULL,
-                            &Type,
-                            NULL,
-                            &Size) != ERROR_SUCCESS ||
-            Type != REG_BINARY ||
-            Size == 0 || (Size % sizeof(SNDVOL_REG_LINESTATE) != 0))
-        {
-            goto ExitClose;
-        }
+        /* now update line states */
+        RegSetValueEx(hLineKey, LineStatesValue, 0, REG_BINARY, (const BYTE*)LineState, cbSize);
+        Ret = TRUE;
 
-        LineStates = HeapAlloc(GetProcessHeap(),
-                               HEAP_ZERO_MEMORY,
-                               Size);
-
-        if (LineStates != NULL)
-        {
-            if (RegQueryValueEx(hLineKey,
-                                LineStatesValue,
-                                NULL,
-                                &Type,
-                                (LPBYTE)LineStates,
-                                &Size) != ERROR_SUCCESS ||
-                Type != REG_BINARY ||
-                Size == 0 || (Size % sizeof(SNDVOL_REG_LINESTATE) != 0))
-            {
-                goto ExitClose;
-            }
-
-            /* try to find the control */
-            for (i = 0; i < Size / sizeof(SNDVOL_REG_LINESTATE); i++)
-            {
-                if (!_tcscmp(szControlName,
-                             LineStates[i].LineName))
-                {
-                    LineStates[i].Flags = Flags;
-                    Ret = TRUE;
-                    break;
-                }
-            }
-
-            /* now update line states */
-            if (Ret)
-            {
-                RegSetValueEx(hLineKey, LineStatesValue, 0, REG_BINARY, (const BYTE*)LineStates, Size);
-            }
-        }
-
-ExitClose:
-        HeapFree(GetProcessHeap(),
-                 0,
-                 LineStates);
         RegCloseKey(hLineKey);
     }
 
     return Ret;
-
-
-
-
 }
 
 BOOL
