@@ -887,10 +887,10 @@ ExWaitForUnblockPushLock(
  *--*/
 FORCEINLINE
 VOID
-_ExInitializePushLock(IN PULONG_PTR PushLock)
+_ExInitializePushLock(OUT PEX_PUSH_LOCK PushLock)
 {
     /* Set the value to 0 */
-    *PushLock = 0;
+    PushLock->Ptr = 0;
 }
 #define ExInitializePushLock _ExInitializePushLock
 

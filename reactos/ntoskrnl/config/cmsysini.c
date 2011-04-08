@@ -1393,8 +1393,8 @@ CmInitSystem1(VOID)
 
     /* Initialize the hive list and lock */
     InitializeListHead(&CmpHiveListHead);
-    ExInitializePushLock((PVOID)&CmpHiveListHeadLock);
-    ExInitializePushLock((PVOID)&CmpLoadHiveLock);
+    ExInitializePushLock(&CmpHiveListHeadLock);
+    ExInitializePushLock(&CmpLoadHiveLock);
 
     /* Initialize registry lock */
     ExInitializeResourceLite(&CmpRegistryLock);
@@ -1614,7 +1614,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
         if (DriverNode->ListEntry.RegistryPath.Buffer)
         {
             /* Free it */
-            CmpFree(DriverNode->ListEntry.RegistryPath.Buffer, 
+            CmpFree(DriverNode->ListEntry.RegistryPath.Buffer,
                     DriverNode->ListEntry.RegistryPath.MaximumLength);
         }
         

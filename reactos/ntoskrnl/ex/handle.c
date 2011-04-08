@@ -28,7 +28,7 @@ ExpInitializeHandleTables(VOID)
 {
     /* Initialize the list of handle tables and the lock */
     InitializeListHead(&HandleTableListHead);
-    ExInitializePushLock((PULONG_PTR)&HandleTableListLock);
+    ExInitializePushLock(&HandleTableListLock);
 }
 
 PHANDLE_TABLE_ENTRY
@@ -409,11 +409,11 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     for (i = 0; i < 4; i++)
     {
         /* Initialize the handle table lock */
-        ExInitializePushLock((PULONG_PTR)&HandleTable->HandleTableLock[i]);
+        ExInitializePushLock(&HandleTable->HandleTableLock[i]);
     }
 
     /* Initialize the contention event lock and return the lock */
-    ExInitializePushLock((PULONG_PTR)&HandleTable->HandleContentionEvent);
+    ExInitializePushLock(&HandleTable->HandleContentionEvent);
     return HandleTable;
 }
 

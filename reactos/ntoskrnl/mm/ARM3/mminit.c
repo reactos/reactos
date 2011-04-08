@@ -1993,7 +1993,7 @@ MmArmInitSystem(IN ULONG Phase,
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
 
         /* Initialize the working set lock */
-        ExInitializePushLock((PULONG_PTR)&MmSystemCacheWs.WorkingSetMutex);
+        ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);
 
         /* Set commit limit */
         MmTotalCommitLimit = 2 * _1GB;
