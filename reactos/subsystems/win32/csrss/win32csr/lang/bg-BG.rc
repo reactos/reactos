@@ -59,4 +59,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Долна страница"
   IDS_SCROLLUP "Прелистване нагоре"
   IDS_SCROLLDOWN "Прелистване надолу"
+
+  IDS_COMMAND_PROMPT "Command Prompt"
 END

@@ -73,12 +73,21 @@ CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
     SECURITY_ATTRIBUTES SecurityAttributes;
     PCSRSS_SCREEN_BUFFER NewBuffer;
     BOOL GuiMode;
+    WCHAR Title[255];
+    HINSTANCE hInst;
 
     Console->Title.MaximumLength = Console->Title.Length = 0;
     Console->Title.Buffer = NULL;
 
-    //FIXME
-    RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
+    hInst = GetModuleHandleW(L"win32csr");
+    if (LoadStringW(hInst,IDS_COMMAND_PROMPT,Title,sizeof(Title)/sizeof(Title[0])))
+    {
+	RtlCreateUnicodeString(&Console->Title, Title);
+    }
+    else
+    {
+	RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
+    }
 
     Console->ReferenceCount = 0;
     Console->LineBuffer = NULL;

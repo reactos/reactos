@@ -53,4 +53,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Halaman Turun"
   IDS_SCROLLUP "Gulung Naik"
   IDS_SCROLLDOWN "Gulung Turun"
+
+  IDS_COMMAND_PROMPT "Command Prompt"
 END

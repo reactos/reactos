@@ -58,4 +58,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Nastêpna strona"
   IDS_SCROLLUP "Przewiñ do góry"
   IDS_SCROLLDOWN "Przewiñ na dó³"
+
+  IDS_COMMAND_PROMPT "Command Prompt"
 END
