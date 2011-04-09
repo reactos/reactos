@@ -10,6 +10,7 @@
 	<file>testlist.c</file>
 	<file>user32_apitest.rc</file>
 
+	<file>GetKeyState.c</file>
 	<file>InitializeLpkHooks.c</file>
 	<file>RealGetWindowClass.c</file>
 	<file>ScrollDC.c</file>
@@ -18,6 +19,7 @@
 	<file>GetIconInfo.c</file>
 	<file>GetPeekMessage.c</file>
 	<file>DeferWindowPos.c</file>
+	<file>SetCursorPos.c</file>
 
 </module>
 </group>

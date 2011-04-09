@@ -13,6 +13,8 @@ extern void func_GetSystemMetrics(void);
 extern void func_GetIconInfo(void);
 extern void func_GetPeekMessage(void);
 extern void func_DeferWindowPos(void);
+extern void func_GetKeyState(void);
+extern void func_SetCursorPos(void);
 
 const struct test winetest_testlist[] =
 {
@@ -24,7 +26,8 @@ const struct test winetest_testlist[] =
     { "GetIconInfo", func_GetIconInfo },
     { "GetPeekMessage", func_GetPeekMessage },
     { "DeferWindowPos", func_DeferWindowPos },
-
+    { "GetKeyState", func_GetKeyState },
+    { "SetCursorPos", func_SetCursorPos },
     { 0, 0 }
 };
 
