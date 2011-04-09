@@ -8,4 +8,4 @@ add_library(usbd SHARED
 
 set_module_type(usbd kernelmodedriver)
 add_importlibs(usbd ntoskrnl hal)
-add_importlib_target(usbd.spec usbd.sys)
+add_importlib_target(usbd.spec)
