@@ -21,6 +21,7 @@ IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 #include "lang/es-ES.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
+#include "lang/pl-PL.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
 

@@ -9,4 +9,5 @@
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/pl-PL.rc"
 #include "lang/uk-UA.rc"
