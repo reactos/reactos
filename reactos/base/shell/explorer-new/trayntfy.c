@@ -19,14 +19,13 @@
  */
 
 #include <precomp.h>
-#include <string.h>
 
 /*
  * TrayClockWnd
  */ 
 
 static const TCHAR szTrayClockWndClass[] = TEXT("TrayClockWClass");
-static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced");
+static LPCTSTR s_szRegistryKey = _T("Software\\ReactOS\\Features\\Explorer");
 BOOL blShowSeconds;
 
 #define ID_TRAYCLOCK_TIMER  0
