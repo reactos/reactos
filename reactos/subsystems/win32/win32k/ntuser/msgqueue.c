@@ -291,7 +291,7 @@ MsqPostMouseMove(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
 }
 
 VOID FASTCALL
-co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo)
+co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook)
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
@@ -326,8 +326,11 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo)
    MouseHookData.dwExtraInfo = dwExtraInfo;
 
    /* If the hook procedure returned non zero, dont send the message */
-   if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
-      return;
+   if (Hook)
+   {
+      if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
+         return;
+   }
 
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();

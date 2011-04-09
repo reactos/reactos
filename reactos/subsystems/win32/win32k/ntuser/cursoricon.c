@@ -159,7 +159,7 @@ UserSetCursor(
     return OldCursor;
 }
 
-BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo)
+BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook)
 {
     PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
@@ -194,12 +194,12 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo)
     pt.x = x;
     pt.y = y;
 
-    /* 3. Generate a mouse move message, this sets the htEx. */
+    /* 3. Generate a mouse move message, this sets the htEx and Track Window too. */
     Msg.message = WM_MOUSEMOVE;
     Msg.wParam = CurInfo->ButtonsDown;
     Msg.lParam = MAKELPARAM(x, y);
     Msg.pt = pt;
-    co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo);
+    co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
 
     /* 1. Store the new cursor position */
     gpsi->ptCursor = pt;
@@ -677,7 +677,7 @@ UserClipCursor(
     {
         CurInfo->bClipped = TRUE;
         RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, 0, 0);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, 0, 0, FALSE);
     }
     else
     {

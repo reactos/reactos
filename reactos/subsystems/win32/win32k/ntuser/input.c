@@ -1138,7 +1138,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
-      UserSetCursorPos(MousePos.x, MousePos.y, Injected, mi->dwExtraInfo);
+      UserSetCursorPos(MousePos.x, MousePos.y, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
@@ -1146,7 +1146,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
    {
@@ -1154,7 +1154,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
    {
@@ -1162,7 +1162,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
    {
@@ -1170,7 +1170,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
    {
@@ -1178,7 +1178,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
    {
@@ -1186,7 +1186,7 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
 
    if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
@@ -1204,14 +1204,14 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
          gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
    }
    else if(mi->dwFlags & MOUSEEVENTF_XUP)
@@ -1222,21 +1222,21 @@ IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
          gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
    }
    if(mi->dwFlags & MOUSEEVENTF_WHEEL)
    {
       Msg.message = WM_MOUSEWHEEL;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
-      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
 
    return TRUE;
