@@ -1,6 +1,6 @@
 /* FILE:        dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2010-05-25
+ * UPDATED:     2011-03-31
  * THANKS TO:   navaraf, who translated major part of this file
  */
 
@@ -539,7 +539,7 @@ BEGIN
 	PUSHBUTTON "&Zav¯Ìt", IDCANCEL, 118, 198, 60, 14
 	LTEXT "&Kapacita:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&Souborov˝ systÈm", -1, 7, 35, 170, 9
+	LTEXT "Souborov˝ systÈ&m", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
 	LTEXT "&Velikost alokaËnÌ jednotky", -1, 7, 64, 170, 9
@@ -597,7 +597,7 @@ BEGIN
 	IDS_SHV_COLUMN13            "Kategorie"
 	IDS_SHV_COLUMN_DELFROM      "P˘vodnÌ umÌstÏnÌ"
 	IDS_SHV_COLUMN_DELDATE      "OdstranÏno"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_FONTTYPE     "Druh pÌsma" //fonttype
 	IDS_SHV_COLUMN_WORKGROUP    "PracovnÌ skupina"
 	IDS_SHV_NETWORKLOCATION     "SÌùovÈ umÌstÏnÌ"
 	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
@@ -739,8 +739,8 @@ BEGIN
 
 	IDS_FILE_FOLDER             "%u soubor˘, %u sloûek"
 	IDS_PRINTERS                "Tisk·rny"
-	IDS_FONTS                   "Fonty"
-	IDS_INSTALLNEWFONT          "Nainstalovat nov˝ font..."
+	IDS_FONTS                   "PÌsma"
+	IDS_INSTALLNEWFONT          "Nainstalovat novÈ pÌsmo..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "V˝chozÌ alokaËnÌ velikost"
 	IDS_COPY_OF                 "Kopie "
