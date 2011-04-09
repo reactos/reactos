@@ -199,7 +199,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
                                     PrefContext->SelectedLine,
                                     LineName,
                                     MIXER_LONG_NAME_CHARS,
-                                    FALSE) == -1)
+                                    TRUE) == -1)
             {
                 LineName[0] = TEXT('\0');
             }
@@ -340,7 +340,7 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
 
 static 
 VOID
-WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
+WriteLineSettings(PPREFERENCES_CONTEXT Context, HWND hwndDlg)
 {
     HWND hwndControls;
     INT Count, Index;
@@ -358,7 +358,7 @@ WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
     /* sanity check */
     assert(Count);
 
-    if (SndMixerGetLineName(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, DestinationName, MIXER_LONG_NAME_CHARS, TRUE) == -1)
+    if (SndMixerGetLineName(Context->Mixer, Context->SelectedLine, DestinationName, MIXER_LONG_NAME_CHARS, TRUE) == -1)
     {
         /* failed to get destination line name */
         return;
@@ -395,7 +395,7 @@ WriteLineSettings(PREFERENCES_CONTEXT Context, HWND hwndDlg)
     }
 
     /* now write the line config */
-    WriteLineConfig(Preferences.DeviceName, DestinationName, LineStates, sizeof(SNDVOL_REG_LINESTATE) * Count);
+    WriteLineConfig(Context->DeviceName, DestinationName, LineStates, sizeof(SNDVOL_REG_LINESTATE) * Count);
 
     /* free line states */
     HeapFree(GetProcessHeap(), 0, LineStates);
@@ -509,7 +509,7 @@ DlgPreferencesProc(HWND hwndDlg,
                 case IDOK:
                 {
                     /* write line settings */
-                    WriteLineSettings(Preferences, hwndDlg);
+                    WriteLineSettings(Context, hwndDlg);
 
                     /* fall through */
                 }
@@ -564,19 +564,8 @@ DlgPreferencesProc(HWND hwndDlg,
 
             /* update all controls */
             UpdatePrefDlgControls(Context,
-                                  (DWORD)-1);
+                                  (DWORD)Context->SelectedLine);
             return TRUE;
-        }
-
-        case WM_DESTROY:
-        {
-            Context = GetDialogData(hwndDlg,
-                                    PREFERENCES_CONTEXT);
-            if (Context->Mixer != NULL)
-            {
-                SndMixerDestroy(Context->Mixer);
-            }
-            break;
         }
 
         case WM_CLOSE:
@@ -789,16 +778,17 @@ MainWindowProc(HWND hwnd,
             {
                 case IDC_PROPERTIES:
                 {
-                    PREFERENCES_CONTEXT Preferences;
+                    PREFERENCES_CONTEXT Pref;
 
-                    Preferences.MixerWindow = MixerWindow;
-                    Preferences.Mixer = NULL;
+                    Pref.MixerWindow = MixerWindow;
+                    Pref.Mixer = NULL;
+                    Pref.SelectedLine = Preferences.SelectedLine;
 
                     if (DialogBoxParam(hAppInstance,
                                        MAKEINTRESOURCE(IDD_PREFERENCES),
                                        hwnd,
                                        DlgPreferencesProc,
-                                       (LPARAM)&Preferences) == IDOK)
+                                       (LPARAM)&Pref) == IDOK)
                     {
                         /* update window */
                         TCHAR szProduct[MAXPNAMELEN];
@@ -820,11 +810,17 @@ MainWindowProc(HWND hwnd,
                         /* destroy old status bar */
                         DestroyWindow(MixerWindow->hStatusBar);
 
+                        /* update details */
+                        Preferences.SelectedLine = Pref.SelectedLine;
+
+                        /* destroy old mixer */
+                        SndMixerDestroy(Preferences.MixerWindow->Mixer);
+
+                        /* use new selected mixer */
+                        Preferences.MixerWindow->Mixer = Pref.Mixer;
+
                         /* rebuild dialog controls */
-                        if (RebuildMixerWindowControls(&Preferences))
-                        {
-                            DPRINT("Rebuilding mixer window controls failed!\n");
-                        }
+                        RebuildMixerWindowControls(&Preferences);
 
                         /* create status window */
                         MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,

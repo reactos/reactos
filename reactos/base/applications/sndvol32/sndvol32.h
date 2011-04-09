@@ -31,8 +31,7 @@ extern HANDLE hAppHeap;
 #define SZ_APP_CLASS TEXT("Volume Control")
 
 ULONG DbgPrint(PCH , ...);
-#define DPRINT 
-//DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
+#define DPRINT DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
 
 
 /*

@@ -340,7 +340,7 @@ EnumConnectionsCallback(
     if (Line->cControls != 0)
     {
       /* get line name */
-      if (SndMixerGetLineName(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, FALSE) == -1)
+      if (SndMixerGetLineName(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, TRUE) == -1)
       {
           /* failed to get line name */
           LineName[0] = L'\0';
