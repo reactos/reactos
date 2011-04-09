@@ -41,6 +41,106 @@ MsqInitializeImpl(VOID)
    return(STATUS_SUCCESS);
 }
 
+DWORD FASTCALL UserGetKeyState(DWORD key)
+{
+   DWORD ret = 0;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
+
+   if( key < 0x100 )
+   {
+       ret = ((DWORD)(MessageQueue->KeyState[key] & KS_DOWN_BIT) << 8 ) |
+            (MessageQueue->KeyState[key] & KS_LOCK_BIT);
+   }
+
+   return ret;
+}
+
+/* change the input key state for a given key */
+static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
+{
+    if (down)
+    {
+        if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT)) 
+        {
+            MessageQueue->KeyState[key] ^= KS_LOCK_BIT;
+        }
+        MessageQueue->KeyState[key] |= KS_DOWN_BIT;
+    }
+    else
+    {
+        MessageQueue->KeyState[key] &= ~KS_DOWN_BIT;
+    }
+}
+
+/* update the input key state for a keyboard message */
+static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
+{
+    UCHAR key;
+    BOOL down = 0;
+
+    switch (msg->message)
+    {
+    case WM_LBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_LBUTTONUP:
+        set_input_key_state( MessageQueue, VK_LBUTTON, down );
+        break;
+    case WM_MBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_MBUTTONUP:
+        set_input_key_state( MessageQueue, VK_MBUTTON, down );
+        break;
+    case WM_RBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_RBUTTONUP:
+        set_input_key_state( MessageQueue, VK_RBUTTON, down );
+        break;
+    case WM_XBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_XBUTTONUP:
+        if (msg->wParam == XBUTTON1) 
+            set_input_key_state( MessageQueue, VK_XBUTTON1, down );
+        else if (msg->wParam == XBUTTON2) 
+            set_input_key_state( MessageQueue, VK_XBUTTON2, down );
+        break;
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        down = 1;
+        /* fall through */
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        key = (UCHAR)msg->wParam;
+        set_input_key_state( MessageQueue, key, down );
+        switch(key)
+        {
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            down = (MessageQueue->KeyState[VK_LCONTROL] | MessageQueue->KeyState[VK_RCONTROL]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_CONTROL, down );
+            break;
+        case VK_LMENU:
+        case VK_RMENU:
+            down = (MessageQueue->KeyState[VK_LMENU] | MessageQueue->KeyState[VK_RMENU]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_MENU, down );
+            break;
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            down = (MessageQueue->KeyState[VK_LSHIFT] | MessageQueue->KeyState[VK_RSHIFT]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_SHIFT, down );
+            break;
+        }
+        break;
+    }
+}
+
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
@@ -1294,6 +1394,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
            if (Remove)
            {
+               update_input_key_state(MessageQueue, pMsg);
                RemoveEntryList(&CurrentMessage->ListEntry);
                ClearMsgBitsMask(MessageQueue, QS_INPUT);
                MsqDestroyMessage(CurrentMessage);
@@ -1712,6 +1813,21 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
    }
 
    return NULL;
+}
+
+SHORT
+APIENTRY
+NtUserGetKeyState(INT key)
+{
+   DWORD Ret;
+
+   UserEnterExclusive();
+
+   Ret = UserGetKeyState(key);
+
+   UserLeave();
+
+   return Ret;
 }
 
 /* EOF */

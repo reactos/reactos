@@ -33,27 +33,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
-/* Lock modifiers */
-#define CAPITAL_BIT   0x80000000
-#define NUMLOCK_BIT   0x40000000
-#define MOD_BITS_MASK 0x3fffffff
-#define MOD_KCTRL     0x02
-/* Key States */
-#define KS_DOWN_MASK     0xc0
-#define KS_DOWN_BIT      0x80
-#define KS_LOCK_BIT      0x01
-/* Scan Codes */
-#define SC_KEY_UP        0x8000
-/* lParam bits */
-#define LP_EXT_BIT       (1<<24)
-/* From kbdxx.c -- Key changes with numlock */
-#define KNUMP         0x400
-
-
 BYTE gQueueKeyStateTable[256];
-
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -351,40 +331,6 @@ ToUnicodeInner(UINT wVirtKey,
 
    return 0;
 }
-
-
-DWORD FASTCALL UserGetKeyState(DWORD key)
-{
-   DWORD ret = 0;
-
-   if( key < 0x100 )
-   {
-      ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-            (gQueueKeyStateTable[key] & KS_LOCK_BIT);
-   }
-
-   return ret;
-}
-
-
-SHORT
-APIENTRY
-NtUserGetKeyState(
-   INT key)
-{
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetKeyState\n");
-   UserEnterExclusive();
-
-   RETURN(UserGetKeyState(key));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetKeyState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 
 
 DWORD FASTCALL UserGetAsyncKeyState(DWORD key)

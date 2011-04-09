@@ -108,6 +108,9 @@ typedef struct _USER_MESSAGE_QUEUE
   /* extra message information */
   LPARAM ExtraInfo;
 
+  /* state of each key */
+  UCHAR KeyState[256];
+
   /* messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
   /* messages that are currently dispatched by this message queue, required for cleanup */

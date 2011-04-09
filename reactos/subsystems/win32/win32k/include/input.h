@@ -27,6 +27,22 @@ extern PATTACHINFO gpai;
 #define KBL_PRELOAD 2
 #define KBL_RESET 4
 
+/* Key States */
+#define KS_DOWN_MASK     0xc0
+#define KS_DOWN_BIT      0x80
+#define KS_LOCK_BIT      0x01
+/* Lock modifiers */
+#define CAPITAL_BIT   0x80000000
+#define NUMLOCK_BIT   0x40000000
+#define MOD_BITS_MASK 0x3fffffff
+#define MOD_KCTRL     0x02
+/* Scan Codes */
+#define SC_KEY_UP        0x8000
+/* lParam bits */
+#define LP_EXT_BIT       (1<<24)
+/* From kbdxx.c -- Key changes with numlock */
+#define KNUMP         0x400
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
