@@ -58,11 +58,12 @@ VOID
 DumpQueueHeadList(PEHCI_HOST_CONTROLLER hcd)
 {
     KIRQL OldIrql;
+    PQUEUE_HEAD QueueHead, FirstQueueHead;
 
     KeAcquireSpinLock(&hcd->Lock, &OldIrql);
 
-    PQUEUE_HEAD QueueHead = (PQUEUE_HEAD)hcd->CommonBufferVA;
-    PQUEUE_HEAD FirstQueueHead = QueueHead;
+    QueueHead = (PQUEUE_HEAD)hcd->CommonBufferVA;
+    FirstQueueHead = QueueHead;
     DPRINT1("Dumping QueueHead List!!!!!!!!!!!!!\n");
     while (1)
     {

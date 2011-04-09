@@ -22,6 +22,9 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
     ULONG OpRegisters;
     PEHCI_HOST_CONTROLLER hcd;
     LONG i;
+    ULONG CurrentAddr, OffSet;
+    PQUEUE_HEAD CompletedQH, NextQH;
+    PQUEUE_TRANSFER_DESCRIPTOR CompletedTD, NextTD;
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeferredContext;
 
@@ -44,10 +47,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
     if (CStatus & (EHCI_STS_INT | EHCI_ERROR_INT))
     {
         DPRINT("Asyn Complete!\n");
-        ULONG CurrentAddr, OffSet;
-        PQUEUE_HEAD CompletedQH, NextQH;
-        PQUEUE_TRANSFER_DESCRIPTOR CompletedTD, NextTD;
-        
+
         /* AsyncListAddr Register will have the next QueueHead to execute */
         CurrentAddr = GetAsyncListQueueRegister(hcd);
 
