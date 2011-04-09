@@ -294,7 +294,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo)
    MouseHistoryOfMoves[gcur_count].x = Msg->pt.x;
    MouseHistoryOfMoves[gcur_count].y = Msg->pt.y;
    MouseHistoryOfMoves[gcur_count].time = Msg->time;
-   MouseHistoryOfMoves[gcur_count].dwExtraInfo = 0; // need to be passed from IntMouseInput mi.dwExtraInfo.
+   MouseHistoryOfMoves[gcur_count].dwExtraInfo = dwExtraInfo;
    if (gcur_count++ == 64) gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 }
 

@@ -159,7 +159,7 @@ UserSetCursor(
     return OldCursor;
 }
 
-BOOL UserSetCursorPos( INT x, INT y)
+BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo)
 {
     PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
@@ -199,7 +199,7 @@ BOOL UserSetCursorPos( INT x, INT y)
     Msg.wParam = CurInfo->ButtonsDown;
     Msg.lParam = MAKELPARAM(x, y);
     Msg.pt = pt;
-    co_MsqInsertMouseMessage(&Msg, 0, 0);
+    co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo);
 
     /* 1. Store the new cursor position */
     gpsi->ptCursor = pt;
@@ -677,7 +677,7 @@ UserClipCursor(
     {
         CurInfo->bClipped = TRUE;
         RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, 0, 0);
     }
     else
     {
