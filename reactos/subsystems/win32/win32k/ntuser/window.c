@@ -2575,7 +2575,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
     msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
     msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
     msg.pt = gpsi->ptCursor;
-    co_MsqInsertMouseMessage(&msg, 0, 0);
+    co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
 
    if (!IntIsWindow(Window->head.h))
    {
