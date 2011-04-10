@@ -3974,128 +3974,127 @@ RegQueryReflectionKey(IN HKEY hBase,
 }
 
 
-/************************************************************************
- *  RegQueryValueExA
+/******************************************************************************
+ * RegQueryValueExA   [ADVAPI32.@]
  *
- * @implemented
+ * Get the type and contents of a specified value under with a key.
+ *
+ * PARAMS
+ *  hkey      [I]   Handle of the key to query
+ *  name      [I]   Name of value under hkey to query
+ *  reserved  [I]   Reserved - must be NULL
+ *  type      [O]   Destination for the value type, or NULL if not required
+ *  data      [O]   Destination for the values contents, or NULL if not required
+ *  count     [I/O] Size of data, updated with the number of bytes returned
+ *
+ * RETURNS
+ *  Success: ERROR_SUCCESS. *count is updated with the number of bytes copied to data.
+ *  Failure: ERROR_INVALID_HANDLE, if hkey is invalid.
+ *           ERROR_INVALID_PARAMETER, if any other parameter is invalid.
+ *           ERROR_MORE_DATA, if on input *count is too small to hold the contents.
+ *                     
+ * NOTES
+ *   MSDN states that if data is too small it is partially filled. In reality 
+ *   it remains untouched.
  */
-LONG WINAPI
-RegQueryValueExA(HKEY hKey,
-                 LPCSTR lpValueName,
-                 LPDWORD lpReserved,
-                 LPDWORD lpType,
-                 LPBYTE  lpData,
-                 LPDWORD lpcbData)
+LONG
+WINAPI
+RegQueryValueExA(HKEY hkeyorg,
+                 LPCSTR name,
+                 LPDWORD reserved,
+                 LPDWORD type,
+                 LPBYTE data,
+                 LPDWORD count)
 {
-    UNICODE_STRING ValueName;
-    LPWSTR lpValueBuffer;
-    LONG ErrorCode;
-    DWORD Length;
-    DWORD Type;
-    NTSTATUS Status;
-    ULONG Index;
+    HANDLE hkey;
+    NTSTATUS status;
+    ANSI_STRING nameA;
+    UNICODE_STRING nameW;
+    DWORD total_size, datalen = 0;
+    char buffer[256], *buf_ptr = buffer;
+    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
+    static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
 
-    TRACE("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
-          hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
+    TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
+          hkey, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
 
-    if (lpData != NULL && lpcbData == NULL)
+    if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
+    status = MapDefaultKey(&hkey, hkeyorg);
+    if (!NT_SUCCESS(status))
     {
-        return ERROR_INVALID_PARAMETER;
+        return RtlNtStatusToDosError(status);
     }
 
-    Length = (lpcbData == NULL || lpData == NULL) ? 0 : *lpcbData * sizeof(WCHAR);
+    if (count) datalen = *count;
+    if (!data && count) *count = 0;
 
-    if (lpData)
+    RtlInitAnsiString( &nameA, name );
+    if ((status = RtlAnsiStringToUnicodeString( &nameW, &nameA, TRUE )))
     {
-        lpValueBuffer = RtlAllocateHeap(ProcessHeap,
-                                        0,
-                                        Length + sizeof(WCHAR));
-        if (!lpValueBuffer)
+        return RtlNtStatusToDosError(status);
+        ClosePredefKey(hkey);
+    }
+
+    status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,
+                              buffer, sizeof(buffer), &total_size );
+    if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
+
+    /* we need to fetch the contents for a string type even if not requested,
+     * because we need to compute the length of the ASCII string. */
+    if (data || is_string(info->Type))
+    {
+        /* retry with a dynamically allocated buffer */
+        while (status == STATUS_BUFFER_OVERFLOW)
         {
-            return ERROR_OUTOFMEMORY;
-        }
-    }
-    else
-    {
-        lpValueBuffer = NULL;
-
-        if (lpcbData)
-            *lpcbData = 0;
-    }
-
-    if(!RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                         (LPSTR)lpValueName))
-    {
-        ERR("RtlCreateUnicodeStringFromAsciiz failed!\n");
-        ErrorCode = ERROR_OUTOFMEMORY;
-        goto cleanup;
-    }
-
-    ErrorCode = RegQueryValueExW(hKey,
-                                 ValueName.Buffer,
-                                 lpReserved,
-                                 &Type,
-                                 (LPBYTE)lpValueBuffer,
-                                 &Length);
-    TRACE("ErrorCode %lu\n", ErrorCode);
-
-    RtlFreeUnicodeString(&ValueName);
-
-    if (ErrorCode == ERROR_SUCCESS ||
-        ErrorCode == ERROR_MORE_DATA)
-    {
-
-        if (is_string(Type))
-        {
-            if (ErrorCode == ERROR_SUCCESS && lpValueBuffer != NULL)
+            if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
+            if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
             {
-                Status = RtlUnicodeToMultiByteN((PCHAR)lpData, *lpcbData, &Index, (PWCHAR)lpValueBuffer, Length);
-                if (NT_SUCCESS(Status))
-                {
-                    PCHAR szData = (PCHAR)lpData;
-                    if(&szData[Index] < (PCHAR)(lpData + *lpcbData))
-                    {
-                        szData[Index] = '\0';
-                    }
-                }
+                status = STATUS_NO_MEMORY;
+                goto done;
+            }
+            info = (KEY_VALUE_PARTIAL_INFORMATION *)buf_ptr;
+            status = NtQueryValueKey( hkey, &nameW, KeyValuePartialInformation,
+                                      buf_ptr, total_size, &total_size );
+        }
+
+        if (status) goto done;
+
+        if (is_string(info->Type))
+        {
+            DWORD len;
+
+            RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info_size),
+                                       total_size - info_size );
+            if (data && len)
+            {
+                if (len > datalen) status = STATUS_BUFFER_OVERFLOW;
                 else
                 {
-                    ErrorCode = RtlNtStatusToDosError(Status);
+                    RtlUnicodeToMultiByteN( (char*)data, len, NULL, (WCHAR *)(buf_ptr + info_size),
+                                            total_size - info_size );
+                    /* if the type is REG_SZ and data is not 0-terminated
+                     * and there is enough space in the buffer NT appends a \0 */
+                    if (len < datalen && data[len-1]) data[len] = 0;
                 }
             }
-
-            Length = Length / sizeof(WCHAR);
+            total_size = len + info_size;
         }
-        else if (ErrorCode == ERROR_SUCCESS && lpValueBuffer != NULL)
+        else if (data)
         {
-            if (*lpcbData < Length)
-            {
-                ErrorCode = ERROR_MORE_DATA;
-            }
-            else
-            {
-                RtlMoveMemory(lpData, lpValueBuffer, Length);
-            }
-        }
-
-        if (lpcbData != NULL)
-        {
-            *lpcbData = Length;
+            if (total_size - info_size > datalen) status = STATUS_BUFFER_OVERFLOW;
+            else memcpy( data, buf_ptr + info_size, total_size - info_size );
         }
     }
+    else status = STATUS_SUCCESS;
 
-    if (lpType != NULL)
-    {
-        *lpType = Type;
-    }
+    if (type) *type = info->Type;
+    if (count) *count = total_size - info_size;
 
-cleanup:
-    if (lpValueBuffer != NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, lpValueBuffer);
-    }
-
-    return ErrorCode;
+ done:
+    if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
+    RtlFreeUnicodeString( &nameW );
+    ClosePredefKey(hkey);
+    return RtlNtStatusToDosError(status);
 }
 
 
