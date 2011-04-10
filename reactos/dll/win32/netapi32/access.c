@@ -793,7 +793,7 @@ NET_API_STATUS WINAPI NetUserModalsGet(
             PPOLICY_ACCOUNT_DOMAIN_INFO domainInfo;
             NTSTATUS ntStatus;
             PSID domainIdentifier = NULL;
-            int domainNameLen;
+            int domainNameLen, domainIdLen;
 
             ZeroMemory(&objectAttributes, sizeof(objectAttributes));
             objectAttributes.Length = sizeof(objectAttributes);
@@ -820,11 +820,12 @@ NET_API_STATUS WINAPI NetUserModalsGet(
             }
 
             domainIdentifier = domainInfo->DomainSid;
+            domainIdLen = (domainIdentifier) ? GetLengthSid(domainIdentifier) : 0;
             domainNameLen = lstrlenW(domainInfo->DomainName.Buffer) + 1;
             LsaClose(policyHandle);
 
             ntStatus = NetApiBufferAllocate(sizeof(USER_MODALS_INFO_2) +
-                                            GetLengthSid(domainIdentifier) +
+                                            domainIdLen +
                                             domainNameLen * sizeof(WCHAR),
                                             (LPVOID *)pbuffer);
 
@@ -836,15 +837,16 @@ NET_API_STATUS WINAPI NetUserModalsGet(
             }
 
             umi = (USER_MODALS_INFO_2 *) *pbuffer;
-            umi->usrmod2_domain_id = *pbuffer + sizeof(USER_MODALS_INFO_2);
+            umi->usrmod2_domain_id = (domainIdLen > 0) ? (*pbuffer + sizeof(USER_MODALS_INFO_2)) : NULL;
             umi->usrmod2_domain_name = (LPWSTR)(*pbuffer +
-                sizeof(USER_MODALS_INFO_2) + GetLengthSid(domainIdentifier));
+                sizeof(USER_MODALS_INFO_2) + domainIdLen);
 
             lstrcpynW(umi->usrmod2_domain_name,
                       domainInfo->DomainName.Buffer,
                       domainNameLen);
-            CopySid(GetLengthSid(domainIdentifier), umi->usrmod2_domain_id,
-                    domainIdentifier);
+            if (domainIdLen > 0)
+                CopySid(GetLengthSid(domainIdentifier), umi->usrmod2_domain_id,
+                        domainIdentifier);
 
             LsaFreeMemory(domainInfo);
 
