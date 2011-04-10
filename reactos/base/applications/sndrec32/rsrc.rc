@@ -16,6 +16,7 @@ IDB_BITMAP2_REC_DIS     BITMAP                  "resources/but_rec_dis.bmp"
 IDB_BITMAP2_START_DIS   BITMAP                  "resources/but_start_dis.bmp"
 IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 
+#include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
