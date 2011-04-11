@@ -107,10 +107,11 @@ FindTimer(PWND Window,
           UINT_PTR nID,
           UINT flags)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr, RetTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -134,10 +135,11 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -158,11 +160,12 @@ FASTCALL
 ValidateTimerCallback(PTHREADINFO pti,
                       LPARAM lParam)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   BOOL Ret = FALSE;
   PTIMER pTmr;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -389,7 +392,7 @@ BOOL
 FASTCALL
 PostTimerMessages(PWND Window)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
@@ -400,7 +403,7 @@ PostTimerMessages(PWND Window)
   ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   while(pLE != &TimersListHead)
   {
      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -441,12 +444,12 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr;
   LONG TimerCount = 0;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
@@ -515,7 +518,7 @@ ProcessTimers(VOID)
 BOOL FASTCALL
 DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
 {
-   PLIST_ENTRY pLE = TimersListHead.Flink;
+   PLIST_ENTRY pLE;
    PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
 
@@ -523,7 +526,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
       return FALSE;
 
    TimerEnterExclusive();
-
+   pLE = TimersListHead.Flink;
    while(pLE != &TimersListHead)
    {
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -570,14 +573,14 @@ IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
    DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
           Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
+   TimerEnterExclusive();
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
 
    if (pTmr)
    {
-      TimerEnterExclusive();
       RemoveTimer(pTmr);
-      TimerLeave();
    }
+   TimerLeave();
 
    return pTmr ? TRUE :  FALSE;
 }
