@@ -282,8 +282,13 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
 	TRACE("%p\n",This);
 
 	dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		  LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_AUTOARRANGE;
+          LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE;
         dwExStyle = WS_EX_CLIENTEDGE;
+
+    if (This->FolderSettings.fFlags & FWF_DESKTOP) 
+       dwStyle |= LVS_ALIGNLEFT;
+    else
+       dwStyle |= LVS_ALIGNTOP;
 
 	switch (This->FolderSettings.ViewMode)
 	{
