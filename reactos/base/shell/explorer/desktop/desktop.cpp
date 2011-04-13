@@ -496,8 +496,6 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 {
 	_hwndListView = GetNextWindow(hwnd, GW_CHILD);
 
-	SetWindowStyle(_hwndListView, GetWindowStyle(_hwndListView)&~LVS_ALIGNMASK);//|LVS_ALIGNTOP|LVS_AUTOARRANGE);
-
 	 // work around for Windows NT, Win 98, ...
 	 // Without this the desktop has mysteriously only a size of 800x600 pixels.
 	ClientRect rect(hwnd);
@@ -506,9 +504,8 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	 // subclass background window
 	new BackgroundWindow(_hwndListView);
 
-	_icon_algo = 1;	// default icon arrangement
+	_icon_algo = 0;	// default icon arrangement
 
-	PositionIcons();
 	InitDragDrop();
 }
 
@@ -736,6 +733,9 @@ void DesktopShellView::PositionIcons(int dir)
 
 	RECT work_area;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
+
+	/* disable default allignment */
+	SetWindowStyle(_hwndListView, GetWindowStyle(_hwndListView)&~LVS_ALIGNMASK);//|LVS_ALIGNTOP|LVS_AUTOARRANGE);
 
 	const POINTS& dir1 = s_align_dir1[_icon_algo];
 	const POINTS& dir2 = s_align_dir2[_icon_algo];
