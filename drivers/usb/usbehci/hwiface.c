@@ -18,16 +18,20 @@
 /* Queue Element Transfer Descriptors */
 
 PQUEUE_TRANSFER_DESCRIPTOR
-CreateDescriptor(PEHCI_HOST_CONTROLLER hcd, UCHAR PIDCode, ULONG TotalBytesToTransfer)
+CreateDescriptor(
+    PEHCI_HOST_CONTROLLER hcd, 
+    UCHAR PIDCode, 
+    ULONG TotalBytesToTransfer)
 {
     PQUEUE_TRANSFER_DESCRIPTOR Descriptor;
     ULONG PhysicalAddress;
     UCHAR i;
-    KIRQL OldIrql;
+    NTSTATUS Status;
 
-    KeAcquireSpinLock(&hcd->Lock, &OldIrql);
+    Status = DmaMemAllocator_Allocate(hcd->DmaMemAllocator, sizeof(QUEUE_TRANSFER_DESCRIPTOR), (PVOID*)&Descriptor, &PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+       return NULL;
 
-    Descriptor = (PQUEUE_TRANSFER_DESCRIPTOR)AllocateMemory(hcd, sizeof(QUEUE_TRANSFER_DESCRIPTOR), &PhysicalAddress);
     RtlZeroMemory(Descriptor, sizeof(QUEUE_TRANSFER_DESCRIPTOR));
     Descriptor->NextPointer = TERMINATE_POINTER;
     Descriptor->AlternateNextPointer = TERMINATE_POINTER;
@@ -38,18 +42,16 @@ CreateDescriptor(PEHCI_HOST_CONTROLLER hcd, UCHAR PIDCode, ULONG TotalBytesToTra
     Descriptor->Token.Bits.PIDCode = PIDCode;
     Descriptor->Token.Bits.TotalBytesToTransfer = TotalBytesToTransfer;
     Descriptor->PhysicalAddr = PhysicalAddress;
-    for (i=0;i<5;i++)
-        Descriptor->BufferPointer[i] = 0;
-
-    KeReleaseSpinLock(&hcd->Lock, OldIrql);
 
     return Descriptor;
 }
 
 VOID
-FreeDescriptor(PQUEUE_TRANSFER_DESCRIPTOR Descriptor)
+FreeDescriptor(
+    PEHCI_HOST_CONTROLLER hcd, 
+    PQUEUE_TRANSFER_DESCRIPTOR Descriptor)
 {
-    ReleaseMemory((ULONG)Descriptor);
+    DmaMemAllocator_Free(hcd->DmaMemAllocator, Descriptor, sizeof(QUEUE_TRANSFER_DESCRIPTOR));
 }
 
 /* Queue Head */
@@ -84,16 +86,17 @@ PQUEUE_HEAD
 CreateQueueHead(PEHCI_HOST_CONTROLLER hcd)
 {
     PQUEUE_HEAD CurrentQH;
-    ULONG PhysicalAddress , i;
-    KIRQL OldIrql;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS PhysicalAddress;
 
-    KeAcquireSpinLock(&hcd->Lock, &OldIrql);
+    Status = DmaMemAllocator_Allocate(hcd->DmaMemAllocator, sizeof(QUEUE_HEAD), (PVOID*)&CurrentQH, &PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+       return NULL;
 
-    CurrentQH = (PQUEUE_HEAD)AllocateMemory(hcd, sizeof(QUEUE_HEAD), &PhysicalAddress);
     RtlZeroMemory(CurrentQH, sizeof(QUEUE_HEAD));
 
     ASSERT(CurrentQH);
-    CurrentQH->PhysicalAddr = PhysicalAddress;
+    CurrentQH->PhysicalAddr = PhysicalAddress.LowPart;
     CurrentQH->HorizontalLinkPointer = TERMINATE_POINTER;
     CurrentQH->CurrentLinkPointer = TERMINATE_POINTER;
     CurrentQH->AlternateNextPointer = TERMINATE_POINTER;
@@ -118,12 +121,9 @@ CreateQueueHead(PEHCI_HOST_CONTROLLER hcd)
     CurrentQH->Token.DWord = 0;
     CurrentQH->NextQueueHead = NULL;
     CurrentQH->PreviousQueueHead = NULL;
-    for (i=0; i<5; i++)
-        CurrentQH->BufferPointer[i] = 0;
-
     CurrentQH->Token.Bits.InterruptOnComplete = TRUE;
 
-    KeReleaseSpinLock(&hcd->Lock, OldIrql);
+
     return CurrentQH;
 }
 
@@ -169,8 +169,10 @@ UnlinkQueueHead(PEHCI_HOST_CONTROLLER hcd, PQUEUE_HEAD QueueHead)
 }
 
 VOID
-DeleteQueueHead(PQUEUE_HEAD QueueHead)
+DeleteQueueHead(
+    PEHCI_HOST_CONTROLLER hcd,
+    PQUEUE_HEAD QueueHead)
 {
-    ReleaseMemory((ULONG)QueueHead);
+    DmaMemAllocator_Free(hcd->DmaMemAllocator, QueueHead, sizeof(QUEUE_HEAD));
 }
 

@@ -2,25 +2,42 @@
 
 #include "hardware.h"
 
-typedef struct _MEM_ENTRY
-{
-    UCHAR InUse:1;
-    UCHAR Blocks:7;
-} MEM_ENTRY, *PMEM_ENTRY;
-
-typedef struct _MEM_HEADER
-{
-    UCHAR IsFull;
-    MEM_ENTRY Entry[124];
-    UCHAR Reserved[3];
-} MEM_HEADER, *PMEM_HEADER;
-
+/* destroys memory allocator */
 VOID
-DumpPages(VOID);
+NTAPI
+DmaMemAllocator_Destroy(
+    IN LPDMA_MEMORY_ALLOCATOR Allocator);
 
-ULONG
-AllocateMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Size, ULONG *PhysicalAddress);
+/* create memory allocator */
+NTSTATUS
+NTAPI
+DmaMemAllocator_Create(
+    IN LPDMA_MEMORY_ALLOCATOR *OutMemoryAllocator);
 
+/* initializes memory allocator */
+NTSTATUS
+NTAPI
+DmaMemAllocator_Initialize(
+    IN OUT LPDMA_MEMORY_ALLOCATOR Allocator,
+    IN ULONG DefaultBlockSize,
+    IN PKSPIN_LOCK Lock,
+    IN PHYSICAL_ADDRESS PhysicalBase,
+    IN PVOID VirtualBase,
+    IN ULONG Length);
+
+/* allocates memory from allocator */
+NTSTATUS
+NTAPI
+DmaMemAllocator_Allocate(
+    IN LPDMA_MEMORY_ALLOCATOR Allocator,
+    IN ULONG Size,
+    OUT PVOID *OutVirtualAddress,
+    OUT PPHYSICAL_ADDRESS OutPhysicalAddress);
+
+/* frees memory block from allocator */
 VOID
-ReleaseMemory(ULONG Address);
-
+NTAPI
+DmaMemAllocator_Free(
+    IN LPDMA_MEMORY_ALLOCATOR Allocator,
+    IN PVOID VirtualAddress,
+    IN ULONG Size);

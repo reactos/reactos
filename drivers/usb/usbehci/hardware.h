@@ -264,6 +264,18 @@ typedef struct _EHCI_CAPS {
     UCHAR PortRoute [8];
 } EHCI_CAPS, *PEHCI_CAPS;
 
+
+typedef struct
+{
+    PKSPIN_LOCK Lock;
+    RTL_BITMAP Bitmap;
+    PULONG BitmapBuffer;
+    ULONG BlockSize;
+    PVOID VirtualBase;
+    PHYSICAL_ADDRESS PhysicalBase;
+    ULONG Length;
+}DMA_MEMORY_ALLOCATOR, *LPDMA_MEMORY_ALLOCATOR;
+
 typedef struct _EHCI_HOST_CONTROLLER
 {
     ULONG OpRegisters;
@@ -273,6 +285,7 @@ typedef struct _EHCI_HOST_CONTROLLER
     ULONG CommonBufferSize;
     PQUEUE_HEAD AsyncListQueue;
     KSPIN_LOCK Lock;
+    LPDMA_MEMORY_ALLOCATOR DmaMemAllocator;
 } EHCI_HOST_CONTROLLER, *PEHCI_HOST_CONTROLLER;
 
 ULONG

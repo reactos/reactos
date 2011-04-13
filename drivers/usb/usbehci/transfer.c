@@ -143,11 +143,13 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
     ULONG MdlPhysicalAddr;
     PKEVENT Event = NULL;
     PMDL pMdl = NULL;
-    PUSB_DEFAULT_PIPE_SETUP_PACKET CtrlSetupVA, CtrlPhysicalPA;
+    PUSB_DEFAULT_PIPE_SETUP_PACKET CtrlSetupVA;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS PhysicalAddress;
 
-    CtrlSetupVA = (PUSB_DEFAULT_PIPE_SETUP_PACKET)AllocateMemory(hcd,
-                                                               sizeof(USB_DEFAULT_PIPE_SETUP_PACKET),
-                                                               (ULONG*)&CtrlPhysicalPA);
+    /* allocate memory */
+    Status = DmaMemAllocator_Allocate(hcd->DmaMemAllocator, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), (PVOID*)&CtrlSetupVA, &PhysicalAddress);
+    ASSERT(Status == STATUS_SUCCESS);
 
     RtlCopyMemory(CtrlSetupVA, CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
     /* If no Irp then wait on completion */
@@ -214,7 +216,7 @@ SubmitControlTransfer(PEHCI_HOST_CONTROLLER hcd,
     }
     
     /* Assign the descritors buffers */
-    Descriptor[0]->BufferPointer[0] = (ULONG)CtrlPhysicalPA;
+    Descriptor[0]->BufferPointer[0] = PhysicalAddress.LowPart;
 
     if (TransferBuffer)
     {        
