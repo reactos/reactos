@@ -113,8 +113,6 @@ done:
      */
     if (hScreenDC)
         ReleaseDC(NULL, hScreenDC);
-    if (hOldBitmap)
-        hBitmap = SelectObject(hDC, hOldBitmap);
     if (hDC)
         DeleteDC(hDC);
     if (hBitmapBrush)
