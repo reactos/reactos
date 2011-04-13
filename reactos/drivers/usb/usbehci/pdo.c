@@ -47,12 +47,8 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
     0x01,       /* bNumInterfaces; (1) */
     0x23,       /* bConfigurationValue; */
     0x00,       /* iConfiguration; */
-    0x40,       /* bmAttributes; 
-    Bit 7: must be set,
-        6: Self-powered,
-        5: Remote wakeup,
-        4..0: reserved */
-    0x00       /* MaxPower; */
+    0x40,       /* bmAttributes; */
+    0x00        /* MaxPower; */
 };
 
 const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] =
@@ -66,7 +62,7 @@ const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] =
     0x09,       /* bInterfaceClass; HUB_CLASSCODE */
     0x01,       /* bInterfaceSubClass; */
     0x00,       /* bInterfaceProtocol: */
-    0x00       /* iInterface; */
+    0x00        /* iInterface; */
 };
 
 const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
@@ -88,12 +84,14 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PIO_STACK_LOCATION Stack = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     ULONG_PTR Information = 0;
+    PEHCI_HOST_CONTROLLER hcd;
 
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
     ASSERT(PdoDeviceExtension->Common.IsFdo == FALSE);
 
+    hcd = &FdoDeviceExtension->hcd;
     Stack =  IoGetCurrentIrpStackLocation(Irp);
 
     switch(Stack->Parameters.DeviceIoControl.IoControlCode)
@@ -108,13 +106,18 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
             UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
 
+            /* If there was no device passed then this URB is for the RootHub */
             if (UsbDevice == NULL)
                 UsbDevice = PdoDeviceExtension->UsbDevices[0];
+
+            /* Check if it is a Status Change Endpoint (SCE). The Hub Driver sends this request and miniports mark the IRP pending
+               if there is no changes on any of the ports. When the DPC of miniport routine detects changes this IRP will be completed.
+               Based on XEN PV Usb Drivers */
 
             if ((Urb->UrbHeader.Function == URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER) &&
                 (UsbDevice == PdoDeviceExtension->UsbDevices[0]))
             {
-                DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER on SCE\n");
+                DPRINT("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER on SCE\n");
                 if (Urb->UrbBulkOrInterruptTransfer.PipeHandle != &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor)
                 {
                     DPRINT1("PipeHandle doesnt match SCE PipeHandle\n");
@@ -123,12 +126,23 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 /* Queue the Irp first */
                 QueueURBRequest(PdoDeviceExtension, Irp);
 
-                /* Check if there is any connected devices */
-                for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
+                /* Check for port changes */
+                if (EnumControllerPorts(hcd) == FALSE)
                 {
-                    if (PdoDeviceExtension->Ports[i].PortChange == 0x01)
+                    DPRINT("No port change\n");
+                    Status = STATUS_PENDING;
+                    IoMarkIrpPending(Irp);
+                    break;
+                }
+
+                /* If we reached this point then port status has changed, so check
+                   which port */
+                for (i = 0; i < hcd->ECHICaps.HCSParams.PortCount; i++)
+                {
+                    if (hcd->Ports[i].PortChange == 0x01)
                     {
-                        DPRINT1("Inform hub driver that port %d has changed\n", i+1);
+                        DPRINT1("On SCE request: Inform hub driver that port %d has changed\n", i+1);
+                        ASSERT(FALSE);
                         ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((i + 1) & 7);
                         Information = 0;
                         Status = STATUS_SUCCESS;
@@ -143,14 +157,10 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     }
                 }
                 if (Status == STATUS_SUCCESS) break;
-                DPRINT1("Queueing IRP\n");
+
                 IoMarkIrpPending(Irp);
                 Status = STATUS_PENDING;
                 break;
-            }
-            else
-            {
-                DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB send to device %x\n", UsbDevice);
             }
 
             Status = HandleUrbRequest(PdoDeviceExtension, Irp);
@@ -186,7 +196,7 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", Stack->Parameters.Others.Argument2);
+            DPRINT1("Ehci: IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", Stack->Parameters.Others.Argument2);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* Return the root hubs devicehandle */
@@ -202,12 +212,12 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
+            DPRINT1("Ehci: IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
             ASSERT(Stack->Parameters.Others.Argument1 != NULL);
             if (Stack->Parameters.Others.Argument1)
             {
-                /* FIXME: Determine the number of hubs between the usb device and root hub */
-                DPRINT1("RootHubCount %x\n", *(PULONG)Stack->Parameters.Others.Argument1);
+                /* FIXME: Determine the number of hubs between the usb device and root hub. 
+                   For now we have at least one. */
                 *(PULONG)Stack->Parameters.Others.Argument1 = 1;
             }
             Status = STATUS_SUCCESS;
@@ -235,15 +245,14 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO:
         {
-            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO Arg1 %x, Arg2 %x\n", Stack->Parameters.Others.Argument1, Stack->Parameters.Others.Argument2);
+            DPRINT("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
+            /* DDK documents that both the PDO and FDO are returned. However, while writing the UsbHub driver it was determine
+               that this was not the case. Windows usbehci driver gives the Pdo in both Arguments. Which makes sense as upper level
+               drivers should not be communicating with FDO. */
             if (Stack->Parameters.Others.Argument1)
                 *(PVOID *)Stack->Parameters.Others.Argument1 = FdoDeviceExtension->Pdo;
-
-            /* Windows usbehci driver gives the Pdo in both Arguments. */
             if (Stack->Parameters.Others.Argument2)
-                //*(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
                 *(PVOID *)Stack->Parameters.Others.Argument2 = FdoDeviceExtension->Pdo;
-
             Information = 0;
             Status = STATUS_SUCCESS;
             break;
@@ -254,8 +263,6 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             DPRINT1("Ehci: IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION\n");
             /* FIXME: Set Callback for safe power down */
             CallBackInfo = Stack->Parameters.DeviceIoControl.Type3InputBuffer;
-            DPRINT1("IdleCallback %x\n", CallBackInfo->IdleCallback);
-            DPRINT1("IdleContext %x\n", CallBackInfo->IdleContext);
 
             PdoDeviceExtension->IdleCallback = CallBackInfo->IdleCallback;
             PdoDeviceExtension->IdleContext = CallBackInfo->IdleContext;
@@ -300,6 +307,7 @@ PdoQueryId(PDEVICE_OBJECT DeviceObject, PIRP Irp, ULONG_PTR* Information)
         }
         case BusQueryHardwareIDs:
         {
+            /* FIXME: Build from Device Vendor and Device ID */
             Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB20&VID8086&PID265C&REV0000") + 1;
             Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB20&VID8086&PID265C") + 1;
             Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB20") + 1;
@@ -388,7 +396,6 @@ PdoDispatchPnp(
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
             UNICODE_STRING InterfaceSymLinkName;
-            LONG i;
 
             DPRINT1("Ehci: PDO StartDevice\n");
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -397,15 +404,6 @@ PdoDispatchPnp(
             /* Create the root hub */
             RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
 
-            for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
-            {
-                PdoDeviceExtension->Ports[i].PortStatus = 0x8000;
-                PdoDeviceExtension->Ports[i].PortChange = 0;
-
-                if (!FdoDeviceExtension->hcd.ECHICaps.HCSParams.PortPowerControl)
-                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_POWER;
-            }
-
             RtlCopyMemory(&RootHubDevice->DeviceDescriptor,
                           ROOTHUB2_DEVICE_DESCRIPTOR,
                           sizeof(ROOTHUB2_DEVICE_DESCRIPTOR));
@@ -413,7 +411,8 @@ PdoDispatchPnp(
             RootHubDevice->DeviceDescriptor.idVendor = FdoDeviceExtension->VendorId;
             RootHubDevice->DeviceDescriptor.idProduct = FdoDeviceExtension->DeviceId;
 
-            /* FIXME: Do something better below */
+            /* Here config, interfaces and descriptors are stored. This was duplicated from XEN PV Usb Drivers implementation.
+               Not sure that it is really needed as the information can be queueried from the device. */
 
             RootHubDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
                                                             sizeof(PVOID) * RootHubDevice->DeviceDescriptor.bNumConfigurations,
@@ -483,11 +482,11 @@ PdoDispatchPnp(
                     PPDO_DEVICE_EXTENSION PdoDeviceExtension;
                     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-                    DPRINT1("BusRelations!!!!!\n");
+                    DPRINT("BusRelations!!!!!\n");
 
                     /* The hub driver has created the new device object and reported to pnp, as a result the pnp manager
-                       has resent this IRP and type, so leave the next SCE request pending until a new device arrives.
-                       Is there a better way to do this */
+                       has sent this IRP and type, so leave the next SCE request pending until a new device arrives.
+                       Is there a better way to do this? */
                     ExAcquireFastMutex(&PdoDeviceExtension->ListLock);
                     PdoDeviceExtension->HaltQueue = TRUE;
                     ExReleaseFastMutex(&PdoDeviceExtension->ListLock);
@@ -531,7 +530,7 @@ PdoDispatchPnp(
             DeviceCapabilities->UINumber = 0;
             DeviceCapabilities->DeviceD2 = 1;
 
-             /* FIXME */
+             /* FIXME: Verify these settings are correct */
             DeviceCapabilities->HardwareDisabled = FALSE;
             //DeviceCapabilities->NoDisplayInUI = FALSE;
             DeviceCapabilities->DeviceState[0] = PowerDeviceD0;
