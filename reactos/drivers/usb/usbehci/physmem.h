@@ -22,5 +22,4 @@ ULONG
 AllocateMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Size, ULONG *PhysicalAddress);
 
 VOID
-ReleaseMemory(ULONG Address);
-
+ReleaseMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Address);

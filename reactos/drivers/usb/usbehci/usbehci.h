@@ -93,14 +93,6 @@ typedef struct _COMMON_DEVICE_EXTENSION
     PDEVICE_OBJECT DeviceObject;
 } COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
-typedef struct _EHCIPORTS
-{
-    ULONG PortNumber;
-    ULONG PortType;
-    USHORT PortStatus;
-    USHORT PortChange;
-} EHCIPORTS, *PEHCIPORTS;
-
 typedef struct _FDO_DEVICE_EXTENSION
 {
     COMMON_DEVICE_EXTENSION Common;
@@ -109,10 +101,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT LowerDevice;
     PDEVICE_OBJECT Pdo;
     ULONG DeviceState;
-
     PVOID RootHubDeviceHandle;
-    PDMA_ADAPTER pDmaAdapter;
-
     ULONG Vector;
     KIRQL Irql;
 
@@ -124,8 +113,6 @@ typedef struct _FDO_DEVICE_EXTENSION
     KDPC TimerDpcObject;
 
     KAFFINITY Affinity;
-
-    ULONG MapRegisters;
 
     ULONG BusNumber;
     ULONG BusAddress;
@@ -148,8 +135,6 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     BOOLEAN AsyncComplete;
 
-    //PULONG ResourceBase;
-    //ULONG Size;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct _PDO_DEVICE_EXTENSION
@@ -168,8 +153,6 @@ typedef struct _PDO_DEVICE_EXTENSION
     RH_INIT_CALLBACK *CallbackRoutine;
     USB_IDLE_CALLBACK IdleCallback;
     PVOID IdleContext;
-    ULONG NumberOfPorts;
-    EHCIPORTS Ports[32];
     KTIMER Timer;
     KEVENT QueueDrainedEvent;
     FAST_MUTEX ListLock;
