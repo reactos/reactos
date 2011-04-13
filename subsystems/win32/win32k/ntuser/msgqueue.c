@@ -20,6 +20,8 @@
 /* GLOBALS *******************************************************************/
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
+MOUSEMOVEPOINT MouseHistoryOfMoves[64];
+INT gcur_count = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -37,6 +39,106 @@ MsqInitializeImpl(VOID)
                                   256);
 
    return(STATUS_SUCCESS);
+}
+
+DWORD FASTCALL UserGetKeyState(DWORD key)
+{
+   DWORD ret = 0;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
+
+   if( key < 0x100 )
+   {
+       ret = ((DWORD)(MessageQueue->KeyState[key] & KS_DOWN_BIT) << 8 ) |
+            (MessageQueue->KeyState[key] & KS_LOCK_BIT);
+   }
+
+   return ret;
+}
+
+/* change the input key state for a given key */
+static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
+{
+    if (down)
+    {
+        if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT)) 
+        {
+            MessageQueue->KeyState[key] ^= KS_LOCK_BIT;
+        }
+        MessageQueue->KeyState[key] |= KS_DOWN_BIT;
+    }
+    else
+    {
+        MessageQueue->KeyState[key] &= ~KS_DOWN_BIT;
+    }
+}
+
+/* update the input key state for a keyboard message */
+static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
+{
+    UCHAR key;
+    BOOL down = 0;
+
+    switch (msg->message)
+    {
+    case WM_LBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_LBUTTONUP:
+        set_input_key_state( MessageQueue, VK_LBUTTON, down );
+        break;
+    case WM_MBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_MBUTTONUP:
+        set_input_key_state( MessageQueue, VK_MBUTTON, down );
+        break;
+    case WM_RBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_RBUTTONUP:
+        set_input_key_state( MessageQueue, VK_RBUTTON, down );
+        break;
+    case WM_XBUTTONDOWN:
+        down = 1;
+        /* fall through */
+    case WM_XBUTTONUP:
+        if (msg->wParam == XBUTTON1) 
+            set_input_key_state( MessageQueue, VK_XBUTTON1, down );
+        else if (msg->wParam == XBUTTON2) 
+            set_input_key_state( MessageQueue, VK_XBUTTON2, down );
+        break;
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        down = 1;
+        /* fall through */
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        key = (UCHAR)msg->wParam;
+        set_input_key_state( MessageQueue, key, down );
+        switch(key)
+        {
+        case VK_LCONTROL:
+        case VK_RCONTROL:
+            down = (MessageQueue->KeyState[VK_LCONTROL] | MessageQueue->KeyState[VK_RCONTROL]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_CONTROL, down );
+            break;
+        case VK_LMENU:
+        case VK_RMENU:
+            down = (MessageQueue->KeyState[VK_LMENU] | MessageQueue->KeyState[VK_RMENU]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_MENU, down );
+            break;
+        case VK_LSHIFT:
+        case VK_RSHIFT:
+            down = (MessageQueue->KeyState[VK_LSHIFT] | MessageQueue->KeyState[VK_RSHIFT]) & KS_DOWN_BIT;
+            set_input_key_state( MessageQueue, VK_SHIFT, down );
+            break;
+        }
+        break;
+    }
 }
 
 HANDLE FASTCALL
@@ -189,7 +291,7 @@ MsqPostMouseMove(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
 }
 
 VOID FASTCALL
-co_MsqInsertMouseMessage(MSG* Msg)
+co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook)
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
@@ -219,24 +321,38 @@ co_MsqInsertMouseMessage(MSG* Msg)
          break;
    }
 
-   MouseHookData.flags = 0;
+   MouseHookData.flags = flags; // LLMHF_INJECTED
    MouseHookData.time = Msg->time;
-   MouseHookData.dwExtraInfo = 0;
+   MouseHookData.dwExtraInfo = dwExtraInfo;
 
    /* If the hook procedure returned non zero, dont send the message */
-   if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
-      return;
+   if (Hook)
+   {
+      if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
+         return;
+   }
 
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
    if(!pwndDesktop)
        return;
 
+   /* Set hit somewhere on the desktop */
+   pDesk = pwndDesktop->head.rpdesk;
+   pDesk->htEx = HTNOWHERE;
+   pDesk->spwndTrack = pwndDesktop;
+
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
    if(Msg->hwnd != NULL)
    {
        pwnd = UserGetWindowObject(Msg->hwnd);
+       if ((pwnd->style & WS_VISIBLE) && 
+            IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
+       {
+          pDesk->htEx = HTCLIENT;
+          pDesk->spwndTrack = pwnd;
+       }
    }
    else
    {
@@ -255,7 +371,6 @@ co_MsqInsertMouseMessage(MSG* Msg)
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
-               pDesk = pwnd->head.rpdesk;
                pDesk->htEx = HTCLIENT;
                pDesk->spwndTrack = pwnd;
                break;
@@ -277,6 +392,13 @@ co_MsqInsertMouseMessage(MSG* Msg)
            MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
        }
    }
+
+   /* Do GetMouseMovePointsEx FIFO. */
+   MouseHistoryOfMoves[gcur_count].x = Msg->pt.x;
+   MouseHistoryOfMoves[gcur_count].y = Msg->pt.y;
+   MouseHistoryOfMoves[gcur_count].time = Msg->time;
+   MouseHistoryOfMoves[gcur_count].dwExtraInfo = dwExtraInfo;
+   if (gcur_count++ == 64) gcur_count = 0; // 0 - 63 is 64, FIFO forwards.
 }
 
 //
@@ -479,7 +601,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    RemoveEntryList(&Message->ListEntry);
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   if (Message->SenderQueue)
    {
       if (Message->DispatchingListEntry.Flink != NULL)
       {
@@ -523,8 +645,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Result);
    }
 
-   /* Only if it is not a no wait message */
-   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   /* Only if the message has a sender was the queue referenced */
+   if (Message->SenderQueue)
    {
       IntDereferenceMessageQueue(Message->SenderQueue);
       IntDereferenceMessageQueue(MessageQueue);
@@ -588,8 +710,8 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
-         /* remove the message from the dispatching list if neede */
-         if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* Only if the message has a sender was the queue referenced */
+         if ((SentMessage->SenderQueue)
             && (SentMessage->DispatchingListEntry.Flink != NULL))
          {
             RemoveEntryList(&SentMessage->DispatchingListEntry);
@@ -607,8 +729,8 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                ExFreePool((PVOID)SentMessage->Msg.lParam);
          }
 
-         /* Only if it is not a no wait message */
-         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         /* Only if the message has a sender was the queue referenced */
+         if (SentMessage->SenderQueue)
          {
             /* dereference our and the sender's message queue */
             IntDereferenceMessageQueue(MessageQueue);
@@ -1275,8 +1397,9 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
            if (Remove)
            {
+               update_input_key_state(MessageQueue, pMsg);
                RemoveEntryList(&CurrentMessage->ListEntry);
-               ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
+               ClearMsgBitsMask(MessageQueue, QS_INPUT);
                MsqDestroyMessage(CurrentMessage);
            }
 
@@ -1336,7 +1459,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
          if (Remove)
          {
              RemoveEntryList(&CurrentMessage->ListEntry);
-             ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
+             ClearMsgBitsMask(MessageQueue, QS_POSTMESSAGE);
              MsqDestroyMessage(CurrentMessage);
          }
          return(TRUE);
@@ -1451,9 +1574,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
                                              ListEntry);
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
-
-      /* remove the message from the dispatching list if needed */
-      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
+      /* Only if the message has a sender was the queue referenced */
+      if ((CurrentSentMessage->SenderQueue) 
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
@@ -1471,8 +1593,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* Only if the message has a sender was the queue referenced */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
@@ -1511,8 +1633,8 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if it is not a no wait message */
-      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      /* Only if the message has a sender was the queue referenced */
+      if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
          IntDereferenceMessageQueue(MessageQueue);
@@ -1592,6 +1714,9 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    /* clean it up */
    MsqCleanupMessageQueue(MessageQueue);
 
+   if (MessageQueue->NewMessagesHandle != NULL)
+      ZwClose(MessageQueue->NewMessagesHandle);
+   MessageQueue->NewMessagesHandle = NULL;
    /* decrease the reference counter, if it hits zero, the queue will be freed */
    IntDereferenceMessageQueue(MessageQueue);
 }
@@ -1691,6 +1816,21 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
    }
 
    return NULL;
+}
+
+SHORT
+APIENTRY
+NtUserGetKeyState(INT key)
+{
+   DWORD Ret;
+
+   UserEnterExclusive();
+
+   Ret = UserGetKeyState(key);
+
+   UserLeave();
+
+   return Ret;
 }
 
 /* EOF */

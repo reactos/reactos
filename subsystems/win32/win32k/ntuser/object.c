@@ -407,6 +407,11 @@ UserDereferenceObject(PVOID object)
   {
      entry = handle_to_entry(gHandleTable, ((PHEAD)object)->h );
 
+     if (!entry)
+     {
+        DPRINT1("warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        return FALSE;
+     }
      DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
 
      ((PHEAD)object)->cLockObj = 0;

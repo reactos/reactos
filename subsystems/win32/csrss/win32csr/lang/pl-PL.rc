@@ -2,6 +2,7 @@
 * translated by xrogers (http://rogers.cyberdusk.pl/)
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
+* translation update by Olaf Siejka (Caemyr), Apr 2011
 */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -58,4 +59,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Nastêpna strona"
   IDS_SCROLLUP "Przewiñ do góry"
   IDS_SCROLLDOWN "Przewiñ na dó³"
+
+  IDS_COMMAND_PROMPT "Wiersz polecenia"
 END

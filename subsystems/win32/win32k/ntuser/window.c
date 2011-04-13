@@ -1531,11 +1531,10 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
         {
             USER_REFERENCE_ENTRY Ref;
             UserRefObjectCo(pWindow->spwndParent, &Ref);
-            // Should be co_IntSendMessage please retest, Ref to Chg, revision 51254...
-            co_IntSendMessageNoWait( pWindow->spwndParent->head.h,
-                                     WM_PARENTNOTIFY,
-                                     MAKEWPARAM( msg, pWindow->IDMenu),
-                                     (LPARAM)pWindow->head.h );
+            co_IntSendMessage( pWindow->spwndParent->head.h,
+                               WM_PARENTNOTIFY,
+                               MAKEWPARAM( msg, pWindow->IDMenu),
+                               (LPARAM)pWindow->head.h );
             UserDerefObjectCo(pWindow->spwndParent);
         }
     }
@@ -1693,7 +1692,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    DPRINT("Created object with handle %X\n", hWnd);
 
    if (NULL == pti->rpdesk->DesktopWindow)
-   {
+   {  /*HACK! Helper for win32csr/desktopbg.c */
       /* If there is no desktop window yet, we must be creating it */
       pti->rpdesk->DesktopWindow = hWnd;
       pti->rpdesk->pDeskInfo->spwnd = pWnd;
@@ -1892,7 +1891,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    return pWnd;
 
 AllocError:
-
+   DPRINT1("IntCreateWindow Allocation Error.\n");
    if(pWnd)
       UserDereferenceObject(pWnd);
 
@@ -2576,7 +2575,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
     msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
     msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
     msg.pt = gpsi->ptCursor;
-    co_MsqInsertMouseMessage(&msg);
+    co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
 
    if (!IntIsWindow(Window->head.h))
    {

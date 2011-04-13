@@ -4,7 +4,8 @@ add_definitions(-D_DLL -D__USE_CRTIMP)
 set_unicode()
 
 list(APPEND SOURCE
-    misc.c
+    dialog.c
+	misc.c
     mixer.c
     sndvol32.c
     sndvol32.rc)

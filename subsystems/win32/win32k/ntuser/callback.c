@@ -510,18 +510,25 @@ co_IntCallHookProc(INT HookId,
 
    UserEnterCo();
 
-   _SEH2_TRY
+   if (ResultPointer)
    {
-      ProbeForRead(ResultPointer, sizeof(LRESULT), 1);
-      /* Simulate old behaviour: copy into our local buffer */
-      Result = *(LRESULT*)ResultPointer;
+      _SEH2_TRY
+      {
+         ProbeForRead(ResultPointer, sizeof(LRESULT), 1);
+         /* Simulate old behaviour: copy into our local buffer */
+         Result = *(LRESULT*)ResultPointer;
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         Result = 0;
+         Hit = TRUE;
+      }
+      _SEH2_END;
    }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   else
    {
-      Result = 0;
-      Hit = TRUE;
+      DPRINT1("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
    }
-   _SEH2_END;
 
    if (!NT_SUCCESS(Status))
    {

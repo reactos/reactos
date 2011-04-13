@@ -67,7 +67,7 @@ ObpInitSdCache(VOID)
     {
         /* Initialize the lock and the list */
         InitializeListHead(&ObsSecurityDescriptorCache[i].Head);
-        ExInitializePushLock((PULONG_PTR)&ObsSecurityDescriptorCache[i].PushLock);
+        ExInitializePushLock(&ObsSecurityDescriptorCache[i].PushLock);
     }
 
     /* Return success */
@@ -419,7 +419,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
         {
             /* Increment its reference count */
             InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, RefBias);
-                                              
+            
             /* Release the lock */
             ObpSdReleaseLockShared(CacheEntry);
             

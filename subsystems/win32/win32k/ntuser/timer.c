@@ -17,6 +17,8 @@
 #define NDEBUG
 #include <debug.h>
 
+WORD FASTCALL get_key_state(void);
+
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY TimersListHead;
@@ -82,7 +84,7 @@ RemoveTimer(PTIMER pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
-     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
+     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM))) // System timers are reusable.
      {
         UINT_PTR IDEvent;
 
@@ -105,10 +107,11 @@ FindTimer(PWND Window,
           UINT_PTR nID,
           UINT flags)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr, RetTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -132,10 +135,11 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr = NULL;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -156,11 +160,12 @@ FASTCALL
 ValidateTimerCallback(PTHREADINFO pti,
                       LPARAM lParam)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   BOOL Ret = FALSE;
   PTIMER pTmr;
 
   TimerEnterExclusive();
+  pLE = TimersListHead.Flink;
   while (pLE != &TimersListHead)
   {
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -287,7 +292,73 @@ SystemTimerProc(HWND hwnd,
          UINT_PTR idEvent,
              DWORD dwTime)
 {
-  DPRINT( "Timer Running!\n" );
+  PDESKTOP pDesk;
+  PWND pWnd = NULL;
+
+  if (hwnd)
+  {
+     pWnd = UserGetWindowObject(hwnd);
+     if (!pWnd)
+     {
+        DPRINT1( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
+        return;
+     }
+  }
+  else
+  {
+     DPRINT( "Windowless Timer Running!\n" );
+     return;
+  }
+
+  switch (idEvent)
+  {
+/*
+   Used in NtUserTrackMouseEvent.
+ */
+     case ID_EVENT_SYSTIMER_MOUSEHOVER:
+       {
+          POINT Point;
+          UINT Msg;
+          WPARAM wParam;
+
+          pDesk = pWnd->head.rpdesk;
+          if ( pDesk->dwDTFlags & DF_TME_HOVER &&
+               pWnd == pDesk->spwndTrack )
+          {
+             Point = gpsi->ptCursor;
+             if ( IntPtInRect(&pDesk->rcMouseHover, Point) )
+             {
+                if (pDesk->htEx == HTCLIENT) // In a client area.
+                {
+                   wParam = get_key_state();
+                   Msg = WM_MOUSEHOVER;
+
+                   if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
+                   {
+                      Point.x = pWnd->rcClient.right - Point.x - 1;
+                   }
+                   else
+                      Point.x -= pWnd->rcClient.left;
+                   Point.y -= pWnd->rcClient.top;
+                }
+                else
+                {
+                   wParam = pDesk->htEx; // Need to support all HTXYZ hits.
+                   Msg = WM_NCMOUSEHOVER;
+                }
+                UserPostMessage(hwnd, Msg, wParam, MAKELPARAM(Point.x, Point.y));
+                pDesk->dwDTFlags &= ~DF_TME_HOVER;
+                break; // Kill this timer.
+             }
+          }
+       }
+       return; // Not this window so just return.
+
+     default:
+       DPRINT1( "System Timer Proc invalid id %d!\n", idEvent );
+       break;
+  }
+  IntKillTimer(pWnd, idEvent, TRUE);
 }
 
 VOID
@@ -296,7 +367,9 @@ StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
   // that calles Idle process so the screen savers will know to run......    
-  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
+  IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
+// Test Timers
+//  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
 }
 
 UINT_PTR
@@ -319,7 +392,7 @@ BOOL
 FASTCALL
 PostTimerMessages(PWND Window)
 {
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
@@ -330,7 +403,7 @@ PostTimerMessages(PWND Window)
   ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   while(pLE != &TimersListHead)
   {
      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -347,6 +420,13 @@ PostTimerMessages(PWND Window)
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;
+           // Now move this entry to the end of the list so it will not be
+           // called again in the next msg loop.
+           if (pLE != &TimersListHead)
+           {
+              RemoveEntryList(&pTmr->ptmrList);
+              InsertTailList(&TimersListHead, &pTmr->ptmrList);
+           }
            break;
         }
 
@@ -364,12 +444,12 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
-  PLIST_ENTRY pLE = TimersListHead.Flink;
+  PLIST_ENTRY pLE;
   PTIMER pTmr;
   LONG TimerCount = 0;
 
   TimerEnterExclusive();
-
+  pLE = TimersListHead.Flink;
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
@@ -438,7 +518,7 @@ ProcessTimers(VOID)
 BOOL FASTCALL
 DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
 {
-   PLIST_ENTRY pLE = TimersListHead.Flink;
+   PLIST_ENTRY pLE;
    PTIMER pTmr;
    BOOL TimersRemoved = FALSE;
 
@@ -446,7 +526,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWND Window)
       return FALSE;
 
    TimerEnterExclusive();
-
+   pLE = TimersListHead.Flink;
    while(pLE != &TimersListHead)
    {
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -493,14 +573,14 @@ IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
    DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
           Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
+   TimerEnterExclusive();
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
 
    if (pTmr)
    {
-      TimerEnterExclusive();
       RemoveTimer(pTmr);
-      TimerLeave();
    }
+   TimerLeave();
 
    return pTmr ? TRUE :  FALSE;
 }

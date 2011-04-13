@@ -277,56 +277,6 @@ NtUserGetImeHotKey(
    return 0;
 }
 
-
-DWORD
-APIENTRY
-NtUserGetMouseMovePointsEx(
-   UINT cbSize,
-   LPMOUSEMOVEPOINT lppt,
-   LPMOUSEMOVEPOINT lpptBuf,
-   int nBufPoints,
-   DWORD resolution)
-{
-   UserEnterExclusive();
-
-   if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
-   {
-      UserLeave();
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return -1;
-   }
-
-   _SEH2_TRY
-   {
-      ProbeForRead(lppt, cbSize, 1);
-      ProbeForWrite(lpptBuf, cbSize, 1);
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-       SetLastNtError(_SEH2_GetExceptionCode());
-       EngSetLastError(ERROR_NOACCESS);
-   }
-   _SEH2_END;
-
-/*
-   Call a subfunction of GetMouseMovePointsEx!
-   switch(resolution)
-   {
-     case GMMP_USE_DISPLAY_POINTS:
-     case GMMP_USE_HIGH_RESOLUTION_POINTS:
-          break;
-     default:
-        EngSetLastError(GMMP_ERR_POINT_NOT_FOUND);
-        return GMMP_ERR_POINT_NOT_FOUND;
-   }
-  */
-   UNIMPLEMENTED
-   UserLeave();
-   return -1;
-}
-
-
-
 BOOL
 APIENTRY
 NtUserImpersonateDdeClientWindow(
@@ -585,17 +535,6 @@ NtUserSetThreadState(
 
    return 0;
 }
-
-BOOL
-APIENTRY
-NtUserTrackMouseEvent(
-   LPTRACKMOUSEEVENT lpEventTrack)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 
 DWORD
 APIENTRY

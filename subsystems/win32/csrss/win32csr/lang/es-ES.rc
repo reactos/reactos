@@ -58,4 +58,6 @@ BEGIN
   IDS_SCROLLPAGE_DOWN "Bajar página"
   IDS_SCROLLUP "Desplazar arriba"
   IDS_SCROLLDOWN "Desplazar abajo"
+
+  IDS_COMMAND_PROMPT "Command Prompt"
 END

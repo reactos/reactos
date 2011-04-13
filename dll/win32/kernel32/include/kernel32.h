@@ -96,6 +96,7 @@ extern RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 extern UNICODE_STRING BaseDllDirectory;
 extern UNICODE_STRING BaseDefaultPath;
 extern UNICODE_STRING BaseDefaultPathAppend;
+extern PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 
 extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 

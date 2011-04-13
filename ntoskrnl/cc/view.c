@@ -596,7 +596,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   current->DirtySegmentListEntry.Flink = NULL;
   current->DirtySegmentListEntry.Blink = NULL;
   current->ReferenceCount = 1;
-  ExInitializePushLock((PULONG_PTR)&current->Lock);
+  ExInitializePushLock(&current->Lock);
   ExAcquirePushLockExclusive(&current->Lock);
   KeAcquireGuardedMutex(&ViewLock);
 

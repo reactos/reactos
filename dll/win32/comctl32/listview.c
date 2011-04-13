@@ -360,7 +360,7 @@ typedef struct tagLISTVIEW_INFO
 #define SB_INTERNAL      -1
 
 /* maximum size of a label */
-#define DISP_TEXT_SIZE 512
+#define DISP_TEXT_SIZE 260
 
 /* padding for items in list and small icon display modes */
 #define WIDTH_PADDING 12
@@ -543,7 +543,7 @@ static BOOL textsetptrT(LPWSTR *dest, LPCWSTR src, BOOL isW)
 static inline int textcmpWT(LPCWSTR aw, LPCWSTR bt, BOOL isW)
 {
     if (!aw) return bt ? -1 : 0;
-    if (!bt) return aw ? 1 : 0;
+    if (!bt) return 1;
     if (aw == LPSTR_TEXTCALLBACKW)
 	return bt == LPSTR_TEXTCALLBACKW ? 1 : -1;
     if (bt != LPSTR_TEXTCALLBACKW)
@@ -865,6 +865,7 @@ static inline void notify_itemactivate(const LISTVIEW_INFO *infoPtr, const LVHIT
       item.mask = LVIF_PARAM|LVIF_STATE;
       item.iItem = htInfo->iItem;
       item.iSubItem = 0;
+      item.stateMask = (UINT)-1;
       if (LISTVIEW_GetItemT(infoPtr, &item, TRUE)) {
 	  nmia.lParam = item.lParam;
  	  nmia.uOldState = item.state;
@@ -1634,8 +1635,19 @@ static inline BOOL LISTVIEW_GetItemW(const LISTVIEW_INFO *infoPtr, LPLVITEMW lpL
 /* used to handle collapse main item column case */
 static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
 {
-    return (infoPtr->rcFocus.left < infoPtr->rcFocus.right) ?
-            DrawFocusRect(hdc, &infoPtr->rcFocus) : FALSE;
+    BOOL Ret = FALSE;
+
+    if (infoPtr->rcFocus.left < infoPtr->rcFocus.right)
+    {
+        DWORD dwOldBkColor, dwOldTextColor;
+
+        dwOldBkColor = SetBkColor(hdc, RGB(255, 255, 255));
+        dwOldTextColor = SetBkColor(hdc, RGB(0, 0, 0));
+        Ret = DrawFocusRect(hdc, &infoPtr->rcFocus);
+        SetBkColor(hdc, dwOldBkColor);
+        SetBkColor(hdc, dwOldTextColor);
+    }
+    return Ret;
 }
 
 /* Listview invalidation functions: use _only_ these functions to invalidate */
@@ -5041,7 +5053,11 @@ enddraw:
 
     /* Draw marquee rectangle if appropriate */
     if (infoPtr->bMarqueeSelect)
+    {
+        SetBkColor(hdc, RGB(255, 255, 255));
+        SetTextColor(hdc, RGB(0, 0, 0));
         DrawFocusRect(hdc, &infoPtr->marqueeDrawRect);
+    }
 
     if (cdmode & CDRF_NOTIFYPOSTPAINT)
 	notify_postpaint(infoPtr, &nmlvcd);
@@ -5878,6 +5894,7 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, BOOL isW)
                SetWindowLongPtrA(hedit, GWLP_WNDPROC, (DWORD_PTR)EditLblWndProcA) );
 
     SendMessageW(hedit, WM_SETFONT, (WPARAM)infoPtr->hFont, FALSE);
+    SendMessageW(hedit, EM_SETLIMITTEXT, DISP_TEXT_SIZE-1, 0);
 
     return hedit;
 }
@@ -6743,7 +6760,7 @@ static BOOL LISTVIEW_GetItemExtT(const LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVIte
 
     pszText = lpLVItem->pszText;
     bResult = LISTVIEW_GetItemT(infoPtr, lpLVItem, isW);
-    if (bResult && lpLVItem->pszText != pszText)
+    if (bResult && (lpLVItem->mask & LVIF_TEXT) && lpLVItem->pszText != pszText)
     {
 	if (lpLVItem->pszText != LPSTR_TEXTCALLBACKW)
 	    textcpynT(pszText, isW, lpLVItem->pszText, isW, lpLVItem->cchTextMax);

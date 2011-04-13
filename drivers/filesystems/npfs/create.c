@@ -937,10 +937,10 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     if (IsListEmpty(&Fcb->ServerCcbListHead) &&
         IsListEmpty(&Fcb->ClientCcbListHead))
     {
-        RtlFreeUnicodeString(&Fcb->PipeName);
         KeLockMutex(&Vcb->PipeListLock);
         RemoveEntryList(&Fcb->PipeListEntry);
         KeUnlockMutex(&Vcb->PipeListLock);
+        RtlFreeUnicodeString(&Fcb->PipeName);
         ExFreePool(Fcb);
         FileObject->FsContext = NULL;
     }

@@ -6,7 +6,6 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
-#define MSQ_SENTNOWAIT  0x80000000
 
 #define QSIDCOUNTS 6
 
@@ -108,6 +107,9 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* extra message information */
   LPARAM ExtraInfo;
+
+  /* state of each key */
+  UCHAR KeyState[256];
 
   /* messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
@@ -243,7 +245,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-co_MsqInsertMouseMessage(MSG* Msg);
+co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL
@@ -277,8 +279,6 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
       DPRINT("Free message queue 0x%x\n", (MsgQueue)); \
       if ((MsgQueue)->NewMessages != NULL) \
         ObDereferenceObject((MsgQueue)->NewMessages); \
-      if ((MsgQueue)->NewMessagesHandle != NULL) \
-        ZwClose((MsgQueue)->NewMessagesHandle); \
       ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)

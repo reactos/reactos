@@ -1,6 +1,6 @@
 /* FILE:        applications/charmap/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-29
+ * UPDATED:     2011-03-31
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -10,7 +10,7 @@ CAPTION "Mapa znakù"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_SYSMENU | WS_MINIMIZEBOX
 BEGIN
-  LTEXT         "Font:", IDC_STATIC, 6, 7, 24, 9
+  LTEXT         "Písmo:", IDC_STATIC, 6, 7, 24, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
   PUSHBUTTON    "Nápovìda", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156

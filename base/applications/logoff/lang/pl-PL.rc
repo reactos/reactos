@@ -14,7 +14,7 @@ IDS_USAGE, "Przerywa sesjê.\n\n\
   /v\t\tWyœwietla informacjê o wykonanej czynnoœci.\n\
   /?\t\tWyœwietla niniejsz¹ pomoc.\n\n"
 
-IDS_LOGOFF_REMOTE, "Przeywanie sesji na maszynie zdalnej."
+IDS_LOGOFF_REMOTE, "Przerywanie sesji na maszynie zdalnej."
 IDS_LOGOFF_LOCAL, "Przerywanie niniejszej sesji na maszynie lokalnej."
 
 IDS_ILLEGAL_PARAM, "Nieprawid³owy parametr\n"

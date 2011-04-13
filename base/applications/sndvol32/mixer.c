@@ -23,7 +23,7 @@
  * FILE:        subsys/system/sndvol32/mixer.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
-#include <sndvol32.h>
+#include "sndvol32.h"
 
 #define NO_MIXER_SELECTED ((UINT)(~0))
 
@@ -107,7 +107,7 @@ SndMixerClose(PSND_MIXER Mixer)
     }
 }
 
-static BOOL
+BOOL
 SndMixerQueryControls(PSND_MIXER Mixer,
                       PUINT DisplayControls,
                       LPMIXERLINE LineInfo,
@@ -116,7 +116,7 @@ SndMixerQueryControls(PSND_MIXER Mixer,
     if (LineInfo->cControls > 0)
     {
         *Controls = (MIXERCONTROL*) HeapAlloc(GetProcessHeap(),
-                              0,
+                              HEAP_ZERO_MEMORY,
                               LineInfo->cControls * sizeof(MIXERCONTROL));
         if (*Controls != NULL)
         {
@@ -207,7 +207,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
             }
 
             Con = (SND_MIXER_CONNECTION*) HeapAlloc(GetProcessHeap(),
-                            0,
+                            HEAP_ZERO_MEMORY,
                             sizeof(SND_MIXER_CONNECTION));
             if (Con != NULL)
             {
@@ -467,6 +467,52 @@ SndMixerEnumProducts(PSND_MIXER Mixer,
     }
 
     return Ret;
+}
+
+INT
+SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails)
+{
+    MIXERCONTROLDETAILS MixerDetails;
+
+    if (Mixer->hmx)
+    {
+        MixerDetails.cbStruct = sizeof(MIXERCONTROLDETAILS);
+        MixerDetails.dwControlID = dwControlID;
+        MixerDetails.cChannels = 1; //FIXME
+        MixerDetails.cMultipleItems = 0;
+        MixerDetails.cbDetails = cbDetails;
+        MixerDetails.paDetails = paDetails;
+
+        if (mixerSetControlDetails((HMIXEROBJ)Mixer->hmx, &MixerDetails, MIXER_GETCONTROLDETAILSF_VALUE | MIXER_OBJECTF_HMIXER) == MMSYSERR_NOERROR)
+        {
+            return 1;
+        }
+    }
+
+    return -1;
+}
+
+
+INT
+SndMixerGetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails)
+{
+    MIXERCONTROLDETAILS MixerDetails;
+
+    if (Mixer->hmx)
+    {
+        MixerDetails.cbStruct = sizeof(MIXERCONTROLDETAILS);
+        MixerDetails.dwControlID = dwControlID;
+        MixerDetails.cChannels = 1; //FIXME
+        MixerDetails.cMultipleItems = 0;
+        MixerDetails.cbDetails = cbDetails;
+        MixerDetails.paDetails = paDetails;
+
+        if (mixerGetControlDetails((HMIXEROBJ)Mixer->hmx, &MixerDetails, MIXER_GETCONTROLDETAILSF_VALUE | MIXER_OBJECTF_HMIXER) == MMSYSERR_NOERROR)
+        {
+            return 1;
+        }
+    }
+    return -1;
 }
 
 INT

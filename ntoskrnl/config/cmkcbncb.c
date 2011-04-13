@@ -45,7 +45,7 @@ CmpInitializeCache(VOID)
     for (i = 0;i < CmpHashTableSize; i++)
     {
         /* Setup the pushlock */
-        ExInitializePushLock((PULONG_PTR)&CmpCacheTable[i].Lock);
+        ExInitializePushLock(&CmpCacheTable[i].Lock);
     }
     
     /* Calculate length for the name cache */
@@ -66,7 +66,7 @@ CmpInitializeCache(VOID)
     for (i = 0;i < CmpHashTableSize; i++)
     {
         /* Setup the pushlock */
-        ExInitializePushLock((PULONG_PTR)&CmpNameCacheTable[i].Lock);
+        ExInitializePushLock(&CmpNameCacheTable[i].Lock);
     }
     
     /* Setup the delayed close table */
@@ -1072,9 +1072,9 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     if (Flags & CMP_ENLIST_KCB_LOCKED_SHARED)
     {
         /* It's shared, so release the KCB shared lock */
-        CmpReleaseKcbLock(KeyBody->KeyControlBlock);     
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
         ASSERT(!(Flags & CMP_ENLIST_KCB_LOCKED_EXCLUSIVE));
-    } 
+    }
 
     /* Check if we need to lock the KCB */
     if (!(Flags & CMP_ENLIST_KCB_LOCKED_EXCLUSIVE))
@@ -1097,7 +1097,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     {
         /* Release the lock */
         CmpReleaseKcbLock(KeyBody->KeyControlBlock);
-    } 
+    }
 }
 
 VOID
@@ -1184,7 +1184,7 @@ CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
                         ASSERT(KeyBody->NotifyBlock == NULL);
                         
                         /* Release the reference we took */
-    				    ObDereferenceObjectDeferDelete(KeyBody);
+                        ObDereferenceObjectDeferDelete(KeyBody);
                         continue;
                     }
                 }
