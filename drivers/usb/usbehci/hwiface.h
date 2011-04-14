@@ -22,3 +22,8 @@ UnlinkQueueHead(PEHCI_HOST_CONTROLLER hcd, PQUEUE_HEAD QueueHead);
 VOID
 DeleteQueueHead(PEHCI_HOST_CONTROLLER hcd, PQUEUE_HEAD QueueHead);
 
+VOID
+LinkQueueHeadToCompletedList(PEHCI_HOST_CONTROLLER hcd, PQUEUE_HEAD QueueHead);
+
+VOID
+CleanupAsyncList(PEHCI_HOST_CONTROLLER hcd);

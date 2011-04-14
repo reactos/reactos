@@ -256,18 +256,14 @@ NtGdiTransformPoints(
     PDC pdc;
     LPPOINT Points;
     ULONG Size;
-    BOOL ret;
+    BOOL ret = TRUE;
+
+    if (Count <= 0)
+        return TRUE;
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
-    {
-        DC_UnlockDc(pdc);
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -291,8 +287,7 @@ NtGdiTransformPoints(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
+        /* Do not set last error */
         _SEH2_YIELD(goto leave;)
     }
     _SEH2_END;
@@ -323,8 +318,7 @@ NtGdiTransformPoints(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
+        /* Do not set last error */
     }
     _SEH2_END;
 

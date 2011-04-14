@@ -10,207 +10,132 @@
 #include "physmem.h"
 #include "debug.h"
 
+#define SMALL_ALLOCATION_SIZE 32
+
 VOID
-NTAPI
-DmaMemAllocator_Destroy(
-    IN LPDMA_MEMORY_ALLOCATOR Allocator)
+DumpPages()
 {
-    /* is there a bitmap buffer */
-    if (Allocator->BitmapBuffer)
-    {
-        /* free bitmap buffer */
-        ExFreePool(Allocator->BitmapBuffer);
-    }
-
-    /* free struct */
-    ExFreePool(Allocator);
+    //PMEM_HEADER MemBlock = (PMEM_HEADER)EhciSharedMemory.VirtualAddr;
 }
 
-NTSTATUS
-NTAPI
-DmaMemAllocator_Create(
-    IN LPDMA_MEMORY_ALLOCATOR *OutMemoryAllocator)
+// Returns Virtual Address of Allocated Memory
+ULONG
+AllocateMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Size, ULONG *PhysicalAddress)
 {
-    LPDMA_MEMORY_ALLOCATOR Allocator;
+    PMEM_HEADER MemoryPage = NULL;
+    ULONG PageCount = 0;
+    ULONG NumberOfPages = hcd->CommonBufferSize / PAGE_SIZE;
+    ULONG BlocksNeeded = 0;
+    ULONG i,j, freeCount;
+    ULONG RetAddr = 0;
 
-    /* sanity check */
-    ASSERT(OutMemoryAllocator);
+    MemoryPage = (PMEM_HEADER)hcd->CommonBufferVA[0];
+    Size = ((Size + SMALL_ALLOCATION_SIZE - 1) / SMALL_ALLOCATION_SIZE) * SMALL_ALLOCATION_SIZE;
+    BlocksNeeded = Size / SMALL_ALLOCATION_SIZE;
 
-    /* allocate struct - must be non paged as it contains a spin lock */
-    Allocator = ExAllocatePool(NonPagedPool, sizeof(DMA_MEMORY_ALLOCATOR));
-    if (!Allocator)
-    {
-        /* no memory */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* zero struct */
-    RtlZeroMemory(Allocator, sizeof(DMA_MEMORY_ALLOCATOR));
-
-    /* store result */
-    *OutMemoryAllocator = Allocator;
-
-    /* done */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-DmaMemAllocator_Initialize(
-    IN OUT LPDMA_MEMORY_ALLOCATOR Allocator,
-    IN ULONG DefaultBlockSize,
-    IN PKSPIN_LOCK Lock,
-    IN PHYSICAL_ADDRESS PhysicalBase,
-    IN PVOID VirtualBase,
-    IN ULONG Length)
-{
-    PULONG BitmapBuffer;
-    ULONG BitmapLength;
-
-    /* sanity checks */
-    ASSERT(Length >= PAGE_SIZE);
-    ASSERT(Length % PAGE_SIZE == 0);
-    ASSERT(DefaultBlockSize == 32 || DefaultBlockSize == 64 || DefaultBlockSize == 128);
-
-    /* calculate bitmap length */
-    BitmapLength = (Length / DefaultBlockSize) / sizeof(ULONG);
-
-    /* allocate bitmap buffer from nonpaged pool */
-    BitmapBuffer = ExAllocatePool(NonPagedPool, BitmapLength);
-    if (!BitmapBuffer)
-    {
-        /* out of memory */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* initialize bitmap */
-    RtlInitializeBitMap(&Allocator->Bitmap, BitmapBuffer, BitmapLength);
-    RtlClearAllBits(&Allocator->Bitmap);
-
-    /* initialize rest of allocator */
-    Allocator->PhysicalBase = PhysicalBase;
-    Allocator->VirtualBase = VirtualBase;
-    Allocator->Length = Length;
-    Allocator->BitmapBuffer = BitmapBuffer;
-    Allocator->Lock = Lock;
-    Allocator->BlockSize = DefaultBlockSize;
-
-    /* done */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-DmaMemAllocator_Allocate(
-    IN LPDMA_MEMORY_ALLOCATOR Allocator,
-    IN ULONG Size,
-    OUT PVOID *OutVirtualAddress,
-    OUT PPHYSICAL_ADDRESS OutPhysicalAddress)
-{
-    ULONG Length, BlockCount, FreeIndex, StartPage, EndPage;
-    KIRQL OldLevel;
-
-    /* sanity check */
-    ASSERT(Size < PAGE_SIZE);
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
-
-    /* align request size to block size */
-    Length = (Size + Allocator->BlockSize -1) & ~(Allocator->BlockSize -1);
-
-    /* sanity check */
-    ASSERT(Length);
-
-    /* convert to block count */
-    BlockCount = Length / Allocator->BlockSize;
-
-    /* acquire lock */
-    KeAcquireSpinLock(Allocator->Lock, &OldLevel);
-
-
-    /* start search */
-    FreeIndex = 0;
     do
     {
-
-        /* search for an free index */
-        FreeIndex = RtlFindClearBits(&Allocator->Bitmap, BlockCount, FreeIndex);
-
-        /* check if there were bits found */
-        if (FreeIndex == MAXULONG)
-           break;
-
-        /* check that the allocation does not spawn over page boundaries */
-        StartPage = (FreeIndex * Allocator->BlockSize);
-        StartPage = (StartPage != 0 ? StartPage / PAGE_SIZE : 0);
-        EndPage = ((FreeIndex + BlockCount) * Allocator->BlockSize) / PAGE_SIZE;
-
-
-        if (StartPage == EndPage)
+        if (MemoryPage->IsFull)
         {
-            /* reserve bits */
-            RtlSetBits(&Allocator->Bitmap, FreeIndex, BlockCount);
-
-            /* done */
-            break;
+            PageCount++;
+            
+            if (!(PMEM_HEADER)hcd->CommonBufferVA[PageCount])
+            {
+                hcd->CommonBufferVA[PageCount] =
+                    hcd->pDmaAdapter->DmaOperations->AllocateCommonBuffer(hcd->pDmaAdapter,
+                                                                          PAGE_SIZE,
+                                                                          &hcd->CommonBufferPA[PageCount],
+                                                                          FALSE);
+            }
+            MemoryPage = (PMEM_HEADER)hcd->CommonBufferVA[PageCount];
+            continue;
         }
-        else
+        freeCount = 0;
+        for (i = 0; i < sizeof(MemoryPage->Entry); i++)
         {
-            /* request spaws a page boundary */
-            FreeIndex++;
+            if (!MemoryPage->Entry[i].InUse)
+            {
+                freeCount++;
+            }
+            else
+            {
+                freeCount = 0;
+            }
+
+            if ((i-freeCount+1 + BlocksNeeded) > sizeof(MemoryPage->Entry))
+            {
+                freeCount = 0;
+                break;
+            }
+
+            if (freeCount == BlocksNeeded)
+            {
+                for (j = 0; j < freeCount; j++)
+                {
+                    MemoryPage->Entry[i-j].InUse = 1;
+                    MemoryPage->Entry[i-j].Blocks = 0;
+                }
+
+                MemoryPage->Entry[i-freeCount + 1].Blocks = BlocksNeeded;
+
+                RetAddr = (ULONG)MemoryPage + (SMALL_ALLOCATION_SIZE * (i - freeCount + 1)) + sizeof(MEM_HEADER);
+
+                *(ULONG*)PhysicalAddress = (ULONG)hcd->CommonBufferPA[PageCount].LowPart + (RetAddr - (ULONG)hcd->CommonBufferVA[PageCount]);
+
+                return RetAddr;
+            }
         }
-    }
-    while(TRUE);
 
-    /* release bitmap lock */
-    KeReleaseSpinLock(Allocator->Lock, OldLevel);
+        PageCount++;
+        if (!(PMEM_HEADER)hcd->CommonBufferVA[PageCount])
+        {
+            
+            hcd->CommonBufferVA[PageCount] =
+                hcd->pDmaAdapter->DmaOperations->AllocateCommonBuffer(hcd->pDmaAdapter,
+                                                                      PAGE_SIZE,
+                                                                      &hcd->CommonBufferPA[PageCount],
+                                                                      FALSE);
+            DPRINT1("Allocated CommonBuffer VA %x, PA %x\n", hcd->CommonBufferVA[PageCount], hcd->CommonBufferPA[PageCount]);
+        }
+        MemoryPage = (PMEM_HEADER)hcd->CommonBufferVA[PageCount];
 
-    /* check if allocation failed */
-    if (FreeIndex == MAXULONG)
-    {
-        /* allocation failed */
-        return STATUS_UNSUCCESSFUL;
-    }
+    } while (PageCount < NumberOfPages);
 
-    /* return result */
-    *OutVirtualAddress = (PVOID)((ULONG_PTR)Allocator->VirtualBase + FreeIndex * Allocator->BlockSize);
-    OutPhysicalAddress->QuadPart = Allocator->PhysicalBase.QuadPart + FreeIndex * Allocator->BlockSize;
+    if (PageCount == NumberOfPages)
+        ASSERT(FALSE);
 
-    /* done */
-    return STATUS_SUCCESS;
+    return 0;
 }
 
 VOID
-NTAPI
-DmaMemAllocator_Free(
-    IN LPDMA_MEMORY_ALLOCATOR Allocator,
-    IN OPTIONAL PVOID VirtualAddress,
-    IN ULONG Size)
+ReleaseMemory(PEHCI_HOST_CONTROLLER hcd, ULONG Address)
 {
-    KIRQL OldLevel;
-    ULONG BlockOffset = 0, BlockLength;
+    PMEM_HEADER MemoryPage;
+    ULONG Index, i, BlockSize;
 
-    /* sanity check */
-    ASSERT(VirtualAddress);
+    MemoryPage = (PMEM_HEADER)(Address & ~(PAGE_SIZE - 1));
 
-    /* calculate block length */
-    BlockLength = ((ULONG_PTR)VirtualAddress - (ULONG_PTR)Allocator->VirtualBase);
+    Index = (Address - ((ULONG)MemoryPage + sizeof(MEM_HEADER))) / SMALL_ALLOCATION_SIZE;
+    BlockSize = MemoryPage->Entry[Index].Blocks;
 
-    /* is block offset zero */
-    if (BlockLength)
+    for (i = 0; i < BlockSize; i++)
     {
-        /* divide by base block size */
-        BlockOffset = BlockLength / Allocator->BlockSize;
+        MemoryPage->Entry[Index + i].InUse = 0;
+        MemoryPage->Entry[Index + i].Blocks = 0;
     }
 
-    /* align size to base block */
-    Size = (Size + Allocator->BlockSize - 1) & ~(Allocator->BlockSize - 1);
-
-    /* acquire bitmap lock */
-    KeAcquireSpinLock(Allocator->Lock, &OldLevel);
-
-    /* clear bits */
-    RtlClearBits(&Allocator->Bitmap, BlockOffset, Size);
-
-    /* release bitmap lock */
-    KeReleaseSpinLock(Allocator->Lock, OldLevel);
+    if (MemoryPage != (PMEM_HEADER)hcd->CommonBufferVA[0])
+    {
+        for (i=0; i < sizeof(MemoryPage->Entry) / 2; i++)
+        {
+            if ((MemoryPage->Entry[i].InUse) || (MemoryPage->Entry[sizeof(MemoryPage->Entry) - i].InUse))
+                return;
+        }
+        DPRINT1("Freeing CommonBuffer VA %x, PA %x\n", MemoryPage, MmGetPhysicalAddress(MemoryPage));
+        hcd->pDmaAdapter->DmaOperations->FreeCommonBuffer(hcd->pDmaAdapter,
+                                                          PAGE_SIZE,
+                                                          MmGetPhysicalAddress(MemoryPage),
+                                                          MemoryPage,
+                                                          FALSE);
+    }
 }

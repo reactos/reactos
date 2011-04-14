@@ -1425,8 +1425,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN( FALSE);
     }
 
-    /* If this is not a callback and it can be sent now, then send it. */
-    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+    /* If it can be sent now, then send it. */
+    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1452,11 +1452,20 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+
+        if (CompletionCallback)
+        {
+            co_IntCallSentMessageCallback(CompletionCallback,
+                                          hWnd,
+                                          Msg,
+                                          CompletionCallbackContext,
+                                          Result);
+        }
     }
 
 
 
-    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
@@ -1471,6 +1480,12 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN( FALSE);
     }
 
+    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
+    /* Take reference on this MessageQueue if its a callback. It will be released 
+       when message is processed or removed from target hwnd MessageQueue */
+    if (CompletionCallback)
+       IntReferenceMessageQueue(Win32Thread->MessageQueue);
+
     Message->Msg.hwnd = hWnd;
     Message->Msg.message = Msg;
     Message->Msg.wParam = wParam;
@@ -1482,8 +1497,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
     Message->CallBackSenderQueue = Win32Thread->MessageQueue;
     Message->DispatchingListEntry.Flink = NULL;
-    
-    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
     Message->HookMessage = MSQ_NORMAL;
@@ -1492,7 +1505,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
     MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, TRUE);
-
     IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
     RETURN(TRUE);

@@ -14,7 +14,7 @@ BEGIN
 	IDS_PRINT, "Друк"
 	IDS_STRING, "Jackdaws love my big sphinx of quartz. 1234567890"
 	IDS_ERROR, "Помилка"
-	IDS_ERROR_NOMEM, "Недостатньо пам'яті для завершення операцію."
+	IDS_ERROR_NOMEM, "Недостатньо пам'яті для завершення операції."
 	IDS_ERROR_NOFONT, "Файл %1 не є коректним файлом шрифту."
 	IDS_ERROR_NOCLASS, "Неможливо ініціалізувати віконний клас."
 	IDS_ERROR_BADCMD, "Не вказаний файл шрифту.\nСинтаксис:\n  fontview.exe <файл шрифту>"

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <assert.h>
+#include <locale.h>
 #include "doskey.h"
 
 #define MAX_STRING 2000
@@ -190,6 +191,8 @@ static LPWSTR RemoveQuotes(LPWSTR str)
 int
 wmain(VOID)
 {
+	setlocale(LC_ALL, "");
+
     /* Get the full command line using GetCommandLine(). We can't just use argv,
      * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
     WCHAR *pArgStart;

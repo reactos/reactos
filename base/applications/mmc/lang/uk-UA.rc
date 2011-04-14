@@ -25,5 +25,5 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE "Консоль керування ReactOS"
-    IDS_CONSOLETITLE "Console%1!u!"
+    IDS_CONSOLETITLE "Консоль%1!u!"
 END

@@ -62,5 +62,5 @@ BEGIN
   IDS_SCROLLUP "Прокрутити догори"
   IDS_SCROLLDOWN "Прокрутити донизу"
 
-  IDS_COMMAND_PROMPT "Command Prompt"
+  IDS_COMMAND_PROMPT "Командний рядок"
 END

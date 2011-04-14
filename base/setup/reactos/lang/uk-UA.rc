@@ -67,7 +67,7 @@ BEGIN
     PUSHBUTTON "&Створити", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Видалити", IDC_PARTDELETE, 76,155,50,15
     PUSHBUTTON "Д&райвер", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
-    PUSHBUTTON "&Додаткові параметри...", IDC_PARTMOREOPTS, 218,155,80,15
+    PUSHBUTTON "&Додаткові Опції...", IDC_PARTMOREOPTS, 218,155,80,15
     LTEXT "Для початку встановлення натисніть Далі", IDC_STATIC, 10, 180 ,277, 20
 END
 
@@ -87,20 +87,21 @@ BEGIN
     PUSHBUTTON "&Скасувати",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
-IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
+IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 116
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Додаткові параметри встановлення"
+CAPTION "Розширені параметри розділу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Базовий каталог", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
+    CONTROL "Тека встановлення", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
     EDITTEXT IDC_PATH, 10,11,278,13, WS_VISIBLE
 
-    CONTROL "Встановлення завантажувача", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
+    CONTROL "Встановлення завантажувача", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
-    CONTROL "Встановити завантажувач на диск (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Не встановлювати завантажувач", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
-    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Скасувати", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+    CONTROL "Встановити завантажувач на жосткий диск (MBR та VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Встановити завантажувач на жосткий диск (лише VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Не встановлювати завантажувач", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
+    PUSHBUTTON "&OK", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Скасувати", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
@@ -108,7 +109,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Встановлення Акаунта", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "Інформація про Встановлення", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "Для початку встановлення натисніть Далі.", IDC_STATIC, 10, 180 ,277, 20
 END
 
@@ -151,8 +152,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Створення розділу на диску, копіювання файлів, встановлення завантажувача"
     IDS_RESTARTTITLE    "Перший етап встановлення завершено"
     IDS_RESTARTSUBTITLE "Перший етап завершено, для продовження потрібне перезавантаження"
-    IDS_SUMMARYTITLE    "Встановлення Акаунта"
-    IDS_SUMMARYSUBTITLE "Список встановлення властивостей для перевірки, перш ніж звернутися при встановленні пристроїв"
+    IDS_SUMMARYTITLE    "Інформація про Встановлення"
+    IDS_SUMMARYSUBTITLE "Перевірте список властивостей встановлення, перш ніж почати встановлення системи"
     IDS_ABORTSETUP      "ReactOS встановлений на комп'ютер не повністю. Якщо ви закриєте програму встановлення зараз, в подальшому вам доведеться повторити встановлення ReactOS. Ви впевнені, що необхідно перервати встановлення?"
     IDS_ABORTSETUP2     "Перервати встановлення?"
 END

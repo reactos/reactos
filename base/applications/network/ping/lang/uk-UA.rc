@@ -12,9 +12,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_USAGE "\nВикористання: ping [-t] [-n count] [-l size] [-w timeout] хост\n\n\
 Опції:\n\
-    -t             Пінг вказаного вузла поки не буде здійстена ручна зупинка.\n\
+    -t             Пінг вказаного вузла поки не буде здійснена ручна зупинка.\n\
                    Для зупинки натисніть Control-C.\n\
-    -n count       Число запитів, які будуть підправлені.\n\
+    -n count       Кількість запитів, які будуть підправлені.\n\
     -l size        Розмір буфера відправки.\n\
     -w timeout     Час очікування кожної відповіді в мілісекундах.\n\n\0"
 
@@ -28,7 +28,7 @@ BEGIN
     IDS_SETSOCKOPT_FAILED           "setsockopt невдалий (%1!d!).\n\0"
     IDS_COULD_NOT_CREATE_SOCKET     "Не вдалося створити сокет (#%1!d!).\n\0"
     IDS_COULD_NOT_INIT_WINSOCK      "Не вдалося ініціалізувати winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "Ім'я або IP-адреса хосту повинне бути вказане.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Ім'я або IP-адреса хосту повинні бути вказані.\n\0"
     IDS_BAD_PARAMETER               "Поганий параметр %1.\n\0"
     IDS_BAD_OPTION_FORMAT           "Невірний формат опції %1.\n\0"
     IDS_BAD_OPTION                  "Погана опція %1.\n\0"
