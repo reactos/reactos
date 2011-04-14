@@ -2667,30 +2667,48 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
     return STATUS_SUCCESS;
 }
 
+#define FIND_ACTCTX_RETURN_FLAGS 0x00000002
+#define FIND_ACTCTX_RETURN_ASSEMBLY_METADATA 0x00000004
+#define FIND_ACTCTX_VALID_MASK (FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX | FIND_ACTCTX_RETURN_FLAGS | FIND_ACTCTX_RETURN_ASSEMBLY_METADATA)
+
+NTSTATUS
+NTAPI
+RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid, ULONG section_kind,
+                                                  UNICODE_STRING *section_name, PACTCTX_SECTION_KEYED_DATA data )
+{
+    /* Check general parameter combinations */
+    if (!section_name ||
+        (flags & ~FIND_ACTCTX_VALID_MASK) ||
+        ((flags & FIND_ACTCTX_VALID_MASK) && !data) ||
+        (data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)))
+    {
+        DPRINT1("invalid parameter\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* TODO */
+    if (flags & FIND_ACTCTX_RETURN_FLAGS ||
+        flags & FIND_ACTCTX_RETURN_ASSEMBLY_METADATA)
+    {
+        DPRINT1("unknown flags %08x\n", flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
                                        UNICODE_STRING *section_name, PVOID ptr )
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
-    NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    NTSTATUS status;
 
-    if (guid)
-    {
-        DPRINT1("expected guid == NULL\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-    if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
-    {
-        DPRINT1("unknown flags %08x\n", flags);
-        return STATUS_INVALID_PARAMETER;
-    }
-    if (!data || data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) ||
-        !section_name || !section_name->Buffer)
-    {
-        DPRINT1("invalid parameter\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
+    if (!NT_SUCCESS(status)) return status;
+
+    status = STATUS_SXS_KEY_NOT_FOUND;
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
