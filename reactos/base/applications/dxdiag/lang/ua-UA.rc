@@ -219,7 +219,7 @@ BEGIN
 	IDS_REG_SUCCESS "Так"
 	IDS_REG_FAIL "Помилка"
 	IDS_DDTEST_ERROR "Збій у перевірці!"
-	IDS_DDTEST_DESCRIPTION "Буде виконана перевірка DirecDraw на цей пристрій. Продовжити?"
+	IDS_DDTEST_DESCRIPTION "Буде виконана перевірка інтерфейсу DirecDraw. Продовжити?"
 	IDS_DDPRIMARY_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання на первинній поверхні. Будуть виводитись чорні та білі прямокутники. Продовжити?"
 	IDS_DDPRIMARY_RESULT "Ви бачили чорні та білі прямокутники?"
 	IDS_DDOFFSCREEN_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання в закадровий буфер. Повинен рухатись білий прямокутник. Продовжити?"
@@ -229,4 +229,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u Мб"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u біт)(%uГц)"
 	IDS_OPTION_NO "Ні"
+	IDS_D3DTEST_DESCRIPTION "Буде виконана перевірка інтерфейсу Direct3D. Продовжити?"
+	IDS_D3DTEST_D3Dx "Цей тест використає апаратно-прискорений Direct3D інтерфейс %u."
 END

@@ -69,7 +69,7 @@ STRING_ENTER_LABEL     "Мітка диску (11 символів,натисніть Enter якщо не треба)?
 
 STRING_NO_LABEL        "Не можу встановити мітку диску"
 
-STRING_FREE_SPACE     "\n%I64d байтів на диску.\n%I64d байтів наявно на диску.\n"
+STRING_FREE_SPACE     "\n%I64d байтів на диску.\n%I64d байтів доступно на диску.\n"
 
 STRING_SERIAL_NUMBER   "\nСерійний номер диску - %04X-%04X\n"
 END
