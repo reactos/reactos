@@ -8,6 +8,7 @@ add_library(usbehci SHARED
     usbehci.cpp
     hcd_controller.cpp
     hardware.cpp
+    misc.cpp
     usbehci.rc)
 
 target_link_libraries(usbehci

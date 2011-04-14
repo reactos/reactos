@@ -50,4 +50,9 @@ NTSTATUS CreateHCDController(PHCDCONTROLLER *HcdController);
 //
 NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 
+//
+// misc.cpp
+//
+NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
 #endif
