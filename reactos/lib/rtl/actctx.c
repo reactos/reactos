@@ -2710,6 +2710,10 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
 
     status = STATUS_SXS_KEY_NOT_FOUND;
 
+    /* if there is no data, but params are valid,
+       we return that sxs key is not found to be at least somehow compatible */
+    if (!data) return status;
+
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
 
