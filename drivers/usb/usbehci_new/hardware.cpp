@@ -41,6 +41,7 @@ public:
     NTSTATUS GetDmaMemoryManager(OUT struct IDMAMemoryManager **OutMemoryManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
     NTSTATUS ResetController();
+    NTSTATUS ResetPort(ULONG PortIndex);
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
     // local
@@ -75,8 +76,6 @@ CUSBHardwareDevice::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    UNICODE_STRING GuidString;
-
     if (IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNKNOWN(this));
