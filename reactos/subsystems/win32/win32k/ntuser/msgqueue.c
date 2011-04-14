@@ -588,6 +588,28 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Message->Msg.wParam,
                                     Message->Msg.lParam);
    }
+   else if ((Message->CompletionCallback)
+       && (Message->CallBackSenderQueue == MessageQueue))
+   {   /* Call the callback routine */
+      if (Message->QS_Flags & QS_SMRESULT)
+      {
+         co_IntCallSentMessageCallback(Message->CompletionCallback,
+                                       Message->Msg.hwnd,
+                                       Message->Msg.message,
+                                       Message->CompletionCallbackContext,
+                                       Message->lResult);
+         /* Set callback to NULL to prevent reentry */
+         Message->CompletionCallback = NULL;
+      }
+      else
+      {
+         /* The message has not been processed yet, reinsert it. */
+         RemoveEntryList(&Message->ListEntry);
+         InsertTailList(&Message->CallBackSenderQueue->SentMessagesListHead, &Message->ListEntry);
+         DPRINT("Callback Message not processed yet. Requeuing the message\n");
+         return (FALSE);
+      }
+   }
    else
    {  /* Call the window procedure. */
       Result = co_IntSendMessage( Message->Msg.hwnd,
@@ -599,6 +621,22 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    /* remove the message from the local dispatching list, because it doesn't need
       to be cleaned up on thread termination anymore */
    RemoveEntryList(&Message->ListEntry);
+
+   /* If the message is a callback, insert it in the callback senders MessageQueue */
+   if (Message->CompletionCallback)
+   {
+      if (Message->CallBackSenderQueue)
+      {
+         Message->lResult = Result;
+         Message->QS_Flags |= QS_SMRESULT;
+
+         /* insert it in the callers message queue */
+         InsertTailList(&Message->CallBackSenderQueue->SentMessagesListHead, &Message->ListEntry);
+         MsqWakeQueue(Message->CallBackSenderQueue, QS_SENDMESSAGE, TRUE);
+         IntDereferenceMessageQueue(Message->CallBackSenderQueue);
+      }
+      return (TRUE);
+   }
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
    if (Message->SenderQueue)
@@ -635,19 +673,10 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Call the callback if the message was sent with SendMessageCallback */
-   if (Message->CompletionCallback != NULL)
-   {
-      co_IntCallSentMessageCallback(Message->CompletionCallback,
-                                    Message->Msg.hwnd,
-                                    Message->Msg.message,
-                                    Message->CompletionCallbackContext,
-                                    Result);
-   }
-
-   /* Only if the message has a sender was the queue referenced */
+   /* if the message has a sender */
    if (Message->SenderQueue)
    {
+       /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(Message->SenderQueue);
       IntDereferenceMessageQueue(MessageQueue);
    }
@@ -710,6 +739,11 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          RemoveEntryList(&SentMessage->ListEntry);
          ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
+         /* if it is a callback and this queue is not the sender queue, dereference queue */
+         if ((SentMessage->CompletionCallback) && (SentMessage->CallBackSenderQueue != MessageQueue))
+         {
+            IntDereferenceMessageQueue(SentMessage->CallBackSenderQueue);
+         }
          /* Only if the message has a sender was the queue referenced */
          if ((SentMessage->SenderQueue)
             && (SentMessage->DispatchingListEntry.Flink != NULL))
@@ -729,7 +763,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                ExFreePool((PVOID)SentMessage->Msg.lParam);
          }
 
-         /* Only if the message has a sender was the queue referenced */
+         /* if the message has a sender */
          if (SentMessage->SenderQueue)
          {
             /* dereference our and the sender's message queue */
@@ -1573,8 +1607,14 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
 
+      /* if it is a callback and this queue is not the sender queue, dereference queue */
+      if ((CurrentSentMessage->CompletionCallback) && (CurrentSentMessage->CallBackSenderQueue != MessageQueue))
+      {
+         IntDereferenceMessageQueue(CurrentSentMessage->CallBackSenderQueue);
+      }
+
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
-      /* Only if the message has a sender was the queue referenced */
+      /* Only if the message has a sender was the message in the DispatchingList */
       if ((CurrentSentMessage->SenderQueue) 
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
@@ -1593,7 +1633,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if the message has a sender was the queue referenced */
+      /* if the message has a sender */
       if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
@@ -1612,6 +1652,12 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentEntry = RemoveHeadList(&MessageQueue->LocalDispatchingMessagesHead);
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
+
+      /* if it is a callback and this queue is not the sender queue, dereference queue */
+      if ((CurrentSentMessage->CompletionCallback) && (CurrentSentMessage->CallBackSenderQueue != MessageQueue))
+      {
+         IntDereferenceMessageQueue(CurrentSentMessage->CallBackSenderQueue);
+      }
 
       /* remove the message from the dispatching list */
       if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
@@ -1633,7 +1679,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
       }
 
-      /* Only if the message has a sender was the queue referenced */
+      /* if the message has a sender */
       if (CurrentSentMessage->SenderQueue)
       {
          /* dereference our and the sender's message queue */
