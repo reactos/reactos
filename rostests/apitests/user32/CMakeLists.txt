@@ -2,14 +2,16 @@
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    DeferWindowPos.c
+    GetIconInfo.c
+    GetKeyState.c
+    GetPeekMessage.c
+    GetSystemMetrics.c
     InitializeLpkHooks.c
     RealGetWindowClass.c
     ScrollDC.c
     ScrollWindowEx.c
-    GetSystemMetrics.c
-    GetIconInfo.c
-    GetPeekMessage.c
-    DeferWindowPos.c
+    SetCursorPos.c
     testlist.c
     user32_apitest.rc)
 
