@@ -596,7 +596,7 @@ ComputerPageDlgProc(HWND hwndDlg,
           SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
 
           /* Set text limits */
-          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
+          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, MAX_COMPUTERNAME_LENGTH, 0);
           SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
           SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
 
@@ -630,7 +630,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                 break;
 
               case PSN_WIZNEXT:
-                if (GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
+                if (0 == GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, MAX_COMPUTERNAME_LENGTH + 1))
                 {
                   if (0 == LoadStringW(hDllInstance, IDS_WZD_COMPUTERNAME, EmptyComputerName,
                                        sizeof(EmptyComputerName) / sizeof(EmptyComputerName[0])))
