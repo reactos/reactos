@@ -514,7 +514,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Lock the DIB palette */
-    ppalDIB = PALETTE_LockPalette(hpalDIB);
+    ppalDIB = PALETTE_ShareLockPalette(hpalDIB);
     if (!ppalDIB)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -555,7 +555,7 @@ Exit:
         ret = ScanLines;
     }
 
-    if (ppalDIB) PALETTE_UnlockPalette(ppalDIB);
+    if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
@@ -1590,7 +1590,7 @@ DIB_CreateDIBSection(
         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         goto cleanup;
     }
-    bmp = SURFACE_LockSurface(res);
+    bmp = SURFACE_ShareLockSurface(res); // HACK
     if (NULL == bmp)
     {
         DPRINT1("SURFACE_LockSurface failed\n");
@@ -1646,7 +1646,7 @@ cleanup:
 
     if (bmp)
     {
-        SURFACE_UnlockSurface(bmp);
+        SURFACE_ShareUnlockSurface(bmp);
     }
 
     // Return BITMAP handle and storage location

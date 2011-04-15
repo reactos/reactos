@@ -119,7 +119,7 @@ GreCreateBitmapEx(
         }
         DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
         fjBitmap |= BMF_RLE_HACK;
-        
+
         iFormat = iFormat == BMF_4RLE ? BMF_4BPP : BMF_8BPP;
         psurf->SurfObj.iBitmapFormat = iFormat;
     }
@@ -201,7 +201,7 @@ NtGdiCreateBitmap(
 
     if (pUnsafeBits && hbmp)
     {
-        PSURFACE psurf = SURFACE_LockSurface(hbmp);
+        PSURFACE psurf = SURFACE_ShareLockSurface(hbmp);
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, cjSize, 1);
@@ -215,7 +215,7 @@ NtGdiCreateBitmap(
         }
         _SEH2_END
 
-        SURFACE_UnlockSurface(psurf);
+        SURFACE_ShareUnlockSurface(psurf);
     }
 
     return hbmp;

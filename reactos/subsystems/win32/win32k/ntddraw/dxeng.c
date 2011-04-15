@@ -743,7 +743,7 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
    if (pDC)
    {
       if (SetType == 1)
-      {   
+      {
         if ( Set )
             pDC->fs |= DC_FLAG_FULLSCREEN;
         else

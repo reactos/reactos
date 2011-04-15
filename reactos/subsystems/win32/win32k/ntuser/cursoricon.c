@@ -934,24 +934,24 @@ NtUserSetCursorContents(
     /* Copy new IconInfo field */
     CurIcon->IconInfo = IconInfo;
 
-    psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+    psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
     if (psurfBmp)
     {
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
         GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
     }
     else
     {
-        psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask);
+        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmMask);
         if (!psurfBmp)
             goto done;
 
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
 
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
     }
 	GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
 

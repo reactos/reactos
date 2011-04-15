@@ -469,11 +469,11 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
         return NULL;
     }
 
-    PalGDI = (PPALETTE) PALETTE_LockPalette(NewPalette);
+    PalGDI = (PPALETTE) PALETTE_ShareLockPalette(NewPalette);
     if (PalGDI != NULL)
     {
         PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-        PALETTE_UnlockPalette(PalGDI);
+        PALETTE_ShareUnlockPalette(PalGDI);
     }
     else
     {
@@ -664,7 +664,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
    if (NULL != dc)
    {
       HPALETTE hpal = dc->dclevel.hpal;
-      palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
+      palGDI = PALETTE_ShareLockPalette(hpal);
       if (!palGDI)
       {
          DC_UnlockDc(dc);
@@ -691,7 +691,7 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
             (GetGValue(Color) >> GBits) << GBits,
             (GetBValue(Color) >> BBits) << BBits);
       }
-      PALETTE_UnlockPalette(palGDI);
+      PALETTE_ShareUnlockPalette(palGDI);
       DC_UnlockDc(dc);
    }
 
@@ -704,7 +704,7 @@ NtGdiGetNearestPaletteIndex(
     HPALETTE hpal,
     COLORREF crColor)
 {
-    PPALETTE ppal = (PPALETTE) PALETTE_LockPalette(hpal);
+    PPALETTE ppal = PALETTE_ShareLockPalette(hpal);
     UINT index  = 0;
 
     if (ppal)
@@ -715,7 +715,7 @@ NtGdiGetNearestPaletteIndex(
             index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);
         }
         // else SetLastError ?
-        PALETTE_UnlockPalette(ppal);
+        PALETTE_ShareUnlockPalette(ppal);
     }
 
     return index;
@@ -777,13 +777,13 @@ IntAnimatePalette(HPALETTE hPal,
         PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
-        palPtr = (PPALETTE)PALETTE_LockPalette(hPal);
+        palPtr = PALETTE_ShareLockPalette(hPal);
         if (!palPtr) return FALSE;
 
         pal_entries = palPtr->NumColors;
         if (StartIndex >= pal_entries)
         {
-            PALETTE_UnlockPalette(palPtr);
+            PALETTE_ShareUnlockPalette(palPtr);
             return FALSE;
         }
         if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
@@ -800,7 +800,7 @@ IntAnimatePalette(HPALETTE hPal,
             }
         }
 
-        PALETTE_UnlockPalette(palPtr);
+        PALETTE_ShareUnlockPalette(palPtr);
 
         /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
@@ -831,7 +831,7 @@ IntGetPaletteEntries(
     PPALETTE palGDI;
     UINT numEntries;
 
-    palGDI = (PPALETTE) PALETTE_LockPalette(hpal);
+    palGDI = (PPALETTE) PALETTE_ShareLockPalette(hpal);
     if (NULL == palGDI)
     {
         return 0;
@@ -846,7 +846,7 @@ IntGetPaletteEntries(
         }
         if (numEntries <= StartIndex)
         {
-            PALETTE_UnlockPalette(palGDI);
+            PALETTE_ShareUnlockPalette(palGDI);
             return 0;
         }
         memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
@@ -856,7 +856,7 @@ IntGetPaletteEntries(
         Entries = numEntries;
     }
 
-    PALETTE_UnlockPalette(palGDI);
+    PALETTE_ShareUnlockPalette(palGDI);
     return Entries;
 }
 
@@ -894,7 +894,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
+    palGDI = PALETTE_ShareLockPalette(dc->dclevel.hpal);
     if (palGDI != NULL)
     {
         if (pe != NULL)
@@ -917,7 +917,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
     }
 
     if (palGDI != NULL)
-        PALETTE_UnlockPalette(palGDI);
+        PALETTE_ShareUnlockPalette(palGDI);
 
     if (dc != NULL)
         DC_UnlockDc(dc);
@@ -941,13 +941,13 @@ IntSetPaletteEntries(
     	return 0;
     }
 
-    palGDI = PALETTE_LockPalette(hpal);
+    palGDI = PALETTE_ShareLockPalette(hpal);
     if (!palGDI) return 0;
 
     numEntries = palGDI->NumColors;
     if (Start >= numEntries)
     {
-        PALETTE_UnlockPalette(palGDI);
+        PALETTE_ShareUnlockPalette(palGDI);
         return 0;
     }
     if (numEntries < Start + Entries)
@@ -955,7 +955,7 @@ IntSetPaletteEntries(
         Entries = numEntries - Start;
     }
     memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
-    PALETTE_UnlockPalette(palGDI);
+    PALETTE_ShareUnlockPalette(palGDI);
 
     return Entries;
 }
@@ -1138,7 +1138,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
         !GDI_HANDLE_IS_TYPE(hgdiobj, GDI_OBJECT_TYPE_PALETTE) )
       return Ret;
 
-   palGDI = PALETTE_LockPalette(hgdiobj);
+   palGDI = PALETTE_ShareLockPalette(hgdiobj);
    if (!palGDI) return FALSE;
 
    // FIXME!!
@@ -1146,7 +1146,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    // Zero out Current and Old Translated pointers?
    //
    Ret = TRUE;
-   PALETTE_UnlockPalette(palGDI);
+   PALETTE_ShareUnlockPalette(palGDI);
    return Ret;
 }
 
