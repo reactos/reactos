@@ -9,6 +9,7 @@ add_library(usbehci SHARED
     hcd_controller.cpp
     hardware.cpp
     misc.cpp
+    purecall.cpp
     usbehci.rc)
 
 target_link_libraries(usbehci
