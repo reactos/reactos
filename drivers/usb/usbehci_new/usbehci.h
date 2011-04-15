@@ -25,11 +25,7 @@ typedef struct
 {
     BOOLEAN IsFDO;                                               // is device a FDO or PDO
     BOOLEAN IsHub;                                               // is device a hub / child - not yet used
-    union
-    {
-        PHCDCONTROLLER HcdController;                            // hcd controller
-        PHUBCONTROLLER HubController;                            // hub controller
-    };
+    PDISPATCHIRP Dispatcher;                                     // dispatches the code
 }COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
 //
@@ -62,6 +58,6 @@ NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 //
 // root_hub_controller.cpp
 //
-NTSTATUS CreateRootHubController(PHUBCONTROLLER * OutHubController);
+NTSTATUS CreateHubController(PHUBCONTROLLER * OutHubController);
 
 #endif

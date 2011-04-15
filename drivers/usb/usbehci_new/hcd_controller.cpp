@@ -11,7 +11,8 @@
 #define INITGUID
 #include "usbehci.h"
 
-class CHCDController : public IHCDController
+class CHCDController : public IHCDController,
+                       public IDispatchIrp
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -33,8 +34,10 @@ public:
         return m_Ref;
     }
 
-    // interface functions
+    // IHCDController interface functions
     NTSTATUS Initialize(IN PROOTHDCCONTROLLER RootHCDController, IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject);
+
+    // IDispatchIrp interface functions
     NTSTATUS HandlePnp(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     NTSTATUS HandlePower(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
     NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
@@ -42,8 +45,7 @@ public:
     // local functions
     NTSTATUS CreateFDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
     NTSTATUS CreatePDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
-    NTSTATUS HandleQueryInterface(PIO_STACK_LOCATION IoStack);
-    NTSTATUS SetDeviceInterface(BOOLEAN bEnable);
+    NTSTATUS SetSymbolicLink(BOOLEAN Enable);
 
     // constructor / destructor
     CHCDController(IUnknown *OuterUnknown){}
@@ -57,10 +59,7 @@ protected:
     PDEVICE_OBJECT m_FunctionalDeviceObject;
     PDEVICE_OBJECT m_NextDeviceObject;
     PUSBHARDWAREDEVICE m_Hardware;
-    PDEVICE_OBJECT m_BusPDO;
-    UNICODE_STRING m_HubDeviceInterfaceString;
-    BOOLEAN m_InterfaceEnabled;
-    ULONG m_PDODeviceNumber;
+    PHUBCONTROLLER m_HubController;
     ULONG m_FDODeviceNumber;
 };
 
@@ -73,15 +72,6 @@ CHCDController::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    UNICODE_STRING GuidString;
-
-    if (IsEqualGUIDAligned(refiid, IID_IUnknown))
-    {
-        *Output = PVOID(PUNKNOWN(this));
-        PUNKNOWN(*Output)->AddRef();
-        return STATUS_SUCCESS;
-    }
-
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -187,7 +177,7 @@ CHCDController::Initialize(
     //
     DeviceExtension->IsFDO = TRUE;
     DeviceExtension->IsHub = FALSE;
-    DeviceExtension->HcdController = PHCDCONTROLLER(this);
+    DeviceExtension->Dispatcher = PDISPATCHIRP(this);
 
     //
     // device is initialized
@@ -345,17 +335,17 @@ CHCDController::HandlePnp(
     PCM_RESOURCE_LIST RawResourceList;
     PCM_RESOURCE_LIST TranslatedResourceList;
     PDEVICE_RELATIONS DeviceRelations;
-    PDEVICE_CAPABILITIES DeviceCapabilities;
-    LPGUID Guid;
     NTSTATUS Status;
-    ULONG Index;
-
-    DPRINT("HandlePnp\n");
 
     //
     // get device extension
     //
     DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(DeviceExtension->IsFDO);
 
     //
     // get current stack location
@@ -366,90 +356,67 @@ CHCDController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT1("IRP_MN_START FDO: %lu\n", DeviceExtension->IsFDO);
+            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO\n");
 
-            if (DeviceExtension->IsFDO)
+            //
+            // first start lower device object
+            //
+            Status = SyncForwardIrp(m_NextDeviceObject, Irp);
+
+            if (NT_SUCCESS(Status))
             {
                 //
-                // first start lower device object
+                // operation succeeded, lets start the device
                 //
-                Status = SyncForwardIrp(m_NextDeviceObject, Irp);
+                RawResourceList = IoStack->Parameters.StartDevice.AllocatedResources;
+                TranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
 
-                if (NT_SUCCESS(Status))
+                if (m_Hardware)
                 {
                     //
-                    // operation succeeded, lets start the device
+                    // start the hardware
                     //
-                    RawResourceList = IoStack->Parameters.StartDevice.AllocatedResources;
-                    TranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
-
-                    if (m_Hardware)
-                    {
-                        //
-                        // start the hardware
-                        //
-                        Status = m_Hardware->PnpStart(RawResourceList, TranslatedResourceList);
-                    }
+                    Status = m_Hardware->PnpStart(RawResourceList, TranslatedResourceList);
                 }
 
                 //
-                // HACK / FIXME: Windows XP SP3 fails to enumerate the PDO correctly, which
-                //               causes the PDO device never to startup.
+                // enable symbolic link
                 //
-                Status = SetDeviceInterface(TRUE);
-            }
-            else
-            {
-                //
-                // start the PDO device
-                //
-                ASSERT(0);
-
-                //
-                //FIXME create the parent root hub device
-                //
-
-                //
-                // register device interface 
-                //
-                Status = SetDeviceInterface(TRUE);
+                Status = SetSymbolicLink(TRUE);
             }
 
-            DPRINT1("IRP_MN_START FDO: %lu Status %x\n", DeviceExtension->IsFDO, Status);
-
+            DPRINT1("CHCDController::HandlePnp IRP_MN_START FDO: Status %x\n", Status);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT1("IRP_MN_QUERY_DEVICE_RELATIONS Type %lx FDO: \n", IoStack->Parameters.QueryDeviceRelations.Type, DeviceExtension->IsFDO);
+            DPRINT1("CHCDController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", IoStack->Parameters.QueryDeviceRelations.Type);
 
-            if (m_BusPDO == NULL)
+            if (m_HubController == NULL)
             {
                 //
-                // create bus PDO
+                // create hub controller
                 //
-                Status = CreatePDO(m_DriverObject, &m_BusPDO);
-
+                Status = CreateHubController(&m_HubController);
                 if (!NT_SUCCESS(Status))
                 {
                     //
-                    // failed to create bus device object
+                    // failed to create hub controller
                     //
                     break;
                 }
 
                 //
-                // initialize extension
+                // initialize hub controller
                 //
-                DeviceExtension = (PCOMMON_DEVICE_EXTENSION)m_BusPDO->DeviceExtension;
-                DeviceExtension->IsFDO = FALSE;
-                DeviceExtension->IsHub = FALSE;
-                DeviceExtension->HcdController = (this);
-
-                //
-                // clear init flag
-                //
-                m_BusPDO->Flags &= ~DO_DEVICE_INITIALIZING;
+                Status = m_HubController->Initialize(m_DriverObject, PHCDCONTROLLER(this), m_Hardware, TRUE, 0 /* FIXME*/);
+                if (!NT_SUCCESS(Status))
+                {
+                    //
+                    // failed to initialize hub controller
+                    //
+                    break;
+                }
             }
 
             if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)
@@ -472,9 +439,14 @@ CHCDController::HandlePnp(
                 // init device relations
                 //
                 DeviceRelations->Count = 1;
-                DeviceRelations->Objects [0] = m_BusPDO;
+                Status = m_HubController->GetHubControllerDeviceObject(&DeviceRelations->Objects [0]);
 
-                ObReferenceObject(m_BusPDO);
+                //
+                // sanity check
+                //
+                PC_ASSERT(Status == STATUS_SUCCESS);
+
+                ObReferenceObject(DeviceRelations->Objects [0]);
 
                 //
                 // store result
@@ -482,12 +454,19 @@ CHCDController::HandlePnp(
                 Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
                 Status = STATUS_SUCCESS;
             }
+            else
+            {
+                //
+                // not supported
+                //
+                PC_ASSERT(0);
+                Status = STATUS_NOT_SUPPORTED;
+            }
             break;
         }
-
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT1("IRP_MN_STOP_DEVICE FDO: %lu\n", DeviceExtension->IsFDO);
+            DPRINT1("CHCDController::HandlePnp IRP_MN_STOP_DEVICE\n");
 
             if (m_Hardware)
             {
@@ -513,153 +492,31 @@ CHCDController::HandlePnp(
             }
             break;
         }
-        case IRP_MN_QUERY_CAPABILITIES:
-        {
-            DPRINT1("IRP_MN_QUERY_CAPABILITIES FDO: %lu\n", DeviceExtension->IsFDO);
-
-            if (DeviceExtension->IsFDO == FALSE)
-            {
-                DeviceCapabilities = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
-
-                DeviceCapabilities->LockSupported = FALSE;
-                DeviceCapabilities->EjectSupported = FALSE;
-                DeviceCapabilities->Removable = FALSE;
-                DeviceCapabilities->DockDevice = FALSE;
-                DeviceCapabilities->UniqueID = FALSE;
-                DeviceCapabilities->SilentInstall = FALSE;
-                DeviceCapabilities->RawDeviceOK = FALSE;
-                DeviceCapabilities->SurpriseRemovalOK = FALSE;
-                DeviceCapabilities->Address = 0;
-                DeviceCapabilities->UINumber = 0;
-                DeviceCapabilities->DeviceD2 = 1;
-
-                /* FIXME */
-                DeviceCapabilities->HardwareDisabled = FALSE;
-                DeviceCapabilities->NoDisplayInUI = FALSE;
-                DeviceCapabilities->DeviceState[0] = PowerDeviceD0;
-                for (Index = 0; Index < PowerSystemMaximum; Index++)
-                    DeviceCapabilities->DeviceState[Index] = PowerDeviceD3;
-                DeviceCapabilities->DeviceWake = PowerDeviceUnspecified;
-                DeviceCapabilities->D1Latency = 0;
-                DeviceCapabilities->D2Latency = 0;
-                DeviceCapabilities->D3Latency = 0;
-
-                Status = STATUS_SUCCESS;
-            }
-            else
-            {
-                //
-                // forward irp to next device object
-                //
-                IoSkipCurrentIrpStackLocation(Irp);
-                return IoCallDriver(m_NextDeviceObject, Irp);
-            }
-
-            break;
-        }
-        case IRP_MN_QUERY_INTERFACE:
-        {
-            DPRINT1("IRP_MN_QUERY_INTERFACE FDO %u\n", DeviceExtension->IsFDO);
-            //
-            // check if the device is FDO
-            //
-            if (DeviceExtension->IsFDO)
-            {
-                //
-                // just pass the irp to next device object
-                //
-                IoSkipCurrentIrpStackLocation(Irp);
-                return IoCallDriver(m_NextDeviceObject, Irp);
-            }
-
-            //
-            // handle device interface requests
-            //
-            Status = HandleQueryInterface(IoStack);
-            break;
-        }
-        case IRP_MN_QUERY_BUS_INFORMATION:
-        {
-            DPRINT1("IRP_MN_QUERY_BUS_INFORMATION FDO %lx\n", DeviceExtension->IsFDO);
-
-            if (DeviceExtension->IsFDO == FALSE)
-            {
-                //
-                // allocate buffer for bus guid
-                //
-                Guid = (LPGUID)ExAllocatePool(PagedPool, sizeof(GUID));
-                if (Guid)
-                {
-                    //
-                    // copy BUS guid
-                    //
-                    RtlMoveMemory(Guid, &GUID_BUS_TYPE_USB, sizeof(GUID));
-                    Status = STATUS_SUCCESS;
-                    Irp->IoStatus.Information = (ULONG_PTR)Guid;
-                }
-            }
-            break;
-        }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT1("IRP_MN_REMOVE_DEVICE FDO: %lu\n", DeviceExtension->IsFDO);
+            DPRINT1("CHCDController::HandlePnp IRP_MN_REMOVE_DEVICE FDO\n");
 
-            if (DeviceExtension->IsFDO == FALSE)
-            {
-                //
-                // deactivate device interface for BUS PDO
-                //
-                SetDeviceInterface(FALSE);
+            //
+            // detach device from device stack
+            //
+            IoDetachDevice(m_NextDeviceObject);
 
-                //
-                // complete the request first
-                //
-                Irp->IoStatus.Status = STATUS_SUCCESS;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-                //
-                // now delete device
-                //
-                IoDeleteDevice(m_BusPDO);
-
-                //
-                // nullify pointer
-                //
-                m_BusPDO = 0;
-                return STATUS_SUCCESS;
-            }
-            else
-            {
-                //
-                // detach device from device stack
-                //
-                IoDetachDevice(m_NextDeviceObject);
-
-                //
-                // delete device
-                //
-                IoDeleteDevice(m_FunctionalDeviceObject);
-            }
+            //
+            // delete device
+            //
+            IoDeleteDevice(m_FunctionalDeviceObject);
 
             Status = STATUS_SUCCESS;
             break;
         }
         default:
         {
-            if (DeviceExtension->IsFDO)
-            {
-                DPRINT1("HandlePnp> FDO Dispatch to lower device object %lu\n", IoStack->MinorFunction);
-
-                //
-                // forward irp to next device object
-                //
-                IoSkipCurrentIrpStackLocation(Irp);
-                return IoCallDriver(m_NextDeviceObject, Irp);
-            }
-            else
-            {
-                DPRINT1("UNHANDLED PDO Request %lu\n", IoStack->MinorFunction);
-            }
+            DPRINT1("CHCDController::HandlePnp Dispatch to lower device object %lu\n", IoStack->MinorFunction);
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(m_NextDeviceObject, Irp);
         }
     }
 
@@ -683,44 +540,6 @@ CHCDController::HandlePower(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-CHCDController::HandleQueryInterface(
-    PIO_STACK_LOCATION IoStack)
-{
-    UNICODE_STRING GuidBuffer;
-    NTSTATUS Status;
-
-    if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, USB_BUS_INTERFACE_HUB_GUID))
-    {
-        DPRINT1("HandleQueryInterface> UNIMPLEMENTED USB_BUS_INTERFACE_HUB_GUID Version %x\n", IoStack->Parameters.QueryInterface.Version);
-
-    }
-    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, USB_BUS_INTERFACE_USBDI_GUID))
-    {
-        DPRINT1("HandleQueryInterface> UNIMPLEMENTED USB_BUS_INTERFACE_USBDI_GUID Version %x\n", IoStack->Parameters.QueryInterface.Version);
-    }
-    else
-    {
-        //
-        // convert guid to string
-        //
-        Status = RtlStringFromGUID(*IoStack->Parameters.QueryInterface.InterfaceType, &GuidBuffer);
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // print interface
-            //
-            DPRINT1("HandleQueryInterface GUID: %wZ Version %x\n", &GuidBuffer, IoStack->Parameters.QueryInterface.Version);
-
-            //
-            // free guid buffer
-            //
-            RtlFreeUnicodeString(&GuidBuffer);
-        }
-    }
-    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -796,7 +615,7 @@ CHCDController::CreateFDO(
 }
 
 NTSTATUS
-CHCDController::SetDeviceInterface(
+CHCDController::SetSymbolicLink(
     BOOLEAN Enable)
 {
     NTSTATUS Status;
@@ -807,27 +626,9 @@ CHCDController::SetDeviceInterface(
     if (Enable)
     {
         //
-        // register device interface
-        //
-        Status = IoRegisterDeviceInterface(m_PhysicalDeviceObject, &GUID_DEVINTERFACE_USB_HUB, 0, &m_HubDeviceInterfaceString);
-
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // now enable the device interface
-            //
-            Status = IoSetDeviceInterfaceState(&m_HubDeviceInterfaceString, TRUE);
-
-            //
-            // enable interface
-            //
-            m_InterfaceEnabled = TRUE;
-        }
-
-        //
         // create legacy link
         //
-        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_PDODeviceNumber);
+        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
         swprintf(FDOName, L"\\Device\\USBFDO-%d", m_FDODeviceNumber);
         RtlInitUnicodeString(&Link, LinkName);
         RtlInitUnicodeString(&FDO, FDOName);
@@ -845,101 +646,31 @@ CHCDController::SetDeviceInterface(
             ASSERT(0);
         }
     }
-    else if (m_InterfaceEnabled)
+    else
     {
         //
-        // disable device interface
+        // create legacy link
         //
-        Status = IoSetDeviceInterfaceState(&m_HubDeviceInterfaceString, FALSE);
+        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
+        RtlInitUnicodeString(&Link, LinkName);
 
-        if (NT_SUCCESS(Status))
+        //
+        // now delete the symbolic link
+        //
+        Status = IoDeleteSymbolicLink(&Link);
+
+        if (!NT_SUCCESS(Status))
         {
             //
-            // now delete interface string
+            // FIXME: handle me
             //
-            RtlFreeUnicodeString(&m_HubDeviceInterfaceString);
+            ASSERT(0);
         }
-
-            //
-            // disable interface
-            //
-            m_InterfaceEnabled = FALSE;
-
     }
 
     //
     // done
     //
-    return Status;
-}
-
-NTSTATUS
-CHCDController::CreatePDO(
-    PDRIVER_OBJECT DriverObject,
-    PDEVICE_OBJECT * OutDeviceObject)
-{
-    WCHAR CharDeviceName[64];
-    NTSTATUS Status;
-    ULONG UsbDeviceNumber = 0;
-    UNICODE_STRING DeviceName;
-
-    while (TRUE)
-    {
-        //
-        // construct device name
-        //
-        swprintf(CharDeviceName, L"\\Device\\USBPDO-%d", UsbDeviceNumber);
-
-        //
-        // initialize device name
-        //
-        RtlInitUnicodeString(&DeviceName, CharDeviceName);
-
-        //
-        // create device
-        //
-        Status = IoCreateDevice(DriverObject,
-                                sizeof(COMMON_DEVICE_EXTENSION),
-                                &DeviceName,
-                                FILE_DEVICE_CONTROLLER,
-                                0,
-                                FALSE,
-                                OutDeviceObject);
-
-        /* check for success */
-        if (NT_SUCCESS(Status))
-            break;
-
-        //
-        // is there a device object with that same name
-        //
-        if ((Status == STATUS_OBJECT_NAME_EXISTS) || (Status == STATUS_OBJECT_NAME_COLLISION))
-        {
-            //
-            // Try the next name
-            //
-            UsbDeviceNumber++;
-            continue;
-        }
-
-        //
-        // bail out on other errors
-        //
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("CreatePDO: Failed to create %wZ, Status %x\n", &DeviceName, Status);
-            return Status;
-        }
-    }
-
-    //
-    // store PDO number
-    //
-    m_PDODeviceNumber = UsbDeviceNumber;
-
-    DPRINT1("CreateFDO: DeviceName %wZ\n", &DeviceName);
-
-    /* done */
     return Status;
 }
 

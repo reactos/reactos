@@ -79,12 +79,7 @@ EHCI_Dispatch(
     //
     // sanity checks
     //
-    PC_ASSERT(DeviceExtension->HcdController);
-
-    //
-    // FIXME: support bus device
-    //
-    PC_ASSERT(DeviceExtension->IsHub == FALSE);
+    PC_ASSERT(DeviceExtension->Dispatcher);
 
     switch(IoStack->MajorFunction)
     {
@@ -93,7 +88,7 @@ EHCI_Dispatch(
             //
             // dispatch pnp
             //
-            return DeviceExtension->HcdController->HandlePnp(DeviceObject, Irp);
+            return DeviceExtension->Dispatcher->HandlePnp(DeviceObject, Irp);
         }
 
         case IRP_MJ_POWER:
@@ -101,7 +96,7 @@ EHCI_Dispatch(
             //
             // dispatch pnp
             //
-            return DeviceExtension->HcdController->HandlePower(DeviceObject, Irp);
+            return DeviceExtension->Dispatcher->HandlePower(DeviceObject, Irp);
         }
         case IRP_MJ_SYSTEM_CONTROL:
         case IRP_MJ_DEVICE_CONTROL:
@@ -109,7 +104,7 @@ EHCI_Dispatch(
             //
             // dispatch pnp
             //
-            return DeviceExtension->HcdController->HandleDeviceControl(DeviceObject, Irp);
+            return DeviceExtension->Dispatcher->HandleDeviceControl(DeviceObject, Irp);
         }
         case IRP_MJ_CREATE:
         {
@@ -133,7 +128,6 @@ EHCI_Dispatch(
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
 
     return Status;
 }

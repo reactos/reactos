@@ -10,6 +10,7 @@ add_library(usbehci SHARED
     hardware.cpp
     misc.cpp
     purecall.cpp
+    hub_controller.cpp
     usbehci.rc)
 
 target_link_libraries(usbehci

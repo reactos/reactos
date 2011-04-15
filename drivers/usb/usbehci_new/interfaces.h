@@ -103,33 +103,6 @@ DECLARE_INTERFACE_(IHCDController, IUnknown)
                                 IN PDRIVER_OBJECT DriverObject,
                                 IN PDEVICE_OBJECT PhysicalDeviceObject) = 0;
 
-//-----------------------------------------------------------------------------------------
-//
-// HandlePnp
-//
-// Description: This function handles all pnp requests
-
-    virtual NTSTATUS HandlePnp(IN PDEVICE_OBJECT DeviceObject,
-                               IN OUT PIRP Irp) = 0;
-
-//-----------------------------------------------------------------------------------------
-//
-// HandlePower
-//
-// Description: This function handles all power pnp requests
-//
-    virtual NTSTATUS HandlePower(IN PDEVICE_OBJECT DeviceObject,
-                                 IN OUT PIRP Irp) = 0;
-
-//-----------------------------------------------------------------------------------------
-//
-// HandleDeviceControl
-//
-// Description: handles device io control requests
-
-    virtual NTSTATUS HandleDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-                                         IN OUT PIRP Irp) = 0;
-
 };
 
 typedef IHCDController *PHCDCONTROLLER;
@@ -177,14 +150,6 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 // Description: handles pnp stop request from device. It unregisteres the interrupt, releases ports and dma object.
 
     virtual NTSTATUS PnpStop(void) = 0;
-
-//-----------------------------------------------------------------------------------------
-//
-// HandlePower
-//
-// Description: handles power requests
-
-    virtual NTSTATUS HandlePower(PIRP Irp) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -451,10 +416,34 @@ DECLARE_INTERFACE_(IHubController, IUnknown)
 //
 // Description: Initializes the hub controller
 
-    virtual NTSTATUS Initialize(IN PHCDCONTROLLER Controller,
+    virtual NTSTATUS Initialize(IN PDRIVER_OBJECT DriverObject,
+                                IN PHCDCONTROLLER Controller,
                                 IN PUSBHARDWAREDEVICE Device,
                                 IN BOOLEAN IsRootHubDevice,
                                 IN ULONG DeviceAddress) = 0;
+
+//----------------------------------------------------------------------------------------
+//
+// GetHubControllerDeviceObject
+//
+// Description: Returns the hub controller device object
+
+    virtual NTSTATUS GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject) = 0;
+
+};
+
+typedef IHubController *PHUBCONTROLLER;
+
+//=========================================================================================
+//
+// class IDispatchIrp
+//
+// Description: This class is used to handle irp dispatch requests
+// 
+
+DECLARE_INTERFACE_(IDispatchIrp, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
 
 //-----------------------------------------------------------------------------------------
 //
@@ -484,7 +473,6 @@ DECLARE_INTERFACE_(IHubController, IUnknown)
                                          IN OUT PIRP Irp) = 0;
 };
 
-typedef IHubController *PHUBCONTROLLER;
-
+typedef IDispatchIrp *PDISPATCHIRP;
 
 #endif
