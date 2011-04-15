@@ -376,7 +376,7 @@ EngAssociateSurface(
     ppdev = (PDEVOBJ*)hdev;
 
     /* Lock the surface */
-    psurf = SURFACE_LockSurface(hsurf);
+    psurf = SURFACE_ShareLockSurface(hsurf);
     if (!psurf)
     {
         return FALSE;
@@ -394,7 +394,7 @@ EngAssociateSurface(
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return TRUE;
 }
@@ -415,7 +415,7 @@ EngModifySurface(
     PSURFACE psurf;
     PDEVOBJ* ppdev;
 
-    psurf = SURFACE_LockSurface(hsurf);
+    psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf == NULL)
     {
         return FALSE;
@@ -438,7 +438,7 @@ EngModifySurface(
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return TRUE;
 }
@@ -479,19 +479,17 @@ SURFOBJ *
 APIENTRY
 EngLockSurface(IN HSURF hsurf)
 {
-    SURFACE *psurf = GDIOBJ_ShareLockObj(hsurf, GDI_OBJECT_TYPE_BITMAP);
+    SURFACE *psurf = SURFACE_ShareLockSurface(hsurf);
 
-    if (psurf != NULL)
-        return &psurf->SurfObj;
-
-    return NULL;
+    return psurf ? &psurf->SurfObj : NULL;
 }
 
 VOID
 APIENTRY
 NtGdiEngUnlockSurface(IN SURFOBJ *pso)
 {
-    EngUnlockSurface(pso);
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
 }
 
 VOID
@@ -501,7 +499,7 @@ EngUnlockSurface(IN SURFOBJ *pso)
     if (pso != NULL)
     {
         SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
-        GDIOBJ_ShareUnlockObjByPtr((POBJ)psurf);
+        SURFACE_ShareUnlockSurface(psurf);
     }
 }
 
