@@ -241,7 +241,7 @@ CHCDController::HandleDeviceControl(
     DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 
-    DPRINT1("HandleDeviceControl>Type: FDO %u IoCtl %x InputBufferLength %lu OutputBufferLength %lu NOT IMPLEMENTED\n",
+    DPRINT1("HandleDeviceControl>Type: FDO %u IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
         DeviceExtension->IsFDO,
         IoStack->Parameters.DeviceIoControl.IoControlCode,
         IoStack->Parameters.DeviceIoControl.InputBufferLength,
@@ -282,21 +282,23 @@ CHCDController::HandleDeviceControl(
                         //
                         // it does
                         //
-                        Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, IoStack->Parameters.DeviceIoControl.OutputBufferLength, DriverKey->DriverKeyName, &ResultLength);
+                        Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG), DriverKey->DriverKeyName, &ResultLength);
 
-                        //DPRINT1("Result %S\n", DriverKey->DriverKeyName);
+                        if (NT_SUCCESS(Status))
+                        {
+                            //
+                            // informal debug print
+                            //
+                            DPRINT1("Result %S\n", DriverKey->DriverKeyName);
+                        }
                     }
-
-					//
-					// FIXME
-					//
 
                     //
                     // store result
                     //
-                    DriverKey->ActualLength = ResultLength;
+                    DriverKey->ActualLength = ResultLength + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName) + sizeof(WCHAR);
                     Irp->IoStatus.Information = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-                    Status = STATUS_BUFFER_OVERFLOW;
+                    Status = STATUS_SUCCESS;
                 }
             }
             else
@@ -308,13 +310,28 @@ CHCDController::HandleDeviceControl(
                 Irp->IoStatus.Information = sizeof(USB_HCD_DRIVERKEY_NAME);
             }
         }
+        else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_ROOT_HUB_NAME)
+        {
+            DPRINT1("IOCTL_USB_GET_ROOT_HUB_NAME is not implemented yet\n");
+        }
+    }
+    else
+    {
+        //
+        // the PDO does not support any device IOCTLs
+        //
+        Status = STATUS_SUCCESS;
     }
 
-//
-
+    //
+    // complete the request
+    //
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+    //
+    // done
+    //
     return Status;
 }
 
