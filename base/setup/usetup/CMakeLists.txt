@@ -33,7 +33,7 @@ add_executable(usetup
 target_link_libraries(usetup
     mingw_main
     zlib
-    newinflib
+    inflib
     ext2lib
     vfatlib
     mingw_common)
