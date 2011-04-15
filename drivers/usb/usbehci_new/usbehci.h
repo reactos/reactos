@@ -32,6 +32,10 @@ typedef struct
     };
 }COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
+//
+// tag for allocations
+//
+#define TAG_USBEHCI 'ICHE'
 
 //
 // assert for c++ - taken from portcls
@@ -54,5 +58,10 @@ NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 // misc.cpp
 //
 NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+//
+// root_hub_controller.cpp
+//
+NTSTATUS CreateRootHubController(PHUBCONTROLLER * OutHubController);
 
 #endif

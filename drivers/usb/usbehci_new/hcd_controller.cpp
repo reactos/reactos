@@ -952,7 +952,7 @@ CreateHCDController(
     //
     // allocate controller
     //
-    This = new(NonPagedPool, 0) CHCDController(0);
+    This = new(NonPagedPool, TAG_USBEHCI) CHCDController(0);
     if (!This)
     {
         //

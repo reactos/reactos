@@ -454,7 +454,7 @@ DECLARE_INTERFACE_(IHubController, IUnknown)
     virtual NTSTATUS Initialize(IN PHCDCONTROLLER Controller,
                                 IN PUSBHARDWAREDEVICE Device,
                                 IN BOOLEAN IsRootHubDevice,
-                                IN ULONG DeviceAddress);
+                                IN ULONG DeviceAddress) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
