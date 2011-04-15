@@ -302,9 +302,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PSECTION_OBJECT SectionObject;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionSize;
-#if 0 // Wine code
-    FT_Fixed XScale, YScale;
-#endif
     UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
     /* Open the font file */
@@ -395,22 +392,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     RtlCopyMemory(FontGDI->Filename, FileName->Buffer, FileName->Length);
     FontGDI->Filename[FileName->Length / sizeof(WCHAR)] = L'\0';
     FontGDI->face = Face;
-
-    /* FIXME: Complete text metrics */
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
-    XScale = Face->size->metrics.x_scale;
-    YScale = Face->size->metrics.y_scale;
-    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) -
-                                     FT_MulFix(Face->descender, YScale)) >> 6;
-#else
-    FontGDI->TextMetric.tmAscent  = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
-    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
-    FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender - Face->size->metrics.descender) >> 6;
-#endif
-
-
 
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
     DPRINT("Num glyphs: %u\n", Face->num_glyphs);
@@ -856,14 +837,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     Otm->otmSize = Needed;
 
-//  FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-    if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
-    {
-        FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-        FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
-    }
-
-    RtlCopyMemory(&Otm->otmTextMetrics, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+    FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
     Otm->otmFiller = 0;
     RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -882,8 +856,8 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmrcFontBox.right = (FT_MulFix(FontGDI->face->bbox.xMax, XScale) + 32) >> 6;
     Otm->otmrcFontBox.top = (FT_MulFix(FontGDI->face->bbox.yMax, YScale) + 32) >> 6;
     Otm->otmrcFontBox.bottom = (FT_MulFix(FontGDI->face->bbox.yMin, YScale) + 32) >> 6;
-    Otm->otmMacAscent = FontGDI->TextMetric.tmAscent;
-    Otm->otmMacDescent = -FontGDI->TextMetric.tmDescent;
+    Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
+    Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
     Otm->otmMacLineGap = Otm->otmLineGap;
     Otm->otmusMinimumPPEM = 0; /* TT Header */
     Otm->otmptSubscriptSize.x = (FT_MulFix(pOS2->ySubscriptXSize, XScale) + 32) >> 6;
@@ -2512,13 +2486,8 @@ ftGdiGetTextMetricsW(
 
             if (NT_SUCCESS(Status))
             {
-                if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
-                {
-                    FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
-                    FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
-                }
+                FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
-                RtlCopyMemory(&ptmwi->TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
@@ -2814,7 +2783,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj->Font->iUniq = 1; // Now it can be cached.
         IntFontType(FontGdi);
         FontGdi->flType = TextObj->Font->flFontType;
-        FontGdi->flRealizedType = 0;
         FontGdi->Underline = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfUnderline ? 0xff : 0;
         FontGdi->StrikeOut = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfStrikeOut ? 0xff : 0;
         TextObj->fl |= TEXTOBJECT_INIT;
