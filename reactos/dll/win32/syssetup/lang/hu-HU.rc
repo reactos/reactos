@@ -71,7 +71,7 @@ CAPTION "ReactOS Telepítõ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Adj egy nevet a számítógépednek, ami nem több mint 63 betû. "\
+    LTEXT "Adj egy nevet a számítógépednek, ami nem több mint 15 betû. "\
           "Ha hálózaton vagy, akkor ennek a névnek egyedinek kell lennie.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Számítógép név:", IDC_STATIC, 54, 38, 75, 8

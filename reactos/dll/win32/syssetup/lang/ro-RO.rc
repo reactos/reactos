@@ -74,7 +74,7 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrieți un nume pentru computer de maxim 63 de caractere. "\
+    LTEXT "Scrieți un nume pentru computer de maxim 15 de caractere. "\
           "Dacă sunteți în rețea, numele computerului trebuie să fie unic.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nume:", IDC_STATIC, 54, 38, 75, 8
