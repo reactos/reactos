@@ -47,9 +47,7 @@ set_module_type(browseui win32dll)
 target_link_libraries(browseui
     atlnew
     uuid
-    wine
-    -lmingw32
-    -lcoldname)
+    wine)
 
 add_importlibs(browseui
     shlwapi
