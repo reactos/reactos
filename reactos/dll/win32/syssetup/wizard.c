@@ -564,6 +564,25 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
   return TRUE;
 }
 
+/* lpBuffer will be filled with a 15-char string (plus the null terminator) */
+static void
+GenerateComputerName(LPWSTR lpBuffer)
+{
+    static const WCHAR Chars[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static const unsigned cChars = sizeof(Chars) / sizeof(WCHAR) - 1;
+    unsigned i;
+
+    wcscpy(lpBuffer, L"REACTOS-");
+
+    srand(GetTickCount());
+
+    /* fill in 7 characters */
+    for (i = 8; i < 15; i++)
+        lpBuffer[i] = Chars[rand() % cChars];
+
+    lpBuffer[15] = UNICODE_NULL; /* NULL-terminate */
+}
+
 static INT_PTR CALLBACK
 ComputerPageDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -576,7 +595,6 @@ ComputerPageDlgProc(HWND hwndDlg,
   PWCHAR Password;
   WCHAR Title[64];
   WCHAR EmptyComputerName[256], NotMatchPassword[256], WrongPassword[256];
-  DWORD Length;
   LPNMHDR lpnm;
 
   if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
@@ -588,9 +606,8 @@ ComputerPageDlgProc(HWND hwndDlg,
     {
       case WM_INITDIALOG:
         {
-          /* Retrieve current computer name */
-          Length = MAX_COMPUTERNAME_LENGTH + 1;
-          GetComputerNameW(ComputerName, &Length);
+          /* Generate a new pseudo-random computer name */
+          GenerateComputerName(ComputerName);
 
           /* Display current computer name */
           SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
