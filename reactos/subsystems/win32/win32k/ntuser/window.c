@@ -448,6 +448,8 @@ static LRESULT co_UserFreeWindow(PWND Window,
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
 
+   IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
+
    /* from now on no messages can be sent to this window anymore */
    Window->state |= WNDS_DESTROYED;
    Window->fnid |= FNID_FREED;
@@ -2507,8 +2509,6 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
          ti->pDeskInfo->hShellWindow = NULL;
       }
    }
-
-   IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
    IntEngWindowChanged(Window, WOC_DELETE);
 
