@@ -89,13 +89,13 @@ IntCreateRegistryPath(
    AfterControlSet = *DriverRegistryPath;
    /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
    Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
-			0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
+            0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
             wcslen(RegistryMachineSystem)));
    if (Valid)
    {
       AfterControlSet.Buffer += wcslen(RegistryMachineSystem);
       AfterControlSet.Length -= sizeof(RegistryMachineSystem) - sizeof(UNICODE_NULL);
-      
+
       /* Check if path contains CURRENTCONTROLSET */
       if (AfterControlSet.Length > sizeof(CurrentControlSet) &&
           0 == _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, wcslen(CurrentControlSet)))
@@ -110,8 +110,8 @@ IntCreateRegistryPath(
          AfterControlSet.Buffer += wcslen(ControlSet);
          AfterControlSet.Length -= sizeof(ControlSet) - sizeof(UNICODE_NULL);
          while (AfterControlSet.Length > 0 &&
-                L'0' <= *AfterControlSet.Buffer &&
-                L'9' <= *AfterControlSet.Buffer)
+                *AfterControlSet.Buffer >= L'0' &&
+                *AfterControlSet.Buffer >= L'9')
          {
             AfterControlSet.Buffer++;
             AfterControlSet.Length -= sizeof(WCHAR);
@@ -133,21 +133,21 @@ IntCreateRegistryPath(
       DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(PagedPool,
          DeviceRegistryPath->MaximumLength,
          TAG_VIDEO_PORT);
-      if (NULL != DeviceRegistryPath->Buffer)
+      if (DeviceRegistryPath->Buffer != NULL)
       {
          /* Build device path */
-      	 wcsncpy(DeviceRegistryPath->Buffer,
+         wcsncpy(DeviceRegistryPath->Buffer,
                  DriverRegistryPath->Buffer,
                  AfterControlSet.Buffer - DriverRegistryPath->Buffer);
          DeviceRegistryPath->Length = (AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
          RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
          RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
          RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
-         
+
          /* Check if registry key exists */
          Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DriverRegistryPath->Buffer));
-         
-         if(!Valid)
+
+         if (!Valid)
             ExFreePoolWithTag(DeviceRegistryPath->Buffer, TAG_VIDEO_PORT);
       }
       else
@@ -168,14 +168,14 @@ IntCreateRegistryPath(
          NonPagedPool,
          DeviceRegistryPath->MaximumLength,
          TAG_VIDEO_PORT);
-      
+
       if (!DeviceRegistryPath->Buffer)
          return STATUS_NO_MEMORY;
-      
+
       RtlCopyUnicodeString(DeviceRegistryPath, DriverRegistryPath);
       RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
    }
-   
+
    return STATUS_SUCCESS;
 }
 
