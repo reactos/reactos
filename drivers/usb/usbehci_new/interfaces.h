@@ -253,7 +253,7 @@ DECLARE_INTERFACE_(IDMAMemoryManager, IUnknown)
 
     virtual NTSTATUS Allocate(IN ULONG Size,
                               OUT PVOID *OutVirtualBase,
-                              OUT PPHYSICAL_ADDRESS *OutPhysicalAddress) = 0;
+                              OUT PPHYSICAL_ADDRESS OutPhysicalAddress) = 0;
 
 
 //-----------------------------------------------------------------------------------------

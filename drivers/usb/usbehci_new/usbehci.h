@@ -62,4 +62,9 @@ NTSTATUS NTAPI GetBusInterface(PDEVICE_OBJECT DeviceObject, PBUS_INTERFACE_STAND
 //
 NTSTATUS CreateHubController(PHUBCONTROLLER * OutHubController);
 
+//
+// memory_manager.cpp
+//
+NTSTATUS CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
+
 #endif
