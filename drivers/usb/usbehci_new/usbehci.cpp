@@ -98,7 +98,7 @@ EHCI_Dispatch(
             //
             return DeviceExtension->Dispatcher->HandlePower(DeviceObject, Irp);
         }
-        case IRP_MJ_SYSTEM_CONTROL:
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
         case IRP_MJ_DEVICE_CONTROL:
         {
             //

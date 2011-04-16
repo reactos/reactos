@@ -417,6 +417,11 @@ CHCDController::HandlePnp(
                     //
                     break;
                 }
+
+                //
+                // add reference to prevent it from getting deleting while hub driver adds / removes references
+                //
+                m_HubController->AddRef();
             }
 
             if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)
@@ -511,7 +516,7 @@ CHCDController::HandlePnp(
         }
         default:
         {
-            DPRINT1("CHCDController::HandlePnp Dispatch to lower device object %lu\n", IoStack->MinorFunction);
+            DPRINT1("CHCDController::HandlePnp Dispatch to lower device object %lx\n", IoStack->MinorFunction);
             //
             // forward irp to next device object
             //
