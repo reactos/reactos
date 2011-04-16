@@ -157,8 +157,8 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 //
 // Description: returns the device details such as vendor id, device id, number of ports and speed
 
-    virtual NTSTATUS GetDeviceDetails(OUT OPTIONAL PULONG VendorId,
-                                      OUT OPTIONAL PULONG DeviceId,
+    virtual NTSTATUS GetDeviceDetails(OUT OPTIONAL PUSHORT VendorId,
+                                      OUT OPTIONAL PUSHORT DeviceId,
                                       OUT OPTIONAL PULONG NumberOfPorts,
                                       OUT OPTIONAL PULONG Speed) = 0;
 

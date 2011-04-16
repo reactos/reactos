@@ -51,7 +51,7 @@ public:
     NTSTATUS PnpStart(PCM_RESOURCE_LIST RawResources, PCM_RESOURCE_LIST TranslatedResources);
     NTSTATUS PnpStop(void);
     NTSTATUS HandlePower(PIRP Irp);
-    NTSTATUS GetDeviceDetails(PULONG VendorId, PULONG DeviceId, PULONG NumberOfPorts, PULONG Speed);
+    NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
     NTSTATUS GetDmaMemoryManager(OUT struct IDMAMemoryManager **OutMemoryManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
     NTSTATUS StartController();
@@ -85,6 +85,8 @@ protected:
     ULONG m_MapRegisters;
     PQUEUE_HEAD m_AsyncListQueueHead;
     EHCI_CAPS m_Capabilities;
+    USHORT m_VendorID;
+    USHORT m_DeviceID;
 
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -118,6 +120,10 @@ CUSBHardwareDevice::Initialize(
     PDEVICE_OBJECT PhysicalDeviceObject,
     PDEVICE_OBJECT LowerDeviceObject)
 {
+    BUS_INTERFACE_STANDARD BusInterface;
+    PCI_COMMON_CONFIG PciConfig;
+    NTSTATUS Status;
+    ULONG BytesRead;
 
     DPRINT1("CUSBHardwareDevice::Initialize\n");
 
@@ -133,6 +139,36 @@ CUSBHardwareDevice::Initialize(
     // initialize device lock
     //
     KeInitializeSpinLock(&m_Lock);
+
+    m_VendorID = 0;
+    m_DeviceID = 0;
+
+    Status = GetBusInterface(PhysicalDeviceObject, &BusInterface);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get BusInteface!\n");
+        return Status;
+    }
+
+    BytesRead = (*BusInterface.GetBusData)(BusInterface.Context,
+                                           PCI_WHICHSPACE_CONFIG,
+                                           &PciConfig,
+                                           0,
+                                           PCI_COMMON_HDR_LENGTH);
+
+    if (BytesRead != PCI_COMMON_HDR_LENGTH)
+    {
+        DPRINT1("Failed to get pci config information!\n");
+        return STATUS_SUCCESS;
+    }
+
+    if (!(PciConfig.Command & PCI_ENABLE_BUS_MASTER))
+    {
+        DPRINT1("PCI Configuration shows this as a non Bus Mastering device!\n");
+    }
+
+    m_VendorID = PciConfig.VendorID;
+    m_DeviceID = PciConfig.DeviceID;
 
     return STATUS_SUCCESS;
 }
@@ -314,15 +350,18 @@ CUSBHardwareDevice::HandlePower(
 
 NTSTATUS
 CUSBHardwareDevice::GetDeviceDetails(
-    OUT OPTIONAL PULONG VendorId,
-    OUT OPTIONAL PULONG DeviceId,
+    OUT OPTIONAL PUSHORT VendorId,
+    OUT OPTIONAL PUSHORT DeviceId,
     OUT OPTIONAL PULONG NumberOfPorts,
     OUT OPTIONAL PULONG Speed)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    *VendorId = m_VendorID;
+    *DeviceId = m_DeviceID;
+    *NumberOfPorts = m_Capabilities.HCSParams.PortCount;
+    //FIXME: What to returned here?
+    *Speed = 0;
+    return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 CUSBHardwareDevice::GetDmaMemoryManager(
@@ -331,7 +370,6 @@ CUSBHardwareDevice::GetDmaMemoryManager(
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 NTSTATUS
 CUSBHardwareDevice::GetUSBQueue(
@@ -392,7 +430,7 @@ CUSBHardwareDevice::StartController(void)
     //
     // FIXME: Assign the AsyncList Register
     //
-    
+
     //
     // Set Schedules to Enable and Interrupt Threshold to 1ms.
     //
@@ -403,7 +441,7 @@ CUSBHardwareDevice::StartController(void)
     UsbCmd.IntThreshold = 1;
     // FIXME: Set framelistsize when periodic is implemented.
     SetCommandRegister(&UsbCmd);
-    
+
     //
     // Enable Interrupts and start execution
     //
@@ -412,7 +450,7 @@ CUSBHardwareDevice::StartController(void)
 
     UsbCmd.Run = TRUE;
     SetCommandRegister(&UsbCmd);
-    
+
     //
     // Wait for execution to start
     //
@@ -420,7 +458,7 @@ CUSBHardwareDevice::StartController(void)
     {
         KeStallExecutionProcessor(10);
         UsbSts = EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
-        
+
         if (!(UsbSts & EHCI_STS_HALT))
         {
             break;
@@ -450,7 +488,7 @@ CUSBHardwareDevice::StopController(void)
     //
     // Disable Interrupts and stop execution
     EHCI_WRITE_REGISTER_ULONG (EHCI_USBINTR, 0);
-    
+
     GetCommandRegister(&UsbCmd);
     UsbCmd.Run = FALSE;
     SetCommandRegister(&UsbCmd);
@@ -470,7 +508,7 @@ CUSBHardwareDevice::StopController(void)
         DPRINT1("EHCI ERROR: Controller is not responding to Stop request!\n");
         return STATUS_UNSUCCESSFUL;
     }
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -485,8 +523,44 @@ NTSTATUS
 CUSBHardwareDevice::ResetPort(
     IN ULONG PortIndex)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG PortStatus;
+
+    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+    if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
+    {
+        DPRINT1("Non HighSpeed device. Releasing Ownership\n");
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), EHCI_PRT_RELEASEOWNERSHIP);
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // Reset and clean enable
+    //
+    PortStatus |= EHCI_PRT_RESET;
+    PortStatus &= ~EHCI_PRT_ENABLED;
+    EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
+
+    KeStallExecutionProcessor(100);
+
+    //
+    // Clear reset
+    //
+    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+    PortStatus &= ~EHCI_PRT_RESET;
+    EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex), PortStatus);
+
+    KeStallExecutionProcessor(100);
+
+    //
+    // Check that the port reset
+    //
+    PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
+    if (PortStatus & EHCI_PRT_RESET)
+    {
+        DPRINT1("Port did not reset\n");
+        return STATUS_RETRY;
+    }
+    return STATUS_SUCCESS;
 }
 
 KIRQL
@@ -524,26 +598,26 @@ InterruptServiceRoutine(
 
     This = (CUSBHardwareDevice*) ServiceContext;
     CStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_USBSTS);
-    
+
     CStatus &= (EHCI_ERROR_INT | EHCI_STS_INT | EHCI_STS_IAA | EHCI_STS_PCD | EHCI_STS_FLR);
     //
     // Check that it belongs to EHCI
     //
     if (!CStatus)
         return FALSE;
-    
+
     //
     // Clear the Status
     //
     This->EHCI_WRITE_REGISTER_ULONG(EHCI_USBSTS, CStatus);
-    
+
     if (CStatus & EHCI_STS_FATAL)
     {
         This->StopController();
         DPRINT1("EHCI: Host System Error!\n");
         return TRUE;
     }
-    
+
     if (CStatus & EHCI_ERROR_INT)
     {
         DPRINT1("EHCI Status = 0x%x\n", CStatus);
@@ -572,13 +646,13 @@ EhciDefferedRoutine(
 
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
-    
+
     if (CStatus & EHCI_STS_PCD)
     {
         for (i = 0; i < This->m_Capabilities.HCSParams.PortCount; i++)
         {
             PortStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * i));
-            
+
             //
             // Device connected or removed
             //
@@ -592,7 +666,7 @@ EhciDefferedRoutine(
                 if (PortStatus & EHCI_PRT_CONNECTED)
                 {
                     DPRINT1("Device connected on port %d\n", i);
-                    
+
                     //
                     //FIXME: Determine device speed
                     //
@@ -602,14 +676,14 @@ EhciDefferedRoutine(
                         {
                             DPRINT1("Misbeaving controller. Port should be disabled at this point\n");
                         }
-                        
+
                         if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
                         {
                             DPRINT1("Non HighSeped device connected. Release ownership\n");
                             This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), EHCI_PRT_RELEASEOWNERSHIP);
                             continue;
                         }
-                        
+
                         //
                         // FIXME: Is a port reset needed, or does hub driver request this?
                         //
@@ -619,7 +693,7 @@ EhciDefferedRoutine(
                 {
                     DPRINT1("Device disconnected on port %d\n", i);
                 }
-                
+
                 //
                 // FIXME: This needs to be saved somewhere
                 //
