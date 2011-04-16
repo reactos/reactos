@@ -10,6 +10,13 @@
 
 #define INITGUID
 #include "usbehci.h"
+#include "hardware.h"
+
+BOOLEAN
+NTAPI
+InterruptServiceRoutine(
+    IN PKINTERRUPT  Interrupt,
+    IN PVOID  ServiceContext);
 
 class CUSBHardwareDevice : public IUSBHardwareDevice
 {
@@ -40,6 +47,8 @@ public:
     NTSTATUS GetDeviceDetails(PULONG VendorId, PULONG DeviceId, PULONG NumberOfPorts, PULONG Speed);
     NTSTATUS GetDmaMemoryManager(OUT struct IDMAMemoryManager **OutMemoryManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
+    NTSTATUS StartController();
+    NTSTATUS StopController();
     NTSTATUS ResetController();
     NTSTATUS ResetPort(ULONG PortIndex);
     KIRQL AcquireDeviceLock(void);
@@ -65,6 +74,21 @@ protected:
     PULONG m_Base;
     PDMA_ADAPTER m_Adapter;
     ULONG m_MapRegisters;
+    PQUEUE_HEAD AsyncListQueueHead;
+    EHCI_CAPS m_Capabilities;
+
+    VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+    VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+    VOID SetStatusRegister(PEHCI_USBSTS_CONTENT UsbSts);
+    VOID GetStatusRegister(PEHCI_USBSTS_CONTENT UsbSts);
+    //VOID SetPortRegister(PEHCI_USBPORTSC_CONTENT UsbPort);
+    //VOID GetPortRegister(PEHCI_USBPORTSC_CONTENT UsbPort);
+    ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
+    ULONG EHCI_READ_REGISTER_USHORT(ULONG Offset);
+    ULONG EHCI_READ_REGISTER_UCHAR(ULONG Offset);
+    VOID EHCI_WRITE_REGISTER_ULONG(ULONG Offset, ULONG Value);
+    VOID EHCI_WRITE_REGISTER_USHORT(ULONG Offset, ULONG Value);
+    VOID EHCI_WRITE_REGISTER_UCHAR(ULONG Offset, ULONG Value);
 };
 
 //=================================================================================================
@@ -112,13 +136,81 @@ CUSBHardwareDevice::Initialize(
     return STATUS_SUCCESS;
 }
 
+VOID
+CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
+{
+    PULONG Register;
+    Register = (PULONG)UsbCmd;
+    WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBCMD), *Register);
+}
+
+VOID
+CUSBHardwareDevice::GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
+{
+    PULONG Register;
+    Register = (PULONG)UsbCmd;
+    *Register = READ_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBCMD));
+}
+
+
+VOID
+CUSBHardwareDevice::SetStatusRegister(PEHCI_USBSTS_CONTENT UsbSts)
+{
+    PULONG Register;
+    Register = (PULONG)UsbSts;
+    WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBSTS), *Register);
+}
+
+VOID
+CUSBHardwareDevice::GetStatusRegister(PEHCI_USBSTS_CONTENT UsbSts)
+{
+    PULONG CmdRegister;
+    CmdRegister = (PULONG)UsbSts;
+    *CmdRegister = READ_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBSTS));
+}
+
+ULONG
+CUSBHardwareDevice::EHCI_READ_REGISTER_ULONG(ULONG Offset)
+{
+    return READ_REGISTER_ULONG((PULONG)((ULONG)m_Base + Offset));
+}
+
+ULONG
+CUSBHardwareDevice::EHCI_READ_REGISTER_USHORT(ULONG Offset)
+{
+    return READ_REGISTER_USHORT((PUSHORT)((ULONG)m_Base + Offset));
+}
+
+ULONG
+CUSBHardwareDevice::EHCI_READ_REGISTER_UCHAR(ULONG Offset)
+{
+    return READ_REGISTER_UCHAR((PUCHAR)((ULONG)m_Base + Offset));
+}
+
+VOID
+CUSBHardwareDevice::EHCI_WRITE_REGISTER_ULONG(ULONG Offset, ULONG Value)
+{
+    WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + Offset), Value);
+}
+
+VOID
+CUSBHardwareDevice::EHCI_WRITE_REGISTER_USHORT(ULONG Offset, ULONG Value)
+{
+    WRITE_REGISTER_USHORT((PUSHORT)((ULONG)m_Base + Offset), Value);
+}
+
+VOID
+CUSBHardwareDevice::EHCI_WRITE_REGISTER_UCHAR(ULONG Offset, ULONG Value)
+{
+    WRITE_REGISTER_UCHAR((PUCHAR)((ULONG)m_Base + Offset), Value);
+}
 
 NTSTATUS
 CUSBHardwareDevice::PnpStart(
     PCM_RESOURCE_LIST RawResources,
     PCM_RESOURCE_LIST TranslatedResources)
 {
-    ULONG Index;
+    ULONG Index, Count;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
     DEVICE_DESCRIPTION DeviceDescription;
     PVOID ResourceBase;
@@ -174,8 +266,26 @@ CUSBHardwareDevice::PnpStart(
                 }
 
                 //
-                //FIXME: query capabilities and update m_Base
+                // Get controllers capabilities 
                 //
+                m_Capabilities.Length = READ_REGISTER_UCHAR((PUCHAR)ResourceBase);
+                m_Capabilities.HCIVersion = READ_REGISTER_USHORT((PUSHORT)((ULONG)ResourceBase + 2));
+                m_Capabilities.HCSParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 4));
+                m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 8));
+
+                DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
+                if (m_Capabilities.HCSParams.PortRouteRules)
+                {
+                    for (Count = 0; Count < m_Capabilities.HCSParams.PortCount; Count++)
+                    {
+                        m_Capabilities.PortRoute[Count] = READ_REGISTER_UCHAR((PUCHAR)(ULONG)ResourceBase + 12 + Count);
+                    }
+                }
+
+                //
+                // Set m_Base to the address of Operational Register Space
+                //
+                m_Base = (PULONG)((ULONG)ResourceBase + m_Capabilities.Length);
                 break;
             }
         }
@@ -211,7 +321,16 @@ CUSBHardwareDevice::PnpStart(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    return STATUS_SUCCESS;
+    //
+    // FIXME: Create a QueueHead that will always be the address of the AsyncList
+    //
+    AsyncListQueueHead = NULL;
+
+    //
+    // Start the controller
+    //
+    DPRINT1("Starting Controller\n");
+    return StartController();
 }
 
 NTSTATUS
@@ -258,6 +377,140 @@ CUSBHardwareDevice::GetUSBQueue(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+CUSBHardwareDevice::StartController(void)
+{
+    EHCI_USBCMD_CONTENT UsbCmd;
+    EHCI_USBSTS_CONTENT UsbSts;
+    LONG FailSafe;
+
+    //
+    // Stop the controller if its running
+    //
+    GetStatusRegister(&UsbSts);
+    if (UsbSts.HCHalted)
+        StopController();
+
+    //
+    // Reset the device. Bit is set to 0 on completion.
+    //
+    SetCommandRegister(&UsbCmd);
+    UsbCmd.HCReset = TRUE;
+    SetCommandRegister(&UsbCmd);
+
+    //
+    // Check that the controller reset
+    //
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(10);
+        GetCommandRegister(&UsbCmd);
+        if (!UsbCmd.HCReset)
+        {
+            break;
+        }
+    }
+
+    //
+    // If the controller did not reset then fail
+    //
+    if (UsbCmd.HCReset)
+    {
+        DPRINT1("EHCI ERROR: Controller failed to reset. Hardware problem!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // Disable Interrupts and clear status
+    //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, 0);
+    EHCI_WRITE_REGISTER_ULONG(EHCI_USBSTS, 0x0000001f);
+
+    //
+    // FIXME: Assign the AsyncList Register
+    //
+    
+    //
+    // Set Schedules to Enable and Interrupt Threshold to 1ms.
+    //
+    GetCommandRegister(&UsbCmd);
+    UsbCmd.PeriodicEnable = FALSE;
+    UsbCmd.AsyncEnable = FALSE;  //FIXME: Need USB Memory Manager
+
+    UsbCmd.IntThreshold = 1;
+    // FIXME: Set framlistsize when periodic is implemented.
+    SetCommandRegister(&UsbCmd);
+    
+    //
+    // Enable Interrupts and start execution
+    //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_USBINTR, EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
+        /*| EHCI_USBINTR_FLROVR*/  | EHCI_USBINTR_PC);
+
+    UsbCmd.Run = TRUE;
+    SetCommandRegister(&UsbCmd);
+    
+    //
+    // Wait for execution to start
+    //
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(10);
+        GetStatusRegister(&UsbSts);
+        
+        if (!UsbSts.HCHalted)
+        {
+            break;
+        }
+    }
+
+    if (!UsbSts.HCHalted)
+    {
+        DPRINT1("Could not start execution on the controller\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // Set port routing to EHCI controller
+    //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_CONFIGFLAG, 1);
+    DPRINT1("EHCI Started!\n");
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBHardwareDevice::StopController(void)
+{
+    EHCI_USBCMD_CONTENT UsbCmd;
+    EHCI_USBSTS_CONTENT UsbSts;
+    LONG FailSafe;
+
+    //
+    // Disable Interrupts and stop execution
+    EHCI_WRITE_REGISTER_ULONG (EHCI_USBINTR, 0);
+    
+    GetCommandRegister(&UsbCmd);
+    UsbCmd.Run = FALSE;
+    SetCommandRegister(&UsbCmd);
+
+    for (FailSafe = 100; FailSafe > 1; FailSafe--)
+    {
+        KeStallExecutionProcessor(10);
+        GetStatusRegister(&UsbSts);
+        if (UsbSts.HCHalted)
+        {
+            break;
+        }
+    }
+
+    if (!UsbSts.HCHalted)
+    {
+        DPRINT1("EHCI ERROR: Controller is not responding to Stop request!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+    
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 CUSBHardwareDevice::ResetController(void)
@@ -314,7 +567,8 @@ CreateUSBHardware(
 {
     PUSBHARDWAREDEVICE This;
 
-    This = new(NonPagedPool, 0) CUSBHardwareDevice(0);
+    This = new(NonPagedPool, TAG_USBEHCI) CUSBHardwareDevice(0);
+
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
