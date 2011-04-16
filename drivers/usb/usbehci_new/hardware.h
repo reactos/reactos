@@ -43,6 +43,22 @@
 #define EHCI_ERROR_INT                  (EHCI_STS_FATAL | EHCI_STS_ERR)
 
 //
+// Port Register Flags
+//
+#define EHCI_PRT_CONNECTED              0x01
+#define EHCI_PRT_CONNECTSTATUSCHAGE     0x02
+#define EHCI_PRT_ENABLED                0x04
+#define EHCI_PRT_ENABLEDSTATUSCHANGE    0x08
+#define EHCI_PRT_OVERCURRENTACTIVE      0x10
+#define EHCI_PRT_OVERCURRENTCHANGE      0x20
+#define EHCI_PRT_FORCERESUME            0x40
+#define EHCI_PRT_SUSPEND                0x80
+#define EHCI_PRT_RESET                  0x100
+#define EHCI_PRT_SLOWSPEEDLINE          0x400
+#define EHCI_PRT_POWER                  0x1000
+#define EHCI_PRT_RELEASEOWNERSHIP       0x2000
+
+//
 // Terminate Pointer used for QueueHeads and Element Transfer Descriptors to mark Pointers as the end
 //
 #define TERMINATE_POINTER       0x01
@@ -201,41 +217,6 @@ typedef struct _EHCI_USBCMD_CONTENT
     ULONG IntThreshold : 8;
     ULONG Reserved2 : 8;
 } EHCI_USBCMD_CONTENT, *PEHCI_USBCMD_CONTENT;
-
-//
-// Status register content
-//
-typedef struct _EHCI_USBSTS_CONTENT
-{
-    ULONG USBInterrupt:1;
-    ULONG ErrorInterrupt:1;
-    ULONG DetectChangeInterrupt:1;
-    ULONG FrameListRolloverInterrupt:1;
-    ULONG HostSystemErrorInterrupt:1;
-    ULONG AsyncAdvanceInterrupt:1;
-    ULONG Reserved:6;
-    ULONG HCHalted:1;
-    ULONG Reclamation:1;
-    ULONG PeriodicScheduleStatus:1;
-    ULONG AsynchronousScheduleStatus:1;
-} EHCI_USBSTS_CONTENT, *PEHCI_USBSTS_CONTENT;
-
-typedef struct _EHCI_USBPORTSC_CONTENT
-{
-    ULONG CurrentConnectStatus:1;
-    ULONG ConnectStatusChange:1;
-    ULONG PortEnabled:1;
-    ULONG PortEnableChanged:1;
-    ULONG OverCurrentActive:1;
-    ULONG OverCurrentChange:1;
-    ULONG ForcePortResume:1;
-    ULONG Suspend:1;
-    ULONG PortReset:1;
-    ULONG Reserved:1;
-    ULONG LineStatus:2;
-    ULONG PortPower:1;
-    ULONG PortOwner:1;
-} EHCI_USBPORTSC_CONTENT, *PEHCI_USBPORTSC_CONTENT;
 
 typedef struct _EHCI_HCS_CONTENT
 {
