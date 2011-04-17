@@ -97,14 +97,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Podgl¹d zdarzeñ"
-	IDC_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta³ odnaleziony w Ÿródle: ( %s ). Ten komputer mo¿e nie miec wystarczaj¹cych informacji w rejestrze albo bibliotek DLL, aby wyœwietliæ wiadomoœci z komputera zdalnego."
-	IDC_EVENTLOG_ERROR_TYPE        "B³¹d"
-	IDC_EVENTLOG_WARNING_TYPE      "Ostrze¿enie"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Informacja"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Udany Audyt"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Nieudany Audyt"
-	IDC_EVENTLOG_SUCCESS           "Sukces"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Zdarzenie nieznane"
+	IDS_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta³ odnaleziony w Ÿródle: ( %s ). Ten komputer mo¿e nie miec wystarczaj¹cych informacji w rejestrze albo bibliotek DLL, aby wyœwietliæ wiadomoœci z komputera zdalnego."
+	IDS_EVENTLOG_ERROR_TYPE        "B³¹d"
+	IDS_EVENTLOG_WARNING_TYPE      "Ostrze¿enie"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Informacja"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Udany Audyt"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Nieudany Audyt"
+	IDS_EVENTLOG_SUCCESS           "Sukces"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Zdarzenie nieznane"
 END
 
 STRINGTABLE

@@ -93,14 +93,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Hendelseliste"
-	IDC_EVENTSTRINGIDNOTFOUND      "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nødvendige register informasjon eller melding DLL filer for å vise melding fra en fjern datamaskin."
-	IDC_EVENTLOG_ERROR_TYPE        "Feil"
-	IDC_EVENTLOG_WARNING_TYPE      "Advarseler"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Informasjon"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Revisjon suksess"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Revisjon misslykkes"
-	IDC_EVENTLOG_SUCCESS           "Suksess"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Ukjent hendelse"
+	IDS_EVENTSTRINGIDNOTFOUND      "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nødvendige register informasjon eller melding DLL filer for å vise melding fra en fjern datamaskin."
+	IDS_EVENTLOG_ERROR_TYPE        "Feil"
+	IDS_EVENTLOG_WARNING_TYPE      "Advarseler"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Informasjon"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Revisjon suksess"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Revisjon misslykkes"
+	IDS_EVENTLOG_SUCCESS           "Suksess"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Ukjent hendelse"
 END
 
 STRINGTABLE

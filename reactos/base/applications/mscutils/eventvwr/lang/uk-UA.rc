@@ -93,14 +93,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Оглядач подій"
-	IDC_EVENTSTRINGIDNOTFOUND      "Опис для Ідентифікатора події( %lu ) за джерелом( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера."
-	IDC_EVENTLOG_ERROR_TYPE        "Помилка"
-	IDC_EVENTLOG_WARNING_TYPE      "Попередження"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Повідомлення"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Аудит успіхів"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Аудит відмов"
-	IDC_EVENTLOG_SUCCESS           "Успіх"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Невідома подія"
+	IDS_EVENTSTRINGIDNOTFOUND      "Опис для Ідентифікатора події( %lu ) за джерелом( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера."
+	IDS_EVENTLOG_ERROR_TYPE        "Помилка"
+	IDS_EVENTLOG_WARNING_TYPE      "Попередження"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Повідомлення"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Аудит успіхів"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Аудит відмов"
+	IDS_EVENTLOG_SUCCESS           "Успіх"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Невідома подія"
 END
 
 STRINGTABLE

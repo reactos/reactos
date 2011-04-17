@@ -93,14 +93,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Vizualizator evenimente"
-	IDC_EVENTSTRINGIDNOTFOUND      "Descrierea pentru ID-ul de eveniment ( %lu ) în sursa ( %s ) nu poate fi gãsitã. Computerul local este posibil sã nu aibã informaþiile sau fiºierele DLL pentru a afiºa mesajele de pe un computer la distanþã."
-	IDC_EVENTLOG_ERROR_TYPE        "Eroare"
-	IDC_EVENTLOG_WARNING_TYPE      "Avertisment"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Informaþie"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Succes audit"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Eºec audit"
-	IDC_EVENTLOG_SUCCESS           "Succes"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Eveniment necunoscut"
+	IDS_EVENTSTRINGIDNOTFOUND      "Descrierea pentru ID-ul de eveniment ( %lu ) în sursa ( %s ) nu poate fi gãsitã. Computerul local este posibil sã nu aibã informaþiile sau fiºierele DLL pentru a afiºa mesajele de pe un computer la distanþã."
+	IDS_EVENTLOG_ERROR_TYPE        "Eroare"
+	IDS_EVENTLOG_WARNING_TYPE      "Avertisment"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Informaþie"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Succes audit"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Eºec audit"
+	IDS_EVENTLOG_SUCCESS           "Succes"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Eveniment necunoscut"
 END
 
 STRINGTABLE

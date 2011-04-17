@@ -89,14 +89,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "이벤트 뷰어"
-	IDC_EVENTSTRINGIDNOTFOUND      "( %s ) 의 이벤트ID ( %lu ) 에 대한 설명을 찾을 수 없습니다. 로컬 컴퓨터가 원격 컴퓨터의 메세지를 표시하는데 필요한 레지스트리나 DLL 파일을 가지지 않고 있을수 있습니다."
-	IDC_EVENTLOG_ERROR_TYPE        "에러"
-	IDC_EVENTLOG_WARNING_TYPE      "경고"
-	IDC_EVENTLOG_INFORMATION_TYPE  "정보"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "감사 성공"
-	IDC_EVENTLOG_AUDIT_FAILURE     "감사 실패"
-	IDC_EVENTLOG_SUCCESS           "성공"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "알려지지 않은 이벤트"
+	IDS_EVENTSTRINGIDNOTFOUND      "( %s ) 의 이벤트ID ( %lu ) 에 대한 설명을 찾을 수 없습니다. 로컬 컴퓨터가 원격 컴퓨터의 메세지를 표시하는데 필요한 레지스트리나 DLL 파일을 가지지 않고 있을수 있습니다."
+	IDS_EVENTLOG_ERROR_TYPE        "에러"
+	IDS_EVENTLOG_WARNING_TYPE      "경고"
+	IDS_EVENTLOG_INFORMATION_TYPE  "정보"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "감사 성공"
+	IDS_EVENTLOG_AUDIT_FAILURE     "감사 실패"
+	IDS_EVENTLOG_SUCCESS           "성공"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "알려지지 않은 이벤트"
 END
 
 STRINGTABLE

@@ -93,14 +93,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "イベント ビューア"
-	IDC_EVENTSTRINGIDNOTFOUND      "イベント ID (%lu) (ソ\ース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表\示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能\性があります。"
-	IDC_EVENTLOG_ERROR_TYPE        "エラー"
-	IDC_EVENTLOG_WARNING_TYPE      "警告"
-	IDC_EVENTLOG_INFORMATION_TYPE  "情報"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "成功の監査"
-	IDC_EVENTLOG_AUDIT_FAILURE     "失敗の監査"
-	IDC_EVENTLOG_SUCCESS           "成功"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "不明なイベント"
+	IDS_EVENTSTRINGIDNOTFOUND      "イベント ID (%lu) (ソ\ース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表\示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能\性があります。"
+	IDS_EVENTLOG_ERROR_TYPE        "エラー"
+	IDS_EVENTLOG_WARNING_TYPE      "警告"
+	IDS_EVENTLOG_INFORMATION_TYPE  "情報"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "成功の監査"
+	IDS_EVENTLOG_AUDIT_FAILURE     "失敗の監査"
+	IDS_EVENTLOG_SUCCESS           "成功"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "不明なイベント"
 END
 
 STRINGTABLE
