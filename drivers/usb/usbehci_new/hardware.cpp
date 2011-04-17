@@ -52,12 +52,17 @@ public:
     NTSTATUS PnpStop(void);
     NTSTATUS HandlePower(PIRP Irp);
     NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    NTSTATUS GetDmaMemoryManager(OUT struct IDMAMemoryManager **OutMemoryManager);
+    NTSTATUS GetDmaAdapter(OUT PDMA_ADAPTER AdapterObject);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
+
     NTSTATUS StartController();
     NTSTATUS StopController();
     NTSTATUS ResetController();
     NTSTATUS ResetPort(ULONG PortIndex);
+
+    VOID SetAsyncListAddressRegister(ULONG PhysicalAddress);
+    VOID SetPeriodicListRegister(ULONG PhysicalAddress);
+
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
     // local
@@ -83,10 +88,10 @@ protected:
     PULONG m_Base;
     PDMA_ADAPTER m_Adapter;
     ULONG m_MapRegisters;
-    PQUEUE_HEAD m_AsyncListQueueHead;
     EHCI_CAPS m_Capabilities;
     USHORT m_VendorID;
     USHORT m_DeviceID;
+    PUSBQUEUE m_UsbQueue;
 
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -127,6 +132,12 @@ CUSBHardwareDevice::Initialize(
 
     DPRINT1("CUSBHardwareDevice::Initialize\n");
 
+    Status = CreateUSBQueue(&m_UsbQueue);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create UsbQueue!\n");
+        return Status;
+    }
     //
     // store device objects
     // 
@@ -322,11 +333,6 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
-    // FIXME: Create a QueueHead that will always be the address of the AsyncList
-    //
-    m_AsyncListQueueHead = NULL;
-
-    //
     // Start the controller
     //
     DPRINT1("Starting Controller\n");
@@ -355,20 +361,16 @@ CUSBHardwareDevice::GetDeviceDetails(
     OUT OPTIONAL PULONG NumberOfPorts,
     OUT OPTIONAL PULONG Speed)
 {
-    *VendorId = m_VendorID;
-    *DeviceId = m_DeviceID;
-    *NumberOfPorts = m_Capabilities.HCSParams.PortCount;
+    if (VendorId)
+        *VendorId = m_VendorID;
+    if (DeviceId)
+        *DeviceId = m_DeviceID;
+    if (NumberOfPorts)
+        *NumberOfPorts = m_Capabilities.HCSParams.PortCount;
     //FIXME: What to returned here?
-    *Speed = 0;
+    if (Speed)
+        *Speed = 0;
     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CUSBHardwareDevice::GetDmaMemoryManager(
-    OUT struct IDMAMemoryManager **OutMemoryManager)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -563,6 +565,30 @@ CUSBHardwareDevice::ResetPort(
     return STATUS_SUCCESS;
 }
 
+//-----------------------------------------------------------------------------------------
+//
+// SetAsyncListAddressRegister
+//
+// Description: this functions sets the register to a address that is the physical address of a QueueHead.
+// This is the location at which the controller will start executing the Asynchronous Schedule.
+//
+VOID CUSBHardwareDevice::SetAsyncListAddressRegister(ULONG PhysicalAddress)
+{
+    EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, PhysicalAddress);
+}
+
+//-----------------------------------------------------------------------------------------
+//
+// SetPeriodicListRegister
+//
+// Description: this functions sets the register to a address that is the physical address of a ???.
+// This is the location at which the controller will start executing the Periodic Schedule.
+//
+VOID CUSBHardwareDevice::SetPeriodicListRegister(ULONG PhysicalAddress)
+{
+    EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);
+}
+
 KIRQL
 CUSBHardwareDevice::AcquireDeviceLock(void)
 {
@@ -642,14 +668,15 @@ EhciDefferedRoutine(
     IN PVOID SystemArgument2)
 {
     CUSBHardwareDevice *This;
-    ULONG CStatus, PortStatus, i;
+    ULONG CStatus, PortStatus, PortCount, i;
 
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
+    This->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
     if (CStatus & EHCI_STS_PCD)
     {
-        for (i = 0; i < This->m_Capabilities.HCSParams.PortCount; i++)
+        for (i = 0; i < PortCount; i++)
         {
             PortStatus = This->EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * i));
 

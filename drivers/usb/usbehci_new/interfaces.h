@@ -164,16 +164,6 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
-// GetDmaMemoryManager
-//
-// Description: returns interface to DMAMemoryManager
-// Interface is reference counted, you need to call Release method when you are done with it
-// Do not call Initialize on IDMAMemoryManager, the object is already initialized
-
-    virtual NTSTATUS GetDmaMemoryManager(OUT struct IDMAMemoryManager **OutMemoryManager) = 0;
-
-//-----------------------------------------------------------------------------------------
-//
 // GetUSBQueue
 //
 // Description: returns interface to internal IUSBQueue
@@ -190,6 +180,26 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 // Returns STATUS_SUCCESS when the controller was successfully reset
 
    virtual NTSTATUS ResetController() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// StartController
+//
+// Description: this functions starts controller allowing interrupts for device connects/removal, and execution of
+// Periodic and Asynchronous Schedules. 
+//
+
+    virtual NTSTATUS StartController() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// StopController
+//
+// Description: this functions stops controller disabling interrupts for device connects/removal, and execution of
+// Periodic and Asynchronous Schedules. 
+//
+
+    virtual NTSTATUS StopController() = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -364,8 +374,8 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: initializes the object
 
     virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware,
-                                IN OPTIONAL PKSPIN_LOCK Lock,
-                                IN PDMAMEMORYMANAGER MemoryManager) = 0;
+                                PADAPTER_OBJECT AdapterObject,
+                                IN OPTIONAL PKSPIN_LOCK Lock) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -383,7 +393,7 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Returns status success when successful
 
     virtual NTSTATUS AddUSBRequest(IUSBRequest * Request) = 0;
-
+    virtual NTSTATUS AddUSBRequest(PURB Urb) = 0;
 //-----------------------------------------------------------------------------------------
 //
 // CancelRequests()

@@ -72,4 +72,9 @@ NTSTATUS CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
 //
 NTSTATUS CreateUSBDevice(PUSBDEVICE *OutDevice);
 
+//
+// usb_queue.cpp
+//
+NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
+
 #endif
