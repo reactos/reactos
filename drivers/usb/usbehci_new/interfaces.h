@@ -444,6 +444,15 @@ DECLARE_INTERFACE_(IHubController, IUnknown)
 
     virtual NTSTATUS GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject) = 0;
 
+//----------------------------------------------------------------------------------------
+//
+// GetHubControllerSymbolicLink
+//
+// Description: Returns the symbolic link of the root hub
+
+    virtual NTSTATUS GetHubControllerSymbolicLink(ULONG BufferLength, PVOID Buffer, PULONG RequiredLength) = 0;
+
+
 };
 
 typedef IHubController *PHUBCONTROLLER;

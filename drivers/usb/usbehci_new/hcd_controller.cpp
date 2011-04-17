@@ -230,87 +230,123 @@ CHCDController::HandleDeviceControl(
     //
     DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    //
+    // sanity check
+    //
+    PC_ASSERT(DeviceExtension->IsFDO);
 
-    DPRINT1("HandleDeviceControl>Type: FDO %u IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
-        DeviceExtension->IsFDO,
+    DPRINT1("HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
         IoStack->Parameters.DeviceIoControl.IoControlCode,
         IoStack->Parameters.DeviceIoControl.InputBufferLength,
         IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
     //
-    // get device type
+    // perform ioctl for FDO
     //
-    if (DeviceExtension->IsFDO)
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_HCD_DRIVERKEY_NAME)
     {
         //
-        // perform ioctl for FDO
+        // check if sizee is at least >= USB_HCD_DRIVERKEY_NAME
         //
-        if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_HCD_DRIVERKEY_NAME)
+        if(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(USB_HCD_DRIVERKEY_NAME))
         {
             //
-            // check if sizee is at least >= USB_HCD_DRIVERKEY_NAME
+            // get device property size
             //
-            if(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(USB_HCD_DRIVERKEY_NAME))
+            Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, 0, NULL, &ResultLength);
+
+            //
+            // get input buffer
+            //
+            DriverKey = (PUSB_HCD_DRIVERKEY_NAME)Irp->AssociatedIrp.SystemBuffer;
+
+            //
+            // check result
+            //
+            if (Status == STATUS_BUFFER_TOO_SMALL)
             {
                 //
-                // get device property size
+                // does the caller provide enough buffer space
                 //
-                Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, 0, NULL, &ResultLength);
-
-                DriverKey = (PUSB_HCD_DRIVERKEY_NAME)Irp->AssociatedIrp.SystemBuffer;
-
-                //
-                // check result
-                //
-                if (Status == STATUS_BUFFER_TOO_SMALL)
+                if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >= ResultLength)
                 {
                     //
-                    // does the caller provide enough buffer space
+                    // it does
                     //
-                    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >= ResultLength)
+                    Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG), DriverKey->DriverKeyName, &ResultLength);
+
+                    if (NT_SUCCESS(Status))
                     {
                         //
-                        // it does
+                        // informal debug print
                         //
-                        Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG), DriverKey->DriverKeyName, &ResultLength);
-
-                        if (NT_SUCCESS(Status))
-                        {
-                            //
-                            // informal debug print
-                            //
-                            DPRINT1("Result %S\n", DriverKey->DriverKeyName);
-                        }
+                        DPRINT1("Result %S\n", DriverKey->DriverKeyName);
                     }
-
-                    //
-                    // store result
-                    //
-                    DriverKey->ActualLength = ResultLength + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName) + sizeof(WCHAR);
-                    Irp->IoStatus.Information = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-                    Status = STATUS_SUCCESS;
                 }
-            }
-            else
-            {
+
                 //
-                // buffer is certainly too small
+                // store result
                 //
-                Status = STATUS_BUFFER_OVERFLOW;
-                Irp->IoStatus.Information = sizeof(USB_HCD_DRIVERKEY_NAME);
+                DriverKey->ActualLength = ResultLength + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName) + sizeof(WCHAR);
+                Irp->IoStatus.Information = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+                Status = STATUS_SUCCESS;
             }
         }
-        else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_ROOT_HUB_NAME)
+        else
         {
-            DPRINT1("IOCTL_USB_GET_ROOT_HUB_NAME is not implemented yet\n");
+            //
+            // buffer is certainly too small
+            //
+            Status = STATUS_BUFFER_OVERFLOW;
+            Irp->IoStatus.Information = sizeof(USB_HCD_DRIVERKEY_NAME);
         }
     }
-    else
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_ROOT_HUB_NAME)
     {
         //
-        // the PDO does not support any device IOCTLs
+        // check if sizee is at least >= USB_HCD_DRIVERKEY_NAME
         //
-        Status = STATUS_SUCCESS;
+        if(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(USB_HCD_DRIVERKEY_NAME))
+        {
+            //
+            // sanity check
+            //
+            PC_ASSERT(m_HubController);
+
+            //
+            // get input buffer
+            //
+            DriverKey = (PUSB_HCD_DRIVERKEY_NAME)Irp->AssociatedIrp.SystemBuffer;
+
+            //
+            // get symbolic link
+            //
+            Status = m_HubController->GetHubControllerSymbolicLink(IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG), DriverKey->DriverKeyName, &ResultLength);
+
+
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // informal debug print
+                //
+                DPRINT1("Result %S\n", DriverKey->DriverKeyName);
+            }
+
+            //
+            // store result
+            //
+            DriverKey->ActualLength = ResultLength + FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName) + sizeof(WCHAR);
+            Irp->IoStatus.Information = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            //
+            // buffer is certainly too small
+            //
+            Status = STATUS_BUFFER_OVERFLOW;
+            Irp->IoStatus.Information = sizeof(USB_HCD_DRIVERKEY_NAME);
+        }
     }
 
     //

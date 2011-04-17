@@ -36,6 +36,8 @@ public:
 
     // IHubController interface functions
     virtual NTSTATUS Initialize(IN PDRIVER_OBJECT DriverObject, IN PHCDCONTROLLER Controller, IN PUSBHARDWAREDEVICE Device, IN BOOLEAN IsRootHubDevice, IN ULONG DeviceAddress);
+    virtual NTSTATUS GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject);
+    virtual NTSTATUS GetHubControllerSymbolicLink(ULONG BufferLength, PVOID Buffer, PULONG RequiredLength);
 
     // IDispatchIrp interface functions
     virtual NTSTATUS HandlePnp(IN PDEVICE_OBJECT DeviceObject, IN OUT PIRP Irp);
@@ -46,7 +48,6 @@ public:
     NTSTATUS HandleQueryInterface(PIO_STACK_LOCATION IoStack);
     NTSTATUS SetDeviceInterface(BOOLEAN bEnable);
     NTSTATUS CreatePDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
-    NTSTATUS GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject);
     PUSBHARDWAREDEVICE GetUsbHardware();
     ULONG AcquireDeviceAddress();
     VOID ReleaseDeviceAddress(ULONG DeviceAddress);
@@ -71,8 +72,10 @@ protected:
     PUSBHARDWAREDEVICE m_Hardware;
     BOOLEAN m_IsRootHubDevice;
     ULONG m_DeviceAddress;
+
     BOOLEAN m_InterfaceEnabled;
     UNICODE_STRING m_HubDeviceInterfaceString;
+
     PDEVICE_OBJECT m_HubControllerDeviceObject;
     PDRIVER_OBJECT m_DriverObject;
 
@@ -267,6 +270,51 @@ CHubController::GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject)
 
     return STATUS_SUCCESS;
 }
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::GetHubControllerSymbolicLink(
+    ULONG BufferLength,
+    PVOID Buffer,
+    PULONG RequiredLength)
+{
+    if (!m_InterfaceEnabled)
+    {
+        //
+        // device interface not yet enabled
+        //
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (BufferLength < m_HubDeviceInterfaceString.Length - 8)
+    {
+        //
+        // buffer too small
+        // length is without '\??\'
+        //
+        *RequiredLength = m_HubDeviceInterfaceString.Length- 8;
+
+        //
+        // done
+        //
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    //
+    // copy symbolic link
+    //
+    RtlCopyMemory(Buffer, &m_HubDeviceInterfaceString.Buffer[4], m_HubDeviceInterfaceString.Length - 8);
+
+    //
+    // store length, length is without '\??\'
+    //
+    *RequiredLength = m_HubDeviceInterfaceString.Length - 8;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
 //-----------------------------------------------------------------------------------------
 NTSTATUS
 CHubController::HandlePnp(
