@@ -3,6 +3,8 @@ add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
 
+set_rc_compiler()
+
 add_executable(itss_winetest protocol.c testlist.c rsrc.rc)
 target_link_libraries(itss_winetest wine)
 set_module_type(itss_winetest win32cui)

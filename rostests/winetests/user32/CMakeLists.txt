@@ -3,6 +3,8 @@ add_definitions(
     -D__ROS_LONG64__
     -D_DLL -D__USE_CRTIMP)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     broadcast.c
     class.c

@@ -1,6 +1,8 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     DeferWindowPos.c
     GetIconInfo.c
