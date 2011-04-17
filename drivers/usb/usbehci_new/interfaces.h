@@ -344,6 +344,8 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 
 };
 
+typedef IUSBRequest *PUSBREQUEST;
+
 //=========================================================================================
 //
 // class IUSBQueue
@@ -398,6 +400,8 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest) = 0;
 };
+
+typedef IUSBQueue *PUSBQUEUE;
 
 //=========================================================================================
 //
@@ -495,7 +499,8 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
     virtual NTSTATUS Initialize(IN PHUBCONTROLLER HubController,
                                 IN PUSBHARDWAREDEVICE Device,
                                 IN PVOID Parent,
-                                IN ULONG Port) = 0;
+                                IN ULONG Port,
+                                IN ULONG PortStatus) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -584,7 +589,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // Description: gets current selected configuration index
 
-   virtual UCHAR GetConfigurationValue();
+   virtual UCHAR GetConfigurationValue() = 0;
 
 //-----------------------------------------------------------------------------------------
 //
