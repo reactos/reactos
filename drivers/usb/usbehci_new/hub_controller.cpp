@@ -54,8 +54,12 @@ public:
     NTSTATUS AddUsbDevice(PUSBDEVICE UsbDevice);
     NTSTATUS RemoveUsbDevice(PUSBDEVICE UsbDevice);
     VOID SetNotification(PVOID CallbackContext, PRH_INIT_CALLBACK CallbackRoutine);
+    // internal ioctl routines
     NTSTATUS HandleGetDescriptor(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassDevice(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleGetStatusFromDevice(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
 
     // constructor / destructor
     CHubController(IUnknown *OuterUnknown){}
@@ -273,6 +277,7 @@ CHubController::HandlePnp(
     PCOMMON_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_CAPABILITIES DeviceCapabilities;
     PPNP_BUS_INFORMATION BusInformation;
+    PDEVICE_RELATIONS DeviceRelations;
     NTSTATUS Status;
     ULONG Index = 0, Length;
     USHORT VendorID, DeviceID;
@@ -515,6 +520,47 @@ CHubController::HandlePnp(
             //
             return STATUS_SUCCESS;
         }
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+        {
+            DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %x\n", IoStack->Parameters.QueryDeviceRelations.Type);
+
+            if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
+            {
+                //
+                // allocate device relations
+                //
+                DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), TAG_USBEHCI);
+                if (!DeviceRelations)
+                {
+                    //
+                    // no memory
+                    //
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                //
+                // initialize device relations
+                //
+                DeviceRelations->Count = 1;
+                DeviceRelations->Objects[0] = DeviceObject;
+                ObReferenceObject(DeviceObject);
+
+                //
+                // done
+                //
+                Status = STATUS_SUCCESS;
+                Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+            }
+            else
+            {
+                //
+                // not handled
+                //
+                Status = Irp->IoStatus.Status;
+            }
+            break;
+        }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
             DPRINT1("CHubController::HandlePnp IRP_MN_QUERY_BUS_INFORMATION\n");
@@ -591,6 +637,84 @@ CHubController::HandlePower(
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+CHubController::HandleClassOther(
+    IN OUT PIRP Irp, 
+    PURB Urb)
+{
+    DPRINT1("CHubController::HandleClassOther> Request %x Value %x not implemented\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
+
+    //
+    // FIXME implement me
+    //
+
+    return STATUS_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleSelectConfiguration(
+    IN OUT PIRP Irp, 
+    PURB Urb)
+{
+    //
+    // sanity checks
+    //
+
+    //
+    // FIXME: support devices
+    //
+    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle == NULL); 
+
+    //
+    // FIXME: support setting device to unconfigured state
+    //
+    PC_ASSERT(Urb->UrbSelectConfiguration.ConfigurationDescriptor);
+
+    //
+    // set device handle
+    //
+    Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)ROOTHUB2_CONFIGURATION_DESCRIPTOR;
+
+    //
+    // TODO: copy interface info
+    //
+    return STATUS_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleGetStatusFromDevice(
+    IN OUT PIRP Irp, 
+    PURB Urb)
+{
+    PUSHORT Status;
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
+    PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBufferLength >= sizeof(USHORT));
+    PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBuffer);
+    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle == NULL); 
+
+    //
+    // get status buffer
+    //
+    Status = (PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer;
+
+    //
+    // FIXME need more flags ?
+    //
+    *Status = USB_PORT_STATUS_CONNECT;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
 CHubController::HandleClassDevice(
     IN OUT PIRP Irp,
     IN OUT PURB Urb)
@@ -605,53 +729,63 @@ CHubController::HandleClassDevice(
     //
     switch(Urb->UrbControlVendorClassRequest.Request)
     {
-        case USB_DEVICE_CLASS_HUB:
+        case USB_REQUEST_GET_DESCRIPTOR:
         {
-            //
-            // sanity checks
-            //
-            PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
-            PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR));
+            switch (Urb->UrbControlVendorClassRequest.Value >> 8)
+            {
+                case USB_DEVICE_CLASS_RESERVED: // FALL THROUGH
+                case USB_DEVICE_CLASS_HUB:
+                {
+                    //
+                    // sanity checks
+                    //
+                    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
+                    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR));
 
-            //
-            // get hub descriptor
-            //
-            UsbHubDescriptor = (PUSB_HUB_DESCRIPTOR)Urb->UrbControlVendorClassRequest.TransferBuffer;
+                    //
+                    // get hub descriptor
+                    //
+                    UsbHubDescriptor = (PUSB_HUB_DESCRIPTOR)Urb->UrbControlVendorClassRequest.TransferBuffer;
 
-            //
-            // one hub is handled
-            //
-            UsbHubDescriptor->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
-            Urb->UrbControlVendorClassRequest.TransferBufferLength = sizeof(USB_HUB_DESCRIPTOR);
+                    //
+                    // one hub is handled
+                    //
+                    UsbHubDescriptor->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
+                    Urb->UrbControlVendorClassRequest.TransferBufferLength = sizeof(USB_HUB_DESCRIPTOR);
 
-            //
-            // type should 0x29 according to msdn
-            //
-            UsbHubDescriptor->bDescriptorType = 0x29;
+                    //
+                    // type should 0x29 according to msdn
+                    //
+                    UsbHubDescriptor->bDescriptorType = 0x29;
 
-            //
-            // get port count
-            //
-            Status = m_Hardware->GetDeviceDetails(&Dummy1, &Dummy1, &PortCount, &Dummy2);
-            PC_ASSERT(Status == STATUS_SUCCESS);
+                    //
+                    // get port count
+                    //
+                    Status = m_Hardware->GetDeviceDetails(&Dummy1, &Dummy1, &PortCount, &Dummy2);
+                    PC_ASSERT(Status == STATUS_SUCCESS);
 
-            //
-            // FIXME: retrieve values
-            //
-            UsbHubDescriptor->bNumberOfPorts = PortCount;
-            UsbHubDescriptor->wHubCharacteristics = 0x0012;
-            UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
-            UsbHubDescriptor->bHubControlCurrent = 0x00;
+                    //
+                    // FIXME: retrieve values
+                    //
+                    UsbHubDescriptor->bNumberOfPorts = PortCount;
+                    UsbHubDescriptor->wHubCharacteristics = 0x0012;
+                    UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
+                    UsbHubDescriptor->bHubControlCurrent = 0x00;
 
-            //
-            // done
-            //
-            Status = STATUS_SUCCESS;
+                    //
+                    // done
+                    //
+                    Status = STATUS_SUCCESS;
+                    break;
+               }
+               default:
+                   DPRINT1("CHubController::HandleClassDevice Class %x not implemented\n", Urb->UrbControlVendorClassRequest.Value >> 8);
+                   break;
+            }
             break;
         }
         default:
-            DPRINT1("CHubController::HandleClassDevice Class %x not implemented\n", Urb->UrbControlVendorClassRequest.Request);
-            break;
+            DPRINT1("CHubController::HandleClassDevice Type %x not implemented\n", Urb->UrbControlVendorClassRequest.Request);
     }
 
     return Status;
@@ -807,6 +941,16 @@ CHubController::HandleDeviceControl(
                     break;
                 case URB_FUNCTION_CLASS_DEVICE:
                     Status = HandleClassDevice(Irp, Urb);
+                    break;
+                case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
+                    Status = HandleGetStatusFromDevice(Irp, Urb);
+                    break;
+                case URB_FUNCTION_SELECT_CONFIGURATION:
+                    Status = HandleSelectConfiguration(Irp, Urb);
+                    break;
+                case URB_FUNCTION_CLASS_OTHER:
+                    Status = HandleClassOther(Irp, Urb);
+                    break;
             }
             //
             // request completed
@@ -1865,7 +2009,7 @@ USBHI_Initialize20Hub(
     ULONG TtCount)
 {
     UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1889,6 +2033,11 @@ USBHI_RootHubInitNotification(
     // set notification routine
     //
     Controller->SetNotification(CallbackContext, CallbackRoutine);
+
+    //
+    // FIXME: determine when to perform callback
+    //
+    CallbackRoutine(CallbackContext);
 
     //
     // done
