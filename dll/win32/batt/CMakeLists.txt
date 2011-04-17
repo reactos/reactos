@@ -2,6 +2,7 @@
 spec2def(batt.dll batt.spec)
 
 set_unicode()
+set_rc_compiler()
 
 add_library(batt SHARED
     batt.c

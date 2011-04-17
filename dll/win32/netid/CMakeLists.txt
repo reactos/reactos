@@ -1,5 +1,6 @@
 
 spec2def(netid.dll netid.spec)
+set_rc_compiler()
 
 list(APPEND SOURCE
     netid.c

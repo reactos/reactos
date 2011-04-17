@@ -2,6 +2,8 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 generate_idl_iids(qmgr_local.idl)
 
 spec2def(qmgr.dll qmgr.spec)

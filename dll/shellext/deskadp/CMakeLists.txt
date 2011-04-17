@@ -1,6 +1,6 @@
 
 set_unicode()
-
+set_rc_compiler()
 spec2def(deskadp.dll deskadp.spec)
 
 list(APPEND SOURCE

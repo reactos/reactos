@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 add_executable(magnify
     magnifier.c
     settings.c

@@ -15,6 +15,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(jscript.dll jscript.spec)
 
 list(APPEND SOURCE

@@ -1,4 +1,5 @@
 
+set_rc_compiler()
 add_executable(fontview
     display.c
     fontview.c

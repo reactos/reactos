@@ -1,4 +1,5 @@
 
+set_rc_compiler()
 spec2def(shimgvw.dll shimgvw.spec)
 
 list(APPEND SOURCE

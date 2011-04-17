@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 add_library(buslogic SHARED BusLogic958.c BusLogic958.rc)
 
 target_link_libraries(buslogic libcntpr)

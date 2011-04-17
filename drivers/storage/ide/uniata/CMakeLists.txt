@@ -2,6 +2,7 @@
 include_directories(inc)
 
 set_cpp()
+set_rc_compiler()
 
 add_library(uniata SHARED
     id_ata.cpp

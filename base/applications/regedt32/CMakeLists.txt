@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_executable(regedt32 regedt32.c resource.rc)
 

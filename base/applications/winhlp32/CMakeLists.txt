@@ -1,4 +1,6 @@
 
+set_rc_compiler()
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_definitions(

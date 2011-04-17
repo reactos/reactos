@@ -1,6 +1,8 @@
 
 spec2def(userenv.dll userenv.spec)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     desktop.c
     directory.c

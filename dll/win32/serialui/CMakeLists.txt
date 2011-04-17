@@ -1,6 +1,6 @@
 
 set_unicode()
-
+set_rc_compiler()
 spec2def(serialui.dll serialui.spec)
 
 list(APPEND SOURCE

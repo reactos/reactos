@@ -6,6 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(hhctrl.ocx hhctrl.ocx.spec)
 
 add_library(hhctrl SHARED

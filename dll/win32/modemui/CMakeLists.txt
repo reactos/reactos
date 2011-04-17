@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(modemui.dll modemui.spec)
 

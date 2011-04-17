@@ -6,6 +6,7 @@ add_definitions(
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(riched20.dll riched20.spec)
+set_rc_compiler()
 
 list(APPEND SOURCE
     caret.c

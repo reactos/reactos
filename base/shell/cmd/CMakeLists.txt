@@ -7,6 +7,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 list(APPEND SOURCE main.c cmd.rc)
 
 list(APPEND SOURCE

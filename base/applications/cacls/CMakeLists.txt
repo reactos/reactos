@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 list(APPEND SOURCE cacls.c cacls.rc)
 

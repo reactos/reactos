@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_executable(mplay32 mplay32.c mplay32.rc)
 

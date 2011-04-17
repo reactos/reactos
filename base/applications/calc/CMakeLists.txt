@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
 

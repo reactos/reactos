@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 

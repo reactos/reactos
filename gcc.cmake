@@ -10,7 +10,14 @@ set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-bas
 # -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
+#set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
+
+# Temporary, until windres issues are fixed
+get_target_property(WRC native-wrc IMPORTED_LOCATION_NOCONFIG)
+set(CMAKE_RC_COMPILE_OBJECT
+    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -xc -E <SOURCE> -o <OBJECT>"
+    "${WRC} -i <OBJECT> -o <OBJECT>"
+    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
 
 if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 	set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crs <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -190,7 +197,7 @@ macro(set_module_type MODULE TYPE)
         endif(NOT IS_UNICODE)
         target_link_libraries(${MODULE} mingw_common)
     elseif(${TYPE} MATCHES win32dll)
-        set_entrypoint(${MODULE} DllMain 12)
+		set_entrypoint(${MODULE} DllMain 12)
         target_link_libraries(${MODULE} mingw_dllmain mingw_common)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
@@ -236,7 +243,11 @@ macro(set_rc_compiler)
         set(rc_result_incs "-I${arg} ${rc_result_incs}")
     endforeach()
 
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>")
+    #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>")
+    set(CMAKE_RC_COMPILE_OBJECT
+    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${rc_result_defs} -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -xc -E <SOURCE> -o <OBJECT>"
+    "${WRC} -I${CMAKE_CURRENT_SOURCE_DIR} -i <OBJECT> -o <OBJECT>"
+    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
 endmacro()
 
 #idl files support

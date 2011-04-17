@@ -8,6 +8,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(avifil32.dll avifil32.spec)
 
 add_library(avifil32 SHARED

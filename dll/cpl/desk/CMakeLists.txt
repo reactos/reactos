@@ -5,6 +5,7 @@ add_definitions(
     -D_WIN32
     -D_DLL -D__USE_CRTIMP)
 
+set_rc_compiler()
 spec2def(desk.cpl desk.spec)
 
 add_library(desk SHARED

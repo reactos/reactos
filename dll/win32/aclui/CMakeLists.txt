@@ -1,6 +1,6 @@
 
 spec2def(aclui.dll aclui.spec)
-
+set_rc_compiler()
 set_unicode()
 
 add_definitions(-DSUPPORT_UXTHEME)

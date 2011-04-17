@@ -1,4 +1,5 @@
 
+set_rc_compiler()
 set_unicode()
 
 list(APPEND SOURCE

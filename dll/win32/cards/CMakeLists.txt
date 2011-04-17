@@ -4,6 +4,8 @@ set_unicode()
 # Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN
 add_definitions(-DCARDSTYLE_DEFAULT)
 
+set_rc_compiler()
+
 spec2def(cards.dll cards.spec)
 
 list(APPEND SOURCE

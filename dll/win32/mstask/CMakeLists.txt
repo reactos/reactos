@@ -9,6 +9,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 generate_idl_iids(mstask_local.idl)
 
 spec2def(mstask.dll mstask.spec)

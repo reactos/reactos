@@ -1,4 +1,5 @@
 
+set_rc_compiler()
 spec2def(rasdlg.dll rasdlg.spec)
 
 list(APPEND SOURCE

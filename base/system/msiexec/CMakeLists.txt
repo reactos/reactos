@@ -5,6 +5,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/wine)
 
+set_rc_compiler()
+
 add_executable(msiexec
     msiexec.c
     service.c

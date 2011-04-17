@@ -10,7 +10,7 @@
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
+// #include "lang/ja-JP.rc" Error: Invalid character in string '√ÂI√Âv√ÂV√Â‘«Ì√Â‘«ù(&O)' for codepage 932
 #include "lang/ko-KR.rc"
 #include "lang/no-NO.rc"
 #include "lang/nl-NL.rc"

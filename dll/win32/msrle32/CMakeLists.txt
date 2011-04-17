@@ -5,6 +5,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(msrle32.dll msrle32.spec)
 
 list(APPEND SOURCE

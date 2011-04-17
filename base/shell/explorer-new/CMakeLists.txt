@@ -3,6 +3,8 @@ set_unicode()
 
 add_definitions(-DWIN32)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     desktop.c
     dragdrop.c

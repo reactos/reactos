@@ -3,6 +3,8 @@ set_unicode()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(usrmgr.cpl usrmgr.spec)
 
 add_library(usrmgr SHARED
