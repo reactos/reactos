@@ -111,7 +111,7 @@ IntCreateRegistryPath(
          AfterControlSet.Length -= sizeof(ControlSet) - sizeof(UNICODE_NULL);
          while (AfterControlSet.Length > 0 &&
                 *AfterControlSet.Buffer >= L'0' &&
-                *AfterControlSet.Buffer >= L'9')
+                *AfterControlSet.Buffer <= L'9')
          {
             AfterControlSet.Buffer++;
             AfterControlSet.Length -= sizeof(WCHAR);
@@ -145,7 +145,7 @@ IntCreateRegistryPath(
          RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
 
          /* Check if registry key exists */
-         Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DriverRegistryPath->Buffer));
+         Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DeviceRegistryPath->Buffer));
 
          if (!Valid)
             ExFreePoolWithTag(DeviceRegistryPath->Buffer, TAG_VIDEO_PORT);
