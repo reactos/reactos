@@ -47,6 +47,13 @@ public:
     NTSTATUS SetDeviceInterface(BOOLEAN bEnable);
     NTSTATUS CreatePDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
     NTSTATUS GetHubControllerDeviceObject(PDEVICE_OBJECT * HubDeviceObject);
+    PUSBHARDWAREDEVICE GetUsbHardware();
+    ULONG AcquireDeviceAddress();
+    VOID ReleaseDeviceAddress(ULONG DeviceAddress);
+    BOOLEAN ValidateUsbDevice(PUSBDEVICE UsbDevice);
+    NTSTATUS AddUsbDevice(PUSBDEVICE UsbDevice);
+    NTSTATUS RemoveUsbDevice(PUSBDEVICE UsbDevice);
+    VOID SetNotification(PVOID CallbackContext, PRH_INIT_CALLBACK CallbackRoutine);
 
     // constructor / destructor
     CHubController(IUnknown *OuterUnknown){}
@@ -63,7 +70,23 @@ protected:
     UNICODE_STRING m_HubDeviceInterfaceString;
     PDEVICE_OBJECT m_HubControllerDeviceObject;
     PDRIVER_OBJECT m_DriverObject;
+
+    PVOID m_HubCallbackContext; 
+    PRH_INIT_CALLBACK m_HubCallbackRoutine;
+
+
+    KSPIN_LOCK m_Lock;
+    RTL_BITMAP m_DeviceAddressBitmap;
+    PULONG m_DeviceAddressBitmapBuffer;
+    LIST_ENTRY m_UsbDeviceList;
 };
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PUSBDEVICE Device;
+}USBDEVICE_ENTRY, *PUSBDEVICE_ENTRY;
+
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
@@ -96,6 +119,26 @@ CHubController::Initialize(
     m_IsRootHubDevice = IsRootHubDevice;
     m_DeviceAddress = DeviceAddress;
     m_DriverObject = DriverObject;
+    KeInitializeSpinLock(&m_Lock);
+
+    //
+    // allocate device address bitmap buffer
+    //
+    m_DeviceAddressBitmapBuffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, 16, TAG_USBEHCI);
+    if (!m_DeviceAddressBitmapBuffer)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize device address bitmap
+    //
+    RtlInitializeBitMap(&m_DeviceAddressBitmap, m_DeviceAddressBitmapBuffer, 128);
+    RtlClearAllBits(&m_DeviceAddressBitmap);
+
 
     //
     // create PDO
@@ -197,9 +240,7 @@ CHubController::HandlePnp(
                     //
                     Status = m_Hardware->GetDeviceDetails(&VendorID, &DeviceID, &NumPorts, &HiSpeed);
 
-                    HiSpeed = TRUE;
-
-                    if (HiSpeed)
+                    if (HiSpeed == 0x200)
                     {
                         //
                         // USB 2.0 hub
@@ -261,8 +302,6 @@ CHubController::HandlePnp(
                     //
                     Status = m_Hardware->GetDeviceDetails(&VendorID, &DeviceID, &NumPorts, &HiSpeed);
 
-                    HiSpeed = TRUE;
-
                     if (!NT_SUCCESS(Status))
                     {
                          DPRINT1("CHubController::HandlePnp> failed to get hardware id %x\n", Status);
@@ -270,7 +309,7 @@ CHubController::HandlePnp(
                          DeviceID = 0x3A37;
                     }
 
-                    if (HiSpeed)
+                    if (HiSpeed == 0x200)
                     {
                         //
                         // USB 2.0 hub
@@ -479,6 +518,7 @@ CHubController::HandleDeviceControl(
 {
     PIO_STACK_LOCATION IoStack;
     PCOMMON_DEVICE_EXTENSION DeviceExtension;
+    PURB Urb;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 
     //
@@ -505,7 +545,13 @@ CHubController::HandleDeviceControl(
     {
         case IOCTL_INTERNAL_USB_SUBMIT_URB:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB UNIMPLEMENTED\n");
+            //
+            // get urb
+            //
+            Urb = (PURB)IoStack->Parameters.Others.Argument1;
+            PC_ASSERT(Urb);
+
+            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x Length %lu Status %x Handle %p Flags %x UNIMPLEMENTED\n", Urb->UrbHeader.Function, Urb->UrbHeader.Length, Urb->UrbHeader.Status, Urb->UrbHeader.UsbdDeviceHandle, Urb->UrbHeader.UsbdFlags);
 
             //
             // request completed
@@ -597,6 +643,283 @@ CHubController::HandleDeviceControl(
     return Status;
 }
 
+//-----------------------------------------------------------------------------------------
+PUSBHARDWAREDEVICE
+CHubController::GetUsbHardware()
+{
+    return m_Hardware;
+}
+
+//-----------------------------------------------------------------------------------------
+ULONG
+CHubController::AcquireDeviceAddress()
+{
+    KIRQL OldLevel;
+    ULONG DeviceAddress;
+
+    //
+    // acquire device lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // find address
+    //
+    DeviceAddress = RtlFindClearBits(&m_DeviceAddressBitmap, 1, 0);
+    if (DeviceAddress != MAXULONG)
+    {
+        //
+        // reserve address
+        //
+        RtlSetBit(&m_DeviceAddressBitmap, DeviceAddress);
+
+        //
+        // device addresses start from 0x1 - 0xFF
+        //
+        DeviceAddress++;
+    }
+
+    //
+    // release spin lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+
+    //
+    // return device address
+    //
+    return DeviceAddress;
+}
+//-----------------------------------------------------------------------------------------
+VOID
+CHubController::ReleaseDeviceAddress(
+    ULONG DeviceAddress)
+{
+    KIRQL OldLevel;
+
+    //
+    // acquire device lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(DeviceAddress != 0);
+
+    //
+    // convert back to bit number
+    //
+    DeviceAddress--;
+
+    //
+    // clear bit
+    //
+    RtlClearBit(&m_DeviceAddressBitmap, DeviceAddress);
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+}
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::RemoveUsbDevice(
+    PUSBDEVICE UsbDevice)
+{
+    PUSBDEVICE_ENTRY DeviceEntry;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    KIRQL OldLevel;
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // point to first entry
+    //
+    Entry = m_UsbDeviceList.Flink;
+
+    //
+    // find matching entry
+    //
+    while(Entry != &m_UsbDeviceList)
+    {
+        //
+        // get entry
+        //
+        DeviceEntry = (PUSBDEVICE_ENTRY)CONTAINING_RECORD(Entry, USBDEVICE_ENTRY, Entry);
+
+        //
+        // is it current entry
+        //
+        if (DeviceEntry->Device == UsbDevice)
+        {
+            //
+            // remove entry
+            //
+            RemoveEntryList(Entry);
+
+            //
+            // free entry
+            //
+            ExFreePoolWithTag(DeviceEntry, TAG_USBEHCI);
+
+            //
+            // done
+            //
+            Status = STATUS_SUCCESS;
+            break;
+        }
+
+        //
+        // goto next device
+        //
+        Entry = Entry->Flink;
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+
+    //
+    // return result
+    //
+    return Status;
+}
+//-----------------------------------------------------------------------------------------
+BOOLEAN
+CHubController::ValidateUsbDevice(PUSBDEVICE UsbDevice)
+{
+    PUSBDEVICE_ENTRY DeviceEntry;
+    PLIST_ENTRY Entry;
+    KIRQL OldLevel;
+    BOOLEAN Result = FALSE;
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // point to first entry
+    //
+    Entry = m_UsbDeviceList.Flink;
+
+    //
+    // find matching entry
+    //
+    while(Entry != &m_UsbDeviceList)
+    {
+        //
+        // get entry
+        //
+        DeviceEntry = (PUSBDEVICE_ENTRY)CONTAINING_RECORD(Entry, USBDEVICE_ENTRY, Entry);
+
+        //
+        // is it current entry
+        //
+        if (DeviceEntry->Device == UsbDevice)
+        {
+            //
+            // device is valid
+            //
+            Result = TRUE;
+            break;
+        }
+
+        //
+        // goto next device
+        //
+        Entry = Entry->Flink;
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+
+    //
+    // return result
+    //
+    return Result;
+
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::AddUsbDevice(
+    PUSBDEVICE UsbDevice)
+{
+    PUSBDEVICE_ENTRY DeviceEntry;
+    NTSTATUS Status;
+    KIRQL OldLevel;
+
+    //
+    // allocate device entry
+    //
+    DeviceEntry = (PUSBDEVICE_ENTRY)ExAllocatePoolWithTag(NonPagedPool, sizeof(USBDEVICE_ENTRY), TAG_USBEHCI);
+    if (!DeviceEntry)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize entry
+    //
+    DeviceEntry->Device = UsbDevice;
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // insert entry
+    //
+    InsertTailList(&m_UsbDeviceList, &DeviceEntry->Entry);
+
+    //
+    // release spin lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------
+VOID
+CHubController::SetNotification(
+    PVOID CallbackContext,
+    PRH_INIT_CALLBACK CallbackRoutine)
+{
+    KIRQL OldLevel;
+
+    //
+    // acquire hub controller lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // now set the callback routine and context of the hub
+    //
+    m_HubCallbackContext = CallbackContext;
+    m_HubCallbackRoutine = CallbackRoutine;
+
+   //
+   // release hub controller lock
+   //
+   KeReleaseSpinLock(&m_Lock, OldLevel);
+}
+
 //=================================================================================================
 //
 // Generic Interface functions
@@ -643,8 +966,86 @@ USBHI_CreateUsbDevice(
     USHORT PortStatus,
     USHORT PortNumber)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBDEVICE NewUsbDevice;
+    CHubController * Controller;
+    NTSTATUS Status;
+
+    DPRINT1("USBHI_CreateUsbDevice\n");
+
+    //
+    // first get hub controller
+    //
+    Controller = (CHubController *)BusContext;
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(Controller);
+    PC_ASSERT(BusContext == HubDeviceHandle);
+
+    //
+    // now allocate usb device
+    //
+    Status = CreateUSBDevice(&NewUsbDevice);
+
+    //
+    // check for success
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // release controller
+        //
+        Controller->Release();
+        DPRINT1("USBHI_CreateUsbDevice: failed to create usb device %x\n", Status);
+        return Status;
+    }
+
+    //
+    // now initialize device
+    //
+    Status = NewUsbDevice->Initialize(PHUBCONTROLLER(Controller), Controller->GetUsbHardware(),PVOID(Controller), PortNumber);
+
+    //
+    // check for success
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // release usb device
+        //
+        NewUsbDevice->Release();
+        DPRINT1("USBHI_CreateUsbDevice: failed to initialize usb device %x\n", Status);
+        return Status;
+    }
+
+    //
+    // insert into list
+    //
+    Status = Controller->AddUsbDevice(NewUsbDevice);
+    //
+    // check for success
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // release usb device
+        //
+        NewUsbDevice->Release();
+
+        DPRINT1("USBHI_CreateUsbDevice: failed to add usb device %x\n", Status);
+        return Status;
+    }
+
+    //
+    // store the handle
+    //
+    *NewDevice = NewUsbDevice;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -653,8 +1054,93 @@ USBHI_InitializeUsbDevice(
     PVOID BusContext,
     PUSB_DEVICE_HANDLE DeviceHandle)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBDEVICE UsbDevice;
+    CHubController * Controller;
+    ULONG DeviceAddress;
+    NTSTATUS Status;
+    ULONG Index = 0;
+
+    DPRINT1("USBHI_InitializeUsbDevice\n");
+
+    //
+    // first get controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get device object
+    //
+    UsbDevice = (PUSBDEVICE)DeviceHandle;
+    PC_ASSERT(UsbDevice);
+
+    //
+    // validate device handle
+    //
+    if (!Controller->ValidateUsbDevice(UsbDevice))
+    {
+        DPRINT1("USBHI_InitializeUsbDevice invalid device handle %p\n", DeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // now reserve an address
+    //
+    DeviceAddress = Controller->AcquireDeviceAddress();
+
+    //
+    // is the device address valid
+    //
+    if (DeviceAddress == MAXULONG)
+    {
+        //
+        // failed to get an device address from the device address pool
+        //
+        DPRINT1("USBHI_InitializeUsbDevice failed to get device address\n");
+        return STATUS_DEVICE_DATA_ERROR;
+    }
+
+    do
+    {
+        //
+        // now set the device address
+        //
+        Status = UsbDevice->SetDeviceAddress(DeviceAddress);
+
+        if (NT_SUCCESS(Status))
+            break;
+
+    }while(Index++ < 3	);
+
+    //
+    // check for failure
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to set device address
+        //
+        DPRINT1("USBHI_InitializeUsbDevice failed to set address with %x\n", Status);
+
+        //
+        // release address
+        //
+        Controller->ReleaseDeviceAddress(DeviceAddress);
+
+        //
+        // return error
+        //
+        return STATUS_DEVICE_DATA_ERROR;
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -667,8 +1153,103 @@ USBHI_GetUsbDescriptors(
     PUCHAR ConfigDescriptorBuffer,
     PULONG ConfigDescriptorBufferLength)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBDEVICE UsbDevice;
+    CHubController * Controller;
+    NTSTATUS Status;
+    PURB Urb;
+
+    DPRINT1("USBHI_GetUsbDescriptors\n");
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(DeviceDescriptorBuffer);
+    PC_ASSERT(*DeviceDescriptorBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR));
+
+    //
+    // first get controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+
+    //
+    // get device object
+    //
+    UsbDevice = (PUSBDEVICE)DeviceHandle;
+    PC_ASSERT(UsbDevice);
+
+    //
+    // validate device handle
+    //
+    if (!Controller->ValidateUsbDevice(UsbDevice))
+    {
+        DPRINT1("USBHI_GetUsbDescriptors invalid device handle %p\n", DeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // get device descriptor
+    //
+    UsbDevice->GetDeviceDescriptor((PUSB_DEVICE_DESCRIPTOR)DeviceDescriptorBuffer);
+
+    //
+    // store result length
+    //
+    *DeviceDescriptorBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
+
+    //
+    // allocate urb
+    //
+    Urb = (PURB)ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), TAG_USBEHCI);
+    if (!Urb)
+    {
+        //
+        // no memory
+        // 
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // zero request
+    //
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    //
+    // initialize request
+    //
+    Urb->UrbHeader.Function = URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE;
+    Urb->UrbHeader.Length = sizeof(_URB_CONTROL_DESCRIPTOR_REQUEST);
+    Urb->UrbControlDescriptorRequest.DescriptorType = USB_CONFIGURATION_DESCRIPTOR_TYPE;
+    Urb->UrbControlDescriptorRequest.TransferBuffer = ConfigDescriptorBuffer;
+    Urb->UrbControlDescriptorRequest.TransferBufferLength = *ConfigDescriptorBufferLength;
+
+    //
+    // submit urb
+    //
+    Status = UsbDevice->SubmitUrb(Urb);
+
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // TransferBufferLength holds the number of bytes transferred
+        //
+        *ConfigDescriptorBufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+    }
+
+    //
+    // free urb
+    //
+    ExFreePoolWithTag(Urb, TAG_USBEHCI);
+
+    //
+    // complete the request
+    //
+    return Status;
 }
 
 NTSTATUS
@@ -678,8 +1259,71 @@ USBHI_RemoveUsbDevice(
     PUSB_DEVICE_HANDLE DeviceHandle,
     ULONG Flags)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBDEVICE UsbDevice;
+    CHubController * Controller;
+    NTSTATUS Status;
+
+    DPRINT1("USBHI_RemoveUsbDevice\n");
+
+    //
+    // first get controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get device object
+    //
+    UsbDevice = (PUSBDEVICE)DeviceHandle;
+    PC_ASSERT(UsbDevice);
+
+    //
+    // validate device handle
+    //
+    if (!Controller->ValidateUsbDevice(UsbDevice))
+    {
+        DPRINT1("USBHI_RemoveUsbDevice invalid device handle %p\n", DeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // check if there were flags passed
+    //
+    if (Flags & USBD_KEEP_DEVICE_DATA || Flags  & USBD_MARK_DEVICE_BUSY)
+    {
+        //
+        // ignore flags for now
+        //
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // remove device
+    //
+    Status = Controller->RemoveUsbDevice(UsbDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // invalid device handle
+        //
+        DPRINT1("USBHI_RemoveUsbDevice Invalid device handle %p\n", UsbDevice);
+        PC_ASSERT(0);
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // release usb device
+    //
+    UsbDevice->Release();
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -712,8 +1356,78 @@ USBHI_QueryDeviceInformation(
     ULONG DeviceInformationBufferLength,
     PULONG LengthReturned)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSB_DEVICE_INFORMATION_0 DeviceInfo;
+    PUSBDEVICE UsbDevice;
+    CHubController * Controller;
+    NTSTATUS Status;
+
+    DPRINT1("USBHI_QueryDeviceInformation\n");
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(DeviceInformationBufferLength >= sizeof(USB_DEVICE_INFORMATION_0));
+    PC_ASSERT(DeviceInformationBuffer);
+    PC_ASSERT(LengthReturned);
+
+    //
+    // get controller object
+    //
+    Controller = (CHubController*)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get device object
+    //
+    UsbDevice = (PUSBDEVICE)DeviceHandle;
+    PC_ASSERT(UsbDevice);
+
+    //
+    // validate device handle
+    //
+    if (!Controller->ValidateUsbDevice(UsbDevice))
+    {
+        DPRINT1("USBHI_QueryDeviceInformation invalid device handle %p\n", DeviceHandle);
+
+        //
+        // invalid device handle
+        //
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
+    //
+    // access information buffer
+    //
+    DeviceInfo = (PUSB_DEVICE_INFORMATION_0)DeviceInformationBuffer;
+
+    //
+    // initialize with default values
+    //
+    DeviceInfo->InformationLevel = 0;
+    DeviceInfo->ActualLength = sizeof(USB_DEVICE_INFORMATION_0);
+    DeviceInfo->PortNumber = UsbDevice->GetPort();
+    DeviceInfo->CurrentConfigurationValue = UsbDevice->GetConfigurationValue();
+    DeviceInfo->DeviceAddress = 0; UsbDevice->GetDeviceAddress();
+    DeviceInfo->HubAddress = 0; //FIXME
+    DeviceInfo->DeviceSpeed = UsbDevice->GetSpeed();
+    DeviceInfo->DeviceType = UsbDevice->GetType();
+    DeviceInfo->NumberOfOpenPipes = 0; //FIXME
+
+    //
+    // get device descriptor
+    //
+    UsbDevice->GetDeviceDescriptor(&DeviceInfo->DeviceDescriptor);
+
+    //
+    // FIXME return pipe information
+    //
+
+    //
+    // store result length
+    //
+    *LengthReturned = sizeof(USB_DEVICE_INFORMATION_0);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -747,8 +1461,87 @@ USBHI_GetExtendedHubInformation(
     ULONG HubInformationBufferLength,
     PULONG LengthReturned)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSB_EXTHUB_INFORMATION_0 HubInfo;
+    CHubController * Controller;
+    PUSBHARDWAREDEVICE Hardware;
+    ULONG Index;
+    ULONG NumPort, Dummy2;
+    USHORT Dummy1;
+    NTSTATUS Status;
+
+    DPRINT1("USBHI_GetExtendedHubInformation\n");
+
+    //
+    // sanity checks
+    // 
+    PC_ASSERT(HubInformationBuffer);
+    PC_ASSERT(HubInformationBufferLength == sizeof(USB_EXTHUB_INFORMATION_0));
+    PC_ASSERT(LengthReturned);
+
+    //
+    // get hub controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get usb hardware device
+    //
+    Hardware = Controller->GetUsbHardware();
+
+    //
+    // retrieve number of ports
+    //
+    Status = Hardware->GetDeviceDetails(&Dummy1, &Dummy1, &NumPort, &Dummy2);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get hardware details, ouch ;)
+        //
+        DPRINT1("USBHI_GetExtendedHubInformation failed to get hardware details with %x\n", Status);
+        return Status;
+    }
+
+    //
+    // get hub information buffer
+    //
+    HubInfo = (PUSB_EXTHUB_INFORMATION_0)HubInformationBuffer;
+
+    //
+    // initialize hub information
+    //
+    HubInfo->InformationLevel = 0;
+
+    //
+    // store port count
+    //
+    HubInfo->NumberOfPorts = NumPort;
+
+    //
+    // initialize port information
+    //
+    for(Index = 0; Index < NumPort; Index++)
+    {
+        HubInfo->Port[Index].PhysicalPortNumber = Index + 1;
+        HubInfo->Port[Index].PortLabelNumber = Index + 1;
+        HubInfo->Port[Index].VidOverride = 0;
+        HubInfo->Port[Index].PidOverride = 0;
+        HubInfo->Port[Index].PortAttributes = USB_PORTATTR_SHARED_USB2; //FIXME
+    }
+
+    //
+    // store result length
+    //
+#ifdef _MSC_VER
+    *LengthReturned = FIELD_OFFSET(USB_EXTHUB_INFORMATION_0, Port[HubInfo->NumberOfPorts]);
+#else
+    *LengthReturned = FIELD_OFFSET(USB_EXTHUB_INFORMATION_0, Port) + sizeof(USB_EXTPORT_INFORMATION_0) * HubInfo->NumberOfPorts;
+#endif
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -791,8 +1584,25 @@ USBHI_RootHubInitNotification(
     PVOID CallbackContext,
     PRH_INIT_CALLBACK CallbackRoutine)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    CHubController * Controller;
+
+    DPRINT1("USBHI_RootHubInitNotification\n");
+
+    //
+    // get controller object
+    //
+    Controller = (CHubController*)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // set notification routine
+    //
+    Controller->SetNotification(CallbackContext, CallbackRoutine);
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -811,7 +1621,37 @@ USBHI_SetDeviceHandleData(
     PVOID DeviceHandle,
     PDEVICE_OBJECT UsbDevicePdo)
 {
-    UNIMPLEMENTED
+    PUSBDEVICE UsbDevice;
+    CHubController * Controller;
+
+    //
+    // get controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get device handle
+    //
+    UsbDevice = (PUSBDEVICE)DeviceHandle;
+
+    //
+    // validate device handle
+    //
+    if (!Controller->ValidateUsbDevice(UsbDevice))
+    {
+        DPRINT1("USBHI_SetDeviceHandleData DeviceHandle %p is invalid\n", DeviceHandle);
+
+        //
+        // invalid handle
+        //
+        return;
+    }
+
+    //
+    // set device handle data
+    //
+    UsbDevice->SetDeviceHandleData(UsbDevicePdo);
 }
 
 //=================================================================================================
@@ -826,7 +1666,46 @@ USBDI_GetUSBDIVersion(
     PUSBD_VERSION_INFORMATION VersionInformation,
     PULONG HcdCapabilites)
 {
-    UNIMPLEMENTED
+    CHubController * Controller;
+    PUSBHARDWAREDEVICE Device;
+    ULONG Speed, Dummy2;
+    USHORT Dummy1;
+
+    DPRINT1("USBDI_GetUSBDIVersion\n");
+
+    //
+    // get controller
+    //
+    Controller = (CHubController*)BusContext;
+
+    //
+    // get usb hardware
+    //
+    Device = Controller->GetUsbHardware();
+    PC_ASSERT(Device);
+
+    if (VersionInformation)
+    {
+        //
+        // windows xp supported
+        //
+        VersionInformation->USBDI_Version = 0x00000500;
+
+        //
+        // get device speed
+        //
+        Device->GetDeviceDetails(&Dummy1, &Dummy1, &Dummy2, &Speed);
+
+        //
+        // store speed details
+        //
+        VersionInformation->Supported_USB_Version = Speed;
+    }
+
+    //
+    // no flags supported
+    //
+    *HcdCapabilites = 0;
 }
 
 NTSTATUS
@@ -867,8 +1746,33 @@ USB_BUSIFFN
 USBDI_IsDeviceHighSpeed(
     PVOID BusContext)
 {
-    UNIMPLEMENTED
-    return TRUE;
+    CHubController * Controller;
+    PUSBHARDWAREDEVICE Device;
+    ULONG Speed, Dummy2;
+    USHORT Dummy1;
+
+    DPRINT1("USBDI_IsDeviceHighSpeed\n");
+
+    //
+    // get controller
+    //
+    Controller = (CHubController*)BusContext;
+
+    //
+    // get usb hardware
+    //
+    Device = Controller->GetUsbHardware();
+    PC_ASSERT(Device);
+
+    //
+    // get device speed
+    //
+    Device->GetDeviceDetails(&Dummy1, &Dummy1, &Dummy2, &Speed);
+
+    //
+    // USB 2.0 equals 0x200
+    //
+    return (Speed == 0x200);
 }
 
 NTSTATUS

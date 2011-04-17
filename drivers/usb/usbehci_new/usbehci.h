@@ -54,7 +54,6 @@ NTSTATUS CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
 // misc.cpp
 //
 NTSTATUS NTAPI SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-
 NTSTATUS NTAPI GetBusInterface(PDEVICE_OBJECT DeviceObject, PBUS_INTERFACE_STANDARD busInterface);
 
 //
@@ -66,5 +65,11 @@ NTSTATUS CreateHubController(PHUBCONTROLLER * OutHubController);
 // memory_manager.cpp
 //
 NTSTATUS CreateDMAMemoryManager(PDMAMEMORYMANAGER *OutMemoryManager);
+
+
+//
+// usb_device.cpp
+//
+NTSTATUS CreateUSBDevice(PUSBDEVICE *OutDevice);
 
 #endif

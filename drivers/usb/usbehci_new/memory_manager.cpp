@@ -85,7 +85,7 @@ CDMAMemoryManager::Initialize(
     //
     // calculate bitmap length
     //
-    BitmapLength = (DmaBufferSize / DefaultBlockSize) / sizeof(ULONG);
+    BitmapLength = (DmaBufferSize / DefaultBlockSize) / 8;
 
     //
     // allocate bitmap buffer
@@ -102,7 +102,7 @@ CDMAMemoryManager::Initialize(
     //
     // initialize bitmap
     //
-    RtlInitializeBitMap(&m_Bitmap, m_BitmapBuffer, BitmapLength);
+    RtlInitializeBitMap(&m_Bitmap, m_BitmapBuffer, BitmapLength * 8);
 
     //
     // clear all bits

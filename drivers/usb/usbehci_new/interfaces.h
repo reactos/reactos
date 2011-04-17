@@ -475,4 +475,127 @@ DECLARE_INTERFACE_(IDispatchIrp, IUnknown)
 
 typedef IDispatchIrp *PDISPATCHIRP;
 
+//=========================================================================================
+//
+// class IUSBDevice
+//
+// Description: This class is used to abstract details of a usb device
+// 
+
+DECLARE_INTERFACE_(IUSBDevice, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+//----------------------------------------------------------------------------------------
+//
+// Initialize
+//
+// Description: Initializes the usb device
+
+    virtual NTSTATUS Initialize(IN PHUBCONTROLLER HubController,
+                                IN PUSBHARDWAREDEVICE Device,
+                                IN PVOID Parent,
+                                IN ULONG Port) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// IsHub
+//
+// Description: returns true when device is a hub
+
+    virtual BOOLEAN IsHub() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetParent
+//
+// Description: gets the parent device of the this device
+
+    virtual NTSTATUS GetParent(PVOID * Parent) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetDeviceAddress
+//
+// Description: gets the device address of the this device
+
+    virtual ULONG GetDeviceAddress() = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
+// GetPort
+//
+// Description: gets the port to which this device is connected
+
+    virtual ULONG GetPort() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetSpeed
+//
+// Description: gets the speed of the device
+
+    virtual USB_DEVICE_SPEED GetSpeed() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetType
+//
+// Description: gets the type of the device, either 1.1 or 2.0 device
+
+    virtual USB_DEVICE_TYPE GetType() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetState
+//
+// Description: gets the device state
+
+    virtual ULONG GetState() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SetDeviceHandleData
+//
+// Description: sets device handle data
+
+    virtual void SetDeviceHandleData(PVOID Data) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SetDeviceAddress
+//
+// Description: sets device handle data
+
+    virtual NTSTATUS SetDeviceAddress(ULONG DeviceAddress) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetDeviceDescriptor
+//
+// Description: sets device handle data
+
+    virtual void GetDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetConfigurationValue
+//
+// Description: gets current selected configuration index
+
+   virtual UCHAR GetConfigurationValue();
+
+//-----------------------------------------------------------------------------------------
+//
+// SubmitUrb
+//
+// Description: submits an urb
+
+    virtual NTSTATUS SubmitUrb(PURB Urb) = 0;
+
+};
+
+typedef IUSBDevice *PUSBDEVICE;
+
 #endif
