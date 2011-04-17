@@ -1307,6 +1307,23 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 {
     EVENTMSG Event;
 
+    if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN ||
+        Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
+    {
+        switch (Msg->wParam)
+        {
+            case VK_LSHIFT: case VK_RSHIFT:
+                Msg->wParam = VK_SHIFT;
+                break;
+            case VK_LCONTROL: case VK_RCONTROL:
+                Msg->wParam = VK_CONTROL;
+                break;
+            case VK_LMENU: case VK_RMENU:
+                Msg->wParam = VK_MENU;
+                break;
+        }
+    }
+
     Event.message = Msg->message;
     Event.hwnd    = Msg->hwnd;
     Event.time    = Msg->time;
