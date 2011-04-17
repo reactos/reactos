@@ -301,7 +301,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
             (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST))
 
 #define IS_KBD_MESSAGE(message) \
-    (message == WM_KEYDOWN || message == WM_KEYUP)
+    (message >= WM_KEYFIRST && message <= WM_KEYLAST)
 
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask);
