@@ -4,8 +4,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 set_rc_compiler()
 spec2def(shdoclc.dll shdoclc.spec)
 
-set_rc_compiler()
-
 add_library(shdoclc SHARED rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shdoclc.def)
 
