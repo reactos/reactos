@@ -1,3 +1,5 @@
+#pragma code_page(65001) // UTF-8
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -54,7 +56,7 @@ CAPTION "Ajustes"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "General ", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Guardar posici髇 de la ventana", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Guardar posici贸n de la ventana", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
 	AUTOCHECKBOX "&Actualizar la lista de programas accesibles al comenzar", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Registro de programas instalados y desinstalados", IDC_LOG_ENABLED, 15, 46, 219, 12
 
@@ -62,7 +64,7 @@ BEGIN
 	LTEXT "Carpeta de descargas:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
 	PUSHBUTTON "&Seleccionar", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Borrar el instalador del programa tras su instalaci髇", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	AUTOCHECKBOX "&Borrar el instalador del programa tras su instalaci贸n", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
 	PUSHBUTTON "Por defecto", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "Aceptar", IDOK, 116, 124, 60, 14
@@ -116,37 +118,37 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_APP_NAME "Nombre"
-	IDS_APP_INST_VERSION "Versi髇"
-	IDS_APP_DESCRIPTION "Descripci髇"
+	IDS_APP_INST_VERSION "Versi贸n"
+	IDS_APP_DESCRIPTION "Descripci贸n"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_INFO_VERSION "\nVersi髇: "
-	IDS_INFO_DESCRIPTION "\nDescripci髇: "
+	IDS_INFO_VERSION "\nVersi贸n: "
+	IDS_INFO_DESCRIPTION "\nDescripci贸n: "
 	IDS_INFO_PUBLISHER "\nAutor: "
 	IDS_INFO_HELPLINK "\nEnlace de ayuda: "
-	IDS_INFO_HELPPHONE "\nTel閒ono de ayuda: "
+	IDS_INFO_HELPPHONE "\nTel茅fono de ayuda: "
 	IDS_INFO_README "\nLeeme: "
 	IDS_INFO_REGOWNER "\nUsuario registrador: "
 	IDS_INFO_PRODUCTID "\nID Producto: "
 	IDS_INFO_CONTACT "\nContacto: "
-	IDS_INFO_UPDATEINFO "\nInformaci髇 actualizaci髇: "
-	IDS_INFO_INFOABOUT "\nInformaci髇 Acerca de: "
+	IDS_INFO_UPDATEINFO "\nInformaci贸n actualizaci贸n: "
+	IDS_INFO_INFOABOUT "\nInformaci贸n Acerca de: "
 	IDS_INFO_COMMENTS "\nComentarios: "
-	IDS_INFO_INSTLOCATION "\nLocalizaci髇 de instalaci髇: "
-	IDS_INFO_INSTALLSRC "\nOrigen de instalaci髇: "
-	IDS_INFO_UNINSTALLSTR "\nComando de desinstalaci髇: "
+	IDS_INFO_INSTLOCATION "\nLocalizaci贸n de instalaci贸n: "
+	IDS_INFO_INSTALLSRC "\nOrigen de instalaci贸n: "
+	IDS_INFO_UNINSTALLSTR "\nComando de desinstalaci贸n: "
 	IDS_INFO_MODIFYPATH "\nRuta modificada: "
-	IDS_INFO_INSTALLDATE "\nFecha instalaci髇: "
+	IDS_INFO_INSTALLDATE "\nFecha instalaci贸n: "
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_AINFO_VERSION "\nVersi髇: "
-	IDS_AINFO_DESCRIPTION "\nDescripci髇: "
-	IDS_AINFO_SIZE "\nTama駉: "
-	IDS_AINFO_URLSITE "\nP醙ina Web: "
+	IDS_AINFO_VERSION "\nVersi贸n: "
+	IDS_AINFO_DESCRIPTION "\nDescripci贸n: "
+	IDS_AINFO_SIZE "\nTama帽o: "
+	IDS_AINFO_URLSITE "\nP谩gina Web: "
 	IDS_AINFO_LICENCE "\nLicencia: "
 END
 
@@ -155,11 +157,11 @@ BEGIN
 	IDS_CAT_AUDIO "Audio"
 	IDS_CAT_DEVEL "Desarrollo"
 	IDS_CAT_DRIVERS "Drivers"
-	IDS_CAT_EDU "Educaci髇"
-	IDS_CAT_ENGINEER "Ingenier韆"
+	IDS_CAT_EDU "Educaci贸n"
+	IDS_CAT_ENGINEER "Ingenier铆a"
 	IDS_CAT_FINANCE "Finanzas"
 	IDS_CAT_GAMES "Juegos y Entretenimiento"
-	IDS_CAT_GRAPHICS "Gr醘icos"
+	IDS_CAT_GRAPHICS "Gr谩ficos"
 	IDS_CAT_INTERNET "Internet & Redes"
 	IDS_CAT_LIBS "Librerias"
 	IDS_CAT_OFFICE "Oficina"
@@ -178,16 +180,16 @@ BEGIN
 	IDS_MODIFY "Modificar"
 	IDS_APPS_COUNT "Cantidad de aplicaciones: %d"
 	IDS_WELCOME_TITLE "Bienvenido a ReactOS Applications Manager!\n\n"
-	IDS_WELCOME_TEXT "Seleccione una categor韆 a la izquierda, posteriormente seleccione la aplicaci髇 a instalar o desinstalar.\nReactOS Web: "
+	IDS_WELCOME_TEXT "Seleccione una categor铆a a la izquierda, posteriormente seleccione la aplicaci贸n a instalar o desinstalar.\nReactOS Web: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Instaladas"
-	IDS_AVAILABLEFORINST "Disponible para instalaci髇"
+	IDS_AVAILABLEFORINST "Disponible para instalaci贸n"
 	IDS_UPDATES "Actualizaciones"
 	IDS_APPLICATIONS "Aplicaciones"
-	IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta donde se descargar醤 los programas:"
-	IDS_CHOOSE_FOLDER_ERROR "a carpeta especificada no existe!"
-	IDS_USER_NOT_ADMIN "ebe tener privilegios de administrador para ejecutar ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "縀sta seguro que quiere borrar los datos del programa instalado del registro?"
-	IDS_INFORMATION "Informaci髇"
+	IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta donde se descargar谩n los programas:"
+	IDS_CHOOSE_FOLDER_ERROR "隆La carpeta especificada no existe!"
+	IDS_USER_NOT_ADMIN "隆Debe tener privilegios de administrador para ejecutar ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "驴Esta seguro que quiere borrar los datos del programa instalado del registro?"
+	IDS_INFORMATION "Informaci贸n"
 	IDS_UNABLE_TO_REMOVE "!Imposible eliminar los datos del programa del registro!"
 END

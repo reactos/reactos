@@ -1,3 +1,5 @@
+#pragma code_page(65001) // UTF-8
+
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 IDR_MAINMENU MENU
@@ -12,7 +14,7 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installieren",  ID_INSTALL
 		MENUITEM "&Deinstallieren",ID_UNINSTALL
-		MENUITEM "&Ändern",   ID_MODIFY
+		MENUITEM "&Ã„ndern",   ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
@@ -21,7 +23,7 @@ BEGIN
 	POPUP "Hilfe"
 	BEGIN
 		MENUITEM "Hilfe",      ID_HELP, GRAYED
-		MENUITEM "Über",     ID_ABOUT
+		MENUITEM "Ãœber",     ID_ABOUT
 	END
 END
 
@@ -29,7 +31,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Öffne den Link in einem Browser", ID_OPEN_LINK
+		MENUITEM "&Ã–ffne den Link in einem Browser", ID_OPEN_LINK
 		MENUITEM "&Kopiere den Link in die Zwischenablage", ID_COPY_LINK
 	END
 END
@@ -40,7 +42,7 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installieren",   ID_INSTALL
 		MENUITEM "&Deinstallieren", ID_UNINSTALL
-		MENUITEM "&Ändern",    ID_MODIFY
+		MENUITEM "&Ã„ndern",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
@@ -55,14 +57,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Allgemein", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "Fensterposition &speichern", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "Beim Start Liste der verfügbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "Hinzufügen und Entfernen von Programmen mit&loggen", IDC_LOG_ENABLED, 15, 46, 219, 12
+	AUTOCHECKBOX "Beim Start Liste der verfÃ¼gbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "HinzufÃ¼gen und Entfernen von Programmen mit&loggen", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Download", -1, 4, 65, 240, 51
-	LTEXT "Ordner für Downloads:", -1, 16, 75, 100, 9
+	LTEXT "Ordner fÃ¼r Downloads:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Wählen", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Installer nach Programminstallation löschen", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&WÃ¤hlen", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Installer nach Programminstallation lÃ¶schen", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
 	PUSHBUTTON "Vorgabe", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
@@ -76,7 +78,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installation von einem Datenträger (CD oder DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Installation von einem DatentrÃ¤ger (CD oder DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON "Herunterla&den und installieren", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -95,11 +97,11 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Über"
+CAPTION "Ãœber"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "ReactOS-Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Schließen", IDOK, 133, 46, 50, 14
+	PUSHBUTTON "SchlieÃŸen", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
@@ -107,7 +109,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_TOOLTIP_INSTALL "Installieren"
 	IDS_TOOLTIP_UNINSTALL "Deinstallieren"
-	IDS_TOOLTIP_MODIFY "Ändern"
+	IDS_TOOLTIP_MODIFY "Ã„ndern"
 	IDS_TOOLTIP_SETTINGS "Einstellungen"
 	IDS_TOOLTIP_REFRESH "Aktualisieren"
 	IDS_TOOLTIP_EXIT "Beenden"
@@ -128,16 +130,16 @@ BEGIN
 	IDS_INFO_HELPLINK "\nHilfe-Link: "
 	IDS_INFO_HELPPHONE "\nHilfe-Telefonnr.: "
 	IDS_INFO_README "\nReadme: "
-	IDS_INFO_REGOWNER "\nregistrierter Eigentümer: "
+	IDS_INFO_REGOWNER "\nregistrierter EigentÃ¼mer: "
 	IDS_INFO_PRODUCTID "\nProdukt-ID: "
 	IDS_INFO_CONTACT "\nKontakt: "
 	IDS_INFO_UPDATEINFO "\nUpdate-Informationen: "
-	IDS_INFO_INFOABOUT "\nInformation über: "
+	IDS_INFO_INFOABOUT "\nInformation Ã¼ber: "
 	IDS_INFO_COMMENTS "\nKommentare: "
 	IDS_INFO_INSTLOCATION "\nInstallationsort: "
 	IDS_INFO_INSTALLSRC "\nInstallationsquelle: "
 	IDS_INFO_UNINSTALLSTR "\nDeinstallationsstring: "
-	IDS_INFO_MODIFYPATH "\nÄnderungspfad: "
+	IDS_INFO_MODIFYPATH "\nÃ„nderungspfad: "
 	IDS_INFO_INSTALLDATE "\nInstallationsdatum: "
 END
 
@@ -145,7 +147,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_AINFO_VERSION "\nVersion: "
 	IDS_AINFO_DESCRIPTION "\nBeschreibung: "
-	IDS_AINFO_SIZE "\nGröße: "
+	IDS_AINFO_SIZE "\nGrÃ¶ÃŸe: "
 	IDS_AINFO_URLSITE "\nHomepage: "
 	IDS_AINFO_LICENCE "\nLizenz: "
 END
@@ -158,11 +160,11 @@ BEGIN
 	IDS_CAT_EDU "Edutainment"
 	IDS_CAT_ENGINEER "Technische Anwendungen"
 	IDS_CAT_FINANCE "Finanzen"
-	IDS_CAT_GAMES "Spiele & Spaß"
+	IDS_CAT_GAMES "Spiele & SpaÃŸ"
 	IDS_CAT_GRAPHICS "Grafik"
 	IDS_CAT_INTERNET "Internet & Netzwerk"
 	IDS_CAT_LIBS "Bibliotheken"
-	IDS_CAT_OFFICE "Büro"
+	IDS_CAT_OFFICE "BÃ¼ro"
 	IDS_CAT_OTHER "Sonstiges"
 	IDS_CAT_SCIENCE "Wissenschaft"
 	IDS_CAT_TOOLS "Werkzeuge"
@@ -175,19 +177,19 @@ BEGIN
 	IDS_SEARCH_TEXT "Suche..."
 	IDS_INSTALL "Installieren"
 	IDS_UNINSTALL "Deinstallieren"
-	IDS_MODIFY "Ändern"
+	IDS_MODIFY "Ã„ndern"
 	IDS_APPS_COUNT "Anzahl der Anwendungen: %d"
 	IDS_WELCOME_TITLE "Willkommen im ReactOS-Anwendungsmanager!\n\n"
-	IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS-Webseite: "
+	IDS_WELCOME_TEXT "WÃ¤hlen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS-Webseite: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installiert"
-	IDS_AVAILABLEFORINST "Zur Installation verfügbar"
+	IDS_AVAILABLEFORINST "Zur Installation verfÃ¼gbar"
 	IDS_UPDATES "Aktualisierungen"
 	IDS_APPLICATIONS "Anwendungen"
-	IDS_CHOOSE_FOLDER_TEXT "Wählen Sie ein Verzeichnis aus, das zum Herunterladen verwendet werden soll:"
+	IDS_CHOOSE_FOLDER_TEXT "WÃ¤hlen Sie ein Verzeichnis aus, das zum Herunterladen verwendet werden soll:"
 	IDS_CHOOSE_FOLDER_ERROR "Sie haben ein nicht existierendes Verzeichnis angegeben! Neu anlegen?"
-	IDS_USER_NOT_ADMIN "Sie müssen als Administrator angemeldet sein, um den Anwendungsmanager zu starten!"
-	IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen möchten?"
+	IDS_USER_NOT_ADMIN "Sie mÃ¼ssen als Administrator angemeldet sein, um den Anwendungsmanager zu starten!"
+	IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen mÃ¶chten?"
 	IDS_INFORMATION "Informationen"
-	IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
+	IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry lÃ¶schen!"
 END

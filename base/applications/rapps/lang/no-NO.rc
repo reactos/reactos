@@ -1,3 +1,5 @@
+#pragma code_page(65001) // UTF-8
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -29,7 +31,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Åpne lenke i en nettleser", ID_OPEN_LINK
+		MENUITEM "&Ã…pne lenke i en nettleser", ID_OPEN_LINK
 		MENUITEM "&Kopier lenke  til utklipptavlen", ID_COPY_LINK
 	END
 END
@@ -145,7 +147,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_AINFO_VERSION "\nVersjon: "
 	IDS_AINFO_DESCRIPTION "\nBeskrivelse: "
-	IDS_AINFO_SIZE "\nStørrelse: "
+	IDS_AINFO_SIZE "\nStÃ¸rrelse: "
 	IDS_AINFO_URLSITE "\nHjemmeside: "
 	IDS_AINFO_LICENCE "\nLisens: "
 END
@@ -165,14 +167,14 @@ BEGIN
 	IDS_CAT_OFFICE "Kontor"
 	IDS_CAT_OTHER "Andre"
 	IDS_CAT_SCIENCE "Vitenskap"
-	IDS_CAT_TOOLS "Verktøy"
+	IDS_CAT_TOOLS "VerktÃ¸y"
 	IDS_CAT_VIDEO "Filmer"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_APPTITLE "ReactOS programbehandler"
-	IDS_SEARCH_TEXT "Søk..."
+	IDS_SEARCH_TEXT "SÃ¸k..."
 	IDS_INSTALL "Installere"
 	IDS_UNINSTALL "Avinstallere"
 	IDS_MODIFY "Endre"

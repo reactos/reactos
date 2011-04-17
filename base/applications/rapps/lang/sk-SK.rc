@@ -1,32 +1,34 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  29-08-2009
  * LAST CHANGE:  26-07-2010
  */
+
+#pragma code_page(65001) // UTF-8
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&S˙bor"
+	POPUP "&S√∫bor"
 	BEGIN
 		MENUITEM "&Nastavenia",   ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "S&konËiù",      ID_EXIT
+		MENUITEM "S&konƒçi≈•",      ID_EXIT
 	END
 	POPUP "&Programy"
 	BEGIN
-		MENUITEM "&Inötalovaù",   ID_INSTALL
-		MENUITEM "O&dinötalovaù", ID_UNINSTALL
-		MENUITEM "&Zmeniù",       ID_MODIFY
+		MENUITEM "&In≈°talova≈•",   ID_INSTALL
+		MENUITEM "O&din≈°talova≈•", ID_UNINSTALL
+		MENUITEM "&Zmeni≈•",       ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "Odst&r·niù z Registrov", ID_REGREMOVE
+		MENUITEM "Odst&r√°ni≈• z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Obnoviù",      ID_REFRESH
+		MENUITEM "&Obnovi≈•",      ID_REFRESH
 	END
-	POPUP "PomocnÌk"
+	POPUP "Pomocn√≠k"
 	BEGIN
-		MENUITEM "PomocnÌk",      ID_HELP, GRAYED
-		MENUITEM "»o je ...",     ID_ABOUT
+		MENUITEM "Pomocn√≠k",      ID_HELP, GRAYED
+		MENUITEM "ƒåo je ...",     ID_ABOUT
 	END
 END
 
@@ -34,8 +36,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Otvoriù linku v prehliadaËi", ID_OPEN_LINK
-		MENUITEM "&KopÌrovaù linku do schr·nky", ID_COPY_LINK
+		MENUITEM "&Otvori≈• linku v prehliadaƒçi", ID_OPEN_LINK
+		MENUITEM "&Kop√≠rova≈• linku do schr√°nky", ID_COPY_LINK
 	END
 END
 
@@ -43,13 +45,13 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Inötalovaù",   ID_INSTALL
-		MENUITEM "O&dinötalovaù", ID_UNINSTALL
-		MENUITEM "&Zmeniù",       ID_MODIFY
+		MENUITEM "&In≈°talova≈•",   ID_INSTALL
+		MENUITEM "O&din≈°talova≈•", ID_UNINSTALL
+		MENUITEM "&Zmeni≈•",       ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "Odst&r·niù z Registrov", ID_REGREMOVE
+		MENUITEM "Odst&r√°ni≈• z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Obnoviù",      ID_REFRESH
+		MENUITEM "&Obnovi≈•",      ID_REFRESH
 	END
 END
 
@@ -58,69 +60,69 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "VöeobecnÈ", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Uloûiù pozÌciu okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Aktualizovaù zoznam dostupn˝ch programov pri spustenÌ", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Z·znam o inötalovanÌ a odstr·nenÌ programov", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "V≈°eobecn√©", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Ulo≈æi≈• poz√≠ciu okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Aktualizova≈• zoznam dostupn√Ωch programov pri spusten√≠", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Z√°znam o in≈°talovan√≠ a odstr√°nen√≠ programov", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "Sùahovanie", -1, 4, 65, 240, 51
-	LTEXT "PrieËinok pre sùahovanie:", -1, 16, 75, 100, 9
+	GROUPBOX "S≈•ahovanie", -1, 4, 65, 240, 51
+	LTEXT "Prieƒçinok pre s≈•ahovanie:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Vybraù", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Zmazaù inötalaËnÈ programy po nainötalovanÌ", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&Vybra≈•", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Zmaza≈• in≈°talaƒçn√© programy po nain≈°talovan√≠", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "PredvolenÈ", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Predvolen√©", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Zruöiù", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inötal·cia programu"
+CAPTION "In≈°tal√°cia programu"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Inötalovaù z disku (CD alebo DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Stiahnuù a inötalovaù", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&In≈°talova≈• z disku (CD alebo DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Stiahnu≈• a in≈°talova≈•", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Zruöiù", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Sùahujem ..." // Stiahnuù ???
+CAPTION "S≈•ahujem ..." // Stiahnu≈• ???
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON "Zruöiù", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "»o je ManaûÈr aplik·ciÌ systÈmu ReactOS"
+CAPTION "ƒåo je Mana≈æ√©r aplik√°ci√≠ syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ManaûÈr aplik·ciÌ systÈmu ReactOS\nAutorskÈ pr·va (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: M·rio KaËm·r (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Zavrieù", IDOK, 133, 46, 50, 14
+	LTEXT "Mana≈æ√©r aplik√°ci√≠ syst√©mu ReactOS\nAutorsk√© pr√°va (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: M√°rio Kaƒçm√°r (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON "Zavrie≈•", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_TOOLTIP_INSTALL "Inötalovaù"
-	IDS_TOOLTIP_UNINSTALL "Odinötalovaù"
-	IDS_TOOLTIP_MODIFY "Zmeniù"
+	IDS_TOOLTIP_INSTALL "In≈°talova≈•"
+	IDS_TOOLTIP_UNINSTALL "Odin≈°talova≈•"
+	IDS_TOOLTIP_MODIFY "Zmeni≈•"
 	IDS_TOOLTIP_SETTINGS "Nastavenia"
-	IDS_TOOLTIP_REFRESH "Obnoviù"
-	IDS_TOOLTIP_EXIT "SkonËiù"
+	IDS_TOOLTIP_REFRESH "Obnovi≈•"
+	IDS_TOOLTIP_EXIT "Skonƒçi≈•"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APP_NAME "N·zov"
+	IDS_APP_NAME "N√°zov"
 	IDS_APP_INST_VERSION "Verzia"
 	IDS_APP_DESCRIPTION "Popis"
 END
@@ -129,11 +131,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_INFO_VERSION "\nVerzia: "
 	IDS_INFO_DESCRIPTION "\nPopis: "
-	IDS_INFO_PUBLISHER "\nVydavateæ: "
+	IDS_INFO_PUBLISHER "\nVydavateƒæ: "
 	IDS_INFO_HELPLINK "\nHelp Link: "
 	IDS_INFO_HELPPHONE "\nHelp Telephone: "
-	IDS_INFO_README "\n»ÌtajMa: "
-	IDS_INFO_REGOWNER "\nRegistrovan˝ vlastnÌk: "
+	IDS_INFO_README "\nƒå√≠tajMa: "
+	IDS_INFO_REGOWNER "\nRegistrovan√Ω vlastn√≠k: "
 	IDS_INFO_PRODUCTID "\nID Produktu: "
 	IDS_INFO_CONTACT "\nKontakt: "
 	IDS_INFO_UPDATEINFO "\nUpdate Information: "
@@ -143,56 +145,56 @@ BEGIN
 	IDS_INFO_INSTALLSRC "\nInstall Source: "
 	IDS_INFO_UNINSTALLSTR "\nUninstall String: "
 	IDS_INFO_MODIFYPATH "\nModify Path: "
-	IDS_INFO_INSTALLDATE "\nD·tum inötal·cie: "
+	IDS_INFO_INSTALLDATE "\nD√°tum in≈°tal√°cie: "
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_AINFO_VERSION "\nVerzia: "
 	IDS_AINFO_DESCRIPTION "\nPopis: "
-	IDS_AINFO_SIZE "\nVeækosù: "
-	IDS_AINFO_URLSITE "\nDomovsk· str·nka: "
+	IDS_AINFO_SIZE "\nVeƒækos≈•: "
+	IDS_AINFO_URLSITE "\nDomovsk√° str√°nka: "
 	IDS_AINFO_LICENCE "\nLicencia: "
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_CAT_AUDIO "Audio"
-	IDS_CAT_DEVEL "V˝voj·rske" // Development, v˝voj??
-	IDS_CAT_DRIVERS "Ovl·daËe" // Drivers
-	IDS_CAT_EDU "Vzdel·vacie" // Edutainment
-	IDS_CAT_ENGINEER "Inûinierske" // Engineering, konötrukËnÈ??
-	IDS_CAT_FINANCE "FinanËnÈ" // Finance, peÚaûnÌctvo??
-	IDS_CAT_GAMES "Hry & z·bava" // Games & Fun, z·bavnÈ??
-	IDS_CAT_GRAPHICS "GrafickÈ" // Graphics
-	IDS_CAT_INTERNET "Internet & sieù"
-	IDS_CAT_LIBS "Kniûnice"
-	IDS_CAT_OFFICE "Kancel·rske" // Office
-	IDS_CAT_OTHER "InÈ"
-	IDS_CAT_SCIENCE "VedeckÈ" // Science
-	IDS_CAT_TOOLS "N·stroje" // Tools
+	IDS_CAT_DEVEL "V√Ωvoj√°rske" // Development, v√Ωvoj??
+	IDS_CAT_DRIVERS "Ovl√°daƒçe" // Drivers
+	IDS_CAT_EDU "Vzdel√°vacie" // Edutainment
+	IDS_CAT_ENGINEER "In≈æinierske" // Engineering, kon≈°trukƒçn√©??
+	IDS_CAT_FINANCE "Finanƒçn√©" // Finance, pe≈àa≈æn√≠ctvo??
+	IDS_CAT_GAMES "Hry & z√°bava" // Games & Fun, z√°bavn√©??
+	IDS_CAT_GRAPHICS "Grafick√©" // Graphics
+	IDS_CAT_INTERNET "Internet & sie≈•"
+	IDS_CAT_LIBS "Kni≈ænice"
+	IDS_CAT_OFFICE "Kancel√°rske" // Office
+	IDS_CAT_OTHER "In√©"
+	IDS_CAT_SCIENCE "Vedeck√©" // Science
+	IDS_CAT_TOOLS "N√°stroje" // Tools
 	IDS_CAT_VIDEO "Video"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APPTITLE "ManaûÈr aplik·ciÌ systÈmu ReactOS"
-	IDS_SEARCH_TEXT "Hæadaù..."
-	IDS_INSTALL "Inötalovaù"
-	IDS_UNINSTALL "Odinötalovaù"
-	IDS_MODIFY "Zmeniù"
-	IDS_APPS_COUNT "PoËet programov: %d"
-	IDS_WELCOME_TITLE "VÌta V·s ManaûÈr aplik·ciÌ systÈmu ReactOS!\n\n" // ReactOS Application Manager
-	IDS_WELCOME_TEXT "Vyberte si kategÛriu na æavej strane, potom vyberte aplik·ciu, ktor˙ chcete nainötalovaù alebo odinötalovaù.\nWebstr·nka projektu ReactOS: "
+	IDS_APPTITLE "Mana≈æ√©r aplik√°ci√≠ syst√©mu ReactOS"
+	IDS_SEARCH_TEXT "Hƒæada≈•..."
+	IDS_INSTALL "In≈°talova≈•"
+	IDS_UNINSTALL "Odin≈°talova≈•"
+	IDS_MODIFY "Zmeni≈•"
+	IDS_APPS_COUNT "Poƒçet programov: %d"
+	IDS_WELCOME_TITLE "V√≠ta V√°s Mana≈æ√©r aplik√°ci√≠ syst√©mu ReactOS!\n\n" // ReactOS Application Manager
+	IDS_WELCOME_TEXT "Vyberte si kateg√≥riu na ƒæavej strane, potom vyberte aplik√°ciu, ktor√∫ chcete nain≈°talova≈• alebo odin≈°talova≈•.\nWebstr√°nka projektu ReactOS: "
 	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "NainötalovanÈ"
-	IDS_AVAILABLEFORINST "DostupnÈ pre nainötalovanie"
-	IDS_UPDATES "Aktualiz·cie"
-	IDS_APPLICATIONS "Aplik·cie"
-	IDS_CHOOSE_FOLDER_TEXT "Vyberte prieËinok, ktor˝ sa pouûije pre sùahovanie programov:"
-	IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistuj˙ci prieËinok!"
-	IDS_USER_NOT_ADMIN "Mali by ste byù administr·tor pre spustenie ""ManaûÈra aplik·ciÌ systÈmu ReactOS""!"
-	IDS_APP_REG_REMOVE "Naozaj chcete vymazaù ˙daje o nainötalovanom programe z registrov?"
-	IDS_INFORMATION "Inform·cie"
-	IDS_UNABLE_TO_REMOVE "Nie je moûnÈ odstr·niù z registrov ˙daje o programe!"
+	IDS_INSTALLED "Nain≈°talovan√©"
+	IDS_AVAILABLEFORINST "Dostupn√© pre nain≈°talovanie"
+	IDS_UPDATES "Aktualiz√°cie"
+	IDS_APPLICATIONS "Aplik√°cie"
+	IDS_CHOOSE_FOLDER_TEXT "Vyberte prieƒçinok, ktor√Ω sa pou≈æije pre s≈•ahovanie programov:"
+	IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistuj√∫ci prieƒçinok!"
+	IDS_USER_NOT_ADMIN "Mali by ste by≈• administr√°tor pre spustenie ""Mana≈æ√©ra aplik√°ci√≠ syst√©mu ReactOS""!"
+	IDS_APP_REG_REMOVE "Naozaj chcete vymaza≈• √∫daje o nain≈°talovanom programe z registrov?"
+	IDS_INFORMATION "Inform√°cie"
+	IDS_UNABLE_TO_REMOVE "Nie je mo≈æn√© odstr√°ni≈• z registrov √∫daje o programe!"
 END

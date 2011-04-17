@@ -1,3 +1,5 @@
+#pragma code_page(65001) // UTF-8
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -11,17 +13,17 @@ BEGIN
 	POPUP "&Programmes"
 	BEGIN
 		MENUITEM "&Installer",  ID_INSTALL
-		MENUITEM "&DÈsinstaller",ID_UNINSTALL
+		MENUITEM "&D√©sinstaller",ID_UNINSTALL
 		MENUITEM "&Modifier",   ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Supprimer du registre", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&RafraÓchir",  ID_REFRESH
+		MENUITEM "&Rafra√Æchir",  ID_REFRESH
 	END
 	POPUP "Aide"
 	BEGIN
 		MENUITEM "Aide",      ID_HELP, GRAYED
-		MENUITEM "¿ propos",     ID_ABOUT
+		MENUITEM "≈î propos",     ID_ABOUT
 	END
 END
 
@@ -39,12 +41,12 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "&Installer",   ID_INSTALL
-		MENUITEM "&DÈsinstaller", ID_UNINSTALL
+		MENUITEM "&D√©sinstaller", ID_UNINSTALL
 		MENUITEM "&Modifier",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Supprimer du registre", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&RafraÓchir",   ID_REFRESH
+		MENUITEM "&Rafra√Æchir",   ID_REFRESH
 	END
 END
 
@@ -53,18 +55,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "GÈnÈral", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Enregistrer la position de la fenÍtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Mettre ‡ jour la liste des programmes accessibles au dÈmarage", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	GROUPBOX "G√©n√©ral", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Enregistrer la position de la fenƒôtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Mettre ≈ï jour la liste des programmes accessibles au d√©marage", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Journal de l'installation de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "TÈlÈchargement", -1, 4, 65, 240, 51
-	LTEXT "Fichier des tÈlÈchargements :", -1, 16, 75, 100, 9
+	GROUPBOX "T√©l√©chargement", -1, 4, 65, 240, 51
+	LTEXT "Fichier des t√©l√©chargements :", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&SÈlectionner", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Supprimer l'installateur du programme aprËs l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&S√©lectionner", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Supprimer l'installateur du programme aprƒçs l'installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Par dÈfaut", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Par d√©faut", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "Accepter", IDOK, 116, 124, 60, 14
 	PUSHBUTTON "Annuler", IDCANCEL, 181, 124, 60, 14
 END
@@ -76,8 +78,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installer ‡ partir d'un disque (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&TÈlÈcharger et installer", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Installer ≈ï partir d'un disque (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&T√©l√©charger et installer", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "Accepter", IDOK, 86, 78, 60, 14
 	PUSHBUTTON "Annuler", IDCANCEL, 150, 78, 60, 14
@@ -85,7 +87,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "TÈlÈcharger..."
+CAPTION "T√©l√©charger..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -95,7 +97,7 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "¿ propos"
+CAPTION "≈î propos"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\npar Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
@@ -106,10 +108,10 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_TOOLTIP_INSTALL "Installer"
-	IDS_TOOLTIP_UNINSTALL "DÈsinstaller"
+	IDS_TOOLTIP_UNINSTALL "D√©sinstaller"
 	IDS_TOOLTIP_MODIFY "Modifier"
 	IDS_TOOLTIP_SETTINGS "Configuration"
-	IDS_TOOLTIP_REFRESH "RafraÓchir"
+	IDS_TOOLTIP_REFRESH "Rafra√Æchir"
 	IDS_TOOLTIP_EXIT "Sortir"
 END
 
@@ -126,18 +128,18 @@ BEGIN
 	IDS_INFO_DESCRIPTION "\nDescription : "
 	IDS_INFO_PUBLISHER "\nAuteur : "
 	IDS_INFO_HELPLINK "\nLien d'aide : "
-	IDS_INFO_HELPPHONE "\nTÈlÈphone d'aide : "
+	IDS_INFO_HELPPHONE "\nT√©l√©phone d'aide : "
 	IDS_INFO_README "\nLisez-moi : "
-	IDS_INFO_REGOWNER "\nUtilisateur enregistrÈ : "
+	IDS_INFO_REGOWNER "\nUtilisateur enregistr√© : "
 	IDS_INFO_PRODUCTID "\nID du produit : "
 	IDS_INFO_CONTACT "\nContact : "
-	IDS_INFO_UPDATEINFO "\nInformation de mise ‡ jour : "
-	IDS_INFO_INFOABOUT "\nInformation ‡ propos : "
+	IDS_INFO_UPDATEINFO "\nInformation de mise ≈ï jour : "
+	IDS_INFO_INFOABOUT "\nInformation ≈ï propos : "
 	IDS_INFO_COMMENTS "\nCommentaires : "
-	IDS_INFO_INSTLOCATION "\Emplacement de l'installation : "
+	IDS_INFO_INSTLOCATION "\nEmplacement de l'installation : "
 	IDS_INFO_INSTALLSRC "\nSource de l'installation : "
-	IDS_INFO_UNINSTALLSTR "\nCommande de dÈsinstallation : "
-	IDS_INFO_MODIFYPATH "\nModifier le chemin d'accËs : "
+	IDS_INFO_UNINSTALLSTR "\nCommande de d√©sinstallation : "
+	IDS_INFO_MODIFYPATH "\nModifier le chemin d'accƒçs : "
 	IDS_INFO_INSTALLDATE "\nDate d'installation : "
 END
 
@@ -153,20 +155,20 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_CAT_AUDIO "Audio"
-	IDS_CAT_DEVEL "DÈveloppement"
+	IDS_CAT_DEVEL "D√©veloppement"
 	IDS_CAT_DRIVERS "Pilotes"
-	IDS_CAT_EDU "…ducation"
-	IDS_CAT_ENGINEER "IngÈnierie"
+	IDS_CAT_EDU "√âducation"
+	IDS_CAT_ENGINEER "Ing√©nierie"
 	IDS_CAT_FINANCE "Finance"
-	IDS_CAT_GAMES "Jeux & dÈtente"
+	IDS_CAT_GAMES "Jeux & d√©tente"
 	IDS_CAT_GRAPHICS "Graphismes"
-	IDS_CAT_INTERNET "Internet & rÈsaux"
-	IDS_CAT_LIBS "BibliothËques"
+	IDS_CAT_INTERNET "Internet & r√©saux"
+	IDS_CAT_LIBS "Bibliothƒçques"
 	IDS_CAT_OFFICE "Bureautique"
 	IDS_CAT_OTHER "Autres"
 	IDS_CAT_SCIENCE "Sciences"
 	IDS_CAT_TOOLS "Outils"
-	IDS_CAT_VIDEO "VidÈo"
+	IDS_CAT_VIDEO "Vid√©o"
 END
 
 STRINGTABLE DISCARDABLE
@@ -174,20 +176,20 @@ BEGIN
 	IDS_APPTITLE "ReactOS Applications Manager"
 	IDS_SEARCH_TEXT "Chercher..."
 	IDS_INSTALL "Installer"
-	IDS_UNINSTALL "DÈsinstaller"
+	IDS_UNINSTALL "D√©sinstaller"
 	IDS_MODIFY "Modifier"
 	IDS_APPS_COUNT "Nombre d'applications : %d"
-	IDS_WELCOME_TITLE "Bienvenue ‡ ReactOS Applications Manager!\n\n"
-	IDS_WELCOME_TEXT "Choisisez une catÈgorie ‡ gauche, ensuite choisisez une application ‡ installer ou dÈsinstaller.\nSite internet de ReactOS : "
+	IDS_WELCOME_TITLE "Bienvenue ≈ï ReactOS Applications Manager!\n\n"
+	IDS_WELCOME_TEXT "Choisisez une cat√©gorie ≈ï gauche, ensuite choisisez une application ≈ï installer ou d√©sinstaller.\nSite internet de ReactOS : "
 	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "InstallÈ"
+	IDS_INSTALLED "Install√©"
 	IDS_AVAILABLEFORINST "Disponible pour installation"
-	IDS_UPDATES "Mises ‡ jour"
+	IDS_UPDATES "Mises ≈ï jour"
 	IDS_APPLICATIONS "Applications"
-	IDS_CHOOSE_FOLDER_TEXT "Choisisez un dossier dans lequel seront tÈlÈchargÈs les programmes :"
-	IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spÈcifiÈ n'existe pas. Le crÈer ?"
-	IDS_USER_NOT_ADMIN "Vous devez Ítre un administrateur pour dÈmarrer ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Etes-vous s˚r de vouloir supprimer les donnÈes du programme installÈ du registre ?"
+	IDS_CHOOSE_FOLDER_TEXT "Choisisez un dossier dans lequel seront t√©l√©charg√©s les programmes :"
+	IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez sp√©cifi√© n'existe pas. Le cr√©er ?"
+	IDS_USER_NOT_ADMIN "Vous devez ƒôtre un administrateur pour d√©marrer ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Etes-vous s≈±r de vouloir supprimer les donn√©es du programme install√© du registre ?"
 	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Impossible de supprimer les donnÈes du programme du registre !"
+	IDS_UNABLE_TO_REMOVE "Impossible de supprimer les donn√©es du programme du registre !"
 END
