@@ -40,6 +40,7 @@ list(APPEND SOURCE
     version.c
     virtual.c
     volume.c
+    dosdev.c
     testlist.c
     resource.rc)
 
