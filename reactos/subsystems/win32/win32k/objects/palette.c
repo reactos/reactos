@@ -92,33 +92,33 @@ InitPaletteImpl()
     gpalRGB.RedMask = RGB(0xFF, 0x00, 0x00);
     gpalRGB.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalRGB.BlueMask = RGB(0x00, 0x00, 0xFF);
-    gpalRGB.BaseObject.ulShareCount = 0;
+    gpalRGB.BaseObject.ulShareCount = 1;
     gpalRGB.BaseObject.BaseFlags = 0 ;
 
     gpalBGR.flFlags = PAL_BGR;
     gpalBGR.RedMask = RGB(0x00, 0x00, 0xFF);
     gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
-    gpalBGR.BaseObject.ulShareCount = 0;
+    gpalBGR.BaseObject.ulShareCount = 1;
     gpalBGR.BaseObject.BaseFlags = 0 ;
 
     gpalRGB555.flFlags = PAL_RGB16_555 | PAL_BITFIELDS;
     gpalRGB555.RedMask = 0x7C00;
     gpalRGB555.GreenMask = 0x3E0;
     gpalRGB555.BlueMask = 0x1F;
-    gpalRGB555.BaseObject.ulShareCount = 0;
+    gpalRGB555.BaseObject.ulShareCount = 1;
     gpalRGB555.BaseObject.BaseFlags = 0 ;
 
     gpalRGB565.flFlags = PAL_RGB16_565 | PAL_BITFIELDS;
     gpalRGB565.RedMask = 0xF800;
     gpalRGB565.GreenMask = 0x7E0;
     gpalRGB565.BlueMask = 0x1F;
-    gpalRGB565.BaseObject.ulShareCount = 0;
+    gpalRGB565.BaseObject.ulShareCount = 1;
     gpalRGB565.BaseObject.BaseFlags = 0 ;
 
     memset(&gpalMono, 0, sizeof(PALETTE));
     gpalMono.flFlags = PAL_MONOCHROME;
-    gpalMono.BaseObject.ulShareCount = 0;
+    gpalMono.BaseObject.ulShareCount = 1;
     gpalMono.BaseObject.BaseFlags = 0 ;
 
     /* Initialize default surface palettes */
