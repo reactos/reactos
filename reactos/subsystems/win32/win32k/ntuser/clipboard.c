@@ -984,11 +984,11 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
 
 
-                    psurf = SURFACE_LockSurface(hMem);
+                    psurf = SURFACE_ShareLockSurface(hMem);
                     BITMAP_GetObject(psurf, sizeof(BITMAP), (PVOID)&bm);
                     if(psurf)
                     {
-                        SURFACE_UnlockSurface(psurf);
+                        SURFACE_ShareUnlockSurface(psurf);
                     }
 
                     bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);

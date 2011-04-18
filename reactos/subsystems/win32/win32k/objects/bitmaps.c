@@ -270,7 +270,7 @@ IntCreateCompatibleBitmap(
                           1,
                           dibs.dsBm.bmBitsPixel,
                           NULL);
-            psurfBmp = SURFACE_LockSurface(Bmp);
+            psurfBmp = SURFACE_ShareLockSurface(Bmp);
             ASSERT(psurfBmp);
             /* Assign palette */
             psurfBmp->ppal = psurf->ppal;
@@ -278,7 +278,7 @@ IntCreateCompatibleBitmap(
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // Fixme
-            SURFACE_UnlockSurface(psurfBmp);
+            SURFACE_ShareUnlockSurface(psurfBmp);
         }
         else if (Count == sizeof(DIBSECTION))
         {
@@ -316,7 +316,7 @@ IntCreateCompatibleBitmap(
                     return 0;
                 }
 
-                PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
+                PalGDI = PALETTE_ShareLockPalette(psurf->ppal->BaseObject.hHmgr);
 
                 for (Index = 0;
                         Index < 256 && Index < PalGDI->NumColors;
@@ -327,7 +327,7 @@ IntCreateCompatibleBitmap(
                     bi->bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
                     bi->bmiColors[Index].rgbReserved = 0;
                 }
-                PALETTE_UnlockPalette(PalGDI);
+                PALETTE_ShareUnlockPalette(PalGDI);
             }
 
             Bmp = DIB_CreateDIBSection(Dc,
@@ -390,7 +390,7 @@ NtGdiGetBitmapDimension(
     if (hBitmap == NULL)
         return FALSE;
 
-    psurfBmp = SURFACE_LockSurface(hBitmap);
+    psurfBmp = SURFACE_ShareLockSurface(hBitmap);
     if (psurfBmp == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -408,7 +408,7 @@ NtGdiGetBitmapDimension(
     }
     _SEH2_END
 
-    SURFACE_UnlockSurface(psurfBmp);
+    SURFACE_ShareUnlockSurface(psurfBmp);
 
     return Ret;
 }
@@ -496,12 +496,12 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
                     NtGdiSelectBitmap(hDCTmp, hBmpOld);
 
                     // our bitmap is no longer selected, so we can access it's stuff...
-                    psurf = SURFACE_LockSurface(hBmpTmp);
+                    psurf = SURFACE_ShareLockSurface(hBmpTmp);
                     if (psurf)
                     {
                         // Dont you need to convert something here?
                         Result = *(COLORREF*)psurf->SurfObj.pvScan0;
-                        SURFACE_UnlockSurface(psurf);
+                        SURFACE_ShareUnlockSurface(psurf);
                     }
                 }
                 GreDeleteObject(hBmpTmp);
@@ -598,7 +598,7 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
-    psurf = SURFACE_LockSurface(hBitmap);
+    psurf = SURFACE_ShareLockSurface(hBitmap);
     if (!psurf)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -612,7 +612,7 @@ NtGdiGetBitmapBits(
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)
     {
-        SURFACE_UnlockSurface(psurf);
+        SURFACE_ShareUnlockSurface(psurf);
         return bmSize;
     }
 
@@ -632,7 +632,7 @@ NtGdiGetBitmapBits(
     }
     _SEH2_END
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return ret;
 }
@@ -652,7 +652,7 @@ NtGdiSetBitmapBits(
         return 0;
     }
 
-    psurf = SURFACE_LockSurface(hBitmap);
+    psurf = SURFACE_ShareLockSurface(hBitmap);
     if (psurf == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -671,7 +671,7 @@ NtGdiSetBitmapBits(
     }
     _SEH2_END
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return ret;
 }
@@ -689,7 +689,7 @@ NtGdiSetBitmapDimension(
     if (hBitmap == NULL)
         return FALSE;
 
-    psurf = SURFACE_LockSurface(hBitmap);
+    psurf = SURFACE_ShareLockSurface(hBitmap);
     if (psurf == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -714,7 +714,7 @@ NtGdiSetBitmapDimension(
     psurf->sizlDim.cx = Width;
     psurf->sizlDim.cy = Height;
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return Ret;
 }
@@ -998,11 +998,11 @@ NtGdiGetDCforBitmap(
     IN HBITMAP hsurf)
 {
     HDC hdc = NULL;
-    PSURFACE psurf = SURFACE_LockSurface(hsurf);
+    PSURFACE psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf)
     {
         hdc = psurf->hdc;
-        SURFACE_UnlockSurface(psurf);
+        SURFACE_ShareUnlockSurface(psurf);
     }
     return hdc;
 }

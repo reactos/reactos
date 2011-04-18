@@ -634,7 +634,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         }
 
         /* Try to get the size of the wallpaper */
-        if(!(psurfBmp = SURFACE_LockSurface(hbmp)))
+        if(!(psurfBmp = SURFACE_ShareLockSurface(hbmp)))
         {
             GreDeleteObject(hbmp);
             return 0;
@@ -644,7 +644,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         gpwinstaCurrent->cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
         gpwinstaCurrent->WallpaperMode = wmCenter;
 
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
 
         /* Change the bitmap's ownership */
         GDIOBJ_SetOwnership(hbmp, NULL);
@@ -907,7 +907,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETWORKAREA:
         {
-            /*FIXME: we should set the work area of the monitor 
+            /*FIXME: we should set the work area of the monitor
                      that contains the specified rectangle*/
             PMONITOR pmonitor = IntGetPrimaryMonitor();
             RECT rcWorkArea;

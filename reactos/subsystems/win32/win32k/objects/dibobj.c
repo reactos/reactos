@@ -164,7 +164,7 @@ IntSetDIBColorTable(
             return 0;
         }
 
-        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
+        PalGDI = PALETTE_ShareLockPalette(psurf->ppal->BaseObject.hHmgr);
 
         for (Index = StartIndex;
                 Index < StartIndex + Entries && Index < PalGDI->NumColors;
@@ -174,7 +174,7 @@ IntSetDIBColorTable(
             PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
             PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
         }
-        PALETTE_UnlockPalette(PalGDI);
+        PALETTE_ShareUnlockPalette(PalGDI);
     }
     else
         Entries = 0;
@@ -277,8 +277,8 @@ IntSetDIBits(
                   bmi->bmiHeader.biHeight,
                   bmi->bmiHeader.biBitCount));
 
-    psurfDst = SURFACE_LockSurface(hBitmap);
-    psurfSrc = SURFACE_LockSurface(SourceBitmap);
+    psurfDst = SURFACE_ShareLockSurface(hBitmap);
+    psurfSrc = SURFACE_ShareLockSurface(SourceBitmap);
 
     if(!(psurfSrc && psurfDst))
     {
@@ -311,11 +311,11 @@ IntSetDIBits(
 cleanup:
     if(psurfSrc)
     {
-        SURFACE_UnlockSurface(psurfSrc);
+        SURFACE_ShareUnlockSurface(psurfSrc);
     }
     if(psurfDst)
     {
-        SURFACE_UnlockSurface(psurfDst);
+        SURFACE_ShareUnlockSurface(psurfDst);
     }
     GreDeleteObject(SourceBitmap);
 
@@ -766,7 +766,7 @@ NtGdiGetDIBitsInternal(
                 /* For color DDBs in native depth (mono DDBs always have
                    a black/white palette):
                    Generate the color map from the selected palette */
-                PPALETTE pDcPal = PALETTE_LockPalette(pDC->dclevel.hpal);
+                PPALETTE pDcPal = PALETTE_ShareLockPalette(pDC->dclevel.hpal);
                 if(!pDcPal)
                 {
                     ScanLines = 0 ;
@@ -786,7 +786,7 @@ NtGdiGetDIBitsInternal(
                     rgbQuads[i].rgbBlue     = pDcPal->IndexedColors[i].peBlue;
                     rgbQuads[i].rgbReserved = 0;
                 }
-                PALETTE_UnlockPalette(pDcPal);
+                PALETTE_ShareUnlockPalette(pDcPal);
             }
             else
             {
@@ -1548,10 +1548,10 @@ DIB_CreateDIBSection(
     {
         if(dc)
         {
-            PPALETTE pdcPal ;
-            pdcPal = PALETTE_LockPalette(dc->dclevel.hpal);
-            hpal = DIB_MapPaletteColors(pdcPal, bmi);
-            PALETTE_UnlockPalette(pdcPal);
+            PPALETTE ppalDc;
+            ppalDc = PALETTE_ShareLockPalette(dc->dclevel.hpal);
+            hpal = DIB_MapPaletteColors(ppalDc, bmi);
+            PALETTE_ShareUnlockPalette(ppalDc);
         }
         else
         {

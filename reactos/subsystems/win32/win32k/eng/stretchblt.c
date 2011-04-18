@@ -55,7 +55,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     {
         GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
         hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
-        psurfPattern = SURFACE_LockSurface(hbmPattern);
+        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
         if (psurfPattern)
         {
             PatternSurface = &psurfPattern->SurfObj;
@@ -78,7 +78,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     /* Pattern brush */
     if (psurfPattern)
     {
-        SURFACE_UnlockSurface(psurfPattern);
+        SURFACE_ShareUnlockSurface(psurfPattern);
     }
 
     return bResult;
