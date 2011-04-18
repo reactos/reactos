@@ -14,7 +14,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-#include <Dbt.h>
+#include <dbt.h>
 DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS *****************************************************************/
