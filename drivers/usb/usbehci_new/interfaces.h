@@ -209,6 +209,25 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 //
 
     virtual NTSTATUS ResetPort(ULONG PortNumber) = 0;
+    
+//-----------------------------------------------------------------------------------------
+//
+// SetAsyncListRegister
+//
+// Description: this functions sets the register to a address that is the physical address of a QueueHead.
+// This is the location at which the controller will start executing the Asynchronous Schedule.
+//
+// FIXME: This is only available for USB 2.0
+    virtual VOID SetAsyncListRegister(ULONG PhysicalAddress) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SetPeriodicListRegister
+//
+// Description: this functions sets the register to a address that is the physical address of a ???.
+// This is the location at which the controller will start executing the Periodic Schedule.
+//
+    virtual VOID SetPeriodicListRegister(ULONG PhysicalAddress) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -374,7 +393,7 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: initializes the object
 
     virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware,
-                                PADAPTER_OBJECT AdapterObject,
+                                PDMA_ADAPTER AdapterObject,
                                 IN OPTIONAL PKSPIN_LOCK Lock) = 0;
 
 //-----------------------------------------------------------------------------------------

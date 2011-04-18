@@ -60,7 +60,7 @@ public:
     NTSTATUS ResetController();
     NTSTATUS ResetPort(ULONG PortIndex);
 
-    VOID SetAsyncListAddressRegister(ULONG PhysicalAddress);
+    VOID SetAsyncListRegister(ULONG PhysicalAddress);
     VOID SetPeriodicListRegister(ULONG PhysicalAddress);
 
     KIRQL AcquireDeviceLock(void);
@@ -132,12 +132,16 @@ CUSBHardwareDevice::Initialize(
 
     DPRINT1("CUSBHardwareDevice::Initialize\n");
 
+    //
+    // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
+    //
     Status = CreateUSBQueue(&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
         return Status;
     }
+
     //
     // store device objects
     // 
@@ -333,8 +337,26 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
+    // Stop the controller before modifying schedules
+    //
+    Status = StopController();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    //
+    // Initialize the UsbQueue now that we have an AdapterObject.
+    //
+    Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to Initialize the UsbQueue\n");
+        return Status;
+    }
+
+    //
     // Start the controller
     //
+
     DPRINT1("Starting Controller\n");
     return StartController();
 }
@@ -369,7 +391,7 @@ CUSBHardwareDevice::GetDeviceDetails(
         *NumberOfPorts = m_Capabilities.HCSParams.PortCount;
     //FIXME: What to returned here?
     if (Speed)
-        *Speed = 0;
+        *Speed = 0x200;
     return STATUS_SUCCESS;
 }
 
@@ -477,6 +499,7 @@ CUSBHardwareDevice::StartController(void)
     // Set port routing to EHCI controller
     //
     EHCI_WRITE_REGISTER_ULONG(EHCI_CONFIGFLAG, 1);
+
     DPRINT1("EHCI Started!\n");
     return STATUS_SUCCESS;
 }
@@ -489,6 +512,7 @@ CUSBHardwareDevice::StopController(void)
 
     //
     // Disable Interrupts and stop execution
+    //
     EHCI_WRITE_REGISTER_ULONG (EHCI_USBINTR, 0);
 
     GetCommandRegister(&UsbCmd);
@@ -565,25 +589,11 @@ CUSBHardwareDevice::ResetPort(
     return STATUS_SUCCESS;
 }
 
-//-----------------------------------------------------------------------------------------
-//
-// SetAsyncListAddressRegister
-//
-// Description: this functions sets the register to a address that is the physical address of a QueueHead.
-// This is the location at which the controller will start executing the Asynchronous Schedule.
-//
-VOID CUSBHardwareDevice::SetAsyncListAddressRegister(ULONG PhysicalAddress)
+VOID CUSBHardwareDevice::SetAsyncListRegister(ULONG PhysicalAddress)
 {
     EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, PhysicalAddress);
 }
 
-//-----------------------------------------------------------------------------------------
-//
-// SetPeriodicListRegister
-//
-// Description: this functions sets the register to a address that is the physical address of a ???.
-// This is the location at which the controller will start executing the Periodic Schedule.
-//
 VOID CUSBHardwareDevice::SetPeriodicListRegister(ULONG PhysicalAddress)
 {
     EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);

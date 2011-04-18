@@ -125,8 +125,7 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
     
     //Software
     ULONG PhysicalAddr;
-    struct _QUEUE_TRANSFER_DESCRIPTOR *PreviousDescriptor;
-    struct _QUEUE_TRANSFER_DESCRIPTOR *NextDescriptor;
+    LIST_ENTRY LinkedDescriptors;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
 //
@@ -190,8 +189,7 @@ typedef struct _QUEUE_HEAD
 
     //Software
     ULONG PhysicalAddr;
-    struct _QUEUE_HEAD *PreviousQueueHead;
-    struct _QUEUE_HEAD *NextQueueHead;
+    LIST_ENTRY LinkedQueueHeads;
     PQUEUE_TRANSFER_DESCRIPTOR TransferDescriptor;
     PIRP IrpToComplete;
     PMDL MdlToFree;
