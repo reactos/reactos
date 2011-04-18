@@ -50,12 +50,16 @@ protected:
     PDMA_ADAPTER m_Adapter;
     PVOID VirtualBase;
     PHYSICAL_ADDRESS PhysicalAddress;
-    PLIST_ENTRY ExecutingList;
-    PLIST_ENTRY PendingList;
+    PQUEUE_HEAD AsyncQueueHead;
+    PQUEUE_HEAD PendingQueueHead;
     IDMAMemoryManager *m_MemoryManager;
 
     PQUEUE_HEAD CreateQueueHead();
     PQUEUE_TRANSFER_DESCRIPTOR CreateDescriptor(UCHAR PIDCode, ULONG TotalBytesToTransfer);
+    VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
+    VOID UnlinkQueueHead(PQUEUE_HEAD QueueHead);
+    VOID LinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
+    PQUEUE_HEAD UnlinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, ULONG Count);
 };
 
 //=================================================================================================
@@ -84,7 +88,6 @@ CUSBQueue::Initialize(
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
     NTSTATUS Status;
-    PQUEUE_HEAD HeadQueueHead;
 
     DPRINT1("CUSBQueue::Initialize()\n");
 
@@ -130,33 +133,28 @@ CUSBQueue::Initialize(
     }
 
     //
-    // Create a dead QueueHead for use in Async Register
+    // Create a QueueHead for use in Async Register
     //
-    HeadQueueHead = CreateQueueHead();
-    HeadQueueHead->HorizontalLinkPointer = HeadQueueHead->PhysicalAddr | QH_TYPE_QH;
-    HeadQueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
-    HeadQueueHead->Token.Bits.InterruptOnComplete = FALSE;
-    HeadQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
-    HeadQueueHead->Token.Bits.Halted = TRUE;
+    AsyncQueueHead = CreateQueueHead();
+    AsyncQueueHead->HorizontalLinkPointer = AsyncQueueHead->PhysicalAddr | QH_TYPE_QH;
+    AsyncQueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+    AsyncQueueHead->Token.Bits.InterruptOnComplete = FALSE;
+    AsyncQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
+    AsyncQueueHead->Token.Bits.Halted = TRUE;
     
-    Hardware->SetAsyncListRegister(HeadQueueHead->PhysicalAddr);
+    Hardware->SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
 
     //
-    // Set ExecutingList and create PendingList
+    // Create a Unused QueueHead to hold pending QueueHeads
     //
-    ExecutingList = &HeadQueueHead->LinkedQueueHeads;
-    PendingList = (PLIST_ENTRY) ExAllocatePool(NonPagedPool, sizeof(LIST_ENTRY));
-    if (!PendingList)
-    {
-        DPRINT1("Pool allocation failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    PendingQueueHead = CreateQueueHead();
+    PendingQueueHead->Token.Bits.Halted = TRUE;
 
     //
-    // Initialize ListHeads
+    // Initialize ListHead in QueueHeads
     //
-    InitializeListHead(ExecutingList);
-    InitializeListHead(PendingList);
+    InitializeListHead(&AsyncQueueHead->LinkedQueueHeads);
+    InitializeListHead(&PendingQueueHead->LinkedQueueHeads);
 
     return STATUS_SUCCESS;
 }
@@ -262,6 +260,9 @@ CUSBQueue::CreateDescriptor(
     if (!NT_SUCCESS(Status))
         return NULL;
 
+    //
+    // Set default values
+    //
     Descriptor->NextPointer = TERMINATE_POINTER;
     Descriptor->AlternateNextPointer = TERMINATE_POINTER;
     Descriptor->Token.Bits.DataToggle = TRUE;
@@ -270,7 +271,144 @@ CUSBQueue::CreateDescriptor(
     Descriptor->Token.Bits.PIDCode = PIDCode;
     Descriptor->Token.Bits.TotalBytesToTransfer = TotalBytesToTransfer;
     Descriptor->PhysicalAddr = PhysicalAddress.LowPart;
+
     return Descriptor;
+}
+
+//
+// LinkQueueHead - Links one QueueHead to the end of HeadQueueHead list, updating HorizontalLinkPointer.
+//
+VOID
+CUSBQueue::LinkQueueHead(
+    PQUEUE_HEAD HeadQueueHead,
+    PQUEUE_HEAD NewQueueHead)
+{
+    PQUEUE_HEAD LastQueueHead, NextQueueHead;
+    PLIST_ENTRY Entry;
+    ASSERT(HeadQueueHead);
+    ASSERT(NewQueueHead);
+
+    //
+    // Link the LIST_ENTRYs
+    //
+    InsertTailList(&HeadQueueHead->LinkedQueueHeads, &NewQueueHead->LinkedQueueHeads);
+
+    //
+    // Update HLP for Previous QueueHead, which should be the last in list.
+    //
+    Entry = NewQueueHead->LinkedQueueHeads.Blink;
+    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    LastQueueHead->HorizontalLinkPointer = (NewQueueHead->PhysicalAddr | QH_TYPE_QH);
+
+    //
+    // Update HLP for NewQueueHead to point to next, which should be the HeadQueueHead
+    //
+    Entry = NewQueueHead->LinkedQueueHeads.Flink;
+    NextQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    ASSERT(NextQueueHead == HeadQueueHead);
+    NewQueueHead->HorizontalLinkPointer = NextQueueHead->PhysicalAddr;
+}
+
+//
+// UnlinkQueueHead - Unlinks one QueueHead, updating HorizontalLinkPointer.
+//
+VOID
+CUSBQueue::UnlinkQueueHead(
+    PQUEUE_HEAD QueueHead)
+{
+    PQUEUE_HEAD PreviousQH, NextQH;
+    PLIST_ENTRY Entry;
+
+    Entry = QueueHead->LinkedQueueHeads.Blink;
+    PreviousQH = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    Entry = QueueHead->LinkedQueueHeads.Flink;
+    NextQH = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    ASSERT(QueueHead->HorizontalLinkPointer == (NextQH->PhysicalAddr | QH_TYPE_QH));
+    PreviousQH->HorizontalLinkPointer = NextQH->PhysicalAddr | QH_TYPE_QH;
+
+    RemoveEntryList(&QueueHead->LinkedQueueHeads);
+}
+
+//
+// LinkQueueHeadChain - Links a list of QueueHeads to the HeadQueueHead list, updating HorizontalLinkPointer.
+//
+VOID
+CUSBQueue::LinkQueueHeadChain(
+    PQUEUE_HEAD HeadQueueHead,
+    PQUEUE_HEAD NewQueueHead)
+{
+    PQUEUE_HEAD LastQueueHead;
+    PLIST_ENTRY Entry;
+    ASSERT(HeadQueueHead);
+    ASSERT(NewQueueHead);
+
+    //
+    // Find the last QueueHead in NewQueueHead
+    //
+    Entry = NewQueueHead->LinkedQueueHeads.Blink;
+    ASSERT(Entry != NewQueueHead->LinkedQueueHeads.Flink);
+    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+
+    //
+    // Set the LinkPointer and Flink
+    //
+    LastQueueHead->HorizontalLinkPointer = HeadQueueHead->PhysicalAddr | QH_TYPE_QH;
+    LastQueueHead->LinkedQueueHeads.Flink = &HeadQueueHead->LinkedQueueHeads;
+
+    //
+    // Fine the last QueueHead in HeadQueueHead
+    //
+    Entry = HeadQueueHead->LinkedQueueHeads.Blink;
+    HeadQueueHead->LinkedQueueHeads.Blink = &LastQueueHead->LinkedQueueHeads;
+    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    LastQueueHead->LinkedQueueHeads.Flink = &NewQueueHead->LinkedQueueHeads;
+    LastQueueHead->HorizontalLinkPointer = NewQueueHead->PhysicalAddr | QH_TYPE_QH;
+}
+
+//
+// UnlinkQueueHeadChain - Unlinks a list number of QueueHeads from HeadQueueHead list, updating HorizontalLinkPointer.
+// returns the chain of QueueHeads removed from HeadQueueHead.
+//
+PQUEUE_HEAD
+CUSBQueue::UnlinkQueueHeadChain(
+    PQUEUE_HEAD HeadQueueHead,
+    ULONG Count)
+{
+    PQUEUE_HEAD LastQueueHead, FirstQueueHead;
+    PLIST_ENTRY Entry;
+    ULONG Index;
+
+    //
+    // Find the last QueueHead in NewQueueHead
+    //
+    Entry = &HeadQueueHead->LinkedQueueHeads;
+    FirstQueueHead = CONTAINING_RECORD(Entry->Flink, QUEUE_HEAD, LinkedQueueHeads);
+
+    for (Index = 0; Index < Count; Index++)
+    {
+        Entry = Entry->Flink;
+
+        if (Entry == &HeadQueueHead->LinkedQueueHeads)
+        {
+            DPRINT1("Warnnig; Only %d QueueHeads in HeadQueueHead\n", Index);
+            Count = Index + 1;
+            break;
+        }
+    }
+
+    LastQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+    HeadQueueHead->LinkedQueueHeads.Flink = LastQueueHead->LinkedQueueHeads.Flink;
+    if (Count + 1 == Index)
+    {
+        HeadQueueHead->LinkedQueueHeads.Blink = &HeadQueueHead->LinkedQueueHeads;
+    }
+    else
+        HeadQueueHead->LinkedQueueHeads.Blink = LastQueueHead->LinkedQueueHeads.Flink;
+
+    FirstQueueHead->LinkedQueueHeads.Blink = &LastQueueHead->LinkedQueueHeads;
+    LastQueueHead->LinkedQueueHeads.Flink = &FirstQueueHead->LinkedQueueHeads;
+    LastQueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
+    return FirstQueueHead;
 }
 
 NTSTATUS
