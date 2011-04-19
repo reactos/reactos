@@ -288,7 +288,7 @@ CHubController::GetHubControllerSymbolicLink(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (BufferLength < m_HubDeviceInterfaceString.Length - 8)
+    if (BufferLength < (ULONG)m_HubDeviceInterfaceString.Length - 8)
     {
         //
         // buffer too small
@@ -774,7 +774,7 @@ CHubController::HandleClassOther(
     //
     // sanity check
     //
-    PC_ASSERT(Urb->UrbControlVendorClassRequest.Index - 1 < NumPort);
+    PC_ASSERT(Urb->UrbControlVendorClassRequest.Index - 1 < (USHORT)NumPort);
 
     //
     // port range reported start from 1 -n
@@ -1882,7 +1882,8 @@ USBHI_GetUsbDescriptors(
     //
     // submit urb
     //
-    Status = UsbDevice->SubmitUrb(Urb);
+    //Status = UsbDevice->SubmitUrb(Urb);
+    UNIMPLEMENTED
 
     if (NT_SUCCESS(Status))
     {

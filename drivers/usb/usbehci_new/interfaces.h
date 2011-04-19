@@ -174,6 +174,15 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
+// GetDMA
+//
+// Description: returns the DMA object which can be used to allocate memory from the common buffer
+
+    virtual NTSTATUS GetDMA(OUT struct IDMAMemoryManager **OutDMAMemoryManager) = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
 // ResetController()
 //
 // Description: this function resets the controller
@@ -363,40 +372,33 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // The irp contains an URB block which contains all necessary information
 
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, 
-                                       IN OUT PIRP Irp);
-
-//-----------------------------------------------------------------------------------------
-//
-// SetCompletionEvent
-//
-// Description: sets up completion event which is signaled when the
-// request is completed or cancelled
-
-    virtual NTSTATUS SetCompletionEvent(IN PKEVENT Event) = 0;
+                                       IN OUT PIRP Irp) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
 // CompletionCallback
 //
 // Description: called when request has been completed. It is called when
-// IUSBQueue completes the request
+// IUSBQueue completes a queue head
 
     virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode,
-                                   IN ULONG UrbStatusCode) = 0;
+                                    IN ULONG UrbStatusCode,
+                                    IN struct _QUEUE_HEAD *QueueHead) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
 // CancelCallback
 //
-// Description: called when request is cancelled. Called by IUSBQueue
+// Description: called when the queue head is cancelled
 
-    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode) = 0;
+    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode,
+                                IN struct _QUEUE_HEAD *QueueHead) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
 //  GetQueueHead
 //
-// Description: returns an initialized queue head with contains the all transfer descriptors
+// Description: returns an initialized queue head which contains all transfer descriptors
 
     virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead) = 0;
 
@@ -406,6 +408,9 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 //
 // Description: returns true when the request has been completed
 // Should be called after the CompletionCallback has been invoked
+// This function is called by IUSBQueue after queue head has been completed
+// If the function returns true, IUSBQueue will then call ShouldReleaseRequestAfterCompletion
+// If that function returns also true, it calls Release() to delete the IUSBRequest
 
     virtual BOOLEAN IsRequestComplete() = 0;
 
@@ -417,6 +422,34 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 
     virtual ULONG GetTransferType() = 0;
 
+//-----------------------------------------------------------------------------------------
+//
+// GetResultStatus
+//
+// Description: returns the status code of the result
+// Note: this function will block the caller untill the request has been completed
+
+    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS * NtStatusCode,
+                                 OUT OPTIONAL PULONG UrbStatusCode) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// IsRequestInitialized
+//
+// Description: returns true when the request has been successfully initialized using InitializeXXX methods
+
+    virtual BOOLEAN IsRequestInitialized() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// ShouldReleaseRequestAfterCompletion
+//
+// Description: this function gets called when the request returns
+// IUSBQueue will then call Release() on the object to release all associated memory
+// This function will typically return true when the request has been initialized with an irp
+// If the request was initialized with an setup packet, it will return false
+
+    virtual BOOLEAN ShouldReleaseRequestAfterCompletion() = 0;
 };
 
 typedef IUSBRequest *PUSBREQUEST;
@@ -446,7 +479,7 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 //
 // GetPendingRequestCount
 //
-// Description: returns the number of pending requests
+// Description: returns the number of pending requests true from IsRequestComplete
 
     virtual ULONG GetPendingRequestCount() = 0;
 
@@ -608,7 +641,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // Description: gets the device address of the this device
 
-    virtual ULONG GetDeviceAddress() = 0;
+    virtual UCHAR GetDeviceAddress() = 0;
 
 
 //-----------------------------------------------------------------------------------------
@@ -657,7 +690,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // Description: sets device handle data
 
-    virtual NTSTATUS SetDeviceAddress(ULONG DeviceAddress) = 0;
+    virtual NTSTATUS SetDeviceAddress(UCHAR DeviceAddress) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -677,11 +710,11 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
-// SubmitUrb
+// SubmitIrp
 //
-// Description: submits an urb
+// Description: submits an irp containing an urb
 
-    virtual NTSTATUS SubmitUrb(PURB Urb) = 0;
+    virtual NTSTATUS SubmitIrp(PIRP Urb) = 0;
 
 };
 

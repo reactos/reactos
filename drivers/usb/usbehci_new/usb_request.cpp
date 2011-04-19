@@ -38,12 +38,14 @@ public:
     // IUSBRequest interface functions
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
-    virtual NTSTATUS SetCompletionEvent(IN PKEVENT Event);
-    virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode);
-    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode);
+    virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode, IN struct _QUEUE_HEAD *QueueHead);
+    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode, IN struct _QUEUE_HEAD *QueueHead);
     virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
+    virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
+    virtual BOOLEAN IsRequestInitialized();
+    virtual BOOLEAN ShouldReleaseRequestAfterCompletion();
 
     // local functions
     ULONG InternalGetTransferType();
@@ -60,17 +62,60 @@ public:
 
 protected:
     LONG m_Ref;
+
+    //
+    // memory manager for allocating setup packet / queue head / transfer descriptors
+    //
     PDMAMEMORYMANAGER m_DmaManager;
-    PUSB_DEFAULT_PIPE_SETUP_PACKET m_SetupPacket;
-    ULONG m_TransferBufferLength;
-    PMDL m_TransferBufferMDL;
+
+    //
+    // caller provided irp packet containing URB request
+    //
     PIRP m_Irp;
+
+    //
+    // transfer buffer length
+    //
+    ULONG m_TransferBufferLength;
+
+    //
+    // transfer buffer MDL
+    //
+    PMDL m_TransferBufferMDL;
+
+
+    //
+    // caller provided setup packet
+    //
+    PUSB_DEFAULT_PIPE_SETUP_PACKET m_SetupPacket;
+
+    //
+    // completion event for callers who initialized request with setup packet
+    //
     PKEVENT m_CompletionEvent;
 
+    //
+    // DMA queue head
+    //
     PQUEUE_HEAD m_QueueHead;
+
+    //
+    // DMA transfer descriptors linked to the queue head
+    //
     PQUEUE_TRANSFER_DESCRIPTOR m_TransferDescriptors[3];
+
+    //
+    // allocated setup packet from the DMA pool
+    //
     PUSB_DEFAULT_PIPE_SETUP_PACKET m_DescriptorPacket;
     PHYSICAL_ADDRESS m_DescriptorSetupPacket;
+
+    //
+    // stores the result of the operation
+    //
+    NTSTATUS m_NtStatusCode;
+    ULONG m_UrbStatusCode;
+
 };
 
 //----------------------------------------------------------------------------------------
@@ -104,6 +149,23 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
+
+    //
+    // allocate completion event
+    //
+    m_CompletionEvent = (PKEVENT)ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_USBEHCI);
+    if (!m_CompletionEvent)
+    {
+        //
+        // failed to allocate completion event
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize completion event
+    //
+    KeInitializeEvent(m_CompletionEvent, NotificationEvent, FALSE);
 
     //
     // done
@@ -166,7 +228,7 @@ CUSBRequest::InitializeWithIrp(
             if (Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
             {
                 //
-                // it must have an MDL
+                // FIXME: it must have an MDL
                 //
                 PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
 
@@ -189,37 +251,26 @@ CUSBRequest::InitializeWithIrp(
     return STATUS_SUCCESS;
 
 }
-//----------------------------------------------------------------------------------------
-NTSTATUS
-CUSBRequest::SetCompletionEvent(
-    IN PKEVENT Event)
-{
-    if (m_QueueHead)
-    {
-        //
-        // WTF? operation is already in progress
-        //
-        return STATUS_UNSUCCESSFUL;
-    }
 
-    //
-    // store completion event
-    //
-    m_CompletionEvent = Event;
-
-    //
-    // done
-    //
-    return STATUS_SUCCESS;
-}
 //----------------------------------------------------------------------------------------
 VOID
 CUSBRequest::CompletionCallback(
     IN NTSTATUS NtStatusCode,
-    IN ULONG UrbStatusCode)
+    IN ULONG UrbStatusCode,
+    IN struct _QUEUE_HEAD *QueueHead)
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
+
+    //
+    // FIXME: support linked queue heads
+    //
+
+    //
+    // store completion code
+    //
+    m_NtStatusCode = NtStatusCode;
+    m_UrbStatusCode = UrbStatusCode;
 
     if (m_Irp)
     {
@@ -260,22 +311,32 @@ CUSBRequest::CompletionCallback(
         //
         IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
     }
-
-    if (m_CompletionEvent)
+    else
     {
         //
-        // FIXME: make sure the request was not split
+        // signal completion event
         //
+        PC_ASSERT(m_CompletionEvent);
         KeSetEvent(m_CompletionEvent, 0, FALSE);
     }
 }
 //----------------------------------------------------------------------------------------
 VOID
 CUSBRequest::CancelCallback(
-    IN NTSTATUS NtStatusCode)
+    IN NTSTATUS NtStatusCode,
+    IN struct _QUEUE_HEAD *QueueHead)
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
+
+    //
+    // FIXME: support linked queue heads
+    //
+
+    //
+    // store cancelleation code
+    //
+    m_NtStatusCode = NtStatusCode;
 
     if (m_Irp)
     {
@@ -306,12 +367,12 @@ CUSBRequest::CancelCallback(
         //
         IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
     }
-
-    if (m_CompletionEvent)
+    else
     {
         //
-        // FIXME: make sure the request was not split
+        // signal completion event
         //
+        PC_ASSERT(m_CompletionEvent);
         KeSetEvent(m_CompletionEvent, 0, FALSE);
     }
 }
@@ -370,6 +431,7 @@ CUSBRequest::IsRequestComplete()
     //
     // FIXME: check if request was split
     //
+    UNIMPLEMENTED
     return TRUE;
 }
 //----------------------------------------------------------------------------------------
@@ -451,7 +513,6 @@ CUSBRequest::BuildControlTransferQueueHead(
     NTSTATUS Status;
     ULONG NumTransferDescriptors, Index;
     PQUEUE_HEAD QueueHead;
-
 
     //
     // first allocate the queue head
@@ -802,3 +863,75 @@ CUSBRequest::BuildSetupPacket()
     return Status;
 }
 
+//----------------------------------------------------------------------------------------
+VOID
+CUSBRequest::GetResultStatus(
+    OUT OPTIONAL NTSTATUS * NtStatusCode,
+    OUT OPTIONAL PULONG UrbStatusCode)
+{
+    //
+    // sanity check
+    //
+    PC_ASSERT(m_CompletionEvent);
+
+    //
+    // wait for the operation to complete
+    //
+    KeWaitForSingleObject(m_CompletionEvent, Executive, KernelMode, FALSE, NULL);
+
+    //
+    // copy status
+    //
+    if (NtStatusCode)
+    {
+        *NtStatusCode = m_NtStatusCode;
+    }
+
+    //
+    // copy urb status
+    //
+    if (UrbStatusCode)
+    {
+        *UrbStatusCode = m_UrbStatusCode;
+    }
+
+}
+
+
+//-----------------------------------------------------------------------------------------
+BOOLEAN
+CUSBRequest::IsRequestInitialized()
+{
+    if (m_Irp || m_SetupPacket)
+    {
+        //
+        // request is initialized
+        //
+        return TRUE;
+    }
+
+    //
+    // request is not initialized
+    //
+    return FALSE;
+}
+
+//-----------------------------------------------------------------------------------------
+BOOLEAN
+CUSBRequest::ShouldReleaseRequestAfterCompletion()
+{
+    if (m_Irp)
+    {
+        //
+        // the request is completed, release it
+        //
+        return TRUE;
+    }
+    else
+    {
+        //
+        // created with an setup packet, don't release
+        //
+        return FALSE;
+    }
+}
