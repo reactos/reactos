@@ -97,8 +97,10 @@ protected:
     EHCI_CAPS m_Capabilities;
     USHORT m_VendorID;
     USHORT m_DeviceID;
+    PQUEUE_HEAD AsyncQueueHead;
     PUSBQUEUE m_UsbQueue;
     PDMAMEMORYMANAGER m_MemoryManager;
+
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -155,16 +157,6 @@ CUSBHardwareDevice::Initialize(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
-        return Status;
-    }
-
-    //
-    // Initialize the DMAMemoryManager
-    //
-    Status = m_MemoryManager->Initialize(this, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize the DMAMemoryManager\n");
         return Status;
     }
 
@@ -250,6 +242,7 @@ CUSBHardwareDevice::PnpStart(
     ULONG Index, Count;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
     DEVICE_DESCRIPTION DeviceDescription;
+    PHYSICAL_ADDRESS AsyncPhysicalAddress;
     PVOID ResourceBase;
     NTSTATUS Status;
 
@@ -383,6 +376,16 @@ CUSBHardwareDevice::PnpStart(
         return Status;
 
     //
+    // Initialize the DMAMemoryManager
+    //
+    Status = m_MemoryManager->Initialize(this, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to initialize the DMAMemoryManager\n");
+        return Status;
+    }
+
+    //
     // Initialize the UsbQueue now that we have an AdapterObject.
     //
     Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, NULL);
@@ -392,10 +395,29 @@ CUSBHardwareDevice::PnpStart(
         return Status;
     }
 
+    // 
+    // Create a queuehead for the Async Register
+    //
+    m_MemoryManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&AsyncQueueHead, &AsyncPhysicalAddress);
+
+    AsyncQueueHead->AlternateNextPointer = TERMINATE_POINTER;
+    AsyncQueueHead->NextPointer = TERMINATE_POINTER;
+    AsyncQueueHead->PhysicalAddr = AsyncPhysicalAddress.LowPart;
+    AsyncQueueHead->HorizontalLinkPointer = AsyncQueueHead->PhysicalAddr | QH_TYPE_QH;
+    AsyncQueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+    AsyncQueueHead->Token.Bits.InterruptOnComplete = FALSE;
+    AsyncQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
+    AsyncQueueHead->Token.Bits.Halted = TRUE;
+    AsyncQueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
+    AsyncQueueHead->EndPointCharacteristics.NakCountReload = 0xF;
+    AsyncQueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
+    AsyncQueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
+
+    SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
+
     //
     // Start the controller
     //
-
     DPRINT1("Starting Controller\n");
     return StartController();
 }

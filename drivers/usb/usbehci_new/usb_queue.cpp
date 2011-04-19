@@ -93,9 +93,6 @@ CUSBQueue::Initialize(
     //
     KeInitializeSpinLock(&m_Lock);
 
-    //
-    // FIXME: Need to set AsyncRegister with a QUEUEHEAD
-    //
     return Status;
 }
 
