@@ -868,6 +868,10 @@ GreDeleteObject(HGDIOBJ hObject)
                 Entry->UserData = NULL;
              }
              break;
+
+          case GDI_OBJECT_TYPE_DC:
+//             DC_FreeDcAttr(hObject);
+             break;
        }
 
        return NULL != hObject
