@@ -52,13 +52,17 @@ public:
     NTSTATUS PnpStop(void);
     NTSTATUS HandlePower(PIRP Irp);
     NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
-    NTSTATUS GetDmaAdapter(OUT PDMA_ADAPTER AdapterObject);
+    NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
 
     NTSTATUS StartController();
     NTSTATUS StopController();
     NTSTATUS ResetController();
     NTSTATUS ResetPort(ULONG PortIndex);
+
+    NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange);
+    NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status);
+    NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature);
 
     VOID SetAsyncListRegister(ULONG PhysicalAddress);
     VOID SetPeriodicListRegister(ULONG PhysicalAddress);
@@ -85,6 +89,8 @@ protected:
     KSPIN_LOCK m_Lock;
     PKINTERRUPT m_Interrupt;
     KDPC m_IntDpcObject;
+    PVOID VirtualBase;
+    PHYSICAL_ADDRESS PhysicalAddress;
     PULONG m_Base;
     PDMA_ADAPTER m_Adapter;
     ULONG m_MapRegisters;
@@ -92,7 +98,7 @@ protected:
     USHORT m_VendorID;
     USHORT m_DeviceID;
     PUSBQUEUE m_UsbQueue;
-
+    PDMAMEMORYMANAGER m_MemoryManager;
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -133,12 +139,32 @@ CUSBHardwareDevice::Initialize(
     DPRINT1("CUSBHardwareDevice::Initialize\n");
 
     //
+    // Create DMAMemoryManager for use with QueueHeads and Transfer Descriptors.
+    //
+    Status =  CreateDMAMemoryManager(&m_MemoryManager);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create DMAMemoryManager Object\n");
+        return Status;
+    }
+
+    //
     // Create the UsbQueue class that will handle the Asynchronous and Periodic Schedules
     //
     Status = CreateUSBQueue(&m_UsbQueue);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create UsbQueue!\n");
+        return Status;
+    }
+
+    //
+    // Initialize the DMAMemoryManager
+    //
+    Status = m_MemoryManager->Initialize(this, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to initialize the DMAMemoryManager\n");
         return Status;
     }
 
@@ -337,6 +363,19 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
+    // Create Common Buffer
+    //
+    VirtualBase = m_Adapter->DmaOperations->AllocateCommonBuffer(m_Adapter,
+                                                                 PAGE_SIZE * 4,
+                                                                 &PhysicalAddress,
+                                                                 FALSE);
+    if (!VirtualBase)
+    {
+        DPRINT1("Failed to allocate a common buffer\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
     // Stop the controller before modifying schedules
     //
     Status = StopController();
@@ -395,13 +434,25 @@ CUSBHardwareDevice::GetDeviceDetails(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS CUSBHardwareDevice::GetDMA(
+    OUT struct IDMAMemoryManager **OutDMAMemoryManager)
+{
+    if (!m_MemoryManager)
+        return STATUS_UNSUCCESSFUL;
+    *OutDMAMemoryManager = m_MemoryManager;
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 CUSBHardwareDevice::GetUSBQueue(
     OUT struct IUSBQueue **OutUsbQueue)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (!m_UsbQueue)
+        return STATUS_UNSUCCESSFUL;
+    *OutUsbQueue = m_UsbQueue;
+    return STATUS_SUCCESS;
 }
+
 
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
@@ -589,6 +640,140 @@ CUSBHardwareDevice::ResetPort(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS CUSBHardwareDevice::GetPortStatus(
+    ULONG PortId,
+    OUT USHORT *PortStatus,
+    OUT USHORT *PortChange)
+{
+    ULONG Value;
+    USHORT Status = 0, Change = 0;
+
+    //
+    // Get the value of the Port Status and Control Register
+    //
+    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+
+    //
+    // If the PowerPortControl is 0 then host controller does not have power control switches
+    if (!m_Capabilities.HCSParams.PortPowerControl)
+    {
+        Status |= USB_PORT_STATUS_POWER;
+    }
+    else
+    {
+        // Check the value of PortPower
+        if (Value & EHCI_PRT_POWER)
+        {
+            Status |= USB_PORT_STATUS_POWER;
+        }
+    }
+
+    // Get Speed. If SlowSpeedLine flag is there then its a slow speed device
+    if (Value & EHCI_PRT_SLOWSPEEDLINE)
+        Status |= USB_PORT_STATUS_LOW_SPEED;
+    else
+        Status |= USB_PORT_STATUS_HIGH_SPEED;
+
+    // Get Connected Status
+    if (Value & EHCI_PRT_CONNECTED)
+        Status |= USB_PORT_STATUS_CONNECT;
+
+    // Get Enabled Status
+    if (Value & EHCI_PRT_ENABLED)
+        Status |= USB_PORT_STATUS_ENABLE;
+
+    // Is it suspended?
+    if (Value & EHCI_PRT_SUSPEND)
+        Status |= USB_PORT_STATUS_SUSPEND;
+
+    // a overcurrent is active?
+    if (Value & EHCI_PRT_OVERCURRENTACTIVE)
+        Status |= USB_PORT_STATUS_OVER_CURRENT;
+
+    // In a reset state?
+    if (Value & EHCI_PRT_RESET)
+        Status |= USB_PORT_STATUS_RESET;
+
+    //
+    // FIXME: Is the Change here correct?
+    //
+    if (Value & EHCI_PRT_CONNECTSTATUSCHANGE)
+        Change |= USB_PORT_STATUS_CONNECT;
+
+    if (Value & EHCI_PRT_ENABLEDSTATUSCHANGE)
+        Change |= USB_PORT_STATUS_ENABLE;
+
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS CUSBHardwareDevice::ClearPortStatus(
+    ULONG PortId,
+    ULONG Status)
+{
+    ULONG Value;
+
+    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+
+    if (Status == C_PORT_RESET)
+    {
+        if (Value & EHCI_PRT_RESET)
+        {
+            Value &= ~EHCI_PRT_RESET;
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+            KeStallExecutionProcessor(100);
+        }
+    }
+
+    if (Status == C_PORT_CONNECTION)
+    {
+        // FIXME: Make sure its the Connection and Enable Change status.
+        Value |= EHCI_PRT_CONNECTSTATUSCHANGE;
+        Value |= EHCI_PRT_ENABLEDSTATUSCHANGE;
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS CUSBHardwareDevice::SetPortFeature(
+    ULONG PortId,
+    ULONG Feature)
+{
+    ULONG Value;
+
+    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+    if (Feature == PORT_ENABLE)
+    {
+        //
+        // FIXME: EHCI Ports can only be disabled via reset
+        //
+    }
+    
+    if (Feature == PORT_RESET)
+    {
+        if (Value & EHCI_PRT_SLOWSPEEDLINE)
+        {
+            DPRINT1("Non HighSpeed device. Releasing Ownership\n");
+        }
+
+        //
+        // Reset and clean enable
+        //
+        Value |= EHCI_PRT_RESET;
+        Value &= ~EHCI_PRT_ENABLED;
+        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
+        KeStallExecutionProcessor(100);
+    }
+    
+    if (Feature == PORT_POWER)
+        DPRINT1("Not implemented\n");
+
+    return STATUS_SUCCESS;
+}
+
 VOID CUSBHardwareDevice::SetAsyncListRegister(ULONG PhysicalAddress)
 {
     EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, PhysicalAddress);
@@ -693,12 +878,12 @@ EhciDefferedRoutine(
             //
             // Device connected or removed
             //
-            if (PortStatus & EHCI_PRT_CONNECTSTATUSCHAGE)
+            if (PortStatus & EHCI_PRT_CONNECTSTATUSCHANGE)
             {
                 //
                 // Clear the port change status
                 //
-                This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus & EHCI_PRT_CONNECTSTATUSCHAGE);
+                This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_CONNECTSTATUSCHANGE);
 
                 if (PortStatus & EHCI_PRT_CONNECTED)
                 {

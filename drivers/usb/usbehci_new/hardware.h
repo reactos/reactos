@@ -46,7 +46,7 @@
 // Port Register Flags
 //
 #define EHCI_PRT_CONNECTED              0x01
-#define EHCI_PRT_CONNECTSTATUSCHAGE     0x02
+#define EHCI_PRT_CONNECTSTATUSCHANGE    0x02
 #define EHCI_PRT_ENABLED                0x04
 #define EHCI_PRT_ENABLEDSTATUSCHANGE    0x08
 #define EHCI_PRT_OVERCURRENTACTIVE      0x10
@@ -192,7 +192,7 @@ typedef struct _QUEUE_HEAD
     LIST_ENTRY LinkedQueueHeads;
     PQUEUE_TRANSFER_DESCRIPTOR TransferDescriptor;
     PIRP IrpToComplete;
-    PMDL MdlToFree;
+    PMDL Mdl;
     PKEVENT Event;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 

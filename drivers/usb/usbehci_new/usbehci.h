@@ -7,6 +7,10 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
+//
+// FIXME: 
+// #include <usbprotocoldefs.h>
+//
 #include <usb.h>
 #include <stdio.h>
 #include <wdmguid.h>
@@ -20,6 +24,20 @@
 #include <kcom.h>
 
 #include "interfaces.h"
+
+//
+// flags for handling USB_REQUEST_SET_FEATURE / USB_REQUEST_GET_FEATURE
+//
+#define PORT_ENABLE         1
+#define PORT_SUSPEND        2
+#define PORT_OVER_CURRENT   3
+#define PORT_RESET          4
+#define PORT_POWER          8
+#define C_PORT_CONNECTION   16
+#define C_PORT_ENABLE       17
+#define C_PORT_SUSPEND      18
+#define C_PORT_OVER_CURRENT 19
+#define C_PORT_RESET        20
 
 typedef struct
 {

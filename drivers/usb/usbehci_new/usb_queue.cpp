@@ -48,14 +48,9 @@ protected:
     LONG m_Ref;
     KSPIN_LOCK m_Lock;
     PDMA_ADAPTER m_Adapter;
-    PVOID VirtualBase;
-    PHYSICAL_ADDRESS PhysicalAddress;
     PQUEUE_HEAD AsyncQueueHead;
     PQUEUE_HEAD PendingQueueHead;
-    IDMAMemoryManager *m_MemoryManager;
 
-    PQUEUE_HEAD CreateQueueHead();
-    PQUEUE_TRANSFER_DESCRIPTOR CreateDescriptor(UCHAR PIDCode, ULONG TotalBytesToTransfer);
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
     VOID UnlinkQueueHead(PQUEUE_HEAD QueueHead);
     VOID LinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
@@ -87,35 +82,11 @@ CUSBQueue::Initialize(
     PDMA_ADAPTER AdapterObject,
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT1("CUSBQueue::Initialize()\n");
 
     ASSERT(Hardware);
-    ASSERT(AdapterObject);
-
-    //
-    // Create Common Buffer
-    //
-    VirtualBase = AdapterObject->DmaOperations->AllocateCommonBuffer(AdapterObject,
-                                                                     PAGE_SIZE * 4,
-                                                                     &PhysicalAddress,
-                                                                     FALSE);
-    if (!VirtualBase)
-    {
-        DPRINT1("Failed to allocate a common buffer\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // Create DMAMemoryManager for use with QueueHeads and Transfer Descriptors.
-    //
-    Status =  CreateDMAMemoryManager(&m_MemoryManager);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create DMAMemoryManager Object\n");
-        return Status;
-    }
 
     //
     // initialize device lock
@@ -123,46 +94,20 @@ CUSBQueue::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
-    // Initialize the DMAMemoryManager
+    // FIXME: Need to set AsyncRegister with a QUEUEHEAD
     //
-    Status = m_MemoryManager->Initialize(Hardware, &m_Lock, PAGE_SIZE * 4, VirtualBase, PhysicalAddress, 32);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize the DMAMemoryManager\n");
-        return Status;
-    }
-
-    //
-    // Create a QueueHead for use in Async Register
-    //
-    AsyncQueueHead = CreateQueueHead();
-    AsyncQueueHead->HorizontalLinkPointer = AsyncQueueHead->PhysicalAddr | QH_TYPE_QH;
-    AsyncQueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
-    AsyncQueueHead->Token.Bits.InterruptOnComplete = FALSE;
-    AsyncQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
-    AsyncQueueHead->Token.Bits.Halted = TRUE;
-    
-    Hardware->SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
-
-    //
-    // Create a Unused QueueHead to hold pending QueueHeads
-    //
-    PendingQueueHead = CreateQueueHead();
-    PendingQueueHead->Token.Bits.Halted = TRUE;
-
-    //
-    // Initialize ListHead in QueueHeads
-    //
-    InitializeListHead(&AsyncQueueHead->LinkedQueueHeads);
-    InitializeListHead(&PendingQueueHead->LinkedQueueHeads);
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 ULONG
 CUSBQueue::GetPendingRequestCount()
 {
-    UNIMPLEMENTED
+    //
+    // Loop through the pending list and iterrate one for each QueueHead that
+    // has a IRP to complete.
+    //
+    
+    
     return 0;
 }
 
@@ -195,84 +140,6 @@ CUSBQueue::CreateUSBRequest(
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
-}
-
-PQUEUE_HEAD
-CUSBQueue::CreateQueueHead()
-{
-    PQUEUE_HEAD QueueHead;
-    PHYSICAL_ADDRESS PhysicalAddress;
-    NTSTATUS Status;
-    //
-    // Create the QueueHead from Common Buffer
-    //
-    Status = m_MemoryManager->Allocate(sizeof(QUEUE_HEAD),
-                                       (PVOID*)&QueueHead,
-                                       &PhysicalAddress);
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    //
-    // Initialize default values
-    //
-
-    QueueHead->PhysicalAddr = PhysicalAddress.LowPart;
-    QueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
-    QueueHead->AlternateNextPointer = TERMINATE_POINTER;
-    QueueHead->NextPointer = TERMINATE_POINTER;
-
-    // 1 for non high speed, 0 for high speed device
-    QueueHead->EndPointCharacteristics.ControlEndPointFlag = 0;
-    QueueHead->EndPointCharacteristics.HeadOfReclamation = FALSE;
-    QueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
-
-    // Set NakCountReload to max value possible
-    QueueHead->EndPointCharacteristics.NakCountReload = 0xF;
-
-    // Get the Initial Data Toggle from the Queue Element Desriptor
-    QueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
-
-    QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
-
-    QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
-
-    // Interrupt when QueueHead is processed
-    QueueHead->Token.Bits.InterruptOnComplete = FALSE;
-
-    return QueueHead;
-}
-
-PQUEUE_TRANSFER_DESCRIPTOR
-CUSBQueue::CreateDescriptor(
-    UCHAR PIDCode,
-    ULONG TotalBytesToTransfer)
-{
-    PQUEUE_TRANSFER_DESCRIPTOR Descriptor;
-    PHYSICAL_ADDRESS PhysicalAddress;
-    NTSTATUS Status;
-
-    //
-    // Create the Descriptor from Common Buffer
-    //
-    Status = m_MemoryManager->Allocate(sizeof(QUEUE_TRANSFER_DESCRIPTOR),
-                                       (PVOID*)&Descriptor,
-                                       &PhysicalAddress);
-    if (!NT_SUCCESS(Status))
-        return NULL;
-
-    //
-    // Set default values
-    //
-    Descriptor->NextPointer = TERMINATE_POINTER;
-    Descriptor->AlternateNextPointer = TERMINATE_POINTER;
-    Descriptor->Token.Bits.DataToggle = TRUE;
-    Descriptor->Token.Bits.ErrorCounter = 0x03;
-    Descriptor->Token.Bits.Active = TRUE;
-    Descriptor->Token.Bits.PIDCode = PIDCode;
-    Descriptor->Token.Bits.TotalBytesToTransfer = TotalBytesToTransfer;
-    Descriptor->PhysicalAddr = PhysicalAddress.LowPart;
-
-    return Descriptor;
 }
 
 //
