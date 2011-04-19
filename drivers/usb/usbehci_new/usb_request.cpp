@@ -70,6 +70,7 @@ protected:
     PQUEUE_HEAD m_QueueHead;
     PQUEUE_TRANSFER_DESCRIPTOR m_TransferDescriptors[3];
     PUSB_DEFAULT_PIPE_SETUP_PACKET m_DescriptorPacket;
+    PHYSICAL_ADDRESS m_DescriptorSetupPacket;
 };
 
 //----------------------------------------------------------------------------------------
@@ -570,14 +571,15 @@ CUSBRequest::BuildControlTransferQueueHead(
     }
 
     //
-    // FIXME: where put MDL virtual address?
+    // Control Transfers have only one in or out buffer if one at all. Put in the QueueHead the
+    // same as BulkTransfers. USBQueue will use the Mdl to fill in the BufferPointers
     //
+    QueueHead->Mdl = m_TransferBufferMDL;
 
-
     //
-    // link setup packet into buffer - VIRTUAL Address!!!
+    // link setup packet into buffer - Physical Address!!!
     //
-    m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorPacket);
+    m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorSetupPacket.LowPart);
 
     //
     // link transfer descriptors to queue head
@@ -791,6 +793,7 @@ CUSBRequest::BuildSetupPacket()
         // copy setup packet
         //
         RtlCopyMemory(m_DescriptorPacket, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+        m_DescriptorSetupPacket = PhysicalAddress;
     }
 
     //

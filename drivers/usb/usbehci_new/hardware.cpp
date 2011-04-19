@@ -602,6 +602,9 @@ CUSBHardwareDevice::ResetPort(
 {
     ULONG PortStatus;
 
+    if (PortIndex > m_Capabilities.HCSParams.PortCount)
+        return STATUS_UNSUCCESSFUL;
+
     PortStatus = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortIndex));
     if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
     {
@@ -640,7 +643,8 @@ CUSBHardwareDevice::ResetPort(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS CUSBHardwareDevice::GetPortStatus(
+NTSTATUS
+CUSBHardwareDevice::GetPortStatus(
     ULONG PortId,
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
@@ -648,6 +652,11 @@ NTSTATUS CUSBHardwareDevice::GetPortStatus(
     ULONG Value;
     USHORT Status = 0, Change = 0;
 
+    DPRINT1("CUSBHardwareDevice::GetPortStatus\n");
+
+    if (PortId > m_Capabilities.HCSParams.PortCount)
+        return STATUS_UNSUCCESSFUL;
+    
     //
     // Get the value of the Port Status and Control Register
     //
@@ -703,15 +712,27 @@ NTSTATUS CUSBHardwareDevice::GetPortStatus(
     if (Value & EHCI_PRT_ENABLEDSTATUSCHANGE)
         Change |= USB_PORT_STATUS_ENABLE;
 
+    *PortStatus = Status;
+    *PortChange = Change;
+
+    //HACK: Maybe
+    if (Status == (USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_POWER))
+        *PortChange = USB_PORT_STATUS_CONNECT;
     
     return STATUS_SUCCESS;
 }
 
-NTSTATUS CUSBHardwareDevice::ClearPortStatus(
+NTSTATUS
+CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
 {
     ULONG Value;
+
+    DPRINT1("CUSBHardwareDevice::ClearPortStatus\n");
+
+    if (PortId > m_Capabilities.HCSParams.PortCount)
+        return STATUS_UNSUCCESSFUL;
 
     Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
 
@@ -737,18 +758,26 @@ NTSTATUS CUSBHardwareDevice::ClearPortStatus(
 }
 
 
-NTSTATUS CUSBHardwareDevice::SetPortFeature(
+NTSTATUS
+CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
 {
     ULONG Value;
 
+    DPRINT1("CUSBHardwareDevice::SetPortFeature\n");
+
+    if (PortId > m_Capabilities.HCSParams.PortCount)
+        return STATUS_UNSUCCESSFUL;
+
     Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+
     if (Feature == PORT_ENABLE)
     {
         //
         // FIXME: EHCI Ports can only be disabled via reset
         //
+        DPRINT1("PORT_ENABLE not supported for EHCI\n");
     }
     
     if (Feature == PORT_RESET)
@@ -757,7 +786,6 @@ NTSTATUS CUSBHardwareDevice::SetPortFeature(
         {
             DPRINT1("Non HighSpeed device. Releasing Ownership\n");
         }
-
         //
         // Reset and clean enable
         //
@@ -769,17 +797,21 @@ NTSTATUS CUSBHardwareDevice::SetPortFeature(
     }
     
     if (Feature == PORT_POWER)
-        DPRINT1("Not implemented\n");
+        DPRINT1("PORT_POWER Not implemented\n");
 
     return STATUS_SUCCESS;
 }
 
-VOID CUSBHardwareDevice::SetAsyncListRegister(ULONG PhysicalAddress)
+VOID
+CUSBHardwareDevice::SetAsyncListRegister(
+    ULONG PhysicalAddress)
 {
     EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, PhysicalAddress);
 }
 
-VOID CUSBHardwareDevice::SetPeriodicListRegister(ULONG PhysicalAddress)
+VOID
+CUSBHardwareDevice::SetPeriodicListRegister(
+    ULONG PhysicalAddress)
 {
     EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);
 }

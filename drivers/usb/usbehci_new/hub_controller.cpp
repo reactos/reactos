@@ -90,6 +90,7 @@ protected:
     RTL_BITMAP m_DeviceAddressBitmap;
     PULONG m_DeviceAddressBitmapBuffer;
     LIST_ENTRY m_UsbDeviceList;
+    PIRP m_PendingSCEIrp;
 };
 
 typedef struct
@@ -692,6 +693,60 @@ CHubController::HandleBulkOrInterruptTransfer(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
+    ULONG PortCount, PortId;
+    USHORT PortStatus, PortChange;
+
+    //
+    // First check if the request is for the Status Change Endpoint
+    //
+
+    //
+    // Is the Request for the root hub
+    //
+    if (Urb->UrbHeader.UsbdDeviceHandle==0)
+    {
+        //
+        // There should only be one SCE request pending at a time
+        //
+        ASSERT (m_PendingSCEIrp == NULL);
+
+        //
+        // Get the number of ports and check each one for device connected
+        //
+        m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
+        DPRINT1("SCE Request\n");
+        DPRINT1("PortCount %d\n", PortCount);
+        ((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 0;
+        for (PortId = 0; PortId < PortCount; PortId++)
+        {
+            m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
+
+            DPRINT1("Port %d: Status %x, Change %x\n", PortId, PortStatus, PortChange);
+
+            //
+            // FIXME: Verify that this is correct.
+            //
+            if ((PortStatus & USB_PORT_STATUS_CONNECT) && (PortChange & USB_PORT_STATUS_CONNECT))
+            {
+                DPRINT1("Device is connected on port %d\n", PortId);
+                ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((PortId + 1) & 7);
+                break;
+            }
+        }
+
+        //
+        // If there were changes then return SUCCESS
+        //
+        if (((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] != 0)
+            return STATUS_SUCCESS;
+
+        //
+        // Else pend the IRP, to be completed when a device connects or disconnects.
+        //
+        m_PendingSCEIrp = Irp;
+        IoMarkIrpPending(Irp);
+        return STATUS_PENDING;
+    }
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -743,9 +798,8 @@ CHubController::HandleClassOther(
             //
             // get port status
             //
-            //Status = m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
+            Status = m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
-            Status = STATUS_SUCCESS;
             if (NT_SUCCESS(Status))
             {
                 //
@@ -771,10 +825,10 @@ CHubController::HandleClassOther(
             switch (Urb->UrbControlVendorClassRequest.Value)
             {
                 case C_PORT_CONNECTION:
-                    //Status = m_Hardware->ClearPortStatus(PortId, C_PORT_CONNECTION);
+                    Status = m_Hardware->ClearPortStatus(PortId, C_PORT_CONNECTION);
                     break;
                 case C_PORT_RESET:
-                    //Status= m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
+                    Status= m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
                     break;
                 default:
                     DPRINT("Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
@@ -806,7 +860,7 @@ CHubController::HandleClassOther(
                     //
                     // set suspend port feature
                     //
-                    Status = STATUS_SUCCESS; //m_Hardware->SetPortFeature(PortId, PORT_SUSPEND);
+                    Status = m_Hardware->SetPortFeature(PortId, PORT_SUSPEND);
                     break;
                 }
                 case PORT_POWER:
@@ -814,7 +868,7 @@ CHubController::HandleClassOther(
                     //
                     // set power feature on port
                     //
-                    Status = STATUS_SUCCESS; //m_Hardware->SetPortFeature(PortId, PORT_POWER);
+                    Status = m_Hardware->SetPortFeature(PortId, PORT_POWER);
                     break;
                 }
 
@@ -1232,9 +1286,12 @@ CHubController::HandleDeviceControl(
             break;
         }
     }
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
