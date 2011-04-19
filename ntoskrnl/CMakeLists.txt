@@ -32,7 +32,6 @@ if(NEWCC)
         cache/pinsup.c
         cache/section/data.c
         cache/section/fault.c
-        cache/section/io.c
         cache/section/reqtools.c
         cache/section/sptab.c
         cache/section/swapout.c)
@@ -47,6 +46,7 @@ else()
 endif()
 
 list(APPEND SOURCE
+    cache/section/io.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c

@@ -12,7 +12,8 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
+//#define NDEBUG
+#include "../cache/section/newmm.h"
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -26,6 +27,12 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE
 }
 IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
+typedef struct _ROSSYM_KM_OWN_CONTEXT {
+    ROSSYM_OWN_FILECONTEXT Rossym;
+    LARGE_INTEGER FileOffset;
+    PFILE_OBJECT FileObject;
+} ROSSYM_KM_OWN_CONTEXT, *PROSSYM_KM_OWN_CONTEXT;
+
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
@@ -34,6 +41,50 @@ static ULONG_PTR KdbpImageBase;
 BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
+
+static BOOLEAN
+KdbpSeekSymFile(PVOID FileContext, ULONG_PTR Target)
+{
+    PROSSYM_KM_OWN_CONTEXT Context = (PROSSYM_KM_OWN_CONTEXT)FileContext;
+    Context->FileOffset.QuadPart = Target;
+    return TRUE;
+}
+
+static BOOLEAN
+KdbpReadSymFile(PVOID FileContext, PVOID Buffer, ULONG Length)
+{
+    PROSSYM_KM_OWN_CONTEXT Context = (PROSSYM_KM_OWN_CONTEXT)FileContext;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status = MiSimpleRead
+        (Context->FileObject, 
+         &Context->FileOffset,
+         Buffer,
+         Length,
+         FALSE,
+         &Iosb);
+    return NT_SUCCESS(Status);
+}
+
+static PROSSYM_OWN_FILECONTEXT 
+KdbpCaptureFileForSymbols(PFILE_OBJECT FileObject)
+{
+    PROSSYM_KM_OWN_CONTEXT Context = ExAllocatePool(NonPagedPool, sizeof(*Context));
+    if (!Context) return NULL;
+    ObReferenceObject(FileObject);
+    Context->FileOffset.QuadPart = 0;
+    Context->FileObject = FileObject;
+    Context->Rossym.ReadFileProc = KdbpReadSymFile;
+    Context->Rossym.SeekFileProc = KdbpSeekSymFile;
+    return &Context->Rossym;
+}
+
+static VOID
+KdbpReleaseFileForSymbols(PROSSYM_OWN_FILECONTEXT FileContext)
+{
+    PROSSYM_KM_OWN_CONTEXT Context = (PROSSYM_KM_OWN_CONTEXT)FileContext;
+    ObDereferenceObject(Context->FileObject);
+    ExFreePool(Context);
+}
 
 static BOOLEAN
 KdbpSymSearchModuleList(
@@ -127,12 +178,9 @@ KdbSymPrintAddress(
     IN PVOID Address)
 {
 	PMEMORY_AREA MemoryArea = NULL;
-	HANDLE FileHandle = NULL;
 	PROS_SECTION_OBJECT SectionObject;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	IO_STATUS_BLOCK IoStatusBlock;
-	UNICODE_STRING ModuleFileName;
+    PROSSYM_OWN_FILECONTEXT FileContext;
     ULONG_PTR RelativeAddress;
     NTSTATUS Status;
     ULONG LineNumber;
@@ -163,44 +211,22 @@ KdbSymPrintAddress(
 		}
 		SectionObject = MemoryArea->Data.SectionData.Section;
 		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
-		if (SectionObject->ImageSection->ImageBase != KdbpImageBase)
+		if (MemoryArea->StartingAddress != KdbpImageBase)
 		{
 			if (KdbpRosSymInfo)
 			{
 				RosSymDelete(KdbpRosSymInfo);
 				KdbpRosSymInfo = NULL;
+                KdbpImageBase = 0;
 			}
 
-			Status = MmGetFileNameForAddress(Address, &ModuleFileName);
-			if (!NT_SUCCESS(Status))
-				goto end;
-
-			InitializeObjectAttributes
-				(&ObjectAttributes,
-				 &ModuleFileName,
-				 OBJ_CASE_INSENSITIVE,
-				 NULL,
-				 NULL);
-
-			if (!NT_SUCCESS
-				(ZwOpenFile
-				 (&FileHandle,
-				  FILE_READ_ACCESS,
-				  &ObjectAttributes,
-				  &IoStatusBlock,
-				  FILE_SHARE_READ,
-				  FILE_SYNCHRONOUS_IO_NONALERT)))
+            if ((FileContext = KdbpCaptureFileForSymbols(SectionObject->FileObject)))
 			{
-				goto end;
-			}
+                if (RosSymCreateFromFile(FileContext, &KdbpRosSymInfo))
+                    KdbpImageBase = MemoryArea->StartingAddress;
 
-			if (!RosSymCreateFromFile(&FileHandle, &KdbpRosSymInfo))
-			{
-				KdbpRosSymInfo = NULL;
+                KdbpReleaseFileForSymbols(FileContext);
 			}
-
-			ZwClose(FileHandle);
-			KdbpImageBase = SectionObject->ImageSection->ImageBase;
 		}
 
 		if (KdbpRosSymInfo)
@@ -402,6 +428,8 @@ KdbpSymLoadModuleSymbols(
     HANDLE FileHandle;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
+    PFILE_OBJECT FileObject;
+    PROSSYM_OWN_FILECONTEXT FileContext;
 
     /* Allow KDB to break on module load */
     KdbModuleLoaded(FileName);
@@ -423,7 +451,7 @@ KdbpSymLoadModuleSymbols(
     /*  Open the file  */
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               0,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
@@ -443,20 +471,34 @@ KdbpSymLoadModuleSymbols(
 
     DPRINT("Loading symbols from %wZ...\n", FileName);
 
-    if (!RosSymCreateFromFile(&FileHandle, RosSymInfo))
+    Status = ObReferenceObjectByHandle
+        (FileHandle,
+         FILE_READ_DATA|SYNCHRONIZE,
+         NULL,
+         KernelMode,
+         (PVOID*)&FileObject,
+         NULL);
+
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to load symbols from %wZ\n", FileName);
+        DPRINT("Could not get the file object\n");
+        ZwClose(FileHandle);
         return;
     }
 
+    if ((FileContext = KdbpCaptureFileForSymbols(FileObject)))
+    {
+        if (RosSymCreateFromFile(FileContext, RosSymInfo))
+        {
+            /* add file to cache */
+            KdbpSymAddCachedFile(FileName, *RosSymInfo);
+            DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
+        }
+        KdbpReleaseFileForSymbols(FileContext);
+    }
+
+    ObDereferenceObject(FileObject);
     ZwClose(FileHandle);
-
-    DPRINT("Symbols loaded.\n");
-
-    /* add file to cache */
-    KdbpSymAddCachedFile(FileName, *RosSymInfo);
-
-    DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
 }
 
 VOID

@@ -16,6 +16,7 @@ list(APPEND SOURCE
     dwarfpubnames.c
     find.c
     fromfile.c
+    iofile.c
     init.c
     initkm.c
     initum.c

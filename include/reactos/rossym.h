@@ -24,6 +24,11 @@ typedef struct _ROSSYM_CALLBACKS {
   BOOLEAN (*SeekFileProc)(PVOID FileContext, ULONG_PTR Position);
 } ROSSYM_CALLBACKS, *PROSSYM_CALLBACKS;
 
+typedef struct _ROSSYM_OWN_FILECONTEXT {
+  BOOLEAN (*ReadFileProc)(PVOID FileContext, PVOID Buffer, ULONG Size);
+  BOOLEAN (*SeekFileProc)(PVOID FileContext, ULONG_PTR Position);
+} ROSSYM_OWN_FILECONTEXT, *PROSSYM_OWN_FILECONTEXT;
+
 struct Dwarf;
 typedef struct Dwarf *PROSSYM_INFO;
 

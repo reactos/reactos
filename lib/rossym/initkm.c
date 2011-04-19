@@ -38,8 +38,8 @@ RosSymInitKernelMode(VOID)
     {
       RosSymAllocMemKM,
       RosSymFreeMemKM,
-      RosSymZwReadFile,
-      RosSymZwSeekFile
+      RosSymIoReadFile,
+      RosSymIoSeekFile
     };
 
   RosSymInit(&KmCallbacks);
