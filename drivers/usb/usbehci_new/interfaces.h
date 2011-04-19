@@ -209,7 +209,31 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 //
 
     virtual NTSTATUS ResetPort(ULONG PortNumber) = 0;
-    
+
+//-----------------------------------------------------------------------------------------
+//
+// GetPortStatus
+//
+// Description: this functions return status and change state of port
+//
+    virtual NTSTATUS GetPortStatus(ULONG PortId, OUT USHORT *PortStatus, OUT USHORT *PortChange) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// ClearPortStatus
+//
+// Description: Clears Status of Port, for example Connection, Enable and Reset
+//
+    virtual NTSTATUS ClearPortStatus(ULONG PortId, ULONG Status) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SetPortFeature
+//
+// Description: this functions Sets Feature on Port, for example Enable, Power and Reset
+//
+    virtual NTSTATUS SetPortFeature(ULONG PortId, ULONG Feature) = 0;
+
 //-----------------------------------------------------------------------------------------
 //
 // SetAsyncListRegister
