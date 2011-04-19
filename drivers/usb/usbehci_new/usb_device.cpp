@@ -68,6 +68,7 @@ protected:
     USB_DEVICE_DESCRIPTOR m_DeviceDescriptor;
     ULONG m_PortStatus;
     PUSBQUEUE m_Queue;
+    PDMAMEMORYMANAGER m_DmaManager;
 };
 
 //----------------------------------------------------------------------------------------
@@ -123,6 +124,21 @@ CUSBDevice::Initialize(
         DPRINT1("CUSBDevice::Initialize GetUsbQueue failed with %x\n", Status);
         return Status;
     }
+
+    //
+    // FIXME: get dma manager
+    //
+    //Status = m_Device->GetDMA(&m_DmaManager);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get usb queue
+        //
+        DPRINT1("CUSBDevice::Initialize GetUsbQueue failed with %x\n", Status);
+        return Status;
+    }
+
+
 
     //
     // zero descriptor
@@ -293,7 +309,7 @@ CUSBDevice::SetDeviceAddress(
     // initialize request
     //
     CtrlSetup.bRequest = USB_REQUEST_SET_ADDRESS;
-    CtrlSetup.wValue.W = DeviceAddress;
+    CtrlSetup.wValue.W = (USHORT)DeviceAddress;
 
     //
     // set device address
@@ -386,6 +402,8 @@ CUSBDevice::CommitSetupPacket(
     PUSBREQUEST Request;
     KEVENT Event;
     BOOLEAN Wait = FALSE;
+    PMDL Mdl = 0;
+
 
     if (!m_Queue)
     {
@@ -409,10 +427,12 @@ CUSBDevice::CommitSetupPacket(
         return Status;
     }
 
+    /* FIXME build MDL */
+
     //
     // initialize request
     //
-    Status = Request->InitializeWithSetupPacket(Packet, BufferLength, Buffer);
+    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, BufferLength, Mdl);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -439,7 +459,7 @@ CUSBDevice::CommitSetupPacket(
     //
     // set completion details
     //
-    Status = Request->SetCompletionDetails(Irp, pEvent);
+    Status = Request->SetCompletionEvent(pEvent);
     if (!NT_SUCCESS(Status))
     {
         //

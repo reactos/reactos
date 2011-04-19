@@ -312,6 +312,8 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 // CancelCallback routine is invoked.
 // 
 
+struct _QUEUE_HEAD;
+
 DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -324,44 +326,39 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // If there is a TransferBuffer, the TransferBufferLength contains the length of the buffer
 
 
-    virtual NTSTATUS InitializeWithSetupPacket(IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
-                                               IN ULONG TransferBufferLength,
-                                               IN PVOID TransferBuffer) = 0;
-
-//
-//TODO: find required parameters for different packet types 
-//
-
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
+                                               IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
+                                               IN OUT ULONG TransferBufferLength,
+                                               IN OUT PMDL TransferBuffer) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
-// SetEndPoint
+// InitializeWithIrp
 //
-// Description: sets the endpoint of the request. 
+// Description: initializes the request with an IRP
+// The irp contains an URB block which contains all necessary information
 
-    virtual NTSTATUS SetEndPoint(PUSB_ENDPOINT_DESCRIPTOR EndPoint);
+    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, 
+                                       IN OUT PIRP Irp);
 
 //-----------------------------------------------------------------------------------------
 //
-// SetCompletionDetails
+// SetCompletionEvent
 //
-// Description: sets up how the request should be completed
-// If an irp is passed, then it is completed with status code of the 
-// CompletionCallback or CancelCallback
-// If an event is passed, then the event is signaled
+// Description: sets up completion event which is signaled when the
+// request is completed or cancelled
 
-    virtual NTSTATUS SetCompletionDetails(IN OPTIONAL PIRP Irp,
-                                          IN OPTIONAL PKEVENT Event) = 0;
+    virtual NTSTATUS SetCompletionEvent(IN PKEVENT Event) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
 // CompletionCallback
 //
-// Description: called when request has been completed. It is called when 
+// Description: called when request has been completed. It is called when
 // IUSBQueue completes the request
 
     virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode,
-                                    IN ULONG UrbStatusCode) = 0;
+                                   IN ULONG UrbStatusCode) = 0;
 
 //-----------------------------------------------------------------------------------------
 //
@@ -370,6 +367,31 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: called when request is cancelled. Called by IUSBQueue
 
     virtual VOID CancelCallback(IN NTSTATUS NtStatusCode) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+//  GetQueueHead
+//
+// Description: returns an initialized queue head with contains the all transfer descriptors
+
+    virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+//  IsRequestComplete
+//
+// Description: returns true when the request has been completed
+// Should be called after the CompletionCallback has been invoked
+
+    virtual BOOLEAN IsRequestComplete() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetTransferType
+//
+// Description: returns the type of the request: control, bulk, iso, interrupt
+
+    virtual ULONG GetTransferType() = 0;
 
 };
 

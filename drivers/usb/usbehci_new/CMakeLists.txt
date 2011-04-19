@@ -7,6 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_library(usbehci SHARED
     usbehci.cpp
     usb_device.cpp
+    usb_request.cpp
     usb_queue.cpp
     hcd_controller.cpp
     hardware.cpp

@@ -327,8 +327,11 @@ CHCDController::HandleDeviceControl(
             if (NT_SUCCESS(Status))
             {
                 //
-                // informal debug print
+                // null terminate it
                 //
+                PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG) - sizeof(WCHAR) >= ResultLength);
+
+                DriverKey->DriverKeyName[ResultLength / sizeof(WCHAR)] = L'\0';
                 DPRINT1("Result %S\n", DriverKey->DriverKeyName);
             }
 
@@ -552,7 +555,6 @@ CHCDController::HandlePnp(
         }
         default:
         {
-            DPRINT1("CHCDController::HandlePnp Dispatch to lower device object %lx\n", IoStack->MinorFunction);
             //
             // forward irp to next device object
             //

@@ -1,0 +1,801 @@
+/*
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/usbehci/usb_request.cpp
+ * PURPOSE:     USB EHCI device driver.
+ * PROGRAMMERS:
+ *              Michael Martin (michael.martin@reactos.org)
+ *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+
+#define INITGUID
+
+#include "usbehci.h"
+#include "hardware.h"
+
+class CUSBRequest : public IUSBRequest
+{
+public:
+    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
+
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        InterlockedIncrement(&m_Ref);
+        return m_Ref;
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        InterlockedDecrement(&m_Ref);
+
+        if (!m_Ref)
+        {
+            delete this;
+            return 0;
+        }
+        return m_Ref;
+    }
+
+    // IUSBRequest interface functions
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
+    virtual NTSTATUS SetCompletionEvent(IN PKEVENT Event);
+    virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode);
+    virtual VOID CancelCallback(IN NTSTATUS NtStatusCode);
+    virtual NTSTATUS GetQueueHead(struct _QUEUE_HEAD ** OutHead);
+    virtual BOOLEAN IsRequestComplete();
+    virtual ULONG GetTransferType();
+
+    // local functions
+    ULONG InternalGetTransferType();
+    NTSTATUS BuildControlTransferQueueHead(PQUEUE_HEAD * OutHead);
+    NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
+    NTSTATUS CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
+    NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
+    ULONG GetDeviceAddress();
+    NTSTATUS BuildSetupPacket();
+
+    // constructor / destructor
+    CUSBRequest(IUnknown *OuterUnknown){}
+    virtual ~CUSBRequest(){}
+
+protected:
+    LONG m_Ref;
+    PDMAMEMORYMANAGER m_DmaManager;
+    PUSB_DEFAULT_PIPE_SETUP_PACKET m_SetupPacket;
+    ULONG m_TransferBufferLength;
+    PMDL m_TransferBufferMDL;
+    PIRP m_Irp;
+    PKEVENT m_CompletionEvent;
+
+    PQUEUE_HEAD m_QueueHead;
+    PQUEUE_TRANSFER_DESCRIPTOR m_TransferDescriptors[3];
+    PUSB_DEFAULT_PIPE_SETUP_PACKET m_DescriptorPacket;
+};
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+STDMETHODCALLTYPE
+CUSBRequest::QueryInterface(
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    return STATUS_UNSUCCESSFUL;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::InitializeWithSetupPacket(
+    IN PDMAMEMORYMANAGER DmaManager,
+    IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
+    IN OUT ULONG TransferBufferLength,
+    IN OUT PMDL TransferBuffer)
+{
+    //
+    // sanity checks
+    //
+    PC_ASSERT(DmaManager);
+    PC_ASSERT(SetupPacket);
+
+    //
+    // initialize packet
+    //
+    m_DmaManager = DmaManager;
+    m_SetupPacket = SetupPacket;
+    m_TransferBufferLength = TransferBufferLength;
+    m_TransferBufferMDL = TransferBuffer;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::InitializeWithIrp(
+    IN PDMAMEMORYMANAGER DmaManager,
+    IN OUT PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+    NTSTATUS Status;
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(DmaManager);
+    PC_ASSERT(Irp);
+
+    //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
+    PC_ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_SUBMIT_URB);
+    PC_ASSERT(IoStack->Parameters.Others.Argument1 != 0);
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+    //
+    // store irp
+    //
+    m_Irp = Irp;
+
+    //
+    // check function type
+    //
+    switch (Urb->UrbHeader.Function)
+    {
+        //
+        // luckily those request have the same structure layout
+        //
+        case URB_FUNCTION_CLASS_INTERFACE:
+        case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
+        case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
+        {
+            //
+            // bulk / interrupt transfer
+            //
+            if (Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
+            {
+                //
+                // it must have an MDL
+                //
+                PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+
+                //
+                // get mdl buffer
+                //
+                m_TransferBufferMDL = Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL;
+                m_TransferBufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+            }
+            break;
+        }
+        default:
+            DPRINT1("URB Function: not supported %x\n", Urb->UrbHeader.Function);
+            PC_ASSERT(FALSE);
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+
+}
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::SetCompletionEvent(
+    IN PKEVENT Event)
+{
+    if (m_QueueHead)
+    {
+        //
+        // WTF? operation is already in progress
+        //
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // store completion event
+    //
+    m_CompletionEvent = Event;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+//----------------------------------------------------------------------------------------
+VOID
+CUSBRequest::CompletionCallback(
+    IN NTSTATUS NtStatusCode,
+    IN ULONG UrbStatusCode)
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+
+    if (m_Irp)
+    {
+        //
+        // set irp completion status
+        //
+        m_Irp->IoStatus.Status = NtStatusCode;
+
+        //
+        // get current irp stack location
+        //
+        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+        //
+        // get urb
+        //
+        Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+        //
+        // store urb status
+        //
+        Urb->UrbHeader.Status = UrbStatusCode;
+
+        //
+        // check if the request was successfull
+        //
+        if (!NT_SUCCESS(NtStatusCode))
+        {
+            //
+            // set returned length to zero in case of error
+            //
+            Urb->UrbHeader.Length = 0;
+        }
+
+        //
+        // FIXME: check if the transfer was split
+        // if yes dont complete irp yet
+        //
+        IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
+    }
+
+    if (m_CompletionEvent)
+    {
+        //
+        // FIXME: make sure the request was not split
+        //
+        KeSetEvent(m_CompletionEvent, 0, FALSE);
+    }
+}
+//----------------------------------------------------------------------------------------
+VOID
+CUSBRequest::CancelCallback(
+    IN NTSTATUS NtStatusCode)
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+
+    if (m_Irp)
+    {
+        //
+        // set irp completion status
+        //
+        m_Irp->IoStatus.Status = NtStatusCode;
+
+        //
+        // get current irp stack location
+        //
+        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+        //
+        // get urb
+        //
+        Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+        //
+        // store urb status
+        //
+        Urb->UrbHeader.Status = USBD_STATUS_CANCELED;
+        Urb->UrbHeader.Length = 0;
+
+        //
+        // FIXME: check if the transfer was split
+        // if yes dont complete irp yet
+        //
+        IoCompleteRequest(m_Irp, IO_NO_INCREMENT);
+    }
+
+    if (m_CompletionEvent)
+    {
+        //
+        // FIXME: make sure the request was not split
+        //
+        KeSetEvent(m_CompletionEvent, 0, FALSE);
+    }
+}
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::GetQueueHead(
+    struct _QUEUE_HEAD ** OutHead)
+{
+    ULONG TransferType;
+    NTSTATUS Status;
+
+    //
+    // first get transfer type
+    //
+    TransferType = InternalGetTransferType();
+
+    //
+    // build request depending on type
+    //
+    switch(TransferType)
+    {
+        case USB_ENDPOINT_TYPE_CONTROL:
+            Status = BuildControlTransferQueueHead(OutHead);
+            break;
+        case USB_ENDPOINT_TYPE_BULK:
+            Status = BuildBulkTransferQueueHead(OutHead);
+            break;
+        case USB_ENDPOINT_TYPE_INTERRUPT:
+            DPRINT1("USB_ENDPOINT_TYPE_INTERRUPT not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+            DPRINT1("USB_ENDPOINT_TYPE_ISOCHRONOUS not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // store queue head
+        //
+        m_QueueHead = *OutHead;
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
+
+//----------------------------------------------------------------------------------------
+BOOLEAN
+CUSBRequest::IsRequestComplete()
+{
+    //
+    // FIXME: check if request was split
+    //
+    return TRUE;
+}
+//----------------------------------------------------------------------------------------
+ULONG
+CUSBRequest::GetTransferType()
+{
+    //
+    // call internal implementation
+    //
+    return InternalGetTransferType();
+}
+
+//----------------------------------------------------------------------------------------
+ULONG
+CUSBRequest::InternalGetTransferType()
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    ULONG TransferType;
+
+    //
+    // check if an irp is provided
+    //
+    if (m_Irp)
+    {
+        //
+        // get stack location
+        //
+        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+        //
+        // get urb
+        //
+        Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+        //
+        // check if there is a handle
+        //
+        if (Urb->UrbBulkOrInterruptTransfer.PipeHandle)
+        {
+            //
+            // cast to end point
+            //
+            EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+
+            //
+            // end point is defined in the low byte of bmAttributes
+            //
+            TransferType = (EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
+        }
+        else
+        {
+            //
+            // no pipe handle, assume it is a control transfer
+            //
+            TransferType = USB_ENDPOINT_TYPE_CONTROL;
+        }
+    }
+    else
+    {
+        //
+        // initialized with setup packet, must be a control transfer
+        //
+        TransferType = USB_ENDPOINT_TYPE_CONTROL;
+    }
+
+    //
+    // done
+    //
+    return TransferType;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::BuildControlTransferQueueHead(
+    PQUEUE_HEAD * OutHead)
+{
+    NTSTATUS Status;
+    ULONG NumTransferDescriptors, Index;
+    PQUEUE_HEAD QueueHead;
+
+
+    //
+    // first allocate the queue head
+    //
+    Status  = CreateQueueHead(&QueueHead);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate queue head
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // create setup packet
+    //
+    Status = BuildSetupPacket();
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate setup packet
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // calculate num of transfer descriptors
+    //
+    NumTransferDescriptors = m_TransferBufferMDL != 0 ? 3 : 2;
+
+    //
+    // allocate transfer descriptors
+    //
+    for(Index = 0; Index < NumTransferDescriptors; Index++)
+    {
+        //
+        // allocate transfer descriptor
+        //
+        Status = CreateDescriptor(&m_TransferDescriptors[Index]);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to allocate transfer descriptor
+            //
+            return Status;
+        }
+    }
+
+    //
+    // now initialize the queue head
+    //
+    QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
+    
+	//if (PipeHandle)
+    //    QueueHead->EndPointCharacteristics.EndPointNumber = ((PUSB_ENDPOINT_DESCRIPTOR)PipeHandle)->bEndpointAddress & 0x0F;
+
+    QueueHead->Token.Bits.DataToggle = TRUE;
+
+    //
+    // setup descriptors
+    //
+    m_TransferDescriptors[0]->Token.Bits.PIDCode = PID_CODE_SETUP_TOKEN;
+    m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer = sizeof(USB_DEFAULT_PIPE_SETUP_PACKET);
+    m_TransferDescriptors[0]->Token.Bits.DataToggle = FALSE;
+
+    if (m_TransferBufferMDL)
+    {
+        //
+        // setup in descriptor
+        //
+        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
+        m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = m_TransferBufferLength;
+
+        //
+        // setup out descriptor
+        //
+        m_TransferDescriptors[2]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
+        m_TransferDescriptors[2]->Token.Bits.TotalBytesToTransfer = 0;
+
+        //
+        // link descriptors
+        //
+        m_TransferDescriptors[0]->NextPointer = m_TransferDescriptors[1]->PhysicalAddr;
+
+        //
+        // special case, setup alternative next descriptor in case of error
+        // HAIKU links to dead descriptor
+        //
+        m_TransferDescriptors[0]->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
+        m_TransferDescriptors[1]->NextPointer = m_TransferDescriptors[2]->PhysicalAddr;
+        m_TransferDescriptors[1]->AlternateNextPointer = m_TransferDescriptors[2]->PhysicalAddr;
+
+        //
+        // interrupt on completion
+        //
+        m_TransferDescriptors[2]->Token.Bits.InterruptOnComplete = TRUE;
+
+    }
+    else
+    {
+        //
+        // no buffer, setup in descriptor
+        //
+        m_TransferDescriptors[1]->Token.Bits.PIDCode = PID_CODE_IN_TOKEN;
+        m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = 0;
+
+        //
+        // link descriptors
+        //
+        m_TransferDescriptors[0]->NextPointer = m_TransferDescriptors[1]->PhysicalAddr;
+        m_TransferDescriptors[0]->AlternateNextPointer = m_TransferDescriptors[1]->PhysicalAddr;
+
+        //
+        // interrupt on completion
+        //
+        m_TransferDescriptors[1]->Token.Bits.InterruptOnComplete = TRUE;
+    }
+
+    //
+    // FIXME: where put MDL virtual address?
+    //
+
+
+    //
+    // link setup packet into buffer - VIRTUAL Address!!!
+    //
+    m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorPacket);
+
+    //
+    // link transfer descriptors to queue head
+    //
+    QueueHead->NextPointer = m_TransferDescriptors[0]->PhysicalAddr;
+
+    //
+    // store result
+    //
+    *OutHead = QueueHead;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::BuildBulkTransferQueueHead(
+    PQUEUE_HEAD * OutHead)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::CreateDescriptor(
+    PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor)
+{
+    PQUEUE_TRANSFER_DESCRIPTOR Descriptor;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS TransferDescriptorPhysicalAddress;
+
+    //
+    // allocate descriptor
+    //
+    Status = m_DmaManager->Allocate(sizeof(QUEUE_TRANSFER_DESCRIPTOR), (PVOID*)&Descriptor, &TransferDescriptorPhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate transfer descriptor
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize transfer descriptor
+    //
+    Descriptor->NextPointer = TERMINATE_POINTER;
+    Descriptor->AlternateNextPointer = TERMINATE_POINTER;
+    Descriptor->Token.Bits.DataToggle = TRUE;
+    Descriptor->Token.Bits.ErrorCounter = 0x03;
+    Descriptor->Token.Bits.Active = TRUE;
+    Descriptor->PhysicalAddr = TransferDescriptorPhysicalAddress.LowPart;
+
+    //
+    // store result
+    //
+    *OutDescriptor = Descriptor;
+
+    //
+    // done
+    //
+    return Status;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::CreateQueueHead(
+    PQUEUE_HEAD *OutQueueHead)
+{
+    PQUEUE_HEAD QueueHead;
+    PHYSICAL_ADDRESS QueueHeadPhysicalAddress;
+    NTSTATUS Status;
+
+    //
+    // allocate queue head
+    //
+    Status = m_DmaManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate queue head
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize queue head
+    //
+    QueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
+    QueueHead->AlternateNextPointer = TERMINATE_POINTER;
+    QueueHead->NextPointer = TERMINATE_POINTER;
+
+    //
+    // 1 for non high speed, 0 for high speed device
+    //
+    QueueHead->EndPointCharacteristics.ControlEndPointFlag = 0;
+    QueueHead->EndPointCharacteristics.HeadOfReclamation = FALSE;
+    QueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
+
+    //
+    // Set NakCountReload to max value possible
+    //
+    QueueHead->EndPointCharacteristics.NakCountReload = 0xF;
+
+    //
+    // Get the Initial Data Toggle from the QEDT
+    //
+    QueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+
+    //
+    // FIXME: check if High Speed Device
+    //
+    QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
+    QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
+    QueueHead->Token.DWord = 0;
+    QueueHead->Token.Bits.InterruptOnComplete = FALSE;
+
+    //
+    // FIXME check if that is really needed
+    //
+    QueueHead->PhysicalAddr = QueueHeadPhysicalAddress.LowPart;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+//----------------------------------------------------------------------------------------
+ULONG
+CUSBRequest::GetDeviceAddress()
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+    PUSBDEVICE UsbDevice;
+
+    //
+    // check if there is an irp provided
+    //
+    if (!m_Irp)
+    {
+        //
+        // no irp is provided
+        // assume it is for device address 0
+        return 0;
+    }
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+    //
+    // get contained urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+    //
+    // check if there is a pipe handle provided
+    //
+    if (Urb->UrbHeader.UsbdDeviceHandle)
+    {
+        //
+        // there is a device handle provided
+        //
+        UsbDevice = (PUSBDEVICE)Urb->UrbHeader.UsbdDeviceHandle;
+
+        //
+        // return device address
+        //
+        return UsbDevice->GetDeviceAddress();
+    }
+
+    //
+    // no device handle provided, it is the host root bus
+    //
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::BuildSetupPacket()
+{
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS PhysicalAddress;
+
+    //
+    // FIXME: generate setup packet from urb request
+    //
+    PC_ASSERT(m_SetupPacket);
+
+    //
+    // allocate common buffer setup packet
+    //
+    Status = m_DmaManager->Allocate(sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), (PVOID*)&m_DescriptorPacket, &PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // no memory
+        //
+        return Status;
+    }
+
+    if (m_SetupPacket)
+    {
+        //
+        // copy setup packet
+        //
+        RtlCopyMemory(m_DescriptorPacket, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
+

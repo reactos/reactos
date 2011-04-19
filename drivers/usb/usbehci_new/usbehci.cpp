@@ -64,8 +64,6 @@ EHCI_Dispatch(
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
 
-    DPRINT1("EHCI_Dispatch\n");
-
     //
     // get common device extension
     //
@@ -106,19 +104,10 @@ EHCI_Dispatch(
             //
             return DeviceExtension->Dispatcher->HandleDeviceControl(DeviceObject, Irp);
         }
-        case IRP_MJ_CREATE:
-        {
-            //
-            // dispatch create request
-            //
-            Status = STATUS_SUCCESS;
-
-            break;
-        }
         default:
         {
-            DPRINT1("EHCI_Dispatch> Major %lu Minor %lu not supported\n", IoStack->MajorFunction, IoStack->MinorFunction);
-            Status = STATUS_NOT_SUPPORTED;
+            DPRINT1("EHCI_Dispatch> Major %lu Minor %lu unhandeled\n", IoStack->MajorFunction, IoStack->MinorFunction);
+            Status = STATUS_SUCCESS;
         }
     }
 

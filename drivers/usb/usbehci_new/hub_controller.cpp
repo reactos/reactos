@@ -61,6 +61,8 @@ public:
     NTSTATUS HandleGetStatusFromDevice(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
+
 
     // constructor / destructor
     CHubController(IUnknown *OuterUnknown){}
@@ -154,6 +156,20 @@ const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
     0x08, 0x00, /* wMaxPacketSize; 1 + (MAX_ROOT_PORTS / 8) */
     0xFF        /* bInterval; (255ms -- usb 2.0 spec) */
 };
+
+//
+// flags for handling USB_REQUEST_SET_FEATURE / USB_REQUEST_GET_FEATURE
+//
+#define PORT_ENABLE         1
+#define PORT_SUSPEND        2
+#define PORT_OVER_CURRENT   3
+#define PORT_RESET          4
+#define PORT_POWER          8
+#define C_PORT_CONNECTION   16
+#define C_PORT_ENABLE       17
+#define C_PORT_SUSPEND      18
+#define C_PORT_OVER_CURRENT 19
+#define C_PORT_RESET        20
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
@@ -653,7 +669,9 @@ CHubController::HandlePnp(
         }
         default:
         {
-            DPRINT1("CHubController::HandlePnp Unhandeled %x\n", IoStack->MinorFunction);
+            //
+            // ignore request with default status
+            //
             Status = Irp->IoStatus.Status;
             break;
         }
@@ -682,6 +700,15 @@ CHubController::HandlePower(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_IMPLEMENTED;
 }
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleBulkOrInterruptTransfer(
+    IN OUT PIRP Irp, 
+    PURB Urb)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
@@ -689,11 +716,143 @@ CHubController::HandleClassOther(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
-    DPRINT1("CHubController::HandleClassOther> Request %x Value %x not implemented\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    USHORT PortStatus = 0, PortChange = 0;
+    PUSHORT Buffer;
+    ULONG NumPort;
+    ULONG PortId;
+
+    //DPRINT1("CHubController::HandleClassOther> Request %x Value %x not implemented\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
 
     //
-    // FIXME implement me
+    // get number of ports available
     //
+    Status = m_Hardware->GetDeviceDetails(NULL, NULL, &NumPort, NULL);
+    PC_ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(Urb->UrbControlVendorClassRequest.Index - 1 < NumPort);
+
+    //
+    // port range reported start from 1 -n
+    // convert back port id so it matches the hardware
+    //
+    PortId = Urb->UrbControlVendorClassRequest.Index - 1;
+
+    //
+    // check request code
+    //
+    switch(Urb->UrbControlVendorClassRequest.Request)
+    {
+        case USB_REQUEST_GET_STATUS:
+        {
+            //
+            // sanity check
+            //
+            PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength == sizeof(USHORT) * 2);
+            PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
+
+            //
+            // get port status
+            //
+            //Status = m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
+
+            Status = STATUS_SUCCESS;
+            if (NT_SUCCESS(Status))
+            {
+                //
+                // request contains buffer of 2 ushort which are used from submitting port status and port change status
+                //
+                Buffer = (PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer;
+
+                //
+                // store status, then port change
+                //
+                *Buffer = PortStatus;
+                Buffer++;
+                *Buffer = PortChange;
+            }
+
+            //
+            // done
+            //
+            break;
+        }
+        case USB_REQUEST_CLEAR_FEATURE:
+        {
+            switch (Urb->UrbControlVendorClassRequest.Value)
+            {
+                case C_PORT_CONNECTION:
+                    //Status = m_Hardware->ClearPortStatus(PortId, C_PORT_CONNECTION);
+                    break;
+                case C_PORT_RESET:
+                    //Status= m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
+                    break;
+                default:
+                    DPRINT("Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
+                    PC_ASSERT(FALSE);
+                    break;
+           }
+
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case USB_REQUEST_SET_FEATURE:
+        {
+            //
+            // request set feature
+            //
+            switch(Urb->UrbControlVendorClassRequest.Value)
+            {
+                case PORT_ENABLE:
+                {
+                    //
+                    // port enable is a no-op for EHCI
+                    //
+                    Status = STATUS_SUCCESS;
+                    break;
+                }
+
+                case PORT_SUSPEND:
+                {
+                    //
+                    // set suspend port feature
+                    //
+                    Status = STATUS_SUCCESS; //m_Hardware->SetPortFeature(PortId, PORT_SUSPEND);
+                    break;
+                }
+                case PORT_POWER:
+                {
+                    //
+                    // set power feature on port
+                    //
+                    Status = STATUS_SUCCESS; //m_Hardware->SetPortFeature(PortId, PORT_POWER);
+                    break;
+                }
+
+                case PORT_RESET:
+                {
+                    //
+                    // reset port feature
+                    //
+                    Status = m_Hardware->ResetPort(PortId);
+                    PC_ASSERT(Status == STATUS_SUCCESS);
+                    break;
+                }
+                default:
+                    DPRINT1("Unsupported request id %x\n", Urb->UrbControlVendorClassRequest.Value);
+                    PC_ASSERT(FALSE);
+            }
+            break;
+        }
+        default:
+            DPRINT1("CHubController::HandleClassOther Unknown request code %x\n", Urb->UrbControlVendorClassRequest.Request);
+            PC_ASSERT(0);
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+    }
+
 
     return STATUS_SUCCESS;
 }
@@ -862,7 +1021,6 @@ CHubController::HandleGetDescriptor(
 
             if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
             {
-                DPRINT1("Root Hub descriptor\n");
                 //
                 // copy root hub device descriptor
                 //
@@ -960,13 +1118,6 @@ CHubController::HandleDeviceControl(
     //
     DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-
-    DPRINT1("HandleDeviceControl>Type: FDO %u IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n",
-        DeviceExtension->IsFDO,
-        IoStack->Parameters.DeviceIoControl.IoControlCode,
-        IoStack->Parameters.DeviceIoControl.InputBufferLength,
-        IoStack->Parameters.DeviceIoControl.OutputBufferLength);
-
     //
     // determine which request should be performed
     //
@@ -979,8 +1130,6 @@ CHubController::HandleDeviceControl(
             //
             Urb = (PURB)IoStack->Parameters.Others.Argument1;
             PC_ASSERT(Urb);
-
-            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x Length %lu Status %x Handle %p Flags %x UNIMPLEMENTED\n", Urb->UrbHeader.Function, Urb->UrbHeader.Length, Urb->UrbHeader.Status, Urb->UrbHeader.UsbdDeviceHandle, Urb->UrbHeader.UsbdFlags);
 
             switch (Urb->UrbHeader.Function)
             {
@@ -999,6 +1148,12 @@ CHubController::HandleDeviceControl(
                 case URB_FUNCTION_CLASS_OTHER:
                     Status = HandleClassOther(Irp, Urb);
                     break;
+                case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
+                    Status = HandleBulkOrInterruptTransfer(Irp, Urb);
+                    break;
+                default:
+                    DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);
+                    break;
             }
             //
             // request completed
@@ -1007,7 +1162,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
+            DPRINT("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
 
             if (IoStack->Parameters.Others.Argument1)
             {
@@ -1032,7 +1187,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
+            DPRINT("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
 
             //
             // this is the first request send, it delivers the PDO to the caller
@@ -1061,7 +1216,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
+            DPRINT("IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
 
             //
             // after IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO is delivered, the usbhub driver
@@ -1080,6 +1235,14 @@ CHubController::HandleDeviceControl(
             //
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(ULONG);
+            break;
+        }
+        default:
+        {
+            DPRINT1("HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu NOT IMPLEMENTED\n",
+                    IoStack->Parameters.DeviceIoControl.IoControlCode,
+                    IoStack->Parameters.DeviceIoControl.InputBufferLength,
+                    IoStack->Parameters.DeviceIoControl.OutputBufferLength);
             break;
         }
     }
@@ -1921,7 +2084,37 @@ USBHI_GetControllerInformation(
     ULONG ControllerInformationBufferLength,
     PULONG LengthReturned)
 {
-    UNIMPLEMENTED
+    PUSB_CONTROLLER_INFORMATION_0 ControllerInfo;
+
+    DPRINT1("USBHI_GetControllerInformation\n");
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(ControllerInformationBuffer);
+    PC_ASSERT(ControllerInformationBufferLength >= sizeof(USB_CONTROLLER_INFORMATION_0));
+
+    //
+    // get controller info buffer
+    //
+    ControllerInfo = (PUSB_CONTROLLER_INFORMATION_0)ControllerInformationBuffer;
+
+    //
+    // FIXME only version 0 is supported for now
+    //
+    PC_ASSERT(ControllerInfo->InformationLevel == 0);
+
+    //
+    // fill in information
+    //
+    ControllerInfo->ActualLength = sizeof(USB_CONTROLLER_INFORMATION_0);
+    ControllerInfo->SelectiveSuspendEnabled = FALSE; //FIXME
+    ControllerInfo->IsHighSpeedController = TRUE;
+
+    //
+    // set length returned
+    //
+    *LengthReturned = ControllerInfo->ActualLength;
     return STATUS_NOT_IMPLEMENTED;
 }
 
