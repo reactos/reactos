@@ -827,6 +827,8 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     if (!IsObjectDead(hDC))
     {
+        DC_vFreeDcAttr(DCToDelete); // Plug a leak see bug 6119!
+
         if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
         {
             DPRINT1("DC_FreeDC failed\n");
