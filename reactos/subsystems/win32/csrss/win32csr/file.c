@@ -82,7 +82,7 @@ CSR_API(CsrDefineDosDevice)
     Status = RtlEnterCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     if (! NT_SUCCESS(Status))
     {
-        DPRINT1("RtlEnterCriticalSection() failed (Status %lx)",
+        DPRINT1("RtlEnterCriticalSection() failed (Status %lx)\n",
                 Status);
         return Status;
     }
@@ -149,7 +149,7 @@ CSR_API(CsrDefineDosDevice)
             
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed (Status %lx)",
+                DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed (Status %lx)\n",
                      &DeviceName, Status);
                 _SEH2_LEAVE;
             }
@@ -270,7 +270,7 @@ CSR_API(CsrDefineDosDevice)
             Status = NtMakeTemporaryObject(LinkHandle);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("NtMakeTemporaryObject(%wZ) failed (Status %lx)",
+                DPRINT1("NtMakeTemporaryObject(%wZ) failed (Status %lx)\n",
                      &DeviceName, Status);
                 _SEH2_LEAVE;
             }
@@ -279,7 +279,7 @@ CSR_API(CsrDefineDosDevice)
             LinkHandle = NULL;
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("NtClose(%wZ) failed (Status %lx)",
+                DPRINT1("NtClose(%wZ) failed (Status %lx)\n",
                      &DeviceName, Status);
                 _SEH2_LEAVE;
             }
@@ -396,7 +396,7 @@ CSR_API(CsrDefineDosDevice)
                                              SECURITY_DESCRIPTOR_REVISION);
         if (! NT_SUCCESS(Status))
         {
-            DPRINT1("RtlCreateSecurityDescriptor() failed (Status %lx)",
+            DPRINT1("RtlCreateSecurityDescriptor() failed (Status %lx)\n",
                  Status);
             _SEH2_LEAVE;
         }
@@ -406,7 +406,7 @@ CSR_API(CsrDefineDosDevice)
                               ACL_REVISION);
         if (! NT_SUCCESS(Status))
         {
-            DPRINT1("RtlCreateAcl() failed (Status %lx)",
+            DPRINT1("RtlCreateAcl() failed (Status %lx)\n",
                  Status);
             _SEH2_LEAVE;
         }
@@ -430,7 +430,7 @@ CSR_API(CsrDefineDosDevice)
                                               FALSE);
         if (! NT_SUCCESS(Status))
         {
-            DPRINT1("RtlSetDaclSecurityDescriptor() failed (Status %lx)",
+            DPRINT1("RtlSetDaclSecurityDescriptor() failed (Status %lx)\n",
                  Status);
             _SEH2_LEAVE;
         }
@@ -449,13 +449,13 @@ CSR_API(CsrDefineDosDevice)
             Status = NtMakePermanentObject(LinkHandle);
             if (! NT_SUCCESS(Status))
             {
-                DPRINT1("NtMakePermanentObject(%wZ) failed (Status %lx)",
+                DPRINT1("NtMakePermanentObject(%wZ) failed (Status %lx)\n",
                      &DeviceName, Status);
             }
         }
         else
         {
-            DPRINT1("NtCreateSymbolicLinkObject(%wZ) failed (Status %lx)",
+            DPRINT1("NtCreateSymbolicLinkObject(%wZ) failed (Status %lx)\n",
                  &DeviceName, Status);
         }
     }
