@@ -39,64 +39,68 @@ struct _CONTROLLER_INFO;
 
 typedef struct _DRIVE_INFO
 {
-  struct _CONTROLLER_INFO  *ControllerInfo;
-  UCHAR                    UnitNumber; /* 0,1,2,3 */
-  LARGE_INTEGER            MotorStartTime;
-  PDEVICE_OBJECT           DeviceObject;
-  CM_FLOPPY_DEVICE_DATA    FloppyDeviceData;
-  DISK_GEOMETRY            DiskGeometry;
-  UCHAR                    BytesPerSectorCode;
-  WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
-  WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
-  ULONG                    DiskChangeCount;
-  BOOLEAN                  Initialized;
+    struct _CONTROLLER_INFO  *ControllerInfo;
+    UCHAR                    UnitNumber; /* 0,1,2,3 */
+    LARGE_INTEGER            MotorStartTime;
+    PDEVICE_OBJECT           DeviceObject;
+    CM_FLOPPY_DEVICE_DATA    FloppyDeviceData;
+    DISK_GEOMETRY            DiskGeometry;
+    UCHAR                    BytesPerSectorCode;
+    WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
+    WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
+    ULONG                    DiskChangeCount;
+    BOOLEAN                  Initialized;
 } DRIVE_INFO, *PDRIVE_INFO;
 
 typedef struct _CONTROLLER_INFO
 {
-  BOOLEAN          Populated;
-  BOOLEAN          Initialized;
-  ULONG            ControllerNumber;
-  INTERFACE_TYPE   InterfaceType;
-  ULONG            BusNumber;
-  ULONG            Level;
-  KIRQL            MappedLevel;
-  ULONG            Vector;
-  ULONG            MappedVector;
-  KINTERRUPT_MODE  InterruptMode;
-  PUCHAR           BaseAddress;
-  ULONG            Dma;
-  ULONG            MapRegisters;
-  PVOID            MapRegisterBase;
-  BOOLEAN          Master;
-  KEVENT           SynchEvent;
-  KDPC             Dpc;
-  PKINTERRUPT      InterruptObject;
-  PADAPTER_OBJECT  AdapterObject;
-  UCHAR            NumberOfDrives;
-  BOOLEAN          ImpliedSeeks;
-  DRIVE_INFO       DriveInfo[MAX_DRIVES_PER_CONTROLLER];
-  PDRIVE_INFO      CurrentDrive;
-  BOOLEAN          Model30;
-  KEVENT           MotorStoppedEvent;
-  KTIMER           MotorTimer;
-  KDPC             MotorStopDpc;
-  BOOLEAN          StopDpcQueued;
+    BOOLEAN          Populated;
+    BOOLEAN          Initialized;
+    ULONG            ControllerNumber;
+    INTERFACE_TYPE   InterfaceType;
+    ULONG            BusNumber;
+    ULONG            Level;
+    KIRQL            MappedLevel;
+    ULONG            Vector;
+    ULONG            MappedVector;
+    KINTERRUPT_MODE  InterruptMode;
+    PUCHAR           BaseAddress;
+    ULONG            Dma;
+    ULONG            MapRegisters;
+    PVOID            MapRegisterBase;
+    BOOLEAN          Master;
+    KEVENT           SynchEvent;
+    KDPC             Dpc;
+    PKINTERRUPT      InterruptObject;
+    PADAPTER_OBJECT  AdapterObject;
+    UCHAR            NumberOfDrives;
+    BOOLEAN          ImpliedSeeks;
+    DRIVE_INFO       DriveInfo[MAX_DRIVES_PER_CONTROLLER];
+    PDRIVE_INFO      CurrentDrive;
+    BOOLEAN          Model30;
+    KEVENT           MotorStoppedEvent;
+    KTIMER           MotorTimer;
+    KDPC             MotorStopDpc;
+    BOOLEAN          StopDpcQueued;
 } CONTROLLER_INFO, *PCONTROLLER_INFO;
 
-NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
-                           PUNICODE_STRING RegistryPath);
+NTSTATUS NTAPI
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
-VOID NTAPI SignalMediaChanged(PDEVICE_OBJECT DeviceObject,
-                              PIRP Irp);
+VOID NTAPI
+SignalMediaChanged(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-VOID NTAPI WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo);
+VOID NTAPI
+WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo);
+NTSTATUS NTAPI
+ResetChangeFlag(PDRIVE_INFO DriveInfo);
 
-VOID NTAPI StartMotor(PDRIVE_INFO DriveInfo);
+VOID NTAPI
+StartMotor(PDRIVE_INFO DriveInfo);
 
-VOID NTAPI StopMotor(PCONTROLLER_INFO ControllerInfo);
+VOID NTAPI
+StopMotor(PCONTROLLER_INFO ControllerInfo);
 
 /*
  * MEDIA TYPES
