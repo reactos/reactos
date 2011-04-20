@@ -192,7 +192,7 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    {
       pRgn = dc->dclevel.prgnMeta;
    }
-   else
+   else if (dc->rosdc.hClipRgn)
    {
 	   Unlock = TRUE ;
        pRgn = REGION_LockRgn(dc->rosdc.hClipRgn); // CLIPRGN
