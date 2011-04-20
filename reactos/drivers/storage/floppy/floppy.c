@@ -971,22 +971,25 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	      continue; /* continue to next drive */
 	    }
 
-	  /* 3e: Set up the DPC */
+      /* 3e: Increase global floppy drives count */
+      IoGetConfigurationInformation()->FloppyCount++;
+
+	  /* 3f: Set up the DPC */
 	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, (PIO_DPC_ROUTINE)DpcForIsr);
 
-	  /* 3f: Point the device extension at our DriveInfo struct */
+	  /* 3g: Point the device extension at our DriveInfo struct */
 	  gControllerInfo[i].DriveInfo[j].DeviceObject->DeviceExtension = &gControllerInfo[i].DriveInfo[j];
 
-	  /* 3g: neat comic strip */
+	  /* 3h: neat comic strip */
 
-	  /* 3h: set the initial media type to unknown */
+	  /* 3i: set the initial media type to unknown */
 	  memset(&gControllerInfo[i].DriveInfo[j].DiskGeometry, 0, sizeof(DISK_GEOMETRY));
 	  gControllerInfo[i].DriveInfo[j].DiskGeometry.MediaType = Unknown;
 
-	  /* 3i: Now that we're done, set the Initialized flag so we know to free this in Unload */
+	  /* 3j: Now that we're done, set the Initialized flag so we know to free this in Unload */
 	  gControllerInfo[i].DriveInfo[j].Initialized = TRUE;
 
-	  /* 3j: Clear the DO_DEVICE_INITIALIZING flag */
+	  /* 3k: Clear the DO_DEVICE_INITIALIZING flag */
       gControllerInfo[i].DriveInfo[j].DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         }
     }
