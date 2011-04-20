@@ -562,6 +562,9 @@
 <directory name="ufatx">
 	<xi:include href="ufatx/ufatx.rbuild" />
 </directory>
+<directory name="unicows">
+	<xi:include href="unicows/unicows.rbuild" />
+</directory>
 <directory name="untfs">
 	<xi:include href="untfs/untfs.rbuild" />
 </directory>
