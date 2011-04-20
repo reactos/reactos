@@ -935,3 +935,37 @@ CUSBRequest::ShouldReleaseRequestAfterCompletion()
         return FALSE;
     }
 }
+
+NTSTATUS
+InternalCreateUSBRequest(
+    PUSBREQUEST *OutRequest)
+{
+    PUSBREQUEST This;
+
+    //
+    // allocate requests
+    //
+    This = new(NonPagedPool, TAG_USBEHCI) CUSBRequest(0);
+    if (!This)
+    {
+        //
+        // failed to allocate
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // add reference count
+    //
+    This->AddRef();
+
+    //
+    // return result
+    //
+    *OutRequest = (PUSBREQUEST)This;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}

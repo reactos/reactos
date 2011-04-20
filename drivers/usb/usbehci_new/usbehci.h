@@ -95,4 +95,9 @@ NTSTATUS CreateUSBDevice(PUSBDEVICE *OutDevice);
 //
 NTSTATUS CreateUSBQueue(PUSBQUEUE *OutUsbQueue);
 
+//
+// usb_request.cpp
+//
+NTSTATUS InternalCreateUSBRequest(PUSBREQUEST *OutRequest);
+
 #endif

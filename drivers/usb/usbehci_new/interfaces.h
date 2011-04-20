@@ -264,6 +264,30 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
+// GetAsyncListRegister
+//
+// Description: Returns the memory address used in the Asynchronous Register
+//
+    virtual ULONG GetAsyncListRegister() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetPeriodicListRegister
+//
+// Description: Returns the the memory address used in the Periodic Register
+//
+    virtual ULONG GetPeriodicListRegister() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SetStatusChangeEndpointCallBack
+//
+// Description: Used to callback to the hub controller when SCE detected
+//
+    virtual VOID SetStatusChangeEndpointCallBack(PVOID CallBack,PVOID Context) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
 // AcquireDeviceLock
 //
 // Description: acquires the device lock

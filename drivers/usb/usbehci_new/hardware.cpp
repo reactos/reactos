@@ -12,6 +12,8 @@
 #include "usbehci.h"
 #include "hardware.h"
 
+typedef VOID __stdcall HD_INIT_CALLBACK(IN PVOID CallBackContext);
+
 BOOLEAN
 NTAPI
 InterruptServiceRoutine(
@@ -66,6 +68,10 @@ public:
 
     VOID SetAsyncListRegister(ULONG PhysicalAddress);
     VOID SetPeriodicListRegister(ULONG PhysicalAddress);
+    ULONG GetAsyncListRegister();
+    ULONG GetPeriodicListRegister();
+
+    VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
 
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
@@ -100,7 +106,8 @@ protected:
     PQUEUE_HEAD AsyncQueueHead;
     PUSBQUEUE m_UsbQueue;
     PDMAMEMORYMANAGER m_MemoryManager;
-
+    HD_INIT_CALLBACK* m_SCECallBack;
+    PVOID m_SCEContext;
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
@@ -385,16 +392,6 @@ CUSBHardwareDevice::PnpStart(
         return Status;
     }
 
-    //
-    // Initialize the UsbQueue now that we have an AdapterObject.
-    //
-    Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to Initialize the UsbQueue\n");
-        return Status;
-    }
-
     // 
     // Create a queuehead for the Async Register
     //
@@ -413,7 +410,19 @@ CUSBHardwareDevice::PnpStart(
     AsyncQueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
     AsyncQueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
 
+    InitializeListHead(&AsyncQueueHead->LinkedQueueHeads);
+
     SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
+
+    //
+    // Initialize the UsbQueue now that we have an AdapterObject.
+    //
+    Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to Initialize the UsbQueue\n");
+        return Status;
+    }
 
     //
     // Start the controller
@@ -838,6 +847,26 @@ CUSBHardwareDevice::SetPeriodicListRegister(
     EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);
 }
 
+ULONG
+CUSBHardwareDevice::GetAsyncListRegister()
+{
+    return PhysicalAddress.LowPart;
+}
+
+ULONG CUSBHardwareDevice::GetPeriodicListRegister()
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+VOID CUSBHardwareDevice::SetStatusChangeEndpointCallBack(
+    PVOID CallBack,
+    PVOID Context)
+{
+    m_SCECallBack = (HD_INIT_CALLBACK*)CallBack;
+    m_SCEContext = Context;
+}
+
 KIRQL
 CUSBHardwareDevice::AcquireDeviceLock(void)
 {
@@ -937,7 +966,7 @@ EhciDefferedRoutine(
                 //
                 // Clear the port change status
                 //
-                This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_CONNECTSTATUSCHANGE);
+                //This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), PortStatus | EHCI_PRT_CONNECTSTATUSCHANGE);
 
                 if (PortStatus & EHCI_PRT_CONNECTED)
                 {
@@ -964,6 +993,7 @@ EhciDefferedRoutine(
                         // FIXME: Is a port reset needed, or does hub driver request this?
                         //
                     }
+                    This->m_SCECallBack(This->m_SCEContext);
                 }
                 else
                 {

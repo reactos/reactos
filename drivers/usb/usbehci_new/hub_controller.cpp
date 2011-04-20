@@ -11,6 +11,9 @@
 #define INITGUID
 #include "usbehci.h"
 
+VOID StatusChangeEndpointCallBack(
+    PVOID Context);
+
 class CHubController : public IHubController,
                        public IDispatchIrp
 {
@@ -62,7 +65,8 @@ public:
     NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
-
+    
+    friend VOID StatusChangeEndpointCallBack(PVOID Context);
 
     // constructor / destructor
     CHubController(IUnknown *OuterUnknown){}
@@ -91,6 +95,9 @@ protected:
     PULONG m_DeviceAddressBitmapBuffer;
     LIST_ENTRY m_UsbDeviceList;
     PIRP m_PendingSCEIrp;
+
+    //Internal Functions
+    BOOLEAN QueryStatusChageEndpoint(PIRP Irp);
 };
 
 typedef struct
@@ -254,12 +261,72 @@ CHubController::Initialize(
     }
 
     //
+    // Set the SCE Callback that the Hardware Device will call on port status change
+    //
+    Device->SetStatusChangeEndpointCallBack((PVOID)StatusChangeEndpointCallBack, this);
+    //
     // clear init flag
     //
     m_HubControllerDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
 
     return STATUS_SUCCESS;
+}
+
+//
+// Queries the ports to see if there has been a device connected or removed.
+//
+BOOLEAN
+CHubController::QueryStatusChageEndpoint(
+    PIRP Irp)
+{
+    ULONG PortCount, PortId;
+    PIO_STACK_LOCATION IoStack;
+    USHORT PortStatus, PortChange;
+    PURB Urb;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack);
+
+    //
+    // Get the Urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+    ASSERT(Urb);
+
+    //
+    // Get the number of ports and check each one for device connected
+    //
+    m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
+    DPRINT1("SCE Request\n");
+    ((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 0;
+    for (PortId = 0; PortId < PortCount; PortId++)
+    {
+        m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
+
+        DPRINT1("Port %d: Status %x, Change %x\n", PortId, PortStatus, PortChange);
+
+        //
+        // Loop the ports
+        //
+        if ((PortStatus & USB_PORT_STATUS_CONNECT) && (PortChange & USB_PORT_STATUS_CONNECT))
+        {
+            DPRINT1("Device is connected on port %d\n", PortId);
+            // Set the value for the port number
+            ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((PortId + 1) & 7);
+        }
+    }
+
+    //
+    // If there were changes then return TRUE
+    //
+    if (((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] != 0)
+        return TRUE;
+
+    return FALSE;
 }
 
 //-----------------------------------------------------------------------------------------
@@ -693,9 +760,6 @@ CHubController::HandleBulkOrInterruptTransfer(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
-    ULONG PortCount, PortId;
-    USHORT PortStatus, PortChange;
-
     //
     // First check if the request is for the Status Change Endpoint
     //
@@ -703,42 +767,13 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     // Is the Request for the root hub
     //
-    if (Urb->UrbHeader.UsbdDeviceHandle==0)
+    if (Urb->UrbHeader.UsbdDeviceHandle == 0)
     {
-        //
-        // There should only be one SCE request pending at a time
-        //
-        ASSERT (m_PendingSCEIrp == NULL);
-
-        //
-        // Get the number of ports and check each one for device connected
-        //
-        m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
-        DPRINT1("SCE Request\n");
-        DPRINT1("PortCount %d\n", PortCount);
-        ((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 0;
-        for (PortId = 0; PortId < PortCount; PortId++)
+        ASSERT(m_PendingSCEIrp == NULL);
+        if (QueryStatusChageEndpoint(Irp))
         {
-            m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
-
-            DPRINT1("Port %d: Status %x, Change %x\n", PortId, PortStatus, PortChange);
-
-            //
-            // FIXME: Verify that this is correct.
-            //
-            if ((PortStatus & USB_PORT_STATUS_CONNECT) && (PortChange & USB_PORT_STATUS_CONNECT))
-            {
-                DPRINT1("Device is connected on port %d\n", PortId);
-                ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((PortId + 1) & 7);
-                break;
-            }
-        }
-
-        //
-        // If there were changes then return SUCCESS
-        //
-        if (((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] != 0)
             return STATUS_SUCCESS;
+        }
 
         //
         // Else pend the IRP, to be completed when a device connects or disconnects.
@@ -747,6 +782,7 @@ CHubController::HandleBulkOrInterruptTransfer(
         IoMarkIrpPending(Irp);
         return STATUS_PENDING;
     }
+
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -2842,4 +2878,23 @@ CreateHubController(
     // done
     //
     return STATUS_SUCCESS;
+}
+
+VOID StatusChangeEndpointCallBack(PVOID Context)
+{
+    CHubController* This;
+    PIRP Irp;
+    This = (CHubController*)Context;
+
+    ASSERT(This);
+
+    DPRINT1("SCE Notification!\n");
+    Irp = This->m_PendingSCEIrp;
+    This->m_PendingSCEIrp = NULL;
+
+    This->QueryStatusChageEndpoint(Irp);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }

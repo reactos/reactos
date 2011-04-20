@@ -48,8 +48,8 @@ protected:
     LONG m_Ref;
     KSPIN_LOCK m_Lock;
     PDMA_ADAPTER m_Adapter;
-    PQUEUE_HEAD AsyncQueueHead;
-    PQUEUE_HEAD PendingQueueHead;
+    PQUEUE_HEAD AsyncListQueueHead;
+    PQUEUE_HEAD PendingListQueueHead;
 
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
     VOID UnlinkQueueHead(PQUEUE_HEAD QueueHead);
@@ -93,6 +93,26 @@ CUSBQueue::Initialize(
     //
     KeInitializeSpinLock(&m_Lock);
 
+    //
+    // Get the AsyncQueueHead
+    //
+    AsyncListQueueHead = (PQUEUE_HEAD)Hardware->GetAsyncListRegister();
+
+    //
+    // Create the PendingListQueueHead from NONPAGEDPOOL. It will never be linked into the Asynclist Schedule
+    //
+    PendingListQueueHead = (PQUEUE_HEAD)ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUE_HEAD), TAG_USBEHCI);
+    if (!PendingListQueueHead)
+    {
+        DPRINT1("Pool Allocation failed!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Initialize the List Head
+    //
+    InitializeListHead(&PendingListQueueHead->LinkedQueueHeads);
+
     return Status;
 }
 
@@ -112,8 +132,17 @@ NTSTATUS
 CUSBQueue::AddUSBRequest(
     IUSBRequest * Request)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PQUEUE_HEAD QueueHead;
+    ASSERT(Request != NULL);
+
+    Request->GetQueueHead(&QueueHead);
+
+    //
+    // Add it to the pending list
+    //
+    LinkQueueHead(PendingListQueueHead, QueueHead);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -135,8 +164,18 @@ NTSTATUS
 CUSBQueue::CreateUSBRequest(
     IUSBRequest **OutRequest)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBREQUEST UsbRequest;
+    NTSTATUS Status;
+
+    *OutRequest = NULL;
+    Status = InternalCreateUSBRequest(&UsbRequest);
+    
+    if (NT_SUCCESS(Status))
+    {
+        *OutRequest = UsbRequest;
+    }
+    
+    return Status;
 }
 
 //
