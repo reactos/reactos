@@ -60,6 +60,7 @@ base\applications\msconfig\msconfig.exe                 1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
 base\applications\mscutils\eventvwr\eventvwr.exe        1
 base\applications\mscutils\servman\servman.exe          1
+base\applications\mspaint\mspaint.exe                   1
 base\applications\mstsc\mstsc.exe                       1
 base\applications\network\arp\arp.exe                   1
 base\applications\network\dwnl\dwnl.exe                 1
@@ -75,7 +76,6 @@ base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
 base\applications\notepad\notepad.exe                   1
-base\applications\paint\paint.exe                       1
 base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
 base\applications\regedit\clb\clb.dll                   1
