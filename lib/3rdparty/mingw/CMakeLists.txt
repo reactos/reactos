@@ -58,8 +58,8 @@ add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
 set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
 
-add_definitions(-DCRTDLL -D_WINDOWS_)
 add_library(mingw_dllmain crtdll.c dllargv.c)
+set_property(TARGET mingw_dllmain PROPERTY COMPILE_DEFINITIONS CRTDLL _WINDOWS_)
 add_dependencies(mingw_dllmain psdk)
 
 if(NOT MSVC)
@@ -74,5 +74,5 @@ if(NOT MSVC)
 endif()
 
 add_library(getopt getopt.c)
-set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL1 __USE_CRTIMP)
+set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)
