@@ -279,6 +279,14 @@ bool CardRegion::OnLButtonDown(int x, int y)
     return false;
 }
 
+void CardRegion::ClickRelease(int x, int y)
+{
+    iNumDragCards = GetNumDragCards(x, y);
+
+    if (ClickReleaseCallback)
+        ClickReleaseCallback(*this, iNumDragCards); 
+}
+
 bool CardRegion::OnLButtonUp(int x, int y)
 {
     CardRegion *pDestStack = 0;
