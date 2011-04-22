@@ -756,12 +756,11 @@ BEGIN
 	IDS_SYS_FILE                "Системний файл"
 
 	IDS_OPEN_VERB               "Відкрити"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Запустити як "
 	IDS_EDIT_VERB               "Змінити"
 	IDS_FIND_VERB               "Пошук"
 	IDS_PRINT_VERB              "Друк"
-	IDS_PLAY_VERB               "Відтворити"
-	IDS_PREVIEW_VERB            "Перегляд"
 
 	IDS_FILE_FOLDER             "%u файлів, %u папок"
 	IDS_PRINTERS                "Принтери"

@@ -742,12 +742,11 @@ BEGIN
 	IDS_SYS_FILE                "Системный файл"
 
 	IDS_OPEN_VERB               "Открыть"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Запустить как "
 	IDS_EDIT_VERB               "Изменить"
 	IDS_FIND_VERB               "Поиск"
 	IDS_PRINT_VERB              "Печать"
-	IDS_PLAY_VERB               "Воспроизвести"
-	IDS_PREVIEW_VERB            "Предпросмотр"
 
 	IDS_FILE_FOLDER             "%u файлов, %u папок"
 	IDS_PRINTERS                "Принтеры"

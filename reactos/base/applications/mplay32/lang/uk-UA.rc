@@ -34,4 +34,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Перемотування вперед"
 	IDS_TOOLTIP_FORWARD "Вперед"
     IDS_APPTITLE "Програвач ReactOS"
+	IDS_PLAY "Відтворити"
 END

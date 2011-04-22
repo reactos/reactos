@@ -1,0 +1,18 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE    "Przegl¹darka obrazów i faxów ReactOS"
+    IDS_SETASDESKBG "Ustaw jako t³o pulpitu"
+    IDS_PREVIEW     "Podgl¹d"
+
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC   "Nastêpny obraz"
+    IDS_TOOLTIP_PREV_PIC   "Poprzedni obraz"
+    IDS_TOOLTIP_ZOOM_IN    "Powiêksz (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Pomniejsz (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Obróæ zgodnie z ruchem wskazówek zegara (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Obróæ przeciwnie do ruchu wskazówek zegara (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Drukuj (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Zapisz jako... (Ctrl+S)"
+END

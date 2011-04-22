@@ -6,8 +6,9 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "ReactOS paveikslëliø ir faksogramø perþiûros programa"
+    IDS_APPTITLE    "ReactOS paveikslëliø ir faksogramø perþiûros programa"
     IDS_SETASDESKBG "Nustatyti kaip darbalaukio fonà"
+    IDS_PREVIEW     "Preview"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Tolesnis paveikslëlis"
