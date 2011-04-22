@@ -682,10 +682,10 @@ BEGIN
 	IDS_LOGOFF_PROMPT           "Ви хочете вийти з системи?"
 
     /* Run File dialog */
-	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_RUNDLG_ERROR            "Неможливо відобразити Діалог Запуску Файлу (внутрішня помилка)"
+	IDS_RUNDLG_BROWSE_ERROR     "Неможливо відобразити Діалог Огляду (внутрішня помилка)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Огляд"
+	IDS_RUNDLG_BROWSE_FILTER    "Виконувані Файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
@@ -736,8 +736,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Доступний простір"
 	IDS_EMPTY_BITBUCKET         "Очистити Кошик"
 	IDS_PICK_ICON_TITLE         "Вибрати значок"
-	IDS_PICK_ICON_FILTER        "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-	IDS_OPEN_WITH_FILTER        "Виконувані файли (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_PICK_ICON_FILTER        "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Всі Файли (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Виконувані файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Папка"
 	IDS_VIRTUAL_DRIVER          "Драйвер віртуального пристрою"
 	IDS_BAT_FILE                "Пакетний файл ReactOS"
@@ -756,7 +756,7 @@ BEGIN
 	IDS_SYS_FILE                "Системний файл"
 
 	IDS_OPEN_VERB               "Відкрити"
-	IDS_EXPLORE_VERB            "Explore"
+	IDS_EXPLORE_VERB            "Відкрити в дереві"
 	IDS_RUNAS_VERB              "Запустити як "
 	IDS_EDIT_VERB               "Змінити"
 	IDS_FIND_VERB               "Пошук"

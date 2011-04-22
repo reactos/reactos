@@ -7,7 +7,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Панель задач", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Диспетчер задач", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Закрепить панель задач", ID_LOCKTASKBAR
         MENUITEM "&Свойства", ID_SHELL_CMD_PROPERTIES
