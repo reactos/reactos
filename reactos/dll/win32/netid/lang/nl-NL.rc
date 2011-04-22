@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Computerbeschrijving:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Volledige computernaam:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(Standaard)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Werkgroep:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(leeg)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Om de Netwerk Indentificatie wizard te gebruiken, word lid van een domein en maak een lokale gebruiker aan en klik op ""Network ID"".", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Netwerk ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Om deze computer te hernoemen of om lid te worden van een domein, klik op ""Change"".", IDC_STATIC, 6, 149, 170, 17

@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Описание:", IDC_STATIC, 6, 40, 70, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Полное имя:", IDC_STATIC, 6, 68, 64, 9
-    LTEXT       "(По умолчанию)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Рабочая группа:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(пусто)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Идентификация...", IDC_NETWORK_ID, 180, 114, 72, 15
     LTEXT       "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 6, 149, 170, 17
