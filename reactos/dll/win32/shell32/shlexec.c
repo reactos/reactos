@@ -1429,8 +1429,10 @@ static UINT_PTR SHELL_execute_url( LPCWSTR lpFile, LPCWSTR wFile, LPCWSTR wcmd, 
 void do_error_dialog( UINT_PTR retval, HWND hwnd, WCHAR* filename)
 {
     WCHAR msg[2048];
-    DWORD error_code = GetLastError();
     DWORD_PTR msgArguments[3]  = { (DWORD_PTR)filename, 0, 0 };
+    DWORD error_code;
+
+    error_code = GetLastError();
 
     if (retval == SE_ERR_NOASSOC)
         LoadStringW(shell32_hInstance, IDS_SHLEXEC_NOASSOC, msg, sizeof(msg)/sizeof(WCHAR));
