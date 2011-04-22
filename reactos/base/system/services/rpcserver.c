@@ -455,12 +455,17 @@ DWORD RCloseServiceHandle(
         HeapFree(GetProcessHeap(), 0, hManager);
         hManager = NULL;
 
+        *hSCObject = NULL;
+
         DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
     }
     else if (hService != NULL)
     {
         DPRINT("Found service handle\n");
+
+        /* Lock the service database exlusively */
+        ScmLockDatabaseExclusive();
 
         /* Get the pointer to the service record */
         lpService = hService->ServiceEntry;
@@ -491,6 +496,7 @@ DWORD RCloseServiceHandle(
                 if (dwError != ERROR_SUCCESS)
                 {
                     DPRINT("Failed to open services key\n");
+                    ScmUnlockDatabase();
                     return dwError;
                 }
 
@@ -507,6 +513,7 @@ DWORD RCloseServiceHandle(
                 {
                     DPRINT("Deletion failed due to running dependencies.\n");
                     RegCloseKey(hServicesKey);
+                    ScmUnlockDatabase();
                     return ERROR_SUCCESS;
                 }
 
@@ -522,6 +529,7 @@ DWORD RCloseServiceHandle(
                 if (dwError != ERROR_SUCCESS)
                 {
                     DPRINT("Failed to Delete the Service Registry key\n");
+                    ScmUnlockDatabase();
                     return dwError;
                 }
 
@@ -529,6 +537,10 @@ DWORD RCloseServiceHandle(
                 ScmDeleteServiceRecord(lpService);
             }
         }
+
+        ScmUnlockDatabase();
+
+        *hSCObject = NULL;
 
         DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
@@ -755,12 +767,14 @@ DWORD RDeleteService(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Acquire service database lock exclusively */
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
 
     if (lpService->bDeleted)
     {
         DPRINT("The service has already been marked for delete!\n");
-        return ERROR_SERVICE_MARKED_FOR_DELETE;
+        dwError = ERROR_SERVICE_MARKED_FOR_DELETE;
+        goto Done;
     }
 
     /* Mark service for delete */
@@ -768,7 +782,9 @@ DWORD RDeleteService(
 
     dwError = ScmMarkServiceForDelete(lpService);
 
-    /* FIXME: Release service database lock */
+Done:;
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     DPRINT("RDeleteService() done\n");
 
@@ -1047,6 +1063,7 @@ DWORD RQueryServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
+    /* Lock the srevice database shared */
     ScmLockDatabaseShared();
 
     /* Return service status information */
@@ -1054,6 +1071,7 @@ DWORD RQueryServiceStatus(
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
+    /* Unlock the service database */
     ScmUnlockDatabase();
 
     return ERROR_SUCCESS;
@@ -1132,12 +1150,14 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_DATA;
     }
 
+    /* Lock the service database exclusively */
     ScmLockDatabaseExclusive();
 
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
                   sizeof(SERVICE_STATUS));
 
+    /* Unlock the service database */
     ScmUnlockDatabase();
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
@@ -1233,13 +1253,14 @@ DWORD RChangeServiceConfigW(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock database exclusively */
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
 
     if (lpService->bDeleted)
     {
-        /* FIXME: Unlock database */
         DPRINT("The service has already been marked for delete!\n");
-        return ERROR_SERVICE_MARKED_FOR_DELETE;
+        dwError = ERROR_SERVICE_MARKED_FOR_DELETE;
+        goto done;
     }
 
     /* Open the service key */
@@ -1406,11 +1427,12 @@ DWORD RChangeServiceConfigW(
         /* FIXME: Write password */
     }
 
-    /* FIXME: Unlock database */
-
 done:
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     DPRINT("RChangeServiceConfigW() done (Error %lu)\n", dwError);
 
@@ -2326,7 +2348,8 @@ DWORD REnumServicesStatusW(
     if (lpResumeHandle)
         dwLastResumeCount = *lpResumeHandle;
 
-    /* FIXME: Lock the service list shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     lpService = ScmGetServiceEntryByResumeCount(dwLastResumeCount);
     if (lpService == NULL)
@@ -2464,7 +2487,8 @@ DWORD REnumServicesStatusW(
     }
 
 Done:;
-    /* FIXME: Unlock the service list */
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     DPRINT("REnumServicesStatusW() done (Error %lu)\n", dwError);
 
@@ -2532,7 +2556,7 @@ DWORD ROpenServiceW(
     PSERVICE lpService;
     PMANAGER_HANDLE hManager;
     SC_HANDLE hHandle;
-    DWORD dwError;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ROpenServiceW() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
@@ -2556,14 +2580,16 @@ DWORD ROpenServiceW(
     if (!lpServiceName)
         return ERROR_INVALID_ADDRESS;
 
-    /* FIXME: Lock the service list */
+    /* Lock the service database exclusive */
+    ScmLockDatabaseExclusive();
 
     /* Get service database entry */
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService == NULL)
     {
         DPRINT("Could not find a service!\n");
-        return ERROR_SERVICE_DOES_NOT_EXIST;
+        dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+        goto Done;
     }
 
     /* Create a service handle */
@@ -2572,7 +2598,7 @@ DWORD ROpenServiceW(
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT("ScmCreateServiceHandle() failed (Error %lu)\n", dwError);
-        return dwError;
+        goto Done;
     }
 
     /* Check the desired access */
@@ -2582,7 +2608,7 @@ DWORD ROpenServiceW(
     {
         DPRINT("ScmCheckAccess() failed (Error %lu)\n", dwError);
         HeapFree(GetProcessHeap(), 0, hHandle);
-        return dwError;
+        goto Done;
     }
 
     lpService->dwRefCount++;
@@ -2591,9 +2617,13 @@ DWORD ROpenServiceW(
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
 
+Done:;
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     DPRINT("ROpenServiceW() done\n");
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -2644,7 +2674,8 @@ DWORD RQueryServiceConfigW(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service database shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 KEY_READ,
@@ -2784,6 +2815,9 @@ DWORD RQueryServiceConfigW(
         *pcbBytesNeeded = dwRequiredSize;
 
 Done:;
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
 
@@ -2795,8 +2829,6 @@ Done:;
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
-
-    /* FIXME: Unlock the service database */
 
     DPRINT("RQueryServiceConfigW() done\n");
 
@@ -3078,13 +3110,14 @@ DWORD RChangeServiceConfigA(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock database exclusively */
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
 
     if (lpService->bDeleted)
     {
-        /* FIXME: Unlock database */
         DPRINT("The service has already been marked for delete!\n");
-        return ERROR_SERVICE_MARKED_FOR_DELETE;
+        dwError = ERROR_SERVICE_MARKED_FOR_DELETE;
+        goto done;
     }
 
     /* Open the service key */
@@ -3299,9 +3332,10 @@ DWORD RChangeServiceConfigA(
         /* FIXME: Write password */
     }
 
-    /* FIXME: Unlock database */
-
 done:
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
@@ -3822,7 +3856,8 @@ DWORD RQueryServiceConfigA(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service database shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 KEY_READ,
@@ -3995,6 +4030,9 @@ DWORD RQueryServiceConfigA(
         *pcbBytesNeeded = dwRequiredSize;
 
 Done:;
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
 
@@ -4006,8 +4044,6 @@ Done:;
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
-
-    /* FIXME: Unlock the service database */
 
     DPRINT("RQueryServiceConfigA() done\n");
 
@@ -4444,13 +4480,14 @@ DWORD RChangeServiceConfig2W(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock database exclusively */
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
 
     if (lpService->bDeleted)
     {
-        /* FIXME: Unlock database */
         DPRINT("The service has already been marked for delete!\n");
-        return ERROR_SERVICE_MARKED_FOR_DELETE;
+        dwError = ERROR_SERVICE_MARKED_FOR_DELETE;
+        goto done;
     }
 
     /* Open the service key */
@@ -4490,7 +4527,9 @@ DWORD RChangeServiceConfig2W(
     }
 
 done:
-    /* FIXME: Unlock database */
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
@@ -4545,7 +4584,8 @@ DWORD RQueryServiceConfig2A(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service database shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 KEY_READ,
@@ -4603,13 +4643,14 @@ DWORD RQueryServiceConfig2A(
     }
 
 done:
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (lpDescription != NULL)
         HeapFree(GetProcessHeap(), 0, lpDescription);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
-
-    /* FIXME: Unlock database */
 
     DPRINT("RQueryServiceConfig2W() done (Error %lu)\n", dwError);
 
@@ -4663,7 +4704,8 @@ DWORD RQueryServiceConfig2W(
         return ERROR_INVALID_HANDLE;
     }
 
-    /* FIXME: Lock the service database shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 KEY_READ,
@@ -4759,6 +4801,9 @@ DWORD RQueryServiceConfig2W(
     }
 
 done:
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (lpDescription != NULL)
         HeapFree(GetProcessHeap(), 0, lpDescription);
 
@@ -4770,8 +4815,6 @@ done:
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
-
-    /* FIXME: Unlock database */
 
     DPRINT("RQueryServiceConfig2W() done (Error %lu)\n", dwError);
 
@@ -4825,6 +4868,9 @@ DWORD RQueryServiceStatusEx(
         return ERROR_INVALID_HANDLE;
     }
 
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
+
     lpStatus = (LPSERVICE_STATUS_PROCESS)lpBuffer;
 
     /* Return service status information */
@@ -4834,6 +4880,9 @@ DWORD RQueryServiceStatusEx(
 
     lpStatus->dwProcessId = lpService->ProcessId;	/* FIXME */
     lpStatus->dwServiceFlags = 0;			/* FIXME */
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     return ERROR_SUCCESS;
 }
@@ -5028,9 +5077,10 @@ DWORD REnumServicesStatusExW(
         return ERROR_ACCESS_DENIED;
     }
 
-    if (lpResumeIndex) dwLastResumeCount = *lpResumeIndex;
+    if (lpResumeIndex)
+        dwLastResumeCount = *lpResumeIndex;
 
-    /* Lock the service list shared */
+    /* FIXME: Lock the service list shared */
 
     lpService = ScmGetServiceEntryByResumeCount(dwLastResumeCount);
     if (lpService == NULL)
@@ -5232,7 +5282,7 @@ DWORD REnumServicesStatusExW(
     }
 
 Done:;
-    /* Unlock the service list */
+    /* FIXME: Unlock the service list */
 
     DPRINT("REnumServicesStatusExW() done (Error %lu)\n", dwError);
 
