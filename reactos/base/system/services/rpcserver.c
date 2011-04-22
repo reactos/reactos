@@ -4508,13 +4508,12 @@ DWORD RChangeServiceConfig2W(
             lpServiceDescription->lpDescription != NULL)
         {
             DPRINT("Setting value %S\n", lpServiceDescription->lpDescription);
-            RegSetValueExW(hServiceKey,
-                           L"Description",
-                           0,
-                           REG_SZ,
-                           (LPBYTE)lpServiceDescription->lpDescription,
-                           (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR));
-
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"Description",
+                                     0,
+                                     REG_SZ,
+                                     (LPBYTE)lpServiceDescription->lpDescription,
+                                     (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR));
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
