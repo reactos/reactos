@@ -10,7 +10,7 @@ WCHAR szStringBuf[MAX_STRING];
 LPWSTR pszExeName = L"cmd.exe";
 
 /* Function pointers */
-typedef DWORD (WINAPI *GetConsoleCommandHistoryW_t) (LPWSTR sCommands, DWORD nBufferLength, LPWSTR sExeName); 
+typedef DWORD (WINAPI *GetConsoleCommandHistoryW_t) (LPWSTR sCommands, DWORD nBufferLength, LPWSTR sExeName);
 typedef DWORD (WINAPI *GetConsoleCommandHistoryLengthW_t) (LPWSTR sExeName);
 typedef BOOL (WINAPI *SetConsoleNumberOfCommandsW_t)(DWORD nNumber, LPWSTR sExeName);
 typedef VOID (WINAPI *ExpungeConsoleCommandHistoryW_t)(LPWSTR sExeName);
@@ -142,7 +142,7 @@ static VOID ReadFromFile(LPWSTR param)
         return;
     }
 
-    while ( fgetws(line, MAX_PATH, fp) != NULL) 
+    while ( fgetws(line, MAX_PATH, fp) != NULL)
     {
         /* Remove newline character */
         WCHAR *end = &line[wcslen(line) - 1];
@@ -191,13 +191,16 @@ static LPWSTR RemoveQuotes(LPWSTR str)
 int
 wmain(VOID)
 {
-	setlocale(LC_ALL, "");
+    WCHAR *pArgStart;
+    WCHAR *pArgEnd;
+    HMODULE hKernel32;
+
+    setlocale(LC_ALL, "");
 
     /* Get the full command line using GetCommandLine(). We can't just use argv,
      * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
-    WCHAR *pArgStart;
-    WCHAR *pArgEnd = GetCommandLine();
-	HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
+    pArgEnd = GetCommandLine();
+	hKernel32 = LoadLibraryW(L"kernel32.dll");
 
 	/* Get function pointers */
 	pGetConsoleCommandHistoryW = (GetConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "GetConsoleCommandHistoryW");
