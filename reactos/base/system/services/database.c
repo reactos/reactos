@@ -923,7 +923,7 @@ ScmStartUserModeService(PSERVICE Service,
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
 
-    DPRINT1("Service: %p  ImagePath: %wZ  PipeName: %S\n", Service, &ImagePath, NtControlPipeName);
+    DPRINT("Service: %p  ImagePath: %wZ  PipeName: %S\n", Service, &ImagePath, NtControlPipeName);
 
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
                                                   PIPE_ACCESS_DUPLEX,
@@ -1039,13 +1039,13 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 
     DPRINT("ScmStartService() called\n");
 
-    DPRINT1("Start Service %p (%S)\n", Service, Service->lpServiceName);
+    DPRINT("Start Service %p (%S)\n", Service, Service->lpServiceName);
 
     EnterCriticalSection(&ControlServiceCriticalSection);
 
     if (Service->Status.dwCurrentState != SERVICE_STOPPED)
     {
-        DPRINT1("Service %S is already running!\n", Service->lpServiceName);
+        DPRINT("Service %S is already running!\n", Service->lpServiceName);
         LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_SERVICE_ALREADY_RUNNING;
     }
