@@ -98,14 +98,14 @@ NpfsConnectPipe(PIRP Irp,
     /* Fail, if the CCB is not a pipe CCB */
     if (Ccb->Type != CCB_PIPE)
     {
-        DPRINT1("Not a pipe\n");
+        DPRINT("Not a pipe\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
     /* Fail, if the CCB is not a server end CCB */
     if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
     {
-        DPRINT1("Not the server end\n");
+        DPRINT("Not the server end\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
@@ -209,14 +209,14 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     /* Fail, if the CCB is not a pipe CCB */
     if (Ccb->Type != CCB_PIPE)
     {
-        DPRINT1("Not a pipe\n");
+        DPRINT("Not a pipe\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
     /* Fail, if the CCB is not a server end CCB */
     if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
     {
-        DPRINT1("Not the server end\n");
+        DPRINT("Not the server end\n");
         return STATUS_ILLEGAL_FUNCTION;
     }
 
@@ -336,7 +336,7 @@ NpfsWaitPipe(PIRP Irp,
     FileObject = IoStack->FileObject;
     ASSERT(FileObject);
 
-    DPRINT1("Waiting on Pipe %wZ\n", &FileObject->FileName);
+    DPRINT("Waiting on Pipe %wZ\n", &FileObject->FileName);
 
     WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
 
@@ -359,7 +359,7 @@ NpfsWaitPipe(PIRP Irp,
     /* Fail if not pipe was found */
     if (Fcb == NULL)
     {
-        DPRINT1("No pipe found!\n", Fcb);
+        DPRINT("No pipe found!\n", Fcb);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
