@@ -474,6 +474,14 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // If the request was initialized with an setup packet, it will return false
 
     virtual BOOLEAN ShouldReleaseRequestAfterCompletion() = 0;
+
+//----------------------------------------------------------------------------------------
+//
+// FreeQueueHead
+//
+// Description: frees the queue head with the associated transfer descriptors
+
+    virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead) = 0;
 };
 
 typedef IUSBRequest *PUSBREQUEST;

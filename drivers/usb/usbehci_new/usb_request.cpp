@@ -46,6 +46,7 @@ public:
     virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN ShouldReleaseRequestAfterCompletion();
+    virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead);
 
     // local functions
     ULONG InternalGetTransferType();
@@ -416,6 +417,11 @@ CUSBRequest::GetQueueHead(
         // store queue head
         //
         m_QueueHead = *OutHead;
+
+        //
+        // store request object
+        //
+        (*OutHead)->Request = PVOID(this);
     }
 
     //
@@ -933,6 +939,58 @@ CUSBRequest::ShouldReleaseRequestAfterCompletion()
         // created with an setup packet, don't release
         //
         return FALSE;
+    }
+}
+
+//-----------------------------------------------------------------------------------------
+VOID
+CUSBRequest::FreeQueueHead(
+    IN struct _QUEUE_HEAD * QueueHead)
+{
+    //
+    // FIXME: support chained queue heads
+    //
+    PC_ASSERT(QueueHead == m_QueueHead);
+
+    //
+    // release queue head
+    //
+    m_DmaManager->Release(QueueHead, sizeof(QUEUE_HEAD));
+
+    //
+    // nullify pointer
+    //
+    m_QueueHead = 0;
+
+    //
+    // release transfer descriptors
+    //
+
+    if (m_TransferDescriptors[0])
+    {
+        //
+        // release transfer descriptors
+        //
+        m_DmaManager->Release(m_TransferDescriptors[0], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
+        m_TransferDescriptors[0] = 0;
+    }
+
+    if (m_TransferDescriptors[1])
+    {
+        //
+        // release transfer descriptors
+        //
+        m_DmaManager->Release(m_TransferDescriptors[1], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
+        m_TransferDescriptors[1] = 0;
+    }
+
+    if (m_TransferDescriptors[2])
+    {
+        //
+        // release transfer descriptors
+        //
+        m_DmaManager->Release(m_TransferDescriptors[2], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
+        m_TransferDescriptors[2] = 0;
     }
 }
 

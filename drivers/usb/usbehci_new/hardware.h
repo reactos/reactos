@@ -194,6 +194,7 @@ typedef struct _QUEUE_HEAD
     PIRP IrpToComplete;
     PMDL Mdl;
     PKEVENT Event;
+    PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
 //

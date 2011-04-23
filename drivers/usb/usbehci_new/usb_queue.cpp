@@ -51,10 +51,17 @@ protected:
     PQUEUE_HEAD AsyncListQueueHead;
     PQUEUE_HEAD PendingListQueueHead;
 
+    // queue head manipulation functions
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
     VOID UnlinkQueueHead(PQUEUE_HEAD QueueHead);
     VOID LinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
     PQUEUE_HEAD UnlinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, ULONG Count);
+
+    // called for each completed queue head
+    NTSTATUS QueueHeadCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
+
+    // called when the completion queue is cleaned up
+    VOID QueueHeadCleanup(PQUEUE_HEAD QueueHead);
 };
 
 //=================================================================================================
@@ -141,6 +148,11 @@ CUSBQueue::AddUSBRequest(
     // Add it to the pending list
     //
     LinkQueueHead(PendingListQueueHead, QueueHead);
+
+    //
+    // add extra reference which is released when the request is completed
+    //
+    Request->AddRef();
 
     return STATUS_SUCCESS;
 }
@@ -312,6 +324,154 @@ CUSBQueue::UnlinkQueueHeadChain(
     LastQueueHead->LinkedQueueHeads.Flink = &FirstQueueHead->LinkedQueueHeads;
     LastQueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
     return FirstQueueHead;
+}
+
+NTSTATUS
+CUSBQueue::QueueHeadCompletion(
+    PQUEUE_HEAD CurrentQH,
+    NTSTATUS Status)
+{
+    IUSBRequest *Request;
+    USBD_STATUS UrbStatus;
+    PQUEUE_HEAD NewQueueHead;
+
+    //
+    // this function is called when a queue head has been completed
+    //
+    PC_ASSERT(CurrentQH->Token.Bits.Active == 0);
+
+    //
+    // get contained usb request
+    //
+    Request = (IUSBRequest*)CurrentQH->Request;
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(Request);
+
+    //
+    // check if the queue head was completed with errors
+    //
+    if (CurrentQH->Token.Bits.Halted)
+    {
+        if (CurrentQH->Token.Bits.DataBufferError)
+        {
+            //
+            // data buffer error
+            //
+            UrbStatus = USBD_STATUS_DATA_BUFFER_ERROR;
+        }
+        else if (CurrentQH->Token.Bits.BabbleDetected)
+        {
+            //
+            // babble detected
+            //
+            UrbStatus = USBD_STATUS_BABBLE_DETECTED;
+        }
+        else
+        {
+            //
+            // stall pid
+            //
+            UrbStatus = USBD_STATUS_STALL_PID;
+        }
+    }
+    else
+    {
+        //
+        // well done ;)
+        //
+        UrbStatus = USBD_STATUS_SUCCESS;
+    }
+
+    //
+    // notify request that a queue head has been completed
+    //
+    Request->CompletionCallback(Status, UrbStatus, CurrentQH);
+
+    //
+    // now unlink the queue head
+    // FIXME: implement chained queue heads
+    //
+    UnlinkQueueHead(CurrentQH);
+
+    //
+    // check if the request is complete
+    //
+    if (Request->IsRequestComplete() == FALSE)
+    {
+        //
+        // request is still in complete
+        // get new queue head
+        //
+        Status = Request->GetQueueHead(&NewQueueHead);
+
+        //
+        // add to pending list
+        //
+        LinkQueueHead(PendingListQueueHead, NewQueueHead);
+    }
+    else
+    {
+        //
+        // FIXME: put queue head into completed queue head list
+        //
+    }
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+VOID
+CUSBQueue::QueueHeadCleanup(
+    PQUEUE_HEAD CurrentQH)
+{
+    IUSBRequest * Request;
+    BOOLEAN ShouldReleaseWhenDone;
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(CurrentQH->Token.Bits.Active == 0);
+    PC_ASSERT(CurrentQH->Request);
+
+    //
+    // get request
+    //
+    Request = (IUSBRequest*)CurrentQH->Request;
+
+    //
+    // let IUSBRequest free the queue head
+    //
+    Request->FreeQueueHead(CurrentQH);
+
+    //
+    // check if we should release request when done
+    //
+    ShouldReleaseWhenDone = Request->ShouldReleaseRequestAfterCompletion();
+
+    //
+    // release reference when the request was added
+    //
+    Request->Release();
+
+    //
+    // check if the operation was asynchronous
+    //
+    if (ShouldReleaseWhenDone)
+    {
+        //
+        // release outstanding reference count
+        //
+        Request->Release();
+    }
+
+    //
+    // request is now released
+    //
 }
 
 NTSTATUS
