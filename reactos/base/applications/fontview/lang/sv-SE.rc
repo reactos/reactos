@@ -1,0 +1,22 @@
+/*
+ * PROJECT:         ReactOS RAPPS
+ * FILE:            \base\applications\fontview\lang\sv-SE.rc
+ * PURPOSE:         Swedish resource file
+ * Translation:     Jaix Bly
+ */
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUIT, "Avsluta"
+	IDS_PRINT, "Skriv ut"
+	IDS_STRING, "Jackdaws love my big sphinx of quartz. 1234567890"
+	IDS_ERROR, "Fel"
+	IDS_ERROR_NOMEM, "Det er inte nog minne för att slutföre operationen."
+	IDS_ERROR_NOFONT, "Filen %1 är inte en giltig typsnittsfil."
+	IDS_ERROR_NOCLASS, "Kunde inte initialisera Windows klassen."
+	IDS_ERROR_BADCMD, "Ingen typsnittsfil är angiven.\nSyntaxs:\n  fontview.exe <typsnittsfil>"
+END
+
+
+
