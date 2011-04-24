@@ -381,6 +381,7 @@ int main(int argc, char **argv)
          if (!strcmp((char*)section_header->Name, ".text") ||
              !strcmp((char*)section_header->Name, ".data") ||
              !strcmp((char*)section_header->Name, ".idata") ||
+             !strcmp((char*)section_header->Name, ".rdata") ||
              !strcmp((char*)section_header->Name, ".bss"))
          {
             section_header->Characteristics |= htodl(IMAGE_SCN_MEM_NOT_PAGED);
