@@ -1050,7 +1050,7 @@ CHubController::HandleClassDevice(
                     //
                     // FIXME: retrieve values
                     //
-                    UsbHubDescriptor->bNumberOfPorts = PortCount;
+                    UsbHubDescriptor->bNumberOfPorts = (UCHAR)PortCount;
                     UsbHubDescriptor->wHubCharacteristics = 0x0012;
                     UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
                     UsbHubDescriptor->bHubControlCurrent = 0x00;
@@ -1842,8 +1842,6 @@ USBHI_GetUsbDescriptors(
 {
     PUSBDEVICE UsbDevice;
     CHubController * Controller;
-    NTSTATUS Status;
-    PURB Urb;
 
     DPRINT1("USBHI_GetUsbDescriptors\n");
 
@@ -1851,7 +1849,10 @@ USBHI_GetUsbDescriptors(
     // sanity check
     //
     PC_ASSERT(DeviceDescriptorBuffer);
+    PC_ASSERT(DeviceDescriptorBufferLength);
     PC_ASSERT(*DeviceDescriptorBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR));
+    PC_ASSERT(ConfigDescriptorBufferLength);
+    PC_ASSERT(*ConfigDescriptorBufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
 
     //
     // first get controller
@@ -1890,54 +1891,14 @@ USBHI_GetUsbDescriptors(
     *DeviceDescriptorBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
 
     //
-    // allocate urb
+    // get configuration descriptor
     //
-    Urb = (PURB)ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), TAG_USBEHCI);
-    if (!Urb)
-    {
-        //
-        // no memory
-        // 
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // zero request
-    //
-    RtlZeroMemory(Urb, sizeof(URB));
-
-    //
-    // initialize request
-    //
-    Urb->UrbHeader.Function = URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE;
-    Urb->UrbHeader.Length = sizeof(_URB_CONTROL_DESCRIPTOR_REQUEST);
-    Urb->UrbControlDescriptorRequest.DescriptorType = USB_CONFIGURATION_DESCRIPTOR_TYPE;
-    Urb->UrbControlDescriptorRequest.TransferBuffer = ConfigDescriptorBuffer;
-    Urb->UrbControlDescriptorRequest.TransferBufferLength = *ConfigDescriptorBufferLength;
-
-    //
-    // submit urb
-    //
-    //Status = UsbDevice->SubmitUrb(Urb);
-    UNIMPLEMENTED
-
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // TransferBufferLength holds the number of bytes transferred
-        //
-        *ConfigDescriptorBufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
-    }
-
-    //
-    // free urb
-    //
-    ExFreePoolWithTag(Urb, TAG_USBEHCI);
+    UsbDevice->GetConfigurationDescriptors((PUSB_CONFIGURATION_DESCRIPTOR)ConfigDescriptorBuffer, *ConfigDescriptorBufferLength, ConfigDescriptorBufferLength);
 
     //
     // complete the request
     //
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -2195,7 +2156,11 @@ USBHI_GetControllerInformation(
     // set length returned
     //
     *LengthReturned = ControllerInfo->ActualLength;
-    return STATUS_NOT_IMPLEMENTED;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

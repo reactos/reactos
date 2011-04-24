@@ -65,6 +65,8 @@ public:
     virtual void GetDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
     virtual UCHAR GetConfigurationValue();
     virtual NTSTATUS SubmitIrp(PIRP Irp);
+    virtual VOID GetConfigurationDescriptors(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer, IN ULONG BufferLength, OUT PULONG OutBufferLength);
+
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
@@ -113,7 +115,6 @@ CUSBDevice::Initialize(
     IN ULONG PortStatus)
 {
     NTSTATUS Status;
-    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
     //
     // initialize members
@@ -835,6 +836,36 @@ CUSBDevice::CreateConfigurationDescriptor(
     //
     return Status;
 }
+//----------------------------------------------------------------------------------------
+VOID
+CUSBDevice::GetConfigurationDescriptors(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer,
+    IN ULONG BufferLength,
+    OUT PULONG OutBufferLength)
+{
+    //
+    // sanity check
+    //
+    PC_ASSERT(BufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    PC_ASSERT(ConfigDescriptorBuffer);
+    PC_ASSERT(OutBufferLength);
+
+    //
+    // FIXME: support multiple configurations
+    //
+    PC_ASSERT(m_DeviceDescriptor.bNumConfigurations == 1);
+
+    //
+    // copy first configuration descriptor
+    //
+    RtlCopyMemory(ConfigDescriptorBuffer, &m_ConfigurationDescriptors[0].ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    //
+    // store length
+    //
+    *OutBufferLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
+}
+
 
 //----------------------------------------------------------------------------------------
 NTSTATUS

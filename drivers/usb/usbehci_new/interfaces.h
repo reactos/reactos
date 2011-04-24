@@ -748,6 +748,15 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 
     virtual NTSTATUS SubmitIrp(PIRP Urb) = 0;
 
+//-----------------------------------------------------------------------------------------
+//
+// GetConfigurationDescriptors
+//
+// Description: returns one or more configuration descriptors
+
+    virtual VOID GetConfigurationDescriptors(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer,
+                                             IN ULONG BufferLength,
+                                             OUT PULONG OutBufferLength) = 0;
 };
 
 typedef IUSBDevice *PUSBDEVICE;

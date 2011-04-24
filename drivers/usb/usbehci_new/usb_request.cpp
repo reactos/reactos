@@ -56,6 +56,7 @@ public:
     NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
     ULONG GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
+    NTSTATUS BuildSetupPacketFromURB();
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -83,7 +84,6 @@ protected:
     // transfer buffer MDL
     //
     PMDL m_TransferBufferMDL;
-
 
     //
     // caller provided setup packet
@@ -181,7 +181,6 @@ CUSBRequest::InitializeWithIrp(
 {
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
-    NTSTATUS Status;
 
     //
     // sanity checks
@@ -407,6 +406,10 @@ CUSBRequest::GetQueueHead(
             break;
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
             DPRINT1("USB_ENDPOINT_TYPE_ISOCHRONOUS not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        default:
+            PC_ASSERT(FALSE);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
     }
@@ -838,11 +841,6 @@ CUSBRequest::BuildSetupPacket()
     PHYSICAL_ADDRESS PhysicalAddress;
 
     //
-    // FIXME: generate setup packet from urb request
-    //
-    PC_ASSERT(m_SetupPacket);
-
-    //
     // allocate common buffer setup packet
     //
     Status = m_DmaManager->Allocate(sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), (PVOID*)&m_DescriptorPacket, &PhysicalAddress);
@@ -862,10 +860,167 @@ CUSBRequest::BuildSetupPacket()
         RtlCopyMemory(m_DescriptorPacket, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
         m_DescriptorSetupPacket = PhysicalAddress;
     }
+    else
+    {
+        //
+        // build setup packet from urb
+        //
+        Status = BuildSetupPacketFromURB();
+    }
 
     //
     // done
     //
+    return Status;
+}
+
+
+NTSTATUS
+CUSBRequest::BuildSetupPacketFromURB()
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(m_Irp);
+    PC_ASSERT(m_DescriptorPacket);
+
+    //
+    // get stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+    //
+    // zero descriptor packet
+    //
+    RtlZeroMemory(m_DescriptorPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+
+
+    switch (Urb->UrbHeader.Function)
+    {
+    /* CLEAR FEATURE */
+        case URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE:
+        case URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE:
+        case URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT:
+            UNIMPLEMENTED
+            break;
+
+    /* GET CONFIG */
+        case URB_FUNCTION_GET_CONFIGURATION:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_CONFIGURATION;
+            m_DescriptorPacket->bmRequestType.B = 0x80;
+            m_DescriptorPacket->wLength = 1;
+            break;
+
+    /* GET DESCRIPTOR */
+        case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_DESCRIPTOR;
+            m_DescriptorPacket->wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
+            m_DescriptorPacket->wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
+            m_DescriptorPacket->wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            m_DescriptorPacket->bmRequestType.B = 0x80;
+            break;
+
+    /* GET INTERFACE */
+        case URB_FUNCTION_GET_INTERFACE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_CONFIGURATION;
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x80;
+            m_DescriptorPacket->wLength = 1;
+            break;
+
+    /* GET STATUS */
+        case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_STATUS;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x80;
+            m_DescriptorPacket->wLength = 2;
+            break;
+
+    case URB_FUNCTION_GET_STATUS_FROM_INTERFACE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_STATUS;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index != 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x81;
+            m_DescriptorPacket->wLength = 2;
+            break;
+
+    case URB_FUNCTION_GET_STATUS_FROM_ENDPOINT:
+            m_DescriptorPacket->bRequest = USB_REQUEST_GET_STATUS;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index != 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x82;
+            m_DescriptorPacket->wLength = 2;
+            break;
+
+    /* SET ADDRESS */
+
+    /* SET CONFIG */
+        case URB_FUNCTION_SELECT_CONFIGURATION:
+            m_DescriptorPacket->bRequest = USB_REQUEST_SET_CONFIGURATION;
+            m_DescriptorPacket->wValue.W = Urb->UrbSelectConfiguration.ConfigurationDescriptor->bConfigurationValue;
+            m_DescriptorPacket->wIndex.W = 0;
+            m_DescriptorPacket->wLength = 0;
+            m_DescriptorPacket->bmRequestType.B = 0x00;
+            break;
+
+    /* SET DESCRIPTOR */
+        case URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE:
+        case URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE:
+        case URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT:
+            UNIMPLEMENTED
+            break;
+
+    /* SET FEATURE */
+        case URB_FUNCTION_SET_FEATURE_TO_DEVICE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_SET_FEATURE;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x80;
+            break;
+
+        case URB_FUNCTION_SET_FEATURE_TO_INTERFACE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_SET_FEATURE;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x81;
+            break;
+
+        case URB_FUNCTION_SET_FEATURE_TO_ENDPOINT:
+            m_DescriptorPacket->bRequest = USB_REQUEST_SET_FEATURE;
+            ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
+            m_DescriptorPacket->wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+            m_DescriptorPacket->bmRequestType.B = 0x82;
+            break;
+
+    /* SET INTERFACE*/
+        case URB_FUNCTION_SELECT_INTERFACE:
+            m_DescriptorPacket->bRequest = USB_REQUEST_SET_INTERFACE;
+            m_DescriptorPacket->wValue.W = Urb->UrbSelectInterface.Interface.AlternateSetting;
+            m_DescriptorPacket->wIndex.W = Urb->UrbSelectInterface.Interface.InterfaceNumber;
+            m_DescriptorPacket->wLength = 0;
+            m_DescriptorPacket->bmRequestType.B = 0x01;
+            break;
+
+    /* SYNC FRAME */
+        case URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL:
+            UNIMPLEMENTED
+            break;
+        default:
+            UNIMPLEMENTED
+            break;
+    }
+
     return Status;
 }
 
