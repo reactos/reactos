@@ -59,7 +59,7 @@ CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Napíšte názov Vášho poèítaèa v dåke 63 znakov alebo menej. "\
+    LTEXT "Napíšte názov Vášho poèítaèa v dåke 15 znakov alebo menej. "\
           "Ak je poèítaè pripojenı k sieti, musí bı jeho názov unikátny.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Názov poèítaèa:", IDC_STATIC, 54, 38, 75, 8

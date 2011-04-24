@@ -76,7 +76,7 @@ CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Skriv inn et navn for din datamaskin som er 63 karakterer eller mindre. "\
+    LTEXT "Skriv inn et navn for din datamaskin som er 15 karakterer eller mindre. "\
           "Hvis du er på et nettverk, så må ditt datamaskin navn være unikt.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Datamaskin navn:", IDC_STATIC, 54, 38, 75, 8

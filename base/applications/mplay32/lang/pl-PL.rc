@@ -28,4 +28,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Przewiñ do przodu"
 	IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
     IDS_APPTITLE "ReactOS Multimedia Player"
+	IDS_PLAY "Odtwórz"
 END

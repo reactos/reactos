@@ -754,12 +754,11 @@ BEGIN
 	IDS_SYS_FILE                "File di sistema"
 
 	IDS_OPEN_VERB               "Apri"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Eseguire come "
 	IDS_EDIT_VERB               "Modifica"
 	IDS_FIND_VERB               "Cerca"
 	IDS_PRINT_VERB              "Stampa"
-	IDS_PLAY_VERB               "Mostra"
-	IDS_PREVIEW_VERB            "Anteprima"
 
 	IDS_FILE_FOLDER             "%u File, %u Cartelle"
 	IDS_PRINTERS                "Stampanti"

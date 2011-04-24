@@ -66,7 +66,7 @@ BltMask(SURFOBJ* psoDest,
         pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
 
         hbmPattern = EBRUSHOBJ_pvGetEngBrush(pebo);
-        psurfPattern = SURFACE_LockSurface(hbmPattern);
+        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
         if (psurfPattern != NULL)
         {
             psoPattern = &psurfPattern->SurfObj;
@@ -168,7 +168,7 @@ BltMask(SURFOBJ* psoDest,
     }
 
     if (psurfPattern)
-        SURFACE_UnlockSurface(psurfPattern);
+        SURFACE_ShareUnlockSurface(psurfPattern);
 
     return TRUE;
 }
@@ -230,7 +230,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     {
         GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
         hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
-        psurfPattern = SURFACE_LockSurface(hbmPattern);
+        psurfPattern = SURFACE_ShareLockSurface(hbmPattern);
         if (psurfPattern)
         {
             BltInfo.PatternSurface = &psurfPattern->SurfObj;
@@ -250,7 +250,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     /* Pattern brush */
     if (psurfPattern)
     {
-        SURFACE_UnlockSurface(psurfPattern);
+        SURFACE_ShareUnlockSurface(psurfPattern);
     }
 
     return Result;

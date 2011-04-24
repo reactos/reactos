@@ -1,0 +1,33 @@
+/*
+ * PROJECT:         ReactOS RAPPS
+ * FILE:            \base\applications\cmdutils\doskey\lang\sv-SE.rc
+ * PURPOSE:         Swedish resource file
+ * Translation:     Jaix Bly
+ */
+ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Hanterar commandoradseditering; settings, history, and macros.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Sätter på insert mode.\n\
+  /OVERSTRIKE         Stänger av insert mode.\n\
+  /EXENAME=exename    Ställer in vilket program som ska visas/ändra historia\n\
+                      och macros för. Standardinställning är cmd.exe.\n\
+  /HISTORY            Visar kommando historian.\n\
+  /LISTSIZE=size      Ställer in antal kommandon per historebuffer.\n\
+  /REINSTALL          Rensar kommandohistorien.\n\
+  /MACROS             Visa makrodefinitioner.\n\
+  /MACROS:exename     Visa makrodefinitioner för ett specifikt program.\n\
+  /MACROS:ALL         Visa makrodefinitioner för all program.\n\
+  /MACROFILE=file     Laddar makrodefinitioner från file.\n\
+  macroname           Specificerar namnet på ett makro man vill skapa.\n\
+  text                Specificerar utbytestexten för macrot.\n"
+
+IDS_INVALID_MACRO_DEF, "Ogiltig makrodefinition: %s\n"
+
+END

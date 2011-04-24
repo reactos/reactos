@@ -31,4 +31,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Vyhæadaù dopredu"
 	IDS_TOOLTIP_FORWARD "PreskoËiù dopredu"
     IDS_APPTITLE "Multimedi·lny prehr·vaË systÈmu ReactOS"
+	IDS_PLAY "Prehraù"
 END

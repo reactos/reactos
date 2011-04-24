@@ -9,11 +9,14 @@
 /* INCLUDES ******************************************************************/
 #define NDEBUG
 #include "w32csr.h"
+#include "file.h"
 #include <debug.h>
 
 /* Not defined in any header file */
 extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
 extern VOID WINAPI InitializeAppSwitchHook();
+extern LIST_ENTRY DosDeviceHistory;
+extern RTL_CRITICAL_SECTION Win32CsrDefineDosDeviceCritSec;
 
 /* GLOBALS *******************************************************************/
 
@@ -88,6 +91,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
     CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
     CSRSS_DEFINE_API(GET_TEMP_FILE,                CsrGetTempFile),
+    CSRSS_DEFINE_API(DEFINE_DOS_DEVICE,            CsrDefineDosDevice),
     { 0, 0, NULL }
 };
 
@@ -104,6 +108,10 @@ DllMain(HANDLE hDll,
         InitializeAppSwitchHook();
     }
 
+    if (DLL_PROCESS_DETACH == dwReason)
+    {
+        CsrCleanupDefineDosDevice();
+    }
     return TRUE;
 }
 
@@ -174,6 +182,8 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
     ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
     ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
+    Status = RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
+    InitializeListHead(&DosDeviceHistory);
     return TRUE;
 }
 

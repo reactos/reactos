@@ -90,14 +90,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "ZobrazovaË udalostÌ"
-	IDC_EVENTSTRINGIDNOTFOUND      "Popis pre udalosù ID ( %lu ) zo zdroja ( %s ) nebol n·jden˝. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
-	IDC_EVENTLOG_ERROR_TYPE        "Chyba"
-	IDC_EVENTLOG_WARNING_TYPE      "Upozornenie"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Inform·cia"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Kontrola uspeön·"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Kontrola zlyhala"
-	IDC_EVENTLOG_SUCCESS           "⁄spech" //Success
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Nezn·ma udalosù"
+	IDS_EVENTSTRINGIDNOTFOUND      "Popis pre udalosù ID ( %lu ) zo zdroja ( %s ) nebol n·jden˝. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+	IDS_EVENTLOG_ERROR_TYPE        "Chyba"
+	IDS_EVENTLOG_WARNING_TYPE      "Upozornenie"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Inform·cia"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Kontrola uspeön·"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Kontrola zlyhala"
+	IDS_EVENTLOG_SUCCESS           "⁄spech" //Success
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Nezn·ma udalosù"
 END
 
 STRINGTABLE

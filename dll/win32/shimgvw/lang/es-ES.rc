@@ -2,8 +2,9 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "Visor de imágenes y fax de ReactOS"
-    	IDS_SETASDESKBG "Establecer como fondo de escritorio"
+    IDS_APPTITLE    "Visor de imágenes y fax de ReactOS"
+    IDS_SETASDESKBG "Establecer como fondo de escritorio"
+    IDS_PREVIEW     "Vista previa"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Imagen siguiente"

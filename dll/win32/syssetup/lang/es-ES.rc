@@ -81,7 +81,7 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba un nombre para su equipo que sea de 63 caracteres o menos. "\
+    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. "\
           "Si se encuentra conectado a una red, el nombre debe ser único.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nombre del &Equipo:", IDC_STATIC, 54, 38, 75, 8

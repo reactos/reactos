@@ -746,12 +746,11 @@ BEGIN
 	IDS_SYS_FILE                "Systemfil"
 
 	IDS_OPEN_VERB               "Åpne"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Kjør som"
 	IDS_EDIT_VERB               "Rediger"
 	IDS_FIND_VERB               "Finn"
 	IDS_PRINT_VERB              "Skriv ut"
-	IDS_PLAY_VERB               "Spill"
-	IDS_PREVIEW_VERB            "Forhåndsvis"
 
 	IDS_FILE_FOLDER             "%u filer, %u mapper"
 	IDS_PRINTERS                "Skrivere"

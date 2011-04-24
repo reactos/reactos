@@ -1307,6 +1307,23 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 {
     EVENTMSG Event;
 
+    if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN ||
+        Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
+    {
+        switch (Msg->wParam)
+        {
+            case VK_LSHIFT: case VK_RSHIFT:
+                Msg->wParam = VK_SHIFT;
+                break;
+            case VK_LCONTROL: case VK_RCONTROL:
+                Msg->wParam = VK_CONTROL;
+                break;
+            case VK_LMENU: case VK_RMENU:
+                Msg->wParam = VK_MENU;
+                break;
+        }
+    }
+
     Event.message = Msg->message;
     Event.hwnd    = Msg->hwnd;
     Event.time    = Msg->time;
@@ -1878,5 +1895,67 @@ NtUserGetKeyState(INT key)
 
    return Ret;
 }
+
+
+DWORD
+APIENTRY
+NtUserGetKeyboardState(LPBYTE lpKeyState)
+{
+   DWORD ret = TRUE;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+
+   UserEnterShared();
+
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
+
+   _SEH2_TRY
+   {
+       ProbeForWrite(lpKeyState,sizeof(MessageQueue->KeyState) ,1);
+       RtlCopyMemory(lpKeyState,MessageQueue->KeyState,sizeof(MessageQueue->KeyState));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       SetLastNtError(_SEH2_GetExceptionCode());
+       ret = FALSE;
+   }
+   _SEH2_END;
+
+   UserLeave();
+
+   return ret;
+}
+
+BOOL
+APIENTRY
+NtUserSetKeyboardState(LPBYTE lpKeyState)
+{
+   DWORD ret = TRUE;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+
+   UserEnterExclusive();
+
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
+
+   _SEH2_TRY
+   {
+       ProbeForRead(lpKeyState,sizeof(MessageQueue->KeyState) ,1);
+       RtlCopyMemory(MessageQueue->KeyState,lpKeyState,sizeof(MessageQueue->KeyState));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       SetLastNtError(_SEH2_GetExceptionCode());
+       ret = FALSE;
+   }
+   _SEH2_END;
+
+   UserLeave();
+
+   return ret;
+}
+
 
 /* EOF */

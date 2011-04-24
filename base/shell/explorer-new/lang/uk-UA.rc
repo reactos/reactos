@@ -13,7 +13,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Панель завдань", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Диспетчер завдань", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Закріпити панель завдань", ID_LOCKTASKBAR
         MENUITEM "В&ластивості", ID_SHELL_CMD_PROPERTIES

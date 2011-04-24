@@ -751,12 +751,11 @@ BEGIN
 	IDS_SYS_FILE                "Plik systemowy"
 
 	IDS_OPEN_VERB               "Otwórz"
+	IDS_EXPLORE_VERB            "Eksploruj"
 	IDS_RUNAS_VERB              "Uruchom jako "
 	IDS_EDIT_VERB               "Edytuj"
 	IDS_FIND_VERB               "Wyszukaj"
 	IDS_PRINT_VERB              "Drukuj"
-	IDS_PLAY_VERB               "Odtwórz"
-	IDS_PREVIEW_VERB            "Podgl¹d"
 
 	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
 	IDS_PRINTERS                "Drukarki"

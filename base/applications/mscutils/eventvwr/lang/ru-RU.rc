@@ -93,14 +93,14 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Просмотр событий"
-	IDC_EVENTSTRINGIDNOTFOUND      "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера."
-	IDC_EVENTLOG_ERROR_TYPE        "Ошибка"
-	IDC_EVENTLOG_WARNING_TYPE      "Предупреждение"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Уведомление"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Аудит успехов"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Аудит отказов"
-	IDC_EVENTLOG_SUCCESS           "Успех"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Неизвестное событие"
+	IDS_EVENTSTRINGIDNOTFOUND      "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера."
+	IDS_EVENTLOG_ERROR_TYPE        "Ошибка"
+	IDS_EVENTLOG_WARNING_TYPE      "Предупреждение"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Уведомление"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Аудит успехов"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Аудит отказов"
+	IDS_EVENTLOG_SUCCESS           "Успех"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Неизвестное событие"
 END
 
 STRINGTABLE

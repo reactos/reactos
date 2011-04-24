@@ -73,7 +73,7 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben sie einen Computernamen ein (maximal 63 Zeichen). "\
+    LTEXT "Bitte geben sie einen Computernamen ein (maximal 15 Zeichen). "\
           "Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8

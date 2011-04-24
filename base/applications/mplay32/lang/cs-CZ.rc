@@ -31,4 +31,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Posunout vpøed"
 	IDS_TOOLTIP_FORWARD "Pøeskoèit vpøed"
 	IDS_APPTITLE "ReactOS Pøehrávaè multimédií"
+	IDS_PLAY "Pøehrát"
 END

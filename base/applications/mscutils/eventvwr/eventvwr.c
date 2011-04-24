@@ -385,7 +385,7 @@ GetEventMessage(IN LPCWSTR KeyName,
 
         if (!bDone)
         {
-            LoadStringW(hInst, IDC_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
             swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
         }
 
@@ -395,7 +395,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         return bDone;
     }
 
-    LoadStringW(hInst, IDC_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
+    LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
     swprintf(EventText, szStringIDNotFound, (DWORD)(pevlr->EventID & 0xFFFF), SourceName);
 
     return FALSE;
@@ -409,25 +409,25 @@ GetEventType(IN WORD dwEventType,
     switch (dwEventType)
     {
         case EVENTLOG_ERROR_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_WARNING_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_INFORMATION_TYPE:
-            LoadStringW(hInst, IDC_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_SUCCESS:
-            LoadStringW(hInst, IDC_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_FAILURE:
-            LoadStringW(hInst, IDC_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_SUCCESS:
-            LoadStringW(hInst, IDC_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         default:
-            LoadStringW(hInst, IDC_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
+            LoadStringW(hInst, IDS_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
     }
 }

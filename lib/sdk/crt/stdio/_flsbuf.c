@@ -24,7 +24,7 @@ _flsbuf(int ch, FILE *stream)
         return EOF;
     }
 
-    /* Is this was a read buffer */
+    /* Check if this was a read buffer */
     if (stream->_flag & _IOREAD)
     {
         /* Must be at the end of the file */

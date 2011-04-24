@@ -73,7 +73,7 @@ CAPTION "ReactOSi paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Anna oma arvutile nimi. See ei tohi olla pikem kui 63 tähemärki. "\
+    LTEXT "Anna oma arvutile nimi. See ei tohi olla pikem kui 15 tähemärki. "\
           "Võrgus peab arvuti nimi olema unikaalne.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Arvuti nimi:", IDC_STATIC, 54, 38, 75, 8

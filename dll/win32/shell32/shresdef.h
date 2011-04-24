@@ -148,12 +148,12 @@
 #define IDS_RUNDLG_BROWSE_FILTER    183
 
 #define IDS_OPEN_VERB               300
-#define IDS_RUNAS_VERB              301
-#define IDS_EDIT_VERB               302
-#define IDS_FIND_VERB               303
-#define IDS_PRINT_VERB              304
-#define IDS_PLAY_VERB               305
-#define IDS_PREVIEW_VERB            306
+#define IDS_EXPLORE_VERB            301
+#define IDS_RUNAS_VERB              302
+#define IDS_EDIT_VERB               303
+#define IDS_FIND_VERB               304
+#define IDS_PRINT_VERB              305
+
 #define IDS_FILE_FOLDER             307
 #define IDS_CREATELINK              308
 #define IDS_INSTALLNEWFONT          309

@@ -26,4 +26,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "前へシーク"
 	IDS_TOOLTIP_FORWARD "前へスキップ"
 	IDS_APPTITLE "ReactOS マルチメディア プレーヤー"
+	IDS_PLAY "再生"
 END

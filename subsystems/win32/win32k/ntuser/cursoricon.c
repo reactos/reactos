@@ -508,11 +508,11 @@ NtUserGetIconInfo(
     {
         PSURFACE psurfBmp;
 
-        psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
         if (psurfBmp)
         {
             colorBpp = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-            SURFACE_UnlockSurface(psurfBmp);
+            SURFACE_ShareUnlockSurface(psurfBmp);
         }
     }
 
@@ -934,24 +934,24 @@ NtUserSetCursorContents(
     /* Copy new IconInfo field */
     CurIcon->IconInfo = IconInfo;
 
-    psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+    psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
     if (psurfBmp)
     {
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
         GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
     }
     else
     {
-        psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask);
+        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmMask);
         if (!psurfBmp)
             goto done;
 
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
 
-        SURFACE_UnlockSurface(psurfBmp);
+        SURFACE_ShareUnlockSurface(psurfBmp);
     }
 	GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
 
@@ -1197,7 +1197,7 @@ UserDrawIconEx(
 
         /* In order to correctly display 32 bit icons Windows first scans the image,
            because information about transparency is not stored in any image's headers */
-        psurfOff = SURFACE_LockSurface(hbmColor);
+        psurfOff = SURFACE_ShareLockSurface(hbmColor);
         if (psurfOff)
         {
             fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfOff->SurfObj.iBitmapFormat].DIB_GetPixel;
@@ -1215,7 +1215,7 @@ UserDrawIconEx(
                         break;
                 }
             }
-            SURFACE_UnlockSurface(psurfOff);
+            SURFACE_ShareUnlockSurface(psurfOff);
         }
     }
 
@@ -1272,7 +1272,7 @@ UserDrawIconEx(
             goto CleanupAlpha;
         }
 
-        psurf = SURFACE_LockSurface(hMemBmp);
+        psurf = SURFACE_ShareLockSurface(hMemBmp);
         if(!psurf)
         {
             DPRINT1("SURFACE_LockSurface failed!\n");
@@ -1294,7 +1294,7 @@ UserDrawIconEx(
             }
         }
 
-        SURFACE_UnlockSurface(psurf);
+        SURFACE_ShareUnlockSurface(psurf);
 
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
 

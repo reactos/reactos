@@ -392,8 +392,8 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (Stack->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
                 usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
                     "invalid buffer size\n"));
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-                goto intcontfailure;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
             }
 
             RtlCopyMemory(&DeviceExtension->ConnectData,
@@ -408,14 +408,14 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 sizeof(KEYBOARD_ATTRIBUTES)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES: "
                         "invalid buffer size\n"));
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
             }
             /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
             &DevExt->KeyboardAttributes,
             sizeof(KEYBOARD_ATTRIBUTES));*/
 
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         case IOCTL_KEYBOARD_QUERY_INDICATORS:
             usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_KEYBOARD_QUERY_INDICATORS\n"));
@@ -439,8 +439,8 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC: "
                         "invalid buffer size\n"));
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
             }
             /*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
             &DevExt->KeyboardTypematic,
@@ -454,8 +454,8 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_SET_INDICTATORS: "
                         "invalid buffer size\n"));
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
             }
 
             RtlCopyMemory(&DeviceExtension->KeyboardIndicators,
@@ -472,8 +472,8 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
                     usb_dbg_print(DBGLVL_MAXIMUM, ("Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
                         "invalid buffer size\n"));
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    goto intcontfailure;
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
             }
 
             /*RtlCopyMemory(&DevExt->KeyboardTypematic,
@@ -501,10 +501,7 @@ KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
             break;
         }
-intcontfailure:
-        Status = Irp->IoStatus.Status;
     }
-
 
     if (Status == STATUS_INVALID_DEVICE_REQUEST)
     {

@@ -749,12 +749,11 @@ BEGIN
 	IDS_SYS_FILE                "SystÈmov˝ s˙bor"
 
 	IDS_OPEN_VERB               "Otvoriù"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Spustiù ako "
 	IDS_EDIT_VERB               "Upraviù"
 	IDS_FIND_VERB               "Find" //N·jsù, Hæadaù, Vyhæadaù ???
 	IDS_PRINT_VERB              "TlaËiù"
-	IDS_PLAY_VERB               "Prehraù"
-	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 
 	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
 	IDS_PRINTERS                "TlaËiarne"

@@ -746,12 +746,11 @@ BEGIN
 	IDS_SYS_FILE                "System file"
 
 	IDS_OPEN_VERB               "Open"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Run as "
 	IDS_EDIT_VERB               "Edit"
 	IDS_FIND_VERB               "Find"
 	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
 
 	IDS_FILE_FOLDER             "%u Files, %u Folders"
 	IDS_PRINTERS                "Printers"

@@ -93,14 +93,14 @@ END
 STRINGTABLE 
 BEGIN
 	IDS_APP_TITLE                  "Visor de sucesos"
-	IDC_EVENTSTRINGIDNOTFOUND      "La descripción para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
-	IDC_EVENTLOG_ERROR_TYPE        "Error"
-	IDC_EVENTLOG_WARNING_TYPE      "Advertencia"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Información"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Auditoria Satisfactoria"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Auditoria Fallida"
-	IDC_EVENTLOG_SUCCESS           "Acierto"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Evento Desconocido"
+	IDS_EVENTSTRINGIDNOTFOUND      "La descripción para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
+	IDS_EVENTLOG_ERROR_TYPE        "Error"
+	IDS_EVENTLOG_WARNING_TYPE      "Advertencia"
+	IDS_EVENTLOG_INFORMATION_TYPE  "Información"
+	IDS_EVENTLOG_AUDIT_SUCCESS     "Auditoria Satisfactoria"
+	IDS_EVENTLOG_AUDIT_FAILURE     "Auditoria Fallida"
+	IDS_EVENTLOG_SUCCESS           "Acierto"
+	IDS_EVENTLOG_UNKNOWN_TYPE      "Evento Desconocido"
 END
 
 STRINGTABLE

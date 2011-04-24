@@ -260,76 +260,94 @@
 /*
  * FUNCTIONS
  */
-NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo);
+NTSTATUS NTAPI
+HwTurnOnMotor(PDRIVE_INFO DriveInfo);
 
-NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo);
+NTSTATUS NTAPI
+HwSenseDriveStatus(PDRIVE_INFO DriveInfo);
 
-NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
-                               BOOLEAN Read,
-                               UCHAR Unit,
-                               UCHAR Cylinder,
-                               UCHAR Head,
-                               UCHAR Sector,
-                               UCHAR BytesPerSector,
-                               UCHAR EndOfTrack,
-                               UCHAR Gap3Length,
-                               UCHAR DataLength);
+NTSTATUS NTAPI
+HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
+                BOOLEAN Read,
+                UCHAR Unit,
+                UCHAR Cylinder,
+                UCHAR Head,
+                UCHAR Sector,
+                UCHAR BytesPerSector,
+                UCHAR EndOfTrack,
+                UCHAR Gap3Length,
+                UCHAR DataLength);
 
-NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo);
+NTSTATUS NTAPI
+HwRecalibrate(PDRIVE_INFO DriveInfo);
 
-NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo,
-                        UCHAR Head);
+NTSTATUS NTAPI
+HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head);
 
-NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
-                             UCHAR Unit,
-                             UCHAR Head,
-                             UCHAR BytesPerSector,
-                             UCHAR SectorsPerTrack,
-                             UCHAR Gap3Length,
-                             UCHAR FillerPattern);
+NTSTATUS NTAPI
+HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
+              UCHAR Unit,
+              UCHAR Head,
+              UCHAR BytesPerSector,
+              UCHAR SectorsPerTrack,
+              UCHAR Gap3Length,
+              UCHAR FillerPattern);
 
-NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
-                      UCHAR Cylinder);
+NTSTATUS NTAPI
+HwSeek(PDRIVE_INFO DriveInfo, UCHAR Cylinder);
 
-NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwReadWriteResult(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwGetVersion(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
-                           BOOLEAN EIS,
-			   BOOLEAN EFIFO,
-			   BOOLEAN POLL,
-			   UCHAR FIFOTHR,
-			   UCHAR PRETRK) ;
+NTSTATUS NTAPI
+HwConfigure(PCONTROLLER_INFO ControllerInfo,
+            BOOLEAN EIS,
+            BOOLEAN EFIFO,
+            BOOLEAN POLL,
+            UCHAR FIFOTHR,
+            UCHAR PRETRK) ;
 
-NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
-                             PBOOLEAN DiskChanged);
+NTSTATUS NTAPI
+HwDiskChanged(PDRIVE_INFO DriveInfo,
+              PBOOLEAN DiskChanged);
 
-NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
-                                        PUCHAR Status);
+NTSTATUS NTAPI
+HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
+                         PUCHAR Status);
 
-NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
-                         UCHAR HeadLoadTime,
-                         UCHAR HeadUnloadTime,
-                         UCHAR StepRateTime,
-                         BOOLEAN NonDma);
+NTSTATUS NTAPI
+HwSpecify(PCONTROLLER_INFO ControllerInfo,
+          UCHAR HeadLoadTime,
+          UCHAR HeadUnloadTime,
+          UCHAR StepRateTime,
+          BOOLEAN NonDma);
 
-NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
-                              PUCHAR CurCylinder,
-                              PUCHAR CurHead);
+NTSTATUS NTAPI
+HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
+               PUCHAR CurCylinder,
+               PUCHAR CurHead);
 
-NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
-                             UCHAR DataRate);
+NTSTATUS NTAPI
+HwSetDataRate(PCONTROLLER_INFO ControllerInfo, UCHAR DataRate);
 
-NTSTATUS NTAPI HwReset(PCONTROLLER_INFO Controller);
+NTSTATUS NTAPI
+HwReset(PCONTROLLER_INFO Controller);
 
-NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwPowerOff(PCONTROLLER_INFO ControllerInfo);
 
-VOID NTAPI HwDumpRegisters(PCONTROLLER_INFO ControllerInfo);
+VOID NTAPI
+HwDumpRegisters(PCONTROLLER_INFO ControllerInfo);
 
-NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo);
+NTSTATUS NTAPI
+HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo);
 

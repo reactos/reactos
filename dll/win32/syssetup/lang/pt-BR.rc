@@ -71,7 +71,7 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Digite um nome para o seu computador com 63 caracteres ou menos. "\
+    LTEXT "Digite um nome para o seu computador com 15 caracteres ou menos. "\
           "Se você está em uma rede, o nome do computador deve ser exclusivo.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nome do &Computador:", IDC_STATIC, 54, 38, 75, 8

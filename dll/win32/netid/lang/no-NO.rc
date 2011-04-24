@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Beskrivelse av datamaskinen:", IDC_STATIC, 6, 40, 135, 9
     EDITTEXT    IDC_COMPDESC, 110, 38, 136, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Fullt datamaskinnavn:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(Standard)", IDC_COMPUTERNAME, 110, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Arbeidsgruppe:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(Tom)", IDC_WORKGROUPDOMAIN_NAME, 110, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Klikk nettverks-ID for å bruke veiviseren for nettverksidentifikasjon til å bli med i et domene og opprette en lokal brukerkonto.", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Nettverk-ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Klikk Endre for å gi datamaskinen et nytt navn eller bli med i et domenet.", IDC_STATIC, 6, 149, 170, 17

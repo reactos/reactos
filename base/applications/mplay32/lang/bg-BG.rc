@@ -26,4 +26,5 @@ BEGIN
 	IDS_TOOLTIP_SEEKFORW "Търсене напред"
 	IDS_TOOLTIP_FORWARD "Търсене напред"
     IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
+	IDS_PLAY "Възпроизвеждане"
 END

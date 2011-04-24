@@ -22,7 +22,8 @@
 #define IDS_TOOLTIP_SEEKBACK 105
 #define IDS_TOOLTIP_SEEKFORW 106
 #define IDS_TOOLTIP_FORWARD  107
-#define IDS_ALL_TYPES_FILTER 108        
+#define IDS_ALL_TYPES_FILTER 108
+#define IDS_PLAY             109
 
 /* Menu */
 #define IDR_MAINMENU 500

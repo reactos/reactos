@@ -11,7 +11,18 @@
 
 #include "api.h"
 
+typedef struct tagCSRSS_DOS_DEVICE_HISTORY_ENTRY
+{
+    UNICODE_STRING Device;
+    UNICODE_STRING Target;
+    LIST_ENTRY Entry;
+} CSRSS_DOS_DEVICE_HISTORY_ENTRY, *PCSRSS_DOS_DEVICE_HISTORY_ENTRY;
+
 /* Api functions */
 CSR_API(CsrGetTempFile);
+CSR_API(CsrDefineDosDevice);
+
+/* functions */
+void CsrCleanupDefineDosDevice();
 
 /* EOF */

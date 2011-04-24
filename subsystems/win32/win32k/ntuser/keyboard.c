@@ -486,55 +486,6 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    return Result;
 }
 
-DWORD
-APIENTRY
-NtUserGetKeyboardState(
-   LPBYTE lpKeyState)
-{
-   BOOL Result = TRUE;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetKeyboardState\n");
-   UserEnterShared();
-
-   if (lpKeyState)
-   {
-      if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, gQueueKeyStateTable, 256)))
-         Result = FALSE;
-   }
-
-   RETURN(Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetKeyboardState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-BOOL
-APIENTRY
-NtUserSetKeyboardState(LPBYTE lpKeyState)
-{
-   BOOL Result = TRUE;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserSetKeyboardState\n");
-   UserEnterExclusive();
-
-   if (lpKeyState)
-   {
-      if(! NT_SUCCESS(MmCopyFromCaller(gQueueKeyStateTable, lpKeyState, 256)))
-         Result = FALSE;
-   }
-
-   RETURN(Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 static UINT VkToScan( UINT Code, BOOL ExtCode, PKBDTABLES pkKT )
 {
    int i;

@@ -25,9 +25,10 @@
  */
 
 DRIVER_DISPATCH DeviceIoctl;
-NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
-                           PIRP Irp);
 
-VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
-                              PIRP Irp);
+NTSTATUS NTAPI
+DeviceIoctl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+VOID NTAPI
+DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp);
 

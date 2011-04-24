@@ -40,6 +40,7 @@ public:
 	bool SetDropRule(UINT uDropType, pCanDropProc proc = 0);
 
 	void SetClickProc    (pClickProc proc);
+	void SetClickReleaseProc (pClickProc proc);
 	void SetDblClickProc (pClickProc proc);
 
 	void SetAddCardProc    (pAddProc proc);
@@ -132,6 +133,7 @@ private:
 	bool  OnLButtonDblClk(int x, int y);
 	bool  OnMouseMove(int x, int y);
 	bool  OnLButtonUp(int x, int y);
+    void  ClickRelease(int x, int y);
 
 
 	//
@@ -204,6 +206,7 @@ private:
 	pCanDragProc	CanDragCallback;
 	pCanDropProc	CanDropCallback;
 	pClickProc		ClickCallback;
+	pClickProc		ClickReleaseCallback;
 	pClickProc		DblClickCallback;
 	pAddProc		AddCallback;
 	pRemoveProc		RemoveCallback;

@@ -10,8 +10,9 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "Програма перегляду зображень і факсів ReactOS"
+    IDS_APPTITLE    "Програма перегляду зображень і факсів ReactOS"
     IDS_SETASDESKBG "Встановити як фон робочого столу"
+    IDS_PREVIEW     "Перегляд"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Наступне зображення"

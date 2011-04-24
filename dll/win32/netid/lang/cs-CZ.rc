@@ -15,9 +15,9 @@ BEGIN
     LTEXT       "Popis poèítaèe:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Úplnı název poèítaèe:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(Implicitní)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Pracovní skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(prázdné)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Kliknutím na ""Síová ID"" lze pouít Prùvodce síovou identifikací k pøipojení se k doménì a vytvoøení místního uivatele.", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Síová ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
     LTEXT       "Kliknutím na ""Zmìnit"" lze pøejmenovat tento poèítaè nebo se pøipojit k doménì.", IDC_STATIC, 6, 149, 170, 17

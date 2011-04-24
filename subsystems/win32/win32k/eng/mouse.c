@@ -390,7 +390,7 @@ EngSetPointerShape(
         if (!psurfMask) goto failure;
 
         /* Initialize an EXLATEOBJ */
-        ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
+        ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
         EXLATEOBJ_vInitialize(&exlo,
                               &gpalMono,
                               ppal,
@@ -409,7 +409,7 @@ EngSetPointerShape(
 
         /* Cleanup */
         EXLATEOBJ_vCleanup(&exlo);
-        if (ppal) PALETTE_UnlockPalette(ppal);
+        if (ppal) PALETTE_ShareUnlockPalette(ppal);
     }
 
     /* Hide mouse pointer */

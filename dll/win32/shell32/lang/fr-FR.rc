@@ -747,12 +747,11 @@ BEGIN
 	IDS_SYS_FILE                "Fichier système"
 
 	IDS_OPEN_VERB               "Ouvrir"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Lancer en tant que "
 	IDS_EDIT_VERB               "Éditer"
 	IDS_FIND_VERB               "Chercher"
 	IDS_PRINT_VERB              "Imprimer"
-	IDS_PLAY_VERB               "Lire"
-	IDS_PREVIEW_VERB            "Apercevoir"
 
 	IDS_FILE_FOLDER             "%u fichiers, %u répertoires"
 	IDS_PRINTERS                "Imprimantes"

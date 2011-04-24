@@ -538,7 +538,7 @@ KeDetachProcess(VOID)
     KiExitDispatcher(ApcLock.OldIrql);
 
     /* Check if we have pending APCs */
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
+    if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])))
     {
         /* What do you know, we do! Request them to be delivered */
         Thread->ApcState.KernelApcPending = TRUE;
@@ -705,7 +705,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
     KiExitDispatcher(ApcLock.OldIrql);
 
     /* Check if we have pending APCs */
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
+    if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])))
     {
         /* What do you know, we do! Request them to be delivered */
         Thread->ApcState.KernelApcPending = TRUE;

@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Περιγραφή υπολογιστή:", IDC_STATIC, 6, 40, 70, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Πλήρες όνομα υπολογιστή:", IDC_STATIC, 6, 68, 64, 9
-    LTEXT       "(Προεπιλεγμένο)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Ομάδα εργασίας:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(άδειο)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Για να χρησιμοποιήσετε το βοηθό Network Identfication για να μπείτε σε ένα domain και να δημιουργήσετε έναν τοπικό χρήστη, κάντε κλικ στο ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Network ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Για να μετονομάσετε αυτόν τον υπολογιστή ή να συμμετάσχετε σε μια ομάδα εργασίας, κάντε κλικ στο κουμπί ""Αλλαγή"".", IDC_STATIC, 6, 149, 170, 17
