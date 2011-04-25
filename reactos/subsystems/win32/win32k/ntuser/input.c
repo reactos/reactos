@@ -482,7 +482,7 @@ static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
-   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -794,7 +794,7 @@ KeyboardThreadMain(PVOID StartContext)
 
             if (ModifierState & MOD_ALT)
             {
-               lParam |= (1 << 29);
+               lParam |= (1 << 29); // wine -> (HIWORD(lParam) & KEYDATA_ALT) #define KEYDATA_ALT 0x2000
 
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_SYSKEYDOWN;
