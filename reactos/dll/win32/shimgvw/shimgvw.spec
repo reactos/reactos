@@ -5,7 +5,7 @@
 @ stdcall ImageView_PrintTo(ptr ptr wstr long)
 @ stdcall ImageView_PrintToA(ptr ptr str long)
 @ stdcall ImageView_PrintToW(ptr ptr wstr long)
-@ stdcall imageview_fullscreenW(ptr ptr wstr long)
+@ stdcall imageview_fullscreenW(ptr ptr wstr long) ImageView_FullscreenW
 @ stub ConvertDIBSECTIONToThumbnail
 @ stub DllCanUnloadNow
 @ stub DllGetClassObject
