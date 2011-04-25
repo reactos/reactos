@@ -29,6 +29,5 @@
 	<file>harderror.c</file>
 	<file>lineinput.c</file>
 	<file>tuiconsole.c</file>
-	<file>appswitch.c</file>
 	<file>win32csr.rc</file>
 </module>

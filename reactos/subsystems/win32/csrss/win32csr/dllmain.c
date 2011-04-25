@@ -14,7 +14,6 @@
 
 /* Not defined in any header file */
 extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
-extern VOID WINAPI InitializeAppSwitchHook();
 extern LIST_ENTRY DosDeviceHistory;
 extern RTL_CRITICAL_SECTION Win32CsrDefineDosDeviceCritSec;
 
@@ -105,7 +104,6 @@ DllMain(HANDLE hDll,
     if (DLL_PROCESS_ATTACH == dwReason)
     {
         Win32CsrDllHandle = hDll;
-        InitializeAppSwitchHook();
     }
 
     if (DLL_PROCESS_DETACH == dwReason)

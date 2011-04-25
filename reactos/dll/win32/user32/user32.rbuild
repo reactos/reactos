@@ -16,6 +16,7 @@
 		<pch>user32.h</pch>
 	</directory>
 	<directory name="controls">
+		<file>appswitch.c</file>
 		<file>button.c</file>
 		<file>combo.c</file>
 		<file>edit.c</file>
