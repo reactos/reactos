@@ -210,7 +210,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
        }
        pWnd->style |= WS_DISABLED;
     }
-    
+
     if (Update)
     {
         IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, 0);
@@ -517,6 +517,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    if(Window->hrgnClip)
    {
+      IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
       GreDeleteObject(Window->hrgnClip);
       Window->hrgnClip = NULL;
    }
@@ -2265,7 +2266,7 @@ cleanup:
       UserDereferenceObject(Window);
    }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
-   
+
    return ret;
 }
 
