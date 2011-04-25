@@ -179,6 +179,9 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	retcode = FALSE;
 	goto i__leave;
     }
+  _pei386_runtime_relocator ();
+  if (retcode && dwReason == DLL_PROCESS_ATTACH)
+    __main ();
   if (dwReason == DLL_PROCESS_ATTACH || dwReason == DLL_THREAD_ATTACH)
     {
         retcode = DllEntryPoint (hDllHandle, dwReason, lpreserved);
@@ -187,9 +190,6 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	if (! retcode)
 	  goto i__leave;
     }
-  _pei386_runtime_relocator ();
-  if (retcode && dwReason == DLL_PROCESS_ATTACH)
-    __main ();
   retcode = DllMain(hDllHandle,dwReason,lpreserved);
   if ((dwReason == DLL_PROCESS_ATTACH) && ! retcode)
     {
