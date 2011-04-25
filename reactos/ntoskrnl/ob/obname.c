@@ -113,24 +113,28 @@ VOID
 NTAPI
 ObDereferenceDeviceMap(IN PEPROCESS Process)
 {
-    //KIRQL OldIrql;
-    PDEVICE_MAP DeviceMap = Process->DeviceMap;
+    PDEVICE_MAP DeviceMap;
 
-    /* FIXME: We don't use Process Devicemaps yet */
+    /* Get the pointer to this process devicemap and reset it
+       holding devicemap lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+    DeviceMap = Process->DeviceMap;
+    Process->DeviceMap = NULL;
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* Continue only if there is a devicemap to dereference */
     if (DeviceMap)
     {
-        /* FIXME: Acquire the DeviceMap Spinlock */
-        // KeAcquireSpinLock(DeviceMap->Lock, &OldIrql);
+        KeAcquireGuardedMutex(&ObpDeviceMapLock);
 
         /* Delete the device map link and dereference it */
-        Process->DeviceMap = NULL;
         if (--DeviceMap->ReferenceCount)
         {
             /* Nobody is referencing it anymore, unlink the DOS directory */
             DeviceMap->DosDevicesDirectory->DeviceMap = NULL;
 
-            /* FIXME: Release the DeviceMap Spinlock */
-            // KeReleasepinLock(DeviceMap->Lock, OldIrql);
+            /* Release the devicemap lock */
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
 
             /* Dereference the DOS Devices Directory and free the Device Map */
             ObDereferenceObject(DeviceMap->DosDevicesDirectory);
@@ -138,8 +142,8 @@ ObDereferenceDeviceMap(IN PEPROCESS Process)
         }
         else
         {
-            /* FIXME: Release the DeviceMap Spinlock */
-            // KeReleasepinLock(DeviceMap->Lock, OldIrql);
+            /* Release the devicemap lock */
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
         }
     }
 }
@@ -1144,15 +1148,12 @@ NTAPI
 ObQueryDeviceMapInformation(IN PEPROCESS Process,
                             IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
 {
-    //KIRQL OldIrql ;
-
     /*
     * FIXME: This is an ugly hack for now, to always return the System Device Map
     * instead of returning the Process Device Map. Not important yet since we don't use it
     */
 
-    /* FIXME: Acquire the DeviceMap Spinlock */
-    // KeAcquireSpinLock(DeviceMap->Lock, &OldIrql);
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
 
     /* Make a copy */
     DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
@@ -1160,8 +1161,7 @@ ObQueryDeviceMapInformation(IN PEPROCESS Process,
                   ObSystemDeviceMap->DriveType,
                   sizeof(ObSystemDeviceMap->DriveType));
 
-    /* FIXME: Release the DeviceMap Spinlock */
-    // KeReleasepinLock(DeviceMap->Lock, OldIrql);
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
 }
 
 /* EOF */
