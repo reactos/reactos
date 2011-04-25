@@ -735,7 +735,8 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now check for normal messages. */
-        if ((ProcessMask & QS_POSTMESSAGE) &&
+        if (( (ProcessMask & QS_POSTMESSAGE) ||
+              (ProcessMask & QS_HOTKEY) ) &&
             MsqPeekMessage( ThreadQueue,
                             RemoveMessages,
                             Window,

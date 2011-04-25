@@ -97,6 +97,34 @@ IntClientShutdown(
    return lResult;
 }
 
+LRESULT FASTCALL
+DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   LRESULT lResult = 0;
+   BOOL Hook = FALSE;
+
+   if (ISITHOOKED(WH_CBT) || (pWnd->head.rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)))
+   {
+      Hook = TRUE;
+      lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
+      
+      if (lResult) return lResult;
+   }
+
+   switch (wParam & 0xfff0)
+   {
+      case SC_SCREENSAVE:
+        DPRINT1("Screensaver Called!\n");
+        break;
+
+      default:
+        UNIMPLEMENTED;
+        break;
+   }
+
+   return(Hook ? 1 : 0); // Don't call us again from user space.
+}
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -117,7 +145,7 @@ IntDefWindowProc(
       case WM_SYSCOMMAND:
       {
          DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
-         lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
+         lResult = DefWndHandleSysCommand(Wnd, wParam, lParam);
          break;
       }
       case WM_SHOWWINDOW:
@@ -142,6 +170,12 @@ IntDefWindowProc(
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
+      case WM_GETHOTKEY:
+         return DefWndGetHotKey(UserHMGetHandle(Wnd));                
+      case WM_SETHOTKEY:
+         return DefWndSetHotKey(Wnd, wParam);
+
+      /* ReactOS only. */
       case WM_CBT:
       {
          switch (wParam)

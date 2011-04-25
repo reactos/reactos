@@ -463,6 +463,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
+         update_input_key_state(FocusMessageQueue, &Msg);
          MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
@@ -481,6 +482,8 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    MSG Mesg;
    LARGE_INTEGER LargeTickCount;
    NTSTATUS Status;
+   INT id;
+   DWORD Type;
 
    Status = ObReferenceObjectByPointer (Thread,
                                         THREAD_ALL_ACCESS,
@@ -503,14 +506,17 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   Mesg.hwnd = hWnd;
-   Mesg.message = WM_HOTKEY;
-   Mesg.wParam = wParam;
-   Mesg.lParam = lParam;
+   id = wParam; // Check for hot keys unrelated to the hot keys set by RegisterHotKey.
+
+   Mesg.hwnd    = hWnd;
+   Mesg.message = id != IDHOT_REACTOS ? WM_HOTKEY : WM_SYSCOMMAND;
+   Mesg.wParam  = id != IDHOT_REACTOS ? wParam    : SC_HOTKEY;
+   Mesg.lParam  = id != IDHOT_REACTOS ? lParam    : (LPARAM)hWnd;
+   Type         = id != IDHOT_REACTOS ? QS_HOTKEY : QS_POSTMESSAGE;
    KeQueryTickCount(&LargeTickCount);
-   Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
-   Mesg.pt = gpsi->ptCursor;
-   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   Mesg.time    = MsqCalculateMessageTime(&LargeTickCount);
+   Mesg.pt      = gpsi->ptCursor;
+   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, Type);
    UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
 
@@ -543,8 +549,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
-   LRESULT Result;
    PTHREADINFO pti;
+   LRESULT Result = 0;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -1321,6 +1327,10 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             case VK_LMENU: case VK_RMENU:
                 Msg->wParam = VK_MENU;
                 break;
+            case VK_F10:
+                if (Msg->message == WM_KEYUP) Msg->message = WM_SYSKEYUP;
+                if (Msg->message == WM_KEYDOWN) Msg->message = WM_SYSKEYDOWN;
+                break;
         }
     }
 
@@ -1450,7 +1460,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
            {
                update_input_key_state(MessageQueue, pMsg);
                RemoveEntryList(&CurrentMessage->ListEntry);
-               ClearMsgBitsMask(MessageQueue, QS_INPUT);
+               ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
                MsqDestroyMessage(CurrentMessage);
            }
 
@@ -1510,7 +1520,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
          if (Remove)
          {
              RemoveEntryList(&CurrentMessage->ListEntry);
-             ClearMsgBitsMask(MessageQueue, QS_POSTMESSAGE);
+             ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
              MsqDestroyMessage(CurrentMessage);
          }
          return(TRUE);

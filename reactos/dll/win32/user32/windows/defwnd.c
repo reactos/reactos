@@ -753,12 +753,12 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   WINDOWPLACEMENT wp;
   POINT Pt;
+  LRESULT lResult;
 
   if (!IsWindowEnabled( hWnd )) return 0;
 
   if (ISITHOOKED(WH_CBT))
   {
-     LRESULT lResult;
      NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
      if (lResult) return 0;
   }
@@ -795,7 +795,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
       case SC_CLOSE:
         return SendMessageW(hWnd, WM_CLOSE, 0, 0);
-
+//      case SC_DEFAULT:
       case SC_MOUSEMENU:
         {
           Pt.x = (short)LOWORD(lParam);
@@ -815,9 +815,40 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
 	break;
 
+      case SC_SCREENSAVE:
+        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+        break;
+
+      case SC_NEXTWINDOW:
+      case SC_PREVWINDOW:
+        FIXME("Implement Alt-Tab!!! wParam 0x%x lParam 0x%x\n",wParam,lParam);
+        break;
+
+      case SC_HOTKEY:
+        {
+           HWND hwnd, hWndLastActive;
+
+           hwnd = (HWND)lParam;
+           PWND pWnd = ValidateHwnd(hwnd);
+           if (pWnd)
+           {
+              hWndLastActive = GetLastActivePopup(hwnd);
+              if (hWndLastActive)
+              {
+                 hwnd = hWndLastActive;
+                 pWnd = ValidateHwnd(hwnd);
+              }
+              SetForegroundWindow(hwnd);
+              if (pWnd->style & WS_MINIMIZE)
+              {
+                 PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+              }
+           }
+        }
+        break;
+
       default:
-	/* FIXME: Implement */
-        UNIMPLEMENTED;
+        FIXME("Unimplemented DefWndHandleSysCommand wParam 0x%x\n",wParam);
         break;
     }
 
@@ -1380,39 +1411,49 @@ User32DefWindowProc(HWND hWnd,
             if(wParam == VK_F10) iF10Key = VK_F10;
             break;
 
-        /* FIXME: This is also incomplete. */
         case WM_SYSKEYDOWN:
         {
             if (HIWORD(lParam) & KEYDATA_ALT)
-            {
-                HWND top = GetAncestor(hWnd, GA_ROOT);
-             /* if( HIWORD(lParam) & ~KEYDATA_PREVSTATE ) */
-                if ( (wParam == VK_MENU || wParam == VK_LMENU
-                                    || wParam == VK_RMENU) && !iMenuSysKey )
-                   iMenuSysKey = 1;
-                else
-                   iMenuSysKey = 0;
+            {   /* Previous state, if the key was down before this message,
+                   this is a cheap way to ignore autorepeat keys. */
+                if ( !(HIWORD(lParam) & KEYDATA_PREVSTATE) )
+                {
+                   if ( ( wParam == VK_MENU  ||
+                          wParam == VK_LMENU ||
+                          wParam == VK_RMENU ) && !iMenuSysKey )
+                       iMenuSysKey = 1;
+                   else
+                       iMenuSysKey = 0;
+                }
 
                 iF10Key = 0;
 
                 if (wParam == VK_F4) /* Try to close the window */
                 {
-                    if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
-                    {
-                        if (bUnicode)
-                            PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
-                        else
-                            PostMessageA(top, WM_SYSCOMMAND, SC_CLOSE, 0);
-                    }
+                   HWND top = GetAncestor(hWnd, GA_ROOT);
+                   if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
+                      PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
-                else if (wParam == VK_SNAPSHOT)
+                else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?
                 {
-                    HWND hwnd = hWnd;
-                    while (GetParent(hwnd) != NULL)
-                    {
-                        hwnd = GetParent(hwnd);
-                    }
-                    DefWndScreenshot(hwnd);
+                   HWND hwnd = hWnd;
+                   while (GetParent(hwnd) != NULL)
+                   {
+                       hwnd = GetParent(hwnd);
+                   }
+                   DefWndScreenshot(hwnd);
+                }
+                else if ( wParam == VK_ESCAPE || wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+                {
+                   WPARAM wParamTmp;
+                   HWND Active = GetActiveWindow(); // Noticed MDI problem.
+                   if (!Active)
+                   {
+                      FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
+                      break;
+                   }
+                   wParamTmp = GetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                   SendMessageW( Active, WM_SYSCOMMAND, wParamTmp, wParam );
                 }
             }
             else if( wParam == VK_F10 )
@@ -1421,8 +1462,6 @@ User32DefWindowProc(HWND hWnd,
                     SendMessageW( hWnd, WM_CONTEXTMENU, (WPARAM)hWnd, MAKELPARAM(-1, -1) );
                 iF10Key = 1;
             }
-            else if( wParam == VK_ESCAPE && (GetKeyState(VK_SHIFT) & 0x8000))
-                SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, ' ' );
             break;
         }
 
@@ -1440,36 +1479,22 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCHAR:
         {
             iMenuSysKey = 0;
-            if (wParam == '\r' && IsIconic(hWnd))
+            if (wParam == VK_RETURN && IsIconic(hWnd))
             {
                 PostMessageW( hWnd, WM_SYSCOMMAND, SC_RESTORE, 0L );
                 break;
             }
             if ((HIWORD(lParam) & KEYDATA_ALT) && wParam)
             {
-                if (wParam == '\t' || wParam == '\x1b') break;
-                if (wParam == ' ' && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
+                if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
+                if (wParam == VK_SPACE && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
                     SendMessageW( GetParent(hWnd), Msg, wParam, lParam );
                 else
                     SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, wParam );
             }
             else /* check for Ctrl-Esc */
-                if (wParam != '\x1b') MessageBeep(0);
+                if (wParam != VK_ESCAPE) MessageBeep(0);
             break;
-        }
-
-        case WM_SHOWWINDOW:
-        {
-            if (lParam) // Call when it is necessary.
-               NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE);
-            break;
-        }
-
-        case WM_CLIENTSHUTDOWN:
-        {
-            LRESULT lResult;
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
-            return lResult;   
         }
 
         case WM_CANCELMODE:
@@ -1800,6 +1825,17 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
+/* Move to win32k !*/
+        case WM_SHOWWINDOW:
+            if (!lParam) break; // Call when it is necessary.
+        case WM_CLIENTSHUTDOWN:
+        case WM_GETHOTKEY:
+        case WM_SETHOTKEY:
+        {
+            LRESULT lResult;
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
+            return lResult;
+        }
     }
     return 0;
 }
