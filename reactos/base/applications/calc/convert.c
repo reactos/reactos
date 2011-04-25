@@ -355,7 +355,7 @@ static const conv_t conv_TIME[] = {
  */
 static const conv_t conv_TEMPERATURE[] = {
     DECLARE_CONV_UNIT(TEMPERATURE, CELSIUS,     "$+273.15",       "$-273.15")
-    DECLARE_CONV_UNIT(TEMPERATURE, FAHRENHEIT,  "($-459.67)*5/9", "$*9/5-459.67")
+    DECLARE_CONV_UNIT(TEMPERATURE, FAHRENHEIT,  "($+459.67)*5/9", "$*9/5-459.67")
     DECLARE_CONV_UNIT(TEMPERATURE, KELVIN,      "$",              "$")
     DECLARE_CONV_UNIT(TEMPERATURE, RANKINE,     "$*5/9",          "$*9/5")
     DECLARE_CONV_END

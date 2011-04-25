@@ -39,6 +39,12 @@ URLSite = http://www.mozilla-europe.org/pl/
 Description = Один из самых популярных и лучших бесплатных браузеров.
 URLSite = http://www.mozilla-europe.org/ru/
 
+[Section.041b] 
+Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
+Size = 6,1 MB
+URLSite = http://www.mozilla-europe.org/sk/
+URLDownload = http://mozilla.mirrors.skynet.be/pub/ftp.mozilla.org/firefox/releases/2.0.0.20/win32/sk/Firefox%20Setup%202.0.0.20.exe
+
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 URLSite = http://www.mozilla-europe.org/uk/
