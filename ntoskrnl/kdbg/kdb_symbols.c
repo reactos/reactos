@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include "../cache/section/newmm.h"
 #include <debug.h>
 
