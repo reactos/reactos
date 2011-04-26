@@ -94,7 +94,19 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     { 0, 0, NULL }
 };
 
+static HHOOK hhk = NULL;
+
 /* FUNCTIONS *****************************************************************/
+
+LRESULT
+CALLBACK
+KeyboardHookProc(
+    int nCode,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+   return CallNextHookEx(hhk, nCode, wParam, lParam);
+}
 
 BOOL WINAPI
 DllMain(HANDLE hDll,
@@ -104,6 +116,13 @@ DllMain(HANDLE hDll,
     if (DLL_PROCESS_ATTACH == dwReason)
     {
         Win32CsrDllHandle = hDll;
+//
+// HACK HACK HACK ReactOS to BOOT! Initialization BUG ALERT! See bug 5655.
+//
+        hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);
+// BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
+//  BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
+//   BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
     }
 
     if (DLL_PROCESS_DETACH == dwReason)
