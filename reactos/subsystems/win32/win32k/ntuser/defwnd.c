@@ -118,8 +118,8 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
         break;
 
       default:
-        UNIMPLEMENTED;
-        break;
+   // We do not support anything else here so we should return normal even when sending a hook.
+        return 0;
    }
 
    return(Hook ? 1 : 0); // Don't call us again from user space.
