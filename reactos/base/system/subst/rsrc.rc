@@ -4,3 +4,5 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "lang/en-US.rc"
+#include "lang/es-ES.rc"
+#include "lang/it-IT.rc"
