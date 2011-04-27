@@ -1555,7 +1555,15 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
       pMonitor = IntGetPrimaryMonitor();
-      ASSERT(pMonitor);
+
+      /* Check if we don't have a monitor attached yet */
+      if(pMonitor == NULL)
+      {
+          Cs->x = Cs->y = 0;
+          Cs->cx = 800;
+          Cs->cy = 600;
+          return;
+      }
 
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
 
