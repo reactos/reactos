@@ -47,6 +47,9 @@ public:
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN ShouldReleaseRequestAfterCompletion();
     virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead);
+    virtual VOID GetTransferBuffer(OUT PMDL * OutMDL, OUT PULONG TransferLength);
+    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
+
 
     // local functions
     ULONG InternalGetTransferType();
@@ -641,12 +644,6 @@ CUSBRequest::BuildControlTransferQueueHead(
     }
 
     //
-    // Control Transfers have only one in or out buffer if one at all. Put in the QueueHead the
-    // same as BulkTransfers. USBQueue will use the Mdl to fill in the BufferPointers
-    //
-    QueueHead->Mdl = m_TransferBufferMDL;
-
-    //
     // link setup packet into buffer - Physical Address!!!
     //
     m_TransferDescriptors[0]->BufferPointer[0] = (ULONG)PtrToUlong(m_DescriptorSetupPacket.LowPart);
@@ -1149,6 +1146,64 @@ CUSBRequest::FreeQueueHead(
     }
 }
 
+//-----------------------------------------------------------------------------------------
+BOOLEAN
+CUSBRequest::IsQueueHeadComplete(
+    struct _QUEUE_HEAD * QueueHead)
+{
+    ULONG Index;
+
+    //
+    // first check - is the queue head currently active
+    //
+    if (QueueHead->Token.Bits.Active)
+    {
+        //
+        // queue head is active (currently processed)
+        //
+        return FALSE;
+    }
+
+    //
+    // FIXME: support chained queue heads
+    //
+    for(Index = 0; Index < 3; Index++)
+    {
+        //
+        // check transfer descriptors for completion
+        //
+        if (m_TransferDescriptors[Index])
+        {
+            //
+            // check for serious error
+            //
+            PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Halted == 0);
+
+            //
+            // the transfer descriptor should be in the same state as the queue head
+            //
+            PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Active == 0);
+        }
+    }
+
+    return TRUE;
+}
+
+//-----------------------------------------------------------------------------------------
+VOID
+CUSBRequest::GetTransferBuffer(
+    OUT PMDL * OutMDL,
+    OUT PULONG TransferLength)
+{
+    // sanity checks
+    PC_ASSERT(OutMDL);
+    PC_ASSERT(TransferLength);
+
+    *OutMDL = m_TransferBufferMDL;
+    *TransferLength = m_TransferBufferLength;
+}
+
+//-----------------------------------------------------------------------------------------
 NTSTATUS
 InternalCreateUSBRequest(
     PUSBREQUEST *OutRequest)

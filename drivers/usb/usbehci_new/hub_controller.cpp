@@ -1988,16 +1988,6 @@ USBHI_RestoreUsbDevice(
 
 NTSTATUS
 USB_BUSIFFN
-USBHI_GetPortHackFlags(
-    PVOID BusContext,
-    PULONG Flags)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-USB_BUSIFFN
 USBHI_QueryDeviceInformation(
     PVOID BusContext,
     PUSB_DEVICE_HANDLE DeviceHandle,
@@ -2565,7 +2555,6 @@ CHubController::HandleQueryInterface(
             InterfaceHub->GetUsbDescriptors = USBHI_GetUsbDescriptors;
             InterfaceHub->RemoveUsbDevice = USBHI_RemoveUsbDevice;
             InterfaceHub->RestoreUsbDevice = USBHI_RestoreUsbDevice;
-            InterfaceHub->GetPortHackFlags = USBHI_GetPortHackFlags;
             InterfaceHub->QueryDeviceInformation = USBHI_QueryDeviceInformation;
         }
 

@@ -482,7 +482,26 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: frees the queue head with the associated transfer descriptors
 
     virtual VOID FreeQueueHead(struct _QUEUE_HEAD * QueueHead) = 0;
+
+//---------------------------------------------------------------------------------------
+//
+// GetTransferBuffer
+//
+// Description: this function returns the transfer buffer mdl and length
+// Used by IUSBQueue for mapping buffer contents with DMA
+
+    virtual VOID GetTransferBuffer(OUT PMDL * OutMDL,
+                                   OUT PULONG TransferLength) = 0;
+
+//--------------------------------------------------------------------------------------
+//
+// IsQueueHeadComplete
+//
+// Description: returns true when the queue head which was passed as a parameter has been completed
+
+    virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead) = 0;
 };
+
 
 typedef IUSBRequest *PUSBREQUEST;
 
@@ -539,6 +558,24 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: creates an usb request
 
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest) = 0;
+
+//--------------------------------------------------------------------------------------
+//
+// InterruptCallback
+//
+// Description: callback when the periodic / asynchronous queue has been completed / queue head been completed
+
+    virtual VOID InterruptCallback(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell) = 0;
+
+//--------------------------------------------------------------------------------------
+//
+// CompleteAsyncRequests
+//
+// Description: once a request has been completed it is moved to pending queue. Since a queue head should only be freed
+// after a door bell ring, this needs some synchronization.
+// This function gets called by IUSBHardware after it the Interrupt on Async Advance bit has been set
+
+    virtual VOID CompleteAsyncRequests() = 0;
 };
 
 typedef IUSBQueue *PUSBQUEUE;

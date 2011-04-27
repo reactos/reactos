@@ -87,30 +87,39 @@ public:
     virtual ~CUSBHardwareDevice(){}
 
 protected:
-    LONG m_Ref;
-    PDRIVER_OBJECT m_DriverObject;
-    PDEVICE_OBJECT m_PhysicalDeviceObject;
-    PDEVICE_OBJECT m_FunctionalDeviceObject;
-    PDEVICE_OBJECT m_NextDeviceObject;
-    KSPIN_LOCK m_Lock;
-    PKINTERRUPT m_Interrupt;
-    KDPC m_IntDpcObject;
-    PVOID VirtualBase;
-    PHYSICAL_ADDRESS PhysicalAddress;
-    PULONG m_Base;
-    PDMA_ADAPTER m_Adapter;
-    ULONG m_MapRegisters;
-    EHCI_CAPS m_Capabilities;
-    USHORT m_VendorID;
-    USHORT m_DeviceID;
-    PQUEUE_HEAD AsyncQueueHead;
-    PUSBQUEUE m_UsbQueue;
-    PDMAMEMORYMANAGER m_MemoryManager;
-    HD_INIT_CALLBACK* m_SCECallBack;
-    PVOID m_SCEContext;
+    LONG m_Ref;                                                                        // reference count
+    PDRIVER_OBJECT m_DriverObject;                                                     // driver object
+    PDEVICE_OBJECT m_PhysicalDeviceObject;                                             // pdo
+    PDEVICE_OBJECT m_FunctionalDeviceObject;                                           // fdo (hcd controller)
+    PDEVICE_OBJECT m_NextDeviceObject;                                                 // lower device object
+    KSPIN_LOCK m_Lock;                                                                 // hardware lock
+    PKINTERRUPT m_Interrupt;                                                           // interrupt object
+    KDPC m_IntDpcObject;                                                               // dpc object for deferred isr processing
+    PVOID VirtualBase;                                                                 // virtual base for memory manager
+    PHYSICAL_ADDRESS PhysicalAddress;                                                  // physical base for memory manager
+    PULONG m_Base;                                                                     // EHCI operational port base registers
+    PDMA_ADAPTER m_Adapter;                                                            // dma adapter object
+    ULONG m_MapRegisters;                                                              // map registers count
+    EHCI_CAPS m_Capabilities;                                                          // EHCI caps
+    USHORT m_VendorID;                                                                 // vendor id
+    USHORT m_DeviceID;                                                                 // device id
+    PQUEUE_HEAD AsyncQueueHead;                                                        // async queue head terminator
+    PUSBQUEUE m_UsbQueue;                                                              // usb request queue
+    PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
+    HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
+    PVOID m_SCEContext;                                                                // status change callback routine context
+    BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
+
+    // set command
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+
+    // get command
     VOID GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
+
+    // read register
     ULONG EHCI_READ_REGISTER_ULONG(ULONG Offset);
+
+    // write register
     VOID EHCI_WRITE_REGISTER_ULONG(ULONG Offset, ULONG Value);
 };
 
@@ -315,6 +324,7 @@ CUSBHardwareDevice::PnpStart(
                 m_Capabilities.HCCParamsLong = READ_REGISTER_ULONG((PULONG)((ULONG)ResourceBase + 8));
 
                 DPRINT1("Controller has %d Ports\n", m_Capabilities.HCSParams.PortCount);
+                DPRINT1("Controller EHCI Version %x\n", m_Capabilities.HCIVersion);
                 if (m_Capabilities.HCSParams.PortRouteRules)
                 {
                     for (Count = 0; Count < m_Capabilities.HCSParams.PortCount; Count++)
@@ -850,7 +860,7 @@ CUSBHardwareDevice::SetPeriodicListRegister(
 ULONG
 CUSBHardwareDevice::GetAsyncListRegister()
 {
-    return PhysicalAddress.LowPart;
+    return AsyncQueueHead->PhysicalAddr;
 }
 
 ULONG CUSBHardwareDevice::GetPeriodicListRegister()
@@ -946,10 +956,85 @@ EhciDefferedRoutine(
     IN PVOID SystemArgument2)
 {
     CUSBHardwareDevice *This;
-    ULONG CStatus, PortStatus, PortCount, i;
+    ULONG CStatus, PortStatus, PortCount, i, ShouldRingDoorBell;
+    NTSTATUS Status = STATUS_SUCCESS;
+    EHCI_USBCMD_CONTENT UsbCmd;
 
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
+
+
+    //
+    // check for completion of async schedule
+    //
+    if (CStatus & (EHCI_STS_RECL| EHCI_STS_INT | EHCI_ERROR_INT))
+    {
+        if (CStatus & EHCI_ERROR_INT)
+        {
+            //
+            // controller reported error
+            //
+            Status = STATUS_UNSUCCESSFUL;
+        }
+
+        //
+        // check if there is a door bell ring in progress
+        //
+        if (This->m_DoorBellRingInProgress == FALSE)
+        {
+            //
+            // inform IUSBQueue of a completed queue head
+            //
+            This->m_UsbQueue->InterruptCallback(Status, &ShouldRingDoorBell);
+
+            //
+            // was a queue head completed?
+            //
+             if (ShouldRingDoorBell)
+             {
+                 //
+                 // set door ring bell in progress status flag
+                 //
+                 This->m_DoorBellRingInProgress = TRUE;
+
+                 //
+                 // get command register
+                 //
+                 This->GetCommandRegister(&UsbCmd);
+
+                 //
+                 // set door rang bell bit
+                 //
+                 UsbCmd.DoorBell = TRUE;
+
+                 //
+                 // update command status
+                 //
+                 This->SetCommandRegister(&UsbCmd);
+             }
+        }
+    }
+
+    //
+    // check if the controller has acknowledged the door bell 
+    //
+    if (CStatus & EHCI_STS_IAA)
+    {
+        //
+        // controller has acknowledged, assert we rang the bell
+        //
+        PC_ASSERT(This->m_DoorBellRingInProgress == TRUE);
+
+        //
+        // now notify IUSBQueue that it can free completed requests
+        //
+        This->m_UsbQueue->CompleteAsyncRequests();
+
+        //
+        // door ring bell completed
+        //
+        This->m_DoorBellRingInProgress = FALSE;
+    }
 
     This->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
     if (CStatus & EHCI_STS_PCD)

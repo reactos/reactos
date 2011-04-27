@@ -190,10 +190,6 @@ typedef struct _QUEUE_HEAD
     //Software
     ULONG PhysicalAddr;
     LIST_ENTRY LinkedQueueHeads;
-    PQUEUE_TRANSFER_DESCRIPTOR TransferDescriptor;
-    PIRP IrpToComplete;
-    PMDL Mdl;
-    PKEVENT Event;
     PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 

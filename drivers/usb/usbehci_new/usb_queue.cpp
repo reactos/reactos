@@ -33,12 +33,14 @@ public:
         return m_Ref;
     }
 
-    NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN OPTIONAL PKSPIN_LOCK Lock);
-    ULONG GetPendingRequestCount();
-    NTSTATUS AddUSBRequest(PURB Urb);
-    NTSTATUS AddUSBRequest(IUSBRequest * Request);
-    NTSTATUS CancelRequests();
-    NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
+    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN OPTIONAL PKSPIN_LOCK Lock);
+    virtual ULONG GetPendingRequestCount();
+    virtual NTSTATUS AddUSBRequest(PURB Urb);
+    virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
+    virtual NTSTATUS CancelRequests();
+    virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
+    virtual VOID InterruptCallback(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
+    virtual VOID CompleteAsyncRequests();
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -50,6 +52,7 @@ protected:
     PDMA_ADAPTER m_Adapter;
     PQUEUE_HEAD AsyncListQueueHead;
     PQUEUE_HEAD PendingListQueueHead;
+    LIST_ENTRY m_CompletedRequestAsyncList;
 
     // queue head manipulation functions
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
@@ -57,8 +60,11 @@ protected:
     VOID LinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
     PQUEUE_HEAD UnlinkQueueHeadChain(PQUEUE_HEAD HeadQueueHead, ULONG Count);
 
+    // processes the async list
+    VOID ProcessAsyncList(IN NTSTATUS Status, OUT PULONG ShouldRingDoorBell);
+
     // called for each completed queue head
-    NTSTATUS QueueHeadCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
+    VOID QueueHeadCompletion(PQUEUE_HEAD QueueHead, NTSTATUS Status);
 
     // called when the completion queue is cleaned up
     VOID QueueHeadCleanup(PQUEUE_HEAD QueueHead);
@@ -119,6 +125,17 @@ CUSBQueue::Initialize(
     // Initialize the List Head
     //
     InitializeListHead(&PendingListQueueHead->LinkedQueueHeads);
+
+    //
+    // fake the queue head as the first queue head
+    //
+    PendingListQueueHead->PhysicalAddr = ((ULONG_PTR)AsyncListQueueHead | QH_TYPE_QH);
+
+    //
+    // Initialize completed async list head
+    //
+    InitializeListHead(&m_CompletedRequestAsyncList);
+
 
     return Status;
 }
@@ -234,13 +251,44 @@ CUSBQueue::UnlinkQueueHead(
     PQUEUE_HEAD PreviousQH, NextQH;
     PLIST_ENTRY Entry;
 
+    //
+    // sanity check: there must be at least one queue head with halted bit set
+    //
+    PC_ASSERT(QueueHead->Token.Bits.Halted == 0);
+
+    //
+    // get previous link
+    //
     Entry = QueueHead->LinkedQueueHeads.Blink;
+
+    //
+    // get queue head structure
+    //
     PreviousQH = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+
+    //
+    // get next link
+    //
     Entry = QueueHead->LinkedQueueHeads.Flink;
+
+    //
+    // get queue head structure
+    //
     NextQH = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+
+    //
+    // sanity check
+    //
     ASSERT(QueueHead->HorizontalLinkPointer == (NextQH->PhysicalAddr | QH_TYPE_QH));
+
+    //
+    // remove queue head from linked list
+    //
     PreviousQH->HorizontalLinkPointer = NextQH->PhysicalAddr | QH_TYPE_QH;
 
+    //
+    // remove software link
+    //
     RemoveEntryList(&QueueHead->LinkedQueueHeads);
 }
 
@@ -326,7 +374,7 @@ CUSBQueue::UnlinkQueueHeadChain(
     return FirstQueueHead;
 }
 
-NTSTATUS
+VOID
 CUSBQueue::QueueHeadCompletion(
     PQUEUE_HEAD CurrentQH,
     NTSTATUS Status)
@@ -415,14 +463,94 @@ CUSBQueue::QueueHeadCompletion(
     else
     {
         //
-        // FIXME: put queue head into completed queue head list
+        // put queue head into completed queue head list
         //
+        InsertTailList(&m_CompletedRequestAsyncList, &CurrentQH->LinkedQueueHeads);
+    }
+}
+
+VOID
+CUSBQueue::ProcessAsyncList(
+    IN NTSTATUS Status,
+    OUT PULONG ShouldRingDoorBell)
+{
+    KIRQL OldLevel;
+    PLIST_ENTRY Entry;
+    PQUEUE_HEAD QueueHead;
+    IUSBRequest * Request;
+
+    //
+    // lock completed async list
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // walk async list 
+    //
+    Entry = PendingListQueueHead->LinkedQueueHeads.Flink;
+
+    while(Entry != &PendingListQueueHead->LinkedQueueHeads)
+    {
+        //
+        // get queue head structure
+        //
+        QueueHead = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+
+        //
+        // sanity check
+        //
+        PC_ASSERT(QueueHead->Request);
+
+        //
+        // get IUSBRequest interface
+        //
+        Request = (IUSBRequest*)QueueHead->Request;
+
+
+        //
+        // move to next entry
+        //
+        Entry = Entry->Flink;
+
+        //
+        // check if queue head is complete
+        //
+        if (Request->IsQueueHeadComplete(QueueHead))
+        {
+            //
+            // current queue head is complete
+            //
+            QueueHeadCompletion(QueueHead, Status);
+
+            //
+            // ring door bell is going to be necessary
+            //
+            *ShouldRingDoorBell = TRUE;
+        }
     }
 
     //
-    // done
+    // release lock
     //
-    return STATUS_SUCCESS;
+    KeReleaseSpinLock(&m_Lock, OldLevel);
+
+}
+
+
+VOID
+CUSBQueue::InterruptCallback(
+    IN NTSTATUS Status, 
+    OUT PULONG ShouldRingDoorBell)
+{
+    //
+    // iterate asynchronous list
+    //
+    *ShouldRingDoorBell = FALSE;
+    ProcessAsyncList(Status, ShouldRingDoorBell);
+
+    //
+    // TODO: implement periodic schedule processing
+    //
 }
 
 VOID
@@ -472,6 +600,47 @@ CUSBQueue::QueueHeadCleanup(
     //
     // request is now released
     //
+}
+
+VOID
+CUSBQueue::CompleteAsyncRequests()
+{
+    KIRQL OldLevel;
+    PLIST_ENTRY Entry;
+    PQUEUE_HEAD CurrentQH;
+
+    //
+    // first acquire request lock
+    //
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    //
+    // the list should not be empty
+    //
+    PC_ASSERT(!IsListEmpty(&m_CompletedRequestAsyncList));
+
+    while(!IsListEmpty(&m_CompletedRequestAsyncList))
+    {
+        //
+        // remove first entry
+        //
+        Entry = RemoveHeadList(&m_CompletedRequestAsyncList);
+
+        //
+        // get queue head structure
+        //
+        CurrentQH = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
+
+        //
+        // complete request now
+        //
+        QueueHeadCleanup(CurrentQH);
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&m_Lock, OldLevel);
 }
 
 NTSTATUS
