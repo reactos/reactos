@@ -109,6 +109,7 @@ protected:
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
+    EHCI_PORT_STATUS m_PortStatus[16];                                                 // port status
 
     // set command
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -681,6 +682,7 @@ CUSBHardwareDevice::ResetPort(
         DPRINT1("Port did not reset\n");
         return STATUS_RETRY;
     }
+
     return STATUS_SUCCESS;
 }
 
@@ -690,10 +692,9 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
+#if 0
     ULONG Value;
     USHORT Status = 0, Change = 0;
-
-    DPRINT1("CUSBHardwareDevice::GetPortStatus\n");
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
@@ -755,11 +756,10 @@ CUSBHardwareDevice::GetPortStatus(
 
     *PortStatus = Status;
     *PortChange = Change;
-
-    //HACK: Maybe
-    if (Status == (USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_POWER))
-        *PortChange = USB_PORT_STATUS_CONNECT;
-    
+#else
+    *PortStatus = m_PortStatus[PortId].PortStatus;
+    *PortChange = m_PortStatus[PortId].PortChange;
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -784,6 +784,12 @@ CUSBHardwareDevice::ClearPortStatus(
             Value &= ~EHCI_PRT_RESET;
             EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
             KeStallExecutionProcessor(100);
+
+            //
+            // update port status
+            //
+            m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
+            m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
         }
     }
 
@@ -793,6 +799,8 @@ CUSBHardwareDevice::ClearPortStatus(
         Value |= EHCI_PRT_CONNECTSTATUSCHANGE;
         Value |= EHCI_PRT_ENABLEDSTATUSCHANGE;
         EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
+
+        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_CONNECT;
     }
 
     return STATUS_SUCCESS;
@@ -827,14 +835,25 @@ CUSBHardwareDevice::SetPortFeature(
         {
             DPRINT1("Non HighSpeed device. Releasing Ownership\n");
         }
-        //
-        // Reset and clean enable
-        //
-        Value |= EHCI_PRT_RESET;
-        Value &= ~EHCI_PRT_ENABLED;
-        EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
 
-        KeStallExecutionProcessor(100);
+        ResetPort(PortId);
+
+        //
+        // update cached settings
+        //
+        m_PortStatus[PortId].PortChange |= USB_PORT_STATUS_RESET;
+        m_PortStatus[PortId].PortStatus &= ~USB_PORT_STATUS_ENABLE;
+
+        //
+        // is there a status change callback
+        //
+        if (m_SCECallBack != NULL)
+        {
+            //
+            // issue callback
+            //
+            m_SCECallBack(m_SCEContext);
+        }
     }
     
     if (Feature == PORT_POWER)
@@ -1069,16 +1088,29 @@ EhciDefferedRoutine(
 
                         if (PortStatus & EHCI_PRT_SLOWSPEEDLINE)
                         {
-                            DPRINT1("Non HighSeped device connected. Release ownership\n");
+                            DPRINT1("Non HighSpeed device connected. Release ownership\n");
                             This->EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * i), EHCI_PRT_RELEASEOWNERSHIP);
                             continue;
                         }
-
-                        //
-                        // FIXME: Is a port reset needed, or does hub driver request this?
-                        //
                     }
-                    This->m_SCECallBack(This->m_SCEContext);
+
+                    //
+                    // update port status flags
+                    //
+                    This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED;
+                    This->m_PortStatus[i].PortStatus |= USB_PORT_STATUS_CONNECT;
+                    This->m_PortStatus[i].PortChange |= USB_PORT_STATUS_CONNECT;
+
+                    //
+                    // is there a status change callback
+                    //
+                    if (This->m_SCECallBack != NULL)
+                    {
+                        //
+                        // issue callback
+                        //
+                        This->m_SCECallBack(This->m_SCEContext);
+                    }
                 }
                 else
                 {

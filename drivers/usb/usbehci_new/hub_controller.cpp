@@ -913,7 +913,7 @@ CHubController::HandleClassOther(
                     //
                     // reset port feature
                     //
-                    Status = m_Hardware->ResetPort(PortId);
+                    Status = m_Hardware->SetPortFeature(PortId, PORT_RESET);
                     PC_ASSERT(Status == STATUS_SUCCESS);
                     break;
                 }
@@ -928,9 +928,7 @@ CHubController::HandleClassOther(
             PC_ASSERT(0);
             Status = STATUS_INVALID_DEVICE_REQUEST;
     }
-
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 //-----------------------------------------------------------------------------------------
@@ -1311,6 +1309,12 @@ CHubController::HandleDeviceControl(
             //
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(ULONG);
+            break;
+        }
+        case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
+        {
+            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION UNIMPLEMENTED\n");
+            Status = STATUS_SUCCESS;
             break;
         }
         default:

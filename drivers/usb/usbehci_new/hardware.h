@@ -58,6 +58,7 @@
 #define EHCI_PRT_POWER                  0x1000
 #define EHCI_PRT_RELEASEOWNERSHIP       0x2000
 
+#define EHCI_PORTSC_DATAMASK    0xffffffd1
 //
 // Terminate Pointer used for QueueHeads and Element Transfer Descriptors to mark Pointers as the end
 //
@@ -280,3 +281,10 @@ typedef struct _EHCI_HOST_CONTROLLER
     KSPIN_LOCK Lock;
     LPDMA_MEMORY_ALLOCATOR DmaMemAllocator;
 } EHCI_HOST_CONTROLLER, *PEHCI_HOST_CONTROLLER;
+
+typedef struct
+{
+    ULONG PortStatus;
+    ULONG PortChange;
+}EHCI_PORT_STATUS;
+
