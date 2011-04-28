@@ -550,7 +550,6 @@ CUSBDevice::CommitSetupPacket(
         return Status;
     }
 
-
     //
     // now add the request
     //

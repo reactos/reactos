@@ -539,6 +539,11 @@ CUSBRequest::BuildControlTransferQueueHead(
     }
 
     //
+    // sanity check
+    //
+    PC_ASSERT(QueueHead);
+
+    //
     // create setup packet
     //
     Status = BuildSetupPacket();
@@ -772,6 +777,11 @@ CUSBRequest::CreateQueueHead(
     // FIXME check if that is really needed
     //
     QueueHead->PhysicalAddr = QueueHeadPhysicalAddress.LowPart;
+
+    //
+    // output queue head
+    //
+    *OutQueueHead = QueueHead;
 
     //
     // done

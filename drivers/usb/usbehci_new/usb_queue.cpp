@@ -157,19 +157,81 @@ CUSBQueue::AddUSBRequest(
     IUSBRequest * Request)
 {
     PQUEUE_HEAD QueueHead;
+    NTSTATUS Status;
+    ULONG Type;
+
+    //
+    // sanity check
+    //
     ASSERT(Request != NULL);
 
-    Request->GetQueueHead(&QueueHead);
+    //
+    // get request type
+    //
+    Type = Request->GetTransferType();
 
     //
-    // Add it to the pending list
+    // check if supported
     //
-    LinkQueueHead(PendingListQueueHead, QueueHead);
+    switch(Type)
+    {
+        case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+        case USB_ENDPOINT_TYPE_INTERRUPT:
+            /* NOT IMPLEMENTED IN QUEUE */
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        case USB_ENDPOINT_TYPE_BULK:
+        case USB_ENDPOINT_TYPE_CONTROL:
+            Status = STATUS_SUCCESS;
+            break;
+        default:
+            /* BUG */
+            PC_ASSERT(FALSE);
+    }
+
+    //
+    // check for success
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // request not supported, please try later
+        //
+        return Status;
+    }
+
+    if (Type == USB_ENDPOINT_TYPE_BULK || Type == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // get queue head
+        //
+        Status = Request->GetQueueHead(&QueueHead);
+
+        //
+        // check for success
+        //
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to get queue head
+            //
+           return Status;
+        }
+
+        DPRINT1("Request %p QueueHead %p inserted into AsyncQueue\n", Request, QueueHead);
+
+        //
+        // Add it to the pending list
+        //
+        LinkQueueHead(PendingListQueueHead, QueueHead);
+    }
+
 
     //
     // add extra reference which is released when the request is completed
     //
     Request->AddRef();
+
 
     return STATUS_SUCCESS;
 }
