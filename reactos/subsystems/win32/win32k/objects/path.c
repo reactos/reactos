@@ -70,8 +70,7 @@ PATH_Delete(HPATH hPath)
   pPath = PATH_LockPath( hPath );
   if (!pPath) return FALSE;
   PATH_DestroyGdiPath( pPath );
-  PATH_UnlockPath( pPath );
-  PATH_FreeExtPathByHandle(hPath);
+  GDIOBJ_vDeleteObject(&pPath->BaseObject);
   return TRUE;
 }
 
@@ -1527,7 +1526,7 @@ PATH_WidenPath(DC *dc)
 
     PATH_FlattenPath(pPath);
 
-    size = IntGdiGetObject( pdcattr->hpen, 0, NULL);
+    size = GreGetObject( pdcattr->hpen, 0, NULL);
     if (!size)
     {
         PATH_UnlockPath( pPath );
@@ -1536,9 +1535,9 @@ PATH_WidenPath(DC *dc)
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
-    (VOID) IntGdiGetObject( pdcattr->hpen, size, elp);
+    GreGetObject(pdcattr->hpen, size, elp);
 
-    obj_type = GDIOBJ_GetObjectType(pdcattr->hpen);
+    obj_type = GDI_HANDLE_GET_TYPE(pdcattr->hpen);
     if(obj_type == GDI_OBJECT_TYPE_PEN)
     {
         penStyle = ((LOGPEN*)elp)->lopnStyle;
@@ -1865,6 +1864,7 @@ PATH_WidenPath(DC *dc)
         DPRINT1("Assign path failed\n");
     PATH_DestroyGdiPath(pNewPath);
     ExFreePoolWithTag(pNewPath, TAG_PATH);
+    PATH_UnlockPath(pPath);
     return ret;
 }
 
@@ -2120,6 +2120,7 @@ NtGdiAbortPath(HDC  hDC)
   }
 
   pPath = PATH_LockPath(dc->dclevel.hPath);
+  if (!pPath)
   {
       DC_UnlockDc(dc);
       return FALSE;
@@ -2128,6 +2129,8 @@ NtGdiAbortPath(HDC  hDC)
   PATH_EmptyPath(pPath);
 
   PATH_UnlockPath(pPath);
+  dc->dclevel.flPath &= ~DCPATH_ACTIVE;
+
   DC_UnlockDc ( dc );
   return TRUE;
 }
@@ -2182,7 +2185,7 @@ NtGdiBeginPath( HDC  hDC )
 
   DPRINT("BeginPath 2 h 0x%x p 0x%x\n", dc->dclevel.hPath, pPath);
   // Path handles are shared. Also due to recursion with in the same thread.
-  GDIOBJ_UnlockObjByPtr((POBJ)pPath);       // Unlock
+  GDIOBJ_vUnlockObject((POBJ)pPath);       // Unlock
   pPath = PATH_LockPath(dc->dclevel.hPath); // Share Lock.
 
   /* Make sure that path is empty */

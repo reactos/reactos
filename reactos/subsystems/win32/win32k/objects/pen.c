@@ -29,12 +29,12 @@
 
 PBRUSH
 FASTCALL
-PEN_LockPen(HGDIOBJ hBMObj)
+PEN_LockPen(HGDIOBJ hobj)
 {
-   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
-   else
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
+    if (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE &&
+        GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE) return NULL;
+
+    return GDIOBJ_LockObject(hobj, GDIObjType_BRUSH_TYPE);
 }
 
 PBRUSH
@@ -189,11 +189,7 @@ IntGdiExtCreatePen(
 ExitCleanup:
    EngSetLastError(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
-   PEN_UnlockPen(pbrushPen);
-   if (bOldStylePen)
-      PEN_FreePenByHandle(hPen);
-   else
-      PEN_FreeExtPenByHandle(hPen);
+   GDIOBJ_vDeleteObject(&pbrushPen->BaseObject);
    return NULL;
 }
 

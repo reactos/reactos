@@ -69,25 +69,25 @@ VIS_ComputeVisibleRegion(
            CurrentWindow->state & WNDS_DESTROYED )
       {
          DPRINT1("ATM the Current Window or Parent is dead!\n");
-         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
+         if (VisRgn) GreDeleteObject(VisRgn);
          return NULL;
       }
 
       if (!(CurrentWindow->style & WS_VISIBLE))
       {
-         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
+         if (VisRgn) GreDeleteObject(VisRgn);
          return NULL;
       }
 
       ClipRgn = IntSysCreateRectRgnIndirect(&CurrentWindow->rcClient);
       NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
-      REGION_FreeRgnByHandle(ClipRgn);
+      GreDeleteObject(ClipRgn);
 
       if ((PreviousWindow->style & WS_CLIPSIBLINGS) ||
           (PreviousWindow == Wnd && ClipSiblings))
       {
          CurrentSibling = CurrentWindow->spwndChild;
-         while ( CurrentSibling != NULL && 
+         while ( CurrentSibling != NULL &&
                  CurrentSibling != PreviousWindow )
          {
             if ((CurrentSibling->style & WS_VISIBLE) &&
@@ -102,7 +102,7 @@ VIS_ComputeVisibleRegion(
                   NtGdiOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
                }
                NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-               REGION_FreeRgnByHandle(ClipRgn);
+               GreDeleteObject(ClipRgn);
             }
             CurrentSibling = CurrentSibling->spwndNext;
          }
@@ -129,7 +129,7 @@ VIS_ComputeVisibleRegion(
                NtGdiOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
             }
             NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-            REGION_FreeRgnByHandle(ClipRgn);
+            GreDeleteObject(ClipRgn);
          }
          CurrentWindow = CurrentWindow->spwndNext;
       }
@@ -172,7 +172,7 @@ co_VIS_WindowLayoutChanged(
                           RDW_ALLCHILDREN);
       UserDerefObjectCo(Parent);
    }
-   REGION_FreeRgnByHandle(Temp);
+   GreDeleteObject(Temp);
 }
 
 /* EOF */

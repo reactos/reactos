@@ -182,8 +182,9 @@
 		<file>font.c</file>
 		<file>freetype.c</file>
 		<file>gdibatch.c</file>
-		<file>gdiobj.c</file>
 		<file>gdidbg.c</file>
+		<file>gdiobj.c</file>
+		<file>gdipool.c</file>
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>

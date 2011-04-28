@@ -12,23 +12,14 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG gulFirstFree;
+extern ULONG gulFirstUnused;
 
 ULONG gulDebugChannels = 0;
+ULONG gulLogUnique = 0;
 
 #ifdef GDI_DEBUG
-
-ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-struct DbgOpenGDIHandle
-{
-    ULONG idx;
-    int count;
-};
-#define MAX_BACKTRACES 1024
-static struct DbgOpenGDIHandle AllocatorTable[MAX_BACKTRACES];
-
+#if 0
 static
 BOOL
 CompareBacktraces(ULONG idx1, ULONG idx2)
@@ -50,7 +41,9 @@ CompareBacktraces(ULONG idx1, ULONG idx2)
     return TRUE;
 }
 
-void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
+VOID
+NTAPI
+DbgDumpGdiHandleTable(void)
 {
     static int leak_reported = 0;
     int i, j, idx, nTraces = 0;
@@ -139,9 +132,11 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 
     ASSERT(FALSE);
 }
+#endif
 
 ULONG
-CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
+NTAPI
+DbgCaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 {
     ULONG nFrameCount;
 
@@ -160,7 +155,8 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 }
 
 BOOL
-GdiDbgHTIntegrityCheck()
+NTAPI
+DbgGdiHTIntegrityCheck()
 {
 	ULONG i, nDeleted = 0, nFree = 0, nUsed = 0;
 	PGDI_TABLE_ENTRY pEntry;
@@ -171,7 +167,7 @@ GdiDbgHTIntegrityCheck()
 	/* FIXME: check reserved entries */
 
 	/* Now go through the deleted objects */
-	i = GdiHandleTable->FirstFree & 0xffff;
+	i = gulFirstFree & 0xffff;
 	while (i)
 	{
 		pEntry = &GdiHandleTable->Entries[i];
@@ -208,7 +204,7 @@ GdiDbgHTIntegrityCheck()
         i = (ULONG_PTR)pEntry->KernelData & 0xffff;
 	};
 
-	for (i = GdiHandleTable->FirstUnused;
+	for (i = gulFirstUnused;
 	     i < GDI_HANDLE_COUNT;
 	     i++)
 	{
@@ -280,39 +276,134 @@ GdiDbgHTIntegrityCheck()
 	return r;
 }
 
-ULONG
-FASTCALL
-GDIOBJ_IncrementShareCount(POBJ Object)
-{
-    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
-    GDIDBG_CAPTURESHARELOCKER(Object->hHmgr);
-    ASSERT(cLocks >= 1);
-    return cLocks;
-}
-
 #endif /* GDI_DEBUG */
 
-void
-GdiDbgDumpLockedHandles()
+VOID
+NTAPI
+DbgDumpLockedGdiHandles()
 {
+#if 0
     ULONG i;
 
     for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
     {
-        PGDI_TABLE_ENTRY pEntry = &GdiHandleTable->Entries[i];
+        PENTRY pentry = &gpentHmgr[i];
 
-        if (pEntry->Type & GDI_ENTRY_BASETYPE_MASK)
+        if (pentry->Objt)
         {
-            BASEOBJECT *pObject = pEntry->KernelData;
-            if (pObject->cExclusiveLock > 0)
+            POBJ pobj = pentry->einfo.pobj;
+            if (pobj->cExclusiveLock > 0)
             {
                 DPRINT1("Locked object: %lx, type = %lx. allocated from:\n",
-                        i, pEntry->Type);
-                GDIDBG_TRACEALLOCATOR(i);
-                DPRINT1("Locked from:\n");
-                GDIDBG_TRACELOCKER(i);
+                        i, pentry->Objt);
+                DBG_DUMP_EVENT_LIST(&pobj->slhLog);
             }
         }
+    }
+#endif
+}
+
+VOID
+NTAPI
+DbgLogEvent(PSLIST_HEADER pslh, EVENT_TYPE nEventType, LPARAM lParam)
+{
+    PLOGENTRY pLogEntry;
+
+    /* Log a maximum of 100 events */
+    if (QueryDepthSList(pslh) >= 1000) return;
+
+    /* Allocate a logentry */
+    pLogEntry = EngAllocMem(0, sizeof(LOGENTRY), 'golG');
+    if (!pLogEntry) return;
+
+    /* Set type */
+    pLogEntry->nEventType = nEventType;
+    pLogEntry->ulUnique = InterlockedIncrement((LONG*)&gulLogUnique);
+    pLogEntry->dwProcessId = HandleToUlong(PsGetCurrentProcessId());
+    pLogEntry->dwThreadId = HandleToUlong(PsGetCurrentThreadId());
+    pLogEntry->lParam = lParam;
+
+    /* Capture a backtrace */
+    DbgCaptureStackBackTace(pLogEntry->apvBackTrace, 20);
+
+    switch (nEventType)
+    {
+        case EVENT_ALLOCATE:
+        case EVENT_CREATE_HANDLE:
+        case EVENT_REFERENCE:
+        case EVENT_DEREFERENCE:
+        case EVENT_LOCK:
+        case EVENT_UNLOCK:
+        case EVENT_DELETE:
+        case EVENT_FREE:
+        case EVENT_SET_OWNER:
+        default:
+            break;
+    }
+
+    /* Push it on the list */
+    InterlockedPushEntrySList(pslh, &pLogEntry->sleLink);
+}
+
+#define REL_ADDR(va) ((ULONG_PTR)va - (ULONG_PTR)&__ImageBase)
+
+VOID
+DbgPrintEvent(PLOGENTRY pLogEntry)
+{
+    PSTR pstr;
+
+    switch (pLogEntry->nEventType)
+    {
+        case EVENT_ALLOCATE: pstr = "Allocate"; break;
+        case EVENT_CREATE_HANDLE: pstr = "CreatHdl"; break;
+        case EVENT_REFERENCE: pstr = "Ref"; break;
+        case EVENT_DEREFERENCE: pstr = "Deref"; break;
+        case EVENT_LOCK: pstr = "Lock"; break;
+        case EVENT_UNLOCK: pstr = "Unlock"; break;
+        case EVENT_DELETE: pstr = "Delete"; break;
+        case EVENT_FREE: pstr = "Free"; break;
+        case EVENT_SET_OWNER: pstr = "SetOwner"; break;
+        default: pstr = "Unknown"; break;
+    }
+
+    DbgPrint("[%ld] %03x:%03x %.8s val=%p <%lx,%lx,%lx,%lx>\n",
+             pLogEntry->ulUnique,
+             pLogEntry->dwProcessId,
+             pLogEntry->dwThreadId,
+             pstr,
+             pLogEntry->lParam,
+             REL_ADDR(pLogEntry->apvBackTrace[2]),
+             REL_ADDR(pLogEntry->apvBackTrace[3]),
+             REL_ADDR(pLogEntry->apvBackTrace[4]),
+             REL_ADDR(pLogEntry->apvBackTrace[5]));
+}
+
+VOID
+NTAPI
+DbgDumpEventList(PSLIST_HEADER pslh)
+{
+    PSLIST_ENTRY psle;
+    PLOGENTRY pLogEntry;
+
+    while ((psle = InterlockedPopEntrySList(pslh)))
+    {
+        pLogEntry = CONTAINING_RECORD(psle, LOGENTRY, sleLink);
+        DbgPrintEvent(pLogEntry);
+    }
+
+}
+
+VOID
+NTAPI
+DbgCleanupEventList(PSLIST_HEADER pslh)
+{
+    PSLIST_ENTRY psle;
+    PLOGENTRY pLogEntry;
+
+    while ((psle = InterlockedPopEntrySList(pslh)))
+    {
+        pLogEntry = CONTAINING_RECORD(psle, LOGENTRY, sleLink);
+        EngFreeMem(pLogEntry);
     }
 }
 
@@ -323,9 +414,9 @@ DbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
-        DbgPrint("FATAL: Win32DbgPreServiceHook(%ld): There are %ld exclusive locks!\n",
+        DbgPrint("FATAL: Win32DbgPreServiceHook(0x%lx): There are %ld exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
-        GdiDbgDumpLockedHandles();
+        DbgDumpLockedGdiHandles();
         ASSERT(FALSE);
     }
 
@@ -338,9 +429,9 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
-        DbgPrint("FATAL: Win32DbgPostServiceHook(%ld): There are %ld exclusive locks!\n",
+        DbgPrint("FATAL: Win32DbgPostServiceHook(0x%lx): There are %ld exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
-        GdiDbgDumpLockedHandles();
+        DbgDumpLockedGdiHandles();
         ASSERT(FALSE);
     }
     return ulResult;

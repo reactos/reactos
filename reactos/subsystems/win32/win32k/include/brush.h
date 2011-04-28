@@ -89,14 +89,11 @@ typedef struct _EBRUSHOBJ
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000
 
 #define  BRUSH_AllocBrush() ((PBRUSH) GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
-#define  BRUSH_AllocBrushWithHandle() ((PBRUSH) GDIOBJ_AllocObjWithHandle (GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSH_AllocBrushWithHandle() ((PBRUSH) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BRUSH, sizeof(BRUSH)))
 #define  BRUSH_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
 #define  BRUSH_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
-#define  BRUSH_LockBrush(hBrush) ((PBRUSH)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSH_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr((POBJ)pBrush)
-
 #define  BRUSH_ShareLockBrush(hBrush) ((PBRUSH)GDIOBJ_ShareLockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_ShareUnlockObjByPtr((POBJ)pBrush)
+#define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_vDereferenceObject((POBJ)pBrush)
 
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);

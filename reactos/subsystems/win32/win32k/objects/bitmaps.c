@@ -114,7 +114,7 @@ GreCreateBitmapEx(
         if (!pvBits)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            SURFACE_FreeSurfaceByHandle(hbmp);
+            GDIOBJ_vDeleteObject(&psurf->BaseObject);
             return NULL;
         }
         DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
@@ -133,7 +133,7 @@ GreCreateBitmapEx(
         /* Bail out if that failed */
         DPRINT1("SURFACE_bSetBitmapBits failed.\n");
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        SURFACE_FreeSurfaceByHandle(hbmp);
+        GDIOBJ_vDeleteObject(&psurf->BaseObject);
         return NULL;
     }
 
@@ -209,8 +209,7 @@ NtGdiCreateBitmap(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SURFACE_UnlockSurface(psurf);
-            SURFACE_FreeSurfaceByHandle(hbmp);
+            GDIOBJ_vDeleteObject(&psurf->BaseObject);
             _SEH2_YIELD(return NULL;)
         }
         _SEH2_END
@@ -274,7 +273,7 @@ IntCreateCompatibleBitmap(
             ASSERT(psurfBmp);
             /* Assign palette */
             psurfBmp->ppal = psurf->ppal;
-            GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
+            GDIOBJ_vReferenceObjectByPointer((POBJ)psurf->ppal);
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // Fixme
@@ -316,7 +315,7 @@ IntCreateCompatibleBitmap(
                     return 0;
                 }
 
-                PalGDI = PALETTE_ShareLockPalette(psurf->ppal->BaseObject.hHmgr);
+                PalGDI = psurf->ppal;
 
                 for (Index = 0;
                         Index < 256 && Index < PalGDI->NumColors;
@@ -327,7 +326,6 @@ IntCreateCompatibleBitmap(
                     bi->bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
                     bi->bmiColors[Index].rgbReserved = 0;
                 }
-                PALETTE_ShareUnlockPalette(PalGDI);
             }
 
             Bmp = DIB_CreateDIBSection(Dc,
@@ -873,8 +871,8 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         if (resBitmap)
         {
             IntSetBitmapBits(resBitmap, Bitmap->SurfObj.cjBits, Bitmap->SurfObj.pvBits);
-            GDIOBJ_IncrementShareCount(&Bitmap->ppal->BaseObject);
-            GDIOBJ_ShareUnlockObjByPtr(&resBitmap->ppal->BaseObject);
+            GDIOBJ_vReferenceObjectByPointer(&Bitmap->ppal->BaseObject);
+            GDIOBJ_vDereferenceObject(&resBitmap->ppal->BaseObject);
             resBitmap->ppal = Bitmap->ppal;
             SURFACE_ShareUnlockSurface(resBitmap);
         }

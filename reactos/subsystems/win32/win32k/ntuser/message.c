@@ -667,7 +667,7 @@ IntDispatchMessage(PMSG pMsg)
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
         HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
-        REGION_FreeRgnByHandle( hrgn );
+        GreDeleteObject(hrgn);
     }
 
     return retval;
@@ -1482,7 +1482,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     }
 
     IntReferenceMessageQueue(Window->head.pti->MessageQueue);
-    /* Take reference on this MessageQueue if its a callback. It will be released 
+    /* Take reference on this MessageQueue if its a callback. It will be released
        when message is processed or removed from target hwnd MessageQueue */
     if (CompletionCallback)
        IntReferenceMessageQueue(Win32Thread->MessageQueue);

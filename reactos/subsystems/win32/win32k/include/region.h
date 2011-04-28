@@ -11,6 +11,8 @@ typedef struct _ROSRGNDATA
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
   BASEOBJECT    BaseObject;
+  PRGN_ATTR prgnattr;
+  RGN_ATTR rgnattr;
 
   RGNDATAHEADER rdh;
   RECTL        *Buffer;
@@ -21,8 +23,6 @@ typedef struct _ROSRGNDATA
 
 #define  REGION_FreeRgn(pRgn)  GDIOBJ_FreeObj((POBJ)pRgn, GDIObjType_RGN_TYPE)
 #define  REGION_FreeRgnByHandle(hRgn)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
-#define  REGION_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION))
-#define  REGION_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr((POBJ)pRgn)
 
 PROSRGNDATA FASTCALL REGION_AllocRgnWithHandle(INT n);
 PROSRGNDATA FASTCALL REGION_AllocUserRgnWithHandle(INT n);
@@ -52,9 +52,28 @@ PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
 VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
 HRGN FASTCALL IntSysCreateRectRgn(INT,INT,INT,INT);
 PROSRGNDATA FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
+BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
 #define IntSysCreateRectRgnIndirect(prc) \
   IntSysCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
 #define IntSysCreateRectpRgnIndirect(prc) \
   IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
+
+PROSRGNDATA
+FASTCALL
+IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
+
+FORCEINLINE
+PREGION
+REGION_LockRgn(HRGN hrgn)
+{
+    return GDIOBJ_LockObject(hrgn, GDIObjType_RGN_TYPE);
+}
+
+FORCEINLINE
+VOID
+REGION_UnlockRgn(PREGION prgn)
+{
+    GDIOBJ_vUnlockObject(&prgn->BaseObject);
+}

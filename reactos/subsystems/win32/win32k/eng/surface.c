@@ -151,7 +151,7 @@ SURFACE_AllocSurface(
     }
 
     /* Allocate a SURFACE object */
-    psurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP);
+    psurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP, sizeof(SURFACE));
 
     if (psurf)
     {
@@ -166,7 +166,7 @@ SURFACE_AllocSurface(
 
         /* Assign a default palette and increment its reference count */
         psurf->ppal = appalSurfaceDefault[iFormat];
-        GDIOBJ_IncrementShareCount(&psurf->ppal->BaseObject);
+        GDIOBJ_vReferenceObjectByPointer(&psurf->ppal->BaseObject);
     }
 
     return psurf;
@@ -285,12 +285,12 @@ EngCreateBitmap(
     {
         /* Bail out if that failed */
         DPRINT1("SURFACE_bSetBitmapBits failed.\n");
-        SURFACE_FreeSurfaceByHandle(hbmp);
+        GDIOBJ_vDeleteObject(&psurf->BaseObject);
         return NULL;
     }
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hbmp, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -324,7 +324,7 @@ EngCreateDeviceBitmap(
     hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hbmp, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -355,7 +355,7 @@ EngCreateDeviceSurface(
     hsurf = psurf->SurfObj.hsurf;
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hsurf, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -448,8 +448,16 @@ BOOL
 APIENTRY
 EngDeleteSurface(IN HSURF hsurf)
 {
-    GDIOBJ_SetOwnership(hsurf, PsGetCurrentProcess());
-    SURFACE_FreeSurfaceByHandle(hsurf);
+    PSURFACE psurf;
+
+    psurf = SURFACE_ShareLockSurface(hsurf);
+    if (!psurf)
+    {
+        DPRINT1("Could not reference surface to delete\n");
+        return FALSE;
+    }
+
+    GDIOBJ_vDeleteObject(&psurf->BaseObject);
     return TRUE;
 }
 

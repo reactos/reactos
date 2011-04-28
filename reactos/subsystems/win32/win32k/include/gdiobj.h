@@ -9,7 +9,7 @@
 #include <win32k/ntgdihdl.h>
 #include "win32.h"
 
-/* apparently the first 10 entries are never used in windows as they are empty */
+/* The first 10 entries are never used in windows, they are empty */
 #define RESERVE_ENTRIES_COUNT 10
 
 typedef struct _GDI_HANDLE_TABLE
@@ -24,11 +24,7 @@ typedef struct _GDI_HANDLE_TABLE
   PVOID           pvLangPack;              // Language Pack.
   CFONT           cfPublic[GDI_CFONT_MAX]; // Public Fonts.
   DWORD           dwCFCount;
-//////////////////////////////////////////////////////////////////////////////
-  PPAGED_LOOKASIDE_LIST LookasideLists;
 
-  ULONG           FirstFree;
-  ULONG           FirstUnused;
 
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
@@ -42,18 +38,18 @@ typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
  * It's for thread locking. */
 typedef struct _BASEOBJECT
 {
-  HGDIOBJ     hHmgr;
-  ULONG       ulShareCount;
-  USHORT      cExclusiveLock;
-  USHORT      BaseFlags;
-  PTHREADINFO Tid;
-  EX_PUSH_LOCK pushlock;
+    HGDIOBJ hHmgr;
+    union {
+        ULONG ulShareCount; /* For objects without a handle */
+        DWORD dwThreadId;   /* Exclusive lock owner */
+    };
+    USHORT cExclusiveLock;
+    USHORT BaseFlags;
+    EX_PUSH_LOCK pushlock;
+#if DBG_ENABLE_EVENT_LOGGING
+    SLIST_HEADER slhLog;
+#endif
 } BASEOBJECT, *POBJ;
-
-typedef struct _CLIENTOBJ
-{
-  BASEOBJECT BaseObject;
-} CLIENTOBJ, *PCLIENTOBJ;
 
 enum BASEFLAGS
 {
@@ -63,103 +59,125 @@ enum BASEFLAGS
     BASEFLAG_READY_TO_DIE = 0x1000
 };
 
-BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
-BOOL    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
-BOOL    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
-BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-//VOID    INTERNAL_CALL GDIOBJ_ShareUnlockObjByPtr(POBJ Object);
-BOOL    INTERNAL_CALL GDIOBJ_ValidateHandle(HGDIOBJ hObj, ULONG ObjectType);
-POBJ    INTERNAL_CALL GDIOBJ_AllocObj(UCHAR ObjectType);
-POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType);
-VOID    INTERNAL_CALL GDIOBJ_FreeObj (POBJ pObj, UCHAR ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_FreeObjByHandle (HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
-VOID INTERNAL_CALL GDIOBJ_LockMultipleObjs(ULONG ulCount, IN HGDIOBJ* ahObj, OUT PGDIOBJ* apObj);
+typedef struct _CLIENTOBJ
+{
+  BASEOBJECT BaseObject;
+} CLIENTOBJ, *PCLIENTOBJ;
 
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+#define GDIOBJFLAG_DEFAULT	(0x0)
+#define GDIOBJFLAG_IGNOREPID 	(0x1)
+#define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
 INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitGdiHandleTable(VOID);
 
-#define GDIOBJ_GetObjectType(Handle) \
-  GDI_HANDLE_GET_TYPE(Handle)
+BOOL
+NTAPI
+GreIsHandleValid(
+    HGDIOBJ hobj);
 
-#define GDIOBJFLAG_DEFAULT	(0x0)
-#define GDIOBJFLAG_IGNOREPID 	(0x1)
-#define GDIOBJFLAG_IGNORELOCK 	(0x2)
-
-BOOL FASTCALL GreDeleteObject(HGDIOBJ hObject);
-BOOL FASTCALL IsObjectDead(HGDIOBJ);
-BOOL FASTCALL IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
-BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
-
-/*!
- * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked.
- * You should unlock the object
- * as soon as you don't need to have access to it's data.
-
- * \param Object 	Object pointer (as returned by GDIOBJ_LockObj).
- */
-ULONG
-FORCEINLINE
-GDIOBJ_UnlockObjByPtr(POBJ Object)
-{
-#if DBG
-    PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
-    if (pti)
-    {
-        if (pti->cExclusiveLocks < 1)
-        {
-            DbgPrint("cExclusiveLocks = %ld, object: %ld\n",
-                    pti->cExclusiveLocks, Object->cExclusiveLock);
-            ASSERT(FALSE);
-        }
-        pti->cExclusiveLocks--;
-    }
-#endif
-    INT cLocks = InterlockedDecrement((PLONG)&Object->cExclusiveLock);
-    ASSERT(cLocks >= 0);
-    return cLocks;
-}
+BOOL
+NTAPI
+GreDeleteObject(
+    HGDIOBJ hObject);
 
 ULONG
-FORCEINLINE
-GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
-{
-    HGDIOBJ hobj = Object->hHmgr;
-    USHORT flags = Object->BaseFlags;
-    INT cLocks = InterlockedDecrement((PLONG)&Object->ulShareCount);
-    ASSERT(cLocks >= 0);
-    if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
-    {
-        ASSERT(Object->cExclusiveLock == 0);
-        GDIOBJ_SetOwnership(hobj, PsGetCurrentProcess());
-        GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
-    }
-    return cLocks;
-}
+NTAPI
+GreGetObjectOwner(
+    HGDIOBJ hobj);
 
-#ifdef GDI_DEBUG
-ULONG FASTCALL GDIOBJ_IncrementShareCount(POBJ Object);
-#else
-ULONG
-FORCEINLINE
-GDIOBJ_IncrementShareCount(POBJ Object)
-{
-    INT cLocks = InterlockedIncrement((PLONG)&Object->ulShareCount);
-    ASSERT(cLocks >= 1);
-    return cLocks;
-}
-#endif
+BOOL
+NTAPI
+GreSetObjectOwner(
+    HGDIOBJ hobj,
+    ULONG ulOwner);
 
-INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
+INT
+NTAPI
+GreGetObject(
+    IN HGDIOBJ hobj,
+    IN INT cbCount,
+    IN PVOID pvBuffer);
 
-#define GDIOBJ_GetKernelObj(Handle) \
-  ((PGDI_TABLE_ENTRY)&GdiHandleTable->Entries[GDI_HANDLE_GET_INDEX(Handle)])->KernelData
-#define GDI_ENTRY_TO_INDEX(ht, e)                                              \
-  (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
-#define GDI_HANDLE_GET_ENTRY(HandleTable, h)                                   \
-  (&(HandleTable)->Entries[GDI_HANDLE_GET_INDEX((h))])
+POBJ
+NTAPI
+GDIOBJ_AllocateObject(
+    UCHAR objt,
+    ULONG cjSize,
+    FLONG fl);
+
+VOID
+NTAPI
+GDIOBJ_vDeleteObject(
+    POBJ pobj);
+
+POBJ
+NTAPI
+GDIOBJ_ReferenceObjectByHandle(
+    HGDIOBJ hobj,
+    UCHAR objt);
+
+VOID
+NTAPI
+GDIOBJ_vReferenceObjectByPointer(
+    POBJ pobj);
+
+VOID
+NTAPI
+GDIOBJ_vDereferenceObject(
+    POBJ pobj);
+
+PGDIOBJ
+NTAPI
+GDIOBJ_LockObject(
+    HGDIOBJ hobj,
+    UCHAR objt);
+
+VOID
+NTAPI
+GDIOBJ_vUnlockObject(
+    POBJ pobj);
+
+VOID
+NTAPI
+GDIOBJ_vSetObjectOwner(
+    POBJ pobj,
+    ULONG ulOwner);
+
+BOOL
+NTAPI
+GDIOBJ_bLockMultipleObjects(
+    ULONG ulCount,
+    HGDIOBJ* ahObj,
+    PGDIOBJ* apObj,
+    UCHAR objt);
+
+HGDIOBJ
+NTAPI
+GDIOBJ_hInsertObject(
+    POBJ pobj,
+    ULONG ulOwner);
+
+VOID
+NTAPI
+GDIOBJ_vFreeObject(
+    POBJ pobj);
+
+VOID
+NTAPI
+GDIOBJ_vSetObjectAttr(
+    POBJ pobj,
+    PVOID pvObjAttr);
+
+PVOID
+NTAPI
+GDIOBJ_pvGetObjectAttr(
+    POBJ pobj);
+
+BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+POBJ    INTERNAL_CALL GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ObjectType);
+PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+

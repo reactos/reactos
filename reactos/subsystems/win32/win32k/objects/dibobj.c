@@ -164,7 +164,7 @@ IntSetDIBColorTable(
             return 0;
         }
 
-        PalGDI = PALETTE_ShareLockPalette(psurf->ppal->BaseObject.hHmgr);
+        PalGDI = psurf->ppal;
 
         for (Index = StartIndex;
                 Index < StartIndex + Entries && Index < PalGDI->NumColors;
@@ -174,7 +174,6 @@ IntSetDIBColorTable(
             PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
             PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
         }
-        PALETTE_ShareUnlockPalette(PalGDI);
     }
     else
         Entries = 0;
@@ -559,7 +558,7 @@ Exit:
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
-    if (hpalDIB) PALETTE_FreePaletteByHandle(hpalDIB);
+    if (hpalDIB) GreDeleteObject(hpalDIB);
     DC_UnlockDc(pDC);
 
     return ret;
@@ -1639,7 +1638,7 @@ cleanup:
 
         if (res)
         {
-            SURFACE_FreeSurfaceByHandle(res);
+            GreDeleteObject(res);
             res = 0;
         }
     }

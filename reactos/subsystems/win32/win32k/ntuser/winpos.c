@@ -1206,7 +1206,7 @@ co_WinPosSetWindowPos(
          {
             /* Nothing to copy, clean up */
             RGNOBJAPI_Unlock(VisRgn);
-            REGION_FreeRgnByHandle(CopyRgn);
+            GreDeleteObject(CopyRgn);
             CopyRgn = NULL;
          }
          else if (OldWindowRect.left != NewWindowRect.left ||
@@ -1299,12 +1299,12 @@ co_WinPosSetWindowPos(
                     RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
          }
-         REGION_FreeRgnByHandle(DirtyRgn);
+         GreDeleteObject(DirtyRgn);
       }
 
       if (CopyRgn != NULL)
       {
-         REGION_FreeRgnByHandle(CopyRgn);
+         GreDeleteObject(CopyRgn);
       }
 
       /* Expose what was covered before but not covered anymore */
@@ -1325,13 +1325,13 @@ co_WinPosSetWindowPos(
          {
             co_VIS_WindowLayoutChanged(Window, ExposedRgn);
          }
-         REGION_FreeRgnByHandle(ExposedRgn);
-         REGION_FreeRgnByHandle(VisBefore);
+         GreDeleteObject(ExposedRgn);
+         GreDeleteObject(VisBefore);
       }
 
       if (VisAfter != NULL)
       {
-         REGION_FreeRgnByHandle(VisAfter);
+         GreDeleteObject(VisAfter);
       }
 
       if (!(WinPos.flags & SWP_NOACTIVATE))
@@ -1421,7 +1421,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    //  HRGN VisibleRgn;
 
    ASSERT_REFS_CO(Wnd);
-   
+
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
 
    switch (Cmd)
@@ -1640,7 +1640,7 @@ co_WinPosSearchChildren(
          UserDereferenceObject(ScopeWin);
          return NULL;
     }
-    
+
     return ScopeWin;
 }
 
@@ -1698,7 +1698,7 @@ IntDeferWindowPos( HDWP hdwp,
                   SWP_HIDEWINDOW | SWP_FRAMECHANGED))
     {
        EngSetLastError(ERROR_INVALID_PARAMETER);
-       return NULL;    
+       return NULL;
     }
 
     if (!(pDWP = (PSMWP)UserGetObject(gHandleTable, hdwp, otSMWP)))
@@ -1756,7 +1756,7 @@ IntDeferWindowPos( HDWP hdwp,
     pDWP->acvr[pDWP->ccvr].pos.cx = cx;
     pDWP->acvr[pDWP->ccvr].pos.cy = cy;
     pDWP->acvr[pDWP->ccvr].pos.flags = flags;
-    pDWP->acvr[pDWP->ccvr].hrgnClip = NULL; 
+    pDWP->acvr[pDWP->ccvr].hrgnClip = NULL;
     pDWP->acvr[pDWP->ccvr].hrgnInterMonitor = NULL;
     pDWP->ccvr++;
 END:
@@ -1917,7 +1917,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 
    if ( WndInsertAfter &&
         WndInsertAfter != HWND_BOTTOM &&
-        WndInsertAfter != HWND_TOPMOST && 
+        WndInsertAfter != HWND_TOPMOST &&
         WndInsertAfter != HWND_NOTOPMOST )
    {
       pWndIA = UserGetWindowObject(WndInsertAfter);
@@ -1934,7 +1934,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 Exit:
    DPRINT("Leave NtUserDeferWindowPos, ret=%i\n", Ret);
    UserLeave();
-   return Ret;   
+   return Ret;
 }
 
 /*
@@ -1984,7 +1984,7 @@ NtUserSetWindowPos(
 
    if ( hWndInsertAfter &&
         hWndInsertAfter != HWND_BOTTOM &&
-        hWndInsertAfter != HWND_TOPMOST && 
+        hWndInsertAfter != HWND_TOPMOST &&
         hWndInsertAfter != HWND_NOTOPMOST )
    {
       pWndIA = UserGetWindowObject(hWndInsertAfter);
@@ -2051,7 +2051,7 @@ NtUserSetWindowRgn(
 
    if (hRgn) // The region will be deleted in user32.
    {
-      if (GDIOBJ_ValidateHandle(hRgn, GDI_OBJECT_TYPE_REGION))
+      if (GreIsHandleValid(hRgn))
       {
          hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
 
@@ -2068,6 +2068,7 @@ NtUserSetWindowRgn(
    if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
+      IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
       GreDeleteObject(Window->hrgnClip);
    }
 
@@ -2198,7 +2199,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
       EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN(FALSE);
    }
-   
+
    UserRefObjectCo(Window, &Ref);
    ret = co_WinPosShowWindow(Window, nCmdShow);
    UserDerefObjectCo(Window);

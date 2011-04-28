@@ -65,13 +65,12 @@ HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                                  CONST RGBQUAD *Colors);
 #define  PALETTE_FreePalette(pPalette)  GDIOBJ_FreeObj((POBJ)pPalette, GDIObjType_PAL_TYPE)
 #define  PALETTE_FreePaletteByHandle(hPalette)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
-#define  PALETTE_LockPalette(hPalette) ((PPALETTE)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
-#define  PALETTE_UnlockPalette(pPalette) GDIOBJ_UnlockObjByPtr((POBJ)pPalette)
+#define  PALETTE_UnlockPalette(pPalette) GDIOBJ_vUnlockObject((POBJ)pPalette)
 
 #define  PALETTE_ShareLockPalette(hpal) \
   ((PPALETTE)GDIOBJ_ShareLockObj((HGDIOBJ)hpal, GDI_OBJECT_TYPE_PALETTE))
 #define  PALETTE_ShareUnlockPalette(ppal)  \
-  GDIOBJ_ShareUnlockObjByPtr(&ppal->BaseObject)
+  GDIOBJ_vDereferenceObject(&ppal->BaseObject)
 
 BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
 INIT_FUNCTION NTSTATUS NTAPI InitPaletteImpl(VOID);

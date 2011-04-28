@@ -297,7 +297,7 @@ NtGdiEllipse(
     DPRINT("Ellipse 2: XLeft: %d, YLeft: %d, Width: %d, Height: %d\n",
                CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
-    pFillBrushObj = BRUSH_LockBrush(pdcattr->hbrush);
+    pFillBrushObj = BRUSH_ShareLockBrush(pdcattr->hbrush);
     if (NULL == pFillBrushObj)
     {
         DPRINT1("FillEllipse Fail\n");
@@ -317,7 +317,7 @@ NtGdiEllipse(
                               RadiusX*2, // Width
                               RadiusY*2, // Height
                               &tmpFillBrushObj);
-        BRUSH_UnlockBrush(pFillBrushObj);
+        BRUSH_ShareUnlockBrush(pFillBrushObj);
     }
 
     if (ret)
@@ -784,7 +784,7 @@ IntRoundRect(
     RectBounds.right  += dc->ptlDCOrig.x;
     RectBounds.bottom += dc->ptlDCOrig.y;
 
-    pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
+    pbrushFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
     if (NULL == pbrushFill)
     {
         DPRINT1("FillRound Fail\n");
@@ -804,7 +804,7 @@ IntRoundRect(
                                 xCurveDiameter,
                                 yCurveDiameter,
                                 &brushTemp);
-        BRUSH_UnlockBrush(pbrushFill);
+        BRUSH_ShareUnlockBrush(pbrushFill);
     }
 
     if (ret)

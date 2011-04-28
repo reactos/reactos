@@ -114,6 +114,14 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Win32Process->peProcess = Process;
         /* setup process flags */
         Win32Process->W32PF_flags = 0;
+
+        /* Create pools for GDI object attributes */
+        Win32Process->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
+        Win32Process->pPoolBrushAttr = GdiPoolCreate(sizeof(BRUSH_ATTR), 'arbG');
+        Win32Process->pPoolRgnAttr = GdiPoolCreate(sizeof(RGN_ATTR), 'agrG');
+        ASSERT(Win32Process->pPoolDcAttr);
+        ASSERT(Win32Process->pPoolBrushAttr);
+        ASSERT(Win32Process->pPoolRgnAttr);
     }
     else
     {
@@ -148,6 +156,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         UserSetProcessWindowStation(NULL);
 
+        /* Destroy GDI pools */
+        GdiPoolDestroy(Win32Process->pPoolDcAttr);
+        GdiPoolDestroy(Win32Process->pPoolBrushAttr);
+        GdiPoolDestroy(Win32Process->pPoolRgnAttr);
     }
 
     RETURN( STATUS_SUCCESS);
@@ -440,7 +452,7 @@ DriverEntry(
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
 
-#if 0 // DBG
+#if 1 // DBG
     /* Register service hook callbacks */
     KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
