@@ -434,28 +434,81 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 {
 	FILE_FS_DEVICE_INFORMATION FileFsDevice;
 	IO_STATUS_BLOCK IoStatusBlock;
-
 	HANDLE hFile;
-	NTSTATUS errCode;
+	NTSTATUS Status;
+    UNICODE_STRING NtPath;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR Buffer[MAX_PATH+1];
 
-	hFile = InternalOpenDirW(lpRootPathName, FALSE);
-	if (hFile == INVALID_HANDLE_VALUE)
-	{
-	    return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
-	}
+    if (!lpRootPathName)
+    {
+        DWORD cBytes;
+        
+        /* Get current directory */
+        cBytes = RtlGetCurrentDirectory_U(sizeof(Buffer), Buffer);
+        if(cBytes < sizeof(Buffer))
+        {
+            ASSERT(cBytes < MAX_PATH*sizeof(WCHAR));
+            Buffer[cBytes/sizeof(WCHAR)] = L'\\';
+            Buffer[cBytes/sizeof(WCHAR)+1] = L'\0';
+            lpRootPathName = Buffer;
+        } /* else fail... should we allow longer current dirs? */
+    }
 
-	errCode = NtQueryVolumeInformationFile (hFile,
-	                                        &IoStatusBlock,
-	                                        &FileFsDevice,
-	                                        sizeof(FILE_FS_DEVICE_INFORMATION),
-	                                        FileFsDeviceInformation);
-	if (!NT_SUCCESS(errCode))
-	{
-		CloseHandle(hFile);
-		SetLastErrorByStatus (errCode);
-		return 0;
-	}
+    if (!RtlDosPathNameToNtPathName_U(lpRootPathName, &NtPath, NULL, NULL))
+    {
+        WARN("Invalid path: %ls\n", lpRootPathName);
+        return DRIVE_NO_ROOT_DIR;
+    }
+
+    /* Path from RtlDosPathNameToNtPathName_U does not contain '/' and multiple '\\' in a row */
+    if(!NtPath.Length || NtPath.Buffer[NtPath.Length/sizeof(WCHAR)-1] != L'\\')
+    {
+        /* Path must be ended by slash */
+        WARN("Invalid path: %ls\n", NtPath.Buffer);
+        return DRIVE_NO_ROOT_DIR;
+    }
+
+    /* Remove ending slash */
+    NtPath.Length -= sizeof(WCHAR);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+	                           &NtPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+			                   NULL);
+
+    Status = NtCreateFile(&hFile,
+                          FILE_GENERIC_READ,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ|FILE_SHARE_WRITE,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+
+    RtlFreeUnicodeString(&NtPath);
+
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("Invalid path: %ls\n", lpRootPathName);
+        return DRIVE_NO_ROOT_DIR;	/* According to WINE regression tests */
+    }
+
+	Status = NtQueryVolumeInformationFile (hFile,
+	                                       &IoStatusBlock,
+	                                       &FileFsDevice,
+	                                       sizeof(FILE_FS_DEVICE_INFORMATION),
+	                                       FileFsDeviceInformation);
 	CloseHandle(hFile);
+	if (!NT_SUCCESS(Status))
+    {
+        ERR("NtQueryVolumeInformationFile failed for %ls\n", lpRootPathName);
+        return DRIVE_UNKNOWN;
+    }
 
         switch (FileFsDevice.DeviceType)
         {
