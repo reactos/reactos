@@ -154,6 +154,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
             LogonProcess = NULL;
         }
 
+        /* Close the startup desktop */
+        ASSERT(Win32Process->rpdeskStartup);
+        ASSERT(Win32Process->hdeskStartup);
+        ObDereferenceObject(Win32Process->rpdeskStartup);
+        ZwClose(Win32Process->hdeskStartup);
+
+        /* Close the current window station */
         UserSetProcessWindowStation(NULL);
 
         /* Destroy GDI pools */
@@ -211,6 +218,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         HDESK hDesk = NULL;
         NTSTATUS Status;
         PUNICODE_STRING DesktopPath;
+        PDESKTOP pdesk;
         PRTL_USER_PROCESS_PARAMETERS ProcessParams = (Process->Peb ? Process->Peb->ProcessParameters : NULL);
 
         DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
@@ -223,37 +231,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
             InitializeListHead(&Win32Thread->aphkStart[i]);
         }
 
-        /*
-         * inherit the thread desktop and process window station (if not yet inherited) from the process startup
-         * info structure. See documentation of CreateProcess()
-         */
-        DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
-        Status = IntParseDesktopPath(Process,
-                                     DesktopPath,
-                                     &hWinSta,
-                                     &hDesk);
-        if(NT_SUCCESS(Status))
-        {
-            if(hWinSta != NULL)
-            {
-                if(!UserSetProcessWindowStation(hWinSta))
-                {
-                    DPRINT1("Failed to set process window station\n");
-                }
-            }
-
-            if (hDesk != NULL)
-            {
-                if (!IntSetThreadDesktop(hDesk, FALSE))
-                {
-                        DPRINT1("Unable to set thread desktop\n");
-                }
-            }
-        }
-        else
-        {
-           DPRINT1("No Desktop handle for this Thread!\n");
-        }
         Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
         co_IntDestroyCaret(Win32Thread);
         Win32Thread->ppi = PsGetCurrentProcessWin32Process();
@@ -266,6 +243,58 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         }
         Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
         Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+
+        /* HAAAAAAAACK! This should go to Win32kProcessCallback */
+        if(Win32Thread->ppi->hdeskStartup == NULL)
+        {
+            /*
+             * inherit the thread desktop and process window station (if not yet inherited) from the process startup
+             * info structure. See documentation of CreateProcess()
+             */
+            DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
+            Status = IntParseDesktopPath(Process,
+                                         DesktopPath,
+                                         &hWinSta,
+                                         &hDesk);
+            if(NT_SUCCESS(Status))
+            {
+                if(hWinSta != NULL)
+                {
+                    if(!UserSetProcessWindowStation(hWinSta))
+                    {
+                        DPRINT1("Failed to set process window station\n");
+                    }
+                }
+
+                if (hDesk != NULL)
+                {
+                    /* Validate the new desktop. */
+                    Status = IntValidateDesktopHandle(hDesk,
+                                                      UserMode,
+                                                      0,
+                                                      &pdesk);
+
+                    if(NT_SUCCESS(Status))
+                    {
+                        Win32Thread->ppi->hdeskStartup = hDesk;
+                        Win32Thread->ppi->rpdeskStartup = pdesk;
+                    }
+                }
+            }
+            else
+            {
+               DPRINT1("No Desktop handle for this Thread!\n");
+            }
+        }
+
+        if (Win32Thread->ppi->hdeskStartup != NULL)
+        {
+            if (!IntSetThreadDesktop(Win32Thread->ppi->hdeskStartup, FALSE))
+            {
+                DPRINT1("Unable to set thread desktop\n");
+            }
+        }
+
         pTeb = NtCurrentTeb();
         if (pTeb)
         { /* Attempt to startup client support which should have been initialized in IntSetThreadDesktop. */
