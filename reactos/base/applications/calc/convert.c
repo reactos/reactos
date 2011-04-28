@@ -50,7 +50,7 @@ typedef struct {
 static const conv_t conv_ANGLE[] = {
     DECLARE_CONV_UNIT(ANGLE, DEGREES,  "$", "$")
     DECLARE_CONV_UNIT(ANGLE, GRADIANS, "$*0.9", "$/0.9")
-    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$*180/P", "$*P/180")
+    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$/P*180", "$*P/180")
     DECLARE_CONV_END
 };
 
