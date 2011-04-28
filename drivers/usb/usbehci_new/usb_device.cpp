@@ -310,26 +310,37 @@ NTSTATUS
 CUSBDevice::SetDeviceAddress(
     UCHAR DeviceAddress)
 {
-    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+    PUSB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
     UCHAR OldAddress;
     ULONG Index;
 
+    DPRINT1("CUSBDevice::SetDeviceAddress Address %d\n", DeviceAddress);
+
+    CtrlSetup = (PUSB_DEFAULT_PIPE_SETUP_PACKET)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), TAG_USBEHCI);
+    if (!CtrlSetup)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
     //
     // zero request
     //
-    RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    RtlZeroMemory(CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
     //
     // initialize request
     //
-    CtrlSetup.bRequest = USB_REQUEST_SET_ADDRESS;
-    CtrlSetup.wValue.W = (USHORT)DeviceAddress;
+    CtrlSetup->bRequest = USB_REQUEST_SET_ADDRESS;
+    CtrlSetup->wValue.W = (USHORT)DeviceAddress;
 
     //
     // set device address
     //
-    Status = CommitSetupPacket(&CtrlSetup, 0, 0);
+    Status = CommitSetupPacket(CtrlSetup, 0, 0);
+
+    //
+    // free setup packet
+    //
+    ExFreePoolWithTag(CtrlSetup, TAG_USBEHCI);
 
     //
     // check for success
@@ -367,7 +378,7 @@ CUSBDevice::SetDeviceAddress(
         //
         // failed to retrieve device descriptor
         //
-        DPRINT1("CUSBbDevice::SetDeviceAddress> failed to set new device address %d, falling back to %d Error %x\n", DeviceAddress, OldAddress, Status);
+        DPRINT1("CUSBbDevice::SetDeviceAddress> failed to retrieve device descriptor with device address set Error %x\n", Status);
         m_DeviceAddress = OldAddress;
 
         //
@@ -375,8 +386,6 @@ CUSBDevice::SetDeviceAddress(
         //
         return Status;
     }
-
-    PC_ASSERT(FALSE);
 
     //
     // sanity checks
@@ -547,7 +556,7 @@ CUSBDevice::CommitSetupPacket(
     //
     // initialize request
     //
-    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, BufferLength, Mdl);
+    Status = Request->InitializeWithSetupPacket(m_DmaManager, Packet, m_DeviceAddress, BufferLength, Mdl);
     if (!NT_SUCCESS(Status))
     {
         //

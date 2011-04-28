@@ -36,7 +36,7 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
     virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode, IN struct _QUEUE_HEAD *QueueHead);
     virtual VOID CancelCallback(IN NTSTATUS NtStatusCode, IN struct _QUEUE_HEAD *QueueHead);
@@ -57,7 +57,7 @@ public:
     NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
     NTSTATUS CreateQueueHead(PQUEUE_HEAD *OutQueueHead);
-    ULONG GetDeviceAddress();
+    UCHAR GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
 
@@ -99,6 +99,11 @@ protected:
     PKEVENT m_CompletionEvent;
 
     //
+    // device address for callers who initialized it with device address
+    //
+    UCHAR m_DeviceAddress;
+
+    //
     // DMA queue head
     //
     PQUEUE_HEAD m_QueueHead;
@@ -137,6 +142,7 @@ NTSTATUS
 CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
+    IN UCHAR DeviceAddress,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -153,6 +159,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_SetupPacket = SetupPacket;
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
+    m_DeviceAddress = DeviceAddress;
 
     //
     // allocate completion event
@@ -796,7 +803,7 @@ CUSBRequest::CreateQueueHead(
 }
 
 //----------------------------------------------------------------------------------------
-ULONG
+UCHAR
 CUSBRequest::GetDeviceAddress()
 {
     PIO_STACK_LOCATION IoStack;
@@ -809,9 +816,9 @@ CUSBRequest::GetDeviceAddress()
     if (!m_Irp)
     {
         //
-        // no irp is provided
-        // assume it is for device address 0
-        return 0;
+        // used provided address
+        //
+        return m_DeviceAddress;
     }
 
     //
@@ -1157,6 +1164,14 @@ CUSBRequest::FreeQueueHead(
         //
         m_DmaManager->Release(m_TransferDescriptors[2], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
         m_TransferDescriptors[2] = 0;
+    }
+
+    if (m_DescriptorPacket)
+    {
+        //
+        // release packet descriptor
+        //
+        m_DmaManager->Release(m_DescriptorPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
     }
 }
 

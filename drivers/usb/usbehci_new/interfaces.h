@@ -385,6 +385,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
+                                               IN UCHAR DeviceAddress,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 

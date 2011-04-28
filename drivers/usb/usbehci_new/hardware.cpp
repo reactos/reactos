@@ -1003,20 +1003,20 @@ EhciDefferedRoutine(
     //
     if (CStatus & (EHCI_STS_RECL| EHCI_STS_INT | EHCI_ERROR_INT))
     {
-        if (CStatus & EHCI_ERROR_INT)
-        {
-            //
-            // controller reported error
-            //
-            Status = STATUS_UNSUCCESSFUL;
-            PC_ASSERT(FALSE);
-        }
-
         //
         // check if there is a door bell ring in progress
         //
         if (This->m_DoorBellRingInProgress == FALSE)
         {
+            if (CStatus & EHCI_ERROR_INT)
+            {
+                //
+                // controller reported error
+                //
+                Status = STATUS_UNSUCCESSFUL;
+                PC_ASSERT(FALSE);
+            }
+
             //
             // inform IUSBQueue of a completed queue head
             //
