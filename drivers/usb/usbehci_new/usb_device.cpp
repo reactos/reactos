@@ -66,7 +66,7 @@ public:
     virtual UCHAR GetConfigurationValue();
     virtual NTSTATUS SubmitIrp(PIRP Irp);
     virtual VOID GetConfigurationDescriptors(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer, IN ULONG BufferLength, OUT PULONG OutBufferLength);
-
+    virtual ULONG GetConfigurationDescriptorsLength();
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
@@ -74,6 +74,7 @@ public:
     virtual NTSTATUS CreateConfigurationDescriptor(ULONG ConfigurationIndex);
     virtual NTSTATUS CreateDeviceDescriptor();
     virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
+    virtual VOID DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
 
     // constructor / destructor
     CUSBDevice(IUnknown *OuterUnknown){}
@@ -753,6 +754,11 @@ CUSBDevice::CreateConfigurationDescriptor(
     ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Buffer;
 
     //
+    // informal debug print
+    //
+    DumpConfigurationDescriptor(ConfigurationDescriptor);
+
+    //
     // sanity check
     //
     PC_ASSERT(ConfigurationDescriptor->bLength == sizeof(USB_CONFIGURATION_DESCRIPTOR));
@@ -867,12 +873,20 @@ CUSBDevice::GetConfigurationDescriptors(
     IN ULONG BufferLength,
     OUT PULONG OutBufferLength)
 {
+    PVOID Buffer;
+    ULONG InterfaceIndex, EndpointIndex;
+
     //
     // sanity check
     //
     PC_ASSERT(BufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
     PC_ASSERT(ConfigDescriptorBuffer);
     PC_ASSERT(OutBufferLength);
+
+    //
+    // reset copied length
+    //
+    *OutBufferLength = 0;
 
     //
     // FIXME: support multiple configurations
@@ -885,12 +899,87 @@ CUSBDevice::GetConfigurationDescriptors(
     RtlCopyMemory(ConfigDescriptorBuffer, &m_ConfigurationDescriptors[0].ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
 
     //
-    // store length
+    // subtract length
     //
-    *OutBufferLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
+    BufferLength -= sizeof(USB_CONFIGURATION_DESCRIPTOR);
+    *OutBufferLength += sizeof(USB_CONFIGURATION_DESCRIPTOR);
+
+    //
+    // increment offset
+    //
+    Buffer = (PVOID)(ConfigDescriptorBuffer + 1);
+
+    for(InterfaceIndex = 0; InterfaceIndex < m_ConfigurationDescriptors[0].ConfigurationDescriptor.bNumInterfaces; InterfaceIndex++)
+    {
+        if (BufferLength < sizeof(USB_INTERFACE_DESCRIPTOR))
+        {
+            //
+            // no more room in buffer
+            //
+            return;
+        }
+
+        //
+        // copy interface descriptor
+        //
+        RtlCopyMemory(Buffer, &m_ConfigurationDescriptors[0].Interfaces[InterfaceIndex].InterfaceDescriptor, sizeof(USB_INTERFACE_DESCRIPTOR));
+
+        //
+        // increment offset
+        //
+        Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof(USB_INTERFACE_DESCRIPTOR));
+        BufferLength -= sizeof(USB_INTERFACE_DESCRIPTOR);
+        *OutBufferLength += sizeof(USB_INTERFACE_DESCRIPTOR);
+
+        //
+        // does the interface have endpoints
+        //
+        if (m_ConfigurationDescriptors[0].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints)
+        {
+            //
+            // is enough space available
+            //
+            if (BufferLength < sizeof(USB_ENDPOINT_DESCRIPTOR) * m_ConfigurationDescriptors[0].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints)
+            {
+                //
+                // no buffer
+                //
+                return;
+            }
+
+            //
+            // copy end points
+            //
+            for(EndpointIndex = 0; EndpointIndex < m_ConfigurationDescriptors[0].Interfaces[InterfaceIndex].InterfaceDescriptor.bNumEndpoints; EndpointIndex++)
+            {
+                //
+                // copy endpoint
+                //
+                RtlCopyMemory(Buffer, &m_ConfigurationDescriptors[0].Interfaces[InterfaceIndex].EndPoints[EndpointIndex].EndPointDescriptor, sizeof(USB_ENDPOINT_DESCRIPTOR));
+
+                //
+                // increment buffer offset
+                //
+                Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof(USB_ENDPOINT_DESCRIPTOR));
+                BufferLength -= sizeof(USB_ENDPOINT_DESCRIPTOR);
+                *OutBufferLength += sizeof(USB_ENDPOINT_DESCRIPTOR);
+            }
+        }
+    }
 }
 
+//----------------------------------------------------------------------------------------
+ULONG
+CUSBDevice::GetConfigurationDescriptorsLength()
+{
+    //
+    // FIXME: support multiple configurations
+    //
+    PC_ASSERT(m_DeviceDescriptor.bNumConfigurations == 1);
 
+    return m_ConfigurationDescriptors[0].ConfigurationDescriptor.wTotalLength;
+}
+//----------------------------------------------------------------------------------------
 VOID
 CUSBDevice::DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
@@ -911,6 +1000,20 @@ CUSBDevice::DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
     DPRINT1("bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
 }
 
+//----------------------------------------------------------------------------------------
+VOID
+CUSBDevice::DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+}
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CreateUSBDevice(

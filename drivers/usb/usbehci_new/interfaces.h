@@ -795,6 +795,13 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
     virtual VOID GetConfigurationDescriptors(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer,
                                              IN ULONG BufferLength,
                                              OUT PULONG OutBufferLength) = 0;
+
+//----------------------------------------------------------------------------------------
+//
+// Description: returns length of configuration descriptors
+//
+     virtual ULONG GetConfigurationDescriptorsLength() = 0;
+
 };
 
 typedef IUSBDevice *PUSBDEVICE;
