@@ -242,12 +242,6 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
             MsqDecPaintCountQueue(Wnd->head.pti->MessageQueue);
             co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
 
-            if ( (HANDLE) 1 != TempRegion &&
-                 NULL != TempRegion)
-            {
-               /* NOTE: The region can already be deleted! */
-               GreDeleteObject(TempRegion);
-            }
          }
 
          if (Wnd->state & WNDS_ERASEBACKGROUND)

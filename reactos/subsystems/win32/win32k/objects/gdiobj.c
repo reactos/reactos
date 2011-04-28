@@ -368,9 +368,8 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
             pentry->ObjectOwner.ulObj != GDI_OBJ_HMGR_PUBLIC &&
             pentry->ObjectOwner.ulObj != PtrToUlong(PsGetCurrentProcessId()))
         {
-            DPRINT1("GDIOBJ: Cannot reference foreign handle %p, pentry=%p:%lx.\n",
+            DPRINT("GDIOBJ: Cannot reference foreign handle %p, pentry=%p:%lx.\n",
                     hobj, pentry, pentry->ObjectOwner.ulObj);
-            //ASSERT(FALSE);
             return NULL;
         }
 
@@ -892,7 +891,7 @@ GreIsHandleValid(HGDIOBJ hobj)
 {
     PENTRY pentry;
 
-    pentry = ENTRY_ReferenceEntryByHandle(hobj, GDIOBJFLAG_IGNOREPID);
+    pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
     if (!pentry) return FALSE;
     GDIOBJ_vDereferenceObject(pentry->einfo.pobj);
     return TRUE;

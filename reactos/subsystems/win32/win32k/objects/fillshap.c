@@ -248,7 +248,7 @@ NtGdiEllipse(
     if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
         DC_vUpdateLineBrush(dc);
 
-    pbrush = PEN_LockPen(pdcattr->hpen);
+    pbrush = PEN_ShareLockPen(pdcattr->hpen);
     if (!pbrush)
     {
         DPRINT1("Ellipse Fail 1\n");
@@ -329,7 +329,7 @@ NtGdiEllipse(
                              pbrush);
 
     pbrush->ptPenWidth.x = PenOrigWidth;
-    PEN_UnlockPen(pbrush);
+    PEN_ShareUnlockPen(pbrush);
     DC_UnlockDc(dc);
     DPRINT("Ellipse Exit.\n");
     return ret;
@@ -714,7 +714,7 @@ IntRoundRect(
     int  yCurveDiameter)
 {
     PDC_ATTR pdcattr;
-    PBRUSH   pbrushLine, pbrushFill;
+    PBRUSH   pbrLine, pbrFill;
     RECTL RectBounds;
     LONG PenWidth, PenOrigWidth;
     BOOL ret = TRUE; // default to success
@@ -748,18 +748,18 @@ IntRoundRect(
     if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
         DC_vUpdateLineBrush(dc);
 
-    pbrushLine = PEN_LockPen(pdcattr->hpen);
-    if (!pbrushLine)
+    pbrLine = PEN_ShareLockPen(pdcattr->hpen);
+    if (!pbrLine)
     {
         /* Nothing to do, as we don't have a bitmap */
         EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrushLine->ptPenWidth.x;
-    if (pbrushLine->ulPenStyle == PS_NULL) PenWidth = 0;
+    PenOrigWidth = PenWidth = pbrLine->ptPenWidth.x;
+    if (pbrLine->ulPenStyle == PS_NULL) PenWidth = 0;
 
-    if (pbrushLine->ulPenStyle == PS_INSIDEFRAME)
+    if (pbrLine->ulPenStyle == PS_INSIDEFRAME)
     {
        if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
        if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
@@ -770,7 +770,7 @@ IntRoundRect(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrushLine->ptPenWidth.x = PenWidth;
+    pbrLine->ptPenWidth.x = PenWidth;
 
     RectBounds.left = Left;
     RectBounds.top = Top;
@@ -784,8 +784,8 @@ IntRoundRect(
     RectBounds.right  += dc->ptlDCOrig.x;
     RectBounds.bottom += dc->ptlDCOrig.y;
 
-    pbrushFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
-    if (NULL == pbrushFill)
+    pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
+    if (!pbrFill)
     {
         DPRINT1("FillRound Fail\n");
         EngSetLastError(ERROR_INTERNAL_ERROR);
@@ -793,7 +793,7 @@ IntRoundRect(
     }
     else
     {
-        RtlCopyMemory(&brushTemp, pbrushFill, sizeof(brushTemp));
+        RtlCopyMemory(&brushTemp, pbrFill, sizeof(brushTemp));
         brushTemp.ptOrigin.x += RectBounds.left - Left;
         brushTemp.ptOrigin.y += RectBounds.top - Top;
         ret = IntFillRoundRect( dc,
@@ -804,7 +804,7 @@ IntRoundRect(
                                 xCurveDiameter,
                                 yCurveDiameter,
                                 &brushTemp);
-        BRUSH_ShareUnlockBrush(pbrushFill);
+        BRUSH_ShareUnlockBrush(pbrFill);
     }
 
     if (ret)
@@ -815,10 +815,10 @@ IntRoundRect(
                 RectBounds.bottom,
                    xCurveDiameter,
                    yCurveDiameter,
-                   pbrushLine);
+                   pbrLine);
 
-    pbrushLine->ptPenWidth.x = PenOrigWidth;
-    PEN_UnlockPen(pbrushLine);
+    pbrLine->ptPenWidth.x = PenOrigWidth;
+    PEN_ShareUnlockPen(pbrLine);
     return ret;
 }
 

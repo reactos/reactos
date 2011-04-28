@@ -368,13 +368,13 @@ DC_Cleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pdc->eboBackground);
 
     /*  Free regions */
-    if (pdc->rosdc.hClipRgn)
+    if (pdc->rosdc.hClipRgn && GreIsHandleValid(pdc->rosdc.hClipRgn))
         GreDeleteObject(pdc->rosdc.hClipRgn);
     if (pdc->prgnVis)
     {
         REGION_Delete(pdc->prgnVis);
     }
-    if (pdc->rosdc.hGCClipRgn)
+    if (pdc->rosdc.hGCClipRgn && GreIsHandleValid(pdc->rosdc.hGCClipRgn))
     {
         GreDeleteObject(pdc->rosdc.hGCClipRgn);
     }
