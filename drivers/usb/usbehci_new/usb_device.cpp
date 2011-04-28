@@ -67,6 +67,8 @@ public:
     virtual NTSTATUS SubmitIrp(PIRP Irp);
     virtual VOID GetConfigurationDescriptors(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptorBuffer, IN ULONG BufferLength, OUT PULONG OutBufferLength);
     virtual ULONG GetConfigurationDescriptorsLength();
+    virtual NTSTATUS SubmitSetupPacket(IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, OUT ULONG BufferLength, OUT PVOID Buffer);
+
 
     // local function
     virtual NTSTATUS CommitIrp(PIRP Irp);
@@ -1013,6 +1015,41 @@ CUSBDevice::DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR Configurat
     DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
     DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
     DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+}
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBDevice::SubmitSetupPacket(
+    IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, 
+    IN OUT ULONG BufferLength, 
+    OUT PVOID Buffer)
+{
+    NTSTATUS Status;
+    PMDL Mdl;
+
+    //
+    // allocate mdl
+    //
+    Mdl = IoAllocateMdl(Buffer, BufferLength, FALSE, FALSE, 0);
+
+    //
+    // HACK HACK HACK: assume the buffer is build from non paged pool
+    //
+    MmBuildMdlForNonPagedPool(Mdl);
+
+    //
+    // commit setup packet
+    //
+    Status = CommitSetupPacket(SetupPacket, BufferLength, Mdl);
+
+    //
+    // free mdl
+    //
+    IoFreeMdl(Mdl);
+
+    //
+    // done
+    //
+    return Status;
 }
 //----------------------------------------------------------------------------------------
 NTSTATUS

@@ -802,6 +802,17 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
      virtual ULONG GetConfigurationDescriptorsLength() = 0;
 
+//----------------------------------------------------------------------------------------
+//
+// SubmitSetupPacket
+//
+// Description: submits an setup packet. The usb device will then create an usb request from it and submit it to the queue
+
+     virtual NTSTATUS SubmitSetupPacket(IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
+                                        IN OUT ULONG BufferLength,
+                                        OUT PVOID Buffer) = 0;
+
+
 };
 
 typedef IUSBDevice *PUSBDEVICE;

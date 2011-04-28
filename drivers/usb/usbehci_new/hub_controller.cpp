@@ -868,7 +868,6 @@ CHubController::HandleClassOther(
                     break;
                 default:
                     DPRINT("Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
-                    PC_ASSERT(FALSE);
                     break;
            }
 
@@ -1079,6 +1078,7 @@ CHubController::HandleGetDescriptor(
 {
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     PUCHAR Buffer;
     PUSBDEVICE UsbDevice;
     ULONG Length;
@@ -1191,7 +1191,7 @@ CHubController::HandleGetDescriptor(
                 //
                 UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
 
-                if (UsbDevice->GetConfigurationDescriptorsLength() > Urb->UrbControlDescriptorRequest.TransferBufferLength)
+                if (sizeof(USB_CONFIGURATION_DESCRIPTOR) > Urb->UrbControlDescriptorRequest.TransferBufferLength)
                 {
                     //
                     // buffer too small
@@ -1213,7 +1213,7 @@ CHubController::HandleGetDescriptor(
                 //
                 // sanity check
                 //
-                PC_ASSERT(UsbDevice->GetConfigurationDescriptorsLength() == Length);
+                PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= Length);
 
                 //
                 // store result size
@@ -1221,6 +1221,41 @@ CHubController::HandleGetDescriptor(
                 Urb->UrbControlDescriptorRequest.TransferBufferLength = Length;
                 Status = STATUS_SUCCESS;
             }
+            break;
+        }
+        case USB_STRING_DESCRIPTOR_TYPE:
+        {
+            //
+            // sanity check
+            //
+            PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
+            PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+
+            //
+            // check if this is a valid usb device handle
+            //
+            PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+            //
+            // get device
+            //
+            UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+            //
+            // generate setup packet
+            //
+            CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+            CtrlSetup.wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
+            CtrlSetup.wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
+            CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
+            CtrlSetup.wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            CtrlSetup.bmRequestType.B = 0x80;
+
+            //
+            // submit setup packet
+            //
+            Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
             break;
         }
         default:
@@ -2049,8 +2084,45 @@ USBHI_RestoreUsbDevice(
     PUSB_DEVICE_HANDLE OldDeviceHandle,
     PUSB_DEVICE_HANDLE NewDeviceHandle)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PUSBDEVICE OldUsbDevice, NewUsbDevice;
+    CHubController * Controller;
+    NTSTATUS Status;
+
+    DPRINT1("USBHI_RestoreUsbDevice\n");
+
+    //
+    // first get controller
+    //
+    Controller = (CHubController *)BusContext;
+    PC_ASSERT(Controller);
+
+    //
+    // get device object
+    //
+    OldUsbDevice = (PUSBDEVICE)OldDeviceHandle;
+    NewUsbDevice = (PUSBDEVICE)NewDeviceHandle;
+    PC_ASSERT(OldUsbDevice);
+    PC_ASSERT(NewDeviceHandle);
+
+    //
+    // validate device handle
+    //
+    PC_ASSERT(Controller->ValidateUsbDevice(NewUsbDevice));
+    PC_ASSERT(Controller->ValidateUsbDevice(OldUsbDevice));
+
+    DPRINT1("NewUsbDevice: DeviceAddress %x\n", NewUsbDevice->GetDeviceAddress());
+
+
+    DPRINT1("OldUsbDevice: DeviceAddress %x\n", OldUsbDevice->GetDeviceAddress());
+
+    PC_ASSERT(FALSE);
+
+    //
+    // remove old device handle
+    //
+    USBHI_RemoveUsbDevice(BusContext, OldDeviceHandle, 0);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -2430,11 +2502,36 @@ USBHI_SetDeviceHandleData(
         //
         return;
     }
+    else
+    {
+        //
+        // usbhub sends this request as a part of the Pnp startup sequence
+        // looks like we need apply a dragon voodoo to fixup the device stack
+        // otherwise usbhub will cause a bugcheck
+        //
+        DPRINT1("USBHI_SetDeviceHandleData %p\n", UsbDevicePdo);
 
-    //
-    // set device handle data
-    //
-    UsbDevice->SetDeviceHandleData(UsbDevicePdo);
+        //
+        // fixup device stack voodoo part #1
+        //
+        UsbDevicePdo->StackSize++;
+
+        //
+        // sanity check
+        //
+        PC_ASSERT(UsbDevicePdo->AttachedDevice);
+
+        //
+        // should be usbstor
+        // fixup device stack voodoo part #2
+        //
+        UsbDevicePdo->AttachedDevice->StackSize++;
+
+        //
+        // set device handle data
+        //
+        UsbDevice->SetDeviceHandleData(UsbDevicePdo);
+    }
 }
 
 //=================================================================================================
