@@ -52,8 +52,7 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 
    if( key < 0x100 )
    {
-       ret = ((DWORD)(MessageQueue->KeyState[key] & KS_DOWN_BIT) << 8 ) |
-            (MessageQueue->KeyState[key] & KS_LOCK_BIT);
+       ret = (DWORD)MessageQueue->KeyState[key];
    }
 
    return ret;
@@ -62,6 +61,8 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 /* change the input key state for a given key */
 static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
 {
+    DPRINT("set_input_key_state key:%d, down:%d\n", key, down);
+
     if (down)
     {
         if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT))
@@ -81,6 +82,8 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
 {
     UCHAR key;
     BOOL down = 0;
+
+    DPRINT("update_input_key_state message:%d\n", msg->message);
 
     switch (msg->message)
     {
@@ -1465,7 +1468,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
            if (Remove)
            {
-               update_input_key_state(MessageQueue, pMsg);
+               update_input_key_state(MessageQueue, &msg);
                RemoveEntryList(&CurrentMessage->ListEntry);
                ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
                MsqDestroyMessage(CurrentMessage);
