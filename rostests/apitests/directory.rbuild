@@ -21,6 +21,10 @@
 	<directory name="user32">
 		<xi:include href="user32/user32_apitest.rbuild" />
 	</directory>
+	
+	<directory name="kernel32">
+		<xi:include href="kernel32/kernel32_apitest.rbuild" />
+	</directory>
 
 	<if property="ARCH" value="i386">
 		<directory name="w32kdll">

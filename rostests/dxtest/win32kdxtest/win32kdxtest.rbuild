@@ -11,3 +11,4 @@
 	<file>NtGdiDdWaitForVerticalBlank.c</file>
 	<file>NtGdiDdCanCreateSurface.c</file>
 	<file>dump.c</file>
+</module>

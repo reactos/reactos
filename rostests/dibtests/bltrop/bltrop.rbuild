@@ -4,3 +4,4 @@
 	<library>user32</library>
 	<file>bltrop.c</file>
 	<file>bltrop.rc</file>
+</module>
