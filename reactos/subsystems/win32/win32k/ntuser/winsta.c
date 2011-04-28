@@ -621,7 +621,7 @@ NtUserCloseWindowStation(
 
    DPRINT("Closing window station handle (0x%X)\n", hWinSta);
 
-   Status = ZwClose(hWinSta);
+   Status = ObCloseHandle(hWinSta, UserMode);
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -975,7 +975,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
 
    if(hwinstaOld != NULL)
    {
-       ZwClose(hwinstaOld);
+       ObCloseHandle(hwinstaOld, UserMode);
    }
 
    return TRUE;
