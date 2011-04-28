@@ -604,6 +604,12 @@ CUSBRequest::BuildControlTransferQueueHead(
         m_TransferDescriptors[1]->Token.Bits.TotalBytesToTransfer = m_TransferBufferLength;
 
         //
+        // FIXME: check if the request spawns over a page -> fill other members
+        //
+        PC_ASSERT(m_TransferBufferLength <= PAGE_SIZE);
+        m_TransferDescriptors[1]->BufferPointer[0] = MmGetPhysicalAddress(MmGetMdlVirtualAddress(m_TransferBufferMDL)).LowPart;
+
+        //
         // setup out descriptor
         //
         m_TransferDescriptors[2]->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
@@ -845,12 +851,11 @@ NTSTATUS
 CUSBRequest::BuildSetupPacket()
 {
     NTSTATUS Status;
-    PHYSICAL_ADDRESS PhysicalAddress;
 
     //
     // allocate common buffer setup packet
     //
-    Status = m_DmaManager->Allocate(sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), (PVOID*)&m_DescriptorPacket, &PhysicalAddress);
+    Status = m_DmaManager->Allocate(sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), (PVOID*)&m_DescriptorPacket, &m_DescriptorSetupPacket);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -865,7 +870,6 @@ CUSBRequest::BuildSetupPacket()
         // copy setup packet
         //
         RtlCopyMemory(m_DescriptorPacket, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
-        m_DescriptorSetupPacket = PhysicalAddress;
     }
     else
     {

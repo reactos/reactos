@@ -51,7 +51,6 @@ protected:
     KSPIN_LOCK m_Lock;
     PDMA_ADAPTER m_Adapter;
     PQUEUE_HEAD AsyncListQueueHead;
-    PQUEUE_HEAD PendingListQueueHead;
     LIST_ENTRY m_CompletedRequestAsyncList;
 
     // queue head manipulation functions
@@ -109,33 +108,17 @@ CUSBQueue::Initialize(
     //
     // Get the AsyncQueueHead
     //
-    AsyncListQueueHead = (PQUEUE_HEAD)Hardware->GetAsyncListRegister();
-
-    //
-    // Create the PendingListQueueHead from NONPAGEDPOOL. It will never be linked into the Asynclist Schedule
-    //
-    PendingListQueueHead = (PQUEUE_HEAD)ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUE_HEAD), TAG_USBEHCI);
-    if (!PendingListQueueHead)
-    {
-        DPRINT1("Pool Allocation failed!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    AsyncListQueueHead = (PQUEUE_HEAD)Hardware->GetAsyncListQueueHead();
 
     //
     // Initialize the List Head
     //
-    InitializeListHead(&PendingListQueueHead->LinkedQueueHeads);
-
-    //
-    // fake the queue head as the first queue head
-    //
-    PendingListQueueHead->PhysicalAddr = ((ULONG_PTR)AsyncListQueueHead | QH_TYPE_QH);
+    InitializeListHead(&AsyncListQueueHead->LinkedQueueHeads);
 
     //
     // Initialize completed async list head
     //
     InitializeListHead(&m_CompletedRequestAsyncList);
-
 
     return Status;
 }
@@ -223,7 +206,7 @@ CUSBQueue::AddUSBRequest(
         //
         // Add it to the pending list
         //
-        LinkQueueHead(PendingListQueueHead, QueueHead);
+        LinkQueueHead(AsyncListQueueHead, QueueHead);
     }
 
 
@@ -300,7 +283,7 @@ CUSBQueue::LinkQueueHead(
     Entry = NewQueueHead->LinkedQueueHeads.Flink;
     NextQueueHead = CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
     ASSERT(NextQueueHead == HeadQueueHead);
-    NewQueueHead->HorizontalLinkPointer = NextQueueHead->PhysicalAddr;
+    NewQueueHead->HorizontalLinkPointer = (NextQueueHead->PhysicalAddr | QH_TYPE_QH);
 }
 
 //
@@ -520,7 +503,7 @@ CUSBQueue::QueueHeadCompletion(
         //
         // add to pending list
         //
-        LinkQueueHead(PendingListQueueHead, NewQueueHead);
+        LinkQueueHead(AsyncListQueueHead, NewQueueHead);
     }
     else
     {
@@ -549,9 +532,9 @@ CUSBQueue::ProcessAsyncList(
     //
     // walk async list 
     //
-    Entry = PendingListQueueHead->LinkedQueueHeads.Flink;
+    Entry = AsyncListQueueHead->LinkedQueueHeads.Flink;
 
-    while(Entry != &PendingListQueueHead->LinkedQueueHeads)
+    while(Entry != &AsyncListQueueHead->LinkedQueueHeads)
     {
         //
         // get queue head structure
@@ -573,6 +556,8 @@ CUSBQueue::ProcessAsyncList(
         // move to next entry
         //
         Entry = Entry->Flink;
+
+        DPRINT1("Request %p QueueHead %p Complete %d\n", Request, QueueHead, Request->IsQueueHeadComplete(QueueHead));
 
         //
         // check if queue head is complete
@@ -604,6 +589,9 @@ CUSBQueue::InterruptCallback(
     IN NTSTATUS Status, 
     OUT PULONG ShouldRingDoorBell)
 {
+
+    DPRINT1("CUSBQueue::InterruptCallback\n");
+
     //
     // iterate asynchronous list
     //
@@ -670,6 +658,8 @@ CUSBQueue::CompleteAsyncRequests()
     KIRQL OldLevel;
     PLIST_ENTRY Entry;
     PQUEUE_HEAD CurrentQH;
+
+    DPRINT1("CUSBQueue::CompleteAsyncRequests\n");
 
     //
     // first acquire request lock

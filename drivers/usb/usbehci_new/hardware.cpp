@@ -68,7 +68,7 @@ public:
 
     VOID SetAsyncListRegister(ULONG PhysicalAddress);
     VOID SetPeriodicListRegister(ULONG PhysicalAddress);
-    ULONG GetAsyncListRegister();
+    struct _QUEUE_HEAD * GetAsyncListQueueHead();
     ULONG GetPeriodicListRegister();
 
     VOID SetStatusChangeEndpointCallBack(PVOID CallBack, PVOID Context);
@@ -423,8 +423,6 @@ CUSBHardwareDevice::PnpStart(
 
     InitializeListHead(&AsyncQueueHead->LinkedQueueHeads);
 
-    SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
-
     //
     // Initialize the UsbQueue now that we have an AdapterObject.
     //
@@ -439,7 +437,24 @@ CUSBHardwareDevice::PnpStart(
     // Start the controller
     //
     DPRINT1("Starting Controller\n");
-    return StartController();
+    Status = StartController();
+
+    //
+    // check for success
+    //
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // set async list head
+        //
+        SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
+    }
+
+
+    //
+    // done
+    //
+    return Status;
 }
 
 NTSTATUS
@@ -553,7 +568,7 @@ CUSBHardwareDevice::StartController(void)
     //
     GetCommandRegister(&UsbCmd);
     UsbCmd.PeriodicEnable = FALSE;
-    UsbCmd.AsyncEnable = FALSE;  //FIXME: Need USB Memory Manager
+    UsbCmd.AsyncEnable = TRUE;  //FIXME: Need USB Memory Manager
 
     UsbCmd.IntThreshold = 1;
     // FIXME: Set framelistsize when periodic is implemented.
@@ -876,10 +891,10 @@ CUSBHardwareDevice::SetPeriodicListRegister(
     EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);
 }
 
-ULONG
-CUSBHardwareDevice::GetAsyncListRegister()
+struct _QUEUE_HEAD *
+CUSBHardwareDevice::GetAsyncListQueueHead()
 {
-    return AsyncQueueHead->PhysicalAddr;
+    return AsyncQueueHead;
 }
 
 ULONG CUSBHardwareDevice::GetPeriodicListRegister()
@@ -994,6 +1009,7 @@ EhciDefferedRoutine(
             // controller reported error
             //
             Status = STATUS_UNSUCCESSFUL;
+            PC_ASSERT(FALSE);
         }
 
         //

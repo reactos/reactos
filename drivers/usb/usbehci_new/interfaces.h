@@ -268,7 +268,7 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 //
 // Description: Returns the memory address used in the Asynchronous Register
 //
-    virtual ULONG GetAsyncListRegister() = 0;
+    virtual struct _QUEUE_HEAD * GetAsyncListQueueHead() = 0;
 
 //-----------------------------------------------------------------------------------------
 //

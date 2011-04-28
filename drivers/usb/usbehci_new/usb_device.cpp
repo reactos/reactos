@@ -73,6 +73,7 @@ public:
     virtual NTSTATUS CommitSetupPacket(PUSB_DEFAULT_PIPE_SETUP_PACKET Packet, IN ULONG BufferLength, IN OUT PMDL Mdl);
     virtual NTSTATUS CreateConfigurationDescriptor(ULONG ConfigurationIndex);
     virtual NTSTATUS CreateDeviceDescriptor();
+    virtual VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
 
     // constructor / destructor
     CUSBDevice(IUnknown *OuterUnknown){}
@@ -343,6 +344,11 @@ CUSBDevice::SetDeviceAddress(
     }
 
     //
+    // lets have a short nap
+    //
+    KeStallExecutionProcessor(300);
+
+    //
     // back up old address
     //
     OldAddress = m_DeviceAddress;
@@ -369,6 +375,8 @@ CUSBDevice::SetDeviceAddress(
         //
         return Status;
     }
+
+    PC_ASSERT(FALSE);
 
     //
     // sanity checks
@@ -629,6 +637,14 @@ CUSBDevice::CreateDeviceDescriptor()
     //
     IoFreeMdl(Mdl);
 
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // informal dbg print
+        //
+        DumpDeviceDescriptor(&m_DeviceDescriptor);
+    }
+
     //
     // done
     //
@@ -865,6 +881,26 @@ CUSBDevice::GetConfigurationDescriptors(
     *OutBufferLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
 }
 
+
+VOID
+CUSBDevice::DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
+{
+    DPRINT1("Dumping Device Descriptor %x\n", DeviceDescriptor);
+    DPRINT1("bLength %x\n", DeviceDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
+    DPRINT1("bcdUSB %x\n", DeviceDescriptor->bcdUSB);
+    DPRINT1("bDeviceClass %x\n", DeviceDescriptor->bDeviceClass);
+    DPRINT1("bDeviceSubClass %x\n", DeviceDescriptor->bDeviceSubClass);
+    DPRINT1("bDeviceProtocol %x\n", DeviceDescriptor->bDeviceProtocol);
+    DPRINT1("bMaxPacketSize0 %x\n", DeviceDescriptor->bMaxPacketSize0);
+    DPRINT1("idVendor %x\n", DeviceDescriptor->idVendor);
+    DPRINT1("idProduct %x\n", DeviceDescriptor->idProduct);
+    DPRINT1("bcdDevice %x\n", DeviceDescriptor->bcdDevice);
+    DPRINT1("iManufacturer %x\n", DeviceDescriptor->iManufacturer);
+    DPRINT1("iProduct %x\n", DeviceDescriptor->iProduct);
+    DPRINT1("iSerialNumber %x\n", DeviceDescriptor->iSerialNumber);
+    DPRINT1("bNumConfigurations %x\n", DeviceDescriptor->bNumConfigurations);
+}
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
