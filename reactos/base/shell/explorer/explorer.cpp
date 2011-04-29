@@ -968,7 +968,9 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 	}
 #endif
 
-	return Window::MessageLoop();
+	Window::MessageLoop();
+	
+	return 1;
 }
 
 
