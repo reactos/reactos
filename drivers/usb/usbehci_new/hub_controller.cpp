@@ -63,6 +63,7 @@ public:
     NTSTATUS HandleClassDevice(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleGetStatusFromDevice(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleSelectInterface(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
     
@@ -936,29 +937,87 @@ CHubController::HandleSelectConfiguration(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
-    //
-    // sanity checks
-    //
+    PUSBDEVICE UsbDevice;
 
     //
-    // FIXME: support devices
+    // is the request for the Root Hub
     //
-    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle == NULL); 
+    if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+    {
+        //
+        // FIXME: support setting device to unconfigured state
+        //
+        PC_ASSERT(Urb->UrbSelectConfiguration.ConfigurationDescriptor);
+
+        //
+        // set device handle
+        //
+        Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)ROOTHUB2_CONFIGURATION_DESCRIPTOR;
+
+        //
+        // TODO: copy interface info
+        //
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        //
+        // check if this is a valid usb device handle
+        //
+        PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+        //
+        // get device
+        //
+        UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // select configuration
+        //
+        return UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+    }
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleSelectInterface(
+    IN OUT PIRP Irp, 
+    PURB Urb)
+{
+    PUSBDEVICE UsbDevice;
 
     //
-    // FIXME: support setting device to unconfigured state
+    // sanity check
     //
-    PC_ASSERT(Urb->UrbSelectConfiguration.ConfigurationDescriptor);
+    PC_ASSERT(Urb->UrbSelectInterface.ConfigurationHandle);
 
     //
-    // set device handle
+    // is the request for the Root Hub
     //
-    Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)ROOTHUB2_CONFIGURATION_DESCRIPTOR;
+    if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+    {
+        //
+        // no op for root hub
+        //
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        //
+        // check if this is a valid usb device handle
+        //
+        PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
 
-    //
-    // TODO: copy interface info
-    //
-    return STATUS_SUCCESS;
+        //
+        // get device
+        //
+        UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+        //
+        // select interface
+        //
+        return UsbDevice->SelectInterface(Urb->UrbSelectInterface.ConfigurationHandle, &Urb->UrbSelectInterface.Interface);
+    }
 }
 
 //-----------------------------------------------------------------------------------------
@@ -1249,7 +1308,7 @@ CHubController::HandleGetDescriptor(
             CtrlSetup.wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
             CtrlSetup.wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
             CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
-            CtrlSetup.wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            CtrlSetup.wLength = (USHORT)Urb->UrbControlDescriptorRequest.TransferBufferLength;
             CtrlSetup.bmRequestType.B = 0x80;
 
             //
@@ -1316,6 +1375,9 @@ CHubController::HandleDeviceControl(
                     break;
                 case URB_FUNCTION_SELECT_CONFIGURATION:
                     Status = HandleSelectConfiguration(Irp, Urb);
+                    break;
+                case URB_FUNCTION_SELECT_INTERFACE:
+                    Status = HandleSelectInterface(Irp, Urb);
                     break;
                 case URB_FUNCTION_CLASS_OTHER:
                     Status = HandleClassOther(Irp, Urb);
@@ -1898,7 +1960,7 @@ USBHI_InitializeUsbDevice(
         //
         // now set the device address
         //
-        Status = UsbDevice->SetDeviceAddress(DeviceAddress);
+        Status = UsbDevice->SetDeviceAddress((UCHAR)DeviceAddress);
 
         if (NT_SUCCESS(Status))
             break;

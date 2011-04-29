@@ -36,7 +36,7 @@ public:
     }
 
     // IUSBRequest interface functions
-    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
+    virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager, IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, IN UCHAR DeviceAddress, IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN OUT ULONG TransferBufferLength, IN OUT PMDL TransferBuffer);
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
     virtual VOID CompletionCallback(IN NTSTATUS NtStatusCode, IN ULONG UrbStatusCode, IN struct _QUEUE_HEAD *QueueHead);
     virtual VOID CancelCallback(IN NTSTATUS NtStatusCode, IN struct _QUEUE_HEAD *QueueHead);
@@ -104,6 +104,11 @@ protected:
     UCHAR m_DeviceAddress;
 
     //
+    // store end point address
+    //
+    PUSB_ENDPOINT_DESCRIPTOR m_EndpointDescriptor;
+
+    //
     // DMA queue head
     //
     PQUEUE_HEAD m_QueueHead;
@@ -143,6 +148,7 @@ CUSBRequest::InitializeWithSetupPacket(
     IN PDMAMEMORYMANAGER DmaManager,
     IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
     IN UCHAR DeviceAddress,
+    IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
     IN OUT ULONG TransferBufferLength,
     IN OUT PMDL TransferBuffer)
 {
@@ -160,6 +166,7 @@ CUSBRequest::InitializeWithSetupPacket(
     m_TransferBufferLength = TransferBufferLength;
     m_TransferBufferMDL = TransferBuffer;
     m_DeviceAddress = DeviceAddress;
+    m_EndpointDescriptor = EndpointDescriptor;
 
     //
     // allocate completion event
@@ -241,6 +248,11 @@ CUSBRequest::InitializeWithIrp(
                 // FIXME: it must have an MDL
                 //
                 PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+
+                //
+                // get endpoint descriptor
+                //
+                m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
                 //
                 // get mdl buffer
@@ -590,8 +602,14 @@ CUSBRequest::BuildControlTransferQueueHead(
     //
     QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
     
-	//if (PipeHandle)
-    //    QueueHead->EndPointCharacteristics.EndPointNumber = ((PUSB_ENDPOINT_DESCRIPTOR)PipeHandle)->bEndpointAddress & 0x0F;
+    if (m_EndpointDescriptor)
+    {
+        //
+        // set endpoint address and max packet length
+        //
+        QueueHead->EndPointCharacteristics.EndPointNumber = m_EndpointDescriptor->bEndpointAddress & 0x0F;
+        QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->wMaxPacketSize;
+    }
 
     QueueHead->Token.Bits.DataToggle = TRUE;
 

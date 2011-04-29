@@ -386,6 +386,7 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
     virtual NTSTATUS InitializeWithSetupPacket(IN PDMAMEMORYMANAGER DmaManager,
                                                IN PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket,
                                                IN UCHAR DeviceAddress,
+                                               IN OPTIONAL PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor,
                                                IN OUT ULONG TransferBufferLength,
                                                IN OUT PMDL TransferBuffer) = 0;
 
@@ -796,13 +797,13 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
                                              IN ULONG BufferLength,
                                              OUT PULONG OutBufferLength) = 0;
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
 //
 // Description: returns length of configuration descriptors
 //
      virtual ULONG GetConfigurationDescriptorsLength() = 0;
 
-//----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------
 //
 // SubmitSetupPacket
 //
@@ -812,7 +813,24 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
                                         IN OUT ULONG BufferLength,
                                         OUT PVOID Buffer) = 0;
 
+//-----------------------------------------------------------------------------------------
+//
+// SelectConfiguration
+//
+// Description: selects a configuration
 
+    virtual NTSTATUS SelectConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+                                         IN PUSBD_INTERFACE_INFORMATION Interface,
+                                         OUT USBD_CONFIGURATION_HANDLE *ConfigurationHandle) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// SelectConfiguration
+//
+// Description: selects a interface of an configuration
+
+    virtual NTSTATUS SelectInterface(IN USBD_CONFIGURATION_HANDLE ConfigurationHandle,
+                                     IN OUT PUSBD_INTERFACE_INFORMATION Interface) = 0;
 };
 
 typedef IUSBDevice *PUSBDEVICE;
