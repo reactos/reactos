@@ -182,7 +182,6 @@ void SaveSettings(void)
 		SaveDword(hKey,     _T("lfCharSet"),        Globals.lfFont.lfCharSet);
 		SaveDword(hKey,     _T("lfClipPrecision"),  Globals.lfFont.lfClipPrecision);
 		SaveDword(hKey,     _T("lfEscapement"),     Globals.lfFont.lfEscapement);
-		SaveString(hKey,    _T("lfFaceName"),       Globals.lfFont.lfFaceName);
 		SaveDword(hKey,     _T("lfItalic"),         Globals.lfFont.lfItalic);
 		SaveDword(hKey,     _T("lfOrientation"),    Globals.lfFont.lfOrientation);
 		SaveDword(hKey,     _T("lfOutPrecision"),   Globals.lfFont.lfOutPrecision);
@@ -190,14 +189,27 @@ void SaveSettings(void)
 		SaveDword(hKey,     _T("lfQuality"),        Globals.lfFont.lfQuality);
 		SaveDword(hKey,     _T("lfStrikeOut"),      Globals.lfFont.lfStrikeOut);
 		SaveDword(hKey,     _T("lfUnderline"),      Globals.lfFont.lfUnderline);
-		SaveDword(hKey,     _T("lfWeight"),         Globals.lfFont.lfWeight);
-		SaveDword(hKey,     _T("iPointSize"),       PointSizeFromHeight(Globals.lfFont.lfHeight));
 		SaveDword(hKey,     _T("fWrap"),            Globals.bWrapLongLines ? 1 : 0);
 		SaveDword(hKey,     _T("fStatusBar"),       Globals.bShowStatusBar ? 1 : 0);
 		SaveDword(hKey,     _T("iWindowPosX"),      Globals.main_rect.left);
 		SaveDword(hKey,     _T("iWindowPosY"),      Globals.main_rect.top);
 		SaveDword(hKey,     _T("iWindowPosDX"),     Globals.main_rect.right - Globals.main_rect.left);
 		SaveDword(hKey,     _T("iWindowPosDY"),     Globals.main_rect.bottom - Globals.main_rect.top);
+		
+		if (*Globals.lfFont.lfFaceName == '\0')
+		{
+		     static const TCHAR default_font[] = _T("Tahoma");
+		     _tcscpy(Globals.lfFont.lfFaceName, default_font);
+			 Globals.lfFont.lfHeight = 100;
+			 Globals.lfFont.lfWeight = 400;
+			 SaveDword(hKey,     _T("iPointSize"),   Globals.lfFont.lfHeight);
+		}
+		else
+		{
+		     SaveDword(hKey,     _T("iPointSize"),  PointSizeFromHeight(Globals.lfFont.lfHeight));
+		}
+		SaveDword(hKey,     _T("lfWeight"),         Globals.lfFont.lfWeight);
+		SaveString(hKey,    _T("lfFaceName"),       Globals.lfFont.lfFaceName);
 		RegCloseKey(hKey);
 	}
 
