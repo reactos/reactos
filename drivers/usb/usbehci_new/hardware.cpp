@@ -417,7 +417,7 @@ CUSBHardwareDevice::PnpStart(
     AsyncQueueHead->EndPointCharacteristics.HeadOfReclamation = TRUE;
     AsyncQueueHead->Token.Bits.Halted = TRUE;
     AsyncQueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
-    AsyncQueueHead->EndPointCharacteristics.NakCountReload = 0xF;
+    AsyncQueueHead->EndPointCharacteristics.NakCountReload = 0;
     AsyncQueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
     AsyncQueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
 
@@ -438,18 +438,6 @@ CUSBHardwareDevice::PnpStart(
     //
     DPRINT1("Starting Controller\n");
     Status = StartController();
-
-    //
-    // check for success
-    //
-    if (NT_SUCCESS(Status))
-    {
-        //
-        // set async list head
-        //
-        SetAsyncListRegister(AsyncQueueHead->PhysicalAddr);
-    }
-
 
     //
     // done
@@ -560,8 +548,9 @@ CUSBHardwareDevice::StartController(void)
     EHCI_WRITE_REGISTER_ULONG(EHCI_USBSTS, 0x0000001f);
 
     //
-    // FIXME: Assign the AsyncList Register
+    // Assign the AsyncList Register
     //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, AsyncQueueHead->PhysicalAddr);
 
     //
     // Set Schedules to Enable and Interrupt Threshold to 1ms.
