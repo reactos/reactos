@@ -53,6 +53,7 @@ public:
 
     // local functions
     ULONG InternalGetTransferType();
+    UCHAR InternalGetPidDirection();
     NTSTATUS BuildControlTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS BuildBulkTransferQueueHead(PQUEUE_HEAD * OutHead);
     NTSTATUS CreateDescriptor(PQUEUE_TRANSFER_DESCRIPTOR *OutDescriptor);
@@ -205,6 +206,8 @@ CUSBRequest::InitializeWithIrp(
     PC_ASSERT(DmaManager);
     PC_ASSERT(Irp);
 
+    m_DmaManager = DmaManager;
+
     //
     // get current irp stack location
     //
@@ -245,20 +248,49 @@ CUSBRequest::InitializeWithIrp(
             if (Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
             {
                 //
-                // FIXME: it must have an MDL
+                // Check if there is a MDL
                 //
-                PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+                if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+                {
+                    //
+                    // Create one using TransferBuffer
+                    //
+                    DPRINT1("Creating Mdl from Urb Buffer\n");
+                    m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
+                                                        Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
+                                                        FALSE,
+                                                        FALSE,
+                                                        NULL);
+
+                    if (!m_TransferBufferMDL)
+                    {
+                        //
+                        // failed to allocate mdl
+                        //
+                        return STATUS_INSUFFICIENT_RESOURCES;
+                    }
+
+                    //
+                    // build mdl for non paged pool
+                    // FIXME: Does hub driver already do this when passing MDL?
+                    //
+                    MmBuildMdlForNonPagedPool(m_TransferBufferMDL);
+                }
+                else
+                {
+                    m_TransferBufferMDL = Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL;
+                }
+
+                //
+                // save buffer length
+                //
+                m_TransferBufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
 
                 //
                 // get endpoint descriptor
                 //
                 m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
 
-                //
-                // get mdl buffer
-                //
-                m_TransferBufferMDL = Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL;
-                m_TransferBufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
             }
             break;
         }
@@ -315,6 +347,18 @@ CUSBRequest::CompletionCallback(
         // store urb status
         //
         Urb->UrbHeader.Status = UrbStatusCode;
+
+        //
+        // Check if the MDL was created
+        //
+
+        if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+        {
+            //
+            // Free Mdl
+            //
+            IoFreeMdl(m_TransferBufferMDL);
+        }
 
         //
         // check if the request was successfull
@@ -536,6 +580,35 @@ CUSBRequest::InternalGetTransferType()
     return TransferType;
 }
 
+UCHAR
+CUSBRequest::InternalGetPidDirection()
+{
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+
+    ASSERT(m_Irp);
+    //
+    // get stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+
+    //
+    // cast to end point
+    //
+    EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+
+    //
+    // end point is defined in the low byte of bmAttributes
+    //
+    return (EndpointDescriptor->bmAttributes & USB_ENDPOINT_DIRECTION_MASK);
+}
+
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBRequest::BuildControlTransferQueueHead(
@@ -705,8 +778,123 @@ NTSTATUS
 CUSBRequest::BuildBulkTransferQueueHead(
     PQUEUE_HEAD * OutHead)
 {
-    UNIMPLEMENTED
+    NTSTATUS Status;
+    ULONG NumTransferDescriptors, TransferBufferRounded, NumPages, Index, FailIndex;
+    PQUEUE_HEAD QueueHead;
+
+    //
+    // Allocate the queue head
+    //
+    Status = CreateQueueHead(&QueueHead);
+
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate queue heads
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // sanity checks
+    //
+    PC_ASSERT(QueueHead);
+
+    //
+    // Determine number of transfer descriptors needed. Max size is 3 * 5 Pages
+    // FIXME: Do we need anything bigger?
+    //
+    TransferBufferRounded = ROUND_TO_PAGES(m_TransferBufferLength);
+    NumPages = Index = 0;
+    NumTransferDescriptors = 1;
+    while (TransferBufferRounded > 0)
+    {
+        TransferBufferRounded -= PAGE_SIZE;
+        NumPages++;
+        Index++;
+        if (Index == 5)
+        {
+            NumTransferDescriptors++;
+            Index = 0;
+        }
+    }
+
+    DPRINT1("Need TransferDescriptors %x, Pages %x\n", NumTransferDescriptors, NumPages);
+    DPRINT1("This is the end of the line!!!!!!!!\n");
     return STATUS_NOT_IMPLEMENTED;
+    //FIXME: Below needs work.
+
+    //
+    // FIXME: Handle transfers greater than 5 * PAGE_SIZE * 3
+    //
+    if (NumTransferDescriptors > 3) NumTransferDescriptors = 3;
+
+    //
+    // Allocated transfer descriptors
+    //
+    for (Index = 0; Index < NumTransferDescriptors; Index++)
+    {
+        Status = CreateDescriptor(&m_TransferDescriptors[Index]);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // Failed to allocate transfer descriptors
+            //
+
+            //
+            // Free QueueHead
+            //
+            FreeQueueHead(QueueHead);
+
+            //
+            // Free Descriptors
+            // FIXME: Implement FreeDescriptors
+            //
+            //for (FailIndex = 0; FailIndex < Index; FailIndex++)
+                //FreeDescriptor(m_TransferDescriptors[FailIndex]);
+
+            return Status;
+        }
+
+        //
+        // Go ahead and link descriptors
+        //
+        if (Index > 0)
+        {
+            m_TransferDescriptors[Index - 1]->NextPointer = m_TransferDescriptors[Index]->PhysicalAddr;
+        }
+        
+    }
+
+    //
+    // Initialize the QueueHead
+    //
+    QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
+    
+    if (m_EndpointDescriptor)
+    {
+        //
+        // Set endpoint address and max packet length
+        //
+        QueueHead->EndPointCharacteristics.EndPointNumber = m_EndpointDescriptor->bEndpointAddress & 0x0F;
+        QueueHead->EndPointCharacteristics.MaximumPacketLength = m_EndpointDescriptor->wMaxPacketSize;
+    }
+
+    QueueHead->Token.Bits.DataToggle = TRUE;
+    
+    //
+    // Setup descriptors
+    //
+    m_TransferDescriptors[0]->Token.Bits.PIDCode = InternalGetPidDirection();
+    //m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer = ???
+    //m_TransferDescriptors[0]->Token.Bits.DataToggle = FALSE;
+
+    m_TransferDescriptors[Index]->Token.Bits.InterruptOnComplete = TRUE;
+
+    ASSERT(m_TransferBufferMDL);
+
+    
+    return STATUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------------------
@@ -764,6 +952,7 @@ CUSBRequest::CreateQueueHead(
     // allocate queue head
     //
     Status = m_DmaManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysicalAddress);
+
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1225,12 +1414,12 @@ CUSBRequest::IsQueueHeadComplete(
             //
             // check for serious error
             //
-            PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Halted == 0);
+            //PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Halted == 0);
 
             //
             // the transfer descriptor should be in the same state as the queue head
             //
-            PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Active == 0);
+            //PC_ASSERT(m_TransferDescriptors[Index]->Token.Bits.Active == 0);
         }
     }
 

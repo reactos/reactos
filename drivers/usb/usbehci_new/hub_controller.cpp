@@ -761,6 +761,8 @@ CHubController::HandleBulkOrInterruptTransfer(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
+    PUSBDEVICE UsbDevice;
+    PUSB_ENDPOINT_DESCRIPTOR EndPointDesc = NULL;
     //
     // First check if the request is for the Status Change Endpoint
     //
@@ -779,13 +781,45 @@ CHubController::HandleBulkOrInterruptTransfer(
         //
         // Else pend the IRP, to be completed when a device connects or disconnects.
         //
+        DPRINT1("Pending SCE Irp\n");;
         m_PendingSCEIrp = Irp;
         IoMarkIrpPending(Irp);
         return STATUS_PENDING;
     }
 
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    //
+    // Check PipeHandle to determine if this is a Bulk or Interrupt Transfer Request
+    //
+    EndPointDesc = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+
+    switch(EndPointDesc->bmAttributes & 0x0F)
+    {
+        case USB_ENDPOINT_TYPE_CONTROL:
+            DPRINT1("Control Transfer is not expected!!!\n");
+            return STATUS_INVALID_DEVICE_REQUEST;
+        case USB_ENDPOINT_TYPE_BULK:
+            DPRINT1("Initiating Bulk Transfer\n");
+            break;
+        case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+        case USB_ENDPOINT_TYPE_INTERRUPT:
+            DPRINT1("Not Supported\n");
+            break;
+        default:
+            DPRINT1("Unknown EndPoint Type!\n");
+            break;
+    }
+
+    //
+    // check if this is a valid usb device handle
+    //
+    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+    //
+    // get device
+    //
+    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+    return UsbDevice->SubmitIrp(Irp);
 }
 
 //-----------------------------------------------------------------------------------------
@@ -3068,13 +3102,18 @@ VOID StatusChangeEndpointCallBack(PVOID Context)
 
     ASSERT(This);
 
-    DPRINT1("SCE Notification!\n");
     Irp = This->m_PendingSCEIrp;
-    This->m_PendingSCEIrp = NULL;
+    if (!Irp)
+    {
+        DPRINT1("There was no pending IRP for SCE. Did the usb hub 2.0 driver (usbhub2) load?\n");
+        return;
+    }
 
+    This->m_PendingSCEIrp = NULL;
     This->QueryStatusChageEndpoint(Irp);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
+
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }

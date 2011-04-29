@@ -456,7 +456,7 @@ CUSBDevice::CommitIrp(
     NTSTATUS Status;
     PUSBREQUEST Request;
 
-    if (!m_Queue || m_DmaManager)
+    if (!m_Queue || !m_DmaManager)
     {
         //
         // no queue, wtf?
