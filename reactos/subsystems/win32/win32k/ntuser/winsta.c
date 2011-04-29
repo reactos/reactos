@@ -940,6 +940,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
 
     ppi = PsGetCurrentProcessWin32Process();
 
+    /* Reference the new window station */
     if(hWindowStation !=NULL)
     {
         Status = IntValidateWindowStationHandle( hWindowStation,
@@ -956,27 +957,28 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     }
 
    OldWinSta = ppi->prpwinsta;
-   hwinstaOld = ppi->hwinsta;
+   hwinstaOld = PsGetProcessWin32WindowStation(ppi->peProcess);
 
-   /*
-    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
-    */
-
-   InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
-
-   ppi->prpwinsta = NewWinSta;
-   ppi->hwinsta = hWindowStation;
-
-
+   /* Dereference the previous window station */
    if(OldWinSta != NULL)
    {
        ObDereferenceObject(OldWinSta);
    }
 
-   if(hwinstaOld != NULL)
+   /* Check if we have a stale handle (it should happen for console apps) */
+   if(hwinstaOld != ppi->hwinsta)
    {
        ObCloseHandle(hwinstaOld, UserMode);
    }
+
+   /*
+    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
+    */
+   
+   PsSetProcessWindowStation(ppi->peProcess, hWindowStation);
+
+   ppi->prpwinsta = NewWinSta;
+   ppi->hwinsta = hWindowStation;
 
    return TRUE;
 }

@@ -79,6 +79,21 @@ PsGetThreadWin32Thread(
 );
 
 NTKERNELAPI
+PVOID
+NTAPI
+PsGetProcessWin32WindowStation(
+    PEPROCESS Process
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsSetProcessWindowStation(
+    PEPROCESS Process,
+    PVOID WindowStation
+);
+
+NTKERNELAPI
 PTEB
 NTAPI
 PsGetThreadTeb(
