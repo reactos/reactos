@@ -1461,7 +1461,7 @@ CHubController::AcquireDeviceAddress()
         //
         // reserve address
         //
-        RtlSetBit(&m_DeviceAddressBitmap, DeviceAddress);
+        RtlSetBits(&m_DeviceAddressBitmap, DeviceAddress, 1);
 
         //
         // device addresses start from 0x1 - 0xFF
@@ -1504,7 +1504,7 @@ CHubController::ReleaseDeviceAddress(
     //
     // clear bit
     //
-    RtlClearBit(&m_DeviceAddressBitmap, DeviceAddress);
+    RtlClearBits(&m_DeviceAddressBitmap, DeviceAddress, 1);
 
     //
     // release lock
