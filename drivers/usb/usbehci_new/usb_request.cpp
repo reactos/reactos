@@ -1190,6 +1190,7 @@ CUSBRequest::FreeQueueHead(
         // release packet descriptor
         //
         m_DmaManager->Release(m_DescriptorPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+        m_DescriptorPacket = 0;
     }
 }
 

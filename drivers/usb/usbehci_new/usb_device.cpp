@@ -1129,7 +1129,7 @@ CUSBDevice::SelectConfiguration(
     //
     RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
     CtrlSetup.bRequest = USB_REQUEST_SET_CONFIGURATION;
-    CtrlSetup.wValue.W = ConfigurationDescriptor->iConfiguration;
+    CtrlSetup.wValue.W = ConfigurationDescriptor->bConfigurationValue;
 
     //
     // select configuration
@@ -1214,8 +1214,8 @@ CUSBDevice::SelectInterface(
     //
     RtlZeroMemory(&CtrlSetup, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
     CtrlSetup.bRequest = USB_REQUEST_SET_INTERFACE;
-    CtrlSetup.wValue.W = InterfaceInfo->AlternateSetting;
-    CtrlSetup.wIndex.W = InterfaceInfo->InterfaceNumber;
+    CtrlSetup.wValue.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bAlternateSetting;
+    CtrlSetup.wIndex.W = Configuration->Interfaces[InterfaceInfo->InterfaceNumber].InterfaceDescriptor.bInterfaceNumber;
     CtrlSetup.bmRequestType.B = 0x01;
 
     //
