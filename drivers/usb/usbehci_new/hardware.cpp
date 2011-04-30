@@ -774,7 +774,7 @@ CUSBHardwareDevice::ClearPortStatus(
 {
     ULONG Value;
 
-    DPRINT1("CUSBHardwareDevice::ClearPortStatus\n");
+    DPRINT("CUSBHardwareDevice::ClearPortStatus\n");
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
@@ -818,7 +818,7 @@ CUSBHardwareDevice::SetPortFeature(
 {
     ULONG Value;
 
-    DPRINT1("CUSBHardwareDevice::SetPortFeature\n");
+    DPRINT("CUSBHardwareDevice::SetPortFeature\n");
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;

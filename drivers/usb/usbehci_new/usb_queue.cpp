@@ -98,7 +98,7 @@ CUSBQueue::Initialize(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("CUSBQueue::Initialize()\n");
+    DPRINT("CUSBQueue::Initialize()\n");
 
     ASSERT(Hardware);
 
@@ -208,7 +208,7 @@ CUSBQueue::AddUSBRequest(
            return Status;
         }
 
-        DPRINT1("Request %p QueueHead %p inserted into AsyncQueue\n", Request, QueueHead);
+        DPRINT("Request %p QueueHead %p inserted into AsyncQueue\n", Request, QueueHead);
 
         //
         // Add it to the pending list
@@ -518,7 +518,7 @@ CUSBQueue::ProcessAsyncList(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT1("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete
@@ -550,7 +550,7 @@ CUSBQueue::InterruptCallback(
     OUT PULONG ShouldRingDoorBell)
 {
 
-    DPRINT1("CUSBQueue::InterruptCallback\n");
+    DPRINT("CUSBQueue::InterruptCallback\n");
 
     //
     // iterate asynchronous list
@@ -666,7 +666,7 @@ CUSBQueue::CompleteAsyncRequests()
     PLIST_ENTRY Entry;
     PQUEUE_HEAD CurrentQH;
 
-    DPRINT1("CUSBQueue::CompleteAsyncRequests\n");
+    DPRINT("CUSBQueue::CompleteAsyncRequests\n");
 
     //
     // first acquire request lock

@@ -799,7 +799,7 @@ CHubController::HandleBulkOrInterruptTransfer(
             DPRINT1("Control Transfer is not expected!!!\n");
             return STATUS_INVALID_DEVICE_REQUEST;
         case USB_ENDPOINT_TYPE_BULK:
-            DPRINT1("Initiating Bulk Transfer\n");
+            DPRINT("Initiating Bulk Transfer\n");
             break;
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
         case USB_ENDPOINT_TYPE_INTERRUPT:

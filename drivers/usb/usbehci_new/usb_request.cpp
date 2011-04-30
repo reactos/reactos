@@ -261,7 +261,7 @@ CUSBRequest::InitializeWithIrp(
                     //
                     // Create one using TransferBuffer
                     //
-                    DPRINT1("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
                     m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
                                                         Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
                                                         FALSE,
@@ -384,7 +384,7 @@ CUSBRequest::CompletionCallback(
             Urb->UrbBulkOrInterruptTransfer.TransferBufferLength = InternalCalculateTransferLength();
         }
 
-        DPRINT1("Request %p Completing Irp %p NtStatusCode %x UrbStatusCode %x Transferred Length %lu\n", this, m_Irp, NtStatusCode, UrbStatusCode, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+        DPRINT("Request %p Completing Irp %p NtStatusCode %x UrbStatusCode %x Transferred Length %lu\n", this, m_Irp, NtStatusCode, UrbStatusCode, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
 
         //
         // FIXME: check if the transfer was split
@@ -521,7 +521,6 @@ CUSBRequest::IsRequestComplete()
     //
     // FIXME: check if request was split
     //
-    UNIMPLEMENTED
     return TRUE;
 }
 //----------------------------------------------------------------------------------------
@@ -790,12 +789,12 @@ CUSBRequest::BuildBulkTransferQueueHead(
     PC_ASSERT(Base);
 
 
-    DPRINT1("EndPointAddress %x\n", m_EndpointDescriptor->bEndpointAddress);
-    DPRINT1("EndPointDirection %x\n", USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
+    DPRINT("EndPointAddress %x\n", m_EndpointDescriptor->bEndpointAddress);
+    DPRINT("EndPointDirection %x\n", USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
 
-    DPRINT1("Request %p Base Address %p TransferBytesLength %lu MDL %p\n", this, Base, BytesAvailable, m_TransferBufferMDL);
-    DPRINT1("InternalGetPidDirection() %d EndPointAddress %x\n", InternalGetPidDirection(), m_EndpointDescriptor->bEndpointAddress & 0x0F);
-    DPRINT1("Irp %p QueueHead %p\n", m_Irp, QueueHead);
+    DPRINT("Request %p Base Address %p TransferBytesLength %lu MDL %p\n", this, Base, BytesAvailable, m_TransferBufferMDL);
+    DPRINT("InternalGetPidDirection() %d EndPointAddress %x\n", InternalGetPidDirection(), m_EndpointDescriptor->bEndpointAddress & 0x0F);
+    DPRINT("Irp %p QueueHead %p\n", m_Irp, QueueHead);
 
     //PC_ASSERT(InternalGetPidDirection() == USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
 
@@ -868,7 +867,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     //
                     BytesAvailable -= m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
 
-                    DPRINT1("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                         BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
                }
                else
@@ -879,7 +878,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                    m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer = BytesAvailable;
                    BytesAvailable = 0;
 
-                   DPRINT1("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                   DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                        BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
                    break;
                }
@@ -913,7 +912,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     //
                     BytesAvailable -= PAGE_SIZE;
 
-                    DPRINT1("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                             BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
                 }
                 else
@@ -938,7 +937,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     //
                     // done
                     //
-                    DPRINT1("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                             BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
 
                     break;
@@ -1465,7 +1464,6 @@ CUSBRequest::FreeQueueHead(
         //
         // release transfer descriptors
         //
-        DPRINT1("m_TransferDescriptor[0] Length %lu\n", m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer);
         m_DmaManager->Release(m_TransferDescriptors[0], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
         m_TransferDescriptors[0] = 0;
     }
