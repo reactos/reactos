@@ -127,6 +127,7 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
     //Software
     ULONG PhysicalAddr;
     LIST_ENTRY LinkedDescriptors;
+    ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
 //

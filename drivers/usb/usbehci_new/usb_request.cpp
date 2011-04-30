@@ -61,6 +61,7 @@ public:
     UCHAR GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
+    ULONG InternalCalculateTransferLength();
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -253,9 +254,14 @@ CUSBRequest::InitializeWithIrp(
                 if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
                 {
                     //
+                    // sanity check
+                    //
+                    PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+
+                    //
                     // Create one using TransferBuffer
                     //
-                    DPRINT1("Creating Mdl from Urb Buffer\n");
+                    DPRINT1("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
                     m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
                                                         Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
                                                         FALSE,
@@ -370,8 +376,15 @@ CUSBRequest::CompletionCallback(
             //
             Urb->UrbHeader.Length = 0;
         }
+        else
+        {
+            //
+            // calculate transfer length
+            //
+            Urb->UrbBulkOrInterruptTransfer.TransferBufferLength = InternalCalculateTransferLength();
+        }
 
-        DPRINT1("Request %p Completing Irp %p NtStatusCode %x UrbStatusCode %x\n", this, m_Irp, NtStatusCode, UrbStatusCode);
+        DPRINT1("Request %p Completing Irp %p NtStatusCode %x UrbStatusCode %x Transferred Length %lu\n", this, m_Irp, NtStatusCode, UrbStatusCode, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
 
         //
         // FIXME: check if the transfer was split
@@ -525,9 +538,6 @@ CUSBRequest::GetTransferType()
 ULONG
 CUSBRequest::InternalGetTransferType()
 {
-    PIO_STACK_LOCATION IoStack;
-    PURB Urb;
-    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
     ULONG TransferType;
 
     //
@@ -535,38 +545,12 @@ CUSBRequest::InternalGetTransferType()
     //
     if (m_Irp)
     {
-        //
-        // get stack location
-        //
-        IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+        ASSERT(m_EndpointDescriptor);
 
         //
-        // get urb
+        // end point is defined in the low byte of bmAttributes
         //
-        Urb = (PURB)IoStack->Parameters.Others.Argument1;
-
-        //
-        // check if there is a handle
-        //
-        if (Urb->UrbBulkOrInterruptTransfer.PipeHandle)
-        {
-            //
-            // cast to end point
-            //
-            EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
-
-            //
-            // end point is defined in the low byte of bmAttributes
-            //
-            TransferType = (EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
-        }
-        else
-        {
-            //
-            // no pipe handle, assume it is a control transfer
-            //
-            TransferType = USB_ENDPOINT_TYPE_CONTROL;
-        }
+        TransferType = (m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK);
     }
     else
     {
@@ -585,30 +569,13 @@ CUSBRequest::InternalGetTransferType()
 UCHAR
 CUSBRequest::InternalGetPidDirection()
 {
-    PIO_STACK_LOCATION IoStack;
-    PURB Urb;
-    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-
     ASSERT(m_Irp);
-    //
-    // get stack location
-    //
-    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
-
-    //
-    // get urb
-    //
-    Urb = (PURB)IoStack->Parameters.Others.Argument1;
-
-    //
-    // cast to end point
-    //
-    EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbBulkOrInterruptTransfer.PipeHandle;
+    ASSERT(m_EndpointDescriptor);
 
     //
     // end point is defined in the low byte of bEndpointAddress
     //
-    return (EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
+    return (m_EndpointDescriptor->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK) >> 7;
 }
 
 //----------------------------------------------------------------------------------------
@@ -816,16 +783,19 @@ CUSBRequest::BuildBulkTransferQueueHead(
     //
     // get virtual base of mdl
     //
-    Base = MmGetMdlVirtualAddress(m_TransferBufferMDL);
+    Base = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
     BytesAvailable = m_TransferBufferLength;
 
     PC_ASSERT(m_EndpointDescriptor);
+    PC_ASSERT(Base);
+
 
     DPRINT1("EndPointAddress %x\n", m_EndpointDescriptor->bEndpointAddress);
     DPRINT1("EndPointDirection %x\n", USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
 
-    DPRINT1("Request %p Base Address %p TransferBytesLength %lu\n", this, Base, BytesAvailable);
+    DPRINT1("Request %p Base Address %p TransferBytesLength %lu MDL %p\n", this, Base, BytesAvailable, m_TransferBufferMDL);
     DPRINT1("InternalGetPidDirection() %d EndPointAddress %x\n", InternalGetPidDirection(), m_EndpointDescriptor->bEndpointAddress & 0x0F);
+    DPRINT1("Irp %p QueueHead %p\n", m_Irp, QueueHead);
 
     //PC_ASSERT(InternalGetPidDirection() == USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
 
@@ -881,7 +851,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                 //
                 // check if request fills another page
                 //
-                if (PageOffset + BytesAvailable >= PAGE_SIZE)
+                if (PageOffset + BytesAvailable > PAGE_SIZE)
                 {
                     //
                     // move to next page
@@ -975,6 +945,11 @@ CUSBRequest::BuildBulkTransferQueueHead(
                 }
             }
         }
+
+        //
+        // store transfer bytes of descriptor
+        //
+        m_TransferDescriptors[Index]->TotalBytesToTransfer = m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
 
         //
         // Go ahead and link descriptors
@@ -1578,6 +1553,36 @@ CUSBRequest::GetTransferBuffer(
 
     *OutMDL = m_TransferBufferMDL;
     *TransferLength = m_TransferBufferLength;
+}
+//-----------------------------------------------------------------------------------------
+ULONG
+CUSBRequest::InternalCalculateTransferLength()
+{
+    if (!m_Irp)
+    {
+        //
+        // FIXME: get length for control request
+        //
+        return m_TransferBufferLength;
+    }
+
+    //
+    // sanity check
+    //
+    ASSERT(m_EndpointDescriptor);
+
+    if (USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress))
+    {
+        //
+        // bulk in request
+        //
+        return m_TransferDescriptors[0]->TotalBytesToTransfer - m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer;
+    }
+
+    //
+    // bulk out transfer
+    //
+    return m_TransferBufferLength;
 }
 
 //-----------------------------------------------------------------------------------------
