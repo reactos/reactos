@@ -466,7 +466,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
-         update_input_key_state(FocusMessageQueue, &Msg);
          MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
@@ -1006,6 +1005,9 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
    {
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
+
+       if (MessageBits & QS_KEY)
+          update_input_key_state( MessageQueue, Msg );
    }
 
    Message->QS_Flags = MessageBits;
