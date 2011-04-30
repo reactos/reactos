@@ -28,7 +28,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
     if not defined BUILD_ENVIRONMENT (
         echo Error: Visual Studio version too old or version detection failed.
-        exit /b	
+        exit /b
     )
     echo Detected Visual Studio Environment %BUILD_ENVIRONMENT%-%ARCH%
     if not "%1" == "VSSolution" (
@@ -57,7 +57,7 @@ exit /b
 :: Create directories
 :createdirs
 
-set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH% 
+set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
