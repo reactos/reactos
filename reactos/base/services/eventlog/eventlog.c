@@ -174,12 +174,11 @@ ServiceMain(DWORD argc,
 }
 
 
-BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
+PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 {
     DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
     WCHAR *Buf = NULL, *Expanded = NULL;
     LONG Result;
-    BOOL ret = TRUE;
     PLOGFILE pLogf;
 
     DPRINT("LoadLogFile: %S\n", LogName);
@@ -188,11 +187,10 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
                     NULL, NULL, &MaxValueLen, NULL, NULL);
 
     Buf = HeapAlloc(MyHeap, 0, MaxValueLen);
-
     if (!Buf)
     {
         DPRINT1("Can't allocate heap!\n");
-        return FALSE;
+        return NULL;
     }
 
     ValueLen = MaxValueLen;
@@ -203,29 +201,27 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
                              &Type,
                              (LPBYTE) Buf,
                              &ValueLen);
-
     if (Result != ERROR_SUCCESS)
     {
         DPRINT1("RegQueryValueEx failed: %d\n", GetLastError());
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     if (Type != REG_EXPAND_SZ && Type != REG_SZ)
     {
         DPRINT1("%S\\File - value of wrong type %x.\n", LogName, Type);
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     ExpandedLen = ExpandEnvironmentStrings(Buf, NULL, 0);
     Expanded = HeapAlloc(MyHeap, 0, ExpandedLen * sizeof(WCHAR));
-
     if (!Expanded)
     {
         DPRINT1("Can't allocate heap!\n");
         HeapFree(MyHeap, 0, Buf);
-        return FALSE;
+        return NULL;
     }
 
     ExpandEnvironmentStrings(Buf, Expanded, ExpandedLen);
@@ -237,12 +233,11 @@ BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
     if (pLogf == NULL)
     {
         DPRINT1("Failed to create %S!\n", Expanded);
-        ret = FALSE;
     }
 
     HeapFree(MyHeap, 0, Buf);
     HeapFree(MyHeap, 0, Expanded);
-    return ret;
+    return pLogf;
 }
 
 BOOL LoadLogFiles(HKEY eventlogKey)
@@ -251,6 +246,7 @@ BOOL LoadLogFiles(HKEY eventlogKey)
     DWORD MaxLognameLen, LognameLen;
     WCHAR *Buf = NULL;
     INT i;
+    PLOGFILE pLogFile;
 
     RegQueryInfoKey(eventlogKey,
                     NULL, NULL, NULL, NULL,
@@ -288,10 +284,16 @@ BOOL LoadLogFiles(HKEY eventlogKey)
             return FALSE;
         }
 
-        if (!LoadLogFile(SubKey, Buf))
-            DPRINT1("Failed to load %S\n", Buf);
-        else
+        pLogFile = LoadLogFile(SubKey, Buf);
+        if (pLogFile != NULL)
+        {
             DPRINT("Loaded %S\n", Buf);
+            LoadEventSources(SubKey, pLogFile);
+        }
+        else
+        {
+            DPRINT1("Failed to load %S\n", Buf);
+        }
 
         RegCloseKey(SubKey);
         LognameLen = MaxLognameLen;
@@ -310,6 +312,7 @@ INT wmain()
     HKEY elogKey;
 
     LogfListInitialize();
+    InitEventSourceList();
 
     MyHeap = HeapCreate(0, 1024 * 256, 0);
 

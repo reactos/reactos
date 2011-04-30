@@ -93,19 +93,17 @@ typedef struct _LOGFILE
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
-#if 0
 typedef struct _EVENTSOURCE
 {
     LIST_ENTRY EventSourceListEntry;
     PLOGFILE LogFile;
-    ULONG CurrentRecord;
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
-#endif
 
 typedef struct _LOGHANDLE
 {
     LIST_ENTRY LogHandleListEntry;
+    PEVENTSOURCE EventSource;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
     WCHAR szName[1];
@@ -191,6 +189,17 @@ VOID EventTimeToSystemTime(DWORD EventTime,
 
 VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
                            DWORD * pEventTime);
+
+/* eventsource.c */
+VOID InitEventSourceList(VOID);
+
+BOOL
+LoadEventSources(HKEY hKey,
+                 PLOGFILE pLogFile);
+
+PEVENTSOURCE
+GetEventSourceByName(LPCWSTR Name);
+
 
 /* logport.c */
 NTSTATUS WINAPI PortThreadRoutine(PVOID Param);
