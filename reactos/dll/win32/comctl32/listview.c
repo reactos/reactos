@@ -315,6 +315,7 @@ typedef struct tagLISTVIEW_INFO
   COLORREF clrBk;
   COLORREF clrText;
   COLORREF clrTextBk;
+  BOOL bDefaultBkColor;
 
   /* font */
   HFONT hDefaultFont;
@@ -7870,7 +7871,8 @@ static BOOL LISTVIEW_Scroll(LISTVIEW_INFO *infoPtr, INT dx, INT dy)
 static BOOL LISTVIEW_SetBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrBk)
 {
     TRACE("(clrBk=%x)\n", clrBk);
-
+    
+    infoPtr->bDefaultBkColor = FALSE;
     if(infoPtr->clrBk != clrBk) {
 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
 	infoPtr->clrBk = clrBk;
@@ -9263,6 +9265,7 @@ static LRESULT LISTVIEW_NCCreate(HWND hwnd, const CREATESTRUCTW *lpcs)
   infoPtr->clrText = CLR_DEFAULT;
   infoPtr->clrTextBk = CLR_DEFAULT;
   LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
+  infoPtr->bDefaultBkColor = TRUE;
 
   /* set default values */
   infoPtr->nFocusedItem = -1;
@@ -11525,6 +11528,11 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_SYSCOLORCHANGE:
     COMCTL32_RefreshSysColors();
+    if (infoPtr->bDefaultBkColor)
+    {
+        LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
+        infoPtr->bDefaultBkColor = TRUE;
+    }
     return 0;
 
 /*	case WM_TIMER: */
