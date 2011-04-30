@@ -785,7 +785,7 @@ DECLARE_INTERFACE_(IUSBDevice, IUnknown)
 //
 // Description: submits an irp containing an urb
 
-    virtual NTSTATUS SubmitIrp(PIRP Urb) = 0;
+    virtual NTSTATUS SubmitIrp(PIRP Irp) = 0;
 
 //-----------------------------------------------------------------------------------------
 //

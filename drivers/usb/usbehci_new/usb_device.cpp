@@ -484,6 +484,11 @@ CUSBDevice::CommitIrp(
     Status = Request->InitializeWithIrp(m_DmaManager, Irp);
 
     //
+    // mark irp as pending
+    //
+    IoMarkIrpPending(Irp);
+
+    //
     // now add the request
     //
     Status = m_Queue->AddUSBRequest(Request);
@@ -500,7 +505,7 @@ CUSBDevice::CommitIrp(
     //
     // done
     //
-    return Status;
+    return STATUS_PENDING;
 }
 
 //----------------------------------------------------------------------------------------
@@ -1199,6 +1204,16 @@ CUSBDevice::SelectInterface(
         //
         // copy pipe handle
         //
+        DPRINT1("PipeIndex %lu\n", PipeIndex);
+        DPRINT1("EndpointAddress %x\n", InterfaceInfo->Pipes[PipeIndex].EndpointAddress);
+        DPRINT1("Interval %d\n", InterfaceInfo->Pipes[PipeIndex].Interval);
+        DPRINT1("MaximumPacketSize %d\n", InterfaceInfo->Pipes[PipeIndex].MaximumPacketSize);
+        DPRINT1("MaximumTransferSize %d\n", InterfaceInfo->Pipes[PipeIndex].MaximumTransferSize);
+        DPRINT1("PipeFlags %d\n", InterfaceInfo->Pipes[PipeIndex].PipeFlags);
+        DPRINT1("PipeType %dd\n", InterfaceInfo->Pipes[PipeIndex].PipeType);
+        DPRINT1("UsbEndPoint %x\n", Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor.bEndpointAddress);
+        PC_ASSERT(Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor.bEndpointAddress == InterfaceInfo->Pipes[PipeIndex].EndpointAddress);
+
         InterfaceInfo->Pipes[PipeIndex].PipeHandle = &Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor;
 
         if (Configuration->Interfaces[InterfaceInfo->InterfaceNumber].EndPoints[PipeIndex].EndPointDescriptor.bmAttributes & (USB_ENDPOINT_TYPE_ISOCHRONOUS | USB_ENDPOINT_TYPE_INTERRUPT))

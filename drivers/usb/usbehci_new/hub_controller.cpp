@@ -65,6 +65,7 @@ public:
     NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleSelectInterface(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleClassInterface(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
     
     friend VOID StatusChangeEndpointCallBack(PVOID Context);
@@ -1364,6 +1365,70 @@ CHubController::HandleGetDescriptor(
 
 //-----------------------------------------------------------------------------------------
 NTSTATUS
+CHubController::HandleClassInterface(
+    IN OUT PIRP Irp,
+    IN OUT PURB Urb)
+{
+    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+    NTSTATUS Status;
+    PUSBDEVICE UsbDevice;
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
+    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength);
+    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle);
+
+    //
+    // check if this is a valid usb device handle
+    //
+    PC_ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+    //
+    // get device
+    //
+    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+
+    DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
+    DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
+    DPRINT1("TransferBufferLength %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
+    DPRINT1("TransferBuffer %x\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
+    DPRINT1("TransferBufferMDL %x\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
+    DPRINT1("RequestTypeReservedBits %x\n", Urb->UrbControlVendorClassRequest.RequestTypeReservedBits);
+    DPRINT1("Request %x\n", Urb->UrbControlVendorClassRequest.Request);
+    DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
+    DPRINT1("Index %x\n", Urb->UrbControlVendorClassRequest.Index);
+
+    //
+    // initialize setup packet
+    //
+    CtrlSetup.bmRequestType.B = 0xa1; //FIXME: Const.
+    CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
+    CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
+    CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
+    CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+
+    //
+    // issue request
+    //
+    Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlVendorClassRequest.TransferBufferLength, Urb->UrbControlVendorClassRequest.TransferBuffer);
+
+    //
+    // assert on failure
+    //
+    PC_ASSERT(NT_SUCCESS(Status));
+
+
+    //
+    // done
+    //
+    return Status;
+}
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
 CHubController::HandleDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp)
@@ -1418,6 +1483,9 @@ CHubController::HandleDeviceControl(
                     break;
                 case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
                     Status = HandleBulkOrInterruptTransfer(Irp, Urb);
+                    break;
+                case URB_FUNCTION_CLASS_INTERFACE:
+                    Status = HandleClassInterface(Irp, Urb);
                     break;
                 default:
                     DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);

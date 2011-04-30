@@ -136,7 +136,7 @@ CDMAMemoryManager::Allocate(
     // sanity checks
     //
     ASSERT(Size < PAGE_SIZE);
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    //ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     //
     // align request
