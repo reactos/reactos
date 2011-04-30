@@ -244,7 +244,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 
          }
 
-         if (Wnd->state & WNDS_ERASEBACKGROUND)
+         if (Wnd->state & WNDS_SENDERASEBACKGROUND)
          {
             if (Wnd->hrgnUpdate)
             {
@@ -252,9 +252,11 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
                                   Wnd->hrgnUpdate,
                                   DCX_CACHE|DCX_USESTYLE|DCX_INTERSECTRGN|DCX_KEEPCLIPRGN);
 
-               if (co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
+               Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+               // Kill the loop, so Clear before we send.
+               if (!co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                {
-                  Wnd->state &= ~WNDS_ERASEBACKGROUND;
+                  Wnd->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
                }
                UserReleaseDC(Wnd, hDC, FALSE);
             }
@@ -379,7 +381,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
       if (Flags & RDW_FRAME)
          Wnd->state |= WNDS_SENDNCPAINT;
       if (Flags & RDW_ERASE)
-         Wnd->state |= WNDS_ERASEBACKGROUND;
+         Wnd->state |= WNDS_SENDERASEBACKGROUND;
 
       Flags |= RDW_FRAME;
    }
@@ -398,11 +400,11 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
       }
 
       if (Wnd->hrgnUpdate == NULL)
-         Wnd->state &= ~WNDS_ERASEBACKGROUND;
+         Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
       if (Flags & RDW_NOFRAME)
          Wnd->state &= ~WNDS_SENDNCPAINT;
       if (Flags & RDW_NOERASE)
-         Wnd->state &= ~WNDS_ERASEBACKGROUND;
+         Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
    }
 
    if (Flags & RDW_INTERNALPAINT)
@@ -819,7 +821,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       Window->state &= ~WNDS_SENDNCPAINT;
       MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
       co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
-      if (hRgn != (HANDLE)1 && hRgn != NULL && GreIsHandleValid(hRgn))
+      if (hRgn != HRGN_WINDOW && hRgn != NULL && GreIsHandleValid(hRgn))
       {
          /* NOTE: The region can already by deleted! */
          GreDeleteObject(hRgn);
@@ -854,10 +856,14 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    Window->state &= ~WNDS_INTERNALPAINT;
 
-   if (Window->state & WNDS_ERASEBACKGROUND)
+   if (Window->state & WNDS_SENDERASEBACKGROUND)
    {
-      Window->state &= ~WNDS_ERASEBACKGROUND;
+      Window->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
       Ps.fErase = !co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)Ps.hdc, 0);
+      if ( Ps.fErase )
+      {
+         Window->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+      }
    }
    else
    {
