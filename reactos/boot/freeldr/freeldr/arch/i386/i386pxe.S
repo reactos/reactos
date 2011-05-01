@@ -34,9 +34,9 @@ _pxe_function:
 _pxe_entry_point:
 	.long	0
 _pxe_buffer_segment:
-	.word0
+	.word	0
 _pxe_buffer_offset:
-	.word0
+	.word	0
 _pxe_result:
 	.word	0
 
