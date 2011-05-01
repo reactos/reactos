@@ -1,4 +1,8 @@
 
+set_unicode()
+set_cpp()
+set_rc_compiler()
+
 add_executable(sndrec32
     audio_format.cpp
     audio_membuffer.cpp
@@ -12,4 +16,4 @@ add_executable(sndrec32
 
 target_link_libraries(sndrec32 stlport)
 set_module_type(sndrec32 win32gui)
-add_importlibs(sndrec32 winmm user32 msacm32 comctl32 comdlg32 gdi32 msvcrt)
+add_importlibs(sndrec32 winmm user32 msacm32 comctl32 comdlg32 gdi32 msvcrt kernel32)
