@@ -168,7 +168,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
             Percent = PercentPerChunk = 0;
         else
             Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
-        gRamDiskBase = MmAllocateMemory(gRamDiskSize);
+        gRamDiskBase = MmAllocateMemoryWithType(gRamDiskSize, LoaderXIPRom);
         if (!gRamDiskBase)
         {
             UiMessageBox("Failed to allocate memory for RAM disk\n");
