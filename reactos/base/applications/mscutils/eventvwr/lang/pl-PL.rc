@@ -119,3 +119,9 @@ BEGIN
     IDS_COLUMNCOMPUTER  "Komputer"
     IDS_COLUMNEVENTDATA "Dane zdarzenia"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "None"
+    IDS_NOT_AVAILABLE "N/A"
+END

@@ -115,3 +115,9 @@ BEGIN
     IDS_COLUMNCOMPUTER  "Комп'ютер"
     IDS_COLUMNEVENTDATA "Дані події"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "None"
+    IDS_NOT_AVAILABLE "N/A"
+END

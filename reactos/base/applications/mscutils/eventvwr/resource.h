@@ -64,3 +64,6 @@
 #define IDS_COLUMNCOMPUTER              307
 #define IDS_COLUMNEVENTDATA             308
 
+#define IDS_NONE                        320
+#define IDS_NOT_AVAILABLE               321
+
