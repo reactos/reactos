@@ -7871,7 +7871,7 @@ static BOOL LISTVIEW_Scroll(LISTVIEW_INFO *infoPtr, INT dx, INT dy)
 static BOOL LISTVIEW_SetBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrBk)
 {
     TRACE("(clrBk=%x)\n", clrBk);
-    
+
     infoPtr->bDefaultBkColor = FALSE;
     if(infoPtr->clrBk != clrBk) {
 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);

@@ -51,7 +51,6 @@
  *   - WM_QUERYNEWPALETTE
  *   - WM_RBUTTONDOWN
  *   - WM_RBUTTONUP
- *   - WM_SYSCOLORCHANGE
  *   - WM_VKEYTOITEM
  *   - WM_WININICHANGE
  *   Notifications:
@@ -1524,8 +1523,9 @@ REBAR_SizeToHeight(REBAR_INFO *infoPtr, int height)
         for (i = prev_visible(infoPtr, infoPtr->uNumBands); i > 0; i = prev_visible(infoPtr, i))
         {
             REBAR_BAND *lpBand = REBAR_GetBand(infoPtr, i);
-            int height = lpBand->rcBand.bottom - lpBand->rcBand.top;
             int cyBreakExtra;  /* additional cy for the rebar after a RBBS_BREAK on this band */
+
+            height = lpBand->rcBand.bottom - lpBand->rcBand.top;
 
             if (infoPtr->dwStyle & RBS_VARHEIGHT)
                 cyBreakExtra = lpBand->cyRowSoFar; /* 'height' => 'lpBand->cyRowSoFar' + 'height'*/
@@ -1846,8 +1846,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     return uChanged;
 }
 
-static LRESULT
-REBAR_InternalEraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc, const RECT *clip)
+static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
      /* Function:  This erases the background rectangle by drawing  */
      /*  each band with its background color (or the default) and   */
      /*  draws each bands right separator if necessary. The row     */
@@ -1950,14 +1949,10 @@ REBAR_InternalEraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc, const RECT *clip)
         else
         {
             old = SetBkColor (hdc, new);
-            TRACE("%s background color=0x%06x, band (%d,%d)-(%d,%d), clip (%d,%d)-(%d,%d)\n",
+            TRACE("%s background color=0x%06x, band %s\n",
                   (lpBand->clrBack == CLR_NONE) ? "none" :
                     ((lpBand->clrBack == CLR_DEFAULT) ? "dft" : ""),
-                  GetBkColor(hdc),
-                  rcBand.left,rcBand.top,
-                  rcBand.right,rcBand.bottom,
-                  clip->left, clip->top,
-                  clip->right, clip->bottom);
+                  GetBkColor(hdc), wine_dbgstr_rect(&rcBand));
             ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &rcBand, NULL, 0, 0);
             if (lpBand->clrBack != CLR_NONE)
                 SetBkColor (hdc, old);
@@ -2120,7 +2115,7 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     REBAR_BAND *hitBand, *rowBeginBand;
 
     if(infoPtr->uNumBands <= 0)
-        ERR("There are no bands in this rebar");
+        ERR("There are no bands in this rebar\n");
 
     /* Up/down dragging can only occur when there is more than one
      * band in the rebar */
@@ -2544,10 +2539,8 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, const REBARBANDINFOW *lprbbi,
 
     /* initialize band */
     memset(lpBand, 0, sizeof(*lpBand));
-    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
-                                                     infoPtr->clrText;
-    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
-                                                   infoPtr->clrBk;
+    lpBand->clrFore = infoPtr->clrText;
+    lpBand->clrBack = infoPtr->clrBk;
     lpBand->iImage = -1;
 
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
@@ -3000,18 +2993,6 @@ REBAR_Destroy (REBAR_INFO *infoPtr)
     return 0;
 }
 
-
-static LRESULT
-REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
-{
-    RECT cliprect;
-
-    if (GetClipBox ( hdc, &cliprect))
-        return REBAR_InternalEraseBkGnd (infoPtr, hdc, &cliprect);
-    return 0;
-}
-
-
 static LRESULT
 REBAR_GetFont (const REBAR_INFO *infoPtr)
 {
@@ -3454,7 +3435,7 @@ REBAR_Paint (const REBAR_INFO *infoPtr, HDC hdc)
         TRACE("painting (%s)\n", wine_dbgstr_rect(&ps.rcPaint));
         if (ps.fErase) {
             /* Erase area of paint if requested */
-            REBAR_InternalEraseBkGnd (infoPtr, hdc, &ps.rcPaint);
+            REBAR_EraseBkGnd (infoPtr, hdc);
         }
         REBAR_Refresh (infoPtr, hdc);
 	EndPaint (infoPtr->hwndSelf, &ps);
@@ -3809,6 +3790,8 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOLORCHANGE:
             COMCTL32_RefreshSysColors();
+            infoPtr->clrBtnText = comctl32_color.clrBtnText;
+            infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
             return 0;
 
 /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
