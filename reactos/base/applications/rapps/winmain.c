@@ -723,6 +723,7 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             SendMessage(hListView, WM_SYSCOLORCHANGE, 0, 0);
             SendMessage(hTreeView, WM_SYSCOLORCHANGE, 0, 0);
             SendMessage(hToolBar, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessageW(hRichEdit, EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
         }
         break;
 
