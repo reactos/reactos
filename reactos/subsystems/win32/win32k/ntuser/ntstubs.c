@@ -519,6 +519,8 @@ NtUserSetSysColors(
    if (Ret)
    {
       UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
+
+      UserRedrawDesktop();
    }
 
    UserLeave();
