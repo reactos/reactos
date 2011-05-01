@@ -43,7 +43,7 @@ The Event log service was stopped.
 MessageId=6009
 Severity=Warning
 Facility=System
-SymbolicName=EVENT_EventlogProductInfo
+SymbolicName=EVENT_EventLogProductInfo
 Language=English
 ReactOS %1 %2 %3 %4.
 .
