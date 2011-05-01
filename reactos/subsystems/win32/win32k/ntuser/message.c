@@ -1218,7 +1218,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             RETURN( FALSE);
         }
 
-        //ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1230,8 +1229,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         {
             *uResult = Result;
         }
-
-        //ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1438,7 +1435,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
-        //ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1450,7 +1446,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         {
             *uResult = Result;
         }
-        //ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
