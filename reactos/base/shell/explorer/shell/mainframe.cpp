@@ -372,6 +372,11 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
 		break;
 
+	  case WM_SYSCOLORCHANGE:
+		SendMessage(_hwndrebar, WM_SYSCOLORCHANGE, 0, 0);
+		SendMessage(_htoolbar, WM_SYSCOLORCHANGE, 0, 0);
+		break;
+
 	  default:
 		return false;
 	}
@@ -992,6 +997,20 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return (LRESULT)MDIShellBrowserChild::create(create_info);
 		}
 		return TRUE;}	// success
+
+	  case WM_SYSCOLORCHANGE: {
+		LRESULT res;
+		HWND hChild;
+
+		/* Forward WM_SYSCOLORCHANGE to common controls */
+		SendMessage(_hextrabar, WM_SYSCOLORCHANGE, 0, 0);
+		SendMessage(_hdrivebar, WM_SYSCOLORCHANGE, 0, 0);
+
+		for(hChild = GetNextWindow(_hmdiclient,GW_CHILD); hChild; hChild = GetNextWindow(hChild, GW_HWNDNEXT))
+			SendMessage(hChild, WM_SYSCOLORCHANGE, 0, 0);
+
+		super::ProcessMessage(nmsg, wparam, lparam, &res);
+		break; }
 
 	  default: {
 		LRESULT res;
