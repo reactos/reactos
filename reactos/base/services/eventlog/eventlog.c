@@ -168,6 +168,10 @@ ServiceMain(DWORD argc,
     {
         DPRINT("Service started\n");
         UpdateServiceStatus(SERVICE_RUNNING);
+
+        LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                        0,
+                        EVENT_EventlogStarted);
     }
 
     DPRINT("ServiceMain() done\n");

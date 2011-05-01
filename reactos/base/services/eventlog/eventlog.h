@@ -13,6 +13,7 @@
 #define WIN32_NO_STATUS
 
 #include <windows.h>
+#include <netevent.h>
 #include <lpctypes.h>
 #include <lpcfuncs.h>
 #include <rtlfuncs.h>
@@ -176,6 +177,11 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  WCHAR * lpStrings,
                                  DWORD dwDataSize,
                                  LPVOID lpRawData);
+
+VOID
+LogfReportEvent(WORD wType,
+                WORD wCategory,
+                DWORD dwEventId);
 
 /* eventlog.c */
 extern HANDLE MyHeap;

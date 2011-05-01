@@ -1049,3 +1049,53 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     *lpRecSize = dwRecSize;
     return Buffer;
 }
+
+
+VOID
+LogfReportEvent(WORD wType,
+                WORD wCategory,
+                DWORD dwEventId)
+{
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    PEVENTSOURCE pEventSource = NULL;
+    PBYTE logBuffer;
+    DWORD lastRec;
+    DWORD recSize;
+    DWORD dwError;
+
+    if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+    {
+        szComputerName[0] = 0;
+    }
+
+    pEventSource = GetEventSourceByName(L"EventLog");
+    if (pEventSource == NULL)
+    {
+        return;
+    }
+
+    lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
+
+    logBuffer = LogfAllocAndBuildNewRecord(&recSize,
+                                           lastRec,
+                                           wType,
+                                           wCategory,
+                                           dwEventId,
+                                           pEventSource->szName,
+                                           (LPCWSTR)szComputerName,
+                                           0,
+                                           NULL,
+                                           0, //wNumStrings,
+                                           NULL, //lpStrings,
+                                           0, //dwDataSize,
+                                           NULL); //lpRawData);
+
+    dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
+    if (!dwError)
+    {
+        DPRINT1("ERROR WRITING TO EventLog %S\n", pEventSource->LogFile->FileName);
+    }
+
+    LogfFreeRecord(logBuffer);
+}
