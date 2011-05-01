@@ -1995,6 +1995,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    hwndInsertAfter = HWND_TOP;
 
    UserRefObjectCo(Window, &Ref);
+   UserDereferenceObject(Window);
    ObDereferenceObject(WinSta);
 
    //// Check for a hook to eliminate overhead. ////
@@ -2260,7 +2261,6 @@ cleanup:
    if (Window)
    {
       UserDerefObjectCo(Window);
-      UserDereferenceObject(Window);
    }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
 
