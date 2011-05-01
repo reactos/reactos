@@ -275,7 +275,7 @@ BasepLoadLibraryAsDatafile(PWSTR Path, LPCWSTR Name, HMODULE *hModule)
     HANDLE hMapping;
     NTSTATUS Status;
     PVOID lpBaseAddress = NULL;
-    SIZE_T ViewSize;
+    SIZE_T ViewSize = 0;
     //PUNICODE_STRING OriginalName;
     //UNICODE_STRING dotDLL = RTL_CONSTANT_STRING(L".DLL");
 
