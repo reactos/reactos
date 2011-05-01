@@ -1006,8 +1006,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
 
-       if (MessageBits & QS_KEY)
-          update_input_key_state( MessageQueue, Msg );
+       update_input_key_state( MessageQueue, Msg );
    }
 
    Message->QS_Flags = MessageBits;
