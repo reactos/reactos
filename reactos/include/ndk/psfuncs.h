@@ -185,6 +185,13 @@ PsGetProcessInheritedFromUniqueProcessId(
     IN PEPROCESS Process
 );
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsGetProcessExitStatus(
+    PEPROCESS Process
+);
+
 //
 // Quota Functions
 //

@@ -128,6 +128,23 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
         Win32Process->W32PF_flags |= W32PF_TERMINATED;
 
+        /* Notify logon application to restart shell if needed */
+        if(Win32Process->rpdeskStartup->pDeskInfo)
+        {
+            if(Win32Process->rpdeskStartup->pDeskInfo->ppiShellProcess == Win32Process)
+            {
+                DWORD ExitCode;
+                ExitCode = PsGetProcessExitStatus(Win32Process->peProcess);
+
+                DPRINT1("Shell process is exiting (%d)\n", ExitCode);
+
+                UserPostMessage(hwndSAS, 
+                                WM_LOGONNOTIFY, 
+                                LN_SHELL_EXITED, 
+                                ExitCode);
+            }
+        }
+
         if (Win32Process->InputIdleEvent)
         {
            EngFreeMem((PVOID)Win32Process->InputIdleEvent);
@@ -243,6 +260,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         }
         Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
         Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+        Win32Thread->pEThread = Thread;
 
         /* HAAAAAAAACK! This should go to Win32kProcessCallback */
         if(Win32Thread->ppi->hdeskStartup == NULL)
@@ -322,7 +340,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
            // System thread running! Now SendMessage should be okay.
            Win32Thread->pcti = &Win32Thread->cti;
         }
-        Win32Thread->pEThread = Thread;
+        GetW32ThreadInfo();
     }
     else
     {

@@ -101,18 +101,7 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
 /* temp hack */
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
-   PTHREADINFO ti;
-   PWND Window;
-
-   if (PsGetCurrentProcess() != PsInitialSystemProcess)
-   {
-       ti = GetW32ThreadInfo();
-       if (ti == NULL)
-       {
-          EngSetLastError(ERROR_ACCESS_DENIED);
-          return NULL;
-       }
-   }
+    PWND Window;
 
    if (!hWnd)
    {
@@ -3308,7 +3297,11 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->pDeskInfo) ti->pDeskInfo->hShellWindow = hwndShell;
+   if (ti->pDeskInfo) 
+   {
+       ti->pDeskInfo->hShellWindow = hwndShell;
+       ti->pDeskInfo->ppiShellProcess = ti->ppi;
+   }
 
    UserDerefObjectCo(WndShell);
 
