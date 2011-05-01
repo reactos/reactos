@@ -33,6 +33,7 @@
 		<file>fs.c</file>
 		<file>iso.c</file>
 		<file>ntfs.c</file>
+		<file>pxe.c</file>
 	</directory>
 	<directory name="inifile">
 		<file>ini_init.c</file>
