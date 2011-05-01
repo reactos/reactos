@@ -717,6 +717,15 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             return TRUE;
         }
 
+        case WM_SYSCOLORCHANGE:
+        {
+            /* Forward WM_SYSCOLORCHANGE to common controls */
+            SendMessage(hListView, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hTreeView, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hToolBar, WM_SYSCOLORCHANGE, 0, 0);
+        }
+        break;
+
         case WM_DESTROY:
         {
             ShowWindow(hwnd, SW_HIDE);

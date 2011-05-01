@@ -579,7 +579,7 @@ DlgPreferencesProc(HWND hwndDlg,
         {
             HWND hwndControls;
             
-            /* Forward WM_SYSCOLORCHANGE to common controls */
+            /* Forward WM_SYSCOLORCHANGE */
             hwndControls = GetDlgItem(hwndDlg, IDC_CONTROLS);
             SendMessage(hwndControls, WM_SYSCOLORCHANGE, 0, 0);
             break;

@@ -1177,6 +1177,11 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_MENUSELECT:
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
+    case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(g_pChildWnd->hListWnd, WM_SYSCOLORCHANGE, 0, 0);
+        SendMessage(g_pChildWnd->hTreeWnd, WM_SYSCOLORCHANGE, 0, 0);
+        break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
         PostQuitMessage(0);
