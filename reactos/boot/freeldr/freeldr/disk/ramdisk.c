@@ -164,7 +164,10 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
         // Allocate memory for it
         //
         ChunkSize = 8 * 1024 * 1024;
-        Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
+        if (gRamDiskSize < ChunkSize)
+            Percent = PercentPerChunk = 0;
+        else
+            Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
         gRamDiskBase = MmAllocateMemory(gRamDiskSize);
         if (!gRamDiskBase)
         {
