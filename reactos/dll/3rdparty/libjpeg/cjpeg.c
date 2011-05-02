@@ -2,7 +2,7 @@
  * cjpeg.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2008 by Guido Vollbeding.
+ * Modified 2003-2010 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -165,6 +165,9 @@ usage (void)
   fprintf(stderr, "  -targa         Input file is Targa format (usually not needed)\n");
 #endif
   fprintf(stderr, "Switches for advanced users:\n");
+#ifdef DCT_SCALING_SUPPORTED
+  fprintf(stderr, "  -block N       DCT block size (1..16; default is 8)\n");
+#endif
 #ifdef DCT_ISLOW_SUPPORTED
   fprintf(stderr, "  -dct int       Use integer DCT method%s\n",
 	  (JDCT_DEFAULT == JDCT_ISLOW ? " (default)" : ""));
@@ -254,9 +257,29 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
       exit(EXIT_FAILURE);
 #endif
 
-    } else if (keymatch(arg, "baseline", 1)) {
+    } else if (keymatch(arg, "baseline", 2)) {
       /* Force baseline-compatible output (8-bit quantizer values). */
       force_baseline = TRUE;
+
+    } else if (keymatch(arg, "block", 2)) {
+      /* Set DCT block size. */
+#if defined(DCT_SCALING_SUPPORTED) && defined(JPEG_LIB_VERSION_MAJOR) && \
+    (JPEG_LIB_VERSION_MAJOR > 8 || (JPEG_LIB_VERSION_MAJOR == 8 && \
+     defined(JPEG_LIB_VERSION_MINOR) && JPEG_LIB_VERSION_MINOR >= 3))
+      int val;
+
+      if (++argn >= argc)	/* advance to next argument */
+	usage();
+      if (sscanf(argv[argn], "%d", &val) != 1)
+	usage();
+      if (val < 1 || val > 16)
+	usage();
+      cinfo->block_size = val;
+#else
+      fprintf(stderr, "%s: sorry, block size setting not supported\n",
+	      progname);
+      exit(EXIT_FAILURE);
+#endif
 
     } else if (keymatch(arg, "dct", 2)) {
       /* Select DCT algorithm. */
