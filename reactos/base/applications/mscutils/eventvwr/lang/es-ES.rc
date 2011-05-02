@@ -118,6 +118,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE          "None"
+    IDS_NONE          "Ninguna"
     IDS_NOT_AVAILABLE "N/A"
 END
