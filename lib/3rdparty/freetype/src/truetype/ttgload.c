@@ -161,7 +161,30 @@
                      &top_bearing,
                      &advance_height );
 
+    loader->left_bearing = left_bearing;
+    loader->advance      = advance_width;
+    loader->top_bearing  = top_bearing;
+    loader->vadvance     = advance_height;
+
+    if ( !loader->linear_def )
+    {
+      loader->linear_def = 1;
+      loader->linear     = advance_width;
+    }
+  }
+
+
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
+
+  static void
+  tt_get_metrics_incr_overrides( TT_Loader  loader,
+                                 FT_UInt    glyph_index )
+  {
+    TT_Face  face = (TT_Face)loader->face;
+
+    FT_Short   left_bearing = 0, top_bearing = 0;
+    FT_UShort  advance_width = 0, advance_height = 0;
+
 
     /* If this is an incrementally loaded font check whether there are */
     /* overriding metrics for this glyph.                              */
@@ -172,9 +195,9 @@
       FT_Error                   error;
 
 
-      metrics.bearing_x = left_bearing;
+      metrics.bearing_x = loader->left_bearing;
       metrics.bearing_y = 0;
-      metrics.advance   = advance_width;
+      metrics.advance   = loader->advance;
       metrics.advance_v = 0;
 
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
@@ -190,8 +213,8 @@
 
       /* GWW: Do I do the same for vertical metrics? */
       metrics.bearing_x = 0;
-      metrics.bearing_y = top_bearing;
-      metrics.advance   = advance_height;
+      metrics.bearing_y = loader->top_bearing;
+      metrics.advance   = loader->vadvance;
 
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
@@ -204,23 +227,23 @@
 
 #endif /* 0 */
 
+      loader->left_bearing = left_bearing;
+      loader->advance      = advance_width;
+      loader->top_bearing  = top_bearing;
+      loader->vadvance     = advance_height;
+
+      if ( !loader->linear_def )
+      {
+        loader->linear_def = 1;
+        loader->linear     = advance_width;
+      }
     }
 
   Exit:
+    return;
+  }
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
-
-    loader->left_bearing = left_bearing;
-    loader->advance      = advance_width;
-    loader->top_bearing  = top_bearing;
-    loader->vadvance     = advance_height;
-
-    if ( !loader->linear_def )
-    {
-      loader->linear_def = 1;
-      loader->linear     = advance_width;
-    }
-  }
 
 
   /*************************************************************************/
@@ -271,7 +294,7 @@
     FT_UNUSED( glyph_index );
 
 
-    FT_TRACE5(( "Glyph %ld\n", glyph_index ));
+    FT_TRACE4(( "Glyph %ld\n", glyph_index ));
 
     /* the following line sets the `error' variable through macros! */
     if ( FT_STREAM_SEEK( offset ) || FT_FRAME_ENTER( byte_count ) )
@@ -367,7 +390,7 @@
       if ( cont[0] <= prev_cont )
       {
         /* unordered contours: this is invalid */
-        error = FT_Err_Invalid_Table;
+        error = TT_Err_Invalid_Table;
         goto Fail;
       }
       prev_cont = cont[0];
@@ -1118,7 +1141,8 @@
 
     {
       FT_Stream  stream = loader->stream;
-      FT_UShort  n_ins;
+      FT_UShort  n_ins, max_ins;
+      FT_ULong   tmp;
 
 
       /* TT_Load_Composite_Glyph only gives us the offset of instructions */
@@ -1130,12 +1154,27 @@
       FT_TRACE5(( "  Instructions size = %d\n", n_ins ));
 
       /* check it */
-      if ( n_ins > ((TT_Face)loader->face)->max_profile.maxSizeOfInstructions )
+      max_ins = ((TT_Face)loader->face)->max_profile.maxSizeOfInstructions;
+      if ( n_ins > max_ins )
       {
-        FT_TRACE0(( "TT_Process_Composite_Glyph: too many instructions (%d)\n",
-                    n_ins ));
+        /* acroread ignores this field, so we only do a rough safety check */
+        if ( (FT_Int)n_ins > loader->byte_len )
+        {
+          FT_TRACE1(( "TT_Process_Composite_Glyph: "
+                      "too many instructions (%d) for glyph with length %d\n",
+                      n_ins, loader->byte_len ));
+          return TT_Err_Too_Many_Hints;
+        }
 
-        return TT_Err_Too_Many_Hints;
+        tmp = loader->exec->glyphSize;
+        error = Update_Max( loader->exec->memory,
+                            &tmp,
+                            sizeof ( FT_Byte ),
+                            (void*)&loader->exec->glyphIns,
+                            n_ins );
+        loader->exec->glyphSize = (FT_UShort)tmp;
+        if ( error )
+          return error;
       }
       else if ( n_ins == 0 )
         return TT_Err_Ok;
@@ -1316,7 +1355,13 @@
       if ( header_only )
         goto Exit;
 
+      /* must initialize points before (possibly) overriding */
+      /* glyph metrics from the incremental interface        */
       TT_LOADER_SET_PP( loader );
+
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+      tt_get_metrics_incr_overrides( loader, glyph_index );
+#endif
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 
@@ -1353,7 +1398,13 @@
       goto Exit;
     }
 
+    /* must initialize points before (possibly) overriding */
+    /* glyph metrics from the incremental interface        */
     TT_LOADER_SET_PP( loader );
+
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    tt_get_metrics_incr_overrides( loader, glyph_index );
+#endif
 
     /***********************************************************************/
     /***********************************************************************/
@@ -1481,6 +1532,7 @@
         FT_UInt      num_base_subgs = gloader->base.num_subglyphs;
 
         FT_Stream    old_stream     = loader->stream;
+        FT_Int       old_byte_len   = loader->byte_len;
 
 
         FT_GlyphLoader_Add( gloader );
@@ -1535,7 +1587,8 @@
                                           num_base_points );
         }
 
-        loader->stream = old_stream;
+        loader->stream   = old_stream;
+        loader->byte_len = old_byte_len;
 
         /* process the glyph */
         loader->ins_pos = ins_pos;
@@ -1857,6 +1910,9 @@
         FT_UInt  i;
 
 
+        FT_TRACE4(( "tt_loader_init: grayscale change,"
+                    " re-executing `prep' table\n" ));
+
         exec->grayscale = grayscale;
 
         for ( i = 0; i < size->cvt_size; i++ )
@@ -2031,9 +2087,11 @@
         glyph->outline        = loader.gloader->base.outline;
         glyph->outline.flags &= ~FT_OUTLINE_SINGLE_PASS;
 
-        /* In case bit 1 of the `flags' field in the `head' table isn't */
-        /* set, translate array so that (0,0) is the glyph's origin.    */
-        if ( ( face->header.Flags & 2 ) == 0 && loader.pp1.x )
+        /* Translate array so that (0,0) is the glyph's origin.  Note  */
+        /* that this behaviour is independent on the value of bit 1 of */
+        /* the `flags' field in the `head' table -- at least major     */
+        /* applications like Acroread indicate that.                   */
+        if ( loader.pp1.x )
           FT_Outline_Translate( &glyph->outline, -loader.pp1.x, 0 );
       }
 

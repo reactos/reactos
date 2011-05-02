@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,9 +50,9 @@
   tt_name_entry_ascii_from_utf16( TT_NameEntry  entry,
                                   FT_Memory     memory )
   {
-    FT_String*  string;
+    FT_String*  string = NULL;
     FT_UInt     len, code, n;
-    FT_Byte*    read = (FT_Byte*)entry->string;
+    FT_Byte*    read   = (FT_Byte*)entry->string;
     FT_Error    error;
 
 
@@ -81,9 +81,9 @@
   tt_name_entry_ascii_from_other( TT_NameEntry  entry,
                                   FT_Memory     memory )
   {
-    FT_String*  string;
+    FT_String*  string = NULL;
     FT_UInt     len, code, n;
-    FT_Byte*    read = (FT_Byte*)entry->string;
+    FT_Byte*    read   = (FT_Byte*)entry->string;
     FT_Error    error;
 
 
@@ -160,7 +160,7 @@
       /* According to the OpenType 1.3 specification, only Microsoft or  */
       /* Apple platform IDs might be used in the `name' table.  The      */
       /* `Unicode' platform is reserved for the `cmap' table, and the    */
-      /* `Iso' one is deprecated.                                        */
+      /* `ISO' one is deprecated.                                        */
       /*                                                                 */
       /* However, the Apple TrueType specification doesn't say the same  */
       /* thing and goes to suggest that all Unicode `name' table entries */
@@ -691,9 +691,7 @@
       LOAD_( os2 );
       if ( error )
       {
-        if ( error != SFNT_Err_Table_Missing )
-          goto Exit;
-
+        /* we treat the table as missing if there are any errors */
         face->os2.version = 0xFFFFU;
       }
     }

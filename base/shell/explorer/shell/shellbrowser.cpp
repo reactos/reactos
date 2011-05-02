@@ -701,6 +701,12 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		return TRUE;}
 
+	  case WM_SYSCOLORCHANGE:
+		/* Forward WM_SYSCOLORCHANGE to common controls */
+		SendMessage(_left_hwnd, WM_SYSCOLORCHANGE, 0, 0);
+		SendMessage(_right_hwnd, WM_SYSCOLORCHANGE, 0, 0);
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

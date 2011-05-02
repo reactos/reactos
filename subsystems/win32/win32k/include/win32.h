@@ -105,6 +105,9 @@ typedef struct _THREADINFO
     LIST_ENTRY W32CallbackListHead;
     SINGLE_LIST_ENTRY  ReferencesList;
     ULONG cExclusiveLocks;
+#if DBG
+    USHORT acExclusiveLockCount[GDIObjTypeTotal];
+#endif
 
 } THREADINFO;
 
@@ -186,4 +189,7 @@ typedef struct _PROCESSINFO
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
+  struct _GDI_POOL *pPoolDcAttr;
+  struct _GDI_POOL *pPoolBrushAttr;
+  struct _GDI_POOL *pPoolRgnAttr;
 } PROCESSINFO;

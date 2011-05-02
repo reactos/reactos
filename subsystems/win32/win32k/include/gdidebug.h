@@ -1,12 +1,51 @@
 #pragma once
 
-extern ULONG gulDebugChannels;
+typedef enum _LOG_EVENT_TYPE
+{
+    EVENT_ALLOCATE,
+    EVENT_CREATE_HANDLE,
+    EVENT_REFERENCE,
+    EVENT_DEREFERENCE,
+    EVENT_LOCK,
+    EVENT_UNLOCK,
+    EVENT_DELETE,
+    EVENT_FREE,
+    EVENT_SET_OWNER,
+} LOG_EVENT_TYPE;
 
-#define GDI_STACK_LEVELS 20
-extern ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-extern ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-extern ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-extern ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+typedef struct _LOGENTRY
+{
+    SLIST_ENTRY sleLink;
+    LOG_EVENT_TYPE nEventType;
+    DWORD dwProcessId;
+    DWORD dwThreadId;
+    ULONG ulUnique;
+    LPARAM lParam;
+    PVOID apvBackTrace[20];
+    union
+    {
+        ULONG_PTR data1;
+    } data;
+} LOGENTRY, *PLOGENTRY;
+
+#if DBG_ENABLE_EVENT_LOGGING
+VOID NTAPI DbgDumpEventList(PSLIST_HEADER pslh);
+VOID NTAPI DbgLogEvent(PSLIST_HEADER pslh, EVENT_TYPE nEventType, LPARAM lParam);
+VOID NTAPI DbgCleanupEventList(PSLIST_HEADER pslh);
+#define DBG_LOGEVENT(pslh, type, val) DbgLogEvent(pslh, type, (ULONG_PTR)val)
+#define DBG_INITLOG(pslh) InitializeSListHead(pslh)
+#define DBG_DUMP_EVENT_LIST(pslh) DbgDumpEventList(pslh)
+#define DBG_CLEANUP_EVENT_LIST(pslh) DbgCleanupEventList(pslh)
+#else
+#define DBG_LOGEVENT(pslh, type, val)
+#define DBG_INITLOG(pslh)
+#define DBG_DUMP_EVENT_LIST(pslh)
+#define DBG_CLEANUP_EVENT_LIST(pslh)
+#endif
+
+extern ULONG gulLogUnique;
+
+extern ULONG gulDebugChannels;
 
 enum _DEBUGCHANNELS
 {
@@ -17,72 +56,17 @@ enum _DEBUGCHANNELS
     DbgModeSwitch = 16,
 };
 
-void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable);
-ULONG CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture);
-BOOL GdiDbgHTIntegrityCheck(VOID);
-void GdiDbgDumpLockedHandles(VOID);
+VOID NTAPI DbgDumpGdiHandleTable(VOID);
+ULONG NTAPI DbgCaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture);
+BOOL NTAPI DbgGdiHTIntegrityCheck(VOID);
+VOID NTAPI DbgDumpLockedGdiHandles(VOID);
 
 #define DBGENABLE(ch) gulDebugChannels |= (ch);
 #define DBGDISABLE(ch) gulDebugChannels &= ~(ch);
 #define DPRINTCH(ch) if (gulDebugChannels & (ch)) DbgPrint
 
-#ifdef GDI_DEBUG
-
 #define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
-
-#define IS_HANDLE_VALID(idx) \
-    ((GdiHandleTable->Entries[idx].Type & GDI_ENTRY_BASETYPE_MASK) != 0)
-
-#define GDIDBG_TRACECALLER() \
-  DPRINT1("-> called from:\n"); \
-  KeRosDumpStackFrames(NULL, 20);
-#define GDIDBG_TRACEALLOCATOR(handle) \
-  DPRINT1("-> allocated from:\n"); \
-  KeRosDumpStackFrames(GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACELOCKER(handle) \
-  DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACESHARELOCKER(handle) \
-  DPRINT1("-> locked from:\n"); \
-  KeRosDumpStackFrames(GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_TRACEDELETER(handle) \
-  DPRINT1("-> deleted from:\n"); \
-  KeRosDumpStackFrames(GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREALLOCATOR(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleAllocator[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURELOCKER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTURESHARELOCKER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleShareLocker[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_CAPTUREDELETER(handle) \
-  CaptureStackBackTace((PVOID*)GDIHandleDeleter[GDI_HANDLE_GET_INDEX(handle)], GDI_STACK_LEVELS);
-#define GDIDBG_DUMPHANDLETABLE() \
-  IntDumpHandleTable(GdiHandleTable)
-#define GDIDBG_INITLOOPTRACE() \
-  ULONG Attempts = 0;
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread) \
-  if ((++Attempts % 20) == 0) \
-  { \
-    DPRINT1("[%d] Handle 0x%p Locked by 0x%x (we're 0x%x)\n", Attempts, Handle, PrevThread, Thread); \
-  }
-
-#else
-
-#define GDIDBG_TRACECALLER()
-#define GDIDBG_TRACEALLOCATOR(index)
-#define GDIDBG_TRACELOCKER(index)
-#define GDIDBG_TRACESHARELOCKER(index)
-#define GDIDBG_CAPTUREALLOCATOR(index)
-#define GDIDBG_CAPTURELOCKER(index)
-#define GDIDBG_CAPTURESHARELOCKER(index)
-#define GDIDBG_CAPTUREDELETER(handle)
-#define GDIDBG_DUMPHANDLETABLE()
-#define GDIDBG_INITLOOPTRACE()
-#define GDIDBG_TRACELOOP(Handle, PrevThread, Thread)
-#define GDIDBG_TRACEDELETER(handle)
-
-#endif /* GDI_DEBUG */
 
 #if DBG
 void
@@ -104,7 +88,6 @@ GdiDbgAssertNoLocks(char * pszFile, ULONG nLine)
     {
         DbgPrint("(%s:%ld) There are %ld exclusive locks!\n",
                  pszFile, nLine, pti->cExclusiveLocks);
-        GdiDbgDumpLockedHandles();
         ASSERT(FALSE);
     }
 }

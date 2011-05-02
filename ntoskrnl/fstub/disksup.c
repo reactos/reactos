@@ -64,17 +64,20 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 26))
     {
         /* Force assignment */
+        KeAcquireGuardedMutex(&ObpDeviceMapLock);
         if ((ObSystemDeviceMap->DriveMap & (1 << DriveNumber)) != 0)
         {
             DbgPrint("Drive letter already used!\n");
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
             return FALSE;
         }
+        KeReleaseGuardedMutex(&ObpDeviceMapLock);
     }
     else
     {
         /* Automatic assignment */
         DriveNumber = AUTO_DRIVE;
-
+        KeAcquireGuardedMutex(&ObpDeviceMapLock);
         for (i = 2; i < 26; i++)
         {
             if ((ObSystemDeviceMap->DriveMap & (1 << i)) == 0)
@@ -83,6 +86,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
                 break;
             }
         }
+        KeReleaseGuardedMutex(&ObpDeviceMapLock);
 
         if (DriveNumber == AUTO_DRIVE)
         {
@@ -92,10 +96,6 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     }
 
     DPRINT("DriveNumber %d\n", DriveNumber);
-
-    /* Update the System Device Map */
-    ObSystemDeviceMap->DriveMap |= (1 << DriveNumber);
-    ObSystemDeviceMap->DriveType[DriveNumber] = DriveType;
 
     /* Build drive name */
     swprintf(DriveNameBuffer,

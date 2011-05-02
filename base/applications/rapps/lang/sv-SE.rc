@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS RAPPS
- * FILE:                  \base\applications\rapps\lang\sv-SE.rc
+ * FILE:            \base\applications\rapps\lang\sv-SE.rc
  * PURPOSE:         Swedish resource file
- * Translation:      Jaix Bly
+ * Translation:     Jaix Bly
  */
 
 #pragma code_page(65001) // UTF-8
@@ -21,11 +21,11 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",  ID_INSTALL
 		MENUITEM "&Avinstallera",ID_UNINSTALL
-		MENUITEM "&Ändra",   ID_MODIFY
+		MENUITEM "&�\x84ndra",   ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Uppdatere",  ID_REFRESH
+		MENUITEM "&Uppdatera",  ID_REFRESH
 	END
 	POPUP "Hjälp"
 	BEGIN
@@ -38,8 +38,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Öppne länk i webläsare", ID_OPEN_LINK
-		MENUITEM "&Kopier länk till urklipp", ID_COPY_LINK
+		MENUITEM "&�ppna l�nk i webl�sare", ID_OPEN_LINK
+		MENUITEM "&Kopiera l�nk till urklipp", ID_COPY_LINK
 	END
 END
 
@@ -49,7 +49,7 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",   ID_INSTALL
 		MENUITEM "&Avinstallera", ID_UNINSTALL
-		MENUITEM "&Ändre",    ID_MODIFY
+		MENUITEM "&�ndra",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
@@ -62,18 +62,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inställningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Allmänna", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Spara fönster position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	GROUPBOX "Allm�nna", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Spara f�nsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Uppdatera listan med tillg�ngliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Nerladding", -1, 4, 65, 240, 51
 	LTEXT "Mapp för nerladdningar:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
 	PUSHBUTTON "&Välj", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Ta bort programms installerare efter installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	AUTOCHECKBOX "&Ta bort programinstallerare efter installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Förinställd", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Standard", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
 	PUSHBUTTON "Avbryt", IDCANCEL, 181, 124, 60, 14
 END
@@ -186,15 +186,15 @@ BEGIN
 	IDS_UNINSTALL "Avinstallera"
 	IDS_MODIFY "Ändra"
 	IDS_APPS_COUNT "Programantal: %d"
-	IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
-	IDS_WELCOME_TEXT "Välj en kategori till vänstre, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
+	IDS_WELCOME_TITLE "V�lkommen till ReactOS programhanterare!\n\n"
+	IDS_WELCOME_TEXT "V�lj en kategori till v�nster, och sedan ett program f�r att installera eller avinstallera.\nReactOS Web sida: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installerat"
 	IDS_AVAILABLEFORINST "Tillgängliga for installation"
 	IDS_UPDATES "Uppdateringar"
 	IDS_APPLICATIONS "Program"
 	IDS_CHOOSE_FOLDER_TEXT "Välj en mapp som kommer att användas för nerladdning av program:"
-	IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en obefintlig mapp!"
+	IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
 	IDS_USER_NOT_ADMIN "Du måste vara administratör för att starta ""ReactOS programhanterare""!"
 	IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
 	IDS_INFORMATION "Information"

@@ -181,7 +181,8 @@ GdiSelectPalette(
 
     if(pdc->dctype == DCTYPE_MEMORY)
     {
-        IntGdiRealizePalette(pdc);
+        // This didn't work anyway
+        //IntGdiRealizePalette(hDC);
     }
 
     PALETTE_ShareUnlockPalette(ppal);
@@ -364,7 +365,7 @@ NtGdiSelectBitmap(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdc, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
     /* Return the old bitmap handle */
@@ -543,7 +544,12 @@ NtGdiGetRandomRgn(
             else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
             break;
         case SYSRGN:
-            if (pdc->prgnVis) hrgnSrc = pdc->prgnVis->BaseObject.hHmgr;
+            if (pdc->prgnVis)
+            {
+                PREGION prgnDest = REGION_LockRgn(hrgnDest);
+                ret = IntGdiCombineRgn(prgnDest, pdc->prgnVis, 0, RGN_COPY) == ERROR ? -1 : 1;
+                REGION_UnlockRgn(prgnDest);
+            }
             break;
         default:
             hrgnSrc = NULL;

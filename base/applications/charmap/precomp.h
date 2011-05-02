@@ -1,12 +1,15 @@
 #ifndef __CHARMAP_PRECOMP_H
 #define __CHARMAP_PRECOMP_H
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include "resource.h"
+
+#define SIZEOF(_v)  (sizeof(_v) / sizeof(*_v))
 
 #define XCELLS 20
 #define YCELLS 10

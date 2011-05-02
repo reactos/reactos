@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType-specific tables loader (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 1996-2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -137,6 +137,12 @@
             dist = diff;
         }
 
+        if ( entry == limit )
+        {
+          /* `loca' is the last table */
+          dist = stream->size - pos;
+        }
+
         if ( new_loca_len <= dist )
         {
           face->num_locations = face->root.num_glyphs;
@@ -201,6 +207,26 @@
         pos1 <<= 1;
         pos2 <<= 1;
       }
+    }
+
+    /* Check broken location data */
+    if ( pos1 >= face->glyf_len )
+    {
+      FT_TRACE1(( "tt_face_get_location:"
+                 " too large offset=0x%08lx found for gid=0x%04lx,"
+                 " exceeding the end of glyf table (0x%08lx)\n",
+                 pos1, gindex, face->glyf_len ));
+      *asize = 0;
+      return 0;
+    }
+
+    if ( pos2 >= face->glyf_len )
+    {
+      FT_TRACE1(( "tt_face_get_location:"
+                 " too large offset=0x%08lx found for gid=0x%04lx,"
+                 " truncate at the end of glyf table (0x%08lx)\n",
+                 pos2, gindex + 1, face->glyf_len ));
+      pos2 = face->glyf_len;
     }
 
     /* The `loca' table must be ordered; it refers to the length of */
@@ -287,7 +313,7 @@
       FT_Short*  limit = cur + face->cvt_size;
 
 
-      for ( ; cur <  limit; cur++ )
+      for ( ; cur < limit; cur++ )
         *cur = FT_GET_SHORT();
     }
 

@@ -268,8 +268,20 @@ FT_BEGIN_HEADER
   /*                    flow.  In all cases, the pitch is an offset to add */
   /*                    to a bitmap pointer in order to go down one row.   */
   /*                                                                       */
+  /*                    Note that `padding' means the alignment of a       */
+  /*                    bitmap to a byte border, and FreeType functions    */
+  /*                    normally align to the smallest possible integer    */
+  /*                    value.                                             */
+  /*                                                                       */
   /*                    For the B/W rasterizer, `pitch' is always an even  */
   /*                    number.                                            */
+  /*                                                                       */
+  /*                    To change the pitch of a bitmap (say, to make it a */
+  /*                    multiple of 4), use @FT_Bitmap_Convert.            */
+  /*                    Alternatively, you might use callback functions to */
+  /*                    directly render to the application's surface; see  */
+  /*                    the file `example2.cpp' in the tutorial for a      */
+  /*                    demonstration.                                     */
   /*                                                                       */
   /*    buffer       :: A typeless pointer to the bitmap buffer.  This     */
   /*                    value should be aligned on 32-bit boundaries in    */

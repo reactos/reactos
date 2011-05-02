@@ -149,18 +149,13 @@ typedef struct _DC
 
 /* Internal functions *********************************************************/
 
-#define  DC_LockDc(hDC)  \
-  ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
-#define  DC_UnlockDc(pDC)  \
-  GDIOBJ_UnlockObjByPtr ((POBJ)pDC)
-
 extern PDC defaultDCstate;
 
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
 PDC NTAPI DC_AllocDcWithHandle(VOID);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
-VOID FASTCALL DC_AllocateDcAttr(HDC);
+BOOL NTAPI DC_bAllocDcAttr(PDC pdc);
 VOID FASTCALL DC_FreeDcAttr(HDC);
 BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
 BOOL FASTCALL DC_SetOwnership(HDC hDC, PEPROCESS Owner);
@@ -203,6 +198,22 @@ BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 BOOL FASTCALL MakeInfoDC(PDC,BOOL);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
+BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
+
+FORCEINLINE
+PDC
+DC_LockDc(HDC hdc)
+{
+    //if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) return NULL; ???
+    return GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
+}
+
+FORCEINLINE
+VOID
+DC_UnlockDc(PDC pdc)
+{
+    GDIOBJ_vUnlockObject(&pdc->BaseObject);
+}
 
 VOID
 FORCEINLINE
@@ -215,7 +226,7 @@ DC_vSelectSurface(PDC pdc, PSURFACE psurfNew)
         SURFACE_ShareUnlockSurface(psurfOld);
     }
     if (psurfNew)
-        GDIOBJ_IncrementShareCount((POBJ)psurfNew);
+        GDIOBJ_vReferenceObjectByPointer((POBJ)psurfNew);
     pdc->dclevel.pSurface = psurfNew;
 }
 
@@ -227,7 +238,7 @@ DC_vSelectFillBrush(PDC pdc, PBRUSH pbrFill)
     if (pbrFillOld)
         BRUSH_ShareUnlockBrush(pbrFillOld);
     if (pbrFill)
-        GDIOBJ_IncrementShareCount((POBJ)pbrFill);
+        GDIOBJ_vReferenceObjectByPointer((POBJ)pbrFill);
     pdc->dclevel.pbrFill = pbrFill;
 }
 
@@ -239,7 +250,7 @@ DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
     if (pbrLineOld)
         BRUSH_ShareUnlockBrush(pbrLineOld);
     if (pbrLine)
-        GDIOBJ_IncrementShareCount((POBJ)pbrLine);
+        GDIOBJ_vReferenceObjectByPointer((POBJ)pbrLine);
     pdc->dclevel.pbrLine = pbrLine;
 }
 
@@ -251,7 +262,7 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
     if (ppalOld)
         PALETTE_ShareUnlockPalette(ppalOld);
     if (ppal)
-        GDIOBJ_IncrementShareCount((POBJ)ppal);
+        GDIOBJ_vReferenceObjectByPointer((POBJ)ppal);
     pdc->dclevel.ppal = ppal;
 }
 

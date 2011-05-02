@@ -667,7 +667,7 @@ IntDispatchMessage(PMSG pMsg)
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
         HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
-        REGION_FreeRgnByHandle( hrgn );
+        GreDeleteObject(hrgn);
     }
 
     return retval;
@@ -735,7 +735,8 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now check for normal messages. */
-        if ((ProcessMask & QS_POSTMESSAGE) &&
+        if (( (ProcessMask & QS_POSTMESSAGE) ||
+              (ProcessMask & QS_HOTKEY) ) &&
             MsqPeekMessage( ThreadQueue,
                             RemoveMessages,
                             Window,
@@ -1217,7 +1218,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             RETURN( FALSE);
         }
 
-        ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1229,8 +1229,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         {
             *uResult = Result;
         }
-
-        ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1437,7 +1435,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
-        ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1449,7 +1446,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         {
             *uResult = Result;
         }
-        ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1481,7 +1477,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     }
 
     IntReferenceMessageQueue(Window->head.pti->MessageQueue);
-    /* Take reference on this MessageQueue if its a callback. It will be released 
+    /* Take reference on this MessageQueue if its a callback. It will be released
        when message is processed or removed from target hwnd MessageQueue */
     if (CompletionCallback)
        IntReferenceMessageQueue(Win32Thread->MessageQueue);

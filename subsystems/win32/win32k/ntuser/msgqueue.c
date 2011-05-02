@@ -52,8 +52,9 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 
    if( key < 0x100 )
    {
-       ret = ((DWORD)(MessageQueue->KeyState[key] & KS_DOWN_BIT) << 8 ) |
-            (MessageQueue->KeyState[key] & KS_LOCK_BIT);
+       ret = (DWORD)MessageQueue->KeyState[key];
+       if (MessageQueue->KeyState[key] & KS_DOWN_BIT)
+          ret |= 0xFF00; // If down, windows returns 0xFF80. 
    }
 
    return ret;
@@ -62,9 +63,11 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 /* change the input key state for a given key */
 static void set_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, UCHAR key, BOOL down )
 {
+    DPRINT("set_input_key_state key:%d, down:%d\n", key, down);
+
     if (down)
     {
-        if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT)) 
+        if (!(MessageQueue->KeyState[key] & KS_DOWN_BIT))
         {
             MessageQueue->KeyState[key] ^= KS_LOCK_BIT;
         }
@@ -81,6 +84,8 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
 {
     UCHAR key;
     BOOL down = 0;
+
+    DPRINT("update_input_key_state message:%d\n", msg->message);
 
     switch (msg->message)
     {
@@ -106,9 +111,9 @@ static void update_input_key_state( PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg )
         down = 1;
         /* fall through */
     case WM_XBUTTONUP:
-        if (msg->wParam == XBUTTON1) 
+        if (msg->wParam == XBUTTON1)
             set_input_key_state( MessageQueue, VK_XBUTTON1, down );
-        else if (msg->wParam == XBUTTON2) 
+        else if (msg->wParam == XBUTTON2)
             set_input_key_state( MessageQueue, VK_XBUTTON2, down );
         break;
     case WM_KEYDOWN:
@@ -223,7 +228,7 @@ ClearMsgBitsMask(PUSER_MESSAGE_QUEUE Queue, UINT MessageBits)
    pti = Queue->Thread->Tcb.Win32Thread;
 
    if (MessageBits & QS_KEY)
-   {  
+   {
       if (--Queue->nCntsQBits[QSRosKey] == 0) ClrMask |= QS_KEY;
    }
    if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
@@ -347,7 +352,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    if(Msg->hwnd != NULL)
    {
        pwnd = UserGetWindowObject(Msg->hwnd);
-       if ((pwnd->style & WS_VISIBLE) && 
+       if ((pwnd->style & WS_VISIBLE) &&
             IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
        {
           pDesk->htEx = HTCLIENT;
@@ -367,7 +372,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
               continue;
            }
 
-           if((pwnd->style & WS_VISIBLE) && 
+           if((pwnd->style & WS_VISIBLE) &&
               IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
            {
                Msg->hwnd = pwnd->head.h;
@@ -481,6 +486,8 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    MSG Mesg;
    LARGE_INTEGER LargeTickCount;
    NTSTATUS Status;
+   INT id;
+   DWORD Type;
 
    Status = ObReferenceObjectByPointer (Thread,
                                         THREAD_ALL_ACCESS,
@@ -503,14 +510,17 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   Mesg.hwnd = hWnd;
-   Mesg.message = WM_HOTKEY;
-   Mesg.wParam = wParam;
-   Mesg.lParam = lParam;
+   id = wParam; // Check for hot keys unrelated to the hot keys set by RegisterHotKey.
+
+   Mesg.hwnd    = hWnd;
+   Mesg.message = id != IDHOT_REACTOS ? WM_HOTKEY : WM_SYSCOMMAND;
+   Mesg.wParam  = id != IDHOT_REACTOS ? wParam    : SC_HOTKEY;
+   Mesg.lParam  = id != IDHOT_REACTOS ? lParam    : (LPARAM)hWnd;
+   Type         = id != IDHOT_REACTOS ? QS_HOTKEY : QS_POSTMESSAGE;
    KeQueryTickCount(&LargeTickCount);
-   Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
-   Mesg.pt = gpsi->ptCursor;
-   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   Mesg.time    = MsqCalculateMessageTime(&LargeTickCount);
+   Mesg.pt      = gpsi->ptCursor;
+   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, Type);
    UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
 
@@ -543,8 +553,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
-   LRESULT Result;
    PTHREADINFO pti;
+   LRESULT Result = 0;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -811,7 +821,14 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    ptirec = MessageQueue->Thread->Tcb.Win32Thread;
    ASSERT(ThreadQueue != MessageQueue);
    ASSERT(ptirec->pcti); // Send must have a client side to receive it!!!!
-   
+
+   /* Don't send from or to a dying thread */
+    if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
+    {
+        *uResult = -1;
+        return STATUS_TIMEOUT;
+    }
+
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
    /* FIXME - increase reference counter of sender's message queue here */
@@ -990,6 +1007,8 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
    {
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
+
+       update_input_key_state( MessageQueue, Msg );
    }
 
    Message->QS_Flags = MessageBits;
@@ -1028,7 +1047,7 @@ static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
         if (pwndParent == pwndDesktop) break;
         pt.x += pwnd->rcClient.left - pwndParent->rcClient.left;
         pt.y += pwnd->rcClient.top - pwndParent->rcClient.top;
-        
+
         pwnd = pwndParent;
         co_IntSendMessage( UserHMGetHandle(pwnd), WM_PARENTNOTIFY,
                       MAKEWPARAM( event, idChild ), MAKELPARAM( pt.x, pt.y ) );
@@ -1070,7 +1089,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     DPRINT("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
-    
+
     if (pwndMsg == NULL || pwndMsg->head.pti != pti)
     {
         /* Remove and ignore the message */
@@ -1140,7 +1159,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            }
         }
 
-        if (!((first ==  0 && last == 0) || (message >= first || message <= last))) 
+        if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
             DPRINT("Message out of range!!!\n");
             RETURN(FALSE);
@@ -1261,8 +1280,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
-                LONG ret = co_IntSendMessage( msg->hwnd, 
-                                              WM_MOUSEACTIVATE, 
+                LONG ret = co_IntSendMessage( msg->hwnd,
+                                              WM_MOUSEACTIVATE,
                                               (WPARAM)UserHMGetHandle(pwndTop),
                                               MAKELONG( hittest, msg->message));
                 switch(ret)
@@ -1320,6 +1339,10 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                 break;
             case VK_LMENU: case VK_RMENU:
                 Msg->wParam = VK_MENU;
+                break;
+            case VK_F10:
+                if (Msg->message == WM_KEYUP) Msg->message = WM_SYSKEYUP;
+                if (Msg->message == WM_KEYDOWN) Msg->message = WM_SYSKEYDOWN;
                 break;
         }
     }
@@ -1433,7 +1456,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
     CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                           ListEntry);
-    do 
+    do
     {
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
@@ -1448,9 +1471,9 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
            if (Remove)
            {
-               update_input_key_state(MessageQueue, pMsg);
+               update_input_key_state(MessageQueue, &msg);
                RemoveEntryList(&CurrentMessage->ListEntry);
-               ClearMsgBitsMask(MessageQueue, QS_INPUT);
+               ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
                MsqDestroyMessage(CurrentMessage);
            }
 
@@ -1480,7 +1503,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
-   
+
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
 
@@ -1510,7 +1533,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
          if (Remove)
          {
              RemoveEntryList(&CurrentMessage->ListEntry);
-             ClearMsgBitsMask(MessageQueue, QS_POSTMESSAGE);
+             ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
              MsqDestroyMessage(CurrentMessage);
          }
          return(TRUE);
@@ -1532,7 +1555,7 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
    ret = KeWaitForSingleObject( MessageQueue->NewMessages,
                                 UserRequest,
                                 UserMode,
-                                FALSE, 
+                                FALSE,
                                 NULL );
    UserEnterCo();
    return ret;
@@ -1604,7 +1627,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
    PTHREADINFO pti;
-   
+
    pti = MessageQueue->Thread->Tcb.Win32Thread;
 
 
@@ -1632,7 +1655,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
       /* Only if the message has a sender was the message in the DispatchingList */
-      if ((CurrentSentMessage->SenderQueue) 
+      if ((CurrentSentMessage->SenderQueue)
          && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2008, 2009 by                                    */
+/*  Copyright 2006, 2007, 2008, 2009, 2010 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1371,7 +1371,7 @@
     FT_UNUSED( metrics );
 
 
-    error = af_glyph_hints_reload( hints, outline, 0 );
+    error = af_glyph_hints_reload( hints, outline );
     if ( error )
       goto Exit;
 

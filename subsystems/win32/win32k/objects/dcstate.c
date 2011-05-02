@@ -101,15 +101,11 @@ DC_vRestoreDC(
     IN PDC pdc,
     INT iSaveLevel)
 {
-    PEPROCESS pepCurrentProcess;
     HDC hdcSave;
     PDC pdcSave;
 
     ASSERT(iSaveLevel > 0);
     DPRINT("DC_vRestoreDC(%p, %ld)\n", pdc->BaseObject.hHmgr, iSaveLevel);
-
-    /* Get current process */
-    pepCurrentProcess = PsGetCurrentProcess();
 
     /* Loop the save levels */
     while (pdc->dclevel.lSaveDepth > iSaveLevel)
@@ -118,7 +114,7 @@ DC_vRestoreDC(
         DPRINT("RestoreDC = %p\n", hdcSave);
 
         /* Set us as the owner */
-        if (!GDIOBJ_SetOwnership(hdcSave, pepCurrentProcess))
+        if (!GreSetObjectOwner(hdcSave, GDI_OBJ_HMGR_POWNED))
         {
             /* Could not get ownership. That's bad! */
             DPRINT1("Could not get ownership of saved DC (%p) for hdc %p!\n",
@@ -261,7 +257,7 @@ NtGdiSaveDC(
 
     /* Make it a kernel handle
        (FIXME: windows handles this different, see wiki)*/
-    GDIOBJ_SetOwnership(hdcSave, NULL);
+    GreSetObjectOwner(hdcSave, GDI_OBJ_HMGR_PUBLIC);
 
     /* Copy the current state */
     DC_vCopyState(pdc, pdcSave, TRUE);

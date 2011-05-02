@@ -169,6 +169,9 @@ ObInitSystem(VOID)
     /* Initialize the Default Event */
     KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE);
 
+    /* Initialize the Dos Device Map mutex */
+    KeInitializeGuardedMutex(&ObpDeviceMapLock);
+
     /* Setup default access for the system process */
     PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
     PsGetCurrentThread()->GrantedAccess = THREAD_ALL_ACCESS;

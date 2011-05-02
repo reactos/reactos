@@ -17,11 +17,14 @@ Licence = Unbekannt
 [Section.040a]
 Licence = Desconocida
 
-[Section.040a]
+[Section.040c]
 Licence = Inconnue
 
 [Section.0415]
 Licence = Nieznana
+
+[Section.041b]
+Description = Neznáma
 
 [Section.0422]
 Licence = Невідома

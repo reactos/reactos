@@ -5,6 +5,7 @@ set_unicode()
 
 list(APPEND SOURCE
     eventlog.c
+    eventsource.c
     logport.c
     eventlog.rc
     rpc.c

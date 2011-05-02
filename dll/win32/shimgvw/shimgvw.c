@@ -519,12 +519,6 @@ ImageView_PrintToW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
     DPRINT("ImageView_PrintToW() not implemented\n");
 }
 
-VOID WINAPI
-imageview_fullscreenW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
-{
-    DPRINT("ImageView_fullscreenW() not implemented\n");
-}
-
 BOOL WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,

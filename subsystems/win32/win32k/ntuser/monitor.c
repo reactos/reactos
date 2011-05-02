@@ -175,7 +175,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
         }
         Monitor->Prev = p;
     }
-    
+
     IntUpdateMonitorSize(pGdiDevice);
 
     return STATUS_SUCCESS;
@@ -232,7 +232,7 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     }
 
     if (Monitor->hrgnMonitor)
-        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+        GreDeleteObject(Monitor->hrgnMonitor);
 
     IntDestroyMonitorObject(Monitor);
 
@@ -276,8 +276,8 @@ IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
 
     if (Monitor->hrgnMonitor)
     {
-        GDIOBJ_SetOwnership(Monitor->hrgnMonitor, PsGetCurrentProcess());
-        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+        GreSetObjectOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(Monitor->hrgnMonitor);
     }
 
     Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
@@ -413,7 +413,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
             if (monitorRectList != NULL)
                 monitorRectList[iCount] = IntersectionRect;
         }
-        
+
         /* Increase count of found monitors */
         iCount++;
     }
@@ -806,7 +806,7 @@ NtUserMonitorFromRect(
         return hMonitor;
     }
 
-    hMonitorList = ExAllocatePoolWithTag(PagedPool, 
+    hMonitorList = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(HMONITOR) * numMonitors,
                                          USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)

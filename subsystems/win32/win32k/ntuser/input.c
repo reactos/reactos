@@ -482,7 +482,7 @@ static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
-   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -794,7 +794,7 @@ KeyboardThreadMain(PVOID StartContext)
 
             if (ModifierState & MOD_ALT)
             {
-               lParam |= (1 << 29);
+               lParam |= (1 << 29); // wine -> (HIWORD(lParam) & KEYDATA_ALT) #define KEYDATA_ALT 0x2000
 
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_SYSKEYDOWN;
@@ -1297,9 +1297,10 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    if (ki->dwFlags & KEYEVENTF_KEYUP)
    {
       Msg.message = WM_KEYUP;
-      if ((gQueueKeyStateTable[VK_MENU] & 0x80) &&
+      if (((gQueueKeyStateTable[VK_MENU] & 0x80) &&
           ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
            || !(gQueueKeyStateTable[VK_CONTROL] & 0x80)))
+          || (wVkStripped == VK_F10))
       {
          if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
              (wVkStripped != VK_MENU)) /* <ALT>-down...<something else>-up */
@@ -1311,8 +1312,9 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    else
    {
       Msg.message = WM_KEYDOWN;
-      if ((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
+      if (((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
           !(gQueueKeyStateTable[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL))
+          || (wVkStripped == VK_F10))
       {
          Msg.message = WM_SYSKEYDOWN;
          TrackSysKey = wVkStripped;

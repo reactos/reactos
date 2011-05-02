@@ -4,8 +4,9 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010                                                         */
+/*  by David Turner, Robert Wilhelm, and Werner Lemberg.                   */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -223,9 +224,10 @@
 
   /*************************************************************************/
   /*                                                                       */
-  /* A simple bounds-checking macro.                                       */
+  /* Two simple bounds-checking macros.                                    */
   /*                                                                       */
-#define BOUNDS( x, n )  ( (FT_UInt)(x) >= (FT_UInt)(n) )
+#define BOUNDS( x, n )   ( (FT_UInt)(x)  >= (FT_UInt)(n)  )
+#define BOUNDSL( x, n )  ( (FT_ULong)(x) >= (FT_ULong)(n) )
 
 #undef  SUCCESS
 #define SUCCESS  0
@@ -476,8 +478,7 @@
     return TT_Err_Ok;
 
   Fail_Memory:
-    FT_ERROR(( "Init_Context: not enough memory for 0x%08lx\n",
-               (FT_Long)exec ));
+    FT_ERROR(( "Init_Context: not enough memory for %p\n", exec ));
     TT_Done_Context( exec );
 
     return error;
@@ -508,7 +509,7 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  static FT_Error
+  FT_LOCAL_DEF( FT_Error )
   Update_Max( FT_Memory  memory,
               FT_ULong*  size,
               FT_Long    multiplier,
@@ -594,6 +595,12 @@
       exec->storage   = size->storage;
 
       exec->twilight  = size->twilight;
+
+      /* In case of multi-threading it can happen that the old size object */
+      /* no longer exists, thus we must clear all glyph zone references.   */
+      ft_memset( &exec->zp0, 0, sizeof ( exec->zp0 ) );
+      exec->zp1 = exec->zp0;
+      exec->zp2 = exec->zp0;
     }
 
     /* XXX: We reserve a little more elements on the stack to deal safely */
@@ -1109,6 +1116,287 @@
     /*  MIRP[30]  */  PACK( 2, 0 ),
     /*  MIRP[31]  */  PACK( 2, 0 )
   };
+
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+
+  static
+  const char*  const opcode_name[256] =
+  {
+    "SVTCA y",
+    "SVTCA x",
+    "SPvTCA y",
+    "SPvTCA x",
+    "SFvTCA y",
+    "SFvTCA x",
+    "SPvTL ||",
+    "SPvTL +",
+    "SFvTL ||",
+    "SFvTL +",
+    "SPvFS",
+    "SFvFS",
+    "GPV",
+    "GFV",
+    "SFvTPv",
+    "ISECT",
+
+    "SRP0",
+    "SRP1",
+    "SRP2",
+    "SZP0",
+    "SZP1",
+    "SZP2",
+    "SZPS",
+    "SLOOP",
+    "RTG",
+    "RTHG",
+    "SMD",
+    "ELSE",
+    "JMPR",
+    "SCvTCi",
+    "SSwCi",
+    "SSW",
+
+    "DUP",
+    "POP",
+    "CLEAR",
+    "SWAP",
+    "DEPTH",
+    "CINDEX",
+    "MINDEX",
+    "AlignPTS",
+    "INS_$28",
+    "UTP",
+    "LOOPCALL",
+    "CALL",
+    "FDEF",
+    "ENDF",
+    "MDAP[0]",
+    "MDAP[1]",
+
+    "IUP[0]",
+    "IUP[1]",
+    "SHP[0]",
+    "SHP[1]",
+    "SHC[0]",
+    "SHC[1]",
+    "SHZ[0]",
+    "SHZ[1]",
+    "SHPIX",
+    "IP",
+    "MSIRP[0]",
+    "MSIRP[1]",
+    "AlignRP",
+    "RTDG",
+    "MIAP[0]",
+    "MIAP[1]",
+
+    "NPushB",
+    "NPushW",
+    "WS",
+    "RS",
+    "WCvtP",
+    "RCvt",
+    "GC[0]",
+    "GC[1]",
+    "SCFS",
+    "MD[0]",
+    "MD[1]",
+    "MPPEM",
+    "MPS",
+    "FlipON",
+    "FlipOFF",
+    "DEBUG",
+
+    "LT",
+    "LTEQ",
+    "GT",
+    "GTEQ",
+    "EQ",
+    "NEQ",
+    "ODD",
+    "EVEN",
+    "IF",
+    "EIF",
+    "AND",
+    "OR",
+    "NOT",
+    "DeltaP1",
+    "SDB",
+    "SDS",
+
+    "ADD",
+    "SUB",
+    "DIV",
+    "MUL",
+    "ABS",
+    "NEG",
+    "FLOOR",
+    "CEILING",
+    "ROUND[0]",
+    "ROUND[1]",
+    "ROUND[2]",
+    "ROUND[3]",
+    "NROUND[0]",
+    "NROUND[1]",
+    "NROUND[2]",
+    "NROUND[3]",
+
+    "WCvtF",
+    "DeltaP2",
+    "DeltaP3",
+    "DeltaCn[0]",
+    "DeltaCn[1]",
+    "DeltaCn[2]",
+    "SROUND",
+    "S45Round",
+    "JROT",
+    "JROF",
+    "ROFF",
+    "INS_$7B",
+    "RUTG",
+    "RDTG",
+    "SANGW",
+    "AA",
+
+    "FlipPT",
+    "FlipRgON",
+    "FlipRgOFF",
+    "INS_$83",
+    "INS_$84",
+    "ScanCTRL",
+    "SDVPTL[0]",
+    "SDVPTL[1]",
+    "GetINFO",
+    "IDEF",
+    "ROLL",
+    "MAX",
+    "MIN",
+    "ScanTYPE",
+    "InstCTRL",
+    "INS_$8F",
+
+    "INS_$90",
+    "INS_$91",
+    "INS_$92",
+    "INS_$93",
+    "INS_$94",
+    "INS_$95",
+    "INS_$96",
+    "INS_$97",
+    "INS_$98",
+    "INS_$99",
+    "INS_$9A",
+    "INS_$9B",
+    "INS_$9C",
+    "INS_$9D",
+    "INS_$9E",
+    "INS_$9F",
+
+    "INS_$A0",
+    "INS_$A1",
+    "INS_$A2",
+    "INS_$A3",
+    "INS_$A4",
+    "INS_$A5",
+    "INS_$A6",
+    "INS_$A7",
+    "INS_$A8",
+    "INS_$A9",
+    "INS_$AA",
+    "INS_$AB",
+    "INS_$AC",
+    "INS_$AD",
+    "INS_$AE",
+    "INS_$AF",
+
+    "PushB[0]",
+    "PushB[1]",
+    "PushB[2]",
+    "PushB[3]",
+    "PushB[4]",
+    "PushB[5]",
+    "PushB[6]",
+    "PushB[7]",
+    "PushW[0]",
+    "PushW[1]",
+    "PushW[2]",
+    "PushW[3]",
+    "PushW[4]",
+    "PushW[5]",
+    "PushW[6]",
+    "PushW[7]",
+
+    "MDRP[00]",
+    "MDRP[01]",
+    "MDRP[02]",
+    "MDRP[03]",
+    "MDRP[04]",
+    "MDRP[05]",
+    "MDRP[06]",
+    "MDRP[07]",
+    "MDRP[08]",
+    "MDRP[09]",
+    "MDRP[10]",
+    "MDRP[11]",
+    "MDRP[12]",
+    "MDRP[13]",
+    "MDRP[14]",
+    "MDRP[15]",
+
+    "MDRP[16]",
+    "MDRP[17]",
+    "MDRP[18]",
+    "MDRP[19]",
+    "MDRP[20]",
+    "MDRP[21]",
+    "MDRP[22]",
+    "MDRP[23]",
+    "MDRP[24]",
+    "MDRP[25]",
+    "MDRP[26]",
+    "MDRP[27]",
+    "MDRP[28]",
+    "MDRP[29]",
+    "MDRP[30]",
+    "MDRP[31]",
+
+    "MIRP[00]",
+    "MIRP[01]",
+    "MIRP[02]",
+    "MIRP[03]",
+    "MIRP[04]",
+    "MIRP[05]",
+    "MIRP[06]",
+    "MIRP[07]",
+    "MIRP[08]",
+    "MIRP[09]",
+    "MIRP[10]",
+    "MIRP[11]",
+    "MIRP[12]",
+    "MIRP[13]",
+    "MIRP[14]",
+    "MIRP[15]",
+
+    "MIRP[16]",
+    "MIRP[17]",
+    "MIRP[18]",
+    "MIRP[19]",
+    "MIRP[20]",
+    "MIRP[21]",
+    "MIRP[22]",
+    "MIRP[23]",
+    "MIRP[24]",
+    "MIRP[25]",
+    "MIRP[26]",
+    "MIRP[27]",
+    "MIRP[28]",
+    "MIRP[29]",
+    "MIRP[30]",
+    "MIRP[31]"
+  };
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
 
 
   static
@@ -1727,7 +2015,8 @@
       if ( distance && val < 0 )
         val = 0;
     }
-    else {
+    else
+    {
       val = distance - compensation;
       if ( val > 0 )
         val = 0;
@@ -2892,24 +3181,30 @@
   }
 
 
-#define DO_JROT               \
-    if ( args[1] != 0 )       \
-    {                         \
-      CUR.IP      += args[0]; \
-      CUR.step_ins = FALSE;   \
+#define DO_JROT                          \
+    if ( args[1] != 0 )                  \
+    {                                    \
+      CUR.IP      += args[0];            \
+      if ( CUR.IP < 0 )                  \
+        CUR.error = TT_Err_Bad_Argument; \
+      CUR.step_ins = FALSE;              \
     }
 
 
-#define DO_JMPR             \
-    CUR.IP      += args[0]; \
+#define DO_JMPR                        \
+    CUR.IP      += args[0];            \
+    if ( CUR.IP < 0 )                  \
+      CUR.error = TT_Err_Bad_Argument; \
     CUR.step_ins = FALSE;
 
 
-#define DO_JROF               \
-    if ( args[1] == 0 )       \
-    {                         \
-      CUR.IP      += args[0]; \
-      CUR.step_ins = FALSE;   \
+#define DO_JROF                          \
+    if ( args[1] == 0 )                  \
+    {                                    \
+      CUR.IP      += args[0];            \
+      if ( CUR.IP < 0 )                  \
+        CUR.error = TT_Err_Bad_Argument; \
+      CUR.step_ins = FALSE;              \
     }
 
 
@@ -2992,39 +3287,39 @@
     args[0] = FT_PIX_CEIL( args[0] );
 
 
-#define DO_RS                          \
-   {                                   \
-     FT_ULong  I = (FT_ULong)args[0];  \
-                                       \
-                                       \
-     if ( BOUNDS( I, CUR.storeSize ) ) \
-     {                                 \
-       if ( CUR.pedantic_hinting )     \
-       {                               \
-         ARRAY_BOUND_ERROR;            \
-       }                               \
-       else                            \
-         args[0] = 0;                  \
-     }                                 \
-     else                              \
-       args[0] = CUR.storage[I];       \
+#define DO_RS                           \
+   {                                    \
+     FT_ULong  I = (FT_ULong)args[0];   \
+                                        \
+                                        \
+     if ( BOUNDSL( I, CUR.storeSize ) ) \
+     {                                  \
+       if ( CUR.pedantic_hinting )      \
+       {                                \
+         ARRAY_BOUND_ERROR;             \
+       }                                \
+       else                             \
+         args[0] = 0;                   \
+     }                                  \
+     else                               \
+       args[0] = CUR.storage[I];        \
    }
 
 
-#define DO_WS                          \
-   {                                   \
-     FT_ULong  I = (FT_ULong)args[0];  \
-                                       \
-                                       \
-     if ( BOUNDS( I, CUR.storeSize ) ) \
-     {                                 \
-       if ( CUR.pedantic_hinting )     \
-       {                               \
-         ARRAY_BOUND_ERROR;            \
-       }                               \
-     }                                 \
-     else                              \
-       CUR.storage[I] = args[1];       \
+#define DO_WS                           \
+   {                                    \
+     FT_ULong  I = (FT_ULong)args[0];   \
+                                        \
+                                        \
+     if ( BOUNDSL( I, CUR.storeSize ) ) \
+     {                                  \
+       if ( CUR.pedantic_hinting )      \
+       {                                \
+         ARRAY_BOUND_ERROR;             \
+       }                                \
+     }                                  \
+     else                               \
+       CUR.storage[I] = args[1];        \
    }
 
 
@@ -3033,7 +3328,7 @@
      FT_ULong  I = (FT_ULong)args[0];    \
                                          \
                                          \
-     if ( BOUNDS( I, CUR.cvtSize ) )     \
+     if ( BOUNDSL( I, CUR.cvtSize ) )    \
      {                                   \
        if ( CUR.pedantic_hinting )       \
        {                                 \
@@ -3052,7 +3347,7 @@
      FT_ULong  I = (FT_ULong)args[0];    \
                                          \
                                          \
-     if ( BOUNDS( I, CUR.cvtSize ) )     \
+     if ( BOUNDSL( I, CUR.cvtSize ) )    \
      {                                   \
        if ( CUR.pedantic_hinting )       \
        {                                 \
@@ -3069,7 +3364,7 @@
      FT_ULong  I = (FT_ULong)args[0];                           \
                                                                 \
                                                                 \
-     if ( BOUNDS( I, CUR.cvtSize ) )                            \
+     if ( BOUNDSL( I, CUR.cvtSize ) )                           \
      {                                                          \
        if ( CUR.pedantic_hinting )                              \
        {                                                        \
@@ -4390,7 +4685,7 @@
     /* first of all, check the index */
 
     F = args[0];
-    if ( BOUNDS( F, CUR.maxFunc + 1 ) )
+    if ( BOUNDSL( F, CUR.maxFunc + 1 ) )
       goto Fail;
 
     /* Except for some old Apple fonts, all functions in a TrueType */
@@ -4466,7 +4761,7 @@
 
     /* first of all, check the index */
     F = args[1];
-    if ( BOUNDS( F, CUR.maxFunc + 1 ) )
+    if ( BOUNDSL( F, CUR.maxFunc + 1 ) )
       goto Fail;
 
     /* Except for some old Apple fonts, all functions in a TrueType */
@@ -4569,7 +4864,7 @@
     }
 
     def->opc    = (FT_Byte)args[0];
-    def->start  = CUR.IP+1;
+    def->start  = CUR.IP + 1;
     def->range  = CUR.curRange;
     def->active = TRUE;
 
@@ -4741,7 +5036,7 @@
 
     L = (FT_ULong)args[0];
 
-    if ( BOUNDS( L, CUR.zp2.n_points ) )
+    if ( BOUNDSL( L, CUR.zp2.n_points ) )
     {
       if ( CUR.pedantic_hinting )
       {
@@ -4825,8 +5120,8 @@
     K = (FT_UShort)args[1];
     L = (FT_UShort)args[0];
 
-    if( BOUNDS( L, CUR.zp0.n_points ) ||
-        BOUNDS( K, CUR.zp1.n_points ) )
+    if ( BOUNDS( L, CUR.zp0.n_points ) ||
+         BOUNDS( K, CUR.zp1.n_points ) )
     {
       if ( CUR.pedantic_hinting )
       {
@@ -5480,12 +5775,12 @@
   static void
   Ins_SHZ( INS_ARG )
   {
-    TT_GlyphZoneRec zp;
-    FT_UShort       refp;
-    FT_F26Dot6      dx,
-                    dy;
+    TT_GlyphZoneRec  zp;
+    FT_UShort        refp;
+    FT_F26Dot6       dx,
+                     dy;
 
-    FT_UShort       last_point, i;
+    FT_UShort        last_point, i;
 
 
     if ( BOUNDS( args[0], 2 ) )
@@ -5505,7 +5800,16 @@
     if ( CUR.GS.gep2 == 0 && CUR.zp2.n_points > 0 )
       last_point = (FT_UShort)( CUR.zp2.n_points - 1 );
     else if ( CUR.GS.gep2 == 1 && CUR.zp2.n_contours > 0 )
+    {
       last_point = (FT_UShort)( CUR.zp2.contours[CUR.zp2.n_contours - 1] );
+
+      if ( BOUNDS( last_point, CUR.zp2.n_points ) )
+      {
+        if ( CUR.pedantic_hinting )
+          CUR.error = TT_Err_Invalid_Reference;
+        return;
+      }
+    }
     else
       last_point = 0;
 
@@ -5687,8 +5991,8 @@
     cvtEntry = (FT_ULong)args[1];
     point    = (FT_UShort)args[0];
 
-    if ( BOUNDS( point,    CUR.zp0.n_points ) ||
-         BOUNDS( cvtEntry, CUR.cvtSize )      )
+    if ( BOUNDS( point,     CUR.zp0.n_points ) ||
+         BOUNDSL( cvtEntry, CUR.cvtSize )      )
     {
       if ( CUR.pedantic_hinting )
         CUR.error = TT_Err_Invalid_Reference;
@@ -5880,7 +6184,7 @@
     /* XXX: UNDOCUMENTED! cvt[-1] = 0 always */
 
     if ( BOUNDS( point,      CUR.zp1.n_points ) ||
-         BOUNDS( cvtEntry,   CUR.cvtSize + 1 )  ||
+         BOUNDSL( cvtEntry,  CUR.cvtSize + 1 )  ||
          BOUNDS( CUR.GS.rp0, CUR.zp0.n_points ) )
     {
       if ( CUR.pedantic_hinting )
@@ -6131,8 +6435,8 @@
     p1 = (FT_UShort)args[0];
     p2 = (FT_UShort)args[1];
 
-    if ( BOUNDS( args[0], CUR.zp1.n_points ) ||
-         BOUNDS( args[1], CUR.zp0.n_points ) )
+    if ( BOUNDS( p1, CUR.zp1.n_points ) ||
+         BOUNDS( p2, CUR.zp0.n_points ) )
     {
       if ( CUR.pedantic_hinting )
         CUR.error = TT_Err_Invalid_Reference;
@@ -6466,8 +6770,8 @@
       end_point   = CUR.pts.contours[contour] - CUR.pts.first_point;
       first_point = point;
 
-      if ( CUR.pts.n_points <= end_point )
-        end_point = CUR.pts.n_points;
+      if ( BOUNDS ( end_point, CUR.pts.n_points ) )
+        end_point = CUR.pts.n_points - 1;
 
       while ( point <= end_point && ( CUR.pts.tags[point] & mask ) == 0 )
         point++;
@@ -6483,12 +6787,11 @@
         {
           if ( ( CUR.pts.tags[point] & mask ) != 0 )
           {
-            if ( point > 0 )
-              _iup_worker_interpolate( &V,
-                                       cur_touched + 1,
-                                       point - 1,
-                                       cur_touched,
-                                       point );
+            _iup_worker_interpolate( &V,
+                                     cur_touched + 1,
+                                     point - 1,
+                                     cur_touched,
+                                     point );
             cur_touched = point;
           }
 
@@ -6661,7 +6964,7 @@
       A = (FT_ULong)CUR.stack[CUR.args + 1];
       B = CUR.stack[CUR.args];
 
-      if ( BOUNDS( A, CUR.cvtSize ) )
+      if ( BOUNDSL( A, CUR.cvtSize ) )
       {
         if ( CUR.pedantic_hinting )
         {
@@ -6771,7 +7074,7 @@
         call = CUR.callStack + CUR.callTop++;
 
         call->Caller_Range = CUR.curRange;
-        call->Caller_IP    = CUR.IP+1;
+        call->Caller_IP    = CUR.IP + 1;
         call->Cur_Count    = 1;
         call->Cur_Restart  = def->start;
 
@@ -7139,6 +7442,10 @@
     do
     {
       CUR.opcode = CUR.code[CUR.IP];
+
+      FT_TRACE7(( "  " ));
+      FT_TRACE7(( opcode_name[CUR.opcode] ));
+      FT_TRACE7(( "\n" ));
 
       if ( ( CUR.length = opcode_length[CUR.opcode] ) < 0 )
       {
@@ -7833,6 +8140,15 @@
 #ifdef TT_CONFIG_OPTION_STATIC_RASTER
     *exc = cur;
 #endif
+
+    /* If any errors have occurred, function tables may be broken. */
+    /* Force a re-execution of `prep' and `fpgm' tables if no      */
+    /* bytecode debugger is run.                                   */
+    if ( CUR.error && !CUR.instruction_trap )
+    {
+      FT_TRACE1(( "  The interpreter returned error 0x%x\n", CUR.error ));
+      exc->size->cvt_ready      = FALSE;  
+    }
 
     return CUR.error;
   }

@@ -1329,7 +1329,7 @@ IntFillArc( PDC dc,
 
     pdcattr = dc->pdcattr;
 
-    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    pbrush = BRUSH_ShareLockBrush(pdcattr->hbrush);
     if (!pbrush)
     {
         DPRINT1("FillArc Fail\n");
@@ -1342,7 +1342,7 @@ IntFillArc( PDC dc,
                        (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
                        pbrush, Chord);
 
-    BRUSH_UnlockBrush(pbrush);
+    BRUSH_ShareUnlockBrush(pbrush);
     return ret;
 }
 

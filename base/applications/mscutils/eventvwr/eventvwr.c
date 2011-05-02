@@ -267,7 +267,7 @@ GetEventCategory(IN LPCWSTR KeyName,
             }
             else
             {
-                wcscpy(CategoryName, L"None");
+                LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
             }
 
             if (hLibrary != NULL)
@@ -281,7 +281,7 @@ GetEventCategory(IN LPCWSTR KeyName,
         }
     }
 
-    wcscpy(CategoryName, L"None");
+    LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
 
     return FALSE;
 }
@@ -597,9 +597,9 @@ QueryEventMessages(LPWSTR lpMachineName,
 
         while (dwRead > 0)
         {
-            wcscpy(szUsername , L"N/A");
-            wcscpy(szEventText , L"N/A");
-            wcscpy(szCategory , L"None");
+            LoadStringW(hInst, IDS_NOT_AVAILABLE, szUsername, MAX_PATH);
+            LoadStringW(hInst, IDS_NOT_AVAILABLE, szEventText, MAX_PATH);
+            LoadStringW(hInst, IDS_NONE, szCategory, MAX_PATH);
 
             // Get the event source name.
             lpSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
@@ -1142,6 +1142,7 @@ DisplayEvent(HWND hDlg)
 
         SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, szDate);
         SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, szTime);
+
         SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, szUser);
         SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, szSource);
         SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, szComputer);

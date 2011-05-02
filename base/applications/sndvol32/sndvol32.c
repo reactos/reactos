@@ -574,6 +574,16 @@ DlgPreferencesProc(HWND hwndDlg,
                       IDCANCEL);
             break;
         }
+        
+        case WM_SYSCOLORCHANGE:
+        {
+            HWND hwndControls;
+            
+            /* Forward WM_SYSCOLORCHANGE */
+            hwndControls = GetDlgItem(hwndDlg, IDC_CONTROLS);
+            SendMessage(hwndControls, WM_SYSCOLORCHANGE, 0, 0);
+            break;
+        }
     }
 
     return 0;

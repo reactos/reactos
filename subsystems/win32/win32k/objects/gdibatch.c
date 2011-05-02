@@ -20,7 +20,7 @@ FASTCALL
 DoDeviceSync( SURFOBJ *Surface, PRECTL Rect, FLONG fl)
 {
   PPDEVOBJ Device = (PDEVOBJ*)Surface->hdev;
-// No punting and "Handle to a surface, provided that the surface is device-managed. 
+// No punting and "Handle to a surface, provided that the surface is device-managed.
 // Otherwise, dhsurf is zero".
   if (!(Device->flFlags & PDEV_DRIVER_PUNTED_CALL) && (Surface->dhsurf))
   {
@@ -42,9 +42,9 @@ VOID
 FASTCALL
 SynchonizeDriver(FLONG Flags)
 {
-  SURFOBJ *SurfObj; 
+  SURFOBJ *SurfObj;
   PPDEVOBJ Device;
-  
+
   if (Flags & GCAPS2_SYNCFLUSH)
       Flags = DSS_FLUSH_EVENT;
   if (Flags & GCAPS2_SYNCTIMER)
@@ -149,7 +149,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         break;
   }
 
-  return Size; 
+  return Size;
 }
 
 /*
@@ -190,7 +190,7 @@ NtGdiFlushUserBatch(VOID)
       PCHAR pHdr = (PCHAR)&pTeb->GdiTebBatch.Buffer[0];
       PDC pDC = NULL;
 
-      if (hDC && !IsObjectDead(hDC))
+      if (GDI_HANDLE_GET_TYPE(hDC) == GDILoObjType_LO_DC_TYPE && GreIsHandleValid(hDC))
       {
           pDC = DC_LockDc(hDC);
       }

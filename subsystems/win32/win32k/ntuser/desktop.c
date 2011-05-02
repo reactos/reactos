@@ -168,7 +168,7 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
    IntFreeDesktopHeap(Desktop);
 }
 
-NTSTATUS NTAPI 
+NTSTATUS NTAPI
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 {
     PTHREADINFO pti;
@@ -640,7 +640,7 @@ UserRedrawDesktop()
 {
     PWND Window = NULL;
     HRGN hRgn;
-    
+
     Window = UserGetDesktopWindow();
     hRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
 
@@ -650,8 +650,8 @@ UserRedrawDesktop()
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
-    
-    REGION_FreeRgnByHandle(hRgn);
+
+    GreDeleteObject(hRgn);
 }
 
 
@@ -1831,7 +1831,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     DPRINT("IntSetThreadDesktop() , FOF=%d\n", FreeOnFailure);
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
     W32Thread = PsGetCurrentThreadWin32Thread();
-    
+
     if(hDesktop != NULL)
     {
         /* Validate the new desktop. */
@@ -1943,7 +1943,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 
         ObDereferenceObject(OldDesktop);
     }
-    
+
     if (hOldDesktop != NULL)
     {
         ZwClose(hOldDesktop);
@@ -1965,11 +1965,11 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    BOOL ret;
 
    UserEnterExclusive();
-   
+
    ret = IntSetThreadDesktop(hDesktop, FALSE);
-   
+
    UserLeave();
-   
+
    return ret;
 }
 

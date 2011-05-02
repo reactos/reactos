@@ -91,4 +91,7 @@ ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
 ULONG PnpBiosGetDeviceNode(UCHAR *NodeId,
 			 UCHAR *NodeBuffer);
 
+/* i386pxe.S */
+USHORT PxeCallApi(USHORT Segment, USHORT Offset, USHORT Service, VOID* Parameter);
+
 /* EOF */

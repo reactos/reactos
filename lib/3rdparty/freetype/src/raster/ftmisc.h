@@ -5,7 +5,7 @@
 /*    Miscellaneous macros for stand-alone rasterizer (specification       */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 2005, 2009 by                                                */
+/*  Copyright 2005, 2009, 2010 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -27,6 +27,7 @@
 #ifndef __FTMISC_H__
 #define __FTMISC_H__
 
+
   /* memset */
 #include FT_CONFIG_STANDARD_LIBRARY_H
 
@@ -34,6 +35,7 @@
 #define FT_END_HEADER
 
 #define FT_LOCAL_DEF( x )   static x
+
 
   /* from include/freetype2/fttypes.h */
 
@@ -77,11 +79,21 @@
 
   } FT_MemoryRec;
 
+
   /* from src/ftcalc.c */
 
-#include <inttypes.h>
+#if ( defined _WIN32 || defined _WIN64 )
+
+  typedef __int64  FT_Int64;
+
+#else
+
+#include "inttypes.h"
 
   typedef int64_t  FT_Int64;
+
+#endif
+
 
   static FT_Long
   FT_MulDiv( FT_Long  a,

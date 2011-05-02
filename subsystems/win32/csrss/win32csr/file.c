@@ -59,7 +59,7 @@ CSR_API(CsrDefineDosDevice)
     DWORD dwFlags;
     PWSTR lpBuffer;
 
-    DPRINT("CsrDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n", 
+    DPRINT("CsrDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
            Request->Data.DefineDosDeviceRequest.dwFlags,
            &Request->Data.DefineDosDeviceRequest.DeviceName,
            &Request->Data.DefineDosDeviceRequest.TargetName);
@@ -98,6 +98,17 @@ CSR_API(CsrDefineDosDevice)
 
         RequestLinkTarget =
             &Request->Data.DefineDosDeviceRequest.TargetName;
+        /*
+         * Strip off any trailing '\', if we leave a trailing slash the drive remains non-accessible.
+         * So working around it for now.
+         * FIXME: Need to fix this in the object manager ObpLookupObjectName()??, and remove this when the its fixed.
+         */
+        while (RequestLinkTarget->Length >= sizeof(WCHAR) &&
+               RequestLinkTarget->Buffer[(RequestLinkTarget->Length/sizeof(WCHAR)) - 1] == L'\\')
+        {
+            RequestLinkTarget->Length -= sizeof(WCHAR);
+        }
+
         lpBuffer = (PWSTR) RtlAllocateHeap(Win32CsrApiHeap,
                                            HEAP_ZERO_MEMORY,
                                            RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));
@@ -146,7 +157,7 @@ CSR_API(CsrDefineDosDevice)
                                                    &LinkTarget,
                                                    &Length);
             }
-            
+
             if (! NT_SUCCESS(Status))
             {
                 DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed (Status %lx)\n",
@@ -188,7 +199,7 @@ CSR_API(CsrDefineDosDevice)
                             CONTAINING_RECORD(Entry,
                                               CSRSS_DOS_DEVICE_HISTORY_ENTRY,
                                               Entry);
-                        Matched = 
+                        Matched =
                             ! RtlCompareUnicodeString(&RequestDeviceName,
                                                       &HistoryEntry->Device,
                                                       FALSE);
@@ -459,7 +470,7 @@ CSR_API(CsrDefineDosDevice)
                  &DeviceName, Status);
         }
     }
-    _SEH2_FINALLY 
+    _SEH2_FINALLY
     {
         (void) RtlLeaveCriticalSection(&Win32CsrDefineDosDeviceCritSec);
         if (DeviceName.Buffer)
@@ -504,13 +515,13 @@ CSR_API(CsrDefineDosDevice)
     return Status;
 }
 
-void CsrCleanupDefineDosDevice()
+void CsrCleanupDefineDosDevice(void)
 {
     PLIST_ENTRY Entry, ListHead;
     PCSRSS_DOS_DEVICE_HISTORY_ENTRY HistoryEntry;
 
     (void) RtlDeleteCriticalSection(&Win32CsrDefineDosDeviceCritSec);
-    
+
     ListHead = &DosDeviceHistory;
     Entry = ListHead->Flink;
     while (Entry != ListHead)

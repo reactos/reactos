@@ -27,6 +27,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
    HRGN hRgnVis;
+   PREGION prgnClip, prgnGCClip;
 
     // would prefer this, but the rest of the code sucks
 //    ASSERT(Dc->rosdc.hGCClipRgn);
@@ -37,10 +38,18 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    if (Dc->rosdc.hGCClipRgn == NULL)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
+   prgnGCClip = REGION_LockRgn(Dc->rosdc.hGCClipRgn);
+   ASSERT(prgnGCClip);
+
    if (Dc->rosdc.hClipRgn == NULL)
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, hRgnVis, 0, RGN_COPY);
+      IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, NULL, RGN_COPY);
    else
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, hRgnVis, RGN_AND);
+   {
+      prgnClip = REGION_LockRgn(Dc->rosdc.hClipRgn); // FIXME: locking order, ugh
+      IntGdiCombineRgn(prgnGCClip, Dc->prgnVis, prgnClip, RGN_AND);
+      REGION_UnlockRgn(prgnClip);
+   }
+   REGION_UnlockRgn(prgnGCClip);
 
    NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);
 
@@ -74,6 +83,7 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
+  PREGION prgn;
 
   if (!hrgn)
   {
@@ -90,10 +100,12 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   ASSERT (dc->prgnVis != NULL);
 
-  retval = NtGdiCombineRgn(dc->prgnVis->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
+  prgn = RGNOBJAPI_Lock(hrgn, NULL);
+  retval = prgn ? IntGdiCombineRgn(dc->prgnVis, prgn, NULL, RGN_COPY) : ERROR;
+  RGNOBJAPI_Unlock(prgn);
   if ( retval != ERROR )
   {
-    NtGdiOffsetRgn(dc->prgnVis->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    IntGdiOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
   DC_UnlockDc(dc);
@@ -114,7 +126,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     {
       if (dc->rosdc.hClipRgn != NULL)
       {
-        REGION_FreeRgnByHandle(dc->rosdc.hClipRgn);
+        GreDeleteObject(dc->rosdc.hClipRgn);
         dc->rosdc.hClipRgn = NULL;
       }
     }
@@ -213,7 +225,7 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
 
       retval = REGION_GetRgnBox(pRgnNew, rc);
 
-	  REGION_FreeRgnByHandle(pRgnNew->BaseObject.hHmgr);
+	  REGION_Delete(pRgnNew);
 
       DC_UnlockDc(dc);
 	  if(Unlock) REGION_UnlockRgn(pRgn);
@@ -266,7 +278,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
 {
    INT Result;
    RECTL Rect;
-   HRGN NewRgn;
+   PREGION prgnNew, prgnClip;
    PDC dc = DC_LockDc(hDC);
 
    if (!dc)
@@ -282,8 +294,8 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
 
    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
 
-   NewRgn = IntSysCreateRectRgnIndirect(&Rect);
-   if (!NewRgn)
+   prgnNew = IntSysCreateRectpRgnIndirect(&Rect);
+   if (!prgnNew)
    {
       Result = ERROR;
    }
@@ -292,14 +304,18 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->rosdc.hClipRgn)
       {
          dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->prgnVis->BaseObject.hHmgr, NewRgn, RGN_DIFF);
+         prgnClip = REGION_LockRgn(dc->rosdc.hClipRgn);
+         IntGdiCombineRgn(prgnClip, dc->prgnVis, prgnNew, RGN_DIFF);
+         REGION_UnlockRgn(prgnClip);
          Result = SIMPLEREGION;
       }
       else
       {
-         Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_DIFF);
+         prgnClip = REGION_LockRgn(dc->rosdc.hClipRgn);
+         Result = IntGdiCombineRgn(prgnClip, prgnClip, prgnNew, RGN_DIFF);
+         REGION_UnlockRgn(prgnClip);
       }
-      REGION_FreeRgnByHandle(NewRgn);
+      REGION_Delete(prgnNew);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
@@ -349,7 +365,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
    else
    {
       Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_AND);
-      REGION_FreeRgnByHandle(NewRgn);
+      GreDeleteObject(NewRgn);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
@@ -476,13 +492,13 @@ IntGdiSetMetaRgn(PDC pDC)
                                    RGN_AND);
            if ( Ret )
            {
-              GDIOBJ_ShareUnlockObjByPtr(&pDC->dclevel.prgnMeta->BaseObject);
+              GDIOBJ_vDereferenceObject(&pDC->dclevel.prgnMeta->BaseObject);
               if (!((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.ulShareCount)
                  REGION_Delete(pDC->dclevel.prgnMeta);
 
               pDC->dclevel.prgnMeta = TempRgn;
 
-              GDIOBJ_ShareUnlockObjByPtr(&pDC->dclevel.prgnClip->BaseObject);
+              GDIOBJ_vDereferenceObject(&pDC->dclevel.prgnClip->BaseObject);
               if (!((PROSRGNDATA)pDC->dclevel.prgnClip)->BaseObject.ulShareCount)
                  REGION_Delete(pDC->dclevel.prgnClip);
 

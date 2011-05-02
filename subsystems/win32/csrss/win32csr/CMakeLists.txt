@@ -13,7 +13,6 @@ set_rc_compiler()
 
 list(APPEND SOURCE
     alias.c
-    appswitch.c
     coninput.c
     conoutput.c
     console.c

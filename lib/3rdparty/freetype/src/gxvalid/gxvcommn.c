@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common tables validation (body).                      */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2009                                             */
+/*  Copyright 2004, 2005, 2009, 2010                                       */
 /*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -908,7 +908,7 @@
     nnames = FT_Get_Sfnt_Name_Count( valid->face );
     for ( i = 0; i < nnames; i++ )
     {
-      if ( FT_Get_Sfnt_Name( valid->face, i, &name ) != FT_Err_Ok )
+      if ( FT_Get_Sfnt_Name( valid->face, i, &name ) != GXV_Err_Ok )
         continue ;
 
       if ( name.name_id == name_index )

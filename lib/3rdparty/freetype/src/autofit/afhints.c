@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (body).                                 */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009 by                        */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009, 2010 by                  */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -377,120 +377,6 @@
   }
 
 
-  /* compute all inflex points in a given glyph */
-
-  static void
-  af_glyph_hints_compute_inflections( AF_GlyphHints  hints )
-  {
-    AF_Point*  contour       = hints->contours;
-    AF_Point*  contour_limit = contour + hints->num_contours;
-
-
-    /* do each contour separately */
-    for ( ; contour < contour_limit; contour++ )
-    {
-      AF_Point  point = contour[0];
-      AF_Point  first = point;
-      AF_Point  start = point;
-      AF_Point  end   = point;
-      AF_Point  before;
-      AF_Point  after;
-      FT_Pos    in_x, in_y, out_x, out_y;
-      AF_Angle  orient_prev, orient_cur;
-      FT_Int    finished = 0;
-
-
-      /* compute first segment in contour */
-      first = point;
-
-      start = end = first;
-      do
-      {
-        end = end->next;
-        if ( end == first )
-          goto Skip;
-
-        in_x = end->fx - start->fx;
-        in_y = end->fy - start->fy;
-
-      } while ( in_x == 0 && in_y == 0 );
-
-      /* extend the segment start whenever possible */
-      before = start;
-      do
-      {
-        do
-        {
-          start  = before;
-          before = before->prev;
-          if ( before == first )
-            goto Skip;
-
-          out_x = start->fx - before->fx;
-          out_y = start->fy - before->fy;
-
-        } while ( out_x == 0 && out_y == 0 );
-
-        orient_prev = ft_corner_orientation( in_x, in_y, out_x, out_y );
-
-      } while ( orient_prev == 0 );
-
-      first = start;
-
-      in_x = out_x;
-      in_y = out_y;
-
-      /* now process all segments in the contour */
-      do
-      {
-        /* first, extend current segment's end whenever possible */
-        after = end;
-        do
-        {
-          do
-          {
-            end   = after;
-            after = after->next;
-            if ( after == first )
-              finished = 1;
-
-            out_x = after->fx - end->fx;
-            out_y = after->fy - end->fy;
-
-          } while ( out_x == 0 && out_y == 0 );
-
-          orient_cur = ft_corner_orientation( in_x, in_y, out_x, out_y );
-
-        } while ( orient_cur == 0 );
-
-        if ( ( orient_prev + orient_cur ) == 0 )
-        {
-          /* we have an inflection point here */
-          do
-          {
-            start->flags |= AF_FLAG_INFLECTION;
-            start = start->next;
-
-          } while ( start != end );
-
-          start->flags |= AF_FLAG_INFLECTION;
-        }
-
-        start = end;
-        end   = after;
-
-        orient_prev = orient_cur;
-        in_x        = out_x;
-        in_y        = out_y;
-
-      } while ( !finished );
-
-    Skip:
-      ;
-    }
-  }
-
-
   FT_LOCAL_DEF( void )
   af_glyph_hints_init( AF_GlyphHints  hints,
                        FT_Memory      memory )
@@ -551,8 +437,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   af_glyph_hints_reload( AF_GlyphHints  hints,
-                         FT_Outline*    outline,
-                         FT_Bool        get_inflections )
+                         FT_Outline*    outline )
   {
     FT_Error   error   = AF_Err_Ok;
     AF_Point   points;
@@ -639,13 +524,11 @@
       {
         FT_Vector*  vec           = outline->points;
         char*       tag           = outline->tags;
-        AF_Point    first         = points;
         AF_Point    end           = points + outline->contours[0];
         AF_Point    prev          = end;
         FT_Int      contour_index = 0;
 
 
-        FT_UNUSED( first );
         for ( point = points; point < point_limit; point++, vec++, tag++ )
         {
           point->fx = (FT_Short)vec->x;
@@ -673,9 +556,8 @@
           {
             if ( ++contour_index < outline->n_contours )
             {
-              first = point + 1;
-              end   = points + outline->contours[contour_index];
-              prev  = end;
+              end  = points + outline->contours[contour_index];
+              prev = end;
             }
           }
         }
@@ -751,11 +633,6 @@
         }
       }
     }
-
-    /* compute inflection points --                 */
-    /* disabled due to no longer perceived benefits */
-    if ( 0 && get_inflections )
-      af_glyph_hints_compute_inflections( hints );
 
   Exit:
     return error;

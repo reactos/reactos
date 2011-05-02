@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/objects/gdiobj.c
+ * FILE:            subsystems/win32/win32k/objects/gdipool.c
  * PURPOSE:         Static size allocator for user mode object attributes
  * PROGRAMMERS:     Timo Kreuzer
  */
@@ -34,6 +34,9 @@ typedef struct _GDI_POOL
     ULONG cSlotsPerSection;
     ULONG cEmptySections;
     EX_PUSH_LOCK pushlock; // for pool growth
+#if DBG_ENABLE_EVENT_LOGGING
+    SLIST_HEADER slhLog;
+#endif
 
     LIST_ENTRY leInUseList;
     LIST_ENTRY leEmptyList;
@@ -95,7 +98,13 @@ GdiPoolDeleteSection(PGDI_POOL pPool, PGDI_POOL_SECTION pSection)
     SIZE_T cjSize = 0;
 
     /* Should not have any allocations */
-    ASSERT(pSection->cAllocCount == 0);
+    if (pSection->cAllocCount != 0)
+    {
+        DPRINT1("There are %ld allocations left, section=%p, pool=%p\n",
+                pSection->cAllocCount, pSection, pPool);
+        DBG_DUMP_EVENT_LIST(&pPool->slhLog);
+        ASSERT(FALSE);
+    }
 
     /* Release the virtual memory */
     status = ZwFreeVirtualMemory(NtCurrentProcess(),
@@ -186,8 +195,11 @@ GdiPoolAllocate(
         pSection->ulCommitBitmap |= ulPageBit;
     }
 
-    /* Increase alloc count and check if section is now busy */
+    /* Increase alloc count */
     pSection->cAllocCount++;
+    DBG_LOGEVENT(&pPool->slhLog, EVENT_ALLOCATE, pvAlloc);
+
+    /* Check if section is now busy */
     if (pSection->cAllocCount == pPool->cSlotsPerSection)
     {
         /* Remove the section from the ready list */
@@ -198,11 +210,10 @@ done:
     /* Release the pool lock and enable APCs */
     ExReleasePushLockExclusive(&pPool->pushlock);
     KeLeaveCriticalRegion();
-DPRINT1("GdiPoolallocate: %p\n", pvAlloc);
 
+    DPRINT("GdiPoolallocate: %p\n", pvAlloc);
     return pvAlloc;
 }
-
 
 VOID
 NTAPI
@@ -211,10 +222,10 @@ GdiPoolFree(
     PVOID pvAlloc)
 {
     PLIST_ENTRY ple;
-    PGDI_POOL_SECTION pSection;
+    PGDI_POOL_SECTION pSection = NULL;
     ULONG_PTR cjOffset;
     ULONG ulIndex;
-DPRINT1("GdiPoolFree: %p\n", pvAlloc);
+    DPRINT("GdiPoolFree: %p\n", pvAlloc);
 
     /* Disable APCs and acquire the pool lock */
     KeEnterCriticalRegion();
@@ -243,6 +254,7 @@ DPRINT1("GdiPoolFree: %p\n", pvAlloc);
 
             /* Decrease allocation count */
             pSection->cAllocCount--;
+            DBG_LOGEVENT(&pPool->slhLog, EVENT_FREE, pvAlloc);
 
             /* Check if the section got valid now */
             if (pSection->cAllocCount == pPool->cSlotsPerSection - 1)
@@ -274,6 +286,8 @@ DPRINT1("GdiPoolFree: %p\n", pvAlloc);
         }
     }
 
+    DbgPrint("failed to free. pvAlloc=%p, base=%p, size=%lx\n",
+             pvAlloc, pSection->pvBaseAddress, pPool->cjSectionSize);
     ASSERT(FALSE);
     // KeBugCheck()
 
@@ -305,6 +319,7 @@ GdiPoolCreate(
     pPool->ulTag = ulTag;
     pPool->cjSectionSize = GDI_POOL_ALLOCATION_GRANULARITY;
     pPool->cSlotsPerSection = pPool->cjSectionSize / cjAllocSize;
+    DBG_INITLOG(&pPool->slhLog);
 
     return pPool;
 }
@@ -317,20 +332,24 @@ GdiPoolDestroy(PGDI_POOL pPool)
     PLIST_ENTRY ple;
 
     /* Loop all empty sections, removing them */
-    while ((ple = RemoveHeadList(&pPool->leEmptyList)))
+    while (!IsListEmpty(&pPool->leEmptyList))
     {
         /* Delete the section */
+        ple = RemoveHeadList(&pPool->leEmptyList);
         pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leInUseLink);
         GdiPoolDeleteSection(pPool, pSection);
     }
 
     /* Loop all ready sections, removing them */
-    while ((ple = RemoveHeadList(&pPool->leInUseList)))
+    while (!IsListEmpty(&pPool->leInUseList))
     {
         /* Delete the section */
+        ple = RemoveHeadList(&pPool->leInUseList);
         pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leInUseLink);
         GdiPoolDeleteSection(pPool, pSection);
     }
+
+    DBG_CLEANUP_EVENT_LIST(&pPool->slhLog);
 
     EngFreeMem(pPool);
 }

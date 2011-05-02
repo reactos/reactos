@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Python
+Name = Python 2
 Version = 2.7.1
 Licence = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
@@ -13,6 +13,9 @@ CDPath = none
 
 [Section.0407]
 Description = Eine sehr mächtige, dynamische Programmiersprache.
+
+[Section.040a]
+Description = Un lenguaje de programación dinámico sumamente potente. 
 
 [Section.040c]
 Description = Un langage de programmation dynamique remarquablement puissant.

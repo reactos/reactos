@@ -27,6 +27,7 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 #include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
+#include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
 

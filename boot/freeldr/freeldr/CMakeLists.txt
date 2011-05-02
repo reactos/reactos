@@ -31,6 +31,7 @@ if(ARCH MATCHES i386)
             arch/i386/i386cpu.S
             arch/i386/i386idt.S
             arch/i386/i386pnp.S
+            arch/i386/i386pxe.S
             arch/i386/i386trap.S
             arch/i386/int386.S
             arch/i386/linux.S
@@ -65,6 +66,7 @@ list(APPEND FREELDR_BASE_SOURCE
     fs/fs.c
     fs/iso.c
     fs/ntfs.c
+    fs/pxe.c
     inifile/ini_init.c
     inifile/inifile.c
     inifile/parse.c

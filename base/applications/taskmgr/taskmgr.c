@@ -396,6 +396,12 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_MENUSELECT:
         TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
+    case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(hApplicationPageListCtrl, WM_SYSCOLORCHANGE, 0, 0);
+        SendMessage(hProcessPageListCtrl, WM_SYSCOLORCHANGE, 0, 0);
+        SendMessage(hProcessPageHeaderCtrl, WM_SYSCOLORCHANGE, 0, 0);
+        break;
     }
 
     return 0;
