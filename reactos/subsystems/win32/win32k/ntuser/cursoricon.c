@@ -63,7 +63,7 @@ InitCursorImpl()
      gSysCursorInfo.bClipped = FALSE;
      gSysCursorInfo.LastBtnDown = 0;
      gSysCursorInfo.CurrentCursorObject = NULL;
-     gSysCursorInfo.ShowingCursor = 0;
+     gSysCursorInfo.ShowingCursor = -1;
      gSysCursorInfo.ClickLockActive = FALSE;
      gSysCursorInfo.ClickLockTime = 0;
 
@@ -129,7 +129,7 @@ UserSetCursor(
     /* Do we have a new cursor? */
     if (NewCursor)
     {
-        CurInfo->ShowingCursor = 1;
+        CurInfo->ShowingCursor = 0;
         CurInfo->CurrentCursorObject = NewCursor;
 
         /* Call GDI to set the new screen cursor */
@@ -144,7 +144,7 @@ UserSetCursor(
     else
     {
         /* Check if were diplaying a cursor */
-        if (OldCursor && CurInfo->ShowingCursor)
+        if (OldCursor && CurInfo->ShowingCursor >= 0)
         {
             /* Remove the cursor */
             GreMovePointer(hdcScreen, -1, -1);
@@ -152,7 +152,7 @@ UserSetCursor(
         }
 
         CurInfo->CurrentCursorObject = NULL;
-        CurInfo->ShowingCursor = 0;
+        CurInfo->ShowingCursor = -1;
     }
 
     /* Return the old cursor */
@@ -219,13 +219,13 @@ int UserShowCursor(BOOL bShow)
 
     if (!(hdcScreen = IntGetScreenDC()))
     {
-        return 0; /* No mouse */
+        return -1; /* No mouse */
     }
 
     if (bShow == FALSE)
     {
         /* Check if were diplaying a cursor */
-        if (CurInfo->ShowingCursor == 1)
+        if (CurInfo->ShowingCursor == 0)
         {
             /* Remove the pointer */
             GreMovePointer(hdcScreen, -1, -1);
@@ -235,7 +235,7 @@ int UserShowCursor(BOOL bShow)
     }
     else
     {
-        if (CurInfo->ShowingCursor == 0)
+        if (CurInfo->ShowingCursor == -1)
         {
             /*Show the pointer*/
             GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
@@ -621,7 +621,7 @@ NtUserGetCursorInfo(
     CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
     SafeCi.cbSize = sizeof(CURSORINFO);
-    SafeCi.flags = ((CurInfo->ShowingCursor && CurIcon) ? CURSOR_SHOWING : 0);
+    SafeCi.flags = ((CurIcon && CurInfo->ShowingCursor >= 0) ? CURSOR_SHOWING : 0);
     SafeCi.hCursor = (CurIcon ? (HCURSOR)CurIcon->Self : (HCURSOR)0);
 
     SafeCi.ptScreenPos = gpsi->ptCursor;
