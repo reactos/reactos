@@ -53,6 +53,8 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
    if( key < 0x100 )
    {
        ret = (DWORD)MessageQueue->KeyState[key];
+       if (MessageQueue->KeyState[key] & KS_DOWN_BIT)
+          ret |= 0xFF00; // If down, windows returns 0xFF80. 
    }
 
    return ret;
