@@ -143,6 +143,7 @@ list(APPEND SOURCE
     objects/gdibatch.c
 	objects/gdidbg.c
     objects/gdiobj.c
+    objects/gdipool.c
     objects/icm.c
     objects/line.c
     objects/metafile.c
