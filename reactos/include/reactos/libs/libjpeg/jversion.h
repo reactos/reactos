@@ -1,7 +1,7 @@
 /*
  * jversion.h
  *
- * Copyright (C) 1991-2010, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1991-2011, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -9,6 +9,6 @@
  */
 
 
-#define JVERSION	"8b  16-May-2010"
+#define JVERSION	"8c  16-Jan-2011"
 
-#define JCOPYRIGHT	"Copyright (C) 2010, Thomas G. Lane, Guido Vollbeding"
+#define JCOPYRIGHT	"Copyright (C) 2011, Thomas G. Lane, Guido Vollbeding"
