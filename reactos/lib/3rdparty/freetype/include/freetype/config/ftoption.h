@@ -317,7 +317,7 @@ FT_BEGIN_HEADER
   /* supply font data incrementally as the document is parsed, such        */
   /* as the Ghostscript interpreter for the PostScript language.           */
   /*                                                                       */
-/* #define FT_CONFIG_OPTION_INCREMENTAL */
+#define FT_CONFIG_OPTION_INCREMENTAL
 
 
   /*************************************************************************/
@@ -488,8 +488,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* Define TT_CONFIG_OPTION_BYTECODE_INTERPRETER if you want to compile   */
-  /* a bytecode interpreter in the TrueType driver.  Note that there are   */
-  /* important patent issues related to the use of the interpreter.        */
+  /* a bytecode interpreter in the TrueType driver.                        */
   /*                                                                       */
   /* By undefining this, you will only compile the code necessary to load  */
   /* TrueType glyphs without hinting.                                      */
@@ -497,17 +496,20 @@ FT_BEGIN_HEADER
   /*   Do not #undef this macro here, since the build system might         */
   /*   define it for certain configurations only.                          */
   /*                                                                       */
-/* #define TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#define TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 
 
   /*************************************************************************/
   /*                                                                       */
   /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
   /* of the TrueType bytecode interpreter is used that doesn't implement   */
-  /* any of the patented opcodes and algorithms.  Note that the            */
-  /* TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored* if you define  */
-  /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER; in other words, either define  */
-  /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                              */
+  /* any of the patented opcodes and algorithms.  The patents related to   */
+  /* TrueType hinting have expired worldwide since May 2010; this option   */
+  /* is now deprecated.                                                    */
+  /*                                                                       */
+  /* Note that the TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored*  */
+  /* if you define TT_CONFIG_OPTION_BYTECODE_INTERPRETER; in other words,  */
+  /* either define TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                */
   /* TT_CONFIG_OPTION_UNPATENTED_HINTING but not both at the same time.    */
   /*                                                                       */
   /* This macro is only useful for a small number of font files (mostly    */
@@ -544,7 +546,7 @@ FT_BEGIN_HEADER
   /*     ...                                                               */
   /*   }                                                                   */
   /*                                                                       */
-//#define TT_CONFIG_OPTION_UNPATENTED_HINTING
+/* #define TT_CONFIG_OPTION_UNPATENTED_HINTING */
 
 
   /*************************************************************************/
@@ -688,6 +690,27 @@ FT_BEGIN_HEADER
    * size and activates a few memory-saving optimizations as well.
    */
 #define FT_CONFIG_OPTION_OLD_INTERNALS
+
+
+  /*
+   *  To detect legacy cache-lookup call from a rogue client (<= 2.1.7),
+   *  we restrict the number of charmaps in a font.  The current API of
+   *  FTC_CMapCache_Lookup() takes cmap_index & charcode, but old API
+   *  takes charcode only.  To determine the passed value is for cmap_index
+   *  or charcode, the possible cmap_index is restricted not to exceed
+   *  the minimum possible charcode by a rogue client.  It is also very
+   *  unlikely that a rogue client is interested in Unicode values 0 to 15.
+   *
+   *  NOTE: The original threshold was 4 deduced from popular number of
+   *        cmap subtables in UCS-4 TrueType fonts, but now it is not
+   *        irregular for OpenType fonts to have more than 4 subtables,
+   *        because variation selector subtables are available for Apple
+   *        and Microsoft platforms.
+   */
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_MAX_CHARMAP_CACHEABLE 15
+#endif
 
 
   /*

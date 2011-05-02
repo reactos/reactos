@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by            */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by      */
 /*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -52,7 +52,8 @@
   /* as Type42 fonts have no Private dict,         */
   /* we set the last argument of T1_FIELD_XXX to 0 */
   static const
-  T1_FieldRec  t42_keywords[] = {
+  T1_FieldRec  t42_keywords[] =
+  {
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontInfo
@@ -268,7 +269,8 @@
                                                  temp_scale ) >> 16 );
 
     /* we need to scale the values by 1.0/temp_scale */
-    if ( temp_scale != 0x10000L ) {
+    if ( temp_scale != 0x10000L )
+    {
       temp[0] = FT_DivFix( temp[0], temp_scale );
       temp[1] = FT_DivFix( temp[1], temp_scale );
       temp[2] = FT_DivFix( temp[2], temp_scale );
@@ -575,6 +577,12 @@
         }
 
         string_size = T1_ToInt( parser );
+        if ( string_size < 0 )
+        {
+          FT_ERROR(( "t42_parse_sfnts: invalid string size\n" ));
+          error = T42_Err_Invalid_File_Format;
+          goto Fail;
+        }
 
         T1_Skip_PS_Token( parser );             /* `RD' */
         if ( parser->root.error )
@@ -582,13 +590,14 @@
 
         string_buf = parser->root.cursor + 1;   /* one space after `RD' */
 
-        parser->root.cursor += string_size + 1;
-        if ( parser->root.cursor >= limit )
+        if ( limit - parser->root.cursor < string_size )
         {
           FT_ERROR(( "t42_parse_sfnts: too many binary data\n" ));
           error = T42_Err_Invalid_File_Format;
           goto Fail;
         }
+        else
+          parser->root.cursor += string_size + 1;
       }
 
       if ( !string_buf )

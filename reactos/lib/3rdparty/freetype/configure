@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009 by
+# Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009, 2010 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -78,10 +78,15 @@ if test $# -gt 0; then
   done
 fi
 
-# build a dummy Makefile if we are not building in the source tree
+# build a dummy Makefile if we are not building in the source tree;
+# we use inodes to avoid issues with symbolic links
+inode_src=`ls -id $abs_ft2_dir | awk '{print $1}'`
+inode_dst=`ls -id $abs_curr_dir | awk '{print $1}'`
 
-if test "$abs_curr_dir" != "$abs_ft2_dir"; then
-  mkdir reference
+if test $inode_src -ne $inode_dst; then
+  if test ! -d reference; then
+    mkdir reference
+  fi
   if test ! -r $abs_curr_dir/modules.cfg; then
     echo "Copying \`modules.cfg'"
     cp $abs_ft2_dir/modules.cfg $abs_curr_dir
@@ -91,7 +96,7 @@ if test "$abs_curr_dir" != "$abs_ft2_dir"; then
   echo "OBJ_DIR   := $abs_curr_dir"             >> Makefile
   echo "OBJ_BUILD := \$(OBJ_DIR)"               >> Makefile
   echo "DOC_DIR   := \$(OBJ_DIR)/reference"     >> Makefile
-  echo "LIBTOOL   := \$(OBJ_DIR)/libtool"       >> Makefile
+  echo "FT_LIBTOOL_DIR   := \$(OBJ_DIR)"        >> Makefile
   echo "ifndef FT2DEMOS"                        >> Makefile
   echo "  include \$(TOP_DIR)/Makefile"         >> Makefile
   echo "else"                                   >> Makefile

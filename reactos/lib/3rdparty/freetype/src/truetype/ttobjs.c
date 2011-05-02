@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -146,31 +147,206 @@
   /* This list shall be expanded as we find more of them.       */
 
   static FT_Bool
-  tt_check_trickyness( FT_String*  name )
+  tt_check_trickyness_family( FT_String*  name )
   {
+
 #define TRICK_NAMES_MAX_CHARACTERS  16
-#define TRICK_NAMES_COUNT 7
-    static const char trick_names[TRICK_NAMES_COUNT][TRICK_NAMES_MAX_CHARACTERS+1] =
+#define TRICK_NAMES_COUNT            8
+
+    static const char trick_names[TRICK_NAMES_COUNT]
+                                 [TRICK_NAMES_MAX_CHARACTERS + 1] =
     {
       "DFKaiSho-SB",     /* dfkaisb.ttf */
       "DFKaiShu",
       "DFKai-SB",        /* kaiu.ttf */
+      "HuaTianKaiTi?",   /* htkt2.ttf */
       "HuaTianSongTi?",  /* htst3.ttf */
       "MingLiU",         /* mingliu.ttf & mingliu.ttc */
       "PMingLiU",        /* mingliu.ttc */
       "MingLi43",        /* mingli.ttf */
     };
+
     int  nn;
 
 
-    if ( !name )
-      return FALSE;
-
-    /* Note that we only check the face name at the moment; it might */
-    /* be worth to do more checks for a few special cases.           */
     for ( nn = 0; nn < TRICK_NAMES_COUNT; nn++ )
       if ( ft_strstr( name, trick_names[nn] ) )
         return TRUE;
+
+    return FALSE;
+  }
+
+
+  /* XXX: This function should be in the `sfnt' module. */
+
+  /* Some PDF generators clear the checksums in the TrueType header table. */
+  /* For example, Quartz ContextPDF clears all entries, or Bullzip PDF     */
+  /* Printer clears the entries for subsetted subtables.  We thus have to  */
+  /* recalculate the checksums  where necessary.                           */
+
+  static FT_UInt32
+  tt_synth_sfnt_checksum( FT_Stream  stream,
+                          FT_ULong   length )
+  {
+    FT_Error   error;
+    FT_UInt32  checksum = 0;
+    int        i;
+
+
+    if ( FT_FRAME_ENTER( length ) )
+      return 0;
+
+    for ( ; length > 3; length -= 4 )
+      checksum += (FT_UInt32)FT_GET_ULONG();
+
+    for ( i = 3; length > 0; length --, i-- )
+      checksum += (FT_UInt32)( FT_GET_BYTE() << ( i * 8 ) );
+
+    FT_FRAME_EXIT();
+
+    return checksum;
+  }
+
+
+  /* XXX: This function should be in the `sfnt' module. */
+
+  static FT_ULong
+  tt_get_sfnt_checksum( TT_Face    face,
+                        FT_UShort  i )
+  {
+    if ( face->dir_tables[i].CheckSum )
+      return face->dir_tables[i].CheckSum;
+
+    else if ( !face->goto_table )
+      return 0;
+
+    else if ( !face->goto_table( face,
+                                 face->dir_tables[i].Tag,
+                                 face->root.stream,
+                                 NULL ) )
+      return 0;
+
+    return (FT_ULong)tt_synth_sfnt_checksum( face->root.stream,
+                                             face->dir_tables[i].Length );
+  }
+
+
+  typedef struct tt_sfnt_id_rec_
+  {
+    FT_ULong  CheckSum;
+    FT_ULong  Length;
+
+  } tt_sfnt_id_rec;
+
+
+  static FT_Bool
+  tt_check_trickyness_sfnt_ids( TT_Face  face )
+  {
+#define TRICK_SFNT_IDS_PER_FACE   3
+#define TRICK_SFNT_IDS_NUM_FACES  5
+
+    static const tt_sfnt_id_rec sfnt_id[TRICK_SFNT_IDS_NUM_FACES]
+                                       [TRICK_SFNT_IDS_PER_FACE] = {
+
+#define TRICK_SFNT_ID_cvt   0
+#define TRICK_SFNT_ID_fpgm  1
+#define TRICK_SFNT_ID_prep  2
+
+      { /* MingLiU 1995 */
+        { 0x05bcf058, 0x000002e4 }, /* cvt  */
+        { 0x28233bf1, 0x000087c4 }, /* fpgm */
+        { 0xa344a1ea, 0x000001e1 }  /* prep */
+      },
+      { /* MingLiU 1996- */
+        { 0x05bcf058, 0x000002e4 }, /* cvt  */
+        { 0x28233bf1, 0x000087c4 }, /* fpgm */
+        { 0xa344a1eb, 0x000001e1 }  /* prep */
+      },
+      { /* DFKaiShu */
+        { 0x11e5ead4, 0x00000350 }, /* cvt  */
+        { 0x5a30ca3b, 0x00009063 }, /* fpgm */
+        { 0x13a42602, 0x0000007e }  /* prep */
+      },
+      { /* HuaTianKaiTi */
+        { 0xfffbfffc, 0x00000008 }, /* cvt  */
+        { 0x9c9e48b8, 0x0000bea2 }, /* fpgm */
+        { 0x70020112, 0x00000008 }  /* prep */
+      },
+      { /* HuaTianSongTi */
+        { 0xfffbfffc, 0x00000008 }, /* cvt  */
+        { 0x0a5a0483, 0x00017c39 }, /* fpgm */
+        { 0x70020112, 0x00000008 }  /* prep */
+      }
+    };
+
+    FT_ULong  checksum;
+    int       num_matched_ids[TRICK_SFNT_IDS_NUM_FACES];
+    int       i, j, k;
+
+
+    FT_MEM_SET( num_matched_ids, 0,
+                sizeof( int ) * TRICK_SFNT_IDS_NUM_FACES );
+
+    for ( i = 0; i < face->num_tables; i++ )
+    {
+      checksum = 0;
+
+      switch( face->dir_tables[i].Tag )
+      {
+      case TTAG_cvt:
+        k = TRICK_SFNT_ID_cvt;
+        break;
+
+      case TTAG_fpgm:
+        k = TRICK_SFNT_ID_fpgm;
+        break;
+
+      case TTAG_prep:
+        k = TRICK_SFNT_ID_prep;
+        break;
+
+      default:
+        continue;
+      }
+
+      for ( j = 0; j < TRICK_SFNT_IDS_NUM_FACES; j++ )
+        if ( face->dir_tables[i].Length == sfnt_id[j][k].Length )
+        {
+          if ( !checksum )
+            checksum = tt_get_sfnt_checksum( face, i );
+
+          if ( sfnt_id[j][k].CheckSum == checksum )
+            num_matched_ids[j]++;
+
+          if ( num_matched_ids[j] == TRICK_SFNT_IDS_PER_FACE )
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+  }
+
+
+  static FT_Bool
+  tt_check_trickyness( FT_Face  face )
+  {
+    if ( !face )
+      return FALSE;
+
+    /* First, check the face name. */
+    if ( face->family_name )
+    {
+      if ( tt_check_trickyness_family( face->family_name ) )
+        return TRUE;
+      else
+        return FALSE;
+    }
+
+    /* Type42 fonts may lack `name' tables, we thus try to identify */
+    /* tricky fonts by checking the checksums of Type42-persistent  */
+    /* sfnt tables (`cvt', `fpgm', and `prep').                     */
+    if ( tt_check_trickyness_sfnt_ids( (TT_Face)face ) )
+      return TRUE;
 
     return FALSE;
   }
@@ -250,7 +426,7 @@
     if ( error )
       goto Exit;
 
-    if ( tt_check_trickyness( ttface->family_name ) )
+    if ( tt_check_trickyness( ttface ) )
       ttface->face_flags |= FT_FACE_FLAG_TRICKY;
 
     error = tt_face_load_hdmx( face, stream );
@@ -458,7 +634,11 @@
       error = TT_Goto_CodeRange( exec, tt_coderange_font, 0 );
 
       if ( !error )
+      {
+        FT_TRACE4(( "Executing `fpgm' table.\n" ));
+
         error = face->interpreter( exec );
+      }
     }
     else
       error = TT_Err_Ok;
@@ -520,7 +700,11 @@
       error = TT_Goto_CodeRange( exec, tt_coderange_cvt, 0 );
 
       if ( !error && !size->debug )
+      {
+        FT_TRACE4(( "Executing `prep' table.\n" ));
+
         error = face->interpreter( exec );
+      }
     }
     else
       error = TT_Err_Ok;

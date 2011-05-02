@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006 by                              */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2010 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -69,7 +69,7 @@
   FT_GlyphLoader_New( FT_Memory        memory,
                       FT_GlyphLoader  *aloader )
   {
-    FT_GlyphLoader  loader;
+    FT_GlyphLoader  loader = NULL;
     FT_Error        error;
 
 

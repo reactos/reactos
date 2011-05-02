@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Generic list support for FreeType (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2007 by                                     */
+/*  Copyright 1996-2001, 2003, 2007, 2010 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -254,6 +254,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    user    :: A user-supplied field which is passed as the last       */
   /*               argument to the destructor.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    This function expects that all nodes added by @FT_List_Add or      */
+  /*    @FT_List_Insert have been dynamically allocated.                   */
   /*                                                                       */
   FT_EXPORT( void )
   FT_List_Finalize( FT_List             list,

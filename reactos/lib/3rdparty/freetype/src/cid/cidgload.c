@@ -272,7 +272,6 @@
                        FT_Int32      load_flags )
   {
     CID_GlyphSlot  glyph = (CID_GlyphSlot)cidglyph;
-    CID_Size       size  = (CID_Size)cidsize;
     FT_Error       error;
     T1_DecoderRec  decoder;
     CID_Face       face = (CID_Face)cidglyph->face;
@@ -375,7 +374,7 @@
 
       cidglyph->format            = FT_GLYPH_FORMAT_OUTLINE;
 
-      if ( size && cidsize->metrics.y_ppem < 24 )
+      if ( cidsize->metrics.y_ppem < 24 )
         cidglyph->outline.flags |= FT_OUTLINE_HIGH_PRECISION;
 
       /* apply the font matrix */

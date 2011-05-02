@@ -64,7 +64,7 @@ FT_BEGIN_HEADER
    *     MacOS systems (even if they contain a Microsoft charmap as well).
    *
    *   TT_PLATFORM_ISO ::
-   *     This value was used to specify Unicode charmaps.  It is however
+   *     This value was used to specify ISO/IEC 10646 charmaps.  It is however
    *     now deprecated.  See @TT_ISO_ID_XXX for a list of corresponding
    *     `encoding_id' values.
    *

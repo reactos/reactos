@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR bitmap loader (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006, 2009 by                                    */
+/*  Copyright 2002, 2003, 2006, 2009, 2010 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -353,7 +353,7 @@
                            FT_Long   *aadvance,
                            FT_UInt   *aformat )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PFR_Err_Ok;
     FT_Byte   flags;
     FT_Char   b;
     FT_Byte*  p = *pdata;
@@ -484,7 +484,7 @@
                         FT_Bool     decreasing,
                         FT_Bitmap*  target )
   {
-    FT_Error          error = 0;
+    FT_Error          error = PFR_Err_Ok;
     PFR_BitWriterRec  writer;
 
 

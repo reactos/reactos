@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for sfnt module.     */
 /*                                                                         */
-/*  Copyright 2009 by                                                      */
+/*  Copyright 2009, 2010 by                                                */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -60,15 +60,16 @@
   FT_Error
   sfnt_module_class_pic_init(  FT_Library library )
   {
-    FT_PIC_Container* pic_container = &library->pic_container;
-    FT_Error        error = FT_Err_Ok;
-    sfntModulePIC* container;
-    FT_Memory memory = library->memory;
+    FT_PIC_Container*  pic_container = &library->pic_container;
+    FT_Error           error = SFNT_Err_Ok;
+    sfntModulePIC*     container;
+    FT_Memory          memory = library->memory;
+
 
     /* allocate pointer, clear and set global container pointer */
     if ( FT_ALLOC ( container, sizeof ( *container ) ) )
       return error;
-    FT_MEM_SET( container, 0, sizeof(*container) );
+    FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->sfnt = container;
 
     /* initialize pointer table - this is how the module usually expects this data */

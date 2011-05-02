@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1045,7 +1046,8 @@
 
     if ( cur < limit && ft_isdigit( *cur ) )
     {
-      *size = T1_ToInt( parser );
+      FT_Long  s = T1_ToInt( parser );
+
 
       T1_Skip_PS_Token( parser );   /* `RD' or `-|' or something else */
 
@@ -1053,8 +1055,12 @@
       /* `RD' or `-|' token                          */
       *base = parser->root.cursor + 1;
 
-      parser->root.cursor += *size + 1;
-      return !parser->root.error;
+      if ( s >= 0 && s < limit - *base )
+      {
+        parser->root.cursor += s + 1;
+        *size = s;
+        return !parser->root.error;
+      }
     }
 
     FT_ERROR(( "read_binary_data: invalid size field\n" ));
@@ -1111,7 +1117,7 @@
       temp[2] = FT_DivFix( temp[2], temp_scale );
       temp[4] = FT_DivFix( temp[4], temp_scale );
       temp[5] = FT_DivFix( temp[5], temp_scale );
-      temp[3] = 0x10000L;
+      temp[3] = temp[3] < 0 ? -0x10000L : 0x10000L;
     }
 
     matrix->xx = temp[0];
@@ -2180,7 +2186,7 @@
       /* OK, we do the following: for each element in the encoding  */
       /* table, look up the index of the glyph having the same name */
       /* the index is then stored in type1.encoding.char_index, and */
-      /* a the name to type1.encoding.char_name                     */
+      /* the name to type1.encoding.char_name                       */
 
       min_char = 0;
       max_char = 0;

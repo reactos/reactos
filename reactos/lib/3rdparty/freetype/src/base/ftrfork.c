@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (body).                             */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009 by                        */
+/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010 by                  */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  FT_Raccess_Get_HeaderInfo() and raccess_guess_darwin_hfsplus() are     */
@@ -349,6 +349,42 @@
                           const char  *insertion );
 
 
+  typedef enum  FT_RFork_Rule_ {
+    FT_RFork_Rule_invalid = -2,
+    FT_RFork_Rule_uknown, /* -1 */
+    FT_RFork_Rule_apple_double,
+    FT_RFork_Rule_apple_single,
+    FT_RFork_Rule_darwin_ufs_export,
+    FT_RFork_Rule_darwin_newvfs,
+    FT_RFork_Rule_darwin_hfsplus,
+    FT_RFork_Rule_vfat,
+    FT_RFork_Rule_linux_cap,
+    FT_RFork_Rule_linux_double,
+    FT_RFork_Rule_linux_netatalk
+  } FT_RFork_Rule;
+
+  /* For fast translation between rule index and rule type,
+   * the macros FT_RFORK_xxx should be kept consistent with
+   * the raccess_guess_funcs table
+   */
+  typedef struct raccess_guess_rec_ {
+    raccess_guess_func  func;
+    FT_RFork_Rule       type;
+  } raccess_guess_rec;
+
+  static raccess_guess_rec  raccess_guess_table[FT_RACCESS_N_RULES] =
+  {
+    { raccess_guess_apple_double,	FT_RFork_Rule_apple_double, },
+    { raccess_guess_apple_single,	FT_RFork_Rule_apple_single, },
+    { raccess_guess_darwin_ufs_export,	FT_RFork_Rule_darwin_ufs_export, },
+    { raccess_guess_darwin_newvfs,	FT_RFork_Rule_darwin_newvfs, },
+    { raccess_guess_darwin_hfsplus,	FT_RFork_Rule_darwin_hfsplus, },
+    { raccess_guess_vfat,		FT_RFork_Rule_vfat, },
+    { raccess_guess_linux_cap,		FT_RFork_Rule_linux_cap, },
+    { raccess_guess_linux_double,	FT_RFork_Rule_linux_double, },
+    { raccess_guess_linux_netatalk,	FT_RFork_Rule_linux_netatalk, },
+  };
+
   FT_BASE_DEF( void )
   FT_Raccess_Guess( FT_Library  library,
                     FT_Stream   stream,
@@ -359,19 +395,6 @@
   {
     FT_Long  i;
 
-
-    raccess_guess_func  funcs[FT_RACCESS_N_RULES] =
-    {
-      raccess_guess_apple_double,
-      raccess_guess_apple_single,
-      raccess_guess_darwin_ufs_export,
-      raccess_guess_darwin_newvfs,
-      raccess_guess_darwin_hfsplus,
-      raccess_guess_vfat,
-      raccess_guess_linux_cap,
-      raccess_guess_linux_double,
-      raccess_guess_linux_netatalk,
-    };
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
     {
@@ -384,11 +407,38 @@
       if ( errors[i] )
         continue ;
 
-      errors[i] = (funcs[i])( library, stream, base_name,
-                              &(new_names[i]), &(offsets[i]) );
+      errors[i] = (raccess_guess_table[i].func)( library,
+                                                 stream, base_name,
+                                                 &(new_names[i]),
+                                                 &(offsets[i]) );
     }
 
     return;
+  }
+
+
+  static FT_RFork_Rule
+  raccess_get_rule_type_from_rule_index( FT_UInt  rule_index )
+  {
+    if ( rule_index >= FT_RACCESS_N_RULES )
+      return FT_RFork_Rule_invalid;
+
+    return raccess_guess_table[rule_index].type;
+  }
+
+
+  FT_LOCAL_DEF( FT_Bool )
+  raccess_rule_by_darwin_vfs( FT_UInt  rule_index )
+  {
+    switch( raccess_get_rule_type_from_rule_index( rule_index ) )
+    {
+      case FT_RFork_Rule_darwin_newvfs:
+      case FT_RFork_Rule_darwin_hfsplus:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
   }
 
 
@@ -751,7 +801,7 @@
                           const char  *original_name,
                           const char  *insertion )
   {
-    char*        new_name;
+    char*        new_name = NULL;
     const char*  tmp;
     const char*  slash;
     size_t       new_length;

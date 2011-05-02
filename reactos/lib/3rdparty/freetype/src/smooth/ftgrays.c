@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A new `perfect' anti-aliasing renderer (body).                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 2000-2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -103,16 +103,20 @@
 #include <stdarg.h>
 #endif
 
+#include <stddef.h>
 #include <string.h>
 #include <setjmp.h>
 #include <limits.h>
 #define FT_UINT_MAX  UINT_MAX
+#define FT_INT_MAX   INT_MAX
 
 #define ft_memset   memset
 
 #define ft_setjmp   setjmp
 #define ft_longjmp  longjmp
 #define ft_jmp_buf  jmp_buf
+
+typedef ptrdiff_t  FT_PtrDist;
 
 
 #define ErrRaster_Invalid_Mode      -2
@@ -183,7 +187,7 @@
             shift_,                                    \
             delta_                                     \
          };
-                                          
+
 #define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_,            \
                                 raster_new_, raster_reset_,       \
                                 raster_set_mode_, raster_render_, \
@@ -350,8 +354,6 @@
 
     int  band_size;
     int  band_shoot;
-    int  conic_level;
-    int  cubic_level;
 
     ft_jmp_buf  jump_buffer;
 
@@ -875,53 +877,35 @@
     FT_Vector*  arc;
 
 
-    dx = DOWNSCALE( ras.x ) + to->x - ( control->x << 1 );
-    if ( dx < 0 )
-      dx = -dx;
-    dy = DOWNSCALE( ras.y ) + to->y - ( control->y << 1 );
-    if ( dy < 0 )
-      dy = -dy;
-    if ( dx < dy )
-      dx = dy;
-
-    level = 1;
-    dx = dx / ras.conic_level;
-    while ( dx > 0 )
-    {
-      dx >>= 2;
-      level++;
-    }
-
-    /* a shortcut to speed things up */
-    if ( level <= 1 )
-    {
-      /* we compute the mid-point directly in order to avoid */
-      /* calling gray_split_conic()                          */
-      TPos  to_x, to_y, mid_x, mid_y;
-
-
-      to_x  = UPSCALE( to->x );
-      to_y  = UPSCALE( to->y );
-      mid_x = ( ras.x + to_x + 2 * UPSCALE( control->x ) ) / 4;
-      mid_y = ( ras.y + to_y + 2 * UPSCALE( control->y ) ) / 4;
-
-      gray_render_line( RAS_VAR_ mid_x, mid_y );
-      gray_render_line( RAS_VAR_ to_x, to_y );
-
-      return;
-    }
-
-    arc       = ras.bez_stack;
-    levels    = ras.lev_stack;
-    top       = 0;
-    levels[0] = level;
-
+    arc      = ras.bez_stack;
     arc[0].x = UPSCALE( to->x );
     arc[0].y = UPSCALE( to->y );
     arc[1].x = UPSCALE( control->x );
     arc[1].y = UPSCALE( control->y );
     arc[2].x = ras.x;
     arc[2].y = ras.y;
+
+    dx = FT_ABS( arc[2].x + arc[0].x - 2 * arc[1].x );
+    dy = FT_ABS( arc[2].y + arc[0].y - 2 * arc[1].y );
+    if ( dx < dy )
+      dx = dy;
+
+    if ( dx <= ONE_PIXEL / 4 )
+    {
+      gray_render_line( RAS_VAR_ arc[0].x, arc[0].y );
+      return;
+    }
+
+    level = 0;
+    while ( dx > ONE_PIXEL / 4 )
+    {
+      dx >>= 2;
+      level++;
+    }
+
+    levels    = ras.lev_stack;
+    levels[0] = level;
+    top       = 0;
 
     while ( top >= 0 )
     {
@@ -953,21 +937,9 @@
       }
 
     Draw:
-      {
-        TPos  to_x, to_y, mid_x, mid_y;
-
-
-        to_x  = arc[0].x;
-        to_y  = arc[0].y;
-        mid_x = ( ras.x + to_x + 2 * arc[1].x ) / 4;
-        mid_y = ( ras.y + to_y + 2 * arc[1].y ) / 4;
-
-        gray_render_line( RAS_VAR_ mid_x, mid_y );
-        gray_render_line( RAS_VAR_ to_x, to_y );
-
-        top--;
-        arc -= 2;
-      }
+      gray_render_line( RAS_VAR_ arc[0].x, arc[0].y );
+      top--;
+      arc -= 2;
     }
 
     return;
@@ -1007,58 +979,8 @@
                               const FT_Vector*  control2,
                               const FT_Vector*  to )
   {
-    TPos        dx, dy, da, db;
-    int         top, level;
-    int*        levels;
     FT_Vector*  arc;
 
-
-    dx = DOWNSCALE( ras.x ) + to->x - ( control1->x << 1 );
-    if ( dx < 0 )
-      dx = -dx;
-    dy = DOWNSCALE( ras.y ) + to->y - ( control1->y << 1 );
-    if ( dy < 0 )
-      dy = -dy;
-    if ( dx < dy )
-      dx = dy;
-    da = dx;
-
-    dx = DOWNSCALE( ras.x ) + to->x - 3 * ( control1->x + control2->x );
-    if ( dx < 0 )
-      dx = -dx;
-    dy = DOWNSCALE( ras.y ) + to->y - 3 * ( control1->x + control2->y );
-    if ( dy < 0 )
-      dy = -dy;
-    if ( dx < dy )
-      dx = dy;
-    db = dx;
-
-    level = 1;
-    da    = da / ras.cubic_level;
-    db    = db / ras.conic_level;
-    while ( da > 0 || db > 0 )
-    {
-      da >>= 2;
-      db >>= 3;
-      level++;
-    }
-
-    if ( level <= 1 )
-    {
-      TPos   to_x, to_y, mid_x, mid_y;
-
-
-      to_x  = UPSCALE( to->x );
-      to_y  = UPSCALE( to->y );
-      mid_x = ( ras.x + to_x +
-                3 * UPSCALE( control1->x + control2->x ) ) / 8;
-      mid_y = ( ras.y + to_y +
-                3 * UPSCALE( control1->y + control2->y ) ) / 8;
-
-      gray_render_line( RAS_VAR_ mid_x, mid_y );
-      gray_render_line( RAS_VAR_ to_x, to_y );
-      return;
-    }
 
     arc      = ras.bez_stack;
     arc[0].x = UPSCALE( to->x );
@@ -1070,58 +992,127 @@
     arc[3].x = ras.x;
     arc[3].y = ras.y;
 
-    levels    = ras.lev_stack;
-    top       = 0;
-    levels[0] = level;
-
-    while ( top >= 0 )
+    for (;;)
     {
-      level = levels[top];
-      if ( level > 1 )
+      /* Check that the arc crosses the current band. */
+      TPos  min, max, y;
+
+
+      min = max = arc[0].y;
+
+      y = arc[1].y;
+      if ( y < min )
+        min = y;
+      if ( y > max )
+        max = y;
+
+      y = arc[2].y;
+      if ( y < min )
+        min = y;
+      if ( y > max )
+        max = y;
+
+      y = arc[3].y;
+      if ( y < min )
+        min = y;
+      if ( y > max )
+        max = y;
+
+      if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < ras.min_ey )
+        goto Draw;
+
+      /* Decide whether to split or draw. See `Rapid Termination          */
+      /* Evaluation for Recursive Subdivision of Bezier Curves' by Thomas */
+      /* F. Hain, at                                                      */
+      /* http://www.cis.southalabama.edu/~hain/general/Publications/Bezier/Camera-ready%20CISST02%202.pdf */
+
       {
-        /* check that the arc crosses the current band */
-        TPos  min, max, y;
+        TPos  dx, dy, dx_, dy_;
+        TPos  dx1, dy1, dx2, dy2;
+        TPos  L, s, s_limit;
 
 
-        min = max = arc[0].y;
-        y = arc[1].y;
-        if ( y < min ) min = y;
-        if ( y > max ) max = y;
-        y = arc[2].y;
-        if ( y < min ) min = y;
-        if ( y > max ) max = y;
-        y = arc[3].y;
-        if ( y < min ) min = y;
-        if ( y > max ) max = y;
-        if ( TRUNC( min ) >= ras.max_ey || TRUNC( max ) < 0 )
-          goto Draw;
-        gray_split_cubic( arc );
-        arc += 3;
-        top ++;
-        levels[top] = levels[top - 1] = level - 1;
-        continue;
+        /* dx and dy are x and y components of the P0-P3 chord vector. */
+        dx = arc[3].x - arc[0].x;
+        dy = arc[3].y - arc[0].y;
+
+        /* L is an (under)estimate of the Euclidean distance P0-P3.       */
+        /*                                                                */
+        /* If dx >= dy, then r = sqrt(dx^2 + dy^2) can be overestimated   */
+        /* with least maximum error by                                    */
+        /*                                                                */
+        /*   r_upperbound = dx + (sqrt(2) - 1) * dy  ,                    */
+        /*                                                                */
+        /* where sqrt(2) - 1 can be (over)estimated by 107/256, giving an */
+        /* error of no more than 8.4%.                                    */
+        /*                                                                */
+        /* Similarly, some elementary calculus shows that r can be        */
+        /* underestimated with least maximum error by                     */
+        /*                                                                */
+        /*   r_lowerbound = sqrt(2 + sqrt(2)) / 2 * dx                    */
+        /*                  + sqrt(2 - sqrt(2)) / 2 * dy  .               */
+        /*                                                                */
+        /* 236/256 and 97/256 are (under)estimates of the two algebraic   */
+        /* numbers, giving an error of no more than 8.1%.                 */
+
+        dx_ = FT_ABS( dx );
+        dy_ = FT_ABS( dy );
+
+        /* This is the same as                     */
+        /*                                         */
+        /*   L = ( 236 * FT_MAX( dx_, dy_ )        */
+        /*       + 97 * FT_MIN( dx_, dy_ ) ) >> 8; */
+        L = ( dx_ > dy_ ? 236 * dx_ +  97 * dy_
+                        :  97 * dx_ + 236 * dy_ ) >> 8;
+
+        /* Avoid possible arithmetic overflow below by splitting. */
+        if ( L > 32767 )
+          goto Split;
+
+        /* Max deviation may be as much as (s/L) * 3/4 (if Hain's v = 1). */
+        s_limit = L * (TPos)( ONE_PIXEL / 6 );
+
+        /* s is L * the perpendicular distance from P1 to the line P0-P3. */
+        dx1 = arc[1].x - arc[0].x;
+        dy1 = arc[1].y - arc[0].y;
+        s = FT_ABS( dy * dx1 - dx * dy1 );
+
+        if ( s > s_limit )
+          goto Split;
+
+        /* s is L * the perpendicular distance from P2 to the line P0-P3. */
+        dx2 = arc[2].x - arc[0].x;
+        dy2 = arc[2].y - arc[0].y;
+        s = FT_ABS( dy * dx2 - dx * dy2 );
+
+        if ( s > s_limit )
+          goto Split;
+
+        /* If P1 or P2 is outside P0-P3, split the curve. */
+        if ( dy * dy1 + dx * dx1 < 0                                     ||
+             dy * dy2 + dx * dx2 < 0                                     ||
+             dy * (arc[3].y - arc[1].y) + dx * (arc[3].x - arc[1].x) < 0 ||
+             dy * (arc[3].y - arc[2].y) + dx * (arc[3].x - arc[2].x) < 0 )
+          goto Split;
+
+        /* No reason to split. */
+        goto Draw;
       }
+
+    Split:
+      gray_split_cubic( arc );
+      arc += 3;
+      continue;
 
     Draw:
-      {
-        TPos  to_x, to_y, mid_x, mid_y;
+      gray_render_line( RAS_VAR_ arc[0].x, arc[0].y );
 
+      if ( arc == ras.bez_stack )
+        return;
 
-        to_x  = arc[0].x;
-        to_y  = arc[0].y;
-        mid_x = ( ras.x + to_x + 3 * ( arc[1].x + arc[2].x ) ) / 8;
-        mid_y = ( ras.y + to_y + 3 * ( arc[1].y + arc[2].y ) ) / 8;
-
-        gray_render_line( RAS_VAR_ mid_x, mid_y );
-        gray_render_line( RAS_VAR_ to_x, to_y );
-        top --;
-        arc -= 3;
-      }
+      arc -= 3;
     }
-
-    return;
   }
-
 
 
   static int
@@ -1189,7 +1180,7 @@
     /* first of all, compute the scanline offset */
     p = (unsigned char*)map->buffer - y * map->pitch;
     if ( map->pitch >= 0 )
-      p += ( map->rows - 1 ) * map->pitch;
+      p += (unsigned)( ( map->rows - 1 ) * map->pitch );
 
     for ( ; count > 0; count--, spans++ )
     {
@@ -1759,25 +1750,6 @@
     ras.count_ex = ras.max_ex - ras.min_ex;
     ras.count_ey = ras.max_ey - ras.min_ey;
 
-    /* simple heuristic used to speed up the bezier decomposition -- see */
-    /* the code in gray_render_conic() and gray_render_cubic() for more  */
-    /* details                                                           */
-    ras.conic_level = 32;
-    ras.cubic_level = 16;
-
-    {
-      int  level = 0;
-
-
-      if ( ras.count_ex > 24 || ras.count_ey > 24 )
-        level++;
-      if ( ras.count_ex > 120 || ras.count_ey > 120 )
-        level++;
-
-      ras.conic_level <<= level;
-      ras.cubic_level <<= level;
-    }
-
     /* set up vertical bands */
     num_bands = (int)( ( ras.max_ey - ras.min_ey ) / ras.band_size );
     if ( num_bands == 0 )
@@ -2003,14 +1975,14 @@
     FT_UNUSED( raster );
   }
 
-#else /* _STANDALONE_ */
+#else /* !_STANDALONE_ */
 
   static int
   gray_raster_new( FT_Memory   memory,
                    FT_Raster*  araster )
   {
     FT_Error  error;
-    PRaster   raster;
+    PRaster   raster = NULL;
 
 
     *araster = 0;
@@ -2033,7 +2005,7 @@
     FT_FREE( raster );
   }
 
-#endif /* _STANDALONE_ */
+#endif /* !_STANDALONE_ */
 
 
   static void

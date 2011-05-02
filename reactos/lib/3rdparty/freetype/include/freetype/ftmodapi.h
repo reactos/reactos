@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2008, 2009 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2008, 2009, 2010 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -252,6 +252,33 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_Reference_Library                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A counter gets initialized to~1 at the time an @FT_Library         */
+  /*    structure is created.  This function increments the counter.       */
+  /*    @FT_Done_Library then only destroys a library if the counter is~1, */
+  /*    otherwise it simply decrements the counter.                        */
+  /*                                                                       */
+  /*    This function helps in managing life-cycles of structures which    */
+  /*    reference @FT_Library objects.                                     */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    library :: A handle to a target library object.                    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Since>                                                               */
+  /*    2.4.2                                                              */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Reference_Library( FT_Library  library );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_New_Library                                                     */
   /*                                                                       */
   /* <Description>                                                         */
@@ -263,6 +290,9 @@ FT_BEGIN_HEADER
   /*    @FT_Add_Default_Modules or a series of calls to @FT_Add_Module)    */
   /*    instead of @FT_Init_FreeType to initialize the FreeType library.   */
   /*                                                                       */
+  /*    Don't use @FT_Done_FreeType but @FT_Done_Library to destroy a      */
+  /*    library instance.                                                  */
+  /*                                                                       */
   /* <Input>                                                               */
   /*    memory   :: A handle to the original memory object.                */
   /*                                                                       */
@@ -271,6 +301,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Library.                                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_New_Library( FT_Memory    memory,
@@ -291,6 +325,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Library.                                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Library( FT_Library  library );
@@ -394,8 +432,8 @@ FT_BEGIN_HEADER
    *
    *    FT_TRUETYPE_ENGINE_TYPE_PATENTED ::
    *       The library implements a bytecode interpreter that covers
-   *       the full instruction set of the TrueType virtual machine.
-   *       See the file `docs/PATENTS' for legal aspects.
+   *       the full instruction set of the TrueType virtual machine (this
+   *       was governed by patents until May 2010, hence the name).
    *
    *  @since:
    *       2.2
