@@ -12593,10 +12593,7 @@ START_TEST(msg)
     test_dialog_messages();
     test_nullCallback();
     test_dbcs_wm_char();
-    if(!winetest_interactive)
-        skip("skipping test_menu_messages, that hangs on reactos\n");
-    else
-        test_menu_messages();
+    test_menu_messages();
     test_paintingloop();
     test_defwinproc();
     test_clipboard_viewers();
