@@ -469,7 +469,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		 // forward message to common controls
 		SendMessage(g_Globals._hwndShellView, WM_SYSCOLORCHANGE, 0, 0);
-		SendMessage(_desktopBar, WM_SYSCOLORCHANGE, 0, 0);OutputDebugStringA("WM_SYSCOLORCHANGE desktop\n");
+		SendMessage(_desktopBar, WM_SYSCOLORCHANGE, 0, 0);
 		break;
 
 	  default: def:
