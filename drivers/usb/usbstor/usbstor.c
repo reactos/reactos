@@ -239,9 +239,9 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = USBSTOR_AddDevice;
 
     //
-    // driver start i/o routine
+    // FIXME: driver start i/o routine
     //
-    DriverObject->DriverStartIo = USBSTOR_StartIo;
+    //DriverObject->DriverStartIo = USBSTOR_StartIo;
 
 
     //

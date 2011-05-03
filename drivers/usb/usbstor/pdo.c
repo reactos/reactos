@@ -11,6 +11,221 @@
 
 #include "usbstor.h"
 
+LPCSTR
+USBSTOR_GetDeviceType(
+    IN PUFI_INQUIRY_RESPONSE InquiryData)
+{
+    //
+    // check if device type is zero
+    //
+    if (InquiryData->DeviceType == 0)
+    {
+        //
+        // direct access device
+        //
+
+        //
+        // FIXME: check if floppy
+        //
+        return "Disk";
+    }
+
+    //
+    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // 
+    switch (InquiryData->DeviceType)
+    {
+        case 1:
+        {
+            //
+            // sequential device, i.e magnetic tape
+            //
+            return "Sequential";
+        }
+        case 4:
+        {
+            //
+            // write once device
+            //
+            return "Worm";
+        }
+        case 5:
+        {
+            //
+            // CDROM device
+            //
+            return "CdRom";
+        }
+        case 7:
+        {
+            //
+            // optical memory device
+            //
+            return "Optical";
+        }
+        case 8:
+        {
+            //
+            // medium change device
+            //
+            return "Changer";
+        }
+        default:
+        {
+            //
+            // other device
+            //
+            return "CdRom";
+        }
+    }
+}
+
+ULONG
+CopyField(
+    IN PUCHAR Name,
+    IN PUCHAR Buffer,
+    IN ULONG MaxLength)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < MaxLength; Index++)
+    {
+        if (Name[Index] == '\0')
+            return Index;
+
+        Buffer[Index] = Name[Index];
+    }
+
+    return MaxLength;
+}
+
+
+NTSTATUS
+USBSTOR_PdoHandleQueryDeviceId(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PPDO_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    UCHAR Buffer[100];
+    LPCSTR DeviceType;
+    ULONG Offset = 0, Index;
+    PUFI_INQUIRY_RESPONSE InquiryData;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING DeviceId;
+
+    //
+    // get device extension
+    //
+    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(DeviceExtension->InquiryData);
+
+    //
+    // get inquiry data
+    //
+    InquiryData = (PUFI_INQUIRY_RESPONSE)DeviceExtension->InquiryData;
+
+    //
+    // get device type
+    //
+    DeviceType = USBSTOR_GetDeviceType(InquiryData);
+
+    //
+    // lets create device string
+    //
+    Offset = sprintf(&Buffer[Offset], "USBSTOR\\%s&Ven_", DeviceType);
+
+    //
+    // copy vendor id
+    //
+    Offset += CopyField(InquiryData->Vendor, &Buffer[Offset], 8);
+
+    //
+    // copy product string
+    //
+    Offset += sprintf(&Buffer[Offset], "&Prod_");
+
+    //
+    // copy product identifier
+    //
+    Offset += CopyField(InquiryData->Product, &Buffer[Offset], 16);
+
+    //
+    // copy revision string
+    //
+    Offset += sprintf(&Buffer[Offset], "&Rev_");
+
+    //
+    // copy revision identifer
+    //
+    Offset += CopyField(InquiryData->Revision, &Buffer[Offset], 4);
+
+    //
+    // FIXME: device serial number
+    //
+    Offset +=sprintf(&Buffer[Offset], "\\00000000&%d", DeviceExtension->LUN);
+
+    //
+    // now convert restricted characters to underscores
+    //
+    for(Index = 0; Index < Offset; Index++)
+    {
+        if (Buffer[Index] <= ' ' || Buffer[Index] >= 0x7F /* last printable ascii character */ ||  Buffer[Index] == ',')
+        {
+            //
+            // convert to underscore
+            //
+            Buffer[Index] = '_';
+        }
+    }
+
+    //
+    // now initialize ansi string
+    //
+    RtlInitAnsiString(&AnsiString, (PCSZ)Buffer);
+
+    //
+    // allocate DeviceId string
+    //
+    DeviceId.Length = 0;
+    DeviceId.MaximumLength = (Offset + 2) * sizeof(WCHAR);
+    DeviceId.Buffer = (LPWSTR)AllocateItem(PagedPool, DeviceId.MaximumLength);
+    if (!DeviceId.Buffer)
+    {
+        //
+        // no memory
+        //
+        Irp->IoStatus.Information = 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
+    //
+    // convert to unicode
+    //
+    Status = RtlAnsiStringToUnicodeString(&DeviceId, &AnsiString, FALSE);
+
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // store result
+        //
+        Irp->IoStatus.Information = (ULONG_PTR)DeviceId.Buffer;
+    }
+
+    DPRINT1("DeviceId %wZ\n", &DeviceId);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+
 NTSTATUS
 USBSTOR_PdoHandleDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
@@ -102,9 +317,20 @@ USBSTOR_PdoHandlePnp(
            Status = STATUS_NOT_SUPPORTED;
            break;
        case IRP_MN_QUERY_ID:
-           DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_QUERY_ID unimplemented\n");
+       {
+           if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
+           {
+               //
+               // handle query device id
+               //
+               Status = USBSTOR_PdoHandleQueryDeviceId(DeviceObject, Irp);
+               break;
+           }
+
+           DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
            Status = STATUS_NOT_SUPPORTED;
            break;
+       }
        case IRP_MN_REMOVE_DEVICE:
            DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_REMOVE_DEVICE unimplemented\n");
            Status = STATUS_SUCCESS;
@@ -208,6 +434,8 @@ USBSTOR_CreatePDO(
     // output device object
     //
     *ChildDeviceObject = PDO;
+
+    USBSTOR_SendInquiryCmd(PDO);
 
     //
     // done
