@@ -5,6 +5,7 @@
  * PURPOSE:     USB block storage device driver.
  * PROGRAMMERS:
  *              James Tabor
+                Johannes Anderwald
  */
 
 /* INCLUDES ******************************************************************/
@@ -15,84 +16,201 @@
 
 /* PUBLIC AND PRIVATE FUNCTIONS **********************************************/
 
-NTSTATUS NTAPI
-IrpStub(IN PDEVICE_OBJECT DeviceObject,
-        IN PIRP Irp)
+NTSTATUS
+NTAPI
+USBSTOR_AddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    NTSTATUS Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-}
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
 
-NTSTATUS NTAPI
-AddDevice(IN PDRIVER_OBJECT DriverObject,
-          IN PDEVICE_OBJECT pdo)
-{
+    //
+    // lets create the device
+    //
+    Status = IoCreateDevice(DriverObject, sizeof(FDO_DEVICE_EXTENSION), 0, FILE_DEVICE_BUS_EXTENDER, 0, FALSE, &DeviceObject);
+
+    //
+    // check for success
+    //
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("USBSTOR_AddDevice: Failed to create FDO Status %x\n", Status);
+        return Status;
+    }
+
+    //
+    // get device extension
+    //
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension);
+
+    //
+    // zero device extension
+    //
+    RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
+
+    //
+    // initialize device extension
+    //
+    DeviceExtension->Common.IsFDO = TRUE;
+    DeviceExtension->FunctionalDeviceObject = DeviceObject;
+    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+    DeviceExtension->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+
+    //
+    // did attaching fail
+    //
+    if (!DeviceExtension->LowerDeviceObject)
+    {
+        //
+        // device removed
+        //
+        IoDeleteDevice(DeviceObject);
+
+        return STATUS_DEVICE_REMOVED;
+    }
+
+    //
+    // set device flags
+    //
+    DeviceObject->Flags |= DO_BUFFERED_IO | DO_POWER_PAGABLE;
+
+    //
+    // device is initialized
+    //
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+
+    //
+    // done
+    //
     return STATUS_SUCCESS;
 }
 
-VOID NTAPI
-DriverUnload(PDRIVER_OBJECT DriverObject)
+VOID
+NTAPI
+USBSTOR_Unload(
+    PDRIVER_OBJECT DriverObject)
 {
+    //
+    // no-op
+    //
 }
 
-VOID NTAPI
-StartIo(PUSBSTOR_DEVICE_EXTENSION DeviceExtension,
-        PIRP Irp)
+VOID
+NTAPI
+USBSTOR_StartIo(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
+    //
+    // implement me
+    //
+    UNIMPLEMENTED
 }
 
-static NTSTATUS NTAPI
-DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+NTAPI
+USBSTOR_DispatchClose(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
+    //
+    // function always succeeds ;)
+    //
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS NTAPI
-DispatchCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+
+NTSTATUS
+NTAPI
+USBSTOR_DispatchDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
+    UNIMPLEMENTED
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS NTAPI
-DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+
+NTSTATUS
+NTAPI
+USBSTOR_DispatchScsi(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
+    UNIMPLEMENTED
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
-
-static NTSTATUS NTAPI
-DispatchScsi(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+NTAPI
+USBSTOR_DispatchReadWrite(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
-    return STATUS_SUCCESS;
+    //
+    // read write ioctl is not supported
+    //
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_INVALID_PARAMETER;
 }
 
-static NTSTATUS NTAPI
-DispatchReadWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+NTAPI
+USBSTOR_DispatchPnp(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
-    return STATUS_SUCCESS;
+    PCOMMON_DEVICE_EXTENSION DeviceExtension;
+
+    //
+    // get common device extension
+    //
+    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // is it for the FDO
+    //
+    if (DeviceExtension->IsFDO)
+    {
+        //
+        // dispatch pnp request to fdo pnp handler
+        //
+        return USBSTOR_FdoHandlePnp(DeviceObject, Irp);
+    }
+    else
+    {
+        //
+        // dispatch request to pdo pnp handler
+        //
+        return USBSTOR_PdoHandlePnp(DeviceObject, Irp);
+    }
 }
 
-static NTSTATUS NTAPI
-DispatchSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+NTAPI
+USBSTOR_DispatchPower(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
-    return STATUS_SUCCESS;
-}
+    UNIMPLEMENTED
 
-static NTSTATUS NTAPI
-DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-    return STATUS_SUCCESS;
-}
-
-static NTSTATUS NTAPI
-DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
-{
-    DPRINT1("USBSTOR: IRP_MJ_POWER unimplemented\n");
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -101,37 +219,62 @@ DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 
 
 
-/*
- * Standard DriverEntry method.
- */
-NTSTATUS NTAPI
-DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
+NTSTATUS
+NTAPI
+DriverEntry(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegPath)
 {
-    ULONG i;
 
-    DPRINT("********* USB Storage *********\n");
+    DPRINT1("********* USB Storage *********\n");
 
-    DriverObject->DriverUnload = DriverUnload;
-    DriverObject->DriverExtension->AddDevice = AddDevice;
+    //
+    // driver unload routine
+    //
+    DriverObject->DriverUnload = USBSTOR_Unload;
 
-    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-        DriverObject->MajorFunction[i] = IrpStub;
+    //
+    // add device function
+    //
+    DriverObject->DriverExtension->AddDevice = USBSTOR_AddDevice;
 
-    DriverObject->DriverStartIo = (PVOID)StartIo;
+    //
+    // driver start i/o routine
+    //
+    DriverObject->DriverStartIo = USBSTOR_StartIo;
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchClose;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchClose;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCleanup;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_READ] = DispatchReadWrite;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = DispatchReadWrite;
 
-    /* Scsi Miniport support */
-    DriverObject->MajorFunction[IRP_MJ_SCSI] = DispatchScsi;
-    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = DispatchSystemControl;
+    //
+    // create / close
+    //
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = USBSTOR_DispatchClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBSTOR_DispatchClose;
 
-    DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-    DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+    //
+    // scsi pass through requests
+    //
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = USBSTOR_DispatchDeviceControl;
+
+    //
+    // irp dispatch read / write
+    //
+    DriverObject->MajorFunction[IRP_MJ_READ] = USBSTOR_DispatchReadWrite;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = USBSTOR_DispatchReadWrite;
+
+    //
+    // scsi queue ioctl
+    //
+    DriverObject->MajorFunction[IRP_MJ_SCSI] = USBSTOR_DispatchScsi;
+
+    //
+    // pnp processing
+    //
+    DriverObject->MajorFunction[IRP_MJ_PNP] = USBSTOR_DispatchPnp;
+
+    //
+    // power processing
+    //
+    DriverObject->MajorFunction[IRP_MJ_POWER] = USBSTOR_DispatchPower;
 
     return STATUS_SUCCESS;
 }

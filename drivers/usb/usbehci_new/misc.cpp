@@ -80,8 +80,11 @@ SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return Status;
 }
 
-NTSTATUS NTAPI
-GetBusInterface(PDEVICE_OBJECT DeviceObject, PBUS_INTERFACE_STANDARD busInterface)
+NTSTATUS
+NTAPI
+GetBusInterface(
+    PDEVICE_OBJECT DeviceObject, 
+    PBUS_INTERFACE_STANDARD busInterface)
 {
     KEVENT Event;
     NTSTATUS Status;

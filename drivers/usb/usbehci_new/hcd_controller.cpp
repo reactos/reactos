@@ -44,7 +44,6 @@ public:
 
     // local functions
     NTSTATUS CreateFDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
-    NTSTATUS CreatePDO(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT * OutDeviceObject);
     NTSTATUS SetSymbolicLink(BOOLEAN Enable);
 
     // constructor / destructor
