@@ -12572,10 +12572,7 @@ START_TEST(msg)
     test_paint_messages();
     test_interthread_messages();
     test_message_conversion();
-    if(!winetest_interactive)
-        skip("skipping test_accelerators, that hangs on reactos\n");
-    else
-        test_accelerators();
+    test_accelerators();
     test_timers();
     test_timers_no_wnd();
     if (hCBT_hook) test_set_hook();
