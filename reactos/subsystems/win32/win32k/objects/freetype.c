@@ -1569,8 +1569,8 @@ ftGdiGetGlyphOutline(
 //  FT_Set_Pixel_Sizes(ft_face,
 //                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
     /* FIXME should set character height if neg */
-//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-//                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+//                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -2165,9 +2165,8 @@ TextIntGetTextExtentPoint(PDC dc,
     error = FT_Set_Pixel_Sizes(face,
                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                                /* FIXME should set character height if neg */
-                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                                - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 
+							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));							   
     if (error)
     {
         DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -2228,7 +2227,8 @@ TextIntGetTextExtentPoint(PDC dc,
     IntUnLockFreeType;
 
     Size->cx = (TotalWidth + 32) >> 6;
-    Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
+    Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+	            dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
     Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
@@ -2452,9 +2452,8 @@ ftGdiGetTextMetricsW(
         Error = FT_Set_Pixel_Sizes(Face,
                                    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                                    /* FIXME should set character height if neg */
-                                   (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                                    - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                                    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                                   (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                                   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
         IntUnLockFreeType;
         if (0 != Error)
         {
@@ -3304,9 +3303,8 @@ GreExtTextOutW(
                 face,
                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                 /* FIXME should set character height if neg */
-                (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                 - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
         DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -3843,8 +3841,8 @@ NtGdiGetCharABCWidthsW(
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                        /* FIXME should set character height if neg */
-                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                       dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -4010,9 +4008,8 @@ NtGdiGetCharWidthW(
     FT_Set_Pixel_Sizes(face,
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                        /* FIXME should set character height if neg */
-                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                        - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+                       dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
