@@ -1,0 +1,57 @@
+
+Public interface:
+------------------
+- FtfdEnableDriver: 100% done
+- FtfdEnablePDEV: 100% done
+- FtfdCompletePDEV: 100% done
+- FtfdDisablePDEV: 100% done
+- FtfdEscape: unimplemented, probably unneccessary
+- FtfdLoadFontFile: 90% done
+    - handle DESIGNVECTOR
+- FtfdQueryFont: 70% done, depends on FtfdInitIfiMetrics
+- FtfdQueryFontTree: 70% done, depends on FtfdInitGlyphSet and FtfdInitKerningPairs
+- FtfdUnloadFontFile: 100% done, depends on FtfdDestroyFace
+- FtfdQueryFontFile: 50%
+    - implement QFF_DESCRIPTION, unimportant
+- FtfdQueryFontCaps: 100% done
+- FtfdQueryTrueTypeTable: unimplemented
+- FtfdGetTrueTypeFile: unimplemented
+
+- FtfdQueryFontData: 10%, depends on FtfdLoadGlyph
+    - QFD_MAXEXTENTS: dependes on FtfdQueryMaxExtents
+    - QFD_GLYPHANDBITMAP: depends on FtfdQueryGlyphData, FtfdQueryGlyphBits
+    - QFD_GLYPHANDOUTLINE: depends on FtfdQueryGlyphData, FtfdQueryGlyphOutline
+        - provide an outline (not neccessary)
+    - QFD_TT_GRAY1_BITMAP
+- FtfdQueryGlyphAttrs: unimplemented, later
+- FtfdQueryAdvanceWidths: 90% done
+    - check possibility of FT_ADVANCE_FLAG_FAST_ONLY
+- FtfdQueryTrueTypeOutline: unimplemented
+- FtfdFontManagement: unimplemented, unneccessary
+- FtfdDestroyFont: unimplemented, later
+
+internal interface
+-------------------
+- FtfdInitIfiMetrics: 70% done
+    - handle other font types then TTF/OTF
+    - fix fwdLowestPPEm, fwdMacLineGap, ptlBaseline, ptlAspect, ptlCaret
+    - cKerningPairs, ulPanoseCulture
+    - check fwdMacAscender, fwdMacDescender
+
+- FtfdInitGlyphSet: 100% done
+- FtfdInitKerningPairs: unimplemented, later
+- FtfdDestroyFace: 100% done
+
+- FtfdCreateFontInstance: 80%
+    - handle XFORM (create a matrix and set freetype xform)
+- FtfdGetFontInstance: 100% done
+- FtfdQueryMaxExtents: 10% done
+
+- FtfdLoadGlyph: 80% done
+    - hande accelerator flags for bitmap / outline
+- FtfdQueryGlyphData: 50% done
+    - handle vertical layout
+    - handle fxInkTop, fxInkBottom, ptqD
+
+- FtfdQueryGlyphBits: 5%
+- FtfdQueryGlyphOutline: unimplemented
