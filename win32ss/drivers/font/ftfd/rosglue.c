@@ -24,7 +24,7 @@ DbgPrint(IN PCCH Format, IN ...)
     va_list args;
 
     va_start(args, Format);
-    EngDebugPrint("ft2: ", (PCHAR)Format, args);
+    EngDebugPrint("ftfd: ", (PCHAR)Format, args);
     va_end(args);
     return 0;
 }
