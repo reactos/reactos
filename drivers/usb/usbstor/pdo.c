@@ -80,7 +80,7 @@ USBSTOR_GetDeviceType(
     }
 }
 
-LPCWSTR
+LPCSTR
 USBSTOR_GetGenericType(
     IN PUFI_INQUIRY_RESPONSE InquiryData)
 {
@@ -96,7 +96,7 @@ USBSTOR_GetGenericType(
         //
         // FIXME: check if floppy
         //
-        return L"GenDisk";
+        return "GenDisk";
     }
 
     //
@@ -109,42 +109,42 @@ USBSTOR_GetGenericType(
             //
             // sequential device, i.e magnetic tape
             //
-            return L"GenSequential";
+            return "GenSequential";
         }
         case 4:
         {
             //
             // write once device
             //
-            return L"GenWorm";
+            return "GenWorm";
         }
         case 5:
         {
             //
             // CDROM device
             //
-            return L"GenCdRom";
+            return "GenCdRom";
         }
         case 7:
         {
             //
             // optical memory device
             //
-            return L"GenOptical";
+            return "GenOptical";
         }
         case 8:
         {
             //
             // medium change device
             //
-            return L"GenChanger";
+            return "GenChanger";
         }
         default:
         {
             //
             // other device
             //
-            return L"UsbstorOther";
+            return "UsbstorOther";
         }
     }
 }
@@ -254,8 +254,6 @@ USBSTOR_PdoHandleQueryDeviceText(
 }
 
 
-
-
 NTSTATUS
 USBSTOR_PdoHandleQueryDeviceId(
     IN PDEVICE_OBJECT DeviceObject,
@@ -269,8 +267,6 @@ USBSTOR_PdoHandleQueryDeviceId(
     PUFI_INQUIRY_RESPONSE InquiryData;
     ANSI_STRING AnsiString;
     UNICODE_STRING DeviceId;
-
-    DPRINT1("USBSTOR_PdoHandleQueryDeviceId\n");
 
     //
     // get device extension
@@ -300,21 +296,13 @@ USBSTOR_PdoHandleQueryDeviceId(
     //
     // lets create device string
     //
-    Offset = sprintf(&Buffer[Offset], "USBSTOR\\") + 1;
-
-    //
-    // copy vendor id
-    //
+    Offset = sprintf(&Buffer[Offset], "USBSTOR\\");
+    Offset += sprintf(&Buffer[Offset], DeviceType);
+    Offset += sprintf(&Buffer[Offset], "&Ven_");
     Offset += CopyField(InquiryData->Vendor, &Buffer[Offset], 8);
-
-    //
-    // copy product identifier
-    //
+    Offset += sprintf(&Buffer[Offset], "&Prod_");
     Offset += CopyField(InquiryData->Product, &Buffer[Offset], 16);
-
-    //
-    // copy revision identifer
-    //
+    Offset += sprintf(&Buffer[Offset], "&Rev_");
     Offset += CopyField(InquiryData->Revision, &Buffer[Offset], 4);
 
     //
@@ -374,14 +362,23 @@ USBSTOR_ConvertToUnicodeString(
     ASSERT(ResultBufferLength);
     ASSERT(ResultBufferLength > ResultBufferOffset);
 
-    DPRINT1("ResultBufferOffset %lu ResultBufferLength %lu Buffer %s Length %lu\n", ResultBufferOffset, ResultBufferLength, Buffer, strlen(Buffer));
+    DPRINT("ResultBufferOffset %lu ResultBufferLength %lu Buffer %s Length %lu\n", ResultBufferOffset, ResultBufferLength, Buffer, strlen(Buffer));
 
+    //
+    // construct destination string
+    //
     DeviceString.Buffer = &ResultBuffer[ResultBufferOffset];
     DeviceString.Length = 0;
     DeviceString.MaximumLength = (ResultBufferLength - ResultBufferOffset) * sizeof(WCHAR);
 
+    //
+    // initialize source string
+    //
     RtlInitAnsiString(&AnsiString, Buffer);
 
+    //
+    // convert to unicode
+    //
     Status = RtlAnsiStringToUnicodeString(&DeviceString, &AnsiString, FALSE);
     ASSERT(Status == STATUS_SUCCESS);
 
@@ -406,14 +403,12 @@ USBSTOR_PdoHandleQueryHardwareId(
 {
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    LPCWSTR GenericType;
+    LPCSTR GenericType, DeviceType;
     LPWSTR Buffer;
     CHAR Id1[50], Id2[50], Id3[50], Id4[50], Id5[50], Id6[50];
     ULONG Id1Length, Id2Length, Id3Length, Id4Length, Id5Length,Id6Length;
     ULONG Offset, TotalLength, Length;
     PUFI_INQUIRY_RESPONSE InquiryData;
-
-    DPRINT1("USBSTOR_PdoHandleQueryHardwareId\n");
 
     //
     // get PDO device extension
@@ -437,9 +432,11 @@ USBSTOR_PdoHandleQueryHardwareId(
 
 
     //
-    // get generic type
+    // get device type and generic type
     //
+    DeviceType = USBSTOR_GetDeviceType(InquiryData);
     GenericType = USBSTOR_GetGenericType(InquiryData);
+
     ASSERT(GenericType);
 
     //
@@ -449,12 +446,12 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id1, sizeof(Id1));
     Offset = 0;
     Offset = sprintf(&Id1[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id1[Offset], "Disk"); //FIXME
+    Offset += sprintf(&Id1[Offset], DeviceType);
     Offset += CopyField(InquiryData->Vendor, &Id1[Offset], 8);
     Offset += CopyField(InquiryData->Product, &Id1[Offset], 16);
     Offset += CopyField(InquiryData->Revision, &Id1[Offset], 4);
     Id1Length = strlen(Id1) + 1;
-    DPRINT1("HardwareId1 %s\n", Id1);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
 
     //
     // generate id 2
@@ -463,11 +460,11 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id2, sizeof(Id2));
     Offset = 0;
     Offset = sprintf(&Id2[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id2[Offset], "Disk"); //FIXME
+    Offset += sprintf(&Id2[Offset], DeviceType);
     Offset += CopyField(InquiryData->Vendor, &Id2[Offset], 8);
     Offset += CopyField(InquiryData->Product, &Id2[Offset], 16);
     Id2Length = strlen(Id2) + 1;
-    DPRINT1("HardwareId2 %s\n", Id2);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
 
     //
     // generate id 3
@@ -476,10 +473,10 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id3, sizeof(Id3));
     Offset = 0;
     Offset = sprintf(&Id3[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id3[Offset], "Disk"); //FIXME
+    Offset += sprintf(&Id3[Offset], DeviceType);
     Offset += CopyField(InquiryData->Vendor, &Id3[Offset], 8);
     Id3Length = strlen(Id3) + 1;
-    DPRINT1("HardwareId3 %s\n", Id3);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
 
     //
     // generate id 4
@@ -488,12 +485,12 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id4, sizeof(Id4));
     Offset = 0;
     Offset = sprintf(&Id4[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id4[Offset], "Disk"); //FIXME
+    Offset += sprintf(&Id4[Offset], DeviceType);
     Offset += CopyField(InquiryData->Vendor, &Id4[Offset], 8);
     Offset += CopyField(InquiryData->Product, &Id4[Offset], 16);
     Offset += CopyField(InquiryData->Revision, &Id4[Offset], 1);
     Id4Length = strlen(Id4) + 1;
-    DPRINT1("HardwareId4 %s\n", Id4);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
     //
     // generate id 5
@@ -502,9 +499,9 @@ USBSTOR_PdoHandleQueryHardwareId(
     RtlZeroMemory(Id5, sizeof(Id5));
     Offset = 0;
     Offset = sprintf(&Id5[Offset], "USBSTOR\\");
-    Offset += sprintf(&Id5[Offset], "GenDisk"); //FIXME
+    Offset += sprintf(&Id5[Offset], GenericType);
     Id5Length = strlen(Id5) + 1;
-    DPRINT1("HardwareId5 %s\n", Id5);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
     //
     // generate id 6
@@ -512,9 +509,9 @@ USBSTOR_PdoHandleQueryHardwareId(
     //
     RtlZeroMemory(Id6, sizeof(Id6));
     Offset = 0;
-    Offset = sprintf(&Id6[Offset], "GenDisk"); //FIXME
+    Offset = sprintf(&Id6[Offset], GenericType);
     Id6Length = strlen(Id6) + 1;
-    DPRINT1("HardwareId6 %s\n", Id6);
+    DPRINT1("USBSTOR_PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
     //
     // compute total length
@@ -547,7 +544,10 @@ USBSTOR_PdoHandleQueryHardwareId(
     USBSTOR_ConvertToUnicodeString(Id5, Length, Offset, Buffer, &Offset);
     USBSTOR_ConvertToUnicodeString(Id6, Length, Offset, Buffer, &Offset);
 
-    DPRINT1("Offset %lu Length %lu\n", Offset, Length);
+    //
+    // sanity check
+    //
+    ASSERT(Offset + 1 == Length);
 
     //
     // store result
@@ -567,12 +567,10 @@ USBSTOR_PdoHandleQueryCompatibleId(
 {
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    WCHAR Buffer[100];
-    ULONG Length;
+    CHAR Buffer[100];
+    ULONG Length, Offset;
     LPWSTR InstanceId;
     LPCSTR DeviceType;
-
-    DPRINT1("USBSTOR_PdoHandleQueryCompatibleId\n");
 
     //
     // get PDO device extension
@@ -602,22 +600,8 @@ USBSTOR_PdoHandleQueryCompatibleId(
     //
     // format instance id
     //
-    Length = swprintf(Buffer, L"USBSTOR\\%s", L"Disk") + 1;
-    Length += swprintf(&Buffer[Length], L"USBSTOR\\%s", L"RAW") + 2;
-
-    //
-    // verify this
-    //
-   // Length += swprintf(&Buffer[Length], L"USBSTOR\\RAW") + 1;
-
-    //Buffer[Length] = UNICODE_NULL;
-    //Buffer[Length+1] = UNICODE_NULL;
-    //Length++;
-
-    //
-    // calculate length
-    //
-
+    Length = sprintf(Buffer, L"USBSTOR\\%s", DeviceType) + 1;
+    Length += sprintf(&Buffer[Length], L"USBSTOR\\%s", L"RAW") + 2;
 
     //
     // allocate instance id
@@ -632,12 +616,10 @@ USBSTOR_PdoHandleQueryCompatibleId(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
  
-    //
-    // copy instance id
-    //
-    wcscpy(InstanceId, Buffer);
+    USBSTOR_ConvertToUnicodeString(Buffer, Length, 0, InstanceId, &Offset);
+    USBSTOR_ConvertToUnicodeString(&Buffer[Offset], Length, Offset, InstanceId, &Offset);
 
-    DPRINT1("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
+    DPRINT1("USBSTOR_PdoHandleQueryCompatibleId %S\n", InstanceId);
 
     //
     // store result
@@ -656,12 +638,9 @@ USBSTOR_PdoHandleQueryInstanceId(
     IN OUT PIRP Irp)
 {
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension;
     WCHAR Buffer[100];
     ULONG Length;
     LPWSTR InstanceId;
-
-    DPRINT1("USBSTOR_PdoHandleQueryInstanceId\n");
 
     //
     // get PDO device extension
@@ -669,19 +648,10 @@ USBSTOR_PdoHandleQueryInstanceId(
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
-    // get FDO device extension
-    //
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
-
-    //
-    // sanity check
-    //
-    ASSERT(FDODeviceExtension->DeviceDescriptor);
-
-    //
     // format instance id
+    // FIXME: retrieve serial number from string device descriptor
     //
-    swprintf(Buffer, L"USB\\VID_%04x&PID_%04x\\%s", FDODeviceExtension->DeviceDescriptor->idVendor, FDODeviceExtension->DeviceDescriptor->idProduct, L"09188212515A");
+    swprintf(Buffer, L"%s&%d", L"09188212515A", PDODeviceExtension->LUN);
 
     //
     // calculate length
@@ -927,7 +897,7 @@ USBSTOR_CreatePDO(
     //
     // create child device object
     //
-    Status = IoCreateDevice(DeviceObject->DriverObject, sizeof(PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_MASS_STORAGE, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &PDO);
+    Status = IoCreateDevice(DeviceObject->DriverObject, sizeof(PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_MASS_STORAGE, FILE_AUTOGENERATED_DEVICE_NAME | FILE_DEVICE_SECURE_OPEN, FALSE, &PDO);
     if (!NT_SUCCESS(Status))
     {
         //
