@@ -129,42 +129,39 @@ const UCHAR ROOTHUB2_DEVICE_DESCRIPTOR [] =
 
 };
 
-const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
+const USB_CONFIGURATION_DESCRIPTOR ROOTHUB2_CONFIGURATION_DESCRIPTOR =
 {
-    /* one configuration */
-    0x09,       /* bLength; */
-    0x02,       /* bDescriptorType; Configuration */
-    0x19, 0x00, /* wTotalLength; */
-    0x01,       /* bNumInterfaces; (1) */
-    0x23,       /* bConfigurationValue; */
-    0x00,       /* iConfiguration; */
-    0x40,       /* bmAttributes; */
-    0x00        /* MaxPower; */
+    sizeof(USB_CONFIGURATION_DESCRIPTOR),
+    USB_CONFIGURATION_DESCRIPTOR_TYPE,
+    sizeof(USB_CONFIGURATION_DESCRIPTOR) + sizeof(USB_INTERFACE_DESCRIPTOR) + sizeof(USB_ENDPOINT_DESCRIPTOR),
+    1,
+    1,
+    0,
+    0x40, /* self powered */
+    0x0
 };
 
-const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] =
+const USB_INTERFACE_DESCRIPTOR ROOTHUB2_INTERFACE_DESCRIPTOR =
 {
-    /* one interface */
-    0x09,       /* bLength: Interface; */
-    0x04,       /* bDescriptorType; Interface */
-    0x00,       /* bInterfaceNumber; */
-    0x00,       /* bAlternateSetting; */
-    0x01,       /* bNumEndpoints; */
-    0x09,       /* bInterfaceClass; HUB_CLASSCODE */
-    0x01,       /* bInterfaceSubClass; */
-    0x00,       /* bInterfaceProtocol: */
-    0x00        /* iInterface; */
+    sizeof(USB_INTERFACE_DESCRIPTOR),                            /* bLength */
+    USB_INTERFACE_DESCRIPTOR_TYPE,                               /* bDescriptorType; Interface */
+    0,                                                           /* bInterfaceNumber; */
+    0,                                                           /* bAlternateSetting; */
+    0x1,                                                         /* bNumEndpoints; */
+    0x09,                                                        /* bInterfaceClass; HUB_CLASSCODE */
+    0x01,                                                        /* bInterfaceSubClass; */
+    0x00,                                                        /* bInterfaceProtocol: */
+    0x00,                                                        /* iInterface; */
 };
 
-const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
+const USB_ENDPOINT_DESCRIPTOR ROOTHUB2_ENDPOINT_DESCRIPTOR =
 {
-    /* one endpoint (status change endpoint) */
-    0x07,       /* bLength; */
-    0x05,       /* bDescriptorType; Endpoint */
-    0x81,       /* bEndpointAddress; IN Endpoint 1 */
-    0x03,       /* bmAttributes; Interrupt */
-    0x08, 0x00, /* wMaxPacketSize; 1 + (MAX_ROOT_PORTS / 8) */
-    0xFF        /* bInterval; (255ms -- usb 2.0 spec) */
+    sizeof(USB_ENDPOINT_DESCRIPTOR),                             /* bLength */
+    USB_ENDPOINT_DESCRIPTOR_TYPE,                                /* bDescriptorType */
+    0x81,                                                        /* bEndPointAddress */
+    USB_ENDPOINT_TYPE_INTERRUPT,                                 /* bmAttributes */
+    0x01,                                                        /* wMaxPacketSize */
+    0xC                                                          /* bInterval */
 };
 
 //----------------------------------------------------------------------------------------
@@ -266,11 +263,11 @@ CHubController::Initialize(
     // Set the SCE Callback that the Hardware Device will call on port status change
     //
     Device->SetStatusChangeEndpointCallBack((PVOID)StatusChangeEndpointCallBack, this);
+
     //
     // clear init flag
     //
     m_HubControllerDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
 
     return STATUS_SUCCESS;
 }
@@ -286,6 +283,8 @@ CHubController::QueryStatusChageEndpoint(
     PIO_STACK_LOCATION IoStack;
     USHORT PortStatus, PortChange;
     PURB Urb;
+    PUCHAR TransferBuffer;
+    UCHAR Changed = FALSE;
 
     //
     // get current stack location
@@ -303,8 +302,9 @@ CHubController::QueryStatusChageEndpoint(
     // Get the number of ports and check each one for device connected
     //
     m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
-    DPRINT1("SCE Request\n");
-    ((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 0;
+    DPRINT1("SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+
+    TransferBuffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
     for (PortId = 0; PortId < PortCount; PortId++)
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
@@ -318,14 +318,15 @@ CHubController::QueryStatusChageEndpoint(
         {
             DPRINT1("Device is connected on port %d\n", PortId);
             // Set the value for the port number
-            ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((PortId + 1) & 7);
+             *TransferBuffer = 1 << ((PortId + 1) & 7);
+            Changed = TRUE;
         }
     }
 
     //
     // If there were changes then return TRUE
     //
-    if (((PULONG)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] != 0)
+    if (Changed != 0)
         return TRUE;
 
     return FALSE;
@@ -835,7 +836,7 @@ CHubController::HandleClassOther(
     ULONG NumPort;
     ULONG PortId;
 
-    //DPRINT1("CHubController::HandleClassOther> Request %x Value %x not implemented\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
+    DPRINT("CHubController::HandleClassOther> Request %x Value %x\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
 
     //
     // get number of ports available
@@ -877,6 +878,7 @@ CHubController::HandleClassOther(
                 //
                 // request contains buffer of 2 ushort which are used from submitting port status and port change status
                 //
+                DPRINT("PortId %x PortStatus %x PortChange %x\n", PortId, PortStatus, PortChange);
                 Buffer = (PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer;
 
                 //
@@ -973,6 +975,7 @@ CHubController::HandleSelectConfiguration(
     PURB Urb)
 {
     PUSBDEVICE UsbDevice;
+    PUSBD_INTERFACE_INFORMATION InterfaceInfo;
 
     //
     // is the request for the Root Hub
@@ -987,11 +990,33 @@ CHubController::HandleSelectConfiguration(
         //
         // set device handle
         //
-        Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)ROOTHUB2_CONFIGURATION_DESCRIPTOR;
+        Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)&ROOTHUB2_CONFIGURATION_DESCRIPTOR;
 
         //
-        // TODO: copy interface info
+        // copy interface info
         //
+        InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
+
+        InterfaceInfo->InterfaceHandle = (USBD_INTERFACE_HANDLE)&ROOTHUB2_INTERFACE_DESCRIPTOR;
+        InterfaceInfo->Class = ROOTHUB2_INTERFACE_DESCRIPTOR.bInterfaceClass;
+        InterfaceInfo->SubClass = ROOTHUB2_INTERFACE_DESCRIPTOR.bInterfaceSubClass;
+        InterfaceInfo->Protocol = ROOTHUB2_INTERFACE_DESCRIPTOR.bInterfaceProtocol;
+        InterfaceInfo->Reserved = 0;
+
+        //
+        // sanity check
+        //
+        PC_ASSERT(InterfaceInfo->NumberOfPipes == 1);
+
+        //
+        // copy pipe info
+        //
+        InterfaceInfo->Pipes[0].MaximumPacketSize = ROOTHUB2_ENDPOINT_DESCRIPTOR.wMaxPacketSize;
+        InterfaceInfo->Pipes[0].EndpointAddress = ROOTHUB2_ENDPOINT_DESCRIPTOR.bEndpointAddress;
+        InterfaceInfo->Pipes[0].Interval = ROOTHUB2_ENDPOINT_DESCRIPTOR.bInterval;
+        InterfaceInfo->Pipes[0].PipeType = (USBD_PIPE_TYPE)(ROOTHUB2_ENDPOINT_DESCRIPTOR.bmAttributes & USB_ENDPOINT_TYPE_MASK);
+        InterfaceInfo->Pipes[0].PipeHandle = (PVOID)&ROOTHUB2_ENDPOINT_DESCRIPTOR;
+
         return STATUS_SUCCESS;
     }
     else
@@ -1098,6 +1123,8 @@ CHubController::HandleClassDevice(
     ULONG PortCount, Dummy2;
     USHORT Dummy1;
 
+    DPRINT("CHubController::HandleClassDevice Request %x Class %x\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value >> 8);
+
     //
     // check class request type
     //
@@ -1142,7 +1169,7 @@ CHubController::HandleClassDevice(
                     // FIXME: retrieve values
                     //
                     UsbHubDescriptor->bNumberOfPorts = (UCHAR)PortCount;
-                    UsbHubDescriptor->wHubCharacteristics = 0x0012;
+                    UsbHubDescriptor->wHubCharacteristics = 0x00;
                     UsbHubDescriptor->bPowerOnToPowerGood = 0x01;
                     UsbHubDescriptor->bHubControlCurrent = 0x00;
 
@@ -1176,6 +1203,8 @@ CHubController::HandleGetDescriptor(
     PUCHAR Buffer;
     PUSBDEVICE UsbDevice;
     ULONG Length;
+
+    DPRINT("CHubController::HandleGetDescriptor\n");
 
     //
     // check descriptor type
@@ -1231,8 +1260,7 @@ CHubController::HandleGetDescriptor(
                 //
                 // request is for the root bus controller
                 //
-               C_ASSERT(sizeof(ROOTHUB2_CONFIGURATION_DESCRIPTOR) == sizeof(USB_CONFIGURATION_DESCRIPTOR));
-               RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, ROOTHUB2_CONFIGURATION_DESCRIPTOR, sizeof(USB_CONFIGURATION_DESCRIPTOR));
+                RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, &ROOTHUB2_CONFIGURATION_DESCRIPTOR, sizeof(USB_CONFIGURATION_DESCRIPTOR));
 
                 //
                 // get configuration descriptor, very retarded!
@@ -1248,6 +1276,7 @@ CHubController::HandleGetDescriptor(
                     // buffer too small
                     //
                     Status = STATUS_SUCCESS;
+                    ASSERT(FALSE);
                     break;
                 }
 
@@ -1255,15 +1284,13 @@ CHubController::HandleGetDescriptor(
                 // copy interface descriptor template
                 //
                 Buffer = (PUCHAR)(ConfigurationDescriptor + 1);
-                C_ASSERT(sizeof(ROOTHUB2_INTERFACE_DESCRIPTOR) == sizeof(USB_INTERFACE_DESCRIPTOR));
-                RtlCopyMemory(Buffer, ROOTHUB2_INTERFACE_DESCRIPTOR, sizeof(USB_INTERFACE_DESCRIPTOR));
+                RtlCopyMemory(Buffer, &ROOTHUB2_INTERFACE_DESCRIPTOR, sizeof(USB_INTERFACE_DESCRIPTOR));
 
                 //
                 // copy end point descriptor template
                 //
                 Buffer += sizeof(USB_INTERFACE_DESCRIPTOR);
-                C_ASSERT(sizeof(ROOTHUB2_ENDPOINT_DESCRIPTOR) == sizeof(USB_ENDPOINT_DESCRIPTOR));
-                RtlCopyMemory(Buffer, ROOTHUB2_ENDPOINT_DESCRIPTOR, sizeof(USB_ENDPOINT_DESCRIPTOR));
+                RtlCopyMemory(Buffer, &ROOTHUB2_ENDPOINT_DESCRIPTOR, sizeof(USB_ENDPOINT_DESCRIPTOR));
 
                 //
                 // done
@@ -1498,7 +1525,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
+            DPRINT("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %p\n", this);
 
             if (IoStack->Parameters.Others.Argument1)
             {
@@ -2392,8 +2419,9 @@ USBHI_QueryDeviceInformation(
     DeviceInfo->NumberOfOpenPipes = 0; //FIXME
 
     //
-    // FIXME get device descriptor
+    // get device descriptor
     //
+    RtlMoveMemory(&DeviceInfo->DeviceDescriptor, ROOTHUB2_DEVICE_DESCRIPTOR, sizeof(USB_DEVICE_DESCRIPTOR));
 
     //
     // FIXME return pipe information
@@ -2402,7 +2430,7 @@ USBHI_QueryDeviceInformation(
     //
     // store result length
     //
-    *LengthReturned = sizeof(USB_DEVICE_INFORMATION_0);
+    *LengthReturned = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList[DeviceInfo->NumberOfOpenPipes]);
 
     //
     // done
@@ -2587,7 +2615,7 @@ USBHI_Initialize20Hub(
     PUSB_DEVICE_HANDLE HubDeviceHandle,
     ULONG TtCount)
 {
-    UNIMPLEMENTED
+    DPRINT("USBHI_Initialize20Hub HubDeviceHandle %p UNIMPLEMENTED TtCount %lu\n", HubDeviceHandle, TtCount);
     return STATUS_SUCCESS;
 }
 
@@ -2600,7 +2628,7 @@ USBHI_RootHubInitNotification(
 {
     CHubController * Controller;
 
-    DPRINT1("USBHI_RootHubInitNotification\n");
+    DPRINT("USBHI_RootHubInitNotification %p \n", CallbackContext);
 
     //
     // get controller object

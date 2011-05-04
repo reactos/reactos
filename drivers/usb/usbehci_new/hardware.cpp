@@ -20,12 +20,17 @@ InterruptServiceRoutine(
     IN PKINTERRUPT  Interrupt,
     IN PVOID  ServiceContext);
 
-VOID NTAPI
+VOID
+NTAPI
 EhciDefferedRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
     IN PVOID SystemArgument2);
+
+VOID
+NTAPI
+StatusChangeWorkItemRoutine(PVOID Context);
 
 class CUSBHardwareDevice : public IUSBHardwareDevice
 {
@@ -81,7 +86,7 @@ public:
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
     friend VOID NTAPI EhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
-
+    friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     // constructor / destructor
     CUSBHardwareDevice(IUnknown *OuterUnknown){}
     virtual ~CUSBHardwareDevice(){}
@@ -110,6 +115,7 @@ protected:
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     EHCI_PORT_STATUS m_PortStatus[16];                                                 // port status
+    WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
 
     // set command
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -189,6 +195,11 @@ CUSBHardwareDevice::Initialize(
     // initialize device lock
     //
     KeInitializeSpinLock(&m_Lock);
+
+    //
+    // intialize status change work item
+    //
+    ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
 
     m_VendorID = 0;
     m_DeviceID = 0;
@@ -774,7 +785,7 @@ CUSBHardwareDevice::ClearPortStatus(
 {
     ULONG Value;
 
-    DPRINT("CUSBHardwareDevice::ClearPortStatus\n");
+    DPRINT("CUSBHardwareDevice::ClearPortStatus PortId %x Feature %x\n", PortId, Status);
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
@@ -1112,9 +1123,9 @@ EhciDefferedRoutine(
                     if (This->m_SCECallBack != NULL)
                     {
                         //
-                        // issue callback
+                        // queue work item for processing
                         //
-                        This->m_SCECallBack(This->m_SCEContext);
+                        ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
                     }
                 }
                 else
@@ -1129,6 +1140,29 @@ EhciDefferedRoutine(
         }
     }
     return;
+}
+
+VOID
+NTAPI
+StatusChangeWorkItemRoutine(
+    PVOID Context)
+{
+    //
+    // cast to hardware object
+    //
+    CUSBHardwareDevice * This = (CUSBHardwareDevice*)Context;
+
+    //
+    // is there a callback
+    //
+    if (This->m_SCECallBack)
+    {
+        //
+        // issue callback
+        //
+        This->m_SCECallBack(This->m_SCEContext);
+    }
+
 }
 
 NTSTATUS
