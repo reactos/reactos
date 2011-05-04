@@ -2913,8 +2913,8 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk, UINT wFlags)
       if (NewWnd != Mt->OwnerWnd)
         {
           Mt->OwnerWnd = NewWnd;
-          SetCapture(Mt->OwnerWnd);
-          (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd);
+          (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd); // 1
+          SetCapture(Mt->OwnerWnd);                                          // 2
         }
 
       Mt->TopMenu = Mt->CurrentMenu = NewMenu; /* all subpopups are hidden */
@@ -2936,37 +2936,35 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk, UINT wFlags)
  * going to hide it anyway.
  */
 static BOOL FASTCALL
-MenuSuspendPopup(MTRACKER* Mt, UINT Message)
+MenuSuspendPopup(MTRACKER* Mt, UINT uMsg)
 {
-  MSG Msg;
+    MSG msg;
 
-  Msg.hwnd = Mt->OwnerWnd;
+    msg.hwnd = Mt->OwnerWnd;
 
-  PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_REMOVE);
-  Mt->TrackFlags |= TF_SKIPREMOVE;
+    PeekMessageW( &msg, 0, uMsg, uMsg, PM_NOYIELD | PM_REMOVE); // ported incorrectly since 8317 GvG
+//    Mt->TrackFlags |= TF_SKIPREMOVE; // This sends TrackMenu into a loop with arrow keys!!!!
 
-  switch (Message)
+    switch( uMsg )
     {
-      case WM_KEYDOWN:
-        PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
-        if (WM_KEYUP == Msg.message || WM_PAINT == Msg.message)
-          {
-            PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_REMOVE);
-            PeekMessageW(&Msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
-            if (WM_KEYDOWN == Msg.message
-                && (VK_LEFT == Msg.wParam || VK_RIGHT == Msg.wParam))
-              {
-                Mt->TrackFlags |= TF_SUSPENDPOPUP;
-                return TRUE;
-              }
-          }
-        break;
+	case WM_KEYDOWN:
+	     PeekMessageW( &msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
+	     if( msg.message == WM_KEYUP || msg.message == WM_PAINT )
+	     {
+		 PeekMessageW( &msg, 0, 0, 0, PM_NOYIELD | PM_REMOVE);
+	         PeekMessageW( &msg, 0, 0, 0, PM_NOYIELD | PM_NOREMOVE);
+	         if( msg.message == WM_KEYDOWN &&
+		    (msg.wParam == VK_LEFT || msg.wParam == VK_RIGHT))
+	         {
+		     Mt->TrackFlags |= TF_SUSPENDPOPUP;
+		     return TRUE;
+	         }
+	     }
+	     break;
     }
-
-  /* failures go through this */
-  Mt->TrackFlags &= ~TF_SUSPENDPOPUP;
-
-  return FALSE;
+    /* failures go through this */
+    Mt->TrackFlags &= ~TF_SUSPENDPOPUP;
+    return FALSE;
 }
 
 /***********************************************************************
@@ -3029,14 +3027,14 @@ MenuKeyLeft(MTRACKER* Mt, UINT Flags)
     }
 
   /* Try to move 1 column left (if possible) */
-  if (NO_SELECTED_ITEM != (PrevCol = MenuGetStartOfPrevColumn(&MenuInfo)))
-    {
-      if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
-        {
+  if ( (PrevCol = MenuGetStartOfPrevColumn(&MenuInfo)) != NO_SELECTED_ITEM)
+  {
+     if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
+     {
           MenuSelectItem(Mt->OwnerWnd, &MenuInfo, PrevCol, TRUE, 0);
-        }
-      return;
-    }
+     }
+     return;
+  }
 
   /* close topmost popup */
   while (MenuTmp != Mt->CurrentMenu)
@@ -3056,16 +3054,16 @@ MenuKeyLeft(MTRACKER* Mt, UINT Flags)
     {
       return;
     }
-  if ((MenuPrev == Mt->TopMenu) && 0 == (TopMenuInfo.Flags & MF_POPUP))
+  if ((MenuPrev == Mt->TopMenu) && !(TopMenuInfo.Flags & MF_POPUP))
     {
       /* move menu bar selection if no more popups are left */
 
-      if (! MenuDoNextMenu(Mt, VK_LEFT, Flags))
+      if (!MenuDoNextMenu(Mt, VK_LEFT, Flags))
         {
           MenuMoveSelection(Mt->OwnerWnd, &TopMenuInfo, ITEM_PREV);
         }
 
-      if (MenuPrev != MenuTmp || 0 != (Mt->TrackFlags & TF_SUSPENDPOPUP))
+      if (MenuPrev != MenuTmp || Mt->TrackFlags & TF_SUSPENDPOPUP)
         {
           /* A sublevel menu was displayed - display the next one
            * unless there is another displacement coming up */
@@ -3110,23 +3108,23 @@ static void FASTCALL MenuKeyRight(MTRACKER *Mt, UINT Flags)
       if (hmenutmp != Mt->CurrentMenu) return;
     }
 
-  if (! MenuGetRosMenuInfo(&CurrentMenuInfo, Mt->CurrentMenu))
+    if (! MenuGetRosMenuInfo(&CurrentMenuInfo, Mt->CurrentMenu))
     {
       return;
     }
 
-  /* Check to see if there's another column */
-  if (NO_SELECTED_ITEM != (NextCol = MenuGetStartOfNextColumn(&CurrentMenuInfo)))
+    /* Check to see if there's another column */
+    if ( (NextCol = MenuGetStartOfNextColumn(&CurrentMenuInfo)) != NO_SELECTED_ITEM)
     {
-      TRACE("Going to %d.\n", NextCol);
-      if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
-        {
+       TRACE("Going to %d.\n", NextCol);
+       if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
+       {
           MenuSelectItem(Mt->OwnerWnd, &MenuInfo, NextCol, TRUE, 0);
-        }
-      return;
+       }
+       return;
     }
 
-  if (0 == (MenuInfo.Flags & MF_POPUP))	/* menu bar tracking */
+    if (!(MenuInfo.Flags & MF_POPUP)) /* menu bar tracking */
     {
       if (Mt->CurrentMenu != Mt->TopMenu)
         {
@@ -3325,8 +3323,8 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                     if (hmenu)
                         fEndMenu |= !MenuMouseMove( &mt, hmenu, wFlags );
 
-	        } /* switch(msg.message) - mouse */
-	    }
+	    } /* switch(msg.message) - mouse */
+        }
         else if ((msg.message >= WM_KEYFIRST) && (msg.message <= WM_KEYLAST))
         {
             fRemove = TRUE;  /* Keyboard messages are always removed */
@@ -3339,7 +3337,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                     case VK_MENU:
                     case VK_F10:
                         fEndMenu = TRUE;
-                         break;
+                        break;
 
                     case VK_HOME:
                     case VK_END:
@@ -3668,7 +3666,6 @@ VOID MenuTrackKbdMenuBar(HWND hwnd, UINT wParam, WCHAR wChar)
 track_menu:
     MenuTrackMenu( hTrackMenu, wFlags, 0, 0, hwnd, NULL );
     MenuExitTracking( hwnd, FALSE );
-
 }
 
 /**********************************************************************
