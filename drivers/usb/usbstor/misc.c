@@ -203,6 +203,8 @@ USBSTOR_SyncUrbRequest(
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
     IoStack->Parameters.Others.Argument1 = (PVOID)UrbRequest;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = UrbRequest->UrbHeader.Length;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
 
     //
     // setup completion routine

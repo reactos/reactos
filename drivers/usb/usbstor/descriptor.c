@@ -115,7 +115,6 @@ USBSTOR_GetDescriptors(
          //
          // failed to get device descriptor
          //
-         FreeItem(DeviceExtension->DeviceDescriptor);
          DeviceExtension->DeviceDescriptor = NULL;
          return Status;
      }
@@ -271,7 +270,7 @@ USBSTOR_ScanConfigurationDescriptor(
         //
         // was it the last descriptor
         //
-        if ((ULONG_PTR)CurrentDescriptor > ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+        if ((ULONG_PTR)CurrentDescriptor >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
         {
             //
             // reached last descriptor
@@ -433,7 +432,8 @@ USBSTOR_SelectConfigurationAndInterface(
         //
         // update configuration info
         //
-        RtlCopyMemory(DeviceExtension->InterfaceInformation, &Urb->UrbSelectInterface.Interface, Urb->UrbSelectConfiguration.Interface.Length);
+        ASSERT(Urb->UrbSelectInterface.Interface.Length == DeviceExtension->InterfaceInformation->Length);
+        RtlCopyMemory(DeviceExtension->InterfaceInformation, &Urb->UrbSelectInterface.Interface, Urb->UrbSelectInterface.Interface.Length);
     }
 
     //

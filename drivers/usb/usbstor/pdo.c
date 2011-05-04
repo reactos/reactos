@@ -75,10 +75,80 @@ USBSTOR_GetDeviceType(
             //
             // other device
             //
-            return "CdRom";
+            return "Other";
         }
     }
 }
+
+LPCWSTR
+USBSTOR_GetGenericType(
+    IN PUFI_INQUIRY_RESPONSE InquiryData)
+{
+    //
+    // check if device type is zero
+    //
+    if (InquiryData->DeviceType == 0)
+    {
+        //
+        // direct access device
+        //
+
+        //
+        // FIXME: check if floppy
+        //
+        return L"GenDisk";
+    }
+
+    //
+    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // 
+    switch (InquiryData->DeviceType)
+    {
+        case 1:
+        {
+            //
+            // sequential device, i.e magnetic tape
+            //
+            return L"GenSequential";
+        }
+        case 4:
+        {
+            //
+            // write once device
+            //
+            return L"GenWorm";
+        }
+        case 5:
+        {
+            //
+            // CDROM device
+            //
+            return L"GenCdRom";
+        }
+        case 7:
+        {
+            //
+            // optical memory device
+            //
+            return L"GenOptical";
+        }
+        case 8:
+        {
+            //
+            // medium change device
+            //
+            return L"GenChanger";
+        }
+        default:
+        {
+            //
+            // other device
+            //
+            return L"UsbstorOther";
+        }
+    }
+}
+
 
 ULONG
 CopyField(
@@ -114,6 +184,8 @@ USBSTOR_PdoHandleQueryDeviceId(
     ANSI_STRING AnsiString;
     UNICODE_STRING DeviceId;
 
+    DPRINT1("USBSTOR_PdoHandleQueryDeviceId\n");
+
     //
     // get device extension
     //
@@ -133,6 +205,11 @@ USBSTOR_PdoHandleQueryDeviceId(
     // get device type
     //
     DeviceType = USBSTOR_GetDeviceType(InquiryData);
+
+    //
+    // zero buffer
+    //
+    RtlZeroMemory(Buffer, sizeof(Buffer));
 
     //
     // lets create device string
@@ -192,7 +269,7 @@ USBSTOR_PdoHandleQueryDeviceId(
     // allocate DeviceId string
     //
     DeviceId.Length = 0;
-    DeviceId.MaximumLength = (Offset + 2) * sizeof(WCHAR);
+    DeviceId.MaximumLength = (strlen((PCHAR)Buffer) + 1) * sizeof(WCHAR);
     DeviceId.Buffer = (LPWSTR)AllocateItem(PagedPool, DeviceId.MaximumLength);
     if (!DeviceId.Buffer)
     {
@@ -217,7 +294,7 @@ USBSTOR_PdoHandleQueryDeviceId(
         Irp->IoStatus.Information = (ULONG_PTR)DeviceId.Buffer;
     }
 
-    DPRINT1("DeviceId %wZ\n", &DeviceId);
+    DPRINT1("DeviceId %wZ Status %x\n", &DeviceId, Status);
 
     //
     // done
@@ -225,6 +302,161 @@ USBSTOR_PdoHandleQueryDeviceId(
     return Status;
 }
 
+NTSTATUS
+USBSTOR_PdoHandleQueryHardwareId(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
+{
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    WCHAR Buffer[200];
+    ULONG Length;
+    LPWSTR DeviceName;
+    LPCWSTR GenericType;
+
+    DPRINT1("USBSTOR_PdoHandleQueryInstanceId\n");
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // get FDO device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->DeviceDescriptor);
+
+    //
+    // get generic type
+    //
+    GenericType = USBSTOR_GetGenericType((PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData);
+    ASSERT(GenericType);
+
+    //
+    // zero buffer
+    //
+    RtlZeroMemory(Buffer, sizeof(Buffer));
+
+    //
+    // format hardware id
+    //
+    Length = swprintf(Buffer, L"USB\\VID_%04x&Pid_%04x&Rev_%04x", FDODeviceExtension->DeviceDescriptor->idVendor, FDODeviceExtension->DeviceDescriptor->idProduct, FDODeviceExtension->DeviceDescriptor->bcdDevice) + 1;
+    Length += swprintf(&Buffer[Length], L"USB\\VID_%04x&Pid_%04x", FDODeviceExtension->DeviceDescriptor->idVendor, FDODeviceExtension->DeviceDescriptor->idProduct) + 1;
+    Length += swprintf(&Buffer[Length], L"USBSTOR\\%s", GenericType) + 1;
+    Length += swprintf(&Buffer[Length], L"%s", GenericType) + 1;
+
+    //
+    // TODO: add more ids
+    //
+
+    Buffer[Length] = UNICODE_NULL;
+    Length++;
+
+    DPRINT1("Name %S\n", Buffer);
+
+    //
+    // allocate buffer
+    //
+    DeviceName = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+
+    if (!DeviceName)
+    {
+        //
+        // no memory
+        //
+        Irp->IoStatus.Information = 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // copy device name
+    //
+    RtlMoveMemory(DeviceName, Buffer, Length * sizeof(WCHAR));
+
+    //
+    // store result
+    //
+    Irp->IoStatus.Information = (ULONG_PTR)DeviceName;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+USBSTOR_PdoHandleQueryInstanceId(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
+{
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    WCHAR Buffer[100];
+    ULONG Length;
+    LPWSTR InstanceId;
+
+    DPRINT1("USBSTOR_PdoHandleQueryInstanceId\n");
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // get FDO device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->DeviceDescriptor);
+
+    //
+    // format instance id
+    //
+    swprintf(Buffer, L"USB\\VID_%04x&PID_%04x\\%s", FDODeviceExtension->DeviceDescriptor->idVendor, FDODeviceExtension->DeviceDescriptor->idProduct, L"00000000");
+
+    //
+    // calculate length
+    //
+    Length = wcslen(Buffer) + 1;
+
+    //
+    // allocate instance id
+    //
+    InstanceId = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+    if (!InstanceId)
+    {
+        //
+        // no memory
+        //
+        Irp->IoStatus.Information = 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+ 
+    //
+    // copy instance id
+    //
+    wcscpy(InstanceId, Buffer);
+
+    DPRINT1("USBSTOR_PdoHandleQueryInstanceId %S\n", InstanceId);
+
+    //
+    // store result
+    //
+    Irp->IoStatus.Information = (ULONG_PTR)InstanceId;
+
+    //
+    // completed successfully
+    //
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 USBSTOR_PdoHandleDeviceRelations(
@@ -233,6 +465,8 @@ USBSTOR_PdoHandleDeviceRelations(
 {
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
+
+    DPRINT1("USBSTOR_PdoHandleDeviceRelations\n");
 
     //
     // get current irp stack location
@@ -289,6 +523,7 @@ USBSTOR_PdoHandlePnp(
     PIO_STACK_LOCATION IoStack;
     PPDO_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+    PDEVICE_CAPABILITIES Caps;
 
     //
     // get current stack location
@@ -326,9 +561,26 @@ USBSTOR_PdoHandlePnp(
                Status = USBSTOR_PdoHandleQueryDeviceId(DeviceObject, Irp);
                break;
            }
+           else if (IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
+           {
+               //
+               // handle instance id
+               //
+               Status = USBSTOR_PdoHandleQueryHardwareId(DeviceObject, Irp);
+               break;
+           }
+           else if (IoStack->Parameters.QueryId.IdType == BusQueryInstanceID)
+           {
+               //
+               // handle instance id
+               //
+               Status = USBSTOR_PdoHandleQueryInstanceId(DeviceObject, Irp);
+               break;
+           }
 
            DPRINT1("USBSTOR_PdoHandlePnp: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
            Status = STATUS_NOT_SUPPORTED;
+           Irp->IoStatus.Information = 0;
            break;
        }
        case IRP_MN_REMOVE_DEVICE:
@@ -341,6 +593,16 @@ USBSTOR_PdoHandlePnp(
            // just forward irp to lower device
            //
            Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
+
+           if (NT_SUCCESS(Status))
+           {
+               //
+               // check if no unique id
+               //
+               Caps = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
+               Caps->UniqueID = FALSE; //FIXME
+               Caps->Removable = TRUE; //FIXME
+           }
            break;
        }
        case IRP_MN_START_DEVICE:
