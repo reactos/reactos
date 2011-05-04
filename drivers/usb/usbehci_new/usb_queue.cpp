@@ -177,6 +177,7 @@ CUSBQueue::AddUSBRequest(
         default:
             /* BUG */
             PC_ASSERT(FALSE);
+            Status = STATUS_NOT_SUPPORTED;
     }
 
     //

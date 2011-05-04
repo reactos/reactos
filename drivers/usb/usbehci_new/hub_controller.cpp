@@ -2277,7 +2277,6 @@ USBHI_RestoreUsbDevice(
 {
     PUSBDEVICE OldUsbDevice, NewUsbDevice;
     CHubController * Controller;
-    NTSTATUS Status;
 
     DPRINT1("USBHI_RestoreUsbDevice\n");
 
@@ -2430,8 +2429,11 @@ USBHI_QueryDeviceInformation(
     //
     // store result length
     //
+#ifdef _MSC_VER
     *LengthReturned = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList[DeviceInfo->NumberOfOpenPipes]);
-
+#else
+    *LengthReturned = sizeof(USB_DEVICE_INFORMATION_0) + (DeviceInfo->NumberOfOpenPipes > 1 ? (DeviceInfo->NumberOfOpenPipes - 1) * sizeof(USB_PIPE_INFORMATION_0) : 0);
+#endif
     //
     // done
     //
