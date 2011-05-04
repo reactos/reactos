@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/usb/usbhub/fdo.c
@@ -14,8 +14,12 @@
 #include "usbhub.h"
 
 NTSTATUS
+QueryStatusChangeEndpoint(
+    IN PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
 SubmitRequestToRootHub(
-    IN PDEVICE_OBJECT DeviceObject,
+    IN PDEVICE_OBJECT RootHubDeviceObject,
     IN ULONG IoControlCode,
     OUT PVOID OutParameter1,
     OUT PVOID OutParameter2)
@@ -32,7 +36,7 @@ SubmitRequestToRootHub(
     // Build Control Request
     //
     Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                                        DeviceObject,
+                                        RootHubDeviceObject,
                                         NULL, 0,
                                         NULL, 0,
                                         TRUE,
@@ -61,7 +65,7 @@ SubmitRequestToRootHub(
     //
     // Call RootHub
     //
-    Status = IoCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(RootHubDeviceObject, Irp);
 
     if (Status == STATUS_PENDING)
     {
@@ -73,16 +77,259 @@ SubmitRequestToRootHub(
     return Status;
 }
 
+
+NTSTATUS
+GetPortStatusAndChange(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG PortId,
+    OUT PPORT_STATUS_CHANGE StatusChange)
+{
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // Allocate URB
+    //
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
+    if (!Urb)
+    {
+        DPRINT1("Failed to allocate memory for URB!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Zero it
+    //
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    //
+    // Create URB for getting Port Status
+    //
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_OTHER,
+                          sizeof(Urb->UrbControlVendorClassRequest),
+                          USBD_TRANSFER_DIRECTION_OUT,
+                          0,
+                          USB_REQUEST_GET_STATUS,
+                          0,
+                          PortId,
+                          StatusChange,
+                          0,
+                          sizeof(PORT_STATUS_CHANGE),
+                          0);
+
+    //
+    // Query the Root Hub
+    //
+    Status = SubmitRequestToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+    //
+    // Free URB
+    //
+    ExFreePool(Urb);
+
+    return Status;
+}
+
+NTSTATUS
+SetPortFeature(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG PortId,
+    IN ULONG Feature)
+{
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // Allocate URB
+    //
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
+    if (!Urb)
+    {
+        DPRINT1("Failed to allocate memory for URB!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Zero it
+    //
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    //
+    // Create URB for Clearing Port Reset
+    //
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_OTHER,
+                          sizeof(Urb->UrbControlVendorClassRequest),
+                          USBD_TRANSFER_DIRECTION_IN,
+                          0,
+                          USB_REQUEST_SET_FEATURE,
+                          Feature,
+                          PortId,
+                          NULL,
+                          0,
+                          0,
+                          0);
+    //
+    // Query the Root Hub
+    //
+    Status = SubmitRequestToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+    //
+    // Free URB
+    //
+    ExFreePool(Urb);
+
+    return Status;
+}
+
+NTSTATUS
+ClearPortFeature(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG PortId,
+    IN ULONG Feature)
+{
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // Allocate a URB
+    //
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
+    if (!Urb)
+    {
+        DPRINT1("Failed to allocate memory for URB!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Zero it
+    //
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    //
+    // Create URB for Clearing Port Reset
+    //
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_OTHER,
+                          sizeof(Urb->UrbControlVendorClassRequest),
+                          USBD_TRANSFER_DIRECTION_IN,
+                          0,
+                          USB_REQUEST_CLEAR_FEATURE,
+                          Feature,
+                          PortId,
+                          NULL,
+                          0,
+                          0,
+                          0);
+    //
+    // Query the Root Hub
+    //
+    Status = SubmitRequestToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+    //
+    // Free URB
+    //
+    ExFreePool(Urb);
+
+    return Status;
+}
+
+VOID NTAPI
+DeviceStatusChangeThread(
+    IN PVOID Context)
+{
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PWORK_ITEM_DATA WorkItemData;
+    PORT_STATUS_CHANGE PortStatus;
+    LONG PortId, i;
+
+    WorkItemData = (PWORK_ITEM_DATA)Context;
+    DeviceObject = (PDEVICE_OBJECT)WorkItemData->Context;
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // Itterate all ports
+    //
+    for (PortId = 1; PortId <= HubDeviceExtension->UsbExtHubInfo.NumberOfPorts; PortId++)
+    {
+        PortStatus.Change = 0;
+        PortStatus.Status = 0;
+        //
+        // Get Port Status
+        //
+        Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &PortStatus);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to get port status for port %d, Status %x\n", PortId, Status);
+            // FIXME: Do we really want to halt further SCE requests?
+            return;
+        }
+
+        //
+        // Check for new device connection
+        //
+        if (PortStatus.Change == USB_PORT_STATUS_CONNECT)
+        {
+            //
+            // Clear Connection Status
+            //
+            Status = ClearPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, C_PORT_CONNECTION);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to clear connection change for port %d\n", PortId);
+                // FIXME: Do we really want to halt further SCE requests?
+                return;
+            }
+
+            //
+            // Get Port Status and ensure it updated
+            //
+            Status = GetPortStatusAndChange(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, &PortStatus);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to get port status for port %d, Status %x\n", PortId, Status);
+                // FIXME: Do we really want to halt further SCE requests?
+                return;
+            }
+
+            if (PortStatus.Change != 0)
+            {
+                DPRINT1("Port %d did not clear Connection Change!\n");
+                // FIXME: Do we really want to halt further SCE requests?
+                return;
+            }
+
+            //
+            // FIXME: Create the device object and enable the port
+            //
+            //CreateUsbChildDeviceObject
+        }
+    }
+
+    //
+    // Send another SCE Request
+    //
+    QueryStatusChangeEndpoint(DeviceObject);
+
+    ExFreePool(WorkItemData);
+}
+
 NTSTATUS
 StatusChangeEndpointCompletion(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Context)
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
 {
+    PDEVICE_OBJECT RealDeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PWORK_ITEM_DATA WorkItemData;
     LONG i;
 
-    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+    RealDeviceObject = (PDEVICE_OBJECT)Context;
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)RealDeviceObject->DeviceExtension;
 
     //
     // Determine which port has changed
@@ -91,9 +338,6 @@ StatusChangeEndpointCompletion(
     {
         DPRINT1("Port %x HubDeviceExtension->PortStatus %x\n",i+1, HubDeviceExtension->PortStatusChange[i].Status);
         DPRINT1("Port %x HubDeviceExtension->PortChange %x\n",i+1, HubDeviceExtension->PortStatusChange[i].Change);
-        //
-        // FIXME: Call function to check port before creating device object for it
-        //
     }
 
     //
@@ -101,12 +345,30 @@ StatusChangeEndpointCompletion(
     //
     IoFreeIrp(Irp);
 
+    //
+    // Create and initialize work item data
+    //
+    WorkItemData = ExAllocatePoolWithTag(NonPagedPool, sizeof(WORK_ITEM_DATA), USB_HUB_TAG);
+    if (!WorkItemData)
+    {
+        DPRINT1("Failed to allocate memory!n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    WorkItemData->Context = RealDeviceObject;
+    ExInitializeWorkItem(&WorkItemData->WorkItem, (PWORKER_THREAD_ROUTINE)DeviceStatusChangeThread, (PVOID)WorkItemData);
+
+    //
+    // Queue the work item to handle initializing the device
+    //
+    ExQueueWorkItem(&WorkItemData->WorkItem, DelayedWorkQueue);
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 NTSTATUS
 QueryStatusChangeEndpoint(
-    PDEVICE_OBJECT DeviceObject)
+    IN PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION Stack;
@@ -114,12 +376,8 @@ QueryStatusChangeEndpoint(
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    HubDeviceExtension->PendingSCEUrb;
-    RtlZeroMemory(&HubDeviceExtension->PendingSCEUrb,
-                  sizeof(URB));
-
     //
-    // Create URB for Status Change Endpoint request
+    // Initialize URB for Status Change Endpoint request
     //
     UsbBuildInterruptOrBulkTransferRequest(&HubDeviceExtension->PendingSCEUrb,
                                            sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
@@ -139,7 +397,7 @@ QueryStatusChangeEndpoint(
     // Allocate an Irp
     //
     HubDeviceExtension->PendingSCEIrp = IoAllocateIrp(HubDeviceExtension->RootHubPhysicalDeviceObject->StackSize,
-                                                      FALSE);
+                                        FALSE);
 
     if (!HubDeviceExtension->PendingSCEIrp)
     {
@@ -175,8 +433,10 @@ QueryStatusChangeEndpoint(
                            TRUE,
                            TRUE);
 
+    //
+    // Send to RootHub
+    //
     Status = IoCallDriver(HubDeviceExtension->RootHubPhysicalDeviceObject, HubDeviceExtension->PendingSCEIrp);
-    DPRINT1("SCE request status %x\n", Status);
 
     return STATUS_PENDING;
 }
@@ -234,171 +494,14 @@ QueryInterface(
     return Status;
 }
 
-NTSTATUS 
-GetPortStatusAndChange(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG PortId,
-    OUT PORT_STATUS_CHANGE *StatusChange)
-{
-    NTSTATUS Status;
-    PURB Urb;
-
-    //
-    // Allocate URB
-    //
-    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
-    if (!Urb)
-    {
-        DPRINT1("Failed to allocate memory for URB!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // Zero it
-    //
-    RtlZeroMemory(Urb, sizeof(URB));
-
-    //
-    // Create URB for getting Port Status
-    //
-    UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_OTHER,
-                          sizeof(Urb->UrbControlVendorClassRequest),
-                          USBD_TRANSFER_DIRECTION_OUT,
-                          0,
-                          USB_REQUEST_GET_STATUS,
-                          0,
-                          PortId,
-                          &StatusChange,
-                          0,
-                          sizeof(PORT_STATUS_CHANGE),
-                          0);
-
-    //
-    // Query the Root Hub
-    //
-    Status = SubmitRequestToRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
-
-    //
-    // Free URB
-    //
-    ExFreePool(Urb);
-
-    return Status;
-}
-
-NTSTATUS
-SetPortFeature(
-    PDEVICE_OBJECT DeviceObject,
-    ULONG PortId,
-    ULONG Feature)
-{
-    NTSTATUS Status;
-    PURB Urb;
-
-    //
-    // Allocate URB
-    //
-    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
-    if (!Urb)
-    {
-        DPRINT1("Failed to allocate memory for URB!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // Zero it
-    //
-    RtlZeroMemory(Urb, sizeof(URB));
-
-    //
-    // Create URB for Clearing Port Reset
-    //
-    UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_OTHER,
-                          sizeof(Urb->UrbControlVendorClassRequest),
-                          USBD_TRANSFER_DIRECTION_IN,
-                          0,
-                          USB_REQUEST_SET_FEATURE,
-                          Feature,
-                          PortId,
-                          NULL,
-                          0,
-                          0,
-                          0);
-    //
-    // Query the Root Hub
-    //
-    Status = SubmitRequestToRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
-
-    //
-    // Free URB
-    //
-    ExFreePool(Urb);
-
-    return Status;
-}
-
-NTSTATUS
-ClearPortFeature(
-    PDEVICE_OBJECT DeviceObject,
-    ULONG PortId,
-    ULONG Feature)
-{
-    NTSTATUS Status;
-    PURB Urb;
-
-    //
-    // Allocate a URB
-    //
-    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
-    if (!Urb)
-    {
-        DPRINT1("Failed to allocate memory for URB!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // Zero it
-    //
-    RtlZeroMemory(Urb, sizeof(URB));
-
-    //
-    // Create URB for Clearing Port Reset
-    //
-    UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_OTHER,
-                          sizeof(Urb->UrbControlVendorClassRequest),
-                          USBD_TRANSFER_DIRECTION_IN,
-                          0,
-                          USB_REQUEST_CLEAR_FEATURE,
-                          Feature,
-                          PortId,
-                          NULL,
-                          0,
-                          0,
-                          0);
-    //
-    // Query the Root Hub
-    //
-    Status = SubmitRequestToRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
-
-    //
-    // Free URB
-    //
-    ExFreePool(Urb);
-
-    return Status;
-}
-
 NTSTATUS
 GetUsbDeviceDescriptor(
-    PDEVICE_OBJECT ChildDeviceObject,
-    UCHAR DescriptorType,
-    UCHAR Index,
-    USHORT LangId,
-    PVOID TransferBuffer,
-    ULONG TransferBufferLength)
+    IN PDEVICE_OBJECT ChildDeviceObject,
+    IN UCHAR DescriptorType,
+    IN UCHAR Index,
+    IN USHORT LangId,
+    OUT PVOID TransferBuffer,
+    IN ULONG TransferBufferLength)
 {
     NTSTATUS Status;
     PURB Urb;
@@ -508,7 +611,6 @@ USBHUB_FdoQueryBusRelations(
     ULONG NeededSize;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DPRINT1("Query Bus Relations\n");
 
     //
     // Count the number of children
@@ -554,8 +656,9 @@ USBHUB_FdoQueryBusRelations(
     *pDeviceRelations = DeviceRelations;
 
     //
-    // FIXME: Send the first SCE Request
+    // Send the first SCE Request
     //
+    QueryStatusChangeEndpoint(DeviceObject);
 
     return STATUS_SUCCESS;
 }
@@ -582,7 +685,6 @@ USBHUB_FdoHandlePnp(
             ULONG Result = 0;
             PUSB_INTERFACE_DESCRIPTOR Pid;
             ULONG PortId;
-
             USBD_INTERFACE_LIST_ENTRY InterfaceList[2] = {{NULL, NULL}, {NULL, NULL}};
             PURB ConfigUrb = NULL;
 
@@ -629,7 +731,7 @@ USBHUB_FdoHandlePnp(
             //
             // Get the Hub Interface
             //
-            Status = QueryInterface(HubDeviceExtension->RootHubPhysicalDeviceObject, 
+            Status = QueryInterface(HubDeviceExtension->RootHubPhysicalDeviceObject,
                                     USB_BUS_INTERFACE_HUB_GUID,
                                     sizeof(USB_BUS_INTERFACE_HUB_V5),
                                     5,
@@ -679,7 +781,6 @@ USBHUB_FdoHandlePnp(
                                                                              sizeof(USB_DEVICE_INFORMATION_0),
                                                                              &Result);
 
-
             DPRINT1("Status %x, Result 0x%08lx\n", Status, Result);
             DPRINT1("InformationLevel %x\n", HubDeviceExtension->DeviceInformation.InformationLevel);
             DPRINT1("ActualLength %x\n", HubDeviceExtension->DeviceInformation.ActualLength);
@@ -687,7 +788,6 @@ USBHUB_FdoHandlePnp(
             DPRINT1("DeviceDescriptor %x\n", HubDeviceExtension->DeviceInformation.DeviceDescriptor);
             DPRINT1("HubAddress %x\n", HubDeviceExtension->DeviceInformation.HubAddress);
             DPRINT1("NumberofPipes %x\n", HubDeviceExtension->DeviceInformation.NumberOfOpenPipes);
-
 
             //
             // Get Root Hubs Device Descriptor
@@ -746,10 +846,10 @@ USBHUB_FdoHandlePnp(
             DumpConfigurationDescriptor(&HubDeviceExtension->HubConfigDescriptor);
 
             Status = HubDeviceExtension->HubInterface.GetExtendedHubInformation(HubDeviceExtension->RootHubPhysicalDeviceObject,
-                                                                    HubDeviceExtension->RootHubPhysicalDeviceObject,
-                                                                    &HubDeviceExtension->UsbExtHubInfo,
-                                                                    sizeof(USB_EXTHUB_INFORMATION_0),
-                                                                    &Result);
+                                                                                HubDeviceExtension->RootHubPhysicalDeviceObject,
+                                                                                &HubDeviceExtension->UsbExtHubInfo,
+                                                                                sizeof(USB_EXTHUB_INFORMATION_0),
+                                                                                &Result);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to extended hub information. Unable to determine the number of ports!\n");
@@ -764,7 +864,7 @@ USBHUB_FdoHandlePnp(
             UsbBuildVendorRequest(Urb,
                                   URB_FUNCTION_CLASS_DEVICE,
                                   sizeof(Urb->UrbControlVendorClassRequest),
-                                  USBD_TRANSFER_DIRECTION_IN,
+                                  USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
                                   0,
                                   USB_DEVICE_CLASS_RESERVED,
                                   0,
@@ -781,6 +881,9 @@ USBHUB_FdoHandlePnp(
                                             Urb,
                                             NULL);
 
+            //
+            // FIXME: This is returning nothing.
+            //
             DPRINT1("bDescriptorType %x\n", HubDeviceExtension->HubDescriptor.bDescriptorType);
 
             if (!NT_SUCCESS(Status))
@@ -794,16 +897,25 @@ USBHUB_FdoHandlePnp(
             // Allocate memory for PortStatusChange to hold 2 USHORTs for each port on hub
             //
             HubDeviceExtension->PortStatusChange = ExAllocatePoolWithTag(NonPagedPool,
-                                                                         sizeof(ULONG) * HubDeviceExtension->HubDescriptor.bNumberOfPorts,
+                                                                         sizeof(ULONG) * HubDeviceExtension->UsbExtHubInfo.NumberOfPorts,
                                                                          USB_HUB_TAG);
+
+            //
+            // Initialize the Hub
+            //
+            Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubDeviceExtension->RootHubPhysicalDeviceObject,
+                                                                      HubDeviceExtension->RootHubHandle, 1);
+            DPRINT1("Status %x\n", Status);
 
             //
             // Get the first Configuration Descriptor
             //
             Pid = USBD_ParseConfigurationDescriptorEx(&HubDeviceExtension->HubConfigDescriptor,
                                                       &HubDeviceExtension->HubConfigDescriptor,
-                                                      -1, -1, -1, -1, -1);
+                                                     -1, -1, -1, -1, -1);
+
             ASSERT(Pid != NULL);
+
             InterfaceList[0].InterfaceDescriptor = Pid;
             ConfigUrb = USBD_CreateConfigurationRequestEx(&HubDeviceExtension->HubConfigDescriptor,
                                                           (PUSBD_INTERFACE_LIST_ENTRY)&InterfaceList);
@@ -821,19 +933,15 @@ USBHUB_FdoHandlePnp(
             ExFreePool(ConfigUrb);
 
             //
-            // Initialize the Hub
-            //
-            Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubDeviceExtension->RootHubPhysicalDeviceObject,
-                                                                      HubDeviceExtension->RootHubHandle, 1);
-            DPRINT1("Status %x\n", Status);
-
-            //
             // Enable power on all ports
             //
-            for (PortId = 0; PortId < HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
+            for (PortId = 1; PortId <= HubDeviceExtension->HubDescriptor.bNumberOfPorts; PortId++)
             {
-                SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_POWER);
+                Status = SetPortFeature(HubDeviceExtension->RootHubPhysicalDeviceObject, PortId, PORT_POWER);
+                if (!NT_SUCCESS(Status))
+                    DPRINT1("Failed to power on port %d\n", PortId);
             }
+
             ExFreePool(Urb);
             break;
         }
@@ -859,7 +967,7 @@ USBHUB_FdoHandlePnp(
                 }
                 default:
                     DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
-                        Stack->Parameters.QueryDeviceRelations.Type);
+                            Stack->Parameters.QueryDeviceRelations.Type);
                     return ForwardIrpAndForget(DeviceObject, Irp);
             }
             break;
@@ -885,6 +993,7 @@ USBHUB_FdoHandlePnp(
             return ForwardIrpAndForget(DeviceObject, Irp);
         }
     }
+
     Irp->IoStatus.Information = Information;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -893,8 +1002,8 @@ USBHUB_FdoHandlePnp(
 
 NTSTATUS
 USBHUB_FdoHandleDeviceControl(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     DPRINT1("FdoHandleDeviceControl\n");
     UNIMPLEMENTED
