@@ -482,7 +482,7 @@ static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
-//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); This sends everything into a msg loop!
+   //co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -859,6 +859,11 @@ KeyboardThreadMain(PVOID StartContext)
             {
                 /* There is no focused window to receive a keyboard message */
                 continue;
+            }
+            if ( msg.wParam == VK_F10 ) // Bypass this key before it is in the queue.
+            {
+               if (msg.message == WM_KEYUP) msg.message = WM_SYSKEYUP;
+               if (msg.message == WM_KEYDOWN) msg.message = WM_SYSKEYDOWN;
             }
             /*
              * Post a keyboard message.

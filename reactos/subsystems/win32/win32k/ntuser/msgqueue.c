@@ -1340,10 +1340,6 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             case VK_LMENU: case VK_RMENU:
                 Msg->wParam = VK_MENU;
                 break;
-            case VK_F10:
-                if (Msg->message == WM_KEYUP) Msg->message = WM_SYSKEYUP;
-                if (Msg->message == WM_KEYDOWN) Msg->message = WM_SYSKEYDOWN;
-                break;
         }
     }
 
