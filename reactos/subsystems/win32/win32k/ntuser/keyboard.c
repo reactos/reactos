@@ -341,8 +341,13 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
    {
       ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
             (gQueueKeyStateTable[key] & KS_LOCK_BIT);
+      if ( ret & 0x8000 )
+         ret |= 0xFFFF0000; // If down, windows returns 0xFFFF8000.
    }
-
+   else
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+   }
    return ret;
 }
 
@@ -355,19 +360,19 @@ WORD FASTCALL get_key_state(void)
 
     if (gpsi->aiSysMet[SM_SWAPBUTTON])
     {
-        if (UserGetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_LBUTTON;
-        if (UserGetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_RBUTTON;
+        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_LBUTTON;
+        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_RBUTTON;
     }
     else
     {
-        if (UserGetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_LBUTTON;
-        if (UserGetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_RBUTTON;
+        if (gQueueKeyStateTable[VK_LBUTTON] & 0x80) ret |= MK_LBUTTON;
+        if (gQueueKeyStateTable[VK_RBUTTON] & 0x80) ret |= MK_RBUTTON;
     }
-    if (UserGetAsyncKeyState(VK_MBUTTON) & 0x80)  ret |= MK_MBUTTON;
-    if (UserGetAsyncKeyState(VK_SHIFT) & 0x80)    ret |= MK_SHIFT;
-    if (UserGetAsyncKeyState(VK_CONTROL) & 0x80)  ret |= MK_CONTROL;
-    if (UserGetAsyncKeyState(VK_XBUTTON1) & 0x80) ret |= MK_XBUTTON1;
-    if (UserGetAsyncKeyState(VK_XBUTTON2) & 0x80) ret |= MK_XBUTTON2;
+    if (gQueueKeyStateTable[VK_MBUTTON]  & 0x80) ret |= MK_MBUTTON;
+    if (gQueueKeyStateTable[VK_SHIFT]    & 0x80) ret |= MK_SHIFT;
+    if (gQueueKeyStateTable[VK_CONTROL]  & 0x80) ret |= MK_CONTROL;
+    if (gQueueKeyStateTable[VK_XBUTTON1] & 0x80) ret |= MK_XBUTTON1;
+    if (gQueueKeyStateTable[VK_XBUTTON2] & 0x80) ret |= MK_XBUTTON2;
     return ret;
 }
 
@@ -401,9 +406,17 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    WCHAR wp[2] = { 0 };
    MSG NewMsg = { 0 };
    PKBDTABLES keyLayout;
+   PWND pWndMsg;
    BOOL Result = FALSE;
 
-   pti = PsGetCurrentThreadWin32Thread();
+   pWndMsg = UserGetWindowObject(lpMsg->hwnd);
+   if (!pWndMsg) // Must have a window!
+   {
+      DPRINT1("No Window for Translate.\n");
+      return FALSE;
+   }
+
+   pti = pWndMsg->head.pti;
    keyLayout = pti->KeyboardLayout->KBTables;
    if( !keyLayout )
       return FALSE;
@@ -416,6 +429,8 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    /* All messages have to contain the cursor point. */
    NewMsg.pt = gpsi->ptCursor;
 
+   DPRINT("IntTranslateKbdMessage %s\n", lpMsg->message == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN");
+
     switch (lpMsg->wParam)
     {
     case VK_PACKET:
@@ -427,9 +442,13 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         return TRUE;
     }
 
-   UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
-                           gQueueKeyStateTable, wp, 2, 0,
-                           keyLayout );
+   UState = ToUnicodeInner( lpMsg->wParam,
+                            HIWORD(lpMsg->lParam) & 0xff,
+                            gQueueKeyStateTable,
+                            wp,
+                            2,
+                            0,
+                            keyLayout );
 
    if (UState == 1)
    {
@@ -482,7 +501,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
-
+   DPRINT("IntTranslateKbdMessage E %s\n", NewMsg.message == WM_CHAR ? "WM_CHAR" : "WM_SYSCHAR");
    return Result;
 }
 
@@ -839,6 +858,8 @@ W32kKeyProcessMessage(LPMSG Msg,
     *
     * Shift and the LP_EXT_BIT cancel. */
    ScanCode = (Msg->lParam >> 16) & 0xff;
+   DPRINT("ScanCode %04x\n",ScanCode);
+
    BaseMapping = Msg->wParam =
                     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
    if( Prefix == 0 )

@@ -56,7 +56,10 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
        if (MessageQueue->KeyState[key] & KS_DOWN_BIT)
           ret |= 0xFF00; // If down, windows returns 0xFF80. 
    }
-
+   else
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+   }
    return ret;
 }
 
@@ -1457,9 +1460,17 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
         if (IsListEmpty(CurrentEntry)) break;
         if (!CurrentMessage) break;
         CurrentEntry = CurrentMessage->ListEntry.Flink;
-
-        if ( (( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && (CurrentMessage->QS_Flags & QSflags)) ||
-             ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) )
+/*
+ MSDN:
+ 1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.
+ 2: retrieves only messages on the current thread's message queue whose hwnd value is NULL.
+ 3: handle to the window whose messages are to be retrieved.
+ */
+      if ( ( !Window || // 1
+            ( Window == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
+              ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
         {
            msg = CurrentMessage->Msg;
 

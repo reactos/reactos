@@ -1333,6 +1333,27 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
       Msg.lParam = MAKELPARAM(1 /* repeat count */, ki->wScan);
    }
 
+   if (!(ki->dwFlags & KEYEVENTF_UNICODE))
+   {
+      if (ki->dwFlags & KEYEVENTF_KEYUP)
+      {
+         gQueueKeyStateTable[wVk] &= ~0x80;
+         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+      }
+      else
+      {
+         if (!(gQueueKeyStateTable[wVk] & 0x80)) gQueueKeyStateTable[wVk] ^= 0x01;
+         gQueueKeyStateTable[wVk] |= 0xc0;
+         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
+      }
+
+      if (gQueueKeyStateTable[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
+
+      if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
+
+      Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
+   }
+
    FocusMessageQueue = IntGetFocusMessageQueue();
 
    Msg.hwnd = 0;
@@ -1365,27 +1386,6 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
       return FALSE;
    }
 
-   if (!(ki->dwFlags & KEYEVENTF_UNICODE))
-   {
-      if (ki->dwFlags & KEYEVENTF_KEYUP)
-      {
-         gQueueKeyStateTable[wVk] &= ~0x80;
-         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
-      }
-      else
-      {
-         if (!(gQueueKeyStateTable[wVk] & 0x80)) gQueueKeyStateTable[wVk] ^= 0x01;
-         gQueueKeyStateTable[wVk] |= 0xc0;
-         gQueueKeyStateTable[wVkStripped] = gQueueKeyStateTable[wVkL] | gQueueKeyStateTable[wVkR];
-      }
-
-      if (gQueueKeyStateTable[VK_MENU] & 0x80) flags |= KF_ALTDOWN;
-
-      if (wVkStripped == VK_SHIFT) flags &= ~KF_EXTENDED;
-
-      Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
-   }
-
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");
@@ -1400,7 +1400,6 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
-         Msg.pt = gpsi->ptCursor;
       // Post to hardware queue, based on the first part of wine "some GetMessage tests"
       // in test_PeekMessage()
          MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
