@@ -1222,6 +1222,7 @@ typedef enum {
     XML_WITH_DEBUG_MEM = 29,
     XML_WITH_DEBUG_RUN = 30,
     XML_WITH_ZLIB = 31,
+    XML_WITH_ICU = 32,
     XML_WITH_NONE = 99999 /* just to be sure of allocation size */
 } xmlFeature;
 
@@ -1232,4 +1233,3 @@ XMLPUBFUN int XMLCALL
 }
 #endif
 #endif /* __XML_PARSER_H__ */
-

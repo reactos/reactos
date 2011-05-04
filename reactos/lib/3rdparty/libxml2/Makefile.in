@@ -52,7 +52,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/libxml-2.0.pc.in $(srcdir)/libxml.spec.in \
 	$(srcdir)/xml2-config.in $(top_srcdir)/configure AUTHORS \
 	COPYING ChangeLog INSTALL NEWS TODO acconfig.h config.guess \
-	config.sub depcomp install-sh ltmain.sh missing mkinstalldirs
+	config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -62,7 +62,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = libxml2.spec xml2-config libxml-2.0.pc \
 	libxml-2.0-uninstalled.pc
@@ -418,6 +418,7 @@ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
@@ -466,6 +467,7 @@ VERSION_SCRIPT_FLAGS = @VERSION_SCRIPT_FLAGS@
 WGET = @WGET@
 WIN32_EXTRA_LDFLAGS = @WIN32_EXTRA_LDFLAGS@
 WIN32_EXTRA_LIBADD = @WIN32_EXTRA_LIBADD@
+WIN32_EXTRA_PYTHON_LIBADD = @WIN32_EXTRA_PYTHON_LIBADD@
 WITH_C14N = @WITH_C14N@
 WITH_CATALOG = @WITH_CATALOG@
 WITH_DEBUG = @WITH_DEBUG@
@@ -474,6 +476,7 @@ WITH_FTP = @WITH_FTP@
 WITH_HTML = @WITH_HTML@
 WITH_HTTP = @WITH_HTTP@
 WITH_ICONV = @WITH_ICONV@
+WITH_ICU = @WITH_ICU@
 WITH_ISO8859X = @WITH_ISO8859X@
 WITH_LEGACY = @WITH_LEGACY@
 WITH_MEM_DEBUG = @WITH_MEM_DEBUG@
@@ -544,7 +547,6 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
-lt_ECHO = @lt_ECHO@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
@@ -2700,9 +2702,9 @@ xml2Conf.sh: xml2Conf.sh.in Makefile
 	&& mv xml2Conf.tmp xml2Conf.sh
 
 install-data-local: 
-	$(mkinstalldirs) $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
+	@MKDIR_P@ $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	-@INSTALL@ -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
-	$(mkinstalldirs) $(DESTDIR)$(EXAMPLES_DIR)
+	@MKDIR_P@ $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/xmllint.c $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/testSAX.c $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/testHTML.c $(DESTDIR)$(EXAMPLES_DIR)

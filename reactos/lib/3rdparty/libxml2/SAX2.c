@@ -2242,8 +2242,12 @@ xmlSAX2StartElementNs(void *ctx,
 	    if ((URI != NULL) && (prefix == pref))
 		ret->ns = ns;
 	} else {
-	    xmlSAX2ErrMemory(ctxt, "xmlSAX2StartElementNs");
-	    return;
+            /*
+             * any out of memory error would already have been raised
+             * but we can't be garanteed it's the actual error due to the
+             * API, best is to skip in this case
+             */
+	    continue;
 	}
 #ifdef LIBXML_VALID_ENABLED
 	if ((!ctxt->html) && ctxt->validate && ctxt->wellFormed &&

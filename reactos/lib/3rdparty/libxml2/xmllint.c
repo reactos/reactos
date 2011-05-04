@@ -162,6 +162,9 @@ static int html = 0;
 static int xmlout = 0;
 #endif
 static int htmlout = 0;
+#if defined(LIBXML_HTML_ENABLED)
+static int nodefdtd = 0;
+#endif
 #ifdef LIBXML_PUSH_ENABLED
 static int push = 0;
 #endif /* LIBXML_PUSH_ENABLED */
@@ -2507,14 +2510,14 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		    htmlSaveFile(output ? output : "-", doc);
 		}
 		else if (encoding != NULL) {
-		    if ( format ) {
+		    if (format == 1) {
 			htmlSaveFileFormat(output ? output : "-", doc, encoding, 1);
 		    }
 		    else {
 			htmlSaveFileFormat(output ? output : "-", doc, encoding, 0);
 		    }
 		}
-		else if (format) {
+		else if (format == 1) {
 		    htmlSaveFileFormat(output ? output : "-", doc, NULL, 1);
 		}
 		else {
@@ -2586,13 +2589,13 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		int len;
 
 		if (encoding != NULL) {
-		    if ( format ) {
+		    if (format == 1) {
 		        xmlDocDumpFormatMemoryEnc(doc, &result, &len, encoding, 1);
 		    } else {
 			xmlDocDumpMemoryEnc(doc, &result, &len, encoding);
 		    }
 		} else {
-		    if (format)
+		    if (format == 1)
 			xmlDocDumpFormatMemory(doc, &result, &len, 1);
 		    else
 			xmlDocDumpMemory(doc, &result, &len);
@@ -2611,7 +2614,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 		xmlSaveFile(output ? output : "-", doc);
 	    } else if (oldout) {
 	        if (encoding != NULL) {
-		    if ( format ) {
+		    if (format == 1) {
 			ret = xmlSaveFormatFileEnc(output ? output : "-", doc,
 						   encoding, 1);
 		    }
@@ -2624,7 +2627,7 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 				output ? output : "-");
 			progresult = XMLLINT_ERR_OUT;
 		    }
-		} else if (format) {
+		} else if (format == 1) {
 		    ret = xmlSaveFormatFile(output ? output : "-", doc, 1);
 		    if (ret < 0) {
 			fprintf(stderr, "failed save to %s\n",
@@ -2653,8 +2656,10 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 	        xmlSaveCtxtPtr ctxt;
 		int saveOpts = 0;
 
-                if (format)
+                if (format == 1)
 		    saveOpts |= XML_SAVE_FORMAT;
+                else if (format == 2)
+                    saveOpts |= XML_SAVE_WSNONSIG;
 
 #if defined(LIBXML_HTML_ENABLED) || defined(LIBXML_VALID_ENABLED)
                 if (xmlout)
@@ -2995,6 +3000,7 @@ static void usage(const char *name) {
 #ifdef LIBXML_HTML_ENABLED
     printf("\t--html : use the HTML parser\n");
     printf("\t--xmlout : force to use the XML serializer when using --html\n");
+    printf("\t--nodefdtd : do not default HTML doctype\n");
 #endif
 #ifdef LIBXML_PUSH_ENABLED
     printf("\t--push : use the push mode of the parser\n");
@@ -3010,6 +3016,10 @@ static void usage(const char *name) {
     printf("\t--format : reformat/reindent the input\n");
     printf("\t--encode encoding : output in the given encoding\n");
     printf("\t--dropdtd : remove the DOCTYPE of the input docs\n");
+    printf("\t--pretty STYLE : pretty-print in a particular style\n");
+    printf("\t                 0 Do not pretty print\n");
+    printf("\t                 1 Format the XML content, as --format\n");
+    printf("\t                 2 Add whitespace inside tags, preserving content\n");
 #endif /* LIBXML_OUTPUT_ENABLED */
     printf("\t--c14n : save in W3C canonical format v1.0 (with comments)\n");
     printf("\t--c14n11 : save in W3C canonical format v1.1 (with comments)\n");
@@ -3157,6 +3167,10 @@ main(int argc, char **argv) {
 	else if ((!strcmp(argv[i], "-xmlout")) ||
 	         (!strcmp(argv[i], "--xmlout"))) {
 	    xmlout++;
+	} else if ((!strcmp(argv[i], "-nodefdtd")) ||
+	         (!strcmp(argv[i], "--nodefdtd"))) {
+            nodefdtd++;
+	    options |= HTML_PARSE_NODEFDTD;
         }
 #endif /* LIBXML_HTML_ENABLED */
 	else if ((!strcmp(argv[i], "-loaddtd")) ||
@@ -3326,9 +3340,20 @@ main(int argc, char **argv) {
 	         (!strcmp(argv[i], "--format"))) {
 	     noblanks++;
 #ifdef LIBXML_OUTPUT_ENABLED
-	     format++;
+	     format = 1;
 #endif /* LIBXML_OUTPUT_ENABLED */
 	     xmlKeepBlanksDefault(0);
+	}
+	else if ((!strcmp(argv[i], "-pretty")) ||
+	         (!strcmp(argv[i], "--pretty"))) {
+	     i++;
+#ifdef LIBXML_OUTPUT_ENABLED
+	     format = atoi(argv[i]);
+#endif /* LIBXML_OUTPUT_ENABLED */
+	     if (format == 1) {
+	         noblanks++;
+	         xmlKeepBlanksDefault(0);
+	     }
 	}
 #ifdef LIBXML_READER_ENABLED
 	else if ((!strcmp(argv[i], "-stream")) ||
@@ -3613,6 +3638,11 @@ main(int argc, char **argv) {
         }
 	if ((!strcmp(argv[i], "-maxmem")) ||
 	         (!strcmp(argv[i], "--maxmem"))) {
+	    i++;
+	    continue;
+        }
+	if ((!strcmp(argv[i], "-pretty")) ||
+	         (!strcmp(argv[i], "--pretty"))) {
 	    i++;
 	    continue;
         }

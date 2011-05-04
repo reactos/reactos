@@ -2887,9 +2887,11 @@ htmlParseScript(htmlParserCtxtPtr ctxt) {
     }
 
     if ((!(IS_CHAR_CH(cur))) && (!((cur == 0) && (ctxt->progressive)))) {
-	htmlParseErrInt(ctxt, XML_ERR_INVALID_CHAR,
-	                "Invalid char in CDATA 0x%X\n", cur);
-	NEXT;
+        htmlParseErrInt(ctxt, XML_ERR_INVALID_CHAR,
+                    "Invalid char in CDATA 0x%X\n", cur);
+        if (ctxt->input->cur < ctxt->input->end) {
+            NEXT;
+        }
     }
 
     if ((nbchar != 0) && (ctxt->sax != NULL) && (!ctxt->disableSAX)) {
@@ -3275,7 +3277,7 @@ htmlParseCharRef(htmlParserCtxtPtr ctxt) {
 	        val = val * 16 + (CUR - 'A') + 10;
 	    else {
 	        htmlParseErr(ctxt, XML_ERR_INVALID_HEX_CHARREF,
-		             "htmlParseCharRef: missing semicolumn\n",
+		             "htmlParseCharRef: missing semicolon\n",
 			     NULL, NULL);
 		break;
 	    }
@@ -3290,7 +3292,7 @@ htmlParseCharRef(htmlParserCtxtPtr ctxt) {
 	        val = val * 10 + (CUR - '0');
 	    else {
 	        htmlParseErr(ctxt, XML_ERR_INVALID_DEC_CHARREF,
-		             "htmlParseCharRef: missing semicolumn\n",
+		             "htmlParseCharRef: missing semicolon\n",
 			     NULL, NULL);
 		break;
 	    }
@@ -4670,7 +4672,7 @@ htmlParseDocument(htmlParserCtxtPtr ctxt) {
     if ((ctxt->sax) && (ctxt->sax->endDocument != NULL))
         ctxt->sax->endDocument(ctxt->userData);
 
-    if (ctxt->myDoc != NULL) {
+    if ((!(ctxt->options & HTML_PARSE_NODEFDTD)) && (ctxt->myDoc != NULL)) {
 	dtd = xmlGetIntSubset(ctxt->myDoc);
 	if (dtd == NULL)
 	    ctxt->myDoc->intSubset =
@@ -5609,7 +5611,7 @@ htmlParseTryOrFinish(htmlParserCtxtPtr ctxt, int terminate) {
 		        int idx;
 			xmlChar val;
 
-			idx = htmlParseLookupSequence(ctxt, '<', '/', 0, 0, 1);
+			idx = htmlParseLookupSequence(ctxt, '<', '/', 0, 0, 0);
 			if (idx < 0)
 			    goto done;
 		        val = in->cur[idx + 2];
@@ -6451,6 +6453,7 @@ htmlCtxtReset(htmlParserCtxtPtr ctxt)
 
     ctxt->wellFormed = 1;
     ctxt->nsWellFormed = 1;
+    ctxt->disableSAX = 0;
     ctxt->valid = 1;
     ctxt->vctxt.userData = ctxt;
     ctxt->vctxt.error = xmlParserValidityError;
@@ -6529,6 +6532,10 @@ htmlCtxtUseOptions(htmlParserCtxtPtr ctxt, int options)
     if (options & XML_PARSE_HUGE) {
 	ctxt->options |= XML_PARSE_HUGE;
         options -= XML_PARSE_HUGE;
+    }
+    if (options & HTML_PARSE_NODEFDTD) {
+	ctxt->options |= HTML_PARSE_NODEFDTD;
+        options -= HTML_PARSE_NODEFDTD;
     }
     ctxt->dictNames = 0;
     return (options);

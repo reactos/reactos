@@ -721,8 +721,19 @@ xmlNewNs(xmlNodePtr node, const xmlChar *href, const xmlChar *prefix) {
     if ((node != NULL) && (node->type != XML_ELEMENT_NODE))
 	return(NULL);
 
-    if ((prefix != NULL) && (xmlStrEqual(prefix, BAD_CAST "xml")))
-	return(NULL);
+    if ((prefix != NULL) && (xmlStrEqual(prefix, BAD_CAST "xml"))) {
+        /* xml namespace is predefined, no need to add it */
+        if (xmlStrEqual(href, XML_XML_NAMESPACE))
+            return(NULL);
+
+        /*
+         * Problem, this is an attempt to bind xml prefix to a wrong
+         * namespace, which breaks
+         * Namespace constraint: Reserved Prefixes and Namespace Names
+         * from XML namespace. But documents authors may not care in
+         * their context so let's proceed.
+         */
+    }
 
     /*
      * Allocate a new Namespace and fill the fields.

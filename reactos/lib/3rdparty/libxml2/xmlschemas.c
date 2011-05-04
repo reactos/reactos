@@ -26811,6 +26811,11 @@ xmlSchemaValidateElem(xmlSchemaValidCtxtPtr vctxt)
 	    vctxt->skipDepth = 0;
 	    return(ret);
 	}
+        /*
+         * Augment the IDC definitions for the main schema and all imported ones
+         * NOTE: main schema is the first in the imported list
+         */
+        xmlHashScan(vctxt->schema->schemasImports,(xmlHashScanner)xmlSchemaAugmentImportedIDC, vctxt);
     }
     if (vctxt->depth > 0) {
 	/*
