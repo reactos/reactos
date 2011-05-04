@@ -5,6 +5,7 @@
 #include <usbbusif.h>
 #include <usbioctl.h>
 #include <usb.h>
+#include <stdio.h>
 #include <usbdlib.h>
 #include <debug.h>
 //BROKEN: #include <usbprotocoldefs.h>
@@ -52,6 +53,7 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
 {
     COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT ParentDeviceObject;
+    PUSB_DEVICE_HANDLE UsbDeviceHandle;
     PWCHAR DeviceId;
     PWCHAR InstanceId;
     PWCHAR HardwareIds;

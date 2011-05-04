@@ -23,7 +23,7 @@ USBHUB_PdoHandleInternalDeviceControl(
     ULONG_PTR Information = 0;
     NTSTATUS Status;
 
-    DPRINT1("UsbhubInternalDeviceControlPdo() called\n");
+    DPRINT1("UsbhubInternalDeviceControlPdo(%x) called\n", DeviceObject);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     Status = Irp->IoStatus.Status;
@@ -74,7 +74,7 @@ USBHUB_PdoStartDevice(
 {
     PHUB_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    DPRINT1("USBHUB_PdoStartDevice\n");
+    DPRINT1("USBHUB_PdoStartDevice %x\n", DeviceObject);
     DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     UNIMPLEMENTED
@@ -107,12 +107,14 @@ USBHUB_PdoQueryId(
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
             SourceString = ChildDeviceExtension->HardwareIds;
+            Status = STATUS_NOT_SUPPORTED;
             break;
         }
         case BusQueryCompatibleIDs:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
             SourceString = ChildDeviceExtension->CompatibleIds;
+            Status = STATUS_NOT_SUPPORTED;
             break;
         }
         case BusQueryInstanceID:
