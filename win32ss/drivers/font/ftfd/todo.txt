@@ -15,7 +15,7 @@ Public interface:
     - implement QFF_DESCRIPTION, unimportant
 - FtfdQueryFontCaps: 100% done
 - FtfdQueryTrueTypeTable: 100% done
-- FtfdGetTrueTypeFile: unimplemented
+- FtfdGetTrueTypeFile: 100% done
 
 - FtfdQueryFontData: 10%, depends on FtfdLoadGlyph
     - QFD_MAXEXTENTS: dependes on FtfdQueryMaxExtents
