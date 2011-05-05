@@ -529,17 +529,6 @@ NtUserSetSysColors(
 
 DWORD
 APIENTRY
-NtUserSetThreadState(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserUpdateInputContext(
    DWORD Unknown0,
    DWORD Unknown1,

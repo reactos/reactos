@@ -769,7 +769,7 @@ KeyboardThreadMain(PVOID StartContext)
                      (KeyInput.MakeCode == LastMakeCode))
                {
                   RepeatCount++;
-                  lParam |= (1 << 30);
+                  lParam |= (KF_REPEAT << 16);
                }
                else
                {
@@ -782,7 +782,7 @@ KeyboardThreadMain(PVOID StartContext)
             {
                LastFlags = 0;
                LastMakeCode = 0; /* Should never match */
-               lParam |= (1 << 30) | (1 << 31);
+               lParam |= (KF_UP << 16) | (KF_REPEAT << 16);
             }
 
             lParam |= RepeatCount;
@@ -790,11 +790,11 @@ KeyboardThreadMain(PVOID StartContext)
             lParam |= (KeyInput.MakeCode & 0xff) << 16;
 
             if (KeyInput.Flags & KEY_E0)
-               lParam |= (1 << 24);
+               lParam |= (KF_EXTENDED << 16);
 
             if (ModifierState & MOD_ALT)
             {
-               lParam |= (1 << 29); // wine -> (HIWORD(lParam) & KEYDATA_ALT) #define KEYDATA_ALT 0x2000
+               lParam |= (KF_ALTDOWN << 16);
 
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_SYSKEYDOWN;
@@ -821,6 +821,10 @@ KeyboardThreadMain(PVOID StartContext)
                 {
                     keyboardLayout = ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout;
                 }
+                if ( FocusQueue->QF_flags & QF_DIALOGACTIVE )
+                   lParam |= (KF_DLGMODE << 16);
+                if ( FocusQueue->MenuOwner )//FocusQueue->MenuState ) // MenuState needs a start flag...
+                   lParam |= (KF_MENUMODE << 16);
             }
             if (!keyboardLayout)
             {
@@ -1265,8 +1269,14 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
    Msg.wParam = wVk;
    flags = LOBYTE(ki->wScan);
 
+   FocusMessageQueue = IntGetFocusMessageQueue();
+
    if (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) flags |= KF_EXTENDED;
    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */
+   if ( FocusMessageQueue && FocusMessageQueue->QF_flags & QF_DIALOGACTIVE )
+      flags |= KF_DLGMODE;
+   if ( FocusMessageQueue && FocusMessageQueue->MenuOwner )//FocusMessageQueue->MenuState ) // MenuState needs a start flag...
+      flags |= KF_MENUMODE;
 
    /* strip left/right for menu, control, shift */
    switch (wVk)
@@ -1354,8 +1364,6 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
       Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
    }
 
-   FocusMessageQueue = IntGetFocusMessageQueue();
-
    Msg.hwnd = 0;
 
    if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
@@ -1374,7 +1382,7 @@ IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
 
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
-   KbdHookData.flags = flags >> 8;
+   KbdHookData.flags = (flags & (KF_EXTENDED | KF_ALTDOWN | KF_UP)) >> 8;
    if (Injected) KbdHookData.flags |= LLKHF_INJECTED;
    KbdHookData.time = Msg.time;
    KbdHookData.dwExtraInfo = ki->dwExtraInfo;
