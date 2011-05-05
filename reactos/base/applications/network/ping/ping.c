@@ -727,6 +727,10 @@ int wmain(int argc, LPWSTR argv[])
             FormatOutput(IDS_MIN_MAX_AVERAGE, MinTime, MaxTime, AvgTime);
         }
     }
+    else
+    {
+        return 1;
+    }
     return 0;
 }
 
