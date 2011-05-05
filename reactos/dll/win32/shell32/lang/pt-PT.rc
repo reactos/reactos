@@ -427,7 +427,7 @@ LTEXT "Abre com:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appnome", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Mudar...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vançado", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -764,4 +764,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detalhes para '%s' extensão"
 	IDS_FILE_DETAILSADV         "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

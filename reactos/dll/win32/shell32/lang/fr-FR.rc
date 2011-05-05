@@ -428,7 +428,7 @@ LTEXT "Ouvrir avec :", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nom de l'application", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Modifier...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Les fichiers avec l'extension '%s' sont de type '%s'. Pour modifier les paramètres qui concernent tous les fichiers '%s', cliquez sur Avancé.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vancé", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -765,4 +765,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Détails concernant l'extension '%s'"
 	IDS_FILE_DETAILSADV         "Les fichiers avec l'extension '%s' sont de type '%s'. Pour modifier les paramètres qui concernent tous les fichiers '%s', cliquez sur Avancé."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

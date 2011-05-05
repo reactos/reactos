@@ -412,7 +412,7 @@ LTEXT "Otevírat v:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Zmìnit...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Soubory s pøíponou '%s' jsou typu '%s'. Kliknutím na tlaèítko Pokroèilé lze zmìnit nastavení pro všechny soubory '%s'.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "&Pokroèilé", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -748,4 +748,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Podrobnosti pro typ souborù '%s'"
 	IDS_FILE_DETAILSADV         "Soubory s pøíponou '%s' jsou typu '%s'. Kliknutím na tlaèítko Pokroèilé lze zmìnit nastavení pro všechny soubory '%s'."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

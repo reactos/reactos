@@ -424,7 +424,7 @@ LTEXT "開くプログラム:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "アプリ名", 14005, 100, 140, 40, 10
 PUSHBUTTON "変更(&C)...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -761,4 +761,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "拡張子 '%s' の詳細"
 	IDS_FILE_DETAILSADV         "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

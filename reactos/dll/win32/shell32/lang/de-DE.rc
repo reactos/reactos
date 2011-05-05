@@ -427,7 +427,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -765,4 +765,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Details zum Dateityp '%s'"
 	IDS_FILE_DETAILSADV         "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
+	IDS_FILE_TYPES              "Dateitypen"
+	IDS_COLUMN_EXTENSION        "Erweiterungen"
 END

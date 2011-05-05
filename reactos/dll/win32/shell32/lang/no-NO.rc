@@ -425,7 +425,7 @@ LTEXT "Åpne med:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Endre...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "Av&ansert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -764,4 +764,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detailjer for '%s' utvidelser"
 	IDS_FILE_DETAILSADV         "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

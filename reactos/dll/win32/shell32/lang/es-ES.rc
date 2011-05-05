@@ -437,7 +437,7 @@ LTEXT "Se abre con:", -1, 12, 140, 50, 10
 //ICON
 LTEXT "Aplicación", 14005, 100, 140, 40, 10
 PUSHBUTTON "Cam&biar...", 14006, 230, 140, 50, 14, WS_TABSTOP
-LTEXT "Archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas.", 14007, 12, 165, 220, 30
+LTEXT "", 14007, 12, 165, 220, 30
 PUSHBUTTON "Opciones avanza&das", 14008, 190, 213, 90, 14, WS_TABSTOP
 END
 
@@ -774,4 +774,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detalles para el tipo de archivo '%s'"
 	IDS_FILE_DETAILSADV         "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END
