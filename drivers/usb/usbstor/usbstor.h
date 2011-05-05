@@ -13,7 +13,7 @@
 #include <usbdlib.h>
 #include <stdio.h>
 #include <wdmguid.h>
-
+#include <classpnp.h>
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
@@ -24,15 +24,15 @@ IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT TargetDevice,
   OUT PDEVICE_OBJECT *AttachedToDeviceObject);
 
-typedef struct _COMMON_DEVICE_EXTENSION
+typedef struct __COMMON_DEVICE_EXTENSION__
 {
     BOOLEAN IsFDO;
 
-}COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
+}USBSTOR_COMMON_DEVICE_EXTENSION, *PUSBSTOR_COMMON_DEVICE_EXTENSION;
 
 typedef struct
 {
-    COMMON_DEVICE_EXTENSION Common;                                                      // common device extension
+    USBSTOR_COMMON_DEVICE_EXTENSION Common;                                                      // common device extension
 
     PDEVICE_OBJECT FunctionalDeviceObject;                                               // functional device object
     PDEVICE_OBJECT PhysicalDeviceObject;                                                 // physical device object
@@ -50,12 +50,12 @@ typedef struct
 
 typedef struct
 {
-    COMMON_DEVICE_EXTENSION Common;
+    USBSTOR_COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
     PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
-
 
 //
 // max lun command identifier
@@ -213,3 +213,18 @@ USBSTOR_GetPipeHandles(
 NTSTATUS
 USBSTOR_SendInquiryCmd(
     IN PDEVICE_OBJECT DeviceObject);
+
+
+//---------------------------------------------------------------------
+//
+// disk.c routines
+//
+NTSTATUS
+USBSTOR_HandleInternalDeviceControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+NTSTATUS
+USBSTOR_HandleDeviceControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);

@@ -134,11 +134,16 @@ USBSTOR_DispatchDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("USBSTOR_DispatchDeviceControl\n");
+    NTSTATUS Status;
+
+    //
+    // handle requests
+    //
+    Status = USBSTOR_HandleDeviceControl(DeviceObject, Irp);
+
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
 }
 
 
@@ -148,12 +153,17 @@ USBSTOR_DispatchScsi(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    DPRINT1("USBSTOR_DispatchScsi\n");
+    NTSTATUS Status;
+
+    //
+    // handle requests
+    //
+    Status = USBSTOR_HandleInternalDeviceControl(DeviceObject, Irp);
 
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -165,7 +175,6 @@ USBSTOR_DispatchReadWrite(
     //
     // read write ioctl is not supported
     //
-    DPRINT1("USBSTOR_DispatchReadWrite\n");
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -178,12 +187,12 @@ USBSTOR_DispatchPnp(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    PCOMMON_DEVICE_EXTENSION DeviceExtension;
+    PUSBSTOR_COMMON_DEVICE_EXTENSION DeviceExtension;
 
     //
     // get common device extension
     //
-    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = (PUSBSTOR_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // is it for the FDO
