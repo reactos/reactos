@@ -697,11 +697,10 @@ FtfdQueryTrueTypeTable(
     ULONG *pcjTable)
 {
     PFTFD_FILE pfile = (PFTFD_FILE)diFile;
-    PBYTE pjTable, pjData;
+    PBYTE pjTable;
     ULONG cjTable;
 
     DbgPrint("FtfdQueryTrueTypeTable\n");
-    __debugbreak();
 
     /* Check if this file supports TrueType tables */
     if (pfile->ulFileFormat != FILEFMT_TTF &&
@@ -710,6 +709,8 @@ FtfdQueryTrueTypeTable(
         DbgPrint("File format doesn't support true type tables\n");
         return FD_ERROR;
     }
+
+    // FIXME: handle ulFont
 
     /* Check if the whole file is requested */
     if (ulTag == 0)
@@ -729,29 +730,32 @@ FtfdQueryTrueTypeTable(
         }
     }
 
-    // FIXME: handle ulFont
-
-    /* Check for overflow and if the offset and size fit into the view */
-    pjData = pjTable + dpStart;
-    if ( (pjData < pjTable) || (pjData + cjBuf < pjData) ||
-         (pjData + cjBuf > (PBYTE)pfile->pvView + pfile->cjView) )
-    {
-        DbgPrint("Overflow: dpStart=0x%lx, cjBuf=0x%lx\n", dpStart, cjBuf);
-        return FD_ERROR;
-    }
-
-    /* Check if we shall copy data */
-    if (pjBuf)
-    {
-        /* Copy the data to the buffer */
-        RtlCopyMemory(pjBuf, pjTable + dpStart, cjBuf);
-    }
-
     /* Return requested pointers */
     if (ppjTable) *ppjTable = pjTable;
     if (pcjTable) *pcjTable = cjTable;
 
-    return FD_ERROR;
+
+    /* Check if we shall copy data */
+    if (pjBuf)
+    {
+        /* Check if the offset is inside the table */
+        if (dpStart < 0 || (ULONG_PTR)dpStart >= cjTable)
+        {
+            DbgPrint("dpStart outside the table: %p\n", dpStart);
+            return FD_ERROR;
+        }
+
+        /* Don't copy beyond the table end */
+        cjTable -= dpStart;
+
+        /* Don't copy more then the buffer can hold */
+        if (cjBuf < cjTable) cjTable = cjBuf;
+
+        /* Copy the data to the buffer */
+        RtlCopyMemory(pjBuf, pjTable + dpStart, cjTable);
+    }
+
+    return cjTable;
 }
 
 PVOID
@@ -760,9 +764,21 @@ FtfdGetTrueTypeFile(
     ULONG_PTR diFile,
     ULONG *pcj)
 {
+    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
+
     DbgPrint("FtfdGetTrueTypeFile\n");
-    __debugbreak();
-    return 0;
+
+    /* Check if this file is TrueType */
+    if (pfile->ulFileFormat != FILEFMT_TTF &&
+        pfile->ulFileFormat != FILEFMT_OTF)
+    {
+        DbgPrint("File format is not TrueType or Opentype\n");
+        return NULL;
+    }
+
+    /* Return the pointer and size */
+    if (pcj) *pcj = pfile->cjView;
+    return pfile->pvView;
 }
 
 #if 0 // not needed atm
