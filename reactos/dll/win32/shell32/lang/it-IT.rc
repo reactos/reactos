@@ -129,7 +129,7 @@ BEGIN
 	LTEXT "Versione " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "Questa versione di ReactOS è registrata da:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Questa versione di ReactOS è registrata a nome di:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -435,7 +435,7 @@ LTEXT "Si apre con:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nome", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Cambia...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "I files con estensione '%s' sono di tipo '%s'.\nPer cambiare le impostazioni che influenzano tutti i file '%s', cliccare\nAvanzate.", 14007, 12, 155, 160, 30
+LTEXT "I files con estensione '%s' sono di tipo '%s'. Per cambiare le impostazioni per tutti i file '%s', cliccare su Avanzate.", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vanzate", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -769,4 +769,7 @@ BEGIN
 	IDS_COPY_OF                 "Copia di"
 
 	IDS_SHLEXEC_NOASSOC         "Non c'è un programma configurato per aprire questo tipo di file."
+	
+	IDS_FILE_DETAILS            "Dettagli per l'estensione '%s'"
+	IDS_FILE_DETAILSADV         "I files con estensione '%s' sono di tipo '%s'. Per modificare le impostazioni per tutti i file '%s', cliccare su Avanzate."
 END

@@ -427,7 +427,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Um\ndie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "Umdie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -762,4 +762,7 @@ BEGIN
 	IDS_COPY_OF                 "Kopie von"
 
     IDS_SHLEXEC_NOASSOC         "Es ist kein Programm mit diesem Dateityp verknüpft."
+	
+	IDS_FILE_DETAILS            "Details zum Dateityp '%s'"
+	IDS_FILE_DETAILSADV         "Umdie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
 END

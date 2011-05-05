@@ -427,7 +427,7 @@ LTEXT "Opens with:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+LTEXT "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.", 14007, 12, 155, 160, 30
 PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -761,4 +761,7 @@ BEGIN
 	IDS_COPY_OF                 "Copy of"
 
 	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	
+	IDS_FILE_DETAILS            "Details for '%s' extension"
+	IDS_FILE_DETAILSADV         "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
 END

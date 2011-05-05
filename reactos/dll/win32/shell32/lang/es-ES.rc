@@ -771,4 +771,7 @@ BEGIN
 	IDS_COPY_OF                 "Copia de"
 
 	IDS_SHLEXEC_NOASSOC         "No hay ningún programa configurado en ReactOS para abrir este tipo de archivo."
+	
+	IDS_FILE_DETAILS            "Detalles para el tipo de archivo '%s'"
+	IDS_FILE_DETAILSADV         "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
 END

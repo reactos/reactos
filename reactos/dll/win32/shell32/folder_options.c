@@ -399,7 +399,7 @@ FolderOptionsFileTypesDlg(
 {
     LPNMLISTVIEW lppl;
     LVITEMW lvItem;
-    WCHAR Buffer[200], FormatBuffer[100];
+    WCHAR Buffer[200], FormatBuffer[100];  //FIXME
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
 
@@ -451,6 +451,16 @@ FolderOptionsFileTypesDlg(
                         swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
                         /* update dialog */
                         SendDlgItemMessageW(hwndDlg, 14003, WM_SETTEXT, 0, (LPARAM)Buffer);
+                        
+                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                        {
+                            /* use default english format string */
+                            wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
+                        }
+                        /* format buffer */
+                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
+                        /* update dialog */
+                        SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM)Buffer); 
                     }
            }
            break;

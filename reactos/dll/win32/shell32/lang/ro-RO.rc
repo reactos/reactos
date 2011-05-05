@@ -427,7 +427,7 @@ LTEXT "Deschidere cu:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nume ap.", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Schimbare", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Fișierele cu extensia '%s' sunt de tipul '%s'. \nPentru a schimbat setări care vor afecta\ntoate fișierele '%s', clic pe Avansat.", 14007, 12, 155, 160, 30
+LTEXT "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat.", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vansat", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -760,6 +760,9 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Mărime de alocare implicită"
 
 	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	
+	IDS_FILE_DETAILS            "Detalii pentru extensia '%s'"
+	IDS_FILE_DETAILSADV         "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat."
 END
 
 #pragma code_page(default)
