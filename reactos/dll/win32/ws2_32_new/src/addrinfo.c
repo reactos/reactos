@@ -902,9 +902,9 @@ WINAPI
 getnameinfo(const struct sockaddr FAR *sa,
             socklen_t salen,
             char FAR *host,
-            DWORD hostlen,
+            socklen_t hostlen,
             char FAR *serv,
-            DWORD servlen,
+            socklen_t servlen,
             INT flags)
 {
     INT ErrorCode;

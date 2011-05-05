@@ -1007,11 +1007,11 @@ NTSTATUS WINAPI LsaSetSecret(
 NTSTATUS
 WINAPI
 LsaSetForestTrustInformation(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-    BOOL CheckOnly,
-    PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
+    IN LSA_HANDLE PolicyHandle,
+    IN PLSA_UNICODE_STRING TrustedDomainName,
+    IN PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
+    IN BOOLEAN CheckOnly,
+    OUT PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
 {
     FIXME("(%p,%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, ForestTrustInfo, CheckOnly, CollisionInfo);
     return STATUS_NOT_IMPLEMENTED;

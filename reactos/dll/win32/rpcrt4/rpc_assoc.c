@@ -22,9 +22,11 @@
 #include <stdarg.h>
 #include <assert.h>
 
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "rpc.h"
 #include "rpcndr.h"
-#include "winternl.h"
+#include <ndk/ntndk.h>
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -56,7 +58,7 @@ typedef struct _RpcContextHandle
     NDR_RUNDOWN rundown_routine;
     void *ctx_guard;
     UUID uuid;
-    RTL_RWLOCK rw_lock;
+    RTL_RESOURCE rw_lock;
     unsigned int refs;
 } RpcContextHandle;
 

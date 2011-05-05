@@ -24,6 +24,7 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
+#define SECURITY_WIN32
 #include "sspi.h"
 #include "ntsecapi.h"
 #include "ntsecpkg.h"

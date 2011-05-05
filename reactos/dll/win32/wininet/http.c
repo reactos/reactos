@@ -61,6 +61,7 @@
 #define NO_SHLWAPI_STRFCNS
 #define NO_SHLWAPI_GDI
 #include "shlwapi.h"
+#define SECURITY_WIN32
 #include "sspi.h"
 #include "wincrypt.h"
 

@@ -37,12 +37,9 @@
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winerror.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnt.h"
-#include "winternl.h"
+#include <windows.h>
+#include <ndk/ntndk.h>
+
 #include "iptypes.h"
 #include "iphlpapi.h"
 #include "wine/unicode.h"

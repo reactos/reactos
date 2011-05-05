@@ -24,6 +24,7 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
+#define SECURITY_WIN32
 #include "sspi.h"
 #include "ntsecapi.h"
 #include "ntsecpkg.h"
@@ -110,11 +111,6 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
     NULL, /* ChangeAccountPassword */
-    NULL, /* QueryMetaData */
-    NULL, /* ExchangeMetaData */
-    NULL, /* GetCredUIContext */
-    NULL, /* UpdateCredentials */
-    NULL, /* ValidateTargetInfo */
   }, {
     NULL, /* InitializePackage */
     NULL, /* LsaLogonUser */
@@ -146,11 +142,6 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
     NULL, /* ChangeAccountPassword */
-    NULL, /* QueryMetaData */
-    NULL, /* ExchangeMetaData */
-    NULL, /* GetCredUIContext */
-    NULL, /* UpdateCredentials */
-    NULL, /* ValidateTargetInfo */
   }
 };
 
@@ -162,7 +153,7 @@ NTSTATUS WINAPI SpLsaModeInitialize(ULONG LsaVersion, PULONG PackageVersion,
 {
     TRACE("(%u, %p, %p, %p)\n", LsaVersion, PackageVersion, ppTables, pcTables);
 
-    *PackageVersion = SECPKG_INTERFACE_VERSION_6;
+    *PackageVersion = SECPKG_INTERFACE_VERSION_4;
     *pcTables = 2;
     *ppTables = secPkgFunctionTable;
 
