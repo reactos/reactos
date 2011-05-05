@@ -2,15 +2,15 @@
 #if 0 /* in case someone actually tries to compile this */
 
 /* example.c - an example of using libpng
- * Last changed in libpng 1.4.2 [May 6, 2010]
+ * Last changed in libpng 1.5.2 [March 31, 2011]
  * This file has been placed in the public domain by the authors.
- * Maintained 1998-2010 Glenn Randers-Pehrson
+ * Maintained 1998-2011 Glenn Randers-Pehrson
  * Maintained 1996, 1997 Andreas Dilger)
  * Written 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
 
 /* This is an example of how to use libpng to read and write PNG files.
- * The file libpng.txt is much more verbose then this.  If you have not
+ * The file libpng-manual.txt is much more verbose then this.  If you have not
  * read it, do so first.  This was designed to be a starting point of an
  * implementation.  This is not officially part of libpng, is hereby placed
  * in the public domain, and therefore does not require a copyright notice.
@@ -31,7 +31,7 @@
   */
 
 #ifndef png_jmpbuf
-#  define png_jmpbuf(png_ptr) ((png_ptr)->jmpbuf)
+#  define png_jmpbuf(png_ptr) ((png_ptr)->png_jmpbuf)
 #endif
 
 /* Check to see if a file is a PNG file using png_sig_cmp().  png_sig_cmp()
@@ -286,7 +286,6 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
          /* An array of colors to which the image should be quantized */
          png_color std_color_cube[MAX_SCREEN_COLORS];
 
-         /* Prior to libpng-1.4.2, this was png_set_dither(). */
          png_set_quantize(png_ptr, std_color_cube, MAX_SCREEN_COLORS,
             MAX_SCREEN_COLORS, NULL, 0);
       }
@@ -656,14 +655,18 @@ void write_png(char *file_name /* , ... other image information ... */)
 
    /* Optional significant bit (sBIT) chunk */
    png_color_8 sig_bit;
+
    /* If we are dealing with a grayscale image then */
    sig_bit.gray = true_bit_depth;
+
    /* Otherwise, if we are dealing with a color image then */
    sig_bit.red = true_red_bit_depth;
    sig_bit.green = true_green_bit_depth;
    sig_bit.blue = true_blue_bit_depth;
+
    /* If the image has an alpha channel then */
    sig_bit.alpha = true_alpha_bit_depth;
+
    png_set_sBIT(png_ptr, info_ptr, &sig_bit);
 
 
@@ -676,20 +679,21 @@ void write_png(char *file_name /* , ... other image information ... */)
    text_ptr[0].key = "Title";
    text_ptr[0].text = "Mona Lisa";
    text_ptr[0].compression = PNG_TEXT_COMPRESSION_NONE;
+   text_ptr[0].itxt_length = 0;
+   text_ptr[0].lang = NULL;
+   text_ptr[0].lang_key = NULL;
    text_ptr[1].key = "Author";
    text_ptr[1].text = "Leonardo DaVinci";
    text_ptr[1].compression = PNG_TEXT_COMPRESSION_NONE;
+   text_ptr[1].itxt_length = 0;
+   text_ptr[1].lang = NULL;
+   text_ptr[1].lang_key = NULL;
    text_ptr[2].key = "Description";
    text_ptr[2].text = "<long text>";
    text_ptr[2].compression = PNG_TEXT_COMPRESSION_zTXt;
-#ifdef PNG_iTXt_SUPPORTED
-   text_ptr[0].lang = NULL;
-   text_ptr[0].lang_key = NULL;
-   text_ptr[1].lang = NULL;
-   text_ptr[1].lang_key = NULL;
+   text_ptr[2].itxt_length = 0;
    text_ptr[2].lang = NULL;
    text_ptr[2].lang_key = NULL;
-#endif
    png_set_text(png_ptr, info_ptr, text_ptr, 3);
 
    /* Other optional chunks like cHRM, bKGD, tRNS, tIME, oFFs, pHYs */
@@ -754,6 +758,7 @@ void write_png(char *file_name /* , ... other image information ... */)
    /* Turn on interlace handling if you are not using png_write_image() */
    if (interlacing)
       number_passes = png_set_interlace_handling(png_ptr);
+
    else
       number_passes = 1;
 
