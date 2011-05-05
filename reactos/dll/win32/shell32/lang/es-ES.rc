@@ -774,6 +774,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detalles para el tipo de archivo '%s'"
 	IDS_FILE_DETAILSADV         "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
-	IDS_FILE_TYPES              "FileTypes"
-	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_FILE_TYPES              "Tipos de archivos"
+	IDS_COLUMN_EXTENSION        "Extensiones"
 END
