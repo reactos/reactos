@@ -14,7 +14,7 @@ Public interface:
 - FtfdQueryFontFile: 50%
     - implement QFF_DESCRIPTION, unimportant
 - FtfdQueryFontCaps: 100% done
-- FtfdQueryTrueTypeTable: unimplemented
+- FtfdQueryTrueTypeTable: 100% done
 - FtfdGetTrueTypeFile: unimplemented
 
 - FtfdQueryFontData: 10%, depends on FtfdLoadGlyph

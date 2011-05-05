@@ -46,10 +46,15 @@ FtfdCreateFontInstance(
     {
         /* Failure! */
         DbgPrint("Error creating face\n");
+        EngFreeMem(pfont);
         return NULL;
     }
 
+    pfont->ftface = ftface;
+
     pxo = FONTOBJ_pxoGetXform(pfo);
+
+    // divide into scaling and rotation / shearing
 
     fterror = FT_Set_Char_Size(ftface,
                                0,
@@ -66,7 +71,6 @@ FtfdCreateFontInstance(
     /* Set non-orthogonal transformation */
     // FT_Set_Transform
 
-    pfont->ftface = ftface;
 
     /* Set the pvProducer member of the fontobj */
     pfo->pvProducer = pfont;
