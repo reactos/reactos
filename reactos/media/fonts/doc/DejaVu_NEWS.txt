@@ -1,3 +1,85 @@
+Changes from 2.32 to 2.33
+
+* added Old Italic block to Sans (by MaEr) 
+* added U+051E, U+051F to Sans (by MaEr) 
+* added U+01BA, U+0372-U+0373, U+0376-U+0377, U+03CF, U+1D00-U+1D01,
+  U+1D03-U+1D07, U+1D0A-U+1D13, U+1D15, U+1D18-U+1D1C, U+1D20-U+1D2B,
+  U+1D2F, U+1D3D, U+1D5C-U+1D61, U+1D66-U+1D6B, U+1DB8, U+1E9C-U+1E9D,
+  U+1EFA-U+1EFB, U+2C60-U+2C61, U+2C63, U+A726-U+A73C, U+A73E-U+A73F,
+  U+A746-U+A747, U+A74A-U+A74B, U+A74E+U+A74F, U+A768-U+A769, U+A77B-U+A77C,
+  U+A780-U+A787, U+A790-U+A791, U+A7FA-U+A7FF to Serif (by Gee Fung Sit 薛至峰) 
+* added alternate forms to U+014A and U+01B7 in Serif (by Gee Fung Sit 薛至峰) 
+* typographical improvements to U+0166-U+0167, U+0197, U+01B5-U+01B6, U+01BB,
+  U+0222-U+0223, U+023D, U+0250-U+0252, U+026E, U+0274, U+028F, U+029F,
+  U+02A3-U+02A5, U+02AB, U+03FE-U+03FF, U+1D02, U+1D14, U+1D1D-U+1D1F, U+1D3B,
+  U+1D43-U+1D46, U+1D59, U+1D9B, U+2C71, U+2C73 in Serif (by Gee Fung Sit 薛至峰) 
+* fixed bugs #31762 and #34700 plus other small fixes (wrong direction,
+  duplicate points, etc.) for Sans and Serif (by Gee Fung Sit 薛至峰) 
+* added U+204B to Mono (by Gee Fung Sit 薛至峰) 
+* added U+26E2 to Sans (by Gee Fung Sit 薛至峰) 
+* added Playing Cards block (U+1F0A0-U+1F0DF) to Sans (by Gee Fung Sit 薛至峰) 
+* emoticons in Sans: replace U+2639-U+263B with better versions, add
+  U+1F601-U+1F610, U+1F612-U+1F614, U+1F616, U+1F618, U+1F61A, U+1F61C-U+1F61E,
+  U+1F620-U+1F624, U+1F625, U+1F628-U+1F62B, U+1F62D, U+1F630-U+1F633,
+  U+1F635-U+1F640 (by Ben Laenen and Denis Jacquerye) 
+* added U+A78E, U+A790-U+A791 to Sans and Mono (by Denis Jacquerye) 
+* added U+A7FA to Sans (by Denis Jacquerye) 
+* subscripts: added U+2095-U+209C to Sans, Serif and Mono, adjusted
+  U+1D49-U+1D4A in Sans and Mono (by Denis Jacquerye) 
+* added U+0243 to Mono (by Denis Jacquerye) 
+* adjusted U+0307 to match dot of i, replaced dotaccent U+02D9 with U+0307 in
+most dependencies in Sans (by Denis Jacquerye) 
+* adjusted anchors of f and added them to long s in Sans (by Denis Jacquerye) 
+* added anchors to precomposed dependencies of D and d (by Denis Jacquerye) 
+* added debug glyphs U+F002 and U+F003 which will show current point size (by
+  Ben Laenen) 
+* use correct version for Serbian italic be (by Eugeniy Meshcheryakov) 
+* added pictograms U+1F42D-U+1F42E, U+1F431, U+1F435 (by Denis Jacquerye) 
+* improved Hebrew in Sans (by Lior Halphon) 
+* improved Armenian in Sans, and added Armenian in Serif and Mono (by Rouben
+  Hakobian (Tarumian), Aleksey Chalabyan and Norayr Chilingarian) 
+* remove "locl" feature for Romanian for S/T/s/t with cedilla/comma accent (by
+  Ben Laenen) 
+* replace wrong "dflt" script tag in Mono with "DFLT" (by Ben Laenen)
+
+Changes from 2.31 to 2.32
+
+* added to Sans: Latin small letter p with stroke (U+1D7D), Latin capital
+  letter p with stroke through descender (U+A750), Latin small letter p with
+  stroke through descender (U+A751), Latin capital letter thorn with stroke
+  (U+A764), Latin small letter thorn with stroke (U+A765), Latin capital letter
+  thorn with stroke through descender (U+A766), Latin small letter thorn with
+  stroke through descender (U+A767), Latin capital letter q with stroke through
+  descender (U+A756), Latin small letter q with stroke through descender
+  (U+A757), Latin capital letter p with flourish (U+A752), Latin small letter p
+  with flourish (U+A753) (by Ben Laenen)
+* add new Indian rupee symbol (U+20B9) to Sans, Serif and Mono (although
+  standardization in Unicode not complete yet, UTC did assign this code point)
+  (by Ben Laenen)
+* Sans: adjusted U+0E3F, U+20AB, U+20AD-U+20AE, U+20B1, U+20B5, U+20B8 to have
+  them take up the same width as digits (by Gee Fung Sit 薛至峰)
+* added U+23E8 to Sans (by Thomas Henlich)
+* fixed numerous bugs (#22579, #28189, #28977, N'Ko in Windows, fixed U+FB4F,
+  anchors for U+0332-U+0333, made extensions in Misc. Technical connect, and
+  other small fixes) (by Gee Fung Sit 薛至峰)
+* added looptail g as stylistic variant to Serif (by Gee Fung Sit 薛至峰)
+* added the remaining precomposed characters in Latin Extended Additional in
+  Serif (by Gee Fung Sit 薛至峰)
+* added Georgian Mkhedruli (U+10D0-U+10FC) to Sans ExtraLight (by Besarion
+  Gugushvili)
+* fix spacing in hinting of U+042E (Ю) in Mono (by Ben Laenen)
+* replaced U+2650 and minor changes to U+2640-U+2642, U+2699, U+26A2-U+26A5,
+  U+26B2-U+26B5, U+26B8 in Sans (by Gee Fung Sit 薛至峰)
+* added U+1E9C-U+1E9D, U+1EFA-U+1EFB, U+2028-U+2029, U+20B8, U+2150-U+2152,
+  U+2189, U+26C0-U+26C3, U+A722-U+A725, U+1F030-U+1F093 to Sans (by Gee Fung
+  Sit 薛至峰)
+* added U+1E9C-U+1E9E, U+1EFA-U+1EFB, U+2028-U+2029, U+20B8, U+2181-U+2182,
+  U+2185 U+A722-U+A725, to Sans ExtraLight (by Gee Fung Sit 薛至峰)
+* added U+20B8, U+22A2-U+22A5, U+A722-U+A725 to Mono (by Gee Fung Sit 薛至峰)
+* added U+02CD, U+01BF, U+01F7, U+0222-U+0223, U+0243-U+0244, U+0246-U+024F,
+  U+2150-U+2152, U+2189, U+239B-U+23AD and U+A73D to Serif (by Gee Fung Sit
+  薛至峰)
+
 Changes from 2.30 to 2.31
 
 * fixed bug where Serif Condensed Italic wouldn't get proper subfamily tags (by
@@ -1230,4 +1312,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 2378 2010-05-27 08:11:33Z ben_laenen $
+$Id: NEWS 2471 2011-02-27 14:25:15Z ben_laenen $
