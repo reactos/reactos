@@ -10,6 +10,10 @@
 #include "ftfd.h"
 #include <freetype/t1tables.h>
 
+// FIXME: we can have unaligned memory access, use:
+#define GETW(px) = (((PUCHAR)px)[1] | ((PUCHAR)px)[0] << 8)
+#define GETD(px) = (GETW((PUCHAR)px + 2) | GETW(px) << 16)
+
 #define SWAPW(x) _byteswap_ushort(x)
 #define SWAPD(x) _byteswap_ulong(x)
 
@@ -51,7 +55,7 @@ typedef struct _OTF_OS2_DATA
     SHORT 	ySuperscriptYOffset;
     SHORT 	yStrikeoutSize;
     SHORT 	yStrikeoutPosition;
-    union
+    union // 0x30
     {
         struct
         {
@@ -83,6 +87,19 @@ typedef struct _OTF_OS2_DATA
     USHORT 	usMaxContext;
 } OTF_OS2_DATA, *POTF_OS2_DATA;
 #include <poppack.h>
+
+ULONG
+CalcTableChecksum(PVOID pvTable, ULONG cjTable)
+{
+    PULONG pul = pvTable, pulEnd;
+    ULONG ulCheckSum = 0L;
+
+    pulEnd = (PULONG)pvTable + (cjTable + 3) / sizeof(ULONG);
+
+    while (pul < pulEnd) ulCheckSum += SWAPD(*pul++);
+
+    return ulCheckSum;
+}
 
 BOOL
 OtfGetType1FontInfo(
@@ -118,7 +135,17 @@ OtfGetType1FontInfo(
     return TRUE;
 }
 
+/*! \name OtfFindTable
+ *  \brief Searches for a specific table in TrueType and OpenType font files
+ *  \param pvView - The address where the font file is mapped
+ *  \param vjView - Size of the mapped font file
+ *  \param ulTag - Identifier tag of the table to search
+ *  \param pulLength - Pointer to an ULONG that recieves the table length,
+ *                     Can be NULL;
+ *  \return Pointer to the table if successful, NULL if unsuccessful.
+ */
 PVOID
+NTAPI
 OtfFindTable(
     PVOID pvView,
     ULONG cjView,
@@ -126,7 +153,7 @@ OtfFindTable(
     PULONG pulLength)
 {
     POTF_FILE_HEADER pFileHeader = pvView;
-    ULONG i, ulOffset, ulLength, ulNumTables;
+    ULONG i, ulOffset, ulLength, ulNumTables, ulCheckSum;
 
     /* Verify the file header */
     if (pFileHeader->ulIdentifier != 'OTTO' &&
@@ -165,6 +192,13 @@ OtfFindTable(
                 return NULL;
             }
 
+            ulCheckSum = CalcTableChecksum((PUCHAR)pvView + ulOffset, ulLength);
+            if (ulCheckSum != SWAPD(pFileHeader->aTableEntries[i].ulCheckSum))
+            {
+                DbgPrint("Checksum mitmatch! %ld, %ld \n", ulOffset, ulLength);
+                return NULL;
+            }
+
             if (pulLength) *pulLength = ulLength;
             return (PUCHAR)pvView + ulOffset;
         }
@@ -174,15 +208,18 @@ OtfFindTable(
     return NULL;
 }
 
+/*! \name OtfGetWinFamily
+ *  \brief Translates IBM font class IDs into a Windows family bitfield
+ *  \param jClassId
+ *  \param jSubclassId
+ *  \ref http://www.microsoft.com/typography/otspec/ibmfc.htm
+ */
 BYTE
 OtfGetWinFamily(BYTE jClassId, BYTE jSubclassId)
 {
-    BYTE jFamily = 0;
-
     switch (jClassId)
     {
         case 0: // Class ID = 0 No Classification
-            /* We rely on the already set value */
             break;
 
         case 1: // Class ID = 1 Oldstyle Serifs
@@ -197,37 +234,141 @@ OtfGetWinFamily(BYTE jClassId, BYTE jSubclassId)
                 case 6: // Subclass ID = 6 : Dutch Traditional
                 case 7: // Subclass ID = 7 : Contemporary
                 case 8: // Subclass ID = 8 : Calligraphic
-                    jFamily = FF_SCRIPT; break;
-
                 case 15: // Subclass ID = 15 : Miscellaneous
-
                 default: // Subclass ID = 9-14 : (reserved for future use)
                     break;
             }
+
         case 2: // Class ID = 2 Transitional Serifs
+            switch (jSubclassId)
+            {
+                case 15: return FF_ROMAN; // 15: Miscellaneous
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Direct Line
+                case 2: // Subclass ID = 2 : Script
+                default: // Subclass ID = 3-14 : (reserved for future use)
+                    break;
+            }
+
         case 3: // Class ID = 3 Modern Serifs
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Italian
+                case 2: // Subclass ID = 2 : Script
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 3-14 : (reserved for future use)
+                    break;
+            }
+
         case 4: // Class ID = 4 Clarendon Serifs
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Clarendon
+                case 2: // Subclass ID = 2 : Modern
+                case 3: // Subclass ID = 3 : Traditional
+                case 4: // Subclass ID = 4 : Newspaper
+                case 5: // Subclass ID = 5 : Stub Serif
+                case 6: // Subclass ID = 6 : Monotone
+                case 7: // Subclass ID = 7 : Typewriter
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 8-14: (reserved for future use)
+                    break;
+            }
+
         case 5: // Class ID = 5 Slab Serifs
-        case 6: // Class ID = 6 (reserved for future use)
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Monotone
+                case 2: // Subclass ID = 2 : Humanist
+                case 3: // Subclass ID = 3 : Geometric
+                case 4: // Subclass ID = 4 : Swiss
+                case 5: // Subclass ID = 5 : Typewriter
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 6-14 : (reserved for future use)
+                    break;
+            }
+
         case 7: // Class ID = 7 Freeform Serifs
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Modern
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 2-14 : (reserved for future use)
+                    break;
+            }
+
         case 8: // Class ID = 8 Sans Serif
             switch (jSubclassId)
             {
-                case 15: // Subclass ID = 15 : Miscellaneous
-                    jFamily = FF_SWISS | FF_ROMAN; break;
-                default:
+                case 0: return FF_SWISS; // 0: No Classification
+                case 5: return FF_SWISS; // 5: Neo-grotesque Gothic
+                case 15: return FF_SWISS|FF_ROMAN; // 15: Miscellaneous
+
+                case 1: // Subclass ID = 1 : IBM Neo-grotesque Gothic
+                case 2: // Subclass ID = 2 : Humanist
+                case 3: // Subclass ID = 3 : Low-x Round Geometric
+                case 4: // Subclass ID = 4 : High-x Round Geometric
+                case 6: // Subclass ID = 6 : Modified Neo-grotesque Gothic
+                case 9: // Subclass ID = 9 : Typewriter Gothic
+                case 10: // Subclass ID = 10 : Matrix
+                default: // Subclass ID = 7-8, 11-14 : (reserved for future use)
                     break;
             }
+
         case 9: // Class ID = 9 Ornamentals
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Engraver
+                case 2: // Subclass ID = 2 : Black Letter
+                case 3: // Subclass ID = 3 : Decorative
+                case 4: // Subclass ID = 4 : Three Dimensional
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 5-14 : (reserved for future use)
+                    break;
+            }
+
         case 10: // Class ID = 10 Scripts
-        case 11: // Class ID = 11 (reserved for future use)
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 1: // Subclass ID = 1 : Uncial
+                case 2: // Subclass ID = 2 : Brush Joined
+                case 3: // Subclass ID = 3 : Formal Joined
+                case 4: // Subclass ID = 4 : Monotone Joined
+                case 5: // Subclass ID = 5 : Calligraphic
+                case 6: // Subclass ID = 6 : Brush Unjoined
+                case 7: // Subclass ID = 7 : Formal Unjoined
+                case 8: // Subclass ID = 8 : Monotone Unjoined
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 9-14 : (reserved for future use)
+                    break;
+            }
+
         case 12: // Class ID = 12 Symbolic
+            switch (jSubclassId)
+            {
+                case 0: // Subclass ID = 0 : No Classification
+                case 3: // Subclass ID = 3 : Mixed Serif
+                case 6: // Subclass ID = 6 : Oldstyle Serif
+                case 7: // Subclass ID = 7 : Neo-grotesque Sans Serif
+                case 15: // Subclass ID = 15 : Miscellaneous
+                default: // Subclass ID = 1-2,4-5,8-14  : (reserved for future use)
+                    break;
+            }
+
         case 13: // Class ID = 13 Reserved
         case 14: // Class ID = 14 Reserved
+        default: // Class ID = 6,11 (reserved for future use)
             break;
     }
+
 __debugbreak();
-    return jFamily;
+    return 0;
 }
 
 VOID
@@ -259,11 +400,8 @@ OtfGetIfiMetrics(
     pifi->jWinPitchAndFamily &= 3;
     pifi->jWinPitchAndFamily |= OtfGetWinFamily(pOs2->jClassId, pOs2->jSubClassId);
     pifi->usWinWeight = SWAPW(pOs2->usWeightClass);
-    //pifi->flInfo;
     pifi->fsSelection = SWAPW(pOs2->fsSelection);
     pifi->fsType = SWAPW(pOs2->fsType);
-    //pifi->fwdUnitsPerEm;
-    //pifi->fwdLowestPPEm;
     pifi->fwdWinAscender = SWAPW(pOs2->usWinAscent);
     pifi->fwdWinDescender = SWAPW(pOs2->usWinDescent);
     //pifi->fwdMacAscender;
@@ -273,7 +411,6 @@ OtfGetIfiMetrics(
     pifi->fwdTypoDescender = SWAPW(pOs2->sTypoDescender);
     pifi->fwdTypoLineGap = SWAPW(pOs2->sTypoLineGap);
     pifi->fwdAveCharWidth = SWAPW(pOs2->xAvgCharWidth);
-    //pifi->fwdMaxCharInc;
     pifi->fwdCapHeight = SWAPW(pOs2->sCapHeight);
     pifi->fwdXHeight = SWAPW(pOs2->sxHeight);
     pifi->fwdSubscriptXSize = SWAPW(pOs2->ySubscriptXSize);
@@ -292,17 +429,12 @@ OtfGetIfiMetrics(
     pifi->wcLastChar = SWAPW(pOs2->usLastCharIndex);
     pifi->wcDefaultChar = SWAPW(pOs2->usDefaultChar);
     pifi->wcBreakChar = SWAPW(pOs2->usBreakChar);
-    //pifi->chFirstChar = (CHAR)pifi->wcFirstChar; // FIXME: convert
-    //pifi->chLastChar = (CHAR)pifi->wcLastChar;
-    pifi->chDefaultChar = (CHAR)pifi->wcDefaultChar;
-    pifi->chBreakChar = (CHAR)pifi->wcBreakChar;
-    //pifi->ptlBaseline;
-    //pifi->ptlAspect;
-    //pifi->ptlCaret;
-    //pifi->rclFontBox;
     *(DWORD*)pifi->achVendId = *(DWORD*)pOs2->achVendID;
-    //pifi->cKerningPairs;
     //pifi->ulPanoseCulture;
     pifi->panose = *(PANOSE*)pOs2->panose;
+
+    /* Convert the special characters from unicode to ansi */
+    EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 3);
+
 }
 

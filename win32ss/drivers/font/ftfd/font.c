@@ -230,8 +230,9 @@ FtfdInitIfiMetrics(
                            pifi->achVendId,
                            4);
 
+
     DbgPrint("Finished with the ifi: %p\n", pifi);
-    __debugbreak();
+    //__debugbreak();
 
     return TRUE;
 }
@@ -244,17 +245,19 @@ FtfdInitGlyphSet(
     FT_Face ftface = pface->ftface;
     FD_GLYPHSET *pGlyphSet;
     FT_UInt index;
-    ULONG i, j, cjSize;
+    ULONG i, cRuns, cjSize;
     HGLYPH * phglyphs;
     WCHAR wcCurrent, wcPrev;
 
     DbgPrint("FtfdInitGlyphSet()\n");
 
-    /* Calculate FD_GLYPHSET size */
-    cjSize = sizeof(FD_GLYPHSET) + (pface->cRuns - 1) * sizeof(WCRUN);
+    /* Calculate FD_GLYPHSET size (incl. HGLYPH array!) */
+    cjSize = FIELD_OFFSET(FD_GLYPHSET, awcrun)
+             + pface->cRuns * sizeof(WCRUN)
+             + pface->cMappings * sizeof(HGLYPH);
 
     /* Allocate the FD_GLYPHSET structure plus an array of HGLYPHs */
-    pGlyphSet = EngAllocMem(0, cjSize + pface->cMappings * sizeof(HGLYPH), TAG_GLYPHSET);
+    pGlyphSet = EngAllocMem(0, cjSize, TAG_GLYPHSET);
     if (!pGlyphSet)
     {
         DbgPrint("EngAllocMem() failed.\n");
@@ -272,7 +275,7 @@ FtfdInitGlyphSet(
 
     /* Loop through all character mappings */
     wcPrev = wcCurrent = (WCHAR)FT_Get_First_Char(ftface, &index);
-    for (i = 0, j = 0; i < pface->cMappings && index; i++)
+    for (i = 0, cRuns = 0; i < pface->cMappings && index; i++)
     {
         /* Use index as glyph handle */
         phglyphs[i] = (HGLYPH)index;
@@ -281,16 +284,16 @@ FtfdInitGlyphSet(
         if (wcCurrent == wcPrev + 1)
         {
             /* Append to current WCRUN */
-            pGlyphSet->awcrun[j].cGlyphs++;
+            pGlyphSet->awcrun[cRuns - 1].cGlyphs++;
         }
         else
         {
             /* Add a new WCRUN */
-            pGlyphSet->awcrun[j].wcLow = wcCurrent;
-            pGlyphSet->awcrun[j].cGlyphs = 1;
-            pGlyphSet->awcrun[j].phg = &phglyphs[i];
-            j++;
-            //DbgPrint("adding new run i=%ld, j=%ld, wc=%x\n", i, j, wcCurrent);
+            cRuns++;
+            pGlyphSet->awcrun[cRuns - 1].wcLow = wcCurrent;
+            pGlyphSet->awcrun[cRuns - 1].cGlyphs = 1;
+            pGlyphSet->awcrun[cRuns - 1].phg = &phglyphs[i];
+            //DbgPrint("adding new run i=%ld, cRuns=%ld, wc=%x\n", i, cRuns, wcCurrent);
         }
 
         /* Get the next charcode and index */
@@ -693,8 +696,61 @@ FtfdQueryTrueTypeTable(
     PBYTE *ppjTable,
     ULONG *pcjTable)
 {
+    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
+    PBYTE pjTable, pjData;
+    ULONG cjTable;
+
     DbgPrint("FtfdQueryTrueTypeTable\n");
     __debugbreak();
+
+    /* Check if this file supports TrueType tables */
+    if (pfile->ulFileFormat != FILEFMT_TTF &&
+        pfile->ulFileFormat != FILEFMT_OTF)
+    {
+        DbgPrint("File format doesn't support true type tables\n");
+        return FD_ERROR;
+    }
+
+    /* Check if the whole file is requested */
+    if (ulTag == 0)
+    {
+        /* Requested the whole file */
+        pjTable = pfile->pvView;
+        cjTable = pfile->cjView;
+    }
+    else
+    {
+        /* Search for the table */
+        pjTable = OtfFindTable(pfile->pvView, pfile->cjView, ulTag, &cjTable);
+        if (!pjTable)
+        {
+            DbgPrint("Couldn't find the requested table\n");
+            return FD_ERROR;
+        }
+    }
+
+    // FIXME: handle ulFont
+
+    /* Check for overflow and if the offset and size fit into the view */
+    pjData = pjTable + dpStart;
+    if ( (pjData < pjTable) || (pjData + cjBuf < pjData) ||
+         (pjData + cjBuf > (PBYTE)pfile->pvView + pfile->cjView) )
+    {
+        DbgPrint("Overflow: dpStart=0x%lx, cjBuf=0x%lx\n", dpStart, cjBuf);
+        return FD_ERROR;
+    }
+
+    /* Check if we shall copy data */
+    if (pjBuf)
+    {
+        /* Copy the data to the buffer */
+        RtlCopyMemory(pjBuf, pjTable + dpStart, cjBuf);
+    }
+
+    /* Return requested pointers */
+    if (ppjTable) *ppjTable = pjTable;
+    if (pcjTable) *pcjTable = cjTable;
+
     return FD_ERROR;
 }
 

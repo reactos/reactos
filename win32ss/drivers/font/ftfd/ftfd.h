@@ -266,4 +266,12 @@ OtfGetIfiMetrics(
     PFTFD_FACE pface,
     PIFIMETRICS pifi);
 
+PVOID
+NTAPI
+OtfFindTable(
+    PVOID pvView,
+    ULONG cjView,
+    ULONG ulTag,
+    PULONG pulLength);
+
 #endif /* _FTFD_PCH_ */
