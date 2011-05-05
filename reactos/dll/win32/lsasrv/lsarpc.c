@@ -392,7 +392,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyModificationInformation:
         case PolicyAuditFullSetInformation:
         case PolicyAuditFullQueryInformation:
-        case PolicyEfsInformation:
+        case PolicyDnsDomainInformationInt:
         {
             FIXME("category not implemented\n");
             return STATUS_UNSUCCESSFUL;
