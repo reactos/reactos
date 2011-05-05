@@ -3,7 +3,11 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
-#define __specstrings
+#define SPECSTRINGS_H
+
+#ifdef  __cplusplus
+extern "C" {
+#endif 
 
 #ifdef __cplusplus
 #ifndef __nothrow
@@ -86,7 +90,9 @@
 #define __in_bcount_z_opt(size)
 #define __in_ecount_nz_opt(size)
 #define __in_bcount_nz_opt(size)
+#ifndef __cplusplus
 #define __out
+#endif
 #define __out_ecount(size)
 #define __out_z
 #define __out_nz
@@ -274,5 +280,7 @@
 #define __analysis_assume(expr)
 #endif
 
-//#endif
+#ifdef  __cplusplus
+}
+#endif
 

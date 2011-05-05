@@ -370,9 +370,9 @@ getnameinfo(
   IN const SOCKADDR *pSockaddr,
   IN socklen_t SockaddrLength,
   OUT PCHAR pNodeBuffer OPTIONAL,
-  IN DWORD NodeBufferSize,
+  IN socklen_t NodeBufferSize,
   OUT PCHAR pServiceBuffer,
-  IN DWORD ServiceBufferSize,
+  IN socklen_t ServiceBufferSize,
   IN INT Flags);
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2) || (_WIN32_WINNT >= 0x0502)

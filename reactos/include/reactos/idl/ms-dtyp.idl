@@ -99,7 +99,7 @@ cpp_quote("#ifndef _WINNT_H")
 typedef void *HANDLE;
 typedef void /*VOID,*/ *PVOID;
 cpp_quote("#endif")
-cpp_quote("#ifndef __WINE_RPCDCE_H")
+cpp_quote("#ifndef __RPCDCE_H__")
 typedef void *RPC_BINDING_HANDLE;
 cpp_quote("#endif")
 typedef [context_handle] void *PCONTEXT_HANDLE, *PPCONTEXT_HANDLE;
