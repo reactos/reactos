@@ -19,6 +19,7 @@
  */
 
 #include <windows.h>
+#define SECURITY_WIN32
 #include <secext.h>
 #include <rpcdce.h>
 #include "wine/test.h"

@@ -27,6 +27,7 @@
 #include <msidefs.h>
 #include <msi.h>
 #include <sddl.h>
+#define SECURITY_WIN32
 #include <secext.h>
 
 #include "wine/test.h"

@@ -34,16 +34,12 @@
 
 /* Helper macros to find the size of SECPKG_FUNCTION_TABLE */
 #define SECPKG_FUNCTION_TABLE_SIZE_1 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    SetContextAttributes)
+    SetExtendedInformation)
 #define SECPKG_FUNCTION_TABLE_SIZE_2 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    SetCredentialsAttributes)
+    SetContextAttributes)
 #define SECPKG_FUNCTION_TABLE_SIZE_3 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    ChangeAccountPassword)
-#define SECPKG_FUNCTION_TABLE_SIZE_4 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    QueryMetaData)
-#define SECPKG_FUNCTION_TABLE_SIZE_5 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    ValidateTargetInfo)
-#define SECPKG_FUNCTION_TABLE_SIZE_6 sizeof(SECPKG_FUNCTION_TABLE)
+    SetCredentialsAttributes)
+#define SECPKG_FUNCTION_TABLE_SIZE_4 sizeof(SECPKG_FUNCTION_TABLE)
 
 static NTSTATUS (NTAPI *pSpLsaModeInitialize)(ULONG, PULONG,
     PSECPKG_FUNCTION_TABLE*, PULONG);
@@ -137,10 +133,6 @@ static PSECPKG_FUNCTION_TABLE getNextSecPkgTable(PSECPKG_FUNCTION_TABLE pTable,
         size = SECPKG_FUNCTION_TABLE_SIZE_3;
     else if (Version == SECPKG_INTERFACE_VERSION_4)
         size = SECPKG_FUNCTION_TABLE_SIZE_4;
-    else if (Version == SECPKG_INTERFACE_VERSION_5)
-        size = SECPKG_FUNCTION_TABLE_SIZE_5;
-    else if (Version == SECPKG_INTERFACE_VERSION_6)
-        size = SECPKG_FUNCTION_TABLE_SIZE_6;
     else {
         ok(FALSE, "Unknown package version 0x%x\n", Version);
         return NULL;
