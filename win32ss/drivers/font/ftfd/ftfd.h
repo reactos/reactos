@@ -107,6 +107,7 @@ typedef struct
     FT_Face ftface;
     FD_XFORM fdxQuantized;
     FTFD_DEVICEMETRICS metrics;
+    ULONG xScale;
     HGLYPH hgSelected;
     ULONG cjSelected;
 } FTFD_FONT, *PFTFD_FONT;

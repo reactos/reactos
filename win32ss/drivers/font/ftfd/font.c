@@ -725,7 +725,7 @@ FtfdQueryTrueTypeTable(
         pjTable = OtfFindTable(pfile->pvView, pfile->cjView, ulTag, &cjTable);
         if (!pjTable)
         {
-            DbgPrint("Couldn't find the requested table\n");
+            DbgPrint("Couldn't find table '%.4s'\n", (char*)&ulTag);
             return FD_ERROR;
         }
     }
