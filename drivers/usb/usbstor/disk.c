@@ -18,12 +18,70 @@ USBSTOR_HandleExecuteSCSI(
     IN OUT PSCSI_REQUEST_BLOCK Request,
     IN PPDO_DEVICE_EXTENSION PDODeviceExtension)
 {
-    DPRINT1("USBSTOR_HandleExecuteSCSI\n");
+    PCDB pCDB;
+    NTSTATUS Status;
 
-    DbgBreakPoint();
+    //
+    // get SCSI command data block
+    //
+    pCDB = (PCDB)Request->Cdb;
 
-    Request->SrbStatus = SRB_STATUS_ERROR;
-    return STATUS_NOT_SUPPORTED;
+    DPRINT1("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
+
+    if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
+    {
+        //
+        // sanity checks
+        //
+        ASSERT(Request->DataBuffer);
+
+        if (Request->DataTransferLength == sizeof(READ_CAPACITY_DATA_EX))
+        {
+            //
+            // retrieve capacity extended structure
+            //
+            Status = USBSTOR_SendCapacityCmd(DeviceObject, (PREAD_CAPACITY_DATA_EX)Request->DataBuffer, NULL);
+        }
+        else
+        {
+            //
+            // sanity check
+            //
+            ASSERT(Request->DataTransferLength == sizeof(READ_CAPACITY_DATA));
+
+            //
+            // retrieve capacity
+            //
+            Status = USBSTOR_SendCapacityCmd(DeviceObject, NULL, (PREAD_CAPACITY_DATA)Request->DataBuffer);
+        }
+        DPRINT1("USBSTOR_SendCapacityCmd %x\n", Status);
+
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // store returned info length
+            //
+            Irp->IoStatus.Information = Request->DataTransferLength;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+        else
+        {
+            //
+            // failed to retrieve capacity
+            //
+            Irp->IoStatus.Information = 0;
+            Request->SrbStatus = SRB_STATUS_ERROR;
+        }
+    }
+    else
+    {
+        UNIMPLEMENTED;
+        Request->SrbStatus = SRB_STATUS_ERROR;
+        Status = STATUS_NOT_SUPPORTED;
+        DbgBreakPoint();
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -63,7 +121,7 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT1("SRB_FUNCTION_EXECUTE_SCSI\n");
             Status = USBSTOR_HandleExecuteSCSI(DeviceObject, Irp, Request, PDODeviceExtension);
-
+            break;
         }
         case SRB_FUNCTION_RELEASE_DEVICE:
         {
@@ -411,14 +469,13 @@ USBSTOR_HandleQueryProperty(
     }
 }
 
-
-
 NTSTATUS
 USBSTOR_HandleDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
 
     //
     // get current stack location
@@ -430,17 +487,48 @@ USBSTOR_HandleDeviceControl(
         //
         // query property
         //
-        return USBSTOR_HandleQueryProperty(DeviceObject, Irp);
+        Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_ADDRESS)
+    {
+        //
+        // query get scsi address
+        //
+        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_GET_ADDRESS NOT implemented\n");
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_PASS_THROUGH)
+    {
+        //
+        // query scsi pass through
+        //
+        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT)
+    {
+        //
+        // query scsi pass through direct
+        //
+        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER)
+    {
+        //
+        // query serial number
+        //
+        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else
+    {
+        //
+        // unsupported
+        //
+        DPRINT("USBSTOR_HandleDeviceControl IoControl %x not supported\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+        Status = STATUS_NOT_SUPPORTED;
     }
 
-    DPRINT1("USBSTOR_HandleDeviceControl IoControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
-    DPRINT1("USBSTOR_HandleDeviceControl InputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.InputBufferLength);
-    DPRINT1("USBSTOR_HandleDeviceControl OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
-    DPRINT1("USBSTOR_HandleDeviceControl InputBuffer %x\n", IoStack->Parameters.DeviceIoControl.Type3InputBuffer);
-    DPRINT1("USBSTOR_HandleDeviceControl SystemBuffer %x\n", Irp->AssociatedIrp.SystemBuffer);
-    DPRINT1("USBSTOR_HandleDeviceControl UserBuffer %x\n", Irp->UserBuffer);
-    DPRINT1("USBSTOR_HandleDeviceControl MdlAddress %x\n", Irp->MdlAddress);
-
-
-    return STATUS_NOT_SUPPORTED;
+    return Status;
 }

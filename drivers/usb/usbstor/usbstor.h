@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <wdmguid.h>
 #include <classpnp.h>
+#include <scsi.h>
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
@@ -101,7 +102,6 @@ typedef struct
 
 C_ASSERT(sizeof(UFI_INQUIRY_CMD) == 12);
 
-#define UFI_INQURIY_CODE 0x12
 #define UFI_INQUIRY_CMD_LEN 0x6
 
 //
@@ -121,6 +121,34 @@ typedef struct
 }UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
 
 C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
+// UFI read capacity cmd
+//
+typedef struct
+{
+    UCHAR Code;                                                      // operation code 0x25
+    UCHAR LUN;                                                       // lun address
+    UCHAR LBA[4];                                                   // logical block address, should be zero
+    UCHAR Reserved1[2];                                              // reserved 0x00
+    UCHAR PMI;                                                       // PMI = 0x00
+    UCHAR Reserved2[3];                                              // reserved 0x00
+}UFI_CAPACITY_CMD, *PUFI_CAPACITY_CMD;
+
+C_ASSERT(sizeof(UFI_CAPACITY_CMD) == 12);
+
+#define UFI_CAPACITY_CMD_LEN 0xA //FIXME support length 16 too if requested
+
+//
+// UFI Read Capcacity command response
+//
+typedef struct
+{
+    ULONG LastLogicalBlockAddress;                                   // last logical block address
+    ULONG BlockLength;                                               // block length in bytes
+}UFI_CAPACITY_RESPONSE, *PUFI_CAPACITY_RESPONSE;
+
 
 //---------------------------------------------------------------------
 //
@@ -214,6 +242,11 @@ NTSTATUS
 USBSTOR_SendInquiryCmd(
     IN PDEVICE_OBJECT DeviceObject);
 
+NTSTATUS
+USBSTOR_SendCapacityCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PREAD_CAPACITY_DATA_EX CapacityDataEx,
+    OUT PREAD_CAPACITY_DATA CapacityData);
 
 //---------------------------------------------------------------------
 //

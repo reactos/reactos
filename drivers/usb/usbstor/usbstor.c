@@ -141,9 +141,16 @@ USBSTOR_DispatchDeviceControl(
     //
     Status = USBSTOR_HandleDeviceControl(DeviceObject, Irp);
 
-    Irp->IoStatus.Information = 0;
+    //
+    // complete request
+    //
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    //
+    // done
+    //
+    return Status;
 }
 
 
@@ -160,7 +167,6 @@ USBSTOR_DispatchScsi(
     //
     Status = USBSTOR_HandleInternalDeviceControl(DeviceObject, Irp);
 
-    Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;

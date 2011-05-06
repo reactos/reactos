@@ -300,7 +300,6 @@ USBSTOR_SendInquiryCmd(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PCBW OutControl;
 
-
     //
     // get PDO device extension
     //
@@ -322,7 +321,7 @@ USBSTOR_SendInquiryCmd(
     // initialize inquiry cmd
     //
     RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
-    Cmd.Code = UFI_INQURIY_CODE;
+    Cmd.Code = SCSIOP_INQUIRY;
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
     Cmd.AllocationLength = sizeof(UFI_INQUIRY_RESPONSE);
 
@@ -404,3 +403,123 @@ USBSTOR_SendInquiryCmd(
     //
     return Status;
 }
+
+NTSTATUS
+USBSTOR_SendCapacityCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PREAD_CAPACITY_DATA_EX CapacityDataEx,
+    OUT PREAD_CAPACITY_DATA CapacityData)
+{
+    UFI_INQUIRY_CMD Cmd;
+    CSW CSW;
+    NTSTATUS Status;
+    PUFI_CAPACITY_RESPONSE Response;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PCBW OutControl;
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // allocate capacity response
+    //
+    Response = (PUFI_CAPACITY_RESPONSE)AllocateItem(NonPagedPool, sizeof(UFI_CAPACITY_RESPONSE));
+    if (!Response)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize inquiry cmd
+    //
+    RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
+    Cmd.Code = SCSIOP_INQUIRY;
+    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
+    Cmd.AllocationLength = sizeof(UFI_INQUIRY_RESPONSE);
+
+    //
+    // now send inquiry cmd
+    //
+    Status = USBSTOR_SendCBW(DeviceObject, UFI_CAPACITY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_CAPACITY_RESPONSE), &OutControl);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendCapacityCmd> USBSTOR_SendCBW failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // now send inquiry response
+    //
+    Status = USBSTOR_SendData(DeviceObject, sizeof(UFI_CAPACITY_RESPONSE), Response);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendCapacityCmd> USBSTOR_SendData failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    DPRINT1("LastLogicalBlockAddress %lu\n", Response->LastLogicalBlockAddress);
+    DPRINT1("BlockLength %lu\n", Response->BlockLength);
+    DPRINT1("Medium Length %lu\n", Response->BlockLength * Response->LastLogicalBlockAddress);
+
+    //
+    // store response
+    //
+    if (CapacityDataEx)
+    {
+        CapacityDataEx->LogicalBlockAddress.QuadPart = Response->LastLogicalBlockAddress;
+        CapacityDataEx->BytesPerBlock = Response->BlockLength;
+    }
+    else
+    {
+        CapacityData->LogicalBlockAddress = Response->LastLogicalBlockAddress;
+        CapacityData->BytesPerBlock = Response->BlockLength;
+    }
+
+    //
+    // send csw
+    //
+    Status = USBSTOR_SendCSW(DeviceObject, OutControl, 512, &CSW);
+
+    DPRINT1("------------------------\n");
+    DPRINT1("CSW %p\n", &CSW);
+    DPRINT1("Signature %x\n", CSW.Signature);
+    DPRINT1("Tag %x\n", CSW.Tag);
+    DPRINT1("DataResidue %x\n", CSW.DataResidue);
+    DPRINT1("Status %x\n", CSW.Status);
+
+    //
+    // FIXME: handle error
+    //
+    ASSERT(CSW.Status == 0);
+
+    //
+    // free item
+    //
+    FreeItem(OutControl);
+
+    //
+    // free response
+    //
+    FreeItem(Response);
+
+    //
+    // done
+    //
+    return Status;
+}
+
