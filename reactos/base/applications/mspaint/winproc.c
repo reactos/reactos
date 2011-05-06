@@ -447,11 +447,11 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else if (hwnd == hwndMiniature)
             {
-                long mclient[4];
+                RECT mclient;
                 HDC hdc;
-                GetClientRect(hwndMiniature, (LPRECT) &mclient);
+                GetClientRect(hwndMiniature, &mclient);
                 hdc = GetDC(hwndMiniature);
-                BitBlt(hdc, 0, 0, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+                StretchBlt(hdc, 0, 0, mclient.right, mclient.bottom, hDrawingDC, 0, 0, imgXRes, imgYRes, SRCCOPY);
                 ReleaseDC(hwndMiniature, hdc);
             }
             break;
