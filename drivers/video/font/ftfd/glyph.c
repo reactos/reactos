@@ -11,8 +11,11 @@
 
 #define FLOATL_1 0x3f800000
 
+#define BITMAP_SIZE(cx, cy, bpp) \
+    ((((((cx * bpp) + 7) >> 3) * cy) + 3) & ~3)
+
 #define GLYPHBITS_SIZE(cx, cy, bpp) \
-    (FIELD_OFFSET(GLYPHBITS, aj) + ((((cx * bpp) + 31) >> 5) * cy * 4))
+    (FIELD_OFFSET(GLYPHBITS, aj) + BITMAP_SIZE(cx, cy, bpp))
 
 PFTFD_FONT
 NTAPI
@@ -62,6 +65,7 @@ FtfdCreateFontInstance(
 
     pfont->ftface = ftface;
 
+    /* Get the XFORMOBJ from the font */
     pxo = FONTOBJ_pxoGetXform(pfo);
     if (!pxo)
     {
@@ -83,7 +87,7 @@ FtfdCreateFontInstance(
         __debugbreak();
         // FIXME: need to calculate scaling
 
-        /* initialize a matrix */
+        /* Initialize a matrix */
         ftmatrix.xx = 0x10000 * pface->ifiex.ifi.fwdUnitsPerEm * 72 /
                           pfo->sizLogResPpi.cx;
         ftmatrix.xy = 0x00000000;
@@ -163,7 +167,7 @@ FtfdCreateFontInstance(
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
     if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
 
-DbgPrint("Created font with %ld (%ld)\n", yScale, yScale/64);
+DbgPrint("Created font with %ld (%ld)\n", yScale, (yScale+32)/64);
 //__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
@@ -197,7 +201,6 @@ FtfdQueryMaxExtents(
     PFTFD_FONT pfont = FtfdGetFontInstance(pfo);
     PFTFD_FACE pface = pfont->pface;
     FT_Face ftface = pfont->ftface;
-    ULONG cjMaxWidth, cjMaxBitmapSize;
     XFORMOBJ *pxo;
 
     DbgPrint("FtfdQueryMaxExtents\n");
@@ -232,7 +235,7 @@ FtfdQueryMaxExtents(
         else
             pfddm->lD = 0;
 
-        /* Copy the values from the font structure */
+        /* Copy some values from the font structure */
         pfddm->fxMaxAscender = pfont->metrics.ptfxMaxAscender.y;
         pfddm->fxMaxDescender = pfont->metrics.ptfxMaxDescender.y;
         pfddm->ptlUnderline1 = pfont->metrics.ptlUnderline1;
@@ -242,14 +245,8 @@ FtfdQueryMaxExtents(
         pfddm->cxMax = pfont->metrics.sizlMax.cx;
         pfddm->cyMax = pfont->metrics.sizlMax.cy;
 
-        /* Calculate Width in bytes */
-        cjMaxWidth = ((pfddm->cxMax + 7) >> 3);
-
-        /* Calculate size of the bitmap, rounded to DWORDs */
-        cjMaxBitmapSize = ((cjMaxWidth * pfddm->cyMax) + 3) & ~3;
-
         /* cjGlyphMax is the full size of the GLYPHBITS structure */
-        pfddm->cjGlyphMax = FIELD_OFFSET(GLYPHBITS, aj) + cjMaxBitmapSize;
+        pfddm->cjGlyphMax = GLYPHBITS_SIZE(pfddm->cxMax, pfddm->cyMax, 4);
 
         /* Copy the quantized matrix from the font structure */
         pfddm->fdxQuantized = pfont->fdxQuantized;
@@ -264,7 +261,7 @@ FtfdQueryMaxExtents(
         pfddm->lMinD = 0;
     }
 
-__debugbreak();
+//__debugbreak();
 
     /* Return the size of the structure */
     return sizeof(FD_DEVICEMETRICS);
@@ -315,8 +312,8 @@ FtfdQueryGlyphData(
     if (1 /* layout horizontal */)
     {
         pgd->fxA = ftglyph->metrics.horiBearingX;
-        pgd->fxAB = pgd->fxA + ftglyph->metrics.width;
-        pgd->fxD = ftglyph->metrics.horiAdvance;
+        pgd->fxAB = pgd->fxA + ftglyph->metrics.width / 4;
+        pgd->fxD = ftglyph->metrics.horiAdvance / 4;
     }
     else
     {
@@ -325,10 +322,10 @@ FtfdQueryGlyphData(
         pgd->fxD = ftglyph->metrics.vertAdvance;
     }
 
-    pgd->fxInkTop = 0;
     pgd->fxInkBottom = 0;
+    pgd->fxInkTop = pgd->fxInkBottom + (ftglyph->bitmap.rows << 4);
     pgd->rclInk.left = ftglyph->bitmap_left;
-    pgd->rclInk.top = ftglyph->bitmap_top;
+    pgd->rclInk.top = -ftglyph->bitmap_top;
     pgd->rclInk.right = pgd->rclInk.left + ftglyph->bitmap.width;
     pgd->rclInk.bottom = pgd->rclInk.top + ftglyph->bitmap.rows;
 
@@ -336,13 +333,52 @@ FtfdQueryGlyphData(
     if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
     if (ftglyph->bitmap.rows == 0) pgd->rclInk.bottom++;
 
-    pgd->ptqD.x.LowPart = 0;
-    pgd->ptqD.x.HighPart = pgd->fxD;
-    pgd->ptqD.y.LowPart = 0;
+    pgd->ptqD.x.LowPart = 0x000000fd;
+    pgd->ptqD.x.HighPart = 0;
+    pgd->ptqD.y.LowPart = 0x000000a0; // 0x000000a0
     pgd->ptqD.y.HighPart = 0;
     //pgd->ptqD.x.QuadPart = 0;
     //pgd->ptqD.y.QuadPart = 0;
+//__debugbreak();
+}
 
+VOID
+FtfdCopyBitmap(
+    BYTE *pjDest,
+    FT_Bitmap *ftbitmap)
+{
+    ULONG ulRows, ulDstDelta, ulSrcDelta;
+    PBYTE pjDstLine, pjSrcLine;
+
+
+    pjDstLine = pjDest;
+    ulDstDelta = (ftbitmap->width*4 + 7) / 8;
+
+    pjSrcLine = ftbitmap->buffer;
+    ulSrcDelta = abs(ftbitmap->pitch);
+
+    ulRows = ftbitmap->rows;
+    while (ulRows--)
+    {
+        ULONG ulWidth = ulDstDelta;
+        BYTE j, *pjSrc;
+
+        pjSrc = pjSrcLine;
+        while (ulWidth--)
+        {
+            /* Get the 1st pixel */
+            j = (*pjSrc++) & 0xf0;
+
+            /* Get the 2nd pixel */
+            if (ulWidth > 0 || !(ftbitmap->width & 1))
+                j |= (*pjSrc++) >> 4;
+            *pjDstLine++ = j;
+        }
+
+        /* Go to the next line */
+        //pjDstLine += ulDstDelta;
+        pjSrcLine += ulSrcDelta;
+    }
 }
 
 VOID
@@ -354,13 +390,30 @@ FtfdQueryGlyphBits(
 {
     PFTFD_FONT pfont = pfo->pvProducer;
     FT_GlyphSlot ftglyph = pfont->ftface->glyph;
+    ULONG cjBitmapSize;
 
-    pgb->ptlOrigin.x = 0;
-    pgb->ptlOrigin.y = 0;
+    pgb->ptlOrigin.x =   ftglyph->bitmap_left;
+    pgb->ptlOrigin.y = - ftglyph->bitmap_top;
     pgb->sizlBitmap.cx = ftglyph->bitmap.width;
     pgb->sizlBitmap.cy = ftglyph->bitmap.rows;
 
-    DbgPrint("QueryGlyphBits for hg=%lx, cjSize=%ld\n", hg, cjSize);
+    cjBitmapSize = BITMAP_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4);
+    if (cjBitmapSize + FIELD_OFFSET(GLYPHBITS, aj) > cjSize)
+    {
+        DbgPrint("ERROR: buffer too small, got %ld, need %ld\n",
+                 cjSize, cjBitmapSize + FIELD_OFFSET(GLYPHBITS, aj));
+        __debugbreak();
+        return;
+    }
+
+    /* Copy the bitmap */
+    FtfdCopyBitmap(pgb->aj, &ftglyph->bitmap);
+
+    //RtlCopyMemory(pgb->aj, ftglyph->bitmap.buffer, cjBitmapSize);
+
+    DbgPrint("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
+             hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
+             GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4));
 
 }
 
@@ -372,6 +425,22 @@ FtfdQueryGlyphOutline(
     ULONG cjSize)
 {
 
+}
+
+BOOL
+FtRenderGlyphBitmap(
+    PFTFD_FONT pfont)
+{
+    FT_Error fterror;
+
+    fterror = FT_Render_Glyph(pfont->ftface->glyph, FT_RENDER_MODE_NORMAL);
+    if (fterror)
+    {
+        DbgPrint("cound't render glyph\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /** Public Interface **********************************************************/
@@ -400,6 +469,8 @@ FtfdQueryFontData(
             /* Load the requested glyph */
             if (!FtfdLoadGlyph(pfont, hg, 0)) return FD_ERROR;
 
+            if (!FtRenderGlyphBitmap(pfont)) return FD_ERROR;
+
             if (pgd) FtfdQueryGlyphData(pfo, hg, pgd, pv);
 
 
@@ -411,7 +482,7 @@ FtfdQueryFontData(
             /* Return the size for a 1bpp bitmap */
             return GLYPHBITS_SIZE(pfont->ftface->glyph->bitmap.width,
                                   pfont->ftface->glyph->bitmap.rows,
-                                  1);
+                                  4);
 
         case QFD_GLYPHANDOUTLINE:
             DbgPrint("QFD_GLYPHANDOUTLINE\n");
@@ -446,7 +517,7 @@ FtfdQueryFontData(
             DbgPrint("QFD_TT_GRAY8_BITMAP\n");
             break;
         default:
-            DbgPrint("Impossible iMode value: %lx\n", iMode);
+            DbgPrint("ERROR: Invalid iMode value: %lx\n", iMode);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return FD_ERROR;
     }
@@ -517,8 +588,9 @@ fl = 0;
         }
         else
         {
-            //DbgPrint("Got advance width: hg=%lx, adv=%d\n", phg[i], advance >> 12);
-            pusWidths[i] = (USHORT)advance >> 12;
+            /* Transform from 16.16 points to 28.4 pixels */
+            pusWidths[i] = (USHORT)((advance * 72 / pfo->sizLogResPpi.cx) >> 12);
+            //DbgPrint("Got advance width: hg=%lx, adv=%lx->%ld\n", phg[i], advance, pt.x);
         }
     }
 
