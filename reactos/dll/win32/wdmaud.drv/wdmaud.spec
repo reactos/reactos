@@ -1,6 +1,0 @@
-@ stdcall DriverProc(ptr long long ptr ptr)
-@ stdcall mxdMessage(long long long long long)
-@ stdcall auxMessage(long long long long long)
-@ stdcall wodMessage(long long long long long)
-@ stdcall widMessage(long long long long long)
-@ stdcall modMessage(long long long long long)

@@ -1,9 +1,0 @@
-LIBRARY			CSQ
-DESCRIPTION		"ReactOS Cancel-Safe Queue Library"
-EXPORTS
-  IoCsqInitialize
-  IoCsqInitializeEx
-	IoCsqInsertIrp
-	IoCsqInsertIrpEx
-  IoCsqRemoveIrp
-  IoCsqRemoveNextIrp

@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS German (Switzerland) Keyboard Layout\0"
-#define REACTOS_STR_INTERNAL_NAME	"kbdsg\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"kbdsg.dll\0"
-#include <reactos/version.rc>
