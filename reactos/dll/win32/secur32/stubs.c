@@ -1,15 +1,9 @@
 
 
-#include <windows.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <reactos/debug.h>
-
-#define SEC_ENTRY WINAPI
-#define STATUS_UNSUCCESSFUL ((SECURITY_STATUS)0x80000001)
-
-typedef LONG SECURITY_STATUS;
-typedef PVOID PSECURITY_PACKAGE_OPTIONS, PSecurityUserData;
 
 SECURITY_STATUS
 SEC_ENTRY
@@ -54,3 +48,14 @@ GetSecurityUserInfo(
     return STATUS_UNSUCCESSFUL;
 }
 
+SECURITY_STATUS
+SEC_ENTRY
+UnsealMessage(
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc MessageBuffers,
+    ULONG MessageSequenceNumber,
+    PULONG QualityOfProtection)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
