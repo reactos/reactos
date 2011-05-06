@@ -20,6 +20,7 @@ USBSTOR_HandleExecuteSCSI(
 {
     PCDB pCDB;
     NTSTATUS Status;
+    ULONG TransferredLength;
 
     //
     // get SCSI command data block
@@ -62,6 +63,35 @@ USBSTOR_HandleExecuteSCSI(
             // store returned info length
             //
             Irp->IoStatus.Information = Request->DataTransferLength;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+        else
+        {
+            //
+            // failed to retrieve capacity
+            //
+            Irp->IoStatus.Information = 0;
+            Request->SrbStatus = SRB_STATUS_ERROR;
+        }
+    }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
+    {
+        DPRINT1("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
+        ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
+        ASSERT(Request->DataBuffer);
+
+        //
+        // send mode sense command
+        //
+        Status = USBSTOR_SendModeSenseCmd(DeviceObject, Request, &TransferredLength);
+        DPRINT1("USBSTOR_SendModeSenseCmd Status %x BytesReturned %lu\n", Status, TransferredLength);
+
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // store returned info length
+            //
+            Irp->IoStatus.Information = TransferredLength;
             Request->SrbStatus = SRB_STATUS_SUCCESS;
         }
         else

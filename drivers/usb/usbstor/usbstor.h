@@ -149,6 +149,22 @@ typedef struct
     ULONG BlockLength;                                               // block length in bytes
 }UFI_CAPACITY_RESPONSE, *PUFI_CAPACITY_RESPONSE;
 
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
+// UFI sense mode cmd
+//
+typedef struct
+{
+    UCHAR Code;                                                      // operation code
+    UCHAR LUN;                                                       // lun address
+    UCHAR PageCode:6;                                                // page code selector
+    UCHAR PC:2;                                                      // type of parameters to be returned
+    UCHAR Reserved[4];                                               // reserved 0x00
+    USHORT AllocationLength;                                         // parameters length
+    UCHAR Reserved1[3];
+}UFI_SENSE_CMD, *PUFI_SENSE_CMD;
+
+C_ASSERT(sizeof(UFI_CAPACITY_CMD) == 12);
 
 //---------------------------------------------------------------------
 //
@@ -248,6 +264,12 @@ USBSTOR_SendCapacityCmd(
     OUT PREAD_CAPACITY_DATA_EX CapacityDataEx,
     OUT PREAD_CAPACITY_DATA CapacityData);
 
+NTSTATUS
+USBSTOR_SendModeSenseCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request,
+    OUT PULONG TransferBufferLength);
+
 //---------------------------------------------------------------------
 //
 // disk.c routines
@@ -261,3 +283,5 @@ NTSTATUS
 USBSTOR_HandleDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+

@@ -435,7 +435,7 @@ USBSTOR_SendCapacityCmd(
     }
 
     //
-    // initialize inquiry cmd
+    // initialize capacity cmd
     //
     RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
     Cmd.Code = SCSIOP_INQUIRY;
@@ -443,7 +443,7 @@ USBSTOR_SendCapacityCmd(
     Cmd.AllocationLength = sizeof(UFI_INQUIRY_RESPONSE);
 
     //
-    // now send inquiry cmd
+    // now send capacity cmd
     //
     Status = USBSTOR_SendCBW(DeviceObject, UFI_CAPACITY_CMD_LEN, (PUCHAR)&Cmd, sizeof(UFI_CAPACITY_RESPONSE), &OutControl);
     if (!NT_SUCCESS(Status))
@@ -506,6 +506,126 @@ USBSTOR_SendCapacityCmd(
     // FIXME: handle error
     //
     ASSERT(CSW.Status == 0);
+
+    //
+    // free item
+    //
+    FreeItem(OutControl);
+
+    //
+    // free response
+    //
+    FreeItem(Response);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+USBSTOR_SendModeSenseCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request,
+    OUT PULONG TransferBufferLength)
+{
+    UFI_SENSE_CMD Cmd;
+    CSW CSW;
+    NTSTATUS Status;
+    PVOID Response;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PCBW OutControl;
+    PCDB pCDB;
+
+    //
+    // get SCSI command data block
+    //
+    pCDB = (PCDB)Request->Cdb;
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // allocate sense response from non paged pool
+    //
+    Response = (PUFI_CAPACITY_RESPONSE)AllocateItem(NonPagedPool, Request->DataTransferLength);
+    if (!Response)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // initialize mode sense cmd
+    //
+    RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
+    Cmd.Code = SCSIOP_MODE_SENSE;
+    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
+    Cmd.PageCode = pCDB->MODE_SENSE.PageCode;
+    Cmd.PC = pCDB->MODE_SENSE.Pc;
+    Cmd.AllocationLength = pCDB->MODE_SENSE.AllocationLength;
+
+    //
+    // now send mode sense cmd
+    //
+    Status = USBSTOR_SendCBW(DeviceObject, UFI_CAPACITY_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, &OutControl);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendCapacityCmd> USBSTOR_SendCBW failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // now send data block response
+    //
+    Status = USBSTOR_SendData(DeviceObject, Request->DataTransferLength, Response);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendCapacityCmd> USBSTOR_SendData failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // send csw
+    //
+    Status = USBSTOR_SendCSW(DeviceObject, OutControl, 512, &CSW);
+
+    DPRINT1("------------------------\n");
+    DPRINT1("CSW %p\n", &CSW);
+    DPRINT1("Signature %x\n", CSW.Signature);
+    DPRINT1("Tag %x\n", CSW.Tag);
+    DPRINT1("DataResidue %x\n", CSW.DataResidue);
+    DPRINT1("Status %x\n", CSW.Status);
+
+    //
+    // FIXME: handle error
+    //
+    ASSERT(CSW.Status == 0);
+    ASSERT(CSW.DataResidue == 0);
+
+    //
+    // calculate transfer length
+    //
+    *TransferBufferLength = Request->DataTransferLength - CSW.DataResidue;
+
+    //
+    // copy buffer
+    //
+    RtlCopyMemory(Request->DataBuffer, Response, *TransferBufferLength);
 
     //
     // free item
