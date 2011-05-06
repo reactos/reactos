@@ -794,6 +794,12 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetClipboardData(CF_BITMAP, CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
                     CloseClipboard();
                     break;
+                case IDM_EDITCUT:
+                    /* Copy */
+                    SendMessage(hwnd, WM_COMMAND, IDM_EDITCOPY, 0);
+                    /* Delete selection */
+                    SendMessage(hwnd, WM_COMMAND, IDM_EDITDELETESELECTION, 0);
+                    break;
                 case IDM_EDITPASTE:
                     OpenClipboard(hMainWnd);
                     if (GetClipboardData(CF_BITMAP) != NULL)
