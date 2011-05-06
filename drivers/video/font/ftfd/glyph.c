@@ -9,6 +9,8 @@
 
 /** Private Interface *********************************************************/
 
+#define FLOATL_1 0x3f800000
+
 #define GLYPHBITS_SIZE(cx, cy, bpp) \
     (FIELD_OFFSET(GLYPHBITS, aj) + ((((cx * bpp) + 31) >> 5) * cy * 4))
 
@@ -18,10 +20,17 @@ FtfdCreateFontInstance(
     FONTOBJ *pfo)
 {
     PFTFD_FILE pfile = (PFTFD_FILE)pfo->iFile;
+    PFTFD_FACE pface = pfile->apface[pfo->iFace - 1];
     PFTFD_FONT pfont;
     XFORMOBJ* pxo;
+    XFORML xform;
+    FLOATOBJ_XFORM foxform;
     FT_Error fterror;
     FT_Face ftface;
+    FT_Matrix ftmatrix;
+    ULONG iComplexity;
+    LONG xScale, yScale;
+    FTFD_DEVICEMETRICS *pmetrics;
 
     /* Allocate a font structure */
     pfont = EngAllocMem(0, sizeof(FTFD_FONT), 0);
@@ -34,6 +43,7 @@ FtfdCreateFontInstance(
     pfont->pfo = pfo;
     pfont->pfile = pfile;
     pfont->iFace = pfo->iFace;
+    pfont->pface = pface;
     pfont->hgSelected = -1;
 
     /* Create a freetype face */
@@ -53,24 +63,108 @@ FtfdCreateFontInstance(
     pfont->ftface = ftface;
 
     pxo = FONTOBJ_pxoGetXform(pfo);
-
-    // divide into scaling and rotation / shearing
-
-    fterror = FT_Set_Char_Size(ftface,
-                               0,
-                               16 * 64,
-                               pfo->sizLogResPpi.cx,
-                               pfo->sizLogResPpi.cy);
-    if (fterror)
+    if (!pxo)
     {
-        /* Failure! */
-        DbgPrint("Error setting face size\n");
-        return NULL;
+        // unhandled yet
+        __debugbreak();
     }
 
-    /* Set non-orthogonal transformation */
-    // FT_Set_Transform
+    /* Get a FLOATOBJ_XFORM matrix */
+    iComplexity = XFORMOBJ_iGetFloatObjXform(pxo, &foxform);
+    if (iComplexity == DDI_ERROR)
+    {
+        __debugbreak();
+    }
 
+    /* Check if there is rotation / shearing (cannot use iComplexity!?) */
+    if (foxform.eM12.ul1 != 0 || foxform.eM12.ul2 != 0 ||
+        foxform.eM21.ul1 != 0 || foxform.eM21.ul2 != 0)
+    {
+        __debugbreak();
+        // FIXME: need to calculate scaling
+
+        /* initialize a matrix */
+        ftmatrix.xx = 0x10000 * pface->ifiex.ifi.fwdUnitsPerEm * 72 /
+                          pfo->sizLogResPpi.cx;
+        ftmatrix.xy = 0x00000000;
+        ftmatrix.yx = 0x00000000;
+        ftmatrix.yy = 0x10000 * pface->ifiex.ifi.fwdUnitsPerEm * 72 /
+                          pfo->sizLogResPpi.cy;
+
+        /* Apply the XFORMOBJ to the matrix */
+        XFORMOBJ_bApplyXform(pxo, XF_LTOL, 2, &ftmatrix, &ftmatrix);
+
+        /* Set non-orthogonal transformation */
+        // FT_Set_Transform
+
+    }
+    else
+    {
+        /* The font sizes are calculated from the em height, multiplied with
+         * the diagonal matrix coefficients. Since the given xform translates
+         * into pixels and we need points (FT_Set_Char_Size allows higher
+         * precision than FT_Set_Pixel_Sizes), we multiply with 72 / dpi.
+         * The value is multiplied with 64 to yield a 26.6 fixed float. */
+        xScale = 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72 / pfo->sizLogResPpi.cx;
+        FLOATOBJ_MulLong(&foxform.eM11, xScale);
+        yScale = 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72 / pfo->sizLogResPpi.cy;
+        FLOATOBJ_MulLong(&foxform.eM22, yScale);
+
+        /* Get the final scaling values in 26.6 fixed float format */
+        xScale = FLOATOBJ_GetLong(&foxform.eM11);
+        yScale = FLOATOBJ_GetLong(&foxform.eM22);
+
+        /* Set the x and y character size for the font */
+        fterror = FT_Set_Char_Size(ftface,
+                                   xScale,
+                                   yScale,
+                                   pfo->sizLogResPpi.cx,
+                                   pfo->sizLogResPpi.cy);
+        if (fterror)
+        {
+            /* Failure! */
+            DbgPrint("Error setting face size\n");
+            return NULL;
+        }
+
+    }
+
+    // FIXME: quantize to 16.16 fixpoint
+    XFORMOBJ_iGetXform(pxo, &xform);
+    pfont->fdxQuantized.eXX = xform.eM11;
+    pfont->fdxQuantized.eXY = xform.eM12;
+    pfont->fdxQuantized.eYX = xform.eM21;
+    pfont->fdxQuantized.eYY = xform.eM22;
+
+    /* Prepare required coordinates in font space */
+    pmetrics = &pfont->metrics;
+    pmetrics->ptfxMaxAscender.x = 0;
+    pmetrics->ptfxMaxAscender.y = ftface->bbox.yMax << 4; // FIXME: not exact
+    pmetrics->ptfxMaxDescender.x = 0;
+    pmetrics->ptfxMaxDescender.y = -ftface->bbox.yMin << 4; // FIXME: not exact
+    pmetrics->ptlUnderline1.x = 0;
+    pmetrics->ptlUnderline1.y = -pface->ifiex.ifi.fwdUnderscorePosition;
+    pmetrics->ptlStrikeout.x = 0;
+    pmetrics->ptlStrikeout.y = -pface->ifiex.ifi.fwdStrikeoutPosition;;
+    pmetrics->ptlULThickness.x = 0;
+    pmetrics->ptlULThickness.y = pface->ifiex.ifi.fwdUnderscoreSize;
+    pmetrics->ptlSOThickness.x = 0;
+    pmetrics->ptlSOThickness.y = pface->ifiex.ifi.fwdStrikeoutSize;
+    pmetrics->sizlMax.cx = ftface->bbox.xMax - ftface->bbox.xMin;
+    pmetrics->sizlMax.cy = ftface->bbox.yMax - ftface->bbox.yMin;
+
+    /* Transform all coordinates into device space */
+    if (!XFORMOBJ_bApplyXform(pxo, XF_LTOL, 7, pmetrics->aptl, pmetrics->aptl))
+    {
+        __debugbreak();
+    }
+
+    /* Fixup some minimum values */
+    if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
+    if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
+
+DbgPrint("Created font with %ld (%ld)\n", yScale, yScale/64);
+//__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
     pfo->pvProducer = pfont;
@@ -93,8 +187,6 @@ FtfdGetFontInstance(
     return pfont;
 }
 
-#define FLOATL_1 0x3f800000
-
 ULONG
 NTAPI
 FtfdQueryMaxExtents(
@@ -103,7 +195,10 @@ FtfdQueryMaxExtents(
     ULONG cjSize)
 {
     PFTFD_FONT pfont = FtfdGetFontInstance(pfo);
+    PFTFD_FACE pface = pfont->pface;
+    FT_Face ftface = pfont->ftface;
     ULONG cjMaxWidth, cjMaxBitmapSize;
+    XFORMOBJ *pxo;
 
     DbgPrint("FtfdQueryMaxExtents\n");
 
@@ -116,45 +211,36 @@ FtfdQueryMaxExtents(
             return FD_ERROR;
         }
 
-        //xScale = pfont->xScale;
-        //yScale = pfont->yScale;
+        /* Get the XFORMOBJ */
+        pxo = FONTOBJ_pxoGetXform(pfo);
 
-        /* Fill FD_DEVICEMETRICS */
+        /* Accelerator flags (ignored atm) */
         pfddm->flRealizedType = 0;
+
+        /* Baseline vectors */
         pfddm->pteBase.x = FLOATL_1;
         pfddm->pteBase.y = 0;
         pfddm->pteSide.x = 0;
-        pfddm->pteSide.y = FLOATL_1;
-        pfddm->ptlUnderline1.x = 0;
-        pfddm->ptlUnderline1.y = 1;
-        pfddm->ptlStrikeout.x = 0;
-        pfddm->ptlStrikeout.y = -4;
-        pfddm->ptlULThickness.x = 0;
-        pfddm->ptlULThickness.y = 1;
-        pfddm->ptlSOThickness.x = 0;
-        pfddm->ptlSOThickness.y = 1;
-        pfddm->lMinA = 0;
-        pfddm->lMinC = 0;
-        pfddm->lMinD = 0;
+        pfddm->pteSide.y = 0xbf800000; //-FLOATL_1;
 
-#if 0
-        if (pfont->ulAngle == 90 || pfont->ulAngle == 270)
-        {
-            pfddm->cxMax = xScale * GETVAL(pFontInfo->dfPixHeight);
-            pfddm->cyMax = yScale * GETVAL(pFontInfo->dfMaxWidth);
-            pfddm->fxMaxAscender = yScale * GETVAL(pFontInfo->dfAscent) << 4;
-            pfddm->fxMaxDescender = (pfddm->cyMax << 4) - pfddm->fxMaxAscender;
-        }
+        /* Transform the baseline vectors */
+        //XFORMOBJ_bApplyXformToFloat(pxo, 2, &pfddm->pteBase);
+
+        /* Fixed width advance */
+        if (ftface->face_flags & FT_FACE_FLAG_FIXED_WIDTH)
+            pfddm->lD = ftface->max_advance_width;
         else
-        {
-            pfddm->cxMax = xScale * GETVAL(pFontInfo->dfMaxWidth);
-            pfddm->cyMax = yScale * GETVAL(pFontInfo->dfPixHeight);
-            pfddm->fxMaxAscender = yScale * GETVAL(pFontInfo->dfAscent) << 4;
-            pfddm->fxMaxDescender = (pfddm->cyMax << 4) - pfddm->fxMaxAscender;
-        }
-#endif
+            pfddm->lD = 0;
 
-        pfddm->lD = pfddm->cxMax;
+        /* Copy the values from the font structure */
+        pfddm->fxMaxAscender = pfont->metrics.ptfxMaxAscender.y;
+        pfddm->fxMaxDescender = pfont->metrics.ptfxMaxDescender.y;
+        pfddm->ptlUnderline1 = pfont->metrics.ptlUnderline1;
+        pfddm->ptlStrikeout = pfont->metrics.ptlStrikeout;
+        pfddm->ptlULThickness = pfont->metrics.ptlULThickness;
+        pfddm->ptlSOThickness = pfont->metrics.ptlSOThickness;
+        pfddm->cxMax = pfont->metrics.sizlMax.cx;
+        pfddm->cyMax = pfont->metrics.sizlMax.cy;
 
         /* Calculate Width in bytes */
         cjMaxWidth = ((pfddm->cxMax + 7) >> 3);
@@ -165,8 +251,20 @@ FtfdQueryMaxExtents(
         /* cjGlyphMax is the full size of the GLYPHBITS structure */
         pfddm->cjGlyphMax = FIELD_OFFSET(GLYPHBITS, aj) + cjMaxBitmapSize;
 
-        /* NOTE: fdxQuantized and NonLinear... stay unchanged */
+        /* Copy the quantized matrix from the font structure */
+        pfddm->fdxQuantized = pfont->fdxQuantized;
+
+        pfddm->lNonLinearExtLeading =   0x00000000;
+        pfddm->lNonLinearIntLeading =   0x00000010;
+        pfddm->lNonLinearMaxCharWidth = 0x80000000;
+        pfddm->lNonLinearAvgCharWidth = 0x80000000;
+
+        pfddm->lMinA = 0;
+        pfddm->lMinC = 0;
+        pfddm->lMinD = 0;
     }
+
+__debugbreak();
 
     /* Return the size of the structure */
     return sizeof(FD_DEVICEMETRICS);
@@ -211,8 +309,6 @@ FtfdQueryGlyphData(
     PFTFD_FONT pfont = pfo->pvProducer;
     FT_GlyphSlot ftglyph = pfont->ftface->glyph;
 
-if (hg > 1) __debugbreak();
-
     pgd->gdf.pgb = pvGlyphData;
     pgd->hg = hg;
 
@@ -247,9 +343,6 @@ if (hg > 1) __debugbreak();
     //pgd->ptqD.x.QuadPart = 0;
     //pgd->ptqD.y.QuadPart = 0;
 
-
-if (hg > 1) __debugbreak();
-
 }
 
 VOID
@@ -262,14 +355,13 @@ FtfdQueryGlyphBits(
     PFTFD_FONT pfont = pfo->pvProducer;
     FT_GlyphSlot ftglyph = pfont->ftface->glyph;
 
-if (hg > 1) __debugbreak();
-
     pgb->ptlOrigin.x = 0;
     pgb->ptlOrigin.y = 0;
     pgb->sizlBitmap.cx = ftglyph->bitmap.width;
     pgb->sizlBitmap.cy = ftglyph->bitmap.rows;
 
-if (hg > 1) __debugbreak();
+    DbgPrint("QueryGlyphBits for hg=%lx, cjSize=%ld\n", hg, cjSize);
+
 }
 
 VOID
@@ -425,7 +517,7 @@ fl = 0;
         }
         else
         {
-            DbgPrint("Got advance width: hg=%lx, adv=%d\n", phg[i], advance >> 12);
+            //DbgPrint("Got advance width: hg=%lx, adv=%d\n", phg[i], advance >> 12);
             pusWidths[i] = (USHORT)advance >> 12;
         }
     }

@@ -107,7 +107,7 @@ FtfdInitIfiMetrics(
     if (pface->cRuns > 1)
         pifi->flInfo |= FM_INFO_NOT_CONTIGUOUS;
     if (pface->ulFontFormat != FMT_FNT)
-        pifi->flInfo |= FM_INFO_RETURNS_OUTLINES | FM_INFO_ARB_XFORMS;
+        pifi->flInfo |= /*FM_INFO_RETURNS_OUTLINES |*/ FM_INFO_ARB_XFORMS;
     pifi->flInfo |= FM_INFO_RIGHT_HANDED; // FIXME: how to determine?
 
     /* Font style */
@@ -733,7 +733,6 @@ FtfdQueryTrueTypeTable(
     /* Return requested pointers */
     if (ppjTable) *ppjTable = pjTable;
     if (pcjTable) *pcjTable = cjTable;
-
 
     /* Check if we shall copy data */
     if (pjBuf)
