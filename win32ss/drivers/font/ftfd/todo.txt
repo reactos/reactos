@@ -45,7 +45,7 @@ internal interface
 - FtfdCreateFontInstance: 80%
     - handle XFORM (create a matrix and set freetype xform)
 - FtfdGetFontInstance: 100% done
-- FtfdQueryMaxExtents: 10% done
+- FtfdQueryMaxExtents: 80% done
 
 - FtfdLoadGlyph: 80% done
     - hande accelerator flags for bitmap / outline

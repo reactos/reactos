@@ -83,12 +83,30 @@ typedef struct _FTFD_FILE
     PFTFD_FACE apface[1];
 } FTFD_FILE, *PFTFD_FILE;
 
+typedef union _FTFD_DEVICEMETRICS
+{
+    POINTL aptl[7];
+    struct
+    {
+        POINTFIX ptfxMaxAscender;
+        POINTFIX ptfxMaxDescender;
+        POINTL ptlUnderline1;
+        POINTL ptlStrikeout;
+        POINTL ptlULThickness;
+        POINTL ptlSOThickness;
+        SIZEL sizlMax;
+    };
+} FTFD_DEVICEMETRICS;
+
 typedef struct
 {
     FONTOBJ *pfo;
     PFTFD_FILE pfile;
+    PFTFD_FACE pface;
     ULONG iFace;
     FT_Face ftface;
+    FD_XFORM fdxQuantized;
+    FTFD_DEVICEMETRICS metrics;
     HGLYPH hgSelected;
     ULONG cjSelected;
 } FTFD_FONT, *PFTFD_FONT;
