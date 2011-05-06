@@ -721,6 +721,9 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SendMessage(hwnd, WM_CLOSE, wParam, lParam);
                     break;
                 case IDM_FILENEW:
+                    ShowWindow(hSelection, SW_HIDE);
+                    clearHistory();
+
                     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
                     SendMessage(hImageArea, WM_PAINT, 0, 0);
                     break;
