@@ -3,7 +3,7 @@
  *
  * Copyright 2005 Sebastian Gasiorek
  *
- * Update by Caemyr - Olaf Siejka (Dec-Jan, 2007)
+ * Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl; 
@@ -402,8 +402,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "Czy dodaæ dane do rejestru?"
+  IDS_IMPORTED_OK               "Dane dopisane do rejestru"
 END
 
 /*****************************************************************/
