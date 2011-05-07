@@ -10,6 +10,9 @@
 
 #include "precomp.h"
 
+#define __LWIP_INET_H__
+#include "lwip/netifapi.h"
+
 
 LIST_ENTRY InterfaceListHead;
 KSPIN_LOCK InterfaceListLock;
@@ -20,6 +23,12 @@ BOOLEAN IpWorkItemQueued = FALSE;
 /* Work around calling timer at Dpc level */
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
+
+VOID
+TCPRegisterInterface(PIP_INTERFACE IF);
+
+VOID
+TCPUnregisterInterface(PIP_INTERFACE IF);
 
 VOID DontFreePacket(
     PVOID Object)
@@ -174,13 +183,14 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
-    IF->TCPContext = ExAllocatePoolWithTag
-	( NonPagedPool, sizeof(OSK_IFADDR) + 3 * sizeof( struct sockaddr_in ),
-          OSKITTCP_CONTEXT_TAG );
+    IF->TCPContext = ExAllocatePool
+	( NonPagedPool, sizeof(struct netif));
     if (!IF->TCPContext) {
         ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
         return NULL;
     }
+    
+    TCPRegisterInterface(IF);
 
 #ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
@@ -203,8 +213,10 @@ VOID IPDestroyInterface(
 #ifdef __NTDRIVER__
     RemoveTDIInterfaceEntity( IF );
 #endif
+    
+    TCPUnregisterInterface(IF);
 
-    ExFreePoolWithTag(IF->TCPContext, OSKITTCP_CONTEXT_TAG);
+    ExFreePool(IF->TCPContext);
     ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
 }
 
@@ -231,6 +243,8 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
      * other computers */
     if (IF != Loopback)
        ARPTransmit(NULL, NULL, IF);
+    
+    TCPUpdateInterfaceIPInformation(IF);
 }
 
 BOOLEAN IPRegisterInterface(

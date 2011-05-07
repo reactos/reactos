@@ -1,7 +1,8 @@
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
 add_definitions(
     -DNDIS40
@@ -30,7 +31,7 @@ add_library(tcpip SHARED ${CMAKE_CURRENT_BINARY_DIR}/tcpip_precomp.h.gch ${SOURC
 
 target_link_libraries(tcpip
     ip
-    oskittcp
+    lwip
     ${PSEH_LIB}
     chew)
 

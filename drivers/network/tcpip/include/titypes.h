@@ -13,6 +13,7 @@
  */
 #define ReferenceObject(Object)                            \
 {                                                          \
+    ASSERT(((Object)->RefCount) > 0);                      \
     InterlockedIncrement(&((Object)->RefCount));           \
 }
 
@@ -22,6 +23,7 @@
  */
 #define DereferenceObject(Object)                           \
 {                                                           \
+    ASSERT(((Object)->RefCount) > 0);                       \
     if (InterlockedDecrement(&((Object)->RefCount)) == 0)   \
         (((Object)->Free)(Object));                         \
 }
@@ -33,7 +35,7 @@
 {                                                        \
     ReferenceObject(Object);                             \
     KeAcquireSpinLock(&((Object)->Lock), Irql);          \
-    memcpy(&(Object)->OldIrql, Irql, sizeof(KIRQL));     \
+    (Object)->OldIrql = *Irql;                           \
 }
 
 /*
@@ -266,10 +268,6 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
-    LIST_ENTRY CompletionQueue;/* Completed requests to finish */
-
-    /* Signals */
-    UINT    SignalState;       /* Active signals from oskit */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

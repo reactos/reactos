@@ -3,7 +3,8 @@ add_definitions(-D__NTDRIVER__)
 
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
 if(ARCH MATCHES i386)
     list(APPEND SOURCE network/i386/checksum.S)
