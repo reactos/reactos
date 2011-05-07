@@ -132,6 +132,9 @@ extern "C" {
 #define LOCALE_SYSTEM_DEFAULT	0x800
 #define LOCALE_USER_DEFAULT	0x400
 
+#define LOCALE_IREADINGLAYOUT       0x0070
+#define LOCALE_INEUTRAL             0x0071
+
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
 
 #define NORM_IGNORECASE	1
