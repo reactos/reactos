@@ -377,6 +377,7 @@ dll\win32\netshell\netshell.dll                     1
 dll\win32\newdev\newdev.dll                         1
 dll\win32\ntdsapi\ntdsapi.dll                       1
 dll\win32\ntlanman\ntlanman.dll                     1
+dll\win32\ntlmssp\ntlmssp.dll                     1
 dll\win32\ntmarta\ntmarta.dll                       1
 dll\win32\ntprint\ntprint.dll                       1
 dll\win32\objsel\objsel.dll                         1

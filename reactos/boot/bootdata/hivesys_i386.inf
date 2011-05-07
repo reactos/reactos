@@ -926,7 +926,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"WinNT"
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,""
 
-HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll,ntlmssp.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
 
 ; Some installers check for SP6
