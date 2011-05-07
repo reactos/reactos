@@ -17,6 +17,55 @@
 #define GLYPHBITS_SIZE(cx, cy, bpp) \
     (FIELD_OFFSET(GLYPHBITS, aj) + BITMAP_SIZE(cx, cy, bpp))
 
+static
+VOID
+FtfdComputeBaseVector(
+    POINTE *ppte,
+    FLOATOBJ foX,
+    FLOATOBJ foY)
+{
+    FT_Vector ftvector;
+    LONG lLength;
+    FLOATOBJ fo, foLength;
+
+    /* Optimization for scaling transformations */
+    if (foX.ul1 == 0 && foX.ul2 == 0)
+    {
+        ppte->x = 0;
+        ppte->y = FLOATL_1;
+        return;
+    }
+    if (foY.ul1 == 0 && foY.ul2 == 0)
+    {
+        ppte->x = FLOATL_1;
+        ppte->y = 0;
+        return;
+    }
+
+    /* Convert the point into a 8.24 format freetype vector */
+    fo = foX;
+    FLOATOBJ_MulLong(&fo, 0x01000000);
+    ftvector.x = FLOATOBJ_GetLong(&fo);
+    fo = foY;
+    FLOATOBJ_MulLong(&fo, 0x01000000);
+    ftvector.y = FLOATOBJ_GetLong(&fo);
+
+    /* Get the length of the freetype vector */
+    lLength = FT_Vector_Length(&ftvector);
+
+    /* Convert the 8.24 fixpoint back into a FLOATOBJ */
+    FLOATOBJ_SetLong(&foLength, lLength);
+    FLOATOBJ_DivLong(&foLength, 0x01000000);
+
+    /* Now divide the vector by the length */
+    FLOATOBJ_Div(&foX, &foLength);
+    FLOATOBJ_Div(&foY, &foLength);
+
+    /* Finally convert to FLOATL */
+    ppte->x = FLOATOBJ_GetFloat(&foX);
+    ppte->y = FLOATOBJ_GetFloat(&foY);
+}
+
 PFTFD_FONT
 NTAPI
 FtfdCreateFontInstance(
@@ -69,16 +118,25 @@ FtfdCreateFontInstance(
     pxo = FONTOBJ_pxoGetXform(pfo);
     if (!pxo)
     {
-        // unhandled yet
-        __debugbreak();
+        WARN("Error there is no XFORMOBJ!\n");
+        EngFreeMem(pfont);
+        return NULL;
     }
+
+    // FIXME: quantize to 16.16 fixpoint
+    XFORMOBJ_iGetXform(pxo, &xform);
+    pfont->fdxQuantized.eXX = xform.eM11;
+    pfont->fdxQuantized.eXY = xform.eM12;
+    pfont->fdxQuantized.eYX = xform.eM21;
+    pfont->fdxQuantized.eYY = xform.eM22;
 
     /* Get a FLOATOBJ_XFORM matrix */
     iComplexity = XFORMOBJ_iGetFloatObjXform(pxo, &foxform);
-    if (iComplexity == DDI_ERROR)
-    {
-        __debugbreak();
-    }
+    ASSERT(iComplexity != DDI_ERROR);
+
+    /* Compute normalized base vectors */
+    FtfdComputeBaseVector(&pfont->pteBase, foxform.eM11, foxform.eM21);
+    FtfdComputeBaseVector(&pfont->pteSide, foxform.eM12, foxform.eM22);
 
     /* Check if there is rotation / shearing (cannot use iComplexity!?) */
     if (foxform.eM12.ul1 != 0 || foxform.eM12.ul2 != 0 ||
@@ -128,9 +186,9 @@ FtfdCreateFontInstance(
         {
             /* Failure! */
             WARN("Error setting face size\n");
+            EngFreeMem(pfont);
             return NULL;
         }
-
     }
 
     /* Check if there is a design vector */
@@ -144,16 +202,10 @@ FtfdCreateFontInstance(
         {
             /* Failure! */
             WARN("Failed to set design vector\n");
+            EngFreeMem(pfont);
             return NULL;
         }
     }
-
-    // FIXME: quantize to 16.16 fixpoint
-    XFORMOBJ_iGetXform(pxo, &xform);
-    pfont->fdxQuantized.eXX = xform.eM11;
-    pfont->fdxQuantized.eXY = xform.eM12;
-    pfont->fdxQuantized.eYX = xform.eM21;
-    pfont->fdxQuantized.eYY = xform.eM22;
 
     /* Prepare required coordinates in font space */
     pmetrics = &pfont->metrics;
@@ -175,15 +227,17 @@ FtfdCreateFontInstance(
     /* Transform all coordinates into device space */
     if (!XFORMOBJ_bApplyXform(pxo, XF_LTOL, 7, pmetrics->aptl, pmetrics->aptl))
     {
-        __debugbreak();
+        WARN("Failed apply coordinate transformation.\n");
+        EngFreeMem(pfont);
+        return NULL;
     }
 
     /* Fixup some minimum values */
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
     if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
 
-TRACE("Created font with %ld (%ld)\n", yScale, (yScale+32)/64);
-//__debugbreak();
+    TRACE("Created font of size %ld (%ld)\n", yScale, (yScale+32)/64);
+    //__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
     pfo->pvProducer = pfont;
@@ -222,6 +276,7 @@ FtfdQueryMaxExtents(
 
     if (pfddm)
     {
+        /* Verify parameter */
         if (cjSize < sizeof(FD_DEVICEMETRICS))
         {
             /* Not enough space, fail */
@@ -235,17 +290,8 @@ FtfdQueryMaxExtents(
         /* Accelerator flags (ignored atm) */
         pfddm->flRealizedType = 0;
 
-        /* Baseline vectors */
-        pfddm->pteBase.x = FLOATL_1;
-        pfddm->pteBase.y = 0;
-        pfddm->pteSide.x = 0;
-        pfddm->pteSide.y = 0xbf800000; //-FLOATL_1;
-
-        /* Transform the baseline vectors */
-        //XFORMOBJ_bApplyXformToFloat(pxo, 2, &pfddm->pteBase);
-
         /* Fixed width advance */
-        if (ftface->face_flags & FT_FACE_FLAG_FIXED_WIDTH)
+        if (FT_IS_FIXED_WIDTH(ftface))
             pfddm->lD = ftface->max_advance_width;
         else
             pfddm->lD = 0;
@@ -259,6 +305,8 @@ FtfdQueryMaxExtents(
         pfddm->ptlSOThickness = pfont->metrics.ptlSOThickness;
         pfddm->cxMax = pfont->metrics.sizlMax.cx;
         pfddm->cyMax = pfont->metrics.sizlMax.cy;
+        pfddm->pteBase = pfont->pteBase;
+        pfddm->pteSide = pfont->pteSide;
 
         /* cjGlyphMax is the full size of the GLYPHBITS structure */
         pfddm->cjGlyphMax = GLYPHBITS_SIZE(pfddm->cxMax, pfddm->cyMax, 4);

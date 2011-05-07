@@ -16,6 +16,7 @@
 #include FT_XFREE86_H
 #include FT_TYPE1_TABLES_H
 #include FT_MULTIPLE_MASTERS_H
+#include FT_TRIGONOMETRY_H
 
 extern FT_Library gftlibrary;
 
@@ -126,6 +127,8 @@ typedef struct
     FT_Face ftface;
     FD_XFORM fdxQuantized;
     FTFD_DEVICEMETRICS metrics;
+    POINTE pteBase;
+    POINTE pteSide;
     ULONG xScale;
     HGLYPH hgSelected;
     ULONG cjSelected;
