@@ -293,8 +293,9 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
       pt.x = pt.y = 0;
       while(!hittest)
 	{
-	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)
-	    break;
+          if (!GetMessageW(&msg, NULL, 0, 0)) break; //return 0;
+          if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
+
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
@@ -330,8 +331,13 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		  pt.y =(rectWindow.top+rectWindow.bottom)/2;
 		  break;
 		case VK_RETURN:
-		case VK_ESCAPE: return 0;
+		case VK_ESCAPE:
+		  return 0;
 		}
+            default:
+              TranslateMessage( &msg );
+              DispatchMessageW( &msg );
+              break;
 	    }
 	}
       *capturePoint = pt;
@@ -555,8 +561,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       int dx = 0, dy = 0;
 
-      if (GetMessageW(&msg, 0, 0, 0) <= 0)
-        break;
+      if (!GetMessageW(&msg, 0, 0, 0)) break;
+      if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
 
       /* Exit on button-up, Return, or Esc */
       if ((msg.message == WM_LBUTTONUP) ||
@@ -572,7 +578,11 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         }
 
       if ((msg.message != WM_KEYDOWN) && (msg.message != WM_MOUSEMOVE))
-	continue;  /* We are not interested in other messages */
+      {
+         TranslateMessage( &msg );
+         DispatchMessageW( &msg );
+         continue;  /* We are not interested in other messages */
+      }
 
       pt = msg.pt;
 
