@@ -40,6 +40,7 @@
 	<file>version.c</file>
 	<file>virtual.c</file>
 	<file>volume.c</file>
+	<file>dosdev.c</file>
 	<file>testlist.c</file>
 	<file>resource.rc</file>
 </module>

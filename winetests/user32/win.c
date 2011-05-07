@@ -6058,11 +6058,7 @@ START_TEST(win)
     test_capture_1();
     test_capture_2();
     test_capture_3(hwndMain, hwndMain2);
-
-    if(!winetest_interactive)
-        skip("skipping test_capture_4, that hangs on reactos\n");
-    else
-        test_capture_4();
+    test_capture_4();
 
     test_CreateWindow();
     test_parent_owner();

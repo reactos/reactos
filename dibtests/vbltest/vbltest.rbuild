@@ -4,3 +4,4 @@
 	<library>gdi32</library>
 	<file>vbltest.c</file>
 	<file>vbltest.rc</file>
+</module>

@@ -42,6 +42,7 @@ extern void func_toolhelp(void);
 extern void func_virtual(void);
 extern void func_version(void);
 extern void func_volume(void);
+extern void func_dosdev(void);
 
 const struct test winetest_testlist[] =
 {
@@ -78,6 +79,7 @@ const struct test winetest_testlist[] =
     { "virtual", func_virtual },
     { "version", func_version },
     { "volume", func_volume },
+    { "dosdev", func_dosdev },
     { 0, 0 }
 };
 

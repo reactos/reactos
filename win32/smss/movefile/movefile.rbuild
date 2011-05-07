@@ -4,3 +4,4 @@
 	<library>user32</library>
 	<file>movefile.cpp</file>
 	<file>movefile.rc</file>
+</module>

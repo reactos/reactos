@@ -5,6 +5,7 @@ add_subdirectory(dciman32)
 add_subdirectory(gdi32)
 add_subdirectory(ntdll)
 add_subdirectory(user32)
+add_subdirectory(kernel32)
 
 if(NOT MSVC)
 if(ARCH MATCHES i386)

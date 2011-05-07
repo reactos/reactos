@@ -16,3 +16,4 @@
 	<file>capicon.c</file>
 	<file>capicon.rc</file>
 </module>
+</group>

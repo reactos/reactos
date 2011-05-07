@@ -334,6 +334,8 @@ VOID FsRtlIsDbcsInExpressionTest()
 VOID
 NtoskrnlFsRtlTest(HANDLE KeyHandle)
 {
+    StartTest();
+
     FsRtlIsNameInExpressionTest();
     FsRtlIsDbcsInExpressionTest();
 
