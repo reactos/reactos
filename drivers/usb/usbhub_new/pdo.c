@@ -4,7 +4,7 @@
  * FILE:            drivers/usb/usbhub/fdo.c
  * PURPOSE:         Handle PDO
  * PROGRAMMERS:
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Michael Martin (michael.martin@reactos.org)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
@@ -72,13 +72,22 @@ USBHUB_PdoStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PHUB_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
+    //NTSTATUS Status;
     DPRINT1("USBHUB_PdoStartDevice %x\n", DeviceObject);
-    DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // This should be a PDO
+    //
+    ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
+
+    //
+    // FIXME: Fow now assume success
+    //
 
     UNIMPLEMENTED
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -88,9 +97,9 @@ USBHUB_PdoQueryId(
     OUT ULONG_PTR* Information)
 {
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
-    ULONG IdType;
-    PWCHAR SourceString = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG IdType, StringLength = 0;
+    PWCHAR SourceString = NULL, ReturnString = NULL;
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
     IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -101,26 +110,48 @@ USBHUB_PdoQueryId(
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
             SourceString = ChildDeviceExtension->DeviceId;
+            Status = STATUS_SUCCESS;
             break;
         }
         case BusQueryHardwareIDs:
         {
+            ULONG Index = 0, LastIndex;
+            PWCHAR Ptr;
+
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-            SourceString = ChildDeviceExtension->HardwareIds;
-            Status = STATUS_NOT_SUPPORTED;
+
+            StringLength = wcslen(ChildDeviceExtension->DeviceId);
+            StringLength += wcslen(L"&Rev_XXXX") + 1;
+            StringLength += wcslen(ChildDeviceExtension->DeviceId) + 1;
+            StringLength = StringLength * sizeof(WCHAR);
+
+            ReturnString = ExAllocatePool(PagedPool, StringLength);
+            Ptr = ReturnString;
+            LastIndex = Index;
+            Index += swprintf(&Ptr[Index],
+                              L"%s&Rev_%04lx", ChildDeviceExtension->DeviceId,
+                              ChildDeviceExtension->DeviceDesc.bcdDevice)  + 1;
+            Ptr[Index] = UNICODE_NULL;
+            DPRINT1("%S\n", &Ptr[LastIndex]);
+            LastIndex = Index;
+            Index += swprintf(&Ptr[Index], L"%s", ChildDeviceExtension->DeviceId)  + 1;
+            Ptr[Index] = UNICODE_NULL;
+            DPRINT1("%S\n", &Ptr[LastIndex]);
+            Status = STATUS_SUCCESS;
             break;
         }
         case BusQueryCompatibleIDs:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
-            SourceString = ChildDeviceExtension->CompatibleIds;
-            Status = STATUS_NOT_SUPPORTED;
+            //SourceString = ChildDeviceExtension->CompatibleIds;
+            //return STATUS_NOT_SUPPORTED;
             break;
         }
         case BusQueryInstanceID:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
             SourceString = ChildDeviceExtension->InstanceId;
+            Status = STATUS_SUCCESS;
             break;
         }
         default:
@@ -128,7 +159,17 @@ USBHUB_PdoQueryId(
             return STATUS_NOT_SUPPORTED;
     }
 
-    *Information = (ULONG_PTR)SourceString;
+    if (SourceString)
+    {
+        StringLength = (wcslen(SourceString) + 1) * sizeof(WCHAR);
+        DPRINT1("StringLen %d\n", StringLength);
+        ReturnString = ExAllocatePool(PagedPool, StringLength);
+        RtlCopyMemory(ReturnString, SourceString, StringLength);
+        DPRINT1("%S\n", ReturnString);
+    }
+
+    *Information = (ULONG_PTR)ReturnString;
+
     return Status;
 }
 
@@ -140,30 +181,47 @@ USBHUB_PdoQueryDeviceText(
 {
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
     DEVICE_TEXT_TYPE DeviceTextType;
+    PWCHAR SourceString = NULL, ReturnString = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
     LCID LocaleId;
+    ULONG StrLen;
 
     DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
     LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // FIXME: LocaleId
+    //
 
     switch (DeviceTextType)
     {
         case DeviceTextDescription:
         case DeviceTextLocationInformation:
         {
-            if (DeviceTextType == DeviceTextDescription)
-            {
-                *Information = (ULONG_PTR)ChildDeviceExtension->TextDescription;
-                DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
-            }
-            else
-                DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
-            return STATUS_SUCCESS;
+            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+            SourceString = ChildDeviceExtension->TextDescription;
+            DPRINT1("%S\n", SourceString);
+            break;
         }
         default:
+        {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / unknown device text type 0x%lx\n", DeviceTextType);
-            return STATUS_NOT_SUPPORTED;
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        }
     }
+
+    if (SourceString)
+    {
+        StrLen = (wcslen(SourceString) + 1) * sizeof(WCHAR);
+        ReturnString = ExAllocatePool(PagedPool, StrLen);
+        RtlCopyMemory(ReturnString, SourceString, StrLen);
+        DPRINT1("%S\n", ReturnString);
+        *Information = (ULONG_PTR)ReturnString;
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -196,13 +254,13 @@ USBHUB_PdoHandlePnp(
             DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
             // FIXME: capabilities can change with connected device
             DeviceCapabilities->LockSupported = TRUE;
-            DeviceCapabilities->EjectSupported = FALSE;
-            DeviceCapabilities->Removable = FALSE;
+            DeviceCapabilities->EjectSupported = TRUE;
+            DeviceCapabilities->Removable = TRUE;
             DeviceCapabilities->DockDevice = FALSE;
-            DeviceCapabilities->UniqueID = FALSE;
+            DeviceCapabilities->UniqueID = TRUE;
             DeviceCapabilities->SilentInstall = TRUE;
             DeviceCapabilities->RawDeviceOK = FALSE;
-            DeviceCapabilities->SurpriseRemovalOK = FALSE;
+            DeviceCapabilities->SurpriseRemovalOK = TRUE;
             DeviceCapabilities->HardwareDisabled = FALSE;
             //DeviceCapabilities->NoDisplayInUI = FALSE;
             DeviceCapabilities->DeviceState[0] = PowerDeviceD0;
@@ -237,7 +295,6 @@ USBHUB_PdoHandlePnp(
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
         {
             PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
-
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             ResourceList = ExAllocatePool(PagedPool, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
             if (!ResourceList)
@@ -268,9 +325,30 @@ USBHUB_PdoHandlePnp(
             Status = USBHUB_PdoQueryId(DeviceObject, Irp, &Information);
             break;
         }
+        case IRP_MN_QUERY_BUS_INFORMATION:
+        {
+            PPNP_BUS_INFORMATION BusInfo;
+            BusInfo = (PPNP_BUS_INFORMATION)ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+            RtlCopyMemory(&BusInfo->BusTypeGuid,
+                          &GUID_BUS_TYPE_USB,
+                          sizeof(BusInfo->BusTypeGuid));
+            BusInfo->LegacyBusType = PNPBus;
+            // FIXME
+            BusInfo->BusNumber = 0;
+            Information = (ULONG_PTR)BusInfo;
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            //
+            // FIXME
+            //
+            Status = STATUS_SUCCESS;
+        }
         default:
         {
-            DPRINT1("ERROR PDO IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
+            DPRINT1("PDO IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
             Information = Irp->IoStatus.Information;
             Status = Irp->IoStatus.Status;
         }

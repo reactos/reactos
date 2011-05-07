@@ -165,13 +165,24 @@ USBHUB_DispatchInternalDeviceControl(
 }
 
 NTSTATUS NTAPI
-USBHUB_DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+USBHUB_DispatchPnp(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
 {
     DPRINT1("USBHUB: DispatchPnp\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_FdoHandlePnp(DeviceObject, Irp);
     else
         return USBHUB_PdoHandlePnp(DeviceObject, Irp);
+}
+
+NTSTATUS NTAPI
+USBHUB_DispatchPower(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS NTAPI
@@ -184,15 +195,13 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = USBHUB_AddDevice;
     DPRINT1("USBHUB: DriverEntry\n");
 
-    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-        DriverObject->MajorFunction[i] = USBHUB_IrpStub;
-
     DriverObject->MajorFunction[IRP_MJ_CREATE] = USBHUB_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBHUB_Close;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = USBHUB_Cleanup;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = USBHUB_DispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = USBHUB_DispatchInternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = USBHUB_DispatchPnp;
+    DriverObject->MajorFunction[IRP_MJ_POWER] =USBHUB_DispatchPower;
 
     return STATUS_SUCCESS;
 }

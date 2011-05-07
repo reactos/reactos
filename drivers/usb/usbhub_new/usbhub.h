@@ -1,6 +1,8 @@
 #pragma once
 
+#include <ntifs.h>
 #include <ntddk.h>
+#include <wdmguid.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
@@ -59,6 +61,8 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
     PWCHAR HardwareIds;
     PWCHAR CompatibleIds;
     PWCHAR TextDescription;
+    USB_DEVICE_DESCRIPTOR DeviceDesc;
+    USB_CONFIGURATION_DESCRIPTOR ConfigDesc;
     UNICODE_STRING SymbolicLinkName;
 } HUB_CHILDDEVICE_EXTENSION, *PHUB_CHILDDEVICE_EXTENSION;
 
