@@ -8,169 +8,98 @@
  */
 
 #include "ftfd.h"
-#include <freetype/t1tables.h>
+#include "tttables.h"
 
-// FIXME: we can have unaligned memory access, use:
-#define GETW(px) = (((PUCHAR)px)[1] | ((PUCHAR)px)[0] << 8)
-#define GETD(px) = (GETW((PUCHAR)px + 2) | GETW(px) << 16)
-
-#define SWAPW(x) _byteswap_ushort(x)
-#define SWAPD(x) _byteswap_ulong(x)
-
-typedef struct _OTF_TABLE_ENTRY
+ULONG test_GETD(PVOID pv)
 {
-    ULONG ulTag;
-    ULONG ulCheckSum;
-    ULONG ulOffset;
-    ULONG ulLength;
-} OTF_TABLE_ENTRY, *POTF_TABLE_ENTRY;
+    PUSHORT pus = pv;
+    return (ULONG)_byteswap_ushort(pus[0]) << 16 | _byteswap_ushort(pus[1]);
+}
 
-typedef struct _OTF_FILE_HEADER
-{
-    ULONG ulIdentifier;
-    USHORT usNumTables;
-    USHORT usSearchRange;
-    USHORT usEntrySelector;
-    USHORT usRangeshift;
-
-    OTF_TABLE_ENTRY aTableEntries[1];
-
-} OTF_FILE_HEADER, *POTF_FILE_HEADER;
-
-#include <pshpack1.h>
-typedef struct _OTF_OS2_DATA
-{
-    USHORT 	version; // 	0x0004
-    SHORT 	xAvgCharWidth;
-    USHORT 	usWeightClass;
-    USHORT 	usWidthClass;
-    USHORT 	fsType;
-    SHORT 	ySubscriptXSize;
-    SHORT 	ySubscriptYSize;
-    SHORT 	ySubscriptXOffset;
-    SHORT 	ySubscriptYOffset;
-    SHORT 	ySuperscriptXSize;
-    SHORT 	ySuperscriptYSize;
-    SHORT 	ySuperscriptXOffset;
-    SHORT 	ySuperscriptYOffset;
-    SHORT 	yStrikeoutSize;
-    SHORT 	yStrikeoutPosition;
-    union // 0x30
-    {
-        struct
-        {
-            BYTE jClassId;
-            BYTE jSubClassId;
-        };
-        SHORT 	sFamilyClass;
-    };
-    BYTE 	panose[10];
-    ULONG 	ulUnicodeRange1; // 	Bits 0-31
-    ULONG 	ulUnicodeRange2; // 	Bits 32-63
-    ULONG 	ulUnicodeRange3; // 	Bits 64-95
-    ULONG 	ulUnicodeRange4; // 	Bits 96-127
-    CHAR 	achVendID[4];
-    USHORT 	fsSelection;
-    USHORT 	usFirstCharIndex;
-    USHORT 	usLastCharIndex;
-    SHORT 	sTypoAscender;
-    SHORT 	sTypoDescender;
-    SHORT 	sTypoLineGap;
-    USHORT 	usWinAscent;
-    USHORT 	usWinDescent;
-    ULONG 	ulCodePageRange1; // 	Bits 0-31
-    ULONG 	ulCodePageRange2; // 	Bits 32-63
-    SHORT 	sxHeight;
-    SHORT 	sCapHeight;
-    USHORT 	usDefaultChar;
-    USHORT 	usBreakChar;
-    USHORT 	usMaxContext;
-} OTF_OS2_DATA, *POTF_OS2_DATA;
-#include <poppack.h>
-
+static
 ULONG
 CalcTableChecksum(PVOID pvTable, ULONG cjTable)
 {
     PULONG pul = pvTable, pulEnd;
     ULONG ulCheckSum = 0L;
+    ASSERT(!((ULONG_PTR)pvTable & 3));
 
     pulEnd = (PULONG)pvTable + (cjTable + 3) / sizeof(ULONG);
 
-    while (pul < pulEnd) ulCheckSum += SWAPD(*pul++);
+    while (pul < pulEnd) ulCheckSum += GETD(pul++);
 
     return ulCheckSum;
 }
 
-BOOL
-OtfGetType1FontInfo(
-    PFTFD_FACE pface,
-    PIFIMETRICS pifi)
-{
-    FT_Error fterror;
-    PS_FontInfoRec fontinfo;
-
-    fterror = FT_Get_PS_Font_Info(pface->ftface, &fontinfo);
-    if (fterror)
-    {
-        DbgPrint("ERROR: Failed to retrieve font info\n");
-        return FALSE;
-    }
-
-    /* Try to find the font weight */
-    if (strncpy(fontinfo.weight, "Normal", 7) == 0)
-        pifi->usWinWeight = FW_NORMAL;
-    // else if (..)
-    else
-        pifi->usWinWeight = FW_REGULAR;
-
-    pifi->lItalicAngle = fontinfo.italic_angle;
-
-    /* Clear lower 2 bits and set FIXED_PITCH or VARIABLE_PITCH */
-    pifi->jWinPitchAndFamily &= ~3;
-    if (fontinfo.is_fixed_pitch)
-        pifi->jWinPitchAndFamily |= FIXED_PITCH;
-    else
-        pifi->jWinPitchAndFamily |= VARIABLE_PITCH;
-
-    return TRUE;
-}
-
-/*! \name OtfFindTable
+/*! \name FtfdFindTrueTypeTable
  *  \brief Searches for a specific table in TrueType and OpenType font files
  *  \param pvView - The address where the font file is mapped
- *  \param vjView - Size of the mapped font file
+ *  \param cjView - Size of the mapped font file
+ *  \param iFace - 1-based index of the font in the font file.
  *  \param ulTag - Identifier tag of the table to search
  *  \param pulLength - Pointer to an ULONG that recieves the table length,
- *                     Can be NULL;
+ *                     Can be NULL.
  *  \return Pointer to the table if successful, NULL if unsuccessful.
  */
 PVOID
 NTAPI
-OtfFindTable(
+FtfdFindTrueTypeTable(
     PVOID pvView,
     ULONG cjView,
+    ULONG ulFont,
     ULONG ulTag,
     PULONG pulLength)
 {
-    POTF_FILE_HEADER pFileHeader = pvView;
+    POTF_FILE_HEADER pFontHeader;
+    PTT_COLLECTION pCollection;
     ULONG i, ulOffset, ulLength, ulNumTables, ulCheckSum;
+    ASSERT(ulFont > 0);
 
-    /* Verify the file header */
-    if (pFileHeader->ulIdentifier != 'OTTO' &&
-        pFileHeader->ulIdentifier != 'fctt' &&
-        pFileHeader->ulIdentifier != 0x00000100)
+    /* Check if this is a font collection */
+    pCollection = pvView;
+    if (pCollection->ulTTCTag == 'fctt')
     {
-        DbgPrint("ERROR: Couldn't verify identifier: 0x%lx\n",
-                 pFileHeader->ulIdentifier);
+        /* Check if we have enough fonts in the file */
+        if (ulFont > GETD(&pCollection->ulNumFonts))
+        {
+            WARN("ulFont too big: %ld\n", ulFont);
+            return NULL;
+        }
+
+        /* Get the offset of the font we want */
+        ulOffset = GETD(&pCollection->aulOffsetTable[ulFont - 1]);
+        if (ulOffset >= cjView)
+        {
+            WARN("Font %ld is not inside the mapped region\n", ulFont);
+            return NULL;
+        }
+
+        /* Update the font position and remaining view size */
+        pvView = (PUCHAR)pvView + ulOffset;
+        cjView -= ulOffset;
+    }
+    else if (ulFont > 1)
+    {
+        // Shouldn't happen
+        __debugbreak();
+    }
+
+    /* Verify the font header */
+    pFontHeader = pvView;
+    if (pFontHeader->ulIdentifier != 'OTTO' &&
+        pFontHeader->ulIdentifier != 0x00000100)
+    {
+        WARN("Bad font header: 0x%lx\n",
+                 pFontHeader->ulIdentifier);
         return NULL;
     }
 
     /* Check if number of tables is ok */
-    ulNumTables = SWAPW(pFileHeader->usNumTables);
+    ulNumTables = GETW(&pFontHeader->usNumTables);
     ulLength = ulNumTables * sizeof(OTF_TABLE_ENTRY);
     if (ulLength + sizeof(OTF_FILE_HEADER) > cjView)
     {
-        DbgPrint("ERROR: Too many tables (%ld)\n", ulNumTables);
+        WARN("Too many tables (%ld)\n", ulNumTables);
         return NULL;
     }
 
@@ -178,27 +107,29 @@ OtfFindTable(
     for (i = 0; i < ulNumTables; i++)
     {
         /* Compare the tag */
-        if (pFileHeader->aTableEntries[i].ulTag == ulTag)
+        if (pFontHeader->aTableEntries[i].ulTag == ulTag)
         {
             /* Get table offset and length */
-            ulOffset = SWAPD(pFileHeader->aTableEntries[i].ulOffset);
-            ulLength = SWAPD(pFileHeader->aTableEntries[i].ulLength);
+            ulOffset = GETD(&pFontHeader->aTableEntries[i].ulOffset);
+            ulLength = GETD(&pFontHeader->aTableEntries[i].ulLength);
 
             /* Check if this is inside the file */
             if (ulOffset + ulLength > cjView ||
                 ulOffset + ulLength < ulOffset)
             {
-                DbgPrint("invalid table entry. %ld, %ld \n", ulOffset, ulLength);
+                WARN("Invalid table entry. %ld, %ld \n", ulOffset, ulLength);
                 return NULL;
             }
 
+            /* Check the table's checksum */
             ulCheckSum = CalcTableChecksum((PUCHAR)pvView + ulOffset, ulLength);
-            if (ulCheckSum != SWAPD(pFileHeader->aTableEntries[i].ulCheckSum))
+            if (ulCheckSum != GETD(&pFontHeader->aTableEntries[i].ulCheckSum))
             {
-                DbgPrint("Checksum mitmatch! %ld, %ld \n", ulOffset, ulLength);
+                WARN("Checksum mitmatch! %ld, %ld \n", ulOffset, ulLength);
                 return NULL;
             }
 
+            /* Return size and pointer to the table */
             if (pulLength) *pulLength = ulLength;
             return (PUCHAR)pvView + ulOffset;
         }
@@ -208,14 +139,15 @@ OtfFindTable(
     return NULL;
 }
 
-/*! \name OtfGetWinFamily
+/*! \name GetWinFamily
  *  \brief Translates IBM font class IDs into a Windows family bitfield
  *  \param jClassId
  *  \param jSubclassId
  *  \ref http://www.microsoft.com/typography/otspec/ibmfc.htm
  */
+static
 BYTE
-OtfGetWinFamily(BYTE jClassId, BYTE jSubclassId)
+GetWinFamily(BYTE jClassId, BYTE jSubclassId)
 {
     switch (jClassId)
     {
@@ -373,7 +305,7 @@ __debugbreak();
 
 VOID
 NTAPI
-OtfGetIfiMetrics(
+FtfdGetWinMetrics(
     PFTFD_FACE pface,
     PIFIMETRICS pifi)
 {
@@ -381,15 +313,12 @@ OtfGetIfiMetrics(
     PVOID pvView = pfile->pvView;
     POTF_OS2_DATA pOs2;
 
-    /* Try to get type 1 info */
-    OtfGetType1FontInfo(pface, pifi);
-
     /* Get the OS/2 table for the face */
     // FIXME: get the right table for the face, when multiple faces
-    pOs2 = OtfFindTable(pvView, pfile->cjView, '2/SO', NULL);
+    pOs2 = FtfdFindTrueTypeTable(pvView, pfile->cjView, pface->iFace, '2/SO', NULL);
     if (!pOs2)
     {
-        DbgPrint("Couldn't find OS/2 table\n");
+        WARN("Couldn't find OS/2 table\n");
         return;
     }
 
@@ -398,37 +327,37 @@ OtfGetIfiMetrics(
     //pifi->lCharBias;
     //pifi->jWinCharSet;
     pifi->jWinPitchAndFamily &= 3;
-    pifi->jWinPitchAndFamily |= OtfGetWinFamily(pOs2->jClassId, pOs2->jSubClassId);
-    pifi->usWinWeight = SWAPW(pOs2->usWeightClass);
-    pifi->fsSelection = SWAPW(pOs2->fsSelection);
-    pifi->fsType = SWAPW(pOs2->fsType);
-    pifi->fwdWinAscender = SWAPW(pOs2->usWinAscent);
-    pifi->fwdWinDescender = SWAPW(pOs2->usWinDescent);
+    pifi->jWinPitchAndFamily |= GetWinFamily(pOs2->jClassId, pOs2->jSubClassId);
+    pifi->usWinWeight = GETW(&pOs2->usWeightClass);
+    pifi->fsSelection = GETW(&pOs2->fsSelection);
+    pifi->fsType = GETW(&pOs2->fsType);
+    pifi->fwdWinAscender = GETW(&pOs2->usWinAscent);
+    pifi->fwdWinDescender = GETW(&pOs2->usWinDescent);
     //pifi->fwdMacAscender;
     //pifi->fwdMacDescender;
     //pifi->fwdMacLineGap;
-    pifi->fwdTypoAscender = SWAPW(pOs2->sTypoAscender);
-    pifi->fwdTypoDescender = SWAPW(pOs2->sTypoDescender);
-    pifi->fwdTypoLineGap = SWAPW(pOs2->sTypoLineGap);
-    pifi->fwdAveCharWidth = SWAPW(pOs2->xAvgCharWidth);
-    pifi->fwdCapHeight = SWAPW(pOs2->sCapHeight);
-    pifi->fwdXHeight = SWAPW(pOs2->sxHeight);
-    pifi->fwdSubscriptXSize = SWAPW(pOs2->ySubscriptXSize);
-    pifi->fwdSubscriptYSize = SWAPW(pOs2->ySubscriptYSize);
-    pifi->fwdSubscriptXOffset = SWAPW(pOs2->ySubscriptXOffset);
-    pifi->fwdSubscriptYOffset = SWAPW(pOs2->ySubscriptYOffset);
-    pifi->fwdSuperscriptXSize = SWAPW(pOs2->ySuperscriptXSize);
-    pifi->fwdSuperscriptYSize = SWAPW(pOs2->ySuperscriptYSize);
-    pifi->fwdSuperscriptXOffset = SWAPW(pOs2->ySuperscriptXOffset);
-    pifi->fwdSuperscriptYOffset = SWAPW(pOs2->ySuperscriptYOffset);
+    pifi->fwdTypoAscender = GETW(&pOs2->sTypoAscender);
+    pifi->fwdTypoDescender = GETW(&pOs2->sTypoDescender);
+    pifi->fwdTypoLineGap = GETW(&pOs2->sTypoLineGap);
+    pifi->fwdAveCharWidth = GETW(&pOs2->xAvgCharWidth);
+    pifi->fwdCapHeight = GETW(&pOs2->sCapHeight);
+    pifi->fwdXHeight = GETW(&pOs2->sxHeight);
+    pifi->fwdSubscriptXSize = GETW(&pOs2->ySubscriptXSize);
+    pifi->fwdSubscriptYSize = GETW(&pOs2->ySubscriptYSize);
+    pifi->fwdSubscriptXOffset = GETW(&pOs2->ySubscriptXOffset);
+    pifi->fwdSubscriptYOffset = GETW(&pOs2->ySubscriptYOffset);
+    pifi->fwdSuperscriptXSize = GETW(&pOs2->ySuperscriptXSize);
+    pifi->fwdSuperscriptYSize = GETW(&pOs2->ySuperscriptYSize);
+    pifi->fwdSuperscriptXOffset = GETW(&pOs2->ySuperscriptXOffset);
+    pifi->fwdSuperscriptYOffset = GETW(&pOs2->ySuperscriptYOffset);
     //pifi->fwdUnderscoreSize;
     //pifi->fwdUnderscorePosition;
-    pifi->fwdStrikeoutSize = SWAPW(pOs2->yStrikeoutSize);
-    pifi->fwdStrikeoutPosition = SWAPW(pOs2->yStrikeoutPosition);
-    pifi->wcFirstChar = SWAPW(pOs2->usFirstCharIndex);
-    pifi->wcLastChar = SWAPW(pOs2->usLastCharIndex);
-    pifi->wcDefaultChar = SWAPW(pOs2->usDefaultChar);
-    pifi->wcBreakChar = SWAPW(pOs2->usBreakChar);
+    pifi->fwdStrikeoutSize = GETW(&pOs2->yStrikeoutSize);
+    pifi->fwdStrikeoutPosition = GETW(&pOs2->yStrikeoutPosition);
+    pifi->wcFirstChar = GETW(&pOs2->usFirstCharIndex);
+    pifi->wcLastChar = GETW(&pOs2->usLastCharIndex);
+    pifi->wcDefaultChar = GETW(&pOs2->usDefaultChar);
+    pifi->wcBreakChar = GETW(&pOs2->usBreakChar);
     *(DWORD*)pifi->achVendId = *(DWORD*)pOs2->achVendID;
     //pifi->ulPanoseCulture;
     pifi->panose = *(PANOSE*)pOs2->panose;
@@ -436,5 +365,106 @@ OtfGetIfiMetrics(
     /* Convert the special characters from unicode to ansi */
     EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 3);
 
+}
+
+
+/** Public Interface **********************************************************/
+
+LONG
+APIENTRY
+FtfdQueryTrueTypeTable(
+    ULONG_PTR diFile,
+    ULONG ulFont,
+    ULONG ulTag,
+    PTRDIFF dpStart,
+    ULONG cjBuf,
+    BYTE *pjBuf,
+    PBYTE *ppjTable,
+    ULONG *pcjTable)
+{
+    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
+    PBYTE pjTable;
+    ULONG cjTable;
+
+    TRACE("FtfdQueryTrueTypeTable\n");
+
+    /* Check if this file supports TrueType tables */
+    if (pfile->ulFileFormat != FILEFMT_TTF &&
+        pfile->ulFileFormat != FILEFMT_OTF)
+    {
+        WARN("File format doesn't support true type tables\n");
+        return FD_ERROR;
+    }
+
+    /* Check if the whole file is requested */
+    if (ulTag == 0)
+    {
+        /* Requested the whole file */
+        pjTable = pfile->pvView;
+        cjTable = pfile->cjView;
+    }
+    else
+    {
+        /* Search for the table */
+        pjTable = FtfdFindTrueTypeTable(pfile->pvView,
+                                        pfile->cjView,
+                                        ulFont,
+                                        ulTag,
+                                        &cjTable);
+        if (!pjTable)
+        {
+            WARN("Couldn't find table '%.4s'\n", (char*)&ulTag);
+            return FD_ERROR;
+        }
+    }
+
+    /* Return requested pointers */
+    if (ppjTable) *ppjTable = pjTable;
+    if (pcjTable) *pcjTable = cjTable;
+
+    /* Check if we shall copy data */
+    if (pjBuf)
+    {
+        /* Check if the offset is inside the table */
+        if (dpStart < 0 || (ULONG_PTR)dpStart >= cjTable)
+        {
+            WARN("dpStart outside the table: %p\n", dpStart);
+            return FD_ERROR;
+        }
+
+        /* Don't copy beyond the table end */
+        cjTable -= dpStart;
+
+        /* Don't copy more then the buffer can hold */
+        if (cjBuf < cjTable) cjTable = cjBuf;
+
+        /* Copy the data to the buffer */
+        RtlCopyMemory(pjBuf, pjTable + dpStart, cjTable);
+    }
+
+    return cjTable;
+}
+
+PVOID
+APIENTRY
+FtfdGetTrueTypeFile(
+    ULONG_PTR diFile,
+    ULONG *pcj)
+{
+    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
+
+    TRACE("FtfdGetTrueTypeFile\n");
+
+    /* Check if this file is TrueType */
+    if (pfile->ulFileFormat != FILEFMT_TTF &&
+        pfile->ulFileFormat != FILEFMT_OTF)
+    {
+        WARN("File format is not TrueType or Opentype\n");
+        return NULL;
+    }
+
+    /* Return the pointer and size */
+    if (pcj) *pcj = pfile->cjView;
+    return pfile->pvView;
 }
 

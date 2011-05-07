@@ -6,7 +6,7 @@ list(APPEND SOURCE
     enable.c
     font.c
     glyph.c
-    opentype.c
+    tttables.c
     rosglue.c)
 
 list(APPEND PCH_SKIP_SOURCE

@@ -58,7 +58,7 @@ FtfdCreateFontInstance(
     if (fterror)
     {
         /* Failure! */
-        DbgPrint("Error creating face\n");
+        WARN("Error creating face\n");
         EngFreeMem(pfont);
         return NULL;
     }
@@ -127,7 +127,7 @@ FtfdCreateFontInstance(
         if (fterror)
         {
             /* Failure! */
-            DbgPrint("Error setting face size\n");
+            WARN("Error setting face size\n");
             return NULL;
         }
 
@@ -167,7 +167,7 @@ FtfdCreateFontInstance(
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
     if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
 
-DbgPrint("Created font with %ld (%ld)\n", yScale, (yScale+32)/64);
+TRACE("Created font with %ld (%ld)\n", yScale, (yScale+32)/64);
 //__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
@@ -203,14 +203,14 @@ FtfdQueryMaxExtents(
     FT_Face ftface = pfont->ftface;
     XFORMOBJ *pxo;
 
-    DbgPrint("FtfdQueryMaxExtents\n");
+    TRACE("FtfdQueryMaxExtents\n");
 
     if (pfddm)
     {
         if (cjSize < sizeof(FD_DEVICEMETRICS))
         {
             /* Not enough space, fail */
-            DbgPrint("ERROR: cjSize = %ld\n", cjSize);
+            WARN("cjSize = %ld\n", cjSize);
             return FD_ERROR;
         }
 
@@ -283,7 +283,7 @@ FtfdLoadGlyph(
         fterror = FT_Load_Glyph(pfont->ftface, hg, 0);
         if (fterror)
         {
-            DbgPrint("FtfdLoadGlyph: couldn't load glyph 0x%lx\n", hg);
+            WARN("Couldn't load glyph 0x%lx\n", hg);
             pfont->hgSelected = -1;
             return FALSE;
         }
@@ -400,7 +400,7 @@ FtfdQueryGlyphBits(
     cjBitmapSize = BITMAP_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4);
     if (cjBitmapSize + FIELD_OFFSET(GLYPHBITS, aj) > cjSize)
     {
-        DbgPrint("ERROR: buffer too small, got %ld, need %ld\n",
+        WARN("Buffer too small, got %ld, need %ld\n",
                  cjSize, cjBitmapSize + FIELD_OFFSET(GLYPHBITS, aj));
         __debugbreak();
         return;
@@ -411,9 +411,9 @@ FtfdQueryGlyphBits(
 
     //RtlCopyMemory(pgb->aj, ftglyph->bitmap.buffer, cjBitmapSize);
 
-    DbgPrint("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
-             hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
-             GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4));
+    TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
+          hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
+          GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4));
 
 }
 
@@ -436,7 +436,7 @@ FtRenderGlyphBitmap(
     fterror = FT_Render_Glyph(pfont->ftface->glyph, FT_RENDER_MODE_NORMAL);
     if (fterror)
     {
-        DbgPrint("cound't render glyph\n");
+        WARN("Cound't render glyph\n");
         return FALSE;
     }
 
@@ -458,13 +458,13 @@ FtfdQueryFontData(
 {
     PFTFD_FONT pfont = FtfdGetFontInstance(pfo);
 
-    DbgPrint("FtfdQueryFontData, iMode=%ld, hg=%lx, pgd=%p, pv=%p, cjSize=%ld\n",
-             iMode, hg, pgd, pv, cjSize);
+    TRACE("FtfdQueryFontData, iMode=%ld, hg=%lx, pgd=%p, pv=%p, cjSize=%ld\n",
+          iMode, hg, pgd, pv, cjSize);
 
     switch (iMode)
     {
         case QFD_GLYPHANDBITMAP:
-            DbgPrint("QFD_GLYPHANDBITMAP\n");
+            TRACE("QFD_GLYPHANDBITMAP\n");
 
             /* Load the requested glyph */
             if (!FtfdLoadGlyph(pfont, hg, 0)) return FD_ERROR;
@@ -485,7 +485,7 @@ FtfdQueryFontData(
                                   4);
 
         case QFD_GLYPHANDOUTLINE:
-            DbgPrint("QFD_GLYPHANDOUTLINE\n");
+            TRACE("QFD_GLYPHANDOUTLINE\n");
 
             /* Load the requested glyph */
             if (!FtfdLoadGlyph(pfont, hg, 1)) return FD_ERROR;
@@ -505,19 +505,19 @@ FtfdQueryFontData(
             return FtfdQueryMaxExtents(pfo, pv, cjSize);
 
         case QFD_TT_GRAY1_BITMAP:
-            DbgPrint("QFD_TT_GRAY1_BITMAP\n");
+            TRACE("QFD_TT_GRAY1_BITMAP\n");
             break;
         case QFD_TT_GRAY2_BITMAP:
-            DbgPrint("QFD_TT_GRAY2_BITMAP\n");
+            TRACE("QFD_TT_GRAY2_BITMAP\n");
             break;
         case QFD_TT_GRAY4_BITMAP:
-            DbgPrint("QFD_TT_GRAY4_BITMAP\n");
+            TRACE("QFD_TT_GRAY4_BITMAP\n");
             break;
         case QFD_TT_GRAY8_BITMAP:
-            DbgPrint("QFD_TT_GRAY8_BITMAP\n");
+            TRACE("QFD_TT_GRAY8_BITMAP\n");
             break;
         default:
-            DbgPrint("ERROR: Invalid iMode value: %lx\n", iMode);
+            WARN("Invalid iMode value: %lx\n", iMode);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return FD_ERROR;
     }
@@ -534,12 +534,12 @@ FtfdQueryGlyphAttrs(
     FONTOBJ *pfo,
     ULONG iMode)
 {
-    DbgPrint("FtfdQueryGlyphAttrs\n");
+    TRACE("FtfdQueryGlyphAttrs\n");
 
     /* Verify parameters */
     if (!pfo || iMode != FO_ATTR_MODE_ROTATE)
     {
-        DbgPrint("ERROR: invalid parameters: %p, %ld\n", pfo, iMode);
+        WARN("Invalid parameters: %p, %ld\n", pfo, iMode);
         return NULL;
     }
 
@@ -567,7 +567,7 @@ FtfdQueryAdvanceWidths(
     FT_Error fterror;
     FT_Fixed advance;
 
-    DbgPrint("FtfdQueryAdvanceWidths\n");
+    TRACE("FtfdQueryAdvanceWidths\n");
 
     // FIXME: layout horizontal/vertical
     fl = (iMode == QAW_GETEASYWIDTHS) ? FT_ADVANCE_FLAG_FAST_ONLY : 0;
@@ -581,7 +581,7 @@ fl = 0;
         fterror = FT_Get_Advance(ftface, (FT_UInt)phg[i], fl, &advance);
         if (fterror || advance > 0x0FFFF000)
         {
-            DbgPrint("ERROR: failed to query advance width hg=%lx, fl=0x%lx\n",
+            WARN("Failed to query advance width hg=%lx, fl=0x%lx\n",
                      phg[i], fl);
             pusWidths[i] = 0xffff;
             bResult = FALSE;
@@ -590,7 +590,7 @@ fl = 0;
         {
             /* Transform from 16.16 points to 28.4 pixels */
             pusWidths[i] = (USHORT)((advance * 72 / pfo->sizLogResPpi.cx) >> 12);
-            //DbgPrint("Got advance width: hg=%lx, adv=%lx->%ld\n", phg[i], advance, pt.x);
+            //TRACE("Got advance width: hg=%lx, adv=%lx->%ld\n", phg[i], advance, pt.x);
         }
     }
 
@@ -609,7 +609,7 @@ FtfdQueryTrueTypeOutline(
     ULONG cjBuf,
     TTPOLYGONHEADER *ppoly)
 {
-    DbgPrint("FtfdQueryTrueTypeOutline\n");
+    TRACE("FtfdQueryTrueTypeOutline\n");
     __debugbreak();
     return 0;
 }
@@ -625,7 +625,7 @@ FtfdFontManagement(
     ULONG cjOut,
     PVOID pvOut)
 {
-    DbgPrint("FtfdFontManagement\n");
+    TRACE("FtfdFontManagement\n");
     __debugbreak();
     return 0;
 }
@@ -635,7 +635,7 @@ APIENTRY
 FtfdDestroyFont(
     FONTOBJ *pfo)
 {
-    DbgPrint("FtfdDestroyFont()\n");
+    TRACE("FtfdDestroyFont()\n");
     __debugbreak();
 }
 

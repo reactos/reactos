@@ -14,14 +14,32 @@
 #include <winddi.h>
 
 #include <ft2build.h>
+#include FT_FREETYPE_H
 #include <freetype/ftadvanc.h>
 #include <freetype/ftxf86.h>
-#include FT_FREETYPE_H
+#include <freetype/t1tables.h>
 
 extern FT_Library gftlibrary;
 
 #define TAG_GLYPHSET 'GlSt'
 #define TAG_IFIMETRICS 'Ifim'
+
+#if 1// DBG
+#define ASSERT(x) \
+    if(!(x)) \
+    { \
+        DbgPrint("Assertion '%s' failed at %s:%i\n", #x, __FILE__, __LINE__); \
+        __debugbreak(); \
+    }
+#define TRACE DbgPrint
+#define WARN DbgPrint
+#define FATAL DbgPrint
+#else
+#define ASSERT(x)
+#define TRACE(...)
+#define WARN(...)
+#define FATAL(...)
+#endif
 
 /** Driver specific types *****************************************************/
 
@@ -63,6 +81,7 @@ typedef struct
 {
     struct _FTFD_FILE *pfile;
     FT_Face ftface;
+    ULONG iFace;
     ULONG ulFontFormat;
     ULONG cGlyphs;
     ULONG cMappings;
@@ -279,18 +298,21 @@ FtfdGetTrueTypeFile(
     ULONG_PTR iFile,
     ULONG *pcj);
 
-VOID
-NTAPI
-OtfGetIfiMetrics(
-    PFTFD_FACE pface,
-    PIFIMETRICS pifi);
+/* Private interface */
 
 PVOID
 NTAPI
-OtfFindTable(
+FtfdFindTrueTypeTable(
     PVOID pvView,
     ULONG cjView,
+    ULONG iFace,
     ULONG ulTag,
     PULONG pulLength);
+
+VOID
+NTAPI
+FtfdGetWinMetrics(
+    PFTFD_FACE pface,
+    PIFIMETRICS pifi);
 
 #endif /* _FTFD_PCH_ */
