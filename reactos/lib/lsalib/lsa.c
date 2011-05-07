@@ -16,10 +16,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-extern HANDLE Secur32Heap;
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -112,7 +108,7 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
     }
 
     OutBufferSize = Reply->d.CallAuthenticationPackageReply.OutBufferLength;
-    *ProtocolReturnBuffer = RtlAllocateHeap(Secur32Heap,
+    *ProtocolReturnBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             OutBufferSize);
     *ReturnBufferLength = OutBufferSize;
@@ -130,7 +126,7 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 NTSTATUS WINAPI
 LsaFreeReturnBuffer(PVOID Buffer)
 {
-    return RtlFreeHeap(Secur32Heap, 0, Buffer);
+    return RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 }
 
 
@@ -260,7 +256,7 @@ LsaLogonUser(HANDLE LsaHandle,
         return Status;
     }
 
-    *ProfileBuffer = RtlAllocateHeap(Secur32Heap,
+    *ProfileBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                      0,
                                      Reply->d.LogonUserReply.ProfileBufferLength);
     memcpy(*ProfileBuffer,
@@ -280,6 +276,14 @@ LsaLogonUser(HANDLE LsaHandle,
 /*
  * @implemented
  */
+
+/* 
+   msdn:
+   The LsaRegisterLogonProcess function verifies that the application making the 
+   function call is a logon process by checking that it has the SeTcbPrivilege privilege set.
+   It also opens the application's process for PROCESS_DUP_HANDLE access in anticipation of 
+   future LSA authentication calls.
+*/
 NTSTATUS WINAPI
 LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
                         PHANDLE Handle,
@@ -290,8 +294,8 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     ULONG ConnectInfoLength;
     NTSTATUS Status;
     LSASS_CONNECT_DATA ConnectInfo;
-//    LSASS_REQUEST Request;
-//    LSASS_REPLY Reply;
+    //LSASS_REQUEST Request;
+    //LSASS_REPLY Reply;
 
     /* Check the logon process name length */
     if (LsaLogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
@@ -323,10 +327,10 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
                            &ConnectInfoLength);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ZwConnectPort LsaAuthenticationPort failed with %x\n", Status);
         return Status;
     }
 
-    return Status;
 #if 0
     Request.Type = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
     Request.Header.u1.s1.DataLength = sizeof(LSASS_REQUEST) -
@@ -343,8 +347,8 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
                                     &Reply.Header);
     if (!NT_SUCCESS(Status))
     {
-//        NtClose(*Handle);
-//        *Handle = NULL;
+        DPRINT1("ZwRequestWaitReplyPort failed with %x\n", Status);
+        *Handle = NULL;
         return Status;
     }
 
@@ -358,6 +362,8 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     *OperationalMode = Reply.d.RegisterLogonProcessReply.OperationalMode;
 
     return Reply.Status;
+#else
+    return Status;
 #endif
 }
 
