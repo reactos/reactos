@@ -7,6 +7,7 @@
 
 #include "ftfd.h"
 
+static
 FWORD
 CalculateAveCharWidth(
     FT_Face ftface)
@@ -44,7 +45,7 @@ allglyphs:
         if (fterror) continue;
 
         /* Calculate accumulative char width */
-        ulAccumCharWidth += ftface->glyph->metrics.width; // fIXME: weighted
+        ulAccumCharWidth += ftface->glyph->metrics.width; // FIXME: weighted
         cGlyphs++;
     }
 
@@ -69,7 +70,7 @@ FtfdInitIfiMetrics(
     /* Get the freetype face pointer */
     ftface = pface->ftface;
 
-    /* Fill IFIMETRICS */
+    /* Init header */
     pifiex = &pface->ifiex;
     pifi = &pface->ifiex.ifi;
     pifi->cjThis = sizeof(FTFD_IFIMETRICS);
@@ -94,7 +95,11 @@ FtfdInitIfiMetrics(
     pifi->lEmbedId = 0;
     pifi->lCharBias = 0;
 
-    /* Set flags */
+    /* Set pitch */
+    pifi->jWinPitchAndFamily = FT_IS_FIXED_WIDTH(ftface) ? FIXED_PITCH :
+                                                           VARIABLE_PITCH;
+
+    /* Feature flags */
     pifi->flInfo = FM_INFO_RETURNS_BITMAPS | FM_INFO_1BPP | FM_INFO_4BPP;
     if (pface->ulFontFormat == FMT_TYPE1)
         pifi->flInfo |= FM_INFO_TECH_TYPE1;
@@ -110,48 +115,15 @@ FtfdInitIfiMetrics(
         pifi->flInfo |= /*FM_INFO_RETURNS_OUTLINES |*/ FM_INFO_ARB_XFORMS;
     pifi->flInfo |= FM_INFO_RIGHT_HANDED; // FIXME: how to determine?
 
-    /* Font style */
-    pifi->fsSelection = FM_SEL_REGULAR;
-    pifi->usWinWeight = FW_REGULAR;
-    if (ftface->style_flags & FT_STYLE_FLAG_BOLD)
-    {
-        pifi->fsSelection &= ~FM_SEL_REGULAR;
-        pifi->fsSelection |= FM_SEL_BOLD;
-        pifi->usWinWeight = FW_BOLD;
-    }
-    if (ftface->style_flags & FT_STYLE_FLAG_ITALIC)
-    {
-        pifi->fsSelection &= ~FM_SEL_REGULAR; // ??? remove it?
-        pifi->fsSelection |= FM_SEL_ITALIC;
-    }
-
-    pifi->fsType = 0;
-
     /* Font resolution */
     pifi->fwdUnitsPerEm = ftface->units_per_EM;
     pifi->fwdLowestPPEm = 3; // FIXME
 
     /* Font metrics */
-    pifi->fwdWinAscender = (ftface->ascender * 213) / 170;
-    pifi->fwdWinDescender = -(ftface->descender * 213) / 170;
     pifi->fwdMacAscender = ftface->ascender;
     pifi->fwdMacDescender = ftface->descender;
     pifi->fwdMacLineGap = 0;
-    pifi->fwdAveCharWidth = 0;
-    pifi->fwdTypoAscender = ftface->ascender;
-    pifi->fwdTypoDescender = ftface->descender;
-    pifi->fwdTypoLineGap = ftface->units_per_EM / 10;
     pifi->fwdMaxCharInc = ftface->max_advance_width;
-    pifi->fwdCapHeight = 0;
-    pifi->fwdXHeight = 0;
-    pifi->fwdSubscriptXSize = 0;
-    pifi->fwdSubscriptYSize = 0;
-    pifi->fwdSubscriptXOffset = 0;
-    pifi->fwdSubscriptYOffset = 0;
-    pifi->fwdSuperscriptXSize = 0;
-    pifi->fwdSuperscriptYSize = 0;
-    pifi->fwdSuperscriptXOffset = 0;
-    pifi->fwdSuperscriptYOffset = 0;
     pifi->fwdUnderscoreSize = ftface->underline_thickness;
     pifi->fwdUnderscorePosition = ftface->underline_position; // FIXME: off by 10
     pifi->fwdStrikeoutSize = pifi->fwdUnitsPerEm / 20;
@@ -170,17 +142,6 @@ FtfdInitIfiMetrics(
     pifi->rclFontBox.top = ftface->bbox.yMax;
     pifi->rclFontBox.bottom = ftface->bbox.yMin;
 
-    /* Special characters */
-    pifi->chFirstChar = 0x00;
-    pifi->chLastChar = 0xff;
-    pifi->chDefaultChar = 0x20;
-    pifi->chBreakChar = 0x20;
-    //pifi->wcFirstChar = 0;
-    //pifi->wcLastChar = 0x00ff;
-    pifi->wcDefaultChar = 0x0020;
-    pifi->wcBreakChar = 0x0020;
-
-    *(DWORD*)&pifi->achVendId = '0000';
     pifi->cKerningPairs = 0;
     pifi->ulPanoseCulture = FM_PANOSE_CULTURE_LATIN;
 
@@ -195,26 +156,70 @@ FtfdInitIfiMetrics(
     pifi->panose.bMidline = PAN_ANY;
     pifi->panose.bXHeight = PAN_ANY;
 
+    /* Try to get OS/2 TrueType or OpenType metrics */
+    if (!FtfdGetWinMetrics(pface, pifi))
+    {
+        /* No success, use fallback */
+
+        /* Font style flags */
+        pifi->fsType = 0;
+        pifi->fsSelection = FM_SEL_REGULAR;
+        pifi->usWinWeight = FW_REGULAR;
+        if (ftface->style_flags & FT_STYLE_FLAG_BOLD)
+        {
+            pifi->fsSelection &= ~FM_SEL_REGULAR;
+            pifi->fsSelection |= FM_SEL_BOLD;
+            pifi->usWinWeight = FW_BOLD;
+        }
+        if (ftface->style_flags & FT_STYLE_FLAG_ITALIC)
+        {
+            pifi->fsSelection &= ~FM_SEL_REGULAR;
+            pifi->fsSelection |= FM_SEL_ITALIC;
+        }
+
+        /* Metrics */
+        pifi->fwdWinAscender = (ftface->ascender * 213) / 170;
+        pifi->fwdWinDescender = -(ftface->descender * 213) / 170;
+        pifi->fwdTypoAscender = ftface->ascender;
+        pifi->fwdTypoDescender = ftface->descender;
+        pifi->fwdTypoLineGap = ftface->units_per_EM / 10;
+        pifi->fwdAveCharWidth = 0;
+        pifi->fwdCapHeight = 0;
+        pifi->fwdXHeight = 0;
+        pifi->fwdSubscriptXSize = 0;
+        pifi->fwdSubscriptYSize = 0;
+        pifi->fwdSubscriptXOffset = 0;
+        pifi->fwdSubscriptYOffset = 0;
+        pifi->fwdSuperscriptXSize = 0;
+        pifi->fwdSuperscriptYSize = 0;
+        pifi->fwdSuperscriptXOffset = 0;
+        pifi->fwdSuperscriptYOffset = 0;
+        pifi->fwdAveCharWidth = CalculateAveCharWidth(ftface);
+
+        /* Special characters (first and last char are already enumerated) */
+        pifi->wcDefaultChar = 0x0020;
+        pifi->wcBreakChar = 0x0020;
+
+        *(DWORD*)&pifi->achVendId = '0000';
+    }
+
     /* Try to get type1 info from freetype */
     fterror = FT_Get_PS_Font_Info(pface->ftface, &fontinfo);
     if (fterror == 0)
     {
         /* Set italic angle */
         pifi->lItalicAngle = fontinfo.italic_angle;
-
-        /* Set pitch */
-        if (fontinfo.is_fixed_pitch)
-            pifi->jWinPitchAndFamily = FIXED_PITCH;
-        else
-            pifi->jWinPitchAndFamily = VARIABLE_PITCH;
     }
     else
     {
         /* Set fallback values */
         pifi->lItalicAngle = 0;
-        pifi->jWinPitchAndFamily = 0;
     }
 
+    /* Convert the special characters from unicode to ansi */
+    EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 3);
+
+    /* Convert names to unicode */
     EngMultiByteToUnicodeN(pifiex->awcFamilyName,
                            LF_FACESIZE,
                            NULL,
@@ -233,26 +238,16 @@ FtfdInitIfiMetrics(
                            ftface->family_name,
                            strnlen(ftface->family_name, MAX_PATH));
 
-    /* Use OS/2 TrueType or OpenType tables */
-    FtfdGetWinMetrics(pface, pifi);
-
-    if (pifi->fwdAveCharWidth == 0)
-        pifi->fwdAveCharWidth = CalculateAveCharWidth(ftface);
-
     /* Create a unique name */
     wcscpy(pifiex->awcUniqueName, L"1.000;ABCD;");
     wcsncat(pifiex->awcUniqueName, pifiex->awcFamilyName, LF_FACESIZE);
     pifiex->awcUniqueName[0] = L'1'; // + version?
-    //pifiex->awcUniqueName[2] = L'0'; // + version?
+    pifiex->awcUniqueName[2] = L'0'; // + version?
     EngMultiByteToUnicodeN(pifiex->awcUniqueName + 6,
                            4,
                            NULL,
                            pifi->achVendId,
                            4);
-
-
-    TRACE("Finished with the ifi: %p\n", pifi);
-    //__debugbreak();
 
     return TRUE;
 }

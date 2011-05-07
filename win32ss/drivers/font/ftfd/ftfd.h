@@ -42,8 +42,6 @@ extern FT_Library gftlibrary;
 #define FATAL(...)
 #endif
 
-// move to appropriate header
-#define STAMP_DESIGNVECTOR (0x8000000 + 'd' + ('v' << 8))
 
 /** Driver specific types *****************************************************/
 
@@ -314,7 +312,7 @@ FtfdFindTrueTypeTable(
     ULONG ulTag,
     PULONG pulLength);
 
-VOID
+BOOL
 NTAPI
 FtfdGetWinMetrics(
     PFTFD_FACE pface,
