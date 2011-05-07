@@ -688,21 +688,19 @@ GetUsbStringDescriptor(
 
     //
     // Get the index string descriptor length
+    // FIXME: Implement LangIds
     //
     Status = GetUsbDeviceDescriptor(ChildDeviceObject,
                                     USB_STRING_DESCRIPTOR_TYPE,
                                     Index,
-                                    0,
+                                    0x0409,
                                     StringDesc,
                                     sizeof(USB_STRING_DESCRIPTOR));
-
-    //
-    // If lenght is 4 only then either this is a bad index or the device is not reporting
-    //
-    if (StringDesc->bLength == 4)
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBHUB: Device Data Error\n");
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("GetUsbDeviceDescriptor failed with status %x\n", Status);
+        ExFreePool(StringDesc);
+        return Status;
     }
 
     DPRINT1("StringDesc->bLength %d\n", StringDesc->bLength);
@@ -724,19 +722,21 @@ GetUsbStringDescriptor(
         DPRINT1("Failed to allocate buffer for string!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
     RtlZeroMemory(StringDesc, SizeNeeded);
+
     //
     // Get the string
     //
     Status = GetUsbDeviceDescriptor(ChildDeviceObject,
                                     USB_STRING_DESCRIPTOR_TYPE,
                                     Index,
-                                    0,
+                                    0x0409,
                                     StringDesc,
                                     SizeNeeded);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get string from device\n");
+        DPRINT1("GetUsbDeviceDescriptor failed with status %x\n", Status);
         ExFreePool(StringDesc);
         return Status;
     }

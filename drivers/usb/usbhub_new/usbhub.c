@@ -190,8 +190,6 @@ DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath)
 {
-    ULONG i;
-
     DriverObject->DriverExtension->AddDevice = USBHUB_AddDevice;
     DPRINT1("USBHUB: DriverEntry\n");
 
