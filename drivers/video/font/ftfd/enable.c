@@ -41,7 +41,7 @@ FtfdEnableDriver(
 {
     FT_Error fterror;
 
-    DbgPrint("FtfdEnableDriver()\n");
+    TRACE("FtfdEnableDriver()\n");
 
     /* Check parameter */
     if (cj < sizeof(DRVENABLEDATA))
@@ -53,7 +53,7 @@ FtfdEnableDriver(
     fterror = FT_Init_FreeType(&gftlibrary);
     if (fterror)
     {
-        DbgPrint("an error occurred during library initialization: %ld.\n", fterror);
+        WARN("Failed to initialize freetype library: %ld.\n", fterror);
         return FALSE;
     }
 
@@ -82,7 +82,7 @@ FtfdEnablePDEV(
     IN LPWSTR pwszDeviceName,
     IN HANDLE hDriver)
 {
-    DbgPrint("FtfdEnablePDEV(hdev=%p)\n", hdev);
+    TRACE("FtfdEnablePDEV(hdev=%p)\n", hdev);
 
     /* Return a dummy DHPDEV */
     return (PVOID)1;
@@ -95,7 +95,7 @@ FtfdCompletePDEV(
     IN DHPDEV dhpdev,
     IN HDEV hdev)
 {
-    DbgPrint("FtfdCompletePDEV()\n");
+    TRACE("FtfdCompletePDEV()\n");
     /* Nothing to do */
 }
 
@@ -105,7 +105,7 @@ APIENTRY
 FtfdDisablePDEV(
     IN DHPDEV dhpdev)
 {
-    DbgPrint("FtfdDisablePDEV()\n");
+    TRACE("FtfdDisablePDEV()\n");
     /* Nothing to do */
 }
 
@@ -119,7 +119,7 @@ FtfdEscape(
     ULONG cjOut,
     PVOID pvOut)
 {
-    DbgPrint("FtfdEscape\n");
+    TRACE("FtfdEscape\n");
     __debugbreak();
     return 0;
 }

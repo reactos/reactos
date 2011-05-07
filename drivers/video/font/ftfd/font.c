@@ -30,7 +30,7 @@ CalculateAveCharWidth(
     goto done;
 
 allglyphs:
-    DbgPrint("using all glyphs\n");
+    TRACE("using all glyphs\n");
 
     /* Start over */
     ulAccumCharWidth = 0;
@@ -60,9 +60,11 @@ FtfdInitIfiMetrics(
     PFTFD_IFIMETRICS pifiex;
     PIFIMETRICS pifi;
     FT_Face ftface;
+    FT_Error fterror;
+    PS_FontInfoRec fontinfo;
     ULONG i;
 
-    DbgPrint("FtfdInitIfiMetrics()\n");
+    TRACE("FtfdInitIfiMetrics()\n");
 
     /* Get the freetype face pointer */
     ftface = pface->ftface;
@@ -90,9 +92,7 @@ FtfdInitIfiMetrics(
     }
 
     pifi->lEmbedId = 0;
-    pifi->lItalicAngle = 0;
     pifi->lCharBias = 0;
-    pifi->jWinPitchAndFamily = 0; // FIXME: generic way to get this?
 
     /* Set flags */
     pifi->flInfo = FM_INFO_RETURNS_BITMAPS | FM_INFO_1BPP | FM_INFO_4BPP;
@@ -138,9 +138,9 @@ FtfdInitIfiMetrics(
     pifi->fwdMacDescender = ftface->descender;
     pifi->fwdMacLineGap = 0;
     pifi->fwdAveCharWidth = 0;
-    pifi->fwdTypoAscender = pifi->fwdMacAscender;
-    pifi->fwdTypoDescender = pifi->fwdMacDescender;
-    pifi->fwdTypoLineGap = 0;
+    pifi->fwdTypoAscender = ftface->ascender;
+    pifi->fwdTypoDescender = ftface->descender;
+    pifi->fwdTypoLineGap = ftface->units_per_EM / 10;
     pifi->fwdMaxCharInc = ftface->max_advance_width;
     pifi->fwdCapHeight = 0;
     pifi->fwdXHeight = 0;
@@ -195,6 +195,26 @@ FtfdInitIfiMetrics(
     pifi->panose.bMidline = PAN_ANY;
     pifi->panose.bXHeight = PAN_ANY;
 
+    /* Try to get type1 info from freetype */
+    fterror = FT_Get_PS_Font_Info(pface->ftface, &fontinfo);
+    if (fterror == 0)
+    {
+        /* Set italic angle */
+        pifi->lItalicAngle = fontinfo.italic_angle;
+
+        /* Set pitch */
+        if (fontinfo.is_fixed_pitch)
+            pifi->jWinPitchAndFamily = FIXED_PITCH;
+        else
+            pifi->jWinPitchAndFamily = VARIABLE_PITCH;
+    }
+    else
+    {
+        /* Set fallback values */
+        pifi->lItalicAngle = 0;
+        pifi->jWinPitchAndFamily = 0;
+    }
+
     EngMultiByteToUnicodeN(pifiex->awcFamilyName,
                            LF_FACESIZE,
                            NULL,
@@ -214,7 +234,7 @@ FtfdInitIfiMetrics(
                            strnlen(ftface->family_name, MAX_PATH));
 
     /* Use OS/2 TrueType or OpenType tables */
-    OtfGetIfiMetrics(pface, pifi);
+    FtfdGetWinMetrics(pface, pifi);
 
     if (pifi->fwdAveCharWidth == 0)
         pifi->fwdAveCharWidth = CalculateAveCharWidth(ftface);
@@ -231,7 +251,7 @@ FtfdInitIfiMetrics(
                            4);
 
 
-    DbgPrint("Finished with the ifi: %p\n", pifi);
+    TRACE("Finished with the ifi: %p\n", pifi);
     //__debugbreak();
 
     return TRUE;
@@ -249,7 +269,7 @@ FtfdInitGlyphSet(
     HGLYPH * phglyphs;
     WCHAR wcCurrent, wcPrev;
 
-    DbgPrint("FtfdInitGlyphSet()\n");
+    TRACE("FtfdInitGlyphSet()\n");
 
     /* Calculate FD_GLYPHSET size (incl. HGLYPH array!) */
     cjSize = FIELD_OFFSET(FD_GLYPHSET, awcrun)
@@ -260,7 +280,7 @@ FtfdInitGlyphSet(
     pGlyphSet = EngAllocMem(0, cjSize, TAG_GLYPHSET);
     if (!pGlyphSet)
     {
-        DbgPrint("EngAllocMem() failed.\n");
+        WARN("EngAllocMem() failed.\n");
         return NULL;
     }
 
@@ -293,7 +313,7 @@ FtfdInitGlyphSet(
             pGlyphSet->awcrun[cRuns - 1].wcLow = wcCurrent;
             pGlyphSet->awcrun[cRuns - 1].cGlyphs = 1;
             pGlyphSet->awcrun[cRuns - 1].phg = &phglyphs[i];
-            //DbgPrint("adding new run i=%ld, cRuns=%ld, wc=%x\n", i, cRuns, wcCurrent);
+            //TRACE("adding new run i=%ld, cRuns=%ld, wc=%x\n", i, cRuns, wcCurrent);
         }
 
         /* Get the next charcode and index */
@@ -301,7 +321,7 @@ FtfdInitGlyphSet(
         wcCurrent = (WCHAR)FT_Get_Next_Char(ftface, wcCurrent, &index);
     }
 
-    DbgPrint("Done with font tree, %d runs\n", pGlyphSet->cRuns);
+    TRACE("Done with font tree, %d runs\n", pGlyphSet->cRuns);
     pface->pGlyphSet = pGlyphSet;
     return pGlyphSet;
 }
@@ -310,7 +330,7 @@ VOID
 FtfdInitKerningPairs(
     PFTFD_FACE pface)
 {
-    //DbgPrint("unimplemented\n");
+    //WARN("unimplemented\n");
 }
 
 static
@@ -354,6 +374,7 @@ PFTFD_FACE
 NTAPI
 FtfdCreateFace(
     PFTFD_FILE pfile,
+    ULONG iFace,
     FT_Face ftface)
 {
     PFTFD_FACE pface;
@@ -365,11 +386,12 @@ FtfdCreateFace(
     pface = EngAllocMem(FL_ZERO_MEMORY, sizeof(FTFD_FACE), 'dftF');
     if (!pface)
     {
-        DbgPrint("Couldn't allcate a face\n");
+        WARN("Couldn't allcate a face\n");
         return NULL;
     }
 
     pface->pfile = pfile;
+    pface->iFace = iFace;
     pface->ftface = ftface;
     pface->cGlyphs = ftface->num_glyphs;
 
@@ -380,7 +402,7 @@ FtfdCreateFace(
     fterror = FT_Select_Charmap(ftface, FT_ENCODING_UNICODE);
     if (fterror)
     {
-        DbgPrint("ERROR: Could not load unicode charmap\n");
+        WARN("Could not load unicode charmap\n");
         return NULL;
     }
 
@@ -456,19 +478,19 @@ FtfdLoadFontFile(
     FT_Face ftface;
     PFTFD_FILE pfile = NULL;
 
-    DbgPrint("FtfdLoadFontFile()\n");
+    TRACE("FtfdLoadFontFile()\n");
 
     /* Check parameters */
     if (cFiles != 1)
     {
-        DbgPrint("ERROR: Only 1 File is allowed, got %ld!\n", cFiles);
+        WARN("Only 1 File is allowed, got %ld!\n", cFiles);
         return HFF_INVALID;
     }
 
     /* Map the font file */
     if (!EngMapFontFileFD(*piFile, (PULONG*)&pvView, &cjView))
     {
-        DbgPrint("ERROR: Could not map font file!\n");
+        WARN("Could not map font file!\n");
         return HFF_INVALID;
     }
 
@@ -477,7 +499,7 @@ FtfdLoadFontFile(
     if (fterror)
     {
         /* Failure! */
-        DbgPrint("ERROR: No faces found in file\n");
+        WARN("No faces found in file\n");
         goto error;
     }
 
@@ -490,7 +512,7 @@ FtfdLoadFontFile(
     if (!pfile)
     {
         /* Failure! */
-        DbgPrint("ERROR: EngAllocMem() failed.\n");
+        WARN("EngAllocMem() failed.\n");
         goto error;
     }
 
@@ -502,10 +524,10 @@ FtfdLoadFontFile(
     pfile->ulFastCheckSum = ulFastCheckSum;
 
     /* Create a face */
-    pfile->apface[0] = FtfdCreateFace(pfile, ftface);
+    pfile->apface[0] = FtfdCreateFace(pfile, 1, ftface);
     if (!pfile->apface[0])
     {
-        DbgPrint("ERROR: FtfdCreateFace() failed.\n");
+        WARN("FtfdCreateFace() failed.\n");
         goto error;
     }
 
@@ -519,16 +541,16 @@ FtfdLoadFontFile(
         fterror = FT_New_Memory_Face(gftlibrary, *ppvView, *pcjView, i, &ftface);
         if (fterror)
         {
-            DbgPrint("error\n");
+            WARN("error\n");
             __debugbreak();
             goto error;
         }
 
         /* Store the face in the file structure */
-        pfile->apface[i] = FtfdCreateFace(pfile, ftface);
+        pfile->apface[i] = FtfdCreateFace(pfile, i + 1, ftface);
     }
 
-    DbgPrint("Success! Returning %ld faces\n", cNumFaces);
+    TRACE("Success! Returning %ld faces\n", cNumFaces);
     return (ULONG_PTR)pfile;
 
 error:
@@ -552,12 +574,12 @@ FtfdQueryFont(
     PFTFD_FILE pfile = (PFTFD_FILE)diFile;
     PFTFD_FACE pface = pfile->apface[iFace - 1];
 
-    DbgPrint("FtfdQueryFont()\n");
+    TRACE("FtfdQueryFont()\n");
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)
     {
-        DbgPrint("ERROR: iFace > pfile->cNumFaces || !pid\n");
+        WARN("iFace > pfile->cNumFaces || !pid\n");
         return NULL;
     }
 
@@ -580,12 +602,12 @@ FtfdQueryFontTree(
     PFTFD_FILE pfile = (PFTFD_FILE)diFile;
     PFTFD_FACE pface;
 
-    DbgPrint("FtfdQueryFontTree(iMode=%ld)\n", iMode);
+    TRACE("FtfdQueryFontTree(iMode=%ld)\n", iMode);
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)
     {
-        DbgPrint("ERROR: iFace > pfile->cNumFaces || !pid\n");
+        WARN("iFace > pfile->cNumFaces || !pid\n");
         return NULL;
     }
 
@@ -603,7 +625,7 @@ FtfdQueryFontTree(
             return pface->pKerningPairs;
 
         default:
-            DbgPrint("ERROR: invalid iMode: %ld\n", iMode);
+            WARN("Invalid iMode: %ld\n", iMode);
     }
 
     return NULL;
@@ -617,7 +639,7 @@ FtfdUnloadFontFile(
     PFTFD_FILE pfile = (PFTFD_FILE)diFile;
     ULONG i;
 
-    DbgPrint("FtfdUnloadFontFile()\n");
+    TRACE("FtfdUnloadFontFile()\n");
 
     /* Cleanup faces */
     for (i = 0; i < pfile->cNumFaces; i++)
@@ -634,7 +656,6 @@ FtfdUnloadFontFile(
     return TRUE;
 }
 
-
 LONG
 APIENTRY
 FtfdQueryFontFile(
@@ -645,7 +666,7 @@ FtfdQueryFontFile(
 {
     PFTFD_FILE pfile = (PFTFD_FILE)diFile;
 
-    DbgPrint("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
+    TRACE("FtfdQueryFontFile(ulMode=%ld)\n", ulMode);
 
     switch (ulMode)
     {
@@ -669,7 +690,7 @@ FtfdQueryFontCaps(
     ULONG culCaps,
     ULONG *pulCaps)
 {
-    DbgPrint("FtfdQueryFontCaps()\n");
+    TRACE("FtfdQueryFontCaps()\n");
 
     /* We need room for 2 ULONGs */
     if (culCaps < 2)
@@ -684,101 +705,6 @@ FtfdQueryFontCaps(
     return 2;
 }
 
-LONG
-APIENTRY
-FtfdQueryTrueTypeTable(
-    ULONG_PTR diFile,
-    ULONG ulFont,
-    ULONG ulTag,
-    PTRDIFF dpStart,
-    ULONG cjBuf,
-    BYTE *pjBuf,
-    PBYTE *ppjTable,
-    ULONG *pcjTable)
-{
-    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
-    PBYTE pjTable;
-    ULONG cjTable;
-
-    DbgPrint("FtfdQueryTrueTypeTable\n");
-
-    /* Check if this file supports TrueType tables */
-    if (pfile->ulFileFormat != FILEFMT_TTF &&
-        pfile->ulFileFormat != FILEFMT_OTF)
-    {
-        DbgPrint("File format doesn't support true type tables\n");
-        return FD_ERROR;
-    }
-
-    // FIXME: handle ulFont
-
-    /* Check if the whole file is requested */
-    if (ulTag == 0)
-    {
-        /* Requested the whole file */
-        pjTable = pfile->pvView;
-        cjTable = pfile->cjView;
-    }
-    else
-    {
-        /* Search for the table */
-        pjTable = OtfFindTable(pfile->pvView, pfile->cjView, ulTag, &cjTable);
-        if (!pjTable)
-        {
-            DbgPrint("Couldn't find table '%.4s'\n", (char*)&ulTag);
-            return FD_ERROR;
-        }
-    }
-
-    /* Return requested pointers */
-    if (ppjTable) *ppjTable = pjTable;
-    if (pcjTable) *pcjTable = cjTable;
-
-    /* Check if we shall copy data */
-    if (pjBuf)
-    {
-        /* Check if the offset is inside the table */
-        if (dpStart < 0 || (ULONG_PTR)dpStart >= cjTable)
-        {
-            DbgPrint("dpStart outside the table: %p\n", dpStart);
-            return FD_ERROR;
-        }
-
-        /* Don't copy beyond the table end */
-        cjTable -= dpStart;
-
-        /* Don't copy more then the buffer can hold */
-        if (cjBuf < cjTable) cjTable = cjBuf;
-
-        /* Copy the data to the buffer */
-        RtlCopyMemory(pjBuf, pjTable + dpStart, cjTable);
-    }
-
-    return cjTable;
-}
-
-PVOID
-APIENTRY
-FtfdGetTrueTypeFile(
-    ULONG_PTR diFile,
-    ULONG *pcj)
-{
-    PFTFD_FILE pfile = (PFTFD_FILE)diFile;
-
-    DbgPrint("FtfdGetTrueTypeFile\n");
-
-    /* Check if this file is TrueType */
-    if (pfile->ulFileFormat != FILEFMT_TTF &&
-        pfile->ulFileFormat != FILEFMT_OTF)
-    {
-        DbgPrint("File format is not TrueType or Opentype\n");
-        return NULL;
-    }
-
-    /* Return the pointer and size */
-    if (pcj) *pcj = pfile->cjView;
-    return pfile->pvView;
-}
 
 #if 0 // not needed atm
 VOID
@@ -787,7 +713,7 @@ FtfdFree(
     PVOID pv,
     ULONG_PTR id)
 {
-    DbgPrint("FtfdFree()\n");
+    TRACE("FtfdFree()\n");
     EngFreeMem(pv);
 }
 #endif

@@ -7,7 +7,7 @@ add_library(ftfd SHARED
     enable.c
     font.c
     glyph.c
-    opentype.c
+    tttables.c
     rosglue.c
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
