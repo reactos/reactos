@@ -1357,7 +1357,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","NoInteractiveServices",0x000100
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","ShellErrorMode",0x00010003,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","SystemDirectory",0x00020002,"%SystemRoot%\system32"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll,ntlmssp.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
 
 ; Service groups
