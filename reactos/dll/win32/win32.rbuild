@@ -352,6 +352,9 @@
 <directory name="ntlanman">
 	<xi:include href="ntlanman/ntlanman.rbuild" />
 </directory>
+<directory name="ntlmssp">
+	<xi:include href="ntlmssp/ntlmssp.rbuild" />
+</directory>
 <directory name="ntmarta">
 	<xi:include href="ntmarta/ntmarta.rbuild" />
 </directory>
