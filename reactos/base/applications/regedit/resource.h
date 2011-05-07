@@ -185,6 +185,8 @@
 #define IDS_NEW_VALUE                   31127
 #define IDS_GOTO_SUGGESTED_KEY          31128
 
+#define IDS_IMPORT_PROMPT               31129
+#define IDS_IMPORTED_OK                 31130
 
 #define IDD_EDIT_STRING                  2000
 #define IDC_VALUE_NAME                   2001

@@ -393,6 +393,12 @@ BEGIN
   IDS_FINISHEDFIND               "Τέλος αναζήτησης στη registry."
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMPORT_PROMPT             "Add the data to the registry?"
+  IDS_IMPORTED_OK               "Information added to the registry"
+END
+
 /*****************************************************************/
 
 

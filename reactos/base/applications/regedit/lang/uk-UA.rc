@@ -394,6 +394,12 @@ BEGIN
   IDS_FINISHEDFIND               "Пошук у реєстрі завершений."
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMPORT_PROMPT             "Add the data to the registry?"
+  IDS_IMPORTED_OK               "Information added to the registry"
+END
+
 /*****************************************************************/
 
 

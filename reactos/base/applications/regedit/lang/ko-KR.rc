@@ -378,6 +378,12 @@ BEGIN
   IDS_FINISHEDFIND               "레지스트리 검색을 완료했습니다."
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMPORT_PROMPT             "Add the data to the registry?"
+  IDS_IMPORTED_OK               "Information added to the registry"
+END
+
 /*****************************************************************/
 
 

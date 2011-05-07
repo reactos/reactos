@@ -398,6 +398,12 @@ BEGIN
   IDS_FINISHEDFIND               "Fine ricerca nel registro."
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMPORT_PROMPT             "Aggiungere l'informazione al registro?"
+  IDS_IMPORTED_OK               "L'informazione è stata aggiunta al registro"
+END
+
 /*****************************************************************/
 
 
