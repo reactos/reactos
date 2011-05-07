@@ -50,7 +50,7 @@ FtfdFindTrueTypeTable(
     ULONG ulTag,
     PULONG pulLength)
 {
-    POTF_FILE_HEADER pFontHeader;
+    PTT_FILE_HEADER pFontHeader;
     PTT_COLLECTION pCollection;
     ULONG i, ulOffset, ulLength, ulNumTables, ulCheckSum;
     ASSERT(ulFont > 0);
@@ -96,8 +96,8 @@ FtfdFindTrueTypeTable(
 
     /* Check if number of tables is ok */
     ulNumTables = GETW(&pFontHeader->usNumTables);
-    ulLength = ulNumTables * sizeof(OTF_TABLE_ENTRY);
-    if (ulLength + sizeof(OTF_FILE_HEADER) > cjView)
+    ulLength = ulNumTables * sizeof(TT_TABLE_ENTRY);
+    if (ulLength + sizeof(TT_FILE_HEADER) > cjView)
     {
         WARN("Too many tables (%ld)\n", ulNumTables);
         return NULL;
@@ -311,7 +311,7 @@ FtfdGetWinMetrics(
 {
     PFTFD_FILE pfile = pface->pfile;
     PVOID pvView = pfile->pvView;
-    POTF_OS2_DATA pOs2;
+    PTT_OS2_DATA pOs2;
 
     /* Get the OS/2 table for the face */
     // FIXME: get the right table for the face, when multiple faces

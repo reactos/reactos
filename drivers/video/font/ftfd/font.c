@@ -390,6 +390,7 @@ FtfdCreateFace(
         return NULL;
     }
 
+    /* Set basic fields */
     pface->pfile = pfile;
     pface->iFace = iFace;
     pface->ftface = ftface;
@@ -534,6 +535,33 @@ FtfdLoadFontFile(
     /* Get the file format */
     pfile->ulFileFormat = FtfdGetFileFormat(pfile);
 
+    /* Check for design vector */
+    if (pdv)
+    {
+        /* Check if the font format supports it */
+        if (pfile->apface[0]->ulFontFormat != FMT_TYPE1)
+        {
+            WARN("Design vector is not supported\n");
+            goto error;
+        }
+
+        /* Verify the design vector, just in case ... */
+        if (pdv->dvReserved != STAMP_DESIGNVECTOR ||
+            pdv->dvNumAxes > MM_MAX_NUMAXES)
+        {
+            WARN("Design vector is invalid\n");
+            goto error;
+        }
+
+        /* Copy design vector */
+        pfile->dv = *pdv;
+    }
+    else
+    {
+        /* Mark as not present */
+        pfile->dv.dvReserved = 0;
+    }
+
     /* Loop all additional faces in this file */
     for (i = 1; i < cNumFaces; i++)
     {
@@ -650,7 +678,7 @@ FtfdUnloadFontFile(
     /* Unmap the font file */
     EngUnmapFontFileFD(pfile->iFile);
 
-    /* Free the memory that was allocated for the font */
+    /* Free the memory that was allocated for the file */
     EngFreeMem(pfile);
 
     return TRUE;

@@ -133,6 +133,21 @@ FtfdCreateFontInstance(
 
     }
 
+    /* Check if there is a design vector */
+    if (pfile->dv.dvReserved == STAMP_DESIGNVECTOR)
+    {
+        /* Set the coordinates */
+        fterror = FT_Set_MM_Design_Coordinates(ftface,
+                                               pfile->dv.dvNumAxes,
+                                               pfile->dv.dvValues);
+        if (fterror)
+        {
+            /* Failure! */
+            WARN("Failed to set design vector\n");
+            return NULL;
+        }
+    }
+
     // FIXME: quantize to 16.16 fixpoint
     XFORMOBJ_iGetXform(pxo, &xform);
     pfont->fdxQuantized.eXX = xform.eM11;
@@ -464,11 +479,10 @@ FtfdQueryFontData(
     switch (iMode)
     {
         case QFD_GLYPHANDBITMAP:
-            TRACE("QFD_GLYPHANDBITMAP\n");
-
             /* Load the requested glyph */
             if (!FtfdLoadGlyph(pfont, hg, 0)) return FD_ERROR;
 
+            /* Render the glyph bitmap */
             if (!FtRenderGlyphBitmap(pfont)) return FD_ERROR;
 
             if (pgd) FtfdQueryGlyphData(pfo, hg, pgd, pv);
@@ -635,7 +649,20 @@ APIENTRY
 FtfdDestroyFont(
     FONTOBJ *pfo)
 {
+    PFTFD_FONT pfont = pfo->pvProducer;
+
     TRACE("FtfdDestroyFont()\n");
-    __debugbreak();
+
+    /* Nothing to do? */
+    if (!pfont) return;
+
+    /* We don't need this anymore */
+    pfo->pvProducer = NULL;
+
+    /* Cleanup the freetype face for this font */
+    FT_Done_Face(pfont->ftface);
+
+    /* Free the font structure */
+    EngFreeMem(pfont);
 }
 

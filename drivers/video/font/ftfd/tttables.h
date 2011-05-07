@@ -23,15 +23,15 @@ typedef struct _TT_COLLECTION
     ULONG aulOffsetTable[1];
 } TT_COLLECTION, *PTT_COLLECTION;
 
-typedef struct _OTF_TABLE_ENTRY
+typedef struct _TT_TABLE_ENTRY
 {
     ULONG ulTag;
     ULONG ulCheckSum;
     ULONG ulOffset;
     ULONG ulLength;
-} OTF_TABLE_ENTRY, *POTF_TABLE_ENTRY;
+} TT_TABLE_ENTRY, *PTT_TABLE_ENTRY;
 
-typedef struct _OTF_FILE_HEADER
+typedef struct _TT_FILE_HEADER
 {
     ULONG ulIdentifier;
     USHORT usNumTables;
@@ -39,12 +39,12 @@ typedef struct _OTF_FILE_HEADER
     USHORT usEntrySelector;
     USHORT usRangeshift;
 
-    OTF_TABLE_ENTRY aTableEntries[1];
+    TT_TABLE_ENTRY aTableEntries[1];
 
-} OTF_FILE_HEADER, *POTF_FILE_HEADER;
+} TT_FILE_HEADER, *PTT_FILE_HEADER;
 
 #include <pshpack1.h>
-typedef struct _OTF_OS2_DATA
+typedef struct _TT_OS2_DATA
 {
     USHORT 	version; // 	0x0004
     SHORT 	xAvgCharWidth;
@@ -91,5 +91,5 @@ typedef struct _OTF_OS2_DATA
     USHORT 	usDefaultChar;
     USHORT 	usBreakChar;
     USHORT 	usMaxContext;
-} OTF_OS2_DATA, *POTF_OS2_DATA;
+} TT_OS2_DATA, *PTT_OS2_DATA;
 #include <poppack.h>
