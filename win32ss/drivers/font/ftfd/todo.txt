@@ -6,8 +6,7 @@ Public interface:
 - FtfdCompletePDEV: 100% done
 - FtfdDisablePDEV: 100% done
 - FtfdEscape: unimplemented, probably unneccessary
-- FtfdLoadFontFile: 90% done
-    - handle DESIGNVECTOR
+- FtfdLoadFontFile: 95% done
 - FtfdQueryFont: 70% done, depends on FtfdInitIfiMetrics
 - FtfdQueryFontTree: 70% done, depends on FtfdInitGlyphSet and FtfdInitKerningPairs
 - FtfdUnloadFontFile: 100% done, depends on FtfdDestroyFace
@@ -28,7 +27,7 @@ Public interface:
     - check possibility of FT_ADVANCE_FLAG_FAST_ONLY
 - FtfdQueryTrueTypeOutline: unimplemented
 - FtfdFontManagement: unimplemented, unneccessary
-- FtfdDestroyFont: unimplemented, later
+- FtfdDestroyFont: 100% implemented
 
 internal interface
 -------------------

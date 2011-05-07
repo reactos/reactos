@@ -15,9 +15,10 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <freetype/ftadvanc.h>
-#include <freetype/ftxf86.h>
-#include <freetype/t1tables.h>
+#include FT_ADVANCES_H
+#include FT_XFREE86_H
+#include FT_TYPE1_TABLES_H
+#include FT_MULTIPLE_MASTERS_H
 
 extern FT_Library gftlibrary;
 
@@ -41,6 +42,9 @@ extern FT_Library gftlibrary;
 #define FATAL(...)
 #endif
 
+// move to appropriate header
+#define STAMP_DESIGNVECTOR (0x8000000 + 'd' + ('v' << 8))
+
 /** Driver specific types *****************************************************/
 
 typedef enum
@@ -59,10 +63,10 @@ typedef enum
 
 typedef enum
 {
-    FILEFMT_TTF,
-    FILEFMT_OTF,
-    FILEFMT_FNT,
-} FLE_FORMAT;
+    FILEFMT_TTF, /* TrueType font file */
+    FILEFMT_OTF, /* OpenType font file */
+    FILEFMT_FNT, /* Windows .fnt file */
+} FILE_FORMAT;
 
 //"Bold Italic Underline Strikeout"
 #define MAX_STYLESIZE 35
@@ -99,6 +103,7 @@ typedef struct _FTFD_FILE
     ULONG cNumFaces;
     ULONG ulFastCheckSum;
     ULONG ulFileFormat;
+    DESIGNVECTOR dv;
     PFTFD_FACE apface[1];
 } FTFD_FILE, *PFTFD_FILE;
 
