@@ -303,7 +303,7 @@ __debugbreak();
     return 0;
 }
 
-VOID
+BOOL
 NTAPI
 FtfdGetWinMetrics(
     PFTFD_FACE pface,
@@ -319,14 +319,12 @@ FtfdGetWinMetrics(
     if (!pOs2)
     {
         WARN("Couldn't find OS/2 table\n");
-        return;
+        return FALSE;
     }
 
     //pifi->lEmbedId;
-    //pifi->lItalicAngle;
     //pifi->lCharBias;
     //pifi->jWinCharSet;
-    pifi->jWinPitchAndFamily &= 3;
     pifi->jWinPitchAndFamily |= GetWinFamily(pOs2->jClassId, pOs2->jSubClassId);
     pifi->usWinWeight = GETW(&pOs2->usWeightClass);
     pifi->fsSelection = GETW(&pOs2->fsSelection);
@@ -362,9 +360,7 @@ FtfdGetWinMetrics(
     //pifi->ulPanoseCulture;
     pifi->panose = *(PANOSE*)pOs2->panose;
 
-    /* Convert the special characters from unicode to ansi */
-    EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 3);
-
+    return TRUE;
 }
 
 
