@@ -67,7 +67,7 @@ public:
     NTSTATUS HandleClassOther(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassInterface(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleBulkOrInterruptTransfer(IN OUT PIRP Irp, PURB Urb);
-    
+
     friend VOID StatusChangeEndpointCallBack(PVOID Context);
 
     // constructor / destructor
@@ -305,31 +305,30 @@ CHubController::QueryStatusChageEndpoint(
     DPRINT1("SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
 
     TransferBuffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
+
+    //
+    // Loop the ports
+    //
     for (PortId = 0; PortId < PortCount; PortId++)
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
         DPRINT1("Port %d: Status %x, Change %x\n", PortId, PortStatus, PortChange);
 
+
         //
-        // Loop the ports
+        // If theres a flag in PortChange return TRUE so the SCE Irp will be completed
         //
-        if ((PortStatus & USB_PORT_STATUS_CONNECT) && (PortChange & USB_PORT_STATUS_CONNECT))
+        if (PortChange != 0)
         {
-            DPRINT1("Device is connected on port %d\n", PortId);
+            DPRINT1("Change state on port %d\n", PortId);
             // Set the value for the port number
              *TransferBuffer = 1 << ((PortId + 1) & 7);
             Changed = TRUE;
         }
     }
 
-    //
-    // If there were changes then return TRUE
-    //
-    if (Changed != 0)
-        return TRUE;
-
-    return FALSE;
+    return Changed;
 }
 
 //-----------------------------------------------------------------------------------------
@@ -777,6 +776,7 @@ CHubController::HandleBulkOrInterruptTransfer(
         ASSERT(m_PendingSCEIrp == NULL);
         if (QueryStatusChageEndpoint(Irp))
         {
+            StatusChangeEndpointCallBack(this);
             return STATUS_SUCCESS;
         }
 
@@ -2094,7 +2094,7 @@ USBHI_InitializeUsbDevice(
         if (NT_SUCCESS(Status))
             break;
 
-    }while(Index++ < 3	);
+    }while(Index++ < 3    );
 
     //
     // check for failure
@@ -2706,11 +2706,6 @@ USBHI_SetDeviceHandleData(
         DPRINT1("USBHI_SetDeviceHandleData %p\n", UsbDevicePdo);
 
         //
-        // fixup device stack voodoo part #1
-        //
-        UsbDevicePdo->StackSize++;
-
-        //
         // sanity check
         //
         PC_ASSERT(UsbDevicePdo->AttachedDevice);
@@ -3151,6 +3146,11 @@ CHubController::CreatePDO(
     }
 
     DPRINT1("CHubController::CreatePDO: DeviceName %wZ\n", &DeviceName);
+
+    //
+    // fixup device stack voodoo part #1
+    //
+    (*OutDeviceObject)->StackSize++;
 
     /* done */
     return Status;

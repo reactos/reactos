@@ -713,7 +713,7 @@ CUSBHardwareDevice::GetPortStatus(
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
-    
+
     //
     // Get the value of the Port Status and Control Register
     //
@@ -799,12 +799,18 @@ CUSBHardwareDevice::ClearPortStatus(
             Value &= ~EHCI_PRT_RESET;
             EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
             KeStallExecutionProcessor(100);
+        }
 
-            //
-            // update port status
-            //
-            m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
+        Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
+        //
+        // update port status
+        //
+        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
+        if (Value & EHCI_PRT_ENABLED) 
             m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
+        else
+        {
+            DPRINT1("Port is not enabled.\n");
         }
     }
 
@@ -843,7 +849,7 @@ CUSBHardwareDevice::SetPortFeature(
         //
         DPRINT1("PORT_ENABLE not supported for EHCI\n");
     }
-    
+
     if (Feature == PORT_RESET)
     {
         if (Value & EHCI_PRT_SLOWSPEEDLINE)
@@ -870,7 +876,7 @@ CUSBHardwareDevice::SetPortFeature(
             m_SCECallBack(m_SCEContext);
         }
     }
-    
+
     if (Feature == PORT_POWER)
         DPRINT1("PORT_POWER Not implemented\n");
 
