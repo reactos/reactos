@@ -63,7 +63,7 @@ typedef struct
 //
 #define USB_BULK_GET_MAX_LUN             0xFE
 
-
+#include <pshpack1.h>
 typedef struct
 {
     ULONG Signature;                                                 // CBW signature
@@ -74,6 +74,9 @@ typedef struct
     UCHAR CommandBlockLength;                                        // Command block length
     UCHAR CommandBlock[16];
 }CBW, *PCBW;
+
+C_ASSERT(sizeof(CBW) == 31);
+
 
 #define CBW_SIGNATURE 0x43425355
 #define MAX_LUN 0xF
@@ -114,7 +117,7 @@ typedef struct
     UCHAR Version;                                                   // contains version 0x00
     UCHAR Format;                                                    // response format
     UCHAR Length;                                                    // additional length
-    USHORT Reserved;                                                 // reserved
+    UCHAR Reserved[3];                                               // reserved
     UCHAR Vendor[8];                                                 // vendor identification string
     UCHAR Product[16];                                               // product identification string
     UCHAR Revision[4];                                               // product revision code
@@ -149,6 +152,24 @@ typedef struct
     ULONG BlockLength;                                               // block length in bytes
 }UFI_CAPACITY_RESPONSE, *PUFI_CAPACITY_RESPONSE;
 
+C_ASSERT(sizeof(UFI_CAPACITY_RESPONSE) == 8);
+
+#define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
+#define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
+
+#define HTONL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
+
+#define NTOHL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
+
+
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
 // UFI sense mode cmd
@@ -164,7 +185,34 @@ typedef struct
     UCHAR Reserved1[3];
 }UFI_SENSE_CMD, *PUFI_SENSE_CMD;
 
-C_ASSERT(sizeof(UFI_CAPACITY_CMD) == 12);
+C_ASSERT(sizeof(UFI_SENSE_CMD) == 12);
+
+#define UFI_SENSE_CMD_LEN (6)
+
+typedef struct
+{
+    USHORT ModeDataLength;                                           // length of parameters for sense cmd
+    UCHAR MediumTypeCode;                                            // 00 for mass storage, 0x94 for floppy
+    UCHAR WP:1;                                                      // write protect bit
+    UCHAR Reserved1:2;                                                // reserved 00
+    UCHAR DPOFUA:1;                                                  // should be zero
+    UCHAR Reserved2:4;                                               // reserved
+    UCHAR Reserved[4];                                               // reserved
+}UFI_MODE_PARAMETER_HEADER, *PUFI_MODE_PARAMETER_HEADER;
+
+
+C_ASSERT(sizeof(UFI_MODE_PARAMETER_HEADER) == 8);
+
+typedef struct
+{
+    UCHAR PC;
+    UCHAR PageLength;
+    UCHAR Reserved1;
+    UCHAR ITM;
+    UCHAR Flags;
+    UCHAR Reserved[3];
+}UFI_TIMER_PROTECT_PAGE, *PUFI_TIMER_PROTECT_PAGE;
+C_ASSERT(sizeof(UFI_TIMER_PROTECT_PAGE) == 8);
 
 //---------------------------------------------------------------------
 //

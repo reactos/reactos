@@ -410,7 +410,7 @@ USBSTOR_SendCapacityCmd(
     OUT PREAD_CAPACITY_DATA_EX CapacityDataEx,
     OUT PREAD_CAPACITY_DATA CapacityData)
 {
-    UFI_INQUIRY_CMD Cmd;
+    UFI_CAPACITY_CMD Cmd;
     CSW CSW;
     NTSTATUS Status;
     PUFI_CAPACITY_RESPONSE Response;
@@ -438,9 +438,8 @@ USBSTOR_SendCapacityCmd(
     // initialize capacity cmd
     //
     RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
-    Cmd.Code = SCSIOP_INQUIRY;
+    Cmd.Code = SCSIOP_READ_CAPACITY;
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
-    Cmd.AllocationLength = sizeof(UFI_INQUIRY_RESPONSE);
 
     //
     // now send capacity cmd
@@ -472,9 +471,9 @@ USBSTOR_SendCapacityCmd(
         return Status;
     }
 
-    DPRINT1("LastLogicalBlockAddress %lu\n", Response->LastLogicalBlockAddress);
-    DPRINT1("BlockLength %lu\n", Response->BlockLength);
-    DPRINT1("Medium Length %lu\n", Response->BlockLength * Response->LastLogicalBlockAddress);
+    DPRINT1("LastLogicalBlockAddress %lu\n", NTOHL(Response->LastLogicalBlockAddress));
+    DPRINT1("BlockLength %lu\n", NTOHL(Response->BlockLength));
+    DPRINT1("Medium Length %lu\n", NTOHL(Response->BlockLength) * NTOHL(Response->LastLogicalBlockAddress));
 
     //
     // store response
@@ -536,6 +535,7 @@ USBSTOR_SendModeSenseCmd(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PCBW OutControl;
     PCDB pCDB;
+    PUFI_MODE_PARAMETER_HEADER Header;
 
     //
     // get SCSI command data block
@@ -560,6 +560,18 @@ USBSTOR_SendModeSenseCmd(
     }
 
     //
+    // sanity check
+    //
+
+
+    // Supported pages
+    // MODE_PAGE_ERROR_RECOVERY
+    // MODE_PAGE_FLEXIBILE
+    // MODE_PAGE_LUN_MAPPING
+    // MODE_PAGE_FAULT_REPORTING
+    // MODE_SENSE_RETURN_ALL
+
+    //
     // initialize mode sense cmd
     //
     RtlZeroMemory(&Cmd, sizeof(UFI_INQUIRY_CMD));
@@ -567,12 +579,15 @@ USBSTOR_SendModeSenseCmd(
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
     Cmd.PageCode = pCDB->MODE_SENSE.PageCode;
     Cmd.PC = pCDB->MODE_SENSE.Pc;
-    Cmd.AllocationLength = pCDB->MODE_SENSE.AllocationLength;
+    Cmd.AllocationLength = HTONS(pCDB->MODE_SENSE.AllocationLength);
+
+    DPRINT1("PageCode %x\n", pCDB->MODE_SENSE.PageCode);
+    DPRINT1("PC %x\n", pCDB->MODE_SENSE.Pc);
 
     //
     // now send mode sense cmd
     //
-    Status = USBSTOR_SendCBW(DeviceObject, UFI_CAPACITY_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, &OutControl);
+    Status = USBSTOR_SendCBW(DeviceObject, UFI_SENSE_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, &OutControl);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -598,6 +613,20 @@ USBSTOR_SendModeSenseCmd(
         ASSERT(FALSE);
         return Status;
     }
+
+    Header = (PUFI_MODE_PARAMETER_HEADER)Response;
+
+    //
+    // TODO: build layout
+    //
+    // first struct is the header
+    // MODE_PARAMETER_HEADER / _MODE_PARAMETER_HEADER10
+    //
+    // followed by 
+    // MODE_PARAMETER_BLOCK
+    //
+    // 
+	DbgBreakPoint();
 
     //
     // send csw

@@ -97,7 +97,7 @@ USBSTOR_HandleExecuteSCSI(
         else
         {
             //
-            // failed to retrieve capacity
+            // failed to retrieve sense data
             //
             Irp->IoStatus.Information = 0;
             Request->SrbStatus = SRB_STATUS_ERROR;
