@@ -18,52 +18,51 @@
     (FIELD_OFFSET(GLYPHBITS, aj) + BITMAP_SIZE(cx, cy, bpp))
 
 static
-VOID
-FtfdComputeBaseVector(
-    POINTE *ppte,
-    FLOATOBJ foX,
-    FLOATOBJ foY)
+FLOATOBJ
+FtfdNormalizeBaseVector(
+    POINTEF *pptef)
 {
+    FLOATOBJ efTmp, efLength;
     FT_Vector ftvector;
     LONG lLength;
-    FLOATOBJ fo, foLength;
 
+//__debugbreak();
+#if 0
     /* Optimization for scaling transformations */
-    if (foX.ul1 == 0 && foX.ul2 == 0)
+    if (pptef->y.ul1 == 0 && ppfted->y.ul2 == 0)
     {
-        ppte->x = 0;
-        ppte->y = FLOATL_1;
-        return;
-    }
-    if (foY.ul1 == 0 && foY.ul2 == 0)
-    {
-        ppte->x = FLOATL_1;
-        ppte->y = 0;
-        return;
+        efLength = pptef->x;
+        FLOATOBJ_SetLong(&pptef->x, 1);
+        return efLength;
     }
 
-    /* Convert the point into a 8.24 format freetype vector */
-    fo = foX;
-    FLOATOBJ_MulLong(&fo, 0x01000000);
-    ftvector.x = FLOATOBJ_GetLong(&fo);
-    fo = foY;
-    FLOATOBJ_MulLong(&fo, 0x01000000);
-    ftvector.y = FLOATOBJ_GetLong(&fo);
+    if (pptef->x.ul1 == 0 && ppfted->x.ul2 == 0)
+    {
+        efLength = pptef->y;
+        FLOATOBJ_SetLong(&pptef->y, 1);
+        return efLength;
+    }
+#endif
+    /* Convert the point into 8.24 fixpoint format */
+    efTmp = pptef->x;
+    FLOATOBJ_MulLong(&efTmp, 0x01000000);
+    ftvector.x = FLOATOBJ_GetLong(&efTmp);
+    efTmp = pptef->y;
+    FLOATOBJ_MulLong(&efTmp, 0x01000000);
+    ftvector.y = FLOATOBJ_GetLong(&efTmp);
 
-    /* Get the length of the freetype vector */
+    /* Get the length of the fixpoint vector */
     lLength = FT_Vector_Length(&ftvector);
 
-    /* Convert the 8.24 fixpoint back into a FLOATOBJ */
-    FLOATOBJ_SetLong(&foLength, lLength);
-    FLOATOBJ_DivLong(&foLength, 0x01000000);
+    /* Convert the fixpoint back into a FLOATOBJ */
+    FLOATOBJ_SetLong(&efLength, lLength);
+    FLOATOBJ_DivLong(&efLength, 0x01000000);
 
     /* Now divide the vector by the length */
-    FLOATOBJ_Div(&foX, &foLength);
-    FLOATOBJ_Div(&foY, &foLength);
+    FLOATOBJ_Div(&pptef->x, &efLength);
+    FLOATOBJ_Div(&pptef->y, &efLength);
 
-    /* Finally convert to FLOATL */
-    ppte->x = FLOATOBJ_GetFloat(&foX);
-    ppte->y = FLOATOBJ_GetFloat(&foY);
+    return efLength;
 }
 
 PFTFD_FONT
@@ -75,14 +74,13 @@ FtfdCreateFontInstance(
     PFTFD_FACE pface = pfile->apface[pfo->iFace - 1];
     PFTFD_FONT pfont;
     XFORMOBJ* pxo;
-    XFORML xform;
-    FLOATOBJ_XFORM foxform;
+    FLOATOBJ_XFORM fxform;
     FT_Error fterror;
     FT_Face ftface;
     FT_Matrix ftmatrix;
     ULONG iComplexity;
-    LONG xScale, yScale;
     FTFD_DEVICEMETRICS *pmetrics;
+    FLOATOBJ efScaleX, efScaleY;
 
     /* Allocate a font structure */
     pfont = EngAllocMem(0, sizeof(FTFD_FONT), 0);
@@ -123,24 +121,54 @@ FtfdCreateFontInstance(
         return NULL;
     }
 
-    // FIXME: quantize to 16.16 fixpoint
-    XFORMOBJ_iGetXform(pxo, &xform);
-    pfont->fdxQuantized.eXX = xform.eM11;
-    pfont->fdxQuantized.eXY = xform.eM12;
-    pfont->fdxQuantized.eYX = xform.eM21;
-    pfont->fdxQuantized.eYY = xform.eM22;
-
     /* Get a FLOATOBJ_XFORM matrix */
-    iComplexity = XFORMOBJ_iGetFloatObjXform(pxo, &foxform);
+    iComplexity = XFORMOBJ_iGetFloatObjXform(pxo, &fxform);
     ASSERT(iComplexity != DDI_ERROR);
 
-    /* Compute normalized base vectors */
-    FtfdComputeBaseVector(&pfont->pteBase, foxform.eM11, foxform.eM21);
-    FtfdComputeBaseVector(&pfont->pteSide, foxform.eM12, foxform.eM22);
+    /* Get the base vectors (unnormalized) */
+    pfont->ptefBase.x = fxform.eM11;
+    pfont->ptefBase.y = fxform.eM21;
+    pfont->ptefSide.x = fxform.eM12;
+    pfont->ptefSide.y = fxform.eM22;
+
+    /* Normalize the base vectors and get their length */
+    efScaleX = FtfdNormalizeBaseVector(&pfont->ptefBase);
+    efScaleY = FtfdNormalizeBaseVector(&pfont->ptefSide);
+
+    // FIXME: quantize to 16.16 fixpoint
+    pfont->fdxQuantized.eXX = FLOATOBJ_GetFloat(&fxform.eM11);
+    pfont->fdxQuantized.eXY = FLOATOBJ_GetFloat(&fxform.eM12);
+    pfont->fdxQuantized.eYX = FLOATOBJ_GetFloat(&fxform.eM21);
+    pfont->fdxQuantized.eYY = FLOATOBJ_GetFloat(&fxform.eM22);
+
+    /* The coordinate transformation given by Windows transforms from font
+     * space to device space. Since we use FT_Set_Char_Size, which allows
+     * higher precision than FT_Set_Pixel_Sizes, we need to convert into
+     * points. So we multiply our scaling coefficients with 72 divided by
+     * the device resolution. We also need a 26.4 fixpoint value, so we
+     * multiply with 64. */
+    FLOATOBJ_MulLong(&efScaleX, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
+    FLOATOBJ_DivLong(&efScaleX, pfo->sizLogResPpi.cx);
+    FLOATOBJ_MulLong(&efScaleY, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
+    FLOATOBJ_DivLong(&efScaleY, pfo->sizLogResPpi.cy);
+
+    /* Set the x and y character size for the font */
+    fterror = FT_Set_Char_Size(ftface,
+                               FLOATOBJ_GetLong(&efScaleX),
+                               FLOATOBJ_GetLong(&efScaleY),
+                               pfo->sizLogResPpi.cx,
+                               pfo->sizLogResPpi.cy);
+    if (fterror)
+    {
+        /* Failure! */
+        WARN("Error setting face size\n");
+        EngFreeMem(pfont);
+        return NULL;
+    }
 
     /* Check if there is rotation / shearing (cannot use iComplexity!?) */
-    if (foxform.eM12.ul1 != 0 || foxform.eM12.ul2 != 0 ||
-        foxform.eM21.ul1 != 0 || foxform.eM21.ul2 != 0)
+    if (fxform.eM12.ul1 != 0 || fxform.eM12.ul2 != 0 ||
+        fxform.eM21.ul1 != 0 || fxform.eM21.ul2 != 0)
     {
         __debugbreak();
         // FIXME: need to calculate scaling
@@ -159,36 +187,6 @@ FtfdCreateFontInstance(
         /* Set non-orthogonal transformation */
         // FT_Set_Transform
 
-    }
-    else
-    {
-        /* The font sizes are calculated from the em height, multiplied with
-         * the diagonal matrix coefficients. Since the given xform translates
-         * into pixels and we need points (FT_Set_Char_Size allows higher
-         * precision than FT_Set_Pixel_Sizes), we multiply with 72 / dpi.
-         * The value is multiplied with 64 to yield a 26.6 fixed float. */
-        xScale = 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72 / pfo->sizLogResPpi.cx;
-        FLOATOBJ_MulLong(&foxform.eM11, xScale);
-        yScale = 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72 / pfo->sizLogResPpi.cy;
-        FLOATOBJ_MulLong(&foxform.eM22, yScale);
-
-        /* Get the final scaling values in 26.6 fixed float format */
-        xScale = FLOATOBJ_GetLong(&foxform.eM11);
-        yScale = FLOATOBJ_GetLong(&foxform.eM22);
-
-        /* Set the x and y character size for the font */
-        fterror = FT_Set_Char_Size(ftface,
-                                   xScale,
-                                   yScale,
-                                   pfo->sizLogResPpi.cx,
-                                   pfo->sizLogResPpi.cy);
-        if (fterror)
-        {
-            /* Failure! */
-            WARN("Error setting face size\n");
-            EngFreeMem(pfont);
-            return NULL;
-        }
     }
 
     /* Check if there is a design vector */
@@ -236,7 +234,7 @@ FtfdCreateFontInstance(
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
     if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
 
-    TRACE("Created font of size %ld (%ld)\n", yScale, (yScale+32)/64);
+    //TRACE("Created font of size %ld (%ld)\n", yScale, (yScale+32)/64);
     //__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
@@ -305,8 +303,12 @@ FtfdQueryMaxExtents(
         pfddm->ptlSOThickness = pfont->metrics.ptlSOThickness;
         pfddm->cxMax = pfont->metrics.sizlMax.cx;
         pfddm->cyMax = pfont->metrics.sizlMax.cy;
-        pfddm->pteBase = pfont->pteBase;
-        pfddm->pteSide = pfont->pteSide;
+
+        /* Convert the base vectors from FLOATOBJ to FLOATL */
+        pfddm->pteBase.x = FLOATOBJ_GetFloat(&pfont->ptefBase.x);
+        pfddm->pteBase.y = FLOATOBJ_GetFloat(&pfont->ptefBase.y);
+        pfddm->pteSide.x = FLOATOBJ_GetFloat(&pfont->ptefSide.x);
+        pfddm->pteSide.y = FLOATOBJ_GetFloat(&pfont->ptefSide.y);
 
         /* cjGlyphMax is the full size of the GLYPHBITS structure */
         pfddm->cjGlyphMax = GLYPHBITS_SIZE(pfddm->cxMax, pfddm->cyMax, 4);
