@@ -308,7 +308,6 @@ FtfdInitGlyphSet(
             pGlyphSet->awcrun[cRuns - 1].wcLow = wcCurrent;
             pGlyphSet->awcrun[cRuns - 1].cGlyphs = 1;
             pGlyphSet->awcrun[cRuns - 1].phg = &phglyphs[i];
-            //TRACE("adding new run i=%ld, cRuns=%ld, wc=%x\n", i, cRuns, wcCurrent);
         }
 
         /* Get the next charcode and index */
@@ -695,6 +694,7 @@ FtfdQueryFontFile(
     {
         case QFF_DESCRIPTION:
         {
+            WARN("QFF_DESCRIPTION unimplemented\n");
             return 0;
         }
 

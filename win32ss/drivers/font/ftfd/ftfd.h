@@ -121,6 +121,12 @@ typedef union _FTFD_DEVICEMETRICS
     };
 } FTFD_DEVICEMETRICS;
 
+typedef struct _POINTEF
+{
+    FLOATOBJ x;
+    FLOATOBJ y;
+} POINTEF, *PPOINTEF;
+
 typedef struct
 {
     FONTOBJ *pfo;
@@ -130,8 +136,8 @@ typedef struct
     FT_Face ftface;
     FD_XFORM fdxQuantized;
     FTFD_DEVICEMETRICS metrics;
-    POINTE pteBase;
-    POINTE pteSide;
+    POINTEF ptefBase;
+    POINTEF ptefSide;
     ULONG xScale;
     HGLYPH hgSelected;
     ULONG cjSelected;

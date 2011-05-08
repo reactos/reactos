@@ -32,7 +32,7 @@ Public interface:
 internal interface
 -------------------
 - FtfdInitIfiMetrics: 70% done
-    - handle other font types then TTF/OTF
+    - handle other font types than TTF/OTF
     - fix fwdLowestPPEm, fwdMacLineGap, ptlBaseline, ptlAspect, ptlCaret
     - cKerningPairs, ulPanoseCulture
     - check fwdMacAscender, fwdMacDescender
@@ -41,16 +41,18 @@ internal interface
 - FtfdInitKerningPairs: unimplemented, later
 - FtfdDestroyFace: 100% done
 
-- FtfdCreateFontInstance: 80%
+- FtfdCreateFontInstance: 90%
     - handle XFORM (create a matrix and set freetype xform)
 - FtfdGetFontInstance: 100% done
-- FtfdQueryMaxExtents: 80% done
+- FtfdQueryMaxExtents: 90% done
 
 - FtfdLoadGlyph: 80% done
     - hande accelerator flags for bitmap / outline
-- FtfdQueryGlyphData: 50% done
+- FtfdQueryGlyphData: 70% done
     - handle vertical layout
-    - handle fxInkTop, fxInkBottom, ptqD
+    - handle ptqD
 
-- FtfdQueryGlyphBits: 5%
+- FtfdQueryGlyphBits: 40%
+    - handle 1bpp bitmaps
+
 - FtfdQueryGlyphOutline: unimplemented
