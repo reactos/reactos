@@ -1938,4 +1938,71 @@ CmShutdownSystem(VOID)
     CmpDoFlushAll(TRUE);
 }
 
+VOID
+NTAPI
+CmpSetVersionData(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    UNICODE_STRING ValueData;
+    HANDLE KeyHandle;
+    WCHAR Buffer[128];
+    NTSTATUS Status;
+
+    /* Open the 'CurrentVersion' key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               0,
+                               NULL);
+
+    Status = NtCreateKey(&KeyHandle,
+                         KEY_CREATE_SUB_KEY,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create key &wZ (Status: %08lx)\n", &KeyName, Status);
+        return;
+    }
+
+    /* Set the 'CurrentType' value */
+    RtlInitUnicodeString(&ValueName,
+                         L"CurrentType");
+
+#ifdef CONFIG_SMP
+    wcscpy(Buffer, L"Multiprocessor");
+#else
+    wcscpy(Buffer, L"Uniprocessor");
+#endif
+
+    wcscat(Buffer, L" ");
+
+#if (DBG == 1)
+    wcscat(Buffer, L"Checked");
+#else
+    wcscat(Buffer, L"Free");
+#endif
+
+    RtlInitUnicodeString(&ValueData,
+                         Buffer);
+
+    NtSetValueKey(KeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  ValueData.Buffer,
+                  ValueData.Length + sizeof(WCHAR));
+
+    /* Close the key */
+    NtClose(KeyHandle);
+}
+
 /* EOF */

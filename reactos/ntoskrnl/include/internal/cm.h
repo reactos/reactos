@@ -1529,6 +1529,12 @@ CmSetLazyFlushState(
     IN BOOLEAN Enable
 );
 
+VOID
+NTAPI
+CmpSetVersionData(
+    VOID
+);
+
 //
 // Driver List Routines
 //
