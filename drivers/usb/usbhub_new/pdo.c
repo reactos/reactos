@@ -97,9 +97,10 @@ USBHUB_PdoQueryId(
     OUT ULONG_PTR* Information)
 {
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
-    ULONG IdType, StringLength = 0;
-    PWCHAR SourceString = NULL, ReturnString = NULL;
-    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    ULONG IdType;
+    PUNICODE_STRING SourceString = NULL;
+    PWCHAR ReturnString = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -109,49 +110,25 @@ USBHUB_PdoQueryId(
         case BusQueryDeviceID:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
-            SourceString = ChildDeviceExtension->DeviceId;
-            Status = STATUS_SUCCESS;
+            SourceString = &ChildDeviceExtension->usDeviceId;
             break;
         }
         case BusQueryHardwareIDs:
         {
-            ULONG Index = 0, LastIndex;
-            PWCHAR Ptr;
-
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-
-            StringLength = wcslen(ChildDeviceExtension->DeviceId);
-            StringLength += wcslen(L"&Rev_XXXX") + 1;
-            StringLength += wcslen(ChildDeviceExtension->DeviceId) + 1;
-            StringLength = StringLength * sizeof(WCHAR);
-
-            ReturnString = ExAllocatePool(PagedPool, StringLength);
-            Ptr = ReturnString;
-            LastIndex = Index;
-            Index += swprintf(&Ptr[Index],
-                              L"%s&Rev_%04lx", ChildDeviceExtension->DeviceId,
-                              ChildDeviceExtension->DeviceDesc.bcdDevice)  + 1;
-            Ptr[Index] = UNICODE_NULL;
-            DPRINT1("%S\n", &Ptr[LastIndex]);
-            LastIndex = Index;
-            Index += swprintf(&Ptr[Index], L"%s", ChildDeviceExtension->DeviceId)  + 1;
-            Ptr[Index] = UNICODE_NULL;
-            DPRINT1("%S\n", &Ptr[LastIndex]);
-            Status = STATUS_SUCCESS;
+            SourceString = &ChildDeviceExtension->usHardwareIds;
             break;
         }
         case BusQueryCompatibleIDs:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
-            //SourceString = ChildDeviceExtension->CompatibleIds;
-            //return STATUS_NOT_SUPPORTED;
+            SourceString = &ChildDeviceExtension->usCompatibleIds;
             break;
         }
         case BusQueryInstanceID:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
-            SourceString = ChildDeviceExtension->InstanceId;
-            Status = STATUS_SUCCESS;
+            SourceString = &ChildDeviceExtension->usInstanceId;
             break;
         }
         default:
@@ -161,10 +138,8 @@ USBHUB_PdoQueryId(
 
     if (SourceString)
     {
-        StringLength = (wcslen(SourceString) + 1) * sizeof(WCHAR);
-        DPRINT1("StringLen %d\n", StringLength);
-        ReturnString = ExAllocatePool(PagedPool, StringLength);
-        RtlCopyMemory(ReturnString, SourceString, StringLength);
+        ReturnString = ExAllocatePool(PagedPool, SourceString->Length);
+        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->Length);
         DPRINT1("%S\n", ReturnString);
     }
 
@@ -181,10 +156,10 @@ USBHUB_PdoQueryDeviceText(
 {
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
     DEVICE_TEXT_TYPE DeviceTextType;
-    PWCHAR SourceString = NULL, ReturnString = NULL;
+    PUNICODE_STRING SourceString = NULL;
+    PWCHAR ReturnString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     LCID LocaleId;
-    ULONG StrLen;
 
     DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
     LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
@@ -200,8 +175,7 @@ USBHUB_PdoQueryDeviceText(
         case DeviceTextLocationInformation:
         {
             DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
-            SourceString = ChildDeviceExtension->TextDescription;
-            DPRINT1("%S\n", SourceString);
+            SourceString = &ChildDeviceExtension->usTextDescription;
             break;
         }
         default:
@@ -214,9 +188,8 @@ USBHUB_PdoQueryDeviceText(
 
     if (SourceString)
     {
-        StrLen = (wcslen(SourceString) + 1) * sizeof(WCHAR);
-        ReturnString = ExAllocatePool(PagedPool, StrLen);
-        RtlCopyMemory(ReturnString, SourceString, StrLen);
+        ReturnString = ExAllocatePool(PagedPool, SourceString->Length);
+        RtlCopyMemory(ReturnString, SourceString->Buffer, SourceString->Length);
         DPRINT1("%S\n", ReturnString);
         *Information = (ULONG_PTR)ReturnString;
     }

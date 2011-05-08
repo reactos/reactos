@@ -306,7 +306,7 @@ DeviceStatusChangeThread(
                 DPRINT1("Device connected from port %d\n", PortId);
 
                 // No SCE completion done for clearing C_PORT_CONNECT
-    
+
                 //
                 // Reset Port
                 //
@@ -315,7 +315,7 @@ DeviceStatusChangeThread(
                 {
                     DPRINT1("Failed to reset port %d\n", PortId);
                 }
-            }    
+            }
         }
         else if (PortStatus.Change & USB_PORT_STATUS_ENABLE)
         {
@@ -671,7 +671,8 @@ GetUsbStringDescriptor(
     IN PDEVICE_OBJECT ChildDeviceObject,
     IN UCHAR Index,
     IN USHORT LangId,
-    OUT PVOID *TransferBuffer)
+    OUT PVOID *TransferBuffer,
+    OUT USHORT *Size)
 {
     NTSTATUS Status;
     PUSB_STRING_DESCRIPTOR StringDesc = NULL;
@@ -702,8 +703,17 @@ GetUsbStringDescriptor(
         ExFreePool(StringDesc);
         return Status;
     }
-
     DPRINT1("StringDesc->bLength %d\n", StringDesc->bLength);
+
+    //
+    // Did we get something more than the length of the first two fields of structure?
+    //
+    if (StringDesc->bLength == 2)
+    {
+        DPRINT1("USB Device Error!\n");
+        ExFreePool(StringDesc);
+        return STATUS_DEVICE_DATA_ERROR;
+    }
     SizeNeeded = StringDesc->bLength + sizeof(WCHAR);
 
     //
@@ -760,10 +770,184 @@ GetUsbStringDescriptor(
     // Copy the string to destination
     //
     RtlCopyMemory(*TransferBuffer, StringDesc->bString, SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bLength));
+    *Size = SizeNeeded;
 
     ExFreePool(StringDesc);
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CreateDeviceIds(
+    PDEVICE_OBJECT UsbChildDeviceObject)
+{
+    NTSTATUS Status;
+    ULONG Index;
+    PWCHAR BufferPtr;
+    PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
+
+    UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)UsbChildDeviceObject->DeviceExtension;
+
+    //
+    // Initialize the CompatibleIds String
+    //
+    UsbChildExtension->usCompatibleIds.Length = 144;
+    UsbChildExtension->usCompatibleIds.MaximumLength = UsbChildExtension->usCompatibleIds.Length;
+
+    BufferPtr = ExAllocatePoolWithTag(NonPagedPool,
+                                      UsbChildExtension->usCompatibleIds.Length,
+                                      USB_HUB_TAG);
+    if (!BufferPtr)
+    {
+        DPRINT1("Failed to allocate memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(BufferPtr, UsbChildExtension->usCompatibleIds.Length);
+
+    Index = 0;
+    //
+    // Construct the CompatibleIds
+    //
+    if (UsbChildExtension->DeviceDesc.bDeviceClass == 0)
+    {
+        PUSB_INTERFACE_DESCRIPTOR InterDesc = (PUSB_INTERFACE_DESCRIPTOR)
+            ((ULONG_PTR)UsbChildExtension->FullConfigDesc + sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+        Index += swprintf(&BufferPtr[Index], 
+                          L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+                          InterDesc->bInterfaceClass,InterDesc->bInterfaceSubClass,InterDesc->bInterfaceProtocol) + 1;
+        Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x&SubClass_%02x",
+                          InterDesc->bInterfaceClass,InterDesc->bInterfaceSubClass) + 1;
+        Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x",
+                          InterDesc->bInterfaceClass) + 1;
+    }
+    else
+    {
+        PUSB_DEVICE_DESCRIPTOR DevDesc = &UsbChildExtension->DeviceDesc;
+        Index += swprintf(&BufferPtr[Index], 
+                          L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+                          DevDesc->bDeviceClass,DevDesc->bDeviceSubClass,DevDesc->bDeviceProtocol) + 1;
+        Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x&SubClass_%02x",
+                          DevDesc->bDeviceClass,DevDesc->bDeviceSubClass) + 1;
+        Index += swprintf(&BufferPtr[Index],
+                          L"USB\\Class_%02x",
+                          DevDesc->bDeviceClass) + 1;
+    }
+    BufferPtr[Index] = UNICODE_NULL;
+    DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
+    UsbChildExtension->usCompatibleIds.Buffer = BufferPtr;
+
+    //
+    // Initialize the DeviceId String
+    //
+    UsbChildExtension->usDeviceId.Length = 44;
+    UsbChildExtension->usDeviceId.MaximumLength  = UsbChildExtension->usDeviceId.Length;
+    BufferPtr = ExAllocatePoolWithTag(NonPagedPool,
+                                      UsbChildExtension->usDeviceId.Length,
+                                      USB_HUB_TAG);
+    if (!BufferPtr)
+    {
+        DPRINT1("Failed to allocate memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    //
+    // Construct DeviceId
+    //
+    swprintf(BufferPtr, L"USB\\Vid_%04x&Pid_%04x\0", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct);
+    DPRINT1("usDeviceId) %wZ\n", &UsbChildExtension->usDeviceId);
+    UsbChildExtension->usDeviceId.Buffer = BufferPtr;
+
+    //
+    // Initialize the HardwareId String
+    //
+    UsbChildExtension->usHardwareIds.Length = 110;
+    UsbChildExtension->usHardwareIds.MaximumLength = UsbChildExtension->usHardwareIds.Length;
+    BufferPtr = ExAllocatePoolWithTag(NonPagedPool, UsbChildExtension->usHardwareIds.Length, USB_HUB_TAG);
+    if (!BufferPtr)
+    {
+        DPRINT1("Failed to allocate memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    RtlZeroMemory(BufferPtr, UsbChildExtension->usHardwareIds.Length);
+
+    //
+    // Consturct HardwareIds
+    //
+    Index = 0;
+    Index += swprintf(&BufferPtr[Index], 
+                      L"USB\\Vid_%04x&Pid_%04x&Rev_%04x",
+                      UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct, UsbChildExtension->DeviceDesc.bcdDevice) + 1;
+    Index += swprintf(&BufferPtr[Index],
+                      L"USB\\Vid_%04x&Pid_%04x",
+                      UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct) + 1;
+    BufferPtr[Index] = UNICODE_NULL;
+    DPRINT1("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
+    UsbChildExtension->usHardwareIds.Buffer = BufferPtr;
+
+    //
+    // FIXME: Handle Lang ids
+    //
+
+    //
+    // Get the product string
+    //
+    Status = GetUsbStringDescriptor(UsbChildDeviceObject,
+                                    UsbChildExtension->DeviceDesc.iProduct,
+                                    0,
+                                    (PVOID*)&UsbChildExtension->usTextDescription.Buffer,
+                                    &UsbChildExtension->usTextDescription.Length);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+        goto Cleanup;
+    }
+
+    UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
+    DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
+
+    //
+    // Get the Serial Number string
+    //
+    Status = GetUsbStringDescriptor(UsbChildDeviceObject,
+                                    UsbChildExtension->DeviceDesc.iSerialNumber,
+                                    0,
+                                    (PVOID*)&UsbChildExtension->usInstanceId.Buffer,
+                                    &UsbChildExtension->usInstanceId.Length);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+        goto Cleanup;
+    }
+
+    UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
+    DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
+
+    return Status;
+
+Cleanup:
+    //
+    // Free Memory
+    //
+    if (UsbChildExtension->usCompatibleIds.Buffer)
+        ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+    if (UsbChildExtension->usDeviceId.Buffer)
+        ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+    if (UsbChildExtension->usHardwareIds.Buffer)
+        ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+    if (UsbChildExtension->usTextDescription.Buffer)
+        ExFreePool(UsbChildExtension->usTextDescription.Buffer);
+    if (UsbChildExtension->usInstanceId.Buffer)
+        ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+    return Status;
 }
 
 NTSTATUS
@@ -782,6 +966,7 @@ CreateUsbChildDeviceObject(
     UNICODE_STRING DeviceName;
     ULONG ConfigDescSize, DeviceDescSize;
     PVOID HubInterfaceBusContext;
+    USB_CONFIGURATION_DESCRIPTOR ConfigDesc;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) UsbHubDeviceObject->DeviceExtension;
     HubInterface = &HubDeviceExtension->HubInterface;
@@ -823,7 +1008,6 @@ CreateUsbChildDeviceObject(
         //
         // Create a DeviceObject
         //
-
         Status = IoCreateDevice(UsbHubDeviceObject->DriverObject,
                                 sizeof(HUB_CHILDDEVICE_EXTENSION),
                                 NULL,
@@ -902,7 +1086,7 @@ CreateUsbChildDeviceObject(
                                              UsbChildExtension->UsbDeviceHandle,
                                              (PUCHAR)&UsbChildExtension->DeviceDesc,
                                              &DeviceDescSize,
-                                             (PUCHAR)&UsbChildExtension->ConfigDesc,
+                                             (PUCHAR)&ConfigDesc,
                                              &ConfigDescSize);
     if (!NT_SUCCESS(Status))
     {
@@ -911,47 +1095,53 @@ CreateUsbChildDeviceObject(
     }
 
     DumpDeviceDescriptor(&UsbChildExtension->DeviceDesc);
+    DumpConfigurationDescriptor(&ConfigDesc);
 
     //
-    // Allocate memory for DeviceId
+    // FIXME: Support more than one configuration and one interface?
     //
-    UsbChildExtension->DeviceId = ExAllocatePoolWithTag(NonPagedPool, 32 * sizeof(WCHAR), USB_HUB_TAG);
+    if (UsbChildExtension->DeviceDesc.bNumConfigurations > 1)
+    {
+        DPRINT1("Warning: Device has more than one configuration. Only one configuration (the first) is supported!\n");
+    }
+
+    if (ConfigDesc.bNumInterfaces > 1)
+    {
+        DPRINT1("Warning: Device has more that one interface. Only one interface (the first) is currently supported\n");
+    }
+
+    ConfigDescSize = ConfigDesc.wTotalLength;
 
     //
-    // Construct DeviceId from vendor and product values
+    // Allocate memory for the first full descriptor, including interfaces and endpoints.
     //
-    swprintf(UsbChildExtension->DeviceId, L"USB\\Vid_%04x&Pid_%04x", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct);
-
-    DPRINT1("Usb Device Id %S\n", UsbChildExtension->DeviceId);
+    UsbChildExtension->FullConfigDesc = ExAllocatePoolWithTag(PagedPool, ConfigDescSize, USB_HUB_TAG);
 
     //
-    // FIXME: Handle Lang ids, will use default for now
+    // Retrieve the full configuration descriptor
     //
-
-    //
-    // Get the product string
-    //
-    Status = GetUsbStringDescriptor(NewChildDeviceObject,
-                                    UsbChildExtension->DeviceDesc.iProduct,
+    Status = GetUsbDeviceDescriptor(NewChildDeviceObject,
+                                    USB_CONFIGURATION_DESCRIPTOR_TYPE,
                                     0,
-                                    (PVOID*)&UsbChildExtension->TextDescription);
+                                    0,
+                                    UsbChildExtension->FullConfigDesc,
+                                    ConfigDescSize);
+
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+        DPRINT1("USBHUB: GetUsbDeviceDescriptor failed with status %x\n", Status);
         goto Cleanup;
     }
 
-    DPRINT1("Usb TextDescription %S\n", UsbChildExtension->TextDescription);
+    DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
 
-    Status = GetUsbStringDescriptor(NewChildDeviceObject,
-                                    UsbChildExtension->DeviceDesc.iSerialNumber,
-                                    0,
-                                    (PVOID*)&UsbChildExtension->InstanceId);
-
-    DPRINT1("Usb InstanceId %S\n", UsbChildExtension->InstanceId);
+    //
+    // Construct all the strings that will described the device to PNP
+    //
+    Status = CreateDeviceIds(NewChildDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+        DPRINT1("Failed to create strings needed to describe device to PNP.\n");
         goto Cleanup;
     }
 
@@ -962,6 +1152,21 @@ CreateUsbChildDeviceObject(
 
 Cleanup:
 
+    //
+    // Remove the usb device if it was created
+    //
+    if (UsbChildExtension->UsbDeviceHandle)
+        HubInterface->RemoveUsbDevice(HubInterfaceBusContext, UsbChildExtension->UsbDeviceHandle, 0);
+
+    //
+    // Free full configuration descriptor if one was allocated
+    //
+    if (UsbChildExtension->FullConfigDesc)
+        ExFreePool(UsbChildExtension->FullConfigDesc);
+
+    //
+    // Delete the device object
+    //
     IoDeleteDevice(NewChildDeviceObject);
     return Status;
 }
@@ -1352,7 +1557,7 @@ USBHUB_FdoHandlePnp(
                 if (!NT_SUCCESS(Status))
                     DPRINT1("Failed to power on port %d\n", PortId);
             }
-            
+
             DPRINT1("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
             //
             //

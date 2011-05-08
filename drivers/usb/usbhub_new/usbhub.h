@@ -56,13 +56,14 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
     COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT ParentDeviceObject;
     PUSB_DEVICE_HANDLE UsbDeviceHandle;
-    PWCHAR DeviceId;
-    PWCHAR InstanceId;
-    PWCHAR HardwareIds;
-    PWCHAR CompatibleIds;
-    PWCHAR TextDescription;
+    UNICODE_STRING usDeviceId;
+    UNICODE_STRING usInstanceId;
+    UNICODE_STRING usHardwareIds;
+    UNICODE_STRING usCompatibleIds;
+    UNICODE_STRING usTextDescription;
+    UNICODE_STRING usLocationInformation;
     USB_DEVICE_DESCRIPTOR DeviceDesc;
-    USB_CONFIGURATION_DESCRIPTOR ConfigDesc;
+    PUSB_CONFIGURATION_DESCRIPTOR FullConfigDesc;
     UNICODE_STRING SymbolicLinkName;
 } HUB_CHILDDEVICE_EXTENSION, *PHUB_CHILDDEVICE_EXTENSION;
 
@@ -155,4 +156,8 @@ DumpDeviceDescriptor(
 
 VOID
 DumpConfigurationDescriptor(
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+    
+VOID
+DumpFullConfigurationDescriptor(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
