@@ -43,6 +43,12 @@ extern FT_Library gftlibrary;
 #define FATAL(...)
 #endif
 
+/* Helper for FLOATOBJ */
+#ifdef _M_IX86
+#define FLOATOBJ_bIsNull(pf) (((pf)->ul1 == 0) && ((pf)->ul2 == 0))
+#else
+#define FLOATOBJ_bIsNull(pf) (*(pf) == 0)
+#endif
 
 /** Driver specific types *****************************************************/
 

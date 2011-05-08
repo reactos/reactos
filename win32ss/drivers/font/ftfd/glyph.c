@@ -26,24 +26,22 @@ FtfdNormalizeBaseVector(
     FT_Vector ftvector;
     LONG lLength;
 
-//__debugbreak();
-#if 0
     /* Optimization for scaling transformations */
-    if (pptef->y.ul1 == 0 && ppfted->y.ul2 == 0)
+    if (FLOATOBJ_bIsNull(&pptef->y))
     {
         efLength = pptef->x;
         FLOATOBJ_SetLong(&pptef->x, 1);
         return efLength;
     }
 
-    if (pptef->x.ul1 == 0 && ppfted->x.ul2 == 0)
+    if (FLOATOBJ_bIsNull(&pptef->x))
     {
         efLength = pptef->y;
         FLOATOBJ_SetLong(&pptef->y, 1);
         return efLength;
     }
-#endif
-    /* Convert the point into 8.24 fixpoint format */
+
+    /* Convert the point into a 8.24 fixpoint vector */
     efTmp = pptef->x;
     FLOATOBJ_MulLong(&efTmp, 0x01000000);
     ftvector.x = FLOATOBJ_GetLong(&efTmp);
@@ -62,6 +60,7 @@ FtfdNormalizeBaseVector(
     FLOATOBJ_Div(&pptef->x, &efLength);
     FLOATOBJ_Div(&pptef->y, &efLength);
 
+    /* Return the former length of the vector */
     return efLength;
 }
 
@@ -80,7 +79,7 @@ FtfdCreateFontInstance(
     FT_Matrix ftmatrix;
     ULONG iComplexity;
     FTFD_DEVICEMETRICS *pmetrics;
-    FLOATOBJ efScaleX, efScaleY;
+    FLOATOBJ efTemp, efScaleX, efScaleY;
 
     /* Allocate a font structure */
     pfont = EngAllocMem(0, sizeof(FTFD_FONT), 0);
@@ -125,6 +124,12 @@ FtfdCreateFontInstance(
     iComplexity = XFORMOBJ_iGetFloatObjXform(pxo, &fxform);
     ASSERT(iComplexity != DDI_ERROR);
 
+    // FIXME: quantize to 16.16 fixpoint
+    pfont->fdxQuantized.eXX = FLOATOBJ_GetFloat(&fxform.eM11);
+    pfont->fdxQuantized.eXY = FLOATOBJ_GetFloat(&fxform.eM12);
+    pfont->fdxQuantized.eYX = FLOATOBJ_GetFloat(&fxform.eM21);
+    pfont->fdxQuantized.eYY = FLOATOBJ_GetFloat(&fxform.eM22);
+
     /* Get the base vectors (unnormalized) */
     pfont->ptefBase.x = fxform.eM11;
     pfont->ptefBase.y = fxform.eM21;
@@ -134,12 +139,6 @@ FtfdCreateFontInstance(
     /* Normalize the base vectors and get their length */
     efScaleX = FtfdNormalizeBaseVector(&pfont->ptefBase);
     efScaleY = FtfdNormalizeBaseVector(&pfont->ptefSide);
-
-    // FIXME: quantize to 16.16 fixpoint
-    pfont->fdxQuantized.eXX = FLOATOBJ_GetFloat(&fxform.eM11);
-    pfont->fdxQuantized.eXY = FLOATOBJ_GetFloat(&fxform.eM12);
-    pfont->fdxQuantized.eYX = FLOATOBJ_GetFloat(&fxform.eM21);
-    pfont->fdxQuantized.eYY = FLOATOBJ_GetFloat(&fxform.eM22);
 
     /* The coordinate transformation given by Windows transforms from font
      * space to device space. Since we use FT_Set_Char_Size, which allows
@@ -167,26 +166,32 @@ FtfdCreateFontInstance(
     }
 
     /* Check if there is rotation / shearing (cannot use iComplexity!?) */
-    if (fxform.eM12.ul1 != 0 || fxform.eM12.ul2 != 0 ||
-        fxform.eM21.ul1 != 0 || fxform.eM21.ul2 != 0)
+    if (!FLOATOBJ_bIsNull(&fxform.eM12) || !FLOATOBJ_bIsNull(&fxform.eM21))
     {
         __debugbreak();
-        // FIXME: need to calculate scaling
 
-        /* Initialize a matrix */
-        ftmatrix.xx = 0x10000 * pface->ifiex.ifi.fwdUnitsPerEm * 72 /
-                          pfo->sizLogResPpi.cx;
-        ftmatrix.xy = 0x00000000;
-        ftmatrix.yx = 0x00000000;
-        ftmatrix.yy = 0x10000 * pface->ifiex.ifi.fwdUnitsPerEm * 72 /
-                          pfo->sizLogResPpi.cy;
+        /* Create a transformation matrix that is applied after the character
+         * scaling. We simply use the normalized base vectors and convert them
+         * to 16.16 fixpoint format */
 
-        /* Apply the XFORMOBJ to the matrix */
-        XFORMOBJ_bApplyXform(pxo, XF_LTOL, 2, &ftmatrix, &ftmatrix);
+        efTemp = pfont->ptefBase.x;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
 
-        /* Set non-orthogonal transformation */
-        // FT_Set_Transform
+        efTemp = pfont->ptefSide.x;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
 
+        efTemp = pfont->ptefBase.y;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pfont->ptefSide.y;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+
+        /* Set the transformation matrix */
+        FT_Set_Transform(ftface, &ftmatrix, 0);
     }
 
     /* Check if there is a design vector */
@@ -376,16 +381,18 @@ FtfdQueryGlyphData(
 
     if (1 /* layout horizontal */)
     {
+        // FIXME: ftglyph->metrics doesn't handle non-orthogonal transformations
+        // http://www.freetype.org/freetype2/docs/reference/ft2-base_interface.html#FT_Set_Transform
         pgd->fxA = ftglyph->metrics.horiBearingX;
         pgd->fxAB = pgd->fxA + ftglyph->metrics.width / 4;
-        pgd->fxD = ftglyph->metrics.horiAdvance / 4;
     }
     else
     {
         pgd->fxA = ftglyph->metrics.vertBearingX;
         pgd->fxAB = pgd->fxA + ftglyph->metrics.height;
-        pgd->fxD = ftglyph->metrics.vertAdvance;
     }
+
+    pgd->fxD = ftglyph->advance.x / 4; // should be projected on the x-axis
 
     pgd->fxInkBottom = 0;
     pgd->fxInkTop = pgd->fxInkBottom + (ftglyph->bitmap.rows << 4);
@@ -398,9 +405,9 @@ FtfdQueryGlyphData(
     if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
     if (ftglyph->bitmap.rows == 0) pgd->rclInk.bottom++;
 
-    pgd->ptqD.x.LowPart = 0x000000fd;
+    pgd->ptqD.x.LowPart = 0x000000fd; // ftglyph->advance.x
     pgd->ptqD.x.HighPart = 0;
-    pgd->ptqD.y.LowPart = 0x000000a0; // 0x000000a0
+    pgd->ptqD.y.LowPart = 0x000000a0; // ftglyph->advance.y
     pgd->ptqD.y.HighPart = 0;
     //pgd->ptqD.x.QuadPart = 0;
     //pgd->ptqD.y.QuadPart = 0;
