@@ -396,8 +396,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "Додати дані до реєстру?"
+  IDS_IMPORTED_OK               "Інформація була додана до реєстру"
 END
 
 /*****************************************************************/
