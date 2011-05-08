@@ -1,0 +1,23 @@
+
+
+Installation
+========
+To install the driver, copy it to your Windows\system32 folder. Then go the following registry key:
+HKLM\SOFTWARE\Microsodt\Windows NT\CurrentVersion\Font Drivers
+There should be at least one value: "Adobe Type Manager" : REG_SZ : "atmfd.dll"
+Create a new value of type REG_SZ. The name is "Freetype Font driver", the value is "ftfd.dll"
+Reboot.
+
+Testing
+=====
+Since Windows uses an internal driver for TrueType fonts, build into win32k and loaded before any
+other font driver, custom drivers will never see any ttf files. To test it, you can use OpenType fonts
+in Adobe Type1 format. Those would usually be handled by the "Adobe Type Manager font driver" atmfd.dll.
+But the newly installed driver will see the font file first.
+
+Warning
+======
+The driver is not production quality, so expect crashes. Don't use it on your production machine, but in
+a virtual machine. Attaching WinDbg to Windows is recommended to see the debug output. Or use DbgView
+from SysInternals.
+

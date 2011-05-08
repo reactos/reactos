@@ -152,7 +152,7 @@ GetWinFamily(BYTE jClassId, BYTE jSubclassId)
     switch (jClassId)
     {
         case 0: // Class ID = 0 No Classification
-            break;
+            return FF_SWISS;
 
         case 1: // Class ID = 1 Oldstyle Serifs
             switch (jSubclassId)
@@ -299,8 +299,9 @@ GetWinFamily(BYTE jClassId, BYTE jSubclassId)
             break;
     }
 
-__debugbreak();
-    return 0;
+    WARN("Unhandled class: jClassId=%d, jSubclassId=%d\n", jClassId, jSubclassId);
+//__debugbreak();
+    return FF_SWISS;
 }
 
 BOOL
