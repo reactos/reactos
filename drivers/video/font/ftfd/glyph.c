@@ -165,7 +165,7 @@ FtfdCreateFontInstance(
         return NULL;
     }
 
-    /* Check if there is rotation / shearing (cannot use iComplexity!?) */
+    /* Check if there is rotation / skewing (cannot use iComplexity!?) */
     if (!FLOATOBJ_bIsNull(&fxform.eM12) || !FLOATOBJ_bIsNull(&fxform.eM21))
     {
         __debugbreak();
