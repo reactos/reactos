@@ -103,6 +103,35 @@ USBSTOR_HandleExecuteSCSI(
             Request->SrbStatus = SRB_STATUS_ERROR;
         }
     }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ)
+    {
+        DPRINT1("SCSIOP_READ DataTransferLength %lu\n", Request->DataTransferLength);
+        ASSERT(Request->DataBuffer);
+
+        //
+        // send read command
+        //
+        Status = USBSTOR_SendReadCmd(DeviceObject, Request, &TransferredLength);
+        DPRINT1("USBSTOR_SendReadCmd Status %x BytesReturned %lu\n", Status, TransferredLength);
+
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // store returned info length
+            //
+            Irp->IoStatus.Information = TransferredLength;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+        else
+        {
+            //
+            // failed to retrieve sense data
+            //
+            Irp->IoStatus.Information = 0;
+            Request->SrbStatus = SRB_STATUS_ERROR;
+        }
+    }
+
     else
     {
         UNIMPLEMENTED;

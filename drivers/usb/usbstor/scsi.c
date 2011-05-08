@@ -490,6 +490,12 @@ USBSTOR_SendCapacityCmd(
     }
 
     //
+    // store result in device extension
+    //
+    PDODeviceExtension->LastLogicBlockAddress = NTOHL(Response->LastLogicalBlockAddress);
+    PDODeviceExtension->BlockLength =  NTOHL(Response->BlockLength);
+
+    //
     // send csw
     //
     Status = USBSTOR_SendCSW(DeviceObject, OutControl, 512, &CSW);
@@ -672,3 +678,138 @@ USBSTOR_SendModeSenseCmd(
     return Status;
 }
 
+NTSTATUS
+USBSTOR_SendReadCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request,
+    OUT PULONG TransferBufferLength)
+{
+    UFI_READ_CMD Cmd;
+    CSW CSW;
+    NTSTATUS Status;
+    PVOID Response;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PCBW OutControl;
+    PCDB pCDB;
+    ULONG BlockCount;
+
+    //
+    // get SCSI command data block
+    //
+    pCDB = (PCDB)Request->Cdb;
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // allocate read buffer response from non paged pool
+    //
+    Response = (PUFI_CAPACITY_RESPONSE)AllocateItem(NonPagedPool, Request->DataTransferLength);
+    if (!Response)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // FIXME: support more logical blocks
+    //
+    ASSERT(Request->DataTransferLength == PDODeviceExtension->BlockLength);
+
+    //
+    // block count
+    //
+    BlockCount = Request->DataTransferLength / PDODeviceExtension->BlockLength;
+
+    //
+    // initialize read sense cmd
+    //
+    RtlZeroMemory(&Cmd, sizeof(UFI_READ_CMD));
+    Cmd.Code = SCSIOP_READ;
+    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
+    Cmd.ContiguousLogicBlocks = _byteswap_ushort(BlockCount);
+
+    RtlCopyMemory(&Cmd.LogicalBlockAddress, pCDB->READ12.LogicalBlock, sizeof(UCHAR) * 4);
+
+    DPRINT1("BlockAddress %lu BlockCount %lu BlockLength %lu\n", NTOHL(Cmd.LogicalBlockAddress), BlockCount, PDODeviceExtension->BlockLength);
+
+    //
+    // now send read cmd
+    //
+    Status = USBSTOR_SendCBW(DeviceObject, UFI_READ_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, &OutControl);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendReadCmd> USBSTOR_SendCBW failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // now read the logical block
+    //
+    Status = USBSTOR_SendData(DeviceObject, Request->DataTransferLength, Response);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to read logical block
+        //
+        DPRINT1("USBSTOR_SendReadCmd> USBSTOR_SendData failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+
+    DbgBreakPoint();
+
+    //
+    // send csw
+    //
+    Status = USBSTOR_SendCSW(DeviceObject, OutControl, 512, &CSW);
+
+    DPRINT1("------------------------\n");
+    DPRINT1("CSW %p\n", &CSW);
+    DPRINT1("Signature %x\n", CSW.Signature);
+    DPRINT1("Tag %x\n", CSW.Tag);
+    DPRINT1("DataResidue %x\n", CSW.DataResidue);
+    DPRINT1("Status %x\n", CSW.Status);
+
+    //
+    // FIXME: handle error
+    //
+    ASSERT(CSW.Status == 0);
+    ASSERT(CSW.DataResidue == 0);
+
+    //
+    // calculate transfer length
+    //
+    *TransferBufferLength = Request->DataTransferLength - CSW.DataResidue;
+
+    //
+    // copy buffer
+    //
+    RtlCopyMemory(Request->DataBuffer, Response, *TransferBufferLength);
+
+    //
+    // free item
+    //
+    FreeItem(OutControl);
+
+    //
+    // free response
+    //
+    FreeItem(Response);
+
+    //
+    // done
+    //
+    return Status;
+}
