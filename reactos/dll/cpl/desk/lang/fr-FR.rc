@@ -55,8 +55,8 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Modèle de couleurs", IDC_STATIC, 7, 140, 64, 7
-    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effets...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Avancé", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
@@ -101,22 +101,22 @@ END
 IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 340, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effets"
+CAPTION "Effects"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Utiliser l'effet de transition suivant pour les menus et les bulles d'aides :",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "&Utilisez l'effet de transition suivant pour les menus et les bulles d'aides:",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 330, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "U&tiliser la méthode suivante pour lisser les bords des polices d'écran :",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "U&tilisez la méthode suivante pour aplanir les bords des polices d'écran:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 330, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     CONTROL         "Uti&liser de grandes icones",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 330, 19
-    CONTROL         "&Montrer les ombres sous les menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "&Montrer ombrage sous les menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 330, 19
-    CONTROL         "Montrer le contenu des fenêtres lorsqu'elles sont bougées",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "Montrer contenu des fenêtres lorsqu'elles sont bougés",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 330, 19
-    CONTROL         "&Cacher les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "&Cacher les lettres soulignées pour la navigation du clavier jusqu'à ce que j'appuie sur la touche Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 330, 19
     PUSHBUTTON "Annuler", IDCANCEL, 281, 165, 50, 14
     DEFPUSHBUTTON "Accepter", IDOK, 227, 165, 50, 14
@@ -181,8 +181,8 @@ END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Effet de glissement"
-    IDS_FADEEFFECT  "Effet de fondu"
+    IDS_SLIDEEFFECT "Slide effect"
+    IDS_FADEEFFECT  "Fade effect"
 END
 
 STRINGTABLE DISCARDABLE
@@ -263,6 +263,6 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Paramètres d'affichage"
-    IDS_APPLY_FAILED "Échec lors de l'application des nouveaux paramètres..."
+    IDS_APPLY_FAILED "Echec lors de l'application des nouveaux paramètres..."
     IDS_APPLY_NEEDS_RESTART "Vous devez redémarrer votre ordinateur pour appliquer les modifications."
 END

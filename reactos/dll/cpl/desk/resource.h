@@ -92,11 +92,10 @@
 
 /* Appearance Page */
 #define IDC_APPEARANCE_PREVIEW          1500
-#define IDC_APPEARANCE_UI_ITEM          1501
-#define IDC_APPEARANCE_COLORSCHEME      1502
-#define IDC_APPEARANCE_FONTSIZE         1503
-#define IDC_APPEARANCE_EFFECTS          1504
-#define IDC_APPEARANCE_ADVANCED         1505
+#define IDC_APPEARANCE_COLORSCHEME      1501
+#define IDC_APPEARANCE_FONTSIZE         1502
+#define IDC_APPEARANCE_EFFECTS          1503
+#define IDC_APPEARANCE_ADVANCED         1504
 
 #define IDS_INACTWIN                    1510
 #define IDS_ACTWIN                      1511
