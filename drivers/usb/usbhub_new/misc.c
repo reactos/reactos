@@ -46,6 +46,54 @@ DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescripto
     DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
 }
 
+VOID
+DumpFullConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    LONG i, j;
+
+    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
+    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR) ((ULONG_PTR)ConfigurationDescriptor + sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    for (i=0; i < ConfigurationDescriptor->bNumInterfaces; i++)
+    {
+        DPRINT1("- Dumping InterfaceDescriptor %x\n", InterfaceDescriptor);
+        DPRINT1("  bLength %x\n", InterfaceDescriptor->bLength);
+        DPRINT1("  bDescriptorType %x\n", InterfaceDescriptor->bDescriptorType);
+        DPRINT1("  bInterfaceNumber %x\n", InterfaceDescriptor->bInterfaceNumber);
+        DPRINT1("  bAlternateSetting %x\n", InterfaceDescriptor->bAlternateSetting);
+        DPRINT1("  bNumEndpoints %x\n", InterfaceDescriptor->bNumEndpoints);
+        DPRINT1("  bInterfaceClass %x\n", InterfaceDescriptor->bInterfaceClass);
+        DPRINT1("  bInterfaceSubClass %x\n", InterfaceDescriptor->bInterfaceSubClass);
+        DPRINT1("  bInterfaceProtocol %x\n", InterfaceDescriptor->bInterfaceProtocol);
+        DPRINT1("  iInterface %x\n", InterfaceDescriptor->iInterface);
+
+        EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR) ((ULONG_PTR)InterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR));
+
+        for (j=0; j < InterfaceDescriptor->bNumEndpoints; j++)
+        {
+            DPRINT1("   bLength %x\n", EndpointDescriptor->bLength);
+            DPRINT1("   bDescriptorType %x\n", EndpointDescriptor->bDescriptorType);
+            DPRINT1("   bEndpointAddress %x\n", EndpointDescriptor->bEndpointAddress);
+            DPRINT1("   bmAttributes %x\n", EndpointDescriptor->bmAttributes);
+            DPRINT1("   wMaxPacketSize %x\n", EndpointDescriptor->wMaxPacketSize);
+            DPRINT1("   bInterval %x\n", EndpointDescriptor->bInterval);
+            EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR) ((ULONG_PTR)EndpointDescriptor + sizeof(USB_ENDPOINT_DESCRIPTOR));
+        }
+        InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)(ULONG_PTR)EndpointDescriptor;
+    }
+}
+
 NTSTATUS
 NTAPI
 ForwardIrpAndWaitCompletion(
