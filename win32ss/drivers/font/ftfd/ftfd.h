@@ -21,6 +21,7 @@
 #include FT_MULTIPLE_MASTERS_H
 #include FT_TRIGONOMETRY_H
 
+
 extern FT_Library gftlibrary;
 
 #define TAG_GLYPHSET 'GlSt'
@@ -95,6 +96,7 @@ typedef struct
     ULONG cGlyphs;
     ULONG cMappings;
     ULONG cRuns;
+    PWCHAR pwcReverseTable;
     FD_GLYPHSET *pGlyphSet;
     FD_KERNINGPAIR *pKerningPairs;
     FTFD_IFIMETRICS ifiex;
@@ -332,5 +334,10 @@ NTAPI
 FtfdGetWinMetrics(
     PFTFD_FACE pface,
     PIFIMETRICS pifi);
+
+VOID
+NTAPI
+FtfdInitKerningPairs(
+    PFTFD_FACE pface);
 
 #endif /* _FTFD_PCH_ */
