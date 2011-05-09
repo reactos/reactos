@@ -315,7 +315,6 @@ FtfdGetWinMetrics(
     PTT_OS2_DATA pOs2;
 
     /* Get the OS/2 table for the face */
-    // FIXME: get the right table for the face, when multiple faces
     pOs2 = FtfdFindTrueTypeTable(pvView, pfile->cjView, pface->iFace, '2/SO', NULL);
     if (!pOs2)
     {
@@ -364,6 +363,133 @@ FtfdGetWinMetrics(
     return TRUE;
 }
 
+ULONG
+NTAPI
+FtfdGetNumberOfKerningPairs(
+    PFTFD_FACE pface)
+{
+    PFTFD_FILE pfile = pface->pfile;
+    PTT_KERNING_TABLE pKerning;
+    PTT_KERNING_SUBTABLE pSubTable;
+    ULONG i, nPairs = 0;
+
+__debugbreak();
+
+    /* Get the kern table for the face */
+    pKerning = FtfdFindTrueTypeTable(pfile->pvView,
+                                     pfile->cjView,
+                                     pface->iFace,
+                                     'nrek',
+                                     NULL);
+    if (!pKerning)
+    {
+        WARN("Couldn't find kerning table\n");
+        return 0;
+    }
+
+    if (pKerning->usVersion != 0)
+    {
+        WARN("Found unknown version %lx\n", pKerning->usVersion);
+        return 0;
+    }
+
+    /* Start with the first subtable */
+    pSubTable = &pKerning->subtable;
+
+    /* Loop all subtables */
+    for (i = 0; i < pKerning->nTables; i++)
+    {
+        nPairs += GETW(&pSubTable->format0.nPairs);
+        pSubTable = (PVOID)((PCHAR)pSubTable + pSubTable->usLength);
+    }
+
+    TRACE("Got %ld kerning pairs\n", nPairs);
+    return nPairs;
+}
+
+VOID
+NTAPI
+FtfdInitKerningPairs(
+    PFTFD_FACE pface)
+{
+    PFTFD_FILE pfile = pface->pfile;
+    PTT_KERNING_TABLE pKernTable;
+    PTT_KERNING_SUBTABLE pSubTable;
+    ULONG i, j, cPairs = 0;
+    FD_KERNINGPAIR *pKernPair;
+    HGLYPH hgLeft, hgRight;
+
+__debugbreak();
+
+    /* Get the kern table for the face */
+    pKernTable = FtfdFindTrueTypeTable(pfile->pvView,
+                                     pfile->cjView,
+                                     pface->iFace,
+                                     'nrek',
+                                     NULL);
+
+    if (!pKernTable || pKernTable->usVersion != 0)
+    {
+        TRACE("Couldn't find kerning table\n");
+        return;
+    }
+
+    // FIXME: do an overflow check
+    /* Loop all subtables */
+    pSubTable = &pKernTable->subtable;
+    for (i = 0; i < pKernTable->nTables; i++)
+    {
+        /* Only type 0 is interesting */
+        if (GETW(&pSubTable->usVersion) == 0)
+            cPairs += GETW(&pSubTable->format0.nPairs);
+    }
+
+    if (cPairs == 0)
+    {
+        return;
+    }
+
+    /* Allocate an FD_KERNINGPAIR array */
+    pKernPair = EngAllocMem(0, (cPairs + 1) * sizeof(FD_KERNINGPAIR), '1234');
+    pface->pKerningPairs = pKernPair;
+    if (!pKernPair)
+    {
+        WARN("EngAllocMem failed\n");
+        return;
+    }
+
+    /* Loop all subtables again */
+    pSubTable = &pKernTable->subtable;
+    for (i = 0; i < pKernTable->nTables; i++)
+    {
+        /* Only type 0 is interesting */
+        if (GETW(&pSubTable->usVersion) != 0) continue;
+
+        /* Loop all kern pairs in the table */
+        for (j = 0; j < GETW(&pSubTable->format0.nPairs); j++)
+        {
+            /* Get the glyph handles for the kerning */
+            hgLeft = GETW(&pSubTable->format0.akernpair[j].usLeft);
+            hgRight = GETW(&pSubTable->format0.akernpair[j].usRight);
+
+            /* Windows wants WCHARs, convert them */
+            pKernPair->wcFirst = pface->pwcReverseTable[hgLeft];
+            pKernPair->wcSecond = pface->pwcReverseTable[hgLeft];
+            pKernPair->fwdKern = GETW(&pSubTable->format0.akernpair[j].fwdValue);
+            pKernPair++;
+        }
+
+        /* Go to next subtable */
+        pSubTable = (PVOID)((PCHAR)pSubTable + pSubTable->usLength);
+    }
+
+    /* Zero terminate last FD_KERNINGPAIR entry */
+    pKernPair->wcFirst = 0;
+    pKernPair->wcSecond = 0;
+    pKernPair->fwdKern = 0;
+
+    pface->ifiex.ifi.cKerningPairs = cPairs;
+}
 
 /** Public Interface **********************************************************/
 

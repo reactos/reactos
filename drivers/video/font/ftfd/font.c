@@ -263,8 +263,18 @@ FtfdInitGlyphSet(
     ULONG i, cRuns, cjSize;
     HGLYPH * phglyphs;
     WCHAR wcCurrent, wcPrev;
+    PWCHAR pwcReverseTable;
 
     TRACE("FtfdInitGlyphSet()\n");
+
+    /* Allocate an array of WCHARs */
+    pwcReverseTable = EngAllocMem(0, pface->ftface->num_glyphs, 'dftF');
+    if (!pwcReverseTable)
+    {
+        WARN("EngAllocMem() failed.\n");
+        return NULL;
+    }
+
 
     /* Calculate FD_GLYPHSET size (incl. HGLYPH array!) */
     cjSize = FIELD_OFFSET(FD_GLYPHSET, awcrun)
@@ -292,6 +302,9 @@ FtfdInitGlyphSet(
     wcPrev = wcCurrent = (WCHAR)FT_Get_First_Char(ftface, &index);
     for (i = 0, cRuns = 0; i < pface->cMappings && index; i++)
     {
+        /* Create an entry in the reverse lookup table */
+        pwcReverseTable[index] = wcCurrent;
+
         /* Use index as glyph handle */
         phglyphs[i] = (HGLYPH)index;
 
@@ -317,15 +330,10 @@ FtfdInitGlyphSet(
 
     TRACE("Done with font tree, %d runs\n", pGlyphSet->cRuns);
     pface->pGlyphSet = pGlyphSet;
+    pface->pwcReverseTable = pwcReverseTable;
     return pGlyphSet;
 }
 
-VOID
-FtfdInitKerningPairs(
-    PFTFD_FACE pface)
-{
-    //WARN("unimplemented\n");
-}
 
 static
 ULONG
@@ -633,7 +641,7 @@ FtfdQueryFontTree(
         return NULL;
     }
 
-    /* get pointer to the requested face */
+    /* Get pointer to the requested face */
     pface = pfile->apface[iFace - 1];
 
     switch (iMode)
