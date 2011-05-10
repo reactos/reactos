@@ -382,7 +382,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         3,
         14,
-        "Layout di tastiera:",
+        "  Layout di tastiera:",
         TEXT_STYLE_NORMAL
     },
     {
