@@ -66,7 +66,7 @@ macro(set_image_base MODULE IMAGE_BASE)
 endmacro()
 
 macro(set_module_type MODULE TYPE)
-    add_dependencies(${MODULE} psdk buildno_header)
+    add_dependencies(${MODULE} psdk)
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
         set_entrypoint(${MODULE} NtProcessStartup@4)

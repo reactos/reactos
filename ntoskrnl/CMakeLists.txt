@@ -446,7 +446,7 @@ target_link_libraries(ntoskrnl
 add_importlibs(ntoskrnl hal kdcom bootvid)
 
 add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
-add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi asm)
+add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
 add_livecd_target(ntoskrnl reactos/system32)
