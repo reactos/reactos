@@ -544,7 +544,7 @@ ParseFromRoot:
     }
 
     /* Reparse */
-    while (Reparse)
+    while (Reparse && MaxReparse)
     {
         /* Get the name */
         RemainingName = *ObjectName;
@@ -795,6 +795,7 @@ ReparseObject:
                 {
                     /* Reparse again */
                     Reparse = TRUE;
+                    --MaxReparse;
 
                     /* Start over from root if we got sent back there */
                     if ((Status == STATUS_REPARSE_OBJECT) ||
