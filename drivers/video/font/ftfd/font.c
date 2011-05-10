@@ -268,7 +268,8 @@ FtfdInitGlyphSet(
     TRACE("FtfdInitGlyphSet()\n");
 
     /* Allocate an array of WCHARs */
-    pwcReverseTable = EngAllocMem(0, pface->ftface->num_glyphs, 'dftF');
+    cjSize = pface->cGlyphs * sizeof(WCHAR);
+    pwcReverseTable = EngAllocMem(0, cjSize, 'dftF');
     if (!pwcReverseTable)
     {
         WARN("EngAllocMem() failed.\n");
@@ -303,6 +304,7 @@ FtfdInitGlyphSet(
     for (i = 0, cRuns = 0; i < pface->cMappings && index; i++)
     {
         /* Create an entry in the reverse lookup table */
+        ASSERT(index < pface->cGlyphs);
         pwcReverseTable[index] = wcCurrent;
 
         /* Use index as glyph handle */
@@ -355,6 +357,8 @@ FtfdGetFontFormat(FT_Face ftface)
     return FMT_UNKNOWN;
 }
 
+static
+ULONG
 FtfdGetFileFormat(
     PFTFD_FILE pfile)
 {

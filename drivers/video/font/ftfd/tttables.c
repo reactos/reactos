@@ -407,6 +407,21 @@ __debugbreak();
     return nPairs;
 }
 
+INT
+__cdecl
+CompareKernPair(
+    FD_KERNINGPAIR *pkp1,
+    FD_KERNINGPAIR *pkp2)
+{
+    ULONG ul1, ul2;
+    ul1 = pkp1->wcFirst + 65536 * pkp1->wcSecond;
+    ul2 = pkp2->wcFirst + 65536 * pkp2->wcSecond;
+    if (ul1 < ul2) return -1;
+    if (ul1 > ul2) return 1;
+    return 0;
+}
+
+
 VOID
 NTAPI
 FtfdInitKerningPairs(
@@ -415,33 +430,65 @@ FtfdInitKerningPairs(
     PFTFD_FILE pfile = pface->pfile;
     PTT_KERNING_TABLE pKernTable;
     PTT_KERNING_SUBTABLE pSubTable;
-    ULONG i, j, cPairs = 0;
+    ULONG cjSize, i, j, cPairs = 0;
     FD_KERNINGPAIR *pKernPair;
     HGLYPH hgLeft, hgRight;
+    USHORT nTables;
+    ULONG_PTR ulLastAddress;
 
-__debugbreak();
+//__debugbreak();
 
     /* Get the kern table for the face */
     pKernTable = FtfdFindTrueTypeTable(pfile->pvView,
-                                     pfile->cjView,
-                                     pface->iFace,
-                                     'nrek',
-                                     NULL);
+                                       pfile->cjView,
+                                       pface->iFace,
+                                       'nrek',
+                                       &cjSize);
 
-    if (!pKernTable || pKernTable->usVersion != 0)
+    if (!pKernTable || cjSize < sizeof(TT_KERNING_TABLE) ||
+         pKernTable->usVersion != 0)
     {
-        TRACE("Couldn't find kerning table\n");
+        TRACE("Couldn't find a valid kerning table\n");
         return;
     }
 
-    // FIXME: do an overflow check
+    nTables = GETW(&pKernTable->nTables);
+    ulLastAddress = (ULONG_PTR)pKernTable + cjSize;
+
+
     /* Loop all subtables */
     pSubTable = &pKernTable->subtable;
-    for (i = 0; i < pKernTable->nTables; i++)
+    for (i = 0; i < nTables; i++)
     {
-        /* Only type 0 is interesting */
+        /* Check if the subtable is accessible */
+        if ((ULONG_PTR)pSubTable + sizeof(TT_KERNING_SUBTABLE) > ulLastAddress)
+        {
+            __debugbreak();
+            return;
+        }
+
+        /* Get the table size and check if its valid */
+        cjSize = GETW(&pSubTable->usLength);
+        if ((ULONG_PTR)pSubTable + cjSize > ulLastAddress)
+        {
+            __debugbreak();
+            return;
+        }
+
+        /* Check version */
         if (GETW(&pSubTable->usVersion) == 0)
+        {
+            /* Get number of kerning pairs and check id its valid */
             cPairs += GETW(&pSubTable->format0.nPairs);
+            if ((ULONG_PTR)&pSubTable->format0.akernpair[cPairs] > ulLastAddress)
+            {
+                __debugbreak();
+                return;
+            }
+        }
+
+        /* Go to next subtable */
+        pSubTable = (PVOID)((PCHAR)pSubTable + cjSize);
     }
 
     if (cPairs == 0)
@@ -450,7 +497,7 @@ __debugbreak();
     }
 
     /* Allocate an FD_KERNINGPAIR array */
-    pKernPair = EngAllocMem(0, (cPairs + 1) * sizeof(FD_KERNINGPAIR), '1234');
+    pKernPair = EngAllocMem(0, (cPairs + 1) * sizeof(FD_KERNINGPAIR), 'dftF');
     pface->pKerningPairs = pKernPair;
     if (!pKernPair)
     {
@@ -460,34 +507,46 @@ __debugbreak();
 
     /* Loop all subtables again */
     pSubTable = &pKernTable->subtable;
-    for (i = 0; i < pKernTable->nTables; i++)
+    for (i = 0; i < nTables; i++)
     {
-        /* Only type 0 is interesting */
-        if (GETW(&pSubTable->usVersion) != 0) continue;
-
-        /* Loop all kern pairs in the table */
-        for (j = 0; j < GETW(&pSubTable->format0.nPairs); j++)
+        /* Check version */
+        if (GETW(&pSubTable->usVersion) == 0)
         {
-            /* Get the glyph handles for the kerning */
-            hgLeft = GETW(&pSubTable->format0.akernpair[j].usLeft);
-            hgRight = GETW(&pSubTable->format0.akernpair[j].usRight);
+            /* Loop all kern pairs in the table */
+            for (j = 0; j < GETW(&pSubTable->format0.nPairs); j++)
+            {
+                /* Get the glyph handles for the kerning */
+                hgLeft = GETW(&pSubTable->format0.akernpair[j].usLeft);
+                hgRight = GETW(&pSubTable->format0.akernpair[j].usRight);
 
-            /* Windows wants WCHARs, convert them */
-            pKernPair->wcFirst = pface->pwcReverseTable[hgLeft];
-            pKernPair->wcSecond = pface->pwcReverseTable[hgLeft];
-            pKernPair->fwdKern = GETW(&pSubTable->format0.akernpair[j].fwdValue);
-            pKernPair++;
+                /* Make sure we are inside the range */
+                if (hgLeft >= pface->cGlyphs) hgLeft = 0;
+                if (hgRight >= pface->cGlyphs) hgRight = 0;
+
+                /* Windows wants WCHARs, convert them */
+                pKernPair->wcFirst = pface->pwcReverseTable[hgLeft];
+                pKernPair->wcSecond = pface->pwcReverseTable[hgLeft];
+                pKernPair->fwdKern = GETW(&pSubTable->format0.akernpair[j].fwdValue);
+                pKernPair++;
+            }
         }
 
         /* Go to next subtable */
-        pSubTable = (PVOID)((PCHAR)pSubTable + pSubTable->usLength);
+        pSubTable = (PVOID)((PCHAR)pSubTable + GETW(&pSubTable->usLength));
     }
 
-    /* Zero terminate last FD_KERNINGPAIR entry */
+    /* Zero terminate array */
     pKernPair->wcFirst = 0;
     pKernPair->wcSecond = 0;
     pKernPair->fwdKern = 0;
 
+    /* Sort the array */
+    EngSort((PBYTE)pface->pKerningPairs,
+            sizeof(FD_KERNINGPAIR),
+            cPairs,
+            (SORTCOMP)CompareKernPair);
+
+    /* Set the number of kernpairs in the IFIMETRICS */
     pface->ifiex.ifi.cKerningPairs = cPairs;
 }
 
