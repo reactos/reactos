@@ -1957,7 +1957,7 @@ CmpSetVersionData(VOID)
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               0,
+                               NULL,
                                NULL);
 
     Status = NtCreateKey(&KeyHandle,
@@ -1969,7 +1969,7 @@ CmpSetVersionData(VOID)
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create key &wZ (Status: %08lx)\n", &KeyName, Status);
+        DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
         return;
     }
 
