@@ -374,7 +374,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     POBJECT_SYMBOLIC_LINK SymlinkObject = (POBJECT_SYMBOLIC_LINK)ParsedObject;
     PUNICODE_STRING TargetPath;
     PWSTR NewTargetPath;
-    ULONG LengthUsed, MaximumLength;
+    ULONG LengthUsed, MaximumLength, TempLength;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -411,9 +411,39 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
         return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
+    /* Check if this symlink is bound to a specific object */
+    if (SymlinkObject->LinkTargetObject)
+    {
+        UNIMPLEMENTED;
+    }
+
     /* Set the target path and length */
     TargetPath = &SymlinkObject->LinkTarget;
-    LengthUsed = TargetPath->Length + RemainingName->Length;
+    TempLength = TargetPath->Length;
+
+    /*
+     * Strip off the extra trailing '\', if we don't do this we will end up
+     * adding a extra '\' between TargetPath and RemainingName
+     * causing caller's like ObpLookupObjectName() to fail.
+     */
+    if (TempLength && RemainingName->Length)
+    {
+        /* The target and remaining names aren't empty, so check for slashes */
+        if ((TargetPath->Buffer[TempLength / sizeof(WCHAR) - 1] ==
+            OBJ_NAME_PATH_SEPARATOR) &&
+            (RemainingName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR))
+        {
+            /* Reduce the length by one to cut off the extra '\' */
+            TempLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+        }
+    }
+
+    /* Calculate the new length */
+    LengthUsed = TempLength + RemainingName->Length;
+
+    /* Check if it's not too much */
+    if (LengthUsed > 0xFFF0)
+        return STATUS_NAME_TOO_LONG;
 
     /* Optimization: check if the new name is shorter */
     if (FullPath->MaximumLength <= LengthUsed)
@@ -436,13 +466,13 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     if (RemainingName->Length)
     {
         /* Copy the new path */
-        RtlMoveMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
+        RtlMoveMemory((PVOID)((ULONG_PTR)NewTargetPath + TempLength),
                       RemainingName->Buffer,
                       RemainingName->Length);
     }
 
     /* Copy the target path and null-terminate it */
-    RtlCopyMemory(NewTargetPath, TargetPath->Buffer, TargetPath->Length);
+    RtlCopyMemory(NewTargetPath, TargetPath->Buffer, TempLength);
     NewTargetPath[LengthUsed / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* If the optimization didn't work, free the old buffer */
