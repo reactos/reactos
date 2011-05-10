@@ -632,7 +632,7 @@ USBSTOR_SendModeSenseCmd(
     // MODE_PARAMETER_BLOCK
     //
     // 
-	DbgBreakPoint();
+    UNIMPLEMENTED
 
     //
     // send csw
@@ -807,6 +807,80 @@ USBSTOR_SendReadCmd(
     // free response
     //
     FreeItem(Response);
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+USBSTOR_SendTestUnitCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request)
+{
+    UFI_TEST_UNIT_CMD Cmd;
+    CSW CSW;
+    NTSTATUS Status;
+    PVOID Response;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PCBW OutControl;
+    PCDB pCDB;
+    ULONG BlockCount;
+
+    //
+    // initialize test unit cmd
+    //
+    RtlZeroMemory(&Cmd, sizeof(UFI_TEST_UNIT_CMD));
+    Cmd.Code = SCSIOP_TEST_UNIT_READY;
+    Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
+
+    //
+    // no data should be transferred
+    //
+    ASSERT(Request->DataTransferLength == 0);
+
+    //
+    // now send test unit cmd
+    //
+    Status = USBSTOR_SendCBW(DeviceObject, UFI_TEST_UNIT_CMD_LEN, (PUCHAR)&Cmd, 0, &OutControl);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to send CBW
+        //
+        DPRINT1("USBSTOR_SendReadCmd> USBSTOR_SendCBW failed with %x\n", Status);
+        FreeItem(Response);
+        ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // send csw
+    //
+    Status = USBSTOR_SendCSW(DeviceObject, OutControl, 512, &CSW);
+
+    DPRINT1("------------------------\n");
+    DPRINT1("CSW %p\n", &CSW);
+    DPRINT1("Signature %x\n", CSW.Signature);
+    DPRINT1("Tag %x\n", CSW.Tag);
+    DPRINT1("DataResidue %x\n", CSW.DataResidue);
+    DPRINT1("Status %x\n", CSW.Status);
+
+    //
+    // FIXME: handle error
+    //
+    ASSERT(CSW.Status == 0);
+    ASSERT(CSW.DataResidue == 0);
+
+    //
+    // free item
+    //
+    FreeItem(OutControl);
+
+    //
+    // FIXME: read sense buffer
+    //
 
     //
     // done

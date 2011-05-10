@@ -19,6 +19,22 @@
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
 
+
+
+#define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
+#define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
+
+#define HTONL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
+
+#define NTOHL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
+                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
+                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
+                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
+
 NTSTATUS NTAPI
 IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT SourceDevice,
@@ -56,6 +72,8 @@ typedef struct
     UCHAR LUN;                                                                           // lun id
     PVOID InquiryData;                                                                   // USB SCSI inquiry data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
+    ULONG BlockLength;                                                                   // length of block
+    ULONG LastLogicBlockAddress;                                                         // last block address
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 //
@@ -127,6 +145,24 @@ C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
+// UFI read cmd
+//
+typedef struct
+{
+    UCHAR Code;                                                      // operation code
+    UCHAR LUN;                                                       // lun
+    ULONG LogicalBlockAddress;                                       // logical block address
+    UCHAR Reserved;                                                  // reserved 0x00
+    USHORT ContiguousLogicBlocks;                                    // num of contiguous logical blocks
+    UCHAR Reserved1[3];                                              // reserved 0x00
+}UFI_READ_CMD;
+
+C_ASSERT(sizeof(UFI_READ_CMD) == 12);
+
+#define UFI_READ_CMD_LEN (0xA)
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
 // UFI read capacity cmd
 //
 typedef struct
@@ -153,22 +189,6 @@ typedef struct
 }UFI_CAPACITY_RESPONSE, *PUFI_CAPACITY_RESPONSE;
 
 C_ASSERT(sizeof(UFI_CAPACITY_RESPONSE) == 8);
-
-#define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
-#define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
-
-#define HTONL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
-                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
-                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
-                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
-
-
-#define NTOHL(n) (((((unsigned long)(n) & 0xFF)) << 24) | \
-                  ((((unsigned long)(n) & 0xFF00)) << 8) | \
-                  ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
-                  ((((unsigned long)(n) & 0xFF000000)) >> 24))
-
-
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -213,6 +233,22 @@ typedef struct
     UCHAR Reserved[3];
 }UFI_TIMER_PROTECT_PAGE, *PUFI_TIMER_PROTECT_PAGE;
 C_ASSERT(sizeof(UFI_TIMER_PROTECT_PAGE) == 8);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
+// UFI test unit command
+//
+
+typedef struct
+{
+    UCHAR Code;                                                       // operation code 0x00
+    UCHAR LUN;                                                        // lun
+    UCHAR Reserved[10];                                               // reserved 0x00
+}UFI_TEST_UNIT_CMD, *PUFI_TEST_UNIT_CMD;
+
+C_ASSERT(sizeof(UFI_TEST_UNIT_CMD) == 12);
+
+#define UFI_TEST_UNIT_CMD_LEN (6)
 
 //---------------------------------------------------------------------
 //
@@ -317,6 +353,18 @@ USBSTOR_SendModeSenseCmd(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PSCSI_REQUEST_BLOCK Request,
     OUT PULONG TransferBufferLength);
+
+NTSTATUS
+USBSTOR_SendReadCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request,
+    OUT PULONG TransferBufferLength);
+
+NTSTATUS
+USBSTOR_SendTestUnitCmd(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PSCSI_REQUEST_BLOCK Request);
+
 
 //---------------------------------------------------------------------
 //

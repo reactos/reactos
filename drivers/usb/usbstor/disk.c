@@ -125,13 +125,36 @@ USBSTOR_HandleExecuteSCSI(
         else
         {
             //
-            // failed to retrieve sense data
+            // failed to read
             //
             Irp->IoStatus.Information = 0;
             Request->SrbStatus = SRB_STATUS_ERROR;
         }
     }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
+    {
+        DPRINT1("SCSIOP_TEST_UNIT_READY\n");
 
+        //
+        // send test unit command
+        //
+        Status = USBSTOR_SendTestUnitCmd(DeviceObject, Request);
+
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // store returned info length
+            //
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+        else
+        {
+            //
+            // test unit command failed
+            //
+            Request->SrbStatus = SRB_STATUS_ERROR;
+        }
+    }
     else
     {
         UNIMPLEMENTED;
@@ -421,7 +444,7 @@ USBSTOR_HandleQueryProperty(
         DeviceDescriptor->Size = TotalLength;
         DeviceDescriptor->DeviceType = InquiryData->DeviceType;
         DeviceDescriptor->DeviceTypeModifier = (InquiryData->RMB & 0x7F);
-        DeviceDescriptor->RemovableMedia = FALSE; //FIXME check if floppy
+        DeviceDescriptor->RemovableMedia = TRUE;
         DeviceDescriptor->CommandQueueing = FALSE;
         DeviceDescriptor->BusType = BusTypeUsb;
         DeviceDescriptor->VendorIdOffset = sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR);
