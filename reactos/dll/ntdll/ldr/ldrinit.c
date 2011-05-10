@@ -591,6 +591,9 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                                                        sizeof(ULONG),
                                                        NULL);
             if (!NT_SUCCESS(Status)) BreakOnDllLoad = 0;
+
+            /* Reset status back to STATUS_SUCCESS */
+            Status = STATUS_SUCCESS;
         }
 
         /* Break if aksed */
