@@ -1054,7 +1054,11 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 VOID
 LogfReportEvent(WORD wType,
                 WORD wCategory,
-                DWORD dwEventId)
+                DWORD dwEventId,
+                WORD wNumStrings,
+                WCHAR *lpStrings,
+                DWORD dwDataSize,
+                LPVOID lpRawData)
 {
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
@@ -1086,10 +1090,10 @@ LogfReportEvent(WORD wType,
                                            (LPCWSTR)szComputerName,
                                            0,
                                            NULL,
-                                           0, //wNumStrings,
-                                           NULL, //lpStrings,
-                                           0, //dwDataSize,
-                                           NULL); //lpRawData);
+                                           wNumStrings,
+                                           lpStrings,
+                                           dwDataSize,
+                                           lpRawData);
 
     dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
     if (!dwError)

@@ -12,6 +12,7 @@
 #define NDEBUG
 #define WIN32_NO_STATUS
 
+#include <stdio.h>
 #include <windows.h>
 #include <netevent.h>
 #include <lpctypes.h>
@@ -181,7 +182,11 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 VOID
 LogfReportEvent(WORD wType,
                 WORD wCategory,
-                DWORD dwEventId);
+                DWORD dwEventId,
+                WORD wNumStrings,
+                WCHAR *lpStrings,
+                DWORD dwDataSize,
+                LPVOID lpRawData);
 
 /* eventlog.c */
 extern HANDLE MyHeap;

@@ -135,6 +135,71 @@ ServiceInit(VOID)
 }
 
 
+static VOID
+ReportProductInfoEvent(VOID)
+{
+    OSVERSIONINFOW versionInfo;
+    WCHAR szBuffer[512];
+    DWORD dwLength;
+    HKEY hKey;
+    DWORD dwValueLength;
+    DWORD dwType;
+    LONG lResult = ERROR_SUCCESS;
+
+    ZeroMemory(&versionInfo, sizeof(OSVERSIONINFO));
+    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+    /* Get version information */
+    if (!GetVersionExW(&versionInfo))
+        return;
+
+    ZeroMemory(szBuffer, 512 * sizeof(WCHAR));
+
+    /* Write version into the buffer */
+    dwLength = swprintf(szBuffer,
+                        L"%lu.%lu",
+                        versionInfo.dwMajorVersion,
+                        versionInfo.dwMinorVersion) + 1;
+
+    /* Write build number into the buffer */
+    dwLength += swprintf(&szBuffer[dwLength],
+                         L"%lu",
+                         versionInfo.dwBuildNumber) + 1;
+
+    /* Write service pack info into the buffer */
+    wcscpy(&szBuffer[dwLength], versionInfo.szCSDVersion);
+    dwLength += wcslen(versionInfo.szCSDVersion) + 1;
+
+    /* Read 'CurrentType' from the registry and write it into the buffer */
+    lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hKey);
+    if (lResult == ERROR_SUCCESS)
+    {
+        dwValueLength = 512 - dwLength;
+        lResult = RegQueryValueEx(hKey,
+                                  L"CurrentType",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)&szBuffer[dwLength],
+                                  &dwValueLength);
+
+        RegCloseKey(hKey);
+    }
+
+    /* Log the product information */
+    LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
+                    0,
+                    EVENT_EventLogProductInfo,
+                    4,
+                    szBuffer,
+                    0,
+                    NULL);
+}
+
+
 static VOID CALLBACK
 ServiceMain(DWORD argc,
             LPWSTR *argv)
@@ -169,9 +234,15 @@ ServiceMain(DWORD argc,
         DPRINT("Service started\n");
         UpdateServiceStatus(SERVICE_RUNNING);
 
+        ReportProductInfoEvent();
+
         LogfReportEvent(EVENTLOG_INFORMATION_TYPE,
                         0,
-                        EVENT_EventlogStarted);
+                        EVENT_EventlogStarted,
+                        0,
+                        NULL,
+                        0,
+                        NULL);
     }
 
     DPRINT("ServiceMain() done\n");
