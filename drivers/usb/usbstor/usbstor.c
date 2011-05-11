@@ -165,11 +165,7 @@ USBSTOR_DispatchScsi(
     //
     // handle requests
     //
-    Status = USBSTOR_HandleInternalDeviceControl(DeviceObject, Irp);
-
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
+    return USBSTOR_HandleInternalDeviceControl(DeviceObject, Irp);
 }
 
 NTSTATUS

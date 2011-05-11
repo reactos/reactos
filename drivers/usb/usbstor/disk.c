@@ -20,7 +20,6 @@ USBSTOR_HandleExecuteSCSI(
 {
     PCDB pCDB;
     NTSTATUS Status;
-    ULONG TransferredLength;
 
     //
     // get SCSI command data block
@@ -29,6 +28,7 @@ USBSTOR_HandleExecuteSCSI(
 
     DPRINT1("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
 
+
     if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
     {
         //
@@ -36,43 +36,8 @@ USBSTOR_HandleExecuteSCSI(
         //
         ASSERT(Request->DataBuffer);
 
-        if (Request->DataTransferLength == sizeof(READ_CAPACITY_DATA_EX))
-        {
-            //
-            // retrieve capacity extended structure
-            //
-            Status = USBSTOR_SendCapacityCmd(DeviceObject, (PREAD_CAPACITY_DATA_EX)Request->DataBuffer, NULL);
-        }
-        else
-        {
-            //
-            // sanity check
-            //
-            ASSERT(Request->DataTransferLength == sizeof(READ_CAPACITY_DATA));
-
-            //
-            // retrieve capacity
-            //
-            Status = USBSTOR_SendCapacityCmd(DeviceObject, NULL, (PREAD_CAPACITY_DATA)Request->DataBuffer);
-        }
-        DPRINT1("USBSTOR_SendCapacityCmd %x\n", Status);
-
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // store returned info length
-            //
-            Irp->IoStatus.Information = Request->DataTransferLength;
-            Request->SrbStatus = SRB_STATUS_SUCCESS;
-        }
-        else
-        {
-            //
-            // failed to retrieve capacity
-            //
-            Irp->IoStatus.Information = 0;
-            Request->SrbStatus = SRB_STATUS_ERROR;
-        }
+        DPRINT1("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
+        Status = USBSTOR_SendCapacityCmd(DeviceObject, Irp);
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
     {
@@ -83,25 +48,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         // send mode sense command
         //
-        Status = USBSTOR_SendModeSenseCmd(DeviceObject, Request, &TransferredLength);
-        DPRINT1("USBSTOR_SendModeSenseCmd Status %x BytesReturned %lu\n", Status, TransferredLength);
-
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // store returned info length
-            //
-            Irp->IoStatus.Information = TransferredLength;
-            Request->SrbStatus = SRB_STATUS_SUCCESS;
-        }
-        else
-        {
-            //
-            // failed to retrieve sense data
-            //
-            Irp->IoStatus.Information = 0;
-            Request->SrbStatus = SRB_STATUS_ERROR;
-        }
+        Status = USBSTOR_SendModeSenseCmd(DeviceObject, Irp);
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ)
     {
@@ -111,25 +58,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         // send read command
         //
-        Status = USBSTOR_SendReadCmd(DeviceObject, Request, &TransferredLength);
-        DPRINT1("USBSTOR_SendReadCmd Status %x BytesReturned %lu\n", Status, TransferredLength);
-
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // store returned info length
-            //
-            Irp->IoStatus.Information = TransferredLength;
-            Request->SrbStatus = SRB_STATUS_SUCCESS;
-        }
-        else
-        {
-            //
-            // failed to read
-            //
-            Irp->IoStatus.Information = 0;
-            Request->SrbStatus = SRB_STATUS_ERROR;
-        }
+        Status = USBSTOR_SendReadCmd(DeviceObject, Irp);
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
     {
@@ -138,22 +67,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         // send test unit command
         //
-        Status = USBSTOR_SendTestUnitCmd(DeviceObject, Request);
-
-        if (NT_SUCCESS(Status))
-        {
-            //
-            // store returned info length
-            //
-            Request->SrbStatus = SRB_STATUS_SUCCESS;
-        }
-        else
-        {
-            //
-            // test unit command failed
-            //
-            Request->SrbStatus = SRB_STATUS_ERROR;
-        }
+        Status = USBSTOR_SendTestUnitCmd(DeviceObject, Irp);
     }
     else
     {
@@ -202,8 +116,7 @@ USBSTOR_HandleInternalDeviceControl(
         case SRB_FUNCTION_EXECUTE_SCSI:
         {
             DPRINT1("SRB_FUNCTION_EXECUTE_SCSI\n");
-            Status = USBSTOR_HandleExecuteSCSI(DeviceObject, Irp, Request, PDODeviceExtension);
-            break;
+            return USBSTOR_HandleExecuteSCSI(DeviceObject, Irp, Request, PDODeviceExtension);
         }
         case SRB_FUNCTION_RELEASE_DEVICE:
         {
@@ -280,6 +193,11 @@ USBSTOR_HandleInternalDeviceControl(
         }
     }
 
+    //
+    // complete request
+    //
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 

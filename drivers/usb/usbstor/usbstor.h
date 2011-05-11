@@ -250,6 +250,25 @@ C_ASSERT(sizeof(UFI_TEST_UNIT_CMD) == 12);
 
 #define UFI_TEST_UNIT_CMD_LEN (6)
 
+typedef struct
+{
+    union
+    {
+        PCBW cbw;
+        PCSW csw;
+    };
+    URB Urb;
+    PIRP Irp;
+    ULONG TransferDataLength;
+    PUCHAR TransferData;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PMDL TransferBufferMDL;
+    PKEVENT Event;
+}IRP_CONTEXT, *PIRP_CONTEXT;
+
+
+
 //---------------------------------------------------------------------
 //
 // fdo.c routines
@@ -345,26 +364,22 @@ USBSTOR_SendInquiryCmd(
 NTSTATUS
 USBSTOR_SendCapacityCmd(
     IN PDEVICE_OBJECT DeviceObject,
-    OUT PREAD_CAPACITY_DATA_EX CapacityDataEx,
-    OUT PREAD_CAPACITY_DATA CapacityData);
+    IN PIRP Irp);
 
 NTSTATUS
 USBSTOR_SendModeSenseCmd(
     IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PSCSI_REQUEST_BLOCK Request,
-    OUT PULONG TransferBufferLength);
+    IN PIRP Irp);
 
 NTSTATUS
 USBSTOR_SendReadCmd(
     IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PSCSI_REQUEST_BLOCK Request,
-    OUT PULONG TransferBufferLength);
+    IN PIRP Irp);
 
 NTSTATUS
 USBSTOR_SendTestUnitCmd(
     IN PDEVICE_OBJECT DeviceObject,
-    IN OUT PSCSI_REQUEST_BLOCK Request);
-
+    IN PIRP Irp);
 
 //---------------------------------------------------------------------
 //
