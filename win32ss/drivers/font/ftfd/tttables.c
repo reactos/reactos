@@ -152,7 +152,7 @@ GetWinFamily(BYTE jClassId, BYTE jSubclassId)
     switch (jClassId)
     {
         case 0: // Class ID = 0 No Classification
-            return FF_SWISS;
+            return FF_ROMAN;//FF_SWISS;
 
         case 1: // Class ID = 1 Oldstyle Serifs
             switch (jSubclassId)
