@@ -146,6 +146,7 @@ typedef struct
     ULONG xScale;
     HGLYPH hgSelected;
     ULONG cjSelected;
+    UCHAR jBpp;
 } FTFD_FONT, *PFTFD_FONT;
 
 

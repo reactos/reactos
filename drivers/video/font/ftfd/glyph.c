@@ -37,7 +37,7 @@ FtfdNormalizeBaseVector(
     if (FLOATOBJ_bIsNull(&pptef->x))
     {
         efLength = pptef->y;
-        FLOATOBJ_SetLong(&pptef->y, 1);
+        FLOATOBJ_SetLong(&pptef->y, -1);
         return efLength;
     }
 
@@ -59,6 +59,9 @@ FtfdNormalizeBaseVector(
     /* Now divide the vector by the length */
     FLOATOBJ_Div(&pptef->x, &efLength);
     FLOATOBJ_Div(&pptef->y, &efLength);
+
+    /* y axis is inverted! */
+    FLOATOBJ_Neg(&pptef->y);
 
     /* Return the former length of the vector */
     return efLength;
@@ -110,6 +113,9 @@ FtfdCreateFontInstance(
     }
 
     pfont->ftface = ftface;
+
+    /* Set requested number of bits per pixel */
+    pfont->jBpp = pfo->flFontType & FO_GRAY16 ? 4 : 1;
 
     /* Get the XFORMOBJ from the font */
     pxo = FONTOBJ_pxoGetXform(pfo);
@@ -316,13 +322,15 @@ FtfdQueryMaxExtents(
         pfddm->pteSide.y = FLOATOBJ_GetFloat(&pfont->ptefSide.y);
 
         /* cjGlyphMax is the full size of the GLYPHBITS structure */
-        pfddm->cjGlyphMax = GLYPHBITS_SIZE(pfddm->cxMax, pfddm->cyMax, 4);
+        pfddm->cjGlyphMax = GLYPHBITS_SIZE(pfddm->cxMax,
+                                           pfddm->cyMax,
+                                           pfont->jBpp);
 
         /* Copy the quantized matrix from the font structure */
         pfddm->fdxQuantized = pfont->fdxQuantized;
 
         pfddm->lNonLinearExtLeading =   0x00000000;
-        pfddm->lNonLinearIntLeading =   0x00000010;
+        pfddm->lNonLinearIntLeading =   0x00000080; // FIXME
         pfddm->lNonLinearMaxCharWidth = 0x80000000;
         pfddm->lNonLinearAvgCharWidth = 0x80000000;
 
@@ -405,17 +413,28 @@ FtfdQueryGlyphData(
     if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
     if (ftglyph->bitmap.rows == 0) pgd->rclInk.bottom++;
 
-    pgd->ptqD.x.LowPart = 0x000000fd; // ftglyph->advance.x
+    // FIXME:
+    pgd->ptqD.x.LowPart = pgd->fxD;
     pgd->ptqD.x.HighPart = 0;
-    pgd->ptqD.y.LowPart = 0x000000a0; // ftglyph->advance.y
+    pgd->ptqD.y.LowPart = 0;
     pgd->ptqD.y.HighPart = 0;
     //pgd->ptqD.x.QuadPart = 0;
     //pgd->ptqD.y.QuadPart = 0;
 //__debugbreak();
 }
 
+static
 VOID
-FtfdCopyBitmap(
+FtfdCopyBitmap1Bpp(
+    BYTE *pjDest,
+    FT_Bitmap *ftbitmap)
+{
+    __debugbreak();
+}
+
+static
+VOID
+FtfdCopyBitmap4Bpp(
     BYTE *pjDest,
     FT_Bitmap *ftbitmap)
 {
@@ -469,7 +488,9 @@ FtfdQueryGlyphBits(
     pgb->sizlBitmap.cx = ftglyph->bitmap.width;
     pgb->sizlBitmap.cy = ftglyph->bitmap.rows;
 
-    cjBitmapSize = BITMAP_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4);
+    cjBitmapSize = BITMAP_SIZE(pgb->sizlBitmap.cx,
+                               pgb->sizlBitmap.cy,
+                               pfont->jBpp);
     if (cjBitmapSize + FIELD_OFFSET(GLYPHBITS, aj) > cjSize)
     {
         WARN("Buffer too small, got %ld, need %ld\n",
@@ -479,13 +500,14 @@ FtfdQueryGlyphBits(
     }
 
     /* Copy the bitmap */
-    FtfdCopyBitmap(pgb->aj, &ftglyph->bitmap);
-
-    //RtlCopyMemory(pgb->aj, ftglyph->bitmap.buffer, cjBitmapSize);
+    if (pfont->jBpp == 4)
+        FtfdCopyBitmap4Bpp(pgb->aj, &ftglyph->bitmap);
+    else
+        FtfdCopyBitmap1Bpp(pgb->aj, &ftglyph->bitmap);
 
     TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
           hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
-          GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, 4));
+          GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, pfont->jBpp));
 
 }
 
@@ -504,8 +526,10 @@ FtRenderGlyphBitmap(
     PFTFD_FONT pfont)
 {
     FT_Error fterror;
+    FT_Render_Mode mode;
 
-    fterror = FT_Render_Glyph(pfont->ftface->glyph, FT_RENDER_MODE_NORMAL);
+    mode = pfont->jBpp == 1 ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_NORMAL;
+    fterror = FT_Render_Glyph(pfont->ftface->glyph, mode);
     if (fterror)
     {
         WARN("Cound't render glyph\n");
@@ -553,7 +577,7 @@ FtfdQueryFontData(
             /* Return the size for a 1bpp bitmap */
             return GLYPHBITS_SIZE(pfont->ftface->glyph->bitmap.width,
                                   pfont->ftface->glyph->bitmap.rows,
-                                  4);
+                                  pfont->jBpp);
 
         case QFD_GLYPHANDOUTLINE:
             TRACE("QFD_GLYPHANDOUTLINE\n");

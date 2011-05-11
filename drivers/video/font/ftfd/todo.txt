@@ -34,8 +34,11 @@ internal interface
 - FtfdInitIfiMetrics: 70% done
     - handle other font types than TTF/OTF
     - fix fwdLowestPPEm, fwdMacLineGap, ptlBaseline, ptlAspect, ptlCaret
-    - cKerningPairs, ulPanoseCulture
+    - cKerningPairs from atmfd is bigger, ulPanoseCulture
     - check fwdMacAscender, fwdMacDescender
+    - Check jWinPitchandFamily (from OS/2 table, Apolonia: 0,0->0x12)
+    - chLastChar: hardcoded 0xff ?
+    - fix fwdUnderscorePosition
 
 - FtfdInitGlyphSet: 100% done
 - FtfdInitKerningPairs: unimplemented, later
@@ -50,9 +53,14 @@ internal interface
     - hande accelerator flags for bitmap / outline
 - FtfdQueryGlyphData: 70% done
     - handle vertical layout
-    - handle ptqD
+    - handle ptqD for rotation / skewing
 
-- FtfdQueryGlyphBits: 40%
+- FtfdQueryGlyphBits: 50% depends on FtfdCopyBitmap4Bpp and FtfdCopyBitmap1Bpp
     - handle 1bpp bitmaps
 
 - FtfdQueryGlyphOutline: unimplemented
+- FtfdCopyBitmap4Bpp: 90 %
+    - add rounding
+    - Could need optimization
+- FtfdCopyBitmap1Bpp: unimplemented
+

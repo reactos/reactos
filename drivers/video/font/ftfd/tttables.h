@@ -47,7 +47,7 @@ typedef struct _TT_FILE_HEADER
 
 typedef struct _TT_OS2_DATA
 {
-    USHORT 	version; // 	0x0004
+    USHORT 	version; // 	// 0x00
     SHORT 	xAvgCharWidth;
     USHORT 	usWeightClass;
     USHORT 	usWidthClass;
@@ -55,14 +55,14 @@ typedef struct _TT_OS2_DATA
     SHORT 	ySubscriptXSize;
     SHORT 	ySubscriptYSize;
     SHORT 	ySubscriptXOffset;
-    SHORT 	ySubscriptYOffset;
+    SHORT 	ySubscriptYOffset; // 0x10
     SHORT 	ySuperscriptXSize;
     SHORT 	ySuperscriptYSize;
     SHORT 	ySuperscriptXOffset;
     SHORT 	ySuperscriptYOffset;
     SHORT 	yStrikeoutSize;
     SHORT 	yStrikeoutPosition;
-    union // 0x30
+    union // 0x1e
     {
         struct
         {

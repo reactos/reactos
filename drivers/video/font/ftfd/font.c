@@ -217,7 +217,10 @@ FtfdInitIfiMetrics(
     }
 
     /* Convert the special characters from unicode to ansi */
-    EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 3);
+    EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 8);
+
+    /* This one seems to be hardcoded to 0xff */
+    pifi->chLastChar = 0xff;
 
     /* Convert names to unicode */
     EngMultiByteToUnicodeN(pifiex->awcFamilyName,
@@ -249,6 +252,7 @@ FtfdInitIfiMetrics(
                            pifi->achVendId,
                            4);
 
+    //__debugbreak();
     return TRUE;
 }
 
@@ -486,6 +490,8 @@ FtfdLoadFontFile(
     PFTFD_FILE pfile = NULL;
 
     TRACE("FtfdLoadFontFile()\n");
+//__debugbreak();
+//return 0;
 
     /* Check parameters */
     if (cFiles != 1)
