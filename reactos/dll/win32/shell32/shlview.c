@@ -2115,7 +2115,7 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 	if(!GetClassInfoW(shell32_hInstance, SV_CLASS_NAME, &wc))
 	{
 	  ZeroMemory(&wc, sizeof(wc));
-	  wc.style		= CS_HREDRAW | CS_VREDRAW;
+	  wc.style		= 0;
 	  wc.lpfnWndProc	= ShellView_WndProc;
 	  wc.cbClsExtra		= 0;
 	  wc.cbWndExtra		= 0;
