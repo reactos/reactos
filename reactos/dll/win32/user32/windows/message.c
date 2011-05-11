@@ -13,6 +13,81 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+/* From wine: */
+/* flag for messages that contain pointers */
+/* 32 messages per entry, messages 0..31 map to bits 0..31 */
+
+#define SET(msg) (1 << ((msg) & 31))
+
+static const unsigned int message_pointer_flags[] =
+{
+    /* 0x00 - 0x1f */
+    SET(WM_CREATE) | SET(WM_SETTEXT) | SET(WM_GETTEXT) |
+    SET(WM_WININICHANGE) | SET(WM_DEVMODECHANGE),
+    /* 0x20 - 0x3f */
+    SET(WM_GETMINMAXINFO) | SET(WM_DRAWITEM) | SET(WM_MEASUREITEM) | SET(WM_DELETEITEM) |
+    SET(WM_COMPAREITEM),
+    /* 0x40 - 0x5f */
+    SET(WM_WINDOWPOSCHANGING) | SET(WM_WINDOWPOSCHANGED) | SET(WM_COPYDATA) |
+    SET(WM_COPYGLOBALDATA) | SET(WM_NOTIFY) | SET(WM_HELP),
+    /* 0x60 - 0x7f */
+    SET(WM_STYLECHANGING) | SET(WM_STYLECHANGED),
+    /* 0x80 - 0x9f */
+    SET(WM_NCCREATE) | SET(WM_NCCALCSIZE) | SET(WM_GETDLGCODE),
+    /* 0xa0 - 0xbf */
+    SET(EM_GETSEL) | SET(EM_GETRECT) | SET(EM_SETRECT) | SET(EM_SETRECTNP),
+    /* 0xc0 - 0xdf */
+    SET(EM_REPLACESEL) | SET(EM_GETLINE) | SET(EM_SETTABSTOPS),
+    /* 0xe0 - 0xff */
+    SET(SBM_GETRANGE) | SET(SBM_SETSCROLLINFO) | SET(SBM_GETSCROLLINFO) | SET(SBM_GETSCROLLBARINFO),
+    /* 0x100 - 0x11f */
+    0,
+    /* 0x120 - 0x13f */
+    0,
+    /* 0x140 - 0x15f */
+    SET(CB_GETEDITSEL) | SET(CB_ADDSTRING) | SET(CB_DIR) | SET(CB_GETLBTEXT) |
+    SET(CB_INSERTSTRING) | SET(CB_FINDSTRING) | SET(CB_SELECTSTRING) |
+    SET(CB_GETDROPPEDCONTROLRECT) | SET(CB_FINDSTRINGEXACT),
+    /* 0x160 - 0x17f */
+    0,
+    /* 0x180 - 0x19f */
+    SET(LB_ADDSTRING) | SET(LB_INSERTSTRING) | SET(LB_GETTEXT) | SET(LB_SELECTSTRING) |
+    SET(LB_DIR) | SET(LB_FINDSTRING) |
+    SET(LB_GETSELITEMS) | SET(LB_SETTABSTOPS) | SET(LB_ADDFILE) | SET(LB_GETITEMRECT),
+    /* 0x1a0 - 0x1bf */
+    SET(LB_FINDSTRINGEXACT),
+    /* 0x1c0 - 0x1df */
+    0,
+    /* 0x1e0 - 0x1ff */
+    0,
+    /* 0x200 - 0x21f */
+    SET(WM_NEXTMENU) | SET(WM_SIZING) | SET(WM_MOVING) | SET(WM_DEVICECHANGE),
+    /* 0x220 - 0x23f */
+    SET(WM_MDICREATE) | SET(WM_MDIGETACTIVE) | SET(WM_DROPOBJECT) |
+    SET(WM_QUERYDROPOBJECT) | SET(WM_DRAGLOOP) | SET(WM_DRAGSELECT) | SET(WM_DRAGMOVE),
+    /* 0x240 - 0x25f */
+    0,
+    /* 0x260 - 0x27f */
+    0,
+    /* 0x280 - 0x29f */
+    0,
+    /* 0x2a0 - 0x2bf */
+    0,
+    /* 0x2c0 - 0x2df */
+    0,
+    /* 0x2e0 - 0x2ff */
+    0,
+    /* 0x300 - 0x31f */
+    SET(WM_ASKCBFORMATNAME)
+};
+
+/* check whether a given message type includes pointers */
+static inline int is_pointer_message( UINT message )
+{
+    if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
+        return (message_pointer_flags[message / 32] & SET(message)) != 0;
+}
+
 /* DDE message exchange
  *
  * - Session initialization
@@ -1500,12 +1575,20 @@ DispatchMessageA(CONST MSG *lpmsg)
     else
         Wnd = NULL;
 
+    if (is_pointer_message(lpmsg->message))
+    {
+       SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+       return 0;
+    }
+
     if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
     {
         WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
 
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
+
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
 
        _SEH2_TRY // wine does this. Hint: Prevents call to another thread....
        {
@@ -1572,12 +1655,20 @@ DispatchMessageW(CONST MSG *lpmsg)
     else
         Wnd = NULL;
 
+    if (is_pointer_message(lpmsg->message))
+    {
+       SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+       return 0;
+    }
+
     if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
     {
         WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
 
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
+
+        if (!NtUserValidateTimerCallback(lpmsg->hwnd, lpmsg->wParam, lpmsg->lParam)) return 0;
 
        _SEH2_TRY
        {
@@ -2032,6 +2123,12 @@ SendMessageCallbackA(
   MSG AnsiMsg, UcMsg;
   CALL_BACK_INFO CallBackInfo;
 
+  if (is_pointer_message(Msg))
+  {
+     SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+     return FALSE;
+  }
+
   CallBackInfo.CallBack = lpCallBack;
   CallBackInfo.Context = dwData;
 
@@ -2072,6 +2169,12 @@ SendMessageCallbackW(
   ULONG_PTR dwData)
 {
   CALL_BACK_INFO CallBackInfo;
+
+  if (is_pointer_message(Msg))
+  {
+     SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+     return FALSE;
+  }
 
   CallBackInfo.CallBack = lpCallBack;
   CallBackInfo.Context = dwData;
@@ -2237,6 +2340,12 @@ SendNotifyMessageA(
   BOOL Ret;
   MSG AnsiMsg, UcMsg;
 
+  if (is_pointer_message(Msg))
+  {
+     SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+     return FALSE;
+  }
+
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
@@ -2265,6 +2374,12 @@ SendNotifyMessageW(
 {
   MSG UMMsg, KMMsg;
   LRESULT Result;
+
+  if (is_pointer_message(Msg))
+  {
+     SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+     return FALSE;
+  }
 
   UMMsg.hwnd = hWnd;
   UMMsg.message = Msg;
