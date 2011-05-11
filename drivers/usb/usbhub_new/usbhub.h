@@ -56,6 +56,7 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
     COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT ParentDeviceObject;
     PUSB_DEVICE_HANDLE UsbDeviceHandle;
+    ULONG PortNumber;
     UNICODE_STRING usDeviceId;
     UNICODE_STRING usInstanceId;
     UNICODE_STRING usHardwareIds;

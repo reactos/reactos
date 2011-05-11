@@ -9,8 +9,6 @@
  */
 
 #define INITGUID
-
-#define NDEBUG
 #include "usbhub.h"
 
 NTSTATUS
@@ -73,11 +71,18 @@ SubmitRequestToRootHub(
     //
     Status = IoCallDriver(RootHubDeviceObject, Irp);
 
-    if (Status == STATUS_PENDING)
+    //
+    // Its ok to block here as this function is called in an nonarbitrary thread
+    //
+    if    (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
+
+    //
+    // The IO Manager will free the IRP
+    //
 
     return Status;
 }
@@ -353,9 +358,21 @@ DeviceStatusChangeThread(
             DPRINT1("Port %d Status %x\n", PortId, PortStatus.Status);
             DPRINT1("Port %d Change %x\n", PortId, PortStatus.Change);
 
+            //
+            // Check that reset was cleared
+            //
             if(PortStatus.Change & USB_PORT_STATUS_RESET)
             {
                 DPRINT1("Port did not clear reset! Possible Hardware problem!\n");
+            }
+
+            //
+            // Check if the device is still connected
+            //
+            if (!(PortStatus.Status & USB_PORT_STATUS_CONNECT))
+            {
+                DPRINT1("Device has been disconnected\n");
+                continue;
             }
 
             //
@@ -838,8 +855,8 @@ CreateDeviceIds(
                           DevDesc->bDeviceClass) + 1;
     }
     BufferPtr[Index] = UNICODE_NULL;
-    DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
     UsbChildExtension->usCompatibleIds.Buffer = BufferPtr;
+    DPRINT1("usCompatibleIds %wZ\n", &UsbChildExtension->usCompatibleIds);
 
     //
     // Initialize the DeviceId String
@@ -860,8 +877,8 @@ CreateDeviceIds(
     // Construct DeviceId
     //
     swprintf(BufferPtr, L"USB\\Vid_%04x&Pid_%04x\0", UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct);
-    DPRINT1("usDeviceId) %wZ\n", &UsbChildExtension->usDeviceId);
     UsbChildExtension->usDeviceId.Buffer = BufferPtr;
+    DPRINT1("usDeviceId %wZ\n", &UsbChildExtension->usDeviceId);
 
     //
     // Initialize the HardwareId String
@@ -889,8 +906,8 @@ CreateDeviceIds(
                       L"USB\\Vid_%04x&Pid_%04x",
                       UsbChildExtension->DeviceDesc.idVendor, UsbChildExtension->DeviceDesc.idProduct) + 1;
     BufferPtr[Index] = UNICODE_NULL;
-    DPRINT1("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
     UsbChildExtension->usHardwareIds.Buffer = BufferPtr;
+    DPRINT1("usHardWareIds %wZ\n", &UsbChildExtension->usHardwareIds);
 
     //
     // FIXME: Handle Lang ids
@@ -1049,6 +1066,7 @@ CreateUsbChildDeviceObject(
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)NewChildDeviceObject->DeviceExtension;
     RtlZeroMemory(UsbChildExtension, sizeof(HUB_CHILDDEVICE_EXTENSION));
     UsbChildExtension->ParentDeviceObject = UsbHubDeviceObject;
+    UsbChildExtension->PortNumber = PortId;
 
     //
     // Create the UsbDeviceObject
@@ -1567,6 +1585,10 @@ USBHUB_FdoHandlePnp(
                 Status = HubDeviceExtension->HubInterface.RootHubInitNotification(HubInterfaceBusContext,
                                                                                   DeviceObject,
                                                                                   (PRH_INIT_CALLBACK)RootHubInitCallbackFunction);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Failed to set callback\n");
+                }
             }
             else
             {
@@ -1574,11 +1596,6 @@ USBHUB_FdoHandlePnp(
                 // Send the first SCE Request
                 //
                 QueryStatusChangeEndpoint(DeviceObject);
-            }
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to set callback\n");
             }
 
             ExFreePool(Urb);

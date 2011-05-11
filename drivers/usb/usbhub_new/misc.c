@@ -7,7 +7,6 @@
  *                  Michael Martin (michael.martin@reactos.org)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
-#define NDEBUG
 #include "usbhub.h"
 #include <stdarg.h>
 
