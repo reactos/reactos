@@ -21,34 +21,138 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-/***********************************************************************
- *              InitializeSecurityContextW
- */
-SECURITY_STATUS SEC_ENTRY InitializeSecurityContextW(
- PCredHandle phCredential, PCtxtHandle phContext, SEC_WCHAR *pszTargetName, 
- ULONG fContextReq, ULONG Reserved1, ULONG TargetDataRep, 
- PSecBufferDesc pInput, ULONG Reserved2, PCtxtHandle phNewContext, 
- PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry)
+CRITICAL_SECTION ContextCritSect;
+LIST_ENTRY ValidContextList;
+
+NTSTATUS
+NtlmContextInitialize(VOID)
+{
+    InitializeCriticalSection(&ContextCritSect);
+    InitializeListHead(&ValidContextList);
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+NtlmReferenceContext(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CONTEXT Context = (PNTLMSSP_CONTEXT)Handle;
+
+    EnterCriticalSection(&ContextCritSect);
+
+    ASSERT(Context->RefCount > 0);
+
+    /* A context that is not authenticated is only valid for a 
+       pre-determined interval */
+    if (NtlmIntervalElapsed(Context->StartTime, Context->Timeout))
+    {
+        if ((Context->State != Authenticated) &&
+            (Context->State != AuthenticateSent) &&
+            (Context->State != PassedToService))
+        {
+            ERR("Context %p has timed out\n", Context);
+            LeaveCriticalSection(&ContextCritSect);
+            return;
+        }
+    }
+    Context->RefCount += 1;
+    LeaveCriticalSection(&ContextCritSect);
+}
+
+VOID
+NtlmDereferenceContext(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CONTEXT Context = (PNTLMSSP_CONTEXT)Handle;
+
+    EnterCriticalSection(&ContextCritSect);
+
+    ASSERT(Context->RefCount >= 1);
+
+    Context->RefCount -= 1;
+
+    /* If there are no references free the object */
+    if (Context->RefCount == 0)
+    {
+        ERR("Deleting context %p\n",Context);
+        /* free memory */
+        NtlmFree(Context);
+    }
+
+    LeaveCriticalSection(&ContextCritSect);
+}
+
+VOID
+NtlmContextTerminate(VOID)
+{
+    EnterCriticalSection(&ContextCritSect);
+
+    /* dereference all items */
+    while (!IsListEmpty(&ValidContextList))
+    {
+        PNTLMSSP_CONTEXT Context;
+        Context = CONTAINING_RECORD(ValidContextList.Flink,
+                                    NTLMSSP_CONTEXT,
+                                    Entry);
+
+        NtlmDereferenceContext((ULONG_PTR)Context);
+    }
+
+    LeaveCriticalSection(&ContextCritSect);
+
+    /* free critical section */
+    DeleteCriticalSection(&ContextCritSect);
+
+    return;
+}
+
+/* public functions */
+
+SECURITY_STATUS
+SEC_ENTRY
+InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
+                           IN OPTIONAL PCtxtHandle phContext,
+                           IN OPTIONAL SEC_WCHAR *pszTargetName,
+                           IN ULONG fContextReq,
+                           IN ULONG Reserved1,
+                           IN ULONG TargetDataRep,
+                           IN OPTIONAL PSecBufferDesc pInput,
+                           IN ULONG Reserved2,
+                           IN OUT OPTIONAL PCtxtHandle phNewContext,
+                           IN OUT OPTIONAL PSecBufferDesc pOutput,
+                           OUT ULONG *pfContextAttr,
+                           OUT OPTIONAL PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_INVALID_HANDLE;
+    SecBuffer inputTokens[2];
+    SecBuffer outputTokens[2];
+    UCHAR sessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
 
     TRACE("%p %p %s 0x%08x %d %d %p %d %p %p %p %p\n", phCredential, phContext,
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
      Reserved1, phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
-    FIXME("AcceptSecurityContext Unimplemented\n");
+    if(TargetDataRep == SECURITY_NETWORK_DREP)
+        WARN("SECURITY_NETWORK_DREP\n");
+
+    RtlZeroMemory(sessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
 
     return ret;
 }
 
-/***********************************************************************
- *              InitializeSecurityContextA
- */
-SECURITY_STATUS SEC_ENTRY InitializeSecurityContextA(
- PCredHandle phCredential, PCtxtHandle phContext, SEC_CHAR *pszTargetName,
- ULONG fContextReq, ULONG Reserved1, ULONG TargetDataRep, 
- PSecBufferDesc pInput,ULONG Reserved2, PCtxtHandle phNewContext, 
- PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry)
+SECURITY_STATUS
+SEC_ENTRY
+InitializeSecurityContextA(IN OPTIONAL PCredHandle phCredential,
+                           IN OPTIONAL PCtxtHandle phContext,
+                           IN OPTIONAL SEC_CHAR *pszTargetName,
+                           IN ULONG fContextReq,
+                           IN ULONG Reserved1,
+                           IN ULONG TargetDataRep,
+                           IN OPTIONAL PSecBufferDesc pInput,
+                           IN ULONG Reserved2,
+                           IN OUT OPTIONAL PCtxtHandle phNewContext,
+                           IN OUT OPTIONAL PSecBufferDesc pOutput,
+                           OUT ULONG *pfContextAttr,
+                           OUT OPTIONAL PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret;
     SEC_WCHAR *target = NULL;
@@ -75,33 +179,41 @@ SECURITY_STATUS SEC_ENTRY InitializeSecurityContextA(
     return ret;
 }
 
-/***********************************************************************
- *              QueryContextAttributesW
- */
-SECURITY_STATUS SEC_ENTRY QueryContextAttributesW(PCtxtHandle phContext,
- ULONG ulAttribute, void *pBuffer)
+SECURITY_STATUS
+SEC_ENTRY
+QueryContextAttributesW(PCtxtHandle phContext,
+                        ULONG ulAttribute,
+                        void *pBuffer)
 {
     TRACE("%p %d %p\n", phContext, ulAttribute, pBuffer);
     if (!phContext)
         return SEC_E_INVALID_HANDLE;
 
+    UNIMPLEMENTED;
+
     return SEC_E_UNSUPPORTED_FUNCTION;
 }
 
-
-/***********************************************************************
- *              QueryContextAttributesA
- */
-SECURITY_STATUS SEC_ENTRY QueryContextAttributesA(PCtxtHandle phContext,
- ULONG ulAttribute, void *pBuffer)
+SECURITY_STATUS
+SEC_ENTRY
+QueryContextAttributesA(PCtxtHandle phContext,
+                        ULONG ulAttribute,
+                        void *pBuffer)
 {
     return QueryContextAttributesW(phContext, ulAttribute, pBuffer);
 }
 
-SECURITY_STATUS SEC_ENTRY AcceptSecurityContext(
- PCredHandle phCredential, PCtxtHandle phContext, PSecBufferDesc pInput,
- ULONG fContextReq, ULONG TargetDataRep, PCtxtHandle phNewContext, 
- PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry)
+SECURITY_STATUS
+SEC_ENTRY
+AcceptSecurityContext(IN PCredHandle phCredential,
+                      IN OUT PCtxtHandle phContext,
+                      IN PSecBufferDesc pInput,
+                      IN ULONG fContextReq,
+                      IN ULONG TargetDataRep,
+                      IN OUT PCtxtHandle phNewContext,
+                      IN OUT PSecBufferDesc pOutput,
+                      OUT ULONG *pfContextAttr,
+                      OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_INVALID_HANDLE;
 
@@ -109,30 +221,28 @@ SECURITY_STATUS SEC_ENTRY AcceptSecurityContext(
      fContextReq, TargetDataRep, phNewContext, pOutput, pfContextAttr,
      ptsExpiry);
 
-    FIXME("AcceptSecurityContext Unimplemented\n");
+    UNIMPLEMENTED;
 
     return ret;
 }
 
-/***********************************************************************
- *              DeleteSecurityContext
- */
-SECURITY_STATUS SEC_ENTRY DeleteSecurityContext(PCtxtHandle phContext)
+SECURITY_STATUS
+SEC_ENTRY
+DeleteSecurityContext(PCtxtHandle phContext)
 {
     if (!phContext)
     {
-        ERR("Delete NULL context!\n");
         return SEC_E_INVALID_HANDLE;
     }
 
-    FIXME("Delete context %p unimplemented\n", phContext);
+    NtlmDereferenceContext((ULONG_PTR)phContext);
+    phContext = NULL;
     return SEC_E_OK;
 }
 
-/***********************************************************************
- *              ImpersonateSecurityContext
- */
-SECURITY_STATUS SEC_ENTRY ImpersonateSecurityContext(PCtxtHandle phContext)
+SECURITY_STATUS
+SEC_ENTRY
+ImpersonateSecurityContext(PCtxtHandle phContext)
 {
     SECURITY_STATUS ret;
 
@@ -151,7 +261,9 @@ SECURITY_STATUS SEC_ENTRY ImpersonateSecurityContext(PCtxtHandle phContext)
 /***********************************************************************
  *              RevertSecurityContext
  */
-SECURITY_STATUS SEC_ENTRY RevertSecurityContext(PCtxtHandle phContext)
+SECURITY_STATUS
+SEC_ENTRY
+RevertSecurityContext(PCtxtHandle phContext)
 {
     SECURITY_STATUS ret;
 
@@ -167,9 +279,20 @@ SECURITY_STATUS SEC_ENTRY RevertSecurityContext(PCtxtHandle phContext)
     return ret;
 }
 
-SECURITY_STATUS SEC_ENTRY FreeContextBuffer(PVOID pv)
+SECURITY_STATUS
+SEC_ENTRY
+FreeContextBuffer(PVOID pv)
 {
     HeapFree(GetProcessHeap(), 0, pv);
-
     return SEC_E_OK;
+}
+
+SECURITY_STATUS
+SEC_ENTRY
+ApplyControlToken(IN  PCtxtHandle phContext,
+                  IN  PSecBufferDesc pInput)
+{
+
+    UNIMPLEMENTED;
+    return SEC_E_UNSUPPORTED_FUNCTION;
 }

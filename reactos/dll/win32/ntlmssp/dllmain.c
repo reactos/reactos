@@ -20,12 +20,37 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+
+BOOL SetupIsActive(VOID);
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
+    TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
 
-	if (fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDLL);
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinstDLL);
 
-	return TRUE;
+        /* hack: rsaehn has still not registered its crypto providers */
+        /* its not like we are going to logon to anything yet */
+        if(!SetupIsActive())
+        {
+            //REACTOS BUG: even after 2nd stage crypto providers are not available!
+            //NtlmInitializeRNG();
+            //NtlmInitializeProtectedMemory();
+        }
+        NtlmCredentialInitialize();
+        NtlmContextInitialize();
+        break;
+    case DLL_PROCESS_DETACH:
+        NtlmContextTerminate();
+        NtlmCredentialTerminate();
+        NtlmTerminateRNG();
+        NtlmTerminateProtectedMemory();
+        break;
+    default:
+        break;
+    }
+    return TRUE;
 }

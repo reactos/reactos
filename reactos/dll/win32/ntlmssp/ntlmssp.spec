@@ -1,7 +1,7 @@
 @ stdcall AcceptSecurityContext(ptr ptr ptr long long ptr ptr ptr ptr)
 @ stdcall AcquireCredentialsHandleA(str str long ptr ptr ptr ptr ptr ptr)
-@ stdcall AcquireCredentialsHandleW(wstr wstr long ptr ptr ptr ptr ptr ptr)secur32.AcquireCredentialsHandleW
-#@ stdcall ApplyControlToken(ptr ptr)
+@ stdcall AcquireCredentialsHandleW(wstr wstr long ptr ptr ptr ptr ptr ptr)
+@ stdcall ApplyControlToken(ptr ptr)
 @ stdcall CompleteAuthToken(ptr ptr)
 @ stdcall DeleteSecurityContext(ptr)
 @ stdcall EnumerateSecurityPackagesA(ptr ptr)
