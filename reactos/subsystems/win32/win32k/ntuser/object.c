@@ -54,7 +54,7 @@ __inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY
 __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
-
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
    DPRINT("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
@@ -63,6 +63,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       ht->freelist = entry->ptr;
 
       gpsi->cHandleEntries++;
+      ppi->UserHandleCount++;
       return entry;
    }
 
@@ -132,6 +133,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    entry->generation = 1;
 
    gpsi->cHandleEntries++;
+   ppi->UserHandleCount++;
 
    return entry;
 }
@@ -147,6 +149,7 @@ VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes)
 
 __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY entry)
 {
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
    void *ret;
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
@@ -156,6 +159,7 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ht->freelist  = entry;
 
    gpsi->cHandleEntries--;
+   ppi->UserHandleCount--;
 
    return ret;
 }
