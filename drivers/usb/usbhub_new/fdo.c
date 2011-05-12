@@ -914,38 +914,44 @@ CreateDeviceIds(
     //
 
     //
-    // Get the product string
+    // Get the product string if obe provided
     //
-    Status = GetUsbStringDescriptor(UsbChildDeviceObject,
-                                    UsbChildExtension->DeviceDesc.iProduct,
-                                    0,
-                                    (PVOID*)&UsbChildExtension->usTextDescription.Buffer,
-                                    &UsbChildExtension->usTextDescription.Length);
-    if (!NT_SUCCESS(Status))
+    if (UsbChildExtension->DeviceDesc.iProduct)
     {
-        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-        goto Cleanup;
+        Status = GetUsbStringDescriptor(UsbChildDeviceObject,
+                                        UsbChildExtension->DeviceDesc.iProduct,
+                                        0,
+                                        (PVOID*)&UsbChildExtension->usTextDescription.Buffer,
+                                        &UsbChildExtension->usTextDescription.Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+            goto Cleanup;
+        }
+
+        UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
+        DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
     }
 
-    UsbChildExtension->usTextDescription.MaximumLength = UsbChildExtension->usTextDescription.Length;
-    DPRINT1("Usb TextDescription %wZ\n", &UsbChildExtension->usTextDescription);
-
     //
-    // Get the Serial Number string
+    // Get the Serial Number string if obe provided
     //
-    Status = GetUsbStringDescriptor(UsbChildDeviceObject,
-                                    UsbChildExtension->DeviceDesc.iSerialNumber,
-                                    0,
-                                    (PVOID*)&UsbChildExtension->usInstanceId.Buffer,
-                                    &UsbChildExtension->usInstanceId.Length);
-    if (!NT_SUCCESS(Status))
+    if (UsbChildExtension->DeviceDesc.iSerialNumber)
     {
-        DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
-        goto Cleanup;
-    }
+        Status = GetUsbStringDescriptor(UsbChildDeviceObject,
+                                        UsbChildExtension->DeviceDesc.iSerialNumber,
+                                        0,
+                                        (PVOID*)&UsbChildExtension->usInstanceId.Buffer,
+                                        &UsbChildExtension->usInstanceId.Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+            goto Cleanup;
+        }
 
-    UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
-    DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
+        UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
+        DPRINT1("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
+    }
 
     return Status;
 
