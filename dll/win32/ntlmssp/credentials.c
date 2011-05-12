@@ -21,11 +21,109 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-/***********************************************************************
- *              QueryCredentialsAttributesW
- */
-SECURITY_STATUS SEC_ENTRY QueryCredentialsAttributesW(
-        PCredHandle phCredential, ULONG ulAttribute, PVOID pBuffer)
+CRITICAL_SECTION CredentialCritSect;
+LIST_ENTRY ValidCredentialList;
+
+
+/* private functions */
+NTSTATUS
+NtlmCredentialInitialize(VOID)
+{
+    InitializeCriticalSection(&CredentialCritSect);
+    InitializeListHead(&ValidCredentialList);
+    return STATUS_SUCCESS;
+}
+
+BOOL
+NtlmCompareCredentials(IN NTLMSSP_CREDENTIAL Credential1,
+                       IN NTLMSSP_CREDENTIAL Credential2)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/* FIXME: validate handles! */
+VOID
+NtlmReferenceCredential(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CREDENTIAL cred = (PNTLMSSP_CREDENTIAL)Handle;
+
+    EnterCriticalSection(&CredentialCritSect);
+
+    ASSERT(cred->RefCount > 0);
+    cred->RefCount += 1;
+
+    LeaveCriticalSection(&CredentialCritSect);
+}
+
+VOID
+NtlmDereferenceCredential(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CREDENTIAL cred = (PNTLMSSP_CREDENTIAL)Handle;
+
+    EnterCriticalSection(&CredentialCritSect);
+
+    TRACE("NtlmDereferenceCredential %p refcount %d\n", Handle, cred->RefCount);
+
+    ASSERT(cred->RefCount >= 1);
+
+    cred->RefCount -= 1;
+
+    /* If there are no references free the object */
+    if (cred->RefCount == 0 )
+    {
+        TRACE("Deleting credential %p\n",cred);
+
+        /* free memory */
+        if(cred->DomainName.Buffer)
+            NtlmFree(cred->DomainName.Buffer);
+        if (cred->UserName.Buffer)
+            NtlmFree(cred->UserName.Buffer);
+        if (cred->Password.Buffer)
+            NtlmFree(cred->Password.Buffer);
+        if (cred->SecToken)
+            NtClose(cred->SecToken);
+
+        /* remove from list */
+        RemoveEntryList(&cred->Entry);
+
+        /* delete object */
+        NtlmFree(cred);
+    }
+    LeaveCriticalSection(&CredentialCritSect);
+}
+
+VOID
+NtlmCredentialTerminate(VOID)
+{
+    EnterCriticalSection(&CredentialCritSect);
+
+    /* dereference all items */
+    while (!IsListEmpty(&ValidCredentialList))
+    {
+        PNTLMSSP_CREDENTIAL Credential;
+        Credential = CONTAINING_RECORD(ValidCredentialList.Flink,
+                                       NTLMSSP_CREDENTIAL,
+                                       Entry);
+
+        NtlmDereferenceCredential((ULONG_PTR)Credential);
+    }
+
+    LeaveCriticalSection(&CredentialCritSect);
+
+    /* free critical section */
+    DeleteCriticalSection(&CredentialCritSect);
+
+    return;
+}
+
+/* public functions */
+
+SECURITY_STATUS
+SEC_ENTRY
+QueryCredentialsAttributesW(PCredHandle phCredential,
+                            ULONG ulAttribute,
+                            PVOID pBuffer)
 {
     SECURITY_STATUS ret;
 
@@ -42,12 +140,11 @@ SECURITY_STATUS SEC_ENTRY QueryCredentialsAttributesW(
     return ret;
 }
 
-
-/***********************************************************************
- *              QueryCredentialsAttributesA
- */
-SECURITY_STATUS SEC_ENTRY QueryCredentialsAttributesA(
-        PCredHandle phCredential, ULONG ulAttribute, PVOID pBuffer)
+SECURITY_STATUS
+SEC_ENTRY
+QueryCredentialsAttributesA(IN PCredHandle phCredential,
+                            IN ULONG ulAttribute,
+                            OUT PVOID pBuffer)
 {
     SECURITY_STATUS ret;
 
@@ -64,99 +161,166 @@ SECURITY_STATUS SEC_ENTRY QueryCredentialsAttributesA(
     return ret;
 }
 
-/***********************************************************************
- *              AcquireCredentialsHandleW
- */
-SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleW(
- SEC_WCHAR *pszPrincipal, SEC_WCHAR *pszPackage, ULONG fCredentialUse,
- PLUID pLogonID, PVOID pAuthData, SEC_GET_KEY_FN pGetKeyFn,
- PVOID pGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry)
+SECURITY_STATUS
+SEC_ENTRY
+AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
+                          IN OPTIONAL SEC_WCHAR *pszPackage,
+                          IN ULONG fCredentialUse,
+                          IN PLUID pLogonID,
+                          IN PVOID pAuthData,
+                          IN SEC_GET_KEY_FN pGetKeyFn,
+                          IN PVOID pGetKeyArgument,
+                          OUT PCredHandle phCredential,
+                          OUT PTimeStamp ptsExpiry)
 {
-    SECURITY_STATUS ret = SEC_E_UNSUPPORTED_FUNCTION;
-    PNtlmCredentials cred = NULL;
-    SEC_WCHAR *username = NULL, *domain = NULL;
 
-    ERR("(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
+    PNTLMSSP_CREDENTIAL cred = NULL;
+    SECURITY_STATUS ret = SEC_E_OK;
+    ULONG credFlags = fCredentialUse;
+    UNICODE_STRING username, domain, password;
+    BOOL foundCred = FALSE;
+    LUID luidToUse = SYSTEM_LUID;
+
+    TRACE("AcquireCredentialsHandleW(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
      debugstr_w(pszPrincipal), debugstr_w(pszPackage), fCredentialUse,
      pLogonID, pAuthData, pGetKeyFn, pGetKeyArgument, phCredential, ptsExpiry);
 
-    FIXME("AcquireCredentialsHandleW Unimplemented\n");
-    switch(fCredentialUse)
+    if (pGetKeyFn || pGetKeyArgument)
     {
-        case SECPKG_CRED_INBOUND:
-            cred = HeapAlloc(GetProcessHeap(), 0, sizeof(*cred));
-            if (!cred)
-                ret = SEC_E_INSUFFICIENT_MEMORY;
-            else
-            {
-                cred->mode = NTLM_SERVER;
-                cred->username_arg = NULL;
-                cred->domain_arg = NULL;
-                cred->password = NULL;
-                cred->pwlen = 0;
-                phCredential->dwUpper = fCredentialUse;
-                phCredential->dwLower = (ULONG_PTR)cred;
-                ret = SEC_E_OK;
-            }
-            break;
-        case SECPKG_CRED_OUTBOUND:
-            {
-                cred = HeapAlloc(GetProcessHeap(), 0, sizeof(*cred));
-                if (!cred)
-                {
-                    ret = SEC_E_INSUFFICIENT_MEMORY;
-                    break;
-                }
-                cred->mode = NTLM_CLIENT;
-                cred->username_arg = NULL;
-                cred->domain_arg = NULL;
-                cred->password = NULL;
-                cred->pwlen = 0;
-
-                if(pAuthData != NULL)
-                {
-                    PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
-
-                    TRACE("Username is %s\n", debugstr_wn(auth_data->User, auth_data->UserLength));
-                    TRACE("Domain name is %s\n", debugstr_wn(auth_data->Domain, auth_data->DomainLength));
-
-                    //cred->username_arg = GetUsernameArg(auth_data->User, auth_data->UserLength);
-                    //cred->domain_arg = GetDomainArg(auth_data->Domain, auth_data->DomainLength);
-                }
-
-                phCredential->dwUpper = fCredentialUse;
-                phCredential->dwLower = (ULONG_PTR)cred;
-                TRACE("ACH phCredential->dwUpper: 0x%08lx, dwLower: 0x%08lx\n",
-                      phCredential->dwUpper, phCredential->dwLower);
-                ret = SEC_E_OK;
-                break;
-            }
-        case SECPKG_CRED_BOTH:
-            FIXME("AcquireCredentialsHandle: SECPKG_CRED_BOTH stub\n");
-            ret = SEC_E_UNSUPPORTED_FUNCTION;
-            phCredential = NULL;
-            break;
-        default:
-            phCredential = NULL;
-            ret = SEC_E_UNKNOWN_CREDENTIALS;
+        WARN("msdn says these should always be null!\n");
+        return ret;
     }
 
-    HeapFree(GetProcessHeap(), 0, username);
-    HeapFree(GetProcessHeap(), 0, domain);
+    //initialize to null
+    RtlInitUnicodeString(&username, NULL);
+    RtlInitUnicodeString(&domain, NULL);
+    RtlInitUnicodeString(&password, NULL);
+
+    //if(fCredentialUse == SECPKG_CRED_OUTBOUND)
+    if(pAuthData)
+    {
+        PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
+
+        /* detect null session */
+        if ((auth_data->User) && (auth_data->Password) &&
+            (auth_data->Domain) && (!auth_data->UserLength) &&
+            (!auth_data->PasswordLength) &&(!auth_data->DomainLength))
+        {
+            WARN("Using null session.\n");
+            credFlags |= NTLM_CRED_NULLSESSION;
+        }
+
+        /* create unicode strings and null terminate buffers */
+
+        if(auth_data->User)
+        {
+            int len = auth_data->UserLength;
+            username.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            if(username.Buffer)
+            {
+                username.MaximumLength = username.Length = len+1;
+                memcpy(username.Buffer, auth_data->User, len* sizeof(WCHAR));
+                username.Buffer[len+1] = L'\0';
+            }
+            else
+                return SEC_E_INSUFFICIENT_MEMORY;
+        }
+
+        if(auth_data->Password)
+        {
+            int len = auth_data->PasswordLength;
+            password.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            if(password.Buffer)
+            {
+                password.MaximumLength = password.Length = len+1;
+                memcpy(password.Buffer, auth_data->Password, len* sizeof(WCHAR));
+                password.Buffer[len+1] = L'\0';
+            }
+            else
+                return SEC_E_INSUFFICIENT_MEMORY;
+        }
+
+        if(auth_data->Domain)
+        {
+            int len = auth_data->DomainLength;
+            domain.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            if(domain.Buffer)
+            {
+                domain.MaximumLength = domain.Length = len+1;
+                memcpy(domain.Buffer, auth_data->Domain, len* sizeof(WCHAR));
+                domain.Buffer[len+1] = L'\0';
+            }
+            else
+                return SEC_E_INSUFFICIENT_MEMORY;
+        }
+    }
+
+    /* FIXME: LOOKUP STORED CREDENTIALS!!! */
+
+    /* we need to build a credential */
+    /* refactor: move into seperate function */
+    if(!foundCred)
+    {
+        cred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
+        cred->RefCount = 1;
+        cred->ProcId = GetCurrentProcessId();//FIXME
+        cred->SecPackageFlags = credFlags;
+        cred->SecToken = NULL; //FIXME
+
+        /* FIX ME: check against LSA token */
+        if((cred->SecToken == NULL) && !(credFlags & NTLM_CRED_NULLSESSION))
+        {
+            /* check privilages? */
+            cred->LogonId = luidToUse;
+        }
+
+        if(domain.Buffer != NULL)
+            cred->DomainName = domain;
+
+        if(username.Buffer != NULL)
+            cred->UserName = username;
+
+        if(password.Buffer != NULL)
+        {
+            NtlmProtectMemory(password.Buffer, password.Length);
+            cred->Password = password;
+        }
+
+        EnterCriticalSection(&CredentialCritSect);
+        InsertHeadList(&ValidCredentialList, &cred->Entry);
+        LeaveCriticalSection(&CredentialCritSect);
+
+        TRACE("added credential %x\n",cred);
+        TRACE("%s %s %s",debugstr_w(username.Buffer), debugstr_w(password.Buffer), debugstr_w(domain.Buffer));
+    }
+
+    /* return cred */
+    phCredential->dwUpper = credFlags;
+    phCredential->dwLower = (ULONG_PTR)cred;
+
+    //*ptsExpiry->HighPart = 0x7FFFFF36;
+    //*ptsExpiry->LowPart = 0xD5969FFF;
+
+
+    /* free strings as we used recycled credentials */
+    //if(foundCred)
 
     return ret;
 }
 
-
-/***********************************************************************
- *              AcquireCredentialsHandleA
- */
-SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleA(
- SEC_CHAR *pszPrincipal, SEC_CHAR *pszPackage, ULONG fCredentialUse,
- PLUID pLogonID, PVOID pAuthData, SEC_GET_KEY_FN pGetKeyFn,
- PVOID pGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry)
+SECURITY_STATUS
+SEC_ENTRY
+AcquireCredentialsHandleA(SEC_CHAR *pszPrincipal,
+                          SEC_CHAR *pszPackage,
+                          ULONG fCredentialUse,
+                          PLUID pLogonID,
+                          PVOID pAuthData,
+                          SEC_GET_KEY_FN pGetKeyFn,
+                          PVOID pGetKeyArgument,
+                          PCredHandle phCredential,
+                          PTimeStamp ptsExpiry)
 {
-    SECURITY_STATUS ret;
+    SECURITY_STATUS ret = SEC_E_OK;
     int user_sizeW, domain_sizeW, passwd_sizeW;
     
     SEC_WCHAR *user = NULL, *domain = NULL, *passwd = NULL, *package = NULL;
@@ -164,7 +328,7 @@ SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleA(
     PSEC_WINNT_AUTH_IDENTITY_W pAuthDataW = NULL;
     PSEC_WINNT_AUTH_IDENTITY_A identity  = NULL;
 
-    ERR("(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
+    TRACE("AcquireCredentialsHandleA(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
      debugstr_a(pszPrincipal), debugstr_a(pszPackage), fCredentialUse,
      pLogonID, pAuthData, pGetKeyFn, pGetKeyArgument, phCredential, ptsExpiry);
     
@@ -178,7 +342,6 @@ SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleA(
         MultiByteToWideChar(CP_ACP, 0, pszPackage, -1, package, package_sizeW);
     }
 
-    
     if(pAuthData != NULL)
     {
         identity = pAuthData;
@@ -259,28 +422,17 @@ SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleA(
     return ret;
 }
 
-/***********************************************************************
- *             FreeCredentialsHandle
- */
-SECURITY_STATUS SEC_ENTRY FreeCredentialsHandle(
-        PCredHandle phCredential)
+SECURITY_STATUS
+SEC_ENTRY
+FreeCredentialsHandle(PCredHandle phCredential)
 {
-    SECURITY_STATUS ret;
+    TRACE("FreeCredentialsHandle %x %x %x\n", phCredential, phCredential->dwLower);
 
-    if(phCredential){
-        PNtlmCredentials cred = (PNtlmCredentials) phCredential->dwLower;
-        phCredential->dwUpper = 0;
-        phCredential->dwLower = 0;
-        if (cred->password)
-            memset(cred->password, 0, cred->pwlen);
-        HeapFree(GetProcessHeap(), 0, cred->password);
-        HeapFree(GetProcessHeap(), 0, cred->username_arg);
-        HeapFree(GetProcessHeap(), 0, cred->domain_arg);
-        HeapFree(GetProcessHeap(), 0, cred);
-        ret = SEC_E_OK;
-    }
-    else
-        ret = SEC_E_OK;
-    
-    return ret;
+    if(!phCredential) /* fixme: more handle validation */
+        return SEC_E_INVALID_HANDLE;
+
+    NtlmDereferenceCredential((ULONG_PTR)phCredential->dwLower);
+    phCredential = NULL;
+
+    return SEC_E_OK;
 }

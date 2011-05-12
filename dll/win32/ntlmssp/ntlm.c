@@ -20,6 +20,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+/* FIXME: hardcoded NtlmUserMode */
+NTLM_MODE NtlmMode = NtlmUserMode;
+
 static SecurityFunctionTableA ntlmTableA = {
     SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
     EnumerateSecurityPackagesA,
@@ -92,7 +95,6 @@ EnumerateSecurityPackagesA(OUT unsigned long* pcPackages,
     ret = QuerySecurityPackageInfoA(NULL, ppPackageInfo);
 
     *pcPackages = 1;
-    ERR("EnumerateSecurityPackagesW returning! \n");
     return ret;
 }
 
@@ -106,7 +108,6 @@ EnumerateSecurityPackagesW(OUT unsigned long* pcPackages,
     ret = QuerySecurityPackageInfoW(NULL, ppPackageInfo);
 
     *pcPackages = 1;
-    ERR("EnumerateSecurityPackagesW returning! \n");
     return ret;
 }
 

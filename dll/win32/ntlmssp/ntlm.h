@@ -23,18 +23,25 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "ntstatus.h"
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include "windows.h"
+#include <windows.h>
+#include <ndk/ntndk.h>
 #define SECURITY_WIN32
 #define _NO_KSECDD_IMPORT_
-#include "rpc.h"
-#include "sspi.h"
-#include "ntsecapi.h"
-#include "ntsecpkg.h"
+#include <rpc.h>
+#include <sspi.h>
+#include <ntsecapi.h>
+#include <ntsecpkg.h>
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
+
+/* globals */
+extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
+extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
+extern SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
+extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA in SpInitialize
 
 #define NTLM_NAME_A "NTLM\0"
 #define NTLM_NAME_W L"NTLM\0"
@@ -42,18 +49,20 @@
 #define NTLM_COMMENT_A "NTLM Security Package\0"
 #define NTLM_COMMENT_W L"NTLM Security Package\0"
 
-/* According to Windows, NTLM has the following capabilities.  */
+/* NTLM has the following capabilities. */
 #define NTLM_CAPS ( \
-        SECPKG_FLAG_INTEGRITY | \
-        SECPKG_FLAG_PRIVACY | \
-        SECPKG_FLAG_TOKEN_ONLY | \
-        SECPKG_FLAG_CONNECTION | \
-        SECPKG_FLAG_MULTI_REQUIRED | \
-        SECPKG_FLAG_IMPERSONATION | \
         SECPKG_FLAG_ACCEPT_WIN32_NAME | \
-        SECPKG_FLAG_READONLY_WITH_CHECKSUM)
+        SECPKG_FLAG_CONNECTION | \
+        SECPKG_FLAG_IMPERSONATION | \
+        SECPKG_FLAG_INTEGRITY | \
+        SECPKG_FLAG_LOGON | \
+        SECPKG_FLAG_MULTI_REQUIRED | \
+        SECPKG_FLAG_NEGOTIABLE | \
+        SECPKG_FLAG_PRIVACY | \
+        SECPKG_FLAG_TOKEN_ONLY)
 
-#define NTLM_MAX_BUF 1904 /* wtf? */
+#define NTLM_MAX_BUF 1904
+#define NTLM_CRED_NULLSESSION SECPKG_CRED_RESERVED
 
 /* NTLMSSP flags indicating the negotiated features */
 #define NTLMSSP_NEGOTIATE_UNICODE                   0x00000001
@@ -76,176 +85,108 @@
 #define NTLMSSP_NEGOTIATE_KEY_EXCHANGE              0x40000000
 #define NTLMSSP_NEGOTIATE_56                        0x80000000
 
-typedef struct tag_arc4_info {
-    unsigned char x, y;
-    unsigned char state[256];
-} arc4_info;
 
-typedef enum _helper_mode /* remove? */
+typedef enum _NTLM_MODE {
+    NtlmLsaMode = 1,
+    NtlmUserMode
+} NTLM_MODE, *PNTLM_MODE;
+
+extern NTLM_MODE NtlmMode;
+
+typedef struct _NTLMSSP_CREDENTIAL
 {
-    NTLM_SERVER,
-    NTLM_CLIENT,
-    NUM_HELPER_MODES
-} HelperMode;
+    LIST_ENTRY Entry;
+    ULONG RefCount;
+    ULONG SecPackageFlags;
+    UNICODE_STRING DomainName;
+    UNICODE_STRING UserName;
+    UNICODE_STRING Password;
+    ULONG ProcId;
+    HANDLE SecToken;
+    LUID LogonId;
 
-typedef struct _NtlmCredentials /* remove? */
+} NTLMSSP_CREDENTIAL, *PNTLMSSP_CREDENTIAL;
+
+typedef enum {
+    Idle,
+    NegotiateSent,
+    ChallengeSent,
+    AuthenticateSent,
+    Authenticated,
+    PassedToService
+} NTLM_CONTEXT_STATE, *PNTLM_CONTEXT_STATE;
+
+typedef struct _NTLMSSP_CONTEXT
 {
-    HelperMode mode;
-    char *username_arg;
-    char *domain_arg;
-    char *password;
-    int pwlen;
-} NtlmCredentials, *PNtlmCredentials;
+    LIST_ENTRY Entry;
+    LARGE_INTEGER StartTime;//context creation time
+    ULONG Timeout;//how long context is valid pre-authentication
+    ULONG RefCount;
+    ULONG ProtocolFlags;
+    ULONG ContextFlags;
+    NTLM_CONTEXT_STATE State;
+    HANDLE SecToken;
+    PNTLMSSP_CREDENTIAL Credential; //creator
+    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH]; //ChallengeSent
+    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH]; //LSA
+    BOOL isServer;
+    ULONG ProcId;
+} NTLMSSP_CONTEXT, *PNTLMSSP_CONTEXT;
 
-typedef struct _NegoHelper { /* remove? */
-    HelperMode mode;
-    int pipe_in;
-    int pipe_out;
-    int major;
-    int minor;
-    int micro;
-    char *com_buf;
-    int com_buf_size;
-    int com_buf_offset;
-    BYTE *session_key;
-    ULONG neg_flags;
-    struct {
-        struct {
-            ULONG seq_num;
-            arc4_info *a4i;
-        } ntlm;
-        struct {
-            BYTE *send_sign_key;
-            BYTE *send_seal_key;
-            BYTE *recv_sign_key;
-            BYTE *recv_seal_key;
-            ULONG send_seq_no;
-            ULONG recv_seq_no;
-            arc4_info *send_a4i;
-            arc4_info *recv_a4i;
-        } ntlm2;
-    } crypt;
-} NegoHelper, *PNegoHelper;
+/* private functions */
 
-typedef enum _sign_direction { /* remove? */
-    NTLM_SEND,
-    NTLM_RECV
-} SignDirection;
+/* credentials.c */
+NTSTATUS
+NtlmCredentialInitialize(VOID);
 
-/* functions */ 
+VOID
+NtlmCredentialTerminate(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_QueryCredentialsAttributesA(
-        PCredHandle phCredential, ULONG ulAttribute, PVOID pBuffer);
+/* context.c */
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_AcquireCredentialsHandleA(
- SEC_CHAR *pszPrincipal, SEC_CHAR *pszPackage, ULONG fCredentialUse,
- PLUID pLogonID, PVOID pAuthData, SEC_GET_KEY_FN pGetKeyFn,
- PVOID pGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry);
+NTSTATUS
+NtlmContextInitialize(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_FreeCredentialsHandle(
-        PCredHandle phCredential);
+VOID
+NtlmContextTerminate(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_InitializeSecurityContextA(
-        PCredHandle phCredential, PCtxtHandle phContext, SEC_CHAR *pszTargetName,
-        ULONG fContextReq, ULONG Reserved1, ULONG TargetDataRep, 
-        PSecBufferDesc pInput,ULONG Reserved2, PCtxtHandle phNewContext, 
-        PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry);
+/* crypt.c */
+BOOL
+NtlmInitializeRNG(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_AcceptSecurityContext(
-        PCredHandle phCredential, PCtxtHandle phContext, PSecBufferDesc pInput,
-        ULONG fContextReq, ULONG TargetDataRep, PCtxtHandle phNewContext, 
-        PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry);
+VOID
+NtlmTerminateRNG(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_CompleteAuthToken(PCtxtHandle phContext,
-        PSecBufferDesc pToken);
+NTSTATUS
+NtlmGenerateRandomBits(VOID *Bits,
+                       ULONG Size);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_DeleteSecurityContext(
-        PCtxtHandle phContext);
+BOOL
+NtlmInitializeProtectedMemory(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_QueryContextAttributesA(
-        PCtxtHandle phContext,
-        ULONG ulAttribute, void *pBuffer);
+VOID
+NtlmTerminateProtectedMemory(VOID);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_ImpersonateSecurityContext(
-        PCtxtHandle phContext);
+BOOL
+NtlmProtectMemory(VOID *Data,
+                  ULONG Size);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_RevertSecurityContext(
-        PCtxtHandle phContext);
+BOOL
+NtlmUnProtectMemory(VOID *Data,
+                    ULONG Size);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_MakeSignature(
-        PCtxtHandle phContext, ULONG fQOP,
-        PSecBufferDesc pMessage, ULONG MessageSeqNo);
+/* util.c */
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_VerifySignature(
-        PCtxtHandle phContext,
-        PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP);
+PVOID
+NtlmAllocate(IN ULONG Size);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_EncryptMessage(
-        PCtxtHandle phContext,
-        ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo);
+VOID
+NtlmFree(IN PVOID Buffer);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_DecryptMessage(
-        PCtxtHandle phContext,
-        PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP);
+BOOLEAN
+NtlmIntervalElapsed(IN LARGE_INTEGER Start,
+                    IN LONG Timeout);
 
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_QueryCredentialsAttributesW(
-        PCredHandle phCredential, ULONG ulAttribute, PVOID pBuffer);
-
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_QueryCredentialsAttributesA(
-        PCredHandle phCredential, ULONG ulAttribute, PVOID pBuffer);
-
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_AcquireCredentialsHandleW(
-        SEC_WCHAR *pszPrincipal, SEC_WCHAR *pszPackage, ULONG fCredentialUse,
-        PLUID pLogonID, PVOID pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-        PVOID pGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry);
-
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_InitializeSecurityContextW(
-        PCredHandle phCredential, PCtxtHandle phContext, SEC_WCHAR *pszTargetName, 
-        ULONG fContextReq, ULONG Reserved1, ULONG TargetDataRep, 
-        PSecBufferDesc pInput, ULONG Reserved2, PCtxtHandle phNewContext, 
-        PSecBufferDesc pOutput, ULONG *pfContextAttr, PTimeStamp ptsExpiry);
-
-SECURITY_STATUS
-SEC_ENTRY
-ntlm_QueryContextAttributesW(
-        PCtxtHandle phContext,
-        ULONG ulAttribute, void *pBuffer);
 
 
 #endif
