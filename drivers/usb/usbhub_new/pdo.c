@@ -26,7 +26,7 @@ UrbCompletion(
     // Get the original Irp
     //
     OriginalIrp = (PIRP)Context;
-
+    
     //
     // Update it to match what was returned for the IRP that was passed to RootHub
     //
@@ -137,7 +137,15 @@ USBHUB_PdoHandleInternalDeviceControl(
 
     //DPRINT1("UsbhubInternalDeviceControlPdo(%x) called\n", DeviceObject);
 
+    //
+    // get current stack location
+    //
     Stack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(Stack);
+
+    //
+    // Set default status
+    //
     Status = Irp->IoStatus.Status;
 
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -173,18 +181,13 @@ USBHUB_PdoHandleInternalDeviceControl(
         case IOCTL_INTERNAL_USB_SUBMIT_URB:
         {
             //DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB\n");
-            //
-            // get current stack location
-            //
-            Stack = IoGetCurrentIrpStackLocation(Irp);
-            ASSERT(Stack);
 
             //
             // Get the Urb
             //
             Urb = (PURB)Stack->Parameters.Others.Argument1;
             ASSERT(Urb);
-
+            
             //
             // Set the real device handle
             //
@@ -229,8 +232,12 @@ USBHUB_PdoHandleInternalDeviceControl(
                     DPRINT1("Length %x\n", Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
                     DPRINT1("UrbLink %x\n", Urb->UrbBulkOrInterruptTransfer.UrbLink);
                     DPRINT1("hca %x\n", Urb->UrbBulkOrInterruptTransfer.hca);
+                    if (Urb->UrbBulkOrInterruptTransfer.TransferFlags == USBD_SHORT_TRANSFER_OK)
+                    {
+                    }
                 */
                     break;
+                            
                 }
                 case URB_FUNCTION_CLASS_INTERFACE:
                     DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
@@ -255,8 +262,39 @@ USBHUB_PdoHandleInternalDeviceControl(
             DPRINT1("IOCTL_INTERNAL_USB_RESET_PORT\n");
             break;
         case IOCTL_INTERNAL_USB_GET_PORT_STATUS:
+        {
+            PORT_STATUS_CHANGE PortStatus;
+            LONG PortId;
+            PUCHAR PortStatusBits;
+
+            PortStatusBits = (PUCHAR)Stack->Parameters.Others.Argument1;
+            //
+            // USBD_PORT_ENABLED (bit 0) or USBD_PORT_CONNECTED (bit 1)
+            //
             DPRINT1("IOCTL_INTERNAL_USB_GET_PORT_STATUS\n");
+            DPRINT1("Arg1 %x\n", *PortStatusBits);
+            *PortStatusBits = 0;
+            if (Stack->Parameters.Others.Argument1)
+            {
+                for (PortId = 1; PortId <= HubDeviceExtension->UsbExtHubInfo.NumberOfPorts; PortId++)
+                {
+                    Status = GetPortStatusAndChange(RootHubDeviceObject, PortId, &PortStatus);
+                    if (NT_SUCCESS(Status))
+                    {
+                        DPRINT1("Connect %x\n", ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2));
+                        DPRINT1("Enable %x\n", ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
+                        *PortStatusBits +=
+                            ((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2) +
+                            ((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2);
+                        
+                    }
+                }
+            }
+            
+            DPRINT1("Arg1 %x\n", *PortStatusBits);
+            Status = STATUS_SUCCESS;
             break;
+        }
         case IOCTL_INTERNAL_USB_ENABLE_PORT:
             DPRINT1("IOCTL_INTERNAL_USB_ENABLE_PORT\n");
             break;

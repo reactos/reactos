@@ -112,7 +112,7 @@ GetPortStatusAndChange(
     RtlZeroMemory(Urb, sizeof(URB));
 
     //
-    // Create URB for getting Port Status
+    // Initialize URB for getting Port Status
     //
     UsbBuildVendorRequest(Urb,
                           URB_FUNCTION_CLASS_OTHER,
@@ -165,7 +165,7 @@ SetPortFeature(
     RtlZeroMemory(Urb, sizeof(URB));
 
     //
-    // Create URB for Clearing Port Reset
+    // Initialize URB for Clearing Port Reset
     //
     UsbBuildVendorRequest(Urb,
                           URB_FUNCTION_CLASS_OTHER,
@@ -217,7 +217,7 @@ ClearPortFeature(
     RtlZeroMemory(Urb, sizeof(URB));
 
     //
-    // Create URB for Clearing Port Reset
+    // Initialize URB for Clearing Port Reset
     //
     UsbBuildVendorRequest(Urb,
                           URB_FUNCTION_CLASS_OTHER,
@@ -655,7 +655,7 @@ GetUsbDeviceDescriptor(
     RtlZeroMemory(Urb, sizeof(URB));
 
     //
-    // Create URB for getting device descriptor
+    // Initialize URB for getting device descriptor
     //
     UsbBuildGetDescriptorRequest(Urb,
                                  sizeof(Urb->UrbControlDescriptorRequest),

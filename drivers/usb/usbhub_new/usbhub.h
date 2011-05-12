@@ -158,7 +158,13 @@ DumpDeviceDescriptor(
 VOID
 DumpConfigurationDescriptor(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
-    
+
 VOID
 DumpFullConfigurationDescriptor(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+
+NTSTATUS
+GetPortStatusAndChange(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG PortId,
+    OUT PPORT_STATUS_CHANGE StatusChange);

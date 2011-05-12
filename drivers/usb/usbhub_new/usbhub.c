@@ -9,8 +9,6 @@
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-
-//#define NDEBUG
 #include "usbhub.h"
 
 NTSTATUS NTAPI
@@ -61,7 +59,7 @@ USBHUB_AddDevice(
     PDEVICE_OBJECT DeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     NTSTATUS Status;
-
+    DPRINT1("USBHUB: AddDevice\n");
     //
     // Create the Device Object
     //
