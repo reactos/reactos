@@ -86,6 +86,16 @@ protected:
     ULONG m_TransferBufferLength;
 
     //
+    // current transfer length
+    //
+    ULONG m_TransferBufferLengthCompleted;
+
+    //
+    // Total Transfer Length
+    //
+    ULONG m_TotalBytesTransferred;
+
+    //
     // transfer buffer MDL
     //
     PMDL m_TransferBufferMDL;
@@ -169,6 +179,12 @@ CUSBRequest::InitializeWithSetupPacket(
     m_TransferBufferMDL = TransferBuffer;
     m_DeviceAddress = DeviceAddress;
     m_EndpointDescriptor = EndpointDescriptor;
+    m_TotalBytesTransferred = 0;
+
+    //
+    // Set Length Completed to 0
+    //
+    m_TransferBufferLengthCompleted = 0;
 
     //
     // allocate completion event
@@ -208,6 +224,7 @@ CUSBRequest::InitializeWithIrp(
     PC_ASSERT(Irp);
 
     m_DmaManager = DmaManager;
+    m_TotalBytesTransferred = 0;
 
     //
     // get current irp stack location
@@ -244,7 +261,7 @@ CUSBRequest::InitializeWithIrp(
         case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
         {
             //
-            // bulk / interrupt transfer
+            // bulk interrupt transfer
             //
             if (Urb->UrbBulkOrInterruptTransfer.TransferBufferLength)
             {
@@ -281,6 +298,10 @@ CUSBRequest::InitializeWithIrp(
                     // FIXME: Does hub driver already do this when passing MDL?
                     //
                     MmBuildMdlForNonPagedPool(m_TransferBufferMDL);
+
+                    //
+                    // Keep that ehci created the MDL and needs to free it.
+                    //
                 }
                 else
                 {
@@ -291,6 +312,11 @@ CUSBRequest::InitializeWithIrp(
                 // save buffer length
                 //
                 m_TransferBufferLength = Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+
+                //
+                // Set Length Completed to 0
+                //
+                m_TransferBufferLengthCompleted = 0;
 
                 //
                 // get endpoint descriptor
@@ -357,7 +383,6 @@ CUSBRequest::CompletionCallback(
         //
         // Check if the MDL was created
         //
-
         if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
         {
             //
@@ -439,6 +464,7 @@ CUSBRequest::CancelCallback(
         //
         // store urb status
         //
+        DPRINT1("Request Cancelled\n");
         Urb->UrbHeader.Status = USBD_STATUS_CANCELED;
         Urb->UrbHeader.Length = 0;
 
@@ -521,6 +547,18 @@ CUSBRequest::IsRequestComplete()
     //
     // FIXME: check if request was split
     //
+
+    //
+    // Check if the transfer was completed, only valid for Bulk Transfers
+    //
+    if ((m_TransferBufferLengthCompleted < m_TransferBufferLength)
+        && (GetTransferType() == USB_ENDPOINT_TYPE_BULK))
+    {
+        //
+        // Transfer not completed
+        //
+        return FALSE;
+    }
     return TRUE;
 }
 //----------------------------------------------------------------------------------------
@@ -642,7 +680,7 @@ CUSBRequest::BuildControlTransferQueueHead(
     // now initialize the queue head
     //
     QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
-    
+
     if (m_EndpointDescriptor)
     {
         //
@@ -751,7 +789,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
     ULONG TransferDescriptorCount, Index;
     ULONG BytesAvailable, BufferIndex;
     PVOID Base;
-    ULONG PageOffset;
+    ULONG PageOffset, CurrentTransferBufferLength;
 
     //
     // Allocate the queue head
@@ -770,24 +808,59 @@ CUSBRequest::BuildBulkTransferQueueHead(
     // sanity checks
     //
     PC_ASSERT(QueueHead);
-
-    //
-    // FIXME: support more than one descriptor
-    //
-    PC_ASSERT(m_TransferBufferLength < PAGE_SIZE * 5);
     PC_ASSERT(m_TransferBufferLength);
 
-    TransferDescriptorCount = 1;
+    //
+    // Max default of 3 descriptors
+    //
+    TransferDescriptorCount = 3;
 
     //
     // get virtual base of mdl
     //
     Base = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
-    BytesAvailable = m_TransferBufferLength;
+
+    //
+    // Increase the size of last transfer, 0 in case this is the first
+    //
+    Base = (PVOID)((ULONG_PTR)Base + m_TransferBufferLengthCompleted);
 
     PC_ASSERT(m_EndpointDescriptor);
     PC_ASSERT(Base);
 
+    //
+    // Get the offset from page size
+    //
+    PageOffset = BYTE_OFFSET(Base);
+
+    //
+    // PageOffset should only be > 0 if this is the  first transfer for this requests
+    //
+    if ((PageOffset != 0) && (m_TransferBufferLengthCompleted != 0))
+    {
+        ASSERT(FALSE);
+    }
+
+    //
+    // Calculate the size of this transfer
+    //
+    if ((PageOffset != 0) && ((m_TransferBufferLength - m_TransferBufferLengthCompleted) >= (PAGE_SIZE * 4) + PageOffset))
+    {
+        CurrentTransferBufferLength = (PAGE_SIZE * 4) + PageOffset;
+    }
+    else if ((m_TransferBufferLength - m_TransferBufferLengthCompleted) >= PAGE_SIZE * 5)
+    {
+        CurrentTransferBufferLength = PAGE_SIZE * 5;
+    }
+    else
+        CurrentTransferBufferLength = (m_TransferBufferLength - m_TransferBufferLengthCompleted);
+
+    //
+    // Add current transfer length to transfer length completed
+    //
+    m_TransferBufferLengthCompleted += CurrentTransferBufferLength;
+    BytesAvailable = CurrentTransferBufferLength;
+    DPRINT("CurrentTransferBufferLength %x, m_TransferBufferLengthCompleted %x\n", CurrentTransferBufferLength, m_TransferBufferLengthCompleted);
 
     DPRINT("EndPointAddress %x\n", m_EndpointDescriptor->bEndpointAddress);
     DPRINT("EndPointDirection %x\n", USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress));
@@ -833,9 +906,9 @@ CUSBRequest::BuildBulkTransferQueueHead(
         for(BufferIndex = 0; BufferIndex < 5; BufferIndex++)
         {
             //
-            // setup buffer
+            // If this is the first buffer of the first descriptor and there is a PageOffset
             //
-            if (BufferIndex == 0)
+            if ((BufferIndex == 0) && (PageOffset != 0) && (Index == 0))
             {
                 //
                 // use physical address
@@ -843,45 +916,25 @@ CUSBRequest::BuildBulkTransferQueueHead(
                 m_TransferDescriptors[Index]->BufferPointer[0] = MmGetPhysicalAddress(Base).LowPart;
 
                 //
-                // get offset within page
+                // move to next page
                 //
-                PageOffset = BYTE_OFFSET(m_TransferDescriptors[Index]->BufferPointer[0]);
+                Base = (PVOID)ROUND_TO_PAGES(Base);
 
                 //
-                // check if request fills another page
+                // increment transfer bytes
                 //
-                if (PageOffset + BytesAvailable > PAGE_SIZE)
-                {
-                    //
-                    // move to next page
-                    //
-                    Base = (PVOID)ROUND_TO_PAGES(Base);
-
-                    //
-                    // increment transfer bytes
-                    //
+                if (CurrentTransferBufferLength > PAGE_SIZE - PageOffset)
                     m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer = PAGE_SIZE - PageOffset;
+                else
+                    m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer = CurrentTransferBufferLength;
 
-                    //
-                    // decrement available byte count
-                    //
-                    BytesAvailable -= m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
+                //
+                // decrement available byte count
+                //
+                BytesAvailable -= m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer;
 
-                    DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
-                        BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
-               }
-               else
-               {
-                   //
-                   // request ends on the first buffer page
-                   //
-                   m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer = BytesAvailable;
-                   BytesAvailable = 0;
-
-                   DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
-                       BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
-                   break;
-               }
+                DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
+                    BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
             }
             else
             {
@@ -935,7 +988,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     BytesAvailable -= BytesAvailable;
 
                     //
-                    // done
+                    // done as this is the last partial or full page
                     //
                     DPRINT("TransferDescriptor %p BufferPointer %p BufferIndex %lu TotalBytes %lu Remaining %lu\n", m_TransferDescriptors[Index], m_TransferDescriptors[Index]->BufferPointer[BufferIndex],
                             BufferIndex, m_TransferDescriptors[Index]->Token.Bits.TotalBytesToTransfer, BytesAvailable);
@@ -943,6 +996,12 @@ CUSBRequest::BuildBulkTransferQueueHead(
                     break;
                 }
             }
+
+            //
+            // Check if all bytes have been consumed
+            //
+            if (BytesAvailable == 0)
+                break;
         }
 
         //
@@ -971,6 +1030,12 @@ CUSBRequest::BuildBulkTransferQueueHead(
         //
         // FIXME need dead queue transfer descriptor?
         //
+
+        //
+        // Check if all bytes have been consumed
+        //
+        if (BytesAvailable == 0)
+            break;
     }
 
     //
@@ -982,7 +1047,7 @@ CUSBRequest::BuildBulkTransferQueueHead(
     // Initialize the QueueHead
     //
     QueueHead->EndPointCharacteristics.DeviceAddress = GetDeviceAddress();
-    
+
     if (m_EndpointDescriptor)
     {
         //
@@ -1440,10 +1505,12 @@ VOID
 CUSBRequest::FreeQueueHead(
     IN struct _QUEUE_HEAD * QueueHead)
 {
+    LONG DescriptorCount;
+
     //
     // FIXME: support chained queue heads
     //
-    PC_ASSERT(QueueHead == m_QueueHead);
+    //PC_ASSERT(QueueHead == m_QueueHead);
 
     //
     // release queue head
@@ -1458,32 +1525,40 @@ CUSBRequest::FreeQueueHead(
     //
     // release transfer descriptors
     //
-
-    if (m_TransferDescriptors[0])
+    for (DescriptorCount = 0; DescriptorCount < 3; DescriptorCount++)
     {
-        //
-        // release transfer descriptors
-        //
-        m_DmaManager->Release(m_TransferDescriptors[0], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
-        m_TransferDescriptors[0] = 0;
-    }
+        if (m_TransferDescriptors[DescriptorCount])
+        {
+            //
+            // Calculate Total Bytes Transferred
+            // FIXME: Is this the correct method of determine bytes transferred?
+            //
+            if (USB_ENDPOINT_TYPE_BULK == GetTransferType())
+            {
+                //
+                // sanity check
+                //
+                ASSERT(m_EndpointDescriptor);
 
-    if (m_TransferDescriptors[1])
-    {
-        //
-        // release transfer descriptors
-        //
-        m_DmaManager->Release(m_TransferDescriptors[1], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
-        m_TransferDescriptors[1] = 0;
-    }
+                if (USB_ENDPOINT_DIRECTION_IN(m_EndpointDescriptor->bEndpointAddress))
+                {
+                    DPRINT1("m_TotalBytesTransferred %x, %x - %x\n",
+                        m_TotalBytesTransferred,
+                        m_TransferDescriptors[DescriptorCount]->TotalBytesToTransfer,
+                        m_TransferDescriptors[DescriptorCount]->Token.Bits.TotalBytesToTransfer);
 
-    if (m_TransferDescriptors[2])
-    {
-        //
-        // release transfer descriptors
-        //
-        m_DmaManager->Release(m_TransferDescriptors[2], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
-        m_TransferDescriptors[2] = 0;
+                    m_TotalBytesTransferred +=
+                        m_TransferDescriptors[DescriptorCount]->TotalBytesToTransfer -
+                        m_TransferDescriptors[DescriptorCount]->Token.Bits.TotalBytesToTransfer;
+                }
+            }
+
+            //
+            // release transfer descriptors
+            //
+            m_DmaManager->Release(m_TransferDescriptors[DescriptorCount], sizeof(QUEUE_TRANSFER_DESCRIPTOR));
+            m_TransferDescriptors[DescriptorCount] = 0;
+        }
     }
 
     if (m_DescriptorPacket)
@@ -1573,8 +1648,9 @@ CUSBRequest::InternalCalculateTransferLength()
     {
         //
         // bulk in request
+        // HACK: Properly determine transfer length
         //
-        return m_TransferDescriptors[0]->TotalBytesToTransfer - m_TransferDescriptors[0]->Token.Bits.TotalBytesToTransfer;
+        return m_TransferBufferLength;//m_TotalBytesTransferred;
     }
 
     //

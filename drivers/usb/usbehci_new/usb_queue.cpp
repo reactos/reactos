@@ -137,8 +137,7 @@ CUSBQueue::GetPendingRequestCount()
     // Loop through the pending list and iterrate one for each QueueHead that
     // has a IRP to complete.
     //
-    
-    
+
     return 0;
 }
 
@@ -149,6 +148,7 @@ CUSBQueue::AddUSBRequest(
     PQUEUE_HEAD QueueHead;
     NTSTATUS Status;
     ULONG Type;
+    KIRQL OldLevel;
 
     //
     // sanity check
@@ -214,7 +214,9 @@ CUSBQueue::AddUSBRequest(
         //
         // Add it to the pending list
         //
+        KeAcquireSpinLock(&m_Lock, &OldLevel);
         LinkQueueHead(AsyncListQueueHead, QueueHead);
+        KeReleaseSpinLock(&m_Lock, OldLevel);
     }
 
 
@@ -251,12 +253,12 @@ CUSBQueue::CreateUSBRequest(
 
     *OutRequest = NULL;
     Status = InternalCreateUSBRequest(&UsbRequest);
-    
+
     if (NT_SUCCESS(Status))
     {
         *OutRequest = UsbRequest;
     }
-    
+
     return Status;
 }
 
@@ -432,41 +434,20 @@ CUSBQueue::QueueHeadCompletion(
     PQUEUE_HEAD CurrentQH,
     NTSTATUS Status)
 {
-    IUSBRequest *Request;
-    PQUEUE_HEAD NewQueueHead;
+    KIRQL OldLevel;
 
     //
     // now unlink the queue head
     // FIXME: implement chained queue heads
     //
+
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
     UnlinkQueueHead(CurrentQH);
 
-    //
-    // get contained usb request
-    //
-    Request = (IUSBRequest*)CurrentQH->Request;
-
-    //
-    // check if the request is complete
-    //
-    if (Request->IsRequestComplete() == FALSE)
-    {
-        //
-        // request is still in complete
-        // get new queue head
-        //
-        Status = Request->GetQueueHead(&NewQueueHead);
-
-        //
-        // add to pending list
-        //
-        InsertTailList(&m_PendingRequestAsyncList, &NewQueueHead->LinkedQueueHeads);
-    }
-
-    //
-    // put queue head into completed queue head list
-    //
     InsertTailList(&m_CompletedRequestAsyncList, &CurrentQH->LinkedQueueHeads);
+
+    KeReleaseSpinLock(&m_Lock, OldLevel);
 
 }
 
@@ -507,7 +488,6 @@ CUSBQueue::ProcessAsyncList(
         // get IUSBRequest interface
         //
         Request = (IUSBRequest*)QueueHead->Request;
-
 
         //
         // move to next entry
@@ -568,6 +548,7 @@ VOID
 CUSBQueue::QueueHeadCleanup(
     PQUEUE_HEAD CurrentQH)
 {
+    PQUEUE_HEAD NewQueueHead;
     IUSBRequest * Request;
     BOOLEAN ShouldReleaseWhenDone;
     USBD_STATUS UrbStatus;
@@ -625,9 +606,47 @@ CUSBQueue::QueueHeadCleanup(
     }
 
     //
-    // notify request that a queue head has been completed
+    // Check if the transfer was completed and if UrbStatus is ok
     //
-    Request->CompletionCallback(STATUS_SUCCESS /*FIXME*/, UrbStatus, CurrentQH);
+    if ((Request->IsRequestComplete() == FALSE) && (UrbStatus == USBD_STATUS_SUCCESS))
+    {
+        //
+        // let IUSBRequest free the queue head
+        //
+        Request->FreeQueueHead(CurrentQH);
+
+        //
+        // request is incomplete, get new queue head
+        //
+        if (Request->GetQueueHead(&NewQueueHead) == STATUS_SUCCESS)
+        {
+            //
+            // add to pending list
+            //
+            InsertTailList(&m_PendingRequestAsyncList, &NewQueueHead->LinkedQueueHeads);
+
+            //
+            // Done for now
+            //
+            return;
+        }
+        DPRINT1("Unable to create a new QueueHead\n");
+        PC_ASSERT(FALSE);
+
+        //
+        // Else there was a problem
+        // FIXME: Find better return
+        UrbStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (UrbStatus != USBD_STATUS_SUCCESS) PC_ASSERT(FALSE);
+
+    //
+    // notify request that a transfer has completed
+    //
+    Request->CompletionCallback(UrbStatus != USBD_STATUS_SUCCESS ?  STATUS_UNSUCCESSFUL : STATUS_SUCCESS,
+                                UrbStatus,
+                                CurrentQH);
 
     //
     // let IUSBRequest free the queue head
@@ -666,6 +685,7 @@ CUSBQueue::CompleteAsyncRequests()
     KIRQL OldLevel;
     PLIST_ENTRY Entry;
     PQUEUE_HEAD CurrentQH;
+    IUSBRequest *Request;
 
     DPRINT("CUSBQueue::CompleteAsyncRequests\n");
 
@@ -692,6 +712,11 @@ CUSBQueue::CompleteAsyncRequests()
         CurrentQH = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
 
         //
+        // Get the Request for this QueueHead
+        //
+        Request = (IUSBRequest*) CurrentQH->Request;
+
+        //
         // complete request now
         //
         QueueHeadCleanup(CurrentQH);
@@ -705,7 +730,7 @@ CUSBQueue::CompleteAsyncRequests()
         //
         // remove first entry
         //
-        Entry = RemoveHeadList(&m_CompletedRequestAsyncList);
+        Entry = RemoveHeadList(&m_PendingRequestAsyncList);
 
         //
         // get queue head structure
@@ -713,7 +738,7 @@ CUSBQueue::CompleteAsyncRequests()
         CurrentQH = (PQUEUE_HEAD)CONTAINING_RECORD(Entry, QUEUE_HEAD, LinkedQueueHeads);
 
         //
-        // Add it to the pending list
+        // Add it to the AsyncList list
         //
         LinkQueueHead(AsyncListQueueHead, CurrentQH);
     }
