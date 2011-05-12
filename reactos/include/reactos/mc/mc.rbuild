@@ -20,4 +20,8 @@
 	<module name="neteventmsg" type="messageheader">
 		<file>netevent.mc</file>
 	</module>
+
+	<module name="ntiologc" type="messageheader">
+		<file>ntiologc.mc</file>
+	</module>
 </group>

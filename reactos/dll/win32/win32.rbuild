@@ -169,6 +169,9 @@
 <directory name="inseng">
 	<xi:include href="inseng/inseng.rbuild" />
 </directory>
+<directory name="iologmsg">
+	<xi:include href="iologmsg/iologmsg.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>

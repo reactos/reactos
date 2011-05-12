@@ -75,6 +75,7 @@
 	<property name="BASEADDRESS_ITSS"		value="0x66370000" />
 	<property name="BASEADDRESS_ITIRCL"		value="0x663a0000" />
 	<property name="BASEADDRESS_INETMIB1"		value="0x666f0000" />
+	<property name="BASEADDRESS_IOLOGMSG"		value="0x669a0000" />
 	<property name="BASEADDRESS_INITPKI"		value="0x66b00000" />
 	<property name="BASEADDRESS_WSHTCPIP"		value="0x677b0000" />
 	<property name="BASEADDRESS_CRYPT32"		value="0x67ab0000" />
