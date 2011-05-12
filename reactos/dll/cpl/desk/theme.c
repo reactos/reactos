@@ -222,6 +222,7 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	DWORD dwDisposition;
 	TCHAR clText[16];
 	NONCLIENTMETRICS NonClientMetrics;
+	ICONMETRICS IconMetrics;
 
 	/* Apply Colors from global variable */
 	SetSysColors(NUM_COLORS, g_ColorList, theme->crColor);
@@ -247,7 +248,7 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 		RegCloseKey(hKey);
 	}
 
-	/* Apply the fonts */
+	/* Apply non client metrics */
 	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
 	NonClientMetrics.lfCaptionFont = theme->lfFont[FONT_CAPTION];
@@ -255,50 +256,30 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	NonClientMetrics.lfMenuFont = theme->lfFont[FONT_MENU];
 	NonClientMetrics.lfStatusFont = theme->lfFont[FONT_INFO];
 	NonClientMetrics.lfMessageFont = theme->lfFont[FONT_DIALOG];
-	SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-	SystemParametersInfo(SPI_SETICONTITLELOGFONT, sizeof(LOGFONT), &theme->lfFont[FONT_ICON], 0);
+	NonClientMetrics.iBorderWidth = theme->Size[SIZE_BORDER_X];
+	NonClientMetrics.iScrollWidth = theme->Size[SIZE_SCROLL_X];
+	NonClientMetrics.iScrollHeight = theme->Size[SIZE_SCROLL_Y];
+	NonClientMetrics.iCaptionWidth = theme->Size[SIZE_CAPTION_Y];
+	NonClientMetrics.iCaptionHeight = theme->Size[SIZE_CAPTION_Y];
+	NonClientMetrics.iSmCaptionWidth = theme->Size[SIZE_SMCAPTION_Y];
+	NonClientMetrics.iSmCaptionHeight = theme->Size[SIZE_SMCAPTION_Y];
+	NonClientMetrics.iMenuWidth = theme->Size[SIZE_MENU_SIZE_X];
+	NonClientMetrics.iMenuHeight = theme->Size[SIZE_MENU_Y];
+	SystemParametersInfo(SPI_SETNONCLIENTMETRICS, 
+						 sizeof(NONCLIENTMETRICS), 
+						 &NonClientMetrics, 
+						 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
-	/* FIXME: Apply size metrics */
-
-	/* Save fonts and size metrics to registry */
-	Result = RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop\\WindowMetrics"), 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition);
-	if (Result == ERROR_SUCCESS)
-	{
-		RegSetValueEx(hKey, TEXT("CaptionFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_CAPTION], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("SmCaptionFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_SMCAPTION], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("IconFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_ICON], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("MenuFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_MENU], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("StatusFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_INFO], sizeof(LOGFONT));
-		RegSetValueEx(hKey, TEXT("MessageFont"), 0, REG_BINARY, (BYTE *)&theme->lfFont[FONT_DIALOG], sizeof(LOGFONT));
-
-		/* Save size metrics to registry */
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_BORDER_X]);
-		RegSetValueEx(hKey, TEXT("BorderWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_CAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("CaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_CAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("CaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_SMCAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("SmCaptionWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_SMCAPTION_Y]);
-		RegSetValueEx(hKey, TEXT("SmCaptionHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_ICON_SPC_X]);
-		RegSetValueEx(hKey, TEXT("IconSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_ICON_SPC_Y]);
-		RegSetValueEx(hKey, TEXT("IconVerticalSpacing"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_MENU_SIZE_X]);
-		RegSetValueEx(hKey, TEXT("MenuWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_MENU_Y]);
-		RegSetValueEx(hKey, TEXT("MenuHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_SCROLL_X]);
-		RegSetValueEx(hKey, TEXT("ScrollWidth"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), -15 * theme->Size[SIZE_SCROLL_Y]);
-		RegSetValueEx(hKey, TEXT("ScrollHeight"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-		wsprintf(clText, TEXT("%d"), theme->Size[SIZE_ICON_X]);
-		RegSetValueEx(hKey, TEXT("Shell Icon Size"), 0, REG_SZ, (BYTE *)clText, sizeof(clText));
-
-		RegCloseKey(hKey);
-	}
+	/* Apply icon metrics */
+	IconMetrics.cbSize = sizeof(ICONMETRICS);
+	SystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICS), &IconMetrics, 0);
+	IconMetrics.iHorzSpacing = theme->Size[SIZE_ICON_SPC_X];
+	IconMetrics.iVertSpacing = theme->Size[SIZE_ICON_SPC_Y];
+	IconMetrics.lfFont = theme->lfFont[FONT_ICON];
+	SystemParametersInfo(SPI_SETICONMETRICS, 
+						 sizeof(ICONMETRICS), 
+						 &IconMetrics, 
+						 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
 	/* Effects, save only when needed: */
 	/* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
