@@ -9,7 +9,7 @@ extern SecurePackageTable *packageTable;
 SECURITY_STATUS WINAPI ApplyControlTokenW(PCtxtHandle Handle, PSecBufferDesc Buffer);
 SECURITY_STATUS WINAPI ApplyControlTokenA(PCtxtHandle Handle, PSecBufferDesc Buffer);
 
-static SecurityFunctionTableA securityFunctionTableA =
+SecurityFunctionTableA securityFunctionTableA =
 {
     SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
     EnumerateSecurityPackagesA,
@@ -41,7 +41,7 @@ static SecurityFunctionTableA securityFunctionTableA =
     NULL
 };
 
-static SecurityFunctionTableW securityFunctionTableW =
+SecurityFunctionTableW securityFunctionTableW =
 {
     SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
     EnumerateSecurityPackagesW,
@@ -72,6 +72,7 @@ static SecurityFunctionTableW securityFunctionTableW =
     DecryptMessage,
     NULL
 };
+
 
 /***********************************************************************
  *		EnumerateSecurityPackagesW (SECUR32.@)
@@ -269,7 +270,6 @@ PSecurityFunctionTableW
 WINAPI
 InitSecurityInterfaceW(VOID)
 {
-    ERR("InitSecurityInterfaceW() called\n");
     return &securityFunctionTableW;
 }
 
@@ -278,7 +278,6 @@ PSecurityFunctionTableA
 WINAPI
 InitSecurityInterfaceA(VOID)
 {
-    ERR("InitSecurityInterfaceA() called\n");
     return &securityFunctionTableA;
 }
 

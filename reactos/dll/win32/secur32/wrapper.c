@@ -33,7 +33,7 @@ static SECURITY_STATUS SECUR32_makeSecHandle(PSecHandle phSec,
 {
     SECURITY_STATUS ret;
 
-    TRACE("%p %p %p\n", phSec, package, realHandle);
+    TRACE("makeSecHandle %p %p %p\n", phSec, package, realHandle);
 
     if (phSec && package && realHandle)
     {
@@ -152,9 +152,9 @@ SECURITY_STATUS WINAPI AcquireCredentialsHandleW(
 SECURITY_STATUS WINAPI FreeCredentialsHandle(
  PCredHandle phCredential)
 {
-    SECURITY_STATUS ret;
+    SECURITY_STATUS ret = SEC_E_INVALID_HANDLE;
 
-    TRACE("%p\n", phCredential);
+    TRACE("FreeCredentialsHandle %p\n", phCredential);
     if (phCredential)
     {
         SecurePackage *package = (SecurePackage *)phCredential->dwUpper;
@@ -163,12 +163,9 @@ SECURITY_STATUS WINAPI FreeCredentialsHandle(
         if (package && package->provider &&
          package->provider->fnTableW.FreeCredentialsHandle)
             ret = package->provider->fnTableW.FreeCredentialsHandle(cred);
-        else
-            ret = SEC_E_INVALID_HANDLE;
         HeapFree(GetProcessHeap(), 0, cred);
     }
-    else
-        ret = SEC_E_INVALID_HANDLE;
+
     return ret;
 }
 

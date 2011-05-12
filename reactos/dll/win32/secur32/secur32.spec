@@ -64,7 +64,7 @@
 @ stub SaslInitializeSecurityContextA
 @ stub SaslInitializeSecurityContextW
 @ stub SaslContextOption
-@ stub SealMessage #(ptr long ptr long)
+@ stdcall SealMessage (ptr long ptr long)
 @ stub SecCacheSspiPackages
 @ stub SecpFreeMemory
 @ stub SecpTranslateName

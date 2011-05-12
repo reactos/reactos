@@ -38,68 +38,6 @@ CRITICAL_SECTION cs;
 SecurePackageTable *packageTable = NULL;
 SecureProviderTable *providerTable = NULL;
 
-static SecurityFunctionTableA securityFunctionTableA = {
-    SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
-    EnumerateSecurityPackagesA,
-    QueryCredentialsAttributesA,
-    AcquireCredentialsHandleA,
-    FreeCredentialsHandle,
-    NULL, /* Reserved2 */
-    InitializeSecurityContextA,
-    AcceptSecurityContext,
-    CompleteAuthToken,
-    DeleteSecurityContext,
-    ApplyControlToken,
-    QueryContextAttributesA,
-    ImpersonateSecurityContext,
-    RevertSecurityContext,
-    MakeSignature,
-    VerifySignature,
-    FreeContextBuffer,
-    QuerySecurityPackageInfoA,
-    EncryptMessage, /* Reserved3 */
-    DecryptMessage, /* Reserved4 */
-    ExportSecurityContext,
-    ImportSecurityContextA,
-    AddCredentialsA,
-    NULL, /* Reserved8 */
-    QuerySecurityContextToken,
-    EncryptMessage,
-    DecryptMessage,
-    SetContextAttributesA
-};
-
-static SecurityFunctionTableW securityFunctionTableW = {
-    SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
-    EnumerateSecurityPackagesW,
-    QueryCredentialsAttributesW,
-    AcquireCredentialsHandleW,
-    FreeCredentialsHandle,
-    NULL, /* Reserved2 */
-    InitializeSecurityContextW,
-    AcceptSecurityContext,
-    CompleteAuthToken,
-    DeleteSecurityContext,
-    ApplyControlToken,
-    QueryContextAttributesW,
-    ImpersonateSecurityContext,
-    RevertSecurityContext,
-    MakeSignature,
-    VerifySignature,
-    FreeContextBuffer,
-    QuerySecurityPackageInfoW,
-    EncryptMessage, /* Reserved3 */
-    DecryptMessage, /* Reserved4 */
-    ExportSecurityContext,
-    ImportSecurityContextW,
-    AddCredentialsW,
-    NULL, /* Reserved8 */
-    QuerySecurityContextToken,
-    EncryptMessage,
-    DecryptMessage,
-    SetContextAttributesW
-};
-
 static PWSTR SECUR32_strdupW(PCWSTR str)
 {
     PWSTR ret;
@@ -332,7 +270,7 @@ SecureProvider *SECUR32_addProvider(const SecurityFunctionTableA *fnTableA,
 
     EnterCriticalSection(&cs);
 
-    ERR("Adding %s provider\n", debugstr_w(moduleName));
+    TRACE("Adding %s provider\n", debugstr_w(moduleName));
 
     if (!providerTable)
     {
@@ -383,7 +321,7 @@ void SECUR32_addPackages(SecureProvider *provider, ULONG toAdd,
 
     EnterCriticalSection(&cs);
 
-    ERR("Will add %d packages\n",toAdd);
+    TRACE("Will add %d packages\n",toAdd);
 
     if (!packageTable)
     {
@@ -411,7 +349,7 @@ void SECUR32_addPackages(SecureProvider *provider, ULONG toAdd,
             infoA ? &infoA[i] : NULL,
             infoW ? &infoW[i] : NULL);
 
-        ERR("added: %s\n",debugstr_w(package->infoW.Name));
+        TRACE("added: %s\n",debugstr_w(package->infoW.Name));
     }
     packageTable->numPackages += toAdd;
 
@@ -431,7 +369,7 @@ BOOL LoadSSPProvider(PWSTR moduleName)
          (INIT_SECURITY_INTERFACE_A)GetProcAddress(lib,
          SECURITY_ENTRYPOINT_ANSIA);
 
-        ERR("loaded %s, InitSecurityInterfaceA is %p, InitSecurityInterfaceW is %p\n",
+        TRACE("loaded %s, InitSecurityInterfaceA is %p, InitSecurityInterfaceW is %p\n",
          debugstr_w(moduleName), pInitSecurityInterfaceA,
          pInitSecurityInterfaceW);
         if (pInitSecurityInterfaceW || pInitSecurityInterfaceA)
@@ -449,17 +387,17 @@ BOOL LoadSSPProvider(PWSTR moduleName)
                 fnTableW = pInitSecurityInterfaceW();
             if (fnTableW && fnTableW->EnumerateSecurityPackagesW)
             {
-                //if (fnTableW != &securityFunctionTableW)
+                if (fnTableW != &securityFunctionTableW)
                     ret = fnTableW->EnumerateSecurityPackagesW(&toAdd, &infoW);
-                //else
-                    //ERR("%s has built-in providers, skip adding\n", debugstr_w(moduleName));
+                else
+                    WARN("%s has built-in providers, skip adding\n", debugstr_w(moduleName));
             }
             else if (fnTableA && fnTableA->EnumerateSecurityPackagesA)
             {
-                //if (fnTableA != &securityFunctionTableA)
+                if (fnTableA != &securityFunctionTableA)
                     ret = fnTableA->EnumerateSecurityPackagesA(&toAdd, &infoA);
-                //else
-                    //ERR("%s has built-in providers, skip adding\n", debugstr_w(moduleName));
+                else
+                    WARN("%s has built-in providers, skip adding\n", debugstr_w(moduleName));
             }
             if (ret == SEC_E_OK && toAdd > 0 && (infoW || infoA))
             {
@@ -477,7 +415,7 @@ BOOL LoadSSPProvider(PWSTR moduleName)
         return TRUE;
     }
 
-    WARN("failed to load %s\n", debugstr_w(moduleName));
+    ERR("failed to load %s\n", debugstr_w(moduleName));
     return FALSE;
 }
 

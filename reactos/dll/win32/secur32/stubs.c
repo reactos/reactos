@@ -59,3 +59,15 @@ UnsealMessage(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
+SECURITY_STATUS
+SEC_ENTRY
+SealMessage(
+    LSA_SEC_HANDLE ContextHandle,
+    ULONG QualityOfProtection,
+    PSecBufferDesc MessageBuffers,
+    ULONG MessageSequenceNumber)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}

@@ -31,3 +31,7 @@
 #include "secur32_priv.h"
 #include "thunks.h"
 
+
+extern SecurityFunctionTableA securityFunctionTableA;
+extern SecurityFunctionTableW securityFunctionTableW;
+
