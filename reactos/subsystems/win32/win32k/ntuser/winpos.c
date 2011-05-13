@@ -1793,6 +1793,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp )
                                      winpos->pos.flags);
     }
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
+    UserDereferenceObject(pDWP);
     UserDeleteObject(hdwp, otSMWP);
     return res;
 }
