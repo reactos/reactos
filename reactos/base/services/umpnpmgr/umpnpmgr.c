@@ -187,8 +187,7 @@ DWORD PNP_Disconnect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    return CR_SUCCESS;
 }
 
 
@@ -197,8 +196,7 @@ DWORD PNP_Connect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    return CR_SUCCESS;
 }
 
 
@@ -1107,6 +1105,157 @@ DWORD PNP_SetClassRegProp(
 }
 
 
+static VOID
+SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
+                      OUT LPWSTR pszEnumerator,
+                      OUT LPWSTR pszDevice,
+                      OUT LPWSTR pszInstance)
+{
+    WCHAR szLocalDeviceInstanceID[MAX_DEVICE_ID_LEN];
+    LPWSTR lpEnumerator = NULL;
+    LPWSTR lpDevice = NULL;
+    LPWSTR lpInstance = NULL;
+    LPWSTR ptr;
+
+    wcscpy(szLocalDeviceInstanceID, pszDeviceInstanceID);
+
+    *pszEnumerator = 0;
+    *pszDevice = 0;
+    *pszInstance = 0;
+
+    lpEnumerator = szLocalDeviceInstanceID;
+
+    ptr = wcschr(lpEnumerator, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = 0;
+        lpDevice = ++ptr;
+
+        ptr = wcschr(lpDevice, L'\\');
+        if (ptr != NULL)
+        {
+            *ptr = 0;
+            lpInstance = ++ptr;
+        }
+    }
+
+    if (lpEnumerator != NULL)
+        wcscpy(pszEnumerator, lpEnumerator);
+
+    if (lpDevice != NULL)
+        wcscpy(pszDevice, lpDevice);
+
+    if (lpInstance != NULL)
+        wcscpy(pszInstance, lpInstance);
+}
+
+
+static CONFIGRET
+CreateDeviceInstance(LPWSTR pszDeviceID)
+{
+    WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
+    WCHAR szDevice[MAX_DEVICE_ID_LEN];
+    WCHAR szInstance[MAX_DEVICE_ID_LEN];
+    HKEY hKeyEnumerator;
+    HKEY hKeyDevice;
+    HKEY hKeyInstance;
+    HKEY hKeyControl;
+    LONG lError;
+
+    /* Split the instance ID */
+    SplitDeviceInstanceID(pszDeviceID,
+                          szEnumerator,
+                          szDevice,
+                          szInstance);
+
+    /* Open or create the enumerator key */
+    lError = RegCreateKeyExW(hEnumKey,
+                             szEnumerator,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hKeyEnumerator,
+                             NULL);
+    if (lError != ERROR_SUCCESS)
+    {
+        return CR_REGISTRY_ERROR;
+    }
+
+    /* Open or create the device key */
+    lError = RegCreateKeyExW(hKeyEnumerator,
+                             szDevice,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hKeyDevice,
+                             NULL);
+
+    /* Close the enumerator key */
+    RegCloseKey(hKeyEnumerator);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        return CR_REGISTRY_ERROR;
+    }
+
+    /* Try to open the instance key and fail if it exists */
+    lError = RegOpenKeyExW(hKeyDevice,
+                           szInstance,
+                           0,
+                           KEY_SET_VALUE,
+                           &hKeyInstance);
+    if (lError == ERROR_SUCCESS)
+    {
+        DPRINT1("Instance %S already exists!\n", szInstance);
+        RegCloseKey(hKeyInstance);
+        RegCloseKey(hKeyDevice);
+        return CR_ALREADY_SUCH_DEVINST;
+    }
+
+    /* Create a new instance key */
+    lError = RegCreateKeyExW(hKeyDevice,
+                             szInstance,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hKeyInstance,
+                             NULL);
+
+    /* Close the device key */
+    RegCloseKey(hKeyDevice);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        return CR_REGISTRY_ERROR;
+    }
+
+    /* Create the 'Control' sub key */
+    lError = RegCreateKeyExW(hKeyInstance,
+                             L"Control",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hKeyControl,
+                             NULL);
+    if (lError == ERROR_SUCCESS)
+    {
+        RegCloseKey(hKeyControl);
+    }
+
+    RegCloseKey(hKeyInstance);
+
+    return (lError == ERROR_SUCCESS) ? CR_SUCCESS : CR_REGISTRY_ERROR;
+}
+
+
 /* Function 28 */
 DWORD PNP_CreateDevInst(
     handle_t hBinding,
@@ -1115,8 +1264,25 @@ DWORD PNP_CreateDevInst(
     PNP_RPC_STRING_LEN ulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_CreateDevInst: %S\n", pszDeviceID);
+
+    if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
+    {
+        /* FIXME */
+        DPRINT1("CM_CREATE_DEVNODE_GENERATE_ID support not implemented yet!\n", ret);
+        ret = CR_CALL_NOT_IMPLEMENTED;
+        goto done;
+    }
+
+    /* Create the device instance */
+    ret = CreateDeviceInstance(pszDeviceID);
+
+done:;
+    DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 
@@ -1886,7 +2052,6 @@ PNP_RunDetection(
     handle_t hBinding,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
