@@ -4,13 +4,16 @@
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly
  */
+
+#pragma code_page(65001) // UTF-8
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Arkiv"
 	BEGIN
-		MENUITEM "&Inställningar", ID_SETTINGS
+		MENUITEM "&InstÃ¤llningar", ID_SETTINGS
 		MENUITEM SEPARATOR
 		MENUITEM "A&vsluta",     ID_EXIT
 	END
@@ -18,15 +21,15 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",  ID_INSTALL
 		MENUITEM "&Avinstallera",ID_UNINSTALL
-		MENUITEM "&Ändra",   ID_MODIFY
+		MENUITEM "&Ã„ndra",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort frÄºn Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",  ID_REFRESH
 	END
-	POPUP "Hjälp"
+	POPUP "HjÃ¤lp"
 	BEGIN
-		MENUITEM "Hjälp",      ID_HELP, GRAYED
+		MENUITEM "HjÃ¤lp",      ID_HELP, GRAYED
 		MENUITEM "Om...",     ID_ABOUT
 	END
 END
@@ -35,8 +38,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
-		MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
+		MENUITEM "&Ã–ppna lÃ¤nk i weblÃ¤sare", ID_OPEN_LINK
+		MENUITEM "&Kopiera lÃ¤nk till urklipp", ID_COPY_LINK
 	END
 END
 
@@ -46,9 +49,9 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",   ID_INSTALL
 		MENUITEM "&Avinstallera", ID_UNINSTALL
-		MENUITEM "&Ändra",    ID_MODIFY
+		MENUITEM "&Ã„ndra",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort frÄºn Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",   ID_REFRESH
 	END
@@ -56,18 +59,18 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inställningar"
+CAPTION "InstÃ¤llningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Allmänna", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Spara fönsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	GROUPBOX "AllmÃ¤nna", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Spara fÃ¶nsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Uppdatera listan med tillgÃ¤ngliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Nerladding", -1, 4, 65, 240, 51
-	LTEXT "Mapp för nerladdningar:", -1, 16, 75, 100, 9
+	LTEXT "Mapp fÃ¶r nerladdningar:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Välj", IDC_CHOOSE, 187, 85, 50, 14
+	PUSHBUTTON "&VÃ¤lj", IDC_CHOOSE, 187, 85, 50, 14
 	AUTOCHECKBOX "&Ta bort programinstallerare efter installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
 	PUSHBUTTON "Standard", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
@@ -82,7 +85,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installera från disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Installera frÄºn disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON "&Ladda ner och installera", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -105,7 +108,7 @@ CAPTION "Om"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "ReactOS Programhanterare\nCopyright (C) 2009\nav Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Stäng", IDOK, 133, 46, 50, 14
+	PUSHBUTTON "StÃ¤ng", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
@@ -114,7 +117,7 @@ BEGIN
 	IDS_TOOLTIP_INSTALL "Installera"
 	IDS_TOOLTIP_UNINSTALL "Avinstallera"
 	IDS_TOOLTIP_MODIFY "Redigera"
-	IDS_TOOLTIP_SETTINGS "Inställingar"
+	IDS_TOOLTIP_SETTINGS "InstÃ¤llingar"
 	IDS_TOOLTIP_REFRESH "Uppdatera"
 	IDS_TOOLTIP_EXIT "Avsluta"
 END
@@ -131,19 +134,19 @@ BEGIN
 	IDS_INFO_VERSION "\nVersion: "
 	IDS_INFO_DESCRIPTION "\nBeskrivning: "
 	IDS_INFO_PUBLISHER "\nUtgivare: "
-	IDS_INFO_HELPLINK "\nHjälplänk: "
-	IDS_INFO_HELPPHONE "\nHjälptelefon: "
-	IDS_INFO_README "\nLäs mig: "
-	IDS_INFO_REGOWNER "\nRegistrerad ägare: "
+	IDS_INFO_HELPLINK "\nHjÃ¤lplÃ¤nk: "
+	IDS_INFO_HELPPHONE "\nHjÃ¤lptelefon: "
+	IDS_INFO_README "\nLÃ¤s mig: "
+	IDS_INFO_REGOWNER "\nRegistrerad Ã¤gare: "
 	IDS_INFO_PRODUCTID "\nProdukt ID: "
 	IDS_INFO_CONTACT "\nKontakt: "
 	IDS_INFO_UPDATEINFO "\nUppdaterinsinformation: "
 	IDS_INFO_INFOABOUT "\nInformation om: "
 	IDS_INFO_COMMENTS "\nKommentarer: "
 	IDS_INFO_INSTLOCATION "\nInstallationsplacering: "
-	IDS_INFO_INSTALLSRC "\nInstallationskälla: "
-	IDS_INFO_UNINSTALLSTR "\nAvinstallationssträng: "
-	IDS_INFO_MODIFYPATH "\nÄndra sökväg: "
+	IDS_INFO_INSTALLSRC "\nInstallationskÃ¤lla: "
+	IDS_INFO_UNINSTALLSTR "\nAvinstallationsstrÃ¤ng: "
+	IDS_INFO_MODIFYPATH "\nÃ„ndra sÃ¶kvÃ¤g: "
 	IDS_INFO_INSTALLDATE "\nInstallationsdatum: "
 END
 
@@ -166,7 +169,7 @@ BEGIN
 	IDS_CAT_FINANCE "Finans"
 	IDS_CAT_GAMES "Spel & kul"
 	IDS_CAT_GRAPHICS "Grafik"
-	IDS_CAT_INTERNET "Internet & Nätverk"
+	IDS_CAT_INTERNET "Internet & NÃ¤tverk"
 	IDS_CAT_LIBS "Bibliotek"
 	IDS_CAT_OFFICE "Kontor"
 	IDS_CAT_OTHER "Annat"
@@ -178,22 +181,22 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_APPTITLE "ReactOS programhanterare"
-	IDS_SEARCH_TEXT "Sök..."
+	IDS_SEARCH_TEXT "SÃ¶k..."
 	IDS_INSTALL "Installera"
 	IDS_UNINSTALL "Avinstallera"
-	IDS_MODIFY "Ändra"
+	IDS_MODIFY "Ã„ndra"
 	IDS_APPS_COUNT "Programantal: %d"
-	IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
-	IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
+	IDS_WELCOME_TITLE "VÃ¤lkommen till ReactOS programhanterare!\n\n"
+	IDS_WELCOME_TEXT "VÃ¤lj en kategori till vÃ¤nster, och sedan ett program fÃ¶r att installera eller avinstallera.\nReactOS Web sida: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installerat"
-	IDS_AVAILABLEFORINST "Tillgängliga for installation"
+	IDS_AVAILABLEFORINST "TillgÃ¤ngliga for installation"
 	IDS_UPDATES "Uppdateringar"
 	IDS_APPLICATIONS "Program"
-	IDS_CHOOSE_FOLDER_TEXT "Välj en mapp som kommer att användas för nerladdning av program:"
+	IDS_CHOOSE_FOLDER_TEXT "VÃ¤lj en mapp som kommer att anvÃ¤ndas fÃ¶r nerladdning av program:"
 	IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
-	IDS_USER_NOT_ADMIN "Du måste vara administratör för att starta ""ReactOS programhanterare""!"
-	IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
+	IDS_USER_NOT_ADMIN "Du mÄºste vara administratÃ¶r fÃ¶r att starta ""ReactOS programhanterare""!"
+	IDS_APP_REG_REMOVE "Ã„r du sÃ¤ker pÄº att du vill ta bort data det installerade programmets data frÄºn registret?"
 	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
+	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data frÄºn registret!"
 END

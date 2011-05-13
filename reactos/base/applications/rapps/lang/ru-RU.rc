@@ -1,27 +1,29 @@
+#pragma code_page(65001) /* UTF-8 */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
+	POPUP "&Р¤Р°Р№Р»"
 	BEGIN
-		MENUITEM "&Параметры",   ID_SETTINGS
+		MENUITEM "&РџР°СЂР°РјРµС‚СЂС‹",   ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "&Выход",       ID_EXIT
+		MENUITEM "&Р’С‹С…РѕРґ",       ID_EXIT
 	END
-	POPUP "&Программы"
+	POPUP "&РџСЂРѕРіСЂР°РјРјС‹"
 	BEGIN
-		MENUITEM "У&становить",  ID_INSTALL
-		MENUITEM "&Удалить",     ID_UNINSTALL
-		MENUITEM "&Изменить",    ID_MODIFY
+		MENUITEM "РЈ&СЃС‚Р°РЅРѕРІРёС‚СЊ",  ID_INSTALL
+		MENUITEM "&РЈРґР°Р»РёС‚СЊ",     ID_UNINSTALL
+		MENUITEM "&РР·РјРµРЅРёС‚СЊ",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "У&далить из реестра", ID_REGREMOVE
+		MENUITEM "РЈ&РґР°Р»РёС‚СЊ РёР· СЂРµРµСЃС‚СЂР°", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Обновить",    ID_REFRESH
+		MENUITEM "&РћР±РЅРѕРІРёС‚СЊ",    ID_REFRESH
 	END
-	POPUP "Справка"
+	POPUP "РЎРїСЂР°РІРєР°"
 	BEGIN
-		MENUITEM "Содержание",      ID_HELP, GRAYED
-		MENUITEM "О программе",     ID_ABOUT
+		MENUITEM "РЎРѕРґРµСЂР¶Р°РЅРёРµ",      ID_HELP, GRAYED
+		MENUITEM "Рћ РїСЂРѕРіСЂР°РјРјРµ",     ID_ABOUT
 	END
 END
 
@@ -29,8 +31,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Открыть ссылку в браузере", ID_OPEN_LINK
-		MENUITEM "&Копировать ссылку в буфер", ID_COPY_LINK
+		MENUITEM "&РћС‚РєСЂС‹С‚СЊ СЃСЃС‹Р»РєСѓ РІ Р±СЂР°СѓР·РµСЂРµ", ID_OPEN_LINK
+		MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ РІ Р±СѓС„РµСЂ", ID_COPY_LINK
 	END
 END
 
@@ -38,156 +40,156 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Установить",   ID_INSTALL
-		MENUITEM "&Удалить",      ID_UNINSTALL
-		MENUITEM "&Изменить",     ID_MODIFY
+		MENUITEM "&РЈСЃС‚Р°РЅРѕРІРёС‚СЊ",   ID_INSTALL
+		MENUITEM "&РЈРґР°Р»РёС‚СЊ",      ID_UNINSTALL
+		MENUITEM "&РР·РјРµРЅРёС‚СЊ",     ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "У&далить из реестра", ID_REGREMOVE
+		MENUITEM "РЈ&РґР°Р»РёС‚СЊ РёР· СЂРµРµСЃС‚СЂР°", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Обновить",     ID_REFRESH
+		MENUITEM "&РћР±РЅРѕРІРёС‚СЊ",     ID_REFRESH
 	END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Параметры"
+CAPTION "РџР°СЂР°РјРµС‚СЂС‹"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Общие", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Сохранять положение окна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Обновлять список доступных программ при запуске", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Вести лог установки/удаления программ", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "РћР±С‰РёРµ", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&РЎРѕС…СЂР°РЅСЏС‚СЊ РїРѕР»РѕР¶РµРЅРёРµ РѕРєРЅР°", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&РћР±РЅРѕРІР»СЏС‚СЊ СЃРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… РїСЂРѕРіСЂР°РјРј РїСЂРё Р·Р°РїСѓСЃРєРµ", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Р’РµСЃС‚Рё Р»РѕРі СѓСЃС‚Р°РЅРѕРІРєРё/СѓРґР°Р»РµРЅРёСЏ РїСЂРѕРіСЂР°РјРј", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "Загрузка", -1, 4, 65, 240, 51
-	LTEXT "Папка для загрузок:", -1, 16, 75, 77, 9
+	GROUPBOX "Р—Р°РіСЂСѓР·РєР°", -1, 4, 65, 240, 51
+	LTEXT "РџР°РїРєР° РґР»СЏ Р·Р°РіСЂСѓР·РѕРє:", -1, 16, 75, 77, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "В&ыбрать", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Удалять инсталляторы программ после установки", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "Р’&С‹Р±СЂР°С‚СЊ", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&РЈРґР°Р»СЏС‚СЊ РёРЅСЃС‚Р°Р»Р»СЏС‚РѕСЂС‹ РїСЂРѕРіСЂР°РјРј РїРѕСЃР»Рµ СѓСЃС‚Р°РЅРѕРІРєРё", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка программы"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° РїСЂРѕРіСЂР°РјРјС‹"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Установить с диска", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Скачать и установить", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЃ РґРёСЃРєР°", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&РЎРєР°С‡Р°С‚СЊ Рё СѓСЃС‚Р°РЅРѕРІРёС‚СЊ", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Загрузка..."
+CAPTION "Р—Р°РіСЂСѓР·РєР°..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
-    PUSHBUTTON "Отмена", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "О программе"
+CAPTION "Рћ РїСЂРѕРіСЂР°РјРјРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Менеджер приложений ReactOS\nАвторские права (C) 2009\nДмитрий Чапышев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Закрыть", IDOK, 133, 46, 50, 14
+	LTEXT "РњРµРЅРµРґР¶РµСЂ РїСЂРёР»РѕР¶РµРЅРёР№ ReactOS\nРђРІС‚РѕСЂСЃРєРёРµ РїСЂР°РІР° (C) 2009\nР”РјРёС‚СЂРёР№ Р§Р°РїС‹С€РµРІ (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON "Р—Р°РєСЂС‹С‚СЊ", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_TOOLTIP_INSTALL "Установить"
-	IDS_TOOLTIP_UNINSTALL "Удалить"
-	IDS_TOOLTIP_MODIFY "Изменить"
-	IDS_TOOLTIP_SETTINGS "Параметры"
-	IDS_TOOLTIP_REFRESH "Обновить"
-	IDS_TOOLTIP_EXIT "Выход"
+	IDS_TOOLTIP_INSTALL "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ"
+	IDS_TOOLTIP_UNINSTALL "РЈРґР°Р»РёС‚СЊ"
+	IDS_TOOLTIP_MODIFY "РР·РјРµРЅРёС‚СЊ"
+	IDS_TOOLTIP_SETTINGS "РџР°СЂР°РјРµС‚СЂС‹"
+	IDS_TOOLTIP_REFRESH "РћР±РЅРѕРІРёС‚СЊ"
+	IDS_TOOLTIP_EXIT "Р’С‹С…РѕРґ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APP_NAME "Название"
-	IDS_APP_INST_VERSION "Версия"
-	IDS_APP_DESCRIPTION "Описание"
+	IDS_APP_NAME "РќР°Р·РІР°РЅРёРµ"
+	IDS_APP_INST_VERSION "Р’РµСЂСЃРёСЏ"
+	IDS_APP_DESCRIPTION "РћРїРёСЃР°РЅРёРµ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_INFO_VERSION "\nВерсия: "
-	IDS_INFO_DESCRIPTION "\nОписание: "
-	IDS_INFO_PUBLISHER "\nИздатель: "
-	IDS_INFO_HELPLINK "\nСсылка поддержки: "
-	IDS_INFO_HELPPHONE "\nТелефон поддержки: "
-	IDS_INFO_README "\nФайл ""Readme"": "
-	IDS_INFO_REGOWNER "\nЗарегистрированный владелец: "
-	IDS_INFO_PRODUCTID "\nКод продукта: "
-	IDS_INFO_CONTACT "\nКонтакт: "
-	IDS_INFO_UPDATEINFO "\nИнформация об обновлениях: "
-	IDS_INFO_INFOABOUT "\nИнформация о программе: "
-	IDS_INFO_COMMENTS "\nКомментарии: "
-	IDS_INFO_INSTLOCATION "\nУстановлено в: "
-	IDS_INFO_INSTALLSRC "\nИсточник установки: "
-	IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
-	IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
-	IDS_INFO_INSTALLDATE "\nДата установки: "
+	IDS_INFO_VERSION "\nР’РµСЂСЃРёСЏ: "
+	IDS_INFO_DESCRIPTION "\nРћРїРёСЃР°РЅРёРµ: "
+	IDS_INFO_PUBLISHER "\nРР·РґР°С‚РµР»СЊ: "
+	IDS_INFO_HELPLINK "\nРЎСЃС‹Р»РєР° РїРѕРґРґРµСЂР¶РєРё: "
+	IDS_INFO_HELPPHONE "\nРўРµР»РµС„РѕРЅ РїРѕРґРґРµСЂР¶РєРё: "
+	IDS_INFO_README "\nР¤Р°Р№Р» ""Readme"": "
+	IDS_INFO_REGOWNER "\nР—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹Р№ РІР»Р°РґРµР»РµС†: "
+	IDS_INFO_PRODUCTID "\nРљРѕРґ РїСЂРѕРґСѓРєС‚Р°: "
+	IDS_INFO_CONTACT "\nРљРѕРЅС‚Р°РєС‚: "
+	IDS_INFO_UPDATEINFO "\nРРЅС„РѕСЂРјР°С†РёСЏ РѕР± РѕР±РЅРѕРІР»РµРЅРёСЏС…: "
+	IDS_INFO_INFOABOUT "\nРРЅС„РѕСЂРјР°С†РёСЏ Рѕ РїСЂРѕРіСЂР°РјРјРµ: "
+	IDS_INFO_COMMENTS "\nРљРѕРјРјРµРЅС‚Р°СЂРёРё: "
+	IDS_INFO_INSTLOCATION "\nРЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ РІ: "
+	IDS_INFO_INSTALLSRC "\nРСЃС‚РѕС‡РЅРёРє СѓСЃС‚Р°РЅРѕРІРєРё: "
+	IDS_INFO_UNINSTALLSTR "\nРЎС‚СЂРѕРєР° РґР»СЏ СѓРґР°Р»РµРЅРёСЏ: "
+	IDS_INFO_MODIFYPATH "\nРЎС‚СЂРѕРєР° РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ: "
+	IDS_INFO_INSTALLDATE "\nР”Р°С‚Р° СѓСЃС‚Р°РЅРѕРІРєРё: "
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_AINFO_VERSION "\nВерсия: "
-	IDS_AINFO_DESCRIPTION "\nОписание: "
-	IDS_AINFO_SIZE "\nРазмер: "
-	IDS_AINFO_URLSITE "\nДомашняя страница: "
-	IDS_AINFO_LICENCE "\nЛицензия: "
+	IDS_AINFO_VERSION "\nР’РµСЂСЃРёСЏ: "
+	IDS_AINFO_DESCRIPTION "\nРћРїРёСЃР°РЅРёРµ: "
+	IDS_AINFO_SIZE "\nР Р°Р·РјРµСЂ: "
+	IDS_AINFO_URLSITE "\nР”РѕРјР°С€РЅСЏСЏ СЃС‚СЂР°РЅРёС†Р°: "
+	IDS_AINFO_LICENCE "\nР›РёС†РµРЅР·РёСЏ: "
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_CAT_AUDIO "Аудио"
-	IDS_CAT_DEVEL "Разработка"
-	IDS_CAT_DRIVERS "Драйверы"
-	IDS_CAT_EDU "Образование"
-	IDS_CAT_ENGINEER "Инженерные"
-	IDS_CAT_FINANCE "Финансы"
-	IDS_CAT_GAMES "Игры и развлечения"
-	IDS_CAT_GRAPHICS "Графика"
-	IDS_CAT_INTERNET "Интернет и сеть"
-	IDS_CAT_LIBS "Библиотеки"
-	IDS_CAT_OFFICE "Офис"
-	IDS_CAT_OTHER "Разное"
-	IDS_CAT_SCIENCE "Наука"
-	IDS_CAT_TOOLS "Инструменты"
-	IDS_CAT_VIDEO "Видео"
+	IDS_CAT_AUDIO "РђСѓРґРёРѕ"
+	IDS_CAT_DEVEL "Р Р°Р·СЂР°Р±РѕС‚РєР°"
+	IDS_CAT_DRIVERS "Р”СЂР°Р№РІРµСЂС‹"
+	IDS_CAT_EDU "РћР±СЂР°Р·РѕРІР°РЅРёРµ"
+	IDS_CAT_ENGINEER "РРЅР¶РµРЅРµСЂРЅС‹Рµ"
+	IDS_CAT_FINANCE "Р¤РёРЅР°РЅСЃС‹"
+	IDS_CAT_GAMES "РРіСЂС‹ Рё СЂР°Р·РІР»РµС‡РµРЅРёСЏ"
+	IDS_CAT_GRAPHICS "Р“СЂР°С„РёРєР°"
+	IDS_CAT_INTERNET "РРЅС‚РµСЂРЅРµС‚ Рё СЃРµС‚СЊ"
+	IDS_CAT_LIBS "Р‘РёР±Р»РёРѕС‚РµРєРё"
+	IDS_CAT_OFFICE "РћС„РёСЃ"
+	IDS_CAT_OTHER "Р Р°Р·РЅРѕРµ"
+	IDS_CAT_SCIENCE "РќР°СѓРєР°"
+	IDS_CAT_TOOLS "РРЅСЃС‚СЂСѓРјРµРЅС‚С‹"
+	IDS_CAT_VIDEO "Р’РёРґРµРѕ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APPTITLE "Менеджер приложений ReactOS"
-	IDS_SEARCH_TEXT "Поиск..."
-	IDS_INSTALL "Установить"
-	IDS_UNINSTALL "Удалить"
-	IDS_MODIFY "Изменить"
-	IDS_APPS_COUNT "Количество: %d"
-	IDS_WELCOME_TITLE "Добро пожаловать в ""Менеджер приложений ReactOS""!\n\n"
-	IDS_WELCOME_TEXT "Выберите категорию слева и приложение для установки или удаления.\nСайт ReactOS: "
+	IDS_APPTITLE "РњРµРЅРµРґР¶РµСЂ РїСЂРёР»РѕР¶РµРЅРёР№ ReactOS"
+	IDS_SEARCH_TEXT "РџРѕРёСЃРє..."
+	IDS_INSTALL "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ"
+	IDS_UNINSTALL "РЈРґР°Р»РёС‚СЊ"
+	IDS_MODIFY "РР·РјРµРЅРёС‚СЊ"
+	IDS_APPS_COUNT "РљРѕР»РёС‡РµСЃС‚РІРѕ: %d"
+	IDS_WELCOME_TITLE "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ ""РњРµРЅРµРґР¶РµСЂ РїСЂРёР»РѕР¶РµРЅРёР№ ReactOS""!\n\n"
+	IDS_WELCOME_TEXT "Р’С‹Р±РµСЂРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ СЃР»РµРІР° Рё РїСЂРёР»РѕР¶РµРЅРёРµ РґР»СЏ СѓСЃС‚Р°РЅРѕРІРєРё РёР»Рё СѓРґР°Р»РµРЅРёСЏ.\nРЎР°Р№С‚ ReactOS: "
 	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "Установленные"
-	IDS_AVAILABLEFORINST "Доступно для установки"
-	IDS_UPDATES "Обновления"
-	IDS_APPLICATIONS "Приложения"
-	IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
-	IDS_CHOOSE_FOLDER_ERROR "Вы указали несуществующую папку!"
-	IDS_USER_NOT_ADMIN "Вы должны быть администратором для запуска ""Менеджера приложений ReactOS""!"
-	IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
-	IDS_INFORMATION "Информация"
-	IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
+	IDS_INSTALLED "РЈСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рµ"
+	IDS_AVAILABLEFORINST "Р”РѕСЃС‚СѓРїРЅРѕ РґР»СЏ СѓСЃС‚Р°РЅРѕРІРєРё"
+	IDS_UPDATES "РћР±РЅРѕРІР»РµРЅРёСЏ"
+	IDS_APPLICATIONS "РџСЂРёР»РѕР¶РµРЅРёСЏ"
+	IDS_CHOOSE_FOLDER_TEXT "Р’С‹Р±РµСЂРёС‚Рµ РїР°РїРєСѓ, РєРѕС‚РѕСЂР°СЏ Р±СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РґР»СЏ Р·Р°РіСЂСѓР·РєРё РїСЂРѕРіСЂР°РјРј:"
+	IDS_CHOOSE_FOLDER_ERROR "Р’С‹ СѓРєР°Р·Р°Р»Рё РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰СѓСЋ РїР°РїРєСѓ!"
+	IDS_USER_NOT_ADMIN "Р’С‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј РґР»СЏ Р·Р°РїСѓСЃРєР° ""РњРµРЅРµРґР¶РµСЂР° РїСЂРёР»РѕР¶РµРЅРёР№ ReactOS""!"
+	IDS_APP_REG_REMOVE "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ РґР°РЅРЅС‹Рµ РѕР± СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅРѕР№ РїСЂРѕРіСЂР°РјРјРµ РёР· СЂРµРµСЃС‚СЂР°?"
+	IDS_INFORMATION "РРЅС„РѕСЂРјР°С†РёСЏ"
+	IDS_UNABLE_TO_REMOVE "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ РґР°РЅРЅС‹Рµ Рѕ РїСЂРѕРіСЂР°РјРјРµ РёР· СЂРµРµСЃС‚СЂР°!"
 END
