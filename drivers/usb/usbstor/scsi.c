@@ -110,12 +110,34 @@ USBSTOR_CSWCompletionRoutine(
     //
     Context = (PIRP_CONTEXT)Ctx;
 
+    //
+    // is there a mdl
+    //
     if (Context->TransferBufferMDL)
     {
         //
-        // free mdl
+        // is there an irp associated
         //
-        IoFreeMdl(Context->TransferBufferMDL);
+        if (Context->Irp)
+        {
+            //
+            // did we allocate the mdl
+            //
+            if (Context->TransferBufferMDL != Context->Irp->MdlAddress)
+            {
+                //
+                // free mdl
+                //
+                IoFreeMdl(Context->TransferBufferMDL);
+            }
+        }
+        else
+        {
+            //
+            // free mdl
+            //
+            IoFreeMdl(Context->TransferBufferMDL);
+        }
     }
 
     if (Context->Irp)
@@ -318,7 +340,6 @@ USBSTOR_CBWCompletionRoutine(
     //
     Context = (PIRP_CONTEXT)Ctx;
 
-
     //
     // get next stack location
     //
@@ -461,15 +482,46 @@ USBSTOR_SendRequest(
     if (Context->TransferDataLength)
     {
         //
-        // allocate mdl for buffer, buffer must be allocated from NonPagedPool
+        // check if the original request already does not have an mdl associated
         //
-        Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, Context->TransferDataLength, FALSE, FALSE, NULL);
-        if (!Context->TransferBufferMDL)
+        if (OriginalRequest)
+        {
+            if (OriginalRequest->MdlAddress != NULL && Context->TransferData == NULL)
+            {
+                //
+                // I/O paging request
+                //
+                Context->TransferBufferMDL = OriginalRequest->MdlAddress;
+            }
+            else
+            {
+                //
+                // allocate mdl for buffer, buffer must be allocated from NonPagedPool
+                //
+                Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, Context->TransferDataLength, FALSE, FALSE, NULL);
+                if (!Context->TransferBufferMDL)
+                {
+                    //
+                    // failed to allocate MDL
+                    //
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+            }
+        }
+        else
         {
             //
-            // failed to allocate MDL
+            // allocate mdl for buffer, buffer must be allocated from NonPagedPool
             //
-            return STATUS_INSUFFICIENT_RESOURCES;
+            Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, Context->TransferDataLength, FALSE, FALSE, NULL);
+            if (!Context->TransferBufferMDL)
+            {
+                //
+                // failed to allocate MDL
+                //
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
         }
 
         //
@@ -656,8 +708,26 @@ USBSTOR_SendModeSenseCmd(
     PCDB pCDB;
     PUFI_MODE_PARAMETER_HEADER Header;
 
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get request block
+    //
+    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+
+    RtlZeroMemory(Request->DataBuffer, Request->DataTransferLength);
+    Request->SrbStatus = SRB_STATUS_SUCCESS;
+    Irp->IoStatus.Information = Request->DataTransferLength;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
 
 #if 0
     //
@@ -808,6 +878,7 @@ USBSTOR_SendReadCmd(
     ULONG BlockCount;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
+    PVOID Buffer;
 
     //
     // get current stack location
@@ -830,10 +901,9 @@ USBSTOR_SendReadCmd(
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
-    // FIXME: support more logical blocks
+    // informal debug print
     //
-    DPRINT1("Request->DataTransferLength %x, PDODeviceExtension->BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
-    ASSERT(Request->DataTransferLength == PDODeviceExtension->BlockLength);
+    DPRINT1("USBSTOR_SendReadCmd DataTransferLength %x, BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
 
     //
     // block count
@@ -855,7 +925,7 @@ USBSTOR_SendReadCmd(
     //
     // send request
     //
-    return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
+	return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
 }
 
 NTSTATUS
