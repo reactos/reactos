@@ -507,6 +507,10 @@ USBSTOR_SendRequest(
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
 
+                //
+                // build mdl for nonpaged pool
+                //
+                MmBuildMdlForNonPagedPool(Context->TransferBufferMDL);
             }
         }
         else
@@ -522,12 +526,12 @@ USBSTOR_SendRequest(
                 //
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-        }
 
-        //
-        // build mdl for nonpaged pool
-        //
-        MmBuildMdlForNonPagedPool(Context->TransferBufferMDL);
+            //
+            // build mdl for nonpaged pool
+            //
+            MmBuildMdlForNonPagedPool(Context->TransferBufferMDL);
+        }
     }
 
     //
@@ -917,10 +921,12 @@ USBSTOR_SendReadCmd(
     Cmd.Code = SCSIOP_READ;
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
     Cmd.ContiguousLogicBlocks = _byteswap_ushort(BlockCount);
+    Cmd.LogicalBlockByte0 = pCDB->CDB10.LogicalBlockByte0;
+    Cmd.LogicalBlockByte1 = pCDB->CDB10.LogicalBlockByte1;
+    Cmd.LogicalBlockByte2 = pCDB->CDB10.LogicalBlockByte2;
+    Cmd.LogicalBlockByte3 = pCDB->CDB10.LogicalBlockByte3;
 
-    RtlCopyMemory(&Cmd.LogicalBlockAddress, pCDB->READ12.LogicalBlock, sizeof(UCHAR) * 4);
-
-    DPRINT1("BlockAddress %lu BlockCount %lu BlockLength %lu\n", NTOHL(Cmd.LogicalBlockAddress), BlockCount, PDODeviceExtension->BlockLength);
+    DPRINT1("BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
 
     //
     // send request

@@ -151,7 +151,10 @@ typedef struct
 {
     UCHAR Code;                                                      // operation code
     UCHAR LUN;                                                       // lun
-    ULONG LogicalBlockAddress;                                       // logical block address
+    UCHAR LogicalBlockByte0;                                         // lba byte 0
+    UCHAR LogicalBlockByte1;                                         // lba byte 1
+    UCHAR LogicalBlockByte2;                                         // lba byte 2
+    UCHAR LogicalBlockByte3;                                         // lba byte 3
     UCHAR Reserved;                                                  // reserved 0x00
     USHORT ContiguousLogicBlocks;                                    // num of contiguous logical blocks
     UCHAR Reserved1[3];                                              // reserved 0x00
