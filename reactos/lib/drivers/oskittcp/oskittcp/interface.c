@@ -129,9 +129,10 @@ int OskitTCPSocket( void *context,
 		    int proto )
 {
     struct socket *so;
+    int error ;
 
     OSKLock();
-    int error = socreate(domain, &so, type, proto);
+    error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
     InitializeSocketFlags(so);

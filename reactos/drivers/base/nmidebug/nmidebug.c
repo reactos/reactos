@@ -21,7 +21,14 @@ NmiClearFlag(VOID)
 {
     ((PCHAR)&KiBugCheckData[4])[0] -= (NmiBegin[3] | NmiBegin[7]);
     ((PCHAR)&KiBugCheckData[4])[3] |= 1;
+#ifdef _MSC_VER
+    __asm
+    {
+        rcr KiBugCheckData[4], 8
+    }
+#else
     __asm__("rcrl %b[shift], %k[retval]" : [retval] "=rm" (KiBugCheckData[4]) : "[retval]" (KiBugCheckData[4]), [shift] "Nc" (8));
+#endif
 }
 
 BOOLEAN

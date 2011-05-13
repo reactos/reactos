@@ -368,6 +368,8 @@ PdoDispatchPnp(
     PIO_STACK_LOCATION Stack;
     ULONG_PTR Information = Irp->IoStatus.Information;
     NTSTATUS Status = Irp->IoStatus.Status;
+    PDEVICE_CAPABILITIES DeviceCapabilities;
+    ULONG i;
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     MinorFunction = Stack->MinorFunction;
@@ -513,8 +515,6 @@ PdoDispatchPnp(
         case IRP_MN_QUERY_CAPABILITIES:
         {
             DPRINT("Ehci: PDO Query Capabilities\n");
-            PDEVICE_CAPABILITIES DeviceCapabilities;
-            ULONG i;
 
             DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
 

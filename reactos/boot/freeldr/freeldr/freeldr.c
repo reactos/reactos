@@ -54,6 +54,17 @@ VOID BootMain(LPSTR CmdLine)
 	RunLoader();
 }
 
+#ifdef _MSC_VER
+long _ftol2(double f)
+{
+    return _ftol(f);
+}
+long _ftol2_sse(double f)
+{
+    return _ftol(f);
+}
+#endif
+
 // We need to emulate these, because the original ones don't work in freeldr
 int __cdecl wctomb(char *mbchar, wchar_t wchar)
 {

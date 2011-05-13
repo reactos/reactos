@@ -67,6 +67,8 @@ AcpiOsRemoveInterruptHandler (
 ACPI_STATUS
 AcpiOsInitialize (void)
 {
+    UINT32 i;
+
     DPRINT("AcpiOsInitialize called\n");
 
 #ifndef NDEBUG
@@ -74,8 +76,6 @@ AcpiOsInitialize (void)
     AcpiDbgLevel = 0x00FFFFFF;
     AcpiDbgLayer = 0xFFFFFFFF;
 #endif
-
-    UINT32 i;
 
     for (i = 0; i < NUM_SEMAPHORES; i++)
     {
@@ -209,10 +209,11 @@ void *
 AcpiOsAcquireObject (
     ACPI_CACHE_T            *Cache)
 {
+    void* ptr;
 	PNPAGED_LOOKASIDE_LIST List = (PNPAGED_LOOKASIDE_LIST)Cache;
+
     DPRINT("AcpiOsAcquireObject from %p\n", Cache);
-    void* ptr = 
-        ExAllocateFromNPagedLookasideList(List);
+    ptr = ExAllocateFromNPagedLookasideList(List);
     ASSERT(ptr);
 
 	RtlZeroMemory(ptr,List->L.Size);
@@ -692,8 +693,10 @@ AcpiOsExecute (
 UINT64
 AcpiOsGetTimer (void)
 {
-    DPRINT("AcpiOsGetTimer\n");
     LARGE_INTEGER Timer;
+
+    DPRINT("AcpiOsGetTimer\n");
+    
     KeQueryTickCount(&Timer);
 
     return Timer.QuadPart;
@@ -758,9 +761,10 @@ ACPI_PHYSICAL_ADDRESS
 AcpiOsGetRootPointer (
     void)
 {
-    DPRINT("AcpiOsGetRootPointer\n");
     ACPI_PHYSICAL_ADDRESS pa = 0;
 
+    DPRINT("AcpiOsGetRootPointer\n");
+    
     AcpiFindRootPointer(&pa);
     return pa;
 }
