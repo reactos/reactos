@@ -2050,7 +2050,6 @@ NtUserGetMenuItemRect(
    UINT uItem,
    PRECTL lprcItem)
 {
-   ROSMENUINFO mi;
    PWND ReferenceWnd;
    LONG XMove, YMove;
    RECTL Rect;
@@ -2074,15 +2073,12 @@ NtUserGetMenuItemRect(
 
    if(!hWnd)
    {
-      if(!UserMenuInfo(Menu, &mi, FALSE))
-         RETURN( FALSE);
-      if(mi.Wnd == 0)
-         RETURN( FALSE);
+       hWnd = Menu->MenuInfo.Wnd;
    }
 
    if (lprcItem == NULL) RETURN( FALSE);
 
-   if (!(ReferenceWnd = UserGetWindowObject(mi.Wnd))) RETURN( FALSE);
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
 
    if(MenuItem->fType & MF_POPUP)
    {
