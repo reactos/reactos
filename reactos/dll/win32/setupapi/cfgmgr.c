@@ -595,8 +595,9 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpParentDevInst;
     CONFIGRET ret = CR_SUCCESS;
+    WCHAR szLocalDeviceID[MAX_DEVICE_ID_LEN];
 
-    FIXME("%p %s %p %lx %p\n",
+    TRACE("%p %s %p %lx %p\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
@@ -605,7 +606,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     if (pdnDevInst == NULL)
         return CR_INVALID_POINTER;
 
-    if (pDeviceID == NULL || wcslen(pDeviceID) == 0)
+    if (pDeviceID == NULL || wcslen(pDeviceID) == 0 || wcslen(pDeviceID) >= MAX_DEVICE_ID_LEN)
         return CR_INVALID_DEVICE_ID;
 
     if (dnParent == 0)
@@ -634,10 +635,12 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     if (lpParentDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
+    wcscpy(szLocalDeviceID, pDeviceID);
+
     RpcTryExcept
     {
         ret = PNP_CreateDevInst(BindingHandle,
-                                pDeviceID,
+                                szLocalDeviceID,
                                 lpParentDevInst,
                                 MAX_DEVICE_ID_LEN,
                                 ulFlags);
