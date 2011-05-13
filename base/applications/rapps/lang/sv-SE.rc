@@ -21,9 +21,9 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",  ID_INSTALL
 		MENUITEM "&Avinstallera",ID_UNINSTALL
-		MENUITEM "&�\x84ndra",   ID_MODIFY
+		MENUITEM "&Ändra",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort frĺn Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",  ID_REFRESH
 	END
@@ -38,8 +38,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&�ppna l�nk i webl�sare", ID_OPEN_LINK
-		MENUITEM "&Kopiera l�nk till urklipp", ID_COPY_LINK
+		MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
+		MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
 	END
 END
 
@@ -49,9 +49,9 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",   ID_INSTALL
 		MENUITEM "&Avinstallera", ID_UNINSTALL
-		MENUITEM "&�ndra",    ID_MODIFY
+		MENUITEM "&Ändra",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+		MENUITEM "&Ta bort frĺn Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Uppdatera",   ID_REFRESH
 	END
@@ -62,9 +62,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inställningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Allm�nna", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Spara f�nsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Uppdatera listan med tillg�ngliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	GROUPBOX "Allmänna", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Spara fönsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
 	AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Nerladding", -1, 4, 65, 240, 51
@@ -85,7 +85,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Installera från disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Installera frĺn disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
 	AUTORADIOBUTTON "&Ladda ner och installera", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -186,8 +186,8 @@ BEGIN
 	IDS_UNINSTALL "Avinstallera"
 	IDS_MODIFY "Ändra"
 	IDS_APPS_COUNT "Programantal: %d"
-	IDS_WELCOME_TITLE "V�lkommen till ReactOS programhanterare!\n\n"
-	IDS_WELCOME_TEXT "V�lj en kategori till v�nster, och sedan ett program f�r att installera eller avinstallera.\nReactOS Web sida: "
+	IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
+	IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installerat"
 	IDS_AVAILABLEFORINST "Tillgängliga for installation"
@@ -195,8 +195,8 @@ BEGIN
 	IDS_APPLICATIONS "Program"
 	IDS_CHOOSE_FOLDER_TEXT "Välj en mapp som kommer att användas för nerladdning av program:"
 	IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
-	IDS_USER_NOT_ADMIN "Du måste vara administratör för att starta ""ReactOS programhanterare""!"
-	IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
+	IDS_USER_NOT_ADMIN "Du mĺste vara administratör för att starta ""ReactOS programhanterare""!"
+	IDS_APP_REG_REMOVE "Är du säker pĺ att du vill ta bort data det installerade programmets data frĺn registret?"
 	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
+	IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data frĺn registret!"
 END
