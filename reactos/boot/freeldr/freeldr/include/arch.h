@@ -17,7 +17,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef __ASM__
 #pragma once
+#endif
+
+#ifndef HEX
+#define HEX(y) 0x##y
+#endif
 
 #ifdef _M_AMD64
 #include <arch/amd64/amd64.h>
@@ -25,18 +31,18 @@
 
 #if defined (_M_IX86)
 /* Defines needed for switching between real and protected mode */
-#define NULL_DESC	0x00	/* NULL descriptor */
-#define PMODE_CS	0x08	/* PMode code selector, base 0 limit 4g */
-#define PMODE_DS	0x10	/* PMode data selector, base 0 limit 4g */
-#define RMODE_CS	0x18	/* RMode code selector, base 0 limit 64k */
-#define RMODE_DS	0x20	/* RMode data selector, base 0 limit 64k */
+#define NULL_DESC	HEX(00)	/* NULL descriptor */
+#define PMODE_CS	HEX(08)	/* PMode code selector, base 0 limit 4g */
+#define PMODE_DS	HEX(10)	/* PMode data selector, base 0 limit 4g */
+#define RMODE_CS	HEX(18)	/* RMode code selector, base 0 limit 64k */
+#define RMODE_DS	HEX(20)	/* RMode data selector, base 0 limit 64k */
 #endif
 
-#define CR0_PE_SET	0x00000001	/* OR this value with CR0 to enable pmode */
-#define CR0_PE_CLR	0xFFFFFFFE	/* AND this value with CR0 to disable pmode */
+#define CR0_PE_SET	HEX(00000001)	/* OR this value with CR0 to enable pmode */
+#define CR0_PE_CLR	HEX(FFFFFFFE)	/* AND this value with CR0 to disable pmode */
 
-#define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
-#define STACK32ADDR	0x78000	/* The 32-bit stack top will be at 7000:8000, or 0x78000 */
+#define STACK16ADDR	HEX(7000)	/* The 16-bit stack top will be at 0000:7000 */
+#define STACK32ADDR	HEX(78000)	/* The 32-bit stack top will be at 7000:8000, or 0x78000 */
 
 #if defined (_M_IX86) || defined (_M_AMD64)
 #define BIOSCALLBUFFER		0x78000	/* Buffer to store temporary data for any Int386() call */
@@ -59,21 +65,21 @@ extern ULONG gDiskReadBuffer, gFileSysBuffer;
 
 
 // Flag Masks
-#define I386FLAG_CF		0x0001		// Carry Flag
-#define I386FLAG_RESV1	0x0002		// Reserved - Must be 1
-#define I386FLAG_PF		0x0004		// Parity Flag
-#define I386FLAG_RESV2	0x0008		// Reserved - Must be 0
-#define I386FLAG_AF		0x0010		// Auxiliary Flag
-#define I386FLAG_RESV3	0x0020		// Reserved - Must be 0
-#define I386FLAG_ZF		0x0040		// Zero Flag
-#define I386FLAG_SF		0x0080		// Sign Flag
-#define I386FLAG_TF		0x0100		// Trap Flag (Single Step)
-#define I386FLAG_IF		0x0200		// Interrupt Flag
-#define I386FLAG_DF		0x0400		// Direction Flag
-#define I386FLAG_OF		0x0800		// Overflow Flag
+#define I386FLAG_CF		HEX(0001)		// Carry Flag
+#define I386FLAG_RESV1	HEX(0002)		// Reserved - Must be 1
+#define I386FLAG_PF		HEX(0004)		// Parity Flag
+#define I386FLAG_RESV2	HEX(0008)		// Reserved - Must be 0
+#define I386FLAG_AF		HEX(0010)		// Auxiliary Flag
+#define I386FLAG_RESV3	HEX(0020)		// Reserved - Must be 0
+#define I386FLAG_ZF		HEX(0040)		// Zero Flag
+#define I386FLAG_SF		HEX(0080)		// Sign Flag
+#define I386FLAG_TF		HEX(0100)		// Trap Flag (Single Step)
+#define I386FLAG_IF		HEX(0200)		// Interrupt Flag
+#define I386FLAG_DF		HEX(0400)		// Direction Flag
+#define I386FLAG_OF		HEX(0800)		// Overflow Flag
 
 
-#ifndef ASM
+#ifndef __ASM__
 
 #include <pshpack1.h>
 typedef struct
@@ -172,4 +178,4 @@ VOID	SoftReboot(VOID);					// Implemented in boot.S
 
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
-#endif /* ! ASM */
+#endif /* ! __ASM__ */

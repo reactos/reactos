@@ -16,18 +16,20 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+#ifndef __ASM__
 #pragma once
+#endif
 
 /* Macros. */
 
 /* The magic number for the Multiboot header. */
-#define MULTIBOOT_HEADER_MAGIC          0x1BADB002
+#define MULTIBOOT_HEADER_MAGIC          HEX(1BADB002)
 
 /* The flags for the Multiboot header. */
-#define MULTIBOOT_HEADER_FLAGS          0x00010003
+#define MULTIBOOT_HEADER_FLAGS          HEX(00010003)
 
 /* The magic number passed by a Multiboot-compliant boot loader. */
-#define MULTIBOOT_BOOTLOADER_MAGIC      0x2BADB002
+#define MULTIBOOT_BOOTLOADER_MAGIC      HEX(2BADB002)
 
 /* The size of our stack (16KB). */
 #define STACK_SIZE                      0x4000
@@ -39,20 +41,20 @@
 # define EXT_C(sym)                     sym
 #endif
 
-#define MB_INFO_FLAG_MEM_SIZE			0x00000001
-#define MB_INFO_FLAG_BOOT_DEVICE		0x00000002
-#define MB_INFO_FLAG_COMMAND_LINE		0x00000004
-#define MB_INFO_FLAG_MODULES			0x00000008
-#define MB_INFO_FLAG_AOUT_SYMS			0x00000010
-#define MB_INFO_FLAG_ELF_SYMS			0x00000020
-#define MB_INFO_FLAG_MEMORY_MAP			0x00000040
-#define MB_INFO_FLAG_DRIVES				0x00000080
-#define MB_INFO_FLAG_CONFIG_TABLE		0x00000100
-#define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
-#define MB_INFO_FLAG_APM_TABLE			0x00000400
-#define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
+#define MB_INFO_FLAG_MEM_SIZE			HEX(00000001)
+#define MB_INFO_FLAG_BOOT_DEVICE		HEX(00000002)
+#define MB_INFO_FLAG_COMMAND_LINE		HEX(00000004)
+#define MB_INFO_FLAG_MODULES			HEX(00000008)
+#define MB_INFO_FLAG_AOUT_SYMS			HEX(00000010)
+#define MB_INFO_FLAG_ELF_SYMS			HEX(00000020)
+#define MB_INFO_FLAG_MEMORY_MAP			HEX(00000040)
+#define MB_INFO_FLAG_DRIVES				HEX(00000080)
+#define MB_INFO_FLAG_CONFIG_TABLE		HEX(00000100)
+#define MB_INFO_FLAG_BOOT_LOADER_NAME	HEX(00000200)
+#define MB_INFO_FLAG_APM_TABLE			HEX(00000400)
+#define MB_INFO_FLAG_GRAPHICS_TABLE		HEX(00000800)
 
-#ifndef ASM
+#ifndef __ASM__
 /* Do not include here in boot.S. */
 
 /* Types. */
@@ -101,4 +103,4 @@ typedef struct memory_map
   unsigned long reserved;
 } memory_map_t;
 
-#endif /* ! ASM */
+#endif /* ! __ASM__ */
