@@ -332,6 +332,8 @@ USBSTOR_CBWCompletionRoutine(
 {
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
+    UCHAR Code;
+    USBD_PIPE_HANDLE PipeHandle;
 
     DPRINT1("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
 
@@ -351,12 +353,31 @@ USBSTOR_CBWCompletionRoutine(
     if (Context->TransferDataLength)
     {
         //
+        // get command code
+        //
+        Code = Context->cbw->CommandBlock[0];
+
+        if (Code == SCSIOP_WRITE)
+        {
+            //
+            // write request use bulk out pipe
+            // 
+            PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle;
+        }
+        else
+        {
+            //
+            // default bulk in pipe
+            //
+            PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
+        }
+
+        //
         // now initialize the urb for sending data
         //
-
         UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
                                                sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
-                                               Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                               PipeHandle,
                                                NULL,
                                                Context->TransferBufferMDL,
                                                Context->TransferDataLength,
@@ -871,11 +892,11 @@ USBSTOR_SendModeSenseCmd(
 }
 
 NTSTATUS
-USBSTOR_SendReadCmd(
+USBSTOR_SendReadWriteCmd(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UFI_READ_CMD Cmd;
+    UFI_READ_WRITE_CMD Cmd;
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PCDB pCDB;
@@ -907,7 +928,12 @@ USBSTOR_SendReadCmd(
     //
     // informal debug print
     //
-    DPRINT1("USBSTOR_SendReadCmd DataTransferLength %x, BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
+    DPRINT1("USBSTOR_SendReadWriteCmd DataTransferLength %x, BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
+
+    //
+    // sanity check
+    //
+    ASSERT(PDODeviceExtension->BlockLength);
 
     //
     // block count
@@ -917,8 +943,8 @@ USBSTOR_SendReadCmd(
     //
     // initialize read cmd
     //
-    RtlZeroMemory(&Cmd, sizeof(UFI_READ_CMD));
-    Cmd.Code = SCSIOP_READ;
+    RtlZeroMemory(&Cmd, sizeof(UFI_READ_WRITE_CMD));
+    Cmd.Code = pCDB->AsByte[0];
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
     Cmd.ContiguousLogicBlocks = _byteswap_ushort(BlockCount);
     Cmd.LogicalBlockByte0 = pCDB->CDB10.LogicalBlockByte0;
@@ -931,7 +957,7 @@ USBSTOR_SendReadCmd(
     //
     // send request
     //
-	return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
+	return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_WRITE_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
 }
 
 NTSTATUS

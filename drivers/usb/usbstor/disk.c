@@ -50,14 +50,14 @@ USBSTOR_HandleExecuteSCSI(
         //
         Status = USBSTOR_SendModeSenseCmd(DeviceObject, Irp);
     }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ)
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ /*||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE*/)
     {
-        DPRINT1("SCSIOP_READ DataTransferLength %lu\n", Request->DataTransferLength);
+        DPRINT1("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
 
         //
-        // send read command
+        // send read / write command
         //
-        Status = USBSTOR_SendReadCmd(DeviceObject, Irp);
+        Status = USBSTOR_SendReadWriteCmd(DeviceObject, Irp);
     }
     else if (pCDB->AsByte[0] == SCSIOP_MEDIUM_REMOVAL)
     {

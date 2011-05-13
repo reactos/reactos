@@ -158,11 +158,11 @@ typedef struct
     UCHAR Reserved;                                                  // reserved 0x00
     USHORT ContiguousLogicBlocks;                                    // num of contiguous logical blocks
     UCHAR Reserved1[3];                                              // reserved 0x00
-}UFI_READ_CMD;
+}UFI_READ_WRITE_CMD;
 
-C_ASSERT(sizeof(UFI_READ_CMD) == 12);
+C_ASSERT(sizeof(UFI_READ_WRITE_CMD) == 12);
 
-#define UFI_READ_CMD_LEN (0xA)
+#define UFI_READ_WRITE_CMD_LEN (0xA)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -375,7 +375,7 @@ USBSTOR_SendModeSenseCmd(
     IN PIRP Irp);
 
 NTSTATUS
-USBSTOR_SendReadCmd(
+USBSTOR_SendReadWriteCmd(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
