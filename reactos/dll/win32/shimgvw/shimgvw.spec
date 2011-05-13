@@ -7,8 +7,8 @@
 @ stdcall ImageView_PrintToW(ptr ptr wstr long)
 @ stdcall imageview_fullscreenW(ptr ptr wstr long) ImageView_FullscreenW
 @ stub ConvertDIBSECTIONToThumbnail
-@ stub DllCanUnloadNow
-@ stub DllGetClassObject
-@ stub DllInstall
-@ stub DllRegisterServer
-@ stub DllUnregisterServer
+@ stub -private DllCanUnloadNow
+@ stub -private DllGetClassObject
+@ stub -private DllInstall
+@ stub -private DllRegisterServer
+@ stub -private DllUnregisterServer

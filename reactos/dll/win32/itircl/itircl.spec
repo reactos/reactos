@@ -1,4 +1,4 @@
 @ stdcall -private DllCanUnloadNow()
-@ stub DllGetClassObject
+@ stub -private DllGetClassObject
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()

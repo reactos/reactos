@@ -1,4 +1,4 @@
 # deskmon.dll exports
 
- 1 stdcall DllCanUnloadNow()
- 2 stdcall DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
