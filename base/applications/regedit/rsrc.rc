@@ -38,7 +38,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-//#include "lang/ja-JP.rc" FIXME: iconv issue
+#include "lang/ja-JP.rc"
 #include "lang/ko-KR.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"

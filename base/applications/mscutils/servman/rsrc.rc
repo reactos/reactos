@@ -28,7 +28,7 @@ IDI_DRIVER      ICON "res/driver.ico"
 #include "lang/fr-FR.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-//#include "lang/ja-JP.rc" FIXME: iconv issue
+#include "lang/ja-JP.rc"
 #include "lang/ko-KR.rc"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
