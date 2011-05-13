@@ -497,7 +497,7 @@
 @ cdecl -arch=i386 _CIsqrt() msvcrt._CIsqrt
 @ cdecl -arch=i386 _CItan() msvcrt._CItan
 @ cdecl -arch=i386 _CItanh() msvcrt._CItanh
-@ cdecl _CxxThrowException(long long) msvcrt._CxxThrowException
+@ stdcall _CxxThrowException(long long) msvcrt._CxxThrowException
 @ cdecl -i386 _EH_prolog() msvcrt._EH_prolog
 @ extern _HUGE msvcrt._HUGE
 @ cdecl _XcptFilter(long ptr) msvcrt._XcptFilter

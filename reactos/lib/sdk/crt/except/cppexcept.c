@@ -490,7 +490,7 @@ int CDECL __CppXcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
 /*********************************************************************
  *		_CxxThrowException (MSVCRT.@)
  */
-void CDECL _CxxThrowException( exception *object, const cxx_exception_type *type )
+void WINAPI _CxxThrowException( exception *object, const cxx_exception_type *type )
 {
     ULONG_PTR args[3];
 
