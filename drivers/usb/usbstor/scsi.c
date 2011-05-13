@@ -258,19 +258,20 @@ USBSTOR_DataCompletionRoutine(
     //
     // get next stack location
     //
+
     IoStack = IoGetNextIrpStackLocation(Irp);
 
     //
     // now initialize the urb for sending the csw
     //
-    Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Length = sizeof(URB);
-    Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
-    Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferBuffer = Context->csw;
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength = 512; //FIXME
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL = NULL;
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK;
-
+    UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
+                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                           Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                           Context->csw,
+                                           NULL,
+                                           512, //FIXME
+                                           USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                                           NULL);
 
     //
     // initialize stack location
@@ -291,6 +292,7 @@ USBSTOR_DataCompletionRoutine(
     // call driver
     //
     IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -330,12 +332,15 @@ USBSTOR_CBWCompletionRoutine(
         //
         // now initialize the urb for sending data
         //
-        Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Length = sizeof(URB);
-        Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
-        Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL = Context->TransferBufferMDL;
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength = Context->TransferDataLength;
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK;
+
+        UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
+                                               sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                               Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                               NULL,
+                                               Context->TransferBufferMDL,
+                                               Context->TransferDataLength,
+                                               USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                                               NULL);
 
         //
         // setup completion routine
@@ -347,12 +352,15 @@ USBSTOR_CBWCompletionRoutine(
         //
         // now initialize the urb for sending the csw
         //
-        Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Length = sizeof(URB);
-        Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
-        Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferBuffer = Context->csw;
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength = 512; //FIXME
-        Context->Urb.UrbBulkOrInterruptTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK;
+
+        UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
+                                               sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                               Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                               Context->csw,
+                                               NULL,
+                                               512, //FIXME
+                                               USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
+                                               NULL);
 
         //
         // setup completion routine
@@ -373,6 +381,7 @@ USBSTOR_CBWCompletionRoutine(
     // call driver
     //
     IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
+
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -427,12 +436,14 @@ USBSTOR_SendRequest(
     //
     // now initialize the urb
     //
-    Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Length = sizeof(URB);
-    Context->Urb.UrbBulkOrInterruptTransfer.Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
-    Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle = FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle;
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferBuffer = (PVOID)Context->cbw;
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength = sizeof(CBW);
-    Context->Urb.UrbBulkOrInterruptTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_OUT | USBD_SHORT_TRANSFER_OK;
+    UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
+                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
+                                           FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle,
+                                           Context->cbw,
+                                           NULL,
+                                           sizeof(CBW),
+                                           USBD_TRANSFER_DIRECTION_OUT | USBD_SHORT_TRANSFER_OK,
+                                           NULL);
 
     //
     // initialize rest of context
@@ -477,7 +488,6 @@ USBSTOR_SendRequest(
         FreeItem(Context);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
 
     //
     // get next stack location
@@ -822,6 +832,7 @@ USBSTOR_SendReadCmd(
     //
     // FIXME: support more logical blocks
     //
+    DPRINT1("Request->DataTransferLength %x, PDODeviceExtension->BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
     ASSERT(Request->DataTransferLength == PDODeviceExtension->BlockLength);
 
     //

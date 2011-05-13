@@ -124,6 +124,7 @@ USBSTOR_FdoHandleStartDevice(
     IN PFDO_DEVICE_EXTENSION DeviceExtension,
     IN OUT PIRP Irp)
 {
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDesc;
     NTSTATUS Status;
     UCHAR Index = 0;
 
@@ -157,6 +158,18 @@ USBSTOR_FdoHandleStartDevice(
     // dump device descriptor
     //
     USBSTOR_DumpDeviceDescriptor(DeviceExtension->DeviceDescriptor);
+
+    //
+    // Check that this device uses bulk transfers and is SCSI
+    //
+    InterfaceDesc = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)DeviceExtension->ConfigurationDescriptor + sizeof(USB_CONFIGURATION_DESCRIPTOR));
+    DPRINT1("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
+    if (InterfaceDesc->bInterfaceProtocol != 0x50)
+    {
+        DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    
 
     //
     // now select an interface
@@ -290,6 +303,7 @@ USBSTOR_FdoHandlePnp(
            //
            // just forward irp to lower device
            //
+           //IoSkipCurrentIrpStackLocation(Irp);
            Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
            break;
        }

@@ -60,13 +60,15 @@ USBSTOR_GetDescriptor(
     //
     // initialize urb
     //
-    Urb->UrbHeader.Function = URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE;
-    Urb->UrbHeader.Length = sizeof(URB);
-    Urb->UrbControlDescriptorRequest.DescriptorType = DescriptorType;
-    Urb->UrbControlDescriptorRequest.TransferBuffer = Descriptor;
-    Urb->UrbControlDescriptorRequest.TransferBufferLength = DescriptorLength;
-    Urb->UrbControlDescriptorRequest.Index = DescriptorIndex;
-    Urb->UrbControlDescriptorRequest.LanguageId = LanguageId;
+    UsbBuildGetDescriptorRequest(Urb,
+                                 sizeof(Urb->UrbControlDescriptorRequest),
+                                 DescriptorType,
+                                 DescriptorIndex,
+                                 LanguageId,
+                                 Descriptor,
+                                 NULL,
+                                 DescriptorLength,
+                                 NULL);
 
     //
     // submit urb
