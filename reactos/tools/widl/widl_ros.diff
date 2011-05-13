@@ -12,6 +12,25 @@ diff -u wine-1.3.4/tools/widl/hash.c tools/widl/hash.c
  
  #include "widltypes.h"
  #include "hash.h"
+diff -u wine-1.3.4/tools/widl/header.c tools/widl/header.c
+--- wine-1.3.4/tools/widl/header.c	2010-09-19 17:48:47.640625000 +0200
++++ tools/widl/header.c	2010-10-26 18:30:19.000000000 +0200
+@@ -1081,15 +1081,7 @@
+ {
+   unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
+   const char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
+-  static int allocate_written = 0;
+ 
+-  if (!allocate_written)
+-  {
+-    allocate_written = 1;
+-    fprintf(header, "void * __RPC_USER MIDL_user_allocate(SIZE_T);\n");
+-    fprintf(header, "void __RPC_USER MIDL_user_free(void *);\n\n");
+-  }
+-
+   fprintf(header, "/*****************************************************************************\n");
+   fprintf(header, " * %s interface (v%d.%d)\n", iface->name, MAJORVERSION(ver), MINORVERSION(ver));
+   fprintf(header, " */\n");
 diff -u wine-1.3.4/tools/widl/parser.y tools/widl/parser.y
 --- wine-1.3.4/tools/widl/parser.y	2010-09-19 17:49:40.578125000 +0200
 +++ tools/widl/parser.y	2010-10-03 16:44:18.781250000 +0200
