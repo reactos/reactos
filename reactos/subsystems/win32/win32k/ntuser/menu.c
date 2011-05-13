@@ -1864,8 +1864,8 @@ NtUserGetMenuBarInfo(
                 }
               Rect.left = Offset.x;
               Rect.right = Offset.x + MenuObject->MenuInfo.Width;
-              Rect.top = Offset.y;
-              Rect.bottom = Offset.y + MenuObject->MenuInfo.Height;
+              Rect.bottom = Offset.y;
+              Rect.top = Offset.y - MenuObject->MenuInfo.Height;
               kmbi.rcBar = Rect;
               DPRINT("Rect top = %d bottom = %d left = %d right = %d \n",
                        Rect.top, Rect.bottom, Rect.left, Rect.right);
