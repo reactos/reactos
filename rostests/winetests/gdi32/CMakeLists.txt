@@ -22,4 +22,4 @@ list(APPEND SOURCE
 add_executable(gdi32_winetest ${SOURCE})
 set_module_type(gdi32_winetest win32cui)
 add_importlibs(gdi32_winetest gdi32 user32 advapi32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET gdi32_winetest DESTINATION reactos/bin)
+add_cd_file(TARGET gdi32_winetest DESTINATION reactos/bin FOR all)

@@ -24,4 +24,4 @@ list(APPEND SOURCE
 add_executable(msvcrt_winetest ${SOURCE})
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest msvcrt kernel32 ntdll)
-add_cd_file(TARGET msvcrt_winetest DESTINATION reactos/bin)
+add_cd_file(TARGET msvcrt_winetest DESTINATION reactos/bin FOR all)

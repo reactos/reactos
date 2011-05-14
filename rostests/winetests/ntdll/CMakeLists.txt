@@ -28,4 +28,4 @@ list(APPEND SOURCE
 add_executable(ntdll_winetest ${SOURCE})
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET ntdll_winetest DESTINATION reactos/bin)
+add_cd_file(TARGET ntdll_winetest DESTINATION reactos/bin FOR all)

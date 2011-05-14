@@ -27,4 +27,4 @@ ${SOURCE})
 set_module_type(rosautotest win32cui)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
 
-add_cd_file(TARGET rosautotest DESTINATION reactos/system32)
+add_cd_file(TARGET rosautotest DESTINATION reactos/system32 FOR all)
