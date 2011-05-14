@@ -30,14 +30,14 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Zpìt", EM_UNDO
+    MENUITEM "&ZpÃ¬t", EM_UNDO
     MENUITEM SEPARATOR
     MENUITEM "V&yjmout", WM_CUT
-    MENUITEM "&Kopírovat", WM_COPY
-    MENUITEM "&Vložit", WM_PASTE
+    MENUITEM "&KopÃ­rovat", WM_COPY
+    MENUITEM "&VloÅ¾it", WM_PASTE
     MENUITEM "Od&stranit", WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Vy&brat vše", EM_SETSEL
+    MENUITEM "Vy&brat vÅ¡e", EM_SETSEL
   END
 END
 
@@ -45,12 +45,12 @@ END
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   MENUITEM "&Obnovit", 61728
-  MENUITEM "&Pøesunout", 61456
+  MENUITEM "&PÃ¸esunout", 61456
   MENUITEM "&Velikost", 61440
   MENUITEM "Mi&nimalizovat", 61472
   MENUITEM "Ma&ximalizovat", 61488
   MENUITEM SEPARATOR
-  MENUITEM "&Zavøít\tAlt-F4", 61536
+  MENUITEM "&ZavÃ¸Ã­t\tAlt-F4", 61536
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -63,18 +63,18 @@ BEGIN
   IDS_ERROR,    "Chyba"
   IDS_OK,       "OK"
   IDS_CANCEL,   "Storno"
-  IDS_ABORT,    "&Pøerušit"
+  IDS_ABORT,    "&PÃ¸eruÅ¡it"
   IDS_RETRY,    "&Znovu"
   IDS_IGNORE,   "&Ignorovat"
   IDS_YES,      "&Ano"
   IDS_NO,       "&Ne"
-  IDS_HELP,     "Nápovìda"
+  IDS_HELP,     "NÃ¡povÃ¬da"
   IDS_TRYAGAIN, "Z&kusit znovu"
-  IDS_CONTINUE, "P&okraèovat"
+  IDS_CONTINUE, "P&okraÃ¨ovat"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Více oken..." //kde se toto objevuje?
+  IDS_MDI_MOREWINDOWS, "&VÃ­ce oken..." //kde se toto objevuje?
 END
 

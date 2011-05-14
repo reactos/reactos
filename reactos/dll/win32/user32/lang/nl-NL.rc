@@ -28,7 +28,7 @@ BEGIN
     MENUITEM "&Ongedaan maken", EM_UNDO
     MENUITEM SEPARATOR
     MENUITEM "K&nippen", WM_CUT
-    MENUITEM "&Kopiëren", WM_COPY
+    MENUITEM "&KopiÃ«ren", WM_COPY
     MENUITEM "&Plakken", WM_PASTE
     MENUITEM "&Verwijderen", WM_CLEAR
     MENUITEM SEPARATOR

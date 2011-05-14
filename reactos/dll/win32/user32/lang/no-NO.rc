@@ -45,7 +45,7 @@ SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   MENUITEM "&Gjenopprett", 61728
   MENUITEM "&Flytt", 61456
-  MENUITEM "&Størrelse", 61440
+  MENUITEM "&StÃ¸rrelse", 61440
   MENUITEM "Mi&nimer", 61472
   MENUITEM "&Maksimer", 61488
   MENUITEM SEPARATOR
@@ -68,7 +68,7 @@ BEGIN
   IDS_YES,      "&Ja"
   IDS_NO,       "&Nei"
   IDS_HELP,     "Hjelp"
-  IDS_TRYAGAIN, "&Prøv på nytt"
+  IDS_TRYAGAIN, "&PrÃ¸v pÃ¥ nytt"
   IDS_CONTINUE, "&Fortsett"
 END
 

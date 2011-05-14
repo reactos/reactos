@@ -29,7 +29,7 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Välj fönster"
+CAPTION "VÃ¤lj fÃ¶nster"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -45,7 +45,7 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Ångra", EM_UNDO
+    MENUITEM "&Ã…ngra", EM_UNDO
     MENUITEM SEPARATOR
     MENUITEM "&Klipp ut", WM_CUT
     MENUITEM "K&opiera", WM_COPY
@@ -59,13 +59,13 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Återställ", 61728
+  MENUITEM "&Ã…terstÃ¤ll", 61728
   MENUITEM "&Flytta", 61456
   MENUITEM "S&torlek", 61440
   MENUITEM "&Minimera", 61472
   MENUITEM "Ma&ximera", 61488
   MENUITEM SEPARATOR
-  MENUITEM "&Stäng\tAlt-F4", 61536
+  MENUITEM "&StÃ¤ng\tAlt-F4", 61536
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -79,17 +79,17 @@ BEGIN
   IDS_OK,       "OK"
   IDS_CANCEL,   "Avbryt"
   IDS_ABORT,    "&Avbryt"
-  IDS_RETRY,    "&Försök igen"
+  IDS_RETRY,    "&FÃ¶rsÃ¶k igen"
   IDS_IGNORE,   "&Ignorera"
   IDS_YES,      "&Ja"
   IDS_NO,       "&Nej"
-  IDS_HELP,     "Hjälp"
-  IDS_TRYAGAIN, "&Försök igen"
-  IDS_CONTINUE, "F&ortsätt"
+  IDS_HELP,     "HjÃ¤lp"
+  IDS_TRYAGAIN, "&FÃ¶rsÃ¶k igen"
+  IDS_CONTINUE, "F&ortsÃ¤tt"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Fler fönster..."
+  IDS_MDI_MOREWINDOWS, "&Fler fÃ¶nster..."
 END
 

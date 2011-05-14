@@ -9,11 +9,11 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Выбор окна"
+CAPTION "Р’С‹Р±РѕСЂ РѕРєРЅР°"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&Отмена", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&РћС‚РјРµРЅР°", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -25,27 +25,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Отменить",       EM_UNDO
+    MENUITEM "&РћС‚РјРµРЅРёС‚СЊ",       EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "&Вырезать",       WM_CUT
-    MENUITEM "&Копировать",     WM_COPY
-    MENUITEM "В&ставить",       WM_PASTE
-    MENUITEM "&Удалить",        WM_CLEAR
+    MENUITEM "&Р’С‹СЂРµР·Р°С‚СЊ",       WM_CUT
+    MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ",     WM_COPY
+    MENUITEM "Р’&СЃС‚Р°РІРёС‚СЊ",       WM_PASTE
+    MENUITEM "&РЈРґР°Р»РёС‚СЊ",        WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Выделить &все",   EM_SETSEL
+    MENUITEM "Р’С‹РґРµР»РёС‚СЊ &РІСЃРµ",   EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Востановить",      SC_RESTORE
-  MENUITEM "&Переместить",      SC_MOVE
-  MENUITEM "Р&азмер",           SC_SIZE
-  MENUITEM "&Свернуть",         SC_MINIMIZE
-  MENUITEM "&Развернуть",       SC_MAXIMIZE
+  MENUITEM "&Р’РѕСЃС‚Р°РЅРѕРІРёС‚СЊ",      SC_RESTORE
+  MENUITEM "&РџРµСЂРµРјРµСЃС‚РёС‚СЊ",      SC_MOVE
+  MENUITEM "Р &Р°Р·РјРµСЂ",           SC_SIZE
+  MENUITEM "&РЎРІРµСЂРЅСѓС‚СЊ",         SC_MINIMIZE
+  MENUITEM "&Р Р°Р·РІРµСЂРЅСѓС‚СЊ",       SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Закрыть\tAlt-F4",  SC_CLOSE
+  MENUITEM "&Р—Р°РєСЂС‹С‚СЊ\tAlt-F4",  SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -55,21 +55,21 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_ERROR,    "Ошибка"
+  IDS_ERROR,    "РћС€РёР±РєР°"
   IDS_OK,       "OK"
-  IDS_CANCEL,   "Отмена"
-  IDS_ABORT,    "&Прекратить"
-  IDS_RETRY,    "П&овторить"
-  IDS_IGNORE,   "&Игнорировать"
-  IDS_YES,      "&Да"
-  IDS_NO,       "&Нет"
-  IDS_HELP,     "Справка"
-  IDS_TRYAGAIN, "&Повторить позднее"
-  IDS_CONTINUE, "П&родолжить"
+  IDS_CANCEL,   "РћС‚РјРµРЅР°"
+  IDS_ABORT,    "&РџСЂРµРєСЂР°С‚РёС‚СЊ"
+  IDS_RETRY,    "Рџ&РѕРІС‚РѕСЂРёС‚СЊ"
+  IDS_IGNORE,   "&РРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ"
+  IDS_YES,      "&Р”Р°"
+  IDS_NO,       "&РќРµС‚"
+  IDS_HELP,     "РЎРїСЂР°РІРєР°"
+  IDS_TRYAGAIN, "&РџРѕРІС‚РѕСЂРёС‚СЊ РїРѕР·РґРЅРµРµ"
+  IDS_CONTINUE, "Рџ&СЂРѕРґРѕР»Р¶РёС‚СЊ"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Другие окна..."
+  IDS_MDI_MOREWINDOWS, "&Р”СЂСѓРіРёРµ РѕРєРЅР°..."
 END
 

@@ -17,7 +17,7 @@ CAPTION "Select Window"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&MÈgse", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&M√©gse", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -31,25 +31,25 @@ BEGIN
   BEGIN
     MENUITEM "&Visszavon", EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "K&iv·g·s", WM_CUT
-    MENUITEM "&M·sol", WM_COPY
+    MENUITEM "K&iv√°g√°s", WM_CUT
+    MENUITEM "&M√°sol", WM_COPY
     MENUITEM "&Beilleszt", WM_PASTE
-    MENUITEM "&Tˆrˆl", WM_CLEAR
+    MENUITEM "&T√∂r√∂l", WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Mindet &Kijelˆl", EM_SETSEL
+    MENUITEM "Mindet &Kijel√∂l", EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Vissza ·llÌt", 61728
-  MENUITEM "¡t &helyez", 61456
-  MENUITEM "&MÈret", 61440
-  MENUITEM "&Kis mÈret", 61472
-  MENUITEM "&Nagy mÈret", 61488
+  MENUITEM "&Vissza √°ll√≠t", 61728
+  MENUITEM "√Åt &helyez", 61456
+  MENUITEM "&M√©ret", 61440
+  MENUITEM "&Kis m√©ret", 61472
+  MENUITEM "&Nagy m√©ret", 61488
   MENUITEM SEPARATOR
-  MENUITEM "&Bez·r\tAlt-F4", 61536
+  MENUITEM "&Bez√°r\tAlt-F4", 61536
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,20 +61,20 @@ STRINGTABLE
 BEGIN
   IDS_ERROR,    "Hiba"
   IDS_OK,       "OK"
-  IDS_CANCEL,   "MÈgse"
-  IDS_ABORT,    "&MegszakÌt"
-  IDS_RETRY,    "&⁄jra"
-  IDS_IGNORE,   "&Tov·bb"
+  IDS_CANCEL,   "M√©gse"
+  IDS_ABORT,    "&Megszak√≠t"
+  IDS_RETRY,    "&√öjra"
+  IDS_IGNORE,   "&Tov√°bb"
   IDS_YES,      "&Igen"
   IDS_NO,       "&Nem"
-  IDS_HELP,     "S˙gÛ"
-  IDS_TRYAGAIN, "&⁄jra"
+  IDS_HELP,     "S√∫g√≥"
+  IDS_TRYAGAIN, "&√öjra"
   IDS_CONTINUE, "&Folytat"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Tˆbb ablak..."
+  IDS_MDI_MOREWINDOWS, "&T√∂bb ablak..."
 END
 
 
