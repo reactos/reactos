@@ -18,7 +18,7 @@
 	</module>
 
 	<module name="neteventmsg" type="messageheader">
-		<file>netevent.mc</file>
+		<file>neteventmsg.mc</file>
 	</module>
 
 	<module name="ntiologc" type="messageheader">
