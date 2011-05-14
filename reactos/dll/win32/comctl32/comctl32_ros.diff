@@ -247,3 +247,18 @@ Index: rebar.c
              return 0;
  
  /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
+Index: monthcal.c
+===================================================================
+--- monthcal.c	(Revision 51719)
++++ monthcal.c	(Arbeitskopie)
+@@ -143,8 +143,8 @@
+ /* empty SYSTEMTIME const */
+ static const SYSTEMTIME st_null;
+ /* valid date limits */
+-static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDay = 31 };
+-static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9,  .wDay = 14 };
++static const SYSTEMTIME max_allowed_date = { 9999, 12, 0, 31, 0, 0, 0, 0 };
++static const SYSTEMTIME min_allowed_date = { 1752, 9, 0, 14, 0, 0, 0, 0 };
+
+ /* Prev/Next buttons */
+ enum nav_direction
