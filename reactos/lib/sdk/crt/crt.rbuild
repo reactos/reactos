@@ -6,6 +6,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>chkstk_asm.s</file>
+				<file>chkstk_ms.s</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
