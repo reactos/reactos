@@ -20,32 +20,30 @@ WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 extern HINSTANCE hDllInst;
 
-LRESULT
-ThemeDefWindowProcAW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC defWndProc, BOOL ANSI);
+LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
 
 USERAPIHOOK user32ApiHook;
 BYTE gabDWPmessages[UAHOWP_MAX_SIZE];
+BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
 
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {      
-    return ThemeDefWindowProcAW(hWnd, 
-                                Msg, 
-                                wParam, 
-                                lParam, 
-                                user32ApiHook.DefWindowProcW, 
-                                FALSE);
+    return ThemeWndProc(hWnd, 
+                        Msg, 
+                        wParam, 
+                        lParam, 
+                        user32ApiHook.DefWindowProcW);
 }
 
 static LRESULT CALLBACK
 ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    return ThemeDefWindowProcAW(hWnd, 
-                                Msg, 
-                                wParam, 
-                                lParam, 
-                                user32ApiHook.DefWindowProcA, 
-                                TRUE);
+    return ThemeWndProc(hWnd, 
+                        Msg, 
+                        wParam, 
+                        lParam, 
+                        user32ApiHook.DefWindowProcA);
 }
 
 BOOL CALLBACK 
@@ -64,19 +62,44 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     puah->DefWindowProcW = ThemeDefWindowProcW;
     puah->DefWndProcArray.MsgBitArray  = gabDWPmessages;
     puah->DefWndProcArray.Size = UAHOWP_MAX_SIZE;
+    puah->WndProcArray.MsgBitArray = gabMSGPmessages;
+    puah->WndProcArray.Size = UAHOWP_MAX_SIZE;
 
-    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_CREATE);
-    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_DESTROY);
-    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_THEMECHANGED);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCPAINT);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCACTIVATE);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCMOUSEMOVE);
-    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_MOUSEMOVE);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCMOUSELEAVE);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCHITTEST);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCLBUTTONDOWN);
-    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCLBUTTONDBLCLK);
-    
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCUAHDRAWCAPTION);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCUAHDRAWFRAME);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_SETTEXT);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_WINDOWPOSCHANGED);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_CONTEXTMENU);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_STYLECHANGED);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_SETICON);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCDESTROY);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_SYSCOMMAND);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_CTLCOLORMSGBOX);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_CTLCOLORBTN);
+    UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_CTLCOLORSTATIC);
+
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_CREATE);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_SETTINGCHANGE);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_DRAWITEM);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_MEASUREITEM);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_WINDOWPOSCHANGING);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_WINDOWPOSCHANGED);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_STYLECHANGING);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_STYLECHANGED);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_NCCREATE);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_NCDESTROY);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_NCPAINT);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_MENUCHAR);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_MDISETMENU);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_THEMECHANGED);
+    UAH_HOOK_MESSAGE(puah->WndProcArray, WM_UAHINIT);
+
     return TRUE;
 }
 

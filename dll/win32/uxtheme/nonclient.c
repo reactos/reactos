@@ -25,8 +25,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 
-LRESULT
-ThemeDefWindowProcAW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC defWndProc, BOOL ANSI)
+LRESULT CALLBACK 
+ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc)
 {
     UNIMPLEMENTED;
 
@@ -34,5 +34,5 @@ ThemeDefWindowProcAW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC 
     if(Msg == WM_NCPAINT || Msg == WM_NCACTIVATE)
         return FALSE;
 
-	return defWndProc(hWnd, Msg, wParam, lParam);
+    return DefWndProc(hWnd, Msg, wParam, lParam);
 }
