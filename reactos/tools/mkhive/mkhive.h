@@ -46,8 +46,8 @@
 #define STATUS_INVALID_PARAMETER_2       ((NTSTATUS)0xC00000F0)
 #define STATUS_BUFFER_OVERFLOW           ((NTSTATUS)0x80000005)
 
-unsigned char BitScanForward(ULONG * Index, const unsigned long Mask);
-unsigned char BitScanReverse(ULONG * const Index, const unsigned long Mask);
+unsigned char BitScanForward(ULONG * Index, unsigned long Mask);
+unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
 #define RtlFillMemoryUlong(dst, len, val) memset(dst, val, len)
 
 NTSTATUS NTAPI
@@ -66,6 +66,46 @@ RtlInitUnicodeString(
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
     IN WCHAR Source);
+
+LONG WINAPI
+RegQueryValueExW(
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName,
+    IN PULONG lpReserved,
+    OUT PULONG lpType,
+    OUT PUCHAR lpData,
+    OUT PSIZE_T lpcbData);
+
+LONG WINAPI
+RegSetValueExW(
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName OPTIONAL,
+    IN ULONG Reserved,
+    IN ULONG dwType,
+    IN const UCHAR* lpData,
+    IN USHORT cbData);
+
+LONG WINAPI
+RegDeleteKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey);
+
+LONG WINAPI
+RegDeleteValueW(
+    IN HKEY hKey,
+    IN LPCWSTR lpValueName OPTIONAL);
+
+LONG WINAPI
+RegCreateKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult);
+
+LONG WINAPI
+RegOpenKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult);
 
 #define CMLIB_HOST
 #include <cmlib.h>
@@ -95,11 +135,5 @@ extern LIST_ENTRY CmiHiveListHead;
 #include <string.h>
 #endif//_WIN32
 
-#ifdef _MSC_VER
-#define GCC_PACKED
-#define inline
-#else//_MSC_VER
-#define GCC_PACKED __attribute__((packed))
-#endif//_MSC_VER
 
 /* EOF */
