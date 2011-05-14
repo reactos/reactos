@@ -116,6 +116,54 @@ HWND WINAPI GetProgmanWindow(VOID);
 // User api hook
 //
 
+typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
+
+typedef struct _UAHOWP
+{
+  BYTE*  MsgBitArray;
+  DWORD  Size;
+} UAHOWP, *PUAHOWP;
+
+#define UAH_HOOK_MESSAGE(uahowp, msg) uahowp.MsgBitArray[msg/8] |= (1 << (msg % 8));
+#define UAH_IS_MESSAGE_HOOKED(uahowp, msg) (uahowp.MsgBitArray[msg/8] & (1 << (msg % 8)))
+#define UAHOWP_MAX_SIZE WM_USER/8
+
+typedef struct tagUSERAPIHOOK
+{
+  DWORD       size;
+  WNDPROC     DefWindowProcA;
+  WNDPROC     DefWindowProcW;
+  UAHOWP      DefWndProcArray;
+  FARPROC     GetScrollInfo;
+  FARPROC     SetScrollInfo;
+  FARPROC     EnableScrollBar;
+  FARPROC     AdjustWindowRectEx;
+  FARPROC     SetWindowRgn;
+  WNDPROC_OWP PreWndProc;
+  WNDPROC_OWP PostWndProc;
+  UAHOWP      WndProcArray;
+  WNDPROC_OWP PreDefDlgProc;
+  WNDPROC_OWP PostDefDlgProc;
+  UAHOWP      DlgProcArray;
+  FARPROC     GetSystemMetrics;
+  FARPROC     SystemParametersInfoA;
+  FARPROC     SystemParametersInfoW;
+  FARPROC     ForceResetUserApiHook;
+  FARPROC     DrawFrameControl;
+  FARPROC     DrawCaption;
+  FARPROC     MDIRedrawFrame;
+  FARPROC     GetRealWindowOwner;
+} USERAPIHOOK, *PUSERAPIHOOK;
+
+typedef enum _UAPIHK
+{
+  uahLoadInit,
+  uahStop,
+  uahShutdown
+} UAPIHK, *PUAPIHK;
+
+typedef BOOL(CALLBACK *USERAPIHOOKPROC)(UAPIHK State, PUSERAPIHOOK puah);
+
 typedef struct _USERAPIHOOKINFO
 {
   DWORD m_size;
@@ -125,51 +173,12 @@ typedef struct _USERAPIHOOKINFO
   LPCWSTR m_funname2;
 } USERAPIHOOKINFO,*PUSERAPIHOOKINFO;
 
-typedef enum _UAPIHK
-{
-  uahLoadInit,
-  uahStop,
-  uahShutdown
-} UAPIHK, *PUAPIHK;
-
-typedef DWORD (CALLBACK * USERAPIHOOKPROC)(UAPIHK State, ULONG_PTR Info);
-
-typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
-
-typedef struct _UAHOWP
-{
-  BYTE*  MsgBitArray;
-  DWORD  Size;
-} UAHOWP, *PUAHOWP;
-
-typedef struct tagUSERAPIHOOK
-{
-  DWORD   size;
-  WNDPROC DefWindowProcA;
-  WNDPROC DefWindowProcW;
-  UAHOWP  DefWndProcArray;
-  FARPROC GetScrollInfo;
-  FARPROC SetScrollInfo;
-  FARPROC EnableScrollBar;
-  FARPROC AdjustWindowRectEx;
-  FARPROC SetWindowRgn;
-  WNDPROC_OWP PreWndProc;
-  WNDPROC_OWP PostWndProc;
-  UAHOWP  WndProcArray;
-  WNDPROC_OWP PreDefDlgProc;
-  WNDPROC_OWP PostDefDlgProc;
-  UAHOWP  DlgProcArray;
-  FARPROC GetSystemMetrics;
-  FARPROC SystemParametersInfoA;
-  FARPROC SystemParametersInfoW;
-  FARPROC ForceResetUserApiHook;
-  FARPROC DrawFrameControl;
-  FARPROC DrawCaption;
-  FARPROC MDIRedrawFrame;
-  FARPROC GetRealWindowOwner;
-} USERAPIHOOK, *PUSERAPIHOOK;
-
+#if (WINVER == _WIN32_WINNT_WINXP)
+BOOL WINAPI RegisterUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC CallbackFunc);
+#elif (WINVER == _WIN32_WINNT_WS03)
 BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
+#endif
+
 BOOL WINAPI UnregisterUserApiHook(VOID);
 
 #endif
