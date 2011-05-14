@@ -1002,3 +1002,94 @@ USBSTOR_SendTestUnitCmd(
     //
     return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_TEST_UNIT_CMD_LEN, (PUCHAR)&Cmd, 0, NULL);
 }
+
+
+NTSTATUS
+USBSTOR_HandleExecuteSCSI(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PCDB pCDB;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get request block
+    //
+    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+
+    //
+    // get SCSI command data block
+    //
+    pCDB = (PCDB)Request->Cdb;
+
+    DPRINT1("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
+
+    if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
+    {
+        //
+        // sanity checks
+        //
+        ASSERT(Request->DataBuffer);
+
+        DPRINT1("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
+        Status = USBSTOR_SendCapacityCmd(DeviceObject, Irp);
+    }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
+    {
+        DPRINT1("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
+        ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
+        ASSERT(Request->DataBuffer);
+
+        //
+        // send mode sense command
+        //
+        Status = USBSTOR_SendModeSenseCmd(DeviceObject, Irp);
+    }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ /*||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE*/)
+    {
+        DPRINT1("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
+
+        //
+        // send read / write command
+        //
+        Status = USBSTOR_SendReadWriteCmd(DeviceObject, Irp);
+    }
+    else if (pCDB->AsByte[0] == SCSIOP_MEDIUM_REMOVAL)
+    {
+        DPRINT1("SCSIOP_MEDIUM_REMOVAL\n");
+
+        //
+        // just complete the request
+        //
+        Request->SrbStatus = SRB_STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = Request->DataTransferLength;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
+    {
+        DPRINT1("SCSIOP_TEST_UNIT_READY\n");
+
+        //
+        // send test unit command
+        //
+        Status = USBSTOR_SendTestUnitCmd(DeviceObject, Irp);
+    }
+    else
+    {
+        UNIMPLEMENTED;
+        Request->SrbStatus = SRB_STATUS_ERROR;
+        Status = STATUS_NOT_SUPPORTED;
+        DbgBreakPoint();
+    }
+
+    return Status;
+}

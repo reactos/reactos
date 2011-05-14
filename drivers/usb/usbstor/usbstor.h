@@ -63,6 +63,9 @@ typedef struct
     UCHAR BulkOutPipeIndex;                                                              // bulk out pipe index
     UCHAR MaxLUN;                                                                        // max lun for device
     PDEVICE_OBJECT ChildPDO[16];                                                         // max 16 child pdo devices
+    KSPIN_LOCK IrpListLock;                                                              // irp list lock
+    LIST_ENTRY IrpListHead;                                                              // irp list head
+    BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -75,6 +78,9 @@ typedef struct
     ULONG BlockLength;                                                                   // length of block
     ULONG LastLogicBlockAddress;                                                         // last block address
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+
+
+
 
 //
 // max lun command identifier
@@ -361,26 +367,7 @@ USBSTOR_GetPipeHandles(
 // scsi.c routines
 //
 NTSTATUS
-USBSTOR_SendInquiryCmd(
-    IN PDEVICE_OBJECT DeviceObject);
-
-NTSTATUS
-USBSTOR_SendCapacityCmd(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-
-NTSTATUS
-USBSTOR_SendModeSenseCmd(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-
-NTSTATUS
-USBSTOR_SendReadWriteCmd(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-
-NTSTATUS
-USBSTOR_SendTestUnitCmd(
+USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
@@ -398,4 +385,35 @@ USBSTOR_HandleDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
+//---------------------------------------------------------------------
+//
+// queue.c routines
+//
+VOID
+NTAPI
+USBSTOR_StartIo(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
 
+VOID
+USBSTOR_QueueFlushIrps(
+    IN PDEVICE_OBJECT DeviceObject);
+
+VOID
+USBSTOR_QueueRelease(
+    IN PDEVICE_OBJECT DeviceObject);
+
+BOOLEAN
+USBSTOR_QueueAddIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+VOID
+NTAPI
+USBSTOR_CancelIo(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp);
+
+VOID
+USBSTOR_QueueInitialize(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension);

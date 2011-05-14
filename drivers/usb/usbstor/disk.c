@@ -12,87 +12,6 @@
 #include "usbstor.h"
 
 NTSTATUS
-USBSTOR_HandleExecuteSCSI(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN OUT PSCSI_REQUEST_BLOCK Request,
-    IN PPDO_DEVICE_EXTENSION PDODeviceExtension)
-{
-    PCDB pCDB;
-    NTSTATUS Status;
-
-    //
-    // get SCSI command data block
-    //
-    pCDB = (PCDB)Request->Cdb;
-
-    DPRINT1("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
-
-
-    if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
-    {
-        //
-        // sanity checks
-        //
-        ASSERT(Request->DataBuffer);
-
-        DPRINT1("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
-        Status = USBSTOR_SendCapacityCmd(DeviceObject, Irp);
-    }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
-    {
-        DPRINT1("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
-        ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
-        ASSERT(Request->DataBuffer);
-
-        //
-        // send mode sense command
-        //
-        Status = USBSTOR_SendModeSenseCmd(DeviceObject, Irp);
-    }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ /*||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE*/)
-    {
-        DPRINT1("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
-
-        //
-        // send read / write command
-        //
-        Status = USBSTOR_SendReadWriteCmd(DeviceObject, Irp);
-    }
-    else if (pCDB->AsByte[0] == SCSIOP_MEDIUM_REMOVAL)
-    {
-        DPRINT1("SCSIOP_MEDIUM_REMOVAL\n");
-
-        //
-        // just complete the request
-        //
-        Request->SrbStatus = SRB_STATUS_SUCCESS;
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = Request->DataTransferLength;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-    }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
-    {
-        DPRINT1("SCSIOP_TEST_UNIT_READY\n");
-
-        //
-        // send test unit command
-        //
-        Status = USBSTOR_SendTestUnitCmd(DeviceObject, Irp);
-    }
-    else
-    {
-        UNIMPLEMENTED;
-        Request->SrbStatus = SRB_STATUS_ERROR;
-        Status = STATUS_NOT_SUPPORTED;
-        DbgBreakPoint();
-    }
-
-    return Status;
-}
-
-NTSTATUS
 USBSTOR_HandleInternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -128,7 +47,58 @@ USBSTOR_HandleInternalDeviceControl(
         case SRB_FUNCTION_EXECUTE_SCSI:
         {
             DPRINT1("SRB_FUNCTION_EXECUTE_SCSI\n");
-            return USBSTOR_HandleExecuteSCSI(DeviceObject, Irp, Request, PDODeviceExtension);
+
+            //
+            // check if request is valid
+            //
+            if (Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+            {
+                //
+                // data is transferred with this irp
+                //
+                if (Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) ||
+                    Request->DataTransferLength == 0 ||
+                    Irp->MdlAddress == NULL)
+                {
+                    //
+                    // invalid parameter
+                    //
+                    Status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+            }
+            else
+            {
+                //
+                // sense buffer request
+                //
+                if (Request->DataTransferLength ||
+                    Request->DataBuffer ||
+                    Irp->MdlAddress)
+                {
+                    //
+                    // invalid parameter
+                    //
+                    Status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+            }
+
+            //
+            // add the request
+            //
+            if (!USBSTOR_QueueAddIrp(DeviceObject, Irp))
+            {
+                //
+                // irp was not added to the queue
+                //
+                IoStartPacket(PDODeviceExtension->LowerDeviceObject, Irp, &Request->QueueSortKey, USBSTOR_CancelIo);
+            }
+
+            //
+            // irp pending
+            //
+            return STATUS_PENDING;
         }
         case SRB_FUNCTION_RELEASE_DEVICE:
         {
@@ -179,20 +149,37 @@ USBSTOR_HandleInternalDeviceControl(
         }
         case SRB_FUNCTION_RELEASE_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_RELEASE_QUEUE UNIMPLEMENTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            DPRINT1("SRB_FUNCTION_RELEASE_QUEUE\n");
+
+            //
+            // release queue
+            //
+            USBSTOR_QueueRelease(DeviceObject);
+
+
+            //
+            // set status success
+            //
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         }
+
         case SRB_FUNCTION_FLUSH:
+        case SRB_FUNCTION_FLUSH_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_FLUSH UNIMPLEMENTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-        }
-        case SRB_FUNCTION_SET_LINK_TIMEOUT:
-        {
-            DPRINT1("SRB_FUNCTION_FLUSH UNIMPLEMENTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE\n");
+
+            //
+            // flush all requests
+            //
+            USBSTOR_QueueFlushIrps(DeviceObject);
+
+            //
+            // set status success
+            //
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
             break;
         }
         default:

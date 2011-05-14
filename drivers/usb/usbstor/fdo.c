@@ -142,6 +142,11 @@ USBSTOR_FdoHandleStartDevice(
     }
 
     //
+    // intialize irp queue
+    //
+    USBSTOR_QueueInitialize(DeviceExtension);
+
+    //
     // first get device & configuration & string descriptor
     //
     Status = USBSTOR_GetDescriptors(DeviceObject);

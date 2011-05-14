@@ -99,18 +99,6 @@ USBSTOR_Unload(
     //
 }
 
-VOID
-NTAPI
-USBSTOR_StartIo(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    //
-    // implement me
-    //
-    UNIMPLEMENTED
-}
-
 NTSTATUS
 NTAPI
 USBSTOR_DispatchClose(
@@ -251,10 +239,9 @@ DriverEntry(
     DriverObject->DriverExtension->AddDevice = USBSTOR_AddDevice;
 
     //
-    // FIXME: driver start i/o routine
+    // driver start i/o routine
     //
-    //DriverObject->DriverStartIo = USBSTOR_StartIo;
-
+    DriverObject->DriverStartIo = USBSTOR_StartIo;
 
     //
     // create / close
