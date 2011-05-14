@@ -36,4 +36,4 @@ add_importlibs(cryptui
     ntdll)
 
 add_importlib_target(cryptui.spec)
-add_cd_file(TARGET cryptui DESTINATION reactos/system32)
+add_cd_file(TARGET cryptui DESTINATION reactos/system32 FOR all)

@@ -17,4 +17,4 @@ target_link_libraries(ntlanman wine)
 
 add_importlibs(ntlanman netapi32 msvcrt kernel32 ntdll)
 
-add_cd_file(TARGET ntlanman DESTINATION reactos/system32)
+add_cd_file(TARGET ntlanman DESTINATION reactos/system32 FOR all)

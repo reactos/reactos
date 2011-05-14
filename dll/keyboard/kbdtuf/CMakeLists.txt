@@ -9,4 +9,4 @@ set_entrypoint(kbdtuf 0)
 
 add_dependencies(kbdtuf psdk)
 
-add_cd_file(TARGET kbdtuf DESTINATION reactos/system32)
+add_cd_file(TARGET kbdtuf DESTINATION reactos/system32 FOR all)

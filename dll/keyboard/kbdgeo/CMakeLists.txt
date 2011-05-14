@@ -9,4 +9,4 @@ set_entrypoint(kbdgeo 0)
 
 add_dependencies(kbdgeo psdk)
 
-add_cd_file(TARGET kbdgeo DESTINATION reactos/system32)
+add_cd_file(TARGET kbdgeo DESTINATION reactos/system32 FOR all)

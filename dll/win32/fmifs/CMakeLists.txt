@@ -21,5 +21,5 @@ set_entrypoint(fmifs InitializeFmIfs@12)
 
 add_importlibs(fmifs kernel32 ntdll)
 add_dependencies(fmifs psdk)
-add_cd_file(TARGET fmifs DESTINATION reactos/system32)
+add_cd_file(TARGET fmifs DESTINATION reactos/system32 FOR all)
 add_importlib_target(fmifs.spec)

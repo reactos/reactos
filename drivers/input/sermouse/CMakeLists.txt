@@ -12,4 +12,4 @@ add_library(sermouse SHARED
 set_module_type(sermouse kernelmodedriver)
 add_importlibs(sermouse ntoskrnl hal)
 
-add_cd_file(TARGET sermouse DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET sermouse DESTINATION reactos/system32/drivers FOR all)

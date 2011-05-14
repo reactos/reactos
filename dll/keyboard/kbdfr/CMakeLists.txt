@@ -9,4 +9,4 @@ set_entrypoint(kbdfr 0)
 
 add_dependencies(kbdfr psdk)
 
-add_cd_file(TARGET kbdfr DESTINATION reactos/system32)
+add_cd_file(TARGET kbdfr DESTINATION reactos/system32 FOR all)

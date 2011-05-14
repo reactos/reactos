@@ -9,4 +9,4 @@ set_target_properties(logon PROPERTIES SUFFIX ".scr")
 
 target_link_libraries(logon scrnsave)
 add_importlibs(logon user32 gdi32 msvcrt kernel32)
-add_cd_file(TARGET logon DESTINATION reactos/system32)
+add_cd_file(TARGET logon DESTINATION reactos/system32 FOR all)

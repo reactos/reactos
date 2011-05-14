@@ -59,4 +59,4 @@ add_importlibs(libtiff user32 msvcrt kernel32)
 
 add_dependencies(libtiff psdk)
 
-add_cd_file(TARGET libtiff DESTINATION reactos/system32)
+add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)

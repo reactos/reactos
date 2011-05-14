@@ -38,4 +38,4 @@ add_importlibs(sti
     kernel32
     ntdll)
 
-add_cd_file(TARGET sti DESTINATION reactos/system32)
+add_cd_file(TARGET sti DESTINATION reactos/system32 FOR all)

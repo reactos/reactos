@@ -14,4 +14,4 @@ add_importlibs(msfs ntoskrnl hal)
 
 add_pch(msfs ${CMAKE_CURRENT_SOURCE_DIR}/msfs.h ${SOURCE})
 
-add_cd_file(TARGET msfs DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET msfs DESTINATION reactos/system32/drivers FOR all)

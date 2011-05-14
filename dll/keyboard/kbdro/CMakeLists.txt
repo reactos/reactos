@@ -9,4 +9,4 @@ set_entrypoint(kbdro 0)
 
 add_dependencies(kbdro psdk)
 
-add_cd_file(TARGET kbdro DESTINATION reactos/system32)
+add_cd_file(TARGET kbdro DESTINATION reactos/system32 FOR all)

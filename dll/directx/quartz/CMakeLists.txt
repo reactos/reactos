@@ -71,4 +71,4 @@ add_importlibs(quartz
     kernel32
     ntdll)
 
-add_cd_file(TARGET quartz DESTINATION reactos/system32)
+add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)

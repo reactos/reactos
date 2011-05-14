@@ -31,4 +31,4 @@ add_importlibs(mmsys
     ntdll
     kernel32)
 
-add_cd_file(TARGET mmsys DESTINATION reactos/system32)
+add_cd_file(TARGET mmsys DESTINATION reactos/system32 FOR all)

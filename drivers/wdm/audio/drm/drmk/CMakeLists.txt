@@ -26,4 +26,4 @@ set_entrypoint(drmk 0)
 add_importlibs(drmk ntoskrnl)
 add_importlib_target(drmk.spec)
 
-add_cd_file(TARGET drmk DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET drmk DESTINATION reactos/system32/drivers FOR all)

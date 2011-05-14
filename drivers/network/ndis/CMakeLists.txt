@@ -42,5 +42,5 @@ add_importlibs(ndis ntoskrnl hal)
 
 add_pch(ndis ${CMAKE_CURRENT_SOURCE_DIR}/include/ndissys.h ${SOURCE})
 
-add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers FOR all)
 add_importlib_target(ndis.spec)

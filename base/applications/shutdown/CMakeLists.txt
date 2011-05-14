@@ -12,4 +12,4 @@ add_pch(shutdown ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(shutdown win32cui)
 add_importlibs(shutdown advapi32 user32 msvcrt kernel32)
-add_cd_file(TARGET shutdown DESTINATION reactos/system32)
+add_cd_file(TARGET shutdown DESTINATION reactos/system32 FOR all)

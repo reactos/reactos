@@ -18,4 +18,4 @@ add_importlibs(idndl kernel32)
 
 add_dependencies(idndl psdk)
 
-add_cd_file(TARGET idndl DESTINATION reactos)
+add_cd_file(TARGET idndl DESTINATION reactos FOR all)

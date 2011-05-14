@@ -44,5 +44,5 @@ target_link_libraries(ks ${PSEH_LIB})
 add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 
-add_cd_file(TARGET ks DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET ks DESTINATION reactos/system32/drivers FOR all)
 add_importlib_target(ks.spec)

@@ -31,5 +31,5 @@ add_importlibs(devmgr
 
 add_pch(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cd_file(TARGET devmgr DESTINATION reactos/system32)
+add_cd_file(TARGET devmgr DESTINATION reactos/system32 FOR all)
 add_importlib_target(devmgr.spec)

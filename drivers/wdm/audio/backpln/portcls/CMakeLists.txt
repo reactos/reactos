@@ -70,4 +70,4 @@ set_target_properties(portcls PROPERTIES SUFFIX ".sys")
 
 add_importlibs(portcls ntoskrnl ks drmk hal)
 
-add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers FOR all)

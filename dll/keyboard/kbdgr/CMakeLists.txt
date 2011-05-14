@@ -9,4 +9,4 @@ set_entrypoint(kbdgr 0)
 
 add_dependencies(kbdgr psdk)
 
-add_cd_file(TARGET kbdgr DESTINATION reactos/system32)
+add_cd_file(TARGET kbdgr DESTINATION reactos/system32 FOR all)

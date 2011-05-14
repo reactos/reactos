@@ -16,4 +16,4 @@ add_importlibs(dxtn msvcrt)
 
 add_dependencies(dxtn psdk)
 
-add_cd_file(TARGET dxtn DESTINATION reactos/system32)
+add_cd_file(TARGET dxtn DESTINATION reactos/system32 FOR all)

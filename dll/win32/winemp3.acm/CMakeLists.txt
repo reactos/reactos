@@ -31,4 +31,4 @@ add_importlibs(winemp3.acm
 
 add_dependencies(winemp3.acm psdk)
 
-add_cd_file(TARGET winemp3.acm DESTINATION reactos/system32)
+add_cd_file(TARGET winemp3.acm DESTINATION reactos/system32 FOR all)

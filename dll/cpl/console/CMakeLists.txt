@@ -24,4 +24,4 @@ add_importlibs(console
     kernel32)
 
 add_pch(console ${CMAKE_CURRENT_SOURCE_DIR}/console.h ${SOURCE})
-add_cd_file(TARGET console DESTINATION reactos/system32)
+add_cd_file(TARGET console DESTINATION reactos/system32 FOR all)

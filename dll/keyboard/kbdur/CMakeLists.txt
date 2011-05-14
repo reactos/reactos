@@ -9,4 +9,4 @@ set_entrypoint(kbdur 0)
 
 add_dependencies(kbdur psdk)
 
-add_cd_file(TARGET kbdur DESTINATION reactos/system32)
+add_cd_file(TARGET kbdur DESTINATION reactos/system32 FOR all)

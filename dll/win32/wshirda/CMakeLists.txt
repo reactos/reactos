@@ -12,4 +12,4 @@ add_library(wshirda SHARED ${SOURCE})
 
 set_module_type(wshirda win32dll)
 add_importlibs(wshirda ws2_32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET wshirda DESTINATION reactos/system32)
+add_cd_file(TARGET wshirda DESTINATION reactos/system32 FOR all)

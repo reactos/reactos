@@ -18,4 +18,4 @@ target_link_libraries(rasdlg
 
 add_importlibs(rasdlg msvcrt kernel32 ntdll)
 
-add_cd_file(TARGET rasdlg DESTINATION reactos/system32)
+add_cd_file(TARGET rasdlg DESTINATION reactos/system32 FOR all)

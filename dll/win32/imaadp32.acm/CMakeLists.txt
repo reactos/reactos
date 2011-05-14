@@ -20,4 +20,4 @@ target_link_libraries(imaadp32.acm wine)
 
 add_importlibs(imaadp32.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(imaadp32.acm psdk)
-add_cd_file(TARGET imaadp32.acm DESTINATION reactos/system32)
+add_cd_file(TARGET imaadp32.acm DESTINATION reactos/system32 FOR all)

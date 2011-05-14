@@ -9,4 +9,4 @@ set_entrypoint(kbdtat 0)
 
 add_dependencies(kbdtat psdk)
 
-add_cd_file(TARGET kbdtat DESTINATION reactos/system32)
+add_cd_file(TARGET kbdtat DESTINATION reactos/system32 FOR all)

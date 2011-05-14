@@ -9,4 +9,4 @@ set_entrypoint(kbdindev 0)
 
 add_dependencies(kbdindev psdk)
 
-add_cd_file(TARGET kbdindev DESTINATION reactos/system32)
+add_cd_file(TARGET kbdindev DESTINATION reactos/system32 FOR all)

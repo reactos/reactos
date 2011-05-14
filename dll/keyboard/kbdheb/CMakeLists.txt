@@ -9,4 +9,4 @@ set_entrypoint(kbdheb 0)
 
 add_dependencies(kbdheb psdk)
 
-add_cd_file(TARGET kbdheb DESTINATION reactos/system32)
+add_cd_file(TARGET kbdheb DESTINATION reactos/system32 FOR all)

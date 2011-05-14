@@ -17,4 +17,4 @@ set_module_type(spider win32gui)
 
 add_importlibs(spider advapi32 comctl32 user32 gdi32 kernel32 msvcrt)
 
-add_cd_file(TARGET spider DESTINATION reactos/system32)
+add_cd_file(TARGET spider DESTINATION reactos/system32 FOR all)

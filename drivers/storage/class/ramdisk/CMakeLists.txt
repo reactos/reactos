@@ -8,4 +8,4 @@ add_importlibs(ramdisk
     ntoskrnl
     hal)
 
-add_cd_file(TARGET ramdisk DESTINATION reactos/system32/drivers NO_CAB)
+add_cd_file(TARGET ramdisk DESTINATION reactos/system32/drivers NO_CAB FOR all)

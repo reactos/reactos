@@ -62,4 +62,4 @@ add_importlibs(browseui
     kernel32
     ntdll)
 
-add_cd_file(TARGET browseui DESTINATION reactos/system32)
+add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)

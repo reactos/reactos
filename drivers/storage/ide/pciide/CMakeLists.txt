@@ -4,4 +4,4 @@ add_library(pciide SHARED pciide.c pciide.rc)
 set_module_type(pciide kernelmodedriver)
 add_importlibs(pciide pciidex ntoskrnl)
 
-add_cd_file(TARGET pciide DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET pciide DESTINATION reactos/system32/drivers FOR all)

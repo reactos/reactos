@@ -27,4 +27,4 @@ add_importlibs(timedate
     msvcrt
     kernel32)
 
-add_cd_file(TARGET timedate DESTINATION reactos/system32)
+add_cd_file(TARGET timedate DESTINATION reactos/system32 FOR all)

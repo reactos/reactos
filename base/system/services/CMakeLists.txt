@@ -24,4 +24,4 @@ add_pch(services ${CMAKE_CURRENT_SOURCE_DIR}/services.h ${SOURCE})
 
 set_module_type(services win32cui)
 add_importlibs(services user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
-add_cd_file(TARGET services DESTINATION reactos/system32)
+add_cd_file(TARGET services DESTINATION reactos/system32 FOR all)

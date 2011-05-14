@@ -29,4 +29,4 @@ add_executable(telnet
 
 set_module_type(telnet win32cui)
 add_importlibs(telnet ws2_32 user32 kernel32 msvcrt)
-add_cd_file(TARGET telnet DESTINATION reactos/system32)
+add_cd_file(TARGET telnet DESTINATION reactos/system32 FOR all)

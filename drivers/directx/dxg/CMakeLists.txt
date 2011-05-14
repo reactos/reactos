@@ -12,4 +12,4 @@ add_library(dxg SHARED
 set_module_type(dxg kernelmodedriver)
 add_importlibs(dxg dxgthk ntoskrnl)
 
-add_cd_file(TARGET dxg DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET dxg DESTINATION reactos/system32/drivers FOR all)

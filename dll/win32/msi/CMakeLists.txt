@@ -95,5 +95,5 @@ add_importlibs(msi
     kernel32
     ntdll)
 
-add_cd_file(TARGET msi DESTINATION reactos/system32)
+add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 add_importlib_target(msi.spec)

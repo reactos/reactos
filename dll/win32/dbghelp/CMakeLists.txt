@@ -57,4 +57,4 @@ target_link_libraries(dbghelp
 
 add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
 add_importlib_target(dbghelp.spec)
-add_cd_file(TARGET dbghelp DESTINATION reactos/system32)
+add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)

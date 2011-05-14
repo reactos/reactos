@@ -28,5 +28,5 @@ target_link_libraries(userenv uuid)
 add_importlibs(userenv advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(userenv ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cd_file(TARGET userenv DESTINATION reactos/system32)
+add_cd_file(TARGET userenv DESTINATION reactos/system32 FOR all)
 add_importlib_target(userenv.spec)

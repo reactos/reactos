@@ -36,4 +36,4 @@ add_importlibs(itss
     ntdll)
 
 add_dependencies(itss wineheaders)
-add_cd_file(TARGET itss DESTINATION reactos/system32)
+add_cd_file(TARGET itss DESTINATION reactos/system32 FOR all)

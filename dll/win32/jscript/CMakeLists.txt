@@ -61,4 +61,4 @@ add_importlibs(jscript
     ntdll)
 
 add_dependencies(jscript jsglobal)
-add_cd_file(TARGET jscript DESTINATION reactos/system32)
+add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)

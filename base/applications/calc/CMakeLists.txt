@@ -19,4 +19,4 @@ if(MSVC)
 add_importlibs(calc ntdll)
 endif()
 
-add_cd_file(TARGET calc DESTINATION reactos/system32)
+add_cd_file(TARGET calc DESTINATION reactos/system32 FOR all)

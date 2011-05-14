@@ -18,4 +18,4 @@ target_link_libraries(printui wine)
 
 add_importlibs(printui shell32 kernel32 ntdll)
 add_dependencies(printui psdk)
-add_cd_file(TARGET printui DESTINATION reactos/system32)
+add_cd_file(TARGET printui DESTINATION reactos/system32 FOR all)

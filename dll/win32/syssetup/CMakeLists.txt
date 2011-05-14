@@ -39,4 +39,4 @@ add_importlibs(syssetup
     ntdll)
 
 
-add_cd_file(TARGET syssetup DESTINATION reactos/system32)
+add_cd_file(TARGET syssetup DESTINATION reactos/system32 FOR all)

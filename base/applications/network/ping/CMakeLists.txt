@@ -13,4 +13,4 @@ if(MSVC)
 add_importlibs(ping ntdll)
 endif()
 
-add_cd_file(TARGET ping DESTINATION reactos/system32)
+add_cd_file(TARGET ping DESTINATION reactos/system32 FOR all)

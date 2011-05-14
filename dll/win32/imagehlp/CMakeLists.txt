@@ -29,4 +29,4 @@ add_importlib_target(imagehlp.spec)
 
 add_pch(imagehlp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cd_file(TARGET imagehlp DESTINATION reactos/system32)
+add_cd_file(TARGET imagehlp DESTINATION reactos/system32 FOR all)

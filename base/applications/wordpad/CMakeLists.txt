@@ -20,4 +20,4 @@ set_module_type(wordpad win32gui)
 
 target_link_libraries(wordpad wine uuid)
 add_importlibs(wordpad comdlg32 ole32 shell32 user32 gdi32 advapi32 comctl32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET wordpad DESTINATION reactos/system32)
+add_cd_file(TARGET wordpad DESTINATION reactos/system32 FOR all)

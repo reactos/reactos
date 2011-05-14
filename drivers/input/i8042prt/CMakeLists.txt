@@ -17,4 +17,4 @@ add_library(i8042prt SHARED
 set_module_type(i8042prt kernelmodedriver)
 add_importlibs(i8042prt ntoskrnl hal)
 
-add_cd_file(TARGET i8042prt DESTINATION reactos/system32/drivers NO_CAB)
+add_cd_file(TARGET i8042prt DESTINATION reactos/system32/drivers NO_CAB FOR all)

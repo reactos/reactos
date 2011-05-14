@@ -32,4 +32,4 @@ add_importlibs(intl
     shell32
     kernel32)
 
-add_cd_file(TARGET intl DESTINATION reactos/system32)
+add_cd_file(TARGET intl DESTINATION reactos/system32 FOR all)

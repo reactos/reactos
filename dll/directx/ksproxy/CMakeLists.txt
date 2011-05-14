@@ -52,4 +52,4 @@ add_importlibs(ksproxy
 
 add_dependencies(ksproxy psdk)
 
-add_cd_file(TARGET ksproxy DESTINATION reactos/system32)
+add_cd_file(TARGET ksproxy DESTINATION reactos/system32 FOR all)

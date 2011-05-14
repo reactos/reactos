@@ -102,5 +102,5 @@ add_importlibs(shell32
     msvcrt
     ntdll)
 
-add_cd_file(TARGET shell32 DESTINATION reactos/system32)
+add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(shell32.spec)

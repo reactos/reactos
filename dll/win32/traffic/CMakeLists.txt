@@ -17,4 +17,4 @@ target_link_libraries(traffic wine)
 
 add_importlibs(traffic msvcrt kernel32 ntdll)
 add_dependencies(traffic psdk)
-add_cd_file(TARGET traffic DESTINATION reactos/system32)
+add_cd_file(TARGET traffic DESTINATION reactos/system32 FOR all)

@@ -32,4 +32,4 @@ add_importlibs(localspl
     kernel32
     ntdll)
 
-add_cd_file(TARGET localspl DESTINATION reactos/system32)
+add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)

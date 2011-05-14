@@ -20,4 +20,4 @@ set_module_type(authz win32dll)
 add_pch(authz ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_importlibs(authz advapi32 msvcrt kernel32 ntdll)
 
-add_cd_file(TARGET authz DESTINATION reactos/system32)
+add_cd_file(TARGET authz DESTINATION reactos/system32 FOR all)

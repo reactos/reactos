@@ -24,4 +24,4 @@ add_importlibs(ntfs ntoskrnl hal)
 
 add_pch(ntfs ${CMAKE_CURRENT_SOURCE_DIR}/ntfs.h ${SOURCE})
 
-add_cd_file(TARGET ntfs DESTINATION reactos/system32/drivers NO_CAB)
+add_cd_file(TARGET ntfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -26,4 +26,4 @@ add_importlibs(afd ntoskrnl hal)
 
 add_pch(afd ${CMAKE_CURRENT_SOURCE_DIR}/include/afd.h ${SOURCE})
 
-add_cd_file(TARGET afd DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET afd DESTINATION reactos/system32/drivers FOR all)

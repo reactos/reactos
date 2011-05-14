@@ -44,4 +44,4 @@ add_importlibs(pcix ntoskrnl hal)
 add_pch(pcix ${CMAKE_CURRENT_SOURCE_DIR}/pci.h ${SOURCE})
 add_dependencies(pcix pciclass)
 
-add_cd_file(TARGET pcix DESTINATION reactos/system32/drivers NO_CAB)
+add_cd_file(TARGET pcix DESTINATION reactos/system32/drivers NO_CAB FOR all)

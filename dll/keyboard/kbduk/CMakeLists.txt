@@ -9,4 +9,4 @@ set_entrypoint(kbduk 0)
 
 add_dependencies(kbduk psdk)
 
-add_cd_file(TARGET kbduk DESTINATION reactos/system32)
+add_cd_file(TARGET kbduk DESTINATION reactos/system32 FOR all)

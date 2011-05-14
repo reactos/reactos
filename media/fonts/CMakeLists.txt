@@ -34,5 +34,5 @@ list(APPEND FONT_FILES
 )
 
 foreach(item ${FONT_FILES})
-    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts)
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)
 endforeach(item)

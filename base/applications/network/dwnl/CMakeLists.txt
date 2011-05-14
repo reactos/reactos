@@ -13,4 +13,4 @@ if(MSVC)
 add_importlibs(dwnl ntdll)
 endif()
 
-add_cd_file(TARGET dwnl DESTINATION reactos/system32)
+add_cd_file(TARGET dwnl DESTINATION reactos/system32 FOR all)

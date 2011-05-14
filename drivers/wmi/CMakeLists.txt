@@ -25,4 +25,4 @@ set_target_properties(wmilib PROPERTIES SUFFIX ".sys")
 add_importlibs(wmilib ntoskrnl)
 add_importlib_target(wmilib.spec)
 
-add_cd_file(TARGET wmilib DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET wmilib DESTINATION reactos/system32/drivers FOR all)

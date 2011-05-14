@@ -38,4 +38,4 @@ add_importlibs(sysdm
     ntdll)
 
 add_pch(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_cd_file(TARGET sysdm DESTINATION reactos/system32)
+add_cd_file(TARGET sysdm DESTINATION reactos/system32 FOR all)

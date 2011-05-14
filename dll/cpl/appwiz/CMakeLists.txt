@@ -23,4 +23,4 @@ add_importlibs(appwiz
     shell32
     kernel32)
 
-add_cd_file(TARGET appwiz DESTINATION reactos/system32)
+add_cd_file(TARGET appwiz DESTINATION reactos/system32 FOR all)

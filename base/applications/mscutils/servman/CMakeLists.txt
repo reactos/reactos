@@ -32,4 +32,4 @@ set_module_type(servman win32gui)
 
 add_importlibs(servman user32 gdi32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
 
-add_cd_file(TARGET servman DESTINATION reactos/system32)
+add_cd_file(TARGET servman DESTINATION reactos/system32 FOR all)

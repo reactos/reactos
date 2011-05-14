@@ -34,4 +34,4 @@ add_importlibs(regedit user32 gdi32 advapi32 ole32 shell32 comctl32 comdlg32 shl
 
 #add_subdirectory(clb)
 
-add_cd_file(TARGET regedit DESTINATION reactos)
+add_cd_file(TARGET regedit DESTINATION reactos FOR all)

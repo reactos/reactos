@@ -38,4 +38,4 @@ add_importlibs(explorer_new
     kernel32
     ntdll)
 
-add_cd_file(TARGET explorer_new DESTINATION reactos)
+add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)

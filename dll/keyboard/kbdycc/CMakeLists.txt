@@ -9,4 +9,4 @@ set_entrypoint(kbdycc 0)
 
 add_dependencies(kbdycc psdk)
 
-add_cd_file(TARGET kbdycc DESTINATION reactos/system32)
+add_cd_file(TARGET kbdycc DESTINATION reactos/system32 FOR all)

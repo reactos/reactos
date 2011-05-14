@@ -59,5 +59,5 @@ add_importlibs(setupapi
     ntdll)
 
 
-add_cd_file(TARGET setupapi DESTINATION reactos/system32)
+add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)
 add_importlib_target(setupapi.spec)

@@ -1,6 +1,6 @@
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/l_intl.nls DESTINATION reactos/system32 NO_CAB)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_437.nls DESTINATION reactos/system32 NO_CAB)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_1252.nls DESTINATION reactos/system32 NO_CAB)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/l_intl.nls DESTINATION reactos/system32 NO_CAB FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_437.nls DESTINATION reactos/system32 NO_CAB FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/c_1252.nls DESTINATION reactos/system32 NO_CAB FOR all)
 
 list(APPEND NLS_FILES
     c_037.nls
@@ -64,5 +64,5 @@ list(APPEND NLS_FILES
     
     
 foreach(item ${NLS_FILES})
-    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/system32)
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/system32 FOR all)
 endforeach(item)

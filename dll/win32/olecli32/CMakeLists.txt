@@ -17,4 +17,4 @@ target_link_libraries(olecli32 wine)
 
 add_importlibs(olecli32 ole32 gdi32 kernel32 ntdll)
 add_dependencies(olecli32 psdk)
-add_cd_file(TARGET olecli32 DESTINATION reactos/system32)
+add_cd_file(TARGET olecli32 DESTINATION reactos/system32 FOR all)

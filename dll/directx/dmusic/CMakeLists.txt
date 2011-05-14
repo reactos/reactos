@@ -41,4 +41,4 @@ add_importlibs(dmusic
 
 add_dependencies(dmusic psdk)
 
-add_cd_file(TARGET dmusic DESTINATION reactos/system32)
+add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)

@@ -12,4 +12,4 @@ add_importlibs(compbatt ntoskrnl hal battc)
 
 add_pch(compbatt ${CMAKE_CURRENT_SOURCE_DIR}/compbatt.h ${SOURCE})
 
-add_cd_file(TARGET compbatt DESTINATION reactos/system32/drivers)
+add_cd_file(TARGET compbatt DESTINATION reactos/system32/drivers FOR all)
