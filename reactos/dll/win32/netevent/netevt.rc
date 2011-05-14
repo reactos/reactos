@@ -6,4 +6,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"netevent.dll\0"
 #include <reactos/version.rc>
 
-#include "netevent.rc"
+#include "neteventmsg.rc"
