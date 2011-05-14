@@ -48,7 +48,7 @@ IDI_NPICON ICON "res/notepad.ico"
 #include "lang/hy-AM.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-//#include "lang/ja-JP.rc" FIXME: iconv issue
+#include "lang/ja-JP.rc"
 #include "lang/lt-LT.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
