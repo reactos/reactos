@@ -34,4 +34,4 @@ add_importlib_target(dhcpcsvc.spec)
 
 add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
 
-add_cab_target(dhcpcsvc 1)
+add_cd_file(TARGET dhcpcsvc DESTINATION reactos/system32)

@@ -9,4 +9,4 @@ set_entrypoint(kbdazel 0)
 
 add_dependencies(kbdazel psdk)
 
-add_cab_target(kbdazel 1)
+add_cd_file(TARGET kbdazel DESTINATION reactos/system32)

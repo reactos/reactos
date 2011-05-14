@@ -38,4 +38,4 @@ add_importlibs(hhctrl
     kernel32
     ntdll)
 
-add_cab_target(hhctrl 1)
+add_cd_file(TARGET hhctrl DESTINATION reactos/system32)

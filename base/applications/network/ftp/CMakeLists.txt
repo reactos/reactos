@@ -21,4 +21,4 @@ if(MSVC)
     add_importlibs(ftp ntdll)
 endif()
 
-add_cab_target(ftp 1)
+add_cd_file(TARGET ftp DESTINATION reactos/system32)

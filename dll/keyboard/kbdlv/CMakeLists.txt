@@ -9,4 +9,4 @@ set_entrypoint(kbdlv 0)
 
 add_dependencies(kbdlv psdk)
 
-add_cab_target(kbdlv 1)
+add_cd_file(TARGET kbdlv DESTINATION reactos/system32)

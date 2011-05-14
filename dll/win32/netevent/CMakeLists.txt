@@ -10,4 +10,4 @@ set_module_type(netevent win32dll)
 add_importlibs(netevent msvcrt kernel32)
 
 add_dependencies(netevent neteventmsg)
-add_cab_target(netevent 1)
+add_cd_file(TARGET netevent DESTINATION reactos/system32)

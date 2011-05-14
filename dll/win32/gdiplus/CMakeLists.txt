@@ -51,4 +51,4 @@ if(ARCH MATCHES amd64)
 target_link_libraries(gdiplus crt)
 endif(ARCH MATCHES amd64)
 
-add_cab_target(gdiplus 1)
+add_cd_file(TARGET gdiplus DESTINATION reactos/system32)

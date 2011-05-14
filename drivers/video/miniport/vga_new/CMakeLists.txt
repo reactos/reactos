@@ -22,4 +22,4 @@ add_importlibs(vga videoprt)
 
 add_pch(vga ${CMAKE_CURRENT_SOURCE_DIR}/vga.h ${SOURCE})
 
-add_cab_target(vga 2)
+add_cd_file(TARGET vga DESTINATION reactos/system32/drivers)

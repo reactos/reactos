@@ -25,4 +25,4 @@ add_importlibs(powercfg
     kernel32
     ntdll)
 
-add_cab_target(powercfg 1)
+add_cd_file(TARGET powercfg DESTINATION reactos/system32)

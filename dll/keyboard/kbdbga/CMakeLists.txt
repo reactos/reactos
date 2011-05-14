@@ -9,4 +9,4 @@ set_entrypoint(kbdbga 0)
 
 add_dependencies(kbdbga psdk)
 
-add_cab_target(kbdbga 1)
+add_cd_file(TARGET kbdbga DESTINATION reactos/system32)

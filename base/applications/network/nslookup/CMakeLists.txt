@@ -6,4 +6,4 @@ add_executable(nslookup
 
 set_module_type(nslookup win32cui)
 add_importlibs(nslookup user32 ws2_32 snmpapi iphlpapi msvcrt kernel32)
-add_cab_target(nslookup 1)
+add_cd_file(TARGET nslookup DESTINATION reactos/system32)

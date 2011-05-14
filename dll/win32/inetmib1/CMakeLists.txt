@@ -25,4 +25,4 @@ add_importlibs(inetmib1
     kernel32
     ntdll)
 
-add_cab_target(inetmib1 1)
+add_cd_file(TARGET inetmib1 DESTINATION reactos/system32)

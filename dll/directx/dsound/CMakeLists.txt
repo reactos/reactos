@@ -39,5 +39,5 @@ add_importlibs(dsound
     kernel32
     ntdll)
 
-add_cab_target(dsound 1)
+add_cd_file(TARGET dsound DESTINATION reactos/system32)
 add_importlib_target(dsound.spec)

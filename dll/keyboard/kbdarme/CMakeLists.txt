@@ -9,4 +9,4 @@ set_entrypoint(kbdarme 0)
 
 add_dependencies(kbdarme psdk)
 
-add_cab_target(kbdarme 1)
+add_cd_file(TARGET kbdarme DESTINATION reactos/system32)

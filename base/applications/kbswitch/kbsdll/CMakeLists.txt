@@ -12,4 +12,4 @@ add_library(kbsdll SHARED ${SOURCE})
 
 set_module_type(kbsdll win32dll)
 add_importlibs(kbsdll user32 comctl32 kernel32 msvcrt)
-add_cab_target(kbsdll 1)
+add_cd_file(TARGET kbsdll DESTINATION reactos/system32)

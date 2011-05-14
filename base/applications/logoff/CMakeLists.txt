@@ -12,4 +12,4 @@ add_pch(logoff ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(logoff win32cui)
 add_importlibs(logoff advapi32 user32 msvcrt kernel32)
-add_cab_target(logoff 1)
+add_cd_file(TARGET logoff DESTINATION reactos/system32)

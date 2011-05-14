@@ -24,5 +24,4 @@ add_importlibs(cdfs ntoskrnl hal)
 
 add_pch(cdfs ${CMAKE_CURRENT_SOURCE_DIR}/cdfs.h ${SOURCE})
 
-add_minicd_target(cdfs reactos cdfs.sys)
-add_livecd_target(cdfs reactos/system32/drivers cdfs.sys)
+add_cd_file(TARGET cdfs DESTINATION reactos/system32/drivers NO_CAB)

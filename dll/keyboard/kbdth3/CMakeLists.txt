@@ -9,4 +9,4 @@ set_entrypoint(kbdth3 0)
 
 add_dependencies(kbdth3 psdk)
 
-add_cab_target(kbdth3 1)
+add_cd_file(TARGET kbdth3 DESTINATION reactos/system32)

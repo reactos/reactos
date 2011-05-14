@@ -9,4 +9,4 @@ set_entrypoint(kbdblr 0)
 
 add_dependencies(kbdblr psdk)
 
-add_cab_target(kbdblr 1)
+add_cd_file(TARGET kbdblr DESTINATION reactos/system32)

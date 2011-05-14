@@ -9,4 +9,4 @@ set_entrypoint(kbdhu 0)
 
 add_dependencies(kbdhu psdk)
 
-add_cab_target(kbdhu 1)
+add_cd_file(TARGET kbdhu DESTINATION reactos/system32)

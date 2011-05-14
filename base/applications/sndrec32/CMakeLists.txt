@@ -17,4 +17,4 @@ add_executable(sndrec32
 target_link_libraries(sndrec32 stlport)
 set_module_type(sndrec32 win32gui)
 add_importlibs(sndrec32 winmm user32 msacm32 comctl32 comdlg32 gdi32 msvcrt kernel32)
-add_cab_target(sndrec32 1)
+add_cd_file(TARGET sndrec32 DESTINATION reactos/system32)

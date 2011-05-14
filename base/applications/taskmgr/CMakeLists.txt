@@ -29,4 +29,4 @@ add_pch(taskmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(taskmgr win32gui)
 add_importlibs(taskmgr advapi32 user32 gdi32 shell32 comctl32 msvcrt kernel32 ntdll)
-add_cab_target(taskmgr 1)
+add_cd_file(TARGET taskmgr DESTINATION reactos/system32)

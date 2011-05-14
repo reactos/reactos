@@ -39,4 +39,4 @@ add_importlibs(actxprxy
 
 add_definitions(-DREGISTER_PROXY_DLL -DPROXY_DELEGATION)
 
-add_cab_target(actxprxy 1)
+add_cd_file(TARGET actxprxy DESTINATION reactos/system32)

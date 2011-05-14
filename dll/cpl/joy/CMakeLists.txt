@@ -19,4 +19,4 @@ add_importlibs(joy
     kernel32
     ntdll)
 
-add_cab_target(joy 1)
+add_cd_file(TARGET joy DESTINATION reactos/system32)

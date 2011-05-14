@@ -16,4 +16,4 @@ set_module_type(msiexec win32gui)
 
 target_link_libraries(msiexec uuid wine)
 add_importlibs(msiexec user32 advapi32 ole32 msi msvcrt kernel32 ntdll)
-add_cab_target(msiexec 1)
+add_cd_file(TARGET msiexec DESTINATION reactos/system32)

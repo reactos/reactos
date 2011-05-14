@@ -9,4 +9,4 @@ set_entrypoint(kbduzb 0)
 
 add_dependencies(kbduzb psdk)
 
-add_cab_target(kbduzb 1)
+add_cd_file(TARGET kbduzb DESTINATION reactos/system32)

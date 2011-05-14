@@ -31,4 +31,4 @@ add_importlibs(usrmgr
     ntdll)
 
 
-add_cab_target(usrmgr 1)
+add_cd_file(TARGET usrmgr DESTINATION reactos/system32)

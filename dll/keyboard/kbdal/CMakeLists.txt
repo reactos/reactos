@@ -9,4 +9,4 @@ set_entrypoint(kbdal 0)
 
 add_dependencies(kbdal psdk)
 
-add_cab_target(kbdal 1)
+add_cd_file(TARGET kbdal DESTINATION reactos/system32)

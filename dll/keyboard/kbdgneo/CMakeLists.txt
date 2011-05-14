@@ -9,4 +9,4 @@ set_entrypoint(kbdgneo 0)
 
 add_dependencies(kbdgneo psdk)
 
-add_cab_target(kbdgneo 1)
+add_cd_file(TARGET kbdgneo DESTINATION reactos/system32)

@@ -24,4 +24,4 @@ add_importlibs(shimgvw
     kernel32
     ntdll)
 
-add_cab_target(shimgvw 1)
+add_cd_file(TARGET shimgvw DESTINATION reactos/system32)

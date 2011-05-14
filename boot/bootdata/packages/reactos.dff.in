@@ -1,3 +1,4 @@
+
 ; Main ReactOS package
 
 .Set DiskLabelTemplate="ReactOS"                ; Label of disk

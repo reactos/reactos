@@ -15,5 +15,5 @@ target_link_libraries(lz32 wine)
 
 add_importlibs(lz32 kernel32 ntdll)
 add_dependencies(lz32 psdk)
-add_cab_target(lz32 1)
+add_cd_file(TARGET lz32 DESTINATION reactos/system32)
 add_importlib_target(lz32.spec)

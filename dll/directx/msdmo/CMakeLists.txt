@@ -26,4 +26,4 @@ add_importlibs(msdmo
 
 add_dependencies(msdmo dxsdk psdk)
 
-add_cab_target(msdmo 1)
+add_cd_file(TARGET msdmo DESTINATION reactos/system32)

@@ -15,4 +15,4 @@ add_importlib_target(batt.spec)
 
 add_importlibs(batt msvcrt kernel32 ntdll)
 
-add_cab_target(batt 1)
+add_cd_file(TARGET batt DESTINATION reactos/system32)

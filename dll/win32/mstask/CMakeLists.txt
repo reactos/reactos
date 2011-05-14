@@ -34,4 +34,4 @@ target_link_libraries(mstask uuid wine)
 
 add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
 
-add_cab_target(mstask 1)
+add_cd_file(TARGET mstask DESTINATION reactos/system32)

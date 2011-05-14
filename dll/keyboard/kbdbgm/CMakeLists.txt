@@ -9,4 +9,4 @@ set_entrypoint(kbdbgm 0)
 
 add_dependencies(kbdbgm psdk)
 
-add_cab_target(kbdbgm 1)
+add_cd_file(TARGET kbdbgm DESTINATION reactos/system32)

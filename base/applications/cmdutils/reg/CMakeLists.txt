@@ -8,4 +8,4 @@ add_executable(reg reg.c rsrc.rc)
 
 set_module_type(reg win32cui)
 add_importlibs(reg advapi32 user32 msvcrt kernel32)
-add_cab_target(reg 1)
+add_cd_file(TARGET reg DESTINATION reactos/system32)

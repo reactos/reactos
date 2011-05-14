@@ -62,5 +62,5 @@ target_link_libraries(oleaut32
 
 add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl32 urlmon msvcrt kernel32 ntdll)
 
-add_cab_target(oleaut32 1)
+add_cd_file(TARGET oleaut32 DESTINATION reactos/system32)
 add_importlib_target(oleaut32.spec)

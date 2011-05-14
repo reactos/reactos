@@ -14,4 +14,4 @@ target_link_libraries(shdoclc wine)
 add_importlibs(shdoclc kernel32 ntdll)
 add_dependencies(shdoclc psdk)
 
-add_cab_target(shdoclc 1)
+add_cd_file(TARGET shdoclc DESTINATION reactos/system32)

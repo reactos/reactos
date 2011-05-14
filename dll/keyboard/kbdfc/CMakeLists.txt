@@ -9,4 +9,4 @@ set_entrypoint(kbdfc 0)
 
 add_dependencies(kbdfc psdk)
 
-add_cab_target(kbdfc 1)
+add_cd_file(TARGET kbdfc DESTINATION reactos/system32)

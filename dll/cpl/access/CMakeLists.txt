@@ -24,4 +24,4 @@ add_importlibs(access
     comctl32
     kernel32)
 
-add_cab_target(access 1)
+add_cd_file(TARGET access DESTINATION reactos/system32)

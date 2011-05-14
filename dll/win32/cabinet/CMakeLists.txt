@@ -23,4 +23,4 @@ add_importlibs(cabinet kernel32 ntdll)
 add_importlib_target(cabinet.spec)
 
 add_dependencies(cabinet psdk)
-add_cab_target(cabinet 1)
+add_cd_file(TARGET cabinet DESTINATION reactos/system32)

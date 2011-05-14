@@ -9,4 +9,4 @@ set_entrypoint(kbdsw 0)
 
 add_dependencies(kbdsw psdk)
 
-add_cab_target(kbdsw 1)
+add_cd_file(TARGET kbdsw DESTINATION reactos/system32)

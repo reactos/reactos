@@ -9,4 +9,4 @@ set_entrypoint(kbdne 0)
 
 add_dependencies(kbdne psdk)
 
-add_cab_target(kbdne 1)
+add_cd_file(TARGET kbdne DESTINATION reactos/system32)

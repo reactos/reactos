@@ -22,7 +22,6 @@ macro(CreateBootSectorTarget _target_name _asm_file _object_file)
         DEPENDS ${_asm_file})
     set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
     add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
-    add_minicd(${_object_file} loader ${OBJECT_NAME})
 endmacro()
 
 else()
@@ -32,89 +31,12 @@ endmacro()
 
 endif()
 
-macro(add_minicd_target _targetname _dir) # optional parameter: _nameoncd
-    if("${ARGN}" STREQUAL "")
-        get_target_property(FILENAME ${_targetname} LOCATION)
-        get_filename_component(_nameoncd ${FILENAME} NAME)
-    else()
-        set(_nameoncd ${ARGN})
-    endif()
-
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
-endmacro()
-
-macro(add_minicd FILENAME _dir _nameoncd)
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt "${FILENAME}\t${_dir}\t${_nameoncd}\n")
-endmacro()
-
 macro(set_cpp)
     include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
     set(IS_CPP 1)
     add_definitions(
         -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
         -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
-endmacro()
-
-macro(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
-    if("${ARGN}" STREQUAL "")
-        get_target_property(FILENAME ${_targetname} LOCATION)
-        get_filename_component(_nameoncd ${FILENAME} NAME)
-    else()
-        set(_nameoncd ${ARGN})
-    endif()
-
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
-endmacro()
-
-macro(add_livecd FILENAME _dir)# optional parameter : _nameoncd
-    if("${ARGN}" STREQUAL "")
-        get_filename_component(_nameoncd ${FILENAME} NAME)
-    else()
-        set(_nameoncd ${ARGN})
-    endif()
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt "${FILENAME}\t${_dir}\t${_nameoncd}\n")
-endmacro()
-
-macro(cab_to_dir _dir_num _var_name)
-#   1 = system32
-#   2 = system32\drivers
-#   3 = Fonts
-#   4 =
-#   5 = system32\drivers\etc
-#   6 = inf
-#   7 = bin
-#   8 = media
-    if(${_dir_num} STREQUAL "1")
-        set(${_var_name} "reactos/system32")
-    elseif(${_dir_num} STREQUAL "2")
-        set(${_var_name} "reactos/system32/drivers")
-    elseif(${_dir_num} STREQUAL "3")
-        set(${_var_name} "reactos/fonts")
-    elseif(${_dir_num} STREQUAL "4")
-        set(${_var_name} "reactos")
-    elseif(${_dir_num} STREQUAL "5")
-        set(${_var_name} "reactos/system32/drivers/etc")
-    elseif(${_dir_num} STREQUAL "6")
-        set(${_var_name} "reactos/inf")
-    elseif(${_dir_num} STREQUAL "7")
-        set(${_var_name} "reactos/bin")
-    elseif(${_dir_num} STREQUAL "8")
-        set(${_var_name} "reactos/system32/drivers")
-    else()
-        message(FATAL_ERROR "Wrong directory ${_dir_num}")
-    endif()
-endmacro()
-
-macro(add_cab_target _targetname _num )
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt "${_targetname}\t${_num}\n")
-    cab_to_dir(${_num} _dir)
-    add_livecd_target(${_targetname} ${_dir})
-endmacro()
-
-macro(add_cab FILENAME _num)
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_cab.txt "${FILENAME}\t${_num}\n")
-    cab_to_dir(${_num} _dir)
-    add_livecd(${FILENAME} ${_dir})
 endmacro()
 
 macro(add_dependency_node _node)
@@ -159,3 +81,75 @@ macro(add_message_headers)
     endforeach()
 endmacro()
 
+macro(dir_to_num dir var)
+    if(${dir} STREQUAL reactos/system32)
+        set(${var} 1)
+    elseif(${dir} STREQUAL reactos/system32/drivers)
+        set(${var} 2)
+    elseif(${dir} STREQUAL reactos/Fonts)
+        set(${var} 3)
+    elseif(${dir} STREQUAL reactos)
+        set(${var} 4)
+    elseif(${dir} STREQUAL reactos/system32/drivers/etc)
+        set(${var} 5)
+    elseif(${dir} STREQUAL reactos/inf)
+        set(${var} 6)
+    elseif(${dir} STREQUAL reactos/bin)
+        set(${var} 7)
+    elseif(${dir} STREQUAL reactos/media)
+        set(${var} 8)
+    else()
+        message(ERROR "Wrong destination: ${dir}")
+    endif()
+endmacro()
+
+function(add_cd_file)
+    cmake_parse_arguments(_CD "NO_CAB;NO_LIVECD" "DESTINATION;NAME_ON_CD;TARGET" "FILE" ${ARGN})
+    if(NOT (_CD_TARGET OR _CD_FILE))
+        message(FATAL_ERROR "You must provide a target or a file to install!")
+    endif()
+    
+    if(NOT _CD_DESTINATION)
+        message(FATAL_ERROR "You must provide a destination")
+    elseif(${_CD_DESTINATION} STREQUAL root)
+        set(_CD_DESTINATION "")
+    endif()
+    
+    if(NOT _CD_FILE)
+        get_target_property(__file ${_CD_TARGET} LOCATION)
+    else()
+        if(NOT _CD_NO_CAB)
+            add_dependencies(reactos_cab ${_CD_FILE})
+        endif()
+        set(__file ${_CD_FILE})
+    endif()
+    #whether or not we should put it in reactos.cab or directly on cd
+    if(_CD_NO_CAB)
+        foreach(item ${__file})
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+        endforeach()
+        if(_CD_NAME_ON_CD)
+            get_filename_component(__file ${__file} NAME)
+            #rename it in the cd tree
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
+        endif()
+        #add right dependency
+        if(_CD_TARGET)
+            add_dependencies(bootcd ${_CD_TARGET})
+        else()
+            add_dependencies(bootcd ${_CD_FILE})
+        endif()
+        if(NOT _CD_NO_LIVECD)
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(COPY \"${__file}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+        endif()
+    else()
+        #add right dependency
+        if(_CD_TARGET)
+            add_dependencies(reactos_cab ${_CD_TARGET})
+        else()
+            add_dependencies(reactos_cab ${_CD_FILE})
+        endif()
+        dir_to_num(${_CD_DESTINATION} _num)
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${__file} ${_num}\n")
+    endif()
+endfunction()

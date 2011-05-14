@@ -54,5 +54,5 @@ add_importlibs(ddraw
     ntdll)
 
 add_dependencies(ddraw wineheaders)
-add_cab_target(ddraw 1)
+add_cd_file(TARGET ddraw DESTINATION reactos/system32)
 add_importlib_target(ddraw.spec)

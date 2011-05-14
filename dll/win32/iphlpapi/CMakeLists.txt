@@ -29,5 +29,5 @@ set_module_type(iphlpapi win32dll)
 
 target_link_libraries(iphlpapi wine tdilib)
 add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
-add_cab_target(iphlpapi 1)
+add_cd_file(TARGET iphlpapi DESTINATION reactos/system32)
 add_importlib_target(iphlpapi.spec)

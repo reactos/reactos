@@ -28,7 +28,7 @@ target_link_libraries(msacm32 wine)
 add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
 add_dependencies(msacm32 psdk)
 
-add_cab_target(msacm32 1)
+add_cd_file(TARGET msacm32 DESTINATION reactos/system32)
 add_importlib_target(msacm32.spec)
 
 add_subdirectory(msacm32.drv)

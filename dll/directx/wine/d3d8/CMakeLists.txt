@@ -48,4 +48,4 @@ add_importlibs(d3d8
     ntdll)
 
 add_dependencies(d3d8 wineheaders)
-add_cab_target(d3d8 1)
+add_cd_file(TARGET d3d8 DESTINATION reactos/system32)

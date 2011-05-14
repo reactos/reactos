@@ -36,4 +36,4 @@ add_importlibs(itss
     ntdll)
 
 add_dependencies(itss wineheaders)
-add_cab_target(itss 1)
+add_cd_file(TARGET itss DESTINATION reactos/system32)

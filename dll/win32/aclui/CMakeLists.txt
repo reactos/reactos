@@ -26,4 +26,4 @@ add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme msvcr
 
 add_pch(aclui ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cab_target(aclui 1)
+add_cd_file(TARGET aclui DESTINATION reactos/system32)

@@ -10,4 +10,4 @@ if(MSVC)
 add_importlibs(tracert ntdll)
 endif()
 
-add_cab_target(tracert 1)
+add_cd_file(TARGET tracert DESTINATION reactos/system32)

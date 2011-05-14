@@ -9,4 +9,4 @@ set_entrypoint(kbdcan 0)
 
 add_dependencies(kbdcan psdk)
 
-add_cab_target(kbdcan 1)
+add_cd_file(TARGET kbdcan DESTINATION reactos/system32)

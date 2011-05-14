@@ -30,5 +30,5 @@ target_link_libraries(lsasrv
 
 add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
 add_dependencies(lsasrv psdk)
-add_cab_target(lsasrv 1)
+add_cd_file(TARGET lsasrv DESTINATION reactos/system32)
 add_importlib_target(lsasrv.spec)
