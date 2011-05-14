@@ -474,10 +474,9 @@ KiGetFeatureBits(VOID)
             }
         }
     }
-    
+
+#define print_supported(kf_value) ((FeatureBits & kf_value) ? #kf_value : "")
     DPRINT1("Supported CPU features : %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-#define print_supported(kf_value) \
-    FeatureBits & kf_value ? #kf_value : ""
     print_supported(KF_V86_VIS),
     print_supported(KF_RDTSC),
     print_supported(KF_CR4),
@@ -739,7 +738,7 @@ KiGetCacheInformation(VOID)
                 /* Check if we support CPUID 0x80000006 */
                 CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
                 if (Data[0] >= 0x80000006)
-                {   
+                {
                     /* Get 2nd level cache and tlb size */
                     CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
                     
@@ -1352,7 +1351,7 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
         
         /* Now load NPX state from the NPX area */
         FxSaveArea = KiGetThreadNpxArea(Thread);
-        Ke386FxStore(FxSaveArea);    
+        Ke386FxStore(FxSaveArea);
     }
     else
     {
