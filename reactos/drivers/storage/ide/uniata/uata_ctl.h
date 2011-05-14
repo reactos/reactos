@@ -63,6 +63,7 @@ extern "C" {
 #define IOCTL_SCSI_MINIPORT_UNIATA_RESETBB         ((FILE_DEVICE_SCSI << 16) + 0x09a5)
 #define IOCTL_SCSI_MINIPORT_UNIATA_RESET_DEVICE    ((FILE_DEVICE_SCSI << 16) + 0x09a6)
 #define IOCTL_SCSI_MINIPORT_UNIATA_REG_IO          ((FILE_DEVICE_SCSI << 16) + 0x09a7)
+#define IOCTL_SCSI_MINIPORT_UNIATA_GET_VERSION     ((FILE_DEVICE_SCSI << 16) + 0x09a8)
 
 typedef struct _ADDREMOVEDEV {
     ULONG WaitForPhysicalLink; // us
@@ -86,6 +87,15 @@ typedef struct _GETTRANSFERMODE {
     ULONG CurrentMode;
     ULONG Reserved;
 } GETTRANSFERMODE, *PGETTRANSFERMODE;
+
+typedef struct _GETDRVVERSION {
+    ULONG Length;
+    USHORT VersionMj;
+    USHORT VersionMn;
+    USHORT SubVerMj;
+    USHORT SubVerMn;
+    ULONG Reserved;
+} GETDRVVERSION, *PGETDRVVERSION;
 
 typedef struct _CHANINFO {
     ULONG               MaxTransferMode; // may differ from Controller's value due to 40-pin cable
@@ -131,9 +141,11 @@ typedef struct _ADAPTERINFO {
     // with so many broken PCI IDE controllers being sold, we have
     // to support them.
     ULONG NumberChannels;
-
     BOOLEAN ChanInfoValid;
-    CHAR    Reserved[3];
+
+    UCHAR   NumberLuns;
+    BOOLEAN LunInfoValid;
+    CHAR    Reserved;
 
     ULONG   AdapterInterfaceType;
 
@@ -264,6 +276,7 @@ typedef struct _UNIATA_CTL {
         ADAPTERINFO             AdapterInfo;
 //        IDENTIFY_DATA2        LunIdent;
 //        ATA_PASS_THROUGH_DIRECT AtaDirect;
+        GETDRVVERSION           Version;
         UNIATA_REG_IO_HDR       RegIo;
     };
 } UNIATA_CTL, *PUNIATA_CTL;

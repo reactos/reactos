@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2005 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2011 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     atapi.h
@@ -92,14 +92,16 @@ ScsiDebugPrint(
 
 #else // SCSI_PORT_DBG_PRINT
 
-//#ifndef USE_DBGPRINT_LOGGER
-//ULONG
-//_cdecl
-//DbgPrint(
-//    PCH Format,
-//    ...
-//    );
-//#endif // USE_DBGPRINT_LOGGER
+#ifndef USE_DBGPRINT_LOGGER
+/*
+ULONG
+_cdecl
+DbgPrint(
+    PCH Format,
+    ...
+    );
+*/
+#endif // USE_DBGPRINT_LOGGER
 
 #define PRINT_PREFIX
 
@@ -243,8 +245,8 @@ typedef struct _IDE_REGISTERS_2 {
 #define DFLAGS_DWORDIO_ENABLED       0x0400    // Indicates that we should use 32-bit IO
 #define DFLAGS_WCACHE_ENABLED        0x0800    // Indicates that we use write cache
 #define DFLAGS_RCACHE_ENABLED        0x1000    // Indicates that we use read cache
-#define DFLAGS_ORIG_GEOMETRY         0x2000    //
-#define DFLAGS_REINIT_DMA            0x4000    //
+#define DFLAGS_ORIG_GEOMETRY         0x2000    // 
+#define DFLAGS_REINIT_DMA            0x4000    // 
 #define DFLAGS_HIDDEN                0x8000    // Hidden device, available only with special IOCTLs
                                                // via communication virtual device
 //#define DFLAGS_            0x10000    // 
@@ -346,18 +348,20 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_DOOR_UNLOCK      0xDF
 #define IDE_COMMAND_STANDBY_IMMED    0xE0 // flush and spin down
 #define IDE_COMMAND_STANDBY          0xE2 // flush and spin down and enable autopowerdown timer
+#define IDE_COMMAND_READ_PM          0xE4 // SATA PM
 #define IDE_COMMAND_SLEEP            0xE6 // flush, spin down and deactivate interface
 #define IDE_COMMAND_FLUSH_CACHE      0xE7
+#define IDE_COMMAND_WRITE_PM         0xE8 // SATA PM
 #define IDE_COMMAND_IDENTIFY         0xEC
 #define IDE_COMMAND_MEDIA_EJECT      0xED
 #define IDE_COMMAND_FLUSH_CACHE48    0xEA
 #define IDE_COMMAND_ENABLE_MEDIA_STATUS  0xEF
-#define	IDE_COMMAND_SET_FEATURES     0xEF      /* features command,
+#define	IDE_COMMAND_SET_FEATURES     0xEF      /* features command, 
                                                  IDE_COMMAND_ENABLE_MEDIA_STATUS */
 #define IDE_COMMAND_READ_NATIVE_SIZE 0xF8
 #define IDE_COMMAND_SET_NATIVE_SIZE  0xF9
 
-#define SCSIOP_ATA_PASSTHROUGH       0xCC //
+#define SCSIOP_ATA_PASSTHROUGH       0xCC // 
 
 //
 // IDE status definitions
@@ -569,7 +573,7 @@ typedef struct _IDENTIFY_DATA {
     USHORT DoubleWordIo;                    // 60  48
 
     USHORT Reserved62_0:8;                  // 62  49
-    USHORT SupportDma:1;
+    USHORT SupportDma:1;                    
     USHORT SupportLba:1;
     USHORT DisableIordy:1;
     USHORT SupportIordy:1;
@@ -587,11 +591,11 @@ typedef struct _IDENTIFY_DATA {
 #define IDENTIFY_CAPABILITIES_SUPPORT_QTAG  0x4000
 #define IDENTIFY_CAPABILITIES_SUPPORT_IDMA  0x8000*/
 
-    USHORT DeviceStandbyMin:1;              // 64  50
+    USHORT DeviceStandbyMin:1;              // 64  50      
     USHORT Reserved50_1:13;
     USHORT DeviceCapability1:1;
     USHORT DeviceCapability0:1;
-//    USHORT Reserved2;
+//    USHORT Reserved2;                       
 
     UCHAR  Vendor51;                        // 66  51
     UCHAR  PioCycleTimingMode;              // 67
@@ -644,6 +648,7 @@ typedef struct _IDENTIFY_DATA {
     USHORT SataCapabilities;                //     76
 #define ATA_SATA_GEN1			0x0002
 #define ATA_SATA_GEN2			0x0004
+#define ATA_SATA_GEN3			0x0008
 #define ATA_SUPPORT_NCQ			0x0100
 #define ATA_SUPPORT_IFPWRMNGTRCV	0x0200
 
@@ -678,12 +683,12 @@ typedef struct _IDENTIFY_DATA {
         USHORT Reserved_82_15:1;
 
         USHORT Microcode:1;                  //     83/86
-        USHORT Queued:1;                     //
-        USHORT CFA:1;                        //
-        USHORT APM:1;                        //
-        USHORT Notify:1;                     //
-        USHORT Standby:1;                    //
-        USHORT Spinup:1;                     //
+        USHORT Queued:1;                     //     
+        USHORT CFA:1;                        //     
+        USHORT APM:1;                        //     
+        USHORT Notify:1;                     //     
+        USHORT Standby:1;                    //     
+        USHORT Spinup:1;                     //     
         USHORT Reserver_83_7:1;
         USHORT MaxSecurity:1;                //
         USHORT AutoAcoustic:1;               //
@@ -707,7 +712,7 @@ typedef struct _IDENTIFY_DATA {
 
     USHORT UltraDMASupport : 8;             //     88
     USHORT UltraDMAActive : 8;
-
+    
     USHORT EraseTime;                       //     89
     USHORT EnhancedEraseTime;               //     90
     USHORT CurentAPMLevel;                  //     91
@@ -743,9 +748,9 @@ typedef struct _IDENTIFY_DATA {
     USHORT Reserved107[10];                 //     107-116
 
     ULONG  LargeSectorSize;                 //     117-118
-
+    
     USHORT Reserved117[8];                  //     119-126
-
+    
     USHORT RemovableStatus;                 //     127
     USHORT SecurityStatus;                  //     128
 
@@ -775,7 +780,7 @@ typedef struct _IDENTIFY_DATA {
     UCHAR  :1;
     UCHAR  CmdProtocol:2;                      // 00 00
 //    USHORT GeneralConfiguration;            // 00
-
+  
     USHORT NumberOfCylinders;               // 02
     USHORT Reserved1;                       // 04
     USHORT NumberOfHeads;                   // 06
@@ -944,29 +949,6 @@ AtapiSoftReset(
     ULONG            DeviceNumber
     );
 
-/*#define IdeHardReset(BaseIoAddress,result) \
-{\
-    UCHAR statusByte;\
-    ULONG i;\
-    SelectDrive(BaseIoAddress,DeviceNumber); \
-    AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_DISABLE_INTERRUPTS | IDE_DC_RESET_CONTROLLER );\
-    ScsiPortStallExecution(50 * 1000);\
-    AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_REENABLE_CONTROLLER);\
-    // 5 seconds for reset \
-    for (i = 0; i < 1000 * (1+11); i++) {\
-        statusByte = AtapiReadPort1(&BaseIoAddress->AltStatus);\
-        if (statusByte != IDE_STATUS_IDLE && statusByte != IDE_STATUS_SUCCESS) {\
-            ScsiPortStallExecution((i<1000) ? 5 : 500);\
-        } else {\
-            break;\
-        }\
-    }\
-    KdPrint2((PRINT_PREFIX "IdeHardReset: Status %x\n", statusByte)); \
-    if (i == 1000*1000) {\
-        result = FALSE;\
-    }\
-    result = TRUE;\
-}*/
 
 #endif //USER_MODE
 
@@ -1045,6 +1027,17 @@ AtapiInterrupt__(
     IN UCHAR c
     );
 
+UCHAR
+NTAPI
+AtapiCheckInterrupt__(
+    IN PVOID HwDeviceExtension,
+    IN UCHAR c
+    );
+
+#define INTERRUPT_REASON_IGNORE          0
+#define INTERRUPT_REASON_OUR             1
+#define INTERRUPT_REASON_UNEXPECTED      2
+
 BOOLEAN
 NTAPI
 AtapiHwInitialize(
@@ -1061,9 +1054,10 @@ IdeBuildSenseBuffer(
 VOID
 NTAPI
 IdeMediaStatus(
-    IN BOOLEAN EnableMSN,
+    BOOLEAN EnableMSN,
     IN PVOID HwDeviceExtension,
-    IN UCHAR Channel
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber
     );
 
 ULONG NTAPI
@@ -1324,6 +1318,14 @@ UniataAnybodyHome(
 
 extern UCHAR AtaCommands48[256];
 extern UCHAR AtaCommandFlags[256];
+
+/*
+ We need LBA48 when requested LBA or BlockCount are too large.
+ But for LBA-based commands we have *special* limitation
+*/
+#define UniAta_need_lba48(command, lba, count, supp48) \
+    (  ((AtaCommandFlags[command] & ATA_CMD_FLAG_LBAIOsupp) && (supp48) && (((lba+count) >= ATA_MAX_IOLBA28) || (count > 256)) ) || \
+       (lba > ATA_MAX_LBA28) || (count > 255) )
 
 #ifdef _DEBUG
 #define PrintNtConsole  _PrintNtConsole

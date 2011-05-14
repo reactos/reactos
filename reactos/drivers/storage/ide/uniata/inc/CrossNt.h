@@ -57,7 +57,13 @@ CrNtGetProcAddress(
     PCHAR pFunctionName
     );
 
-typedef BOOLEAN (__stdcall *ptrCrNtPsGetVersion)(
+#ifdef __GNUC__
+  #define DECL_FUNC_PTR(_type, _cconv, _name)    _type _cconv ( * _name)
+#else
+  #define DECL_FUNC_PTR(_type, _cconv, _name)    _type (_cconv * _name)
+#endif
+
+typedef DECL_FUNC_PTR(BOOLEAN, __stdcall, ptrCrNtPsGetVersion)(
     PULONG MajorVersion OPTIONAL,
     PULONG MinorVersion OPTIONAL,
     PULONG BuildNumber OPTIONAL,
@@ -67,7 +73,7 @@ typedef BOOLEAN (__stdcall *ptrCrNtPsGetVersion)(
 extern "C"
 ptrCrNtPsGetVersion  CrNtPsGetVersion;
 
-typedef NTSTATUS (__stdcall *ptrCrNtNtQuerySystemInformation)(
+typedef DECL_FUNC_PTR(NTSTATUS, __stdcall, ptrCrNtNtQuerySystemInformation)(
     IN SYSTEM_INFORMATION_CLASS SystemInfoClass,
     OUT PVOID                   SystemInfoBuffer,
     IN ULONG                    SystemInfoBufferSize,
@@ -114,6 +120,8 @@ extern HANDLE g_hHal;
 // NT3.51 doesn't export strlen() and strcmp()
 // The same time, Release build doesn't depend no these functions since they are inlined
 
+#ifndef USE_REACTOS_DDK
+
 size_t __cdecl CrNtstrlen (
         const char * str
         );
@@ -125,6 +133,8 @@ int __cdecl CrNtstrcmp (
 
 #define strlen CrNtstrlen
 #define strcmp CrNtstrcmp
+
+#endif // !USE_REACTOS_DDK
 
 #endif //_DEBUG
 
