@@ -66,7 +66,7 @@ extern "C" {
 #endif
 
 #ifdef USE_DBGPRINT_LOGGER
-#include "inc\PostDbgMesg.h"
+#include "inc/PostDbgMesg.h"
 #define DbgPrint             DbgDump_Printf
 #define Connect_DbgPrint()   {DbgDump_SetAutoReconnect(TRUE); DbgDump_Reconnect();}
 #else // USE_DBGPRINT_LOGGER
