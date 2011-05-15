@@ -2645,7 +2645,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     {
         RtlEnterHeapLock(Heap->LockVariable);
         HeapLocked = TRUE;
-        Flags &= ~HEAP_NO_SERIALIZE;
+        Flags ^= HEAP_NO_SERIALIZE;
     }
 
     /* Get the pointer to the in-use entry */
