@@ -369,10 +369,16 @@ public:																			\
     reinterpret_cast<DWORD>(&_CComChainData<classname, _ComMapClass>::data),	\
     _Chain},
 
-#define DECLARE_REGISTRY_RESOURCEID(x)\
-	static HRESULT WINAPI UpdateRegistry(BOOL bRegister)\
-	{\
-		return ATL::_pAtlModule->UpdateRegistryFromResource(x, bRegister); \
+#define DECLARE_NO_REGISTRY()\
+	static HRESULT WINAPI UpdateRegistry(BOOL /*bRegister*/)					\
+	{																			\
+		return S_OK;															\
+	}
+
+#define DECLARE_REGISTRY_RESOURCEID(x)											\
+	static HRESULT WINAPI UpdateRegistry(BOOL bRegister)						\
+	{																			\
+		return ATL::_pAtlModule->UpdateRegistryFromResource(x, bRegister);		\
 	}
 
 #define DECLARE_NOT_AGGREGATABLE(x)												\
@@ -841,8 +847,8 @@ public:
 		newArray = reinterpret_cast<IUnknown **>(realloc(m_ppUnk, newSize * sizeof(IUnknown *)));
 		if (newArray == NULL)
 			return 0;
-		memset(&m_ppUnk[m_nSize], 0, (newSize - m_nSize) * sizeof(IUnknown *));
 		m_ppUnk = newArray;
+		memset(&m_ppUnk[m_nSize], 0, (newSize - m_nSize) * sizeof(IUnknown *));
 		m_nSize = newSize;
 		m_ppUnk[m_nSize] = pUnk;
 		return m_nSize + 1;
@@ -862,6 +868,15 @@ public:
 		return FALSE;
 	}
 
+private:
+	CComDynamicUnkArray &operator = (const CComDynamicUnkArray &)
+	{
+		return *this;
+	}
+
+	CComDynamicUnkArray(const CComDynamicUnkArray &)
+	{
+	}
 };
 
 struct _ATL_CONNMAP_ENTRY

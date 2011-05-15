@@ -24,7 +24,7 @@
 #define GCCU(x)	x __attribute__((unused))
 #define Unused(x)
 #else
-#define GCCU(x) x
+#define GCCU(x)
 #define Unused(x)	(x);
 #endif // __GNUC__
 
@@ -353,6 +353,11 @@ public:
 		return ::ShowWindow(m_hWnd, nCmdShow);
 	}
 
+	BOOL UpdateWindow()
+	{
+		ATLASSERT(::IsWindow(m_hWnd));
+		return ::UpdateWindow(m_hWnd);
+	}
 };
 
 _declspec(selectany) RECT CWindow::rcDefault = { CW_USEDEFAULT, CW_USEDEFAULT, 0, 0 };
@@ -770,6 +775,8 @@ struct _ATL_WNDCLASSINFOW
 
 	ATOM Register(WNDPROC *p)
 	{
+		if (m_wc.hInstance == NULL)
+			m_wc.hInstance = _AtlBaseModule.GetModuleInstance();
 		if (m_atom == 0)
 			m_atom = RegisterClassEx(&m_wc);
 		return m_atom;

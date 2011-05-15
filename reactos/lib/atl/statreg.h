@@ -89,13 +89,26 @@ public:
 		rep_list							*new_rep;
 
 		new_rep = reinterpret_cast<rep_list *>(HeapAlloc(GetProcessHeap(), 0, sizeof(rep_list)));
+		if (new_rep == NULL)
+			return E_OUTOFMEMORY;
 
 		new_rep->key_len  = lstrlenW(key);
 		new_rep->key = reinterpret_cast<OLECHAR *>(HeapAlloc(GetProcessHeap(), 0, (new_rep->key_len + 1) * sizeof(OLECHAR)));
+		if (new_rep->key == NULL)
+		{
+			HeapFree(GetProcessHeap(), 0, new_rep);
+			return E_OUTOFMEMORY;
+		}
 		memcpy(new_rep->key, key, (new_rep->key_len + 1) * sizeof(OLECHAR));
 
 		len = lstrlenW(item) + 1;
 		new_rep->item = reinterpret_cast<OLECHAR *>(HeapAlloc(GetProcessHeap(), 0, len * sizeof(OLECHAR)));
+		if (new_rep->item == NULL)
+		{
+			HeapFree(GetProcessHeap(), 0, new_rep->key);
+			HeapFree(GetProcessHeap(), 0, new_rep);
+			return E_OUTOFMEMORY;
+		}
 		memcpy(new_rep->item, item, len * sizeof(OLECHAR));
 
 		new_rep->next = m_rep;
@@ -205,25 +218,34 @@ private:
 		return RegDeleteKey(parentKey, subKeyName);
 	}
 
-	void strbuf_init(strbuf *buf)
+	HRESULT strbuf_init(strbuf *buf)
 	{
 		buf->str = reinterpret_cast<LPOLESTR>(HeapAlloc(GetProcessHeap(), 0, 128 * sizeof(WCHAR)));
+		if (buf->str == NULL)
+			return E_OUTOFMEMORY;
 		buf->alloc = 128;
 		buf->len = 0;
+		return S_OK;
 	}
 
-	void strbuf_write(LPCOLESTR str, strbuf *buf, int len)
+	HRESULT strbuf_write(LPCOLESTR str, strbuf *buf, int len)
 	{
+		LPOLESTR							newBuffer;
+
 		if (len == -1)
 			len = lstrlenW(str);
-		if (buf->len+len+1 >= buf->alloc)
+		if (buf->len + len + 1 >= buf->alloc)
 		{
 			buf->alloc = (buf->len + len) * 2;
-			buf->str = reinterpret_cast<LPOLESTR>(HeapReAlloc(GetProcessHeap(), 0, buf->str, buf->alloc * sizeof(WCHAR)));
+			newBuffer = reinterpret_cast<LPOLESTR>(HeapReAlloc(GetProcessHeap(), 0, buf->str, buf->alloc * sizeof(WCHAR)));
+			if (newBuffer == NULL)
+				return E_OUTOFMEMORY;
+			buf->str = newBuffer;
 		}
 		memcpy(buf->str + buf->len, str, len * sizeof(OLECHAR));
 		buf->len += len;
 		buf->str[buf->len] = '\0';
+		return S_OK;
 	}
 
 
@@ -242,11 +264,18 @@ private:
 		{
 			filelen = GetFileSize(file, NULL);
 			regstra = reinterpret_cast<LPSTR>(HeapAlloc(GetProcessHeap(), 0, filelen));
+			if (regstra == NULL)
+				return E_OUTOFMEMORY;
 			lres = ReadFile(file, regstra, filelen, NULL, NULL);
 			if (lres == ERROR_SUCCESS)
 			{
 				len = MultiByteToWideChar(CP_ACP, 0, regstra, filelen, NULL, 0) + 1;
 				regstrw = reinterpret_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR)));
+				if (regstra == NULL)
+				{
+					HeapFree(GetProcessHeap(), 0, regstra);
+					return E_OUTOFMEMORY;
+				}
 				MultiByteToWideChar(CP_ACP, 0, regstra, filelen, regstrw, len);
 				regstrw[len - 1] = '\0';
 
@@ -291,6 +320,8 @@ private:
 				{
 					len = MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<LPCSTR>(regstra), reslen, NULL, 0) + 1;
 					regstrw = reinterpret_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR)));
+					if (regstrw == NULL)
+						return E_OUTOFMEMORY;
 					MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<LPCSTR>(regstra), reslen, regstrw, len);
 					regstrw[len - 1] = '\0';
 
@@ -316,7 +347,9 @@ private:
 		strbuf								buf;
 		HRESULT								hResult;
 
-		strbuf_init(&buf);
+		hResult = strbuf_init(&buf);
+		if (FAILED(hResult))
+			return hResult;
 		hResult = do_preprocess(data, &buf);
 		if (SUCCEEDED(hResult))
 		{
@@ -334,12 +367,15 @@ private:
 		LPCOLESTR							iter;
 		LPCOLESTR							iter2;
 		rep_list							*rep_iter;
+		HRESULT								hResult;
 
 		iter2 = data;
 		iter = wcschr(data, '%');
 		while (iter)
 		{
-			strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			hResult = strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			if (FAILED(hResult))
+				return hResult;
 
 			iter2 = ++iter;
 			if (!*iter2)
@@ -349,7 +385,11 @@ private:
 				return DISP_E_EXCEPTION;
 
 			if (iter == iter2)
-				strbuf_write(_T("%"), buf, 1);
+			{
+				hResult = strbuf_write(_T("%"), buf, 1);
+				if (FAILED(hResult))
+					return hResult;
+			}
 			else
 			{
 				for (rep_iter = m_rep; rep_iter; rep_iter = rep_iter->next)
@@ -360,14 +400,18 @@ private:
 				if (!rep_iter)
 					return DISP_E_EXCEPTION;
 
-				strbuf_write(rep_iter->item, buf, -1);
+				hResult = strbuf_write(rep_iter->item, buf, -1);
+				if (FAILED(hResult))
+					return hResult;
 			}
 
 			iter2 = ++iter;
 			iter = wcschr(iter, '%');
 		}
 
-		strbuf_write(iter2, buf, -1);
+		hResult = strbuf_write(iter2, buf, -1);
+		if (FAILED(hResult))
+			return hResult;
 
 		return S_OK;
 	}
@@ -376,6 +420,7 @@ private:
 	{
 		LPCOLESTR							iter;
 		LPCOLESTR							iter2;
+		HRESULT								hResult;
 
 		iter2 = *str;
 		buf->len = 0;
@@ -392,7 +437,9 @@ private:
 
 		if (*iter == '}' || *iter == '=')
 		{
-			strbuf_write(iter++, buf, 1);
+			hResult = strbuf_write(iter++, buf, 1);
+			if (FAILED(hResult))
+				return hResult;
 		}
 		else if (*iter == '\'')
 		{
@@ -403,20 +450,36 @@ private:
 				*str = iter;
 				return DISP_E_EXCEPTION;
 			}
-			strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			hResult = strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			if (FAILED(hResult))
+				return hResult;
 			iter++;
 		}
 		else
 		{
 			while (*iter && !iswspace(*iter))
 				iter++;
-			strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			hResult = strbuf_write(iter2, buf, static_cast<int>(iter - iter2));
+			if (FAILED(hResult))
+				return hResult;
 		}
 
 		while (iswspace(*iter))
 			iter++;
 		*str = iter;
 		return S_OK;
+	}
+
+	inline unsigned int HexToBin(char a)
+	{
+		if (a >= '0' && a <= '9')
+			return a - 0x30;
+		if (a >= 'A' && a <= 'F')
+			return a - 'A' + 10;
+		if (a >= 'a' && a <= 'f')
+			return a - 'a' + 10;
+		ATLASSERT(false);
+		return 0;
 	}
 
 	HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOOL do_register)
@@ -446,7 +509,9 @@ private:
 		hres = get_word(&iter, buf);
 		if (FAILED(hres))
 			return hres;
-		strbuf_init(&name);
+		hres = strbuf_init(&name);
+		if (FAILED(hres))
+			return hres;
 
 		while(buf->str[1] || buf->str[0] != '}')
 		{
@@ -463,7 +528,7 @@ private:
 			if (key_type != NORMAL)
 			{
 				hres = get_word(&iter, buf);
-				if(FAILED(hres))
+				if (FAILED(hres))
 					break;
 			}
 	    
@@ -472,7 +537,9 @@ private:
 				if (key_type == IS_VAL)
 				{
 					hkey = parent_key;
-					strbuf_write(buf->str, &name, -1);
+					hres = strbuf_write(buf->str, &name, -1);
+					if (FAILED(hres))
+						return hres;
 				}
 				else if (key_type == DO_DELETE)
 				{
@@ -492,7 +559,9 @@ private:
 			}
 			else if (key_type != IS_VAL && key_type != DO_DELETE)
 			{
-				strbuf_write(buf->str, &name, -1);
+				hres = strbuf_write(buf->str, &name, -1);
+				if (FAILED(hres))
+					return hres;
 				lres = RegOpenKey(parent_key, buf->str, &hkey);
 				if (lres != ERROR_SUCCESS)
 				{
@@ -521,31 +590,50 @@ private:
 							lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_SZ, (PBYTE)buf->str,
 									(lstrlenW(buf->str) + 1) * sizeof(WCHAR));
 							if (lres != ERROR_SUCCESS)
-							{
 								hres = HRESULT_FROM_WIN32(lres);
+							break;
+						case 'e':
+							hres = get_word(&iter, buf);
+							if (FAILED(hres))
 								break;
-							}
+							lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_EXPAND_SZ, (PBYTE)buf->str,
+									(lstrlenW(buf->str) + 1) * sizeof(WCHAR));
+							if (lres != ERROR_SUCCESS)
+								hres = HRESULT_FROM_WIN32(lres);
 							break;
 						case 'd':
 							{
+								hres = get_word(&iter, buf);
+								if (FAILED(hres))
+									break;
 								WCHAR *end;
 								DWORD dw;
-								if(*iter == '0' && iter[1] == 'x')
-								{
-									iter += 2;
-									dw = wcstol(iter, &end, 16);
-								}
+								if ((buf->str[0] == '0' && buf->str[1] == 'x') || (buf->str[0] == '&' && buf->str[1] == 'H'))
+									dw = wcstoul(&buf->str[2], &end, 16);
 								else
-								{
-									dw = wcstol(iter, &end, 10);
-								}
-								iter = end;
+									dw = wcstol(&buf->str[0], &end, 10);
 								lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_DWORD, (PBYTE)&dw, sizeof(dw));
 								if (lres != ERROR_SUCCESS)
-								{
 									hres = HRESULT_FROM_WIN32(lres);
+								break;
+							}
+						case 'b':
+							{
+								DWORD			count;
+								DWORD			curIndex;
+
+								hres = get_word(&iter, buf);
+								if (FAILED(hres))
 									break;
-								}
+								count = buf->len;
+								if ((count & 1) != 0)
+									return DISP_E_EXCEPTION;
+								count = count / 2;
+								for (curIndex = 0; curIndex < count; curIndex++)
+									buf->str[curIndex] = (HexToBin(buf->str[curIndex * 2]) << 4) | HexToBin(buf->str[curIndex * 2 + 1]);
+								lres = RegSetValueEx(hkey, name.len ? name.str :  NULL, 0, REG_BINARY, (PBYTE)buf->str, count);
+								if (lres != ERROR_SUCCESS)
+									hres = HRESULT_FROM_WIN32(lres);
 								break;
 							}
 						default:
@@ -628,9 +716,10 @@ private:
 		};
 
 		iter = data;
-		hResult = S_OK;
 
-		strbuf_init(&buf);
+		hResult = strbuf_init(&buf);
+		if (FAILED(hResult))
+			return hResult;
 		hResult = get_word(&iter, &buf);
 		if (FAILED(hResult))
 			return hResult;
