@@ -233,6 +233,16 @@ USBSTOR_CSWCompletionRoutine(
         // complete request
         //
         IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
+
+        //
+        // terminate current request
+        //
+        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, TRUE);
+
+        //
+        // start next request
+        //
+        USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
     }
 
     if (Context->Event)
@@ -432,7 +442,7 @@ USBSTOR_SendRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP OriginalRequest,
     IN OPTIONAL PKEVENT Event,
-    IN ULONG CommandLength,
+    IN UCHAR CommandLength,
     IN PUCHAR Command,
     IN ULONG TransferDataLength,
     IN PUCHAR TransferData)
@@ -740,11 +750,11 @@ USBSTOR_SendModeSenseCmd(
     UFI_SENSE_CMD Cmd;
     NTSTATUS Status;
     PVOID Response;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PCBW OutControl;
     PCDB pCDB;
     PUFI_MODE_PARAMETER_HEADER Header;
 #endif
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
 
@@ -763,6 +773,26 @@ USBSTOR_SendModeSenseCmd(
     Irp->IoStatus.Information = Request->DataTransferLength;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+    //
+    // terminate current request
+    //
+    USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, TRUE);
+
+    //
+    // start next request
+    //
+    USBSTOR_QueueNextRequest(PDODeviceExtension->LowerDeviceObject);
 
     return STATUS_SUCCESS;
 
@@ -956,7 +986,8 @@ USBSTOR_SendReadWriteCmd(
     RtlZeroMemory(&Cmd, sizeof(UFI_READ_WRITE_CMD));
     Cmd.Code = pCDB->AsByte[0];
     Cmd.LUN = (PDODeviceExtension->LUN & MAX_LUN);
-    Cmd.ContiguousLogicBlocks = _byteswap_ushort(BlockCount);
+    Cmd.ContiguousLogicBlocksByte0 = pCDB->CDB10.TransferBlocksMsb;
+    Cmd.ContiguousLogicBlocksByte1 = pCDB->CDB10.TransferBlocksLsb;
     Cmd.LogicalBlockByte0 = pCDB->CDB10.LogicalBlockByte0;
     Cmd.LogicalBlockByte1 = pCDB->CDB10.LogicalBlockByte1;
     Cmd.LogicalBlockByte2 = pCDB->CDB10.LogicalBlockByte2;
@@ -1023,6 +1054,17 @@ USBSTOR_HandleExecuteSCSI(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
     // get current stack location
@@ -1082,6 +1124,17 @@ USBSTOR_HandleExecuteSCSI(
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = Request->DataTransferLength;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        //
+        // terminate current request
+        //
+        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, TRUE);
+
+        //
+        // start next request
+        //
+        USBSTOR_QueueNextRequest(PDODeviceExtension->LowerDeviceObject);
+
         return STATUS_SUCCESS;
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)

@@ -32,6 +32,11 @@ USBSTOR_HandleInternalDeviceControl(
     Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
 
     //
+    // sanity check
+    //
+    ASSERT(Request);
+
+    //
     // get device extension
     //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -39,8 +44,7 @@ USBSTOR_HandleInternalDeviceControl(
     //
     // sanity check
     //
-    ASSERT(Request);
-    ASSERT(PDODeviceExtension);
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     switch(Request->Function)
     {
@@ -87,7 +91,7 @@ USBSTOR_HandleInternalDeviceControl(
             //
             // add the request
             //
-            if (!USBSTOR_QueueAddIrp(DeviceObject, Irp))
+            if (!USBSTOR_QueueAddIrp(PDODeviceExtension->LowerDeviceObject, Irp))
             {
                 //
                 // irp was not added to the queue
@@ -154,8 +158,7 @@ USBSTOR_HandleInternalDeviceControl(
             //
             // release queue
             //
-            USBSTOR_QueueRelease(DeviceObject);
-
+            USBSTOR_QueueRelease(PDODeviceExtension->LowerDeviceObject);
 
             //
             // set status success
@@ -173,7 +176,7 @@ USBSTOR_HandleInternalDeviceControl(
             //
             // flush all requests
             //
-            USBSTOR_QueueFlushIrps(DeviceObject);
+            USBSTOR_QueueFlushIrps(PDODeviceExtension->LowerDeviceObject);
 
             //
             // set status success

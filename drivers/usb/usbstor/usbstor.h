@@ -68,6 +68,7 @@ typedef struct
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
     BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
+    BOOLEAN SrbActive;                                                                   // debug field if srb is pending
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -164,7 +165,8 @@ typedef struct
     UCHAR LogicalBlockByte2;                                         // lba byte 2
     UCHAR LogicalBlockByte3;                                         // lba byte 3
     UCHAR Reserved;                                                  // reserved 0x00
-    USHORT ContiguousLogicBlocks;                                    // num of contiguous logical blocks
+    UCHAR ContiguousLogicBlocksByte0;                                // msb contigious logic blocks byte
+    UCHAR ContiguousLogicBlocksByte1;                                // msb contigious logic blocks
     UCHAR Reserved1[3];                                              // reserved 0x00
 }UFI_READ_WRITE_CMD;
 
@@ -424,3 +426,11 @@ VOID
 USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
+VOID
+USBSTOR_QueueNextRequest(
+    IN PDEVICE_OBJECT DeviceObject);
+
+VOID
+USBSTOR_QueueTerminateRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN ModifySrbState);

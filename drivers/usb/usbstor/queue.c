@@ -15,6 +15,10 @@ VOID
 USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension)
 {
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // initialize queue lock
@@ -85,21 +89,19 @@ USBSTOR_QueueAddIrp(
 {
     PDRIVER_CANCEL OldDriverCancel;
     KIRQL OldLevel;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     BOOLEAN IrpListFreeze;
     BOOLEAN SrbProcessing;
 
     //
-    // get pdo device extension
-    //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-    //
     // get FDO device extension
     //
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // mark irp pending
@@ -183,25 +185,19 @@ USBSTOR_RemoveIrp(
     IN PDEVICE_OBJECT DeviceObject)
 {
     KIRQL OldLevel;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PLIST_ENTRY Entry;
     PIRP Irp = NULL;
 
     //
-    // get pdo device extension
+    // get FDO device extension
     //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // sanity check
     //
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-    //
-    // get FDO device extension
-    //
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // acquire lock
@@ -240,7 +236,6 @@ USBSTOR_QueueFlushIrps(
     IN PDEVICE_OBJECT DeviceObject)
 {
     KIRQL OldLevel;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PLIST_ENTRY Entry;
     PIRP Irp;
@@ -248,19 +243,14 @@ USBSTOR_QueueFlushIrps(
     PSCSI_REQUEST_BLOCK Request;
 
     //
-    // get pdo device extension
+    // get FDO device extension
     //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // sanity check
     //
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-    //
-    // get FDO device extension
-    //
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // acquire lock
@@ -320,10 +310,58 @@ USBSTOR_QueueFlushIrps(
 }
 
 VOID
+USBSTOR_QueueTerminateRequest(
+    IN PDEVICE_OBJECT FDODeviceObject,
+    IN BOOLEAN ModifySrbState)
+{
+    KIRQL OldLevel;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    //
+    // get FDO device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FDODeviceObject->DeviceExtension;
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->Common.IsFDO);
+
+    //
+    // acquire lock
+    //
+    KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
+
+    //
+    // decrement pending irp count
+    //
+    FDODeviceExtension->IrpPendingCount--;
+
+    if (ModifySrbState)
+    {
+        //
+        // sanity check
+        //
+        ASSERT(FDODeviceExtension->SrbActive == TRUE);
+
+        //
+        // indicate processing is completed
+        //
+        FDODeviceExtension->SrbActive = FALSE;
+    }
+
+    //
+    // release lock
+    //
+    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+
+}
+
+VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
@@ -331,12 +369,12 @@ USBSTOR_QueueNextRequest(
     //
     // get pdo device extension
     //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // sanity check
     //
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // remove first irp from list
@@ -351,6 +389,7 @@ USBSTOR_QueueNextRequest(
         //
         // no work to do
         //
+        IoStartNextPacket(DeviceObject, TRUE);
         return;
     }
 
@@ -365,16 +404,25 @@ USBSTOR_QueueNextRequest(
     Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
 
     //
+    // sanity check
+    //
+    ASSERT(Request);
+
+    //
     // start next packet
     //
-    IoStartPacket(PDODeviceExtension->LowerDeviceObject, Irp, &Request->QueueSortKey, USBSTOR_CancelIo);
+    IoStartPacket(DeviceObject, Irp, &Request->QueueSortKey, USBSTOR_CancelIo);
+
+    //
+    // start next request
+    //
+    IoStartNextPacket(DeviceObject, TRUE);
 }
 
 VOID
 USBSTOR_QueueRelease(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PIRP Irp;
     KIRQL OldLevel;
@@ -382,19 +430,14 @@ USBSTOR_QueueRelease(
     PSCSI_REQUEST_BLOCK Request;
 
     //
-    // get pdo device extension
+    // get FDO device extension
     //
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // sanity check
     //
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-    //
-    // get FDO device extension
-    //
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
     // acquire lock
@@ -440,7 +483,7 @@ USBSTOR_QueueRelease(
     //
     // start new packet
     //
-    IoStartPacket(PDODeviceExtension->LowerDeviceObject, // FDO
+    IoStartPacket(DeviceObject,
                   Irp,
                   &Request->QueueSortKey, 
                   USBSTOR_CancelIo);
@@ -511,12 +554,8 @@ USBSTOR_StartIo(
             //
             // queue next request
             //
+            USBSTOR_QueueTerminateRequest(DeviceObject, FALSE);
             USBSTOR_QueueNextRequest(DeviceObject);
-
-            //
-            // start next request
-            //
-            IoStartNextPacket(DeviceObject, TRUE);
         }
 
         //
@@ -540,6 +579,12 @@ USBSTOR_StartIo(
     //
     ResetInProgress = FDODeviceExtension->ResetInProgress;
     ASSERT(ResetInProgress == FALSE);
+
+    //
+    // sanity check
+    //
+    ASSERT(FDODeviceExtension->SrbActive == FALSE);
+    FDODeviceExtension->SrbActive = TRUE;
 
     //
     // release lock
@@ -572,37 +617,16 @@ USBSTOR_StartIo(
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
-    else
-    {
-        //
-        // execute scsi
-        //
-        Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
-
-        //
-        // acquire lock
-        //
-        KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
-
-        //
-        // FIXME: synchronize with error handler
-        //
-        FDODeviceExtension->IrpPendingCount--;
-
-        //
-        // release lock
-        //
-        KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+        USBSTOR_QueueTerminateRequest(DeviceObject, TRUE);
+        return;
     }
 
     //
-    // FIXME: synchronize action with error handling
+    // execute scsi
     //
-    USBSTOR_QueueNextRequest(IoStack->DeviceObject);
+    Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
 
     //
-    // start next request
+    // FIXME: handle error
     //
-    IoStartNextPacket(DeviceObject, TRUE);
 }
