@@ -442,6 +442,7 @@ USBSTOR_SendRequest(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
+	PULONG MdlVirtualAddress;
 
     //
     // first allocate irp context
@@ -507,8 +508,18 @@ USBSTOR_SendRequest(
         //
         if (OriginalRequest)
         {
-            if (OriginalRequest->MdlAddress != NULL && Context->TransferData == NULL)
+            if ((OriginalRequest->MdlAddress != NULL) &&
+			(Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
             {
+				//
+				// Sanity check that the Mdl does describe the TransferData for read/write
+				//
+				if (CommandLength == UFI_READ_WRITE_CMD_LEN)
+				{
+					MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
+					ASSERT(MdlVirtualAddress == Context->TransferData);
+				}
+
                 //
                 // I/O paging request
                 //
@@ -1052,7 +1063,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         Status = USBSTOR_SendModeSenseCmd(DeviceObject, Irp);
     }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ /*||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE*/)
+    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ ||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE)
     {
         DPRINT1("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
 
