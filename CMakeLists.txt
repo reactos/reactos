@@ -106,10 +106,6 @@ else()
     # IDL macros for widl/midl
     include(cmake/idl-support.cmake)
 
-    #Some useful variables
-    set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
-    set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
-
     # Activate support for assembly source files
     enable_language(ASM)
 

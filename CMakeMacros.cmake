@@ -157,4 +157,22 @@ function(add_cd_file)
             endif()
         endif()
     endif() #end bootcd
+    
+    #do we add it to livecd?
+    list(FIND _CD_FOR livecd __cd)
+    if(NOT __cd EQUAL -1)
+        #manage dependency
+        if(_CD_TARGET)
+            add_dependencies(livecd ${_CD_TARGET})
+        endif()
+        foreach(item ${_CD_FILE})
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+        endforeach()
+        if(_CD_NAME_ON_CD)
+            get_filename_component(__file ${_CD_FILE} NAME)
+            #rename it in the cd tree
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
+        endif()
+    endif() #end livecd
+    
 endfunction()
