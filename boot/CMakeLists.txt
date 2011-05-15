@@ -17,15 +17,15 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
     "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles)\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users)\n")
+    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users\")\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users/Desktop)\n")
+    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users/Desktop\")\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User)\n")
+    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User\")\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/Desktop)\n")
+    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/Desktop\")\n")
 file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/My Documents)\n")
+    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/My Documents\")\n")
 
 add_custom_target(livecd
     ${CMAKE_COMMAND} -D CD_DIR=${CMAKE_CURRENT_BINARY_DIR}/livecd
