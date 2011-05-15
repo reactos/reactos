@@ -1,0 +1,56 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {D20EA4E1-3957-11d2-A40B-0C5020524153} = s 'Administrative Tools'
+		{
+			val '{305CA226-D286-468e-B848-2B2E8E697B74} 2' = d '5'
+			val InfoTip = e '@%%SystemRoot%%\system32\SHELL32.dll,-22921'
+			val LocalizedString = e '@%%SystemRoot%%\system32\SHELL32.dll,-22982'
+			DefaultIcon = e '%%SystemRoot%%\system32\main.cpl,10'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			Instance
+			{
+				val CLSID = s '{0AFACED1-E828-11D1-9187-B532F1E9575D}'
+				InitPropertyBag
+				{
+					val Attributes = s '0x00000011'
+					val TargetSpecialFolder = s '0x002f'
+				}
+			}
+			'ShellFolder'
+			{
+				val Attributes = d '&H60000100'
+				val WantsFORPARSING = s ''
+			}
+		}
+	}
+}
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+					NoRemove Explorer
+					{
+						NoRemove ControlPanel
+						{
+							NoRemove NameSpace
+							{
+								'{D20EA4E1-3957-11d2-A40B-0C5020524153}' = s 'Administrative Tools'
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

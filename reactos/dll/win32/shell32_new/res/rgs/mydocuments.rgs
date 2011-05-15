@@ -1,0 +1,67 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {450D8FBA-AD25-11D0-98A8-0800361B1103}
+		{
+			val 'InfoTip' = e '@%%SystemRoot%%\system32\SHELL32.dll,-22914'
+			val 'SortOrderIndex' = d '&H00000048'
+			val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-9227'
+			DefaultIcon = e '%%SystemRoot%%\system32\SHELL32.dll,-235'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+				val LoadWithoutCOM = s ''
+			}
+			'ShellFolder'
+			{
+				val 'Attributes' = d '&Hf080013d'
+				val 'CallForAttributes' = d '&H00020040'
+				val 'HideOnDesktopPerUser' = s ''
+				val 'QueryForOverlay' = s ''
+				val 'WantsFORPARSING' = s ''
+			}
+			'shell'
+			{
+				'find' = e '@%%SystemRoot%%\system32\SHELL32.dll,-29188'
+				{
+					val 'SuppressionPolicy' = d '&H00000080'
+					'command' = e '%%SystemRoot%%\Explorer.exe'
+					'ddeexec' =  s '[FindFolder("%%l", %%I)]'
+					{
+						'application' = s 'Folders'
+						'topic' = s 'AppProperties'
+					}
+				}
+			}
+		}
+	}
+}
+HKLM
+{
+	NoRemove Software
+	{
+		NoRemove Microsoft
+		{
+			NoRemove Windows
+			{
+				NoRemove CurrentVersion
+				{
+					NoRemove Explorer
+					{
+						NoRemove Desktop
+						{
+							NoRemove NameSpace
+							{
+								'{450D8FBA-AD25-11D0-98A8-0800361B1103}'
+								{
+									val 'Removal Message' = s '@mydocs.dll,-900'
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
