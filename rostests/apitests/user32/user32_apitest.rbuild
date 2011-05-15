@@ -20,6 +20,7 @@
 	<file>GetPeekMessage.c</file>
 	<file>DeferWindowPos.c</file>
 	<file>SetCursorPos.c</file>
+	<file>WndProc.c</file>
 
 </module>
 </group>
