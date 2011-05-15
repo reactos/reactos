@@ -277,7 +277,6 @@ typedef struct _HEAP_SEGMENT
     USHORT SegmentAllocatorBackTraceIndex;
     USHORT Reserved;
     LIST_ENTRY UCRSegmentList;
-    PHEAP_ENTRY LastEntryInSegment; //FIXME: non-Vista
 } HEAP_SEGMENT, *PHEAP_SEGMENT;
 
 typedef struct _HEAP_UCR_DESCRIPTOR

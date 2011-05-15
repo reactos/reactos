@@ -571,7 +571,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
     PLIST_ENTRY Current;
     ULONG_PTR Address = 0;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor, PreviousUcr = NULL;
-    PHEAP_ENTRY FirstEntry, LastEntry, PreviousLastEntry;
+    PHEAP_ENTRY FirstEntry, LastEntry;
     NTSTATUS Status;
 
     DPRINT("RtlpFindAndCommitPages(%p %p %x %p)\n", Heap, Segment, *Size, Address);
@@ -619,40 +619,17 @@ RtlpFindAndCommitPages(PHEAP Heap,
             /* Calculate first and last entries */
             FirstEntry = (PHEAP_ENTRY)Address;
 
-            if ((Segment->LastEntryInSegment->Flags & HEAP_ENTRY_LAST_ENTRY) &&
-                (ULONG_PTR)(Segment->LastEntryInSegment + Segment->LastEntryInSegment->Size) == (ULONG_PTR)UcrDescriptor->Address)
-            {
-                LastEntry = Segment->LastEntryInSegment;
-            }
+            /* Go through the entries to find the last one */
+            if (PreviousUcr)
+                LastEntry = (PHEAP_ENTRY)((ULONG_PTR)PreviousUcr->Address + PreviousUcr->Size);
             else
+                LastEntry = &Segment->Entry;
+
+            while (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
             {
-                /* Go through the entries to find the last one */
-
-                if (PreviousUcr)
-                    LastEntry = (PHEAP_ENTRY)((ULONG_PTR)PreviousUcr->Address + PreviousUcr->Size);
-                else
-                    LastEntry = Segment->FirstEntry;
-
-                while (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
-                {
-                    PreviousLastEntry = LastEntry;
-                    LastEntry += LastEntry->Size;
-
-                    if ((ULONG_PTR)LastEntry >= (ULONG_PTR)Segment->LastValidEntry ||
-                        LastEntry->Size == 0)
-                    {
-                        if (LastEntry == (PHEAP_ENTRY)Address)
-                        {
-                            /* Found it */
-                            LastEntry = PreviousLastEntry;
-                            break;
-                        }
-
-                        DPRINT1("Last entry not found in a committed range near to %p\n", PreviousLastEntry);
-                        return NULL;
-                    }
-                }
+                LastEntry += LastEntry->Size;
             }
+            ASSERT((LastEntry + LastEntry->Size) == FirstEntry);
 
             /* Unmark it as a last entry */
             LastEntry->Flags &= ~HEAP_ENTRY_LAST_ENTRY;
@@ -663,20 +640,28 @@ RtlpFindAndCommitPages(PHEAP Heap,
 
             DPRINT("Updating UcrDescriptor %p, new Address %p, size %d\n",
                 UcrDescriptor, UcrDescriptor->Address, UcrDescriptor->Size);
+                
+            /* Set various first entry fields*/
+            FirstEntry->SegmentOffset = LastEntry->SegmentOffset;
+            FirstEntry->Size = *Size >> HEAP_ENTRY_SHIFT;
+            FirstEntry->PreviousSize = LastEntry->Size;
 
             /* Check if anything left in this UCR */
             if (UcrDescriptor->Size == 0)
             {
                 /* It's fully exhausted */
-                if (UcrDescriptor->Address == Segment->LastValidEntry)
+                
+                /* Check if this is the end of the segment */ 
+                if(UcrDescriptor->Address == Segment->LastValidEntry)
                 {
                     FirstEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
-                    Segment->LastEntryInSegment = FirstEntry;
                 }
                 else
                 {
                     FirstEntry->Flags = 0;
-                    Segment->LastEntryInSegment = Segment->FirstEntry;
+                    /* Update field of next entry */
+                    ASSERT((FirstEntry + FirstEntry->Size)->PreviousSize == 0);
+                    (FirstEntry + FirstEntry->Size)->PreviousSize = FirstEntry->Size;
                 }
 
                 /* This UCR needs to be removed because it became useless */
@@ -688,18 +673,8 @@ RtlpFindAndCommitPages(PHEAP Heap,
             else
             {
                 FirstEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
-                Segment->LastEntryInSegment = FirstEntry;
             }
-
-            /* Set various first entry fields*/
-            FirstEntry->SegmentOffset = LastEntry->SegmentOffset;
-            FirstEntry->Size = *Size >> HEAP_ENTRY_SHIFT;
-            FirstEntry->PreviousSize = LastEntry->Size;
-
-            /* Update previous size */
-            if (!(FirstEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
-                (FirstEntry + FirstEntry->Size)->PreviousSize = FirstEntry->Size;
-
+                
             /* We're done */
             return (PHEAP_FREE_ENTRY)FirstEntry;
         }
@@ -820,9 +795,6 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
         FreeEntry->Size = PrecedingSize;
         Heap->TotalFreeSize += PrecedingSize;
 
-        /* Set last entry in the segment to this entry */
-        Segment->LastEntryInSegment = (PHEAP_ENTRY)FreeEntry;
-
         /* Insert it into the free list */
         RtlpInsertFreeBlockHelper(Heap, FreeEntry, PrecedingSize, FALSE);
     }
@@ -830,12 +802,6 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
     {
         /* Adjust preceding in use entry */
         PrecedingInUseEntry->Flags |= HEAP_ENTRY_LAST_ENTRY;
-        Segment->LastEntryInSegment = PrecedingInUseEntry;
-    } else if ((ULONG_PTR)Segment->LastEntryInSegment >= DecommitBase &&
-               ((PCHAR)Segment->LastEntryInSegment < ((PCHAR)DecommitBase + DecommitSize)))
-    {
-        /* Update this segment's last entry */
-        Segment->LastEntryInSegment = Segment->FirstEntry;
     }
 
     /* Now the next one */
@@ -940,9 +906,6 @@ RtlpInitializeHeapSegment(PHEAP Heap,
     HeapEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
     HeapEntry->PreviousSize = Segment->Entry.Size;
     HeapEntry->SegmentOffset = SegmentIndex;
-
-    /* Set last entry in segment */
-    Segment->LastEntryInSegment = HeapEntry;
 
     /* Insert it */
     RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)HeapEntry, (PHEAP_ENTRY)UncommittedBase - HeapEntry);
@@ -1108,10 +1071,6 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
         /* Copy flags */
         CurrentEntry->Flags = FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY;
 
-        /* Update last entry in the segment */
-        if (CurrentEntry->Flags & HEAP_ENTRY_LAST_ENTRY)
-            Heap->Segments[CurrentEntry->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)CurrentEntry;
-
         /* Advance FreeEntry and update sizes */
         FreeEntry = CurrentEntry;
         *FreeSize = *FreeSize + CurrentEntry->Size;
@@ -1144,10 +1103,6 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
 
             /* Copy flags */
             FreeEntry->Flags = NextEntry->Flags & HEAP_ENTRY_LAST_ENTRY;
-
-            /* Update last entry in the segment */
-            if (FreeEntry->Flags & HEAP_ENTRY_LAST_ENTRY)
-                Heap->Segments[FreeEntry->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)FreeEntry;
 
             /* Remove next entry now */
             RtlpRemoveFreeBlock(Heap, NextEntry, FALSE, FALSE);
@@ -1794,7 +1749,7 @@ RtlpSplitEntry(PHEAP Heap,
                SIZE_T Index,
                SIZE_T Size)
 {
-    PHEAP_FREE_ENTRY SplitBlock, SplitBlock2;
+    PHEAP_FREE_ENTRY SplitBlock;
     UCHAR FreeFlags;
     PHEAP_ENTRY InUseEntry;
     SIZE_T FreeSize;
@@ -1836,70 +1791,13 @@ RtlpSplitEntry(PHEAP Heap,
             SplitBlock->SegmentOffset = InUseEntry->SegmentOffset;
             SplitBlock->Size = FreeSize;
             SplitBlock->PreviousSize = Index;
-
-            /* Check if it's the last entry */
-            if (FreeFlags & HEAP_ENTRY_LAST_ENTRY)
-            {
-                /* Insert it to the free list if it's the last entry */
-                RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
-                Heap->TotalFreeSize += FreeSize;
-            }
-            else
-            {
-                /* Not so easy - need to update next's previous size too */
-                SplitBlock2 = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize);
-
-                if (SplitBlock2->Flags & HEAP_ENTRY_BUSY)
-                {
-                    SplitBlock2->PreviousSize = (USHORT)FreeSize;
-                    RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
-                    Heap->TotalFreeSize += FreeSize;
-                }
-                else
-                {
-                    /* Even more complex - the next entry is free, so we can merge them into one! */
-                    SplitBlock->Flags = SplitBlock2->Flags;
-
-                    /* Remove that next entry */
-                    RtlpRemoveFreeBlock(Heap, SplitBlock2, FALSE, FALSE);
-
-                    /* Update sizes */
-                    FreeSize += SplitBlock2->Size;
-                    Heap->TotalFreeSize -= SplitBlock2->Size;
-
-                    if (FreeSize <= HEAP_MAX_BLOCK_SIZE)
-                    {
-                        /* Insert it back */
-                        SplitBlock->Size = FreeSize;
-
-                        /* Don't forget to update previous size of the next entry! */
-                        if (!(SplitBlock->Flags & HEAP_ENTRY_LAST_ENTRY))
-                        {
-                            ((PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize))->PreviousSize = FreeSize;
-                        }
-
-                        /* Actually insert it */
-                        RtlpInsertFreeBlockHelper(Heap, SplitBlock, (USHORT)FreeSize, FALSE);
-
-                        /* Update total size */
-                        Heap->TotalFreeSize += FreeSize;
-                    }
-                    else
-                    {
-                        /* Resulting block is quite big */
-                        RtlpInsertFreeBlock(Heap, SplitBlock, FreeSize);
-                    }
-                }
-            }
-
-            /* Reset flags of the free entry */
+            
+            /* Coalesce it with the next entry */
+            SplitBlock = RtlpCoalesceFreeBlocks(Heap, SplitBlock, &FreeSize, FALSE);
+            RtlpInsertFreeBlock(Heap, SplitBlock, FreeSize);
+            
+            /* Reset the flag */
             FreeFlags = 0;
-
-            /* Update last entry in segment */
-            if (SplitBlock->Flags & HEAP_ENTRY_LAST_ENTRY)
-            {
-                Heap->Segments[SplitBlock->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)SplitBlock;
-            }
         }
     }
 
@@ -2535,9 +2433,7 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
 
         /* Either update previous size of the next entry or mark it as a last
            entry in the segment*/
-        if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
-            Heap->Segments[InUseEntry->SegmentOffset]->LastEntryInSegment = InUseEntry;
-        else
+        if (!(RememberFlags & HEAP_ENTRY_LAST_ENTRY))
             (InUseEntry + InUseEntry->Size)->PreviousSize = InUseEntry->Size;
     }
     else
@@ -2551,8 +2447,7 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
         /* Update the following block or set the last entry in the segment */
         if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
         {
-            /* Set last entry and set flags and size */
-            Heap->Segments[InUseEntry->SegmentOffset]->LastEntryInSegment = InUseEntry;
+            /* Set flags and size */
             UnusedEntry->Flags = RememberFlags;
             UnusedEntry->Size = FreeSize;
 
@@ -2597,9 +2492,7 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
                     /* Fine for a dedicated list */
                     UnusedEntry->Size = FreeSize;
 
-                    if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
-                        Heap->Segments[UnusedEntry->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)UnusedEntry;
-                    else
+                    if (!(RememberFlags & HEAP_ENTRY_LAST_ENTRY))
                         ((PHEAP_ENTRY)UnusedEntry + FreeSize)->PreviousSize = FreeSize;
 
                     /* Insert it back and update total size */
@@ -2752,7 +2645,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     {
         RtlEnterHeapLock(Heap->LockVariable);
         HeapLocked = TRUE;
-        Flags ^= HEAP_NO_SERIALIZE;
+        Flags &= ~HEAP_NO_SERIALIZE;
     }
 
     /* Get the pointer to the in-use entry */
@@ -2918,9 +2811,6 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                 /* Is that the last entry */
                 if (FreeFlags & HEAP_ENTRY_LAST_ENTRY)
                 {
-                    /* Update segment's last entry */
-                    Heap->Segments[SplitBlock->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)SplitBlock;
-
                     /* Set its size and insert it to the list */
                     SplitBlock->Size = (USHORT)FreeSize;
                     RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
@@ -2967,10 +2857,6 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                             {
                                 /* Update previous size of the next entry */
                                 ((PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize))->PreviousSize = FreeSize;
-                            }
-                            else
-                            {
-                                Heap->Segments[SplitBlock->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)SplitBlock;
                             }
 
                             /* Insert the new one back and update total size */
