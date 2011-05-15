@@ -9,7 +9,6 @@ if(MSVC)
     set(IDL_CLIENT_ARG /cstub) #.c for stub client library
     set(IDL_PROXY_ARG /proxy)
     set(IDL_INTERFACE_ARG /iid)
-    set(IDL_DLLDATA_ARG /dlldata)
     if(ARCH MATCHES i386)
         set(IDL_FLAGS /win32)
     elseif(ARCH MATCHES amd64)
@@ -20,13 +19,12 @@ if(MSVC)
 else()
     set(IDL_COMPILER native-widl)
     set(IDL_HEADER_ARG -h -o) #.h
-    set(IDL_HEADER_ARG2 -H) #.h
+    set(IDL_HEADER_ARG2 -h -H) #.h
     set(IDL_TYPELIB_ARG -t -o) #.tlb
-    set(IDL_SERVER_ARG -s -S) #.c for server library
-    set(IDL_CLIENT_ARG -c -C) #.c for stub client library
+    set(IDL_SERVER_ARG -s -o) #.c for server library
+    set(IDL_CLIENT_ARG -c -o) #.c for stub client library
     set(IDL_PROXY_ARG -p -o)
     set(IDL_INTERFACE_ARG -u -o)
-    set(IDL_DLLDATA_ARG --dlldata-only -o)
     if(ARCH MATCHES i386)
         set(IDL_FLAGS -m32 --win32)
     elseif(ARCH MATCHES amd64)
@@ -92,20 +90,12 @@ macro(add_rpcproxy_files)
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
         if(NOT MSVC)
-        # cmake internal dependency checker detects that .c depends on .h.
-        # Building them in two passes avoids unnecessary recompilation (to put it simple)
-        # Fortunately, midl is smarter and generates .h BEFORE .c
-            add_custom_command(
-                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
-                COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-            set(_depends ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h)
             list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${_depends})
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
     endforeach()
 
     # Extra pass to generate dlldata
@@ -126,29 +116,15 @@ macro(add_rpc_library TARGET)
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        set_source_files_properties(
-            ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c
-            PROPERTIES GENERATED TRUE)
         list(APPEND server_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c)
 
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        set_source_files_properties(
-            ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c
-            PROPERTIES GENERATED TRUE)
         list(APPEND client_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c)
     endforeach()
     add_library(${TARGET} ${server_SOURCES} ${client_SOURCES})
