@@ -56,7 +56,7 @@ USBSTOR_HandleInternalDeviceControl(
                 //
                 // data is transferred with this irp
                 //
-                if ((Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)) ||
+                if ((Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) ||
                     Request->DataTransferLength == 0 ||
                     Irp->MdlAddress == NULL)
                 {
