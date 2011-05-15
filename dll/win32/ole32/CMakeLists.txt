@@ -20,7 +20,7 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_rpcproxy_library(ole32proxy
+add_rpcproxy_files(
     dcom.idl
     ole32_unknwn.idl
     ole32_objidl.idl
@@ -65,7 +65,12 @@ list(APPEND SOURCE
     usrmarshal.c
     ole32res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dcom_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dcom_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ole32_unknwn_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ole32_objidl_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ole32_oleidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
 
 add_library(ole32 SHARED ${SOURCE})
@@ -73,7 +78,6 @@ add_library(ole32 SHARED ${SOURCE})
 set_module_type(ole32 win32dll)
 
 target_link_libraries(ole32
-    ole32proxy
     wine
     irotrpc
     uuid

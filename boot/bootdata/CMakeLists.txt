@@ -12,9 +12,21 @@ list(APPEND CD_HIVES
     ${CMAKE_CURRENT_SOURCE_DIR}/livecd.inf
     ${CMAKE_CURRENT_SOURCE_DIR}/hiveinst_${ARCH}.inf)
 
-add_custom_target(livecd_hives
-    native-mkhive ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${ARCH} ${CD_HIVES}
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sam
+        ${CMAKE_CURRENT_BINARY_DIR}/default
+        ${CMAKE_CURRENT_BINARY_DIR}/security
+        ${CMAKE_CURRENT_BINARY_DIR}/software
+        ${CMAKE_CURRENT_BINARY_DIR}/system
+    COMMAND native-mkhive ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${ARCH} ${CD_HIVES}
     DEPENDS native-mkhive ${CD_HIVES})
+
+add_custom_target(livecd_hives
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sam
+        ${CMAKE_CURRENT_BINARY_DIR}/default
+        ${CMAKE_CURRENT_BINARY_DIR}/security
+        ${CMAKE_CURRENT_BINARY_DIR}/software
+        ${CMAKE_CURRENT_BINARY_DIR}/system)
 
 add_cd_file(
     FILE ${CMAKE_CURRENT_BINARY_DIR}/sam

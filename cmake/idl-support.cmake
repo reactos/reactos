@@ -3,12 +3,13 @@
 if(MSVC)
     set(IDL_COMPILER midl)
     set(IDL_HEADER_ARG /h) #.h
-    set(IDL_HEADER_ARG2 /h) #.h
+    set(IDL_HEADER_ARG2 /header) #.h
     set(IDL_TYPELIB_ARG /tlb) #.tlb
     set(IDL_SERVER_ARG /sstub) #.c for stub server library
     set(IDL_CLIENT_ARG /cstub) #.c for stub client library
     set(IDL_PROXY_ARG /proxy)
     set(IDL_INTERFACE_ARG /iid)
+    set(IDL_DLLDATA_ARG /dlldata)
     if(ARCH MATCHES i386)
         set(IDL_FLAGS /win32)
     elseif(ARCH MATCHES amd64)
@@ -19,12 +20,13 @@ if(MSVC)
 else()
     set(IDL_COMPILER native-widl)
     set(IDL_HEADER_ARG -h -o) #.h
-    set(IDL_HEADER_ARG2 -h -H) #.h
+    set(IDL_HEADER_ARG2 -H) #.h
     set(IDL_TYPELIB_ARG -t -o) #.tlb
     set(IDL_SERVER_ARG -s -S) #.c for server library
     set(IDL_CLIENT_ARG -c -C) #.c for stub client library
-    set(IDL_PROXY_ARG -p -P)
+    set(IDL_PROXY_ARG -p -o)
     set(IDL_INTERFACE_ARG -u -o)
+    set(IDL_DLLDATA_ARG --dlldata-only -o)
     if(ARCH MATCHES i386)
         set(IDL_FLAGS -m32 --win32)
     elseif(ARCH MATCHES amd64)
@@ -80,38 +82,42 @@ macro(add_idl_headers TARGET)
     add_custom_target(${TARGET} ALL DEPENDS ${HEADERS})
 endmacro()
 
-macro(add_rpcproxy_library TARGET)
+macro(add_rpcproxy_files)
     get_includes(INCLUDES)
     get_defines(DEFINES)
+
+    if(MSVC)
+        set(DLLDATA_ARG /dlldata ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c)
+    endif()
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
-        if(MSVC)
-            set(IDL_DLLDATA_ARG /dlldata ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c)
-        else()
-            set(IDL_DLLDATA_ARG "")
+        if(NOT MSVC)
+        # cmake internal dependency checker detects that .c depends on .h.
+        # Building them in two passes avoids unnecessary recompilation (to put it simple)
+        # Fortunately, midl is smarter and generates .h BEFORE .c
+            add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
+                COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+            set(_depends ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h)
+            list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_DLLDATA_ARG} ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        set_source_files_properties(
-            ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c
-            PROPERTIES GENERATED TRUE)
-        list(APPEND rpcproxy_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c)
-        list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.idl)
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c
+            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${_depends})
     endforeach()
 
-    if(NOT MSVC)
-        # Extra pass to generate dlldata for widl
+    # Extra pass to generate dlldata
+    if(MSVC)
+        #nobody told how to generate it, so mark it as generated
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
+    else()
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
-            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} --dlldata-only -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} --dlldata-only -o ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c ${IDLS}
             DEPENDS ${IDLS})
     endif()
-    set_source_files_properties(
-        ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
-        PROPERTIES GENERATED TRUE)
-    add_library(${TARGET} ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${rpcproxy_SOURCES})
 endmacro()
 
 macro(add_rpc_library TARGET)
@@ -120,7 +126,11 @@ macro(add_rpc_library TARGET)
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h
+            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         set_source_files_properties(
@@ -129,7 +139,11 @@ macro(add_rpc_library TARGET)
         list(APPEND server_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c)
 
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h
+            COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         set_source_files_properties(

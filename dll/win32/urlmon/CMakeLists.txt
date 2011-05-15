@@ -10,7 +10,7 @@ set_rc_compiler()
 
 spec2def(urlmon.dll urlmon.spec)
 
-add_rpcproxy_library(urlmonproxy urlmon_urlmon.idl)
+add_rpcproxy_files(urlmon_urlmon.idl)
 
 list(APPEND SOURCE
     bindctx.c
@@ -36,6 +36,8 @@ list(APPEND SOURCE
     urlmon_main.c
     usrmarshal.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/urlmon_urlmon_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
@@ -45,7 +47,6 @@ add_library(urlmon SHARED ${SOURCE})
 set_module_type(urlmon win32dll)
 
 target_link_libraries(urlmon
-    urlmonproxy
     uuid
     wine
     ${PSEH_LIB})

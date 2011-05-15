@@ -14,7 +14,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(quartz.dll quartz.spec)
 
-add_rpcproxy_library(quartzproxy quartz_strmif.idl)
+add_rpcproxy_files(quartz_strmif.idl)
 
 list(APPEND SOURCE
     avidec.c
@@ -42,6 +42,8 @@ list(APPEND SOURCE
     control.c
     avisplit.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
 add_library(quartz SHARED ${SOURCE})
@@ -49,7 +51,6 @@ add_library(quartz SHARED ${SOURCE})
 set_module_type(quartz win32dll)
 
 target_link_libraries(quartz
-    quartzproxy
     strmiids
     uuid
     wine

@@ -20,6 +20,9 @@ list(APPEND SOURCE
     vartype.c
     oleaut32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_oaidl_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -47,14 +50,13 @@ include_directories(
 
 spec2def(oleaut32.dll oleaut32.spec)
 
-add_rpcproxy_library(oleaut32proxy oleaut32_oaidl.idl oleaut32_ocidl.idl)
+add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 add_library(oleaut32 SHARED ${SOURCE})
 
 set_module_type(oleaut32 win32dll)
 
 target_link_libraries(oleaut32
-    oleaut32proxy
     wine
     wineldr
     uuid
