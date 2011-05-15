@@ -240,11 +240,15 @@ USBSTOR_HandleQueryProperty(
     PSTORAGE_PROPERTY_QUERY PropertyQuery;
     PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader;
     PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
-    ULONG FieldLengthVendor, FieldLengthProduct, FieldLengthRevision, TotalLength;
+    ULONG FieldLengthVendor, FieldLengthProduct, FieldLengthRevision, TotalLength, FieldLengthSerialNumber;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PUFI_INQUIRY_RESPONSE InquiryData;
     PSTORAGE_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUCHAR Buffer;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    UNICODE_STRING SerialNumber;
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
 
     DPRINT1("USBSTOR_HandleQueryProperty\n");
 
@@ -307,6 +311,14 @@ USBSTOR_HandleQueryProperty(
         //
         PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         ASSERT(PDODeviceExtension);
+        ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+        //
+        // get device extension
+        //
+        FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+        ASSERT(FDODeviceExtension);
+        ASSERT(FDODeviceExtension->Common.IsFDO);
 
         //
         // get inquiry data
@@ -322,14 +334,28 @@ USBSTOR_HandleQueryProperty(
         FieldLengthRevision = USBSTOR_GetFieldLength(InquiryData->Revision, 4);
 
         //
-        // FIXME handle serial number
+        // is there a serial number
         //
+        if (FDODeviceExtension->SerialNumber)
+        {
+            //
+            // get length
+            //
+            FieldLengthSerialNumber = wcslen(FDODeviceExtension->SerialNumber->bString);
+        }
+        else
+        {
+            //
+            // no serial number
+            //
+            FieldLengthSerialNumber = 0;
+        }
 
         //
-        // total length required is sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLength + 3 extra null bytes - 1
+        // total length required is sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLength + 4 extra null bytes - 1
         // -1 due STORAGE_DEVICE_DESCRIPTOR contains one byte length of parameter data
         //
-        TotalLength = sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + 2;
+        TotalLength = sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + FieldLengthSerialNumber + 3;
 
         //
         // check if output buffer is long enough
@@ -370,8 +396,8 @@ USBSTOR_HandleQueryProperty(
         DeviceDescriptor->VendorIdOffset = sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR);
         DeviceDescriptor->ProductIdOffset = DeviceDescriptor->VendorIdOffset + FieldLengthVendor + 1;
         DeviceDescriptor->ProductRevisionOffset = DeviceDescriptor->ProductIdOffset + FieldLengthProduct + 1;
-        DeviceDescriptor->SerialNumberOffset = 0; //FIXME
-        DeviceDescriptor->RawPropertiesLength = FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + 3;
+        DeviceDescriptor->SerialNumberOffset = (FieldLengthSerialNumber > 0 ? DeviceDescriptor->ProductRevisionOffset + FieldLengthRevision + 1 : 0);
+        DeviceDescriptor->RawPropertiesLength = FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + FieldLengthSerialNumber + 3 + (FieldLengthSerialNumber > 0 ? + 1 : 0);
 
         //
         // copy descriptors
@@ -400,12 +426,34 @@ USBSTOR_HandleQueryProperty(
         Buffer += FieldLengthRevision + 1;
 
         //
-        // TODO: copy revision
+        // copy serial number
         //
+        if (FieldLengthSerialNumber)
+        {
+            //
+            // init unicode string
+            //
+            RtlInitUnicodeString(&SerialNumber, FDODeviceExtension->SerialNumber->bString);
+
+            //
+            // init ansi string
+            //
+            AnsiString.Buffer = (PCHAR)Buffer;
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = FieldLengthSerialNumber * sizeof(WCHAR);
+
+            //
+            // convert to ansi code
+            //
+            Status = RtlUnicodeStringToAnsiString(&AnsiString, &SerialNumber, FALSE);
+            ASSERT(Status == STATUS_SUCCESS);
+        }
+
 
         DPRINT("Vendor %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->VendorIdOffset));
         DPRINT("Product %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset));
         DPRINT("Revision %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductRevisionOffset));
+        DPRINT("Serial %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->SerialNumberOffset));
 
         //
         // done

@@ -161,8 +161,36 @@ USBSTOR_GetDescriptors(
      }
 
      //
-     // FIXME: scan string descriptors
+     // check if there is a serial number provided
      //
+     if (DeviceExtension->DeviceDescriptor->iSerialNumber)
+     {
+         //
+         // get serial number
+         //
+         Status = USBSTOR_GetDescriptor(DeviceExtension->LowerDeviceObject, USB_STRING_DESCRIPTOR_TYPE, 100 * sizeof(WCHAR), DeviceExtension->DeviceDescriptor->iSerialNumber, 0x0409, (PVOID*)&DeviceExtension->SerialNumber);
+         if (!NT_SUCCESS(Status))
+         {
+             //
+             // failed to get serial number descriptor, free device descriptor
+             //
+             FreeItem(DeviceExtension->DeviceDescriptor);
+             DeviceExtension->DeviceDescriptor = NULL;
+
+             //
+             // free configuration descriptor
+             //
+             FreeItem(DeviceExtension->ConfigurationDescriptor);
+             DeviceExtension->ConfigurationDescriptor = NULL;
+
+             //
+             // set serial number to zero
+             //
+             DeviceExtension->SerialNumber = NULL;
+             return Status;
+          }
+     }
+
      return Status;
 }
 

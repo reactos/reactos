@@ -57,6 +57,7 @@ typedef struct
     USB_BUS_INTERFACE_USBDI_V2 BusInterface;                                             // bus interface of device
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;                                             // usb device descriptor
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;                               // usb configuration descriptor
+    PUSB_STRING_DESCRIPTOR SerialNumber;                                                 // usb serial number
     PUSBD_INTERFACE_INFORMATION InterfaceInformation;                                    // usb interface information
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;                                       // usb configuration handle
     UCHAR BulkInPipeIndex;                                                               // bulk in pipe index
@@ -81,9 +82,6 @@ typedef struct
     ULONG BlockLength;                                                                   // length of block
     ULONG LastLogicBlockAddress;                                                         // last block address
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
-
-
-
 
 //
 // max lun command identifier

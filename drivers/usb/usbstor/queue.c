@@ -175,7 +175,7 @@ USBSTOR_QueueAddIrp(
     //
     // if list is freezed, dont start this packet
     //
-    DPRINT1("IrpListFreeze: %lu IrpPendingCount %lu\n", IrpListFreeze, FDODeviceExtension->IrpPendingCount);
+    DPRINT("IrpListFreeze: %lu IrpPendingCount %lu\n", IrpListFreeze, FDODeviceExtension->IrpPendingCount);
 
     return (IrpListFreeze || SrbProcessing);
 }
@@ -503,7 +503,7 @@ USBSTOR_StartIo(
     NTSTATUS Status;
     BOOLEAN ResetInProgress;
 
-    DPRINT1("USBSTOR_StartIo\n");
+    DPRINT("USBSTOR_StartIo\n");
 
     //
     // get FDO device extension

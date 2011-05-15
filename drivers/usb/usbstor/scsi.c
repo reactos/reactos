@@ -103,7 +103,7 @@ USBSTOR_CSWCompletionRoutine(
     PREAD_CAPACITY_DATA CapacityData;
     PUFI_CAPACITY_RESPONSE Response;
 
-    DPRINT1("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
+    DPRINT("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
 
     //
     // access context
@@ -280,7 +280,7 @@ USBSTOR_DataCompletionRoutine(
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("USBSTOR_DataCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
+    DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
 
     //
     // access context
@@ -345,7 +345,7 @@ USBSTOR_CBWCompletionRoutine(
     UCHAR Code;
     USBD_PIPE_HANDLE PipeHandle;
 
-    DPRINT1("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
+    DPRINT("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
 
     //
     // access context
@@ -993,7 +993,7 @@ USBSTOR_SendReadWriteCmd(
     Cmd.LogicalBlockByte2 = pCDB->CDB10.LogicalBlockByte2;
     Cmd.LogicalBlockByte3 = pCDB->CDB10.LogicalBlockByte3;
 
-    DPRINT1("USBSTOR_SendReadWriteCmd BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
+    DPRINT("USBSTOR_SendReadWriteCmd BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
 
     //
     // send request
@@ -1081,7 +1081,7 @@ USBSTOR_HandleExecuteSCSI(
     //
     pCDB = (PCDB)Request->Cdb;
 
-    DPRINT1("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
+    DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
 
     if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
     {
@@ -1090,7 +1090,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         ASSERT(Request->DataBuffer);
 
-        DPRINT1("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
+        DPRINT("SCSIOP_READ_CAPACITY Length %\n", Request->DataTransferLength);
         Status = USBSTOR_SendCapacityCmd(DeviceObject, Irp);
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
@@ -1106,7 +1106,7 @@ USBSTOR_HandleExecuteSCSI(
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_READ ||  pCDB->MODE_SENSE.OperationCode == SCSIOP_WRITE)
     {
-        DPRINT1("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
+        DPRINT("SCSIOP_READ / SCSIOP_WRITE DataTransferLength %lu\n", Request->DataTransferLength);
 
         //
         // send read / write command
@@ -1115,7 +1115,7 @@ USBSTOR_HandleExecuteSCSI(
     }
     else if (pCDB->AsByte[0] == SCSIOP_MEDIUM_REMOVAL)
     {
-        DPRINT1("SCSIOP_MEDIUM_REMOVAL\n");
+        DPRINT("SCSIOP_MEDIUM_REMOVAL\n");
 
         //
         // just complete the request
@@ -1139,7 +1139,7 @@ USBSTOR_HandleExecuteSCSI(
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
     {
-        DPRINT1("SCSIOP_TEST_UNIT_READY\n");
+        DPRINT("SCSIOP_TEST_UNIT_READY\n");
 
         //
         // send test unit command

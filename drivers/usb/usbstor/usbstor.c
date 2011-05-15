@@ -108,7 +108,7 @@ USBSTOR_DispatchClose(
     //
     // function always succeeds ;)
     //
-    DPRINT1("USBSTOR_DispatchScsi\n");
+    DPRINT("USBSTOR_DispatchClose\n");
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);

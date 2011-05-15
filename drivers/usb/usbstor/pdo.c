@@ -638,6 +638,7 @@ USBSTOR_PdoHandleQueryInstanceId(
     IN OUT PIRP Irp)
 {
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
     WCHAR Buffer[100];
     ULONG Length;
     LPWSTR InstanceId;
@@ -648,10 +649,27 @@ USBSTOR_PdoHandleQueryInstanceId(
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
-    // format instance id
-    // FIXME: retrieve serial number from string device descriptor
+    // get FDO device extension
     //
-    swprintf(Buffer, L"%s&%d", L"09188212515A", PDODeviceExtension->LUN);
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+
+    //
+    // format instance id
+    //
+    if (FDODeviceExtension->SerialNumber)
+    {
+        //
+        // using serial number from device
+        //
+        swprintf(Buffer, L"%s&%d", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
+    }
+    else
+    {
+        //
+        // FIXME: should use some random value
+        //
+        swprintf(Buffer, L"%s&%d", L"00000000", PDODeviceExtension->LUN);
+    }
 
     //
     // calculate length
