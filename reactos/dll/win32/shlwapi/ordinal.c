@@ -144,7 +144,7 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
  * the view pointer returned by this size.
  *
  */
-HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
+HANDLE WINAPI SHAllocShared(LPVOID lpvData, ULONG dwSize, DWORD dwProcId)
 {
   HANDLE hMap;
   LPVOID pMapped;
@@ -3735,6 +3735,7 @@ BOOL WINAPI GetOpenFileNameWrapW(LPOPENFILENAMEW ofn)
 /*************************************************************************
  *      @	[SHLWAPI.404]
  */
+#if 1
 HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHCONTF flags, IEnumIDList **ppenum)
 {
     /* Windows attempts to get an IPersist interface and, if that fails, an
@@ -3751,6 +3752,29 @@ HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHC
 
     return IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
 }
+#else
+HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHCONTF flags, IEnumIDList **ppenum)
+{
+    IPersist *persist;
+    HRESULT hr;
+
+    hr = IShellFolder_QueryInterface(lpFolder, &IID_IPersist, (LPVOID)&persist);
+    if(SUCCEEDED(hr))
+    {
+        CLSID clsid;
+        hr = IPersist_GetClassID(persist, &clsid);
+        if(SUCCEEDED(hr))
+        {
+            if(IsEqualCLSID(&clsid, &CLSID_ShellFSFolder))
+                hr = IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
+            else
+                hr = E_FAIL;
+        }
+        IPersist_Release(persist);
+    }
+    return hr;
+}
+#endif
 
 /* INTERNAL: Map from HLS color space to RGB */
 static WORD ConvertHue(int wHue, WORD wMid1, WORD wMid2)
