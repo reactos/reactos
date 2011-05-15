@@ -148,8 +148,6 @@ USBSTOR_DispatchScsi(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    NTSTATUS Status;
-
     //
     // handle requests
     //

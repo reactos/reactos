@@ -442,7 +442,7 @@ USBSTOR_SendRequest(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
-	PULONG MdlVirtualAddress;
+    PUCHAR MdlVirtualAddress;
 
     //
     // first allocate irp context
@@ -509,16 +509,16 @@ USBSTOR_SendRequest(
         if (OriginalRequest)
         {
             if ((OriginalRequest->MdlAddress != NULL) &&
-			(Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
+                (Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
             {
-				//
-				// Sanity check that the Mdl does describe the TransferData for read/write
-				//
-				if (CommandLength == UFI_READ_WRITE_CMD_LEN)
-				{
-					MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
-					ASSERT(MdlVirtualAddress == Context->TransferData);
-				}
+                //
+                // Sanity check that the Mdl does describe the TransferData for read/write
+                //
+                if (CommandLength == UFI_READ_WRITE_CMD_LEN)
+                {
+                    MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
+                    ASSERT(MdlVirtualAddress == Context->TransferData);
+                }
 
                 //
                 // I/O paging request
@@ -736,6 +736,7 @@ USBSTOR_SendModeSenseCmd(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+#if 0
     UFI_SENSE_CMD Cmd;
     NTSTATUS Status;
     PVOID Response;
@@ -743,7 +744,7 @@ USBSTOR_SendModeSenseCmd(
     PCBW OutControl;
     PCDB pCDB;
     PUFI_MODE_PARAMETER_HEADER Header;
-
+#endif
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
 
@@ -908,13 +909,11 @@ USBSTOR_SendReadWriteCmd(
     IN PIRP Irp)
 {
     UFI_READ_WRITE_CMD Cmd;
-    NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PCDB pCDB;
     ULONG BlockCount;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
-    PVOID Buffer;
 
     //
     // get current stack location
@@ -939,7 +938,7 @@ USBSTOR_SendReadWriteCmd(
     //
     // informal debug print
     //
-    DPRINT1("USBSTOR_SendReadWriteCmd DataTransferLength %x, BlockLength %x\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
+    DPRINT("USBSTOR_SendReadWriteCmd DataTransferLength %lu, BlockLength %lu\n", Request->DataTransferLength, PDODeviceExtension->BlockLength);
 
     //
     // sanity check
@@ -963,12 +962,12 @@ USBSTOR_SendReadWriteCmd(
     Cmd.LogicalBlockByte2 = pCDB->CDB10.LogicalBlockByte2;
     Cmd.LogicalBlockByte3 = pCDB->CDB10.LogicalBlockByte3;
 
-    DPRINT1("BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
+    DPRINT1("USBSTOR_SendReadWriteCmd BlockAddress %x%x%x%x BlockCount %lu BlockLength %lu\n", Cmd.LogicalBlockByte0, Cmd.LogicalBlockByte1, Cmd.LogicalBlockByte2, Cmd.LogicalBlockByte3, BlockCount, PDODeviceExtension->BlockLength);
 
     //
     // send request
     //
-	return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_WRITE_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
+    return USBSTOR_SendRequest(DeviceObject, Irp, NULL, UFI_READ_WRITE_CMD_LEN, (PUCHAR)&Cmd, Request->DataTransferLength, (PUCHAR)Request->DataBuffer);
 }
 
 NTSTATUS

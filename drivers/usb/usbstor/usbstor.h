@@ -66,6 +66,8 @@ typedef struct
     KSPIN_LOCK IrpListLock;                                                              // irp list lock
     LIST_ENTRY IrpListHead;                                                              // irp list head
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
+    BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
+    ULONG IrpPendingCount;                                                               // count of irp pending
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -371,6 +373,10 @@ USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
+NTSTATUS
+USBSTOR_SendInquiryCmd(
+    IN PDEVICE_OBJECT DeviceObject);
+
 //---------------------------------------------------------------------
 //
 // disk.c routines
@@ -417,3 +423,4 @@ USBSTOR_CancelIo(
 VOID
 USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
+

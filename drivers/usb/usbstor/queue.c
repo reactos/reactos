@@ -27,7 +27,6 @@ USBSTOR_QueueInitialize(
     InitializeListHead(&FDODeviceExtension->IrpListHead);
 }
 
-
 VOID
 NTAPI
 USBSTOR_CancelIo(
@@ -89,11 +88,13 @@ USBSTOR_QueueAddIrp(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     BOOLEAN IrpListFreeze;
+    BOOLEAN SrbProcessing;
 
     //
     // get pdo device extension
     //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
     // get FDO device extension
@@ -111,9 +112,22 @@ USBSTOR_QueueAddIrp(
     KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
 
     //
-    // add irp to queue
+    // check if there are irp pending
     //
-    InsertTailList(&FDODeviceExtension->IrpListHead, &Irp->Tail.Overlay.ListEntry);
+    SrbProcessing = FDODeviceExtension->IrpPendingCount != 0;
+
+    if (SrbProcessing)
+    {
+        //
+        // add irp to queue
+        //
+        InsertTailList(&FDODeviceExtension->IrpListHead, &Irp->Tail.Overlay.ListEntry);
+   }
+
+   //
+   // increment pending count
+   //
+   FDODeviceExtension->IrpPendingCount++;
 
     //
     // now set the driver cancel routine
@@ -159,7 +173,9 @@ USBSTOR_QueueAddIrp(
     //
     // if list is freezed, dont start this packet
     //
-    return IrpListFreeze;
+    DPRINT1("IrpListFreeze: %lu IrpPendingCount %lu\n", IrpListFreeze, FDODeviceExtension->IrpPendingCount);
+
+    return (IrpListFreeze || SrbProcessing);
 }
 
 PIRP
@@ -442,6 +458,7 @@ USBSTOR_StartIo(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     KIRQL OldLevel;
     NTSTATUS Status;
+    BOOLEAN ResetInProgress;
 
     DPRINT1("USBSTOR_StartIo\n");
 
@@ -519,9 +536,10 @@ USBSTOR_StartIo(
     KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
 
     //
-    // remove irp from list
+    // check reset is in progress
     //
-    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+    ResetInProgress = FDODeviceExtension->ResetInProgress;
+    ASSERT(ResetInProgress == FALSE);
 
     //
     // release lock
@@ -544,9 +562,39 @@ USBSTOR_StartIo(
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
-    // execute scsi
+    // is a reset in progress
     //
-    Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
+    if (ResetInProgress)
+    {
+        //
+        // hard reset is in progress
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    else
+    {
+        //
+        // execute scsi
+        //
+        Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
+
+        //
+        // acquire lock
+        //
+        KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
+
+        //
+        // FIXME: synchronize with error handler
+        //
+        FDODeviceExtension->IrpPendingCount--;
+
+        //
+        // release lock
+        //
+        KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+    }
 
     //
     // FIXME: synchronize action with error handling
@@ -557,5 +605,4 @@ USBSTOR_StartIo(
     // start next request
     //
     IoStartNextPacket(DeviceObject, TRUE);
-
 }
