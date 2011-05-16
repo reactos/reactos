@@ -114,7 +114,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
     NTSTATUS Status;
     KIRQL OldIrql;
     
-    DbgPrint("TCPAcceptEventHandler\n");
+    DbgPrint("TCPAcceptEventHandler] Called\n");
     
     ReferenceObject(Connection);
     
@@ -126,7 +126,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         Irp = Bucket->Request.RequestContext;
         IrpSp = IoGetCurrentIrpStackLocation( Irp );
         
-        TI_DbgPrint(DEBUG_TCP,("Getting the socket\n"));
+        TI_DbgPrint(DEBUG_TCP,("[TCPAcceptEventHandler] Getting the socket\n"));
         
         Status = TCPCheckPeerForAccept(newpcb,
                                        (PTDI_REQUEST_KERNEL)&IrpSp->Parameters);
@@ -136,22 +136,27 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        DbgPrint("Associated with: 0x%x\n", Bucket->AssociatedEndpoint->SocketContext);
+        DbgPrint("[TCPAcceptEventHandler] Associated with: 0x%x\n", Bucket->AssociatedEndpoint->SocketContext);
         
-        DbgPrint("Completing accept event %x\n", Status);
+        DbgPrint("[TCPAcceptEventHandler] Completing accept event %x\n", Status);
         
         Complete = Bucket->Request.RequestNotifyObject;
         
         if (Status == STATUS_SUCCESS)
         {
+            newpcb->state = LISTEN;
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
             Bucket->AssociatedEndpoint->SocketContext = newpcb;
+            DbgPrint("[TCPAcceptEventHandler] LibTCPAccept coming up\n");
             
             LibTCPAccept(newpcb, Bucket->AssociatedEndpoint);
+
+            DbgPrint("[TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
+            newpcb->state = ESTABLISHED;
         }
         
-        DbgPrint("Done!\n");
+        DbgPrint("[TCPAcceptEventHandler] Done!\n");
         
         Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
             
@@ -172,7 +177,7 @@ TCPSendEventHandler(void *arg, u16_t space)
     NTSTATUS Status;
     PMDL Mdl;
     
-    DbgPrint("TCPSendEventHandler\n");
+    DbgPrint("[TCPSendEventHandler] Called\n");
     
     ReferenceObject(Connection);
 
@@ -248,7 +253,7 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
     
     ReferenceObject(Connection);
     
-    DbgPrint("TCPRecvEventHandler\n");
+    DbgPrint("[TCPRecvEventHandler] Called\n");
     
     if ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock))) {
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -304,18 +309,19 @@ TCPConnectEventHandler(void *arg, err_t err)
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     
-    DbgPrint("TCPConnectEventHandler\n");
+    DbgPrint("[TCPConnectEventHandler] Called\n");
     
     ReferenceObject(Connection);
     
-    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock))) {
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
+    {
         
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
         
         Bucket->Status = TCPTranslateError(err);
         Bucket->Information = 0;
         
-        DbgPrint("Completing connection request! (0x%x)\n", err);
+        DbgPrint("[TCPConnectEventHandler] Completing connection request! (0x%x)\n", err);
         
         Complete = Bucket->Request.RequestNotifyObject;
         
@@ -323,6 +329,8 @@ TCPConnectEventHandler(void *arg, err_t err)
         
         ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
     }
+
+    DbgPrint("[TCPConnectEventHandler] Done\n");
     
     DereferenceObject(Connection);
 }
