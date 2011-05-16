@@ -37,7 +37,7 @@ elseif(ARCH MATCHES arm)
     include(config-arm.cmake)
 endif()
 
-add_definitions(-D__REACTOS__)
+add_definitions(-D__REACTOS__ __ROS_CMAKE__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
