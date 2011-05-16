@@ -31,21 +31,21 @@ Public interface:
 
 internal interface
 -------------------
-- FtfdInitIfiMetrics: 70% done
+- FtfdInitIfiMetrics: 80% done
     - handle other font types than TTF/OTF
     - fix fwdLowestPPEm, fwdMacLineGap, ptlBaseline, ptlAspect, ptlCaret
     - cKerningPairs from atmfd is bigger, ulPanoseCulture
     - check fwdMacAscender, fwdMacDescender
     - Check jWinPitchandFamily (from OS/2 table, Apolonia: 0,0->0x12)
-    - chLastChar: hardcoded 0xff ?
     - fix fwdUnderscorePosition
 
 - FtfdInitGlyphSet: 100% done
-- FtfdInitKerningPairs: unimplemented, later
+- FtfdInitKerningPairs: 90% done
+    - Should we do complete glyph -> unicode expansion?
+
 - FtfdDestroyFace: 100% done
 
-- FtfdCreateFontInstance: 90%
-    - handle XFORM (create a matrix and set freetype xform)
+- FtfdCreateFontInstance: 95%
 - FtfdGetFontInstance: 100% done
 - FtfdQueryMaxExtents: 90% done
 

@@ -45,6 +45,27 @@ typedef struct _TT_FILE_HEADER
 
 } TT_FILE_HEADER, *PTT_FILE_HEADER;
 
+typedef struct _TT_TABLE_HEAD
+{
+    ULONG ulVersion;
+    ULONG fontRevision;
+    ULONG checkSumAdjustment;
+    ULONG magicNumber;
+    USHORT flags;
+    USHORT unitsPerEm;
+    ULONGLONG created;
+    ULONGLONG modified;
+    SHORT xMin;
+    SHORT yMin;
+    SHORT xMax;
+    SHORT yMax;
+    USHORT macStyle;
+    USHORT lowestRecPPEM;
+    SHORT fontDirectionHint;
+    SHORT indexToLocFormat;
+    SHORT glyphDataFormat;
+} TT_TABLE_HEAD, *PTT_TABLE_HEAD;
+
 typedef struct _TT_OS2_DATA
 {
     USHORT 	version; // 	// 0x00

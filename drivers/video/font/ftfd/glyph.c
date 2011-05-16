@@ -154,13 +154,15 @@ FtfdCreateFontInstance(
      * multiply with 64. */
     FLOATOBJ_MulLong(&efScaleX, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
     FLOATOBJ_DivLong(&efScaleX, pfo->sizLogResPpi.cx);
+    pfont->sizlScale.cx = FLOATOBJ_GetLong(&efScaleX);
     FLOATOBJ_MulLong(&efScaleY, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
     FLOATOBJ_DivLong(&efScaleY, pfo->sizLogResPpi.cy);
+    pfont->sizlScale.cy = FLOATOBJ_GetLong(&efScaleY);
 
     /* Set the x and y character size for the font */
     fterror = FT_Set_Char_Size(ftface,
-                               FLOATOBJ_GetLong(&efScaleX),
-                               FLOATOBJ_GetLong(&efScaleY),
+                               pfont->sizlScale.cx,
+                               pfont->sizlScale.cy,
                                pfo->sizLogResPpi.cx,
                                pfo->sizLogResPpi.cy);
     if (fterror)
@@ -219,9 +221,9 @@ FtfdCreateFontInstance(
     /* Prepare required coordinates in font space */
     pmetrics = &pfont->metrics;
     pmetrics->ptfxMaxAscender.x = 0;
-    pmetrics->ptfxMaxAscender.y = ftface->bbox.yMax << 4; // FIXME: not exact
+    pmetrics->ptfxMaxAscender.y = pface->ifiex.ifi.fwdWinAscender << 4;
     pmetrics->ptfxMaxDescender.x = 0;
-    pmetrics->ptfxMaxDescender.y = -ftface->bbox.yMin << 4; // FIXME: not exact
+    pmetrics->ptfxMaxDescender.y = pface->ifiex.ifi.fwdWinDescender << 4;
     pmetrics->ptlUnderline1.x = 0;
     pmetrics->ptlUnderline1.y = -pface->ifiex.ifi.fwdUnderscorePosition;
     pmetrics->ptlStrikeout.x = 0;
@@ -245,7 +247,8 @@ FtfdCreateFontInstance(
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
     if (pmetrics->ptlSOThickness.y <= 0) pmetrics->ptlSOThickness.y = 1;
 
-    //TRACE("Created font of size %ld (%ld)\n", yScale, (yScale+32)/64);
+    TRACE("Created font of size %ld (%ld)\n",
+          pfont->sizlScale.cy, (pfont->sizlScale.cy+32)/64);
     //__debugbreak();
 
     /* Set the pvProducer member of the fontobj */
@@ -339,6 +342,8 @@ FtfdQueryMaxExtents(
         pfddm->lMinD = 0;
     }
 
+    TRACE("pfddm->fxMaxAscender=%ld, yScale=%ld, height=%ld\n",
+          pfddm->fxMaxAscender, pfont->sizlScale.cy, (pfont->sizlScale.cy+32)/64);
 //__debugbreak();
 
     /* Return the size of the structure */
@@ -400,14 +405,18 @@ FtfdQueryGlyphData(
         pgd->fxAB = pgd->fxA + ftglyph->metrics.height;
     }
 
+    /* D is the glyph advance width */
     pgd->fxD = ftglyph->advance.x / 4; // should be projected on the x-axis
 
-    pgd->fxInkBottom = 0;
-    pgd->fxInkTop = pgd->fxInkBottom + (ftglyph->bitmap.rows << 4);
+    /* This is the box in which the bitmap fits */
     pgd->rclInk.left = ftglyph->bitmap_left;
     pgd->rclInk.top = -ftglyph->bitmap_top;
     pgd->rclInk.right = pgd->rclInk.left + ftglyph->bitmap.width;
     pgd->rclInk.bottom = pgd->rclInk.top + ftglyph->bitmap.rows;
+
+    /* FIX representation of bitmap top and bottom */
+    pgd->fxInkBottom = (-pgd->rclInk.bottom) << 4;
+    pgd->fxInkTop = pgd->rclInk.top << 4;
 
     /* Make the bitmap at least 1x1 pixel */
     if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
@@ -418,8 +427,6 @@ FtfdQueryGlyphData(
     pgd->ptqD.x.HighPart = 0;
     pgd->ptqD.y.LowPart = 0;
     pgd->ptqD.y.HighPart = 0;
-    //pgd->ptqD.x.QuadPart = 0;
-    //pgd->ptqD.y.QuadPart = 0;
 //__debugbreak();
 }
 
@@ -440,7 +447,6 @@ FtfdCopyBitmap4Bpp(
 {
     ULONG ulRows, ulDstDelta, ulSrcDelta;
     PBYTE pjDstLine, pjSrcLine;
-
 
     pjDstLine = pjDest;
     ulDstDelta = (ftbitmap->width*4 + 7) / 8;
@@ -505,9 +511,9 @@ FtfdQueryGlyphBits(
     else
         FtfdCopyBitmap1Bpp(pgb->aj, &ftglyph->bitmap);
 
-    TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
-          hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
-          GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, pfont->jBpp));
+    //TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
+    //      hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
+    //      GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, pfont->jBpp));
 
 }
 
@@ -554,8 +560,8 @@ FtfdQueryFontData(
 {
     PFTFD_FONT pfont = FtfdGetFontInstance(pfo);
 
-    TRACE("FtfdQueryFontData, iMode=%ld, hg=%lx, pgd=%p, pv=%p, cjSize=%ld\n",
-          iMode, hg, pgd, pv, cjSize);
+    //TRACE("FtfdQueryFontData, iMode=%ld, hg=%lx, pgd=%p, pv=%p, cjSize=%ld\n",
+    //      iMode, hg, pgd, pv, cjSize);
 
     switch (iMode)
     {
