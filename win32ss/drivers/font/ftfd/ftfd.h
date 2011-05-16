@@ -146,7 +146,7 @@ typedef struct
     FTFD_DEVICEMETRICS metrics;
     POINTEF ptefBase;
     POINTEF ptefSide;
-    ULONG xScale;
+    SIZEL sizlScale;
     HGLYPH hgSelected;
     ULONG cjSelected;
     UCHAR jBpp;

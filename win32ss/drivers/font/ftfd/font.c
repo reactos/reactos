@@ -145,17 +145,6 @@ FtfdInitIfiMetrics(
     pifi->cKerningPairs = 0;
     pifi->ulPanoseCulture = FM_PANOSE_CULTURE_LATIN;
 
-    pifi->panose.bFamilyType = PAN_FAMILY_TEXT_DISPLAY;
-    pifi->panose.bSerifStyle = PAN_ANY;
-    pifi->panose.bWeight = PAN_ANY;
-    pifi->panose.bProportion = PAN_ANY;
-    pifi->panose.bContrast = PAN_ANY;
-    pifi->panose.bStrokeVariation = PAN_ANY;
-    pifi->panose.bArmStyle = PAN_ANY;
-    pifi->panose.bLetterform = PAN_ANY;
-    pifi->panose.bMidline = PAN_ANY;
-    pifi->panose.bXHeight = PAN_ANY;
-
     /* Try to get OS/2 TrueType or OpenType metrics */
     if (!FtfdGetWinMetrics(pface, pifi))
     {
@@ -183,7 +172,6 @@ FtfdInitIfiMetrics(
         pifi->fwdTypoAscender = ftface->ascender;
         pifi->fwdTypoDescender = ftface->descender;
         pifi->fwdTypoLineGap = ftface->units_per_EM / 10;
-        pifi->fwdAveCharWidth = 0;
         pifi->fwdCapHeight = 0;
         pifi->fwdXHeight = 0;
         pifi->fwdSubscriptXSize = 0;
@@ -199,6 +187,17 @@ FtfdInitIfiMetrics(
         /* Special characters (first and last char are already enumerated) */
         pifi->wcDefaultChar = 0x0020;
         pifi->wcBreakChar = 0x0020;
+
+        pifi->panose.bFamilyType = PAN_FAMILY_TEXT_DISPLAY;
+        pifi->panose.bSerifStyle = PAN_ANY;
+        pifi->panose.bWeight = PAN_ANY;
+        pifi->panose.bProportion = PAN_ANY;
+        pifi->panose.bContrast = PAN_ANY;
+        pifi->panose.bStrokeVariation = PAN_ANY;
+        pifi->panose.bArmStyle = PAN_ANY;
+        pifi->panose.bLetterform = PAN_ANY;
+        pifi->panose.bMidline = PAN_ANY;
+        pifi->panose.bXHeight = PAN_ANY;
 
         *(DWORD*)&pifi->achVendId = '0000';
     }
