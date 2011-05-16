@@ -22,34 +22,35 @@ CalculateAveCharWidth(
     {
         /* Load the glyph into the glyph slot */
         fterror = FT_Load_Char(ftface, wc, FT_LOAD_NO_SCALE|FT_LOAD_NO_BITMAP);
-        if (fterror) goto allglyphs;
+        if (fterror) break;
 
         /* Calculate accumulative char width */
         ulAccumCharWidth += ftface->glyph->metrics.width;
         cGlyphs++;
     }
-    goto done;
 
-allglyphs:
-    TRACE("using all glyphs\n");
-
-    /* Start over */
-    ulAccumCharWidth = 0;
-    cGlyphs = 0;
-
-    /* Loop all glyphs in the font */
-    for (index = 0; index <= (UINT)ftface->num_glyphs; index++)
+    /* Check if an error occured */
+    if (wc <= L'z')
     {
-        /* Load the glyph into the glyph slot */
-        fterror = FT_Load_Glyph(ftface, index, FT_LOAD_NO_SCALE|FT_LOAD_NO_BITMAP);
-        if (fterror) continue;
+        TRACE("using all glyphs\n");
 
-        /* Calculate accumulative char width */
-        ulAccumCharWidth += ftface->glyph->metrics.width; // FIXME: weighted
-        cGlyphs++;
+        /* Start over */
+        ulAccumCharWidth = 0;
+        cGlyphs = 0;
+
+        /* Loop all glyphs in the font */
+        for (index = 0; index <= (UINT)ftface->num_glyphs; index++)
+        {
+            /* Load the glyph into the glyph slot */
+            fterror = FT_Load_Glyph(ftface, index, FT_LOAD_NO_SCALE|FT_LOAD_NO_BITMAP);
+            if (fterror) continue;
+
+            /* Calculate accumulative char width */
+            ulAccumCharWidth += ftface->glyph->metrics.width; // FIXME: weighted
+            cGlyphs++;
+        }
     }
 
-done:
     return (FWORD)(ulAccumCharWidth / cGlyphs);
 }
 
