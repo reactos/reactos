@@ -701,7 +701,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
     UNICODE_STRING LinkTarget, KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE LinkHandle, RegistryHandle, KeyHandle;
-    WCHAR LinkTargetBuffer[256], KeyNameBuffer[sizeof("SystemPartition")];
+    WCHAR LinkTargetBuffer[256], KeyNameBuffer[sizeof("SystemPartition") / sizeof(WCHAR)];
     UNICODE_STRING CmRegistryMachineSystemName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM");
 
     ASSERT(NtSystemPartitionDeviceName->MaximumLength >= NtSystemPartitionDeviceName->Length + sizeof(WCHAR));

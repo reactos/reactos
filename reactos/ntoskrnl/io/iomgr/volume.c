@@ -937,14 +937,56 @@ IoReleaseVpbSpinLock(IN KIRQL Irql)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoSetSystemPartition(IN PUNICODE_STRING VolumeNameString)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    HANDLE RootHandle, KeyHandle;
+    UNICODE_STRING HKLMSystem, KeyString;
+    WCHAR Buffer[sizeof(L"SystemPartition") / sizeof(WCHAR)];
+
+    RtlInitUnicodeString(&HKLMSystem, L"\\REGISTRY\\MACHINE\\SYSTEM");
+
+    /* Open registry to save data (HKLM\SYSTEM) */
+    Status = IopOpenRegistryKeyEx(&RootHandle, 0, &HKLMSystem, KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Create or open Setup subkey */
+    KeyString.Buffer = Buffer;
+    KeyString.Length = sizeof(L"Setup") - sizeof(UNICODE_NULL);
+    KeyString.MaximumLength = sizeof(L"Setup");
+    RtlCopyMemory(Buffer, L"Setup", sizeof(L"Setup"));
+    Status = IopCreateRegistryKeyEx(&KeyHandle,
+                                    RootHandle,
+                                    &KeyString,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    NULL);
+    ZwClose(RootHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Store caller value */
+    KeyString.Length = sizeof(L"SystemPartition") - sizeof(UNICODE_NULL);
+    KeyString.MaximumLength = sizeof(L"SystemPartition");
+    RtlCopyMemory(Buffer, L"SystemPartition", sizeof(L"SystemPartition"));
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyString,
+                           0,
+                           REG_SZ,
+                           VolumeNameString->Buffer,
+                           VolumeNameString->Length + sizeof(UNICODE_NULL));
+    ZwClose(KeyHandle);
+
+    return Status;
 }
 
 /*
