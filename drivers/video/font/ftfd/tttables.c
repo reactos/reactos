@@ -363,50 +363,6 @@ FtfdGetWinMetrics(
     return TRUE;
 }
 
-ULONG
-NTAPI
-FtfdGetNumberOfKerningPairs(
-    PFTFD_FACE pface)
-{
-    PFTFD_FILE pfile = pface->pfile;
-    PTT_KERNING_TABLE pKerning;
-    PTT_KERNING_SUBTABLE pSubTable;
-    ULONG i, nPairs = 0;
-
-__debugbreak();
-
-    /* Get the kern table for the face */
-    pKerning = FtfdFindTrueTypeTable(pfile->pvView,
-                                     pfile->cjView,
-                                     pface->iFace,
-                                     'nrek',
-                                     NULL);
-    if (!pKerning)
-    {
-        WARN("Couldn't find kerning table\n");
-        return 0;
-    }
-
-    if (pKerning->usVersion != 0)
-    {
-        WARN("Found unknown version %lx\n", pKerning->usVersion);
-        return 0;
-    }
-
-    /* Start with the first subtable */
-    pSubTable = &pKerning->subtable;
-
-    /* Loop all subtables */
-    for (i = 0; i < pKerning->nTables; i++)
-    {
-        nPairs += GETW(&pSubTable->format0.nPairs);
-        pSubTable = (PVOID)((PCHAR)pSubTable + pSubTable->usLength);
-    }
-
-    TRACE("Got %ld kerning pairs\n", nPairs);
-    return nPairs;
-}
-
 INT
 __cdecl
 CompareKernPair(
