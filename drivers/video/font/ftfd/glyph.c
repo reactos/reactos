@@ -434,7 +434,25 @@ FtfdCopyBitmap1Bpp(
     BYTE *pjDest,
     FT_Bitmap *ftbitmap)
 {
-    __debugbreak();
+    ULONG ulRows, ulDstDelta, ulSrcDelta;
+    PBYTE pjDstLine, pjSrcLine;
+
+    pjDstLine = pjDest;
+    ulDstDelta = (ftbitmap->width + 7) / 8;
+
+    pjSrcLine = ftbitmap->buffer;
+    ulSrcDelta = abs(ftbitmap->pitch);
+
+    ulRows = ftbitmap->rows;
+    while (ulRows--)
+    {
+        /* Copy one line */
+        memcpy(pjDstLine, pjSrcLine, ulDstDelta);
+
+        /* Next ros */
+        pjDstLine += ulDstDelta;
+        pjSrcLine += ulSrcDelta;
+    }
 }
 
 static
