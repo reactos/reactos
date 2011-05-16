@@ -1,0 +1,9 @@
+// C++ forwarding C float header.
+
+//
+// ISO C++ 14882: 18.2.2  Implementation properties: C library
+//
+
+#pragma once
+
+#include <float.h>

@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 1999
+ * Silicon Graphics Computer Systems, Inc.
+ *
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+// WARNING: The classes defined in this header are DEPRECATED.  This
+// header is defined in section D.7.1 of the C++ standard, and it
+// MAY BE REMOVED in a future standard revision.  You should use the
+// header <sstream> instead.
+
+
+#ifndef _STLP_STRSTREAM
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x1070
+#  include <stl/_prolog.h>
+#  define _STLP_STRSTREAM
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1070) && \
+   !(defined (_STLP_NO_IOSTREAMS) && defined (_STLP_IMPORT_VENDOR_STD))
+#  include <stl/_ioserr.h>
+
+#  ifndef _STLP_INTERNAL_STRSTREAM
+#    include <stl/_strstream.h>
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x1070) || defined (_STLP_IMPORT_VENDOR_STD)
+/* Even if deprecated strstream header is still part of the Standard. Remove
+ * _STLP_IMPORT_VENDOR_STD check if the native compiler library do not grant
+ * it anymore. */
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <strstream>
+#  else
+#    include _STLP_NATIVE_HEADER(strstream)
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1070)
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_STRSTREAM */
+
+// Local Variables:
+// mode:C++
+// End:
