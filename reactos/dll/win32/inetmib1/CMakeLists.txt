@@ -1,0 +1,28 @@
+
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+spec2def(inetmib1.dll inetmib1.spec)
+
+list(APPEND SOURCE
+    main.c 
+    ${CMAKE_CURRENT_BINARY_DIR}/inetmib1_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
+
+add_library(inetmib1 SHARED ${SOURCE})
+
+set_module_type(inetmib1 win32dll)
+
+target_link_libraries(inetmib1 wine)
+
+add_importlibs(inetmib1
+    msvcrt
+    snmpapi
+    iphlpapi
+    kernel32
+    ntdll)
+
+add_cd_file(TARGET inetmib1 DESTINATION reactos/system32 FOR all)

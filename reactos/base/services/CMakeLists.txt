@@ -1,0 +1,11 @@
+
+add_subdirectory(audiosrv)
+add_subdirectory(eventlog)
+add_subdirectory(rpcss)
+add_subdirectory(spoolsv)
+add_subdirectory(svchost)
+add_subdirectory(tcpsvcs)
+add_subdirectory(telnetd)
+#add_subdirectory(tftpd)
+add_subdirectory(umpnpmgr)
+add_subdirectory(wlansvc)
