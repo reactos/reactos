@@ -6,7 +6,7 @@
 #ifndef _INC_MATH
 #define _INC_MATH
 
-#include <crtdefs.h>
+#include "crtdefs.h"
 
 struct exception;
 
