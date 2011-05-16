@@ -62,8 +62,8 @@
 @ stdcall CM_Get_Class_NameW(ptr wstr ptr long)
 @ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long)
 @ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long)
-@ stub CM_Get_Class_Registry_PropertyA
-@ stub CM_Get_Class_Registry_PropertyW
+@ stdcall CM_Get_Class_Registry_PropertyA(ptr long ptr ptr ptr long ptr)
+@ stdcall CM_Get_Class_Registry_PropertyW(ptr long ptr ptr ptr long ptr)
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
 @ stub CM_Get_DevNode_Custom_PropertyA

@@ -23,25 +23,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /***********************************************************************
- *		TPWriteProfileString (SETUPX.62)
- */
-BOOL WINAPI TPWriteProfileString16( LPCSTR section, LPCSTR entry, LPCSTR string )
-{
-    FIXME( "%s %s %s: stub\n", debugstr_a(section), debugstr_a(entry), debugstr_a(string) );
-    return TRUE;
-}
-
-
-/***********************************************************************
- *		suErrorToIds  (SETUPX.61)
- */
-DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
-{
-    FIXME( "%x %x: stub\n", w1, w2 );
-    return 0;
-}
-
-/***********************************************************************
  *		pSetupRegistryDelnode(SETUPAPI.@)
  */
 BOOL WINAPI pSetupRegistryDelnode(DWORD x, DWORD y)
@@ -156,35 +137,6 @@ SetupDiUnremoveDevice(
     FIXME ("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
-}
-
-
-/***********************************************************************
- *		CMP_RegisterNotification(SETUPAPI.@)
- */
-CONFIGRET
-WINAPI
-CMP_RegisterNotification(
-  IN HANDLE hRecipient,
-  IN LPVOID lpvNotificationFilter,
-  IN DWORD  dwFlags,
-  OUT PULONG pluhDevNotify)
-{
-    FIXME ("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return CR_FAILURE;
-}
-
-
-/***********************************************************************
- *		CMP_UnregisterNotification(SETUPAPI.@)
- */
-CONFIGRET
-WINAPI
-CMP_UnregisterNotification(IN HDEVNOTIFY handle)
-{
-    FIXME ("Stub %p\n", handle);
-    return CR_SUCCESS;
 }
 
 

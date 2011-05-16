@@ -84,25 +84,6 @@ RpcStatusToCmStatus(RPC_STATUS Status)
 
 
 /***********************************************************************
- * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
- */
-DWORD WINAPI CMP_WaitNoPendingInstallEvents(
-    DWORD dwTimeout)
-{
-    HANDLE hEvent;
-    DWORD ret;
-
-    hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
-    if (hEvent == NULL)
-       return WAIT_FAILED;
-
-    ret = WaitForSingleObject(hEvent, dwTimeout);
-    CloseHandle(hEvent);
-    return ret;
-}
-
-
-/***********************************************************************
  * CMP_Init_Detection [SETUPAPI.@]
  */
 CONFIGRET WINAPI CMP_Init_Detection(
@@ -130,6 +111,22 @@ CONFIGRET WINAPI CMP_Init_Detection(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CMP_RegisterNotification [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_RegisterNotification(IN HANDLE hRecipient,
+                         IN LPVOID lpvNotificationFilter,
+                         IN DWORD dwFlags,
+                         OUT PULONG pluhDevNotify)
+{
+    FIXME("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return CR_FAILURE;
 }
 
 
@@ -175,6 +172,37 @@ CONFIGRET WINAPI CMP_Report_LogOn(
         Sleep(5000);
     }
 
+    return ret;
+}
+
+
+/***********************************************************************
+ * CMP_UnregisterNotification [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+{
+    FIXME("Stub %p\n", handle);
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
+ */
+DWORD WINAPI CMP_WaitNoPendingInstallEvents(
+    DWORD dwTimeout)
+{
+    HANDLE hEvent;
+    DWORD ret;
+
+    hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
+    if (hEvent == NULL)
+       return WAIT_FAILED;
+
+    ret = WaitForSingleObject(hEvent, dwTimeout);
+    CloseHandle(hEvent);
     return ret;
 }
 
@@ -1546,6 +1574,44 @@ CM_Get_Class_Name_ExW(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
+    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("\n");
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
+    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("\n");
+
+#if 0
+    if (ClassGuid == NULL ||
+        pulLength == NULL)
+        return 3;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pSetupStringFromGuid(ClassGuid, ebp_6c, 0x27) != 0)
+        return 1F;
+#endif
+
+
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
