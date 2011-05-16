@@ -312,13 +312,26 @@ FtfdGetWinMetrics(
 {
     PFTFD_FILE pfile = pface->pfile;
     PVOID pvView = pfile->pvView;
-    PTT_OS2_DATA pOs2;
+    PTT_TABLE_OS2 pOs2;
+    PTT_TABLE_HEAD pHead;
+
+    /* Get the head table for the face */
+    pHead = FtfdFindTrueTypeTable(pvView, pfile->cjView, pface->iFace, 'daeh', NULL);
+    if (!pHead)
+    {
+        WARN("Couldn't find 'head' table\n");
+        return FALSE;
+    }
+
+    /* Get lowest PPEm */
+    pifi->fwdLowestPPEm = GETW(&pHead->lowestRecPPEM);
+    pface->ulFontRevision = GETD(&pHead->fontRevision);
 
     /* Get the OS/2 table for the face */
     pOs2 = FtfdFindTrueTypeTable(pvView, pfile->cjView, pface->iFace, '2/SO', NULL);
     if (!pOs2)
     {
-        WARN("Couldn't find OS/2 table\n");
+        WARN("Couldn't find 'OS/2' table\n");
         return FALSE;
     }
 

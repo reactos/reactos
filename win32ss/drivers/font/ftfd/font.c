@@ -51,6 +51,7 @@ CalculateAveCharWidth(
         }
     }
 
+    /* Return the average glyph width */
     return (FWORD)(ulAccumCharWidth / cGlyphs);
 }
 
@@ -85,7 +86,7 @@ FtfdInitIfiMetrics(
     pifi->dpCharSets = FIELD_OFFSET(FTFD_IFIMETRICS, ajCharSet);
     pifi->dpFontSim = 0;
 
-    /* Charsets */
+    /* Initialize charsets */
     pifi->jWinCharSet = ANSI_CHARSET;
     pifiex->ajCharSet[0] = pifi->jWinCharSet;
     for (i = 1; i < 16; i++)
@@ -118,7 +119,7 @@ FtfdInitIfiMetrics(
 
     /* Font resolution */
     pifi->fwdUnitsPerEm = ftface->units_per_EM;
-    pifi->fwdLowestPPEm = 3; // FIXME
+    pifi->fwdLowestPPEm = 3;
 
     /* Font metrics */
     pifi->fwdMacAscender = ftface->ascender;
@@ -242,15 +243,13 @@ FtfdInitIfiMetrics(
                            strnlen(ftface->family_name, MAX_PATH));
 
     /* Create a unique name */
-    wcscpy(pifiex->awcUniqueName, L"1.000;ABCD;");
+    wcscpy(pifiex->awcUniqueName, L"1.000;????;");
     wcsncat(pifiex->awcUniqueName, pifiex->awcFamilyName, LF_FACESIZE);
-    pifiex->awcUniqueName[0] = L'1'; // + version?
-    pifiex->awcUniqueName[2] = L'0'; // + version?
-    EngMultiByteToUnicodeN(pifiex->awcUniqueName + 6,
-                           4,
-                           NULL,
-                           pifi->achVendId,
-                           4);
+    pifiex->awcUniqueName[0] = L'0' +  HIWORD(pface->ulFontRevision) % 10;
+    pifiex->awcUniqueName[2] = L'0' + (LOWORD(pface->ulFontRevision) / 100) % 10;
+    pifiex->awcUniqueName[3] = L'0' + (LOWORD(pface->ulFontRevision) / 10) % 10;
+    pifiex->awcUniqueName[4] = L'0' +  LOWORD(pface->ulFontRevision) % 10;
+    EngMultiByteToUnicodeN(pifiex->awcUniqueName+6, 4, NULL, pifi->achVendId, 4);
 
     //__debugbreak();
     return TRUE;
@@ -279,7 +278,6 @@ FtfdInitGlyphSet(
         WARN("EngAllocMem() failed.\n");
         return NULL;
     }
-
 
     /* Calculate FD_GLYPHSET size (incl. HGLYPH array!) */
     cjSize = FIELD_OFFSET(FD_GLYPHSET, awcrun)
@@ -437,6 +435,7 @@ FtfdCreateFace(
         wcCurrent = (WCHAR)FT_Get_Next_Char(ftface, wcCurrent, &index);
     }
 
+    /* Save the last character */
     pface->ifiex.ifi.wcLastChar = wcPrev;
 
     /* Initialize IFIMETRICS */

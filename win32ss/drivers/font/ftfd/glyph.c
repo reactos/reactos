@@ -263,10 +263,8 @@ FtfdGetFontInstance(
 {
     PFTFD_FONT pfont = pfo->pvProducer;
 
-    if (!pfont)
-    {
-        pfont = FtfdCreateFontInstance(pfo);
-    }
+    /* Create a font instance if neccessary */
+    if (!pfont) pfont = FtfdCreateFontInstance(pfo);
 
     /* Return the font instance */
     return pfont;
@@ -302,7 +300,7 @@ FtfdQueryMaxExtents(
         /* Accelerator flags (ignored atm) */
         pfddm->flRealizedType = 0;
 
-        /* Fixed width advance */
+        /* Set fixed width advance */
         if (FT_IS_FIXED_WIDTH(ftface))
             pfddm->lD = ftface->max_advance_width;
         else
@@ -362,7 +360,7 @@ FtfdLoadGlyph(
     /* Check if the glyph needs to be updated */
     if (pfont->hgSelected != hg)
     {
-        /* Load the glypg into the freetype face slot */
+        /* Load the glyph into the freetype face slot */
         fterror = FT_Load_Glyph(pfont->ftface, hg, 0);
         if (fterror)
         {
@@ -406,7 +404,7 @@ FtfdQueryGlyphData(
     }
 
     /* D is the glyph advance width */
-    pgd->fxD = ftglyph->advance.x / 4; // should be projected on the x-axis
+    pgd->fxD = ftglyph->advance.x / 4; // FIXME: should be projected on the x-axis
 
     /* This is the box in which the bitmap fits */
     pgd->rclInk.left = ftglyph->bitmap_left;
@@ -418,7 +416,7 @@ FtfdQueryGlyphData(
     pgd->fxInkBottom = (-pgd->rclInk.bottom) << 4;
     pgd->fxInkTop = pgd->rclInk.top << 4;
 
-    /* Make the bitmap at least 1x1 pixel */
+    /* Make the bitmap at least 1x1 pixel large */
     if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
     if (ftglyph->bitmap.rows == 0) pgd->rclInk.bottom++;
 
@@ -668,7 +666,7 @@ FtfdQueryAdvanceWidths(
     FT_Error fterror;
     FT_Fixed advance;
 
-    TRACE("FtfdQueryAdvanceWidths\n");
+    //TRACE("FtfdQueryAdvanceWidths\n");
 
     // FIXME: layout horizontal/vertical
     fl = (iMode == QAW_GETEASYWIDTHS) ? FT_ADVANCE_FLAG_FAST_ONLY : 0;
