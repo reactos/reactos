@@ -66,7 +66,7 @@ typedef struct _TT_TABLE_HEAD
     SHORT glyphDataFormat;
 } TT_TABLE_HEAD, *PTT_TABLE_HEAD;
 
-typedef struct _TT_OS2_DATA
+typedef struct _TT_TABLE_OS2
 {
     USHORT 	version; // 	// 0x00
     SHORT 	xAvgCharWidth;
@@ -113,7 +113,7 @@ typedef struct _TT_OS2_DATA
     USHORT 	usDefaultChar;
     USHORT 	usBreakChar;
     USHORT 	usMaxContext;
-} TT_OS2_DATA, *PTT_OS2_DATA;
+} TT_TABLE_OS2, *PTT_TABLE_OS2;
 
 typedef struct _TT_KERNPAIR
 {
