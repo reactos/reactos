@@ -739,7 +739,7 @@ VOID
 NTAPI
 VidDisplayString(PUCHAR String)
 {
-    ULONG TopDelta = 14;
+    ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
     while (*String)
