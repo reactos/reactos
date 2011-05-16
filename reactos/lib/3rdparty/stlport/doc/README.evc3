@@ -1,0 +1,157 @@
+
+========================================
+STLport README for eMbedded Visual C++ 3
+========================================
+
+by: Michael Fink, vividos@users.sourceforge.net, last edited 2005-11-15
+
+============
+Introduction
+============
+This document describes how STLport can be compiled and used with Microsoft
+eMbedded Visual C++ 3.
+
+For any further comments or questsion visit STLport mailing lists
+http://stlport.sourceforge.net/Maillists.shtml or forums
+https://sourceforge.net/forum/?group_id=146814
+
+
+=============
+Prerequisites
+=============
+To build and use STLport you will need following tools and libraries:
+ - eMbedded Visual C++ 3.0
+ - latest CVS version of STLport, use info from page
+   'http://stlport.sourceforge.net/CVS.shtml' to get it.
+   Note that you may have to get a different branch, please check out the
+   STLport forum "Announcements" which sourcecode is being worked on.
+
+================
+Building STLport
+================
+Note: if you don't plan to use the iostreams part of STLport (via the define
+_STLP_NO_IOSTREAMS), you don't have to build the library. You can skip straight
+to the "Using STLport" section.
+
+If you want to compile for the Pocket PC 2002 SDK (which in most cases you want)
+be sure to set the PLATFORM environment variable to "Pocket PC 2002", e.g. with
+this command:
+
+  set PLATFORM=Pocket PC 2002
+
+Open a command line prompt and execute the batch file that sets up compiling
+for ARM or x86 processors. These files usually are in a folder like
+'C:\Program Files\Windows CE eMbedded Tools\EVC\WCE300\BIN\' and are called
+WCEARM.bat and WCEx86.bat. Check if the environment variables are set up
+properly after that call. You can also adjust the batch files to have the
+PLATFORM variable set automatically.
+
+Go into STLport's 'build\lib' folder and type:
+
+  configure.bat -c evc3
+
+The makefiles are configured with the given settings. Call configure.bat with
+the --help option to see all options. The program automatically tells you which
+command line to use. If you want to install the libraries, add the "install"
+target as follows:
+
+  nmake /fmsvc.mak install
+
+All libraries (debug, stldebug, release) are now built, static and shared
+ones. Import libraries (.lib files) are put in the 'lib\evc3-arm' folder, DLLs
+are put in the 'bin\evc3-arm' folder. If you use another target platform, the
+name of the folder is changed accordingly, e.g. evc3-x86 for emulator files.
+
+Once STLport is built you can decrease the size of the STLport folder by
+removing intermediate build files. This is done with the following command:
+
+  nmake /fmsvc.mak clobber
+
+Note: MIPS platform is also available for build, but it may not compile or work
+      properly. Use with caution!
+
+===============
+Testing STLport
+===============
+You can use the unit tests to verify STLport behaves correctly. Change into
+STLports 'build\test\unit' folder and type:
+
+  nmake /fmsvc.mak install
+
+If you want to build the unit tests for the emulator, you have to reconfigure
+STLport with the configure.bat, as described above.
+
+Once the unit tests are built, upload the binary (found in the 'bin\evc3-arm'
+folder) to your device or emulator and start it (the test runs for about 30
+seconds, depending on the speed of the device). The file 'stlp_test.txt' is
+created in the root folder of the device, which contains the unit test
+results. It should report no errors.
+
+=============
+Using STLport
+=============
+Adjust your include and link paths in eVC3 in 'Tools -> Options -> Directories'
+and add the paths for all platforms and CPUs on which you want to use STLport.
+In the include files add the path to STLport's 'stlport' folder. Make sure it
+is the first directory listed there. Add STLport's 'lib\evc3-arm' or
+'lib\evc3-x86' (depending on what target you use) folder for the library files
+(order of paths doesn't matter here).
+
+There are some preprocessor defines that control usage of the STLport in evc3
+projects:
+
+Define the symbol _STLP_USE_STATIC_LIB when you want to statically link against
+STLport. The linker will remove unused classes and methods then, saving some
+space in the executable.
+
+If you don't want to use the iostreams part of the library, you can specify the
+define _STLP_NO_IOSTREAMS. In this mode there is no need to link against the
+library.
+
+STLport uses automatic linking to find the proper .lib file. If you want to see
+what import library STLport is going to use, define _STLP_VERBOSE_AUTO_LINK.
+When not using automatic linking (by specifying _STLP_DONT_USE_AUTO_LINK), you
+have to specify the proper .lib file in the Project Settings, on the "link" tab.
+The .lib names have the following syntax:
+
+   stlport(d|stld)[_static].<STLport-Version>.lib
+
+Examples:
+
+   stlport_static.5.0.lib - static release version, Version 5.0.0
+   stlportd_50.lib - dll debug version, Version 5.0.0
+
+Note that usage of the _STLP_DEBUG mode is currently not recommended for
+eMbedded Visual C++ builds using the ARM compiler, due to a compiler bug.
+
+When using STLport together with MFC, be sure to include the MFC headers first,
+then include STLport headers, e.g. in your Stdafx.h. This way STLport correctly
+recognizes MFC usage. You also can define the macro _STLP_USE_MFC, either in
+your project settings or in stlport/stl/config/user_config.h.
+
+Now you should be ready to use STLport.
+
+============
+Known issues
+============
+ - Unit Tests in _STLP_DEBUG mode (target 'stldbg-shared') fails in
+   __stl_debug_engine::_M_detach() for several tests due to unknown reasons.
+   A compiler bug in the ARM compiler is suspected.
+   There is currently no workaround for this bug. It is recommended to not use
+   _STLP_DEBUG mode.
+
+ - Resource compiler issue:
+
+    The resource compiler is not a C++ compiler, it is a compiler that translates
+  resource files, i.e. files that describe dialogs, strings, version information
+  and other parts of the GUI on MS Windows systems.
+
+    The problem is that it includes files from the C/C++ include path, and
+  STLport uses mechanisms the resource compiler can't handle, e.g. using macro
+  names longer than 31 characters.
+
+    The workaround is to guard all affected headers (stdio.h, string.h, stdarg.h,
+  stdlib.h, ctype.h) against this. The resource compiler is detected by the
+  macro RC_INVOKED.
+
+ - See also README.evc4 issues.

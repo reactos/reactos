@@ -1,0 +1,138 @@
+5.2:
+
+- Major modifications:
+
+	* Use of #include_next to access native platform/compiler headers when the
+	preprocessor support it. Enhance STLport portability as native header path do
+	not have to be adapted each time the header structure is modified.
+
+	* Yet a modification of the include schema in all C++ Standard headers. Now
+	_STLP_WHOLE_NATIVE_STD mode works as expected, used in conjonction with
+	_STLP_DONT_REDEFINE_STD it is possible to use STLport in stlport namespace at
+	the same time as using native library in std namespace.
+
+	* Use of the gcc visibility feature for gcc versions after 4.0.
+
+	* For builds under Windows, STLport now adapt to the PSDK used to build it. It
+	should be the same as the one used when building an application using the
+	STLport libs. A compatibility detection mecanism has been implemented in order
+	to report not homogeneous build environment with a link error rather than undefined
+	runtime error.
+
+- Enhancements:
+
+	* Use of malloc based allocator on system having GlibC 2.3 and later, keep
+	node allocator for others.
+
+	* Delay instanciation of type traits type in vector and deque implementation to
+	be able to use some of the nested types like iterator even if type used to
+	instanciate the container is not completely defined.
+	
+	* Container pointer specialization feature now works even with incomplete types
+	thanks to use of partial template specialization.
+
+5.1:
+
+- Major modifications
+
+	* Folder architecture: All configuration files are now in stlport/stl/config folder.
+	stlport/stl_user_config.h renamed and moved as stlport/stl/config/user_config.h.
+	stlport/stl/_site_config.h renamed and moved as stlport/stl/config/hosts.h.
+	STLport configuration now also try to seperate platform configuration from compiler
+	one.
+
+	* Allocators implementation is in src folder to enhance encapsulation. Default
+	allocator when using STLport without building it (_STLP_NO_IOSTREAMS) is the simple
+	new/delete based allocator, node allocator is the default when building the lib.
+
+	* Access to native headers has been modified to make STLport less dependant on
+	native headers internal includes, should improve portability.
+
+	* Segregation of headers has been improved. You might have to add now missing
+	functional or algorithm Standard headers include in your code.
+
+- Enhancements
+
+	* Support enhancements:
+	  - Borland compilers starting with the free one (5.5.1)
+	  - HP aC++/ANSI C B3910B A.06.06
+	  - Visual Studio 2005 for Windows CE
+	  - Use of intrinsic type traits support of Visual Studio 2005
+
+	* Improved meta programming techniques especially in uninitialized_* algorithms.
+	If you need a vector of null pointer prefer to write 'vector<void*> v(10)' rather
+	than 'vector<void*> v(10, (void*)0)'.
+
+	* Fully functional pointer specialization feature (_STLP_USE_PTR_SPECIALIZATIONS).
+
+	* Extension of template search methods in associative and hashed container has
+	been completed.
+
+	* STL safe mode: Now detect badly implemented strict weak ordering functors, assert
+	if a < b && b < a. Same for equivalent functor used in hash container implementation,
+	assert if a <=> b but !(b <=> a).
+
+	* Improved locale creation delay on Windows platform.
+
+	* STL containers implementation now correctly handle allocators with state. This kind
+	of allocator has to overload swap method if any specific action has to be made when
+	swaping 2 instances.
+
+	* STLport is ready for safe string functions *_s (_STLP_USE_SAFE_STRING_FUNCTIONS)
+
+	* Many bug fixes, see etc/ChangeLog-5.1.
+
+5.0:
+
+- Major modifications
+
+	* No more wrapper mode: you can use STLport iostreams or no iostreams
+	at all.
+
+	* _STLP_NO_CUSTOM_IO now also hide basic_string implementation
+
+	* internal namespace schema has been modified, see doc folder for additionnal
+	informations.
+
+- Enhancements
+
+	* Support of many modern C++ compilers and platforms
+	  - gcc 3.4.0 and later
+	  - MSVC .Net 2002, 2003 and MSVC 2005 Beta
+	  - Windows CE 
+	see build/test/unit/STATUS for a complete list of tested platforms/compilers
+
+	* Move semantic: vector or deque of any other STL containers are using
+	move semantic when resized or modified rather than copy.
+
+	* New checks in safe STL mode like null pointer or check of iterator range
+	pass to container constructors.
+
+	* Expression template for string concatenation operations (available
+	throught the _STLP_USE_TEMPLATE_EXPRESSION config option)
+
+	* Implementation of the short string optimization trick, basic_string have
+	a small static buffer in this case.
+
+	* STL containers vector, deque, list and slist pointer specialization to
+	limit code bloats (see _STLP_USE_PTR_SPECIALIZATIONS on config file)
+
+	* Use of boost type_traits rather than internal equivalent when requested
+	(see _STLP_USE_BOOST_SUPPORT in config file)
+
+	* set/multiset, or map/multimap iterators cannot be compared anymore.
+
+	* unordered_set, unordered_multiset, unordered_map, unordered_multimap hash
+	containers implementation specified in the TR1 document.
+
+	* Thanks to the _STLP_LEAKS_PEDANTIC config option you can ask STLport to
+	clean its memory pool before being unloaded, useful to only detect real
+	memory leak problems.
+
+	* Creation of configuration scripts to make STLport configuration easier.
+
+	* Improvment of some algorithm like search_n or stable_sort.
+
+	* Ported to 64 bits platforms.
+
+	* Large file ( > 4 Go) stream support on Win32 platform.

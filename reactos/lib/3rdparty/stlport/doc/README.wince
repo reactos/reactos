@@ -1,0 +1,94 @@
+Programming under MS Windows CE with STLport
+=============================================
+
+This is supposed to give an overview for programming on MS Windows CE, with and
+partially without STLport, what tools are available and what common pitfalls
+exist. Note that for every supported compiler there is another readme file which
+explains the specifics of that compiler.
+
+
+
+Available compilers:
+---------------------
+
+- Embedded Visual C++ 3 (eVC3): this IDE/compiler is for the CE3 target platforms.
+The included compiler is MSC12, the same as for VC6, so many workarounds for its
+'features' apply here, too. STLport works out of the box with this.
+
+- Embedded Visual C++ 4 (eVC4): basically the same as eVC3, but it can compile for
+CE4.x and 5. Note that currently (2007-03-06) I haven't tested this with CE5,
+because you can use a better compiler using VC8/VS2005. This compiler can be
+downloaded for free from the MS website, including a product activation key.
+STLport works out of the box with this.
+
+- Visual C++ 8 (VC8) aka Visual Studio 2005 (VS2005): with this version (and
+partially already version 7) the embedded and desktop IDEs have been merged again,
+so it supports compiling for MS Windows CE, versions 5 and later. Note that the
+freely downloadable express edition does not(!) allow compiling for CE. This IDE
+uses MSC14 as compiler. STLport works out of the box with CE5.
+
+- Platform Builders (PB): this tool is used to create a CE image. You can select the
+modules (e.g. Explorer, but also C++ RTTI) you include in the image. These IDEs use
+several different compilers (MSC12-14). STLport hasn't been tested with this
+IDE, AFAIK.
+
+- There used to be an addon for VC6(?) that allowed compiling for CE. This plugin
+has been superceeded by eVC3/4 and support for it has been removed from STLport in
+version 5.
+
+- Others: some vendors (e.g. Intel) provide compilers that are able to generate
+CE executables. I'm not aware of an attempt to compile STLport with them.
+
+
+
+Environment specialties:
+-------------------------
+
+- In order to develop for a platform, the first thing you need is a so-called SDK.
+This package includes headers and libraries that (more or less) resemble the APIs
+available on the device. The IDEs come with a basic selection of SDKs, but in
+general you need to retrieve an according SDK from the vendor. If you are the
+vendor, you can generate an SDK for a platform with Platform Builder.
+
+- The provided API is typically a subset of the 'normal' win32 API. Often, some
+features are simply not supported, like security descriptors when opening files.
+Also, these APIs are only supported for wchar_t strings, e.g. only CreateFileW()
+and not CreateFileA().
+
+- CE doesn't have a current directory, hence no relative paths to that dir. You can 
+have relative parts in global paths though.
+
+- CE doesn't have environment variables, thus STLport can't support e.g.
+setenv/getenv. It also doesn't attempt to provide workarounds.
+
+- Since many features are optional (see the description of Platform Builder), it
+is possible that you don't have e.g. a console that std::cout could write to. The
+same applies to exceptions (see e.g. the add-on lib for RTTI for eVC4). Other
+features might go amiss, too. This makes it hard for STLport to adapt to, in
+particular because this information is not available outside PB, a header might
+declare a function that in fact is not present. Keep this in mind when you get
+linker errors.
+
+- The supplied C++ standard library is extremely cut down, e.g. iostreams and
+locales are missing completely.
+
+- The supplied standard C API is at best rudimentary. Functions like e.g. time() or
+clock() are declared but not defined. STLport doesn't include any workarounds for
+these missing functions at present.
+
+- All compilers are cross-compilers, i.e. you run them on a win32 host and they
+produce executable code for the target platform. The same applies to the debugger,
+which is connected via serial, USB or ethernet. Alternatively, there are emulators
+that run on the host machine and simulate the target platform.
+
+- The entrypoint for executables is generally WinMain. Normally, you would have
+switched to a normal main() using /SUBSYSTEM:CONSOLE on the linker commandline.
+The linkers for at least CE4 and 5 don't understand this switch, they claim it
+conflicts with CE targets. Instead, set the entrypoint directly to 
+mainACRTStartup.
+
+- The name of a DLL loaded via an import library can't be longer than 32 chars. If
+this is not the case, the application will behave as if the DLL was not present or
+couldn't be loaded for whatever other reason. This limitation applies to at least
+CE 4 and 5.
+
