@@ -7,16 +7,19 @@
 	<library>advapi32</library>
 	<library>crypt32</library>
 	<library>ntdll</library>
+	<library>netapi32</library>
 	<file>context.c</file>
 	<file>credentials.c</file>
 	<file>crypt.c</file>
 	<file>rc4.c</file>
 	<file>stubs.c</file>
 	<file>messages.c</file>
-	<file>ntlm.c</file>
+	<file>ntlmssp.c</file>
 	<file>sign.c</file>
 	<file>util.c</file>
 	<file>dllmain.c</file>
+	<file>debug.c</file>
+	<file>protocol.c</file>
 </module>
 
 

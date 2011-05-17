@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "ntlm.h"
+#include "ntlmssp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 
@@ -31,14 +32,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
+        NtlmInitializeGlobals();
 
-        /* hack: rsaehn has still not registered its crypto providers */
-        /* its not like we are going to logon to anything yet */
+        /* rsaehn has still not registered its crypto providers */
         if(!SetupIsActive())
         {
             //REACTOS BUG: even after 2nd stage crypto providers are not available!
-            //NtlmInitializeRNG();
-            //NtlmInitializeProtectedMemory();
+            NtlmInitializeRNG();
+            NtlmInitializeProtectedMemory();
         }
         NtlmCredentialInitialize();
         NtlmContextInitialize();
@@ -48,6 +49,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         NtlmCredentialTerminate();
         NtlmTerminateRNG();
         NtlmTerminateProtectedMemory();
+        NtlmTerminateGlobals();
         break;
     default:
         break;

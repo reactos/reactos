@@ -15,16 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "ntlm.h"
+#include "ntlmssp.h"
 #include <wincrypt.h>
 #include "rc4.h"
+
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 HCRYPTPROV Prov;
 PVOID LockedMemoryPtr = NULL;
 ULONG LockedMemorySize = 0;
-
-WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
-
 BOOL
 NtlmInitializeRNG(VOID)
 {
@@ -61,8 +61,8 @@ NtlmGenerateRandomBits(VOID *Bits, ULONG Size)
     if(CryptGenRandom(Prov, Size, (BYTE*)Bits))
         return STATUS_SUCCESS;
 
-    /* fix me: translate win32 error? */
-    return STATUS_UNSUCCESSFUL;
+    //return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 BOOL
