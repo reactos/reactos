@@ -1670,8 +1670,11 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
        PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo = NULL;
     BOOL ret = FALSE;
-    SP_DEVINFO_DATA DevInfo;
+    CONFIGRET cr;
+    DEVINST RootDevInst;
+    DEVINST DevInst;
 
     TRACE("%p %s %s %s %p %x %p\n", DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1710,59 +1713,62 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         return FALSE;
     }
 
-        if (CreationFlags & DICD_GENERATE_ID)
-        {
-            /* Generate a new unique ID for this device */
-            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-            FIXME("not implemented\n");
-        }
+    /* Get the root device instance */
+    cr = CM_Locate_DevInst_ExW(&RootDevInst,
+                               NULL,
+                               CM_LOCATE_DEVINST_NORMAL,
+                               set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    }
+
+    /* Create the new device instance */
+    cr = CM_Create_DevInst_ExW(&DevInst,
+                               (DEVINSTID)DeviceName,
+                               RootDevInst,
+                               0,
+                               set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    }
+
+    if (CreateDeviceInfo(set, DeviceName, ClassGuid, &deviceInfo))
+    {
+        InsertTailList(&set->ListHead, &deviceInfo->ListEntry);
+
+        if (!DeviceInfoData)
+            ret = TRUE;
         else
         {
-            /* Device name is fully qualified. Try to open it */
-            BOOL rc;
-
-            DevInfo.cbSize = sizeof(SP_DEVINFO_DATA);
-            rc = SetupDiOpenDeviceInfoW(
-                DeviceInfoSet,
-                DeviceName,
-                NULL, /* hwndParent */
-                CreationFlags & DICD_INHERIT_CLASSDRVS ? DIOD_INHERIT_CLASSDRVS : 0,
-                &DevInfo);
-
-            if (rc)
+            if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
             {
-                /* SetupDiOpenDeviceInfoW has already added
-                 * the device info to the device info set
-                 */
-                SetLastError(ERROR_DEVINST_ALREADY_EXISTS);
+                SetLastError(ERROR_INVALID_USER_BUFFER);
             }
-            else if (GetLastError() == ERROR_NO_SUCH_DEVINST)
+            else
             {
-                struct DeviceInfo *deviceInfo;
-
-                if (CreateDeviceInfo(set, DeviceName, ClassGuid, &deviceInfo))
-                {
-                    InsertTailList(&set->ListHead, &deviceInfo->ListEntry);
-
-                    if (!DeviceInfoData)
-                        ret = TRUE;
-                    else
-                    {
-                        if (DeviceInfoData->cbSize != sizeof(PSP_DEVINFO_DATA))
-                        {
-                            SetLastError(ERROR_INVALID_USER_BUFFER);
-                        }
-                        else
-                        {
-                            memcpy(&DeviceInfoData->ClassGuid, ClassGuid, sizeof(GUID));
-                            DeviceInfoData->DevInst = deviceInfo->dnDevInst;
-                            DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
-                            ret = TRUE;
-                        }
-                    }
-                }
+                memcpy(&DeviceInfoData->ClassGuid, ClassGuid, sizeof(GUID));
+                DeviceInfoData->DevInst = deviceInfo->dnDevInst;
+                DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
+                ret = TRUE;
             }
         }
+    }
+
+    if (ret == FALSE)
+    {
+        if (deviceInfo != NULL)
+        {
+            /* Remove deviceInfo from List */
+            RemoveEntryList(&deviceInfo->ListEntry);
+
+            /* Destroy deviceInfo */
+            DestroyDeviceInfo(deviceInfo);
+        }
+    }
 
     TRACE("Returning %d\n", ret);
     return ret;
@@ -4542,10 +4548,14 @@ SetupDiSetDeviceInstallParamsW(
     return ret;
 }
 
-BOOL WINAPI SetupDiSetDeviceInstallParamsA(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+/***********************************************************************
+ *		SetupDiSetDeviceInstallParamsW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSetDeviceInstallParamsA(
+    HDEVINFO DeviceInfoSet,
+    PSP_DEVINFO_DATA DeviceInfoData,
+    PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
 {
     SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
     int len = 0;
@@ -4635,6 +4645,25 @@ cleanup:
     return ret;
 }
 
+static BOOL
+IsDeviceInfoInDeviceInfoSet(
+    struct DeviceInfoSet *deviceInfoSet,
+    struct DeviceInfo *deviceInfo)
+{
+    PLIST_ENTRY ListEntry;
+
+    ListEntry = deviceInfoSet->ListHead.Flink;
+    while (ListEntry != &deviceInfoSet->ListHead)
+    {
+        if (deviceInfo == CONTAINING_RECORD(ListEntry, struct DeviceInfo, ListEntry))
+            return TRUE;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return FALSE;
+}
+
 /***********************************************************************
  *		SetupDiDeleteDeviceInfo (SETUPAPI.@)
  */
@@ -4643,11 +4672,28 @@ SetupDiDeleteDeviceInfo(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
+    struct DeviceInfoSet *deviceInfoSet;
+    struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData;
+    BOOL ret = FALSE;
+
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    FIXME("not implemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((deviceInfoSet = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (!IsDeviceInfoInDeviceInfoSet(deviceInfoSet, deviceInfo))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        RemoveEntryList(&deviceInfo->ListEntry);
+        DestroyDeviceInfo(deviceInfo);
+        ret = TRUE;
+    }
+
+    return ret;
 }
 
 
