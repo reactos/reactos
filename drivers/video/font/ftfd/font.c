@@ -225,19 +225,19 @@ FtfdInitIfiMetrics(
 
     /* Convert names to unicode */
     EngMultiByteToUnicodeN(pifiex->awcFamilyName,
-                           LF_FACESIZE,
+                           sizeof(pifiex->awcFamilyName),
                            NULL,
                            ftface->family_name,
                            strnlen(ftface->family_name, MAX_PATH));
 
     EngMultiByteToUnicodeN(pifiex->awcStyleName,
-                           LF_FACESIZE,
+                           sizeof(pifiex->awcStyleName),
                            NULL,
                            ftface->style_name,
                            strnlen(ftface->style_name, MAX_PATH));
 
     EngMultiByteToUnicodeN(pifiex->awcFaceName,
-                           LF_FACESIZE,
+                           sizeof(pifiex->awcFaceName),
                            NULL,
                            ftface->family_name,
                            strnlen(ftface->family_name, MAX_PATH));
@@ -249,7 +249,7 @@ FtfdInitIfiMetrics(
     pifiex->awcUniqueName[2] = L'0' + (LOWORD(pface->ulFontRevision) / 100) % 10;
     pifiex->awcUniqueName[3] = L'0' + (LOWORD(pface->ulFontRevision) / 10) % 10;
     pifiex->awcUniqueName[4] = L'0' +  LOWORD(pface->ulFontRevision) % 10;
-    EngMultiByteToUnicodeN(pifiex->awcUniqueName+6, 4, NULL, pifi->achVendId, 4);
+    EngMultiByteToUnicodeN(pifiex->awcUniqueName+6, 8, NULL, pifi->achVendId, 4);
 
     //__debugbreak();
     return TRUE;

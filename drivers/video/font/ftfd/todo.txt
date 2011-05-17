@@ -15,7 +15,6 @@ Public interface:
 - FtfdQueryFontCaps: 100% done
 - FtfdQueryTrueTypeTable: 100% done
 - FtfdGetTrueTypeFile: 100% done
-
 - FtfdQueryFontData: 10%, depends on FtfdLoadGlyph
     - QFD_MAXEXTENTS: dependes on FtfdQueryMaxExtents
     - QFD_GLYPHANDBITMAP: depends on FtfdQueryGlyphData, FtfdQueryGlyphBits
@@ -33,11 +32,20 @@ internal interface
 -------------------
 - FtfdInitIfiMetrics: 80% done
     - handle other font types than TTF/OTF
-    - fix fwdLowestPPEm, fwdMacLineGap, ptlBaseline, ptlAspect, ptlCaret
-    - cKerningPairs from atmfd is bigger, ulPanoseCulture
-    - check fwdMacAscender, fwdMacDescender
-    - Check jWinPitchandFamily (from OS/2 table, Apolonia: 0,0->0x12)
-    - fix fwdUnderscorePosition
+    - dpwszFamilyName, dpwszStyleName, dpwszFaceName: locale
+    - dpwszUniqueName: get from 'name' table
+    - dpFontSim: implement
+    - dpCharSets: implement
+    - fwdMacLineGap: implement
+    - fwdMaxCharInc: check/fix
+    - fwdCapHeight: check/fix
+    - fwdUnderscorePosition: fix
+    - chFirstChar, chLastChar, chDefaultChar, chBreakChar: fix
+    - wcDefaultChar, wcBreakChar: fix
+    - ptlBaseline: fix
+    - ptlAspect: fix
+    - ptlCaret: fix
+    - jWinPitchandFamily: check, improve (Apolonia: 0,0->0x12)
 
 - FtfdInitGlyphSet: 100% done
 - FtfdInitKerningPairs: 90% done
@@ -55,12 +63,17 @@ internal interface
     - handle vertical layout
     - handle ptqD for rotation / skewing
 
-- FtfdQueryGlyphBits: 50% depends on FtfdCopyBitmap4Bpp and FtfdCopyBitmap1Bpp
-    - handle 1bpp bitmaps
+- FtfdQueryGlyphBits: 90% depends on FtfdCopyBitmap4Bpp and FtfdCopyBitmap1Bpp
 
 - FtfdQueryGlyphOutline: unimplemented
 - FtfdCopyBitmap4Bpp: 90 %
     - add rounding
     - Could need optimization
-- FtfdCopyBitmap1Bpp: unimplemented
+- FtfdCopyBitmap1Bpp: 90 %
+    - Can we use full memcpy?
+
+When replacing the original ttf driver
+-----------------------------------------------
+- Horizontal metrics are broken
+- Marlett symbols are wrong
 
