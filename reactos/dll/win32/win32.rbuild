@@ -295,6 +295,9 @@
 <directory name="msnet32">
 	<xi:include href="msnet32/msnet32.rbuild" />
 </directory>
+<directory name="msports">
+	<xi:include href="msports/msports.rbuild" />
+</directory>
 <directory name="msrle32">
 	<xi:include href="msrle32/msrle32.rbuild" />
 </directory>

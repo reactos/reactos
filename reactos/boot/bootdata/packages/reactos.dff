@@ -357,6 +357,7 @@ dll\win32\msimtf\msimtf.dll                         1
 dll\win32\msisip\msisip.dll                         1
 dll\win32\msisys.ocx\msisys.ocx                     1
 dll\win32\msnet32\msnet32.dll                       1
+dll\win32\msports\msports.dll                       1
 dll\win32\msrle32\msrle32.dll                       1
 dll\win32\mssign32\mssign32.dll                     1
 dll\win32\mssip32\mssip32.dll                       1

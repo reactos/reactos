@@ -52,6 +52,7 @@
 	<property name="BASEADDRESS_NETID"		value="0x5f660000" />
 	<property name="BASEADDRESS_NTPRINT"		value="0x5f6a0000" />
 	<property name="BASEADDRESS_MSSIP32"		value="0x60430000" />
+	<property name="BASEADDRESS_MSPORTS"		value="0x60450000" />
 	<property name="BASEADDRESS_MSISIP"		value="0x60b10000" />
 	<property name="BASEADDRESS_INSENG"		value="0x61000000" />
 	<property name="BASEADDRESS_QEDIT"		value="0x611c0000" />
