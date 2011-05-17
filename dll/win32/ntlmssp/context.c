@@ -81,8 +81,11 @@ NtlmDereferenceContext(IN ULONG_PTR Handle)
     TRACE("%p refcount %lu\n",context, context->RefCount);
     ASSERT(context->RefCount >= 1);
 
-    /* decrement and check for delete */
-    if (context->RefCount-- == 0)
+    /* decrement reference */
+    context->RefCount--;
+
+    /* check for object rundown */
+    if (context->RefCount == 0)
     {
         TRACE("Deleting context %p\n",context);
 
@@ -467,7 +470,8 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                     &sessionKey,
                                     &NegotiateFlags);
 
-        phNewContext = (PCtxtHandle)newContext;
+        phCredential->dwUpper = NegotiateFlags;
+        phNewContext->dwLower = newContext;
 
         if(!newContext || !NT_SUCCESS(ret))
         {
@@ -502,7 +506,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     else        /* challenge! */
     {
         ERR("challenge message unimplemented!!!\n");
-        
+        ERR("phNewContext %p phContext %x!!!\n",phNewContext, *phContext);
         *phNewContext = *phContext;
         if (fContextReq & ISC_REQ_USE_SUPPLIED_CREDS)
         {
@@ -692,7 +696,7 @@ DeleteSecurityContext(PCtxtHandle phContext)
         return SEC_E_INVALID_HANDLE;
     }
 
-    NtlmDereferenceContext((ULONG_PTR)phContext);
+    NtlmDereferenceContext((ULONG_PTR)phContext->dwLower);
     phContext = NULL;
     return SEC_E_OK;
 }
@@ -740,7 +744,7 @@ SECURITY_STATUS
 SEC_ENTRY
 FreeContextBuffer(PVOID pv)
 {
-    HeapFree(GetProcessHeap(), 0, pv);
+    NtlmFree(pv);
     return SEC_E_OK;
 }
 

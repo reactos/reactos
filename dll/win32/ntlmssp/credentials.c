@@ -76,8 +76,11 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
     TRACE("%p refcount %d\n",cred, cred->RefCount);
     ASSERT(cred->RefCount >= 1);
 
-    /* decrement and check for delete */
-    if (cred->RefCount-- == 0 )
+    /* decrement reference */
+    cred->RefCount--;
+
+    /* check for object rundown */
+    if (cred->RefCount == 0)
     {
         TRACE("Deleting credential %p\n",cred);
 
@@ -289,7 +292,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         if(password.Buffer != NULL)
         {
-            NtlmProtectMemory(password.Buffer, password.Length);
+            NtlmProtectMemory(password.Buffer, password.Length * sizeof(WCHAR));
             cred->Password = password;
         }
 
