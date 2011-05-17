@@ -36,16 +36,15 @@ internal interface
     - dpwszUniqueName: get from 'name' table
     - dpFontSim: implement
     - dpCharSets: implement
-    - fwdMacLineGap: implement
+    - fwdMacLineGap: from hhea table
     - fwdMaxCharInc: check/fix
     - fwdCapHeight: check/fix
     - fwdUnderscorePosition: fix
     - chFirstChar, chLastChar, chDefaultChar, chBreakChar: fix
     - wcDefaultChar, wcBreakChar: fix
     - ptlBaseline: fix
-    - ptlAspect: fix
-    - ptlCaret: fix
-    - jWinPitchandFamily: check, improve (Apolonia: 0,0->0x12)
+    - ptlCaret: use hhea table caretSlopeRun, caretSlopeRise
+    - Put most important charset into slot 0
 
 - FtfdInitGlyphSet: 100% done
 - FtfdInitKerningPairs: 90% done

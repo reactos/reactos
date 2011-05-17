@@ -92,21 +92,21 @@ typedef struct _TT_TABLE_OS2
         };
         SHORT 	sFamilyClass;
     };
-    BYTE 	panose[10];
-    ULONG 	ulUnicodeRange1; // 	Bits 0-31
-    ULONG 	ulUnicodeRange2; // 	Bits 32-63
-    ULONG 	ulUnicodeRange3; // 	Bits 64-95
-    ULONG 	ulUnicodeRange4; // 	Bits 96-127
-    CHAR 	achVendID[4];
-    USHORT 	fsSelection;
-    USHORT 	usFirstCharIndex;
-    USHORT 	usLastCharIndex;
-    SHORT 	sTypoAscender;
+    BYTE 	panose[10]; // 0x20
+    ULONG 	ulUnicodeRange1; // 0x2A 	Bits 0-31
+    ULONG 	ulUnicodeRange2; // 0x2E	Bits 32-63
+    ULONG 	ulUnicodeRange3; // 0x32	Bits 64-95
+    ULONG 	ulUnicodeRange4; // 0x36	Bits 96-127
+    CHAR 	achVendID[4]; // 0x3a
+    USHORT 	fsSelection; // 0x3e
+    USHORT 	usFirstCharIndex; // 0x40
+    USHORT 	usLastCharIndex; // 0x42
+    SHORT 	sTypoAscender; // 0x44
     SHORT 	sTypoDescender;
     SHORT 	sTypoLineGap;
     USHORT 	usWinAscent;
     USHORT 	usWinDescent;
-    ULONG 	ulCodePageRange1; // 	Bits 0-31
+    ULONG 	ulCodePageRange1; // 0x4e	Bits 0-31
     ULONG 	ulCodePageRange2; // 	Bits 32-63
     SHORT 	sxHeight;
     SHORT 	sCapHeight;
