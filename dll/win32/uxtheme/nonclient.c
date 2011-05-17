@@ -328,7 +328,26 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 static void 
 ThemeDrawBorders(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
+    RECT rcPart;
+    int iState = pcontext->Active ? FS_ACTIVE : FS_INACTIVE;
 
+    /* Draw the bottom border */
+    rcPart = *prcCurrent;
+    rcPart.top = rcPart.bottom - pcontext->wi.cyWindowBorders;
+    prcCurrent->bottom = rcPart.top;
+    DrawThemeBackground(pcontext->theme, pcontext->hDC, WP_FRAMEBOTTOM, iState, &rcPart, NULL);
+
+    /* Draw the left border */
+    rcPart = *prcCurrent;
+    rcPart.right = pcontext->wi.cxWindowBorders ;
+    prcCurrent->left = rcPart.right;
+    DrawThemeBackground(pcontext->theme, pcontext->hDC,WP_FRAMELEFT, iState, &rcPart, NULL);
+
+    /* Draw the right border */
+    rcPart = *prcCurrent;
+    rcPart.left = rcPart.right - pcontext->wi.cxWindowBorders;
+    prcCurrent->right = rcPart.left;
+    DrawThemeBackground(pcontext->theme, pcontext->hDC,WP_FRAMERIGHT, iState, &rcPart, NULL);
 }
 
 static void 
