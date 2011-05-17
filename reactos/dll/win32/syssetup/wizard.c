@@ -1453,7 +1453,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
       if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
                            sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
       {
-        wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
+        wcscpy(ErrorLocalTime, L"Setup was unable to set the local time.");
       }
       MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
       return FALSE;
@@ -1469,8 +1469,6 @@ DateTimePageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
   PSETUPDATA SetupData;
-  WCHAR Title[64];
-  WCHAR ErrorLocalTime[256];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -1525,23 +1523,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
               case PSN_WIZNEXT:
                 {
-                  GetLocalSystemTime(hwndDlg, SetupData);
-                  SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-                                   SetupData);
-                  SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-                  if(!SetSystemLocalTime(hwndDlg, SetupData))
-                  {
-                    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
-                    {
-                      wcscpy(Title, L"ReactOS Setup");
-                    }
-                    if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
-                                         sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
-                    {
-                      wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
-                    }
-                    MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
-                  }
+                    WriteDateTimeSettings(hwndDlg, SetupData);
                 }
                 break;
 
