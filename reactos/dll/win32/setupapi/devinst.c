@@ -1415,6 +1415,8 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
     LPWSTR DriverKey = NULL; /* {GUID}\Index */
     LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
     DWORD Index; /* Index used in the DriverKey name */
+    DWORD dwSize;
+    DWORD Disposition;
     DWORD rc;
     HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
     HKEY hEnumKey = NULL;
@@ -1514,37 +1516,104 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         }
         else /* KeyType == DIREG_DRV */
         {
-            if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) != RPC_S_OK)
+            /* Open device key, to read Driver value */
+            hDeviceKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, Scope, HwProfile, DIREG_DEV, KEY_QUERY_VALUE | KEY_SET_VALUE);
+            if (hDeviceKey == INVALID_HANDLE_VALUE)
                 goto cleanup;
-            /* The driver key is in \System\CurrentControlSet\Control\Class\{GUID}\Index */
-            DriverKey = HeapAlloc(GetProcessHeap(), 0, (strlenW(lpGuidString) + 7) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
-            if (!DriverKey)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto cleanup;
-            }
-            DriverKey[0] = '{';
-            strcpyW(&DriverKey[1], lpGuidString);
-            pDeviceInstance = &DriverKey[strlenW(DriverKey)];
-            *pDeviceInstance++ = '}';
-            *pDeviceInstance++ = '\\';
-            rc = RegOpenKeyExW(RootKey,
-                REGSTR_PATH_CLASS_NT,
-                0,
-                KEY_CREATE_SUB_KEY,
-                &hClassKey);
+
+            rc = RegOpenKeyExW(RootKey, REGSTR_PATH_CLASS_NT, 0, KEY_CREATE_SUB_KEY, &hClassKey);
             if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
                 goto cleanup;
             }
 
-            /* Try all values for Index between 0 and 9999 */
-            Index = 0;
-            while (Index <= 9999)
+            rc = RegQueryValueExW(hDeviceKey, REGSTR_VAL_DRIVER, NULL, NULL, NULL, &dwSize);
+            if (rc != ERROR_SUCCESS)
             {
-                DWORD Disposition;
-                sprintfW(pDeviceInstance, InstanceKeyFormat, Index);
+                /* Create a new driver key */
+
+                if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) != RPC_S_OK)
+                    goto cleanup;
+
+                /* The driver key is in \System\CurrentControlSet\Control\Class\{GUID}\Index */
+                DriverKey = HeapAlloc(GetProcessHeap(), 0, (strlenW(lpGuidString) + 7) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                if (!DriverKey)
+                {
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto cleanup;
+                }
+
+                DriverKey[0] = '{';
+                strcpyW(&DriverKey[1], lpGuidString);
+                pDeviceInstance = &DriverKey[strlenW(DriverKey)];
+                *pDeviceInstance++ = '}';
+                *pDeviceInstance++ = '\\';
+
+                /* Try all values for Index between 0 and 9999 */
+                Index = 0;
+                while (Index <= 9999)
+                {
+                    sprintfW(pDeviceInstance, InstanceKeyFormat, Index);
+                    rc = RegCreateKeyExW(hClassKey,
+                        DriverKey,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+#if _WIN32_WINNT >= 0x502
+                        KEY_READ | KEY_WRITE,
+#else
+                        KEY_ALL_ACCESS,
+#endif
+                        NULL,
+                        &hKey,
+                        &Disposition);
+                    if (rc != ERROR_SUCCESS)
+                    {
+                        SetLastError(rc);
+                        goto cleanup;
+                    }
+                    if (Disposition == REG_CREATED_NEW_KEY)
+                        break;
+                    RegCloseKey(hKey);
+                    hKey = NULL;
+                    Index++;
+                }
+
+                if (Index > 9999)
+                {
+                    /* Unable to create more than 9999 devices within the same class */
+                    SetLastError(ERROR_GEN_FAILURE);
+                    goto cleanup;
+                }
+
+                /* Write the new Driver value */
+                rc = RegSetValueExW(hDeviceKey, REGSTR_VAL_DRIVER, 0, REG_SZ, (const BYTE *)DriverKey, (strlenW(DriverKey) + 1) * sizeof(WCHAR));
+                if (rc != ERROR_SUCCESS)
+                {
+                    SetLastError(rc);
+                    goto cleanup;
+                }
+
+            }
+            else
+            {
+                /* Open the existing driver key */
+
+                DriverKey = HeapAlloc(GetProcessHeap(), 0, dwSize);
+                if (!DriverKey)
+                {
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto cleanup;
+                }
+
+                rc = RegQueryValueExW(hDeviceKey, REGSTR_VAL_DRIVER, NULL, NULL, (LPBYTE)DriverKey, &dwSize);
+                if (rc != ERROR_SUCCESS)
+                {
+                    SetLastError(rc);
+                    goto cleanup;
+                }
+
                 rc = RegCreateKeyExW(hClassKey,
                     DriverKey,
                     0,
@@ -1563,28 +1632,6 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
                     SetLastError(rc);
                     goto cleanup;
                 }
-                if (Disposition == REG_CREATED_NEW_KEY)
-                    break;
-                RegCloseKey(hKey);
-                hKey = NULL;
-                Index++;
-            }
-            if (Index > 9999)
-            {
-                /* Unable to create more than 9999 devices within the same class */
-                SetLastError(ERROR_GEN_FAILURE);
-                goto cleanup;
-            }
-
-            /* Open device key, to write Driver value */
-            hDeviceKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, Scope, HwProfile, DIREG_DEV, KEY_SET_VALUE);
-            if (hDeviceKey == INVALID_HANDLE_VALUE)
-                goto cleanup;
-            rc = RegSetValueExW(hDeviceKey, REGSTR_VAL_DRIVER, 0, REG_SZ, (const BYTE *)DriverKey, (strlenW(DriverKey) + 1) * sizeof(WCHAR));
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
             }
         }
 
