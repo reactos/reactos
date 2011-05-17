@@ -149,170 +149,30 @@ FtfdFindTrueTypeTable(
     return NULL;
 }
 
-/*! \name GetWinFamily
- *  \brief Translates IBM font class IDs into a Windows family bitfield
- *  \param jClassId
- *  \param jSubclassId
- *  \ref http://www.microsoft.com/typography/otspec/ibmfc.htm
- */
-static
-BYTE
-GetWinFamily(BYTE jClassId, BYTE jSubclassId)
+static BYTE
+gajlCodePage1[32] =
 {
-    switch (jClassId)
-    {
-        case 0: // Class ID = 0 No Classification
-            return FF_ROMAN;//FF_SWISS;
-
-        case 1: // Class ID = 1 Oldstyle Serifs
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : IBM Rounded Legibility
-                case 2: // Subclass ID = 2 : Garalde
-                case 3: // Subclass ID = 3 : Venetian
-                case 4: // Subclass ID = 4 : Modified Venetian
-                case 5: // Subclass ID = 5 : Dutch Modern
-                case 6: // Subclass ID = 6 : Dutch Traditional
-                case 7: // Subclass ID = 7 : Contemporary
-                case 8: // Subclass ID = 8 : Calligraphic
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 9-14 : (reserved for future use)
-                    break;
-            }
-
-        case 2: // Class ID = 2 Transitional Serifs
-            switch (jSubclassId)
-            {
-                case 15: return FF_ROMAN; // 15: Miscellaneous
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Direct Line
-                case 2: // Subclass ID = 2 : Script
-                default: // Subclass ID = 3-14 : (reserved for future use)
-                    break;
-            }
-
-        case 3: // Class ID = 3 Modern Serifs
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Italian
-                case 2: // Subclass ID = 2 : Script
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 3-14 : (reserved for future use)
-                    break;
-            }
-
-        case 4: // Class ID = 4 Clarendon Serifs
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Clarendon
-                case 2: // Subclass ID = 2 : Modern
-                case 3: // Subclass ID = 3 : Traditional
-                case 4: // Subclass ID = 4 : Newspaper
-                case 5: // Subclass ID = 5 : Stub Serif
-                case 6: // Subclass ID = 6 : Monotone
-                case 7: // Subclass ID = 7 : Typewriter
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 8-14: (reserved for future use)
-                    break;
-            }
-
-        case 5: // Class ID = 5 Slab Serifs
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Monotone
-                case 2: // Subclass ID = 2 : Humanist
-                case 3: // Subclass ID = 3 : Geometric
-                case 4: // Subclass ID = 4 : Swiss
-                case 5: // Subclass ID = 5 : Typewriter
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 6-14 : (reserved for future use)
-                    break;
-            }
-
-        case 7: // Class ID = 7 Freeform Serifs
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Modern
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 2-14 : (reserved for future use)
-                    break;
-            }
-
-        case 8: // Class ID = 8 Sans Serif
-            switch (jSubclassId)
-            {
-                case 0: return FF_SWISS; // 0: No Classification
-                case 5: return FF_SWISS; // 5: Neo-grotesque Gothic
-                case 15: return FF_SWISS|FF_ROMAN; // 15: Miscellaneous
-
-                case 1: // Subclass ID = 1 : IBM Neo-grotesque Gothic
-                case 2: // Subclass ID = 2 : Humanist
-                case 3: // Subclass ID = 3 : Low-x Round Geometric
-                case 4: // Subclass ID = 4 : High-x Round Geometric
-                case 6: // Subclass ID = 6 : Modified Neo-grotesque Gothic
-                case 9: // Subclass ID = 9 : Typewriter Gothic
-                case 10: // Subclass ID = 10 : Matrix
-                default: // Subclass ID = 7-8, 11-14 : (reserved for future use)
-                    break;
-            }
-
-        case 9: // Class ID = 9 Ornamentals
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Engraver
-                case 2: // Subclass ID = 2 : Black Letter
-                case 3: // Subclass ID = 3 : Decorative
-                case 4: // Subclass ID = 4 : Three Dimensional
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 5-14 : (reserved for future use)
-                    break;
-            }
-
-        case 10: // Class ID = 10 Scripts
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 1: // Subclass ID = 1 : Uncial
-                case 2: // Subclass ID = 2 : Brush Joined
-                case 3: // Subclass ID = 3 : Formal Joined
-                case 4: // Subclass ID = 4 : Monotone Joined
-                case 5: // Subclass ID = 5 : Calligraphic
-                case 6: // Subclass ID = 6 : Brush Unjoined
-                case 7: // Subclass ID = 7 : Formal Unjoined
-                case 8: // Subclass ID = 8 : Monotone Unjoined
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 9-14 : (reserved for future use)
-                    break;
-            }
-
-        case 12: // Class ID = 12 Symbolic
-            switch (jSubclassId)
-            {
-                case 0: // Subclass ID = 0 : No Classification
-                case 3: // Subclass ID = 3 : Mixed Serif
-                case 6: // Subclass ID = 6 : Oldstyle Serif
-                case 7: // Subclass ID = 7 : Neo-grotesque Sans Serif
-                case 15: // Subclass ID = 15 : Miscellaneous
-                default: // Subclass ID = 1-2,4-5,8-14  : (reserved for future use)
-                    break;
-            }
-
-        case 13: // Class ID = 13 Reserved
-        case 14: // Class ID = 14 Reserved
-        default: // Class ID = 6,11 (reserved for future use)
-            break;
-    }
-
-    WARN("Unhandled class: jClassId=%d, jSubclassId=%d\n", jClassId, jSubclassId);
-//__debugbreak();
-    return FF_SWISS;
-}
+    /* 0 */ ANSI_CHARSET,
+    /* 1 */ EASTEUROPE_CHARSET,
+    /* 2 */ RUSSIAN_CHARSET,
+    /* 3 */ GREEK_CHARSET,
+    /* 4 */ TURKISH_CHARSET,
+    /* 5 */ HEBREW_CHARSET,
+    /* 6 */ ARABIC_CHARSET,
+    /* 7 */ BALTIC_CHARSET,
+    /* 8 */ VIETNAMESE_CHARSET,
+    /* 9-15 */ 0, 0, 0, 0, 0, 0, 0,
+    /* 16 */ THAI_CHARSET,
+    /* 17 */ SHIFTJIS_CHARSET,
+    /* 18 */ GB2312_CHARSET,
+    /* 19 */ HANGEUL_CHARSET, // Korean Wansung, is this correct?
+    /* 20 */ CHINESEBIG5_CHARSET,
+    /* 21 */ JOHAB_CHARSET,
+    /* 22-28 */ 0, 0, 0, 0, 0, 0, 0,
+    /* 29 */ MAC_CHARSET,
+    /* 30 */ OEM_CHARSET,
+    /* 31 */ SYMBOL_CHARSET,
+};
 
 BOOL
 NTAPI
@@ -324,6 +184,8 @@ FtfdGetWinMetrics(
     PVOID pvView = pfile->pvView;
     PTT_TABLE_OS2 pOs2;
     PTT_TABLE_HEAD pHead;
+    PBYTE pjCharset;
+    ULONG ulCharset, ulBit, ulCodePageRange1;
 
     /* Get the head table for the face */
     pHead = FtfdFindTrueTypeTable(pvView, pfile->cjView, pface->iFace, 'daeh', NULL);
@@ -345,10 +207,26 @@ FtfdGetWinMetrics(
         return FALSE;
     }
 
+    /* Get a pointer to the charsets */
+    pjCharset = (PBYTE)pifi + pifi->dpCharSets;
+
+    /* Loop bits of ulCodePageRange1 */
+    ulCodePageRange1 = GETD(&pOs2->ulCodePageRange1);
+    for (ulBit = 0, ulCharset = 0; ulBit < 32 && ulCharset < 15; ulBit++)
+    {
+        /* Check if the unicode range is present */
+        if (ulCodePageRange1 & (1 << ulBit))
+        {
+            /* Save the win charset */
+            pjCharset[ulCharset++] = gajlCodePage1[ulBit];
+        }
+    }
+
+    /* Copy the first charset */
+    pifi->jWinCharSet = pjCharset[0];
+
     //pifi->lEmbedId;
     //pifi->lCharBias;
-    //pifi->jWinCharSet;
-    pifi->jWinPitchAndFamily |= GetWinFamily(pOs2->jClassId, pOs2->jSubClassId);
     pifi->usWinWeight = GETW(&pOs2->usWeightClass);
     pifi->fsSelection = GETW(&pOs2->fsSelection);
     pifi->fsType = GETW(&pOs2->fsType);

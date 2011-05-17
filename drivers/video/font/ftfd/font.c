@@ -97,10 +97,6 @@ FtfdInitIfiMetrics(
     pifi->lEmbedId = 0;
     pifi->lCharBias = 0;
 
-    /* Set pitch */
-    pifi->jWinPitchAndFamily = FT_IS_FIXED_WIDTH(ftface) ? FIXED_PITCH :
-                                                           VARIABLE_PITCH;
-
     /* Feature flags */
     pifi->flInfo = FM_INFO_RETURNS_BITMAPS | FM_INFO_1BPP | FM_INFO_4BPP;
     if (pface->ulFontFormat == FMT_TYPE1)
@@ -127,14 +123,12 @@ FtfdInitIfiMetrics(
     pifi->fwdMacLineGap = 0;
     pifi->fwdMaxCharInc = ftface->max_advance_width;
     pifi->fwdUnderscoreSize = ftface->underline_thickness;
-    pifi->fwdUnderscorePosition = ftface->underline_position; // FIXME: off by 10
-    pifi->fwdStrikeoutSize = pifi->fwdUnitsPerEm / 20;
-    pifi->fwdStrikeoutPosition = pifi->fwdUnitsPerEm / 4;
+    pifi->fwdUnderscorePosition = ftface->underline_position;
 
     pifi->ptlBaseline.x = 1; // FIXME
     pifi->ptlBaseline.y = 0; // FIXME
-    pifi->ptlAspect.x = 0x3e9; // FIXME
-    pifi->ptlAspect.y = 0x3e9; // FIXME
+    pifi->ptlAspect.x = 1;
+    pifi->ptlAspect.y = 1;
     pifi->ptlCaret.x = 0; // FIXME
     pifi->ptlCaret.y = 1; // FIXME
 
@@ -173,9 +167,9 @@ FtfdInitIfiMetrics(
         pifi->fwdWinDescender = -(ftface->descender * 213) / 170;
         pifi->fwdTypoAscender = ftface->ascender;
         pifi->fwdTypoDescender = ftface->descender;
-        pifi->fwdTypoLineGap = ftface->units_per_EM / 10;
-        pifi->fwdCapHeight = 0;
-        pifi->fwdXHeight = 0;
+        pifi->fwdTypoLineGap = pifi->fwdUnitsPerEm / 10;
+        pifi->fwdCapHeight = pifi->fwdUnitsPerEm / 2;
+        pifi->fwdXHeight = pifi->fwdUnitsPerEm / 4;
         pifi->fwdSubscriptXSize = 0;
         pifi->fwdSubscriptYSize = 0;
         pifi->fwdSubscriptXOffset = 0;
@@ -184,6 +178,8 @@ FtfdInitIfiMetrics(
         pifi->fwdSuperscriptYSize = 0;
         pifi->fwdSuperscriptXOffset = 0;
         pifi->fwdSuperscriptYOffset = 0;
+        pifi->fwdStrikeoutSize = pifi->fwdUnderscoreSize;
+        pifi->fwdStrikeoutPosition = pifi->fwdMacAscender / 3;
         pifi->fwdAveCharWidth = CalculateAveCharWidth(ftface);
 
         /* Special characters (first and last char are already enumerated) */
@@ -201,7 +197,7 @@ FtfdInitIfiMetrics(
         pifi->panose.bMidline = PAN_ANY;
         pifi->panose.bXHeight = PAN_ANY;
 
-        *(DWORD*)&pifi->achVendId = '0000';
+        *(DWORD*)&pifi->achVendId = 'nknU';
     }
 
     /* Try to get type1 info from freetype */
@@ -216,6 +212,22 @@ FtfdInitIfiMetrics(
         /* Set fallback values */
         pifi->lItalicAngle = 0;
     }
+
+    /* Get the win family */
+    if (pifi->panose.bFamilyType == PAN_FAMILY_SCRIPT)
+        pifi->jWinPitchAndFamily = FF_SCRIPT;
+    else if (pifi->panose.bFamilyType == PAN_FAMILY_DECORATIVE)
+        pifi->jWinPitchAndFamily = FF_DECORATIVE;
+    else if (pifi->panose.bProportion == PAN_PROP_MODERN)
+        pifi->jWinPitchAndFamily = FF_MODERN;
+    else if (pifi->panose.bSerifStyle <= PAN_SERIF_ROUNDED)
+        pifi->jWinPitchAndFamily = FF_SWISS;
+    else
+        pifi->jWinPitchAndFamily = FF_ROMAN;
+
+    /* Set pitch */
+    pifi->jWinPitchAndFamily |= FT_IS_FIXED_WIDTH(ftface) ? FIXED_PITCH :
+                                                            VARIABLE_PITCH;
 
     /* Convert the special characters from unicode to ansi */
     EngUnicodeToMultiByteN(&pifi->chFirstChar, 4, NULL, &pifi->wcFirstChar, 8);
