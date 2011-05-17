@@ -1,0 +1,23 @@
+Tasks to do by the end of GSoC (sorted in decending order by importance):
+
+1) Make sure all basic functinalities are working
+	- accept so far is not which should be fixed
+
+
+2) 	Create a test application that simulates heavy usage
+   of networking. Preferably multi threaded. This should
+   check whether we have any memory leaks, broken functionality
+   or fatal blue screen errors.
+
+3) 	Improve existing IOCTLs.
+4)	Improve support for netstat (e.g. netstat -na).
+
+Notes:
+
+	- 2) Worth looking into how we can take advantage of firefox's
+stress tests (e.g. xmlhttprequest)
+
+	- 1) 2) and a bit of 3) should be completed before the midterm
+evaluations.
+
+	
