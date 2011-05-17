@@ -102,6 +102,9 @@ USBSTOR_CSWCompletionRoutine(
     PREAD_CAPACITY_DATA_EX CapacityDataEx;
     PREAD_CAPACITY_DATA CapacityData;
     PUFI_CAPACITY_RESPONSE Response;
+    PERRORHANDLER_WORKITEM_DATA ErrorHandlerWorkItemData;
+    NTSTATUS Status;
+    PURB Urb;
 
     DPRINT("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p\n", Irp, Ctx);
 
@@ -153,15 +156,74 @@ USBSTOR_CSWCompletionRoutine(
         Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
         ASSERT(Request);
 
-        //
-        // FIXME: check status
-        //
-        Request->SrbStatus = SRB_STATUS_SUCCESS;
+        Status = Irp->IoStatus.Status;
+
+        Urb = &Context->Urb;
 
         //
         // get SCSI command data block
         //
         pCDB = (PCDB)Request->Cdb;
+
+        //
+        // check status
+        //
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Status %x\n", Status);
+            DPRINT1("UrbStatus %x\n", Urb->UrbHeader.Status);
+
+            //
+            // Check for errors that can be handled
+            // FIXME: Verify all usb errors that can be recovered via pipe reset/port reset/controller reset
+            //
+            if ((Urb->UrbHeader.Status & USB_RECOVERABLE_ERRORS) == Urb->UrbHeader.Status)
+            {
+                DPRINT1("Attempting Error Recovery\n");
+                //
+                // If a Read Capacity Request free TransferBuffer
+                //
+                if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
+                {
+                    FreeItem(Context->TransferData);
+                }
+
+                //
+                // Clean up the rest
+                //
+                FreeItem(Context->cbw);
+                FreeItem(Context);
+
+                //
+                // Allocate Work Item Data
+                //
+                ErrorHandlerWorkItemData = ExAllocatePoolWithTag(NonPagedPool, sizeof(ERRORHANDLER_WORKITEM_DATA), USB_STOR_TAG);
+                if (!ErrorHandlerWorkItemData)
+                {
+                    DPRINT1("Failed to allocate memory\n");
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    //
+                    // Initialize and queue the work item to handle the error
+                    //
+                    ExInitializeWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem,
+                                        ErrorHandlerWorkItemRoutine,
+                                        ErrorHandlerWorkItemData);
+    
+                    ErrorHandlerWorkItemData->DeviceObject = Context->FDODeviceExtension->FunctionalDeviceObject;
+                    ErrorHandlerWorkItemData->Irp = Irp;
+                    ErrorHandlerWorkItemData->Context = Context;
+                    DPRINT1("Queuing WorkItemROutine\n");
+                    ExQueueWorkItem(&ErrorHandlerWorkItemData->WorkQueueItem, DelayedWorkQueue);
+
+                    return STATUS_MORE_PROCESSING_REQUIRED;
+                }
+            }
+        }
+
+        Request->SrbStatus = SRB_STATUS_SUCCESS;
 
         //
         // read capacity needs special work

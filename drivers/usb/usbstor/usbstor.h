@@ -35,6 +35,9 @@
                   ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
                   ((((unsigned long)(n) & 0xFF000000)) >> 24))
 
+#define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
+	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
+
 NTSTATUS NTAPI
 IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT SourceDevice,
@@ -278,6 +281,13 @@ typedef struct
     PKEVENT Event;
 }IRP_CONTEXT, *PIRP_CONTEXT;
 
+typedef struct _ERRORHANDLER_WORKITEM_DATA
+{
+	PDEVICE_OBJECT DeviceObject;
+	PIRP Irp;
+	PIRP_CONTEXT Context;
+	WORK_QUEUE_ITEM WorkQueueItem;
+} ERRORHANDLER_WORKITEM_DATA, *PERRORHANDLER_WORKITEM_DATA;
 
 
 //---------------------------------------------------------------------
@@ -423,6 +433,11 @@ USBSTOR_CancelIo(
 VOID
 USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
+
+VOID
+NTAPI
+ErrorHandlerWorkItemRoutine(
+	PVOID Context);
 
 VOID
 USBSTOR_QueueNextRequest(

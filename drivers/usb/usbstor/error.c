@@ -103,7 +103,7 @@ USBSTOR_HandleTransferError(
 				break;
 			}
 
-			DPRINT1("Failed to reset pipe %x\n");
+			DPRINT1("Failed to reset pipe %x\n", Status);
 
 			//
 			// FIXME: Reset of pipe failed, attempt to reset port
