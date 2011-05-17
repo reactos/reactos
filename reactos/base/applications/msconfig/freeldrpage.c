@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/freeldrpage.c
+ * FILE:        base/applications/msconfig/freeldrpage.c
  * PURPOSE:     Freeloader configuration page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
- *
+ *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>
  */
 
 #include <precomp.h>
@@ -23,100 +23,111 @@ typedef struct
 
 static FREELDR_SETTINGS Settings = { 0, { 0, }, 0, 0, FALSE };
 
+#define BUFFER_SIZE 512
 
-BOOL
-LoadBootIni(WCHAR * szDrive, HWND hDlg)
+static BOOL
+LoadBootIni(WCHAR *szDrive, HWND hDlg)
 {
-   WCHAR szBuffer[512];
-   HWND hDlgCtrl;
-   FILE * file;
-   UINT length;
-   LRESULT pos;
+    WCHAR szBuffer[BUFFER_SIZE];
+    HWND hDlgCtrl;
+    FILE * file;
+    UINT length;
+    LRESULT pos;
 
-   wcscpy(szBuffer, szDrive);
-   wcscat(szBuffer, L"boot.ini");
-   
-   file = _wfopen(szBuffer, L"rt");
-   if (!file)
-       return FALSE;
-            
-   hDlgCtrl = GetDlgItem(hDlg, IDC_LIST_BOX);
+    wcscpy(szBuffer, szDrive);
+    wcscat(szBuffer, L"freeldr.ini");
 
-   while(!feof(file))
-   {
-        if (fgetws(szBuffer, sizeof(szBuffer) / sizeof(WCHAR), file))
+    file = _wfopen(szBuffer, L"rt");
+    if (!file)
+    {
+        wcscpy(szBuffer, szDrive);
+        wcscat(szBuffer, L"boot.ini");
+        file = _wfopen(szBuffer, L"rt");
+        if (!file)
+            return FALSE;
+    }     
+
+    hDlgCtrl = GetDlgItem(hDlg, IDC_LIST_BOX);
+
+    while(!feof(file))
+    {
+        if (fgetws(szBuffer, BUFFER_SIZE, file))
         {
             length = wcslen(szBuffer);
-            while(szBuffer[length] < 14) //FIXME remove line feeds
-                szBuffer[length--] = 0;
-
-            pos = SendMessageW(hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szBuffer);
-
-
-            if (szBuffer[0] == L'[')
-                continue;
-
-            if (!wcsncmp(szBuffer, L"timeout=", 8))
+            if (length > 1)
             {
-                Settings.TimeOut = _wtoi(&szBuffer[8]);
-                continue;
-            }
+                szBuffer[length] = L'\0';
+                szBuffer[length - 1] = L'\0';
 
-            if (!wcsncmp(szBuffer, L"default=", 8))
-            {
-                wcscpy(Settings.szDefaultOS, &szBuffer[8]);
-                continue;
+                pos = SendMessageW(hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szBuffer);
+
+                if (szBuffer[0] == L'[')
+                    continue;
+
+                if (!wcsncmp(szBuffer, L"timeout=", 8))
+                {
+                    Settings.TimeOut = _wtoi(&szBuffer[8]);
+                    continue;
+                }
+
+                if (!wcsncmp(szBuffer, L"default=", 8))
+                {
+                    wcscpy(Settings.szDefaultOS, &szBuffer[8]);
+                    continue;
+                }
+                if (pos != LB_ERR)
+                    SendMessage(hDlgCtrl, LB_SETITEMDATA, pos, 1); // indicate that this item is an boot entry
+                Settings.OSConfigurationCount++;
             }
-            if (pos != LB_ERR)
-                SendMessage(hDlgCtrl, LB_SETITEMDATA, pos, 1); // indicate that this item is an boot entry
-            Settings.OSConfigurationCount++;
         }
-   }
+    }
 
-   fclose(file);
-   Settings.UseBootIni = TRUE;
+    fclose(file);
+    Settings.UseBootIni = TRUE;
 
-   pos = SendMessageW(hDlgCtrl, LB_FINDSTRING, 3, (LPARAM)Settings.szDefaultOS);
-   if (pos != LB_ERR)
-   {
+    pos = SendMessageW(hDlgCtrl, LB_FINDSTRING, 3, (LPARAM)Settings.szDefaultOS);
+    if (pos != LB_ERR)
+    {
        Settings.szDefaultPos = pos;
        SendMessage(hDlgCtrl, LB_SETCURSEL, pos, 0);
-   }
+    }
 
-   SetDlgItemInt(hDlg, IDC_TXT_BOOT_TIMEOUT, Settings.TimeOut, FALSE);
-   if (Settings.OSConfigurationCount < 2)
-   {
+    SetDlgItemInt(hDlg, IDC_TXT_BOOT_TIMEOUT, Settings.TimeOut, FALSE);
+    if (Settings.OSConfigurationCount < 2)
+    {
         EnableWindow(GetDlgItem(hDlg, IDC_BTN_SET_DEFAULT_BOOT), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDC_BTN_MOVE_UP_BOOT_OPTION), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDC_BTN_MOVE_DOWN_BOOT_OPTION), FALSE);
-   }
-   return TRUE;
+    }
+    return TRUE;
 }
 
-
-BOOL
-InitializeDialog(HWND hDlg)
+static BOOL
+InitializeFreeLDRDialog(HWND hDlg)
 {
-   // FIXME
-   // find real boot drive and handle freeldr configuration ini
-    return LoadBootIni(L"C:\\", hDlg);
+    WCHAR winDir[PATH_MAX];
+    WCHAR* ptr = NULL;
+
+    GetWindowsDirectoryW(winDir, PATH_MAX);
+    ptr = wcschr(winDir, L'\\');
+    if (ptr == NULL)
+    {
+        return FALSE;
+    }
+    ptr[1] = L'\0';
+    return LoadBootIni(winDir, hDlg);
 }
-
-
 
 INT_PTR CALLBACK
 FreeLdrPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT pos;
 
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-
     switch (message) {
     case WM_INITDIALOG:
         hFreeLdrDialog = hDlg;
         SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        InitializeDialog(hDlg);
+        InitializeFreeLDRDialog(hDlg);
         return TRUE;
     case WM_COMMAND:
         switch(HIWORD(wParam))
