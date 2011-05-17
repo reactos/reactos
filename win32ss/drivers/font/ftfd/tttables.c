@@ -121,8 +121,18 @@ FtfdFindTrueTypeTable(
                 return NULL;
             }
 
-            /* Check the table's checksum */
+            /* Calculate the table's checksum */
             ulCheckSum = CalcTableChecksum((PUCHAR)pvView + ulOffset, ulLength);
+
+            /* Special fixup for 'head' table */
+            if (ulTag == 'daeh')
+            {
+                /* Substract checkSumAdjustment value */
+                PULONG pulAdjust = (PULONG)((PUCHAR)pvView + ulOffset + 8);
+                ulCheckSum -= GETD(pulAdjust);
+            }
+
+            /* Check for failure */
             if (ulCheckSum != GETD(&pFontHeader->aTableEntries[i].ulCheckSum))
             {
                 WARN("Checksum mitmatch! %ld, %ld \n", ulOffset, ulLength);
