@@ -16,12 +16,76 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "ntlm.h"
+#include "ntlmssp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-/* FIXME: hardcoded NtlmUserMode */
-NTLM_MODE NtlmMode = NtlmUserMode;
+/* globals */
+
+/* use (sparingly) to read/write global state */
+CRITICAL_SECTION GlobalCritSect; 
+
+NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME */
+BOOLEAN Inited = FALSE;
+UNICODE_STRING NtlmComputerNameString;
+UNICODE_STRING NtlmDomainNameString;
+OEM_STRING NtlmOemComputerNameString;
+OEM_STRING NtlmOemDomainNameString;
+HANDLE NtlmSystemSecurityToken;
+
+/* private functions */
+
+NTSTATUS
+NtlmInitializeGlobals(VOID)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    WCHAR compName[CNLEN + 1], domName[DNLEN+1];
+    ULONG compNamelen = sizeof(compName), domNamelen = sizeof(domName);
+
+    InitializeCriticalSection(&GlobalCritSect);
+
+    if (!GetComputerNameW(compName, &compNamelen))
+    {
+        compName[0] = L'\0';
+        ERR("could not get computer name!\n");
+    }
+    RtlCreateUnicodeString(&NtlmComputerNameString, compName);
+
+    if (!GetComputerNameExW(ComputerNameDnsFullyQualified, domName, &domNamelen))
+    {
+        domName[0] = L'\0';
+        ERR("could not get domain name!\n");
+    }
+
+    RtlCreateUnicodeString(&NtlmDomainNameString, domName);
+
+    RtlUnicodeStringToOemString(&NtlmOemComputerNameString,
+                                &NtlmComputerNameString,
+                                TRUE);
+
+    RtlUnicodeStringToOemString(&NtlmOemDomainNameString,
+                                &NtlmDomainNameString,
+                                TRUE);
+
+    status = NtOpenProcessToken(NtCurrentProcess(),
+                                TOKEN_QUERY | TOKEN_DUPLICATE,
+                                &NtlmSystemSecurityToken);
+
+    if(!NT_SUCCESS(status))
+    {
+        ERR("could not get process token!!\n");
+    }
+    return status;
+}
+
+VOID
+NtlmTerminateGlobals(VOID)
+{
+
+}
+
+/* public functions */
 
 static SecurityFunctionTableA ntlmTableA = {
     SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
@@ -220,12 +284,10 @@ QuerySecurityPackageInfoW(SEC_WCHAR *pszPackageName,
     return ret;
 }
 
-
-/***********************************************************************
- *              CompleteAuthToken
- */
-SECURITY_STATUS SEC_ENTRY CompleteAuthToken(PCtxtHandle phContext,
- PSecBufferDesc pToken)
+SECURITY_STATUS
+SEC_ENTRY
+CompleteAuthToken(PCtxtHandle phContext,
+                  PSecBufferDesc pToken)
 {
     TRACE("%p %p\n", phContext, pToken);
     if (!phContext)

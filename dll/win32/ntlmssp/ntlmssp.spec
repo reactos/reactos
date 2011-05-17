@@ -19,6 +19,6 @@
 @ stdcall QuerySecurityPackageInfoA(str ptr)
 @ stdcall QuerySecurityPackageInfoW(wstr ptr)
 @ stdcall RevertSecurityContext(ptr)
-@ stdcall SealMessage (ptr long ptr long) EncryptMessage
-@ stdcall UnsealMessage(ptr ptr long ptr) DecryptMessage
+@ stdcall EncryptMessage(ptr long ptr long)
+@ stdcall DecryptMessage(ptr ptr long ptr)
 @ stdcall VerifySignature(ptr ptr long ptr)

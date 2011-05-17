@@ -17,10 +17,10 @@
  *
  */
 
-#include "ntlm.h"
+#include "ntlmssp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
-
 
 PVOID
 NtlmAllocate(IN ULONG Size)
@@ -61,7 +61,7 @@ NtlmFree(IN PVOID Buffer)
                 NtlmLsaFuncTable->FreeLsaHeap(Buffer);
                 break;
             case NtlmUserMode:
-                HeapFree(GetProcessHeap(),0,Buffer);
+                HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, Buffer);
                 break;
             default:
                 ERR("NtlmState unknown!\n");
@@ -75,7 +75,8 @@ NtlmFree(IN PVOID Buffer)
 }
 
 BOOLEAN
-NtlmIntervalElapsed(IN LARGE_INTEGER Start,IN LONG Timeout)
+NtlmHasIntervalElapsed(IN LARGE_INTEGER Start,
+                       IN LONG Timeout)
 {
     LARGE_INTEGER now;
     LARGE_INTEGER elapsed;
@@ -99,7 +100,7 @@ NtlmIntervalElapsed(IN LARGE_INTEGER Start,IN LONG Timeout)
     return FALSE;
 }
 
-/* hack: see dllmain.c */
+/* check if loaded during system setup */
 /* from base/services/umpnpmgr/umpnpmgr.c */
 BOOL
 SetupIsActive(VOID)
@@ -129,4 +130,49 @@ cleanup:
     TRACE("System setup in progress? %S\n", ret ? L"YES" : L"NO");
 
    return ret;
+}
+
+BOOLEAN
+NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
+                 IN ULONG BufferIndex,
+                 OUT PSecBuffer *pOutBuffer,
+                 IN BOOLEAN OutputToken)
+{
+    PSecBuffer Buffer;
+
+    ASSERT(pOutBuffer != NULL);
+    if (!pInputDesc)
+    {
+        *pOutBuffer = NULL;
+        return TRUE;
+    }
+
+    /* check version */
+    if (pInputDesc->ulVersion != SECBUFFER_VERSION)
+        return FALSE;
+
+    /* check how many buffers we have */
+    if(pInputDesc->cBuffers < BufferIndex)
+        return FALSE;
+
+    /* get buffer */
+     Buffer = &pInputDesc->pBuffers[BufferIndex];
+
+     /* detect a SECBUFFER_TOKEN */
+     if ((Buffer->BufferType & (~SECBUFFER_READONLY)) == SECBUFFER_TOKEN)
+     {
+         /* detect read only buffer */
+         if (OutputToken && (Buffer->BufferType & SECBUFFER_READONLY))
+             return  FALSE;
+
+         /* LSA server must map the user provided buffer into its address space */
+         if(inLsaMode)
+         {
+             if (!NT_SUCCESS(NtlmLsaFuncTable->MapBuffer(Buffer, Buffer)))
+                 return FALSE;
+         }
+         *pOutBuffer = Buffer;
+         return TRUE;
+     }
+    return FALSE;
 }

@@ -17,8 +17,9 @@
  *
  */
 
-#include "ntlm.h"
+#include "ntlmssp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 /* initialize all to null since we still dont use them */
@@ -26,3 +27,4 @@ SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaMo
 PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable = NULL; //fuctions provided by LSA in SpInstanceInit
 SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
 PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable = NULL; // functions provided by LSA in SpInitialize
+

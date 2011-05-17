@@ -17,8 +17,9 @@
  *
  */
 
-#include "ntlm.h"
+#include "ntlmssp.h"
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 CRITICAL_SECTION CredentialCritSect;
@@ -42,35 +43,41 @@ NtlmCompareCredentials(IN NTLMSSP_CREDENTIAL Credential1,
     return FALSE;
 }
 
-/* FIXME: validate handles! */
-VOID
+PNTLMSSP_CREDENTIAL
 NtlmReferenceCredential(IN ULONG_PTR Handle)
 {
-    PNTLMSSP_CREDENTIAL cred = (PNTLMSSP_CREDENTIAL)Handle;
-
+    PNTLMSSP_CREDENTIAL cred;
     EnterCriticalSection(&CredentialCritSect);
 
+    cred = (PNTLMSSP_CREDENTIAL)Handle;
+
+    /* sanity */
+    ASSERT(cred);
+    TRACE("%p refcount %d\n",cred, cred->RefCount);
     ASSERT(cred->RefCount > 0);
-    cred->RefCount += 1;
+
+    /* reference */
+    cred->RefCount++;
 
     LeaveCriticalSection(&CredentialCritSect);
+    return cred;
 }
 
 VOID
 NtlmDereferenceCredential(IN ULONG_PTR Handle)
 {
-    PNTLMSSP_CREDENTIAL cred = (PNTLMSSP_CREDENTIAL)Handle;
-
+    PNTLMSSP_CREDENTIAL cred;
     EnterCriticalSection(&CredentialCritSect);
 
-    TRACE("NtlmDereferenceCredential %p refcount %d\n", Handle, cred->RefCount);
+    cred = (PNTLMSSP_CREDENTIAL)Handle;
 
+    /* sanity */
+    ASSERT(cred);
+    TRACE("%p refcount %d\n",cred, cred->RefCount);
     ASSERT(cred->RefCount >= 1);
 
-    cred->RefCount -= 1;
-
-    /* If there are no references free the object */
-    if (cred->RefCount == 0 )
+    /* decrement and check for delete */
+    if (cred->RefCount-- == 0 )
     {
         TRACE("Deleting credential %p\n",cred);
 
@@ -264,8 +271,8 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         cred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
         cred->RefCount = 1;
         cred->ProcId = GetCurrentProcessId();//FIXME
-        cred->SecPackageFlags = credFlags;
-        cred->SecToken = NULL; //FIXME
+        cred->UseFlags = credFlags;
+        cred->SecToken = NtlmSystemSecurityToken; //FIXME
 
         /* FIX ME: check against LSA token */
         if((cred->SecToken == NULL) && !(credFlags & NTLM_CRED_NULLSESSION))
@@ -291,7 +298,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         LeaveCriticalSection(&CredentialCritSect);
 
         TRACE("added credential %x\n",cred);
-        TRACE("%s %s %s",debugstr_w(username.Buffer), debugstr_w(password.Buffer), debugstr_w(domain.Buffer));
+        TRACE("%s %s %s\n",debugstr_w(username.Buffer), debugstr_w(password.Buffer), debugstr_w(domain.Buffer));
     }
 
     /* return cred */
@@ -426,7 +433,7 @@ SECURITY_STATUS
 SEC_ENTRY
 FreeCredentialsHandle(PCredHandle phCredential)
 {
-    TRACE("FreeCredentialsHandle %x %x %x\n", phCredential, phCredential->dwLower);
+    TRACE("FreeCredentialsHandle %x %x\n", phCredential, phCredential->dwLower);
 
     if(!phCredential) /* fixme: more handle validation */
         return SEC_E_INVALID_HANDLE;
