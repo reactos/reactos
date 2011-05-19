@@ -138,7 +138,6 @@ FtfdInitIfiMetrics(
     pifi->rclFontBox.top = ftface->bbox.yMax;
     pifi->rclFontBox.bottom = ftface->bbox.yMin;
 
-    pifi->cKerningPairs = 0;
     pifi->ulPanoseCulture = FM_PANOSE_CULTURE_LATIN;
 
     /* Try to get OS/2 TrueType or OpenType metrics */
@@ -182,8 +181,8 @@ FtfdInitIfiMetrics(
         pifi->fwdStrikeoutPosition = pifi->fwdMacAscender / 3;
         pifi->fwdAveCharWidth = CalculateAveCharWidth(ftface);
 
-        /* Special characters (first and last char are already enumerated) */
-        pifi->wcDefaultChar = 0x0020;
+        /* Special characters */
+        pifi->wcDefaultChar = 0x001F;
         pifi->wcBreakChar = 0x0020;
 
         pifi->panose.bFamilyType = PAN_FAMILY_TEXT_DISPLAY;
@@ -199,6 +198,14 @@ FtfdInitIfiMetrics(
 
         *(DWORD*)&pifi->achVendId = 'nknU';
     }
+
+    /* Copy unicode values to ansi values */
+    pifi->chDefaultChar = (CHAR)pifi->wcDefaultChar;
+    pifi->chBreakChar = (CHAR)pifi->wcBreakChar;
+    pifi->chFirstChar = (CHAR)pifi->wcFirstChar;
+    if (pifi->wcFirstChar > 0xff) pifi->chFirstChar = 0xff;
+    pifi->chLastChar = (CHAR)pifi->wcLastChar;
+    if (pifi->wcLastChar > 0xff) pifi->chLastChar = 0xff;
 
     /* Try to get type1 info from freetype */
     fterror = FT_Get_PS_Font_Info(pface->ftface, &fontinfo);
@@ -334,7 +341,7 @@ FtfdInitGlyphSet(
         {
             /* Add a new WCRUN */
             cRuns++;
-            pGlyphSet->awcrun[cRuns - 1].wcLow = wcCurrent;
+            pGlyphSet->awcrun[cRuns - 1].wcLow = wcCurrent - pface->wcCharBias;
             pGlyphSet->awcrun[cRuns - 1].cGlyphs = 1;
             pGlyphSet->awcrun[cRuns - 1].phg = &phglyphs[i];
         }
@@ -399,9 +406,33 @@ FtfdCreateFace(
 {
     PFTFD_FACE pface;
     FT_Error fterror;
-    ULONG ulAccumCharWidth = 0;
+    ULONG ulEncoding, ulAccumCharWidth = 0;
     WCHAR wcCurrent, wcPrev;
     FT_UInt index;
+
+    /* Try to load a unicode charmap */
+    ulEncoding = FT_ENCODING_UNICODE;
+    fterror = FT_Select_Charmap(ftface, ulEncoding);
+    if (fterror)
+    {
+        /* Check if we have any charmaps at all */
+        if (ftface->num_charmaps == 0)
+        {
+            WARN("There are no charmaps available!\n");
+            return NULL;
+        }
+
+        /* Load first charmap instead */
+        ulEncoding = ftface->charmaps[0]->encoding;
+        fterror = FT_Select_Charmap(ftface, ulEncoding);
+        if (fterror)
+        {
+            WARN("Could not load a charmap\n");
+            return NULL;
+        }
+
+        TRACE("Loaded charmap with encoding %.4s\n", &ulEncoding);
+    }
 
     pface = EngAllocMem(FL_ZERO_MEMORY, sizeof(FTFD_FACE), 'dftF');
     if (!pface)
@@ -415,17 +446,13 @@ FtfdCreateFace(
     pface->iFace = iFace;
     pface->ftface = ftface;
     pface->cGlyphs = ftface->num_glyphs;
+    pface->ulEncoding = ulEncoding;
+
+    /* Set char bias, FIXME: use lCharBias? other encodings? */
+    pface->wcCharBias = ulEncoding == FT_ENCODING_MS_SYMBOL ? 0xf000 : 0;
 
     /* Get the font format */
     pface->ulFontFormat = FtfdGetFontFormat(ftface);
-
-    /* Load a unicode charmap */
-    fterror = FT_Select_Charmap(ftface, FT_ENCODING_UNICODE);
-    if (fterror)
-    {
-        WARN("Could not load unicode charmap\n");
-        return NULL;
-    }
 
     /* Start with 0 runs and 0 mappings */
     pface->cMappings = 0;
@@ -433,7 +460,7 @@ FtfdCreateFace(
 
     /* Loop through all character mappings */
     wcPrev = wcCurrent = (WCHAR)FT_Get_First_Char(ftface, &index);
-    pface->ifiex.ifi.wcFirstChar = wcCurrent;
+    pface->ifiex.ifi.wcFirstChar = wcCurrent - pface->wcCharBias;;
     while (index)
     {
         /* Count the mapping */
@@ -448,7 +475,7 @@ FtfdCreateFace(
     }
 
     /* Save the last character */
-    pface->ifiex.ifi.wcLastChar = wcPrev;
+    pface->ifiex.ifi.wcLastChar = wcPrev - pface->wcCharBias;;
 
     /* Initialize IFIMETRICS */
     FtfdInitIfiMetrics(pface);
