@@ -340,7 +340,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     }
 
     attrs = GetFileAttributesW(szPath);
-    if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_DIRECTORY))
+    if (attrs == INVALID_FILE_ATTRIBUTES)
     {
         /* invalid path */
         return FALSE;
