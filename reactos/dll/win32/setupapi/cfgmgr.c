@@ -1584,7 +1584,9 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
     LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("\n");
+    FIXME("%p %lu %p %p %p %lx %lx\n",
+          ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1596,22 +1598,68 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
     LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("\n");
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
+    ULONG ulType = 0;
+    ULONG ulTransferLength = 0;
+    CONFIGRET ret;
 
-#if 0
-    if (ClassGuid == NULL ||
-        pulLength == NULL)
-        return 3;
+    TRACE("%p %lu %p %p %p %lx %lx\n",
+          ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
+
+    if (ClassGuid == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    if (pSetupStringFromGuid(ClassGuid, ebp_6c, 0x27) != 0)
-        return 1F;
-#endif
+    if (pSetupStringFromGuid(ClassGuid,
+                             szGuidString,
+                             PNP_MAX_GUID_STRING_LEN) != 0)
+        return CR_INVALID_DATA;
 
+    if (ulProperty < CM_CRP_MIN || ulProperty > CM_CRP_MAX)
+        return CR_INVALID_PROPERTY;
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetClassRegProp(BindingHandle,
+                                  szGuidString,
+                                  ulProperty,
+                                  &ulType,
+                                  Buffer,
+                                  &ulTransferLength,
+                                  pulLength,
+                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+    {
+        if (pulRegDataType != NULL)
+            *pulRegDataType = ulType;
+    }
+
+    return ret;
 }
 
 
