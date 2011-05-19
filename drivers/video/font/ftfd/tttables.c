@@ -253,13 +253,15 @@ FtfdGetWinMetrics(
     //pifi->fwdUnderscorePosition;
     pifi->fwdStrikeoutSize = GETW(&pOs2->yStrikeoutSize);
     pifi->fwdStrikeoutPosition = GETW(&pOs2->yStrikeoutPosition);
+    *(DWORD*)pifi->achVendId = *(DWORD*)pOs2->achVendID;
+    //pifi->ulPanoseCulture;
+    pifi->panose = *(PANOSE*)pOs2->panose;
+
+    /* Get special characters */
     pifi->wcFirstChar = GETW(&pOs2->usFirstCharIndex);
     pifi->wcLastChar = GETW(&pOs2->usLastCharIndex);
     pifi->wcDefaultChar = GETW(&pOs2->usDefaultChar);
     pifi->wcBreakChar = GETW(&pOs2->usBreakChar);
-    *(DWORD*)pifi->achVendId = *(DWORD*)pOs2->achVendID;
-    //pifi->ulPanoseCulture;
-    pifi->panose = *(PANOSE*)pOs2->panose;
 
     return TRUE;
 }

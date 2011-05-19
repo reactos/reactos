@@ -94,6 +94,8 @@ typedef struct
     ULONG cMappings;
     ULONG cRuns;
     ULONG ulFontRevision;
+    ULONG ulEncoding;
+    WCHAR wcCharBias;
     PWCHAR pwcReverseTable;
     FD_GLYPHSET *pGlyphSet;
     FD_KERNINGPAIR *pKerningPairs;
