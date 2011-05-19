@@ -175,4 +175,32 @@ function(add_cd_file)
         endif()
     endif() #end livecd
     
+    #do we add it to regtest?
+    list(FIND _CD_FOR regtest __cd)
+    if(NOT __cd EQUAL -1)
+        #whether or not we should put it in reactos.cab or directly on cd
+        if(_CD_NO_CAB)
+            #directly on cd
+            foreach(item ${_CD_FILE})
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+            endforeach()
+            if(_CD_NAME_ON_CD)
+                get_filename_component(__file ${_CD_FILE} NAME)
+                #rename it in the cd tree
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
+            endif()
+            if(_CD_TARGET)
+                #manage dependency
+                add_dependencies(bootcdregtest ${_CD_TARGET})
+            endif()
+        else()
+            #add it in reactos.cab
+            #dir_to_num(${_CD_DESTINATION} _num)
+            #file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
+            #if(_CD_TARGET)
+            #    #manage dependency
+            #    add_dependencies(reactos_cab ${_CD_TARGET})
+            #endif()
+        endif()
+    endif() #end bootcd
 endfunction()

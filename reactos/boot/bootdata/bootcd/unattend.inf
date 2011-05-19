@@ -1,0 +1,60 @@
+; In order to get unattended setup working:
+; 1. Copy unattend.inf.sample to unattend.inf, adjust as needed
+; 2. Uncomment the line in bootdata.rbuild to include it into bootcd
+
+[Unattend]
+Signature = "$ReactOS$"
+
+; yes - unattend setup enabled
+; no - unattend setup disabled
+UnattendSetupEnabled = no
+
+; Install to \Device\Harddisk0\Partition1\ReactOS
+DestinationDiskNumber = 0
+DestinationPartitionNumber = 1
+InstallationDirectory=ReactOS
+
+; MBRInstallType=0  skips MBR installation
+; MBRInstallType=1  install MBR on floppy  
+; MBRInstallType=2  install MBR on hdd
+MBRInstallType=2 
+
+FullName="MyName"
+;OrgName="MyOrg"
+ComputerName="MYCOMPUTERNAME";
+AdminPassword="MyPassword"
+
+; TimeZone is set GMT as default
+TimeZoneIndex=85
+
+; enable this setting to disable daylight saving changes
+; DisableAutoDaylightTimeSet = 1
+
+; enable this setting to format the selected partition
+; 1 - format enabled
+; 0 - format disabled
+FormatPartition=1
+
+; enable this setting to automatically create a partition
+; during installation
+; 1 - enabled
+; 0 - disabled
+AutoPartition = 1
+
+; enable this setting to disable vmware driver install
+; yes - disabled
+; no  - enabled
+DisableVmwInst = yes
+
+; set this option to automatically
+; specify language in 2nd mode setup
+; see hivesys.inf for available languages
+; LocaleID = 407 
+
+
+; enable this section to automatically launch programs
+; after 3rd boot
+;
+; [GuiRunOnce]
+; %SystemRoot%\system32\cmd.exe
+
