@@ -150,7 +150,7 @@ FtfdCreateFontInstance(
      * space to device space. Since we use FT_Set_Char_Size, which allows
      * higher precision than FT_Set_Pixel_Sizes, we need to convert into
      * points. So we multiply our scaling coefficients with 72 divided by
-     * the device resolution. We also need a 26.4 fixpoint value, so we
+     * the device resolution. We also need a 26.6 fixpoint value, so we
      * multiply with 64. */
     FLOATOBJ_MulLong(&efScaleX, 64 * pface->ifiex.ifi.fwdUnitsPerEm * 72);
     FLOATOBJ_DivLong(&efScaleX, pfo->sizLogResPpi.cx);
@@ -176,7 +176,7 @@ FtfdCreateFontInstance(
     /* Check if there is rotation / skewing (cannot use iComplexity!?) */
     if (!FLOATOBJ_bIsNull(&fxform.eM12) || !FLOATOBJ_bIsNull(&fxform.eM21))
     {
-        __debugbreak();
+        //__debugbreak();
 
         /* Create a transformation matrix that is applied after the character
          * scaling. We simply use the normalized base vectors and convert them
@@ -330,8 +330,8 @@ FtfdQueryMaxExtents(
         /* Copy the quantized matrix from the font structure */
         pfddm->fdxQuantized = pfont->fdxQuantized;
 
-        pfddm->lNonLinearExtLeading =   0x00000000;
-        pfddm->lNonLinearIntLeading =   0x00000080; // FIXME
+        pfddm->lNonLinearExtLeading =   0x80000000;
+        pfddm->lNonLinearIntLeading =   0x80000000; // FIXME
         pfddm->lNonLinearMaxCharWidth = 0x80000000;
         pfddm->lNonLinearAvgCharWidth = 0x80000000;
 
@@ -341,7 +341,8 @@ FtfdQueryMaxExtents(
     }
 
     TRACE("pfddm->fxMaxAscender=%ld, yScale=%ld, height=%ld\n",
-          pfddm->fxMaxAscender, pfont->sizlScale.cy, (pfont->sizlScale.cy+32)/64);
+          pfddm->fxMaxAscender, pfont->sizlScale.cy,
+          (pfont->sizlScale.cy+32)/64);
 //__debugbreak();
 
     /* Return the size of the structure */
@@ -686,28 +687,53 @@ FtfdQueryAdvanceWidths(
 
     //TRACE("FtfdQueryAdvanceWidths\n");
 
-    // FIXME: layout horizontal/vertical
-    fl = (iMode == QAW_GETEASYWIDTHS) ? FT_ADVANCE_FLAG_FAST_ONLY : 0;
-//      | (ftface->face_flags & FT_FACE_FLAG_VERTICAL) ? FT_LOAD_VERTICAL_LAYOUT : 0;
-fl = 0;
+    /* The selected glyph will be changed */
+    pfont->hgSelected = -1;
 
-    /* Loop all requested glyphs */
-    for (i = 0; i < cGlyphs; i++)
+    /* Check if fast version is requested */
+    if (0 && iMode == QAW_GETEASYWIDTHS)
     {
-        /* Query advance width */
-        fterror = FT_Get_Advance(ftface, (FT_UInt)phg[i], fl, &advance);
-        if (fterror || advance > 0x0FFFF000)
+        fl = FT_ADVANCE_FLAG_FAST_ONLY;
+
+        /* Check if the font layout is vertical */
+        if (ftface->face_flags & FT_FACE_FLAG_VERTICAL)
         {
-            WARN("Failed to query advance width hg=%lx, fl=0x%lx\n",
-                     phg[i], fl);
-            pusWidths[i] = 0xffff;
-            bResult = FALSE;
+            fl |= FT_LOAD_VERTICAL_LAYOUT;
         }
-        else
+
+        /* Loop all requested glyphs */
+        for (i = 0; i < cGlyphs; i++)
         {
-            /* Transform from 16.16 points to 28.4 pixels */
-            pusWidths[i] = (USHORT)((advance * 72 / pfo->sizLogResPpi.cx) >> 12);
-            //TRACE("Got advance width: hg=%lx, adv=%lx->%ld\n", phg[i], advance, pt.x);
+            /* Query advance width */
+            fterror = FT_Get_Advances(ftface, (FT_UInt)phg[i], 1, fl, &advance);
+            if (fterror || advance > 0xFFFF)
+            {
+                pusWidths[i] = 0xffff;
+                bResult = FALSE;
+            }
+            else
+            {
+                pusWidths[i] = (USHORT)(advance >> 2);
+                //TRACE("Got advance width: hg=%lx, adv=%lx->%ld\n", phg[i], advance, pt.x);
+            }
+        }
+    }
+    else
+    {
+        /* Loop all requested glyphs */
+        for (i = 0; i < cGlyphs; i++)
+        {
+            /* Load the glyph */
+            fterror = FT_Load_Glyph(ftface, (FT_UInt)phg[i], 0);
+            if (fterror)
+            {
+                pusWidths[i] = 0xffff;
+                bResult = FALSE; // FIXME: return FALSE or DDI_ERROR?
+            }
+            else
+            {
+                pusWidths[i] = (USHORT)ftface->glyph->advance.x >> 2;
+            }
         }
     }
 

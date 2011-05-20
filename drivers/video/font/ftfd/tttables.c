@@ -273,11 +273,13 @@ CompareKernPair(
     FD_KERNINGPAIR *pkp2)
 {
     ULONG ul1, ul2;
+
+    /* Calculate the values for the 2 kerning pairs */
     ul1 = pkp1->wcFirst + 65536 * pkp1->wcSecond;
     ul2 = pkp2->wcFirst + 65536 * pkp2->wcSecond;
-    if (ul1 < ul2) return -1;
-    if (ul1 > ul2) return 1;
-    return 0;
+
+    /* Return the comparison result */
+    return (ul1 < ul2) ? -1 : ((ul1 > ul2) ? 1 : 0);
 }
 
 
@@ -314,7 +316,6 @@ FtfdInitKerningPairs(
     nTables = GETW(&pKernTable->nTables);
     ulLastAddress = (ULONG_PTR)pKernTable + cjSize;
 
-
     /* Loop all subtables */
     pSubTable = &pKernTable->subtable;
     for (i = 0; i < nTables; i++)
@@ -322,7 +323,7 @@ FtfdInitKerningPairs(
         /* Check if the subtable is accessible */
         if ((ULONG_PTR)pSubTable + sizeof(TT_KERNING_SUBTABLE) > ulLastAddress)
         {
-            __debugbreak();
+            WARN("kern table outside the file\n");
             return;
         }
 
@@ -330,7 +331,7 @@ FtfdInitKerningPairs(
         cjSize = GETW(&pSubTable->usLength);
         if ((ULONG_PTR)pSubTable + cjSize > ulLastAddress)
         {
-            __debugbreak();
+            WARN("kern table exceeds size of the file\n");
             return;
         }
 
@@ -341,7 +342,7 @@ FtfdInitKerningPairs(
             cPairs += GETW(&pSubTable->format0.nPairs);
             if ((ULONG_PTR)&pSubTable->format0.akernpair[cPairs] > ulLastAddress)
             {
-                __debugbreak();
+                WARN("Number of kerning pairs too large for table size\n");
                 return;
             }
         }
