@@ -131,11 +131,12 @@ CDMAMemoryManager::Allocate(
 {
     ULONG Length, BlockCount, FreeIndex, StartPage, EndPage;
     KIRQL OldLevel;
+    ULONG BlocksPerPage;
 
     //
     // sanity checks
     //
-    ASSERT(Size < PAGE_SIZE);
+    ASSERT(Size <= PAGE_SIZE);
     //ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     //
@@ -157,6 +158,11 @@ CDMAMemoryManager::Allocate(
     // acquire lock
     //
     KeAcquireSpinLock(m_Lock, &OldLevel);
+
+    //
+    // helper variable
+    //
+    BlocksPerPage = PAGE_SIZE / m_BlockSize;
 
     //
     // start search
@@ -193,6 +199,19 @@ CDMAMemoryManager::Allocate(
         if (StartPage == EndPage)
         {
             //
+            // reserve block
+            //
+            RtlSetBits(&m_Bitmap, FreeIndex, BlockCount);
+
+            //
+            // reserve block
+            //
+            break;
+        }
+        else if ((BlockCount == BlocksPerPage) && (FreeIndex % BlocksPerPage == 0))
+        {
+            //
+            // the request equals PAGE_SIZE and is aligned at page boundary
             // reserve block
             //
             RtlSetBits(&m_Bitmap, FreeIndex, BlockCount);

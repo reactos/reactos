@@ -33,7 +33,7 @@ public:
         return m_Ref;
     }
 
-    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN OPTIONAL PKSPIN_LOCK Lock);
+    virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
     virtual ULONG GetPendingRequestCount();
     virtual NTSTATUS AddUSBRequest(PURB Urb);
     virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
@@ -47,13 +47,18 @@ public:
     virtual ~CUSBQueue(){}
 
 protected:
-    LONG m_Ref;
-    KSPIN_LOCK m_Lock;
-    PDMA_ADAPTER m_Adapter;
-    PQUEUE_HEAD AsyncListQueueHead;
-    LIST_ENTRY m_CompletedRequestAsyncList;
-    LIST_ENTRY m_PendingRequestAsyncList;
-
+    LONG m_Ref;                                                                         // reference count
+    KSPIN_LOCK m_Lock;                                                                  // list lock
+    PDMA_ADAPTER m_Adapter;                                                             // dma adapter
+    PUSBHARDWAREDEVICE m_Hardware;                                                      // stores hardware object
+    PQUEUE_HEAD AsyncListQueueHead;                                                     // async queue head
+    LIST_ENTRY m_CompletedRequestAsyncList;                                             // completed async request list
+    LIST_ENTRY m_PendingRequestAsyncList;                                               // pending async request list
+    ULONG m_MaxPeriodicListEntries;                                                     // max perdiodic list entries
+    ULONG m_MaxPollingInterval;                                                         // max polling interval
+    PHYSICAL_ADDRESS m_SyncFrameListAddr;                                               // physical address of sync frame list
+    PULONG m_SyncFrameList;                                                             // virtual address of sync frame list
+    PQUEUE_HEAD * m_SyncFrameListQueueHeads;                                            // stores the frame list of queue head
 
     // queue head manipulation functions
     VOID LinkQueueHead(PQUEUE_HEAD HeadQueueHead, PQUEUE_HEAD NewQueueHead);
@@ -69,6 +74,9 @@ protected:
 
     // called when the completion queue is cleaned up
     VOID QueueHeadCleanup(PQUEUE_HEAD QueueHead);
+
+    // intializes the sync schedule
+    NTSTATUS InitializeSyncSchedule(IN PUSBHARDWAREDEVICE Hardware, IN PDMAMEMORYMANAGER MemManager);
 };
 
 //=================================================================================================
@@ -93,7 +101,8 @@ CUSBQueue::QueryInterface(
 NTSTATUS
 CUSBQueue::Initialize(
     IN PUSBHARDWAREDEVICE Hardware,
-    PDMA_ADAPTER AdapterObject,
+    IN PDMA_ADAPTER AdapterObject,
+    IN PDMAMEMORYMANAGER MemManager,
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -127,7 +136,139 @@ CUSBQueue::Initialize(
     //
     InitializeListHead(&m_PendingRequestAsyncList);
 
+    //
+    // now initialize sync schedule
+    //
+    Status = InitializeSyncSchedule(Hardware, MemManager);
+
     return Status;
+}
+
+NTSTATUS
+CUSBQueue::InitializeSyncSchedule(
+    IN PUSBHARDWAREDEVICE Hardware,
+    IN PDMAMEMORYMANAGER MemManager)
+{
+    PHYSICAL_ADDRESS QueueHeadPhysAddr;
+    NTSTATUS Status;
+    ULONG Index;
+    PQUEUE_HEAD QueueHead;
+
+    //
+    // FIXME: check if smaller list sizes are supported
+    //
+    m_MaxPeriodicListEntries = 1024;
+
+    //
+    // use polling scheme of 32ms
+    //
+    m_MaxPollingInterval = 32;
+
+    //
+    // allocate dummy frame list array
+    //
+    m_SyncFrameListQueueHeads = (PQUEUE_HEAD*)ExAllocatePool(NonPagedPool, m_MaxPollingInterval * sizeof(PQUEUE_HEAD));
+    if (!m_SyncFrameListQueueHeads)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  
+    //
+    // first allocate a page to hold the queue array
+    //
+    Status = MemManager->Allocate(m_MaxPeriodicListEntries * sizeof(PVOID), (PVOID*)&m_SyncFrameList, &m_SyncFrameListAddr);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate sync frame list array
+        //
+        DPRINT1("Failed to allocate sync frame list\n");
+        ExFreePool(m_SyncFrameListQueueHeads);
+        ASSERT(FALSE);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // now allocate queue head descriptors for the polling interval
+    //
+    for(Index = 0; Index < m_MaxPeriodicListEntries; Index++)
+    {
+        //
+        // check if is inside our polling interrupt frequency window
+        //
+        if (Index < m_MaxPollingInterval)
+        {
+            //
+            // allocate queue head
+            //
+            Status = MemManager->Allocate(sizeof(QUEUE_HEAD), (PVOID*)&QueueHead, &QueueHeadPhysAddr);
+
+            //
+            // initialize queue head
+            //
+            QueueHead->HorizontalLinkPointer = TERMINATE_POINTER;
+            QueueHead->AlternateNextPointer = TERMINATE_POINTER;
+            QueueHead->NextPointer = TERMINATE_POINTER;
+
+            //
+            // 1 for non high speed, 0 for high speed device
+            //
+            QueueHead->EndPointCharacteristics.ControlEndPointFlag = 0;
+            QueueHead->EndPointCharacteristics.HeadOfReclamation = FALSE;
+            QueueHead->EndPointCharacteristics.MaximumPacketLength = 64;
+
+            //
+            // Set NakCountReload to max value possible
+            //
+            QueueHead->EndPointCharacteristics.NakCountReload = 0xF;
+
+            //
+            // Get the Initial Data Toggle from the QEDT
+            //
+            QueueHead->EndPointCharacteristics.QEDTDataToggleControl = FALSE;
+
+            //
+            // FIXME: check if High Speed Device
+            //
+            QueueHead->EndPointCharacteristics.EndPointSpeed = QH_ENDPOINT_HIGHSPEED;
+            QueueHead->EndPointCapabilities.NumberOfTransactionPerFrame = 0x03;
+            QueueHead->Token.DWord = 0;
+            QueueHead->Token.Bits.InterruptOnComplete = FALSE;
+            QueueHead->PhysicalAddr = QueueHeadPhysAddr.LowPart;
+
+
+            //
+            // store in queue head array
+            //
+            m_SyncFrameListQueueHeads[Index] = QueueHead;
+        }
+        else
+        {
+            //
+            // get cached entry
+            //
+            QueueHead = m_SyncFrameListQueueHeads[m_MaxPeriodicListEntries % m_MaxPollingInterval];
+        }
+
+        //
+        // store entry
+        //
+        m_SyncFrameList[Index] = (QueueHead->PhysicalAddr | 0x2);
+    }
+
+    //
+    // now set the sync base
+    //
+    Hardware->SetPeriodicListRegister(m_SyncFrameListAddr.LowPart);
+
+    //
+    // sync frame list initialized
+    //
+    return STATUS_SUCCESS;
 }
 
 ULONG

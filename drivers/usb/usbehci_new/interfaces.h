@@ -525,7 +525,8 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: initializes the object
 
     virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware,
-                                PDMA_ADAPTER AdapterObject,
+                                IN PDMA_ADAPTER AdapterObject,
+                                IN PDMAMEMORYMANAGER MemManager,
                                 IN OPTIONAL PKSPIN_LOCK Lock) = 0;
 
 //-----------------------------------------------------------------------------------------
