@@ -116,6 +116,7 @@ protected:
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     EHCI_PORT_STATUS m_PortStatus[16];                                                 // port status
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
+    ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
 
     // set command
     VOID SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd);
@@ -564,10 +565,15 @@ CUSBHardwareDevice::StartController(void)
     EHCI_WRITE_REGISTER_ULONG(EHCI_ASYNCLISTBASE, AsyncQueueHead->PhysicalAddr);
 
     //
+    // Assign the SyncList Register
+    //
+    EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, m_SyncFramePhysAddr);
+
+    //
     // Set Schedules to Enable and Interrupt Threshold to 1ms.
     //
     GetCommandRegister(&UsbCmd);
-    UsbCmd.PeriodicEnable = FALSE;
+    UsbCmd.PeriodicEnable = TRUE;
     UsbCmd.AsyncEnable = TRUE;  //FIXME: Need USB Memory Manager
 
     UsbCmd.IntThreshold = 1;
@@ -894,7 +900,10 @@ VOID
 CUSBHardwareDevice::SetPeriodicListRegister(
     ULONG PhysicalAddress)
 {
-    EHCI_WRITE_REGISTER_ULONG(EHCI_PERIODICLISTBASE, PhysicalAddress);
+    //
+    // store physical address
+    //
+    m_SyncFramePhysAddr = PhysicalAddress;
 }
 
 struct _QUEUE_HEAD *
