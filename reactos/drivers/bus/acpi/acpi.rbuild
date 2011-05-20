@@ -18,7 +18,7 @@
 </if>
 
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="acpi">include</include>
 	<include base="acpica">include</include>
 	<library>ntoskrnl</library>

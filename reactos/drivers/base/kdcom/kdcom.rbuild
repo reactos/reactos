@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kdcom" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kdcom.dll">
 	<importlibrary definition="kdcom.spec"></importlibrary>
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="kdcom.dll" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="kdcom.dll" />
 	<include base="kdcom">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

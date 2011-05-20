@@ -39,7 +39,12 @@ pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
-ext2.sys=,,,,,,x,,,,,,4
+ext2fs.sys=,,,,,,x,,,,,,4
+classpnp.sys=,,,,,,,,,,,,4
+pcix.sys=,,,,,,,,,,,,4
+pcmcia.sys=,,,,,,,,,,,,4
+swenum.sys=,,,,,,,,,,,,4
+ntdll.dll=,,,,,,,,,,,,2
 
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp

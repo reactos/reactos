@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="classpnp" type="kernelmodedriver" installbase="system32/drivers" installname="classpnp.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<importlibrary definition="class.spec" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

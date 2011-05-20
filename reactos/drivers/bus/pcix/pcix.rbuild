@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="pcix" type="kernelmodedriver" installbase="system32/drivers" installname="pcix.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="pcix">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

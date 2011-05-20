@@ -1921,7 +1921,7 @@ SetInstallationCompleted(VOID)
   HKEY hKey = 0;
   DWORD InProgress = 0;
   DWORD InstallDate;
-  
+
   if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\Setup",
                      0,
@@ -1931,7 +1931,7 @@ SetInstallationCompleted(VOID)
     RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
     RegCloseKey( hKey );
   }
-  
+
   if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
                      L"Software\\Microsoft\\Windows NT\\CurrentVersion",
                      0,
@@ -2233,7 +2233,7 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
     {
         WCHAR szBuffer[MAX_PATH];
         wcscpy(szBuffer, szDrive);
-        wcscat(szBuffer, L"reactos\\ntoskrnl.exe");
+        wcscat(szBuffer, L"reactos\\system32\\ntoskrnl.exe");
         LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
         if (FileExists(szBuffer, NULL))
         {
@@ -2383,7 +2383,7 @@ InstallWizard(VOID)
   hWnd = (HWND)PropertySheet(&psh);
   ShowWindow(hWnd, SW_SHOW);
 
-  while (GetMessage(&msg, NULL, 0, 0)) 
+  while (GetMessage(&msg, NULL, 0, 0))
   {
     if(!IsDialogMessage(hWnd, &msg))
     {

@@ -1404,7 +1404,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
     ULONGLONG m1, m2;
 
     /*  check for unpartitioned space  */
-    m1 = PartEntry->UnpartitionedLength; 
+    m1 = PartEntry->UnpartitionedLength;
     m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
 
     if( m1 > RequiredPartitionDiskSpace)
@@ -2843,6 +2843,7 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
+    WCHAR CompleteOrigFileName[512];
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
@@ -2901,10 +2902,14 @@ AddSectionToCopyQueue(HINF InfFile,
             break;
         }
 
+        wcscpy(CompleteOrigFileName, SourceRootDir.Buffer);
+        wcscat(CompleteOrigFileName, L"\\");
+        wcscat(CompleteOrigFileName, DirKeyValue);
+
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
                             SourceRootPath.Buffer,
-                            SourceRootDir.Buffer,
+                            CompleteOrigFileName,
                             FileKeyName,
                             DirKeyValue,
                             TargetFileName))
@@ -3601,10 +3606,10 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     NTSTATUS Status;
-    
+
     PartitionType = PartitionList->ActiveBootPartition->
                     PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
-    
+
     Status = InstallVBRToPartition(&SystemRootPath,
                                    &SourceRootPath,
                                    &DestinationArcPath,
@@ -3614,7 +3619,7 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-    
+
     return SUCCESS_PAGE;
 }
 
@@ -3644,10 +3649,10 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     swprintf(DestinationDevicePathBuffer,
              L"\\Device\\Harddisk%d\\Partition0",
              PartitionList->ActiveBootDisk->DiskNumber);
-    
+
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
-        
+
     DPRINT("Install MBR bootcode: %S ==> %S\n",
             SourceMbrPathBuffer, DestinationDevicePathBuffer);
 
@@ -3931,7 +3936,7 @@ RunUSetup(VOID)
             case BOOT_LOADER_HARDDISK_MBR_PAGE:
                 Page = BootLoaderHarddiskMbrPage(&Ir);
                 break;
-                
+
             case BOOT_LOADER_HARDDISK_VBR_PAGE:
                 Page = BootLoaderHarddiskVbrPage(&Ir);
                 break;

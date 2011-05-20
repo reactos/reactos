@@ -3,7 +3,7 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="hal" type="kernelmodedll" entrypoint="HalInitSystem" installbase="system32" installname="hal.dll">
 	<importlibrary base="hal" definition="../hal.pspec" />
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="hal.dll" />
 	<include base="hal">include</include>
 	<include base="ntoskrnl">include</include>
 	<!-- include base="x86emu">.</include -->

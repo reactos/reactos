@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="class2" type="kernelmodedriver" installbase="system32/drivers" installname="class2.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<importlibrary definition="class2.spec" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

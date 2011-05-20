@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="hal" type="kernelmodedll" entrypoint="HalInitSystem" installbase="system32" installname="hal.dll">
 	<importlibrary base="hal" definition="../hal.pspec" />
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="hal.dll" />
 	<include base="hal">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_NTHAL_" />

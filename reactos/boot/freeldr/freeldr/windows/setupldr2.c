@@ -109,11 +109,11 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
 VOID
 SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
 {
-    INFCONTEXT InfContext;
+    INFCONTEXT InfContext, dirContext;
     BOOLEAN Status;
-    LPCSTR Media, DriverName;
+    LPCSTR Media, DriverName, dirIndex, ImagePath;
     WCHAR ServiceName[256];
-    WCHAR ImagePath[256];
+    WCHAR ImagePathW[256];
 
     /* Open inf section */
     if (!InfFindFirstLine(InfHandle, "SourceDisksFiles", NULL, &InfContext))
@@ -123,23 +123,28 @@ SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPC
     do
     {
         if (InfGetDataField(&InfContext, 7, &Media) &&
-            InfGetDataField(&InfContext, 0, &DriverName))
+            InfGetDataField(&InfContext, 0, &DriverName) && 
+            InfGetDataField(&InfContext, 13, &dirIndex))
         {
-            if (strcmp(Media, "x") == 0)
+            if ((strcmp(Media, "x") == 0) &&
+                InfFindFirstLine(InfHandle, "Directories", dirIndex, &dirContext) &&
+                InfGetDataField(&dirContext, 1, &ImagePath))
             {
                 /* Convert name to widechar */
                 swprintf(ServiceName, L"%S", DriverName);
 
+                /* Prepare image path */
+                swprintf(ImagePathW, L"%S", ImagePath);
+                wcscat(ImagePathW, L"\\");
+                wcscat(ImagePathW, ServiceName);
+                
                 /* Remove .sys extension */
                 ServiceName[wcslen(ServiceName) - 4] = 0;
-
-                /* Prepare image path */
-                swprintf(ImagePath, L"%S", DriverName);
 
                 /* Add it to the list */
                 Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
                     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-                    ImagePath,
+                    ImagePathW,
                     ServiceName);
 
                 if (!Status)
@@ -274,31 +279,34 @@ VOID LoadReactOSSetup2(VOID)
     UseRealHeap = TRUE;
     LoaderBlock->ConfigurationRoot = MachHwDetect();
 
+	strcpy(FileName, "\\ArcName\\");
+
     /* Load kernel */
-    strcpy(FileName, BootPath);
-    strcat(FileName, "NTOSKRNL.EXE");
-    Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
+    strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderSystemCode, &NtosBase);
     DPRINTM(DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase);
+    Status = WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
+        FileName, NtosBase, &KernelDTE);
+    DPRINTM(DPRINT_WINDOWS, "Ntos Data Table Entry allocated with status %d at %p\n", Status, KernelDTE);
 
     /* Load HAL */
-    strcpy(FileName, BootPath);
-    strcat(FileName, "HAL.DLL");
-    Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
+    strcat(FileName, "SYSTEM32\\HAL.DLL");
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderHalCode, &HalBase);
     DPRINTM(DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase);
+    Status = WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
+        FileName, HalBase, &HalDTE);
+    DPRINTM(DPRINT_WINDOWS, "HAL Data Table Entry allocated with status %d at %p\n", Status, HalDTE);
 
     /* Load kernel-debugger support dll */
-    strcpy(FileName, BootPath);
-    strcat(FileName, "KDCOM.DLL");
-    Status = WinLdrLoadImage(FileName, LoaderBootDriver, &KdComBase);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
+    strcat(FileName, "SYSTEM32\\KDCOM.DLL");
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderBootDriver, &KdComBase);
     DPRINTM(DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase);
-
-    /* Allocate data table entries for above-loaded modules */
-    WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
-        "NTOSKRNL.EXE", NtosBase, &KernelDTE);
-    WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-        "HAL.DLL", HalBase, &HalDTE);
-    WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
-        "KDCOM.DLL", KdComBase, &KdComDTE);
+    Status = WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
+        FileName, KdComBase, &KdComDTE);
+    DPRINTM(DPRINT_WINDOWS, "KdCom Data Table Entry allocated with status %d at %p\n", Status, HalDTE);
 
     /* Load all referenced DLLs for kernel, HAL and kdcom.dll */
     strcpy(SearchPath, BootPath);
@@ -306,9 +314,15 @@ VOID LoadReactOSSetup2(VOID)
     WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
     if (KdComDTE)
         WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
+    /* In system32 too */
+    strcpy(SearchPath + strlen(BootPath), "system32\\");
+    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
+    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
+    if (KdComDTE)
+        WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
 
-    /* Load NLS data */
-    SetupLdrLoadNlsData(LoaderBlock, InfHandle, BootPath);
+    /* Load NLS data, they are in system32 */
+    SetupLdrLoadNlsData(LoaderBlock, InfHandle, SearchPath);
 
     /* Get a list of boot drivers */
     SetupLdrScanBootDrivers(LoaderBlock, InfHandle, BootPath);

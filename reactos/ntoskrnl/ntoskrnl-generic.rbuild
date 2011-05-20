@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" />
 	<importlibrary definition="ntoskrnl.pspec" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />

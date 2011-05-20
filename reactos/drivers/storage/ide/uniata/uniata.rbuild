@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="uniata" type="kernelmodedriver" installbase="system32/drivers" installname="uniata.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
 	<group compilerset="gcc">

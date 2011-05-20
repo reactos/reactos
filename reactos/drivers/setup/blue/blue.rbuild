@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="blue" type="kernelmodedriver" installbase="system32/drivers" installname="blue.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

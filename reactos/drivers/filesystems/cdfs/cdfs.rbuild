@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32/drivers" />
 	<include base="cdfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
