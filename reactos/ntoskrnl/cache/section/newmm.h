@@ -181,6 +181,9 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer, 
  ULONG Length,
+#ifdef __ROS_CMAKE__
+ BOOLEAN Paging,
+#endif
  PIO_STATUS_BLOCK ReadStatus);
 
 NTSTATUS
@@ -403,40 +406,6 @@ MmCreateCacheSection
  ULONG SectionPageProtection,
  ULONG AllocationAttributes,
  PFILE_OBJECT FileObject);
-
-NTSTATUS
-NTAPI
-MiSimpleRead
-(PFILE_OBJECT FileObject, 
- PLARGE_INTEGER FileOffset,
- PVOID Buffer, 
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus);
-
-NTSTATUS
-NTAPI
-_MiSimpleWrite
-(PFILE_OBJECT FileObject, 
- PLARGE_INTEGER FileOffset,
- PVOID Buffer, 
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus,
- const char *file,
- int line);
-
-#define MiSimpleWrite(F,O,B,L,R) _MiSimpleWrite(F,O,B,L,R,__FILE__,__LINE__)
-
-NTSTATUS
-NTAPI
-_MiWriteBackPage
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER Offset,
- ULONG Length,
- PFN_NUMBER Page,
- const char *File,
- int Line);
-
-#define MiWriteBackPage(F,O,L,P) _MiWriteBackPage(F,O,L,P,__FILE__,__LINE__)
 
 PVOID
 NTAPI

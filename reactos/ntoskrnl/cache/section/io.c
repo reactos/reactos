@@ -99,6 +99,9 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer, 
  ULONG Length,
+#ifdef __ROS_CMAKE__
+ BOOLEAN Paging,
+#endif
  PIO_STATUS_BLOCK ReadStatus)
 {
     NTSTATUS Status;
@@ -140,9 +143,13 @@ MiSimpleRead
     {
 		return STATUS_NO_MEMORY;
     }
-    
+
+#ifndef __ROS_CMAKE__
     Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-    
+#else
+    Irp->Flags |= (Paging ? IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE : 0) | IRP_SYNCHRONOUS_API;
+#endif
+
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
@@ -150,7 +157,11 @@ MiSimpleRead
 	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
-    
+
+#ifdef __ROS_CMAKE__
+    ObReferenceObject(FileObject);
+#endif
+
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
