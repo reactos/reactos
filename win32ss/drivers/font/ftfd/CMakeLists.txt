@@ -4,6 +4,7 @@ spec2def(ftfd.dll ftfd.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     enable.c
+    copybits.c
     font.c
     glyph.c
     tttables.c
