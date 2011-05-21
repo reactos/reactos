@@ -93,7 +93,7 @@ macro(add_rpcproxy_files)
             list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${NAME}_p.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
     endforeach()
@@ -116,18 +116,18 @@ macro(add_rpc_library TARGET)
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         list(APPEND server_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_s.c)
 
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_HEADER_ARG2} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         list(APPEND client_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_c.c)
     endforeach()
-    add_library(${TARGET} ${server_SOURCES} ${client_SOURCES})
+    add_library(${TARGET} ${client_SOURCES} ${server_SOURCES})
     add_dependencies(${TARGET} psdk)
 endmacro()
 
