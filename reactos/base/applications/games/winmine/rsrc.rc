@@ -51,15 +51,16 @@ MINES BITMAP rc/mines.bmp
 #include "lang/ko-KR.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
-#include "lang/pl-PL.rc"
 #include "lang/tr-TR.rc"
 
-/* UTF-8 */
+// UTF-8
+#pragma code_page(65001)
 #include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/lt-LT.rc"
+#include "lang/pl-PL.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"

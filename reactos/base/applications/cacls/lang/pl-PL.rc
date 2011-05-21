@@ -1,8 +1,9 @@
 /*
  *         translated by TestamenT
- *      testament@users.sourceforge.net
- * https://sourceforge.net/projects/reactospl
- * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         testament@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -10,38 +11,38 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Poka¿ lub modyfikuj listê kontroli dostêpu (Access Control List) plików\n\n\
-CACLS nazwa pliku [/T] [/E] [/C] [/G u¿ytkownik:dostêp [...]] [/R u¿ytkownik [...]]\n\
-               [/P u¿ytkownik:dostêp [...]] [/D u¿ytkownik [...]]\n\
-   nazwa pliku   Poka¿ ACL.\n\
-   /T            Zmiana ACL okreœlonych plików w\n\
+IDS_HELP, "PokaÅ¼ lub modyfikuj listÄ™ kontroli dostÄ™pu (Access Control List) plikÃ³w\n\n\
+CACLS nazwa pliku [/T] [/E] [/C] [/G uÅ¼ytkownik:dostÄ™p [...]] [/R uÅ¼ytkownik [...]]\n\
+               [/P uÅ¼ytkownik:dostÄ™p [...]] [/D uÅ¼ytkownik [...]]\n\
+   nazwa pliku   PokaÅ¼ ACL.\n\
+   /T            Zmiana ACL okreÅ›lonych plikÃ³w w\n\
                  aktualnym katalogu i wszystkich podkatalogach.\n\
-   /E            Umo¿liwia edycjê listy ACL zamiast jej zamiany.\n\
-   /C            Kontynuuje mimo b³êdów braku dostêpu.\n\
-   /G u¿ytkownik:dostêp  Przyznanie okreœlonemu u¿ytkownikowi prawa dostêpu.\n\
-                         Dostêp ma byæ tylko do:\n\
-                              R  Odczytu\n\
-                              W  Zapisu\n\
-                              C  Zmiany (zapis)\n\
-                              F  Pe³en dostêp\n\
-   /R u¿ytkownik         Odwo³aj okreœlonemu u¿ytkownikowi prawa dostêpu (wa¿ny tylko z /E).\n\
-   /P u¿ytkownik:dostêp  Zast¹p okreœlonemu u¿ytkownikowi prawa dostêpu.\n\
-                         Dostêp ma byæ tylko do:\n\
-                              N  ¯adnego\n\
-                              R  Odczytu\n\
-                              W  Zapisu\n\
-                              C  Zmiany (zapis)\n\
-                              F  Pe³en dostêp\n\
-   /D u¿ytkownik        Odbiera prawa dostêpu okreœlonemu u¿ytkownikowi.\n\
-W jednym poleceniu mo¿na okreœliæ wiele plików, u¿ywaj¹c symboli wieloznacznych.\n\
-W jednym poleceniu mo¿na okreœliæ wielu u¿ytkowników.\n\n\
-Skróty:\n\
+   /E            UmoÅ¼liwia edycjÄ™ listy ACL zamiast jej zamiany.\n\
+   /C            Kontynuuje mimo bÅ‚Ä™dÃ³w braku dostÄ™pu.\n\
+   /G uÅ¼ytkownik:dostÄ™p  Przyznaje okreÅ›lonemu uÅ¼ytkownikowi prawa dostÄ™pu.\n\
+                         Poziom dostÄ™u:\n\
+                              R  Odczyt\n\
+                              W  Zapis\n\
+                              C  Zmiana (zapis)\n\
+                              F  PeÅ‚ny dostÄ™p\n\
+   /R uÅ¼ytkownik         OdwoÅ‚uje prawa dostÄ™pu okreÅ›lonemu uÅ¼ytkownikowi  (dziaÅ‚a tylko z opcjÄ… /E).\n\
+   /P uÅ¼ytkownik:dostÄ™p  Edytuje prawa dostÄ™pu okreÅ›lonego uÅ¼ytkownika.\n\
+                         Poziom dostÄ™pu:\n\
+                              N  Brak\n\
+                              R  Odczyt\n\
+                              W  Zapis\n\
+                              C  Zmiana (zapis)\n\
+                              F  PeÅ‚ny dostÄ™p\n\
+   /D uÅ¼ytkownik        Odbiera prawa dostÄ™pu okreÅ›lonemu uÅ¼ytkownikowi.\n\
+W jednym poleceniu moÅ¼na edytowaÄ‡ prawa dostÄ™pu do wielu plikÃ³w, uÅ¼ywajÄ…c symboli wieloznacznych.\n\
+W jednym poleceniu moÅ¼na edytowaÄ‡ prawa dostÄ™pu wielu uÅ¼ytkownikÃ³w.\n\n\
+SkrÃ³ty:\n\
    CI - Dziedziczenie kontenera.\n\
-        CI - ACE bêdzie dziedziczony przez katalogi.\n\
+        CI - ACE bÄ™dzie dziedziczony przez katalogi.\n\
    OI - Dziedziczenie obiektu.\n\
-        ACE bêdzie dziedziczony przez pliki.\n\
+        ACE bÄ™dzie dziedziczony przez pliki.\n\
    IO - Tylko dziedziczenie.\n\
-        ACE nie odnosi siê do bie¿¹cego pliku / katalogu.\n"
+        ACE nie odnosi siÄ™ do bieÅ¼Ä…cego pliku / katalogu.\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

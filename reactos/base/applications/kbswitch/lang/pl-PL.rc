@@ -1,8 +1,9 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Apr,2008)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl
+ *         translated by Caemyr - Olaf Siejka (Apr,2008)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -13,6 +14,6 @@ BEGIN
     BEGIN
         MENUITEM "&Ustawienia...",  ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjúcie",        ID_EXIT
+        MENUITEM "&Wyj≈õcie",        ID_EXIT
     END
 END

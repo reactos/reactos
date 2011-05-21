@@ -1,20 +1,18 @@
 /*
- * PROJECT:      Spider Solitaire
- * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/pl-PL.rc
- * PURPOSE:      Polish Language File for Spider Solitaire
- * TRANSLATOR:   Maciej Bialas
+ *         PROJECT:      Spider Solitaire
+ *         LICENSE:      See COPYING in top level directory
+ *         FILE:         base/applications/games/spider/lang/pl-PL.rc
+ *         PURPOSE:      Polish Language File for Spider Solitaire
+ *         TRANSLATOR:   Maciej Bialas
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
  
-#include "resource.h"
-
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Wybierz koszulkÍ talii"
+CAPTION "Wybierz koszulkƒô talii"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -36,11 +34,11 @@ END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Poziom trudnoúci"
+CAPTION "Poziom trudno≈õci"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "£atwy: &Jeden kolor",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "åredni: &Dwa kolory", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "≈Åatwy: &Jeden kolor",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "≈öredni: &Dwa kolory", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
     AUTORADIOBUTTON "Trudny: &Cztery kolory",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
@@ -51,11 +49,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Pajπk"
-    IDS_SPI_ABOUT   "Pasjans - Pajπk, autor: Gregor Schneider\n\nCardLib wersja 1.0"
-    IDS_SPI_QUIT    "Czy na pewno chcesz zakoÒczyÊ?"
-    IDS_SPI_WIN     "Gratulacje, wygra≥eú(aú)!"
-    IDS_SPI_DEAL    "RozdaÊ ponownie?"
+    IDS_SPI_NAME    "PajƒÖk"
+    IDS_SPI_ABOUT   "Pasjans - PajƒÖk, autor: Gregor Schneider\n\nCardLib wersja 1.0"
+    IDS_SPI_QUIT    "Czy na pewno chcesz zako≈Ñczyƒá?"
+    IDS_SPI_WIN     "Gratulacje, wygra≈Çe≈õ(a≈õ)!"
+    IDS_SPI_DEAL    "Rozdaƒá ponownie?"
 END
 
 
@@ -69,11 +67,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Talia...",                    IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjúcie",                       IDM_GAME_EXIT
+        MENUITEM "&Wyj≈õcie",                       IDM_GAME_EXIT
     END
     POPUP "&Pomoc"
     BEGIN
-        MENUITEM "&ZawartoúÊ\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Zawarto≈õƒá\tF1",               IDM_HELP_CONTENTS
         MENUITEM "&O programie",                      IDM_HELP_ABOUT
     END
 END

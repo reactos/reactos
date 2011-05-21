@@ -1,9 +1,10 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Apr,2008)
- *      updated by Saibamen - Adam Stachowicz (Apr, 2011)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl
+ *         translated by Caemyr - Olaf Siejka (Apr,2008)
+ *         updated by Saibamen - Adam Stachowicz (Apr, 2011)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -12,32 +13,32 @@ IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Narzêdzie diagnostyki ReactX"
+CAPTION "NarzÄ™dzie diagnostyki ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
     PUSHBUTTON "&Pomoc", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "&Nastêpna", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&NastÄ™pna", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Zapisz wszystkie informacje...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Wyjœcie", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&WyjÅ›cie", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 190
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ten program dostarcza szczegó³owe dane o komponentach ReactX i sterownikach, zainstalowanych na twoim systemie..", -1, 10, 10, 443, 17
-    LTEXT "Jeœli wiesz ju¿, gdzie tkwi b³¹d, kliknij na odpowiedni¹ zak³adkê. W innym wypadku mo¿esz przejœæ przez wszystkie zak³adki przyciskiem Nastêpna", -1, 10, 30, 443, 25
+    LTEXT "Ten program dostarcza szczegÃ³Å‚owe dane o komponentach ReactX i sterownikach, zainstalowanych na twoim systemie..", -1, 10, 10, 443, 17
+    LTEXT "JeÅ›li wiesz juÅ¼, gdzie tkwi bÅ‚Ä…d, kliknij na odpowiedniÄ… zakÅ‚adkÄ™. W innym wypadku moÅ¼esz przejÅ›Ä‡ przez wszystkie zakÅ‚adki przyciskiem NastÄ™pna", -1, 10, 30, 443, 25
     GROUPBOX "Informacje o systemie", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Data i czas:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Nazwa komputera:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "System operacyjny:", -1, 70, 90, 80, 10, SS_RIGHT
-    LTEXT "Jêzyk:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "JÄ™zyk:", -1, 70, 100, 80, 10, SS_RIGHT
     LTEXT "Producent:", -1, 70, 110, 80, 10, SS_RIGHT
     LTEXT "Model:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Procesor:", -1, 70, 140, 80, 10, SS_RIGHT
-    LTEXT "Pamiêæ:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "PamiÄ™Ä‡:", -1, 70, 150, 80, 10, SS_RIGHT
     LTEXT "Plik wymiany:", -1, 70, 160, 80, 10, SS_RIGHT
     LTEXT "Wersja ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
@@ -57,13 +58,13 @@ IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Urz¹dzenie", -1, 10, 10, 220, 100
+    GROUPBOX "UrzÄ…dzenie", -1, 10, 10, 220, 100
     RTEXT "Nazwa:", -1, 20, 25, 70, 10
     RTEXT "Producent:", -1, 20, 35, 70, 10
     RTEXT "GPU:", -1, 20, 45, 70, 10
     RTEXT "Typ DAC:", -1, 20, 55, 70, 10
-    RTEXT "Pamiêæ:", -1, 20, 65, 70, 10
-    RTEXT "Bie¿¹ca rozdzielczoœæ:", -1, 20, 75, 70, 10
+    RTEXT "PamiÄ™Ä‡:", -1, 20, 65, 70, 10
+    RTEXT "BieÅ¼Ä…ca rozdzielczoÅ›Ä‡:", -1, 20, 75, 70, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 130, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 130, 10
@@ -74,7 +75,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 130, 10
 
     GROUPBOX "Sterownik", -1, 240, 10, 190, 100
-    RTEXT "G³ówny sterownik:", -1, 245, 30, 55, 10
+    RTEXT "GÅ‚Ã³wny sterownik:", -1, 245, 30, 55, 10
     RTEXT "Wersja:", -1, 245, 40, 55, 10
     RTEXT "Data:", -1, 245, 50, 55, 10
     RTEXT "WHQL:", -1, 245, 60, 55, 10
@@ -96,9 +97,9 @@ BEGIN
     LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
     LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
     LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
-    PUSHBUTTON "W³¹cz", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
-    PUSHBUTTON "W³¹cz", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
-    PUSHBUTTON "W³¹cz", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "WÅ‚Ä…cz", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "WÅ‚Ä…cz", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "WÅ‚Ä…cz", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Testuj DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
     PUSHBUTTON "Testuj Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
 
@@ -111,13 +112,13 @@ IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Urz¹dzenie", -1, 10, 10, 250, 100
+    GROUPBOX "UrzÄ…dzenie", -1, 10, 10, 250, 100
     RTEXT "Nazwa:", -1, 20, 25, 70, 10
-    RTEXT "ID Urz¹dzenia:", -1, 20, 35, 70, 10
+    RTEXT "ID UrzÄ…dzenia:", -1, 20, 35, 70, 10
     RTEXT "ID Producenta:", -1, 20, 45, 70, 10
     RTEXT "ID Produktu:", -1, 20, 55, 70, 10
     RTEXT "Typ:", -1, 20, 65, 70, 10
-    RTEXT "Urz¹denie domyœlne:", -1, 20, 75, 70, 10
+    RTEXT "UrzÄ…dzenie domyÅ›lne:", -1, 20, 75, 70, 10
     LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
@@ -139,7 +140,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX-", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Przyspieszenie sprzêtowe\nPoziom:", -1, 20, 135, 90, 20
+    RTEXT "Przyspieszenie sprzÄ™towe\nPoziom:", -1, 20, 135, 90, 20
     PUSHBUTTON "Testuj DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Uwagi", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -156,9 +157,9 @@ IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Urz¹dzenia DirectInput", -1, 10, 10, 452, 80
+    GROUPBOX "UrzÄ…dzenia DirectInput", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
-    GROUPBOX "Urz¹denia wejœcia", -1, 10, 100, 452, 60
+    GROUPBOX "UrzÄ…denia wejÅ›cia", -1, 10, 100, 452, 60
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
     GROUPBOX "Informacje", -1, 10, 170, 452, 50
     EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
@@ -168,7 +169,7 @@ IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zarejestrowani dostawcy us³ug DirectPlay", -1, 10, 10, 452, 80
+    GROUPBOX "Zarejestrowani dostawcy usÅ‚ug DirectPlay", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
 END
 
@@ -180,23 +181,23 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_MAIN_DIALOG "Narzêdzie diagnostyki ReactX"
+	IDS_MAIN_DIALOG "NarzÄ™dzie diagnostyki ReactX"
 	IDS_SYSTEM_DIALOG "System"
 	IDS_DISPLAY_DIALOG "Grafika"
-	IDS_SOUND_DIALOG "DŸwiêk"
+	IDS_SOUND_DIALOG "DÅºwiÄ™k"
 	IDS_MUSIC_DIALOG "Muzyka"
 	IDS_INPUT_DIALOG "Peryferia"
-	IDS_NETWORK_DIALOG "Sieæ"
+	IDS_NETWORK_DIALOG "SieÄ‡"
 	IDS_HELP_DIALOG "Pomoc"
 	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB u¿ytych, %I64u MB dostêpnych"
+	IDS_FORMAT_SWAP "%I64u MB uÅ¼ytych, %I64u MB dostÄ™pnych"
 	IDS_FORMAT_UNIPROC "%s (%u CPU)"
 	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
 	IDS_VERSION_UNKNOWN "Wersja nieznana"
-	IDS_DEVICE_STATUS_ATTACHED "Po³¹czony"
-	IDS_DEVICE_STATUS_MISSING "Roz³¹czony"
+	IDS_DEVICE_STATUS_ATTACHED "PoÅ‚Ä…czony"
+	IDS_DEVICE_STATUS_MISSING "RozÅ‚Ä…czony"
 	IDS_DEVICE_STATUS_UNKNOWN "Nieznany"
-	IDS_DEVICE_NAME "Nazwa urz¹dzenia"
+	IDS_DEVICE_NAME "Nazwa urzÄ…dzenia"
 	IDS_DEVICE_STATUS "Stan"
 	IDS_DEVICE_CONTROLLER "ID Kontrolera"
 	IDS_DEVICE_MANUFACTURER "ID Producenta"
@@ -208,24 +209,24 @@ BEGIN
 	IDS_DIRECTPLAY_COL_NAME2 "Rejestr"
 	IDS_DIRECTPLAY_COL_NAME3 "Plik"
 	IDS_DIRECTPLAY_COL_NAME4 "Wersja"
-	IDS_DIRECTPLAY8_MODEMSP "Dostawca us³ug modemowych DirectPlay8"
-	IDS_DIRECTPLAY8_SERIALSP "Dostawca us³ug portu szeregowego DirectPlay8"
-	IDS_DIRECTPLAY8_IPXSP "Dostawca us³ug IPX DirectPlay8"
-	IDS_DIRECTPLAY8_TCPSP "Dostawca us³ug TCP/IP DirectPlay8"
-	IDS_DIRECTPLAY_TCPCONN "Po³¹czenie internetowe TCP/IP dla DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "Po³¹czenie IPX dla DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Po³¹czenie modemowe dla DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Po³¹czenie szeregowe dla DirectPlay"
+	IDS_DIRECTPLAY8_MODEMSP "Dostawca usÅ‚ug modemowych DirectPlay8"
+	IDS_DIRECTPLAY8_SERIALSP "Dostawca usÅ‚ug portu szeregowego DirectPlay8"
+	IDS_DIRECTPLAY8_IPXSP "Dostawca usÅ‚ug IPX DirectPlay8"
+	IDS_DIRECTPLAY8_TCPSP "Dostawca usÅ‚ug TCP/IP DirectPlay8"
+	IDS_DIRECTPLAY_TCPCONN "PoÅ‚Ä…czenie internetowe TCP/IP dla DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "PoÅ‚Ä…czenie IPX dla DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "PoÅ‚Ä…czenie modemowe dla DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "PoÅ‚Ä…czenie szeregowe dla DirectPlay"
 	IDS_REG_SUCCESS "OK"
-	IDS_REG_FAIL "B³¹d"
+	IDS_REG_FAIL "BÅ‚Ä…d"
 	IDS_DDTEST_ERROR "Test nieudany!"
-	IDS_DDTEST_DESCRIPTION "Czy chcesz rozpocz¹æ test interface DirectDraw?"
-	IDS_DDPRIMARY_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania na powierzchni podstawowej. Narysowane zostan¹ czarne i bia³e prostok¹ty. Kontynuowaæ?"
-	IDS_DDPRIMARY_RESULT "Czy by³o widaæ czarne i bia³e prostok¹ty?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania przy u¿yciu bufora pozaekranowego. Narysowany zostanie poruszaj¹cy siê bia³y kwadrat. Kontynuowaæ?"
-	IDS_DDOFFSCREEN_RESULT "Czy by³o widaæ poruszaj¹cy siê bia³y kwadrat?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania w trybie pe³noekranowym. Narysowany zostanie poruszaj¹cy siê bia³y kwadrat. Kontynuowaæ?"
-	IDS_DDFULLSCREEN_RESULT "Czy by³o widaæ poruszaj¹cy siê bia³y kwadrat, w trybie pe³noekranowym?"
+	IDS_DDTEST_DESCRIPTION "Czy chcesz rozpoczÄ…Ä‡ test interface DirectDraw?"
+	IDS_DDPRIMARY_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania na powierzchni podstawowej. Narysowane zostanÄ… czarne i biaÅ‚e prostokÄ…ty. KontynuowaÄ‡?"
+	IDS_DDPRIMARY_RESULT "Czy byÅ‚o widaÄ‡ czarne i biaÅ‚e prostokÄ…ty?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania przy uÅ¼yciu bufora pozaekranowego. Narysowany zostanie poruszajÄ…cy siÄ™ biaÅ‚y kwadrat. KontynuowaÄ‡?"
+	IDS_DDOFFSCREEN_RESULT "Czy byÅ‚o widaÄ‡ poruszajÄ…cy siÄ™ biaÅ‚y kwadrat?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Ten test wykorzysta DirectDraw do rysowania w trybie peÅ‚noekranowym. Narysowany zostanie poruszajÄ…cy siÄ™ biaÅ‚y kwadrat. KontynuowaÄ‡?"
+	IDS_DDFULLSCREEN_RESULT "Czy byÅ‚o widaÄ‡ poruszajÄ…cy siÄ™ biaÅ‚y kwadrat, w trybie peÅ‚noekranowym?"
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "Nie"

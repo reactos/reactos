@@ -1,22 +1,23 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Dec,2007)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
+ *         translated by Caemyr - Olaf Siejka (Dec,2007)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_USAGE, "Wyœwietla dane, podzielone na odcinki o d³ugoœci ekranu.\n\n\
-  MORE < [Napêd:][Œcie¿ka]Nazwa pliku\n\
+  IDS_USAGE, "WyÅ›wietla dane, podzielone na odcinki o dÅ‚ugoÅ›ci ekranu.\n\n\
+  MORE < [NapÄ™d:][ÅšcieÅ¼ka]Nazwa pliku\n\
   Polecenie | MORE \n\
-  MORE [Napêd:][Œcie¿ka]Nazwa pliku\n\n\
-  [Napêd:][Œcie¿ka]Nazwa pliku    Plik, którego zawartoœæ ma byæ wyœwietlona.\n\
-  Polecenie\t\t     Polecenie, którego wynik ma byæ wyœwietlony.\n\n\
-  Po wyœwietleniu ""-- Kontynuuj --"" mo¿esz nacisn¹æ dowolny klawisz, aby przejœæ na nastêpn¹ stronê.\n"
+  MORE [NapÄ™d:][ÅšcieÅ¼ka]Nazwa pliku\n\n\
+  [NapÄ™d:][ÅšcieÅ¼ka]Nazwa pliku    Plik, ktÃ³rego zawartoÅ›Ä‡ ma byÄ‡ wyÅ›wietlona.\n\
+  Polecenie\t\t     Polecenie, ktÃ³rego wynik ma byÄ‡ wyÅ›wietlony.\n\n\
+  Po wyÅ›wietleniu ""-- Kontynuuj --"" moÅ¼esz nacisnÄ…Ä‡ dowolny klawisz, aby przejÅ›Ä‡ do nastÄ™pnej strony.\n"
 
   IDS_CONTINUE, " -- Kontynuuj (100%) -- "
-  IDS_FILE_ACCESS, "Brak dostêpu do pliku: %s."
+  IDS_FILE_ACCESS, "Brak dostÄ™pu do pliku: %s."
 END

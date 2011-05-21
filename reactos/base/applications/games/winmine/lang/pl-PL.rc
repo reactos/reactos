@@ -19,9 +19,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
-
-#include "resource.h"
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -38,12 +38,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Znaczniki",        IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&Pocz¹tkuj¹cy",     IDM_BEGINNER
+        MENUITEM "&PoczÄ…tkujÄ…cy",     IDM_BEGINNER
         MENUITEM "Z&aawansowany",     IDM_ADVANCED
         MENUITEM "&Ekspert",          IDM_EXPERT
-        MENUITEM "&U¿ytkownika",      IDM_CUSTOM
+        MENUITEM "&UÅ¼ytkownika",      IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "W&yjœcie\tAlt+X",   IDM_EXIT
+        MENUITEM "W&yjÅ›cie\tAlt+X",   IDM_EXIT
     END
     POPUP "&Info" BEGIN
         MENUITEM "&Najlepsze Wyniki", IDM_TIMES
@@ -57,7 +57,7 @@ CAPTION "Najlepsze Wyniki"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Najlepsze Wyniki", -1,  10,  10, 150,  45
-    LTEXT           "Pocz¹tkuj¹cy",      -1,  20,  20,  50,   8
+    LTEXT           "PoczÄ…tkujÄ…cy",      -1,  20,  20,  50,   8
     LTEXT           "Zaawansowany",      -1,  20,  30,  50,   8
     LTEXT           "Ekspert",        -1,  20,  40,  50,   8
     LTEXT           "999",          IDC_TIME1,  80,  20,  15,   8
@@ -74,14 +74,14 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Gratulacje!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Podaj swoje imiê", -1,  10,  10, 150,  10
+    LTEXT           "Podaj swoje imiÄ™", -1,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
     DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
 END
 
 DLG_CUSTOM DIALOGEX  0, 0, 100, 100
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Ustawienia U¿ytkownika"
+CAPTION "Ustawienia UÅ¼ytkownika"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Wiersze",   -1,   5,   5,  30,  10

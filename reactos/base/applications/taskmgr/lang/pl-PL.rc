@@ -1,21 +1,11 @@
 /*
-* translated by xrogers
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
-/////////////////////////////////////////////////////////////////////////////
-// Polish resources
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011) 
+ */
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-#pragma code_page(1250)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
@@ -23,13 +13,13 @@ BEGIN
     BEGIN
         MENUITEM "&Nowe zadanie (Uruchom...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Zakoñcz pracê Mened¿era zadañ",          ID_FILE_EXIT
+        MENUITEM "&ZakoÅ„cz pracÄ™ MenedÅ¼era zadaÅ„",          ID_FILE_EXIT
     END
     POPUP "&Opcje"
     BEGIN
         MENUITEM "Za&wsze na wierzchu",              ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "&Minimalizuj podczas u¿ytkowania",            ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "&Minimalizuj podczas uÅ¼ytkowania",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
         MENUITEM "&Ukryj, gdy zminimalizowane",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
@@ -38,8 +28,8 @@ BEGIN
     END
     POPUP "&Widok"
     BEGIN
-        MENUITEM "&Odœwie¿ teraz",                ID_VIEW_REFRESH
-        POPUP "&Szybkoœæ aktualizacji"
+        MENUITEM "&OdÅ›wieÅ¼ teraz",                ID_VIEW_REFRESH
+        POPUP "&CzÄ™stotliwoÅ›Ä‡ aktualizacji"
         BEGIN
             MENUITEM "&Wysoka",                       ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normalna",                     ID_VIEW_UPDATESPEED_NORMAL
@@ -49,44 +39,44 @@ BEGIN
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "D&u¿e ikony",                ID_VIEW_LARGE
-        MENUITEM "&Ma³e ikony",                ID_VIEW_SMALL
-        MENUITEM "&Szczegó³y",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "D&uÅ¼e ikony",                ID_VIEW_LARGE
+        MENUITEM "&MaÅ‚e ikony",                ID_VIEW_SMALL
+        MENUITEM "&SzczegÃ³Å‚y",                    ID_VIEW_DETAILS, CHECKED
         MENUITEM "Wybierz &kolumny...",          ID_VIEW_SELECTCOLUMNS
-        POPUP "H&istoria u¿ycia procesora CPU"
+        POPUP "H&istoria uÅ¼ycia procesora CPU"
         BEGIN
-            MENUITEM "Jeden &wykres dla wszystkich procesorów CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "Jeden &wykres dla wszystkich procesorÃ³w CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Jeden w&ykres dla ka¿dego procesora CPU",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "Jeden w&ykres dla kaÅ¼dego procesora CPU",          ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "Poka¿ &czas j¹dra",          ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "PokaÅ¼ &czas jÄ…dra",          ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "O&kna"
     BEGIN
-        MENUITEM "&S¹siaduj¹co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "S¹si&aduj¹co w pionie",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&SÄ…siadujÄ…co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "SÄ…si&adujÄ…co w pionie",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "Mi&nimalizuj",                   ID_WINDOWS_MINIMIZE
         MENUITEM "&Maksymalizuj",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Kaskadowo",                    ID_WINDOWS_CASCADE
-        MENUITEM "&Przesuñ na wierzch",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&PrzesuÅ„ na wierzch",             ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Mened¿er zadañ - tematy &pomocy",   ID_HELP_TOPICS
+        MENUITEM "MenedÅ¼er zadaÅ„ - tematy &pomocy",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Mened¿er zadañ - &informacje",         ID_HELP_ABOUT
+        MENUITEM "MenedÅ¼er zadaÅ„ - &informacje",         ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "&S¹siaduj¹co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "S¹si&aduj¹co w pionie",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&SÄ…siadujÄ…co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "SÄ…si&adujÄ…co w pionie",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "Mi&nimalizuj",                   ID_WINDOWS_MINIMIZE
     MENUITEM "&Maksymalizuj",                   ID_WINDOWS_MAXIMIZE
     MENUITEM "&Kaskadowo",                    ID_WINDOWS_CASCADE
-    MENUITEM "&Przesuñ na wierzch",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "&PrzesuÅ„ na wierzch",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
@@ -95,9 +85,9 @@ BEGIN
     BEGIN
         MENUITEM "&Nowe zadanie (Uruchom...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "D&u¿e ikony",                ID_VIEW_LARGE
-        MENUITEM "&Ma³e ikony",                ID_VIEW_SMALL
-        MENUITEM "&Szczegó³y",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "D&uÅ¼e ikony",                ID_VIEW_LARGE
+        MENUITEM "&MaÅ‚e ikony",                ID_VIEW_SMALL
+        MENUITEM "&SzczegÃ³Å‚y",                    ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -105,17 +95,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "P&rze³¹cz na",                  ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&Przesuñ na wierzch",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "P&rzeÅ‚Ä…cz na",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&PrzesuÅ„ na wierzch",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "&S¹siaduj¹co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "S¹si&aduj¹co w pionie",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&SÄ…siadujÄ…co w poziomie",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "SÄ…si&adujÄ…co w pionie",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "Mi&nimalizuj",                   ID_WINDOWS_MINIMIZE
         MENUITEM "&Maksymalizuj",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Kaskadowo",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&Zakoñcz zadanie",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "Prz&ejdŸ do procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&ZakoÅ„cz zadanie",                   ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Prz&ejdÅº do procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -124,7 +114,7 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Przywróæ",                    ID_RESTORE
+        MENUITEM "&PrzywrÃ³Ä‡",                    ID_RESTORE
         MENUITEM "&Zamknij",                      ID_FILE_EXIT
         MENUITEM SEPARATOR
         MENUITEM "Za&wsze na wierzchu",              ID_OPTIONS_ALWAYSONTOP
@@ -135,8 +125,8 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Zakoñcz proces",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Zamknij &drzewo procesów",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&ZakoÅ„cz proces",                ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Zamknij &drzewo procesÃ³w",           ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "D&ebuguj",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
@@ -146,17 +136,17 @@ BEGIN
 
             MENUITEM "&Wysoki",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "&Powy¿ej normalnego",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&PowyÅ¼ej normalnego",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
             MENUITEM "&Normalny",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "P&oni¿ej normalnego",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "P&oniÅ¼ej normalnego",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
             MENUITEM "N&iski",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Ustaw &koligacjê...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Edytuj &kana³y debugowania...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "Ustaw &koligacjÄ™...",            ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "Edytuj &kanaÅ‚y debugowania...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -171,7 +161,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Mened¿er zadañ"
+CAPTION "MenedÅ¼er zadaÅ„"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -185,8 +175,8 @@ BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Nowe zadanie...",IDC_NEWTASK,175,189,65,14
-    PUSHBUTTON      "P&rze³¹cz na",IDC_SWITCHTO,107,189,65,14,WS_DISABLED
-    PUSHBUTTON      "&Zakoñcz zadanie",IDC_ENDTASK,39,189,65,14,WS_DISABLED
+    PUSHBUTTON      "P&rzeÅ‚Ä…cz na",IDC_SWITCHTO,107,189,65,14,WS_DISABLED
+    PUSHBUTTON      "&ZakoÅ„cz zadanie",IDC_ENDTASK,39,189,65,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -196,8 +186,8 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Zakoñcz proces",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "Po&ka¿ procesy wszystkich u¿ytkowników",IDC_SHOWALLPROCESSES,
+    PUSHBUTTON      "&ZakoÅ„cz proces",IDC_ENDPROCESS,171,189,69,14
+    CONTROL         "Po&kaÅ¼ procesy wszystkich uÅ¼ytkownikÃ³w",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
 END
 
@@ -206,14 +196,14 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "U¿ycie procesora",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "U¿ycie pliku stronicowania",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "UÅ¼ycie procesora",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "UÅ¼ycie pliku stronicowania",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Sumy",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Pamiêæ zadeklarowana (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Pamiêæ fizyczna (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Pamiêæ j¹dra (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "PamiÄ™Ä‡ zadeklarowana (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "PamiÄ™Ä‡ fizyczna (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "PamiÄ™Ä‡ jÄ…dra (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "Uchwyty",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "W¹tki",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "WÄ…tki",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Procesy",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -231,7 +221,7 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Razem",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Dostêpne",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "DostÄ™pne",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
     LTEXT           "Bufor systemu",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -248,21 +238,21 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "Historia u¿ycia procesora CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Historia uÅ¼ycia procesora CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Historia uzycia pliku stronicowania",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Wyœwietl u¿ycie procesora",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
+    PUSHBUTTON      "WyÅ›wietl uÅ¼ycie procesora",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Wyœwietl u¿ycie pamiêci",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
+    PUSHBUTTON      "WyÅ›wietl zuÅ¼ycie pamiÄ™ci",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
                     WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Historia u¿ycia procesora",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    PUSHBUTTON      "Historia uÅ¼ycia procesora",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Historia u¿ycia pamiêci",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "Historia zuÅ¼ycia pamiÄ™ci",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kana³y debugowania"
+CAPTION "KanaÅ‚y debugowania"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
@@ -278,7 +268,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,174,133,50,14
-    LTEXT           "Ustawienie koligacji procesora kontroluje, na którym CPU proces bêdzie móg³ dzia³aæ",
+    LTEXT           "Ustawienie koligacji procesora kontroluje, na ktÃ³rym CPU proces bÄ™dzie mÃ³gÅ‚ dziaÅ‚aÄ‡",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -353,23 +343,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,138,178,50,14
-    LTEXT           "Wybierz kolumny do wyœwietlania na stronie Proces mened¿era zadañ",
+    LTEXT           "Wybierz kolumny do wyÅ›wietlania na stronie Proces MenedÅ¼era zadaÅ„",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Nazwa obrazu",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "PI&D (idewntyfikator procesu)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
-    CONTROL         "&U¿ycie procesora CPU",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&UÅ¼ycie procesora CPU",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
     CONTROL         "&Czas procesora CPU",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
-    CONTROL         "U¿ycie pa&miêci",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ZuÅ¼ycie pa&miÄ™ci",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,63,10
-    CONTROL         "&Zmiana u¿ycia pamiêci",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "&Zmiana zuÅ¼ycia pamiÄ™ci",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
-    CONTROL         "&Szczytowe u¿ycie pamiêci",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "&Szczytowe zuÅ¼ycie pamiÄ™ci",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
-    CONTROL         "&B³êdy stron",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&BÅ‚Ä™dy stronic",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,53,10
     CONTROL         "Obie&kty USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
@@ -379,11 +369,11 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
     CONTROL         "&Identyfikator sesji",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
-    CONTROL         "Naz&wa u¿ytkownika",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Naz&wa uÅ¼ytkownika",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,51,10
-    CONTROL         "Zmi&ana b³êdów stron",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "Zmi&ana bÅ‚Ä™dÃ³w stronic",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "&Rozmiar pamiêci wirtualnej",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "&Rozmiar pamiÄ™ci wirtualnej",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
     CONTROL         "&Pula stronicowania",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
@@ -391,9 +381,9 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
     CONTROL         "Prior&ytet podstawowy",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
-    CONTROL         "&Liczba uchwytów",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Liczba uchwytÃ³w",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,59,10
-    CONTROL         "Liczba w&¹tków",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Liczba w&Ä…tkÃ³w",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,59,10
     CONTROL         "Obiekty &GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
@@ -528,23 +518,23 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Mened¿er zadañ"
-    IDC_TASKMGR             "Mened¿er zadañ"
-    IDS_IDLE_PROCESS        "Proces bezczynnoœci systemu"
+    IDS_APP_TITLE           "MenedÅ¼er zadaÅ„"
+    IDC_TASKMGR             "MenedÅ¼er zadaÅ„"
+    IDS_IDLE_PROCESS        "Proces bezczynnoÅ›ci systemu"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_NEW             "Uruchamia nowy program"
-    ID_OPTIONS_ALWAYSONTOP  "Mened¿er zadañ wyœwietlany jest na wierzchu wszystkich okien"
+    ID_OPTIONS_ALWAYSONTOP  "MenedÅ¼er zadaÅ„ wyÅ›wietlany jest na wierzchu wszystkich okien"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Mened¿er zdañ jest minimalizowany podczas operacji prze³¹czania zdañ"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Ukrywaj Mened¿era zadañ, kiedy jest on zminimalizowany"
-    ID_VIEW_REFRESH         "Zmusza Mened¿era zadañ do odœwie¿enia w tym momencie, niezale¿nie od ustawieñ szybkoœci odœwie¿ania"
-    ID_VIEW_LARGE           "Wyœwietla zadania u¿ywaj¹c du¿ych ikon"
-    ID_VIEW_SMALL           "Wyœwietla zadania u¿ywaj¹c ma³ych ikon"
-    ID_VIEW_DETAILS         "Wyœwietla informacje o ka¿dym zadaniu"
-    ID_VIEW_UPDATESPEED_HIGH "Aktualizuje okno dwa razy na sekundê"
+                            "MenedÅ¼er zadaÅ„ jest minimalizowany podczas operacji przeÅ‚Ä…czania zadaÅ„"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Ukrywaj MenedÅ¼era zadaÅ„, kiedy jest on zminimalizowany"
+    ID_VIEW_REFRESH         "Zmusza MenedÅ¼era zadaÅ„ do odÅ›wieÅ¼enia w tym momencie, niezaleÅ¼nie od ustawieÅ„ czÄ™stotliwoÅ›ci odÅ›wieÅ¼ania"
+    ID_VIEW_LARGE           "WyÅ›wietla zadania uÅ¼ywajÄ…c duÅ¼ych ikon"
+    ID_VIEW_SMALL           "WyÅ›wietla zadania uÅ¼ywajÄ…c maÅ‚ych ikon"
+    ID_VIEW_DETAILS         "WyÅ›wietla informacje o kaÅ¼dym zadaniu"
+    ID_VIEW_UPDATESPEED_HIGH "Aktualizuje okno dwa razy na sekundÄ™"
     ID_VIEW_UPDATESPEED_NORMAL "Aktualizuje okno co dwie sekundy"
     ID_VIEW_UPDATESPEED_LOW "Aktualizuje okno co cztery sekundy"
 END
@@ -553,46 +543,46 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Nie aktualizuje automatycznie"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Rozmieszcza okna s¹siaduj¹co w poziomie"
-    ID_WINDOWS_TILEVERTICALLY "Rozmieszcza okna s¹siaduj¹co w pionie"
+                            "Rozmieszcza okna sÄ…siadujÄ…co w poziomie"
+    ID_WINDOWS_TILEVERTICALLY "Rozmieszcza okna sÄ…siadujÄ…co w pionie"
     ID_WINDOWS_MINIMIZE     "Minimalizuje okno"
     ID_WINDOWS_MAXIMIZE     "Maksymalizuje okno"
-    ID_WINDOWS_CASCADE      "Ustawia okna w kaskadê"
-    ID_WINDOWS_BRINGTOFRONT "Prze³¹cza okna na wierzch, lecz nie prze³¹cza na nie"
-    ID_HELP_TOPICS          "Wyœwietla tematy pomocy Mened¿era zadañ"
-    ID_HELP_ABOUT           "Wyœwietla informacje o programie, numerze wersji oraz prawach autorskich"
-    ID_FILE_EXIT            "Zamyka Mened¿er zadañ"
+    ID_WINDOWS_CASCADE      "Ustawia okna w kaskadÄ™"
+    ID_WINDOWS_BRINGTOFRONT "WyÅ›wietla okna na wierzchu, lecz nie przeÅ‚Ä…cza na nie"
+    ID_HELP_TOPICS          "WyÅ›wietla tematy pomocy MenedÅ¼era zadaÅ„"
+    ID_HELP_ABOUT           "WyÅ›wietla informacje o programie, numerze wersji oraz prawach autorskich"
+    ID_FILE_EXIT            "Zamyka MenedÅ¼era zadaÅ„"
     ID_OPTIONS_SHOW16BITTASKS
                             "Pokazuje 16-bitowe aplikacje skojarzone z plikiem ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS   "Zaznacza, które kolumny bêd¹ widoczne na stronie Procesy"
-    ID_VIEW_SHOWKERNELTIMES "Wyœwietla czas j¹dra na wykresie u¿ycia procesora"
+    ID_VIEW_SELECTCOLUMNS   "Zaznacza, ktÃ³re kolumny bÄ™dÄ… widoczne na stronie Procesy"
+    ID_VIEW_SHOWKERNELTIMES "WyÅ›wietla czas jÄ…dra na wykresie uÅ¼ycia procesora"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Jeden wykres pokazuje ca³kowite zu¿ycie procesorów CPU"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Ka¿dy procesor ma osobny wykres"
+                            "Jeden wykres pokazuje caÅ‚kowite uÅ¼ycie procesorÃ³w"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "KaÅ¼dy procesor ma osobny wykres"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "Przenosi zadanie na pierwszy plan, uaktywnia je"
+                            "Przenosi zadanie na pierwszy plan i uaktywnia je"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_ENDTASK              "Zamyka zadanie"
     ID_GOTOPROCESS          "Ustawia aktywnym proces zaznaczonego zadania"
-    ID_RESTORE              "Przywraca Mened¿er zadañ ze stanu ukrycia"
+    ID_RESTORE              "Przywraca MenedÅ¼er zadaÅ„ ze stanu ukrycia"
     ID_PROCESS_PAGE_ENDPROCESS "Usuwa proces z systemu"
     ID_PROCESS_PAGE_ENDPROCESSTREE
                             "Usuwa dany proces oraz wszystkie procesy potomne z systemu"
     ID_PROCESS_PAGE_DEBUG   "Podpina pod ten proces debugger"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "Kontroluje, pod którymi procesorami bêdzie móg³ dzia³aæ proces"
+                            "Kontroluje, pod ktÃ³rymi procesorami bÄ™dzie mÃ³gÅ‚ dziaÅ‚aÄ‡ proces"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
                             "Ustawia procesowi priorytet czasu rzeczywistego"
     ID_PROCESS_PAGE_SETPRIORITY_HIGH "Ustawia procesowi priorytet wysoki"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "Ustawia procesowi priorytet powy¿ej normalnego"
+                            "Ustawia procesowi priorytet powyÅ¼ej normalnego"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
                             "Ustawia procesowi priorytet normalny"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "Ustawia procesowi priorytet poni¿ej normalnego"
+                            "Ustawia procesowi priorytet poniÅ¼ej normalnego"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Ustawia procesowi priorytet niski"
 END
 
@@ -601,26 +591,26 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TAB_APPS                  "Aplikacje"
     IDS_TAB_PROCESSES             "Procesy"
-    IDS_TAB_PERFORMANCE           "Wydajnoœæ"
+    IDS_TAB_PERFORMANCE           "WydajnoÅ›Ä‡"
     IDS_TAB_TASK                  "Zadanie"
     IDS_TAB_STATUS                "Stan"
     IDS_TAB_IMAGENAME             "Nazwa obrazu"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Nazwa u¿ytkownika"
+    IDS_TAB_USERNAME              "Nazwa uÅ¼ytkownika"
     IDS_TAB_SESSIONID             "ID sesji"
     IDS_TAB_CPU                   "CPU"
     IDS_TAB_CPUTIME               "Czas procesora CPU"
-    IDS_TAB_MEMUSAGE              "U¿ycie pamiêci"
-    IDS_TAB_PEAKMEMUSAGE          "Szczytowe u¿ycie pamiêci"
-    IDS_TAB_MEMDELTA              "Zmiana u¿ycia pamiêci"
-    IDS_TAB_PAGEFAULT             "B³êdy stron"
-    IDS_TAB_PFDELTA               "Zmiana b³êdów stron"
-    IDS_TAB_VMSIZE                "Rozmiar pamiêci wirtualnej"
+    IDS_TAB_MEMUSAGE              "ZuÅ¼ycie pamiÄ™ci"
+    IDS_TAB_PEAKMEMUSAGE          "Szczytowe zuÅ¼ycie pamiÄ™ci"
+    IDS_TAB_MEMDELTA              "Zmiana zuÅ¼ycia pamiÄ™ci"
+    IDS_TAB_PAGEFAULT             "BÅ‚Ä™dy stronic"
+    IDS_TAB_PFDELTA               "Zmiana bÅ‚Ä™dÃ³w stronic"
+    IDS_TAB_VMSIZE                "Rozmiar pamiÄ™ci wirtualnej"
     IDS_TAB_PAGEDPOOL             "Pula stronicowana"
     IDS_TAB_NPPOOL                "Pula niestronicowana"
     IDS_TAB_BASEPRI               "Priorytet podstawowy"
     IDS_TAB_HANDLES               "Uchwyty"
-    IDS_TAB_THREADS               "W¹tki"
+    IDS_TAB_THREADS               "WÄ…tki"
     IDS_TAB_USERPBJECTS           "Obiekty USER"
     IDS_TAB_GDIOBJECTS            "Obiekty GDI"
     IDS_TAB_IOREADS               "Odczyty We/Wy"
@@ -630,48 +620,31 @@ BEGIN
     IDS_TAB_IOWRITESBYTES         "Zapisy We/Wy w bajtach"
     IDS_TAB_IOOTHERBYTES          "Inne We/Wy w bajtach"
     IDS_MENU_SELECTCOLUMNS        "Wybierz &kolumny..."
-    IDS_MENU_16BITTASK            "Poka¿ 16-&bitowe zadania"
+    IDS_MENU_16BITTASK            "PokaÅ¼ 16-&bitowe zadania"
     IDS_MENU_WINDOWS              "&Okna"
-    IDS_MENU_LARGEICONS           "Du¿e ikony"
-    IDS_MENU_SMALLICONS           "Ma³e ikony"
-    IDS_MENU_DETAILS              "Szczegó³y"
+    IDS_MENU_LARGEICONS           "DuÅ¼e ikony"
+    IDS_MENU_SMALLICONS           "MaÅ‚e ikony"
+    IDS_MENU_DETAILS              "SzczegÃ³Å‚y"
     IDS_MENU_ONEGRAPHALLCPUS      "Jeden wykres, wszystkie procesory CPU"
-    IDS_MENU_ONEGRAPHPERCPU       "Dla ka¿dego procesora CPU oddzielny wykres"
+    IDS_MENU_ONEGRAPHPERCPU       "Dla kaÅ¼dego procesora CPU oddzielny wykres"
     IDS_MENU_CPUHISTORY           "&Historia CPU"
-    IDS_MENU_SHOWKERNELTIMES      "&Pokazuj czas j¹dra"
-    IDS_CREATENEWTASK             "Stwórz nowy proces"
-    IDS_CREATENEWTASK_DESC        "Wpisz nazwê programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez Mened¿er zadañ."
-    IDS_MSG_ACCESSPROCESSAFF      "Nie mo¿na uzyskaæ dostêpu lub ustawiæ koligacji procesu"
-    IDS_MSG_PROCESSONEPRO         "Proces musi posiadaæ koligacjê z przynajmniej jednym procesorem."
-    IDS_MSG_INVALIDOPTION         "Nieprawid³owa opcja"
-    IDS_MSG_UNABLEDEBUGPROCESS    "Nie mo¿na debugowaæ procesu"
-    IDS_MSG_WARNINGDEBUG          "UWAGA: Debugowanie procesu mo¿e spowodowaæ utratê danych.\nCzy jesteœ pewien, ¿e chcesz podpi¹æ debugger pod ten proces?"
-    IDS_MSG_TASKMGRWARNING        "Ostrze¿enie Mened¿era zadañ"
-    IDS_MSG_WARNINGTERMINATING    "UWAGA: Zakoñczenie procesu mo¿e przynieœæ niepo¿¹dane skutki, w tym równie¿ utratê danych i niestabilnoœæ systemu.\nProces nie bêdzie mia³ szansy na zapisane danych.\nCzy na pewno chcesz zakoñczyæ?"
-    IDS_MSG_UNABLETERMINATEPRO    "Nie mo¿na zakoñczyæ procesu"
-    IDS_MSG_UNABLECHANGEPRIORITY  "Nie mo¿na zmieniæ priorytetu"
-    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu mo¿e przynieœæ\nniepo¿¹dane skutki, w tym równie¿ niestabilnoœæ systemu.\nCzy na pewno chcesz zmieniæ priorytet?"
-    IDS_MSG_TRAYICONCPUUSAGE      "U¿ycie procesora: %d%%"
+    IDS_MENU_SHOWKERNELTIMES      "&Pokazuj czas jÄ…dra"
+    IDS_CREATENEWTASK             "StwÃ³rz nowy proces"
+    IDS_CREATENEWTASK_DESC        "Wpisz nazwÄ™ programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez MenedÅ¼er zadaÅ„."
+    IDS_MSG_ACCESSPROCESSAFF      "Nie moÅ¼na uzyskaÄ‡ dostÄ™pu lub ustawiÄ‡ koligacji procesu"
+    IDS_MSG_PROCESSONEPRO         "Proces musi posiadaÄ‡ koligacjÄ™ z przynajmniej jednym procesorem."
+    IDS_MSG_INVALIDOPTION         "NieprawidÅ‚owa opcja"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Nie moÅ¼na debugowaÄ‡ procesu"
+    IDS_MSG_WARNINGDEBUG          "UWAGA: Debugowanie procesu moÅ¼e spowodowaÄ‡ utratÄ™ danych.\nCzy jesteÅ› pewien, Å¼e chcesz podpiÄ…Ä‡ debugger pod ten proces?"
+    IDS_MSG_TASKMGRWARNING        "OstrzeÅ¼enie MenedÅ¼era zadaÅ„"
+    IDS_MSG_WARNINGTERMINATING    "UWAGA: ZakoÅ„czenie procesu moÅ¼e przynieÅ›Ä‡ niepoÅ¼Ä…dane skutki, w tym rÃ³wnieÅ¼ doprowadziÄ‡ do utraty danych i niestabilnoÅ›ci systemu.\nProces nie bÄ™dzie miaÅ‚ szansy na zapisane danych.\nCzy na pewno chcesz zakoÅ„czyÄ‡?"
+    IDS_MSG_UNABLETERMINATEPRO    "Nie moÅ¼na zakoÅ„czyÄ‡ tego procesu"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Nie moÅ¼na zmieniÄ‡ priorytetu"
+    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu moÅ¼e przynieÅ›Ä‡\nniepoÅ¼Ä…dane skutki, w tym rÃ³wnieÅ¼ niestabilnoÅ›Ä‡ systemu.\nCzy na pewno chcesz zmieni priorytet?"
+    IDS_MSG_TRAYICONCPUUSAGE      "UÅ¼ycie procesora: %d%%"
     IDS_STATUS_MEMUSAGE           "Pam. zadeklar.: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "U¿ycie procesora: %3d%%"
+    IDS_STATUS_CPUUSAGE           "UÅ¼ycie procesora: %3d%%"
     IDS_STATUS_PROCESSES          "Procesy: %d"
     IDS_Not_Responding            "Nie odpowiada"
     IDS_Running                   "Uruchomiony"
 END
-
-
-#endif    // Polish resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

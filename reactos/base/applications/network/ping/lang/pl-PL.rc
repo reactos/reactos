@@ -1,41 +1,42 @@
 /*
- *         translated by Caemyr (Olaf Siejka)
- * 	  caemyr@gmail.com
-   *	  Jan, 2011
+ *         translated by Caemyr - Olaf Siejka (Jan, 2011)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
-
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE "\nSposób u¿ycia: ping [-t] [-n iloœæ] [-l bajtów] [-w czas] host-docelowy\n\n\
+    IDS_USAGE "\nSposÃ³b uÅ¼ycia: ping [-t] [-n iloÅ›Ä‡] [-l bajtÃ³w] [-w czas] host-docelowy\n\n\
 Opcje:\n\
-    -t             Pinguj wskazanego hosta w sposób ci¹g³y.\n\
-                   Aby przerwaæ - wciœnij Control C.\n\
-    -n iloœæ     Iloœæ prób pingowania.\n\
-    -l bajtów   Rozmiar pakietu echo w bajtach     .\n\
-    -w czas     OpóŸnienie oczekiwanej odpowiedzi, w milisekundach.\n\n\0"
+    -t             Pinguj wskazanego hosta w sposÃ³b ciÄ…gÅ‚y.\n\
+                   Aby przerwaÄ‡ - wciÅ›nij Control C.\n\
+    -n iloÅ›Ä‡     IloÅ›Ä‡ prÃ³b pingowania.\n\
+    -l bajtÃ³w   Rozmiar pakietu echo w bajtach     .\n\
+    -w czas     OpÃ³Åºnienie oczekiwanej odpowiedzi, w milisekundach.\n\n\0"
 
-    IDS_PING_WITH_BYTES             "\nPingowanie %1 [%2] przy u¿yciu %3!d! bajtów danych:\n\n\0"
-    IDS_PING_STATISTICS             "\nStatystyka wyników badania hosta %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakiety: Wys³ane = %1!d!, Odebrane = %2!d!, Utracone = %3!d! (%4!d!%% strat),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP      "Ca³kowity, przybli¿ony czas podró¿y pakietu w millisekundach:\n\0"
-    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maksimum = %2, Uœredniony = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES        "Brak dostêpnych zasobów.\n\0"
+    IDS_PING_WITH_BYTES             "\nPingowanie %1 [%2] przy uÅ¼yciu %3!d! bajtÃ³w danych:\n\n\0"
+    IDS_PING_STATISTICS             "\nStatystyka rezultatu badania hosta %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakiety: WysÅ‚ane = %1!d!, Odebrane = %2!d!, Utracone = %3!d! (%4!d!%% strat),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "CaÅ‚kowity, przybliÅ¼ony czas podrÃ³Å¼y pakietu w millisekundach:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maksimum = %2, UÅ›redniony = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Brak dostÄ™pnych zasobÃ³w.\n\0"
     IDS_UNKNOWN_HOST                "Nieznany host %1.\n\0"
-    IDS_SETSOCKOPT_FAILED           "B³¹d w setsockopt (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET     "B³¹d podczas tworzenia gniazda (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK      "B³¹d podczas inicjalizacji winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED      "Brak nazwy hosta b¹dŸ adresu IP.\n\0"
-    IDS_BAD_PARAMETER               "Nieprawid³owy parametr %1.\n\0"
-    IDS_BAD_OPTION_FORMAT           "Nieprawid³owy format opcji %1.\n\0"
-    IDS_BAD_OPTION                  "Nieprawid³owa opcja %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L          "Nieprawid³owa wartoœæ dla opcji -l, wymagana liczba naturalna od 0 do %1!d!.\n\0"
-    IDS_REPLY_FROM                  "OdpowiedŸ z %1: bajtów=%2!d! czas%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE            "Host docelowy nieosi¹galny.\n\0"
-    IDS_COULD_NOT_TRANSMIT          "B³¹d podczas transmisji danych (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV              "B³¹d podczas odbioru danych (%1!d!).\n\0"
+    IDS_SETSOCKOPT_FAILED           "BÅ‚Ä…d w setsockopt (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "BÅ‚Ä…d podczas tworzenia gniazda (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "BÅ‚Ä…d podczas inicjalizacji winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Brak nazwy hosta bÄ…dÅº adresu IP.\n\0"
+    IDS_BAD_PARAMETER               "NieprawidÅ‚owy parametr %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "NieprawidÅ‚owy format opcji %1.\n\0"
+    IDS_BAD_OPTION                  "NieprawidÅ‚owa opcja %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "NieprawidÅ‚owa wartoÅ›Ä‡ dla opcji -l, wymagana liczba naturalna od 0 do %1!d!.\n\0"
+    IDS_REPLY_FROM                  "OdpowiedÅº z %1: bajtÃ³w=%2!d! czas%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Host docelowy nieosiÄ…galny.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "BÅ‚Ä…d podczas transmisji danych (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "BÅ‚Ä…d podczas odbioru danych (%1!d!).\n\0"
     IDS_REQUEST_TIMEOUT             "Brak odpowiedzi.\n\0"
     IDS_MS                          "ms\0"
     IDS_1MS                         "1ms\0"

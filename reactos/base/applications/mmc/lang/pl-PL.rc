@@ -1,8 +1,9 @@
 /*
-* translated by xrogers
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -11,17 +12,17 @@ BEGIN
     POPUP "Pl&ik"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Za&koñcz\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Za&koÅ„cz\tAlt+F4", ID_FILE_EXIT
     END
 
     POPUP "&Pomoc"
     BEGIN
-        MENUITEM "Konsola Zarz¹dzania ReactOS - i&nformacje...", ID_HELP_ABOUT
+        MENUITEM "Konsola ZarzÄ…dzania ReactOS - i&nformacje...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "Konsola Zarz¹dzania ReactOS"
+    IDS_APPTITLE "Konsola ZarzÄ…dzania ReactOS"
     IDS_CONSOLETITLE "Konsola%1!u!"
 END

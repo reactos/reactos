@@ -1,15 +1,16 @@
 /*
- * PROJECT:     ReactOS Event Viewer
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/eventvwr/lang/en-US.rc
- * PURPOSE:     English Language File for ReactOS Event Viewer
+ *         PROJECT:     ReactOS Event Viewer
+ *         LICENSE:     GPL - See COPYING in the top level directory
+ *         FILE:        base/applications/mscutils/eventvwr/lang/en-US.rc
+ *         PURPOSE:     English Language File for ReactOS Event Viewer
  *
- * translated by Caemyr - Olaf Siejka (Dec,2007;May,2011)
- * Use ReactOS forum PM or IRC to contact me
- * http://www.reactos.org
- * IRC: irc.freenode.net #reactos-pl;
+ *         translated by Caemyr - Olaf Siejka (Dec,2007;May,2011)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
-
+ 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDC_EVENTVWR MENU
@@ -20,11 +21,11 @@ BEGIN
 		MENUITEM "&Zabezpieczenia",                 ID_LOG_SECURITY
 		MENUITEM "&System",                   ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
-		MENUITEM "&Wyjúcie",                     IDM_EXIT
+		MENUITEM "&Wyj≈õcie",                     IDM_EXIT
 	END
-	POPUP "&Podglπd"
+	POPUP "&PodglƒÖd"
 	BEGIN
-		MENUITEM "&Odúwieø",                  IDM_REFRESH
+		MENUITEM "&Od≈õwie≈º",                  IDM_REFRESH
 	END
 	MENUITEM "Op&cje",                    ID_OPTIONS
 	POPUP "Po&moc"
@@ -47,7 +48,7 @@ CAPTION "O programie"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "Podglπd zdarzeÒ ReactOS wersja 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "PodglƒÖd zdarze≈Ñ ReactOS wersja 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
 	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
 	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
 END
@@ -57,18 +58,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
 CAPTION "Czekaj.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	CTEXT           "£adowanie logÛw zdarzeÒ. ProszÍ czekaÊ ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+	CTEXT           "≈Åadowanie log√≥w zdarze≈Ñ. Proszƒô czekaƒá ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "SzczegÛ≥y zdarzenia"
+CAPTION "Szczeg√≥≈Çy zdarzenia"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 	DEFPUSHBUTTON   "&Zamknij",IDOK,12,258,50,14
 	PUSHBUTTON      "&Poprzedni",IDPREVIOUS,78,258,50,14
-	PUSHBUTTON      "&NastÍpny",IDNEXT,144,258,50,14
+	PUSHBUTTON      "&Nastƒôpny",IDNEXT,144,258,50,14
 	PUSHBUTTON      "Po&moc",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
 	LTEXT           "&Opis:",IDC_STATIC,15,70,39,8
@@ -76,13 +77,13 @@ BEGIN
 	LTEXT           "Statycznie",IDC_EVENTDATESTATIC,56,14,72,8
 	LTEXT           "Czas:",IDC_STATIC,14,27,36,8
 	LTEXT           "Statycznie",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "&Uøytkownik:",IDC_STATIC,14,41,36,8
+	LTEXT           "&U≈ºytkownik:",IDC_STATIC,14,41,36,8
 	LTEXT           "Statycznie",IDC_EVENTUSERSTATIC,56,41,72,8
 	LTEXT           "&Komputer:",IDC_STATIC,14,54,36,8
 	LTEXT           "Statycznie",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
 	LTEXT           "Numer ID:",IDC_STATIC,133,15,36,8
 	LTEXT           "Statycznie",IDC_EVENTIDSTATIC,175,15,87,8
-	LTEXT           "ØrÛd≥o:",IDC_STATIC,133,28,36,8
+	LTEXT           "≈πr√≥d≈Ço:",IDC_STATIC,133,28,36,8
 	LTEXT           "Statycznie",IDC_EVENTSOURCESTATIC,175,28,87,8
 	LTEXT           "Typ:",IDC_STATIC,133,42,36,8
 	LTEXT           "Statycznie",IDC_EVENTTYPESTATIC,175,42,87,8
@@ -91,15 +92,15 @@ BEGIN
 	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
 	LTEXT           "D&ane",IDC_STATIC,14,194,20,8
 	CONTROL         "&Bajty",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
-	CONTROL         "&S≥owa",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+	CONTROL         "&S≈Çowa",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
 END
 
 STRINGTABLE
 BEGIN
-	IDS_APP_TITLE                  "Podglπd zdarzeÒ"
-	IDS_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta≥ odnaleziony w ürÛdle: ( %s ). Ten komputer moøe nie miec wystarczajπcych informacji w rejestrze albo bibliotek DLL, aby wyúwietliÊ wiadomoúci z komputera zdalnego."
-	IDS_EVENTLOG_ERROR_TYPE        "B≥πd"
-	IDS_EVENTLOG_WARNING_TYPE      "Ostrzeøenie"
+	IDS_APP_TITLE                  "PodglƒÖd zdarze≈Ñ"
+	IDS_EVENTSTRINGIDNOTFOUND      "Opis zdarzenia dla danego numeru ID: ( %lu ) nie zosta≈Ç odnaleziony w ≈∫r√≥dle: ( %s ). Ten komputer mo≈ºe nie miec wystarczajƒÖcych informacji w rejestrze, albo bibliotek DLL, aby wy≈õwietliƒá wiadomo≈õci z komputera zdalnego."
+	IDS_EVENTLOG_ERROR_TYPE        "B≈ÇƒÖd"
+	IDS_EVENTLOG_WARNING_TYPE      "Ostrze≈ºenie"
 	IDS_EVENTLOG_INFORMATION_TYPE  "Informacja"
 	IDS_EVENTLOG_AUDIT_SUCCESS     "Udany Audyt"
 	IDS_EVENTLOG_AUDIT_FAILURE     "Nieudany Audyt"
@@ -112,10 +113,10 @@ BEGIN
     IDS_COLUMNTYPE      "Typ"
     IDS_COLUMNDATE      "Data"
     IDS_COLUMNTIME      "Czas"
-    IDS_COLUMNSOURCE    "èrÛd≥o"
+    IDS_COLUMNSOURCE    "≈πr√≥d≈Ço"
     IDS_COLUMNCATEGORY  "Kategoria"
     IDS_COLUMNEVENT     "Zdarzenie"
-    IDS_COLUMNUSER      "Uøytkownik"
+    IDS_COLUMNUSER      "U≈ºytkownik"
     IDS_COLUMNCOMPUTER  "Komputer"
     IDS_COLUMNEVENTDATA "Dane zdarzenia"
 END
