@@ -21,6 +21,10 @@
 #include <mshtmcid.h>
 #include <olectl.h>
 
+#if defined(_MSC_VER) && (__midl >= 501)
+midl_pragma warning(disable: 2362)
+#endif
+
 import "ocidl.idl";
 import "dimm.idl";
 import "shtypes.idl";
@@ -6933,7 +6937,7 @@ methods:
 
 [
     noncreatable,
-    uuid(3050F24D-98B5-11CF-BB82-00AA00BDCE0B)
+    uuid(3050F251-98B5-11CF-BB82-00AA00BDCE0B)
 ]
 coclass HTMLFormElement
 {
@@ -12497,13 +12501,13 @@ interface IHTMLDocument6 : IDispatch
     HRESULT onstorage([in] VARIANT v);
 
     [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
-    HRESULT onstorage([out] VARIANT *p);
+    HRESULT onstorage([retval, out] VARIANT *p);
 
     [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
     HRESULT onstoragecommit([in] VARIANT v);
 
     [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
-    HRESULT onstoragecommit([out] VARIANT *p);
+    HRESULT onstoragecommit([retval, out] VARIANT *p);
 
     [id(DISPID_IHTMLDOCUMENT6_IE8_GETELEMENTBYID)]
     HRESULT getElementById(

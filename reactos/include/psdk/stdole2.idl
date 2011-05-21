@@ -61,7 +61,7 @@ library stdole
         void *pfnDeferredFillIn;
         SCODE scode;
     } EXCEPINFO;
-
+#ifndef __midl
     [
         odl,
         uuid(00000000-0000-0000-C000-000000000046),
@@ -139,7 +139,7 @@ library stdole
         HRESULT Clone(
                       [out] IEnumVARIANT **ppenum);
     }
-
+#endif /* !__midl */
     typedef [uuid(66504301-BE0F-101A-8BBB-00AA00300CAB), public]
         unsigned long OLE_COLOR;
 

@@ -72,7 +72,7 @@ interface wlansvc_interface
     DWORD _RpcQueryAutoConfigParameter(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] /* enum32 */ DWORD OpCode,
-        [out] LPDWORD pdwDataSize,
+        [in, out] LPDWORD pdwDataSize,
         [out][ref][size_is(*pdwDataSize)] char ** ppData,
         [out] /* enum32 */ DWORD * pWlanOpcodeValueType);
 
@@ -95,7 +95,7 @@ interface wlansvc_interface
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] GUID* pInterfaceGuid,
         [in] /* enum32 */ long OpCode,
-        [out] LPDWORD pdwDataSize,
+        [in, out] LPDWORD pdwDataSize,
         [out][ref][size_is(*pdwDataSize)] LPBYTE* ppData,
         [out] /* enum32 */ LPDWORD pWlanOpcodeValueType);
 
@@ -131,7 +131,7 @@ interface wlansvc_interface
         [in][unique] PDOT11_SSID pDot11Ssid,
         [in] /* enum16 */ short dot11BssType,
         [in] DWORD bSecurityEnabled,
-        [out] LPDWORD dwBssListSize,
+        [in, out] LPDWORD dwBssListSize,
         [out][ref][size_is(*dwBssListSize)] LPBYTE *ppWlanBssList);
 
     /* Function: 0x0C */
@@ -231,7 +231,7 @@ interface wlansvc_interface
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
-        [out] LPDWORD dwDataSize,
+        [in, out] LPDWORD dwDataSize,
         [out][ref][size_is(*dwDataSize)] LPBYTE *pData);
 
     /* Function: 0x1A */
@@ -325,7 +325,7 @@ interface wlansvc_interface
     /* Function: 0x26 */
     DWORD _RpcQueryPlapCredentials(
         [in] wchar_t * arg_1,
-        [out] LPDWORD dwSize,
+        [in, out] LPDWORD dwSize,
         [out][ref][size_is(*dwSize)] struct_E ** arg_3,
         [out][ref][string] wchar_t ** arg_4,
         [out] GUID* pInterfaceGuid,

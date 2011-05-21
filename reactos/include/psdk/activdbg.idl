@@ -553,6 +553,140 @@ interface IActiveScriptSiteDebug64 : IUnknown
             [out] BOOL *pfCallOnScriptErrorWhenContinuing);
 }
 
+[
+    object,
+    uuid(51973C17-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IDebugStackFrame : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C1e-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumDebugStackFrames : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C2a-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IApplicationDebugger : IUnknown
+{
+    /* FIXME: fill me! */
+};
+
+[
+    object,
+    uuid(51973C3c-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumRemoteDebugApplicationThreads : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C34-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IDebugApplicationNode : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C40-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumDebugExpressionContexts : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c38-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugApplicationThread : IRemoteDebugApplicationThread
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C1a-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugSyncOperation : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c1b-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugAsyncOperation : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c18-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugStackFrameSniffer : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C36-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique),
+    local
+]
+interface IDebugThreadCall32 : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C12-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IActiveScriptErrorDebug : IActiveScriptError
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C41-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IProvideExpressionContexts : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
 cpp_quote("#ifndef DISABLE_ACTIVDBG_INTERFACE_WRAPPERS")
 cpp_quote("#ifdef _WIN64")
 
