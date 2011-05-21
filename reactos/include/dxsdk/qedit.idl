@@ -160,9 +160,16 @@ interface IMediaDet : IUnknown
 };
 
 [
-    uuid(65BD0711-24D2-4ff7-9324-ED2E5D3ABAFA),
+    uuid(78530B68-61F9-11D2-8CAD-00A024580902),
+    version(1.0),
 ]
-coclass MediaDet
+library DexterLib
 {
-    [default] interface IMediaDet;
+    [
+        uuid(65BD0711-24D2-4ff7-9324-ED2E5D3ABAFA),
+    ]
+    coclass MediaDet
+    {
+        [default] interface IMediaDet;
+    };
 };

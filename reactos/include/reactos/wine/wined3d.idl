@@ -3374,7 +3374,15 @@ interface IWineD3DDevice : IUnknown
     );
 }
 
+#ifdef __midl
+IWineD3D * __stdcall WineDirect3DCreate(UINT dxVersion, void *parent);
+IWineD3DClipper * __stdcall WineDirect3DCreateClipper(void);
+void __stdcall wined3d_mutex_lock(void);
+void __stdcall wined3d_mutex_unlock(void);
+#else
 IWineD3D *WineDirect3DCreate(UINT dxVersion, void *parent);
 IWineD3DClipper *WineDirect3DCreateClipper(void);
 void wined3d_mutex_lock(void);
 void wined3d_mutex_unlock(void);
+#endif
+
