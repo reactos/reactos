@@ -27,10 +27,6 @@ void MENU_EndMenu( HWND );
 
 /* GLOBALS *******************************************************************/
 
-/* Bits in the dwKeyData */
-#define KEYDATA_ALT             0x2000
-#define KEYDATA_PREVSTATE       0x4000
-
 static short iF10Key = 0;
 static short iMenuSysKey = 0;
 
@@ -828,10 +824,10 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_SCREENSAVE:
         NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         break;
-
+LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
-        FIXME("Implement Alt-Tab!!! wParam 0x%x lParam 0x%x\n",wParam,lParam);
+        DoAppSwitch( wParam, lParam);
         break;
 
       case SC_HOTKEY:
@@ -1423,10 +1419,10 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SYSKEYDOWN:
         {
-            if (HIWORD(lParam) & KEYDATA_ALT)
+            if (HIWORD(lParam) & KF_ALTDOWN)
             {   /* Previous state, if the key was down before this message,
                    this is a cheap way to ignore autorepeat keys. */
-                if ( !(HIWORD(lParam) & KEYDATA_PREVSTATE) )
+                if ( !(HIWORD(lParam) & KF_REPEAT) )
                 {
                    if ( ( wParam == VK_MENU  ||
                           wParam == VK_LMENU ||
@@ -1494,7 +1490,7 @@ User32DefWindowProc(HWND hWnd,
                 PostMessageW( hWnd, WM_SYSCOMMAND, SC_RESTORE, 0L );
                 break;
             }
-            if ((HIWORD(lParam) & KEYDATA_ALT) && wParam)
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam)
             {
                 if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
                 if (wParam == VK_SPACE && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))

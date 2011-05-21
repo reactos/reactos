@@ -13,6 +13,7 @@ include_directories(
 set_rc_compiler()
 
 list(APPEND SOURCE
+    controls/appswitch.c
     controls/button.c
     controls/combo.c
     controls/edit.c

@@ -1,10 +1,10 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/user32/controls/appswitch.c
  * PURPOSE:         app switching functionality
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ *                  David Quintana (gigaherz@gmail.com)
  */
 
 #include <user32.h>
@@ -12,259 +12,548 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-typedef struct APPSWITCH_ITEM
+// limit the number of windows shown in the alt-tab window
+// 120 windows results in (12*40) by (10*40) pixels worth of icons.
+#define MAX_WINDOWS 120
+
+// Global variables
+HWND switchdialog;
+HFONT dialogFont;
+int selectedWindow = 0;
+BOOL isOpen = FALSE;
+
+int fontHeight=0;
+
+WCHAR windowText[1024];
+
+HWND windowList[MAX_WINDOWS];
+HICON iconList[MAX_WINDOWS];
+int windowCount = 0;
+
+int cxBorder, cyBorder;
+int nItems, nCols, nRows;
+int itemsW, itemsH;
+int totalW, totalH;
+int xOffset, yOffset;
+POINT pt;
+
+void ResizeAndCenter(HWND hwnd, int width, int height)
 {
-    HWND hwndDlg;
-    DWORD zPos;
-    HICON hIcon;
-    BOOL bFocus;
-    struct APPSWITCH_ITEM * Next;
-    WCHAR szText[1];
-} APPSWITCH_ITEM, *PAPPSWITCH_ITEM;
+   int screenwidth = GetSystemMetrics(SM_CXSCREEN);
+   int screenheight = GetSystemMetrics(SM_CYSCREEN);
 
-static PAPPSWITCH_ITEM pRoot = NULL;
-static DWORD NumOfWindows = 0;
-static HWND hAppWindowDlg = NULL;
-static HHOOK hhk = NULL;
+   pt.x = (screenwidth - width) / 2;
+   pt.y = (screenheight - height) / 2;
 
-UINT WINAPI PrivateExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
-
-
-BOOL
-CALLBACK
-EnumWindowEnumProc(
-    HWND hwnd,
-    LPARAM lParam
-)
-{
-    PAPPSWITCH_ITEM pItem;
-    UINT Length;
-    HICON hIcon;
-    PAPPSWITCH_ITEM pCurItem;
-    DWORD dwPid;
-    HANDLE hProcess;
-    WCHAR szFileName[MAX_PATH] = {0};
-
-    /* check if the enumerated window is visible */
-    if (!IsWindowVisible(hwnd))
-        return TRUE;
-    /* get window icon */
-    hIcon = (HICON)SendMessage(hwnd, WM_GETICON, ICON_BIG, 0);
-    if (!hIcon)
-    {
-        GetWindowThreadProcessId(hwnd, &dwPid);
-        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, dwPid);
-        if (hProcess)
-        {
-//            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
-            {
-                szFileName[MAX_PATH-1] = L'\0';
-                PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
-            }
-        }
-    }
-    else
-    {
-        /* icons from WM_GETICON need to be copied */
-        hIcon = CopyIcon(hIcon);
-    }
-    /* get the text length */
-    Length = SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
-    /* allocate item structure for it */
-//    pItem = (PAPPSWITCH_ITEM)HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(APPSWITCH_ITEM) + Length * sizeof(WCHAR));
-    if (!pItem)
-        return TRUE;
-    if (Length)
-    {
-        /* retrieve the window text when available */
-        SendMessageW(hwnd, WM_GETTEXT, Length+1, (LPARAM)pItem->szText);
-    }
-    /* copy the window icon */
-    pItem->hIcon = hIcon;
-    /* store window handle */
-    pItem->hwndDlg = hwnd;
-    /* is the window the active window */
-    if (GetActiveWindow() == hwnd)
-        pItem->bFocus = TRUE;
-
-    if (!pRoot)
-    {
-        /* first item */
-        pRoot = pItem;
-        return TRUE;
-    }
-
-    /* enumerate the last item */
-    pCurItem = pRoot;
-    while(pCurItem->Next)
-        pCurItem = pCurItem->Next;
-
-    /* insert it into the list */
-    pCurItem->Next = pItem;
-    NumOfWindows++;
-    return TRUE;
+   MoveWindow(hwnd, pt.x, pt.y, width, height, FALSE);
 }
 
-VOID
-EnumerateAppWindows(HDESK hDesk, HWND hwndDlg)
+void MakeWindowActive(HWND hwnd)
 {
-    /* initialize defaults */
-    pRoot = NULL;
-    NumOfWindows = 0;
-    hAppWindowDlg = hwndDlg;
-    /* enumerate all windows */
-    EnumDesktopWindows(hDesk, EnumWindowEnumProc, (LPARAM)NULL);
-    if (NumOfWindows > 7)
+   WINDOWPLACEMENT wpl;
+
+   GetWindowPlacement(hwnd, &wpl);
+
+   if (wpl.showCmd == SW_SHOWMINIMIZED)
+      ShowWindow(hwnd, SW_RESTORE);
+
+   BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
+   SetForegroundWindow(hwnd);
+}
+
+void CompleteSwitch(BOOL doSwitch)
+{
+   if (!isOpen)
+      return;
+
+   isOpen = FALSE;
+
+   TRACE("[ATbot] CompleteSwitch Hiding Window.\n");
+   ShowWindow(switchdialog, SW_HIDE);
+
+   if(doSwitch)
+   {
+      if(selectedWindow >= windowCount)
+         return;
+
+      // FIXME: workaround because reactos fails to activate the previous window correctly.
+      //if(selectedWindow != 0)
+      {
+         HWND hwnd = windowList[selectedWindow];
+                  
+         GetWindowTextW(hwnd, windowText, 1023);
+
+         TRACE("[ATbot] CompleteSwitch Switching to 0x%08x (%ls)\n", hwnd, windowText);
+
+         MakeWindowActive(hwnd);
+      }
+   }
+
+   windowCount = 0;
+}
+
+BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
+{
+   HICON hIcon;
+
+   UNREFERENCED_PARAMETER(lParam);
+
+   if (!IsWindowVisible(window))
+            return TRUE;
+
+   GetClassNameW(window,windowText,4095);
+   if ((wcscmp(L"Shell_TrayWnd",windowText)==0) ||
+       (wcscmp(L"Progman",windowText)==0) )
+            return TRUE;
+      
+   // First try to get the big icon assigned to the window
+   hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
+   if (!hIcon)
+   {
+      // If no icon is assigned, try to get the icon assigned to the windows' class
+      hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
+      if (!hIcon)
+      {
+         // If we still don't have an icon, see if we can do with the small icon,
+         // or a default application icon
+         hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
+         if (!hIcon)
+         {
+            // If all fails, give up and continue with the next window
+            return TRUE;
+         }
+      }
+   }
+
+   windowList[windowCount] = window;
+   iconList[windowCount] = CopyIcon(hIcon);
+
+   windowCount++;
+
+   // If we got to the max number of windows,
+   // we won't be able to add any more
+   if(windowCount == MAX_WINDOWS)
+      return FALSE;
+
+   return TRUE;
+}
+
+// Function mostly compatible with the normal EnumWindows,
+// except it lists in Z-Order and it doesn't ensure consistency
+// if a window is removed while enumerating
+void EnumWindowsZOrder(WNDENUMPROC callback, LPARAM lParam)
+{
+    HWND next = GetTopWindow(NULL);
+    while (next != NULL)
     {
-        /* FIXME resize window */
+        if(!callback(next, lParam))
+         break;
+        next = GetWindow(next, GW_HWNDNEXT);
     }
 }
 
-VOID
-MarkNextEntryAsActive()
+void ProcessMouseMessage(UINT message, LPARAM lParam)
 {
-    PAPPSWITCH_ITEM pItem;
+   int xPos = LOWORD(lParam); 
+   int yPos = HIWORD(lParam); 
 
-    pItem = pRoot;
-    if (!pRoot)
-        return;
+   int xIndex = (xPos - xOffset)/40;
+   int xOff   = (xPos - xOffset)%40;
 
-    while(pItem)
+   int yIndex = (yPos - yOffset)/40;
+   int yOff   = (yPos - yOffset)%40;
+
+   if(xOff > 32 || xIndex > nItems)
+      return;
+
+   if(yOff > 32 || yIndex > nRows)
+      return;
+
+   selectedWindow = (yIndex*nCols) + xIndex;
+   if (message == WM_MOUSEMOVE)
+   {
+      InvalidateRect(switchdialog, NULL, TRUE);
+      //RedrawWindow(switchdialog, NULL, NULL, 0);
+   }
+   else
+   {
+      selectedWindow = (yIndex*nCols) + xIndex;
+      CompleteSwitch(TRUE);
+   }
+}
+
+void OnPaint(HWND hWnd)
+{
+   HDC dialogDC;
+   PAINTSTRUCT paint;
+   RECT cRC, textRC;
+   int i;
+   HBRUSH hBrush;
+   HPEN hPen;
+   COLORREF cr;
+   int nch = GetWindowTextW(windowList[selectedWindow], windowText, 1023);
+
+   dialogDC = BeginPaint(hWnd, &paint);
+   {
+      GetClientRect(hWnd, &cRC);
+      FillRect(dialogDC, &cRC, GetSysColorBrush(COLOR_MENU));
+
+      for(i=0; i< windowCount; i++)
+      {
+         HICON hIcon = iconList[i];
+         
+         int xpos = xOffset + 40 * (i % nCols);
+         int ypos = yOffset + 40 * (i / nCols);
+
+         if (selectedWindow == i)
+         {
+            hBrush = GetSysColorBrush(COLOR_HIGHLIGHT);
+         }
+         else
+         {
+            hBrush = GetSysColorBrush(COLOR_MENU);
+         }
+#if TRUE
+         cr = GetSysColor(COLOR_BTNTEXT); // doesn't look right! >_<
+         hPen = CreatePen(PS_DOT, 1, cr);
+         SelectObject(dialogDC, hPen);
+         SelectObject(dialogDC, hBrush);
+         Rectangle(dialogDC, xpos-2, ypos-2, xpos+32+2, ypos+32+2);
+         DeleteObject(hPen);
+         // Must NOT destroy the system brush!
+#else
+         RECT rc = { xpos-2, ypos-2, xpos+32+2, ypos+32+2 };
+         FillRect(dialogDC, &rc, hBrush);
+#endif
+         DrawIcon(dialogDC, xpos, ypos, hIcon);
+      }
+
+      SelectObject(dialogDC, dialogFont);
+      SetTextColor(dialogDC, GetSysColor(COLOR_BTNTEXT));
+      SetBkColor(dialogDC, GetSysColor(COLOR_BTNFACE));
+
+      textRC.top = itemsH;
+      textRC.left = 8;
+      textRC.right = totalW - 8;
+      textRC.bottom = totalH - 8;
+      DrawTextW(dialogDC, windowText, nch, &textRC, DT_CENTER|DT_END_ELLIPSIS);
+   }
+   EndPaint(hWnd, &paint);
+}
+
+DWORD CreateSwitcherWindow(HINSTANCE hInstance)
+{
+    switchdialog = CreateWindowExW( WS_EX_TOPMOST|WS_EX_DLGMODALFRAME|WS_EX_TOOLWINDOW,
+                                    WC_SWITCH,
+                                    L"",
+                                    WS_POPUP|WS_BORDER|WS_DISABLED,
+                                    CW_USEDEFAULT,
+                                    CW_USEDEFAULT,
+                                    400, 150,
+                                    NULL, NULL,
+                                    hInstance, NULL);
+    if (!switchdialog)
     {
-        if (pItem->bFocus)
-        {
-            pItem->bFocus = FALSE;
-            if (pItem->Next)
-                pItem->Next->bFocus = TRUE;
+       TRACE("[ATbot] Task Switcher Window failed to create.\n");
+       return 0;
+    }
+                                
+    isOpen = FALSE;
+    return 1;
+}
+                                        
+DWORD GetDialogFont()
+{
+   HDC tDC;
+   TEXTMETRIC tm;
+
+   dialogFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+
+   tDC = GetDC(0);
+   GetTextMetrics(tDC, &tm);
+   fontHeight = tm.tmHeight;
+   ReleaseDC(0, tDC);
+
+   return 1;
+}
+
+void PrepareWindow()
+{
+   cxBorder = GetSystemMetrics(SM_CXBORDER);
+   cyBorder = GetSystemMetrics(SM_CYBORDER);
+   
+   nItems = windowCount;
+   nCols = min(max(nItems,8),12);
+   nRows = (nItems+nCols-1)/nCols;
+
+   itemsW = nCols*32 + (nCols+1)*8;
+   itemsH = nRows*32 + (nRows+1)*8;
+
+   totalW = itemsW + 2*cxBorder + 4;
+   totalH = itemsH + 2*cyBorder + fontHeight + 8; // give extra pixels for the window title
+
+   xOffset = 8;
+   yOffset = 8;
+
+   if (nItems < nCols)
+   {
+      int w2 = nItems*32 + (nItems-1)*8;
+      xOffset = (itemsW-w2)/2;
+   }
+   ResizeAndCenter(switchdialog, totalW, totalH);
+}
+
+void ProcessHotKey()
+{
+   if (!isOpen)
+   {
+      windowCount=0;
+      EnumWindowsZOrder(EnumerateCallback, 0);
+
+      if (windowCount < 2)
+         return;
+
+      selectedWindow = 1;
+
+      TRACE("[ATbot] HotKey Received. Opening window.\n");
+      ShowWindow(switchdialog, SW_SHOWNORMAL);
+      MakeWindowActive(switchdialog);
+      isOpen = TRUE;
+   }
+   else
+   {
+      TRACE("[ATbot] HotKey Received  Rotating.\n");
+      selectedWindow = (selectedWindow + 1)%windowCount;
+      InvalidateRect(switchdialog, NULL, TRUE);
+   }
+}
+
+LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
+{
+   HWND hwnd;
+   MSG msg;
+   BOOL Esc = FALSE;
+   INT Count = 0;
+   WCHAR Text[1024];
+
+   switchdialog = NULL;
+
+   switch (lParam)
+   {
+      case VK_TAB:
+         if( !CreateSwitcherWindow(User32Instance) ) return 0;
+         if( !GetDialogFont() ) return 0;
+         ProcessHotKey();
+         break;
+
+      case VK_ESCAPE:
+         windowCount = 0;
+         Count = 0;
+         EnumWindowsZOrder(EnumerateCallback, 0);
+         if (windowCount < 2) return 0;
+         if (wParam == SC_NEXTWINDOW)
+            Count = 1;
+         else
+         {
+            if (windowCount == 2)
+               Count = 0;
             else
-                pRoot->bFocus = TRUE;
-        }
-        pItem = pItem->Next;
-    }
+               Count = windowCount - 1;
+         }
+         TRACE("DoAppSwitch VK_ESCAPE 1 Count %d windowCount %d\n",Count,windowCount);
+         hwnd = windowList[Count];
+         GetWindowTextW(hwnd, Text, 1023);
+         TRACE("[ATbot] Switching to 0x%08x (%ls)\n", hwnd, Text);
+         MakeWindowActive(hwnd);
+         Esc = TRUE;
+         break;
 
-    InvalidateRgn(hAppWindowDlg, NULL, TRUE);
+      default:
+         return 0;
+   }
+   // Main message loop:
+   while (1)
+   {
+      for (;;)
+      {
+         if (PeekMessageW( &msg, 0, 0, 0, PM_NOREMOVE ))
+         {
+             if (!CallMsgFilterW( &msg, MSGF_NEXTWINDOW )) break;
+             /* remove the message from the queue */
+             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
+         }
+         else
+             WaitMessage();
+      }
+
+      switch (msg.message)
+      {
+        case WM_KEYUP:
+        {
+          PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
+          if (msg.wParam == VK_MENU)
+          {
+             CompleteSwitch(TRUE);
+          }
+          else if (msg.wParam == VK_RETURN)
+          {
+             CompleteSwitch(TRUE);
+          }
+          else if (msg.wParam == VK_ESCAPE)
+          {
+             TRACE("DoAppSwitch VK_ESCAPE 2\n");
+             CompleteSwitch(FALSE);
+          }
+          goto Exit; //break;
+        }
+
+        case WM_SYSKEYDOWN:
+        {
+          PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
+          if (HIWORD(msg.lParam) & KF_ALTDOWN)
+          {
+             INT Shift;
+             if ( msg.wParam == VK_TAB )
+             {
+                if (Esc) break;
+                Shift = GetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                if (Shift == SC_NEXTWINDOW)
+                {
+                   selectedWindow = (selectedWindow + 1)%windowCount;
+                }
+                else
+                {
+                   selectedWindow = selectedWindow - 1;
+                   if (selectedWindow < 0)
+                      selectedWindow = windowCount - 1;
+                }
+                InvalidateRect(switchdialog, NULL, TRUE);
+             }
+             else if ( msg.wParam == VK_ESCAPE )
+             {
+                if (!Esc) break;
+                if (windowCount < 2)
+                   goto Exit;
+                if (wParam == SC_NEXTWINDOW)
+                {
+                   Count = (Count + 1)%windowCount;
+                }
+                else
+                {
+                   Count--;
+                   if (Count < 0)
+                      Count = windowCount - 1;
+                }
+                hwnd = windowList[Count];
+                GetWindowTextW(hwnd, Text, 1023);
+                MakeWindowActive(hwnd);
+             }
+          }
+          break;
+        }
+
+        case WM_LBUTTONUP:
+          PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
+          ProcessMouseMessage(msg.message, msg.lParam);
+          goto Exit;
+
+        default:
+          if (PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE ))
+          {
+             TranslateMessage(&msg);
+             DispatchMessageW(&msg);
+          }
+          break;
+      }
+   }
+Exit:
+   if (switchdialog) DestroyWindow(switchdialog);
+   switchdialog = NULL;
+   selectedWindow = 0;
+   windowCount = 0;
+   return 0;
 }
 
-
-LRESULT
-CALLBACK
-KeyboardHookProc(
-    int nCode,
-    WPARAM wParam,
-    LPARAM lParam
-)
-{
-    PKBDLLHOOKSTRUCT hk = (PKBDLLHOOKSTRUCT) lParam;
-
-    if (wParam == WM_SYSKEYUP)
-    {
-        /* is tab key pressed */
-        if (hk->vkCode == VK_TAB)
-        {
-            if (hAppWindowDlg == NULL)
-            {
-                /* FIXME
-                 * launch window
-                 */
-                FIXME("launch alt-tab window\n");
-            }
-            else
-            {
-                MarkNextEntryAsActive();
-            }
-        }
-    }
-    return CallNextHookEx(hhk, nCode, wParam, lParam);
-}
-
-VOID
-PaintAppWindows(HWND hwndDlg, HDC hDc)
-{
-    DWORD dwIndex, X, Y;
-    PAPPSWITCH_ITEM pCurItem;
-    RECT Rect;
-    DWORD XSize, YSize, XMax;
-    HBRUSH hBrush;
-
-    X = 10;
-    Y = 10;
-    XSize = GetSystemMetrics(SM_CXICON);
-    YSize = GetSystemMetrics(SM_CYICON);
-    XMax = (XSize+(XSize/2)) * 7 + X;
-    pCurItem = pRoot;
-
-    for (dwIndex = 0; dwIndex < NumOfWindows; dwIndex++)
-    {
-        if (X >= XMax)
-        {
-            X = 10;
-            Y += YSize + (YSize/2);
-        }
-        if (pCurItem->bFocus)
-        {
-            hBrush = CreateSolidBrush(RGB(30, 30, 255));
-            SetRect(&Rect, X-5, Y-5, X + XSize + 5, Y + YSize + 5);
-            FillRect(hDc, &Rect, hBrush);
-            DeleteObject((HGDIOBJ)hBrush);
-//            SendDlgItemMessageW(hwndDlg, IDC_STATIC_CUR_APP, WM_SETTEXT, 0, (LPARAM)pCurItem->szText);
-        }
-
-        DrawIcon(hDc, X, Y, pCurItem->hIcon);
-        pCurItem = pCurItem->Next;
-        X += XSize +(XSize/2);
-    }
-}
 VOID
 DestroyAppWindows()
 {
-    PAPPSWITCH_ITEM pCurItem, pNextItem;
-
-    pCurItem = pRoot;
-    while(pCurItem)
-    {
-        pNextItem = pCurItem->Next;
-        DestroyIcon(pCurItem->hIcon);
-//        HeapFree(Win32CsrApiHeap, 0, pCurItem);
-        pCurItem = pNextItem;
-    }
-    pRoot = NULL;
-    hAppWindowDlg = NULL;
-    NumOfWindows = 0;
+   INT i;
+   for (i=0; i< windowCount; i++)
+   {
+      HICON hIcon = iconList[i];
+      DestroyIcon(hIcon);
+   }
 }
 
-INT_PTR
-CALLBACK
-SwitchWindowDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
+//
+// Switch System Class Window Proc.
+//
+LRESULT WINAPI SwitchWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
-    PAINTSTRUCT Paint;
-    HDESK hInput;
+   PWND pWnd;
+   PALTTABINFO ati;
+   pWnd = ValidateHwnd(hWnd);
+   if (pWnd)
+   {
+      if (!pWnd->fnid)
+      {
+         NtUserSetWindowFNID(hWnd, FNID_SWITCH);
+      }
+   }    
 
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        hInput =  OpenInputDesktop(0,0, GENERIC_ALL);
-        if (hInput)
-        {
-            EnumerateAppWindows(hInput, hwndDlg);
-            CloseDesktop(hInput);
-        }
-        return TRUE;
-    case WM_PAINT:
-        BeginPaint(hwndDlg, &Paint);
-        PaintAppWindows(hwndDlg, Paint.hdc);
-        EndPaint(hwndDlg, &Paint);
-        break;
-    case WM_DESTROY:
-        DestroyAppWindows();
-        break;
-    }
-    return FALSE;
+   switch (uMsg)
+   {
+      case WM_NCCREATE:
+         if (!(ati = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ati))))
+            return 0;
+         SetWindowLongPtrW( hWnd, 0, (LONG_PTR)ati );
+         return TRUE;
+
+      case WM_SHOWWINDOW:
+         if (wParam == TRUE)
+         {
+            PrepareWindow();
+            ati = (PALTTABINFO)GetWindowLongPtrW(hWnd, 0);
+            ati->cItems = nItems;
+            ati->cxItem = ati->cyItem = 43;
+            ati->cRows = nRows;
+            ati->cColumns = nCols;
+         }
+         return 0;
+
+      case WM_MOUSEMOVE:
+         ProcessMouseMessage(uMsg, lParam);
+         return 0;
+
+      case WM_ACTIVATE:
+         if (wParam == WA_INACTIVE)
+         {
+            CompleteSwitch(FALSE);
+         }
+         return 0;
+
+      case WM_PAINT:
+         OnPaint(hWnd);
+         return 0;
+
+      case WM_DESTROY:
+         isOpen = FALSE;
+         ati = (PALTTABINFO)GetWindowLongPtrW(hWnd, 0);
+         HeapFree( GetProcessHeap(), 0, ati );
+         SetWindowLongPtrW( hWnd, 0, 0 );
+         DestroyAppWindows();
+         NtUserSetWindowFNID(hWnd, FNID_DESTROY);
+         return 0;
+   }
+   return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-VOID
-WINAPI
-InitializeAppSwitchHook()
+LRESULT WINAPI SwitchWndProcA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);
-    TRACE("InitializeAppSwitchHook hhk %p\n", hhk);
+   return SwitchWndProc_common(hWnd, uMsg, wParam, lParam, FALSE);
+}
+
+LRESULT WINAPI SwitchWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+   return SwitchWndProc_common(hWnd, uMsg, wParam, lParam, TRUE);
 }
