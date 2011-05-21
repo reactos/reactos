@@ -148,7 +148,6 @@ typedef struct
     POINTEF ptefSide;
     SIZEL sizlScale;
     HGLYPH hgSelected;
-    ULONG cjSelected;
     UCHAR jBpp;
 } FTFD_FONT, *PFTFD_FONT;
 
@@ -340,3 +339,10 @@ VOID
 NTAPI
 FtfdInitKerningPairs(
     PFTFD_FACE pface);
+
+VOID
+NTAPI
+FtfdCopyBits(
+    BYTE jBppDst,
+    BYTE *pjDest,
+    FT_Bitmap *ftbitmap);

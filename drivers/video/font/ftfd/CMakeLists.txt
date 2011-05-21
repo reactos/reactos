@@ -5,6 +5,7 @@ spec2def(ftfd.dll ftfd.spec)
 
 add_library(ftfd SHARED
     enable.c
+    copybits.c
     font.c
     glyph.c
     tttables.c

@@ -98,6 +98,7 @@ FtfdCreateFontInstance(
     pfont->pface = pface;
     pfont->hgSelected = -1;
 
+
     /* Create a freetype face */
     fterror = FT_New_Memory_Face(gftlibrary,
                                  pfile->pvView,
@@ -429,72 +430,6 @@ FtfdQueryGlyphData(
 //__debugbreak();
 }
 
-static
-VOID
-FtfdCopyBitmap1Bpp(
-    BYTE *pjDest,
-    FT_Bitmap *ftbitmap)
-{
-    ULONG ulRows, ulDstDelta, ulSrcDelta;
-    PBYTE pjDstLine, pjSrcLine;
-
-    pjDstLine = pjDest;
-    ulDstDelta = (ftbitmap->width + 7) / 8;
-
-    pjSrcLine = ftbitmap->buffer;
-    ulSrcDelta = abs(ftbitmap->pitch);
-
-    ulRows = ftbitmap->rows;
-    while (ulRows--)
-    {
-        /* Copy one line */
-        memcpy(pjDstLine, pjSrcLine, ulDstDelta);
-
-        /* Next ros */
-        pjDstLine += ulDstDelta;
-        pjSrcLine += ulSrcDelta;
-    }
-}
-
-static
-VOID
-FtfdCopyBitmap4Bpp(
-    BYTE *pjDest,
-    FT_Bitmap *ftbitmap)
-{
-    ULONG ulRows, ulDstDelta, ulSrcDelta;
-    PBYTE pjDstLine, pjSrcLine;
-
-    pjDstLine = pjDest;
-    ulDstDelta = (ftbitmap->width*4 + 7) / 8;
-
-    pjSrcLine = ftbitmap->buffer;
-    ulSrcDelta = abs(ftbitmap->pitch);
-
-    ulRows = ftbitmap->rows;
-    while (ulRows--)
-    {
-        ULONG ulWidth = ulDstDelta;
-        BYTE j, *pjSrc;
-
-        pjSrc = pjSrcLine;
-        while (ulWidth--)
-        {
-            /* Get the 1st pixel */
-            j = (*pjSrc++) & 0xf0;
-
-            /* Get the 2nd pixel */
-            if (ulWidth > 0 || !(ftbitmap->width & 1))
-                j |= (*pjSrc++) >> 4;
-            *pjDstLine++ = j;
-        }
-
-        /* Go to the next line */
-        //pjDstLine += ulDstDelta;
-        pjSrcLine += ulSrcDelta;
-    }
-}
-
 VOID
 FtfdQueryGlyphBits(
     FONTOBJ *pfo,
@@ -523,15 +458,11 @@ FtfdQueryGlyphBits(
     }
 
     /* Copy the bitmap */
-    if (pfont->jBpp == 4)
-        FtfdCopyBitmap4Bpp(pgb->aj, &ftglyph->bitmap);
-    else
-        FtfdCopyBitmap1Bpp(pgb->aj, &ftglyph->bitmap);
+    FtfdCopyBits(pfont->jBpp, pgb->aj, &ftglyph->bitmap);
 
     //TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
     //      hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,
     //      GLYPHBITS_SIZE(pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, pfont->jBpp));
-
 }
 
 VOID
