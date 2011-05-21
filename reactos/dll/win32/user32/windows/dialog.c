@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
-#define DF_DIALOGACTIVE 0x4000
+#define DF_DIALOGACTIVE 0x4000 // ReactOS
 #define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
@@ -1143,7 +1143,13 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
         case WM_ACTIVATE:
-            NtUserSetThreadState(DF_DIALOGACTIVE,DF_DIALOGACTIVE);
+            { // ReactOS
+               DWORD dwSetFlag;
+               HWND hwndparent = DIALOG_FindMsgDestination( hwnd );
+               // if WA_CLICK/ACTIVE ? set dialog is active.
+               dwSetFlag = wParam ? DF_DIALOGACTIVE : 0;
+               if (hwndparent != hwnd) NtUserSetThreadState(dwSetFlag, DF_DIALOGACTIVE);
+            }
             if (wParam) DEFDLG_RestoreFocus( hwnd );
             else DEFDLG_SaveFocus( hwnd );
             return 0;
