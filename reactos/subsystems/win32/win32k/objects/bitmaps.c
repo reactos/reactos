@@ -154,15 +154,23 @@ GreCreateBitmap(
     IN UINT cBitsPixel,
     IN OPTIONAL PVOID pvBits)
 {
+    HBITMAP hbmp;
     /* Call the extended function */
-    return GreCreateBitmapEx(nWidth,
+    hbmp = GreCreateBitmapEx(nWidth,
                              nHeight,
                              0, /* auto width */
                              BitmapFormat(cBitsPixel * cPlanes, BI_RGB),
                              0, /* no bitmap flags */
                              0, /* auto size */
-                             pvBits,
-							 DDB_SURFACE /* DDB */);
+                             NULL,
+                             DDB_SURFACE /* DDB */);
+    if (pvBits && hbmp)
+    {
+       PSURFACE psurf = SURFACE_ShareLockSurface(hbmp);
+       UnsafeSetBitmapBits(psurf, 0, pvBits);
+       SURFACE_ShareUnlockSurface(psurf);
+    }
+    return hbmp;
 }
 
 HBITMAP

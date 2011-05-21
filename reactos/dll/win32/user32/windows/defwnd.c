@@ -927,8 +927,8 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
-  if (CTLCOLOR_SCROLLBAR == ctlType)
-    {
+  if (ctlType == CTLCOLOR_SCROLLBAR)
+  {
       HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
       COLORREF bk = GetSysColor(COLOR_3DHILIGHT);
       SetTextColor(hDC, GetSysColor(COLOR_3DFACE));
@@ -938,37 +938,24 @@ DefWndControlColor(HDC hDC, UINT ctlType)
        * we better use 0x55aa bitmap brush to make scrollbar's background
        * look different from the window background.
        */
-      if (bk == GetSysColor(COLOR_WINDOW))
-	{
-          static const WORD wPattern55AA[] =
-          {
-              0x5555, 0xaaaa, 0x5555, 0xaaaa,
-              0x5555, 0xaaaa, 0x5555, 0xaaaa
-          };
-          static HBITMAP hPattern55AABitmap = NULL;
-          static HBRUSH hPattern55AABrush = NULL;
-          if (hPattern55AABrush == NULL)
-            {
-              hPattern55AABitmap = CreateBitmap(8, 8, 1, 1, wPattern55AA);
-              hPattern55AABrush = CreatePatternBrush(hPattern55AABitmap);
-            }
-          return hPattern55AABrush;
-	}
-      UnrealizeObject(hb);
+      if ( bk == GetSysColor(COLOR_WINDOW))
+          return gpsi->hbrGray;
+
+      UnrealizeObject( hb );
       return hb;
-    }
+  }
 
   SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
 
-  if ((CTLCOLOR_EDIT == ctlType) || (CTLCOLOR_LISTBOX == ctlType))
-    {
+  if ((ctlType == CTLCOLOR_EDIT) || (ctlType == CTLCOLOR_LISTBOX))
+  {
       SetBkColor(hDC, GetSysColor(COLOR_WINDOW));
-    }
+  }
   else
-    {
+  {
       SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
       return GetSysColorBrush(COLOR_3DFACE);
-    }
+  }
 
   return GetSysColorBrush(COLOR_WINDOW);
 }

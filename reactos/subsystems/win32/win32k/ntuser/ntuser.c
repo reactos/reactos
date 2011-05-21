@@ -92,6 +92,8 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
+    static const WORD wPattern55AA[] = { 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa };
+    HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
@@ -124,6 +126,14 @@ UserInitialize(
     NtUserUpdatePerUserSystemParameters(0, TRUE);
 
     CsrInit();
+
+    if (gpsi->hbrGray == NULL)
+    {
+       hPattern55AABitmap = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)wPattern55AA);
+       gpsi->hbrGray = IntGdiCreatePatternBrush(hPattern55AABitmap);
+       GreDeleteObject(hPattern55AABitmap);
+       GreSetBrushOwner(gpsi->hbrGray, GDI_OBJ_HMGR_PUBLIC);
+    }
 
     return STATUS_SUCCESS;
 }
