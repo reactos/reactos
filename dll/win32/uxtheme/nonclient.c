@@ -7,6 +7,7 @@
  */
  
 #include <windows.h>
+#include <windowsx.h>
 #include "undocuser.h"
 #include "vfwmsgs.h"
 #include "uxtheme.h"
@@ -47,6 +48,12 @@ typedef enum {
     BUTTON_DISABLED ,
     BUTTON_INACTIVE
 } THEME_BUTTON_STATES;
+
+#define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
+            ((!(Style & WS_CHILD) && (Style & WS_THICKFRAME) && !(Style & WS_MAXIMIZE))  || \
+             ((Style & WS_CHILD) && (ParentStyle & WS_THICKFRAME) && !(ParentStyle & WS_MAXIMIZE) && \
+             (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
+             (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 
 #define HAS_MENU(hwnd,style)  ((((style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) && GetMenu(hwnd))
 
@@ -642,6 +649,228 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
         SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
 }
 
+
+static LRESULT
+DefWndNCHitTest(HWND hWnd, POINT Point)
+{
+    RECT WindowRect;
+    POINT ClientPoint;
+    WINDOWINFO wi;
+
+    GetWindowInfo(hWnd, &wi);
+
+    if (!PtInRect(&wi.rcWindow, Point))
+    {
+        return HTNOWHERE;
+    }
+    WindowRect = wi.rcWindow;
+
+    if (UserHasWindowEdge(wi.dwStyle, wi.dwExStyle))
+    {
+        LONG XSize, YSize;
+
+        InflateRect(&WindowRect, -(int)wi.cxWindowBorders, -(int)wi.cyWindowBorders);
+        XSize = GetSystemMetrics(SM_CXSIZE) * GetSystemMetrics(SM_CXBORDER);
+        YSize = GetSystemMetrics(SM_CYSIZE) * GetSystemMetrics(SM_CYBORDER);
+        if (!PtInRect(&WindowRect, Point))
+        {
+            BOOL ThickFrame;
+
+            ThickFrame = (wi.dwStyle & WS_THICKFRAME);
+            if (Point.y < WindowRect.top)
+            {
+                if(wi.dwStyle & WS_MINIMIZE)
+                    return HTCAPTION;
+                if(!ThickFrame)
+                    return HTBORDER;
+                if (Point.x < (WindowRect.left + XSize))
+                    return HTTOPLEFT;
+                if (Point.x >= (WindowRect.right - XSize))
+                    return HTTOPRIGHT;
+                return HTTOP;
+            }
+            if (Point.y >= WindowRect.bottom)
+            {
+                if(wi.dwStyle & WS_MINIMIZE)
+                    return HTCAPTION;
+                if(!ThickFrame)
+                    return HTBORDER;
+                if (Point.x < (WindowRect.left + XSize))
+                    return HTBOTTOMLEFT;
+                if (Point.x >= (WindowRect.right - XSize))
+                    return HTBOTTOMRIGHT;
+                return HTBOTTOM;
+            }
+            if (Point.x < WindowRect.left)
+            {
+                if(wi.dwStyle & WS_MINIMIZE)
+                    return HTCAPTION;
+                if(!ThickFrame)
+                    return HTBORDER;
+                if (Point.y < (WindowRect.top + YSize))
+                    return HTTOPLEFT;
+                if (Point.y >= (WindowRect.bottom - YSize))
+                    return HTBOTTOMLEFT;
+                return HTLEFT;
+            }
+            if (Point.x >= WindowRect.right)
+            {
+                if(wi.dwStyle & WS_MINIMIZE)
+                    return HTCAPTION;
+                if(!ThickFrame)
+                    return HTBORDER;
+                if (Point.y < (WindowRect.top + YSize))
+                    return HTTOPRIGHT;
+                if (Point.y >= (WindowRect.bottom - YSize))
+                    return HTBOTTOMRIGHT;
+                return HTRIGHT;
+            }
+        }
+    }
+    else
+    {
+        if (wi.dwExStyle & WS_EX_STATICEDGE)
+            InflateRect(&WindowRect, -GetSystemMetrics(SM_CXBORDER),
+                                     -GetSystemMetrics(SM_CYBORDER));
+        if (!PtInRect(&WindowRect, Point))
+            return HTBORDER;
+    }
+
+    if ((wi.dwStyle & WS_CAPTION) == WS_CAPTION)
+    {
+        if (wi.dwExStyle & WS_EX_TOOLWINDOW)
+            WindowRect.top += GetSystemMetrics(SM_CYSMCAPTION);
+        else
+            WindowRect.top += GetSystemMetrics(SM_CYCAPTION);
+
+        if (!PtInRect(&WindowRect, Point))
+        {
+
+            INT ButtonWidth;
+
+            if (wi.dwExStyle & WS_EX_TOOLWINDOW)
+                ButtonWidth = GetSystemMetrics(SM_CXSMSIZE);
+            else
+                ButtonWidth = GetSystemMetrics(SM_CXSIZE);
+
+            ButtonWidth -= 4;
+            ButtonWidth+= BUTTON_GAP_SIZE;
+
+            if (wi.dwStyle & WS_SYSMENU)
+            {
+                if (wi.dwExStyle & WS_EX_TOOLWINDOW)
+                {
+                    WindowRect.right -= ButtonWidth;
+                }
+                else
+                {
+                    if(!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
+                        WindowRect.left += ButtonWidth;
+                    WindowRect.right -= ButtonWidth;
+                }
+            }
+            if (Point.x < WindowRect.left)
+                return HTSYSMENU;
+            if (WindowRect.right <= Point.x)
+                return HTCLOSE;
+            if (wi.dwStyle & WS_MAXIMIZEBOX || wi.dwStyle & WS_MINIMIZEBOX)
+                WindowRect.right -= ButtonWidth;
+            if (Point.x >= WindowRect.right)
+                return HTMAXBUTTON;
+            if (wi.dwStyle & WS_MINIMIZEBOX)
+                WindowRect.right -= ButtonWidth;
+            if (Point.x >= WindowRect.right)
+                return HTMINBUTTON;
+            return HTCAPTION;
+        }
+    }
+
+    if(!(wi.dwStyle & WS_MINIMIZE))
+    {
+        HMENU menu;
+
+        ClientPoint = Point;
+        ScreenToClient(hWnd, &ClientPoint);
+        GetClientRect(hWnd, &wi.rcClient);
+
+        if (PtInRect(&wi.rcClient, ClientPoint))
+        {
+            return HTCLIENT;
+        }
+
+        if ((menu = GetMenu(hWnd)) && !(wi.dwStyle & WS_CHILD))
+        {
+            if (Point.x > 0 && Point.x < WindowRect.right && ClientPoint.y < 0)
+                return HTMENU;
+        }
+
+        if (wi.dwExStyle & WS_EX_CLIENTEDGE)
+        {
+            InflateRect(&WindowRect, -2 * GetSystemMetrics(SM_CXBORDER),
+                        -2 * GetSystemMetrics(SM_CYBORDER));
+        }
+
+        if ((wi.dwStyle & WS_VSCROLL) && (wi.dwStyle & WS_HSCROLL) &&
+            (WindowRect.bottom - WindowRect.top) > GetSystemMetrics(SM_CYHSCROLL))
+        {
+            RECT ParentRect, TempRect = WindowRect, TempRect2 = WindowRect;
+            HWND Parent = GetParent(hWnd);
+
+            TempRect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
+            if ((wi.dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+            else
+                TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+            if (PtInRect(&TempRect, Point))
+                return HTVSCROLL;
+
+            TempRect2.top = TempRect2.bottom - GetSystemMetrics(SM_CYHSCROLL);
+            if ((wi.dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                TempRect2.left += GetSystemMetrics(SM_CXVSCROLL);
+            else
+                TempRect2.right -= GetSystemMetrics(SM_CXVSCROLL);
+            if (PtInRect(&TempRect2, Point))
+                return HTHSCROLL;
+
+            TempRect.top = TempRect2.top;
+            TempRect.bottom = TempRect2.bottom;
+            if(Parent)
+                GetClientRect(Parent, &ParentRect);
+            if (PtInRect(&TempRect, Point) && HASSIZEGRIP(wi.dwStyle, wi.dwExStyle,
+                      GetWindowLongW(Parent, GWL_STYLE), wi.rcWindow, ParentRect))
+            {
+                if ((wi.dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                    return HTBOTTOMLEFT;
+                else
+                    return HTBOTTOMRIGHT;
+            }
+        }
+        else
+        {
+            if (wi.dwStyle & WS_VSCROLL)
+            {
+                RECT TempRect = WindowRect;
+
+                if ((wi.dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                    TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
+                else
+                    TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
+                if (PtInRect(&TempRect, Point))
+                    return HTVSCROLL;
+            } 
+            else if (wi.dwStyle & WS_HSCROLL)
+            {
+                RECT TempRect = WindowRect;
+                TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
+                if (PtInRect(&TempRect, Point))
+                    return HTHSCROLL;
+            }
+        }
+    }
+
+    return HTNOWHERE;
+}
+
 LRESULT CALLBACK 
 ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc)
 {
@@ -669,6 +898,13 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
             default:
                 return DefWndProc(hWnd, Msg, wParam, lParam);
         }
+    case WM_NCHITTEST:
+    {
+        POINT Point;
+        Point.x = GET_X_LPARAM(lParam);
+        Point.y = GET_Y_LPARAM(lParam);
+        return DefWndNCHitTest(hWnd, Point);
+    }
     default:
         return DefWndProc(hWnd, Msg, wParam, lParam);
     }
