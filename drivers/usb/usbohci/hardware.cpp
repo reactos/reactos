@@ -22,7 +22,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-EhciDefferedRoutine(
+OhciDefferedRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -82,7 +82,7 @@ public:
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
-    friend VOID NTAPI EhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI OhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     // constructor / destructor
     CUSBHardwareDevice(IUnknown *OuterUnknown){}
@@ -249,7 +249,7 @@ CUSBHardwareDevice::PnpStart(
             case CmResourceTypeInterrupt:
             {
                 KeInitializeDpc(&m_IntDpcObject,
-                                EhciDefferedRoutine,
+                                OhciDefferedRoutine,
                                 this);
 
                 Status = IoConnectInterrupt(&m_Interrupt,
@@ -522,6 +522,21 @@ CUSBHardwareDevice::StartController(void)
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET), Control);
 
     //
+    // wait a bit
+    //
+    KeStallExecutionProcessor(100);
+
+    //
+    // is the controller started
+    //
+    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+
+    //
+    // assert that the controller has been started
+    //
+    ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
+
+    //
     // retrieve number of ports
     //
     for(Index = 0; Index < 10; Index++)
@@ -562,6 +577,12 @@ CUSBHardwareDevice::StartController(void)
     // print out number ports
     //
     DPRINT1("NumberOfPorts %lu\n", m_NumberOfPorts);
+
+
+    //
+    // now enable the interrupts
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_NORMAL_INTERRUPTS | OHCI_MASTER_INTERRUPT_ENABLE);
 
     //
     // done
@@ -938,19 +959,150 @@ InterruptServiceRoutine(
     IN PKINTERRUPT  Interrupt,
     IN PVOID  ServiceContext)
 {
-    ASSERT(FALSE);
+    CUSBHardwareDevice *This;
+    ULONG DoneHead, Status, Acknowledge = 0;
+
+    //
+    // get context
+    //
+    This = (CUSBHardwareDevice*) ServiceContext;
+
+    DPRINT1("InterruptServiceRoutine\n");
+
+    //
+    // get done head
+    //
+    DoneHead = This->m_HCCA->DoneHead;
+
+    //
+    // check if zero
+    //
+    if (DoneHead == 0)
+    {
+        //
+        // the interrupt was not caused by DoneHead update
+        // check if something important happened
+        //
+        Status = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET)) & (~OHCI_WRITEBACK_DONE_HEAD); 
+        if (Status == 0)
+        {
+            //
+            // nothing happened, appears to be shared interrupt
+            //
+            return FALSE;
+        }
+    }
+    else
+    {
+        //
+        // DoneHead update happened, check if there are other events too
+        //
+        Status = OHCI_WRITEBACK_DONE_HEAD;
+
+        //
+        // since ed descriptors are 16 byte aligned, the controller sets the lower bits if there were other interrupt requests
+        //
+        if (DoneHead & OHCI_DONE_INTERRUPTS)
+        {
+            //
+            // get other events
+            //
+            Status |= READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)) & READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_ENABLE_OFFSET));
+        }
+    }
+
+    //
+    // sanity check
+    //
+    ASSERT(Status != 0);
+
+     if (Status & OHCI_WRITEBACK_DONE_HEAD)
+     {
+         //
+         // head completed
+         //
+         DPRINT1("InterruptServiceRoutine> Done Head completion\n");
+
+         //
+         // FIXME: handle event
+         //
+         Acknowledge |= OHCI_WRITEBACK_DONE_HEAD;
+    }
+
+    if (Status & OHCI_RESUME_DETECTED)
+    {
+        //
+        // resume
+        //
+        DPRINT1("InterruptServiceRoutine> Resume\n");
+        Acknowledge |= OHCI_RESUME_DETECTED;
+    }
+
+
+    if (Status & OHCI_UNRECOVERABLE_ERROR)
+    {
+        DPRINT1("InterruptServiceRoutine> Controller error\n");
+        //
+        // halt controller
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_CONTROL_OFFSET)), OHCI_HC_FUNCTIONAL_STATE_RESET);
+    }
+
+    if (Status & OHCI_ROOT_HUB_STATUS_CHANGE) 
+    {
+        //
+        // new device has arrived
+        //
+        DPRINT1("InterruptServiceRoutine> New Device arrival\n");
+
+        //
+        // disable interrupt as it will fire untill the port has been reset
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_INTERRUPT_DISABLE_OFFSET)), OHCI_ROOT_HUB_STATUS_CHANGE);
+        Acknowledge |= OHCI_ROOT_HUB_STATUS_CHANGE;
+    }
+
+    //
+    // is there something to acknowledge
+    //
+    if (Acknowledge)
+    {
+        //
+        // ack change
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), Acknowledge);
+    }
+
+    //
+    // defer processing
+    //
+    DPRINT1("Status %x\n", Status);
+    KeInsertQueueDpc(&This->m_IntDpcObject, This, (PVOID)Status);
+
+    //
+    // interrupt handled
+    //
     return TRUE;
 }
 
-VOID NTAPI
-EhciDefferedRoutine(
+VOID
+NTAPI
+OhciDefferedRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
     IN PVOID SystemArgument2)
 {
-    ASSERT(FALSE);
-    return;
+    CUSBHardwareDevice *This;
+    ULONG CStatus;
+
+    //
+    // get parameters
+    //
+    This = (CUSBHardwareDevice*) SystemArgument1;
+    CStatus = (ULONG) SystemArgument2;
+
+
 }
 
 VOID

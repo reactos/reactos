@@ -49,7 +49,7 @@ typedef struct
 //
 // tag for allocations
 //
-#define TAG_USBOHCI 'ICHE'
+#define TAG_USBOHCI 'ICHO'
 
 //
 // assert for c++ - taken from portcls
