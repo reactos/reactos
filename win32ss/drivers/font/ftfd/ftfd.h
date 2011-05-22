@@ -119,7 +119,7 @@ typedef struct _FTFD_FILE
 
 typedef union _FTFD_DEVICEMETRICS
 {
-    POINTL aptl[7];
+    POINTL aptl[10];
     struct
     {
         POINTFIX ptfxMaxAscender;
@@ -128,7 +128,7 @@ typedef union _FTFD_DEVICEMETRICS
         POINTL ptlStrikeout;
         POINTL ptlULThickness;
         POINTL ptlSOThickness;
-        SIZEL sizlMax;
+        POINTL aptlBBox[4];
     };
 } FTFD_DEVICEMETRICS;
 
@@ -147,6 +147,8 @@ typedef struct
     FT_Face ftface;
     FD_XFORM fdxQuantized;
     FTFD_DEVICEMETRICS metrics;
+    RECTL rclBBox;
+    SIZEL sizlMax;
     POINTEF ptefBase;
     POINTEF ptefSide;
     SIZEL sizlScale;
