@@ -23,4 +23,4 @@
 
 // UTF-8
 #pragma code_page(65001)
-#include "lang/pl-PL.rc"
+#include "lang/pl-PL.rc
