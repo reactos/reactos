@@ -340,6 +340,7 @@ MsgBoxPrint(const char *Format, ...)
 	return 0;
 }
 
+DECLSPEC_NORETURN
 NTKERNELAPI
 VOID
 NTAPI
