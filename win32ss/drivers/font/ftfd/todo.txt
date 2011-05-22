@@ -7,8 +7,8 @@ Public interface:
 - FtfdDisablePDEV: 100% done
 - FtfdEscape: unimplemented, probably unneccessary
 - FtfdLoadFontFile: 95% done
-- FtfdQueryFont: 70% done, depends on FtfdInitIfiMetrics
-- FtfdQueryFontTree: 70% done, depends on FtfdInitGlyphSet and FtfdInitKerningPairs
+- FtfdQueryFont: 80% done, depends on FtfdInitIfiMetrics
+- FtfdQueryFontTree: 90% done, depends on FtfdInitGlyphSet and FtfdInitKerningPairs
 - FtfdUnloadFontFile: 100% done, depends on FtfdDestroyFace
 - FtfdQueryFontFile: 50%
     - implement QFF_DESCRIPTION, unimportant
@@ -32,21 +32,18 @@ internal interface
 -------------------
 - FtfdInitIfiMetrics: 80% done
     - handle other font types than TTF/OTF
-    - dpwszFamilyName, dpwszStyleName, dpwszFaceName: locale
-    - dpwszUniqueName: get from 'name' table
+    - localized dpwszFamilyName, dpwszStyleName, dpwszFaceName
+    - get dpwszUniqueName from 'name' table
     - dpFontSim: implement
-    - dpCharSets: implement
     - fwdMacLineGap: from hhea table
     - fwdMaxCharInc: check/fix
     - fwdCapHeight: check/fix
-    - fwdUnderscorePosition: fix
-    - chFirstChar, chLastChar, chDefaultChar, chBreakChar: fix
-    - wcDefaultChar, wcBreakChar: fix
     - ptlBaseline: fix
     - ptlCaret: use hhea table caretSlopeRun, caretSlopeRise
     - Put most important charset into slot 0
 
-- FtfdInitGlyphSet: 100% done
+- FtfdInitGlyphSet: 90% done
+    - completely handle symbol and other charsets
 - FtfdInitKerningPairs: 90% done
     - Should we do complete glyph -> unicode expansion?
 
@@ -55,6 +52,7 @@ internal interface
 - FtfdCreateFontInstance: 95%
 - FtfdGetFontInstance: 100% done
 - FtfdQueryMaxExtents: 90% done
+    - check lNonLinear* and lMin*
 
 - FtfdLoadGlyph: 80% done
     - hande accelerator flags for bitmap / outline
@@ -62,17 +60,20 @@ internal interface
     - handle vertical layout
     - handle ptqD for rotation / skewing
 
-- FtfdQueryGlyphBits: 90% depends on FtfdCopyBitmap4Bpp and FtfdCopyBitmap1Bpp
+- FtfdQueryGlyphBits: 90% depends on FtfdCopyBits
 
 - FtfdQueryGlyphOutline: unimplemented
-- FtfdCopyBitmap4Bpp: 90 %
-    - add rounding
-    - Could need optimization
-- FtfdCopyBitmap1Bpp: 90 %
+- FtfdCopyBits: 70 % depends on FtfdCopyBits_S1D1, FtfdCopyBits_S1D4,
+                                FtfdCopyBits_S8D1, FtfdCopyBits_S8D4
+
+- FtfdCopyBits_S1D1: 95 %
     - Can we use full memcpy?
+- FtfdCopyBits_S1D4: 100 %
+- FtfdCopyBits_S8D1: unimpemented
+- FtfdCopyBits_S8D4: 90%
+    - add rounding
 
 When replacing the original ttf driver
 -----------------------------------------------
-- Horizontal metrics are broken
-- Marlett symbols are wrong
+- arrow symbol in startmenu is broken
 

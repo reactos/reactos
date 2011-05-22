@@ -128,7 +128,7 @@ typedef struct _FTFD_DEVICEMETRICS
             POINTL ptlStrikeout;
             POINTL ptlULThickness;
             POINTL ptlSOThickness;
-            POINTL aptlBBox[4];
+            POINTL aptfxBBox[4];
         };
     };
     FIX fxMaxAscender;
@@ -150,7 +150,7 @@ typedef struct
     FT_Face ftface;
     FD_XFORM fdxQuantized;
     FTFD_DEVICEMETRICS metrics;
-    RECTL rclBBox;
+    RECTL rcfxBBox;
     SIZEL sizlMax;
     POINTEF ptefBase;
     POINTEF ptefSide;
@@ -352,7 +352,7 @@ VOID
 NTAPI
 FtfdCopyBits(
     BYTE jBppDst,
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap);
 
 #endif /* _FTFD_PCH_ */
