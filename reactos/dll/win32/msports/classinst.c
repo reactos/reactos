@@ -6,7 +6,10 @@
  * PROGRAMMERS: Copyright 2011 Eric Kohl
  */
 
+#define WIN32_NO_STATUS
 #include <windows.h>
+#include <cmtypes.h>
+#include <stdio.h>
 #include <setupapi.h>
 #include <wine/debug.h>
 
@@ -21,14 +24,241 @@ typedef enum _PORT_TYPE
 } PORT_TYPE;
 
 
+BOOL
+GetBootResourceList(HDEVINFO DeviceInfoSet,
+                    PSP_DEVINFO_DATA DeviceInfoData,
+                    PCM_RESOURCE_LIST *ppResourceList)
+{
+    HKEY hDeviceKey = NULL;
+    HKEY hConfigKey = NULL;
+    LPBYTE lpBuffer = NULL;
+    DWORD dwDataSize;
+    LONG lError;
+    BOOL ret = FALSE;
+
+    *ppResourceList = NULL;
+
+    hDeviceKey = SetupDiCreateDevRegKeyW(DeviceInfoSet,
+                                         DeviceInfoData,
+                                         DICS_FLAG_GLOBAL,
+                                         0,
+                                         DIREG_DEV,
+                                         NULL,
+                                         NULL);
+    if (!hDeviceKey)
+        return FALSE;
+
+    lError = RegOpenKeyExW(hDeviceKey,
+                           L"LogConf",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hConfigKey);
+    if (lError != ERROR_SUCCESS)
+        goto done;
+
+    /* Get the configuration data size */
+    lError = RegQueryValueExW(hConfigKey,
+                              L"BootConfig",
+                              NULL,
+                              NULL,
+                              NULL,
+                              &dwDataSize);
+    if (lError != ERROR_SUCCESS)
+        goto done;
+
+    /* Allocate the buffer */
+    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwDataSize);
+    if (lpBuffer == NULL)
+        goto done;
+
+    /* Retrieve the configuration data */
+    lError = RegQueryValueExW(hConfigKey,
+                              L"BootConfig",
+                              NULL,
+                              NULL,
+                             (LPBYTE)lpBuffer,
+                              &dwDataSize);
+    if (lError == ERROR_SUCCESS)
+        ret = TRUE;
+
+done:
+    if (ret == FALSE && lpBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBuffer);
+
+    if (hConfigKey)
+        RegCloseKey(hConfigKey);
+
+    if (hDeviceKey)
+        RegCloseKey(hDeviceKey);
+
+    if (ret == TRUE)
+        *ppResourceList = (PCM_RESOURCE_LIST)lpBuffer;
+
+    return ret;
+}
+
+
+DWORD
+GetSerialPortNumber(IN HDEVINFO DeviceInfoSet,
+                    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    PCM_RESOURCE_LIST lpResourceList = NULL;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR lpResDes;
+    ULONG i;
+    DWORD dwBaseAddress = 0;
+    DWORD dwPortNumber = 0;
+
+    TRACE("GetSerialPortNumber(%p, %p)\n",
+          DeviceInfoSet, DeviceInfoData);
+
+    if (GetBootResourceList(DeviceInfoSet,
+                            DeviceInfoData,
+                            &lpResourceList))
+    {
+        TRACE("Full resource descriptors: %ul\n", lpResourceList->Count);
+        if (lpResourceList->Count > 0)
+        {
+            TRACE("Partial resource descriptors: %ul\n", lpResourceList->List[0].PartialResourceList.Count);
+
+            for (i = 0; i < lpResourceList->List[0].PartialResourceList.Count; i++)
+            {
+                lpResDes = &lpResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+                TRACE("Type: %u\n", lpResDes->Type);
+
+                switch (lpResDes->Type)
+                {
+                    case CmResourceTypePort:
+                        TRACE("Port: Start: %I64x  Length: %lu\n",
+                              lpResDes->u.Port.Start.QuadPart,
+                              lpResDes->u.Port.Length);
+                        if (lpResDes->u.Port.Start.HighPart == 0)
+                            dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
+                        break;
+
+                    case CmResourceTypeInterrupt:
+                        TRACE("Interrupt: Level: %lu  Vector: %lu\n",
+                              lpResDes->u.Interrupt.Level,
+                              lpResDes->u.Interrupt.Vector);
+                        break;
+                }
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, lpResourceList);
+    }
+
+    switch (dwBaseAddress)
+    {
+        case 0x3f8:
+            dwPortNumber = 1;
+            break;
+
+        case 0x2f8:
+            dwPortNumber = 2;
+            break;
+
+        case 0x3e8:
+            dwPortNumber = 3;
+            break;
+
+        case 0x2e8:
+            dwPortNumber = 4;
+            break;
+    }
+
+    return dwPortNumber;
+}
+
+
+DWORD
+GetParallelPortNumber(IN HDEVINFO DeviceInfoSet,
+                      IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    PCM_RESOURCE_LIST lpResourceList = NULL;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR lpResDes;
+    ULONG i;
+    DWORD dwBaseAddress = 0;
+    DWORD dwPortNumber = 0;
+
+    TRACE("GetParallelPortNumber(%p, %p)\n",
+          DeviceInfoSet, DeviceInfoData);
+
+    if (GetBootResourceList(DeviceInfoSet,
+                            DeviceInfoData,
+                            &lpResourceList))
+    {
+        TRACE("Full resource descriptors: %ul\n", lpResourceList->Count);
+        if (lpResourceList->Count > 0)
+        {
+            TRACE("Partial resource descriptors: %ul\n", lpResourceList->List[0].PartialResourceList.Count);
+
+            for (i = 0; i < lpResourceList->List[0].PartialResourceList.Count; i++)
+            {
+                lpResDes = &lpResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+                TRACE("Type: %u\n", lpResDes->Type);
+
+                switch (lpResDes->Type)
+                {
+                    case CmResourceTypePort:
+                        TRACE("Port: Start: %I64x  Length: %lu\n",
+                              lpResDes->u.Port.Start.QuadPart,
+                              lpResDes->u.Port.Length);
+                        if (lpResDes->u.Port.Start.HighPart == 0)
+                            dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
+                        break;
+
+                    case CmResourceTypeInterrupt:
+                        TRACE("Interrupt: Level: %lu  Vector: %lu\n",
+                              lpResDes->u.Interrupt.Level,
+                              lpResDes->u.Interrupt.Vector);
+                        break;
+                }
+
+            }
+
+        }
+
+        HeapFree(GetProcessHeap(), 0, lpResourceList);
+    }
+
+    switch (dwBaseAddress)
+    {
+        case 0x378:
+            dwPortNumber = 1;
+            break;
+
+        case 0x278:
+            dwPortNumber = 2;
+            break;
+    }
+
+    return dwPortNumber;
+}
+
+
 static DWORD
 InstallSerialPort(IN HDEVINFO DeviceInfoSet,
                   IN PSP_DEVINFO_DATA DeviceInfoData)
 {
-    LPWSTR pszFriendlyName = L"Serial Port (COMx)";
+    WCHAR szDeviceDescription[256];
+    WCHAR szFriendlyName[256];
+    WCHAR szPortName[5];
+    DWORD dwPortNumber;
 
     TRACE("InstallSerialPort(%p, %p)\n",
           DeviceInfoSet, DeviceInfoData);
+
+    dwPortNumber = GetSerialPortNumber(DeviceInfoSet,
+                                       DeviceInfoData);
+    if (dwPortNumber != 0)
+    {
+        swprintf(szPortName, L"COM%u", dwPortNumber);
+    }
+    else
+    {
+        wcscpy(szPortName, L"COMx");
+    }
+
 
     /* Install the device */
     if (!SetupDiInstallDevice(DeviceInfoSet,
@@ -37,12 +267,32 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
         return GetLastError();
     }
 
+    if (SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_DEVICEDESC,
+                                          NULL,
+                                          (LPBYTE)szDeviceDescription,
+                                          256 * sizeof(WCHAR),
+                                          NULL))
+    {
+        swprintf(szFriendlyName,
+                 L"%s (%s)",
+                 szDeviceDescription,
+                 szPortName);
+    }
+    else
+    {
+        swprintf(szFriendlyName,
+                 L"Serial Port (%s)",
+                 szPortName);
+    }
+
     /* Set the friendly name for the device */
     SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet,
                                       DeviceInfoData,
                                       SPDRP_FRIENDLYNAME,
-                                      (LPBYTE)pszFriendlyName,
-                                      (wcslen(pszFriendlyName) + 1) * sizeof(WCHAR));
+                                      (LPBYTE)szFriendlyName,
+                                      (wcslen(szFriendlyName) + 1) * sizeof(WCHAR));
 
     return ERROR_SUCCESS;
 }
@@ -52,9 +302,61 @@ static DWORD
 InstallParallelPort(IN HDEVINFO DeviceInfoSet,
                     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
-     FIXME("InstallParallelPort(%p, %p)\n",
-           DeviceInfoSet, DeviceInfoData);
-     return ERROR_DI_DO_DEFAULT;
+    WCHAR szDeviceDescription[256];
+    WCHAR szFriendlyName[256];
+    WCHAR szPortName[5];
+    DWORD dwPortNumber;
+
+    TRACE("InstallParallelPort(%p, %p)\n",
+          DeviceInfoSet, DeviceInfoData);
+
+    dwPortNumber = GetParallelPortNumber(DeviceInfoSet,
+                                         DeviceInfoData);
+    if (dwPortNumber != 0)
+    {
+        swprintf(szPortName, L"LPT%u", dwPortNumber);
+    }
+    else
+    {
+        wcscpy(szPortName, L"LPTx");
+    }
+
+
+    /* Install the device */
+    if (!SetupDiInstallDevice(DeviceInfoSet,
+                              DeviceInfoData))
+    {
+        return GetLastError();
+    }
+
+    if (SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_DEVICEDESC,
+                                          NULL,
+                                          (LPBYTE)szDeviceDescription,
+                                          256 * sizeof(WCHAR),
+                                          NULL))
+    {
+        swprintf(szFriendlyName,
+                 L"%s (%s)",
+                 szDeviceDescription,
+                 szPortName);
+    }
+    else
+    {
+        swprintf(szFriendlyName,
+                 L"Serial Port (%s)",
+                 szPortName);
+    }
+
+    /* Set the friendly name for the device */
+    SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      SPDRP_FRIENDLYNAME,
+                                      (LPBYTE)szFriendlyName,
+                                      (wcslen(szFriendlyName) + 1) * sizeof(WCHAR));
+
+    return ERROR_SUCCESS;
 }
 
 
