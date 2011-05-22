@@ -147,6 +147,14 @@ FtfdCreateFontInstance(
     efScaleX = FtfdNormalizeBaseVector(&pfont->ptefBase);
     efScaleY = FtfdNormalizeBaseVector(&pfont->ptefSide);
 
+    /* Calculate maximum ascender and descender */
+    efTemp = efScaleY;
+    FLOATOBJ_MulLong(&efTemp, pface->ifiex.ifi.fwdWinAscender << 4);
+    pfont->metrics.fxMaxAscender = FLOATOBJ_GetLong(&efTemp);
+    efTemp = efScaleY;
+    FLOATOBJ_MulLong(&efTemp, pface->ifiex.ifi.fwdWinDescender << 4);
+    pfont->metrics.fxMaxDescender = FLOATOBJ_GetLong(&efTemp);
+
     /* The coordinate transformation given by Windows transforms from font
      * space to device space. Since we use FT_Set_Char_Size, which allows
      * higher precision than FT_Set_Pixel_Sizes, we need to convert into
@@ -221,10 +229,6 @@ FtfdCreateFontInstance(
 
     /* Prepare required coordinates in font space */
     pmetrics = &pfont->metrics;
-    pmetrics->ptfxMaxAscender.x = 0;
-    pmetrics->ptfxMaxAscender.y = pface->ifiex.ifi.fwdWinAscender << 4;
-    pmetrics->ptfxMaxDescender.x = 0;
-    pmetrics->ptfxMaxDescender.y = pface->ifiex.ifi.fwdWinDescender << 4;
     pmetrics->ptlUnderline1.x = 0;
     pmetrics->ptlUnderline1.y = -pface->ifiex.ifi.fwdUnderscorePosition;
     pmetrics->ptlStrikeout.x = 0;
@@ -243,7 +247,7 @@ FtfdCreateFontInstance(
     pmetrics->aptlBBox[3].y = ftface->bbox.yMax;
 
     /* Transform all coordinates into device space */
-    if (!XFORMOBJ_bApplyXform(pxo, XF_LTOL, 10, pmetrics->aptl, pmetrics->aptl))
+    if (!XFORMOBJ_bApplyXform(pxo, XF_LTOL, 8, pmetrics->aptl, pmetrics->aptl))
     {
         WARN("Failed apply coordinate transformation.\n");
         EngFreeMem(pfont);
@@ -332,8 +336,8 @@ FtfdQueryMaxExtents(
             pfddm->lD = 0;
 
         /* Copy some values from the font structure */
-        pfddm->fxMaxAscender = pfont->metrics.ptfxMaxAscender.y;
-        pfddm->fxMaxDescender = pfont->metrics.ptfxMaxDescender.y;
+        pfddm->fxMaxAscender = pfont->metrics.fxMaxAscender;
+        pfddm->fxMaxDescender = pfont->metrics.fxMaxDescender;
         pfddm->ptlUnderline1 = pfont->metrics.ptlUnderline1;
         pfddm->ptlStrikeout = pfont->metrics.ptlStrikeout;
         pfddm->ptlULThickness = pfont->metrics.ptlULThickness;

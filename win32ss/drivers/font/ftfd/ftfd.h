@@ -117,19 +117,22 @@ typedef struct _FTFD_FILE
     PFTFD_FACE apface[1];
 } FTFD_FILE, *PFTFD_FILE;
 
-typedef union _FTFD_DEVICEMETRICS
+typedef struct _FTFD_DEVICEMETRICS
 {
-    POINTL aptl[10];
-    struct
+    union
     {
-        POINTFIX ptfxMaxAscender;
-        POINTFIX ptfxMaxDescender;
-        POINTL ptlUnderline1;
-        POINTL ptlStrikeout;
-        POINTL ptlULThickness;
-        POINTL ptlSOThickness;
-        POINTL aptlBBox[4];
+        POINTL aptl[8];
+        struct
+        {
+            POINTL ptlUnderline1;
+            POINTL ptlStrikeout;
+            POINTL ptlULThickness;
+            POINTL ptlSOThickness;
+            POINTL aptlBBox[4];
+        };
     };
+    FIX fxMaxAscender;
+    FIX fxMaxDescender;
 } FTFD_DEVICEMETRICS;
 
 typedef struct _POINTEF
