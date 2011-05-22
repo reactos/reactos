@@ -71,6 +71,22 @@ IsWindowActive(HWND hWnd, DWORD ExStyle)
     return ret;
 }
 
+static BOOL 
+UserHasWindowEdge(DWORD Style, DWORD ExStyle)
+{
+    if (Style & WS_MINIMIZE)
+        return TRUE;
+    if (ExStyle & WS_EX_DLGMODALFRAME)
+        return TRUE;
+    if (ExStyle & WS_EX_STATICEDGE)
+        return FALSE;
+    if (Style & WS_THICKFRAME)
+        return TRUE;
+    if (Style == WS_DLGFRAME || Style == WS_CAPTION)
+        return TRUE;
+   return FALSE;
+}
+
 HICON
 UserGetWindowIcon(HWND hwnd)
 {
@@ -395,7 +411,71 @@ ThemeDrawBorders(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 static void 
 DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
 {
+    /* Draw outer edge */
+    if (UserHasWindowEdge(context->wi.dwStyle, context->wi.dwExStyle))
+    {
+        DrawEdge(context->hDC, prcCurrent, EDGE_RAISED, BF_RECT | BF_ADJUST);
+    } 
+    else if (context->wi.dwExStyle & WS_EX_STATICEDGE)
+    {
+        DrawEdge(context->hDC, prcCurrent, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
+    }
 
+    /* Firstly the "thick" frame */
+    if ((context->wi.dwStyle & WS_THICKFRAME) && !(context->wi.dwStyle & WS_MINIMIZE))
+    {
+        INT Width =
+            (GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME)) *
+            GetSystemMetrics(SM_CXBORDER);
+        INT Height =
+            (GetSystemMetrics(SM_CYFRAME) - GetSystemMetrics(SM_CYDLGFRAME)) *
+            GetSystemMetrics(SM_CYBORDER);
+
+        SelectObject(context->hDC, GetSysColorBrush(
+                     context->Active ? COLOR_ACTIVEBORDER : COLOR_INACTIVEBORDER));
+
+        /* Draw frame */
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+               prcCurrent->right - prcCurrent->left, Height, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+               Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom, 
+               prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->right, prcCurrent->top, 
+               -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
+
+        InflateRect(prcCurrent, -Width, -Height);
+    }
+
+    /* Now the other bit of the frame */
+    if (context->wi.dwStyle & (WS_DLGFRAME | WS_BORDER) || context->wi.dwExStyle & WS_EX_DLGMODALFRAME)
+    {
+        INT Width = GetSystemMetrics(SM_CXBORDER);
+        INT Height = GetSystemMetrics(SM_CYBORDER);
+
+        SelectObject(context->hDC, GetSysColorBrush(
+            (context->wi.dwExStyle & (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE)) ? COLOR_3DFACE :
+            (context->wi.dwExStyle & WS_EX_STATICEDGE) ? COLOR_WINDOWFRAME :
+            (context->wi.dwStyle & (WS_DLGFRAME | WS_THICKFRAME)) ? COLOR_3DFACE :
+            COLOR_WINDOWFRAME));
+
+        /* Draw frame */
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+               prcCurrent->right - prcCurrent->left, Height, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
+               Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom, 
+               prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
+        PatBlt(context->hDC, prcCurrent->right, prcCurrent->top, 
+              -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
+
+        InflateRect(prcCurrent, -Width, -Height);
+    }
+
+    if (context->wi.dwExStyle & WS_EX_CLIENTEDGE)
+    {
+        DrawEdge(context->hDC, prcCurrent, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+    }
 }
 
 static void
