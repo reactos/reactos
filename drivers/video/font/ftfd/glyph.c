@@ -237,14 +237,14 @@ FtfdCreateFontInstance(
     pmetrics->ptlULThickness.y = pface->ifiex.ifi.fwdUnderscoreSize;
     pmetrics->ptlSOThickness.x = 0;
     pmetrics->ptlSOThickness.y = pface->ifiex.ifi.fwdStrikeoutSize;
-    pmetrics->aptlBBox[0].x = ftface->bbox.xMin;
-    pmetrics->aptlBBox[0].y = ftface->bbox.yMin;
-    pmetrics->aptlBBox[1].x = ftface->bbox.xMax;
-    pmetrics->aptlBBox[1].y = ftface->bbox.yMin;
-    pmetrics->aptlBBox[2].x = ftface->bbox.xMax;
-    pmetrics->aptlBBox[2].y = ftface->bbox.yMax;
-    pmetrics->aptlBBox[3].x = ftface->bbox.xMin;
-    pmetrics->aptlBBox[3].y = ftface->bbox.yMax;
+    pmetrics->aptfxBBox[0].x = ftface->bbox.xMin << 4;
+    pmetrics->aptfxBBox[0].y = ftface->bbox.yMin << 4;
+    pmetrics->aptfxBBox[1].x = ftface->bbox.xMax << 4;
+    pmetrics->aptfxBBox[1].y = ftface->bbox.yMin << 4;
+    pmetrics->aptfxBBox[2].x = ftface->bbox.xMax << 4;
+    pmetrics->aptfxBBox[2].y = ftface->bbox.yMax << 4;
+    pmetrics->aptfxBBox[3].x = ftface->bbox.xMin << 4;
+    pmetrics->aptfxBBox[3].y = ftface->bbox.yMax << 4;
 
     /* Transform all coordinates into device space */
     if (!XFORMOBJ_bApplyXform(pxo, XF_LTOL, 8, pmetrics->aptl, pmetrics->aptl))
@@ -254,23 +254,29 @@ FtfdCreateFontInstance(
         return NULL;
     }
 
-    /* Extract the bounding box in device coordinates */
-    pfont->rclBBox.left = min(pmetrics->aptlBBox[0].x, pmetrics->aptlBBox[1].x);
-    pfont->rclBBox.left = min(pfont->rclBBox.left, pmetrics->aptlBBox[2].x);
-    pfont->rclBBox.left = min(pfont->rclBBox.left, pmetrics->aptlBBox[3].x);
-    pfont->rclBBox.right = max(pmetrics->aptlBBox[0].x, pmetrics->aptlBBox[1].x);
-    pfont->rclBBox.right = max(pfont->rclBBox.right, pmetrics->aptlBBox[2].x);
-    pfont->rclBBox.right = max(pfont->rclBBox.right, pmetrics->aptlBBox[3].x);
-    pfont->rclBBox.top = min(pmetrics->aptlBBox[0].y, pmetrics->aptlBBox[1].y);
-    pfont->rclBBox.top = min(pfont->rclBBox.top, pmetrics->aptlBBox[2].y);
-    pfont->rclBBox.top = min(pfont->rclBBox.top, pmetrics->aptlBBox[3].y);
-    pfont->rclBBox.bottom = max(pmetrics->aptlBBox[0].y, pmetrics->aptlBBox[1].y);
-    pfont->rclBBox.bottom = max(pfont->rclBBox.bottom, pmetrics->aptlBBox[2].y);
-    pfont->rclBBox.bottom = max(pfont->rclBBox.bottom, pmetrics->aptlBBox[3].y);
+    /* Extract the bounding box in FIX device coordinates */
+    pfont->rcfxBBox.left = min(pmetrics->aptfxBBox[0].x, pmetrics->aptfxBBox[1].x);
+    pfont->rcfxBBox.left = min(pfont->rcfxBBox.left, pmetrics->aptfxBBox[2].x);
+    pfont->rcfxBBox.left = min(pfont->rcfxBBox.left, pmetrics->aptfxBBox[3].x);
+    pfont->rcfxBBox.right = max(pmetrics->aptfxBBox[0].x, pmetrics->aptfxBBox[1].x);
+    pfont->rcfxBBox.right = max(pfont->rcfxBBox.right, pmetrics->aptfxBBox[2].x);
+    pfont->rcfxBBox.right = max(pfont->rcfxBBox.right, pmetrics->aptfxBBox[3].x);
+    pfont->rcfxBBox.top = min(pmetrics->aptfxBBox[0].y, pmetrics->aptfxBBox[1].y);
+    pfont->rcfxBBox.top = min(pfont->rcfxBBox.top, pmetrics->aptfxBBox[2].y);
+    pfont->rcfxBBox.top = min(pfont->rcfxBBox.top, pmetrics->aptfxBBox[3].y);
+    pfont->rcfxBBox.bottom = max(pmetrics->aptfxBBox[0].y, pmetrics->aptfxBBox[1].y);
+    pfont->rcfxBBox.bottom = max(pfont->rcfxBBox.bottom, pmetrics->aptfxBBox[2].y);
+    pfont->rcfxBBox.bottom = max(pfont->rcfxBBox.bottom, pmetrics->aptfxBBox[3].y);
 
-    /* Calculate maximum extents */
-    pfont->sizlMax.cx = pfont->rclBBox.right - pfont->rclBBox.left;
-    pfont->sizlMax.cy = pfont->rclBBox.bottom - pfont->rclBBox.top;
+    /* Round the bounding box margings to pixels */
+    pfont->rcfxBBox.left = pfont->rcfxBBox.left & ~0xf;
+    pfont->rcfxBBox.top = pfont->rcfxBBox.top & ~0xf;
+    pfont->rcfxBBox.right = (pfont->rcfxBBox.right + 0xf) & ~0xf;
+    pfont->rcfxBBox.bottom = (pfont->rcfxBBox.bottom + 0xf) & ~0xf;
+
+    /* Calculate maximum extents in pixels */
+    pfont->sizlMax.cx = (pfont->rcfxBBox.right - pfont->rcfxBBox.left) >> 4;
+    pfont->sizlMax.cy = (pfont->rcfxBBox.bottom - pfont->rcfxBBox.top) >> 4;
 
     /* Fixup some minimum values */
     if (pmetrics->ptlULThickness.y <= 0) pmetrics->ptlULThickness.y = 1;
@@ -309,7 +315,6 @@ FtfdQueryMaxExtents(
     PFTFD_FONT pfont = FtfdGetFontInstance(pfo);
     PFTFD_FACE pface = pfont->pface;
     FT_Face ftface = pfont->ftface;
-    XFORMOBJ *pxo;
 
     TRACE("FtfdQueryMaxExtents\n");
 
@@ -322,9 +327,6 @@ FtfdQueryMaxExtents(
             WARN("cjSize = %ld\n", cjSize);
             return FD_ERROR;
         }
-
-        /* Get the XFORMOBJ */
-        pxo = FONTOBJ_pxoGetXform(pfo);
 
         /* Accelerator flags (ignored atm) */
         pfddm->flRealizedType = 0;
@@ -416,6 +418,7 @@ FtfdQueryGlyphData(
 {
     PFTFD_FONT pfont = pfo->pvProducer;
     FT_GlyphSlot ftglyph = pfont->ftface->glyph;
+    SIZEL sizlBitmap;
 
     pgd->gdf.pgb = pvGlyphData;
     pgd->hg = hg;
@@ -436,15 +439,23 @@ FtfdQueryGlyphData(
     /* D is the glyph advance width */
     pgd->fxD = ftglyph->advance.x / 4; // FIXME: should be projected on the x-axis
 
+    /* Get the bitnmap size */
+    sizlBitmap.cx = ftglyph->bitmap.width;
+    sizlBitmap.cy = ftglyph->bitmap.rows;
+
+    /* Make the bitmap at least 1x1 pixel large */
+    if (sizlBitmap.cx == 0) sizlBitmap.cx++;
+    if (sizlBitmap.cy == 0) sizlBitmap.cy++;
+
+    /* Don't let the bitmap be larger than the maximum */
+    sizlBitmap.cx = min(sizlBitmap.cx, pfont->sizlMax.cx);
+    sizlBitmap.cy = min(sizlBitmap.cy, pfont->sizlMax.cy);
+
     /* This is the box in which the bitmap fits */
     pgd->rclInk.left = ftglyph->bitmap_left;
     pgd->rclInk.top = -ftglyph->bitmap_top;
-    pgd->rclInk.right = pgd->rclInk.left + ftglyph->bitmap.width;
-    pgd->rclInk.bottom = pgd->rclInk.top + ftglyph->bitmap.rows;
-
-    /* Make the bitmap at least 1x1 pixel large */
-    if (ftglyph->bitmap.width == 0) pgd->rclInk.right++;
-    if (ftglyph->bitmap.rows == 0) pgd->rclInk.bottom++;
+    pgd->rclInk.right = pgd->rclInk.left + sizlBitmap.cx;
+    pgd->rclInk.bottom = pgd->rclInk.top + sizlBitmap.cy;
 
     /* FIX representation of bitmap top and bottom */
     pgd->fxInkBottom = (-pgd->rclInk.bottom) << 4;
@@ -455,12 +466,6 @@ FtfdQueryGlyphData(
     pgd->ptqD.x.HighPart = 0;
     pgd->ptqD.y.LowPart = 0;
     pgd->ptqD.y.HighPart = 0;
-
-    if (ftglyph->bitmap.width > pfont->sizlMax.cx ||
-        ftglyph->bitmap.rows > pfont->sizlMax.cy)
-    {
-        __debugbreak();
-    }
 
 //__debugbreak();
 }
@@ -485,13 +490,9 @@ FtfdQueryGlyphBits(
     if (pgb->sizlBitmap.cx == 0) pgb->sizlBitmap.cx++;
     if (pgb->sizlBitmap.cy == 0) pgb->sizlBitmap.cy++;
 
-    if (pgb->sizlBitmap.cx > pfont->sizlMax.cx ||
-        pgb->sizlBitmap.cy > pfont->sizlMax.cy)
-    {
-        WARN("The size of the bitmap exceeds the maximum size\n");
-        __debugbreak();
-        return;
-    }
+    /* Don't let the bitmap be larger than the maximum */
+    pgb->sizlBitmap.cx = min(pgb->sizlBitmap.cx, pfont->sizlMax.cx);
+    pgb->sizlBitmap.cy = min(pgb->sizlBitmap.cy, pfont->sizlMax.cy);
 
     cjBitmapSize = BITMAP_SIZE(pgb->sizlBitmap.cx,
                                pgb->sizlBitmap.cy,
@@ -505,7 +506,7 @@ FtfdQueryGlyphBits(
     }
 
     /* Copy the bitmap */
-    FtfdCopyBits(pfont->jBpp, pgb->aj, &ftglyph->bitmap);
+    FtfdCopyBits(pfont->jBpp, pgb, &ftglyph->bitmap);
 
     //TRACE("QueryGlyphBits hg=%lx, (%ld,%ld) cjSize=%ld, need %ld\n",
     //      hg, pgb->sizlBitmap.cx, pgb->sizlBitmap.cy, cjSize,

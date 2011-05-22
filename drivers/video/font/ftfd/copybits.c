@@ -11,19 +11,19 @@
 static
 VOID
 FtfdCopyBits_S1D1(
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap)
 {
     ULONG ulRows, ulDstDelta, ulSrcDelta;
     PBYTE pjDstLine, pjSrcLine;
 
-    pjDstLine = pjDest;
-    ulDstDelta = (ftbitmap->width + 7) / 8;
+    pjDstLine = pgb->aj;
+    ulDstDelta = (pgb->sizlBitmap.cx + 7) / 8;
 
     pjSrcLine = ftbitmap->buffer;
     ulSrcDelta = abs(ftbitmap->pitch);
 
-    ulRows = ftbitmap->rows;
+    ulRows = pgb->sizlBitmap.cy;
     while (ulRows--)
     {
         /* Copy one line */
@@ -38,7 +38,7 @@ FtfdCopyBits_S1D1(
 static
 VOID
 FtfdCopyBits_S8D1(
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap)
 {
     __debugbreak();
@@ -48,7 +48,7 @@ FtfdCopyBits_S8D1(
 static
 VOID
 FtfdCopyBits_S1D4(
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap)
 {
     ULONG ulRows, ulSrcDelta;
@@ -56,15 +56,15 @@ FtfdCopyBits_S1D4(
 
 //__debugbreak();
 
-    pjDstLine = pjDest;
+    pjDstLine = pgb->aj;
 
     pjSrcLine = ftbitmap->buffer;
     ulSrcDelta = abs(ftbitmap->pitch);
 
-    ulRows = ftbitmap->rows;
+    ulRows = pgb->sizlBitmap.cy;
     while (ulRows--)
     {
-        ULONG ulWidth = ftbitmap->width;
+        ULONG ulWidth = pgb->sizlBitmap.cx;
         BYTE j, *pjSrc;
         static USHORT ausExpand[] =
         {0x0000, 0x000f, 0x00f0, 0x00ff, 0x0f00, 0x0f0f, 0x0ff0, 0x0fff,
@@ -102,19 +102,19 @@ FtfdCopyBits_S1D4(
 static
 VOID
 FtfdCopyBits_S8D4(
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap)
 {
     ULONG ulRows, ulDstDelta, ulSrcDelta;
     PBYTE pjDstLine, pjSrcLine;
 
-    pjDstLine = pjDest;
-    ulDstDelta = (ftbitmap->width*4 + 7) / 8;
+    pjDstLine = pgb->aj;
+    ulDstDelta = (pgb->sizlBitmap.cx*4 + 7) / 8;
 
     pjSrcLine = ftbitmap->buffer;
     ulSrcDelta = abs(ftbitmap->pitch);
 
-    ulRows = ftbitmap->rows;
+    ulRows = pgb->sizlBitmap.cy;
     while (ulRows--)
     {
         ULONG ulWidth = ulDstDelta;
@@ -127,7 +127,7 @@ FtfdCopyBits_S8D4(
             j = (*pjSrc++) & 0xf0;
 
             /* Get the 2nd pixel */
-            if (ulWidth > 0 || !(ftbitmap->width & 1))
+            if (ulWidth > 0 || !(pgb->sizlBitmap.cx & 1))
                 j |= (*pjSrc++) >> 4;
             *pjDstLine++ = j;
         }
@@ -137,24 +137,30 @@ FtfdCopyBits_S8D4(
     }
 }
 
-void
+VOID
 NTAPI
 FtfdCopyBits(
     BYTE jBppDst,
-    BYTE *pjDest,
+    GLYPHBITS *pgb,
     FT_Bitmap *ftbitmap)
 {
+    /* handle empty bitmaps */
+    if (ftbitmap->width == 0 || ftbitmap->rows == 0)
+    {
+        pgb->aj[0] = 0;
+        return;
+    }
 
     if (jBppDst == 1)
     {
         if (ftbitmap->pixel_mode == FT_PIXEL_MODE_MONO)
         {
-            FtfdCopyBits_S1D1(pjDest, ftbitmap);
+            FtfdCopyBits_S1D1(pgb, ftbitmap);
         }
         else if (ftbitmap->pixel_mode == FT_PIXEL_MODE_GRAY &&
                  ftbitmap->num_grays == 256)
         {
-            FtfdCopyBits_S8D1(pjDest, ftbitmap);
+            FtfdCopyBits_S8D1(pgb, ftbitmap);
         }
         else
         {
@@ -167,12 +173,12 @@ FtfdCopyBits(
     {
         if (ftbitmap->pixel_mode == FT_PIXEL_MODE_MONO)
         {
-            FtfdCopyBits_S1D4(pjDest, ftbitmap);
+            FtfdCopyBits_S1D4(pgb, ftbitmap);
         }
         else if (ftbitmap->pixel_mode == FT_PIXEL_MODE_GRAY &&
                  ftbitmap->num_grays == 256)
         {
-            FtfdCopyBits_S8D4(pjDest, ftbitmap);
+            FtfdCopyBits_S8D4(pgb, ftbitmap);
         }
         else
         {
