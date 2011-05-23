@@ -10,7 +10,6 @@
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
 #include "lang/ko-KR.rc"
 #include "lang/no-NO.rc"
 #include "lang/nl-NL.rc"
@@ -23,5 +22,6 @@
 
 // UTF-8
 #pragma code_page(65001)
+#include "lang/ja-JP.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
