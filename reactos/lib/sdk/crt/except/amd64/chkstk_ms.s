@@ -30,7 +30,7 @@ ___chkstk_ms:
 
 .l_MoreThanAPage:
     sub rcx, PAGE_SIZE          /* yes, move pointer down 4k */
-    or rcx, 0                   /* probe there */
+    or [rcx], 0                 /* probe there */
     sub rax, PAGE_SIZE          /* decrement count */
 
     cmp rax, PAGE_SIZE
