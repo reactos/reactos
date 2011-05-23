@@ -8,4 +8,4 @@ add_executable(mmixer_test test.c)
 set_module_type(mmixer_test win32cui)
 
 target_link_libraries(mmixer_test mmixer)
-add_importlibs(mmixer_test advapi32 setupapi winmm ksuser user32 kernel32 msvcrt)
+add_importlibs(mmixer_test advapi32 setupapi winmm ksuser user32 msvcrt kernel32)
