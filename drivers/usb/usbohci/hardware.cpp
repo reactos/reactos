@@ -112,6 +112,7 @@ protected:
     POHCI_ENDPOINT_DESCRIPTOR  m_IsoEndpointDescriptor;                                // iso endpoint descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_InterruptEndpoints[OHCI_STATIC_ENDPOINT_COUNT];        // endpoints for interrupt / iso transfers
     ULONG m_NumberOfPorts;                                                             // number of ports
+    OHCI_PORT_STATUS m_PortStatus[OHCI_MAX_PORT_COUNT];                                // port change status
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
@@ -852,9 +853,11 @@ CUSBHardwareDevice::GetPortStatus(
     OUT USHORT *PortStatus,
     OUT USHORT *PortChange)
 {
-    UNIMPLEMENTED
-    *PortStatus = 0;
-    *PortChange = 0;
+    //
+    // FIXME: should read status from hardware
+    //
+    *PortStatus = m_PortStatus[PortId].PortStatus;
+    *PortChange = m_PortStatus[PortId].PortChange;
     return STATUS_SUCCESS;
 }
 
@@ -863,7 +866,84 @@ CUSBHardwareDevice::ClearPortStatus(
     ULONG PortId,
     ULONG Status)
 {
-    UNIMPLEMENTED
+    ULONG Value, Index = 0;
+
+    DPRINT("CUSBHardwareDevice::ClearPortStatus PortId %x Feature %x\n", PortId, Status);
+
+    if (PortId > m_NumberOfPorts)
+        return STATUS_UNSUCCESSFUL;
+
+    //
+    // read port status
+    //
+    Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+    KeStallExecutionProcessor(100);
+
+    if (Status == C_PORT_RESET)
+    {
+        //
+        // complete reset
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRSC);
+
+        do
+        {
+           //
+           // read port status
+           //
+           Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+
+           if ((Value & OHCI_RH_PORTSTATUS_PRS)  == 0)
+           {
+               //
+               // reset is complete
+               //
+               break;
+           }
+
+           //
+           // wait a bit
+           //
+           KeStallExecutionProcessor(100);
+           DPRINT1("Wait...\n");
+
+        }while(Index++ < 10);
+
+        if ((Value & OHCI_RH_PORTSTATUS_PRS))
+        {
+            DPRINT1("Failed to reset\n");
+        }
+
+        //
+        // update port status
+        //
+        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_RESET;
+
+        //
+        // sanity check
+        //
+        ASSERT((Value & OHCI_RH_PORTSTATUS_PES));
+
+        if (Value & OHCI_RH_PORTSTATUS_PES) 
+        {
+            //
+            // port is enabled
+            //
+            m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
+         }
+    }
+
+    if (Status == C_PORT_CONNECTION)
+    {
+        //
+        // clear bit
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_CSC);
+        m_PortStatus[PortId].PortChange &= ~USB_PORT_STATUS_CONNECT;
+    }
+
+
+
     return STATUS_SUCCESS;
 }
 
@@ -873,6 +953,16 @@ CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
 {
+    ULONG Value;
+
+    DPRINT1("CUSBHardwareDevice::SetPortFeature PortId %x Feature %x\n", PortId, Feature);
+
+    //
+    // read port status
+    //
+    Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+
+
     if (Feature == PORT_ENABLE)
     {
         //
@@ -900,9 +990,25 @@ CUSBHardwareDevice::SetPortFeature(
     else if (Feature == PORT_RESET)
     {
         //
+        // assert
+        //
+        ASSERT((Value & OHCI_RH_PORTSTATUS_CCS));
+
+        //
         // reset port
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRS);
+
+        //
+        // wait 
+        //
+        KeStallExecutionProcessor(100);
+
+        //
+        // update cached settings
+        //
+        m_PortStatus[PortId].PortChange |= USB_PORT_STATUS_RESET;
+        m_PortStatus[PortId].PortStatus &= ~USB_PORT_STATUS_ENABLE;
 
         //
         // is there a status change callback
@@ -1045,7 +1151,7 @@ InterruptServiceRoutine(
         //
         // halt controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_CONTROL_OFFSET)), OHCI_HC_FUNCTIONAL_STATE_RESET);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
     }
 
     if (Status & OHCI_ROOT_HUB_STATUS_CHANGE) 
@@ -1053,12 +1159,11 @@ InterruptServiceRoutine(
         //
         // new device has arrived
         //
-        DPRINT1("InterruptServiceRoutine> New Device arrival\n");
 
         //
         // disable interrupt as it will fire untill the port has been reset
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_INTERRUPT_DISABLE_OFFSET)), OHCI_ROOT_HUB_STATUS_CHANGE);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_DISABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
         Acknowledge |= OHCI_ROOT_HUB_STATUS_CHANGE;
     }
 
@@ -1070,7 +1175,7 @@ InterruptServiceRoutine(
         //
         // ack change
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)(This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET)), Acknowledge);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_INTERRUPT_STATUS_OFFSET), Acknowledge);
     }
 
     //
@@ -1094,13 +1199,76 @@ OhciDefferedRoutine(
     IN PVOID SystemArgument2)
 {
     CUSBHardwareDevice *This;
-    ULONG CStatus;
+    ULONG CStatus, Index, PortStatus;
 
     //
     // get parameters
     //
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
+
+    if (CStatus & OHCI_ROOT_HUB_STATUS_CHANGE)
+    {
+        //
+        // device connected, lets check which port
+        //
+        for(Index = 0; Index < This->m_NumberOfPorts; Index++)
+        {
+            //
+            // read port status
+            //
+            PortStatus = READ_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_RH_PORT_STATUS(Index)));
+
+            //
+            // check if there is a status change
+            //
+            if (PortStatus & OHCI_RH_PORTSTATUS_CSC)
+            {
+                //
+                // did a device connect
+                //
+                if (PortStatus & OHCI_RH_PORTSTATUS_CCS)
+                {
+                    //
+                    // device connected
+                    //
+                    DPRINT1("New device arrival at Port %d LowSpeed %x\n", Index, (PortStatus & OHCI_RH_PORTSTATUS_LSDA));
+
+                    //
+                    // store change
+                    //
+                    This->m_PortStatus[Index].PortStatus |= USB_PORT_STATUS_CONNECT;
+                    This->m_PortStatus[Index].PortChange |= USB_PORT_STATUS_CONNECT;
+
+                    if ((PortStatus & OHCI_RH_PORTSTATUS_LSDA))
+                    {
+                        //
+                        // low speed device connected
+                        //
+                        This->m_PortStatus[Index].PortStatus |= USB_PORT_STATUS_LOW_SPEED;
+                    }
+
+                    //
+                    // is there a status change callback
+                    //
+                    if (This->m_SCECallBack != NULL)
+                    {
+                        //
+                        // queue work item for processing
+                        //
+                        ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+                    }
+                }
+                else
+                {
+                    //
+                    // device disconnected
+                    //
+                    DPRINT1("Device disconnected at Port %x\n", Index);
+                }
+            }
+        }
+    }
 
 
 }

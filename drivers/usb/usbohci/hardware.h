@@ -211,3 +211,24 @@ typedef struct
 // Maximum port count set by OHCI
 //
 #define OHCI_MAX_PORT_COUNT             15
+
+
+typedef struct
+{
+    ULONG PortStatus;
+    ULONG PortChange;
+}OHCI_PORT_STATUS;
+
+
+typedef struct {
+    // Hardware part 16 bytes
+    uint32  flags;                      // Flags field
+    uint32  buffer_physical;            // Physical buffer pointer
+    uint32  next_physical_descriptor;   // Physical pointer next descriptor
+    uint32  last_physical_byte_address; // Physical pointer to buffer end
+    // Software part
+    addr_t  physical_address;           // Physical address of this descriptor
+    size_t  buffer_size;                // Size of the buffer
+    void    *buffer_logical;            // Logical pointer to the buffer
+    void    *next_logical_descriptor;   // Logical pointer next descriptor
+} ohci_general_td;
