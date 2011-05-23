@@ -1,8 +1,8 @@
 @ stub ComDBClaimNextFreePort
-@ stub ComDBClaimPort
-@ stub ComDBClose
+@ stdcall ComDBClaimPort(ptr long long ptr)
+@ stdcall ComDBClose(ptr)
 @ stub ComDBGetCurrentPortUsage
-@ stub ComDBOpen
+@ stdcall ComDBOpen(ptr)
 @ stub ComDBReleasePort
 @ stub ComDBResizeDatabase
 @ stdcall LibMain(ptr long ptr) DllMain

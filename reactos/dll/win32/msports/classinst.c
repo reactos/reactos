@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <cmtypes.h>
 #include <stdio.h>
+#include <msports.h>
 #include <setupapi.h>
 #include <wine/debug.h>
 
@@ -244,21 +245,33 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     WCHAR szFriendlyName[256];
     WCHAR szPortName[5];
     DWORD dwPortNumber;
+    HCOMDB hComDB = HCOMDB_INVALID_HANDLE_VALUE;
 
     TRACE("InstallSerialPort(%p, %p)\n",
           DeviceInfoSet, DeviceInfoData);
+
+    /* Open the com port database */
+    ComDBOpen(&hComDB);
 
     dwPortNumber = GetSerialPortNumber(DeviceInfoSet,
                                        DeviceInfoData);
     if (dwPortNumber != 0)
     {
         swprintf(szPortName, L"COM%u", dwPortNumber);
+
+        ComDBClaimPort(hComDB,
+                       dwPortNumber,
+                       FALSE,
+                       NULL);
     }
     else
     {
         wcscpy(szPortName, L"COMx");
     }
 
+    /* Close the com port database */
+    if (hComDB != HCOMDB_INVALID_HANDLE_VALUE)
+        ComDBClose(hComDB);
 
     /* Install the device */
     if (!SetupDiInstallDevice(DeviceInfoSet,

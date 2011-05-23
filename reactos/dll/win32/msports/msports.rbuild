@@ -6,6 +6,7 @@
 	<library>advapi32</library>
 	<library>setupapi</library>
 	<file>classinst.c</file>
+	<file>comdb.c</file>
 	<file>msports.c</file>
 	<file>msports.rc</file>
 </module>

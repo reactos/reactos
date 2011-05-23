@@ -5,6 +5,7 @@ spec2def(msports.dll msports.spec)
 
 list(APPEND SOURCE
     classinst.c
+    comdb.c
     msports.c
     msports.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msports_stubs.c
