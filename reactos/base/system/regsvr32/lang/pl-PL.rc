@@ -1,34 +1,36 @@
-#include "resource.h"
 /*
-* translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
+ * 	 translated by xrogers (http://rogers.cyberdusk.pl/)
+ * 	 xxrogers@users.sourceforge.net
+ *	 https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+#include "resource.h"
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\
-Sposób u¿ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
+SposÃ³b uÅ¼ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
 /u -	Wyrejestruj serwer\n\
-/s -	Tryb cichy; nie wyœwietlaj okien komunikatów\n\
-/c -	Wyjœcie w konsoli\n\
-/i -	Wywo³aj funkcjê DllInstall, przekazuj¹c jej opcjonalny [wiersz_polecenia]; u¿ycie tej opcji razem z opcj¹ /u wywo³uje funkcjê dll uninstall\n\
-/n -	Nie wywo³uj serwera DllRegisterServer; tej opcji trzeba u¿yæ z opcj¹ /i"
+/s -	Tryb cichy; nie wyÅ›wietlaj okien komunikatÃ³w\n\
+/c -	WyjÅ›cie w konsoli\n\
+/i -	WywoÅ‚aj funkcjÄ™ DllInstall, przekazujÄ…c jej opcjonalny [wiersz_polecenia]; uÅ¼ycie tej opcji razem z opcjÄ… /u wywoÅ‚uje funkcjÄ™ dll uninstall\n\
+/n -	Nie wywoÅ‚uj serwera DllRegisterServer; tej opcji trzeba uÅ¼yÄ‡ z opcjÄ… /i"
 
-IDS_NoDllSpecified,  "Nie okreœlono nazwy biblioteki DLL."
+IDS_NoDllSpecified,  "Nie okreÅ›lono nazwy biblioteki DLL."
 
 IDS_InvalidFlag,     "Nierozpoznana flaga: %s"
 
-IDS_SwitchN_NoI,     "Nierozpoznana flaga: /n musi byæ u¿yta z prze³¹cznikiem /i"
+IDS_SwitchN_NoI,     "Nierozpoznana flaga: /n musi byÄ‡ uÅ¼yta z przeÅ‚Ä…cznikiem /i"
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') nie powiod³o siê.\nGetLastError zwraca 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') nie powiodÅ‚o siÄ™.\nGetLastError zwraca 0x%08x."
 
-IDS_MissingEntry,    "%s zosta³ za³adowany, jednak punkt wejœcia %s nie zosta³ odnaleziony.\n\n\
-%s mo¿e nie byæ eksportowany, lub uszkodzona wersja %s mo¿e byæ za³adowana w pamiêci. Proszê rozwa¿yæ u¿ycie PView, aby wykryæ i usun¹æ to."
+IDS_MissingEntry,    "%s zostaÅ‚ zaÅ‚adowany, jednak punkt wejÅ›cia %s nie zostaÅ‚ odnaleziony.\n\n\
+%s moÅ¼e nie byÄ‡ eksportowalny, lub uszkodzona wersja %s moÅ¼e byÄ‡ zaÅ‚adowana w pamiÄ™ci. ProszÄ™ rozwaÅ¼yÄ‡ uÅ¼ycie PView, aby wykryÄ‡ i usunÄ…Ä‡ bÅ‚Ä™dy."
 
-IDS_FailureMessage,  "%s w %s nie powiod³a siê.\nKod wynikowy: 0x%08x"
+IDS_FailureMessage,  "%s w %s nie powiodÅ‚a siÄ™.\nKod rezultatu: 0x%08x"
 
-IDS_SuccessMessage   "%s w %s zakoñczona sukcesem."
+IDS_SuccessMessage   "%s w %s zakoÅ„czona sukcesem."
 END

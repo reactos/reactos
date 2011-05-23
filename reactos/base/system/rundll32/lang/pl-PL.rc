@@ -1,13 +1,14 @@
 #include "resource.h"
 /*
-* translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
+ *	 translated by xrogers (http://rogers.cyberdusk.pl/)
+ * 	 xxrogers@users.sourceforge.net
+ * 	 https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary nie móg³ za³adowaæ '%s'"
-    IDS_MissingEntry,   "Brakuj¹cy punkt wejœcia:%s\nW %s"
+    IDS_DllNotLoaded,   "Funkcja LoadLibrary nie mogÅ‚a zaÅ‚adowaÄ‡ '%s'"
+    IDS_MissingEntry,   "BrakujÄ…cy punkt wejÅ›cia:%s\nW %s"
 END
