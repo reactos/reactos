@@ -59,6 +59,10 @@ public:
     NTSTATUS PnpStop(void);
     NTSTATUS HandlePower(PIRP Irp);
     NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
+    NTSTATUS GetBulkHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
+    NTSTATUS GetControlHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
+    VOID HeadEndpointDescriptorModified(ULONG HeadType);
+
     NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
 
@@ -360,16 +364,6 @@ CUSBHardwareDevice::PnpStart(
     }
 
     //
-    // Initialize the UsbQueue now that we have an AdapterObject.
-    //
-    Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, m_MemoryManager, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to Initialize the UsbQueue\n");
-        return Status;
-    }
-
-    //
     // initializes the controller
     //
     Status = InitializeController();
@@ -377,6 +371,16 @@ CUSBHardwareDevice::PnpStart(
     {
         DPRINT1("Failed to Initialize the controller \n");
         ASSERT(FALSE);
+        return Status;
+    }
+
+    //
+    // Initialize the UsbQueue now that we have an AdapterObject.
+    //
+    Status = m_UsbQueue->Initialize(PUSBHARDWAREDEVICE(this), m_Adapter, m_MemoryManager, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to Initialize the UsbQueue\n");
         return Status;
     }
 
@@ -628,6 +632,42 @@ CUSBHardwareDevice::AllocateEndpointDescriptor(
     //
     // done
     //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBHardwareDevice::GetBulkHeadEndpointDescriptor(
+    struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
+{
+    *OutDescriptor = m_BulkEndpointDescriptor;
+    return STATUS_SUCCESS;
+}
+
+VOID
+CUSBHardwareDevice::HeadEndpointDescriptorModified(
+    ULONG Type)
+{
+    if (Type == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // notify controller
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_CONTROL_LIST_FILLED);
+    }
+    else if (Type == USB_ENDPOINT_TYPE_BULK)
+    {
+        //
+        // notify controller
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_BULK_LIST_FILLED);
+    }
+}
+
+NTSTATUS
+CUSBHardwareDevice::GetControlHeadEndpointDescriptor(
+    struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
+{
+    *OutDescriptor = m_ControlEndpointDescriptor;
     return STATUS_SUCCESS;
 }
 
@@ -1128,7 +1168,7 @@ InterruptServiceRoutine(
          // head completed
          //
          DPRINT1("InterruptServiceRoutine> Done Head completion\n");
-
+         ASSERT(FALSE);
          //
          // FIXME: handle event
          //
@@ -1148,9 +1188,11 @@ InterruptServiceRoutine(
     if (Status & OHCI_UNRECOVERABLE_ERROR)
     {
         DPRINT1("InterruptServiceRoutine> Controller error\n");
+
         //
         // halt controller
         //
+        ASSERT(FALSE);
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_CONTROL_OFFSET), OHCI_HC_FUNCTIONAL_STATE_RESET);
     }
 

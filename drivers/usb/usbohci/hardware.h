@@ -192,7 +192,7 @@ typedef struct
 #define OHCI_PAGE_OFFSET(x)         ((x) & 0xfff)
 
 
-typedef struct 
+typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 {
     // Hardware part
     ULONG  Flags;
@@ -202,10 +202,19 @@ typedef struct
 
     // Software part
     PHYSICAL_ADDRESS  PhysicalAddress;
+    PVOID Request;
+    PVOID NextDescriptor;
 }OHCI_ENDPOINT_DESCRIPTOR, *POHCI_ENDPOINT_DESCRIPTOR;
 
 
 #define OHCI_ENDPOINT_SKIP                      0x00004000
+#define OHCI_ENDPOINT_SET_DEVICE_ADDRESS(s)     (s)
+#define OHCI_ENDPOINT_GET_ENDPOINT_NUMBER(s)    (((s) >> 7) & 0xf)
+#define OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(s)    ((s) << 7)
+#define OHCI_ENDPOINT_GET_MAX_PACKET_SIZE(s)    (((s) >> 16) & 0x07ff)
+#define OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(s)    ((s) << 16)
+#define OHCI_ENDPOINT_LOW_SPEED                 0x00002000
+#define OHCI_ENDPOINT_FULL_SPEED                0x00000000
 
 //
 // Maximum port count set by OHCI
@@ -220,15 +229,51 @@ typedef struct
 }OHCI_PORT_STATUS;
 
 
-typedef struct {
+typedef struct
+{
     // Hardware part 16 bytes
-    uint32  flags;                      // Flags field
-    uint32  buffer_physical;            // Physical buffer pointer
-    uint32  next_physical_descriptor;   // Physical pointer next descriptor
-    uint32  last_physical_byte_address; // Physical pointer to buffer end
+    ULONG Flags;                      // Flags field
+    ULONG  BufferPhysical;            // Physical buffer pointer
+    ULONG  NextPhysicalDescriptor;   // Physical pointer next descriptor
+    ULONG LastPhysicalByteAddress; // Physical pointer to buffer end
     // Software part
-    addr_t  physical_address;           // Physical address of this descriptor
-    size_t  buffer_size;                // Size of the buffer
-    void    *buffer_logical;            // Logical pointer to the buffer
-    void    *next_logical_descriptor;   // Logical pointer next descriptor
-} ohci_general_td;
+    PHYSICAL_ADDRESS  PhysicalAddress;           // Physical address of this descriptor
+    ULONG  BufferSize;                // Size of the buffer
+    PVOID    BufferLogical;            // Logical pointer to the buffer
+    PVOID  Request;                   // pointer to IUSBRequest
+}OHCI_GENERAL_TD, *POHCI_GENERAL_TD;
+
+
+#define OHCI_TD_BUFFER_ROUNDING         0x00040000
+#define OHCI_TD_DIRECTION_PID_MASK      0x00180000
+#define OHCI_TD_DIRECTION_PID_SETUP     0x00000000
+#define OHCI_TD_DIRECTION_PID_OUT       0x00080000
+#define OHCI_TD_DIRECTION_PID_IN        0x00100000
+#define OHCI_TD_GET_DELAY_INTERRUPT(x)  (((x) >> 21) & 7)
+#define OHCI_TD_SET_DELAY_INTERRUPT(x)  ((x) << 21)
+#define OHCI_TD_INTERRUPT_MASK          0x00e00000
+#define OHCI_TD_TOGGLE_CARRY            0x00000000
+#define OHCI_TD_TOGGLE_0                0x02000000
+#define OHCI_TD_TOGGLE_1                0x03000000
+#define OHCI_TD_TOGGLE_MASK             0x03000000
+#define OHCI_TD_GET_ERROR_COUNT(x)      (((x) >> 26) & 3)
+#define OHCI_TD_GET_CONDITION_CODE(x)   ((x) >> 28)
+#define OHCI_TD_SET_CONDITION_CODE(x)   ((x) << 28)
+#define OHCI_TD_CONDITION_CODE_MASK     0xf0000000
+
+#define OHCI_TD_INTERRUPT_IMMEDIATE         0x00
+#define OHCI_TD_INTERRUPT_NONE              0x07
+
+#define OHCI_TD_CONDITION_NO_ERROR          0x00
+#define OHCI_TD_CONDITION_CRC_ERROR         0x01
+#define OHCI_TD_CONDITION_BIT_STUFFING      0x02
+#define OHCI_TD_CONDITION_TOGGLE_MISMATCH   0x03
+#define OHCI_TD_CONDITION_STALL             0x04
+#define OHCI_TD_CONDITION_NO_RESPONSE       0x05
+#define OHCI_TD_CONDITION_PID_CHECK_FAILURE 0x06
+#define OHCI_TD_CONDITION_UNEXPECTED_PID    0x07
+#define OHCI_TD_CONDITION_DATA_OVERRUN      0x08
+#define OHCI_TD_CONDITION_DATA_UNDERRUN     0x09
+#define OHCI_TD_CONDITION_BUFFER_OVERRUN    0x0c
+#define OHCI_TD_CONDITION_BUFFER_UNDERRUN   0x0d
+#define OHCI_TD_CONDITION_NOT_ACCESSED      0x0f

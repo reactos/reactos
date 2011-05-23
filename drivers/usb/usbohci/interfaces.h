@@ -107,7 +107,7 @@ DECLARE_INTERFACE_(IHCDController, IUnknown)
 
 typedef IHCDController *PHCDCONTROLLER;
 
-
+struct _OHCI_ENDPOINT_DESCRIPTOR;
 //=========================================================================================
 //
 // class IUSBHardwareDevice
@@ -171,6 +171,33 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 // Do not call Initialize on IUSBQueue, the object is already initialized
 
     virtual NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetBulkHeadEndpointDescriptor
+//
+// Description: returns the bulk head endpoint descriptor
+
+    virtual NTSTATUS GetBulkHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetControlHeadEndpointDescriptor
+//
+// Description: returns the control head endpoint descriptor
+
+    virtual NTSTATUS GetControlHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// HeadEndpointDescriptorModified
+//
+// Description: notifies the hardware that an endpoint descriptor was added to head endpoint descriptor
+
+    virtual VOID HeadEndpointDescriptorModified(ULONG HeadType) = 0;
+
+
+
 
 //-----------------------------------------------------------------------------------------
 //
@@ -334,8 +361,6 @@ typedef IDMAMemoryManager *PDMAMEMORYMANAGER;
 // CancelCallback routine is invoked.
 // 
 
-struct _QUEUE_HEAD;
-
 DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -384,6 +409,14 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: returns the type of the request: control, bulk, iso, interrupt
 
     virtual ULONG GetTransferType() = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetEndpointDescriptor
+//
+// Description: returns the general transfer descriptor
+
+    virtual NTSTATUS GetEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor) = 0;
 
 //-----------------------------------------------------------------------------------------
 //

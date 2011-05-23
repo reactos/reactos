@@ -40,6 +40,7 @@ public:
     virtual NTSTATUS InitializeWithIrp(IN PDMAMEMORYMANAGER DmaManager, IN OUT PIRP Irp);
     virtual BOOLEAN IsRequestComplete();
     virtual ULONG GetTransferType();
+    virtual NTSTATUS GetEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutEndpointDescriptor);
     virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
@@ -51,6 +52,12 @@ public:
     UCHAR GetDeviceAddress();
     NTSTATUS BuildSetupPacket();
     NTSTATUS BuildSetupPacketFromURB();
+    NTSTATUS BuildControlTransferDescriptor(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
+    NTSTATUS CreateGeneralTransferDescriptor(POHCI_GENERAL_TD* OutDescriptor, ULONG BufferSize);
+    VOID FreeDescriptor(POHCI_GENERAL_TD Descriptor);
+    NTSTATUS AllocateEndpointDescriptor(OUT POHCI_ENDPOINT_DESCRIPTOR *OutDescriptor);
+    UCHAR GetEndpointAddress();
+    USHORT GetMaxPacketSize();
 
     // constructor / destructor
     CUSBRequest(IUnknown *OuterUnknown){}
@@ -348,6 +355,46 @@ CUSBRequest::GetTransferType()
     return InternalGetTransferType();
 }
 
+USHORT
+CUSBRequest::GetMaxPacketSize()
+{
+    if (!m_EndpointDescriptor)
+    {
+        //
+        // control request
+        //
+        return 0;
+    }
+
+    ASSERT(m_Irp);
+    ASSERT(m_EndpointDescriptor);
+
+    //
+    // return max packet size
+    //
+    return m_EndpointDescriptor->wMaxPacketSize;
+}
+
+UCHAR
+CUSBRequest::GetEndpointAddress()
+{
+    if (!m_EndpointDescriptor)
+    {
+        //
+        // control request
+        //
+        return 0;
+    }
+
+    ASSERT(m_Irp);
+    ASSERT(m_EndpointDescriptor);
+
+    //
+    // endpoint number is between 1-15
+    //
+    return (m_EndpointDescriptor->bEndpointAddress & 0xF);
+}
+
 //----------------------------------------------------------------------------------------
 ULONG
 CUSBRequest::InternalGetTransferType()
@@ -444,9 +491,366 @@ CUSBRequest::GetDeviceAddress()
     return 0;
 }
 
+VOID
+CUSBRequest::FreeDescriptor(
+    POHCI_GENERAL_TD Descriptor)
+{
+    if (Descriptor->BufferSize)
+    {
+        //
+        // free buffer
+        //
+        m_DmaManager->Release(Descriptor->BufferLogical, Descriptor->BufferSize);
+    }
 
+    //
+    // release descriptor
+    //
+    m_DmaManager->Release(Descriptor, sizeof(OHCI_GENERAL_TD));
 
+}
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::CreateGeneralTransferDescriptor(
+    POHCI_GENERAL_TD* OutDescriptor, 
+    ULONG BufferSize)
+{
+    POHCI_GENERAL_TD Descriptor;
+    PHYSICAL_ADDRESS DescriptorAddress;
+    NTSTATUS Status;
 
+    //
+    // allocate transfer descriptor
+    //
+    Status = m_DmaManager->Allocate(sizeof(OHCI_GENERAL_TD), (PVOID*)&Descriptor, &DescriptorAddress);
+    if (!NT_SUCCESS(Status))
+    {
+         //
+         // no memory
+         //
+         return Status;
+    }
+
+    //
+    // initialize descriptor, hardware part
+    //
+    Descriptor->Flags = 0;
+    Descriptor->BufferPhysical = 0;
+    Descriptor->NextPhysicalDescriptor = 0;
+    Descriptor->LastPhysicalByteAddress = 0;
+
+    //
+    // software part
+    //
+    Descriptor->PhysicalAddress.QuadPart = DescriptorAddress.QuadPart;
+    Descriptor->BufferSize = BufferSize;
+
+    if (BufferSize > 0)
+    {
+        //
+        // allocate buffer from dma
+        //
+        Status = m_DmaManager->Allocate(BufferSize, &Descriptor->BufferLogical, &DescriptorAddress);
+        if (!NT_SUCCESS(Status))
+        {
+             //
+             // no memory
+             //
+             m_DmaManager->Release(Descriptor, sizeof(OHCI_GENERAL_TD));
+             return Status;
+        }
+
+        //
+        // set physical address of buffer 
+        //
+        Descriptor->BufferPhysical = DescriptorAddress.LowPart;
+        Descriptor->LastPhysicalByteAddress = Descriptor->BufferPhysical + BufferSize - 1;
+    }
+
+    //
+    // store result
+    //
+    *OutDescriptor = Descriptor;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBRequest::AllocateEndpointDescriptor(
+    OUT POHCI_ENDPOINT_DESCRIPTOR *OutDescriptor)
+{
+    POHCI_ENDPOINT_DESCRIPTOR Descriptor;
+    PHYSICAL_ADDRESS DescriptorAddress;
+    NTSTATUS Status;
+
+    //
+    // allocate descriptor
+    //
+    Status = m_DmaManager->Allocate(sizeof(OHCI_ENDPOINT_DESCRIPTOR), (PVOID*)&Descriptor, &DescriptorAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to allocate descriptor
+        //
+        return Status;
+    }
+
+    //
+    // intialize descriptor
+    //
+    Descriptor->Flags = OHCI_ENDPOINT_SKIP;
+
+    //
+    // append device address and endpoint number
+    //
+    Descriptor->Flags |= OHCI_ENDPOINT_SET_DEVICE_ADDRESS(m_DeviceAddress);
+    Descriptor->Flags |= OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(GetEndpointAddress());
+    Descriptor->Flags |= OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(GetMaxPacketSize());
+
+    //
+    // FIXME: detect type
+    //
+    Descriptor->Flags |= OHCI_ENDPOINT_FULL_SPEED;
+
+    Descriptor->HeadPhysicalDescriptor = 0;
+    Descriptor->NextPhysicalEndpoint = 0;
+    Descriptor->TailPhysicalDescriptor = 0;
+    Descriptor->PhysicalAddress.QuadPart = DescriptorAddress.QuadPart;
+
+    //
+    // store result
+    //
+    *OutDescriptor = Descriptor;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBRequest::BuildControlTransferDescriptor(
+    POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
+{
+    POHCI_GENERAL_TD SetupDescriptor, StatusDescriptor, DataDescriptor = NULL;
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    NTSTATUS Status;
+
+    DPRINT1("CUSBRequest::BuildControlTransferDescriptor\n");
+
+    //
+    // allocate endpoint descriptor
+    //
+    Status = AllocateEndpointDescriptor(&EndpointDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create setup descriptor
+        //
+        return Status;
+    }
+
+    //
+    // first allocate setup descriptor
+    //
+    Status = CreateGeneralTransferDescriptor(&SetupDescriptor, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create setup descriptor
+        //
+        m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+        return Status;
+    }
+
+    //
+    // now create the status descriptor
+    //
+    Status = CreateGeneralTransferDescriptor(&StatusDescriptor, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create status descriptor
+        //
+        FreeDescriptor(SetupDescriptor);
+        m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+        return Status;
+    }
+
+    if (m_TransferBufferLength)
+    {
+        //
+        // FIXME: support more than one data descriptor
+        //
+        ASSERT(m_TransferBufferLength < 8192);
+
+        //
+        // now create the data descriptor
+        //
+        Status = CreateGeneralTransferDescriptor(&DataDescriptor, 0);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // failed to create status descriptor
+            //
+            m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+            FreeDescriptor(SetupDescriptor);
+            FreeDescriptor(StatusDescriptor);
+            return Status;
+        }
+
+        //
+        // initialize data descriptor
+        //
+        DataDescriptor->Flags = OHCI_TD_BUFFER_ROUNDING| OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) | OHCI_TD_TOGGLE_CARRY | OHCI_TD_DIRECTION_PID_IN;
+
+        //
+        // store physical address of buffer
+        //
+        DataDescriptor->BufferPhysical = MmGetPhysicalAddress(MmGetMdlVirtualAddress(m_TransferBufferMDL)).LowPart;
+        DataDescriptor->LastPhysicalByteAddress = DataDescriptor->BufferPhysical + m_TransferBufferLength - 1; 
+    }
+
+    //
+    // initialize setup descriptor
+    //
+    SetupDescriptor->Flags = OHCI_TD_DIRECTION_PID_SETUP | OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_0 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);
+
+    if (m_SetupPacket)
+    {
+        //
+        // copy setup packet
+        //
+        RtlCopyMemory(SetupDescriptor->BufferLogical, m_SetupPacket, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+    }
+    else
+    {
+        //
+        // generate setup packet from urb
+        //
+        ASSERT(FALSE);
+    }
+
+    //
+    // initialize status descriptor
+    //
+    StatusDescriptor->Flags = OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED) | OHCI_TD_TOGGLE_1 | OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
+    if (m_TransferBufferLength == 0)
+    {
+        //
+        // input direction is flipped for the status descriptor
+        //
+        StatusDescriptor->Flags |= OHCI_TD_DIRECTION_PID_IN;
+    }
+    else
+    {
+        //
+        // output direction is flipped for the status descriptor
+        //
+        StatusDescriptor->Flags |= OHCI_TD_DIRECTION_PID_OUT;
+    }
+
+    //
+    // now link the descriptors
+    //
+    if (m_TransferBufferLength)
+    {
+         //
+         // link setup descriptor to data descriptor
+         //
+         SetupDescriptor->NextPhysicalDescriptor = DataDescriptor->PhysicalAddress.LowPart;
+
+         //
+         // FIXME: should link to last data descriptor to status descriptor
+         //
+         DataDescriptor->NextPhysicalDescriptor = StatusDescriptor->PhysicalAddress.LowPart;
+    }
+    else
+    {
+         //
+         // link setup descriptor to status descriptor
+         //
+         SetupDescriptor->NextPhysicalDescriptor = StatusDescriptor->PhysicalAddress.LowPart;
+    }
+
+    //
+    // now link descriptor to endpoint
+    //
+    EndpointDescriptor->HeadPhysicalDescriptor = SetupDescriptor->PhysicalAddress.LowPart;
+    EndpointDescriptor->TailPhysicalDescriptor = SetupDescriptor->PhysicalAddress.LowPart;
+    DPRINT1("CUSBRequest::BuildControlTransferDescriptor done\n");
+
+    //
+    // store result
+    //
+    *OutEndpointDescriptor = EndpointDescriptor;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::GetEndpointDescriptor(
+    struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
+{
+    ULONG TransferType;
+    NTSTATUS Status;
+
+    //
+    // get transfer type
+    //
+    TransferType = InternalGetTransferType();
+
+    //
+    // build request depending on type
+    //
+    switch(TransferType)
+    {
+        case USB_ENDPOINT_TYPE_CONTROL:
+            Status = BuildControlTransferDescriptor((POHCI_ENDPOINT_DESCRIPTOR*)OutDescriptor);
+            break;
+        case USB_ENDPOINT_TYPE_BULK:
+            DPRINT1("USB_ENDPOINT_TYPE_BULK not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED; //BuildBulkTransferQueueHead(OutDescriptor);
+            break;
+        case USB_ENDPOINT_TYPE_INTERRUPT:
+            DPRINT1("USB_ENDPOINT_TYPE_INTERRUPT not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        case USB_ENDPOINT_TYPE_ISOCHRONOUS:
+            DPRINT1("USB_ENDPOINT_TYPE_ISOCHRONOUS not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        default:
+            PC_ASSERT(FALSE);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // store queue head
+        //
+        //m_QueueHead = *OutDescriptor;
+
+        //
+        // store request object
+        //
+        (*OutDescriptor)->Request = PVOID(this);
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
 
 //----------------------------------------------------------------------------------------
 VOID

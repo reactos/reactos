@@ -46,6 +46,9 @@ public:
 protected:
     LONG m_Ref;                                                                         // reference count
     KSPIN_LOCK m_Lock;                                                                  // list lock
+    PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
+    POHCI_ENDPOINT_DESCRIPTOR m_BulkHeadEndpointDescriptor;                             // bulk head descriptor
+    POHCI_ENDPOINT_DESCRIPTOR m_ControlHeadEndpointDescriptor;                          // control head descriptor
 };
 
 //=================================================================================================
@@ -74,7 +77,26 @@ CUSBQueue::Initialize(
     IN PDMAMEMORYMANAGER MemManager,
     IN OPTIONAL PKSPIN_LOCK Lock)
 {
-    UNIMPLEMENTED
+    //
+    // get bulk endpoint descriptor
+    //
+    Hardware->GetBulkHeadEndpointDescriptor(&m_BulkHeadEndpointDescriptor);
+
+    //
+    // get control endpoint descriptor
+    //
+    Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
+
+    //
+    // initialize spinlock
+    //
+    KeInitializeSpinLock(&m_Lock);
+
+    //
+    // store hardware
+    //
+    m_Hardware = Hardware;
+
     return STATUS_SUCCESS;
 }
 
@@ -96,6 +118,10 @@ CUSBQueue::AddUSBRequest(
     NTSTATUS Status;
     ULONG Type;
     KIRQL OldLevel;
+    POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
+    POHCI_ENDPOINT_DESCRIPTOR Descriptor;
+
+    DPRINT1("CUSBQueue::AddUSBRequest\n");
 
     //
     // sanity check
@@ -142,6 +168,63 @@ CUSBQueue::AddUSBRequest(
     // add extra reference which is released when the request is completed
     //
     Request->AddRef();
+
+    //
+    // get transfer descriptors
+    //
+    Status = Request->GetEndpointDescriptor(&Descriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to get transfer descriptor
+        //
+        DPRINT1("CUSBQueue::AddUSBRequest GetEndpointDescriptor failed with %x\n", Status);
+
+        //
+        // release reference
+        //
+        Request->Release();
+        return Status;
+    }
+
+    //
+    // check type
+    //
+    if (Type == USB_ENDPOINT_TYPE_BULK)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = m_BulkHeadEndpointDescriptor;
+    }
+    else if (Type == USB_ENDPOINT_TYPE_CONTROL)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = m_ControlHeadEndpointDescriptor;
+    }
+
+    //
+    // link endpoints
+    //
+    Descriptor->NextPhysicalEndpoint = HeadDescriptor->NextPhysicalEndpoint;
+    Descriptor->NextDescriptor = HeadDescriptor->NextDescriptor;
+
+    HeadDescriptor->NextPhysicalEndpoint = Descriptor->PhysicalAddress.LowPart;
+    HeadDescriptor->NextDescriptor = Descriptor;
+
+    //
+    // set descriptor active
+    //
+    Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
+
+    //
+    // notify hardware of our request
+    //
+    m_Hardware->HeadEndpointDescriptorModified(Type);
+
+    DPRINT1("Request added to queue\n");
 
 
     return STATUS_SUCCESS;
