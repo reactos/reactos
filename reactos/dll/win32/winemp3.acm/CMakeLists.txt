@@ -18,7 +18,6 @@ set_entrypoint(winemp3.acm 0)
 set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(winemp3.acm
-    mingw_common
     wine
     libmpg123)
 

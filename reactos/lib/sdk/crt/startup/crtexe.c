@@ -56,7 +56,7 @@ extern int _dowildcard;
 #if defined(__GNUC__)
 int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
 #else
-int _MINGW_INSTALL_DEBUG_MATHERR = 0;
+int __declspec(selectany) _MINGW_INSTALL_DEBUG_MATHERR = 0;
 #endif
 extern int __defaultmatherr;
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
@@ -108,8 +108,8 @@ static void duplicate_ppstrings (int ac, char ***av);
 static int __cdecl pre_c_init (void);
 static void __cdecl pre_cpp_init (void);
 static void __cdecl __mingw_prepare_except_for_msvcr80_and_higher (void);
-_CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
-_CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
+_CRTALLOC(".CRT$XIAA") _PIFV __declspec(selectany) mingw_pcinit = pre_c_init;
+_CRTALLOC(".CRT$XCAA") _PVFV __declspec(selectany) mingw_pcppinit = pre_cpp_init;
 
 static int __cdecl
 pre_c_init (void)

@@ -61,11 +61,6 @@ add_library(libjpeg SHARED
 
 set_entrypoint(libjpeg 0)
 
-if(MSVC)
-# for _fltused
-target_link_libraries(libjpeg mingw_common)
-endif()
-
 add_importlibs(libjpeg msvcrt kernel32)
 
 add_dependencies(libjpeg psdk)

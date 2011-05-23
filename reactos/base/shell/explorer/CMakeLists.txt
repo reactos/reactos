@@ -64,8 +64,6 @@ target_link_libraries(explorer
     -lgcc
     -lmingwex
     wine
-    mingw_wmain
-    mingw_common
     uuid)
 
 add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 notifyhook msvcrt kernel32 ntdll)

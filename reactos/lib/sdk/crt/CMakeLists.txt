@@ -8,18 +8,6 @@ include(libcntpr.cmake)
 include(msvcrtex.cmake)
 include(oldnames.cmake)
 
-if(MSVC)
-# This is a temporary solution until we have proper crt libs
-    list(APPEND MSVCSUP_SOURCE
-        misc/fltused.c
-        except/i386/chkstk_asm.s
-        math/i386/ci.c
-        math/i386/ftol2_asm.S)
-
-    add_library(msvcsup ${MSVCSUP_SOURCE})
-    add_dependencies(msvcsup psdk asm)
-endif()
-
 add_library(user32_wsprintf
     printf/streamout.c
     printf/wstreamout.c

@@ -30,7 +30,7 @@ add_library(libpng SHARED
 
 set_entrypoint(libpng 0)
 
-target_link_libraries(libpng mingw_common zlib)
+target_link_libraries(libpng zlib)
 
 add_importlibs(libpng msvcrt kernel32)
 

@@ -25,7 +25,7 @@ list(APPEND SOURCE
 
 add_executable(smss WIN32 ${CMAKE_CURRENT_BINARY_DIR}/smss_smss.h.gch ${SOURCE})
 
-target_link_libraries(smss mingw_common nt smlib)
+target_link_libraries(smss nt smlib)
 if(MSVC)
     target_link_libraries(smss msvcsup)
     set_entrypoint(smss DllMainCRTStartup)
