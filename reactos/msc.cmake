@@ -108,7 +108,6 @@ macro(set_module_type MODULE TYPE)
         set_image_base(${MODULE} 0x00010000)
         add_linkerflag(${MODULE} "/DRIVER")
         add_dependencies(${MODULE} bugcodes)
-        target_link_libraries(${MODULE})
     endif()
 endmacro()
 
@@ -195,4 +194,3 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
 set(PSEH_LIB "pseh")
-
