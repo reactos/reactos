@@ -76,5 +76,7 @@ _PnpBiosSupported:
 PUBLIC _Int386
 _Int386:
 
+PUBLIC _PxeCallApi
+_PxeCallApi:
 
 END
