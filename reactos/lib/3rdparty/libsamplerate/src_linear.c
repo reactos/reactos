@@ -30,9 +30,6 @@
 #include "float_cast.h"
 #include "common.h"
 
-#include <windows.h>
-#include <debug.h>
-
 static int linear_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
 static void linear_reset (SRC_PRIVATE *psrc) ;
 
@@ -110,8 +107,8 @@ linear_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 			src_ratio = psrc->last_ratio + priv->out_gen * (data->src_ratio - psrc->last_ratio) / priv->out_count ;
 
 		if (SRC_DEBUG && priv->in_used < priv->channels && input_index < 1.0)
-		{	DPRINT1 ("Whoops!!!!   in_used : %ld     channels : %d     input_index : %f\n", priv->in_used, priv->channels, input_index) ;
-			ASSERT (0) ;
+		{	printf ("Whoops!!!!   in_used : %ld     channels : %d     input_index : %f\n", priv->in_used, priv->channels, input_index) ;
+			exit (1) ;
 			} ;
 
 		for (ch = 0 ; ch < priv->channels ; ch++)

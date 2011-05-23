@@ -126,7 +126,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 		      FILE_SEQUENTIAL_ONLY);
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtOpenFile failed: %x, %wZ\n", Status, &FileName);
+      DPRINT1("NtOpenFile failed: %x\n", Status);
       goto done;
     }
 #else
