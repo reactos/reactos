@@ -31,17 +31,11 @@ add_executable(usetup
     usetup.rc)
 
 target_link_libraries(usetup
-    mingw_main
     zlib
     inflib
     ext2lib
-    vfatlib
-    mingw_common)
-
-if(MSVC)
-    target_link_libraries(usetup msvcsup)
-endif()
+    vfatlib)
 
 set_module_type(usetup nativecui)
-add_importlibs(usetup kernel32 ntdll)
+add_importlibs(usetup ntdll)
 add_cd_file(TARGET usetup DESTINATION reactos/system32 NO_CAB NAME_ON_CD smss.exe FOR bootcd regtest)
