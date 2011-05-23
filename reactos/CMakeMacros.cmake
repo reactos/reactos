@@ -204,3 +204,26 @@ function(add_cd_file)
         endif()
     endif() #end bootcd
 endfunction()
+
+# Create module_clean targets
+function(add_clean_target target)
+    if(CMAKE_GENERATOR MATCHES "Unix Makefiles" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles")
+        set(CLEAN_COMMAND make clean)
+    elseif(CMAKE_GENERATOR MATCHES "NMake Makefiles")
+        set(CLEAN_COMMAND nmake clean)
+    endif()
+    add_custom_target(${target}_clean
+        COMMAND ${CLEAN_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Cleaning ${target}")
+endfunction()
+
+function(add_library name)
+    _add_library(${name} ${ARGN})
+    add_clean_target(${name})
+endfunction()
+
+function(add_executable name)
+    _add_executable(${name} ${ARGN})
+    add_clean_target(${name})
+endfunction()
