@@ -20,6 +20,7 @@ typedef struct _COMDB
     HKEY hKey;
     DWORD dwSize;
     PBYTE pBitmap;
+    PBYTE pData;
 } COMDB, *PCOMDB;
 
 
