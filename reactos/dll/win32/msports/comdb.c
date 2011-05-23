@@ -20,7 +20,6 @@ typedef struct _COMDB
     HKEY hKey;
     DWORD dwSize;
     PBYTE pBitmap;
-    PBYTE pData;
 } COMDB, *PCOMDB;
 
 
@@ -92,7 +91,7 @@ ComDBClaimPort(IN HCOMDB hComDB,
                                 L"ComDB",
                                 0,
                                 REG_BINARY,
-                                pComDB->pData,
+                                pComDB->pBitmap,
                                 pComDB->dwSize);
     }
 
@@ -171,10 +170,10 @@ ComDBOpen(OUT HCOMDB *phComDB)
     {
         /* Allocate a new bitmap */
         pComDB->dwSize = COMDB_MIN_PORTS_ARBITRATED / BITS_PER_BYTE;
-        pComDB->pData = HeapAlloc(GetProcessHeap(),
-                                  HEAP_ZERO_MEMORY,
-                                  pComDB->dwSize);
-        if (pComDB->pData == NULL)
+        pComDB->pBitmap = HeapAlloc(GetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    pComDB->dwSize);
+        if (pComDB->pBitmap == NULL)
         {
             ERR("Failed to allocaete the bitmap!\n");
             lError = ERROR_ACCESS_DENIED;
@@ -186,7 +185,7 @@ ComDBOpen(OUT HCOMDB *phComDB)
                                 L"ComDB",
                                 0,
                                 REG_BINARY,
-                                pComDB->pData,
+                                pComDB->pBitmap,
                                 pComDB->dwSize);
     }
 
@@ -197,8 +196,8 @@ done:;
         if (pComDB->hKey != NULL)
             RegCloseKey(pComDB->hKey);
 
-        if (pComDB->pData != NULL)
-            HeapFree(GetProcessHeap(), 0, pComDB->pData);
+        if (pComDB->pBitmap != NULL)
+            HeapFree(GetProcessHeap(), 0, pComDB->pBitmap);
 
         HeapFree(GetProcessHeap(), 0, pComDB);
 
