@@ -40,6 +40,7 @@ scsiport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
 ext2fs.sys=,,,,,,x,,,,,,4
+vgafonts.cab=,,,,,,,,,,,,1
 classpnp.sys=,,,,,,,,,,,,4
 pcix.sys=,,,,,,,,,,,,4
 pcmcia.sys=,,,,,,,,,,,,4

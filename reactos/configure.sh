@@ -10,7 +10,6 @@ ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
 
-echo ARCH $ARCH ROS $ROS_ARCH
 if [ "$REACTOS_SOURCE_DIR" == "$PWD" ]
 then
   echo Creating directories in $REACTOS_OUTPUT_PATH
@@ -34,5 +33,5 @@ cmake -G "Unix Makefiles" -DARCH=$ARCH "$REACTOS_SOURCE_DIR"
 cd ../reactos
 cmake -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw32.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
 
-echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, makex, etc...).
+echo "Configure script complete! Enter directories and execute appropriate build commands(ex: make, makex, etc...)."
 
