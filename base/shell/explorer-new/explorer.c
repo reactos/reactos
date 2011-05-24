@@ -350,6 +350,19 @@ GetVersionInfoString(IN TCHAR *szFileName,
     return bRet;
 }
 
+static void HideMinimizedWindows(BOOL hide)
+{
+    MINIMIZEDMETRICS mm; 
+    mm.cbSize = sizeof(MINIMIZEDMETRICS); 
+    SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), &mm, FALSE); 
+    if(hide)
+        mm.iArrange |= ARW_HIDE;
+    else
+        mm.iArrange &= ~ARW_HIDE;
+    SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), &mm, FALSE); 
+}
+
+
 INT WINAPI
 _tWinMain(IN HINSTANCE hInstance,
           IN HINSTANCE hPrevInstance,
@@ -395,7 +408,10 @@ _tWinMain(IN HINSTANCE hInstance,
             Tray = CreateTrayWindow();
 
             if (Tray != NULL)
+            {
                 hShellDesktop = DesktopCreateWindow(Tray);
+                HideMinimizedWindows(TRUE);
+            }
         }
 
         /* WinXP: Notify msgina to hide the welcome screen */
