@@ -269,7 +269,7 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
 	MixerEngine * mixer = (MixerEngine *) param;
 	while(1)
 	{
-		while(WaitForSingleObject(mixer->EventPool[0],100)!=0){if(mixer->dead)goto DEAD;}
+		while(WaitForSingleObject(mixer->EventPool[1],100)!=0){if(mixer->dead)goto DEAD;}
 		Playbuffer(mixer);
 		SetEvent(mixer->EventPool[0]);
 	}
