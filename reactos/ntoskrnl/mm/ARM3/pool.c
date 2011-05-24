@@ -864,7 +864,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Clear the allocation and free bits
         //
-        RtlClearBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, i);
+        RtlClearBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, End);
         RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap, i, NumberOfPages);
 
         //
