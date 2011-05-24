@@ -38,7 +38,7 @@ typedef struct MixerEngine
 extern "C" {
 #endif
 
-__declspec(dllexport) MixerEngine * getmixerengine();
+WINAPI MixerEngine * getmixerengine();
 
 #ifdef __cplusplus 
 }
