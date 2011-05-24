@@ -174,26 +174,20 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 	  goto fail;
 	}
 
-	/* Copy the source xor bitmap to the target and clear out part of it by using
-	   the shortcut mask */
+	/* Copy the source color bitmap to the target */
 	if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
-	             SourceDC, 0, 0, SRCCOPY) ||
-	    ! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-	             ShortcutDC, 0, 0, SRCAND))
-	{
-	  goto fail;
-	}
+	             SourceDC, 0, 0, SRCCOPY)) goto fail;
 
-	if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
-
-	/* Now put in the shortcut xor mask */
-	if (! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-	             ShortcutDC, 0, 0, SRCINVERT))
-	{
-	  goto fail;
-	}
+    /* Copy the source xor bitmap to the target and clear out part of it by using
+       the shortcut mask */
+    if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
+    if (!MaskBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+                 ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+                 ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0, 
+                 MAKEROP4(SRCCOPY, 0xAA0000)))
+    {
+        goto fail;
+    }
 
 	/* Clean up, we're not goto'ing to 'fail' after this so we can be lazy and not set
 	   handles to NULL */
@@ -442,7 +436,7 @@ BOOL SIC_Initialize(void)
                                         100);
     if (ShellSmallIconList)
     {
-         /* Load the document icon, which is used as the default if an icon isn't found. */
+        /* Load the document icon, which is used as the default if an icon isn't found. */
         hSm = (HICON)LoadImageW(shell32_hInstance,
                                 MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
                                 IMAGE_ICON,

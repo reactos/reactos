@@ -550,7 +550,7 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
 	return GetLastError();
 }
 
-static WINAPI DWORD SHOperationProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred, LARGE_INTEGER StreamSize, LARGE_INTEGER StreamBytesTransferred, DWORD dwStreamNumber, DWORD dwCallbackReason, HANDLE hSourceFile, HANDLE hDestinationFile, LPVOID lpData)
+static DWORD WINAPI SHOperationProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred, LARGE_INTEGER StreamSize, LARGE_INTEGER StreamBytesTransferred, DWORD dwStreamNumber, DWORD dwCallbackReason, HANDLE hSourceFile, HANDLE hDestinationFile, LPVOID lpData)
 {
     FILE_OPERATION_CONTEXT * Context;
     LARGE_INTEGER Progress;
