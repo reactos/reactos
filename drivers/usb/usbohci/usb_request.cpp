@@ -44,7 +44,7 @@ public:
     virtual VOID GetResultStatus(OUT OPTIONAL NTSTATUS *NtStatusCode, OUT OPTIONAL PULONG UrbStatusCode);
     virtual BOOLEAN IsRequestInitialized();
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
-
+    virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
 
     // local functions
     ULONG InternalGetTransferType();
@@ -635,7 +635,7 @@ NTSTATUS
 CUSBRequest::BuildControlTransferDescriptor(
     POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
 {
-    POHCI_GENERAL_TD SetupDescriptor, StatusDescriptor, DataDescriptor = NULL;
+    POHCI_GENERAL_TD SetupDescriptor, StatusDescriptor, DataDescriptor = NULL, LastDescriptor;
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
     NTSTATUS Status;
 
@@ -680,6 +680,22 @@ CUSBRequest::BuildControlTransferDescriptor(
         return Status;
     }
 
+    //
+    // finally create the last descriptor
+    //
+    Status = CreateGeneralTransferDescriptor(&LastDescriptor, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create status descriptor
+        //
+        FreeDescriptor(SetupDescriptor);
+        FreeDescriptor(StatusDescriptor);
+        m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+        return Status;
+    }
+
+
     if (m_TransferBufferLength)
     {
         //
@@ -690,7 +706,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // now create the data descriptor
         //
-        Status = CreateGeneralTransferDescriptor(&DataDescriptor, 0);
+        Status = CreateGeneralTransferDescriptor(&DataDescriptor, m_TransferBufferLength);
         if (!NT_SUCCESS(Status))
         {
             //
@@ -699,6 +715,7 @@ CUSBRequest::BuildControlTransferDescriptor(
             m_DmaManager->Release(EndpointDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
             FreeDescriptor(SetupDescriptor);
             FreeDescriptor(StatusDescriptor);
+            FreeDescriptor(LastDescriptor);
             return Status;
         }
 
@@ -762,11 +779,20 @@ CUSBRequest::BuildControlTransferDescriptor(
          // link setup descriptor to data descriptor
          //
          SetupDescriptor->NextPhysicalDescriptor = DataDescriptor->PhysicalAddress.LowPart;
+         SetupDescriptor->NextLogicalDescriptor = DataDescriptor;
 
          //
-         // FIXME: should link to last data descriptor to status descriptor
+         // link data descriptor to status descriptor
+         // FIXME: check if there are more data descriptors
          //
          DataDescriptor->NextPhysicalDescriptor = StatusDescriptor->PhysicalAddress.LowPart;
+         DataDescriptor->NextLogicalDescriptor = StatusDescriptor;
+
+         //
+         // link status descriptor to last descriptor
+         //
+         StatusDescriptor->NextPhysicalDescriptor = LastDescriptor->PhysicalAddress.LowPart;
+         StatusDescriptor->NextLogicalDescriptor = LastDescriptor;
     }
     else
     {
@@ -774,14 +800,21 @@ CUSBRequest::BuildControlTransferDescriptor(
          // link setup descriptor to status descriptor
          //
          SetupDescriptor->NextPhysicalDescriptor = StatusDescriptor->PhysicalAddress.LowPart;
+         SetupDescriptor->NextLogicalDescriptor = StatusDescriptor;
+
+         //
+         // link status descriptor to last descriptor
+         //
+         StatusDescriptor->NextPhysicalDescriptor = LastDescriptor->PhysicalAddress.LowPart;
+         StatusDescriptor->NextLogicalDescriptor = LastDescriptor;
     }
 
     //
     // now link descriptor to endpoint
     //
     EndpointDescriptor->HeadPhysicalDescriptor = SetupDescriptor->PhysicalAddress.LowPart;
-    EndpointDescriptor->TailPhysicalDescriptor = SetupDescriptor->PhysicalAddress.LowPart;
-    DPRINT1("CUSBRequest::BuildControlTransferDescriptor done\n");
+    EndpointDescriptor->TailPhysicalDescriptor = LastDescriptor->PhysicalAddress.LowPart;
+    EndpointDescriptor->HeadLogicalDescriptor = SetupDescriptor;
 
     //
     // store result
@@ -884,6 +917,32 @@ CUSBRequest::GetResultStatus(
         *UrbStatusCode = m_UrbStatusCode;
     }
 
+}
+
+
+VOID
+CUSBRequest::CompletionCallback(
+    struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
+{
+    DPRINT1("CUSBRequest::CompletionCallback\n");
+
+    //
+    // set status code
+    //
+    m_NtStatusCode = STATUS_SUCCESS;
+    m_UrbStatusCode = USBD_STATUS_SUCCESS;
+
+    ASSERT(!m_Irp);
+
+    //
+    // FIXME: cleanup descriptors
+    //
+
+    //
+    // signal completion event
+    //
+    PC_ASSERT(m_CompletionEvent);
+    KeSetEvent(m_CompletionEvent, 0, FALSE);
 }
 
 

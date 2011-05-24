@@ -540,6 +540,7 @@ CUSBHardwareDevice::StartController(void)
     // assert that the controller has been started
     //
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
+    ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
 
     //
     // get frame interval
@@ -689,20 +690,30 @@ VOID
 CUSBHardwareDevice::HeadEndpointDescriptorModified(
     ULONG Type)
 {
+    ULONG Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
+
     if (Type == USB_ENDPOINT_TYPE_CONTROL)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_CONTROL_LIST_FILLED);
+        //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_HEAD_ED_OFFSET), m_ControlEndpointDescriptor->NextPhysicalEndpoint);
+        //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_CURRENT_ED_OFFSET), m_ControlEndpointDescriptor->NextPhysicalEndpoint);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_CONTROL_LIST_FILLED);
     }
     else if (Type == USB_ENDPOINT_TYPE_BULK)
     {
         //
         // notify controller
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), OHCI_BULK_LIST_FILLED);
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_BULK_LIST_FILLED);
     }
+
+    Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
+
+
+    DPRINT1("HeadEndpointDescriptorModified Value %x Type %x\n", Value, Type);
+
 }
 
 NTSTATUS
@@ -1035,7 +1046,9 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         // re-enable root hub change
         //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
+        Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET));
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), Value | OHCI_ROOT_HUB_STATUS_CHANGE);
+
     }
 
     if (Status == C_PORT_CONNECTION)
@@ -1232,11 +1245,6 @@ InterruptServiceRoutine(
          //
          // head completed
          //
-         DPRINT1("InterruptServiceRoutine> Done Head completion\n");
-         ASSERT(FALSE);
-         //
-         // FIXME: handle event
-         //
          Acknowledge |= OHCI_WRITEBACK_DONE_HEAD;
     }
 
@@ -1307,6 +1315,8 @@ OhciDefferedRoutine(
 {
     CUSBHardwareDevice *This;
     ULONG CStatus, Index, PortStatus;
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    ULONG DoneHead;
 
     //
     // get parameters
@@ -1314,6 +1324,25 @@ OhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
+	DPRINT1("OhciDefferedRoutine Status %x\n", CStatus);
+
+    if (CStatus & OHCI_WRITEBACK_DONE_HEAD)
+    {
+        //
+        // descriptor completion, get done head
+        //
+        DoneHead = This->m_HCCA->DoneHead;
+
+        //
+        // clear out lower bits, ed are 16 byte aligned
+        //
+        DoneHead &= ~0xF;
+
+        //
+        // notify queue of event
+        //
+        This->m_UsbQueue->TransferDescriptorCompletionCallback(DoneHead);
+    }
     if (CStatus & OHCI_ROOT_HUB_STATUS_CHANGE)
     {
         //

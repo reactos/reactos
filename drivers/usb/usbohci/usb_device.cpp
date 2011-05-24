@@ -707,6 +707,11 @@ CUSBDevice::CreateConfigurationDescriptor(
     }
 
     //
+    // zero buffer
+    //
+    RtlZeroMemory(Buffer, PAGE_SIZE);
+
+    //
     // build setup packet
     //
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;

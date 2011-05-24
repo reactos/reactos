@@ -33,11 +33,17 @@ public:
         return m_Ref;
     }
 
+    // com
     virtual NTSTATUS Initialize(IN PUSBHARDWAREDEVICE Hardware, PDMA_ADAPTER AdapterObject, IN PDMAMEMORYMANAGER MemManager, IN OPTIONAL PKSPIN_LOCK Lock);
     virtual ULONG GetPendingRequestCount();
     virtual NTSTATUS AddUSBRequest(IUSBRequest * Request);
     virtual NTSTATUS CancelRequests();
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest);
+    virtual VOID TransferDescriptorCompletionCallback(ULONG TransferDescriptorLogicalAddress);
+
+    // local functions
+    BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
+    NTSTATUS FindTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -218,13 +224,14 @@ CUSBQueue::AddUSBRequest(
     // set descriptor active
     //
     Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
+    //HeadDescriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
 
     //
     // notify hardware of our request
     //
     m_Hardware->HeadEndpointDescriptorModified(Type);
 
-    DPRINT1("Request added to queue\n");
+    DPRINT1("Request %x %x added to queue\n", Descriptor, Descriptor->PhysicalAddress);
 
 
     return STATUS_SUCCESS;
@@ -253,6 +260,142 @@ CUSBQueue::CreateUSBRequest(
     }
 
     return Status;
+}
+
+NTSTATUS
+CUSBQueue::FindTransferDescriptorInEndpoint(
+    IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN ULONG TransferDescriptorLogicalAddress,
+    OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor,
+    OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor)
+{
+    POHCI_ENDPOINT_DESCRIPTOR LastDescriptor = EndpointDescriptor;
+
+
+    //
+    // skip first endpoint head
+    //
+    EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)EndpointDescriptor->NextDescriptor;
+
+    while(EndpointDescriptor)
+    {
+        //
+        // check if the transfer descriptor is inside the list
+        //
+        if (IsTransferDescriptorInEndpoint(EndpointDescriptor, TransferDescriptorLogicalAddress))
+        {
+            //
+            // found endpoint
+            //
+            *OutEndpointDescriptor = EndpointDescriptor;
+            *OutPreviousEndpointDescriptor = LastDescriptor;
+
+            //
+            // done
+            //
+            return STATUS_SUCCESS;
+        }
+
+        //
+        // store last endpoint
+        //
+        LastDescriptor = EndpointDescriptor;
+
+        //
+        // move to next
+        //
+        EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)EndpointDescriptor->NextDescriptor;
+    }
+
+    //
+    // failed to endpoint
+    //
+    return STATUS_NOT_FOUND;
+}
+
+
+BOOLEAN
+CUSBQueue::IsTransferDescriptorInEndpoint(
+    IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN ULONG TransferDescriptorLogicalAddress)
+{
+    POHCI_GENERAL_TD Descriptor;
+
+    //
+    // get first general transfer descriptor
+    //
+    Descriptor = (POHCI_GENERAL_TD)EndpointDescriptor->HeadLogicalDescriptor;
+
+    //
+    // sanity check
+    //
+    ASSERT(Descriptor);
+
+    do
+    {
+        if (Descriptor->PhysicalAddress.LowPart == TransferDescriptorLogicalAddress)
+        {
+            //
+            // found descriptor
+            //
+            return TRUE;
+        }
+
+        //
+        // move to next
+        //
+        Descriptor = (POHCI_GENERAL_TD)Descriptor->NextLogicalDescriptor;
+    }while(Descriptor);
+
+
+    //
+    // no descriptor found
+    //
+    return FALSE;
+}
+
+
+VOID
+CUSBQueue::TransferDescriptorCompletionCallback(
+    ULONG TransferDescriptorLogicalAddress)
+{
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, PreviousEndpointDescriptor;
+    NTSTATUS Status;
+    PUSBREQUEST Request;
+
+    //
+    // find transfer descriptor in control list
+    //
+    Status = FindTransferDescriptorInEndpoint(m_ControlHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // FIXME: make sure this is ok
+        // unlink descriptor
+        //
+        PreviousEndpointDescriptor->NextDescriptor = EndpointDescriptor->NextDescriptor;
+        PreviousEndpointDescriptor->NextPhysicalEndpoint = EndpointDescriptor->NextPhysicalEndpoint;
+
+        //
+        // get corresponding request
+        //
+        Request = PUSBREQUEST(EndpointDescriptor->Request);
+
+        //
+        // notify of completion
+        //
+        Request->CompletionCallback(EndpointDescriptor);
+
+        //
+        // FIXME: check if complete
+        //
+
+        //
+        // release request
+        //
+        Request->Release();
+    }
+
 }
 
 

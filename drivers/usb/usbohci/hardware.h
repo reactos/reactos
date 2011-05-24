@@ -202,8 +202,9 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 
     // Software part
     PHYSICAL_ADDRESS  PhysicalAddress;
-    PVOID Request;
+    PVOID HeadLogicalDescriptor;
     PVOID NextDescriptor;
+    PVOID Request;
 }OHCI_ENDPOINT_DESCRIPTOR, *POHCI_ENDPOINT_DESCRIPTOR;
 
 
@@ -238,9 +239,9 @@ typedef struct
     ULONG LastPhysicalByteAddress; // Physical pointer to buffer end
     // Software part
     PHYSICAL_ADDRESS  PhysicalAddress;           // Physical address of this descriptor
+    PVOID NextLogicalDescriptor;
     ULONG  BufferSize;                // Size of the buffer
     PVOID    BufferLogical;            // Logical pointer to the buffer
-    PVOID  Request;                   // pointer to IUSBRequest
 }OHCI_GENERAL_TD, *POHCI_GENERAL_TD;
 
 

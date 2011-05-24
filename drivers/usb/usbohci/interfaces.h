@@ -436,6 +436,13 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 
     virtual BOOLEAN IsRequestInitialized() = 0;
 
+//-----------------------------------------------------------------------------------------
+//
+// CompletionCallback
+//
+// Description: notifies request that the endpoint descriptor is complete
+
+    virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor) = 0;
 };
 
 
@@ -495,6 +502,14 @@ DECLARE_INTERFACE_(IUSBQueue, IUnknown)
 // Description: creates an usb request
 
     virtual NTSTATUS CreateUSBRequest(IUSBRequest **OutRequest) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// TransferDescriptorCompletionCallback
+//
+// Description: notifies the queue that a transfer was completed
+
+    virtual VOID TransferDescriptorCompletionCallback(ULONG TransferDescriptorLogicalAddress) = 0;
 
 };
 
