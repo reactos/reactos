@@ -253,6 +253,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
 
+    DbgPrint("[AfdCreate] Created socket\n");
+
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
     Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
@@ -469,7 +471,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     {
         if (ZwClose(FCB->AddressFile.Handle) == STATUS_INVALID_HANDLE)
         {
-            DbgPrint("INVALID ADDRESS FILE HANDLE VALUE: %x %x\n", FCB->AddressFile.Handle, FCB->AddressFile.Object);
+            DbgPrint("[AfdCloseSocket] INVALID ADDRESS FILE HANDLE VALUE: %x %x\n", FCB->AddressFile.Handle, FCB->AddressFile.Object);
         }
     }
 
@@ -477,7 +479,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     {
         if (ZwClose(FCB->Connection.Handle) == STATUS_INVALID_HANDLE)
         {
-            DbgPrint("INVALID CONNECTION HANDLE VALUE: %x %x\n", FCB->Connection.Handle, FCB->Connection.Object);
+            DbgPrint("[AfdCloseSocket] INVALID CONNECTION HANDLE VALUE: %x %x\n", FCB->Connection.Handle, FCB->Connection.Object);
         }
     }
 

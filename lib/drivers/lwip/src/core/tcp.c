@@ -753,26 +753,33 @@ tcp_slowtmr(void)
   /* Steps through all of the active PCBs. */
   prev = NULL;
   pcb = tcp_active_pcbs;
-  if (pcb == NULL) {
+  if (pcb == NULL)
+  {
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: no active pcbs\n"));
   }
-  while (pcb != NULL) {
+  while (pcb != NULL)
+  {
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: processing active pcb\n"));
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != CLOSED\n", pcb->state != CLOSED);
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != LISTEN\n", pcb->state != LISTEN);
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != TIME-WAIT\n", pcb->state != TIME_WAIT);
 
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: active pcb ports (%d -> %d) %d\n", pcb->local_port, pcb->remote_port, pcb->identifier));
+
     pcb_remove = 0;
     pcb_reset = 0;
 
-    if (pcb->state == SYN_SENT && pcb->nrtx == TCP_SYNMAXRTX) {
+    if (pcb->state == SYN_SENT && pcb->nrtx == TCP_SYNMAXRTX)
+    {
       ++pcb_remove;
       LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: max SYN retries reached\n"));
     }
-    else if (pcb->nrtx == TCP_MAXRTX) {
+    else if (pcb->nrtx == TCP_MAXRTX)
+    {
       ++pcb_remove;
       LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: max DATA retries reached\n"));
-    } else {
+    }
+    else {
       if (pcb->persist_backoff > 0) {
         /* If snd_wnd is zero, use persist timer to send 1 byte probes
          * instead of using the standard retransmission mechanism. */
@@ -895,13 +902,16 @@ tcp_slowtmr(void)
     }
 
     /* If the PCB should be removed, do it. */
-    if (pcb_remove) {
+    if (pcb_remove)
+    {
       tcp_pcb_purge(pcb);
       /* Remove PCB from tcp_active_pcbs list. */
       if (prev != NULL) {
         LWIP_ASSERT("tcp_slowtmr: middle tcp != tcp_active_pcbs", pcb != tcp_active_pcbs);
         prev->next = pcb->next;
-      } else {
+      }
+      else
+      {
         /* This PCB was the first. */
         LWIP_ASSERT("tcp_slowtmr: first pcb == tcp_active_pcbs", tcp_active_pcbs == pcb);
         tcp_active_pcbs = pcb->next;
@@ -916,19 +926,24 @@ tcp_slowtmr(void)
       pcb2 = pcb->next;
       memp_free(MEMP_TCP_PCB, pcb);
       pcb = pcb2;
-    } else {
+    }
+    else
+    {
       /* get the 'next' element now and work with 'prev' below (in case of abort) */
       prev = pcb;
       pcb = pcb->next;
 
       /* We check if we should poll the connection. */
       ++prev->polltmr;
-      if (prev->polltmr >= prev->pollinterval) {
+      if (prev->polltmr >= prev->pollinterval)
+      {
         prev->polltmr = 0;
         LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: polling application\n"));
+        //LWIP_ASSERT("tcp_slowtmr: active pcb->poll != 0\n", pcb->poll != 0);
         TCP_EVENT_POLL(prev, err);
         /* if err == ERR_ABRT, 'prev' is already deallocated */
-        if (err == ERR_OK) {
+        if (err == ERR_OK)
+        {
           tcp_output(prev);
         }
       }

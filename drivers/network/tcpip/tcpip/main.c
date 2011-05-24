@@ -360,7 +360,7 @@ TiDispatchInternal(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatchInternal] Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
     DeviceObject, Irp, IrpSp->MinorFunction));
 
   Irp->IoStatus.Status      = STATUS_SUCCESS;
@@ -435,7 +435,7 @@ TiDispatchInternal(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatchInternal] Leaving. Status = (0x%X).\n", Status));
 
   if( Complete )
       IRPFinish( Irp, Status );
@@ -462,7 +462,7 @@ TiDispatch(
 
   IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 
-  TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Called. IRP is at (0x%X).\n", Irp));
 
   Irp->IoStatus.Information = 0;
 
@@ -505,7 +505,7 @@ TiDispatch(
     }
   }
 
-  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Leaving. Status = (0x%X).\n", Status));
 
   return IRPFinish( Irp, Status );
 }
@@ -524,7 +524,7 @@ VOID NTAPI TiUnload(
 
   TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
   if (!IsListEmpty(&AddressFileListHead)) {
-    TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
+    TI_DbgPrint(MIN_TRACE, ("[TCPIP, TiUnload] Called. Open address file objects exists.\n"));
   }
   TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
@@ -573,7 +573,7 @@ VOID NTAPI TiUnload(
   if (EntityList)
     ExFreePoolWithTag(EntityList, TDI_ENTITY_TAG);
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, TiUnload] Leaving.\n"));
 }
 
 NTSTATUS NTAPI
@@ -598,7 +598,7 @@ DriverEntry(
   NDIS_STATUS NdisStatus;
   LARGE_INTEGER DueTime;
 
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DriverEntry] Called\n"));
 
   /* TdiInitialize() ? */
 
@@ -758,6 +758,9 @@ DriverEntry(
      relative expiration time of IP_TIMEOUT milliseconds */
   DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
   KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
+
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DriverEntry] Finished\n"));
+
 
   return STATUS_SUCCESS;
 }

@@ -149,7 +149,7 @@
 /**
  * TCP_DEBUG: Enable debugging for TCP.
  */
-#define TCP_DEBUG                       LWIP_DBG_OFF
+#define TCP_DEBUG                       LWIP_DBG_ON
 
 /**
  * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.

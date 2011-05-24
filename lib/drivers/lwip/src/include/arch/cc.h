@@ -47,7 +47,7 @@ typedef u32_t mem_ptr_t;
 #define LWIP_CHKSUM_ALGORITHM 3
 
 /* Diagnostics */
-#define LWIP_PLATFORM_DIAG(x) DbgPrint(x)
+#define LWIP_PLATFORM_DIAG(x) (DbgPrint x)
 #define LWIP_PLATFORM_ASSERT(x) ASSERTMSG(x, FALSE)
 
 /* Synchronization */

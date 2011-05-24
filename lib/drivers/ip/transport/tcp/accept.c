@@ -13,12 +13,15 @@
 #include "rosip.h"
 
 NTSTATUS TCPCheckPeerForAccept(PVOID Context,
-                               PTDI_REQUEST_KERNEL Request) {
+                               PTDI_REQUEST_KERNEL Request)
+{
     struct tcp_pcb *newpcb = Context;
     NTSTATUS Status;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
     PTA_IP_ADDRESS RemoteAddress;
     struct ip_addr ipaddr;
+
+    DbgPrint("[IP, TCPCheckPeerForAccept] Called\n");
     
     if (Request->RequestFlags & TDI_QUERY_ACCEPT)
         DbgPrint("TDI_QUERY_ACCEPT NOT SUPPORTED!!!\n");
@@ -36,14 +39,15 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
     
     RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
     
-    TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
+    DbgPrint("[IP, TCPCheckPeerForAccept] Leaving. Status %x\n", Status);
 
     return Status;
 }
 
 /* This listen is on a socket we keep as internal.  That socket has the same
  * lifetime as the address file */
-NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
+NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
+{
     NTSTATUS Status = STATUS_SUCCESS;
     struct ip_addr AddressToBind;
     KIRQL OldIrql;
@@ -53,10 +57,10 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
 
     LockObject(Connection, &OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Called\n"));
 
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-    Connection->SocketContext));
+    TI_DbgPrint(DEBUG_TCP, ("Connection->SocketContext %x\n",
+        Connection->SocketContext));
     
     AddressToBind.addr = Connection->AddressFile->Address.Address.IPv4Address;
 
@@ -73,7 +77,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
 
     UnlockObject(Connection, OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Leaving. Status = %x\n", Status));
 
     return Status;
 }
@@ -117,24 +121,26 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
 
-    TI_DbgPrint(DEBUG_TCP,("TCPAccept started\n"));
+    DbgPrint("[IP, TCPAccept] Called\n");
 
     LockObject(Listener, &OldIrql);
 
     Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket),
                                    TDI_BUCKET_TAG );
     
-    if( Bucket ) {
+    if( Bucket )
+    {
         Bucket->AssociatedEndpoint = Connection;
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
         InsertTailList( &Listener->ListenRequest, &Bucket->Entry );
         Status = STATUS_PENDING;
-    } else
+    }
+    else
         Status = STATUS_NO_MEMORY;
 
     UnlockObject(Listener, OldIrql);
 
-    TI_DbgPrint(DEBUG_TCP,("TCPAccept finished %x\n", Status));
+    DbgPrint("[IP, TCPAccept] Leaving. Status = %x\n", Status);
     return Status;
 }

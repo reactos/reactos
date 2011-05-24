@@ -25,7 +25,7 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     
     /* The caller frees the pbuf struct */
     
-    DbgPrint("Sending data out on %c%c\n", netif->name[0], netif->name[1]);
+    DbgPrint("[IP, TCPSendDataCallback] Sending data out on %c%c\n", netif->name[0], netif->name[1]);
     
     if (((*(u8_t*)p->payload) & 0xF0) == 0x40)
     {

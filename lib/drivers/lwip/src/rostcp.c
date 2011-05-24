@@ -5,6 +5,20 @@
 
 #include <debug.h>
 
+static const char * const tcp_state_str[] = {
+  "CLOSED",      
+  "LISTEN",      
+  "SYN_SENT",    
+  "SYN_RCVD",    
+  "ESTABLISHED", 
+  "FIN_WAIT_1",  
+  "FIN_WAIT_2",  
+  "CLOSE_WAIT",  
+  "CLOSING",     
+  "LAST_ACK",    
+  "TIME_WAIT"   
+};
+
 /* The way that lwIP does multi-threading is really not ideal for our purposes but
  * we best go along with it unless we want another unstable TCP library. lwIP uses
  * a thread called the "tcpip thread" which is the only one allowed to call raw API
@@ -44,7 +58,8 @@ static
 err_t
 InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, u16_t space)
 {
-    DbgPrint("SendEvent(0x%x, 0x%x, %d)\n", arg, pcb, (unsigned int)space);
+    DbgPrint("[InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
+        arg, pcb, (unsigned int)space);
     
     /* Make sure the socket didn't get closed */
     if (!arg) return ERR_OK;
@@ -60,7 +75,8 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 {
     u32_t len;
 
-    DbgPrint("RecvEvent(0x%x, 0x%x, 0x%x, %d)\n", arg, pcb, p, (unsigned int)err);
+    DbgPrint("[InternalRecvEventHandler] RecvEvent (0x%x, 0x%x, 0x%x, %d)\n",
+        arg, pcb, p, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
     if (!arg)
@@ -75,7 +91,8 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
     }
     else
     {
-        DbgPrint("RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n", p, p->payload, p->len, p->tot_len);
+        DbgPrint("[InternalRecvEventHandler] RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n",
+            p, p->payload, p->len, p->tot_len);
 
         if (err == ERR_OK)
         {
@@ -107,10 +124,15 @@ static
 err_t
 InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
-    DbgPrint("AcceptEvent(0x%x, 0x%x, %d)\n", arg, newpcb, (unsigned int)err);
+    DbgPrint("[InternalAcceptEventHandler] AcceptEvent (0x%x, 0x%x, %d)\n",
+        arg, newpcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
-    if (!arg) return ERR_ABRT;
+    if (!arg)
+        return ERR_ABRT;
+
+    DbgPrint("[InternalAcceptEventHandler] newpcb->state = %s\n",
+                tcp_state_str[newpcb->state]);
     
     TCPAcceptEventHandler(arg, newpcb);
     
@@ -125,10 +147,12 @@ static
 err_t
 InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
 {
-    DbgPrint("ConnectEvent(0x%x, 0x%x, %d)\n", arg, pcb, (unsigned int)err);
+    DbgPrint("[InternalConnectEventHandler] ConnectEvent(0x%x, 0x%x, %d)\n",
+        arg, pcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
-    if (!arg) return ERR_OK;
+    if (!arg)
+        return ERR_OK;
     
     TCPConnectEventHandler(arg, err);
     
@@ -428,6 +452,8 @@ void
 LibTCPConnectCallback(void *arg)
 {
     struct connect_callback_msg *msg = arg;
+
+    DbgPrint("[LibTCPConnectCallback] Called\n");
     
     ASSERT(arg);
     
@@ -436,6 +462,8 @@ LibTCPConnectCallback(void *arg)
         msg->Error = ERR_INPROGRESS;
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
+
+    DbgPrint("[LibTCPConnectCallback] Done\n");
 }
 
 err_t
@@ -536,7 +564,7 @@ LibTCPClose(struct tcp_pcb *pcb)
 void
 LibTCPAccept(struct tcp_pcb *pcb, void *arg)
 {
-    DbgPrint("LibTCPAccept(0x%x, 0x%x)\n", pcb, arg);
+    DbgPrint("[LibTCPAccept] (pcb, arg) = (0x%x, 0x%x)\n", pcb, arg);
     
     ASSERT(arg);
     
@@ -545,13 +573,15 @@ LibTCPAccept(struct tcp_pcb *pcb, void *arg)
     tcp_sent(pcb, InternalSendEventHandler);
     tcp_arg(pcb, arg);
     
-    tcp_accepted(pcb);
+    tcp_accepted(pcb->listener);
+
+    DbgPrint("[LibTCPAccept] Done\n");
 }
 
 err_t
 LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 {
-    DbgPrint("LibTCPGetHostName(0x%x)\n", pcb);
+    DbgPrint("[LibTCPGetHostName] pcb = (0x%x)\n", pcb);
     
     if (!pcb)
         return ERR_CLSD;
@@ -567,7 +597,7 @@ LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 err_t
 LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 {
-    DbgPrint("LibTCPGetPeerName(0x%x)\n", pcb);
+    DbgPrint("[LibTCPGetPeerName] pcb = (0x%x)\n", pcb);
     
     if (!pcb)
         return ERR_CLSD;
@@ -575,7 +605,7 @@ LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
     *ipaddr = pcb->remote_ip;
     *port = pcb->remote_port;
     
-    DbgPrint("Got remote port: %d\n", *port);
+    DbgPrint("[LibTCPGetPeerName] Got remote port: %d\n", *port);
     
     return ERR_OK;
 }
