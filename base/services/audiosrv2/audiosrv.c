@@ -65,7 +65,6 @@ void Playbuffer(MixerEngine * mixer)
     DWORD Length;
     HANDLE FilterHandle; 
     HANDLE PinHandle;
-    PSHORT SoundBuffer;
     BOOL Result;
     NTSTATUS Status;
 
