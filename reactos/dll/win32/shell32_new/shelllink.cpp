@@ -102,6 +102,7 @@ static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWor
 /* strdup on the process heap */
 static LPWSTR __inline HEAP_strdupAtoW( HANDLE heap, DWORD flags, LPCSTR str)
 {
+    assert(str);
     INT len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
     LPWSTR p = (LPWSTR)HeapAlloc( heap, flags, len*sizeof (WCHAR) );
     if( !p )
@@ -254,6 +255,16 @@ HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 
 		if( SUCCEEDED( r ) )
 		{
+            if ( sCurFile )
+            {
+                HeapFree(GetProcessHeap(), 0, sCurFile);
+            }
+            sCurFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(pszFileName)+1) * sizeof(WCHAR));
+            if ( sCurFile )
+            {
+                wcscpy(sCurFile, pszFileName);
+            }
+
 			StartLinkProcessor( pszFileName );
 
 			bDirty = FALSE;
@@ -276,8 +287,25 @@ HRESULT WINAPI ShellLink::SaveCompleted(LPCOLESTR pszFileName)
 
 HRESULT WINAPI ShellLink::GetCurFile(LPOLESTR *ppszFileName)
 {
-	FIXME("(%p)\n", this);
-	return NOERROR;
+    *ppszFileName = NULL;
+
+    if ( !sCurFile)
+    {
+        /* IPersistFile::GetCurFile called before IPersistFile::Save */
+        return S_FALSE;
+    }
+
+    *ppszFileName = (LPOLESTR)CoTaskMemAlloc((wcslen(sCurFile)+1) * sizeof(WCHAR));
+    if (!*ppszFileName)
+    {
+        /* out of memory */
+        return E_OUTOFMEMORY;
+    }
+
+    /* copy last saved filename */
+    wcscpy(*ppszFileName, sCurFile);
+
+    return NOERROR;
 }
 
 /************************************************************************
@@ -1023,10 +1051,13 @@ HRESULT WINAPI ShellLink::SetDescription(LPCSTR pszName)
     TRACE("(%p)->(pName=%s)\n", this, pszName);
 
     HeapFree(GetProcessHeap(), 0, sDescription);
-    sDescription = HEAP_strdupAtoW( GetProcessHeap(), 0, pszName);
-    if ( !sDescription )
-        return E_OUTOFMEMORY;
+    sDescription = NULL;
 
+    if ( pszName ) {
+        sDescription = HEAP_strdupAtoW( GetProcessHeap(), 0, pszName);
+        if ( !sDescription )
+            return E_OUTOFMEMORY;
+    }
     bDirty = TRUE;
 
     return S_OK;
@@ -1050,10 +1081,13 @@ HRESULT WINAPI ShellLink::SetWorkingDirectory(LPCSTR pszDir)
     TRACE("(%p)->(dir=%s)\n",this, pszDir);
 
     HeapFree(GetProcessHeap(), 0, sWorkDir);
-    sWorkDir = HEAP_strdupAtoW( GetProcessHeap(), 0, pszDir);
-    if ( !sWorkDir )
-        return E_OUTOFMEMORY;
+    sWorkDir = NULL;
 
+    if ( pszDir ) {
+        sWorkDir = HEAP_strdupAtoW( GetProcessHeap(), 0, pszDir);
+        if ( !sWorkDir )
+            return E_OUTOFMEMORY;
+    }
     bDirty = TRUE;
 
     return S_OK;
@@ -1077,9 +1111,13 @@ HRESULT WINAPI ShellLink::SetArguments(LPCSTR pszArgs)
     TRACE("(%p)->(args=%s)\n",this, pszArgs);
 
     HeapFree(GetProcessHeap(), 0, sArgs);
-    sArgs = HEAP_strdupAtoW( GetProcessHeap(), 0, pszArgs);
-    if( !sArgs )
-        return E_OUTOFMEMORY;
+    sArgs = NULL;
+
+    if ( pszArgs ) {
+        sArgs = HEAP_strdupAtoW( GetProcessHeap(), 0, pszArgs);
+        if( !sArgs )
+            return E_OUTOFMEMORY;
+    }
 
     bDirty = TRUE;
 
@@ -1196,9 +1234,13 @@ HRESULT WINAPI ShellLink::SetIconLocation(LPCSTR pszIconPath,INT iIcon)
     TRACE("(%p)->(path=%s iicon=%u)\n",this, pszIconPath, iIcon);
 
     HeapFree(GetProcessHeap(), 0, sIcoPath);
-    sIcoPath = HEAP_strdupAtoW(GetProcessHeap(), 0, pszIconPath);
-    if ( !sIcoPath )
-        return E_OUTOFMEMORY;
+    sIcoPath = NULL;
+
+    if ( pszIconPath ) {
+        sIcoPath = HEAP_strdupAtoW(GetProcessHeap(), 0, pszIconPath);
+        if ( !sIcoPath )
+            return E_OUTOFMEMORY;
+    }
 
     iIcoNdx = iIcon;
     bDirty = TRUE;
@@ -1211,8 +1253,12 @@ HRESULT WINAPI ShellLink::SetRelativePath(LPCSTR pszPathRel, DWORD dwReserved)
     TRACE("(%p)->(path=%s %x)\n",this, pszPathRel, dwReserved);
 
     HeapFree(GetProcessHeap(), 0, sPathRel);
-    sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
-    bDirty = TRUE;
+    sPathRel = NULL;
+
+    if ( pszPathRel ) {
+        sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
+        bDirty = TRUE;
+    }
 
     return ShellLink_UpdatePath(sPathRel, sPath, sWorkDir, &sPath);
 }

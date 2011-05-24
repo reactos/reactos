@@ -71,6 +71,7 @@ private:
  	LPWSTR        sComponent;
 	volume_info   volume;
     LPWSTR        sLinkPath;
+    LPWSTR        sCurFile;
     BOOL          bRunAs;
 	BOOL          bDirty;
 	INT           iIdOpen;  /* id of the "Open" entry in the context menu */
