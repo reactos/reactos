@@ -167,6 +167,8 @@ CUSBQueue::AddUSBRequest(
         //
         // request not supported, please try later
         //
+        DPRINT1("Request Type %x not supported\n", Type);
+        ASSERT(FALSE);
         return Status;
     }
 
@@ -389,7 +391,7 @@ CUSBQueue::TransferDescriptorCompletionCallback(
         //
         // FIXME: check if complete
         //
-
+        ASSERT(Request->IsRequestComplete());
         //
         // release request
         //

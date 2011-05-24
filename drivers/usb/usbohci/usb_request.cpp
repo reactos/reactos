@@ -706,7 +706,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // now create the data descriptor
         //
-        Status = CreateGeneralTransferDescriptor(&DataDescriptor, m_TransferBufferLength);
+        Status = CreateGeneralTransferDescriptor(&DataDescriptor, 0);
         if (!NT_SUCCESS(Status))
         {
             //
@@ -924,6 +924,8 @@ VOID
 CUSBRequest::CompletionCallback(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
+    POHCI_GENERAL_TD TransferDescriptor, NextTransferDescriptor;
+
     DPRINT1("CUSBRequest::CompletionCallback\n");
 
     //
@@ -937,6 +939,45 @@ CUSBRequest::CompletionCallback(
     //
     // FIXME: cleanup descriptors
     //
+
+    //
+    // get first general transfer descriptor
+    //
+    TransferDescriptor = (POHCI_GENERAL_TD)OutDescriptor->HeadLogicalDescriptor;
+
+    while(TransferDescriptor)
+    {
+        //
+        // get next
+        //
+        NextTransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
+
+        //
+        // is there a buffer associated
+        //
+        if (TransferDescriptor->BufferSize)
+        {
+            //
+            // release buffer
+            //
+            m_DmaManager->Release(TransferDescriptor->BufferLogical, TransferDescriptor->BufferSize);
+        }
+
+        //
+        // release descriptor
+        //
+        m_DmaManager->Release(TransferDescriptor, sizeof(OHCI_GENERAL_TD));
+
+        //
+        // move to next
+        //
+        TransferDescriptor = NextTransferDescriptor;
+    }
+
+    //
+    // release endpoint descriptor
+    //
+    m_DmaManager->Release(OutDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
 
     //
     // signal completion event
