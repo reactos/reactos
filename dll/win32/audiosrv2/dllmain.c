@@ -62,7 +62,7 @@ BOOL fInit, fIgnore;
 	return TRUE;
 }
 
-__declspec(dllexport) MixerEngine * getmixerengine()
+WINAPI MixerEngine * getmixerengine()
 {
 return lpvMem;
 }
