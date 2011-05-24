@@ -10,7 +10,11 @@
 #define _WIN32_IE 0x0501
 #endif
 
-#include <psdk/commctrl.h>
+#include_next <commctrl.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #undef DPA_GetPtr
 LPVOID WINAPI DPA_GetPtr(HDPA, INT);
@@ -68,5 +72,9 @@ typedef struct
 /* undocumented messages in Toolbar */
 #define TB_UNKWN45D              (WM_USER+93)
 #define TB_UNKWN464              (WM_USER+100)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _INC_COMMCTRL_WINE */
