@@ -922,9 +922,9 @@ CHubController::HandleClassOther(
                 case PORT_ENABLE:
                 {
                     //
-                    // port enable is a no-op for OHCI
+                    // port enable
                     //
-                    Status = STATUS_SUCCESS;
+                    Status = m_Hardware->SetPortFeature(PortId, PORT_ENABLE);
                     break;
                 }
 

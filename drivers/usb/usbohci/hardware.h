@@ -100,7 +100,7 @@
 //
 //  Root Hub status register (section 7.4.3)
 //
-#define OHCI_RH_STATUS                          0x50
+#define OHCI_RH_STATUS_OFFSET                          0x50
 #define OHCI_RH_LOCAL_POWER_STATUS              0x00000001
 #define OHCI_RH_OVER_CURRENT_INDICATOR          0x00000002
 #define OHCI_RH_DEVICE_REMOTE_WAKEUP_ENABLE     0x00008000

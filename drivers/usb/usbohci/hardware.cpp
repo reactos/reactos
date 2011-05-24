@@ -489,7 +489,7 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    ULONG Control, NumberOfPorts, Index, Descriptor;
+    ULONG Control, NumberOfPorts, Index, Descriptor, FrameInterval, Periodic, IntervalValue;
 
     //
     // first write address of HCCA
@@ -540,6 +540,48 @@ CUSBHardwareDevice::StartController(void)
     // assert that the controller has been started
     //
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
+
+    //
+    // get frame interval
+    //
+    //FrameInterval = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET)) & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE;
+    //FrameInterval |= OHCI_FSMPS(IntervalValue) | IntervalValue;
+
+    //
+    // write frame interval
+    //
+    //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
+    // 90% periodic
+    //Periodic = OHCI_PERIODIC(intervalValue);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + 0x40 /*OHCI_PERIODIC_START_OFFSET*/), 0x3E67);
+
+
+    //
+    // read descriptor
+    //
+    Descriptor = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET));
+
+    //
+    // no over current protection
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor | OHCI_RH_NO_OVER_CURRENT_PROTECTION);
+
+    //
+    // enable power on all ports
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_STATUS_OFFSET), OHCI_RH_LOCAL_POWER_STATUS_CHANGE);
+
+    //
+    // wait a bit
+    //
+    KeStallExecutionProcessor(10);
+
+    //
+    // write descriptor
+    //
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_DESCRIPTOR_A_OFFSET), Descriptor);
+
+
 
     //
     // retrieve number of ports
@@ -913,19 +955,11 @@ CUSBHardwareDevice::ClearPortStatus(
     if (PortId > m_NumberOfPorts)
         return STATUS_UNSUCCESSFUL;
 
-    //
-    // read port status
-    //
     Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
     KeStallExecutionProcessor(100);
 
     if (Status == C_PORT_RESET)
     {
-        //
-        // complete reset
-        //
-        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRSC);
-
         do
         {
            //
@@ -945,14 +979,43 @@ CUSBHardwareDevice::ClearPortStatus(
            // wait a bit
            //
            KeStallExecutionProcessor(100);
-           DPRINT1("Wait...\n");
 
-        }while(Index++ < 10);
+           //DPRINT1("Value %x Index %lu\n", Value, Index);
 
-        if ((Value & OHCI_RH_PORTSTATUS_PRS))
+        }while(TRUE);
+
+        //
+        // check if reset bit is still set
+        //
+        if (Value & OHCI_RH_PORTSTATUS_PRS)
         {
-            DPRINT1("Failed to reset\n");
+            //
+            // reset failed
+            //
+            DPRINT1("PortId %lu Reset failed\n", PortId);
+            return STATUS_UNSUCCESSFUL;
         }
+
+        //
+        // sanity checks
+        //
+        ASSERT((Value & OHCI_RH_PORTSTATUS_PRS) == 0);
+        ASSERT((Value & OHCI_RH_PORTSTATUS_PRSC));
+
+        //
+        // clear reset bit complete
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)), OHCI_RH_PORTSTATUS_PRSC);
+
+        //
+        // read status register
+        //
+        Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_RH_PORT_STATUS(PortId)));
+
+        //
+        // reset complete bit should be cleared
+        //
+        ASSERT((Value & OHCI_RH_PORTSTATUS_PRSC) == 0);
 
         //
         // update port status
@@ -964,13 +1027,15 @@ CUSBHardwareDevice::ClearPortStatus(
         //
         ASSERT((Value & OHCI_RH_PORTSTATUS_PES));
 
-        if (Value & OHCI_RH_PORTSTATUS_PES) 
-        {
-            //
-            // port is enabled
-            //
-            m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
-         }
+        //
+        // port is enabled
+        //
+        m_PortStatus[PortId].PortStatus |= USB_PORT_STATUS_ENABLE;
+
+        //
+        // re-enable root hub change
+        //
+        WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_INTERRUPT_ENABLE_OFFSET), OHCI_ROOT_HUB_STATUS_CHANGE);
     }
 
     if (Status == C_PORT_CONNECTION)
@@ -1275,6 +1340,12 @@ OhciDefferedRoutine(
                     // device connected
                     //
                     DPRINT1("New device arrival at Port %d LowSpeed %x\n", Index, (PortStatus & OHCI_RH_PORTSTATUS_LSDA));
+
+                    //
+                    // enable port
+                    //
+                    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)This->m_Base + OHCI_RH_PORT_STATUS(Index)), OHCI_RH_PORTSTATUS_PES);
+
 
                     //
                     // store change
