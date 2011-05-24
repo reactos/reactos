@@ -1,6 +1,0 @@
-
-add_library(w32kdll_xpsp2 SHARED main.c w32kdll_xpsp2.S)
-set_entrypoint(w32kdll_xpsp2 0)
-target_link_libraries(w32kdll_xpsp2 ${CMAKE_CURRENT_SOURCE_DIR}/w32kdll_xpsp2.def)
-add_dependencies(w32kdll_xpsp2 psdk )
-add_importlib_target(w32kdll_xpsp2.def)
