@@ -255,14 +255,14 @@ HRESULT WINAPI ShellLink::Save(LPCOLESTR pszFileName, BOOL fRemember)
 
 		if( SUCCEEDED( r ) )
 		{
-            if ( sCurFile )
+            if ( sLinkPath )
             {
-                HeapFree(GetProcessHeap(), 0, sCurFile);
+                HeapFree(GetProcessHeap(), 0, sLinkPath);
             }
-            sCurFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(pszFileName)+1) * sizeof(WCHAR));
-            if ( sCurFile )
+            sLinkPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(pszFileName)+1) * sizeof(WCHAR));
+            if ( sLinkPath )
             {
-                wcscpy(sCurFile, pszFileName);
+                wcscpy(sLinkPath, pszFileName);
             }
 
 			StartLinkProcessor( pszFileName );
@@ -289,13 +289,13 @@ HRESULT WINAPI ShellLink::GetCurFile(LPOLESTR *ppszFileName)
 {
     *ppszFileName = NULL;
 
-    if ( !sCurFile)
+    if ( !sLinkPath)
     {
         /* IPersistFile::GetCurFile called before IPersistFile::Save */
         return S_FALSE;
     }
 
-    *ppszFileName = (LPOLESTR)CoTaskMemAlloc((wcslen(sCurFile)+1) * sizeof(WCHAR));
+    *ppszFileName = (LPOLESTR)CoTaskMemAlloc((wcslen(sLinkPath)+1) * sizeof(WCHAR));
     if (!*ppszFileName)
     {
         /* out of memory */
@@ -303,7 +303,7 @@ HRESULT WINAPI ShellLink::GetCurFile(LPOLESTR *ppszFileName)
     }
 
     /* copy last saved filename */
-    wcscpy(*ppszFileName, sCurFile);
+    wcscpy(*ppszFileName, sLinkPath);
 
     return NOERROR;
 }
