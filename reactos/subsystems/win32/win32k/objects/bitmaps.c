@@ -80,7 +80,6 @@ GreCreateBitmapEx(
 	IN FLONG flags)
 {
     PSURFACE psurf;
-    SURFOBJ *pso;
     HBITMAP hbmp;
 
     /* Verify format */
@@ -94,9 +93,8 @@ GreCreateBitmapEx(
         return NULL;
     }
 
-    /* Get the handle for the bitmap and the surfobj */
+    /* Get the handle for the bitmap */
     hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-    pso = &psurf->SurfObj;
 
     /* The infamous RLE hack */
     if (iFormat == BMF_4RLE || iFormat == BMF_8RLE)
@@ -144,6 +142,7 @@ GreCreateBitmapEx(
 
 /* Creates a DDB surface,
  * as in CreateCompatibleBitmap or CreateBitmap.
+ * Note that each scanline must be 32bit aligned!
  */
 HBITMAP
 APIENTRY

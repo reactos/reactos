@@ -92,9 +92,9 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
-    static const WORD wPattern55AA[] =
-    { 0x5555, 0, 0xaaaa, 0, 0x5555, 0, 0xaaaa, 0,
-      0x5555, 0, 0xaaaa, 0, 0x5555, 0, 0xaaaa, 0 };
+    static const DWORD wPattern55AA[] = /* 32 bit aligned */
+    { 0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa,
+      0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa };
     HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
