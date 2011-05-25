@@ -771,7 +771,9 @@ extern "C" {
 #define MSV1_0_NTLM3_MIN_NT_RESPONSE_LENGTH RTL_SIZEOF_THROUGH_FIELD(MSV1_0_NTLM3_RESPONSE,AvPairsOff)
 
   typedef enum {
-    MsvAvEOL,MsvAvNbComputerName,MsvAvNbDomainName,MsvAvDnsComputerName,MsvAvDnsDomainName,MsvAvDnsTreeName,MsvAvFlags
+    MsvAvEOL,MsvAvNbComputerName,MsvAvNbDomainName,MsvAvDnsComputerName,
+    MsvAvDnsDomainName, MsvAvDnsTreeName, MsvAvFlags, MsvAvTimestamp,
+    MsvAvRestrictions, MsvAvTargetName, MsvAvChannelBindings
   } MSV1_0_AVID;
 
   typedef struct _MSV1_0_AV_PAIR {
