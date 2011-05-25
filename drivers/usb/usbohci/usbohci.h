@@ -7,6 +7,13 @@
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
+
+extern
+"C"
+{
+#include <usbdlib.h>
+}
+
 //
 // FIXME: 
 // #include <usbprotocoldefs.h>

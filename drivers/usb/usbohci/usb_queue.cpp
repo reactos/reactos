@@ -146,10 +146,10 @@ CUSBQueue::AddUSBRequest(
     {
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
         case USB_ENDPOINT_TYPE_INTERRUPT:
+        case USB_ENDPOINT_TYPE_BULK:
             /* NOT IMPLEMENTED IN QUEUE */
             Status = STATUS_NOT_SUPPORTED;
             break;
-        case USB_ENDPOINT_TYPE_BULK:
         case USB_ENDPOINT_TYPE_CONTROL:
             Status = STATUS_SUCCESS;
             break;

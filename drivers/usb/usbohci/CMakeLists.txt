@@ -30,6 +30,6 @@ else()
 endif(MSVC)
 
 set_module_type(usbohci kernelmodedriver)
-add_importlibs(usbohci ntoskrnl ks drmk hal)
+add_importlibs(usbohci ntoskrnl ks drmk hal usbd)
 
 add_cab_target(usbohci 2)
