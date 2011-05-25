@@ -34,6 +34,7 @@ add_importlibs(explorer_new
     shell32
     shlwapi
     version
+    uxtheme
     msvcrt
     kernel32
     ntdll)

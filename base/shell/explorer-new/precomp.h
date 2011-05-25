@@ -17,7 +17,9 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <uxtheme.h>
 
+#include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
 #include "todo.h"
