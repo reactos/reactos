@@ -246,6 +246,7 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     WCHAR szPortName[5];
     DWORD dwPortNumber;
     HCOMDB hComDB = HCOMDB_INVALID_HANDLE_VALUE;
+    HKEY hKey;
 
     TRACE("InstallSerialPort(%p, %p)\n",
           DeviceInfoSet, DeviceInfoData);
@@ -253,10 +254,12 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     /* Open the com port database */
     ComDBOpen(&hComDB);
 
+    /* Determine the port number from its resources ... */
     dwPortNumber = GetSerialPortNumber(DeviceInfoSet,
                                        DeviceInfoData);
     if (dwPortNumber != 0)
     {
+        /* ... and claim the port number in the database */
         ComDBClaimPort(hComDB,
                        dwPortNumber,
                        FALSE,
@@ -264,15 +267,37 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     }
     else
     {
+        /* ... or claim the next free port number */
         ComDBClaimNextFreePort(hComDB,
                                &dwPortNumber);
     }
 
+    /* Build the name of the port device */
     swprintf(szPortName, L"COM%u", dwPortNumber);
 
     /* Close the com port database */
     if (hComDB != HCOMDB_INVALID_HANDLE_VALUE)
         ComDBClose(hComDB);
+
+    /* Set the 'PortName' value */
+    hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet,
+                                   DeviceInfoData,
+                                   DICS_FLAG_GLOBAL,
+                                   0,
+                                   DIREG_DEV,
+                                   NULL,
+                                   NULL);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        RegSetValueExW(hKey,
+                       L"PortName",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)szPortName,
+                       (wcslen(szPortName) + 1) * sizeof(WCHAR));
+
+        RegCloseKey(hKey);
+    }
 
     /* Install the device */
     if (!SetupDiInstallDevice(DeviceInfoSet,
@@ -281,6 +306,7 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
         return GetLastError();
     }
 
+    /* Get the device description... */
     if (SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet,
                                           DeviceInfoData,
                                           SPDRP_DEVICEDESC,
@@ -289,6 +315,7 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
                                           256 * sizeof(WCHAR),
                                           NULL))
     {
+        /* ... and use it to build a new friendly name */
         swprintf(szFriendlyName,
                  L"%s (%s)",
                  szDeviceDescription,
@@ -296,6 +323,7 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     }
     else
     {
+        /* ... or build a generic friendly name */
         swprintf(szFriendlyName,
                  L"Serial Port (%s)",
                  szPortName);
