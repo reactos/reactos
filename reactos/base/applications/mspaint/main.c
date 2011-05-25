@@ -168,8 +168,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     wincl.lpfnWndProc       = WindowProcedure;
     wincl.style             = CS_DBLCLKS;
     wincl.cbSize            = sizeof(WNDCLASSEX);
-    wincl.hIcon             = LoadIcon(NULL, IDI_APPLICATION);
-    wincl.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(500));
+    wincl.hIcon             = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
+    wincl.hIconSm           = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_APPICON));
     wincl.hCursor           = LoadCursor(NULL, IDC_ARROW);
     wincl.lpszMenuName      = NULL;
     wincl.cbClsExtra        = 0;
