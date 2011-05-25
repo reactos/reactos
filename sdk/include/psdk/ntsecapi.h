@@ -214,7 +214,11 @@ typedef enum {
   MsvAvDnsComputerName,
   MsvAvDnsDomainName,
   MsvAvDnsTreeName,
-  MsvAvFlags
+  MsvAvFlags,
+  MsvAvTimestamp,
+  MsvAvRestrictions,
+  MsvAvTargetName,
+  MsvAvChannelBindings
 } MSV1_0_AVID;
 typedef enum _MSV1_0_PROTOCOL_MESSAGE_TYPE {
   MsV1_0Lm20ChallengeRequest = 0,
