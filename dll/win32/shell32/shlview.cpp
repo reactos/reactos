@@ -1712,7 +1712,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
 	  case LVN_ENDLABELEDITW:
 	    {
-	      TRACE("-- LVN_ENDLABELEDITA %p\n", this);
+	      TRACE("-- LVN_ENDLABELEDITW %p\n", this);
 	      if (lpdi->item.pszText)
 	      {
 	        HRESULT hr;
