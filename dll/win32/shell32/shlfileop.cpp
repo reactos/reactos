@@ -584,7 +584,7 @@ BOOL
 QueueFile(
     FILE_OPERATION_CONTEXT * Context)
 {
-    FILE_ENTRY * from, *to;
+    FILE_ENTRY * from, *to = NULL;
     BOOL bRet = FALSE;
 
     if (Context->Index >= Context->from->dwNumFiles)
