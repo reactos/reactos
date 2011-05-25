@@ -447,8 +447,13 @@ BOOL CDefView::CreateList()
 	TRACE("%p\n",this);
 
 	dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		  LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_AUTOARRANGE;
+          LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE;
         dwExStyle = WS_EX_CLIENTEDGE;
+
+    if (FolderSettings.fFlags & FWF_DESKTOP) 
+       dwStyle |= LVS_ALIGNLEFT;
+    else
+       dwStyle |= LVS_ALIGNTOP;
 
 	switch (FolderSettings.ViewMode)
 	{
@@ -489,8 +494,11 @@ BOOL CDefView::CreateList()
           * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
           * and activate drop shadows if necessary
           */
-         if (0)
+         if (1)
+         {
            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
+           SendMessageW(hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
+         }
          else
          {
            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
@@ -840,7 +848,8 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
 	if (FolderSettings.fFlags & (FWF_DESKTOP | FWF_TRANSPARENT))
-		return 1;
+		return SendMessageW(GetParent(), WM_ERASEBKGND, wParam, lParam); /* redirect to parent */
+
 	bHandled = FALSE;
 	return 0;
 }

@@ -399,8 +399,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
         switch (uMsg)
         {
             case WM_ERASEBKGND:
-                PaintDesktop((HDC)wParam);
-                break;
+                return (LRESULT)PaintDesktop((HDC)wParam);
 
             case WM_GETISHELLBROWSER:
                 Ret = (LRESULT)((IShellBrowser *)pThis);
