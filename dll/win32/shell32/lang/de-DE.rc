@@ -55,7 +55,7 @@ BEGIN
 		MENUITEM "Aktualisieren",             FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "Einfügen",                  FCIDM_SHVIEW_INSERT
-		MENUITEM "Verknüpfung einfügen",      FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Einfügen als Verweis",      FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "&Eigenschaften",            FCIDM_SHVIEW_PROPERTIES
 	END
@@ -672,6 +672,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Ausloggen"
 	IDS_LOGOFF_PROMPT           "Möchten Sie sich ausloggen?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Startmenü\\Programme"
 	IDS_PERSONAL                "Eigene Dateien"
@@ -715,14 +721,14 @@ BEGIN
 	IDS_SHELL_ABOUT_BACK        "< &Zurück"
 	FCIDM_SHVIEW_NEW 	    "Neu"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Neues Ver&zeichnis"
-	FCIDM_SHVIEW_NEWLINK        "Neue &Verknüpfung"
+	FCIDM_SHVIEW_NEWLINK        "Neuer Ver&weis"
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
 	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
 	IDS_RECYCLEBIN_DISKSPACE    "freier Speicher"
 	IDS_EMPTY_BITBUCKET         "Papierkorb leeren"
 	IDS_PICK_ICON_TITLE         "Symbol auswählen"
-	IDS_PICK_ICON_FILTER        "Symboldateien(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Programme\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Symboldateien (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Programme (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Dateiordner"
 	IDS_VIRTUAL_DRIVER          "Virtueller Gerätetreiber"
 	IDS_BAT_FILE                "ReactOS-Stapelverarbeitungsdatei"

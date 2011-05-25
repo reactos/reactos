@@ -674,6 +674,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Odhl·siù"
 	IDS_LOGOFF_PROMPT           "Naozaj sa chcete odhl·siù?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Ponuka ätart\\Programy"
 	IDS_PERSONAL                "Moje dokumenty"
@@ -723,8 +729,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
 	IDS_EMPTY_BITBUCKET         "Vypr·zdniù KÙö"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "S˙bory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "PrieËinok"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
 	IDS_BAT_FILE                "D·vkov˝ s˙bor systÈmu ReactOS"

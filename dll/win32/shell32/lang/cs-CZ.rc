@@ -655,6 +655,12 @@ BEGIN
 	IDS_LOGOFF_TITLE            "Odhlásit se"
 	IDS_LOGOFF_PROMPT           "Opravdu se chcete odhlásit?"
 
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Nabídka Start\\Programy"
 	IDS_PERSONAL                "Dokumenty"
@@ -704,8 +710,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Dostupné místo"
 	IDS_EMPTY_BITBUCKET         "Vysypat koš"
 	IDS_PICK_ICON_TITLE         "Zvolit ikonu"
-	IDS_PICK_ICON_FILTER        "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Spustitelné soubory\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Spustitelné soubory (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Složka"
 	IDS_VIRTUAL_DRIVER          "Virtuální ovladaè zaøízení"
 	IDS_BAT_FILE                "ReactOS dávkový soubor"
