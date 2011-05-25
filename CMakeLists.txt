@@ -26,7 +26,7 @@ set(CMAKE_COLOR_MAKEFILE OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
-#set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+set_property(GLOBAL PROPERTY RULE_MESSAGES ON)
 
 # check that the ARCH (target architecture) variable is defined
 if(NOT ARCH)
