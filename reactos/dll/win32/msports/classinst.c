@@ -257,8 +257,6 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
                                        DeviceInfoData);
     if (dwPortNumber != 0)
     {
-        swprintf(szPortName, L"COM%u", dwPortNumber);
-
         ComDBClaimPort(hComDB,
                        dwPortNumber,
                        FALSE,
@@ -266,8 +264,11 @@ InstallSerialPort(IN HDEVINFO DeviceInfoSet,
     }
     else
     {
-        wcscpy(szPortName, L"COMx");
+        ComDBClaimNextFreePort(hComDB,
+                               &dwPortNumber);
     }
+
+    swprintf(szPortName, L"COM%u", dwPortNumber);
 
     /* Close the com port database */
     if (hComDB != HCOMDB_INVALID_HANDLE_VALUE)

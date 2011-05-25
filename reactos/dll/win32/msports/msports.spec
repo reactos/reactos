@@ -1,10 +1,10 @@
-@ stub ComDBClaimNextFreePort
+@ stdcall ComDBClaimNextFreePort(ptr ptr)
 @ stdcall ComDBClaimPort(ptr long long ptr)
 @ stdcall ComDBClose(ptr)
-@ stub ComDBGetCurrentPortUsage
+@ stdcall ComDBGetCurrentPortUsage(ptr ptr long long ptr)
 @ stdcall ComDBOpen(ptr)
-@ stub ComDBReleasePort
-@ stub ComDBResizeDatabase
+@ stdcall ComDBReleasePort(ptr long)
+@ stdcall ComDBResizeDatabase(ptr long)
 @ stdcall LibMain(ptr long ptr) DllMain
 @ stub ParallelPortPropPageProvider
 @ stdcall PortsClassInstaller(long ptr ptr)

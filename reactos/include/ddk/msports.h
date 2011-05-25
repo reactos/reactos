@@ -14,6 +14,11 @@ typedef HCOMDB *PHCOMDB;
 
 LONG
 WINAPI
+ComDBClaimNextFreePort(IN HCOMDB hComDB,
+                       OUT LPDWORD ComNumber);
+
+LONG
+WINAPI
 ComDBClaimPort(IN HCOMDB hComDB,
                IN DWORD ComNumber,
                IN BOOL ForceClaim,
@@ -28,7 +33,7 @@ WINAPI
 ComDBGetCurrentPortUsage(IN HCOMDB hComDB,
                          OUT PBYTE Buffer,
                          IN DWORD BufferSize,
-                         IN ULONG ReportType,
+                         IN DWORD ReportType,
                          OUT LPDWORD MaxPortsReported);
 
 LONG
