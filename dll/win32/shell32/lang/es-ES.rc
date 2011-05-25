@@ -113,8 +113,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Mensaje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Si", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Si &a todo", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Sí", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Sí &a todo", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Cancelar", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
@@ -156,7 +156,7 @@ CAPTION "Ejecutar"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet, y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 24
+	LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 24
 	LTEXT "&Abrir:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "Aceptar", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -682,10 +682,10 @@ BEGIN
 	IDS_LOGOFF_PROMPT           "¿Desea cerrar la sesión?"
 
     /* Run File dialog */
-	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_RUNDLG_ERROR            "Imposible mostrar el diálogo Ejecutar (error interno)"
+	IDS_RUNDLG_BROWSE_ERROR     "Imposible mostrar el diálogo Examinar (error interno)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Examinar"
+	IDS_RUNDLG_BROWSE_FILTER    "Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menú Inicio\\Programas"

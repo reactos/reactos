@@ -111,8 +111,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Messaggi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Si", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Si a &tutti", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Sì", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Sì a &tutti", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Annulla", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
@@ -154,7 +154,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa internet, e ReactOS la aprirà.", 12289, 36, 11, 182, 18
+	LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa Internet, e ReactOS la aprirà.", 12289, 36, 11, 182, 18
 	LTEXT "&Apri:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -297,7 +297,7 @@ BEGIN
 	LTEXT "Disco %s", 14009, 100, 170, 40, 10
 	PUSHBUTTON "Pulitura disco", 14010, 180, 175, 50, 15, WS_TABSTOP
 	CHECKBOX "Comprimere il disco per recuperare dello spazio", 14011, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Permettere di indicizzare questo disco al servizio di indicizzazione per avere ricerche dei file più rapide", 14012, 15, 220, 200, 10, WS_DISABLED
+	CHECKBOX "Indicizza il disco per ricerche più rapide dei file", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -445,7 +445,7 @@ CAPTION "Conferma della sovrascrittura dei file"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Sì", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Sì &tutti", 12807, 85, 122, 60, 14
+	PUSHBUTTON "Sì a &tutti", 12807, 85, 122, 60, 14
 	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "Annulla", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
@@ -466,7 +466,7 @@ CAPTION "Chiudi sessione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Siete sicuro di voler Chiudere la sessione?", -1, 43, 11, 140, 22
+	LTEXT "Siete sicuro di voler chiudere la sessione?", -1, 43, 11, 140, 22
 	DEFPUSHBUTTON "&Chiudi sessione", IDOK, 57, 40, 60, 14
 	PUSHBUTTON "Annulla", IDCANCEL, 122, 40, 60, 14
 END
@@ -583,7 +583,7 @@ BEGIN
 	GROUPBOX "Opzioni per la verifica del disco", -1, 7, 6, 179, 50
 	PUSHBUTTON "Annulla", IDCANCEL, 118, 100, 60, 14
 	AUTOCHECKBOX "Correggi automaticamente gli errori", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Ricerca dei settori difettosi e tentativo di correzione", 14001, 16, 30, 165, 10
+	AUTOCHECKBOX "&Cerca i settori difettosi e tenta di correggerli", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -680,10 +680,10 @@ BEGIN
 	IDS_LOGOFF_PROMPT           "Volete disconnettervi?"
 
     /* Run File dialog */
-	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_RUNDLG_ERROR            "Impossibile mostrare il dialogo Eseguire (errore interno)"
+	IDS_RUNDLG_BROWSE_ERROR     "Impossibile mostrare il dialogo sfoglia (errore interno)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Sfoglia"
+	IDS_RUNDLG_BROWSE_FILTER    "File Eseguibili (*.exe)\0*.exe\0Tutti i file (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Avvio\\Programmi"
@@ -733,22 +733,22 @@ BEGIN
 	IDS_RECYCLEBIN_LOCATION     "Posizione del Cestino"
 	IDS_RECYCLEBIN_DISKSPACE    "Spazio disponibile"
 	IDS_EMPTY_BITBUCKET         "Svuota cestino"
-	IDS_PICK_ICON_TITLE         "Scegliere un icona"
-	IDS_PICK_ICON_FILTER        "Icone (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-	IDS_OPEN_WITH_FILTER        "File eseguibili (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+	IDS_PICK_ICON_TITLE         "Scegliere un'icona"
+	IDS_PICK_ICON_FILTER        "Icone (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Tutti i file (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "File eseguibili (*.exe)\0*.exe\0Tutti i file (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Cartella"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Applicazione Dos"
+	IDS_VIRTUAL_DRIVER          "Driver di Periferica Virtuale"
+	IDS_BAT_FILE                "File Batch ReactOS"
+	IDS_CMD_FILE                "Script di comandi ReactOS"
+	IDS_COM_FILE                "Applicazione DOS"
 	IDS_CPL_FILE                "Elemento del pannello di controllo"
 	IDS_CUR_FILE                "Cursore"
 	IDS_DLL_FILE                "Estensione di applicazione"
-	IDS_DRV_FILE                "Device Driver"
+	IDS_DRV_FILE                "Driver di periferica"
 	IDS_EXE_FILE                "Applicazione"
 	IDS_FON_FILE                "Font"
 	IDS_TTF_FILE                "TrueType Font"
-	IDS_HLP_FILE                "Help File"
+	IDS_HLP_FILE                "File della guida"
 	IDS_INI_FILE                "Impostazioni di configurazione"
 	IDS_LNK_FILE                "Collegamento"
 	IDS_SYS_FILE                "File di sistema"
