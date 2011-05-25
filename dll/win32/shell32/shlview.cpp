@@ -1928,8 +1928,6 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             {
                 ERR("no IID_ISFHelper for destination\n");
 
-                //IShellFolder_Release(psfFrom);
-                //IShellFolder_Release(psfTarget);
                 SHFree(pidl);
                 _ILFreeaPidl(apidl, lpcida->cidl);
                 ReleaseStgMedium(&medium);
@@ -1941,9 +1939,6 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             {
                 ERR("no IID_ISFHelper for source\n");
 
-                //ISFHelper_Release(psfhlpdst);
-                ///IShellFolder_Release(psfFrom);
-                //IShellFolder_Release(psfTarget);
                 SHFree(pidl);
                 _ILFreeaPidl(apidl, lpcida->cidl);
                 ReleaseStgMedium(&medium);
@@ -1955,13 +1950,10 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             */
             hr = psfhlpdst->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
 
-            //ISFHelper_Release(psfhlpdst);
-            //ISFHelper_Release(psfhlpsrc);
-            //IShellFolder_Release(psfFrom);
             SHFree(pidl);
             _ILFreeaPidl(apidl, lpcida->cidl);
             ReleaseStgMedium(&medium);
-            //IDataObject_Release(pda);
+
             TRACE("paste end hr %x\n", hr);
             break;
 		}
@@ -2134,7 +2126,15 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
 	*phWnd = 0;
 
 	TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n",this, lpPrevView,lpfs, psb, prcView, phWnd);
-	TRACE("-- vmode=%x flags=%x left=%i top=%i right=%i bottom=%i\n",lpfs->ViewMode, lpfs->fFlags ,prcView->left,prcView->top, prcView->right, prcView->bottom);
+
+	if (lpfs != NULL)
+		TRACE("-- vmode=%x flags=%x\n", lpfs->ViewMode, lpfs->fFlags);
+	if (prcView != NULL)
+		TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
+
+	/* Validate the Shell Browser */
+	if (psb == NULL)
+		return E_UNEXPECTED;
 
 	/*set up the member variables*/
 	pShellBrowser = psb;
@@ -2513,7 +2513,12 @@ HRESULT WINAPI CDefView::DragLeave()
         pCurDropTarget->DragLeave();
         pCurDropTarget.Release();
     }
-    pCurDataObject.Release();
+
+    if (pCurDataObject != NULL)
+    {
+        pCurDataObject.Release();
+    }
+
     iDragOverItem = 0;
 
     return S_OK;
