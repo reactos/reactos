@@ -1831,11 +1831,139 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         }
         else if(plvKeyDown->wVKey == 'C' && ctrl)
         {
-            FIXME("Need to copy\n");
+            if (GetSelections())
+            {
+                CComPtr<IDataObject> pda;
+
+                if (SUCCEEDED(pSFParent->GetUIObjectOf(m_hWnd, cidl, (LPCITEMIDLIST*)apidl, IID_IDataObject, 0, (LPVOID *)&pda)))
+                {
+                    HRESULT hr = OleSetClipboard(pda);
+                    if (FAILED(hr))
+                    {
+                        WARN("OleSetClipboard failed");
+                    }
+                }
+            }
+            break;
         }
         else if(plvKeyDown->wVKey == 'V' && ctrl)
         {
-            FIXME("Need to paste\n");
+            CComPtr<IDataObject> pda;
+            STGMEDIUM medium;
+            FORMATETC formatetc;
+            LPITEMIDLIST * apidl;
+            LPITEMIDLIST pidl;
+            CComPtr<IShellFolder> psfFrom;
+            CComPtr<IShellFolder> psfDesktop;
+            CComPtr<IShellFolder> psfTarget;
+            LPIDA lpcida;
+            CComPtr<ISFHelper> psfhlpdst;
+            CComPtr<ISFHelper> psfhlpsrc;
+            HRESULT hr;
+
+            hr = OleGetClipboard(&pda);
+            if (hr != S_OK)
+            {
+                ERR("Failed to get clipboard with %lx\n", hr);
+                return E_FAIL;
+            }
+
+            InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+            hr = pda->GetData(&formatetc, &medium);
+
+            if (FAILED(hr))
+            {
+                ERR("Failed to get clipboard data with %lx\n", hr);
+                return E_FAIL;
+            }
+
+            /* lock the handle */
+            lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+            if (!lpcida)
+            {
+                ERR("failed to lock pidl\n");
+                ReleaseStgMedium(&medium);
+                return E_FAIL;
+            }
+
+            /* convert the data into pidl */
+            apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+
+            if (!apidl)
+            {
+                ERR("failed to copy pidl\n");
+                return E_FAIL;
+            }
+
+            if (FAILED(SHGetDesktopFolder(&psfDesktop)))
+            {
+                ERR("failed to get desktop folder\n");
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                return E_FAIL;
+            }
+
+            if (_ILIsDesktop(pidl))
+            {
+                /* use desktop shellfolder */
+                psfFrom = psfDesktop;
+            }
+            else if (FAILED(psfDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID*)&psfFrom)))
+            {
+                ERR("no IShellFolder\n");
+
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+
+                return E_FAIL;
+            }
+
+            psfTarget = pSFParent;
+
+
+            /* get source and destination shellfolder */
+            if (FAILED(psfTarget->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpdst)))
+            {
+                ERR("no IID_ISFHelper for destination\n");
+
+                //IShellFolder_Release(psfFrom);
+                //IShellFolder_Release(psfTarget);
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+
+                return E_FAIL;
+            }
+
+            if (FAILED(psfFrom->QueryInterface(IID_ISFHelper, (LPVOID*)&psfhlpsrc)))
+            {
+                ERR("no IID_ISFHelper for source\n");
+
+                //ISFHelper_Release(psfhlpdst);
+                ///IShellFolder_Release(psfFrom);
+                //IShellFolder_Release(psfTarget);
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                return E_FAIL;
+            }
+
+            /* FIXXME
+            * do we want to perform a copy or move ???
+            */
+            hr = psfhlpdst->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
+
+            //ISFHelper_Release(psfhlpdst);
+            //ISFHelper_Release(psfhlpsrc);
+            //IShellFolder_Release(psfFrom);
+            SHFree(pidl);
+            _ILFreeaPidl(apidl, lpcida->cidl);
+            ReleaseStgMedium(&medium);
+            //IDataObject_Release(pda);
+            TRACE("paste end hr %x\n", hr);
+            break;
 		}
         else
             FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
