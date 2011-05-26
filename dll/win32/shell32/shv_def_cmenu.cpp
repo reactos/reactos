@@ -646,10 +646,6 @@ IDefaultContextMenuImpl::AddStaticContextMenusToMenu(
            idResource = IDS_FIND_VERB;
         else if (!wcsicmp(curEntry->szVerb, L"print"))
            idResource = IDS_PRINT_VERB;
-        else if (!wcsicmp(curEntry->szVerb, L"play"))
-           idResource = IDS_PLAY_VERB;
-        else if (!wcsicmp(curEntry->szVerb, L"preview"))
-           idResource = IDS_PREVIEW_VERB;
         else if (!wcsicmp(curEntry->szVerb, L"printto"))
 		{
 			curEntry = curEntry->Next;

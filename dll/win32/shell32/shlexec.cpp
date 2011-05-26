@@ -1426,15 +1426,22 @@ static UINT_PTR SHELL_execute_url( LPCWSTR lpFile, LPCWSTR wFile, LPCWSTR wcmd, 
     return retval;
 }
 
-void do_error_dialog( UINT_PTR retval, HWND hwnd )
+void do_error_dialog( UINT_PTR retval, HWND hwnd, WCHAR* filename)
 {
     WCHAR msg[2048];
-    int error_code=GetLastError();
+    DWORD error_code = GetLastError();
+    DWORD_PTR msgArguments[3]  = { (DWORD_PTR)filename, 0, 0 };
 
     if (retval == SE_ERR_NOASSOC)
         LoadStringW(shell32_hInstance, IDS_SHLEXEC_NOASSOC, msg, sizeof(msg)/sizeof(WCHAR));
     else
-        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code, 0, msg, sizeof(msg)/sizeof(WCHAR), NULL);
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       NULL,
+                       error_code,
+                       LANG_USER_DEFAULT,
+                       msg,
+                       sizeof(msg)/sizeof(WCHAR),
+                       (va_list*)msgArguments);
 
     MessageBoxW(hwnd, msg, NULL, MB_ICONERROR);
 }
@@ -1596,7 +1603,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
             Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
             //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
-               do_error_dialog(retval, sei_tmp.hwnd);
+               do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
         }
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
         if (wszParameters != parametersBuffer)
@@ -1824,7 +1831,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
 
         //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
-            do_error_dialog(retval, sei_tmp.hwnd);
+            do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
     }
 
     HeapFree(GetProcessHeap(), 0, wszApplicationName);

@@ -153,8 +153,7 @@
 #define IDS_EDIT_VERB               303
 #define IDS_FIND_VERB               304
 #define IDS_PRINT_VERB              305
-#define IDS_PLAY_VERB               306
-#define IDS_PREVIEW_VERB            307
+
 #define IDS_FILE_FOLDER             308
 #define IDS_CREATELINK              309
 #define IDS_INSTALLNEWFONT          310

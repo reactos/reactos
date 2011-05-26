@@ -746,12 +746,11 @@ BEGIN
 	IDS_SYS_FILE                "Fișier de sistem"
 
 	IDS_OPEN_VERB               "Deschidere"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Rulare ca "
 	IDS_EDIT_VERB               "Editare"
 	IDS_FIND_VERB               "Căutare"
 	IDS_PRINT_VERB              "Imprimare"
-	IDS_PLAY_VERB               "Redare"
-	IDS_PREVIEW_VERB            "Previzualizare"
 
 	IDS_FILE_FOLDER             "%u fișiere, %u dosare"
 	IDS_PRINTERS                "Imprimante"

@@ -730,12 +730,11 @@ BEGIN
 	IDS_SYS_FILE                "Systémový soubor"
 
 	IDS_OPEN_VERB               "Otevøít"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Spustit jako "
 	IDS_EDIT_VERB               "Upravit"
 	IDS_FIND_VERB               "Najít"
 	IDS_PRINT_VERB              "Tisknout"
-	IDS_PLAY_VERB               "Pøehrát"
-	IDS_PREVIEW_VERB            "Náhled"
 
 	IDS_FILE_FOLDER             "%u souborù, %u složek"
 	IDS_PRINTERS                "Tiskárny"
