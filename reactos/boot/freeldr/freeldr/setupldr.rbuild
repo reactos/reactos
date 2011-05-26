@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 
-<module name="setupldr" type="bootloader" baseaddress="$(BASEADDRESS_FREELDR)>
+<module name="setupldr" type="bootloader" baseaddress="$(BASEADDRESS_FREELDR)">
 	<linkerscript>freeldr_$(ARCH).lnk</linkerscript>
 	<bootstrap installbase="loader" />
 	<library>freeldr_startup</library>
