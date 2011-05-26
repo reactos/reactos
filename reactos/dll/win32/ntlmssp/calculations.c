@@ -30,26 +30,26 @@ VOID
 NTOWFv1(const PWCHAR password,
         PUCHAR result)
 {
-    ULONG i, len = wcslen(password);
-
+    ULONG i, len = wcslen(password) * sizeof(WCHAR);
+    WCHAR pass[14];
+    memcpy(pass, password, len);
     for(i = len; i<14; i++)
     {
-        password[i] = L'0';
+        pass[i] = L'0';
     }
-
-    MD4((PUCHAR)password, len, result);
+    MD4((PUCHAR)pass, 14, result);
 }
 
 VOID
 NTOWFv2(const PWCHAR password, const PWCHAR user, const PWCHAR domain, PUCHAR result)
 {
     UCHAR response_key_nt_v1 [16];
-    ULONG len_user = user ? wcslen(user) : 0;
-    ULONG len_domain = domain ? wcslen(domain) : 0;
+    ULONG len_user = (user ? wcslen(user) : 0) * sizeof(WCHAR);
+    ULONG len_domain = (domain ? wcslen(domain) : 0) * sizeof(WCHAR);
     WCHAR user_upper[len_user + 1];
-    ULONG len_user_u = len_user * sizeof(WCHAR);
-    ULONG len_domain_u = len_domain * sizeof(WCHAR);
-    WCHAR buff[(len_user + len_domain)*sizeof(WCHAR)];
+    ULONG len_user_u = len_user;
+    ULONG len_domain_u = len_domain;
+    WCHAR buff[len_user + len_domain];
     ULONG i;
 
     /* Uppercase user */
@@ -57,9 +57,8 @@ NTOWFv2(const PWCHAR password, const PWCHAR user, const PWCHAR domain, PUCHAR re
         user_upper[i] = toupper(user[i]);
     }
     user_upper[len_user] = 0;
-
-    len_user_u = swprintf(buff, user_upper, len_user_u);
-    len_domain_u = swprintf(buff+len_user_u, domain ? domain : L"", len_domain_u);
+    len_user_u = swprintf(buff, user_upper, len_user_u) * sizeof(WCHAR);
+    len_domain_u = swprintf(buff+len_user_u, domain ? domain : L"", len_domain_u) * sizeof(WCHAR);
 
     NTOWFv1(password, response_key_nt_v1);
     HMAC_MD5(response_key_nt_v1, 16, (PUCHAR)buff, len_user_u + len_domain_u, result);
