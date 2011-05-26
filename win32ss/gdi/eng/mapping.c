@@ -332,26 +332,17 @@ EngLoadModuleEx(
     _In_ FLONG fl)
 {
     PFILEVIEW pFileView = NULL;
+    PFONTFILEVIEW pffv;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hRootDir;
     UNICODE_STRING ustrFileName;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileInformation;
+    POBJECT_NAME_INFORMATION pNameInfo;
     HANDLE hFile;
     NTSTATUS Status;
     LARGE_INTEGER liSize;
-
-    if (fl & FVF_FONTFILE)
-    {
-        pFileView = EngAllocMem(0, sizeof(FONTFILEVIEW), 'vffG');
-    }
-    else
-    {
-        pFileView = EngAllocMem(0, sizeof(FILEVIEW), 'liFg');
-    }
-
-    /* Check for success */
-    if (!pFileView) return NULL;
+    ULONG cjInfo, cjDesired;
 
     /* Check if the file is relative to system32 */
     if (fl & FVF_SYSTEMROOT)
@@ -390,6 +381,56 @@ EngLoadModuleEx(
         return NULL;
     }
 
+    /* Check if this is a font file */
+    if (fl & FVF_FONTFILE)
+    {
+        /* Query name information length */
+        Status = ZwQueryObject(hFile,  ObjectNameInformation, NULL, 0, &cjInfo);
+        if (Status != STATUS_INFO_LENGTH_MISMATCH) goto cleanup;
+
+        /* Allocate a FONTFILEVIEW structure */
+        pffv = EngAllocMem(0, sizeof(FONTFILEVIEW) + cjInfo, 'vffG');
+        pFileView = (PFILEVIEW)pffv;
+        if (!pffv)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+
+        /* Query name information */
+        pNameInfo = (POBJECT_NAME_INFORMATION)(pffv + 1);
+        Status = ZwQueryObject(hFile,
+                               ObjectNameInformation,
+                               pNameInfo,
+                               cjInfo,
+                               &cjDesired);
+        if (!NT_SUCCESS(Status)) goto cleanup;
+
+        /* Initialize extended fields */
+        pffv->pwszPath = pNameInfo->Name.Buffer;
+        pffv->ulRegionSize = 0;
+        pffv->cKRefCount = 0;
+        pffv->cRefCountFD = 0;
+        pffv->pvSpoolerBase = NULL;
+        pffv->dwSpoolerPid = 0;
+    }
+    else
+    {
+        /* Allocate a FILEVIEW structure */
+        pFileView = EngAllocMem(0, sizeof(FILEVIEW), 'liFg');
+        if (!pFileView)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+    }
+
+    /* Initialize the structure */
+    pFileView->pvKView = NULL;
+    pFileView->pvViewFD = NULL;
+    pFileView->cjView = 0;
+
+    /* Query the last write time */
     Status = ZwQueryInformationFile(hFile,
                                     &IoStatusBlock,
                                     &FileInformation,
@@ -411,6 +452,7 @@ EngLoadModuleEx(
                              hFile,
                              NULL);
 
+cleanup:
     /* Close the file handle */
     ZwClose(hFile);
 
@@ -420,11 +462,6 @@ EngLoadModuleEx(
         EngFreeMem(pFileView);
         return NULL;
     }
-
-
-    pFileView->pvKView = NULL;
-    pFileView->pvViewFD = NULL;
-    pFileView->cjView = 0;
 
     return pFileView;
 }
