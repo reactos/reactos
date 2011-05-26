@@ -66,7 +66,7 @@ FAT16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   ChunkSize = CACHEPAGESIZE(DeviceExt);
   FATOffset = CurrentCluster * 2;
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
+  if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
   {
     return STATUS_UNSUCCESSFUL;
   }
