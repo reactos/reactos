@@ -759,19 +759,10 @@ void LoadSettings(void)
 void SaveSettings(void)
 {
     HKEY hKey;
-    WCHAR szSubKey1[] = L"Software";
-    WCHAR szSubKey2[] = L"Software\\ReactOS";
-    WCHAR szSubKey3[] = L"Software\\ReactOS\\TaskManager";
+    WCHAR szSubKey[] = L"Software\\ReactOS\\TaskManager";
 
     /* Open (or create) the key */
-    hKey = NULL;
-    RegCreateKeyExW(HKEY_CURRENT_USER, szSubKey1, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-    RegCloseKey(hKey);
-    hKey = NULL;
-    RegCreateKeyExW(HKEY_CURRENT_USER, szSubKey2, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-    RegCloseKey(hKey);
-    hKey = NULL;
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, szSubKey3, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, szSubKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
     /* Save the settings */
     RegSetValueExW(hKey, L"Preferences", 0, REG_BINARY, (LPBYTE)&TaskManagerSettings, sizeof(TASKMANAGER_SETTINGS));

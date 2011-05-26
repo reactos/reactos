@@ -179,7 +179,7 @@ void PerfDataRefresh(void)
     ULONG                                      cwcUserName;
 
     /* Get new system time */
-    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
+    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
     if (!NT_SUCCESS(status))
         return;
 
