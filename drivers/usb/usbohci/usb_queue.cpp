@@ -44,7 +44,12 @@ public:
     // local functions
     BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
     NTSTATUS FindTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
+    NTSTATUS FindTransferDescriptorInInterruptHeadEndpoints(IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
+
     VOID CleanupEndpointDescriptor(POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor);
+    POHCI_ENDPOINT_DESCRIPTOR FindInterruptEndpointDescriptor(UCHAR InterruptInterval);
+    VOID PrintEndpointList(POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor);
+    VOID LinkEndpoint(POHCI_ENDPOINT_DESCRIPTOR HeadEndpointDescriptor, POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor);
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -56,6 +61,7 @@ protected:
     PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
     POHCI_ENDPOINT_DESCRIPTOR m_BulkHeadEndpointDescriptor;                             // bulk head descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_ControlHeadEndpointDescriptor;                          // control head descriptor
+    POHCI_ENDPOINT_DESCRIPTOR * m_InterruptEndpoints;
 };
 
 //=================================================================================================
@@ -95,6 +101,11 @@ CUSBQueue::Initialize(
     Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
 
     //
+    // get interrupt endpoints
+    //
+    Hardware->GetInterruptEndpointDescriptors(&m_InterruptEndpoints);
+
+    //
     // initialize spinlock
     //
     KeInitializeSpinLock(&m_Lock);
@@ -116,6 +127,32 @@ CUSBQueue::GetPendingRequestCount()
     //
 
     return 0;
+}
+
+VOID
+CUSBQueue::LinkEndpoint(
+    POHCI_ENDPOINT_DESCRIPTOR HeadEndpointDescriptor,
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    POHCI_ENDPOINT_DESCRIPTOR CurrentEndpointDescriptor = HeadEndpointDescriptor;
+
+    //
+    // get last descriptor in queue
+    //
+    while(CurrentEndpointDescriptor->NextDescriptor)
+    {
+        //
+        // move to last descriptor
+        //
+        CurrentEndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)CurrentEndpointDescriptor->NextDescriptor;
+    }
+
+    //
+    // link endpoints
+    //
+    CurrentEndpointDescriptor->NextPhysicalEndpoint = EndpointDescriptor->PhysicalAddress.LowPart;
+    CurrentEndpointDescriptor->NextDescriptor = EndpointDescriptor;
+
 }
 
 NTSTATUS
@@ -146,10 +183,10 @@ CUSBQueue::AddUSBRequest(
     switch(Type)
     {
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
-        case USB_ENDPOINT_TYPE_INTERRUPT:
             /* NOT IMPLEMENTED IN QUEUE */
             Status = STATUS_NOT_SUPPORTED;
             break;
+        case USB_ENDPOINT_TYPE_INTERRUPT:
         case USB_ENDPOINT_TYPE_CONTROL:
         case USB_ENDPOINT_TYPE_BULK:
             Status = STATUS_SUCCESS;
@@ -213,31 +250,35 @@ CUSBQueue::AddUSBRequest(
         //
         HeadDescriptor = m_ControlHeadEndpointDescriptor;
     }
+    else if (Type == USB_ENDPOINT_TYPE_INTERRUPT)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = FindInterruptEndpointDescriptor(Request->GetInterval());
+        ASSERT(HeadDescriptor);
+    }
 
     //
-    // link endpoints
+    // insert endpoint at end
     //
-    Descriptor->NextPhysicalEndpoint = HeadDescriptor->NextPhysicalEndpoint;
-    Descriptor->NextDescriptor = HeadDescriptor->NextDescriptor;
-
-    HeadDescriptor->NextPhysicalEndpoint = Descriptor->PhysicalAddress.LowPart;
-    HeadDescriptor->NextDescriptor = Descriptor;
+    LinkEndpoint(HeadDescriptor, Descriptor);
 
     //
     // set descriptor active
     //
     Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
-    //HeadDescriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
 
     DPRINT("Request %x Logical %x added to queue Queue %p Logical %x\n", Descriptor, Descriptor->PhysicalAddress.LowPart, HeadDescriptor, HeadDescriptor->PhysicalAddress.LowPart);
 
 
-    //
-    // notify hardware of our request
-    //
-    m_Hardware->HeadEndpointDescriptorModified(Type);
-
-
+    if (Type == USB_ENDPOINT_TYPE_CONTROL || Type == USB_ENDPOINT_TYPE_BULK)
+    {
+        //
+        // notify hardware of our request
+        //
+        m_Hardware->HeadEndpointDescriptorModified(Type);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -318,6 +359,35 @@ CUSBQueue::FindTransferDescriptorInEndpoint(
     return STATUS_NOT_FOUND;
 }
 
+NTSTATUS
+CUSBQueue::FindTransferDescriptorInInterruptHeadEndpoints(IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor)
+{
+    ULONG Index;
+    NTSTATUS Status;
+
+    //
+    // search descriptor in endpoint list
+    //
+    for(Index = 0; Index < OHCI_STATIC_ENDPOINT_COUNT; Index++)
+    {
+        //
+        // is it in current endpoint
+        //
+        Status = FindTransferDescriptorInEndpoint(m_InterruptEndpoints[Index], TransferDescriptorLogicalAddress, OutEndpointDescriptor, OutPreviousEndpointDescriptor);
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // found transfer descriptor
+            //
+            return STATUS_SUCCESS;
+        }
+    }
+
+    //
+    // not found
+    //
+    return STATUS_NOT_FOUND;
+}
 
 BOOLEAN
 CUSBQueue::IsTransferDescriptorInEndpoint(
@@ -399,7 +469,27 @@ CUSBQueue::CleanupEndpointDescriptor(
     Request->Release();
 
 }
+VOID
+CUSBQueue::PrintEndpointList(
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor)
+{
+    DPRINT1("CUSBQueue::PrintEndpointList HeadEndpoint %p Logical %x\n", EndpointDescriptor, EndpointDescriptor->PhysicalAddress.LowPart);
 
+    //
+    // get first general transfer descriptor
+    //
+    EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)EndpointDescriptor->NextDescriptor;
+
+    while(EndpointDescriptor)
+    {
+        DPRINT1("    CUSBQueue::PrintEndpointList Endpoint %p Logical %x\n", EndpointDescriptor, EndpointDescriptor->PhysicalAddress.LowPart);
+
+        //
+        // move to next
+        //
+        EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)EndpointDescriptor->NextDescriptor;
+    }
+}
 
 VOID
 CUSBQueue::TransferDescriptorCompletionCallback(
@@ -445,13 +535,72 @@ CUSBQueue::TransferDescriptorCompletionCallback(
     }
 
     //
+    // find transfer descriptor in interrupt list
+    //
+    Status = FindTransferDescriptorInInterruptHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // cleanup endpoint
+        //
+        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+        //
+        // done
+        //
+        return;
+    }
+
+
+    //
     // hardware reported dead endpoint completed
     //
-    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
+    DPRINT("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
     ASSERT(FALSE);
 
 }
 
+POHCI_ENDPOINT_DESCRIPTOR
+CUSBQueue::FindInterruptEndpointDescriptor(
+    UCHAR InterruptInterval)
+{
+    ULONG Index = 0;
+    ULONG Power = 1;
+
+    //
+    // sanity check
+    //
+    ASSERT(InterruptInterval < OHCI_BIGGEST_INTERVAL);
+
+    //
+    // find interrupt index
+    //
+    while (Power <= OHCI_BIGGEST_INTERVAL / 2)
+    {
+        //
+        // is current interval greater
+        //
+        if (Power * 2 > InterruptInterval)
+            break;
+
+        //
+        // increment power
+        //
+        Power *= 2;
+
+        //
+        // move to next interrupt
+        //
+        Index++;
+    }
+
+    DPRINT("InterruptInterval %lu Selected InterruptIndex %lu Choosen Interval %lu\n", InterruptInterval, Index, Power);
+
+    //
+    // return endpoint
+    //
+    return m_InterruptEndpoints[Index];
+}
 
 NTSTATUS
 CreateUSBQueue(

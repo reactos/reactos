@@ -61,6 +61,7 @@ public:
     NTSTATUS GetDeviceDetails(PUSHORT VendorId, PUSHORT DeviceId, PULONG NumberOfPorts, PULONG Speed);
     NTSTATUS GetBulkHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
     NTSTATUS GetControlHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
+    NTSTATUS GetInterruptEndpointDescriptors(struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptor);
     VOID HeadEndpointDescriptorModified(ULONG HeadType);
 
     NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
@@ -113,16 +114,16 @@ protected:
     PHYSICAL_ADDRESS m_HCCAPhysicalAddress;                                            // hcca physical address
     POHCI_ENDPOINT_DESCRIPTOR m_ControlEndpointDescriptor;                             // dummy control endpoint descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_BulkEndpointDescriptor;                                // dummy control endpoint descriptor
-    POHCI_ENDPOINT_DESCRIPTOR  m_IsoEndpointDescriptor;                                // iso endpoint descriptor
+    POHCI_ENDPOINT_DESCRIPTOR m_IsoEndpointDescriptor;                                 // iso endpoint descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_InterruptEndpoints[OHCI_STATIC_ENDPOINT_COUNT];        // endpoints for interrupt / iso transfers
     ULONG m_NumberOfPorts;                                                             // number of ports
     OHCI_PORT_STATUS m_PortStatus[OHCI_MAX_PORT_COUNT];                                // port change status
     PDMAMEMORYMANAGER m_MemoryManager;                                                 // memory manager
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
-    BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
+    ULONG m_IntervalValue;                                                             // periodic interval value
 };
 
 //=================================================================================================
@@ -489,7 +490,7 @@ CUSBHardwareDevice::GetUSBQueue(
 NTSTATUS
 CUSBHardwareDevice::StartController(void)
 {
-    ULONG Control, NumberOfPorts, Index, Descriptor, FrameInterval, Periodic, IntervalValue;
+    ULONG Control, NumberOfPorts, Index, Descriptor, FrameInterval, Periodic;
 
     //
     // first write address of HCCA
@@ -545,16 +546,19 @@ CUSBHardwareDevice::StartController(void)
     //
     // get frame interval
     //
-    //FrameInterval = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET)) & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE;
-    //FrameInterval |= OHCI_FSMPS(IntervalValue) | IntervalValue;
+    FrameInterval = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET)) & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE;
+    FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
 
     //
     // write frame interval
     //
-    //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
-    // 90% periodic
-    //Periodic = OHCI_PERIODIC(intervalValue);
-    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + 0x40 /*OHCI_PERIODIC_START_OFFSET*/), 0x3E67);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET), FrameInterval);
+
+    //
+    // 90 % periodic
+    //
+    Periodic = OHCI_PERIODIC(m_IntervalValue);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
 
 
     //
@@ -683,6 +687,14 @@ CUSBHardwareDevice::GetBulkHeadEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
 {
     *OutDescriptor = m_BulkEndpointDescriptor;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBHardwareDevice::GetInterruptEndpointDescriptors(
+    struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptor)
+{
+    *OutDescriptor = m_InterruptEndpoints;
     return STATUS_SUCCESS;
 }
 
@@ -846,7 +858,7 @@ NTSTATUS
 CUSBHardwareDevice::StopController(void)
 {
     ULONG Control, Reset;
-    ULONG Index;
+    ULONG Index, FrameInterval;
 
     //
     // first turn off all interrupts
@@ -877,6 +889,16 @@ CUSBHardwareDevice::StopController(void)
     // wait a bit
     //
     KeStallExecutionProcessor(100);
+
+    //
+    // read from interval
+    //
+    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+
+    //
+    // store interval value for later
+    //
+    m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
 
     //
     // now reset controller

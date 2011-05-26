@@ -90,6 +90,19 @@
 #define OHCI_RH_NO_OVER_CURRENT_PROTECTION          0x1000
 #define OHCI_RH_GET_POWER_ON_TO_POWER_GOOD_TIME(s)  ((s) >> 24)
 
+//
+//  Frame interval register (section 7.3.1)
+//
+#define OHCI_FRAME_INTERVAL_OFFSET                 0x34
+#define OHCI_GET_INTERVAL_VALUE(s)          ((s) & 0x3fff)
+#define OHCI_GET_FS_LARGEST_DATA_PACKET(s)  (((s) >> 16) & 0x7fff)
+#define OHCI_FRAME_INTERVAL_TOGGLE          0x80000000
+
+//
+// periodic start register
+//
+#define OHCI_PERIODIC_START_OFFSET             0x40
+#define OHCI_PERIODIC(i)            ((i) * 9 / 10)
 
 //
 //  Root Hub Descriptor B register (section 7.4.2)

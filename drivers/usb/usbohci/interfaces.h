@@ -190,6 +190,14 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
+// GetInterruptEndpointDescriptors
+//
+// Description: returns interrupt endpoint descriptors
+
+    virtual NTSTATUS GetInterruptEndpointDescriptors(struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptorArray) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
 // HeadEndpointDescriptorModified
 //
 // Description: notifies the hardware that an endpoint descriptor was added to head endpoint descriptor
@@ -451,6 +459,15 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: frees the associated endpoint descriptor and its general descriptors
 
     virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// GetInterruptInterval
+//
+// Description: returns interval of the iso / interrupt
+
+    virtual UCHAR GetInterval() = 0;
+
 };
 
 

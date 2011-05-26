@@ -46,6 +46,8 @@ public:
     virtual BOOLEAN IsQueueHeadComplete(struct _QUEUE_HEAD * QueueHead);
     virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
     virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor);
+    virtual UCHAR GetInterval();
+
 
     // local functions
     ULONG InternalGetTransferType();
@@ -375,6 +377,18 @@ CUSBRequest::GetMaxPacketSize()
     // return max packet size
     //
     return m_EndpointDescriptor->wMaxPacketSize;
+}
+
+UCHAR
+CUSBRequest::GetInterval()
+{
+    ASSERT(m_EndpointDescriptor);
+    ASSERT((m_EndpointDescriptor->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_INTERRUPT);
+
+    //
+    // return interrupt interval
+    //
+    return m_EndpointDescriptor->bInterval;
 }
 
 UCHAR
@@ -786,7 +800,7 @@ CUSBRequest::BuildBulkInterruptEndpoint(
             FirstDescriptor = CurrentDescriptor;
         }
 
-        DPRINT("PreviousDescriptor %p CurrentDescriptor %p  Buffer Logical %p Physical %x Last Physical %x CurrentSize %lu\n", PreviousDescriptor, CurrentDescriptor, CurrentDescriptor->BufferLogical, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress, CurrentSize);
+        DPRINT("PreviousDescriptor %p CurrentDescriptor %p Logical %x  Buffer Logical %p Physical %x Last Physical %x CurrentSize %lu\n", PreviousDescriptor, CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, CurrentDescriptor->BufferLogical, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress, CurrentSize);
 
         //
         //  set previous descriptor
@@ -847,7 +861,6 @@ CUSBRequest::BuildBulkInterruptEndpoint(
     // done
     //
     return STATUS_SUCCESS;
-
 }
 
 

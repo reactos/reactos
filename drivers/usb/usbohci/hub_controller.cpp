@@ -60,6 +60,7 @@ public:
     VOID SetNotification(PVOID CallbackContext, PRH_INIT_CALLBACK CallbackRoutine);
     // internal ioctl routines
     NTSTATUS HandleGetDescriptor(IN OUT PIRP Irp, PURB Urb);
+    NTSTATUS HandleGetDescriptorFromInterface(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleClassDevice(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleGetStatusFromDevice(IN OUT PIRP Irp, PURB Urb);
     NTSTATUS HandleSelectConfiguration(IN OUT PIRP Irp, PURB Urb);
@@ -1223,6 +1224,55 @@ CHubController::HandleClassDevice(
 
     return Status;
 }
+
+//-----------------------------------------------------------------------------------------
+NTSTATUS
+CHubController::HandleGetDescriptorFromInterface(
+    IN OUT PIRP Irp,
+    IN OUT PURB Urb)
+{
+    PUSBDEVICE UsbDevice;
+    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+    NTSTATUS Status;
+
+    //
+    // sanity check
+    //
+    ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength);
+    ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
+
+    //
+    // check if this is a valid usb device handle
+    //
+    ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+    //
+    // get device
+    //
+    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+    //
+    // generate setup packet
+    //
+    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+    CtrlSetup.wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
+    CtrlSetup.wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
+    CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
+    CtrlSetup.wLength = (USHORT)Urb->UrbControlDescriptorRequest.TransferBufferLength;
+    CtrlSetup.bmRequestType.B = 0x81;
+
+    //
+    // submit setup packet
+    //
+    Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
+    // done
+    //
+    return Status;
+}
+
 //-----------------------------------------------------------------------------------------
 NTSTATUS
 CHubController::HandleGetDescriptor(
@@ -1492,8 +1542,8 @@ CHubController::HandleClassInterface(
     //
     // sanity check
     //
-    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer);
-    PC_ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength);
+    //ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer || Urb->UrbControlVendorClassRequest.TransferBufferMDL);
+    //ASSERT(Urb->UrbControlVendorClassRequest.TransferBufferLength);
     PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle);
 
     //
@@ -1520,7 +1570,7 @@ CHubController::HandleClassInterface(
     //
     // initialize setup packet
     //
-    CtrlSetup.bmRequestType.B = 0xa1; //FIXME: Const.
+    CtrlSetup.bmRequestType.B = 0xa1;
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
@@ -1579,6 +1629,9 @@ CHubController::HandleDeviceControl(
 
             switch (Urb->UrbHeader.Function)
             {
+                case URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE:
+                    Status = HandleGetDescriptorFromInterface(Irp, Urb);
+                    break;
                 case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
                     Status = HandleGetDescriptor(Irp, Urb);
                     break;
