@@ -675,7 +675,6 @@ SVC_(GdiDrawStream, 3)
 
 
 // ReactOS, specific, syscalls)
-SVC_(GdiSetDIBits, 7)
 SVC_(GdiSetViewportOrgEx, 4)
 SVC_(GdiSetWindowOrgEx, 4)
 SVC_(GdiGetFontFamilyInfo, 4)

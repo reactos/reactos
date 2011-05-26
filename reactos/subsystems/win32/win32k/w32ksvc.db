@@ -675,7 +675,6 @@ NtGdiDrawStream                                  3
 #
 #
 #ReactOS specific syscalls
-NtGdiSetDIBits                          7
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowOrgEx                     4
 NtGdiGetFontFamilyInfo                  4
