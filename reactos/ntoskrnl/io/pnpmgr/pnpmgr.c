@@ -168,6 +168,20 @@ IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
+NTSTATUS
+NTAPI
+IopQueryStopDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PVOID Dummy;
+    
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_QUERY_STOP_DEVICE;
+    
+    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+}
+
 VOID
 NTAPI
 IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
@@ -180,6 +194,21 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     Stack.MinorFunction = IRP_MN_REMOVE_DEVICE;
 
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
+    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+}
+
+VOID
+NTAPI
+IopSendStopDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PVOID Dummy;
+    
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_STOP_DEVICE;
+    
+    /* Drivers should never fail a IRP_MN_STOP_DEVICE request */
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
@@ -298,12 +327,6 @@ IopStartDevice(
    HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
-
-   if (DeviceNode->Flags & (DNF_STARTED | DNF_START_REQUEST_PENDING))
-   {
-       /* Nothing to do here */
-       return STATUS_SUCCESS;
-   }
 
    Status = IopAssignDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
@@ -3551,13 +3574,93 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNIMPLEMENTED;
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(PhysicalDeviceObject);
+    IO_STACK_LOCATION Stack;
+    ULONG PnPFlags;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_QUERY_PNP_DEVICE_STATE;
+    
+    Status = IopSynchronousCall(PhysicalDeviceObject, &Stack, (PVOID*)&PnPFlags);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IRP_MN_QUERY_PNP_DEVICE_STATE failed with status 0x%x\n", Status);
+        return;
+    }
+
+    if ((PnPFlags & PNP_DEVICE_REMOVED) ||
+        ((PnPFlags & PNP_DEVICE_FAILED) && !(PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)))
+    {
+        /* Surprise removal */
+        
+        IopSendSurpriseRemoval(PhysicalDeviceObject);
+        
+        /* Tell the user-mode PnP manager that a device was removed */
+        IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL,
+                                  &DeviceNode->InstancePath);
+        
+        IopSendRemoveDevice(PhysicalDeviceObject);
+    }
+    else if ((PnPFlags & PNP_DEVICE_FAILED) && (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED))
+    {
+        /* Stop for resource rebalance */
+        
+        if (NT_SUCCESS(IopQueryStopDevice(PhysicalDeviceObject)))
+        {
+            IopSendStopDevice(PhysicalDeviceObject);
+        }
+    }
+    
+    /* Resource rebalance */
+    if (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)
+    {
+        DPRINT("Sending IRP_MN_QUERY_RESOURCES to device stack\n");
+    
+        Status = IopInitiatePnpIrp(PhysicalDeviceObject,
+                                   &IoStatusBlock,
+                                   IRP_MN_QUERY_RESOURCES,
+                                   NULL);
+        if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+        {
+            DeviceNode->BootResources =
+            (PCM_RESOURCE_LIST)IoStatusBlock.Information;
+            IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+        }
+        else
+        {
+            DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
+            DeviceNode->BootResources = NULL;
+        }
+    
+        DPRINT("Sending IRP_MN_QUERY_RESOURCE_REQUIREMENTS to device stack\n");
+    
+        Status = IopInitiatePnpIrp(PhysicalDeviceObject,
+                                   &IoStatusBlock,
+                                   IRP_MN_QUERY_RESOURCE_REQUIREMENTS,
+                                   NULL);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceNode->ResourceRequirements =
+            (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
+        }
+        else
+        {
+            DPRINT("IopInitiatePnpIrp() failed (Status %08lx)\n", Status);
+            DeviceNode->ResourceRequirements = NULL;
+        }
+        
+        /* IRP_MN_FILTER_RESOURCE_REQUIREMENTS is called indirectly by IopStartDevice */
+        IopStartDevice(DeviceNode);
+    }
 }
 
 /**
