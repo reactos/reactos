@@ -30,9 +30,9 @@ VOID
 NTOWFv1(const PWCHAR password,
         PUCHAR result)
 {
-    ULONG i, len = wcslen(password) * sizeof(WCHAR);
+    ULONG i, len = wcslen(password);
     WCHAR pass[14];
-    memcpy(pass, password, len);
+    memcpy(pass, password, len * sizeof(WCHAR));
     for(i = len; i<14; i++)
     {
         pass[i] = L'0';
@@ -44,11 +44,11 @@ VOID
 NTOWFv2(const PWCHAR password, const PWCHAR user, const PWCHAR domain, PUCHAR result)
 {
     UCHAR response_key_nt_v1 [16];
-    ULONG len_user = (user ? wcslen(user) : 0) * sizeof(WCHAR);
-    ULONG len_domain = (domain ? wcslen(domain) : 0) * sizeof(WCHAR);
+    ULONG len_user = user ? wcslen(user) : 0;
+    ULONG len_domain = domain ? wcslen(domain) : 0;
     WCHAR user_upper[len_user + 1];
-    ULONG len_user_u = len_user;
-    ULONG len_domain_u = len_domain;
+    ULONG len_user_u = len_user * sizeof(WCHAR);
+    ULONG len_domain_u = len_domain * sizeof(WCHAR);
     WCHAR buff[len_user + len_domain];
     ULONG i;
 
@@ -324,9 +324,9 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
     pNtResponse->Flags = 0;
     pNtResponse->MsgWord = 0;
 
+
     NtQuerySystemTime((PLARGE_INTEGER)&pNtResponse->TimeStamp);
     NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
-
     memcpy(pNtResponse->Buffer, pServerName->Buffer, pServerName->Length);
 
     NtlmNtResponse(pUserName,
@@ -360,6 +360,7 @@ NtpLmSessionKeys(IN PUSER_SESSION_KEY NtpUserSessionKey,
                 OUT PLM_SESSION_KEY pLmSessionKey)
 {
     HMAC_MD5_CTX ctx;
+
 
     HMACMD5Init(&ctx, (PUCHAR)NtpUserSessionKey, sizeof(*NtpUserSessionKey));
     HMACMD5Update(&ctx, ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
