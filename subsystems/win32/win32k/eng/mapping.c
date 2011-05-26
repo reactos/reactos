@@ -11,49 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
-// HACK!!!
-#define MmMapViewInSessionSpace MmMapViewInSystemSpace
-#define MmUnmapViewInSessionSpace MmUnmapViewInSystemSpace
-
-typedef struct _ENGSECTION
-{
-    PVOID pvSectionObject;
-    PVOID pvMappedBase;
-    SIZE_T cjViewSize;
-    ULONG ulTag;
-} ENGSECTION, *PENGSECTION;
-
-typedef struct _FILEVIEW
-{
-    LARGE_INTEGER  LastWriteTime;  
-    PVOID          pvKView;
-    PVOID          pvViewFD;  
-    SIZE_T         cjView;  
-    PVOID          pSection;  
-} FILEVIEW, *PFILEVIEW;   
-
-typedef struct _FONTFILEVIEW 
-{
-    FILEVIEW;
-    DWORD          reserved[2];
-    PWSTR          pwszPath;
-    SIZE_T         ulRegionSize;
-    ULONG          cKRefCount;
-    ULONG          cRefCountFD;
-    PVOID          pvSpoolerBase;
-    DWORD          dwSpoolerPid;
-} FONTFILEVIEW, *PFONTFILEVIEW;
-
-enum
-{
-    FVF_SYSTEMROOT = 1,
-    FVF_READONLY = 2,
-    FVF_FONTFILE = 4,
-};
-
 HANDLE ghSystem32Directory;
 HANDLE ghRootDirectory;
-
 
 PVOID
 NTAPI
@@ -156,7 +115,7 @@ EngMapSection(
         }
         else
         {
-            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n", 
+            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n",
                     pSection->pvMappedBase, Status);
         }
     }
@@ -256,26 +215,17 @@ EngLoadModuleEx(
     FLONG fl)
 {
     PFILEVIEW pFileView = NULL;
+    PFONTFILEVIEW pffv;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hRootDir;
     UNICODE_STRING ustrFileName;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileInformation;
+    POBJECT_NAME_INFORMATION pNameInfo;
     HANDLE hFile;
     NTSTATUS Status;
     LARGE_INTEGER liSize;
-
-    if (fl & FVF_FONTFILE)
-    {
-        pFileView = EngAllocMem(0, sizeof(FONTFILEVIEW), 'vffG');
-    }
-    else
-    {
-        pFileView = EngAllocMem(0, sizeof(FILEVIEW), 'liFg');
-    }
-
-    /* Check for success */
-    if (!pFileView) return NULL;
+    ULONG cjInfo, cjDesired;
 
     /* Check if the file is relative to system32 */
     if (fl & FVF_SYSTEMROOT)
@@ -308,6 +258,56 @@ EngLoadModuleEx(
                           NULL,
                           0);
 
+    /* Check if this is a font file */
+    if (fl & FVF_FONTFILE)
+    {
+        /* Query name information length */
+        Status = ZwQueryObject(hFile,  ObjectNameInformation, NULL, 0, &cjInfo);
+        if (Status != STATUS_INFO_LENGTH_MISMATCH) goto cleanup;
+
+        /* Allocate a FONTFILEVIEW structure */
+        pffv = EngAllocMem(0, sizeof(FONTFILEVIEW) + cjInfo, 'vffG');
+        pFileView = (PFILEVIEW)pffv;
+        if (!pffv)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+
+        /* Query name information */
+        pNameInfo = (POBJECT_NAME_INFORMATION)(pffv + 1);
+        Status = ZwQueryObject(hFile,
+                               ObjectNameInformation,
+                               pNameInfo,
+                               cjInfo,
+                               &cjDesired);
+        if (!NT_SUCCESS(Status)) goto cleanup;
+
+        /* Initialize extended fields */
+        pffv->pwszPath = pNameInfo->Name.Buffer;
+        pffv->ulRegionSize = 0;
+        pffv->cKRefCount = 0;
+        pffv->cRefCountFD = 0;
+        pffv->pvSpoolerBase = NULL;
+        pffv->dwSpoolerPid = 0;
+    }
+    else
+    {
+        /* Allocate a FILEVIEW structure */
+        pFileView = EngAllocMem(0, sizeof(FILEVIEW), 'liFg');
+        if (!pFileView)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+    }
+
+    /* Initialize the structure */
+    pFileView->pvKView = NULL;
+    pFileView->pvViewFD = NULL;
+    pFileView->cjView = 0;
+
+    /* Query the last write time */
     Status = ZwQueryInformationFile(hFile,
                                     &IoStatusBlock,
                                     &FileInformation,
@@ -329,6 +329,7 @@ EngLoadModuleEx(
                              hFile,
                              NULL);
 
+cleanup:
     /* Close the file handle */
     ZwClose(hFile);
 
@@ -338,11 +339,6 @@ EngLoadModuleEx(
         EngFreeMem(pFileView);
         return NULL;
     }
-
-
-    pFileView->pvKView = NULL;
-    pFileView->pvViewFD = NULL;
-    pFileView->cjView = 0;
 
     return pFileView;
 }

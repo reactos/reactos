@@ -91,5 +91,6 @@
 #include <include/engevent.h>
 #include <include/ldevobj.h>
 #include <include/device.h>
+#include <include/mapping.h>
 #include <dib/dib.h>
 #include <include/gdidebug.h>

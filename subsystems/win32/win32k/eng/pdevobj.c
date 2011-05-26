@@ -193,7 +193,7 @@ PDEVOBJ_pdmMatchDevMode(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEW pdmCurrent;
-    INT i;
+    ULONG i;
     DWORD dwFields;
 
     pGraphicsDevice = ppdev->pGraphicsDevice;
