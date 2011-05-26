@@ -697,8 +697,6 @@ CUSBHardwareDevice::HeadEndpointDescriptorModified(
         //
         // notify controller
         //
-        //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_HEAD_ED_OFFSET), m_ControlEndpointDescriptor->NextPhysicalEndpoint);
-        //WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_CURRENT_ED_OFFSET), m_ControlEndpointDescriptor->NextPhysicalEndpoint);
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_CONTROL_LIST_FILLED);
     }
     else if (Type == USB_ENDPOINT_TYPE_BULK)
@@ -708,12 +706,6 @@ CUSBHardwareDevice::HeadEndpointDescriptorModified(
         //
         WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET), Value | OHCI_BULK_LIST_FILLED);
     }
-
-    Value = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_COMMAND_STATUS_OFFSET));
-
-
-    DPRINT1("HeadEndpointDescriptorModified Value %x Type %x\n", Value, Type);
-
 }
 
 NTSTATUS
@@ -1191,7 +1183,7 @@ InterruptServiceRoutine(
     //
     This = (CUSBHardwareDevice*) ServiceContext;
 
-    DPRINT1("InterruptServiceRoutine\n");
+    DPRINT("InterruptServiceRoutine\n");
 
     //
     // get done head
@@ -1246,6 +1238,7 @@ InterruptServiceRoutine(
          // head completed
          //
          Acknowledge |= OHCI_WRITEBACK_DONE_HEAD;
+         This->m_HCCA->DoneHead = 0;
     }
 
     if (Status & OHCI_RESUME_DETECTED)
@@ -1296,8 +1289,8 @@ InterruptServiceRoutine(
     //
     // defer processing
     //
-    DPRINT1("Status %x\n", Status);
-    KeInsertQueueDpc(&This->m_IntDpcObject, This, (PVOID)Status);
+    DPRINT("Status %x Acknowledge %x\n", Status, Acknowledge);
+    KeInsertQueueDpc(&This->m_IntDpcObject, (PVOID)Status, (PVOID)(DoneHead & ~1));
 
     //
     // interrupt handled
@@ -1321,23 +1314,14 @@ OhciDefferedRoutine(
     //
     // get parameters
     //
-    This = (CUSBHardwareDevice*) SystemArgument1;
-    CStatus = (ULONG) SystemArgument2;
+    This = (CUSBHardwareDevice*)DeferredContext;
+    CStatus = (ULONG) SystemArgument1;
+    DoneHead = (ULONG)SystemArgument2;
 
-	DPRINT1("OhciDefferedRoutine Status %x\n", CStatus);
+    DPRINT("OhciDefferedRoutine Status %x\n", CStatus);
 
     if (CStatus & OHCI_WRITEBACK_DONE_HEAD)
     {
-        //
-        // descriptor completion, get done head
-        //
-        DoneHead = This->m_HCCA->DoneHead;
-
-        //
-        // clear out lower bits, ed are 16 byte aligned
-        //
-        DoneHead &= ~0xF;
-
         //
         // notify queue of event
         //

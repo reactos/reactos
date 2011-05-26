@@ -443,6 +443,14 @@ DECLARE_INTERFACE_(IUSBRequest, IUnknown)
 // Description: notifies request that the endpoint descriptor is complete
 
     virtual VOID CompletionCallback(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor) = 0;
+
+//-----------------------------------------------------------------------------------------
+//
+// FreeEndpointDescriptor
+//
+// Description: frees the associated endpoint descriptor and its general descriptors
+
+    virtual VOID FreeEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor) = 0;
 };
 
 

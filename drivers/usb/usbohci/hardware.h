@@ -216,6 +216,8 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 #define OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(s)    ((s) << 16)
 #define OHCI_ENDPOINT_LOW_SPEED                 0x00002000
 #define OHCI_ENDPOINT_FULL_SPEED                0x00000000
+#define OHCI_ENDPOINT_DIRECTION_OUT             0x00000800
+#define OHCI_ENDPOINT_DIRECTION_IN              0x00001000
 
 //
 // Maximum port count set by OHCI

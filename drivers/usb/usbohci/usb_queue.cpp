@@ -44,6 +44,7 @@ public:
     // local functions
     BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
     NTSTATUS FindTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
+    VOID CleanupEndpointDescriptor(POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor);
 
     // constructor / destructor
     CUSBQueue(IUnknown *OuterUnknown){}
@@ -127,7 +128,7 @@ CUSBQueue::AddUSBRequest(
     POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
     POHCI_ENDPOINT_DESCRIPTOR Descriptor;
 
-    DPRINT1("CUSBQueue::AddUSBRequest\n");
+    DPRINT("CUSBQueue::AddUSBRequest\n");
 
     //
     // sanity check
@@ -146,11 +147,11 @@ CUSBQueue::AddUSBRequest(
     {
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
         case USB_ENDPOINT_TYPE_INTERRUPT:
-        case USB_ENDPOINT_TYPE_BULK:
             /* NOT IMPLEMENTED IN QUEUE */
             Status = STATUS_NOT_SUPPORTED;
             break;
         case USB_ENDPOINT_TYPE_CONTROL:
+        case USB_ENDPOINT_TYPE_BULK:
             Status = STATUS_SUCCESS;
             break;
         default:
@@ -228,12 +229,14 @@ CUSBQueue::AddUSBRequest(
     Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
     //HeadDescriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
 
+    DPRINT("Request %x Logical %x added to queue Queue %p Logical %x\n", Descriptor, Descriptor->PhysicalAddress.LowPart, HeadDescriptor, HeadDescriptor->PhysicalAddress.LowPart);
+
+
     //
     // notify hardware of our request
     //
     m_Hardware->HeadEndpointDescriptorModified(Type);
 
-    DPRINT1("Request %x %x added to queue\n", Descriptor, Descriptor->PhysicalAddress);
 
 
     return STATUS_SUCCESS;
@@ -356,6 +359,47 @@ CUSBQueue::IsTransferDescriptorInEndpoint(
     return FALSE;
 }
 
+VOID
+CUSBQueue::CleanupEndpointDescriptor(
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor)
+{
+    PUSBREQUEST Request;
+
+    //
+    // FIXME: verify unlinking process
+    //
+    PreviousEndpointDescriptor->NextDescriptor = EndpointDescriptor->NextDescriptor;
+    PreviousEndpointDescriptor->NextPhysicalEndpoint = EndpointDescriptor->NextPhysicalEndpoint;
+
+    //
+    // get corresponding request
+    //
+    Request = PUSBREQUEST(EndpointDescriptor->Request);
+    ASSERT(Request);
+
+    //
+    // notify of completion
+    //
+    Request->CompletionCallback(EndpointDescriptor);
+
+    //
+    // free endpoint descriptor
+    //
+    Request->FreeEndpointDescriptor(EndpointDescriptor);
+
+    //
+    // FIXME: check if complete
+    //
+    //ASSERT(Request->IsRequestComplete());
+
+    //
+    // release request
+    //
+    Request->Release();
+
+}
+
 
 VOID
 CUSBQueue::TransferDescriptorCompletionCallback(
@@ -363,7 +407,8 @@ CUSBQueue::TransferDescriptorCompletionCallback(
 {
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, PreviousEndpointDescriptor;
     NTSTATUS Status;
-    PUSBREQUEST Request;
+
+    DPRINT("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
 
     //
     // find transfer descriptor in control list
@@ -372,31 +417,38 @@ CUSBQueue::TransferDescriptorCompletionCallback(
     if (NT_SUCCESS(Status))
     {
         //
-        // FIXME: make sure this is ok
-        // unlink descriptor
+        // cleanup endpoint
         //
-        PreviousEndpointDescriptor->NextDescriptor = EndpointDescriptor->NextDescriptor;
-        PreviousEndpointDescriptor->NextPhysicalEndpoint = EndpointDescriptor->NextPhysicalEndpoint;
+        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
 
         //
-        // get corresponding request
+        // done
         //
-        Request = PUSBREQUEST(EndpointDescriptor->Request);
-
-        //
-        // notify of completion
-        //
-        Request->CompletionCallback(EndpointDescriptor);
-
-        //
-        // FIXME: check if complete
-        //
-        ASSERT(Request->IsRequestComplete());
-        //
-        // release request
-        //
-        Request->Release();
+        return;
     }
+
+    //
+    // find transfer descriptor in bulk list
+    //
+    Status = FindTransferDescriptorInEndpoint(m_BulkHeadEndpointDescriptor, TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // cleanup endpoint
+        //
+        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+        //
+        // done
+        //
+        return;
+    }
+
+    //
+    // hardware reported dead endpoint completed
+    //
+    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
+    ASSERT(FALSE);
 
 }
 
