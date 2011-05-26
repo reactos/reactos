@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * ReactOS shell32 fork translation updated by Caemyr -
- * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010)
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010, May 2011)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -769,6 +769,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Szczegó³y dla rozszerzenia '%s'"
 	IDS_FILE_DETAILSADV         "Pliki z rozszerzeniem '%s' s¹ typu '%s'. Aby zmieniæ ustawienia, które dotycz¹ wszystkich plików '%s', kliknij przycisk Zaawansowane."
-	IDS_FILE_TYPES              "FileTypes"
-	IDS_COLUMN_EXTENSION        "Extensions"
+	IDS_FILE_TYPES              "Typy plików"
+	IDS_COLUMN_EXTENSION        "Rozszerzenia"
 END
