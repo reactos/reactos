@@ -127,6 +127,21 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
 VOID
 NTAPI
+IopSendSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PVOID Dummy;
+    
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_SURPRISE_REMOVAL;
+    
+    /* Drivers should never fail a IRP_MN_SURPRISE_REMOVAL request */
+    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+}
+
+VOID
+NTAPI
 IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     IO_STACK_LOCATION Stack;
@@ -1566,6 +1581,44 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    return STATUS_SUCCESS;
 }
 
+static
+VOID
+IopHandleDeviceRemoval(
+    IN PDEVICE_NODE DeviceNode,
+    IN PDEVICE_RELATIONS DeviceRelations)
+{
+    PDEVICE_NODE Child = DeviceNode->Child, NextChild;
+    ULONG i;
+    BOOLEAN Found;
+
+    while (Child != NULL)
+    {
+        NextChild = Child->Sibling;
+        Found = FALSE;
+
+        for (i = 0; i < DeviceRelations->Count; i++)
+        {
+            if (IopGetDeviceNode(DeviceRelations->Objects[i]) == Child)
+            {
+                Found = TRUE;
+                break;
+            }
+        }
+
+        if (!Found)
+        {
+            IopSendSurpriseRemoval(Child->PhysicalDeviceObject);
+
+            /* Tell the user-mode PnP manager that a device was removed */
+            IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL,
+                                      &Child->InstancePath);
+
+            IopSendRemoveDevice(Child->PhysicalDeviceObject);
+        }
+
+        Child = NextChild;
+    }
+}
 
 NTSTATUS
 IopEnumerateDevice(
@@ -1582,12 +1635,6 @@ IopEnumerateDevice(
     ULONG i;
 
     DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
-    DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
-
-    /* Report the device to the user-mode pnp manager */
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                              &DeviceNode->InstancePath);
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
@@ -1613,6 +1660,11 @@ IopEnumerateDevice(
     }
 
     DPRINT("Got %u PDOs\n", DeviceRelations->Count);
+    
+    /*
+     * Send removal IRPs for devices that have disappeared
+     */
+    IopHandleDeviceRemoval(DeviceNode, DeviceRelations);
 
     /*
      * Create device nodes for all discovered devices
@@ -1633,6 +1685,12 @@ IopEnumerateDevice(
                 &ChildDeviceNode);
             if (NT_SUCCESS(Status))
             {
+                DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
+                
+                /* Report the device to the user-mode pnp manager */
+                IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                                          &ChildDeviceNode->InstancePath);
+                
                 /* Mark the node as enumerated */
                 ChildDeviceNode->Flags |= DNF_ENUMERATED;
 
