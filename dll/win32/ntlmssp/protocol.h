@@ -37,20 +37,20 @@
 #define NTLMSSP_NEGOTIATE_SEAL                        0x00000020
 #define NTLMSSP_NEGOTIATE_DATAGRAM                    0x00000040
 #define NTLMSSP_NEGOTIATE_LM_KEY                      0x00000080
-#define NTLMSSP_RESERVED_8                            0x00000100
+#define NTLMSSP_NEGOTIATE_NETWARE                     0x00000100 //forget about it
 #define NTLMSSP_NEGOTIATE_NTLM                        0x00000200
 #define NTLMSSP_NEGOTIATE_NT_ONLY                     0x00000400
-#define NTLMSSP_RESERVED_7                            0x00000800
+#define NTLMSSP_NEGOTIATE_NULL_SESSION                0x00000800
 #define NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED         0x00001000
 #define NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED    0x00002000
-#define NTLMSSP_RESERVED_6                            0x00004000
+#define NTLMSSP_NEGOTIATE_LOCAL_CALL                  0x00004000
 #define NTLMSSP_NEGOTIATE_ALWAYS_SIGN                 0x00008000
 #define NTLMSSP_TARGET_TYPE_DOMAIN                    0x00010000
 #define NTLMSSP_TARGET_TYPE_SERVER                    0x00020000
 #define NTLMSSP_TARGET_TYPE_SHARE                     0x00040000
-#define NTLMSSP_NEGOTIATE_NTLM2                       0x00080000
-#define NTLMSSP_NEGOTIATE_IDENTIFY                    0x00100000
-#define NTLMSSP_RESERVED_5                            0x00200000
+#define NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY    0x00080000
+#define NTLMSSP_REQUEST_INIT_RESP                     0x00100000
+#define NTLMSSP_REQUEST_ACCEPT_RESP                   0x00200000 //get session key and luid
 #define NTLMSSP_REQUEST_NON_NT_SESSION_KEY            0x00400000
 #define NTLMSSP_NEGOTIATE_TARGET_INFO                 0x00800000
 #define NTLMSSP_RESERVED_4                            0x01000000
@@ -63,6 +63,41 @@
 #define NTLMSSP_NEGOTIATE_56                          0x80000000
 
 #define NTLMSSP_REVISION_W2K3 0x0F
+
+/* basic types */
+typedef struct _CYPHER_BLOCK
+{
+    CHAR data[8];
+}CYPHER_BLOCK, *PCYPHER_BLOCK;
+
+typedef struct _USER_SESSION_KEY
+{
+    CYPHER_BLOCK data[2];
+}USER_SESSION_KEY, *PUSER_SESSION_KEY;
+
+typedef struct _NT_OWF_PASSWORD
+{
+    CYPHER_BLOCK data[2];
+}NT_OWF_PASSWORD, *PNT_OWF_PASSWORD;
+
+typedef struct _LM_OWF_PASSWORD
+{
+    CYPHER_BLOCK data[2];
+}LM_OWF_PASSWORD, *PLM_OWF_PASSWORD;
+
+/* where to put? correct ?*/
+typedef struct _LM_SESSION_KEY
+{
+    UCHAR data[MSV1_0_LANMAN_SESSION_KEY_LENGTH];
+} LM_SESSION_KEY, *PLM_SESSION_KEY;
+
+typedef struct _LM2_RESPONSE
+{
+    UCHAR Response[MSV1_0_NTLM3_RESPONSE_LENGTH];
+    UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
+} LM2_RESPONSE, *PLM2_RESPONSE;
+
+/* message types */
 
 //only filled if NTLMSSP_NEGOTIATE_VERSION is present
 //ignored on retail builds
@@ -129,11 +164,116 @@ typedef struct _AUTHENTICATE_MESSAGE
     /* payload */
 }AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
 
+/* basic functions */
+
+VOID
+NTOWFv1(
+    const PWCHAR password,
+    PUCHAR result);
+
+VOID
+NTOWFv2(
+    PWCHAR password,
+    PWCHAR user,
+    PWCHAR domain,
+    PUCHAR result);
+
+VOID
+LMOWFv1(
+    PCCHAR password,
+    PUCHAR result);
+
+VOID
+LMOWFv2(
+    const PWCHAR password,
+    const PWCHAR user,
+    const PWCHAR domain,
+    PUCHAR result);
+
+VOID
+NONCE(
+    PUCHAR buffer,
+    ULONG num);
+
+VOID
+KXKEY(
+    ULONG flags,
+    const PUCHAR session_base_key,
+    const PUCHAR lm_challenge_resonse,
+    const PUCHAR server_challenge,
+    PUCHAR key_exchange_key);
+
+VOID
+SIGNKEY(
+    const PUCHAR RandomSessionKey,
+    BOOLEAN IsClient,
+    PUCHAR Result);
+
+VOID
+SEALKEY(
+    ULONG flags,
+    const PUCHAR  RandomSessionKey,
+    BOOLEAN client,
+    PUCHAR result);
+
+VOID
+MAC(ULONG flags,
+    PCCHAR buf,
+    ULONG buf_len,
+    PUCHAR sign_key,
+    ULONG sign_key_len,
+    PUCHAR seal_key,
+    ULONG seal_key_len,
+    ULONG random_pad,
+    ULONG sequence,
+    PUCHAR result);
+
+VOID
+NtlmChallengeResponse(
+    IN PUNICODE_STRING pUserName,
+    IN PUNICODE_STRING pPassword,
+    IN PUNICODE_STRING pDomainName,
+    IN PUNICODE_STRING pServerName,
+    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
+    OUT PMSV1_0_NTLM3_RESPONSE pNtResponse,
+    OUT PLM2_RESPONSE pLm2Response,
+    OUT PUSER_SESSION_KEY UserSessionKey,
+    OUT PLM_SESSION_KEY LmSessionKey);
+
+/* avl functions */
+
+PMSV1_0_AV_PAIR
+NtlmAvlInit(
+    IN void * pAvList);
+
+PMSV1_0_AV_PAIR
+NtlmAvlGet(
+    IN PMSV1_0_AV_PAIR pAvList,
+    IN MSV1_0_AVID AvId,
+    IN LONG cAvList);
+
+ULONG
+NtlmAvlLen(
+    IN PMSV1_0_AV_PAIR pAvList,
+    IN LONG cAvList);
+
+PMSV1_0_AV_PAIR
+NtlmAvlAdd(
+    IN PMSV1_0_AV_PAIR pAvList,
+    IN MSV1_0_AVID AvId,
+    IN PUNICODE_STRING pString,
+    IN LONG cAvList);
+
+ULONG
+NtlmAvlSize(
+    IN ULONG Pairs,
+    IN ULONG PairsLen);
+
+/* message functions */
 SECURITY_STATUS
 NtlmGenerateNegotiateMessage(
     IN ULONG_PTR hContext,
     IN ULONG ContextReq,
-    IN ULONG NegotiateFlags,
     IN PSecBuffer InputToken,
     OUT PSecBuffer *OutputToken);
 
@@ -144,17 +284,28 @@ NtlmHandleNegotiateMessage(
     IN ULONG fContextReq,
     IN PSecBuffer InputToken,
     OUT PSecBuffer *OutputToken,
-    OUT PULONG fContextAttributes,
+    OUT PULONG pContextAttr,
     OUT PTimeStamp ptsExpiry);
 
 SECURITY_STATUS
+NtlmHandleChallengeMessage(
+    IN ULONG_PTR hContext,
+    IN ULONG ContextReq,
+    IN PSecBuffer InputToken1,
+    IN PSecBuffer InputToken2,
+    IN OUT PSecBuffer *OutputToken1,
+    IN OUT PSecBuffer *OutputToken2,
+    OUT PULONG ContextAttr,
+    OUT PTimeStamp ptsExpiry,
+    OUT PULONG NegotiateFlags);
+
+SECURITY_STATUS
 NtlmHandleAuthenticateMessage(
-    IN ULONG_PTR hCredential,
-    IN OUT PULONG_PTR phContext,
+    IN ULONG_PTR hContext,
     IN ULONG fContextReq,
     IN PSecBuffer *pInputTokens,
     OUT PSecBuffer OutputToken,
-    OUT PULONG fContextAttributes,
+    OUT PULONG pContextAttr,
     OUT PTimeStamp ptsExpiry,
     OUT PUCHAR pSessionKey,
     OUT PULONG pfNegotiateFlags,
@@ -162,4 +313,19 @@ NtlmHandleAuthenticateMessage(
     OUT PNTSTATUS pSubStatus,
     OUT PTimeStamp ptsPasswordExpiry,
     OUT PULONG pfUserFlags);
+
+/* helper functions */
+
+SECURITY_STATUS
+NtlmBlobToUnicodeString(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    IN OUT PUNICODE_STRING OutputStr);
+
+VOID
+NtlmUnicodeStringToBlob(
+    IN PVOID OutputBuffer,
+    IN PUNICODE_STRING InStr,
+    IN OUT PNTLM_BLOB OutputBlob,
+    IN OUT PULONG_PTR OffSet);
 

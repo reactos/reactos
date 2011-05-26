@@ -26,8 +26,6 @@
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <wincred.h>
-
 #include <ndk/ntndk.h>
 #define SECURITY_WIN32
 #define _NO_KSECDD_IMPORT_
@@ -35,7 +33,9 @@
 #include <sspi.h>
 #include <ntsecapi.h>
 #include <ntsecpkg.h>
-#include <lmcons.h>
+#include <ntmsv1_0.h>
+#include <lm.h>
+
 #include "wine/unicode.h"
 
 /* globals */
@@ -87,9 +87,9 @@ typedef struct _NTLMSSP_CREDENTIAL
     LIST_ENTRY Entry;
     ULONG RefCount;
     ULONG UseFlags;
-    UNICODE_STRING DomainName;
     UNICODE_STRING UserName;
     UNICODE_STRING Password;
+    UNICODE_STRING DomainName;
     ULONG ProcId;
     HANDLE SecToken;
     LUID LogonId;
@@ -115,7 +115,7 @@ typedef struct _NTLMSSP_CONTEXT
     ULONG NegotiateFlags;
     ULONG ContextFlags;
     NTLMSSP_CONTEXT_STATE State;
-    PNTLMSSP_CREDENTIAL Credential; //creator
+    PNTLMSSP_CREDENTIAL Credential;
     UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH]; //ChallengeSent
     UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH]; //LSA
     HANDLE ClientToken;
@@ -154,6 +154,12 @@ NtlmContextTerminate(VOID);
 
 PNTLMSSP_CONTEXT
 NtlmAllocateContext(VOID);
+
+PNTLMSSP_CONTEXT
+NtlmReferenceContext(IN ULONG_PTR Handle);
+
+VOID
+NtlmDereferenceContext(IN ULONG_PTR Handle);
 
 /* crypt.c */
 BOOL
@@ -207,5 +213,11 @@ NtlmGetSecBuffer(
 
 void
 NtlmPrintNegotiateFlags(ULONG Flags);
+
+void
+NtlmPrintHexDump(PBYTE buffer, DWORD length);
+
+void
+NtlmPrintAvPairs(const PVOID av);
 
 #endif

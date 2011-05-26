@@ -18,6 +18,7 @@
  */
 
 #include "ntlmssp.h"
+#include "protocol.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -175,4 +176,44 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
          return TRUE;
      }
     return FALSE;
+}
+
+SECURITY_STATUS
+NtlmBlobToUnicodeString(IN PSecBuffer InputBuffer,
+                        IN NTLM_BLOB Blob,
+                        IN OUT PUNICODE_STRING OutputStr)
+{
+    ULONG offset = Blob.Offset;
+
+    /* check blob is not beyond the bounds of the input buffer */
+    if(offset >= InputBuffer->cbBuffer ||
+        offset + Blob.Length > InputBuffer->cbBuffer)
+    {
+        ERR("blob points beyond buffer bounds!\n");
+        return SEC_E_INVALID_TOKEN;
+    }
+
+    /* convert blob into a string */
+    OutputStr->MaximumLength = OutputStr->Length = Blob.Length;
+    OutputStr->Buffer = (PWSTR)((PCHAR)InputBuffer->pvBuffer) + offset;
+
+    return SEC_E_OK;
+}
+
+VOID
+NtlmUnicodeStringToBlob(IN PVOID OutputBuffer,
+                        IN PUNICODE_STRING InStr,
+                        IN OUT PNTLM_BLOB OutputBlob,
+                        IN OUT PULONG_PTR OffSet)
+{
+    /* copy string to target location */
+    if(InStr->Buffer)
+        memcpy((PVOID)*OffSet, InStr->Buffer, InStr->Length);
+
+    /* set blob fields */
+    OutputBlob->Length = OutputBlob->MaxLength = InStr->Length;
+    OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)OutputBuffer);
+
+    /* move the offset to the end of the string we just copied */
+    *OffSet += InStr->Length;
 }

@@ -17,7 +17,7 @@
  */
 #include "ntlmssp.h"
 #include <wincrypt.h>
-#include "rc4.h"
+#include "ciphers.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
