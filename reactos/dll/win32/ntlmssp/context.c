@@ -19,7 +19,6 @@
 
 #include "ntlmssp.h"
 #include "protocol.h"
-#include <lm.h>
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -36,7 +35,7 @@ NtlmContextInitialize(VOID)
     return STATUS_SUCCESS;
 }
 
-VOID
+PNTLMSSP_CONTEXT
 NtlmReferenceContext(IN ULONG_PTR Handle)
 {
     PNTLMSSP_CONTEXT context;
@@ -66,6 +65,7 @@ NtlmReferenceContext(IN ULONG_PTR Handle)
 #endif
     context->RefCount++;
     LeaveCriticalSection(&ContextCritSect);
+    return context;
 }
 
 VOID
@@ -163,51 +163,6 @@ NtlmAllocateContext(VOID)
     return ret;
 }
 
-BOOL
-NtlmGetCachedCredential(const SEC_WCHAR *pszTargetName,
-                        PCREDENTIALW *cred)
-{
-    LPCWSTR p;
-    LPCWSTR pszHost;
-    LPWSTR pszHostOnly;
-    BOOL ret;
-
-    if (!pszTargetName)
-        return FALSE;
-
-    /* try to get the start of the hostname from service principal name (SPN) */
-    pszHost = strchrW(pszTargetName, '/');
-    if (pszHost)
-    {
-        /* skip slash character */
-        pszHost++;
-
-        /* find fail of host by detecting start of instance port or start of referrer */
-        p = strchrW(pszHost, ':');
-        if (!p)
-            p = strchrW(pszHost, '/');
-        if (!p)
-            p = pszHost + strlenW(pszHost);
-    }
-    else /* otherwise not an SPN, just a host */
-    {
-        pszHost = pszTargetName;
-        p = pszHost + strlenW(pszHost);
-    }
-
-    pszHostOnly = HeapAlloc(GetProcessHeap(), 0, (p - pszHost + 1) * sizeof(WCHAR));
-    if (!pszHostOnly)
-        return FALSE;
-
-    memcpy(pszHostOnly, pszHost, (p - pszHost) * sizeof(WCHAR));
-    pszHostOnly[p - pszHost] = '\0';
-
-    ret = CredReadW(pszHostOnly, CRED_TYPE_DOMAIN_PASSWORD, 0, cred);
-
-    HeapFree(GetProcessHeap(), 0, pszHostOnly);
-    return ret;
-}
-
 SECURITY_STATUS
 NtlmCreateNegoContext(IN ULONG_PTR Credential,
                       IN SEC_WCHAR *pszTargetName,
@@ -246,7 +201,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
     context->NegotiateFlags = NTLMSSP_NEGOTIATE_UNICODE |
                               NTLMSSP_NEGOTIATE_OEM |
                               NTLMSSP_NEGOTIATE_NTLM |
-                              NTLMSSP_NEGOTIATE_NTLM2 | //if supported
+                              NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
                               NTLMSSP_REQUEST_TARGET |
                               NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
                               NTLMSSP_NEGOTIATE_56 |
@@ -278,8 +233,8 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
     {
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SEAL |
                                    NTLMSSP_NEGOTIATE_LM_KEY |
-                                   NTLMSSP_NEGOTIATE_KEY_EXCH;
-                                   //NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+                                   NTLMSSP_NEGOTIATE_KEY_EXCH |
+                                   NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         *pfContextAttr |= ISC_RET_CONFIDENTIALITY;
         context->ContextFlags |= ISC_RET_CONFIDENTIALITY;
@@ -299,7 +254,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
 
     if(fContextReq & ISC_REQ_IDENTIFY)
     {
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_IDENTIFY;
+        context->NegotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
         *pfContextAttr |= ISC_RET_IDENTIFY;
         context->ContextFlags |= ISC_RET_IDENTIFY;
     }
@@ -311,7 +266,6 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_NT_ONLY;
         context->ContextFlags |= ISC_RET_DATAGRAM;
         *pfContextAttr |= ISC_RET_DATAGRAM;
-        //*pfNegotiateFlags |= NTLMSSP_APP_SEQ; app provided sequence numbers
 
         /* generate session key */
         if(context->NegotiateFlags & (NTLMSSP_NEGOTIATE_SIGN |
@@ -327,47 +281,6 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
             }
         }
 
-        /* local connection */
-        if((!cred->DomainName.Buffer &&
-            !cred->UserName.Buffer &&
-            !cred->Password.Buffer) &&
-            cred->SecToken)
-        {
-            LPWKSTA_USER_INFO_1 ui = NULL;
-            NET_API_STATUS status;
-            PCREDENTIALW credW;
-            context->isLocal = TRUE;
-
-            TRACE("try use local cached credentials\n");
-
-            /* get local credentials */
-            if(pszTargetName && NtlmGetCachedCredential(pszTargetName, &credW))
-            {
-                LPWSTR p;
-                p = strchrW(credW->UserName, '\\');
-                if(p)
-                {
-                    TRACE("%s\n",debugstr_w(credW->UserName));
-                    TRACE("%s\n", debugstr_w((WCHAR*)(p - credW->UserName)));
-                }
-                if(credW->CredentialBlobSize != 0)
-                {
-                    TRACE("%s\n", debugstr_w((WCHAR*)credW->CredentialBlob));
-                }
-                CredFree(credW);
-            }
-            else
-            {
-                status = NetWkstaUserGetInfo(NULL, 1, (LPBYTE *)&ui);
-                if (status != NERR_Success || ui == NULL)
-                {
-                    ret = SEC_E_NO_CREDENTIALS;
-                    goto fail;
-                }
-                TRACE("%s",debugstr_w(ui->wkui1_username));
-                NetApiBufferFree(ui);
-            }
-        }
     }//end is datagram
     
     /* generate session key */
@@ -390,12 +303,11 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
     //*ptsExpiry = 
     *phNewContext = (ULONG_PTR)context;
 
-    TRACE("context %p context->NegotiateFlags:\n",context);
-    NtlmPrintNegotiateFlags(*pfNegotiateFlags);
-
     return ret;
 
 fail:
+    /* free resources */
+    NtlmDereferenceContext((ULONG_PTR)context);
     return ret;
 }
 
@@ -470,9 +382,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                     &sessionKey,
                                     &NegotiateFlags);
 
-        phCredential->dwUpper = NegotiateFlags;
-        phNewContext->dwLower = newContext;
-
         if(!newContext || !NT_SUCCESS(ret))
         {
             ERR("NtlmCreateNegoContext failed with %lx\n", ret);
@@ -481,7 +390,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
 
         ret = NtlmGenerateNegotiateMessage(newContext,
                                            fContextReq,
-                                           NegotiateFlags,
                                            InputToken1,
                                            &OutputToken1);
 
@@ -490,6 +398,10 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             ERR("NtlmGenerateNegotiateMessage failed with %lx\n", ret);
             goto fail;
         }
+
+        /* set results */
+        phNewContext->dwUpper = NegotiateFlags;
+        phNewContext->dwLower = newContext;
 
         /* build blob with the nego message */
         SecBufferDesc BufferDesc;
@@ -505,8 +417,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     }
     else        /* challenge! */
     {
-        ERR("challenge message unimplemented!!!\n");
-        ERR("phNewContext %p phContext %x!!!\n",phNewContext, *phContext);
+        TRACE("ISC challenged!\n");
         *phNewContext = *phContext;
         if (fContextReq & ISC_REQ_USE_SUPPLIED_CREDS)
         {
@@ -529,14 +440,37 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                               TRUE);
         if(!ret)
         {
+            /* not fatal, aparently */
             ERR("Failed to get output token!\n");
-            return SEC_E_INVALID_TOKEN;
         }
 
+        TRACE("phContext->dwLower %lx\n", phContext->dwLower);
+        NtlmHandleChallengeMessage(phContext->dwLower,
+                                   fContextReq,
+                                   InputToken1,
+                                   InputToken2,
+                                   &OutputToken1,
+                                   &OutputToken2,
+                                   pfContextAttr,
+                                   ptsExpiry,
+                                   &NegotiateFlags);
     }
+
     return ret;
 
 fail:
+    /* free resources */
+    if(newContext)
+        NtlmDereferenceContext(newContext);
+
+    if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
+    {
+        if(OutputToken1 && OutputToken1->pvBuffer)
+            NtlmFree(OutputToken1->pvBuffer);
+        if(OutputToken2 && OutputToken2->pvBuffer)
+            NtlmFree(OutputToken1->pvBuffer);
+    }
+
     return ret;
 }
 
@@ -657,7 +591,6 @@ AcceptSecurityContext(IN PCredHandle phCredential,
         return SEC_E_BUFFER_TOO_SMALL;
     }
 
-    ERR("here!");
     /* first call */
     if(!phContext && !InputToken2->cbBuffer)
     {
@@ -692,9 +625,7 @@ SEC_ENTRY
 DeleteSecurityContext(PCtxtHandle phContext)
 {
     if (!phContext)
-    {
         return SEC_E_INVALID_HANDLE;
-    }
 
     NtlmDereferenceContext((ULONG_PTR)phContext->dwLower);
     phContext = NULL;

@@ -438,7 +438,7 @@ FreeCredentialsHandle(PCredHandle phCredential)
 {
     TRACE("FreeCredentialsHandle %x %x\n", phCredential, phCredential->dwLower);
 
-    if(!phCredential) /* fixme: more handle validation */
+    if(!phCredential)
         return SEC_E_INVALID_HANDLE;
 
     NtlmDereferenceCredential((ULONG_PTR)phCredential->dwLower);

@@ -17,21 +17,22 @@
  *
  */
 #include "ntlmssp.h"
+#include "protocol.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 /* globals */
-
-/* use (sparingly) to read/write global state */
-CRITICAL_SECTION GlobalCritSect; 
+CRITICAL_SECTION GlobalCritSect; /* use to read/write global state */
 
 NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME */
-BOOLEAN Inited = FALSE;
 UNICODE_STRING NtlmComputerNameString;
 UNICODE_STRING NtlmDomainNameString;
+UNICODE_STRING NtlmDnsNameString;
+UNICODE_STRING NtlmAvTargetInfo; // contains AV pairs with local info
 OEM_STRING NtlmOemComputerNameString;
 OEM_STRING NtlmOemDomainNameString;
+OEM_STRING NtlmOemDnsNameString;
 HANDLE NtlmSystemSecurityToken;
 
 /* private functions */
@@ -40,24 +41,44 @@ NTSTATUS
 NtlmInitializeGlobals(VOID)
 {
     NTSTATUS status = STATUS_SUCCESS;
-    WCHAR compName[CNLEN + 1], domName[DNLEN+1];
-    ULONG compNamelen = sizeof(compName), domNamelen = sizeof(domName);
-
+    //LPWKSTA_USER_INFO_1 pBuf = NULL;
+    WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
+    ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
+    PMSV1_0_AV_PAIR pAvPairs;
+    ULONG AvPairsLen;
     InitializeCriticalSection(&GlobalCritSect);
 
-    if (!GetComputerNameW(compName, &compNamelen))
+    if(!GetComputerNameW(compName, &compNamelen))
     {
         compName[0] = L'\0';
         ERR("could not get computer name!\n");
     }
-    RtlCreateUnicodeString(&NtlmComputerNameString, compName);
+    TRACE("%s\n",debugstr_w(compName));
 
-    if (!GetComputerNameExW(ComputerNameDnsFullyQualified, domName, &domNamelen))
+    if (!GetComputerNameExW(ComputerNameDnsFullyQualified, dnsName, &dnsNamelen))
     {
-        domName[0] = L'\0';
+        dnsName[0] = L'\0';
         ERR("could not get domain name!\n");
     }
+    TRACE("%s\n",debugstr_w(dnsName));
 
+	/* FIXME: this still does not match what msv1_0 returns */
+   // if (!(NERR_Success == NetWkstaUserGetInfo(0, 1, (LPBYTE*)&pBuf)))
+    //{
+        wcscpy(domName, L"WORKGROUP\0");
+        FIXME("how to get domain name!?\n");
+    //}
+    //else
+    //{
+    //    wcscpy(domName, pBuf->wkui1_logon_domain);
+    //}
+
+    //if (pBuf != NULL)
+    //    NetApiBufferFree(pBuf);
+    TRACE("%s\n",debugstr_w(domName));
+
+    RtlCreateUnicodeString(&NtlmComputerNameString, compName);
+    RtlCreateUnicodeString(&NtlmDnsNameString, dnsName);
     RtlCreateUnicodeString(&NtlmDomainNameString, domName);
 
     RtlUnicodeStringToOemString(&NtlmOemComputerNameString,
@@ -68,6 +89,10 @@ NtlmInitializeGlobals(VOID)
                                 &NtlmDomainNameString,
                                 TRUE);
 
+    RtlUnicodeStringToOemString(&NtlmOemDnsNameString,
+                                &NtlmDnsNameString,
+                                TRUE);
+
     status = NtOpenProcessToken(NtCurrentProcess(),
                                 TOKEN_QUERY | TOKEN_DUPLICATE,
                                 &NtlmSystemSecurityToken);
@@ -76,13 +101,45 @@ NtlmInitializeGlobals(VOID)
     {
         ERR("could not get process token!!\n");
     }
+
+    /* init global target AV pairs */
+
+    RtlInitUnicodeString(&NtlmAvTargetInfo, NULL);
+    AvPairsLen = NtlmDomainNameString.Length + //fix me: domain controller name
+           NtlmComputerNameString.Length + //computer name
+           NtlmDnsNameString.Length + //dns computer name
+           NtlmDnsNameString.Length + //fix me: dns domain name
+           sizeof(MSV1_0_AV_PAIR)*4;
+
+    NtlmAvTargetInfo.Buffer = (PWSTR)NtlmAllocate(AvPairsLen);
+
+    if(!NtlmAvTargetInfo.Buffer)
+    {
+        ERR("failed to allocate NtlmAvTargetInfo\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    pAvPairs = NtlmAvlInit(NtlmAvTargetInfo.Buffer);
+    NtlmAvlAdd(pAvPairs, MsvAvNbDomainName, &NtlmDomainNameString, AvPairsLen);
+    NtlmAvlAdd(pAvPairs, MsvAvNbComputerName, &NtlmComputerNameString, AvPairsLen);
+    NtlmAvlAdd(pAvPairs, MsvAvDnsDomainName, &NtlmDnsNameString, AvPairsLen);
+    NtlmAvlAdd(pAvPairs, MsvAvDnsComputerName, &NtlmDnsNameString, AvPairsLen);
+    NtlmAvTargetInfo.Length = (USHORT)NtlmAvlLen(pAvPairs, AvPairsLen);
+
     return status;
 }
 
 VOID
 NtlmTerminateGlobals(VOID)
 {
-
+    NtlmFree(NtlmComputerNameString.Buffer);
+    NtlmFree(NtlmDomainNameString.Buffer);
+    NtlmFree(NtlmDnsNameString.Buffer);
+    NtlmFree(NtlmOemComputerNameString.Buffer);
+    NtlmFree(NtlmOemDomainNameString.Buffer);
+    NtlmFree(NtlmOemDnsNameString.Buffer);
+    NtlmFree(NtlmAvTargetInfo.Buffer);
+    NtClose(NtlmSystemSecurityToken);
 }
 
 /* public functions */
