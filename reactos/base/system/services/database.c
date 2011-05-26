@@ -1036,6 +1036,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
+    LPCWSTR ErrorLogStrings[2];
 
     DPRINT("ScmStartService() called\n");
 
@@ -1088,15 +1089,20 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
             Group->ServicesRunning = TRUE;
         }
     }
-#if 0
     else
     {
-        switch (Service->ErrorControl)
+        if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
-            case SERVICE_ERROR_NORMAL:
-                /* FIXME: Log error */
-                break;
+            ErrorLogStrings[0] = Service->lpServiceName;
+            ErrorLogStrings[1] = L"Test";
+            ScmLogError(EVENT_SERVICE_START_FAILED,
+                        2,
+                        ErrorLogStrings);
+        }
 
+#if 0
+        switch (Service->dwErrorControl)
+        {
             case SERVICE_ERROR_SEVERE:
                 if (IsLastKnownGood == FALSE)
                 {
@@ -1115,8 +1121,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
                 }
                 break;
         }
-    }
 #endif
+    }
 
     return dwError;
 }
@@ -1242,6 +1248,9 @@ ScmAutoShutdownServices(VOID)
 
     DPRINT("ScmAutoShutdownServices() called\n");
 
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
@@ -1251,13 +1260,17 @@ ScmAutoShutdownServices(VOID)
             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
         {
             /* shutdown service */
-            ScmControlService(CurrentService, SERVICE_CONTROL_STOP);
+            DPRINT("Shutdown service: %S\n", CurrentService->szServiceName);
+            ScmControlService(CurrentService, SERVICE_CONTROL_SHUTDOWN);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
 
-    DPRINT("ScmGetBootAndSystemDriverState() done\n");
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("ScmAutoShutdownServices() done\n");
 }
 
 

@@ -1181,8 +1181,11 @@ DWORD RNotifyBootConfigStatus(
     SVCCTL_HANDLEW lpMachineName,
     DWORD BootAcceptable)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DPRINT1("RNotifyBootConfigStatus(%p %lu) called\n", lpMachineName, BootAcceptable);
+    return ERROR_SUCCESS;
+
+//    UNIMPLEMENTED;
+//    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1898,9 +1901,15 @@ DWORD RCreateServiceW(
         return ERROR_INVALID_PARAMETER;
     }
 
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService)
     {
+        /* Unlock the service database */
+        ScmUnlockDatabase();
+
         /* check if it is marked for deletion */
         if (lpService->bDeleted)
             return ERROR_SERVICE_MARKED_FOR_DELETE;
@@ -1910,7 +1919,12 @@ DWORD RCreateServiceW(
 
     if (lpDisplayName != NULL &&
         ScmGetServiceEntryByDisplayName(lpDisplayName) != NULL)
+    {
+        /* Unlock the service database */
+        ScmUnlockDatabase();
+
         return ERROR_DUPLICATE_SERVICE_NAME;
+    }
 
     if (dwServiceType & SERVICE_DRIVER)
     {
@@ -1925,6 +1939,9 @@ DWORD RCreateServiceW(
         if (dwStartType == SERVICE_BOOT_START ||
             dwStartType == SERVICE_SYSTEM_START)
         {
+            /* Unlock the service database */
+            ScmUnlockDatabase();
+
             return ERROR_INVALID_PARAMETER;
         }
     }
@@ -2113,6 +2130,9 @@ DWORD RCreateServiceW(
     DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
 
 done:;
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
@@ -5079,7 +5099,8 @@ DWORD REnumServicesStatusExW(
     if (lpResumeIndex)
         dwLastResumeCount = *lpResumeIndex;
 
-    /* FIXME: Lock the service list shared */
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
 
     lpService = ScmGetServiceEntryByResumeCount(dwLastResumeCount);
     if (lpService == NULL)
@@ -5281,7 +5302,8 @@ DWORD REnumServicesStatusExW(
     }
 
 Done:;
-    /* FIXME: Unlock the service list */
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     DPRINT("REnumServicesStatusExW() done (Error %lu)\n", dwError);
 
