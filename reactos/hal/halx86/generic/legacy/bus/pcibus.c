@@ -572,7 +572,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
     if (PciData.VendorID == PCI_INVALID_VENDORID) return STATUS_UNSUCCESSFUL;
     
     /* Allocate the supported range structure */
-    *Range = ExAllocatePoolWithTag(PagedPool, sizeof(SUPPORTED_RANGE), 'Hal ');
+    *Range = ExAllocatePoolWithTag(PagedPool, sizeof(SUPPORTED_RANGE), TAG_HAL);
     if (!*Range) return STATUS_INSUFFICIENT_RESOURCES;
     
     /* Set it up */
@@ -766,7 +766,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         PagedPool,
         sizeof(CM_RESOURCE_LIST) +
         (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
-        ' laH');
+        TAG_HAL);
 
     if (NULL == *AllocatedResources)
         return STATUS_NO_MEMORY;
@@ -1015,7 +1015,7 @@ HalpQueryPciRegistryInfo(VOID)
                                       sizeof(PCI_REGISTRY_INFO_INTERNAL) +
                                       (KeyInformation.Values *
                                        sizeof(PCI_CARD_DESCRIPTOR)),
-                                       ' laH');
+                                       TAG_HAL);
             if (PciRegistryInfo)
             {
                 /* Get the first card descriptor entry */
@@ -1069,7 +1069,7 @@ HalpQueryPciRegistryInfo(VOID)
         /* Just allocate the basic structure then */
         PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
                                                 sizeof(PCI_REGISTRY_INFO_INTERNAL),
-                                                ' laH');
+                                                TAG_HAL);
         if (!PciRegistryInfo) return NULL;
     }
 
@@ -1119,7 +1119,7 @@ HalpInitializePciStubs(VOID)
         MaxPciBusNumber = PciRegistryInfo->NoBuses - 1;
 
         /* Free the info structure */
-        ExFreePool(PciRegistryInfo);
+        ExFreePoolWithTag(PciRegistryInfo, TAG_HAL);
     }
 
     /* Initialize the PCI lock */

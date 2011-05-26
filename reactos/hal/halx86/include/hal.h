@@ -45,6 +45,9 @@
 #include "internal/i386/intrin_i.h"
 #endif
 
+#define TAG_HAL    ' laH'
+#define TAG_BUS_HANDLER 'BusH'
+
 /* Internal HAL Headers */
 #include "apic.h"
 #include "bus.h"
