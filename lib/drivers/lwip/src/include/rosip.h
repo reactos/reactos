@@ -21,7 +21,7 @@ err_t LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port);
 err_t LibTCPClose(struct tcp_pcb *pcb);
 err_t LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port);
 err_t LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port);
-void LibTCPAccept(struct tcp_pcb *pcb, void *arg);
+void LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg);
 
 /* IP functions */
 void LibIPInsertPacket(void *ifarg, void *data, u32_t size);

@@ -163,14 +163,17 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         
         if (Status == STATUS_SUCCESS)
         {
-            DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, newpcb->id = %d\n",
-                tcp_state_str[newpcb->state], newpcb->identifier);
+            DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb->id = %d\n",
+                tcp_state_str[newpcb->state],
+                tcp_state_str[((struct tcp_pcb*)Connection->SocketContext)->state],
+                newpcb->identifier);
 
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
             Bucket->AssociatedEndpoint->SocketContext = newpcb;
-            DbgPrint("[IP, TCPAcceptEventHandler] LibTCPAccept coming up\n");
             
-            LibTCPAccept(newpcb, Bucket->AssociatedEndpoint);
+            LibTCPAccept(newpcb,
+                (struct tcp_pcb*)Connection->SocketContext,
+                Bucket->AssociatedEndpoint);
 
             DbgPrint("[IP, TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);

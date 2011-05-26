@@ -278,7 +278,6 @@ struct tcp_pcb {
   /* KEEPALIVE counter */
   u8_t keep_cnt_sent;
   u16_t identifier;
-  struct tcp_pcb_listen* listener;
 };
 
 struct tcp_pcb_listen {  

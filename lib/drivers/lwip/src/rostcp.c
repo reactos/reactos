@@ -562,7 +562,7 @@ LibTCPClose(struct tcp_pcb *pcb)
 }
 
 void
-LibTCPAccept(struct tcp_pcb *pcb, void *arg)
+LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg)
 {
     DbgPrint("[LibTCPAccept] (pcb, arg) = (0x%x, 0x%x)\n", pcb, arg);
     
@@ -573,7 +573,7 @@ LibTCPAccept(struct tcp_pcb *pcb, void *arg)
     tcp_sent(pcb, InternalSendEventHandler);
     tcp_arg(pcb, arg);
     
-    tcp_accepted(pcb->listener);
+    tcp_accepted(listen_pcb);
 
     DbgPrint("[LibTCPAccept] Done\n");
 }

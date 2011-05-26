@@ -530,8 +530,6 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
     /* inherit socket options */
     npcb->so_options = pcb->so_options & SOF_INHERITED;
 
-    npcb->listener = pcb;
-
     /* Register the new PCB so that we can begin receiving segments
        for it. */
     TCP_REG(&tcp_active_pcbs, npcb);
