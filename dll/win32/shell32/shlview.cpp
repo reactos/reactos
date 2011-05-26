@@ -200,6 +200,7 @@ public:
 	LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 	LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+	LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 	LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 	LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -258,6 +259,7 @@ BEGIN_MSG_MAP(CDefView)
 	MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
 	MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 	MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+	MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
 	MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
 END_MSG_MAP()
 
@@ -852,6 +854,12 @@ LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 	bHandled = FALSE;
 	return 0;
+}
+
+LRESULT CDefView::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+	/* Forward WM_SYSCOLORCHANGE to common controls */
+	return SendMessageW(hWndList, uMsg, 0, 0);
 }
 
 LRESULT CDefView::OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
