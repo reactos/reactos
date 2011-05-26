@@ -258,6 +258,7 @@
 	<property name="BASEADDRESS_QUERY"		value="0x7d9a0000" />
 	<property name="BASEADDRESS_HHCTRL"		value="0x7e410000" />
 	<property name="BASEADDRESS_SXS"		value="0x7e690000" />
-	<property name="BASEADDRESS_BEEPMIDI"		value="0x7ef00000" />
+	<property name="BASEADDRESS_BEEPMIDI"		value="0x7e6b0000" />
+	<property name="BASEADDRESS_NTLMSSP"		value="0x7e6d0000" />
 	<property name="BASEADDRESS_FREETYPE"		value="0x7f000000" />
 </group>
