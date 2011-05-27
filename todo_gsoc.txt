@@ -1,7 +1,7 @@
 Tasks to do by the end of GSoC (sorted in decending order by importance):
 
 1) Make sure all basic functinalities are working
-	- accept so far is not which should be fixed
+	- accept does not work currently and needs immediate attention
 
 
 2) 	Create a test application that simulates heavy usage
@@ -9,9 +9,12 @@ Tasks to do by the end of GSoC (sorted in decending order by importance):
    check whether we have any memory leaks, broken functionality
    or fatal blue screen errors.
 
-3) 	Improve existing IOCTLs.
-4)	Improve support for netstat (e.g. netstat -na).
+3) 	Investigate performace issues, especially related to throughput
 
+4) 	Improve existing IOCTLs.
+5)	Improve support for netstat (e.g. netstat -na).
+6)	Consider replacing existing version of lwIP with v1.4
+   (or if appliable newer)
 Notes:
 
 	- 2) Worth looking into how we can take advantage of firefox's
