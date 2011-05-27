@@ -27,7 +27,7 @@
 #include "audsrvrpc_s.h"
 
 
-typedef struct PortStream
+typedef struct ServerStream
 {
 	int volume;
 	LONG freq;
@@ -35,8 +35,9 @@ typedef struct PortStream
 	int channels;
 	ULONG channelmask;
 	HANDLE thread;
-	struct PortStream * next;
-} PortStream;
+	float balance;
+	struct ServerStream * next;
+} ServerStream;
 
 typedef struct MixerEngine
 {
@@ -60,6 +61,7 @@ typedef struct MixerEngine
     HANDLE PinHandle;
 	PKSPROPERTY Property;
 	PKSSTREAM_HEADER Packet;
+	ServerStream * serverstreamlist;
 } MixerEngine;
 
 extern MixerEngine engine;

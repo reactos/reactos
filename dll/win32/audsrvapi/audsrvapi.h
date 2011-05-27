@@ -1,2 +1,2 @@
 #include "audsrvrpc_c.h"
-#include <audsrvapi.h>
+#include <audsrv/audsrvapi.h>

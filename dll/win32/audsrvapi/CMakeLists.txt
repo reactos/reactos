@@ -1,5 +1,5 @@
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/audsrv)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs)
 
 spec2def(audsrvapi.dll audsrvapi.spec)
 
