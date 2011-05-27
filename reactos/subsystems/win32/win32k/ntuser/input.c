@@ -65,43 +65,10 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 		LARGE_INTEGER TickCount;
         KeQueryTickCount(&TickCount);
         LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
+        if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
 	}
     return LastInputTick;
 }
-
-BOOL
-APIENTRY
-NtUserGetLastInputInfo(PLASTINPUTINFO plii)
-{
-    BOOL ret = TRUE;
-
-    UserEnterShared();
-
-    _SEH2_TRY
-    {
-        if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-            _SEH2_LEAVE;
-        }
-
-        ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
-
-        plii->dwTime = IntLastInputTick(FALSE);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
-    }
-    _SEH2_END;
-
-    UserLeave();
-
-    return ret;
-}
-
 
 VOID FASTCALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)

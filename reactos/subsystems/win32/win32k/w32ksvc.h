@@ -683,7 +683,6 @@ SVC_(GdiOffsetWindowOrgEx, 4)
 
 SVC_(UserBuildMenuItemList, 4)
 SVC_(UserGetMenuDefaultItem, 3)
-SVC_(UserGetLastInputInfo, 1)
 SVC_(UserGetMinMaxInfo, 3)
 SVC_(UserGetMonitorInfo, 2)
 SVC_(UserMenuInfo, 3)

@@ -181,7 +181,6 @@ GetKeyNameTextW(LONG lParam,
   return NtUserGetKeyNameText( lParam, lpString, nSize );
 }
 
-
 /*
  * @implemented
  */
@@ -190,7 +189,6 @@ GetKeyState(int nVirtKey)
 {
  return (SHORT) NtUserGetKeyState((DWORD) nVirtKey);
 }
-
 
 /*
  * @implemented
@@ -225,16 +223,23 @@ GetKeyboardType(int nTypeFlag)
 return (int)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
-
 /*
  * @implemented
  */
 BOOL WINAPI
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
-  return NtUserGetLastInputInfo(plii);
-}
+  TRACE("%p\n", plii);
 
+  if (plii->cbSize != sizeof (*plii) )
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  plii->dwTime = gpsi->dwLastRITEventTickCount;
+  return TRUE;
+}
 
 /*
  * @implemented
@@ -247,7 +252,6 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
                strtoul(pwszKLID, NULL, 16),
                Flags);
 }
-
 
 /*
  * @implemented
@@ -263,7 +267,6 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                Flags);
 }
 
-
 /*
  * @implemented
  */
@@ -273,7 +276,6 @@ MapVirtualKeyA(UINT uCode,
 {
   return MapVirtualKeyExA( uCode, uMapType, GetKeyboardLayout( 0 ) );
 }
-
 
 /*
  * @implemented

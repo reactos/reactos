@@ -683,7 +683,6 @@ NtGdiOffsetWindowOrgEx                  4
 #
 NtUserBuildMenuItemList                 4
 NtUserGetMenuDefaultItem                3
-NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2
 NtUserMenuInfo                          3

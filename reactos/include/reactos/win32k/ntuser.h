@@ -3161,11 +3161,6 @@ NtUserGetMenuDefaultItem(
 
 BOOL
 NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
-
-BOOL
-NTAPI
 NtUserGetMinMaxInfo(
   HWND hwnd,
   MINMAXINFO *MinMaxInfo,
