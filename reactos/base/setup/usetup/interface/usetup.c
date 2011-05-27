@@ -3776,10 +3776,14 @@ RunUSetup(VOID)
     INPUT_RECORD Ir;
     PAGE_NUMBER Page;
     LARGE_INTEGER Time;
-    NTSTATUS Status;
+//  NTSTATUS Status;
 
     NtQuerySystemTime(&Time);
 
+#if 0 /* This minimal PnP implementation causes problems because it writes
+       * half complete registry entries which cause devices installed by this
+       * method (PCI) to be improperly installed and not recognized by device manager
+       */
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
                                  TRUE,
@@ -3791,6 +3795,7 @@ RunUSetup(VOID)
                                  &hPnpThread,
                                  NULL);
     if (!NT_SUCCESS(Status))
+#endif
         hPnpThread = INVALID_HANDLE_VALUE;
 
     if (!CONSOLE_Init())
