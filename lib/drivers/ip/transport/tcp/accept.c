@@ -83,7 +83,8 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
 }
 
 BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
-                  PCONNECTION_ENDPOINT Connection ) {
+                  PCONNECTION_ENDPOINT Connection )
+{
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
@@ -92,18 +93,20 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     LockObject(Listener, &OldIrql);
 
     ListEntry = Listener->ListenRequest.Flink;
-    while ( ListEntry != &Listener->ListenRequest ) {
-    Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
+    while ( ListEntry != &Listener->ListenRequest )
+    {
+        Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
 
-    if( Bucket->AssociatedEndpoint == Connection ) {
-        DereferenceObject(Bucket->AssociatedEndpoint);
-        RemoveEntryList( &Bucket->Entry );
-        ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
-        Found = TRUE;
-        break;
-    }
+        if( Bucket->AssociatedEndpoint == Connection )
+        {
+            DereferenceObject(Bucket->AssociatedEndpoint);
+            RemoveEntryList( &Bucket->Entry );
+            ExFreePoolWithTag( Bucket, TDI_BUCKET_TAG );
+            Found = TRUE;
+            break;
+        }
 
-    ListEntry = ListEntry->Flink;
+        ListEntry = ListEntry->Flink;
     }
 
     UnlockObject(Listener, OldIrql);
@@ -131,6 +134,8 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     if( Bucket )
     {
         Bucket->AssociatedEndpoint = Connection;
+        ReferenceObject(Bucket->AssociatedEndpoint);
+
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
         InsertTailList( &Listener->ListenRequest, &Bucket->Entry );
