@@ -1,0 +1,42 @@
+/*
+ * Event Log RPC interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+cpp_quote("#if !defined(__AUDSRV_H__) ")
+typedef long NTSTATUS;
+cpp_quote("#endif")
+
+typedef [range(0, 0x0007FFFF)] unsigned long RULONG;
+typedef struct _RPC_STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+    [size_is(MaximumLength), length_is(Length)] LPSTR Buffer;
+} RPC_STRING, *PRPC_STRING;
+
+typedef [context_handle] PVOID AUDSRV_HANDLE;
+typedef AUDSRV_HANDLE *PAUDSRV_HANDLE;
+typedef [handle, unique] LPWSTR AUDSRV_HANDLE_W;
+typedef [handle, unique] LPSTR AUDSRV_HANDLE_A;
+
+typedef struct _RPC_CLIENT_ID {
+    DWORD UniqueProcess;
+    DWORD UniqueThread;
+} RPC_CLIENT_ID, *PRPC_CLIENT_ID;
+
+[
+    uuid(F4CB5F3D-84CC-4BFF-BB16-1397896E3A38),
+    version(0.0),
+    pointer_default(unique)
+#ifndef __midl
+    ,explicit_handle
+#endif
+]
+
+interface audsrv
+{
+
+    NTSTATUS AUDInitStream([in] AUDSRV_HANDLE *streamthread);
+
+}

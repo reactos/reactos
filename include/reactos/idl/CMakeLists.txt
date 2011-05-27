@@ -2,6 +2,7 @@
 include_directories(.)
 
 add_rpc_library(eventlogrpc eventlogrpc.idl)
+add_rpc_library(audsrvrpc audsrvrpc.idl)
 add_rpc_library(lsarpc lsa.idl)
 add_rpc_library(svcctlrpc svcctl.idl)
 add_rpc_library(wlansvcrpc wlansvc.idl)
