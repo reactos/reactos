@@ -2241,8 +2241,6 @@ DWORD PNP_DeleteServiceDevices(
 static BOOL
 InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 {
-    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    NTSTATUS Status;
     BOOL DeviceInstalled = FALSE;
     DWORD BytesWritten;
     DWORD Value;
@@ -2251,6 +2249,8 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     PROCESS_INFORMATION ProcessInfo;
     STARTUPINFOW StartupInfo;
     UUID RandomUuid;
+    WCHAR RegistryPath[MAX_PATH];
+    HKEY DeviceKey;
 
     /* The following lengths are constant (see below), they cannot overflow */
     WCHAR CommandLine[116];
@@ -2262,26 +2262,30 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
-    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         DeviceInstance);
-    PlugPlayData.Operation = 0; /* Get status */
+    wcscpy(RegistryPath, L"SYSTEM\\CurrentControlSet\\Enum\\");
+    wcscat(RegistryPath, DeviceInstance);
 
-    /* Get device status */
-    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
-                               (PVOID)&PlugPlayData,
-                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
-    if (!NT_SUCCESS(Status))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      RegistryPath,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &DeviceKey) == ERROR_SUCCESS)
     {
-        DPRINT1("NtPlugPlayControl('%S') failed with status 0x%08lx\n", DeviceInstance, Status);
-        return FALSE;
+        if (RegQueryValueExW(DeviceKey,
+                             L"ClassGUID",
+                             NULL,
+                             NULL,
+                             NULL,
+                             NULL) == ERROR_SUCCESS)
+        {
+            DPRINT("No need to install: %S\n", DeviceInstance);
+            return TRUE;
+        }
+
+        CloseHandle(DeviceKey);
     }
 
-    if ((PlugPlayData.DeviceStatus & (DNF_STARTED | DNF_START_FAILED)) != 0)
-    {
-        /* Device is already started, or disabled due to some problem. Don't install it */
-        DPRINT("No need to install '%S'\n", DeviceInstance);
-        return TRUE;
-    }
+    DPRINT1("Installing: %S\n", DeviceInstance);
 
     /* Create a random UUID for the named pipe */
     UuidCreate(&RandomUuid);
@@ -2386,6 +2390,8 @@ cleanup:
 
     if(ProcessInfo.hThread)
         CloseHandle(ProcessInfo.hThread);
+
+    DPRINT1("Success? %d\n", DeviceInstalled);
 
     return DeviceInstalled;
 }
