@@ -4,9 +4,12 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>comctl32</library>
+	<library>user32</library>
 	<library>setupapi</library>
 	<file>classinst.c</file>
 	<file>comdb.c</file>
 	<file>msports.c</file>
+	<file>serial.c</file>
 	<file>msports.rc</file>
 </module>

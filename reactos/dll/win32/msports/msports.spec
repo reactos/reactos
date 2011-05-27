@@ -9,4 +9,4 @@
 @ stub ParallelPortPropPageProvider
 @ stdcall PortsClassInstaller(long ptr ptr)
 @ stub SerialDisplayAdvancedSettings
-@ stub SerialPortPropPageProvider
+@ stdcall SerialPortPropPageProvider(ptr ptr long)
