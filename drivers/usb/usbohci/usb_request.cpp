@@ -57,9 +57,11 @@ public:
     NTSTATUS BuildSetupPacketFromURB();
     NTSTATUS BuildControlTransferDescriptor(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
     NTSTATUS BuildBulkInterruptEndpoint(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
+    NTSTATUS BuildIsochronousEndpoint(POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor);
     NTSTATUS CreateGeneralTransferDescriptor(POHCI_GENERAL_TD* OutDescriptor, ULONG BufferSize);
     VOID FreeDescriptor(POHCI_GENERAL_TD Descriptor);
     NTSTATUS AllocateEndpointDescriptor(OUT POHCI_ENDPOINT_DESCRIPTOR *OutDescriptor);
+    NTSTATUS CreateIsochronousTransferDescriptor(OUT POHCI_ISO_TD *OutDescriptor, ULONG FrameCount);
     UCHAR GetEndpointAddress();
     USHORT GetMaxPacketSize();
 
@@ -243,6 +245,81 @@ CUSBRequest::InitializeWithIrp(
     //
     switch (Urb->UrbHeader.Function)
     {
+        case URB_FUNCTION_ISOCH_TRANSFER:
+        {
+            //
+            // there must be at least one packet
+            //
+            ASSERT(Urb->UrbIsochronousTransfer.NumberOfPackets);
+
+            //
+            // is there data to be transferred
+            //
+            if (Urb->UrbIsochronousTransfer.TransferBufferLength)
+            {
+                //
+                // Check if there is a MDL
+                //
+                if (!Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL)
+                {
+                    //
+                    // sanity check
+                    //
+                    PC_ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+
+                    //
+                    // Create one using TransferBuffer
+                    //
+                    DPRINT("Creating Mdl from Urb Buffer %p Length %lu\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                    m_TransferBufferMDL = IoAllocateMdl(Urb->UrbBulkOrInterruptTransfer.TransferBuffer,
+                                                        Urb->UrbBulkOrInterruptTransfer.TransferBufferLength,
+                                                        FALSE,
+                                                        FALSE,
+                                                        NULL);
+
+                    if (!m_TransferBufferMDL)
+                    {
+                        //
+                        // failed to allocate mdl
+                        //
+                        return STATUS_INSUFFICIENT_RESOURCES;
+                    }
+
+                    //
+                    // build mdl for non paged pool
+                    // FIXME: Does hub driver already do this when passing MDL?
+                    //
+                    MmBuildMdlForNonPagedPool(m_TransferBufferMDL);
+                }
+                else
+                {
+                    //
+                    // use provided mdl
+                    //
+                    m_TransferBufferMDL = Urb->UrbIsochronousTransfer.TransferBufferMDL;
+                }
+            }
+
+            //
+            // save buffer length
+            //
+            m_TransferBufferLength = Urb->UrbIsochronousTransfer.TransferBufferLength;
+
+            //
+            // Set Length Completed to 0
+            //
+            m_TransferBufferLengthCompleted = 0;
+
+            //
+            // get endpoint descriptor
+            //
+            m_EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)Urb->UrbIsochronousTransfer.PipeHandle;
+
+            //
+            // completed initialization
+            //
+            break;
+        }
         //
         // luckily those request have the same structure layout
         //
@@ -525,6 +602,230 @@ CUSBRequest::FreeDescriptor(
     m_DmaManager->Release(Descriptor, sizeof(OHCI_GENERAL_TD));
 
 }
+
+//----------------------------------------------------------------------------------------
+NTSTATUS
+CUSBRequest::CreateIsochronousTransferDescriptor(
+    POHCI_ISO_TD* OutDescriptor, 
+    ULONG FrameCount)
+{
+    POHCI_ISO_TD Descriptor;
+    PHYSICAL_ADDRESS DescriptorAddress;
+    NTSTATUS Status;
+
+    //
+    // allocate transfer descriptor
+    //
+    Status = m_DmaManager->Allocate(sizeof(OHCI_ISO_TD), (PVOID*)&Descriptor, &DescriptorAddress);
+    if (!NT_SUCCESS(Status))
+    {
+         //
+         // no memory
+         //
+         return Status;
+    }
+
+    //
+    // initialize descriptor, hardware part
+    //
+    Descriptor->Flags = OHCI_ITD_SET_FRAME_COUNT(FrameCount) | OHCI_ITD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) |  OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED);
+    Descriptor->BufferPhysical = 0;
+    Descriptor->NextPhysicalDescriptor = 0;
+    Descriptor->LastPhysicalByteAddress = 0;
+
+    //
+    // software part
+    //
+    Descriptor->PhysicalAddress.QuadPart = DescriptorAddress.QuadPart;
+    Descriptor->NextLogicalDescriptor = 0;
+
+    //
+    // store result
+    //
+    *OutDescriptor = Descriptor;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CUSBRequest::BuildIsochronousEndpoint(
+    POHCI_ENDPOINT_DESCRIPTOR * OutEndpointDescriptor)
+{
+    POHCI_ISO_TD FirstDescriptor, PreviousDescriptor = NULL, CurrentDescriptor;
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    ULONG Index = 0, SubIndex, NumberOfPackets, PageOffset;
+    NTSTATUS Status;
+    PVOID Buffer;
+    PIO_STACK_LOCATION IoStack;
+    PURB Urb;
+
+    DPRINT1("cp\n");
+    //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(m_Irp);
+
+    //
+    // sanity check
+    //
+    PC_ASSERT(IoStack->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL);
+    PC_ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_SUBMIT_URB);
+    PC_ASSERT(IoStack->Parameters.Others.Argument1 != 0);
+
+    //
+    // get urb
+    //
+    Urb = (PURB)IoStack->Parameters.Others.Argument1;
+    ASSERT(Urb);
+
+    //
+    // allocate endpoint descriptor
+    //
+    Status = AllocateEndpointDescriptor(&EndpointDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // failed to create setup descriptor
+        //
+        return Status;
+    }
+    DPRINT1("cp\n");
+    //
+    // get buffer
+    //
+    Buffer = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
+    ASSERT(Buffer);
+
+    DPRINT1("cp\n");
+    while(Index < Urb->UrbIsochronousTransfer.NumberOfPackets)
+    {
+        //
+        // get number of packets remaining
+        //
+        NumberOfPackets = min(Urb->UrbIsochronousTransfer.NumberOfPackets - Index, OHCI_ITD_NOFFSET);
+    DPRINT1("cp Number Packets %lu\n", NumberOfPackets);
+        //
+        // allocate iso descriptor
+        //
+        Status = CreateIsochronousTransferDescriptor(&CurrentDescriptor, NumberOfPackets);
+        if (!NT_SUCCESS(Status))
+        {
+            //
+            // FIXME: cleanup
+            // failed to allocate descriptor
+            //
+            ASSERT(FALSE);
+            return Status;
+        }
+    DPRINT1("cp\n");
+        //
+        // initialize descriptor
+        //
+        CurrentDescriptor->BufferPhysical = (MmGetPhysicalAddress(Buffer).LowPart & ~ (PAGE_SIZE - 1));
+
+        //
+        // get page offset
+        //
+        PageOffset = BYTE_OFFSET(MmGetPhysicalAddress(Buffer).LowPart);
+    DPRINT1("cp\n");
+        for(SubIndex = 0; SubIndex < NumberOfPackets; SubIndex++)
+        {
+            //
+            // store buffer offset
+            //
+            CurrentDescriptor->Offset[SubIndex] = Urb->UrbIsochronousTransfer.IsoPacket[Index].Offset + PageOffset;
+        }
+
+        //
+        // increment packet offset
+        //
+        Index += NumberOfPackets;
+
+        //
+        // check if this is the last descriptor
+        //
+        if (Index == Urb->UrbIsochronousTransfer.NumberOfPackets)
+        {
+            //
+            // end of transfer
+            //
+            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + m_TransferBufferLength - 1;
+        }
+        else
+        {
+            //
+            // use start address of next packet - 1
+            //
+            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + PageOffset + Urb->UrbIsochronousTransfer.IsoPacket[Index + 1].Offset - 1;
+
+            //
+            // move buffer to next address
+            //
+            Buffer = (PVOID)((ULONG_PTR)Buffer + Urb->UrbIsochronousTransfer.IsoPacket[Index + 1].Offset);
+        }
+
+        //
+        // is there a previous descriptor
+        //
+        if (PreviousDescriptor)
+        {
+            //
+            // link descriptors
+            //
+            PreviousDescriptor->NextLogicalDescriptor = CurrentDescriptor;
+            PreviousDescriptor->NextPhysicalDescriptor = CurrentDescriptor->PhysicalAddress.LowPart;
+        }
+        else
+        {
+            //
+            // first descriptor
+            //
+            FirstDescriptor = CurrentDescriptor;
+        }
+
+        //
+        // store as previous descriptor
+        //
+        PreviousDescriptor = CurrentDescriptor;
+    }
+    DPRINT1("cp\n");
+
+    //
+    // clear interrupt mask for last transfer descriptor
+    //
+    CurrentDescriptor->Flags &= ~OHCI_TD_INTERRUPT_MASK;
+
+    //
+    // fire interrupt as soon transfer is finished
+    //
+    CurrentDescriptor->Flags |= OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
+
+    //
+    // set isochronous type
+    //
+    EndpointDescriptor->Flags |= OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
+
+    //
+    // now link descriptor to endpoint
+    //
+    EndpointDescriptor->HeadPhysicalDescriptor = FirstDescriptor->PhysicalAddress.LowPart;
+    EndpointDescriptor->TailPhysicalDescriptor = CurrentDescriptor->PhysicalAddress.LowPart;
+    EndpointDescriptor->HeadLogicalDescriptor = FirstDescriptor;
+    DPRINT1("cp\n");
+    //
+    // store result
+    //
+    *OutEndpointDescriptor = EndpointDescriptor;
+
+    //
+    // done
+    //
+    return STATUS_SUCCESS;
+}
+
 //----------------------------------------------------------------------------------------
 NTSTATUS
 CUSBRequest::CreateGeneralTransferDescriptor(
@@ -1084,8 +1385,7 @@ CUSBRequest::GetEndpointDescriptor(
             Status = BuildBulkInterruptEndpoint(OutDescriptor);
             break;
         case USB_ENDPOINT_TYPE_ISOCHRONOUS:
-            DPRINT1("USB_ENDPOINT_TYPE_ISOCHRONOUS not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = BuildIsochronousEndpoint((POHCI_ENDPOINT_DESCRIPTOR*)OutDescriptor);
             break;
         default:
             PC_ASSERT(FALSE);
@@ -1201,7 +1501,6 @@ VOID
 CUSBRequest::CompletionCallback(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
-    POHCI_GENERAL_TD TransferDescriptor, NextTransferDescriptor;
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
 

@@ -190,6 +190,15 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 
 //-----------------------------------------------------------------------------------------
 //
+// GetIsochronousHeadEndpointDescriptor
+//
+// Description: returns the control head endpoint descriptor
+
+    virtual NTSTATUS GetIsochronousHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor) = 0;
+
+
+//-----------------------------------------------------------------------------------------
+//
 // GetInterruptEndpointDescriptors
 //
 // Description: returns interrupt endpoint descriptors
@@ -301,6 +310,14 @@ DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 // Description: releases the device lock
 
     virtual void ReleaseDeviceLock(KIRQL OldLevel) = 0;
+
+//----------------------------------------------------------------------------------------
+//
+// GetCurrentFrameNumber
+//
+// Description: returns the current frame  number
+
+    virtual VOID GetCurrentFrameNumber(PULONG FrameNumber) = 0;
 };
 
 typedef IUSBHardwareDevice *PUSBHARDWAREDEVICE;

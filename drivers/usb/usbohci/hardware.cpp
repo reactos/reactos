@@ -62,7 +62,9 @@ public:
     NTSTATUS GetBulkHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
     NTSTATUS GetControlHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
     NTSTATUS GetInterruptEndpointDescriptors(struct _OHCI_ENDPOINT_DESCRIPTOR *** OutDescriptor);
+    NTSTATUS GetIsochronousHeadEndpointDescriptor(struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor);
     VOID HeadEndpointDescriptorModified(ULONG HeadType);
+
 
     NTSTATUS GetDMA(OUT struct IDMAMemoryManager **m_DmaManager);
     NTSTATUS GetUSBQueue(OUT struct IUSBQueue **OutUsbQueue);
@@ -80,6 +82,7 @@ public:
 
     KIRQL AcquireDeviceLock(void);
     VOID ReleaseDeviceLock(KIRQL OldLevel);
+    virtual VOID GetCurrentFrameNumber(PULONG FrameNumber);
     // local
     BOOLEAN InterruptService();
     NTSTATUS InitializeController();
@@ -698,6 +701,17 @@ CUSBHardwareDevice::GetInterruptEndpointDescriptors(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+CUSBHardwareDevice::GetIsochronousHeadEndpointDescriptor(
+    struct _OHCI_ENDPOINT_DESCRIPTOR ** OutDescriptor)
+{
+    //
+    // get descriptor
+    //
+    *OutDescriptor = m_IsoEndpointDescriptor;
+    return STATUS_SUCCESS;
+}
+
 VOID
 CUSBHardwareDevice::HeadEndpointDescriptorModified(
     ULONG Type)
@@ -847,6 +861,11 @@ CUSBHardwareDevice::InitializeController()
     // Now link the first endpoint to the isochronous endpoint
     //
     m_InterruptEndpoints[0]->NextPhysicalEndpoint = m_IsoEndpointDescriptor->PhysicalAddress.LowPart;
+
+    //
+    // set iso endpoint type
+    //
+    m_IsoEndpointDescriptor->Flags |= OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
 
     //
     // done
@@ -1183,6 +1202,15 @@ CUSBHardwareDevice::AcquireDeviceLock(void)
     return OldLevel;
 }
 
+VOID
+CUSBHardwareDevice::GetCurrentFrameNumber(
+    PULONG FrameNumber)
+{
+    //
+    // store frame number
+    //
+    *FrameNumber = m_HCCA->CurrentFrameNumber;
+}
 
 VOID
 CUSBHardwareDevice::ReleaseDeviceLock(

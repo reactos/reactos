@@ -61,6 +61,7 @@ protected:
     PUSBHARDWAREDEVICE m_Hardware;                                                      // hardware
     POHCI_ENDPOINT_DESCRIPTOR m_BulkHeadEndpointDescriptor;                             // bulk head descriptor
     POHCI_ENDPOINT_DESCRIPTOR m_ControlHeadEndpointDescriptor;                          // control head descriptor
+    POHCI_ENDPOINT_DESCRIPTOR m_IsoHeadEndpointDescriptor;                              // isochronous head descriptor
     POHCI_ENDPOINT_DESCRIPTOR * m_InterruptEndpoints;
 };
 
@@ -99,6 +100,9 @@ CUSBQueue::Initialize(
     // get control endpoint descriptor
     //
     Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
+
+    //
+    Hardware->GetIsochronousHeadEndpointDescriptor(&m_IsoHeadEndpointDescriptor);
 
     //
     // get interrupt endpoints
@@ -164,6 +168,8 @@ CUSBQueue::AddUSBRequest(
     KIRQL OldLevel;
     POHCI_ENDPOINT_DESCRIPTOR HeadDescriptor;
     POHCI_ENDPOINT_DESCRIPTOR Descriptor;
+    POHCI_ISO_TD CurrentDescriptor;
+    ULONG FrameNumber;
 
     DPRINT("CUSBQueue::AddUSBRequest\n");
 
@@ -176,39 +182,6 @@ CUSBQueue::AddUSBRequest(
     // get request type
     //
     Type = Request->GetTransferType();
-
-    //
-    // check if supported
-    //
-    switch(Type)
-    {
-        case USB_ENDPOINT_TYPE_ISOCHRONOUS:
-            /* NOT IMPLEMENTED IN QUEUE */
-            Status = STATUS_NOT_SUPPORTED;
-            break;
-        case USB_ENDPOINT_TYPE_INTERRUPT:
-        case USB_ENDPOINT_TYPE_CONTROL:
-        case USB_ENDPOINT_TYPE_BULK:
-            Status = STATUS_SUCCESS;
-            break;
-        default:
-            /* BUG */
-            PC_ASSERT(FALSE);
-            Status = STATUS_NOT_SUPPORTED;
-    }
-
-    //
-    // check for success
-    //
-    if (!NT_SUCCESS(Status))
-    {
-        //
-        // request not supported, please try later
-        //
-        DPRINT1("Request Type %x not supported\n", Type);
-        ASSERT(FALSE);
-        return Status;
-    }
 
     //
     // add extra reference which is released when the request is completed
@@ -258,6 +231,48 @@ CUSBQueue::AddUSBRequest(
         HeadDescriptor = FindInterruptEndpointDescriptor(Request->GetInterval());
         ASSERT(HeadDescriptor);
     }
+    else if (Type == USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    {
+        //
+        // get head descriptor
+        //
+        HeadDescriptor = m_IsoHeadEndpointDescriptor;
+
+        //
+        // get current frame number
+        //
+        m_Hardware->GetCurrentFrameNumber(&FrameNumber);
+
+        //
+        // increment frame number
+        //
+        FrameNumber++;
+
+        //
+        // apply frame number to iso transfer descriptors
+        //
+        CurrentDescriptor = (POHCI_ISO_TD)Descriptor->HeadLogicalDescriptor;
+
+        DPRINT1("ISO: NextFrameNumber %x\n", FrameNumber);
+
+        while(CurrentDescriptor)
+        {
+            //
+            // set current frame number
+            //
+            CurrentDescriptor->Flags |= OHCI_ITD_SET_STARTING_FRAME(FrameNumber);
+
+            //
+            // move to next frame number
+            //
+            FrameNumber++;
+
+            //
+            // move to next descriptor
+            //
+            CurrentDescriptor = CurrentDescriptor->NextLogicalDescriptor;
+        }
+    }
 
     //
     // insert endpoint at end
@@ -269,9 +284,6 @@ CUSBQueue::AddUSBRequest(
     //
     Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
 
-    DPRINT("Request %x Logical %x added to queue Queue %p Logical %x\n", Descriptor, Descriptor->PhysicalAddress.LowPart, HeadDescriptor, HeadDescriptor->PhysicalAddress.LowPart);
-
-
     if (Type == USB_ENDPOINT_TYPE_CONTROL || Type == USB_ENDPOINT_TYPE_BULK)
     {
         //
@@ -279,6 +291,7 @@ CUSBQueue::AddUSBRequest(
         //
         m_Hardware->HeadEndpointDescriptorModified(Type);
     }
+
 
     return STATUS_SUCCESS;
 }

@@ -231,6 +231,8 @@ typedef struct _OHCI_ENDPOINT_DESCRIPTOR
 #define OHCI_ENDPOINT_FULL_SPEED                0x00000000
 #define OHCI_ENDPOINT_DIRECTION_OUT             0x00000800
 #define OHCI_ENDPOINT_DIRECTION_IN              0x00001000
+#define OHCI_ENDPOINT_GENERAL_FORMAT            0x00000000
+#define OHCI_ENDPOINT_ISOCHRONOUS_FORMAT        0x00008000
 
 //
 // Maximum port count set by OHCI
@@ -293,3 +295,35 @@ typedef struct
 #define OHCI_TD_CONDITION_BUFFER_OVERRUN    0x0c
 #define OHCI_TD_CONDITION_BUFFER_UNDERRUN   0x0d
 #define OHCI_TD_CONDITION_NOT_ACCESSED      0x0f
+
+// --------------------------------
+//  Isochronous transfer descriptor structure (section 4.3.2)
+// --------------------------------
+
+#define OHCI_ITD_NOFFSET 8
+
+typedef struct _OHCI_ISO_TD_
+{
+
+    // Hardware part 32 byte
+    ULONG Flags;
+    ULONG BufferPhysical;                       // Physical page number of byte 0
+    ULONG NextPhysicalDescriptor;               // Next isochronous transfer descriptor
+    ULONG LastPhysicalByteAddress;              // Physical buffer end
+    ULONG Offset[OHCI_ITD_NOFFSET];             // Buffer offsets
+
+    // Software part
+    PHYSICAL_ADDRESS PhysicalAddress;             // Physical address of this descriptor
+    struct _OHCI_ISO_TD_ * NextLogicalDescriptor; // Logical pointer next descriptor
+}OHCI_ISO_TD, *POHCI_ISO_TD;
+
+#define OHCI_ITD_GET_STARTING_FRAME(x)          ((x) & 0x0000ffff)
+#define OHCI_ITD_SET_STARTING_FRAME(x)          ((x) & 0xffff)
+#define OHCI_ITD_GET_DELAY_INTERRUPT(x)         (((x) >> 21) & 7)
+#define OHCI_ITD_SET_DELAY_INTERRUPT(x)         ((x) << 21)
+#define OHCI_ITD_NO_INTERRUPT                   0x00e00000
+#define OHCI_ITD_GET_FRAME_COUNT(x)             ((((x) >> 24) & 7) + 1)
+#define OHCI_ITD_SET_FRAME_COUNT(x)             (((x) - 1) << 24)
+#define OHCI_ITD_GET_CONDITION_CODE(x)          ((x) >> 28)
+#define OHCI_ITD_NO_CONDITION_CODE              0xf0000000
+

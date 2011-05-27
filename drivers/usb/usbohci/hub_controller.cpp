@@ -1119,7 +1119,10 @@ CHubController::HandleGetStatusFromDevice(
     IN OUT PIRP Irp, 
     PURB Urb)
 {
-    PUSHORT Status;
+    PUSHORT DeviceStatus;
+    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+    NTSTATUS Status;
+    PUSBDEVICE UsbDevice;
 
     //
     // sanity checks
@@ -1127,22 +1130,54 @@ CHubController::HandleGetStatusFromDevice(
     PC_ASSERT(Urb->UrbControlGetStatusRequest.Index == 0);
     PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBufferLength >= sizeof(USHORT));
     PC_ASSERT(Urb->UrbControlGetStatusRequest.TransferBuffer);
-    PC_ASSERT(Urb->UrbHeader.UsbdDeviceHandle == NULL); 
 
     //
     // get status buffer
     //
-    Status = (PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer;
+    DeviceStatus = (PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer;
+
+
+    if (Urb->UrbHeader.UsbdDeviceHandle == NULL)
+    {
+        //
+        // FIXME need more flags ?
+        //
+        *DeviceStatus = USB_PORT_STATUS_CONNECT;
+        return STATUS_SUCCESS;
+    }
 
     //
-    // FIXME need more flags ?
+    // check if this is a valid usb device handle
     //
-    *Status = USB_PORT_STATUS_CONNECT;
+    ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+    //
+    // get device
+    //
+    UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+
+     //
+     // generate setup packet
+     //
+     CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
+     CtrlSetup.wValue.LowByte = 0;
+     CtrlSetup.wValue.HiByte = 0;
+     CtrlSetup.wIndex.W = Urb->UrbControlGetStatusRequest.Index; 
+     CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
+     CtrlSetup.bmRequestType.B = 0x80;
+
+    //
+    // submit setup packet
+    //
+    Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
+    ASSERT(Status == STATUS_SUCCESS);
+    DPRINT1("CHubController::HandleGetStatusFromDevice Status %x Length %lu DeviceStatus %x\n", Status, Urb->UrbControlDescriptorRequest.TransferBufferLength, *DeviceStatus);
 
     //
     // done
     //
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 //-----------------------------------------------------------------------------------------
@@ -1155,6 +1190,8 @@ CHubController::HandleClassDevice(
     PUSB_HUB_DESCRIPTOR UsbHubDescriptor;
     ULONG PortCount, Dummy2;
     USHORT Dummy1;
+    PUSBDEVICE UsbDevice;
+    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
     DPRINT("CHubController::HandleClassDevice Request %x Class %x\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value >> 8);
 
@@ -1163,6 +1200,36 @@ CHubController::HandleClassDevice(
     //
     switch(Urb->UrbControlVendorClassRequest.Request)
     {
+        case USB_REQUEST_GET_STATUS:
+        {
+            //
+            // check if this is a valid usb device handle
+            //
+            ASSERT(ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)));
+
+            //
+            // get device
+            //
+            UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
+
+
+            //
+            // generate setup packet
+            //
+            CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
+            CtrlSetup.wValue.LowByte = Urb->UrbControlVendorClassRequest.Index;
+            CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
+            CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
+            CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
+            CtrlSetup.bmRequestType.B = 0xA0;
+
+            //
+            // submit setup packet
+            //
+            Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
+            ASSERT(Status == STATUS_SUCCESS);
+            break;
+        }
         case USB_REQUEST_GET_DESCRIPTOR:
         {
             switch (Urb->UrbControlVendorClassRequest.Value >> 8)
