@@ -456,6 +456,7 @@ TeInstrumentation = 0xf2c
 TeGdiBatchCount = 0xf70
 TeGuaranteedStackBytes = 0xf78
 TeFlsData = 0xfb4
+TeSafeThunkCall = 0xfb8
 ThreadEnvironmentBlockLength = 0xfbc
 
 /* TIME_FIELDS */

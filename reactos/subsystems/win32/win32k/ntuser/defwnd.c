@@ -115,6 +115,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    {
       case SC_SCREENSAVE:
         DPRINT1("Screensaver Called!\n");
+        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
 
       default:

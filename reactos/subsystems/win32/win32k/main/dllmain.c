@@ -23,6 +23,7 @@ PSECTION_OBJECT GlobalUserHeapSection = NULL;
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 SHORT gusLanguageID;
+PPROCESSINFO ppiScrnSaver;
 
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
@@ -63,6 +64,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
         PVOID UserBase = NULL;
+        BOOL Connected;
+        PRTL_USER_PROCESS_PARAMETERS pParams = NULL;
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
@@ -109,11 +112,23 @@ Win32kProcessCallback(struct _EPROCESS *Process,
             /* map the gdi handle table to user land */
             Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
             Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
+            pParams = Process->Peb->ProcessParameters;
         }
 
         Win32Process->peProcess = Process;
         /* setup process flags */
         Win32Process->W32PF_flags = 0;
+
+        Connected = !(Win32Process->W32PF_flags & W32PF_THREADCONNECTED);
+        Win32Process->W32PF_flags |= W32PF_THREADCONNECTED;
+
+        if ( pParams &&
+             pParams->WindowFlags & STARTF_SCRNSAVER &&
+             Connected)
+        {
+           ppiScrnSaver = Win32Process;
+           Win32Process->W32PF_flags |= W32PF_SCREENSAVER;
+        }
 
         /* Create pools for GDI object attributes */
         Win32Process->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
@@ -127,6 +142,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
         Win32Process->W32PF_flags |= W32PF_TERMINATED;
+
+        if (ppiScrnSaver == Win32Process) ppiScrnSaver = NULL;
 
         /* Notify logon application to restart shell if needed */
         if(Win32Process->rpdeskStartup->pDeskInfo)

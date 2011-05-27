@@ -231,7 +231,7 @@ InitializeScreenSaver(
 	if (ScreenSaverThread)
 		CloseHandle(ScreenSaverThread);
 	else
-		WARN("WL: Unable to start screen saver thread\n");
+		ERR("WL: Unable to start screen saver thread\n");
 
 	return TRUE;
 }
@@ -254,7 +254,7 @@ StartScreenSaver(
 
 	if (!ImpersonateLoggedOnUser(Session->UserToken))
 	{
-		ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+		ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
 		goto cleanup;
 	}
 
@@ -265,7 +265,10 @@ StartScreenSaver(
 		KEY_QUERY_VALUE,
 		&hKey);
 	if (rc != ERROR_SUCCESS)
+	{
+		ERR("WL: RegOpenKeyEx Error!\n");
 		goto cleanup;
+	}
 
 	rc = RegQueryValueExW(
 		hKey,
@@ -275,15 +278,24 @@ StartScreenSaver(
 		(LPBYTE)szApplicationName,
 		&bufferSize);
 	if (rc != ERROR_SUCCESS || dwType != REG_SZ)
+	{
+		ERR("WL: RegQueryValueEx Error!\n");
 		goto cleanup;
+	}
 
 	if (bufferSize == 0)
+	{
+		ERR("WL: Buffer size is NULL!\n");
 		goto cleanup;
+	}
 
 	szApplicationName[bufferSize / sizeof(WCHAR)] = 0; /* Terminate the string */
 
 	if (wcslen(szApplicationName) == 0)
+	{
+		ERR("WL: Application Name length is zero!\n");
 		goto cleanup;
+	}
 
 	wsprintfW(szCommandLine, L"%s /s", szApplicationName);
 	TRACE("WL: Executing %S\n", szCommandLine);
@@ -291,6 +303,7 @@ StartScreenSaver(
 	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	ZeroMemory(&ProcessInformation, sizeof(PROCESS_INFORMATION));
 	StartupInfo.cb = sizeof(STARTUPINFOW);
+	StartupInfo.dwFlags = STARTF_SCRNSAVER;
 	/* FIXME: run the screen saver on the screen saver desktop */
 	ret = CreateProcessW(
 		szApplicationName,
@@ -305,7 +318,7 @@ StartScreenSaver(
 		&ProcessInformation);
 	if (!ret)
 	{
-		WARN("WL: Unable to start %S, error %lu\n", szApplicationName, GetLastError());
+		ERR("WL: Unable to start %S, error %lu\n", szApplicationName, GetLastError());
 		goto cleanup;
 	}
 	CloseHandle(ProcessInformation.hThread);

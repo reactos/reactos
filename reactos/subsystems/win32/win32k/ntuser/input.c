@@ -18,6 +18,7 @@
 
 extern BYTE gQueueKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
+extern PPROCESSINFO ppiScrnSaver;
 
 /* GLOBALS *******************************************************************/
 
@@ -27,6 +28,7 @@ PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
+static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
@@ -59,15 +61,49 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 {
-	static DWORD LastInputTick = 0;
-	if (LastInputTickSetGet == TRUE)
-	{
-		LARGE_INTEGER TickCount;
-        KeQueryTickCount(&TickCount);
-        LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
-        if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
-	}
-    return LastInputTick;
+   if (LastInputTickSetGet == TRUE)
+   {
+      LARGE_INTEGER TickCount;
+      KeQueryTickCount(&TickCount);
+      LastInputTick = MsqCalculateMessageTime(&TickCount);
+      if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
+   }
+   return LastInputTick;
+}
+
+
+VOID FASTCALL DoTheScreenSaver(VOID)
+{
+   LARGE_INTEGER TickCount;
+   DWORD Test;
+
+   if (gspv.iScrSaverTimeout > 0) // Zero means Off.
+   {
+      KeQueryTickCount(&TickCount);
+      Test = MsqCalculateMessageTime(&TickCount);
+      Test = Test - LastInputTick;
+      if (Test > gspv.iScrSaverTimeout)
+      {
+         DPRINT("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
+
+         if (ppiScrnSaver) // We are or we are not the screensaver, prevent reentry...
+         { 
+            if (!(ppiScrnSaver->W32PF_flags & W32PF_IDLESCREENSAVER))
+            {
+               ppiScrnSaver->W32PF_flags |= W32PF_IDLESCREENSAVER;
+               DPRINT1("Screensaver is Idle\n");
+            }
+         }
+         else
+         {
+            PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+            if (ForegroundQueue && ForegroundQueue->ActiveWindow)
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 1); // lParam 1 == Secure
+            else
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0);
+         }
+      }
+   }
 }
 
 VOID FASTCALL
@@ -449,7 +485,7 @@ static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
-   //co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
+//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
 static VOID APIENTRY

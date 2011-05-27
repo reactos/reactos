@@ -280,7 +280,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
 
-    gspv.iScrSaverTimeout = 10;
+    gspv.iScrSaverTimeout = 600000; // TO in 10 minutes.
     gspv.bScrSaverActive = FALSE;
     gspv.bScrSaverRunning = FALSE;
 #if(WINVER >= 0x0600)

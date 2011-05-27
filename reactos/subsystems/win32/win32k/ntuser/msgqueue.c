@@ -17,6 +17,8 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID FASTCALL DoTheScreenSaver(VOID);
+
 /* GLOBALS *******************************************************************/
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
@@ -1581,7 +1583,7 @@ VOID
 CALLBACK
 HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-   //DoTheScreenSaver();
+   DoTheScreenSaver();
    DPRINT("HungAppSysTimerProc\n");
    // Process list of windows that are hung and waiting.
 }
