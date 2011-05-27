@@ -1,16 +1,20 @@
+include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/audsrv)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/audiosrv2)
-
-spec2def(audiosrv2dll.dll audiosrv2dll.spec)
+spec2def(audsrvapi.dll audsrvapi.spec)
 
 list(APPEND SOURCE
     dllmain.c
-	${CMAKE_CURRENT_BINARY_DIR}/audiosrv2dll.def)
+	${CMAKE_CURRENT_BINARY_DIR}/audsrvapi.def)
 
-add_library(audiosrv2dll SHARED ${SOURCE})
-set_module_type(audiosrv2dll win32dll)
+add_library(audsrvapi SHARED ${SOURCE})
+set_module_type(audsrvapi win32dll)
 
-target_link_libraries(audiosrv2dll uuid wine)
-add_importlibs(audiosrv2dll ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
-add_cab_target(audiosrv2dll 1)
-add_importlib_target(audiosrv2dll.spec)
+target_link_libraries(audsrvapi audsrvrpc uuid wine ${PSEH_LIB})
+
+
+add_pch(audsrv ${CMAKE_CURRENT_SOURCE_DIR}/audsrv.h ${SOURCE})
+
+add_importlibs(audsrvapi rpcrt4 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
+add_cab_target(audsrvapi 1)
+add_importlib_target(audsrvapi.spec)
