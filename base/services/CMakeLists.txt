@@ -1,6 +1,6 @@
 
 add_subdirectory(audiosrv)
-add_subdirectory(audiosrv2)
+add_subdirectory(audsrv)
 add_subdirectory(eventlog)
 add_subdirectory(rpcss)
 add_subdirectory(spoolsv)
