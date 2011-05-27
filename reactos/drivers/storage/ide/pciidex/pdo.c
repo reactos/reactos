@@ -441,7 +441,7 @@ PciIdeXPdoPnpDispatch(
 			DeviceCapabilities->DockDevice = FALSE;
 			DeviceCapabilities->UniqueID = FALSE;
 			DeviceCapabilities->SilentInstall = FALSE;
-			DeviceCapabilities->RawDeviceOK = TRUE;
+			DeviceCapabilities->RawDeviceOK = FALSE;
 			DeviceCapabilities->SurpriseRemovalOK = TRUE;
 			DeviceCapabilities->HardwareDisabled = FALSE; /* FIXME */
 			//DeviceCapabilities->NoDisplayInUI = FALSE; /* FIXME */
