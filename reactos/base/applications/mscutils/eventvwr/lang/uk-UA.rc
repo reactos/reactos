@@ -63,27 +63,27 @@ CAPTION "Деталі події"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 	DEFPUSHBUTTON   "&Закрити",IDOK,12,258,50,14
-	PUSHBUTTON      "&Попередя",IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "&Попередня",IDPREVIOUS,78,258,50,14
 	PUSHBUTTON      "&Наступна",IDNEXT,144,258,50,14
 	PUSHBUTTON      "&Допомога",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
 	LTEXT           "&Опис:",IDC_STATIC,15,70,39,8
 	LTEXT           "Дата:",IDC_STATIC,14,14,36,8
-	LTEXT           "Постійна",IDC_EVENTDATESTATIC,56,14,72,8
+	LTEXT           "Постійна",IDC_EVENTDATESTATIC,59,14,72,8
 	LTEXT           "Час:",IDC_STATIC,14,27,36,8
-	LTEXT           "Постійний",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "&Користувач:",IDC_STATIC,14,41,36,8
-	LTEXT           "Постійний",IDC_EVENTUSERSTATIC,56,41,72,8
-	LTEXT           "Ко&мп'ютер:",IDC_STATIC,14,54,36,8
-	LTEXT           "Постійний",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
-	LTEXT           "Ідент. Події:",IDC_STATIC,133,15,36,8
+	LTEXT           "Постійний",IDC_EVENTTIMESTATIC,59,27,72,8
+	LTEXT           "&Користувач:",IDC_STATIC,14,41,41,8
+	LTEXT           "Постійний",IDC_EVENTUSERSTATIC,59,41,72,8
+	LTEXT           "Ко&мп'ютер:",IDC_STATIC,14,54,37,8
+	LTEXT           "Постійний",IDC_EVENTCOMPUTERSTATIC,59,54,72,8
+	LTEXT           "ID Події:",IDC_STATIC,133,15,36,8
 	LTEXT           "Постійний",IDC_EVENTIDSTATIC,175,15,87,8
 	LTEXT           "Джерело:",IDC_STATIC,133,28,36,8
 	LTEXT           "Постійне",IDC_EVENTSOURCESTATIC,175,28,87,8
 	LTEXT           "Тип:",IDC_STATIC,133,42,36,8
-	LTEXT           "постійний",IDC_EVENTTYPESTATIC,175,42,87,8
+	LTEXT           "Постійний",IDC_EVENTTYPESTATIC,175,42,87,8
 	LTEXT           "Категорія:",IDC_STATIC,133,55,36,8
-	LTEXT           "постійна",IDC_EVENTCATEGORYSTATIC,175,55,87,8
+	LTEXT           "Постійна",IDC_EVENTCATEGORYSTATIC,175,55,87,8
 	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
 	LTEXT           "Д&aта",IDC_STATIC,14,194,20,8
 	CONTROL         "&Байт",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
