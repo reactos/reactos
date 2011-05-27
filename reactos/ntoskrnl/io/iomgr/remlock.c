@@ -50,7 +50,7 @@ IoInitializeRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     switch (RemlockSize)
     {
         /* Check if this is a debug lock */
-        case sizeof(IO_REMOVE_LOCK_DBG_BLOCK):
+        case (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)):
             /* Setup debug parameters */
             Lock->Dbg.Signature = 'COLR';
             Lock->Dbg.HighWatermark = HighWatermark;
@@ -92,7 +92,7 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     if (!Lock->Common.Removed)
     {
         /* Check what kind of lock this is */
-        if (RemlockSize == sizeof(IO_REMOVE_LOCK_DBG_BLOCK))
+        if (RemlockSize == (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)))
         {
             ASSERT(Lock->Dbg.HighWatermark == 0 || LockValue <= Lock->Dbg.HighWatermark);
 
@@ -154,7 +154,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
 
     /* Check what kind of lock this is */
-    if (RemlockSize == sizeof(IO_REMOVE_LOCK_DBG_BLOCK))
+    if (RemlockSize == (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)))
     {
         /* Acquire blocks queue */
         KeAcquireSpinLock(&(Lock->Dbg.Spin), &OldIrql);
@@ -265,7 +265,7 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
     }
 
     /* Check what kind of lock this is */
-    if (RemlockSize == sizeof(IO_REMOVE_LOCK_DBG_BLOCK))
+    if (RemlockSize == (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)))
     {
         /* A block must be remaining */
         ASSERT(Lock->Dbg.Blocks);
