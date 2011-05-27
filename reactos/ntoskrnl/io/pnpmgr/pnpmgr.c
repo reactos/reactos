@@ -328,6 +328,12 @@ IopStartDevice(
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
+   if (((DeviceNode->Flags & DNF_STARTED) && !(DeviceNode->Flags & DNF_HAS_PROBLEM)) ||
+       (DeviceNode->Flags & DNF_START_REQUEST_PENDING)) 
+   {
+       return STATUS_SUCCESS;
+   }
+
    Status = IopAssignDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
        goto ByeBye;
