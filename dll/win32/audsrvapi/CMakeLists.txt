@@ -5,6 +5,7 @@ spec2def(audsrvapi.dll audsrvapi.spec)
 
 list(APPEND SOURCE
     dllmain.c
+	audsrvapi.c
 	${CMAKE_CURRENT_BINARY_DIR}/audsrvapi.def)
 
 add_library(audsrvapi SHARED ${SOURCE})
