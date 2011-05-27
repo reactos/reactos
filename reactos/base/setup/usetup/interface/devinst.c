@@ -65,6 +65,8 @@ InstallDriver(
     /* Find associated driver name */
     /* FIXME: check in other sections too! */
     if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
+     && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
+     && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
         return FALSE;
     if (!INF_GetDataField(&Context, 1, &ImagePath))
@@ -81,7 +83,7 @@ InstallDriver(
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
     wcscat(FullImagePath, ImagePath);
 
-    DPRINT("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
+    DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);
