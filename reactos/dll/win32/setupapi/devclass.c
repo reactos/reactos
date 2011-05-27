@@ -1135,9 +1135,10 @@ SetupDiGetClassDevPropertySheetsA(
 
 struct ClassDevPropertySheetsData
 {
-    HPROPSHEETPAGE *PropertySheetPages;
-    DWORD MaximumNumberOfPages;
+    LPPROPSHEETHEADERW PropertySheetHeader;
+    DWORD PropertySheetHeaderPageListSize;
     DWORD NumberOfPages;
+    BOOL DontCancel;
 };
 
 static BOOL WINAPI
@@ -1149,14 +1150,16 @@ SETUP_GetClassDevPropertySheetsCallback(
 
     PropPageData = (struct ClassDevPropertySheetsData *)lParam;
 
-    if (PropPageData->NumberOfPages < PropPageData->MaximumNumberOfPages)
+    PropPageData->NumberOfPages++;
+
+    if (PropPageData->PropertySheetHeader->nPages < PropPageData->PropertySheetHeaderPageListSize)
     {
-        *PropPageData->PropertySheetPages = hPropSheetPage;
-        PropPageData->PropertySheetPages++;
+        PropPageData->PropertySheetHeader->phpage[PropPageData->PropertySheetHeader->nPages] = hPropSheetPage;
+        PropPageData->PropertySheetHeader->nPages++;
+        return TRUE;
     }
 
-    PropPageData->NumberOfPages++;
-    return TRUE;
+    return PropPageData->DontCancel;
 }
 
 /***********************************************************************
@@ -1208,6 +1211,7 @@ SetupDiGetClassDevPropertySheetsW(
         PROPERTY_PAGE_PROVIDER pPropPageProvider = NULL;
         struct ClassDevPropertySheetsData PropPageData;
         DWORD dwLength, dwRegType;
+        DWORD InitialNumberOfPages;
         DWORD rc;
 
         if (DeviceInfoData)
@@ -1256,27 +1260,29 @@ SetupDiGetClassDevPropertySheetsW(
             goto cleanup;
         }
 
+        InitialNumberOfPages = PropertySheetHeader->nPages;
+
         Request.cbSize = sizeof(SP_PROPSHEETPAGE_REQUEST);
         Request.PageRequested = SPPSR_ENUM_ADV_DEVICE_PROPERTIES;
         Request.DeviceInfoSet = DeviceInfoSet;
         Request.DeviceInfoData = DeviceInfoData;
-        PropPageData.PropertySheetPages = &PropertySheetHeader->phpage[PropertySheetHeader->nPages];
-        PropPageData.MaximumNumberOfPages = PropertySheetHeaderPageListSize - PropertySheetHeader->nPages;
+
+        PropPageData.PropertySheetHeader = PropertySheetHeader;
+        PropPageData.PropertySheetHeaderPageListSize = PropertySheetHeaderPageListSize;
         PropPageData.NumberOfPages = 0;
-        ret = pPropPageProvider(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
-        if (!ret)
-            goto cleanup;
+        PropPageData.DontCancel = (RequiredSize != NULL) ? TRUE : FALSE;
+
+        pPropPageProvider(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
 
         if (RequiredSize)
-            *RequiredSize = PropPageData.NumberOfPages + PropertySheetHeader->nPages;
-        if (PropPageData.NumberOfPages <= PropPageData.MaximumNumberOfPages)
+            *RequiredSize = PropPageData.NumberOfPages;
+
+        if (InitialNumberOfPages + PropPageData.NumberOfPages <= PropertySheetHeaderPageListSize)
         {
-            PropertySheetHeader->nPages += PropPageData.NumberOfPages;
             ret = TRUE;
         }
         else
         {
-            PropertySheetHeader->nPages += PropPageData.MaximumNumberOfPages;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
         }
 
