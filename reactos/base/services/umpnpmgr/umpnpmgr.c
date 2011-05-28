@@ -536,13 +536,32 @@ DWORD PNP_GetDeviceRegProp(
     PLUGPLAY_CONTROL_PROPERTY_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
     LPWSTR lpValueName = NULL;
-    HKEY hKey = 0;
+    HKEY hKey = NULL;
+    LONG lError;
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceRegProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags != 0)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    /* FIXME: Check pDeviceID */
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
 
     switch (ulProperty)
     {
@@ -626,8 +645,65 @@ DWORD PNP_GetDeviceRegProp(
             lpValueName = NULL;
             break;
 
+        case CM_DRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_DRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        case CM_DRP_ADDRESS:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            lpValueName = L"UINumberDescFormat";
+            break;
+
+        case CM_DRP_DEVICE_POWER_DATA:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY:
+            lpValueName = L"RemovalPolicy";
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            lpValueName = NULL;
+            break;
+
+        case CM_DRP_INSTALL_STATE:
+            lpValueName = NULL;
+            break;
+
+#if (WINVER >= _WIN32_WINNT_WS03)
+        case CM_DRP_LOCATION_PATHS:
+            lpValueName = NULL;
+            break;
+#endif
+
+#if (WINVER >= _WIN32_WINNT_WIN7)
+        case CM_DRP_BASE_CONTAINERID:
+            lpValueName = NULL;
+            break;
+#endif
+
         default:
-            return CR_INVALID_PROPERTY;
+            ret = CR_INVALID_PROPERTY;
+            goto done;
     }
 
     DPRINT("Value name: %S\n", lpValueName);
@@ -635,24 +711,34 @@ DWORD PNP_GetDeviceRegProp(
     if (lpValueName)
     {
         /* Retrieve information from the Registry */
-        if (RegOpenKeyExW(hEnumKey,
-                          pDeviceID,
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey))
-            return CR_INVALID_DEVNODE;
+        lError = RegOpenKeyExW(hEnumKey,
+                               pDeviceID,
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError != ERROR_SUCCESS)
+        {
+            hKey = NULL;
+            *pulLength = 0;
+            ret = CR_INVALID_DEVNODE;
+            goto done;
+        }
 
-        if (RegQueryValueExW(hKey,
-                             lpValueName,
-                             NULL,
-                             pulRegDataType,
-                             Buffer,
-                             pulLength))
-            ret = CR_REGISTRY_ERROR;
-
-        /* FIXME: Check buffer size */
-
-        RegCloseKey(hKey);
+        lError = RegQueryValueExW(hKey,
+                                  lpValueName,
+                                  NULL,
+                                  pulRegDataType,
+                                  Buffer,
+                                  pulLength);
+        if (lError == ERROR_MORE_DATA)
+        {
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            *pulLength = 0;
+            ret = CR_NO_SUCH_VALUE;
+        }
     }
     else
     {
@@ -664,31 +750,57 @@ DWORD PNP_GetDeviceRegProp(
 
         switch (ulProperty)
         {
-#if 0
             case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
-                PlugPlayData.Property = DevicePropertyPhysicalDeviceObjectName;
+                PlugPlayData.Property = 0xb; // DevicePropertyPhysicalDeviceObjectName;
                 break;
 
             case CM_DRP_UI_NUMBER:
-                PlugPlayData.Property = DevicePropertyUINumber;
+                PlugPlayData.Property = 0x11; // DevicePropertyUINumber;
                 break;
 
             case CM_DRP_BUSTYPEGUID:
-                PlugPlayData.Property = DevicePropertyBusTypeGuid;
+                PlugPlayData.Property = 0xc; // DevicePropertyBusTypeGuid;
                 break;
 
             case CM_DRP_LEGACYBUSTYPE:
-                PlugPlayData.Property = DevicePropertyLegacyBusType;
+                PlugPlayData.Property = 0xd; // DevicePropertyLegacyBusType;
                 break;
 
             case CM_DRP_BUSNUMBER:
-                PlugPlayData.Property = DevicePropertyBusNumber;
+                PlugPlayData.Property = 0xe; // DevicePropertyBusNumber;
                 break;
-#endif
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = 15; //DevicePropertyEnumeratorName;
+                PlugPlayData.Property = 0xf; // DevicePropertyEnumeratorName;
                 break;
+
+            case CM_DRP_ADDRESS:
+                PlugPlayData.Property = 0x10; // DevicePropertyAddress;
+                break;
+
+#if 0
+            /* These properties are not supported by IoGetDeviceProperty */
+            case CM_DRP_DEVICE_POWER_DATA:
+            case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+#endif
+
+            case CM_DRP_INSTALL_STATE:
+                PlugPlayData.Property = 0x12; // DevicePropertyInstallState;
+                break;
+
+#if 0
+            /* This property is not supported by IoGetDeviceProperty */
+#if (WINVER >= _WIN32_WINNT_WS03)
+            case CM_DRP_LOCATION_PATHS:
+#endif
+#endif
+
+#if (WINVER >= _WIN32_WINNT_WIN7)
+            case CM_DRP_BASE_CONTAINERID:
+                PlugPlayData.Property = 0x16; // DevicePropertyContainerID;
+                break;
+#endif
 
             default:
                 return CR_INVALID_PROPERTY;
@@ -706,6 +818,12 @@ DWORD PNP_GetDeviceRegProp(
             ret = NtStatusToCrError(Status);
         }
     }
+
+done:;
+    *pulTransferLen = (ret != CR_SUCCESS) ? 0 : *pulLength;
+
+    if (hKey != NULL)
+        RegCloseKey(hKey);
 
     DPRINT("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
 
@@ -2598,7 +2716,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT1("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2620,7 +2738,7 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
-            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT1("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
             /* FIXME: ? */
         }
         else
