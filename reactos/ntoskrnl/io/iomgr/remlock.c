@@ -164,7 +164,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
 
         /* Start browsing tracking blocks to find a block that would match given tag */
         TagFound = FALSE;
-        for (ListEntry = (PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks; ListEntry; ListEntry = ListEntry->Next)
+        for (ListEntry = ((PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks)->Next; ListEntry; ListEntry = ListEntry->Next)
         {
             TrackingBlock = CONTAINING_RECORD(ListEntry, IO_REMOVE_LOCK_TRACKING_BLOCK, BlockEntry);
 
@@ -186,7 +186,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
                 {
                     /* Yes, then remove it from the queue and free it */
                     TagFound = TRUE;
-                    if (ListEntry == (PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks)
+                    if (ListEntry == ((PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks)->Next)
                     {
                         /* Here it is head, remove it using macro */
                         PopEntryList((PSINGLE_LIST_ENTRY)&(Lock->Dbg.Blocks));
