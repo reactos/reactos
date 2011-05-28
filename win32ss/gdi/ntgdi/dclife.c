@@ -117,8 +117,6 @@ DC_InitHack(PDC pdc)
         prgnDefault = IntSysCreateRectpRgn(0, 0, 0, 0);
     }
 
-    pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
-
     /* This should never fail */
     ASSERT(pdc->dclevel.ppal);
 }

@@ -261,7 +261,7 @@ IntValidateWindowStationHandle(
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
-    TEXTMETRICW tmw;
+    //TEXTMETRICW tmw;
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
 
@@ -311,8 +311,11 @@ co_IntInitializeDesktopGraphics(VOID)
         gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
     }
     // Font is realized and this dc was previously set to internal DC_ATTR.
+    DPRINT1("HACK HACK HACK HACK HACK HACK HACK HACK HACK \n");
+#if 0
     gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
     gpsi->tmSysFont     = tmw;
+#endif
 
     /* Put the pointer in the center of the screen */
     gpsi->ptCursor.x = gpsi->aiSysMet[SM_CXSCREEN] / 2;
@@ -1112,7 +1115,7 @@ NtUserGetObjectInformation(
     USEROBJECTFLAGS ObjectFlags;
     PUNICODE_STRING pStrNameU = NULL;
     PVOID pvData = NULL;
-    SIZE_T nDataSize = 0;
+    DWORD nDataSize = 0;
 
     _SEH2_TRY
     {

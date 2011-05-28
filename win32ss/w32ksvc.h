@@ -683,7 +683,6 @@
     // ReactOS-specific syscalls (must be at the end to not interfere!)
     SVC_(GdiSetViewportOrgEx, 4)
     SVC_(GdiSetWindowOrgEx, 4)
-    SVC_(GdiGetFontFamilyInfo, 4)
     SVC_(GdiOffsetViewportOrgEx, 4)
     SVC_(GdiOffsetWindowOrgEx, 4)
     SVC_(UserGetMonitorInfo, 2)

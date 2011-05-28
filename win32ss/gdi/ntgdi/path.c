@@ -2381,6 +2381,8 @@ PATH_ExtTextOut(
     if (!count) return TRUE;
     if (flags & ETO_GLYPH_INDEX) ggo_flags |= GGO_GLYPH_INDEX;
 
+ASSERT(FALSE);
+
     for (idx = 0; idx < count; idx++)
     {
         MAT2 identity = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };

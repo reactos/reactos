@@ -146,32 +146,7 @@ NtGdiEudcLoadUnloadLink(
 }
 
 
-// *********** hacks
-
-ULONG
-FASTCALL
-ftGdiGetGlyphOutline(
-    PDC dc,
-    WCHAR wch,
-    UINT iFormat,
-    LPGLYPHMETRICS pgm,
-    ULONG cjBuf,
-    PVOID pvBuf,
-    LPMAT2 pmat2,
-    BOOL bIgnoreRotation)
-{
-    ASSERT(FALSE);
-    return 0;
-}
-
-int APIENTRY
-NtGdiGetFontFamilyInfo(HDC Dc,
-                       LPLOGFONTW UnsafeLogFont,
-                       PFONTFAMILYINFO UnsafeInfo,
-                       DWORD Size)
-{
-    return 0;
-}
+// *********** hack
 
 NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
@@ -181,39 +156,5 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     return STATUS_UNSUCCESSFUL;
 }
 
-DWORD
-FASTCALL
-IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
-{
-    ASSERT(FALSE);
-    return -1;
-}
-
-INT
-FASTCALL
-ftGdiGetTextCharsetInfo(
-    PDC Dc,
-    LPFONTSIGNATURE lpSig,
-    DWORD dwFlags)
-{
-    ASSERT(FALSE);
-    return 0;
-}
-
-DWORD
-FASTCALL
-IntGetFontLanguageInfo(PDC Dc)
-{
-    ASSERT(FALSE);
-    return 0;
-}
-
-PTEXTOBJ
-FASTCALL
-RealizeFontInit(HFONT hFont)
-{
-    ASSERT(FALSE);
-    return 0;
-}
 
 
