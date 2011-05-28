@@ -643,6 +643,10 @@ EngMapFontFileFD(
                                     PAGE_READONLY);
     }
 
+    /* Return base address and size */
+    if (ppjBuf) *ppjBuf = pffv->pvViewFD;
+    if (pcjBuf) *pcjBuf = pffv->cjView;
+
     return NT_SUCCESS(Status);
 }
 
