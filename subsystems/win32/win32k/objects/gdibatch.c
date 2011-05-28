@@ -117,24 +117,9 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         break;
      case GdiBCSelObj:
      {
-        PGDIBSOBJECT pgO;
-        PTEXTOBJ pNewFnt = NULL;
+        //PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
+        ASSERT(FALSE);
 
-        if (!dc) break;
-        pgO = (PGDIBSOBJECT) pHdr;
-
-        if (NT_SUCCESS(TextIntRealizeFont((HFONT)pgO->hgdiobj,NULL)))
-        {
-           /* LFONTOBJ use share and locking. */
-           pNewFnt = TEXTOBJ_LockText(pgO->hgdiobj);
-
-           dc->dclevel.plfnt = pNewFnt;
-           dc->hlfntCur = pgO->hgdiobj;
-           pdcattr->hlfntNew = pgO->hgdiobj;
-           pdcattr->ulDirty_ |= DIRTY_CHARSET;
-           pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        }
-        if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
         break;
      }
      case GdiBCDelRgn:

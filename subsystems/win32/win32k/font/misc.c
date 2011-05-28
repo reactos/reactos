@@ -181,14 +181,6 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     return STATUS_UNSUCCESSFUL;
 }
 
-NTSTATUS
-FASTCALL
-TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
-{
-    ASSERT(FALSE);
-    return -1;
-}
-
 DWORD
 FASTCALL
 IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
