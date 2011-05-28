@@ -2249,7 +2249,6 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     PROCESS_INFORMATION ProcessInfo;
     STARTUPINFOW StartupInfo;
     UUID RandomUuid;
-    WCHAR RegistryPath[MAX_PATH];
     HKEY DeviceKey;
 
     /* The following lengths are constant (see below), they cannot overflow */
@@ -2262,11 +2261,8 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 
     ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
-    wcscpy(RegistryPath, L"SYSTEM\\CurrentControlSet\\Enum\\");
-    wcscat(RegistryPath, DeviceInstance);
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      RegistryPath,
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceInstance,
                       0,
                       KEY_QUERY_VALUE,
                       &DeviceKey) == ERROR_SUCCESS)
@@ -2279,10 +2275,11 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
                              NULL) == ERROR_SUCCESS)
         {
             DPRINT("No need to install: %S\n", DeviceInstance);
+            RegCloseKey(DeviceKey);
             return TRUE;
         }
 
-        CloseHandle(DeviceKey);
+        RegCloseKey(DeviceKey);
     }
 
     DPRINT1("Installing: %S\n", DeviceInstance);
