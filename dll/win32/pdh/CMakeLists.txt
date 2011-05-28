@@ -21,4 +21,4 @@ target_link_libraries(pdh wine)
 add_importlibs(pdh kernel32 ntdll msvcrt)
 add_importlib_target(pdh.spec)
 
-add_cab_target(pdh 1)
+add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

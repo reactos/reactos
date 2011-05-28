@@ -9,4 +9,4 @@ set_entrypoint(kbdarmw 0)
 
 add_dependencies(kbdarmw psdk)
 
-add_cab_target(kbdarmw 1)
+add_cd_file(TARGET kbdarmw DESTINATION reactos/system32 FOR all)

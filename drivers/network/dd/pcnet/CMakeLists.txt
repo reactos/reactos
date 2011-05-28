@@ -15,4 +15,4 @@ add_library(pcnet SHARED ${SOURCE})
 set_module_type(pcnet kernelmodedriver)
 add_importlibs(pcnet ndis ntoskrnl hal)
 
-add_cab_target(pcnet 2)
+add_cd_file(TARGET pcnet DESTINATION reactos/system32/drivers FOR all)

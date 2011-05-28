@@ -36,4 +36,4 @@ add_importlibs(libpng msvcrt kernel32)
 
 add_dependencies(libpng psdk)
 
-add_cab_target(libpng 1)
+add_cd_file(TARGET libpng DESTINATION reactos/system32 FOR all)

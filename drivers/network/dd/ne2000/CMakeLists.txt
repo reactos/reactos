@@ -11,4 +11,4 @@ add_library(ne2000 SHARED ${SOURCE})
 set_module_type(ne2000 kernelmodedriver)
 add_importlibs(ne2000 ndis ntoskrnl hal)
 
-add_cab_target(ne2000 2)
+add_cd_file(TARGET ne2000 DESTINATION reactos/system32/drivers FOR all)

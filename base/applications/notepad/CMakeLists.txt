@@ -14,4 +14,4 @@ add_executable(notepad ${CMAKE_CURRENT_BINARY_DIR}/notepad_notepad.h.gch ${SOURC
 
 set_module_type(notepad win32gui)
 add_importlibs(notepad user32 gdi32 comctl32 comdlg32 advapi32 shell32 msvcrt kernel32)
-add_cab_target(notepad 1)
+add_cd_file(TARGET notepad DESTINATION reactos/system32 FOR all)

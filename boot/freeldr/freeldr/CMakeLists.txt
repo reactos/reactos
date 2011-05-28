@@ -192,6 +192,8 @@ target_link_libraries(freeldr
 add_pch(freeldr ${CMAKE_CURRENT_SOURCE_DIR}/include/freeldr.h ${FREELDR_SOURCE})
 add_dependencies(freeldr asm)
 
+add_cd_file(TARGET freeldr DESTINATION loader NO_CAB FOR all)
+
 list(APPEND SETUPLDR_MAIN_SOURCE
     bootmgr.c
     inffile/inffile.c
@@ -237,7 +239,5 @@ target_link_libraries(setupldr
 
 add_dependencies(setupldr asm)
 
-# Bootcd files
-add_minicd_target(setupldr loader setupldr.sys)
-add_minicd_target(freeldr loader freeldr.sys)
-add_livecd_target(setupldr loader)
+add_cd_file(TARGET setupldr DESTINATION loader NO_CAB FOR all)
+

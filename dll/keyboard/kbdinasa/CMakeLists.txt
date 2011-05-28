@@ -9,4 +9,4 @@ set_entrypoint(kbdinasa 0)
 
 add_dependencies(kbdinasa psdk)
 
-add_cab_target(kbdinasa 1)
+add_cd_file(TARGET kbdinasa DESTINATION reactos/system32 FOR all)

@@ -18,4 +18,4 @@ add_pch(msconfig ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(msconfig win32gui)
 add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt kernel32)
-add_cab_target(msconfig 1)
+add_cd_file(TARGET msconfig DESTINATION reactos/system32 FOR all)

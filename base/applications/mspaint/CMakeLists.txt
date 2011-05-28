@@ -18,4 +18,4 @@ add_executable(mspaint
 
 set_module_type(mspaint win32gui)
 add_importlibs(mspaint comdlg32 shell32 user32 gdi32 advapi32 comctl32 msvcrt kernel32)
-add_cab_target(mspaint 1)
+add_cd_file(TARGET mspaint DESTINATION reactos/system32 FOR all)

@@ -5,6 +5,8 @@
 
 #define __WINE_CONFIG_H
 
+#define HAVE_SPAWNVP 1
+
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1
 

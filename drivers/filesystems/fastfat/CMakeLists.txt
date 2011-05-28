@@ -30,5 +30,4 @@ add_importlibs(fastfat ntoskrnl hal)
 
 add_pch(fastfat ${CMAKE_CURRENT_SOURCE_DIR}/vfat.h ${SOURCE})
 
-add_minicd_target(fastfat reactos fastfat.sys)
-add_livecd_target(fastfat reactos/system32/drivers)
+add_cd_file(TARGET fastfat DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -28,4 +28,4 @@ add_importlibs(cryptdlg
     kernel32
     ntdll)
 
-add_cab_target(cryptdlg 1)
+add_cd_file(TARGET cryptdlg DESTINATION reactos/system32 FOR all)

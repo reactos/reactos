@@ -81,4 +81,4 @@ add_importlibs(msxml3
     ntdll)
 
 add_dependencies(msxml3 msxml3_v1)
-add_cab_target(msxml3 1)
+add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

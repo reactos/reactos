@@ -17,4 +17,4 @@ target_link_libraries(url wine)
 
 add_importlibs(url shell32 shlwapi msvcrt kernel32 ntdll)
 
-add_cab_target(url 1)
+add_cd_file(TARGET url DESTINATION reactos/system32 FOR all)

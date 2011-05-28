@@ -19,4 +19,4 @@ set_module_type(charmap win32gui)
 
 add_importlibs(charmap user32 gdi32 comctl32 kernel32 msvcrt)
 
-add_cab_target(charmap 1)
+add_cd_file(TARGET charmap DESTINATION reactos/system32 FOR all)

@@ -26,4 +26,4 @@ add_importlibs(unicows
     advapi32
     kernel32
     ntdll)
-add_cab_target(unicows 1)
+add_cd_file(TARGET unicows DESTINATION reactos/system32 FOR all)

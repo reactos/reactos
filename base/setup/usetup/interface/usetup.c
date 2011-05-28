@@ -2843,6 +2843,7 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
+    WCHAR CompleteOrigFileName[512];
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
@@ -2901,10 +2902,14 @@ AddSectionToCopyQueue(HINF InfFile,
             break;
         }
 
+        wcscpy(CompleteOrigFileName, SourceRootDir.Buffer);
+        wcscat(CompleteOrigFileName, L"\\");
+        wcscat(CompleteOrigFileName, DirKeyValue);
+
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
                             SourceRootPath.Buffer,
-                            SourceRootDir.Buffer,
+                            CompleteOrigFileName,
                             FileKeyName,
                             DirKeyValue,
                             TargetFileName))

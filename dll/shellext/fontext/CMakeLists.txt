@@ -25,4 +25,4 @@ add_importlibs(fontext
     kernel32
     ntdll)
 
-add_cab_target(fontext 1)
+add_cd_file(TARGET fontext DESTINATION reactos/system32 FOR all)

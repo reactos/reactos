@@ -7,4 +7,4 @@ target_link_libraries(xcopy wine)
 
 set_module_type(xcopy win32cui)
 add_importlibs(xcopy shell32 user32 msvcrt kernel32 ntdll)
-add_cab_target(xcopy 1)
+add_cd_file(TARGET xcopy DESTINATION reactos/system32 FOR all)

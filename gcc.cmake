@@ -170,7 +170,7 @@ endmacro()
 
 macro(set_module_type MODULE TYPE)
 
-    add_dependencies(${MODULE} psdk buildno_header)
+    add_dependencies(${MODULE} psdk)
     if(${IS_CPP})
         target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
     endif()

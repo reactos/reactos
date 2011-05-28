@@ -9,4 +9,4 @@ set_entrypoint(kbdgrist 0)
 
 add_dependencies(kbdgrist psdk)
 
-add_cab_target(kbdgrist 1)
+add_cd_file(TARGET kbdgrist DESTINATION reactos/system32 FOR all)

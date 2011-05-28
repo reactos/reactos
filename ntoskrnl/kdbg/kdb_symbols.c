@@ -56,7 +56,7 @@ KdbpReadSymFile(PVOID FileContext, PVOID Buffer, ULONG Length)
     PROSSYM_KM_OWN_CONTEXT Context = (PROSSYM_KM_OWN_CONTEXT)FileContext;
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status = MiSimpleRead
-        (Context->FileObject, 
+        (Context->FileObject,
          &Context->FileOffset,
          Buffer,
          Length,
@@ -65,7 +65,7 @@ KdbpReadSymFile(PVOID FileContext, PVOID Buffer, ULONG Length)
     return NT_SUCCESS(Status);
 }
 
-static PROSSYM_OWN_FILECONTEXT 
+static PROSSYM_OWN_FILECONTEXT
 KdbpCaptureFileForSymbols(PFILE_OBJECT FileObject)
 {
     PROSSYM_KM_OWN_CONTEXT Context = ExAllocatePool(NonPagedPool, sizeof(*Context));
@@ -205,13 +205,13 @@ KdbSymPrintAddress(
 	else if (Address < MmSystemRangeStart)
 	{
 		MemoryArea = MmLocateMemoryAreaByAddress(&PsGetCurrentProcess()->Vm, Address);
-		if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) 
+		if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW)
 		{
 			goto end;
 		}
 		SectionObject = MemoryArea->Data.SectionData.Section;
 		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
-		if (MemoryArea->StartingAddress != KdbpImageBase)
+		if (MemoryArea->StartingAddress != (PVOID)KdbpImageBase)
 		{
 			if (KdbpRosSymInfo)
 			{
@@ -223,7 +223,7 @@ KdbSymPrintAddress(
             if ((FileContext = KdbpCaptureFileForSymbols(SectionObject->FileObject)))
 			{
                 if (RosSymCreateFromFile(FileContext, &KdbpRosSymInfo))
-                    KdbpImageBase = MemoryArea->StartingAddress;
+                    KdbpImageBase = (ULONG_PTR)MemoryArea->StartingAddress;
 
                 KdbpReleaseFileForSymbols(FileContext);
 			}
@@ -242,7 +242,7 @@ KdbSymPrintAddress(
 			{
 				DbgPrint
 					("<%wZ:%x (%s:%d (%s))>",
-					 &SectionObject->FileObject->FileName, 
+					 &SectionObject->FileObject->FileName,
 					 RelativeAddress, FileName, LineNumber, FunctionName);
 				return TRUE;
 			}

@@ -28,5 +28,4 @@ target_link_libraries(ext2fs ${PSEH_LIB})
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
 
-add_minicd_target(ext2fs reactos ext2.sys)
-add_livecd_target(ext2fs reactos/system32/drivers ext2.sys)
+add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers NO_CAB FOR all)

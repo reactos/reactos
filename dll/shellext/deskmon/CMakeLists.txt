@@ -27,4 +27,4 @@ add_importlibs(deskmon
 
 add_pch(deskmon ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cab_target(deskmon 1)
+add_cd_file(TARGET deskmon DESTINATION reactos/system32 FOR all)

@@ -11,5 +11,4 @@ target_link_libraries(kbdclass ${PSEH_LIB})
 
 add_importlibs(kbdclass ntoskrnl hal)
 
-add_minicd_target(kbdclass reactos kbdclass.sys)
-add_livecd_target(kbdclass reactos/system32/drivers)
+add_cd_file(TARGET kbdclass DESTINATION reactos/system32/drivers NO_CAB FOR all)

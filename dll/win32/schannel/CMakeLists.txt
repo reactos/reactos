@@ -20,4 +20,4 @@ target_link_libraries(schannel wine)
 
 add_importlibs(schannel secur32 msvcrt kernel32 ntdll)
 
-add_cab_target(schannel 1)
+add_cd_file(TARGET schannel DESTINATION reactos/system32 FOR all)

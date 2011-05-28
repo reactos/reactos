@@ -8,5 +8,4 @@ add_library(pci SHARED
 set_module_type(pci kernelmodedriver)
 add_importlibs(pci ntoskrnl hal)
 
-add_minicd_target(pci reactos pci.sys)
-add_livecd_target(pci reactos/system32/drivers)
+add_cd_file(TARGET pci DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -13,4 +13,4 @@ add_importlibs(ncpa
     shell32
     kernel32)
 
-add_cab_target(ncpa 1)
+add_cd_file(TARGET ncpa DESTINATION reactos/system32 FOR all)

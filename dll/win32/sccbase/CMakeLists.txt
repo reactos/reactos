@@ -17,4 +17,4 @@ target_link_libraries(sccbase wine)
 
 add_importlibs(sccbase msvcrt kernel32 ntdll)
 
-add_cab_target(sccbase 1)
+add_cd_file(TARGET sccbase DESTINATION reactos/system32 FOR all)

@@ -9,4 +9,4 @@ set_entrypoint(kbdcz 0)
 
 add_dependencies(kbdcz psdk)
 
-add_cab_target(kbdcz 1)
+add_cd_file(TARGET kbdcz DESTINATION reactos/system32 FOR all)

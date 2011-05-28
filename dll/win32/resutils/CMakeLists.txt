@@ -17,4 +17,4 @@ target_link_libraries(resutils wine)
 
 add_importlibs(resutils msvcrt kernel32 ntdll)
 
-add_cab_target(resutils 1)
+add_cd_file(TARGET resutils DESTINATION reactos/system32 FOR all)

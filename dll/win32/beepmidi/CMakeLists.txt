@@ -14,4 +14,4 @@ add_importlibs(beepmidi winmm kernel32 ntdll msvcrt)
 add_importlib_target(beepmidi.spec)
 
 add_dependencies(beepmidi psdk)
-add_cab_target(beepmidi 1)
+add_cd_file(TARGET beepmidi DESTINATION reactos/system32 FOR all)

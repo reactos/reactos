@@ -41,4 +41,4 @@ add_importlibs(win32csr user32 gdi32 advapi32 psapi msvcrt kernel32 ntdll)
 add_pch(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/w32csr.h ${SOURCE})
 
 add_dependencies(win32csr bugcodes)
-add_cab_target(win32csr 1)
+add_cd_file(TARGET win32csr DESTINATION reactos/system32 FOR all)

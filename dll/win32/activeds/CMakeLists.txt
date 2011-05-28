@@ -18,4 +18,4 @@ target_link_libraries(activeds wine)
 
 add_importlibs(activeds msvcrt kernel32 ntdll)
 
-add_cab_target(activeds 1)
+add_cd_file(TARGET activeds DESTINATION reactos/system32 FOR all)

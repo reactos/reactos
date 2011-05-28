@@ -33,4 +33,4 @@ add_importlibs(mlang
 
 add_importlib_target(mlang.spec)
 add_dependencies(mlang psdk)
-add_cab_target(mlang 1)
+add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)

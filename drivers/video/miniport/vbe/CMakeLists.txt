@@ -9,4 +9,4 @@ add_importlibs(vbemp videoprt)
 
 target_link_libraries(vbemp libcntpr)
 
-add_cab_target(vbemp 2)
+add_cd_file(TARGET vbemp DESTINATION reactos/system32/drivers FOR all)

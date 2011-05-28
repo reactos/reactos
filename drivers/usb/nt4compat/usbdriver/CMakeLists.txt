@@ -32,4 +32,4 @@ add_importlibs(usbdriver ntoskrnl hal)
 
 add_pch(usbdriver ${CMAKE_CURRENT_SOURCE_DIR}/usbdriver.h ${SOURCE})
 
-add_cab_target(usbdriver 2)
+add_cd_file(TARGET usbdriver DESTINATION reactos/system32/drivers FOR all)

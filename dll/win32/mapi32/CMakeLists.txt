@@ -23,4 +23,4 @@ set_module_type(mapi32 win32dll)
 
 target_link_libraries(mapi32 wine uuid)
 add_importlibs(mapi32 shlwapi shell32 user32 advapi32 msvcrt kernel32 ntdll)
-add_cab_target(mapi32 1)
+add_cd_file(TARGET mapi32 DESTINATION reactos/system32 FOR all)

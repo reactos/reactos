@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-if(${CMAKE_VERSION} VERSION_GREATER "2.8.3")
+if(POLICY CMP0017)
     # Shadow cmake provided modules
     cmake_policy(SET CMP0017 OLD)
 endif()
@@ -13,6 +13,7 @@ include(include/reactos/version.cmake)
 
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
+cmake_policy(SET CMP0002 NEW)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -20,7 +21,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
-set_property(GLOBAL PROPERTY RULE_MESSAGES ON)
+#set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 if(NOT ARCH)
     set(ARCH i386)
@@ -71,6 +72,9 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
+    
+    #useful stuff!
+    include(CMakeParseArguments)
 
     # Do some cleanup
     file(REMOVE
@@ -101,10 +105,6 @@ else()
 
     # IDL macros for widl/midl
     include(cmake/idl-support.cmake)
-
-    #Some useful variables
-    set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
-    set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
 
     # Activate support for assembly source files
     enable_language(ASM)
@@ -185,8 +185,9 @@ else()
 
     include(baseaddress.cmake)
 
-    add_subdirectory(base)
+    #begin with boot so reactos_cab target is defined before all other modules
     add_subdirectory(boot)
+    add_subdirectory(base)
     add_subdirectory(dll)
     add_subdirectory(drivers)
     add_subdirectory(hal)
@@ -199,9 +200,6 @@ else()
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
-
-    #bootcd and livecd
-    include(ros_cd.cmake)
 
     add_dependency_footer()
 

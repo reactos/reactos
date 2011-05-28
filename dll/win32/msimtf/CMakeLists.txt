@@ -19,4 +19,4 @@ set_module_type(msimtf win32dll)
 
 target_link_libraries(msimtf uuid wine)
 add_importlibs(msimtf msvcrt imm32 kernel32 ntdll)
-add_cab_target(msimtf 1)
+add_cd_file(TARGET msimtf DESTINATION reactos/system32 FOR all)

@@ -9,4 +9,4 @@ set_entrypoint(kbdru1 0)
 
 add_dependencies(kbdru1 psdk)
 
-add_cab_target(kbdru1 1)
+add_cd_file(TARGET kbdru1 DESTINATION reactos/system32 FOR all)

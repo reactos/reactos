@@ -11,4 +11,4 @@ target_link_libraries(umpnpmgr pnprpc wdmguid ${PSEH_LIB})
 
 set_module_type(umpnpmgr win32cui)
 add_importlibs(umpnpmgr advapi32 rpcrt4 userenv msvcrt kernel32 ntdll)
-add_cab_target(umpnpmgr 1)
+add_cd_file(TARGET umpnpmgr DESTINATION reactos/system32 FOR all)

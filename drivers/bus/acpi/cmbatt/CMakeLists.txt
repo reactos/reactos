@@ -14,4 +14,4 @@ add_importlibs(cmbatt ntoskrnl hal battc wmilib)
 add_pch(cmbatt ${CMAKE_CURRENT_SOURCE_DIR}/cmbatt.h ${SOURCE})
 
 
-add_cab_target(cmbatt 2)
+add_cd_file(TARGET cmbatt DESTINATION reactos/system32/drivers FOR all)

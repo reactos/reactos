@@ -16,4 +16,4 @@ set_module_type(rasadhlp win32dll)
 
 add_importlibs(rasadhlp ws2_32 msvcrt kernel32 ntdll)
 
-add_cab_target(rasadhlp 1)
+add_cd_file(TARGET rasadhlp DESTINATION reactos/system32 FOR all)

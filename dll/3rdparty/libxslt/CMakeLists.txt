@@ -43,4 +43,4 @@ endif()
 
 add_dependencies(libxslt psdk)
 
-add_cab_target(libxslt 1)
+add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)

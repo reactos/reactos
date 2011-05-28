@@ -29,5 +29,5 @@ set_module_type(videoprt kernelmodedriver)
 add_importlibs(videoprt ntoskrnl hal)
 
 add_pch(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.h ${SOURCE})
-add_cab_target(videoprt 2)
+add_cd_file(TARGET videoprt DESTINATION reactos/system32/drivers FOR all)
 add_importlib_target(videoprt.spec)

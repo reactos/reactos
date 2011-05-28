@@ -17,4 +17,4 @@ add_library(serial SHARED
 set_module_type(serial kernelmodedriver)
 add_importlibs(serial ntoskrnl hal)
 
-add_cab_target(serial 2)
+add_cd_file(TARGET serial DESTINATION reactos/system32/drivers FOR all)

@@ -13,4 +13,4 @@ set_entrypoint(wing32 0)
 
 add_importlibs(wing32 user32 gdi32 msvcrt)
 add_dependencies(wing32 psdk)
-add_cab_target(wing32 1)
+add_cd_file(TARGET wing32 DESTINATION reactos/system32 FOR all)

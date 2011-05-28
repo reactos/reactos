@@ -23,4 +23,4 @@ target_link_libraries(wdmaud
 add_importlibs(wdmaud ntoskrnl ks hal)
 
 
-add_cab_target(wdmaud 2)
+add_cd_file(TARGET wdmaud DESTINATION reactos/system32/drivers FOR all)

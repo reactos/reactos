@@ -11,4 +11,4 @@ set_entrypoint(wmi 0)
 
 add_importlibs(wmi advapi32)
 add_dependencies(wmi psdk)
-add_cab_target(wmi 1)
+add_cd_file(TARGET wmi DESTINATION reactos/system32 FOR all)
