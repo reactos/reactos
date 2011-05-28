@@ -678,7 +678,6 @@ SVC_(GdiDrawStream, 3)
 SVC_(GdiSetDIBits, 7)
 SVC_(GdiSetViewportOrgEx, 4)
 SVC_(GdiSetWindowOrgEx, 4)
-SVC_(GdiGetFontFamilyInfo, 4)
 SVC_(GdiOffsetViewportOrgEx, 4)
 SVC_(GdiOffsetWindowOrgEx, 4)
 

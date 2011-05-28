@@ -2037,7 +2037,8 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
 
     pdcattr = dc->pdcattr;
 
-    TextObj = RealizeFontInit( pdcattr->hlfntNew);
+ASSERT(FALSE);
+    TextObj = NULL;
     if ( !TextObj ) return FALSE;
 
     FontGetObject( TextObj, sizeof(lf), &lf);

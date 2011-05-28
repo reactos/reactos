@@ -314,7 +314,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
-   TEXTMETRICW tmw;
+   //TEXTMETRICW tmw;
    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
    if (! IntCreatePrimarySurface())
    {
@@ -342,8 +342,11 @@ co_IntInitializeDesktopGraphics(VOID)
    gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
    gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
    // Font is realized and this dc was previously set to internal DC_ATTR.
+   DPRINT1("HACK HACK HACK HACK HACK HACK HACK HACK HACK \n");
+#if 0
    gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
    gpsi->tmSysFont     = tmw;
+#endif
 
    return TRUE;
 }
@@ -974,7 +977,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    /*
     * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
     */
-   
+
    PsSetProcessWindowStation(ppi->peProcess, hWindowStation);
 
    ppi->prpwinsta = NewWinSta;

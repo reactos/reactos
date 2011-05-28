@@ -106,8 +106,6 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
-    pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
-
     /* This should never fail */
     ASSERT(pdc->dclevel.ppal);
 

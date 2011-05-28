@@ -290,7 +290,8 @@ NtGdiGetDCDword(
             break;
 
         case GdiGetFontLanguageInfo:
-            SafeResult = IntGetFontLanguageInfo(pdc);
+            ASSERT(FALSE); // FIXME
+            SafeResult = 0;
             break;
 
         case GdiGetIsMemDc:
