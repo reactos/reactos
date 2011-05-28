@@ -7,29 +7,6 @@
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-EngTextOut(
-    SURFOBJ  *pso,
-    STROBJ   *pstro,
-    FONTOBJ  *pfo,
-    CLIPOBJ  *pco,
-    RECTL    *prclExtra,
-    RECTL    *prclOpaque,
-    BRUSHOBJ *pboFore,
-    BRUSHOBJ *pboOpaque,
-    POINTL   *pptlOrg,
-    MIX       mix)
-{
-    // www.osr.com/ddk/graphics/gdifncs_4tgn.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 /*
  * @unimplemented
  */
@@ -368,84 +345,6 @@ EngWritePrinter(
     return FALSE;
 }
 
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-FONTOBJ_cGetAllGlyphHandles(
-    IN FONTOBJ  *FontObj,
-    IN HGLYPH   *Glyphs)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-FONTOBJ_cGetGlyphs(
-    IN FONTOBJ *FontObj,
-    IN ULONG    Mode,
-    IN ULONG    NumGlyphs,
-    IN HGLYPH  *GlyphHandles,
-    IN PVOID   *OutGlyphs)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-IFIMETRICS*
-APIENTRY
-FONTOBJ_pifi(IN FONTOBJ *FontObj)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-_Ret_opt_bytecount_(*pcjFile)
-ENGAPI
-PVOID
-APIENTRY
-FONTOBJ_pvTrueTypeFontFile(
-    _In_ FONTOBJ *pfo,
-    _Out_ ULONG *pcjFile)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-XFORMOBJ*
-APIENTRY
-FONTOBJ_pxoGetXform(IN FONTOBJ *FontObj)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-VOID
-APIENTRY
-FONTOBJ_vGetInfo(
-    IN  FONTOBJ *FontObj,
-    IN  ULONG InfoSize,
-    OUT PFONTINFO FontInfo)
-{
-    UNIMPLEMENTED;
-}
 
 LONG
 APIENTRY
@@ -590,59 +489,6 @@ EngQueryFileTimeStamp(IN LPWSTR FileName)
     return FileTime;
 }
 
-/*
- * @unimplemented
- */
-FD_GLYPHSET *
-APIENTRY
-FONTOBJ_pfdg(
-    IN FONTOBJ *FontObj)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-_Ret_opt_bytecount_(*pcjTable)
-ENGAPI
-PBYTE
-APIENTRY
-FONTOBJ_pjOpenTypeTablePointer(
-    _In_ FONTOBJ *pfo,
-    _In_ ULONG ulTag,
-    _Out_ ULONG *pcjTable)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-PFD_GLYPHATTR
-APIENTRY
-FONTOBJ_pQueryGlyphAttrs(
-    IN FONTOBJ *FontObj,
-    IN ULONG Mode)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-LPWSTR
-APIENTRY
-FONTOBJ_pwszFontFilePaths(
-    IN FONTOBJ *FontObj,
-    OUT ULONG *PathLength)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
 
 /*
  * @unimplemented
@@ -666,71 +512,7 @@ HT_Get8BPPMaskPalette(
  */
 BOOL
 APIENTRY
-NtGdiAnyLinkedFonts(VOID)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiEnableEudc(BOOL enable)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiAddRemoteFontToDC(
-    IN HDC hdc,
-    IN PVOID pvBuffer,
-    IN ULONG cjBuffer,
-    IN OPTIONAL PUNIVERSAL_FONT_ID pufi)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiRemoveMergeFont(
-    IN HDC hdc,
-    IN UNIVERSAL_FONT_ID *pufi)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiAddRemoteMMInstanceToDC(
-    IN HDC hdc,
-    IN DOWNLOADDESIGNVECTOR *pddv,
-    IN ULONG cjDDV)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiFontIsLinked(IN HDC hdc)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -777,20 +559,15 @@ NtGdiClearBitmapAttributes(
 /*
  * @unimplemented
  */
-BOOL
+HBRUSH
 APIENTRY
-NtGdiGetUFI(
-    IN  HDC hdc,
-    OUT PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL DESIGNVECTOR *pdv,
-    OUT ULONG *pcjDV,
-    OUT ULONG *pulBaseCheckSum,
-    OUT FLONG *pfl)
+NtGdiClearBrushAttributes(
+    IN HBRUSH hbm,
+    IN DWORD dwFlags)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return NULL;
 }
-
 
 /*
  * @unimplemented
@@ -844,21 +621,6 @@ NtGdiComputeXformCoefficients(IN HDC hdc)
  */
 BOOL
 APIENTRY
-NtGdiConsoleTextOut(
-    IN HDC hdc,
-    IN POLYTEXTW *lpto,
-    IN UINT nStrings,
-    IN RECTL *prclBounds)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiDeleteColorTransform(
     IN HDC hdc,
     IN HANDLE hColorTransform)
@@ -898,83 +660,6 @@ NtGdiDoBanding(
 /*
  * @unimplemented
  */
-BOOL
-APIENTRY
-NtGdiEnumFontChunk(
-    IN HDC hdc,
-    IN ULONG_PTR idEnum,
-    IN ULONG cjEfdw,
-    OUT ULONG *pcjEfdw,
-    OUT PENUMFONTDATAW pefdw)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiEnumFontClose(
-    IN ULONG_PTR idEnum)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-ULONG_PTR
-APIENTRY
-NtGdiEnumFontOpen(
-    IN HDC hdc,
-    IN ULONG iEnumType,
-    IN FLONG flWin31Compat,
-    IN ULONG cwchMax,
-    IN OPTIONAL LPWSTR pwszFaceName,
-    IN ULONG lfCharSet,
-    OUT ULONG *pulCount)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiEudcLoadUnloadLink(
-    IN OPTIONAL LPCWSTR pBaseFaceName,
-    IN UINT cwcBaseFaceName,
-    IN LPCWSTR pEudcFontPath,
-    IN UINT cwcEudcFontPath,
-    IN INT iPriority,
-    IN INT iFontLinkType,
-    IN BOOL bLoadLin)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiForceUFIMapping(
-    IN HDC hdc,
-    IN PUNIVERSAL_FONT_ID pufi)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 NTSTATUS
 APIENTRY
 NtGdiFullscreenControl(
@@ -991,19 +676,6 @@ NtGdiFullscreenControl(
 /*
  * @unimplemented
  */
-BOOL
-APIENTRY
-NtGdiGetCharWidthInfo(
-    IN HDC hdc,
-    OUT PCHWIDTHINFO pChWidthInfo)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 ULONG_PTR
 APIENTRY
 NtGdiGetColorSpaceforBitmap(
@@ -1011,19 +683,6 @@ NtGdiGetColorSpaceforBitmap(
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiGetETM(
-    IN HDC hdc,
-    OUT EXTTEXTMETRIC *petm)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /*
@@ -1052,20 +711,6 @@ NtGdiInitSpool(VOID)
 }
 
 /*
- * @unimplemented
- */
-INT
-APIENTRY
-NtGdiQueryFonts(
-    OUT PUNIVERSAL_FONT_ID pufiFontList,
-    IN ULONG nBufferSize,
-    OUT PLARGE_INTEGER pTimeStamp)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
  * @implemented
  */
 INT
@@ -1078,37 +723,6 @@ NtGdiGetSpoolMessage(
 {
     /* FIXME: The prototypes */
     EngSetLastError(ERROR_NOT_SUPPORTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtGdiGetGlyphIndicesWInternal(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR pwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD pgi,
-    IN DWORD iMode,
-    IN BOOL bSubset)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-INT
-APIENTRY
-NtGdiGetLinkedUFIs(
-    IN HDC hdc,
-    OUT OPTIONAL PUNIVERSAL_FONT_ID pufiLinkedUFIs,
-    IN INT BufferSize)
-{
-    UNIMPLEMENTED;
     return 0;
 }
 
@@ -1154,66 +768,6 @@ NtGdiUpdateTransform(IN HDC hdc)
 /*
  * @unimplemented
  */
-ULONG
-APIENTRY
-NtGdiQueryFontAssocInfo(
-    IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-APIENTRY
-NtGdiGetStringBitmapW(
-    IN HDC hdc,
-    IN LPWSTR pwsz,
-    IN UINT cwc,
-    OUT BYTE *lpSB,
-    IN UINT cj)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiRemoveFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN ULONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiPolyTextOutW(
-    IN HDC hdc,
-    IN POLYTEXTW *pptw,
-    IN UINT cStr,
-    IN DWORD dwCodePage)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 NTSTATUS
 APIENTRY
 NtGdiGetStats(
@@ -1227,114 +781,6 @@ NtGdiGetStats(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-INT
-APIENTRY
-NtGdiSetupPublicCFONT(
-    IN HDC hdc,
-    IN OPTIONAL HFONT hf,
-    IN ULONG ulAve)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiGetEmbUFI(
-    IN HDC hdc,
-    OUT PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL DESIGNVECTOR *pdv,
-    OUT ULONG *pcjDV,
-    OUT ULONG *pulBaseCheckSum,
-    OUT FLONG  *pfl,
-    OUT KERNEL_PVOID *embFontID)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiGetUFIPathname(
-    IN PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL ULONG* pcwc,
-    OUT OPTIONAL LPWSTR pwszPathname,
-    OUT OPTIONAL ULONG* pcNumFiles,
-    IN FLONG fl,
-    OUT OPTIONAL BOOL *pbMemFont,
-    OUT OPTIONAL ULONG *pcjView,
-    OUT OPTIONAL PVOID pvView,
-    OUT OPTIONAL BOOL *pbTTC,
-    OUT OPTIONAL ULONG *piTTC)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiGetEmbedFonts(
-    VOID)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiChangeGhostFont(
-    IN KERNEL_PVOID *pfontID,
-    IN BOOL bLoad)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiAddEmbFontToDC(
-    IN HDC hdc,
-    IN VOID **pFontID)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiGetWidthTable(
-    IN HDC hdc,
-    IN ULONG cSpecial,
-    IN WCHAR *pwc,
-    IN ULONG cwc,
-    OUT USHORT *psWidth,
-    OUT OPTIONAL WIDTHDATA *pwd,
-    OUT FLONG *pflInfo)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
 
 /*
  * @unimplemented
@@ -1353,22 +799,6 @@ NtGdiIcmBrushInfo(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiMakeFontDir(
-    IN FLONG flEmbed,
-    OUT PBYTE pjFontDir,
-    IN unsigned cjFontDir,
-    IN LPWSTR pwszPathname,
-    IN unsigned cjPathname)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 /*
@@ -1405,46 +835,6 @@ NtGdiSetBitmapAttributes(
 /*
  * @unimplemented
  */
-ULONG
-APIENTRY
-NtGdiSetFontEnumeration(
-    IN ULONG ulType)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSetFontXform(
-    IN HDC hdc,
-    IN DWORD dwxScale,
-    IN DWORD dwyScale)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSetLinkedUFIs(
-    IN HDC hdc,
-    IN PUNIVERSAL_FONT_ID pufiLinks,
-    IN ULONG uNumUFIs)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiSetMagicColors(
@@ -1469,17 +859,6 @@ NtGdiUnloadPrinterDriver(
     return FALSE;
 }
 
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-NtGdiUnmapMemFont(
-    IN PVOID pvView)
-{
-    return TRUE;
-}
-
 BOOL
 APIENTRY
 EngControlSprites(
@@ -1488,38 +867,6 @@ EngControlSprites(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-_Must_inspect_result_
-_Ret_opt_bytecap_(cjSize)
-ENGAPI
-PVOID
-APIENTRY
-EngFntCacheAlloc(
-    _In_ ULONG ulFastCheckSum,
-    _In_ ULONG cjSize)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-VOID
-APIENTRY
-EngFntCacheFault(
-    IN ULONG ulFastCheckSum,
-    IN ULONG iFaultMode)
-{
-    UNIMPLEMENTED;
-}
-
-PVOID
-APIENTRY
-EngFntCacheLookUp(
-    IN ULONG FastCheckSum,
-    OUT PULONG pulSize)
-{
-    UNIMPLEMENTED;
-    return NULL;
 }
 
 BOOLEAN

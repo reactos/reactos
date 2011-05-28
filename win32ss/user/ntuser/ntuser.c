@@ -163,6 +163,9 @@ UserInitialize(VOID)
     return STATUS_SUCCESS;
 }
 
+PEPROCESS gpepCSRSS;
+
+VOID NTAPI GreStartupFontDrivers(VOID);
 /*
  * Called from usersrv.
  */
@@ -178,10 +181,6 @@ NtUserInitialize(
     TRACE("Enter NtUserInitialize(%lx, %p, %p)\n",
           dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
-    /* Check if we are already initialized */
-    if (gpepCSRSS)
-        return STATUS_UNSUCCESSFUL;
-
     /* Check Windows USER subsystem version */
     if (dwWinVersion != USER_VERSION)
     {
@@ -191,6 +190,13 @@ NtUserInitialize(
 
     /* Acquire exclusive lock */
     UserEnterExclusive();
+
+    /* Check if we are already initialized */
+    if (gpepCSRSS != NULL)
+    {
+        UserLeave();
+        return STATUS_UNSUCCESSFUL;
+    }
 
     /* Save the EPROCESS of CSRSS */
     InitCsrProcess(/*PsGetCurrentProcess()*/);
@@ -203,6 +209,7 @@ NtUserInitialize(
 //    Startup DxGraphics.
 //    calls ** UserGetLanguageID() and sets it **.
 //    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+       GreStartupFontDrivers();
 // }
 
     /* Initialize USER */

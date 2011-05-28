@@ -1,5 +1,5 @@
 
-set(USE_DIBLIB FALSE)
+set (USE_DIBLIB FALSE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
@@ -64,6 +64,7 @@ list(APPEND SOURCE
     gdi/eng/engevent.c
     gdi/eng/clip.c
     gdi/eng/debug.c
+    #gdi/eng/drvdbg.c
     gdi/eng/device.c
     gdi/eng/driverobj.c
     gdi/eng/error.c
@@ -86,7 +87,6 @@ list(APPEND SOURCE
     gdi/eng/rlecomp.c
     gdi/eng/semaphor.c
     gdi/eng/sort.c
-    gdi/eng/string.c
     gdi/eng/stretchblt.c
     gdi/eng/surface.c
     gdi/eng/transblt.c
@@ -175,8 +175,6 @@ list(APPEND SOURCE
     gdi/ntgdi/dibobj.c
     gdi/ntgdi/drawing.c
     gdi/ntgdi/fillshap.c
-    gdi/ntgdi/font.c
-    gdi/ntgdi/freetype.c
     gdi/ntgdi/gdibatch.c
     gdi/ntgdi/gdidbg.c
     gdi/ntgdi/gdiobj.c
@@ -193,14 +191,28 @@ list(APPEND SOURCE
     gdi/ntgdi/rect.c
     gdi/ntgdi/region.c
     gdi/ntgdi/stockobj.c
-    gdi/ntgdi/text.c
     gdi/ntgdi/wingl.c
     gdi/ntgdi/xformobj.c
     gdi/eng/stubs.c
     gdi/eng/umpdstubs.c
+
+    font/dcfont.c
+    font/enumfont.c
+    font/fntdrvsup.c
+    font/fontdata.c
+    font/fontrsrc.c
+    font/glyphcache.c
+    font/lfont.c
+    font/rfont.c
+    font/strobj.c
+    font/textmetric.c
+    font/textout.c
+    font/ufi.c
+    font/misc.c
+
     pch.h)
 
-if(USE_DIBLIB)
+if (USE_DIBLIB)
     add_definitions(-D_USE_DIBLIB_)
     list(APPEND SOURCE
         gdi/dib/dib_new.c
@@ -209,7 +221,7 @@ else()
     list(APPEND SOURCE
         gdi/dib/dib.c
         gdi/eng/copybits.c
-        ${GENDIB_FILES})
+         ${GENDIB_FILES})
 endif()
 
 if(ARCH STREQUAL "i386")
@@ -242,7 +254,7 @@ add_library(win32k MODULE
 set_module_type(win32k kernelmodedriver)
 target_link_libraries(win32k ${PSEH_LIB} dxguid libcntpr)
 
-if(USE_DIBLIB)
+if (USE_DIBLIB)
     target_link_libraries(win32k diblib)
 endif()
 

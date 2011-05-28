@@ -56,20 +56,7 @@ typedef struct _STRGDI
 #define TEXTOBJECT_INIT 0x00010000
 
 /* GDI logical font object */
-typedef struct _LFONT
-{
-  /* Header for all gdi objects in the handle table.
-     Do not (re)move this. */
-   BASEOBJECT    BaseObject;
-   LFTYPE        lft;
-   FLONG         fl;
-   FONTOBJ      *Font;
-   WCHAR         TextFace[LF_FACESIZE];
-   DWORD         dwOffsetEndArray;
-// Fixed:
-   ENUMLOGFONTEXDVW logfont;
-   EX_PUSH_LOCK lock;
-} TEXTOBJ, *PTEXTOBJ, LFONT, *PLFONT;
+typedef struct _LFONT TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
 
