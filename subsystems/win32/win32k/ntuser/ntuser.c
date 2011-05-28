@@ -128,6 +128,9 @@ UserInitialize(
     return STATUS_SUCCESS;
 }
 
+PEPROCESS gpepCSRSS;
+
+VOID NTAPI GreStartupFontDrivers(VOID);
 /*
     Called from win32csr.
  */
@@ -159,6 +162,9 @@ NtUserInitialize(
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* Safe CSRSS EPROCESS pointer */
+    gpepCSRSS = PsGetCurrentProcess();
+
 // Initialize Power Request List.
 // Initialize Media Change.
 // InitializeGreCSRSS();
@@ -166,6 +172,7 @@ NtUserInitialize(
 //    Startup DxGraphics.
 //    calls ** IntGdiGetLanguageID() and sets it **.
 //    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+        GreStartupFontDrivers();
 // }
 
     /* Initialize USER */

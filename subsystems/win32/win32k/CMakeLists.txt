@@ -59,7 +59,6 @@ list(APPEND SOURCE
     eng/rlecomp.c
     eng/semaphor.c
     eng/sort.c
-    eng/string.c
     eng/stretchblt.c
     eng/surface.c
     eng/transblt.c
@@ -138,11 +137,10 @@ list(APPEND SOURCE
     objects/dibobj.c
     objects/drawing.c
     objects/fillshap.c
-    objects/font.c
-    objects/freetype.c
     objects/gdibatch.c
 	objects/gdidbg.c
     objects/gdiobj.c
+    objects/gdipool.c
     objects/icm.c
     objects/line.c
     objects/metafile.c
@@ -154,9 +152,23 @@ list(APPEND SOURCE
     objects/rect.c
     objects/region.c
     objects/stockobj.c
-    objects/text.c
     objects/wingl.c
     objects/xformobj.c
+
+    font/dcfont.c
+    font/enumfont.c
+    font/fntdrvsup.c
+    font/fontdata.c
+    font/fontrsrc.c
+    font/glyphcache.c
+    font/lfont.c
+    font/rfont.c
+    font/strobj.c
+    font/textmetric.c
+    font/textout.c
+    font/ufi.c
+    font/misc.c
+
     stubs/stubs.c
     stubs/umpdstubs.c
     win32k.rc)
