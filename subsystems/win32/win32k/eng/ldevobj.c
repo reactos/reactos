@@ -101,6 +101,7 @@ LDEVOBJ_vFreeLDEV(PLDEVOBJ pldev)
 {
     /* Make sure we don't have a driver loaded */
     ASSERT(pldev && pldev->pGdiDriverInfo == NULL);
+    ASSERT(pldev->cRefs == 0);
 
     /* Free the memory */
     ExFreePoolWithTag(pldev, GDITAG_LDEV);
@@ -475,8 +476,9 @@ EngUnloadImage(
         if (pldev->pldevNext)
             pldev->pldevNext->pldevPrev = pldev->pldevPrev;
 
-        /* Unload the image */
+        /* Unload the image and free the LDEV */
         LDEVOBJ_vUnloadImage(pldev);
+        LDEVOBJ_vFreeLDEV(pldev);
     }
 
     /* Unlock loader */
