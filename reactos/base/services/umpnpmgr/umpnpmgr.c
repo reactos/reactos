@@ -674,7 +674,7 @@ DWORD PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_REMOVAL_POLICY:
-            lpValueName = L"RemovalPolicy";
+            lpValueName = NULL;
             break;
 
         case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
@@ -682,7 +682,7 @@ DWORD PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_REMOVAL_POLICY_OVERRIDE:
-            lpValueName = NULL;
+            lpValueName = L"RemovalPolicy";
             break;
 
         case CM_DRP_INSTALL_STATE:
@@ -779,10 +779,17 @@ DWORD PNP_GetDeviceRegProp(
                 break;
 
 #if 0
-            /* These properties are not supported by IoGetDeviceProperty */
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
             case CM_DRP_DEVICE_POWER_DATA:
+#endif
+
+            case CM_DRP_REMOVAL_POLICY:
+                PlugPlayData.Property = 0x12; // DevicePropertyRemovalPolicy
+                break;
+
+#if 0
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
             case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
-            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
 #endif
 
             case CM_DRP_INSTALL_STATE:
@@ -790,7 +797,7 @@ DWORD PNP_GetDeviceRegProp(
                 break;
 
 #if 0
-            /* This property is not supported by IoGetDeviceProperty */
+            /* FIXME: This property is not supported by IoGetDeviceProperty */
 #if (WINVER >= _WIN32_WINNT_WS03)
             case CM_DRP_LOCATION_PATHS:
 #endif
@@ -909,6 +916,30 @@ DWORD PNP_SetDeviceRegProp(
             lpValueName = L"LowerFilters";
             break;
 
+        case CM_DRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_DRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            lpValueName = L"UINumberDescFormat";
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            lpValueName = L"RemovalPolicy";
+            break;
+
         default:
             return CR_INVALID_PROPERTY;
     }
@@ -918,7 +949,7 @@ DWORD PNP_SetDeviceRegProp(
     if (RegOpenKeyExW(hEnumKey,
                       pDeviceId,
                       0,
-                      KEY_ALL_ACCESS, /* FIXME: so much? */
+                      KEY_SET_VALUE,
                       &hKey))
         return CR_INVALID_DEVNODE;
 
