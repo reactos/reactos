@@ -64,7 +64,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
         PVOID UserBase = NULL;
-        BOOL Connected;
         PRTL_USER_PROCESS_PARAMETERS pParams = NULL;
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
@@ -117,14 +116,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         Win32Process->peProcess = Process;
         /* setup process flags */
-        Win32Process->W32PF_flags = 0;
-
-        Connected = !(Win32Process->W32PF_flags & W32PF_THREADCONNECTED);
-        Win32Process->W32PF_flags |= W32PF_THREADCONNECTED;
+        Win32Process->W32PF_flags = W32PF_THREADCONNECTED;
 
         if ( pParams &&
-             pParams->WindowFlags & STARTF_SCRNSAVER &&
-             Connected)
+             pParams->WindowFlags & STARTF_SCRNSAVER )
         {
            ppiScrnSaver = Win32Process;
            Win32Process->W32PF_flags |= W32PF_SCREENSAVER;
