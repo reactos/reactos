@@ -75,14 +75,15 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 VOID FASTCALL DoTheScreenSaver(VOID)
 {
    LARGE_INTEGER TickCount;
-   DWORD Test;
+   DWORD Test, TO;
 
    if (gspv.iScrSaverTimeout > 0) // Zero means Off.
    {
       KeQueryTickCount(&TickCount);
       Test = MsqCalculateMessageTime(&TickCount);
       Test = Test - LastInputTick;
-      if (Test > gspv.iScrSaverTimeout)
+      TO = 1000 * gspv.iScrSaverTimeout;
+      if (Test > TO)
       {
          DPRINT("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
 

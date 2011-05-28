@@ -59,6 +59,7 @@ static const WCHAR* VAL_HOVERHEIGHT = L"MouseHoverHeight";
 
 static const WCHAR* KEY_DESKTOP = L"Control Panel\\Desktop";
 static const WCHAR* VAL_SCRTO = L"ScreenSaveTimeOut";
+static const WCHAR* VAL_SCRNSV = L"SCRNSAVE.EXE";
 static const WCHAR* VAL_SCRACT = L"ScreenSaveActive";
 static const WCHAR* VAL_GRID = L"GridGranularity";
 static const WCHAR* VAL_DRAG = L"DragFullWindows";
@@ -134,6 +135,20 @@ SpiLoadUserPrefMask(DWORD dValue)
         return dValue;
     }
     return Result;
+}
+
+static
+DWORD
+SpiLoadTimeOut(VOID)
+{   // Must have the string!
+    WCHAR szApplicationName[MAX_PATH];
+    RtlZeroMemory(&szApplicationName, sizeof(szApplicationName));
+    if (!RegReadUserSetting(KEY_DESKTOP, VAL_SCRNSV, REG_SZ, &szApplicationName, sizeof(szApplicationName)))
+    {
+        return 0;
+    }
+    if (wcslen(szApplicationName) == 0) return 0;
+    return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 0);
 }
 
 static
@@ -280,7 +295,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
 
-    gspv.iScrSaverTimeout = 600000; // TO in 10 minutes.
+    gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
     gspv.bScrSaverRunning = FALSE;
 #if(WINVER >= 0x0600)

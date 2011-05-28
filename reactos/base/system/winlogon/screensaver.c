@@ -240,7 +240,7 @@ VOID
 StartScreenSaver(
 	IN PWLSESSION Session)
 {
-	HKEY hKey = NULL;
+	HKEY hKey = NULL, hCurrentUser = NULL;
 	WCHAR szApplicationName[MAX_PATH];
 	WCHAR szCommandLine[MAX_PATH + 3];
 	DWORD bufferSize = sizeof(szApplicationName) - sizeof(WCHAR);
@@ -258,8 +258,17 @@ StartScreenSaver(
 		goto cleanup;
 	}
 
+	rc = RegOpenCurrentUser(
+		KEY_READ,
+		&hCurrentUser);
+	if (rc != ERROR_SUCCESS)
+	{
+		ERR("WL: RegOpenCurrentUser Error!\n");
+		goto cleanup;
+	}
+
 	rc = RegOpenKeyExW(
-		HKEY_CURRENT_USER,
+		hCurrentUser,
 		L"Control Panel\\Desktop",
 		0,
 		KEY_QUERY_VALUE,
@@ -343,6 +352,8 @@ cleanup:
 	RevertToSelf();
 	if (hKey)
 		RegCloseKey(hKey);
+	if (hCurrentUser)
+		RegCloseKey(hCurrentUser);
 	if (!ret)
 	{
 		PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_SCRNSVR_ACTIVITY, 0);
