@@ -1242,15 +1242,100 @@ DWORD PNP_GetClassRegProp(
 /* Function 27 */
 DWORD PNP_SetClassRegProp(
     handle_t hBinding,
-    LPWSTR *pszClassGuid,
+    LPWSTR pszClassGuid,
     DWORD ulProperty,
     DWORD ulDataType,
     BYTE *Buffer,
     PNP_PROP_SIZE ulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
+    HKEY hInstKey = 0;
+    HKEY hPropKey = 0;
+    LONG lError;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_SetClassRegProp() called\n");
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    switch (ulProperty)
+    {
+        case CM_DRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_DRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
+
+    lError = RegOpenKeyExW(hClassKey,
+                           pszClassGuid,
+                           0,
+                           KEY_WRITE,
+                           &hInstKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    /* FIXME: Set security descriptor */
+    lError = RegCreateKeyExW(hInstKey,
+                             L"Properties",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hPropKey,
+                             NULL);
+    if (lError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    if (ulLength == 0)
+    {
+        if (RegDeleteValueW(hPropKey,
+                            lpValueName))
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegSetValueExW(hPropKey,
+                           lpValueName,
+                           0,
+                           ulDataType,
+                           Buffer,
+                           ulLength))
+            ret = CR_REGISTRY_ERROR;
+    }
+
+done:;
+    if (hPropKey != NULL)
+        RegCloseKey(hPropKey);
+
+    if (hInstKey != NULL)
+        RegCloseKey(hInstKey);
+
+    return ret;
 }
 
 
