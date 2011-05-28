@@ -1,4 +1,6 @@
 
+extern PEPROCESS gpepCSRSS;
+
 typedef struct _ENGSECTION
 {
     PVOID pvSectionObject;
@@ -9,6 +11,9 @@ typedef struct _ENGSECTION
 
 typedef struct _FILEVIEW
 {
+    LIST_ENTRY     leLink;
+    PWSTR          pwszPath;
+    ULONG          cRefs;
     LARGE_INTEGER  LastWriteTime;
     PVOID          pvKView;
     PVOID          pvViewFD;
@@ -23,9 +28,6 @@ typedef struct _FONTFILEVIEW : FILEVIEW
 typedef struct _FONTFILEVIEW
 {
     FILEVIEW;
-#endif
-    DWORD          reserved[2];
-    PWSTR          pwszPath;
     SIZE_T         ulRegionSize;
     ULONG          cKRefCount;
     ULONG          cRefCountFD;

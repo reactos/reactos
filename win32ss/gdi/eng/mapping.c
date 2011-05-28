@@ -12,7 +12,8 @@
 #include <debug.h>
 
 HANDLE ghSystem32Directory;
-HANDLE ghRootDirectory;
+HSEMAPHORE ghsemModuleList;
+LIST_ENTRY gleModulelist = {&gleModulelist, &gleModulelist};
 
 PVOID
 NTAPI
@@ -338,21 +339,29 @@ EngLoadModuleEx(
     UNICODE_STRING ustrFileName;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileInformation;
-    POBJECT_NAME_INFORMATION pNameInfo;
-    HANDLE hFile;
+    HANDLE hFile = NULL;
     NTSTATUS Status;
     LARGE_INTEGER liSize;
-    ULONG cjInfo, cjDesired;
+    PLIST_ENTRY ple;
+    ULONG cjSize;
 
-    /* Check if the file is relative to system32 */
-    if (fl & FVF_SYSTEMROOT)
+    /* Acquire module list lock */
+    EngAcquireSemaphore(ghsemModuleList);
+
+    /* Loop the list of loaded modules */
+    for (ple = gleModulelist.Flink; ple != &gleModulelist; ple = ple->Flink)
     {
-        hRootDir = ghSystem32Directory;
+        pFileView = CONTAINING_RECORD(ple, FILEVIEW, leLink);
+        if (_wcsnicmp(pFileView->pwszPath, pwsz, MAX_PATH) == 0)
+        {
+            /* Increment reference count and leave */
+            pFileView->cRefs++;
+            goto cleanup;
+        }
     }
-    else
-    {
-        hRootDir = ghRootDirectory;
-    }
+
+    /* Use system32 root dir or absolute path */
+    hRootDir = fl & FVF_SYSTEMROOT ? ghSystem32Directory : NULL;
 
     /* Initialize unicode string and object attributes */
     RtlInitUnicodeString(&ustrFileName, pwsz);
@@ -381,15 +390,18 @@ EngLoadModuleEx(
         return NULL;
     }
 
+    if (!NT_SUCCESS(Status))
+    {
+        pFileView = NULL;
+        goto cleanup;
+    }
+
     /* Check if this is a font file */
     if (fl & FVF_FONTFILE)
     {
-        /* Query name information length */
-        Status = ZwQueryObject(hFile,  ObjectNameInformation, NULL, 0, &cjInfo);
-        if (Status != STATUS_INFO_LENGTH_MISMATCH) goto cleanup;
-
         /* Allocate a FONTFILEVIEW structure */
-        pffv = EngAllocMem(0, sizeof(FONTFILEVIEW) + cjInfo, 'vffG');
+        cjSize = sizeof(FONTFILEVIEW) + ustrFileName.Length + sizeof(WCHAR);
+        pffv = EngAllocMem(0, cjSize, 'vffG');
         pFileView = (PFILEVIEW)pffv;
         if (!pffv)
         {
@@ -397,17 +409,8 @@ EngLoadModuleEx(
             goto cleanup;
         }
 
-        /* Query name information */
-        pNameInfo = (POBJECT_NAME_INFORMATION)(pffv + 1);
-        Status = ZwQueryObject(hFile,
-                               ObjectNameInformation,
-                               pNameInfo,
-                               cjInfo,
-                               &cjDesired);
-        if (!NT_SUCCESS(Status)) goto cleanup;
-
         /* Initialize extended fields */
-        pffv->pwszPath = pNameInfo->Name.Buffer;
+        pffv->pwszPath = (PWSTR)&pffv[1];
         pffv->ulRegionSize = 0;
         pffv->cKRefCount = 0;
         pffv->cRefCountFD = 0;
@@ -417,29 +420,34 @@ EngLoadModuleEx(
     else
     {
         /* Allocate a FILEVIEW structure */
-        pFileView = EngAllocMem(0, sizeof(FILEVIEW), 'liFg');
+        cjSize = sizeof(FILEVIEW) + ustrFileName.Length + sizeof(WCHAR);
+        pFileView = EngAllocMem(0, cjSize, 'liFg');
         if (!pFileView)
         {
             Status = STATUS_NO_MEMORY;
             goto cleanup;
         }
+
+        pFileView->pwszPath = (PWSTR)&pFileView[1];
     }
 
     /* Initialize the structure */
+    pFileView->cRefs = 1;
     pFileView->pvKView = NULL;
     pFileView->pvViewFD = NULL;
     pFileView->cjView = 0;
 
+    /* Copy the file name */
+    wcscpy(pFileView->pwszPath, pwsz);
+
     /* Query the last write time */
+    FileInformation.LastWriteTime.QuadPart = 0;
     Status = ZwQueryInformationFile(hFile,
                                     &IoStatusBlock,
                                     &FileInformation,
                                     sizeof(FILE_BASIC_INFORMATION),
                                     FileBasicInformation);
-    if (NT_SUCCESS(Status))
-    {
-        pFileView->LastWriteTime = FileInformation.LastWriteTime;
-    }
+    pFileView->LastWriteTime = FileInformation.LastWriteTime;
 
     /* Create a section from the file */
     liSize.QuadPart = cjSizeOfModule;
@@ -452,16 +460,22 @@ EngLoadModuleEx(
                              hFile,
                              NULL);
 
-cleanup:
-    /* Close the file handle */
-    ZwClose(hFile);
-
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a section Status=0x%x\n", Status);
         EngFreeMem(pFileView);
-        return NULL;
+        pFileView = NULL;
+        goto cleanup;
     }
+
+    /* Insert the structure into the list */
+    InsertTailList(&gleModulelist, &pFileView->leLink);
+
+cleanup:
+    /* Close the file handle */
+    if (hFile) ZwClose(hFile);
+
+    /* Release module list lock */
+    EngReleaseSemaphore(ghsemModuleList);
 
     return pFileView;
 }
@@ -499,10 +513,10 @@ EngMapModule(
 
     pFileView->cjView = 0;
 
-    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+	/* FIXME: Use system space because ARM3 doesn't support executable sections yet */
     Status = MmMapViewInSystemSpace(pFileView->pSection,
-                                    &pFileView->pvKView,
-                                    &pFileView->cjView);
+                                     &pFileView->pvKView,
+                                     &pFileView->cjView);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to map a section Status=0x%x\n", Status);
@@ -522,19 +536,36 @@ EngFreeModule(
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
-    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
-    Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
-    if (!NT_SUCCESS(Status))
+    /* Acquire module list lock */
+    EngAcquireSemaphore(ghsemModuleList);
+
+    /* Decrement reference count and check if its 0 */
+    if (--pFileView->cRefs == 0)
     {
-        DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
-        ASSERT(FALSE);
+        /* Check if the section was mapped */
+        if (pFileView->pvKView)
+        {
+            /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+            Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
+                ASSERT(FALSE);
+            }
+        }
+
+        /* Dereference the section */
+        ObDereferenceObject(pFileView->pSection);
+
+        /* Remove the entry from the list */
+        RemoveEntryList(&pFileView->leLink);
+
+        /* Free the file view memory */
+        EngFreeMem(pFileView);
     }
 
-    /* Dereference the section */
-    ObDereferenceObject(pFileView->pSection);
-
-    /* Free the file view memory */
-    EngFreeMem(pFileView);
+    /* Release module list lock */
+    EngReleaseSemaphore(ghsemModuleList);
 }
 
 _Success_(return != 0)
@@ -591,9 +622,28 @@ EngMapFontFileFD(
 	_Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
 	_Out_ ULONG *pcjBuf)
 {
-    // www.osr.com/ddk/graphics/gdifncs_0co7.htm
-    UNIMPLEMENTED;
-    return FALSE;
+    PFONTFILEVIEW pffv = (PFONTFILEVIEW)iFile;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    // should be exclusively accessing this file!
+
+    /* Increment reference count and check if its the 1st */
+    if (++pffv->cRefCountFD == 1)
+    {
+        /* Map the file into the address space of CSRSS */
+        Status = MmMapViewOfSection(pffv->pSection,
+                                    gpepCSRSS,
+                                    &pffv->pvViewFD,
+                                    0,
+                                    0,
+                                    NULL,
+                                    &pffv->cjView,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READONLY);
+    }
+
+    return NT_SUCCESS(Status);
 }
 
 VOID
@@ -601,8 +651,17 @@ APIENTRY
 EngUnmapFontFileFD(
     _In_ ULONG_PTR iFile)
 {
-    // http://www.osr.com/ddk/graphics/gdifncs_6wbr.htm
-    UNIMPLEMENTED;
+    PFONTFILEVIEW pffv = (PFONTFILEVIEW)iFile;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    // should be exclusively accessing this file!
+
+    /* Decrement reference count and check if we reached 0 */
+    if (--pffv->cRefCountFD == 0)
+    {
+        /* Unmap the file from the address space of CSRSS */
+        Status = MmUnmapViewOfSection(gpepCSRSS, pffv->pvViewFD);
+    }
 }
 
 __drv_preferredFunction("EngMapFontFileFD", "Obsolete")
