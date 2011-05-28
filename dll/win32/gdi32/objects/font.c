@@ -128,7 +128,7 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
 }
 
 VOID FASTCALL
-NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw)
+NewTextMetricW2A(NEWTEXTMETRICA *tma, const NEWTEXTMETRICW *tmw)
 {
     FONT_TextMetricWToA((TEXTMETRICW *) tmw, (TEXTMETRICA *) tma);
     tma->ntmFlags = tmw->ntmFlags;
@@ -138,168 +138,10 @@ NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw)
 }
 
 VOID FASTCALL
-NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
+NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, const NEWTEXTMETRICEXW *tmw)
 {
     NewTextMetricW2A(&tma->ntmTm, &tmw->ntmTm);
     tma->ntmFontSig = tmw->ntmFontSig;
-}
-
-static int FASTCALL
-IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
-                    BOOL Unicode)
-{
-    int FontFamilyCount;
-    int FontFamilySize;
-    PFONTFAMILYINFO Info;
-    int Ret = 0;
-    int i;
-    ENUMLOGFONTEXA EnumLogFontExA;
-    NEWTEXTMETRICEXA NewTextMetricExA;
-    LOGFONTW lfW;
-
-    Info = RtlAllocateHeap(GetProcessHeap(), 0,
-                           INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO));
-    if (NULL == Info)
-    {
-        return 0;
-    }
-
-    if (!LogFont)
-    {
-        lfW.lfCharSet = DEFAULT_CHARSET;
-        lfW.lfPitchAndFamily = 0;
-        lfW.lfFaceName[0] = 0;
-        LogFont = &lfW;
-    }
-
-    FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, INITIAL_FAMILY_COUNT);
-    if (FontFamilyCount < 0)
-    {
-        RtlFreeHeap(GetProcessHeap(), 0, Info);
-        return 0;
-    }
-    if (INITIAL_FAMILY_COUNT < FontFamilyCount)
-    {
-        FontFamilySize = FontFamilyCount;
-        RtlFreeHeap(GetProcessHeap(), 0, Info);
-        Info = RtlAllocateHeap(GetProcessHeap(), 0,
-                               FontFamilyCount * sizeof(FONTFAMILYINFO));
-        if (NULL == Info)
-        {
-            return 0;
-        }
-        FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, FontFamilySize);
-        if (FontFamilyCount < 0 || FontFamilySize < FontFamilyCount)
-        {
-            RtlFreeHeap(GetProcessHeap(), 0, Info);
-            return 0;
-        }
-    }
-
-    for (i = 0; i < FontFamilyCount; i++)
-    {
-        if (Unicode)
-        {
-            Ret = ((FONTENUMPROCW) EnumProc)(
-                      (VOID*)&Info[i].EnumLogFontEx,
-                      (VOID*)&Info[i].NewTextMetricEx,
-                      Info[i].FontType, lParam);
-        }
-        else
-        {
-            // Could use EnumLogFontExW2A here?
-            LogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
-            WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
-                                (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
-            WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfStyle, -1,
-                                (LPSTR)EnumLogFontExA.elfStyle, LF_FACESIZE, NULL, NULL);
-            WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfScript, -1,
-                                (LPSTR)EnumLogFontExA.elfScript, LF_FACESIZE, NULL, NULL);
-            NewTextMetricExW2A(&NewTextMetricExA,
-                               &Info[i].NewTextMetricEx);
-            Ret = ((FONTENUMPROCA) EnumProc)(
-                      (VOID*)&EnumLogFontExA,
-                      (VOID*)&NewTextMetricExA,
-                      Info[i].FontType, lParam);
-        }
-    }
-
-    RtlFreeHeap(GetProcessHeap(), 0, Info);
-
-    return Ret;
-}
-
-/*
- * @implemented
- */
-int WINAPI
-EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamExProc,
-                    LPARAM lParam, DWORD dwFlags)
-{
-    return IntEnumFontFamilies(hdc, lpLogfont, lpEnumFontFamExProc, lParam, TRUE);
-}
-
-
-/*
- * @implemented
- */
-int WINAPI
-EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
-                  LPARAM lParam)
-{
-    LOGFONTW LogFont;
-
-    ZeroMemory(&LogFont, sizeof(LOGFONTW));
-    LogFont.lfCharSet = DEFAULT_CHARSET;
-    if (NULL != lpszFamily)
-    {
-        if (!*lpszFamily) return 1;
-        lstrcpynW(LogFont.lfFaceName, lpszFamily, LF_FACESIZE);
-    }
-
-    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, TRUE);
-}
-
-
-/*
- * @implemented
- */
-int WINAPI
-EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamExProc,
-                     LPARAM lParam, DWORD dwFlags)
-{
-    LOGFONTW LogFontW, *pLogFontW;
-
-    if (lpLogfont)
-    {
-        LogFontA2W(&LogFontW,lpLogfont);
-        pLogFontW = &LogFontW;
-    }
-    else pLogFontW = NULL;
-
-    /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-    return IntEnumFontFamilies(hdc, pLogFontW, lpEnumFontFamExProc, lParam, FALSE);
-}
-
-
-/*
- * @implemented
- */
-int WINAPI
-EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
-                  LPARAM lParam)
-{
-    LOGFONTW LogFont;
-
-    ZeroMemory(&LogFont, sizeof(LOGFONTW));
-    LogFont.lfCharSet = DEFAULT_CHARSET;
-    if (NULL != lpszFamily)
-    {
-        if (!*lpszFamily) return 1;
-        MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, LogFont.lfFaceName, LF_FACESIZE);
-    }
-
-    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, FALSE);
 }
 
 
@@ -1881,7 +1723,7 @@ EnumFontsA (
 
 INT
 WINAPI
-NewEnumFontFamiliesExW(
+EnumFontFamiliesExW(
     HDC hDC,
     LPLOGFONTW lpLogfont,
     FONTENUMPROCW lpEnumFontFamExProcW,
@@ -1952,3 +1794,96 @@ NewEnumFontFamiliesExW(
 
     return ret;
 }
+
+int
+CALLBACK
+EnumFontFamProcWtoA(
+    const LOGFONTW *plfw,
+    const NEWTEXTMETRICW *pntmw,
+    DWORD FontType,
+    LPARAM lParam)
+{
+    NEWTEXTMETRICA ntma;
+    LOGFONTA lfa;
+    PVOID *ppvParams = (PVOID*)lParam;
+    FONTENUMPROCA lpEnumFontFamProcA = ppvParams[0];
+
+    LogFontW2A(&lfa, plfw);
+    NewTextMetricW2A(&ntma, pntmw);
+
+    return lpEnumFontFamProcA(&lfa, (const TEXTMETRICA*)&ntma, FontType, (LPARAM)ppvParams[1]);
+}
+
+int
+WINAPI
+EnumFontFamiliesW(
+    HDC hdc,
+    LPCWSTR lpszFamily,
+    FONTENUMPROCW lpEnumFontFamProc,
+    LPARAM lParam)
+{
+    LOGFONTW lfw = {0};
+
+    lfw.lfCharSet = DEFAULT_CHARSET;
+    lfw.lfFaceName[0] = 0;
+    lfw.lfPitchAndFamily = 0;
+    if (lpszFamily)
+    {
+        if (!*lpszFamily) return 1;
+        wcsncpy(lfw.lfFaceName, lpszFamily, LF_FACESIZE);
+    }
+
+    return EnumFontFamiliesExW(hdc, &lfw, lpEnumFontFamProc, lParam, 0);
+}
+
+int
+WINAPI
+EnumFontFamiliesExA(
+    HDC hdc,
+    LPLOGFONTA lpLogfont,
+    FONTENUMPROCA lpEnumFontFamExProc,
+    LPARAM lParam,
+    DWORD dwFlags)
+{
+    LOGFONTW LogFontW, *pLogFontW;
+    PVOID apvParams[2];
+
+    apvParams[0] = lpEnumFontFamExProc;
+    apvParams[1] = (PVOID)lParam;
+
+    if (lpLogfont)
+    {
+        LogFontA2W(&LogFontW, lpLogfont);
+        pLogFontW = &LogFontW;
+    }
+    else pLogFontW = NULL;
+
+    return EnumFontFamiliesExW(hdc, pLogFontW, (PVOID)EnumFontFamProcWtoA, (LPARAM)apvParams, dwFlags);
+}
+
+
+int WINAPI
+EnumFontFamiliesA(
+    HDC hdc,
+    LPCSTR lpszFamily,
+    FONTENUMPROCA lpEnumFontFamProc,
+    LPARAM lParam)
+{
+    LOGFONTW lfw = {0};
+    PVOID apvParams[2];
+
+    apvParams[0] = lpEnumFontFamProc;
+    apvParams[1] = (PVOID)lParam;
+
+    lfw.lfCharSet = DEFAULT_CHARSET;
+    lfw.lfFaceName[0] = 0;
+    lfw.lfPitchAndFamily = 0;
+    if (lpszFamily)
+    {
+        if (!*lpszFamily) return 1;
+        MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, lfw.lfFaceName, LF_FACESIZE);
+    }
+
+    return EnumFontFamiliesExW(hdc, &lfw, (PVOID)EnumFontFamProcWtoA, (LPARAM)apvParams, 0);
+}
+
