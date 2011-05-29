@@ -54,7 +54,7 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
                 EM_SETSEL,
                 -1,
                 0);
-
+    PostMessage(GetDlgItem(hDlg, IDC_LICENCEEDIT), WM_VSCROLL, SB_TOP, 0);
     return TRUE;
 }
 
