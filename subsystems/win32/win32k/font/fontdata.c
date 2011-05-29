@@ -77,6 +77,53 @@ NtGdiGetFontUnicodeRanges(
     return 0;
 }
 
+VOID
+NTAPI
+RFONT_vXlateGlpyhs(
+    PRFONT prfnt,
+    ULONG cwc,
+    WCHAR *pwc,
+    HGLYPH *phg,
+    HGLYPH hgDefault)
+{
+    FD_GLYPHSET *pfdg = prfnt->ppfe->pfdg;
+    WCRUN *pwcrun;
+    HGLYPH hg;
+    WCHAR wc;
+    ULONG idx;
+
+    /* Loop all WCHARs */
+    while (cwc--)
+    {
+        wc = *pwc++;
+        hg = hgDefault;
+
+        /* Loop all WCHAR runs */
+        for (pwcrun = &pfdg->awcrun[0];
+             pwcrun < &pfdg->awcrun[pfdg->cRuns];
+             pwcrun++)
+        {
+            /* Check if the char is below the current run */
+            if (wc < pwcrun->wcLow)
+            {
+                /* We couldn't find it, use default */
+                break;
+            }
+
+            /* Calculate index into the current run */
+            idx = wc - pwcrun->wcLow;
+            if (idx < pwcrun->cGlyphs)
+            {
+                hg = pwcrun->phg[idx];
+                break;
+            }
+        }
+
+        *phg++ = hg;
+    }
+}
+
+
 W32KAPI
 DWORD
 APIENTRY
