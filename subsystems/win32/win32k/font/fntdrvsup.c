@@ -58,9 +58,9 @@ DetachCSRSS(KAPC_STATE *pApcState)
     gbAttachedCSRSS = FALSE;
 }
 
-
-ULONG_PTR
-FONTDEV_LoadFontFile(
+static
+HFF
+FONTDEV_hffLoadFontFile(
     PFONTDEV pfntdev,
     ULONG cFiles,
     ULONG_PTR *piFile,
@@ -88,56 +88,70 @@ FONTDEV_LoadFontFile(
 
 }
 
-#if 0
+HFF
+NTAPI
 EngLoadFontFileFD(
-    PPFF ppff,
+    ULONG cFiles,
+    PULONG_PTR piFiles,
+    DESIGNVECTOR *pdv,
+    ULONG ulCheckSum,
+    HDEV *phdev)
 {
     KAPC_STATE ApcState;
-    ULONG_PTR aiFile[FD_MAX_FILES];
     PVOID apvView[FD_MAX_FILES];
     ULONG acjView[FD_MAX_FILES];
-    ULONG ulLangID = 0;
+    ULONG i, ulLangID = 0;
+    PFONTDEV pfntdev;
+    PLIST_ENTRY ple;
     HFF hff = 0;
 
     /* Loop all files */
-    for (i = 0; i < ppff->cFiles; i++)
+    for (i = 0; i < cFiles; i++)
     {
-        /* Setup the file array */
-        aiFile[i] = (ULONG_PTR)ppff->ppfv[i];
-
         /* Map the font file */
-        bResult = EngMapFontFileFD(aiFile[i], &apvView[i], &acjView[i]);
+        if (!EngMapFontFileFD(piFiles[i], (PULONG*)&apvView[i], &acjView[i]))
+        {
+            ASSERT(FALSE);
+        }
     }
 
     /* Attach to CSRSS */
     AttachCSRSS(&ApcState);
 
+    /* Acquire font friver list lock */
+    EngAcquireSemaphore(ghsemFontDriver);
+
     /* Loop all installed font drivers */
-    for (pfntdev = gleFontDriverList.Flink;
-         pfntdev != &gleFontDriverList;
-         pfntdev = pfntdev->leLink.Flink)
+    for (ple = gleFontDriverList.Flink;
+         ple != &gleFontDriverList;
+         ple = ple->Flink)
     {
+        pfntdev = CONTAINING_RECORD(ple, FONTDEV, leLink);
+
         /* Try to load the font file */
-        hff = FONTDEV_LoadFontFile(pfntdev,
-                                   cFiles,
-                                   aiFile,
-                                   apvView,
-                                   acjView,
-                                   pdv,
-                                   ulLangID,
-                                   ppff->ulCheckSum);
+        hff = FONTDEV_hffLoadFontFile(pfntdev,
+                                      cFiles,
+                                      piFiles,
+                                      apvView,
+                                      acjView,
+                                      pdv,
+                                      ulLangID,
+                                      ulCheckSum);
         if (hff)
         {
-            ppff->hff = hff;
+            *phdev = (HDEV)pfntdev;
             break;
         }
     }
 
-    /* Detach from CSRSS */
-    DetachCSRSS(&ApcState)
+    /* Release font friver list lock */
+    EngReleaseSemaphore(ghsemFontDriver);
 
+    /* Detach from CSRSS */
+    DetachCSRSS(&ApcState);
+
+    return hff;
 }
-#endif
 
 BOOL
 EngLoadFontDriver(

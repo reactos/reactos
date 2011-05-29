@@ -32,7 +32,7 @@ ComparePFF(
     for (i = 0; i < cFiles; i++)
     {
         /* Check if the files match */
-        if (pffv[i] != ppff->ppfv[i]) return FALSE;
+        if (pffv[i] != ppff->apffv[i]) return FALSE;
     }
 
     return TRUE;
@@ -41,13 +41,16 @@ ComparePFF(
 PPFF
 NTAPI
 EngLoadFontFile(
+    IN ULONG cFiles,
     IN PWCHAR apwszFiles[],
-    IN ULONG cFiles)
+    IN DESIGNVECTOR *pdv)
 {
     PFONTFILEVIEW apffv[FD_MAX_FILES];
     PLIST_ENTRY ple;
-    PPFF ppff;
-    ULONG i, cjSize;
+    PPFF ppff = NULL;
+    ULONG i, cjSize, ulChecksum = 0;
+    HDEV hdev;
+    HFF hff;
 
     /* Loop the files */
     for (i = 0; i < cFiles; i++)
@@ -79,8 +82,17 @@ EngLoadFontFile(
         }
     }
 
+    /* Load the font with any of the font drivers */
+    hff = EngLoadFontFileFD(cFiles, (PULONG_PTR)apffv, pdv, ulChecksum, &hdev);
+    if (!hff)
+    {
+        DPRINT1("File format is not supported by any font driver\n");
+        while (i--) EngFreeModule(apffv[i]);
+        goto leave;
+    }
+
     /* Allocate a new PFF */
-    cjSize = sizeof(PFF) + cFiles * sizeof(PVOID);
+    cjSize = sizeof(PFF);
     ppff = EngAllocMem(0, cjSize, 'ffpG');
     if (!ppff)
     {
@@ -89,10 +101,11 @@ EngLoadFontFile(
 
     ppff->sizeofThis = cjSize;
     ppff->cFiles = cFiles;
-    ppff->ppfv = (PVOID)(ppff + 1);
+    ppff->hdev = hdev;
+    ppff->hff = hff;
 
     /* Copy the FONTFILEVIEWs */
-    for (i = 0; i < cFiles; i++) ppff->ppfv[i] = apffv[i];
+    for (i = 0; i < cFiles; i++) ppff->apffv[i] = apffv[i];
 
     /* Insert the PFF into the list */
     InsertTailList(&glePFFList, &ppff->leLink);
@@ -186,8 +199,10 @@ NtGdiAddFontResourceW(
     INT iRes = 0;
 
     /* Check parameters */
-    if (cFiles > FD_MAX_FILES || cwc < 3 || cwc > FD_MAX_FILES * MAX_PATH)
+    if (cFiles == 0 || cFiles > FD_MAX_FILES ||
+        cwc < 6 ||  cwc > FD_MAX_FILES * MAX_PATH)
     {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -195,6 +210,7 @@ NtGdiAddFontResourceW(
     pvBuffer = EngAllocMem(0, (cwc + 1) * sizeof(WCHAR), 'pmTG');
     if (!pvBuffer)
     {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
