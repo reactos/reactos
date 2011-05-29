@@ -69,7 +69,7 @@ typedef struct _DCLEVEL
   POINTL            ptlBrushOrigin;
   PBRUSH            pbrFill;
   PBRUSH            pbrLine;
-  PVOID             plfnt; /* LFONTOBJ* (TEXTOBJ*) */
+  struct _LFONT    *plfnt;
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
   LINEATTRS         laPath; /* 0x20 bytes */

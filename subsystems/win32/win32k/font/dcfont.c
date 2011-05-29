@@ -11,6 +11,41 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+HFONT
+DC_hSelectFont(PDC pdc, HFONT hlfntNew)
+{
+    PLFONT plfntNew;
+    HFONT hlfntOld;
+
+    /* Get the current selected font */
+    hlfntOld = pdc->dclevel.plfnt->baseobj.hHmgr;
+
+    /* Check if a new font should be selected */
+    if (hlfntNew !=  hlfntOld)
+    {
+        /* Lock the new font */
+        plfntNew = LFONT_ShareLockFont(hlfntNew);
+        if (plfntNew)
+        {
+            /* Success, dereference the old font */
+            LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+
+            /* Select the new font */
+            pdc->dclevel.plfnt = plfntNew;
+            pdc->pdcattr->hlfntNew = hlfntNew;
+        }
+        else
+        {
+            /* Failed, restore old, return NULL */
+            pdc->pdcattr->hlfntNew = hlfntOld;
+            hlfntOld = NULL;
+        }
+    }
+
+    return hlfntOld;
+}
+
 #if 0
 PRFONT
 NTAPI
@@ -19,28 +54,13 @@ DC_prfnt(PDC pdc)
     PLFONT plfnt;
     PRFONT prfnt;
 
-    /* Check if new font was selected */
-    if (pdc->pdcattr->ulDirty_ & DIRTY_TEXT)
-    {
-        /* Lock the new font */
-        plfnt = LFONT_ShareLockFont(pdc->pdcattr->hlfntNew);
-        if (plfnt)
-        {
-            LFONT_ShareUnlockFont(pdc->dclevel.pFont);
-            pdc->dclevel.pFont = plfnt;
-        }
-        else
-        {
-            // FIXME: test how selecting an invalid font is handled
-            pdc->pdcattr->hlfntNew = pdc->dclevel.pFont;
-        }
-    }
+    /* Select "current" font */
+    DC_hSelectFont(pdc->pdcattr->hlfntNew);
 
     /* Check if font is already realized */
     if (pdc->hlfntCur != pdc->pdcattr->hlfntNew)
     {
-
-        prfnt = LFONT_prfntRealizeFont(pdc->dclevel.pFont);
+        prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt);
 
         /* Dereference the old RFONT */
         RFONT_ShareUnlockFont(pdc->prfnt);
@@ -147,8 +167,22 @@ HFONT
 APIENTRY
 NtGdiSelectFont(
     IN HDC hdc,
-    IN HFONT hf)
+    IN HFONT hlfnt)
 {
-    ASSERT(FALSE);
-    return 0;
+    PDC pdc;
+    HFONT hlfntOld;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return NULL;
+    }
+
+    /* Call the internal function */
+    hlfntOld = DC_hSelectFont(pdc, hlfnt);
+
+    /* Unlock DC and return result */
+    DC_UnlockDc(pdc);
+    return hlfntOld;
 }

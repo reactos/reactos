@@ -12,7 +12,6 @@
 #include <debug.h>
 
 HSEMAPHORE ghsemPFFList;
-PPFF gppffList;
 LIST_ENTRY glePFFList = {&glePFFList, &glePFFList};
 
 
