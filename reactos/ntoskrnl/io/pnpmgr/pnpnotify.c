@@ -23,6 +23,7 @@ typedef struct _PNP_NOTIFY_ENTRY
     PVOID Context;
     UNICODE_STRING Guid;
     PFILE_OBJECT FileObject;
+    PDRIVER_OBJECT DriverObject;
     PDRIVER_NOTIFICATION_CALLBACK_ROUTINE PnpNotificationProc;
 } PNP_NOTIFY_ENTRY, *PPNP_NOTIFY_ENTRY;
 
@@ -319,6 +320,7 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
     Entry->PnpNotificationProc = CallbackRoutine;
     Entry->EventCategory = EventCategory;
     Entry->Context = Context;
+    Entry->DriverObject = DriverObject;
     switch (EventCategory)
     {
         case EventCategoryDeviceInterfaceChange:
@@ -377,9 +379,14 @@ IoUnregisterPlugPlayNotification(IN PVOID NotificationEntry)
     DPRINT("__FUNCTION__(NotificationEntry %p) called\n", Entry);
 
     KeAcquireGuardedMutex(&PnpNotifyListLock);
-    RtlFreeUnicodeString(&Entry->Guid);
     RemoveEntryList(&Entry->PnpNotifyList);
     KeReleaseGuardedMutex(&PnpNotifyListLock);
+
+    RtlFreeUnicodeString(&Entry->Guid);
+
+    ObDereferenceObject(Entry->DriverObject);
+
+    ExFreePoolWithTag(Entry, TAG_PNP_NOTIFY);
 
     return STATUS_SUCCESS;
 }
