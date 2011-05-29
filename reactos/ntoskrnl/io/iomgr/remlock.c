@@ -16,7 +16,7 @@
 
 typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK
 {
-    SINGLE_LIST_ENTRY BlockEntry;
+    PIO_REMOVE_LOCK_TRACKING_BLOCK Next;
     PVOID Tag;
     LARGE_INTEGER LockMoment;
     LPCSTR File;
@@ -114,7 +114,8 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
 
                 /* Queue the block */
                 KeAcquireSpinLock(&(Lock->Dbg.Spin), &OldIrql);
-                PushEntryList((PSINGLE_LIST_ENTRY)&(Lock->Dbg.Blocks), &(TrackingBlock->BlockEntry));
+                TrackingBlock->Next = Lock->Dbg.Blocks;
+                Lock->Dbg.Blocks = TrackingBlock;
                 KeReleaseSpinLock(&(Lock->Dbg.Spin), OldIrql);
             }
         }
@@ -149,8 +150,8 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     LONG LockValue;
     BOOLEAN TagFound;
     LARGE_INTEGER CurrentMoment;
-    PSINGLE_LIST_ENTRY ListEntry;
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
+    PIO_REMOVE_LOCK_TRACKING_BLOCK *TrackingBlockLink;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
 
     /* Check what kind of lock this is */
@@ -164,12 +165,12 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
 
         /* Start browsing tracking blocks to find a block that would match given tag */
         TagFound = FALSE;
-        for (ListEntry = ((PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks)->Next; ListEntry; ListEntry = ListEntry->Next)
+        TrackingBlock = Lock->Dbg.Blocks;
+        TrackingBlockLink = &(Lock->Dbg.Blocks);
+        while (TrackingBlock != NULL)
         {
-            TrackingBlock = CONTAINING_RECORD(ListEntry, IO_REMOVE_LOCK_TRACKING_BLOCK, BlockEntry);
-
             /* First of all, check if the lock was locked for too long */
-            if (CurrentMoment.QuadPart &&
+            if (TrackingBlock->LockMoment.QuadPart &&
                 CurrentMoment.QuadPart - TrackingBlock->LockMoment.QuadPart >  Lock->Dbg.MaxLockedTicks)
             {
                 DPRINT("Lock %#08lx (with tag %#08lx) was supposed to be held at max %I64d ticks but lasted longer\n",
@@ -178,29 +179,23 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
                 ASSERT(FALSE);
             }
 
-            /* If no tracking was found yet */
-            if (TagFound == FALSE)
+            /* Check if this is the first matching tracking block */
+            if ((TagFound == FALSE) && (TrackingBlock->Tag == Tag))
             {
-                /* Check if the current one could match */
-                if (TrackingBlock->Tag == Tag)
-                {
-                    /* Yes, then remove it from the queue and free it */
-                    TagFound = TRUE;
-                    if (ListEntry == ((PSINGLE_LIST_ENTRY)&Lock->Dbg.Blocks)->Next)
-                    {
-                        /* Here it is head, remove it using macro */
-                        PopEntryList((PSINGLE_LIST_ENTRY)&(Lock->Dbg.Blocks));
-                        ExFreePoolWithTag(TrackingBlock, Lock->Dbg.AllocateTag);
-                    }
-                    else
-                    {
-                        /* It's not head, remove it "manually */
-                        ListEntry->Next = TrackingBlock->BlockEntry.Next;
-                        ExFreePoolWithTag(TrackingBlock, Lock->Dbg.AllocateTag);
-                    }
-                }
-             }
+                /* Unlink this tracking block, and free it */
+                TagFound = TRUE;
+                *TrackingBlockLink = TrackingBlock->Next;
+                ExFreePoolWithTag(TrackingBlock, Lock->Dbg.AllocateTag);
+                TrackingBlock = *TrackingBlockLink;
+            }
+            else
+            {
+                /* Go to the next tracking block */
+                TrackingBlockLink = &(TrackingBlock->Next);
+                TrackingBlock = TrackingBlock->Next;
+            }
         }
+
         /* We're done, release queue lock */
         KeReleaseSpinLock(&(Lock->Dbg.Spin), OldIrql);
 
@@ -271,7 +266,7 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
         ASSERT(Lock->Dbg.Blocks);
 
         /* Get it */
-        TrackingBlock = CONTAINING_RECORD(Lock->Dbg.Blocks, IO_REMOVE_LOCK_TRACKING_BLOCK, BlockEntry);
+        TrackingBlock = Lock->Dbg.Blocks;
         /* Tag should match */
         if (TrackingBlock->Tag != Tag)
         {
