@@ -59,7 +59,7 @@ NtGdiGetTextMetricsW(
 
     /* Unlock the DC and return */
     DC_UnlockDc(pdc);
-    return bResult;;
+    return bResult;
 }
 
 W32KAPI
