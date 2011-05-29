@@ -16,11 +16,50 @@ BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     IN HDC hdc,
-    OUT TMW_INTERNAL * ptm,
+    OUT TMW_INTERNAL *ptmwi,
     IN ULONG cj)
 {
-    ASSERT(FALSE);
-    return FALSE;
+    PDC pdc;
+    PRFONT prfnt;
+    PIFIMETRICS pifi;
+    BOOL bResult = TRUE;
+
+    /* verify that the buffer is large enough */
+    if (cj < sizeof(TMW_INTERNAL)) return FALSE;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return FALSE;
+    }
+
+    /* Get pointer to RFONT and IFI */
+    prfnt = DC_prfnt(pdc);
+    pifi = prfnt->ppfe->pifi;
+
+    /* Enter SEH for buffer copy */
+    _SEH2_TRY
+    {
+        /* Probe and fill TMW_INTERNAL */
+        ProbeForWrite(ptmwi, cj, 1);
+        RtlCopyMemory(&ptmwi->TextMetric, prfnt->ptmw, sizeof(TEXTMETRICW));
+        ptmwi->Diff.cjotma = 0; // FIXME: what is this?
+        ptmwi->Diff.chFirst = pifi->chFirstChar;
+        ptmwi->Diff.chLast = pifi->chLastChar;
+        ptmwi->Diff.ChDefault = pifi->chDefaultChar;
+        ptmwi->Diff.ChBreak = pifi->chBreakChar;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        bResult = FALSE;
+    }
+    _SEH2_END
+
+    /* Unlock the DC and return */
+    DC_UnlockDc(pdc);
+    return bResult;;
 }
 
 W32KAPI
