@@ -299,7 +299,7 @@ CUSBRequest::InitializeWithIrp(
                     m_TransferBufferMDL = Urb->UrbIsochronousTransfer.TransferBufferMDL;
                 }
             }
-
+ 
             //
             // save buffer length
             //
@@ -656,13 +656,12 @@ CUSBRequest::BuildIsochronousEndpoint(
 {
     POHCI_ISO_TD FirstDescriptor, PreviousDescriptor = NULL, CurrentDescriptor;
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
-    ULONG Index = 0, SubIndex, NumberOfPackets, PageOffset;
+    ULONG Index = 0, SubIndex, NumberOfPackets, PageOffset, Page;
     NTSTATUS Status;
     PVOID Buffer;
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
 
-    DPRINT1("cp\n");
     //
     // get current irp stack location
     //
@@ -690,23 +689,27 @@ CUSBRequest::BuildIsochronousEndpoint(
         //
         // failed to create setup descriptor
         //
+        ASSERT(FALSE);
         return Status;
     }
-    DPRINT1("cp\n");
+
     //
     // get buffer
     //
     Buffer = MmGetSystemAddressForMdlSafe(m_TransferBufferMDL, NormalPagePriority);
     ASSERT(Buffer);
 
-    DPRINT1("cp\n");
+    //
+    // FIXME: support requests which spans serveral pages
+    //
+    ASSERT(ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(m_TransferBufferMDL), MmGetMdlByteCount(m_TransferBufferMDL)) <= 2);
+
     while(Index < Urb->UrbIsochronousTransfer.NumberOfPackets)
     {
         //
         // get number of packets remaining
         //
         NumberOfPackets = min(Urb->UrbIsochronousTransfer.NumberOfPackets - Index, OHCI_ITD_NOFFSET);
-    DPRINT1("cp Number Packets %lu\n", NumberOfPackets);
         //
         // allocate iso descriptor
         //
@@ -720,23 +723,29 @@ CUSBRequest::BuildIsochronousEndpoint(
             ASSERT(FALSE);
             return Status;
         }
-    DPRINT1("cp\n");
+
         //
-        // initialize descriptor
+        // get physical page
         //
-        CurrentDescriptor->BufferPhysical = (MmGetPhysicalAddress(Buffer).LowPart & ~ (PAGE_SIZE - 1));
+        Page = MmGetPhysicalAddress(Buffer).LowPart;
 
         //
         // get page offset
         //
-        PageOffset = BYTE_OFFSET(MmGetPhysicalAddress(Buffer).LowPart);
-    DPRINT1("cp\n");
+        PageOffset = MmGetMdlByteOffset(m_TransferBufferMDL);
+
+        //
+        // initialize descriptor
+        //
+        CurrentDescriptor->BufferPhysical = Page - PageOffset;
+
         for(SubIndex = 0; SubIndex < NumberOfPackets; SubIndex++)
         {
             //
             // store buffer offset
             //
-            CurrentDescriptor->Offset[SubIndex] = Urb->UrbIsochronousTransfer.IsoPacket[Index].Offset + PageOffset;
+            CurrentDescriptor->Offset[SubIndex] = Urb->UrbIsochronousTransfer.IsoPacket[Index+SubIndex].Offset + PageOffset;
+            DPRINT1("Index %lu PacketOffset %lu FinalOffset %lu\n", SubIndex+Index, Urb->UrbIsochronousTransfer.IsoPacket[Index+SubIndex].Offset, CurrentDescriptor->Offset[SubIndex]);
         }
 
         //
@@ -752,19 +761,14 @@ CUSBRequest::BuildIsochronousEndpoint(
             //
             // end of transfer
             //
-            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + m_TransferBufferLength - 1;
+            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + PageOffset + m_TransferBufferLength - 1;
         }
         else
         {
             //
             // use start address of next packet - 1
             //
-            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + PageOffset + Urb->UrbIsochronousTransfer.IsoPacket[Index + 1].Offset - 1;
-
-            //
-            // move buffer to next address
-            //
-            Buffer = (PVOID)((ULONG_PTR)Buffer + Urb->UrbIsochronousTransfer.IsoPacket[Index + 1].Offset);
+            CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + PageOffset + Urb->UrbIsochronousTransfer.IsoPacket[Index].Offset - 1;
         }
 
         //
@@ -790,8 +794,13 @@ CUSBRequest::BuildIsochronousEndpoint(
         // store as previous descriptor
         //
         PreviousDescriptor = CurrentDescriptor;
+        DPRINT1("Current Descriptor %p Logical %lx StartAddress %x EndAddress %x\n", CurrentDescriptor, CurrentDescriptor->PhysicalAddress.LowPart, CurrentDescriptor->BufferPhysical, CurrentDescriptor->LastPhysicalByteAddress);
+
+    //
+    // fire interrupt as soon transfer is finished
+    //
+    CurrentDescriptor->Flags |= OHCI_TD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_IMMEDIATE);
     }
-    DPRINT1("cp\n");
 
     //
     // clear interrupt mask for last transfer descriptor
@@ -814,7 +823,7 @@ CUSBRequest::BuildIsochronousEndpoint(
     EndpointDescriptor->HeadPhysicalDescriptor = FirstDescriptor->PhysicalAddress.LowPart;
     EndpointDescriptor->TailPhysicalDescriptor = CurrentDescriptor->PhysicalAddress.LowPart;
     EndpointDescriptor->HeadLogicalDescriptor = FirstDescriptor;
-    DPRINT1("cp\n");
+
     //
     // store result
     //
@@ -1451,48 +1460,95 @@ CUSBRequest::FreeEndpointDescriptor(
     struct _OHCI_ENDPOINT_DESCRIPTOR * OutDescriptor)
 {
     POHCI_GENERAL_TD TransferDescriptor, NextTransferDescriptor;
+    POHCI_ISO_TD IsoTransferDescriptor, IsoNextTransferDescriptor;
+    ULONG Index, PacketCount;
 
     DPRINT("CUSBRequest::FreeEndpointDescriptor EndpointDescriptor %p Logical %x\n", OutDescriptor, OutDescriptor->PhysicalAddress.LowPart);
 
-    //
-    // get first general transfer descriptor
-    //
-    TransferDescriptor = (POHCI_GENERAL_TD)OutDescriptor->HeadLogicalDescriptor;
-
-    //
-    // release endpoint descriptor
-    //
-    m_DmaManager->Release(OutDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
-
-    while(TransferDescriptor)
+    if (OutDescriptor->Flags & OHCI_ENDPOINT_ISOCHRONOUS_FORMAT)
     {
         //
-        // get next
+        // get first iso transfer descriptor
         //
-        NextTransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
+        IsoTransferDescriptor = (POHCI_ISO_TD)OutDescriptor->HeadLogicalDescriptor;
 
         //
-        // is there a buffer associated
+        // release endpoint descriptor
         //
-        if (TransferDescriptor->BufferSize)
+        m_DmaManager->Release(OutDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
+
+        while(IsoTransferDescriptor)
         {
             //
-            // release buffer
+            // get next
             //
-            m_DmaManager->Release(TransferDescriptor->BufferLogical, TransferDescriptor->BufferSize);
+            IsoNextTransferDescriptor = IsoTransferDescriptor->NextLogicalDescriptor;
+
+            //
+            // get packet count
+            //
+            PacketCount = OHCI_ITD_GET_FRAME_COUNT(IsoTransferDescriptor->Flags);
+
+            DPRINT1("CUSBRequest::FreeEndpointDescriptor Descriptor %p Logical %x Buffer Physical %x EndAddress %x PacketCount %lu\n", IsoTransferDescriptor, IsoTransferDescriptor->PhysicalAddress.LowPart, IsoTransferDescriptor->BufferPhysical, IsoTransferDescriptor->LastPhysicalByteAddress, PacketCount);
+
+            for(Index = 0; Index < PacketCount; Index++)
+            {
+                DPRINT1("PSW Index %lu Value %x\n", Index, IsoTransferDescriptor->Offset[Index]);
+            }
+
+            //
+            // release descriptor
+            //
+            m_DmaManager->Release(IsoTransferDescriptor, sizeof(OHCI_ISO_TD));
+
+            //
+            // move to next
+            //
+            IsoTransferDescriptor = IsoNextTransferDescriptor;
         }
+    }
+    else
+    {
+        //
+        // get first general transfer descriptor
+        //
+        TransferDescriptor = (POHCI_GENERAL_TD)OutDescriptor->HeadLogicalDescriptor;
 
-        DPRINT("CUSBRequest::FreeEndpointDescriptor Descriptor %p Logical %x Buffer Physical %x EndAddress %x\n", TransferDescriptor, TransferDescriptor->PhysicalAddress.LowPart, TransferDescriptor->BufferPhysical, TransferDescriptor->LastPhysicalByteAddress);
+        //
+        // release endpoint descriptor
+        //
+        m_DmaManager->Release(OutDescriptor, sizeof(OHCI_ENDPOINT_DESCRIPTOR));
 
-        //
-        // release descriptor
-        //
-        m_DmaManager->Release(TransferDescriptor, sizeof(OHCI_GENERAL_TD));
+        while(TransferDescriptor)
+        {
+            //
+            // get next
+            //
+            NextTransferDescriptor = (POHCI_GENERAL_TD)TransferDescriptor->NextLogicalDescriptor;
 
-        //
-        // move to next
-        //
-        TransferDescriptor = NextTransferDescriptor;
+            //
+            // is there a buffer associated
+            //
+            if (TransferDescriptor->BufferSize)
+            {
+                //
+                // release buffer
+                //
+                m_DmaManager->Release(TransferDescriptor->BufferLogical, TransferDescriptor->BufferSize);
+            }
+
+            DPRINT("CUSBRequest::FreeEndpointDescriptor Descriptor %p Logical %x Buffer Physical %x EndAddress %x\n", TransferDescriptor, TransferDescriptor->PhysicalAddress.LowPart, TransferDescriptor->BufferPhysical, TransferDescriptor->LastPhysicalByteAddress);
+
+            //
+            // release descriptor
+            //
+            m_DmaManager->Release(TransferDescriptor, sizeof(OHCI_GENERAL_TD));
+
+            //
+            // move to next
+            //
+            TransferDescriptor = NextTransferDescriptor;
+        }
     }
 
 }

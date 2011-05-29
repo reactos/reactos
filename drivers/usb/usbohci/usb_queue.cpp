@@ -43,8 +43,10 @@ public:
 
     // local functions
     BOOLEAN IsTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
+    BOOLEAN IsTransferDescriptorInIsoEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress);
     NTSTATUS FindTransferDescriptorInEndpoint(IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
     NTSTATUS FindTransferDescriptorInInterruptHeadEndpoints(IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
+    NTSTATUS FindTransferDescriptorInIsochronousHeadEndpoints(IN ULONG TransferDescriptorLogicalAddress, OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor);
 
     VOID CleanupEndpointDescriptor(POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, POHCI_ENDPOINT_DESCRIPTOR PreviousEndpointDescriptor);
     POHCI_ENDPOINT_DESCRIPTOR FindInterruptEndpointDescriptor(UCHAR InterruptInterval);
@@ -101,6 +103,8 @@ CUSBQueue::Initialize(
     //
     Hardware->GetControlHeadEndpointDescriptor(&m_ControlHeadEndpointDescriptor);
 
+    //
+    // get isochronous endpoint
     //
     Hardware->GetIsochronousHeadEndpointDescriptor(&m_IsoHeadEndpointDescriptor);
 
@@ -170,6 +174,7 @@ CUSBQueue::AddUSBRequest(
     POHCI_ENDPOINT_DESCRIPTOR Descriptor;
     POHCI_ISO_TD CurrentDescriptor;
     ULONG FrameNumber;
+    USHORT Frame;
 
     DPRINT("CUSBQueue::AddUSBRequest\n");
 
@@ -244,9 +249,9 @@ CUSBQueue::AddUSBRequest(
         m_Hardware->GetCurrentFrameNumber(&FrameNumber);
 
         //
-        // increment frame number
+        // FIXME: increment frame number
         //
-        FrameNumber++;
+        FrameNumber += 300; 
 
         //
         // apply frame number to iso transfer descriptors
@@ -254,18 +259,19 @@ CUSBQueue::AddUSBRequest(
         CurrentDescriptor = (POHCI_ISO_TD)Descriptor->HeadLogicalDescriptor;
 
         DPRINT1("ISO: NextFrameNumber %x\n", FrameNumber);
+        Frame = (FrameNumber & 0xFFFF);
 
         while(CurrentDescriptor)
         {
             //
             // set current frame number
             //
-            CurrentDescriptor->Flags |= OHCI_ITD_SET_STARTING_FRAME(FrameNumber);
+            CurrentDescriptor->Flags |= OHCI_ITD_SET_STARTING_FRAME(Frame);
 
             //
             // move to next frame number
             //
-            FrameNumber++;
+            Frame += OHCI_ITD_GET_FRAME_COUNT(CurrentDescriptor->Flags);
 
             //
             // move to next descriptor
@@ -275,14 +281,14 @@ CUSBQueue::AddUSBRequest(
     }
 
     //
-    // insert endpoint at end
-    //
-    LinkEndpoint(HeadDescriptor, Descriptor);
-
-    //
     // set descriptor active
     //
     Descriptor->Flags &= ~OHCI_ENDPOINT_SKIP;
+
+    //
+    // insert endpoint at end
+    //
+    LinkEndpoint(HeadDescriptor, Descriptor);
 
     if (Type == USB_ENDPOINT_TYPE_CONTROL || Type == USB_ENDPOINT_TYPE_BULK)
     {
@@ -402,6 +408,97 @@ CUSBQueue::FindTransferDescriptorInInterruptHeadEndpoints(IN ULONG TransferDescr
     return STATUS_NOT_FOUND;
 }
 
+NTSTATUS
+CUSBQueue::FindTransferDescriptorInIsochronousHeadEndpoints(
+    IN ULONG TransferDescriptorLogicalAddress, 
+    OUT POHCI_ENDPOINT_DESCRIPTOR *OutEndpointDescriptor, 
+    OUT POHCI_ENDPOINT_DESCRIPTOR *OutPreviousEndpointDescriptor)
+{
+    POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+    POHCI_ENDPOINT_DESCRIPTOR LastDescriptor = m_IsoHeadEndpointDescriptor;
+
+
+    //
+    // skip first endpoint head
+    //
+    EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)m_IsoHeadEndpointDescriptor->NextDescriptor;
+
+    while(EndpointDescriptor)
+    {
+        //
+        // check if the transfer descriptor is inside the list
+        //
+        if (IsTransferDescriptorInIsoEndpoint(EndpointDescriptor, TransferDescriptorLogicalAddress))
+        {
+            //
+            // found endpoint
+            //
+            *OutEndpointDescriptor = EndpointDescriptor;
+            *OutPreviousEndpointDescriptor = LastDescriptor;
+
+            //
+            // done
+            //
+            return STATUS_SUCCESS;
+        }
+
+        //
+        // store last endpoint
+        //
+        LastDescriptor = EndpointDescriptor;
+
+        //
+        // move to next
+        //
+        EndpointDescriptor = (POHCI_ENDPOINT_DESCRIPTOR)EndpointDescriptor->NextDescriptor;
+    }
+
+    //
+    // failed to endpoint
+    //
+    return STATUS_NOT_FOUND;
+}
+
+BOOLEAN
+CUSBQueue::IsTransferDescriptorInIsoEndpoint(
+    IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
+    IN ULONG TransferDescriptorLogicalAddress)
+{
+    POHCI_ISO_TD Descriptor;
+
+    //
+    // get first general transfer descriptor
+    //
+    Descriptor = (POHCI_ISO_TD)EndpointDescriptor->HeadLogicalDescriptor;
+
+    //
+    // sanity check
+    //
+    ASSERT(Descriptor);
+
+    do
+    {
+        if (Descriptor->PhysicalAddress.LowPart == TransferDescriptorLogicalAddress)
+        {
+            //
+            // found descriptor
+            //
+            return TRUE;
+        }
+
+        //
+        // move to next
+        //
+        Descriptor = (POHCI_ISO_TD)Descriptor->NextLogicalDescriptor;
+    }while(Descriptor);
+
+    //
+    // no descriptor found
+    //
+    return FALSE;
+}
+
+
 BOOLEAN
 CUSBQueue::IsTransferDescriptorInEndpoint(
     IN POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor,
@@ -476,6 +573,8 @@ CUSBQueue::CleanupEndpointDescriptor(
     //
     //ASSERT(Request->IsRequestComplete());
 
+    Request->FreeEndpointDescriptor(EndpointDescriptor);
+
     //
     // release request
     //
@@ -511,7 +610,7 @@ CUSBQueue::TransferDescriptorCompletionCallback(
     POHCI_ENDPOINT_DESCRIPTOR EndpointDescriptor, PreviousEndpointDescriptor;
     NTSTATUS Status;
 
-    DPRINT("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
+    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback transfer descriptor %x\n", TransferDescriptorLogicalAddress);
 
     //
     // find transfer descriptor in control list
@@ -564,13 +663,30 @@ CUSBQueue::TransferDescriptorCompletionCallback(
         return;
     }
 
+    //
+    // last try: find the descriptor in isochronous list
+    //
+    Status = FindTransferDescriptorInIsochronousHeadEndpoints(TransferDescriptorLogicalAddress, &EndpointDescriptor, &PreviousEndpointDescriptor);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // cleanup endpoint
+        //
+        DPRINT1("ISO endpoint complete\n");
+ASSERT(FALSE);
+        CleanupEndpointDescriptor(EndpointDescriptor, PreviousEndpointDescriptor);
+
+        //
+        // done
+        //
+        return;
+    }
 
     //
     // hardware reported dead endpoint completed
     //
-    DPRINT("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
+    DPRINT1("CUSBQueue::TransferDescriptorCompletionCallback invalid transfer descriptor %x\n", TransferDescriptorLogicalAddress);
     ASSERT(FALSE);
-
 }
 
 POHCI_ENDPOINT_DESCRIPTOR

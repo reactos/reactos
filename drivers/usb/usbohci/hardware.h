@@ -310,12 +310,21 @@ typedef struct _OHCI_ISO_TD_
     ULONG BufferPhysical;                       // Physical page number of byte 0
     ULONG NextPhysicalDescriptor;               // Next isochronous transfer descriptor
     ULONG LastPhysicalByteAddress;              // Physical buffer end
-    ULONG Offset[OHCI_ITD_NOFFSET];             // Buffer offsets
+    USHORT Offset[OHCI_ITD_NOFFSET];             // Buffer offsets
 
     // Software part
     PHYSICAL_ADDRESS PhysicalAddress;             // Physical address of this descriptor
     struct _OHCI_ISO_TD_ * NextLogicalDescriptor; // Logical pointer next descriptor
 }OHCI_ISO_TD, *POHCI_ISO_TD;
+
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, Flags) == 0);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, BufferPhysical) == 4);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, NextPhysicalDescriptor) == 8);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, LastPhysicalByteAddress) == 12);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, Offset) == 16);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, PhysicalAddress) == 32);
+C_ASSERT(FIELD_OFFSET(OHCI_ISO_TD, NextLogicalDescriptor) == 40);
+C_ASSERT(sizeof(OHCI_ISO_TD) == 48);
 
 #define OHCI_ITD_GET_STARTING_FRAME(x)          ((x) & 0x0000ffff)
 #define OHCI_ITD_SET_STARTING_FRAME(x)          ((x) & 0xffff)
