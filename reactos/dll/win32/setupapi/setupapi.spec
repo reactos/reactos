@@ -184,8 +184,8 @@
 @ stdcall CM_Request_Eject_PC_Ex(long)
 @ stdcall CM_Run_Detection(long)
 @ stdcall CM_Run_Detection_Ex(long long)
-@ stub CM_Set_Class_Registry_PropertyA
-@ stub CM_Set_Class_Registry_PropertyW
+@ stdcall CM_Set_Class_Registry_PropertyA(ptr long ptr long long ptr)
+@ stdcall CM_Set_Class_Registry_PropertyW(ptr long ptr long long ptr)
 @ stdcall CM_Set_DevNode_Problem(long long long)
 @ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
 @ stdcall CM_Set_DevNode_Registry_PropertyA(long long ptr long long)
