@@ -196,10 +196,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
      pLogonID, pAuthData, pGetKeyFn, pGetKeyArgument, phCredential, ptsExpiry);
 
     if (pGetKeyFn || pGetKeyArgument)
-    {
         WARN("msdn says these should always be null!\n");
-        return ret;
-    }
 
     //initialize to null
     RtlInitUnicodeString(&username, NULL);
@@ -224,13 +221,13 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         if(auth_data->User)
         {
-            int len = auth_data->UserLength;
-            username.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            int len = auth_data->UserLength * sizeof(WCHAR);
+            username.Buffer = NtlmAllocate(len+sizeof(WCHAR));
             if(username.Buffer)
             {
-                username.MaximumLength = username.Length = len+1;
-                memcpy(username.Buffer, auth_data->User, len* sizeof(WCHAR));
-                username.Buffer[len+1] = L'\0';
+                username.MaximumLength = username.Length = len;
+                memcpy(username.Buffer, auth_data->User, len);
+                username.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
             }
             else
                 return SEC_E_INSUFFICIENT_MEMORY;
@@ -238,13 +235,13 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         if(auth_data->Password)
         {
-            int len = auth_data->PasswordLength;
-            password.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            int len = auth_data->PasswordLength * sizeof(WCHAR);
+            password.Buffer = NtlmAllocate(len+sizeof(WCHAR));
             if(password.Buffer)
             {
-                password.MaximumLength = password.Length = len+1;
-                memcpy(password.Buffer, auth_data->Password, len* sizeof(WCHAR));
-                password.Buffer[len+1] = L'\0';
+                password.MaximumLength = password.Length = len;
+                memcpy(password.Buffer, auth_data->Password, len);
+                password.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
             }
             else
                 return SEC_E_INSUFFICIENT_MEMORY;
@@ -252,13 +249,13 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         if(auth_data->Domain)
         {
-            int len = auth_data->DomainLength;
-            domain.Buffer = NtlmAllocate((len+1) * sizeof(WCHAR));
+            int len = auth_data->DomainLength * sizeof(WCHAR);
+            domain.Buffer = NtlmAllocate(len+sizeof(WCHAR));
             if(domain.Buffer)
             {
-                domain.MaximumLength = domain.Length = len+1;
-                memcpy(domain.Buffer, auth_data->Domain, len* sizeof(WCHAR));
-                domain.Buffer[len+1] = L'\0';
+                domain.MaximumLength = domain.Length = len;
+                memcpy(domain.Buffer, auth_data->Domain, len);
+                domain.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
             }
             else
                 return SEC_E_INSUFFICIENT_MEMORY;
@@ -292,7 +289,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         if(password.Buffer != NULL)
         {
-            NtlmProtectMemory(password.Buffer, password.Length * sizeof(WCHAR));
+            NtlmProtectMemory(password.Buffer, password.Length);
             cred->Password = password;
         }
 

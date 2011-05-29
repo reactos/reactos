@@ -112,7 +112,7 @@ KXKEY(ULONG flags,
       const PUCHAR session_base_key,
       const PUCHAR lm_challenge_resonse,
       const PUCHAR server_challenge,
-      PUCHAR  key_exchange_key)
+      PUCHAR key_exchange_key)
 {
     /* fix me */
     memcpy(key_exchange_key, session_base_key, 16);
