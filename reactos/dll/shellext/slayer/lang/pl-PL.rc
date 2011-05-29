@@ -1,33 +1,36 @@
-// Polish resources by Sebastian Gasiorek (2005-07-10)
+/*
+ *      translated by Sebastian Gasiorek
+ *      UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_SLAYERSHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ZgodnoúÊ"
+CAPTION "Zgodno≈õƒá"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Jeøeli masz problemy z uruchamianiem tego programu w ReactOS, wybierz system operacyjny, ktÛry ReactOS powinien zg≥aszaÊ aplikacji.", -1, 7,7,210,31
-  GROUPBOX "Tryb zgodnoúci", IDC_COMPATGROUP, 7,41,210,49
-  CHECKBOX "Uruchom ten program w trybie zgodnoúci z:", IDC_CHKRUNCOMPATIBILITY, 18,57,188,10, BS_AUTOCHECKBOX | WS_TABSTOP
+  LTEXT "Je≈ºeli masz problemy z uruchamianiem tego programu w ReactOS, wybierz system operacyjny, kt√≥ry ReactOS powinien zg≈Çaszaƒá aplikacji.", -1, 7,7,210,31
+  GROUPBOX "Tryb zgodno≈õci", IDC_COMPATGROUP, 7,41,210,49
+  CHECKBOX "Uruchom ten program w trybie zgodno≈õci z:", IDC_CHKRUNCOMPATIBILITY, 18,57,188,10, BS_AUTOCHECKBOX | WS_TABSTOP
   COMBOBOX IDC_COMPATIBILITYMODE, 18,70,188,85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
   GROUPBOX "Ustawienia ekranu", -1, 7,99,210,61, BS_GROUPBOX | WS_DISABLED
   CHECKBOX "Uruchom w 256 kolorach", IDC_CHKRUNIN256COLORS, 18,114,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  CHECKBOX "Uruchom w rozdzielczoúci ekranu 640x480", IDC_CHKRUNIN640480RES, 18,129,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  CHECKBOX "Wy≥πcz kompozycje wizualne", IDC_CHKDISABLEVISUALTHEMES, 18,144,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  PUSHBUTTON "E&dytuj tryby zgodnoúci...", IDC_EDITCOMPATIBILITYMODES, 117,167,100,15
-  /* CONTROL "Dowiedz siÍ wiÍcej o <A>zgodnoúci programÛw</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7,207,210,10, WS_EX_NOPARENTNOTIFY */
+  CHECKBOX "Uruchom w rozdzielczo≈õci ekranu 640x480", IDC_CHKRUNIN640480RES, 18,129,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+  CHECKBOX "Wy≈ÇƒÖcz kompozycje wizualne", IDC_CHKDISABLEVISUALTHEMES, 18,144,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+  PUSHBUTTON "E&dytuj tryby zgodno≈õci...", IDC_EDITCOMPATIBILITYMODES, 117,167,100,15
+  /* CONTROL "Dowiedz siƒô wiƒôcej o <A>zgodno≈õci program√≥w</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7,207,210,10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edycja trybÛw zgodnoúci"
+CAPTION "Edycja tryb√≥w zgodno≈õci"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LISTBOX IDC_COMPATIBILITYMODE, 9,6,148,108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
   PUSHBUTTON "&Dodaj...", IDC_ADD, 162,6,60,14, WS_DISABLED
   PUSHBUTTON "&Edytuj...", IDC_EDIT, 162,24,60,14, WS_DISABLED
-  PUSHBUTTON "&UsuÒ", IDC_DELETE, 162,42,60,14, WS_DISABLED
+  PUSHBUTTON "&Usu≈Ñ", IDC_DELETE, 162,42,60,14, WS_DISABLED
   PUSHBUTTON "&OK", IDOK, 95,116,60,14
   PUSHBUTTON "&Anuluj", IDCANCEL, 162,116,60,14
 END
@@ -35,6 +38,6 @@ END
 STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
-  IDS_DESCRIPTION "Application Compatibility Layer Shell Extension"
+  IDS_DESCRIPTION "Warstwa kompatybilno≈õci program√≥w w pow≈Çoce systemu ReactOS"
 END
 

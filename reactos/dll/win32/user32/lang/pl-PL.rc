@@ -1,4 +1,7 @@
-//Polish translation by Sebastian Gasiorek
+/*
+ *      translated by Sebastian Gasiorek
+ *      UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -32,7 +35,7 @@ BEGIN
     MENUITEM "&Wytnij", WM_CUT
     MENUITEM "&Kopiuj", WM_COPY
     MENUITEM "Wkl&ej", WM_PASTE
-    MENUITEM "&Usuñ", WM_CLEAR
+    MENUITEM "&Usuń", WM_CLEAR
     MENUITEM SEPARATOR
     MENUITEM "Zaznacz w&szystko", EM_SETSEL
   END
@@ -41,8 +44,8 @@ END
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Przywróæ", 61728
-  MENUITEM "Prz&enieœ", 61456
+  MENUITEM "&Przywróć", 61728
+  MENUITEM "Prz&enieś", 61456
   MENUITEM "&Rozmiar", 61440
   MENUITEM "&Minimalizuj", 61472
   MENUITEM "Mak&symalizuj", 61488
@@ -57,22 +60,20 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_ERROR,    "B³¹d"
+  IDS_ERROR,    "Błąd"
   IDS_OK,       "OK"
   IDS_CANCEL,   "Anuluj"
   IDS_ABORT,    "&Przerwij"
-  IDS_RETRY,    "&Ponów próbê"
+  IDS_RETRY,    "&Ponów próbę"
   IDS_IGNORE,   "&Ignoruj"
   IDS_YES,      "&Tak"
   IDS_NO,       "&Nie"
   IDS_HELP,     "Pomoc"
-  IDS_TRYAGAIN, "&Ponów próbê"
+  IDS_TRYAGAIN, "&Ponów próbę"
   IDS_CONTINUE, "&Kontynuuj"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Wiêcej okien..."
+  IDS_MDI_MOREWINDOWS, "&Więcej okien..."
 END
-
-

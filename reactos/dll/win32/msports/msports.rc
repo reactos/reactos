@@ -9,3 +9,7 @@
 
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "lang/pl-PL.rc"

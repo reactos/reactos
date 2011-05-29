@@ -284,7 +284,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_PAINT      "MSPaint.lnk"
 	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
