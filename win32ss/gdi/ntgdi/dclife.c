@@ -320,7 +320,9 @@ DC_vInitDc(
 //	pdc->dclevel.ca =
 
 	/* Setup font data */
-    pdc->hlfntCur = NULL; // FIXME: 2f0a0cf8
+    pdc->dcattr.hlfntNew = StockObjects[SYSTEM_FONT];
+    pdc->hlfntCur = NULL;
+    pdc->dclevel.plfnt = (PVOID)GDIOBJ_ReferenceObjectByHandle(pdc->dcattr.hlfntNew, GDIObjType_LFONT_TYPE); // LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
     pdc->pPFFList = NULL;
     pdc->flSimulationFlags = 0;
     pdc->lEscapement = 0;
@@ -332,8 +334,6 @@ DC_vInitDc(
 	pdc->dcattr.lRelAbs = 1;
 	pdc->dcattr.lBreakExtra = 0;
 	pdc->dcattr.cBreak = 0;
-    pdc->dcattr.hlfntNew = StockObjects[SYSTEM_FONT];
-    pdc->dclevel.plfnt = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
 
     /* Other stuff */
     pdc->hdcNext = NULL;

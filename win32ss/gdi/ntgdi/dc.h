@@ -228,7 +228,7 @@ DC_LockDc(HDC hdc)
                (GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_ALTDC_TYPE));
         ASSERT(pdc->dclevel.plfnt != NULL);
         ASSERT(GDI_HANDLE_GET_TYPE(((POBJ)pdc->dclevel.plfnt)->hHmgr) == GDILoObjType_LO_FONT_TYPE);
-    }
+}
 
     return pdc;
 }
