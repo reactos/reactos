@@ -58,3 +58,4 @@ if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
+add_dependencies(msvcrtex psdk)
