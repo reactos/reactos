@@ -730,14 +730,17 @@ DWORD PNP_GetDeviceRegProp(
                                   pulRegDataType,
                                   Buffer,
                                   pulLength);
-        if (lError == ERROR_MORE_DATA)
+        if (lError != ERROR_SUCCESS)
         {
-            ret = CR_BUFFER_SMALL;
-        }
-        else
-        {
-            *pulLength = 0;
-            ret = CR_NO_SUCH_VALUE;
+            if (lError == ERROR_MORE_DATA)
+            {
+                ret = CR_BUFFER_SMALL;
+            }
+            else
+            {
+                *pulLength = 0;
+                ret = CR_NO_SUCH_VALUE;
+            }
         }
     }
     else
@@ -827,7 +830,7 @@ DWORD PNP_GetDeviceRegProp(
     }
 
 done:;
-    *pulTransferLen = (ret != CR_SUCCESS) ? 0 : *pulLength;
+    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
         RegCloseKey(hKey);
@@ -1234,8 +1237,113 @@ DWORD PNP_GetClassRegProp(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
+    HKEY hInstKey = NULL;
+    HKEY hPropKey = NULL;
+    LONG lError;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_GetClassRegProp() called\n");
+
+    if (pulTransferLen == NULL || pulLength == NULL)
+    {
+        ret = CR_INVALID_POINTER;
+        goto done;
+    }
+
+    if (ulFlags != 0)
+    {
+        ret = CR_INVALID_FLAG;
+        goto done;
+    }
+
+    if (*pulLength < *pulTransferLen)
+        *pulLength = *pulTransferLen;
+
+    *pulTransferLen = 0;
+
+    switch (ulProperty)
+    {
+        case CM_CRP_SECURITY:
+            lpValueName = L"Security";
+            break;
+
+        case CM_CRP_DEVTYPE:
+            lpValueName = L"DeviceType";
+            break;
+
+        case CM_CRP_EXCLUSIVE:
+            lpValueName = L"Exclusive";
+            break;
+
+        case CM_CRP_CHARACTERISTICS:
+            lpValueName = L"DeviceCharacteristics";
+            break;
+
+        default:
+            ret = CR_INVALID_PROPERTY;
+            goto done;
+    }
+
+    DPRINT("Value name: %S\n", lpValueName);
+
+    lError = RegOpenKeyExW(hClassKey,
+                           pszClassGuid,
+                           0,
+                           KEY_READ,
+                           &hInstKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        *pulLength = 0;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    lError = RegOpenKeyExW(hInstKey,
+                           L"Properties",
+                           0,
+                           KEY_READ,
+                           &hPropKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        *pulLength = 0;
+        ret = CR_NO_SUCH_REGISTRY_KEY;
+        goto done;
+    }
+
+    lError = RegQueryValueExW(hPropKey,
+                              lpValueName,
+                              NULL,
+                              pulRegDataType,
+                              Buffer,
+                              pulLength);
+    if (lError != ERROR_SUCCESS)
+    {
+        if (lError == ERROR_MORE_DATA)
+        {
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            *pulLength = 0;
+            ret = CR_NO_SUCH_VALUE;
+        }
+    }
+
+done:;
+    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+
+    if (hPropKey != NULL)
+        RegCloseKey(hPropKey);
+
+    if (hInstKey != NULL)
+        RegCloseKey(hInstKey);
+
+    DPRINT("PNP_GetClassRegProp() done (returns %lx)\n", ret);
+
+    return ret;
 }
 
 
@@ -1264,19 +1372,19 @@ DWORD PNP_SetClassRegProp(
 
     switch (ulProperty)
     {
-        case CM_DRP_SECURITY:
+        case CM_CRP_SECURITY:
             lpValueName = L"Security";
             break;
 
-        case CM_DRP_DEVTYPE:
+        case CM_CRP_DEVTYPE:
             lpValueName = L"DeviceType";
             break;
 
-        case CM_DRP_EXCLUSIVE:
+        case CM_CRP_EXCLUSIVE:
             lpValueName = L"Exclusive";
             break;
 
-        case CM_DRP_CHARACTERISTICS:
+        case CM_CRP_CHARACTERISTICS:
             lpValueName = L"DeviceCharacteristics";
             break;
 
