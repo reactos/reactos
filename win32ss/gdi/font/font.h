@@ -15,6 +15,32 @@ typedef struct _POINTEF
 
 typedef struct _RFONT *PRFONT;
 
+typedef struct _PFE
+{
+    struct _PFF * pPFF;
+    ULONG_PTR iFont;
+    FLONG flPFE;
+    FD_GLYPHSET *pfdg;
+    ULONG_PTR idfdg;
+    IFIMETRICS * pifi;
+    ULONG_PTR idifi;
+    FD_KERNINGPAIR *pkp;
+    ULONG_PTR idkp;
+    ULONG ckp;
+    ULONG iOrientation;
+    ULONG cjEfdwPFE;
+    //GISET * pgiset;
+    ULONG ulTimeStamp;
+    UNIVERSAL_FONT_ID ufi;
+    DWORD pid;
+    DWORD tid;
+    LIST_ENTRY ql;
+    void * pFlEntry;
+    ULONG cAlt;
+    ULONG cPfdgRef;
+    ULONG aiFamilyName[1];
+} PFE, *PPFE;
+
 typedef struct _PFF
 {
     ULONG sizeofThis;
@@ -38,33 +64,8 @@ typedef struct _PFF
     ULONG cFonts;
     void *pPvtDataHead;
     PFONTFILEVIEW apffv[FD_MAX_FILES];
+    PFE apfe[1];
 } PFF, *PPFF;
-
-typedef struct _PFE
-{
-    PFF * pPFF;
-    ULONG_PTR iFont;
-    FLONG flPFE;
-    FD_GLYPHSET * pfdg;
-    ULONG_PTR ulpId;
-    IFIMETRICS * pifi;
-    ULONG_PTR idifi;
-    FD_KERNINGPAIR *pkp;
-    ULONG_PTR idkp;
-    ULONG ckp;
-    ULONG iOrieintation;
-    ULONG cjEfdwPFE;
-    //GISET * pgiset;
-    ULONG ulTimeStamp;
-    UNIVERSAL_FONT_ID ufi;
-    DWORD pid;
-    DWORD tid;
-    LIST_ENTRY ql;
-    void * pFlEntry;
-    ULONG cAlt;
-    ULONG cPfdgRef;
-    ULONG aiFamilyName[1];
-} PFE, *PPFE;
 
 typedef struct
 {
@@ -219,11 +220,4 @@ PRFONT
 NTAPI
 DC_prfnt(PDC pdc);
 
-HFF
-NTAPI
-EngLoadFontFileFD(
-    ULONG cFiles,
-    PULONG_PTR piFiles,
-    DESIGNVECTOR *pdv,
-    ULONG ulCheckSum,
-    HDEV *phdev);
+
