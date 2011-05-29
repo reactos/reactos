@@ -399,21 +399,9 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             goto fail;
         }
 
-        /* set results */
+        /* set result */
         phNewContext->dwUpper = NegotiateFlags;
         phNewContext->dwLower = newContext;
-
-        /* build blob with the nego message */
-        SecBufferDesc BufferDesc;
-        BufferDesc.ulVersion = SECBUFFER_VERSION;
-        BufferDesc.cBuffers = 1;
-        BufferDesc.pBuffers = OutputToken1;
-
-        if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
-            *pfContextAttr |= ISC_RET_ALLOCATED_MEMORY;
-
-        *pOutput = BufferDesc;
-
     }
     else        /* challenge! */
     {
@@ -433,28 +421,34 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             }
         }
 
-        /* get second output token */
-        ret = NtlmGetSecBuffer(pOutput,
-                              1,
-                              &OutputToken2,
-                              TRUE);
-        if(!ret)
+        ret = NtlmHandleChallengeMessage(phNewContext->dwLower,
+                                         fContextReq,
+                                         InputToken1,
+                                         InputToken2,
+                                         OutputToken1,
+                                         OutputToken2,
+                                         pfContextAttr,
+                                         ptsExpiry,
+                                         &NegotiateFlags);
+
+        if(!NT_SUCCESS(ret))
         {
-            /* not fatal, aparently */
-            ERR("Failed to get output token!\n");
+            ERR("NtlmHandleChallengeMessage failed with %lx\n", ret);
+            goto fail;
         }
 
-        TRACE("phContext->dwLower %lx\n", phContext->dwLower);
-        NtlmHandleChallengeMessage(phContext->dwLower,
-                                   fContextReq,
-                                   InputToken1,
-                                   InputToken2,
-                                   &OutputToken1,
-                                   &OutputToken2,
-                                   pfContextAttr,
-                                   ptsExpiry,
-                                   &NegotiateFlags);
     }
+
+    /* build blob with the output message */
+    SecBufferDesc BufferDesc;
+    BufferDesc.ulVersion = SECBUFFER_VERSION;
+    BufferDesc.cBuffers = 1;
+    BufferDesc.pBuffers = OutputToken1;
+
+    if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
+        *pfContextAttr |= ISC_RET_ALLOCATED_MEMORY;
+
+    *pOutput = BufferDesc;
 
     return ret;
 
@@ -520,13 +514,42 @@ QueryContextAttributesW(PCtxtHandle phContext,
                         ULONG ulAttribute,
                         void *pBuffer)
 {
+    SECURITY_STATUS ret = SEC_E_OK;
+    PNTLMSSP_CONTEXT context = NtlmReferenceContext(phContext->dwLower);
+
     TRACE("%p %lx %p\n", phContext, ulAttribute, pBuffer);
-    if (!phContext)
+
+    if (!context)
         return SEC_E_INVALID_HANDLE;
 
-    UNIMPLEMENTED;
+    switch(ulAttribute)
+    {
+        case SECPKG_ATTR_SIZES:
+        {
+            PSecPkgContext_Sizes spcs  = (PSecPkgContext_Sizes) pBuffer;
+            spcs->cbMaxToken = NTLM_MAX_BUF;
+            spcs->cbMaxSignature = sizeof(MESSAGE_SIGNATURE);
+            spcs->cbBlockSize = 0;
+            spcs->cbSecurityTrailer = sizeof(MESSAGE_SIGNATURE);
+            break;
+        }
+        case SECPKG_ATTR_FLAGS:
+        {
+            PSecPkgContext_Flags spcf = (PSecPkgContext_Flags)pBuffer;
+            spcf->Flags = 0;
+            if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
+                spcf->Flags |= ISC_RET_INTEGRITY;
+            if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
+                spcf->Flags |= ISC_RET_CONFIDENTIALITY;
+            break;
+        }
+    default:
+        FIXME("ulAttribute %lx unsupported\n", ulAttribute);
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+    }
 
-    return SEC_E_UNSUPPORTED_FUNCTION;
+    NtlmDereferenceContext((ULONG_PTR)context);
+    return ret;
 }
 
 SECURITY_STATUS
@@ -553,9 +576,8 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     SECURITY_STATUS ret = SEC_E_OK;
     PSecBuffer InputToken1, InputToken2;
     PSecBuffer OutputToken1;
-    ULONG_PTR newContext;
 
-    TRACE("%p %p %p %lx %lx %p %p %p %p\n", phCredential, phContext, pInput,
+    TRACE("AcceptSecurityContext %p %p %p %lx %lx %p %p %p %p\n", phCredential, phContext, pInput,
         fContextReq, TargetDataRep, phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
     /* get first input token */
@@ -577,7 +599,7 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     if(!ret)
     {
         ERR("Failed to get input token!\n");
-        return SEC_E_INVALID_TOKEN;
+        //return SEC_E_INVALID_TOKEN;
     }
 
     /* get first output token */
@@ -592,7 +614,7 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     }
 
     /* first call */
-    if(!phContext && !InputToken2->cbBuffer)
+    if(!phContext && !InputToken2)
     {
         if(!phCredential)
         {
@@ -601,17 +623,17 @@ AcceptSecurityContext(IN PCredHandle phCredential,
         }
 
         ret = NtlmHandleNegotiateMessage(phCredential->dwLower,
-                                         &newContext,
+                                         &phNewContext->dwLower,
                                          fContextReq,
                                          InputToken1,
                                          &OutputToken1,
                                          pfContextAttr,
                                          ptsExpiry);
-        phNewContext = (PCtxtHandle)newContext;
     }
     else
+    {
         WARN("Handle Authenticate UNIMPLEMENTED!\n");
-
+    }
     //if(!NT_SUCCESS(ret))
 
     UNIMPLEMENTED;
@@ -650,9 +672,6 @@ ImpersonateSecurityContext(PCtxtHandle phContext)
     return ret;
 }
 
-/***********************************************************************
- *              RevertSecurityContext
- */
 SECURITY_STATUS
 SEC_ENTRY
 RevertSecurityContext(PCtxtHandle phContext)
@@ -681,8 +700,8 @@ FreeContextBuffer(PVOID pv)
 
 SECURITY_STATUS
 SEC_ENTRY
-ApplyControlToken(IN  PCtxtHandle phContext,
-                  IN  PSecBufferDesc pInput)
+ApplyControlToken(IN PCtxtHandle phContext,
+                  IN PSecBufferDesc pInput)
 {
 
     UNIMPLEMENTED;
