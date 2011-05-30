@@ -8,7 +8,7 @@ int status = 0;
 WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance)
 {
 	RPC_STATUS status;
-    unsigned char * pszStringBinding    = NULL;
+    unsigned short * pszStringBinding    = NULL;
 
 
 	if(clientstream == NULL ) return -1;
@@ -29,7 +29,7 @@ WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,i
 
 	RpcTryExcept  
     {
-		AUDInitStream (&audsrv_v0_0_c_ifspec);
+		AUDInitStream (audsrv_v0_0_c_ifspec);
     }
     RpcExcept(1) 
     {

@@ -1,3 +1,4 @@
+set_unicode()
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs)
 
