@@ -4119,7 +4119,7 @@ IoSynchronousInvalidateDeviceRelations(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -4129,6 +4129,11 @@ IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                       IN OUT PULONG AddressSpace,
                       OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    /* FIXME: Notify the resource arbiter */
+
+    return HalTranslateBusAddress(InterfaceType,
+                                  BusNumber,
+                                  BusAddress,
+                                  AddressSpace,
+                                  TranslatedAddress);
 }
