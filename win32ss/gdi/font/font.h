@@ -220,4 +220,20 @@ PRFONT
 NTAPI
 DC_prfnt(PDC pdc);
 
+PPFF
+NTAPI
+EngLoadFontFileFD(
+    ULONG cFiles,
+    PFONTFILEVIEW *ppffv,
+    DESIGNVECTOR *pdv,
+    ULONG ulCheckSum);
+
+INT
+NTAPI
+GreAddFontResourceInternal(
+    IN PWCHAR apwszFiles[],
+    IN ULONG cFiles,
+    IN FLONG fl,
+    IN DWORD dwPidTid,
+    IN OPTIONAL DESIGNVECTOR *pdv);
 

@@ -30,9 +30,7 @@ BOOL gbAttachedCSRSS;
 HSEMAPHORE ghsemFontDriver;
 LIST_ENTRY gleFontDriverList = {&gleFontDriverList, &gleFontDriverList};
 
-HSEMAPHORE ghsemPFFList;
-LIST_ENTRY glePFFList = {&glePFFList, &glePFFList};
-
+extern HSEMAPHORE ghsemPFFList;
 
 BOOL FASTCALL
 InitFontSupport(VOID)
@@ -60,141 +58,6 @@ DetachCSRSS(KAPC_STATE *pApcState)
     ASSERT(gbAttachedCSRSS);
     KeUnstackDetachProcess(pApcState);
     gbAttachedCSRSS = FALSE;
-}
-
-static
-HFF
-FONTDEV_hffLoadFontFile(
-    PFONTDEV pfntdev,
-    ULONG cFiles,
-    ULONG_PTR *piFile,
-    PVOID *ppvView,
-    ULONG *pcjView,
-    DESIGNVECTOR *pdv,
-    ULONG ulLangID,
-    ULONG ulFastCheckSum)
-{
-    HFF hff;
-    ASSERT(gbAttachedCSRSS);
-
-    /* Call the drivers DrvLoadFontFile function */
-    hff = pfntdev->pldev->pfn.LoadFontFile(cFiles,
-                                           piFile,
-                                           ppvView,
-                                           pcjView,
-                                           pdv,
-                                           ulLangID,
-                                           ulFastCheckSum);
-
-    if (hff == 0) return 0;
-
-    return hff;
-}
-
-static
-HFF
-EngLoadFontFileFD(
-    ULONG cFiles,
-    PFONTFILEVIEW *ppffv,
-    DESIGNVECTOR *pdv,
-    ULONG ulCheckSum,
-    PFONTDEV *ppfntdev)
-{
-    PULONG_PTR piFiles = (PULONG_PTR)ppffv;
-    PVOID apvView[FD_MAX_FILES];
-    ULONG acjView[FD_MAX_FILES];
-    ULONG i, ulLangID = 0;
-    PFONTDEV pfntdev;
-    PLIST_ENTRY ple;
-    HFF hff = 0;
-
-    /* Loop all files */
-    for (i = 0; i < cFiles; i++)
-    {
-        /* Map the font file */
-        if (!EngMapFontFileFD(piFiles[i], (PULONG*)&apvView[i], &acjView[i]))
-        {
-            ASSERT(FALSE);
-        }
-    }
-
-    /* Acquire font driver list lock */
-    EngAcquireSemaphore(ghsemFontDriver);
-
-    /* Loop all installed font drivers */
-    for (ple = gleFontDriverList.Flink;
-         ple != &gleFontDriverList;
-         ple = ple->Flink)
-    {
-        pfntdev = CONTAINING_RECORD(ple, FONTDEV, leLink);
-
-        /* Try to load the font file */
-        hff = FONTDEV_hffLoadFontFile(pfntdev,
-                                      cFiles,
-                                      piFiles,
-                                      apvView,
-                                      acjView,
-                                      pdv,
-                                      ulLangID,
-                                      ulCheckSum);
-        if (hff)
-        {
-            *ppfntdev = pfntdev;
-            break;
-        }
-    }
-
-    /* Release font friver list lock */
-    EngReleaseSemaphore(ghsemFontDriver);
-
-    return hff;
-}
-
-static
-BOOL
-PFF_bCompareFiles(
-    PPFF ppff,
-    ULONG cFiles,
-    PFONTFILEVIEW pffv[])
-{
-    ULONG i;
-
-    /* Check if number of files matches */
-    if (ppff->cFiles != cFiles) return FALSE;
-
-    /* Loop all files */
-    for (i = 0; i < cFiles; i++)
-    {
-        /* Check if the files match */
-        if (pffv[i] != ppff->apffv[i]) return FALSE;
-    }
-
-    return TRUE;
-}
-
-static PPFF
-EngFindPFF(ULONG cFiles, PFONTFILEVIEW *ppffv)
-{
-    PLIST_ENTRY ple;
-    PPFF ppff;
-    ASSERT(cFiles >= 1 && cFiles <= FD_MAX_FILES);
-
-    /* Acquire PFF list lock */
-    EngAcquireSemaphore(ghsemPFFList);
-
-    /* Loop all physical font files (PFF) */
-    for (ple = glePFFList.Flink; ple != &glePFFList; ple = ple->Flink)
-    {
-        ppff = CONTAINING_RECORD(ple, PFF, leLink);
-
-        /* Check if the files are already loaded */
-        if (PFF_bCompareFiles(ppff, cFiles, ppffv)) break;
-    }
-
-    /* Release PFF list lock */
-    EngReleaseSemaphore(ghsemPFFList);
-
-    return ple != &glePFFList ? ppff : NULL;
 }
 
 static void
@@ -245,45 +108,59 @@ PFE_vInitialize(
 
 PPFF
 NTAPI
-EngLoadFontFile(
-    IN ULONG cFiles,
-    IN PWCHAR apwszFiles[],
-    IN DESIGNVECTOR *pdv)
+EngLoadFontFileFD(
+    ULONG cFiles,
+    PFONTFILEVIEW *ppffv,
+    DESIGNVECTOR *pdv,
+    ULONG ulCheckSum)
 {
-    PFONTFILEVIEW apffv[FD_MAX_FILES];
+    PULONG_PTR piFiles = (PULONG_PTR)ppffv;
+    PVOID apvView[FD_MAX_FILES];
+    ULONG acjView[FD_MAX_FILES];
     KAPC_STATE ApcState;
-    PPFF ppff = NULL;
-    ULONG i, cjSize, cFaces, ulChecksum = 0;
+    PLIST_ENTRY ple;
     PFONTDEV pfntdev = NULL;
-    HFF hff;
-
-    /* Loop the files */
-    for (i = 0; i < cFiles; i++)
-    {
-        /* Try to load the file */
-        apffv[i] = (PVOID)EngLoadModuleEx(apwszFiles[i], 0, FVF_FONTFILE);
-        if (!apffv[i])
-        {
-            /* Cleanup and return */
-            while (i--) EngFreeModule(apffv[i]);
-            return NULL;
-        }
-    }
-
-    /* Try to find an existing PFF */
-    ppff = EngFindPFF(cFiles, apffv);
-    if (ppff)
-    {
-        /* Cleanup loaded files, we don't need them anymore */
-        for (i = 0; i < cFiles; i++) EngFreeModule(apffv[i]);
-        return ppff;
-    }
+    HFF hff = 0;
+    ULONG cFaces, cjSize, i, ulLangID = 0;
+    PPFF ppff = NULL;
 
     /* Attach to CSRSS */
     AttachCSRSS(&ApcState);
 
-    /* Try to load the font with any of the font drivers */
-    hff = EngLoadFontFileFD(cFiles, apffv, pdv, ulChecksum, &pfntdev);
+    /* Loop all files */
+    for (i = 0; i < cFiles; i++)
+    {
+        /* Map the font file */
+        if (!EngMapFontFileFD(piFiles[i], (PULONG*)&apvView[i], &acjView[i]))
+        {
+            ASSERT(FALSE);
+        }
+    }
+
+    /* Acquire font driver list lock */
+    EngAcquireSemaphore(ghsemFontDriver);
+
+    /* Loop all installed font drivers */
+    for (ple = gleFontDriverList.Flink;
+         ple != &gleFontDriverList;
+         ple = ple->Flink)
+    {
+        pfntdev = CONTAINING_RECORD(ple, FONTDEV, leLink);
+
+        /* Call the drivers DrvLoadFontFile function */
+        hff = pfntdev->pldev->pfn.LoadFontFile(cFiles,
+                                               piFiles,
+                                               apvView,
+                                               acjView,
+                                               pdv,
+                                               ulLangID,
+                                               ulCheckSum);
+        if (hff) break;
+    }
+
+    /* Release font driver list lock */
+    EngReleaseSemaphore(ghsemFontDriver);
+
     if (!hff)
     {
         DPRINT1("File format is not supported by any font driver\n");
@@ -310,7 +187,7 @@ EngLoadFontFile(
     ppff->hff = hff;
 
     /* Copy the FONTFILEVIEW pointers */
-    for (i = 0; i < cFiles; i++) ppff->apffv[i] = apffv[i];
+    for (i = 0; i < cFiles; i++) ppff->apffv[i] = ppffv[i];
 
     /* Loop all faces in the font file */
     for (i = 0; i < cFaces; i++)
@@ -319,16 +196,7 @@ EngLoadFontFile(
         PFE_vInitialize(&ppff->apfe[i], ppff, i + 1);
     }
 
-    /* Insert the PFF into the list */
-    EngAcquireSemaphore(ghsemPFFList);
-    InsertTailList(&glePFFList, &ppff->leLink);
-    EngReleaseSemaphore(ghsemPFFList);
-
 leave:
-    if (!ppff)
-    {
-        for (i = 0; i < cFiles; i++) EngFreeModule(apffv[i]);
-    }
 
     /* Detach from CSRSS */
     DetachCSRSS(&ApcState);
@@ -393,6 +261,9 @@ VOID
 NTAPI
 GreStartupFontDrivers(VOID)
 {
+    ULONG cFonts;
+    static PWSTR pwszFile = L"\\??\\c:\\ReactOS\\Fonts\\tahoma.ttf";
+
     /* Load freetype font driver */
     if (!EngLoadFontDriver(L"ftfd.dll"))
     {
@@ -403,5 +274,10 @@ GreStartupFontDrivers(VOID)
 
     /* TODO: Enumerate installed font drivers */
     DPRINT1("############ Started font drivers\n");
+
+    // lets load some fonts
+    cFonts = GreAddFontResourceInternal(&pwszFile, 1, 0, 0, NULL);
+    ASSERT(cFonts > 0);
+
 }
 
