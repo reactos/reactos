@@ -138,9 +138,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
                 DPRINT1("Shell process is exiting (%d)\n", ExitCode);
 
-                UserPostMessage(hwndSAS, 
-                                WM_LOGONNOTIFY, 
-                                LN_SHELL_EXITED, 
+                UserPostMessage(hwndSAS,
+                                WM_LOGONNOTIFY,
+                                LN_SHELL_EXITED,
                                 ExitCode);
             }
         }
@@ -534,6 +534,7 @@ DriverEntry(
     CreateStockObjects();
     CreateSysColorObjects();
 
+    NT_ROF(InitMappingImpl());
     NT_ROF(InitXlateImpl());
     NT_ROF(InitPDEVImpl());
     NT_ROF(InitLDEVImpl());
