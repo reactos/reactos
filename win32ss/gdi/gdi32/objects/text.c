@@ -208,7 +208,7 @@ GetTextMetricsA(
         return FALSE;
     }
 
-    FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
+    FONT_TextMetricWToA(&tmwi.tmw, lptm);
     return TRUE;
 }
 
@@ -229,7 +229,7 @@ GetTextMetricsW(
         return FALSE;
     }
 
-    *lptm = tmwi.TextMetric;
+    *lptm = tmwi.tmw;
     return TRUE;
 }
 

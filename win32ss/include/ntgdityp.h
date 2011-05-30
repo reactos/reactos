@@ -361,14 +361,14 @@ typedef struct _TMDIFF
     ULONG cjotma;
     CHAR chFirst;
     CHAR chLast;
-    CHAR ChDefault;
-    CHAR ChBreak;
+    CHAR chDefault;
+    CHAR chBreak;
 } TMDIFF, *PTMDIFF;
 
 typedef struct _TMW_INTERNAL
 {
-    TEXTMETRICW TextMetric;
-    TMDIFF Diff;
+    TEXTMETRICW tmw;
+    TMDIFF tmdiff;
 } TMW_INTERNAL, *PTMW_INTERNAL;
 
 typedef struct _NTMW_INTERNAL
