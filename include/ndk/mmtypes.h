@@ -704,7 +704,7 @@ typedef struct _MMVAD
 //
 // Long VAD used in section and private allocations
 //
-typedef struct _MMVAD_LONG 
+typedef struct _MMVAD_LONG
 {
     union
     {
@@ -969,7 +969,7 @@ extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
 //
 // Section Object Type
 //
-extern POBJECT_TYPE MmSectionObjectType;
+extern NTKERNELAPI POBJECT_TYPE MmSectionObjectType;
 
 #endif // !NTOS_MODE_USER
 
