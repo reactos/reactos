@@ -11,19 +11,98 @@
 #define NDEBUG
 #include <debug.h>
 
+HSEMAPHORE ghsemPFFList;
+static LIST_ENTRY glePrivatePFFList = {&glePrivatePFFList, &glePrivatePFFList};
+static LIST_ENTRY glePublicPFFList = {&glePublicPFFList, &glePublicPFFList};
+
+static
+BOOL
+PFF_bCompareFiles(
+    PPFF ppff,
+    ULONG cFiles,
+    PFONTFILEVIEW pffv[])
+{
+    ULONG i;
+
+    /* Check if number of files matches */
+    if (ppff->cFiles != cFiles) return FALSE;
+
+    /* Loop all files */
+    for (i = 0; i < cFiles; i++)
+    {
+        /* Check if the files match */
+        if (pffv[i] != ppff->apffv[i]) return FALSE;
+    }
+
+    return TRUE;
+}
+
 INT
 NTAPI
 GreAddFontResourceInternal(
     IN PWCHAR apwszFiles[],
     IN ULONG cFiles,
-    IN FLONG f,
+    IN FLONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv)
 {
+    PFONTFILEVIEW apffv[FD_MAX_FILES];
+    PPFF ppff = NULL;
+    PLIST_ENTRY ple, pleListHead;
+    ULONG i, ulCheckSum = 0;
 
+    /* Loop the files */
+    for (i = 0; i < cFiles; i++)
+    {
+        /* Try to load the file */
+        apffv[i] = (PVOID)EngLoadModuleEx(apwszFiles[i], 0, FVF_FONTFILE);
+        if (!apffv[i])
+        {
+            DPRINT1("Failed to load file: '%ls'\n", apwszFiles[i]);
+            /* Cleanup and return */
+            while (i--) EngFreeModule(apffv[i]);
+            return 0;
+        }
+    }
 
-    ASSERT(FALSE);
-    return 0;
+    pleListHead = fl & FR_PRIVATE ? &glePrivatePFFList : &glePublicPFFList;
+
+    /* Acquire PFF list lock */
+    EngAcquireSemaphore(ghsemPFFList);
+
+    /* Loop all physical font files (PFF) */
+    for (ple = pleListHead->Flink; ple != pleListHead; ple = ple->Flink)
+    {
+        ppff = CONTAINING_RECORD(ple, PFF, leLink);
+
+        /* Check if the files are already loaded */
+        if (PFF_bCompareFiles(ppff, cFiles, apffv)) break;
+    }
+
+    /* Release PFF list lock */
+    EngReleaseSemaphore(ghsemPFFList);
+
+    if (ple == pleListHead)
+    {
+        /* Cleanup loaded files, we don't need them anymore */
+        for (i = 0; i < cFiles; i++) EngFreeModule(apffv[i]);
+        return ppff->cFonts;
+    }
+
+    /* Load the font file with a font driver */
+    ppff = EngLoadFontFileFD(cFiles, apffv, pdv, ulCheckSum);
+    if (!ppff)
+    {
+        DPRINT1("Failed to load font with font driver\n");
+        return 0;
+    }
+
+    /* Insert the PFF into the list */
+    EngAcquireSemaphore(ghsemPFFList);
+    InsertTailList(pleListHead, &ppff->leLink);
+    EngReleaseSemaphore(ghsemPFFList);
+
+    return ppff->cFonts;
 }
 
 static
