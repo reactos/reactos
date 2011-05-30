@@ -29,7 +29,7 @@ typedef struct
 
 extern tls_data glob_data;
 
-VOID StartTest();
+VOID StartTest(VOID);
 VOID FinishTest(HANDLE KeyHandle, LPWSTR TestName);
 void kmtest_set_location(const char* file, int line);
 
