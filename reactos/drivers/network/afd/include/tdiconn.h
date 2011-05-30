@@ -19,7 +19,7 @@ NTSTATUS TdiBuildConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnInfo, PTRANSPORT_ADDRESS Name );
 NTSTATUS TdiBuildConnectionInfo
 ( PTDI_CONNECTION_INFORMATION *ConnectionInfo, PTRANSPORT_ADDRESS Name );
-NTSTATUS TdiBuildNullConnectionInfoToPlace
+NTSTATUS TdiBuildNullConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnInfo, ULONG Type );
 NTSTATUS TdiBuildNullConnectionInfo
 ( PTDI_CONNECTION_INFORMATION *ConnectionInfo, ULONG Type );

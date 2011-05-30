@@ -77,7 +77,7 @@ PTRANSPORT_ADDRESS TaCopyTransportAddress( PTRANSPORT_ADDRESS OtherAddress ) {
 	return A;
 }
 
-static NTSTATUS TdiBuildNullConnectionInfoInPlace
+NTSTATUS TdiBuildNullConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnInfo,
   ULONG Type )
 /*

@@ -179,7 +179,7 @@ typedef struct _AFD_FCB {
     PVOID CurrentThread;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
-    BOOLEAN DelayedAccept, NeedsNewListen;
+    BOOLEAN DelayedAccept;
     UINT ConnSeq;
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
     PTDI_CONNECTION_INFORMATION AddressFrom, ConnectInfo;
