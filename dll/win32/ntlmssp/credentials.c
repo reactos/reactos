@@ -53,7 +53,7 @@ NtlmReferenceCredential(IN ULONG_PTR Handle)
 
     /* sanity */
     ASSERT(cred);
-    TRACE("%p refcount %d\n",cred, cred->RefCount);
+    TRACE("%p refcount %lx\n",cred, cred->RefCount);
     ASSERT(cred->RefCount > 0);
 
     /* reference */
@@ -73,7 +73,7 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
 
     /* sanity */
     ASSERT(cred);
-    TRACE("%p refcount %d\n",cred, cred->RefCount);
+    TRACE("%p refcount %lx\n",cred, cred->RefCount);
     ASSERT(cred->RefCount >= 1);
 
     /* decrement reference */
@@ -137,7 +137,7 @@ QueryCredentialsAttributesW(PCredHandle phCredential,
 {
     SECURITY_STATUS ret;
 
-    TRACE("(%p, %d, %p)\n", phCredential, ulAttribute, pBuffer);
+    TRACE("(%p, %lx, %p)\n", phCredential, ulAttribute, pBuffer);
 
     if(ulAttribute == SECPKG_ATTR_NAMES)
     {
@@ -158,7 +158,7 @@ QueryCredentialsAttributesA(IN PCredHandle phCredential,
 {
     SECURITY_STATUS ret;
 
-    TRACE("(%p, %d, %p)\n", phCredential, ulAttribute, pBuffer);
+    TRACE("(%p, %lx, %p)\n", phCredential, ulAttribute, pBuffer);
 
     if(ulAttribute == SECPKG_ATTR_NAMES)
     {

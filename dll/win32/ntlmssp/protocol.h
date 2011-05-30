@@ -164,6 +164,14 @@ typedef struct _AUTHENTICATE_MESSAGE
     /* payload */
 }AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
 
+typedef struct _MESSAGE_SIGNATURE
+{
+    ULONG Version;
+    ULONG RandomPad;
+    ULONG Checksum;
+    ULONG Nonce;
+}MESSAGE_SIGNATURE, *PMESSAGE_SIGNATURE;
+
 /* basic functions */
 
 VOID
@@ -173,14 +181,14 @@ NTOWFv1(
 
 VOID
 NTOWFv2(
-    PWCHAR password,
-    PWCHAR user,
-    PWCHAR domain,
+    const PWCHAR password,
+    const PWCHAR user,
+    const PWCHAR domain,
     PUCHAR result);
 
 VOID
 LMOWFv1(
-    PCCHAR password,
+    const PCCHAR password,
     PUCHAR result);
 
 VOID
@@ -275,15 +283,17 @@ NtlmGenerateNegotiateMessage(
     IN ULONG_PTR hContext,
     IN ULONG ContextReq,
     IN PSecBuffer InputToken,
-    OUT PSecBuffer *OutputToken);
+    OUT PSecBuffer OutputToken);
 
 SECURITY_STATUS
 NtlmHandleNegotiateMessage(
     IN ULONG_PTR hCredential,
-    IN OUT PULONG_PTR phContext,
+    IN OUT ULONG_PTR hContext,
     IN ULONG fContextReq,
-    IN PSecBuffer InputToken,
-    OUT PSecBuffer *OutputToken,
+    IN PSecBuffer InputToken1,
+    IN PSecBuffer InputToken2,
+    OUT PSecBuffer OutputToken1,
+    OUT PSecBuffer OutputToken2,
     OUT PULONG pContextAttr,
     OUT PTimeStamp ptsExpiry);
 
@@ -293,8 +303,8 @@ NtlmHandleChallengeMessage(
     IN ULONG ContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
-    IN OUT PSecBuffer *OutputToken1,
-    IN OUT PSecBuffer *OutputToken2,
+    IN OUT PSecBuffer OutputToken1,
+    IN OUT PSecBuffer OutputToken2,
     OUT PULONG ContextAttr,
     OUT PTimeStamp ptsExpiry,
     OUT PULONG NegotiateFlags);
@@ -303,15 +313,11 @@ SECURITY_STATUS
 NtlmHandleAuthenticateMessage(
     IN ULONG_PTR hContext,
     IN ULONG fContextReq,
-    IN PSecBuffer *pInputTokens,
+    IN PSecBuffer InputToken,
     OUT PSecBuffer OutputToken,
     OUT PULONG pContextAttr,
     OUT PTimeStamp ptsExpiry,
     OUT PUCHAR pSessionKey,
-    OUT PULONG pfNegotiateFlags,
-    OUT PHANDLE TokenHandle,
-    OUT PNTSTATUS pSubStatus,
-    OUT PTimeStamp ptsPasswordExpiry,
     OUT PULONG pfUserFlags);
 
 /* helper functions */
