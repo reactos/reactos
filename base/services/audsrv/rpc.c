@@ -19,25 +19,24 @@ DWORD WINAPI RunRPCThread(LPVOID lpParameter)
     RPC_STATUS Status;
 
     InitializeListHead(&LogHandleListHead);
-printf("reached\n");
-    Status = RpcServerUseProtseqEpW(L"ncacn_np", 20, L"\\pipe\\EventLog", NULL);
+    Status = RpcServerUseProtseqEp(L"ncacn_np", 20, L"\\pipe\\audsrv", NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        printf("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
         return 0;
     }
 
-    Status = RpcServerRegisterIf(audsrv_v0_0_s_ifspec, NULL, NULL);
+    Status = RpcServerRegisterIfEx(audsrv_v0_0_s_ifspec, NULL, NULL, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL );
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        printf("RpcServerRegisterIf() failed (Status %lx)\n", Status);
         return 0;
     }
 
-    Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, FALSE);
+    Status = RpcServerListen(1, 20, FALSE);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
+        printf("RpcServerListen() failed (Status %lx)\n", Status);
     }
 
     return 0;
@@ -46,9 +45,10 @@ printf("reached\n");
 
 /*************************RPC Functions**********************************/
 
-NTSTATUS AUDInitStream(	AUDSRV_HANDLE *streamthread)
+NTSTATUS AUDInitStream(	IN RPC_BINDING_HANDLE hBinding)
 {
     UNIMPLEMENTED;/*Coolest Macro I have ever seen*/
+	printf("Client Connected and called server's procedure\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 /*************************************************************************/

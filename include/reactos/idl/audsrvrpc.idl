@@ -37,6 +37,6 @@ typedef struct _RPC_CLIENT_ID {
 interface audsrv
 {
 
-    NTSTATUS AUDInitStream([in] AUDSRV_HANDLE *streamthread);
+    NTSTATUS AUDInitStream([in] handle_t h1);
 
 }

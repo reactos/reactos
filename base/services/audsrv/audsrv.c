@@ -460,7 +460,7 @@ INT wmain(int argc, char *argv[])
 /*For Temporary Debug purpose, If there is any argument it acts as simple command line app,otherwise it is a NTSERVICE*/
 if(argc==1)
 {
-printf("Under Construction.Please User audsrv.exe -n to start as normal command line application.\n");
+printf("Under Construction.Please Use audsrv.exe -n to start as normal command line application.\n");
     MyHeap = HeapCreate(0, 1024 * 256, 0);
 
     if (!MyHeap)
