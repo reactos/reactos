@@ -160,12 +160,21 @@ IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     IO_STACK_LOCATION Stack;
     PVOID Dummy;
+    NTSTATUS Status;
     
     RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_QUERY_REMOVE_DEVICE;
-    
-    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+
+    Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+
+    IopNotifyPlugPlayNotification(DeviceObject,
+                                  EventCategoryTargetDeviceChange,
+                                  &GUID_TARGET_DEVICE_QUERY_REMOVE,
+                                  NULL,
+                                  NULL);
+
+    return Status;
 }
 
 NTSTATUS
@@ -195,6 +204,12 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+
+    IopNotifyPlugPlayNotification(DeviceObject,
+                                  EventCategoryTargetDeviceChange,
+                                  &GUID_TARGET_DEVICE_REMOVE_COMPLETE,
+                                  NULL,
+                                  NULL);
 }
 
 VOID
@@ -239,9 +254,6 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
             DeviceNode->ResourceListTranslated;
     }
     
-    /* I don't think we set this flag yet */
-    ASSERT(!(DeviceNode->Flags & DNF_STOPPED));
-    
     /* Do the call */
     Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
     if (!NT_SUCCESS(Status))
@@ -258,6 +270,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     
     /* Otherwise, mark us as started */
     DeviceNode->Flags |= DNF_STARTED;
+    DeviceNode->Flags &= ~DNF_STOPPED;
 
     /* We now need enumeration */
     DeviceNode->Flags |= DNF_NEED_ENUMERATION_ONLY;
@@ -276,9 +289,6 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
     ASSERT((DeviceNode->Flags & (DNF_RESOURCE_ASSIGNED |
                                  DNF_RESOURCE_REPORTED |
                                  DNF_NO_RESOURCE_REQUIRED)));
-    ASSERT((!(DeviceNode->Flags & (DNF_HAS_PROBLEM |
-                                   DNF_STARTED |
-                                   DNF_START_REQUEST_PENDING))));
            
     /* Get the device object */
     DeviceObject = DeviceNode->PhysicalDeviceObject;
@@ -327,12 +337,6 @@ IopStartDevice(
    HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
-
-   if (((DeviceNode->Flags & DNF_STARTED) && !(DeviceNode->Flags & DNF_HAS_PROBLEM)) ||
-       (DeviceNode->Flags & DNF_START_REQUEST_PENDING)) 
-   {
-       return STATUS_SUCCESS;
-   }
 
    Status = IopAssignDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
@@ -3623,6 +3627,9 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
         if (NT_SUCCESS(IopQueryStopDevice(PhysicalDeviceObject)))
         {
             IopSendStopDevice(PhysicalDeviceObject);
+
+            DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
+            DeviceNode->Flags |= DNF_STOPPED;
         }
     }
     
@@ -3665,7 +3672,15 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
         }
         
         /* IRP_MN_FILTER_RESOURCE_REQUIREMENTS is called indirectly by IopStartDevice */
-        IopStartDevice(DeviceNode);
+        if (IopStartDevice(DeviceNode) != STATUS_SUCCESS)
+        {
+            DPRINT1("Restart after resource rebalance failed\n");
+
+            DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
+            DeviceNode->Flags |= DNF_START_FAILED;
+
+            IopSendRemoveDevice(PhysicalDeviceObject);
+        }
     }
 }
 
