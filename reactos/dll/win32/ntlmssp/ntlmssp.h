@@ -46,9 +46,12 @@ extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA
 
 extern UNICODE_STRING NtlmComputerNameString;
 extern UNICODE_STRING NtlmDomainNameString;
+extern UNICODE_STRING NtlmDnsNameString;
 extern OEM_STRING NtlmOemComputerNameString;
 extern OEM_STRING NtlmOemDomainNameString;
+extern OEM_STRING NtlmOemDnsNameString;
 extern HANDLE NtlmSystemSecurityToken;
+extern UNICODE_STRING NtlmAvTargetInfo; // contains AV pairs with local info
 
 typedef enum _NTLM_MODE {
     NtlmLsaMode = 1,
