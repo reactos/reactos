@@ -16,9 +16,9 @@ WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,i
 	/*Validity of all other data will be checked at server*/
 	/*Check Connection Status If not connected call Connect()*/
 	/*If connected Properly call the remote audsrv_initstream() function*/
-		status = RpcStringBindingCompose(NULL,L"ncacn_np",NULL,L"\\pipe\\audsrv", NULL,&pszStringBinding);
+		status = RpcStringBindingComposeW(NULL,L"ncacn_np",NULL,L"\\pipe\\audsrv", NULL,&pszStringBinding);
 
-		status = RpcBindingFromStringBinding(pszStringBinding, &audsrv_v0_0_c_ifspec);
+		status = RpcBindingFromStringBindingW(pszStringBinding, &audsrv_v0_0_c_ifspec);
  
 		if (status) printf("Connection Problem p %d \n",status);
 
