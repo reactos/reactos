@@ -278,6 +278,16 @@ CUSBQueue::AddUSBRequest(
             //
             CurrentDescriptor = CurrentDescriptor->NextLogicalDescriptor;
         }
+
+        //
+        // get current frame number
+        //
+        m_Hardware->GetCurrentFrameNumber(&FrameNumber);
+
+        DPRINT1("Hardware 1ms %p Iso %p\n",m_InterruptEndpoints[0], m_IsoHeadEndpointDescriptor);
+		ASSERT(m_InterruptEndpoints[0]->NextPhysicalEndpoint == m_IsoHeadEndpointDescriptor->PhysicalAddress.LowPart);
+
+        PrintEndpointList(m_IsoHeadEndpointDescriptor);
     }
 
     //
@@ -699,7 +709,7 @@ CUSBQueue::FindInterruptEndpointDescriptor(
     //
     // sanity check
     //
-    ASSERT(InterruptInterval < OHCI_BIGGEST_INTERVAL);
+    ASSERT(InterruptInterval <= OHCI_BIGGEST_INTERVAL);
 
     //
     // find interrupt index

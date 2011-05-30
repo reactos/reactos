@@ -628,7 +628,7 @@ CUSBRequest::CreateIsochronousTransferDescriptor(
     //
     // initialize descriptor, hardware part
     //
-    Descriptor->Flags = OHCI_ITD_SET_FRAME_COUNT(FrameCount) | OHCI_ITD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE) |  OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED);
+    Descriptor->Flags = OHCI_ITD_SET_FRAME_COUNT(FrameCount) | OHCI_ITD_SET_DELAY_INTERRUPT(OHCI_TD_INTERRUPT_NONE);// |  OHCI_TD_SET_CONDITION_CODE(OHCI_TD_CONDITION_NOT_ACCESSED);
     Descriptor->BufferPhysical = 0;
     Descriptor->NextPhysicalDescriptor = 0;
     Descriptor->LastPhysicalByteAddress = 0;
@@ -661,6 +661,7 @@ CUSBRequest::BuildIsochronousEndpoint(
     PVOID Buffer;
     PIO_STACK_LOCATION IoStack;
     PURB Urb;
+    PHYSICAL_ADDRESS Address;
 
     //
     // get current irp stack location
@@ -704,6 +705,10 @@ CUSBRequest::BuildIsochronousEndpoint(
     //
     ASSERT(ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(m_TransferBufferMDL), MmGetMdlByteCount(m_TransferBufferMDL)) <= 2);
 
+    Status = m_DmaManager->Allocate(m_TransferBufferLength, &Buffer, &Address);
+    ASSERT(Status == STATUS_SUCCESS);
+
+
     while(Index < Urb->UrbIsochronousTransfer.NumberOfPackets)
     {
         //
@@ -732,7 +737,7 @@ CUSBRequest::BuildIsochronousEndpoint(
         //
         // get page offset
         //
-        PageOffset = MmGetMdlByteOffset(m_TransferBufferMDL);
+        PageOffset = BYTE_OFFSET(Page);
 
         //
         // initialize descriptor
@@ -935,6 +940,8 @@ CUSBRequest::AllocateEndpointDescriptor(
     Descriptor->Flags |= OHCI_ENDPOINT_SET_DEVICE_ADDRESS(GetDeviceAddress());
     Descriptor->Flags |= OHCI_ENDPOINT_SET_ENDPOINT_NUMBER(GetEndpointAddress());
     Descriptor->Flags |= OHCI_ENDPOINT_SET_MAX_PACKET_SIZE(GetMaxPacketSize());
+
+    DPRINT1("Flags %x DeviceAddress %x EndpointAddress %x PacketSize %x\n", Descriptor->Flags, GetDeviceAddress(), GetEndpointAddress(), GetMaxPacketSize());
 
     //
     // is there an endpoint descriptor

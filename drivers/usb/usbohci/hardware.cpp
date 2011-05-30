@@ -545,12 +545,15 @@ CUSBHardwareDevice::StartController(void)
     //
     ASSERT((Control & OHCI_HC_FUNCTIONAL_STATE_MASK) == OHCI_HC_FUNCTIONAL_STATE_OPERATIONAL);
     ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
+    DPRINT1("Control %x\n", Control);
 
     //
     // get frame interval
     //
-    FrameInterval = (READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET)) & OHCI_FRAME_INTERVAL_TOGGLE) ^ OHCI_FRAME_INTERVAL_TOGGLE;
+    FrameInterval = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_OFFSET));
+    DPRINT1("FrameInterval %x IntervalValue %x\n", FrameInterval, m_IntervalValue);
     FrameInterval |= OHCI_FSMPS(m_IntervalValue) | m_IntervalValue;
+    DPRINT1("FrameInterval %x\n", FrameInterval);
 
     //
     // write frame interval
@@ -562,7 +565,7 @@ CUSBHardwareDevice::StartController(void)
     //
     Periodic = OHCI_PERIODIC(m_IntervalValue);
     WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_PERIODIC_START_OFFSET), Periodic);
-
+    DPRINT1("Periodic Start %x\n", Periodic);
 
     //
     // read descriptor
@@ -919,6 +922,8 @@ CUSBHardwareDevice::StopController(void)
     //
     m_IntervalValue = OHCI_GET_INTERVAL_VALUE(FrameInterval);
 
+    DPRINT1("FrameInterval %x Interval %x\n", FrameInterval, m_IntervalValue);
+
     //
     // now reset controller
     //
@@ -1206,10 +1211,30 @@ VOID
 CUSBHardwareDevice::GetCurrentFrameNumber(
     PULONG FrameNumber)
 {
+    ULONG Control;
+    ULONG Number;
+
+
+    Number = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_FRAME_INTERVAL_NUMBER_OFFSET));
+    DPRINT1("FrameNumberInterval %x Frame %x\n", Number, m_HCCA->CurrentFrameNumber);
+
+    //
+    // remove reserved bits
+    //
+    Number &= 0xFFFF;
+
     //
     // store frame number
     //
-    *FrameNumber = m_HCCA->CurrentFrameNumber;
+    *FrameNumber = Number;
+
+    //
+    // is the controller started
+    //
+    Control = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + OHCI_CONTROL_OFFSET));
+    ASSERT((Control & OHCI_ENABLE_LIST) == OHCI_ENABLE_LIST);
+
+
 }
 
 VOID
@@ -1339,7 +1364,7 @@ InterruptServiceRoutine(
     //
     // defer processing
     //
-    DPRINT("Status %x Acknowledge %x\n", Status, Acknowledge);
+    DPRINT1("Status %x Acknowledge %x FrameNumber %x\n", Status, Acknowledge, This->m_HCCA->CurrentFrameNumber);
     KeInsertQueueDpc(&This->m_IntDpcObject, (PVOID)Status, (PVOID)(DoneHead & ~1));
 
     //

@@ -99,6 +99,11 @@
 #define OHCI_FRAME_INTERVAL_TOGGLE          0x80000000
 
 //
+// frame interval
+//
+#define OHCI_FRAME_INTERVAL_NUMBER_OFFSET          0x3C
+
+//
 // periodic start register
 //
 #define OHCI_PERIODIC_START_OFFSET             0x40
