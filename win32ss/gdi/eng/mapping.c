@@ -15,6 +15,16 @@ HANDLE ghSystem32Directory;
 HSEMAPHORE ghsemModuleList;
 LIST_ENTRY gleModulelist = {&gleModulelist, &gleModulelist};
 
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitMappingImpl(VOID)
+{
+    ghsemModuleList = EngCreateSemaphore();
+    if (!ghsemModuleList) return STATUS_NO_MEMORY;
+    return STATUS_SUCCESS;
+}
+
 PVOID
 NTAPI
 EngMapSectionView(
@@ -339,11 +349,12 @@ EngLoadModuleEx(
     UNICODE_STRING ustrFileName;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileInformation;
-    HANDLE hFile = NULL;
+    HANDLE hFile = NULL, hSection;
     NTSTATUS Status;
     LARGE_INTEGER liSize;
     PLIST_ENTRY ple;
-    ULONG cjSize;
+    ULONG cjSize, flPageProtect;
+    ACCESS_MASK amAccess;
 
     /* Acquire module list lock */
     EngAcquireSemaphore(ghsemModuleList);
@@ -363,6 +374,18 @@ EngLoadModuleEx(
     /* Use system32 root dir or absolute path */
     hRootDir = fl & FVF_SYSTEMROOT ? ghSystem32Directory : NULL;
 
+    /* Set access mask and page protection */
+    if (fl & FVF_WRITE)
+    {
+        amAccess = FILE_READ_DATA|FILE_WRITE_DATA;
+        flPageProtect =  PAGE_EXECUTE_READWRITE;
+    }
+    else
+    {
+        amAccess = FILE_READ_DATA;
+        flPageProtect = PAGE_EXECUTE_READ;
+    }
+
     /* Initialize unicode string and object attributes */
     RtlInitUnicodeString(&ustrFileName, pwsz);
     InitializeObjectAttributes(&ObjectAttributes,
@@ -373,7 +396,7 @@ EngLoadModuleEx(
 
     /* Now open the file */
     Status = ZwCreateFile(&hFile,
-                          FILE_READ_DATA,
+                          amAccess,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
@@ -451,14 +474,24 @@ EngLoadModuleEx(
 
     /* Create a section from the file */
     liSize.QuadPart = cjSizeOfModule;
-    Status = MmCreateSection(&pFileView->pSection,
+    Status = ZwCreateSection(&hSection,
                              SECTION_ALL_ACCESS,
                              NULL,
                              &liSize,
-                             fl & FVF_READONLY ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE,
+                             flPageProtect,
                              SEC_COMMIT,
-                             hFile,
-                             NULL);
+                             hFile);
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = ObReferenceObjectByHandle(hSection,
+                                           SECTION_ALL_ACCESS,
+                                           MmSectionObjectType,
+                                           KernelMode,
+                                           &pFileView->pSection,
+                                           NULL);
+        ZwClose(hSection);
+    }
 
     if (!NT_SUCCESS(Status))
     {
@@ -486,7 +519,7 @@ EngLoadModule(
     _In_ LPWSTR pwsz)
 {
     /* Forward to EngLoadModuleEx */
-    return (HANDLE)EngLoadModuleEx(pwsz, 0, FVF_READONLY | FVF_SYSTEMROOT);
+    return EngLoadModuleEx(pwsz, 0, FVF_SYSTEMROOT);
 }
 
 HANDLE
@@ -496,7 +529,7 @@ EngLoadModuleForWrite(
     _In_ ULONG  cjSizeOfModule)
 {
     /* Forward to EngLoadModuleEx */
-    return (HANDLE)EngLoadModuleEx(pwsz, cjSizeOfModule, FVF_SYSTEMROOT);
+    return EngLoadModuleEx(pwsz, cjSizeOfModule, FVF_WRITE|FVF_SYSTEMROOT);
 }
 
 _Check_return_

@@ -38,9 +38,14 @@ typedef struct _FONTFILEVIEW
 enum
 {
     FVF_SYSTEMROOT = 1,
-    FVF_READONLY = 2,
+    FVF_WRITE = 2,
     FVF_FONTFILE = 4,
 };
+
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitMappingImpl(VOID);
 
 PVOID
 NTAPI
