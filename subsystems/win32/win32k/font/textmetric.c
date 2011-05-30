@@ -11,6 +11,81 @@
 #define NDEBUG
 #include <debug.h>
 
+
+
+VOID
+NTAPI
+RFONT_vGetTextMetrics(
+    PRFONT prfnt,
+    TMW_INTERNAL *ptmwi)
+{
+    PIFIMETRICS pifi = prfnt->ppfe->pifi;
+
+    ptmwi->tmw.tmAscent = (prfnt->fddm.fxMaxAscender + 8) / 16;
+    ptmwi->tmw.tmDescent = (prfnt->fddm.fxMaxDescender + 8) / 16;
+    ptmwi->tmw.tmHeight = ptmwi->tmw.tmAscent + ptmwi->tmw.tmDescent;
+    ptmwi->tmw.tmInternalLeading = 0; // FIXME
+    ptmwi->tmw.tmExternalLeading = 0; // FIXME
+    ptmwi->tmw.tmAveCharWidth = 0; // FIXME
+    ptmwi->tmw.tmMaxCharWidth = prfnt->fddm.cxMax;
+    ptmwi->tmw.tmWeight = pifi->usWinWeight;
+    ptmwi->tmw.tmOverhang = 0; // FIXME
+    ptmwi->tmw.tmDigitizedAspectX = pifi->ptlAspect.x;
+    ptmwi->tmw.tmDigitizedAspectY = pifi->ptlAspect.y;
+    ptmwi->tmw.tmFirstChar = pifi->wcFirstChar;
+    ptmwi->tmw.tmLastChar = pifi->wcLastChar;
+    ptmwi->tmw.tmDefaultChar = pifi->wcDefaultChar;
+    ptmwi->tmw.tmBreakChar = pifi->wcBreakChar;
+    ptmwi->tmw.tmItalic = ((pifi->fsSelection & FM_SEL_ITALIC) != 0);
+    ptmwi->tmw.tmUnderlined = ((pifi->fsSelection & FM_SEL_UNDERSCORE) != 0);
+    ptmwi->tmw.tmStruckOut = ((pifi->fsSelection & FM_SEL_STRIKEOUT) != 0);
+    ptmwi->tmw.tmPitchAndFamily = pifi->jWinPitchAndFamily;
+    ptmwi->tmw.tmCharSet = pifi->jWinCharSet;
+    ptmwi->tmdiff.chFirst = pifi->chFirstChar;
+    ptmwi->tmdiff.chLast = pifi->chLastChar;
+    ptmwi->tmdiff.chDefault = pifi->chDefaultChar;
+    ptmwi->tmdiff.chBreak = pifi->chBreakChar;
+    ptmwi->tmdiff.cjotma = 0; // FIXME
+}
+
+VOID
+NTAPI
+RFONT_vGetETM(
+    PRFONT prfnt,
+    EXTTEXTMETRIC *petm)
+{
+    PIFIMETRICS pifi = prfnt->ppfe->pifi;
+
+    petm->emSize = sizeof(EXTTEXTMETRIC);
+    petm->emPointSize = 0; // FIXME
+    petm->emOrientation = 0; // FIXME
+    petm->emMasterHeight = 0; // FIXME
+    petm->emMinScale = 0; // FIXME
+    petm->emMaxScale = 0; // FIXME
+    petm->emMasterUnits = 0; // FIXME
+    petm->emCapHeight = 0; // FIXME
+    petm->emXHeight = 0; // FIXME
+    petm->emLowerCaseAscent = 0; // FIXME
+    petm->emLowerCaseDescent = 0; // FIXME
+    petm->emSlant = 0; // FIXME
+    petm->emSuperScript = 0; // FIXME
+    petm->emSubScript = 0; // FIXME
+    petm->emSuperScriptSize = 0; // FIXME
+    petm->emSubScriptSize = 0; // FIXME
+    petm->emUnderlineOffset = 0; // FIXME
+    petm->emUnderlineWidth = 0; // FIXME
+    petm->emDoubleUpperUnderlineOffset = 0; // FIXME
+    petm->emDoubleLowerUnderlineOffset = 0; // FIXME
+    petm->emDoubleUpperUnderlineWidth = 0; // FIXME
+    petm->emDoubleLowerUnderlineWidth = 0; // FIXME
+    petm->emStrikeOutOffset = 0; // FIXME
+    petm->emStrikeOutWidth = 0; // FIXME
+    petm->emKernPairs = pifi->cKerningPairs;
+    petm->emKernTracks = 0; // FIXME
+
+}
+
+
 W32KAPI
 BOOL
 APIENTRY
@@ -21,7 +96,6 @@ NtGdiGetTextMetricsW(
 {
     PDC pdc;
     PRFONT prfnt;
-    PIFIMETRICS pifi;
     BOOL bResult = TRUE;
 
     /* verify that the buffer is large enough */
@@ -36,19 +110,13 @@ NtGdiGetTextMetricsW(
 
     /* Get pointer to RFONT and IFI */
     prfnt = DC_prfnt(pdc);
-    pifi = prfnt->ppfe->pifi;
 
     /* Enter SEH for buffer copy */
     _SEH2_TRY
     {
         /* Probe and fill TMW_INTERNAL */
         ProbeForWrite(ptmwi, cj, 1);
-        RtlCopyMemory(&ptmwi->TextMetric, prfnt->ptmw, sizeof(TEXTMETRICW));
-        ptmwi->Diff.cjotma = 0; // FIXME: what is this?
-        ptmwi->Diff.chFirst = pifi->chFirstChar;
-        ptmwi->Diff.chLast = pifi->chLastChar;
-        ptmwi->Diff.ChDefault = pifi->chDefaultChar;
-        ptmwi->Diff.ChBreak = pifi->chBreakChar;
+        RFONT_vGetTextMetrics(prfnt, ptmwi);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -69,8 +137,37 @@ NtGdiGetETM(
     IN HDC hdc,
     OUT EXTTEXTMETRIC *petm)
 {
-    ASSERT(FALSE);
-    return FALSE;
+    PDC pdc;
+    PRFONT prfnt;
+    BOOL bResult = TRUE;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return FALSE;
+    }
+
+    /* Get pointer to RFONT */
+    prfnt = DC_prfnt(pdc);
+
+    /* Enter SEH for buffer copy */
+    _SEH2_TRY
+    {
+        /* Probe and fill TMW_INTERNAL */
+        ProbeForWrite(petm, sizeof(EXTTEXTMETRIC), 1);
+        RFONT_vGetETM(prfnt, petm);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        bResult = FALSE;
+    }
+    _SEH2_END
+
+    /* Unlock the DC and return */
+    DC_UnlockDc(pdc);
+    return bResult;
 }
 
 W32KAPI

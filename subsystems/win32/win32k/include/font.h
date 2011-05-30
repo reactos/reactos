@@ -107,7 +107,7 @@ typedef struct _RFONT
     DHPDEV dhpdev;
 
     PFE * ppfe;
-    PFF * pPFF;
+    PFF * ppff;
     RFONTLINK rflPDEV;
     RFONTLINK rflPFF;
     PRFONT prfntSystemTT;
@@ -121,7 +121,7 @@ typedef struct _RFONT
     FLONG flEUDCState;
     ULONG ulContent;
     ULONG ulTimeStamp;
-    ULONG uiNumLinks;
+    ULONG ulNumLinks;
     ULONG iGraphicsMode;
     ULONG ulOrientation;
     ULONG cBitsPerPel;
