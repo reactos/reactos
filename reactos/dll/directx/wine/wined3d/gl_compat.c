@@ -178,9 +178,9 @@ static void WINE_GLAPI wine_glFogi(GLenum pname, GLint param) {
         }
     } else {
         if(pname == GL_FOG_START) {
-            ctx->fogstart = param;
+            ctx->fogstart = (float) param;
         } else if(pname == GL_FOG_END) {
-            ctx->fogend = param;
+            ctx->fogend = (float) param;
         }
         old_fogcoord_glFogi(pname, param);
     }
@@ -199,9 +199,9 @@ static void WINE_GLAPI wine_glFogiv(GLenum pname, const GLint *param) {
         }
     } else {
         if(pname == GL_FOG_START) {
-            ctx->fogstart = *param;
+            ctx->fogstart = (float) *param;
         } else if(pname == GL_FOG_END) {
-            ctx->fogend = *param;
+            ctx->fogend = (float) *param;
         }
         old_fogcoord_glFogiv(pname, param);
     }
@@ -331,13 +331,13 @@ static void WINE_GLAPI wine_glFogCoordfEXT(GLfloat f) {
     ctx->fog_coord_value = f;
 }
 static void WINE_GLAPI wine_glFogCoorddEXT(GLdouble f) {
-    wine_glFogCoordfEXT(f);
+    wine_glFogCoordfEXT((GLfloat) f);
 }
 static void WINE_GLAPI wine_glFogCoordfvEXT(const GLfloat *f) {
     wine_glFogCoordfEXT(*f);
 }
 static void WINE_GLAPI wine_glFogCoorddvEXT(const GLdouble *f) {
-    wine_glFogCoordfEXT(*f);
+    wine_glFogCoordfEXT((GLfloat) *f);
 }
 
 /* End GL_EXT_fog_coord emulation */

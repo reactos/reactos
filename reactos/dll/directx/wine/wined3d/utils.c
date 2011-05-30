@@ -7,7 +7,7 @@
  * Copyright 2005 Oliver Stieber
  * Copyright 2006-2008 Henri Verbeet
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
- * Copyright 2009 Henri Verbeet for CodeWeavers
+ * Copyright 2009-2010 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@ struct StaticPixelFormatDesc
     enum wined3d_format_id id;
     DWORD alphaMask, redMask, greenMask, blueMask;
     UINT bpp;
-    short depthSize, stencilSize;
+    BYTE depthSize, stencilSize;
 };
 
 /*****************************************************************************
@@ -130,8 +130,10 @@ static const struct StaticPixelFormatDesc formats[] =
     /* Vendor-specific formats */
     {WINED3DFMT_ATI2N,                      0x0,        0x0,        0x0,        0x0,        1,      0,      0},
     {WINED3DFMT_NVDB,                       0x0,        0x0,        0x0,        0x0,        0,      0,      0},
+    {WINED3DFMT_INTZ,                       0x0,        0x0,        0x0,        0x0,        4,      24,     8},
     {WINED3DFMT_NVHU,                       0x0,        0x0,        0x0,        0x0,        2,      0,      0},
     {WINED3DFMT_NVHS,                       0x0,        0x0,        0x0,        0x0,        2,      0,      0},
+    {WINED3DFMT_NULL,                       0xff000000, 0x000000ff, 0x0000ff00, 0x00ff0000, 4,      0,      0},
 };
 
 struct wined3d_format_base_flags
@@ -156,6 +158,8 @@ static const struct wined3d_format_base_flags format_base_flags[] =
     {WINED3DFMT_MULTI2_ARGB8,       WINED3DFMT_FLAG_FOURCC},
     {WINED3DFMT_G8R8_G8B8,          WINED3DFMT_FLAG_FOURCC},
     {WINED3DFMT_R8G8_B8G8,          WINED3DFMT_FLAG_FOURCC},
+    {WINED3DFMT_INTZ,               WINED3DFMT_FLAG_FOURCC},
+    {WINED3DFMT_NULL,               WINED3DFMT_FLAG_FOURCC},
     {WINED3DFMT_P8_UINT,            WINED3DFMT_FLAG_GETDC},
     {WINED3DFMT_B8G8R8_UNORM,       WINED3DFMT_FLAG_GETDC},
     {WINED3DFMT_B8G8R8A8_UNORM,     WINED3DFMT_FLAG_GETDC},
@@ -342,10 +346,10 @@ static void convert_r8g8_snorm(const BYTE *src, BYTE *dst, UINT pitch, UINT widt
         Dest = dst + y * outpitch;
         for (x = 0; x < width; x++ )
         {
-            LONG color = (*Source++);
+            const short color = (*Source++);
             /* B */ Dest[0] = 0xff;
             /* G */ Dest[1] = (color >> 8) + 128; /* V */
-            /* R */ Dest[2] = (color) + 128;      /* U */
+            /* R */ Dest[2] = (color & 0xff) + 128;      /* U */
             Dest += 3;
         }
     }
@@ -436,10 +440,10 @@ static void convert_r16g16_snorm(const BYTE *src, BYTE *dst, UINT pitch, UINT wi
         Dest = (unsigned short *) (dst + y * outpitch);
         for (x = 0; x < width; x++ )
         {
-            DWORD color = (*Source++);
+            const DWORD color = (*Source++);
             /* B */ Dest[0] = 0xffff;
             /* G */ Dest[1] = (color >> 16) + 32768; /* V */
-            /* R */ Dest[2] = (color      ) + 32768; /* U */
+            /* R */ Dest[2] = (color & 0xffff) + 32768; /* U */
             Dest += 3;
         }
     }
@@ -856,6 +860,20 @@ static const struct wined3d_format_texture_info format_texture_info[] =
             GL_LUMINANCE_ALPHA,         GL_UNSIGNED_BYTE,                 0,
             WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING | WINED3DFMT_FLAG_FILTERING,
             ARB_TEXTURE_COMPRESSION_RGTC, NULL},
+    {WINED3DFMT_INTZ,                   GL_DEPTH24_STENCIL8_EXT,          GL_DEPTH24_STENCIL8_EXT,                0,
+            GL_DEPTH_STENCIL_EXT,       GL_UNSIGNED_INT_24_8_EXT,         0,
+            WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING | WINED3DFMT_FLAG_FILTERING | WINED3DFMT_FLAG_DEPTH
+            | WINED3DFMT_FLAG_STENCIL,
+            EXT_PACKED_DEPTH_STENCIL,   NULL},
+    {WINED3DFMT_INTZ,                   GL_DEPTH24_STENCIL8,              GL_DEPTH24_STENCIL8,                    0,
+            GL_DEPTH_STENCIL,           GL_UNSIGNED_INT_24_8,             0,
+            WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING | WINED3DFMT_FLAG_FILTERING | WINED3DFMT_FLAG_DEPTH
+            | WINED3DFMT_FLAG_STENCIL,
+            ARB_FRAMEBUFFER_OBJECT,     NULL},
+    {WINED3DFMT_NULL,                   GL_RGBA8,                         GL_RGBA8,                               0,
+            GL_RGBA,                    GL_UNSIGNED_INT_8_8_8_8_REV,      0,
+            WINED3DFMT_FLAG_RENDERTARGET,
+            ARB_FRAMEBUFFER_OBJECT,     NULL},
 };
 
 static inline int getFmtIdx(enum wined3d_format_id format_id)
@@ -916,7 +934,7 @@ static BOOL init_format_base_info(struct wined3d_gl_info *gl_info)
             return FALSE;
         }
 
-        gl_info->formats[fmt_idx].Flags |= format_base_flags[i].flags;
+        gl_info->formats[fmt_idx].flags |= format_base_flags[i].flags;
     }
 
     return TRUE;
@@ -942,7 +960,7 @@ static BOOL init_format_compression_info(struct wined3d_gl_info *gl_info)
         format->block_width = format_compression_info[i].block_width;
         format->block_height = format_compression_info[i].block_height;
         format->block_byte_count = format_compression_info[i].block_byte_count;
-        format->Flags |= WINED3DFMT_FLAG_COMPRESSED;
+        format->flags |= WINED3DFMT_FLAG_COMPRESSED;
     }
 
     return TRUE;
@@ -978,18 +996,18 @@ static void check_fbo_compat(const struct wined3d_gl_info *gl_info, struct wined
     if (status == GL_FRAMEBUFFER_COMPLETE)
     {
         TRACE("Format %s is supported as FBO color attachment.\n", debug_d3dformat(format->id));
-        format->Flags |= WINED3DFMT_FLAG_FBO_ATTACHABLE;
+        format->flags |= WINED3DFMT_FLAG_FBO_ATTACHABLE;
         format->rtInternal = format->glInternal;
     }
     else
     {
         if (!format->rtInternal)
         {
-            if (format->Flags & WINED3DFMT_FLAG_RENDERTARGET)
+            if (format->flags & WINED3DFMT_FLAG_RENDERTARGET)
             {
                 FIXME("Format %s with rendertarget flag is not supported as FBO color attachment,"
                         " and no fallback specified.\n", debug_d3dformat(format->id));
-                format->Flags &= ~WINED3DFMT_FLAG_RENDERTARGET;
+                format->flags &= ~WINED3DFMT_FLAG_RENDERTARGET;
             }
             else
             {
@@ -1024,12 +1042,12 @@ static void check_fbo_compat(const struct wined3d_gl_info *gl_info, struct wined
             {
                 FIXME("Format %s rtInternal format is not supported as FBO color attachment.\n",
                         debug_d3dformat(format->id));
-                format->Flags &= ~WINED3DFMT_FLAG_RENDERTARGET;
+                format->flags &= ~WINED3DFMT_FLAG_RENDERTARGET;
             }
         }
     }
 
-    if (status == GL_FRAMEBUFFER_COMPLETE && format->Flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING)
+    if (status == GL_FRAMEBUFFER_COMPLETE && format->flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING)
     {
         GLuint rb;
 
@@ -1050,7 +1068,7 @@ static void check_fbo_compat(const struct wined3d_gl_info *gl_info, struct wined
         {
             while(glGetError());
             TRACE("Format doesn't support post-pixelshader blending.\n");
-            format->Flags &= ~WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING;
+            format->flags &= ~WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING;
         }
 
         if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT]
@@ -1074,7 +1092,7 @@ static void check_fbo_compat(const struct wined3d_gl_info *gl_info, struct wined
         if (status == GL_FRAMEBUFFER_COMPLETE)
         {
             TRACE("Format %s's sRGB format is FBO attachable.\n", debug_d3dformat(format->id));
-            format->Flags |= WINED3DFMT_FLAG_FBO_ATTACHABLE_SRGB;
+            format->flags |= WINED3DFMT_FLAG_FBO_ATTACHABLE_SRGB;
         }
         else
         {
@@ -1109,14 +1127,14 @@ static void init_format_fbo_compat_info(struct wined3d_gl_info *gl_info)
 
         if (!format->glInternal) continue;
 
-        if (format->Flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))
+        if (format->flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL))
         {
             TRACE("Skipping format %s because it's a depth/stencil format.\n",
                     debug_d3dformat(format->id));
             continue;
         }
 
-        if (format->Flags & WINED3DFMT_FLAG_COMPRESSED)
+        if (format->flags & WINED3DFMT_FLAG_COMPRESSED)
         {
             TRACE("Skipping format %s because it's a compressed format.\n",
                     debug_d3dformat(format->id));
@@ -1163,14 +1181,35 @@ static BOOL init_format_texture_info(struct wined3d_gl_info *gl_info)
         if (!gl_info->supported[format_texture_info[i].extension]) continue;
 
         format = &gl_info->formats[fmt_idx];
+
+        /* ARB_texture_rg defines floating point formats, but only if
+         * ARB_texture_float is also supported. */
+        if (!gl_info->supported[ARB_TEXTURE_FLOAT]
+                && (format->flags & WINED3DFMT_FLAG_FLOAT))
+            continue;
+
         format->glInternal = format_texture_info[i].gl_internal;
         format->glGammaInternal = format_texture_info[i].gl_srgb_internal;
         format->rtInternal = format_texture_info[i].gl_rt_internal;
         format->glFormat = format_texture_info[i].gl_format;
         format->glType = format_texture_info[i].gl_type;
         format->color_fixup = COLOR_FIXUP_IDENTITY;
-        format->Flags |= format_texture_info[i].flags;
+        format->flags |= format_texture_info[i].flags;
         format->heightscale = 1.0f;
+
+        if (format->glGammaInternal != format->glInternal)
+        {
+            /* Filter sRGB capabilities if EXT_texture_sRGB is not supported. */
+            if (!gl_info->supported[EXT_TEXTURE_SRGB])
+            {
+                format->glGammaInternal = format->glInternal;
+                format->flags &= ~(WINED3DFMT_FLAG_SRGB_READ | WINED3DFMT_FLAG_SRGB_WRITE);
+            }
+            else if (gl_info->supported[EXT_TEXTURE_SRGB_DECODE])
+            {
+                format->glInternal = format->glGammaInternal;
+            }
+        }
 
         /* Texture conversion stuff */
         format->convert = format_texture_info[i].convert;
@@ -1326,7 +1365,7 @@ static void init_format_filter_info(struct wined3d_gl_info *gl_info, enum wined3
             for(i = 0; i < (sizeof(fmts16) / sizeof(*fmts16)); i++)
             {
                 fmt_idx = getFmtIdx(fmts16[i]);
-                gl_info->formats[fmt_idx].Flags |= WINED3DFMT_FLAG_FILTERING;
+                gl_info->formats[fmt_idx].flags |= WINED3DFMT_FLAG_FILTERING;
             }
         }
         return;
@@ -1342,7 +1381,7 @@ static void init_format_filter_info(struct wined3d_gl_info *gl_info, enum wined3
         if(filtered)
         {
             TRACE("Format %s supports filtering\n", debug_d3dformat(fmts16[i]));
-            format->Flags |= WINED3DFMT_FLAG_FILTERING;
+            format->flags |= WINED3DFMT_FLAG_FILTERING;
         }
         else
         {
@@ -1565,7 +1604,7 @@ UINT wined3d_format_calculate_size(const struct wined3d_format *format, UINT ali
     {
         size = 0;
     }
-    else if (format->Flags & WINED3DFMT_FLAG_COMPRESSED)
+    else if (format->flags & WINED3DFMT_FLAG_COMPRESSED)
     {
         UINT row_block_count = (width + format->block_width - 1) / format->block_width;
         UINT row_count = (height + format->block_height - 1) / format->block_height;
@@ -1576,7 +1615,11 @@ UINT wined3d_format_calculate_size(const struct wined3d_format *format, UINT ali
         size = height * (((width * format->byte_count) + alignment - 1) & ~(alignment - 1));
     }
 
-    if (format->heightscale != 0.0f) size *= format->heightscale;
+    if (format->heightscale != 0.0f)
+    {
+        /* The D3D format requirements make sure that the resulting format is an integer again */
+        size = (UINT) (size * format->heightscale);
+    }
 
     return size;
 }
@@ -1720,6 +1763,8 @@ const char *debug_d3dformat(enum wined3d_format_id format_id)
         FMT_TO_STR(WINED3DFMT_B5G5R5A1_UNORM);
         FMT_TO_STR(WINED3DFMT_B8G8R8A8_UNORM);
         FMT_TO_STR(WINED3DFMT_B8G8R8X8_UNORM);
+        FMT_TO_STR(WINED3DFMT_INTZ);
+        FMT_TO_STR(WINED3DFMT_NULL);
 #undef FMT_TO_STR
         default:
         {
@@ -1921,7 +1966,6 @@ const char *debug_d3drenderstate(WINED3DRENDERSTATETYPE state)
         D3DSTATE_TO_STR(WINED3DRS_EDGEANTIALIAS);
         D3DSTATE_TO_STR(WINED3DRS_COLORKEYENABLE);
         D3DSTATE_TO_STR(WINED3DRS_MIPMAPLODBIAS);
-        D3DSTATE_TO_STR(WINED3DRS_ZBIAS);
         D3DSTATE_TO_STR(WINED3DRS_RANGEFOGENABLE);
         D3DSTATE_TO_STR(WINED3DRS_ANISOTROPY);
         D3DSTATE_TO_STR(WINED3DRS_FLUSHBATCH);
@@ -2193,6 +2237,8 @@ const char *debug_d3dstate(DWORD state)
         return "STATE_MATERIAL";
     if (STATE_IS_FRONTFACE(state))
         return "STATE_FRONTFACE";
+    if (STATE_IS_POINTSPRITECOORDORIGIN(state))
+        return "STATE_POINTSPRITECOORDORIGIN";
 
     return wine_dbg_sprintf("UNKNOWN_STATE(%#x)", state);
 }
@@ -2493,17 +2539,18 @@ unsigned int count_bits(unsigned int mask)
 /* Helper function for retrieving color info for ChoosePixelFormat and wglChoosePixelFormatARB.
  * The later function requires individual color components. */
 BOOL getColorBits(const struct wined3d_format *format,
-        short *redSize, short *greenSize, short *blueSize, short *alphaSize, short *totalSize)
+        BYTE *redSize, BYTE *greenSize, BYTE *blueSize, BYTE *alphaSize, BYTE *totalSize)
 {
     TRACE("format %s.\n", debug_d3dformat(format->id));
 
     switch (format->id)
     {
+        case WINED3DFMT_B10G10R10A2_UNORM:
+        case WINED3DFMT_R10G10B10A2_UNORM:
         case WINED3DFMT_B8G8R8X8_UNORM:
         case WINED3DFMT_B8G8R8_UNORM:
         case WINED3DFMT_B8G8R8A8_UNORM:
         case WINED3DFMT_R8G8B8A8_UNORM:
-        case WINED3DFMT_B10G10R10A2_UNORM:
         case WINED3DFMT_B5G5R5X1_UNORM:
         case WINED3DFMT_B5G5R5A1_UNORM:
         case WINED3DFMT_B5G6R5_UNORM:
@@ -2530,7 +2577,7 @@ BOOL getColorBits(const struct wined3d_format *format,
 }
 
 /* Helper function for retrieving depth/stencil info for ChoosePixelFormat and wglChoosePixelFormatARB */
-BOOL getDepthStencilBits(const struct wined3d_format *format, short *depthSize, short *stencilSize)
+BOOL getDepthStencilBits(const struct wined3d_format *format, BYTE *depthSize, BYTE *stencilSize)
 {
     TRACE("format %s.\n", debug_d3dformat(format->id));
 
@@ -2545,6 +2592,7 @@ BOOL getDepthStencilBits(const struct wined3d_format *format, short *depthSize, 
         case WINED3DFMT_S8_UINT_D24_FLOAT:
         case WINED3DFMT_D32_UNORM:
         case WINED3DFMT_D32_FLOAT:
+        case WINED3DFMT_INTZ:
             break;
         default:
             FIXME("Unsupported depth/stencil format %s.\n", debug_d3dformat(format->id));
@@ -2689,7 +2737,8 @@ DWORD get_flexible_vertex_size(DWORD d3dvtVertexType) {
     return size;
 }
 
-void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_settings *settings, BOOL ignore_textype) {
+void gen_ffp_frag_op(struct wined3d_stateblock *stateblock, struct ffp_frag_settings *settings, BOOL ignore_textype)
+{
 #define ARG1 0x01
 #define ARG2 0x02
 #define ARG0 0x04
@@ -2725,13 +2774,14 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
     unsigned int i;
     DWORD ttff;
     DWORD cop, aop, carg0, carg1, carg2, aarg0, aarg1, aarg2;
-    IWineD3DDeviceImpl *device = stateblock->device;
-    IWineD3DSurfaceImpl *rt = device->render_targets[0];
+    struct wined3d_device *device = stateblock->device;
+    struct wined3d_surface *rt = device->fb.render_targets[0];
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
 
     for (i = 0; i < gl_info->limits.texture_stages; ++i)
     {
-        IWineD3DBaseTextureImpl *texture;
+        const struct wined3d_texture *texture;
+
         settings->op[i].padding = 0;
         if (stateblock->state.texture_states[i][WINED3DTSS_COLOROP] == WINED3DTOP_DISABLE)
         {
@@ -2756,7 +2806,7 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
             }
             else
             {
-                switch (texture->baseTexture.target)
+                switch (texture->target)
                 {
                     case GL_TEXTURE_1D:
                         settings->op[i].tex_type = tex_1d;
@@ -2813,12 +2863,14 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
 
         if (!i && stateblock->state.textures[0] && stateblock->state.render_states[WINED3DRS_COLORKEYENABLE])
         {
-            IWineD3DBaseTextureImpl *texture = stateblock->state.textures[0];
-            GLenum texture_dimensions = texture->baseTexture.target;
+            GLenum texture_dimensions;
+
+            texture = stateblock->state.textures[0];
+            texture_dimensions = texture->target;
 
             if (texture_dimensions == GL_TEXTURE_2D || texture_dimensions == GL_TEXTURE_RECTANGLE_ARB)
             {
-                IWineD3DSurfaceImpl *surf = (IWineD3DSurfaceImpl *)texture->baseTexture.sub_resources[0];
+                struct wined3d_surface *surf = surface_from_resource(texture->sub_resources[0]);
 
                 if (surf->CKeyFlags & WINEDDSD_CKSRCBLT && !surf->resource.format->alpha_mask)
                 {
@@ -2938,7 +2990,7 @@ void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_setting
         }
     }
     if (stateblock->state.render_states[WINED3DRS_SRGBWRITEENABLE]
-            && rt->resource.format->Flags & WINED3DFMT_FLAG_SRGB_WRITE)
+            && rt->resource.format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
     {
         settings->sRGB_write = 1;
     } else {
@@ -2979,11 +3031,11 @@ void add_ffp_frag_shader(struct wine_rb_tree *shaders, struct ffp_frag_desc *des
  * Requires the caller to activate the correct unit before
  */
 /* GL locking is done by the caller (state handler) */
-void texture_activate_dimensions(IWineD3DBaseTextureImpl *texture, const struct wined3d_gl_info *gl_info)
+void texture_activate_dimensions(const struct wined3d_texture *texture, const struct wined3d_gl_info *gl_info)
 {
     if (texture)
     {
-        switch (texture->baseTexture.target)
+        switch (texture->target)
         {
             case GL_TEXTURE_2D:
                 glDisable(GL_TEXTURE_3D);
@@ -3064,7 +3116,7 @@ void texture_activate_dimensions(IWineD3DBaseTextureImpl *texture, const struct 
 }
 
 /* GL locking is done by the caller (state handler) */
-void sampler_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
+void sampler_texdim(DWORD state, struct wined3d_stateblock *stateblock, struct wined3d_context *context)
 {
     DWORD sampler = state - STATE_SAMPLER(0);
     DWORD mapped_stage = stateblock->device->texUnitMap[sampler];
@@ -3162,7 +3214,7 @@ void select_shader_mode(const struct wined3d_gl_info *gl_info, int *ps_selected,
     else *ps_selected = SHADER_NONE;
 }
 
-const struct blit_shader *wined3d_select_blitter(const struct wined3d_gl_info *gl_info, enum blit_operation blit_op,
+const struct blit_shader *wined3d_select_blitter(const struct wined3d_gl_info *gl_info, enum wined3d_blit_op blit_op,
         const RECT *src_rect, DWORD src_usage, WINED3DPOOL src_pool, const struct wined3d_format *src_format,
         const RECT *dst_rect, DWORD dst_usage, WINED3DPOOL dst_pool, const struct wined3d_format *dst_format)
 {

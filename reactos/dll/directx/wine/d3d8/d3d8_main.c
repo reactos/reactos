@@ -43,9 +43,9 @@ IDirect3D8* WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT SDKVersion) {
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D8Impl));
 
-    object->lpVtbl = &Direct3D8_Vtbl;
+    object->IDirect3D8_iface.lpVtbl = &Direct3D8_Vtbl;
     object->ref = 1;
-    object->WineD3D = WineDirect3DCreate(8, (IUnknown *)object);
+    object->WineD3D = wined3d_create(8, &object->IDirect3D8_iface);
 
     TRACE("Created Direct3D object @ %p, WineObj @ %p\n", object, object->WineD3D);
 
@@ -56,7 +56,7 @@ IDirect3D8* WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT SDKVersion) {
         HeapFree( GetProcessHeap(), 0, object );
         object = NULL;
     }
-    return (IDirect3D8*) object;
+    return &object->IDirect3D8_iface;
 }
 
 /* At process attach */

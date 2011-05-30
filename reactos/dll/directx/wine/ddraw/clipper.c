@@ -95,7 +95,7 @@ static ULONG WINAPI IDirectDrawClipperImpl_Release(IDirectDrawClipper *iface) {
     if (ref == 0)
     {
         EnterCriticalSection(&ddraw_cs);
-        IWineD3DClipper_Release(This->wineD3DClipper);
+        wined3d_clipper_decref(This->wineD3DClipper);
         HeapFree(GetProcessHeap(), 0, This);
         LeaveCriticalSection(&ddraw_cs);
         return 0;
@@ -127,9 +127,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_SetHwnd(
     TRACE("iface %p, flags %#x, window %p.\n", iface, dwFlags, hWnd);
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DClipper_SetHWnd(This->wineD3DClipper,
-                                 dwFlags,
-                                 hWnd);
+    hr = wined3d_clipper_set_window(This->wineD3DClipper, dwFlags, hWnd);
     LeaveCriticalSection(&ddraw_cs);
     switch(hr)
     {
@@ -167,10 +165,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_GetClipList(
             iface, wine_dbgstr_rect(lpRect), lpClipList, lpdwSize);
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DClipper_GetClipList(This->wineD3DClipper,
-                                     lpRect,
-                                     lpClipList,
-                                     lpdwSize);
+    hr = wined3d_clipper_get_clip_list(This->wineD3DClipper, lpRect, lpClipList, lpdwSize);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }
@@ -198,9 +193,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_SetClipList(
     TRACE("iface %p, clip_list %p, flags %#x.\n", iface, lprgn, dwFlag);
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DClipper_SetClipList(This->wineD3DClipper,
-                                     lprgn,
-                                     dwFlag);
+    hr = wined3d_clipper_set_clip_list(This->wineD3DClipper, lprgn, dwFlag);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }
@@ -225,8 +218,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_GetHWnd(
     TRACE("iface %p, window %p.\n", iface, hWndPtr);
 
     EnterCriticalSection(&ddraw_cs);
-    hr =  IWineD3DClipper_GetHWnd(This->wineD3DClipper,
-                                  hWndPtr);
+    hr = wined3d_clipper_get_window(This->wineD3DClipper, hWndPtr);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }
@@ -307,7 +299,7 @@ HRESULT ddraw_clipper_init(IDirectDrawClipperImpl *clipper)
 {
     clipper->lpVtbl = &ddraw_clipper_vtbl;
     clipper->ref = 1;
-    clipper->wineD3DClipper = pWineDirect3DCreateClipper();
+    clipper->wineD3DClipper = wined3d_clipper_create();
     if (!clipper->wineD3DClipper)
     {
         WARN("Failed to create wined3d clipper.\n");

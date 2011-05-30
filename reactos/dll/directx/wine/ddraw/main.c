@@ -38,8 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 /* The configured default surface */
 WINED3DSURFTYPE DefaultSurfaceType = SURFACE_UNKNOWN;
 
-typeof(WineDirect3DCreateClipper) *pWineDirect3DCreateClipper DECLSPEC_HIDDEN;
-typeof(WineDirect3DCreate) *pWineDirect3DCreate DECLSPEC_HIDDEN;
+
 
 /* DDraw list and critical section */
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
@@ -167,31 +166,6 @@ void *ddraw_get_object(struct ddraw_handle_table *t, DWORD handle, enum ddraw_ha
     return entry->object;
 }
 
-/*
- * Helper Function for DDRAW_Create and DirectDrawCreateClipper for
- * lazy loading of the Wine D3D driver.
- *
- * Returns
- *  TRUE on success
- *  FALSE on failure.
- */
-
-BOOL LoadWineD3D(void)
-{
-    static HMODULE hWineD3D = (HMODULE) -1;
-    if (hWineD3D == (HMODULE) -1)
-    {
-        hWineD3D = LoadLibraryA("wined3d");
-        if (hWineD3D)
-        {
-            pWineDirect3DCreate = (typeof(WineDirect3DCreate) *)GetProcAddress(hWineD3D, "WineDirect3DCreate");
-            pWineDirect3DCreateClipper = (typeof(WineDirect3DCreateClipper) *) GetProcAddress(hWineD3D, "WineDirect3DCreateClipper");
-            return TRUE;
-        }
-    }
-    return hWineD3D != NULL;
-}
-
 /***********************************************************************
  *
  * Helper function for DirectDrawCreate and friends
@@ -270,8 +244,8 @@ DDRAW_Create(const GUID *guid,
         return hr;
     }
 
-    hr = IDirectDraw7_QueryInterface((IDirectDraw7 *)This, iid, DD);
-    IDirectDraw7_Release((IDirectDraw7 *)This);
+    hr = IDirectDraw7_QueryInterface(&This->IDirectDraw7_iface, iid, DD);
+    IDirectDraw7_Release(&This->IDirectDraw7_iface);
     if (SUCCEEDED(hr)) list_add_head(&global_ddraw_list, &This->ddraw_list_entry);
     else WARN("Failed to query interface %s from ddraw object %p.\n", debugstr_guid(iid), This);
 
@@ -525,6 +499,23 @@ static const struct object_creation_info object_creation[] =
     { &CLSID_DirectDrawClipper, CF_CreateDirectDrawClipper }
 };
 
+
+/******************************************************************************
+ * DirectDraw ClassFactory implementation
+ ******************************************************************************/
+typedef struct
+{
+    IClassFactory IClassFactory_iface;
+
+    LONG ref;
+    HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, REFIID iid, LPVOID *ppObj);
+} IClassFactoryImpl;
+
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
+
 /*******************************************************************************
  * IDirectDrawClassFactory::QueryInterface
  *
@@ -539,12 +530,10 @@ static const struct object_creation_info object_creation[] =
  *    Failure: E_NOINTERFACE
  *
  *******************************************************************************/
-static HRESULT WINAPI
-IDirectDrawClassFactoryImpl_QueryInterface(IClassFactory *iface,
-                    REFIID riid,
-                    void **obj)
+static HRESULT WINAPI IDirectDrawClassFactoryImpl_QueryInterface(IClassFactory *iface, REFIID riid,
+        void **obj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obj);
 
@@ -569,10 +558,9 @@ IDirectDrawClassFactoryImpl_QueryInterface(IClassFactory *iface,
  *  The new refcount
  *
  *******************************************************************************/
-static ULONG WINAPI
-IDirectDrawClassFactoryImpl_AddRef(IClassFactory *iface)
+static ULONG WINAPI IDirectDrawClassFactoryImpl_AddRef(IClassFactory *iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("%p increasing refcount to %u.\n", This, ref);
@@ -590,10 +578,9 @@ IDirectDrawClassFactoryImpl_AddRef(IClassFactory *iface)
  *  The new refcount
  *
  *******************************************************************************/
-static ULONG WINAPI
-IDirectDrawClassFactoryImpl_Release(IClassFactory *iface)
+static ULONG WINAPI IDirectDrawClassFactoryImpl_Release(IClassFactory *iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("%p decreasing refcount to %u.\n", This, ref);
@@ -617,13 +604,10 @@ IDirectDrawClassFactoryImpl_Release(IClassFactory *iface)
  *  ???
  *
  *******************************************************************************/
-static HRESULT WINAPI
-IDirectDrawClassFactoryImpl_CreateInstance(IClassFactory *iface,
-                                           IUnknown *UnkOuter,
-                                           REFIID riid,
-                                           void **obj)
+static HRESULT WINAPI IDirectDrawClassFactoryImpl_CreateInstance(IClassFactory *iface,
+        IUnknown *UnkOuter, REFIID riid, void **obj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("iface %p, outer_unknown %p, riid %s, object %p.\n",
             iface, UnkOuter, debugstr_guid(riid), obj);
@@ -706,7 +690,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     factory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*factory));
     if (factory == NULL) return E_OUTOFMEMORY;
 
-    factory->lpVtbl = &IClassFactory_Vtbl;
+    factory->IClassFactory_iface.lpVtbl = &IClassFactory_Vtbl;
     factory->ref = 1;
 
     factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
@@ -916,11 +900,11 @@ DllMain(HINSTANCE hInstDLL,
                 WARN("DDraw %p has a refcount of %d\n", ddraw, ddraw->ref7 + ddraw->ref4 + ddraw->ref3 + ddraw->ref2 + ddraw->ref1);
 
                 /* Add references to each interface to avoid freeing them unexpectedly */
-                IDirectDraw_AddRef((IDirectDraw *)&ddraw->IDirectDraw_vtbl);
-                IDirectDraw2_AddRef((IDirectDraw2 *)&ddraw->IDirectDraw2_vtbl);
-                IDirectDraw3_AddRef((IDirectDraw3 *)&ddraw->IDirectDraw3_vtbl);
-                IDirectDraw4_AddRef((IDirectDraw4 *)&ddraw->IDirectDraw4_vtbl);
-                IDirectDraw7_AddRef((IDirectDraw7 *)ddraw);
+                IDirectDraw_AddRef(&ddraw->IDirectDraw_iface);
+                IDirectDraw2_AddRef(&ddraw->IDirectDraw2_iface);
+                IDirectDraw3_AddRef(&ddraw->IDirectDraw3_iface);
+                IDirectDraw4_AddRef(&ddraw->IDirectDraw4_iface);
+                IDirectDraw7_AddRef(&ddraw->IDirectDraw7_iface);
 
                 /* Does a D3D device exist? Destroy it
                     * TODO: Destroy all Vertex buffers, Lights, Materials
@@ -939,8 +923,8 @@ DllMain(HINSTANCE hInstDLL,
                 desc.dwSize = sizeof(desc);
                 for(i = 0; i <= 1; i++)
                 {
-                    hr = IDirectDraw7_EnumSurfaces((IDirectDraw7 *)ddraw,
-                            DDENUMSURFACES_ALL, &desc, ddraw, DestroyCallback);
+                    hr = IDirectDraw7_EnumSurfaces(&ddraw->IDirectDraw7_iface, DDENUMSURFACES_ALL,
+                            &desc, ddraw, DestroyCallback);
                     if(hr != D3D_OK)
                         ERR("(%p) EnumSurfaces failed, prepare for trouble\n", ddraw);
                 }
@@ -952,11 +936,11 @@ DllMain(HINSTANCE hInstDLL,
                 /* Release all hanging references to destroy the objects. This
                     * restores the screen mode too
                     */
-                while(IDirectDraw_Release((IDirectDraw *)&ddraw->IDirectDraw_vtbl));
-                while(IDirectDraw2_Release((IDirectDraw2 *)&ddraw->IDirectDraw2_vtbl));
-                while(IDirectDraw3_Release((IDirectDraw3 *)&ddraw->IDirectDraw3_vtbl));
-                while(IDirectDraw4_Release((IDirectDraw4 *)&ddraw->IDirectDraw4_vtbl));
-                while(IDirectDraw7_Release((IDirectDraw7 *)ddraw));
+                while(IDirectDraw_Release(&ddraw->IDirectDraw_iface));
+                while(IDirectDraw2_Release(&ddraw->IDirectDraw2_iface));
+                while(IDirectDraw3_Release(&ddraw->IDirectDraw3_iface));
+                while(IDirectDraw4_Release(&ddraw->IDirectDraw4_iface));
+                while(IDirectDraw7_Release(&ddraw->IDirectDraw7_iface));
             }
         }
 

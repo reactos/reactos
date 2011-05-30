@@ -51,7 +51,7 @@ static ULONG WINAPI d3d9_vertexshader_AddRef(IDirect3DVertexShader9 *iface)
     {
         IDirect3DDevice9Ex_AddRef(shader->parentDevice);
         wined3d_mutex_lock();
-        IWineD3DVertexShader_AddRef(shader->wineD3DVertexShader);
+        wined3d_shader_incref(shader->wined3d_shader);
         wined3d_mutex_unlock();
     }
 
@@ -70,7 +70,7 @@ static ULONG WINAPI d3d9_vertexshader_Release(IDirect3DVertexShader9 *iface)
         IDirect3DDevice9Ex *device = shader->parentDevice;
 
         wined3d_mutex_lock();
-        IWineD3DVertexShader_Release(shader->wineD3DVertexShader);
+        wined3d_shader_decref(shader->wined3d_shader);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -100,7 +100,7 @@ static HRESULT WINAPI d3d9_vertexshader_GetFunction(IDirect3DVertexShader9 *ifac
     TRACE("iface %p, data %p, data_size %p.\n", iface, data, data_size);
 
     wined3d_mutex_lock();
-    hr = IWineD3DVertexShader_GetFunction(((IDirect3DVertexShader9Impl *)iface)->wineD3DVertexShader, data, data_size);
+    hr = wined3d_shader_get_byte_code(((IDirect3DVertexShader9Impl *)iface)->wined3d_shader, data, data_size);
     wined3d_mutex_unlock();
 
     return hr;
@@ -135,8 +135,8 @@ HRESULT vertexshader_init(IDirect3DVertexShader9Impl *shader, IDirect3DDevice9Im
     shader->lpVtbl = &d3d9_vertexshader_vtbl;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateVertexShader(device->WineD3DDevice, byte_code, NULL,
-            shader, &d3d9_vertexshader_wined3d_parent_ops, &shader->wineD3DVertexShader);
+    hr = wined3d_shader_create_vs(device->wined3d_device, byte_code, NULL,
+            shader, &d3d9_vertexshader_wined3d_parent_ops, &shader->wined3d_shader);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
@@ -144,7 +144,7 @@ HRESULT vertexshader_init(IDirect3DVertexShader9Impl *shader, IDirect3DDevice9Im
         return hr;
     }
 
-    shader->parentDevice = (IDirect3DDevice9Ex *)device;
+    shader->parentDevice = &device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9Ex_AddRef(shader->parentDevice);
 
     return D3D_OK;
@@ -179,7 +179,7 @@ static ULONG WINAPI d3d9_pixelshader_AddRef(IDirect3DPixelShader9 *iface)
     {
         IDirect3DDevice9Ex_AddRef(shader->parentDevice);
         wined3d_mutex_lock();
-        IWineD3DPixelShader_AddRef(shader->wineD3DPixelShader);
+        wined3d_shader_incref(shader->wined3d_shader);
         wined3d_mutex_unlock();
     }
 
@@ -198,7 +198,7 @@ static ULONG WINAPI d3d9_pixelshader_Release(IDirect3DPixelShader9 *iface)
         IDirect3DDevice9Ex *device = shader->parentDevice;
 
         wined3d_mutex_lock();
-        IWineD3DPixelShader_Release(shader->wineD3DPixelShader);
+        wined3d_shader_decref(shader->wined3d_shader);
         wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
@@ -227,7 +227,7 @@ static HRESULT WINAPI d3d9_pixelshader_GetFunction(IDirect3DPixelShader9 *iface,
     TRACE("iface %p, data %p, data_size %p.\n", iface, data, data_size);
 
     wined3d_mutex_lock();
-    hr = IWineD3DPixelShader_GetFunction(((IDirect3DPixelShader9Impl *)iface)->wineD3DPixelShader, data, data_size);
+    hr = wined3d_shader_get_byte_code(((IDirect3DPixelShader9Impl *)iface)->wined3d_shader, data, data_size);
     wined3d_mutex_unlock();
 
     return hr;
@@ -262,8 +262,8 @@ HRESULT pixelshader_init(IDirect3DPixelShader9Impl *shader, IDirect3DDevice9Impl
     shader->lpVtbl = &d3d9_pixelshader_vtbl;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreatePixelShader(device->WineD3DDevice, byte_code, NULL, shader,
-            &d3d9_pixelshader_wined3d_parent_ops, &shader->wineD3DPixelShader);
+    hr = wined3d_shader_create_ps(device->wined3d_device, byte_code, NULL, shader,
+            &d3d9_pixelshader_wined3d_parent_ops, &shader->wined3d_shader);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
@@ -271,7 +271,7 @@ HRESULT pixelshader_init(IDirect3DPixelShader9Impl *shader, IDirect3DDevice9Impl
         return hr;
     }
 
-    shader->parentDevice = (IDirect3DDevice9Ex *)device;
+    shader->parentDevice = &device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9Ex_AddRef(shader->parentDevice);
 
     return D3D_OK;

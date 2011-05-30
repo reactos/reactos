@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Henri Verbeet for CodeWeavers
+ * Copyright 2009, 2011 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,94 +24,68 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-/* IUnknown methods */
-
-static HRESULT STDMETHODCALLTYPE rendertarget_view_QueryInterface(IWineD3DRendertargetView *iface,
-        REFIID riid, void **object)
+ULONG CDECL wined3d_rendertarget_view_incref(struct wined3d_rendertarget_view *view)
 {
-    TRACE("iface %p, riid %s, object %p\n", iface, debugstr_guid(riid), object);
+    ULONG refcount = InterlockedIncrement(&view->refcount);
 
-    if (IsEqualGUID(riid, &IID_IWineD3DRendertargetView)
-            || IsEqualGUID(riid, &IID_IWineD3DBase)
-            || IsEqualGUID(riid, &IID_IUnknown))
-    {
-        IUnknown_AddRef(iface);
-        *object = iface;
-        return S_OK;
-    }
-
-    WARN("%s not implemented, returning E_NOINTERFACE\n", debugstr_guid(riid));
-
-    *object = NULL;
-    return E_NOINTERFACE;
-}
-
-static ULONG STDMETHODCALLTYPE rendertarget_view_AddRef(IWineD3DRendertargetView *iface)
-{
-    struct wined3d_rendertarget_view *This = (struct wined3d_rendertarget_view *)iface;
-    ULONG refcount = InterlockedIncrement(&This->refcount);
-
-    TRACE("%p increasing refcount to %u\n", This, refcount);
+    TRACE("%p increasing refcount to %u.\n", view, refcount);
 
     return refcount;
 }
 
-static ULONG STDMETHODCALLTYPE rendertarget_view_Release(IWineD3DRendertargetView *iface)
+ULONG CDECL wined3d_rendertarget_view_decref(struct wined3d_rendertarget_view *view)
 {
-    struct wined3d_rendertarget_view *This = (struct wined3d_rendertarget_view *)iface;
-    ULONG refcount = InterlockedDecrement(&This->refcount);
+    ULONG refcount = InterlockedDecrement(&view->refcount);
 
-    TRACE("%p decreasing refcount to %u\n", This, refcount);
+    TRACE("%p decreasing refcount to %u.\n", view, refcount);
 
     if (!refcount)
-    {
-        IWineD3DResource_Release(This->resource);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
+        HeapFree(GetProcessHeap(), 0, view);
 
     return refcount;
 }
 
-/* IWineD3DBase methods */
-
-static void * STDMETHODCALLTYPE rendertarget_view_GetParent(IWineD3DRendertargetView *iface)
+void * CDECL wined3d_rendertarget_view_get_parent(const struct wined3d_rendertarget_view *view)
 {
-    TRACE("iface %p.\n", iface);
+    TRACE("view %p.\n", view);
 
-    return ((struct wined3d_rendertarget_view *)iface)->parent;
+    return view->parent;
 }
 
-/* IWineD3DRendertargetView methods */
-
-static HRESULT STDMETHODCALLTYPE rendertarget_view_GetResource(IWineD3DRendertargetView *iface,
-        IWineD3DResource **resource)
+struct wined3d_resource * CDECL wined3d_rendertarget_view_get_resource(const struct wined3d_rendertarget_view *view)
 {
-    struct wined3d_rendertarget_view *This = (struct wined3d_rendertarget_view *)iface;
+    TRACE("view %p.\n", view);
 
-    IWineD3DResource_AddRef(This->resource);
-    *resource = This->resource;
-
-    return WINED3D_OK;
+    return view->resource;
 }
 
-static const struct IWineD3DRendertargetViewVtbl wined3d_rendertarget_view_vtbl =
+static void wined3d_rendertarget_view_init(struct wined3d_rendertarget_view *view,
+        struct wined3d_resource *resource, void *parent)
 {
-    /* IUnknown methods */
-    rendertarget_view_QueryInterface,
-    rendertarget_view_AddRef,
-    rendertarget_view_Release,
-    /* IWineD3DBase methods */
-    rendertarget_view_GetParent,
-    /* IWineD3DRendertargetView methods */
-    rendertarget_view_GetResource,
-};
-
-void wined3d_rendertarget_view_init(struct wined3d_rendertarget_view *view,
-        IWineD3DResource *resource, void *parent)
-{
-    view->vtbl = &wined3d_rendertarget_view_vtbl;
     view->refcount = 1;
-    IWineD3DResource_AddRef(resource);
     view->resource = resource;
     view->parent = parent;
+}
+
+HRESULT CDECL wined3d_rendertarget_view_create(struct wined3d_resource *resource,
+        void *parent, struct wined3d_rendertarget_view **rendertarget_view)
+{
+    struct wined3d_rendertarget_view *object;
+
+    TRACE("resource %p, parent %p, rendertarget_view %p.\n",
+            resource, parent, rendertarget_view);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate memory\n");
+        return E_OUTOFMEMORY;
+    }
+
+    wined3d_rendertarget_view_init(object, resource, parent);
+
+    TRACE("Created render target view %p.\n", object);
+    *rendertarget_view = object;
+
+    return WINED3D_OK;
 }

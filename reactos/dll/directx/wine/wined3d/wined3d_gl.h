@@ -1744,7 +1744,6 @@ typedef enum wined3d_gl_extension
     ARB_GEOMETRY_SHADER4,
     ARB_HALF_FLOAT_PIXEL,
     ARB_HALF_FLOAT_VERTEX,
-    ARB_IMAGING,
     ARB_MAP_BUFFER_RANGE,
     ARB_MULTISAMPLE,
     ARB_MULTITEXTURE,
@@ -1786,6 +1785,7 @@ typedef enum wined3d_gl_extension
     EXT_BLEND_EQUATION_SEPARATE,
     EXT_BLEND_FUNC_SEPARATE,
     EXT_BLEND_MINMAX,
+    EXT_BLEND_SUBTRACT,
     EXT_DRAW_BUFFERS2,
     EXT_DEPTH_BOUNDS_TEST,
     EXT_FOG_COORD,
@@ -1810,6 +1810,7 @@ typedef enum wined3d_gl_extension
     EXT_TEXTURE_FILTER_ANISOTROPIC,
     EXT_TEXTURE_LOD_BIAS,
     EXT_TEXTURE_SRGB,
+    EXT_TEXTURE_SRGB_DECODE,
     EXT_VERTEX_ARRAY_BGRA,
     /* NVIDIA */
     NV_DEPTH_CLAMP,
@@ -1834,9 +1835,9 @@ typedef enum wined3d_gl_extension
     NV_VERTEX_PROGRAM3,
     /* SGI */
     SGIS_GENERATE_MIPMAP,
-    SGI_VIDEO_SYNC,
     /* WGL extensions */
     WGL_ARB_PIXEL_FORMAT,
+    WGL_EXT_SWAP_CONTROL,
     WGL_WINE_PIXEL_FORMAT_PASSTHROUGH,
     /* Internally used */
     WINED3D_GL_NORMALIZED_TEXRECT,
@@ -2145,88 +2146,6 @@ typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTUREFACEARBPROC)(GLenum target, GLe
 /* No _ARB, see extension spec */
 #define GL_HALF_FLOAT                                       0x140b
 #endif
-
-/* GL_ARB_imaging */
-#ifndef GL_ARB_imaging
-#define GL_ARB_imaging 1
-#define GL_CONSTANT_COLOR                                   0x8001
-#define GL_ONE_MINUS_CONSTANT_COLOR                         0x8002
-#define GL_CONSTANT_ALPHA                                   0x8003
-#define GL_ONE_MINUS_CONSTANT_ALPHA                         0x8004
-#define GL_BLEND_COLOR                                      0x8005
-#define GL_FUNC_ADD                                         0x8006
-#define GL_MIN                                              0x8007
-#define GL_MAX                                              0x8008
-#define GL_BLEND_EQUATION                                   0x8009
-#define GL_FUNC_SUBTRACT                                    0x800a
-#define GL_FUNC_REVERSE_SUBTRACT                            0x800b
-#define GL_CONVOLUTION_1D                                   0x8010
-#define GL_CONVOLUTION_2D                                   0x8011
-#define GL_SEPARABLE_2D                                     0x8012
-#define GL_CONVOLUTION_BORDER_MODE                          0x8013
-#define GL_CONVOLUTION_FILTER_SCALE                         0x8014
-#define GL_CONVOLUTION_FILTER_BIAS                          0x8015
-#define GL_REDUCE                                           0x8016
-#define GL_CONVOLUTION_FORMAT                               0x8017
-#define GL_CONVOLUTION_WIDTH                                0x8018
-#define GL_CONVOLUTION_HEIGHT                               0x8019
-#define GL_MAX_CONVOLUTION_WIDTH                            0x801a
-#define GL_MAX_CONVOLUTION_HEIGHT                           0x801b
-#define GL_POST_CONVOLUTION_RED_SCALE                       0x801d
-#define GL_POST_CONVOLUTION_GREEN_SCALE                     0x801f
-#define GL_POST_CONVOLUTION_BLUE_SCALE                      0x801e
-#define GL_POST_CONVOLUTION_ALPHA_SCALE                     0x801f
-#define GL_POST_CONVOLUTION_RED_BIAS                        0x8020
-#define GL_POST_CONVOLUTION_GREEN_BIAS                      0x8021
-#define GL_POST_CONVOLUTION_BLUE_BIAS                       0x8022
-#define GL_POST_CONVOLUTION_ALPHA_BIAS                      0x8023
-#define GL_HISTOGRAM                                        0x8024
-#define GL_PROXY_HISTOGRAM                                  0x8025
-#define GL_HISTOGRAM_WIDTH                                  0x8026
-#define GL_HISTOGRAM_FORMAT                                 0x8027
-#define GL_HISTOGRAM_RED_SIZE                               0x8028
-#define GL_HISTOGRAM_GREEN_SIZE                             0x8029
-#define GL_HISTOGRAM_BLUE_SIZE                              0x802a
-#define GL_HISTOGRAM_ALPHA_SIZE                             0x802b
-#define GL_HISTOGRAM_LUMINANCE_SIZE                         0x802c
-#define GL_HISTOGRAM_SINK                                   0x802d
-#define GL_MINMAX                                           0x802e
-#define GL_MINMAX_FORMAT                                    0x802f
-#define GL_MINMAX_SINK                                      0x8030
-#define GL_TABLE_TOO_LARGE                                  0x8031
-#define GL_COLOR_MATRIX                                     0x80b1
-#define GL_COLOR_MATRIX_STACK_DEPTH                         0x80b2
-#define GL_MAX_COLOR_MATRIX_STACK_DEPTH                     0x80b3
-#define GL_POST_COLOR_MATRIX_RED_SCALE                      0x80b4
-#define GL_POST_COLOR_MATRIX_GREEN_SCALE                    0x80b5
-#define GL_POST_COLOR_MATRIX_BLUE_SCALE                     0x80b6
-#define GL_POST_COLOR_MATRIX_ALPHA_SCALE                    0x80b7
-#define GL_POST_COLOR_MATRIX_RED_BIAS                       0x80b8
-#define GL_POST_COLOR_MATRIX_GREEN_BIAS                     0x80b9
-#define GL_POST_COLOR_MATRIX_BLUE_BIAS                      0x80ba
-#define GL_POST_COLOR_MATRIX_ALPHA_BIAS                     0x80bb
-#define GL_COLOR_TABLE                                      0x80d0
-#define GL_POST_CONVOLUTION_COLOR_TABLE                     0x80d1
-#define GL_POST_COLOR_MATRIX_COLOR_TABLE                    0x80d2
-#define GL_PROXY_COLOR_TABLE                                0x80d3
-#define GL_PROXY_POST_CONVOLUTION_COLOR_TABLE               0x80d4
-#define GL_PROXY_POST_COLOR_MATRIX_COLOR_TABLE              0x80d5
-#define GL_COLOR_TABLE_SCALE                                0x80d6
-#define GL_COLOR_TABLE_BIAS                                 0x80d7
-#define GL_COLOR_TABLE_FORMAT                               0x80d8
-#define GL_COLOR_TABLE_WIDTH                                0x80d9
-#define GL_COLOR_TABLE_RED_SIZE                             0x80da
-#define GL_COLOR_TABLE_GREEN_SIZE                           0x80db
-#define GL_COLOR_TABLE_BLUE_SIZE                            0x80dc
-#define GL_COLOR_TABLE_ALPHA_SIZE                           0x80dd
-#define GL_COLOR_TABLE_LUMINANCE_SIZE                       0x80de
-#define GL_COLOR_TABLE_INTENSITY_SIZE                       0x80df
-#define GL_CONSTANT_BORDER                                  0x8151
-#define GL_REPLICATE_BORDER                                 0x8153
-#define GL_CONVOLUTION_BORDER_COLOR                         0x8154
-#endif
-typedef void (WINE_GLAPI *PGLFNBLENDCOLORPROC)(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONPROC)(GLenum mode);
 
 /* GL_ARB_map_buffer_range */
 #ifndef GL_ARB_map_buffer_range
@@ -2969,6 +2888,18 @@ typedef void (WINE_GLAPI *PGLFNSTENCILFUNCSEPARATEATIPROC)(GLenum, GLenum, GLint
 #define GL_MIRROR_CLAMP_TO_EDGE_ATI                         0x8743
 #endif
 
+/* GL_EXT_blend_color */
+#ifndef GL_EXT_blend_color
+#define GL_EXT_blend_color 1
+#define GL_CONSTANT_COLOR_EXT                               0x8001
+#define GL_ONE_MINUS_CONSTANT_COLOR_EXT                     0x8002
+#define GL_CONSTANT_ALPHA_EXT                               0x8003
+#define GL_ONE_MINUS_CONSTANT_ALPHA_EXT                     0x8004
+#define GL_BLEND_COLOR_EXT                                  0x8005
+#endif
+typedef GLvoid (WINE_GLAPI *PGLFNBLENDCOLOREXTPROC)(GLclampf red,
+        GLclampf green, GLclampf blue, GLclampf alpha);
+
 /* GL_EXT_blend_equation_separate */
 typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLenum modeAlpha);
 
@@ -2982,6 +2913,23 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLe
 #endif
 typedef void (WINE_GLAPI *PGLFNBLENDFUNCSEPARATEEXTPROC)(GLenum sfactorRGB, GLenum dfactorRGB,
         GLenum sfactorAlpha, GLenum dfactorAlpha);
+
+/* GL_EXT_blend_minmax */
+#ifndef GL_EXT_blend_minmax
+#define GL_EXT_blend_minmax 1
+#define GL_FUNC_ADD_EXT                                     0x8006
+#define GL_MIN_EXT                                          0x8007
+#define GL_MAX_EXT                                          0x8008
+#define GL_BLEND_EQUATION_EXT                               0x8009
+#endif
+typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONEXTPROC)(GLenum mode);
+
+/* GL_EXT_blend_subtract */
+#ifndef GL_EXT_blend_subtract
+#define GL_EXT_blend_subtract 1
+#define GL_FUNC_SUBTRACT_EXT                                0x800a
+#define GL_FUNC_REVERSE_SUBTRACT_EXT                        0x800b
+#endif
 
 /* GL_EXT_depth_bounds_test */
 #ifndef GL_EXT_depth_bounds_test
@@ -3412,6 +3360,14 @@ typedef void (WINE_GLAPI *PGLFNGETCOMPRESSEDTEXIMAGEPROC)(GLenum target, GLint l
 #define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT              0x8c4f
 #endif
 
+/* GL_EXT_texture_sRGB_decode */
+#ifndef GL_EXT_texture_sRGB_decode
+#define GL_EXT_texture_sRGB_decode 1
+#define GL_TEXTURE_SRGB_DECODE_EXT                          0x8a48
+#define GL_DECODE_EXT                                       0x8a49
+#define GL_SKIP_DECODE_EXT                                  0x8a4a
+#endif
+
 /* GL_NV_depth_clamp */
 #ifndef GL_NV_depth_clamp
 #define GL_NV_depth_clamp 1
@@ -3711,15 +3667,11 @@ typedef void (WINE_GLAPI *PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC)(GLenum stage, 
 #endif
 
 /* GL_SGIS_generate_mipmap */
-#ifndef GLX_SGIS_generate_mipmap
-#define GLX_SGIS_generate_mipmap 1
+#ifndef GL_SGIS_generate_mipmap
+#define GL_SGIS_generate_mipmap 1
 #define GL_GENERATE_MIPMAP_SGIS                             0x8191
 #define GL_GENERATE_MIPMAP_HINT_SGIS                        0x8192
 #endif
-
-/* GLX_SGI_video_sync */
-typedef int (WINE_GLAPI *PGLXFNGETVIDEOSYNCSGIPROC)(unsigned int *);
-typedef int (WINE_GLAPI *PGLXFNWAITVIDEOSYNCSGIPROC)(int, int, unsigned int *);
 
 /* WGL_ARB_extensions_string */
 typedef const char *(WINAPI *WINED3D_PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hdc);
@@ -3800,6 +3752,8 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLCHOOSEPIXELFORMATARBPROC)(HDC hdc, const int
 /* WGL_WINE_pixel_format_passthrough */
 typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelFormat,
         const PIXELFORMATDESCRIPTOR *ppfd);
+
+typedef BOOL (WINAPI *WINED3D_PFNWGLSWAPINTERVALEXTPROC)(int interval);
 
 #define GL_EXT_FUNCS_GEN \
     /* GL_APPLE_fence */ \
@@ -3885,11 +3839,6 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
             glFramebufferTextureLayerARB,               ARB_GEOMETRY_SHADER4,           NULL) \
     USE_GL_FUNC(PGLFNFRAMEBUFFERTEXTUREFACEARBPROC, \
             glFramebufferTextureFaceARB,                ARB_GEOMETRY_SHADER4,           NULL) \
-    /* GL_ARB_imaging, GL_EXT_blend_minmax */ \
-    USE_GL_FUNC(PGLFNBLENDCOLORPROC, \
-            glBlendColorEXT,                            EXT_BLEND_COLOR,                NULL) \
-    USE_GL_FUNC(PGLFNBLENDEQUATIONPROC, \
-            glBlendEquationEXT,                         EXT_BLEND_MINMAX,               NULL) \
     /* GL_ARB_map_buffer_range */ \
     USE_GL_FUNC(PGLFNMAPBUFFERRANGEPROC, \
             glMapBufferRange,                           ARB_MAP_BUFFER_RANGE,           NULL) \
@@ -4224,12 +4173,18 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
             glStencilOpSeparateATI,                     ATI_SEPARATE_STENCIL,           NULL) \
     USE_GL_FUNC(PGLFNSTENCILFUNCSEPARATEATIPROC, \
             glStencilFuncSeparateATI,                   ATI_SEPARATE_STENCIL,           NULL) \
+    /* GL_EXT_blend_color */ \
+    USE_GL_FUNC(PGLFNBLENDCOLOREXTPROC, \
+            glBlendColorEXT,                            EXT_BLEND_COLOR,                NULL) \
     /* GL_EXT_blend_equation_separate */ \
     USE_GL_FUNC(PGLFNBLENDFUNCSEPARATEEXTPROC, \
             glBlendFuncSeparateEXT,                     EXT_BLEND_FUNC_SEPARATE,        NULL) \
     /* GL_EXT_blend_func_separate */ \
     USE_GL_FUNC(PGLFNBLENDEQUATIONSEPARATEEXTPROC, \
             glBlendEquationSeparateEXT,                 EXT_BLEND_EQUATION_SEPARATE,    NULL) \
+    /* GL_EXT_blend_minmax */ \
+    USE_GL_FUNC(PGLFNBLENDEQUATIONEXTPROC, \
+            glBlendEquationEXT,                         EXT_BLEND_MINMAX,               NULL) \
     /* GL_EXT_depth_bounds_test */ \
     USE_GL_FUNC(PGLFNDEPTHBOUNDSEXTPROC, \
             glDepthBoundsEXT,                           EXT_DEPTH_BOUNDS_TEST,          NULL) \
@@ -4530,17 +4485,13 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
             glCombinerParameterivNV,                    NV_REGISTER_COMBINERS,          NULL) \
     USE_GL_FUNC(PGLFNFINALCOMBINERINPUTNVPROC, \
             glFinalCombinerInputNV,                     NV_REGISTER_COMBINERS,          NULL) \
-    /* GLX_SGI_video_sync */ \
-    USE_GL_FUNC(PGLXFNGETVIDEOSYNCSGIPROC, \
-            glXGetVideoSyncSGI,                         SGI_VIDEO_SYNC,                 NULL) \
-    USE_GL_FUNC(PGLXFNWAITVIDEOSYNCSGIPROC, \
-            glXWaitVideoSyncSGI,                        SGI_VIDEO_SYNC,                 NULL)
 
 #define WGL_EXT_FUNCS_GEN \
     USE_GL_FUNC(WINED3D_PFNWGLGETEXTENSIONSSTRINGARBPROC,       wglGetExtensionsStringARB,      0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBIVARBPROC,    wglGetPixelFormatAttribivARB,   0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBFVARBPROC,    wglGetPixelFormatAttribfvARB,   0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLCHOOSEPIXELFORMATARBPROC,         wglChoosePixelFormatARB,        0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLSETPIXELFORMATWINE,               wglSetPixelFormatWINE,          0, NULL)
+    USE_GL_FUNC(WINED3D_PFNWGLSETPIXELFORMATWINE,               wglSetPixelFormatWINE,          0, NULL) \
+    USE_GL_FUNC(WINED3D_PFNWGLSWAPINTERVALEXTPROC,              wglSwapIntervalEXT,             0, NULL)
 
 #endif /* __WINE_WINED3D_GL */

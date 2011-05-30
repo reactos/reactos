@@ -68,10 +68,8 @@ static void _dump_D3DEXECUTEBUFFERDESC(const D3DEXECUTEBUFFERDESC *lpDesc) {
  *  Viewport: Viewport for this operation
  *
  *****************************************************************************/
-void
-IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
-                                   IDirect3DDeviceImpl *lpDevice,
-                                   IDirect3DViewportImpl *lpViewport)
+HRESULT d3d_execute_buffer_execute(IDirect3DExecuteBufferImpl *This,
+        IDirect3DDeviceImpl *lpDevice, IDirect3DViewportImpl *lpViewport)
 {
     /* DWORD bs = This->desc.dwBufferSize; */
     DWORD vs = This->data.dwVertexOffset;
@@ -81,10 +79,14 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
     char *instr = (char *)This->desc.lpData + is;
 
-    /* Should check if the viewport was added or not to the device */
+    if (lpViewport->active_device != lpDevice)
+    {
+        WARN("Viewport %p active device is %p.\n",
+                lpViewport, lpViewport->active_device);
+        return DDERR_INVALIDPARAMS;
+    }
 
     /* Activate the viewport */
-    lpViewport->active_device = lpDevice;
     viewport_activate(lpViewport, FALSE);
 
     TRACE("ExecuteData :\n");
@@ -153,11 +155,8 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 		}
                 /* IDirect3DDevices have color keying always enabled -
                  * enable it before drawing. This overwrites any ALPHA*
-                 * render state
-                 */
-                IWineD3DDevice_SetRenderState(lpDevice->wineD3DDevice,
-                                              WINED3DRS_COLORKEYENABLE,
-                                              1);
+                 * render state. */
+                wined3d_device_set_render_state(lpDevice->wined3d_device, WINED3DRS_COLORKEYENABLE, 1);
                 IDirect3DDevice7_DrawIndexedPrimitive((IDirect3DDevice7 *)lpDevice,
                         D3DPT_TRIANGLELIST, D3DFVF_TLVERTEX, tl_vx, 0, This->indices, count * 3, 0);
 	    } break;
@@ -316,18 +315,12 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
                 /* Get the transform and world matrix */
                 /* Note: D3DMATRIX is compatible with WINED3DMATRIX */
-
-                IWineD3DDevice_GetTransform(lpDevice->wineD3DDevice,
-                                            D3DTRANSFORMSTATE_VIEW,
-                                            (WINED3DMATRIX*) &view_mat);
-
-                IWineD3DDevice_GetTransform(lpDevice->wineD3DDevice,
-                                            D3DTRANSFORMSTATE_PROJECTION,
-                                            (WINED3DMATRIX*) &proj_mat);
-
-                IWineD3DDevice_GetTransform(lpDevice->wineD3DDevice,
-                                            WINED3DTS_WORLDMATRIX(0),
-                                            (WINED3DMATRIX*) &world_mat);
+                wined3d_device_get_transform(lpDevice->wined3d_device,
+                        D3DTRANSFORMSTATE_VIEW, (WINED3DMATRIX *)&view_mat);
+                wined3d_device_get_transform(lpDevice->wined3d_device,
+                        D3DTRANSFORMSTATE_PROJECTION, (WINED3DMATRIX *)&proj_mat);
+                wined3d_device_get_transform(lpDevice->wined3d_device,
+                        WINED3DTS_WORLDMATRIX(0), (WINED3DMATRIX *)&world_mat);
 
 		for (i = 0; i < count; i++) {
 		    LPD3DPROCESSVERTICES ci = (LPD3DPROCESSVERTICES) instr;
@@ -551,7 +544,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
     }
 
 end_of_buffer:
-    ;
+    return D3D_OK;
 }
 
 /*****************************************************************************

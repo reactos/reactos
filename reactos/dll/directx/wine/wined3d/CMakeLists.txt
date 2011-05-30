@@ -18,11 +18,9 @@ spec2def(wined3d.dll wined3d.spec)
 list(APPEND SOURCE
     ati_fragment_shader.c
     arb_program_shader.c
-    basetexture.c
     buffer.c
     clipper.c
     context.c
-    cubetexture.c
     device.c
     directx.c
     drawprim.c
@@ -37,18 +35,13 @@ list(APPEND SOURCE
     shader_sm4.c
     state.c
     stateblock.c
-    surface_base.c
     surface.c
-    surface_gdi.c 
     swapchain.c
-    swapchain_base.c
-    swapchain_gdi.c
     texture.c
     utils.c
     vertexdeclaration.c
     view.c
     volume.c
-    volumetexture.c
     wined3d_main.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
@@ -62,7 +55,7 @@ endif()
 add_library(wined3d SHARED ${SOURCE})
 set_module_type(wined3d win32dll)
 
-target_link_libraries(wined3d wine uuid wined3d_guid)
+target_link_libraries(wined3d wine uuid)
 
 add_importlibs(wined3d
     user32
