@@ -199,3 +199,4 @@ add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 add_importlib_target(win32k.spec)
 
 add_library(win32ksys sys-stubs.S)
+set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)
