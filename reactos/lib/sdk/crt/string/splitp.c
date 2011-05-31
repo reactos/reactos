@@ -1,3 +1,10 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:         CRT: implementation of _splitpath / _wsplitpath
+ * PROGRAMMERS:     Timo Kreuzer
+ */
+
 #include <precomp.h>
 #include <tchar.h>
 
@@ -6,64 +13,72 @@
  */
 void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
-  _TCHAR* tmp_drive = NULL;
-  _TCHAR* tmp_dir = NULL;
-  _TCHAR* tmp_ext = NULL;
+    const _TCHAR *src, *dir_start, *file_start = 0, *ext_start = 0;
 
-  tmp_drive = (_TCHAR*)_tcschr(path,':');
-  if (drive)
+    /* Truncate all output strings */
+    if (drive) drive[0] = '\0';
+    if (dir) dir[0] = '\0';
+    if (fname) fname[0] = '\0';
+    if (ext) ext[0] = '\0';
+
+    /* Check parameter */
+    if (!path)
     {
-      if (tmp_drive)
-        {
-          _tcsncpy(drive,tmp_drive-1,2);
-          *(drive+2) = 0;
-        }
-      else
-        {
-          *drive = 0;
-        }
-    }
-  if (!tmp_drive)
-    {
-      tmp_drive = (_TCHAR*)path - 1;
+        __set_errno(EINVAL);
+        return;
     }
 
-  tmp_dir = (_TCHAR*)_tcsrchr(path,'\\');
-  if (dir)
+    /* Skip '\\?\' prefix */
+    if ((path[0] == '\\') && (path[1] == '\\') &&
+        (path[2] == '?') && (path[3] == '\\')) path += 4;
+
+    if (path[0] == '\0') return;
+
+    /* Check if we have a drive letter (only 1 char supported) */
+    if (path[1] == ':')
     {
-      if (tmp_dir)
+        if (drive)
         {
-          _tcsncpy(dir,tmp_drive+1,tmp_dir-tmp_drive);
-          *(dir+(tmp_dir-tmp_drive)) = 0;
+            drive[0] = path[0];
+            drive[1] = ':';
+            drive[2] = '\0';
         }
-      else
-        {
-          *dir =0;
-        }
+        path += 2;
+	}
+
+    /* Scan the rest of the string */
+    dir_start = path;
+    while (*path != '\0')
+    {
+        /* Remember last path seperator and last dot */
+        if ((*path == '\\') || (*path == '/')) file_start = path + 1;
+        if (*path == '.') ext_start = path;
+        path++;
     }
 
-  /* If the dot is before the last dir separator, it's part
-   * of a directory name, not the start of the extension */
-  if (!tmp_ext || tmp_ext < tmp_dir)
+    /* Check if we got */
+    if (!file_start) file_start = path;
+    if (!ext_start || ext_start < file_start) ext_start = path;
+
+    if (dir)
     {
-      tmp_ext = (_TCHAR*)path+_tcslen(path);
-    }
-  if (ext)
-    {
-      _tcscpy(ext,tmp_ext);
+        src = dir_start;
+        while (src < file_start) *dir++ = *src++;
+        *dir = '\0';
     }
 
-  if (fname)
+    if (fname)
     {
-      if (tmp_dir)
-        {
-          _tcsncpy(fname,tmp_dir+1,tmp_ext-tmp_dir-1);
-          *(fname+(tmp_ext-tmp_dir-1)) = 0;
-        }
-      else
-        {
-          _tcsncpy(fname,tmp_drive+1,tmp_ext-tmp_drive-1);
-          *(fname+(tmp_ext-path))=0;
-        }
+        src = file_start;
+        while (src < ext_start) *fname++ = *src++;
+        *fname = '\0';
+    }
+
+    if (ext)
+    {
+        src = ext_start;
+        while (*src != '\0') *ext++ = *src++;
+        *ext = '\0';
     }
 }
+
