@@ -7,6 +7,7 @@
 	<installfile installbase="inf">bda.inf</installfile>
 	<installfile installbase="inf">cdrom.inf</installfile>
 	<installfile installbase="inf">cpu.inf</installfile>
+	<installfile installbase="inf">disk.inf</installfile>
 	<installfile installbase="inf">display.inf</installfile>
 	<installfile installbase="inf">fdc.inf</installfile>
 	<installfile installbase="inf">font.inf</installfile>

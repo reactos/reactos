@@ -5,6 +5,7 @@ list(APPEND INF_FILES
     bda.inf
     cdrom.inf
     cpu.inf
+    disk.inf
     display.inf
     fdc.inf
     font.inf
