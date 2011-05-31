@@ -32,6 +32,8 @@ void *RosSymRealloc(void *mem, ulong newsize);
 void xfree(void *v);
 
 #define werrstr(str, ...) DPRINT(str "\n" ,##__VA_ARGS__)
+//#define werrstr(x, ...) printf("(%s:%d) " x "\n",__FILE__,__LINE__,##__VA_ARGS__)
+
 #define malloc(x) RosSymAllocMem(x)
 #define mallocz(x,y) RosSymAllocMemZero(x,y)
 #define free(x) xfree(x)
