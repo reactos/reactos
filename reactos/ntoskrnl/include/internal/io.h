@@ -790,6 +790,16 @@ IopStartDevice(
     IN PDEVICE_NODE DeviceNode
 );
 
+NTSTATUS
+IopStopDevice(
+    IN PDEVICE_NODE DeviceNode
+);
+
+NTSTATUS
+IopRemoveDevice(
+    IN PDEVICE_NODE DeviceNode
+);
+
 PVPB
 NTAPI
 IopCheckVpbMounted(

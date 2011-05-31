@@ -338,6 +338,24 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
 }
 
 NTSTATUS
+IopStopDevice(
+   PDEVICE_NODE DeviceNode)
+{
+   NTSTATUS Status;
+
+   DPRINT("Stopping device: %wZ\n", &DeviceNode->InstancePath);
+
+   Status = IopQueryStopDevice(DeviceNode->PhysicalDeviceObject);
+   if (!NT_SUCCESS(Status))
+   {
+       IopSendStopDevice(DeviceNode->PhysicalDeviceObject);
+       return STATUS_SUCCESS;
+   }
+
+   return Status;
+}
+
+NTSTATUS
 IopStartDevice(
    PDEVICE_NODE DeviceNode)
 {
@@ -420,7 +438,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
        return Status;
    }
 
-   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps + 4);
+   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps->Version + sizeof(DeviceCaps->Version));;
 
    if (DeviceCaps->NoDisplayInUI)
        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
@@ -3873,6 +3891,12 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_RELATIONS DeviceRelations;
     NTSTATUS Status;
     ULONG i;
+
+    if (DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE)
+    {
+        DPRINT1("Removal not allowed for %wZ\n", &DeviceNode->InstancePath);
+        return STATUS_UNSUCCESSFUL;
+    }
     
     IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
                               &DeviceNode->InstancePath);
@@ -3953,6 +3977,23 @@ cleanup:
         }
         
         ExFreePool(DeviceRelations);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+IopRemoveDevice(PDEVICE_NODE DeviceNode)
+{
+    NTSTATUS Status;
+
+    DPRINT("Removing device: %wZ\n", &DeviceNode->InstancePath);
+
+    Status = IopPrepareDeviceForRemoval(DeviceNode->PhysicalDeviceObject);
+    if (NT_SUCCESS(Status))
+    {
+        IopSendRemoveDevice(DeviceNode->PhysicalDeviceObject);
+        return STATUS_SUCCESS;
     }
 
     return Status;
