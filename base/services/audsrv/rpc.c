@@ -45,11 +45,13 @@ DWORD WINAPI RunRPCThread(LPVOID lpParameter)
 
 /*************************RPC Functions**********************************/
 
-NTSTATUS AUDInitStream(	IN RPC_BINDING_HANDLE hBinding)
+int AUDInitStream(	IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance)
 {
-    UNIMPLEMENTED;/*Coolest Macro I have ever seen*/
-	printf("Client Connected and called server's procedure\n");
-    return STATUS_NOT_IMPLEMENTED;
+	HANDLE stream;
+	printf("Client Connected and Initiated Stream Freq: %ld,Channle: %d,Bitspersample: %d,Mask: %ld,Volume: %d,Mute: %d,Balance: %f\n",frequency,channels,bitspersample,channelmask,volume,mute,balance);
+	stream = addstream(frequency,channels,bitspersample,channelmask,volume,mute,balance);
+	if( stream == NULL ){return 0;}else{printf("Stream added\n");}
+    return (int)stream;
 }
 /*************************************************************************/
 void __RPC_FAR *__RPC_USER midl_user_allocate(SIZE_T len)

@@ -4,6 +4,7 @@
 
 #include <ms-dtyp.idl>
 
+
 cpp_quote("#if !defined(__AUDSRV_H__) ")
 typedef long NTSTATUS;
 cpp_quote("#endif")
@@ -19,6 +20,7 @@ typedef [context_handle] PVOID AUDSRV_HANDLE;
 typedef AUDSRV_HANDLE *PAUDSRV_HANDLE;
 typedef [handle, unique] LPWSTR AUDSRV_HANDLE_W;
 typedef [handle, unique] LPSTR AUDSRV_HANDLE_A;
+
 
 typedef struct _RPC_CLIENT_ID {
     DWORD UniqueProcess;
@@ -37,6 +39,6 @@ typedef struct _RPC_CLIENT_ID {
 interface audsrv
 {
 
-    NTSTATUS AUDInitStream([in] handle_t h1);
+    int AUDInitStream([in] handle_t h1,[in]LONG frequency,[in]int channels,[in]int bitspersample,[in] ULONG channelmask,[in]int volume,[in]int mute,[in]float balance);
 
 }

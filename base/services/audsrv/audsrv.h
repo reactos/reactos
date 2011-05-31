@@ -34,6 +34,8 @@ typedef struct ServerStream
 	int bitspersample;
 	int channels;
 	ULONG channelmask;
+	HANDLE played;
+	HANDLE streamready;
 	HANDLE thread;
 	float balance;
 	struct ServerStream * next;
@@ -43,10 +45,13 @@ typedef struct MixerEngine
 {
 /*Should be Initialized at Server Start*/
 	char dead;
-	HANDLE EventPool[2];//0=Played,1=Ready
+	HANDLE played;
+	HANDLE filled;
+	HANDLE streampresent;
 	HANDLE mixerthread;
 	HANDLE playerthread;
 	HANDLE rpcthread;
+	int playcurrent;
 /*Should be Initialized at Server Start from configuration file,Currently there is no configuration file so initialized to a fixed value at start*/
 	int mastervolume;
 	BOOL mute;
@@ -55,8 +60,9 @@ typedef struct MixerEngine
 	int masterchannels;
 	unsigned long masterchannelmask;
 	int masterbitspersample;
-	PSHORT masterbuf;
+	PSHORT masterbuf[2];
 /*Currently don't know the future of following variables*/
+	long bytes_to_play;
 	HANDLE FilterHandle;
     HANDLE PinHandle;
 	PKSPROPERTY Property;
@@ -64,10 +70,15 @@ typedef struct MixerEngine
 	ServerStream * serverstreamlist;
 } MixerEngine;
 
-extern MixerEngine engine;
+extern MixerEngine engine,*pengine;
 
 /* rpc.c */
 DWORD WINAPI RunRPCThread(LPVOID lpParameter);
+/* audsrv.c*/
+void fill(MixerEngine * mixer,int buffer);
+void playbuffer(MixerEngine * mixer,int buffer);
+/*stream.c*/
+HANDLE addstream(LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance);
 /********************************/
 
 #endif  /* __AUDSRV_H__ */

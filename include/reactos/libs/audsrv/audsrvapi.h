@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 /********************Structures*********************/
+
 typedef struct CallBacks
 {
 	void (*OpenComplete) (int error );
@@ -18,7 +19,7 @@ typedef struct ClientStream
 {
 HANDLE stream;
 int dead;
-HANDLE ClientEventPool[1];  /*[0]th event is for Activescheduler*/ 
+HANDLE ClientEventPool[1];  //0]th event is for Activescheduler
 struct CallBacks callbacks;
 } ClientStream;
 

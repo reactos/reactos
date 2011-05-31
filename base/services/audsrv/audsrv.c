@@ -153,27 +153,24 @@ ServiceMain(DWORD argc,
 
 
 
-void fill(MixerEngine * mixer)
+void fill(MixerEngine * mixer,int buffer)
 {
 	DWORD Length;
 	UINT i = 0;
-	mixer->mastervolume = 1000;
-	mixer->masterchannels=2;
-	mixer->masterfreq=48000;
-	mixer->masterbitspersample=16;
-	mixer->masterchannelmask = KSAUDIO_SPEAKER_STEREO;
+Sleep(100);
 	Length = mixer->masterfreq * mixer->masterchannels * mixer->masterbitspersample / 8;
-	mixer->masterbuf = (PSHORT)HeapAlloc(GetProcessHeap(), 0, Length);
+	mixer->masterbuf[buffer] = (PSHORT)HeapAlloc(GetProcessHeap(), 0, Length);
     while (i < Length / 2)
     {
-        mixer->masterbuf[i] = 0x7FFF * sin(0.5 * (i - 1) * 500 * _2pi / 48000);
+        mixer->masterbuf[buffer][i] = 0x7FFF * sin(0.5 * (i - 1) * 500 * _2pi / 48000);
         i++;
-        mixer->masterbuf[i] = 0x7FFF * sin(0.5 * (i - 2) * 500 * _2pi / 48000);
+        mixer->masterbuf[buffer][i] = 0x7FFF * sin(0.5 * (i - 2) * 500 * _2pi / 48000);
         i++;
     }
+	mixer->bytes_to_play = Length;
 }
 
-void initdevice(MixerEngine * mixer)
+void playbuffer(MixerEngine * mixer,int buffer)
 {
 	SP_DEVICE_INTERFACE_DATA InterfaceData;
     SP_DEVINFO_DATA DeviceData;
@@ -186,7 +183,8 @@ void initdevice(MixerEngine * mixer)
     DWORD Length;
     BOOL Result;
     NTSTATUS Status;
-
+if(mixer->masterbuf[buffer])
+{
     //
     // Get a handle to KS Audio Interfaces
     //
@@ -195,7 +193,7 @@ void initdevice(MixerEngine * mixer)
                                        NULL,
                                        DIGCF_DEVICEINTERFACE |DIGCF_PRESENT);
 
-   printf("DeviceHandle %p\n", DeviceHandle);
+   //printf("DeviceHandle %p\n", DeviceHandle);
 
     //
     // Enumerate the first interface
@@ -208,7 +206,7 @@ void initdevice(MixerEngine * mixer)
                                 1,
                                 &InterfaceData);
 
-   printf("SetupDiEnumDeviceInterfaces %u Error %ld\n", Result, GetLastError());
+   //printf("SetupDiEnumDeviceInterfaces %u Error %ld\n", Result, GetLastError());
 
     //
     // Get the interface details (namely the device path)
@@ -227,7 +225,7 @@ void initdevice(MixerEngine * mixer)
                                     NULL,
                                     &DeviceData);
 
-    wprintf(L"SetupDiGetDeviceInterfaceDetail %u Path DetailData %s\n", Result, (LPWSTR)&DetailData->DevicePath[0]);
+    //wprintf(L"SetupDiGetDeviceInterfaceDetail %u Path DetailData %s\n", Result, (LPWSTR)&DetailData->DevicePath[0]);
 
     //
     // Open a handle to the device
@@ -240,7 +238,7 @@ void initdevice(MixerEngine * mixer)
                               FILE_ATTRIBUTE_NORMAL,
                               NULL);
 
-    printf("Handle %p\n", mixer->FilterHandle);
+    //printf("Handle %p\n", mixer->FilterHandle);
 
     //
     // Close the interface handle and clean up
@@ -273,7 +271,7 @@ void initdevice(MixerEngine * mixer)
     //
     // Setup the KS Data Format Information
     //
-    printf("DataFormat %p %p\n", DataFormat,(PVOID)((((ULONG_PTR)DataFormat + 7)) & ~7));
+    //printf("DataFormat %p %p\n", DataFormat,(PVOID)((((ULONG_PTR)DataFormat + 7)) & ~7));
 
     DataFormat->Flags = 0;
     DataFormat->Reserved = 0;
@@ -294,14 +292,14 @@ void initdevice(MixerEngine * mixer)
     WaveFormat->Samples.wValidBitsPerSample = mixer->masterbitspersample;
     WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 
-    printf("Creating pin\n");
+    //printf("Creating pin\n");
 
 	//
     // Create the pin
     //
     Status = KsCreatePin(mixer->FilterHandle, PinConnect, GENERIC_READ|GENERIC_WRITE, &(mixer->PinHandle));
 
-    printf("PinHandle %p Status %lx\n", mixer->PinHandle, Status);
+    //printf("PinHandle %p Status %lx\n", mixer->PinHandle, Status);
 
 
     Length = mixer->masterfreq * mixer->masterchannels * mixer->masterbitspersample / 8;
@@ -311,9 +309,9 @@ void initdevice(MixerEngine * mixer)
     mixer->Packet = (PKSSTREAM_HEADER)HeapAlloc(GetProcessHeap(),
                                          HEAP_ZERO_MEMORY,
                                          sizeof(KSSTREAM_HEADER));
-	mixer->Packet->Data = mixer->masterbuf;
-    mixer->Packet->FrameExtent = Length;
-    mixer->Packet->DataUsed = Length;
+	mixer->Packet->Data = mixer->masterbuf[buffer];
+    mixer->Packet->FrameExtent = mixer->bytes_to_play;
+    mixer->Packet->DataUsed = mixer->bytes_to_play;
     mixer->Packet->Size = sizeof(KSSTREAM_HEADER);
     mixer->Packet->PresentationTime.Numerator = 1;
     mixer->Packet->PresentationTime.Denominator = 1;
@@ -338,13 +336,6 @@ void initdevice(MixerEngine * mixer)
                     sizeof(State),
                     &Length,
                     NULL);
-}
-void playbuffer(MixerEngine * mixer)
-{
-    DWORD Length = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) + MAX_PATH * sizeof(WCHAR);
-    //
-    // Play our 1-second buffer
-    //
 
     DeviceIoControl(mixer->PinHandle,
                     IOCTL_KS_WRITE_STREAM,
@@ -355,14 +346,6 @@ void playbuffer(MixerEngine * mixer)
                     &Length,
                     NULL);
 
-}
-void closedevice(MixerEngine * mixer)
-{
-    KSSTATE State;
-	DWORD Length = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA) + MAX_PATH * sizeof(WCHAR);
-    //
-    // Change the state to stop
-    //
     State = KSSTATE_STOP;
     DeviceIoControl(mixer->PinHandle,
                     IOCTL_KS_PROPERTY,
@@ -375,17 +358,21 @@ void closedevice(MixerEngine * mixer)
 
     CloseHandle(mixer->PinHandle);
     CloseHandle(mixer->FilterHandle);
-
+}
 }
 DWORD WINAPI RunMixerThread(LPVOID param)
 {
 	MixerEngine * mixer = (MixerEngine *) param;
-	SetEvent(mixer->EventPool[0]);
+
+	SetEvent(mixer->played);
 	while(1)
 	{
-	while(WaitForSingleObject(mixer->EventPool[0],100)!=0){if(mixer->dead)goto DEAD;}
-	fill(mixer);
-	SetEvent(mixer->EventPool[1]);
+	while(WaitForSingleObject(mixer->streampresent,100)!=0){if(mixer->dead)goto DEAD;} /*Check if there is at least one stream present.*/
+
+	while(WaitForSingleObject(mixer->played,100)!=0){if(mixer->dead)goto DEAD;}
+	fill(mixer,1-mixer->playcurrent);
+	SetEvent(mixer->filled);
+
 	}
 DEAD:
 	printf("\nMixer Thread Ended\n");
@@ -396,11 +383,11 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
 	MixerEngine * mixer = (MixerEngine *) param;
 	while(1)
 	{
-		while(WaitForSingleObject(mixer->EventPool[1],100)!=0){if(mixer->dead)goto DEAD;}
-	initdevice(mixer);
-		playbuffer(mixer);
-	closedevice(mixer);
-		SetEvent(mixer->EventPool[0]);
+		while(WaitForSingleObject(mixer->filled,100)!=0){if(mixer->dead)goto DEAD;}
+		SetEvent(mixer->played);
+		playbuffer(mixer,mixer->playcurrent);
+
+		mixer->playcurrent=1-mixer->playcurrent;
 	}
 
 DEAD:
@@ -481,8 +468,12 @@ else
 	pengine->mute=FALSE;
 
 	pengine->dead=0;
-	pengine->EventPool[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->EventPool[1]=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->playcurrent=1;
+	pengine->masterbuf[0] = NULL;
+	pengine->masterbuf[1] = NULL;
+	pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
 	SetConsoleCtrlHandler(close,TRUE);
 	SpawnMixerThread(pengine);
 	SpawnPlayerThread(pengine);
@@ -510,8 +501,12 @@ ServiceInit(VOID)
 	pengine->mute=FALSE;
 
 	pengine->dead=0;
-	pengine->EventPool[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->EventPool[1]=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->playcurrent=1;
+	pengine->masterbuf[0] = NULL;
+	pengine->masterbuf[1] = NULL;
+	pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
+	pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
 	SetConsoleCtrlHandler(close,TRUE);
 	SpawnMixerThread(pengine);
 	SpawnPlayerThread(pengine);

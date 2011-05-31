@@ -7,38 +7,25 @@ int status = 0;
  */
 WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance)
 {
-	RPC_STATUS status;
-    unsigned short * pszStringBinding    = NULL;
-
-
-	if(clientstream == NULL ) return -1;
+	int streamid;
+	if (clientstream == NULL ) return -1;
 	if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL) return -2;
 	/*Validity of all other data will be checked at server*/
 	/*Check Connection Status If not connected call Connect()*/
 	/*If connected Properly call the remote audsrv_initstream() function*/
-		status = RpcStringBindingComposeW(NULL,L"ncacn_np",NULL,L"\\pipe\\audsrv", NULL,&pszStringBinding);
-
-		status = RpcBindingFromStringBindingW(pszStringBinding, &audsrv_v0_0_c_ifspec);
- 
-		if (status) printf("Connection Problem p %d \n",status);
-
-		status = RpcStringFree(&pszStringBinding);
- 
-		if (status) printf("Problem Freeing String : %d \n",status);
-
 
 	RpcTryExcept  
     {
-		AUDInitStream (audsrv_v0_0_c_ifspec);
+		streamid = AUDInitStream (audsrv_v0_0_c_ifspec,frequency,channels,bitspersample,channelmask,volume,mute,balance);
+		printf("AUDInitStream Returned %d",streamid);
     }
-    RpcExcept(1) 
+    RpcExcept(1)
     {
         status = RpcExceptionCode();
         printf("Runtime reported exception 0x%lx = %ld\n", status, status);
     }
     RpcEndExcept
-		    status = RpcBindingFree(&audsrv_v0_0_c_ifspec);
- 		if (status == RPC_S_INVALID_BINDING) printf("Error : %d Invalid RPC S HANDLE\n",status);
+
 	/*Analyse the return by the function*/
 	/*Currently Suppose the return is 0 and a valid streamid is returned*/
 	clientstream->stream = &status;
