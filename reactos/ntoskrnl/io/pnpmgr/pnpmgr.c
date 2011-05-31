@@ -438,7 +438,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
        return Status;
    }
 
-   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps->Version + sizeof(DeviceCaps->Version));;
+   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps->Version + sizeof(DeviceCaps->Version));
 
    if (DeviceCaps->NoDisplayInUI)
        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
