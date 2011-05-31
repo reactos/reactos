@@ -602,6 +602,11 @@ IopFreeDeviceNode(
 
 NTSTATUS
 NTAPI
+IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
+                           PDEVICE_CAPABILITIES DeviceCaps);
+
+NTSTATUS
+NTAPI
 IopSynchronousCall(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STACK_LOCATION IoStackLocation,

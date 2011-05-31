@@ -235,25 +235,23 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_NODE DeviceNode;
     NTSTATUS Status;
     PVOID Dummy;
+    DEVICE_CAPABILITIES DeviceCapabilities;
     
     /* Get the device node */
     DeviceNode = IopGetDeviceNode(DeviceObject);
     
+    ASSERT(!(DeviceNode->Flags & DNF_DISABLED));
+
     /* Build the I/O stack locaiton */
     RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
     Stack.MajorFunction = IRP_MJ_PNP;
     Stack.MinorFunction = IRP_MN_START_DEVICE;
     
-    /* Check if we didn't already report the resources */
-    if (!(DeviceNode->Flags & DNF_RESOURCE_REPORTED))
-    {
-        /* Report them */
-        Stack.Parameters.StartDevice.AllocatedResources =
-            DeviceNode->ResourceList;
-        Stack.Parameters.StartDevice.AllocatedResourcesTranslated =
-            DeviceNode->ResourceListTranslated;
-    }
-    
+    Stack.Parameters.StartDevice.AllocatedResources =
+         DeviceNode->ResourceList;
+    Stack.Parameters.StartDevice.AllocatedResourcesTranslated =
+         DeviceNode->ResourceListTranslated;
+
     /* Do the call */
     Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
     if (!NT_SUCCESS(Status))
@@ -267,6 +265,17 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
         DPRINT1("Warning: PnP Start failed (%wZ)\n", &DeviceNode->InstancePath);
         return;
     }
+    
+    DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after start)\n");
+
+    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+    }
+
+    /* Invalidate device state so IRP_MN_QUERY_PNP_DEVICE_STATE is sent */
+    IoInvalidateDeviceState(DeviceObject);
     
     /* Otherwise, mark us as started */
     DeviceNode->Flags |= DNF_STARTED;
@@ -316,7 +325,6 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
     {
         /* Enumerate us */
         IoSynchronousInvalidateDeviceRelations(DeviceObject, BusRelations);
-        IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
         Status = STATUS_SUCCESS;
     }
     else
@@ -337,6 +345,9 @@ IopStartDevice(
    HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
+
+   if (DeviceNode->Flags & DNF_DISABLED)
+       return STATUS_SUCCESS;
 
    Status = IopAssignDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
@@ -383,6 +394,9 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
 {
    IO_STATUS_BLOCK StatusBlock;
    IO_STACK_LOCATION Stack;
+   NTSTATUS Status;
+   HANDLE InstanceKey;
+   UNICODE_STRING ValueName;
 
    /* Set up the Header */
    RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
@@ -396,10 +410,49 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    Stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
 
    /* Send the IRP */
-   return IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                            &StatusBlock,
-                            IRP_MN_QUERY_CAPABILITIES,
-                            &Stack);
+   Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                              &StatusBlock,
+                              IRP_MN_QUERY_CAPABILITIES,
+                              &Stack);
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("IRP_MN_QUERY_CAPABILITIES failed with status 0x%x\n", Status);
+       return Status;
+   }
+
+   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCaps + 4);
+
+   if (DeviceCaps->NoDisplayInUI)
+       DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
+   else
+       DeviceNode->UserFlags &= DNUF_DONT_SHOW_IN_UI;
+
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+   if (NT_SUCCESS(Status))
+   {
+      /* Set 'Capabilities' value */
+      RtlInitUnicodeString(&ValueName, L"Capabilities");
+      Status = ZwSetValueKey(InstanceKey,
+                             &ValueName,
+                             0,
+                             REG_DWORD,
+                             (PVOID)&DeviceNode->CapabilityFlags,
+                             sizeof(ULONG));
+
+      /* Set 'UINumber' value */
+      if (DeviceCaps->UINumber != MAXULONG)
+      {
+         RtlInitUnicodeString(&ValueName, L"UINumber");
+         Status = ZwSetValueKey(InstanceKey,
+                                &ValueName,
+                                0,
+                                REG_DWORD,
+                                &DeviceCaps->UINumber,
+                                sizeof(ULONG));
+      }
+   }
+
+   return Status;
 }
 
 static VOID NTAPI
@@ -1303,7 +1356,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
-   DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack\n");
+   DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
 
    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
    if (!NT_SUCCESS(Status))
@@ -1311,7 +1364,15 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
    }
 
-   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCapabilities + 4);
+   /* This bit is only check after enumeration */
+   if (DeviceCapabilities.HardwareDisabled)
+   {
+       /* FIXME: Cleanup device */
+       DeviceNode->Flags |= DNF_DISABLED;
+       return STATUS_SUCCESS;
+   }
+   else
+       DeviceNode->Flags &= ~DNF_DISABLED;
 
    if (!DeviceCapabilities.UniqueID)
    {
@@ -1371,29 +1432,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
-   }
-
-   {
-      /* Set 'Capabilities' value */
-      RtlInitUnicodeString(&ValueName, L"Capabilities");
-      Status = ZwSetValueKey(InstanceKey,
-                             &ValueName,
-                             0,
-                             REG_DWORD,
-                             (PVOID)&DeviceNode->CapabilityFlags,
-                             sizeof(ULONG));
-
-      /* Set 'UINumber' value */
-      if (DeviceCapabilities.UINumber != MAXULONG)
-      {
-         RtlInitUnicodeString(&ValueName, L"UINumber");
-         Status = ZwSetValueKey(InstanceKey,
-                                &ValueName,
-                                0,
-                                REG_DWORD,
-                                &DeviceCapabilities.UINumber,
-                                sizeof(ULONG));
-      }
    }
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
@@ -1697,6 +1735,15 @@ IopEnumerateDevice(
 
     DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
+    if (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY)
+    {
+        DeviceNode->Flags &= ~DNF_NEED_ENUMERATION_ONLY;
+
+        DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
+        IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                                  &DeviceNode->InstancePath);
+    }
+
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
     Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
@@ -1746,12 +1793,6 @@ IopEnumerateDevice(
                 &ChildDeviceNode);
             if (NT_SUCCESS(Status))
             {
-                DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
-                
-                /* Report the device to the user-mode pnp manager */
-                IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                                          &ChildDeviceNode->InstancePath);
-                
                 /* Mark the node as enumerated */
                 ChildDeviceNode->Flags |= DNF_ENUMERATED;
 
@@ -3162,33 +3203,6 @@ PnpBusTypeGuidGet(IN USHORT Index,
 
 NTSTATUS
 NTAPI
-PpIrpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
-                       OUT PDEVICE_CAPABILITIES DeviceCaps)
-{
-    PVOID Dummy;
-    IO_STACK_LOCATION Stack;
-
-    PAGED_CODE();
-
-    /* Set up the Header */
-    RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
-    DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);
-    DeviceCaps->Version = 1;
-    DeviceCaps->Address = -1;
-    DeviceCaps->UINumber = -1;
-    
-    /* Set up the Stack */
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_QUERY_CAPABILITIES;
-    Stack.Parameters.DeviceCapabilities.Capabilities = DeviceCaps;
-    
-    /* Send the IRP */
-    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
-}
-
-NTSTATUS
-NTAPI
 PnpDeviceObjectToDeviceInstance(IN PDEVICE_OBJECT DeviceObject,
                                 IN PHANDLE DeviceInstanceHandle,
                                 IN ACCESS_MASK DesiredAccess)
@@ -3446,7 +3460,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         case DevicePropertyAddress:
 
             /* Query the device caps */
-            Status = PpIrpQueryCapabilities(DeviceObject, &DeviceCaps);
+            Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
             if (!NT_SUCCESS(Status) || (DeviceCaps.Address == MAXULONG))
                 return STATUS_OBJECT_NAME_NOT_FOUND;
 
@@ -3606,6 +3620,16 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
         DPRINT1("IRP_MN_QUERY_PNP_DEVICE_STATE failed with status 0x%x\n", Status);
         return;
     }
+
+    if (PnPFlags & PNP_DEVICE_NOT_DISABLEABLE)
+        DeviceNode->UserFlags |= DNUF_NOT_DISABLEABLE;
+    else
+        DeviceNode->UserFlags &= ~DNUF_NOT_DISABLEABLE;
+
+    if (PnPFlags & PNP_DEVICE_DONT_DISPLAY_IN_UI)
+        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
+    else
+        DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
 
     if ((PnPFlags & PNP_DEVICE_REMOVED) ||
         ((PnPFlags & PNP_DEVICE_FAILED) && !(PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)))
