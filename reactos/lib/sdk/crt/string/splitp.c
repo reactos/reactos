@@ -24,7 +24,7 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     /* Check parameter */
     if (!path)
     {
-        __set_errno(EINVAL);
+        //__set_errno(EINVAL);
         return;
     }
 
