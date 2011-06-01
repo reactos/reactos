@@ -74,14 +74,14 @@ INT cmd_goto (LPTSTR param)
 	/* jump to end of the file */
 	if ( _tcsicmp( param, _T(":eof"))==0)
 	{
-		SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
+		bc->mempos=bc->memsize;		/* position at the end of the batchfile */
 		return 0;
 	}
 
 	/* jump to begin of the file */
-	SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
+	bc->mempos=0;
 
-	while (FileGetString (bc->hBatchFile, textline, sizeof(textline) / sizeof(textline[0])))
+	while (BatchGetString (textline, sizeof(textline) / sizeof(textline[0])))
 	{
 		int pos;
 		int size;
