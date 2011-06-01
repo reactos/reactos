@@ -13,19 +13,21 @@
 #include <pseh/pseh2.h>
 
 
-NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
+NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status )
+{
     KIRQL OldIrql;
 
     Irp->IoStatus.Status = Status;
 
-    if( Status == STATUS_PENDING )
-	IoMarkIrpPending( Irp );
-    else {
+    if (Status == STATUS_PENDING)
+	    IoMarkIrpPending( Irp );
+    else
+    {
         IoAcquireCancelSpinLock(&OldIrql);
-	(void)IoSetCancelRoutine( Irp, NULL );
+	    (void)IoSetCancelRoutine( Irp, NULL );
         IoReleaseCancelSpinLock(OldIrql);
 
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
 
     return Status;
@@ -56,7 +58,8 @@ NTSTATUS DispPrepareIrpForCancel(
 
     IoAcquireCancelSpinLock(&OldIrql);
 
-    if (!Irp->Cancel && !TransContext->CancelIrps) {
+    if (!Irp->Cancel && !TransContext->CancelIrps)
+    {
         (void)IoSetCancelRoutine(Irp, CancelRoutine);
         IoReleaseCancelSpinLock(OldIrql);
 
@@ -144,38 +147,41 @@ VOID NTAPI DispCancelRequest(
 #endif
 
     /* Try canceling the request */
-    switch(MinorFunction) {
-    case TDI_SEND:
-    case TDI_RECEIVE:
-	DequeuedIrp = TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
-        break;
-
-    case TDI_SEND_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
+    switch(MinorFunction)
+    {
+        case TDI_SEND:
+        case TDI_RECEIVE:
+	    DequeuedIrp = TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
             break;
-        }
 
-        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
-        break;
+        case TDI_SEND_DATAGRAM:
+            if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE)
+            {
+                TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
+                break;
+            }
 
-    case TDI_RECEIVE_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
+            DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
             break;
-        }
 
-        DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
-        break;
+        case TDI_RECEIVE_DATAGRAM:
+            if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE)
+            {
+                TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
+                break;
+            }
 
-    case TDI_CONNECT:
-        DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
-        break;
+            DequeuedIrp = DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
+            break;
 
-    default:
-        TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
-        ASSERT(FALSE);
-        break;
+        case TDI_CONNECT:
+            DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+            break;
+
+        default:
+            TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
+            ASSERT(FALSE);
+            break;
     }
 
     if (DequeuedIrp)
@@ -256,99 +262,107 @@ NTSTATUS DispTdiAssociateAddress(
  *     Status of operation
  */
 {
-  PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
-  PCONNECTION_ENDPOINT Connection;
-  PFILE_OBJECT FileObject;
-  PADDRESS_FILE AddrFile = NULL;
-  NTSTATUS Status;
-  KIRQL OldIrql;
+    PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
+    PCONNECTION_ENDPOINT Connection;
+    PFILE_OBJECT FileObject;
+    PADDRESS_FILE AddrFile = NULL;
+    NTSTATUS Status;
+    KIRQL OldIrql;
 
-  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiAssociateAddress] Called\n"));
+    TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiAssociateAddress] Called\n"));
 
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  /* Get associated connection endpoint file object. Quit if none exists */
+    /* Get associated connection endpoint file object. Quit if none exists */
 
-  TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
+    TranContext = IrpSp->FileObject->FsContext;
+    if (!TranContext)
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection) {
-    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    if (!Connection)
+    {
+        TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  Parameters = (PTDI_REQUEST_KERNEL_ASSOCIATE)&IrpSp->Parameters;
+    Parameters = (PTDI_REQUEST_KERNEL_ASSOCIATE)&IrpSp->Parameters;
 
-  Status = ObReferenceObjectByHandle(
-    Parameters->AddressHandle,
-    0,
-    IoFileObjectType,
-    KernelMode,
-    (PVOID*)&FileObject,
-    NULL);
-  if (!NT_SUCCESS(Status)) {
-    TI_DbgPrint(MID_TRACE, ("Bad address file object handle (0x%X): %x.\n",
-      Parameters->AddressHandle, Status));
-    return STATUS_INVALID_PARAMETER;
-  }
+    Status = ObReferenceObjectByHandle(
+        Parameters->AddressHandle,
+        0,
+        IoFileObjectType,
+        KernelMode,
+        (PVOID*)&FileObject,
+        NULL);
 
-  LockObject(Connection, &OldIrql);
+    if (!NT_SUCCESS(Status))
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad address file object handle (0x%X): %x.\n",
+            Parameters->AddressHandle, Status));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  if (Connection->AddressFile) {
+    LockObject(Connection, &OldIrql);
+
+    if (Connection->AddressFile)
+    {
+        ObDereferenceObject(FileObject);
+        UnlockObject(Connection, OldIrql);
+        TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE)
+    {
+        ObDereferenceObject(FileObject);
+        UnlockObject(Connection, OldIrql);
+        TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
+            FileObject->FsContext2));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get associated address file object. Quit if none exists */
+
+    TranContext = FileObject->FsContext;
+    if (!TranContext)
+    {
+        ObDereferenceObject(FileObject);
+        UnlockObject(Connection, OldIrql);
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+    if (!AddrFile)
+    {
+        UnlockObject(Connection, OldIrql);
+        ObDereferenceObject(FileObject);
+        TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    LockObjectAtDpcLevel(AddrFile);
+
+    ReferenceObject(AddrFile);
+    Connection->AddressFile = AddrFile;
+
+    /* Add connection endpoint to the address file */
+    ReferenceObject(Connection);
+    AddrFile->Connection = Connection;
+
+    /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
     ObDereferenceObject(FileObject);
+
+    UnlockObjectFromDpcLevel(AddrFile);
     UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
 
-  if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-    ObDereferenceObject(FileObject);
-    UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
-      FileObject->FsContext2));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  /* Get associated address file object. Quit if none exists */
-
-  TranContext = FileObject->FsContext;
-  if (!TranContext) {
-    ObDereferenceObject(FileObject);
-    UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-  if (!AddrFile) {
-      UnlockObject(Connection, OldIrql);
-      ObDereferenceObject(FileObject);
-      TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
-      return STATUS_INVALID_PARAMETER;
-  }
-
-  LockObjectAtDpcLevel(AddrFile);
-
-  ReferenceObject(AddrFile);
-  Connection->AddressFile = AddrFile;
-
-  /* Add connection endpoint to the address file */
-  ReferenceObject(Connection);
-  AddrFile->Connection = Connection;
-
-  /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
-  ObDereferenceObject(FileObject);
-
-  UnlockObjectFromDpcLevel(AddrFile);
-  UnlockObject(Connection, OldIrql);
-
-  return Status;
+    return Status;
 }
 
 
@@ -394,7 +408,8 @@ NTSTATUS DispTdiConnect(
                                    Irp,
                                    DispCancelRequest);
 
-  if (NT_SUCCESS(Status)) {
+  if (NT_SUCCESS(Status))
+  {
       Status = TCPConnect(
           TranContext->Handle.ConnectionContext,
           Parameters->RequestConnectionInformation,
@@ -505,7 +520,8 @@ NTSTATUS DispTdiDisconnect(
   }
 
   Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection) {
+  if (!Connection)
+  {
     TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
     Status = STATUS_INVALID_PARAMETER;
     goto done;
@@ -541,103 +557,107 @@ NTSTATUS DispTdiListen(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection;
-  PTDI_REQUEST_KERNEL Parameters;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status = STATUS_SUCCESS;
-  KIRQL OldIrql;
+    PCONNECTION_ENDPOINT Connection;
+    PTDI_REQUEST_KERNEL Parameters;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KIRQL OldIrql;
 
-  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiListen] Called\n"));
+    TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiListen] Called\n"));
+    DbgPrint("[TCPIP, DispTdiListen] Called\n");
 
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  /* Get associated connection endpoint file object. Quit if none exists */
+    /* Get associated connection endpoint file object. Quit if none exists */
 
-  TranContext = IrpSp->FileObject->FsContext;
-  if (TranContext == NULL)
+    TranContext = IrpSp->FileObject->FsContext;
+    if (TranContext == NULL)
     {
-      TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-      Status = STATUS_INVALID_PARAMETER;
-      goto done;
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
     }
 
-  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (Connection == NULL)
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    if (Connection == NULL)
     {
-      TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-      Status = STATUS_INVALID_PARAMETER;
-      goto done;
+        TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
     }
 
-  Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
+    Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = DispPrepareIrpForCancel
-      (TranContext->Handle.ConnectionContext,
-       Irp,
-       (PDRIVER_CANCEL)DispCancelListenRequest);
+    Status = DispPrepareIrpForCancel
+        (TranContext->Handle.ConnectionContext,
+        Irp,
+        (PDRIVER_CANCEL)DispCancelListenRequest);
 
-  LockObject(Connection, &OldIrql);
+    LockObject(Connection, &OldIrql);
 
-  if (Connection->AddressFile == NULL)
-  {
-     TI_DbgPrint(MID_TRACE, ("No associated address file\n"));
-     UnlockObject(Connection, OldIrql);
-     Status = STATUS_INVALID_PARAMETER;
-     goto done;
-  }
+    if (Connection->AddressFile == NULL)
+    {
+        TI_DbgPrint(MID_TRACE, ("No associated address file\n"));
+        UnlockObject(Connection, OldIrql);
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
-  LockObjectAtDpcLevel(Connection->AddressFile);
+    LockObjectAtDpcLevel(Connection->AddressFile);
 
-  /* Listening will require us to create a listening socket and store it in
-   * the address file.  It will be signalled, and attempt to complete an irp
-   * when a new connection arrives. */
-  /* The important thing to note here is that the irp we'll complete belongs
-   * to the socket to be accepted onto, not the listener */
-  if( NT_SUCCESS(Status) && !Connection->AddressFile->Listener ) {
-      Connection->AddressFile->Listener =
-	  TCPAllocateConnectionEndpoint( NULL );
+    /* Listening will require us to create a listening socket and store it in
+    * the address file.  It will be signalled, and attempt to complete an irp
+    * when a new connection arrives. */
+    /* The important thing to note here is that the irp we'll complete belongs
+    * to the socket to be accepted onto, not the listener */
+    if( NT_SUCCESS(Status) && !Connection->AddressFile->Listener )
+    {
+        Connection->AddressFile->Listener = TCPAllocateConnectionEndpoint( NULL );
 
-      if( !Connection->AddressFile->Listener )
-	  Status = STATUS_NO_MEMORY;
+        if( !Connection->AddressFile->Listener )
+	        Status = STATUS_NO_MEMORY;
 
-      if( NT_SUCCESS(Status) ) {
-          ReferenceObject(Connection->AddressFile);
-	  Connection->AddressFile->Listener->AddressFile =
-	      Connection->AddressFile;
+        if( NT_SUCCESS(Status) )
+        {
+            ReferenceObject(Connection->AddressFile);
+	        Connection->AddressFile->Listener->AddressFile = Connection->AddressFile;
 
-	  Status = TCPSocket( Connection->AddressFile->Listener,
-			      Connection->AddressFile->Family,
-			      SOCK_STREAM,
-			      Connection->AddressFile->Protocol );
-      }
+	        Status = TCPSocket( Connection->AddressFile->Listener,
+			            Connection->AddressFile->Family,
+			            SOCK_STREAM,
+			            Connection->AddressFile->Protocol );
+        }
 
-      if( NT_SUCCESS(Status) )
-	  Status = TCPListen( Connection->AddressFile->Listener, 1024 );
-	  /* BACKLOG */
-  }
+        if ( NT_SUCCESS(Status) )
+	        Status = TCPListen( Connection->AddressFile->Listener, 1024 );
+	    /* BACKLOG */
+    }
 
-  if( NT_SUCCESS(Status) ) {
-      Status = TCPAccept
-	  ( (PTDI_REQUEST)Parameters,
-	    Connection->AddressFile->Listener,
-	    Connection,
-	    DispDataRequestComplete,
-	    Irp );
-  }
+    if (NT_SUCCESS(Status))
+    {
+        Status = TCPAccept( (PTDI_REQUEST)Parameters,
+	        Connection->AddressFile->Listener,
+	        Connection,
+	        DispDataRequestComplete,
+	        Irp );
+    }
 
-  UnlockObjectFromDpcLevel(Connection->AddressFile);
-  UnlockObject(Connection, OldIrql);
+    UnlockObjectFromDpcLevel(Connection->AddressFile);
+    UnlockObject(Connection, OldIrql);
 
 done:
-  if (Status != STATUS_PENDING) {
-      DispDataRequestComplete(Irp, Status, 0);
-  } else
-      IoMarkIrpPending(Irp);
+    if (Status != STATUS_PENDING)
+    {
+        DispDataRequestComplete(Irp, Status, 0);
+    }
+    else
+        IoMarkIrpPending(Irp);
 
-  TI_DbgPrint(MID_TRACE,("[TCPIP, DispTdiListen] Leaving %x\n", Status));
+    TI_DbgPrint(MID_TRACE,("[TCPIP, DispTdiListen] Leaving %x\n", Status));
+    DbgPrint("[TCPIP, DispTdiListen] Leaving %x\n", Status);
 
-  return Status;
+    return Status;
 }
 
 

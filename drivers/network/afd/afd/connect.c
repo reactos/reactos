@@ -185,7 +185,8 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 
-NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
+NTSTATUS WarmSocketForConnection( PAFD_FCB FCB )
+{
     NTSTATUS Status;
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer )
@@ -198,7 +199,8 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
                                            &FCB->Connection.Handle,
                                            &FCB->Connection.Object );
 
-    if( NT_SUCCESS(Status) ) {
+    if( NT_SUCCESS(Status) )
+    {
         Status = TdiAssociateAddressFile( FCB->AddressFile.Handle,
                                           FCB->Connection.Object );
     }
@@ -206,7 +208,8 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     return Status;
 }
 
-NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
+NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB )
+{
     NTSTATUS Status;
 
     ASSERT(!FCB->Recv.Window);

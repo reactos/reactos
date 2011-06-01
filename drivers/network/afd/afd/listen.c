@@ -163,8 +163,8 @@ static NTSTATUS NTAPI ListenComplete
     AFD_DbgPrint(MID_TRACE,("Completing listen request.\n"));
     AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", FCB->ListenIrp.Iosb.Status));
 
-    DbgPrint("[ListenComplete] Completing listen request.\n");
-    DbgPrint("[ListenComplete] IoStatus was %x\n", FCB->ListenIrp.Iosb.Status);
+    DbgPrint("[AFD, ListenComplete] Completing listen request.\n");
+    DbgPrint("[AFD, ListenComplete] IoStatus was %x\n", FCB->ListenIrp.Iosb.Status);
 
     Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
     if( !Qelt )
@@ -182,7 +182,7 @@ static NTSTATUS NTAPI ListenComplete
                                 FCB->ListenIrp.
                                 ConnectionReturnInfo->RemoteAddress));
 
-        DbgPrint("[ListenComplete] Address Type: %d (RA %x)\n",
+        DbgPrint("[AFD, ListenComplete] Address Type: %d (RA %x)\n",
                     AddressType,
                     FCB->ListenIrp.
                     ConnectionReturnInfo->RemoteAddress);
@@ -250,7 +250,8 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
     DbgPrint("[AfdListenSocket] Called on %x\n", FCB);
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if( !SocketAcquireStateLock( FCB ) )
+        return LostSocket( Irp );
 
     if( !(ListenReq = LockRequest( Irp, IrpSp )) )
 	    return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
@@ -273,16 +274,16 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Status from warmsocket %x\n", Status));
     DbgPrint("[AfdListenSocket] Status from warmsocket %x\n", Status);
 
-    if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+    if ( !NT_SUCCESS(Status) )
+        return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 
-    Status = TdiBuildNullConnectionInfo
-	( &FCB->ListenIrp.ConnectionCallInfo,
+    Status = TdiBuildNullConnectionInfo(&FCB->ListenIrp.ConnectionCallInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
 
-    if (!NT_SUCCESS(Status)) return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+    if (!NT_SUCCESS(Status))
+        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
 
-    Status = TdiBuildNullConnectionInfo
-	( &FCB->ListenIrp.ConnectionReturnInfo,
+    Status = TdiBuildNullConnectionInfo(&FCB->ListenIrp.ConnectionReturnInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
 
     if (!NT_SUCCESS(Status))
@@ -302,14 +303,15 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			ListenComplete,
 			FCB );
 
-    if( Status == STATUS_PENDING )
-	Status = STATUS_SUCCESS;
+    if (Status == STATUS_PENDING)
+	    Status = STATUS_SUCCESS;
 
     if (NT_SUCCESS(Status))
         FCB->NeedsNewListen = FALSE;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
     DbgPrint("[AfdListenSocket] Returning %x\n", Status);
+    
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
@@ -360,7 +362,8 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-		    PIO_STACK_LOCATION IrpSp ) {
+		    PIO_STACK_LOCATION IrpSp )
+{
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt =
@@ -449,11 +452,11 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		                  (PVOID *)&NewFileObject,
 		                  NULL );
 
-                if( !NT_SUCCESS(Status) )
-                    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+            if( !NT_SUCCESS(Status) )
+                return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 
-                ASSERT(NewFileObject != FileObject);
-                ASSERT(NewFileObject->FsContext != FCB);
+            ASSERT(NewFileObject != FileObject);
+            ASSERT(NewFileObject->FsContext != FCB);
 
 	        /* We have a pending connection ... complete this irp right away */
 	        Status = SatisfyAccept( DeviceExt, Irp, NewFileObject, PendingConnObj );

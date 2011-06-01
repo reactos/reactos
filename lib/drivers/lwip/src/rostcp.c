@@ -58,7 +58,7 @@ static
 err_t
 InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, u16_t space)
 {
-    DbgPrint("[InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
         arg, pcb, (unsigned int)space);
     
     /* Make sure the socket didn't get closed */
@@ -75,7 +75,7 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 {
     u32_t len;
 
-    DbgPrint("[InternalRecvEventHandler] RecvEvent (0x%x, 0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalRecvEventHandler] RecvEvent (0x%x, 0x%x, 0x%x, %d)\n",
         arg, pcb, p, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
@@ -91,7 +91,7 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
     }
     else
     {
-        DbgPrint("[InternalRecvEventHandler] RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n",
+        DbgPrint("[lwIP, InternalRecvEventHandler] RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n",
             p, p->payload, p->len, p->tot_len);
 
         if (err == ERR_OK)
@@ -124,14 +124,14 @@ static
 err_t
 InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
-    DbgPrint("[InternalAcceptEventHandler] AcceptEvent (0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent (0x%x, 0x%x, %d)\n",
         arg, newpcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
     if (!arg)
         return ERR_ABRT;
 
-    DbgPrint("[InternalAcceptEventHandler] newpcb->state = %s\n",
+    DbgPrint("[lwIP, InternalAcceptEventHandler] newpcb->state = %s\n",
                 tcp_state_str[newpcb->state]);
     
     TCPAcceptEventHandler(arg, newpcb);
@@ -147,7 +147,7 @@ static
 err_t
 InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
 {
-    DbgPrint("[InternalConnectEventHandler] ConnectEvent(0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent(0x%x, 0x%x, %d)\n",
         arg, pcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
@@ -165,7 +165,8 @@ static
 void
 InternalErrorEventHandler(void *arg, err_t err)
 {
-    DbgPrint("ErrorEvent(0x%x, %d)\n", arg, (unsigned int)err);
+    DbgPrint("[lwIP, InternalErrorEventHandler] ErrorEvent(0x%x, %d)\n",
+        arg, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
     if (!arg) return;
@@ -197,8 +198,8 @@ LibTCPSocketCallback(void *arg)
     
     if (msg->NewPcb)
     {
-        tcp_arg(msg->NewPcb, msg->Arg);
-        tcp_err(msg->NewPcb, InternalErrorEventHandler);
+        tcp_arg((struct tcp_pcb*)msg->NewPcb, msg->Arg);
+        tcp_err((struct tcp_pcb*)msg->NewPcb, InternalErrorEventHandler);
     }
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
@@ -222,11 +223,11 @@ LibTCPSocket(void *arg)
         else
             ret = NULL;
         
-        DbgPrint("LibTCPSocket(0x%x) = 0x%x\n", arg, ret);
+        DbgPrint("[lwIP, LibTCPSocket] (0x%x) = 0x%x\n", arg, ret);
         
         ExFreePool(msg);
         
-        return ret;
+        return (struct tcp_pcb*)ret;
     }
     
     return NULL;
@@ -267,6 +268,8 @@ LibTCPBind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     
     if (!pcb)
         return ERR_CLSD;
+
+    DbgPrint("[lwIP, LibTCPBind] Called\n");
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct bind_callback_msg));
     if (msg)
@@ -283,7 +286,9 @@ LibTCPBind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
         else
             ret = ERR_CLSD;
         
-        DbgPrint("LibTCPBind(0x%x)\n", pcb);
+        DbgPrint("[lwIP, LibTCPBind] pcb = 0x%x\n", pcb);
+
+        DbgPrint("[lwIP, LibTCPBind] Done\n");
         
         ExFreePool(msg);
         
@@ -314,6 +319,8 @@ LibTCPListenCallback(void *arg)
     void *p;
     
     ASSERT(msg);
+
+    DbgPrint("[lwIP, LibTCPListenCallback] Called\n");
     
     p = msg->Pcb->callback_arg;
     msg->NewPcb = tcp_listen_with_backlog(msg->Pcb, msg->Backlog);
@@ -324,6 +331,8 @@ LibTCPListenCallback(void *arg)
         tcp_accept(msg->NewPcb, InternalAcceptEventHandler);
         tcp_err(msg->NewPcb, InternalErrorEventHandler);
     }
+
+    DbgPrint("[lwIP, LibTCPListenCallback] Done\n");
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
@@ -333,6 +342,8 @@ LibTCPListen(struct tcp_pcb *pcb, u8_t backlog)
 {
     struct listen_callback_msg *msg;
     void *ret;
+
+    DbgPrint("[lwIP, LibTCPListen] Called\n");
     
     if (!pcb)
         return NULL;
@@ -351,7 +362,9 @@ LibTCPListen(struct tcp_pcb *pcb, u8_t backlog)
         else
             ret = NULL;
         
-        DbgPrint("LibTCPListen(0x%x,0x%x)\n", pcb, ret);
+        DbgPrint("[lwIP, LibTCPListen] pcb = 0x%x \n", pcb);
+
+        DbgPrint("[lwIP, LibTCPListen] Done\n");
         
         ExFreePool(msg);
         
@@ -453,7 +466,7 @@ LibTCPConnectCallback(void *arg)
 {
     struct connect_callback_msg *msg = arg;
 
-    DbgPrint("[LibTCPConnectCallback] Called\n");
+    DbgPrint("[lwIP, LibTCPConnectCallback] Called\n");
     
     ASSERT(arg);
     
@@ -463,7 +476,7 @@ LibTCPConnectCallback(void *arg)
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 
-    DbgPrint("[LibTCPConnectCallback] Done\n");
+    DbgPrint("[lwIP, LibTCPConnectCallback] Done\n");
 }
 
 err_t
@@ -471,6 +484,8 @@ LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
 {
     struct connect_callback_msg *msg;
     err_t ret;
+
+    DbgPrint("[lwIP, LibTCPConnect] Called\n");
     
     if (!pcb)
         return ERR_CLSD;
@@ -491,8 +506,10 @@ LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
             ret = ERR_CLSD;
         
         ExFreePool(msg);
-        
-        DbgPrint("LibTCPConnect(0x%x)\n", pcb);
+
+        DbgPrint("[lwIP, LibTCPConnect] pcb = 0x%x\n", pcb);
+
+        DbgPrint("[lwIP, LibTCPConnect] Done\n");
         
         return ret;
     }
@@ -528,21 +545,35 @@ LibTCPClose(struct tcp_pcb *pcb)
 {
     struct close_callback_msg *msg;
     err_t ret;
+
+    DbgPrint("[lwIP, LibTCPClose] Called\n");
     
     if (!pcb)
+    {
+        DbgPrint("[lwIP, LibTCPClose] Done... NO pcb\n");
         return ERR_CLSD;
+    }
+
+    DbgPrint("[lwIP, LibTCPClose] Removing pcb callbacks\n");
     
     tcp_arg(pcb, NULL);
     tcp_recv(pcb, NULL);
     tcp_sent(pcb, NULL);
     tcp_err(pcb, NULL);
     tcp_accept(pcb, NULL);
+
+    DbgPrint("[lwIP, LibTCPClose] Attempting to allocate memory for msg\n");
     
     msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
     if (msg)
     {
+        DbgPrint("[lwIP, LibTCPClose] Initializing msg->Event\n");
         KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
+
+        DbgPrint("[lwIP, LibTCPClose] Initializing msg->pcb = 0x%x\n", pcb);
         msg->Pcb = pcb;
+
+        DbgPrint("[lwIP, LibTCPClose] Attempting to call LibTCPCloseCallback\n");
         
         tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
         
@@ -553,10 +584,14 @@ LibTCPClose(struct tcp_pcb *pcb)
         
         ExFreePool(msg);
         
-        DbgPrint("LibTCPClose(0x%x)\n", pcb);
+        DbgPrint("[lwIP, LibTCPClose] pcb = 0x%x\n", pcb);
+
+        DbgPrint("[lwIP, LibTCPClose] Done\n");
         
         return ret;
     }
+
+    DbgPrint("[lwIP, LibTCPClose] Failed to allocate memory\n");
     
     return ERR_MEM;
 }
@@ -564,7 +599,7 @@ LibTCPClose(struct tcp_pcb *pcb)
 void
 LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg)
 {
-    DbgPrint("[LibTCPAccept] (pcb, arg) = (0x%x, 0x%x)\n", pcb, arg);
+    DbgPrint("[lwIP, LibTCPAccept] Called. (pcb, arg) = (0x%x, 0x%x)\n", pcb, arg);
     
     ASSERT(arg);
     
@@ -575,13 +610,13 @@ LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg)
     
     tcp_accepted(listen_pcb);
 
-    DbgPrint("[LibTCPAccept] Done\n");
+    DbgPrint("[lwIP, LibTCPAccept] Done\n");
 }
 
 err_t
 LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 {
-    DbgPrint("[LibTCPGetHostName] pcb = (0x%x)\n", pcb);
+    DbgPrint("[lwIP, LibTCPGetHostName] Called. pcb = (0x%x)\n", pcb);
     
     if (!pcb)
         return ERR_CLSD;
@@ -589,7 +624,9 @@ LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
     *ipaddr = pcb->local_ip;
     *port = pcb->local_port;
     
-    DbgPrint("Got host port: %d\n", *port);
+    DbgPrint("[lwIP, LibTCPGetHostName] Got host port: %d\n", *port);
+
+    DbgPrint("[lwIP, LibTCPGetHostName] Done\n");
     
     return ERR_OK;
 }
@@ -597,7 +634,7 @@ LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 err_t
 LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 {
-    DbgPrint("[LibTCPGetPeerName] pcb = (0x%x)\n", pcb);
+    DbgPrint("[lwIP, LibTCPGetPeerName] pcb = (0x%x)\n", pcb);
     
     if (!pcb)
         return ERR_CLSD;
@@ -605,7 +642,7 @@ LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
     *ipaddr = pcb->remote_ip;
     *port = pcb->remote_port;
     
-    DbgPrint("[LibTCPGetPeerName] Got remote port: %d\n", *port);
+    DbgPrint("[lwIP, LibTCPGetPeerName] Got remote port: %d\n", *port);
     
     return ERR_OK;
 }

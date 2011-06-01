@@ -13,17 +13,20 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
+NTSTATUS WarmSocketForBind( PAFD_FCB FCB )
+{
     NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
                             FCB->LocalAddress->Address[0].AddressType));
 
-    if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
+    if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer )
+    {
         AFD_DbgPrint(MID_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
-    if( !FCB->LocalAddress ) {
+    if( !FCB->LocalAddress )
+    {
         AFD_DbgPrint(MID_TRACE,("No local address\n"));
         return STATUS_INVALID_PARAMETER;
     }
@@ -54,7 +57,8 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
 NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	      PIO_STACK_LOCATION IrpSp) {
+	      PIO_STACK_LOCATION IrpSp)
+{
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -62,41 +66,44 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    if( !(BindReq = LockRequest( Irp, IrpSp )) )
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0 );
+    if ( !SocketAcquireStateLock( FCB ) )
+        return LostSocket( Irp );
+    if ( !(BindReq = LockRequest( Irp, IrpSp )) )
+	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
-    if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
-    FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
+    if ( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+        FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
-    if( FCB->LocalAddress )
-	Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
-					 FCB->LocalAddress );
+    if (FCB->LocalAddress)
+	    Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
+					     FCB->LocalAddress );
 
-    if( NT_SUCCESS(Status) )
-	Status = WarmSocketForBind( FCB );
+    if (NT_SUCCESS(Status))
+	    Status = WarmSocketForBind( FCB );
+    
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
-    if( !NT_SUCCESS(Status) )
+    if (!NT_SUCCESS(Status))
         return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
 
-    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
-	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
+    if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
+    {
+	    AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
 
-	Status = TdiReceiveDatagram
-	    ( &FCB->ReceiveIrp.InFlightRequest,
-	      FCB->AddressFile.Object,
-	      0,
-	      FCB->Recv.Window,
-	      FCB->Recv.Size,
-	      FCB->AddressFrom,
-	      &FCB->ReceiveIrp.Iosb,
-	      PacketSocketRecvComplete,
-	      FCB );
+	    Status = TdiReceiveDatagram
+	        ( &FCB->ReceiveIrp.InFlightRequest,
+	          FCB->AddressFile.Object,
+	          0,
+	          FCB->Recv.Window,
+	          FCB->Recv.Size,
+	          FCB->AddressFrom,
+	          &FCB->ReceiveIrp.Iosb,
+	          PacketSocketRecvComplete,
+	          FCB );
 
-	/* We don't want to wait for this read to complete. */
-	if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+	    /* We don't want to wait for this read to complete. */
+	    if (Status == STATUS_PENDING)
+            Status = STATUS_SUCCESS;
     }
 
     if (NT_SUCCESS(Status))

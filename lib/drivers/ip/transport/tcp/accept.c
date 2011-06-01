@@ -58,6 +58,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
     LockObject(Connection, &OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Called\n"));
+    DbgPrint("[IP, TCPListen] Called\n");
 
     TI_DbgPrint(DEBUG_TCP, ("Connection->SocketContext %x\n",
         Connection->SocketContext));
@@ -78,6 +79,7 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Leaving. Status = %x\n", Status));
+    DbgPrint("[IP, TCPListen] Leaving. Status = %x\n", Status);
 
     return Status;
 }
@@ -89,6 +91,8 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
     BOOLEAN Found = FALSE;
+
+    DbgPrint("[IP, TCPAbortListenForSocket] Called\n");
 
     LockObject(Listener, &OldIrql);
 
@@ -110,6 +114,9 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     }
 
     UnlockObject(Listener, OldIrql);
+
+    DbgPrint("[IP, TCPAbortListenForSocket] Leaving. Status = %s\n",
+        Found == TRUE ? "TRUE" : "FALSE");
 
     return Found;
 }

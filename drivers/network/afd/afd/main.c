@@ -25,13 +25,17 @@ DWORD DebugTraceLevel = 0;
 
 #endif /* DBG */
 
-void OskitDumpBuffer( PCHAR Data, UINT Len ) {
+void OskitDumpBuffer( PCHAR Data, UINT Len )
+{
     unsigned int i;
 
-    for( i = 0; i < Len; i++ ) {
-	if( i && !(i & 0xf) ) DbgPrint( "\n" );
-	if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
-	DbgPrint( " %02x", Data[i] & 0xff );
+    for( i = 0; i < Len; i++ )
+    {
+	    if( i && !(i & 0xf) )
+            DbgPrint( "\n" );
+	    if( !(i & 0xf) )
+            DbgPrint( "%08x: ", (UINT)(Data + i) );
+	    DbgPrint( " %02x", Data[i] & 0xff );
     }
     DbgPrint("\n");
 }
@@ -239,7 +243,8 @@ AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-		PIO_STACK_LOCATION IrpSp) {
+		PIO_STACK_LOCATION IrpSp)
+{
     PAFD_FCB FCB;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
@@ -263,25 +268,27 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     EaInfo = Irp->AssociatedIrp.SystemBuffer;
 
-    if( EaInfo ) {
-	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
-	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
+    if( EaInfo )
+    {
+	    ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+	    EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
 
-	EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-	    EaInfo->EaNameLength +
-	    EaInfo->EaValueLength;
+	    EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
+	        EaInfo->EaNameLength +
+	        EaInfo->EaValueLength;
 
-	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
-				EaInfo, EaInfoValue));
+	    AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
+				    EaInfo, EaInfoValue));
     }
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
     FCB = ExAllocatePool(NonPagedPool, sizeof(AFD_FCB));
-    if( FCB == NULL ) {
-	Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return STATUS_NO_MEMORY;
+    if( FCB == NULL )
+    {
+	    Irp->IoStatus.Status = STATUS_NO_MEMORY;
+	    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	    return STATUS_NO_MEMORY;
     }
 
     AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
@@ -299,8 +306,9 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     KeInitializeMutex( &FCB->Mutex, 0 );
 
-    for( i = 0; i < MAX_FUNCTIONS; i++ ) {
-	InitializeListHead( &FCB->PendingIrpList[i] );
+    for( i = 0; i < MAX_FUNCTIONS; i++ )
+    {
+	    InitializeListHead( &FCB->PendingIrpList[i] );
     }
 
     InitializeListHead( &FCB->DatagramList );
@@ -308,46 +316,53 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
-    if( ConnectInfo ) {
-	FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
-	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
-	FCB->TdiDeviceName.Buffer =
-	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+    if( ConnectInfo )
+    {
+	    FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
+	    FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
+	    FCB->TdiDeviceName.Buffer =
+	        ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
 
-	if( !FCB->TdiDeviceName.Buffer ) {
-	    ExFreePool(FCB);
-	    AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
-	    Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-	    return STATUS_NO_MEMORY;
-	}
+	    if( !FCB->TdiDeviceName.Buffer )
+        {
+	        ExFreePool(FCB);
+	        AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
+	        Irp->IoStatus.Status = STATUS_NO_MEMORY;
+	        IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+	        return STATUS_NO_MEMORY;
+	    }
 
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
+	    RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		           ConnectInfo->TransportName,
+		           FCB->TdiDeviceName.Length );
 
-	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
-				EaInfo->EaName, &FCB->TdiDeviceName));
-    } else {
-	AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
+	    AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
+				    EaInfo->EaName, &FCB->TdiDeviceName));
+    }
+    else
+    {
+	    AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
     }
 
     FileObject->FsContext = FCB;
 
     /* It seems that UDP sockets are writable from inception */
-    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
+    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
+    {
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
         
-	/* A datagram socket is always sendable */
-	FCB->PollState |= AFD_EVENT_SEND;
-        FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
+	    /* A datagram socket is always sendable */
+	    FCB->PollState |= AFD_EVENT_SEND;
+            FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+            PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
-    if( !NT_SUCCESS(Status) ) {
-	if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
-	ExFreePool( FCB );
-	FileObject->FsContext = NULL;
+    if( !NT_SUCCESS(Status) )
+    {
+	    if( FCB->TdiDeviceName.Buffer )
+            ExFreePool( FCB->TdiDeviceName.Buffer );
+	    ExFreePool( FCB );
+	    FileObject->FsContext = NULL;
     }
 
     Irp->IoStatus.Status = Status;
@@ -413,12 +428,14 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     InFlightRequest[3] = &FCB->ConnectIrp;
 
     /* Cancel our pending requests */
-    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	if( InFlightRequest[i]->InFlightRequest ) {
-	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
-				    i, InFlightRequest[i]->InFlightRequest));
+    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ )
+    {
+	    if( InFlightRequest[i]->InFlightRequest )
+        {
+	        AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
+				        i, InFlightRequest[i]->InFlightRequest));
             IoCancelIrp(InFlightRequest[i]->InFlightRequest);
-	}
+	    }
     }
 
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
@@ -432,13 +449,13 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ExFreePool( FCB->Context );
 
     if( FCB->Recv.Window )
-	ExFreePool( FCB->Recv.Window );
+	    ExFreePool( FCB->Recv.Window );
 
     if( FCB->Send.Window )
-	ExFreePool( FCB->Send.Window );
+	    ExFreePool( FCB->Send.Window );
 
     if( FCB->AddressFrom )
-	ExFreePool( FCB->AddressFrom );
+	    ExFreePool( FCB->AddressFrom );
 
     if( FCB->ConnectInfo )
         ExFreePool( FCB->ConnectInfo );
@@ -456,16 +473,16 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ExFreePool( FCB->DisconnectOptions );
 
     if( FCB->LocalAddress )
-	ExFreePool( FCB->LocalAddress );
+	    ExFreePool( FCB->LocalAddress );
 
     if( FCB->RemoteAddress )
-	ExFreePool( FCB->RemoteAddress );
+	    ExFreePool( FCB->RemoteAddress );
 
     if( FCB->Connection.Object )
-	ObDereferenceObject(FCB->Connection.Object);
+	    ObDereferenceObject(FCB->Connection.Object);
 
     if( FCB->AddressFile.Object )
-	ObDereferenceObject(FCB->AddressFile.Object);
+	    ObDereferenceObject(FCB->AddressFile.Object);
 
     if( FCB->AddressFile.Handle != INVALID_HANDLE_VALUE )
     {
@@ -484,7 +501,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( FCB->TdiDeviceName.Buffer )
-	ExFreePool(FCB->TdiDeviceName.Buffer);
+	    ExFreePool(FCB->TdiDeviceName.Buffer);
 
     ExFreePool(FCB);
 
@@ -499,7 +516,8 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 static NTSTATUS NTAPI
 AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	      PIO_STACK_LOCATION IrpSp) {
+	      PIO_STACK_LOCATION IrpSp)
+{
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_DISCONNECT_INFO DisReq;
@@ -549,7 +567,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			        FCB->ConnectInfo,
 			        ConnectionReturnInfo);
 
-        if (NT_SUCCESS(Status)) {
+        if (NT_SUCCESS(Status))
+        {
             FCB->FilledDisconnectData = MIN(FCB->DisconnectDataSize, ConnectionReturnInfo->UserDataLength);
             if (FCB->FilledDisconnectData)
             {
@@ -572,7 +591,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->PollState |= AFD_EVENT_DISCONNECT;
         FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
-    } else
+    }
+    else
         Status = STATUS_INVALID_PARAMETER;
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );

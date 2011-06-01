@@ -139,6 +139,8 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
 {
   err_t err;
 
+  LWIP_DEBUGF(TCP_DEBUG, ("tcp_close_shutdown: called on pcb %x\n", pcb));
+
   if (rst_on_unacked_data && (pcb->state != LISTEN)) {
     if ((pcb->refused_data != NULL) || (pcb->rcv_wnd != TCP_WND)) {
       /* Not all data received by application, send RST to tell the remote

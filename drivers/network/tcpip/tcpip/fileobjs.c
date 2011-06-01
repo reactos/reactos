@@ -413,15 +413,18 @@ NTSTATUS FileOpenConnection(
   NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
 
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+  TI_DbgPrint(MID_TRACE, ("[TCPIP, FileOpenConnection] Called\n"));
+  //DbgPrint("[TCPIP, FileOpenConnection] Called\n");
 
   Connection = TCPAllocateConnectionEndpoint( ClientContext );
 
-  if( !Connection ) return STATUS_NO_MEMORY;
+  if (!Connection)
+      return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
-  if( !NT_SUCCESS(Status) ) {
+  if (!NT_SUCCESS(Status))
+  {
       DereferenceObject( Connection );
       return Status;
   }
@@ -429,7 +432,8 @@ NTSTATUS FileOpenConnection(
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
 
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  TI_DbgPrint(MAX_TRACE, ("[TCPIP, FileOpenConnection] Leaving\n"));
+  //DbgPrint("[TCPIP, FileOpenConnection] Leaving\n");
 
   return STATUS_SUCCESS;
 }

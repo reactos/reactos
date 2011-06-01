@@ -128,21 +128,27 @@ static NTSTATUS TdiOpenDevice(
                           0,                                    /* Create options */
                           EaInfo,                               /* EA buffer */
                           EaLength);                            /* EA length */
-    if (NT_SUCCESS(Status)) {
+    if (NT_SUCCESS(Status))
+    {
         Status = ObReferenceObjectByHandle(*Handle,                       /* Handle to open file */
                                            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,  /* Access mode */
                                            IoFileObjectType,              /* Object type */
                                            KernelMode,                    /* Access mode */
                                            (PVOID*)Object,                /* Pointer to object */
                                            NULL);                         /* Handle information */
-        if (!NT_SUCCESS(Status)) {
+        if (!NT_SUCCESS(Status))
+        {
 			AFD_DbgPrint(MIN_TRACE, ("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status));
 			ZwClose(*Handle);
-        } else {
+        }
+        else
+        {
 			AFD_DbgPrint(MAX_TRACE, ("Got handle (0x%X)  Object (0x%X)\n",
 									 *Handle, *Object));
         }
-    } else {
+    }
+    else
+    {
         AFD_DbgPrint(MIN_TRACE, ("ZwCreateFile() failed with status (0x%X)\n", Status));
     }
 
@@ -329,14 +335,16 @@ NTSTATUS TdiConnect(
 
 	AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-	if (!ConnectionObject) {
+	if (!ConnectionObject)
+    {
 		AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
 		*Irp = NULL;
 		return STATUS_INVALID_PARAMETER;
 	}
 
 	DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
-	if (!DeviceObject) {
+	if (!DeviceObject)
+    {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
@@ -387,13 +395,15 @@ NTSTATUS TdiAssociateAddressFile(
 	AFD_DbgPrint(MAX_TRACE, ("Called. AddressHandle (0x%X)  ConnectionObject (0x%X)\n",
 							 AddressHandle, ConnectionObject));
 
-	if (!ConnectionObject) {
+	if (!ConnectionObject)
+    {
 		AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
 		return STATUS_INVALID_PARAMETER;
 	}
 
 	DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
-	if (!DeviceObject) {
+	if (!DeviceObject)
+    {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         return STATUS_INVALID_PARAMETER;
 	}
@@ -442,16 +452,19 @@ NTSTATUS TdiListen
 	PDEVICE_OBJECT DeviceObject;
 	NTSTATUS Status;
 
-	AFD_DbgPrint(MAX_TRACE, ("Called\n"));
+	AFD_DbgPrint(MAX_TRACE, ("[AFD, TDIListen] Called\n"));
+    DbgPrint("[AFD, TDIListen] Called\n");
 
-	if (!ConnectionObject) {
+	if (!ConnectionObject)
+    {
 		AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
 		*Irp = NULL;
 		return STATUS_INVALID_PARAMETER;
 	}
 
 	DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
-	if (!DeviceObject) {
+	if (!DeviceObject)
+    {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
@@ -475,6 +488,8 @@ NTSTATUS TdiListen
 				   *ReturnConnectionInfo);  /* Return connection information */
 
 	Status = TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, Iosb);
+
+    DbgPrint("[AFD, TDIListen] Done. Status = 0x%x\n", Status);
 
 	return Status;
 }

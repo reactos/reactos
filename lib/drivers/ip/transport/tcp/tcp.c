@@ -83,6 +83,9 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
                            "Proto %d\n",
                            Connection, Family, Type, Proto));
+    DbgPrint("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
+                           "Proto %d\n",
+                           Connection, Family, Type, Proto);
 
     Connection->SocketContext = LibTCPSocket(Connection);
     if (Connection->SocketContext)
@@ -93,6 +96,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status));
+    DbgPrint("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status);
 
     return Status;
 }
