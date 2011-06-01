@@ -29,7 +29,6 @@ list(APPEND SOURCE
     volume.c
     volumetexture.c
     version.rc
-    #${REACTOS_BINARY_DIR}/include/reactos/wine/wined3d_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
 add_library(d3d8 SHARED ${SOURCE})
