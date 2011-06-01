@@ -122,7 +122,8 @@ KdbpSymFindModule(
  */
 BOOLEAN
 KdbSymPrintAddress(
-    IN PVOID Address)
+    IN PVOID Address,
+    IN PKTRAP_FRAME Context)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG_PTR RelativeAddress;
