@@ -2965,6 +2965,30 @@ PnpEventThread(LPVOID lpParameter)
             DPRINT1("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
             /* FIXME: ? */
         }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_EJECT_VETOED, &RpcStatus))
+        {
+            DPRINT1("Eject vetoed: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_KERNEL_INITIATED_EJECT, &RpcStatus))
+        {
+            DPRINT1("Kernel initiated eject: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SAFE_REMOVAL, &RpcStatus))
+        {
+            DPRINT1("Safe removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SURPRISE_REMOVAL, &RpcStatus))
+        {
+            DPRINT1("Surprise removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVAL_VETOED, &RpcStatus))
+        {
+            DPRINT1("Removal vetoed: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVE_PENDING, &RpcStatus))
+        {
+            DPRINT1("Removal pending: %S\n", PnpEvent->TargetDevice.DeviceIds);
+        }
         else
         {
             DPRINT1("Unknown event, GUID {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
