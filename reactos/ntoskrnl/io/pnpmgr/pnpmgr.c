@@ -45,6 +45,12 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
                        IN ULONG CreateOptions,
                        OUT PHANDLE Handle);
 
+VOID
+IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject);
+
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
@@ -125,6 +131,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
    return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
 NTAPI
 IopSendEject(IN PDEVICE_OBJECT DeviceObject)
@@ -139,6 +146,7 @@ IopSendEject(IN PDEVICE_OBJECT DeviceObject)
     return IopSynchronousCall(DeviceObject, &Stack, &Dummy); 
 }
 
+static
 VOID
 NTAPI
 IopSendSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject)
@@ -154,13 +162,20 @@ IopSendSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject)
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
+static
 NTSTATUS
 NTAPI
 IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
     IO_STACK_LOCATION Stack;
     PVOID Dummy;
     NTSTATUS Status;
+    
+    ASSERT(DeviceNode);
+    
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
+                              &DeviceNode->InstancePath);
     
     RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
     Stack.MajorFunction = IRP_MJ_PNP;
@@ -173,10 +188,18 @@ IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
                                   &GUID_TARGET_DEVICE_QUERY_REMOVE,
                                   NULL,
                                   NULL);
+    
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Removal vetoed by %wZ\n", &DeviceNode->InstancePath);
+        IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
+                                  &DeviceNode->InstancePath);
+    }
 
     return Status;
 }
 
+static
 NTSTATUS
 NTAPI
 IopQueryStopDevice(IN PDEVICE_OBJECT DeviceObject)
@@ -191,6 +214,7 @@ IopQueryStopDevice(IN PDEVICE_OBJECT DeviceObject)
     return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
+static
 VOID
 NTAPI
 IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
@@ -212,6 +236,29 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
                                   NULL);
 }
 
+static
+VOID
+NTAPI
+IopCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PVOID Dummy;
+    
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_CANCEL_REMOVE_DEVICE;
+    
+    /* Drivers should never fail a IRP_MN_CANCEL_REMOVE_DEVICE request */
+    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    
+    IopNotifyPlugPlayNotification(DeviceObject,
+                                  EventCategoryTargetDeviceChange,
+                                  &GUID_TARGET_DEVICE_REMOVE_CANCELLED,
+                                  NULL,
+                                  NULL);
+}
+
+static
 VOID
 NTAPI
 IopSendStopDevice(IN PDEVICE_OBJECT DeviceObject)
@@ -257,7 +304,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     if (!NT_SUCCESS(Status))
     {
         /* Send an IRP_MN_REMOVE_DEVICE request */
-        IopSendRemoveDevice(DeviceObject);
+        IopRemoveDevice(DeviceNode);
 
         /* Set the appropriate flag */
         DeviceNode->Flags |= DNF_START_FAILED;
@@ -3721,7 +3768,7 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
             DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
             DeviceNode->Flags |= DNF_START_FAILED;
 
-            IopSendRemoveDevice(PhysicalDeviceObject);
+            IopRemoveDevice(DeviceNode);
         }
     }
 }
@@ -3881,8 +3928,213 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    return Status;
 }
 
+static
 NTSTATUS
-NTAPI
+IopQueryRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
+{
+    PDEVICE_NODE ChildDeviceNode, NextDeviceNode, FailedRemoveDevice;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    ChildDeviceNode = ParentDeviceNode->Child;
+    while (ChildDeviceNode != NULL)
+    {
+        NextDeviceNode = ChildDeviceNode->Sibling;
+        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        
+        Status = IopPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject);
+        if (!NT_SUCCESS(Status))
+        {
+            FailedRemoveDevice = ChildDeviceNode;
+            goto cleanup;
+        }
+        
+        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+        ChildDeviceNode = NextDeviceNode;
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+    
+    return STATUS_SUCCESS;
+    
+cleanup:
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    ChildDeviceNode = ParentDeviceNode->Child;
+    while (ChildDeviceNode != NULL)
+    {
+        NextDeviceNode = ChildDeviceNode->Sibling;
+        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        
+        IopCancelPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject);
+        
+        /* IRP_MN_CANCEL_REMOVE_DEVICE is also sent to the device
+         * that failed the IRP_MN_QUERY_REMOVE_DEVICE request */
+        if (ChildDeviceNode == FailedRemoveDevice)
+            return Status;
+        
+        ChildDeviceNode = NextDeviceNode;
+        
+        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+    
+    return Status;
+}
+
+static
+VOID
+IopSendRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
+{
+    PDEVICE_NODE ChildDeviceNode, NextDeviceNode;
+    KIRQL OldIrql;
+    
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    ChildDeviceNode = ParentDeviceNode->Child;
+    while (ChildDeviceNode != NULL)
+    {
+        NextDeviceNode = ChildDeviceNode->Sibling;
+        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        
+        IopSendRemoveDevice(ChildDeviceNode->PhysicalDeviceObject);
+        
+        ChildDeviceNode = NextDeviceNode;
+        
+        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+}
+
+static
+VOID
+IopCancelRemoveChildDevices(PDEVICE_NODE ParentDeviceNode)
+{
+    PDEVICE_NODE ChildDeviceNode, NextDeviceNode;
+    KIRQL OldIrql;
+    
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    ChildDeviceNode = ParentDeviceNode->Child;
+    while (ChildDeviceNode != NULL)
+    {
+        NextDeviceNode = ChildDeviceNode->Sibling;
+        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        
+        IopCancelPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject);
+        
+        ChildDeviceNode = NextDeviceNode;
+        
+        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+}
+
+static
+NTSTATUS
+IopQueryRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
+{
+    /* This function DOES NOT dereference the device objects on SUCCESS
+     * but it DOES dereference device objects on FAILURE */
+    
+    ULONG i, j;
+    NTSTATUS Status;
+    
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        Status = IopPrepareDeviceForRemoval(DeviceRelations->Objects[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            j = i;
+            goto cleanup;
+        }
+    }
+    
+    return STATUS_SUCCESS;
+    
+cleanup:
+    /* IRP_MN_CANCEL_REMOVE_DEVICE is also sent to the device
+     * that failed the IRP_MN_QUERY_REMOVE_DEVICE request */
+    for (i = 0; i <= j; i++)
+    {
+        IopCancelPrepareDeviceForRemoval(DeviceRelations->Objects[i]);
+        ObDereferenceObject(DeviceRelations->Objects[i]);
+        DeviceRelations->Objects[i] = NULL;
+    }
+    for (; i < DeviceRelations->Count; i++)
+    {
+        ObDereferenceObject(DeviceRelations->Objects[i]);
+        DeviceRelations->Objects[i] = NULL;
+    }
+    ExFreePool(DeviceRelations);
+    
+    return Status;
+}
+
+static
+VOID
+IopSendRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
+{
+    /* This function DOES dereference the device objects in all cases */
+    
+    ULONG i;
+    
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        IopSendRemoveDevice(DeviceRelations->Objects[i]);
+        ObDereferenceObject(DeviceRelations->Objects[i]);
+        DeviceRelations->Objects[i] = NULL;
+    }
+    
+    ExFreePool(DeviceRelations);
+}
+
+static
+VOID
+IopCancelRemoveDeviceRelations(PDEVICE_RELATIONS DeviceRelations)
+{
+    /* This function DOES dereference the device objects in all cases */
+    
+    ULONG i;
+    
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        IopCancelPrepareDeviceForRemoval(DeviceRelations->Objects[i]);
+        ObDereferenceObject(DeviceRelations->Objects[i]);
+        DeviceRelations->Objects[i] = NULL;
+    }
+    
+    ExFreePool(DeviceRelations);
+}
+
+VOID
+IopCancelPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_RELATIONS DeviceRelations;
+    NTSTATUS Status;
+    
+    IopCancelRemoveDevice(DeviceObject);
+    
+    Stack.Parameters.QueryDeviceRelations.Type = RemovalRelations;
+    
+    Status = IopInitiatePnpIrp(DeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_RELATIONS,
+                               &Stack);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
+        DeviceRelations = NULL;
+    }
+    else
+    {
+        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+    }
+    
+    if (DeviceRelations)
+        IopCancelRemoveDeviceRelations(DeviceRelations);
+}
+
+NTSTATUS
 IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
@@ -3890,7 +4142,6 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_RELATIONS DeviceRelations;
     NTSTATUS Status;
-    ULONG i;
 
     if (DeviceNode->UserFlags & DNUF_NOT_DISABLEABLE)
     {
@@ -3898,15 +4149,9 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
         return STATUS_UNSUCCESSFUL;
     }
     
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
-                              &DeviceNode->InstancePath);
-    
     if (IopQueryRemoveDevice(DeviceObject) != STATUS_SUCCESS)
     {
         DPRINT1("Removal vetoed by failing the query remove request\n");
-        
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
-                                  &DeviceNode->InstancePath);
         
         return STATUS_UNSUCCESSFUL;
     }
@@ -3929,51 +4174,24 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     
     if (DeviceRelations)
     {
-        for (i = 0; i < DeviceRelations->Count; i++)
-        {
-            PDEVICE_NODE RelationsDeviceNode = IopGetDeviceNode(DeviceRelations->Objects[i]);
-            
-            IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
-                                      &RelationsDeviceNode->InstancePath);
-            
-            if (IopRemoveDevice(RelationsDeviceNode) != STATUS_SUCCESS)
-            {
-                DPRINT1("Device removal vetoed by failing a dependent query remove request\n");
-                
-                Status = STATUS_UNSUCCESSFUL;
-                
-                goto cleanup;
-            }
-            else
-            {
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-                
-                DeviceRelations->Objects[i] = NULL;
-            }
-        }
-        
-        ExFreePool(DeviceRelations);
-        
-        DeviceRelations = NULL;
+        Status = IopQueryRemoveDeviceRelations(DeviceRelations);
+        if (!NT_SUCCESS(Status))
+            return Status;
     }
     
-    Status = STATUS_SUCCESS;
-    
-cleanup:
-    if (DeviceRelations)
+    Status = IopQueryRemoveChildDevices(DeviceNode);
+    if (!NT_SUCCESS(Status))
     {
-        for (i = 0; i < DeviceRelations->Count; i++)
-        {
-            if (DeviceRelations->Objects[i])
-            {
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            }
-        }
-        
-        ExFreePool(DeviceRelations);
+        if (DeviceRelations)
+            IopCancelRemoveDeviceRelations(DeviceRelations);
+        return Status;
     }
-
-    return Status;
+    
+    if (DeviceRelations)
+        IopSendRemoveDeviceRelations(DeviceRelations);
+    IopSendRemoveChildDevices(DeviceNode);
+    
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -3993,9 +4211,6 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
         return STATUS_SUCCESS;
     }
 
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
-                              &DeviceNode->InstancePath);
-
     return Status;
 }
 
@@ -4012,16 +4227,13 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
     IO_STACK_LOCATION Stack;
     DEVICE_CAPABILITIES Capabilities;
     NTSTATUS Status;
-    ULONG i;
     
     IopQueueTargetDeviceEvent(&GUID_DEVICE_KERNEL_INITIATED_EJECT,
                               &DeviceNode->InstancePath);
     
     if (IopQueryDeviceCapabilities(DeviceNode, &Capabilities) != STATUS_SUCCESS)
     {
-       IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
-                                 &DeviceNode->InstancePath);
-       return;
+        goto cleanup;
     }
     
     Stack.Parameters.QueryDeviceRelations.Type = EjectionRelations;
@@ -4042,47 +4254,36 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
     
     if (DeviceRelations)
     {
-        for (i = 0; i < DeviceRelations->Count; i++)
-        {
-            PDEVICE_NODE RelationsDeviceNode = IopGetDeviceNode(DeviceRelations->Objects[i]);
-            
-            IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
-                                      &RelationsDeviceNode->InstancePath);
-            
-            if (IopRemoveDevice(RelationsDeviceNode) != STATUS_SUCCESS)
-            {
-                DPRINT1("Device removal vetoed by failing a query remove request (ejection relations)\n");
-
-                goto cleanup;
-            }
-            else
-            {
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-                
-                DeviceRelations->Objects[i] = NULL;
-            }
-        }
-        
-        ExFreePool(DeviceRelations);
-        
-        DeviceRelations = NULL;
+        Status = IopQueryRemoveDeviceRelations(DeviceRelations);
+        if (!NT_SUCCESS(Status))
+            goto cleanup;
+    }
+    
+    Status = IopQueryRemoveChildDevices(DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        if (DeviceRelations)
+            IopCancelRemoveDeviceRelations(DeviceRelations);
+        goto cleanup;
     }
     
     if (IopPrepareDeviceForRemoval(PhysicalDeviceObject) != STATUS_SUCCESS)
     {
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
-                                  &DeviceNode->InstancePath);
-        return;
+        if (DeviceRelations)
+            IopCancelRemoveDeviceRelations(DeviceRelations);
+        IopCancelRemoveChildDevices(DeviceNode);
+        goto cleanup;
     }
+    
+    if (DeviceRelations)
+        IopSendRemoveDeviceRelations(DeviceRelations);
+    IopSendRemoveChildDevices(DeviceNode);
     
     if (Capabilities.EjectSupported)
     {
         if (IopSendEject(PhysicalDeviceObject) != STATUS_SUCCESS)
         {
-            IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
-                                      &DeviceNode->InstancePath);
-
-            return;
+            goto cleanup;
         }
     }
     else
@@ -4090,27 +4291,14 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
         DeviceNode->Flags |= DNF_DISABLED;
     }
     
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT,
+                              &DeviceNode->InstancePath);
+    
+    return;
+    
 cleanup:
-    if (DeviceRelations)
-    {
-        for (i = 0; i < DeviceRelations->Count; i++)
-        {
-            if (DeviceRelations->Objects[i])
-            {
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            }
-        }
-        
-        ExFreePool(DeviceRelations);
-
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
-                                  &DeviceNode->InstancePath);
-    }
-    else
-    {
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT,
-                                  &DeviceNode->InstancePath);
-    }
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
+                              &DeviceNode->InstancePath);
 }
 
 /*
