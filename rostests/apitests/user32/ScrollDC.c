@@ -27,30 +27,35 @@ void Test_ScrollDC()
 	/* Test that no update region is there */
 	hrgn = CreateRectRgn(0,0,0,0);
 	iResult = GetUpdateRgn(hWnd, hrgn, FALSE);
-	ok (iResult == NULLREGION, "\n");
+	ok (iResult == NULLREGION, "Expected NULLREGION, got %d\n", iResult);
 
     /* Test normal scrolling */
-	ok(ScrollDC(hDC, 0, 0, NULL, NULL, hrgn, NULL) == TRUE, "\n");
+	ok(ScrollDC(hDC, 0, 0, NULL, NULL, hrgn, NULL) == TRUE, "ScrollDC failed\n");
 
     /* Scroll with invalid update region */
 	DeleteObject(hrgn);
-	ok(ScrollDC(hDC, 50, 0, NULL, NULL, hrgn, NULL) == FALSE, "\n");
+	ok(ScrollDC(hDC, 50, 0, NULL, NULL, (HRGN)0x12345678, NULL) == FALSE, "ScrollDC successed\n");
+	ok(ScrollDC(hDC, 50, 0, NULL, NULL, hrgn, NULL) == FALSE, "ScrollDC successed\n");
 	hrgn = CreateRectRgn(0,0,0,0);
-	ok(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION, "\n");
+	iResult = GetUpdateRgn(hWnd, hrgn, FALSE);
+	ok(iResult == NULLREGION, "Expected NULLREGION, got %d\n", iResult);
 
     /* Scroll with invalid update rect pointer */
-	ok(ScrollDC(hDC, 50, 0, NULL, NULL, NULL, (PRECT)1) == 0, "\n");
-	ok(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION, "\n");
+	ok(ScrollDC(hDC, 50, 0, NULL, NULL, NULL, (PRECT)1) == FALSE, "ScrollDC failed\n");
+	iResult = GetUpdateRgn(hWnd, hrgn, FALSE);
+	ok(iResult == NULLREGION, "Expected NULLREGION, got %d\n", iResult);
 
     /* Scroll with a clip rect */
     rcClip.left = 50; rcClip.top = 0; rcClip.right = 100; rcClip.bottom = 100;
-	ok(ScrollDC(hDC, 50, 0, NULL, &rcClip, hrgn, NULL) == TRUE, "\n");
-	ok(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION, "\n");
+	ok(ScrollDC(hDC, 50, 0, NULL, &rcClip, hrgn, NULL) == TRUE, "ScrollDC failed\n");
+	iResult = GetUpdateRgn(hWnd, hrgn, FALSE);
+	ok(iResult == NULLREGION, "Expected NULLREGION, got %d\n", iResult);
 
     /* Scroll with a clip rect */
     rcClip.left = 50; rcClip.top = 0; rcClip.right = 100; rcClip.bottom = 100;
-	ok(ScrollDC(hDC, 50, 50, NULL, &rcClip, hrgn, NULL) == TRUE, "\n");
-	ok(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION, "\n");
+	ok(ScrollDC(hDC, 50, 50, NULL, &rcClip, hrgn, NULL) == TRUE, "ScrollDC failed\n");
+	iResult = GetUpdateRgn(hWnd, hrgn, FALSE);
+	ok(iResult == NULLREGION, "Expected NULLREGION, got %d\n", iResult);
 
 	/* Overlap with another window */
 	hWnd2 = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
