@@ -154,6 +154,7 @@ endif()
 
 set_source_files_properties(${FREELDR_ARCH_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_NTHAL_;_BLDR_;_NTSYSTEM_")
 add_library(freeldr_arch ${FREELDR_ARCH_SOURCE})
+add_dependencies(freeldr_arch bugcodes)
 
 list(APPEND FREELDR_SOURCE
     bootmgr.c
