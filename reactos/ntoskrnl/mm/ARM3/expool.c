@@ -736,7 +736,7 @@ ExAllocatePool(POOL_TYPE PoolType,
     //
     // Use a default tag of "None"
     //
-    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, 'enoN');
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_NONE);
 }
 
 /*
@@ -787,6 +787,15 @@ ExFreePoolWithTag(IN PVOID P,
     // Acquire the pool lock
     //
     OldIrql = ExLockPool(PoolDesc);
+
+    //
+    // Check block tag
+    //
+    if (TagToFree && TagToFree != Entry->PoolTag)
+    {
+    	DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Entry->PoolTag);
+    	KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Entry->PoolTag, TagToFree);
+    }
 
     //
     // Check if the next allocation is at the end of the page
