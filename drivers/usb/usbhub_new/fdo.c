@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/usb/usbhub/fdo.c
@@ -254,8 +254,10 @@ DeviceStatusChangeThread(
     PWORK_ITEM_DATA WorkItemData;
     PORT_STATUS_CHANGE PortStatus;
     LONG PortId;
-    DPRINT1("Entered DeviceStatusChangeThread, Context %x\n", Context);
+
     static LONG failsafe = 0;
+
+    DPRINT1("Entered DeviceStatusChangeThread, Context %x\n", Context);
 
     WorkItemData = (PWORK_ITEM_DATA)Context;
     DeviceObject = (PDEVICE_OBJECT)WorkItemData->Context;
