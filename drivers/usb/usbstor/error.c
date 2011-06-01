@@ -65,7 +65,6 @@ USBSTOR_HandleTransferError(
 {
 	NTSTATUS Status;
 	PIO_STACK_LOCATION Stack;
-	PURB Urb;
 	USBD_PIPE_HANDLE PipeHandle;
 	PSCSI_REQUEST_BLOCK Request;
 

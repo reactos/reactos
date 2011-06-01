@@ -600,8 +600,8 @@ USBSTOR_PdoHandleQueryCompatibleId(
     //
     // format instance id
     //
-    Length = sprintf(Buffer, L"USBSTOR\\%s", DeviceType) + 1;
-    Length += sprintf(&Buffer[Length], L"USBSTOR\\%s", L"RAW") + 2;
+    Length = sprintf(Buffer, "USBSTOR\\%s", DeviceType) + 1;
+    Length += sprintf(&Buffer[Length], "USBSTOR\\%s", "RAW") + 2;
 
     //
     // allocate instance id
