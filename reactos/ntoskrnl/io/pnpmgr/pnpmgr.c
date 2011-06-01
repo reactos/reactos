@@ -3917,13 +3917,15 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_RELATIONS,
                                &Stack);
-    if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        return Status;
+        DeviceRelations = NULL;
     }
-    
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+    else
+    {
+        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+    }
     
     if (DeviceRelations)
     {
@@ -4030,15 +4032,15 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_RELATIONS,
                                &Stack);
-    if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT_VETOED,
-                                  &DeviceNode->InstancePath);
-        return;
+        DeviceRelations = NULL;
     }
-    
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+    else
+    {
+        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+    }
     
     if (DeviceRelations)
     {
