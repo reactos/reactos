@@ -3936,12 +3936,9 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
             IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
                                       &RelationsDeviceNode->InstancePath);
             
-            if (IopQueryRemoveDevice(DeviceRelations->Objects[i]) != STATUS_SUCCESS)
+            if (IopRemoveDevice(RelationsDeviceNode) != STATUS_SUCCESS)
             {
                 DPRINT1("Device removal vetoed by failing a dependent query remove request\n");
-                
-                IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
-                                          &RelationsDeviceNode->InstancePath);
                 
                 Status = STATUS_UNSUCCESSFUL;
                 
@@ -3949,11 +3946,6 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
             }
             else
             {
-                IopSendRemoveDevice(DeviceRelations->Objects[i]);
-                
-                IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
-                                          &RelationsDeviceNode->InstancePath);
-                
                 ObDereferenceObject(DeviceRelations->Objects[i]);
                 
                 DeviceRelations->Objects[i] = NULL;
@@ -3995,8 +3987,14 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
     if (NT_SUCCESS(Status))
     {
         IopSendRemoveDevice(DeviceNode->PhysicalDeviceObject);
+        IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
+                                  &DeviceNode->InstancePath);
+        DeviceNode->Flags |= DNF_WILL_BE_REMOVED;
         return STATUS_SUCCESS;
     }
+
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
+                              &DeviceNode->InstancePath);
 
     return Status;
 }
@@ -4051,22 +4049,14 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
             IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
                                       &RelationsDeviceNode->InstancePath);
             
-            if (IopQueryRemoveDevice(DeviceRelations->Objects[i]) != STATUS_SUCCESS)
+            if (IopRemoveDevice(RelationsDeviceNode) != STATUS_SUCCESS)
             {
                 DPRINT1("Device removal vetoed by failing a query remove request (ejection relations)\n");
-                
-                IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVAL_VETOED,
-                                          &RelationsDeviceNode->InstancePath);
-            
+
                 goto cleanup;
             }
             else
             {
-                IopSendRemoveDevice(DeviceRelations->Objects[i]);
-                
-                IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
-                                          &RelationsDeviceNode->InstancePath);
-                
                 ObDereferenceObject(DeviceRelations->Objects[i]);
                 
                 DeviceRelations->Objects[i] = NULL;
