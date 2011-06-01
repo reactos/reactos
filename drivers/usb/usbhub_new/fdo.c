@@ -1559,11 +1559,28 @@ USBHUB_FdoHandlePnp(
             DPRINT1("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
 
             //
-            // Initialize the Hub
+            // check if function is available
             //
-            Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubInterfaceBusContext,
-                                                                      HubDeviceExtension->RootHubHandle, 1);
-            DPRINT1("Status %x\n", Status);
+            if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
+            {
+                //
+                // is it high speed bus
+                //
+                if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed(HubInterfaceBusContext))
+                {
+                    //
+                    // initialize usb 2.0 hub
+                    //
+                    Status = HubDeviceExtension->HubInterface.Initialize20Hub(HubInterfaceBusContext,
+                                                                              HubDeviceExtension->RootHubHandle, 1);
+                    DPRINT1("Status %x\n", Status);
+
+                    //
+                    // FIXME handle error
+                    //
+                    ASSERT(Status == STATUS_SUCCESS);
+                }
+            }
 
             ExFreePool(ConfigUrb);
 
@@ -1585,8 +1602,9 @@ USBHUB_FdoHandlePnp(
             }
 
             DPRINT1("RootHubInitNotification %x\n", HubDeviceExtension->HubInterface.RootHubInitNotification);
+
             //
-            //
+            // init roo hub notification
             //
             if (HubDeviceExtension->HubInterface.RootHubInitNotification)
             {
