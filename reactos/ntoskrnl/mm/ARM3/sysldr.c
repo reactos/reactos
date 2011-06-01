@@ -336,7 +336,7 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     Status = DllInit(&RegPath);
 
     /* Clean up */
-    ExFreePool(RegPath.Buffer);
+    ExFreePoolWithTag(RegPath.Buffer, TAG_LDR_WSTR);
 
     /* Return status value which DllInitialize returned */
     return Status;
@@ -427,7 +427,7 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
                     !((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
                 {
                     /* Free them */
-                    ExFreePool(CurrentImports);
+                    ExFreePoolWithTag(CurrentImports, TAG_LDR_IMPORTS);
                 }
             }
             else
@@ -458,7 +458,7 @@ MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     }
 
     /* Otherwise, free the import list */
-    ExFreePool(LdrEntry->LoadedImports);
+    ExFreePoolWithTag(LdrEntry->LoadedImports, TAG_LDR_IMPORTS);
     LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
 }
 
@@ -948,7 +948,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         if (LdrEntry->FullDllName.Buffer)
         {
             /* Free it */
-            ExFreePool(LdrEntry->FullDllName.Buffer);
+            ExFreePoolWithTag(LdrEntry->FullDllName.Buffer, TAG_LDR_WSTR);
         }
 
         /* Check if we had a section */
@@ -959,7 +959,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         }
 
         /* Free the entry */
-        ExFreePool(LdrEntry);
+        ExFreePoolWithTag(LdrEntry, TAG_MODULE_OBJECT);
     }
 
     /* Release the system lock and return */
@@ -1022,7 +1022,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
         LoadedImports = ExAllocatePoolWithTag(PagedPool,
                                               LoadedImportsSize,
-                                              'TDmM');
+                                              TAG_LDR_IMPORTS);
         if (LoadedImports)
         {
             /* Zero it */
@@ -1059,7 +1059,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         {
             /* It's not, it's importing stuff it shouldn't be! */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1073,7 +1073,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         {
             /* This is not kernel code */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1098,7 +1098,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         {
             /* Failed */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             return Status;
         }
 
@@ -1153,7 +1153,7 @@ CheckDllState:
                                     sizeof(UNICODE_NULL);
             DllName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                    DllName.MaximumLength,
-                                                   'TDmM');
+                                                   TAG_LDR_WSTR);
             if (DllName.Buffer)
             {
                 /* Setup the base length and copy it */
@@ -1177,7 +1177,7 @@ CheckDllState:
                 if (NT_SUCCESS(Status))
                 {
                     /* We can free the DLL Name */
-                    ExFreePool(DllName.Buffer);
+                    ExFreePoolWithTag(DllName.Buffer, TAG_LDR_WSTR);
                 }
                 else
                 {
@@ -1219,7 +1219,7 @@ CheckDllState:
                 /* Cleanup and return */
                 RtlFreeUnicodeString(&NameString);
                 MiDereferenceImports(LoadedImports);
-                if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+                if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
                 return Status;
             }
 
@@ -1252,7 +1252,7 @@ CheckDllState:
         {
             /* Cleanup and return */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             DPRINT1("Warning: Driver failed to load, %S not found\n", *MissingDriver);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
@@ -1282,7 +1282,7 @@ CheckDllState:
                 {
                     /* Cleanup and return */
                     MiDereferenceImports(LoadedImports);
-                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, 'TDmM');
+                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
                     return Status;
                 }
 
@@ -1315,13 +1315,13 @@ CheckDllState:
         if (!ImportCount)
         {
             /* Free the list and set it to no imports */
-            ExFreePoolWithTag(LoadedImports, 'TDmM');
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             LoadedImports = MM_SYSLDR_NO_IMPORTS;
         }
         else if (ImportCount == 1)
         {
             /* Just one entry, we can free the table and only use our entry */
-            ExFreePoolWithTag(LoadedImports, 'TDmM');
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
             LoadedImports = (PLOAD_IMPORTS)ImportEntry;
         }
         else if (ImportCount != LoadedImports->Count)
@@ -1330,7 +1330,7 @@ CheckDllState:
             LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
             NewImports = ExAllocatePoolWithTag(PagedPool,
                                                LoadedImportsSize,
-                                               'TDmM');
+                                               TAG_LDR_IMPORTS);
             if (NewImports)
             {
                 /* Set count */
@@ -1349,7 +1349,7 @@ CheckDllState:
                 }
 
                 /* Free the old copy */
-                ExFreePoolWithTag(LoadedImports, 'TDmM');
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
                 LoadedImports = NewImports;
             }
         }
@@ -1625,7 +1625,7 @@ MiBuildImportsForBootDrivers(VOID)
     if (!(HalEntry) || (!KernelEntry)) return STATUS_NOT_FOUND;
 
     /* Allocate the list */
-    EntryArray = ExAllocatePoolWithTag(PagedPool, Modules * sizeof(PVOID), 'TDmM');
+    EntryArray = ExAllocatePoolWithTag(PagedPool, Modules * sizeof(PVOID), TAG_LDR_IMPORTS);
     if (!EntryArray) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Loop the loaded module list again */
@@ -1773,7 +1773,7 @@ MiBuildImportsForBootDrivers(VOID)
             LoadedImportsSize = ImportSize * sizeof(PVOID) + sizeof(SIZE_T);
             LoadedImports = ExAllocatePoolWithTag(PagedPool,
                                                   LoadedImportsSize,
-                                                  'TDmM');
+                                                  TAG_LDR_IMPORTS);
             ASSERT(LoadedImports);
 
             /* Save the count */
@@ -1805,7 +1805,7 @@ MiBuildImportsForBootDrivers(VOID)
     }
 
     /* Free the initial array */
-    ExFreePool(EntryArray);
+    ExFreePoolWithTag(EntryArray, TAG_LDR_IMPORTS);
 
     /* FIXME: Might not need to keep the HAL/Kernel imports around */
 
@@ -1923,7 +1923,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
                     LdrEntry->BaseDllName.MaximumLength +
                     sizeof(UNICODE_NULL);
-        NewEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_LDR_WSTR);
+        NewEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_MODULE_OBJECT);
         if (!NewEntry) return FALSE;
 
         /* Copy the entry over */
@@ -2561,7 +2561,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     }
 
     /* Allocate a buffer we'll use for names */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, 'nLmM');
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Check for a separator */
@@ -2906,7 +2906,7 @@ LoaderScan:
         if (LdrEntry->FullDllName.Buffer)
         {
             /* Free it */
-            ExFreePool(LdrEntry->FullDllName.Buffer);
+            ExFreePoolWithTag(LdrEntry->FullDllName.Buffer, TAG_LDR_WSTR);
         }
 
         /* Free the entry itself */
@@ -3004,7 +3004,7 @@ Quickie:
     /* if (NamePrefix) ExFreePool(PrefixName.Buffer); */
 
     /* Free the name buffer and return status */
-    ExFreePoolWithTag(Buffer, 'nLmM');
+    ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
     return Status;
 }
 

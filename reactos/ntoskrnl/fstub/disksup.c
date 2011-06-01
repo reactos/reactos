@@ -159,7 +159,7 @@ xHalpGetRDiskCount(VOID)
     BOOLEAN First = TRUE;
     ULONG Count;
 
-    DirectoryInfo = ExAllocatePool(PagedPool, 2 * PAGE_SIZE);
+    DirectoryInfo = ExAllocatePoolWithTag(PagedPool, 2 * PAGE_SIZE, TAG_FILE_SYSTEM);
     if (DirectoryInfo == NULL)
     {
         return 0;
@@ -178,7 +178,7 @@ xHalpGetRDiskCount(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwOpenDirectoryObject for %wZ failed, status=%lx\n", &ArcName, Status);
-        ExFreePool(DirectoryInfo);
+        ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
         return 0;
     }
 
@@ -223,7 +223,7 @@ xHalpGetRDiskCount(VOID)
             }
         }
     }
-    ExFreePool(DirectoryInfo);
+    ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
     return RDiskCount;
 }
 
@@ -377,8 +377,8 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
         PDRIVE_LAYOUT_INFORMATION Buffer;
 
         /* Allocate a partition list for a single entry. */
-        Buffer = ExAllocatePool(NonPagedPool,
-            sizeof(DRIVE_LAYOUT_INFORMATION));
+        Buffer = ExAllocatePoolWithTag(NonPagedPool,
+            sizeof(DRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
         if (Buffer != NULL)
         {
             RtlZeroMemory(Buffer,
@@ -446,13 +446,13 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     DPRINT("RDiskCount %d\n", RDiskCount);
 
-    Buffer1 = (PWSTR)ExAllocatePool(PagedPool,
-        64 * sizeof(WCHAR));
-    Buffer2 = (PWSTR)ExAllocatePool(PagedPool,
-        32 * sizeof(WCHAR));
+    Buffer1 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
+        64 * sizeof(WCHAR), TAG_FILE_SYSTEM);
+    Buffer2 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
+        32 * sizeof(WCHAR), TAG_FILE_SYSTEM);
 
-    PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(PagedPool,
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO));
+    PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool,
+        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO), TAG_FILE_SYSTEM);
 
     if (!Buffer1 || !Buffer2 || !PartialInformation) return;
 
@@ -528,13 +528,13 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Initialize layout array */
     if (ConfigInfo->DiskCount == 0)
         goto end_assign_disks;
-    LayoutArray = ExAllocatePool(NonPagedPool,
-        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+    LayoutArray = ExAllocatePoolWithTag(NonPagedPool,
+        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
     if (!LayoutArray)
     {
-        ExFreePool(PartialInformation);
-        ExFreePool(Buffer2);
-        ExFreePool(Buffer1);
+        ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
+        ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
+        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
         if (hKey) ZwClose(hKey);
     }
 
@@ -896,9 +896,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
         if (LayoutArray[i] != NULL)
-            ExFreePool(LayoutArray[i]);
+            ExFreePoolWithTag(LayoutArray[i], TAG_FILE_SYSTEM);
     }
-    ExFreePool(LayoutArray);
+    ExFreePoolWithTag(LayoutArray, TAG_FILE_SYSTEM);
 end_assign_disks:
 
     /* Assign floppy drives */
@@ -948,9 +948,9 @@ end_assign_disks:
 
     /* Anything else to do? */
 
-    ExFreePool(PartialInformation);
-    ExFreePool(Buffer2);
-    ExFreePool(Buffer1);
+    ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
+    ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
+    ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
     if (hKey)
     {
         ZwClose(hKey);
@@ -1249,8 +1249,8 @@ xHalGetPartialGeometry(IN PDEVICE_OBJECT DeviceObject,
 Cleanup:
     /* Free all the pointers */
     if (Event) ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
-    if (IoStatusBlock) ExFreePool(IoStatusBlock);
-    if (DiskGeometry) ExFreePool(DiskGeometry);
+    if (IoStatusBlock) ExFreePoolWithTag(IoStatusBlock, TAG_FILE_SYSTEM);
+    if (DiskGeometry) ExFreePoolWithTag(DiskGeometry, TAG_FILE_SYSTEM);
     return;
 }
 
@@ -1425,7 +1425,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 
@@ -1843,7 +1843,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 
@@ -1995,7 +1995,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     } while (i < PartitionNumber);
 
     /* Everything done, cleanup */
-    if (Buffer) ExFreePool(Buffer);
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
     return Status;
 }
 
@@ -2043,7 +2043,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 

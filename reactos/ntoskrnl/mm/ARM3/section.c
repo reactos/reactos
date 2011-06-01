@@ -177,7 +177,7 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     BitmapSize = sizeof(RTL_BITMAP) + ((((MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE) + 31) / 32) * sizeof(ULONG));
     Session->SystemSpaceBitMap = ExAllocatePoolWithTag(NonPagedPool,
                                                        BitmapSize,
-                                                       '  mM');
+                                                       TAG_MM);
     ASSERT(Session->SystemSpaceBitMap);
     RtlInitializeBitMap(Session->SystemSpaceBitMap,
                         (PULONG)(Session->SystemSpaceBitMap + 1),
@@ -198,7 +198,7 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     /* Allocate and zero the view table */
     Session->SystemSpaceViewTable = ExAllocatePoolWithTag(NonPagedPool,
                                                           AllocSize,
-                                                          '  mM');
+                                                          TAG_MM);
     ASSERT(Session->SystemSpaceViewTable != NULL);
     RtlZeroMemory(Session->SystemSpaceViewTable, AllocSize);
 
@@ -948,7 +948,7 @@ MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
     ULONG ReturnLength;
 
     /* Allocate memory for our structure */
-    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool, 1024, '  mM');
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool, 1024, TAG_MM);
     if (!ObjectNameInfo) return STATUS_NO_MEMORY;
 
     /* Query the name */
@@ -960,7 +960,7 @@ MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
     {
         /* Failed, free memory */
         DPRINT1("Name query failed\n");
-        ExFreePoolWithTag(ObjectNameInfo, '  mM');
+        ExFreePoolWithTag(ObjectNameInfo, TAG_MM);
         *ModuleName = NULL;
         return Status;
     }
@@ -1088,7 +1088,7 @@ NotSection:
                               ModuleNameInformation->Name.Buffer);
 
        /* Free temp taged buffer from MmGetFileNameForFileObject() */
-       ExFreePoolWithTag(ModuleNameInformation, '  mM');
+       ExFreePoolWithTag(ModuleNameInformation, TAG_MM);
        DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
    }
 

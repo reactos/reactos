@@ -220,7 +220,7 @@ ExpAllocateExclusiveWaiterEvent(IN PERESOURCE Resource,
             {
                 /* Someone already set it, free our event */
                 DPRINT1("WARNING: Handling race condition\n");
-                ExFreePool(Event);
+                ExFreePoolWithTag(Event, TAG_RESOURCE_EVENT);
             }
 
             break;
@@ -280,7 +280,7 @@ ExpAllocateSharedWaiterSemaphore(IN PERESOURCE Resource,
             {
                 /* Someone already set it, free our semaphore */
                 DPRINT1("WARNING: Handling race condition\n");
-                ExFreePool(Semaphore);
+                ExFreePoolWithTag(Semaphore, TAG_RESOURCE_SEMAPHORE);
             }
 
             break;
@@ -356,7 +356,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
     {
         /* Resource changed while we weren't holding the lock; bail out */
         ExReleaseResourceLock(Resource, LockHandle);
-        ExFreePool(Table);
+        ExFreePoolWithTag(Table, TAG_RESOURCE_TABLE);
     }
     else
     {
@@ -380,7 +380,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
         ExReleaseResourceLock(Resource, LockHandle);
 
         /* Free the old table */
-        if (Owner) ExFreePool(Owner);
+        if (Owner) ExFreePoolWithTag(Owner, TAG_RESOURCE_TABLE);
 
         /* Set the resource index */
         if (!OldSize) OldSize = 1;
@@ -1473,9 +1473,9 @@ ExDeleteResourceLite(IN PERESOURCE Resource)
     KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     /* Free every  structure */
-    if (Resource->OwnerTable) ExFreePool(Resource->OwnerTable);
-    if (Resource->SharedWaiters) ExFreePool(Resource->SharedWaiters);
-    if (Resource->ExclusiveWaiters) ExFreePool(Resource->ExclusiveWaiters);
+    if (Resource->OwnerTable) ExFreePoolWithTag(Resource->OwnerTable, TAG_RESOURCE_TABLE);
+    if (Resource->SharedWaiters) ExFreePoolWithTag(Resource->SharedWaiters, TAG_RESOURCE_SEMAPHORE);
+    if (Resource->ExclusiveWaiters) ExFreePoolWithTag(Resource->ExclusiveWaiters, TAG_RESOURCE_EVENT);
 
     /* Return success */
     return STATUS_SUCCESS;

@@ -293,7 +293,7 @@ SepDuplicateToken(PTOKEN Token,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               'uKOT');
+                                               TAG_TOKEN_USERS);
 
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
@@ -320,7 +320,7 @@ SepDuplicateToken(PTOKEN Token,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    'pKOT');
+                                                    TAG_TOKEN_PRIVILAGES);
 
         for (i = 0; i < AccessToken->PrivilegeCount; i++)
         {
@@ -335,7 +335,7 @@ SepDuplicateToken(PTOKEN Token,
             AccessToken->DefaultDacl =
             (PACL) ExAllocatePoolWithTag(PagedPool,
                                          Token->DefaultDacl->AclSize,
-                                         'kDOT');
+                                         TAG_TOKEN_ACL);
             memcpy(AccessToken->DefaultDacl,
                    Token->DefaultDacl,
                    Token->DefaultDacl->AclSize);
@@ -460,13 +460,13 @@ SepDeleteToken(PVOID ObjectBody)
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
 
     if (AccessToken->UserAndGroups)
-        ExFreePool(AccessToken->UserAndGroups);
+        ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
 
     if (AccessToken->Privileges)
-        ExFreePool(AccessToken->Privileges);
+        ExFreePoolWithTag(AccessToken->Privileges, TAG_TOKEN_PRIVILAGES);
 
     if (AccessToken->DefaultDacl)
-        ExFreePool(AccessToken->DefaultDacl);
+        ExFreePoolWithTag(AccessToken->DefaultDacl, TAG_TOKEN_ACL);
 }
 
 
@@ -639,7 +639,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               'uKOT');
+                                               TAG_TOKEN_USERS);
 
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
@@ -675,7 +675,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    'pKOT');
+                                                    TAG_TOKEN_PRIVILAGES);
 
         if (PreviousMode != KernelMode)
         {
@@ -704,7 +704,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->DefaultDacl =
         (PACL) ExAllocatePoolWithTag(PagedPool,
                                      DefaultDacl->AclSize,
-                                     'kDOT');
+                                     TAG_TOKEN_ACL);
         memcpy(AccessToken->DefaultDacl,
                DefaultDacl,
                DefaultDacl->AclSize);
@@ -1720,7 +1720,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                             /* Free the previous dacl if present */
                             if(Token->DefaultDacl != NULL)
                             {
-                                ExFreePool(Token->DefaultDacl);
+                                ExFreePoolWithTag(Token->DefaultDacl, TAG_TOKEN_ACL);
                             }
 
                             /* Set the new dacl */
@@ -1732,7 +1732,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                         /* Clear and free the default dacl if present */
                         if (Token->DefaultDacl != NULL)
                         {
-                            ExFreePool(Token->DefaultDacl);
+                            ExFreePoolWithTag(Token->DefaultDacl, TAG_TOKEN_ACL);
                             Token->DefaultDacl = NULL;
                         }
                     }
@@ -2478,7 +2478,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                        PreviousMode, &hToken);
     }
 
-    if (Dacl) ExFreePool(Dacl);
+    if (Dacl) ExFreePoolWithTag(Dacl, TAG_TOKEN_ACL);
 
     if (OpenAsSelf)
     {

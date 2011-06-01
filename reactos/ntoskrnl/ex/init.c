@@ -244,7 +244,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
                                                 ExpNlsTableSize,
-                                                'iltR');
+                                                TAG_RTLI);
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
@@ -334,7 +334,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePoolWithTag(ExpNlsTableBase, 'iltR');
+    ExFreePoolWithTag(ExpNlsTableBase, TAG_RTLI);
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */
@@ -1321,7 +1321,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
-                                       'tinI');
+                                       TAG_INIT);
     if (!InitBuffer)
     {
         /* Bugcheck */
@@ -1961,7 +1961,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     ExpInitializationPhase++;
 
     /* Free the boot buffer */
-    ExFreePool(InitBuffer);
+    ExFreePoolWithTag(InitBuffer, TAG_INIT);
     DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 

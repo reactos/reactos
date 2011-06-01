@@ -172,7 +172,8 @@ NtAddAtom(IN PWSTR AtomName,
     }
 
     /* If we captured anything, free it */
-    if ((CapturedName) && (CapturedName != AtomName)) ExFreePool(CapturedName);
+    if ((CapturedName) && (CapturedName != AtomName))
+        ExFreePoolWithTag(CapturedName, TAG_ATOM);
 
     /* Return to caller */
     return Status;
@@ -321,7 +322,8 @@ NtFindAtom(IN PWSTR AtomName,
     }
 
     /* If we captured anything, free it */
-    if ((CapturedName) && (CapturedName != AtomName)) ExFreePool(CapturedName);
+    if ((CapturedName) && (CapturedName != AtomName))
+        ExFreePoolWithTag(CapturedName, TAG_ATOM);
 
     /* Return to caller */
     return Status;

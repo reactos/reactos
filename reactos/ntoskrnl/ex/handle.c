@@ -132,7 +132,7 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
     PVOID Buffer;
 
     /* Do the allocation */
-    Buffer = ExAllocatePoolWithTag(PagedPool, Size, 'btbO');
+    Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
     if (Buffer)
     {
         /* Clear the memory */
@@ -157,7 +157,7 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
     PVOID Buffer;
 
     /* Do the allocation */
-    Buffer = ExAllocatePoolWithTag(PagedPool, Size, 'btbO');
+    Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
     if (Buffer)
     {
         /* Check if we have a process to charge quota */
@@ -178,7 +178,7 @@ ExpFreeTablePagedPool(IN PEPROCESS Process OPTIONAL,
                       IN SIZE_T Size)
 {
     /* Free the buffer */
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, TAG_OBJECT_TABLE);
     if (Process)
     {
         /* FIXME: Release quota */
@@ -273,7 +273,7 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     }
 
     /* Free the actual table and check if we need to release quota */
-    ExFreePool(HandleTable);
+    ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
     if (Process)
     {
         /* FIXME: TODO */
@@ -345,7 +345,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     /* Allocate the table */
     HandleTable = ExAllocatePoolWithTag(PagedPool,
                                         sizeof(HANDLE_TABLE),
-                                        'btbO');
+                                        TAG_OBJECT_TABLE);
     if (!HandleTable) return NULL;
 
     /* Check if we have a process */
@@ -362,7 +362,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     if (!HandleTableTable)
     {
         /* Failed, free the table */
-        ExFreePool(HandleTable);
+        ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
         return NULL;
     }
 

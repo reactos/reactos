@@ -60,34 +60,34 @@ VOID
 NTAPI
 FreeInitializedSids(VOID)
 {
-    if (SeNullSid) ExFreePool(SeNullSid);
-    if (SeWorldSid) ExFreePool(SeWorldSid);
-    if (SeLocalSid) ExFreePool(SeLocalSid);
-    if (SeCreatorOwnerSid) ExFreePool(SeCreatorOwnerSid);
-    if (SeCreatorGroupSid) ExFreePool(SeCreatorGroupSid);
-    if (SeCreatorOwnerServerSid) ExFreePool(SeCreatorOwnerServerSid);
-    if (SeCreatorGroupServerSid) ExFreePool(SeCreatorGroupServerSid);
-    if (SeNtAuthoritySid) ExFreePool(SeNtAuthoritySid);
-    if (SeDialupSid) ExFreePool(SeDialupSid);
-    if (SeNetworkSid) ExFreePool(SeNetworkSid);
-    if (SeBatchSid) ExFreePool(SeBatchSid);
-    if (SeInteractiveSid) ExFreePool(SeInteractiveSid);
-    if (SeServiceSid) ExFreePool(SeServiceSid);
-    if (SePrincipalSelfSid) ExFreePool(SePrincipalSelfSid);
-    if (SeLocalSystemSid) ExFreePool(SeLocalSystemSid);
-    if (SeAuthenticatedUserSid) ExFreePool(SeAuthenticatedUserSid);
-    if (SeRestrictedCodeSid) ExFreePool(SeRestrictedCodeSid);
-    if (SeAliasAdminsSid) ExFreePool(SeAliasAdminsSid);
-    if (SeAliasUsersSid) ExFreePool(SeAliasUsersSid);
-    if (SeAliasGuestsSid) ExFreePool(SeAliasGuestsSid);
-    if (SeAliasPowerUsersSid) ExFreePool(SeAliasPowerUsersSid);
-    if (SeAliasAccountOpsSid) ExFreePool(SeAliasAccountOpsSid);
-    if (SeAliasSystemOpsSid) ExFreePool(SeAliasSystemOpsSid);
-    if (SeAliasPrintOpsSid) ExFreePool(SeAliasPrintOpsSid);
-    if (SeAliasBackupOpsSid) ExFreePool(SeAliasBackupOpsSid);
-    if (SeAuthenticatedUsersSid) ExFreePool(SeAuthenticatedUsersSid);
-    if (SeRestrictedSid) ExFreePool(SeRestrictedSid);
-    if (SeAnonymousLogonSid) ExFreePool(SeAnonymousLogonSid);
+    if (SeNullSid) ExFreePoolWithTag(SeNullSid, TAG_SID);
+    if (SeWorldSid) ExFreePoolWithTag(SeWorldSid, TAG_SID);
+    if (SeLocalSid) ExFreePoolWithTag(SeLocalSid, TAG_SID);
+    if (SeCreatorOwnerSid) ExFreePoolWithTag(SeCreatorOwnerSid, TAG_SID);
+    if (SeCreatorGroupSid) ExFreePoolWithTag(SeCreatorGroupSid, TAG_SID);
+    if (SeCreatorOwnerServerSid) ExFreePoolWithTag(SeCreatorOwnerServerSid, TAG_SID);
+    if (SeCreatorGroupServerSid) ExFreePoolWithTag(SeCreatorGroupServerSid, TAG_SID);
+    if (SeNtAuthoritySid) ExFreePoolWithTag(SeNtAuthoritySid, TAG_SID);
+    if (SeDialupSid) ExFreePoolWithTag(SeDialupSid, TAG_SID);
+    if (SeNetworkSid) ExFreePoolWithTag(SeNetworkSid, TAG_SID);
+    if (SeBatchSid) ExFreePoolWithTag(SeBatchSid, TAG_SID);
+    if (SeInteractiveSid) ExFreePoolWithTag(SeInteractiveSid, TAG_SID);
+    if (SeServiceSid) ExFreePoolWithTag(SeServiceSid, TAG_SID);
+    if (SePrincipalSelfSid) ExFreePoolWithTag(SePrincipalSelfSid, TAG_SID);
+    if (SeLocalSystemSid) ExFreePoolWithTag(SeLocalSystemSid, TAG_SID);
+    if (SeAuthenticatedUserSid) ExFreePoolWithTag(SeAuthenticatedUserSid, TAG_SID);
+    if (SeRestrictedCodeSid) ExFreePoolWithTag(SeRestrictedCodeSid, TAG_SID);
+    if (SeAliasAdminsSid) ExFreePoolWithTag(SeAliasAdminsSid, TAG_SID);
+    if (SeAliasUsersSid) ExFreePoolWithTag(SeAliasUsersSid, TAG_SID);
+    if (SeAliasGuestsSid) ExFreePoolWithTag(SeAliasGuestsSid, TAG_SID);
+    if (SeAliasPowerUsersSid) ExFreePoolWithTag(SeAliasPowerUsersSid, TAG_SID);
+    if (SeAliasAccountOpsSid) ExFreePoolWithTag(SeAliasAccountOpsSid, TAG_SID);
+    if (SeAliasSystemOpsSid) ExFreePoolWithTag(SeAliasSystemOpsSid, TAG_SID);
+    if (SeAliasPrintOpsSid) ExFreePoolWithTag(SeAliasPrintOpsSid, TAG_SID);
+    if (SeAliasBackupOpsSid) ExFreePoolWithTag(SeAliasBackupOpsSid, TAG_SID);
+    if (SeAuthenticatedUsersSid) ExFreePoolWithTag(SeAuthenticatedUsersSid, TAG_SID);
+    if (SeRestrictedSid) ExFreePoolWithTag(SeRestrictedSid, TAG_SID);
+    if (SeAnonymousLogonSid) ExFreePoolWithTag(SeAnonymousLogonSid, TAG_SID);
 }
 
 BOOLEAN
@@ -306,7 +306,7 @@ SepCaptureSid(IN PSID InputSid,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Free the SID and return the exception code */
-                ExFreePool(NewSid);
+                ExFreePoolWithTag(NewSid, TAG_SID);
                 _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
@@ -357,7 +357,7 @@ SepReleaseSid(IN PSID CapturedSid,
         (AccessMode != KernelMode ||
          (AccessMode == KernelMode && CaptureIfKernel)))
     {
-        ExFreePool(CapturedSid);
+        ExFreePoolWithTag(CapturedSid, TAG_SID);
     }
 }
 

@@ -136,7 +136,7 @@ ObpDereferenceNameInfo(IN POBJECT_HEADER_NAME_INFO HeaderNameInfo)
         if (HeaderNameInfo->Name.Buffer)
         {
             /* We can get rid of the object name now */
-            ExFreePool(HeaderNameInfo->Name.Buffer);
+            ExFreePoolWithTag(HeaderNameInfo->Name.Buffer, OB_NAME_TAG);
             RtlInitEmptyUnicodeString(&HeaderNameInfo->Name, NULL, 0);
         }
 

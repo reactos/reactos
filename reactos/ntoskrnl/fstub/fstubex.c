@@ -893,7 +893,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
     /* Allocate a buffer to read a sector on the disk */
     Sector = ExAllocatePoolWithTag(NonPagedPool,
                                    Disk->SectorSize,
-                                   'BtsF');
+                                   TAG_FSTUB);
     if (!Sector)
     {
         DPRINT("EFI::Lacking resources!\n");
@@ -911,7 +911,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
                                  (PUSHORT)Sector);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Sector, 'BtsF');
+            ExFreePoolWithTag(Sector, TAG_FSTUB);
             DPRINT("EFI::Failed reading sector for partition entry!\n");
             return Status;
         }
@@ -931,7 +931,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
                                  (PUSHORT)Sector);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Sector, 'BtsF');
+            ExFreePoolWithTag(Sector, TAG_FSTUB);
             DPRINT("EFI::Failed reading sector for partition entry!\n");
             return Status;
         }
@@ -944,7 +944,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
     }
 
     /* Finally, release memory */
-    ExFreePoolWithTag(Sector, 'BtsF');
+    ExFreePoolWithTag(Sector, TAG_FSTUB);
 
     /* Compare checksums */
     if (PreviousCRC32 == EFIHeader->PartitionEntryCRC32)

@@ -311,7 +311,7 @@ SepCaptureAcl(IN PACL InputAcl,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Free the ACL and return the exception code */
-                ExFreePool(NewAcl);
+                ExFreePoolWithTag(NewAcl, TAG_ACL);
                 _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
@@ -361,7 +361,7 @@ SepReleaseAcl(IN PACL CapturedAcl,
         (AccessMode != KernelMode ||
          (AccessMode == KernelMode && CaptureIfKernel)))
     {
-        ExFreePool(CapturedAcl);
+        ExFreePoolWithTag(CapturedAcl, TAG_ACL);
     }
 }
 

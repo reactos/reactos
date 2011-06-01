@@ -640,7 +640,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free captured buffer */
-            if (SafeParams) ExFreePool(SafeParams);
+            if (SafeParams) ExFreePoolWithTag(SafeParams, TAG_ERR);
 
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -676,7 +676,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     if (PreviousMode != KernelMode)
     {
         /* That means we have a buffer to free */
-        if (SafeParams) ExFreePool(SafeParams);
+        if (SafeParams) ExFreePoolWithTag(SafeParams, TAG_ERR);
 
         /* Enter SEH Block for return */
         _SEH2_TRY
