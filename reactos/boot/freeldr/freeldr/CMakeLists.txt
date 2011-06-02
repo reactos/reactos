@@ -163,9 +163,7 @@ list(APPEND FREELDR_SOURCE
     ${FREELDR_BASE_SOURCE}
     )
 
-add_library(freeldr SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_freeldr.h.gch
-    ${FREELDR_SOURCE})
+add_library(freeldr SHARED ${FREELDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" SUFFIX ".sys")
@@ -190,7 +188,7 @@ target_link_libraries(freeldr
     rtl
     libcntpr)
 
-add_pch(freeldr ${CMAKE_CURRENT_SOURCE_DIR}/include/freeldr.h ${FREELDR_SOURCE})
+add_pch(freeldr include/freeldr.h)
 add_dependencies(freeldr asm)
 
 add_cd_file(TARGET freeldr DESTINATION loader NO_CAB FOR all)

@@ -6,13 +6,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sfc_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sfc.def)
 
-add_library(sfc SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/sfc_precomp.h.gch
-    ${SOURCE})
+add_library(sfc SHARED ${SOURCE})
 
 set_module_type(sfc win32dll)
 
 add_importlibs(sfc msvcrt kernel32 ntdll)
-add_pch(sfc ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(sfc precomp.h)
 
 add_cd_file(TARGET sfc DESTINATION reactos/system32 FOR all)

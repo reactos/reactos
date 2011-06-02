@@ -13,9 +13,9 @@ list(APPEND SOURCE
     usage.c
     sc.rc)
 
-add_executable(sc ${CMAKE_CURRENT_BINARY_DIR}/sc_sc.h.gch ${SOURCE})
+add_executable(sc ${SOURCE})
 
-add_pch(sc ${CMAKE_CURRENT_SOURCE_DIR}/sc.h ${SOURCE})
+add_pch(sc sc.h)
 
 set_module_type(sc win32cui)
 add_importlibs(sc advapi32 msvcrt kernel32)

@@ -82,7 +82,6 @@ if(ARCH MATCHES i386)
     spec2def(hal.dll ../hal.spec)
 
     list(APPEND HAL_SOURCE
-        ${CMAKE_CURRENT_BINARY_DIR}/hal_hal.h.gch
         ${HAL_GENERIC_SOURCE}
         ${HAL_GENERIC_PCAT_SOURCE}
         ${HAL_GENERIC_UP_SOURCE}
@@ -92,7 +91,7 @@ if(ARCH MATCHES i386)
 
     # hal
     add_library(hal SHARED ${HAL_SOURCE})
-    add_pch(hal ${CMAKE_CURRENT_SOURCE_DIR}/include/hal.h ${HAL_SOURCE})
+    add_pch(hal include/hal.h)
     add_dependencies(hal psdk bugcodes)
 
     set_entrypoint(hal HalInitSystem@8)

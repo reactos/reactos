@@ -16,13 +16,11 @@ list(APPEND SOURCE
     misc/stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msafd.def)
 
-add_library(msafd SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/msafd_msafd.h.gch
-    ${SOURCE})
+add_library(msafd SHARED ${SOURCE})
 
 set_module_type(msafd win32dll)
 
-add_pch(msafd ${CMAKE_CURRENT_SOURCE_DIR}/msafd.h ${SOURCE})
+add_pch(msafd msafd.h)
 
 add_importlibs(msafd advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msafd DESTINATION reactos/system32 FOR all)

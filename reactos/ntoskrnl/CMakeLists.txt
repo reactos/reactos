@@ -421,7 +421,7 @@ else() # _WINKD_
 
 endif()
 
-add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SOURCE})
+add_executable(ntoskrnl ${SOURCE})
 
 set_entrypoint(ntoskrnl KiSystemStartup@4)
 set_subsystem(ntoskrnl native)
@@ -445,7 +445,7 @@ target_link_libraries(ntoskrnl
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 
-add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
+add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)

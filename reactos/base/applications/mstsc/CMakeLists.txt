@@ -23,9 +23,9 @@ list(APPEND SOURCE
     win32.c
     rdc.rc)
 
-add_executable(mstsc ${CMAKE_CURRENT_BINARY_DIR}/mstsc_precomp.h.gch ${SOURCE})
+add_executable(mstsc ${SOURCE})
 
-add_pch(mstsc ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(mstsc precomp.h)
 
 set_module_type(mstsc win32gui)
 

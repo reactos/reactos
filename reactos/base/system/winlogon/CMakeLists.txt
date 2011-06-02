@@ -8,11 +8,11 @@ list(APPEND SOURCE
     wlx.c
     winlogon.rc)
 
-add_executable(winlogon ${CMAKE_CURRENT_BINARY_DIR}/winlogon_winlogon.h.gch ${SOURCE})
+add_executable(winlogon ${SOURCE})
 
 target_link_libraries(winlogon wine)
 
-add_pch(winlogon ${CMAKE_CURRENT_SOURCE_DIR}/winlogon.h ${SOURCE})
+add_pch(winlogon winlogon.h)
 
 set_module_type(winlogon win32gui)
 add_importlibs(winlogon user32 advapi32 userenv secur32 msvcrt kernel32 ntdll)

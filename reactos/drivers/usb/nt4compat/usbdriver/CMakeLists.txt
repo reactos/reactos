@@ -25,11 +25,11 @@ list(APPEND SOURCE
     keyboard.c
     usbdriver.rc)
 
-add_library(usbdriver SHARED ${CMAKE_CURRENT_BINARY_DIR}/usbdriver_usbdriver.h.gch ${SOURCE})
+add_library(usbdriver SHARED ${SOURCE})
 
 set_module_type(usbdriver kernelmodedriver)
 add_importlibs(usbdriver ntoskrnl hal)
 
-add_pch(usbdriver ${CMAKE_CURRENT_SOURCE_DIR}/usbdriver.h ${SOURCE})
+add_pch(usbdriver usbdriver.h)
 
 add_cd_file(TARGET usbdriver DESTINATION reactos/system32/drivers FOR all)

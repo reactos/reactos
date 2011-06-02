@@ -17,11 +17,11 @@ list(APPEND SOURCE
     volinfo.c
     ntfs.rc)
     
-add_library(ntfs SHARED ${CMAKE_CURRENT_BINARY_DIR}/ntfs_ntfs.h.gch ${SOURCE})
+add_library(ntfs SHARED ${SOURCE})
 
 set_module_type(ntfs kernelmodedriver)
 add_importlibs(ntfs ntoskrnl hal)
 
-add_pch(ntfs ${CMAKE_CURRENT_SOURCE_DIR}/ntfs.h ${SOURCE})
+add_pch(ntfs ntfs.h)
 
 add_cd_file(TARGET ntfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -6,9 +6,9 @@ list(APPEND SOURCE
     logoff.c
     logoff.rc)
 
-add_executable(logoff ${CMAKE_CURRENT_BINARY_DIR}/logoff_precomp.h.gch ${SOURCE})
+add_executable(logoff ${SOURCE})
 
-add_pch(logoff ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(logoff precomp.h)
 
 set_module_type(logoff win32cui)
 add_importlibs(logoff advapi32 user32 msvcrt kernel32)

@@ -109,9 +109,7 @@ list(APPEND SOURCE
     thread/amd64/thread.S)
 endif(ARCH MATCHES i386)
 
-add_library(kernel32 SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_k32.h.gch
-    ${SOURCE})
+add_library(kernel32 SHARED ${SOURCE})
 
 set_entrypoint(kernel32 DllMain@12)
 set_image_base(kernel32 ${baseaddress_kernel32})
@@ -119,7 +117,7 @@ set_image_base(kernel32 ${baseaddress_kernel32})
 target_link_libraries(kernel32 ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
-add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
+add_pch(kernel32 k32.h)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(kernel32.spec)

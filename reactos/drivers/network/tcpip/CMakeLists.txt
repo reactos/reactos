@@ -26,7 +26,7 @@ list(APPEND SOURCE
     tcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)
 
-add_library(tcpip SHARED ${CMAKE_CURRENT_BINARY_DIR}/tcpip_precomp.h.gch ${SOURCE})
+add_library(tcpip SHARED ${SOURCE})
 
 target_link_libraries(tcpip
     ip
@@ -37,6 +37,6 @@ target_link_libraries(tcpip
 set_module_type(tcpip kernelmodedriver)
 add_importlibs(tcpip ndis ntoskrnl hal)
 
-add_pch(tcpip ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
+add_pch(tcpip include/precomp.h)
 
 add_cd_file(TARGET tcpip DESTINATION reactos/system32/drivers FOR all)

@@ -182,7 +182,6 @@ list(APPEND SOURCE
 endif()
 
 add_library(win32k SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/win32k_pch.h.gch
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def
     ${SOURCE})
 
@@ -194,7 +193,7 @@ target_link_libraries(win32k
     libcntpr)
 
 add_importlibs(win32k ntoskrnl hal ftfd)
-add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
+add_pch(win32k pch.h)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 add_importlib_target(win32k.spec)
 

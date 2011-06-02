@@ -12,9 +12,9 @@ list(APPEND SOURCE
     tcpsvcs.rc
     log.c)
 
-add_executable(tcpsvcs ${CMAKE_CURRENT_BINARY_DIR}/tcpsvcs_tcpsvcs.h.gch ${SOURCE})
+add_executable(tcpsvcs ${SOURCE})
 
-add_pch(tcpsvcs ${CMAKE_CURRENT_SOURCE_DIR}/tcpsvcs.h ${SOURCE})
+add_pch(tcpsvcs tcpsvcs.h)
 set_module_type(tcpsvcs win32cui)
 add_importlibs(tcpsvcs ws2_32 advapi32 msvcrt kernel32 ntdll)
 

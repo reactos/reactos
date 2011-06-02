@@ -10,7 +10,7 @@ list(APPEND SOURCE
     deskmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)
 
-add_library(deskmon SHARED ${CMAKE_CURRENT_BINARY_DIR}/deskmon_precomp.h.gch ${SOURCE})
+add_library(deskmon SHARED ${SOURCE})
 
 set_module_type(deskmon win32dll)
 
@@ -25,6 +25,6 @@ add_importlibs(deskmon
     kernel32
     ntdll)
 
-add_pch(deskmon ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(deskmon precomp.h)
 
 add_cd_file(TARGET deskmon DESTINATION reactos/system32 FOR all)

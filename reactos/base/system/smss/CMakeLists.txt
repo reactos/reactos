@@ -23,7 +23,7 @@ list(APPEND SOURCE
     smss.c
     smss.rc)
 
-add_executable(smss WIN32 ${CMAKE_CURRENT_BINARY_DIR}/smss_smss.h.gch ${SOURCE})
+add_executable(smss WIN32 ${SOURCE})
 
 target_link_libraries(smss nt smlib)
 if(MSVC)
@@ -31,7 +31,7 @@ if(MSVC)
     set_entrypoint(smss DllMainCRTStartup)
 endif()
 
-add_pch(smss ${CMAKE_CURRENT_SOURCE_DIR}/smss.h ${SOURCE})
+add_pch(smss smss.h)
 
 set_module_type(smss nativecui)
 add_importlibs(smss ntdll)

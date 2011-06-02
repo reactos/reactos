@@ -28,7 +28,7 @@ list(APPEND SOURCE
     win32csr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 
-add_library(win32csr SHARED ${CMAKE_CURRENT_BINARY_DIR}/win32csr_w32csr.h.gch ${SOURCE})
+add_library(win32csr SHARED ${SOURCE})
 
 target_link_libraries(win32csr
     win32ksys
@@ -38,7 +38,7 @@ set_module_type(win32csr win32dll)
 
 add_importlibs(win32csr user32 gdi32 advapi32 psapi msvcrt kernel32 ntdll)
 
-add_pch(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/w32csr.h ${SOURCE})
+add_pch(win32csr w32csr.h)
 
 add_dependencies(win32csr bugcodes)
 add_cd_file(TARGET win32csr DESTINATION reactos/system32 FOR all)

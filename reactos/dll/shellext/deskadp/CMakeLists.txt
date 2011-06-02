@@ -9,7 +9,7 @@ list(APPEND SOURCE
     deskadp.rc
     ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def)
 
-add_library(deskadp SHARED ${CMAKE_CURRENT_BINARY_DIR}/deskadp_precomp.h.gch ${SOURCE})
+add_library(deskadp SHARED ${SOURCE})
 
 set_module_type(deskadp win32dll)
 
@@ -24,6 +24,6 @@ add_importlibs(deskadp
     kernel32
     ntdll)
 
-add_pch(deskadp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(deskadp precomp.h)
 
 add_cd_file(TARGET deskadp DESTINATION reactos/system32 FOR all)

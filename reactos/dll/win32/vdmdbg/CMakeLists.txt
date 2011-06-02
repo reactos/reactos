@@ -7,11 +7,9 @@ list(APPEND SOURCE
     vdmdbg.c
     ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
 
-add_library(vdmdbg SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg_vdmdbg.h.gch
-    ${SOURCE})
+add_library(vdmdbg SHARED ${SOURCE})
 
 set_module_type(vdmdbg win32dll)
 add_importlibs(vdmdbg msvcrt kernel32 ntdll)
-add_pch(vdmdbg ${CMAKE_CURRENT_SOURCE_DIR}/vdmdbg.h ${SOURCE})
+add_pch(vdmdbg vdmdbg.h)
 add_cd_file(TARGET vdmdbg DESTINATION reactos/system32 FOR all)

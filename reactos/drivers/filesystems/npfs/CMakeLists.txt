@@ -9,11 +9,11 @@ list(APPEND SOURCE
     volume.c
     npfs.rc)
 
-add_library(npfs SHARED ${CMAKE_CURRENT_BINARY_DIR}/npfs_npfs.h.gch ${SOURCE})
+add_library(npfs SHARED ${SOURCE})
 
 target_link_libraries(npfs ${PSEH_LIB})
 
 set_module_type(npfs kernelmodedriver)
 add_importlibs(npfs ntoskrnl hal)
-add_pch(npfs ${CMAKE_CURRENT_SOURCE_DIR}/npfs.h ${SOURCE})
+add_pch(npfs npfs.h)
 add_cd_file(TARGET npfs DESTINATION reactos/system32/drivers FOR all)

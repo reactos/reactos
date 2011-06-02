@@ -75,9 +75,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
-add_pch(shell32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_library(shell32 SHARED ${SOURCE})
 
-add_library(shell32 SHARED ${CMAKE_CURRENT_BINARY_DIR}/shell32_precomp.h.gch ${SOURCE})
+add_pch(shell32 precomp.h)
 
 set_module_type(shell32 win32dll)
 

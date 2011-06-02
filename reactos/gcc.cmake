@@ -93,45 +93,6 @@ else()
     set(ARCH2 ${ARCH})
 endif()
 
-# Macros
-macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
-    # Add the precompiled header to the build
-    get_filename_component(FILE ${_header_filename} NAME)
-    set(_gch_filename "${_target_name}_${FILE}.gch")
-    list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
-
-    # This gets us our includes
-    get_directory_property(DIRINC INCLUDE_DIRECTORIES)
-    foreach(item ${DIRINC})
-        list(APPEND ${_out_compile_flags} -I${item})
-    endforeach()
-
-    # This is a particular bit of undocumented/hacky magic I'm quite proud of
-    get_directory_property(_compiler_flags DEFINITIONS)
-    string(REPLACE "\ " "\t" _compiler_flags ${_compiler_flags})
-    list(APPEND ${_out_compile_flags} ${_compiler_flags})
-
-    # This gets any specific definitions that were added with set-target-property
-    get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
-    if (_target_defs)
-        foreach(item ${_target_defs})
-            list(APPEND ${_out_compile_flags} -D${item})
-        endforeach()
-    endif()
-endmacro()
-
-macro(add_pch _target_name _header_filename _src_list)
-    get_filename_component(FILE ${_header_filename} NAME)
-    set(_gch_filename "${_target_name}_${FILE}.gch")
-    list(APPEND ${_src_list} ${_gch_filename})
-    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
-    file(REMOVE ${_gch_filename})
-    add_custom_command(
-        OUTPUT ${_gch_filename}
-        COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
-        DEPENDS ${_header_filename})
-endmacro()
-
 macro(add_linkerflag MODULE _flag)
     set(NEW_LINKER_FLAGS ${_flag})
     get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
@@ -328,3 +289,46 @@ endmacro()
 
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
+
+# Macros
+macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
+    # Add the precompiled header to the build
+    get_filename_component(_FILE ${_header_filename} NAME)
+    set(_gch_filename "${_target_name}_${_FILE}.gch")
+    list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
+
+    # This gets us our includes
+    get_directory_property(DIRINC INCLUDE_DIRECTORIES)
+    foreach(item ${DIRINC})
+        list(APPEND ${_out_compile_flags} -I${item})
+    endforeach()
+
+    # This our definitions
+    get_directory_property(_compiler_flags DEFINITIONS)
+    list(APPEND ${_out_compile_flags} ${_compiler_flags})
+
+    # This gets any specific definitions that were added with set-target-property
+    get_target_property(_target_defs ${_target_name} COMPILE_DEFINITIONS)
+    if (_target_defs)
+        foreach(item ${_target_defs})
+            list(APPEND ${_out_compile_flags} -D${item})
+        endforeach()
+    endif()
+	
+	separate_arguments(${_out_compile_flags})
+endmacro()
+
+macro(add_pch _target_name _FILE)
+	set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
+	get_filename_component(_basename ${_FILE} NAME)
+    set(_gch_filename ${_target_name}_${basename}.gch)
+    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+	
+    add_custom_command(
+        OUTPUT ${_gch_filename}
+        COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
+        DEPENDS ${_header_filename})
+	get_target_property(_src_files ${_target_name} SOURCES)
+	set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
+	#add_linkerflag(${_target_name} "${_gch_filename}")
+endmacro()

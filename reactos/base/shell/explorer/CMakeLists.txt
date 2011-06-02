@@ -13,7 +13,7 @@ add_definitions(
     -D__WINDRES__
     -D_DLL -D__USE_CRTIMP)
 
-#add_pch(explorer ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
+#add_pch(explorer precomp.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SOURCE
@@ -53,7 +53,7 @@ list(APPEND SOURCE
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
-add_executable(explorer ${SOURCE}) #${CMAKE_CURRENT_BINARY_DIR}/explorer_precomp.h.gch ${SOURCE})
+add_executable(explorer ${SOURCE})
 
 set_subsystem(explorer windows)
 set_entrypoint(explorer WinMainCRTStartup)

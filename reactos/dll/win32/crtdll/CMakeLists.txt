@@ -17,9 +17,7 @@ list(APPEND SOURCE
     crtdll.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def)
 
-add_library(crtdll SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/crtdll_precomp.h.gch
-    ${SOURCE})
+add_library(crtdll SHARED ${SOURCE})
 
 set_module_type(crtdll win32dll)
 
@@ -30,6 +28,6 @@ target_link_libraries(crtdll
     crt)
 
 add_importlibs(crtdll kernel32 ntdll)
-add_pch(crtdll ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(crtdll precomp.h)
 
 add_cd_file(TARGET crtdll DESTINATION reactos/system32 FOR all)

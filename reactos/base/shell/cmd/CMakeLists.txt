@@ -72,11 +72,11 @@ list(APPEND SOURCE
     where.c
     window.c)
 
-add_executable(cmd ${CMAKE_CURRENT_BINARY_DIR}/cmd_precomp.h.gch ${SOURCE})
+add_executable(cmd ${SOURCE})
 
 target_link_libraries(cmd wine)
 
-add_pch(cmd ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
+add_pch(cmd precomp.h)
 set_module_type(cmd win32cui)
 add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET cmd DESTINATION reactos/system32 FOR all)

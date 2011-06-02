@@ -11,11 +11,11 @@ list(APPEND SOURCE
     rpc.c
     file.c)
 
-add_executable(eventlog ${CMAKE_CURRENT_BINARY_DIR}/eventlog_eventlog.h.gch ${SOURCE})
+add_executable(eventlog ${SOURCE})
 
 target_link_libraries(eventlog eventlogrpc ${PSEH_LIB})
 
-add_pch(eventlog ${CMAKE_CURRENT_SOURCE_DIR}/eventlog.h ${SOURCE})
+add_pch(eventlog eventlog.h)
 
 set_module_type(eventlog win32cui)
 add_importlibs(eventlog advapi32 rpcrt4 msvcrt kernel32 ntdll)

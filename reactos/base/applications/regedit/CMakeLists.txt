@@ -22,9 +22,9 @@ list(APPEND SOURCE
     treeview.c
     regedit.rc)
 
-add_pch(regedit ${CMAKE_CURRENT_SOURCE_DIR}/regedit.h ${SOURCE})
+add_executable(regedit ${SOURCE})
 
-add_executable(regedit ${CMAKE_CURRENT_BINARY_DIR}/regedit_regedit.h.gch ${SOURCE})
+add_pch(regedit regedit.h)
 
 set_module_type(regedit win32gui)
 

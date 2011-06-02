@@ -24,9 +24,9 @@ list(APPEND SOURCE
     stop_dependencies.c
     servman.rc)
 
-add_executable(servman ${CMAKE_CURRENT_BINARY_DIR}/servman_precomp.h.gch ${SOURCE})
+add_executable(servman ${SOURCE})
 
-add_pch(servman ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(servman precomp.h)
 
 set_module_type(servman win32gui)
 

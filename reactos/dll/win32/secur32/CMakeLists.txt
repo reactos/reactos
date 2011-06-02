@@ -14,16 +14,14 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/secur32.def
 )
 
-add_library(secur32 SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/secur32_precomp.h.gch
-    ${SOURCE})
+add_library(secur32 SHARED ${SOURCE})
 
 set_module_type(secur32 win32dll)
 
 target_link_libraries(secur32 lsalib)
 
 add_importlibs(secur32 advapi32 msvcrt kernel32 ntdll)
-add_pch(secur32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(secur32 precomp.h)
 
 add_cd_file(TARGET secur32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(secur32.spec)

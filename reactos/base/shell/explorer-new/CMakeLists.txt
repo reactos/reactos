@@ -18,11 +18,11 @@ list(APPEND SOURCE
     traywnd.c
     explorer.rc)
 
-add_executable(explorer_new ${CMAKE_CURRENT_BINARY_DIR}/explorer_new_precomp.h.gch ${SOURCE})
+add_executable(explorer_new ${SOURCE})
 
 target_link_libraries(explorer_new uuid)
 
-add_pch(explorer_new ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(explorer_new precomp.h)
 set_module_type(explorer_new win32gui)
 add_importlibs(explorer_new
     advapi32

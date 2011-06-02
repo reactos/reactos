@@ -18,11 +18,9 @@ list(APPEND SOURCE
     d3dtest8.c
     d3dtest9.c)
 
-add_executable(dxdiag
-    ${CMAKE_CURRENT_BINARY_DIR}/dxdiag_precomp.h.gch
-    ${SOURCE})
+add_executable(dxdiag ${SOURCE})
 
-add_pch(dxdiag ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(dxdiag precomp.h)
 
 set_module_type(dxdiag win32gui)
 

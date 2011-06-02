@@ -11,13 +11,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/authz_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/authz.def)
 
-add_library(authz SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/authz_precomp.h.gch
-    ${SOURCE})
+add_library(authz SHARED ${SOURCE})
 
 set_module_type(authz win32dll)
 
-add_pch(authz ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(authz precomp.h)
 add_importlibs(authz advapi32 msvcrt kernel32 ntdll)
 
 add_cd_file(TARGET authz DESTINATION reactos/system32 FOR all)

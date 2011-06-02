@@ -35,12 +35,12 @@ list(APPEND SOURCE
     ndis.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)
 
-add_library(ndis SHARED ${CMAKE_CURRENT_BINARY_DIR}/ndis_ndissys.h.gch ${SOURCE})
+add_library(ndis SHARED ${SOURCE})
 
 set_module_type(ndis kernelmodedriver)
 add_importlibs(ndis ntoskrnl hal)
 
-add_pch(ndis ${CMAKE_CURRENT_SOURCE_DIR}/include/ndissys.h ${SOURCE})
+add_pch(ndis include/ndissys.h)
 
 add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers FOR all)
 add_importlib_target(ndis.spec)

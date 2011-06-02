@@ -9,11 +9,9 @@ list(APPEND SOURCE
     map.c
     charmap.rc)
 
-add_executable(charmap
-    ${CMAKE_CURRENT_BINARY_DIR}/charmap_precomp.h.gch
-    ${SOURCE})
+add_executable(charmap ${SOURCE})
 
-add_pch(charmap ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(charmap precomp.h)
 
 set_module_type(charmap win32gui)
 

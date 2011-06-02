@@ -9,9 +9,9 @@ list(APPEND SOURCE
     misc.c
     devmgmt.rc)
 
-add_executable(devmgmt ${CMAKE_CURRENT_BINARY_DIR}/devmgmt_precomp.h.gch ${SOURCE})
+add_executable(devmgmt ${SOURCE})
 
-add_pch(devmgmt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(devmgmt precomp.h)
 
 set_module_type(devmgmt win32gui)
 add_importlibs(devmgmt setupapi gdi32 user32 comctl32 advapi32 devmgr msvcrt kernel32)
