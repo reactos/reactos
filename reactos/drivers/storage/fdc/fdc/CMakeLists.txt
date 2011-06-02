@@ -5,8 +5,6 @@ add_library(fdc SHARED
     pdo.c
     fdc.rc)
 
-target_link_libraries(fdc)
-
 set_module_type(fdc kernelmodedriver)
 add_importlibs(fdc hal ntoskrnl)
 
