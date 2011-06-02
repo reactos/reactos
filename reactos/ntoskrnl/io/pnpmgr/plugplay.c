@@ -551,6 +551,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
 
     DeviceNode = IopGetDeviceNode(DeviceObject);
 
+#if 0
     /* Remove the device */
     if (DeviceNode->Flags & DNF_ENUMERATED)
     {
@@ -560,6 +561,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
             DPRINT1("WARNING: Ignoring failed IopRemoveDevice() for %wZ (likely a driver bug)\n", &DeviceNode->InstancePath);
         }
     }
+#endif
 
     /* Reenumerate the device and its children */
     DeviceNode->Flags &= ~DNF_DISABLED;
