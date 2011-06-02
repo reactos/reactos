@@ -294,7 +294,7 @@ set(PSEH_LIB "pseh")
 macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
     # Add the precompiled header to the build
     get_filename_component(_FILE ${_header_filename} NAME)
-    set(_gch_filename "${_target_name}_${_FILE}.gch")
+    set(_gch_filename "${_FILE}.gch")
     list(APPEND ${_out_compile_flags} -c ${_header_filename} -o ${_gch_filename})
 
     # This gets us our includes
@@ -321,7 +321,7 @@ endmacro()
 macro(add_pch _target_name _FILE)
 	set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
 	get_filename_component(_basename ${_FILE} NAME)
-    set(_gch_filename ${_target_name}_${basename}.gch)
+    set(_gch_filename ${_basename}.gch)
     _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
 	
     add_custom_command(
