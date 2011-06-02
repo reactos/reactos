@@ -4,6 +4,9 @@
 <directory name="class">
 	<xi:include href="class/directory.rbuild" />
 </directory>
+<directory name="fdc">
+	<xi:include href="fdc/directory.rbuild" />
+</directory>
 <directory name="floppy">
 	<xi:include href="floppy/floppy.rbuild" />
 </directory>
