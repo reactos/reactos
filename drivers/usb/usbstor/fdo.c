@@ -244,6 +244,7 @@ USBSTOR_FdoHandleStartDevice(
 
     }while(Index < DeviceExtension->MaxLUN);
 
+#if 0
     //
     // finally get usb device interface
     //
@@ -253,9 +254,10 @@ USBSTOR_FdoHandleStartDevice(
         //
         // failed to device interface
         //
-        DPRINT1("USBSTOR_FdoHandleStartDevice failed to device interface %x\n", Status);
+        DPRINT1("USBSTOR_FdoHandleStartDevice failed to get device interface %x\n", Status);
         return Status;
     }
+#endif
 
     //
     // fdo is now initialized
@@ -306,11 +308,10 @@ USBSTOR_FdoHandlePnp(
        case IRP_MN_QUERY_CAPABILITIES:
        {
            //
-           // just forward irp to lower device
+           // FIXME: set custom capabilities 
            //
-           //IoSkipCurrentIrpStackLocation(Irp);
-           Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
-           break;
+           IoSkipCurrentIrpStackLocation(Irp);
+           return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
        }
        case IRP_MN_START_DEVICE:
        {

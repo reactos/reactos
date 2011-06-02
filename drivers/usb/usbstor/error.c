@@ -134,7 +134,7 @@ USBSTOR_HandleTransferError(
 		//
 		Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
 		DPRINT1("Retrying\n");
-		Status = USBSTOR_HandleExecuteSCSI(DeviceObject, Context->Irp, Request, Context->PDODeviceExtension);
+		Status = USBSTOR_HandleExecuteSCSI(DeviceObject, Context->Irp);
 	}
 	
 	DPRINT1("USBSTOR_HandleTransferError returning with Status %x\n", Status);
