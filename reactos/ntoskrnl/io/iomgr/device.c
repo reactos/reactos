@@ -19,9 +19,10 @@
 ULONG IopDeviceObjectNumber = 0;
 LIST_ENTRY ShutdownListHead, LastChanceShutdownListHead;
 KSPIN_LOCK ShutdownListLock;
-extern LIST_ENTRY IopDiskFsListHead;
-extern LIST_ENTRY IopCdRomFsListHead;
-extern LIST_ENTRY IopTapeFsListHead;
+extern LIST_ENTRY IopDiskFileSystemQueueHead;
+extern LIST_ENTRY IopCdRomFileSystemQueueHead;
+extern LIST_ENTRY IopTapeFileSystemQueueHead;
+extern ERESOURCE IopDatabaseResource;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -187,14 +188,17 @@ IoShutdownSystem(IN ULONG Phase)
     }
     else if (Phase == 1)
     {
+        /* Acquire resource forever */
+        ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
+
         /* Shutdown disk file systems */
-        IopShutdownBaseFileSystems(&IopDiskFsListHead);
+        IopShutdownBaseFileSystems(&IopDiskFileSystemQueueHead);
 
         /* Shutdown cdrom file systems */
-        IopShutdownBaseFileSystems(&IopCdRomFsListHead);
+        IopShutdownBaseFileSystems(&IopCdRomFileSystemQueueHead);
 
         /* Shutdown tape filesystems */
-        IopShutdownBaseFileSystems(&IopTapeFsListHead);
+        IopShutdownBaseFileSystems(&IopTapeFileSystemQueueHead);
         
         /* Loop last-chance shutdown notifications */
         ListEntry = ExInterlockedRemoveHeadList(&LastChanceShutdownListHead,

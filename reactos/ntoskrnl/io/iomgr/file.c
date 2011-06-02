@@ -479,7 +479,7 @@ IopParseDevice(IN PVOID ParseObject,
     {
         /* Dereference the device and VPB, then fail */
         IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-        if (Vpb) IopDereferenceVpb(Vpb);
+        if (Vpb) IopDereferenceVpbAndFree(Vpb);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -577,7 +577,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Dereference the device and VPB */
             IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            if (Vpb) IopDereferenceVpb(Vpb);
+            if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
             /* We failed, return status */
             OpenPacket->FinalStatus = Status;
@@ -687,7 +687,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Dereference the device object and VPB */
             IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
-            if (Vpb) IopDereferenceVpb(Vpb);
+            if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
             /* Clear the FO and dereference it */
             FileObject->DeviceObject = NULL;
@@ -783,7 +783,7 @@ IopParseDevice(IN PVOID ParseObject,
         IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
 
         /* Unless the driver cancelled the open, dereference the VPB */
-        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpb(Vpb);
+        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpbAndFree(Vpb);
 
         /* Set the status and return */
         OpenPacket->FinalStatus = Status;
@@ -806,7 +806,7 @@ IopParseDevice(IN PVOID ParseObject,
     if (OwnerDevice != DeviceObject)
     {
         /* We have to de-reference the VPB we had associated */
-        if (Vpb) IopDereferenceVpb(Vpb);
+        if (Vpb) IopDereferenceVpbAndFree(Vpb);
 
         /* And re-associate with the actual one */
         Vpb = FileObject->Vpb;

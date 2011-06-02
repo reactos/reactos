@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hervé Poussineau (hpoussin@reactos.org)
  *                  Eric Kohl
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -21,14 +22,60 @@
 
 /* GLOBALS ******************************************************************/
 
-ERESOURCE FileSystemListLock;
-LIST_ENTRY IopDiskFsListHead, IopNetworkFsListHead;
-LIST_ENTRY IopCdRomFsListHead, IopTapeFsListHead;
-KGUARDED_MUTEX FsChangeNotifyListLock;
-LIST_ENTRY FsChangeNotifyListHead;
+ERESOURCE IopDatabaseResource;
+LIST_ENTRY IopDiskFileSystemQueueHead, IopNetworkFileSystemQueueHead;
+LIST_ENTRY IopCdRomFileSystemQueueHead, IopTapeFileSystemQueueHead;
+LIST_ENTRY IopFsNotifyChangeQueueHead;
+ULONG IopFsRegistrationOps;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*
+ * @halfplemented
+ */
+VOID
+NTAPI
+IopDecrementDeviceObjectRef(IN PDEVICE_OBJECT DeviceObject,
+                            IN BOOLEAN UnloadIfUnused)
+{
+    KIRQL OldIrql;
+
+    /* Acquire lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    ASSERT(DeviceObject->ReferenceCount > 0);
+
+    if (--DeviceObject->ReferenceCount > 0)
+    {
+        KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+        return;
+    }
+
+    /* Here, DO is not referenced any longer, check if we have to unload it */
+    if (UnloadIfUnused || IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
+                          (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | DOE_REMOVE_PENDING))
+    {
+        /* Unload the driver */
+        IopUnloadDevice(DeviceObject);
+    }
+
+    /* Release lock */
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IopDecrementDeviceObjectHandleCount(IN PDEVICE_OBJECT DeviceObject)
+{
+    /* Just decrease reference count */
+    IopDecrementDeviceObjectRef(DeviceObject, FALSE);
+}
+
+/*
+ * @implemented
+ */
 PVPB
 NTAPI
 IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
@@ -100,6 +147,9 @@ IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
     return Vpb;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)
@@ -110,7 +160,7 @@ IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)
     Vpb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(VPB),
                                 TAG_VPB);
-    if (!Vpb) return STATUS_UNSUCCESSFUL;
+    if (!Vpb) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Clear it so we don't waste time manually */
     RtlZeroMemory(Vpb, sizeof(VPB));
@@ -125,9 +175,12 @@ IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
-IopDereferenceVpb(IN PVPB Vpb)
+IopDereferenceVpbAndFree(IN PVPB Vpb)
 {
     KIRQL OldIrql;
 
@@ -136,21 +189,30 @@ IopDereferenceVpb(IN PVPB Vpb)
     Vpb->ReferenceCount--;
 
     /* Check if we're out of references */
-    if (!Vpb->ReferenceCount)
+    if (!Vpb->ReferenceCount && Vpb->RealDevice->Vpb == Vpb &&
+        !(Vpb->Flags & VPB_PERSISTENT))
     {
-        /* FIXME: IMPLEMENT CLEANUP! */
-        ASSERT(FALSE);
-    }
+        /* Release VPB lock */
+        IoReleaseVpbSpinLock(OldIrql);
 
-    /* Release VPB lock */
-    IoReleaseVpbSpinLock(OldIrql);
+        /* And free VPB */
+        ExFreePoolWithTag(Vpb, TAG_VPB);
+    }
+    else
+    {
+        /* Release VPB lock */
+        IoReleaseVpbSpinLock(OldIrql);
+    }
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
-IopReferenceVpbForVerify(IN PDEVICE_OBJECT DeviceObject,
-                         OUT PDEVICE_OBJECT *FileSystemObject,
-                         OUT PVPB *Vpb)
+IopReferenceVerifyVpb(IN PDEVICE_OBJECT DeviceObject,
+                      OUT PDEVICE_OBJECT *FileSystemObject,
+                      OUT PVPB *Vpb)
 {
     KIRQL OldIrql;
     PVPB LocalVpb;
@@ -181,9 +243,9 @@ IopReferenceVpbForVerify(IN PDEVICE_OBJECT DeviceObject,
 
 PVPB
 NTAPI
-IopInitializeVpbForMount(IN PDEVICE_OBJECT DeviceObject,
-                         IN PDEVICE_OBJECT AttachedDeviceObject,
-                         IN BOOLEAN Raw)
+IopMountInitializeVpb(IN PDEVICE_OBJECT DeviceObject,
+                      IN PDEVICE_OBJECT AttachedDeviceObject,
+                      IN BOOLEAN Raw)
 {
     KIRQL OldIrql;
     PVPB Vpb;
@@ -212,20 +274,20 @@ IopInitializeVpbForMount(IN PDEVICE_OBJECT DeviceObject,
     return Vpb;
 }
 
+/*
+ * @implemented
+ */
 VOID
-NTAPI
+FORCEINLINE
 IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
                           IN BOOLEAN DriverActive)
 {
     PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
     PLIST_ENTRY ListEntry;
 
-    /* Acquire the notification lock */
-    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-
     /* Loop the list */
-    ListEntry = FsChangeNotifyListHead.Flink;
-    while (ListEntry != &FsChangeNotifyListHead)
+    ListEntry = IopFsNotifyChangeQueueHead.Flink;
+    while (ListEntry != &IopFsNotifyChangeQueueHead)
     {
         /* Get the entry */
         ChangeEntry = CONTAINING_RECORD(ListEntry,
@@ -238,11 +300,47 @@ IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
         /* Go to the next entry */
         ListEntry = ListEntry->Flink;
     }
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 }
 
+/*
+ * @implemented
+ */
+ULONG
+FASTCALL
+IopInterlockedIncrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
+                             IN PULONG Ulong)
+{
+    KIRQL Irql;
+    ULONG OldValue;
+
+    Irql = KeAcquireQueuedSpinLock(Queue);
+    OldValue = (*Ulong)++;
+    KeReleaseQueuedSpinLock(Queue, Irql);
+
+    return OldValue;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+FASTCALL
+IopInterlockedDecrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
+                             IN PULONG Ulong)
+{
+    KIRQL Irql;
+    ULONG OldValue;
+
+    Irql = KeAcquireQueuedSpinLock(Queue);
+    OldValue = (*Ulong)--;
+    KeReleaseQueuedSpinLock(Queue, Irql);
+
+    return OldValue;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
@@ -254,9 +352,6 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
     KEVENT Event;
     NTSTATUS Status;
 
-    /* Lock the FS List and initialize an event to wait on */
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     /* Get the first entry and start looping */
@@ -267,6 +362,9 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
         DeviceObject = CONTAINING_RECORD(ListEntry,
                                          DEVICE_OBJECT,
                                          Queue.ListEntry);
+
+        ObReferenceObject(DeviceObject);
+        IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
 
         /* Check if we're attached */
         if (DeviceObject->AttachedDevice)
@@ -293,18 +391,20 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
         /* Reset the event */
         KeClearEvent(&Event);
 
+        IopDecrementDeviceObjectRef(DeviceObject, FALSE);
+        ObDereferenceObject(DeviceObject);
+
         /* Go to the next entry */
         ListEntry = ListEntry->Flink;
     }
-
-    /* Release the lock */
-    ExReleaseResourceLite(&FileSystemListLock);
-    KeLeaveCriticalRegion();
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
-IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
+IopLoadFileSystemDriver(IN PDEVICE_OBJECT DeviceObject)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
@@ -347,8 +447,14 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
     }
+
+    /* Dereference DO - FsRec? */
+    IopDecrementDeviceObjectRef(AttachedDeviceObject, TRUE);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
@@ -366,7 +472,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     LIST_ENTRY LocalList;
     PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
     PDEVICE_OBJECT FileSystemDeviceObject, ParentFsDeviceObject;
-    ULONG FsStackOverhead;
+    ULONG FsStackOverhead, RegistrationOps;
     PAGED_CODE();
 
     /* Check if the device isn't already locked */
@@ -387,7 +493,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
     /* Acquire the FS Lock*/
     KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(&FileSystemListLock, TRUE);
+    ExAcquireResourceSharedLite(&IopDatabaseResource, TRUE);
 
     /* Make sure we weren't already mounted */
     if (!(DeviceObject->Vpb->Flags & (VPB_MOUNTED | VPB_REMOVE_PENDING)))
@@ -411,17 +517,17 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             (DeviceObject->DeviceType == FILE_DEVICE_VIRTUAL_DISK))
         {
             /* Use the disk list */
-            FsList = &IopDiskFsListHead;
+            FsList = &IopDiskFileSystemQueueHead;
         }
         else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM)
         {
             /* Use the CD-ROM list */
-            FsList = &IopCdRomFsListHead;
+            FsList = &IopCdRomFileSystemQueueHead;
         }
         else
         {
             /* It's gotta be a tape... */
-            FsList = &IopTapeFsListHead;
+            FsList = &IopTapeFileSystemQueueHead;
         }
 
         /* Now loop the fs list until one of the file systems accepts us */
@@ -502,6 +608,13 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             StackPtr->Parameters.MountVolume.DeviceObject =
                 AttachedDeviceObject;
 
+            /* Save registration operations */
+            RegistrationOps = IopFsRegistrationOps;
+
+            /* Release locks */
+            IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
+            ExReleaseResourceLite(&IopDatabaseResource);
+
             /* Call the driver */
             Status = IoCallDriver(FileSystemDeviceObject, Irp);
             if (Status == STATUS_PENDING)
@@ -515,14 +628,17 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 Status = IoStatusBlock.Status;
             }
 
+            ExAcquireResourceSharedLite(&IopDatabaseResource, TRUE);
+            IopInterlockedDecrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
+
             /* Check if mounting was successful */
             if (NT_SUCCESS(Status))
             {
                 /* Mount the VPB */
-                *Vpb = IopInitializeVpbForMount(DeviceObject,
-                                                AttachedDeviceObject,
-                                                (DeviceObject->Vpb->Flags &
-                                                 VPB_RAW_MOUNT));
+                *Vpb = IopMountInitializeVpb(DeviceObject,
+                                             AttachedDeviceObject,
+                                             (DeviceObject->Vpb->Flags &
+                                              VPB_RAW_MOUNT));
             }
             else
             {
@@ -534,11 +650,22 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     break;
                 }
 
+                /* If there were registration operations in the meanwhile */
+                if (RegistrationOps != IopFsRegistrationOps)
+                {
+                    /* We need to setup a local list to pickup where we left */
+                    LocalList.Flink = FsList->Flink;
+                    ListEntry = &LocalList;
+
+                    Status = STATUS_UNRECOGNIZED_VOLUME;
+                }
+
                 /* Otherwise, check if we need to load the FS driver */
                 if (Status == STATUS_FS_DRIVER_REQUIRED)
                 {
                     /* We need to release the lock */
-                    ExReleaseResourceLite(&FileSystemListLock);
+                    IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
+                    ExReleaseResourceLite(&IopDatabaseResource);
 
                     /* Release the device lock if we're holding it */
                     if (!DeviceIsLocked)
@@ -546,8 +673,11 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                         KeSetEvent(&DeviceObject->DeviceLock, 0, FALSE);
                     }
 
+                    /* Leave critical section */
+                    KeLeaveCriticalRegion();
+
                     /* Load the FS */
-                    IopLoadFileSystem(ParentFsDeviceObject);
+                    IopLoadFileSystemDriver(ParentFsDeviceObject);
 
                     /* Check if the device isn't already locked */
                     if (!DeviceIsLocked)
@@ -569,7 +699,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     }
 
                     /* Reacquire the lock */
-                    ExAcquireResourceSharedLite(&FileSystemListLock, TRUE);
+                    KeEnterCriticalRegion();
+                    ExAcquireResourceSharedLite(&IopDatabaseResource, TRUE);
 
                     /* When we released the lock, make sure nobody beat us */
                     if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
@@ -620,7 +751,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Release the FS lock */
-    ExReleaseResourceLite(&FileSystemListLock);
+    ExReleaseResourceLite(&IopDatabaseResource);
     KeLeaveCriticalRegion();
 
     /* Release the device lock if we're holding it */
@@ -628,7 +759,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
     /* Check if we failed to mount the boot partition */
     if ((!NT_SUCCESS(Status)) &&
-        (DeviceObject->Flags & DO_SYSTEM_BOOT_PARTITION))
+        (DeviceObject->Flags & DO_SYSTEM_BOOT_PARTITION) &&
+        ExpInitializationPhase < 2)
     {
         /* Bugcheck the system */
         KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE,
@@ -642,19 +774,102 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IopNotifyAlreadyRegisteredFileSystems(IN PLIST_ENTRY ListHead,
+                                      IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine,
+                                      BOOLEAN SkipLast)
+{
+    PLIST_ENTRY ListEntry;
+    PDEVICE_OBJECT DeviceObject;
+
+    /* Browse the whole list */
+    ListEntry = ListHead->Flink;
+    while (ListEntry != ListHead)
+    {
+        /* Check if we reached end and if we have to skip it */
+        if (ListEntry->Flink == ListHead && SkipLast)
+        {
+            return;
+        }
+
+        /* Otherwise, get DO and notify */
+        DeviceObject = CONTAINING_RECORD(ListEntry,
+                                         DEVICE_OBJECT,
+                                         Queue.ListEntry);
+
+        DriverNotificationRoutine(DeviceObject, TRUE);
+
+        /* Go to the next entry */
+        ListEntry = ListEntry->Flink;
+    }
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-IoEnumerateRegisteredFiltersList(IN PDRIVER_OBJECT *DriverObjectList,
+IoEnumerateRegisteredFiltersList(OUT PDRIVER_OBJECT *DriverObjectList,
                                  IN ULONG DriverObjectListSize,
                                  OUT PULONG ActualNumberDriverObjects)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    USHORT Index = 0;
+    ULONG ListSize = 0;
+    PLIST_ENTRY ListEntry;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+
+    /* Acquire the FS lock */
+    ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
+
+    /* First of all, count number of driver objects */
+    ListEntry = IopFsNotifyChangeQueueHead.Flink;
+    while (ListEntry != &IopFsNotifyChangeQueueHead)
+    {
+        ListSize++;
+
+        /* Go to the next entry */
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Return this size */
+    *ActualNumberDriverObjects = ListSize;
+
+    /* Then, check if given buffer is big enough to contain list */
+    if (ListSize > DriverObjectListSize / sizeof(PDRIVER_OBJECT))
+    {
+        Status = STATUS_BUFFER_TOO_SMALL;
+    }
+    else
+    {
+        /* Rebrowse the whole list */
+        ListEntry = IopFsNotifyChangeQueueHead.Flink;
+        while (ListEntry != &IopFsNotifyChangeQueueHead)
+        {
+            ChangeEntry = CONTAINING_RECORD(ListEntry,
+                                            FS_CHANGE_NOTIFY_ENTRY,
+                                            FsChangeNotifyList);
+
+            /* Reference the driver object */
+            ObReferenceObject(ChangeEntry->DriverObject);
+            /* And pass it to the caller */
+            DriverObjectList[Index++] = ChangeEntry->DriverObject;
+
+            /* Go to the next entry */
+            ListEntry = ListEntry->Flink;
+        }
+    }
+
+    /* Release the FS lock */
+    ExReleaseResourceLite(&IopDatabaseResource);
+
+    return Status;
 }
 
 /*
@@ -669,20 +884,21 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION StackPtr;
     KEVENT Event;
     PIRP Irp;
-    NTSTATUS Status = STATUS_SUCCESS, VpbStatus;
+    NTSTATUS Status, VpbStatus;
     PDEVICE_OBJECT FileSystemDeviceObject;
     PVPB Vpb, NewVpb;
     BOOLEAN WasNotMounted = TRUE;
 
     /* Wait on the device lock */
-    KeWaitForSingleObject(&DeviceObject->DeviceLock,
-                          Executive,
-                          KernelMode,
-                          FALSE,
-                          NULL);
+    Status = KeWaitForSingleObject(&DeviceObject->DeviceLock,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ASSERT(Status == STATUS_SUCCESS);
 
     /* Reference the VPB */
-    if (IopReferenceVpbForVerify(DeviceObject, &FileSystemDeviceObject, &Vpb))
+    if (IopReferenceVerifyVpb(DeviceObject, &FileSystemDeviceObject, &Vpb))
     {
         /* Initialize the event */
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -698,7 +914,11 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 
         /* Allocate the IRP */
         Irp = IoAllocateIrp(FileSystemDeviceObject->StackSize, FALSE);
-        if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+        if (!Irp)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Release;
+        }
 
         /* Set it up */
         Irp->UserIosb = &IoStatusBlock;
@@ -726,28 +946,37 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Dereference the VPB */
-        IopDereferenceVpb(Vpb);
+        IopDereferenceVpbAndFree(Vpb);
     }
 
     /* Check if we had the wrong volume or didn't mount at all */
-    if ((Status == STATUS_WRONG_VOLUME) || (WasNotMounted))
+    if (Status == STATUS_WRONG_VOLUME)
     {
         /* Create a VPB */
         VpbStatus = IopCreateVpb(DeviceObject);
         if (NT_SUCCESS(VpbStatus))
         {
+            PoVolumeDevice(DeviceObject);
+
             /* Mount it */
             VpbStatus = IopMountVolume(DeviceObject,
                                        AllowRawMount,
                                        TRUE,
                                        FALSE,
                                        &NewVpb);
+
+            /* If we got a new VPB, dereference it */
+            if (NewVpb)
+            {
+                IopInterlockedDecrementUlong(LockQueueIoVpbLock, &NewVpb->ReferenceCount);
+            }
         }
 
         /* If we failed, remove the verify flag */
         if (!NT_SUCCESS(VpbStatus)) DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     }
 
+Release:
     /* Signal the device lock and return */
     KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
     return Status;
@@ -764,29 +993,28 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
     PAGED_CODE();
 
     /* Acquire the FS lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
+    ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Check what kind of FS this is */
     if (DeviceObject->DeviceType == FILE_DEVICE_DISK_FILE_SYSTEM)
     {
         /* Use the disk list */
-        FsList = &IopDiskFsListHead;
+        FsList = &IopDiskFileSystemQueueHead;
     }
     else if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK_FILE_SYSTEM)
     {
         /* Use the network device list */
-        FsList = &IopNetworkFsListHead;
+        FsList = &IopNetworkFileSystemQueueHead;
     }
     else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
     {
         /* Use the CD-ROM list */
-        FsList = &IopCdRomFsListHead;
+        FsList = &IopCdRomFileSystemQueueHead;
     }
     else if (DeviceObject->DeviceType == FILE_DEVICE_TAPE_FILE_SYSTEM)
     {
         /* Use the tape list */
-        FsList = &IopTapeFsListHead;
+        FsList = &IopTapeFileSystemQueueHead;
     }
 
     /* Make sure that we have a valid list */
@@ -805,15 +1033,20 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
         }
     }
 
+    /* Update operations counter */
+    IopFsRegistrationOps++;
+
     /* Clear the initializing flag */
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-    /* Release the FS Lock */
-    ExReleaseResourceLite(&FileSystemListLock);
-    KeLeaveCriticalRegion();
-
     /* Notify file systems of the addition */
     IopNotifyFileSystemChange(DeviceObject, TRUE);
+
+    /* Release the FS Lock */
+    ExReleaseResourceLite(&IopDatabaseResource);
+
+    /* Ensure driver won't be unloaded */
+    IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
 }
 
 /*
@@ -826,18 +1059,25 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
     PAGED_CODE();
 
     /* Acquire the FS lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
+    ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
-    /* Simply remove the entry */
-    RemoveEntryList(&DeviceObject->Queue.ListEntry);
+    /* Simply remove the entry - if queued */
+    if (DeviceObject->Queue.ListEntry.Flink)
+    {
+        RemoveEntryList(&DeviceObject->Queue.ListEntry);
+    }
 
     /* And notify all registered file systems */
     IopNotifyFileSystemChange(DeviceObject, FALSE);
 
+    /* Update operations counter */
+    IopFsRegistrationOps++;
+
     /* Then release the lock */
-    ExReleaseResourceLite(&FileSystemListLock);
-    KeLeaveCriticalRegion();
+    ExReleaseResourceLite(&IopDatabaseResource);
+
+    /* Decrease reference count to allow unload */
+    IopInterlockedDecrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
 }
 
 /*
@@ -846,25 +1086,60 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 NTSTATUS
 NTAPI
 IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-                               IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
+                               IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine)
 {
     PFS_CHANGE_NOTIFY_ENTRY Entry;
     PAGED_CODE();
+
+    /* Acquire the list lock */
+    ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
+
+    /* Check if that driver is already registered (successive calls)
+     * See MSDN note: http://msdn.microsoft.com/en-us/library/ff548499%28v=vs.85%29.aspx
+     */
+    if (!IsListEmpty(&IopFsNotifyChangeQueueHead))
+    {
+        Entry = CONTAINING_RECORD(IopFsNotifyChangeQueueHead.Blink,
+                                  FS_CHANGE_NOTIFY_ENTRY,
+                                  FsChangeNotifyList);
+
+        if (Entry->DriverObject == DriverObject &&
+            Entry->FSDNotificationProc == DriverNotificationRoutine)
+        {
+            /* Release the lock */
+            ExReleaseResourceLite(&IopDatabaseResource);
+
+            return STATUS_DEVICE_ALREADY_ATTACHED;
+        }
+    }
 
     /* Allocate a notification entry */
     Entry = ExAllocatePoolWithTag(PagedPool,
                                   sizeof(FS_CHANGE_NOTIFY_ENTRY),
                                   TAG_FS_CHANGE_NOTIFY);
-    if (!Entry) return(STATUS_INSUFFICIENT_RESOURCES);
+    if (!Entry)
+    {
+        /* Release the lock */
+        ExReleaseResourceLite(&IopDatabaseResource);
+
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Save the driver object and notification routine */
     Entry->DriverObject = DriverObject;
-    Entry->FSDNotificationProc = FSDNotificationProc;
+    Entry->FSDNotificationProc = DriverNotificationRoutine;
 
     /* Insert it into the notification list */
-    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-    InsertTailList(&FsChangeNotifyListHead, &Entry->FsChangeNotifyList);
-    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+    InsertTailList(&IopFsNotifyChangeQueueHead, &Entry->FsChangeNotifyList);
+
+    /* Start notifying all already present FS */
+    IopNotifyAlreadyRegisteredFileSystems(&IopNetworkFileSystemQueueHead, DriverNotificationRoutine, FALSE);
+    IopNotifyAlreadyRegisteredFileSystems(&IopCdRomFileSystemQueueHead, DriverNotificationRoutine, TRUE);
+    IopNotifyAlreadyRegisteredFileSystems(&IopDiskFileSystemQueueHead, DriverNotificationRoutine, TRUE);
+    IopNotifyAlreadyRegisteredFileSystems(&IopTapeFileSystemQueueHead, DriverNotificationRoutine, TRUE);
+
+    /* Release the lock */
+    ExReleaseResourceLite(&IopDatabaseResource);
 
     /* Reference the driver */
     ObReferenceObject(DriverObject);
@@ -884,11 +1159,11 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     PAGED_CODE();
 
     /* Acquire the list lock */
-    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
+    ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Loop the list */
-    NextEntry = FsChangeNotifyListHead.Flink;
-    while (NextEntry != &FsChangeNotifyListHead)
+    NextEntry = IopFsNotifyChangeQueueHead.Flink;
+    while (NextEntry != &IopFsNotifyChangeQueueHead)
     {
         /* Get the entry */
         ChangeEntry = CONTAINING_RECORD(NextEntry,
@@ -910,7 +1185,7 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     }
 
     /* Release the lock and dereference the driver */
-    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+    ExReleaseResourceLite(&IopDatabaseResource);
     ObDereferenceObject(DriverObject);
 }
 

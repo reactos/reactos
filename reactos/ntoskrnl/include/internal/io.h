@@ -838,7 +838,7 @@ IopCreateVpb(
 
 VOID
 NTAPI
-IopDereferenceVpb(
+IopDereferenceVpbAndFree(
     IN PVPB Vpb
 );
 
@@ -869,8 +869,15 @@ IopDereferenceDeviceObject(
 
 NTSTATUS
 NTAPI
-IoGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
-                         OUT PDEVICE_OBJECT *DeviceObject
+IoGetRelatedTargetDevice(
+    IN PFILE_OBJECT FileObject,
+    OUT PDEVICE_OBJECT *DeviceObject
+);
+
+VOID
+NTAPI
+IopUnloadDevice(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
 //
