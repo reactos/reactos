@@ -4153,6 +4153,8 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject)
     {
         DPRINT1("Removal vetoed by failing the query remove request\n");
         
+        IopCancelRemoveDevice(DeviceObject);
+        
         return STATUS_UNSUCCESSFUL;
     }
     
