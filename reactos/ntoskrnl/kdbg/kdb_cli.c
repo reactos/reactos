@@ -2701,6 +2701,9 @@ KdbpCliMainLoop(
     /* Main loop */
     do
     {
+        /* Reset the number of rows/cols printed */
+        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
+
         /* Print the prompt */
         KdbpPrint("kdb:> ");
 
