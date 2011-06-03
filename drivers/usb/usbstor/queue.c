@@ -56,11 +56,6 @@ USBSTOR_CancelIo(
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
 
     //
-    // now release the cancel lock
-    //
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    //
     // remove the irp from the list
     //
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
@@ -68,7 +63,12 @@ USBSTOR_CancelIo(
     //
     // release irp list lock
     //
-    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);
+    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->IrpListLock);    
+
+    //
+    // now release the cancel lock
+    //
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     //
     // set cancel status
@@ -132,6 +132,21 @@ USBSTOR_QueueAddIrp(
    FDODeviceExtension->IrpPendingCount++;
 
     //
+    // check if queue is freezed
+    //
+    IrpListFreeze = FDODeviceExtension->IrpListFreeze;
+
+    //
+    // release list lock
+    //
+    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+
+    //
+    // synchronize with cancellations by holding the cancel lock
+    //
+    IoAcquireCancelSpinLock(&Irp->CancelIrql);
+
+    //
     // now set the driver cancel routine
     //
     OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_CancelIo);
@@ -141,16 +156,6 @@ USBSTOR_QueueAddIrp(
     //
     if (Irp->Cancel && OldDriverCancel == NULL)
     {
-        //
-        // the irp has already been cancelled
-        //
-        KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
-
-        //
-        // cancel routine requires that cancel spinlock is held
-        //
-        IoAcquireCancelSpinLock(&Irp->CancelIrql);
-
         //
         // cancel irp
         //
@@ -163,14 +168,9 @@ USBSTOR_QueueAddIrp(
     }
 
     //
-    // check if queue is freezed
+    // release the cancel lock
     //
-    IrpListFreeze = FDODeviceExtension->IrpListFreeze;
-
-    //
-    // release list lock
-    //
-    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     //
     // if list is freezed, dont start this packet
