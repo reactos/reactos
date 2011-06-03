@@ -30,7 +30,6 @@ class2.sys=,,,,,,x,,,,,,4
 isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
-fdc.sys=,,,,,,,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
 i8042prt.sys=,,,,,,x,,,,,,4
 kbdclass.sys=,,,,,,x,,,,,,4
@@ -61,7 +60,6 @@ PCI\CC_0104 = uniata
 PCI\CC_0105 = uniata
 PCI\CC_0106 = uniata
 *PNP0600 = uniata
-*PNP0700 = fdc
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
@@ -70,7 +68,6 @@ isapnp = isapnp.sys
 
 [BusExtenders.Load]
 pciide = pciide.sys
-fdc = fdc.sys
 
 [SCSI.Load]
 uniata = uniata.sys
