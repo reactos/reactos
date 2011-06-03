@@ -115,7 +115,7 @@ USBSTOR_HandleInternalDeviceControl(
             //
             // release claim
             //
-            PDODeviceExtension->Claimed = TRUE;
+            PDODeviceExtension->Claimed = FALSE;
             Status = STATUS_SUCCESS;
             break;
         }
