@@ -448,8 +448,8 @@ IopLoadFileSystemDriver(IN PDEVICE_OBJECT DeviceObject)
         }
     }
 
-    /* Dereference DO - FsRec? */
-    IopDecrementDeviceObjectRef(AttachedDeviceObject, TRUE);
+    /* Dereference DO - FsRec? - Comment out call, since it breaks up 2nd stage boot, needs more research. */
+//  IopDecrementDeviceObjectRef(AttachedDeviceObject, TRUE);
 }
 
 /*
