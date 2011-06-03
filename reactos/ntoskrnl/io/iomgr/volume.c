@@ -781,7 +781,7 @@ VOID
 NTAPI
 IopNotifyAlreadyRegisteredFileSystems(IN PLIST_ENTRY ListHead,
                                       IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine,
-                                      BOOLEAN SkipLast)
+                                      BOOLEAN SkipRawFs)
 {
     PLIST_ENTRY ListEntry;
     PDEVICE_OBJECT DeviceObject;
@@ -790,8 +790,8 @@ IopNotifyAlreadyRegisteredFileSystems(IN PLIST_ENTRY ListHead,
     ListEntry = ListHead->Flink;
     while (ListEntry != ListHead)
     {
-        /* Check if we reached end and if we have to skip it */
-        if (ListEntry->Flink == ListHead && SkipLast)
+        /* Check if we reached rawfs and if we have to skip it */
+        if (ListEntry->Flink == ListHead && SkipRawFs)
         {
             return;
         }
@@ -819,55 +819,49 @@ IoEnumerateRegisteredFiltersList(OUT PDRIVER_OBJECT *DriverObjectList,
                                  IN ULONG DriverObjectListSize,
                                  OUT PULONG ActualNumberDriverObjects)
 {
-    USHORT Index = 0;
-    ULONG ListSize = 0;
     PLIST_ENTRY ListEntry;
     NTSTATUS Status = STATUS_SUCCESS;
     PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+    ULONG ListSize = 0, MaximumSize = DriverObjectListSize / sizeof(PDRIVER_OBJECT);
 
     /* Acquire the FS lock */
+    KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
-    /* First of all, count number of driver objects */
+    /* Browse the whole list */
     ListEntry = IopFsNotifyChangeQueueHead.Flink;
     while (ListEntry != &IopFsNotifyChangeQueueHead)
     {
+        ChangeEntry = CONTAINING_RECORD(ListEntry,
+                                        FS_CHANGE_NOTIFY_ENTRY,
+                                        FsChangeNotifyList);
+
+        /* If buffer is still big enough */
+        if (ListSize < MaximumSize)
+        {
+            /* Reference the driver object */
+            ObReferenceObject(ChangeEntry->DriverObject);
+            /* And pass it to the caller */
+            DriverObjectList[ListSize] = ChangeEntry->DriverObject;
+        }
+        else
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Increase size counter */
         ListSize++;
 
         /* Go to the next entry */
         ListEntry = ListEntry->Flink;
     }
 
-    /* Return this size */
+    /* Return list size */
     *ActualNumberDriverObjects = ListSize;
-
-    /* Then, check if given buffer is big enough to contain list */
-    if (ListSize > DriverObjectListSize / sizeof(PDRIVER_OBJECT))
-    {
-        Status = STATUS_BUFFER_TOO_SMALL;
-    }
-    else
-    {
-        /* Rebrowse the whole list */
-        ListEntry = IopFsNotifyChangeQueueHead.Flink;
-        while (ListEntry != &IopFsNotifyChangeQueueHead)
-        {
-            ChangeEntry = CONTAINING_RECORD(ListEntry,
-                                            FS_CHANGE_NOTIFY_ENTRY,
-                                            FsChangeNotifyList);
-
-            /* Reference the driver object */
-            ObReferenceObject(ChangeEntry->DriverObject);
-            /* And pass it to the caller */
-            DriverObjectList[Index++] = ChangeEntry->DriverObject;
-
-            /* Go to the next entry */
-            ListEntry = ListEntry->Flink;
-        }
-    }
 
     /* Release the FS lock */
     ExReleaseResourceLite(&IopDatabaseResource);
+    KeLeaveCriticalRegion();
 
     return Status;
 }
@@ -993,6 +987,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
     PAGED_CODE();
 
     /* Acquire the FS lock */
+    KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Check what kind of FS this is */
@@ -1044,6 +1039,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 
     /* Release the FS Lock */
     ExReleaseResourceLite(&IopDatabaseResource);
+    KeLeaveCriticalRegion();
 
     /* Ensure driver won't be unloaded */
     IopInterlockedIncrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
@@ -1059,6 +1055,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
     PAGED_CODE();
 
     /* Acquire the FS lock */
+    KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Simply remove the entry - if queued */
@@ -1075,6 +1072,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 
     /* Then release the lock */
     ExReleaseResourceLite(&IopDatabaseResource);
+    KeLeaveCriticalRegion();
 
     /* Decrease reference count to allow unload */
     IopInterlockedDecrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
@@ -1092,6 +1090,7 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     PAGED_CODE();
 
     /* Acquire the list lock */
+    KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Check if that driver is already registered (successive calls)
@@ -1140,6 +1139,7 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 
     /* Release the lock */
     ExReleaseResourceLite(&IopDatabaseResource);
+    KeLeaveCriticalRegion();
 
     /* Reference the driver */
     ObReferenceObject(DriverObject);
@@ -1159,6 +1159,7 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     PAGED_CODE();
 
     /* Acquire the list lock */
+    KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Loop the list */
@@ -1186,6 +1187,9 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 
     /* Release the lock and dereference the driver */
     ExReleaseResourceLite(&IopDatabaseResource);
+    KeLeaveCriticalRegion();
+
+    /* Dereference the driver */
     ObDereferenceObject(DriverObject);
 }
 
