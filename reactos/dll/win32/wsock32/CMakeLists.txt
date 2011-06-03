@@ -2,7 +2,7 @@
 set_unicode()
 
 spec2def(wsock32.dll wsock32.spec)
-add_library(wsock32 SHARED stubs.c wsock32.rc wsock32.def ${CMAKE_CURRENT_BINARY_DIR}/wsock32.def)
+add_library(wsock32 SHARED stubs.c wsock32.rc ${CMAKE_CURRENT_BINARY_DIR}/wsock32.def)
 
 set_module_type(wsock32 win32dll)
 
