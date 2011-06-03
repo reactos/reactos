@@ -45,13 +45,13 @@ DWORD WINAPI RunRPCThread(LPVOID lpParameter)
 
 /*************************RPC Functions**********************************/
 
-int AUDInitStream(	IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance)
+long AUDInitStream(	IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
-	HANDLE stream;
-	printf("Client Connected and Initiated Stream Freq: %ld,Channle: %d,Bitspersample: %d,Mask: %ld,Volume: %d,Mute: %d,Balance: %f\n",frequency,channels,bitspersample,channelmask,volume,mute,balance);
-	stream = addstream(frequency,channels,bitspersample,channelmask,volume,mute,balance);
-	if( stream == NULL ){return 0;}else{printf("Stream added\n");}
-    return (int)stream;
+	long stream;
+	printf("Client Connected and Initiated Stream Freq: %ld,Channle: %d,Bitspersample: %d,Datatype: %d,Mask: %ld,Volume: %d,Mute: %d,Balance: %f\n",frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
+	stream = addstream(frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
+	if( stream != 0 ){printf("Stream added\n");}
+    return stream;
 }
 /*************************************************************************/
 void __RPC_FAR *__RPC_USER midl_user_allocate(SIZE_T len)

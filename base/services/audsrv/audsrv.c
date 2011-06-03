@@ -41,6 +41,7 @@ const GUID KSINTERFACESETID_Standard            = {0x1A8766A0L, 0x62CE, 0x11CF, 
 const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
+const GUID KSDATAFORMAT_SUBTYPE_IEEE_FLOAT      = {0x00000003L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 
 MixerEngine engine,*pengine;
@@ -152,24 +153,31 @@ ServiceMain(DWORD argc,
 
 
 
-
-void fill(MixerEngine * mixer,int buffer)
+void mixandfill(MixerEngine * mixer,int buffer)
 {
-	DWORD Length;
-	UINT i = 0;
-Sleep(100);
-	Length = mixer->masterfreq * mixer->masterchannels * mixer->masterbitspersample / 8;
-	mixer->masterbuf[buffer] = (PSHORT)HeapAlloc(GetProcessHeap(), 0, Length);
-    while (i < Length / 2)
-    {
-        mixer->masterbuf[buffer][i] = 0x7FFF * sin(0.5 * (i - 1) * 500 * _2pi / 48000);
-        i++;
-        mixer->masterbuf[buffer][i] = 0x7FFF * sin(0.5 * (i - 2) * 500 * _2pi / 48000);
-        i++;
-    }
-	mixer->bytes_to_play = Length;
-}
+	while(WaitForSingleObject(mixer->streampresent,100)!=0){if(mixer->dead) return;} /*Check if there is at least one stream present.*/
+	if(mixer->masterdatatype == 0)/*signed int*/
+	{
+		if(mixer->masterbitspersample == 8)mixs8(mixer,buffer);else if(mixer->masterbitspersample == 16) mixs16(mixer,buffer);else if(mixer->masterbitspersample == 32) mixs32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixs64(mixer,buffer);
+	}
+	else if (mixer->masterdatatype == 1)/*unsigned int*/
+	{
+		if(mixer->masterbitspersample == 8)mixu8(mixer,buffer);else if(mixer->masterbitspersample == 16) mixu16(mixer,buffer);else if(mixer->masterbitspersample == 32) mixu32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixu64(mixer,buffer);
+	}
+	else if(mixer->masterdatatype == 2)/*Float*/
+	{
+		if(mixer->masterbitspersample == 32)mixfl32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixfl64(mixer,buffer);
+	}
 
+	mixer->masterbuf[buffer] = HeapAlloc(GetProcessHeap(), 0, mixer->serverstreamlist->length_filtered);
+	CopyMemory(mixer->masterbuf[buffer],mixer->serverstreamlist->filteredbuf,mixer->serverstreamlist->length_filtered);
+	mixer->bytes_to_play = mixer->serverstreamlist->length_filtered;
+}
+void freebuffer()
+{
+	HeapFree(GetProcessHeap(), 0, pengine->masterbuf[pengine->playcurrent]);
+	pengine->masterbuf[pengine->playcurrent] = NULL;
+}
 void playbuffer(MixerEngine * mixer,int buffer)
 {
 	SP_DEVICE_INTERFACE_DATA InterfaceData;
@@ -276,7 +284,10 @@ if(mixer->masterbuf[buffer])
     DataFormat->Flags = 0;
     DataFormat->Reserved = 0;
     DataFormat->MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-    DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+	if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
+		DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+	else
+		DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
     DataFormat->Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->SampleSize = mixer->masterchannels * mixer->masterbitspersample / 8;
     DataFormat->FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEXTENSIBLE);
@@ -290,9 +301,11 @@ if(mixer->masterbuf[buffer])
     WaveFormat->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
 	WaveFormat->dwChannelMask = mixer->masterchannelmask;
     WaveFormat->Samples.wValidBitsPerSample = mixer->masterbitspersample;
-    WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+	if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
+		WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+	else
+		WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
 
-    //printf("Creating pin\n");
 
 	//
     // Create the pin
@@ -367,12 +380,9 @@ DWORD WINAPI RunMixerThread(LPVOID param)
 	SetEvent(mixer->played);
 	while(1)
 	{
-	while(WaitForSingleObject(mixer->streampresent,100)!=0){if(mixer->dead)goto DEAD;} /*Check if there is at least one stream present.*/
-
 	while(WaitForSingleObject(mixer->played,100)!=0){if(mixer->dead)goto DEAD;}
-	fill(mixer,1-mixer->playcurrent);
+	mixandfill(mixer,1-mixer->playcurrent);
 	SetEvent(mixer->filled);
-
 	}
 DEAD:
 	printf("\nMixer Thread Ended\n");
@@ -386,7 +396,7 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
 		while(WaitForSingleObject(mixer->filled,100)!=0){if(mixer->dead)goto DEAD;}
 		SetEvent(mixer->played);
 		playbuffer(mixer,mixer->playcurrent);
-
+		freebuffer();
 		mixer->playcurrent=1-mixer->playcurrent;
 	}
 
@@ -468,6 +478,7 @@ else
 	pengine->mute=FALSE;
 
 	pengine->dead=0;
+	pengine->streamidpool=0;
 	pengine->playcurrent=1;
 	pengine->masterbuf[0] = NULL;
 	pengine->masterbuf[1] = NULL;
@@ -501,6 +512,7 @@ ServiceInit(VOID)
 	pengine->mute=FALSE;
 
 	pengine->dead=0;
+	pengine->streamidpool=0;
 	pengine->playcurrent=1;
 	pengine->masterbuf[0] = NULL;
 	pengine->masterbuf[1] = NULL;

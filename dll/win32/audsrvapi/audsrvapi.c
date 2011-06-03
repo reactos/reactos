@@ -5,9 +5,9 @@ int status = 0;
 /*Initialize an audio stream
  *Return -1 if callbacks are NULL pointers
  */
-WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance)
+WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
-	int streamid;
+	long streamid;
 	if (clientstream == NULL ) return -1;
 	if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL) return -2;
 	/*Validity of all other data will be checked at server*/
@@ -16,8 +16,9 @@ WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,i
 
 	RpcTryExcept  
     {
-		streamid = AUDInitStream (audsrv_v0_0_c_ifspec,frequency,channels,bitspersample,channelmask,volume,mute,balance);
-		printf("AUDInitStream Returned %d",streamid);
+		streamid = AUDInitStream (audsrv_v0_0_c_ifspec,frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
+		printf("AUDInitStream Returned %ld",streamid);
+		if(streamid != 0) {clientstream->stream = streamid;}
     }
     RpcExcept(1)
     {
@@ -28,8 +29,6 @@ WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,i
 
 	/*Analyse the return by the function*/
 	/*Currently Suppose the return is 0 and a valid streamid is returned*/
-	clientstream->stream = &status;
-
 	clientstream->ClientEventPool[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
 	clientstream->dead = 0;
 

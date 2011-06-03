@@ -7,6 +7,7 @@ list(APPEND SOURCE
     audsrv.c
     audsrv.rc
     rpc.c
+	mixer.c
 	stream.c)
 
 add_executable(audsrv ${SOURCE})

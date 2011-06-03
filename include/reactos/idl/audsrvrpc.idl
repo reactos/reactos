@@ -39,6 +39,6 @@ typedef struct _RPC_CLIENT_ID {
 interface audsrv
 {
 
-    int AUDInitStream([in] handle_t h1,[in]LONG frequency,[in]int channels,[in]int bitspersample,[in] ULONG channelmask,[in]int volume,[in]int mute,[in]float balance);
+    long AUDInitStream([in] handle_t h1,[in]LONG frequency,[in]int channels,[in]int bitspersample,[in]int datatype,[in] ULONG channelmask,[in]int volume,[in]int mute,[in]float balance);
 
 }

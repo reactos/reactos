@@ -1,4 +1,4 @@
-@ stdcall initstream (ptr long long long long long long long)
+@ stdcall initstream (ptr long long long long long long long long)
 @ stdcall playaudio ( ptr);
 @ stdcall stopaudio (ptr );
 @ stdcall Volume(ptr ptr );

@@ -17,14 +17,14 @@ typedef struct CallBacks
 
 typedef struct ClientStream
 {
-HANDLE stream;
+long stream;
 int dead;
 HANDLE ClientEventPool[1];  //0]th event is for Activescheduler
 struct CallBacks callbacks;
 } ClientStream;
 
 /********************API Functions******************/
-WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample, ULONG channelmask,int volume,int mute,float balance);
+WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance);
 WINAPI int playaudio ( ClientStream * clientstream);
 WINAPI int stopaudio (ClientStream * clientstream );
 WINAPI int Volume(ClientStream * clientstream, int * volume );

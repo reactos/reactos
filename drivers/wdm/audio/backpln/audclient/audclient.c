@@ -8,7 +8,7 @@ void opencomplete (int error );
 void buffercopied (int error );
 void playcomplete (int error );
 
-ClientStream clientstream = {NULL,0,{NULL},{opencomplete,buffercopied,playcomplete}};/*This initialization should not be necessary for a typical client*/
+ClientStream clientstream = {0,0,{NULL},{opencomplete,buffercopied,playcomplete}};/*This initialization should not be necessary for a typical client*/
 
 DWORD WINAPI RunAudioThread(LPVOID param)
 {
@@ -39,12 +39,12 @@ wmain(int argc, char* argv[])
 	char input='\0';
 	printf("ReactOS Audio Mixer Sample Client.Enter 'a' to Stop.\n");
 	//if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL) printf("");
-	error = initstream ( &clientstream , 44100 , 2 , 16 , KSAUDIO_SPEAKER_STEREO , 1000 , 0, 0.0 ); /*[out]HANDLE * streamhandle,[in] long frequency,[in] int number of channels,[in] int bitspersample,[in]ULONG channelmask,[in] int volume,[in] int mute,[in] float balance*/
+	error = initstream ( &clientstream , 44100 , 2 , 16 ,0, KSAUDIO_SPEAKER_STEREO , 1000 , 0, 0.0 ); /*[out]HANDLE * streamhandle,[in] long frequency,[in] int number of channels,[in] int bitspersample,[in]ULONG channelmask,[in] int volume,[in] int mute,[in] float balance*/
 	if ( error )
 		printf("Failed to Initialize Stream.Error %d\n", error);
 	else
 	{
-		printf("StreamID : %d\n",*((int *)clientstream.stream));
+		printf("StreamID : %ld\n",clientstream.stream);
 		audiothread = CreateThread(NULL,0,RunAudioThread,&clientstream,0,&dwID);
 	}
 	while ( input != 'a' )
