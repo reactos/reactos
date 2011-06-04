@@ -17,6 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msports);
 
 typedef struct _COMDB
 {
+    HANDLE hMutex;
     HKEY hKey;
 } COMDB, *PCOMDB;
 
@@ -44,6 +45,9 @@ ComDBClaimNextFreePort(IN HCOMDB hComDB,
 
     pComDB = (PCOMDB)hComDB;
 
+    /* Wait for the mutex */
+    WaitForSingleObject(pComDB->hMutex, INFINITE);
+
     /* Get the required bitmap size */
     lError = RegQueryValueExW(pComDB->hKey,
                               L"ComDB",
@@ -52,7 +56,10 @@ ComDBClaimNextFreePort(IN HCOMDB hComDB,
                               NULL,
                               &dwSize);
     if (lError != ERROR_SUCCESS)
-        return lError;
+    {
+        ERR("Failed to query the bitmap size!\n");
+        goto done;
+    }
 
     /* Allocate the bitmap */
     pBitmap = HeapAlloc(GetProcessHeap(),
@@ -61,7 +68,8 @@ ComDBClaimNextFreePort(IN HCOMDB hComDB,
     if (pBitmap == NULL)
     {
         ERR("Failed to allocate the bitmap!\n");
-        return lError;
+        lError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
     }
 
     /* Read the bitmap */
@@ -102,6 +110,10 @@ ComDBClaimNextFreePort(IN HCOMDB hComDB,
     }
 
 done:;
+    /* Release the mutex */
+    ReleaseMutex(pComDB->hMutex);
+
+    /* Release the bitmap */
     if (pBitmap != NULL)
         HeapFree(GetProcessHeap(), 0, pBitmap);
 
@@ -135,6 +147,9 @@ ComDBClaimPort(IN HCOMDB hComDB,
 
     pComDB = (PCOMDB)hComDB;
 
+    /* Wait for the mutex */
+    WaitForSingleObject(pComDB->hMutex, INFINITE);
+
     /* Get the required bitmap size */
     lError = RegQueryValueExW(pComDB->hKey,
                               L"ComDB",
@@ -143,7 +158,10 @@ ComDBClaimPort(IN HCOMDB hComDB,
                               NULL,
                               &dwSize);
     if (lError != ERROR_SUCCESS)
-        return lError;
+    {
+        ERR("Failed to query the bitmap size!\n");
+        goto done;
+    }
 
     /* Allocate the bitmap */
     pBitmap = HeapAlloc(GetProcessHeap(),
@@ -152,7 +170,8 @@ ComDBClaimPort(IN HCOMDB hComDB,
     if (pBitmap == NULL)
     {
         ERR("Failed to allocate the bitmap!\n");
-        return lError;
+        lError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
     }
 
     /* Read the bitmap */
@@ -203,6 +222,10 @@ ComDBClaimPort(IN HCOMDB hComDB,
     }
 
 done:
+    /* Release the mutex */
+    ReleaseMutex(pComDB->hMutex);
+
+    /* Release the bitmap */
     if (pBitmap != NULL)
         HeapFree(GetProcessHeap(), 0, pBitmap);
 
@@ -218,7 +241,8 @@ ComDBClose(IN HCOMDB hComDB)
 
     TRACE("ComDBClose(%p)\n", hComDB);
 
-    if (hComDB == HCOMDB_INVALID_HANDLE_VALUE || hComDB == NULL)
+    if (hComDB == HCOMDB_INVALID_HANDLE_VALUE ||
+        hComDB == NULL)
         return ERROR_INVALID_PARAMETER;
 
     pComDB = (PCOMDB)hComDB;
@@ -226,6 +250,10 @@ ComDBClose(IN HCOMDB hComDB)
     /* Close the registry key */
     if (pComDB->hKey != NULL)
         RegCloseKey(pComDB->hKey);
+
+    /* Close the mutex */
+    if (pComDB->hMutex != NULL)
+        CloseHandle(pComDB->hMutex);
 
     /* Release the database */
     HeapFree(GetProcessHeap(), 0, pComDB);
@@ -267,8 +295,24 @@ ComDBOpen(OUT HCOMDB *phComDB)
     if (pComDB == NULL)
     {
         ERR("Failed to allocate the database!\n");
+        *phComDB = HCOMDB_INVALID_HANDLE_VALUE;
         return ERROR_ACCESS_DENIED;
     }
+
+    /* Create a mutex to protect the database */
+    pComDB->hMutex = CreateMutexW(NULL,
+                                  FALSE,
+                                  L"ComDBMutex");
+    if (pComDB->hMutex == NULL)
+    {
+        ERR("Failed to create the mutex!\n");
+        HeapFree(GetProcessHeap(), 0, pComDB);
+        *phComDB = HCOMDB_INVALID_HANDLE_VALUE;
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Wait for the mutex */
+    WaitForSingleObject(pComDB->hMutex, INFINITE);
 
     /* Create or open the database key */
     lError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
@@ -316,11 +360,17 @@ ComDBOpen(OUT HCOMDB *phComDB)
     }
 
 done:;
+    /* Release the mutex */
+    ReleaseMutex(pComDB->hMutex);
+
     if (lError != ERROR_SUCCESS)
     {
         /* Clean up in case of failure */
         if (pComDB->hKey != NULL)
             RegCloseKey(pComDB->hKey);
+
+        if (pComDB->hMutex != NULL)
+            CloseHandle(pComDB->hMutex);
 
         HeapFree(GetProcessHeap(), 0, pComDB);
 
@@ -361,6 +411,9 @@ ComDBReleasePort(IN HCOMDB hComDB,
 
     pComDB = (PCOMDB)hComDB;
 
+    /* Wait for the mutex */
+    WaitForSingleObject(pComDB->hMutex, INFINITE);
+
     /* Get the required bitmap size */
     lError = RegQueryValueExW(pComDB->hKey,
                               L"ComDB",
@@ -369,7 +422,10 @@ ComDBReleasePort(IN HCOMDB hComDB,
                               NULL,
                               &dwSize);
     if (lError != ERROR_SUCCESS)
-        return lError;
+    {
+        ERR("Failed to query the bitmap size!\n");
+        goto done;
+    }
 
     /* Allocate the bitmap */
     pBitmap = HeapAlloc(GetProcessHeap(),
@@ -378,7 +434,8 @@ ComDBReleasePort(IN HCOMDB hComDB,
     if (pBitmap == NULL)
     {
         ERR("Failed to allocate the bitmap!\n");
-        return lError;
+        lError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
     }
 
     /* Read the bitmap */
@@ -416,6 +473,10 @@ ComDBReleasePort(IN HCOMDB hComDB,
                             dwSize);
 
 done:;
+    /* Release the mutex */
+    ReleaseMutex(pComDB->hMutex);
+
+    /* Release the bitmap */
     if (pBitmap != NULL)
         HeapFree(GetProcessHeap(), 0, pBitmap);
 
