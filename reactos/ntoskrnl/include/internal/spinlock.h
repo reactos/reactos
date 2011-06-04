@@ -24,7 +24,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
-    _ReadWriteBarrier();
+    KeMemoryBarrierWithoutFence();
 }
 
 //
@@ -39,7 +39,7 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
-    _ReadWriteBarrier();
+    KeMemoryBarrierWithoutFence();
 }
 
 #else

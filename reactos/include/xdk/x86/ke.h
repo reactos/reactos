@@ -59,6 +59,8 @@ KeMemoryBarrier(VOID)
 #endif
 }
 
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
+
 NTHALAPI
 KIRQL
 NTAPI

@@ -45,6 +45,22 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
+#define FastFence __faststorefence
+#define LoadFence _mm_lfence
+#define MemoryFence _mm_mfence
+#define StoreFence _mm_sfence
+#define LFENCE_ACQUIRE() LoadFence()
+
+FORCEINLINE
+VOID
+KeMemoryBarrier(VOID)
+{
+  // FIXME: Do we really need lfence after the __faststorefence ?
+  FastFence();
+  LFENCE_ACQUIRE();
+}
+
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 
 FORCEINLINE
 KIRQL

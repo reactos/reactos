@@ -173,7 +173,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
-    _ReadWriteBarrier();
+    KeMemoryBarrierWithoutFence();
 
     /* Always return true on UP Machines */
     return TRUE;
@@ -196,7 +196,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
-    _ReadWriteBarrier();
+    KeMemoryBarrierWithoutFence();
 
     /* Always return true on UP Machines */
     return TRUE;
