@@ -460,7 +460,10 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	ExFreePool( FCB->RemoteAddress );
 
     if( FCB->Connection.Object )
+    {
+        TdiDisassociateAddressFile(FCB->Connection.Object);
 	ObDereferenceObject(FCB->Connection.Object);
+    }
 
     if( FCB->AddressFile.Object )
 	ObDereferenceObject(FCB->AddressFile.Object);

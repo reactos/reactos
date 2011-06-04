@@ -360,6 +360,9 @@ NTSTATUS TdiAssociateAddressFile(
   HANDLE AddressHandle,
   PFILE_OBJECT ConnectionObject);
 
+NTSTATUS TdiDisassociateAddressFile(
+  PFILE_OBJECT ConnectionObject);
+
 NTSTATUS TdiListen
 ( PIRP *Irp,
   PFILE_OBJECT ConnectionObject,

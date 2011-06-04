@@ -420,6 +420,55 @@ NTSTATUS TdiAssociateAddressFile(
 	return Status;
 }
 
+NTSTATUS TdiDisassociateAddressFile(
+	PFILE_OBJECT ConnectionObject)
+/*
+ * FUNCTION: Disassociates a connection endpoint from an address file object
+ * ARGUMENTS:
+ *     ConnectionObject = Connection endpoint file object
+ * RETURNS:
+ *     Status of operation
+ */
+{
+	PDEVICE_OBJECT DeviceObject;
+	IO_STATUS_BLOCK Iosb;
+	NTSTATUS Status;
+	KEVENT Event;
+	PIRP Irp;
+
+	AFD_DbgPrint(MAX_TRACE, ("Called. ConnectionObject (0x%X)\n", ConnectionObject));
+
+	if (!ConnectionObject) {
+		AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
+	if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+	}
+
+	KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+	Irp = TdiBuildInternalDeviceControlIrp(TDI_DISASSOCIATE_ADDRESS,   /* Sub function */
+										   DeviceObject,            /* Device object */
+										   ConnectionObject,        /* File object */
+										   &Event,                  /* Event */
+										   &Iosb);                  /* Status */
+	if (!Irp)
+		return STATUS_INSUFFICIENT_RESOURCES;
+
+	TdiBuildDisassociateAddress(Irp,
+							 DeviceObject,
+							 ConnectionObject,
+							 NULL,
+							 NULL);
+
+	Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
+
+	return Status;
+}
 
 NTSTATUS TdiListen
 ( PIRP *Irp,
@@ -1229,7 +1278,7 @@ NTSTATUS TdiDisconnect(
     }
 
     Irp = TdiBuildInternalDeviceControlIrp
-		( TDI_SEND_DATAGRAM,       /* Sub function */
+		( TDI_DISCONNECT,          /* Sub function */
 		  DeviceObject,            /* Device object */
 		  TransportObject,         /* File object */
 		  &Event,                  /* Event */
