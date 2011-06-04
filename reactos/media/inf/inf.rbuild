@@ -27,6 +27,7 @@
 	<installfile installbase="inf">ports.inf</installfile>
 	<installfile installbase="inf">scsi.inf</installfile>
 	<installfile installbase="inf" root="output">syssetup.inf</installfile>
+	<installfile installbase="inf">unknown.inf</installfile>
 	<installfile installbase="inf">usb.inf</installfile>
 	<installfile installbase="inf">usbport.inf</installfile>
 	<installfile installbase="inf">usbstor.inf</installfile>

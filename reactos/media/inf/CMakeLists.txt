@@ -24,6 +24,7 @@ list(APPEND INF_FILES
     nettcpip.inf
     ports.inf
     scsi.inf
+    unknown.inf
     usb.inf
     usbport.inf
     usbstor.inf
