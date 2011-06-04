@@ -118,6 +118,7 @@ $if (_WDMDDK_)
   ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
 
 #define MmGetProcedureAddress(Address) (Address)
+#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 /* PVOID MmGetSystemAddressForMdl(
  *     IN PMDL Mdl);
