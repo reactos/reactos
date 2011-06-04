@@ -21,6 +21,10 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
     UNREFERENCED_PARAMETER(SpinLock);
+
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
 }
 
 //
@@ -32,6 +36,10 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
     UNREFERENCED_PARAMETER(SpinLock);
+
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
 }
 
 #else

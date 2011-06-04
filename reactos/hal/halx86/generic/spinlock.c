@@ -188,6 +188,10 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     /* Simply raise to synch */
     KeRaiseIrql(SYNCH_LEVEL, OldIrql);
 
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
+
     /* Always return true on UP Machines */
     return TRUE;
 }
@@ -207,6 +211,10 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Simply raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
+
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
 
     /* Always return true on UP Machines */
     return TRUE;

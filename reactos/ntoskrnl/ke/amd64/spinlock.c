@@ -23,14 +23,14 @@
 KIRQL
 KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
 {
-#ifndef CONFIG_SMP
     KIRQL OldIrql;
-    /* Simply raise to dispatch */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Raise to sync */
+    KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock and return */
+    KxAcquireSpinLock(SpinLock);
     return OldIrql;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
@@ -40,14 +40,14 @@ KIRQL
 NTAPI
 KeAcquireSpinLockRaiseToDpc(PKSPIN_LOCK SpinLock)
 {
-#ifndef CONFIG_SMP
     KIRQL OldIrql;
-    /* Simply raise to dispatch */
+
+    /* Raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock and return */
+    KxAcquireSpinLock(SpinLock);
     return OldIrql;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
@@ -58,12 +58,9 @@ NTAPI
 KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
                   KIRQL OldIrql)
 {
-#ifndef CONFIG_SMP
-    /* Simply lower IRQL back */
+    /* Release the lock and lower IRQL back */
+    KxReleaseSpinLock(SpinLock);
     KeLowerIrql(OldIrql);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
@@ -72,14 +69,14 @@ KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
 KIRQL
 KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
-#ifndef CONFIG_SMP
     KIRQL OldIrql;
-    /* Simply raise to dispatch */
+
+    /* Raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
     return OldIrql;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
@@ -88,14 +85,14 @@ KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 KIRQL
 KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
-#ifndef CONFIG_SMP
     KIRQL OldIrql;
-    /* Simply raise to dispatch */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Raise to synch */
+    KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
     return OldIrql;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
@@ -105,13 +102,17 @@ VOID
 KeAcquireInStackQueuedSpinLock(IN PKSPIN_LOCK SpinLock,
                                IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-#ifndef CONFIG_SMP
-    /* Simply raise to dispatch */
+    /* Set up the lock */
+    LockHandle->LockQueue.Next = NULL;
+    LockHandle->LockQueue.Lock = SpinLock;
+
+    /* Raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, &LockHandle->OldIrql);
-#else
-    UNIMPLEMENTED;
-#endif
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
+
 
 /*
  * @implemented
@@ -120,13 +121,17 @@ VOID
 KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
                                            IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-#ifndef CONFIG_SMP
-    /* Simply raise to synch */
+    /* Set up the lock */
+    LockHandle->LockQueue.Next = NULL;
+    LockHandle->LockQueue.Lock = SpinLock;
+
+    /* Raise to synch */
     KeRaiseIrql(SYNCH_LEVEL, &LockHandle->OldIrql);
-#else
-    UNIMPLEMENTED;
-#endif
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
+
 
 /*
  * @implemented
@@ -135,13 +140,13 @@ VOID
 KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                         IN KIRQL OldIrql)
 {
-#ifndef CONFIG_SMP
-    /* Simply lower IRQL back */
+    /* Release the lock */
+    KxReleaseSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
+
+    /* Lower IRQL back */
     KeLowerIrql(OldIrql);
-#else
-    UNIMPLEMENTED;
-#endif
 }
+
 
 /*
  * @implemented
@@ -149,13 +154,11 @@ KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 VOID
 KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-#ifndef CONFIG_SMP
     /* Simply lower IRQL back */
+    KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
     KeLowerIrql(LockHandle->OldIrql);
-#else
-    UNIMPLEMENTED;
-#endif
 }
+
 
 /*
  * @implemented
@@ -168,10 +171,15 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     /* Simply raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
+
     /* Always return true on UP Machines */
     return TRUE;
 #else
     UNIMPLEMENTED;
+    ASSERT(FALSE);
 #endif
 }
 
@@ -186,10 +194,15 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     /* Simply raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    _ReadWriteBarrier();
+
     /* Always return true on UP Machines */
     return TRUE;
 #else
     UNIMPLEMENTED;
+    ASSERT(FALSE);
 #endif
 }
 
