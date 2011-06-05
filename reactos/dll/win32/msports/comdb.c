@@ -270,8 +270,103 @@ ComDBGetCurrentPortUsage(IN HCOMDB hComDB,
                          IN DWORD ReportType,
                          OUT LPDWORD MaxPortsReported)
 {
-    FIXME("ComDBGetCurrentPortUsage(%p)\n", hComDB);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PCOMDB pComDB;
+    DWORD dwBitIndex;
+    DWORD dwByteIndex;
+    DWORD dwType;
+    DWORD dwSize;
+    PBYTE pBitmap = NULL;
+    BYTE cMask;
+    LONG lError = ERROR_SUCCESS;
+
+    if (hComDB == INVALID_HANDLE_VALUE ||
+        hComDB == NULL ||
+        (Buffer == NULL && MaxPortsReported == NULL) ||
+        (ReportType != CDB_REPORT_BITS && ReportType != CDB_REPORT_BYTES))
+        return ERROR_INVALID_PARAMETER;
+
+    pComDB = (PCOMDB)hComDB;
+
+    /* Wait for the mutex */
+    WaitForSingleObject(pComDB->hMutex, INFINITE);
+
+    /* Get the required bitmap size */
+    lError = RegQueryValueExW(pComDB->hKey,
+                              L"ComDB",
+                              NULL,
+                              &dwType,
+                              NULL,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS)
+    {
+        ERR("Failed to query the bitmap size!\n");
+        goto done;
+    }
+
+    /* Allocate the bitmap */
+    pBitmap = HeapAlloc(GetProcessHeap(),
+                        HEAP_ZERO_MEMORY,
+                        dwSize);
+    if (pBitmap == NULL)
+    {
+        ERR("Failed to allocate the bitmap!\n");
+        lError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Read the bitmap */
+    lError = RegQueryValueExW(pComDB->hKey,
+                              L"ComDB",
+                              NULL,
+                              &dwType,
+                              pBitmap,
+                              &dwSize);
+    if (lError != ERROR_SUCCESS)
+        goto done;
+
+    if (Buffer == NULL)
+    {
+        *MaxPortsReported = dwSize * BITS_PER_BYTE;
+    }
+    else
+    {
+        if (ReportType == CDB_REPORT_BITS)
+        {
+            /* Clear the buffer */
+            memset(Buffer, 0, BufferSize);
+
+            memcpy(Buffer,
+                   pBitmap,
+                   min(dwSize, BufferSize));
+
+            if (MaxPortsReported != NULL)
+                *MaxPortsReported = min(dwSize, BufferSize) * BITS_PER_BYTE;
+        }
+        else if (ReportType == CDB_REPORT_BYTES)
+        {
+            /* Clear the buffer */
+            memset(Buffer, 0, BufferSize);
+
+            for (dwBitIndex = 0; dwBitIndex < min(dwSize * BITS_PER_BYTE, BufferSize); dwBitIndex++)
+            {
+                /* Calculate the byte index and a mask for the affected bit */
+                dwByteIndex = dwBitIndex / BITS_PER_BYTE;
+                cMask = 1 << (dwBitIndex % BITS_PER_BYTE);
+
+                if ((pBitmap[dwByteIndex] & cMask) != 0)
+                    Buffer[dwBitIndex] = 1;
+            }
+        }
+    }
+
+done:;
+    /* Release the mutex */
+    ReleaseMutex(pComDB->hMutex);
+
+    /* Release the bitmap */
+    HeapFree(GetProcessHeap(), 0, pBitmap);
+
+    return lError;
 }
 
 
