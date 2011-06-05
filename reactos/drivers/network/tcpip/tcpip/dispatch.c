@@ -259,7 +259,7 @@ NTSTATUS DispTdiAssociateAddress(
   PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  PCONNECTION_ENDPOINT Connection;
+  PCONNECTION_ENDPOINT Connection, LastConnection;
   PFILE_OBJECT FileObject;
   PADDRESS_FILE AddrFile = NULL;
   NTSTATUS Status;
@@ -340,15 +340,22 @@ NTSTATUS DispTdiAssociateAddress(
 
   /* Add connection endpoint to the address file */
   ReferenceObject(Connection);
-  AddrFile->Connection = Connection;
+  if (AddrFile->Connection == NULL)
+      AddrFile->Connection = Connection;
+  else
+  {
+      LastConnection = AddrFile->Connection;
+      while (LastConnection->Next != NULL)
+         LastConnection = LastConnection->Next;
+      LastConnection->Next = Connection;
+  }
 
-  /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
 
   UnlockObjectFromDpcLevel(AddrFile);
   UnlockObject(Connection, OldIrql);
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -425,10 +432,11 @@ NTSTATUS DispTdiDisassociateAddress(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection;
+  PCONNECTION_ENDPOINT Connection, LastConnection;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
   KIRQL OldIrql;
+  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -458,19 +466,42 @@ NTSTATUS DispTdiDisassociateAddress(
 
   LockObjectAtDpcLevel(Connection->AddressFile);
 
-  /* Remove this connection from the address file */
-  DereferenceObject(Connection->AddressFile->Connection);
-  Connection->AddressFile->Connection = NULL;
+  /* Unlink this connection from the address file */
+  if (Connection->AddressFile->Connection == Connection)
+  {
+      Connection->AddressFile->Connection = Connection->Next;
+      DereferenceObject(Connection);
+      Status = STATUS_SUCCESS;
+  }
+  else
+  {
+      LastConnection = Connection->AddressFile->Connection;
+      while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+         LastConnection = LastConnection->Next;
+      if (LastConnection->Next == Connection)
+      {
+          LastConnection->Next = Connection->Next;
+          DereferenceObject(Connection);
+          Status = STATUS_SUCCESS;
+      }
+      else
+      {
+          Status = STATUS_INVALID_PARAMETER;
+      }
+  }
 
   UnlockObjectFromDpcLevel(Connection->AddressFile);
 
-  /* Remove the address file from this connection */
-  DereferenceObject(Connection->AddressFile);
-  Connection->AddressFile = NULL;
+  if (Status == STATUS_SUCCESS)
+  {
+      /* Remove the address file from this connection */
+      DereferenceObject(Connection->AddressFile);
+      Connection->AddressFile = NULL;
+  }
 
   UnlockObject(Connection, OldIrql);
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 
@@ -602,7 +633,6 @@ NTSTATUS DispTdiListen(
 	  Status = STATUS_NO_MEMORY;
 
       if( NT_SUCCESS(Status) ) {
-          ReferenceObject(Connection->AddressFile);
 	  Connection->AddressFile->Listener->AddressFile =
 	      Connection->AddressFile;
 

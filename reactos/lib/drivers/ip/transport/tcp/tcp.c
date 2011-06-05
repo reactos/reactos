@@ -666,12 +666,13 @@ NTSTATUS TCPClose
     KIRQL OldIrql;
     NTSTATUS Status;
     PVOID Socket;
-    PADDRESS_FILE AddressFile = NULL;
-    PCONNECTION_ENDPOINT AddressConnection = NULL;
 
     LockObject(Connection, &OldIrql);
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
+
+    /* We should not be associated to an address file at this point */
+    ASSERT(!Connection->AddressFile);
 
     /* Don't try to close again if the other side closed us already */
     if (Socket)
@@ -693,27 +694,9 @@ NTSTATUS TCPClose
        Status = STATUS_SUCCESS;
     }
 
-    if (Connection->AddressFile)
-    {
-        LockObjectAtDpcLevel(Connection->AddressFile);
-        if (Connection->AddressFile->Connection == Connection)
-        {
-            AddressConnection = Connection->AddressFile->Connection;
-            Connection->AddressFile->Connection = NULL;
-        }
-        UnlockObjectFromDpcLevel(Connection->AddressFile);
-
-        AddressFile = Connection->AddressFile;
-        Connection->AddressFile = NULL;
-    }
-
     UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
-    if (AddressConnection)
-        DereferenceObject(AddressConnection);
-    if (AddressFile)
-        DereferenceObject(AddressFile);
 
     return Status;
 }
