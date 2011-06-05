@@ -55,7 +55,7 @@ set_target_properties(msvcrtex PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 
 if(NOT MSVC)
-    target_link_libraries(msvcrtex oldnames)
+    target_link_libraries(msvcrtex chkstk oldnames)
 endif()
 
 add_dependencies(msvcrtex psdk)
