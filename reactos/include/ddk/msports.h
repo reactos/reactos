@@ -9,11 +9,13 @@ DECLARE_HANDLE(HCOMDB);
 typedef HCOMDB *PHCOMDB;
 #define HCOMDB_INVALID_HANDLE_VALUE ((HCOMDB)INVALID_HANDLE_VALUE)
 
+/* Limits for ComDBResizeDatabase NewSize */
 #define COMDB_MIN_PORTS_ARBITRATED 256
 #define COMDB_MAX_PORTS_ARBITRATED 4096
 
-#define CDB_REPORT_BITS      0x0
-#define CDB_REPORT_BYTES     0x1
+/* ReportType flags for ComDBGetCurrentPortUsage */
+#define CDB_REPORT_BITS  0x0
+#define CDB_REPORT_BYTES 0x1
 
 LONG
 WINAPI
