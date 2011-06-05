@@ -38,6 +38,7 @@ list(APPEND MSVCRTEX_SOURCE
 if(ARCH MATCHES i386)
 list(APPEND MSVCRTEX_SOURCE
     except/i386/chkstk_asm.s
+    except/i386/chkstk_ms.s
     math/i386/ci.c
     math/i386/ftol2_asm.s
     math/i386/alldiv_asm.s
@@ -55,7 +56,7 @@ set_target_properties(msvcrtex PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 
 if(NOT MSVC)
-    target_link_libraries(msvcrtex chkstk oldnames)
+    target_link_libraries(msvcrtex oldnames)
 endif()
 
 add_dependencies(msvcrtex psdk)
