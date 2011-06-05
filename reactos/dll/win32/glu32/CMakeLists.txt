@@ -111,7 +111,7 @@ add_library(glu32 SHARED ${SOURCE})
 
 set_entrypoint(glu32 0)
 
-target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 -lcoldname)
+target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
 
 add_importlibs(glu32
     opengl32
