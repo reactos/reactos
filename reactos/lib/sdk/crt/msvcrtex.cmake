@@ -39,7 +39,7 @@ if(ARCH MATCHES i386)
 list(APPEND MSVCRTEX_SOURCE
     except/i386/chkstk_asm.s
     math/i386/ci.c
-    math/i386/ftol2_asm.S
+    math/i386/ftol2_asm.s
     math/i386/alldiv_asm.s
 )
 endif()
