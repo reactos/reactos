@@ -48,6 +48,8 @@ PVOID	PageLookupTableAddress = NULL;
 ULONG		TotalPagesInLookupTable = 0;
 ULONG		FreePagesInLookupTable = 0;
 ULONG		LastFreePageHint = 0;
+ULONG MmLowestPhysicalPage = 0xFFFFFFFF;
+ULONG MmHighestPhysicalPage = 0;
 
 extern ULONG_PTR	MmHeapPointer;
 extern ULONG_PTR	MmHeapStart;
@@ -75,7 +77,7 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	// Find address for the page lookup table
 	TotalPagesInLookupTable = MmGetAddressablePageCountIncludingHoles();
 	PageLookupTableAddress = MmFindLocationForPageLookupTable(TotalPagesInLookupTable);
-	LastFreePageHint = TotalPagesInLookupTable;
+	LastFreePageHint = MmHighestPhysicalPage;
 
 	if (PageLookupTableAddress == 0)
 	{
@@ -102,20 +104,21 @@ VOID MmInitializeHeap(PVOID PageLookupTable)
 {
 	ULONG PagesNeeded;
 	ULONG HeapStart;
+#ifndef _M_ARM
 	MEMORY_TYPE Type;
 	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	
 	// HACK: Make it so it doesn't overlap kernel space
 	Type = RealPageLookupTable[0x100].PageAllocated;
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x100, 0xFF, LoaderSystemCode);
-
+#endif
 	// Find contigious memory block for HEAP:STACK
 	PagesNeeded = HEAP_PAGES + STACK_PAGES;
 	HeapStart = MmFindAvailablePages(PageLookupTable, TotalPagesInLookupTable, PagesNeeded, FALSE);
-
+#ifndef _M_ARM
 	// Unapply the hack
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x100, 0xFF, Type);
-
+#endif
 	if (HeapStart == 0)
 	{
 		UiMessageBox("Critical error: Can't allocate heap!");
@@ -156,7 +159,7 @@ ULONG MmGetPageNumberFromAddress(PVOID Address)
 ULONG MmGetAddressablePageCountIncludingHoles(VOID)
 {
     MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
-    ULONG EndPage = 0;
+    ULONG PageCount;
 
     //
     // Go through the whole memory map to get max address
@@ -166,18 +169,30 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
         //
         // Check if we got a higher end page address
         //
-        if (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount > EndPage)
+        if (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount > MmHighestPhysicalPage)
         {
             //
-            // Yes, remember it
+            // Yes, remember it if this is real memory
             //
-            EndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+            if (MemoryDescriptor->MemoryType == MemoryFree) MmHighestPhysicalPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+        }
+        
+        //
+        // Check if we got a higher (usable) start page address
+        //
+        if (MemoryDescriptor->BasePage < MmLowestPhysicalPage)
+        {
+            //
+            // Yes, remember it if this is real memory
+            //
+            if (MemoryDescriptor->MemoryType == MemoryFree) MmLowestPhysicalPage = MemoryDescriptor->BasePage;
         }
     }
-
-    DPRINTM(DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning 0x%x\n", EndPage);
-
-    return EndPage;
+    
+    DPRINTM(DPRINT_MEMORY, "lo/hi %lx %lxn", MmLowestPhysicalPage, MmHighestPhysicalPage);
+    PageCount = MmHighestPhysicalPage - MmLowestPhysicalPage;
+    DPRINTM(DPRINT_MEMORY, "MmGetAddressablePageCountIncludingHoles() returning 0x%x\n", PageCount);
+    return PageCount;
 }
 
 PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
@@ -260,7 +275,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     // We will go through and mark pages again according to the memory map
     // But this will mark any holes not described in the map as allocated
     //
-    MmMarkPagesInLookupTable(PageLookupTable, 0, TotalPageCount, LoaderFirmwarePermanent);
+    MmMarkPagesInLookupTable(PageLookupTable, MmLowestPhysicalPage, TotalPageCount, LoaderFirmwarePermanent);
 
     //
     // Parse the whole memory map
@@ -307,9 +322,9 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
             case MemorySpecialMemory:
             {
                 //
-                // Special reserved memory
+                // OS Loader Stack
                 //
-                MemoryMapPageAllocated = LoaderSpecialMemory;
+                MemoryMapPageAllocated = LoaderOsloaderStack;
                 break;
             }
             default:
@@ -343,6 +358,7 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
 
+    StartPage -= MmLowestPhysicalPage;
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
 #if 0
@@ -362,6 +378,7 @@ VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG 
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							Index;
 
+    StartPage -= MmLowestPhysicalPage;
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
 		RealPageLookupTable[Index].PageAllocated = MemoryType;
@@ -416,7 +433,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 
 			if (AvailablePagesSoFar >= PagesNeeded)
 			{
-				return Index;
+				return Index + MmLowestPhysicalPage;
 			}
 		}
 	}
@@ -438,7 +455,7 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 
 			if (AvailablePagesSoFar >= PagesNeeded)
 			{
-				return Index - AvailablePagesSoFar + 1;
+				return Index - AvailablePagesSoFar + 1 + MmLowestPhysicalPage;
 			}
 		}
 	}
@@ -472,7 +489,7 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 
 		if (AvailablePagesSoFar >= PagesNeeded)
 		{
-			return Index;
+			return Index + MmLowestPhysicalPage;
 		}
 	}
 
@@ -488,7 +505,7 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
 	{
 		if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
 		{
-			LastFreePageHint = Index + 1;
+			LastFreePageHint = Index + 1 + MmLowestPhysicalPage;
 			break;
 		}
 	}
@@ -501,6 +518,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, P
 	ULONG							Index;
 
 	StartPage = MmGetPageNumberFromAddress(PageAddress);
+    StartPage -= MmLowestPhysicalPage;
 
 	// Make sure they aren't trying to go past the
 	// end of availabe memory

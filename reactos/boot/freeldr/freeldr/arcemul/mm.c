@@ -30,7 +30,6 @@ static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
     { { MemoryFirmwareTemporary, 0x80, 0x10 }, 4, }, // File system read buffer. FILESYSBUFFER
     { { MemoryFirmwareTemporary, 0x90, 0x10 }, 5, }, // Disk read buffer for int 13h. DISKREADBUFFER
     { { MemoryFirmwarePermanent, 0xA0, 0x60 }, 6, }, // ROM / Video
-    { { MemorySpecialMemory, 0xFFF, 1 }, 7, }, // unusable memory
 #elif __arm__ // This needs to be done per-platform specific way
 
 #endif
@@ -55,7 +54,8 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
         //
         RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
         BiosMemoryMapEntryCount = MachVtbl.GetMemoryMap(BiosMemoryMap,
-            sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
+                                                        sizeof(BiosMemoryMap) /
+                                                        sizeof(BIOS_MEMORY_MAP));
 
         //
         // Copy the entries to our structure
