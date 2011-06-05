@@ -3,6 +3,17 @@ include_directories(include)
 
 add_definitions(-D_CRTBLD)
 
+if(ARCH MATCHES i386)
+    list(APPEND CHKSTK_SOURCE
+        except/i386/chkstk_asm.s
+        except/i386/chkstk_ms.s)
+elseif(ARCH MATCHES powerpc)
+    list(APPEND CHKSTK_SOURCE
+        except/powerpc/chkstk_asm.s)
+endif()
+
+add_library(chkstk ${CHKSTK_SOURCE})
+
 include(crt.cmake)
 include(libcntpr.cmake)
 include(msvcrtex.cmake)

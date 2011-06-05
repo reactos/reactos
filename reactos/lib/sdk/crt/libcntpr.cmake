@@ -65,6 +65,7 @@ list(APPEND LIBCNTPR_SOURCE
 if(ARCH MATCHES i386)
     list(APPEND LIBCNTPR_SOURCE
         except/i386/chkstk_asm.s
+        except/i386/chkstk_ms.s
         except/i386/seh.s
         except/i386/seh_prolog.s
         setjmp/i386/setjmp.s

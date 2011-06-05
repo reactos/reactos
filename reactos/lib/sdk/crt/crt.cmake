@@ -298,7 +298,6 @@ list(APPEND CRT_SOURCE
 
 if(ARCH MATCHES i386)
     list(APPEND CRT_SOURCE
-        except/i386/chkstk_asm.s
         except/i386/prolog.s
         except/i386/seh.s
         except/i386/seh_prolog.s
@@ -311,7 +310,6 @@ if(ARCH MATCHES i386)
         setjmp/i386/setjmp.s)
 elseif(ARCH MATCHES amd64)
     list(APPEND CRT_SOURCE
-        except/amd64/chkstk_asm.s
         except/amd64/seh.s
         float/i386/clearfp.c
         float/i386/cntrlfp.c
@@ -432,7 +430,7 @@ if(ARCH MATCHES amd64)
 endif()
 
 add_library(crt ${CRT_SOURCE})
-
+target_link_libraries(crt chkstk)
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
 add_pch(crt precomp.h)
 add_dependencies(crt psdk asm)
