@@ -31,13 +31,7 @@ link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/sd
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 
-macro(add_pch _target_name _header_filename _src_list)
-    get_filename_component(FILE ${_header_filename} NAME)
-    set(_gch_filename "${_target_name}_${FILE}.gch")
-    add_custom_command(
-        OUTPUT ${_gch_filename}
-        COMMAND echo Ignoring precompiled header
-        DEPENDS ${_header_filename})
+macro(add_pch _target_name _FILE)
 endmacro()
 
 macro(add_linkerflag MODULE _flag)
