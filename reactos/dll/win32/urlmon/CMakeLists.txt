@@ -27,7 +27,6 @@ list(APPEND SOURCE
     mk.c
     protocol.c
     protproxy.c
-    regsvr.c
     sec_mgr.c
     session.c
     umon.c

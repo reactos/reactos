@@ -26,6 +26,8 @@
 
 #define NO_SHLWAPI_REG
 #include "shlwapi.h"
+#include "advpub.h"
+
 #include "wine/debug.h"
 
 #include "urlmon.h"
@@ -187,12 +189,15 @@ HRESULT WINAPI DllCanUnloadNow(void)
  * Urlmon ClassFactory
  */
 typedef struct {
-    const IClassFactoryVtbl *lpClassFactoryVtbl;
+    IClassFactory IClassFactory_iface;
 
     HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
 } ClassFactory;
 
-#define CLASSFACTORY(x)  ((IClassFactory*)  &(x)->lpClassFactoryVtbl)
+static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
+}
 
 static HRESULT WINAPI CF_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppv)
 {
@@ -231,7 +236,7 @@ static ULONG WINAPI CF_Release(IClassFactory *iface)
 static HRESULT WINAPI CF_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
                                         REFIID riid, LPVOID *ppobj)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     HRESULT hres;
     LPUNKNOWN punk;
     
@@ -266,27 +271,27 @@ static const IClassFactoryVtbl ClassFactoryVtbl =
     CF_LockServer
 };
 
-static const ClassFactory FileProtocolCF =
-    { &ClassFactoryVtbl, FileProtocol_Construct};
-static const ClassFactory FtpProtocolCF =
-    { &ClassFactoryVtbl, FtpProtocol_Construct};
-static const ClassFactory GopherProtocolCF =
-    { &ClassFactoryVtbl, GopherProtocol_Construct};
-static const ClassFactory HttpProtocolCF =
-    { &ClassFactoryVtbl, HttpProtocol_Construct};
-static const ClassFactory HttpSProtocolCF =
-    { &ClassFactoryVtbl, HttpSProtocol_Construct};
-static const ClassFactory MkProtocolCF =
-    { &ClassFactoryVtbl, MkProtocol_Construct};
-static const ClassFactory SecurityManagerCF =
-    { &ClassFactoryVtbl, SecManagerImpl_Construct};
-static const ClassFactory ZoneManagerCF =
-    { &ClassFactoryVtbl, ZoneMgrImpl_Construct};
-static const ClassFactory StdURLMonikerCF =
-    { &ClassFactoryVtbl, StdURLMoniker_Construct};
-static const ClassFactory MimeFilterCF =
-    { &ClassFactoryVtbl, MimeFilter_Construct};
- 
+static ClassFactory FileProtocolCF =
+    { { &ClassFactoryVtbl }, FileProtocol_Construct};
+static ClassFactory FtpProtocolCF =
+    { { &ClassFactoryVtbl }, FtpProtocol_Construct};
+static ClassFactory GopherProtocolCF =
+    { { &ClassFactoryVtbl }, GopherProtocol_Construct};
+static ClassFactory HttpProtocolCF =
+    { { &ClassFactoryVtbl }, HttpProtocol_Construct};
+static ClassFactory HttpSProtocolCF =
+    { { &ClassFactoryVtbl }, HttpSProtocol_Construct};
+static ClassFactory MkProtocolCF =
+    { { &ClassFactoryVtbl }, MkProtocol_Construct};
+static ClassFactory SecurityManagerCF =
+    { { &ClassFactoryVtbl }, SecManagerImpl_Construct};
+static ClassFactory ZoneManagerCF =
+    { { &ClassFactoryVtbl }, ZoneMgrImpl_Construct};
+static ClassFactory StdURLMonikerCF =
+    { { &ClassFactoryVtbl }, StdURLMoniker_Construct};
+static ClassFactory MimeFilterCF =
+    { { &ClassFactoryVtbl }, MimeFilter_Construct};
+
 struct object_creation_info
 {
     const CLSID *clsid;
@@ -303,16 +308,16 @@ static const WCHAR wszMk[]   = {'m','k',0};
 
 static const struct object_creation_info object_creation[] =
 {
-    { &CLSID_FileProtocol,            CLASSFACTORY(&FileProtocolCF),    wszFile },
-    { &CLSID_FtpProtocol,             CLASSFACTORY(&FtpProtocolCF),     wszFtp  },
-    { &CLSID_GopherProtocol,          CLASSFACTORY(&GopherProtocolCF),  wszGopher },
-    { &CLSID_HttpProtocol,            CLASSFACTORY(&HttpProtocolCF),    wszHttp },
-    { &CLSID_HttpSProtocol,           CLASSFACTORY(&HttpSProtocolCF),   wszHttps },
-    { &CLSID_MkProtocol,              CLASSFACTORY(&MkProtocolCF),      wszMk },
-    { &CLSID_InternetSecurityManager, CLASSFACTORY(&SecurityManagerCF), NULL    },
-    { &CLSID_InternetZoneManager,     CLASSFACTORY(&ZoneManagerCF),     NULL    },
-    { &CLSID_StdURLMoniker,           CLASSFACTORY(&StdURLMonikerCF),   NULL    },
-    { &CLSID_DeCompMimeFilter,        CLASSFACTORY(&MimeFilterCF),      NULL    }
+    { &CLSID_FileProtocol,            &FileProtocolCF.IClassFactory_iface,    wszFile },
+    { &CLSID_FtpProtocol,             &FtpProtocolCF.IClassFactory_iface,     wszFtp  },
+    { &CLSID_GopherProtocol,          &GopherProtocolCF.IClassFactory_iface,  wszGopher },
+    { &CLSID_HttpProtocol,            &HttpProtocolCF.IClassFactory_iface,    wszHttp },
+    { &CLSID_HttpSProtocol,           &HttpSProtocolCF.IClassFactory_iface,   wszHttps },
+    { &CLSID_MkProtocol,              &MkProtocolCF.IClassFactory_iface,      wszMk },
+    { &CLSID_InternetSecurityManager, &SecurityManagerCF.IClassFactory_iface, NULL    },
+    { &CLSID_InternetZoneManager,     &ZoneManagerCF.IClassFactory_iface,     NULL    },
+    { &CLSID_StdURLMoniker,           &StdURLMonikerCF.IClassFactory_iface,   NULL    },
+    { &CLSID_DeCompMimeFilter,        &MimeFilterCF.IClassFactory_iface,      NULL    }
 };
 
 static void init_session(BOOL init)
@@ -366,6 +371,44 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
+static HRESULT register_inf(BOOL doregister)
+{
+    HRESULT (WINAPI *pRegInstall)(HMODULE hm, LPCSTR pszSection, const STRTABLEA* pstTable);
+    HMODULE hAdvpack;
+
+    static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
+
+    hAdvpack = LoadLibraryW(wszAdvpack);
+    pRegInstall = (void *)GetProcAddress(hAdvpack, "RegInstall");
+
+    return pRegInstall(hProxyDll, doregister ? "RegisterDll" : "UnregisterDll", NULL);
+}
+
+/***********************************************************************
+ *		DllRegisterServer (URLMON.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = URLMON_DllRegisterServer();
+    return SUCCEEDED(hr) ? register_inf(TRUE) : hr;
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (URLMON.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = URLMON_DllUnregisterServer();
+    return SUCCEEDED(hr) ? register_inf(FALSE) : hr;
+}
 
 /***********************************************************************
  *		DllRegisterServerEx (URLMON.@)
@@ -383,7 +426,7 @@ HRESULT WINAPI DllRegisterServerEx(void)
  * Determines if a specified string is a valid URL.
  *
  * PARAMS
- *  pBC        [I] ignored, must be NULL.
+ *  pBC        [I] ignored, should be NULL.
  *  szURL      [I] string that represents the URL in question.
  *  dwReserved [I] reserved and must be zero.
  *
@@ -399,7 +442,7 @@ HRESULT WINAPI IsValidURL(LPBC pBC, LPCWSTR szURL, DWORD dwReserved)
 {
     FIXME("(%p, %s, %d): stub\n", pBC, debugstr_w(szURL), dwReserved);
 
-    if (pBC || dwReserved || !szURL)
+    if (dwReserved || !szURL)
         return E_INVALIDARG;
 
     return S_OK;
@@ -860,5 +903,25 @@ BOOL WINAPI IsLoggingEnabledA(LPCSTR url)
 BOOL WINAPI IsLoggingEnabledW(LPCWSTR url)
 {
     FIXME("(%s)\n", debugstr_w(url));
+    return FALSE;
+}
+
+/***********************************************************************
+ *           URLMON_410 (URLMON.410)
+ *    Undocumented, added in IE8
+ */
+BOOL WINAPI URLMON_410(DWORD unknown1, DWORD unknown2)
+{
+    FIXME("stub: %d %d\n", unknown1, unknown2);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           URLMON_423 (URLMON.423)
+ *    Undocumented, added in IE8
+ */
+BOOL WINAPI URLMON_423(DWORD unknown1, DWORD unknown2, DWORD unknown3, DWORD unknown4)
+{
+    FIXME("stub: %d %d %d %d\n", unknown1, unknown2, unknown3, unknown4);
     return FALSE;
 }

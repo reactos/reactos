@@ -1,0 +1,123 @@
+HKCR
+{
+    NoRemove PROTOCOLS
+    {
+        NoRemove Handler
+        {
+            ForceRemove cdl = s 'CDL: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{3dd53d40-7b8b-11d0-b013-00aa0059ce02}'
+            }
+            ForceRemove file = s 'file:, local: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e7-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove local = s 'file:, local: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e7-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove ftp = s 'ftp: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e3-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove gopher = s 'gopher: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e4-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove http = s 'http: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e2-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove https = s 'https: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e5-baf9-11ce-8c82-00aa004ba90b}'
+            }
+            ForceRemove mk = s 'mk: Asynchronous Pluggable Protocol Handler'
+            {
+                val CLSID = s '{79eac9e6-baf9-11ce-8c82-00aa004ba90b}'
+            }
+        }
+        NoRemove Filter
+        {
+            ForceRemove deflate = s 'AP Deflate Encoding/Decoding Filter'
+            {
+                val CLSID = s '{8f6b0360-b80d-11d0-a9b3-006097942311}'
+            }
+            ForceRemove gzip = s 'AP Deflate Encoding/Decoding Filter'
+            {
+                val CLSID = s '{8f6b0360-b80d-11d0-a9b3-006097942311}'
+            }
+            ForceRemove lzdhtml = s 'AP Deflate Encoding/Decoding Filter'
+            {
+                val CLSID = s '{8f6b0360-b80d-11d0-a9b3-006097942311}'
+            }
+        }
+    }
+}
+HKCU
+{
+    NoRemove Software
+    {
+        NoRemove Microsoft
+        {
+            NoRemove Windows
+            {
+                NoRemove CurrentVersion
+                {
+                    NoRemove 'Internet Settings'
+                    {
+                        val 'User Agent' = s 'Mozilla/4.0 (compatible; MSIE 8.0; Win32)'
+                    }
+                }
+            }
+            NoRemove 'Internet Explorer'
+            {
+                NoRemove Main
+                {
+                    FeatureControl
+                }
+            }
+        }
+    }
+}
+HKLM
+{
+    NoRemove Software
+    {
+        NoRemove Microsoft
+        {
+            NoRemove 'Internet Explorer'
+            {
+                NoRemove Main
+                {
+                    FeatureControl
+                    {
+                        FEATURE_OBJECT_CACHING
+                        FEATURE_ZONE_ELEVATION
+                        FEATURE_MIME_HANDLING
+                        FEATURE_MIME_SNIFFING
+                        FEATURE_WINDOW_RESTRICTIONS
+                        FEATURE_WEBOC_POPUPMANAGEMENT
+                        FEATURE_BEHAVIORS
+                        FEATURE_DISABLE_MK_PROTOCOL
+                        FEATURE_LOCALMACHINE_LOCKDOWN
+                        FEATURE_SECURITYBAND
+                        FEATURE_RESTRICT_ACTIVEXINSTALL
+                        FEATURE_VALIDATE_NAVIGATE_URL
+                        FEATURE_RESTRICT_FILEDOWNLOAD
+                        FEATURE_ADDON_MANAGEMENT
+                        FEATURE_PROTOCOL_LOCKDOWN
+                        FEATURE_HTTP_USERNAME_PASSWORD_DISABLE
+                        FEATURE_SAFE_BINDTOOBJECT
+                        FEATURE_UNC_SAVEDFILECHECK
+                        FEATURE_SSLUX
+                        FEATURE_DISABLE_LEGACY_COMPRESSION
+                        FEATURE_FORCE_ADDR_AND_STATUS
+                        FEATURE_DISABLE_TELNET_PROTOCOL
+                        FEATURE_FEEDS
+                    }
+                }
+            }
+        }
+    }
+}

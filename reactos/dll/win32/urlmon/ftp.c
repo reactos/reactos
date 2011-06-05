@@ -50,12 +50,15 @@ static inline FtpProtocol *impl_from_IWinInetHttpInfo(IWinInetHttpInfo *iface)
     return CONTAINING_RECORD(iface, FtpProtocol, IWinInetHttpInfo_iface);
 }
 
-#define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(FtpProtocol, base, iface)
+static inline FtpProtocol *impl_from_Protocol(Protocol *prot)
+{
+    return CONTAINING_RECORD(prot, FtpProtocol, base);
+}
 
 static HRESULT FtpProtocol_open_request(Protocol *prot, IUri *uri, DWORD request_flags,
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
-    FtpProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    FtpProtocol *This = impl_from_Protocol(prot);
     BSTR url;
     HRESULT hres;
 
@@ -82,7 +85,7 @@ static HRESULT FtpProtocol_end_request(Protocol *prot)
 
 static HRESULT FtpProtocol_start_downloading(Protocol *prot)
 {
-    FtpProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    FtpProtocol *This = impl_from_Protocol(prot);
     DWORD size;
     BOOL res;
 
@@ -99,13 +102,17 @@ static void FtpProtocol_close_connection(Protocol *prot)
 {
 }
 
-#undef ASYNCPROTOCOL_THIS
+static void FtpProtocol_on_error(Protocol *prot, DWORD error)
+{
+    FIXME("(%p) %d - stub\n", prot, error);
+}
 
 static const ProtocolVtbl AsyncProtocolVtbl = {
     FtpProtocol_open_request,
     FtpProtocol_end_request,
     FtpProtocol_start_downloading,
-    FtpProtocol_close_connection
+    FtpProtocol_close_connection,
+    FtpProtocol_on_error
 };
 
 static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
@@ -377,16 +384,28 @@ static HRESULT WINAPI HttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOpti
         void *pBuffer, DWORD *pcbBuffer)
 {
     FtpProtocol *This = impl_from_IWinInetHttpInfo(iface);
-    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+
+    if(!This->base.request)
+        return E_FAIL;
+
+    if(!InternetQueryOptionW(This->base.request, dwOption, pBuffer, pcbBuffer))
+        return S_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
         void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
 {
     FtpProtocol *This = impl_from_IWinInetHttpInfo(iface);
-    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+
+    if(!This->base.request)
+        return E_FAIL;
+
+    if(!HttpQueryInfoW(This->base.request, dwOption, pBuffer, pcbBuffer, pdwFlags))
+        return S_FALSE;
+    return S_OK;
 }
 
 static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {

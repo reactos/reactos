@@ -18,6 +18,7 @@
 @ stdcall CoInternetCreateZoneManager(ptr ptr long)
 @ stub CoInternetGetProtocolFlags
 @ stdcall CoInternetGetSecurityUrl(ptr ptr long long)
+@ stdcall CoInternetGetSecurityUrlEx(ptr ptr long long)
 @ stdcall CoInternetGetSession(long ptr long)
 @ stdcall CoInternetIsFeatureEnabled(long long)
 @ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
@@ -57,6 +58,7 @@
 @ stdcall HlinkNavigateString(ptr wstr)
 @ stdcall HlinkSimpleNavigateToMoniker(ptr wstr wstr ptr ptr ptr long long)
 @ stdcall HlinkSimpleNavigateToString(wstr wstr wstr ptr ptr ptr long long)
+@ stub IEInstallScope
 @ stdcall IsAsyncMoniker(ptr)
 @ stdcall IsLoggingEnabledA(str)
 @ stdcall IsLoggingEnabledW(wstr)
@@ -89,3 +91,6 @@
 @ stdcall UrlMkSetSessionOption(long ptr long long)
 @ stub WriteHitLogging
 @ stub ZonesReInit
+
+410 stdcall @(long long) URLMON_410
+423 stdcall @(long long long long) URLMON_423

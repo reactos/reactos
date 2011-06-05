@@ -21,25 +21,28 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(ProtocolProxy, IInternetProtocol, iface)
+static inline ProtocolProxy *impl_from_IInternetProtocol(IInternetProtocol *iface)
+{
+    return CONTAINING_RECORD(iface, ProtocolProxy, IInternetProtocol_iface);
+}
 
 static HRESULT WINAPI ProtocolProxy_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolSink, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolSink %p)\n", This, ppv);
-        *ppv = PROTSINK(This);
+        *ppv = &This->IInternetProtocolSink_iface;
     }
 
     if(*ppv) {
@@ -53,7 +56,7 @@ static HRESULT WINAPI ProtocolProxy_QueryInterface(IInternetProtocol *iface, REF
 
 static ULONG WINAPI ProtocolProxy_AddRef(IInternetProtocol *iface)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -61,7 +64,7 @@ static ULONG WINAPI ProtocolProxy_AddRef(IInternetProtocol *iface)
 
 static ULONG WINAPI ProtocolProxy_Release(IInternetProtocol *iface)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -84,7 +87,7 @@ static HRESULT WINAPI ProtocolProxy_Start(IInternetProtocol *iface, LPCWSTR szUr
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
           pOIBindInfo, grfPI, dwReserved);
@@ -94,7 +97,7 @@ static HRESULT WINAPI ProtocolProxy_Start(IInternetProtocol *iface, LPCWSTR szUr
 
 static HRESULT WINAPI ProtocolProxy_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
@@ -104,14 +107,14 @@ static HRESULT WINAPI ProtocolProxy_Continue(IInternetProtocol *iface, PROTOCOLD
 static HRESULT WINAPI ProtocolProxy_Abort(IInternetProtocol *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ProtocolProxy_Terminate(IInternetProtocol *iface, DWORD dwOptions)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -120,14 +123,14 @@ static HRESULT WINAPI ProtocolProxy_Terminate(IInternetProtocol *iface, DWORD dw
 
 static HRESULT WINAPI ProtocolProxy_Suspend(IInternetProtocol *iface)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ProtocolProxy_Resume(IInternetProtocol *iface)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -135,7 +138,7 @@ static HRESULT WINAPI ProtocolProxy_Resume(IInternetProtocol *iface)
 static HRESULT WINAPI ProtocolProxy_Read(IInternetProtocol *iface, void *pv,
         ULONG cb, ULONG *pcbRead)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
@@ -145,14 +148,14 @@ static HRESULT WINAPI ProtocolProxy_Read(IInternetProtocol *iface, void *pv,
 static HRESULT WINAPI ProtocolProxy_Seek(IInternetProtocol *iface, LARGE_INTEGER dlibMove,
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ProtocolProxy_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -161,14 +164,12 @@ static HRESULT WINAPI ProtocolProxy_LockRequest(IInternetProtocol *iface, DWORD 
 
 static HRESULT WINAPI ProtocolProxy_UnlockRequest(IInternetProtocol *iface)
 {
-    ProtocolProxy *This = PROTOCOL_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)\n", This);
 
     return IInternetProtocol_UnlockRequest(This->protocol);
 }
-
-#undef PROTOCOL_THIS
 
 static const IInternetProtocolVtbl ProtocolProxyVtbl = {
     ProtocolProxy_QueryInterface,
@@ -186,31 +187,34 @@ static const IInternetProtocolVtbl ProtocolProxyVtbl = {
     ProtocolProxy_UnlockRequest
 };
 
-#define PROTSINK_THIS(iface) DEFINE_THIS(ProtocolProxy, IInternetProtocolSink, iface)
+static inline ProtocolProxy *impl_from_IInternetProtocolSink(IInternetProtocolSink *iface)
+{
+    return CONTAINING_RECORD(iface, ProtocolProxy, IInternetProtocolSink_iface);
+}
 
 static HRESULT WINAPI ProtocolProxySink_QueryInterface(IInternetProtocolSink *iface,
         REFIID riid, void **ppv)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
-    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
+    return IInternetProtocol_QueryInterface(&This->IInternetProtocol_iface, riid, ppv);
 }
 
 static ULONG WINAPI ProtocolProxySink_AddRef(IInternetProtocolSink *iface)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
-    return IInternetProtocol_AddRef(PROTOCOL(This));
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
+    return IInternetProtocol_AddRef(&This->IInternetProtocol_iface);
 }
 
 static ULONG WINAPI ProtocolProxySink_Release(IInternetProtocolSink *iface)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
-    return IInternetProtocol_Release(PROTOCOL(This));
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
+    return IInternetProtocol_Release(&This->IInternetProtocol_iface);
 }
 
 static HRESULT WINAPI ProtocolProxySink_Switch(IInternetProtocolSink *iface,
         PROTOCOLDATA *pProtocolData)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
@@ -220,7 +224,7 @@ static HRESULT WINAPI ProtocolProxySink_Switch(IInternetProtocolSink *iface,
 static HRESULT WINAPI ProtocolProxySink_ReportProgress(IInternetProtocolSink *iface,
         ULONG ulStatusCode, LPCWSTR szStatusText)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
 
     TRACE("(%p)->(%u %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
 
@@ -238,7 +242,7 @@ static HRESULT WINAPI ProtocolProxySink_ReportProgress(IInternetProtocolSink *if
 static HRESULT WINAPI ProtocolProxySink_ReportData(IInternetProtocolSink *iface,
         DWORD grfBSCF, ULONG ulProgress, ULONG ulProgressMax)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
 
     TRACE("(%p)->(%d %u %u)\n", This, grfBSCF, ulProgress, ulProgressMax);
 
@@ -248,14 +252,12 @@ static HRESULT WINAPI ProtocolProxySink_ReportData(IInternetProtocolSink *iface,
 static HRESULT WINAPI ProtocolProxySink_ReportResult(IInternetProtocolSink *iface,
         HRESULT hrResult, DWORD dwError, LPCWSTR szResult)
 {
-    ProtocolProxy *This = PROTSINK_THIS(iface);
+    ProtocolProxy *This = impl_from_IInternetProtocolSink(iface);
 
     TRACE("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
 
     return IInternetProtocolSink_ReportResult(This->protocol_sink, hrResult, dwError, szResult);
 }
-
-#undef PROTSINK_THIS
 
 static const IInternetProtocolSinkVtbl InternetProtocolSinkVtbl = {
     ProtocolProxySink_QueryInterface,
@@ -275,8 +277,8 @@ HRESULT create_protocol_proxy(IInternetProtocol *protocol, IInternetProtocolSink
     if(!sink)
         return E_OUTOFMEMORY;
 
-    sink->lpIInternetProtocolVtbl     = &ProtocolProxyVtbl;
-    sink->lpIInternetProtocolSinkVtbl = &InternetProtocolSinkVtbl;
+    sink->IInternetProtocol_iface.lpVtbl = &ProtocolProxyVtbl;
+    sink->IInternetProtocolSink_iface.lpVtbl = &InternetProtocolSinkVtbl;
     sink->ref = 1;
 
     IInternetProtocol_AddRef(protocol);

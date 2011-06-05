@@ -424,7 +424,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
         LPBC pBC, LPCWSTR szUrl, IUnknown *pUnkOuter, IUnknown **ppUnk,
         IInternetProtocol **ppOInetProt, DWORD dwOption)
 {
-    IInternetProtocolEx *protocol;
+    BindProtocol *protocol;
     HRESULT hres;
 
     TRACE("(%p %s %p %p %p %08x)\n", pBC, debugstr_w(szUrl), pUnkOuter, ppUnk,
@@ -437,7 +437,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
     if(FAILED(hres))
         return hres;
 
-    *ppOInetProt = (IInternetProtocol*)protocol;
+    *ppOInetProt = (IInternetProtocol*)&protocol->IInternetProtocolEx_iface;
     return S_OK;
 }
 
