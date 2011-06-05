@@ -1,6 +1,7 @@
 /*
- * Copyright 2005,2007 YunSong Hwang
- *
+ * Copyright 2003 Mike McCormack for CodeWeavers
+ * Copyright 2005,2007,2010,2011 YunSong Hwang
+  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -18,29 +19,58 @@
 
 #include "resource.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "��Ʈ��ũ ��ȣ �Է�"
+CAPTION "네트워크 암호 입력"
 FONT 9, "MS Shell Dlg"
 {
- LTEXT "����� ����� �̸��� ��ȣ�� �Է��Ͻÿ�:", -1, 40, 6, 150, 15
- LTEXT "���Ͻ�", -1, 40, 26, 50, 10
- LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT "�����", -1, 40, 66, 50, 10
- LTEXT "��ȣ", -1, 40, 86, 50, 10
+ LTEXT "당신의 사용자 이름과 암호를 입력하십시오:", -1, 40, 6, 150, 15
+ LTEXT "프록시", -1, 40, 26, 50, 10
+ LTEXT "영역", -1, 40, 46, 50, 10
+ LTEXT "사용자", -1, 40, 66, 50, 10
+ LTEXT "암호", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "��ȣ �Է�(&S)(�����Ͻÿ�)", IDC_SAVEPASSWORD,
+ CHECKBOX "암호 저장(&S)(안전하지  못함)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Ȯ��", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "���", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "확인", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "취소", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE
+IDD_AUTHDLG DIALOG 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "인증 필요"
+FONT 8, "MS Shell Dlg"
 {
-  IDS_LANCONNECTION "�� ����"
+ LTEXT "당신의 사용자 이름과 암호를 입력하십시오:", -1, 40, 6, 150, 15
+ LTEXT "서버", -1, 40, 26, 50, 10
+ LTEXT "영역", -1, 40, 46, 50, 10
+ LTEXT "사용자", -1, 40, 66, 50, 10
+ LTEXT "암호", -1, 40, 86, 50, 10
+ LTEXT "", IDC_SERVER, 80, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "암호 저장(&S)  (안전하지 못함)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "확인", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "취소", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_INVCERTDLG DIALOG 3, 24, 250, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "보안 경고"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "이 사이트의 인증서에 문제가 있습니다.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "그래도 계속 진행하겠습니까?", -1, 40, 46, 200, 20
+ PUSHBUTTON "예", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "아니오", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

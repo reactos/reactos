@@ -21,6 +21,7 @@
 #include <windef.h>
 #include <winuser.h>
 
+#define IDD_INVCERTDLG   0x398
 #define IDD_AUTHDLG      0x399
 #define IDD_PROXYDLG     0x400
 
@@ -30,5 +31,10 @@
 #define IDC_PASSWORD     0x404
 #define IDC_SAVEPASSWORD 0x405
 #define IDC_SERVER       0x406
+#define IDC_CERT_ERROR   0x407
 
 #define IDS_LANCONNECTION 0x500
+#define IDS_CERT_CA_INVALID   0x501
+#define IDS_CERT_DATE_INVALID 0x502
+#define IDS_CERT_CN_INVALID   0x503
+#define IDS_CERT_ERRORS       0x504

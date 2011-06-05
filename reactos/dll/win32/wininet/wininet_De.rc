@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 Henning Gerhardt
- * Copyright 2009 André Hentschel
+ * Copyright 2009-2010 André Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Netzwerkkennung eingeben"
 FONT 8, "MS Shell Dlg"
@@ -43,7 +43,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Abbrechen", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_AUTHDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Benutzeranmeldung"
 FONT 8, "MS Shell Dlg"
@@ -63,7 +63,14 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Abbrechen", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE
+IDD_INVCERTDLG DIALOG 3, 24, 250, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sicherheits Warnung"
+FONT 8, "MS Shell Dlg"
 {
-  IDS_LANCONNECTION "LAN Verbindung"
+ LTEXT "Es gibt ein Problem mit dem Zertifikat dieser Seite.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Möchten Sie dennoch fortfahren?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Ja", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Nein", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

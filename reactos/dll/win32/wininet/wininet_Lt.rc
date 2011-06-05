@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ * Copyright 2009-2010 Aurimas Fišeras <aurimas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Įveskite tinklo slaptažodį"
 FONT 8, "MS Shell Dlg"
@@ -43,7 +43,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Atsisakyti", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_AUTHDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Reikalingas tapatumo nustatymas"
 FONT 8, "MS Shell Dlg"
@@ -63,7 +63,14 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Atsisakyti", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE
+IDD_INVCERTDLG DIALOG 3, 24, 250, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Įspėjimas apie saugumą"
+FONT 8, "MS Shell Dlg"
 {
-  IDS_LANCONNECTION "Vietinio tinklo ryšys"
+ LTEXT "Yra nesklandumų su šios svetainės liudijimu.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Ar vistiek norite tęsti?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Taip", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Ne", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }
