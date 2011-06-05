@@ -299,7 +299,7 @@ static DWORD comp_length( DWORD len, DWORD flags, WCHAR *comp )
 
 static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
 {
-    static const WCHAR formatW[] = {'%','d',0};
+    static const WCHAR formatW[] = {'%','u',0};
     INTERNET_SCHEME scheme;
 
     *len = 0;
@@ -360,7 +360,7 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
  */
 BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDWORD required )
 {
-    static const WCHAR formatW[] = {'%','d',0};
+    static const WCHAR formatW[] = {'%','u',0};
     static const WCHAR twoslashW[] = {'/','/'};
 
     DWORD len;

@@ -504,7 +504,7 @@ static WCHAR *build_request_path( request_t *request )
             sprintfW( ret, fmt, scheme, request->connect->hostname );
             if (request->connect->hostport)
             {
-                static const WCHAR colonFmt[] = { ':','%','d',0 };
+                static const WCHAR colonFmt[] = { ':','%','u',0 };
 
                 sprintfW( ret + strlenW( ret ), colonFmt,
                     request->connect->hostport );
@@ -870,7 +870,7 @@ static BOOL read_reply( request_t *request );
 static BOOL secure_proxy_connect( request_t *request )
 {
     static const WCHAR verbConnect[] = {'C','O','N','N','E','C','T',0};
-    static const WCHAR fmt[] = {'%','s',':','%','d',0};
+    static const WCHAR fmt[] = {'%','s',':','%','u',0};
     BOOL ret = FALSE;
     LPWSTR path;
     connect_t *connect = request->connect;
@@ -1837,7 +1837,7 @@ static BOOL receive_response( request_t *request, BOOL async )
 
         if (!(request->hdr.disable_flags & WINHTTP_DISABLE_COOKIES)) record_cookies( request );
 
-        if (status == 301 || status == 302)
+        if (status == HTTP_STATUS_MOVED || status == HTTP_STATUS_REDIRECT || status == HTTP_STATUS_REDIRECT_KEEP_VERB)
         {
             if (request->hdr.disable_flags & WINHTTP_DISABLE_REDIRECTS) break;
 

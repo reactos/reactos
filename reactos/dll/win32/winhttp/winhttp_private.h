@@ -204,38 +204,38 @@ typedef struct
     LPDWORD written;
 } write_data_t;
 
-object_header_t *addref_object( object_header_t * );
-object_header_t *grab_object( HINTERNET );
-void release_object( object_header_t * );
-HINTERNET alloc_handle( object_header_t * );
-BOOL free_handle( HINTERNET );
+object_header_t *addref_object( object_header_t * ) DECLSPEC_HIDDEN;
+object_header_t *grab_object( HINTERNET ) DECLSPEC_HIDDEN;
+void release_object( object_header_t * ) DECLSPEC_HIDDEN;
+HINTERNET alloc_handle( object_header_t * ) DECLSPEC_HIDDEN;
+BOOL free_handle( HINTERNET ) DECLSPEC_HIDDEN;
 
-void set_last_error( DWORD );
-DWORD get_last_error( void );
-void send_callback( object_header_t *, DWORD, LPVOID, DWORD );
-void close_connection( request_t * );
+void set_last_error( DWORD ) DECLSPEC_HIDDEN;
+DWORD get_last_error( void ) DECLSPEC_HIDDEN;
+void send_callback( object_header_t *, DWORD, LPVOID, DWORD ) DECLSPEC_HIDDEN;
+void close_connection( request_t * ) DECLSPEC_HIDDEN;
 
-BOOL netconn_close( netconn_t * );
-BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int );
-BOOL netconn_connected( netconn_t * );
-BOOL netconn_create( netconn_t *, int, int, int );
-BOOL netconn_get_next_line( netconn_t *, char *, DWORD * );
-BOOL netconn_init( netconn_t *, BOOL );
-void netconn_unload( void );
-BOOL netconn_query_data_available( netconn_t *, DWORD * );
-BOOL netconn_recv( netconn_t *, void *, size_t, int, int * );
-BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int );
-BOOL netconn_secure_connect( netconn_t *, WCHAR * );
-BOOL netconn_send( netconn_t *, const void *, size_t, int, int * );
-DWORD netconn_set_timeout( netconn_t *, BOOL, int );
-const void *netconn_get_certificate( netconn_t * );
-int netconn_get_cipher_strength( netconn_t * );
+BOOL netconn_close( netconn_t * ) DECLSPEC_HIDDEN;
+BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int ) DECLSPEC_HIDDEN;
+BOOL netconn_connected( netconn_t * ) DECLSPEC_HIDDEN;
+BOOL netconn_create( netconn_t *, int, int, int ) DECLSPEC_HIDDEN;
+BOOL netconn_get_next_line( netconn_t *, char *, DWORD * ) DECLSPEC_HIDDEN;
+BOOL netconn_init( netconn_t *, BOOL ) DECLSPEC_HIDDEN;
+void netconn_unload( void ) DECLSPEC_HIDDEN;
+BOOL netconn_query_data_available( netconn_t *, DWORD * ) DECLSPEC_HIDDEN;
+BOOL netconn_recv( netconn_t *, void *, size_t, int, int * ) DECLSPEC_HIDDEN;
+BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int ) DECLSPEC_HIDDEN;
+BOOL netconn_secure_connect( netconn_t *, WCHAR * ) DECLSPEC_HIDDEN;
+BOOL netconn_send( netconn_t *, const void *, size_t, int, int * ) DECLSPEC_HIDDEN;
+DWORD netconn_set_timeout( netconn_t *, BOOL, int ) DECLSPEC_HIDDEN;
+const void *netconn_get_certificate( netconn_t * ) DECLSPEC_HIDDEN;
+int netconn_get_cipher_strength( netconn_t * ) DECLSPEC_HIDDEN;
 
-BOOL set_cookies( request_t *, const WCHAR * );
-BOOL add_cookie_headers( request_t * );
-BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD );
-void delete_domain( domain_t * );
-BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT port );
+BOOL set_cookies( request_t *, const WCHAR * ) DECLSPEC_HIDDEN;
+BOOL add_cookie_headers( request_t * ) DECLSPEC_HIDDEN;
+BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD ) DECLSPEC_HIDDEN;
+void delete_domain( domain_t * ) DECLSPEC_HIDDEN;
+BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT port ) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc( SIZE_T size )
 {
