@@ -139,6 +139,13 @@ GdiPoolAllocate(
         /* Get a free section */
         ple = pPool->leReadyList.Flink;
         pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leReadyLink);
+        if (pSection->cAllocCount >= pPool->cSlotsPerSection)
+        {
+            DPRINT1("pSection->cAllocCount=%ld, pPool->cSlotsPerSection=%ld\n",
+                    pSection->cAllocCount, pPool->cSlotsPerSection);
+            DBG_DUMP_EVENT_LIST(&pPool->slhLog);
+            ASSERT(FALSE);
+        }
         ASSERT(pSection->cAllocCount < pPool->cSlotsPerSection);
     }
     else
