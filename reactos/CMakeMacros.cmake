@@ -150,7 +150,11 @@ function(add_cd_file)
         else()
             #add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
+            if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
+            else()
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${_CD_FILE}\" ${_num}\n")
+            endif()
             if(_CD_TARGET)
                 #manage dependency
                 add_dependencies(reactos_cab ${_CD_TARGET})
