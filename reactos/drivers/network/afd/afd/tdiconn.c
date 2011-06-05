@@ -38,7 +38,14 @@ UINT TaLengthOfAddress( PTA_ADDRESS Addr ) {
 }
 
 UINT TaLengthOfTransportAddress( PTRANSPORT_ADDRESS Addr ) {
-    UINT AddrLen = 2 * sizeof( ULONG ) + Addr->Address[0].AddressLength;
+    UINT AddrLen = sizeof(ULONG) + TaLengthOfAddress(&Addr->Address[0]);
+    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    return AddrLen;
+}
+
+UINT TaLengthOfTransportAddressByType(UINT AddressType)
+{
+    UINT AddrLen = sizeof(ULONG) + 2 * sizeof(USHORT) + TdiAddressSizeFromType(AddressType);
     AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
     return AddrLen;
 }
@@ -75,6 +82,25 @@ PTRANSPORT_ADDRESS TaCopyTransportAddress( PTRANSPORT_ADDRESS OtherAddress ) {
 		TaCopyTransportAddressInPlace( A, OtherAddress );
 
 	return A;
+}
+
+PTRANSPORT_ADDRESS TaBuildNullTransportAddress(UINT AddressType)
+{
+    UINT AddrLen;
+    PTRANSPORT_ADDRESS A;
+
+    AddrLen = TaLengthOfTransportAddressByType(AddressType);
+    A = ExAllocatePool(NonPagedPool, AddrLen);
+
+    if (A)
+    {
+        A->TAAddressCount = 1;
+        A->Address[0].AddressLength = TdiAddressSizeFromType(AddressType);
+        A->Address[0].AddressType = AddressType;
+        RtlZeroMemory(A->Address[0].Address, A->Address[0].AddressLength);
+    }
+
+    return A;
 }
 
 NTSTATUS TdiBuildNullConnectionInfoInPlace

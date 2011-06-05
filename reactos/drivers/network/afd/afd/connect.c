@@ -407,7 +407,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_CREATED:
 	if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
 	FCB->LocalAddress =
-	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
+	    TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
 
 	if( FCB->LocalAddress ) {
 	    Status = WarmSocketForBind( FCB );
