@@ -123,7 +123,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
 		_SEH2_TRY {
 		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
-				         Write ? IoModifyAccess : IoReadAccess );
+				         Write ? IoReadAccess : IoModifyAccess );
 		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 		    LockFailed = TRUE;
 		} _SEH2_END;
