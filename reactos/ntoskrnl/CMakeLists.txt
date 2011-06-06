@@ -423,7 +423,11 @@ endif()
 
 add_executable(ntoskrnl ${SOURCE})
 
-set_entrypoint(ntoskrnl KiSystemStartup@4)
+if (ARCH MATCHES i386)
+  set_entrypoint(ntoskrnl KiSystemStartup@4)
+else()
+  set_entrypoint(ntoskrnl KiSystemStartup)
+endif()
 set_subsystem(ntoskrnl native)
 
 if(MSVC)

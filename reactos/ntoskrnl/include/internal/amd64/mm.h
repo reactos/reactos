@@ -142,6 +142,9 @@ MiIsPdeForAddressValid(PVOID Address)
             (MiAddressToPde(Address)->u.Hard.Valid));
 }
 
+#define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
+#define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
+
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG_PTR)(v)) / (512 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
 #define ADDR_TO_PTE_OFFSET(v)  ((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE)

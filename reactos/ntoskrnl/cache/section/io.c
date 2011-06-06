@@ -71,9 +71,10 @@ MiSimpleReadComplete
  PIRP Irp,
  PVOID Context)
 {
+    PMDL Mdl = Irp->MdlAddress;
+
    /* Unlock MDL Pages, page 167. */
 	DPRINT("MiSimpleReadComplete %x\n", Irp);
-    PMDL Mdl = Irp->MdlAddress;
     while (Mdl)
     {
 		DPRINT("MDL Unlock %x\n", Mdl);

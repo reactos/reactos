@@ -259,7 +259,6 @@ ENDM
 
 /* FUNCTIONS *****************************************************************/
 
-.text
 .code64
 
 ALIGN 8
@@ -907,6 +906,8 @@ PUBLIC KiUnexpectedInterrupt
 .ENDP KiUnexpectedInterrupt
 
 #ifdef _MSC_VER
+#undef lgdt
+#undef lidt
 
 //void __lgdt(void *Source);
 PUBLIC __lgdt

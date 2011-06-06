@@ -10,7 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-
 #include <ksamd64.inc>
 
 /* FUNCTIONS ****************************************************************/
@@ -166,7 +165,7 @@ KiSwapContext:
     mov [rsp+0], rbp
 
     /* Get the PCR */
-    mov rbx, gs:[KPCR_SELF]
+    mov rbx, gs:[PcSelf]
 
     /* Get the current thread */
     mov rdi, rcx

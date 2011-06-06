@@ -480,7 +480,7 @@ ULONG
 ExGetCountFastReference(IN EX_FAST_REF FastRef)
 {
     /* Return the reference count */
-    return FastRef.RefCnt;
+    return (ULONG)FastRef.RefCnt;
 }
 
 FORCEINLINE
