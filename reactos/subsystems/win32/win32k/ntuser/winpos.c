@@ -1624,6 +1624,7 @@ co_WinPosSearchChildren(
                 if(pwndChild != NULL)
                 {
                     /* We found a window. Don't send any more WM_NCHITTEST messages */
+                    ExFreePool(List);
                     UserDereferenceObject(ScopeWin);
                     return pwndChild;
                 }
