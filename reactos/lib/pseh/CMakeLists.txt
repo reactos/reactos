@@ -19,10 +19,17 @@ if(NOT MSVC)
 
 else()
 
-    list(APPEND SOURCE
-        dummy.c
-        i386/seh.s
-        i386/seh_prolog.s)
+    if(ARCH MATCHES i386)
+        list(APPEND SOURCE
+            dummy.c
+            i386/seh.s
+            i386/seh_prolog.s)
+    elseif(ARCH MATCHES amd64)
+        list(APPEND SOURCE
+            dummy.c
+            amd64/seh.s
+            amd64/seh_prolog.s)
+    endif()
 
     add_library(pseh ${SOURCE})
     add_dependencies(pseh asm)
