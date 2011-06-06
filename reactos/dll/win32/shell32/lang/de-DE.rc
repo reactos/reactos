@@ -660,9 +660,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Das Objekt '%1' kann nicht in den Papierkorb verschoben werden. Möchten Sie es stattdessen löschen?"
 	IDS_OVERWRITEFILE_TEXT      "Dieser Ordner enthält bereits eine Datei namens '%1'.\n\nWollen Sie diese überschreiben?"
 	IDS_OVERWRITEFILE_CAPTION   "Bestätigung: Datei überschreiben"
-	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\n"\
-		"Wenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\n"\
-		"im gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
+	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\nWenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\nim gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Neu starten"

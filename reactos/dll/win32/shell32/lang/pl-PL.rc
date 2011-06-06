@@ -663,10 +663,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Nie mogê przenieœæ elementu '%1' do Kosza. Czy chcesz go zamiast tego usun¹æ?"
 	IDS_OVERWRITEFILE_TEXT      "Ten folder zawiera ju¿ plik o nazwie '%1'.\n\nCzy chcesz go zast¹piæ?"
 	IDS_OVERWRITEFILE_CAPTION   "PotwierdŸ zast¹pienie pliku"
-	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\n"\
-		"Je¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\n"\
-		"w wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\n"\
-		"lub skopiowaæ folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ten folder zawiera ju¿ katalog o nazwie '%1'.\n\nJe¿eli w docelowym folderze wyst¹pi¹ pliki o takich samych nazwach jak\nw wybranym folderze, to zostan¹ one zast¹pione. Czy chcesz mimo to przenieœæ\nlub skopiowaæ folder?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Uruchom ponownie"

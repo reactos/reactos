@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
 	IDS_OVERWRITEFILE_TEXT      "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmar substituição de ficheiro"
-	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\n"\
-		"Se os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\n"\
-		"pasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\n"\
-		"a pasta?"
+	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"

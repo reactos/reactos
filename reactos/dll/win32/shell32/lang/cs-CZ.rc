@@ -643,9 +643,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Položka '%1' nemùže být pøesunuta do Koše. Chcete ji místo toho smazat?"
 	IDS_OVERWRITEFILE_TEXT      "Tato složka již obsahuje soubor s názvem '%1'.\n\nChcete jej pøepsat?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdit pøepsání souboru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tato složka již obsahuje složku s názvem '%1'.\n\n"\
-		"Pokud mají soubory v cílové složce stejné názvy jako soubory ve zvolené\n"\
-		"složce, budou pøepsány. Opravdu chcete pøesunout nebo zkopírovat tuto složku?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tato složka již obsahuje složku s názvem '%1'.\n\nPokud mají soubory v cílové složce stejné názvy jako soubory ve zvolené\nsložce, budou pøepsány. Opravdu chcete pøesunout nebo zkopírovat tuto složku?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Restartovat"

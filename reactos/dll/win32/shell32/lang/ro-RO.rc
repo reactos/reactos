@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Elementul '%1' nu poate fi trimit la gunoi. Vreți să îl ștergeți definitiv în schimb?"
 	IDS_OVERWRITEFILE_TEXT      "Acest dosar deja conține un fișier numit '%1'.\n\nVreți să îl înlocuiți"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmare înlocuire fișier"
-	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\n"\
-		"Dacă fișierele din dosarul de destinație au același nume ca cele din\n"\
-		"dosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\n"\
-		"mutați dosarul?"
+	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\nmutați dosarul?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Repornire"

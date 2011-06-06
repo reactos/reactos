@@ -668,10 +668,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "El elemento '%1' no puede ser enviado a la Papelera de reciclaje. ¿En vez de ello ¿Desea borrarlo?"
 	IDS_OVERWRITEFILE_TEXT      "Esta carpeta ya contiene un archivo con el nombre '%1'.\n\n¿Desea reemplazar el archivo existente?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmar el reemplazo de archivo"
-	IDS_OVERWRITEFOLDER_TEXT    "Esta carpeta ya contiene una carpeta con el nombre '%1'.\n\n"\
-		"Si los archivos de la carpeta existente tienen el mismo nombre que los\n"\
-		"archivos de la carpeta que está moviendo o copiando, serán\n"\
-		"reemplazados. ¿Desea mover o copiar la carpeta de todas formas?"
+	IDS_OVERWRITEFOLDER_TEXT    "Esta carpeta ya contiene una carpeta con el nombre '%1'.\n\nSi los archivos de la carpeta existente tienen el mismo nombre que los\narchivos de la carpeta que está moviendo o copiando, serán\nreemplazados. ¿Desea mover o copiar la carpeta de todas formas?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"

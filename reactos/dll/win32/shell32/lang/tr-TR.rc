@@ -655,10 +655,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "'%1' adlý öðe çöpe gönderilemiyor. Tamamen silmek ister misiniz?"
 	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
 	IDS_OVERWRITEFILE_CAPTION   "Dosya Üzerine Yazmayý Onayla"
-	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Yeniden Baþlat"

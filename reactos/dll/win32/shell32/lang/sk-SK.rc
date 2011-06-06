@@ -661,10 +661,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Poloka '%1' nemôe by odoslaná do koša. Chcete ju namiesto toho vymaza?"
 	IDS_OVERWRITEFILE_TEXT      "Tento prieèinok u obsahuje súbor s názvom '%1'.\n\nChcete ho nahradi?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdenie prepísania súboru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tento prieèinok u obsahuje prieèinok s názvom '%1'.\n\n"\
-		"Ak budú ma súbory v cie¾ovom prieèinku rovnaké názvy ako súbory\n"\
-		"vo vybranom prieèinku, tak budú nahradené. Stále chcete presunú\n"\
-		"alebo skopírova prieèinok?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tento prieèinok u obsahuje prieèinok s názvom '%1'.\n\nAk budú ma súbory v cie¾ovom prieèinku rovnaké názvy ako súbory\nvo vybranom prieèinku, tak budú nahradené. Stále chcete presunú\nalebo skopírova prieèinok?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reštartova"
