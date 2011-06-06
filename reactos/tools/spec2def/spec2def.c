@@ -470,7 +470,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             }
             else if (CompareToken(pc, "-i386"))
             {
-                if (giArch == ARCH_X86) included = 0;
+                if (giArch != ARCH_X86) included = 0;
             }
             else if (CompareToken(pc, "-private"))
             {
