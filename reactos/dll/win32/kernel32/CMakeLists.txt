@@ -114,7 +114,7 @@ add_library(kernel32 SHARED ${SOURCE})
 set_entrypoint(kernel32 DllMain@12)
 set_image_base(kernel32 ${baseaddress_kernel32})
 
-target_link_libraries(kernel32 ${PSEH_LIB})
+target_link_libraries(kernel32 chkstk ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)

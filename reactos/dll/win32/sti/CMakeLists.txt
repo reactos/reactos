@@ -36,6 +36,7 @@ add_importlibs(sti
     oleaut32
     rpcrt4
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

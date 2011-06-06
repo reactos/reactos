@@ -1,4 +1,8 @@
 
 add_library(vfatxlib fatx.c vfatxlib.c)
-add_dependencies(vfatxlib psdk)
 
+if(NOT MSVC)
+    target_link_libraries(vfatxlib -lgcc)
+endif()
+
+add_dependencies(vfatxlib psdk)

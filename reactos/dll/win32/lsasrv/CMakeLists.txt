@@ -28,7 +28,7 @@ target_link_libraries(lsasrv
     wine
     ${PSEH_LIB})
 
-add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
+add_importlibs(lsasrv rpcrt4 msvcrt kernel32 ntdll)
 add_dependencies(lsasrv psdk)
 add_cd_file(TARGET lsasrv DESTINATION reactos/system32 FOR all)
 add_importlib_target(lsasrv.spec)
