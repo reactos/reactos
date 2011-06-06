@@ -52,4 +52,4 @@ add_importlibs(riched20
 
 add_importlib_target(riched20.spec)
 
-add_cab_target(riched20 1)
+add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)

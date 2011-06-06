@@ -27,4 +27,4 @@ add_importlibs(slayer
 
 add_pch(slayer ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cab_target(slayer 1)
+add_cd_file(TARGET slayer DESTINATION reactos/system32 FOR all)

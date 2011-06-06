@@ -13,6 +13,7 @@
 #include "rossympriv.h"
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <pseh/pseh.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -29,6 +30,12 @@ RosSymFreeMemUM(PVOID Area)
   RtlFreeHeap(RtlGetProcessHeap(), 0, Area);
 }
 
+static BOOLEAN
+RosSymGetMemUM(ULONG_PTR *Target, PVOID SourceMem, ULONG Size)
+{
+  return FALSE;
+}
+
 VOID
 RosSymInitUserMode(VOID)
 {
@@ -37,7 +44,8 @@ RosSymInitUserMode(VOID)
       RosSymAllocMemUM,
       RosSymFreeMemUM,
       RosSymZwReadFile,
-      RosSymZwSeekFile
+      RosSymZwSeekFile,
+	  RosSymGetMemUM
     };
 
   RosSymInit(&KmCallbacks);

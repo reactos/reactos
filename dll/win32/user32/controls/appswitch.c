@@ -2,14 +2,15 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/win32csr/appswitch.c
+ * FILE:            dll/win32/user32/controls/appswitch.c
  * PURPOSE:         app switching functionality
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
 
-#define NDEBUG
-#include "w32csr.h"
-#include <debug.h>
+#include <user32.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 typedef struct APPSWITCH_ITEM
 {
@@ -55,7 +56,7 @@ EnumWindowEnumProc(
         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, dwPid);
         if (hProcess)
         {
-            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
+//            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
             {
                 szFileName[MAX_PATH-1] = L'\0';
                 PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
@@ -70,7 +71,7 @@ EnumWindowEnumProc(
     /* get the text length */
     Length = SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
     /* allocate item structure for it */
-    pItem = (PAPPSWITCH_ITEM)HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(APPSWITCH_ITEM) + Length * sizeof(WCHAR));
+//    pItem = (PAPPSWITCH_ITEM)HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(APPSWITCH_ITEM) + Length * sizeof(WCHAR));
     if (!pItem)
         return TRUE;
     if (Length)
@@ -165,7 +166,7 @@ KeyboardHookProc(
                 /* FIXME
                  * launch window
                  */
-                DPRINT1("launch alt-tab window\n");
+                FIXME("launch alt-tab window\n");
             }
             else
             {
@@ -205,7 +206,7 @@ PaintAppWindows(HWND hwndDlg, HDC hDc)
             SetRect(&Rect, X-5, Y-5, X + XSize + 5, Y + YSize + 5);
             FillRect(hDc, &Rect, hBrush);
             DeleteObject((HGDIOBJ)hBrush);
-            SendDlgItemMessageW(hwndDlg, IDC_STATIC_CUR_APP, WM_SETTEXT, 0, (LPARAM)pCurItem->szText);
+//            SendDlgItemMessageW(hwndDlg, IDC_STATIC_CUR_APP, WM_SETTEXT, 0, (LPARAM)pCurItem->szText);
         }
 
         DrawIcon(hDc, X, Y, pCurItem->hIcon);
@@ -223,7 +224,7 @@ DestroyAppWindows()
     {
         pNextItem = pCurItem->Next;
         DestroyIcon(pCurItem->hIcon);
-        HeapFree(Win32CsrApiHeap, 0, pCurItem);
+//        HeapFree(Win32CsrApiHeap, 0, pCurItem);
         pCurItem = pNextItem;
     }
     pRoot = NULL;
@@ -265,5 +266,5 @@ WINAPI
 InitializeAppSwitchHook()
 {
     hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);
-    DPRINT("InitializeAppSwitchHook hhk %p\n", hhk);
+    TRACE("InitializeAppSwitchHook hhk %p\n", hhk);
 }

@@ -67,8 +67,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sök...",              CMD_SEARCH
         MENUITEM "&Sök nästa\tF3",      CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H",     CMD_REPLACE
-        MENUITEM "Go To...\tCtrl+G",    CMD_GOTO
+        MENUITEM "Ersätt\tCtrl+H",     CMD_REPLACE
+        MENUITEM "Gå Till...\tCtrl+G",    CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Markera &allt",       CMD_SELECT_ALL
         MENUITEM "&Tid/datum\tF5",      CMD_TIME_DATE
@@ -78,9 +78,9 @@ BEGIN
         MENUITEM "&Automatiskt radbyte", CMD_WRAP
         MENUITEM "&Font...",             CMD_FONT
     END
-    POPUP "&View"
+    POPUP "&Visa"
     BEGIN
-        MENUITEM "Status&bar", CMD_STATUSBAR
+        MENUITEM "Status&rad", CMD_STATUSBAR
     END
     POPUP "&Hjälp"
     BEGIN
@@ -88,7 +88,7 @@ BEGIN
         MENUITEM "&Sök...",                 CMD_HELP_SEARCH
         MENUITEM "Anvisningar för hjälpen", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About",                  CMD_ABOUT
+        MENUITEM "Om &Anteckningar",        CMD_ABOUT
         MENUITEM "Inf&ormation...",         CMD_ABOUT_WINE
     END
 END
@@ -100,9 +100,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Skrivarinställningar"
 BEGIN
-LTEXT    "&Huvudnot:",  0x140,   10, 07, 40, 15
+LTEXT    "&Sidhuvud:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Fotnot:",  0x142,   10, 24, 40, 15
+LTEXT    "&Sidfot:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "Marginaler:",      0x144,     10, 43,160, 45
@@ -125,36 +125,36 @@ DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Encoding"
+CAPTION "Kodning"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Encoding:",0x155,5,2,41,12
+LTEXT           "Kodning:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Endlines:",0x156,5,20,41,12
+LTEXT           "Slutrader:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Goto line"
+CAPTION "Gå till rad"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "Radnummer:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Avbryt", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "Om ReactOS Anteckningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
+    CONTROL         "ReactOS Anteckningar v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Stäng",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL

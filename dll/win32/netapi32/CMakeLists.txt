@@ -28,5 +28,5 @@ target_link_libraries(netapi32 wine)
 
 add_importlibs(netapi32 iphlpapi ws2_32 advapi32 msvcrt kernel32 ntdll)
 
-add_cab_target(netapi32 1)
+add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(netapi32.spec)

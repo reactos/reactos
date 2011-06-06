@@ -17,4 +17,4 @@ target_link_libraries(slbcsp wine)
 
 add_importlibs(slbcsp msvcrt kernel32 ntdll)
 
-add_cab_target(slbcsp 1)
+add_cd_file(TARGET slbcsp DESTINATION reactos/system32 FOR all)

@@ -25,9 +25,9 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Detta verktyget rapporterar detaljerad information om ReactX komponenter och enheter som är installerade på ditt system.", -1, 10, 10, 443, 17
-    LTEXT "Om du vet vilket område som skapar problemer, välger du den aktuella kategorin ovanför. Om inte, kan du använda knappen ""Nästa sida"" nedanför för att besöka alla sidorna sekventiellt.", -1, 10, 30, 443, 25
+    LTEXT "Om du vet vilket område som skapar problem, kan du klicka på motsvarande flik ovanför. Om inte, kan du använda knappen ""Nästa sida"" nedanför för att besöka alla sidorna sekventiellt.", -1, 10, 30, 443, 25
     GROUPBOX "System Information", -1, 10, 55, 443, 130, SS_RIGHT
-    LTEXT "Nuvarende Datum/Tid:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Aktuellt Datum/Tid:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Datornamn:", -1, 70, 80, 80, 10, SS_RIGHT
     LTEXT "Operativsystem:", -1, 70, 90, 80, 10, SS_RIGHT
     LTEXT "Språk:", -1, 70, 100, 80, 10, SS_RIGHT
@@ -191,8 +191,8 @@ BEGIN
 	IDS_FORMAT_UNIPROC "%s (%u processor)"
 	IDS_FORMAT_MPPROC  "%s (%u procesorer)"
 	IDS_VERSION_UNKNOWN "Okänd version"
-	IDS_DEVICE_STATUS_ATTACHED "Kopplad till"
-	IDS_DEVICE_STATUS_MISSING "Kopplad från"
+	IDS_DEVICE_STATUS_ATTACHED "Ansluten"
+	IDS_DEVICE_STATUS_MISSING "Saknas"
 	IDS_DEVICE_STATUS_UNKNOWN "Okänd"
 	IDS_DEVICE_NAME "Enhetsnamn"
 	IDS_DEVICE_STATUS "Status"
@@ -210,10 +210,10 @@ BEGIN
 	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
 	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
 	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
-	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling for DirectPlay"
-	IDS_DIRECTPLAY_IPXCONN "IPX koppling for DirectPlay"
-	IDS_DIRECTPLAY_MODEMCONN "Modem koppling for DirectPlay"
-	IDS_DIRECTPLAY_SERIALCONN "Serial kopplig for DirectPlay"
+	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP koppling för DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "IPX koppling för DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "Modemkoppling för DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "Seriell kopplig för DirectPlay"
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Fel"
 	IDS_DDTEST_ERROR "Testet misslyckes!"

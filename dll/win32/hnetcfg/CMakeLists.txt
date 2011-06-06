@@ -32,4 +32,4 @@ add_importlibs(hnetcfg
     kernel32
     ntdll)
 
-add_cab_target(hnetcfg 1)
+add_cd_file(TARGET hnetcfg DESTINATION reactos/system32 FOR all)

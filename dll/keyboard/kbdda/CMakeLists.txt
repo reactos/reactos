@@ -9,4 +9,4 @@ set_entrypoint(kbdda 0)
 
 add_dependencies(kbdda psdk)
 
-add_cab_target(kbdda 1)
+add_cd_file(TARGET kbdda DESTINATION reactos/system32 FOR all)

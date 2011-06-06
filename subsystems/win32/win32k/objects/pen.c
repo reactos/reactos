@@ -29,22 +29,15 @@
 
 PBRUSH
 FASTCALL
-PEN_LockPen(HGDIOBJ hBMObj)
+PEN_ShareLockPen(HGDIOBJ hobj)
 {
-   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
-   else
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
-}
+    if (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE &&
+        GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE)
+    {
+        return NULL;
+    }
 
-PBRUSH
-FASTCALL
-PEN_ShareLockPen(HGDIOBJ hBMObj)
-{
-   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
-      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
-   else
-      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
+    return (PBRUSH)GDIOBJ_ReferenceObjectByHandle(hobj, GDIObjType_BRUSH_TYPE);
 }
 
 HPEN APIENTRY
@@ -189,27 +182,23 @@ IntGdiExtCreatePen(
 ExitCleanup:
    EngSetLastError(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
-   PEN_UnlockPen(pbrushPen);
-   if (bOldStylePen)
-      PEN_FreePenByHandle(hPen);
-   else
-      PEN_FreeExtPenByHandle(hPen);
+   GDIOBJ_vDeleteObject(&pbrushPen->BaseObject);
    return NULL;
 }
 
 VOID FASTCALL
 IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color)
 {
-  PBRUSH pbrushPen;
+  PBRUSH pbrPen;
 
-  pbrushPen = PEN_LockPen(hPen);
-  if (pbrushPen)
+  pbrPen = PEN_ShareLockPen(hPen);
+  if (pbrPen)
   {
-    if (pbrushPen->flAttrs & GDIBRUSH_IS_SOLID)
+    if (pbrPen->flAttrs & GDIBRUSH_IS_SOLID)
     {
-      pbrushPen->BrushAttr.lbColor = Color & 0xFFFFFF;
+      pbrPen->BrushAttr.lbColor = Color & 0xFFFFFF;
     }
-    PEN_UnlockPen(pbrushPen);
+    PEN_ShareUnlockPen(pbrPen);
   }
 }
 

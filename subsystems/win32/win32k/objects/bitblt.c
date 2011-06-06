@@ -64,23 +64,19 @@ NtGdiAlphaBlend(
     DPRINT("Locking DCs\n");
     ahDC[0] = hDCDest;
     ahDC[1] = hDCSrc ;
-    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
-    DCDest = apObj[0];
-    DCSrc = apObj[1];
-
-    if ((NULL == DCDest) || (NULL == DCSrc))
+    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
     }
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
 
     if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+        GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+        GDIOBJ_vUnlockObject(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
@@ -112,8 +108,8 @@ NtGdiAlphaBlend(
         !SourceRect.right ||
         !SourceRect.bottom)
     {
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+        GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+        GDIOBJ_vUnlockObject(&DCDest->BaseObject);
         return TRUE;
     }
 
@@ -153,8 +149,8 @@ NtGdiAlphaBlend(
 leave :
     DPRINT("Finishing blit\n");
     DC_vFinishBlit(DCDest, DCSrc);
-    GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+    GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+    GDIOBJ_vUnlockObject(&DCDest->BaseObject);
 
     return bResult;
 }
@@ -216,23 +212,19 @@ NtGdiTransparentBlt(
     DPRINT("Locking DCs\n");
     ahDC[0] = hdcDst;
     ahDC[1] = hdcSrc ;
-    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
-    DCDest = apObj[0];
-    DCSrc = apObj[1];
-
-    if ((NULL == DCDest) || (NULL == DCSrc))
+    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
     }
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
 
     if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+        GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+        GDIOBJ_vUnlockObject(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
@@ -289,8 +281,8 @@ NtGdiTransparentBlt(
 
 done:
     DC_vFinishBlit(DCDest, DCSrc);
-    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-    GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+    GDIOBJ_vUnlockObject(&DCDest->BaseObject);
+    GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
 
     return Ret;
 }
@@ -330,11 +322,16 @@ NtGdiMaskBlt(
     UsesMask = ROP_USES_MASK(dwRop);
 
     //DPRINT1("dwRop : 0x%08x\n", dwRop);
+    if (!hdcDest || (UsesSource && !hdcSrc))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Take care of mask bitmap */
     if(hbmMask)
     {
-        psurfMask = SURFACE_LockSurface(hbmMask);
+        psurfMask = SURFACE_ShareLockSurface(hbmMask);
         if(!psurfMask)
         {
             EngSetLastError(ERROR_INVALID_HANDLE);
@@ -352,14 +349,14 @@ NtGdiMaskBlt(
         if(gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
-            SURFACE_UnlockSurface(psurfMask);
+            SURFACE_ShareUnlockSurface(psurfMask);
             return FALSE;
         }
     }
     else if(psurfMask)
     {
         DPRINT1("Getting Mask bitmap without needing it?\n");
-        SURFACE_UnlockSurface(psurfMask);
+        SURFACE_ShareUnlockSurface(psurfMask);
         psurfMask = NULL;
     }
     MaskPoint.x = xMask;
@@ -368,11 +365,17 @@ NtGdiMaskBlt(
     /* Take care of source and destination bitmap */
     DPRINT("Locking DCs\n");
     ahDC[0] = hdcDest;
-    ahDC[1] = hdcSrc ;
-    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
+    ahDC[1] = UsesSource ? hdcSrc : NULL;
+    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
+    {
+        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
+    ASSERT(DCDest);
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
@@ -390,12 +393,7 @@ NtGdiMaskBlt(
 
     if (UsesSource)
     {
-        if (NULL == DCSrc)
-        {
-            DC_UnlockDc(DCDest);
-            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hdcSrc);
-            return FALSE;
-        }
+        ASSERT(DCSrc);
         if (DCSrc->dctype == DC_TYPE_INFO)
         {
             DC_UnlockDc(DCDest);
@@ -403,12 +401,6 @@ NtGdiMaskBlt(
             /* Yes, Windows really returns TRUE in this case */
             return TRUE;
         }
-    }
-    else if(DCSrc)
-    {
-        DPRINT("Getting a valid Source handle without using source!!!\n");
-        DC_UnlockDc(DCSrc);
-        DCSrc = NULL ;
     }
 
     pdcattr = DCDest->pdcattr;
@@ -490,7 +482,7 @@ cleanup:
         DC_UnlockDc(DCSrc);
     }
     DC_UnlockDc(DCDest);
-    if(psurfMask) SURFACE_UnlockSurface(psurfMask);
+    if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
 
     return Status;
 }
@@ -547,9 +539,12 @@ GreStretchBltMask(
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
-    BOOL UsesSource = ROP_USES_SOURCE(ROP);
+    BOOL UsesSource;
+    BOOL UsesMask;
 
     FIXUP_ROP(ROP);
+    UsesSource = ROP_USES_SOURCE(ROP);
+    UsesMask = ROP_USES_MASK(ROP);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -557,55 +552,44 @@ GreStretchBltMask(
         return FALSE;
     }
 
-    DPRINT("Locking DCs\n");
+    if (!hDCDest || (UsesSource && !hDCSrc) || (UsesMask && !hDCMask))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     ahDC[0] = hDCDest;
-    ahDC[1] = hDCSrc ;
-    ahDC[2] = hDCMask ;
-    GDIOBJ_LockMultipleObjs(3, ahDC, apObj);
+    ahDC[1] = UsesSource ? hDCSrc : NULL;
+    ahDC[2] = UsesMask ? hDCMask : NULL;
+    if (!GDIOBJ_bLockMultipleObjects(3, ahDC, apObj, GDIObjType_DC_TYPE))
+    {
+        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
     DCDest = apObj[0];
     DCSrc = apObj[1];
     DCMask = apObj[2];
 
-    if (NULL == DCDest)
-    {
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
-        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
-        return FALSE;
-    }
-
     if (DCDest->dctype == DC_TYPE_INFO)
     {
-        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
-        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+        if(DCSrc) GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+        if(DCMask) GDIOBJ_vUnlockObject(&DCMask->BaseObject);
+        GDIOBJ_vUnlockObject(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
     if (UsesSource)
     {
-        if (NULL == DCSrc)
-        {
-            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-            if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
-            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
-            return FALSE;
-        }
         if (DCSrc->dctype == DC_TYPE_INFO)
         {
-            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
-            GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-            if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
+            GDIOBJ_vUnlockObject(&DCDest->BaseObject);
+            GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
+            if(DCMask) GDIOBJ_vUnlockObject(&DCMask->BaseObject);
             /* Yes, Windows really returns TRUE in this case */
             return TRUE;
         }
-    }
-    else if(DCSrc)
-    {
-        DPRINT1("Getting a valid Source handle without using source!!!\n");
-        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
-        DCSrc = NULL ;
     }
 
     pdcattr = DCDest->pdcattr;
@@ -867,7 +851,7 @@ IntGdiPolyPatBlt(
 
     for (i = 0; i < cRects; i++)
     {
-        pbrush = BRUSH_LockBrush(pRects->hBrush);
+        pbrush = BRUSH_ShareLockBrush(pRects->hBrush);
         if(pbrush != NULL)
         {
             IntPatBlt(
@@ -878,7 +862,7 @@ IntGdiPolyPatBlt(
                 pRects->r.bottom,
                 dwRop,
                 pbrush);
-            BRUSH_UnlockBrush(pbrush);
+            BRUSH_ShareUnlockBrush(pbrush);
         }
         pRects++;
     }
@@ -928,7 +912,7 @@ NtGdiPatBlt(
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
-    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
+    pbrush = BRUSH_ShareLockBrush(pdcattr->hbrush);
     if (pbrush == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -938,7 +922,7 @@ NtGdiPatBlt(
 
     ret = IntPatBlt(dc, XLeft, YLeft, Width, Height, ROP, pbrush);
 
-    BRUSH_UnlockBrush(pbrush);
+    BRUSH_ShareUnlockBrush(pbrush);
     DC_UnlockDc(dc);
 
     return ret;

@@ -9,4 +9,4 @@ set_entrypoint(kbdja 0)
 
 add_dependencies(kbdja psdk)
 
-add_cab_target(kbdja 1)
+add_cd_file(TARGET kbdja DESTINATION reactos/system32 FOR all)

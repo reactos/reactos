@@ -21,6 +21,7 @@ extern ULONG NtGlobalFlag;
 
 POBJECT_TYPE ObpTypeObjectType = NULL;
 KEVENT ObpDefaultObject;
+KGUARDED_MUTEX ObpDeviceMapLock;
 
 GENERAL_LOOKASIDE ObpNameBufferLookasideList, ObpCreateInfoLookasideList;
 
@@ -107,7 +108,7 @@ ObpDeallocateObject(IN PVOID Object)
                 /* Add the SD charge too */
                 if (Header->Flags & OB_FLAG_SECURITY) PagedPoolCharge += 2048;
             }
-            
+
             /* Return the quota */
             DPRINT("FIXME: Should return quotas: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
 #if 0
@@ -115,7 +116,7 @@ ObpDeallocateObject(IN PVOID Object)
                                     PagedPoolCharge,
                                     NonPagedPoolCharge);
 #endif
-            
+
         }
     }
 
@@ -1261,14 +1262,14 @@ ObpDeleteObjectType(IN PVOID Object)
 {
     ULONG i;
     POBJECT_TYPE ObjectType = (PVOID)Object;
-    
+
     /* Loop our locks */
     for (i = 0; i < 4; i++)
     {
         /* Delete each one */
         ExDeleteResourceLite(&ObjectType->ObjectLocks[i]);
     }
-    
+
     /* Delete our main mutex */
     ExDeleteResourceLite(&ObjectType->Mutex);
 }

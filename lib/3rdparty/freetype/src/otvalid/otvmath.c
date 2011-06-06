@@ -248,7 +248,8 @@
       otv_MathItalicsCorrectionInfo_validate(
         table + MathTopAccentAttachment, valid, FALSE );
 
-    if ( ExtendedShapeCoverage ) {
+    if ( ExtendedShapeCoverage )
+    {
       OTV_NAME_ENTER( "ExtendedShapeCoverage" );
       otv_Coverage_validate( table + ExtendedShapeCoverage, valid, -1 );
       OTV_EXIT;

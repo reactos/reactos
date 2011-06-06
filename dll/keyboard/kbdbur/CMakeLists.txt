@@ -9,4 +9,4 @@ set_entrypoint(kbdbur 0)
 
 add_dependencies(kbdbur psdk)
 
-add_cab_target(kbdbur 1)
+add_cd_file(TARGET kbdbur DESTINATION reactos/system32 FOR all)

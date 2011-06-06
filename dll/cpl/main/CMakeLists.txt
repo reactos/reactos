@@ -26,4 +26,4 @@ add_importlibs(main
     gdi32
     kernel32)
 
-add_cab_target(main 1)
+add_cd_file(TARGET main DESTINATION reactos/system32 FOR all)

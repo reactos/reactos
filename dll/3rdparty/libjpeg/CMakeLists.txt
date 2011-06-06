@@ -70,4 +70,4 @@ add_importlibs(libjpeg msvcrt kernel32)
 
 add_dependencies(libjpeg psdk)
 
-add_cab_target(libjpeg 1)
+add_cd_file(TARGET libjpeg DESTINATION reactos/system32 FOR all)

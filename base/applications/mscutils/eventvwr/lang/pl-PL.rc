@@ -4,7 +4,7 @@
  * FILE:        base/applications/mscutils/eventvwr/lang/en-US.rc
  * PURPOSE:     English Language File for ReactOS Event Viewer
  *
- * translated by Caemyr - Olaf Siejka (Dec,2007)
+ * translated by Caemyr - Olaf Siejka (Dec,2007;May,2011)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -118,4 +118,10 @@ BEGIN
     IDS_COLUMNUSER      "U¿ytkownik"
     IDS_COLUMNCOMPUTER  "Komputer"
     IDS_COLUMNEVENTDATA "Dane zdarzenia"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "Brak"
+    IDS_NOT_AVAILABLE "N/A"
 END

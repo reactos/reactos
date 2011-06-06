@@ -50,7 +50,7 @@ void ProcessPage_OnEndProcess(void)
         return;
     }
 
-    if (!TerminateProcess(hProcess, 0))
+    if (!TerminateProcess(hProcess, 1))
     {
         GetLastErrorText(strErrorText, 260);
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);

@@ -9,4 +9,4 @@ set_entrypoint(kbdir 0)
 
 add_dependencies(kbdir psdk)
 
-add_cab_target(kbdir 1)
+add_cd_file(TARGET kbdir DESTINATION reactos/system32 FOR all)

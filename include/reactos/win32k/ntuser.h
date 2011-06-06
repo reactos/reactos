@@ -65,6 +65,8 @@ typedef struct _DESKTOPINFO
     HWND hProgmanWindow;
     HWND hShellWindow;
 
+    PPROCESSINFO ppiShellProcess;
+
     union
     {
         UINT Dummy;

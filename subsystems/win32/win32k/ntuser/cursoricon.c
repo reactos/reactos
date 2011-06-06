@@ -413,13 +413,13 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
     /* delete bitmaps */
     if (bmpMask)
     {
-        GDIOBJ_SetOwnership(bmpMask, PsGetCurrentProcess());
+        GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(bmpMask);
         CurIcon->IconInfo.hbmMask = NULL;
     }
     if (bmpColor)
     {
-        GDIOBJ_SetOwnership(bmpColor, PsGetCurrentProcess());
+        GreSetObjectOwner(bmpColor, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(bmpColor);
         CurIcon->IconInfo.hbmColor = NULL;
     }
@@ -934,13 +934,16 @@ NtUserSetCursorContents(
     /* Copy new IconInfo field */
     CurIcon->IconInfo = IconInfo;
 
-    psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
-    if (psurfBmp)
+    if (CurIcon->IconInfo.hbmColor)
     {
+        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
+        if (!psurfBmp)
+            goto done;
+
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
         SURFACE_ShareUnlockSurface(psurfBmp);
-        GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+        GreSetObjectOwner(CurIcon->IconInfo.hbmColor, GDI_OBJ_HMGR_PUBLIC);
     }
     else
     {
@@ -953,7 +956,7 @@ NtUserSetCursorContents(
 
         SURFACE_ShareUnlockSurface(psurfBmp);
     }
-	GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+    GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
 
     Ret = TRUE;
 
@@ -1017,7 +1020,7 @@ NtUserSetCursorIconData(
                 CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
                 CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
                 SURFACE_UnlockSurface(psurfBmp);
-                GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+                GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
             }
         }
         if (CurIcon->IconInfo.hbmMask)
@@ -1031,7 +1034,7 @@ NtUserSetCursorIconData(
                     SURFACE_UnlockSurface(psurfBmp);
                 }
             }
-            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+            GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1121,10 +1124,10 @@ done:
 	if(Ret)
 	{
 		/* This icon is shared now */
-		GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+		GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
 		if(CurIcon->IconInfo.hbmColor)
 		{
-			GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+			GreSetObjectOwner(CurIcon->IconInfo.hbmColor, GDI_OBJ_HMGR_PUBLIC);
 		}
 	}
     UserDereferenceObject(CurIcon);
@@ -1170,12 +1173,12 @@ UserDrawIconEx(
     if (istepIfAniCur)
         DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-    if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bm))
+    if (!hbmMask || !GreGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bm))
     {
         return FALSE;
     }
 
-    if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
+    if (hbmColor && !GreGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
     {
         return FALSE;
     }

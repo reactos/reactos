@@ -511,57 +511,46 @@ static UINT FASTCALL MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
   TRACE("\tlooking for '%c' (0x%02x) in [%p]\n", (char) Key, Key, MenuInfo);
 
   if (NULL == MenuInfo || ! IsMenu(MenuInfo->Self))
-    {
+  {
       if (MenuGetRosMenuInfo(&SysMenuInfo, GetSystemMenu(WndOwner, FALSE)))
-        {
+      {
           MenuInfo = &SysMenuInfo;
-        }
+      }
       else
-        {
+      {
           MenuInfo = NULL;
-        }
-    }
+      }
+  }
 
   if (NULL != MenuInfo)
-    {
+  {
       if (MenuGetAllRosMenuItemInfo(MenuInfo->Self, &Items) <= 0)
-        {
+      {
           return -1;
-        }
-      if (! ForceMenuChar)
-        {
-          Key = toupperW(Key);
+      }
+      if ( !ForceMenuChar )
+      {
           ItemInfo = Items;
           for (i = 0; i < MenuInfo->MenuItemCount; i++, ItemInfo++)
-            {
+          {
               if ((ItemInfo->lpstr) && NULL != ItemInfo->dwTypeData)
-                {
+              {
                   WCHAR *p = (WCHAR *) ItemInfo->dwTypeData - 2;
                   do
-                    {
-                      p = strchrW(p + 2, '&');
-		    }
-                  while (NULL != p && L'&' == p[1]);
-                  if (NULL != p && (toupperW(p[1]) == Key))
-                    {
-                      return i;
-                    }
-                }
-            }
-        }
+                  {
+                      p = strchrW (p + 2, '&');
+                  }
+                  while (p != NULL && p [1] == '&');
+                  if (p && (toupperW(p[1]) == toupperW(Key))) return i;
+              }
+          }
+      }
 
       MenuChar = SendMessageW(WndOwner, WM_MENUCHAR,
                               MAKEWPARAM(Key, MenuInfo->Flags), (LPARAM) MenuInfo->Self);
-      if (2 == HIWORD(MenuChar))
-        {
-          return LOWORD(MenuChar);
-        }
-      if (1 == HIWORD(MenuChar))
-        {
-          return (UINT) (-2);
-        }
+      if (HIWORD(MenuChar) == MNC_EXECUTE) return LOWORD(MenuChar);
+      if (HIWORD(MenuChar) == MNC_CLOSE) return (UINT)(-2);
     }
-
   return (UINT)(-1);
 }
 
@@ -1576,12 +1565,12 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
         MenuInfo.FocusedItem = NO_SELECTED_ITEM;
     }
 
-    /* ReactOS Check */
-    if (!ValidateHwnd(hwndOwner))
-    {  // This window maybe already DEAD!!!
+    /* store the owner for DrawItem */
+    if (!IsWindow(hwndOwner))
+    {
+       SetLastError( ERROR_INVALID_WINDOW_HANDLE );
        return FALSE;
     }
-    /* store the owner for DrawItem */
     MenuInfo.WndOwner = hwndOwner;
     MenuSetRosMenuInfo(&MenuInfo);
 
@@ -3673,7 +3662,7 @@ VOID MenuTrackKbdMenuBar(HWND hwnd, UINT wParam, WCHAR wChar)
         if( uItem == NO_SELECTED_ITEM )
             MenuMoveSelection( hwnd, &MenuInfo, ITEM_NEXT );
         else
-            PostMessageW( hwnd, WM_KEYDOWN, VK_DOWN, 0L );
+            PostMessageW( hwnd, WM_KEYDOWN, VK_RETURN, 0 );
     }
 
 track_menu:

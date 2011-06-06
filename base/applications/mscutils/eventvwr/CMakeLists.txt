@@ -10,4 +10,4 @@ if(MSVC)
 add_importlibs(eventvwr ntdll)
 endif()
 
-add_cab_target(eventvwr 1)
+add_cd_file(TARGET eventvwr DESTINATION reactos/system32 FOR all)

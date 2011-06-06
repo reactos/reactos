@@ -14,11 +14,13 @@
 #include <tchar.h>
 #define NDEBUG
 #include <debug.h>
+#include "resource.h"
 
 /* FUNCTIONS ****************************************************************/
 
 void PrintError(DWORD ErrCode)
 {
+    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
     TCHAR *buffer = (TCHAR*) calloc(2048,
                                     sizeof(TCHAR));
     TCHAR *msg = NULL;
@@ -32,9 +34,13 @@ void PrintError(DWORD ErrCode)
                       (TCHAR*)&msg,
                       0,
                       NULL);
+        LoadString(GetModuleHandle(NULL),
+                   IDS_FAILED_WITH_ERROCODE,
+                   szFmtString,
+                   sizeof(szFmtString) / sizeof(szFmtString[0]));
         _sntprintf(buffer,
                    2048,
-                   _T("Failed with error code 0x%x: %s\n"),
+                   szFmtString,
                    ErrCode,
                    msg);
         _tprintf(_T("%s"),
@@ -45,16 +51,15 @@ void PrintError(DWORD ErrCode)
     }
 }
 
-void DisplaySubstUsage()
+void DisplaySubstUsage(void)
 {
-    _tprintf(_T("Associates a path with a drive letter.\n\n"));
-    _tprintf(_T("SUBST [drive1: [drive2:]path]\n"));
-    _tprintf(_T("SUBST drive1: /D\n\n"));
-    _tprintf(_T("   drive1:        Specifies a virtual drive to which you want to assign a path.\n"));
-    _tprintf(_T("   [drive2:]path  Specifies a physical drive and path you want to assign to\n"));
-    _tprintf(_T("                  a virtual drive.\n"));
-    _tprintf(_T("   /D             Deletes a substituted (virtual) drive.\n\n"));
-    _tprintf(_T("Type SUBST with no parameters to display a list of current virtual drives.\n"));
+    TCHAR szHelp[RC_STRING_MAX_SIZE] = {0};
+
+    LoadString(GetModuleHandle(NULL),
+                IDS_USAGE,
+                szHelp,
+                sizeof(szHelp) / sizeof(szHelp[0]));
+    _tprintf(_T("%s"), szHelp);
 }
 
 BOOLEAN IsSubstedDrive(TCHAR *Drive)
@@ -103,7 +108,7 @@ BOOLEAN IsSubstedDrive(TCHAR *Drive)
     return Result;
 }
 
-void DumpSubstedDrives()
+void DumpSubstedDrives(void)
 {
     TCHAR Drive[3] = _T("A:");
     LPTSTR lpTargetPath = NULL;
@@ -161,17 +166,23 @@ void DumpSubstedDrives()
 int DeleteSubst(TCHAR* Drive)
 {
     BOOL Result;
+    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+
+    LoadString(GetModuleHandle(NULL),
+                IDS_INVALID_PARAMETER2,
+                szFmtString,
+                sizeof(szFmtString) / sizeof(szFmtString[0]));
 
     if (_tcslen(Drive) > 2)
     {
-        _tprintf(_T("Invalid parameter - %s\n"),
+        _tprintf(szFmtString,
                  Drive);
         return 1;
     }
 
     if (! IsSubstedDrive(Drive))
     {
-        _tprintf(_T("Invalid Parameter - %s\n"),
+        _tprintf(szFmtString,
                 Drive);
         return 1;
     }
@@ -190,17 +201,33 @@ int DeleteSubst(TCHAR* Drive)
 int AddSubst(TCHAR* Drive, TCHAR *Path)
 {
     BOOL Result;
+    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
-    if (_tcslen(Drive) > 2)
+    LoadString(GetModuleHandle(NULL),
+                IDS_INVALID_PARAMETER2,
+                szFmtString,
+                sizeof(szFmtString) / sizeof(szFmtString[0]));
+    if (_tcslen(Drive) != 2)
     {
-        _tprintf(_T("Invalid parameter - %s\n"),
+        _tprintf(szFmtString,
+                 Drive);
+        return 1;
+    }
+
+    if (Drive[1] != _T(':'))
+    {
+        _tprintf(szFmtString,
                  Drive);
         return 1;
     }
 
     if (IsSubstedDrive(Drive))
     {
-        _tprintf(_T("Drive already SUBSTed\n"));
+        LoadString(GetModuleHandle(NULL),
+                   IDS_DRIVE_ALREAD_SUBSTED,
+                   szFmtString,
+                   sizeof(szFmtString) / sizeof(szFmtString[0]));
+        _tprintf(szFmtString);
         return 1;
     }
 
@@ -218,6 +245,7 @@ int AddSubst(TCHAR* Drive, TCHAR *Path)
 int _tmain(int argc, TCHAR* argv[])
 {
     INT i;
+    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
     for (i = 0; i < argc; i++)
     {
@@ -232,7 +260,11 @@ int _tmain(int argc, TCHAR* argv[])
     {
         if (argc >= 2)
         {
-            _tprintf(_T("Invalid parameter - %s\n"),
+            LoadString(GetModuleHandle(NULL),
+                       IDS_INVALID_PARAMETER,
+                       szFmtString,
+                       sizeof(szFmtString) / sizeof(szFmtString[0]));
+            _tprintf(szFmtString,
                      argv[1]);
             return 1;
         }
@@ -242,7 +274,11 @@ int _tmain(int argc, TCHAR* argv[])
 
     if (argc > 3)
     {
-        _tprintf(_T("Incorrect number of parameters - %s\n"),
+        LoadString(GetModuleHandle(NULL),
+                   IDS_INCORRECT_PARAMETER_COUNT,
+                   szFmtString,
+                   sizeof(szFmtString) / sizeof(szFmtString[0]));
+        _tprintf(szFmtString,
                  argv[3]);
         return 1;
     }

@@ -435,6 +435,8 @@ void UpdateProcesses()
     LV_ITEM item;
     LPPROCESS_PAGE_LIST_ITEM pData;
 
+    SendMessage(hProcessPageListCtrl, WM_SETREDRAW, FALSE, 0);
+
     /* Remove old processes */
     for (i = 0; i < ListView_GetItemCount(hProcessPageListCtrl); i++)
     {
@@ -464,6 +466,8 @@ void UpdateProcesses()
     {
         (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
     }
+
+    SendMessage(hProcessPageListCtrl, WM_SETREDRAW, TRUE, 0);
 }
 
 BOOL ProcessRunning(ULONG ProcessId) 

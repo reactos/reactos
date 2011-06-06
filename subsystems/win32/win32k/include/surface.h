@@ -90,19 +90,17 @@ typedef struct _SURFACE
 
 /*  Internal interface  */
 
-#define SURFACE_AllocSurfaceWithHandle()    ((PSURFACE) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP))
+#define SURFACE_AllocSurfaceWithHandle()    ((PSURFACE) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP, sizeof(SURFACE)))
 #define SURFACE_FreeSurface(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_SURF_TYPE)
 #define SURFACE_FreeSurfaceByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 
 /* NOTE: Use shared locks! */
-#define  SURFACE_LockSurface(hBMObj) \
-  ((PSURFACE) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
 #define  SURFACE_ShareLockSurface(hBMObj) \
   ((PSURFACE) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
 #define  SURFACE_UnlockSurface(pBMObj)  \
-  GDIOBJ_UnlockObjByPtr ((POBJ)pBMObj)
+  GDIOBJ_vUnlockObject ((POBJ)pBMObj)
 #define  SURFACE_ShareUnlockSurface(pBMObj)  \
-  GDIOBJ_ShareUnlockObjByPtr ((POBJ)pBMObj)
+  GDIOBJ_vDereferenceObject ((POBJ)pBMObj)
 
 BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
 

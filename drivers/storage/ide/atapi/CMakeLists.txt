@@ -6,5 +6,4 @@ target_link_libraries(atapi libcntpr)
 set_module_type(atapi kernelmodedriver)
 add_importlibs(atapi scsiport)
 
-add_minicd_target(atapi reactos atapi.sys)
-add_livecd_target(atapi reactos/system32/drivers)
+add_cd_file(TARGET atapi DESTINATION reactos/system32/drivers NO_CAB FOR all)

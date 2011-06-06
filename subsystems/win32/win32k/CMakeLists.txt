@@ -143,6 +143,7 @@ list(APPEND SOURCE
     objects/gdibatch.c
 	objects/gdidbg.c
     objects/gdiobj.c
+    objects/gdipool.c
     objects/icm.c
     objects/line.c
     objects/metafile.c
@@ -194,8 +195,7 @@ target_link_libraries(win32k
 
 add_importlibs(win32k ntoskrnl hal ftfd)
 add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
-add_dependencies(win32k gendib_generated subsystem_napi)
-add_cab_target(win32k 1)
+add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 add_importlib_target(win32k.spec)
 
 add_library(win32ksys sys-stubs.S)

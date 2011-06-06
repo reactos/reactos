@@ -27,5 +27,5 @@ add_importlibs(wintrust crypt32 cryptui user32 advapi32 imagehlp msvcrt kernel32
 
 add_importlib_target(wintrust.spec)
 
-add_cab_target(wintrust 1)
+add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
 

@@ -29,4 +29,4 @@ add_importlibs(objsel
     kernel32
     ntdll)
 
-add_cab_target(objsel 1)
+add_cd_file(TARGET objsel DESTINATION reactos/system32 FOR all)

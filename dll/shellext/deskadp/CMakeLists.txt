@@ -26,4 +26,4 @@ add_importlibs(deskadp
 
 add_pch(deskadp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cab_target(deskadp 1)
+add_cd_file(TARGET deskadp DESTINATION reactos/system32 FOR all)

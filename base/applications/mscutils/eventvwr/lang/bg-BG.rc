@@ -108,3 +108,9 @@ BEGIN
     IDS_COLUMNCOMPUTER  "Компютър"
     IDS_COLUMNEVENTDATA "Данни за събитието"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "None"
+    IDS_NOT_AVAILABLE "N/A"
+END

@@ -3,3 +3,5 @@
 #define REACTOS_STR_INTERNAL_NAME	"subst\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"subst.exe\0"
 #include <reactos/version.rc>
+
+#include "rsrc.rc"

@@ -1,3 +1,7 @@
+;
+; netevent.mc MESSAGE resources for netevent.dll
+;
+
 MessageIdTypedef=DWORD
 
 SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
@@ -10,6 +14,15 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
               )
 
 LanguageNames=(English=0x409:MSG00409)
+
+
+;
+; message definitions
+;
+
+; Facility=System
+
+; Eventlog messages 6xxx-
 
 MessageId=6005
 Severity=Warning
@@ -30,11 +43,13 @@ The Event log service was stopped.
 MessageId=6009
 Severity=Warning
 Facility=System
-SymbolicName=EVENT_EventlogProductInfo
+SymbolicName=EVENT_EventLogProductInfo
 Language=English
 ReactOS %1 %2 %3 %4.
 .
 
+
+; transport messages
 
 MessageId=9004
 Severity=Error

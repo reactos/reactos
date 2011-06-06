@@ -101,18 +101,7 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd)
 /* temp hack */
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
-   PTHREADINFO ti;
-   PWND Window;
-
-   if (PsGetCurrentProcess() != PsInitialSystemProcess)
-   {
-       ti = GetW32ThreadInfo();
-       if (ti == NULL)
-       {
-          EngSetLastError(ERROR_ACCESS_DENIED);
-          return NULL;
-       }
-   }
+    PWND Window;
 
    if (!hWnd)
    {
@@ -210,7 +199,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
        }
        pWnd->style |= WS_DISABLED;
     }
-    
+
     if (Update)
     {
         IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, 0);
@@ -517,6 +506,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    if(Window->hrgnClip)
    {
+      IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
       GreDeleteObject(Window->hrgnClip);
       Window->hrgnClip = NULL;
    }
@@ -1554,7 +1544,15 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
       pMonitor = IntGetPrimaryMonitor();
-      ASSERT(pMonitor);
+
+      /* Check if we don't have a monitor attached yet */
+      if(pMonitor == NULL)
+      {
+          Cs->x = Cs->y = 0;
+          Cs->cx = 800;
+          Cs->cy = 600;
+          return;
+      }
 
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
 
@@ -1997,6 +1995,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    hwndInsertAfter = HWND_TOP;
 
    UserRefObjectCo(Window, &Ref);
+   UserDereferenceObject(Window);
    ObDereferenceObject(WinSta);
 
    //// Check for a hook to eliminate overhead. ////
@@ -2262,10 +2261,9 @@ cleanup:
    if (Window)
    {
       UserDerefObjectCo(Window);
-      UserDereferenceObject(Window);
    }
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
-   
+
    return ret;
 }
 
@@ -3299,7 +3297,11 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->pDeskInfo) ti->pDeskInfo->hShellWindow = hwndShell;
+   if (ti->pDeskInfo) 
+   {
+       ti->pDeskInfo->hShellWindow = hwndShell;
+       ti->pDeskInfo->ppiShellProcess = ti->ppi;
+   }
 
    UserDerefObjectCo(WndShell);
 

@@ -727,7 +727,7 @@ BOOL APIENTRY DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask)
 {
     DPRINT1("ReactX Calling : DxEngSetDCOwner \n");
 
-    return IntGdiSetDCOwnerEx( hObject, OwnerMask, FALSE);
+    return GreSetDCOwner(hObject, OwnerMask);
 }
 
 /************************************************************************/

@@ -9,4 +9,4 @@ set_entrypoint(kbdaze 0)
 
 add_dependencies(kbdaze psdk)
 
-add_cab_target(kbdaze 1)
+add_cd_file(TARGET kbdaze DESTINATION reactos/system32 FOR all)

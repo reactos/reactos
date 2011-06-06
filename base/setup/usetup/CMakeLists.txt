@@ -44,4 +44,4 @@ endif()
 
 set_module_type(usetup nativecui)
 add_importlibs(usetup kernel32 ntdll)
-add_minicd_target(usetup reactos/system32 smss.exe)
+add_cd_file(TARGET usetup DESTINATION reactos/system32 NO_CAB NAME_ON_CD smss.exe FOR bootcd)

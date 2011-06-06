@@ -43,5 +43,4 @@ target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)
 
-add_minicd_target(classpnp reactos classpnp.sys)
-add_livecd_target(classpnp reactos/system32/drivers)
+add_cd_file(TARGET classpnp DESTINATION reactos/system32/drivers NO_CAB FOR all)

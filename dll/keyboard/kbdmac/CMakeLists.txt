@@ -9,4 +9,4 @@ set_entrypoint(kbdmac 0)
 
 add_dependencies(kbdmac psdk)
 
-add_cab_target(kbdmac 1)
+add_cd_file(TARGET kbdmac DESTINATION reactos/system32 FOR all)

@@ -1853,6 +1853,12 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	        (pThis->FolderSettings.fFlags & FWF_TRANSPARENT))
             return SendMessageW(pThis->hWndParent, WM_ERASEBKGND, wParam, lParam); /* redirect to parent */
 	    break;
+
+      case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(pThis->hWndList, WM_SYSCOLORCHANGE, 0, 0);
+        break;
+
       case CWM_GETISHELLBROWSER:
           return (LRESULT)pThis->pShellBrowser;
 	}

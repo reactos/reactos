@@ -26,5 +26,5 @@ set_module_type(mpr win32dll)
 
 target_link_libraries(mpr wine)
 add_importlibs(mpr advapi32 user32 msvcrt kernel32 ntdll)
-add_cab_target(mpr 1)
+add_cd_file(TARGET mpr DESTINATION reactos/system32 FOR all)
 add_importlib_target(mpr.spec)

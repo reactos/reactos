@@ -187,7 +187,7 @@ IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
     return STATUS_OBJECT_TYPE_MISMATCH;
 }
 
-NTSTATUS NTAPI 
+NTSTATUS NTAPI
 IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 {
     PPROCESSINFO ppi;
@@ -326,15 +326,15 @@ co_IntInitializeDesktopGraphics(VOID)
       IntDestroyPrimarySurface();
       return FALSE;
    }
-   IntGdiSetDCOwnerEx(ScreenDeviceContext, GDI_OBJ_HMGR_PUBLIC, FALSE);
+   GreSetDCOwner(ScreenDeviceContext, GDI_OBJ_HMGR_PUBLIC);
 
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
 
    hSystemBM = NtGdiCreateCompatibleDC(ScreenDeviceContext);
 
-   NtGdiSelectFont( hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
-   IntGdiSetDCOwnerEx( hSystemBM, GDI_OBJ_HMGR_PUBLIC, FALSE);
+   NtGdiSelectFont(hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
+   GreSetDCOwner(hSystemBM, GDI_OBJ_HMGR_PUBLIC);
 
    // FIXME! Move these to a update routine.
    gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
@@ -353,8 +353,8 @@ IntEndDesktopGraphics(VOID)
 {
    if (NULL != ScreenDeviceContext)
    {  // No need to allocate a new dcattr.
-      DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
-      NtGdiDeleteObjectApp(ScreenDeviceContext);
+      GreSetDCOwner(ScreenDeviceContext, GDI_OBJ_HMGR_POWNED);
+      GreDeleteObject(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
    }
    IntHideDesktop(IntGetActiveDesktop());
@@ -438,7 +438,7 @@ NtUserCreateWindowStation(
    /*
     * No existing window station found, try to create new one
     */
-   
+
    /* Capture window station name */
    _SEH2_TRY
    {
@@ -621,7 +621,7 @@ NtUserCloseWindowStation(
 
    DPRINT("Closing window station handle (0x%X)\n", hWinSta);
 
-   Status = ZwClose(hWinSta);
+   Status = ObCloseHandle(hWinSta, UserMode);
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -940,6 +940,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
 
     ppi = PsGetCurrentProcessWin32Process();
 
+    /* Reference the new window station */
     if(hWindowStation !=NULL)
     {
         Status = IntValidateWindowStationHandle( hWindowStation,
@@ -956,27 +957,28 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     }
 
    OldWinSta = ppi->prpwinsta;
-   hwinstaOld = ppi->hwinsta;
+   hwinstaOld = PsGetProcessWin32WindowStation(ppi->peProcess);
 
-   /*
-    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
-    */
-
-   InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
-
-   ppi->prpwinsta = NewWinSta;
-   ppi->hwinsta = hWindowStation;
-
-
+   /* Dereference the previous window station */
    if(OldWinSta != NULL)
    {
        ObDereferenceObject(OldWinSta);
    }
 
-   if(hwinstaOld != NULL)
+   /* Check if we have a stale handle (it should happen for console apps) */
+   if(hwinstaOld != ppi->hwinsta)
    {
-       ZwClose(hwinstaOld);
+       ObCloseHandle(hwinstaOld, UserMode);
    }
+
+   /*
+    * FIXME - don't allow changing the window station if there are threads that are attached to desktops and own gui objects
+    */
+   
+   PsSetProcessWindowStation(ppi->peProcess, hWindowStation);
+
+   ppi->prpwinsta = NewWinSta;
+   ppi->hwinsta = hWindowStation;
 
    return TRUE;
 }

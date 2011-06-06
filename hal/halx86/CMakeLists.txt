@@ -101,8 +101,7 @@ if(ARCH MATCHES i386)
     add_importlibs(hal ntoskrnl)
     target_link_libraries(hal libcntpr)
 
-    add_minicd_target(hal reactos hal.dll)
-    add_livecd_target(hal reactos/system32)
+    add_cd_file(TARGET hal DESTINATION reactos/system32 NO_CAB FOR all)
 
     # mini_hal
     add_library(mini_hal ${MINI_HAL_SOURCE})

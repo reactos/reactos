@@ -40,4 +40,4 @@ add_importlibs(tcpip ndis ntoskrnl hal)
 
 add_pch(tcpip ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
 
-add_cab_target(tcpip 2)
+add_cd_file(TARGET tcpip DESTINATION reactos/system32/drivers FOR all)

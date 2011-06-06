@@ -49,6 +49,9 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
     PLOGHANDLE lpLogHandle;
     PLOGFILE currentLogFile = NULL;
     INT i, LogsActive;
+    PEVENTSOURCE pEventSource;
+
+    DPRINT("ElfCreateEventLogHandle(Name: %S)\n", Name);
 
     lpLogHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGHANDLE)
                                   + ((wcslen(Name) + 1) * sizeof(WCHAR)));
@@ -70,19 +73,36 @@ PLOGHANDLE ElfCreateEventLogHandle(LPCWSTR Name, BOOL Create)
 
     /* If Creating, default to the Application Log in case we fail, as documented on MSDN */
     if (Create == TRUE)
-        lpLogHandle->LogFile = LogfListItemByName(L"Application");
+    {
+        pEventSource = GetEventSourceByName(Name);
+        DPRINT("EventSource: %p\n", pEventSource);
+        if (pEventSource)
+        {
+            DPRINT("EventSource LogFile: %p\n", pEventSource->LogFile);
+            lpLogHandle->LogFile = pEventSource->LogFile;
+        }
+        else
+        {
+            DPRINT("EventSource LogFile: Application log file\n");
+            lpLogHandle->LogFile = LogfListItemByName(L"Application");
+        }
+
+        DPRINT("LogHandle LogFile: %p\n", lpLogHandle->LogFile);
+    }
     else
+    {
         lpLogHandle->LogFile = NULL;
 
-    for (i = 1; i <= LogsActive; i++)
-    {
-        currentLogFile = LogfListItemByIndex(i);
-
-        if (_wcsicmp(Name, currentLogFile->LogName) == 0)
+        for (i = 1; i <= LogsActive; i++)
         {
-            lpLogHandle->LogFile = LogfListItemByIndex(i);
-            lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
-            break;
+            currentLogFile = LogfListItemByIndex(i);
+
+            if (_wcsicmp(Name, currentLogFile->LogName) == 0)
+            {
+                lpLogHandle->LogFile = LogfListItemByIndex(i);
+                lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
+                break;
+            }
         }
     }
 
@@ -267,12 +287,16 @@ NTSTATUS ElfrRegisterEventSourceW(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
+    DPRINT1("ElfrRegisterEventSourceW()\n");
+
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
 
     /* RegModuleName must be an empty string */
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
+
+    DPRINT1("ModuleName: %S\n", ModuleName->Buffer);
 
     /*FIXME: UNCServerName must specify the server or empty for local */
 

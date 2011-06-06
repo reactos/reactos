@@ -98,7 +98,8 @@
 #undef  FT_USE_MODULE
 #define FT_USE_MODULE( type, x )  MODULE_CLASS_##x,
 
-  enum {
+  enum
+  {
 #include FT_CONFIG_MODULES_H
     FT_NUM_MODULE_CLASSES
   };

@@ -367,7 +367,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             PostMessage(g_pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
         }
-        else if (!_CmdWndProc(hWnd, message, wParam, lParam))
+
+        if (!_CmdWndProc(hWnd, message, wParam, lParam))
         {
             goto def;
         }

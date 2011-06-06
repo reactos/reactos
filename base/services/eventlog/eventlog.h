@@ -13,6 +13,7 @@
 #define WIN32_NO_STATUS
 
 #include <windows.h>
+#include <netevent.h>
 #include <lpctypes.h>
 #include <lpcfuncs.h>
 #include <rtlfuncs.h>
@@ -93,19 +94,17 @@ typedef struct _LOGFILE
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
-#if 0
 typedef struct _EVENTSOURCE
 {
     LIST_ENTRY EventSourceListEntry;
     PLOGFILE LogFile;
-    ULONG CurrentRecord;
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
-#endif
 
 typedef struct _LOGHANDLE
 {
     LIST_ENTRY LogHandleListEntry;
+    PEVENTSOURCE EventSource;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
     WCHAR szName[1];
@@ -179,6 +178,11 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwDataSize,
                                  LPVOID lpRawData);
 
+VOID
+LogfReportEvent(WORD wType,
+                WORD wCategory,
+                DWORD dwEventId);
+
 /* eventlog.c */
 extern HANDLE MyHeap;
 
@@ -191,6 +195,17 @@ VOID EventTimeToSystemTime(DWORD EventTime,
 
 VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
                            DWORD * pEventTime);
+
+/* eventsource.c */
+VOID InitEventSourceList(VOID);
+
+BOOL
+LoadEventSources(HKEY hKey,
+                 PLOGFILE pLogFile);
+
+PEVENTSOURCE
+GetEventSourceByName(LPCWSTR Name);
+
 
 /* logport.c */
 NTSTATUS WINAPI PortThreadRoutine(PVOID Param);

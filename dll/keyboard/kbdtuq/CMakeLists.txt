@@ -9,4 +9,4 @@ set_entrypoint(kbdtuq 0)
 
 add_dependencies(kbdtuq psdk)
 
-add_cab_target(kbdtuq 1)
+add_cd_file(TARGET kbdtuq DESTINATION reactos/system32 FOR all)

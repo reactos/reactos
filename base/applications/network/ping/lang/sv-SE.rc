@@ -1,0 +1,41 @@
+/*
+ * PROJECT:         ReactOS RAPPS
+ * FILE:            \base\applications\network\ping\lang\sv-SE.rc
+ * PURPOSE:         Swedish resource file
+ * Translation:     Jaix Bly
+ */
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nSYNTAX: ping [-t] [-n antal] [-l storlek] [-w timeout] värddator\n\n\
+Alternativ:\n\
+    -t             Pinga den angivna datorn tills kommandor stoppas.\n\
+                   För att stoppa - tryck Ctrl-C.\n\
+    -n antal       Antal ekobegäranden som ska skickas.\n\
+    -l storlek     Sändniningsbuffertens storlek.\n\
+    -w timeout     Timeout i millisekunder att vänta på varje svar.\n\n\0"
+
+    IDS_PING_WITH_BYTES             "\nPingar %1 [%2] med %3!d! bytes data:\n\n\0"
+    IDS_PING_STATISTICS             "\nPing statistk för %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Packet: Sända = %1!d!, Mottagna = %2!d!, Förlorade = %3!d! (%4!d!%% förlust),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Ungefärliga slingtider i millisekunder:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Genomsnittlig = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Inte tillräckliga resurser tillgänliga.\n\0"
+    IDS_UNKNOWN_HOST                "Okänd Värd %1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt misslyckades (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Kunde inte skapa socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Kunde inte initialisera winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Namn eller IP adress till värd måste anges.\n\0"
+    IDS_BAD_PARAMETER               "Ogiltig parameter %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Ogiltigt format på alternativ %1.\n\0"
+    IDS_BAD_OPTION                  "Ogiltigt alternativ %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Ogiltigt värde för alternativ -l, giltig intervall är från 0 till %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Svar från %1: bytes=%2!d! tid%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Värddatorn går inte att nå.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Kunde inte sända data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Kunde inte ta emot data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Förfrågan gjorde timeout.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END

@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Eine schnelle und effektive Suchanwendung.
 
+[Section.040a]
+Description = Una aplicación de búsqueda rápida llena de opciones.
+
 [Section.040c]
 Description = Une application de recherche rapide et riche en fonctionnalités.
 

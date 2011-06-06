@@ -5,4 +5,4 @@ set_module_type(autochk nativecui)
 
 target_link_libraries(autochk mingw_common nt)
 add_importlibs(autochk kernel32 ntdll)
-add_cab_target(autochk 1)
+add_cd_file(TARGET autochk DESTINATION reactos/system32 FOR all)

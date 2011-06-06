@@ -52,6 +52,6 @@ add_importlibs(shlwapi
     msvcrt
     ntdll)
 
-add_cab_target(shlwapi 1)
+add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
 
 add_importlib_target(shlwapi.spec)

@@ -175,7 +175,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   FTC_GCache_Lookup( FTC_GCache   cache,
-                     FT_UInt32    hash,
+                     FT_PtrDist   hash,
                      FT_UInt      gindex,
                      FTC_GQuery   query,
                      FTC_Node    *anode )

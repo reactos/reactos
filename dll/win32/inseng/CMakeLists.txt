@@ -27,4 +27,4 @@ add_importlibs(inseng
     kernel32
     ntdll)
 
-add_cab_target(inseng 1)
+add_cd_file(TARGET inseng DESTINATION reactos/system32 FOR all)

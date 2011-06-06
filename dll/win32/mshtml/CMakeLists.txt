@@ -105,4 +105,4 @@ add_importlibs(mshtml
     ntdll)
 
 add_dependencies(mshtml mshtml_nsiface_header)
-add_cab_target(mshtml 1)
+add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)

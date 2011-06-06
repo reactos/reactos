@@ -17,4 +17,4 @@ target_link_libraries(mssip32 wine)
 
 add_importlibs(mssip32 msvcrt kernel32 ntdll)
 
-add_cab_target(mssip32 1)
+add_cd_file(TARGET mssip32 DESTINATION reactos/system32 FOR all)

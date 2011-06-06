@@ -18,4 +18,4 @@ add_importlibs(vmwinst
     kernel32
     ntdll)
 
-add_cab_target(vmwinst 1)
+add_cd_file(TARGET vmwinst DESTINATION reactos/system32 FOR all)

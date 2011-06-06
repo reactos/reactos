@@ -31,6 +31,7 @@ if(ARCH MATCHES i386)
             arch/i386/i386cpu.S
             arch/i386/i386idt.S
             arch/i386/i386pnp.S
+            arch/i386/i386pxe.S
             arch/i386/i386trap.S
             arch/i386/int386.S
             arch/i386/linux.S
@@ -65,6 +66,7 @@ list(APPEND FREELDR_BASE_SOURCE
     fs/fs.c
     fs/iso.c
     fs/ntfs.c
+    fs/pxe.c
     inifile/ini_init.c
     inifile/inifile.c
     inifile/parse.c
@@ -152,6 +154,7 @@ endif()
 
 set_source_files_properties(${FREELDR_ARCH_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_NTHAL_;_BLDR_;_NTSYSTEM_")
 add_library(freeldr_arch ${FREELDR_ARCH_SOURCE})
+add_dependencies(freeldr_arch bugcodes)
 
 list(APPEND FREELDR_SOURCE
     bootmgr.c
@@ -189,6 +192,8 @@ target_link_libraries(freeldr
 
 add_pch(freeldr ${CMAKE_CURRENT_SOURCE_DIR}/include/freeldr.h ${FREELDR_SOURCE})
 add_dependencies(freeldr asm)
+
+add_cd_file(TARGET freeldr DESTINATION loader NO_CAB FOR all)
 
 list(APPEND SETUPLDR_MAIN_SOURCE
     bootmgr.c
@@ -235,7 +240,5 @@ target_link_libraries(setupldr
 
 add_dependencies(setupldr asm)
 
-# Bootcd files
-add_minicd_target(setupldr loader setupldr.sys)
-add_minicd_target(freeldr loader freeldr.sys)
-add_livecd_target(setupldr loader)
+add_cd_file(TARGET setupldr DESTINATION loader NO_CAB FOR all)
+

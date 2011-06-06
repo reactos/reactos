@@ -14,4 +14,4 @@ target_link_libraries(kmixer
 
 add_importlibs(kmixer ntoskrnl ks hal)
 
-add_cab_target(kmixer 2)
+add_cd_file(TARGET kmixer DESTINATION reactos/system32/drivers FOR all)

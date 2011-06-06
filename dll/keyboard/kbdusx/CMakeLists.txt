@@ -9,4 +9,4 @@ set_entrypoint(kbdusx 0)
 
 add_dependencies(kbdusx psdk)
 
-add_cab_target(kbdusx 1)
+add_cd_file(TARGET kbdusx DESTINATION reactos/system32 FOR all)

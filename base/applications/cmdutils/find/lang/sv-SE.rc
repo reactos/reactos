@@ -5,7 +5,7 @@ BEGIN
 
 IDS_USAGE, "FIND: Skriver ut alla rader i en fil som innehåller en sträng.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] ""sträng"" [ fil... ]\n\
-    /C  Räkna nummren av linjer som innehåller en strängen\n\
+    /C  Räkna antalet rader som innehåller en strängen\n\
     /I  Ignorera skiftläge\n\
     /N  Antal visade rader, börjar på 1\n\
     /V  Skriver ut rader som inte innehåller strängen"

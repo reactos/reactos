@@ -10,5 +10,4 @@ add_importlibs(disk
     ntoskrnl
     hal)
 
-add_minicd_target(disk reactos disk.sys)
-add_livecd_target(disk reactos/system32/drivers)
+add_cd_file(TARGET disk DESTINATION reactos/system32/drivers NO_CAB FOR all)

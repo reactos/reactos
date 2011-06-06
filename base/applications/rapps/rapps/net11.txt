@@ -11,6 +11,9 @@ URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyId=262D25E3-F589
 URLDownload = http://download.microsoft.com/download/a/a/c/aac39226-8825-44ce-90e3-bf8203e74006/dotnetfx.exe
 CDPath = none
 
+[Section.040a]
+Description = Microsoft .NET Framework versión 1.1 - Paquete redistribuible.
+
 [Section.040c]
 Description = Microsoft .NET Framework version 1.1 - Paquet redistribuable.
 

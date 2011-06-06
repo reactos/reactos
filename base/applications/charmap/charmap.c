@@ -11,7 +11,17 @@
 
 #define ID_ABOUT    0x1
 
+typedef struct {
+    BOOL    IsAdvancedView;
+} SETTINGS;
+
 HINSTANCE hInstance;
+HWND      hCharmapDlg;
+HWND      hAdvancedDlg;
+HWND      hStatusWnd;
+HICON     hSmIcon;
+HICON     hBgIcon;
+SETTINGS  Settings;
 
 /* Font-enumeration callback */
 static
@@ -227,75 +237,90 @@ AddCharToSelection(HWND hDlg, WCHAR ch)
 
 
 static
+void
+UpdateSettings(HWND hDlg)
+{
+    if (hDlg == hCharmapDlg)
+    {
+        Settings.IsAdvancedView =
+        SendDlgItemMessage(hDlg, IDC_CHECK_ADVANCED, BM_GETCHECK, 0, 0);
+    }
+
+    if (hDlg == hAdvancedDlg)
+    {
+    }
+}
+
+static
+void
+ChangeView(HWND hWnd)
+{
+    RECT rcCharmap;
+    RECT rcAdvanced;
+    RECT rcPanelExt;
+    RECT rcPanelInt;
+    RECT rcStatus;
+    UINT DeX, DeY;
+    UINT xPos, yPos;
+    UINT Width, Height;
+    UINT DeskTopWidth, DeskTopHeight;
+
+    GetClientRect(hCharmapDlg, &rcCharmap);
+    GetClientRect(hAdvancedDlg, &rcAdvanced);
+    GetWindowRect(hWnd, &rcPanelExt);
+    GetClientRect(hWnd, &rcPanelInt);
+    GetClientRect(hStatusWnd, &rcStatus);
+
+    DeskTopWidth = GetSystemMetrics(SM_CXFULLSCREEN);
+    DeskTopHeight = GetSystemMetrics(SM_CYFULLSCREEN);
+
+    DeX = (rcPanelExt.right - rcPanelExt.left) - rcPanelInt.right;
+    DeY = (rcPanelExt.bottom - rcPanelExt.top) - rcPanelInt.bottom;
+
+    MoveWindow(hCharmapDlg, 0, 0, rcCharmap.right, rcCharmap.bottom, FALSE);
+    MoveWindow(hAdvancedDlg, 0, rcCharmap.bottom, rcAdvanced.right, rcAdvanced.bottom, FALSE);
+
+    ShowWindow(hAdvancedDlg, (Settings.IsAdvancedView) ? SW_SHOW : SW_HIDE);
+
+    xPos = rcPanelExt.left;
+    yPos = rcPanelExt.top;
+
+    Width = DeX + rcCharmap.right;
+    Height = DeY + rcCharmap.bottom + rcStatus.bottom;
+
+    if (Settings.IsAdvancedView)
+        Height += rcAdvanced.bottom;
+
+    if ((xPos + Width) > DeskTopWidth)
+        xPos += DeskTopWidth - (xPos + Width);
+
+    if ((yPos + Height) > DeskTopHeight)
+        yPos += DeskTopHeight - (yPos + Height);
+
+    MoveWindow(hWnd,
+               xPos, yPos,
+               Width, Height,
+               TRUE);
+}
+
+static
 INT_PTR
 CALLBACK
-DlgProc(HWND hDlg,
-        UINT Message,
-        WPARAM wParam,
-        LPARAM lParam)
+CharMapDlgProc(HWND hDlg,
+               UINT Message,
+               WPARAM wParam,
+               LPARAM lParam)
 {
-    static HICON hSmIcon;
-    static HICON hBgIcon;
-    LPWSTR lpAboutText = NULL;
-
     switch(Message)
     {
         case WM_INITDIALOG:
         {
-            HMENU hSysMenu;
             DWORD evMask;
-
-            hSmIcon = LoadImageW(hInstance,
-                                 MAKEINTRESOURCEW(IDI_ICON),
-                                 IMAGE_ICON,
-                                 16,
-                                 16,
-                                 0);
-            if (hSmIcon)
-            {
-                 SendMessageW(hDlg,
-                              WM_SETICON,
-                              ICON_SMALL,
-                              (LPARAM)hSmIcon);
-            }
-
-            hBgIcon = LoadImageW(hInstance,
-                                 MAKEINTRESOURCEW(IDI_ICON),
-                                 IMAGE_ICON,
-                                 32,
-                                 32,
-                                 0);
-            if (hBgIcon)
-            {
-                SendMessageW(hDlg,
-                             WM_SETICON,
-                             ICON_BIG,
-                             (LPARAM)hBgIcon);
-            }
 
             FillFontStyleComboList(GetDlgItem(hDlg,
                                               IDC_FONTCOMBO));
 
             ChangeMapFont(hDlg);
-            hSysMenu = GetSystemMenu(hDlg,
-                                     FALSE);
-            if (hSysMenu != NULL)
-            {
-                if (LoadStringW(hInstance,
-                                IDS_ABOUT,
-                                lpAboutText,
-                                0))
-                {
-                    AppendMenuW(hSysMenu,
-                                MF_SEPARATOR,
-                                0,
-                                NULL);
-                    AppendMenuW(hSysMenu,
-                                MF_STRING,
-                                ID_ABOUT,
-                                lpAboutText);
-                }
-            }
 
             // Configure Richedi control for sending notification changes.
             evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
@@ -344,35 +369,33 @@ DlgProc(HWND hDlg,
                     CopyCharacters(hDlg);
                     break;
 
-                case IDOK:
-                    if (hSmIcon)
-                        DestroyIcon(hSmIcon);
-                    if (hBgIcon)
-                        DestroyIcon(hBgIcon);
-                    EndDialog(hDlg, 0);
+                case IDC_CHECK_ADVANCED:
+                    UpdateSettings(hDlg);
+                    ChangeView(GetParent(hDlg));
                     break;
             }
         }
         break;
 
-        case WM_SYSCOMMAND:
-        {
-            switch(wParam)
-            {
-                case ID_ABOUT:
-                    ShowAboutDlg(hDlg);
-                break;
-            }
-        }
-        break;
-
-        case WM_CLOSE:
-            if (hSmIcon)
-                DestroyIcon(hSmIcon);
-            if (hBgIcon)
-                DestroyIcon(hBgIcon);
-            EndDialog(hDlg, 0);
+        default:
             break;
+    }
+
+    return FALSE;
+}
+
+static
+INT_PTR
+CALLBACK
+AdvancedDlgProc(HWND hDlg,
+               UINT Message,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    switch(Message)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
 
         default:
             return FALSE;
@@ -381,6 +404,142 @@ DlgProc(HWND hDlg,
     return FALSE;
 }
 
+static int
+OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    HMENU hSysMenu;
+    WCHAR lpAboutText[256];
+
+    hCharmapDlg = CreateDialog(hInstance,
+                               MAKEINTRESOURCE(IDD_CHARMAP),
+                               hWnd,
+                               CharMapDlgProc);
+
+    hAdvancedDlg = CreateDialog(hInstance,
+                               MAKEINTRESOURCE(IDD_ADVANCED),
+                               hWnd,
+                               AdvancedDlgProc);
+
+    hStatusWnd = CreateWindow(STATUSCLASSNAME,
+                              NULL,
+                              WS_CHILD | WS_VISIBLE,
+                              0, 0, 0, 0,
+                              hWnd,
+                              (HMENU)IDD_STATUSBAR,
+                              hInstance,
+                              NULL);
+
+    // Set the status bar for multiple parts output
+    SendMessage(hStatusWnd, SB_SIMPLE, (WPARAM)FALSE, (LPARAM)0);
+
+    ChangeView(hWnd);
+
+    hSysMenu = GetSystemMenu(hWnd, FALSE);
+
+    if (hSysMenu != NULL)
+    {
+        if (LoadStringW(hInstance, IDS_ABOUT, lpAboutText, SIZEOF(lpAboutText)))
+        {
+            AppendMenuW(hSysMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuW(hSysMenu, MF_STRING, ID_ABOUT, lpAboutText);
+        }
+    }
+
+    return 0;
+}
+
+static LRESULT CALLBACK
+PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_CREATE:
+        return OnCreate(hWnd, wParam, lParam);
+
+    case WM_CLOSE:
+        DestroyWindow(hWnd);
+        return 0;
+
+    case WM_SIZE:
+        SendMessage(hStatusWnd, msg, wParam, lParam);
+        break;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+
+    case WM_SYSCOMMAND:
+        switch(wParam) {
+        case ID_ABOUT:
+            ShowAboutDlg(hWnd);
+            break;
+        }
+        break;
+
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+static HWND
+InitInstance(HINSTANCE hInst)
+{
+    WCHAR       szClass[] = L"CharMap";
+    WCHAR       szTitle[256];
+    WNDCLASSEXW wc;
+    HWND        hWnd;
+
+    LoadStringW(hInst, IDS_TITLE, szTitle, SIZEOF(szTitle));
+
+    hSmIcon = LoadImage(hInstance,
+                        MAKEINTRESOURCE(IDI_ICON),
+                        IMAGE_ICON,
+                        16,
+                        16,
+                        0);
+
+    hBgIcon = LoadImage(hInstance,
+                        MAKEINTRESOURCE(IDI_ICON),
+                        IMAGE_ICON,
+                        32,
+                        32,
+                        0);
+
+    // Create workspace
+    ZeroMemory(&wc, sizeof(wc));
+
+    wc.cbSize        = sizeof(wc);
+    wc.lpfnWndProc   = PanelWndProc;
+    wc.hInstance     = hInst;
+    wc.hIcon         = hBgIcon;
+    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+    wc.lpszMenuName  = NULL;
+    wc.lpszClassName = szClass;
+    wc.hIconSm       = hSmIcon;
+
+    RegisterClassExW(&wc);
+
+    hWnd = CreateWindowW(
+            szClass,
+            szTitle,
+            WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            NULL,
+            NULL,
+            hInst,
+            NULL);
+
+    if (hWnd != NULL)
+    {
+        ShowWindow(hWnd, SW_SHOW);
+        UpdateWindow(hWnd);
+    }
+
+    return hWnd;
+}
 
 INT
 WINAPI
@@ -392,6 +551,7 @@ wWinMain(HINSTANCE hInst,
     INITCOMMONCONTROLSEX iccx;
     INT Ret = 1;
     HMODULE hRichEd20;
+    MSG Msg;
 
     hInstance = hInst;
 
@@ -405,10 +565,19 @@ wWinMain(HINSTANCE hInst,
 
         if (hRichEd20 != NULL)
         {
-            Ret = DialogBoxW(hInstance,
-                             MAKEINTRESOURCEW(IDD_CHARMAP),
-                             NULL,
-                             DlgProc) >= 0;
+            InitInstance(hInst);
+
+            for (;;)
+            {
+                if (GetMessage(&Msg, NULL, 0, 0) <= 0)
+                {
+                    Ret = Msg.wParam;
+                    break;
+                }
+
+                TranslateMessage(&Msg);
+                DispatchMessage(&Msg);
+            }
 
             FreeLibrary(hRichEd20);
         }

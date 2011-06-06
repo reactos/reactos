@@ -47,4 +47,4 @@ add_importlibs(desk
     kernel32
     ntdll)
 
-add_cab_target(desk 1)
+add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

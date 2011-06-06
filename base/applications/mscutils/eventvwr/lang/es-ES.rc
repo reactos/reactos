@@ -115,3 +115,9 @@ BEGIN
     IDS_COLUMNCOMPUTER  "Computadora"
     IDS_COLUMNEVENTDATA "Datos del evento"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "Ninguna"
+    IDS_NOT_AVAILABLE "N/A"
+END

@@ -55,6 +55,37 @@ StartTaskManager(
 	return ret;
 }
 
+static BOOL
+StartUserShell(
+	IN OUT PWLSESSION Session)
+{
+	LPVOID lpEnvironment = NULL;
+	BOOLEAN Old;
+	BOOL ret;
+
+	/* Create environment block for the user */
+	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
+	{
+		WARN("WL: CreateEnvironmentBlock() failed\n");
+		return FALSE;
+	}
+
+	/* Get privilege */
+	/* FIXME: who should do it? winlogon or gina? */
+	/* FIXME: reverting to lower privileges after creating user shell? */
+	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
+
+	ret = Session->Gina.Functions.WlxActivateUserShell(
+				Session->Gina.Context,
+				L"Default",
+				NULL, /* FIXME */
+				lpEnvironment);
+
+	DestroyEnvironmentBlock(lpEnvironment);
+	return ret;
+}
+
+
 BOOL
 SetDefaultLanguage(
 	IN BOOL UserProfile)
@@ -167,8 +198,6 @@ HandleLogon(
 	IN OUT PWLSESSION Session)
 {
 	PROFILEINFOW ProfileInfo;
-	LPVOID lpEnvironment = NULL;
-	BOOLEAN Old;
 	BOOL ret = FALSE;
 
 	/* Loading personal settings */
@@ -211,13 +240,6 @@ HandleLogon(
 		goto cleanup;
 	}
 
-	/* Create environment block for the user */
-	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
-	{
-		WARN("WL: CreateEnvironmentBlock() failed\n");
-		goto cleanup;
-	}
-
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
 	UpdatePerUserSystemParameters(0, TRUE);
 
@@ -228,16 +250,7 @@ HandleLogon(
 		goto cleanup;
 	}
 
-	/* Get privilege */
-	/* FIXME: who should do it? winlogon or gina? */
-	/* FIXME: reverting to lower privileges after creating user shell? */
-	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
-
-	if (!Session->Gina.Functions.WlxActivateUserShell(
-		Session->Gina.Context,
-		L"Default",
-		NULL, /* FIXME */
-		lpEnvironment))
+	if (!StartUserShell(Session))
 	{
 		//WCHAR StatusMsg[256];
 		WARN("WL: WlxActivateUserShell() failed\n");
@@ -264,8 +277,6 @@ cleanup:
 	{
 		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
 	}
-	if (lpEnvironment)
-		DestroyEnvironmentBlock(lpEnvironment);
 	RemoveStatusMessage(Session);
 	if (!ret)
 	{
@@ -942,12 +953,30 @@ SASWindowProc(
                 {
                     return HandleMessageBeep(lParam);
                 }
+                case LN_SHELL_EXITED:
+                {
+                    /* lParam is the exit code */
+                    if(lParam != 1)
+                    {
+                        SetTimer(hwndDlg, 1, 1000, NULL);
+                    }
+                    break;
+                }
                 default:
                 {
                     ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);
                 }
             }
             return 0;
+        }
+        case WM_TIMER:
+        {
+            if (wParam == 1)
+            {
+                KillTimer(hwndDlg, 1);
+                StartUserShell(Session);
+            }
+            break;
         }
 		case WLX_WM_SAS:
 		{

@@ -19,10 +19,6 @@ set(CMAKE_RC_COMPILE_OBJECT
     "${WRC} -i <OBJECT> -o <OBJECT>"
     "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
 
-if(NOT CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
-	set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crs <TARGET> <LINK_FLAGS> <OBJECTS>")
-endif()
-
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
 
@@ -170,7 +166,7 @@ endmacro()
 
 macro(set_module_type MODULE TYPE)
 
-    add_dependencies(${MODULE} psdk buildno_header)
+    add_dependencies(${MODULE} psdk)
     if(${IS_CPP})
         target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
     endif()

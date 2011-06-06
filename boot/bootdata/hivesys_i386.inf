@@ -1148,10 +1148,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","File",0x00020000,"%SystemRoot%\system32\config\AppEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application\Service Control Manager","TypesSupported",0x00010001,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","File",0x00020000,"%SystemRoot%\system32\config\SecEvent.Evt"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010001,0x00000007
 
 ; Floppy driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000

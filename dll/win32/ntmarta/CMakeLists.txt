@@ -24,4 +24,4 @@ add_importlibs(ntmarta
     kernel32
     ntdll)
 
-add_cab_target(ntmarta 1)
+add_cd_file(TARGET ntmarta DESTINATION reactos/system32 FOR all)

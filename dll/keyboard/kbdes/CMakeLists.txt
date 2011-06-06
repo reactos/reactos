@@ -9,4 +9,4 @@ set_entrypoint(kbdes 0)
 
 add_dependencies(kbdes psdk)
 
-add_cab_target(kbdes 1)
+add_cd_file(TARGET kbdes DESTINATION reactos/system32 FOR all)

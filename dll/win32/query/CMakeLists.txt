@@ -19,4 +19,4 @@ target_link_libraries(query
 
 add_importlibs(query msvcrt kernel32 ntdll)
 
-add_cab_target(query 1)
+add_cd_file(TARGET query DESTINATION reactos/system32 FOR all)

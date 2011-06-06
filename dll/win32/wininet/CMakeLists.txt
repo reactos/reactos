@@ -33,5 +33,5 @@ target_link_libraries(wininet wine ${PSEH_LIB})
 
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 secur32 crypt32 ws2_32 msvcrt kernel32 ntdll)
 
-add_cab_target(wininet 1)
+add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
 add_importlib_target(wininet.spec)

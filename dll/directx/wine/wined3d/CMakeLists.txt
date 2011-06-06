@@ -74,5 +74,5 @@ add_importlibs(wined3d
     ntdll)
 
 add_dependencies(wined3d wineheaders)
-add_cab_target(wined3d 1)
+add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)
 add_importlib_target(wined3d.spec)

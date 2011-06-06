@@ -647,7 +647,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         SURFACE_ShareUnlockSurface(psurfBmp);
 
         /* Change the bitmap's ownership */
-        GDIOBJ_SetOwnership(hbmp, NULL);
+        GreSetObjectOwner(hbmp, GDI_OBJ_HMGR_PUBLIC);
 
         /* Yes, Windows really loads the current setting from the registry. */
         ulTile = SpiLoadInt(KEY_DESKTOP, L"TileWallpaper", 0);
@@ -677,7 +677,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     if(hOldBitmap != NULL)
     {
         /* Delete the old wallpaper */
-        GDIOBJ_SetOwnership(hOldBitmap, PsGetCurrentProcess());
+        GreSetObjectOwner(hOldBitmap, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(hOldBitmap);
     }
 

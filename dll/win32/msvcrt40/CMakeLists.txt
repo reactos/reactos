@@ -18,4 +18,4 @@ target_link_libraries(msvcrt40 wine)
 
 add_importlibs(msvcrt40 msvcrt kernel32 ntdll)
 
-add_cab_target(msvcrt40 1)
+add_cd_file(TARGET msvcrt40 DESTINATION reactos/system32 FOR all)

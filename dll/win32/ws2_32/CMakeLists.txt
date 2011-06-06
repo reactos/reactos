@@ -32,5 +32,5 @@ target_link_libraries(ws2_32 wine)
 add_importlibs(ws2_32 user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
 add_pch(ws2_32 ${CMAKE_CURRENT_SOURCE_DIR}/include/ws2_32.h ${SOURCE})
 
-add_cab_target(ws2_32 1)
+add_cd_file(TARGET ws2_32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(ws2_32.spec)

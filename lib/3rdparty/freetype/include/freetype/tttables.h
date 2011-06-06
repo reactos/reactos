@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -557,13 +557,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef enum  FT_Sfnt_Tag_
   {
-    ft_sfnt_head = 0,
-    ft_sfnt_maxp = 1,
-    ft_sfnt_os2  = 2,
-    ft_sfnt_hhea = 3,
-    ft_sfnt_vhea = 4,
-    ft_sfnt_post = 5,
-    ft_sfnt_pclt = 6,
+    ft_sfnt_head = 0,    /* TT_Header     */
+    ft_sfnt_maxp = 1,    /* TT_MaxProfile */
+    ft_sfnt_os2  = 2,    /* TT_OS2        */
+    ft_sfnt_hhea = 3,    /* TT_HoriHeader */
+    ft_sfnt_vhea = 4,    /* TT_VertHeader */
+    ft_sfnt_post = 5,    /* TT_Postscript */
+    ft_sfnt_pclt = 6,    /* TT_PCLT       */
 
     sfnt_max   /* internal end mark */
 
@@ -589,6 +589,9 @@ FT_BEGIN_HEADER
   /*    A type-less pointer to the table.  This will be~0 in case of       */
   /*    error, or if the corresponding table was not found *OR* loaded     */
   /*    from the file.                                                     */
+  /*                                                                       */
+  /*    Use a typecast according to `tag' to access the structure          */
+  /*    elements.                                                          */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The table is owned by the face object and disappears with it.      */

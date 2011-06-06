@@ -692,6 +692,14 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         // menu and button events
 
+        case WM_SYSCOLORCHANGE:
+        {
+            /* Redirect message to common controls */
+            HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
+            SendMessage(hToolbar, WM_SYSCOLORCHANGE, 0, 0);
+            break;
+        }
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {

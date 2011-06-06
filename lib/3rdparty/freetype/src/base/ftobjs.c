@@ -29,7 +29,6 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_IDS_H
-#include FT_OUTLINE_H
 
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
@@ -143,7 +142,7 @@
     if ( !args )
       return FT_Err_Invalid_Argument;
 
-    memory   = library->memory;
+    memory = library->memory;
 
     if ( FT_NEW( stream ) )
       goto Exit;
@@ -230,11 +229,11 @@
   static FT_Error
   ft_glyphslot_init( FT_GlyphSlot  slot )
   {
-    FT_Driver         driver = slot->face->driver;
-    FT_Driver_Class   clazz  = driver->clazz;
-    FT_Memory         memory = driver->root.memory;
-    FT_Error          error  = FT_Err_Ok;
-    FT_Slot_Internal  internal;
+    FT_Driver         driver   = slot->face->driver;
+    FT_Driver_Class   clazz    = driver->clazz;
+    FT_Memory         memory   = driver->root.memory;
+    FT_Error          error    = FT_Err_Ok;
+    FT_Slot_Internal  internal = NULL;
 
 
     slot->library = driver->root.library;
@@ -992,6 +991,14 @@
              ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
                cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    ) )
         {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+          if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+          {
+            FT_ERROR(( "find_unicode_charmap: UCS-4 cmap is found "
+                       "at too late position (%d)\n", cur - first ));
+            continue;
+          }
+#endif
           face->charmap = cur[0];
           return FT_Err_Ok;
         }
@@ -1006,6 +1013,14 @@
     {
       if ( cur[0]->encoding == FT_ENCODING_UNICODE )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UCS-2 cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return FT_Err_Ok;
       }
@@ -1047,7 +1062,17 @@
       if ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE    &&
            cur[0]->encoding_id == TT_APPLE_ID_VARIANT_SELECTOR &&
            FT_Get_CMap_Format( cur[0] ) == 14                  )
+      {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UVS cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         return cur[0];
+      }
     }
 
     return NULL;
@@ -1548,11 +1573,26 @@
         goto Exit;
       if ( FT_READ_USHORT( flags ) )
         goto Exit;
-      rlen -= 2;                    /* the flags are part of the resource */
+      FT_TRACE3(( "POST fragment[%d]: offsets=0x%08x, rlen=0x%08x, flags=0x%04x\n",
+                   i, offsets[i], rlen, flags ));
+
+      /* postpone the check of rlen longer than buffer until FT_Stream_Read() */
+      if ( ( flags >> 8 ) == 0 )        /* Comment, should not be loaded */
+        continue;
+
+      /* the flags are part of the resource, so rlen >= 2.  */
+      /* but some fonts declare rlen = 0 for empty fragment */
+      if ( rlen > 2 )
+        rlen -= 2;
+      else
+        rlen = 0;
+
       if ( ( flags >> 8 ) == type )
         len += rlen;
       else
       {
+        if ( pfb_lenpos + 3 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
         pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
         pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -1561,6 +1601,8 @@
         if ( ( flags >> 8 ) == 5 )      /* End of font mark */
           break;
 
+        if ( pfb_pos + 6 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_pos++] = 0x80;
 
         type = flags >> 8;
@@ -1574,13 +1616,23 @@
         pfb_data[pfb_pos++] = 0;
       }
 
+      error = FT_Err_Cannot_Open_Resource;
+      if ( pfb_pos > pfb_len || pfb_pos + rlen > pfb_len )
+        goto Exit2;
+
       error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
+      if ( error )
+        goto Exit2;
       pfb_pos += rlen;
     }
 
+    if ( pfb_pos + 2 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_pos++] = 0x80;
     pfb_data[pfb_pos++] = 3;
 
+    if ( pfb_lenpos + 3 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
     pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
     pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -1799,6 +1851,7 @@
     char *     file_names[FT_RACCESS_N_RULES];
     FT_Long    offsets[FT_RACCESS_N_RULES];
     FT_Error   errors[FT_RACCESS_N_RULES];
+    FT_Bool    is_darwin_vfs, vfs_rfork_has_no_font = FALSE; /* not tested */
 
     FT_Open_Args  args2;
     FT_Stream     stream2 = 0;
@@ -1809,6 +1862,15 @@
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
     {
+      is_darwin_vfs = raccess_rule_by_darwin_vfs( i );
+      if ( is_darwin_vfs && vfs_rfork_has_no_font )
+      {
+        FT_TRACE3(( "Skip rule %d: darwin vfs resource fork"
+                    " is already checked and"
+                    " no font is found\n", i ));
+        continue;
+      }  
+
       if ( errors[i] )
       {
         FT_TRACE3(( "Error[%d] has occurred in rule %d\n", errors[i], i ));
@@ -1822,6 +1884,9 @@
                   i, args2.pathname, offsets[i] ));
 
       error = FT_Stream_New( library, &args2, &stream2 );
+      if ( is_darwin_vfs && error == FT_Err_Cannot_Open_Stream )
+        vfs_rfork_has_no_font = TRUE;
+
       if ( error )
       {
         FT_TRACE3(( "failed\n" ));
@@ -1836,6 +1901,8 @@
 
       if ( !error )
           break;
+      else if ( is_darwin_vfs )
+          vfs_rfork_has_no_font = TRUE;
     }
 
     for (i = 0; i < FT_RACCESS_N_RULES; i++)
@@ -1915,9 +1982,9 @@
     FT_Error     error;
     FT_Driver    driver;
     FT_Memory    memory;
-    FT_Stream    stream = 0;
-    FT_Face      face = 0;
-    FT_ListNode  node = 0;
+    FT_Stream    stream = NULL;
+    FT_Face      face   = NULL;
+    FT_ListNode  node   = NULL;
     FT_Bool      external_stream;
     FT_Module*   cur;
     FT_Module*   limit;
@@ -2141,6 +2208,8 @@
 
       internal->transform_delta.x = 0;
       internal->transform_delta.y = 0;
+
+      internal->refcount = 1;
     }
 
     if ( aface )
@@ -2229,6 +2298,17 @@
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Error )
+  FT_Reference_Face( FT_Face  face )
+  {
+    face->internal->refcount++;
+
+    return FT_Err_Ok;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( FT_Error )
   FT_Done_Face( FT_Face  face )
   {
     FT_Error     error;
@@ -2240,22 +2320,29 @@
     error = FT_Err_Invalid_Face_Handle;
     if ( face && face->driver )
     {
-      driver = face->driver;
-      memory = driver->root.memory;
-
-      /* find face in driver's list */
-      node = FT_List_Find( &driver->faces_list, face );
-      if ( node )
-      {
-        /* remove face object from the driver's list */
-        FT_List_Remove( &driver->faces_list, node );
-        FT_FREE( node );
-
-        /* now destroy the object proper */
-        destroy_face( memory, face, driver );
+      face->internal->refcount--;
+      if ( face->internal->refcount > 0 )
         error = FT_Err_Ok;
+      else
+      {
+        driver = face->driver;
+        memory = driver->root.memory;
+
+        /* find face in driver's list */
+        node = FT_List_Find( &driver->faces_list, face );
+        if ( node )
+        {
+          /* remove face object from the driver's list */
+          FT_List_Remove( &driver->faces_list, node );
+          FT_FREE( node );
+
+          /* now destroy the object proper */
+          destroy_face( memory, face, driver );
+          error = FT_Err_Ok;
+        }
       }
     }
+
     return error;
   }
 
@@ -2901,6 +2988,15 @@
     {
       if ( cur[0]->encoding == encoding )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Select_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2935,6 +3031,15 @@
     {
       if ( cur[0] == charmap )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Set_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2951,12 +3056,24 @@
     FT_Int  i;
 
 
+    if ( !charmap || !charmap->face )
+      return -1;
+
     for ( i = 0; i < charmap->face->num_charmaps; i++ )
       if ( charmap->face->charmaps[i] == charmap )
         break;
 
     FT_ASSERT( i < charmap->face->num_charmaps );
 
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+    if ( i > FT_MAX_CHARMAP_CACHEABLE )
+    {
+      FT_ERROR(( "FT_Get_Charmap_Index: requested charmap is found (%d), "
+                 "but in too late position to cache\n",
+                 i ));
+      return -i;
+    }
+#endif
     return i;
   }
 
@@ -3095,7 +3212,7 @@
       }
       result = cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
     }
-    return  result;
+    return result;
   }
 
 
@@ -3109,14 +3226,14 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       gindex = FT_Get_Char_Index( face, 0 );
-      if ( gindex == 0 )
+      if ( gindex == 0 || gindex >= (FT_UInt)face->num_glyphs )
         result = FT_Get_Next_Char( face, 0, &gindex );
     }
 
-    if ( agindex  )
+    if ( agindex )
       *agindex = gindex;
 
     return result;
@@ -3134,13 +3251,16 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       FT_UInt32  code = (FT_UInt32)charcode;
       FT_CMap    cmap = FT_CMAP( face->charmap );
 
 
-      gindex = cmap->clazz->char_next( cmap, &code );
+      do {
+        gindex = cmap->clazz->char_next( cmap, &code );
+      } while ( gindex >= (FT_UInt)face->num_glyphs );
+
       result = ( gindex == 0 ) ? 0 : code;
     }
 
@@ -3645,7 +3765,7 @@
     FT_Library   library = module->library;
     FT_Memory    memory  = library->memory;
     FT_Error     error;
-    FT_ListNode  node;
+    FT_ListNode  node    = NULL;
 
 
     if ( FT_NEW( node ) )
@@ -3661,7 +3781,7 @@
 
       /* allocate raster object if needed */
       if ( clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
-           clazz->raster_class->raster_new )
+           clazz->raster_class->raster_new                )
       {
         error = clazz->raster_class->raster_new( memory, &render->raster );
         if ( error )
@@ -3702,7 +3822,8 @@
 
 
       /* release raster object, if any */
-      if ( render->raster )
+      if ( render->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
+           render->raster                                         )
         render->clazz->raster_class->raster_done( render->raster );
 
       /* remove from list */
@@ -3842,7 +3963,7 @@
     FT_Library  library;
 
 
-    if ( !slot )
+    if ( !slot || !slot->face )
       return FT_Err_Invalid_Argument;
 
     library = FT_FACE_LIBRARY( slot->face );
@@ -4029,7 +4150,8 @@
       FT_Renderer  renderer = FT_RENDERER( module );
 
 
-      if ( renderer->raster )
+      if ( renderer->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE && 
+           renderer->raster                                         )
         renderer->clazz->raster_class->raster_done( renderer->raster );
     }
 
@@ -4185,10 +4307,21 @@
   /* documentation is in ftmodapi.h */
 
   FT_EXPORT_DEF( FT_Error )
+  FT_Reference_Library( FT_Library  library )
+  {
+    library->refcount++;
+
+    return FT_Err_Ok;
+  }
+
+
+  /* documentation is in ftmodapi.h */
+
+  FT_EXPORT_DEF( FT_Error )
   FT_New_Library( FT_Memory    memory,
                   FT_Library  *alibrary )
   {
-    FT_Library  library = 0;
+    FT_Library  library = NULL;
     FT_Error    error;
 
 
@@ -4223,6 +4356,8 @@
     library->version_major = FREETYPE_MAJOR;
     library->version_minor = FREETYPE_MINOR;
     library->version_patch = FREETYPE_PATCH;
+
+    library->refcount = 1;
 
     /* That's ok now */
     *alibrary = library;
@@ -4280,40 +4415,64 @@
     if ( !library )
       return FT_Err_Invalid_Library_Handle;
 
+    library->refcount--;
+    if ( library->refcount > 0 )
+      goto Exit;
+
     memory = library->memory;
 
     /* Discard client-data */
     if ( library->generic.finalizer )
       library->generic.finalizer( library );
 
-    /* Close all faces in the library.  If we don't do
-     * this, we can have some subtle memory leaks.
+    /*
+     * Close all faces in the library.  If we don't do this, we can have
+     * some subtle memory leaks.
+     *
      * Example:
      *
      *  - the cff font driver uses the pshinter module in cff_size_done
      *  - if the pshinter module is destroyed before the cff font driver,
      *    opened FT_Face objects managed by the driver are not properly
      *    destroyed, resulting in a memory leak
+     *
+     * Some faces are dependent on other faces, like Type42 faces that
+     * depend on TrueType faces synthesized internally.
+     *
+     * The order of drivers should be specified in driver_name[].
      */
     {
-      FT_UInt  n;
+      FT_UInt      m, n;
+      const char*  driver_name[] = { "type42", NULL };
 
 
-      for ( n = 0; n < library->num_modules; n++ )
+      for ( m = 0;
+            m < sizeof ( driver_name ) / sizeof ( driver_name[0] );
+            m++ )
       {
-        FT_Module  module = library->modules[n];
-        FT_List    faces;
-
-
-        if ( ( module->clazz->module_flags & FT_MODULE_FONT_DRIVER ) == 0 )
-          continue;
-
-        faces = &FT_DRIVER(module)->faces_list;
-        while ( faces->head )
+        for ( n = 0; n < library->num_modules; n++ )
         {
-          FT_Done_Face( FT_FACE( faces->head->data ) );
-          if ( faces->head )
-            FT_TRACE0(( "FT_Done_Library: failed to free some faces\n" ));
+          FT_Module    module      = library->modules[n];
+          const char*  module_name = module->clazz->module_name;
+          FT_List      faces;
+
+
+          if ( driver_name[m]                                &&
+               ft_strcmp( module_name, driver_name[m] ) != 0 )
+            continue;
+
+          if ( ( module->clazz->module_flags & FT_MODULE_FONT_DRIVER ) == 0 )
+            continue;
+
+          FT_TRACE7(( "FT_Done_Library: close faces for %s\n", module_name ));
+
+          faces = &FT_DRIVER( module )->faces_list;
+          while ( faces->head )
+          {
+            FT_Done_Face( FT_FACE( faces->head->data ) );
+            if ( faces->head )
+              FT_TRACE0(( "FT_Done_Library: failed to free some faces\n" ));
+          }
         }
       }
     }
@@ -4355,6 +4514,8 @@
 #endif
 
     FT_FREE( library );
+
+  Exit:
     return FT_Err_Ok;
   }
 
@@ -4467,6 +4628,8 @@
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
+  /* documentation is in freetype.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Get_SubGlyph_Info( FT_GlyphSlot  glyph,
                         FT_UInt       sub_index,
@@ -4479,7 +4642,8 @@
     FT_Error  error = FT_Err_Invalid_Argument;
 
 
-    if ( glyph != NULL                              &&
+    if ( glyph                                      &&
+         glyph->subglyphs                           &&
          glyph->format == FT_GLYPH_FORMAT_COMPOSITE &&
          sub_index < glyph->num_subglyphs           )
     {

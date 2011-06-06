@@ -69,6 +69,7 @@
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>
+#include <fs/pxe.h>
 /* ui support */
 #include <ui/gui.h>
 #include <ui/minitui.h>
@@ -83,6 +84,7 @@
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
 #include <arch/i386/miscboot.h>
+#include <arch/i386/pxe.h>
 #include <internal/i386/intrin_i.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>

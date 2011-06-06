@@ -9,4 +9,4 @@ set_entrypoint(kbdgerg 0)
 
 add_dependencies(kbdgerg psdk)
 
-add_cab_target(kbdgerg 1)
+add_cd_file(TARGET kbdgerg DESTINATION reactos/system32 FOR all)

@@ -12,4 +12,4 @@ set_entrypoint(winfax 0)
 
 add_importlibs(winfax kernel32 ntdll)
 add_dependencies(winfax psdk)
-add_cab_target(winfax 1)
+add_cd_file(TARGET winfax DESTINATION reactos/system32 FOR all)

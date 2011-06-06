@@ -108,7 +108,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
+        "\x07  Naciònij F3, aby wyjòÜ bez instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -208,13 +208,13 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         8,
         23,
-        "\x07  Naciònij ENTER aby zainstalowaÜ system ReactOS.",
+        "\x07  Naciònij ENTER, aby zainstalowaÜ system ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  Naciònij F3 aby wyjòÜ bez instalacji systemu ReactOS.",
+        "\x07  Naciònij F3, aby wyjòÜ bez instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -407,13 +407,13 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         6,
         19,
-        "Moæesz zmieniÜ poszczeg¢lne ustawienia za pomoc• klawiszy G‡RA i D‡ù",
+        "Moæesz zmieniÜ poszczeg¢lne ustawienia za pomoc• klawiszy G‡RA i D‡ù,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "aby wybraÜ kategori©. Potem naciònij ENTER by przejòÜ do menu z ",
+        "aby wybraÜ kategori©. Potem naciònij ENTER, by przejòÜ do menu z ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -483,19 +483,19 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         8,
         17,
-        "\x07  Naciònij R by uruchomiÜ Konsol© Odtwarzania.",
+        "\x07  Naciònij R, by uruchomiÜ Konsol© Odtwarzania.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naciònij ESC by powr¢ciÜ do gà¢wnego menu.",
+        "\x07  Naciònij ESC, by powr¢ciÜ do gà¢wnego menu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naciònij ENTER by zrestartowaÜ komputer.",
+        "\x07  Naciònij ENTER, by zrestartowaÜ komputer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -528,7 +528,7 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ komputera.",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni typ komputera.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -540,7 +540,7 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         8,
         13,
-        "\x07  Naciònij klawisz ESC aby powr¢ciÜ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij klawisz ESC, aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_STYLE_NORMAL
     },
     {
@@ -632,7 +632,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         11,
-        "Naciònij ENTER by zrestartowaÜ komputer.",
+        "Naciònij ENTER, by zrestartowaÜ komputer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -665,19 +665,19 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ rozdzielczoòÜ i liczb©",
+         "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ rozdzielczoòÜ i liczb©",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   kolor¢w a nast©pnie naciònij ENTER.",
+        "   kolor¢w, a nast©pnie naciònij ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC, aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_STYLE_NORMAL
     },
     {
@@ -729,7 +729,7 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         10,
         11,
-        "Naciònij ENTER by zrestartowaÜ komputer.",
+        "Naciònij ENTER, by zrestartowaÜ komputer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -816,25 +816,25 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Naciònij G‡RA lub D‡ù by wybraÜ pozycj© z listy.",
+        "\x07  Naciònij G‡RA lub D‡ù, by wybraÜ pozycj© z listy.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciònij ENTER by zainstalowaÜ ReactOS na wybranej partycji.",
+        "\x07  Naciònij ENTER, by zainstalowaÜ ReactOS na wybranej partycji.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Naciònij C by stworzyÜ now• partycj©.",
+        "\x07  Naciònij C, by stworzyÜ now• partycj©.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciònij D by skasowaÜ istniej•c• partycj©.",
+        "\x07  Naciònij D, by skasowaÜ istniej•c• partycj©.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -868,7 +868,7 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     {
         6,
         10,
-        "Instalator sformatuje teraz partycj©. Naciònij ENTER aby kontynuowaÜ.",
+        "Instalator sformatuje teraz partycj©. Naciònij ENTER, aby kontynuowaÜ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -908,7 +908,7 @@ static MUI_ENTRY plPLInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Aby zmieniÜ domyòlny katalog, uæyj klawisza BACKSPACE by skasowaÜ",
+        "Aby zmieniÜ domyòlny katalog, uæyj klawisza BACKSPACE, by skasowaÜ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1046,7 +1046,7 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni typ klawiatury.",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni typ klawiatury.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1058,7 +1058,7 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC, aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1098,7 +1098,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù by wybraÜ odpowiedni ukàad",
+        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni ukàad",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1110,7 +1110,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Naciònij ESC key aby powr¢ciÜ do poprzedniej strony bez zmiany",
+        "\x07  Naciònij ESC, aby powr¢ciÜ do poprzedniej strony bez zmiany",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1180,19 +1180,19 @@ static MUI_ENTRY plPLSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Naciònij klawisz G‡RA alub D‡ù by wybraÜ system plik¢w.",
+        "\x07  Naciònij klawisz G‡RA alub D‡ù, by wybraÜ system plik¢w.",
         0
     },
     {
         8,
         21,
-        "\x07  Naciònij ENTER aby sformatowaÜ partycj©.",
+        "\x07  Naciònij ENTER, aby sformatowaÜ partycj©.",
         0
     },
     {
         8,
         23,
-        "\x07  Naciònij ESC aby wybraÜ inn• partycj©.",
+        "\x07  Naciònij ESC, aby wybraÜ inn• partycj©.",
         0
     },
     {
@@ -1227,7 +1227,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Naciònij D by skasowaÜ partycj©.",
+        "\x07  Naciònij D, by skasowaÜ partycj©.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1239,7 +1239,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Naciònij ESC aby anulowaÜ.",
+        "\x07  Naciònij ESC, aby anulowaÜ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1291,10 +1291,10 @@ MUI_ERROR plPLErrorEntries[] =
         //ERROR_NOT_INSTALLED
         "ReactOS nie zostaà w peàni zainstalowany na twoim\n"
         "komputerze. Jeòli wyjdziesz teraz, trzeba b©dzie\n"
-        "ponownie uruchomiÜ instalator by zainstalowaÜ ReactOS.\n"
+        "ponownie uruchomiÜ instalator, by zainstalowaÜ ReactOS.\n"
         "\n"
-        "  \x07  Naciònij ENTER aby kontynuowaÜ instalacj©.\n"
-        "  \x07  Naciònij F3 aby wyjòÜ z instalatora.",
+        "  \x07  Naciònij ENTER, aby kontynuowaÜ instalacj©.\n"
+        "  \x07  Naciònij F3, aby wyjòÜ z instalatora.",
         "F3= Wyjòcie  ENTER = Kontynuacja"
     },
     {
@@ -1359,8 +1359,8 @@ MUI_ERROR plPLErrorEntries[] =
         "\n"
         "Tworzenie lub kasowanie partycji moæe zniszczyÜ caà• tablic© partycji.\n"
         "\n"
-        "  \x07  Naciònij F3 aby wyjòÜ z instalatora."
-        "  \x07  Naciònij ENTER aby kontynuowaÜ.",
+        "  \x07  Naciònij F3, aby wyjòÜ z instalatora."
+        "  \x07  Naciònij ENTER, aby kontynuowaÜ.",
         "F3= Wyjòcie  ENTER = Kontynuacja"
     },
     {
@@ -1368,14 +1368,14 @@ MUI_ERROR plPLErrorEntries[] =
         "Nie moæesz stworzyÜ nowej partycji w miejscu juæ\n"
         "istniej•cej!\n"
         "\n"
-        "  * Naciònij dowolny klawisz aby kontynuowaÜ.",
+        "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
         "Nie moæesz skasowaÜ pustej przestrzeni, gdzie nie ma æadnej partycji!\n"
         "\n"
-        "  * Naciònij dowolny klawisz aby kontynuowaÜ.",
+        "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
         NULL
     },
     {
@@ -1494,7 +1494,7 @@ MUI_ERROR plPLErrorEntries[] =
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Brak wystarczaj•cej wolnej przestrzeni w wybranej partycji.\n"
-        "  * Naciònij dowolny klawisz aby kontynuowaÜ.",
+        "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
         NULL
     },
     {

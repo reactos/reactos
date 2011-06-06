@@ -44,4 +44,4 @@ add_importlibs(netshell
 
 add_pch(netshell ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-add_cab_target(netshell 1)
+add_cd_file(TARGET netshell DESTINATION reactos/system32 FOR all)

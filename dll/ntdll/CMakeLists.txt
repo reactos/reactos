@@ -58,6 +58,5 @@ set_image_base(ntdll ${baseaddress_ntdll})
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus asm)
 
-add_minicd_target(ntdll reactos/system32 ntdll.dll)
-add_cab_target(ntdll 1)
+add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(def/ntdll.spec)

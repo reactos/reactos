@@ -9,4 +9,4 @@ set_entrypoint(kbdsk1 0)
 
 add_dependencies(kbdsk1 psdk)
 
-add_cab_target(kbdsk1 1)
+add_cd_file(TARGET kbdsk1 DESTINATION reactos/system32 FOR all)

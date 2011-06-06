@@ -20,4 +20,4 @@ target_link_libraries(msgsm32.acm wine)
 
 add_importlibs(msgsm32.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msgsm32.acm psdk)
-add_cab_target(msgsm32.acm 1)
+add_cd_file(TARGET msgsm32.acm DESTINATION reactos/system32 FOR all)

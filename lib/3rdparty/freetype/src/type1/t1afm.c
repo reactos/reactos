@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -235,10 +236,10 @@
                    FT_Stream  stream )
   {
     PSAux_Service  psaux;
-    FT_Memory      memory = stream->memory;
+    FT_Memory      memory  = stream->memory;
     AFM_ParserRec  parser;
-    AFM_FontInfo   fi;
-    FT_Error       error = T1_Err_Unknown_File_Format;
+    AFM_FontInfo   fi      = NULL;
+    FT_Error       error   = T1_Err_Unknown_File_Format;
     T1_Font        t1_font = &( (T1_Face)t1_face )->type1;
 
 

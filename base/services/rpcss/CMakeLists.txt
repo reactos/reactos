@@ -17,5 +17,5 @@ target_link_libraries(rpcss epmrpc irotrpc ${PSEH_LIB} wine)
 set_module_type(rpcss win32cui)
 
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)
-add_cab_target(rpcss 1)
+add_cd_file(TARGET rpcss DESTINATION reactos/system32 FOR all)
 add_dependencies(rpcss winesdk)

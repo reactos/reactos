@@ -12,5 +12,5 @@ add_library(loadperf SHARED
 set_module_type(loadperf win32dll)
 target_link_libraries(loadperf wine)
 add_importlibs(loadperf msvcrt kernel32 ntdll)
-add_cab_target(loadperf 1)
+add_cd_file(TARGET loadperf DESTINATION reactos/system32 FOR all)
 add_importlib_target(loadperf.spec)

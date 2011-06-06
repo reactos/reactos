@@ -77,6 +77,7 @@
 //
 // Definitions used by WM_LOGONNOTIFY
 //
+#define LN_SHELL_EXITED       0x2
 #define LN_START_TASK_MANAGER 0x4
 #define LN_LOCK_WORKSTATION   0x5
 #define LN_UNLOCK_WORKSTATION 0x6

@@ -1,0 +1,54 @@
+LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Information à propos de l'Enregistreur de Son ReactOS"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            128,IDC_REACTOS_SNDREC32,19,14,21,20
+    LTEXT           "Enregistreur de Son ReactOS, version 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "Accepter",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "Fichier"
+    BEGIN
+        MENUITEM "Nouveau",                     ID_NEW
+        MENUITEM "Ouvrir...",                   ID_FILE_OPEN
+        MENUITEM "Enregistrer",                 ID_FILE_SAVE, GRAYED
+        MENUITEM "Enregistrer sous...",         ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Sortir",                      ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "?"
+    BEGIN
+        MENUITEM "A propos...",                  ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "Enregistreur de son"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "Position: %.2f s"
+    IDS_STRDUR              "Durée: %.2f s"
+    IDS_STRBUF              "Buffer: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u bits"
+    IDS_STRMONO             "mono"
+    IDS_STRSTEREO           "stéréo"
+    IDS_STRCHAN             "%s"
+END

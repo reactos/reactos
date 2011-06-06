@@ -22,4 +22,4 @@ target_link_libraries(usp10 wine)
 add_importlibs(usp10 gdi32 msvcrt kernel32 ntdll)
 add_importlib_target(usp10.spec)
 
-add_cab_target(usp10 1)
+add_cd_file(TARGET usp10 DESTINATION reactos/system32 FOR all)

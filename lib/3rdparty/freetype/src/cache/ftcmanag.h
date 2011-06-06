@@ -161,7 +161,7 @@ FT_BEGIN_HEADER
           (a)->y_res == (b)->y_res ) ) )
 
 #define FTC_SCALER_HASH( q )                                 \
-    ( FTC_FACE_ID_HASH( (q)->face_id ) +                     \
+    ( _FTC_FACE_ID_HASH( (q)->face_id ) +                     \
       (q)->width + (q)->height*7 +                           \
       ( (q)->pixel ? 0 : ( (q)->x_res*33 ^ (q)->y_res*61 ) ) )
 

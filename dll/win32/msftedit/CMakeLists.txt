@@ -18,4 +18,4 @@ set_module_type(msftedit win32dll)
 
 target_link_libraries(msftedit uuid wine)
 add_importlibs(msftedit riched20 msvcrt kernel32 ntdll)
-add_cab_target(msftedit 1)
+add_cd_file(TARGET msftedit DESTINATION reactos/system32 FOR all)

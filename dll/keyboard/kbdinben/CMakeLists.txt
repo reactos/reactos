@@ -9,4 +9,4 @@ set_entrypoint(kbdinben 0)
 
 add_dependencies(kbdinben psdk)
 
-add_cab_target(kbdinben 1)
+add_cd_file(TARGET kbdinben DESTINATION reactos/system32 FOR all)
