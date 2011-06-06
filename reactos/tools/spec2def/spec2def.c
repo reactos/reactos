@@ -10,7 +10,7 @@
 typedef struct
 {
     char *pcName;
-    int nNameLength;
+    size_t nNameLength;
     char *pcRedirection;
     int nRedirectionLength;
     int nCallingConvention;
@@ -21,11 +21,21 @@ typedef struct
     unsigned int uFlags;
 } EXPORT;
 
+enum _ARCH
+{
+    ARCH_X86,
+    ARCH_AMD64,
+    ARCH_IA64,
+    ARCH_ARM,
+    ARCH_PPC
+};
+
 typedef int (*PFNOUTLINE)(FILE *, EXPORT *);
 int gbKillAt = 0;
 int gbUseDeco = 0;
 int gbMSComp = 0;
 int no_redirections = 0;
+int giArch = ARCH_X86;
 char *pszArchString = "i386";
 char *pszArchString2;
 char *pszDllName = 0;
@@ -151,7 +161,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         (pexp->uFlags & FL_STUB) == 0) return 0;
 
     fprintf(file, "int ");
-    if (strcmp(pszArchString, "i386") == 0 &&
+    if ((giArch == ARCH_X86) &&
         pexp->nCallingConvention == CC_STDCALL)
     {
         fprintf(file, "__stdcall ");
@@ -218,8 +228,12 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
 void
 OutputHeader_asmstub(FILE *file, char *libname)
 {
-    fprintf(file, "; File generated automatically, do not edit! \n\n"
-            ".586\n.model flat\n.code\n");
+    fprintf(file, "; File generated automatically, do not edit! \n\n");
+
+    if (giArch == ARCH_X86)
+        fprintf(file, ".586\n.model flat\n");
+
+    fprintf(file, ".code\n");
 }
 
 int
@@ -230,6 +244,12 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         fprintf(fileDest, "PUBLIC ordinal%d\nordinal%d: nop\n",
                 pexp->nOrdinal, pexp->nOrdinal);
+    }
+    else if (giArch == ARCH_AMD64)
+    {
+        fprintf(fileDest, "PUBLIC %.*s\n%.*s: nop\n",
+                pexp->nNameLength, pexp->pcName,
+                pexp->nNameLength, pexp->pcName);
     }
     else if (pexp->nCallingConvention == CC_STDCALL)
     {
@@ -274,7 +294,7 @@ void
 PrintName(FILE *fileDest, EXPORT *pexp, int fRedir, int fDeco)
 {
     char *pcName = fRedir ? pexp->pcRedirection : pexp->pcName;
-    int nNameLength = fRedir ? pexp->nRedirectionLength : pexp->nNameLength;
+    size_t nNameLength = fRedir ? pexp->nRedirectionLength : pexp->nNameLength;
 
     if (fDeco && pexp->nCallingConvention == CC_FASTCALL)
          fprintf(fileDest, "@");
@@ -450,7 +470,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             }
             else if (CompareToken(pc, "-i386"))
             {
-                if (strcasecmp(pszArchString, "i386") != 0) included = 0;
+                if (giArch == ARCH_X86) included = 0;
             }
             else if (CompareToken(pc, "-private"))
             {
@@ -572,7 +592,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             {
                 /* Check for stdcall name */
                 char *p = strchr(pc, '@');
-                if (p && (p - pc < exp.nNameLength))
+                if (p && ((size_t)(p - pc) < exp.nNameLength))
                 {
                     int i;
                     exp.nNameLength = p - pc;
@@ -694,15 +714,20 @@ int main(int argc, char *argv[])
         }
     }
 
-    if ((strcasecmp(pszArchString, "x86_64") == 0) ||
-        (strcasecmp(pszArchString, "ia64") == 0))
+    if (strcasecmp(pszArchString, "i386") == 0) giArch = ARCH_X86;
+    else if (strcasecmp(pszArchString, "x86_64") == 0) giArch = ARCH_AMD64;
+    else if (strcasecmp(pszArchString, "ia64") == 0) giArch = ARCH_IA64;
+    else if (strcasecmp(pszArchString, "arm") == 0) giArch = ARCH_ARM;
+    else if (strcasecmp(pszArchString, "ppc") == 0) giArch = ARCH_PPC;
+
+    if ((giArch == ARCH_AMD64) || (giArch = ARCH_IA64))
     {
         pszArchString2 = "win64";
     }
     else
         pszArchString2 = "win32";
 
-    if (strcasecmp(pszArchString, "i386") == 0)
+    if (giArch == ARCH_X86)
     {
         gbUseDeco = 1;
     }
@@ -711,7 +736,7 @@ int main(int argc, char *argv[])
     if (!pszDllName)
     {
         char *p1, *p2;
-        int len;
+        size_t len;
 
         p1 = strrchr(argv[i], '\\');
         if (!p1) p1 = strrchr(argv[i], '/');
