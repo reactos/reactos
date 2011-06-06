@@ -314,7 +314,7 @@ IopInterlockedIncrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
     ULONG OldValue;
 
     Irql = KeAcquireQueuedSpinLock(Queue);
-    OldValue = ((volatile ULONG)*Ulong)++;
+    OldValue = (*Ulong)++;
     KeReleaseQueuedSpinLock(Queue, Irql);
 
     return OldValue;
@@ -332,7 +332,7 @@ IopInterlockedDecrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
     ULONG OldValue;
 
     Irql = KeAcquireQueuedSpinLock(Queue);
-    OldValue = ((volatile ULONG)*Ulong)--;
+    OldValue = (*Ulong)--;
     KeReleaseQueuedSpinLock(Queue, Irql);
 
     return OldValue;
@@ -724,7 +724,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                  * file system.
                  */
                 if (!(AllowRawMount) &&
-                    (Status != STATUS_UNRECOGNIZED_VOLUME) && 
+                    (Status != STATUS_UNRECOGNIZED_VOLUME) &&
                     (FsRtlIsTotalDeviceFailure(Status)))
                 {
                     /* Break out and give up */
