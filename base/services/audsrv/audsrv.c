@@ -3,20 +3,21 @@
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/audsrv.c
  * PURPOSE:          Audio Server
- * COPYRIGHT:        Copyright 2011 Pankaj Yadav
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
 
  */
 
-/* INCLUDES *****************************************************************/
-
 #include "audsrv.h"
 
-/* GLOBALS ******************************************************************/
+static VOID CALLBACK ServiceMain(DWORD,
+                                 LPWSTR *);
 
-static VOID CALLBACK ServiceMain(DWORD, LPWSTR *);
 static DWORD ServiceInit(VOID);
-static BOOL WINAPI close ( DWORD dwCtrlType );
+
+static BOOL WINAPI close (DWORD dwCtrlType);
+
 static WCHAR ServiceName[] = L"AudSrv";
+
 static SERVICE_TABLE_ENTRYW ServiceTable[2] =
 {
     { ServiceName, ServiceMain },
@@ -25,9 +26,6 @@ static SERVICE_TABLE_ENTRYW ServiceTable[2] =
 
 SERVICE_STATUS ServiceStatus;
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
-
-
-HANDLE MyHeap = NULL;
 
 #define _2pi                6.283185307179586476925286766559
 
@@ -44,10 +42,11 @@ const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, 
 const GUID KSDATAFORMAT_SUBTYPE_IEEE_FLOAT      = {0x00000003L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
 
+/*Global Pointer to MixerEngine Structure*/
 MixerEngine engine,*pengine;
-/* FUNCTIONS ****************************************************************/
 
-static VOID
+static
+VOID
 UpdateServiceStatus(DWORD dwState)
 {
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -81,7 +80,7 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
-			close(CTRL_CLOSE_EVENT);
+            close(CTRL_CLOSE_EVENT);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -103,7 +102,7 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
-			close(CTRL_CLOSE_EVENT);
+            close(CTRL_CLOSE_EVENT);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -113,7 +112,9 @@ ServiceControlHandler(DWORD dwControl,
     }
 }
 
-static VOID CALLBACK
+static
+VOID
+CALLBACK
 ServiceMain(DWORD argc,
             LPWSTR *argv)
 {
@@ -151,36 +152,85 @@ ServiceMain(DWORD argc,
     DPRINT("ServiceMain() done\n");
 }
 
-
-
-void mixandfill(MixerEngine * mixer,int buffer)
+/*This Function is called repeatedly by mixer thread.
+  *This functions fetches FilteredBuffer from Every ClientStream Stucture
+  *and mixes them in oder to feed player thread*/
+void
+mixandfill(MixerEngine * mixer,
+           int buffer)
 {
-	while(WaitForSingleObject(mixer->streampresent,100)!=0){if(mixer->dead) return;} /*Check if there is at least one stream present.*/
-	if(mixer->masterdatatype == 0)/*signed int*/
-	{
-		if(mixer->masterbitspersample == 8)mixs8(mixer,buffer);else if(mixer->masterbitspersample == 16) mixs16(mixer,buffer);else if(mixer->masterbitspersample == 32) mixs32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixs64(mixer,buffer);
-	}
-	else if (mixer->masterdatatype == 1)/*unsigned int*/
-	{
-		if(mixer->masterbitspersample == 8)mixu8(mixer,buffer);else if(mixer->masterbitspersample == 16) mixu16(mixer,buffer);else if(mixer->masterbitspersample == 32) mixu32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixu64(mixer,buffer);
-	}
-	else if(mixer->masterdatatype == 2)/*Float*/
-	{
-		if(mixer->masterbitspersample == 32)mixfl32(mixer,buffer);else if(mixer->masterbitspersample == 64) mixfl64(mixer,buffer);
-	}
+    while(WaitForSingleObject(mixer->streampresent,
+                              100) != 0)
+    {
+        if(mixer->dead)
+            return;
+    }
 
-	mixer->masterbuf[buffer] = HeapAlloc(GetProcessHeap(), 0, mixer->serverstreamlist->length_filtered);
-	CopyMemory(mixer->masterbuf[buffer],mixer->serverstreamlist->filteredbuf,mixer->serverstreamlist->length_filtered);
-	mixer->bytes_to_play = mixer->serverstreamlist->length_filtered;
+    /*Master Stream's Datatype is signed int,unsigned int or float when masterdatatype =0,1 and 2 respectively*/
+    if(mixer->masterdatatype == 0)
+    {
+        switch(mixer->masterbitspersample)
+        {
+            case 8:
+                mixs8(mixer,buffer);
+                break;
+            case 16:
+                mixs16(mixer,buffer);
+                break;
+            case 32:
+                mixs32(mixer,buffer);
+                break;
+            case 64:
+                mixs64(mixer,buffer);
+                break;
+        }
+    }
+    else if (mixer->masterdatatype == 1)
+    {
+        switch(mixer->masterbitspersample)
+        {
+            case 8:
+                mixu8(mixer,buffer);
+                break;
+            case 16:
+                mixu16(mixer,buffer);
+                break;
+            case 32:
+                mixu32(mixer,buffer);
+                break;
+            case 64:
+                mixu64(mixer,buffer);
+                break;
+        }
+    }
+    else if(mixer->masterdatatype == 2)
+    {
+        switch(mixer->masterbitspersample)
+        {
+            case 32:
+                mixfl32(mixer,buffer);
+                break;
+            case 64:
+                mixfl64(mixer,buffer);
+                break;
+        }
+    }
 }
+
+/*Frees the Buffer Created in mixer thread*/
 void freebuffer()
 {
-	HeapFree(GetProcessHeap(), 0, pengine->masterbuf[pengine->playcurrent]);
-	pengine->masterbuf[pengine->playcurrent] = NULL;
+    HeapFree(GetProcessHeap(),
+             0,
+            pengine->masterbuf[pengine->playcurrent]);
+
+    pengine->masterbuf[pengine->playcurrent] = NULL;
 }
+
+/*Plays Master buffer pengine->masterbuf[pengine->playcurrent]*/
 void playbuffer(MixerEngine * mixer,int buffer)
 {
-	SP_DEVICE_INTERFACE_DATA InterfaceData;
+    SP_DEVICE_INTERFACE_DATA InterfaceData;
     SP_DEVINFO_DATA DeviceData;
     PSP_DEVICE_INTERFACE_DETAIL_DATA DetailData;
     HDEVINFO DeviceHandle;
@@ -191,8 +241,9 @@ void playbuffer(MixerEngine * mixer,int buffer)
     DWORD Length;
     BOOL Result;
     NTSTATUS Status;
-if(mixer->masterbuf[buffer])
-{
+
+    if(mixer->masterbuf[buffer])
+    {
     //
     // Get a handle to KS Audio Interfaces
     //
@@ -201,7 +252,6 @@ if(mixer->masterbuf[buffer])
                                        NULL,
                                        DIGCF_DEVICEINTERFACE |DIGCF_PRESENT);
 
-   //printf("DeviceHandle %p\n", DeviceHandle);
 
     //
     // Enumerate the first interface
@@ -214,7 +264,6 @@ if(mixer->masterbuf[buffer])
                                 1,
                                 &InterfaceData);
 
-   //printf("SetupDiEnumDeviceInterfaces %u Error %ld\n", Result, GetLastError());
 
     //
     // Get the interface details (namely the device path)
@@ -233,7 +282,6 @@ if(mixer->masterbuf[buffer])
                                     NULL,
                                     &DeviceData);
 
-    //wprintf(L"SetupDiGetDeviceInterfaceDetail %u Path DetailData %s\n", Result, (LPWSTR)&DetailData->DevicePath[0]);
 
     //
     // Open a handle to the device
@@ -246,7 +294,6 @@ if(mixer->masterbuf[buffer])
                               FILE_ATTRIBUTE_NORMAL,
                               NULL);
 
-    //printf("Handle %p\n", mixer->FilterHandle);
 
     //
     // Close the interface handle and clean up
@@ -279,41 +326,37 @@ if(mixer->masterbuf[buffer])
     //
     // Setup the KS Data Format Information
     //
-    //printf("DataFormat %p %p\n", DataFormat,(PVOID)((((ULONG_PTR)DataFormat + 7)) & ~7));
 
     DataFormat->Flags = 0;
     DataFormat->Reserved = 0;
     DataFormat->MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-	if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
-		DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-	else
-		DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+    if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
+        DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    else
+        DataFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
     DataFormat->Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->SampleSize = mixer->masterchannels * mixer->masterbitspersample / 8;
     DataFormat->FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEXTENSIBLE);
 
     WaveFormat->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-	WaveFormat->Format.nChannels = mixer->masterchannels;
+    WaveFormat->Format.nChannels = mixer->masterchannels;
     WaveFormat->Format.nSamplesPerSec = mixer->masterfreq;
     WaveFormat->Format.nBlockAlign = (mixer->masterchannels * mixer->masterbitspersample)/8;;
     WaveFormat->Format.nAvgBytesPerSec = WaveFormat->Format.nSamplesPerSec * WaveFormat->Format.nBlockAlign;
     WaveFormat->Format.wBitsPerSample = mixer->masterbitspersample;
     WaveFormat->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
-	WaveFormat->dwChannelMask = mixer->masterchannelmask;
+    WaveFormat->dwChannelMask = mixer->masterchannelmask;
     WaveFormat->Samples.wValidBitsPerSample = mixer->masterbitspersample;
-	if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
-		WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-	else
-		WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+    if(mixer->masterdatatype == 0 || mixer->masterdatatype == 1)
+        WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    else
+        WaveFormat->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
 
 
-	//
+    //
     // Create the pin
     //
     Status = KsCreatePin(mixer->FilterHandle, PinConnect, GENERIC_READ|GENERIC_WRITE, &(mixer->PinHandle));
-
-    //printf("PinHandle %p Status %lx\n", mixer->PinHandle, Status);
-
 
     Length = mixer->masterfreq * mixer->masterchannels * mixer->masterbitspersample / 8;
     //
@@ -322,7 +365,7 @@ if(mixer->masterbuf[buffer])
     mixer->Packet = (PKSSTREAM_HEADER)HeapAlloc(GetProcessHeap(),
                                          HEAP_ZERO_MEMORY,
                                          sizeof(KSSTREAM_HEADER));
-	mixer->Packet->Data = mixer->masterbuf[buffer];
+    mixer->Packet->Data = mixer->masterbuf[buffer];
     mixer->Packet->FrameExtent = mixer->bytes_to_play;
     mixer->Packet->DataUsed = mixer->bytes_to_play;
     mixer->Packet->Size = sizeof(KSSTREAM_HEADER);
@@ -373,52 +416,96 @@ if(mixer->masterbuf[buffer])
     CloseHandle(mixer->FilterHandle);
 }
 }
+
+/*Thread Routine For Mixer Thread*/
 DWORD WINAPI RunMixerThread(LPVOID param)
 {
-	MixerEngine * mixer = (MixerEngine *) param;
+    MixerEngine * mixer = (MixerEngine *) param;
 
-	SetEvent(mixer->played);
-	while(1)
-	{
-	while(WaitForSingleObject(mixer->played,100)!=0){if(mixer->dead)goto DEAD;}
-	mixandfill(mixer,1-mixer->playcurrent);
-	SetEvent(mixer->filled);
-	}
+    SetEvent(mixer->played);
+
+    while(1)
+    {
+        while(WaitForSingleObject(mixer->played,
+                                  100)!=0)
+        {
+            if(mixer->dead)
+                goto DEAD;
+        }
+
+        mixandfill(mixer,
+                   1-mixer->playcurrent);
+
+        SetEvent(mixer->filled);
+    }
+
 DEAD:
-	printf("\nMixer Thread Ended\n");
-	return 0;
+    return 0;
 }
+
+/*Thread Routine For Player Thread*/
 DWORD WINAPI RunPlayerThread(LPVOID param)
 {
-	MixerEngine * mixer = (MixerEngine *) param;
-	while(1)
-	{
-		while(WaitForSingleObject(mixer->filled,100)!=0){if(mixer->dead)goto DEAD;}
-		SetEvent(mixer->played);
-		playbuffer(mixer,mixer->playcurrent);
-		freebuffer();
-		mixer->playcurrent=1-mixer->playcurrent;
-	}
+    MixerEngine * mixer = (MixerEngine *) param;
+
+    while(1)
+    {
+        while(WaitForSingleObject(mixer->filled,
+                                  100)!=0)
+        {
+            if(mixer->dead)
+                goto DEAD;
+        }
+
+        SetEvent(mixer->played);
+        playbuffer(mixer,
+                   mixer->playcurrent);
+
+        freebuffer();
+
+        mixer->playcurrent=1-mixer->playcurrent;
+    }
 
 DEAD:
-	printf("\nPlayer Thread Ended\n");
-	return 0;
+    return 0;
 }
+
+/*Create Mixer Thread*/
 void SpawnMixerThread(MixerEngine * mixer)
 {
-	DWORD dwID;
-	mixer->mixerthread=CreateThread(NULL,0,RunMixerThread,pengine,0,&dwID);
+    DWORD dwID;
+    mixer->mixerthread=CreateThread(NULL,
+                                    0,
+                                    RunMixerThread,
+                                    pengine,
+                                    0,
+                                    &dwID);
 }
+
+/*Create Player Thread*/
 void SpawnPlayerThread(MixerEngine * mixer)
 {
-	DWORD dwID;
-	mixer->playerthread=CreateThread(NULL,0,RunPlayerThread,pengine,0,&dwID);
+    DWORD dwID;
+    mixer->playerthread=CreateThread(NULL,
+                                     0,
+                                     RunPlayerThread,
+                                     pengine,
+                                     0,
+                                     &dwID);
 }
+
+/*Create RPC Thread*/
 void SpawnRPCThread(MixerEngine * mixer)
 {
-	DWORD dwID;
-	mixer->rpcthread=CreateThread(NULL,0,RunRPCThread,pengine,0,&dwID);
+    DWORD dwID;
+    mixer->rpcthread=CreateThread(NULL,
+                                  0,
+                                  RunRPCThread,
+                                  pengine,
+                                  0,
+                                  &dwID);
 }
+
 void ShutdownRPC(void)
 {
     RPC_STATUS status;
@@ -437,92 +524,107 @@ void ShutdownRPC(void)
        exit(status);
     }
 }
+
+/*This Functions Kills the application, in any condition*/
 static BOOL WINAPI close ( DWORD dwCtrlType )
 {
-	pengine->dead=1;
-	WaitForSingleObject(pengine->mixerthread,INFINITE);
-	WaitForSingleObject(pengine->playerthread,INFINITE);
-	ShutdownRPC();
-	WaitForSingleObject(pengine->rpcthread,INFINITE);
+    pengine->dead=1;
 
-	CloseHandle(pengine->mixerthread);
-	CloseHandle(pengine->playerthread);
-	CloseHandle(pengine->rpcthread);
-	return TRUE;
+    WaitForSingleObject(pengine->mixerthread,
+                        INFINITE);
+    WaitForSingleObject(pengine->playerthread,
+                        INFINITE);
+
+    ShutdownRPC();
+
+    WaitForSingleObject(pengine->rpcthread,INFINITE);
+
+    CloseHandle(pengine->mixerthread);
+    CloseHandle(pengine->playerthread);
+    CloseHandle(pengine->rpcthread);
+
+    return TRUE;
 }
 
 INT wmain(int argc, char *argv[])
 {
     INT RetCode = 0;
-/*For Temporary Debug purpose, If there is any argument it acts as simple command line app,otherwise it is a NTSERVICE*/
-if(argc==1)
-{
-printf("Under Construction.Please Use audsrv.exe -n to start as normal command line application.\n");
-    MyHeap = HeapCreate(0, 1024 * 256, 0);
 
-    if (!MyHeap)
+    /*For Temporary Debugging purpose, If there is any argument it acts as simple command line app,otherwise it is a NTSERVICE*/
+    if(argc==1)
     {
-        DPRINT1("FATAL ERROR, can't create heap.\n");
-        RetCode = 1;
-        goto err;
+        StartServiceCtrlDispatcher(ServiceTable);
+    }
+    else
+    {
+        pengine=&engine;
+
+        /*Later these will be loaded from a Conf file*/
+        pengine->mastervolume=1000;
+        pengine->mute=FALSE;
+
+        pengine->dead=0;
+        pengine->streamidpool=0;
+        pengine->playcurrent=1;
+        pengine->masterbuf[0] = NULL;
+        pengine->masterbuf[1] = NULL;
+        pengine->played=CreateEvent(NULL,
+                                    FALSE,
+                                    FALSE,
+                                    NULL);
+
+        pengine->filled=CreateEvent(NULL,
+                                    FALSE,
+                                    FALSE,
+                                    NULL);
+
+        pengine->streampresent=CreateEvent(NULL,
+                                           TRUE,
+                                           FALSE,
+                                           NULL);
+
+        SetConsoleCtrlHandler(close,
+                              TRUE);
+
+        SpawnMixerThread(pengine);
+        SpawnPlayerThread(pengine);
+        SpawnRPCThread(pengine);
+
+        WaitForSingleObject(pengine->mixerthread,
+                            INFINITE);
+        WaitForSingleObject(pengine->playerthread,
+                            INFINITE);
+        WaitForSingleObject(pengine->rpcthread,INFINITE);
     }
 
-    StartServiceCtrlDispatcher(ServiceTable);
-}
-else
-{
-	pengine=&engine;
-
-	/*Later these will be loaded from a Conf file*/
-	pengine->mastervolume=1000;
-	pengine->mute=FALSE;
-
-	pengine->dead=0;
-	pengine->streamidpool=0;
-	pengine->playcurrent=1;
-	pengine->masterbuf[0] = NULL;
-	pengine->masterbuf[1] = NULL;
-	pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
-	SetConsoleCtrlHandler(close,TRUE);
-	SpawnMixerThread(pengine);
-	SpawnPlayerThread(pengine);
-	SpawnRPCThread(pengine);
-	WaitForSingleObject(pengine->mixerthread,INFINITE);
-	WaitForSingleObject(pengine->playerthread,INFINITE);
-	WaitForSingleObject(pengine->rpcthread,INFINITE);
-}
-  err:
-CloseHandle(pengine->mixerthread);
-CloseHandle(pengine->playerthread);
-CloseHandle(pengine->rpcthread);
-    if (MyHeap)
-        HeapDestroy(MyHeap);
+    CloseHandle(pengine->mixerthread);
+    CloseHandle(pengine->playerthread);
+    CloseHandle(pengine->rpcthread);
 
     return RetCode;
 }
+
 static DWORD
 ServiceInit(VOID)
 {
-	pengine=&engine;
+    pengine=&engine;
 
-	/*Later these will be loaded from a Conf file*/
-	pengine->mastervolume=1000;
-	pengine->mute=FALSE;
+    /*Later these will be loaded from a Conf file*/
+    pengine->mastervolume=1000;
+    pengine->mute=FALSE;
 
-	pengine->dead=0;
-	pengine->streamidpool=0;
-	pengine->playcurrent=1;
-	pengine->masterbuf[0] = NULL;
-	pengine->masterbuf[1] = NULL;
-	pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
-	pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
-	SetConsoleCtrlHandler(close,TRUE);
-	SpawnMixerThread(pengine);
-	SpawnPlayerThread(pengine);
-	SpawnRPCThread(pengine);
+    pengine->dead=0;
+    pengine->streamidpool=0;
+    pengine->playcurrent=1;
+    pengine->masterbuf[0] = NULL;
+    pengine->masterbuf[1] = NULL;
+    pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
+    pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
+    pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
+    SetConsoleCtrlHandler(close,TRUE);
+    SpawnMixerThread(pengine);
+    SpawnPlayerThread(pengine);
+    SpawnRPCThread(pengine);
 
     return ERROR_SUCCESS;
 }

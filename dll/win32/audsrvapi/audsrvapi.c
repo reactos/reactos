@@ -7,76 +7,114 @@ int status = 0;
  */
 WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
-	long streamid;
-	if (clientstream == NULL ) return -1;
-	if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL) return -2;
-	/*Validity of all other data will be checked at server*/
-	/*Check Connection Status If not connected call Connect()*/
-	/*If connected Properly call the remote audsrv_initstream() function*/
+    long streamid;
 
-	RpcTryExcept  
+    if (clientstream == NULL )
+        return -1;
+
+    if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL)
+        return -2;
+
+    /*Validity of all other data will be checked at server*/
+    /*Check Connection Status If not connected call Connect()*/
+    /*If connected Properly call the remote audsrv_initstream() function*/
+
+    RpcTryExcept  
     {
-		streamid = AUDInitStream (audsrv_v0_0_c_ifspec,frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
-		printf("AUDInitStream Returned %ld",streamid);
-		if(streamid != 0) {clientstream->stream = streamid;}
+        streamid = AUDInitStream (audsrv_v0_0_c_ifspec,
+                                  frequency,
+                                  channels,
+                                  bitspersample,
+                                  datatype,
+                                  channelmask,
+                                  volume,
+                                  mute,
+                                  balance);
+
+        if(streamid != 0)
+            clientstream->stream = streamid;
     }
     RpcExcept(1)
     {
         status = RpcExceptionCode();
-        printf("Runtime reported exception 0x%lx = %ld\n", status, status);
     }
     RpcEndExcept
 
-	/*Analyse the return by the function*/
-	/*Currently Suppose the return is 0 and a valid streamid is returned*/
-	clientstream->ClientEventPool[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
-	clientstream->dead = 0;
+    /*Analyse the return by the function*/
+    /*Currently Suppose the return is 0 and a valid streamid is returned*/
+    clientstream->ClientEventPool[0]=CreateEvent(NULL,
+                                                 FALSE,
+                                                 FALSE,
+                                                 NULL);
 
-	return 0;
+    clientstream->dead = 0;
+
+    return 0;
 }
 
 WINAPI int playaudio ( ClientStream * clientstream )
 {
-	/*This is an ActiveScheduler*/
-	clientstream->callbacks.OpenComplete(0);
-	while(1)
-	{
-		while(WaitForSingleObject(clientstream->ClientEventPool[0],100)!=0){if(clientstream->dead)goto DEAD;}
-			/*Check Connection Status If not connected call Connect()*/
-			/*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
-			Sleep(1000);
-			printf("Played a virtual buffer on Virtual Audio Server :) %d\n",clientstream->dead);
-			clientstream->callbacks.BufferCopied(0);
-	}
-	clientstream->callbacks.PlayComplete(0);
+    /*This is an ActiveScheduler*/
+    clientstream->callbacks.OpenComplete(0);
+
+    while(1)
+    {
+        while(WaitForSingleObject(clientstream->ClientEventPool[0],
+                                  100)!=0)
+        {
+            if(clientstream->dead)
+                goto DEAD;
+        }
+            /*Check Connection Status If not connected call Connect()*/
+            /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
+            Sleep(1000);
+            clientstream->callbacks.BufferCopied(0);
+    }
+    clientstream->callbacks.PlayComplete(0);
 
 DEAD:
-printf("\nAudio Thread Ended\n");
+/*Audio Thread Ended*/
 
-	return 0;
+    return 0;
 }
+
 WINAPI int stopaudio (ClientStream * clientstream )
 {
-	/*Server Side termination is remaining*/
-	/*If connected Properly call the remote audsrv_stop() function*/
-	clientstream->dead = 1;  /*Client Side termination*/
+    /*Server Side termination is remaining*/
+    /*If connected Properly call the remote audsrv_stop() function*/
+    clientstream->dead = 1;  /*Client Side termination*/
+    
+    return 0;
 }
+
 WINAPI int Volume(ClientStream * clientstream, int * volume )
 {
+    return 0;
 }
+
 WINAPI int SetVolume(ClientStream * clientstream ,const int newvolume)
 {
+    return 0;
 }
+
 WINAPI int Write(ClientStream * clientstream ,const char * aData)
 {
-	if(clientstream->dead) return -1;
-	SetEvent(clientstream->ClientEventPool[0]);
+    if(clientstream->dead)
+        return -1;
+
+    SetEvent(clientstream->ClientEventPool[0]);
+    
+    return 0;
 }
+
 WINAPI int SetBalance(ClientStream * clientstream ,float balance)
 {
+    return 0;
 }
+
 WINAPI int GetBalance(ClientStream * clientstream ,float * balance)
 {
+    return 0;
 }
 
 

@@ -3,56 +3,74 @@
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/audsrv/rpc.c
  * PURPOSE:          Audio Server
- * COPYRIGHT:        Copyright 2011 Pankaj Yadav
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
   */
-
-/* INCLUDES *****************************************************************/
 
 #include "audsrv.h"
 
 LIST_ENTRY LogHandleListHead;
 
-/* FUNCTIONS ****************************************************************/
-
+/*RPC Listener Thread,Returns values less than 0 in failures*/
 DWORD WINAPI RunRPCThread(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 
     InitializeListHead(&LogHandleListHead);
-    Status = RpcServerUseProtseqEp(L"ncacn_np", 20, L"\\pipe\\audsrv", NULL);
+
+    Status = RpcServerUseProtseqEp(L"ncacn_np",
+                                   20,
+                                   L"\\pipe\\audsrv",
+                                   NULL);
     if (Status != RPC_S_OK)
     {
-        printf("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return 0;
+        return -1;
     }
 
-    Status = RpcServerRegisterIfEx(audsrv_v0_0_s_ifspec, NULL, NULL, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL );
+    Status = RpcServerRegisterIfEx(audsrv_v0_0_s_ifspec,
+                                   NULL,
+                                   NULL,
+                                   0,
+                                   RPC_C_LISTEN_MAX_CALLS_DEFAULT,
+                                   NULL );
     if (Status != RPC_S_OK)
     {
-        printf("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return 0;
+        return -2;
     }
 
-    Status = RpcServerListen(1, 20, FALSE);
+    Status = RpcServerListen(1,
+                             20,
+                             FALSE);
+
     if (Status != RPC_S_OK)
     {
-        printf("RpcServerListen() failed (Status %lx)\n", Status);
+        return -3;
     }
 
     return 0;
 }
 
-
 /*************************RPC Functions**********************************/
 
-long AUDInitStream(	IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
-	long stream;
-	printf("Client Connected and Initiated Stream Freq: %ld,Channle: %d,Bitspersample: %d,Datatype: %d,Mask: %ld,Volume: %d,Mute: %d,Balance: %f\n",frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
-	stream = addstream(frequency,channels,bitspersample,datatype,channelmask,volume,mute,balance);
-	if( stream != 0 ){printf("Stream added\n");}
+    long stream;
+    
+    stream = addstream(frequency,
+                       channels,
+                       bitspersample,
+                       datatype,
+                       channelmask,
+                       volume,
+                       mute,
+                       balance);
+
+    if( stream != 0 )
+    {
+        /*ERROR*/
+    }
     return stream;
 }
+
 /*************************************************************************/
 void __RPC_FAR *__RPC_USER midl_user_allocate(SIZE_T len)
 {
