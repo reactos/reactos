@@ -23,11 +23,6 @@
 #endif
 
 /* Externals.  */
-#ifdef _WIN64
-PRUNTIME_FUNCTION RtlLookupFunctionEntry (ULONG64, PULONG64, PVOID);
-PVOID RtlVirtualUnwind (ULONG HandlerType, ULONG64, ULONG64, PRUNTIME_FUNCTION,
-			PCONTEXT, PVOID *, PULONG64, PVOID);
-#endif
 
 typedef LONG NTSTATUS;	/* same as in ntdef.h / winternl.h */
 

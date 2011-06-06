@@ -50,18 +50,11 @@ _CRTALLOC(".tls$ZZZ") char _tls_end = 0;
 _CRTALLOC(".CRT$XLA") PIMAGE_TLS_CALLBACK __xl_a = 0;
 _CRTALLOC(".CRT$XLZ") PIMAGE_TLS_CALLBACK __xl_z = 0;
 
-#ifdef _WIN64
-_CRTALLOC(".tls") const IMAGE_TLS_DIRECTORY64 _tls_used = {
-  (ULONGLONG) &_tls_start+1, (ULONGLONG) &_tls_end, (ULONGLONG) &_tls_index,
-  (ULONGLONG) (&__xl_a+1), (ULONG) 0, (ULONG) 0
-};
-#else
 _CRTALLOC(".tls") const IMAGE_TLS_DIRECTORY _tls_used = {
-  (ULONG)(ULONG_PTR) &_tls_start+1, (ULONG)(ULONG_PTR) &_tls_end,
-  (ULONG)(ULONG_PTR) &_tls_index, (ULONG)(ULONG_PTR) (&__xl_a+1),
+  (ULONG_PTR) &_tls_start+1, (ULONG_PTR) &_tls_end,
+  (ULONG_PTR) &_tls_index, (ULONG_PTR) (&__xl_a+1),
   (ULONG) 0, (ULONG) 0
 };
-#endif
 
 #ifndef __CRT_THREAD
 #ifdef HAVE_ATTRIBUTE_THREAD
@@ -99,6 +92,7 @@ BOOL WINAPI
 __dyn_tls_init (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
   _PVFV *pfunc;
+  uintptr_t ps;
 
 #ifndef _WIN64
   if (_winmajor < 4)
@@ -135,8 +129,11 @@ __dyn_tls_init (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
       return TRUE;
     }
 
-  for (pfunc = &__xd_a + 1; pfunc != &__xd_z; ++pfunc)
+  ps = (uintptr_t) &__xd_a;
+  ps += sizeof (uintptr_t);
+  for ( ; ps != (uintptr_t) &__xd_z; ps += sizeof (uintptr_t))
     {
+      pfunc = (_PVFV *) ps;
       if (*pfunc != NULL)
 	(*pfunc)();
     }

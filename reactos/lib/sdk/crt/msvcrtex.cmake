@@ -8,6 +8,7 @@ endif()
 list(APPEND MSVCRTEX_SOURCE
     startup/crtexe.c
     startup/wcrtexe.c
+    startup/crt_handler.c
     startup/crtdll.c
     startup/_newmode.c
     startup/wildcard.c
@@ -18,6 +19,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/merr.c
     startup/atonexit.c
     startup/txtmode.c
+    startup/pesect.c
     startup/pseudo-reloc.c
     startup/pseudo-reloc-list.c
     startup/tlsmcrt.c

@@ -158,6 +158,87 @@ __report_error (const char *msg, ...)
 #endif
 }
 
+/* For mingw-w64 we have additional helpers to get image information
+   on runtime.  This allows us to cache for pseudo-relocation pass
+   the temporary access of code/read-only sections.
+   This step speeds up pseudo-relocation pass.  */
+#ifdef __MINGW64_VERSION_MAJOR
+extern int __mingw_GetSectionCount (void);
+extern PIMAGE_SECTION_HEADER __mingw_GetSectionForAddress (LPVOID p);
+extern PBYTE _GetPEImageBase (void);
+
+typedef struct sSecInfo {
+  /* Keeps altered section flags, or zero if nothing was changed.  */
+  DWORD old_protect;
+  PBYTE sec_start;
+  PIMAGE_SECTION_HEADER hash;
+} sSecInfo;
+
+static sSecInfo *the_secs = NULL;
+static int maxSections = 0;
+
+static void
+mark_section_writable (LPVOID addr)
+{
+  MEMORY_BASIC_INFORMATION b;
+  PIMAGE_SECTION_HEADER h;
+  int i;
+
+  for (i = 0; i < maxSections; i++)
+    {
+      if (the_secs[i].sec_start <= ((LPBYTE) addr)
+          && ((LPBYTE) addr) < (the_secs[i].sec_start + the_secs[i].hash->Misc.VirtualSize))
+        return;
+    }
+  h = __mingw_GetSectionForAddress (addr);
+  if (!h)
+    {
+      __report_error ("Address %p has no image-section", addr);
+      return;
+    }
+  the_secs[i].hash = h;
+  the_secs[i].old_protect = 0;
+  the_secs[i].sec_start = _GetPEImageBase () + h->VirtualAddress;
+
+  if (!VirtualQuery (the_secs[i].sec_start, &b, sizeof(b)))
+    {
+      __report_error ("  VirtualQuery failed for %d bytes at address %p",
+		      (int) h->Misc.VirtualSize, the_secs[i].sec_start);
+      return;
+    }
+
+  if (b.Protect != PAGE_EXECUTE_READWRITE && b.Protect != PAGE_READWRITE)
+    VirtualProtect (b.BaseAddress, b.RegionSize, PAGE_EXECUTE_READWRITE,
+		  &the_secs[i].old_protect);
+  ++maxSections;
+  return;
+}
+
+static void
+restore_modified_sections (void)
+{
+  int i;
+  MEMORY_BASIC_INFORMATION b;
+  DWORD oldprot;
+
+  for (i = 0; i < maxSections; i++)
+    {
+      if (the_secs[i].old_protect == 0)
+        continue;
+      if (!VirtualQuery (the_secs[i].sec_start, &b, sizeof(b)))
+	{
+	  __report_error ("  VirtualQuery failed for %d bytes at address %p",
+			  (int) the_secs[i].hash->Misc.VirtualSize,
+			  the_secs[i].sec_start);
+	  return;
+	}
+      VirtualProtect (b.BaseAddress, b.RegionSize, the_secs[i].old_protect,
+		      &oldprot);
+    }
+}
+
+#endif /* __MINGW64_VERSION_MAJOR */
+
 /* This function temporarily marks the page containing addr
  * writable, before copying len bytes from *src to *addr, and
  * then restores the original protection settings to the page.
@@ -174,12 +255,15 @@ __report_error (const char *msg, ...)
 static void
 __write_memory (void *addr, const void *src, size_t len)
 {
+#ifndef __MINGW64_VERSION_MAJOR
   MEMORY_BASIC_INFORMATION b;
   DWORD oldprot;
+#endif /* ! __MINGW64_VERSION_MAJOR */
 
   if (!len)
     return;
 
+#ifndef __MINGW64_VERSION_MAJOR
   if (!VirtualQuery (addr, &b, sizeof(b)))
     {
       __report_error ("  VirtualQuery failed for %d bytes at address %p",
@@ -189,12 +273,18 @@ __write_memory (void *addr, const void *src, size_t len)
   /* Temporarily allow write access to read-only protected memory.  */
   if (b.Protect != PAGE_EXECUTE_READWRITE && b.Protect != PAGE_READWRITE)
     VirtualProtect (b.BaseAddress, b.RegionSize, PAGE_EXECUTE_READWRITE,
-		  &oldprot);
+		    &oldprot);
+#else /* ! __MINGW64_VERSION_MAJOR */
+  mark_section_writable ((LPVOID) addr);
+#endif  /* __MINGW64_VERSION_MAJOR */
+
   /* write the data. */
   memcpy (addr, src, len);
   /* Restore original protection. */
+#ifndef __MINGW64_VERSION_MAJOR
   if (b.Protect != PAGE_EXECUTE_READWRITE && b.Protect != PAGE_READWRITE)
     VirtualProtect (b.BaseAddress, b.RegionSize, oldprot, &oldprot);
+#endif /* !__MINGW64_VERSION_MAJOR */
 }
 
 #define RP_VERSION_V1 0
@@ -361,10 +451,23 @@ void
 _pei386_runtime_relocator (void)
 {
   static NO_COPY int was_init = 0;
+#ifdef __MINGW64_VERSION_MAJOR
+  int mSecs;
+#endif /* __MINGW64_VERSION_MAJOR */
+
   if (was_init)
     return;
   ++was_init;
+#ifdef __MINGW64_VERSION_MAJOR
+  mSecs = __mingw_GetSectionCount ();
+  the_secs = (sSecInfo *) alloca (sizeof (sSecInfo) * (size_t) mSecs);
+  maxSections = 0;
+#endif /* __MINGW64_VERSION_MAJOR */
+
   do_pseudo_reloc (&__RUNTIME_PSEUDO_RELOC_LIST__,
 		   &__RUNTIME_PSEUDO_RELOC_LIST_END__,
-		   &__ImageBase);
+		   &__MINGW_LSYMBOL(_image_base__));
+#ifdef __MINGW64_VERSION_MAJOR
+  restore_modified_sections ();
+#endif /* __MINGW64_VERSION_MAJOR */
 }
