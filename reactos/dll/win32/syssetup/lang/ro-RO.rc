@@ -27,9 +27,7 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la Expertul de instalare al ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Acest expert instalează ReactOS pe computerul dvs. Expertul "\
-          "trebuie să adune niște informații despre computer"\
-          "pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Acest expert instalează ReactOS pe computerul dvs. Expertul trebuie să adune niște informații despre computerpentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Clic pe Următor pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -39,13 +37,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Dezvoltatorii ReactOS le sunt recunoscători următoarelor proiecte de software liber "\
-                    "care au fost utilizate la crearea ReactOS:",
+    LTEXT           "Dezvoltatorii ReactOS le sunt recunoscători următoarelor proiecte de software liber care au fost utilizate la crearea ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS este sub licența GPL, astfel dacă vreți să îl redistribuiți "\
-                    "trebuie să respectați licența GPL.",
+    LTEXT           "ReactOS este sub licența GPL, astfel dacă vreți să îl redistribuiți trebuie să respectați licența GPL.",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Vizualizare GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Clic pe Următor pentru a continua.",IDC_STATIC,15,136,
@@ -74,14 +70,12 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrieți un nume pentru computer de maxim 15 de caractere. "\
-          "Dacă sunteți în rețea, numele computerului trebuie să fie unic.",
+    LTEXT "Scrieți un nume pentru computer de maxim 15 de caractere. Dacă sunteți în rețea, numele computerului trebuie să fie unic.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nume:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Expertul va crea un cont de utilizator cu numele Administrator. "\
-          "Îl puteți folosi când vreți control complet asupra computerului.",
+    LTEXT "Expertul va crea un cont de utilizator cu numele Administrator. Îl puteți folosi când vreți control complet asupra computerului.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Scrieți o parolă pentru Administrator de maxim 14 caractere.",
           IDC_STATIC, 54, 87, 250, 8
@@ -98,9 +92,7 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Setările regionale ar trebui să se potrivească cu limba"\
-          "programelor. Acestea controlează cum apar numerele, "\
-          "datele și valutele.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Setările regionale ar trebui să se potrivească cu limbaprogramelor. Acestea controlează cum apar numerele, datele și valutele.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pentru a aceste setări, clic pe Particularizare.",
           IDC_STATIC, 53, 60, 196, 8
@@ -151,11 +143,9 @@ CAPTION "Finalizare instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Terminare Expert instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Ați terminat cu succes instalarea ReactOS.\n\n" \
-          "După ce veți apăsa Termină computerul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Ați terminat cu succes instalarea ReactOS.\n\nDupă ce veți apăsa Termină computerul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Dacă aveți un CD introdus în computer, scoateți-l. Pentru a "\
-          "reporni computerul, clic pe Termină.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Dacă aveți un CD introdus în computer, scoateți-l. Pentru a reporni computerul, clic pe Termină.", IDC_STATIC, 115, 169, 195, 17
 END
 
 

@@ -17,9 +17,7 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Benvenuti alla configurazione guidata di ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Questa procedura guidata installa ReactOS su questo computer.\nLa procedura "\
-          "deve raccogliere alcune informazioni sull'utente e sul computer "\
-          "per configurare ReactOS adeguatamente.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Questa procedura guidata installa ReactOS su questo computer.\nLa procedura deve raccogliere alcune informazioni sull'utente e sul computer per configurare ReactOS adeguatamente.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Selezionare Avanti per proseguire con la configurazione.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -29,13 +27,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Gli sviluppatori di ReactOS desiderano citare i seguenti progetti Open Source, "\
-                    "che sono stati usati (in tutto o in parte) per creare ReactOS:",
+    LTEXT           "Gli sviluppatori di ReactOS desiderano citare i seguenti progetti Open Source, che sono stati usati (in tutto o in parte) per creare ReactOS:",
                     IDC_STATIC,20,7,286,19
     LISTBOX         IDC_PROJECTS,20,30,280,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo "\
-                    "(in tutto o in parte) è necessario rispettare la GPL",
+    LTEXT           "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo (in tutto o in parte) è necessario rispettare la GPL",
                     IDC_STATIC,20,110,217,22
     PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,241,110,60,19
     LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,20,136,
@@ -64,14 +60,12 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\n"\
-          "Se si è in rete, il nome del computer deve essere univoco.",
+    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 15 caratteri.\nSe si è in rete, il nome del computer deve essere univoco.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nome del &computer:", IDC_STATIC, 29, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. "\
-          "Si potrà usare questo account se si necessita l'accesso completo al computer.",
+    LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. Si potrà usare questo account se si necessita l'accesso completo al computer.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
           IDC_STATIC, 26, 87, 280, 8
@@ -88,9 +82,7 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi "\
-          "che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono "\
-          "i numeri, i valori monetari e le date.", IDC_STATIC, 56, 7, 253, 26
+    LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono i numeri, i valori monetari e le date.", IDC_STATIC, 56, 7, 253, 26
     LTEXT "", IDC_LOCALETEXT, 56, 35, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.",
           IDC_STATIC, 20, 55, 184, 16
@@ -141,11 +133,9 @@ CAPTION "L'installazione di ReactOS è completata"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completamento della procedura guidata di installazione di ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "La procedura guidata di installazione di ReactOS è completata.\n\n" \
-          "Selezionando Fine, il computer sarà riavviato.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "La procedura guidata di installazione di ReactOS è completata.\n\nSelezionando Fine, il computer sarà riavviato.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Se c'è un CD in un lettore, è necessario rimuoverlo. Poi, per riavviare "\
-          "il computer, selezionare Fine.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Se c'è un CD in un lettore, è necessario rimuoverlo. Poi, per riavviare il computer, selezionare Fine.", IDC_STATIC, 115, 169, 195, 17
 END
 
 

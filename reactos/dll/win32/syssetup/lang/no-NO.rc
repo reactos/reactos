@@ -29,9 +29,7 @@ CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Velkommen til ReactOS installasjon veiviser.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Denne veiviseren installerer ReactOS på din datamaskin. Veiviseren "\
-          "må samle sammen nødvendig informasjon om deg og din datamaskin "\
-          "for å sette opp ReactOS skikkelig.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Denne veiviseren installerer ReactOS på din datamaskin. Veiviseren må samle sammen nødvendig informasjon om deg og din datamaskin for å sette opp ReactOS skikkelig.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klikk Neste for å fortsette installasjonen.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -41,13 +39,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS utviklerene anerkjenner de følgende åpen kildekode prosjektene, "\
-                    "(deler av) som ble brukt til å skape ReactOS:",
+    LTEXT           "ReactOS utviklerene anerkjenner de følgende åpen kildekode prosjektene, (deler av) som ble brukt til å skape ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS er lisensert under GPL, så hvis du vil bruke eller gi ut "\
-                    "(deler av) ReactOS, må du respektere GPL",
+    LTEXT           "ReactOS er lisensert under GPL, så hvis du vil bruke eller gi ut (deler av) ReactOS, må du respektere GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Vis GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Klikk Neste for å fortsette installasjonen.",IDC_STATIC,15,136,
@@ -76,14 +72,12 @@ CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Skriv inn et navn for din datamaskin som er 15 karakterer eller mindre. "\
-          "Hvis du er på et nettverk, så må ditt datamaskin navn være unikt.",
+    LTEXT "Skriv inn et navn for din datamaskin som er 15 karakterer eller mindre. Hvis du er på et nettverk, så må ditt datamaskin navn være unikt.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Datamaskin navn:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. "\
-          "Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.",
+    LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Skriv inn et Administrator passord som er 14 karakterer eller mindre.",
           IDC_STATIC, 54, 87, 250, 8
@@ -100,9 +94,7 @@ CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
-          "du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, "\
-          "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
+    LTEXT "Systemets språk og region burde samsvare med språket på programmene du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
     LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 18
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.",
           IDC_STATIC, 53, 60, 184, 8
@@ -153,11 +145,9 @@ CAPTION "Fullfører ReactOS installasjonen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fullfører ReactOS installasjons veiviser", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Installasjonen av ReactOS er fullført.\n\n" \
-          "Når du trykker på fullfør, vil datamaskinen bli startet på nytt.", IDC_STATIC, 115, 40, 205, 100
+    LTEXT "Installasjonen av ReactOS er fullført.\n\nNår du trykker på fullfør, vil datamaskinen bli startet på nytt.", IDC_STATIC, 115, 40, 205, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Fjern en eventuell CD-ROM fra stasjonen. Klikk Fullfør "\
-          "for å starte datamaskinen på nytt.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Fjern en eventuell CD-ROM fra stasjonen. Klikk Fullfør for å starte datamaskinen på nytt.", IDC_STATIC, 115, 169, 195, 17
 END
 
 

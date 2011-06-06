@@ -34,9 +34,7 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
    LTEXT "Witamy w programie instalacyjnym ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-   LTEXT "Ten program pomoże w instalacji systemu ReactOS. W tym celu "\
-         "konieczne będzie zebranie informacji o twoim komputerze, by "\
-         "prawidłowo skonfigurować system operacyjny.", IDC_STATIC, 115, 40, 168, 100
+   LTEXT "Ten program pomoże w instalacji systemu ReactOS. W tym celu konieczne będzie zebranie informacji o twoim komputerze, by prawidłowo skonfigurować system operacyjny.", IDC_STATIC, 115, 40, 168, 100
    LTEXT "Naciśnij Dalej, by kontynuować.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -46,13 +44,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-   LTEXT           "Twórcy ReactOS chcieliby podziękować następującym projektom Open Source, "\
-                   "których to fragmenty zostały wykorzystane do stworzenia ReactOS:",
+   LTEXT           "Twórcy ReactOS chcieliby podziękować następującym projektom Open Source, których to fragmenty zostały wykorzystane do stworzenia ReactOS:",
                    IDC_STATIC,15,7,286,19
    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-   LTEXT           "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła "\
-                   "ReactOS, musisz przestrzegać postanowień licencji.",
+   LTEXT           "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.",
                    IDC_STATIC,15,110,247,19
    PUSHBUTTON      "Pokaż &GPL..",IDC_VIEWGPL,251,110,50,19
    LTEXT           "Naciśnij Dalej, by kontynuować.",IDC_STATIC,15,136,
@@ -81,14 +77,12 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-   LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. "\
-         "Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.",
+   LTEXT "Podaj nazwę komputera, nie dłuższą niż 15 znaków. Jeśli chcesz pracować w sieci, nazwa musi pozostać unikalna.",
          IDC_STATIC, 54, 7, 250, 24
    LTEXT "&Nazwa komputera:", IDC_STATIC, 54, 38, 75, 8
    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-   LTEXT "Program konfiguracyjny stworzy konto Administrator. "\
-         "Dzięki niemu uzyskasz, w razie potrzeby, pełny dostęp do systemu.",
+   LTEXT "Program konfiguracyjny stworzy konto Administrator. Dzięki niemu uzyskasz, w razie potrzeby, pełny dostęp do systemu.",
          IDC_STATIC, 54, 57, 250, 25
    LTEXT "Podaj hasło administratora, nie dłuższe niż 14 znaków.",
          IDC_STATIC, 54, 87, 250, 8
@@ -105,9 +99,7 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-   LTEXT "Lokalizacja systemu powinna być zgodna (językowo) z aplikacjami, "\
-         "których planujesz używać. Lokalizacja odpowiada również za wyświetlanie "\
-         "danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 25
+   LTEXT "Lokalizacja systemu powinna być zgodna (językowo) z aplikacjami, których planujesz używać. Lokalizacja odpowiada również za wyświetlanie danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 25
    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
    LTEXT "By zmienić lokalizację systemu, naciśnij Ustaw.",
          IDC_STATIC, 53, 60, 184, 8
@@ -158,11 +150,9 @@ CAPTION "Zakończenie instalacji ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
    LTEXT "Konfiguracja ReactOS ukończona.", IDC_FINISHTITLE, 115, 8, 195, 24
-   LTEXT "To już koniec ustawień ReactOS.\n\n" \
-         "Teraz naciśnij Koniec, by ponownie uruchomić komputer.", IDC_STATIC, 115, 40, 195, 100
+   LTEXT "To już koniec ustawień ReactOS.\n\nTeraz naciśnij Koniec, by ponownie uruchomić komputer.", IDC_STATIC, 115, 40, 195, 100
    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-   LTEXT "Upewnij się, czy w napędach CD/DVD nie pozostał żaden nośnik. "\
-         "Jeśli tak, to wyjmij go przed naciśnięciem przycisku Koniec.", IDC_STATIC, 115, 169, 195, 17
+   LTEXT "Upewnij się, czy w napędach CD/DVD nie pozostał żaden nośnik. Jeśli tak, to wyjmij go przed naciśnięciem przycisku Koniec.", IDC_STATIC, 115, 169, 195, 17
 END
 
 

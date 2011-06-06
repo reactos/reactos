@@ -24,23 +24,7 @@ IDI_ICON5 ICON "resources/5.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "Wine - http://www.winehq.org\n"\
-                    "FreeType - http://www.freetype.org\n"\
-                    "Expat - http://expat.sourceforge.net\n"\
-                    "DJGPP - http://www.delorie.com/djgpp\n"\
-                    "SYSLINUX - http://syslinux.zytor.com\n"\
-                    "Xbox Linux - http://www.xbox-linux.org\n"\
-                    "MinGW - http://www.mingw.org\n"\
-                    "Bochs - http://bochs.sourceforge.net\n"\
-                    "QEMU - http://fabrice.bellard.free.fr/qemu\n"\
-                    "Mesa3D - http://www.mesa3d.org\n"\
-                    "FreeBSD - http://www.freebsd.org\n"\
-                    "adns - http://adns.jgaa.com\n"\
-                    "ICU - http://www.icu-project.org/\n"\
-                    "GraphApp - http://enchantia.com/software/graphapp/\n"\
-                    "Ext2 - http://winext2fsd.sourceforge.net/\n"\
-                    "X - http://www.x.org/\n"\
-                    ""
+    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nExpat - http://expat.sourceforge.net\nDJGPP - http://www.delorie.com/djgpp\nSYSLINUX - http://syslinux.zytor.com\nXbox Linux - http://www.xbox-linux.org\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nFreeBSD - http://www.freebsd.org\nadns - http://adns.jgaa.com\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nX - http://www.x.org/\n"
 END
 
 IDR_GPL RT_TEXT "COPYING"
