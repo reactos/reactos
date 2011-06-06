@@ -314,7 +314,7 @@ IopInterlockedIncrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
     ULONG OldValue;
 
     Irql = KeAcquireQueuedSpinLock(Queue);
-    OldValue = (*Ulong)++;
+    OldValue = ((volatile ULONG)*Ulong)++;
     KeReleaseQueuedSpinLock(Queue, Irql);
 
     return OldValue;
@@ -332,7 +332,7 @@ IopInterlockedDecrementUlong(IN KSPIN_LOCK_QUEUE_NUMBER Queue,
     ULONG OldValue;
 
     Irql = KeAcquireQueuedSpinLock(Queue);
-    OldValue = (*Ulong)--;
+    OldValue = ((volatile ULONG)*Ulong)--;
     KeReleaseQueuedSpinLock(Queue, Irql);
 
     return OldValue;
