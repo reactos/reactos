@@ -15,6 +15,7 @@ void Test_Rectangle(void)
     HBITMAP hBmp;
     BOOL ret;
     HBRUSH hBrush;
+    HPEN hPen;
     COLORREF color;
     
     hdc = CreateCompatibleDC(NULL);
@@ -48,7 +49,7 @@ void Test_Rectangle(void)
     ok( color == RGB(0, 0, 0), "Expected 0, got 0x%08x\n", (UINT)color);
 
     ret = BitBlt(hdc, 0, 0, 4, 4, NULL, 0, 0, WHITENESS);
-    ok(ret, "BitBlt failed to blank the bitmap!\n");    
+    ok(ret, "BitBlt failed to blank the bitmap!\n");
     /* Try well ordered rectangle coordinates */
     ret = Rectangle(hdc, 0, 0, 2, 2);
     ok(ret, "Rectangle failed!");
@@ -62,6 +63,28 @@ void Test_Rectangle(void)
     ok( color == RGB(255, 255, 255), "Expected 0x00FFFFFF, got 0x%08x\n", (UINT)color);
     color = GetPixel(hdc, 1, 1);
     ok( color == RGB(0, 0, 0), "Expected 0, got 0x%08x\n", (UINT)color);
+    
+    /* tests with NULL pen */
+    hPen = SelectObject(hdc, GetStockObject(NULL_PEN));
+    
+    /* Blank the bitmap */
+    ret = BitBlt(hdc, 0, 0, 4, 4, NULL, 0, 0, WHITENESS);
+    ok(ret, "BitBlt failed to blank the bitmap!\n");
+    
+    ret = Rectangle(hdc, 0, 0, 3, 3);
+    ok(ret, "Rectangle failed!");
+    color = GetPixel(hdc, 0, 0);
+    ok( color == RGB(0, 0, 0), "Expected 0, got 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 2, 2);
+    ok( color == RGB(255, 255, 255), "Expected 0x00FFFFFF, got 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 0, 2);
+    ok( color == RGB(255, 255, 255), "Expected 0x00FFFFFF, got 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 2, 0);
+    ok( color == RGB(255, 255, 255), "Expected 0x00FFFFFF, got 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 1, 1);
+    ok( color == RGB(0, 0, 0), "Expected 0, got 0x%08x\n", (UINT)color);
+    
+    SelectObject(hdc, hPen);
     
     /* Same tests with GM_ADVANCED */
     ok(SetGraphicsMode(hdc, GM_ADVANCED) == GM_COMPATIBLE, "Default mode for the DC is not GM_COMPATIBLE.\n");

@@ -46,6 +46,7 @@ struct notification
     unsigned int status;    /* status received */
     int todo;
     int ignore;
+    int skipped_for_proxy;
 };
 
 struct info
@@ -57,6 +58,25 @@ struct info
     HANDLE wait;
     unsigned int line;
 };
+
+static BOOL proxy_active(void)
+{
+    WINHTTP_PROXY_INFO proxy_info;
+    BOOL active = FALSE;
+
+    if (WinHttpGetDefaultProxyConfiguration(&proxy_info))
+    {
+        active = (proxy_info.lpszProxy != NULL);
+        if (active)
+            GlobalFree((HGLOBAL) proxy_info.lpszProxy);
+        if (proxy_info.lpszProxyBypass != NULL)
+            GlobalFree((HGLOBAL) proxy_info.lpszProxyBypass);
+    }
+    else
+       active = FALSE;
+
+    return active;
+}
 
 static void CALLBACK check_notification( HINTERNET handle, DWORD_PTR context, DWORD status, LPVOID buffer, DWORD buflen )
 {
@@ -88,6 +108,12 @@ static void CALLBACK check_notification( HINTERNET handle, DWORD_PTR context, DW
         }
     }
     if (status_ok) info->index++;
+    if (proxy_active())
+    {
+        while (info->test[info->index].skipped_for_proxy)
+            info->index++;
+    }
+
     if (status & (WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS | WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING))
     {
         SetEvent( info->wait );
@@ -222,10 +248,10 @@ static const struct notification redirect_test[] =
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_REDIRECT, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, 0 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, 0, 0, 1 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_SENDING_REQUEST, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },
@@ -269,6 +295,7 @@ static void test_redirect( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
     ret = WinHttpReceiveResponse( req, NULL );
@@ -299,10 +326,10 @@ static const struct notification async_test[] =
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_REDIRECT, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, 0 },
-    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, 0 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, 0, 0, 1 },
+    { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, 0, 0, 1 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_SENDING_REQUEST, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },

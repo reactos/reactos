@@ -15,4 +15,4 @@ target_link_libraries(advpack_winetest wine)
 
 set_module_type(advpack_winetest win32cui)
 add_importlibs(advpack_winetest cabinet advapi32 msvcrt kernel32 ntdll)
-add_cab_target(advpack_winetest 7)
+add_cd_file(TARGET advpack_winetest DESTINATION reactos/bin FOR all)

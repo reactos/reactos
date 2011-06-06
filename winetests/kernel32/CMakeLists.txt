@@ -49,4 +49,4 @@ target_link_libraries(kernel32_winetest wine)
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 
-add_cab_target(kernel32_winetest 7)
+add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)

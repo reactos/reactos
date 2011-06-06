@@ -943,12 +943,6 @@ static void test_status_callbacks(HINTERNET hInternet)
     HINTERNET hFtp;
     BOOL ret;
 
-    if (!pInternetSetStatusCallbackA)
-    {
-        win_skip("InternetSetStatusCallbackA() is not available, skipping test\n");
-        return;
-    }
-
     cb = pInternetSetStatusCallbackA(hInternet, status_callback);
     ok(cb == NULL, "expected NULL got %p\n", cb);
 
@@ -973,6 +967,12 @@ START_TEST(ftp)
     HANDLE hInternet, hFtp, hHttp;
 
     hWininet = GetModuleHandleA("wininet.dll");
+
+    if(!GetProcAddress(hWininet, "InternetGetCookieExW")) {
+        win_skip("Too old IE (older than 6.0)\n");
+        return;
+    }
+
     pFtpCommandA = (void*)GetProcAddress(hWininet, "FtpCommandA");
     pInternetSetStatusCallbackA = (void*)GetProcAddress(hWininet, "InternetSetStatusCallbackA");
 

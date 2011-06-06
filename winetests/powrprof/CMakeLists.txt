@@ -7,4 +7,4 @@ add_definitions(
 add_executable(powrprof_winetest pwrprof.c testlist.c)
 set_module_type(powrprof_winetest win32cui)
 add_importlibs(powrprof_winetest advapi32 powrprof msvcrt kernel32 ntdll)
-add_cab_target(powrprof_winetest 7)
+add_cd_file(TARGET powrprof_winetest DESTINATION reactos/bin FOR all)

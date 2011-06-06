@@ -370,6 +370,11 @@ static void test_URLOpenStreamW(void)
 
 START_TEST(stream)
 {
+    if(!GetProcAddress(GetModuleHandleA("urlmon.dll"), "CompareSecurityIds")) {
+        win_skip("Too old IE\n");
+        return;
+    }
+
     create_file();
     test_URLOpenBlockingStreamW();
     test_URLOpenStreamW();
