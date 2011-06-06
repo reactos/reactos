@@ -7,6 +7,10 @@ if(ARCH MATCHES i386)
     list(APPEND CHKSTK_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s)
+elseif(ARCH MATCHES amd64)
+    list(APPEND CHKSTK_SOURCE
+        except/amd64/chkstk_asm.s
+        except/amd64/chkstk_ms.s)
 elseif(ARCH MATCHES powerpc)
     list(APPEND CHKSTK_SOURCE
         except/powerpc/chkstk_asm.s)
