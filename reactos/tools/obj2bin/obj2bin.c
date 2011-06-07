@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../pecoff.h"
 
 static
@@ -17,7 +18,8 @@ int main(int argc, char *argv[])
     FILE *pSourceFile, *pDestFile;
     IMAGE_FILE_HEADER FileHeader;
     IMAGE_SECTION_HEADER SectionHeader;
-    unsigned int i, nSize;
+    unsigned int i;
+    size_t nSize;
     void *pData;
 
     if ((argc != 3) || (strcmp(argv[1], "--help") == 0)) Usage();
