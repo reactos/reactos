@@ -209,6 +209,10 @@ typedef struct _IMAGE_BASE_RELOCATION {
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
 #pragma pack(pop)
 
+#ifndef UNALIGNED
+#define UNALIGNED
+#endif
+
 #pragma pack(push,2)
 typedef struct _IMAGE_RELOCATION {
   union {
