@@ -319,16 +319,13 @@ macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
 endmacro()
 
 macro(add_pch _target_name _FILE)
-	set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
-	get_filename_component(_basename ${_FILE} NAME)
-    set(_gch_filename ${_basename}.gch)
-    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+	#set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
+	#get_filename_component(_basename ${_FILE} NAME)
+    #set(_gch_filename ${_basename}.gch)
+    #_PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
 	
-    add_custom_command(
-        OUTPUT ${_gch_filename}
-        COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
-        DEPENDS ${_header_filename})
-	get_target_property(_src_files ${_target_name} SOURCES)
-	set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
+    #add_custom_command(OUTPUT ${_gch_filename} COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args} DEPENDS ${_header_filename})
+	#get_target_property(_src_files ${_target_name} SOURCES)
+	#set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" #OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
 	#add_linkerflag(${_target_name} "${_gch_filename}")
 endmacro()
