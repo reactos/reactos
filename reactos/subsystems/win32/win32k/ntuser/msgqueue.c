@@ -125,7 +125,7 @@ UserSetCursor(
         {
             /* Remove the cursor */
             GreMovePointer(hdcScreen, -1, -1);
-            DPRINT1("Removing pointer!\n");
+            DPRINT("Removing pointer!\n");
             DbgBreakPoint();
         }
         IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
@@ -172,13 +172,13 @@ int UserShowCursor(BOOL bShow)
         {
             /* Show the pointer */
             GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
-            DPRINT1("Showing pointer!\n");
+            DPRINT("Showing pointer!\n");
         }
         else
         {
             /* Remove the pointer */
             GreMovePointer(hdcScreen, -1, -1);
-            DPRINT1("Removing pointer!\n");
+            DPRINT("Removing pointer!\n");
         }
         
         /* Update global info */
