@@ -720,7 +720,7 @@ int main(int argc, char *argv[])
     else if (strcasecmp(pszArchString, "arm") == 0) giArch = ARCH_ARM;
     else if (strcasecmp(pszArchString, "ppc") == 0) giArch = ARCH_PPC;
 
-    if ((giArch == ARCH_AMD64) || (giArch = ARCH_IA64))
+    if ((giArch == ARCH_AMD64) || (giArch == ARCH_IA64))
     {
         pszArchString2 = "win64";
     }
