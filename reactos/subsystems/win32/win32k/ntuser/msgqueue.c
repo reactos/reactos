@@ -126,7 +126,6 @@ UserSetCursor(
             /* Remove the cursor */
             GreMovePointer(hdcScreen, -1, -1);
             DPRINT("Removing pointer!\n");
-            DbgBreakPoint();
         }
         IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
     }
