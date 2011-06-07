@@ -43,6 +43,151 @@ MsqInitializeImpl(VOID)
    return(STATUS_SUCCESS);
 }
 
+PWND FASTCALL
+IntTopLevelWindowFromPoint(INT x, INT y)
+{
+    PWND pWnd, pwndDesktop;
+
+    /* Get the desktop window */
+    pwndDesktop = UserGetDesktopWindow();
+    if (!pwndDesktop)
+        return NULL;
+
+    /* Loop all top level windows */
+    for (pWnd = pwndDesktop->spwndChild;
+         pWnd != NULL;
+         pWnd = pWnd->spwndNext)
+    {
+        if (pWnd->state2 & WNDS2_INDESTROY || pWnd->state & WNDS_DESTROYED)
+        {
+            DPRINT("The Window is in DESTROY!\n");
+            continue;
+        }
+
+        if ((pWnd->style & WS_VISIBLE) && IntPtInWindow(pWnd, x, y))
+            return pWnd;
+    }
+    
+    /* Window has not been found */
+    return NULL;
+}
+
+PCURICON_OBJECT
+FASTCALL
+UserSetCursor(
+    PCURICON_OBJECT NewCursor,
+    BOOL ForceChange)
+{
+    PCURICON_OBJECT OldCursor;
+    HDC hdcScreen;
+    PTHREADINFO pti;
+    PUSER_MESSAGE_QUEUE MessageQueue;
+    PWND pWnd;
+
+    pti = PsGetCurrentThreadWin32Thread();
+    MessageQueue = pti->MessageQueue;
+
+    /* Get the screen DC */
+    if(!(hdcScreen = IntGetScreenDC()))
+    {
+        return (HCURSOR)0;
+    }
+
+    OldCursor = MessageQueue->CursorObject;
+
+    /* Check if cursors are different */
+    if (OldCursor == NewCursor)
+        return OldCursor;
+
+    /* Update cursor for this message queue */
+    MessageQueue->CursorObject = NewCursor;
+
+    /* If cursor is not visible we have nothing to do */
+    if (MessageQueue->ShowingCursor < 0)
+        return OldCursor;
+
+    /* Update cursor if this message queue controls it */
+    pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
+    {
+        if (NewCursor)
+        {
+            /* Call GDI to set the new screen cursor */
+            GreSetPointerShape(hdcScreen,
+                               NewCursor->IconInfo.hbmMask,
+                               NewCursor->IconInfo.hbmColor,
+                               NewCursor->IconInfo.xHotspot,
+                               NewCursor->IconInfo.yHotspot,
+                               gpsi->ptCursor.x,
+                               gpsi->ptCursor.y);
+        }
+        else /* Note: OldCursor != NewCursor so we have to hide cursor */
+        {
+            /* Remove the cursor */
+            GreMovePointer(hdcScreen, -1, -1);
+            DPRINT1("Removing pointer!\n");
+            DbgBreakPoint();
+        }
+        IntGetSysCursorInfo()->CurrentCursorObject = NewCursor;
+    }
+
+    /* Return the old cursor */
+    return OldCursor;
+}
+
+/* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
+ * User32 macro NtUserShowCursor */
+int UserShowCursor(BOOL bShow)
+{
+    HDC hdcScreen;
+    PTHREADINFO pti;
+    PUSER_MESSAGE_QUEUE MessageQueue;
+    PWND pWnd;
+
+    if (!(hdcScreen = IntGetScreenDC()))
+    {
+        return -1; /* No mouse */
+    }
+
+    pti = PsGetCurrentThreadWin32Thread();
+    MessageQueue = pti->MessageQueue;
+    
+    /* Update counter */
+    MessageQueue->ShowingCursor += bShow ? 1 : -1;
+    
+    /* Check for trivial cases */
+    if ((bShow && MessageQueue->ShowingCursor != 0) ||
+        (!bShow && MessageQueue->ShowingCursor != -1))
+    {
+        /* Note: w don't update global info here because it is used only
+          internally to check if cursor is visible */
+        return MessageQueue->ShowingCursor;
+    }
+    
+    /* Check if cursor is above window owned by this MessageQueue */
+    pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
+    {
+        if (bShow)
+        {
+            /* Show the pointer */
+            GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
+            DPRINT1("Showing pointer!\n");
+        }
+        else
+        {
+            /* Remove the pointer */
+            GreMovePointer(hdcScreen, -1, -1);
+            DPRINT1("Removing pointer!\n");
+        }
+        
+        /* Update global info */
+        IntGetSysCursorInfo()->ShowingCursor = MessageQueue->ShowingCursor;
+    }
+
+    return MessageQueue->ShowingCursor;
+}
+
 DWORD FASTCALL UserGetKeyState(DWORD key)
 {
    DWORD ret = 0;
@@ -307,13 +452,15 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    MSLLHOOKSTRUCT MouseHookData;
    PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
+   HDC hdcScreen;
+   PSYSTEM_CURSORINFO CurInfo;
 
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
 
    MouseHookData.pt.x = LOWORD(Msg->lParam);
    MouseHookData.pt.y = HIWORD(Msg->lParam);
-   switch(Msg->message)
+   switch (Msg->message)
    {
       case WM_MOUSEWHEEL:
          MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg->wParam));
@@ -344,7 +491,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
-   if(!pwndDesktop)
+   if (!pwndDesktop)
        return;
 
    /* Set hit somewhere on the desktop */
@@ -354,7 +501,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
-   if(Msg->hwnd != NULL)
+   if (Msg->hwnd != NULL)
    {
        pwnd = UserGetWindowObject(Msg->hwnd);
        if ((pwnd->style & WS_VISIBLE) &&
@@ -366,41 +513,66 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    }
    else
    {
-       /* Loop all top level windows to find which one should receive input */
-       for( pwnd = pwndDesktop->spwndChild;
-            pwnd != NULL;
-            pwnd = pwnd->spwndNext )
+       pwnd = IntTopLevelWindowFromPoint(Msg->pt.x, Msg->pt.y);
+       if (pwnd)
        {
-           if ( pwnd->state2 & WNDS2_INDESTROY || pwnd->state & WNDS_DESTROYED )
-           {
-              DPRINT("The Window is in DESTROY!\n");
-              continue;
-           }
-
-           if((pwnd->style & WS_VISIBLE) &&
-              IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
-           {
-               Msg->hwnd = pwnd->head.h;
-               pDesk->htEx = HTCLIENT;
-               pDesk->spwndTrack = pwnd;
-               break;
-           }
+           Msg->hwnd = pwnd->head.h;
+           pDesk->htEx = HTCLIENT;
+           pDesk->spwndTrack = pwnd;
        }
    }
 
+   hdcScreen = IntGetScreenDC();
+   CurInfo = IntGetSysCursorInfo();
+
    /* Check if we found a window */
-   if(Msg->hwnd != NULL && pwnd != NULL)
+   if (Msg->hwnd != NULL && pwnd != NULL)
    {
-       if(Msg->message == WM_MOUSEMOVE)
+       if (Msg->message == WM_MOUSEMOVE)
        {
-           /* Mouse move is a special case*/
-           MsqPostMouseMove(pwnd->head.pti->MessageQueue, Msg);
+           PUSER_MESSAGE_QUEUE MessageQueue = pwnd->head.pti->MessageQueue;
+
+           /* Check if cursor should be visible */
+           if(hdcScreen &&
+              MessageQueue->CursorObject &&
+              MessageQueue->ShowingCursor >= 0)
+           {
+               /* Check if shape has changed */
+               if(CurInfo->CurrentCursorObject != MessageQueue->CursorObject)
+               {
+                   /* Call GDI to set the new screen cursor */
+                   GreSetPointerShape(hdcScreen,
+                                      MessageQueue->CursorObject->IconInfo.hbmMask,
+                                      MessageQueue->CursorObject->IconInfo.hbmColor,
+                                      MessageQueue->CursorObject->IconInfo.xHotspot,
+                                      MessageQueue->CursorObject->IconInfo.yHotspot,
+                                      gpsi->ptCursor.x,
+                                      gpsi->ptCursor.y);
+               } else
+                   GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
+           }
+           /* Check if w have to hide cursor */
+           else if (CurInfo->ShowingCursor >= 0)
+               GreMovePointer(hdcScreen, -1, -1);
+
+           /* Update global cursor info */
+           CurInfo->ShowingCursor = MessageQueue->ShowingCursor;
+           CurInfo->CurrentCursorObject = MessageQueue->CursorObject;
+
+           /* Mouse move is a special case */
+           MsqPostMouseMove(MessageQueue, Msg);
        }
        else
        {
            DPRINT("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
        }
+   }
+   else if (hdcScreen)
+   {
+       /* always show cursor on background; FIXME: set default pointer */
+       GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
+       CurInfo->ShowingCursor = 0;
    }
 
    /* Do GetMouseMovePointsEx FIFO. */
@@ -1601,13 +1773,14 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    InitializeListHead(&MessageQueue->HardwareMessagesListHead);
    InitializeListHead(&MessageQueue->DispatchingMessagesHead);
    InitializeListHead(&MessageQueue->LocalDispatchingMessagesHead);
-   KeInitializeMutex(&MessageQueue->HardwareLock, 0);
    MessageQueue->QuitPosted = FALSE;
    MessageQueue->QuitExitCode = 0;
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->FocusWindow = NULL;
    MessageQueue->NewMessagesHandle = NULL;
+   MessageQueue->ShowingCursor = 0;
+   MessageQueue->CursorObject = NULL;
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
                           NULL, SynchronizationEvent, FALSE);
@@ -1763,6 +1936,18 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    MessageQueue->nCntsQBits[QSRosPostMessage] = 0;
    MessageQueue->nCntsQBits[QSRosSendMessage] = 0;
    MessageQueue->nCntsQBits[QSRosHotKey] = 0;
+   
+   if (MessageQueue->CursorObject)
+   {
+       PCURICON_OBJECT pCursor = MessageQueue->CursorObject;
+
+       /* Change to another cursor if we going to dereference current one */
+       if (IntGetSysCursorInfo()->CurrentCursorObject == pCursor)
+           UserSetCursor(NULL, TRUE);
+
+       UserDereferenceObject(pCursor);
+   }
+      
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -1988,6 +2173,5 @@ NtUserSetKeyboardState(LPBYTE lpKeyState)
 
    return ret;
 }
-
 
 /* EOF */
