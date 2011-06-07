@@ -191,3 +191,28 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround
 set(PSEH_LIB "pseh")
+
+macro(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
+
+    set(_object_file ${_binary_file}.obj)
+    set(_temp_file ${_binary_file}.tmp)
+
+    add_custom_command(
+        OUTPUT ${_temp_file}
+        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
+        DEPENDS ${_asm_file})
+
+    add_custom_command(
+        OUTPUT ${_object_file}
+        COMMAND ml /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file}
+        DEPENDS ${_temp_file})
+
+    add_custom_command(
+        OUTPUT ${_binary_file}
+        COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
+        DEPENDS ${_object_file})
+
+    set_source_files_properties(${_object_file} ${_temp_file} ${_binary_file} PROPERTIES GENERATED TRUE)
+
+    add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
+endmacro()

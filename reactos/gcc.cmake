@@ -314,7 +314,7 @@ macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
             list(APPEND ${_out_compile_flags} -D${item})
         endforeach()
     endif()
-	
+
 	separate_arguments(${_out_compile_flags})
 endmacro()
 
@@ -323,9 +323,32 @@ macro(add_pch _target_name _FILE)
 	#get_filename_component(_basename ${_FILE} NAME)
     #set(_gch_filename ${_basename}.gch)
     #_PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
-	
+
     #add_custom_command(OUTPUT ${_gch_filename} COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args} DEPENDS ${_header_filename})
 	#get_target_property(_src_files ${_target_name} SOURCES)
 	#set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" #OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
 	#add_linkerflag(${_target_name} "${_gch_filename}")
+endmacro()
+
+macro(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)
+    get_filename_component(OBJECT_PATH ${_object_file} PATH)
+    get_filename_component(OBJECT_NAME ${_object_file} NAME)
+    file(MAKE_DIRECTORY ${OBJECT_PATH})
+    get_directory_property(defines COMPILE_DEFINITIONS)
+    get_directory_property(includes INCLUDE_DIRECTORIES)
+
+    foreach(arg ${defines})
+        set(result_defs ${result_defs} -D${arg})
+    endforeach()
+
+    foreach(arg ${includes})
+        set(result_incs -I${arg} ${result_incs})
+    endforeach()
+
+    add_custom_command(
+        OUTPUT ${_object_file}
+        COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
+        DEPENDS ${_asm_file})
+    set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
+    add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
 endmacro()

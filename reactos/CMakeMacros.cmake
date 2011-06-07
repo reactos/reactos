@@ -1,36 +1,4 @@
 
-if (NOT MSVC)
-
-macro(CreateBootSectorTarget _target_name _asm_file _object_file)
-    get_filename_component(OBJECT_PATH ${_object_file} PATH)
-    get_filename_component(OBJECT_NAME ${_object_file} NAME)
-    file(MAKE_DIRECTORY ${OBJECT_PATH})
-    get_directory_property(defines COMPILE_DEFINITIONS)
-    get_directory_property(includes INCLUDE_DIRECTORIES)
-
-    foreach(arg ${defines})
-        set(result_defs ${result_defs} -D${arg})
-    endforeach()
-
-    foreach(arg ${includes})
-        set(result_incs -I${arg} ${result_incs})
-    endforeach()
-
-    add_custom_command(
-        OUTPUT ${_object_file}
-        COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
-        DEPENDS ${_asm_file})
-    set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
-    add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
-endmacro()
-
-else()
-
-macro(CreateBootSectorTarget _target_name _asm_file _object_file)
-endmacro()
-
-endif()
-
 macro(set_cpp)
     include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
     set(IS_CPP 1)
@@ -108,27 +76,27 @@ function(add_cd_file)
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
-    
+
     if(NOT _CD_DESTINATION)
         message(FATAL_ERROR "You must provide a destination")
     elseif(${_CD_DESTINATION} STREQUAL root)
         set(_CD_DESTINATION "")
     endif()
-    
+
     if(NOT _CD_FOR)
         message(FATAL_ERROR "You must provide a cd name (or "all" for all of them) to install the file on!")
     endif()
-    
+
     #get file if we need to
     if(NOT _CD_FILE)
         get_target_property(_CD_FILE ${_CD_TARGET} LOCATION)
     endif()
-    
+
     #do we add it to all CDs?
     if(_CD_FOR STREQUAL all)
         set(_CD_FOR "bootcd;livecd;regtest")
     endif()
-    
+
     #do we add it to bootcd?
     list(FIND _CD_FOR bootcd __cd)
     if(NOT __cd EQUAL -1)
@@ -161,7 +129,7 @@ function(add_cd_file)
             endif()
         endif()
     endif() #end bootcd
-    
+
     #do we add it to livecd?
     list(FIND _CD_FOR livecd __cd)
     if(NOT __cd EQUAL -1)
@@ -178,7 +146,7 @@ function(add_cd_file)
             file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
         endif()
     endif() #end livecd
-    
+
     #do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
     if(NOT __cd EQUAL -1)

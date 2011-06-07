@@ -61,7 +61,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     if(NOT MSVC)
         export(TARGETS widl wrc gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -72,7 +72,7 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
-    
+
     #useful stuff!
     include(CMakeParseArguments)
 
