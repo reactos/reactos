@@ -6,6 +6,7 @@ add_subdirectory(cdmake)
 add_subdirectory(gendib)
 add_subdirectory(geninc)
 add_subdirectory(mkhive)
+add_subdirectory(obj2bin)
 add_subdirectory(spec2def)
 add_subdirectory(unicode)
 
