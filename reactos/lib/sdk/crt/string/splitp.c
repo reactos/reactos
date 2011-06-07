@@ -24,7 +24,9 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     /* Check parameter */
     if (!path)
     {
-        //__set_errno(EINVAL);
+#ifndef _LIBCNT_
+        __set_errno(EINVAL);
+#endif
         return;
     }
 
@@ -56,7 +58,7 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
         path++;
     }
 
-    /* Check if we got */
+    /* Check if we got a file name / extension */
     if (!file_start) file_start = path;
     if (!ext_start || ext_start < file_start) ext_start = path;
 
