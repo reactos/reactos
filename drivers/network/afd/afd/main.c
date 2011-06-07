@@ -381,6 +381,8 @@ AfdCleanupSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT Function;
     PIRP CurrentIrp;
 
+    DbgPrint("[AFD, AfdCleanupSocket] Called\n");
+
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket(Irp);
 
     for (Function = 0; Function < MAX_FUNCTIONS; Function++)
@@ -400,6 +402,8 @@ AfdCleanupSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
 
+    DbgPrint("[AFD, AfdCleanupSocket] Leaving\n");
+
     return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
 }
 
@@ -414,8 +418,12 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
+    DbgPrint("[AfdCloseSocket] Called\n");
 
-    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
+    if( !SocketAcquireStateLock( FCB ) )
+        return STATUS_FILE_CLOSED;
+
+    DbgPrint("[AfdCloseSocket] Setting closed state\n");
 
     FCB->State = SOCKET_STATE_CLOSED;
     FCB->PollState = AFD_EVENT_CLOSE;
@@ -479,7 +487,10 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    ExFreePool( FCB->RemoteAddress );
 
     if( FCB->Connection.Object )
-	    ObDereferenceObject(FCB->Connection.Object);
+    {
+        TdiDisassociateAddressFile(FCB->Connection.Object);
+	ObDereferenceObject(FCB->Connection.Object);
+    }
 
     if( FCB->AddressFile.Object )
 	    ObDereferenceObject(FCB->AddressFile.Object);
@@ -510,6 +521,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
+    DbgPrint("[AfdCloseSocket] Leaving\n");
 
     return STATUS_SUCCESS;
 }

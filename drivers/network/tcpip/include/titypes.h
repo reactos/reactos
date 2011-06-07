@@ -268,6 +268,8 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
+
+    struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

@@ -161,6 +161,9 @@ VOID AddrFileFree(
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
+  /* We should not be associated with a connection here */
+  ASSERT(!AddrFile->Connection);
+
   /* Remove address file from the global list */
   TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
   RemoveEntryList(&AddrFile->ListEntry);
@@ -377,17 +380,14 @@ NTSTATUS FileCloseAddress(
   if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
   LockObject(AddrFile, &OldIrql);
-  /* We have to close this connection because we started it */
+
+  /* We have to close this listener because we started it */
   if( AddrFile->Listener )
   {
       AddrFile->Listener->AddressFile = NULL;
       TCPClose( AddrFile->Listener );
   }
-  if( AddrFile->Connection )
-  {
-      AddrFile->Connection->AddressFile = NULL;
-      DereferenceObject( AddrFile->Connection );
-  }
+
   UnlockObject(AddrFile, OldIrql);
 
   DereferenceObject(AddrFile);
