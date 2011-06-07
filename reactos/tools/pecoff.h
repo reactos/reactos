@@ -41,11 +41,15 @@
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 
+#define IMAGE_REL_I386_ABSOLUTE 0x0001
+
 typedef unsigned char BYTE;
 typedef unsigned char UCHAR;
 typedef unsigned short WORD;
+typedef short SHORT;
 typedef unsigned short USHORT;
 typedef unsigned long long ULONGLONG;
+
 #if defined(__x86_64__) && !defined(_WIN64)
 typedef signed int LONG;
 typedef unsigned int ULONG;
@@ -205,3 +209,33 @@ typedef struct _IMAGE_BASE_RELOCATION {
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
 #pragma pack(pop)
 
+#pragma pack(push,2)
+typedef struct _IMAGE_RELOCATION {
+  union {
+    DWORD VirtualAddress;
+    DWORD RelocCount;
+  };
+  DWORD SymbolTableIndex;
+  WORD Type;
+} IMAGE_RELOCATION;
+typedef struct _IMAGE_RELOCATION UNALIGNED *PIMAGE_RELOCATION;
+#pragma pack(pop)
+
+#pragma pack(push,2)
+typedef struct _IMAGE_SYMBOL {
+  union {
+    BYTE ShortName[8];
+    struct {
+      DWORD Short;
+      DWORD Long;
+    } Name;
+    DWORD LongName[2];
+  } N;
+  DWORD Value;
+  SHORT SectionNumber;
+  WORD Type;
+  BYTE StorageClass;
+  BYTE NumberOfAuxSymbols;
+} IMAGE_SYMBOL;
+typedef struct _IMAGE_SYMBOL UNALIGNED *PIMAGE_SYMBOL;
+#pragma pack(pop)
