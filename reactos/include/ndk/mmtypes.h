@@ -342,7 +342,7 @@ typedef struct _MMPTE
 {
     union
     {
-        ULONG Long;
+        ULONG_PTR Long;
         HARDWARE_PTE Flush;
         MMPTE_HARDWARE Hard;
         MMPTE_PROTOTYPE Proto;
@@ -704,7 +704,7 @@ typedef struct _MMVAD
 //
 // Long VAD used in section and private allocations
 //
-typedef struct _MMVAD_LONG 
+typedef struct _MMVAD_LONG
 {
     union
     {
