@@ -1569,6 +1569,13 @@ CmpResolveDriverDependencies(
     IN PLIST_ENTRY DriverListHead
 );
 
+BOOLEAN
+NTAPI
+CmpIsSafe(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SafeBootCell,
+    IN HCELL_INDEX DriverCell);
+
 //
 // Global variables accessible from all of Cm
 //

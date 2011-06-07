@@ -369,6 +369,9 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             continue;
         }
 
+        /* safe mode - force to run if prefixed with asterisk */
+        if (GetSystemMetrics(SM_CLEANBOOT) && (szValue[0] != L'*')) continue;
+
         if (bDelete && (res=RegDeleteValueW(hkRun, szValue))!=ERROR_SUCCESS)
         {
             printf("Couldn't delete value - %ld, %ld. Running command anyways.\n", i, res);
@@ -466,6 +469,9 @@ int startup(int argc, const char *argv[])
         }
     } else
         ops=DEFAULT;
+
+    /* do not run certain items in Safe Mode */
+    if(GetSystemMetrics(SM_CLEANBOOT)) ops.startup = FALSE;
 
     /* Perform the ops by order, stopping if one fails, skipping if necessary */
     /* Shachar: Sorry for the perl syntax */

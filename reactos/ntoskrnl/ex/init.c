@@ -1792,7 +1792,10 @@ Phase1InitializationDiscard(IN PVOID Context)
                                          &KeyPartialInfo,
                                          sizeof(KeyPartialInfo),
                                          &Length);
-                if (!NT_SUCCESS(Status)) AlternateShell = FALSE;
+                if (!(NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW))
+                {
+                    AlternateShell = FALSE;
+                }
             }
 
             /* Create the option key */

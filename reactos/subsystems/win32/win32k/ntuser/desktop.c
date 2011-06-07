@@ -1346,6 +1346,7 @@ NtUserPaintDesktop(HDC hDC)
    HWND hWndDesktop;
    BOOL doPatBlt = TRUE;
    PWND WndDesktop;
+    static WCHAR s_wszSafeMode[] = L"Safe Mode";
    int len;
    COLORREF color_old;
    UINT align_old;
@@ -1367,133 +1368,132 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
+    if (!UserGetSystemMetrics(SM_CLEANBOOT))
+    {
+        DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
+        /*
+        * Paint desktop background
+        */
+        if (WinSta->hbmWallpaper != NULL)
+        {
+            SIZE sz;
+            int x, y;
+            HDC hWallpaperDC;
 
-   /*
-    * Paint desktop background
-    */
+            sz.cx = WndDesktop->rcWindow.right - WndDesktop->rcWindow.left;
+            sz.cy = WndDesktop->rcWindow.bottom - WndDesktop->rcWindow.top;
 
-   if (WinSta->hbmWallpaper != NULL)
-   {
-      PWND DeskWin;
-
-      DeskWin = UserGetWindowObject(hWndDesktop);
-
-      if (DeskWin)
-      {
-         SIZE sz;
-         int x, y;
-         HDC hWallpaperDC;
-
-         sz.cx = DeskWin->rcWindow.right - DeskWin->rcWindow.left;
-         sz.cy = DeskWin->rcWindow.bottom - DeskWin->rcWindow.top;
-
-         if (WinSta->WallpaperMode == wmStretch ||
-             WinSta->WallpaperMode == wmTile)
-         {
-            x = 0;
-            y = 0;
-         }
-         else
-         {
-            /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
-            x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
-            y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
-         }
-
-         hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
-         if(hWallpaperDC != NULL)
-         {
-            HBITMAP hOldBitmap;
-
-            /* fill in the area that the bitmap is not going to cover */
-            if (x > 0 || y > 0)
+            if (WinSta->WallpaperMode == wmStretch ||
+                WinSta->WallpaperMode == wmTile)
             {
-               /* FIXME - clip out the bitmap
-                                            can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
-                                            once we support DSTINVERT */
-              PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
-              NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-              NtGdiSelectBrush(hDC, PreviousBrush);
-            }
-
-            /*Do not fill the background after it is painted no matter the size of the picture */
-            doPatBlt = FALSE;
-
-            hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, WinSta->hbmWallpaper);
-
-            if (WinSta->WallpaperMode == wmStretch)
-            {
-                if(Rect.right && Rect.bottom)
-	                NtGdiStretchBlt(hDC,
-                                x,
-                                y,
-                                sz.cx,
-                                sz.cy,
-                                hWallpaperDC,
-                                0,
-                                0,
-                                WinSta->cxWallpaper,
-                                WinSta->cyWallpaper,
-                                SRCCOPY,
-                                0);
-
-            }
-            else if (WinSta->WallpaperMode == wmTile)
-            {
-                /* paint the bitmap across the screen then down */
-                for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
-                {
-                    for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
-                    {
-                        NtGdiBitBlt(hDC,
-                                    x,
-                                    y,
-                                    WinSta->cxWallpaper,
-                                    WinSta->cyWallpaper,
-                                    hWallpaperDC,
-                                    0,
-                                    0,
-                                    SRCCOPY,
-                                    0,
-                                    0);
-                    }
-                }
+                x = 0;
+                y = 0;
             }
             else
             {
-                NtGdiBitBlt(hDC,
-                            x,
-                            y,
-                            WinSta->cxWallpaper,
-                            WinSta->cyWallpaper,
-                            hWallpaperDC,
-                            0,
-                            0,
-                            SRCCOPY,
-                            0,
-                            0);
+                /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
+                x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
+                y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
             }
-            NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
-            NtGdiDeleteObjectApp(hWallpaperDC);
-         }
-      }
-   }
 
-   /* Back ground is set to none, clear the screen */
-   if (doPatBlt)
-   {
+            hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
+            if(hWallpaperDC != NULL)
+            {
+                HBITMAP hOldBitmap;
+
+                /* fill in the area that the bitmap is not going to cover */
+                if (x > 0 || y > 0)
+                {
+                   /* FIXME - clip out the bitmap
+                                                can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                                                once we support DSTINVERT */
+                  PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+                  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+                  NtGdiSelectBrush(hDC, PreviousBrush);
+                }
+
+                /*Do not fill the background after it is painted no matter the size of the picture */
+                doPatBlt = FALSE;
+
+                hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, WinSta->hbmWallpaper);
+
+                if (WinSta->WallpaperMode == wmStretch)
+                {
+                    if(Rect.right && Rect.bottom)
+                        NtGdiStretchBlt(hDC,
+                                    x,
+                                    y,
+                                    sz.cx,
+                                    sz.cy,
+                                    hWallpaperDC,
+                                    0,
+                                    0,
+                                    WinSta->cxWallpaper,
+                                    WinSta->cyWallpaper,
+                                    SRCCOPY,
+                                    0);
+
+                }
+                else if (WinSta->WallpaperMode == wmTile)
+                {
+                    /* paint the bitmap across the screen then down */
+                    for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
+                    {
+                        for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
+                        {
+                            NtGdiBitBlt(hDC,
+                                        x,
+                                        y,
+                                        WinSta->cxWallpaper,
+                                        WinSta->cyWallpaper,
+                                        hWallpaperDC,
+                                        0,
+                                        0,
+                                        SRCCOPY,
+                                        0,
+                                        0);
+                        }
+                    }
+                }
+                else
+                {
+                    NtGdiBitBlt(hDC,
+                                x,
+                                y,
+                                WinSta->cxWallpaper,
+                                WinSta->cyWallpaper,
+                                hWallpaperDC,
+                                0,
+                                0,
+                                SRCCOPY,
+                                0,
+                                0);
+                }
+                NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
+                NtGdiDeleteObjectApp(hWallpaperDC);
+            }
+        }
+    }
+    else
+    {
+        /* Black desktop background in Safe Mode */
+        DesktopBrush = StockObjects[BLACK_BRUSH];
+    }
+
+    /* Back ground is set to none, clear the screen */
+    if (doPatBlt)
+    {
       PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
       NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
       NtGdiSelectBrush(hDC, PreviousBrush);
-   }
+    }
 
    /*
     * Display system version on the desktop background
     */
 
-   if (g_PaintDesktopVersion)
+   if (g_PaintDesktopVersion||UserGetSystemMetrics(SM_CLEANBOOT))
    {
       static WCHAR s_wszVersion[256] = {0};
       RECTL rect;
@@ -1519,7 +1519,29 @@ NtUserPaintDesktop(HDC hDC)
          align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
          mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
 
-         GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
+            if(!UserGetSystemMetrics(SM_CLEANBOOT))
+            {
+                GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
+            }
+            else
+            {
+                /* Safe Mode */
+                /* Version information text in top center */
+                IntGdiSetTextAlign(hDC, TA_CENTER|TA_TOP);
+                GreExtTextOutW(hDC, (rect.right+rect.left)/2, rect.top, 0, NULL, s_wszVersion, len, NULL, 0);
+                /* Safe Mode text in corners */
+                len = wcslen(s_wszSafeMode);
+                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_TOP);
+                GreExtTextOutW(hDC, rect.right, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_BASELINE);
+                GreExtTextOutW(hDC, rect.right, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT|TA_TOP);
+                GreExtTextOutW(hDC, rect.left, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT|TA_BASELINE);
+                GreExtTextOutW(hDC, rect.left, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
+
+            }
+
 
          IntGdiSetBkMode(hDC, mode_old);
          IntGdiSetTextAlign(hDC, align_old);
