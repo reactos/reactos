@@ -4,9 +4,8 @@
  * FILE:            ntoskrnl/ex/i386/fastinterlck_asm.S
  * PURPOSE:         FASTCALL Interlocked Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Paolo Bonzini <bonzini [at] gnu [dot] org>
  */
-
+ 
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
@@ -32,55 +31,25 @@
  */
 PUBLIC @ExInterlockedAddLargeStatistic@8
 @ExInterlockedAddLargeStatistic@8:
-    push ebp
-    push ebx
-    mov  ebp, ecx
 
-Again:
-    /* Load comparand in eax for cmpxchg */
-    mov  eax, [ebp]
+#ifdef CONFIG_SMP
+    /* Do the addition */
+    lock add [ecx], edx
 
-    /* Compute low word of the result in ebx */
-    mov  ebx, edx
-    add  ebx, eax
-
-    /* Carry needs cmpxchg8b */
-    jc   Slow
-
-    /* Fast path still needs to be atomic, so use cmpxchg and retry if it fails
-     * Hopefully it will still get through this path :) */
-    LOCK cmpxchg [ecx], ebx
-    jnz  Again
-
-    /* Thats it */
-    pop  ebx
-    pop  ebp
+    /* Check for carry bit and return */
+    jb .l1
     ret
 
-Slow:
-    /* Save increment across cmpxchg8b */
-    push edx
-
-    /* Finish loading comparand in edx:eax */
-    mov  edx, [ebp+4]
-
-    /* Result in ecx:ebx (we know there's carry) */
-    lea  ecx, [edx+1]
-
-    /* Do a full exchange */
-    LOCK cmpxchg8b [ebp]
-
-    /* restore increment */
-    pop  edx
-
-    /* Need to retry */
-    jnz  Again
-
-    /* Thats it */
-    pop  ebx
-    pop  ebp
+.l1:
+    /* Add carry */
+    lock adc dword ptr [ecx+4], 0
+#else
+    /* Do the addition and add the carry */
+    add dword ptr [ecx], edx
+    adc dword ptr [ecx+4], 0
+#endif
+    /* Return */
     ret
-
 
 /*ULONG
  *FASTCALL
