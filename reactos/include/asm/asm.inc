@@ -35,11 +35,13 @@ rip = 0
     name PROC FRAME
     _name:
 ENDM
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .ENDP MACRO name
     name ENDP
 ENDM
+#define ENDFUNC .ENDP
 
 /* MASM doesn't have an ASCII macro */
 .ASCII MACRO text
@@ -50,10 +52,7 @@ ENDM
 .ASCIZ MACRO text
     DB text, 0
 ENDM
-
-#define lgdt lgdt fword ptr ds:
-
-#define lidt lidt fword ptr ds:
+#define asciz ASCIZ
 
 ljmp MACRO segment, offset
     DB 0
