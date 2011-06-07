@@ -1008,17 +1008,17 @@ co_WinPosSetWindowPos(
 
    co_WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
-   /* Fix up the flags. */
-   if (!WinPosFixupFlags(&WinPos, Window))
-   {
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
-
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   /* Fix up the flags. */
+   if (!WinPosFixupFlags(&WinPos, Window))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
@@ -1112,11 +1112,9 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if (!(Window->style & WS_VISIBLE) &&
-           Window->spwndParent == UserGetDesktopWindow() )
-      {
+      if (Window->spwndParent == UserGetDesktopWindow())
          co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Window->head.h);
-      }
+
       Window->style |= WS_VISIBLE;
    }
 
@@ -1365,6 +1363,17 @@ co_WinPosSetWindowPos(
       PWND pWnd = UserGetWindowObject(WinPos.hwnd);
       if (pWnd)
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+
+   if(IntPtInWindow(Window, gpsi->ptCursor.x, gpsi->ptCursor.y))
+   {
+      /* Generate mouse move message */
+      MSG msg;
+      msg.message = WM_MOUSEMOVE;
+      msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+      msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+      msg.pt = gpsi->ptCursor;
+      co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
    }
 
    return TRUE;
