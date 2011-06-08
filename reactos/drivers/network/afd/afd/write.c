@@ -185,9 +185,12 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
-    FCB->PollState |= AFD_EVENT_SEND;
-    FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+    if (Irp->IoStatus.Status == STATUS_SUCCESS)
+    {
+        FCB->PollState |= AFD_EVENT_SEND;
+        FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */

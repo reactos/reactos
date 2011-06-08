@@ -140,7 +140,13 @@ static NTSTATUS NTAPI ListenComplete
     }
 
     AFD_DbgPrint(MID_TRACE,("Completing listen request.\n"));
-    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", FCB->ListenIrp.Iosb.Status));
+    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", Irp->IoStatus.Status));
+    
+    if (Irp->IoStatus.Status != STATUS_SUCCESS)
+    {
+        SocketStateUnlock(FCB);
+        return Irp->IoStatus.Status;
+    }
 
     Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
     if( !Qelt ) {

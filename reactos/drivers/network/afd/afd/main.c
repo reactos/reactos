@@ -762,6 +762,33 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
+VOID
+CleanupPendingIrp(PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_POLL Poll)
+{
+    PAFD_RECV_INFO RecvReq;
+    PAFD_SEND_INFO SendReq;
+    PAFD_POLL_INFO PollReq;
+    
+    if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV ||
+        IrpSp->MajorFunction == IRP_MJ_READ)
+    {
+        RecvReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
+    }
+    else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
+             IrpSp->MajorFunction == IRP_MJ_WRITE)
+    {
+        SendReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+        UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
+    }
+    else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SELECT)
+    {
+        PollReq = Irp->AssociatedIrp.SystemBuffer;
+        ZeroEvents(PollReq->Handles, PollReq->HandleCount);
+        SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
+    }       
+}
+
 VOID NTAPI
 AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp)
@@ -769,39 +796,46 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    UINT Function;
-    PAFD_RECV_INFO RecvReq;
-    PAFD_SEND_INFO SendReq;
-    PLIST_ENTRY CurrentEntry;
+    ULONG Function, IoctlCode;
     PIRP CurrentIrp;
+    PLIST_ENTRY CurrentEntry;
     PAFD_DEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
     KIRQL OldIrql;
     PAFD_ACTIVE_POLL Poll;
-    PAFD_POLL_INFO PollReq;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-
+    
     if (!SocketAcquireStateLock(FCB))
         return;
+    
+    switch (IrpSp->MajorFunction)
+    {
+        case IRP_MJ_DEVICE_CONTROL:
+            IoctlCode = IrpSp->Parameters.DeviceIoControl.IoControlCode;
+            break;
+            
+        case IRP_MJ_READ:
+            IoctlCode = IOCTL_AFD_RECV;
+            break;
+            
+        case IRP_MJ_WRITE:
+            IoctlCode = IOCTL_AFD_SEND;
+            break;
+            
+        default:
+            ASSERT(FALSE);
+            SocketStateUnlock(FCB);
+            return;
+    }
 
-    ASSERT(IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL);
-
-    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
+    switch (IoctlCode)
     {
         case IOCTL_AFD_RECV:
-        RecvReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-	UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
-        /* Fall through */
-
         case IOCTL_AFD_RECV_DATAGRAM:
         Function = FUNCTION_RECV;
         break;
 
         case IOCTL_AFD_SEND:
-        SendReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-        UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
-        /* Fall through */
-
         case IOCTL_AFD_SEND_DATAGRAM:
         Function = FUNCTION_SEND;
         break;
@@ -821,14 +855,13 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
         while (CurrentEntry != &DeviceExt->Polls)
         {
             Poll = CONTAINING_RECORD(CurrentEntry, AFD_ACTIVE_POLL, ListEntry);
-            CurrentIrp = Poll->Irp;
-            PollReq = CurrentIrp->AssociatedIrp.SystemBuffer;
 
-            if (CurrentIrp == Irp)
+            if (Irp == Poll->Irp)
             {
-                ZeroEvents(PollReq->Handles, PollReq->HandleCount);
-                SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
-                break;
+                CleanupPendingIrp(Irp, IrpSp, Poll);
+                KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
+                SocketStateUnlock(FCB);
+                return;
             }
             else
             {
@@ -838,8 +871,9 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
 
         KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
 
-        /* IRP already completed by SignalSocket */
         SocketStateUnlock(FCB);
+            
+        DbgPrint("WARNING!!! IRP cancellation race could lead to a process hang! (IOCTL_AFD_SELECT)\n");
         return;
             
         default:
@@ -856,7 +890,9 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
         if (CurrentIrp == Irp)
         {
             RemoveEntryList(CurrentEntry);
-            break;
+            CleanupPendingIrp(Irp, IrpSp, NULL);
+            UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
+            return;
         }
         else
         {
@@ -864,7 +900,9 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
         }
     }
     
-    UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
+    SocketStateUnlock(FCB);
+    
+    DbgPrint("WARNING!!! IRP cancellation race could lead to a process hang! (Function: %d)\n", Function);
 }
 
 static VOID NTAPI

@@ -252,10 +252,38 @@ NTSTATUS LostSocket( PIRP Irp ) {
 }
 
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
+    NTSTATUS Status;
+    
+    /* Add the IRP to the queue in all cases (so AfdCancelHandler will work properly) */
     InsertTailList( &FCB->PendingIrpList[Function],
-		    &Irp->Tail.Overlay.ListEntry );
-    IoMarkIrpPending(Irp);
-    (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+                    &Irp->Tail.Overlay.ListEntry );
+    
+    /* Acquire the cancel spin lock and check the cancel bit */
+    IoAcquireCancelSpinLock(&Irp->CancelIrql);
+    if (!Irp->Cancel)
+    {
+        /* We are not cancelled; we're good to go so
+         * set the cancel routine, release the cancel spin lock,
+         * mark the IRP as pending, and
+         * return STATUS_PENDING to the caller
+         */
+        (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+        IoMarkIrpPending(Irp);
+        Status = STATUS_PENDING;
+    }
+    else
+    {
+        /* We were already cancelled before we were able to register our cancel routine
+         * so we are to call the cancel routine ourselves right here to cancel the IRP
+         * (which handles all the stuff we do above) and return STATUS_CANCELLED to the caller
+         */
+        AfdCancelHandler(IoGetCurrentIrpStackLocation(Irp)->DeviceObject,
+                         Irp);
+        Status = STATUS_CANCELLED;
+    }
+    
     SocketStateUnlock( FCB );
-    return STATUS_PENDING;
+
+    return Status;
 }
