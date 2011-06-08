@@ -47,15 +47,16 @@ ENDM
 .ASCII MACRO text
     DB text
 ENDM
+.ascii MACRO text
+    DB text
+ENDM
 
 /* MASM doesn't have an ASCIZ macro */
 .ASCIZ MACRO text
     DB text, 0
 ENDM
-#define asciz ASCIZ
-
-ljmp MACRO segment, offset
-    DB 0
+.asciz MACRO text
+    DB text, 0
 ENDM
 
 .code64 MACRO
@@ -69,11 +70,12 @@ ENDM
 
 .code16 MACRO
     ASSUME nothing
-    .text16 SEGMENT use16
+    .text SEGMENT use16
+    .586
 ENDM
 
 .endcode16 MACRO
-    .text16 ENDS
+    .text ENDS
 ENDM
 
 .bss MACRO
@@ -143,6 +145,16 @@ ENDM
 
 UNIMPLEMENTED MACRO name
 ENDM
+
+absolute MACRO address
+    __absolute__address__ = address
+ENDM
+
+resb MACRO name, size
+    name = __absolute__address__
+    __absolute__address__ = __absolute__address__ + size
+ENDM
+
 
 /* We need this to distinguish repeat from macros */
 #define ENDR ENDM
@@ -261,6 +273,15 @@ code = 1
 
 .macro .endprolog
 .endm
+
+.macro absolute address
+    __absolute__address__ = \address
+ENDM
+
+.macro resb name, size
+    \name = __absolute__address__
+    __absolute__address__ = __absolute__address__ + \size
+ENDM
 
 .macro UNIMPLEMENTED2 file, line, func
 
