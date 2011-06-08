@@ -13,14 +13,13 @@ list(APPEND KMTEST_SOURCE
     ntos_fsrtl.c
     kmtest.rc)
 
-add_library(kmtest SHARED ${KMTEST_SOURCE})
+add_library(kmtest_old SHARED ${KMTEST_SOURCE})
 
-set_module_type(kmtest kernelmodedriver)
-target_link_libraries(kmtest ${PSEH_LIB})
-add_importlibs(kmtest ntoskrnl hal)
+set_module_type(kmtest_old kernelmodedriver)
+target_link_libraries(kmtest_old ${PSEH_LIB})
+add_importlibs(kmtest_old ntoskrnl hal)
 
-add_minicd_target(kmtest reactos kmtest.sys)
-add_livecd_target(kmtest reactos/system32/drivers)
+add_cd_file(TARGET kmtest_old DESTINATION reactos/system32/drivers FOR all)
 
 
 add_library(kmtestassist SHARED kmtestassist.c)
@@ -28,5 +27,4 @@ add_library(kmtestassist SHARED kmtestassist.c)
 set_module_type(kmtestassist kernelmodedriver)
 add_importlibs(kmtestassist ntoskrnl hal)
 
-add_minicd_target(kmtestassist reactos kmtestassist.sys)
-add_livecd_target(kmtestassist reactos/system32/drivers)
+add_cd_file(TARGET kmtestassist DESTINATION reactos/system32/drivers FOR all)

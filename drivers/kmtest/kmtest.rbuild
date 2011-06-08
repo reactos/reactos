@@ -1,4 +1,4 @@
-<module name="kmtest" type="kernelmodedriver" installbase="system32/drivers" installname="kmtest.sys">
+<module name="kmtest_old" type="kernelmodedriver" installbase="system32/drivers" installname="kmtest_old.sys">
 	<bootstrap base="$(CDOUTPUT)" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntoskrnl</library>
