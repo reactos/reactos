@@ -8,13 +8,14 @@ void
 Usage(void)
 {
     printf("Converts a coff object file into a raw binary file.\n"
-           "Syntax: obj2bin <source file> <dest file>\n");
+           "Syntax: obj2bin <source file> <dest file> <base address>\n");
 }
 
 static
 void
 RelocateImage(
     char *pData,
+    unsigned int nSize,
     PIMAGE_RELOCATION pReloc,
     unsigned int cNumRelocs,
     PIMAGE_SYMBOL pSymbols,
@@ -25,15 +26,19 @@ RelocateImage(
 
     for (i = 0; i < cNumRelocs; i++)
     {
+        if (pReloc->VirtualAddress > nSize) continue;
+
         switch (pReloc->Type)
         {
             case IMAGE_REL_I386_ABSOLUTE:
+            case 16:
                 p16 = (void*)(pData + pReloc->VirtualAddress);
-                *p16 = (WORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
+                *p16 += (WORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
                 break;
 
             default:
-                printf("Unknown relocatation type %ld\n", pReloc->Type);
+                printf("Unknown relocatation type %ld address %ld\n",
+                       pReloc->Type, pReloc->VirtualAddress);
         }
 
         pReloc++;
@@ -183,12 +188,14 @@ int main(int argc, char *argv[])
         return -15;
     }
 
-    RelocateImage(pData, pReloc, SectionHeader.NumberOfRelocations, pSymbols, iOffset);
+    RelocateImage(pData, SectionHeader.SizeOfRawData,
+                  pReloc, SectionHeader.NumberOfRelocations, pSymbols, iOffset);
 
     /* Write the section to the destination file */
     if (!fwrite(pData, SectionHeader.SizeOfRawData, 1, pDestFile))
     {
-        fprintf(stderr, "Failed to write data\n");
+        fprintf(stderr, "Failed to write data %ld\n",
+                SectionHeader.SizeOfRawData);
         return -16;
     }
 
