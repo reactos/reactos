@@ -30,10 +30,10 @@ dwarfopen(Pe *pe)
 	if(pe->loadsection(pe, ".debug_abbrev", &d->abbrev) < 0
 	|| pe->loadsection(pe, ".debug_aranges", &d->aranges) < 0
 	|| pe->loadsection(pe, ".debug_line", &d->line) < 0
-	|| pe->loadsection(pe, ".debug_pubnames", &d->pubnames) < 0
 	|| pe->loadsection(pe, ".debug_info", &d->info) < 0
     || pe->loadsection(pe, ".debug_loc", &d->loc) < 0)
 		goto err;
+	pe->loadsection(pe, ".debug_pubnames", &d->pubnames);
 	pe->loadsection(pe, ".debug_frame", &d->frame);
 	pe->loadsection(pe, ".debug_ranges", &d->ranges);
 	pe->loadsection(pe, ".debug_str", &d->str);
