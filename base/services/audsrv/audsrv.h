@@ -69,7 +69,7 @@ typedef struct MixerEngine
     long streamidpool;
     HANDLE played;
     HANDLE filled;
-    HANDLE streampresent;
+    HANDLE newStreamEvent;
     HANDLE mixerthread;
     HANDLE playerthread;
     HANDLE rpcthread;

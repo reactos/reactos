@@ -192,7 +192,7 @@ long AddStream(LONG frequency,int channels,int bitspersample,int datatype, ULONG
             localstream = localstream->next;
         localstream->next = newstream;
     }
-    SetEvent(pengine->streampresent);
+    SetEvent(pengine->newStreamEvent);
     return newstream->streamid;
 
 error:

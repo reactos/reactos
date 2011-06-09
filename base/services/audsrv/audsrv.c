@@ -159,7 +159,7 @@ void
 MixAndFill(MixerEngine * mixer,
            int buffer)
 {
-    while(WaitForSingleObject(mixer->streampresent,
+    while(WaitForSingleObject(mixer->newStreamEvent,
                               100) != 0)
     {
         if(mixer->dead)
@@ -583,7 +583,7 @@ INT wmain(int argc, char *argv[])
                                     FALSE,
                                     NULL);
 
-        pengine->streampresent=CreateEvent(NULL,
+        pengine->newStreamEvent=CreateEvent(NULL,
                                            TRUE,
                                            FALSE,
                                            NULL);
@@ -625,7 +625,7 @@ ServiceInit(VOID)
     pengine->masterbuf[1] = NULL;
     pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
     pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
-    pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
+    pengine->newStreamEvent=CreateEvent(NULL,TRUE,FALSE,NULL);
     SetConsoleCtrlHandler(Close,TRUE);
     SpawnMixerThread(pengine);
     SpawnPlayerThread(pengine);

@@ -24,7 +24,7 @@ typedef struct ClientStream
 } ClientStream;
 
 /********************API Functions******************/
-WINAPI int initstream (ClientStream * clientstream,
+WINAPI int InitStream (ClientStream * clientstream,
                        LONG frequency,
                        int channels,
                        int bitspersample,
@@ -34,8 +34,8 @@ WINAPI int initstream (ClientStream * clientstream,
                        int mute,
                        float balance);
 
-WINAPI int playaudio ( ClientStream * clientstream);
-WINAPI int stopaudio (ClientStream * clientstream );
+WINAPI int PlayAudio ( ClientStream * clientstream);
+WINAPI int StopAudio (ClientStream * clientstream );
 
 WINAPI int Volume(ClientStream * clientstream,
                   int * volume );
