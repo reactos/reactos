@@ -181,7 +181,8 @@ ReadSectorsLBA:
 
 ReadSectorsSetupDiskAddressPacket:
     mov word ptr ds:[LBASectorsRead],cx
-    push 0 // push large 0 ?
+    push 0
+    push 0
     push eax                                // Put 64-bit logical block address on stack
     push es                                    // Put transfer segment on stack
     push bx                                    // Put transfer offset on stack
