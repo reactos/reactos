@@ -94,7 +94,7 @@ resb ISOFileNameEnd, 1
 
 //align open_file_t_size
 absolute HEX(5060)
-resb Files, MAX_OPEN * open_file_t_size
+resb Files, (MAX_OPEN * open_file_t_size)
 
 
 /******************************************************************************/
@@ -104,7 +104,7 @@ start:
     cli                     // Disable interrupts
     xor ax, ax              // ax = segment zero
     mov ss, ax              // Initialize stack segment
-    mov sp, start           // Set up stack
+    mov sp, offset start    // Set up stack
     mov ds, ax              // Initialize other segment registers
     mov es, ax
     mov fs, ax
@@ -150,7 +150,7 @@ relocate:
 
     // Display the 'Press key' message and wait for a maximum of 5 seconds
     call crlf
-    mov si, presskey_msg        // si points to 'Press key' message
+    mov si, offset presskey_msg // si points to 'Press key' message
     call writestr               // display the message
 
     mov byte ptr ds:[TimeoutCount], 5
@@ -166,7 +166,7 @@ relocate:
     cmp eax, ebx
     jnz .poll_again
 
-    mov si, dot_msg            // print '.'
+    mov si, offset dot_msg            // print '.'
     call writestr
     dec byte ptr ds:[TimeoutCount]        // decrement timeout counter
     jz .boot_harddisk
@@ -215,7 +215,7 @@ relocate:
     // at least some BIOSes will get the wrong value otherwise
     mov ax, HEX(4B01)            // Get disk emulation status
     mov dl, byte ptr ds:[DriveNo]
-    mov si, spec_packet
+    mov si, offset spec_packet
     int HEX(13)
     jc    spec_query_failed        // Shouldn't happen (BIOS bug)
     mov dl, byte ptr ds:[DriveNo]
@@ -430,7 +430,7 @@ searchdir_iso:
     inc    di
     and    cl,cl
     jz    .isfile
-    cmp cl, '\'
+    cmp cl, 92 // '\'
     jne    .scan
     mov byte ptr ds:[di-1], 0            // Terminate at directory name
     mov cl,2                // Search for directory
@@ -519,7 +519,7 @@ searchdir_iso:
     pop    di                // Next filename pointer
 
     // restore the backslash in the filename
-    mov byte ptr ds:[di-1], '\'
+    mov byte ptr ds:[di-1], 92 // '\'
 
     mov byte ptr ds:[ISOFlags], cl            // Restore the flags
     jz    .failure            // Did we fail?  If so fail for real!
@@ -656,9 +656,9 @@ spec_query_failed:
 .test_loop:
     pusha
     mov ax, HEX(4B01)
-    mov si, spec_packet
-    mov byte ptr ds:[si], 13            ; Size of buffer
-    int 13h
+    mov si, offset spec_packet
+    mov byte ptr ds:[si], 13            // Size of buffer
+    int HEX(13)
     popa
     jc    .still_broken
 
@@ -704,7 +704,7 @@ fatal_error:
 writemsg:
     push    ax
     push    si
-    mov si, isolinux_str
+    mov si, offset isolinux_str
     call writestr
     pop    si
     call writestr
@@ -714,7 +714,7 @@ writemsg:
 //
 // crlf: Print a newline
 crlf:
-    mov si, crlf_msg
+    mov si, offset crlf_msg
     // Fall through
 
 //
@@ -758,7 +758,7 @@ writehex_common:
 .loop:
     rol    eax, 4
     push    eax
-    and    al, 0Fh
+    and    al, HEX(0F)
     cmp al, 10
     jae    .high
 .low:
@@ -808,7 +808,7 @@ getonesec:
 //    BP    - Sector count
 //
 getlinsec:
-    mov si, dapa            // Load up the DAPA
+    mov si, offset dapa            // Load up the DAPA
     mov word ptr ds:[si+4], bx
     mov bx, es
     mov word ptr ds:[si+6], bx
@@ -841,7 +841,7 @@ xint13:
     mov byte ptr ds:[RetryCount], retry_count
 .try:
     pushad
-    int 13h
+    int HEX(13)
     jc    .error
     add    sp, 8*4            // Clean up stack
     ret
@@ -892,7 +892,7 @@ kaboom:
     mov fs, ax
     mov gs, ax
     sti
-    mov si, err_bootfailed
+    mov si, offset err_bootfailed
     call writestr
     xor    ax, ax        // Wait for keypress
     int HEX(16)
@@ -985,88 +985,88 @@ no_isolinux_msg:
 //
 .align 8
 spec_packet:
-    db HEX(13)          // Size of packet
+    .byte HEX(13)          // Size of packet
 sp_media:
-    db 0                // Media type
+    .byte 0                // Media type
 sp_drive:
-    db 0                // Drive number
+    .byte 0                // Drive number
 sp_controller:
-    db 0                // Controller index
+    .byte 0                // Controller index
 sp_lba:
-    dd 0                // LBA for emulated disk image
+    .long 0                // LBA for emulated disk image
 sp_devspec:
-    dw 0                // IDE/SCSI information
+    .word 0                // IDE/SCSI information
 sp_buffer:
-    dw 0                // User-provided buffer
+    .word 0                // User-provided buffer
 sp_loadseg:
-    dw 0                // Load segment
+    .word 0                // Load segment
 sp_sectors:
-    dw 0                // Sector count
+    .word 0                // Sector count
 sp_chs:
-    db 0,0,0            // Simulated CHS geometry
+    .byte 0,0,0            // Simulated CHS geometry
 sp_dummy:
-    db 0                // Scratch, safe to overwrite
+    .byte 0                // Scratch, safe to overwrite
 
 //
 // EBIOS drive parameter packet
 //
 .align 8
 drive_params:
-    dw 30                // Buffer size
+    .word 30                // Buffer size
 dp_flags:
-    dw 0                // Information flags
+    .word 0                // Information flags
 dp_cyl:
-    dd 0                // Physical cylinders
+    .long 0                // Physical cylinders
 dp_head:
-    dd 0                // Physical heads
+    .long 0                // Physical heads
 dp_sec:
-    dd 0                // Physical sectors/track
+    .long 0                // Physical sectors/track
 dp_totalsec:
-    dd 0,0                // Total sectors
+    .long 0,0                // Total sectors
 dp_secsize:
-    dw 0                // Bytes per sector
+    .word 0                // Bytes per sector
 dp_dpte:
-    dd 0                // Device Parameter Table
+    .long 0                // Device Parameter Table
 dp_dpi_key:
-    dw 0                // 0BEDDh if rest valid
+    .word 0                // 0BEDDh if rest valid
 dp_dpi_len:
-    db 0                // DPI len
-    db 0
-    dw 0
+    .byte 0                // DPI len
+    .byte 0
+    .word 0
 dp_bus:
-    db 0,0,0,0            // Host bus type
+    .byte 0,0,0,0            // Host bus type
 dp_interface:
-    db 0,0,0,0,0,0,0,0            // Interface type
+    .byte 0,0,0,0,0,0,0,0            // Interface type
 db_i_path:
-    dd 0,0                // Interface path
+    .long 0,0                // Interface path
 db_d_path:
-    dd 0,0                // Device path
-    db 0
+    .long 0,0                // Device path
+    .byte 0
 db_dpi_csum:
-    db 0                // Checksum for DPI info
+    .byte 0                // Checksum for DPI info
 
 //
 // EBIOS disk address packet
 //
 .align 8
 dapa:
-    dw 16                // Packet size
+    .word 16                // Packet size
 .count:
-    dw 0                // Block count
+    .word 0                // Block count
 .off:
-    dw 0                // Offset of buffer
+    .word 0                // Offset of buffer
 .seg:
-    dw 0                // Segment of buffer
+    .word 0                // Segment of buffer
 .lba:
-    dd 0                // LBA (LSW)
-    dd 0                // LBA (MSW)
+    .long 0                // LBA (LSW)
+    .long 0                // LBA (MSW)
 
 .align 4
 MaxTransfer:
-    dw 2 //32                // Max sectors per transfer
+    .word 2 //32                // Max sectors per transfer
 
-.org 2047        // Pad to file offset 2046
-.word 0aa55h    // BootSector signature
+.org 2046        // Pad to file offset 2046
+.word HEX(0aa55)    // BootSector signature
 
 .endcode16
 
