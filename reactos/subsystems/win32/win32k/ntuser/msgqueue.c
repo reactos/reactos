@@ -44,6 +44,39 @@ MsqInitializeImpl(VOID)
 }
 
 PWND FASTCALL
+IntChildrenWindowFromPoint(PWND pWndTop, INT x, INT y)
+{
+    PWND pWnd, pWndChild;
+
+    if (!(pWndTop->style & WS_VISIBLE)) return NULL;
+    if ((pWndTop->style & WS_DISABLED)) return NULL;
+    if (!IntPtInWindow(pWndTop, x, y)) return NULL;
+
+    if (x - pWndTop->rcClient.left < pWndTop->rcClient.right &&
+        y - pWndTop->rcClient.top  < pWndTop->rcClient.bottom )
+    {
+       for (pWnd = pWndTop->spwndChild;
+            pWnd != NULL;
+            pWnd = pWnd->spwndNext)
+       {
+           if (pWnd->state2 & WNDS2_INDESTROY || pWnd->state & WNDS_DESTROYED )
+           {
+               DPRINT("The Window is in DESTROY!\n");
+               continue;
+           }
+
+           pWndChild = IntChildrenWindowFromPoint(pWnd, x, y);
+
+           if (pWndChild)
+           {
+              return pWndChild;
+           }
+       }
+    }
+    return pWndTop;
+}
+
+PWND FASTCALL
 IntTopLevelWindowFromPoint(INT x, INT y)
 {
     PWND pWnd, pwndDesktop;
@@ -503,22 +536,17 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    if (Msg->hwnd != NULL)
    {
        pwnd = UserGetWindowObject(Msg->hwnd);
-       if ((pwnd->style & WS_VISIBLE) &&
-            IntPtInWindow(pwnd, Msg->pt.x, Msg->pt.y))
-       {
-          pDesk->htEx = HTCLIENT;
-          pDesk->spwndTrack = pwnd;
-       }
    }
    else
    {
        pwnd = IntTopLevelWindowFromPoint(Msg->pt.x, Msg->pt.y);
-       if (pwnd)
-       {
-           Msg->hwnd = pwnd->head.h;
-           pDesk->htEx = HTCLIENT;
-           pDesk->spwndTrack = pwnd;
-       }
+       if (pwnd) Msg->hwnd = pwnd->head.h;
+   }
+
+   if (pwnd)
+   {
+      pDesk->spwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
+      pDesk->htEx = GetNCHitEx(pDesk->spwndTrack, Msg->pt);
    }
 
    hdcScreen = IntGetScreenDC();
