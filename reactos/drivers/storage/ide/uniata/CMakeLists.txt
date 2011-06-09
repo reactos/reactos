@@ -1,6 +1,8 @@
 
 include_directories(inc)
 
+#add_definitions(-D_DEBUG)
+
 set_cpp()
 set_rc_compiler()
 
