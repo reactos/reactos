@@ -1,3 +1,12 @@
+/*
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             dll\win32\audsrvapi\audsrvapi.c
+ * PURPOSE:          Audio Server
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
+
+ */
+
 #include "audsrvapi.h"
 
 /*All the wrappers for Remote Function should be here*/
@@ -57,14 +66,18 @@ WINAPI int playaudio ( ClientStream * clientstream )
     /*This is an ActiveScheduler*/
     clientstream->callbacks.OpenComplete(0);
 
-    while(1)
+    while(TRUE)
     {
         while(WaitForSingleObject(clientstream->ClientEventPool[0],
                                   100)!=0)
         {
             if(clientstream->dead)
-                goto DEAD;
+                break;
         }
+
+		if(clientstream->dead)
+			break;
+
             /*Check Connection Status If not connected call Connect()*/
             /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
             Sleep(1000);
@@ -74,7 +87,6 @@ WINAPI int playaudio ( ClientStream * clientstream )
 
 DEAD:
 /*Audio Thread Ended*/
-
     return 0;
 }
 

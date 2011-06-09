@@ -1,3 +1,11 @@
+/*
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             services/mixer.c
+ * PURPOSE:          Audio Server
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
+
+ */
 
 #include "audsrv.h"
 void * mixs8(MixerEngine * mixer,int buffer)

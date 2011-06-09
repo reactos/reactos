@@ -424,14 +424,17 @@ DWORD WINAPI RunMixerThread(LPVOID param)
 
     SetEvent(mixer->played);
 
-    while(1)
+    while(TRUE)
     {
         while(WaitForSingleObject(mixer->played,
                                   100)!=0)
         {
             if(mixer->dead)
-                goto DEAD;
+                break;
         }
+
+        if(mixer->dead)
+            break;
 
         mixandfill(mixer,
                    1-mixer->playcurrent);
@@ -439,7 +442,6 @@ DWORD WINAPI RunMixerThread(LPVOID param)
         SetEvent(mixer->filled);
     }
 
-DEAD:
     return 0;
 }
 
@@ -454,8 +456,11 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
                                   100)!=0)
         {
             if(mixer->dead)
-                goto DEAD;
+                break;
         }
+
+        if(mixer->dead)
+            break;
 
         SetEvent(mixer->played);
         playbuffer(mixer,
@@ -466,7 +471,6 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
         mixer->playcurrent=1-mixer->playcurrent;
     }
 
-DEAD:
     return 0;
 }
 

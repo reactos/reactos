@@ -1,3 +1,11 @@
+/*
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             dll\win32\audsrvapi\dllmain.c
+ * PURPOSE:          Audio Server
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
+
+ */
 
 #include "audsrvapi.h"
 
@@ -39,7 +47,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_THREAD_DETACH:
     case DLL_PROCESS_DETACH:
         status = RpcBindingFree(audsrv_v0_0_c_ifspec);
-         if (status == RPC_S_INVALID_BINDING) printf("Error : %d Invalid RPC S HANDLE\n",(int)status);
+         if (status == RPC_S_INVALID_BINDING)
+            OutputDebugStringA("Error Closing RPC Connection");
     break;
     }
     return TRUE;

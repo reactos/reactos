@@ -1,3 +1,12 @@
+/*
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             services/stream.c
+ * PURPOSE:          Audio Server
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
+
+ */
+
 #include "audsrv.h"
 
 long getnewstreamid()

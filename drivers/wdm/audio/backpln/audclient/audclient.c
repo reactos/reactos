@@ -1,3 +1,12 @@
+/*
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             services/audsrv.c
+ * PURPOSE:          Audio Server
+ * COPYRIGHT:        Copyright 2011 Neeraj Yadav
+
+ */
+
 #define WIN32_NO_STATUS
 #define _KSDDK_
 
@@ -20,7 +29,7 @@ DWORD WINAPI RunAudioThread(LPVOID param)
 {
     ClientStream * localstream = (ClientStream *) param;
     playaudio(localstream);
-    
+
     return 0;
 }
 void opencomplete (int error )
@@ -36,8 +45,7 @@ void buffercopied (int error )
 }
 void playcomplete (int error )
 {
-    printf("Play Complete Code %d\n",
-           error);
+    OutputDebugStringA("Playback Completed\n");
 }
 int
 __cdecl
