@@ -14,7 +14,7 @@ int status = 0;
 /*Initialize an audio stream
  *Return -1 if callbacks are NULL pointers
  */
-WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+WINAPI int InitStream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
     long streamid;
 
@@ -61,7 +61,7 @@ WINAPI int initstream (ClientStream * clientstream,LONG frequency,int channels,i
     return 0;
 }
 
-WINAPI int playaudio ( ClientStream * clientstream )
+WINAPI int PlayAudio ( ClientStream * clientstream )
 {
     /*This is an ActiveScheduler*/
     clientstream->callbacks.OpenComplete(0);
@@ -85,12 +85,11 @@ WINAPI int playaudio ( ClientStream * clientstream )
     }
     clientstream->callbacks.PlayComplete(0);
 
-DEAD:
 /*Audio Thread Ended*/
     return 0;
 }
 
-WINAPI int stopaudio (ClientStream * clientstream )
+WINAPI int StopAudio (ClientStream * clientstream )
 {
     /*Server Side termination is remaining*/
     /*If connected Properly call the remote audsrv_stop() function*/
