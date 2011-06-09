@@ -99,14 +99,14 @@ extern MixerEngine engine,*pengine;
 DWORD WINAPI RunRPCThread(LPVOID lpParameter);
 
 /* audsrv.c*/
-void mixandfill(MixerEngine * mixer,
+void MixAndFill(MixerEngine * mixer,
                 int buffer);
-void playbuffer(MixerEngine * mixer,
+void PlayBuffer(MixerEngine * mixer,
                 int buffer);
 
 /*stream.c*/
-long getnewstreamid();
-long addstream(LONG frequency,
+long GetNewStreamID();
+long AddStream(LONG frequency,
                int channels,
                int bitspersample,
                int datatype,
@@ -116,34 +116,34 @@ long addstream(LONG frequency,
                float balance);
 
 /*mixer.c*/
-void * mixs8(MixerEngine * mixer,
+void * MixS8(MixerEngine * mixer,
              int buffer);
 
-void * mixs16(MixerEngine * mixer,
+void * MixS16(MixerEngine * mixer,
               int buffer);
 
-void * mixs32(MixerEngine * mixer,
+void * MixS32(MixerEngine * mixer,
               int buffer);
 
-void * mixs64(MixerEngine * mixer,
+void * MixS64(MixerEngine * mixer,
               int buffer);
 
-void * mixu8(MixerEngine * mixer,
+void * MixU8(MixerEngine * mixer,
              int buffer);
 
-void * mixu16(MixerEngine * mixer,
+void * MixU16(MixerEngine * mixer,
               int buffer);
 
-void * mixu32(MixerEngine * mixer,
+void * MixU32(MixerEngine * mixer,
               int buffer);
 
-void * mixu64(MixerEngine * mixer,
+void * MixU64(MixerEngine * mixer,
               int buffer);
 
-void * mixfl32(MixerEngine * mixer,
+void * MixFL32(MixerEngine * mixer,
                int buffer);
 
-void * mixfl64(MixerEngine * mixer,
+void * MixFL64(MixerEngine * mixer,
                int buffer);
 
 #endif  /* __AUDSRV_H__ */

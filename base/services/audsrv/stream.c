@@ -9,7 +9,7 @@
 
 #include "audsrv.h"
 
-long getnewstreamid()
+long GetNewStreamID()
 {
     long streamid= pengine->streamidpool;
     pengine->streamidpool+=1;
@@ -88,7 +88,7 @@ DWORD WINAPI RunStreamThread(LPVOID param)
     /*Clean Stream's data*/
 }
 
-long addstream(LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+long AddStream(LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
 {
     ServerStream * newstream,*localstream;
     DWORD dwID;
@@ -175,7 +175,7 @@ long addstream(LONG frequency,int channels,int bitspersample,int datatype, ULONG
     WaitForSingleObject(newstream->threadready,
                         INFINITE);
 
-    newstream->streamid=getnewstreamid();
+    newstream->streamid=GetNewStreamID();
 
     if(localstream == NULL)
     {

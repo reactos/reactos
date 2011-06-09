@@ -55,7 +55,7 @@ long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channel
 {
     long stream;
     
-    stream = addstream(frequency,
+    stream = AddStream(frequency,
                        channels,
                        bitspersample,
                        datatype,

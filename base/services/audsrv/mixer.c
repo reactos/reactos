@@ -8,11 +8,11 @@
  */
 
 #include "audsrv.h"
-void * mixs8(MixerEngine * mixer,int buffer)
+void * MixS8(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixs16(MixerEngine * mixer,int buffer)
+void * MixS16(MixerEngine * mixer,int buffer)
 {
     mixer->masterbuf[buffer] = HeapAlloc(GetProcessHeap(), 0, mixer->serverstreamlist->length_filtered);
     CopyMemory(mixer->masterbuf[buffer],mixer->serverstreamlist->filteredbuf,mixer->serverstreamlist->length_filtered);
@@ -20,35 +20,35 @@ void * mixs16(MixerEngine * mixer,int buffer)
 
     return NULL;
 }
-void * mixs32(MixerEngine * mixer,int buffer)
+void * MixS32(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixs64(MixerEngine * mixer,int buffer)
+void * MixS64(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixu8(MixerEngine * mixer,int buffer)
+void * MixU8(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixu16(MixerEngine * mixer,int buffer)
+void * MixU16(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixu32(MixerEngine * mixer,int buffer)
+void * MixU32(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixu64(MixerEngine * mixer,int buffer)
+void * MixU64(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixfl32(MixerEngine * mixer,int buffer)
+void * MixFL32(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }
-void * mixfl64(MixerEngine * mixer,int buffer)
+void * MixFL64(MixerEngine * mixer,int buffer)
 {
     return NULL;
 }

@@ -14,7 +14,7 @@ static VOID CALLBACK ServiceMain(DWORD,
 
 static DWORD ServiceInit(VOID);
 
-static BOOL WINAPI close (DWORD dwCtrlType);
+static BOOL WINAPI Close (DWORD dwCtrlType);
 
 static WCHAR ServiceName[] = L"AudSrv";
 
@@ -80,7 +80,7 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT("  SERVICE_CONTROL_STOP received\n");
-            close(CTRL_CLOSE_EVENT);
+            Close(CTRL_CLOSE_EVENT);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -102,7 +102,7 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
-            close(CTRL_CLOSE_EVENT);
+            Close(CTRL_CLOSE_EVENT);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -156,7 +156,7 @@ ServiceMain(DWORD argc,
   *This functions fetches FilteredBuffer from Every ClientStream Stucture
   *and mixes them in oder to feed player thread*/
 void
-mixandfill(MixerEngine * mixer,
+MixAndFill(MixerEngine * mixer,
            int buffer)
 {
     while(WaitForSingleObject(mixer->streampresent,
@@ -172,16 +172,16 @@ mixandfill(MixerEngine * mixer,
         switch(mixer->masterbitspersample)
         {
             case 8:
-                mixs8(mixer,buffer);
+                MixS8(mixer,buffer);
                 break;
             case 16:
-                mixs16(mixer,buffer);
+                MixS16(mixer,buffer);
                 break;
             case 32:
-                mixs32(mixer,buffer);
+                MixS32(mixer,buffer);
                 break;
             case 64:
-                mixs64(mixer,buffer);
+                MixS64(mixer,buffer);
                 break;
         }
     }
@@ -190,16 +190,16 @@ mixandfill(MixerEngine * mixer,
         switch(mixer->masterbitspersample)
         {
             case 8:
-                mixu8(mixer,buffer);
+                MixU8(mixer,buffer);
                 break;
             case 16:
-                mixu16(mixer,buffer);
+                MixU16(mixer,buffer);
                 break;
             case 32:
-                mixu32(mixer,buffer);
+                MixU32(mixer,buffer);
                 break;
             case 64:
-                mixu64(mixer,buffer);
+                MixU64(mixer,buffer);
                 break;
         }
     }
@@ -208,17 +208,17 @@ mixandfill(MixerEngine * mixer,
         switch(mixer->masterbitspersample)
         {
             case 32:
-                mixfl32(mixer,buffer);
+                MixFL32(mixer,buffer);
                 break;
             case 64:
-                mixfl64(mixer,buffer);
+                MixFL64(mixer,buffer);
                 break;
         }
     }
 }
 
 /*Frees the Buffer Created in mixer thread*/
-void freebuffer()
+void FreeBuffer()
 {
     HeapFree(GetProcessHeap(),
              0,
@@ -228,7 +228,8 @@ void freebuffer()
 }
 
 /*Plays Master buffer pengine->masterbuf[pengine->playcurrent]*/
-void playbuffer(MixerEngine * mixer,int buffer)
+void PlayBuffer(MixerEngine * mixer,
+                int buffer)
 {
     SP_DEVICE_INTERFACE_DATA InterfaceData;
     SP_DEVINFO_DATA DeviceData;
@@ -436,7 +437,7 @@ DWORD WINAPI RunMixerThread(LPVOID param)
         if(mixer->dead)
             break;
 
-        mixandfill(mixer,
+        MixAndFill(mixer,
                    1-mixer->playcurrent);
 
         SetEvent(mixer->filled);
@@ -463,10 +464,10 @@ DWORD WINAPI RunPlayerThread(LPVOID param)
             break;
 
         SetEvent(mixer->played);
-        playbuffer(mixer,
+        PlayBuffer(mixer,
                    mixer->playcurrent);
 
-        freebuffer();
+        FreeBuffer();
 
         mixer->playcurrent=1-mixer->playcurrent;
     }
@@ -530,7 +531,7 @@ void ShutdownRPC(void)
 }
 
 /*This Functions Kills the application, in any condition*/
-static BOOL WINAPI close ( DWORD dwCtrlType )
+static BOOL WINAPI Close ( DWORD dwCtrlType )
 {
     pengine->dead=1;
 
@@ -587,7 +588,7 @@ INT wmain(int argc, char *argv[])
                                            FALSE,
                                            NULL);
 
-        SetConsoleCtrlHandler(close,
+        SetConsoleCtrlHandler(Close,
                               TRUE);
 
         SpawnMixerThread(pengine);
@@ -625,7 +626,7 @@ ServiceInit(VOID)
     pengine->played=CreateEvent(NULL,FALSE,FALSE,NULL);
     pengine->filled=CreateEvent(NULL,FALSE,FALSE,NULL);
     pengine->streampresent=CreateEvent(NULL,TRUE,FALSE,NULL);
-    SetConsoleCtrlHandler(close,TRUE);
+    SetConsoleCtrlHandler(Close,TRUE);
     SpawnMixerThread(pengine);
     SpawnPlayerThread(pengine);
     SpawnRPCThread(pengine);
