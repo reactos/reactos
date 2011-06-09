@@ -192,7 +192,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 #pseh workaround
 set(PSEH_LIB "pseh")
 
-macro(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
+macro(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
 
     set(_object_file ${_binary_file}.obj)
     set(_temp_file ${_binary_file}.tmp)

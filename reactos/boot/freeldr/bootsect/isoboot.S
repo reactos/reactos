@@ -45,8 +45,9 @@
 // ****************************************************************************
 
 //#define DEBUG_MESSAGES                /* Uncomment to get debugging messages */
+#ifndef ROS_REGTEST
 #define WAIT_FOR_KEY
-
+#endif
 
 // ****************************************************************************
 //    BEGIN THE BIOS/CODE/DATA SEGMENT
@@ -129,7 +130,6 @@ relocate:
 #endif
 
     // Make sure the keyboard buffer is empty
-#ifdef WAIT_FOR_KEY
     call pollchar_and_empty
 
     // Check for MBR on harddisk
@@ -148,6 +148,7 @@ relocate:
     je .boot_cdrom // no boot sector found (hopefully there are no weird bootsectors which begin with 0)
     pop ax
 
+#ifdef WAIT_FOR_KEY
     // Display the 'Press key' message and wait for a maximum of 5 seconds
     call crlf
     mov si, offset presskey_msg // si points to 'Press key' message
@@ -171,6 +172,7 @@ relocate:
     dec byte ptr ds:[TimeoutCount]        // decrement timeout counter
     jz .boot_harddisk
     jmp .next_second
+#endif
 
 .boot_harddisk:
     call crlf
@@ -192,7 +194,6 @@ relocate:
     mov dx, HEX(0080)
 
     ljmp16 0, HEX(7C00)
-#endif
 
 .boot_cdrom:
 #ifdef WAIT_FOR_KEY

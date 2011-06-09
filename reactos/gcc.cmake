@@ -352,3 +352,23 @@ macro(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)
     set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
     add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
 endmacro()
+
+macro(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
+    set(_object_file ${_binary_file}.o)
+
+    add_custom_command(
+        OUTPUT ${_object_file}
+        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -D__ASM__ -c ${_asm_file}
+        DEPENDS ${_asm_file})
+
+    add_custom_command(
+        OUTPUT ${_binary_file}
+        COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
+        # COMMAND objcopy --output-target binary --image-base 0x${_base_address} ${_object_file} ${_binary_file}
+        DEPENDS ${_object_file})
+
+    set_source_files_properties(${_object_file} ${_binary_file} PROPERTIES GENERATED TRUE)
+
+    add_custom_target(${_target_name} ALL DEPENDS ${_binary_file})
+
+endmacro()
