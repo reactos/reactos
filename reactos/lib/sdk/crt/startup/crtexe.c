@@ -20,6 +20,7 @@
 #include <tchar.h>
 #include <sect_attribs.h>
 #include <locale.h>
+#include <malloc.h>
 
 #ifndef __winitenv
 extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
@@ -32,7 +33,7 @@ extern char *** __MINGW_IMP_SYMBOL(__initenv);
 #endif
 
 /* Hack, for bug in ld.  Will be removed soon.  */
-#ifndef _MSC_VER
+#if defined(__GNUC__)
 #define __ImageBase __MINGW_LSYMBOL(_image_base__)
 #endif
 
@@ -42,6 +43,8 @@ extern IMAGE_DOS_HEADER __ImageBase;
 extern void _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
+
+__declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
 
 extern int * __MINGW_IMP_SYMBOL(_fmode);
 extern int * __MINGW_IMP_SYMBOL(_commode);
@@ -55,9 +58,11 @@ extern int _dowildcard;
 #if defined(__GNUC__)
 int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
 #else
-int _MINGW_INSTALL_DEBUG_MATHERR = 0;
+int __declspec(selectany) _MINGW_INSTALL_DEBUG_MATHERR = 0;
 #endif
+
 extern int __defaultmatherr;
+
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
 
 static int __cdecl check_managed_app (void);
@@ -80,7 +85,12 @@ _TCHAR *__mingw_winmain_lpCmdLine;
 DWORD __mingw_winmain_nShowCmd;
 
 static int argc;
+
+#if defined(__GNUC__)
 extern void __main(void);
+extern void _pei386_runtime_relocator (void);
+#endif
+
 #ifdef WPRFLAG
 static wchar_t **argv;
 static wchar_t **envp;
@@ -96,7 +106,7 @@ static int has_cctor = 0;
 static _startupinfo startinfo;
 extern LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler;
 
-extern void _pei386_runtime_relocator (void);
+
 long CALLBACK _gnu_exception_handler (EXCEPTION_POINTERS * exception_data);
 #ifdef WPRFLAG
 static void duplicate_ppstrings (int ac, wchar_t ***av);
@@ -107,10 +117,8 @@ static void duplicate_ppstrings (int ac, char ***av);
 static int __cdecl pre_c_init (void);
 static void __cdecl pre_cpp_init (void);
 static void __cdecl __mingw_prepare_except_for_msvcr80_and_higher (void);
-_CRTALLOC(".CRT$XIAA") _PIFV mingw_pcinit = pre_c_init;
-_CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
-
-extern int _MINGW_INSTALL_DEBUG_MATHERR;
+_CRTALLOC(".CRT$XIAA") _PIFV __declspec(selectany) mingw_pcinit = pre_c_init;
+_CRTALLOC(".CRT$XCAA") _PVFV __declspec(selectany) mingw_pcppinit = pre_cpp_init;
 
 static int __cdecl
 pre_c_init (void)
@@ -216,7 +224,7 @@ __tmainCRTStartup (void)
   WINBOOL inDoubleQuote = FALSE;
   memset (&StartupInfo, 0, sizeof (STARTUPINFO));
 
-#ifndef _WIN64
+#if !defined(_WIN64) && defined(__GNUC__)
   /* We need to make sure that this function is build with frame-pointer
      and that we align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
@@ -265,7 +273,9 @@ __tmainCRTStartup (void)
     if (__dyn_tls_init_callback != NULL)
       __dyn_tls_init_callback (NULL, DLL_THREAD_ATTACH, NULL);
     
+#if defined(__GNUC__)
     _pei386_runtime_relocator ();
+#endif
     __mingw_oldexcpt_handler = SetUnhandledExceptionFilter (_gnu_exception_handler);
 #ifdef _WIN64
     __mingw_init_ehandler ();
@@ -277,33 +287,35 @@ __tmainCRTStartup (void)
     if (mingw_app_type)
       {
 #ifdef WPRFLAG
-    lpszCommandLine = (_TCHAR *) _wcmdln;
+	lpszCommandLine = (_TCHAR *) _wcmdln;
 #else
-    lpszCommandLine = (char *) _acmdln;
+	lpszCommandLine = (char *) _acmdln;
 #endif
-    while (*lpszCommandLine > SPACECHAR || (*lpszCommandLine&&inDoubleQuote))
-      {
-	if (*lpszCommandLine == DQUOTECHAR)
-	  inDoubleQuote = !inDoubleQuote;
-#ifdef _MBCS
-	if (_ismbblead (*lpszCommandLine))
+	while (*lpszCommandLine > SPACECHAR || (*lpszCommandLine && inDoubleQuote))
 	  {
-	    if (lpszCommandLine) /* FIXME: Why this check? Should I check for *lpszCommandLine != 0 too? */
-	      lpszCommandLine++;
-	  }
+	    if (*lpszCommandLine == DQUOTECHAR)
+	      inDoubleQuote = !inDoubleQuote;
+#ifdef _MBCS
+	    if (_ismbblead (*lpszCommandLine))
+	      {
+		if (lpszCommandLine) /* FIXME: Why this check? Should I check for *lpszCommandLine != 0 too? */
+		  lpszCommandLine++;
+	      }
 #endif
-	++lpszCommandLine;
-      }
-    while (*lpszCommandLine && (*lpszCommandLine <= SPACECHAR))
-      lpszCommandLine++;
+	    ++lpszCommandLine;
+	  }
+	while (*lpszCommandLine && (*lpszCommandLine <= SPACECHAR))
+	  lpszCommandLine++;
 
-    __mingw_winmain_hInstance = (HINSTANCE) &__ImageBase;
-    __mingw_winmain_lpCmdLine = lpszCommandLine;
-    __mingw_winmain_nShowCmd = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ?
-				StartupInfo.wShowWindow : SW_SHOWDEFAULT;
-    }
+	__mingw_winmain_hInstance = (HINSTANCE) &__ImageBase;
+	__mingw_winmain_lpCmdLine = lpszCommandLine;
+	__mingw_winmain_nShowCmd = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ?
+				    StartupInfo.wShowWindow : SW_SHOWDEFAULT;
+      }
     duplicate_ppstrings (argc, &argv);
+#if defined(__GNUC__)
     __main ();
+#endif
 #ifdef WPRFLAG
     __winitenv = envp;
     /* C++ initialization.
@@ -422,8 +434,8 @@ __mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
 				 uintptr_t __UNUSED_PARAM(pReserved))
 {
 #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
-   wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);
-   wprintf(L"Expression: %s\n", expression);
+  wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);
+  wprintf(L"Expression: %s\n", expression);
 #endif
 }
 

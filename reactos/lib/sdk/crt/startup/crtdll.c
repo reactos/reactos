@@ -33,8 +33,12 @@
 #include <locale.h>
 
 extern void __cdecl _initterm(_PVFV *,_PVFV *);
-extern void __main ();
+
+#if defined(__GNUC__)
+extern void __main (void);
 extern void _pei386_runtime_relocator (void);
+#endif
+
 extern _CRTALLOC(".CRT$XIA") _PIFV __xi_a[];
 extern _CRTALLOC(".CRT$XIZ") _PIFV __xi_z[];
 extern _CRTALLOC(".CRT$XCA") _PVFV __xc_a[];
@@ -179,7 +183,9 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	retcode = FALSE;
 	goto i__leave;
     }
+#if defined(__GNUC__)
   _pei386_runtime_relocator ();
+#endif
   if (dwReason == DLL_PROCESS_ATTACH || dwReason == DLL_THREAD_ATTACH)
     {
         retcode = _CRT_INIT (hDllHandle, dwReason, lpreserved);
@@ -194,7 +200,9 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	  }
     }
   if (dwReason == DLL_PROCESS_ATTACH)
+#if defined(__GNUC__)
     __main ();
+#endif
   retcode = DllMain(hDllHandle,dwReason,lpreserved);
   if (dwReason == DLL_PROCESS_ATTACH && ! retcode)
     {

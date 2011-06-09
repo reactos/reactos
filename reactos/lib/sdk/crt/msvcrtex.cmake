@@ -20,8 +20,6 @@ list(APPEND MSVCRTEX_SOURCE
     startup/atonexit.c
     startup/txtmode.c
     startup/pesect.c
-    startup/pseudo-reloc.c
-    startup/pseudo-reloc-list.c
     startup/tlsmcrt.c
     startup/tlsthrd.c
     startup/tlsmthread.c
@@ -36,6 +34,12 @@ list(APPEND MSVCRTEX_SOURCE
     misc/fltused.c
     misc/ofmt_stub.c
 )
+
+if(NOT MSVC)
+list(APPEND MSVCRTEX_SOURCE
+    startup/pseudo-reloc.c
+    startup/pseudo-reloc-list.c)
+endif()
 
 if(ARCH MATCHES i386)
 list(APPEND MSVCRTEX_SOURCE
