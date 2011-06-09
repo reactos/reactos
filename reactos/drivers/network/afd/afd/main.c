@@ -394,6 +394,9 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     UINT i;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
+    PAFD_TDI_OBJECT_QELT Qelt;
+    PLIST_ENTRY QeltEntry;
+    
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
@@ -420,6 +423,24 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
+
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_CONNECT]));
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]));
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]));
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_PREACCEPT]));
+
+    while (!IsListEmpty(&FCB->PendingConnections))
+    {
+        QeltEntry = RemoveHeadList(&FCB->PendingConnections);
+        Qelt = CONTAINING_RECORD(QeltEntry, AFD_TDI_OBJECT_QELT, ListEntry);
+
+        /* We have to close all pending connections or the listen won't get closed */
+        TdiDisassociateAddressFile(Qelt->Object.Object);
+        ObDereferenceObject(Qelt->Object.Object);
+        ZwClose(Qelt->Object.Handle);
+
+        ExFreePool(Qelt);
+    }
 
     SocketStateUnlock( FCB );
 

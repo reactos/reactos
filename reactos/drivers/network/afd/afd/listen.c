@@ -95,7 +95,7 @@ static NTSTATUS NTAPI ListenComplete
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-    PLIST_ENTRY NextIrpEntry, QeltEntry;
+    PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
 
     if( !SocketAcquireStateLock( FCB ) )
@@ -113,13 +113,6 @@ static NTSTATUS NTAPI ListenComplete
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
                (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-        }
-
-        /* Free all pending connections */
-        while( !IsListEmpty( &FCB->PendingConnections ) ) {
-               QeltEntry = RemoveHeadList(&FCB->PendingConnections);
-               Qelt = CONTAINING_RECORD(QeltEntry, AFD_TDI_OBJECT_QELT, ListEntry);
-               ExFreePool(Qelt);
         }
 
         /* Free ConnectionReturnInfo and ConnectionCallInfo */
