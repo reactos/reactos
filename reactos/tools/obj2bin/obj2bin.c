@@ -110,6 +110,9 @@ int main(int argc, char *argv[])
             return -5;
         }
 
+        /* Skip empty sections */
+        if (SectionHeader.SizeOfRawData == 0) continue;
+
         /* Check if this is '.text' section */
         if (strcmp(SectionHeader.Name, ".text") == 0) break;
     }
@@ -139,7 +142,7 @@ int main(int argc, char *argv[])
     /* Read symbol data */
     if (!fread(pSymbols, nSize, 1, pSourceFile))
     {
-        fprintf(stderr, "Failed to read section %ld file\n", i);
+        fprintf(stderr, "Failed to read symbols: %ld\n", nSize);
         return -9;
     }
 
@@ -161,7 +164,8 @@ int main(int argc, char *argv[])
     /* Read section data */
     if (!fread(pData, SectionHeader.SizeOfRawData, 1, pSourceFile))
     {
-        fprintf(stderr, "Failed to read section %ld file\n", i);
+        fprintf(stderr, "Failed to read section %ld, at 0x%lx size=0x%lx \n",
+                i, SectionHeader.PointerToRawData, SectionHeader.SizeOfRawData);
         return -12;
     }
 
