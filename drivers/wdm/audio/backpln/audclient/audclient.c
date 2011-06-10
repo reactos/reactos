@@ -51,7 +51,8 @@ void PlayComplete (int error )
 }
 int
 __cdecl
-wmain(int argc, char* argv[])
+wmain(int argc,
+      char* argv[])
 {
     int error;
     DWORD dwID;

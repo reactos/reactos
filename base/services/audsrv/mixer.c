@@ -8,96 +8,106 @@
  */
 
 #include "audsrv.h"
-void * MixS8(MixerEngine * mixer,int buffer)
+void * MixS8(MixerEngine * mixer,
+             int buffer)
 {
     return NULL;
 }
-void * MixS16(MixerEngine * mixer,int buffer)
+void * MixS16(MixerEngine * mixer,
+              int buffer)
 {
-	int length=0;
-	short minsamplevalue,maxsamplevalue;
-	float coefficient = 1.0;
-	int streamcount = 0,i;
-	PSHORT localsinkbuf,localsrcbuf;
-	ServerStream * stream = mixer->serverstreamlist;
+    int length=0;
+    short minsamplevalue,maxsamplevalue;
+    float coefficient = 1.0;
+    int streamcount = 0,i;
+    PSHORT localsinkbuf,localsrcbuf;
+    ServerStream * stream = mixer->serverstreamlist;
 
-	/*TODOAssert(mixer->serverstreamlist == NULL)*/
+    /*TODOAssert(mixer->serverstreamlist == NULL)*/
 
-	/*Find the Longest Buffer within all ServerStreams*/
-	length = stream->length_filtered;
-	while(stream->next != NULL)
-	{
-		if(stream->length_filtered > length && stream->ready == TRUE )
-			length = stream->length_filtered;
-		stream = stream->next;
-	}
+    /*Find the Longest Buffer within all ServerStreams*/
+    length = stream->length_filtered;
+    while(stream->next != NULL)
+    {
+        if(stream->length_filtered > length && stream->ready == TRUE )
+            length = stream->length_filtered;
+        stream = stream->next;
+    }
 
-	/*Allocate MasterBuffer*/
+    /*Allocate MasterBuffer*/
     mixer->masterbuf[buffer] = HeapAlloc(GetProcessHeap(), 0, length);
-	localsinkbuf = mixer->masterbuf[buffer];
+    localsinkbuf = mixer->masterbuf[buffer];
     mixer->bytes_to_play = length;
 
-	/*Perform Actual Mixing*/
-	stream = mixer->serverstreamlist;
-	minsamplevalue = *(short *) stream->minsamplevalue;
-	maxsamplevalue = *(short *) stream->maxsamplevalue;
-	while(stream->next != NULL)
-	{
-		localsrcbuf = stream->filteredbuf;
-		if(stream->ready == TRUE )
-		{
-			if( *(short *)stream->maxsamplevalue != maxsamplevalue ||
-			    *(short *)stream->minsamplevalue != minsamplevalue  )
-			{
-				if( (float) maxsamplevalue / (float)*(short *)stream->maxsamplevalue < 
-				    (float) minsamplevalue / (float)*(short *)stream->minsamplevalue )
-					coefficient = (float) maxsamplevalue / (float)*(short *)stream->maxsamplevalue;
-				else
-					coefficient = (float) minsamplevalue / (float)*(short *)stream->minsamplevalue;
-				
-				for(i=0;i<stream->length_filtered;i++)
-				{
-					localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
-				}
-			}
-		}
-		stream->ready = 0;
-		streamcount++;
-		stream = stream->next;
-	}
+    /*Perform Actual Mixing*/
+    stream = mixer->serverstreamlist;
+    minsamplevalue = *(short *) stream->minsamplevalue;
+    maxsamplevalue = *(short *) stream->maxsamplevalue;
+    while(stream->next != NULL)
+    {
+        localsrcbuf = stream->filteredbuf;
+        if(stream->ready == TRUE )
+        {
+            if( *(short *)stream->maxsamplevalue != maxsamplevalue ||
+                *(short *)stream->minsamplevalue != minsamplevalue  )
+            {
+                if( (float) maxsamplevalue / (float)*(short *)stream->maxsamplevalue < 
+                    (float) minsamplevalue / (float)*(short *)stream->minsamplevalue )
+                    coefficient = (float) maxsamplevalue / (float)*(short *)stream->maxsamplevalue;
+                else
+                    coefficient = (float) minsamplevalue / (float)*(short *)stream->minsamplevalue;
+                
+                for(i=0;i<stream->length_filtered;i++)
+                {
+                    localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
+                }
+            }
+        }
+        stream->ready = 0;
+        streamcount++;
+        stream = stream->next;
+    }
     CopyMemory(mixer->masterbuf[buffer],mixer->serverstreamlist->filteredbuf,mixer->serverstreamlist->length_filtered);
 
     return NULL;
 }
-void * MixS32(MixerEngine * mixer,int buffer)
+void * MixS32(MixerEngine * mixer,
+              int buffer)
 {
     return NULL;
 }
-void * MixS64(MixerEngine * mixer,int buffer)
+void * MixS64(MixerEngine * mixer,
+              int buffer)
 {
     return NULL;
 }
-void * MixU8(MixerEngine * mixer,int buffer)
+void * MixU8(MixerEngine * mixer,
+             int buffer)
 {
     return NULL;
 }
-void * MixU16(MixerEngine * mixer,int buffer)
+void * MixU16(MixerEngine * mixer,
+              int buffer)
 {
     return NULL;
 }
-void * MixU32(MixerEngine * mixer,int buffer)
+void * MixU32(MixerEngine * mixer,
+              int buffer)
 {
     return NULL;
 }
-void * MixU64(MixerEngine * mixer,int buffer)
+void * MixU64(MixerEngine * mixer,
+              int buffer)
 {
     return NULL;
 }
-void * MixFL32(MixerEngine * mixer,int buffer)
+void * MixFL32(MixerEngine * mixer,
+               int buffer)
 {
     return NULL;
 }
-void * MixFL64(MixerEngine * mixer,int buffer)
+void * MixFL64(MixerEngine * mixer,
+               int buffer)
 {
     return NULL;
 }

@@ -88,7 +88,14 @@ DWORD WINAPI RunStreamThread(LPVOID param)
     /*Clean Stream's data*/
 }
 
-long AddStream(LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+long AddStream(LONG frequency,
+               int channels,
+               int bitspersample,
+               int datatype,
+               ULONG channelmask,
+               int volume,
+               int mute,
+               float balance )
 {
     ServerStream * newstream,*localstream;
     DWORD dwID;

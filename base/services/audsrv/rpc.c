@@ -51,7 +51,15 @@ DWORD WINAPI RunRPCThread(LPVOID lpParameter)
 
 /*************************RPC Functions**********************************/
 
-long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,
+                       LONG frequency,
+                       int channels,
+                       int bitspersample,
+                       int datatype, 
+                       ULONG channelmask,
+                       int volume,
+                       int mute,
+                       float balance )
 {
     long stream;
     

@@ -14,7 +14,15 @@ int status = 0;
 /*Initialize an audio stream
  *Return -1 if callbacks are NULL pointers
  */
-WINAPI int InitStream (ClientStream * clientstream,LONG frequency,int channels,int bitspersample,int datatype, ULONG channelmask,int volume,int mute,float balance)
+WINAPI int InitStream (ClientStream * clientstream,
+                       LONG frequency,
+                       int channels,
+                       int bitspersample,
+                       int datatype, 
+                       ULONG channelmask,
+                       int volume,
+                       int mute,
+                       float balance)
 {
     long streamid;
 
@@ -75,8 +83,8 @@ WINAPI int PlayAudio ( ClientStream * clientstream )
                 break;
         }
 
-		if(clientstream->dead)
-			break;
+        if(clientstream->dead)
+            break;
 
             /*Check Connection Status If not connected call Connect()*/
             /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
@@ -98,17 +106,20 @@ WINAPI int StopAudio (ClientStream * clientstream )
     return 0;
 }
 
-WINAPI int Volume(ClientStream * clientstream, int * volume )
+WINAPI int Volume(ClientStream * clientstream,
+                  int * volume )
 {
     return 0;
 }
 
-WINAPI int SetVolume(ClientStream * clientstream ,const int newvolume)
+WINAPI int SetVolume(ClientStream * clientstream ,
+                     const int newvolume)
 {
     return 0;
 }
 
-WINAPI int Write(ClientStream * clientstream ,const char * aData)
+WINAPI int Write(ClientStream * clientstream ,
+                 const char * aData)
 {
     if(clientstream->dead)
         return -1;
@@ -118,12 +129,14 @@ WINAPI int Write(ClientStream * clientstream ,const char * aData)
     return 0;
 }
 
-WINAPI int SetBalance(ClientStream * clientstream ,float balance)
+WINAPI int SetBalance(ClientStream * clientstream ,
+                      float balance)
 {
     return 0;
 }
 
-WINAPI int GetBalance(ClientStream * clientstream ,float * balance)
+WINAPI int GetBalance(ClientStream * clientstream ,
+                      float * balance)
 {
     return 0;
 }
