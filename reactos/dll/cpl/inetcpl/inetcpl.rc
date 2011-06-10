@@ -1,0 +1,69 @@
+/*
+ * Internet control panel applet
+ *
+ * Copyright 2010 Detlef Riekenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#include "inetcpl.h"
+
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/He.rc"
+#include "lang/it-IT.rc"
+#include "lang/ja-JP.rc"
+#include "lang/ko-KR.rc"
+#include "lang/lt-LT.rc"
+#include "lang/nl-NL.rc"
+#include "lang/pt-PT.rc"
+#include "lang/ru-RU.rc"
+#include "lang/Sr.rc"
+#include "lang/sv-SE.rc"
+#include "lang/uk-UA.rc"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPL_NAME        "Internet Settings"
+    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
+    IDS_SEC_SETTINGS    "Security settings for zone: "
+    IDS_SEC_LEVEL0      "Custom"
+    IDS_SEC_LEVEL1      "Very Low"
+    IDS_SEC_LEVEL2      "Low"
+    IDS_SEC_LEVEL3      "Medium"
+    IDS_SEC_LEVEL4      "Increased"
+    IDS_SEC_LEVEL5      "High"
+END
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define WINE_FILENAME_STR "inetcpl.cpl"
+#define WINE_FILEDESCRIPTION_STR "Internet Control Panel"
+
+/* Same Version as IE 8 on WinXP */
+#define WINE_FILEVERSION      8,0,6001,18939
+#define WINE_FILEVERSION_STR "8.00.6001.18939"
+
+#define WINE_PRODUCTVERSION      8,0,6001,18939
+#define WINE_PRODUCTVERSION_STR "8.00.6001.18939"
+
+#include "wine/wine_common_ver.rc"
+ 
+/* @makedep: inetcpl.ico */
+ICO_MAIN ICON "inetcpl.ico"
