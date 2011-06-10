@@ -20,8 +20,7 @@
 .intel_syntax noprefix
 #define HEX(y) 0x##y
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 #include <multiboot.h>
 
 	.code16

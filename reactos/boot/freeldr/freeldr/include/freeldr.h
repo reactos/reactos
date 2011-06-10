@@ -29,6 +29,7 @@
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+/* public headers */
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
@@ -45,78 +46,80 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <rosldr.h>
-#include <arcemul.h>
-#include <arch.h>
 #include <rtl.h>
+#include <ntdddisk.h>
+#include <internal/hal.h>
+#include <drivers/pci/pci.h>
+#include <reactos/buildno.h>
+#include <winerror.h>
+
+/* internal headers */
+#include <arcemul.h>
+#include <bytesex.h>
+#include <bget.h>
+#include <cache.h>
+#include <cmdline.h>
+#include <comm.h>
 #include <disk.h>
 #include <fs.h>
-#include <ui.h>
-#include <multiboot.h>
-#include <mm.h>
-#include <cache.h>
-#include <machine.h>
-#include <inifile.h>
 #include <inffile.h>
-#include <video.h>
+#include <inifile.h>
+#include <keycodes.h>
+#include <linux.h>
+#include <machine.h>
+#include <mm.h>
+#include <multiboot.h>
+#include <options.h>
+#include <oslist.h>
 #include <ramdisk.h>
 #include <reactos.h>
 #include <registry.h>
+#include <ui.h>
+#include <ver.h>
+#include <video.h>
 #include <winldr.h>
-#include <ntdddisk.h>
-#include <internal/hal.h>
+
 /* file system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>
 #include <fs/pxe.h>
+
 /* ui support */
 #include <ui/gui.h>
 #include <ui/minitui.h>
 #include <ui/noui.h>
 #include <ui/tui.h>
-/* arch files */
+
+/* arch specific includes */
 #if defined(_M_IX86)
 #include <arch/i386/custom.h>
 #include <arch/i386/drivemap.h>
-#include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
-#include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
 #include <arch/i386/miscboot.h>
-#include <arch/i386/pxe.h>
+#include <arch/pc/hardware.h>
+#include <arch/pc/machpc.h>
+#include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
+#include <arch/pc/pxe.h>
 #include <internal/i386/intrin_i.h>
+#elif defined(_M_AMD64)
+#include <arch/amd64/amd64.h>
+#include <arch/pc/hardware.h>
+#include <arch/pc/machpc.h>
+#include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
+#include <arch/pc/pxe.h>
+#include <internal/amd64/intrin_i.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)
 #include <arch/arm/hardware.h>
 #elif defined(_M_MIPS)
 #include <arch/mips/arcbios.h>
-#elif defined(_M_AMD64)
-#include <arch/amd64/hardware.h>
-#include <arch/amd64/machpc.h>
-#include <arch/i386/pxe.h>
-#include <internal/amd64/intrin_i.h>
 #endif
-/* misc files */
-#include <keycodes.h>
-#include <ver.h>
-#include <cmdline.h>
-#include <bget.h>
-#include <winerror.h>
-/* Needed by boot manager */
-#include <oslist.h>
-#include <options.h>
-#include <linux.h>
-/* Externals */
-#include <reactos/rossym.h>
-#include <reactos/buildno.h>
-/* Needed if debuging is enabled */
-#include <comm.h>
-/* Swap */
-#include <bytesex.h>
-/* Internal shared PCI header */
-#include <drivers/pci/pci.h>
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);

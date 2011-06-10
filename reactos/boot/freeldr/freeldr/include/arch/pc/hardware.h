@@ -20,10 +20,6 @@
 
 #pragma once
 
-#ifndef __REGISTRY_H
-#include "../../reactos/registry.h"
-#endif
-
 #define CONFIG_CMD(bus, dev_fn, where) \
 	(0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
@@ -85,7 +81,7 @@ VOID GetCpuid(ULONG Level,
 ULONGLONG RDTSC(VOID);
 
 /* i386pnp.S */
-ULONG PnpBiosSupported(VOID);
+ULONG_PTR PnpBiosSupported(VOID);
 ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
 			      ULONG *NodeCount);
 ULONG PnpBiosGetDeviceNode(UCHAR *NodeId,

@@ -35,3 +35,7 @@ extern ULONG SecondLevelDcacheSize;
 extern ULONG SecondLevelDcacheFillSize;
 extern ULONG SecondLevelIcacheSize;
 extern ULONG SecondLevelIcacheFillSize;
+
+extern ULONG gDiskReadBuffer, gFileSysBuffer;
+#define DISKREADBUFFER gDiskReadBuffer
+#define FILESYSBUFFER  gFileSysBuffer

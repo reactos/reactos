@@ -56,11 +56,7 @@
 #ifndef ASM
 
 VOID FrLdrSetupGdtIdt(VOID);
-
-#include <arch/i386/realmode.h>
-#define FrldrBootDrive *((PULONG)BSS_BootDrive)
-#define FrldrBootPartition *((PULONG)BSS_BootPartition)
-
+#define MachInit PcMachInit
 #endif
 
 /* EOF */

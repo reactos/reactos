@@ -20,8 +20,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 
 /* Only these flags are propagated into Int386() */
 #define FLAGS_PROP	(I386FLAG_CF | \
@@ -172,9 +171,9 @@ Int386_vector_opcode:
 	movsb
 
 	/* Restore segment and all other registers */
-	
-	
-	popal	
+
+
+	popal
 	popw	%gs
 	popw	%fs
 	popw	%es
