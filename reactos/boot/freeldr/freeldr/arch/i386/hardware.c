@@ -736,7 +736,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
   DPRINTM(DPRINT_HWDETECT,
 	    "Floppy count: %u\n",
 	    FloppyCount);
-  
+
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
   PartialResourceList = MmHeapAlloc(Size);
@@ -808,11 +808,11 @@ DetectSystem(VOID)
     ULONG Size;
     ULONG i;
     BOOLEAN Changed;
-    
+
     /* Count the number of visible drives */
     DiskReportError(FALSE);
     DiskCount = 0;
-    
+
     /* There are some really broken BIOSes out there. There are even BIOSes
         * that happily report success when you ask them to read from non-existent
         * harddisks. So, we set the buffer to known contents first, then try to
@@ -838,7 +838,7 @@ DetectSystem(VOID)
     DiskReportError(TRUE);
     DPRINTM(DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
               (int)DiskCount, (DiskCount == 1) ? "": "s");
-    
+
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
@@ -849,7 +849,7 @@ DetectSystem(VOID)
                   "Failed to allocate resource descriptor\n");
         return NULL;
     }
-    
+
     /* Initialize resource descriptor */
     memset(PartialResourceList, 0, Size);
     PartialResourceList->Version = 1;
@@ -860,7 +860,7 @@ DetectSystem(VOID)
     PartialResourceList->PartialDescriptors[0].Flags = 0;
     PartialResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize =
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    
+
     /* Get harddisk Int13 geometry data */
     Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
     for (i = 0; i < DiskCount; i++)
@@ -872,7 +872,7 @@ DetectSystem(VOID)
             Int13Drives[i].SectorsPerTrack = Geometry.Sectors;
             Int13Drives[i].MaxHeads = Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
-            
+
             DPRINTM(DPRINT_HWDETECT,
                       "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
                       0x80 + i,
@@ -954,7 +954,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
                            0,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
+
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
@@ -962,7 +962,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
         ULONG Size;
         CHAR Identifier[20];
 
-        if (BootDrive == 0x80 + i)
+        if (FrldrBootDrive == 0x80 + i)
             BootDriveReported = TRUE;
 
         /* Get disk values */
@@ -986,15 +986,15 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
 
     /* Add it, if it's a floppy or cdrom */
-    if ((BootDrive >= 0x80 && !BootDriveReported) ||
-        DiskIsDriveRemovable(BootDrive))
+    if ((FrldrBootDrive >= 0x80 && !BootDriveReported) ||
+        DiskIsDriveRemovable(FrldrBootDrive))
     {
         /* TODO: Check if it's really a cdrom drive */
         ULONG* Buffer;
         ULONG Checksum = 0;
 
         /* Read the MBR */
-        if (!MachDiskReadLogicalSectors(BootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
+        if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
         {
           DPRINTM(DPRINT_HWDETECT, "Reading MBR failed\n");
           return;
@@ -1746,9 +1746,9 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            Size,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: KeyboardController\\0\n");
-  
+
   MmHeapFree(PartialResourceList);
- 
+
   DetectKeyboardPeripheral(ControllerKey);
 }
 
@@ -2049,14 +2049,14 @@ PcHwDetect(VOID)
 
   /* Create the 'System' key */
   SystemKey = DetectSystem();
-  
+
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);
   DetectApmBios(SystemKey, &BusNumber);
   DetectPnpBios(SystemKey, &BusNumber);
   DetectIsaBios(SystemKey, &BusNumber);
   DetectAcpiBios(SystemKey, &BusNumber);
-  
+
   DPRINTM(DPRINT_HWDETECT, "DetectHardware() Done\n");
 
   return SystemKey;
