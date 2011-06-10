@@ -173,6 +173,10 @@ macro(add_importlibs MODULE)
     endforeach()
 endmacro()
 
+macro(add_delay_importlibs MODULE)
+# TODO
+endmacro()
+
 macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(

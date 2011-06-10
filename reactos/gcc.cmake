@@ -230,6 +230,14 @@ macro(add_importlibs MODULE)
     endforeach()
 endmacro()
 
+macro(add_delay_importlibs MODULE)
+    foreach(LIB ${ARGN})
+        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}_delayed.a)
+        add_dependencies(${MODULE} lib${LIB}_delayed)
+    endforeach()
+    target_link_libraries(${MODULE} delayimp)
+endmacro()
+
 if(NOT ARCH MATCHES i386)
     set(DECO_OPTION "-@")
 endif()
@@ -250,10 +258,18 @@ macro(add_importlib_target _exports_file)
 
     if (${_extension} STREQUAL ".spec")
 
+        # Normal importlib creation
         add_custom_command(
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+
+        # Delayed importlib creation
+        add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     elseif(${_extension} STREQUAL ".def")
@@ -262,13 +278,22 @@ macro(add_importlib_target _exports_file)
             OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+        add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
     else()
         message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
     endif()
 
+    # Normal importlib target
     add_custom_target(
         lib${_name}
         DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
+    # Delayed importlib target
+    add_custom_target(
+        lib${_name}_delayed
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a)
 
 endmacro()
 
