@@ -65,6 +65,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_BIND_DATA BindReq;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
+    DbgPrint("[AFD, AfdBindSocket] Called\n");
 
     if ( !SocketAcquireStateLock( FCB ) )
         return LostSocket( Irp );
@@ -108,6 +109,8 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (NT_SUCCESS(Status))
         FCB->State = SOCKET_STATE_BOUND;
+
+    DbgPrint("[AFD, AfdBindSocket] Leaving\n");
 
     /* MSAFD relies on us returning the address file handle in the IOSB */
     return UnlockAndMaybeComplete( FCB, Status, Irp, (ULONG_PTR)FCB->AddressFile.Handle );

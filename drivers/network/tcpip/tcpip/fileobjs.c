@@ -239,6 +239,7 @@ NTSTATUS FileOpenAddress(
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
+  DbgPrint("[TCPIP, FileOpenAddress] Called. Proto %d\n", Protocol);
 
   AddrFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(ADDRESS_FILE),
                                    ADDR_FILE_TAG);
@@ -359,6 +360,7 @@ NTSTATUS FileOpenAddress(
     &AddressFileListLock);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  DbgPrint("[TCPIP, FileOpenAddress] Leaving\n");
 
   return STATUS_SUCCESS;
 }
@@ -377,6 +379,8 @@ NTSTATUS FileCloseAddress(
   PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
   KIRQL OldIrql;
 
+  DbgPrint("[TCPIP, FileCloseAddress] Called\n");
+
   if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
   LockObject(AddrFile, &OldIrql);
@@ -393,6 +397,7 @@ NTSTATUS FileCloseAddress(
   DereferenceObject(AddrFile);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  DbgPrint("[TCPIP, FileCloseAddress] Leaving\n");
 
   return STATUS_SUCCESS;
 }

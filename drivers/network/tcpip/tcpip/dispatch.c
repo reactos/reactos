@@ -647,21 +647,22 @@ NTSTATUS DispTdiListen(
     * when a new connection arrives. */
     /* The important thing to note here is that the irp we'll complete belongs
     * to the socket to be accepted onto, not the listener */
-    if( NT_SUCCESS(Status) && !Connection->AddressFile->Listener )
+    if ( NT_SUCCESS(Status) && !Connection->AddressFile->Listener )
     {
         Connection->AddressFile->Listener = TCPAllocateConnectionEndpoint( NULL );
 
-        if( !Connection->AddressFile->Listener )
+        if ( !Connection->AddressFile->Listener )
 	        Status = STATUS_NO_MEMORY;
 
-        if( NT_SUCCESS(Status) ) {
+        if ( NT_SUCCESS(Status) )
+        {
 	        Connection->AddressFile->Listener->AddressFile =
 	        Connection->AddressFile;
 
-	            Status = TCPSocket( Connection->AddressFile->Listener,
-			            Connection->AddressFile->Family,
-			            SOCK_STREAM,
-			            Connection->AddressFile->Protocol );
+	        Status = TCPSocket( Connection->AddressFile->Listener,
+			        Connection->AddressFile->Family,
+			        SOCK_STREAM,
+			        Connection->AddressFile->Protocol );
         }
 
         if ( NT_SUCCESS(Status) )

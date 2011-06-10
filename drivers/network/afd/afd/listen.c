@@ -114,22 +114,22 @@ static NTSTATUS NTAPI ListenComplete
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-    PLIST_ENTRY NextIrpEntry, QeltEntry;
+    PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
 
     DbgPrint("[AFD, ListenComplete] Called\n");
 
-    if( !SocketAcquireStateLock( FCB ) )
+    if ( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 
     FCB->ListenIrp.InFlightRequest = NULL;
 
     DbgPrint("[AFD, ListenComplete] FCB->State = 0x%x (should be 0x%x)\n", FCB->State, SOCKET_STATE_CLOSED);
 
-    if( FCB->State == SOCKET_STATE_CLOSED )
+    if ( FCB->State == SOCKET_STATE_CLOSED )
     {
         /* Cleanup our IRP queue because the FCB is being destroyed */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) )
+        while ( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) )
         {
 	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_PREACCEPT]);
 	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
@@ -138,13 +138,6 @@ static NTSTATUS NTAPI ListenComplete
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
                (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-        }
-
-        /* Free all pending connections */
-        while( !IsListEmpty( &FCB->PendingConnections ) ) {
-               QeltEntry = RemoveHeadList(&FCB->PendingConnections);
-               Qelt = CONTAINING_RECORD(QeltEntry, AFD_TDI_OBJECT_QELT, ListEntry);
-               ExFreePool(Qelt);
         }
 
         /* Free ConnectionReturnInfo and ConnectionCallInfo */
@@ -165,7 +158,13 @@ static NTSTATUS NTAPI ListenComplete
     }
 
     AFD_DbgPrint(MID_TRACE,("Completing listen request.\n"));
-    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", FCB->ListenIrp.Iosb.Status));
+    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", Irp->IoStatus.Status));
+    
+    if (Irp->IoStatus.Status != STATUS_SUCCESS)
+    {
+        SocketStateUnlock(FCB);
+        return Irp->IoStatus.Status;
+    }
 
     DbgPrint("[AFD, ListenComplete] Completing listen request.\n");
     DbgPrint("[AFD, ListenComplete] IoStatus was %x\n", FCB->ListenIrp.Iosb.Status);
@@ -202,7 +201,7 @@ static NTSTATUS NTAPI ListenComplete
     }
 
     /* Satisfy a pre-accept request if one is available */
-    if( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) &&
+    if ( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) &&
 	    !IsListEmpty( &FCB->PendingConnections ) )
     {
 	    PLIST_ENTRY PendingIrp  =
@@ -240,7 +239,7 @@ static NTSTATUS NTAPI ListenComplete
     }
 
     /* Trigger a select return if appropriate */
-    if( !IsListEmpty( &FCB->PendingConnections ) )
+    if ( !IsListEmpty( &FCB->PendingConnections ) )
     {
 	    FCB->PollState |= AFD_EVENT_ACCEPT;
         FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;

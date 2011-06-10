@@ -260,43 +260,50 @@ NTSTATUS TiCloseFileObject(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
 {
-  PIO_STACK_LOCATION IrpSp;
-  PTRANSPORT_CONTEXT Context;
-  TDI_REQUEST Request;
-  NTSTATUS Status;
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT Context;
+    TDI_REQUEST Request;
+    NTSTATUS Status;
 
-  IrpSp   = IoGetCurrentIrpStackLocation(Irp);
-  Context = IrpSp->FileObject->FsContext;
-  if (!Context) {
-    TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
+    DbgPrint("[TCPIP, TiCloseFileObject] Called\n");
 
-  switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-  case TDI_TRANSPORT_ADDRESS_FILE:
-    Request.Handle.AddressHandle = Context->Handle.AddressHandle;
-    Status = FileCloseAddress(&Request);
-    break;
+    IrpSp   = IoGetCurrentIrpStackLocation(Irp);
+    Context = IrpSp->FileObject->FsContext;
+    if (!Context)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  case TDI_CONNECTION_FILE:
-    Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
-    Status = FileCloseConnection(&Request);
-    break;
+    switch ((ULONG_PTR)IrpSp->FileObject->FsContext2)
+    {
+        case TDI_TRANSPORT_ADDRESS_FILE:
+            DbgPrint("[TCPIP, TiCloseFileObject] Closing address file\n");
+            Request.Handle.AddressHandle = Context->Handle.AddressHandle;
+            Status = FileCloseAddress(&Request);
+            break;
 
-  case TDI_CONTROL_CHANNEL_FILE:
-    Request.Handle.ControlChannel = Context->Handle.ControlChannel;
-    Status = FileCloseControlChannel(&Request);
-    break;
+        case TDI_CONNECTION_FILE:
+            Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
+            Status = FileCloseConnection(&Request);
+            break;
 
-  default:
-    DbgPrint("Unknown type %d\n", (ULONG_PTR)IrpSp->FileObject->FsContext2);
-    Status = STATUS_INVALID_PARAMETER;
-    break;
-  }
+        case TDI_CONTROL_CHANNEL_FILE:
+            Request.Handle.ControlChannel = Context->Handle.ControlChannel;
+            Status = FileCloseControlChannel(&Request);
+            break;
 
-  Irp->IoStatus.Status = Status;
+        default:
+            DbgPrint("Unknown type %d\n", (ULONG_PTR)IrpSp->FileObject->FsContext2);
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
 
-  return Irp->IoStatus.Status;
+    Irp->IoStatus.Status = Status;
+
+    DbgPrint("[TCPIP, TiCloseFileObject] Leaving. Status = 0x%x\n", Status);
+
+    return Irp->IoStatus.Status;
 }
 
 
