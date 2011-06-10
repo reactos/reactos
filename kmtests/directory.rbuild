@@ -5,4 +5,5 @@
 		<xi:include href="something/something_drv.rbuild" />
 	</directory>-->
 	<xi:include href="kmtest.rbuild" />
+	<xi:include href="kmtest_drv.rbuild" />
 </group>
