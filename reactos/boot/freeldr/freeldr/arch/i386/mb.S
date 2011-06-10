@@ -20,8 +20,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 #include <multiboot.h>
 
 	/*
@@ -30,7 +29,7 @@
 	 */
 	.code32
     .globl _PageDirectoryStart
-    
+
     .globl _startup_pagedirectory
     .globl _lowmem_pagetable
     .globl _kernel_pagetable

@@ -21,8 +21,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 #include <ver.h>
 
 #define SCREEN_ATTR 0x1f			/* Bright white on blue background */

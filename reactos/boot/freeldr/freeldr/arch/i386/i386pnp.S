@@ -20,9 +20,8 @@
 	.text
 	.code16
 
-#define ASM
+#include <arch/pc/x86common.h>
 
-#include <arch.h>
 
 
 /*
@@ -144,7 +143,7 @@ EXTERN(_PnpBiosGetDeviceNodeCount)
 	movzwl	%ax,%ecx
 	movl	%ecx,_pnp_result
 
-	
+
 	call	switch_to_prot
 	.code32
 
@@ -196,14 +195,14 @@ EXTERN(_PnpBiosGetDeviceNode)
 	movb	(%esi),%al
 	movb	%al,_pnp_node_number
 
-	/* convert pointer to node buffer to segment/offset */ 
+	/* convert pointer to node buffer to segment/offset */
 	movl	0x0C(%ebp),%eax
 	shrl	$4,%eax
 	andl	$0xf000,%eax
-	movw	%ax,_pnp_buffer_segment	
+	movw	%ax,_pnp_buffer_segment
 	movl	0x0C(%ebp),%eax
 	andl	$0xffff,%eax
-	movw	%ax,_pnp_buffer_offset	
+	movw	%ax,_pnp_buffer_offset
 
 	call	switch_to_real
 	.code16
@@ -212,7 +211,7 @@ EXTERN(_PnpBiosGetDeviceNode)
 	movw	_pnp_bios_data_segment,%ax
 	pushw	%ax
 
-	/* push control flag */	
+	/* push control flag */
 	pushw	$0x0001
 
 	/* push pointer to node buffer (segment/offset) */

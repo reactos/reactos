@@ -3,8 +3,6 @@
 
 #include <asm.inc>
 
-#include <arch.h>
-
 .text
 .code16
 

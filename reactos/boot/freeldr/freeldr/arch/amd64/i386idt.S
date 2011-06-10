@@ -20,10 +20,6 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
-
-
 	.p2align	2	/* force 4-byte alignment */
 EXTERN(i386idt)
 	/* Exception 0 - Divide By Zero */

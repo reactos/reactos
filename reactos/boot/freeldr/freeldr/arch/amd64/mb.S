@@ -23,8 +23,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 #include <multiboot.h>
 
 	/*
@@ -33,7 +32,7 @@
 	 */
 	.code64
     .globl PageDirectoryStart
-    
+
     .globl pml4_startup
     .globl pdp_startup
     .globl pd_startup

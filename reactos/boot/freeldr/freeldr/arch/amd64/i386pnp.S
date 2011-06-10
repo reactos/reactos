@@ -23,9 +23,7 @@
 	.text
 	.code16
 
-#define ASM
-
-#include <arch.h>
+#include <arch/pc/x86common.h>
 
 
 /*
@@ -199,7 +197,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov al, [rsi]
 	mov _pnp_node_number, al
 
-	/* convert pointer to node buffer to segment/offset */ 
+	/* convert pointer to node buffer to segment/offset */
 	mov eax, [rbp + 0x0C]
 	shr eax, 4
 	and eax, 0xf000
@@ -215,7 +213,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov ax, _pnp_bios_data_segment
 	push ax
 
-	/* push control flag */	
+	/* push control flag */
 	push 0x0001
 
 	/* push pointer to node buffer (segment/offset) */
