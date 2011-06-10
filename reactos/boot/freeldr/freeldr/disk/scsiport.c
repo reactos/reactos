@@ -11,6 +11,33 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#undef ScsiPortLogError
+#undef ScsiPortMoveMemory
+#undef ScsiPortWritePortBufferUchar
+#undef ScsiPortWritePortBufferUlong
+#undef ScsiPortWritePortBufferUshort
+#undef ScsiPortWritePortUchar
+#undef ScsiPortWritePortUlong
+#undef ScsiPortWritePortUshort
+#undef ScsiPortWriteRegisterBufferUchar
+#undef ScsiPortWriteRegisterBufferUlong
+#undef ScsiPortWriteRegisterBufferUshort
+#undef ScsiPortWriteRegisterUchar
+#undef ScsiPortWriteRegisterUlong
+#undef ScsiPortWriteRegisterUshort
+#undef ScsiPortReadPortBufferUchar
+#undef ScsiPortReadPortBufferUlong
+#undef ScsiPortReadPortBufferUshort
+#undef ScsiPortReadPortUchar
+#undef ScsiPortReadPortUlong
+#undef ScsiPortReadPortUshort
+#undef ScsiPortReadRegisterBufferUchar
+#undef ScsiPortReadRegisterBufferUlong
+#undef ScsiPortReadRegisterBufferUshort
+#undef ScsiPortReadRegisterUchar
+#undef ScsiPortReadRegisterUlong
+#undef ScsiPortReadRegisterUshort
+
 #define NDEBUG
 #include <debug.h>
 

@@ -18,7 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef __ASM__
 #pragma once
+#endif
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
@@ -49,16 +51,15 @@
 
 #define APIC_PHYS_BASE              0xfee00000
 
-#define NUM_PAGES_KERNEL 
+#define NUM_PAGES_KERNEL
 
 #ifndef ASM
-typedef struct _PAGE_DIRECTORY_AMD64
-{
-    HARDWARE_PTE Pde[512];
-} PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
-
 
 VOID FrLdrSetupGdtIdt(VOID);
+
+#include <arch/i386/realmode.h>
+#define FrldrBootDrive *((PULONG)BSS_BootDrive)
+#define FrldrBootPartition *((PULONG)BSS_BootPartition)
 
 #endif
 

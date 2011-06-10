@@ -25,21 +25,21 @@ RealEntryPoint:
 
 	/* checkPoint Charlie - where it all began... */
 	mov si, offset CheckPoint0
-	call writestr	
+	call writestr
 
 	/* Setup a real mode stack */
 	mov	sp, stack16
 
 	/* Zero BootDrive and BootPartition */
 	xor eax, eax
-	mov BootDrive, eax
-	mov BootPartition, eax
+	mov FrldrBootDrive, eax
+	mov FrldrBootPartition, eax
 
 	/* Store the boot drive */
-	mov BootDrive, dl
+	mov FrldrBootDrive, dl
 
 	/* Store the boot partition */
-	mov BootPartition, dh
+	mov FrldrBootPartition, dh
 
 	/* Load the GDT */
 	lgdt gdtptr
@@ -50,16 +50,16 @@ RealEntryPoint:
 
 	/* checkPoint Charlie - where it all began... */
 	mov si, offset CheckPoint1
-	call writestr	
-	
+	call writestr
+
 	call x86_16_BuildPageTables
-	
+
 	/* checkPoint Charlie - where it all began... */
 	mov si, offset CheckPoint2
-	call writestr	
+	call writestr
 
 	/* Check if CPU supports CPUID */
-	
+
 	pushfd
 	pop eax
 	mov ebx, eax
@@ -70,8 +70,8 @@ RealEntryPoint:
 	pop eax
 	cmp eax,ebx
 	jz NO_CPUID_SUPPORT_DETECTED
-	
-	/* CPUID support detected - getting the PAE/PGE */	
+
+	/* CPUID support detected - getting the PAE/PGE */
 
 	mov eax,1 // Fn0000_0001 - PAE in EDX[6]
 	cpuid
@@ -79,24 +79,24 @@ RealEntryPoint:
 	and edx,0x00a0
 	test edx,edx // are PAE and PGE bits set?
 	jz NO_X64_SUPPORT_DETECTED
-	
+
 	/* PAE and PGE are here */
-	
+
 	xor edx, edx
 	mov eax, 0x80000001
 	cpuid
 	and edx, 0x20000000
 	test edx,edx
 	jz NO_X64_SUPPORT_DETECTED
-	
+
 	/* X64 Processor */
-	
+
 	/* checkPoint Charlie - where it all began... */
 	mov si, offset CheckPoint3
-	call writestr	
+	call writestr
 
 	jmp switch64
-	
+
 NO_X64_SUPPORT_DETECTED:
 	mov  si, offset NotAnX64Processor	// Loading message
 	call writestr
@@ -129,7 +129,7 @@ switch64:
 //	mov ds, ax
 //	mov word ptr ds:[0xb8002], 0x0e02 + '2'
 
-	
+
 	/* Return into real mode */
 	call x86_64_SwitchToReal
 	.code16
@@ -169,7 +169,7 @@ x86_16_EnableA20:
 	ret
 
 /*
- * We define 512 2MB pages at the start of memory, so we can access the first 
+ * We define 512 2MB pages at the start of memory, so we can access the first
  * 1 GB as if paging was disabled
  */
 x86_16_BuildPageTables:
@@ -238,7 +238,7 @@ writestr:
 	popad
 	popfd
 	ret
-	
+
 
 writechr:
 	pushf
@@ -252,7 +252,7 @@ writechr:
 
 //.global x86_16_SwitchToLong
 x86_16_SwitchToLong:
-	
+
 	cli
 
 	xor	ax,ax
@@ -332,7 +332,7 @@ SwitchToReal1:
 
 	/* Step 2 - disable long mode in EFER MSR */
 //	mov ecx, 0xC0000080		// Specify EFER MSR
-//	rdmsr					
+//	rdmsr
 //	and eax, ~0x00000100	// Disable EFER.LME
 //	wrmsr
 
@@ -408,12 +408,12 @@ gdtptr:
 	.long	gdt			/* Base Address */
 
 
-.global BootDrive
-BootDrive:
+.global FrldrBootDrive
+FrldrBootDrive:
     .long 0
-    
-.global BootPartition
-BootPartition:
+
+.global FrldrBootPartition
+FrldrBootPartition:
     .long 0
 
 .global NotAnX64Processor
@@ -431,12 +431,12 @@ NoCPUIDSupport:
 CheckPoint0:
 	.ascii "Starting FreeLoader..."
 	.byte 0x0d, 0x0a, 0
-	
+
 .global CheckPoint1
 CheckPoint1:
 	.ascii "FreeLoader[16-bit]: building page tables..."
 	.byte 0x0d, 0x0a, 0
-	
+
 .global CheckPoint2
 CheckPoint2:
 	.ascii "FreeLoader[16-bit]: checking CPU for x64 long mode..."

@@ -123,8 +123,10 @@ PCSTR	DiskGetErrorCodeString(ULONG ErrorCode);
 BOOLEAN	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOLEAN	DiskIsDriveRemovable(ULONG DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
+#ifndef _M_AMD64
 extern ULONG FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+#endif
 
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 

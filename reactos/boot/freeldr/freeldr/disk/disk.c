@@ -132,18 +132,21 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 	/* FIXME */
 	else if (DiskReadBootRecord(FrldrBootDrive, 0, &MasterBootRecord))
 	{
-		/* This is a hard disk */
+		ULONG BootPartition;
 
-		if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &FrldrBootPartition))
+		/* This is a hard disk */
+		if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
 		{
 			DbgPrint("Invalid active partition information\n");
 			return FALSE;
 		}
 
-        	if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
-            	{
-                	return FALSE;
-            	}
+		FrldrBootPartition = BootPartition;
+
+		if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
+		{
+			return FALSE;
+		}
 
 		strcpy(BootPath, Path);
 
@@ -158,7 +161,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 		strcat(BootPath, "partition(");
 		strcat(BootPath, Partition);
 		strcat(BootPath, ")");
-        }
+	}
 	else
 	{
 		/* This is a CD-ROM drive */

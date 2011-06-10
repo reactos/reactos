@@ -95,6 +95,7 @@
 #elif defined(_M_AMD64)
 #include <arch/amd64/hardware.h>
 #include <arch/amd64/machpc.h>
+#include <arch/i386/pxe.h>
 #include <internal/amd64/intrin_i.h>
 #endif
 /* misc files */

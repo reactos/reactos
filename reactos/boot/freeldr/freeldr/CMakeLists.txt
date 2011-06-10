@@ -18,9 +18,14 @@ if(ARCH MATCHES i386)
             arch/i386/arch.S)
     endif()
 elseif(ARCH MATCHES amd64)
-    list(APPEND FREELDR_STARTUP_SOURCE
-        arch/i386/fathelp.S
-        arch/amd64/arch.S)
+    if(MSVC)
+        list(APPEND FREELDR_BASE64K_SOURCE
+            arch/amd64/stubs.S)
+    else()
+        list(APPEND FREELDR_STARTUP_SOURCE
+            arch/i386/fathelp.S
+            arch/amd64/arch.S)
+    endif()
 endif()
 
 if(ARCH MATCHES i386)
@@ -39,12 +44,14 @@ if(ARCH MATCHES i386)
             arch/i386/i386bug.c)
     endif()
 elseif(ARCH MATCHES amd64)
+    if(NOT MSVC)
     list(APPEND FREELDR_BASE64K_SOURCE
         arch/i386/drvmap.S
         arch/i386/i386cpu.S
         arch/i386/i386idt.S
         arch/i386/i386trap.S
         arch/amd64/mb.S)
+    endif()
 endif()
 
 set_source_files_properties(${FREELDR_BASE64K_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_NTHAL_")
@@ -60,7 +67,7 @@ list(APPEND FREELDR_BASE_SOURCE
     disk/disk.c
     disk/partition.c
     disk/ramdisk.c
-    disk/scsiport.c
+    #disk/scsiport.c
     fs/ext2.c
     fs/fat.c
     fs/fs.c
@@ -148,6 +155,25 @@ if(ARCH MATCHES i386)
         arch/i386/xboxvideo.c
         windows/i386/ntsetup.c
         windows/i386/wlmemory.c)
+elseif(ARCH MATCHES amd64)
+    list(APPEND FREELDR_ARCH_SOURCE
+        arch/amd64/loader.c
+        arch/i386/hardware.c
+        arch/i386/hwacpi.c
+        arch/i386/hwapm.c
+        arch/i386/hwpci.c
+        arch/i386/i386rtl.c
+        arch/i386/i386disk.c
+        arch/i386/i386vid.c
+        arch/i386/machpc.c
+        arch/i386/ntoskrnl.c
+        arch/i386/pccons.c
+        arch/i386/pcdisk.c
+        arch/i386/pcmem.c
+        arch/i386/pcrtc.c
+        arch/i386/pcvideo.c
+        windows/amd64/ntsetup.c
+        windows/amd64/wlmemory.c)
 else()
 #TBD
 endif()

@@ -14,10 +14,10 @@ _LoaderEntry:
 
 
 // globals
-PUBLIC _BootPartition
-_BootPartition:
-PUBLIC _BootDrive
-_BootDrive:
+PUBLIC _FrldrBootPartition
+_FrldrBootPartition:
+PUBLIC _FrldrBootDrive
+_FrldrBootDrive:
 
 PUBLIC _PageDirectoryStart
 _PageDirectoryStart:
