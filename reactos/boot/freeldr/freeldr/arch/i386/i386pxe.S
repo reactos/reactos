@@ -20,9 +20,8 @@
 	.text
 	.code16
 
-#define ASM
+#include <arch/pc/x86common.h>
 
-#include <arch.h>
 
 /*
  * U16 PxeCallApi(U16 Segment, U16 Offset, U16 Service, VOID *Parameter);
