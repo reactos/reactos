@@ -199,3 +199,22 @@ function(add_executable name)
     _add_executable(${name} ${ARGN})
     add_clean_target(${name})
 endfunction()
+
+if(WIN32)
+    macro(to_win_path _cmake_path _native_path)
+        string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
+    endmacro()
+
+    macro(concatenate_files _file1 _file2 _output)
+        to_win_path("${_file1}" _real_file1)
+        to_win_path("${_file2}" _real_file2)
+        to_win_path("${_output}" _real_output)
+        add_custom_command(
+            OUTPUT ${_output}
+            COMMAND cmd.exe /C "copy /Y ${_real_file1} + ${_real_file2} ${_real_output}"
+            DEPENDS ${_file1}
+            DEPENDS ${_file2})
+    endmacro()
+else()
+
+endif()
