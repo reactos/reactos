@@ -141,7 +141,7 @@ dll\cpl\console\console.dll                         1
 dll\cpl\desk\desk.cpl                               1
 dll\cpl\hdwwiz\hdwwiz.cpl                           1
 dll\cpl\input\input.dll                             1
-dll\cpl\inetcpl\incetcpl.cpl                        1
+dll\cpl\inetcpl\inetcpl.cpl                         1
 dll\cpl\intl\intl.cpl                               1
 dll\cpl\joy\joy.cpl                                 1
 ;dll\cpl\liccpa\liccpa.cpl                          1
