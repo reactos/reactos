@@ -31,8 +31,17 @@ endif()
 
 link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/sdk/crt)
 
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
+
+get_directory_property(definitions DEFINITIONS)
+
+set(CMAKE_ASM_COMPILE_OBJECT
+    "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include/dxsdk /I${REACTOS_BINARY_DIR}/include /I${REACTOS_BINARY_DIR}/include/dxsdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/ddk /I${REACTOS_SOURCE_DIR}/include/ndk /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/libs /I${REACTOS_SOURCE_DIR}/include/crt/msc ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+    "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
+
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
+set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
 macro(add_pch _target_name _FILE)
 endmacro()

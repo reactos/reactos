@@ -93,25 +93,6 @@ else()
     set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
     include(${IMPORT_EXECUTABLES})
 
-    # Compiler specific definitions and macros
-    if(MSVC)
-        include(msc.cmake)
-    else()
-        include(gcc.cmake)
-    endif()
-
-    # Generic macros
-    include(CMakeMacros.cmake)
-
-    # IDL macros for widl/midl
-    include(cmake/idl-support.cmake)
-
-    # Activate support for assembly source files
-    enable_language(ASM)
-
-    # Activate language support for resource files
-    enable_language(RC)
-
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
     endif()
@@ -149,6 +130,25 @@ else()
     elseif(ARCH MATCHES arm)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
+
+    # Compiler specific definitions and macros
+    if(MSVC)
+        include(msc.cmake)
+    else()
+        include(gcc.cmake)
+    endif()
+
+    # Generic macros
+    include(CMakeMacros.cmake)
+
+    # IDL macros for widl/midl
+    include(cmake/idl-support.cmake)
+
+    # Activate support for assembly source files
+    enable_language(ASM)
+
+    # Activate language support for resource files
+    enable_language(RC)
 
     include_directories(
         include
@@ -202,5 +202,4 @@ else()
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
     add_dependency_footer()
-
 endif()

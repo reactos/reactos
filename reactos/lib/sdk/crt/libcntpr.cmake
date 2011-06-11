@@ -65,7 +65,6 @@ list(APPEND LIBCNTPR_SOURCE
 if(ARCH MATCHES i386)
     list(APPEND LIBCNTPR_SOURCE
         except/i386/chkstk_asm.s
-        except/i386/chkstk_ms.s
         except/i386/seh.s
         except/i386/seh_prolog.s
         setjmp/i386/setjmp.s
@@ -94,6 +93,9 @@ if(ARCH MATCHES i386)
         math/i386/tan_asm.s
         math/i386/ci.c
         misc/i386/readcr4.S)
+    if(NOT MSVC)
+        list(APPEND LIBCNTPR_SOURCE except/i386/chkstk_ms.s)
+    endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND LIBCNTPR_SOURCE
         except/amd64/chkstk_asm.s
