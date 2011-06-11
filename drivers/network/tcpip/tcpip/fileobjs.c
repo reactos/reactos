@@ -392,9 +392,9 @@ NTSTATUS FileCloseAddress(
       TCPClose( AddrFile->Listener );
   }
 
-  UnlockObject(AddrFile, OldIrql);
-
   DereferenceObject(AddrFile);
+
+  UnlockObject(AddrFile, OldIrql);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
   DbgPrint("[TCPIP, FileCloseAddress] Leaving\n");

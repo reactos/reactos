@@ -122,9 +122,8 @@ static NTSTATUS NTAPI ListenComplete
     if ( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 
+    ASSERT(FCB->ListenIrp.InFlightRequest == Irp);
     FCB->ListenIrp.InFlightRequest = NULL;
-
-    DbgPrint("[AFD, ListenComplete] FCB->State = 0x%x (should be 0x%x)\n", FCB->State, SOCKET_STATE_CLOSED);
 
     if ( FCB->State == SOCKET_STATE_CLOSED )
     {
@@ -169,7 +168,7 @@ static NTSTATUS NTAPI ListenComplete
     DbgPrint("[AFD, ListenComplete] Completing listen request.\n");
     DbgPrint("[AFD, ListenComplete] IoStatus was %x\n", FCB->ListenIrp.Iosb.Status);
 
-    Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
+    Qelt = ExAllocatePool( NonPagedPool, sizeof(AFD_TDI_OBJECT_QELT) );//sizeof(*Qelt) );
     if( !Qelt )
     {
 	    Status = STATUS_NO_MEMORY;

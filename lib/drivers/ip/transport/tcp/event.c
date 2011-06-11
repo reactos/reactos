@@ -41,7 +41,8 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
     
     DbgPrint("Flushing recv/all with status: 0x%x\n", Status);
     
-    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock))) {
+    while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
+    {
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
         
         TI_DbgPrint(DEBUG_TCP,
@@ -58,7 +59,8 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
     }
     
-    if (Status == STATUS_SUCCESS) Status = STATUS_FILE_CLOSED;
+    if (Status == STATUS_SUCCESS)
+        Status = STATUS_FILE_CLOSED;
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
     {
