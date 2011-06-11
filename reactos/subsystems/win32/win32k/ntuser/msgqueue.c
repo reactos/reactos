@@ -523,13 +523,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
-   if (!pwndDesktop)
-       return;
-
-   /* Set hit somewhere on the desktop */
+   if (!pwndDesktop) return;
    pDesk = pwndDesktop->head.rpdesk;
-   pDesk->htEx = HTNOWHERE;
-   pDesk->spwndTrack = pwndDesktop;
 
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
@@ -545,7 +540,21 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
    if (pwnd)
    {
-      pDesk->spwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
+      PWND pwndTrack = IntChildrenWindowFromPoint(pwnd, Msg->pt.x, Msg->pt.y);
+
+      if ( pDesk->spwndTrack != pwndTrack && pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) )
+      {
+         if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+            UserPostMessage( UserHMGetHandle(pDesk->spwndTrack),
+                            (pDesk->htEx != HTCLIENT) ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
+                             0, 0);
+
+         if ( pDesk->dwDTFlags & DF_TME_HOVER )
+            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+
+         pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);
+      }
+      pDesk->spwndTrack = pwndTrack;
       pDesk->htEx = GetNCHitEx(pDesk->spwndTrack, Msg->pt);
    }
 
