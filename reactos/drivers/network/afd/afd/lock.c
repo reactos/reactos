@@ -13,49 +13,85 @@
 #include "debug.h"
 #include "pseh/pseh2.h"
 
+PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    ASSERT(Irp->MdlAddress);
+    
+    return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
+
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     BOOLEAN LockFailed = FALSE;
-
-    ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
-    ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+    
     ASSERT(!Irp->MdlAddress);
+    
+    switch (IrpSp->MajorFunction)
+    {
+        case IRP_MJ_DEVICE_CONTROL:
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+            ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
+            ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
 
-    Irp->MdlAddress =
-	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
-		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
-		       FALSE,
-		       FALSE,
-		       NULL );
-    if( Irp->MdlAddress ) {
-	_SEH2_TRY {
-	    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
-	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	    LockFailed = TRUE;
-	} _SEH2_END;
-
-	if( LockFailed ) {
-	    IoFreeMdl( Irp->MdlAddress );
-	    Irp->MdlAddress = NULL;
-	    return NULL;
-	}
-
-	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
-	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
-
-	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
-            MmUnlockPages( Irp->MdlAddress );
-	    IoFreeMdl( Irp->MdlAddress );
-	    Irp->MdlAddress = NULL;
-	    return NULL;
-	}
-
-	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-    } else return NULL;
+            
+            Irp->MdlAddress =
+            IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
+                          IrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                          FALSE,
+                          FALSE,
+                          NULL );
+            if( Irp->MdlAddress ) {
+                _SEH2_TRY {
+                    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
+                } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                    LockFailed = TRUE;
+                } _SEH2_END;
+                
+                if( LockFailed ) {
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+            } else return NULL;
+            break;
+            
+        case IRP_MJ_READ:
+        case IRP_MJ_WRITE:
+            ASSERT(Irp->UserBuffer);
+            
+            Irp->MdlAddress =
+            IoAllocateMdl(Irp->UserBuffer,
+                          (IrpSp->MajorFunction == IRP_MJ_READ) ?
+                                IrpSp->Parameters.Read.Length : IrpSp->Parameters.Write.Length,
+                          FALSE,
+                          FALSE,
+                          NULL );
+            if( Irp->MdlAddress ) {
+                _SEH2_TRY {
+                    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
+                } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                    LockFailed = TRUE;
+                } _SEH2_END;
+                
+                if( LockFailed ) {
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+            } else return NULL;
+            break;
+            
+        default:
+            ASSERT(FALSE);
+            return NULL;
+    }
+    
+    return GetLockedData(Irp, IrpSp);
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
 {
+    ASSERT(Irp->MdlAddress);
     MmUnlockPages( Irp->MdlAddress );
     IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
@@ -123,7 +159,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
 		_SEH2_TRY {
 		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
-				         Write ? IoReadAccess : IoModifyAccess );
+				         Write ? IoModifyAccess : IoReadAccess );
 		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 		    LockFailed = TRUE;
 		} _SEH2_END;

@@ -43,10 +43,13 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectOptions = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PVOID ConnectOptions = LockRequest(Irp, IrpSp);
     UINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+    
+    if (!ConnectOptions)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (FCB->ConnectOptions)
     {
@@ -75,10 +78,13 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PUINT ConnectOptionsSize = LockRequest(Irp, IrpSp);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+    
+    if (!ConnectOptionsSize)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (BufferSize < sizeof(UINT))
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
@@ -129,10 +135,13 @@ AfdSetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectData = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PVOID ConnectData = LockRequest(Irp, IrpSp);
     UINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+    
+    if (!ConnectData)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (FCB->ConnectData)
     {
@@ -161,11 +170,14 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PUINT ConnectDataSize = LockRequest(Irp, IrpSp);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
+    if (!ConnectDataSize)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    
     if (BufferSize < sizeof(UINT))
         return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
 
@@ -274,6 +286,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
 
+    ASSERT(FCB->ConnectIrp.InFlightRequest == Irp);
     FCB->ConnectIrp.InFlightRequest = NULL;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
