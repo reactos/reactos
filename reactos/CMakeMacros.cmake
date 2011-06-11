@@ -211,7 +211,7 @@ if(WIN32)
         to_win_path("${_output}" _real_output)
         add_custom_command(
             OUTPUT ${_output}
-            COMMAND cmd.exe /C "copy /Y ${_real_file1} + ${_real_file2} ${_real_output}"
+            COMMAND cmd.exe /C "copy /Y /B ${_real_file1} + ${_real_file2} ${_real_output} > nul"
             DEPENDS ${_file1}
             DEPENDS ${_file2})
     endmacro()
