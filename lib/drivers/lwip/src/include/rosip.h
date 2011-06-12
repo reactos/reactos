@@ -18,6 +18,7 @@ err_t LibTCPBind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port);
 struct tcp_pcb *LibTCPListen(struct tcp_pcb *pcb, u8_t backlog);
 err_t LibTCPSend(struct tcp_pcb *pcb, void *dataptr, u16_t len);
 err_t LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port);
+err_t LibTCPShutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx);
 err_t LibTCPClose(struct tcp_pcb *pcb);
 err_t LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port);
 err_t LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port);

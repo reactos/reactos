@@ -517,6 +517,73 @@ LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     return ERR_MEM;
 }
 
+struct shutdown_callback_msg
+{
+    /* Synchronization */
+    KEVENT Event;
+    
+    /* Input */
+    struct tcp_pcb *Pcb;
+    int shut_rx;
+    int shut_tx;
+    
+    /* Output */
+    err_t Error;
+};
+
+static
+void
+LibTCPShutdownCallback(void *arg)
+{
+    struct shutdown_callback_msg *msg = arg;
+    
+    msg->Error = tcp_shutdown(msg->Pcb, msg->shut_rx, msg->shut_tx);
+    
+    KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
+}
+
+err_t
+LibTCPShutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx)
+{
+    struct shutdown_callback_msg *msg;
+    err_t ret;
+    
+    DbgPrint("[lwIP, LibTCPShutdown] Called\n");
+    
+    if (!pcb)
+    {
+        DbgPrint("[lwIP, LibTCPShutdown] Done... NO pcb\n");
+        return ERR_CLSD;
+    }
+    
+    msg = ExAllocatePool(NonPagedPool, sizeof(struct shutdown_callback_msg));
+    if (msg)
+    {
+        KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
+        
+        msg->Pcb = pcb;
+        msg->shut_rx = shut_rx;
+        msg->shut_tx = shut_tx;
+                
+        tcpip_callback_with_block(LibTCPShutdownCallback, msg, 1);
+        
+        if (WaitForEventSafely(&msg->Event))
+            ret = msg->Error;
+        else
+            ret = ERR_CLSD;
+        
+        ExFreePool(msg);
+        
+        DbgPrint("[lwIP, LibTCPShutdown] pcb = 0x%x\n", pcb);
+        
+        DbgPrint("[lwIP, LibTCPShutdown] Done\n");
+        
+        return ret;
+    }
+    
+    return ERR_MEM;
+}
+
 struct close_callback_msg
 {
     /* Synchronization */

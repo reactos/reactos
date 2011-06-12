@@ -316,19 +316,15 @@ NTSTATUS TCPDisconnect
 
     if (Flags & TDI_DISCONNECT_RELEASE)
     {
-        /* FIXME */
-        LibTCPClose(Connection->SocketContext);
+        Status = LibTCPShutdown(Connection->SocketContext, 0, 1);
     }
 
     if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
     {
-        /* FIXME */
-        LibTCPClose(Connection->SocketContext);
+        Status = LibTCPShutdown(Connection->SocketContext, 1, 1);
     }
     
-    Status = STATUS_SUCCESS;
-    
-    DbgPrint("LibTCPClose: %x\n", Status);
+    DbgPrint("LibTCPShutdown: %x\n", Status);
 
     UnlockObject(Connection, OldIrql);
 
