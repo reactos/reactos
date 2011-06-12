@@ -85,36 +85,40 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
         return ERR_OK;
     }
     
-    if (!p)
-    {
-        TCPFinEventHandler(arg, ERR_OK);
-    }
-    else
+    if (p)
     {
         DbgPrint("[lwIP, InternalRecvEventHandler] RECV - p:0x%x p->payload:0x%x p->len:%d p->tot_len:%d\n",
             p, p->payload, p->len, p->tot_len);
 
-        if (err == ERR_OK)
+        len = TCPRecvEventHandler(arg, p);
+        if (len == p->tot_len)
         {
-            len = TCPRecvEventHandler(arg, p);
-            if (len != 0)
-            {
-                tcp_recved(pcb, len);
-                
-                pbuf_free(p);
-                
-                return ERR_OK;
-            }
-            else
-            {
-                /* We want lwIP to store the pbuf on its queue for later */
-                return ERR_TIMEOUT;
-            }
+            tcp_recved(pcb, len);
+
+            pbuf_free(p);
+
+            return ERR_OK;
+        }
+        else if (len != 0)
+        {
+            DbgPrint("UNTESTED CASE: NOT ALL DATA TAKEN! EXTRA DATA MAY BE LOST!\n");
+            
+            tcp_recved(pcb, len);
+            
+            /* Possible memory leak of pbuf here? */
+            
+            return ERR_OK;
         }
         else
         {
-            pbuf_free(p);
+            /* We want lwIP to store the pbuf on its queue for later */
+            return ERR_TIMEOUT;
         }
+    }
+    else if (err == ERR_OK)
+    {
+        TCPFinEventHandler(arg, ERR_OK);
+        tcp_close(pcb);
     }
     
     return ERR_OK;
