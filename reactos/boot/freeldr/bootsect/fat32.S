@@ -420,11 +420,8 @@ LoadFileDone:
     mov  dl, byte ptr BP_REL(BootDrive)              // Load boot drive into DL
     mov  dh, byte ptr ds:[BootPartition]           // Load boot partition into DH
 
-    push 0                                      // push segment (0x0000)
-    mov  eax, dword ptr ds:[HEX(8000) + HEX(0A8)]   // load the RVA of the EntryPoint into eax
-    add  eax, HEX(8000)                          // RVA -> VA
-    push ax                                     // push offset
-    retf                                        // Transfer control to FreeLoader
+    /* Transfer execution to the bootloader */
+    ljmp16 0, HEX(8000)
 
 // Returns the FAT entry for a given cluster number
 // On entry EAX has cluster number

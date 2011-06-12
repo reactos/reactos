@@ -227,12 +227,7 @@ FoundFreeLoader:
     // to the helper code. Skip the first three bytes
     // because they contain a jump instruction to skip
     // over the helper code in the FreeLoader image.
-    //jmp  0000:9003h
-    push 0						// push segment (0x0000)
-    mov bx, [HEX(8000) + HEX(0A8)]		// load the RVA of the EntryPoint into eax
-    add bx, HEX(8003)				// RVA -> VA and skip 3 bytes (jump to fathelper code)
-    push bx						// push offset
-    retf						// Transfer control to FreeLoader
+    ljmp16 0, HEX(8003)
 
 
 

@@ -14,7 +14,6 @@ if(ARCH MATCHES i386)
             arch/i386/realmode.S)
     else()
         list(APPEND FREELDR_STARTUP_SOURCE
-            arch/i386/fathelp.S
             arch/i386/arch.S)
     endif()
 elseif(ARCH MATCHES amd64)
@@ -23,7 +22,6 @@ elseif(ARCH MATCHES amd64)
             arch/amd64/stubs.S)
     else()
         list(APPEND FREELDR_STARTUP_SOURCE
-            arch/i386/fathelp.S
             arch/amd64/arch.S)
     endif()
 endif()
@@ -182,6 +180,11 @@ set_source_files_properties(${FREELDR_ARCH_SOURCE} PROPERTIES COMPILE_DEFINITION
 add_library(freeldr_arch ${FREELDR_ARCH_SOURCE})
 add_dependencies(freeldr_arch bugcodes)
 
+CreateBootSectorTarget2(frldr16
+    ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
+    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+    8000)
+
 list(APPEND FREELDR_SOURCE
     bootmgr.c
     ${FREELDR_STARTUP_SOURCE}
@@ -189,24 +192,23 @@ list(APPEND FREELDR_SOURCE
     ${FREELDR_BASE_SOURCE}
     )
 
-add_library(freeldr SHARED ${FREELDR_SOURCE})
+add_executable(freeldr_pe ${FREELDR_SOURCE})
 
 if(NOT MSVC)
-    set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" SUFFIX ".sys")
-set_image_base(freeldr 0x8000)
+    set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
 else()
-    set_target_properties(freeldr PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" SUFFIX ".sys")
-set_image_base(freeldr 0x10000)
+    set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
 endif()
 
-set_subsystem(freeldr native)
-set_entrypoint(freeldr mainCRTStartup)
+set_subsystem(freeldr_pe native)
+set_image_base(freeldr_pe 0x9000)
+set_entrypoint(freeldr_pe mainCRTStartup)
 
 if(ARCH MATCHES i386)
-    target_link_libraries(freeldr mini_hal)
+    target_link_libraries(freeldr_pe mini_hal)
 endif()
 
-target_link_libraries(freeldr
+target_link_libraries(freeldr_pe
     freeldr_arch
     cportlib
     rossym
@@ -214,10 +216,17 @@ target_link_libraries(freeldr
     rtl
     libcntpr)
 
-add_pch(freeldr include/freeldr.h)
-add_dependencies(freeldr asm)
+add_pch(freeldr_pe include/freeldr.h)
+add_dependencies(freeldr_pe asm)
 
-add_cd_file(TARGET freeldr DESTINATION loader NO_CAB FOR all)
+concatenate_files(
+    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.exe
+    ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
+
+add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
+
+add_cd_file(FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR all)
 
 list(APPEND SETUPLDR_MAIN_SOURCE
     bootmgr.c
@@ -238,23 +247,23 @@ list(APPEND SETUPLDR_SOURCE
     ${FREELDR_BASE_SOURCE}
     ${SETUPLDR_MAIN_SOURCE})
 
-add_library(setupldr SHARED ${SETUPLDR_SOURCE})
+add_executable(setupldr_pe ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
-    set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
-set_image_base(setupldr 0x8000)
+    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 else()
-    set_target_properties(setupldr PROPERTIES LINK_FLAGS "/DRIVER /SECTION:.text,ERWP,ALIGN=0x1000" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/DRIVER /SECTION:.text,ERWP,ALIGN=0x1000" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 endif()
 
-set_subsystem(setupldr native)
-set_entrypoint(setupldr mainCRTStartup)
+set_subsystem(setupldr_pe native)
+set_image_base(setupldr_pe 0x9000)
+set_entrypoint(setupldr_pe mainCRTStartup)
 
 if(ARCH MATCHES i386)
-    target_link_libraries(setupldr mini_hal)
+    target_link_libraries(setupldr_pe mini_hal)
 endif()
 
-target_link_libraries(setupldr
+target_link_libraries(setupldr_pe
     freeldr_arch
     cportlib
     rossym
@@ -262,7 +271,14 @@ target_link_libraries(setupldr
     rtl
     libcntpr)
 
-add_dependencies(setupldr asm)
+add_dependencies(setupldr_pe asm)
 
-add_cd_file(TARGET setupldr DESTINATION loader NO_CAB FOR all)
+concatenate_files(
+    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+    ${CMAKE_CURRENT_BINARY_DIR}/setupldr_pe.exe
+    ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
+
+add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
+
+add_cd_file(FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR all)
 

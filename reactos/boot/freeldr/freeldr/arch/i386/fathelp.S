@@ -56,6 +56,7 @@ PUBLIC _mainCRTStartup	// For Mingw32 builds where the linker looks for this sym
 _mainCRTStartup:
 PUBLIC start
 start:
+#if 0
         .byte	HEX(e9)
 		.byte	HEX(fd)
 		.byte	HEX(01)
@@ -134,7 +135,7 @@ LoadFile_Done:
 
 // Reads the entire FAT into memory at 7000:0000
 ReadFatIntoMemory:
-        mov   ax, [bp+HiddenSectors] 
+        mov   ax, [bp+HiddenSectors]
         mov   dx, [bp+HiddenSectors+2]
 		add   ax, [bp+ReservedSectors]
 		adc   dx, 0
@@ -233,6 +234,7 @@ msgLoading:	.asciz "Loading FreeLoader...\r\n"
 
             .org HEX(1fe)				// Pad to 510 bytes
 			.word HEX(0aa55)			// BootSector signature
+#endif
 
 .endcode16
 
