@@ -413,7 +413,7 @@ KeWaitForSingleObject(IN PVOID Object,
     PKTIMER Timer = &Thread->Timer;
     NTSTATUS WaitStatus;
     BOOLEAN Swappable;
-    LARGE_INTEGER DueTime = {0,0}, NewDueTime, InterruptTime;
+    LARGE_INTEGER DueTime = { }, NewDueTime, InterruptTime;
     PLARGE_INTEGER OriginalDueTime = Timeout;
     ULONG Hand = 0;
 
@@ -580,7 +580,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     NTSTATUS WaitStatus = STATUS_SUCCESS;
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime = Timeout;
-    LARGE_INTEGER DueTime = {0,0}, NewDueTime, InterruptTime;
+    LARGE_INTEGER DueTime = { }, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
 
     /* Make sure the Wait Count is valid */

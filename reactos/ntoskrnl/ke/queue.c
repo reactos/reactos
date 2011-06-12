@@ -247,7 +247,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     PKTIMER Timer = &Thread->Timer;
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime = Timeout;
-    LARGE_INTEGER DueTime = {0,0}, NewDueTime, InterruptTime;
+    LARGE_INTEGER DueTime = { }, NewDueTime, InterruptTime;
     ULONG Hand = 0;
     ASSERT_QUEUE(Queue);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
