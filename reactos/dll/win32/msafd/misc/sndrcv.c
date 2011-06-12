@@ -388,7 +388,14 @@ WSPRecvFrom(SOCKET Handle,
     }
 
     /* Re-enable Async Event */
-    SockReenableAsyncSelectEvent(Socket, FD_READ);
+    if (*ReceiveFlags & MSG_OOB)
+    {
+        SockReenableAsyncSelectEvent(Socket, FD_OOB);
+    }
+    else
+    {
+        SockReenableAsyncSelectEvent(Socket, FD_READ);
+    }
 
     return MsafdReturnWithErrno ( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
@@ -667,8 +674,7 @@ WSPSendTo(SOCKET Handle,
         HeapFree(GlobalHeap, 0, BindAddress);
     }
 
-    if (Status != STATUS_PENDING)
-       SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
 }
