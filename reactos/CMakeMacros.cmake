@@ -202,7 +202,7 @@ if(NOT MSVC_IDE)
     endfunction()
 endif()
 
-if(WIN32)
+if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
     macro(to_win_path _cmake_path _native_path)
         string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
     endmacro()
@@ -218,5 +218,11 @@ if(WIN32)
             DEPENDS ${_file2})
     endmacro()
 else()
-
+    macro(concatenate_files _file1 _file2 _output)
+        add_custom_command(
+            OUTPUT ${_output}
+            COMMAND cat ${_file1} ${_file2} > ${_output}
+            DEPENDS ${_file1}
+            DEPENDS ${_file2})
+    endmacro()
 endif()
