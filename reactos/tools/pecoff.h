@@ -42,6 +42,7 @@
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 
 #define IMAGE_REL_I386_ABSOLUTE 0x0001
+#define IMAGE_REL_I386_DIR32    0x0006
 
 typedef unsigned char BYTE;
 typedef unsigned char UCHAR;
