@@ -188,7 +188,6 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
 {
     HWND owner = GetWindow( hWnd, GW_OWNER );
 
-    if (!IsWindow(hWnd)) return 0;
 #ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
     PWND pWnd;
 
@@ -201,6 +200,8 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
        }
     }    
 #endif    
+
+    if (!IsWindow(hWnd)) return 0;
 
     switch( msg )
     {
