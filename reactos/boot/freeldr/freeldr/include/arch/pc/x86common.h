@@ -4,8 +4,8 @@
 #endif
 
 /* Memory layout */
-#define STACK16ADDR         HEX(7000) /* The 16-bit stack top will be at 0000:7000 */
-#define BSS_START           HEX(7000)
+#define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
+#define BSS_START           HEX(6F00)
 #define FREELDR_BASE        HEX(8000)
 #define FREELDR_PE_BASE     HEX(9000)
 #define STACK32ADDR        HEX(78000) /* The 32-bit stack top will be at 7000:8000, or 0x78000 */
@@ -17,15 +17,12 @@
 #define DISKREADBUFFER_SIZE 512
 
 /* These addresses specify the realmode "BSS section" layout */
-#define BSS_CallbackAddress BSS_START + 0
-#define BSS_CallbackReturn BSS_START + 8
-#define BSS_BootDrive BSS_START + 16
-#define BSS_BootPartition BSS_START + 20
+#define BSS_EntryPoint      (BSS_START +  0)
+#define BSS_CallbackAddress (BSS_START +  4)
+#define BSS_CallbackReturn  (BSS_START +  8)
+#define BSS_BootDrive       (BSS_START + 12)
+#define BSS_BootPartition   (BSS_START + 16)
 
-#ifdef _M_AMD64
-#define FrldrBootDrive *((PULONG)BSS_BootDrive)
-#define FrldrBootPartition *((PULONG)BSS_BootPartition)
-#endif
 
 // Flag Masks
 #define I386FLAG_CF		HEX(0001)  // Carry Flag
@@ -45,13 +42,13 @@
 #define CR0_PE_CLR	HEX(FFFFFFFE)	/* AND this value with CR0 to disable pmode */
 
 /* Defines needed for switching between real and protected mode */
-#ifdef _M_IX86
+//#ifdef _M_IX86
 #define NULL_DESC	HEX(00)	/* NULL descriptor */
 #define PMODE_CS	HEX(08)	/* PMode code selector, base 0 limit 4g */
 #define PMODE_DS	HEX(10)	/* PMode data selector, base 0 limit 4g */
 #define RMODE_CS	HEX(18)	/* RMode code selector, base 0 limit 64k */
 #define RMODE_DS	HEX(20)	/* RMode data selector, base 0 limit 64k */
-#endif
+//#endif
 
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:

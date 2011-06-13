@@ -9,26 +9,9 @@ if(ARCH MATCHES arm)
 endif()
 
 if(ARCH MATCHES i386)
-    if(MSVC)
-        list(APPEND FREELDR_BASE64K_SOURCE
-            arch/i386/realmode.S)
-    else()
-        list(APPEND FREELDR_STARTUP_SOURCE
-            arch/i386/arch.S)
-    endif()
-elseif(ARCH MATCHES amd64)
-    if(MSVC)
-        list(APPEND FREELDR_BASE64K_SOURCE
-            arch/amd64/stubs.S)
-    else()
-        list(APPEND FREELDR_STARTUP_SOURCE
-            arch/amd64/arch.S)
-    endif()
-endif()
-
-if(ARCH MATCHES i386)
     if(NOT MSVC)
         list(APPEND FREELDR_BASE64K_SOURCE
+            arch/i386/entry.S
             arch/i386/boot.S
             arch/i386/drvmap.S
             arch/i386/i386cpu.S
@@ -40,15 +23,21 @@ if(ARCH MATCHES i386)
             arch/i386/linux.S
             arch/i386/mb.S
             arch/i386/i386bug.c)
+    else()
+        list(APPEND FREELDR_BASE64K_SOURCE
+            arch/i386/realmode.S)
     endif()
 elseif(ARCH MATCHES amd64)
     if(NOT MSVC)
-    list(APPEND FREELDR_BASE64K_SOURCE
-        arch/i386/drvmap.S
-        arch/i386/i386cpu.S
-        arch/i386/i386idt.S
-        arch/i386/i386trap.S
-        arch/amd64/mb.S)
+        list(APPEND FREELDR_BASE64K_SOURCE
+            arch/i386/drvmap.S
+            arch/i386/i386cpu.S
+            arch/i386/i386idt.S
+            arch/i386/i386trap.S
+            arch/amd64/mb.S)
+    else()
+        list(APPEND FREELDR_BASE64K_SOURCE
+            arch/amd64/stubs.S)
     endif()
 endif()
 
@@ -187,7 +176,6 @@ CreateBootSectorTarget2(frldr16
 
 list(APPEND FREELDR_SOURCE
     bootmgr.c
-    ${FREELDR_STARTUP_SOURCE}
     ${FREELDR_BASE64K_SOURCE}
     ${FREELDR_BASE_SOURCE}
     )
@@ -242,7 +230,6 @@ if(NOT MSVC)
 endif()
 
 list(APPEND SETUPLDR_SOURCE
-    ${FREELDR_STARTUP_SOURCE}
     ${FREELDR_BASE64K_SOURCE}
     ${FREELDR_BASE_SOURCE}
     ${SETUPLDR_MAIN_SOURCE})
