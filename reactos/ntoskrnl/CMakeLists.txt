@@ -456,4 +456,3 @@ add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(ntoskrnl.spec)
 
 add_library(ntdllsys ntdll.S)
-set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE C)

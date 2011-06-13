@@ -1,80 +1,54 @@
 
-# Linking
-if(ARCH MATCHES i386)
-link_directories("${REACTOS_SOURCE_DIR}/importlibs")
-endif()
-link_directories(${REACTOS_BINARY_DIR}/lib/sdk/crt)
-set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
-# -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
-
-#set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
-
-# Temporary, until windres issues are fixed
-get_target_property(WRC native-wrc IMPORTED_LOCATION_NOCONFIG)
-set(CMAKE_RC_COMPILE_OBJECT
-    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -xc -E <SOURCE> -o <OBJECT>"
-    "${WRC} -i <OBJECT> -o <OBJECT>"
-    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
-
 # Compiler Core
-add_definitions(-pipe -fms-extensions)
-
-set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+add_compiler_flags(-pipe -fms-extensions)
 
 # Debugging (Note: DWARF-4 on 4.5.1 when we ship)
-add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
+add_compiler_flags(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
 
 # Tuning
 if(ARCH MATCHES i386)
-    add_definitions(-march=${OARCH} -mtune=${TUNE})
+    add_compiler_flags(-march=${OARCH} -mtune=${TUNE})
 else()
-    add_definitions(-march=${OARCH})
+    add_compiler_flags(-march=${OARCH})
 endif()
 
 # Warnings
-
-add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value -Winvalid-pch)
+add_compiler_flags(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value -Winvalid-pch)
 
 if(ARCH MATCHES amd64)
-    add_definitions(-Wno-format)
+    add_compiler_flags(-Wno-format)
 elseif(ARCH MATCHES arm)
-    add_definitions(-Wno-attributes)
+    add_compiler_flags(-Wno-attributes)
 endif()
 
 # Optimizations
-
 if(OPTIMIZE STREQUAL "1")
-    add_definitions(-Os)
+    add_compiler_flags(-Os)
 elseif(OPTIMIZE STREQUAL "2")
-    add_definitions(-Os)
+    add_compiler_flags(-Os)
 elseif(OPTIMIZE STREQUAL "3")
-    add_definitions(-O1)
+    add_compiler_flags(-O1)
 elseif(OPTIMIZE STREQUAL "4")
-    add_definitions(-O2)
+    add_compiler_flags(-O2)
 elseif(OPTIMIZE STREQUAL "5")
-    add_definitions(-O3)
+    add_compiler_flags(-O3)
 endif()
 
-add_definitions(-fno-strict-aliasing)
+add_compiler_flags(-fno-strict-aliasing)
 
 if(ARCH MATCHES i386)
-    add_definitions(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+    add_compiler_flags(-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
     if(OPTIMIZE STREQUAL "1")
-        add_definitions(-ftracer -momit-leaf-frame-pointer)
+        add_compiler_flags(-ftracer -momit-leaf-frame-pointer)
     endif()
 elseif(ARCH MATCHES amd64)
-    add_definitions(-mpreferred-stack-boundary=4)
+    add_compiler_flags(-mpreferred-stack-boundary=4)
     if(OPTIMIZE STREQUAL "1")
-        add_definitions(-ftracer -momit-leaf-frame-pointer)
+        add_compiler_flags(-ftracer -momit-leaf-frame-pointer)
     endif()
 elseif(ARCH MATCHES arm)
     if(OPTIMIZE STREQUAL "1")
-        add_definitions(-ftracer)
+        add_compiler_flags(-ftracer)
     endif()
 endif()
 
@@ -93,14 +67,35 @@ else()
     set(ARCH2 ${ARCH})
 endif()
 
-macro(add_linkerflag MODULE _flag)
-    set(NEW_LINKER_FLAGS ${_flag})
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
-endmacro()
+# Linking
+if(ARCH MATCHES i386)
+    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
+endif()
+
+link_directories(${REACTOS_BINARY_DIR}/lib/sdk/crt)
+
+set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+
+set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+
+set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--disable-auto-import")
+
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
+
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${CMAKE_C_FLAGS} <DEFINES> -D__ASM__ -c <SOURCE>")
+
+#set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
+
+# Temporary, until windres issues are fixed
+get_target_property(WRC native-wrc IMPORTED_LOCATION_NOCONFIG)
+set(CMAKE_RC_COMPILE_OBJECT
+    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -xc -E <SOURCE> -o <OBJECT>"
+    "${WRC} -i <OBJECT> -o <OBJECT>"
+    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
 
 # Optional 3rd parameter: stdcall stack bytes
 macro(set_entrypoint MODULE ENTRYPOINT)
@@ -150,7 +145,7 @@ macro(set_module_type MODULE TYPE)
             set_entrypoint(${MODULE} mainCRTStartup)
         endif(IS_UNICODE)
     elseif(${TYPE} MATCHES win32dll)
-		set_entrypoint(${MODULE} DllMain 12)
+        set_entrypoint(${MODULE} DllMain 12)
         if(DEFINED baseaddress_${MODULE})
             set_image_base(${MODULE} ${baseaddress_${MODULE}})
         else()
@@ -173,11 +168,6 @@ macro(set_module_type MODULE TYPE)
     else()
         message(FATAL_ERROR "Unknown module type : ${TYPE}")
     endif()
-endmacro()
-
-macro(set_unicode)
-   add_definitions(-DUNICODE -D_UNICODE)
-   set(IS_UNICODE 1)
 endmacro()
 
 # Workaround lack of mingw RC support in cmake

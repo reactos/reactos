@@ -1,6 +1,10 @@
 
 #add_executable(pefixup pefixup.c)
 
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 add_subdirectory(cabman)
 add_subdirectory(cdmake)
 add_subdirectory(gendib)

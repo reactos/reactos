@@ -8,7 +8,7 @@ endif()
 
 project(REACTOS)
 
-#versioning
+# Versioning
 include(include/reactos/version.cmake)
 
 # Don't escape preprocessor definition values added via add_definitions
@@ -30,12 +30,15 @@ string(TOLOWER ${ARCH} ARCH)
 
 # Compile options
 if(ARCH MATCHES i386)
-    include(config.cmake)
+    include(cmake/config.cmake)
 elseif(ARCH MATCHES amd64)
-    include(config-amd64.cmake)
+    include(cmake/config-amd64.cmake)
 elseif(ARCH MATCHES arm)
-    include(config-arm.cmake)
+    include(cmake/config-arm.cmake)
 endif()
+
+# Compiler flags handling
+include(cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__ -D__ROS_CMAKE__)
 
@@ -46,7 +49,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     if(MSVC)
         add_definitions(-Dinline=__inline)
     else()
-       add_definitions(-fshort-wchar)
+        add_compiler_flags(-fshort-wchar)
     endif()
 
     include_directories(
@@ -133,13 +136,13 @@ else()
 
     # Compiler specific definitions and macros
     if(MSVC)
-        include(msc.cmake)
+        include(cmake/msvc.cmake)
     else()
-        include(gcc.cmake)
+        include(cmake/gcc.cmake)
     endif()
 
     # Generic macros
-    include(CMakeMacros.cmake)
+    include(cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
     include(cmake/idl-support.cmake)
@@ -183,7 +186,7 @@ else()
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)
 
-    include(baseaddress.cmake)
+    include(cmake/baseaddress.cmake)
 
     #begin with boot so reactos_cab target is defined before all other modules
     add_subdirectory(boot)

@@ -36,7 +36,7 @@ set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DI
 get_directory_property(definitions DEFINITIONS)
 
 set(CMAKE_ASM_COMPILE_OBJECT
-    "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include/dxsdk /I${REACTOS_BINARY_DIR}/include /I${REACTOS_BINARY_DIR}/include/dxsdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/ddk /I${REACTOS_SOURCE_DIR}/include/ndk /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/libs /I${REACTOS_SOURCE_DIR}/include/crt/msc ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+    "<CMAKE_C_COMPILER> /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
     "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
@@ -44,15 +44,6 @@ set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
 macro(add_pch _target_name _FILE)
-endmacro()
-
-macro(add_linkerflag MODULE _flag)
-    set(NEW_LINKER_FLAGS ${_flag})
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
 endmacro()
 
 macro(set_entrypoint MODULE ENTRYPOINT)
@@ -115,11 +106,6 @@ macro(set_module_type MODULE TYPE)
         add_linkerflag(${MODULE} "/DRIVER")
         add_dependencies(${MODULE} bugcodes)
     endif()
-endmacro()
-
-macro(set_unicode)
-   add_definitions(-DUNICODE -D_UNICODE)
-   set(IS_UNICODE 1)
 endmacro()
 
 macro(set_rc_compiler)
