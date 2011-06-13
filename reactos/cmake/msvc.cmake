@@ -158,16 +158,6 @@ macro(add_importlib_target _exports_file)
     add_dependencies(lib${_name} asm ${_dependencies})
 endmacro()
 
-macro(add_importlibs MODULE)
-    foreach(LIB ${ARGN})
-        if ("${LIB}" MATCHES "msvcrt")
-            target_link_libraries(${MODULE} msvcrtex)
-        endif()
-        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.lib)
-        add_dependencies(${MODULE} lib${LIB})
-    endforeach()
-endmacro()
-
 macro(add_delay_importlibs MODULE)
 # TODO
 endmacro()
