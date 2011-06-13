@@ -25,7 +25,7 @@
 
 	.code16
 
-EXTERN(RealEntryPoint)
+EXTERN(_RealEntryPoint)
 
 	cli
 
