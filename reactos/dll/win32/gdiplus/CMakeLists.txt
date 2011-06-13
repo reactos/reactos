@@ -1,8 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_USE_MATH_DEFINES
-    -D_DLL -D__USE_CRTIMP)
+    -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -31,7 +30,6 @@ list(APPEND SOURCE
 add_library(gdiplus SHARED ${SOURCE})
 
 set_module_type(gdiplus win32dll)
-
 target_link_libraries(gdiplus uuid wine)
 
 add_importlibs(gdiplus
@@ -46,9 +44,9 @@ add_importlibs(gdiplus
     ntdll)
 
 add_importlib_target(gdiplus.spec)
-    
+
 if(ARCH MATCHES amd64)
-target_link_libraries(gdiplus crt)
-endif(ARCH MATCHES amd64)
+    target_link_libraries(gdiplus crt)
+endif()
 
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)

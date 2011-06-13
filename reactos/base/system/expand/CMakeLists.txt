@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_executable(expand expand.c expand.rc)

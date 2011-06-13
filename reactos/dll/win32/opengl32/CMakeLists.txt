@@ -1,8 +1,6 @@
 
 set_unicode()
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 spec2def(opengl32.dll opengl32.spec)
 
 list(APPEND SOURCE

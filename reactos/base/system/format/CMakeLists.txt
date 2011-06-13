@@ -1,7 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
-include_directories(.)
 set_rc_compiler()
 
 add_executable(format format.c format.rc)

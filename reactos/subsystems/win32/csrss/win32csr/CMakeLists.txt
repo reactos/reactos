@@ -1,4 +1,3 @@
-add_definitions(-D_DLL -D__USE_CRTIMP)
 
 include_directories(
     BEFORE .
@@ -19,7 +18,7 @@ list(APPEND SOURCE
     desktopbg.c
     dllmain.c
     exitros.c
-	file.c
+    file.c
     guiconsole.c
     handle.c
     harderror.c

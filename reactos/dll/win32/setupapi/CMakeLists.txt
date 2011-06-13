@@ -2,8 +2,6 @@
 set_unicode()
 
 add_definitions(
-    -D_DLL
-    -D__USE_CRTIMP
     -D_SETUPAPI_
     -D_CFGMGR32_
     -Dwcsnicmp=_wcsnicmp)
@@ -13,6 +11,7 @@ include_directories(
     ${REACTOS_BINARY_DIR}/include/reactos/idl)
 
 set_rc_compiler()
+
 spec2def(setupapi.dll setupapi.spec)
 
 list(APPEND SOURCE
@@ -57,7 +56,6 @@ add_importlibs(setupapi
     shell32
     kernel32
     ntdll)
-
 
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)
 add_importlib_target(setupapi.spec)

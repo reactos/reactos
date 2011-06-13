@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 spec2def(twain_32.dll twain_32.spec)
 
 list(APPEND SOURCE

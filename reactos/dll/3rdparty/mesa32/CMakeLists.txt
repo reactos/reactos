@@ -1,22 +1,21 @@
 
 if(NOT MSVC)
-add_definitions(-w)
+    add_compiler_flags(-w)
 endif()
 
 add_definitions(
     -DUSE_EXTERNAL_DXTN_LIB=1
     -DBUILD_GL32
     -DWIN32
-    -DUSE_3DNOW_ASM
-    -D_DLL -D__USE_CRTIMP)
+    -DUSE_3DNOW_ASM)
 
 if(ARCH MATCHES i386)
-add_definitions(
-    -DUSE_X86_ASM
-    -DUSE_MMX_ASM
-    -DUSE_SSE_ASM)
+    add_definitions(
+        -DUSE_X86_ASM
+        -DUSE_MMX_ASM
+        -DUSE_SSE_ASM)
 else()
-add_definitions(-DGL_NO_STDCALL)
+    add_definitions(-DGL_NO_STDCALL)
 endif(ARCH MATCHES i386)
 
 if(NOT MSVC)
@@ -229,44 +228,39 @@ list(APPEND SOURCE
     src/vbo/vbo_split_inplace.c
     src/drivers/windows/icd/mesa.def)
 
-set_source_files_properties(src/drivers/windows/icd/mesa.def PROPERTIES EXTERNAL_OBJECT TRUE)
-
 if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    src/tnl/t_vertex_sse.c
-    src/x86/3dnow.c
-    src/x86/3dnow_normal.S
-    src/x86/3dnow_xform1.S
-    src/x86/3dnow_xform2.S
-    src/x86/3dnow_xform3.S
-    src/x86/3dnow_xform4.S
-    src/x86/common_x86.c
-    src/x86/common_x86_asm.S
-    src/x86/glapi_x86.S
-    src/x86/mmx_blend.S
-    src/x86/read_rgba_span_x86.S
-    src/x86/sse_normal.S
-    src/x86/sse_xform1.S
-    src/x86/sse_xform2.S
-    src/x86/sse_xform3.S
-    src/x86/sse_xform4.S
-    src/x86/sse.c
-    src/x86/x86.c
-    src/x86/x86_cliptest.S
-    src/x86/x86_xform2.S
-    src/x86/x86_xform3.S
-    src/x86/x86_xform4.S
-    src/x86/rtasm/x86sse.c)
+    list(APPEND SOURCE
+        src/tnl/t_vertex_sse.c
+        src/x86/3dnow.c
+        src/x86/3dnow_normal.S
+        src/x86/3dnow_xform1.S
+        src/x86/3dnow_xform2.S
+        src/x86/3dnow_xform3.S
+        src/x86/3dnow_xform4.S
+        src/x86/common_x86.c
+        src/x86/common_x86_asm.S
+        src/x86/glapi_x86.S
+        src/x86/mmx_blend.S
+        src/x86/read_rgba_span_x86.S
+        src/x86/sse_normal.S
+        src/x86/sse_xform1.S
+        src/x86/sse_xform2.S
+        src/x86/sse_xform3.S
+        src/x86/sse_xform4.S
+        src/x86/sse.c
+        src/x86/x86.c
+        src/x86/x86_cliptest.S
+        src/x86/x86_xform2.S
+        src/x86/x86_xform3.S
+        src/x86/x86_xform4.S
+        src/x86/rtasm/x86sse.c)
 else()
-list(APPEND SOURCE src/x86-64/x86-64.c src/x86-64/xform4.S)
-endif(ARCH MATCHES i386)
+    list(APPEND SOURCE src/x86-64/x86-64.c src/x86-64/xform4.S)
+endif()
 
 add_library(mesa32 SHARED ${SOURCE})
 
 set_entrypoint(mesa32 0)
-
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
-
 add_dependencies(mesa32 psdk)
-
 add_cd_file(TARGET mesa32 DESTINATION reactos/system32 FOR all)

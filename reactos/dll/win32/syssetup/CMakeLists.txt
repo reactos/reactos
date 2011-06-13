@@ -1,8 +1,7 @@
+
 set_unicode()
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 set_rc_compiler()
+
 spec2def(syssetup.dll syssetup.spec)
 
 list(APPEND SOURCE
@@ -19,9 +18,7 @@ add_library(syssetup SHARED ${SOURCE})
 
 set_module_type(syssetup win32dll)
 
-target_link_libraries(syssetup
-    uuid
-    ${PSEH_LIB})
+target_link_libraries(syssetup uuid ${PSEH_LIB})
 
 add_importlibs(syssetup
     msvcrt
@@ -37,6 +34,5 @@ add_importlibs(syssetup
     shlwapi
     kernel32
     ntdll)
-
 
 add_cd_file(TARGET syssetup DESTINATION reactos/system32 FOR all)

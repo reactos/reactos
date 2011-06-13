@@ -3,8 +3,6 @@ set_unicode()
 
 spec2def(user32.dll user32.spec)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys

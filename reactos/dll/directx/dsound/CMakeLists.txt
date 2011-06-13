@@ -1,8 +1,7 @@
 
 add_definitions(
     -D_WINE
-    -D_USE_MATH_DEFINES
-    -D_DLL -D__USE_CRTIMP)
+    -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 

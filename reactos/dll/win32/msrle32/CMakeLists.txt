@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()

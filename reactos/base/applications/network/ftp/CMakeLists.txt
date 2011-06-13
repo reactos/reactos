@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -Dlint)
+add_definitions(-Dlint)
 
 add_executable(ftp
     cmds.c

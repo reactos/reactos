@@ -8,17 +8,16 @@ add_definitions(-D_WIN32_WINNT=0x601)
 add_definitions(
     -D__WINESRC__
     -D_WINE
-    -DLIBXML_STATIC
-    -D_DLL
-    -D__USE_CRTIMP)
+    -DLIBXML_STATIC)
 
 if(MSVC)
-add_definitions(/FIwine/typeof.h)
+    add_compiler_flags(/FIwine/typeof.h)
 endif(MSVC)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(msxml3.dll msxml3.spec)
 
 list(APPEND SOURCE

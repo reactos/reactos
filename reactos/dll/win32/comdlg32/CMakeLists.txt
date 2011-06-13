@@ -1,8 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_WINE
-    -D_DLL -D__USE_CRTIMP)
+    -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 

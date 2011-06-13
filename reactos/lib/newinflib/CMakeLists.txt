@@ -21,7 +21,7 @@ else()
 
     add_definitions(-DWINE_UNICODE_API= -D__NO_CTYPE_INLINES -DINFLIB_HOST -DUSE_HOST_WCSFUNCS)
     if(NOT MSVC)
-        add_definitions(-Wpointer-arith -Wwrite-strings)
+        add_compiler_flags(-Wpointer-arith -Wwrite-strings)
     endif()
     add_library(inflibhost ${GLOBAL_FILES} ${SOURCE})
     target_link_libraries(inflibhost unicode)

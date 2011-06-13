@@ -1,11 +1,9 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(riched20.dll riched20.spec)
+
 set_rc_compiler()
 
 list(APPEND SOURCE
@@ -51,5 +49,4 @@ add_importlibs(riched20
     ntdll)
 
 add_importlib_target(riched20.spec)
-
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)

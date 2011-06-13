@@ -14,7 +14,7 @@ list(APPEND SOURCE
     action.c
     alter.c
     appsearch.c
-	assembly.c
+    assembly.c
     automation.c
     classes.c
     cond.tab.c
@@ -68,13 +68,9 @@ endif()
 add_library(msi SHARED ${SOURCE})
 
 add_idl_Headers(msi_idlheader msiserver.idl)
-
 add_typelib(msi_tlb msiserver.idl)
-
 set_module_type(msi win32dll)
-
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
-
 add_dependencies(msi msi_idlheader msi_tlb)
 
 add_importlibs(msi

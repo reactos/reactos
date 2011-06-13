@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -D__WINESRC__)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(msgsm32.acm msgsm32.acm.spec)
@@ -15,9 +12,7 @@ add_library(msgsm32.acm SHARED ${SOURCE})
 
 set_entrypoint(msgsm32.acm 0)
 set_target_properties(msgsm32.acm PROPERTIES SUFFIX "")
-
 target_link_libraries(msgsm32.acm wine)
-
 add_importlibs(msgsm32.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msgsm32.acm psdk)
 add_cd_file(TARGET msgsm32.acm DESTINATION reactos/system32 FOR all)

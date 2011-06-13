@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 set_unicode()
 
 add_executable(route route.c route.rc)

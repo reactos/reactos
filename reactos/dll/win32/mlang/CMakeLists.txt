@@ -1,7 +1,5 @@
 
-add_definitions(
-	-D__WINESRC__
-	-D_DLL -D__USE_CRTIMP)
+add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -19,7 +17,6 @@ list(APPEND SOURCE
 add_library(mlang SHARED ${SOURCE})
 
 set_entrypoint(mlang 0)
-
 target_link_libraries(mlang uuid wine)
 
 add_importlibs(mlang

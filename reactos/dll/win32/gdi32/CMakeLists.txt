@@ -1,17 +1,15 @@
 
 set_unicode()
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -DLANGPACK)
+add_definitions(-DLANGPACK)
 
 include_directories(include)
 
 spec2def(gdi32.dll gdi32.spec)
 
 if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    objects/efloat.c)
+    list(APPEND SOURCE
+        objects/efloat.c)
 endif()
 
 list(APPEND SOURCE

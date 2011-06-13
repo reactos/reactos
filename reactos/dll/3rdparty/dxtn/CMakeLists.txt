@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 spec2def(dxtn.dll dxtn.spec)
 
 add_library(dxtn SHARED

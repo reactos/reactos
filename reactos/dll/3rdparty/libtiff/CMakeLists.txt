@@ -4,8 +4,7 @@ add_definitions(
     -DNDEBUG
     -DBUILD_LIBTIFF_DLL
     -DDLL_EXPORT
-    -DUSE_WIN32_FILEIO
-    -D_DLL -D__USE_CRTIMP)
+    -DUSE_WIN32_FILEIO)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff
@@ -52,11 +51,7 @@ add_library(libtiff SHARED
     tif_zip.c)
 
 set_entrypoint(libtiff 0)
-
 target_link_libraries(libtiff zlib getopt)
-
 add_importlibs(libtiff user32 msvcrt kernel32)
-
 add_dependencies(libtiff psdk)
-
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
