@@ -13,27 +13,41 @@ Usage(void)
 
 static
 void
-RelocateImage(
+RelocateSection(
     char *pData,
-    unsigned int nSize,
-    PIMAGE_RELOCATION pReloc,
-    unsigned int cNumRelocs,
+    IMAGE_SECTION_HEADER *pSectionHeader,
     PIMAGE_SYMBOL pSymbols,
     unsigned int iOffset)
 {
-    unsigned int i;
+    unsigned int i, nOffset;
+    PIMAGE_RELOCATION pReloc;
+    char *pSection;
     WORD *p16;
+    DWORD *p32;
 
-    for (i = 0; i < cNumRelocs; i++)
+    pSection = pData + pSectionHeader->PointerToRawData;
+
+    /* Calculate pointer to relocation table */
+    pReloc = (PIMAGE_RELOCATION)(pData + pSectionHeader->PointerToRelocations);
+
+    /* Loop all relocations */
+    for (i = 0; i < pSectionHeader->NumberOfRelocations; i++)
     {
-        if (pReloc->VirtualAddress > nSize) continue;
+        nOffset = pReloc->VirtualAddress - pSectionHeader->VirtualAddress;
+
+        if (nOffset > pSectionHeader->SizeOfRawData) continue;
 
         switch (pReloc->Type)
         {
             case IMAGE_REL_I386_ABSOLUTE:
             case 16:
-                p16 = (void*)(pData + pReloc->VirtualAddress);
+                p16 = (void*)(pSection + nOffset);
                 *p16 += (WORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
+                break;
+
+            case IMAGE_REL_I386_DIR32:
+                p32 = (void*)(pSection + nOffset);
+                *p32 += (DWORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
                 break;
 
             default:
@@ -49,13 +63,13 @@ int main(int argc, char *argv[])
 {
     char *pszSourceFile;
     char *pszDestFile;
-    unsigned long iOffset;
+    unsigned long nFileSize, nBaseAddress, nOffsetSectionHeaders;
     FILE *pSourceFile, *pDestFile;
-    IMAGE_FILE_HEADER FileHeader;
-    IMAGE_SECTION_HEADER SectionHeader;
+    IMAGE_FILE_HEADER *pFileHeader;
+    IMAGE_SECTION_HEADER *pSectionHeader;
     unsigned int i;
     size_t nSize;
-    void *pData;
+    char *pData;
     PIMAGE_RELOCATION pReloc;
     PIMAGE_SYMBOL pSymbols;
 
@@ -67,144 +81,81 @@ int main(int argc, char *argv[])
 
     pszSourceFile = argv[1];
     pszDestFile = argv[2];
+    nBaseAddress = strtol(argv[3], 0, 16);
 
     pSourceFile = fopen(pszSourceFile, "rb");
     if (!pSourceFile)
     {
         fprintf(stderr, "Couldn't open source file '%s'\n", pszSourceFile);
-        return -1;
+        return -2;
     }
 
+    /* Get file size */
+    fseek(pSourceFile, 0, SEEK_END);
+    nFileSize = ftell(pSourceFile);
+    rewind(pSourceFile);
+
+    /* Allocate memory for the file */
+    pData = malloc(nFileSize);
+    if (!pData)
+    {
+        fprintf(stderr, "Failed to allocate %ld bytes\n", nFileSize);
+        return -3;
+    }
+
+    /* Read the whole source file */
+    if (!fread(pData, nFileSize, 1, pSourceFile))
+    {
+        fprintf(stderr, "Failed to read source file: %ld\n", nFileSize);
+        return -4;
+    }
+
+    /* Close source file */
+    fclose(pSourceFile);
+
+    /* Open the destination file */
     pDestFile = fopen(pszDestFile, "wb");
     if (!pszDestFile)
     {
         fprintf(stderr, "Couldn't open dest file '%s'\n", pszDestFile);
-        return -2;
+        return -5;
     }
 
-    iOffset = strtol(argv[3], 0, 16);
-
-    /* Load the coff header */
-    nSize = fread(&FileHeader, 1, sizeof(FileHeader), pSourceFile);
-    if (nSize != sizeof(FileHeader))
-    {
-        fprintf(stderr, "Failed to read source file\n");
-        return -3;
-    }
-
-    /* Jump to section headers (skip optional header) */
-    if (fseek(pSourceFile, FileHeader.SizeOfOptionalHeader, SEEK_CUR))
-    {
-        fprintf(stderr, "Failed to set file pointer\n");
-        return -4;
-    }
+    /* Calculate table pointers */
+    pFileHeader = (IMAGE_FILE_HEADER*)pData;
+    pSymbols = (void*)(pData + pFileHeader->PointerToSymbolTable);
+    pSectionHeader = (void*)(((char*)(pFileHeader + 1)) + pFileHeader->SizeOfOptionalHeader);
 
     /* Loop all sections */
-    for (i = 0; i < FileHeader.NumberOfSections; i++)
+    for (i = 0; i < pFileHeader->NumberOfSections; i++)
     {
-        /* Read section header */
-        nSize = fread(&SectionHeader, 1, sizeof(SectionHeader), pSourceFile);
-        if (nSize != sizeof(SectionHeader))
-        {
-            fprintf(stderr, "Failed to read section %ld file\n", i);
-            return -5;
-        }
-
         /* Skip empty sections */
-        if (SectionHeader.SizeOfRawData == 0) continue;
+        if (pSectionHeader->SizeOfRawData == 0) continue;
 
         /* Check if this is '.text' section */
-        if (strcmp(SectionHeader.Name, ".text") == 0) break;
-    }
+        if (strcmp(pSectionHeader->Name, ".text") == 0)
+        {
+            RelocateSection(pData,
+                            pSectionHeader,
+                            pSymbols,
+                            nBaseAddress);
 
-    if (i == FileHeader.NumberOfSections)
-    {
-        fprintf(stderr, "No .text section found\n");
-        return -6;
-    }
+            /* Write the section to the destination file */
+            if (!fwrite(pData + pSectionHeader->PointerToRawData,
+                        pSectionHeader->SizeOfRawData, 1, pDestFile))
+            {
+                fprintf(stderr, "Failed to write data %ld\n",
+                        pSectionHeader->SizeOfRawData);
+                return -6;
+            }
 
-    /* Move file pointer to the symbol table */
-    if (fseek(pSourceFile, FileHeader.PointerToSymbolTable, SEEK_SET))
-    {
-        fprintf(stderr, "Failed to set file pointer\n");
-        return -7;
-    }
+            nBaseAddress += pSectionHeader->SizeOfRawData;
+        }
 
-    /* Allocate memory for the symbols */
-    nSize = FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
-    pSymbols = malloc(nSize);
-    if (!pSymbols)
-    {
-        fprintf(stderr, "Failed to allocate %ld bytes\n", nSize);
-        return -8;
-    }
-
-    /* Read symbol data */
-    if (!fread(pSymbols, nSize, 1, pSourceFile))
-    {
-        fprintf(stderr, "Failed to read symbols: %ld\n", nSize);
-        return -9;
-    }
-
-    /* Move file pointer to the start of the section */
-    if (fseek(pSourceFile, SectionHeader.PointerToRawData, SEEK_SET))
-    {
-        fprintf(stderr, "Failed to set file pointer\n");
-        return -10;
-    }
-
-    /* Allocate memory for the section */
-    pData = malloc(SectionHeader.SizeOfRawData);
-    if (!pData)
-    {
-        fprintf(stderr, "Failed to allocate %ld bytes\n", SectionHeader.SizeOfRawData);
-        return -11;
-    }
-
-    /* Read section data */
-    if (!fread(pData, SectionHeader.SizeOfRawData, 1, pSourceFile))
-    {
-        fprintf(stderr, "Failed to read section %ld, at 0x%lx size=0x%lx \n",
-                i, SectionHeader.PointerToRawData, SectionHeader.SizeOfRawData);
-        return -12;
-    }
-
-    /* Allocate memory for the relocation */
-    nSize = SectionHeader.NumberOfRelocations * sizeof(IMAGE_RELOCATION);
-    pReloc = malloc(nSize);
-    if (!pReloc)
-    {
-        fprintf(stderr, "Failed to allocate %ld bytes\n", nSize);
-        return -13;
-    }
-
-    /* Move file pointer to the relocation table */
-    if (fseek(pSourceFile, SectionHeader.PointerToRelocations, SEEK_SET))
-    {
-        fprintf(stderr, "Failed to set file pointer\n");
-        return -14;
-    }
-
-    /* Read relocation data */
-    if (!fread(pReloc, nSize, 1, pSourceFile))
-    {
-        fprintf(stderr, "Failed to read section %ld file\n", i);
-        return -15;
-    }
-
-    RelocateImage(pData, SectionHeader.SizeOfRawData,
-                  pReloc, SectionHeader.NumberOfRelocations, pSymbols, iOffset);
-
-    /* Write the section to the destination file */
-    if (!fwrite(pData, SectionHeader.SizeOfRawData, 1, pDestFile))
-    {
-        fprintf(stderr, "Failed to write data %ld\n",
-                SectionHeader.SizeOfRawData);
-        return -16;
+        pSectionHeader++;
     }
 
     fclose(pDestFile);
-    fclose(pSourceFile);
 
     return 0;
 }
