@@ -16,6 +16,10 @@
 #include "kmtest.h"
 #include <winioctl.h>
 #include <kmt_public.h>
+#define KMT_DEFINE_TEST_FUNCTIONS
+#include <kmt_test.h>
+
+#define LOGBUFFER_SIZE 65000
 
 static void OutputError(FILE *fp, DWORD error);
 static DWORD RunTest(char *testName);
@@ -40,14 +44,25 @@ static DWORD RunTest(char *testName)
 {
     DWORD error = ERROR_SUCCESS;
     HANDLE hDevice = INVALID_HANDLE_VALUE;
-    DWORD bytesRead;
-    char buffer[1024];
-    BOOL ret;
+    DWORD bytesRead, bytesWritten;
+
+    ResultBuffer = KmtAllocateResultBuffer(LOGBUFFER_SIZE);
+    if (!ResultBuffer)
+    {
+        error = GetLastError();
+        goto cleanup;
+    }
 
     hDevice = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0,
                          NULL, OPEN_EXISTING, 0, NULL);
 
     if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        error = GetLastError();
+        goto cleanup;
+    }
+
+    if (!DeviceIoControl(hDevice, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE]), NULL, 0, &bytesRead, NULL))
     {
         error = GetLastError();
         goto cleanup;
@@ -59,17 +74,7 @@ static DWORD RunTest(char *testName)
         goto cleanup;
     }
 
-    while ((ret = ReadFile(hDevice, buffer, sizeof buffer - 1, &bytesRead, NULL)) != 0)
-    {
-        if (!bytesRead)
-            break;
-
-        assert(bytesRead < sizeof buffer);
-        buffer[bytesRead] = '\0';
-
-        fputs(buffer, stdout);
-    }
-    if (!ret)
+    if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &bytesWritten, NULL))
     {
         error = GetLastError();
         goto cleanup;
@@ -78,6 +83,9 @@ static DWORD RunTest(char *testName)
 cleanup:
     if (hDevice != INVALID_HANDLE_VALUE)
         CloseHandle(hDevice);
+
+    if (ResultBuffer)
+        KmtFreeResultBuffer(ResultBuffer);
 
     return error;
 }
@@ -89,7 +97,7 @@ static DWORD ListTests(PSTR *testList)
     DWORD bytesRead;
     PSTR buffer = NULL;
     DWORD bufferSize;
-    
+
     if (!testList)
     {
         error = ERROR_INVALID_PARAMETER;
@@ -104,7 +112,7 @@ static DWORD ListTests(PSTR *testList)
         error = GetLastError();
         goto cleanup;
     }
-    
+
     bufferSize = 1024;
     buffer = HeapAlloc(GetProcessHeap(), 0, bufferSize);
     if (!buffer)
@@ -125,10 +133,10 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, buffer);
         buffer = NULL;
     }
-        
+
     if (hDevice != INVALID_HANDLE_VALUE)
         CloseHandle(hDevice);
-        
+
     if (testList)
         *testList = buffer;
 
@@ -162,7 +170,7 @@ int __cdecl main(int argc, char **argv)
             printf("    %s\n", testName);
             testName += len + 1;
         }
-        
+
         /* TODO: user-mode test parts */
 
         if (error)
@@ -171,7 +179,7 @@ int __cdecl main(int argc, char **argv)
     else
     {
         char *testName = argv[1];
-        
+
         if (argc > 2)
             fputs("Excess arguments ignored\n", stderr);
 

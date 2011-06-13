@@ -23,6 +23,7 @@ add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
+set_property(TARGET kmtest_drv PROPERTY COMPILE_DEFINITIONS KMT_KERNEL_MODE)
 
 add_cd_file(TARGET kmtest_drv DESTINATION reactos/system32/drivers FOR all)
 
@@ -39,5 +40,6 @@ list(APPEND KMTEST_SOURCE
 add_executable(kmtest ${KMTEST_SOURCE})
 set_module_type(kmtest win32cui)
 add_importlibs(kmtest advapi32 msvcrt kernel32)
+set_property(TARGET kmtest PROPERTY COMPILE_DEFINITIONS KMT_USER_MODE)
 
 add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)

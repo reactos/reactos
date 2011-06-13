@@ -5,7 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <stddef.h>
+#include <ntddk.h>
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;

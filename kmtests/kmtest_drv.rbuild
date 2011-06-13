@@ -4,6 +4,7 @@
 	<library>ntdll</library>
 	<library>hal</library>
 	<library>pseh</library>
+	<define name="KMT_KERNEL_MODE" />
 	<directory name="kmtest_drv">
 		<file>kmtest_drv.c</file>
 		<file>log.c</file>

@@ -8,6 +8,7 @@
 #include <ntddk.h>
 #include <ntstrsafe.h>
 #include <limits.h>
+#include <pseh/pseh2.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -19,9 +20,16 @@
 /* Prototypes */
 DRIVER_INITIALIZE DriverEntry;
 static DRIVER_UNLOAD DriverUnload;
-static DRIVER_DISPATCH DriverCreateClose;
+static DRIVER_DISPATCH DriverCreate;
+static DRIVER_DISPATCH DriverClose;
 static DRIVER_DISPATCH DriverIoControl;
-static DRIVER_DISPATCH DriverRead;
+
+/* Device Extension layout */
+typedef struct
+{
+    PKMT_RESULTBUFFER ResultBuffer;
+    PMDL Mdl;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 /* Globals */
 static PDEVICE_OBJECT MainDeviceObject;
@@ -43,6 +51,8 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Re
 {
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DeviceName;
+    PDEVICE_EXTENSION DeviceExtension;
+
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(RegistryPath);
@@ -55,7 +65,8 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Re
         goto cleanup;
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\Kmtest");
-    Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_UNKNOWN,
+    Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION), &DeviceName,
+                            FILE_DEVICE_UNKNOWN,
                             FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
                             TRUE, &MainDeviceObject);
 
@@ -64,13 +75,14 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Re
 
     DPRINT("DriverEntry. Created DeviceObject %p\n",
              MainDeviceObject);
-    MainDeviceObject->Flags |= DO_DIRECT_IO;
+    DeviceExtension = MainDeviceObject->DeviceExtension;
+    DeviceExtension->ResultBuffer = NULL;
+    DeviceExtension->Mdl = NULL;
 
     DriverObject->DriverUnload = DriverUnload;
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = DriverCreateClose;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = DriverCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = DriverCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = DriverClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DriverIoControl;
-    DriverObject->MajorFunction[IRP_MJ_READ] = DriverRead;
 
 cleanup:
     if (MainDeviceObject && !NT_SUCCESS(Status))
@@ -100,15 +112,21 @@ static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
     DPRINT("DriverUnload\n");
 
     if (MainDeviceObject)
+    {
+        PDEVICE_EXTENSION DeviceExtension = MainDeviceObject->DeviceExtension;
+        ASSERT(!DeviceExtension->Mdl);
+        ASSERT(!DeviceExtension->ResultBuffer);
+        ASSERT(!ResultBuffer);
         IoDeleteDevice(MainDeviceObject);
+    }
 
     LogFree();
 }
 
 /**
- * @name DriverCreateClose
+ * @name DriverCreate
  *
- * Driver Dispatch function for CreateFile/CloseHandle.
+ * Driver Dispatch function for CreateFile
  *
  * @param DeviceObject
  *        Device Object
@@ -117,18 +135,65 @@ static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
  *
  * @return Status
  */
-static NTSTATUS NTAPI DriverCreateClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+static NTSTATUS NTAPI DriverCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
+    PDEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("DriverCreateClose. Function=%s, DeviceObject=%p\n",
-             IoStackLocation->MajorFunction == IRP_MJ_CREATE ? "Create" : "Close",
+    DPRINT("DriverCreate. DeviceObject=%p\n",
              DeviceObject);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(!DeviceExtension->Mdl);
+    ASSERT(!DeviceExtension->ResultBuffer);
+    ASSERT(!ResultBuffer);
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+/**
+ * @name DriverClose
+ *
+ * Driver Dispatch function for CloseHandle.
+ *
+ * @param DeviceObject
+ *        Device Object
+ * @param Irp
+ *        I/O request packet
+ *
+ * @return Status
+ */
+static NTSTATUS NTAPI DriverClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStackLocation;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    PAGED_CODE();
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT("DriverClose. DeviceObject=%p\n",
+             DeviceObject);
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    if (DeviceExtension->Mdl)
+    {
+        MmUnlockPages(DeviceExtension->Mdl);
+        IoFreeMdl(DeviceExtension->Mdl);
+        DeviceExtension->Mdl = NULL;
+        ResultBuffer = DeviceExtension->ResultBuffer = NULL;
+    }
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
@@ -223,55 +288,54 @@ static NTSTATUS NTAPI DriverIoControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 
             break;
         }
+        case IOCTL_KMTEST_SET_RESULTBUFFER:
+        {
+            PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
+            DPRINT("DriverIoControl. IOCTL_KMTEST_SET_RESULTBUFFER, inlen=%lu, outlen=%lu\n",
+                     IoStackLocation->Parameters.DeviceIoControl.InputBufferLength,
+                     IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
+
+            if (DeviceExtension->Mdl)
+            {
+                MmUnlockPages(DeviceExtension->Mdl);
+                IoFreeMdl(DeviceExtension->Mdl);
+            }
+
+            DeviceExtension->Mdl = IoAllocateMdl(IoStackLocation->Parameters.DeviceIoControl.Type3InputBuffer,
+                                                    IoStackLocation->Parameters.DeviceIoControl.InputBufferLength,
+                                                    FALSE, FALSE, NULL);
+            if (!DeviceExtension->Mdl)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            _SEH2_TRY
+            {
+                MmProbeAndLockPages(DeviceExtension->Mdl, KernelMode, IoModifyAccess);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                IoFreeMdl(DeviceExtension->Mdl);
+                DeviceExtension->Mdl = NULL;
+                break;
+            } _SEH2_END;
+
+            ResultBuffer = DeviceExtension->ResultBuffer = MmGetSystemAddressForMdlSafe(DeviceExtension->Mdl, NormalPagePriority);
+
+            DPRINT("DriverIoControl. ResultBuffer: %ld %ld %ld %ld\n",
+                    ResultBuffer->Successes, ResultBuffer->Failures,
+                    ResultBuffer->LogBufferLength, ResultBuffer->LogBufferMaxLength);
+            break;
+        }
         default:
             DPRINT1("DriverIoControl. Invalid IoCtl code 0x%08X\n",
                      IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }
-
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = Length;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return Status;
-}
-
-/**
- * @name DriverRead
- *
- * Driver Dispatch function for ReadFile.
- *
- * @param DeviceObject
- *        Device Object
- * @param Irp
- *        I/O request packet
- *
- * @return Status
- */
-static NTSTATUS NTAPI DriverRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PIO_STACK_LOCATION IoStackLocation;
-    PVOID ReadBuffer;
-    SIZE_T Length;
-
-    PAGED_CODE();
-
-    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("DriverRead. Offset=%I64u, Length=%lu, DeviceObject=%p\n",
-             IoStackLocation->Parameters.Read.ByteOffset.QuadPart,
-             IoStackLocation->Parameters.Read.Length,
-             DeviceObject);
-
-    ReadBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-
-    Length = LogRead(ReadBuffer, IoStackLocation->Parameters.Read.Length);
-
-    DPRINT("DriverRead. Length of data read: %lu\n",
-             Length);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Length;
