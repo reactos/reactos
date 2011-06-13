@@ -187,6 +187,8 @@ reactos/dll/win32/xinput1_3       # Autosync
 reactos/dll/win32/xinput9_1_0     # Autosync
 reactos/dll/win32/xmllite         # Autosync
 
+reactos/dll/cpl/inetcpl           # Synced to Wine-1.3.21
+
 ReactOS shares the following programs with Winehq.
 
 reactos/base/applications/cmdutils/xcopy  # Autosync
