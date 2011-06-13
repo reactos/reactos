@@ -8,7 +8,10 @@
 #include <stddef.h>
 #include <kmt_test.h>
 
+KMT_TESTFUNC Test_Example;
+
 const KMT_TEST TestList[] =
 {
+    { "Example", Test_Example },
     { NULL, NULL }
 };

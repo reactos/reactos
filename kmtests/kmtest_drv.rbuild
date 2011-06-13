@@ -9,4 +9,7 @@
 		<file>log.c</file>
 		<file>testlist.c</file>
 	</directory>
+	<directory name="example">
+		<file>Example.c</file>
+	</directory>
 </module>

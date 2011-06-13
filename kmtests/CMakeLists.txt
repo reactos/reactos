@@ -14,6 +14,8 @@ list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/log.c
     kmtest_drv/testlist.c
 
+    example/Example.c
+
     kmtest_drv/kmtest_drv.rc)
 
 add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
@@ -28,8 +30,6 @@ add_cd_file(TARGET kmtest_drv DESTINATION reactos/system32/drivers FOR all)
 # kmtest.exe loader application
 #
 set_rc_compiler()
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND KMTEST_SOURCE
     kmtest/kmtest.c
