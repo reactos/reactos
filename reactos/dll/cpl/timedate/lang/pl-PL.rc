@@ -1,11 +1,12 @@
-// Polish translation by Sebastian Gasiorek
 /*
-* update by xrogers (13.04.2007)
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*
-* update by Caemyr - Olaf Siejka (Jan, 2008)
-*/
+ *         translated by Sebastian Gasiorek
+ *         updated by xrogers (13.04.2007)
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         updated by Caemyr - Olaf Siejka (Jan, 2008)
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -40,7 +41,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "&Automatycznie uwzglêdnij zmiany czasu",
+    AUTOCHECKBOX "&Automatycznie uwzglÄ™dnij zmiany czasu",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -57,19 +58,19 @@ BEGIN
     PUSHBUTTON      "&Aktualizuj teraz", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronizacja mo¿e nast¹piæ tylko wtedy, gdy komputer jest pod³¹czony do Internetu.", -1, 12, 114, 225, 25
+    LTEXT           "Synchronizacja moÅ¼e nastÄ…piÄ‡ tylko wtedy, gdy komputer jest podÅ‚Ä…czony do Internetu.", -1, 12, 114, 225, 25
 END
 
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Data/Godzina"
-    IDS_CPLDESCRIPTION "Ustaw datê, godzinê i strefê czasow¹ komputera."
+    IDS_CPLDESCRIPTION "Ustaw datÄ™, godzinÄ™ i strefÄ™ czasowÄ… komputera."
     IDS_TIMEZONETEXT "Aktualna strefa czasowa: %s"
-    IDS_TIMEZONEINVALID "Nieprawid³owa"
+    IDS_TIMEZONEINVALID "NieprawidÅ‚owa"
     IDS_TIMEZONEUNKNOWN "Nieznana"
-    IDS_INETTIMESUCSYNC "Zegar zosta³ pomyœlnie zsynchronizowany z %s w dniu %s o %s"
-    IDS_INETTIMENEXTSYNC "Nastêpna synchronizacja w dniu %s o %s"
-    IDS_INETTIMESYNCING "Proszê czekaæ, gdy ReactOS zsynchronizuje czas z %s"
-    IDS_INETTIMEERROR "Wyst¹pi³ b³¹d podczas gdy ReactOS synchronizowa³ czas z %s"
+    IDS_INETTIMESUCSYNC "Zegar zostaÅ‚ pomyÅ›lnie zsynchronizowany z %s w dniu %s o %s"
+    IDS_INETTIMENEXTSYNC "NastÄ™pna synchronizacja w dniu %s o %s"
+    IDS_INETTIMESYNCING "ProszÄ™ czekaÄ‡, gdy ReactOS zsynchronizuje czas z %s"
+    IDS_INETTIMEERROR "WystÄ…piÅ‚ bÅ‚Ä…d podczas prÃ³by synchronizacji czasu z %s"
 END
