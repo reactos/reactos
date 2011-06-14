@@ -243,6 +243,7 @@ UniataSataEvent(
 } // end UniataSataEvent()
 
 ULONG
+NTAPI
 UniataSataReadPort4(
     IN PHW_CHANNEL chan,
     IN ULONG io_port_ndx,
@@ -311,6 +312,7 @@ UniataSataReadPort4(
 } // end UniataSataReadPort4()
 
 VOID
+NTAPI
 UniataSataWritePort4(
     IN PHW_CHANNEL chan,
     IN ULONG io_port_ndx,
