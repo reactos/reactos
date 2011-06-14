@@ -3,21 +3,21 @@ Empty8042:
     .word 0x00eb,0x00eb		// jmp $+2, jmp $+2
     in al, 0x64
     cmp al, 0xff				// legacy-free machine without keyboard
-    jz empty_8042_ret			// controllers on Intel Macs read back 0xFF
+    jz Empty8042_ret			// controllers on Intel Macs read back 0xFF
     test al, 0x02
-    jnz x86_16_Empty8042
-empty_8042_ret:
+    jnz Empty8042
+Empty8042_ret:
 	ret
 
 EnableA20:
     pusha
-    call x86_16_Empty8042
+    call Empty8042
     mov al, 0xD1				// command write
     out 0x64, al
-    call x86_16_Empty8042
+    call Empty8042
     mov al, 0xDF				// A20 on
     out 0x60, al
-    call x86_16_Empty8042
+    call Empty8042
     popa
     ret
 

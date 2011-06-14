@@ -27,6 +27,9 @@ RealModeEntryPoint:
     /* Setup the stack */
     mov sp, word ptr ds:stack16
 
+    /* Enable A20 address line */
+    call EnableA20
+
     /* Get address of optional header */
     mov eax, dword ptr ds:[FREELDR_PE_BASE + IMAGE_DOS_HEADER_e_lfanew]
     add eax, FREELDR_PE_BASE + 4 + IMAGE_FILE_HEADER_SIZE

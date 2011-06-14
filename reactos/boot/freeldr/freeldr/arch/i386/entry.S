@@ -211,69 +211,11 @@ inrmode:
 	ret
 
 
-	/*
-	 * Needed for enabling the a20 address line
-	 */
-.code16
-empty_8042:
-	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
-	in al, HEX(64)
-	cmp al, HEX(ff)               // legacy-free machine without keyboard
-	jz empty_8042_ret           // controllers on Intel Macs read back 0xFF
-	test al, 2
-	jnz empty_8042
-empty_8042_ret:
-	ret
-
-	/*
-	 * Enable the A20 address line (to allow access to over 1mb)
-	 */
-EXTERN(_EnableA20)
 .code32
+PUBLIC _EnableA20
+_EnableA20:
+    ret
 
-	pusha
-
-	call switch_to_real
-.code16
-
-	call empty_8042
-	mov al, HEX(D1)                // command write
-	out HEX(64), al
-	call empty_8042
-	mov al, HEX(DF)                // A20 on
-	out	HEX(60), al
-	call empty_8042
-	call switch_to_prot
-	.code32
-
-	popa
-
-	ret
-
-	/*
-	 * Disable the A20 address line
-	 */
-EXTERN(_DisableA20)
-.code32
-
-	pusha
-
-	call switch_to_real
-	.code16
-
-	call	empty_8042
-	mov al, HEX(D1)                // command write
-	out HEX(64), al
-	call empty_8042
-	mov al, HEX(DD)                // A20 off
-	out HEX(60), al
-	call	empty_8042
-	call	switch_to_prot
-	.code32
-
-	popa
-
-	ret
 
 /* Multiboot support
  *
