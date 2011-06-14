@@ -188,7 +188,7 @@ else()
 endif()
 
 set_subsystem(freeldr_pe native)
-set_image_base(freeldr_pe 0x9000)
+set_image_base(freeldr_pe 0x10000)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
 if(ARCH MATCHES i386)
@@ -242,7 +242,7 @@ else()
 endif()
 
 set_subsystem(setupldr_pe native)
-set_image_base(setupldr_pe 0x9000)
+set_image_base(setupldr_pe 0x10000)
 set_entrypoint(setupldr_pe RealEntryPoint)
 
 if(ARCH MATCHES i386)
