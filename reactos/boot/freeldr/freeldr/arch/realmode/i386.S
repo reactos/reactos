@@ -30,6 +30,9 @@ RealModeEntryPoint:
     /* Enable A20 address line */
     call EnableA20
 
+    /* Safe real mode entry point in shared memory */
+    mov dword ptr [BSS_RealModeEntry], offset switch_to_real16
+
     /* Get address of optional header */
     mov eax, dword ptr ds:[FREELDR_PE_BASE + IMAGE_DOS_HEADER_e_lfanew]
     add eax, FREELDR_PE_BASE + 4 + IMAGE_FILE_HEADER_SIZE
@@ -38,20 +41,74 @@ RealModeEntryPoint:
     mov eax, dword ptr ds:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
     add eax, FREELDR_PE_BASE
 
-    /* Safe the entry point */
-    mov dword ptr [BSS_EntryPoint], eax
-
     /* Patch the long jump instruction */
     mov word ptr [pm_offset], ax
+
+    jmp exit_to_protected
+
+
+/* This is the entry point from protected mode */
+switch_to_real16:
+
+	/* Restore segment registers to correct limit */
+	mov ax, RMODE_DS
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	/* Disable Protected Mode */
+	mov	eax, cr0
+	and eax, CR0_PE_CLR
+	mov	cr0, eax
+
+	/* Clear prefetch queue & correct CS */
+	ljmp16 0, inrmode
+
+inrmode:
+    /* Set real mode segments */
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	/* Clear out the high 16-bits of ESP */
+	/* This is needed because I have one */
+	/* machine that hangs when booted to dos if */
+	/* anything other than 0x0000 is in the high */
+	/* 16-bits of ESP. Even though real-mode */
+	/* code should only use SP and not ESP. */
+	xor esp, esp
+
+    /* Restore real mode stack */
+	mov sp, word ptr ds:[stack16]
+
+	/* Load IDTR with real mode value */
+	lidt rmode_idtptr
+
+	sti		/* These are ok now */
+
+    /* Do the callback, specified by cx */
+    // call word ptr CallbackTable[cx * 4]
+    mov ax, cx
+    call writehex4
 
 /*
  * Switches the processor to protected mode
  * it destroys eax
  */
-switch_to_prot:
+exit_to_protected:
+
+    cli
+
+    /* Safe current stack pointer */
+    mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
-    lgdt    gdtptr
+    lgdt gdtptr
 
     /* Enable Protected Mode */
     mov eax, cr0
@@ -64,6 +121,7 @@ pm_offset:
     .word 0 // receives address of PE entry point
     .word PMODE_CS
     nop
+
 
 
 
@@ -109,8 +167,14 @@ gdtptr:
 	.word HEX(27)		/* Limit */
 	.long gdt			/* Base Address */
 
-.org 1024
+/* Real-mode IDT pointer */
+rmode_idtptr:
+	.word HEX(3ff)		/* Limit */
+	.long 0			/* Base Address */
 
+//.org 1024
+
+#include "int386.inc"
 #include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE)

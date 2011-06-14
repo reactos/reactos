@@ -44,9 +44,9 @@ _RealEntryPoint:
 	lidt i386idtptr
 
     /* Continue execution */
-    jmp dword ptr [_ContinueAddress]
+    jmp dword ptr [ContinueAddress]
 
-_ContinueAddress:
+ContinueAddress:
     .long _FrldrStartup
 
 
@@ -58,6 +58,12 @@ _FrldrStartup:
 	mov dword ptr [_FrldrBootDrive], eax
     mov al, dh
 	mov dword ptr [_FrldrBootPartition], eax
+
+    /* Patch long jump with real mode entry point */
+    mov eax, dword ptr ds:[BSS_RealModeEntry]
+    mov dword ptr ds:[SwitchToReal16Address], eax
+
+call _Int386_ // test
 
 	/* GO! */
 	xor eax, eax
@@ -215,6 +221,51 @@ inrmode:
 PUBLIC _EnableA20
 _EnableA20:
     ret
+
+PUBLIC _Int386_
+_Int386_:
+	/* Save all registers + segment registers */
+	push ds
+	push es
+	push fs
+	push gs
+	pusha
+
+    /* Set the callback index */
+    mov cx, 1234
+
+    /* Set continue address and switch to real mode */
+    mov dword ptr [ContinueAddress], offset Int386_return
+    jmp SwitchToReal
+
+Int386_return:
+
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+
+
+SwitchToReal:
+    /* Set sane segments */
+	mov ax, PMODE_DS
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	/* Save 32-bit stack pointer */
+	mov dword ptr [stack32], esp
+
+	/* jmp to 16-bit segment to set the limit correctly */
+    .byte HEX(0ea) // jmp far RMODE_CS:switch_to_real16
+SwitchToReal16Address:
+    .long 0 // receives address of switch_to_real16
+    .word RMODE_CS
+    nop
 
 
 /* Multiboot support

@@ -17,11 +17,26 @@
 #define DISKREADBUFFER_SIZE 512
 
 /* These addresses specify the realmode "BSS section" layout */
-#define BSS_EntryPoint      (BSS_START +  0)
+#define BSS_RealModeEntry   (BSS_START +  0)
 #define BSS_CallbackAddress (BSS_START +  4)
 #define BSS_CallbackReturn  (BSS_START +  8)
-#define BSS_BootDrive       (BSS_START + 12)
-#define BSS_BootPartition   (BSS_START + 16)
+
+#define BSS_RegisterSet     (BSS_START + 16) /* size = 36 */
+#define BSS_IntVector       (BSS_START + 52)
+// next 52
+
+/* Layout of the REGS structure */
+#define REGS_EAX 0
+#define REGS_EBX 4
+#define REGS_ECX 8
+#define REGS_EDX 12
+#define REGS_ESI 16
+#define REGS_EDI 20
+#define REGS_DS 24
+#define REGS_ES 26
+#define REGS_FS 28
+#define REGS_GS 30
+#define REGS_EFLAGS 32
 
 
 // Flag Masks
