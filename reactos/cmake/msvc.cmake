@@ -167,7 +167,8 @@ macro(add_importlib_target _exports_file)
 endmacro()
 
 macro(add_delay_importlibs MODULE)
-# TODO
+    # TODO. For now forward to normal import libs
+    add_importlibs(${MODULE} ${ARGN})
 endmacro()
 
 macro(spec2def _dllname _spec_file)
