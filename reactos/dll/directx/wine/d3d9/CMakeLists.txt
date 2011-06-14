@@ -7,6 +7,10 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+if(MSVC)
+    add_definitions(-FImsvchelper.h)
+endif()
+
 set_rc_compiler()
 
 spec2def(d3d9.dll d3d9.spec)
