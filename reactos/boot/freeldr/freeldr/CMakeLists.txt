@@ -19,7 +19,6 @@ if(ARCH MATCHES i386)
             arch/i386/i386pnp.S
             arch/i386/i386pxe.S
             arch/i386/i386trap.S
-            arch/i386/int386.S
             arch/i386/linux.S
             arch/i386/mb.S
             arch/i386/i386bug.c)

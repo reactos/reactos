@@ -63,8 +63,6 @@ _FrldrStartup:
     mov eax, dword ptr ds:[BSS_RealModeEntry]
     mov dword ptr ds:[SwitchToReal16Address], eax
 
-call _Int386_ // test
-
 	/* GO! */
 	xor eax, eax
 	push eax
@@ -222,8 +220,25 @@ PUBLIC _EnableA20
 _EnableA20:
     ret
 
-PUBLIC _Int386_
-_Int386_:
+Int386_regsin:
+	.long 0
+Int386_regsout:
+	.long 0
+
+/*
+ * int Int386(int ivec, REGS* in, REGS* out);
+ */
+PUBLIC _Int386
+_Int386:
+
+	/* Get the function parameters */
+	mov eax, dword ptr [esp + 4]
+    mov dword ptr ds:[BSS_IntVector], eax
+	mov eax, dword ptr [esp + 8]
+	mov dword ptr [Int386_regsin], eax
+	mov eax, dword ptr [esp + 12]
+	mov dword ptr [Int386_regsout], eax
+
 	/* Save all registers + segment registers */
 	push ds
 	push es
@@ -231,14 +246,26 @@ _Int386_:
 	push gs
 	pusha
 
+    /* Copy input registers */
+    mov esi, dword ptr [Int386_regsin]
+    mov edi, BSS_RegisterSet
+    mov ecx, 9
+    rep movsd
+
     /* Set the callback index */
-    mov cx, 1234
+    mov bx, 0
 
     /* Set continue address and switch to real mode */
     mov dword ptr [ContinueAddress], offset Int386_return
     jmp SwitchToReal
 
 Int386_return:
+
+    /* Copy output registers */
+    mov esi, BSS_RegisterSet
+    mov edi, dword ptr [Int386_regsout]
+    mov ecx, 9
+    rep movsd
 
     popa
     pop gs

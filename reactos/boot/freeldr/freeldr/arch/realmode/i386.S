@@ -91,10 +91,10 @@ inrmode:
 
 	sti		/* These are ok now */
 
-    /* Do the callback, specified by cx */
-    // call word ptr CallbackTable[cx * 4]
-    mov ax, cx
-    call writehex4
+    /* Do the callback, specified by bx */
+    shl bx, 1
+    call word ptr ds:[callback_table + bx]
+
 
 /*
  * Switches the processor to protected mode
@@ -123,6 +123,8 @@ pm_offset:
     nop
 
 
+callback_table:
+    .word Int386
 
 
     /* 16-bit stack pointer */

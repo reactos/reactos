@@ -1,26 +1,33 @@
 
 
 Int386:
+	/* Save all registers + segment registers */
+	push ds
+	push es
+	push fs
+	push gs
+	pushad
+
     /* Get the interupt vector and patch the opcode */
     mov al, byte ptr ds:[BSS_IntVector]
     mov byte ptr ds:[Int386_vector_opcode], al
 
 	/* Setup the registers */
 	mov ax, word ptr cs:[BSS_RegisterSet + REGS_DS]
-	mov ds, ax					/* DS register */
+	mov ds, ax
 	mov ax, word ptr cs:[BSS_RegisterSet + REGS_ES]
-	mov es, ax					/* ES register */
+	mov es, ax
 	mov ax, word ptr cs:[BSS_RegisterSet + REGS_FS]
-	mov fs, ax					/* FS register */
+	mov fs, ax
 	mov ax, word ptr cs:[BSS_RegisterSet + REGS_GS]
-	mov gs, ax					/* GS register */
+	mov gs, ax
 
-	mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]	/* EAX register */
-	mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]	/* EBX register */
-	mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]	/* ECX register */
-	mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]	/* EDX register */
-	mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]	/* ESI register */
-	mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]	/* EDI register */
+	mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]
+	mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]
+	mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]
+	mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
+	mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
+	mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
 
 	/* Do not set the flags register */
 	/* only return its value in regsout */
@@ -32,24 +39,30 @@ Int386_vector_opcode:
 	.byte	0x00
 
 	/* Save the registers */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_EAX], eax	/* EAX register */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_EBX], ebx	/* EBX register */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_ECX], ecx	/* ECX register */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_EDX], edx	/* EDX register */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_ESI], esi	/* ESI register */
-	mov dword ptr cs:[BSS_RegisterSet + REGS_EDI], edi	/* EDI register */
+	mov dword ptr cs:[BSS_RegisterSet + REGS_EAX], eax
+	mov dword ptr cs:[BSS_RegisterSet + REGS_EBX], ebx
+	mov dword ptr cs:[BSS_RegisterSet + REGS_ECX], ecx
+	mov dword ptr cs:[BSS_RegisterSet + REGS_EDX], edx
+	mov dword ptr cs:[BSS_RegisterSet + REGS_ESI], esi
+	mov dword ptr cs:[BSS_RegisterSet + REGS_EDI], edi
 
-	mov ax, ds					/* DS register */
+	mov ax, ds
 	mov word ptr cs:[BSS_RegisterSet + REGS_DS], ax
-	mov ax, es					/* ES register */
+	mov ax, es
 	mov word ptr cs:[BSS_RegisterSet + REGS_ES], ax
-	mov ax, fs					/* FS register */
+	mov ax, fs
 	mov word ptr cs:[BSS_RegisterSet + REGS_FS], ax
-	mov ax, gs					/* GS register */
+	mov ax, gs
 	mov word ptr cs:[BSS_RegisterSet + REGS_GS], ax
 
-	pushf
-	pop dword ptr cs:[BSS_RegisterSet + REGS_EFLAGS]	/* EFLAGS register */
+	pushfd
+	pop dword ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
 
     ret
 
