@@ -35,8 +35,8 @@ ArcGetConfigurationData(
     CONFIGURATION_COMPONENT* Component);
 
 /* mm.c */
-MEMORY_DESCRIPTOR*
-ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current);
+const MEMORY_DESCRIPTOR*
+ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current);
 
 /* time.c */
 TIMEINFO* ArcGetTime(VOID);

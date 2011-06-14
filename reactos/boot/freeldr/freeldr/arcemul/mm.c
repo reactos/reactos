@@ -34,8 +34,8 @@ static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
 
 #endif
 };
-MEMORY_DESCRIPTOR*
-ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
+const MEMORY_DESCRIPTOR*
+ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
 {
     MEMORY_DESCRIPTOR_INT* CurrentDescriptor;
     BIOS_MEMORY_MAP BiosMemoryMap[32];
@@ -114,7 +114,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return first fixed memory descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[0].m;
+            return &MemoryDescriptors[0].m;
         }
         else
         {
@@ -141,7 +141,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return first fixed memory descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[0].m;
+            return &MemoryDescriptors[0].m;
         }
         else
         {
@@ -161,7 +161,7 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             //
             // Return next fixed descriptor
             //
-            return (MEMORY_DESCRIPTOR*)&MemoryDescriptors[CurrentDescriptor->Index + 1].m;
+            return &MemoryDescriptors[CurrentDescriptor->Index + 1].m;
         }
         else
         {

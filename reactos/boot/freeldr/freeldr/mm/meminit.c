@@ -57,7 +57,7 @@ extern ULONG_PTR	MmHeapStart;
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
 #if DBG
-	MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+	const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
 #endif
 
 	DPRINTM(DPRINT_MEMORY, "Initializing Memory Manager.\n");
@@ -158,7 +158,7 @@ ULONG MmGetPageNumberFromAddress(PVOID Address)
 
 ULONG MmGetAddressablePageCountIncludingHoles(VOID)
 {
-    MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     ULONG PageCount;
 
     //
@@ -197,7 +197,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
 
 PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
 {
-    MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     ULONG PageLookupTableSize;
     ULONG PageLookupTablePages;
     ULONG PageLookupTableStartPage = 0;
@@ -248,6 +248,17 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
         }
 
         //
+        // Can we use this address?
+        //
+        if (MemoryDescriptor->BasePage >= MM_MAX_PAGE)
+        {
+            //
+            // No. Process next descriptor
+            //
+            continue;
+        }
+
+        //
         // Memory block is more suitable than the previous one
         //
         PageLookupTableStartPage = MemoryDescriptor->BasePage;
@@ -263,7 +274,7 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
 
 VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 {
-    MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     TYPE_OF_MEMORY MemoryMapPageAllocated;
     ULONG PageLookupTableStartPage;
     ULONG PageLookupTablePageCount;

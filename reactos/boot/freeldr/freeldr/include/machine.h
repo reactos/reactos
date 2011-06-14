@@ -92,7 +92,6 @@ VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
 VOID MachVideoSync(VOID);
 VOID MachBeep(VOID);
-MEMORY_DESCRIPTOR* ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current);
 BOOLEAN MachDiskGetBootPath(char *BootPath, unsigned Size);
 BOOLEAN MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
