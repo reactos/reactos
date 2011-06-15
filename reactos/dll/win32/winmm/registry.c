@@ -29,10 +29,10 @@ BOOL LoadRegistryMMEDrivers(char* key)
     HKEY drivers_key;
 
     DWORD value_name_length = 256;
-    char value_name[value_name_length];
+    char value_name[256];
 
     DWORD value_data_length = 256;
-    char value_data[value_data_length];
+    char value_data[256];
 
     DWORD value_type;
 

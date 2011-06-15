@@ -10,11 +10,16 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+Bus_PlugInDevice (
+    struct acpi_device *Device,
+    PFDO_DEVICE_DATA            FdoData
+    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (PAGE, Bus_PnP)
 #pragma alloc_text (PAGE, Bus_PlugInDevice)
 #pragma alloc_text (PAGE, Bus_InitializePdo)
-#pragma alloc_text (PAGE, Bus_UnPlugDevice)
 #pragma alloc_text (PAGE, Bus_DestroyPdo)
 #pragma alloc_text (PAGE, Bus_FDO_PnP)
 #pragma alloc_text (PAGE, Bus_StartFdo)
