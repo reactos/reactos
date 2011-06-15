@@ -14,11 +14,11 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // Polish (PL) resources
+// UTF-8 conversion by Caemyr (May, 2011) 
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-#pragma code_page(1250)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -32,30 +32,30 @@ BEGIN
     BEGIN
         MENUITEM "Urucho&m...",                 	ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "Za&koÒcz",                      	ID_FILE_EXIT
+        MENUITEM "Za&ko≈Ñcz",                      	ID_FILE_EXIT
     END
     POPUP "&Widok"
     BEGIN
         MENUITEM "Przyciski &standardowe",              ID_VIEW_TOOL_BAR
         MENUITEM "P&rzyciski dodatkowe",                ID_VIEW_EXTRA_BAR
-        MENUITEM "Pasek &dyskÛw",                  	ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Pasek &dysk√≥w",                  	ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "Pasek &boczny",               	ID_VIEW_SIDE_BAR
         MENUITEM "Pasek sta&nu",               		ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Odúwieø\tF5",                	ID_REFRESH
-        MENUITEM "P&e≥ny ekran\tCtrl+Shift+S",  	ID_VIEW_FULLSCREEN
+        MENUITEM "&Od≈õwie≈º\tF5",                	ID_REFRESH
+        MENUITEM "P&e≈Çny ekran\tCtrl+Shift+S",  	ID_VIEW_FULLSCREEN
         MENUITEM "SDI",                         	ID_VIEW_SDI
     END
     POPUP "&Okna"
     BEGIN
         MENUITEM "Nowe &okno",                 		ID_WINDOW_NEW
         MENUITEM "&Kaskadowo\tShift+F5",         		ID_WINDOW_CASCADE
-        MENUITEM "&Sπsiadujπco poziomo",          	ID_WINDOW_TILE_HORZ
-        MENUITEM "Sπsiadujπco &pionowo\tShift+F4",  	ID_WINDOW_TILE_VERT
+        MENUITEM "&SƒÖsiadujƒÖco poziomo",          	ID_WINDOW_TILE_HORZ
+        MENUITEM "SƒÖsiadujƒÖco &pionowo\tShift+F4",  	ID_WINDOW_TILE_VERT
         MENUITEM "&Autorozmieszczanie",       		ID_WINDOW_AUTOSORT
-        MENUITEM "RozmieúÊ wed≥ug &nazwy",            	ID_WINDOW_ARRANGE
+        MENUITEM "Rozmie≈õƒá wed≈Çug &nazwy",            	ID_WINDOW_ARRANGE
     END
-    POPUP "&NarzÍdzia"
+    POPUP "&Narzƒôdzia"
     BEGIN
         MENUITEM "&Opcje",                    		ID_TOOLS_OPTIONS
     END
@@ -71,8 +71,8 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&W≥aúciwoúci",               	 	ID_DESKTOPBAR_SETTINGS
-        MENUITEM "Menedøer &zadaÒ",           	 	ID_TASKMGR
+        MENUITEM "&W≈Ça≈õciwo≈õci",               	 	ID_DESKTOPBAR_SETTINGS
+        MENUITEM "Mened≈ºer &zada≈Ñ",           	 	ID_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "ReactOS Explorer - &informacje",    	ID_ABOUT_EXPLORER
     END
@@ -82,8 +82,8 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&OtwÛrz regulacjÍ g≥oúnoúci",  	ID_TRAY_VOLUME
-        MENUITEM "&Ustaw w≥aúciwoúci audio",     	ID_VOLUME_PROPERTIES
+        MENUITEM "&Otw√≥rz regulacjƒô g≈Ço≈õno≈õci",  	ID_TRAY_VOLUME
+        MENUITEM "&Ustaw w≈Ça≈õciwo≈õci audio",     	ID_VOLUME_PROPERTIES
     END
 END
 
@@ -91,10 +91,10 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Pokaø ukryte ikony",         	ID_SHOW_HIDDEN_ICONS
-        MENUITEM "&Ukrywaj nieuøywane ikony",		ID_SHOW_ICON_BUTTON
+        MENUITEM "&Poka≈º ukryte ikony",         	ID_SHOW_HIDDEN_ICONS
+        MENUITEM "&Ukrywaj nieu≈ºywane ikony",		ID_SHOW_ICON_BUTTON
         MENUITEM "&Konfiguruj powiadomienia", 		ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ustaw &datÍ/godzinÍ",         	ID_CONFIG_TIME
+        MENUITEM "Ustaw &datƒô/godzinƒô",         	ID_CONFIG_TIME
         MENUITEM SEPARATOR
         MENUITEM "ReactOS Explorer - &informacje",      ID_ABOUT_EXPLORER
     END
@@ -106,7 +106,7 @@ BEGIN
     BEGIN
         MENUITEM "Urucho&m...",                 	ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "Za&koÒcz",                    	ID_FILE_EXIT
+        MENUITEM "Za&ko≈Ñcz",                    	ID_FILE_EXIT
     END
     POPUP "&Widok"
     BEGIN
@@ -114,11 +114,11 @@ BEGIN
         MENUITEM "Pasek &boczny",               	ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "Pasek sta&nu",                	ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Odúwieø\tF5",                	ID_REFRESH
-        MENUITEM "P&e≥ny ekran\tCtrl+Shift+S",  	ID_VIEW_FULLSCREEN
+        MENUITEM "&Od≈õwie≈º\tF5",                	ID_REFRESH
+        MENUITEM "P&e≈Çny ekran\tCtrl+Shift+S",  	ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        	ID_VIEW_MDI
     END
-    POPUP "&NarzÍdzia"
+    POPUP "&Narzƒôdzia"
     BEGIN
         MENUITEM "&Opcje",                    		ID_TOOLS_OPTIONS
     END
@@ -169,45 +169,45 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOGEX DISCARDABLE  0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "W≥aúciwoúci pulpitu"
+CAPTION "W≈Ça≈õciwo≈õci pulpitu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Wybierz sposÛb uk≥adania ikon:",
+    LTEXT           "Wybierz spos√≥b uk≈Çadania ikon:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "lewy/gÛr w dÛ≥",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+    CONTROL         "lewy/g√≥r w d√≥≈Ç",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "lewy/gÛr w prw",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+    CONTROL         "lewy/g√≥r w prw",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "prwy/gÛr w lewo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "prwy/g√≥r w lewo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "prwy/gÛr w dÛ≥",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+    CONTROL         "prwy/g√≥r w d√≥≈Ç",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "lewy/dol.w gÛr",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+    CONTROL         "lewy/dol.w g√≥r",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
     CONTROL         "lewy/dol.w praw",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
     CONTROL         "prwy/dol.w lewo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "prwy/dol.w gÛr",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "prwy/dol.w g√≥r",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "obustr. w dÛ≥",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "obustr. w d√≥≈Ç",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
     CONTROL         "na brzegach",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "dooko≥a",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
+    CONTROL         "dooko≈Ça",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,121,46,44
-//    CONTROL         "Wyúwietlaj &numer wersji",ID_DESKTOP_VERSION,"Button",
+//    CONTROL         "Wy≈õwietlaj &numer wersji",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX DISCARDABLE  0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "W≥aúciwoúci paska zadaÒ"
+CAPTION "W≈Ça≈õciwo≈õci paska zada≈Ñ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Pokaø &zegar",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Poka≈º &zegar",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,152,52,10
     CONTROL         "&Ukrywaj nieaktywne ikony",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
@@ -217,7 +217,7 @@ END
 
 IDD_DESKBAR_STARTMENU DIALOGEX DISCARDABLE  0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "W≥aúciwoúci Menu Start"
+CAPTION "W≈Ça≈õciwo≈õci Menu Start"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -226,18 +226,18 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Konfiguracja ikon powiadomieÒ"
+CAPTION "Konfiguracja ikon powiadomie≈Ñ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Podpowiedü:",IDC_LABEL1,7,44,40,8
+    LTEXT           "&Podpowied≈∫:",IDC_LABEL1,7,44,40,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Tytu≥ okna:",IDC_LABEL2,7,63,44,8
+    LTEXT           "&Tytu≈Ç okna:",IDC_LABEL2,7,63,44,8
     EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "åcieøka:",IDC_LABEL3,7,81,43,8
+    LTEXT           "≈öcie≈ºka:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&SposÛb wyúwietlania",IDC_LABEL4,7,96,157,28
+    GROUPBOX        "&Spos√≥b wy≈õwietlania",IDC_LABEL4,7,96,157,28
     CONTROL         "&widoczny",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,33,10
     CONTROL         "&ukryty",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
@@ -248,7 +248,7 @@ BEGIN
     LTEXT           "&Zmodyfikowany:",IDC_LABEL6,7,132,43,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
                     ES_READONLY
-    CONTROL         "Po&kaø wszystkie",ID_SHOW_HIDDEN_ICONS,"Button",
+    CONTROL         "Po&ka≈º wszystkie",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
     DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
     PUSHBUTTON      "&Anuluj",IDCANCEL,151,153,50,14
@@ -257,21 +257,21 @@ END
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Tryb wyúwietlania okien"
+CAPTION "Tryb wy≈õwietlania okien"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Wybierz tryb wyúwietlania okien:",
+    LTEXT           "Wybierz tryb wy≈õwietlania okien:",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Otwieraj w jednym oknie)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
-    CONTROL         "&SDI (Otwieraj we w≥asnym oknie)",IDC_SDI,"Button",
+    CONTROL         "&SDI (Otwieraj we w≈Çasnym oknie)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,118,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
     CONTROL         "&Otwieraj podkatalogi w nowych oknach",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,135,10
-    LTEXT           "Te opcje bÍdπ stosowane w przysz≥oúci do wszystkich okien.",
+    LTEXT           "Te opcje bƒôdƒÖ stosowane w przysz≈Ço≈õci do wszystkich okien.",
                     IDC_STATIC,7,111,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "&Anuluj",IDCANCEL,106,136,50,14
@@ -349,41 +349,41 @@ BEGIN
     IDS_STARTMENU           "Menu Start"
     IDS_MINIMIZE_ALL        "Minimalizuj wszystko"
     IDS_DESKTOP_NUM         "Pulpit %d"
-    IDS_VOLUME              "G≥oúnoúÊ"
+    IDS_VOLUME              "G≈Ço≈õno≈õƒá"
     IDS_ITEMS_CUR           "Aktualne pozycje"
     IDS_ITEMS_CONFIGURED    "ustawienia"
     IDS_ITEMS_VISIBLE       "widoczne"
     IDS_ITEMS_HIDDEN        "ukryte"
-    IDS_NOTIFY_SHOW         "pokaø"
+    IDS_NOTIFY_SHOW         "poka≈º"
     IDS_NOTIFY_HIDE         "ukryj"
     IDS_NOTIFY_AUTOHIDE     "autoukrywanie"
-    IDS_SHOW_HIDDEN_ICONS   "Pokaø ukryte ikony"
+    IDS_SHOW_HIDDEN_ICONS   "Poka≈º ukryte ikony"
     IDS_HIDE_ICONS          "Ukryj ikony"
-    IDS_TERMINATE           "ZakoÒcz dzia≥anie ReactOS Explorer"
+    IDS_TERMINATE           "Zako≈Ñcz dzia≈Çanie ReactOS Explorer"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_NETWORK             "SieÊ"
-    IDS_CONNECTIONS         "Po≥πczenia sieciowe"
+    IDS_NETWORK             "Sieƒá"
+    IDS_CONNECTIONS         "Po≈ÇƒÖczenia sieciowe"
     IDS_DRIVES              "Dysk"
-    IDS_SEARCH_COMPUTER     "Znajdü komputer..."
-    IDS_SETTINGS_MENU       "Menu ustawieÒ"
+    IDS_SEARCH_COMPUTER     "Znajd≈∫ komputer..."
+    IDS_SETTINGS_MENU       "Menu ustawie≈Ñ"
     IDS_CONTROL_PANEL       "Panel sterowania"
     IDS_PRINTERS            "Drukarki"
-    IDS_BROWSE              "Przeglπdaj"
-    IDS_SEARCH_PRG          "Znajdü program..."
+    IDS_BROWSE              "PrzeglƒÖdaj"
+    IDS_SEARCH_PRG          "Znajd≈∫ program..."
     IDS_ALL_USERS           "Wszyscy\\"
     IDS_SEARCH              "Szukaj"
     IDS_ABOUT_EXPLORER      "ReactOS Explorer - &informacje"
     IDS_LAUNCH_MANY_PROGRAMS
-                            "Zaznaczy≥eú wiÍcej niø jeden program.\nCzy chcesz uruchomiÊ je jednoczeúnie?"
-    IDS_DESKTOPBAR_SETTINGS "W≥aúciwoúci pulpitu"
+                            "Zaznaczy≈Çe≈õ wiƒôcej ni≈º jeden program.\nCzy chcesz uruchomiƒá je jednocze≈õnie?"
+    IDS_DESKTOPBAR_SETTINGS "W≈Ça≈õciwo≈õci pulpitu"
     IDS_DESKTOP             "Pulpit"
-    IDS_TASKBAR             "Pasek zadaÒ"
+    IDS_TASKBAR             "Pasek zada≈Ñ"
     IDS_NAMECOLUMN          "Nazwa"
-    IDS_PATHCOLUMN          "åcieøka"
-    IDS_MENUCOLUMN          "åcieøka menu"
+    IDS_PATHCOLUMN          "≈öcie≈ºka"
+    IDS_MENUCOLUMN          "≈öcie≈ºka menu"
 END
 
 #endif    // Polish (PL) resources

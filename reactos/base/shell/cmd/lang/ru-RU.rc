@@ -5,7 +5,6 @@
  * Aleksey Bragin (aleksey@reactos.com)
  * Copyright 2005
  */
-#pragma code_page(65001)
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
