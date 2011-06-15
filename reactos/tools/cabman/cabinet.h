@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 #include <unistd.h>
 #ifndef MAX_PATH
 #define MAX_PATH 260
