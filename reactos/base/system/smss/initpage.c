@@ -189,7 +189,7 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
           if (InitialSize.QuadPart > GIGABYTE)
             {
               InitialSize.QuadPart = GIGABYTE;
-              MaximumSize.QuadPart = GIGABYTE * 1.5;
+              MaximumSize.QuadPart = GIGABYTE * 3 / 2;
             }
         }
 
