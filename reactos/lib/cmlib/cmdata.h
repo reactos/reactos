@@ -46,11 +46,7 @@
 //
 #define VALUE_COMP_NAME                                 0x0001
 
-#ifdef CMLIB_HOST
-#include <host/pshpack1.h>
-#else
 #include <pshpack1.h>
-#endif
 
 //
 // For memory-mapped Hives
@@ -154,11 +150,7 @@ typedef struct _CM_KEY_SECURITY
     UCHAR Data[ANYSIZE_ARRAY];
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
 
-#ifdef CMLIB_HOST
-#include <host/poppack.h>
-#else
 #include <poppack.h>
-#endif
 
 //
 // Generic Index Entry

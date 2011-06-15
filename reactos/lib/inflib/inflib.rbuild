@@ -11,6 +11,7 @@
 	<file>infrosput.c</file>
 </module>
 <module name="inflibhost" type="hoststaticlibrary" allowwarnings="true">
+	<include base="ReactOS">include/host</include>
 	<include base="inflibhost">.</include>
 	<define name="__NO_CTYPE_INLINES" />
 	<group compilerset="gcc">

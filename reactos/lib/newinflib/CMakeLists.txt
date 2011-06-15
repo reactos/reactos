@@ -5,7 +5,7 @@ list(APPEND GLOBAL_FILES
     infput.c)
 
 if(CMAKE_CROSSCOMPILING)
-    list(APPEND SOURCE 
+    list(APPEND SOURCE
         infrosgen.c
         infrosget.c
         infrosput.c)
@@ -13,7 +13,7 @@ if(CMAKE_CROSSCOMPILING)
     add_library(inflib ${GLOBAL_FILES} ${SOURCE})
     add_dependencies(inflib psdk)
 else()
-    list(APPEND SOURCE 
+    list(APPEND SOURCE
         infhostgen.c
         infhostget.c
         infhostput.c

@@ -47,8 +47,8 @@ extern "C" DECLSPEC_IMPORT void NTAPI RtlMoveMemory(void UNALIGNED *, const void
 #define ARRAYSIZE(X_) (sizeof(X_) / sizeof((X_)[0]))
 #endif
 
-#include <kjk/argv_parser.h>
-#include <kjk/stringz_iterator.h>
+#include <argv_parser.h>
+#include <stringz_iterator.h>
 
 using namespace kjk;
 

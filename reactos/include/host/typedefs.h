@@ -70,7 +70,7 @@ typedef WORD LANGID;
 #define MAXUSHORT USHRT_MAX
 
 /* Widely used structures */
-#include <host/pshpack4.h>
+#include <pshpack4.h>
 typedef struct _RTL_BITMAP
 {
     ULONG  SizeOfBitMap;
@@ -112,7 +112,7 @@ typedef struct _UNICODE_STRING
     USHORT MaximumLength;
     PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
-#include <host/poppack.h>
+#include <poppack.h>
 
 /* List Functions */
 static __inline
@@ -170,7 +170,7 @@ RemoveEntryList(
 {
     PLIST_ENTRY OldFlink;
     PLIST_ENTRY OldBlink;
-    
+
     OldFlink = Entry->Flink;
     OldBlink = Entry->Blink;
     OldFlink->Blink = OldBlink;
@@ -185,7 +185,7 @@ RemoveHeadList(
 {
     PLIST_ENTRY Flink;
     PLIST_ENTRY Entry;
-    
+
     Entry = ListHead->Flink;
     Flink = Entry->Flink;
     ListHead->Flink = Flink;
@@ -200,7 +200,7 @@ RemoveTailList(
 {
     PLIST_ENTRY Blink;
     PLIST_ENTRY Entry;
-    
+
     Entry = ListHead->Blink;
     Blink = Entry->Blink;
     ListHead->Blink = Blink;

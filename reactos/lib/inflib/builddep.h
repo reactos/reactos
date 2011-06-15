@@ -8,7 +8,7 @@
 
 /* Definitions native to the host on which we're building */
 
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #include <stdarg.h>
 #include <stdio.h>

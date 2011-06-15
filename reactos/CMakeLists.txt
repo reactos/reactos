@@ -52,11 +52,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         add_compiler_flags(-fshort-wchar)
     endif()
 
-    include_directories(
-        ${REACTOS_SOURCE_DIR}/tools/unicode
-        include
-        include/host
-        ${REACTOS_BINARY_DIR}/include)
+    include_directories(include/host)
 
     add_subdirectory(tools)
     add_subdirectory(lib)

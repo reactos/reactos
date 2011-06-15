@@ -9,7 +9,7 @@
 /* Definitions native to the host on which we're building */
 
 #include <wine/unicode.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -63,6 +63,7 @@ BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <wcsfuncs.h>
 
 extern PVOID InfpHeap;
 
@@ -81,7 +82,5 @@ extern PVOID InfpHeap;
 #define STRFMT "%S"
 
 #endif /* INFLIB_HOST */
-
-#include <host/wcsfuncs.h>
 
 /* EOF */

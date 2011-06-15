@@ -14,7 +14,7 @@
 
 #ifdef CMLIB_HOST
     #include <wine/unicode.h>
-    #include <host/typedefs.h>
+    #include <typedefs.h>
     #include <stdio.h>
     #include <string.h>
 
@@ -92,9 +92,9 @@
     #undef DECLSPEC_IMPORT
     #define DECLSPEC_IMPORT
     #include <ntddk.h>
+    #include <wcsfuncs.h>
 #endif
 
-#include <host/wcsfuncs.h>
 
 //
 // These define the Debug Masks Supported
@@ -311,8 +311,8 @@ CmCreateRootNode(
 VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive);
-   
-   
+
+
 BOOLEAN
 CMAPI
 HvTrackCellRef(

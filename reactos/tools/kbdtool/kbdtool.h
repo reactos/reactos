@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <time.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #define KEYWORD_COUNT 17
 

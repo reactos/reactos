@@ -29,10 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <host/typedefs.h>
-
-#define USE_HOST_WCSFUNCS
-#include <host/wcsfuncs.h>
+#include <typedefs.h>
 
 // Definitions copied from <ntstatus.h>
 // We only want to include host headers, so we define them manually

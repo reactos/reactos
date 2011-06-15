@@ -23,7 +23,7 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 // Definitions copied from <winnls.h>
 // We only want to include host headers, so we define them manually
