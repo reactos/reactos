@@ -1039,7 +1039,9 @@
 
 /* Define to a macro to generate an assembly function with stdcall calling
    convention */
+#ifndef _MSC_VER
 #define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(name,__ASM_STDCALL(args),code)
+#endif
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
