@@ -116,13 +116,12 @@ ENDM
 
 .fill MACRO count, size, value
     REPEAT count
-        if (size == 1)
+        if (size EQ 1)
             DB value
-        elseif (size == 2)
+        elseif (size EQ 2)
             DW value
-        elseif (size == 4)
+        elseif (size EQ 4)
             DD value
-        else
         endif
     ENDM
 ENDM
