@@ -181,7 +181,7 @@ KdbSymPrintAddress(
     PROSSYM_KM_OWN_CONTEXT FileContext;
     ULONG_PTR RelativeAddress;
     NTSTATUS Status;
-	ROSSYM_LINEINFO LineInfo = { };
+	ROSSYM_LINEINFO LineInfo = {0};
 
     struct {
         enum _ROSSYM_REGNAME regname;
