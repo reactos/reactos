@@ -54,11 +54,7 @@ extern "C" {
 #endif
 
 #ifndef WINE_UNICODE_API
-# if defined(_MSC_VER) || defined(__MINGW32__)
-#  define WINE_UNICODE_API DECLSPEC_IMPORT
-# else
-#  define WINE_UNICODE_API
-# endif
+#define WINE_UNICODE_API
 #endif
 
 #ifndef WINE_UNICODE_INLINE

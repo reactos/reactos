@@ -1,6 +1,3 @@
-
-add_definitions(-DWINE_UNICODE_API= )
-
 list(APPEND SOURCE
     casemap.c
     compose.c

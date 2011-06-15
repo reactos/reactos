@@ -19,7 +19,7 @@ else()
         infhostput.c
         infhostrtl.c)
 
-    add_definitions(-DWINE_UNICODE_API= -D__NO_CTYPE_INLINES -DINFLIB_HOST -DUSE_HOST_WCSFUNCS)
+    add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST)
     if(NOT MSVC)
         add_compiler_flags(-Wpointer-arith -Wwrite-strings)
     endif()

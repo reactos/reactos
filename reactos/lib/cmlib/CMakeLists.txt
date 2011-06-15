@@ -17,7 +17,6 @@ if(CMAKE_CROSSCOMPILING)
     add_dependencies(cmlib bugcodes)
 else()
     add_definitions(
-        -DWINE_UNICODE_API=
         -D__NO_CTYPE_INLINES
         -DCMLIB_HOST)
     add_library(cmlibhost ${SOURCE})

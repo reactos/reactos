@@ -13,7 +13,6 @@
 #define _CMLIB_DEBUG_ 1
 
 #ifdef CMLIB_HOST
-    #include <wine/unicode.h>
     #include <typedefs.h>
     #include <stdio.h>
     #include <string.h>
@@ -69,9 +68,6 @@
     #define PWORK_QUEUE_ITEM PVOID
     #define EX_PUSH_LOCK PULONG_PTR
 
-    /* For <host/wcsfuncs.h> */
-    #define USE_HOST_WCSFUNCS
-
     #define CMLTRACE(x, ...)
 #else
     //
@@ -89,10 +85,12 @@
     #endif
 
     #include <ntdef.h>
-    #undef DECLSPEC_IMPORT
-    #define DECLSPEC_IMPORT
     #include <ntddk.h>
-    #include <wcsfuncs.h>
+
+    /* Prevent inclusion of Windows headers through <wine/unicode.h> */
+    #define _WINDEF_
+    #define _WINBASE_
+    #define _WINNLS_
 #endif
 
 
@@ -121,6 +119,7 @@
 
 #define CMAPI NTAPI
 
+#include <wine/unicode.h>
 #include <wchar.h>
 #include "hivedata.h"
 #include "cmdata.h"

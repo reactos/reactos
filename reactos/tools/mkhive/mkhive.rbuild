@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="mkhive" type="buildtool">
-	<define name="WINE_UNICODE_API">" "</define>
-	<include base="unicode" />
 	<include base="newinflibhost">.</include>
 	<include base="cmlibhost">.</include>
 	<include base="zlibhost">.</include>

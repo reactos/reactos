@@ -1,5 +1,5 @@
-#ifndef _WINVER_H
-#define _WINVER_H
+#ifndef VER_H
+#define VER_H
 
 #ifdef __cplusplus
 extern "C" {

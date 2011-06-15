@@ -1,7 +1,5 @@
 
-add_definitions(
-    -DMKHIVE_HOST
-    -DWINE_UNICODE_API= )
+add_definitions(-DMKHIVE_HOST)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/lib/newinflib
