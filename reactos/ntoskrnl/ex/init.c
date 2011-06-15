@@ -1922,14 +1922,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 
-    /* Disallow strings to be displayed */
-    InbvEnableDisplayString(FALSE);
-
-    /* Clean the screen */
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
+    /* Allow strings to be displayed */
+    InbvEnableDisplayString(TRUE);
 
     /* Wait 5 seconds for initial process to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
