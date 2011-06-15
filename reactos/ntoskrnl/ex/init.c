@@ -1313,7 +1313,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     size_t Remaining;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
-    UNICODE_STRING KeyName, DebugString;
+    UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
@@ -1925,18 +1925,19 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 
-    /* Allow strings to be displayed */
-    InbvEnableDisplayString(TRUE);
+    /* Disallow strings to be displayed */
+    InbvEnableDisplayString(FALSE);
 
-    /* Wait 5 seconds for it to initialize */
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
+    /* Wait 5 seconds for initial process to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
     if (Status == STATUS_SUCCESS)
     {
         /* Failed, display error */
-        RtlInitUnicodeString(&DebugString, L"INIT: Session Manager terminated.");
-        ZwDisplayString(&DebugString);
+        DPRINT1("INIT: Session Manager terminated.\n");
 
         /* Bugcheck the system if SMSS couldn't initialize */
         KeBugCheck(SESSION5_INITIALIZATION_FAILED);

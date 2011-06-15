@@ -480,10 +480,18 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeSetTimerEx(&IopTimer, ExpireTime, 1000, &IopTimerDpc);
 
     /* Create Object Types */
-    if (!IopCreateObjectTypes()) return FALSE;
+    if (!IopCreateObjectTypes())
+    {
+        DPRINT1("IopCreateObjectTypes failed!\n");
+        return FALSE;
+    }
 
     /* Create Object Directories */
-    if (!IopCreateRootDirectories()) return FALSE;
+    if (!IopCreateRootDirectories())
+    {
+        DPRINT1("IopCreateRootDirectories failed!\n");
+        return FALSE;
+    }
 
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
@@ -511,10 +519,19 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopLoaderBlock = NULL;
 
     /* Create ARC names for boot devices */
-    if (!NT_SUCCESS(IopCreateArcNames(LoaderBlock))) return FALSE;
+    Status = IopCreateArcNames(LoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopCreateArcNames failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Mark the system boot partition */
-    if (!IopMarkBootPartition(LoaderBlock)) return FALSE;
+    if (!IopMarkBootPartition(LoaderBlock))
+    {
+        DPRINT1("IopMarkBootPartition failed!\n");
+        return FALSE;
+    }
 
     /* Initialize PnP root relations */
     IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
@@ -539,7 +556,11 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Convert SystemRoot from ARC to NT path */
     Status = IopReassignSystemRoot(LoaderBlock, &NtBootPath);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopReassignSystemRoot failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Set the ANSI_STRING for the root path */
     RootString.MaximumLength = NtSystemRoot.MaximumLength / sizeof(WCHAR);
@@ -550,7 +571,11 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Convert the path into the ANSI_STRING */
     Status = RtlUnicodeStringToAnsiString(&RootString, &NtSystemRoot, FALSE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlUnicodeStringToAnsiString failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Assign drive letters */
     IoAssignDriveLetters(LoaderBlock,
@@ -560,10 +585,19 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Update system root */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAnsiStringToUnicodeString failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Load the System DLL and its Entrypoints */
-    if (!NT_SUCCESS(PsLocateSystemDll())) return FALSE;
+    Status = PsLocateSystemDll();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PsLocateSystemDll failed: %lx\n", Status);
+        return FALSE;
+    }
 
     /* Return success */
     return TRUE;
