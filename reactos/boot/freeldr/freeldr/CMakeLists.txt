@@ -9,22 +9,23 @@ if(ARCH MATCHES arm)
 endif()
 
 if(ARCH MATCHES i386)
+    list(APPEND FREELDR_BASE64K_SOURCE
+        arch/i386/entry.S
+        arch/i386/i386idt.c
+        arch/i386/i386trap.S
+        arch/i386/i386bug.c)
     if(NOT MSVC)
         list(APPEND FREELDR_BASE64K_SOURCE
-            arch/i386/entry.S
             arch/i386/boot.S
             arch/i386/drvmap.S
             arch/i386/i386cpu.S
-            arch/i386/i386idt.S
             arch/i386/i386pnp.S
             arch/i386/i386pxe.S
-            arch/i386/i386trap.S
             arch/i386/linux.S
-            arch/i386/mb.S
-            arch/i386/i386bug.c)
+            arch/i386/multiboot.S
+            arch/i386/mb.S)
     else()
         list(APPEND FREELDR_BASE64K_SOURCE
-            arch/i386/entry.S
             arch/i386/realmode.S)
     endif()
 elseif(ARCH MATCHES amd64)

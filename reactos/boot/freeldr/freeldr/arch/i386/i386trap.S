@@ -17,16 +17,17 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-.intel_syntax noprefix
-	.text
-	.code16
-
+#include <asm.inc>
 #include <arch/pc/x86common.h>
 #include <ver.h>
 
 #define SCREEN_ATTR 0x1f			/* Bright white on blue background */
 
-.macro SAVE_CPU_REGS
+EXTERN _i386PrintExceptionText@12:PROC
+
+.code32
+
+MACRO(SAVE_CPU_REGS)
     /* push the rest of the KTRAP_FRAME */
     push ebp
     push ebx
@@ -60,8 +61,8 @@
     sub esp, 44
 	sgdt [esp]
 	sidt [esp + 8]
-	str [esp + 16]
-	sldt [esp + 18]
+	str word ptr [esp + 16]
+	sldt word ptr [esp + 18]
     mov eax, dr7;
     push eax
     mov eax, dr6;
@@ -82,16 +83,14 @@
     push eax
     mov eax, cr0;
     push eax
-.endm
+ENDM
 
 /* Set by each exception handler to the address of the description text */
 i386ExceptionIndex:
 	.long	0
 
-
 /************************************************************************/
 i386CommonExceptionHandler:
-	.code32
 
 	SAVE_CPU_REGS
 
@@ -108,21 +107,32 @@ i386ExceptionHandlerHang:
 
 	iret
 
-.macro TRAP_STUB function, index
-    EXTERN(\function)
+MACRO(TRAP_STUB, function, index)
+    PUBLIC VAL(function)
+#ifdef _USE_ML
+    function:
+#else
+    \function:
+#endif
     push 0 // Fake error code
-	mov dword ptr i386ExceptionIndex, \index
+	mov dword ptr i386ExceptionIndex, VAL(index)
 	jmp i386CommonExceptionHandler
-.endm
+ENDM
 
-.macro TRAP_STUB2 function, index
-    EXTERN(\function)
-	mov dword ptr i386ExceptionIndex, \index
+MACRO(TRAP_STUB2, function, index)
+    PUBLIC VAL(function)
+#ifdef _USE_ML
+    function:
+#else
+    \function:
+#endif
+	mov dword ptr i386ExceptionIndex, VAL(index)
 	jmp i386CommonExceptionHandler
-.endm
+ENDM
 
 /************************************************************************/
 TRAP_STUB _i386DivideByZero, 0
+
 TRAP_STUB _i386DebugException, 1
 TRAP_STUB _i386NMIException, 2
 TRAP_STUB _i386Breakpoint, 3
@@ -147,30 +157,36 @@ TRAP_STUB _i386SimdFloatError, 19
  * DEBUGGING SUPPORT FUNCTIONS
  ************************************************************************/
 
-.macro BREAKPOINT_TEPLATE functionname, mask1, mask2
-    EXTERN(\functionname)
+MACRO(BREAKPOINT_TEPLATE, functionname, mask1, mask2)
+    PUBLIC VAL(functionname)
+#ifdef _USE_ML
+    functionname:
+#else
+    \functionname:
+#endif
 	push eax
 	mov eax, [esp + 8]
 	mov dr3, eax
 	mov eax, dr7
-	and eax, \mask1
-	or  eax, \mask2
+	and eax, VAL(mask1)
+	or  eax, VAL(mask2)
 	mov dr7, eax
 	pop eax
 	ret
-.endm
+ENDM
 
-BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT1, 0xfff0ffff, 0x00000303
-BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT1, 0xfff0ffff, 0x00030303
-BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT1, 0xfff0ffff, 0x00010303
-BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT2, 0xff0fffff, 0x0000030c
-BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT2, 0xff0fffff, 0x0030030c
-BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT2, 0xff0fffff, 0x0010030c
-BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT3, 0xf0ffffff, 0x00000330
-BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT3, 0xf0ffffff, 0x03000330
-BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT3, 0xf0ffffff, 0x01000330
-BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT4, 0x0fffffff, 0x000003c0
-BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT4, 0x0fffffff, 0x300003c0
-BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT4, 0x0fffffff, 0x100003c0
+BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT1, HEX(0fff0ffff), HEX(000000303)
+BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT1, HEX(0fff0ffff), HEX(000030303)
+BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT1, HEX(0fff0ffff), HEX(000010303)
+BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT2, HEX(0ff0fffff), HEX(00000030c)
+BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT2, HEX(0ff0fffff), HEX(00030030c)
+BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT2, HEX(0ff0fffff), HEX(00010030c)
+BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT3, HEX(0f0ffffff), HEX(000000330)
+BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT3, HEX(0f0ffffff), HEX(003000330)
+BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT3, HEX(0f0ffffff), HEX(001000330)
+BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT4, HEX(00fffffff), HEX(0000003c0)
+BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT4, HEX(00fffffff), HEX(0300003c0)
+BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT4, HEX(00fffffff), HEX(0100003c0)
 
 
+END

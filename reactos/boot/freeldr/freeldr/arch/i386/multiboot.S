@@ -26,6 +26,8 @@
  *
  * Allows freeldr to be loaded as a "multiboot kernel" by
  * other boot loaders like Grub
+ * This code is not referenced from anywhere. GRUB searches for
+ * the header signature and uses the header to load it.
  */
 
 #define MB_INFO_SIZE                90
@@ -171,6 +173,43 @@ mb_info:
 
 cmdline:
 	.fill CMDLINE_SIZE, 1, 0
+
+.align 4	/* force 4-byte alignment */
+gdt:
+	/* NULL Descriptor */
+	.word HEX(0000)
+	.word HEX(0000)
+	.word HEX(0000)
+	.word HEX(0000)
+
+	/* 32-bit flat CS */
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9A00)
+	.word HEX(00CF)
+
+	/* 32-bit flat DS */
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9200)
+	.word HEX(00CF)
+
+	/* 16-bit real mode CS */
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9E00)
+	.word HEX(0000)
+
+	/* 16-bit real mode DS */
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9200)
+	.word HEX(0000)
+
+/* GDT table pointer */
+gdtptr:
+	.word HEX(27)		/* Limit */
+	.long gdt			/* Base Address */
 
 /* Initial GDT table pointer for multiboot */
 gdtptrhigh:

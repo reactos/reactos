@@ -19,10 +19,11 @@
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
-#include <multiboot.h>
 
 EXTERN _BootMain:PROC
 EXTERN _InitIdt:PROC
+EXTERN _i386Idt:DWORD
+//EXTERN _i386idtptr:FWORD
 
 .code32
 
@@ -41,7 +42,11 @@ _RealEntryPoint:
 	mov esp, dword ptr [stack32]
 
 	/* Load the IDT */
+#ifdef _USE_ML
+    lidt fword ptr [i386idtptr]
+#else
 	lidt i386idtptr
+#endif
 
     /* Continue execution */
     jmp dword ptr [ContinueAddress]
@@ -62,6 +67,9 @@ _FrldrStartup:
     /* Patch long jump with real mode entry point */
     mov eax, dword ptr ds:[BSS_RealModeEntry]
     mov dword ptr ds:[SwitchToReal16Address], eax
+
+    /* Initialize the idt */
+    call _InitIdt
 
 	/* GO! */
 	xor eax, eax
@@ -106,8 +114,9 @@ EXTERN(switch_to_prot)
 
 	/* Load the GDT */
 	lgdt	gdtptr
+
 	/* Load the IDT */
-	lidt	i386idtptr
+	lidt i386idtptr
 
 	/* Enable Protected Mode */
 	mov eax, cr0
@@ -351,6 +360,11 @@ gdtptr:
 rmode_idtptr:
 	.word HEX(3ff)		/* Limit */
 	.long 0			/* Base Address */
+
+PUBLIC i386idtptr
+i386idtptr:
+    .word 255			/* Limit */
+    .long _i386Idt		/* Base Address */
 
 PUBLIC _FrldrBootDrive
 _FrldrBootDrive:
