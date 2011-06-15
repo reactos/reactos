@@ -24,6 +24,7 @@ if(ARCH MATCHES i386)
             arch/i386/i386bug.c)
     else()
         list(APPEND FREELDR_BASE64K_SOURCE
+            arch/i386/entry.S
             arch/i386/realmode.S)
     endif()
 elseif(ARCH MATCHES amd64)
@@ -168,10 +169,17 @@ set_source_files_properties(${FREELDR_ARCH_SOURCE} PROPERTIES COMPILE_DEFINITION
 add_library(freeldr_arch ${FREELDR_ARCH_SOURCE})
 add_dependencies(freeldr_arch bugcodes)
 
+if (NOT MSVC)
 CreateBootSectorTarget2(frldr16
     ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
     8000)
+else()
+CreateBootSectorTarget2(frldr16
+    ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
+    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+    F000)
+endif()
 
 list(APPEND FREELDR_SOURCE
     bootmgr.c
@@ -183,12 +191,13 @@ add_executable(freeldr_pe ${FREELDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    set_image_base(freeldr_pe 0x9000)
 else()
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
+    set_image_base(freeldr_pe 0x10000)
 endif()
 
 set_subsystem(freeldr_pe native)
-set_image_base(freeldr_pe 0x9000)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
 if(ARCH MATCHES i386)
@@ -237,12 +246,13 @@ add_executable(setupldr_pe ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_image_base(setupldr_pe 0x9000)
 else()
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/DRIVER /SECTION:.text,ERWP,ALIGN=0x1000" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_image_base(setupldr_pe 0x10000)
 endif()
 
 set_subsystem(setupldr_pe native)
-set_image_base(setupldr_pe 0x9000)
 set_entrypoint(setupldr_pe RealEntryPoint)
 
 if(ARCH MATCHES i386)

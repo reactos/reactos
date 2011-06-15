@@ -359,7 +359,11 @@ get_fs_structures:
     call crlf
 #endif
 
+#ifdef _USE_ML
+    mov bx, HEX(F000)            // bx = load address
+#else
     mov bx, HEX(8000)            // bx = load address
+#endif
     mov si, di                // restore file pointer
     mov cx, HEX(0FFFF)            // load the whole file
     call getfssec            // get the whole file
@@ -374,7 +378,11 @@ get_fs_structures:
     mov dh, 0                    // dh = boot partition
 
     /* Transfer execution to the bootloader */
+#ifdef _USE_ML
+    ljmp16 0, HEX(F000)
+#else
     ljmp16 0, HEX(8000)
+#endif
 
 //
 // searchdir:
