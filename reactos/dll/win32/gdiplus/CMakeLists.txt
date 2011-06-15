@@ -23,9 +23,13 @@ list(APPEND SOURCE
     pen.c
     region.c
     stringformat.c
-    #${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
+
+if(MSVC)
+    list(APPEND SOURCE
+        ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
+endif()
 
 add_library(gdiplus SHARED ${SOURCE})
 
