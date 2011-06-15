@@ -2,23 +2,10 @@
 
 #include <asm.inc>
 
-.code16
-PUBLIC _mainCRTStartup
-_mainCRTStartup:
-_LoaderEntry:
-    ret
-
-.endcode16
-
 .code32
 
 
 // globals
-PUBLIC _FrldrBootPartition
-_FrldrBootPartition:
-PUBLIC _FrldrBootDrive
-_FrldrBootDrive:
-
 PUBLIC _PageDirectoryStart
 _PageDirectoryStart:
 PUBLIC _PageDirectoryEnd
@@ -32,13 +19,6 @@ PUBLIC _kernel_pagetable
 _kernel_pagetable:
 PUBLIC _lowmem_pagetable
 _lowmem_pagetable:
-
-
-PUBLIC RealEntryPoint
-RealEntryPoint:
-
-PUBLIC _EnableA20
-_EnableA20:
 
 PUBLIC _ChainLoadBiosBootSectorCode
 _ChainLoadBiosBootSectorCode:
@@ -72,9 +52,6 @@ _PnpBiosGetDeviceNodeCount:
 
 PUBLIC _PnpBiosSupported
 _PnpBiosSupported:
-
-PUBLIC _Int386
-_Int386:
 
 PUBLIC _PxeCallApi
 _PxeCallApi:

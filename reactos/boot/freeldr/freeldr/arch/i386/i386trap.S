@@ -122,26 +122,26 @@ i386ExceptionHandlerHang:
 .endm
 
 /************************************************************************/
-TRAP_STUB i386DivideByZero, 0
-TRAP_STUB i386DebugException, 1
-TRAP_STUB i386NMIException, 2
-TRAP_STUB i386Breakpoint, 3
-TRAP_STUB i386Overflow, 4
-TRAP_STUB i386BoundException, 5
-TRAP_STUB i386InvalidOpcode, 6
-TRAP_STUB i386FPUNotAvailable, 7
-TRAP_STUB2 i386DoubleFault, 8
-TRAP_STUB i386CoprocessorSegment, 9
-TRAP_STUB2 i386InvalidTSS, 10
-TRAP_STUB2 i386SegmentNotPresent, 11
-TRAP_STUB2 i386StackException, 12
-TRAP_STUB2 i386GeneralProtectionFault, 13
-TRAP_STUB2 i386PageFault, 14
+TRAP_STUB _i386DivideByZero, 0
+TRAP_STUB _i386DebugException, 1
+TRAP_STUB _i386NMIException, 2
+TRAP_STUB _i386Breakpoint, 3
+TRAP_STUB _i386Overflow, 4
+TRAP_STUB _i386BoundException, 5
+TRAP_STUB _i386InvalidOpcode, 6
+TRAP_STUB _i386FPUNotAvailable, 7
+TRAP_STUB2 _i386DoubleFault, 8
+TRAP_STUB _i386CoprocessorSegment, 9
+TRAP_STUB2 _i386InvalidTSS, 10
+TRAP_STUB2 _i386SegmentNotPresent, 11
+TRAP_STUB2 _i386StackException, 12
+TRAP_STUB2 _i386GeneralProtectionFault, 13
+TRAP_STUB2 _i386PageFault, 14
 // 15 is reserved
-TRAP_STUB i386CoprocessorError, 16
-TRAP_STUB i386AlignmentCheck, 17
-TRAP_STUB i386MachineCheck, 18
-TRAP_STUB i386SimdFloatError, 19
+TRAP_STUB _i386CoprocessorError, 16
+TRAP_STUB _i386AlignmentCheck, 17
+TRAP_STUB _i386MachineCheck, 18
+TRAP_STUB _i386SimdFloatError, 19
 
 /************************************************************************
  * DEBUGGING SUPPORT FUNCTIONS

@@ -22,8 +22,6 @@
 VOID
 PcMachInit(const char *CmdLine)
 {
-    EnableA20();
-
     /* Setup vtbl */
     MachVtbl.ConsPutChar = PcConsPutChar;
     MachVtbl.ConsKbHit = PcConsKbHit;
