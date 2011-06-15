@@ -27,7 +27,6 @@ add_executable(smss WIN32 ${SOURCE})
 
 target_link_libraries(smss nt smlib)
 if(MSVC)
-   # target_link_libraries(smss msvcsup)
     set_entrypoint(smss DllMainCRTStartup)
 endif()
 
