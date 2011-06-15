@@ -58,6 +58,8 @@ EXTERN(_RealEntryPoint)
 	/* Store the boot partition */
 	mov byte ptr [_FrldrBootPartition], dh
 
+	call _EnableA20
+
 	/* GO! */
 	push eax
 	call	_BootMain
