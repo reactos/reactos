@@ -289,7 +289,7 @@ Fat12Format(IN HANDLE FileHandle,
     /* Calculate cluster size */
     if (ClusterSize == 0)
     {
-        if (DiskGeometry.MediaType == FixedMedia)
+        if (DiskGeometry->MediaType == FixedMedia)
         {
             /* 4KB Cluster (Harddisk only) */
             ClusterSize = 4096;
