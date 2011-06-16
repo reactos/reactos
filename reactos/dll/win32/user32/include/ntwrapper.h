@@ -235,27 +235,9 @@ ChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 }
 
 EXTINLINE BOOL WINAPI
-GetClipCursor(LPRECT lpRect)
-{
-    return NtUserGetClipCursor(lpRect);
-}
-
-EXTINLINE BOOL WINAPI
 GetCursorInfo(PCURSORINFO pci)
 {
     return NtUserGetCursorInfo(pci);
-}
-
-EXTINLINE BOOL WINAPI
-ClipCursor(CONST RECT *lpRect)
-{
-    return NtUserClipCursor((RECT *)lpRect);
-}
-
-EXTINLINE HCURSOR WINAPI
-SetCursor(HCURSOR hCursor)
-{
-    return NtUserSetCursor(hCursor);
 }
 
 EXTINLINE HDC WINAPI
@@ -466,12 +448,6 @@ EXTINLINE BOOL WINAPI
 GetMenuItemRect(HWND hWnd, HMENU hMenu, UINT uItem, LPRECT lprcItem)
 {
     return NtUserGetMenuItemRect(hWnd, hMenu, uItem, lprcItem);
-}
-
-EXTINLINE BOOL WINAPI
-HiliteMenuItem(HWND hwnd, HMENU hmenu, UINT uItemHilite, UINT uHilite)
-{
-    return NtUserHiliteMenuItem(hwnd, hmenu, uItemHilite, uHilite);
 }
 
 EXTINLINE BOOL WINAPI
