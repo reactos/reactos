@@ -26,11 +26,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
-#if(MSVC)
+if(MSVC)
     set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
     list(APPEND SOURCE
         ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
-#endif()
+endif()
 
 add_library(gdiplus SHARED ${SOURCE})
 
