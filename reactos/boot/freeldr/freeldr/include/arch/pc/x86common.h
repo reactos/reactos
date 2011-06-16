@@ -22,13 +22,23 @@
 #define DISKREADBUFFER_SIZE 512
 
 /* These addresses specify the realmode "BSS section" layout */
-#define BSS_RealModeEntry   (BSS_START +  0)
-#define BSS_CallbackAddress (BSS_START +  4)
-#define BSS_CallbackReturn  (BSS_START +  8)
+#define BSS_RealModeEntry    (BSS_START +  0)
+#define BSS_CallbackAddress  (BSS_START +  4)
+#define BSS_CallbackReturn   (BSS_START +  8)
+#define BSS_RegisterSet      (BSS_START + 16) /* size = 36 */
+#define BSS_IntVector        (BSS_START + 52)
+#define BSS_PxeEntryPoint    (BSS_START + 56)
+#define BSS_PxeBufferSegment (BSS_START + 60)
+#define BSS_PxeBufferOffset  (BSS_START + 64)
+#define BSS_PxeFunction      (BSS_START + 68)
+#define BSS_PxeResult        (BSS_START + 72)
 
-#define BSS_RegisterSet     (BSS_START + 16) /* size = 36 */
-#define BSS_IntVector       (BSS_START + 52)
-// next 52
+
+/* Realmode function IDs */
+#define FNID_Int386 0
+#define FNID_SoftReboot 1
+#define FNID_ChainLoadBiosBootSectorCode 2
+#define FNID_PxeCallApi 3
 
 /* Layout of the REGS structure */
 #define REGS_EAX 0

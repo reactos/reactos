@@ -3,7 +3,7 @@
 
 
 KIDTENTRY DECLSPEC_ALIGN(4) i386Idt[32];
-KDESCRIPTOR i386IdtDescriptor = {0, 255, i386Idt};
+KDESCRIPTOR i386IdtDescriptor = {0, 255, (ULONG)i386Idt};
 
 static
 void

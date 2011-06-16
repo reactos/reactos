@@ -20,17 +20,11 @@ _kernel_pagetable:
 PUBLIC _lowmem_pagetable
 _lowmem_pagetable:
 
-PUBLIC _ChainLoadBiosBootSectorCode
-_ChainLoadBiosBootSectorCode:
-
 PUBLIC _BootOldLinuxKernel
 _BootOldLinuxKernel:
 
 PUBLIC _BootNewLinuxKernel
 _BootNewLinuxKernel:
-
-PUBLIC _SoftReboot
-_SoftReboot:
 
 PUBLIC _DriveMapOldInt13HandlerAddress
 _DriveMapOldInt13HandlerAddress:
@@ -52,8 +46,5 @@ _PnpBiosGetDeviceNodeCount:
 
 PUBLIC _PnpBiosSupported
 _PnpBiosSupported:
-
-PUBLIC _PxeCallApi
-_PxeCallApi:
 
 END

@@ -121,10 +121,13 @@ pm_offset:
     .word 0 // receives address of PE entry point
     .word PMODE_CS
     nop
-
+// FIXME: use ljmp16 PMODE_CS:inpmode + hexed 32bit jump
 
 callback_table:
     .word Int386
+    .word SoftReboot
+    .word ChainLoadBiosBootSectorCode
+    .word PxeCallApi
 
 
     /* 16-bit stack pointer */

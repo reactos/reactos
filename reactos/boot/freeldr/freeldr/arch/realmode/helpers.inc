@@ -102,3 +102,19 @@ SoftReboot:
 
 	/* and jump to location FFFF:0 in ROM */
 	ljmp16	HEX(0FFFF), HEX(0000)
+
+
+ChainLoadBiosBootSectorCode:
+
+    /* Load segment registers */
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov esp, HEX(7C00)
+
+    /* Jump to the bootsector code */
+    ljmp16	HEX(0000), HEX(7C00)

@@ -259,8 +259,8 @@ _Int386:
     mov ecx, 9
     rep movsd
 
-    /* Set the callback index */
-    mov bx, 0
+    /* Set the function ID */
+    mov bx, FNID_Int386
 
     /* Set continue address and switch to real mode */
     mov dword ptr [ContinueAddress], offset Int386_return
@@ -282,6 +282,86 @@ Int386_return:
     ret
 
 
+/*
+ * U16 PxeCallApi(U16 Segment, U16 Offset, U16 Service, VOID *Parameter);
+ *
+ * RETURNS:
+ */
+PUBLIC _PxeCallApi
+_PxeCallApi:
+    push ebp
+    mov ebp, esp
+
+    pusha
+    push es
+
+    /* copy entry point */
+    mov eax, [ebp + 8]
+    shl eax, 16
+    mov ax, [ebp + 12]
+    mov dword ptr ds:[BSS_PxeEntryPoint], eax
+
+    /* copy function */
+    mov ax, [ebp + 16]
+    mov word ptr ds:[BSS_PxeFunction], ax
+
+    /* convert pointer to data buffer to segment/offset */
+    mov eax, [ebp + 20]
+    shr eax, 4
+    and eax, HEX(0f000)
+    mov word ptr ds:[BSS_PxeBufferSegment], ax
+    mov eax, [ebp + 20]
+    and eax, HEX(0ffff)
+    mov word ptr ds:[BSS_PxeBufferOffset], ax
+
+    /* Set the function ID and call realmode */
+    mov bx, FNID_PxeCallApi
+    call i386CallRealMode
+
+    pop es
+    popa
+
+    mov esp, ebp
+    pop ebp
+
+    mov ax, word ptr [BSS_PxeResult]
+
+    ret
+
+
+PUBLIC _SoftReboot
+_SoftReboot:
+    /* Set the function ID */
+    mov bx, FNID_SoftReboot
+
+    /*Switch to real mode (We don't return) */
+    jmp SwitchToReal
+
+
+PUBLIC _ChainLoadBiosBootSectorCode
+_ChainLoadBiosBootSectorCode:
+    /* Set the boot drive */
+    mov dl, byte ptr [_FrldrBootDrive]
+
+    /* Set the function ID */
+    mov bx, FNID_ChainLoadBiosBootSectorCode
+
+    /*Switch to real mode (We don't return) */
+    jmp SwitchToReal
+
+
+PUBLIC i386CallRealMode
+i386CallRealMode:
+    /* Set continue address and switch to real mode */
+    mov dword ptr [ContinueAddress], offset i386CallRealMode_return
+    jmp SwitchToReal
+i386CallRealMode_return:
+    ret
+
+
+/* Entrypoint for realmode function calls
+ * ContinueAddress must be set to the return point from realmode
+ * bx must be set to the ID of the realmode function to call. */
 SwitchToReal:
     /* Set sane segments */
 	mov ax, PMODE_DS
