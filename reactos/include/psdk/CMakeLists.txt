@@ -113,3 +113,5 @@ add_idl_headers(psdk ${SOURCE})
 add_typelib(stdole2 stdole2.idl)
 
 add_iid_library(wuguid wuapi.idl)
+
+generate_idl_iids(wincodec.idl)
