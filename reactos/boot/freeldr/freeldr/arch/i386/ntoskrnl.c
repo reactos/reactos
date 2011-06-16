@@ -72,7 +72,6 @@ IoWritePartitionTable(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-#ifndef _MSC_VER
 NTHALAPI
 VOID
 NTAPI
@@ -120,4 +119,3 @@ KeStallExecutionProcessor(
     #error unimplemented
 #endif
 }
-#endif
