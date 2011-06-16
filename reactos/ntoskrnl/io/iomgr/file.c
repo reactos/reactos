@@ -408,7 +408,8 @@ IopParseDevice(IN PVOID ParseObject,
     if (!(DirectOpen) &&
         !(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
-        ((wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
+        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
+         (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
         !(UseDummyFile))
     {
         DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
