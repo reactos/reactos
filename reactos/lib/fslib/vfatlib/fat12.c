@@ -289,8 +289,16 @@ Fat12Format(IN HANDLE FileHandle,
     /* Calculate cluster size */
     if (ClusterSize == 0)
     {
-        /* 4KB Cluster (Harddisk only) */
-        ClusterSize = 4096;
+        if (DiskGeometry.MediaType == FixedMedia)
+        {
+            /* 4KB Cluster (Harddisk only) */
+            ClusterSize = 4096;
+        }
+        else
+        {
+            /* 512 byte cluster (floppy) */
+            ClusterSize = 512;
+        }
     }
 
     SectorCount = PartitionInfo->PartitionLength.QuadPart >>
