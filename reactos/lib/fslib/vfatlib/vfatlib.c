@@ -127,6 +127,58 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         PartitionInfo.RewritePartition = FALSE;
         PartitionInfo.RecognizedPartition = FALSE;
     }
+    
+    /* If it already has a FAT FS, we'll use that type.
+     * If it doesn't, we will determine the FAT type based on size and offset */
+    if (PartitionInfo.PartitionType != PARTITION_FAT_12 &&
+        PartitionInfo.PartitionType != PARTITION_FAT_16 &&
+        PartitionInfo.PartitionType != PARTITION_HUGE &&
+        PartitionInfo.PartitionType != PARTITION_XINT13 &&
+        PartitionInfo.PartitionType != PARTITION_FAT32 &&
+        PartitionInfo.PartitionType != PARTITION_FAT32_XINT13)
+    {
+        /* Determine the correct type based upon size and offset (copied from usetup) */
+        if (PartitionInfo.PartitionLength.QuadPart < (4200LL * 1024LL))
+        {
+            /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+            PartitionInfo.PartitionType = PARTITION_FAT_12;
+        }
+        else if (PartitionInfo.StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
+        {
+            /* Partition starts below the 8.4GB boundary ==> CHS partition */
+            
+            if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
+            {
+                /* FAT16 CHS partition (partiton size < 32MB) */
+                PartitionInfo.PartitionType = PARTITION_FAT_16;
+            }
+            else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+            {
+                /* FAT16 CHS partition (partition size < 512MB) */
+                PartitionInfo.PartitionType = PARTITION_HUGE;
+            }
+            else
+            {
+                /* FAT32 CHS partition (partition size >= 512MB) */
+                PartitionInfo.PartitionType = PARTITION_FAT32;
+            }
+        }
+        else
+        {
+            /* Partition starts above the 8.4GB boundary ==> LBA partition */
+            
+            if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+            {
+                /* FAT16 LBA partition (partition size < 512MB) */
+                PartitionInfo.PartitionType = PARTITION_XINT13;
+            }
+            else
+            {
+                /* FAT32 LBA partition (partition size >= 512MB) */
+                PartitionInfo.PartitionType = PARTITION_FAT32_XINT13;
+            }
+        }
+    }
 
     DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
     DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset.QuadPart);
