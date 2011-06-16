@@ -247,7 +247,7 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 
 // UTF-8
 #pragma code_page(65001)
-#include "lang/pl-PL.rc"
+#include "explorer-pl.rc"
 #include "explorer-ro.rc"
 
 /////////////////////////////////////////////////////////////////////////////
