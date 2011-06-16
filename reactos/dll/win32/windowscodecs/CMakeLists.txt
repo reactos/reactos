@@ -12,6 +12,10 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
 set_rc_compiler()
 
+if(MSVC)
+    add_compiler_flags(/FItypeof.h)
+endif()
+
 spec2def(windowscodecs.dll windowscodecs.spec)
 
 list(APPEND SOURCE
