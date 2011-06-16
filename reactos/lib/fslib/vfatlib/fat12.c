@@ -323,7 +323,7 @@ Fat12Format(IN HANDLE FileHandle,
     BootSector.Heads = DiskGeometry->TracksPerCylinder;
     BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
     BootSector.SectorsHuge = (SectorCount >= 0x10000) ? (unsigned long)SectorCount : 0;
-    BootSector.Drive = 0xff; /* No BIOS boot drive available */
+    BootSector.Drive = DiskGeometry->MediaType == FixedMedia ? 0x80 : 0x00;
     BootSector.ExtBootSignature = 0x29;
     BootSector.VolumeID = CalcVolumeSerialNumber();
     if ((Label == NULL) || (Label->Buffer == NULL))
