@@ -56,11 +56,11 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
 {
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
-    PUCHAR NewBootSector;
+    PFAT16_BOOT_SECTOR NewBootSector;
     LARGE_INTEGER FileOffset;
 
     /* Allocate buffer for new bootsector */
-    NewBootSector = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
+    NewBootSector = (PFAT16_BOOT_SECTOR)RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             BootSector->BytesPerSector);
     if (NewBootSector == NULL)
@@ -70,9 +70,12 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
     memset(NewBootSector, 0, BootSector->BytesPerSector);
 
     /* Copy FAT16 BPB to new bootsector */
-    memcpy((NewBootSector + 3),
+    memcpy(&NewBootSector->OEMName[0],
            &BootSector->OEMName[0],
            59); /* FAT16 BPB length (up to (not including) Res2) */
+
+    /* Write the boot sector signature */
+    NewBootSector->Signature1 = 0xAA550000;
 
     /* Write sector 0 */
     FileOffset.QuadPart = 0ULL;
