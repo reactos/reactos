@@ -217,9 +217,8 @@ IsFat12_Done:
     ret
 
 
-msgLoading:	.asciz "Loading FreeLoader...\r\n"
+msgLoading:	.asciz "Loading FreeLoader...", CR, LF
 
     .org 510				// Pad to 510 bytes
     .word HEX(0aa55)		// BootSector signature
 
-END

@@ -1,10 +1,10 @@
 
 Empty8042:
-    .word 0x00eb,0x00eb		// jmp $+2, jmp $+2
-    in al, 0x64
-    cmp al, 0xff				// legacy-free machine without keyboard
+    .word HEX(00eb), HEX(00eb)		// jmp $+2, jmp $+2
+    in al, HEX(64)
+    cmp al, HEX(0ff)				// legacy-free machine without keyboard
     jz Empty8042_ret			// controllers on Intel Macs read back 0xFF
-    test al, 0x02
+    test al, 2
     jnz Empty8042
 Empty8042_ret:
 	ret
@@ -12,11 +12,11 @@ Empty8042_ret:
 EnableA20:
     pusha
     call Empty8042
-    mov al, 0xD1				// command write
-    out 0x64, al
+    mov al, HEX(0D1)				// command write
+    out HEX(064), al
     call Empty8042
-    mov al, 0xDF				// A20 on
-    out 0x60, al
+    mov al, HEX(0DF)				// A20 on
+    out HEX(060), al
     call Empty8042
     popa
     ret
@@ -46,9 +46,9 @@ writestr_end:
 writechr:
 	pushf
 	pusha
-	mov	ah, 0x0E
+	mov	ah, HEX(0E)
 	xor	bx, bx
-	int	0x10
+	int	HEX(10)
 	popa
 	popf
 	ret

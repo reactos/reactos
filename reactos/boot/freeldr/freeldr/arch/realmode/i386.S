@@ -31,7 +31,7 @@ RealModeEntryPoint:
     call EnableA20
 
     /* Safe real mode entry point in shared memory */
-    mov dword ptr [BSS_RealModeEntry], offset switch_to_real16
+    mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
 
     /* Get address of optional header */
     mov eax, dword ptr ds:[FREELDR_PE_BASE + IMAGE_DOS_HEADER_e_lfanew]
@@ -41,8 +41,8 @@ RealModeEntryPoint:
     mov eax, dword ptr ds:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
     add eax, FREELDR_PE_BASE
 
-    /* Patch the long jump instruction */
-    mov word ptr [pm_offset], ax
+    /* Save entry point */
+    mov dword ptr [pm_entrypoint], eax
 
     jmp exit_to_protected
 
@@ -87,7 +87,12 @@ inrmode:
 	mov sp, word ptr ds:[stack16]
 
 	/* Load IDTR with real mode value */
+#ifdef _USE_ML
+    DB 0Fh, 01h, 1Eh
+    DW rmode_idtptr
+#else
 	lidt rmode_idtptr
+#endif
 
 	sti		/* These are ok now */
 
@@ -108,7 +113,12 @@ exit_to_protected:
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
+#ifdef _USE_ML
+    DB 0Fh, 01h, 16h
+    DW rmode_idtptr
+#else
     lgdt gdtptr
+#endif
 
     /* Enable Protected Mode */
     mov eax, cr0
@@ -116,14 +126,13 @@ exit_to_protected:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    .byte HEX(0ea) // jmp far PMODE_CS:entry_point
-pm_offset:
-    .word 0 // receives address of PE entry point
-    .word PMODE_CS
+    ljmp16 PMODE_CS, inpmode
+inpmode:
+    .byte HEX(0ff), HEX(25) // opcode of indirect jump
+    .word pm_entrypoint, 0
+pm_entrypoint:
+    .long 0 // receives address of PE entry point
     nop
-// FIXME: use ljmp16 PMODE_CS:inpmode + hexed 32bit jump
-
-
 
 callback_table:
     .word Int386
@@ -174,14 +183,12 @@ gdt:
 /* GDT table pointer */
 gdtptr:
 	.word HEX(27)		/* Limit */
-	.long gdt			/* Base Address */
+    .word gdt, 0        /* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
 	.word HEX(3ff)		/* Limit */
 	.long 0			/* Base Address */
-
-//.org 1024
 
 #include "int386.inc"
 #include "pxe.inc"

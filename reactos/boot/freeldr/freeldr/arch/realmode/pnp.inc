@@ -15,11 +15,11 @@ PnpBiosGetDeviceNodeCount:
 
 	push 0
 
-	call dword ptr [BSS_PnpBiosEntryPoint]
+	call dword ptr ds:[BSS_PnpBiosEntryPoint]
 	add sp, 12
 
 	movzx ecx, ax
-	mov dword ptr [BSS_PnpResult], ecx
+	mov dword ptr ds:[BSS_PnpResult], ecx
 
     ret
 
@@ -48,11 +48,11 @@ PnpBiosGetDeviceNode:
 	push 1
 
 	/* call entry point */
-	call dword ptr [BSS_PnpBiosEntryPoint]
+	call dword ptr ds:[BSS_PnpBiosEntryPoint]
 	add sp, 14
 
 	movzx ecx, ax
-	mov [BSS_PnpResult], ecx
+	mov dword ptr ds:[BSS_PnpResult], ecx
 
     ret
 

@@ -34,9 +34,9 @@ Int386:
 
 	/* Call the interrupt vector */
 	/*int		Int386_vector*/
-	.byte	0xcd
+	.byte HEX(0cd)
 Int386_vector_opcode:
-	.byte	0x00
+	.byte 00
 
 	/* Save the registers */
 	mov dword ptr cs:[BSS_RegisterSet + REGS_EAX], eax

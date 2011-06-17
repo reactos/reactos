@@ -26,8 +26,8 @@ PxeCallApi:
 	push ax
 	mov ax, [BSS_PxeFunction]
 	push ax
-	call dword ptr [BSS_PxeEntryPoint]
+	call dword ptr ds:[BSS_PxeEntryPoint]
 	add esp, 6
-	mov [BSS_PxeResult], ax
+	mov word ptr ds:[BSS_PxeResult], ax
 
     ret
