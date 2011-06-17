@@ -370,10 +370,21 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     StackPtr->MajorFunction = IsDevIoCtl ?
                               IRP_MJ_DEVICE_CONTROL :
                               IRP_MJ_FILE_SYSTEM_CONTROL;
-    StackPtr->MinorFunction = 0;
     StackPtr->Control = 0;
     StackPtr->Flags = 0;
     StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
+    
+    /* Check if this is a FS control request */
+    if (StackPtr->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL)
+    {
+        /* It is, so we have to set a minor function */
+        StackPtr->MinorFunction = (Irp->RequestorMode == KernelMode) ? IRP_MN_KERNEL_CALL : IRP_MN_USER_FS_REQUEST;
+    }
+    else
+    {
+        /* Minor function doesn't matter for regular device control requests */
+        StackPtr->MinorFunction = 0;
+    }
 
     /* Set the IOCTL Data */
     StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
