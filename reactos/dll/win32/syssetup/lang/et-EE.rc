@@ -26,7 +26,7 @@ CAPTION "ReactOSi paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tere tulemast ReactOSi paigaldusprogrammi.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Selle programmi abil paigaldatakse ReactOS arvutisse. Selleks peab esmalt koguma natuke andmeid sinu ja su arvuti kohta.",\
+    LTEXT "Selle programmi abil paigaldatakse ReactOS arvutisse. Selleks peab esmalt koguma natuke andmeid sinu ja su arvuti kohta.",
           IDC_STATIC, 115, 40, 195, 100
     LTEXT "Vajuta Järgmine, et jätkata paigaldamist.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -75,7 +75,7 @@ BEGIN
     LTEXT "&Arvuti nimi:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Arvuti täielikuks haldamiseks luuakse administraatori konto (Administrator). ",\
+    LTEXT "Arvuti täielikuks haldamiseks luuakse administraatori konto (Administrator). ",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Sisesta administraatori parool, mille pikkus on maksimaalselt 14 tähemärki.",
           IDC_STATIC, 54, 87, 250, 8
