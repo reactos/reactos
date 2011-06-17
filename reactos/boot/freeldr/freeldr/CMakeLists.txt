@@ -14,13 +14,13 @@ if(ARCH MATCHES i386)
         arch/i386/i386idt.c
         arch/i386/i386trap.S
         arch/i386/i386pnp.cmake.S
-        arch/i386/i386bug.c)
+        arch/i386/i386bug.c
+        arch/i386/mb.S)
     if(NOT MSVC)
         list(APPEND FREELDR_BASE64K_SOURCE
             arch/i386/drvmap.S
             arch/i386/linux.S
-            arch/i386/multiboot.S
-            arch/i386/mb.S)
+            arch/i386/multiboot.S)
     else()
         list(APPEND FREELDR_BASE64K_SOURCE
             arch/i386/realmode.S)

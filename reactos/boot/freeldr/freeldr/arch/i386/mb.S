@@ -17,39 +17,22 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
-
+#include <asm.inc>
 #include <arch/pc/x86common.h>
 #include <multiboot.h>
 
-	/*
-	 * Here we assume the kernel is loaded at 1mb
-	 * This boots the kernel
-	 */
-	.code32
-    .globl _PageDirectoryStart
+.code32
+PUBLIC _PageDirectoryStart
 
-    .globl _startup_pagedirectory
-    .globl _lowmem_pagetable
-    .globl _kernel_pagetable
-    .globl _apic_pagetable
+PUBLIC _startup_pagedirectory
+PUBLIC _lowmem_pagetable
+PUBLIC _kernel_pagetable
+PUBLIC _apic_pagetable
+PUBLIC _PageDirectoryEnd
 
-    .globl _PageDirectoryEnd
-
-	//
-	// Boot information structure
-	//
-
-EXTERN(_reactos_memory_map_descriptor_size)
-	.long	0
-
-EXTERN(_reactos_memory_map)
-	.rept	(32 * /*sizeof(memory_map_t)*/24)
-	.byte	0
-	.endr
-
+#ifndef _USE_ML
 .bss
+#endif
 _PageDirectoryStart:
 _startup_pagedirectory:
 	.fill 4096, 1, 0
@@ -64,3 +47,5 @@ _apic_pagetable:
 	.fill 4096, 1, 0
 
 _PageDirectoryEnd:
+
+END

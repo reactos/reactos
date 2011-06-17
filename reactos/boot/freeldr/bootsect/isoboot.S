@@ -923,9 +923,9 @@ pollchar_and_empty:
 
 
 isolinux_banner:
-    .asciz "\r\nLoading IsoBoot...\r\n"
+    .asciz CR, LF, "Loading IsoBoot...", CR, LF
 copyright_str:
-    .asciz " (C) 1994-2002 H. Peter Anvin\r\n"
+    .asciz " (C) 1994-2002 H. Peter Anvin", CR, LF
 presskey_msg:
     .asciz "Press any key to boot from CD"
 dot_msg:
@@ -957,33 +957,33 @@ startldr_msg:
 #endif
 
 spec_err_msg:
-    .asciz "Load spec failed, trying wing ...\r\n"
+    .asciz "Load spec failed, trying wing ...", CR, LF
 maybe_msg:
     .asciz "Found smth at drive = "
 alright_msg:
-    .asciz "might be ok, continuing...\r\n"
+    .asciz "might be ok, continuing...", CR, LF
 nothing_msg:
-    .asciz "Failed locate CD-ROM; boot failed.\r\n"
+    .asciz "Failed locate CD-ROM; boot failed.", CR, LF
 
 isolinux_str:
     .asciz "IsoBoot: "
 crlf_msg:
-    .asciz "\r\n"
+    .asciz CR, LF
 diskerr_msg:
     .asciz "Disk error "
 ondrive_str:
     .asciz ", drive "
 
 err_bootfailed:
-    .asciz "\r\nfailed.."
+    .asciz CR, LF, "failed.."
 isolinux_dir:
     .asciz "\\LOADER"
 no_dir_msg:
-    .asciz "LOADER dir not found.\r\n"
+    .asciz "LOADER dir not found.", CR, LF
 isolinux_bin:
     .asciz "SETUPLDR.SYS"
 no_isolinux_msg:
-    .asciz "SETUPLDR not found.\r\n"
+    .asciz "SETUPLDR not found.", CR, LF
 
 
 //
