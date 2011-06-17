@@ -38,13 +38,4 @@ _DriveMapInt13HandlerEnd:
 PUBLIC _DriveMapInt13HandlerMapList
 _DriveMapInt13HandlerMapList:
 
-PUBLIC _PnpBiosGetDeviceNode
-_PnpBiosGetDeviceNode:
-
-PUBLIC _PnpBiosGetDeviceNodeCount
-_PnpBiosGetDeviceNodeCount:
-
-PUBLIC _PnpBiosSupported
-_PnpBiosSupported:
-
 END

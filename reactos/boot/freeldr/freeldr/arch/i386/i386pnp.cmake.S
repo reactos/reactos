@@ -20,8 +20,9 @@
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
-.code32
+EXTERN i386CallRealMode:PROC
 
+.code32
 
 /*
  * U32 PnpBiosSupported(VOID);
@@ -74,13 +75,13 @@ pnp_loop:
 
 	/* Calculate the bios entry point (far pointer) */
 	xor eax, eax
-	mov ax, [esi + 15]
+	mov ax, [esi + HEX(0F)]
 	shl eax, 16
-	mov ax, [esi + 0x0D]
-	mov [BSS_PnpBiosEntryPoint], eax
+	mov ax, [esi + HEX(0D)]
+	mov dword ptr ds:[BSS_PnpBiosEntryPoint], eax
 
 	/* Store bios data segment */
-	mov ax, [esi + 0x1B]
+	mov ax, [esi + HEX(1B)]
 	mov word ptr ds:[BSS_PnpBiosDataSegment], ax
 
 pnp_not_found:
@@ -137,7 +138,8 @@ _PnpBiosGetDeviceNodeCount:
  *
  * RETURNS:
  */
-EXTERN(_PnpBiosGetDeviceNode)
+PUBLIC _PnpBiosGetDeviceNode
+_PnpBiosGetDeviceNode:
 	.code32
 
 	push ebp
@@ -149,23 +151,23 @@ EXTERN(_PnpBiosGetDeviceNode)
 	/* get current node number */
 	mov esi, [ebp + 8]
 	mov al, [esi]
-	mov [BSS_PnpNodeNumber], al
+	mov byte ptr ds:[BSS_PnpNodeNumber], al
 
 	/* convert pointer to node buffer to segment/offset */
 	mov eax, [ebp + 12]
 	shr eax, 4
-	and eax, 0xf000
-	mov word ptr [BSS_PnpBiosBufferSegment], ax
+	and eax, HEX(0f000)
+	mov word ptr ds:[BSS_PnpBiosBufferSegment], ax
 	mov eax, [ebp + 12]
-	and eax, 0xffff
-	mov [BSS_PnpBiosBufferOffset], ax
+	and eax, HEX(0ffff)
+	mov word ptr ds:[BSS_PnpBiosBufferOffset], ax
 
     mov bx, FNID_PnpBiosGetDeviceNode
     call i386CallRealMode
 
 	/* update node number */
 	mov esi, [ebp + 8]
-	mov al, [BSS_PnpNodeNumber]
+	mov al, byte ptr ds:[BSS_PnpNodeNumber]
 	mov [esi], al
 
 	pop es
@@ -178,4 +180,5 @@ EXTERN(_PnpBiosGetDeviceNode)
 
 	ret
 
+END
 /* EOF */
