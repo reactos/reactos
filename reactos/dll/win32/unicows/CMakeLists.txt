@@ -24,6 +24,7 @@ add_importlibs(unicows
     mpr
     gdi32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 add_cd_file(TARGET unicows DESTINATION reactos/system32 FOR all)
