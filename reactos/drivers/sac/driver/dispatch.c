@@ -80,7 +80,6 @@ TimerDpcRoutine(
 }
 
 VOID
-NTAPI
 UnloadHandler(
 	IN PDRIVER_OBJECT DriverObject
 	)

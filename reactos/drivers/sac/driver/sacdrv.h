@@ -7,9 +7,11 @@
  */
 
 /* INCLUDES *******************************************************************/
-#include <ntddk.h>
+#include <ntifs.h>
+#include <ntoskrnl/include/internal/hdl.h>
 
 #define SAC_DBG_ENTRY_EXIT		0x01
+#define SAC_DBG_INIT			0x04
 #define SAC_DBG_MM				0x1000
 
 #define SAC_DBG(x, ...)						\
@@ -154,8 +156,48 @@ typedef struct _SAC_CHANNEL_ATTRIBUTES
 	PKEVENT HasNewDataEvent;
 	PKEVENT LockEvent;
 	PKEVENT RedrawEvent;
-	GUID ChannelId;	
+	GUID ChannelId;
 } SAC_CHANNEL_ATTRIBUTES, *PSAC_CHANNEL_ATTRIBUTES;
+
+NTSTATUS
+Dispatch(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+DispatchDeviceControl(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
+);
+
+NTSTATUS
+DispatchShutdownControl(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
+);
+
+VOID
+UnloadHandler(
+	IN PDRIVER_OBJECT DriverObject
+);
+
+VOID
+FreeGlobalData(
+	VOID
+);
+
+BOOLEAN
+InitializeDeviceData(
+	IN PDEVICE_OBJECT DeviceObject
+);
+
+BOOLEAN
+InitializeGlobalData(
+	IN PUNICODE_STRING RegistryPath,
+	IN PDRIVER_OBJECT DriverObject
+);
 
 extern ULONG SACDebug;
 

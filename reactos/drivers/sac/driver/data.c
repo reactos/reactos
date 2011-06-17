@@ -49,7 +49,7 @@ InitializeDeviceData(
 }
 
 BOOLEAN
-InitalizeGlobalData(
+InitializeGlobalData(
 	IN PUNICODE_STRING RegistryPath,
 	IN PDRIVER_OBJECT DriverObject
 	)
