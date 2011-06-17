@@ -17,83 +17,92 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
 
+#include <asm.inc>
 #include <arch/pc/x86common.h>
 
-EXTERN(_DriveMapInt13HandlerStart)
+.code16
+
+PUBLIC _DriveMapInt13HandlerStart
+_DriveMapInt13HandlerStart:
 Int13Handler:
 
-	pushw	%bp
-	movw	%sp,%bp
-	pushw	%ax
-	pushw	%cx
-	pushw	%si
+	push bp
+	mov bp, sp
+	push ax
+	push cx
+	push si
 
 	cld
 
 	/* Get callers flags from stack */
-	movw	0x06(%bp),%ax
-	movw	%ax,%cs:(CallersFlags - Int13Handler)
+	mov ax, [bp + 6]
+	mov word ptr cs:[CallersFlags - Int13Handler], ax
 
 	/* Save the drive number they passed in */
-	movb	%dl,%cs:(PassedInDriveNumber - Int13Handler)
+	mov cs:[PassedInDriveNumber - Int13Handler], dl
 
 	/* Now we need to perform the mapping */
-	xorw	%cx,%cx
-	movw	$(Int13HandlerMapCount - Int13Handler),%si
+	xor cx, cx
+	mov si, offset Int13HandlerMapCount - Int13Handler
+
 	/* Get the count of drives in the map list */
-	movb	%cs:(%si),%cl
-	incw	%si
+	mov cl, cs:[si]
+	inc si
 
 	/* If the map list is empty then just call the old int 13h handler */
-	cmpb	$0,%cl
-	jz		CallOldInt13Handler
+	cmp cl, 0
+	jz CallOldInt13Handler
 
 GetMappedDriveNumberLoop:
 
 	/* Get the next drive number in the list */
-	lodsw	%cs:(%si),%ax
+	lods ax, cs:[si]
+
 	/* Check to see if it's the one they are calling int 13h for */
-	cmpb	%al,%dl
+	cmp dl, al
+
 	/* If not get the next one */
-	jne		GetMappedDriveNumberLoopNext
+	jne GetMappedDriveNumberLoopNext
 
 	/* If we get here then we have found a mapped drive */
 	/* Send new drive number on to the old int 13h handler */
-	movb	%ah,%dl
+	mov dl, ah
+
 	/* Call BIOS Int 13 Handler */
-	jmp		CallOldInt13Handler
+	jmp CallOldInt13Handler
 
 GetMappedDriveNumberLoopNext:
-	loop	GetMappedDriveNumberLoop
+	loop GetMappedDriveNumberLoop
 
 CallOldInt13Handler:
 	/* Restore the registers we changed off the stack */
-	popw	%si
-	popw	%cx
-	popw	%ax
+	pop si
+	pop cx
+	pop ax
 
 	/* Put flags onto stack */
-	pushw	%cs:(CallersFlags - Int13Handler)
+	push word ptr cs:[CallersFlags - Int13Handler]
+
 
 	/* Call old int 13h handler with new drive number */
-	.byte	0x9a /* lcall */
-EXTERN(_DriveMapOldInt13HandlerAddress)
+	.byte HEX(9a) /* lcall */
+PUBLIC _DriveMapOldInt13HandlerAddress
+_DriveMapOldInt13HandlerAddress:
 	.word	0
 	.word	0
 
 	/* Update the callers flags with the values the BIOS returned */
-	pushw	%ax
+	push ax
 	pushf
-	popw	%ax
-	movw	%ax,0x06(%bp)
-	popw	%ax
-	/* Restore the callers drive number */
-	movb	%cs:(PassedInDriveNumber - Int13Handler),%dl
+	pop ax
+	mov [bp + 6], ax
+	pop ax
 
-	popw	%bp
+	/* Restore the callers drive number */
+	mov dl, cs:[PassedInDriveNumber - Int13Handler]
+
+	pop bp
 
 	iret
 
@@ -103,7 +112,8 @@ CallersFlags:
 PassedInDriveNumber:
 	.byte	0
 
-EXTERN(_DriveMapInt13HandlerMapList)
+PUBLIC _DriveMapInt13HandlerMapList
+_DriveMapInt13HandlerMapList:
 Int13HandlerMapCount:
 	.byte	0
 
@@ -127,4 +137,6 @@ Int13HandlerDrive4:
 Int13HandlerDriveNew4:
 	.byte	0
 
-EXTERN(_DriveMapInt13HandlerEnd)
+PUBLIC _DriveMapInt13HandlerEnd
+_DriveMapInt13HandlerEnd:
+    .byte 0
