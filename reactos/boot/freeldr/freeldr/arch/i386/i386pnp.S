@@ -17,11 +17,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
-
+#include <asm.inc>
 #include <arch/pc/x86common.h>
 
+.code32
 
 
 /*
@@ -34,68 +33,68 @@ _pnp_bios_entry_point:
 _pnp_bios_data_segment:
 	.word	0
 
-EXTERN(_PnpBiosSupported)
-	.code32
+PUBLIC _PnpBiosSupported
+_PnpBiosSupported:
 
-	pushl	%edi
-	pushl	%esi
-	pushl	%ecx
-	pushl	%edx
+	push edi
+	push esi
+	push ecx
+	push edx
 
-	xorl	%edi,%edi
+	xor edi, edi
 
 	/* init esi */
-	movl	$0xF0000,%esi
+	mov esi, HEX(0F0000)
 
 pnp_again:
-	movl	(%esi),%eax
-	cmp		$0x506E5024,%eax			/* "$PnP" */
-	je		pnp_found
+	mov eax, [esi]
+	cmp eax, HEX(506E5024)			/* "$PnP" */
+	je pnp_found
 
-	cmp		$0xFFFF0,%esi
-	je		pnp_not_found
+	cmp esi, HEX(0FFFF0)
+	je pnp_not_found
 
 pnp_add:
-	addl	$0x10,%esi
-	jmp		pnp_again
+	add esi, 16
+	jmp pnp_again
 
 pnp_found:
 	/* first calculate the checksum */
-	pushl	%esi
+	push esi
 
-	pushl	$0x21
-	popl	%ecx
-	xorl	%edx, %edx
+	push HEX(21)
+	pop ecx
+	xor edx, edx
 
 pnp_loop:
 	lodsb
-	addb	%al,%dl
-	loopl	pnp_loop
+	add dl, al
+	loop pnp_loop
 
-	testb	%dl, %dl
-	popl	%esi
-	jnz		pnp_add
+	test dl, dl
+	pop esi
+	jnz pnp_add
 
-	movl	%esi,%edi
+	mov edi, esi
 
 	/* Calculate the bios entry point (far pointer) */
-	xorl	%eax,%eax
-	movw	0x0F(%esi),%ax
-	shll	$16,%eax
-	movw	0x0D(%esi),%ax
-	movl	%eax,_pnp_bios_entry_point
+	xor eax, eax
+	mov ax, [esi + 15]
+	shl eax, 16
+	mov ax, [esi + 0x0D]
+	mov _pnp_bios_entry_point, eax
 
 	/* Store bios data segment */
-	movw	0x1B(%esi),%ax
-	movw	%ax,_pnp_bios_data_segment
+	mov ax, [esi + 0x1B]
+	mov _pnp_bios_data_segment, ax
 
 pnp_not_found:
-	movl	%edi,%eax
+	mov eax, edi
 
-	popl	%edx
-	popl	%ecx
-	popl	%esi
-	popl	%edi
+	pop edx
+	pop ecx
+	pop esi
+	pop edi
 
 	ret
 
@@ -112,58 +111,58 @@ _pnp_node_size:
 _pnp_node_count:
 	.word	0
 
-EXTERN(_PnpBiosGetDeviceNodeCount)
-	.code32
+PUBLIC _PnpBiosGetDeviceNodeCount
+_PnpBiosGetDeviceNodeCount:
 
-	pushl	%ebp
-	movl	%esp,%ebp
+	push ebp
+	mov ebp, esp
 
-	pushal
-	push	%es
+	pusha
+	push es
 
-	call	switch_to_real
+	call switch_to_real
 	.code16
 
-	movw	_pnp_bios_data_segment,%ax
-	pushw	%ax
+	mov ax, word ptr [_pnp_bios_data_segment]
+	push ax
 
-	pushw	%cs
-	movw	$(_pnp_node_size),%ax
-	pushw	%ax
+	push cs
+	mov ax, offset _pnp_node_size
+	push ax
 
-	pushw	%cs
-	movw	$(_pnp_node_count),%ax
-	pushw	%ax
+	push cs
+	mov ax, offset _pnp_node_count
+	push ax
 
-	pushw	$0
+	push 0
 
-	lcall	*_pnp_bios_entry_point
-	addw	$12,%sp
+	call dword ptr [_pnp_bios_entry_point]
+	add sp, 12
 
-	movzwl	%ax,%ecx
-	movl	%ecx,_pnp_result
+	movzx ecx, ax
+	mov _pnp_result, ecx
 
 
-	call	switch_to_prot
+	call switch_to_prot
 	.code32
 
-	movl	0x08(%ebp),%esi
-	movw	_pnp_node_size,%ax
-	movzwl	%ax,%ecx
-	movl	%ecx, (%esi)
+	mov esi, [ebp + 8]
+	mov ax, _pnp_node_size
+	movzx ecx, ax
+	mov [esi], ecx
 
-	movl	0x0C(%ebp),%esi
-	movw	_pnp_node_count,%ax
-	movzwl	%ax,%ecx
-	movl	%eax, (%esi)
+	mov esi, [ebp + 12]
+	mov ax, _pnp_node_count
+	movzx ecx, ax
+	mov [esi], eax
 
-	pop		%es
-	popal
+	pop es
+	popa
 
-	movl	%ebp,%esp
-	popl	%ebp
+	mov esp, ebp
+	pop ebp
 
-	movl	_pnp_result,%eax
+	mov eax, _pnp_result
 
 	ret
 
@@ -184,72 +183,72 @@ _pnp_node_number:
 EXTERN(_PnpBiosGetDeviceNode)
 	.code32
 
-	pushl	%ebp
-	movl	%esp,%ebp
+	push ebp
+	mov ebp, esp
 
-	pushal
-	push	%es
+	pusha
+	push es
 
 	/* get current node number */
-	movl	0x08(%ebp),%esi
-	movb	(%esi),%al
-	movb	%al,_pnp_node_number
+	mov esi, [ebp + 8]
+	mov al, [esi]
+	mov _pnp_node_number, al
 
 	/* convert pointer to node buffer to segment/offset */
-	movl	0x0C(%ebp),%eax
-	shrl	$4,%eax
-	andl	$0xf000,%eax
-	movw	%ax,_pnp_buffer_segment
-	movl	0x0C(%ebp),%eax
-	andl	$0xffff,%eax
-	movw	%ax,_pnp_buffer_offset
+	mov eax, [ebp + 12]
+	shr eax, 4
+	and eax, 0xf000
+	mov _pnp_buffer_segment, ax
+	mov eax, [ebp + 12]
+	and eax, 0xffff
+	mov _pnp_buffer_offset, ax
 
-	call	switch_to_real
+	call switch_to_real
 	.code16
 
 	/* push bios segment */
-	movw	_pnp_bios_data_segment,%ax
-	pushw	%ax
+	mov ax, word ptr [_pnp_bios_data_segment]
+	push ax
 
 	/* push control flag */
-	pushw	$0x0001
+	push 1
 
 	/* push pointer to node buffer (segment/offset) */
-	movw	_pnp_buffer_segment,%ax
-	pushw	%ax
-	movw	_pnp_buffer_offset,%ax
-	pushw	%ax
+	mov ax, word ptr [_pnp_buffer_segment]
+	push ax
+	mov ax, word ptr [_pnp_buffer_offset]
+	push ax
 
 	/* push pointer to node number (segment/offset) */
-	pushw	%cs
-	movw	$(_pnp_node_number),%ax
-	pushw	%ax
+	push cs
+	mov ax, offset _pnp_node_number
+	push ax
 
 	/* push function number */
-	pushw	$1
+	push 1
 
 	/* call entry point */
-	lcall	*_pnp_bios_entry_point
-	addw	$14,%sp
+	call dword ptr [_pnp_bios_entry_point]
+	add sp, 14
 
-	movzwl	%ax,%ecx
-	movl	%ecx,_pnp_result
+	movzx ecx, ax
+	mov _pnp_result, ecx
 
-	call	switch_to_prot
+	call switch_to_prot
 	.code32
 
 	/* update node number */
-	movl	0x08(%ebp),%esi
-	movb	_pnp_node_number,%al
-	movb	%al,(%esi)
+	mov esi, [ebp + 8]
+	mov al, _pnp_node_number
+	mov [esi], al
 
-	pop		%es
-	popal
+	pop es
+	popa
 
-	movl	%ebp,%esp
-	popl	%ebp
+	mov esp, ebp
+	pop ebp
 
-	movl	_pnp_result,%eax
+	mov eax, _pnp_result
 
 	ret
 
