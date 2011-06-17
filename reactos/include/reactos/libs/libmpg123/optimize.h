@@ -58,7 +58,11 @@ enum optcla decclass(const enum optdec);
 
 /* this is included in mpg123.h, which includes config.h */
 #ifdef CCALIGN
+#ifdef _MSC_VER
+#define ALIGNED(a) __declspec(align(a))
+#else
 #define ALIGNED(a) __attribute__((aligned(a)))
+#endif
 #else
 #define ALIGNED(a)
 #endif
