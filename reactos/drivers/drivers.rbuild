@@ -34,6 +34,9 @@
 <directory name="parallel">
 	<xi:include href="parallel/directory.rbuild" />
 </directory>
+<directory name="sac">
+    <xi:include href="sac/directory.rbuild" />
+</directory>
 <directory name="serial">
 	<xi:include href="serial/directory.rbuild" />
 </directory>
