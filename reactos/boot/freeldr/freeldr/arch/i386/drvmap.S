@@ -139,4 +139,3 @@ Int13HandlerDriveNew4:
 
 PUBLIC _DriveMapInt13HandlerEnd
 _DriveMapInt13HandlerEnd:
-    .byte 0

@@ -26,16 +26,4 @@ _BootOldLinuxKernel:
 PUBLIC _BootNewLinuxKernel
 _BootNewLinuxKernel:
 
-PUBLIC _DriveMapOldInt13HandlerAddress
-_DriveMapOldInt13HandlerAddress:
-
-PUBLIC _DriveMapInt13HandlerStart
-_DriveMapInt13HandlerStart:
-
-PUBLIC _DriveMapInt13HandlerEnd
-_DriveMapInt13HandlerEnd:
-
-PUBLIC _DriveMapInt13HandlerMapList
-_DriveMapInt13HandlerMapList:
-
 END

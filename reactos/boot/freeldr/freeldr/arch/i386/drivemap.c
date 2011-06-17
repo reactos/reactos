@@ -25,6 +25,7 @@ ULONG		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
 ULONG		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
 ULONG		DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
 
+#ifndef _MSC_VER
 VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 {
 	CHAR			SettingName[80];
@@ -141,6 +142,7 @@ BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 
 	return TRUE;
 }
+#endif
 
 ULONG DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 {
@@ -167,6 +169,7 @@ ULONG DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 	return BiosDriveNumber;
 }
 
+#ifndef _MSC_VER
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
 	ULONG*	RealModeIVT = (ULONG*)0x00000000;
@@ -220,3 +223,4 @@ VOID DriveMapRemoveInt13Handler(VOID)
 		DriveMapInstalled = FALSE;
 	}
 }
+#endif

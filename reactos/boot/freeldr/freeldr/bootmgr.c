@@ -228,7 +228,7 @@ VOID RunLoader(VOID)
 
 #ifndef _M_ARM
 		// Install the drive mapper according to this sections drive mappings
-#ifdef __i386__
+#if defined(__i386__) && !defined(_MSC_VER)
 		DriveMapMapDrivesInSection(SectionName);
 #endif
 		if (_stricmp(BootType, "ReactOS") == 0)
