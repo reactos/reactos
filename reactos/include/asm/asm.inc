@@ -52,11 +52,13 @@ ENDM
 ENDM
 
 /* MASM doesn't have an ASCIZ macro */
-.ASCIZ MACRO text
-    DB text, 0
+.ASCIZ MACRO text:VARARG
+    DB text
+    DB 0
 ENDM
-.asciz MACRO text
-    DB text, 0
+.asciz MACRO text:VARARG
+    DB text
+    DB 0
 ENDM
 
 .code64 MACRO
@@ -157,6 +159,9 @@ ENDM
 
 /* We need this to distinguish repeat from macros */
 #define ENDR ENDM
+
+#define CR 13
+#define LF 10
 
 #else /***********************************************************************/
 
@@ -304,5 +309,8 @@ ENDM
 #define endif .endif
 #define else .else
 #define elseif .elseif
+
+#define CR "\r"
+#define LF "\n"
 
 #endif
