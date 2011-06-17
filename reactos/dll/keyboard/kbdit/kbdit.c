@@ -86,7 +86,7 @@ ROSDATA USHORT scancode_to_vk[] = {
 /* 32 */  'M',
 /* 33 */  VK_OEM_COMMA,
 /* 34 */  VK_OEM_PERIOD,
-/* 35 */  VK_DIVIDE,
+/* 35 */  VK_OEM_MINUS,
 /* 36 */  VK_RSHIFT,
 /* 37 */  VK_MULTIPLY,
 /* 38 */  VK_LMENU,
