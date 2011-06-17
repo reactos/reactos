@@ -16,14 +16,22 @@ RosSymDelete(PROSSYM_INFO RosSymInfo)
 {
 }
 
+VOID
+RosSymFreeInfo(PROSSYM_LINEINFO LineInfo)
+{
+}
+
 BOOLEAN
 RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
                             ULONG_PTR RelativeAddress,
-                            ULONG *LineNumber,
-                            char *FileName,
-                            char *FunctionName)
+                            PROSSYM_LINEINFO RosSymLineInfo)
 {
     return FALSE;
+}
+
+VOID
+RosSymInit(PROSSYM_CALLBACKS Callbacks)
+{
 }
 
 VOID
