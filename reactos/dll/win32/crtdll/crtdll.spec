@@ -1,5 +1,5 @@
 # Old C runtime library. All functions provided by msvcrt
-  
+
   @ cdecl ??2@YAPAXI@Z(long) msvcrt.??2@YAPAXI@Z
   @ cdecl ??3@YAXPAX@Z(ptr) msvcrt.??3@YAXPAX@Z
   @ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) msvcrt.?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z
@@ -166,9 +166,9 @@
   @ cdecl _isnan( double ) msvcrt._isnan
   @ cdecl _itoa(long ptr long) msvcrt._itoa
   @ cdecl _itow(long ptr long) msvcrt._itow
-  @ cdecl _j0(double) msvcrt._j0
-  @ cdecl _j1(double) msvcrt._j1
-  @ cdecl _jn(long double) msvcrt._jn
+#  @ cdecl _j0(double) msvcrt._j0
+#  @ cdecl _j1(double) msvcrt._j1
+#  @ cdecl _jn(long double) msvcrt._jn
   @ cdecl _kbhit() msvcrt._kbhit
   @ cdecl _lfind(ptr ptr ptr long ptr) msvcrt._lfind
   @ cdecl _loaddll(str) msvcrt._loaddll
@@ -334,9 +334,9 @@
   @ cdecl _write(long ptr long) msvcrt._write
   @ cdecl _wtoi(wstr) msvcrt._wtoi
   @ cdecl _wtol(wstr) msvcrt._wtol
-  @ cdecl _y0(double) msvcrt._y0
-  @ cdecl _y1(double) msvcrt._y1
-  @ cdecl _yn(long double ) msvcrt._yn
+#  @ cdecl _y0(double) msvcrt._y0
+#  @ cdecl _y1(double) msvcrt._y1
+#  @ cdecl _yn(long double ) msvcrt._yn
   @ cdecl abort() msvcrt.abort
   @ cdecl abs(long) msvcrt.abs
   @ cdecl acos(double) msvcrt.acos
