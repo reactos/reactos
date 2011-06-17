@@ -71,15 +71,6 @@ VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 /* hwpci.c */
 VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
-/* i386cpu.S */
-ULONG CpuidSupported(VOID);
-VOID GetCpuid(ULONG Level,
-	      ULONG *eax,
-	      ULONG *ebx,
-	      ULONG *ecx,
-	      ULONG *edx);
-ULONGLONG RDTSC(VOID);
-
 /* i386pnp.S */
 ULONG_PTR PnpBiosSupported(VOID);
 ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,

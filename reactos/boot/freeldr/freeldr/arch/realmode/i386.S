@@ -123,11 +123,15 @@ pm_offset:
     nop
 // FIXME: use ljmp16 PMODE_CS:inpmode + hexed 32bit jump
 
+
+
 callback_table:
     .word Int386
     .word SoftReboot
     .word ChainLoadBiosBootSectorCode
     .word PxeCallApi
+    .word PnpBiosGetDeviceNodeCount
+    .word PnpBiosGetDeviceNode
 
 
     /* 16-bit stack pointer */
@@ -180,6 +184,8 @@ rmode_idtptr:
 //.org 1024
 
 #include "int386.inc"
+#include "pxe.inc"
+#include "pnp.inc"
 #include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE)
