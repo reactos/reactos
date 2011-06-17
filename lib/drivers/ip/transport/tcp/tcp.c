@@ -349,9 +349,9 @@ NTSTATUS TCPClose
     /* Don't try to close again if the other side closed us already */
     if (Socket)
     {
-        LibTCPClose(Socket);
-        
         FlushAllQueues(Connection, STATUS_CANCELLED);
+
+        LibTCPClose(Socket);
     }
 
     UnlockObject(Connection, OldIrql);

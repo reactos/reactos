@@ -30,10 +30,41 @@ static const char * const tcp_state_str[] = {
   "TIME_WAIT"   
 };
 
+static
+VOID
+BucketCompletionWorker(PVOID Context)
+{
+    PTDI_BUCKET Bucket = Context;
+    PTCP_COMPLETION_ROUTINE Complete;
+    
+    Complete = Bucket->Request.RequestNotifyObject;
+    
+    Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
+    
+    ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+    
+    DereferenceObject(Bucket->AssociatedEndpoint);
+}
+
+static
+VOID
+CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Synchronous)
+{
+    ReferenceObject(Connection);
+    Bucket->AssociatedEndpoint = Connection;
+    if (Synchronous)
+    {
+        BucketCompletionWorker(Bucket);
+    }
+    else
+    {
+        ChewCreate(BucketCompletionWorker, Bucket);
+    }
+}
+
 VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
 {
-    PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     
@@ -52,11 +83,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, TRUE);
     }
     
     if (Status == STATUS_SUCCESS)
@@ -69,11 +96,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, TRUE);
     }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
@@ -87,11 +110,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, TRUE);
     }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
@@ -101,11 +120,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, TRUE);
     }
     
     DereferenceObject(Connection);
@@ -126,7 +141,6 @@ VOID
 TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     PIRP Irp;
@@ -161,8 +175,6 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         
         DbgPrint("[IP, TCPAcceptEventHandler] Completing accept event %x\n", Status);
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
         if (Status == STATUS_SUCCESS)
         {
             DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb->id = %d\n",
@@ -183,10 +195,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         
         DbgPrint("[IP, TCPAcceptEventHandler] Done!\n");
         
-        Complete(Bucket->Request.RequestContext,
-                    Bucket->Status, Bucket->Information);
-            
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
     
     DereferenceObject(Connection);
@@ -196,7 +205,6 @@ VOID
 TCPSendEventHandler(void *arg, u16_t space)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     PIRP Irp;
@@ -255,11 +263,7 @@ TCPSendEventHandler(void *arg, u16_t space)
             
             DbgPrint("Completing send req %x\n", Status);
             
-            Complete = Bucket->Request.RequestNotifyObject;
-            
-            Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-            
-            ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+            CompleteBucket(Connection, Bucket, FALSE);
         }
     }
     
@@ -272,7 +276,6 @@ u32_t
 TCPRecvEventHandler(void *arg, struct pbuf *p)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     PIRP Irp;
@@ -324,11 +327,7 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
         Bucket->Status = STATUS_SUCCESS;
         Bucket->Information = Received;
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
 
     DereferenceObject(Connection);
@@ -342,7 +341,6 @@ VOID
 TCPConnectEventHandler(void *arg, err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    PTCP_COMPLETION_ROUTINE Complete;
     PTDI_BUCKET Bucket;
     PLIST_ENTRY Entry;
     
@@ -360,11 +358,7 @@ TCPConnectEventHandler(void *arg, err_t err)
         
         DbgPrint("[IP, TCPConnectEventHandler] Completing connection request! (0x%x)\n", err);
         
-        Complete = Bucket->Request.RequestNotifyObject;
-        
-        Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-        
-        ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
 
     DbgPrint("[IP, TCPConnectEventHandler] Done\n");
