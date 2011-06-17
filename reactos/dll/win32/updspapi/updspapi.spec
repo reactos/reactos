@@ -67,12 +67,12 @@
 @ stub UpdSpSetDynamicStringExA
 @ stub UpdSpSetDynamicStringExW
 @ stub UpdSpSetDynamicStringW
-@ stdcall UpdSpStringTableAddString(ptr wstr long) setupapi.StringTableAddString
-@ stdcall UpdSpStringTableAddStringEx(ptr wstr long ptr long) setupapi.StringTableAddStringEx
-@ stdcall UpdSpStringTableDestroy(ptr) setupapi.StringTableDestroy
+@ stdcall UpdSpStringTableAddString(ptr wstr long) setupapi.pSetupStringTableAddString
+@ stdcall UpdSpStringTableAddStringEx(ptr wstr long ptr long) setupapi.pSetupStringTableAddStringEx
+@ stdcall UpdSpStringTableDestroy(ptr) setupapi.pSetupStringTableDestroy
 @ stub UpdSpStringTableEnum
-@ stdcall UpdSpStringTableInitialize() setupapi.StringTableInitialize
-@ stdcall UpdSpStringTableInitializeEx(long long) setupapi.StringTableInitializeEx
-@ stdcall UpdSpStringTableLookUpString(ptr wstr long) setupapi.StringTableLookUpString
-@ stdcall UpdSpStringTableLookUpStringEx(ptr wstr long ptr long) setupapi.StringTableLookUpStringEx
+@ stdcall UpdSpStringTableInitialize() setupapi.pSetupStringTableInitialize
+@ stdcall UpdSpStringTableInitializeEx(long long) setupapi.pSetupStringTableInitializeEx
+@ stdcall UpdSpStringTableLookUpString(ptr wstr long) setupapi.pSetupStringTableLookUpString
+@ stdcall UpdSpStringTableLookUpStringEx(ptr wstr long ptr long) setupapi.pSetupStringTableLookUpStringEx
 @ stdcall UpdSpTermDefaultQueueCallback(ptr) setupapi.SetupTermDefaultQueueCallback
