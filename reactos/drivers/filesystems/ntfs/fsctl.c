@@ -483,8 +483,9 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
   switch (Stack->MinorFunction)
   {
+    case IRP_MN_KERNEL_CALL:
     case IRP_MN_USER_FS_REQUEST:
-      DPRINT("NTFS: IRP_MN_USER_FS_REQUEST\n");
+      DPRINT("NTFS: IRP_MN_USER_FS_REQUEST/IRP_MN_KERNEL_CALL\n");
       Status = STATUS_INVALID_DEVICE_REQUEST;
       break;
 

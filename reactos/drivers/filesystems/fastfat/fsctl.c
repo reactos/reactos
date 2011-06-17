@@ -841,6 +841,7 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 
    switch (IrpContext->MinorFunction)
    {
+      case IRP_MN_KERNEL_CALL:
       case IRP_MN_USER_FS_REQUEST:
          switch(IrpContext->Stack->Parameters.DeviceIoControl.IoControlCode)
          {
