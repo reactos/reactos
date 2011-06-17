@@ -7,6 +7,7 @@
  */
 #define _HDL_
 #include <cportlib/cportlib.h>
+#include <ndk/extypes.h>
 
 //
 // Define this if you want debugging support
@@ -149,6 +150,38 @@ typedef enum _HEADLESS_CMD
 	HeadlessCmdQueryGUID,
 	HeadlessCmdPutData
 } HEADLESS_CMD, *PHEADLESS_CMD;
+
+typedef enum _HEADLESS_TERM_PORT_TYPE
+{
+	HeadlessUndefinedPortType = 0,
+	HeadlessSerialPort
+} HEADLESS_TERM_PORT_TYPE, *PHEADLESS_TERM_PORT_TYPE;
+
+typedef enum _HEADLESS_TERM_SERIAL_PORT
+{
+	SerialPortUndefined = 0,
+	ComPort1,
+	ComPort2,
+	ComPort3,
+	ComPort4
+} HEADLESS_TERM_SERIAL_PORT, *PHEADLESS_TERM_SERIAL_PORT;
+
+typedef struct _HEADLESS_RSP_QUERY_INFO
+{
+    HEADLESS_TERM_PORT_TYPE PortType;
+    union
+    {
+        struct
+        {
+            BOOLEAN TerminalAttached;
+            BOOLEAN UsedBiosSettings;
+            HEADLESS_TERM_SERIAL_PORT TerminalPort;
+            PUCHAR TerminalPortBaseAddress;
+            ULONG TerminalBaudRate;
+            UCHAR TerminalType;
+        } Serial;
+    };
+} HEADLESS_RSP_QUERY_INFO, *PHEADLESS_RSP_QUERY_INFO;
 
 typedef struct _HEADLESS_CMD_PUT_STRING
 {
