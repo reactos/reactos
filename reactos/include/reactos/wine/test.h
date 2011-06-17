@@ -488,7 +488,7 @@ const char *wine_dbgstr_wn( const WCHAR *str, int n )
         case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
         default:
             if (c >= ' ' && c <= 126)
-                *dst++ = c;
+                *dst++ = (char)c;
             else
             {
                 *dst++ = '\\';
