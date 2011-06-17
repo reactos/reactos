@@ -48,6 +48,13 @@ BucketCompletionWorker(PVOID Context)
 
 static
 VOID
+SocketContextCloseWorker(PVOID Context)
+{
+    LibTCPClose(Context);
+}
+
+static
+VOID
 CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Synchronous)
 {
     ReferenceObject(Connection);
@@ -96,6 +103,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
+        //DereferenceObject(Bucket->AssociatedEndpoint);
         CompleteBucket(Connection, Bucket, TRUE);
     }
     
@@ -146,6 +154,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
     PIRP Irp;
     NTSTATUS Status;
     KIRQL OldIrql;
+    void *OldSocketContext;
     
     DbgPrint("[IP, TCPAcceptEventHandler] Called\n");
     
@@ -183,6 +192,10 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
                 newpcb->identifier);
 
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
+
+            /* free previously created socket context (we don't use it, we use newpcb) */
+            //LibTCPClose(Bucket->AssociatedEndpoint->SocketContext);
+            OldSocketContext = Bucket->AssociatedEndpoint->SocketContext;
             Bucket->AssociatedEndpoint->SocketContext = newpcb;
             
             LibTCPAccept(newpcb,
@@ -199,6 +212,10 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
     }
     
     DereferenceObject(Connection);
+
+    /*  free socket context created in FileOpenConnection, as we're using a new
+        one; we free it asynchornously because otherwise we create a dedlock */
+    ChewCreate(SocketContextCloseWorker, OldSocketContext);
 }
 
 VOID
