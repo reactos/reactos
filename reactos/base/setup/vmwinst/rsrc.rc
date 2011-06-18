@@ -26,11 +26,11 @@ IDB_HEADER    BITMAP "resources/header.bmp"
 #include "lang/ja-JP.rc"
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
-#include "lang/ru-RU.rc"
 #include "lang/sv-SE.rc"
-#include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
 
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

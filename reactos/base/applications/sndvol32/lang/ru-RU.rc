@@ -4,44 +4,44 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Параметры"
+    POPUP "&РџР°СЂР°РјРµС‚СЂС‹"
     BEGIN
-        MENUITEM "&Свойства", IDC_PROPERTIES
-        MENUITEM "&Дополнительные параметры", IDC_ADVANCED_CONTROLS
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°", IDC_PROPERTIES
+        MENUITEM "&Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDC_EXIT
+        MENUITEM "&Р’С‹С…РѕРґ", IDC_EXIT
     END
-    POPUP "&Справка"
+    POPUP "&РЎРїСЂР°РІРєР°"
     BEGIN
-        MENUITEM "&Вызов справки", IDC_HELP_TOPICS
+        MENUITEM "&Р’С‹Р·РѕРІ СЃРїСЂР°РІРєРё", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе", IDC_ABOUT
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ", IDC_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SNDVOL32       "Управление громкостью"
-    IDS_NOMIXERDEVICES "Нет доступных микшерных устройств! Приложение будет завершено."
+    IDS_SNDVOL32       "РЈРїСЂР°РІР»РµРЅРёРµ РіСЂРѕРјРєРѕСЃС‚СЊСЋ"
+    IDS_NOMIXERDEVICES "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РјРёРєС€РµСЂРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ! РџСЂРёР»РѕР¶РµРЅРёРµ Р±СѓРґРµС‚ Р·Р°РІРµСЂС€РµРЅРѕ."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Свойства"
+CAPTION "РЎРІРѕР№СЃС‚РІР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Микшер:", -1, 7,8,48,9
+  LTEXT "&РњРёРєС€РµСЂ:", -1, 7,8,48,9
   COMBOBOX IDC_MIXERDEVICE, 55,8,162,80, CBS_DROPDOWNLIST | WS_TABSTOP
-  GROUPBOX "Настройки громкости:", -1, 7,25,211,77
-  PUSHBUTTON "&Воспроизведение", IDC_PLAYBACK, 13,43,80,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&Запись", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&Другое:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
+  GROUPBOX "РќР°СЃС‚СЂРѕР№РєРё РіСЂРѕРјРєРѕСЃС‚Рё:", -1, 7,25,211,77
+  PUSHBUTTON "&Р’РѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ", IDC_PLAYBACK, 13,43,80,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&Р—Р°РїРёСЃСЊ", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&Р”СЂСѓРіРѕРµ:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
   COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  LTEXT "Отображать регуляторы громкости:", IDC_LABELCONTROLS, 7, 109, 162, 8
+  LTEXT "РћС‚РѕР±СЂР°Р¶Р°С‚СЊ СЂРµРіСѓР»СЏС‚РѕСЂС‹ РіСЂРѕРјРєРѕСЃС‚Рё:", IDC_LABELCONTROLS, 7, 109, 162, 8
   CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
 
   PUSHBUTTON "OK", IDOK, 114,226,50,14
-  PUSHBUTTON "Отмена", IDCANCEL, 168,226,50,14
+  PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 168,226,50,14
 END
 
 IDD_VOLUME_CTRL DIALOG 0, 0, 90, 150

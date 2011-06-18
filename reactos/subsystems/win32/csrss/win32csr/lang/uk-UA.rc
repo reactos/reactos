@@ -10,28 +10,28 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX DISCARDABLE  0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершення програми - "
+CAPTION "Р—Р°РІРµСЂС€РµРЅРЅСЏ РїСЂРѕРіСЂР°РјРё - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Завершення програми... Зачекайте",IDC_STATIC,7,7,186,11
-    CONTROL         "Прогрес",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+    LTEXT           "Р—Р°РІРµСЂС€РµРЅРЅСЏ РїСЂРѕРіСЂР°РјРё... Р—Р°С‡РµРєР°Р№С‚Рµ",IDC_STATIC,7,7,186,11
+    CONTROL         "РџСЂРѕРіСЂРµСЃ",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Якщо завершити програму негайно, то можна втратити всі незбережені дані. Щоб завершити програму зараз, натисніть 'Завершити зараз'",
+    LTEXT           "РЇРєС‰Рѕ Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕРіСЂР°РјСѓ РЅРµРіР°Р№РЅРѕ, С‚Рѕ РјРѕР¶РЅР° РІС‚СЂР°С‚РёС‚Рё РІСЃС– РЅРµР·Р±РµСЂРµР¶РµРЅС– РґР°РЅС–. Р©РѕР± Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕРіСЂР°РјСѓ Р·Р°СЂР°Р·, РЅР°С‚РёСЃРЅС–С‚СЊ 'Р—Р°РІРµСЂС€РёС‚Рё Р·Р°СЂР°Р·'",
                     IDC_STATIC,7,40,186,26
-    DEFPUSHBUTTON   "&Завершити зараз",IDC_END_NOW,150,71,43,17
+    DEFPUSHBUTTON   "&Р—Р°РІРµСЂС€РёС‚Рё Р·Р°СЂР°Р·",IDC_END_NOW,150,71,43,17
 END
 
 IDD_NOT_RESPONDING DIALOGEX DISCARDABLE 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершення програми - "
+CAPTION "Р—Р°РІРµСЂС€РµРЅРЅСЏ РїСЂРѕРіСЂР°РјРё - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Скасувати",IDCANCEL,142,98,43,17
-    PUSHBUTTON      "&Завершити зараз",IDC_END_NOW,78,98,43,17
-    LTEXT           "Ця програма не відповідає",IDC_STATIC,7,7,178,8
-    LTEXT           "Щоб повернутися у ReactOS і перевірити стан програми, натисніть 'Скасувати'",
+    DEFPUSHBUTTON   "РЎРєР°СЃСѓРІР°С‚Рё",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Р—Р°РІРµСЂС€РёС‚Рё Р·Р°СЂР°Р·",IDC_END_NOW,78,98,43,17
+    LTEXT           "Р¦СЏ РїСЂРѕРіСЂР°РјР° РЅРµ РІС–РґРїРѕРІС–РґР°С”",IDC_STATIC,7,7,178,8
+    LTEXT           "Р©РѕР± РїРѕРІРµСЂРЅСѓС‚РёСЃСЏ Сѓ ReactOS С– РїРµСЂРµРІС–СЂРёС‚Рё СЃС‚Р°РЅ РїСЂРѕРіСЂР°РјРё, РЅР°С‚РёСЃРЅС–С‚СЊ 'РЎРєР°СЃСѓРІР°С‚Рё'",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Якщо завершити програму негайно, то можна втратити всі незбережені дані. Щоб завершити програму зараз, натисніть 'Завершити зараз'",
+    LTEXT           "РЇРєС‰Рѕ Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕРіСЂР°РјСѓ РЅРµРіР°Р№РЅРѕ, С‚Рѕ РјРѕР¶РЅР° РІС‚СЂР°С‚РёС‚Рё РІСЃС– РЅРµР·Р±РµСЂРµР¶РµРЅС– РґР°РЅС–. Р©РѕР± Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕРіСЂР°РјСѓ Р·Р°СЂР°Р·, РЅР°С‚РёСЃРЅС–С‚СЊ 'Р—Р°РІРµСЂС€РёС‚Рё Р·Р°СЂР°Р·'",
                     IDC_STATIC,7,53,178,26
 END
 
@@ -45,22 +45,22 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_EDIT "Редагувати"
-  IDS_MARK "Виділити"
-  IDS_COPY "Копіювати\tEnter"
-  IDS_PASTE "Вставити"
-  IDS_SELECTALL "Виділити все"
-  IDS_SCROLL "Прокрутити"
-  IDS_FIND "Знайти..."
-  IDS_DEFAULTS "Замовчування"
-  IDS_PROPERTIES "Властивості"
-  IDS_SCROLLHERE "Прокрутити сюди"
-  IDS_SCROLLTOP "Прокрутити на початок"
-  IDS_SCROLLBOTTOM "Прокрутити на кінець"
-  IDS_SCROLLPAGE_UP "Попередня сотрінка"
-  IDS_SCROLLPAGE_DOWN "Наступна сторінка"
-  IDS_SCROLLUP "Прокрутити догори"
-  IDS_SCROLLDOWN "Прокрутити донизу"
+  IDS_EDIT "Р РµРґР°РіСѓРІР°С‚Рё"
+  IDS_MARK "Р’РёРґС–Р»РёС‚Рё"
+  IDS_COPY "РљРѕРїС–СЋРІР°С‚Рё\tEnter"
+  IDS_PASTE "Р’СЃС‚Р°РІРёС‚Рё"
+  IDS_SELECTALL "Р’РёРґС–Р»РёС‚Рё РІСЃРµ"
+  IDS_SCROLL "РџСЂРѕРєСЂСѓС‚РёС‚Рё"
+  IDS_FIND "Р—РЅР°Р№С‚Рё..."
+  IDS_DEFAULTS "Р—Р°РјРѕРІС‡СѓРІР°РЅРЅСЏ"
+  IDS_PROPERTIES "Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–"
+  IDS_SCROLLHERE "РџСЂРѕРєСЂСѓС‚РёС‚Рё СЃСЋРґРё"
+  IDS_SCROLLTOP "РџСЂРѕРєСЂСѓС‚РёС‚Рё РЅР° РїРѕС‡Р°С‚РѕРє"
+  IDS_SCROLLBOTTOM "РџСЂРѕРєСЂСѓС‚РёС‚Рё РЅР° РєС–РЅРµС†СЊ"
+  IDS_SCROLLPAGE_UP "РџРѕРїРµСЂРµРґРЅСЏ СЃРѕС‚СЂС–РЅРєР°"
+  IDS_SCROLLPAGE_DOWN "РќР°СЃС‚СѓРїРЅР° СЃС‚РѕСЂС–РЅРєР°"
+  IDS_SCROLLUP "РџСЂРѕРєСЂСѓС‚РёС‚Рё РґРѕРіРѕСЂРё"
+  IDS_SCROLLDOWN "РџСЂРѕРєСЂСѓС‚РёС‚Рё РґРѕРЅРёР·Сѓ"
 
-  IDS_COMMAND_PROMPT "Командний рядок"
+  IDS_COMMAND_PROMPT "РљРѕРјР°РЅРґРЅРёР№ СЂСЏРґРѕРє"
 END

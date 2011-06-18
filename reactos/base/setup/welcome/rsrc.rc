@@ -59,10 +59,10 @@ END
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
 
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

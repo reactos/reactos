@@ -10,29 +10,29 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
+	POPUP "&Р¤Р°Р№Р»"
 	BEGIN
-		MENUITEM "&Відкрити...", IDM_OPEN_FILE
-		MENUITEM "&Закрити", IDM_CLOSE_FILE
+		MENUITEM "&Р’С–РґРєСЂРёС‚Рё...", IDM_OPEN_FILE
+		MENUITEM "&Р—Р°РєСЂРёС‚Рё", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "&Вихід", IDM_EXIT
+		MENUITEM "&Р’РёС…С–Рґ", IDM_EXIT
 	END
-	POPUP "&Довідка"
+	POPUP "&Р”РѕРІС–РґРєР°"
 	BEGIN
-		MENUITEM "&Про програму...", IDM_ABOUT
+		MENUITEM "&РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ...", IDM_ABOUT
 	END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Всі підтримувані (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Відтворення"
-	IDS_TOOLTIP_STOP "Зупинити"
-	IDS_TOOLTIP_EJECT "Витягти"
-	IDS_TOOLTIP_BACKWARD "Назад"
-	IDS_TOOLTIP_SEEKBACK "Перемотування назад"
-	IDS_TOOLTIP_SEEKFORW "Перемотування вперед"
-	IDS_TOOLTIP_FORWARD "Вперед"
-    IDS_APPTITLE "Програвач ReactOS"
-	IDS_PLAY "Відтворити"
+	IDS_ALL_TYPES_FILTER "Р’СЃС– РїС–РґС‚СЂРёРјСѓРІР°РЅС– (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Р’С–РґС‚РІРѕСЂРµРЅРЅСЏ"
+	IDS_TOOLTIP_STOP "Р—СѓРїРёРЅРёС‚Рё"
+	IDS_TOOLTIP_EJECT "Р’РёС‚СЏРіС‚Рё"
+	IDS_TOOLTIP_BACKWARD "РќР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKBACK "РџРµСЂРµРјРѕС‚СѓРІР°РЅРЅСЏ РЅР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKFORW "РџРµСЂРµРјРѕС‚СѓРІР°РЅРЅСЏ РІРїРµСЂРµРґ"
+	IDS_TOOLTIP_FORWARD "Р’РїРµСЂРµРґ"
+    IDS_APPTITLE "РџСЂРѕРіСЂР°РІР°С‡ ReactOS"
+	IDS_PLAY "Р’С–РґС‚РІРѕСЂРёС‚Рё"
 END

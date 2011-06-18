@@ -123,10 +123,8 @@ BEGIN
     "#include ""explorer-nl.rc""\r\n"
     "#include ""explorer-no.rc""\r\n"
     "#include ""explorer-pt.rc""\r\n"
-    "#include ""explorer-ru.rc""\r\n"
     "#include ""explorer-sk.rc""\r\n"
     "#include ""explorer-sv.rc""\r\n"
-    "#include ""explorer-uk.rc""\r\n"
     "\r\n"
     "#ifdef __WINDRES__\r\n"
     "#include ""explorer-cn.rc""\r\n"
@@ -138,6 +136,8 @@ BEGIN
     "#pragma code_page(65001)"
     "#include ""explorer-pl.rc""\r\n"
     "#include ""explorer-ro.rc""\r\n"
+    "#include ""explorer-ru.rc""\r\n"
+    "#include ""explorer-uk.rc""\r\n"
     "\0"
 END
 
@@ -233,10 +233,8 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 #include "explorer-nl.rc"
 #include "explorer-no.rc"
 #include "explorer-pt.rc"
-#include "explorer-ru.rc"
 #include "explorer-sk.rc"
 #include "explorer-sv.rc"
-#include "explorer-uk.rc"
 
 #ifdef __WINDRES__
 #include "explorer-cn.rc"
@@ -249,6 +247,8 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 #pragma code_page(65001)
 #include "explorer-pl.rc"
 #include "explorer-ro.rc"
+#include "explorer-ru.rc"
+#include "explorer-uk.rc"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
