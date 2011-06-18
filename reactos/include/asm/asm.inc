@@ -73,7 +73,7 @@ ENDM
 .code16 MACRO
     ASSUME nothing
     .text SEGMENT use16
-    .586
+    .586P
 ENDM
 
 .endcode16 MACRO

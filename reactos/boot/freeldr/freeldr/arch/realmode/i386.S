@@ -88,8 +88,7 @@ inrmode:
 
 	/* Load IDTR with real mode value */
 #ifdef _USE_ML
-    DB 0Fh, 01h, 1Eh
-    DW rmode_idtptr
+    lidt fword ptr rmode_idtptr
 #else
 	lidt rmode_idtptr
 #endif
@@ -114,8 +113,7 @@ exit_to_protected:
 
     /* Load the GDT */
 #ifdef _USE_ML
-    DB 0Fh, 01h, 16h
-    DW gdtptr
+    lgdt fword ptr gdtptr
 #else
     lgdt gdtptr
 #endif
@@ -195,7 +193,7 @@ rmode_idtptr:
 #include "pnp.inc"
 #include "helpers.inc"
 
-.org (FREELDR_PE_BASE - FREELDR_BASE)
+.org (FREELDR_PE_BASE - FREELDR_BASE - 1)
+.byte 0
 .endcode16
-
 END
