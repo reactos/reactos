@@ -2,7 +2,7 @@
 include_directories(include/internal/mingw-w64)
 
 if(NOT MSVC)
-    add_definitions(-Wno-main)
+    add_compiler_flags(-Wno-main)
 endif()
 
 list(APPEND MSVCRTEX_SOURCE
@@ -65,4 +65,4 @@ if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
-add_dependencies(msvcrtex psdk)
+add_dependencies(msvcrtex psdk asm)
