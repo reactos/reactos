@@ -25,7 +25,7 @@ RealModeEntryPoint:
     mov ss, ax
 
     /* Setup the stack */
-    mov sp, word ptr ds:stack16
+    mov sp, word ptr ds:[stack16]
 
     /* Enable A20 address line */
     call EnableA20
@@ -42,7 +42,7 @@ RealModeEntryPoint:
     add eax, FREELDR_PE_BASE
 
     /* Save entry point */
-    mov dword ptr [pm_entrypoint], eax
+    mov dword ptr ds:[pm_entrypoint], eax
 
     jmp exit_to_protected
 
@@ -98,7 +98,7 @@ inrmode:
 
     /* Do the callback, specified by bx */
     shl bx, 1
-    call word ptr ds:[callback_table + bx]
+    call word ptr ds:callback_table[bx]
 
 
 /*
@@ -115,7 +115,7 @@ exit_to_protected:
     /* Load the GDT */
 #ifdef _USE_ML
     DB 0Fh, 01h, 16h
-    DW rmode_idtptr
+    DW gdtptr
 #else
     lgdt gdtptr
 #endif
