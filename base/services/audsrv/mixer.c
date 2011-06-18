@@ -43,11 +43,14 @@ void * MixS16(MixerEngine * mixer,
     stream = mixer->serverstreamlist;
     minsamplevalue = *(short *) stream->minsamplevalue;
     maxsamplevalue = *(short *) stream->maxsamplevalue;
-    while(stream->next != NULL)
+
+    while( stream != NULL)
     {
         localsrcbuf = stream->filteredbuf;
         if(stream->ready == TRUE )
         {
+		    coefficient = 1.0;
+
             if( *(short *)stream->maxsamplevalue != maxsamplevalue ||
                 *(short *)stream->minsamplevalue != minsamplevalue  )
             {
@@ -56,18 +59,16 @@ void * MixS16(MixerEngine * mixer,
                     coefficient = (float) maxsamplevalue / (float)*(short *)stream->maxsamplevalue;
                 else
                     coefficient = (float) minsamplevalue / (float)*(short *)stream->minsamplevalue;
-                
-                for(i=0;i<stream->length_filtered;i++)
-                {
-                    localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
-                }
             }
+			for(i=0;i<stream->length_filtered/sizeof(short);i++)
+            {
+                localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
+			}
         }
-        stream->ready = 0;
+        //stream->ready = 0;  /*TODO Enable it when actual filter thread starts working*/
         streamcount++;
         stream = stream->next;
     }
-    CopyMemory(mixer->masterbuf[buffer],mixer->serverstreamlist->filteredbuf,mixer->serverstreamlist->length_filtered);
 
     return NULL;
 }

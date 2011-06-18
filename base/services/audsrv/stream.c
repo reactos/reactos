@@ -36,7 +36,11 @@ DWORD WINAPI RunStreamThread(LPVOID param)
     while (i < localstream->length_filtered / 2)
     {
         tempbuf[i] = 0x7FFF * sin(0.5 * (i - 1) * 500 * 6.28 / 48000);
-        if(initmin)
+
+        if((localstream->streamid %2) == 0)
+            tempbuf[i] = 0;
+
+			if(initmin)
         {
             if(tempbuf[i]<minimum)
                 minimum = tempbuf[i];
@@ -57,6 +61,11 @@ DWORD WINAPI RunStreamThread(LPVOID param)
         i++;
 
         tempbuf[i] = 0x7FFF * sin(0.5 * (i - 2) * 500 * 6.28 / 48000);
+
+        if((localstream->streamid %2) != 0)
+            tempbuf[i] = 0;
+
+
         if(initmin)
         {
             if(tempbuf[i]<minimum)
