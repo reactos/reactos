@@ -39,6 +39,7 @@
 // boots dramatically.
 
 #include <asm.inc>
+#include "../freeldr/include/arch/pc/x86common.h"
 
 #define BP_REL(x) [bp+x-offset start]
 
@@ -210,7 +211,7 @@ FoundFreeLoader:
     // ES:DI has dir entry (ES:DI == 07E0:XXXX)
     mov ax, word ptr es:[di + HEX(1a)]				// Get start cluster
     push ax									// Save start cluster
-    push HEX(800)							// Put 800h on the stack and load it
+    push FREELDR_BASE / 16					// Put load segment on the stack and load it
     pop es									// Into ES so that we load the cluster at 0000:8000
     call ReadCluster						// Read the cluster
     pop ax									// Restore start cluster of FreeLoader
@@ -227,7 +228,7 @@ FoundFreeLoader:
     // to the helper code. Skip the first three bytes
     // because they contain a jump instruction to skip
     // over the helper code in the FreeLoader image.
-    ljmp16 0, HEX(8003)
+    ljmp16 0, FREELDR_BASE + 3
 
 
 

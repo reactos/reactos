@@ -1,16 +1,9 @@
 
 if(ARCH MATCHES i386)
-    if (NOT MSVC)
     CreateBootSectorTarget2(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        8000)
-    else()
-    CreateBootSectorTarget2(frldr16
-        ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
-        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F000)
-    endif()
+        F800)
 endif()
 
 include_directories(BEFORE include)
@@ -175,12 +168,11 @@ add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
-    set_image_base(freeldr_pe 0x9000)
 else()
     set_target_properties(freeldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
-    set_image_base(freeldr_pe 0x10000)
 endif()
 
+set_image_base(freeldr_pe 0x10000)
 set_subsystem(freeldr_pe native)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
@@ -224,12 +216,11 @@ add_executable(setupldr_pe ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
-    set_image_base(setupldr_pe 0x9000)
 else()
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/DRIVER /SECTION:.text,ERWP,ALIGN=0x1000" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
-    set_image_base(setupldr_pe 0x10000)
 endif()
 
+set_image_base(setupldr_pe 0x10000)
 set_subsystem(setupldr_pe native)
 set_entrypoint(setupldr_pe RealEntryPoint)
 

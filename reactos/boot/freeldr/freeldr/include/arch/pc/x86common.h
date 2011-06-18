@@ -6,13 +6,8 @@
 /* Memory layout */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
-#if defined(_USE_ML) || defined(_MSC_VER)
-#define FREELDR_BASE        HEX(f000)
+#define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
-#else
-#define FREELDR_BASE        HEX(8000)
-#define FREELDR_PE_BASE     HEX(9000)
-#endif
 #define STACK32ADDR        HEX(78000) /* The 32-bit stack top will be at 7000:8000, or 0x78000 */
 #define BIOSCALLBUFFER     HEX(78000) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSEGMENT  HEX(7800) /* Buffer to store temporary data for any Int386() call */

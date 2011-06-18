@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
+#include "../freeldr/include/arch/pc/x86common.h"
 
 #define BP_REL(x) [bp+x-offset start]
 
@@ -390,7 +391,7 @@ CheckEndCluster:
     jmp  PrintFileSystemError   // If so exit with error
 
 InitializeLoadSegment:
-    mov  bx, HEX(800)
+    mov  bx, FREELDR_BASE / 16
     mov  es, bx
 
 LoadFile:
@@ -421,7 +422,7 @@ LoadFileDone:
     mov  dh, byte ptr ds:[BootPartition]           // Load boot partition into DH
 
     /* Transfer execution to the bootloader */
-    ljmp16 0, HEX(8000)
+    ljmp16 0, FREELDR_BASE
 
 // Returns the FAT entry for a given cluster number
 // On entry EAX has cluster number

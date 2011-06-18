@@ -33,16 +33,24 @@ RealModeEntryPoint:
     /* Safe real mode entry point in shared memory */
     mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
 
+    /* Address the image with es segment */
+    mov ax, FREELDR_PE_BASE / 16
+    mov es, ax
+
     /* Get address of optional header */
-    mov eax, dword ptr ds:[FREELDR_PE_BASE + IMAGE_DOS_HEADER_e_lfanew]
-    add eax, FREELDR_PE_BASE + 4 + IMAGE_FILE_HEADER_SIZE
+    mov eax, dword ptr es:[IMAGE_DOS_HEADER_e_lfanew]
+    add eax, 4 + IMAGE_FILE_HEADER_SIZE
 
     /* Get address of entry point */
-    mov eax, dword ptr ds:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
+    mov eax, dword ptr es:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
     add eax, FREELDR_PE_BASE
 
     /* Save entry point */
     mov dword ptr ds:[pm_entrypoint], eax
+
+    /* Restore es */
+    xor ax, ax
+    mov es, ax
 
     jmp exit_to_protected
 

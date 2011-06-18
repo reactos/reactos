@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
+#include "../freeldr/include/arch/pc/x86common.h"
 
 .code16
 
@@ -359,11 +360,7 @@ get_fs_structures:
     call crlf
 #endif
 
-#ifdef _USE_ML
-    mov bx, HEX(F000)            // bx = load address
-#else
-    mov bx, HEX(8000)            // bx = load address
-#endif
+    mov bx, FREELDR_BASE            // bx = load address
     mov si, di                // restore file pointer
     mov cx, HEX(0FFFF)            // load the whole file
     call getfssec            // get the whole file
@@ -378,11 +375,7 @@ get_fs_structures:
     mov dh, 0                    // dh = boot partition
 
     /* Transfer execution to the bootloader */
-#ifdef _USE_ML
-    ljmp16 0, HEX(F000)
-#else
-    ljmp16 0, HEX(8000)
-#endif
+    ljmp16 0, FREELDR_BASE
 
 //
 // searchdir:

@@ -74,7 +74,7 @@ FatHelperEntryPoint:
     pop ax
 
     // AX has start cluster of freeldr.sys
-    mov  bx, HEX(800)
+    mov  bx, FREELDR_BASE / 16
     mov  es,bx
 
 LoadFile:
