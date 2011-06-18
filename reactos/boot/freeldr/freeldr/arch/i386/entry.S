@@ -39,17 +39,17 @@ _RealEntryPoint:
 	mov ss, ax
 
     /* Setup protected mode stack */
-	mov esp, dword ptr [stack32]
+	mov esp, dword ptr ds:[stack32]
 
 	/* Load the IDT */
 #ifdef _USE_ML
-    lidt fword ptr [i386idtptr]
+    lidt fword ptr ds:[i386idtptr]
 #else
 	lidt i386idtptr
 #endif
 
     /* Continue execution */
-    jmp dword ptr [ContinueAddress]
+    jmp dword ptr ds:[ContinueAddress]
 
 ContinueAddress:
     .long _FrldrStartup
@@ -60,9 +60,9 @@ _FrldrStartup:
     /* Store BootDrive and BootPartition */
     xor eax, eax
     mov al, dl
-	mov dword ptr [_FrldrBootDrive], eax
+	mov dword ptr ds:[_FrldrBootDrive], eax
     mov al, dh
-	mov dword ptr [_FrldrBootPartition], eax
+	mov dword ptr ds:[_FrldrBootPartition], eax
 
     /* Patch long jump with real mode entry point */
     mov eax, dword ptr ds:[BSS_RealModeEntry]
