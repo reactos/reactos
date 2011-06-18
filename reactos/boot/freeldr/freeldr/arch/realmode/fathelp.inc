@@ -49,8 +49,8 @@
 
 PUBLIC start
 start:
-    // This code is loaded at 0000:8000 so we have to
-    // encode a jmp instruction to jump to 0000:8200
+    // This code is loaded at 0000:F800 so we have to
+    // encode a jmp instruction to jump to 0000:FA00
     .byte HEX(e9), HEX(fd), HEX(01)
 
 // Now starts the extra boot code that we will store
@@ -217,7 +217,8 @@ IsFat12_Done:
     ret
 
 
-msgLoading:	.asciz "Loading FreeLoader...", CR, LF
+msgLoading:
+    .ascii "Loading FreeLoader...", CR, LF, NUL
 
     .org 510				// Pad to 510 bytes
     .word HEX(0aa55)		// BootSector signature

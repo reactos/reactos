@@ -20,11 +20,11 @@
 
 PxeCallApi:
 
-	mov ax, [BSS_PxeBufferSegment]
+	mov ax, word ptr ds:[BSS_PxeBufferSegment]
 	push ax
-	mov ax, [BSS_PxeBufferOffset]
+	mov ax, word ptr ds:[BSS_PxeBufferOffset]
 	push ax
-	mov ax, [BSS_PxeFunction]
+	mov ax, word ptr ds:[BSS_PxeFunction]
 	push ax
 	call dword ptr ds:[BSS_PxeEntryPoint]
 	add esp, 6

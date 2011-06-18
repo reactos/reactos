@@ -2,7 +2,7 @@
 
 PnpBiosGetDeviceNodeCount:
 
-	mov ax, word ptr [BSS_PnpBiosDataSegment]
+	mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
 	push ax
 
 	push cs
@@ -27,16 +27,16 @@ PnpBiosGetDeviceNodeCount:
 PnpBiosGetDeviceNode:
 
 	/* push bios segment */
-	mov ax, word ptr [BSS_PnpBiosDataSegment]
+	mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
 	push ax
 
 	/* push control flag */
 	push 1
 
 	/* push pointer to node buffer (segment/offset) */
-	mov ax, word ptr [BSS_PnpBiosBufferSegment]
+	mov ax, word ptr ds:[BSS_PnpBiosBufferSegment]
 	push ax
-	mov ax, word ptr [BSS_PnpBiosBufferOffset]
+	mov ax, word ptr ds:[BSS_PnpBiosBufferOffset]
 	push ax
 
 	/* push pointer to node number (segment/offset) */
