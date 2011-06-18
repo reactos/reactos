@@ -1037,8 +1037,7 @@ co_WinPosSetWindowPos(
                              SWP_HIDEWINDOW | SWP_FRAMECHANGED)) !=
             (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
       {
-         VisBefore = VIS_ComputeVisibleRegion(Window, FALSE,
-                                              FALSE, //(Window->style & WS_CLIPCHILDREN) ? TRUE : FALSE,
+         VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
                                               (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
          VisRgn = NULL;
 
@@ -1129,8 +1128,7 @@ co_WinPosSetWindowPos(
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
       /* Determine the new visible region */
-      VisAfter = VIS_ComputeVisibleRegion(Window, FALSE,
-                                          FALSE,//(Window->style & WS_CLIPCHILDREN) ? TRUE : FALSE,
+      VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
                                           (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
       VisRgn = NULL;
 
