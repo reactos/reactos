@@ -20,6 +20,8 @@
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
+EXTERN i386CallRealMode:PROC
+
 .code32
 
 /*
