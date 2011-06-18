@@ -29,7 +29,7 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 
-link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/sdk/crt)
+link_directories(${REACTOS_SOURCE_DIR}/importlibs ${REACTOS_BINARY_DIR}/importlibs ${REACTOS_BINARY_DIR}/lib/sdk/crt)
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 

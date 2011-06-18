@@ -23,9 +23,11 @@ set_module_type(crtdll win32dll)
 
 set_entrypoint(crtdll DllMain@12)
 
-target_link_libraries(crtdll
-    wine
-    crt)
+target_link_libraries(crtdll wine crt)
+
+if(MSVC)
+    target_link_libraries(crtdll oldnames)
+endif()
 
 add_importlibs(crtdll kernel32 ntdll)
 add_pch(crtdll precomp.h)
