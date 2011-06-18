@@ -18,19 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
-#define WIN32_NO_STATUS
-#define NTOS_MODE_USER
-#define UNICODE
-#define _UNICODE
-#define COBJMACROS
-#include <windows.h>
-#include <ndk/ntndk.h>
-#include <fmifs/fmifs.h>
-#include <largeint.h>
-
 #include <precomp.h>
+
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
