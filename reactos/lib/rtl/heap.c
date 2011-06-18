@@ -1749,7 +1749,7 @@ RtlpSplitEntry(PHEAP Heap,
                SIZE_T Index,
                SIZE_T Size)
 {
-    PHEAP_FREE_ENTRY SplitBlock;
+    PHEAP_FREE_ENTRY SplitBlock, SplitBlock2;
     UCHAR FreeFlags;
     PHEAP_ENTRY InUseEntry;
     SIZE_T FreeSize;
@@ -1791,12 +1791,63 @@ RtlpSplitEntry(PHEAP Heap,
             SplitBlock->SegmentOffset = InUseEntry->SegmentOffset;
             SplitBlock->Size = FreeSize;
             SplitBlock->PreviousSize = Index;
-            
-            /* Coalesce it with the next entry */
-            SplitBlock = RtlpCoalesceFreeBlocks(Heap, SplitBlock, &FreeSize, FALSE);
-            RtlpInsertFreeBlock(Heap, SplitBlock, FreeSize);
-            
-            /* Reset the flag */
+
+            /* Check if it's the last entry */
+            if (FreeFlags & HEAP_ENTRY_LAST_ENTRY)
+            {
+                /* Insert it to the free list if it's the last entry */
+                RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
+                Heap->TotalFreeSize += FreeSize;
+            }
+            else
+            {
+                /* Not so easy - need to update next's previous size too */
+                SplitBlock2 = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize);
+
+                if (SplitBlock2->Flags & HEAP_ENTRY_BUSY)
+                {
+                    SplitBlock2->PreviousSize = (USHORT)FreeSize;
+                    RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
+                    Heap->TotalFreeSize += FreeSize;
+                }
+                else
+                {
+                    /* Even more complex - the next entry is free, so we can merge them into one! */
+                    SplitBlock->Flags = SplitBlock2->Flags;
+
+                    /* Remove that next entry */
+                    RtlpRemoveFreeBlock(Heap, SplitBlock2, FALSE, FALSE);
+
+                    /* Update sizes */
+                    FreeSize += SplitBlock2->Size;
+                    Heap->TotalFreeSize -= SplitBlock2->Size;
+
+                    if (FreeSize <= HEAP_MAX_BLOCK_SIZE)
+                    {
+                        /* Insert it back */
+                        SplitBlock->Size = FreeSize;
+
+                        /* Don't forget to update previous size of the next entry! */
+                        if (!(SplitBlock->Flags & HEAP_ENTRY_LAST_ENTRY))
+                        {
+                            ((PHEAP_FREE_ENTRY)((PHEAP_ENTRY)SplitBlock + FreeSize))->PreviousSize = FreeSize;
+                        }
+
+                        /* Actually insert it */
+                        RtlpInsertFreeBlockHelper(Heap, SplitBlock, (USHORT)FreeSize, FALSE);
+
+                        /* Update total size */
+                        Heap->TotalFreeSize += FreeSize;
+                    }
+                    else
+                    {
+                        /* Resulting block is quite big */
+                        RtlpInsertFreeBlock(Heap, SplitBlock, FreeSize);
+                    }
+                }
+            }
+
+            /* Reset flags of the free entry */
             FreeFlags = 0;
         }
     }
@@ -2645,7 +2696,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     {
         RtlEnterHeapLock(Heap->LockVariable);
         HeapLocked = TRUE;
-        Flags ^= HEAP_NO_SERIALIZE;
+        Flags &= ~HEAP_NO_SERIALIZE;
     }
 
     /* Get the pointer to the in-use entry */
