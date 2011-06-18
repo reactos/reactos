@@ -21,11 +21,17 @@ list(APPEND KMTEST_DRV_SOURCE
 add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
 
 set_module_type(kmtest_drv kernelmodedriver)
-target_link_libraries(kmtest_drv ${PSEH_LIB})
+target_link_libraries(kmtest_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
 set_property(TARGET kmtest_drv PROPERTY COMPILE_DEFINITIONS KMT_KERNEL_MODE)
 
 add_cd_file(TARGET kmtest_drv DESTINATION reactos/system32/drivers FOR all)
+
+add_library(kmtest_printf
+    kmtest_drv/printf_stubs.c
+    ${REACTOS_SOURCE_DIR}/lib/sdk/crt/printf/streamout.c)
+set_property(TARGET kmtest_printf PROPERTY COMPILE_DEFINITIONS _LIBCNT_ _USER32_WSPRINTF wctomb=KmtWcToMb)
+set_property(TARGET kmtest_printf PROPERTY INCLUDE_DIRECTORIES ${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
 #
 # kmtest.exe loader application

@@ -8,7 +8,9 @@
 #ifndef _KMTEST_TEST_H_
 #define _KMTEST_TEST_H_
 
-typedef void KMT_TESTFUNC(void);
+#include <stdarg.h>
+
+typedef VOID KMT_TESTFUNC(VOID);
 
 typedef struct
 {
@@ -73,6 +75,12 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
 
     KmtMemCpy(&Buffer->LogBuffer[OldLength], String, Length);
 }
+
+#ifdef KMT_KERNEL_MODE
+INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments);
+#elif defined KMT_USER_MODE
+#define KmtVSNPrintF vsnprintf
+#endif /* defined KMT_USER_MODE */
 
 #endif /* defined KMT_DEFINE_TEST_FUNCTIONS */
 
