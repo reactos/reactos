@@ -49,6 +49,7 @@
 #define FNID_PxeCallApi 3
 #define FNID_PnpBiosGetDeviceNodeCount 4
 #define FNID_PnpBiosGetDeviceNode 5
+#define FNID_BootLinuxKernel 6
 
 /* Layout of the REGS structure */
 #define REGS_EAX 0

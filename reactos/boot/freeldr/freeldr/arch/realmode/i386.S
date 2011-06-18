@@ -139,6 +139,7 @@ callback_table:
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
+    .word BootLinuxKernel
 
 
     /* 16-bit stack pointer */
@@ -191,6 +192,7 @@ rmode_idtptr:
 #include "int386.inc"
 #include "pxe.inc"
 #include "pnp.inc"
+#include "linux.inc"
 #include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE - 1)

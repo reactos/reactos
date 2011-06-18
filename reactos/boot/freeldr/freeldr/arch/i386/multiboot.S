@@ -163,9 +163,7 @@ mb7:
 	call	_BootMain
 
 mbfail:
-	call	switch_to_real
-	.code16
-	int	0x19
+    int 3
 mbstop:	jmp	mbstop	/* We should never get here */
 
 mb_info:
