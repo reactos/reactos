@@ -109,7 +109,10 @@ list(APPEND SOURCE
 add_library(glu32 SHARED ${SOURCE})
 
 set_entrypoint(glu32 0)
-target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
+
+if(NOT MSVC)
+    target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 oldnames)
+endif()
 
 add_importlibs(glu32
     opengl32
