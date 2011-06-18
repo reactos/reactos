@@ -923,67 +923,67 @@ pollchar_and_empty:
 
 
 isolinux_banner:
-    .asciz CR, LF, "Loading IsoBoot...", CR, LF
+    .ascii CR, LF, "Loading IsoBoot...", CR, LF, NUL
 copyright_str:
-    .asciz " (C) 1994-2002 H. Peter Anvin", CR, LF
+    .ascii " (C) 1994-2002 H. Peter Anvin", CR, LF, NUL
 presskey_msg:
-    .asciz "Press any key to boot from CD"
+    .ascii "Press any key to boot from CD", NUL
 dot_msg:
-    .asciz "."
+    .ascii ".", NUL
 
 #ifdef DEBUG_MESSAGES
 startup_msg:
-    .asciz "Startup, DL = '"
+    .ascii "Startup, DL = '", NUL
 spec_ok_msg:
-    .asciz "packet OK, drive = "
+    .ascii "packet OK, drive = ", NUL
 secsize_msg:
-    .asciz "size appears to be "
+    .ascii "size appears to be ", NUL
 rootloc_msg:
-    .asciz "Root dir loc: "
+    .ascii "Root dir loc: ", NUL
 rootlen_msg:
-    .asciz "Root dir len: "
+    .ascii "Root dir len: ", NUL
 rootsect_msg:
-    .asciz "Root dir len(sect): "
+    .ascii "Root dir len(sect): ", NUL
 fileloc_msg:
-    .asciz "SETUPLDR loc: "
+    .ascii "SETUPLDR loc: ", NUL
 filelen_msg:
-    .asciz "SETUPLDR len: "
+    .ascii "SETUPLDR len: ", NUL
 filesect_msg:
-    .asciz "SETUPLDR len(sect): "
+    .ascii "SETUPLDR len(sect): ", NUL
 findfail_msg:
-    .asciz "Failed to find file!"
+    .ascii "Failed to find file!", NUL
 startldr_msg:
-    .asciz "Starting SETUPLDR.SYS"
+    .ascii "Starting SETUPLDR.SYS", NUL
 #endif
 
 spec_err_msg:
-    .asciz "Load spec failed, trying wing ...", CR, LF
+    .ascii "Load spec failed, trying wing ...", CR, LF, NUL
 maybe_msg:
-    .asciz "Found smth at drive = "
+    .ascii "Found smth at drive = ", NUL
 alright_msg:
-    .asciz "might be ok, continuing...", CR, LF
+    .ascii "might be ok, continuing...", CR, LF, NUL
 nothing_msg:
-    .asciz "Failed locate CD-ROM; boot failed.", CR, LF
+    .ascii "Failed locate CD-ROM; boot failed.", CR, LF, NUL
 
 isolinux_str:
-    .asciz "IsoBoot: "
+    .ascii "IsoBoot: ", NUL
 crlf_msg:
-    .asciz CR, LF
+    .ascii CR, LF, NUL
 diskerr_msg:
-    .asciz "Disk error "
+    .ascii "Disk error ", NUL
 ondrive_str:
-    .asciz ", drive "
+    .ascii ", drive ", NUL
 
 err_bootfailed:
-    .asciz CR, LF, "failed.."
+    .ascii CR, LF, "failed..", NUL
 isolinux_dir:
-    .asciz "\\LOADER"
+    .ascii "\\LOADER", NUL
 no_dir_msg:
-    .asciz "LOADER dir not found.", CR, LF
+    .ascii "LOADER dir not found.", CR, LF, NUL
 isolinux_bin:
-    .asciz "SETUPLDR.SYS"
+    .ascii "SETUPLDR.SYS", NUL
 no_isolinux_msg:
-    .asciz "SETUPLDR not found.", CR, LF
+    .ascii "SETUPLDR not found.", CR, LF, NUL
 
 
 //

@@ -522,11 +522,11 @@ PrintFileNotFound:
     jmp  Reboot
 
 msgFreeLdr:
-    .asciz "freeldr.sys not found\r\n"
+    .ascii "freeldr.sys not found", CR, LF, NUL
 filename:
     .ascii "FREELDR SYS"
 msgLoading:
-    .asciz "Loading FreeLoader...\r\n"
+    .ascii "Loading FreeLoader...\r\n", CR, LF, NUL
 
 .org 1022   // Pad to 1022 bytes
 

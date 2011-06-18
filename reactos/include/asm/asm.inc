@@ -44,10 +44,10 @@ ENDM
 #define ENDFUNC .ENDP
 
 /* MASM doesn't have an ASCII macro */
-.ASCII MACRO text
+.ASCII MACRO text:VARARG
     DB text
 ENDM
-.ascii MACRO text
+.ascii MACRO text:VARARG
     DB text
 ENDM
 
@@ -162,6 +162,7 @@ ENDM
 
 #define CR 13
 #define LF 10
+#define NUL 0
 
 #else /***********************************************************************/
 
@@ -312,5 +313,6 @@ ENDM
 
 #define CR "\r"
 #define LF "\n"
+#define NUL "\0"
 
 #endif

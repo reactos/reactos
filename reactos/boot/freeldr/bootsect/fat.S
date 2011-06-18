@@ -406,9 +406,9 @@ NoCarryCHS:
 
 
 msgDiskError:
-    .asciz "Disk error\r\n"
+    .ascii "Disk error", CR, LF, NUL
 msgFreeLdr:
-    .asciz "ldr not found\r\n"
+    .ascii "ldr not found", CR, LF, NUL
 // Sorry, need the space...
 //msgAnyKey:
 //  .asciz "Press any key to restart\r\n"
