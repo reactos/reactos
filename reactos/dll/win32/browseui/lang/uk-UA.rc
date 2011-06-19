@@ -25,14 +25,14 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 // Menus
 //
 
-IDM_CABINET_CONTEXTMENU MENUEX 
+IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Стандартні Кнопки",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Рядок Адреси",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "&Посилання",						IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM SEPARATOR
+        MENUITEM "", -1,                            MFT_SEPARATOR
         MENUITEM "Блокування панелей інструментів",	IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Налаштувати...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
         MENUITEM "&Текстові мітки",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
@@ -122,7 +122,7 @@ END
 // Accelerator
 //
 
-IDR_ACCELERATORS ACCELERATORS 
+IDR_ACCELERATORS ACCELERATORS
 BEGIN
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
@@ -144,50 +144,50 @@ END
 // Strings
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     800                       "Містить команди маніпулювання вибраними об'єктами."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     864                       "Містить команди правки."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     928                       "Містить команди маніпулювання виглядом."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     992                       "Містить команди інструментів."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     1056                      "Містить команди для відображення Допомоги."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9025                      "Закриває вікно."
     9026                      "Йде вверх на один рівень."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9121                      "Під'єднує до мережевого диску."
     9122                      "Від'єднує від мережевого диску."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9250                      "Відображає дані про програму, номер версії, та copyright."
     9252                      "Відображає дані для налагодження."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9281                      "Йде до попередньої сторінки."
     9282                      "Йде до наступної сторінки."
@@ -195,13 +195,13 @@ BEGIN
     9285                      "Йде до вашої домашньої сторінки."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9362                      "Відкриває папку Обране."
     9363                      "Додає поточну сторінку до списку Обраного."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9505                      "Показує чи приховує панелі інструментів."
     9506                      "Показує чи приховує рядок стану."
@@ -211,12 +211,12 @@ BEGIN
     9516                      "Блокує розміри та розташування панелей інструментів."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9533                      "Персоналізує панель інструментів."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9552                      "Показує чи приховує панель Провідника."
     9553                      "Показує панель Пошуку."
@@ -226,47 +226,47 @@ BEGIN
     9559                      "Показує панель Медіа."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SMALLICONS            "Малі значки"
     IDS_LARGEICONS            "Великі значки"
     IDS_SHOWTEXTLABELS        "Показати текстові мітки"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS          "Без текстових міток"
     IDS_SELECTIVETEXTONRIGHT  "Частина тексту праворуч"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL         "|Йти||"
     IDS_GOBUTTONTIPTEMPLATE   "Йти до ""%s"""
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SEARCHLABEL           "Пошук"
     IDS_ADDRESSBANDLABEL      "А&дреса"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FOLDERSLABEL          "Папки"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_HISTORYTEXT           "&Історія\tCtrl+H"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_UP                    "Вверх"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_BACK                  "Назад"
     IDS_FORWARD               "Вперед"

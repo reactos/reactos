@@ -29,14 +29,14 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 // Menus
 //
 
-IDM_CABINET_CONTEXTMENU MENUEX 
+IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Przyciski standardowe",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "Pasek &Adresu",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "&Odnośniki",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Zablokuj paski narzędzi",				IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Dostosuj...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
         MENUITEM "&Etykiety",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
@@ -126,7 +126,7 @@ END
 // Accelerator
 //
 
-IDR_ACCELERATORS ACCELERATORS 
+IDR_ACCELERATORS ACCELERATORS
 BEGIN
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
@@ -148,50 +148,50 @@ END
 // Strings
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     800                       "Zawiera polecenia do manipulowania wybranymi elementami."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     864                       "Zawiera polecenia do edycji."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     928                       "Zawiera polecenia do zmiany widoku."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     992                       "Zawiera polecenia dla narzędzi."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     1056                      "Zawiera polecenia do wyświetlania pomocy."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9025                      "Zamyka okno."
     9026                      "Przechodzi o poziom wyżej."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9121                      "Podłącza dysk sieciowy."
     9122                      "Odłącza dysk sieciowy."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9250                      "Wyświetla informacje o programie, jego wersję i licencję."
     9252                      "Wyświetla informacje do debugowania."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9281                      "Przechodzi na poprzednią stronę."
     9282                      "Przechodzi na następną stronę."
@@ -199,13 +199,13 @@ BEGIN
     9285                      "Przechodzi na stronę domową."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9362                      "Otwiera katalog Ulubionych."
     9363                      "Dodaje bierzącą stronę do listy ulubionych."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9505                      "Pokazuje lub ukrywa paski narzędzi."
     9506                      "Pokazuje lub ukrywa pasek stanu."
@@ -215,12 +215,12 @@ BEGIN
     9516                      "Blokuje położenie i rozmiar pasków."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9533                      "Dostosowuje wybrane paski."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9552                      "Pokazuje lub ukrywa Pasek Eksploratora."
     9553                      "Pokazuje pasek Wyszukiwania."
@@ -230,47 +230,47 @@ BEGIN
     9559                      "Pokazuje pasek Multimediów."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SMALLICONS            "Małe ikony"
     IDS_LARGEICONS            "Duże ikony"
     IDS_SHOWTEXTLABELS        "Pokaż etykiety"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS          "Brak etykiet"
     IDS_SELECTIVETEXTONRIGHT  "Tekst do zaznaczenia po prawej"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL         "|Idź||"
     IDS_GOBUTTONTIPTEMPLATE   "Idź do ""%s"""
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SEARCHLABEL           "Wyszukaj"
     IDS_ADDRESSBANDLABEL      "A&dres"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FOLDERSLABEL          "Katalogi"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_HISTORYTEXT           "&Historia\tCtrl+H"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_UP                    "W górę"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_BACK                  "Wstecz"
     IDS_FORWARD               "Naprzód"

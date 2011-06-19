@@ -26,14 +26,14 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 // Menus
 //
 
-IDM_CABINET_CONTEXTMENU MENUEX 
+IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Обичайни бутони",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Адресна лента",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "&Връзки",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM SEPARATOR
+        MENUITEM "", -1,                            MFT_SEPARATOR
         MENUITEM "Заключване на лентите с &пособия",				IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Нагласяване...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
         MENUITEM "&Текстови етикети",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
@@ -123,7 +123,7 @@ END
 // Accelerator
 //
 
-IDR_ACCELERATORS ACCELERATORS 
+IDR_ACCELERATORS ACCELERATORS
 BEGIN
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
@@ -145,50 +145,50 @@ END
 // Strings
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     800                       "Съдържа заповеди за обработка на избраните предмети."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     864                       "Съдържа заповеди за обработка."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     928                       "Съдържа заповеди за обработка на изгледа."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     992                       "Съдържа заповеди за пособията."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     1056                      "Съсържа заповеди за показване на помощ."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9025                      "Затваря прозореца."
     9026                      "Отива равнище нагоре."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9121                      "Свърване към мрежово устройство."
     9122                      "Разкачане от мрежово устройство."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9250                      "Показва сведения за програмата, версия и възпроизводствени права."
     9252                      "Показва сведения за проследяване на недъзи."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9281                      "Отива на предходната страница."
     9282                      "Отива на следващата страница."
@@ -196,13 +196,13 @@ BEGIN
     9285                      "Отива в началната ви страница."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9362                      "Отваря папката с любимките."
     9363                      "Добавя текущата страница към списъка с любимките."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9505                      "Скрива или показва лентите с пособия."
     9506                      "Скрива или показва лентата на състоянието."
@@ -212,12 +212,12 @@ BEGIN
     9516                      "Заключване на размерите и разположението на лентите с пособия."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9533                      "Нагласяване на лентата с пособия."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9552                      "Показване или скриване на лентата на изследователя."
     9553                      "Показване на лентата за търсене."
@@ -227,47 +227,47 @@ BEGIN
     9559                      "Показване на медийната лента."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SMALLICONS            "Малки значета"
     IDS_LARGEICONS            "Големи значета"
     IDS_SHOWTEXTLABELS        "Показване на текстови етикети"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS          "Липсват текстови етикети"
     IDS_SELECTIVETEXTONRIGHT  "Selective text on right"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL         "|Отиване||"
     IDS_GOBUTTONTIPTEMPLATE   "Отиване в""%s"""
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SEARCHLABEL           "Търсене"
     IDS_ADDRESSBANDLABEL      "&Адрес"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FOLDERSLABEL          "Папки"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_HISTORYTEXT           "&Дневник\tCtrl+H"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_UP                    "Нагоре"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_BACK                  "Назад"
     IDS_FORWARD               "Напред"
