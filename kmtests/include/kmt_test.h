@@ -37,6 +37,8 @@ typedef struct {
 
 extern PKMT_RESULTBUFFER ResultBuffer;
 
+#define START_TEST(name) VOID Test_##name(VOID)
+
 #define KMT_STRINGIZE(x) #x
 #define ok(test, ...)               ok_(test, __FILE__, __LINE__, __VA_ARGS__)
 #define trace(...)                  trace_(   __FILE__, __LINE__, __VA_ARGS__)
@@ -48,6 +50,21 @@ VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments);
 VOID KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...);
 VOID KmtVTrace(PCSTR FileAndLine, PCSTR Format, va_list Arguments);
 VOID KmtTrace(PCSTR FileAndLine, PCSTR Format, ...);
+
+#ifdef KMT_KERNEL_MODE
+#define ok_irql(irql)                       ok(KeGetCurrentIrql() == irql, "IRQL is %d, expected %d\n", KeGetCurrentIrql(), irql)
+#endif /* defined KMT_KERNEL_MODE */
+#define ok_eq_print(value, expected, spec)  ok(value == expected, #value " = " spec ", expected " spec "\n", value, expected)
+#define ok_eq_pointer(value, expected)      ok_eq_print(value, expected, "%p")
+#define ok_eq_int(value, expected)          ok_eq_print(value, expected, "%d")
+#define ok_eq_uint(value, expected)         ok_eq_print(value, expected, "%u")
+#define ok_eq_long(value, expected)         ok_eq_print(value, expected, "%ld")
+#define ok_eq_ulong(value, expected)        ok_eq_print(value, expected, "%lu")
+#define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
+#define ok_bool_true(value, desc)           ok(value == TRUE, desc " FALSE, expected TRUE\n")
+#define ok_bool_false(value, desc)          ok(value == FALSE, desc " TRUE, expected FALSE\n")
+#define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
+#define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
 
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 PKMT_RESULTBUFFER ResultBuffer = NULL;
@@ -71,10 +88,6 @@ static VOID KmtFreeResultBuffer(PKMT_RESULTBUFFER Buffer)
 }
 #endif /* defined KMT_USER_MODE */
 
-#define KmtMemCpy memcpy
-#define KmtStrLen strlen
-#define KmtAssert assert
-
 static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Length)
 {
     LONG OldLength;
@@ -92,7 +105,7 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
         }
     } while (InterlockedCompareExchange(&Buffer->LogBufferLength, NewLength, OldLength) != OldLength);
 
-    KmtMemCpy(&Buffer->LogBuffer[OldLength], String, Length);
+    memcpy(&Buffer->LogBuffer[OldLength], String, Length);
 }
 
 #ifdef KMT_KERNEL_MODE
@@ -108,16 +121,16 @@ static SIZE_T KmtXVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Prepend1,
 
     if (Prepend1)
     {
-        SIZE_T Length = min(BufferMaxLength, KmtStrLen(Prepend1));
-        KmtMemCpy(Buffer, Prepend1, Length);
+        SIZE_T Length = min(BufferMaxLength, strlen(Prepend1));
+        memcpy(Buffer, Prepend1, Length);
         Buffer += Length;
         BufferLength += Length;
         BufferMaxLength -= Length;
     }
     if (Prepend2)
     {
-        SIZE_T Length = min(BufferMaxLength, KmtStrLen(Prepend2));
-        KmtMemCpy(Buffer, Prepend2, Length);
+        SIZE_T Length = min(BufferMaxLength, strlen(Prepend2));
+        memcpy(Buffer, Prepend2, Length);
         Buffer += Length;
         BufferLength += Length;
         BufferMaxLength -= Length;
