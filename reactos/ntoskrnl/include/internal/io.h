@@ -696,6 +696,11 @@ IopCreateRegistryKeyEx(
     OUT PULONG Disposition OPTIONAL
 );
 
+
+NTSTATUS
+IopTraverseDeviceTree(
+    PDEVICETREE_TRAVERSE_CONTEXT Context);
+
 //
 // PnP Routines
 //

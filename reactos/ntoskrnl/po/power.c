@@ -23,6 +23,13 @@ typedef struct _REQUEST_POWER_ITEM
     PVOID Context;
 } REQUEST_POWER_ITEM, *PREQUEST_POWER_ITEM;
 
+typedef struct _POWER_STATE_TRAVERSE_CONTEXT
+{
+    SYSTEM_POWER_STATE SystemPowerState;
+    POWER_ACTION PowerAction;
+    PDEVICE_OBJECT PowerDevice;
+} POWER_STATE_TRAVERSE_CONTEXT, *PPOWER_STATE_TRAVERSE_CONTEXT;
+
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
 POP_POWER_ACTION PopAction;
@@ -64,53 +71,33 @@ PopCleanupPowerState(IN PPOWER_STATE PowerState)
 }
 
 NTSTATUS
-NTAPI
-PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
+PopSendQuerySystemPowerState(PDEVICE_OBJECT DeviceObject, SYSTEM_POWER_STATE SystemState, POWER_ACTION PowerAction)
 {
-    IO_STATUS_BLOCK IoStatusBlock;
-    PDEVICE_OBJECT DeviceObject;
-    PIO_STACK_LOCATION IrpSp;
-    PDEVICE_OBJECT Fdo;
-    NTSTATUS Status;
     KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION IrpSp;
     PIRP Irp;
-
-    if (!PopAcpiPresent) return STATUS_NOT_IMPLEMENTED;
-
-    Status = IopGetSystemPowerDeviceObject(&DeviceObject);
-    if (!NT_SUCCESS(Status)) 
-    {
-        DPRINT1("No system power driver available\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Fdo = IoGetAttachedDeviceReference(DeviceObject);
-
-    if (Fdo == DeviceObject)
-    {
-        DPRINT("An FDO was not attached\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
+    NTSTATUS Status;
+    
     KeInitializeEvent(&Event,
                       NotificationEvent,
                       FALSE);
-
+    
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_POWER,
-                                       Fdo,
+                                       DeviceObject,
                                        NULL,
                                        0,
                                        NULL,
                                        &Event,
                                        &IoStatusBlock);
-
+    
     IrpSp = IoGetNextIrpStackLocation(Irp);
-    IrpSp->MinorFunction = IRP_MN_SET_POWER;
+    IrpSp->MinorFunction = IRP_MN_QUERY_POWER;
     IrpSp->Parameters.Power.Type = SystemPowerState;
-    IrpSp->Parameters.Power.State.SystemState = PowerState;
-
-    DPRINT("Calling ACPI driver");
-    Status = PoCallDriver(Fdo, Irp);
+    IrpSp->Parameters.Power.State.SystemState = SystemState;
+    IrpSp->Parameters.Power.ShutdownType = PowerAction;
+    
+    Status = PoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event,
@@ -118,10 +105,176 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
                               KernelMode,
                               FALSE,
                               NULL);
-      Status = IoStatusBlock.Status;
+        Status = IoStatusBlock.Status;
     }
+    
+    return Status;
+}
 
-    ObDereferenceObject(Fdo);
+NTSTATUS
+PopSendSetSystemPowerState(PDEVICE_OBJECT DeviceObject, SYSTEM_POWER_STATE SystemState, POWER_ACTION PowerAction)
+{
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION IrpSp;
+    PIRP Irp;
+    NTSTATUS Status;
+    
+    KeInitializeEvent(&Event,
+                      NotificationEvent,
+                      FALSE);
+    
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_POWER,
+                                       DeviceObject,
+                                       NULL,
+                                       0,
+                                       NULL,
+                                       &Event,
+                                       &IoStatusBlock);
+    
+    IrpSp = IoGetNextIrpStackLocation(Irp);
+    IrpSp->MinorFunction = IRP_MN_SET_POWER;
+    IrpSp->Parameters.Power.Type = SystemPowerState;
+    IrpSp->Parameters.Power.State.SystemState = SystemState;
+    IrpSp->Parameters.Power.ShutdownType = PowerAction;
+    
+    Status = PoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+    
+    return Status;
+}
+
+NTSTATUS
+PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
+                                 PVOID Context)
+{
+    PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    NTSTATUS Status;
+    
+    DPRINT("PopQuerySystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
+    
+    if (DeviceNode == IopRootDeviceNode)
+        return STATUS_SUCCESS;
+    
+    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
+        return STATUS_SUCCESS;
+
+    Status = PopSendQuerySystemPowerState(DeviceNode->PhysicalDeviceObject,
+                                          PowerStateContext->SystemPowerState,
+                                          PowerStateContext->PowerAction);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Device '%wZ' failed IRP_MN_QUERY_POWER\n", &DeviceNode->InstancePath);
+    }
+    
+#if 0
+    return Status;
+#else
+    return STATUS_SUCCESS;
+#endif
+}
+
+NTSTATUS
+PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
+                               PVOID Context)
+{
+    PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    NTSTATUS Status;
+    
+    DPRINT("PopSetSystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
+    
+    if (DeviceNode == IopRootDeviceNode)
+        return STATUS_SUCCESS;
+    
+    if (DeviceNode->PhysicalDeviceObject == PowerStateContext->PowerDevice)
+        return STATUS_SUCCESS;
+    
+    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
+        return STATUS_SUCCESS;
+
+    Status = PopSendSetSystemPowerState(DeviceNode->PhysicalDeviceObject,
+                                        PowerStateContext->SystemPowerState,
+                                        PowerStateContext->PowerAction);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Device '%wZ' failed IRP_MN_SET_POWER\n", &DeviceNode->InstancePath);
+    }
+    
+#if 0
+    return Status;
+#else
+    return STATUS_SUCCESS;
+#endif
+}
+
+NTSTATUS
+NTAPI
+PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState, POWER_ACTION PowerAction)
+{
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT Fdo;
+    NTSTATUS Status;
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    POWER_STATE_TRAVERSE_CONTEXT PowerContext;
+    
+    Status = IopGetSystemPowerDeviceObject(&DeviceObject);
+    if (!NT_SUCCESS(Status)) 
+    {
+        DPRINT1("No system power driver available\n");
+        Fdo = NULL;
+    }
+    else
+    {
+        Fdo = IoGetAttachedDeviceReference(DeviceObject);
+        if (Fdo == DeviceObject)
+        {
+            DPRINT("An FDO was not attached\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+    
+    /* Set up context */
+    PowerContext.PowerAction = PowerAction;
+    PowerContext.SystemPowerState = PowerState;
+    PowerContext.PowerDevice = Fdo;
+    
+    /* Query for system power change */
+    IopInitDeviceTreeTraverseContext(&Context,
+                                     IopRootDeviceNode,
+                                     PopQuerySystemPowerStateTraverse,
+                                     &PowerContext);
+    
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Query system power state failed; changing state anyway\n");
+    }
+    
+    /* Set system power change */
+    IopInitDeviceTreeTraverseContext(&Context,
+                                     IopRootDeviceNode,
+                                     PopSetSystemPowerStateTraverse,
+                                     &PowerContext);
+    
+    IopTraverseDeviceTree(&Context);
+
+    if (!PopAcpiPresent) return STATUS_NOT_IMPLEMENTED;
+    
+    if (Fdo != NULL)
+    {
+        if (PowerAction != PowerActionShutdownReset)
+            PopSendSetSystemPowerState(Fdo, PowerState, PowerAction);
+
+        ObDereferenceObject(Fdo);
+    }
 
     return Status;
 }
