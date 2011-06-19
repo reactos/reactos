@@ -63,14 +63,12 @@ int main(int argc, char *argv[])
 {
     char *pszSourceFile;
     char *pszDestFile;
-    unsigned long nFileSize, nBaseAddress, nOffsetSectionHeaders;
+    unsigned long nFileSize, nBaseAddress;
     FILE *pSourceFile, *pDestFile;
     IMAGE_FILE_HEADER *pFileHeader;
     IMAGE_SECTION_HEADER *pSectionHeader;
     unsigned int i;
-    size_t nSize;
     char *pData;
-    PIMAGE_RELOCATION pReloc;
     PIMAGE_SYMBOL pSymbols;
 
     if ((argc != 4) || (strcmp(argv[1], "--help") == 0))
@@ -129,11 +127,9 @@ int main(int argc, char *argv[])
     /* Loop all sections */
     for (i = 0; i < pFileHeader->NumberOfSections; i++)
     {
-        /* Skip empty sections */
-        if (pSectionHeader->SizeOfRawData == 0) continue;
-
         /* Check if this is '.text' section */
-        if (strcmp(pSectionHeader->Name, ".text") == 0)
+        if ((strcmp(pSectionHeader->Name, ".text") == 0) &&
+            (pSectionHeader->SizeOfRawData != 0))
         {
             RelocateSection(pData,
                             pSectionHeader,
