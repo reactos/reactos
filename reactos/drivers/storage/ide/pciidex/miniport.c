@@ -34,7 +34,6 @@ PciIdeXForwardOrIgnore(
 		else
 		{
 			DPRINT1("PDO stub for major function 0x%lx\n", MajorFunction);
-			ASSERT(FALSE);
 			Status = STATUS_NOT_SUPPORTED;
 		}
 		Irp->IoStatus.Information = 0;
