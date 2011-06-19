@@ -117,9 +117,6 @@ if(ARCH MATCHES i386)
         list(APPEND FREELDR_COMMON_SOURCE
             arch/i386/drvmap.S
             arch/i386/multiboot.S)
-    else()
-        list(APPEND FREELDR_COMMON_SOURCE
-            arch/i386/realmode.S)
     endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
@@ -217,7 +214,7 @@ add_executable(setupldr_pe ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
 if(NOT MSVC)
     set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 else()
-    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/DRIVER /SECTION:.text,ERWP,ALIGN=0x1000" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+    set_target_properties(setupldr_pe PROPERTIES LINK_FLAGS "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 endif()
 
 set_image_base(setupldr_pe 0x10000)
