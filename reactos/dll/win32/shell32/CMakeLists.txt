@@ -77,8 +77,6 @@ list(APPEND SOURCE
 
 add_library(shell32 SHARED ${SOURCE})
 
-add_pch(shell32 precomp.h)
-
 set_module_type(shell32 win32dll)
 
 target_link_libraries(shell32
@@ -101,6 +99,8 @@ add_importlibs(shell32
     kernel32
     msvcrt
     ntdll)
+	
+add_pch(shell32 precomp.h)
 
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(shell32.spec)

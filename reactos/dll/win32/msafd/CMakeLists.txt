@@ -20,7 +20,6 @@ add_library(msafd SHARED ${SOURCE})
 
 set_module_type(msafd win32dll)
 
-add_pch(msafd msafd.h)
-
 add_importlibs(msafd advapi32 msvcrt kernel32 ntdll)
+add_pch(msafd msafd.h)
 add_cd_file(TARGET msafd DESTINATION reactos/system32 FOR all)

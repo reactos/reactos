@@ -14,9 +14,9 @@ list(APPEND SOURCE
 
 add_executable(tcpsvcs ${SOURCE})
 
-add_pch(tcpsvcs tcpsvcs.h)
 set_module_type(tcpsvcs win32cui)
 add_importlibs(tcpsvcs ws2_32 advapi32 msvcrt kernel32 ntdll)
+add_pch(tcpsvcs tcpsvcs.h)
 
 
 add_cd_file(TARGET tcpsvcs DESTINATION reactos/system32 FOR all)

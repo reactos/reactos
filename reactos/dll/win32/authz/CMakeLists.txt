@@ -15,7 +15,7 @@ add_library(authz SHARED ${SOURCE})
 
 set_module_type(authz win32dll)
 
-add_pch(authz precomp.h)
 add_importlibs(authz advapi32 msvcrt kernel32 ntdll)
+add_pch(authz precomp.h)
 
 add_cd_file(TARGET authz DESTINATION reactos/system32 FOR all)

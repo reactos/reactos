@@ -22,7 +22,6 @@ add_executable(explorer_new ${SOURCE})
 
 target_link_libraries(explorer_new uuid)
 
-add_pch(explorer_new precomp.h)
 set_module_type(explorer_new win32gui)
 add_importlibs(explorer_new
     advapi32
@@ -37,5 +36,6 @@ add_importlibs(explorer_new
     msvcrt
     kernel32
     ntdll)
+add_pch(explorer_new precomp.h)
 
 add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)

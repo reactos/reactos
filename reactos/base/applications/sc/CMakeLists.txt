@@ -15,8 +15,7 @@ list(APPEND SOURCE
 
 add_executable(sc ${SOURCE})
 
-add_pch(sc sc.h)
-
 set_module_type(sc win32cui)
 add_importlibs(sc advapi32 msvcrt kernel32)
+add_pch(sc sc.h)
 add_cd_file(TARGET sc DESTINATION reactos/system32 FOR all)

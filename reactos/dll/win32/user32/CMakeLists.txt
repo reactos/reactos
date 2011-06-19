@@ -75,7 +75,7 @@ target_link_libraries(user32
     win32ksys
     ${PSEH_LIB})
 
-add_pch(user32 include/user32.h)
 add_importlibs(user32 gdi32 advapi32 imm32 msvcrt kernel32 ntdll)
+add_pch(user32 include/user32.h)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(user32.spec)
