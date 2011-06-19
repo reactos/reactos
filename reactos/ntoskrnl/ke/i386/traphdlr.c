@@ -1510,7 +1510,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
 
     /* Set thread fields */
     Thread->TrapFrame = TrapFrame;
-    Thread->PreviousMode = KiUserTrap(TrapFrame) ? UserMode : KernelMode;
+    Thread->PreviousMode = KiUserTrap(TrapFrame);
 
     /* Enable interrupts */
     _enable();
