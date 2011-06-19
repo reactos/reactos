@@ -77,10 +77,18 @@
 
 #if defined(_WIN64)
 #define __int3264   __int64
+typedef __int64 SHANDLE_PTR;
+typedef unsigned __int64 HANDLE_PTR;
+typedef unsigned int UHALF_PTR, *PUHALF_PTR;
+typedef int HALF_PTR, *PHALF_PTR;
 #define ADDRESS_TAG_BIT 0x40000000000UI64
 #else /*  !_WIN64 */
 #define __int3264   __int32
 #define ADDRESS_TAG_BIT 0x80000000UL
+typedef unsigned short UHALF_PTR, *PUHALF_PTR;
+typedef short HALF_PTR, *PHALF_PTR;
+typedef long SHANDLE_PTR;
+typedef unsigned long HANDLE_PTR;
 #define HandleToUlong( h ) ((ULONG)(ULONG_PTR)(h) )
 #define HandleToLong( h ) ((LONG)(LONG_PTR) (h) )
 #define ULongToHandle( h) ((HANDLE)(ULONG_PTR) (h))
@@ -181,14 +189,6 @@ typedef unsigned long UINT_PTR, *PUINT_PTR;
 #define LONG_PTR_DEFINED
 	typedef long LONG_PTR, *PLONG_PTR;
 	typedef unsigned long ULONG_PTR, *PULONG_PTR;
-#endif
-
-typedef unsigned short UHALF_PTR, *PUHALF_PTR;
-typedef short HALF_PTR, *PHALF_PTR;
-
-#ifndef HANDLE_PTR_DEFINED
-#define HANDLE_PTR_DEFINED
-	typedef unsigned long HANDLE_PTR;
 #endif
 
 #endif /* !_WIN64 */
