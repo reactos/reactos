@@ -14,8 +14,7 @@ list(APPEND SOURCE
 
 add_executable(msconfig ${SOURCE})
 
-add_pch(msconfig precomp.h)
-
 set_module_type(msconfig win32gui)
 add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt kernel32)
+add_pch(msconfig precomp.h)
 add_cd_file(TARGET msconfig DESTINATION reactos/system32 FOR all)

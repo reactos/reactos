@@ -15,8 +15,7 @@ add_executable(eventlog ${SOURCE})
 
 target_link_libraries(eventlog eventlogrpc ${PSEH_LIB})
 
-add_pch(eventlog eventlog.h)
-
 set_module_type(eventlog win32cui)
 add_importlibs(eventlog advapi32 rpcrt4 msvcrt kernel32 ntdll)
+add_pch(eventlog eventlog.h)
 add_cd_file(TARGET eventlog DESTINATION reactos/system32 FOR all)
