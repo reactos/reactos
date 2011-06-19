@@ -7,10 +7,15 @@
 
 #include <ntddk.h>
 #include <kmt_test.h>
-#include <kmt_log.h>
 
 VOID Test_Example(VOID)
 {
-    /* TODO: this should be trace(), as in winetests */
-    LogPrint("Message from kernel\n");
+    KIRQL Irql;
+
+    ok(1, "This test should succeed.\n");
+    ok(0, "This test should fail.\n");
+    trace("Message from kernel, low-irql. %s. %ls.\n", "Format strings work", L"Even with Unicode");
+    KeRaiseIrql(HIGH_LEVEL, &Irql);
+    trace("Message from kernel, high-irql. %s. %ls.\n", "Format strings work", L"Even with Unicode");
+    KeLowerIrql(Irql);
 }

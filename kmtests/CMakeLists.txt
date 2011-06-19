@@ -11,7 +11,6 @@ include_directories(
 #
 list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/kmtest_drv.c
-    kmtest_drv/log.c
     kmtest_drv/testlist.c
 
     example/Example.c

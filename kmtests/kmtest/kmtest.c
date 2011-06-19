@@ -74,6 +74,8 @@ static DWORD RunTest(char *testName)
         goto cleanup;
     }
 
+    KmtFinishTest(testName);
+
     if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &bytesWritten, NULL))
     {
         error = GetLastError();

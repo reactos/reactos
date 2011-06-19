@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #include <kmt_public.h>
-#include <kmt_log.h>
+#define KMT_DEFINE_TEST_FUNCTIONS
 #include <kmt_test.h>
 
 /* Prototypes */
@@ -58,11 +58,6 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Re
     UNREFERENCED_PARAMETER(RegistryPath);
 
     DPRINT("DriverEntry\n");
-
-    Status = LogInit();
-
-    if (!NT_SUCCESS(Status))
-        goto cleanup;
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\Kmtest");
     Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION), &DeviceName,
@@ -119,8 +114,6 @@ static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
         ASSERT(!ResultBuffer);
         IoDeleteDevice(MainDeviceObject);
     }
-
-    LogFree();
 }
 
 /**
