@@ -56,8 +56,8 @@ IopInitiatePnpIrp(
     IoStatusBlock);
 
   /* PNP IRPs are always initialized with a status code of
-     STATUS_NOT_IMPLEMENTED */
-  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+     STATUS_NOT_SUPPORTED */
+  Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
   Irp->IoStatus.Information = 0;
 
   IrpSp = IoGetNextIrpStackLocation(Irp);
