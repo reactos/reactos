@@ -679,31 +679,27 @@ SetDIBitsToDevice(
 #endif
     cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, ScanLines);
 
-    if ( Bits )
-    {
-        pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
-        if (pvSafeBits)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Hit = TRUE;
-            }
-            _SEH2_END
+	pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+	if (pvSafeBits)
+	{
+		_SEH2_TRY
+		{
+			RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
+		}
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+		{
+			Hit = TRUE;
+		}
+		_SEH2_END
 
-            if (Hit)
-            {
-                // We don't die, we continue on with a allocated safe pointer to kernel
-                // space.....
-                DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %x or Bits: %x & Size: %d\n",pConvertedInfo,Bits,cjBmpScanSize);
-            }
-            DPRINT("SetDIBitsToDevice Allocate Bits %d!!!\n", cjBmpScanSize);
-        }
-
-    }
+		if (Hit)
+		{
+			// We don't die, we continue on with a allocated safe pointer to kernel
+			// space.....
+			DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %x or Bits: %x & Size: %d\n",pConvertedInfo,Bits,cjBmpScanSize);
+		}
+		DPRINT("SetDIBitsToDevice Allocate Bits %d!!!\n", cjBmpScanSize);
+	}
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
     {
