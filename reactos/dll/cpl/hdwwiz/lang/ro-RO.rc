@@ -145,5 +145,3 @@ BEGIN
 	IDS_SELECTWAYTITLE "Acest Expert vă poate ajuta să instalați alt hardware"
 	IDS_HDTYPESTITLE "Din lista de mai jos, alegeți dispozitivul pe care vreți să îl instalați."
 END
-
-#pragma code_page(default)

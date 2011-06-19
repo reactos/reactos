@@ -301,5 +301,3 @@ BEGIN
   IDS_SECONDS "secunde"
   IDS_MINUTES "minute"
 END
-
-#pragma code_page(default)

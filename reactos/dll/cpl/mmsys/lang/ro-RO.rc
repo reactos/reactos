@@ -267,5 +267,3 @@ BEGIN
     5853 "Intrare în ReactOS"
 	5854 "ReactOS Explorer"
 END
-
-#pragma code_page(default)

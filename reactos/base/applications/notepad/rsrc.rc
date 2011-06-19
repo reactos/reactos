@@ -52,7 +52,6 @@ IDI_NPICON ICON "res/notepad.ico"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
 #include "lang/pt-PT.rc"
-
 #include "lang/sk-SK.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sv-SE.rc"

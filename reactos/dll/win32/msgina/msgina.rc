@@ -20,7 +20,6 @@ IDI_LOCKICON ICON "resources/21.ico"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"
 #include "lang/no-NO.rc"
-#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
@@ -28,3 +27,4 @@ IDI_LOCKICON ICON "resources/21.ico"
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"

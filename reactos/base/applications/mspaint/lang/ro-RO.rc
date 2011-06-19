@@ -204,5 +204,3 @@ BEGIN
     IDS_FILESIZE, "%d bytes"
     IDS_PRINTRES, "%d x %d pixels per meter"
 END
-
-#pragma code_page(default)

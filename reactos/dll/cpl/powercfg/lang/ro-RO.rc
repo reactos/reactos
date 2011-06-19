@@ -162,5 +162,3 @@ BEGIN
   IDS_DEL_SCHEME "Sunteți sigur că vreți să eliminați această schemă?"
   IDS_DEL_SCHEME_TITLE "Eliminare schemă"
 END
-
-#pragma code_page(default)

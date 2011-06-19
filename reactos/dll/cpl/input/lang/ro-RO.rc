@@ -239,5 +239,3 @@ BEGIN
     IDS_UZBEK_CYRILLIC_LAYOUT,                      "Uzbek Cyrillic"
     IDS_VIETNAMESE_LAYOUT,                          "Vietnamese"
 END
-
-#pragma code_page(default)

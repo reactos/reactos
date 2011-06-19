@@ -265,5 +265,3 @@ BEGIN
     IDS_APPLY_FAILED "Nu s-au putut aplica noile setări."
     IDS_APPLY_NEEDS_RESTART "Trebuie să reporniți computerul pentru a aplica noile setări."
 END
-
-#pragma code_page(default)

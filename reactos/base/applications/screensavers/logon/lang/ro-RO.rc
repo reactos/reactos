@@ -5,5 +5,3 @@ BEGIN
     IDS_DESCRIPTION "Ecran de veghe Siglă"
     IDS_TEXT        "Acest ecran de veghe nu are opțiuni."
 END
-
-#pragma code_page(default)

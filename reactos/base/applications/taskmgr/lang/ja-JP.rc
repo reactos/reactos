@@ -4,7 +4,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-#pragma code_page(65001)
 #endif //_WIN32
 #define IDS_PHYSICAL_MEMORY_AVAILABLE   1067
 /////////////////////////////////////////////////////////////////////////////

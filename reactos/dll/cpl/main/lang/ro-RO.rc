@@ -170,5 +170,3 @@ BEGIN
   IDS_OVERWRITE_TEXT "Numele de schemă ales este deja în folosință. Vreți să suprascrieți schema actuală?"
   IDS_ANIMATE_CURSOR "Cursoare animate"
 END
-
-#pragma code_page(default)

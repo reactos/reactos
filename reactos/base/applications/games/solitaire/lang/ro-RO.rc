@@ -89,5 +89,3 @@ BEGIN
     VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
     VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
 END
-
-#pragma code_page(default)

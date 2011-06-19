@@ -202,5 +202,3 @@ STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
 STRING_LINE_COLUMN,                             "Linie %d, coloană %d"
 END
-
-#pragma code_page(default)

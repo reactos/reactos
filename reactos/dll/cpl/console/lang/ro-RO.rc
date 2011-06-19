@@ -146,5 +146,3 @@ BEGIN
 	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
 	IDS_RASTERFONTS "Fonturi raster"
 END
-
-#pragma code_page(default)

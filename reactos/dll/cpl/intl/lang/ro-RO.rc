@@ -197,5 +197,3 @@ BEGIN
     IDS_CPLNAME "Opțiuni regionale"
     IDS_CPLDESCRIPTION "Setări limbi și formatare numere, valute, dată și timp."
 END
-
-#pragma code_page(default)

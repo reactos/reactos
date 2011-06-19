@@ -60,7 +60,6 @@ IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 
-
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"

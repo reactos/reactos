@@ -186,5 +186,3 @@ STRING_LF,                                      "Յունիքս"
 STRING_CR,                                      "Մակինտոշ"
 STRING_LINE_COLUMN,                             "Line %d, column %d"
 END
-
-#pragma code_page(default)

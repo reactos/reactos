@@ -66,5 +66,3 @@ BEGIN
     IDS_INETTIMESYNCING "Așteptași cât ReactOS se sincronizează cu %s"
     IDS_INETTIMEERROR "A apărut o eroare cât timp ReactOS se sincroniza cu %s"
 END
-
-#pragma code_page(default)

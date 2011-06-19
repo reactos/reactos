@@ -82,5 +82,3 @@ BEGIN
     IDS_CONTROLLER "Controlor"
     IDS_STATUS "Stare"
 END
-
-#pragma code_page(default)

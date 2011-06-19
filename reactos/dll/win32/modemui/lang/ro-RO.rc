@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 IDM_MENU MENU
 BEGIN
 	POPUP ""
@@ -613,5 +611,3 @@ BEGIN
 	6604 "Iugoslavia"
 	20013 "ID dispozitiv"
 END
-
-#pragma code_page(default)
