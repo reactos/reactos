@@ -730,5 +730,3 @@ BEGIN
     IDS_WEIGHT_TONS_UK              "Tone (Marea Britanie)"
     IDS_WEIGHT_TONS_US              "Tone (SUA)"
 END
-
-#pragma code_page(default)
