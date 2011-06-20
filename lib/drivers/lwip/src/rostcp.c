@@ -330,20 +330,16 @@ void
 LibTCPListenCallback(void *arg)
 {
     struct listen_callback_msg *msg = arg;
-    void *p;
     
     ASSERT(msg);
 
     DbgPrint("[lwIP, LibTCPListenCallback] Called\n");
-    
-    p = msg->Pcb->callback_arg;
+
     msg->NewPcb = tcp_listen_with_backlog(msg->Pcb, msg->Backlog);
     
     if (msg->NewPcb)
     {
-        tcp_arg(msg->NewPcb, p);
         tcp_accept(msg->NewPcb, InternalAcceptEventHandler);
-        tcp_err(msg->NewPcb, InternalErrorEventHandler);
     }
 
     DbgPrint("[lwIP, LibTCPListenCallback] Done\n");
@@ -641,9 +637,18 @@ LibTCPClose(struct tcp_pcb *pcb)
     DbgPrint("[lwIP, LibTCPClose] pcb->state = %s\n", tcp_state_str[pcb->state]);
 
     tcp_arg(pcb, NULL);
-    tcp_recv(pcb, NULL);
-    tcp_sent(pcb, NULL);
-    tcp_err(pcb, NULL);
+
+    /*  
+        if this pcb is not in LISTEN state than it has
+        valid recv, send and err callbacks to cancel
+    */
+    if (pcb->state != LISTEN)
+    {
+        tcp_recv(pcb, NULL);
+        tcp_sent(pcb, NULL);
+        tcp_err(pcb, NULL);
+    }
+
     tcp_accept(pcb, NULL);
 
     DbgPrint("[lwIP, LibTCPClose] Attempting to allocate memory for msg\n");
