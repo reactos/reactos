@@ -160,8 +160,6 @@ InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
     
     TCPConnectEventHandler(arg, err);
     
-    tcp_recv(pcb, InternalRecvEventHandler);
-    
     return ERR_OK;
 }
 
@@ -187,7 +185,7 @@ struct socket_callback_msg
     PVOID Arg;
     
     /* Output */
-    PVOID NewPcb;
+    struct tcp_pcb *NewPcb;
 };
 
 static
@@ -206,8 +204,8 @@ LibTCPSocketCallback(void *arg)
     
     if (msg->NewPcb)
     {
-        tcp_arg((struct tcp_pcb*)msg->NewPcb, msg->Arg);
-        tcp_err((struct tcp_pcb*)msg->NewPcb, InternalErrorEventHandler);
+        tcp_arg(msg->NewPcb, msg->Arg);
+        tcp_err(msg->NewPcb, InternalErrorEventHandler);
     }
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
@@ -217,7 +215,7 @@ struct tcp_pcb *
 LibTCPSocket(void *arg)
 {
     struct socket_callback_msg *msg = ExAllocatePool(NonPagedPool, sizeof(struct socket_callback_msg));
-    void *ret;
+    struct tcp_pcb *ret;
 
     DbgPrint("[lwIP, LibTCPSocket] Called\n");
     
@@ -239,7 +237,7 @@ LibTCPSocket(void *arg)
         
         ExFreePool(msg);
         
-        return (struct tcp_pcb*)ret;
+        return ret;
     }
 
     DbgPrint("[lwIP, LibTCPSocket] Done\n");
@@ -413,8 +411,6 @@ LibTCPSendCallback(void *arg)
     }
     else
     {
-        tcp_sent(msg->Pcb, InternalSendEventHandler);
-        
         msg->Error = tcp_write(msg->Pcb, msg->Data, msg->DataLength, TCP_WRITE_FLAG_COPY);
         
         tcp_output(msg->Pcb);
@@ -480,6 +476,9 @@ LibTCPConnectCallback(void *arg)
     DbgPrint("[lwIP, LibTCPConnectCallback] Called\n");
     
     ASSERT(arg);
+    
+    tcp_recv(msg->Pcb, InternalRecvEventHandler);
+    tcp_sent(msg->Pcb, InternalSendEventHandler);
     
     msg->Error = tcp_connect(msg->Pcb, msg->IpAddress, ntohs(msg->Port), InternalConnectEventHandler);
     if (msg->Error == ERR_OK)
@@ -695,6 +694,7 @@ LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg)
     tcp_arg(pcb, NULL);
     tcp_recv(pcb, InternalRecvEventHandler);
     tcp_sent(pcb, InternalSendEventHandler);
+    tcp_err(pcb, InternalErrorEventHandler);
     tcp_arg(pcb, arg);
     
     tcp_accepted(listen_pcb);
