@@ -204,6 +204,8 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
         }
         
+        DereferenceObject(Bucket->AssociatedEndpoint);
+
         DbgPrint("[IP, TCPAcceptEventHandler] Done!\n");
         
         CompleteBucket(Connection, Bucket, FALSE);
