@@ -315,6 +315,17 @@ extern int spawnvp(int mode, const char *cmdname, const char * const argv[]);
 
 #endif  /* __i386___ && __GNUC__ */
 
+#if defined(_MSC_VER)
+__forceinline
+int
+ffs(int mask)
+{
+    long index;
+    if (_BitScanForward(&index, mask) == 0) return 0;
+    return index;
+}
+#endif
+
 #else /* NO_LIBWINE_PORT */
 
 #define __WINE_NOT_PORTABLE(func) func##_is_not_portable func##_is_not_portable
