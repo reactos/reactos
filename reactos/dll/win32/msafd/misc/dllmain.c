@@ -1047,6 +1047,7 @@ WSPAccept(SOCKET Handle,
     ULONG                       CallBack;
     WSAPROTOCOL_INFOW           ProtocolInfo;
     SOCKET                      AcceptSocket;
+    PSOCKET_INFORMATION         AcceptSocketInfo;
     UCHAR                       ReceiveBuffer[0x1A];
     HANDLE                      SockEvent;
 
@@ -1362,6 +1363,17 @@ WSPAccept(SOCKET Handle,
         MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
         return INVALID_SOCKET;
     }
+    
+    AcceptSocketInfo = GetSocketStructure(AcceptSocket);
+    if (!AcceptSocketInfo)
+    {
+        NtClose(SockEvent);
+        WSPCloseSocket( AcceptSocket, lpErrno );
+        MsafdReturnWithErrno( STATUS_INVALID_CONNECTION, lpErrno, 0, NULL );
+        return INVALID_SOCKET;
+    }
+    
+    AcceptSocketInfo->SharedData.State = SocketConnected;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
