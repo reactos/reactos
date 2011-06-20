@@ -22,6 +22,9 @@ add_library(itss SHARED ${SOURCE})
 
 set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)
+if(MSVC)
+    target_link_libraries(itss itss_guid)
+endif()
 
 add_importlibs(itss
     urlmon
