@@ -41,24 +41,39 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
                                EXCEPTION_REGISTRATION_RECORD* nested_frame, int nested_trylevel );
 
 /* call a function with a given ebp */
-static inline void *call_ebp_func( void *func, void *ebp )
-{
-    void *ret;
-    int dummy;
 #ifdef _MSC_VER
-#pragma message ("call_ebp_func is unimplemented for MSC")
+#pragma warning(disable:4731) // don't warn about modification of ebp
+#endif
+static inline void *call_ebp_func( void *func, void *_ebp )
+{
+    void *result;
+#ifdef _MSC_VER
+    __asm
+    {
+        push ebx
+        push ebp
+        mov ebp, _ebp
+        call func
+        pop ebp
+        pop ebx
+        mov result, eax
+    }
 #else
+    int dummy;
     __asm__ __volatile__ ("pushl %%ebx\n\t"
                           "pushl %%ebp\n\t"
                           "movl %4,%%ebp\n\t"
                           "call *%%eax\n\t"
                           "popl %%ebp\n\t"
                           "popl %%ebx"
-                          : "=a" (ret), "=S" (dummy), "=D" (dummy)
-                          : "0" (func), "1" (ebp) : "ecx", "edx", "memory" );
+                          : "=a" (result), "=S" (dummy), "=D" (dummy)
+                          : "0" (func), "1" (_ebp) : "ecx", "edx", "memory" );
 #endif
-    return ret;
+    return result;
 }
+#ifdef _MSC_VER
+#pragma warning(default:4731)
+#endif
 
 /* call a copy constructor */
 static inline void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
