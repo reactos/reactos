@@ -50,10 +50,11 @@ static inline void *call_ebp_func( void *func, void *_ebp )
 #ifdef _MSC_VER
     __asm
     {
+        mov eax, func
         push ebx
         push ebp
         mov ebp, _ebp
-        call func
+        call eax
         pop ebp
         pop ebx
         mov result, eax
