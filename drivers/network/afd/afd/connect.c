@@ -281,7 +281,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n",
 			    Context, FCB->FileObject));
-    DbgPrint("[StreamSocketConnectComplete] Called: FCB %x, FO %x\n",
+    DbgPrint("[AFD, StreamSocketConnectComplete] Called: FCB 0x%x, FO 0x%x\n",
 			    Context, FCB->FileObject);
 
     /* I was wrong about this before as we can have pending writes to a not
@@ -333,7 +333,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 	    
         AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
-        DbgPrint("[StreamSocketConnectComplete] Completing connect %x\n", NextIrp);
+        DbgPrint("[AFD, StreamSocketConnectComplete] Completing connect 0x%x\n", NextIrp);
 	    
         NextIrp->IoStatus.Status = Status;
 	    NextIrp->IoStatus.Information = NT_SUCCESS(Status) ? ((ULONG_PTR)FCB->Connection.Handle) : 0;
@@ -410,7 +410,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				       0 );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
-    DbgPrint("[AfdStreamSocketConnect] Connect request:\n");
+    DbgPrint("[AFD, AfdStreamSocketConnect] Connect request:\n");
 #if 0
     OskitDumpBuffer
 	( (PCHAR)ConnectReq,
@@ -420,8 +420,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
         if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
-        FCB->RemoteAddress =
-	        TaCopyTransportAddress( &ConnectReq->RemoteAddress );
+            FCB->RemoteAddress = TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
         if( !FCB->RemoteAddress )
 	        Status = STATUS_NO_MEMORY;
@@ -440,10 +439,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         case SOCKET_STATE_CONNECTING:
 	        return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
-    case SOCKET_STATE_CREATED:
-	if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
-	FCB->LocalAddress =
-	    TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
+        case SOCKET_STATE_CREATED:
+	        if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+	            FCB->LocalAddress = TaBuildNullTransportAddress(
+                    ConnectReq->RemoteAddress.Address[0].AddressType);
 
 	        if( FCB->LocalAddress )
             {
@@ -460,9 +459,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         /* Drop through to SOCKET_STATE_BOUND */
 
         case SOCKET_STATE_BOUND:
-	        if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
-	            FCB->RemoteAddress =
-	                TaCopyTransportAddress( &ConnectReq->RemoteAddress );
+	        if( FCB->RemoteAddress )
+                ExFreePool( FCB->RemoteAddress );
+	        
+            FCB->RemoteAddress = TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
 	        if( !FCB->RemoteAddress )
             {
@@ -475,13 +475,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	        if( !NT_SUCCESS(Status) )
 	            break;
 
-	        Status = TdiBuildConnectionInfo
-	            ( &FCB->ConnectInfo,
-	              &ConnectReq->RemoteAddress );
+	        Status = TdiBuildConnectionInfo(&FCB->ConnectInfo, &ConnectReq->RemoteAddress);
 
             if( NT_SUCCESS(Status) )
-                Status = TdiBuildConnectionInfo(&TargetAddress,
-                                  	        &ConnectReq->RemoteAddress);
+                Status = TdiBuildConnectionInfo(&TargetAddress, &ConnectReq->RemoteAddress);
             else break;
 
 	        if( NT_SUCCESS(Status) )
@@ -502,7 +499,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     ExFreePool(TargetAddress);
 
 	            AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
-                DbgPrint("[AfdStreamSocketConnect] Queueing IRP %x\n", Irp);
+                DbgPrint("[AFD, AfdStreamSocketConnect] Queueing IRP %x\n", Irp);
 
 	            if( Status == STATUS_PENDING )
                 {
@@ -515,7 +512,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         default:
 	        AFD_DbgPrint(MID_TRACE,("Inappropriate socket state %d for connect\n",
 				        FCB->State));
-            DbgPrint("[AfdStreamSocketConnect] Inappropriate socket state %d for connect\n",
+            DbgPrint("[AFD, AfdStreamSocketConnect] Inappropriate socket state %d for connect\n",
                         FCB->State);
 	        break;
     }

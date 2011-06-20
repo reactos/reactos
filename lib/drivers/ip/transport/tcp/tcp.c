@@ -347,14 +347,23 @@ NTSTATUS TCPDisconnect
 
     LockObject(Connection, &OldIrql);
 
-    if (Flags & TDI_DISCONNECT_RELEASE)
+    if (Connection->SocketContext)
     {
-        Status = LibTCPShutdown(Connection->SocketContext, 0, 1);
-    }
+        if (Flags & TDI_DISCONNECT_RELEASE)
+        {
+            Status = TCPTranslateError(LibTCPShutdown(Connection->SocketContext, 0, 1));
+        }
 
-    if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+        if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+        {
+            Status = TCPTranslateError(LibTCPShutdown(Connection->SocketContext, 1, 1));
+        }
+    }
+    else
     {
-        Status = LibTCPShutdown(Connection->SocketContext, 1, 1);
+        /* We already got closed by the other side so just return success */
+        DbgPrint("[IP, TCPDisconnect] Socket was alraedy clsoed on the other side\n");
+        Status = STATUS_SUCCESS;
     }
     
     DbgPrint("LibTCPShutdown: %x\n", Status);

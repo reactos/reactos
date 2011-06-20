@@ -612,7 +612,17 @@ LibTCPCloseCallback(void *arg)
 {
     struct close_callback_msg *msg = arg;
     
-    msg->Error = tcp_close(msg->Pcb);
+    if (msg->Pcb->state == LISTEN)
+    {
+        DbgPrint("[lwIP, LibTCPCloseCallback] Closing a listener\n");
+        msg->Error = tcp_close(msg->Pcb);
+    }
+    else
+    {
+        DbgPrint("[lwIP, LibTCPCloseCallback] Aborting a connection\n");
+        tcp_abort(msg->Pcb);
+        msg->Error = ERR_OK;
+    }
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }

@@ -202,6 +202,10 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
 
             DbgPrint("[IP, TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
+
+            /*  free socket context created in FileOpenConnection, as we're using a new
+                one; we free it asynchornously because otherwise we create a dedlock */
+            ChewCreate(SocketContextCloseWorker, OldSocketContext);
         }
         
         DereferenceObject(Bucket->AssociatedEndpoint);
@@ -212,10 +216,6 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
     }
     
     DereferenceObject(Connection);
-
-    /*  free socket context created in FileOpenConnection, as we're using a new
-        one; we free it asynchornously because otherwise we create a dedlock */
-    ChewCreate(SocketContextCloseWorker, OldSocketContext);
 }
 
 VOID
