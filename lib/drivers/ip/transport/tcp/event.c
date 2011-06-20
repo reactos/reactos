@@ -77,7 +77,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
     
     ReferenceObject(Connection);
     
-    DbgPrint("Flushing recv/all with status: 0x%x\n", Status);
+    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x\n", Status);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
@@ -102,8 +102,10 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         
         Bucket->Status = Status;
         Bucket->Information = 0;
+
+        DbgPrint("[IP, FlushAllQueues] Flushing Listen request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
-        //DereferenceObject(Bucket->AssociatedEndpoint);
+        DereferenceObject(Bucket->AssociatedEndpoint);
         CompleteBucket(Connection, Bucket, TRUE);
     }
     
@@ -179,9 +181,6 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        DbgPrint("[IP, TCPAcceptEventHandler] Associated with: 0x%x\n",
-            Bucket->AssociatedEndpoint->SocketContext);
-        
         DbgPrint("[IP, TCPAcceptEventHandler] Completing accept event %x\n", Status);
         
         if (Status == STATUS_SUCCESS)
@@ -194,7 +193,6 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
 
             /* free previously created socket context (we don't use it, we use newpcb) */
-            //LibTCPClose(Bucket->AssociatedEndpoint->SocketContext);
             OldSocketContext = Bucket->AssociatedEndpoint->SocketContext;
             Bucket->AssociatedEndpoint->SocketContext = newpcb;
             

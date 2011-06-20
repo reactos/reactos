@@ -256,6 +256,8 @@ NTSTATUS FileOpenAddress(
     }
 
     RtlZeroMemory(AddrFile, sizeof(ADDRESS_FILE));
+    DbgPrint("[TCPIP, FileOpenAddress] Allocated AddressFile = 0x%x, sizeof(ADDRESS_FILE) = %d\n",
+        AddrFile, sizeof(ADDRESS_FILE));
 
     AddrFile->RefCount = 1;
     AddrFile->Free = AddrFileFree;
@@ -395,18 +397,22 @@ NTSTATUS FileCloseAddress(
 
     LockObject(AddrFile, &OldIrql);
 
+    DbgPrint("[TCPIP, FileCloseAddress] AddrFile->RefCount = %d before TCPClose\n", AddrFile->RefCount);
+
     /* We have to close this listener because we started it */
     if ( AddrFile->Listener )
     {
         AddrFile->Listener->AddressFile = NULL;
+
+        //DbgPrint("[TCPIP, FileCloseAddress] Calling TCPClose( 0x%x )\n", AddrFile->Listener);
         TCPClose( AddrFile->Listener );
     }
-
-    DbgPrint("[TCPIP, FileCloseAddress] AddrFile->RefCount = %d\n", AddrFile->RefCount);
 
     UnlockObject(AddrFile, OldIrql);
 
     DereferenceObject(AddrFile);
+
+    DbgPrint("[TCPIP, FileCloseAddress] AddrFile->RefCount = %d after TCPClose\n", AddrFile->RefCount);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
     DbgPrint("[TCPIP, FileCloseAddress] Leaving\n");
@@ -439,6 +445,7 @@ NTSTATUS FileOpenConnection(
       return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
+
 
   if (!NT_SUCCESS(Status))
   {

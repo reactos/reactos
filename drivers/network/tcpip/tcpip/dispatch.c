@@ -229,8 +229,7 @@ VOID NTAPI DispCancelListenRequest(
     /* Try canceling the request */
     Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
 
-    if (TCPAbortListenForSocket(Connection->AddressFile->Listener,
-                                Connection))
+    if (TCPAbortListenForSocket(Connection->AddressFile->Listener, Connection))
     {
         Irp->IoStatus.Information = 0;
         IRPFinish(Irp, STATUS_CANCELLED);
@@ -267,16 +266,17 @@ NTSTATUS DispTdiAssociateAddress(
  *     Status of operation
  */
 {
-  PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
-  PCONNECTION_ENDPOINT Connection, LastConnection;
-  PFILE_OBJECT FileObject;
-  PADDRESS_FILE AddrFile = NULL;
-  NTSTATUS Status;
-  KIRQL OldIrql;
+    PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
+    PCONNECTION_ENDPOINT Connection, LastConnection;
+    PFILE_OBJECT FileObject;
+    PADDRESS_FILE AddrFile = NULL;
+    NTSTATUS Status;
+    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiAssociateAddress] Called\n"));
+    DbgPrint("[TCPIP, DispTdiAssociateAddress] Called\n");
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -354,17 +354,20 @@ NTSTATUS DispTdiAssociateAddress(
 
     LockObjectAtDpcLevel(AddrFile);
 
-  /* Add connection endpoint to the address file */
-  ReferenceObject(Connection);
-  if (AddrFile->Connection == NULL)
-      AddrFile->Connection = Connection;
-  else
-  {
-      LastConnection = AddrFile->Connection;
-      while (LastConnection->Next != NULL)
-         LastConnection = LastConnection->Next;
-      LastConnection->Next = Connection;
-  }
+    DbgPrint("[TCPIP, DispTdiAssociateAddress] Associating AddressFile = 0x%x with Connection = 0x%x\n",
+        AddrFile, Connection);
+
+    /* Add connection endpoint to the address file */
+    ReferenceObject(Connection);
+    if (AddrFile->Connection == NULL)
+        AddrFile->Connection = Connection;
+    else
+    {
+        LastConnection = AddrFile->Connection;
+        while (LastConnection->Next != NULL)
+            LastConnection = LastConnection->Next;
+        LastConnection->Next = Connection;
+    }
 
     ReferenceObject(AddrFile);
     Connection->AddressFile = AddrFile;
@@ -374,7 +377,99 @@ NTSTATUS DispTdiAssociateAddress(
 
     ObDereferenceObject(FileObject);
 
+    DbgPrint("[TCPIP, DispTdiAssociateAddress] Leaving\n");
+
     return STATUS_SUCCESS;
+}
+
+NTSTATUS DispTdiDisassociateAddress(
+  PIRP Irp)
+/*
+ * FUNCTION: TDI_DISASSOCIATE_ADDRESS handler
+ * ARGUMENTS:
+ *     Irp = Pointer to an I/O request packet
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    PCONNECTION_ENDPOINT Connection, LastConnection;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+    DbgPrint("[TCPIP, DispTdiDisassociateAddress] Called\n");
+
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Get associated connection endpoint file object. Quit if none exists */
+
+    TranContext = IrpSp->FileObject->FsContext;
+    if (!TranContext)
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    if (!Connection)
+    {
+        TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    LockObject(Connection, &OldIrql);
+
+    if (!Connection->AddressFile)
+    {
+        UnlockObject(Connection, OldIrql);
+        TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    LockObjectAtDpcLevel(Connection->AddressFile);
+
+    /* Unlink this connection from the address file */
+    if (Connection->AddressFile->Connection == Connection)
+    {
+        Connection->AddressFile->Connection = Connection->Next;
+        DereferenceObject(Connection);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        LastConnection = Connection->AddressFile->Connection;
+        while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+            LastConnection = LastConnection->Next;
+        if (LastConnection->Next == Connection)
+        {
+            LastConnection->Next = Connection->Next;
+            DereferenceObject(Connection);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    UnlockObjectFromDpcLevel(Connection->AddressFile);
+
+    if (Status == STATUS_SUCCESS)
+    {
+        DbgPrint("[TCPIP, DispTdiDisassociateAddress] Dissasociating AddressFile = 0x%x from Connection = 0x%x\n",
+            Connection->AddressFile, Connection);
+        /* Remove the address file from this connection */
+        DereferenceObject(Connection->AddressFile);
+        Connection->AddressFile = NULL;
+    }
+
+    UnlockObject(Connection, OldIrql);
+
+    DbgPrint("[TCPIP, DispTdiDisassociateAddress] Leaving. Status = 0x%x\n", Status);
+
+    return Status;
 }
 
 
@@ -440,90 +535,6 @@ done:
 
   return Status;
 }
-
-
-NTSTATUS DispTdiDisassociateAddress(
-  PIRP Irp)
-/*
- * FUNCTION: TDI_DISASSOCIATE_ADDRESS handler
- * ARGUMENTS:
- *     Irp = Pointer to an I/O request packet
- * RETURNS:
- *     Status of operation
- */
-{
-  PCONNECTION_ENDPOINT Connection, LastConnection;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
-  KIRQL OldIrql;
-  NTSTATUS Status;
-
-  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-  /* Get associated connection endpoint file object. Quit if none exists */
-
-  TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection) {
-    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  LockObject(Connection, &OldIrql);
-
-  if (!Connection->AddressFile) {
-    UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
-
-  LockObjectAtDpcLevel(Connection->AddressFile);
-
-  /* Unlink this connection from the address file */
-  if (Connection->AddressFile->Connection == Connection)
-  {
-      Connection->AddressFile->Connection = Connection->Next;
-      DereferenceObject(Connection);
-      Status = STATUS_SUCCESS;
-  }
-  else
-  {
-      LastConnection = Connection->AddressFile->Connection;
-      while (LastConnection->Next != Connection && LastConnection->Next != NULL)
-         LastConnection = LastConnection->Next;
-      if (LastConnection->Next == Connection)
-      {
-          LastConnection->Next = Connection->Next;
-          DereferenceObject(Connection);
-          Status = STATUS_SUCCESS;
-      }
-      else
-      {
-          Status = STATUS_INVALID_PARAMETER;
-      }
-  }
-
-  UnlockObjectFromDpcLevel(Connection->AddressFile);
-
-  if (Status == STATUS_SUCCESS)
-  {
-      /* Remove the address file from this connection */
-      DereferenceObject(Connection->AddressFile);
-      Connection->AddressFile = NULL;
-  }
-
-  UnlockObject(Connection, OldIrql);
-
-  return Status;
-}
-
 
 NTSTATUS DispTdiDisconnect(
   PIRP Irp)
@@ -650,6 +661,8 @@ NTSTATUS DispTdiListen(
     if ( NT_SUCCESS(Status) && !Connection->AddressFile->Listener )
     {
         Connection->AddressFile->Listener = TCPAllocateConnectionEndpoint( NULL );
+        DbgPrint("[TCPIP, DispTdiListen] Connection = 0x%x, Connection->AddressFile->Listener = 0x%x\n",
+            Connection, Connection->AddressFile->Listener);
 
         if ( !Connection->AddressFile->Listener )
 	        Status = STATUS_NO_MEMORY;
@@ -657,7 +670,7 @@ NTSTATUS DispTdiListen(
         if ( NT_SUCCESS(Status) )
         {
 	        Connection->AddressFile->Listener->AddressFile =
-	        Connection->AddressFile;
+	            Connection->AddressFile;
 
 	        Status = TCPSocket( Connection->AddressFile->Listener,
 			        Connection->AddressFile->Family,

@@ -287,8 +287,8 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = ObReferenceObjectByHandle( (PVOID)EventSelectInfo->
 					    EventObject,
 					    FILE_ALL_ACCESS,
-					    NULL,
-					    KernelMode,
+					    ExEventObjectType,
+					    UserMode,
 					    (PVOID *)&FCB->EventSelect,
 					    NULL );
 

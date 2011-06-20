@@ -128,7 +128,7 @@ static
 err_t
 InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
-    DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent (0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent arg = 0x%x, newpcb = 0x%x, err = %d\n",
         arg, newpcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
@@ -197,8 +197,12 @@ LibTCPSocketCallback(void *arg)
     struct socket_callback_msg *msg = arg;
     
     ASSERT(msg);
+
+    DbgPrint("[lwIP, LibTCPSocketCallback] Called\n");
     
     msg->NewPcb = tcp_new();
+
+    DbgPrint("[lwIP, LibTCPSocketCallback] Assigned new pcb = 0x%x\n", msg->NewPcb);
     
     if (msg->NewPcb)
     {
@@ -214,6 +218,8 @@ LibTCPSocket(void *arg)
 {
     struct socket_callback_msg *msg = ExAllocatePool(NonPagedPool, sizeof(struct socket_callback_msg));
     void *ret;
+
+    DbgPrint("[lwIP, LibTCPSocket] Called\n");
     
     if (msg)
     {
@@ -227,12 +233,16 @@ LibTCPSocket(void *arg)
         else
             ret = NULL;
         
-        DbgPrint("[lwIP, LibTCPSocket] (0x%x) = 0x%x\n", arg, ret);
+        DbgPrint("[lwIP, LibTCPSocket] Connection( 0x%x )->SocketContext = pcb( 0x%x )\n", arg, ret);
+
+        DbgPrint("[lwIP, LibTCPSocket] Done\n");
         
         ExFreePool(msg);
         
         return (struct tcp_pcb*)ret;
     }
+
+    DbgPrint("[lwIP, LibTCPSocket] Done\n");
     
     return NULL;
 }
@@ -347,7 +357,7 @@ LibTCPListen(struct tcp_pcb *pcb, u8_t backlog)
     struct listen_callback_msg *msg;
     void *ret;
 
-    DbgPrint("[lwIP, LibTCPListen] Called\n");
+    DbgPrint("[lwIP, LibTCPListen] Called on pcb = 0x%x\n", pcb);
     
     if (!pcb)
         return NULL;
@@ -366,7 +376,8 @@ LibTCPListen(struct tcp_pcb *pcb, u8_t backlog)
         else
             ret = NULL;
         
-        DbgPrint("[lwIP, LibTCPListen] pcb = 0x%x \n", pcb);
+        DbgPrint("[lwIP, LibTCPListen] pcb = 0x%x, newpcb = 0x%x, sizeof(pcb) = %d \n",
+            pcb, ret, sizeof(struct tcp_pcb));
 
         DbgPrint("[lwIP, LibTCPListen] Done\n");
         
@@ -617,7 +628,7 @@ LibTCPClose(struct tcp_pcb *pcb)
     struct close_callback_msg *msg;
     err_t ret;
 
-    DbgPrint("[lwIP, LibTCPClose] Called\n");
+    DbgPrint("[lwIP, LibTCPClose] Called on pcb = 0x%x\n", pcb);
     
     if (!pcb)
     {
@@ -626,7 +637,9 @@ LibTCPClose(struct tcp_pcb *pcb)
     }
 
     DbgPrint("[lwIP, LibTCPClose] Removing pcb callbacks\n");
-    
+
+    DbgPrint("[lwIP, LibTCPClose] pcb->state = %s\n", tcp_state_str[pcb->state]);
+
     tcp_arg(pcb, NULL);
     tcp_recv(pcb, NULL);
     tcp_sent(pcb, NULL);

@@ -139,7 +139,7 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
 {
   err_t err;
 
-  LWIP_DEBUGF(TCP_DEBUG, ("tcp_close_shutdown: called on pcb %x\n", pcb));
+  LWIP_DEBUGF(TCP_DEBUG, ("tcp_close_shutdown: called on pcb 0x%x\n", pcb));
 
   if (rst_on_unacked_data && (pcb->state != LISTEN)) {
     if ((pcb->refused_data != NULL) || (pcb->rcv_wnd != TCP_WND)) {
@@ -181,6 +181,7 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
     break;
   case LISTEN:
     err = ERR_OK;
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_close_shutdown: Remove pcb from listen list and free\n"));
     tcp_pcb_remove(&tcp_listen_pcbs.pcbs, pcb);
     memp_free(MEMP_TCP_PCB_LISTEN, pcb);
     pcb = NULL;
@@ -487,6 +488,8 @@ tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog)
 
   LWIP_UNUSED_ARG(backlog);
   LWIP_ERROR("tcp_listen: pcb already connected", pcb->state == CLOSED, return NULL);
+  DbgPrint("tcp_listen_with_backlog: sizeof(tcp_pcb_listen) = %d, %d\n",
+      sizeof(struct tcp_pcb_listen), (((sizeof(struct tcp_pcb_listen)) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1)));
 
   /* already listening? */
   if (pcb->state == LISTEN) {

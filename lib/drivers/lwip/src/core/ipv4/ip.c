@@ -252,6 +252,8 @@ ip_input(struct pbuf *p, struct netif *inp)
   IP_STATS_INC(ip.recv);
   snmp_inc_ipinreceives();
 
+  DbgPrint("ip_input: called\n");
+
   /* identify the IP header */
   iphdr = (struct ip_hdr *)p->payload;
   if (IPH_V(iphdr) != 4) {
@@ -488,7 +490,7 @@ ip_input(struct pbuf *p, struct netif *inp)
   if (raw_input(p, inp) == 0)
 #endif /* LWIP_RAW */
   {
-
+      DbgPrint("ip_input: choosing protocol\n");
     switch (IPH_PROTO(iphdr)) {
 #if LWIP_UDP
     case IP_PROTO_UDP:
@@ -502,6 +504,7 @@ ip_input(struct pbuf *p, struct netif *inp)
 #if LWIP_TCP
     case IP_PROTO_TCP:
       snmp_inc_ipindelivers();
+      DbgPrint("ip_input: sending data to tcp_input\n");
       tcp_input(p, inp);
       break;
 #endif /* LWIP_TCP */

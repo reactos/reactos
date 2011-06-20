@@ -101,7 +101,7 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     {
         Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
 
-        if( Bucket->AssociatedEndpoint == Connection )
+        if (Bucket->AssociatedEndpoint == Connection)
         {
             DereferenceObject(Bucket->AssociatedEndpoint);
             RemoveEntryList( &Bucket->Entry );

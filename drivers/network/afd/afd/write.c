@@ -328,8 +328,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         
         if (SpaceAvail < SendReq->BufferArray[i].len)
         {
-            if (FCB->Send.BytesUsed + TotalBytesCopied + 
-                SendReq->BufferArray[i].len > FCB->Send.Size)
+            if (TotalBytesCopied + SendReq->BufferArray[i].len > FCB->Send.Size)
             {
                 UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
                 

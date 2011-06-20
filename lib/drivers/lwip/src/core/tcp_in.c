@@ -108,8 +108,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
   iphdr = (struct ip_hdr *)p->payload;
   tcphdr = (struct tcp_hdr *)((u8_t *)p->payload + IPH_HL(iphdr) * 4);
 
-  LWIP_DEBUGF(TCP_DEBUG, ("tcp_input: called\n"));
-
 #if TCP_INPUT_DEBUG
   tcp_debug_print(tcphdr);
 #endif
@@ -177,22 +175,25 @@ tcp_input(struct pbuf *p, struct netif *inp)
   flags = TCPH_FLAGS(tcphdr);
   tcplen = p->tot_len + ((flags & (TCP_FIN | TCP_SYN)) ? 1 : 0);
 
+  LWIP_DEBUGF(TCP_DEBUG, ("tcp_input: called %"U16_F" -> %"U16_F"\n", tcphdr->src, tcphdr->dest));
+
   /* Demultiplex an incoming segment. First, we check if it is destined
      for an active connection. */
   prev = NULL;
-
   
   for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next)
   {
     LWIP_ASSERT("tcp_input: active pcb->state != CLOSED", pcb->state != CLOSED);
     LWIP_ASSERT("tcp_input: active pcb->state != TIME-WAIT", pcb->state != TIME_WAIT);
     LWIP_ASSERT("tcp_input: active pcb->state != LISTEN", pcb->state != LISTEN);
+
     if (pcb->remote_port == tcphdr->src &&
        pcb->local_port == tcphdr->dest &&
        ip_addr_cmp(&(pcb->remote_ip), &current_iphdr_src) &&
        ip_addr_cmp(&(pcb->local_ip), &current_iphdr_dest))
     {
-
+        LWIP_DEBUGF(TCP_DEBUG, ("tcp_input: active pcb -> (localport, remoteport) = %"U16_F" -> %"U16_F"\n", pcb->local_port, pcb->remote_port));
+        DbgPrint("tcp_input: pcb = 0x%x\n", pcb);
       /* Move this PCB to the front of the list so that subsequent
          lookups will be faster (we exploit locality in TCP segment
          arrivals). */
@@ -909,6 +910,8 @@ tcp_receive(struct tcp_pcb *pcb)
   u16_t new_tot_len;
   int found_dupack = 0;
 
+  LWIP_DEBUGF(TCP_DEBUG, ("tcp_receive: called\n"));
+
   if (flags & TCP_ACK) {
     right_wnd_edge = pcb->snd_wnd + pcb->snd_wl2;
 
@@ -1534,6 +1537,8 @@ tcp_receive(struct tcp_pcb *pcb)
       tcp_ack_now(pcb);
     }
   }
+
+  LWIP_DEBUGF(TCP_DEBUG, ("tcp_receive: done\n"));
 }
 
 /**

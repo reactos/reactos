@@ -49,7 +49,8 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
 static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
 	NTSTATUS Status;
 
-	if( !FCB->ReceiveIrp.InFlightRequest ) {
+	if( !FCB->ReceiveIrp.InFlightRequest &&
+        !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)) ) {
 		AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
 
 		Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
@@ -216,7 +217,8 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 		}
     }
 
-    if( FCB->Recv.Content - FCB->Recv.BytesUsed ) {
+    if( FCB->Recv.Content - FCB->Recv.BytesUsed &&
+        IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -576,7 +578,7 @@ PacketSocketRecvComplete(
 		}
     }
 
-    if( !IsListEmpty( &FCB->DatagramList ) ) {
+    if( !IsListEmpty( &FCB->DatagramList ) && IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) ) {
 		AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 		FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;

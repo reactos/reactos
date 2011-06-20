@@ -81,11 +81,11 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     LockObject(Connection, &OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
-                           "Proto %d\n",
-                           Connection, Family, Type, Proto));
-    DbgPrint("[IP, TCPSocket] Called: Connection %x, Family %d, Type %d, "
-                           "Proto %d\n",
-                           Connection, Family, Type, Proto);
+                           "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
+                           Connection, Family, Type, Proto, sizeof(CONNECTION_ENDPOINT)));
+    DbgPrint("[IP, TCPSocket] Called: Connection 0x%x, Family %d, Type %d, "
+                           "Proto %d, sizeof(CONNECTION_ENDPOINT) = %d\n",
+                           Connection, Family, Type, Proto, sizeof(CONNECTION_ENDPOINT));
 
     Connection->SocketContext = LibTCPSocket(Connection);
     if (Connection->SocketContext)
@@ -93,12 +93,45 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
+    DbgPrint("[IP, TCPSocket] Connection->SocketContext = 0x%x\n", Connection->SocketContext);
+
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status));
     DbgPrint("[IP, TCPSocket] Leaving. Status = 0x%x\n", Status);
 
     return Status;
+}
+
+NTSTATUS TCPClose
+( PCONNECTION_ENDPOINT Connection )
+{
+    KIRQL OldIrql;
+    PVOID Socket;
+
+    LockObject(Connection, &OldIrql);
+    Socket = Connection->SocketContext;
+    Connection->SocketContext = NULL;
+
+    DbgPrint("[IP, TCPClose] Called\n");
+
+    /* We should not be associated to an address file at this point */
+    ASSERT(!Connection->AddressFile);
+
+    /* Don't try to close again if the other side closed us already */
+    if (Socket)
+    {
+        FlushAllQueues(Connection, STATUS_CANCELLED);
+        LibTCPClose(Socket);
+    }
+
+    UnlockObject(Connection, OldIrql);
+
+    DereferenceObject(Connection);
+
+    DbgPrint("[IP, TCPClose] Leaving. Connection->RefCount = %d\n", Connection->RefCount);
+
+    return STATUS_SUCCESS;
 }
 
 VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
@@ -331,34 +364,6 @@ NTSTATUS TCPDisconnect
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPDisconnect] Leaving. Status = 0x%x\n", Status));
 
     return Status;
-}
-
-NTSTATUS TCPClose
-( PCONNECTION_ENDPOINT Connection )
-{
-    KIRQL OldIrql;
-    PVOID Socket;
-
-    LockObject(Connection, &OldIrql);
-    Socket = Connection->SocketContext;
-    Connection->SocketContext = NULL;
-
-    /* We should not be associated to an address file at this point */
-    ASSERT(!Connection->AddressFile);
-
-    /* Don't try to close again if the other side closed us already */
-    if (Socket)
-    {
-        FlushAllQueues(Connection, STATUS_CANCELLED);
-
-        LibTCPClose(Socket);
-    }
-
-    UnlockObject(Connection, OldIrql);
-
-    DereferenceObject(Connection);
-
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS TCPReceiveData
