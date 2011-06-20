@@ -23,6 +23,12 @@ import "wtypes.idl";
 import "objidl.idl";
 import "oaidl.idl";
 
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 cpp_quote("#if 0")
 typedef unsigned long MSIHANDLE;
 typedef int INSTALLMESSAGE;

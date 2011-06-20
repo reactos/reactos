@@ -18,6 +18,12 @@
 
 #include "urlmon.idl"
 
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 [
     helpstring("URL Moniker"),
     threading(apartment),
