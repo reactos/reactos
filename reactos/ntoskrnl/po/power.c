@@ -574,7 +574,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
         *pIrp = Irp;
   
     IoSetCompletionRoutine(Irp, PopRequestPowerIrpCompletion, RequestPowerItem, TRUE, TRUE, TRUE);
-    IoCallDriver(TopDeviceObject, Irp);
+    PoCallDriver(TopDeviceObject, Irp);
   
     /* Always return STATUS_PENDING. The completion routine
      * will call CompletionFunction and complete the Irp.
