@@ -26,6 +26,7 @@ set_entrypoint(crtdll DllMain@12)
 target_link_libraries(crtdll wine crt)
 
 if(MSVC)
+    add_importlibs(crtdll msvcrt)
     target_link_libraries(crtdll oldnames)
 endif()
 

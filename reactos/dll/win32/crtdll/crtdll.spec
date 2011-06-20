@@ -94,7 +94,7 @@
   @ cdecl _fgetchar() msvcrt._fgetchar
   @ cdecl _fgetwchar() msvcrt._fgetwchar
   @ cdecl _filbuf(ptr) msvcrt._filbuf
-  @ extern _fileinfo_dll msvcrt._fileinfo
+  @ extern _fileinfo_dll
   @ cdecl _filelength(long) msvcrt._filelength
   @ cdecl _fileno(ptr) msvcrt._fileno
   @ cdecl _findclose(long) msvcrt._findclose
