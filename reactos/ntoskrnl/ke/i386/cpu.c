@@ -41,7 +41,7 @@ ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
 ULONG KePrefetchNTAGranularity = 32;
-CHAR KeNumberProcessors;
+CHAR KeNumberProcessors = 0;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
