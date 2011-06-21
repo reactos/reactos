@@ -610,4 +610,7 @@ int main( int argc, char **argv )
 
 #endif  /* STANDALONE */
 
+// hack for ntdll winetest (this is defined in excpt.h)
+#undef exception_info
+
 #endif  /* __WINE_WINE_TEST_H */
