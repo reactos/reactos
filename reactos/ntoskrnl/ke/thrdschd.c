@@ -696,6 +696,28 @@ KiSetAffinityThread(IN PKTHREAD Thread,
     return OldAffinity;
 }
 
+//
+// This macro exists because NtYieldExecution locklessly attempts to read from
+// the KPRCB's ready summary, and the usual way of going through KeGetCurrentPrcb
+// would require getting fs:1C first (or gs), and then doing another dereference.
+// In an attempt to minimize the amount of instructions and potential race/tear
+// that could happen, Windows seems to define this as a macro that directly acceses
+// the ready summary through a single fs: read by going through the KPCR's PrcbData.
+//
+// See http://research.microsoft.com/en-us/collaboration/global/asia-pacific/
+//     programs/trk_case4_process-thread_management.pdf
+//
+// We need this per-arch because sometimes it's Prcb and sometimes PrcbData, and
+// because on x86 it's FS, and on x64 it's GS (not sure what it is on ARM/PPC).
+//
+#ifdef _M_IX86
+#define KiGetCurrentReadySummary() __readfsdword(FIELD_OFFSET(KIPCR, PrcbData.ReadySummary))
+#elif _M_AMD64
+#define KiGetCurrentReadySummary() __readgsdword(FIELD_OFFSET(KIPCR, Prcb.ReadySummary))
+#else
+#error Implement me!
+#endif
+
 /*
  * @implemented
  */
@@ -703,16 +725,23 @@ NTSTATUS
 NTAPI
 NtYieldExecution(VOID)
 {
-    NTSTATUS Status = STATUS_NO_YIELD_PERFORMED;
+    NTSTATUS Status;
     KIRQL OldIrql;
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD Thread = KeGetCurrentThread(), NextThread;
+    PKPRCB Prcb;
+    PKTHREAD Thread; NextThread;
+
+    /* NB: No instructions (other than entry code) should preceed this line */
 
     /* Fail if there's no ready summary */
-    if (!Prcb->ReadySummary) return Status;
+    if (!KiGetCurrentReadySummary()) return STATUS_NO_YIELD_PERFORMED;
 
-    /* Raise IRQL to synch */
+    /* Now get the current thread, set the status... */
+    Status = STATUS_NO_YIELD_PERFORMED;
+    Thread = KeGetCurrentThread();
+
+    /* Raise IRQL to synch and get the KPRCB now */
     OldIrql = KeRaiseIrqlToSynchLevel();
+    Prcb = KeGetCurrentPrcb();
 
     /* Now check if there's still a ready summary */
     if (Prcb->ReadySummary)
