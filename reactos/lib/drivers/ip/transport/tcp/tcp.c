@@ -69,10 +69,17 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                TI_DbgPrint(DEBUG_TCP,("Getting the socket\n"));
 
-               Status = TCPServiceListeningSocket
-                   ( Connection->AddressFile->Listener,
-                     Bucket->AssociatedEndpoint,
-                     (PTDI_REQUEST_KERNEL)&IrpSp->Parameters );
+               if (Connection->SignalState & SEL_ACCEPT)
+               {
+                   Status = TCPServiceListeningSocket(Connection->AddressFile->Listener,
+                                                      Bucket->AssociatedEndpoint,
+                                                      (PTDI_REQUEST_KERNEL)&IrpSp->Parameters);
+               }
+               else
+               {
+                   /* We got here because of a SEL_FIN event */
+                   Status = STATUS_CANCELLED;
+               }
 
                TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
@@ -121,12 +128,19 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                      Connection->SocketContext));
                TI_DbgPrint(DEBUG_TCP, ("RecvBuffer: %x\n", RecvBuffer));
 
-               Status = TCPTranslateError
-                    ( OskitTCPRecv( Connection->SocketContext,
-                                    RecvBuffer,
-                                    RecvLen,
-                                    &Received,
-                                    0 ) );
+               if (Connection->SignalState & SEL_READ)
+               {
+                   Status = TCPTranslateError(OskitTCPRecv(Connection->SocketContext,
+                                                           RecvBuffer,
+                                                           RecvLen,
+                                                           &Received,
+                                                           0));
+               }
+               else
+               {
+                   /* We got here because of a SEL_FIN event */
+                   Status = STATUS_CANCELLED;
+               }
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
 
@@ -175,12 +189,19 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                  ("Connection->SocketContext: %x\n",
                   Connection->SocketContext));
 
-               Status = TCPTranslateError
-                   ( OskitTCPSend( Connection->SocketContext,
-                                   SendBuffer,
-                                   SendLen,
-                                   &Sent,
-                                   0 ) );
+               if (Connection->SignalState & SEL_WRITE)
+               {
+                   Status = TCPTranslateError(OskitTCPSend(Connection->SocketContext,
+                                                           SendBuffer,
+                                                           SendLen,
+                                                           &Sent,
+                                                           0));
+               }
+               else
+               {
+                   /* We got here because of a SEL_FIN event */
+                   Status = STATUS_CANCELLED;
+               }
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Sent));
 
@@ -648,7 +669,7 @@ NTSTATUS TCPDisconnect
     LockObject(Connection, &OldIrql);
 
     if (Flags & TDI_DISCONNECT_RELEASE)
-        Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
+        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
 
     if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
         Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));

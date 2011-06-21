@@ -31,11 +31,13 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket accepting q\n"));
 	flags |= SEL_ACCEPT;
     }
-    if( so->so_rcv.sb_cc > 0 ) {
+    if( so->so_rcv.sb_cc > 0 && !(so->so_state & SS_CANTRCVMORE) &&
+        (so->so_state & SS_ISCONNECTED) ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
 	flags |= SEL_READ;
     }
-    if( 0 < sbspace(&so->so_snd) ) {
+    if( 0 < sbspace(&so->so_snd) && !(so->so_state & SS_CANTSENDMORE) &&
+        (so->so_state & SS_ISCONNECTED) ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket writeable\n"));
 	flags |= SEL_WRITE;
     }
@@ -51,7 +53,7 @@ void wakeup( struct socket *so, void *token ) {
     if( OtcpEvent.SocketState )
 	OtcpEvent.SocketState( OtcpEvent.ClientData,
 			       so,
-			       so ? so->so_connection : 0,
+			       so->so_connection,
 			       flags );
 
     if( OtcpEvent.Wakeup )

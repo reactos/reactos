@@ -826,7 +826,13 @@ soshutdown(so, how)
 {
 	register struct protosw *pr = so->so_proto;
 
+#ifndef __REACTOS__
+    /* Reads are always killed whether we want
+     * them stopped or not. We don't want this
+     * happening on ROS so this code is commented out
+     */
 	how++;
+#endif
 	if (how & FREAD)
 		sorflush(so);
 	if (how & FWRITE)

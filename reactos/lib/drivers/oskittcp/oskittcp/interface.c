@@ -148,6 +148,7 @@ int OskitTCPRecv( void *connection,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
 		  OSK_UINT Flags ) {
+    struct socket *so = connection;
     struct uio uio = { 0 };
     struct iovec iov = { 0 };
     int error = 0;
@@ -155,9 +156,12 @@ int OskitTCPRecv( void *connection,
     
     if (!connection)
         return OSK_ESHUTDOWN;
+    
+    if (so->so_state & SS_CANTRCVMORE)
+        return OSK_ESHUTDOWN;
 
     OS_DbgPrint(OSK_MID_TRACE,
-                ("so->so_state %x\n", ((struct socket *)connection)->so_state));
+                ("so->so_state %x\n", so->so_state));
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
@@ -290,11 +294,15 @@ int OskitTCPClose( void *socket ) {
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
+    struct socket *so = socket;
     int error;
     struct uio uio;
     struct iovec iov;
 
     if (!socket)
+        return OSK_ESHUTDOWN;
+    
+    if (so->so_state & SS_CANTSENDMORE)
         return OSK_ESHUTDOWN;
 
     iov.iov_len = Len;
