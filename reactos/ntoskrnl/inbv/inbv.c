@@ -718,7 +718,7 @@ INIT_FUNCTION
 DisplayFilter(PCHAR *String)
 {
     /* Ignore empty and "." strings */
-    if(*String && strcmp(String, ".") != 0)
+    if(*String && strcmp(*String, ".") != 0)
     {
         /* Remove the filter */
         InbvInstallDisplayStringFilter(NULL);
