@@ -717,11 +717,15 @@ NTAPI
 INIT_FUNCTION
 DisplayFilter(PCHAR *String)
 {
-    /* Remove the filter */
-    InbvInstallDisplayStringFilter(NULL);
-    
-    /* Draw text screen */
-    DisplayBootBitmap(TRUE);
+    /* Ignore empty and "." strings */
+    if(*String && strcmp(String, ".") != 0)
+    {
+        /* Remove the filter */
+        InbvInstallDisplayStringFilter(NULL);
+
+        /* Draw text screen */
+        DisplayBootBitmap(TRUE);
+    }
 }
 
 VOID

@@ -66,6 +66,7 @@ ULONG lookup[16] =
 ULONG TextColor = 0xF;
 ULONG curr_x = 0;
 ULONG curr_y = 0;
+BOOLEAN CarriageReturn = FALSE;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
 
@@ -279,14 +280,8 @@ VOID
 NTAPI
 VgaScroll(ULONG Scroll)
 {
-    ULONG Top;
-    ULONG SourceOffset, DestOffset;
-    ULONG Offset;
-    ULONG i, j;
-
-    /* Set memory positions of the scroll */
-    SourceOffset = VgaBase + (ScrollRegion[1] * 80) + (ScrollRegion[0] >> 3);
-    DestOffset = SourceOffset + (Scroll * 80);
+    ULONG Top, RowSize, i;
+    PUCHAR OldPosition, NewPosition;
 
     /* Clear the 4 planes */
     __outpw(0x3C4, 0xF02);
@@ -296,56 +291,27 @@ VgaScroll(ULONG Scroll)
 
     /* Set Mode 1 */
     ReadWriteMode(1);
-
-    /* Save top and check if it's above the bottom */
-    Top = ScrollRegion[1];
-    if (Top > ScrollRegion[3]) return;
+    
+    RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
 
     /* Start loop */
-    do
+    for(Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
     {
-        /* Set number of bytes to loop and start offset */
-        Offset = ScrollRegion[0] >> 3;
-        j = SourceOffset;
-
-        /* Check if this is part of the scroll region */
-        if (Offset <= (ScrollRegion[2] >> 3))
-        {
-            /* Update position */
-            i = DestOffset - SourceOffset;
-
-            /* Loop the X axis */
-            do
-            {
-                /* Write value in the new position so that we can do the scroll */
-                WRITE_REGISTER_UCHAR(UlongToPtr(j),
-                                     READ_REGISTER_UCHAR(UlongToPtr(j + i)));
-
-                /* Move to the next memory location to write to */
-                j++;
-
-                /* Move to the next byte in the region */
-                Offset++;
-
-                /* Make sure we don't go past the scroll region */
-            } while (Offset <= (ScrollRegion[2] >> 3));
-        }
-
-        /* Move to the next line */
-        SourceOffset += 80;
-        DestOffset += 80;
-
-        /* Increase top */
-        Top++;
-
-        /* Make sure we don't go past the scroll region */
-    } while (Top <= ScrollRegion[3]);
+        /* Calculate the position in memory for the row */
+        OldPosition = (PUCHAR)VgaBase + (Top + Scroll) * 80 + ScrollRegion[0] / 8;
+        NewPosition = (PUCHAR)VgaBase + Top * 80 + ScrollRegion[0] / 8;
+        
+        /* Scroll the row */
+        for(i = 0; i < RowSize; ++i)
+            WRITE_REGISTER_UCHAR(NewPosition + i, READ_REGISTER_UCHAR(OldPosition + i));
+    }
 }
 
 VOID
 NTAPI
 PreserveRow(IN ULONG CurrentTop,
-            IN ULONG TopDelta)
+            IN ULONG TopDelta,
+            IN BOOLEAN Direction)
 {
     PUCHAR Position1, Position2;
     ULONG Count;
@@ -359,9 +325,19 @@ PreserveRow(IN ULONG CurrentTop,
     /* Set Mode 1 */
     ReadWriteMode(1);
 
-    /* Calculate the position in memory for the row */
-    Position1 = (PUCHAR)VgaBase + 0x9600;
-    Position2 = (PUCHAR)VgaBase + CurrentTop * 80;
+    /* Check which way we're preserving */
+    if (Direction)
+    {
+        /* Calculate the position in memory for the row */
+        Position1 = (PUCHAR)VgaBase + CurrentTop * 80;
+        Position2 = (PUCHAR)VgaBase + 0x9600;
+    }
+    else
+    {
+        /* Calculate the position in memory for the row */
+        Position1 = (PUCHAR)VgaBase + 0x9600;
+        Position2 = (PUCHAR)VgaBase + CurrentTop * 80;
+    }
 
     /* Set the count and make sure it's above 0 */
     Count = TopDelta * 80;
@@ -378,33 +354,6 @@ PreserveRow(IN ULONG CurrentTop,
             Position1++;
         } while (--Count);
     }
-}
-
-VOID
-NTAPI
-CleanCharacter(IN ULONG Left,
-               IN ULONG Top,
-               IN ULONG TopDelta)
-{
-    PUCHAR Position1, Position2;
-    ULONG i;
-    
-    /* Clear the 4 planes */
-    __outpw(0x3C4, 0xF02);
-
-    /* Set the bitmask to 0xFF for all 4 planes */
-    __outpw(0x3CE, 0xFF08);
-
-    /* Set Mode 1 */
-    ReadWriteMode(1);
-
-    /* Calculate the position in memory for the character */
-    Position1 = (PUCHAR)VgaBase + 0x9600 + Left / 8;
-    Position2 = (PUCHAR)VgaBase + Top * 80 + Left / 8;
-
-    /* Copy data from preserved row */
-    for(i = 0; i < TopDelta; ++i)
-        WRITE_REGISTER_UCHAR(Position2 + i * 80, READ_REGISTER_UCHAR(Position1));
 }
 
 VOID
@@ -772,35 +721,34 @@ VidDisplayString(PUCHAR String)
             }
             else
             {
-                /* Preserve the current row */
-                PreserveRow(curr_y, TopDelta);
+                /* Preserve row */
+                PreserveRow(curr_y, TopDelta, FALSE);
             }
 
             /* Update current X */
             curr_x = ScrollRegion[0];
+
+            /* Do not clear line if "\r\n" is given */
+            CarriageReturn = FALSE;
         }
         else if (*String == '\r')
         {
             /* Update current X */
             curr_x = ScrollRegion[0];
-        }
-        else if (*String == '\b')
-        {
-            /* Update current X */
-            if (curr_x > ScrollRegion[0])
-                curr_x -= 8;
-            else
-            {
-                /* We are at line begin - move to previous row */
-                curr_x = ScrollRegion[0];
-                curr_y -= TopDelta;
-            }
             
-            /* Clean current character */
-            CleanCharacter(curr_x, curr_y, TopDelta);
+            /* Check if we're being followed by a new line */
+            CarriageReturn = TRUE;
         }
         else
         {
+            /* check if we had a '\r' last time */
+            if (CarriageReturn)
+            {
+                /* We did, clear the current row */
+                PreserveRow(curr_y, TopDelta, TRUE);
+                CarriageReturn = FALSE;
+            }
+
             /* Display this character */
             DisplayCharacter(*String, curr_x, curr_y, TextColor, 16);
             curr_x += 8;
@@ -819,7 +767,7 @@ VidDisplayString(PUCHAR String)
                 else
                 {
                     /* Preserve the current row */
-                    PreserveRow(curr_y, TopDelta);
+                    PreserveRow(curr_y, TopDelta, FALSE);
                 }
 
                 /* Update X */
