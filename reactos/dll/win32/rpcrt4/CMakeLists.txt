@@ -23,6 +23,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc.S)
+endif()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 

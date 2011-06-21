@@ -171,7 +171,7 @@ static RPC_STATUS get_epm_handle_server(RPC_BINDING_HANDLE *epm_handle)
 
 static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
 {
-    switch (GetExceptionCode())
+    switch (__eptr->ExceptionRecord->ExceptionCode)
     {
         case EXCEPTION_ACCESS_VIOLATION:
         case EXCEPTION_ILLEGAL_INSTRUCTION:
@@ -396,7 +396,7 @@ RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE
 
   status = get_epm_handle_client(Binding, &handle);
   if (status != RPC_S_OK) return status;
-  
+
   status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax, bind->Protseq,
                           ((RpcBinding *)handle)->Endpoint,
                           bind->NetworkAddr, &tower);
