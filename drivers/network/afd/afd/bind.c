@@ -13,19 +13,19 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-NTSTATUS WarmSocketForBind( PAFD_FCB FCB )
+NTSTATUS WarmSocketForBind(PAFD_FCB FCB)
 {
     NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
                             FCB->LocalAddress->Address[0].AddressType));
 
-    if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer )
+    if (!FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer)
     {
         AFD_DbgPrint(MID_TRACE,("Null Device\n"));
         return STATUS_NO_SUCH_DEVICE;
     }
-    if( !FCB->LocalAddress )
+    if (!FCB->LocalAddress)
     {
         AFD_DbgPrint(MID_TRACE,("No local address\n"));
         return STATUS_INVALID_PARAMETER;
@@ -55,33 +55,35 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB )
     return Status;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
-    PAFD_FCB FCB = FileObject->FsContext;
+    PAFD_FCB FCB = (PAFD_FCB)FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
     DbgPrint("[AFD, AfdBindSocket] Called\n");
 
-    if ( !SocketAcquireStateLock( FCB ) )
+    if (!SocketAcquireStateLock(FCB))
         return LostSocket( Irp );
     
-    if ( !(BindReq = LockRequest( Irp, IrpSp )) )
+    if (!(BindReq = (PAFD_BIND_DATA)LockRequest(Irp, IrpSp)) )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
-    if ( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
-        FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
+    if (FCB->LocalAddress )
+        ExFreePool(FCB->LocalAddress);
+    FCB->LocalAddress = TaCopyTransportAddress(&BindReq->Address);
 
     if (FCB->LocalAddress)
 	    Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
 					     FCB->LocalAddress );
 
     if (NT_SUCCESS(Status))
-	    Status = WarmSocketForBind( FCB );
+	    Status = WarmSocketForBind(FCB);
     
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
@@ -116,4 +118,3 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* MSAFD relies on us returning the address file handle in the IOSB */
     return UnlockAndMaybeComplete( FCB, Status, Irp, (ULONG_PTR)FCB->AddressFile.Handle );
 }
-

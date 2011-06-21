@@ -483,57 +483,61 @@ NTSTATUS DispTdiConnect(
  *     Status of operation
  */
 {
-  PCONNECTION_ENDPOINT Connection;
-  PTDI_REQUEST_KERNEL Parameters;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status;
+    PCONNECTION_ENDPOINT Connection;
+    PTDI_REQUEST_KERNEL Parameters;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
 
-  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiConnect] Called\n"));
+    TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiConnect] Called\n"));
 
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-  /* Get associated connection endpoint file object. Quit if none exists */
+    /* Get associated connection endpoint file object. Quit if none exists */
 
-  TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    Status = STATUS_INVALID_PARAMETER;
-    goto done;
-  }
+    TranContext = IrpSp->FileObject->FsContext;
+    if (!TranContext)
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
-  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection) {
-    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    Status = STATUS_INVALID_PARAMETER;
-    goto done;
-  }
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    if (!Connection)
+    {
+        TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
-  Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
+    Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = DispPrepareIrpForCancel(TranContext->Handle.ConnectionContext,
-                                   Irp,
-                                   DispCancelRequest);
+    Status = DispPrepareIrpForCancel(TranContext->Handle.ConnectionContext,
+                                    Irp,
+                                    DispCancelRequest);
 
-  if (NT_SUCCESS(Status))
-  {
-      Status = TCPConnect(
-          TranContext->Handle.ConnectionContext,
-          Parameters->RequestConnectionInformation,
-          Parameters->ReturnConnectionInformation,
-          DispDataRequestComplete,
-          Irp );
-  }
+    if (NT_SUCCESS(Status))
+    {
+        Status = TCPConnect(
+            TranContext->Handle.ConnectionContext,
+            Parameters->RequestConnectionInformation,
+            Parameters->ReturnConnectionInformation,
+            DispDataRequestComplete,
+            Irp );
+    }
 
-done:
-  if (Status != STATUS_PENDING) {
-      DispDataRequestComplete(Irp, Status, 0);
-  } else
-      IoMarkIrpPending(Irp);
+    done:
+    if (Status != STATUS_PENDING)
+    {
+        DispDataRequestComplete(Irp, Status, 0);
+    }
+    else
+        IoMarkIrpPending(Irp);
 
-  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DispTdiConnect] TCP Connect returned %08x\n", Status));
+    TI_DbgPrint(MAX_TRACE, ("[TCPIP, DispTdiConnect] TCP Connect returned %08x\n", Status));
 
-  return Status;
+    return Status;
 }
 
 NTSTATUS DispTdiDisconnect(
@@ -546,51 +550,54 @@ NTSTATUS DispTdiDisconnect(
  *     Status of operation
  */
 {
-  NTSTATUS Status;
-  PTDI_REQUEST_KERNEL_DISCONNECT DisReq;
-  PCONNECTION_ENDPOINT Connection;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
+    PTDI_REQUEST_KERNEL_DISCONNECT DisReq;
+    PCONNECTION_ENDPOINT Connection;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
 
-  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiDisconnect] Called\n"));
+    TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiDisconnect] Called\n"));
 
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
-  DisReq = (PTDI_REQUEST_KERNEL_DISCONNECT)&IrpSp->Parameters;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    DisReq = (PTDI_REQUEST_KERNEL_DISCONNECT)&IrpSp->Parameters;
 
-  /* Get associated connection endpoint file object. Quit if none exists */
+    /* Get associated connection endpoint file object. Quit if none exists */
 
-  TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    Status = STATUS_INVALID_PARAMETER;
-    goto done;
-  }
+    TranContext = IrpSp->FileObject->FsContext;
+    if (!TranContext)
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
-  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection)
-  {
-    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    Status = STATUS_INVALID_PARAMETER;
-    goto done;
-  }
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    if (!Connection)
+    {
+        TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
-  Status = TCPDisconnect(
-      TranContext->Handle.ConnectionContext,
-      DisReq->RequestFlags,
-      DisReq->RequestConnectionInformation,
-      DisReq->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+    Status = TCPDisconnect(
+        TranContext->Handle.ConnectionContext,
+        DisReq->RequestFlags,
+        DisReq->RequestConnectionInformation,
+        DisReq->ReturnConnectionInformation,
+        DispDataRequestComplete,
+        Irp );
 
-done:
-   if (Status != STATUS_PENDING) {
-       DispDataRequestComplete(Irp, Status, 0);
-   } else
-       IoMarkIrpPending(Irp);
+    done:
+    if (Status != STATUS_PENDING)
+    {
+        DispDataRequestComplete(Irp, Status, 0);
+    }
+    else
+        IoMarkIrpPending(Irp);
 
-  TI_DbgPrint(MAX_TRACE, ("[TCPIP, DispTdiDisconnect] TCP Disconnect returned %08x\n", Status));
+    TI_DbgPrint(MAX_TRACE, ("[TCPIP, DispTdiDisconnect] TCP Disconnect returned %08x\n", Status));
 
-  return Status;
+    return Status;
 }
 
 

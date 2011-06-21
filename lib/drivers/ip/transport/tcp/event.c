@@ -185,10 +185,10 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
         
         if (Status == STATUS_SUCCESS)
         {
-            DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb->id = %d\n",
+            DbgPrint("[IP, TCPAcceptEventHandler] newpcb->state = %s, listen_pcb->state = %s, newpcb = 0x%x\n",
                 tcp_state_str[newpcb->state],
                 tcp_state_str[((struct tcp_pcb*)Connection->SocketContext)->state],
-                newpcb->identifier);
+                newpcb);
 
             LockObject(Bucket->AssociatedEndpoint, &OldIrql);
 
@@ -203,6 +203,8 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
             DbgPrint("[IP, TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
 
+            /* sanity assert...this should never be in a LISTEN state */
+            ASSERT(((struct tcp_pcb*)OldSocketContext)->state == CLOSED);
             /*  free socket context created in FileOpenConnection, as we're using a new
                 one; we free it asynchornously because otherwise we create a dedlock */
             ChewCreate(SocketContextCloseWorker, OldSocketContext);
