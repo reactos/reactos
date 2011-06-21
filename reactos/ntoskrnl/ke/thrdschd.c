@@ -728,7 +728,7 @@ NtYieldExecution(VOID)
     NTSTATUS Status;
     KIRQL OldIrql;
     PKPRCB Prcb;
-    PKTHREAD Thread; NextThread;
+    PKTHREAD Thread, NextThread;
 
     /* NB: No instructions (other than entry code) should preceed this line */
 
