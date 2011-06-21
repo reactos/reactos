@@ -163,14 +163,12 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
 						  RecvReq->BufferCount, FALSE );
-            Status = NextIrp->IoStatus.Status =
-			FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+            Status = NextIrp->IoStatus.Status = FCB->PollStatus[FD_CLOSE_BIT];
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
             if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 			(void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-            FCB->Overread = TRUE;
         }
     } else {
 		/* Kick the user that receive would be possible now */
