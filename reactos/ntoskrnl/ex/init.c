@@ -1904,32 +1904,29 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Initialize Power Subsystem in Phase 1*/
     if (!PoInitSystem(1)) KeBugCheck(INTERNAL_POWER_ERROR);
 
+    /* Update progress bar */
+    InbvUpdateProgressBar(90);
+
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
-
-    /* Update progress bar */
-    InbvUpdateProgressBar(85);
 
     /* Make sure nobody touches the loader block again */
     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
     LoaderBlock = Context = NULL;
 
     /* Update progress bar */
-    InbvUpdateProgressBar(90);
+    InbvUpdateProgressBar(100);
+
+    /* Clean the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
+    /* Allow strings to be displayed */
+    InbvEnableDisplayString(TRUE);
 
     /* Launch initial process */
     DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
-
-    /* Clean the screen */
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
-
-    /* Update progress bar */
-    InbvUpdateProgressBar(100);
-
-    /* Allow strings to be displayed */
-    InbvEnableDisplayString(TRUE);
 
     /* Wait 5 seconds for initial process to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);

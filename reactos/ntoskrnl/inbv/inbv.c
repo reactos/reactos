@@ -576,7 +576,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 VOID
 NTAPI
 INIT_FUNCTION
-DisplayBootBitmap(IN BOOLEAN SosMode)
+DisplayBootBitmap(IN BOOLEAN TextMode)
 {
     PVOID Header, Band, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
@@ -591,9 +591,9 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         InbvReleaseLock();
     }
 
-    /* Check if this is SOS mode */
+    /* Check if this is text mode */
     ShowProgressBar = FALSE;
-    if (SosMode)
+    if (TextMode)
     {
         /* Check if this is a server OS */
         if (SharedUserData->NtProductType == NtProductWinNt)
@@ -696,6 +696,9 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
           
           /* Draw the progress bar bit */
 //          if (Bar) InbvBitBlt(Bar, 0, 0);
+
+          /* Set filter which will draw text display if needed */
+          InbvInstallDisplayStringFilter(DisplayFilter);
     }
 
     /* Do we have a system thread? */
@@ -707,6 +710,18 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         //InbvRotBarInit();
         InbvReleaseLock();
     }
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+DisplayFilter(PCHAR *String)
+{
+    /* Remove the filter */
+    InbvInstallDisplayStringFilter(NULL);
+    
+    /* Draw text screen */
+    DisplayBootBitmap(TRUE);
 }
 
 VOID
