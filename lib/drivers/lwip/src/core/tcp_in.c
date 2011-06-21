@@ -298,7 +298,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
 
   if (pcb != NULL)
   {
-      LWIP_DEBUGF(TCP_DEBUG, ("tcp_input: pcb->id = %d is for active connection\n", pcb->identifier));
+      LWIP_DEBUGF(TCP_DEBUG, ("tcp_input: pcb = 0x%x is for active connection\n", pcb));
     /* The incoming segment belongs to a connection. */
 #if TCP_INPUT_DEBUG
 #if TCP_DEBUG
@@ -535,7 +535,6 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
        for it. */
     TCP_REG(&tcp_active_pcbs, npcb);
 
-    npcb->identifier = 21912;
     LWIP_DEBUGF(TCP_DEBUG, ("TCP new pcb created with %"U16_F" -> %"U16_F".\n", npcb->local_port, npcb->remote_port));
 
     /* Parse any options in the SYN. */
@@ -683,8 +682,8 @@ tcp_process(struct tcp_pcb *pcb)
       pcb->state = ESTABLISHED;
 
       LWIP_DEBUGF(TCP_DEBUG,
-          ("[tcp_process] (SYN_SENT) TCP connection established %"U16_F" -> %"U16_F", %"U16_F"\n",
-          pcb->local_port , pcb->remote_port, pcb->identifier));
+          ("[tcp_process] (SYN_SENT) TCP connection established %"U16_F" -> %"U16_F"\n",
+          pcb->local_port , pcb->remote_port));
 
 #if TCP_CALCULATE_EFF_SEND_MSS
       pcb->mss = tcp_eff_send_mss(pcb->mss, &(pcb->remote_ip));
@@ -734,11 +733,11 @@ tcp_process(struct tcp_pcb *pcb)
         u16_t old_cwnd;
         pcb->state = ESTABLISHED;
         LWIP_DEBUGF(TCP_DEBUG,
-            ("[tcp_process] (SYN_RCVD) TCP connection established %"U16_F" -> %"U16_F" for %"U16_F"\n",
-            inseg.tcphdr->src, inseg.tcphdr->dest, pcb->identifier));
+            ("[tcp_process] (SYN_RCVD) TCP connection established %"U16_F" -> %"U16_F"\n",
+            inseg.tcphdr->src, inseg.tcphdr->dest));
         LWIP_DEBUGF(TCP_DEBUG,
-            ("[tcp_process] (SYN_RCVD) TCP local port = %"U16_F" and ID = %"U16_F"\n",
-            pcb->local_port, pcb->identifier));
+            ("[tcp_process] (SYN_RCVD) TCP local port = %"U16_F"\n",
+            pcb->local_port));
 
 #if LWIP_CALLBACK_API
         LWIP_ASSERT("pcb->accept != NULL", pcb->accept != NULL);

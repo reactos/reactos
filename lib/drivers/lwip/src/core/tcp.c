@@ -769,7 +769,7 @@ tcp_slowtmr(void)
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != LISTEN\n", pcb->state != LISTEN);
     LWIP_ASSERT("tcp_slowtmr: active pcb->state != TIME-WAIT\n", pcb->state != TIME_WAIT);
 
-    LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: active pcb ports (%d -> %d) %d\n", pcb->local_port, pcb->remote_port, pcb->identifier));
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: active pcb = 0x%x ports (%d -> %d)\n", pcb, pcb->local_port, pcb->remote_port));
 
     pcb_remove = 0;
     pcb_reset = 0;
