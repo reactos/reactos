@@ -10,259 +10,259 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Загальні"
+CAPTION "Р—Р°РіР°Р»СЊРЅС–"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT       "Операційна система:", IDC_STATIC, 4, 132, 82, 9
+    LTEXT       "РћРїРµСЂР°С†С–Р№РЅР° СЃРёСЃС‚РµРјР°:", IDC_STATIC, 4, 132, 82, 9
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
-    LTEXT       "Версія ", IDC_STATIC, 10, 153, 25, 9
+    LTEXT       "Р’РµСЂСЃС–СЏ ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
-    LTEXT       "Комп'ютер:", IDC_STATIC, 124, 132, 36, 9
+    LTEXT       "РљРѕРјРї'СЋС‚РµСЂ:", IDC_STATIC, 124, 132, 36, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
     LTEXT       "", IDC_MACHINELINE2, 130, 153, 118, 9
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Відвідаєте <A HREF=""http://www.reactos.org/"">домашню сторінку ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 150, 8
-    PUSHBUTTON  "&Ліцензія...", IDC_LICENCE, 170, 199, 78, 14
+    CONTROL     "Р’С–РґРІС–РґР°С”С‚Рµ <A HREF=""http://www.reactos.org/"">РґРѕРјР°С€РЅСЋ СЃС‚РѕСЂС–РЅРєСѓ ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 150, 8
+    PUSHBUTTON  "&Р›С–С†РµРЅР·С–СЏ...", IDC_LICENCE, 170, 199, 78, 14
 END
 
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Обладнання"
+CAPTION "РћР±Р»Р°РґРЅР°РЅРЅСЏ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Диспетчер пристроїв", IDC_STATIC, 6, 7, 244, 61
+    GROUPBOX    "Р”РёСЃРїРµС‚С‡РµСЂ РїСЂРёСЃС‚СЂРѕС—РІ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Диспетчер пристроїв перелічує все обладнання, установлене на цьому комп'ютері. За його допомогою можна змінити властивості будь-якого пристрою.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "&Диспетчер пристроїв...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
+    LTEXT       "Р”РёСЃРїРµС‚С‡РµСЂ РїСЂРёСЃС‚СЂРѕС—РІ РїРµСЂРµР»С–С‡СѓС” РІСЃРµ РѕР±Р»Р°РґРЅР°РЅРЅСЏ, СѓСЃС‚Р°РЅРѕРІР»РµРЅРµ РЅР° С†СЊРѕРјСѓ РєРѕРјРї'СЋС‚РµСЂС–. Р—Р° Р№РѕРіРѕ РґРѕРїРѕРјРѕРіРѕСЋ РјРѕР¶РЅР° Р·РјС–РЅРёС‚Рё РІР»Р°СЃС‚РёРІРѕСЃС‚С– Р±СѓРґСЊ-СЏРєРѕРіРѕ РїСЂРёСЃС‚СЂРѕСЋ.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON  "&Р”РёСЃРїРµС‚С‡РµСЂ РїСЂРёСЃС‚СЂРѕС—РІ...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
 
-    GROUPBOX    "Установка обладнання", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX    "РЈСЃС‚Р°РЅРѕРІРєР° РѕР±Р»Р°РґРЅР°РЅРЅСЏ", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Майстер установки обладнання допомагає установити, відключити, відновити, витягнути, та налаштувати ваше обладнання.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Установка обладнання...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
+    LTEXT       "РњР°Р№СЃС‚РµСЂ СѓСЃС‚Р°РЅРѕРІРєРё РѕР±Р»Р°РґРЅР°РЅРЅСЏ РґРѕРїРѕРјР°РіР°С” СѓСЃС‚Р°РЅРѕРІРёС‚Рё, РІС–РґРєР»СЋС‡РёС‚Рё, РІС–РґРЅРѕРІРёС‚Рё, РІРёС‚СЏРіРЅСѓС‚Рё, С‚Р° РЅР°Р»Р°С€С‚СѓРІР°С‚Рё РІР°С€Рµ РѕР±Р»Р°РґРЅР°РЅРЅСЏ.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON  "&РЈСЃС‚Р°РЅРѕРІРєР° РѕР±Р»Р°РґРЅР°РЅРЅСЏ...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
 
-    GROUPBOX    "Профілі обладнання", IDC_STATIC, 6, 149, 244, 61
+    GROUPBOX    "РџСЂРѕС„С–Р»С– РѕР±Р»Р°РґРЅР°РЅРЅСЏ", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "Профілі обладнання дають змогу установлювати й зберігати різні конфігурації обладнання.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&Профілі обладнання...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
+    LTEXT       "РџСЂРѕС„С–Р»С– РѕР±Р»Р°РґРЅР°РЅРЅСЏ РґР°СЋС‚СЊ Р·РјРѕРіСѓ СѓСЃС‚Р°РЅРѕРІР»СЋРІР°С‚Рё Р№ Р·Р±РµСЂС–РіР°С‚Рё СЂС–Р·РЅС– РєРѕРЅС„С–РіСѓСЂР°С†С–С— РѕР±Р»Р°РґРЅР°РЅРЅСЏ.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON  "&РџСЂРѕС„С–Р»С– РѕР±Р»Р°РґРЅР°РЅРЅСЏ...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Додатково"
+CAPTION "Р”РѕРґР°С‚РєРѕРІРѕ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Потрібно мати права адміністратора, щоб виконати більшу частину цих змін.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX    "Швидкодія", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Візуальні ефекти, використання процесора, оперативної та віртуальної пам'яті.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON  "Параметри", IDC_PERFOR, 194, 48, 50, 14
+    LTEXT       "РџРѕС‚СЂС–Р±РЅРѕ РјР°С‚Рё РїСЂР°РІР° Р°РґРјС–РЅС–СЃС‚СЂР°С‚РѕСЂР°, С‰РѕР± РІРёРєРѕРЅР°С‚Рё Р±С–Р»СЊС€Сѓ С‡Р°СЃС‚РёРЅСѓ С†РёС… Р·РјС–РЅ.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX    "РЁРІРёРґРєРѕРґС–СЏ", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Р’С–Р·СѓР°Р»СЊРЅС– РµС„РµРєС‚Рё, РІРёРєРѕСЂРёСЃС‚Р°РЅРЅСЏ РїСЂРѕС†РµСЃРѕСЂР°, РѕРїРµСЂР°С‚РёРІРЅРѕС— С‚Р° РІС–СЂС‚СѓР°Р»СЊРЅРѕС— РїР°Рј'СЏС‚С–.", IDC_STATIC, 16, 29, 210, 17
+    PUSHBUTTON  "РџР°СЂР°РјРµС‚СЂРё", IDC_PERFOR, 194, 48, 50, 14
 
-    GROUPBOX    "Профілі користувачів", IDC_STATIC, 6,75,244,48
-    LTEXT       "Параметри робочого стола, які стосуються входу до системи.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Параметри", IDC_USERPROFILE, 194, 103, 50, 14
+    GROUPBOX    "РџСЂРѕС„С–Р»С– РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ", IDC_STATIC, 6,75,244,48
+    LTEXT       "РџР°СЂР°РјРµС‚СЂРё СЂРѕР±РѕС‡РѕРіРѕ СЃС‚РѕР»Р°, СЏРєС– СЃС‚РѕСЃСѓСЋС‚СЊСЃСЏ РІС…РѕРґСѓ РґРѕ СЃРёСЃС‚РµРјРё.", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON  "РџР°СЂР°РјРµС‚СЂРё", IDC_USERPROFILE, 194, 103, 50, 14
 
-    GROUPBOX    "Завантаження й відновлення", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Завантаження й відновлення системи, налагоджувальна інформація.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON  "Параметри", IDC_STAREC, 194, 162, 50, 14
+    GROUPBOX    "Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ Р№ РІС–РґРЅРѕРІР»РµРЅРЅСЏ", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ Р№ РІС–РґРЅРѕРІР»РµРЅРЅСЏ СЃРёСЃС‚РµРјРё, РЅР°Р»Р°РіРѕРґР¶СѓРІР°Р»СЊРЅР° С–РЅС„РѕСЂРјР°С†С–СЏ.", IDC_STATIC, 16, 144, 210, 19
+    PUSHBUTTON  "РџР°СЂР°РјРµС‚СЂРё", IDC_STAREC, 194, 162, 50, 14
 
-	PUSHBUTTON  "Налаштування системи", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON  "Змінні оточення", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON  "Звіт про помилки", IDC_ERRORREPORT, 170, 192, 80, 14
+	PUSHBUTTON  "РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ СЃРёСЃС‚РµРјРё", IDC_SYSSETTINGS, 2, 192, 80, 15
+    PUSHBUTTON  "Р—РјС–РЅРЅС– РѕС‚РѕС‡РµРЅРЅСЏ", IDC_ENVVAR, 84, 192, 80, 14
+    PUSHBUTTON  "Р—РІС–С‚ РїСЂРѕ РїРѕРјРёР»РєРё", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "Налаштування системи"
+CAPTION "РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ СЃРёСЃС‚РµРјРё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Інформація про версію",IDC_STATIC,6,3,210,73
-    CONTROL         "Позначити як робочу станцію",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,118,10
-    LTEXT           "ReactOS повудована як серверна ОС, і так само про себе повідомляє. Обрати прапорець, щоб змінити це лише для програм.",IDC_STATIC,15,15,183,41
+    GROUPBOX        "Р†РЅС„РѕСЂРјР°С†С–СЏ РїСЂРѕ РІРµСЂСЃС–СЋ",IDC_STATIC,6,3,210,73
+    CONTROL         "РџРѕР·РЅР°С‡РёС‚Рё СЏРє СЂРѕР±РѕС‡Сѓ СЃС‚Р°РЅС†С–СЋ",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,118,10
+    LTEXT           "ReactOS РїРѕРІСѓРґРѕРІР°РЅР° СЏРє СЃРµСЂРІРµСЂРЅР° РћРЎ, С– С‚Р°Рє СЃР°РјРѕ РїСЂРѕ СЃРµР±Рµ РїРѕРІС–РґРѕРјР»СЏС”. РћР±СЂР°С‚Рё РїСЂР°РїРѕСЂРµС†СЊ, С‰РѕР± Р·РјС–РЅРёС‚Рё С†Рµ Р»РёС€Рµ РґР»СЏ РїСЂРѕРіСЂР°Рј.",IDC_STATIC,15,15,183,41
     PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Профілі обладнання"
+CAPTION "РџСЂРѕС„С–Р»С– РѕР±Р»Р°РґРЅР°РЅРЅСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Можна створити декілька профілів для різних конфігурацій устаткування й вибирати потрібний профіль під час завантаження системи.", IDC_STATIC, 46, 11, 188, 25
-    LTEXT       "Наявні профілі обладнання:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "РњРѕР¶РЅР° СЃС‚РІРѕСЂРёС‚Рё РґРµРєС–Р»СЊРєР° РїСЂРѕС„С–Р»С–РІ РґР»СЏ СЂС–Р·РЅРёС… РєРѕРЅС„С–РіСѓСЂР°С†С–Р№ СѓСЃС‚Р°С‚РєСѓРІР°РЅРЅСЏ Р№ РІРёР±РёСЂР°С‚Рё РїРѕС‚СЂС–Р±РЅРёР№ РїСЂРѕС„С–Р»СЊ РїС–Рґ С‡Р°СЃ Р·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ СЃРёСЃС‚РµРјРё.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "РќР°СЏРІРЅС– РїСЂРѕС„С–Р»С– РѕР±Р»Р°РґРЅР°РЅРЅСЏ:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
-    PUSHBUTTON  "В&ластивості", IDC_HRDPROFPROP, 8, 106, 50, 14
-    PUSHBUTTON  "&Копіювати", IDC_HRDPROFCOPY, 63, 106, 50, 14
-    PUSHBUTTON  "Переі&менувати", IDC_HRDPROFRENAME, 116, 106, 54, 14
-    PUSHBUTTON  "В&идалити", IDC_HRDPROFDEL, 173, 106, 50, 14
+    PUSHBUTTON  "Р’&Р»Р°СЃС‚РёРІРѕСЃС‚С–", IDC_HRDPROFPROP, 8, 106, 50, 14
+    PUSHBUTTON  "&РљРѕРїС–СЋРІР°С‚Рё", IDC_HRDPROFCOPY, 63, 106, 50, 14
+    PUSHBUTTON  "РџРµСЂРµС–&РјРµРЅСѓРІР°С‚Рё", IDC_HRDPROFRENAME, 116, 106, 54, 14
+    PUSHBUTTON  "Р’&РёРґР°Р»РёС‚Рё", IDC_HRDPROFDEL, 173, 106, 50, 14
 
-    GROUPBOX    "Вибір профілю устаткування", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Під час завантаження ReactOS слід:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "зачекати, п&оки користувач не вибере профіль", IDC_HRDPROFWAIT, 14, 158, 185, 8, WS_GROUP
-    AUTORADIOBUTTON "ви&брати перший профіль у списку, якщо вибір не зроблено за", IDC_HRDPROFSELECT, 14, 173, 230, 8
-    LTEXT       "сек", IDC_STATIC, 65, 187, 35, 8
+    GROUPBOX    "Р’РёР±С–СЂ РїСЂРѕС„С–Р»СЋ СѓСЃС‚Р°С‚РєСѓРІР°РЅРЅСЏ", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "РџС–Рґ С‡Р°СЃ Р·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ ReactOS СЃР»С–Рґ:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "Р·Р°С‡РµРєР°С‚Рё, Рї&РѕРєРё РєРѕСЂРёСЃС‚СѓРІР°С‡ РЅРµ РІРёР±РµСЂРµ РїСЂРѕС„С–Р»СЊ", IDC_HRDPROFWAIT, 14, 158, 185, 8, WS_GROUP
+    AUTORADIOBUTTON "РІРё&Р±СЂР°С‚Рё РїРµСЂС€РёР№ РїСЂРѕС„С–Р»СЊ Сѓ СЃРїРёСЃРєСѓ, СЏРєС‰Рѕ РІРёР±С–СЂ РЅРµ Р·СЂРѕР±Р»РµРЅРѕ Р·Р°", IDC_HRDPROFSELECT, 14, 173, 230, 8
+    LTEXT       "СЃРµРє", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 
     DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
-    PUSHBUTTON  "Скасувати", IDCANCEL, 197, 213, 50, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 197, 213, 50, 14
 END
 
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Перейменування профілю"
+CAPTION "РџРµСЂРµР№РјРµРЅСѓРІР°РЅРЅСЏ РїСЂРѕС„С–Р»СЋ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT        "З:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "Р—:", IDC_STATIC, 5, 10, 20, 8
     LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT        "На:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT        "РќР°:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
     DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-    PUSHBUTTON   "Скасувати", IDCANCEL, 196, 24, 50, 14
+    PUSHBUTTON   "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 196, 24, 50, 14
 END
 
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Профілі користувачів"
+CAPTION "РџСЂРѕС„С–Р»С– РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Профілі користувачів містять параметри робочого стола та інші відомості стосовно облікових записів користувачів. Ви можете створити окремі профілі для кожного з комп'ютерів, на яких ви працюєте, або використовувати один спільний профіль для всіх комп'ютерів.",
+    LTEXT       "РџСЂРѕС„С–Р»С– РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ РјС–СЃС‚СЏС‚СЊ РїР°СЂР°РјРµС‚СЂРё СЂРѕР±РѕС‡РѕРіРѕ СЃС‚РѕР»Р° С‚Р° С–РЅС€С– РІС–РґРѕРјРѕСЃС‚С– СЃС‚РѕСЃРѕРІРЅРѕ РѕР±Р»С–РєРѕРІРёС… Р·Р°РїРёСЃС–РІ РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ. Р’Рё РјРѕР¶РµС‚Рµ СЃС‚РІРѕСЂРёС‚Рё РѕРєСЂРµРјС– РїСЂРѕС„С–Р»С– РґР»СЏ РєРѕР¶РЅРѕРіРѕ Р· РєРѕРјРї'СЋС‚РµСЂС–РІ, РЅР° СЏРєРёС… РІРё РїСЂР°С†СЋС”С‚Рµ, Р°Р±Рѕ РІРёРєРѕСЂРёСЃС‚РѕРІСѓРІР°С‚Рё РѕРґРёРЅ СЃРїС–Р»СЊРЅРёР№ РїСЂРѕС„С–Р»СЊ РґР»СЏ РІСЃС–С… РєРѕРјРї'СЋС‚РµСЂС–РІ.",
                     IDC_STATIC, 40, 11, 204, 39
-    LTEXT       "Профілі, які зберігаються на цьому комп'ютері:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT       "РџСЂРѕС„С–Р»С–, СЏРєС– Р·Р±РµСЂС–РіР°СЋС‚СЊСЃСЏ РЅР° С†СЊРѕРјСѓ РєРѕРјРї'СЋС‚РµСЂС–:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Змінити тип", IDC_USERPROFILE_CHANGE, 90, 156, 50, 14
-    PUSHBUTTON  "Видалити", IDC_USERPROFILE_DELETE, 145, 156, 50, 14
-    PUSHBUTTON  "Копіювати...", IDC_USERPROFILE_COPY, 200, 156, 50, 14
+    PUSHBUTTON  "Р—РјС–РЅРёС‚Рё С‚РёРї", IDC_USERPROFILE_CHANGE, 90, 156, 50, 14
+    PUSHBUTTON  "Р’РёРґР°Р»РёС‚Рё", IDC_USERPROFILE_DELETE, 145, 156, 50, 14
+    PUSHBUTTON  "РљРѕРїС–СЋРІР°С‚Рё...", IDC_USERPROFILE_COPY, 200, 156, 50, 14
 
-    CONTROL     "Для створення нового профілю відкрийте <A>Профілі користувачів</A> в Панелі керування.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
+    CONTROL     "Р”Р»СЏ СЃС‚РІРѕСЂРµРЅРЅСЏ РЅРѕРІРѕРіРѕ РїСЂРѕС„С–Р»СЋ РІС–РґРєСЂРёР№С‚Рµ <A>РџСЂРѕС„С–Р»С– РєРѕСЂРёСЃС‚СѓРІР°С‡С–РІ</A> РІ РџР°РЅРµР»С– РєРµСЂСѓРІР°РЅРЅСЏ.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 14
-    PUSHBUTTON  "Скасувати", IDCANCEL, 196, 200, 54, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 196, 200, 54, 14
 END
 
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завантаження й відновлення"
+CAPTION "Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ Р№ РІС–РґРЅРѕРІР»РµРЅРЅСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX    "Завантаження операційної системи", IDC_STATIC, 7, 12, 238, 95
-    LTEXT       "&Операційна система за замовчуванням:", IDC_STATIC, 14, 26, 100, 8
+    GROUPBOX    "Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РѕРїРµСЂР°С†С–Р№РЅРѕС— СЃРёСЃС‚РµРјРё", IDC_STATIC, 7, 12, 238, 95
+    LTEXT       "&РћРїРµСЂР°С†С–Р№РЅР° СЃРёСЃС‚РµРјР° Р·Р° Р·Р°РјРѕРІС‡СѓРІР°РЅРЅСЏРј:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    AUTOCHECKBOX "&Показувати список операційних систем:", IDC_STRECLIST, 14, 56, 150, 8
+    AUTOCHECKBOX "&РџРѕРєР°Р·СѓРІР°С‚Рё СЃРїРёСЃРѕРє РѕРїРµСЂР°С†С–Р№РЅРёС… СЃРёСЃС‚РµРј:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "сек", IDC_STATIC, 215, 56, 25, 8
-    AUTOCHECKBOX "По&казувати варіанти відновлення:", IDC_STRRECREC, 14, 70, 163, 8
+    LTEXT       "СЃРµРє", IDC_STATIC, 215, 56, 25, 8
+    AUTOCHECKBOX "РџРѕ&РєР°Р·СѓРІР°С‚Рё РІР°СЂС–Р°РЅС‚Рё РІС–РґРЅРѕРІР»РµРЅРЅСЏ:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "сек", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Відредагувати список завантаження вручну.", IDC_STATIC, 14, 89, 187, 8
-    PUSHBUTTON  "&Змінити", IDC_STRRECEDIT, 188, 87, 50, 14
+    LTEXT       "СЃРµРє", IDC_STATIC, 215, 70, 25, 8
+    LTEXT       "Р’С–РґСЂРµРґР°РіСѓРІР°С‚Рё СЃРїРёСЃРѕРє Р·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РІСЂСѓС‡РЅСѓ.", IDC_STATIC, 14, 89, 187, 8
+    PUSHBUTTON  "&Р—РјС–РЅРёС‚Рё", IDC_STRRECEDIT, 188, 87, 50, 14
 
-    GROUPBOX    "Відмова системи", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "Записати подію до системного &журналу", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
-    AUTOCHECKBOX "&Надіслати адміністративне оповіщення", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "&Автоматичне перезавантаження", IDC_STRRECRESTART, 14, 152, 145, 10
+    GROUPBOX    "Р’С–РґРјРѕРІР° СЃРёСЃС‚РµРјРё", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "Р—Р°РїРёСЃР°С‚Рё РїРѕРґС–СЋ РґРѕ СЃРёСЃС‚РµРјРЅРѕРіРѕ &Р¶СѓСЂРЅР°Р»Сѓ", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "&РќР°РґС–СЃР»Р°С‚Рё Р°РґРјС–РЅС–СЃС‚СЂР°С‚РёРІРЅРµ РѕРїРѕРІС–С‰РµРЅРЅСЏ", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "&РђРІС‚РѕРјР°С‚РёС‡РЅРµ РїРµСЂРµР·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ", IDC_STRRECRESTART, 14, 152, 145, 10
 
-    GROUPBOX    "Записати налагоджувальну інформацію", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Р—Р°РїРёСЃР°С‚Рё РЅР°Р»Р°РіРѕРґР¶СѓРІР°Р»СЊРЅСѓ С–РЅС„РѕСЂРјР°С†С–СЋ", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT       "&Файл дампа пам'яті:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT       "&Р¤Р°Р№Р» РґР°РјРїР° РїР°Рј'СЏС‚С–:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    AUTOCHECKBOX "За&мінювати наявний файл", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "Р—Р°&РјС–РЅСЋРІР°С‚Рё РЅР°СЏРІРЅРёР№ С„Р°Р№Р»", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
-    PUSHBUTTON  "Скасувати", IDCANCEL, 195, 259, 50, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 195, 259, 50, 14
 END
 
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Віртуальна пам'ять"
+CAPTION "Р’С–СЂС‚СѓР°Р»СЊРЅР° РїР°Рј'СЏС‚СЊ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Диск [мітка тому]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Файл довантаження (МБ)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT       "Р”РёСЃРє [РјС–С‚РєР° С‚РѕРјСѓ]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT       "Р¤Р°Р№Р» РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ (РњР‘)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "Розмір файлу довантаження для вибраного диска", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Диск:", IDC_STATIC, 20, 80, 20, 8
+    GROUPBOX    "Р РѕР·РјС–СЂ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ РґР»СЏ РІРёР±СЂР°РЅРѕРіРѕ РґРёСЃРєР°", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "Р”РёСЃРє:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Доступно:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT       "Р”РѕСЃС‚СѓРїРЅРѕ:", IDC_STATIC, 20, 92, 56, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "&Вихідний розмір (МБ):", -1, 22, 118, 75, 9
-    LTEXT       "&Максимальний розмір (МБ):", -1, 22, 131, 92, 9
-    AUTORADIOBUTTON "&Особливий розмір", IDC_CUSTOM, 20, 105, 79, 9, WS_GROUP
-    AUTORADIOBUTTON "&Розмір, установлюваний системою", IDC_SYSMANSIZE, 20, 145, 143, 9
-    AUTORADIOBUTTON "&Без файлу довантаження", IDC_NOPAGEFILE, 20, 158, 103,9
+    LTEXT       "&Р’РёС…С–РґРЅРёР№ СЂРѕР·РјС–СЂ (РњР‘):", -1, 22, 118, 75, 9
+    LTEXT       "&РњР°РєСЃРёРјР°Р»СЊРЅРёР№ СЂРѕР·РјС–СЂ (РњР‘):", -1, 22, 131, 92, 9
+    AUTORADIOBUTTON "&РћСЃРѕР±Р»РёРІРёР№ СЂРѕР·РјС–СЂ", IDC_CUSTOM, 20, 105, 79, 9, WS_GROUP
+    AUTORADIOBUTTON "&Р РѕР·РјС–СЂ, СѓСЃС‚Р°РЅРѕРІР»СЋРІР°РЅРёР№ СЃРёСЃС‚РµРјРѕСЋ", IDC_SYSMANSIZE, 20, 145, 143, 9
+    AUTORADIOBUTTON "&Р‘РµР· С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ", IDC_NOPAGEFILE, 20, 158, 103,9
     EDITTEXT    IDC_INITIALSIZE, 115, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 115, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Установити", IDC_SET, 158, 155, 50, 14
+    PUSHBUTTON  "РЈСЃС‚Р°РЅРѕРІРёС‚Рё", IDC_SET, 158, 155, 50, 14
 
-    GROUPBOX    "Загальний розмір файлу довантаження для всіх дисків", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Мінімальний розмір:", IDC_STATIC, 18, 188, 88, 9
+    GROUPBOX    "Р—Р°РіР°Р»СЊРЅРёР№ СЂРѕР·РјС–СЂ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ РґР»СЏ РІСЃС–С… РґРёСЃРєС–РІ", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "РњС–РЅС–РјР°Р»СЊРЅРёР№ СЂРѕР·РјС–СЂ:", IDC_STATIC, 18, 188, 88, 9
     LTEXT       "", IDC_MINIMUM, 93, 188, 100, 9
-    LTEXT       "Рекомендовано:", IDC_STATIC, 18, 199, 55, 9
+    LTEXT       "Р РµРєРѕРјРµРЅРґРѕРІР°РЅРѕ:", IDC_STATIC, 18, 199, 55, 9
     LTEXT       "", IDC_RECOMMENDED, 93, 199, 100, 9
-    LTEXT       "Поточний розмір:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "РџРѕС‚РѕС‡РЅРёР№ СЂРѕР·РјС–СЂ:", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 93, 210, 100, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 14
-    PUSHBUTTON  "Скасувати", IDCANCEL, 168, 232, 48, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 168, 232, 48, 14
 END
 
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Змінні оточення"
+CAPTION "Р—РјС–РЅРЅС– РѕС‚РѕС‡РµРЅРЅСЏ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Змінні користувача", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX    "Р—РјС–РЅРЅС– РєРѕСЂРёСЃС‚СѓРІР°С‡Р°", IDC_STATIC, 7, 12, 238, 100
 
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Створити...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
-    PUSHBUTTON  "&Змінити...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
-    PUSHBUTTON  "В&идалити", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX    "Системні змінні", IDC_STATIC, 7, 116, 238, 100
+    PUSHBUTTON  "&РЎС‚РІРѕСЂРёС‚Рё...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
+    PUSHBUTTON  "&Р—РјС–РЅРёС‚Рё...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON  "Р’&РёРґР°Р»РёС‚Рё", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    GROUPBOX    "РЎРёСЃС‚РµРјРЅС– Р·РјС–РЅРЅС–", IDC_STATIC, 7, 116, 238, 100
 
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Створити...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
-    PUSHBUTTON  "&Змінити...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
-    PUSHBUTTON  "В&идалити", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    PUSHBUTTON  "&РЎС‚РІРѕСЂРёС‚Рё...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
+    PUSHBUTTON  "&Р—РјС–РЅРёС‚Рё...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON  "Р’&РёРґР°Р»РёС‚Рё", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
     DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
-    PUSHBUTTON  "Скасувати", IDCANCEL, 195, 224, 50, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 195, 224, 50, 14
 END
 
 
 IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Редагування змінної"
+CAPTION "Р РµРґР°РіСѓРІР°РЅРЅСЏ Р·РјС–РЅРЅРѕС—"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "&Ім'я змінної:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT       "&Р†Рј'СЏ Р·РјС–РЅРЅРѕС—:", IDC_STATIC, 7, 14, 50, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "&Значення змінної:", IDC_STATIC, 7, 32, 87, 8
+    LTEXT       "&Р—РЅР°С‡РµРЅРЅСЏ Р·РјС–РЅРЅРѕС—:", IDC_STATIC, 7, 32, 87, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON  "Скасувати", IDCANCEL, 170, 50, 50, 14
+    PUSHBUTTON  "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 170, 50, 50, 14
 END
 
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
-CAPTION "Ліцензійна угода"
+CAPTION "Р›С–С†РµРЅР·С–Р№РЅР° СѓРіРѕРґР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE DS_SHELLFONT | WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
@@ -273,27 +273,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Система"
-    IDS_CPLSYSTEMDESCRIPTION "Перегляд відомостей про систему комп'ютера та зміна параметрів обладнання, швидкодії, автоматичних оновлень."
-    IDS_MEGABYTE "Мб ОЗП"
-    IDS_GIGABYTE "Гб ОЗП"
-    IDS_TERABYTE "Тб ОЗП"
-    IDS_PETABYTE "Пб ОЗП"
-    IDS_VARIABLE "Змінна"
-    IDS_VALUE    "Значення"
-    IDS_NO_DUMP "(немає)"
-    IDS_MINI_DUMP "Мінідамп(64Кб)"
-    IDS_KERNEL_DUMP "Дамп ядра"
-    IDS_FULL_DUMP "Повний дамп"
-    IDS_USERPROFILE_NAME "Ім'я"
-    IDS_USERPROFILE_SIZE "Розмір"
-    IDS_USERPROFILE_TYPE "Тип"
-    IDS_USERPROFILE_STATUS "Стан"
-    IDS_USERPROFILE_MODIFIED "Змінено"
+    IDS_CPLSYSTEMNAME "РЎРёСЃС‚РµРјР°"
+    IDS_CPLSYSTEMDESCRIPTION "РџРµСЂРµРіР»СЏРґ РІС–РґРѕРјРѕСЃС‚РµР№ РїСЂРѕ СЃРёСЃС‚РµРјСѓ РєРѕРјРї'СЋС‚РµСЂР° С‚Р° Р·РјС–РЅР° РїР°СЂР°РјРµС‚СЂС–РІ РѕР±Р»Р°РґРЅР°РЅРЅСЏ, С€РІРёРґРєРѕРґС–С—, Р°РІС‚РѕРјР°С‚РёС‡РЅРёС… РѕРЅРѕРІР»РµРЅСЊ."
+    IDS_MEGABYTE "РњР± РћР—Рџ"
+    IDS_GIGABYTE "Р“Р± РћР—Рџ"
+    IDS_TERABYTE "РўР± РћР—Рџ"
+    IDS_PETABYTE "РџР± РћР—Рџ"
+    IDS_VARIABLE "Р—РјС–РЅРЅР°"
+    IDS_VALUE    "Р—РЅР°С‡РµРЅРЅСЏ"
+    IDS_NO_DUMP "(РЅРµРјР°С”)"
+    IDS_MINI_DUMP "РњС–РЅС–РґР°РјРї(64РљР±)"
+    IDS_KERNEL_DUMP "Р”Р°РјРї СЏРґСЂР°"
+    IDS_FULL_DUMP "РџРѕРІРЅРёР№ РґР°РјРї"
+    IDS_USERPROFILE_NAME "Р†Рј'СЏ"
+    IDS_USERPROFILE_SIZE "Р РѕР·РјС–СЂ"
+    IDS_USERPROFILE_TYPE "РўРёРї"
+    IDS_USERPROFILE_STATUS "РЎС‚Р°РЅ"
+    IDS_USERPROFILE_MODIFIED "Р—РјС–РЅРµРЅРѕ"
     IDS_MESSAGEBOXTITLE "System control panel applet"
-    IDS_WARNINITIALSIZE "Введіть числове значення для початкового розміру файлу довантаження."
-    IDS_WARNMAXIMUMSIZE "Введіть числове значення для максимального розміру файлу довантаження."
-    IDS_WARNINITIALRANGE "Початковий розмір файлу довантаження не повинен бути меншим 2 Мб і не повинен перевищувати об'єм вільного місця на обраному диску."
-    IDS_WARNMAXIMUMRANGE "Максимальний розмір файлу довантаження не повинен бути меншим від початкового та не повинен перевищувати об'єм вільного місця на обраному диску."
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervй Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blьmel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGй van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
+    IDS_WARNINITIALSIZE "Р’РІРµРґС–С‚СЊ С‡РёСЃР»РѕРІРµ Р·РЅР°С‡РµРЅРЅСЏ РґР»СЏ РїРѕС‡Р°С‚РєРѕРІРѕРіРѕ СЂРѕР·РјС–СЂСѓ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ."
+    IDS_WARNMAXIMUMSIZE "Р’РІРµРґС–С‚СЊ С‡РёСЃР»РѕРІРµ Р·РЅР°С‡РµРЅРЅСЏ РґР»СЏ РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ СЂРѕР·РјС–СЂСѓ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ."
+    IDS_WARNINITIALRANGE "РџРѕС‡Р°С‚РєРѕРІРёР№ СЂРѕР·РјС–СЂ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ РЅРµ РїРѕРІРёРЅРµРЅ Р±СѓС‚Рё РјРµРЅС€РёРј 2 РњР± С– РЅРµ РїРѕРІРёРЅРµРЅ РїРµСЂРµРІРёС‰СѓРІР°С‚Рё РѕР±'С”Рј РІС–Р»СЊРЅРѕРіРѕ РјС–СЃС†СЏ РЅР° РѕР±СЂР°РЅРѕРјСѓ РґРёСЃРєСѓ."
+    IDS_WARNMAXIMUMRANGE "РњР°РєСЃРёРјР°Р»СЊРЅРёР№ СЂРѕР·РјС–СЂ С„Р°Р№Р»Сѓ РґРѕРІР°РЅС‚Р°Р¶РµРЅРЅСЏ РЅРµ РїРѕРІРёРЅРµРЅ Р±СѓС‚Рё РјРµРЅС€РёРј РІС–Рґ РїРѕС‡Р°С‚РєРѕРІРѕРіРѕ С‚Р° РЅРµ РїРѕРІРёРЅРµРЅ РїРµСЂРµРІРёС‰СѓРІР°С‚Рё РѕР±'С”Рј РІС–Р»СЊРЅРѕРіРѕ РјС–СЃС†СЏ РЅР° РѕР±СЂР°РЅРѕРјСѓ РґРёСЃРєСѓ."
+    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervР№ Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas BlСЊmel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGР№ van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
 END

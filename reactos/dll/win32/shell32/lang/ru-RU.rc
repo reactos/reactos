@@ -21,10 +21,10 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "&Большие значки",    FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Мелкие значки",     FCIDM_SHVIEW_SMALLICON
-	MENUITEM "&Список",            FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "&Подробно",          FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "&Р‘РѕР»СЊС€РёРµ Р·РЅР°С‡РєРё",    FCIDM_SHVIEW_BIGICON
+	MENUITEM "&РњРµР»РєРёРµ Р·РЅР°С‡РєРё",     FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&РЎРїРёСЃРѕРє",            FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&РџРѕРґСЂРѕР±РЅРѕ",          FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -32,31 +32,31 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&Просмотр"
+		POPUP "&РџСЂРѕСЃРјРѕС‚СЂ"
 		BEGIN
-			MENUITEM "&Большие значки",   FCIDM_SHVIEW_BIGICON
-			MENUITEM "&Мелкие значки",    FCIDM_SHVIEW_SMALLICON
-			MENUITEM "&Список",           FCIDM_SHVIEW_LISTVIEW
-			MENUITEM "&Подробно",         FCIDM_SHVIEW_REPORTVIEW
+			MENUITEM "&Р‘РѕР»СЊС€РёРµ Р·РЅР°С‡РєРё",   FCIDM_SHVIEW_BIGICON
+			MENUITEM "&РњРµР»РєРёРµ Р·РЅР°С‡РєРё",    FCIDM_SHVIEW_SMALLICON
+			MENUITEM "&РЎРїРёСЃРѕРє",           FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "&РџРѕРґСЂРѕР±РЅРѕ",         FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "Упорядочить &значки"
+		POPUP "РЈРїРѕСЂСЏРґРѕС‡РёС‚СЊ &Р·РЅР°С‡РєРё"
 		BEGIN
-			MENUITEM "По &имени",         0x30  /* column 0 */
-			MENUITEM "По &типу",          0x32  /* column 2 */
-			MENUITEM "По &размеру",       0x31  /* ... */
-			MENUITEM "По &дате",          0x33
+			MENUITEM "РџРѕ &РёРјРµРЅРё",         0x30  /* column 0 */
+			MENUITEM "РџРѕ &С‚РёРїСѓ",          0x32  /* column 2 */
+			MENUITEM "РџРѕ &СЂР°Р·РјРµСЂСѓ",       0x31  /* ... */
+			MENUITEM "РџРѕ &РґР°С‚Рµ",          0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Автоматически",    FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "&РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё",    FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "В&ыровнять значки",   FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Р’&С‹СЂРѕРІРЅСЏС‚СЊ Р·РЅР°С‡РєРё",   FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "О&бновить",           FCIDM_SHVIEW_REFRESH
+		MENUITEM "Рћ&Р±РЅРѕРІРёС‚СЊ",           FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "&Вставить",           FCIDM_SHVIEW_INSERT
-		MENUITEM "Вставить &ярлык",     FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "&Р’СЃС‚Р°РІРёС‚СЊ",           FCIDM_SHVIEW_INSERT
+		MENUITEM "Р’СЃС‚Р°РІРёС‚СЊ &СЏСЂР»С‹Рє",     FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Сво&йства",           FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "РЎРІРѕ&Р№СЃС‚РІР°",           FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -65,27 +65,27 @@ MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "&Проводник",          FCIDM_SHVIEW_EXPLORE
-		MENUITEM "&Открыть",            FCIDM_SHVIEW_OPEN
+		MENUITEM "&РџСЂРѕРІРѕРґРЅРёРє",          FCIDM_SHVIEW_EXPLORE
+		MENUITEM "&РћС‚РєСЂС‹С‚СЊ",            FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "&Вырезать",           FCIDM_SHVIEW_CUT
-		MENUITEM "&Копировать",         FCIDM_SHVIEW_COPY
+		MENUITEM "&Р’С‹СЂРµР·Р°С‚СЊ",           FCIDM_SHVIEW_CUT
+		MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ",         FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "Создать &ярлык",      FCIDM_SHVIEW_CREATELINK
-		MENUITEM "&Удалить",            FCIDM_SHVIEW_DELETE
-		MENUITEM "Переи&меновать",      FCIDM_SHVIEW_RENAME
+		MENUITEM "РЎРѕР·РґР°С‚СЊ &СЏСЂР»С‹Рє",      FCIDM_SHVIEW_CREATELINK
+		MENUITEM "&РЈРґР°Р»РёС‚СЊ",            FCIDM_SHVIEW_DELETE
+		MENUITEM "РџРµСЂРµРё&РјРµРЅРѕРІР°С‚СЊ",      FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "Сво&йства",           FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "РЎРІРѕ&Р№СЃС‚РІР°",           FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Обзор"
+CAPTION "РћР±Р·РѕСЂ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 80, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Отмена", 2, 134, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "РћС‚РјРµРЅР°", 2, 134, 174, 50, 14, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -93,47 +93,47 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Обзор"
+CAPTION "РћР±Р·РѕСЂ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Папка:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "РџР°РїРєР°:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Создать папку", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&РЎРѕР·РґР°С‚СЊ РїР°РїРєСѓ", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Отменить", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "РћС‚РјРµРЅРёС‚СЊ", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Уведомление"
+CAPTION "РЈРІРµРґРѕРјР»РµРЅРёРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Да", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Д&а для всех", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Нет", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Отмена", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Р”Р°", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Р”&Р° РґР»СЏ РІСЃРµС…", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&РќРµС‚", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&РћС‚РјРµРЅР°", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
 
 IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О %s"
+CAPTION "Рћ %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Версия " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Р’РµСЂСЃРёСЏ " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "Данная версия ReactOS зарегистрирована на:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Р”Р°РЅРЅР°СЏ РІРµСЂСЃРёСЏ ReactOS Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅР° РЅР°:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-	LTEXT "Доступная физическая память:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "Р”РѕСЃС‚СѓРїРЅР°СЏ С„РёР·РёС‡РµСЃРєР°СЏ РїР°РјСЏС‚СЊ:", IDC_STATIC, 35, 152, 130, 10
 	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
 	DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
 	
@@ -144,7 +144,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Разработчики ReactOS:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "Р Р°Р·СЂР°Р±РѕС‚С‡РёРєРё ReactOS:", IDC_STATIC, 0, 0, 180, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -154,610 +154,610 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Введите имя программы, папки, документа или ресурс Интернета, и ReactOS откроет их.", 12289, 36, 11, 182, 18
-	LTEXT "&Открыть:", 12305, 5, 39, 34, 10
+	LTEXT "Р’РІРµРґРёС‚Рµ РёРјСЏ РїСЂРѕРіСЂР°РјРјС‹, РїР°РїРєРё, РґРѕРєСѓРјРµРЅС‚Р° РёР»Рё СЂРµСЃСѓСЂСЃ РРЅС‚РµСЂРЅРµС‚Р°, Рё ReactOS РѕС‚РєСЂРѕРµС‚ РёС….", 12289, 36, 11, 182, 18
+	LTEXT "&РћС‚РєСЂС‹С‚СЊ:", 12305, 5, 39, 34, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 40, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "Отмена", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "Об&зор...", 12288, 170, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "РћР±&Р·РѕСЂ...", 12288, 170, 63, 50, 14, WS_TABSTOP
 END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ярлык"
+CAPTION "РЇСЂР»С‹Рє"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
-	LTEXT "Тип объекта:", 14004, 8, 38, 64, 10
+	LTEXT "РўРёРї РѕР±СЉРµРєС‚Р°:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
-	LTEXT "Размещение:", 14006, 8, 58, 64, 10
+	LTEXT "Р Р°Р·РјРµС‰РµРЅРёРµ:", 14006, 8, 58, 64, 10
 	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Объект:", 14008, 8, 77, 45, 10
+	LTEXT "РћР±СЉРµРєС‚:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
-	LTEXT "&Рабочая папка:", 14010, 8, 96, 57, 10
+	LTEXT "&Р Р°Р±РѕС‡Р°СЏ РїР°РїРєР°:", 14010, 8, 96, 57, 10
 	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-	LTEXT "Б&ыстрый вызов:", 14014, 8, 115, 57, 10
+	LTEXT "Р‘&С‹СЃС‚СЂС‹Р№ РІС‹Р·РѕРІ:", 14014, 8, 115, 57, 10
 	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
-	LTEXT "Окно:", 14016, 8, 134, 57, 10
+	LTEXT "РћРєРЅРѕ:", 14016, 8, 134, 57, 10
 	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
-	LTEXT "&Коментарий:", 14018, 8, 152, 57, 10
+	LTEXT "&РљРѕРјРµРЅС‚Р°СЂРёР№:", 14018, 8, 152, 57, 10
 	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Найти объект...", 14020, 9, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "См&енить значок...", 14021, 84, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "&Дополнительно...", 14022, 159, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&РќР°Р№С‚Рё РѕР±СЉРµРєС‚...", 14020, 9, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "РЎРј&РµРЅРёС‚СЊ Р·РЅР°С‡РѕРє...", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ...", 14022, 159, 172, 70, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Дополнительные свойства"
+CAPTION "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ СЃРІРѕР№СЃС‚РІР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Установите нужные свойства для этого ярлыка.", -1, 5, 30, 210, 10
-	CHECKBOX "Запускать с другими учетными данными", 14000, 25, 50, 150, 10
-	LTEXT "Позволяет использовать этот ярлык для запуска программы от &имени администратора, в то же время продолжая работу от своего имени, что защищает компьютер от несанкционированных действий других программ.", -1, 50, 60, 175, 40
-	CHECKBOX "Запус&кать в отдельной области памяти", 14001, 25, 104, 160, 10, WS_DISABLED
+	LTEXT "РЈСЃС‚Р°РЅРѕРІРёС‚Рµ РЅСѓР¶РЅС‹Рµ СЃРІРѕР№СЃС‚РІР° РґР»СЏ СЌС‚РѕРіРѕ СЏСЂР»С‹РєР°.", -1, 5, 30, 210, 10
+	CHECKBOX "Р—Р°РїСѓСЃРєР°С‚СЊ СЃ РґСЂСѓРіРёРјРё СѓС‡РµС‚РЅС‹РјРё РґР°РЅРЅС‹РјРё", 14000, 25, 50, 150, 10
+	LTEXT "РџРѕР·РІРѕР»СЏРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЌС‚РѕС‚ СЏСЂР»С‹Рє РґР»СЏ Р·Р°РїСѓСЃРєР° РїСЂРѕРіСЂР°РјРјС‹ РѕС‚ &РёРјРµРЅРё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°, РІ С‚Рѕ Р¶Рµ РІСЂРµРјСЏ РїСЂРѕРґРѕР»Р¶Р°СЏ СЂР°Р±РѕС‚Сѓ РѕС‚ СЃРІРѕРµРіРѕ РёРјРµРЅРё, С‡С‚Рѕ Р·Р°С‰РёС‰Р°РµС‚ РєРѕРјРїСЊСЋС‚РµСЂ РѕС‚ РЅРµСЃР°РЅРєС†РёРѕРЅРёСЂРѕРІР°РЅРЅС‹С… РґРµР№СЃС‚РІРёР№ РґСЂСѓРіРёС… РїСЂРѕРіСЂР°РјРј.", -1, 50, 60, 175, 40
+	CHECKBOX "Р—Р°РїСѓСЃ&РєР°С‚СЊ РІ РѕС‚РґРµР»СЊРЅРѕР№ РѕР±Р»Р°СЃС‚Рё РїР°РјСЏС‚Рё", 14001, 25, 104, 160, 10, WS_DISABLED
 	PUSHBUTTON "OK", IDOK, 54, 123, 50, 14, WS_VISIBLE
-	PUSHBUTTON "Отмена", IDCANCEL, 120, 123, 50, 14, WS_VISIBLE
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 120, 123, 50, 14, WS_VISIBLE
 END
 
 SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Тип файла:", 14004, 8, 35, 50, 10
-	LTEXT "Папка", 14005, 68, 35, 160, 10
-	LTEXT "Расположение:", 14006, 8, 53, 50, 10
+	LTEXT "РўРёРї С„Р°Р№Р»Р°:", 14004, 8, 35, 50, 10
+	LTEXT "РџР°РїРєР°", 14005, 68, 35, 160, 10
+	LTEXT "Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ:", 14006, 8, 53, 50, 10
 	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Размер:", 14008, 8, 72, 45, 10
+	LTEXT "Р Р°Р·РјРµСЂ:", 14008, 8, 72, 45, 10
 	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Содержит:", 14010, 8, 93, 45, 10
+	LTEXT "РЎРѕРґРµСЂР¶РёС‚:", 14010, 8, 93, 45, 10
 	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Создано:", 14014, 8, 118, 45, 10
+	LTEXT "РЎРѕР·РґР°РЅРѕ:", 14014, 8, 118, 45, 10
 	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	AUTOCHECKBOX "&Только чтение", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Скрыто", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "&РўРѕР»СЊРєРѕ С‡С‚РµРЅРёРµ", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&РЎРєСЂС‹С‚Рѕ", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Тип файла:", 14004, 8, 35, 50, 10
-	LTEXT "файл", 14005, 68, 35, 160, 10
-	LTEXT "Приложение:", 14006, 8, 53, 50, 10
+	LTEXT "РўРёРї С„Р°Р№Р»Р°:", 14004, 8, 35, 50, 10
+	LTEXT "С„Р°Р№Р»", 14005, 68, 35, 160, 10
+	LTEXT "РџСЂРёР»РѕР¶РµРЅРёРµ:", 14006, 8, 53, 50, 10
 	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Размещение:", 14008, 8, 72, 45, 10
+	LTEXT "Р Р°Р·РјРµС‰РµРЅРёРµ:", 14008, 8, 72, 45, 10
 	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Размер:", 14010, 8, 93, 45, 10
+	LTEXT "Р Р°Р·РјРµСЂ:", 14010, 8, 93, 45, 10
 	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Создан:", 14014, 8, 118, 45, 10
+	LTEXT "РЎРѕР·РґР°РЅ:", 14014, 8, 118, 45, 10
 	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Изменен:", 14016, 8, 140, 45, 10
+	LTEXT "РР·РјРµРЅРµРЅ:", 14016, 8, 140, 45, 10
 	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Открыт:", 14018, 8, 160, 45, 10
+	LTEXT "РћС‚РєСЂС‹С‚:", 14018, 8, 160, 45, 10
 	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Атрибуты:", 14020, 8, 189, 45, 10
-	CHECKBOX "Только &чтение", 14021, 58, 189, 67, 10
-	CHECKBOX "Скр&ытый", 14022, 126, 189, 50, 10
-	CHECKBOX "&Архивный", 14023, 181, 189, 49, 10
+	LTEXT "РђС‚СЂРёР±СѓС‚С‹:", 14020, 8, 189, 45, 10
+	CHECKBOX "РўРѕР»СЊРєРѕ &С‡С‚РµРЅРёРµ", 14021, 58, 189, 67, 10
+	CHECKBOX "РЎРєСЂ&С‹С‚С‹Р№", 14022, 126, 189, 50, 10
+	CHECKBOX "&РђСЂС…РёРІРЅС‹Р№", 14023, 181, 189, 49, 10
 END
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Версия"
+CAPTION "Р’РµСЂСЃРёСЏ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Версия файла: ", 14000, 10, 10, 55, 10
+	LTEXT "Р’РµСЂСЃРёСЏ С„Р°Р№Р»Р°: ", 14000, 10, 10, 55, 10
 	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Описание: ", 14002, 10, 27, 45, 10
+	LTEXT "РћРїРёСЃР°РЅРёРµ: ", 14002, 10, 27, 45, 10
 	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	LTEXT "Авторские права: ", 14004, 10, 46, 66, 10
+	LTEXT "РђРІС‚РѕСЂСЃРєРёРµ РїСЂР°РІР°: ", 14004, 10, 46, 66, 10
 	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-	GROUPBOX "Дополнительные сведения: ", 14006, 6, 70, 222, 115
-	LTEXT "Имя элемента: ", 14007, 13, 82, 63, 10
-	LTEXT "Значение: ", 14008, 112, 82, 45, 10
+	GROUPBOX "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ СЃРІРµРґРµРЅРёСЏ: ", 14006, 6, 70, 222, 115
+	LTEXT "РРјСЏ СЌР»РµРјРµРЅС‚Р°: ", 14007, 13, 82, 63, 10
+	LTEXT "Р—РЅР°С‡РµРЅРёРµ: ", 14008, 112, 82, 45, 10
 	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
 	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
-	LTEXT "Тип:", -1, 15, 49, 40, 10
+	LTEXT "РўРёРї:", -1, 15, 49, 40, 10
 	EDITTEXT 14001, 110, 49, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
-	LTEXT "Файловая система:", -1, 15, 68, 86, 10
+	LTEXT "Р¤Р°Р№Р»РѕРІР°СЏ СЃРёСЃС‚РµРјР°:", -1, 15, 68, 86, 10
 	EDITTEXT 14002, 110, 68, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 5, 90, 10, 10
-	LTEXT "Занято:", -1, 25, 90, 78, 10
+	LTEXT "Р—Р°РЅСЏС‚Рѕ:", -1, 25, 90, 78, 10
 	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 5, 105, 10, 10
-	LTEXT "Свободно:", -1, 25, 105, 70, 10
+	LTEXT "РЎРІРѕР±РѕРґРЅРѕ:", -1, 25, 105, 70, 10
 	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
-	LTEXT "Емкость:", -1, 25, 125, 80, 10
+	LTEXT "Р•РјРєРѕСЃС‚СЊ:", -1, 25, 125, 80, 10
 	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 20, 140, 200, 20
 
-	LTEXT "Диск %s", 14009, 100, 170, 52, 10
-	PUSHBUTTON "Очистка диска", 14010, 166, 175, 64, 15, WS_TABSTOP
-	CHECKBOX "&Сжимать для экономии места", 14011, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 15, 220, 216, 10, WS_DISABLED
+	LTEXT "Р”РёСЃРє %s", 14009, 100, 170, 52, 10
+	PUSHBUTTON "РћС‡РёСЃС‚РєР° РґРёСЃРєР°", 14010, 166, 175, 64, 15, WS_TABSTOP
+	CHECKBOX "&РЎР¶РёРјР°С‚СЊ РґР»СЏ СЌРєРѕРЅРѕРјРёРё РјРµСЃС‚Р°", 14011, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Р Р°Р·СЂРµС€РёС‚СЊ &РёРЅРґРµРєСЃРёСЂРѕРІР°РЅРёРµ РґРёСЃРєР° РґР»СЏ Р±С‹СЃС‚СЂРѕРіРѕ РїРѕРёСЃРєР°", 14012, 15, 220, 216, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Сервис"
+CAPTION "РЎРµСЂРІРёСЃ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Проверка диска", -1, 5, 5, 230, 60
-	LTEXT "Проверка тома на наличие ошибок.", -1, 40, 25, 160, 20
-	PUSHBUTTON "Выполнить &проверку...", 14000, 116, 45, 112, 15, WS_TABSTOP
-	GROUPBOX "Дефрагментация диска", -1, 5, 65, 230, 60
-	LTEXT "Дефрагментация файлов, хранящихся на этом томе.", -1, 40, 85, 160, 20
-	PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 116, 105, 112, 15, WS_TABSTOP
-	GROUPBOX "Архивация", -1, 5, 130, 230, 60
-	LTEXT "Архивация файлов, хранящихся на этом томе.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Выполнить &архивацию...", 14002, 116, 170, 112, 15, WS_TABSTOP
+	GROUPBOX "РџСЂРѕРІРµСЂРєР° РґРёСЃРєР°", -1, 5, 5, 230, 60
+	LTEXT "РџСЂРѕРІРµСЂРєР° С‚РѕРјР° РЅР° РЅР°Р»РёС‡РёРµ РѕС€РёР±РѕРє.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Р’С‹РїРѕР»РЅРёС‚СЊ &РїСЂРѕРІРµСЂРєСѓ...", 14000, 116, 45, 112, 15, WS_TABSTOP
+	GROUPBOX "Р”РµС„СЂР°РіРјРµРЅС‚Р°С†РёСЏ РґРёСЃРєР°", -1, 5, 65, 230, 60
+	LTEXT "Р”РµС„СЂР°РіРјРµРЅС‚Р°С†РёСЏ С„Р°Р№Р»РѕРІ, С…СЂР°РЅСЏС‰РёС…СЃСЏ РЅР° СЌС‚РѕРј С‚РѕРјРµ.", -1, 40, 85, 160, 20
+	PUSHBUTTON "Р’С‹РїРѕР»РЅРёС‚СЊ Рґ&РµС„СЂР°РіРјРµРЅС‚Р°С†РёСЋ...", 14001, 116, 105, 112, 15, WS_TABSTOP
+	GROUPBOX "РђСЂС…РёРІР°С†РёСЏ", -1, 5, 130, 230, 60
+	LTEXT "РђСЂС…РёРІР°С†РёСЏ С„Р°Р№Р»РѕРІ, С…СЂР°РЅСЏС‰РёС…СЃСЏ РЅР° СЌС‚РѕРј С‚РѕРјРµ.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Р’С‹РїРѕР»РЅРёС‚СЊ &Р°СЂС…РёРІР°С†РёСЋ...", 14002, 116, 170, 112, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Оборудование"
+CAPTION "РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 RUN_AS_DIALOG DIALOGEX 0, 0, 252, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Запуск от другого имени"
+CAPTION "Р—Р°РїСѓСЃРє РѕС‚ РґСЂСѓРіРѕРіРѕ РёРјРµРЅРё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "От имени какого пользователя вы хотите запустить программу?", -1, 10, 19, 230, 20
-	CHECKBOX "Текущий пользователь %s", 14000, 10, 42, 210, 10
-	LTEXT "Защитить мой компьютер и мои данные от несанкционированной деятельности программ.", -1, 21, 57, 225, 20, WS_DISABLED
-	CHECKBOX "Данная опция может защитить ваш компьютер и данные от вирусов, но программа может работать неправильно", 14001, 25, 79, 221, 24, BS_MULTILINE | WS_DISABLED
-	CHECKBOX "Запустить от имени следующего пользователя:", 14002, 10, 110, 187, 10
-	LTEXT "Имя пользователя:", -1, 16, 133, 54, 10
+	LTEXT "РћС‚ РёРјРµРЅРё РєР°РєРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІС‹ С…РѕС‚РёС‚Рµ Р·Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ?", -1, 10, 19, 230, 20
+	CHECKBOX "РўРµРєСѓС‰РёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ %s", 14000, 10, 42, 210, 10
+	LTEXT "Р—Р°С‰РёС‚РёС‚СЊ РјРѕР№ РєРѕРјРїСЊСЋС‚РµСЂ Рё РјРѕРё РґР°РЅРЅС‹Рµ РѕС‚ РЅРµСЃР°РЅРєС†РёРѕРЅРёСЂРѕРІР°РЅРЅРѕР№ РґРµСЏС‚РµР»СЊРЅРѕСЃС‚Рё РїСЂРѕРіСЂР°РјРј.", -1, 21, 57, 225, 20, WS_DISABLED
+	CHECKBOX "Р”Р°РЅРЅР°СЏ РѕРїС†РёСЏ РјРѕР¶РµС‚ Р·Р°С‰РёС‚РёС‚СЊ РІР°С€ РєРѕРјРїСЊСЋС‚РµСЂ Рё РґР°РЅРЅС‹Рµ РѕС‚ РІРёСЂСѓСЃРѕРІ, РЅРѕ РїСЂРѕРіСЂР°РјРјР° РјРѕР¶РµС‚ СЂР°Р±РѕС‚Р°С‚СЊ РЅРµРїСЂР°РІРёР»СЊРЅРѕ", 14001, 25, 79, 221, 24, BS_MULTILINE | WS_DISABLED
+	CHECKBOX "Р—Р°РїСѓСЃС‚РёС‚СЊ РѕС‚ РёРјРµРЅРё СЃР»РµРґСѓСЋС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ:", 14002, 10, 110, 187, 10
+	LTEXT "РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ:", -1, 16, 133, 54, 10
 	COMBOBOX 14003, 76, 130, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 	PUSHBUTTON "...", 14004, 180, 130, 30, 14, WS_TABSTOP
-	LTEXT "Пароль:", -1, 16, 152, 60, 10
+	LTEXT "РџР°СЂРѕР»СЊ:", -1, 16, 152, 60, 10
 	EDITTEXT 14005, 76, 148, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
 	PUSHBUTTON "...", 14006, 180, 148, 30, 14, WS_TABSTOP
 	PUSHBUTTON "OK", 14007, 59, 170, 60, 14, WS_TABSTOP
-	PUSHBUTTON "Отмена", 14008, 125, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "РћС‚РјРµРЅР°", 14008, 125, 170, 60, 14, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства: Корзина"
+CAPTION "РЎРІРѕР№СЃС‚РІР°: РљРѕСЂР·РёРЅР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Установки для выбранного расположения", -1, 10, 66, 220, 73
-	RADIOBUTTON "&Другой размер:", 14001, 17, 80, 80, 10, NOT WS_TABSTOP
+	GROUPBOX "РЈСЃС‚Р°РЅРѕРІРєРё РґР»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СЂР°СЃРїРѕР»РѕР¶РµРЅРёСЏ", -1, 10, 66, 220, 73
+	RADIOBUTTON "&Р”СЂСѓРіРѕР№ СЂР°Р·РјРµСЂ:", 14001, 17, 80, 80, 10, NOT WS_TABSTOP
 	EDITTEXT 14002, 100, 78, 65, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "&Максимальный размер(Мб):", -1, 17, 95, 102, 10
-	RADIOBUTTON "&Уничтожать файлы сразу после удаления, не помещая их в корзину.", 14003, 17, 108, 206, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 145, 176, 10, WS_TABSTOP
+	LTEXT "&РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ(РњР±):", -1, 17, 95, 102, 10
+	RADIOBUTTON "&РЈРЅРёС‡С‚РѕР¶Р°С‚СЊ С„Р°Р№Р»С‹ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ СѓРґР°Р»РµРЅРёСЏ, РЅРµ РїРѕРјРµС‰Р°СЏ РёС… РІ РєРѕСЂР·РёРЅСѓ.", 14003, 17, 108, 206, 20, BS_MULTILINE | WS_TABSTOP
+	AUTOCHECKBOX "&Р—Р°РїСЂР°С€РёРІР°С‚СЊ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РЅР° СѓРґР°Р»РµРЅРёРµ", 14004, 20, 145, 176, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Выбор программы"
+CAPTION "Р’С‹Р±РѕСЂ РїСЂРѕРіСЂР°РјРјС‹"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-	LTEXT "Выберите программу для открытия этого файла.", -1, 44, 12, 211, 10
-	LTEXT "Файл:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "Программы", -1, 7, 42, 249, 187
+	LTEXT "Р’С‹Р±РµСЂРёС‚Рµ РїСЂРѕРіСЂР°РјРјСѓ РґР»СЏ РѕС‚РєСЂС‹С‚РёСЏ СЌС‚РѕРіРѕ С„Р°Р№Р»Р°.", -1, 44, 12, 211, 10
+	LTEXT "Р¤Р°Р№Р»:    ", 14001, 44, 25, 188, 10
+	GROUPBOX "РџСЂРѕРіСЂР°РјРјС‹", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-	AUTOCHECKBOX "&Использовать ее для всех файлов такого типа", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Обзор...", 14004, 198, 207, 50, 14
+	AUTOCHECKBOX "&РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РµРµ РґР»СЏ РІСЃРµС… С„Р°Р№Р»РѕРІ С‚Р°РєРѕРіРѕ С‚РёРїР°", 14003, 20, 193, 225, 10
+	PUSHBUTTON "&РћР±Р·РѕСЂ...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
-	PUSHBUTTON "Отмена", 14006, 206, 236, 50, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", 14006, 206, 236, 50, 14
 END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Общие"
+CAPTION "РћР±С‰РёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Задачи", -1, 7, 10, 249, 45
+	GROUPBOX "Р—Р°РґР°С‡Рё", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 24, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", 14001, 40, 24, 185, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", 14002, 40, 36, 185, 10, WS_TABSTOP | WS_GROUP
-	GROUPBOX "Обзор папок", -1, 7, 60, 249, 45, WS_TABSTOP
+	AUTORADIOBUTTON "РћС‚РѕР±СЂР°&Р¶РµРЅРёРµ СЃРїРёСЃРєР° С‚РёРїРёС‡РЅС‹С… Р·Р°РґР°С‡ РІ РїР°РїРєР°С…", 14001, 40, 24, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РѕР±С‹&С‡РЅС‹Рµ РїР°РїРєРё ReactOS", 14002, 40, 36, 185, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "РћР±Р·РѕСЂ РїР°РїРѕРє", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 75, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Открывать папки в одном и том же окне", 14004, 40, 75, 185, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", 14005, 40, 87, 185, 10, WS_TABSTOP | WS_GROUP
-	GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
+	AUTORADIOBUTTON "&РћС‚РєСЂС‹РІР°С‚СЊ РїР°РїРєРё РІ РѕРґРЅРѕРј Рё С‚РѕРј Р¶Рµ РѕРєРЅРµ", 14004, 40, 75, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Рћ&С‚РєСЂС‹РІР°С‚СЊ РєР°Р¶РґСѓСЋ РїР°РїРєСѓ РІ РѕС‚РґРµР»СЊРЅРѕРј РѕРєРЅРµ", 14005, 40, 87, 185, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Р©РµР»С‡РєРё РјС‹С€СЊСЋ", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Подчеркив&ать подписи значков", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", 14009, 50, 144, 185, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", 14010, 40, 156, 195, 10, WS_TABSTOP | WS_GROUP
-	PUSHBUTTON "&Восстановить умолчания", 14011, 148, 180, 104, 14, WS_TABSTOP
+	AUTORADIOBUTTON "РћС‚&РєСЂС‹РІР°С‚СЊ РѕРґРЅРёРј С‰РµР»С‡РєРѕРј, РІС‹РґРµР»СЏС‚СЊ СѓРєР°Р·Р°С‚РµР»РµРј", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "РџРѕРґС‡РµСЂРєРёРІ&Р°С‚СЊ РїРѕРґРїРёСЃРё Р·РЅР°С‡РєРѕРІ", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "РџРѕРґС‡РµСЂРєРёРІР°С‚СЊ РїРѕРґРїРёСЃРё Р·&РЅР°С‡РєРѕРІ РїСЂРё РЅР°РІРµРґРµРЅРёРё", 14009, 50, 144, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "РћС‚РєСЂ&С‹РІР°С‚СЊ РґРІРѕР№РЅС‹Рј, Р° РІС‹РґРµР»СЏС‚СЊ РѕРґРЅРёРј С‰РµР»С‡РєРѕРј", 14010, 40, 156, 195, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "&Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ СѓРјРѕР»С‡Р°РЅРёСЏ", 14011, 148, 180, 104, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Вид"
+CAPTION "Р’РёРґ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Представление папок", -1, 7, 10, 249, 60
+GROUPBOX "РџСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ РїР°РїРѕРє", -1, 7, 10, 249, 60
 //ICON
-LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 60, 24, 180, 20
-PUSHBUTTON "&Применить ко всем папкам", 14001, 60, 50, 100, 14, WS_TABSTOP
-PUSHBUTTON "&Сброс для всех папок", 14002, 164, 50, 80, 14, WS_TABSTOP
-LTEXT "Дополнительные параметры:", -1, 9, 78, 120, 10
+LTEXT "РњРѕР¶РЅРѕ РїСЂРёРјРµРЅРёС‚СЊ РІРёРґ, РІС‹Р±СЂР°РЅРЅС‹Р№ РґР»СЏ СЌС‚РѕР№ РїР°РїРєРё, РЅР°РїСЂРёРјРµСЂ, ""РўР°Р±Р»РёС†Р°"" РёР»Рё ""РџР»РёС‚РєР°"", РєРѕ РІСЃРµРј РїР°РїРєР°Рј.", -1, 60, 24, 180, 20
+PUSHBUTTON "&РџСЂРёРјРµРЅРёС‚СЊ РєРѕ РІСЃРµРј РїР°РїРєР°Рј", 14001, 60, 50, 100, 14, WS_TABSTOP
+PUSHBUTTON "&РЎР±СЂРѕСЃ РґР»СЏ РІСЃРµС… РїР°РїРѕРє", 14002, 164, 50, 80, 14, WS_TABSTOP
+LTEXT "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹:", -1, 9, 78, 120, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "&Восстановить умолчания", 14004, 156, 216, 101, 14, WS_TABSTOP
+PUSHBUTTON "&Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ СѓРјРѕР»С‡Р°РЅРёСЏ", 14004, 156, 216, 101, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Типы файлов"
+CAPTION "РўРёРїС‹ С„Р°Р№Р»РѕРІ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Зарегистрированные типы файлов:", -1, 9, 7, 133, 10
+LTEXT "&Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹Рµ С‚РёРїС‹ С„Р°Р№Р»РѕРІ:", -1, 9, 7, 133, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Создать", 14001, 147, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Удалить", 14002, 202, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Описание расширения '%s'", 14003, 7, 130, 249, 70
-LTEXT "Открывать в:", -1, 12, 142, 54, 10
+PUSHBUTTON "&РЎРѕР·РґР°С‚СЊ", 14001, 147, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&РЈРґР°Р»РёС‚СЊ", 14002, 202, 110, 50, 14, WS_TABSTOP
+GROUPBOX "РћРїРёСЃР°РЅРёРµ СЂР°СЃС€РёСЂРµРЅРёСЏ '%s'", 14003, 7, 130, 249, 70
+LTEXT "РћС‚РєСЂС‹РІР°С‚СЊ РІ:", -1, 12, 142, 54, 10
 //ICON
-LTEXT "Приложение:", 14005, 100, 142, 54, 10
-PUSHBUTTON "&Изменить...", 14006, 180, 140, 63, 14, WS_TABSTOP
+LTEXT "РџСЂРёР»РѕР¶РµРЅРёРµ:", 14005, 100, 142, 54, 10
+PUSHBUTTON "&РР·РјРµРЅРёС‚СЊ...", 14006, 180, 140, 63, 14, WS_TABSTOP
 LTEXT "", 14007, 12, 155, 162, 36
-PUSHBUTTON "До&полнительно", 14008, 180, 175, 63, 14, WS_TABSTOP
+PUSHBUTTON "Р”Рѕ&РїРѕР»РЅРёС‚РµР»СЊРЅРѕ", 14008, 180, 175, 63, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Подтверждение замены файла"
+CAPTION "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ Р·Р°РјРµРЅС‹ С„Р°Р№Р»Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Да", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Да - для &всех", 12807, 85, 122, 60, 14
-	PUSHBUTTON "&Нет", IDNO, 150, 122, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 215, 122, 60, 14
+	DEFPUSHBUTTON "&Р”Р°", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Р”Р° - РґР»СЏ &РІСЃРµС…", 12807, 85, 122, 60, 14
+	PUSHBUTTON "&РќРµС‚", IDNO, 150, 122, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Папка уже содержит файл ""%2"".", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "Папка уже содержит доступный только для чтения файл ""%2"".", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Папка уже содержит системный файл ""%2"".", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Заменить имеющийся файл", -1, 44, 35, 228, 10, SS_NOPREFIX
-	LTEXT "(дата и размер неизвестны)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	LTEXT "РџР°РїРєР° СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ С„Р°Р№Р» ""%2"".", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "РџР°РїРєР° СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ РґРѕСЃС‚СѓРїРЅС‹Р№ С‚РѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ С„Р°Р№Р» ""%2"".", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "РџР°РїРєР° СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ СЃРёСЃС‚РµРјРЅС‹Р№ С„Р°Р№Р» ""%2"".", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Р—Р°РјРµРЅРёС‚СЊ РёРјРµСЋС‰РёР№СЃСЏ С„Р°Р№Р»", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "(РґР°С‚Р° Рё СЂР°Р·РјРµСЂ РЅРµРёР·РІРµСЃС‚РЅС‹)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-	LTEXT "следующим файлом?", -1, 44, 75, 228, 10, SS_NOPREFIX
-	LTEXT "(дата и размер неизвестны)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	LTEXT "СЃР»РµРґСѓСЋС‰РёРј С„Р°Р№Р»РѕРј?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "(РґР°С‚Р° Рё СЂР°Р·РјРµСЂ РЅРµРёР·РІРµСЃС‚РЅС‹)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 LOGOFF_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Выход из ReactOS"
+CAPTION "Р’С‹С…РѕРґ РёР· ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Вы действительно хотите выйти из системы?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "В&ыход", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 122, 40, 60, 14
+	LTEXT "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РІС‹Р№С‚Рё РёР· СЃРёСЃС‚РµРјС‹?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "Р’&С‹С…РѕРґ", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Отключение ReactOS"
+CAPTION "РћС‚РєР»СЋС‡РµРЅРёРµ ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Вы действительно хотите выполнить отключение?", -1, 49, 12, 137, 23
-	DEFPUSHBUTTON "Отклю&чение", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 123, 40, 60, 14
+	LTEXT "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РІС‹РїРѕР»РЅРёС‚СЊ РѕС‚РєР»СЋС‡РµРЅРёРµ?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "РћС‚РєР»СЋ&С‡РµРЅРёРµ", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 123, 40, 60, 14
 END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Автозапуск"
+CAPTION "РђРІС‚РѕР·Р°РїСѓСЃРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Выберите &тип содержимого, а затем действие, автоматически выполняемое при его обнаружении в этом устройстве:", 1000, 7, 7, 215, 20
+	LTEXT "Р’С‹Р±РµСЂРёС‚Рµ &С‚РёРї СЃРѕРґРµСЂР¶РёРјРѕРіРѕ, Р° Р·Р°С‚РµРј РґРµР№СЃС‚РІРёРµ, Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІС‹РїРѕР»РЅСЏРµРјРѕРµ РїСЂРё РµРіРѕ РѕР±РЅР°СЂСѓР¶РµРЅРёРё РІ СЌС‚РѕРј СѓСЃС‚СЂРѕР№СЃС‚РІРµ:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-	GROUPBOX "Действия", -1, 7, 45, 212, 146
-	AUTORADIOBUTTON "&Выберите выполняемое действие:", 1005, 14, 54, 202, 10, WS_GROUP
+	GROUPBOX "Р”РµР№СЃС‚РІРёСЏ", -1, 7, 45, 212, 146
+	AUTORADIOBUTTON "&Р’С‹Р±РµСЂРёС‚Рµ РІС‹РїРѕР»РЅСЏРµРјРѕРµ РґРµР№СЃС‚РІРёРµ:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-	AUTORADIOBUTTON "Выдавать &запрос на выбор выполняемого действия", 1006, 14, 177, 202, 10
-	PUSHBUTTON "Восстановить умол&чания", 1008, 108, 197, 110, 14, WS_DISABLED
+	AUTORADIOBUTTON "Р’С‹РґР°РІР°С‚СЊ &Р·Р°РїСЂРѕСЃ РЅР° РІС‹Р±РѕСЂ РІС‹РїРѕР»РЅСЏРµРјРѕРіРѕ РґРµР№СЃС‚РІРёСЏ", 1006, 14, 177, 202, 10
+	PUSHBUTTON "Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ СѓРјРѕР»&С‡Р°РЅРёСЏ", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Смешанное содержимое"
+CAPTION "РЎРјРµС€Р°РЅРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "На этом диске или устройстве хранится содержимое различных типов.", 1001, 32, 7, 191, 20
-	LTEXT "Какое действие следует выполнять ReactOS?", 1002, 32, 31, 188, 8
+	LTEXT "РќР° СЌС‚РѕРј РґРёСЃРєРµ РёР»Рё СѓСЃС‚СЂРѕР№СЃС‚РІРµ С…СЂР°РЅРёС‚СЃСЏ СЃРѕРґРµСЂР¶РёРјРѕРµ СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ.", 1001, 32, 7, 191, 20
+	LTEXT "РљР°РєРѕРµ РґРµР№СЃС‚РІРёРµ СЃР»РµРґСѓРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊ ReactOS?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 160, 186, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 160, 186, 60, 14
 END
 
 MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Смешанное содержимое"
+CAPTION "РЎРјРµС€Р°РЅРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS может всегда выполнять одно и то же действие, когда вы вставляете диск или подключаете устройство с файлами следующего типа:", 1001, 30, 7, 193, 20
+	LTEXT "ReactOS РјРѕР¶РµС‚ РІСЃРµРіРґР° РІС‹РїРѕР»РЅСЏС‚СЊ РѕРґРЅРѕ Рё С‚Рѕ Р¶Рµ РґРµР№СЃС‚РІРёРµ, РєРѕРіРґР° РІС‹ РІСЃС‚Р°РІР»СЏРµС‚Рµ РґРёСЃРє РёР»Рё РїРѕРґРєР»СЋС‡Р°РµС‚Рµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ СЃ С„Р°Р№Р»Р°РјРё СЃР»РµРґСѓСЋС‰РµРіРѕ С‚РёРїР°:", 1001, 30, 7, 193, 20
 	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-	LTEXT "Какое действие следует выполнять ReactOS?", 1002, 32, 41, 190, 8
+	LTEXT "РљР°РєРѕРµ РґРµР№СЃС‚РІРёРµ СЃР»РµРґСѓРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊ ReactOS?", 1002, 32, 41, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-	AUTOCHECKBOX "Всегда выполнять выбранное действие.", 1004, 32, 171, 190, 10
+	AUTOCHECKBOX "Р’СЃРµРіРґР° РІС‹РїРѕР»РЅСЏС‚СЊ РІС‹Р±СЂР°РЅРЅРѕРµ РґРµР№СЃС‚РІРёРµ.", 1004, 32, 171, 190, 10
 	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 160, 185, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 160, 185, 60, 14
 END
 
 AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Автозапуск"
+CAPTION "РђРІС‚РѕР·Р°РїСѓСЃРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS может выполнять одно и то же действие при каждом подключении этого устройства.", 1001, 32, 7, 190, 22
-	LTEXT "&Какое действие следует выполнять ReactOS?", 1002, 32, 31, 190, 8
+	LTEXT "ReactOS РјРѕР¶РµС‚ РІС‹РїРѕР»РЅСЏС‚СЊ РѕРґРЅРѕ Рё С‚Рѕ Р¶Рµ РґРµР№СЃС‚РІРёРµ РїСЂРё РєР°Р¶РґРѕРј РїРѕРґРєР»СЋС‡РµРЅРёРё СЌС‚РѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР°.", 1001, 32, 7, 190, 22
+	LTEXT "&РљР°РєРѕРµ РґРµР№СЃС‚РІРёРµ СЃР»РµРґСѓРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊ ReactOS?", 1002, 32, 31, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
-	AUTOCHECKBOX "&Всегда выполнять выбранное действие", 1004, 32, 143, 190, 8
+	AUTOCHECKBOX "&Р’СЃРµРіРґР° РІС‹РїРѕР»РЅСЏС‚СЊ РІС‹Р±СЂР°РЅРЅРѕРµ РґРµР№СЃС‚РІРёРµ", 1004, 32, 143, 190, 8
 	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 159, 160, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 159, 160, 60, 14
 END
 
 SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Завершение работы ReactOS"
+CAPTION "Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹ ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "Выберите желаемое действие.", -1, 39, 7, 167, 10
+	LTEXT "Р’С‹Р±РµСЂРёС‚Рµ Р¶РµР»Р°РµРјРѕРµ РґРµР№СЃС‚РІРёРµ.", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Сохранить сеанс, обеспечивая работу компьютера в спящем режиме и данными в памяти. При нажатии на любую клавишу или передвижении мыши компьютер возвратится в обычный режим.", 8225, 39, 40, 167, 37
+	LTEXT "РЎРѕС…СЂР°РЅРёС‚СЊ СЃРµР°РЅСЃ, РѕР±РµСЃРїРµС‡РёРІР°СЏ СЂР°Р±РѕС‚Сѓ РєРѕРјРїСЊСЋС‚РµСЂР° РІ СЃРїСЏС‰РµРј СЂРµР¶РёРјРµ Рё РґР°РЅРЅС‹РјРё РІ РїР°РјСЏС‚Рё. РџСЂРё РЅР°Р¶Р°С‚РёРё РЅР° Р»СЋР±СѓСЋ РєР»Р°РІРёС€Сѓ РёР»Рё РїРµСЂРµРґРІРёР¶РµРЅРёРё РјС‹С€Рё РєРѕРјРїСЊСЋС‚РµСЂ РІРѕР·РІСЂР°С‚РёС‚СЃСЏ РІ РѕР±С‹С‡РЅС‹Р№ СЂРµР¶РёРј.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-	PUSHBUTTON "Отмена", IDCANCEL, 75, 82, 60, 14
-	PUSHBUTTON "&Справка", IDHELP, 144, 82, 60, 14
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 75, 82, 60, 14
+	PUSHBUTTON "&РЎРїСЂР°РІРєР°", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Форматирование"
+CAPTION "Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Начать", IDOK, 53, 198, 60, 14
-	PUSHBUTTON "&Закрыть", IDCANCEL, 118, 198, 60, 14
-	LTEXT "&Емкость:", -1, 7, 6, 169, 9
+	DEFPUSHBUTTON "&РќР°С‡Р°С‚СЊ", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "&Р—Р°РєСЂС‹С‚СЊ", IDCANCEL, 118, 198, 60, 14
+	LTEXT "&Р•РјРєРѕСЃС‚СЊ:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&Файловая система:", -1, 7, 35, 170, 9
+	LTEXT "&Р¤Р°Р№Р»РѕРІР°СЏ СЃРёСЃС‚РµРјР°:", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Размер кластера:", -1, 7, 64, 170, 9
+	LTEXT "&Р Р°Р·РјРµСЂ РєР»Р°СЃС‚РµСЂР°:", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&Метка тома:", -1, 7, 93, 170, 9
+	LTEXT "&РњРµС‚РєР° С‚РѕРјР°:", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "&Способы форматирования:", 4610, 7, 121, 170, 49
-	AUTOCHECKBOX "&Быстрое (очистка оглавления)", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "&Использовать сжатие", 28675, 16, 152, 155, 10
+	GROUPBOX "&РЎРїРѕСЃРѕР±С‹ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ:", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "&Р‘С‹СЃС‚СЂРѕРµ (РѕС‡РёСЃС‚РєР° РѕРіР»Р°РІР»РµРЅРёСЏ)", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "&РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃР¶Р°С‚РёРµ", 28675, 16, 152, 155, 10
 END
 
 CHKDSK_DLG DIALOGEX 50, 50, 232, 111
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Проверка диска"
+CAPTION "РџСЂРѕРІРµСЂРєР° РґРёСЃРєР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Запуск", IDOK, 101, 91, 60, 14
-	GROUPBOX "Параметры проверки диска", -1, 7, 5, 218, 50
-	PUSHBUTTON "Отмена", IDCANCEL, 165, 91, 60, 14
-	AUTOCHECKBOX "&Автоматически исправлять системные ошибки", 14000, 16, 19, 178, 10
-	AUTOCHECKBOX "&Проверять и востанавливать поврежденные сектора", 14001, 16, 35, 200, 10
+	DEFPUSHBUTTON "Р—Р°РїСѓСЃРє", IDOK, 101, 91, 60, 14
+	GROUPBOX "РџР°СЂР°РјРµС‚СЂС‹ РїСЂРѕРІРµСЂРєРё РґРёСЃРєР°", -1, 7, 5, 218, 50
+	PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 165, 91, 60, 14
+	AUTOCHECKBOX "&РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё РёСЃРїСЂР°РІР»СЏС‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ РѕС€РёР±РєРё", 14000, 16, 19, 178, 10
+	AUTOCHECKBOX "&РџСЂРѕРІРµСЂСЏС‚СЊ Рё РІРѕСЃС‚Р°РЅР°РІР»РёРІР°С‚СЊ РїРѕРІСЂРµР¶РґРµРЅРЅС‹Рµ СЃРµРєС‚РѕСЂР°", 14001, 16, 35, 200, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 218, 8
 	LTEXT "", 14003, 7, 75, 218, 10
 END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Изменение значка"
+CAPTION "РР·РјРµРЅРµРЅРёРµ Р·РЅР°С‡РєР°"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Имя файла:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Обзор...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "РРјСЏ С„Р°Р№Р»Р°:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "РћР±Р·РѕСЂ...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Значки:", -1, 7, 47, 208, 10
+    LTEXT "Р—РЅР°С‡РєРё:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Отмена",IDCANCEL, 167, 181, 50, 14
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 	/* columns in the shellview */
-	IDS_SHV_COLUMN1             "Имя"
-	IDS_SHV_COLUMN2             "Размер"
-	IDS_SHV_COLUMN3             "Тип"
-	IDS_SHV_COLUMN4             "Изменён"
-	IDS_SHV_COLUMN5             "Атрибуты"
-	IDS_SHV_COLUMN6             "Полный объём"
-	IDS_SHV_COLUMN7             "Свободно"
-	IDS_SHV_COLUMN8             "Имя"
-	IDS_SHV_COLUMN9             "Комментарий"
-	IDS_SHV_COLUMN10            "Владелец"
-	IDS_SHV_COLUMN11            "Группа"
-	IDS_SHV_COLUMN12            "Имя файла"
-	IDS_SHV_COLUMN13            "Категория"
-	IDS_SHV_COLUMN_DELFROM      "Изначальное расположение"
-	IDS_SHV_COLUMN_DELDATE      "Дата удаления"
-	IDS_SHV_COLUMN_FONTTYPE     "Тип шрифта"
-	IDS_SHV_COLUMN_WORKGROUP    "Рабочая группа"
-	IDS_SHV_NETWORKLOCATION     "Сетевое расположение"
-	IDS_SHV_COLUMN_DOCUMENTS    "Документы"
-	IDS_SHV_COLUMN_STATUS       "Состояние"
-	IDS_SHV_COLUMN_COMMENTS     "Коментарии"
-	IDS_SHV_COLUMN_LOCATION     "Расположение"
-	IDS_SHV_COLUMN_MODEL        "Модель"
+	IDS_SHV_COLUMN1             "РРјСЏ"
+	IDS_SHV_COLUMN2             "Р Р°Р·РјРµСЂ"
+	IDS_SHV_COLUMN3             "РўРёРї"
+	IDS_SHV_COLUMN4             "РР·РјРµРЅС‘РЅ"
+	IDS_SHV_COLUMN5             "РђС‚СЂРёР±СѓС‚С‹"
+	IDS_SHV_COLUMN6             "РџРѕР»РЅС‹Р№ РѕР±СЉС‘Рј"
+	IDS_SHV_COLUMN7             "РЎРІРѕР±РѕРґРЅРѕ"
+	IDS_SHV_COLUMN8             "РРјСЏ"
+	IDS_SHV_COLUMN9             "РљРѕРјРјРµРЅС‚Р°СЂРёР№"
+	IDS_SHV_COLUMN10            "Р’Р»Р°РґРµР»РµС†"
+	IDS_SHV_COLUMN11            "Р“СЂСѓРїРїР°"
+	IDS_SHV_COLUMN12            "РРјСЏ С„Р°Р№Р»Р°"
+	IDS_SHV_COLUMN13            "РљР°С‚РµРіРѕСЂРёСЏ"
+	IDS_SHV_COLUMN_DELFROM      "РР·РЅР°С‡Р°Р»СЊРЅРѕРµ СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ"
+	IDS_SHV_COLUMN_DELDATE      "Р”Р°С‚Р° СѓРґР°Р»РµРЅРёСЏ"
+	IDS_SHV_COLUMN_FONTTYPE     "РўРёРї С€СЂРёС„С‚Р°"
+	IDS_SHV_COLUMN_WORKGROUP    "Р Р°Р±РѕС‡Р°СЏ РіСЂСѓРїРїР°"
+	IDS_SHV_NETWORKLOCATION     "РЎРµС‚РµРІРѕРµ СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ"
+	IDS_SHV_COLUMN_DOCUMENTS    "Р”РѕРєСѓРјРµРЅС‚С‹"
+	IDS_SHV_COLUMN_STATUS       "РЎРѕСЃС‚РѕСЏРЅРёРµ"
+	IDS_SHV_COLUMN_COMMENTS     "РљРѕРјРµРЅС‚Р°СЂРёРё"
+	IDS_SHV_COLUMN_LOCATION     "Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ"
+	IDS_SHV_COLUMN_MODEL        "РњРѕРґРµР»СЊ"
 
 	/* special folders */
-	IDS_DESKTOP                 "Рабочий стол"
-	IDS_MYCOMPUTER              "Мой компьютер"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Корзина"
-	IDS_CONTROLPANEL            "Панель управления"
-	IDS_ADMINISTRATIVETOOLS     "Администрирование"
+	IDS_DESKTOP                 "Р Р°Р±РѕС‡РёР№ СЃС‚РѕР»"
+	IDS_MYCOMPUTER              "РњРѕР№ РєРѕРјРїСЊСЋС‚РµСЂ"
+	IDS_RECYCLEBIN_FOLDER_NAME  "РљРѕСЂР·РёРЅР°"
+	IDS_CONTROLPANEL            "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ"
+	IDS_ADMINISTRATIVETOOLS     "РђРґРјРёРЅРёСЃС‚СЂРёСЂРѕРІР°РЅРёРµ"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "&Большие значки"
-	IDS_VIEW_SMALL              "&Мелкие значки"
-	IDS_VIEW_LIST               "&Список"
-	IDS_VIEW_DETAILS            "&Подробно"
-	IDS_SELECT                  "&Выбрать"
-	IDS_OPEN                    "&Открыть"
-	IDS_CREATELINK              "Создать &ярлык"
-	IDS_COPY                    "Копировать"
-	IDS_DELETE                  "Удалить"
-	IDS_PROPERTIES              "Свойства"
-	IDS_CUT                     "Вырезать"
-	IDS_RESTORE                 "Востановить"
-	IDS_FORMATDRIVE             "Форматировать..."
-	IDS_RENAME                  "Переименовать"
-	IDS_INSERT                  "Вставить"
+	IDS_VIEW_LARGE              "&Р‘РѕР»СЊС€РёРµ Р·РЅР°С‡РєРё"
+	IDS_VIEW_SMALL              "&РњРµР»РєРёРµ Р·РЅР°С‡РєРё"
+	IDS_VIEW_LIST               "&РЎРїРёСЃРѕРє"
+	IDS_VIEW_DETAILS            "&РџРѕРґСЂРѕР±РЅРѕ"
+	IDS_SELECT                  "&Р’С‹Р±СЂР°С‚СЊ"
+	IDS_OPEN                    "&РћС‚РєСЂС‹С‚СЊ"
+	IDS_CREATELINK              "РЎРѕР·РґР°С‚СЊ &СЏСЂР»С‹Рє"
+	IDS_COPY                    "РљРѕРїРёСЂРѕРІР°С‚СЊ"
+	IDS_DELETE                  "РЈРґР°Р»РёС‚СЊ"
+	IDS_PROPERTIES              "РЎРІРѕР№СЃС‚РІР°"
+	IDS_CUT                     "Р’С‹СЂРµР·Р°С‚СЊ"
+	IDS_RESTORE                 "Р’РѕСЃС‚Р°РЅРѕРІРёС‚СЊ"
+	IDS_FORMATDRIVE             "Р¤РѕСЂРјР°С‚РёСЂРѕРІР°С‚СЊ..."
+	IDS_RENAME                  "РџРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ"
+	IDS_INSERT                  "Р’СЃС‚Р°РІРёС‚СЊ"
 
-	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
-	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"
-	IDS_DELETEITEM_CAPTION      "Подтверждение удаления файла"
-	IDS_DELETEFOLDER_CAPTION    "Подтверждение удаления папки"
-	IDS_DELETEITEM_TEXT         "Удалить '%1'?"
-	IDS_DELETEMULTIPLE_TEXT     "Удалить эти обьекты (%1?"
-	IDS_DELETESELECTED_TEXT     "Вы действительно хотите удалить выбранный элементы(ы)?"
-	IDS_TRASHITEM_TEXT          "Вы действильно хотите поместить '%1' в Корзину?"
-	IDS_TRASHFOLDER_TEXT        "Вы действительно хотите поместить '%1' и все содержащиеся файлы в Корзину?"
-	IDS_TRASHMULTIPLE_TEXT      "Вы действительно хотите переместить элементы %1 в Корзину?"
-	IDS_CANTTRASH_TEXT          "Файл '%1' не может быть помещен в Корзину. Удалить безвозвратно?"
-	IDS_OVERWRITEFILE_TEXT      "В этой папке уже имеется элемент '%1'.\n\nЗаменить его?"
-	IDS_OVERWRITEFILE_CAPTION   "Подтверждение замены файла"
-	IDS_OVERWRITEFOLDER_TEXT    "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nземенены. Продолжить?"
+	IDS_CREATEFOLDER_DENIED     "РќРµРІРѕР·РјРѕР¶РЅРѕ СЃРѕР·РґР°С‚СЊ РїР°РїРєСѓ - РЅРµС‚ РїРѕР»РЅРѕРјРѕС‡РёР№."
+	IDS_CREATEFOLDER_CAPTION    "РћС€РёР±РєР° РІРѕ РІСЂРµРјСЏ СЃРѕР·РґР°РЅРёСЏ РїР°РїРєРё"
+	IDS_DELETEITEM_CAPTION      "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СѓРґР°Р»РµРЅРёСЏ С„Р°Р№Р»Р°"
+	IDS_DELETEFOLDER_CAPTION    "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ СѓРґР°Р»РµРЅРёСЏ РїР°РїРєРё"
+	IDS_DELETEITEM_TEXT         "РЈРґР°Р»РёС‚СЊ '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "РЈРґР°Р»РёС‚СЊ СЌС‚Рё РѕР±СЊРµРєС‚С‹ (%1?"
+	IDS_DELETESELECTED_TEXT     "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Р№ СЌР»РµРјРµРЅС‚С‹(С‹)?"
+	IDS_TRASHITEM_TEXT          "Р’С‹ РґРµР№СЃС‚РІРёР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРѕРјРµСЃС‚РёС‚СЊ '%1' РІ РљРѕСЂР·РёРЅСѓ?"
+	IDS_TRASHFOLDER_TEXT        "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРѕРјРµСЃС‚РёС‚СЊ '%1' Рё РІСЃРµ СЃРѕРґРµСЂР¶Р°С‰РёРµСЃСЏ С„Р°Р№Р»С‹ РІ РљРѕСЂР·РёРЅСѓ?"
+	IDS_TRASHMULTIPLE_TEXT      "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРµСЂРµРјРµСЃС‚РёС‚СЊ СЌР»РµРјРµРЅС‚С‹ %1 РІ РљРѕСЂР·РёРЅСѓ?"
+	IDS_CANTTRASH_TEXT          "Р¤Р°Р№Р» '%1' РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїРѕРјРµС‰РµРЅ РІ РљРѕСЂР·РёРЅСѓ. РЈРґР°Р»РёС‚СЊ Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ?"
+	IDS_OVERWRITEFILE_TEXT      "Р’ СЌС‚РѕР№ РїР°РїРєРµ СѓР¶Рµ РёРјРµРµС‚СЃСЏ СЌР»РµРјРµРЅС‚ '%1'.\n\nР—Р°РјРµРЅРёС‚СЊ РµРіРѕ?"
+	IDS_OVERWRITEFILE_CAPTION   "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ Р·Р°РјРµРЅС‹ С„Р°Р№Р»Р°"
+	IDS_OVERWRITEFOLDER_TEXT    "Р­С‚Р° РїР°РїРєР° СѓР¶Рµ СЃРѕРґРµСЂР¶РёС‚ РїР°РїРєСѓ СЃ РёРјРµРЅРµРј '%1'.\n\nР•СЃР»Рё РІ РїР°РїРєРµ СЃРѕРґРµСЂР¶Р°С‚СЃСЏ С„Р°Р№Р»С‹ СЃ РѕРґРёРЅР°РєРѕРІС‹РјРё РёРјРµРЅР°РјРё, С‚Рѕ РѕРЅРё С‚Р°Рє Р¶Рµ Р±СѓРґСѓС‚\nР·РµРјРµРЅРµРЅС‹. РџСЂРѕРґРѕР»Р¶РёС‚СЊ?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Перезагрузить"
-	IDS_RESTART_PROMPT          "Вы действительно хотите перезагрузить ReactOS?"
-	IDS_SHUTDOWN_TITLE          "Выключить питание"
-	IDS_SHUTDOWN_PROMPT         "Закончить работу с ReactOS?"
+	IDS_RESTART_TITLE           "РџРµСЂРµР·Р°РіСЂСѓР·РёС‚СЊ"
+	IDS_RESTART_PROMPT          "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРµСЂРµР·Р°РіСЂСѓР·РёС‚СЊ ReactOS?"
+	IDS_SHUTDOWN_TITLE          "Р’С‹РєР»СЋС‡РёС‚СЊ РїРёС‚Р°РЅРёРµ"
+	IDS_SHUTDOWN_PROMPT         "Р—Р°РєРѕРЅС‡РёС‚СЊ СЂР°Р±РѕС‚Сѓ СЃ ReactOS?"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
     /* Run File dialog */
-	IDS_RUNDLG_ERROR            "Невозможно отобразить Диалог Выполнить Файл (внутренняя ошибка)"
-	IDS_RUNDLG_BROWSE_ERROR     "Невозможно отобразить Диалог Обзор (внутренняя ошибка)"
-	IDS_RUNDLG_BROWSE_CAPTION   "Обзор"
-	IDS_RUNDLG_BROWSE_FILTER    "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
+	IDS_RUNDLG_ERROR            "РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РѕР±СЂР°Р·РёС‚СЊ Р”РёР°Р»РѕРі Р’С‹РїРѕР»РЅРёС‚СЊ Р¤Р°Р№Р» (РІРЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР°)"
+	IDS_RUNDLG_BROWSE_ERROR     "РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РѕР±СЂР°Р·РёС‚СЊ Р”РёР°Р»РѕРі РћР±Р·РѕСЂ (РІРЅСѓС‚СЂРµРЅРЅСЏСЏ РѕС€РёР±РєР°)"
+	IDS_RUNDLG_BROWSE_CAPTION   "РћР±Р·РѕСЂ"
+	IDS_RUNDLG_BROWSE_FILTER    "РСЃРїРѕР»РЅСЏРµРјС‹Рµ С„Р°Р№Р»С‹ (*.exe)\0*.exe\0Р’СЃРµ С„Р°Р№Р»С‹ (*.*)\0*.*\0"
 
 	/* shell folder path default values */
-	IDS_PROGRAMS                "Главное меню\\Программы"
-	IDS_PERSONAL                "Мои документы"
-	IDS_FAVORITES               "Избранное"
-	IDS_STARTUP                 "Главное меню\\Программы\\Автозагрузка"
-	IDS_RECENT                  "Недавнее"
-	IDS_SENDTO                  "Отправить"
-	IDS_STARTMENU               "Главное меню"
-	IDS_MYMUSIC                 "Моя музыка"
-	IDS_MYVIDEO                 "Мои фильмы"
-	IDS_DESKTOPDIRECTORY        "Рабочий стол"
-	IDS_NETHOOD                 "Сетевое окружение"
-	IDS_TEMPLATES               "Шаблоны"
+	IDS_PROGRAMS                "Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ\\РџСЂРѕРіСЂР°РјРјС‹"
+	IDS_PERSONAL                "РњРѕРё РґРѕРєСѓРјРµРЅС‚С‹"
+	IDS_FAVORITES               "РР·Р±СЂР°РЅРЅРѕРµ"
+	IDS_STARTUP                 "Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ\\РџСЂРѕРіСЂР°РјРјС‹\\РђРІС‚РѕР·Р°РіСЂСѓР·РєР°"
+	IDS_RECENT                  "РќРµРґР°РІРЅРµРµ"
+	IDS_SENDTO                  "РћС‚РїСЂР°РІРёС‚СЊ"
+	IDS_STARTMENU               "Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ"
+	IDS_MYMUSIC                 "РњРѕСЏ РјСѓР·С‹РєР°"
+	IDS_MYVIDEO                 "РњРѕРё С„РёР»СЊРјС‹"
+	IDS_DESKTOPDIRECTORY        "Р Р°Р±РѕС‡РёР№ СЃС‚РѕР»"
+	IDS_NETHOOD                 "РЎРµС‚РµРІРѕРµ РѕРєСЂСѓР¶РµРЅРёРµ"
+	IDS_TEMPLATES               "РЁР°Р±Р»РѕРЅС‹"
 	IDS_APPDATA                 "Application Data"
-	IDS_PRINTHOOD               "Принтеры"
+	IDS_PRINTHOOD               "РџСЂРёРЅС‚РµСЂС‹"
 	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
 	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "Local Settings\\History"
 	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "Мои рисунки"
+	IDS_MYPICTURES              "РњРѕРё СЂРёСЃСѓРЅРєРё"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Общие документы"
-	IDS_ADMINTOOLS              "Главное меню\\Программы\\Администрирование"
-	IDS_COMMON_MUSIC            "Общие документы\\Моя музыка"
-	IDS_COMMON_PICTURES         "Общие документы\\Мои рисунки"
-	IDS_COMMON_VIDEO            "Общие документы\\Мои фильмы"
+	IDS_COMMON_DOCUMENTS        "РћР±С‰РёРµ РґРѕРєСѓРјРµРЅС‚С‹"
+	IDS_ADMINTOOLS              "Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ\\РџСЂРѕРіСЂР°РјРјС‹\\РђРґРјРёРЅРёСЃС‚СЂРёСЂРѕРІР°РЅРёРµ"
+	IDS_COMMON_MUSIC            "РћР±С‰РёРµ РґРѕРєСѓРјРµРЅС‚С‹\\РњРѕСЏ РјСѓР·С‹РєР°"
+	IDS_COMMON_PICTURES         "РћР±С‰РёРµ РґРѕРєСѓРјРµРЅС‚С‹\\РњРѕРё СЂРёСЃСѓРЅРєРё"
+	IDS_COMMON_VIDEO            "РћР±С‰РёРµ РґРѕРєСѓРјРµРЅС‚С‹\\РњРѕРё С„РёР»СЊРјС‹"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "Сетевое окружение"
+	IDS_NETWORKPLACE            "РЎРµС‚РµРІРѕРµ РѕРєСЂСѓР¶РµРЅРёРµ"
 
-	IDS_NEWFOLDER               "Новая папка"
+	IDS_NEWFOLDER               "РќРѕРІР°СЏ РїР°РїРєР°"
 
-	IDS_DRIVE_FIXED             "Локальный диск"
+	IDS_DRIVE_FIXED             "Р›РѕРєР°Р»СЊРЅС‹Р№ РґРёСЃРє"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Сетевой диск"
+	IDS_DRIVE_NETWORK           "РЎРµС‚РµРІРѕР№ РґРёСЃРє"
 	
-	IDS_OPEN_WITH               "Открыть с помощью"
-	IDS_OPEN_WITH_CHOOSE        "Выбрать программу..."
+	IDS_OPEN_WITH               "РћС‚РєСЂС‹С‚СЊ СЃ РїРѕРјРѕС‰СЊСЋ"
+	IDS_OPEN_WITH_CHOOSE        "Р’С‹Р±СЂР°С‚СЊ РїСЂРѕРіСЂР°РјРјСѓ..."
 
-	IDS_SHELL_ABOUT_AUTHORS     "&Авторы"
-	IDS_SHELL_ABOUT_BACK        "< &Назад"
-	FCIDM_SHVIEW_NEW 	    "Создать"
-	FCIDM_SHVIEW_NEWFOLDER 	    "&Папка"
-	FCIDM_SHVIEW_NEWLINK 	    "&Ярлык"
-	IDS_FOLDER_OPTIONS          "Свойства папки"
-	IDS_RECYCLEBIN_LOCATION     "Расположение Корзины"
-	IDS_RECYCLEBIN_DISKSPACE    "Доступное пространство"
-	IDS_EMPTY_BITBUCKET         "Очистить корзину"
-	IDS_PICK_ICON_TITLE         "Выбрать значок"
-	IDS_PICK_ICON_FILTER        "Файлы значков (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Все файлы (*.*)\0*.*\0"
-	IDS_OPEN_WITH_FILTER        "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
-	IDS_DIRECTORY               "Папка"
-	IDS_VIRTUAL_DRIVER          "Драйвер виртуального устройства"
-	IDS_BAT_FILE                "Пакетный файл ReactOS"
-	IDS_CMD_FILE                "Командный скрипт ReactOS"
-	IDS_COM_FILE                "Приложение Dos"
-	IDS_CPL_FILE                "Аплет панели управления"
-	IDS_CUR_FILE                "Курсор"
-	IDS_DLL_FILE                "Расширение приложения"
-	IDS_DRV_FILE                "Драйвер устройства"
-	IDS_EXE_FILE                "Приложение"
-	IDS_FON_FILE                "Файл шрифта"
-	IDS_TTF_FILE                "Файл шрифта TrueType"
-	IDS_HLP_FILE                "Файл справки"
-	IDS_INI_FILE                "Файл конфигурации"
-	IDS_LNK_FILE                "Ярлык"
-	IDS_SYS_FILE                "Системный файл"
+	IDS_SHELL_ABOUT_AUTHORS     "&РђРІС‚РѕСЂС‹"
+	IDS_SHELL_ABOUT_BACK        "< &РќР°Р·Р°Рґ"
+	FCIDM_SHVIEW_NEW 	    "РЎРѕР·РґР°С‚СЊ"
+	FCIDM_SHVIEW_NEWFOLDER 	    "&РџР°РїРєР°"
+	FCIDM_SHVIEW_NEWLINK 	    "&РЇСЂР»С‹Рє"
+	IDS_FOLDER_OPTIONS          "РЎРІРѕР№СЃС‚РІР° РїР°РїРєРё"
+	IDS_RECYCLEBIN_LOCATION     "Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ РљРѕСЂР·РёРЅС‹"
+	IDS_RECYCLEBIN_DISKSPACE    "Р”РѕСЃС‚СѓРїРЅРѕРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ"
+	IDS_EMPTY_BITBUCKET         "РћС‡РёСЃС‚РёС‚СЊ РєРѕСЂР·РёРЅСѓ"
+	IDS_PICK_ICON_TITLE         "Р’С‹Р±СЂР°С‚СЊ Р·РЅР°С‡РѕРє"
+	IDS_PICK_ICON_FILTER        "Р¤Р°Р№Р»С‹ Р·РЅР°С‡РєРѕРІ (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Р’СЃРµ С„Р°Р№Р»С‹ (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "РСЃРїРѕР»РЅСЏРµРјС‹Рµ С„Р°Р№Р»С‹ (*.exe)\0*.exe\0Р’СЃРµ С„Р°Р№Р»С‹ (*.*)\0*.*\0"
+	IDS_DIRECTORY               "РџР°РїРєР°"
+	IDS_VIRTUAL_DRIVER          "Р”СЂР°Р№РІРµСЂ РІРёСЂС‚СѓР°Р»СЊРЅРѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР°"
+	IDS_BAT_FILE                "РџР°РєРµС‚РЅС‹Р№ С„Р°Р№Р» ReactOS"
+	IDS_CMD_FILE                "РљРѕРјР°РЅРґРЅС‹Р№ СЃРєСЂРёРїС‚ ReactOS"
+	IDS_COM_FILE                "РџСЂРёР»РѕР¶РµРЅРёРµ Dos"
+	IDS_CPL_FILE                "РђРїР»РµС‚ РїР°РЅРµР»Рё СѓРїСЂР°РІР»РµРЅРёСЏ"
+	IDS_CUR_FILE                "РљСѓСЂСЃРѕСЂ"
+	IDS_DLL_FILE                "Р Р°СЃС€РёСЂРµРЅРёРµ РїСЂРёР»РѕР¶РµРЅРёСЏ"
+	IDS_DRV_FILE                "Р”СЂР°Р№РІРµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІР°"
+	IDS_EXE_FILE                "РџСЂРёР»РѕР¶РµРЅРёРµ"
+	IDS_FON_FILE                "Р¤Р°Р№Р» С€СЂРёС„С‚Р°"
+	IDS_TTF_FILE                "Р¤Р°Р№Р» С€СЂРёС„С‚Р° TrueType"
+	IDS_HLP_FILE                "Р¤Р°Р№Р» СЃРїСЂР°РІРєРё"
+	IDS_INI_FILE                "Р¤Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё"
+	IDS_LNK_FILE                "РЇСЂР»С‹Рє"
+	IDS_SYS_FILE                "РЎРёСЃС‚РµРјРЅС‹Р№ С„Р°Р№Р»"
 
-	IDS_OPEN_VERB               "Открыть"
-	IDS_EXPLORE_VERB            "Открыть в дереве"
-	IDS_RUNAS_VERB              "Запустить как "
-	IDS_EDIT_VERB               "Изменить"
-	IDS_FIND_VERB               "Поиск"
-	IDS_PRINT_VERB              "Печать"
+	IDS_OPEN_VERB               "РћС‚РєСЂС‹С‚СЊ"
+	IDS_EXPLORE_VERB            "РћС‚РєСЂС‹С‚СЊ РІ РґРµСЂРµРІРµ"
+	IDS_RUNAS_VERB              "Р—Р°РїСѓСЃС‚РёС‚СЊ РєР°Рє "
+	IDS_EDIT_VERB               "РР·РјРµРЅРёС‚СЊ"
+	IDS_FIND_VERB               "РџРѕРёСЃРє"
+	IDS_PRINT_VERB              "РџРµС‡Р°С‚СЊ"
 
-	IDS_FILE_FOLDER             "%u файлов, %u папок"
-	IDS_PRINTERS                "Принтеры"
-	IDS_FONTS                   "Шрифты"
-	IDS_INSTALLNEWFONT          "Установить новый шрифт..."
+	IDS_FILE_FOLDER             "%u С„Р°Р№Р»РѕРІ, %u РїР°РїРѕРє"
+	IDS_PRINTERS                "РџСЂРёРЅС‚РµСЂС‹"
+	IDS_FONTS                   "РЁСЂРёС„С‚С‹"
+	IDS_INSTALLNEWFONT          "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РЅРѕРІС‹Р№ С€СЂРёС„С‚..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Выделяемый по умолчанию размер"
+	IDS_DEFAULT_CLUSTER_SIZE    "Р’С‹РґРµР»СЏРµРјС‹Р№ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СЂР°Р·РјРµСЂ"
 	IDS_COPY_OF                 "Copy of"
 
 	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 	
-	IDS_FILE_DETAILS            "Описание расширения '%s'"
-	IDS_FILE_DETAILSADV         "Файлы с расширением '%s' имеют тип '%s'. Для изменения параметров всех файлов '%s', нажмите 'Дополнительно'."
-	IDS_FILE_TYPES              "Типы файлов"
-	IDS_COLUMN_EXTENSION        "Расширения"
+	IDS_FILE_DETAILS            "РћРїРёСЃР°РЅРёРµ СЂР°СЃС€РёСЂРµРЅРёСЏ '%s'"
+	IDS_FILE_DETAILSADV         "Р¤Р°Р№Р»С‹ СЃ СЂР°СЃС€РёСЂРµРЅРёРµРј '%s' РёРјРµСЋС‚ С‚РёРї '%s'. Р”Р»СЏ РёР·РјРµРЅРµРЅРёСЏ РїР°СЂР°РјРµС‚СЂРѕРІ РІСЃРµС… С„Р°Р№Р»РѕРІ '%s', РЅР°Р¶РјРёС‚Рµ 'Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ'."
+	IDS_FILE_TYPES              "РўРёРїС‹ С„Р°Р№Р»РѕРІ"
+	IDS_COLUMN_EXTENSION        "Р Р°СЃС€РёСЂРµРЅРёСЏ"
 END

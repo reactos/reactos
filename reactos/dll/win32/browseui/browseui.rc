@@ -71,10 +71,10 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 //#include "lang/sk-SK.rc"
 //#include "lang/sv-SE.rc"
 //#include "lang/tr-TR.rc"
-#include "lang/uk-UA.rc"
 //#include "lang/zh-CN.rc"
 //#include "lang/zh-TW.rc"
 
 /* UTF-8 */
 #include "lang/bg-BG.rc"
 #include "lang/pl-PL.rc"
+#include "lang/uk-UA.rc"

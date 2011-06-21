@@ -4,160 +4,160 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Схемы управления питанием"
+CAPTION "РЎС…РµРјС‹ СѓРїСЂР°РІР»РµРЅРёСЏ РїРёС‚Р°РЅРёРµРј"
 FONT 8, "MS Shell Dlg"
 BEGIN
   ICON IDI_ACDC, IDI_ACDC, 5,5,32,32
-  LTEXT "Выберите схему управления электропитанием с наиболее подходящими параметрами для этого компьютера. Изменение нижеследующих параметров изменит выбранную схему.",
+  LTEXT "Р’С‹Р±РµСЂРёС‚Рµ СЃС…РµРјСѓ СѓРїСЂР°РІР»РµРЅРёСЏ СЌР»РµРєС‚СЂРѕРїРёС‚Р°РЅРёРµРј СЃ РЅР°РёР±РѕР»РµРµ РїРѕРґС…РѕРґСЏС‰РёРјРё РїР°СЂР°РјРµС‚СЂР°РјРё РґР»СЏ СЌС‚РѕРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°. РР·РјРµРЅРµРЅРёРµ РЅРёР¶РµСЃР»РµРґСѓСЋС‰РёС… РїР°СЂР°РјРµС‚СЂРѕРІ РёР·РјРµРЅРёС‚ РІС‹Р±СЂР°РЅРЅСѓСЋ СЃС…РµРјСѓ.",
 	-1,37,5,194,36
-  GROUPBOX "&Схемы управления питанием", -1, 7,57,240,46
+  GROUPBOX "&РЎС…РµРјС‹ СѓРїСЂР°РІР»РµРЅРёСЏ РїРёС‚Р°РЅРёРµРј", -1, 7,57,240,46
   COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  PUSHBUTTON "Сохранить &как...", IDC_SAVEAS_BTN, 103,85,75,15,WS_DISABLED
-  PUSHBUTTON "&Удалить", IDC_DELETE_BTN, 183,85,55,15,WS_DISABLED
-  GROUPBOX "Нет данных", IDC_GRPDETAIL, 7,108,240,105
-  LTEXT "При питании:",IDC_SAT,15,120,60,10
-  LTEXT "от сети",IDC_SAC,113,120,45,15
+  PUSHBUTTON "РЎРѕС…СЂР°РЅРёС‚СЊ &РєР°Рє...", IDC_SAVEAS_BTN, 103,85,75,15,WS_DISABLED
+  PUSHBUTTON "&РЈРґР°Р»РёС‚СЊ", IDC_DELETE_BTN, 183,85,55,15,WS_DISABLED
+  GROUPBOX "РќРµС‚ РґР°РЅРЅС‹С…", IDC_GRPDETAIL, 7,108,240,105
+  LTEXT "РџСЂРё РїРёС‚Р°РЅРёРё:",IDC_SAT,15,120,60,10
+  LTEXT "РѕС‚ СЃРµС‚Рё",IDC_SAC,113,120,45,15
   ICON IDI_AC, IDC_IAC, 85,115,25,15
-  LTEXT "от батарей",IDC_SDC,190,120,45,15
+  LTEXT "РѕС‚ Р±Р°С‚Р°СЂРµР№",IDC_SDC,190,120,45,15
   ICON IDI_DC, IDC_IDC, 165,115,25,15
-  LTEXT "Отключить &монитор:",IDC_MONITOR,15,142,80,10
+  LTEXT "РћС‚РєР»СЋС‡РёС‚СЊ &РјРѕРЅРёС‚РѕСЂ:",IDC_MONITOR,15,142,80,10
   COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
   COMBOBOX IDC_MONITORDCLIST, 175,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "Отключить &диски:",IDC_DISK,15,157,80,10
+  LTEXT "РћС‚РєР»СЋС‡РёС‚СЊ &РґРёСЃРєРё:",IDC_DISK,15,157,80,10
   COMBOBOX IDC_DISKACLIST, 100,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
   COMBOBOX IDC_DISKDCLIST, 175,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "&Ждущий режим через:",IDC_STANDBY,15,177,80,10
+  LTEXT "&Р–РґСѓС‰РёР№ СЂРµР¶РёРј С‡РµСЂРµР·:",IDC_STANDBY,15,177,80,10
   COMBOBOX IDC_STANDBYACLIST, 100,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
   COMBOBOX IDC_STANDBYDCLIST, 175,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT "С&пящий режим через:",IDC_HYBERNATE,15,192,80,10
+  LTEXT "РЎ&РїСЏС‰РёР№ СЂРµР¶РёРј С‡РµСЂРµР·:",IDC_HYBERNATE,15,192,80,10
   COMBOBOX IDC_HYBERNATEACLIST, 100,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
   COMBOBOX IDC_HYBERNATEDCLIST, 175,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 250, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Уведомления"
+CAPTION "РЈРІРµРґРѕРјР»РµРЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Сигнал низкого заряда батарей",-1,10,15,235,95
-    CONTROL         "Включить сигнал н&изкого заряда при уровне:",IDC_ALARM1,
+    GROUPBOX        "РЎРёРіРЅР°Р» РЅРёР·РєРѕРіРѕ Р·Р°СЂСЏРґР° Р±Р°С‚Р°СЂРµР№",-1,10,15,235,95
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ СЃРёРіРЅР°Р» РЅ&РёР·РєРѕРіРѕ Р·Р°СЂСЏРґР° РїСЂРё СѓСЂРѕРІРЅРµ:",IDC_ALARM1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
-    LTEXT           "Нет данных",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
     CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
-    PUSHBUTTON      "Д&ействие...",-1,20,70,70,15,WS_DISABLED
-    LTEXT           "Уведомление:",-1,95,70,50,10
-    LTEXT           "Нет данных",IDC_ALARMMSG1,145,70,95,10
-    LTEXT           "Действие:",-1,95,80,45,10
-    LTEXT           "Нет данных",IDC_ALARMAKTION1,145,80,95,10
-    LTEXT           "Запуск программы:",-1,95,90,50,10
-    LTEXT           "Нет данных",IDC_ALARMPROG1,150,90,40,10
+    PUSHBUTTON      "Р”&РµР№СЃС‚РІРёРµ...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "РЈРІРµРґРѕРјР»РµРЅРёРµ:",-1,95,70,50,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Р”РµР№СЃС‚РІРёРµ:",-1,95,80,45,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Р—Р°РїСѓСЃРє РїСЂРѕРіСЂР°РјРјС‹:",-1,95,90,50,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMPROG1,150,90,40,10
 
-    GROUPBOX        "Сигнал критически низкого заряда батарей",-1,10,115,235,95
-    CONTROL         "Включить такой &сигнал при уровне:",IDC_ALARM2,
+    GROUPBOX        "РЎРёРіРЅР°Р» РєСЂРёС‚РёС‡РµСЃРєРё РЅРёР·РєРѕРіРѕ Р·Р°СЂСЏРґР° Р±Р°С‚Р°СЂРµР№",-1,10,115,235,95
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ С‚Р°РєРѕР№ &СЃРёРіРЅР°Р» РїСЂРё СѓСЂРѕРІРЅРµ:",IDC_ALARM2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
-    LTEXT           "Нет данных",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
     CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
-    PUSHBUTTON      "Де&йствие...",-1,20,170,70,15,WS_DISABLED
-    LTEXT           "Уведомление:",-1,95,170,50,10
-    LTEXT           "Нет данных",IDC_ALARMMSG2,145,170,95,10
-    LTEXT           "Действие:",-1,95,180,45,10
-    LTEXT           "Нет данных",IDC_ALARMAKTION2,145,180,95,10
-    LTEXT           "Запуск программы:",-1,95,190,50,10
-    LTEXT           "Нет данных",IDC_ALARMPROG2,150,190,40,10
+    PUSHBUTTON      "Р”Рµ&Р№СЃС‚РІРёРµ...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "РЈРІРµРґРѕРјР»РµРЅРёРµ:",-1,95,170,50,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Р”РµР№СЃС‚РІРёРµ:",-1,95,180,45,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Р—Р°РїСѓСЃРє РїСЂРѕРіСЂР°РјРјС‹:",-1,95,190,50,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_ALARMPROG2,150,190,40,10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 250, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Дополнительно"
+CAPTION "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,32,32
-    LTEXT           "Выберите желаемые параметры энергосбережения.",-1,37,5,205,20
-    GROUPBOX        "Параметры",-1,5,35,225,55
-    CONTROL         "&Всегда отображать значок на панели задач",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
+    LTEXT           "Р’С‹Р±РµСЂРёС‚Рµ Р¶РµР»Р°РµРјС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ СЌРЅРµСЂРіРѕСЃР±РµСЂРµР¶РµРЅРёСЏ.",-1,37,5,205,20
+    GROUPBOX        "РџР°СЂР°РјРµС‚СЂС‹",-1,5,35,225,55
+    CONTROL         "&Р’СЃРµРіРґР° РѕС‚РѕР±СЂР°Р¶Р°С‚СЊ Р·РЅР°С‡РѕРє РЅР° РїР°РЅРµР»Рё Р·Р°РґР°С‡",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,48,200,10
-    CONTROL         "&Запрашивать пароль при выходе из ждущего режима",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Р—Р°РїСЂР°С€РёРІР°С‚СЊ РїР°СЂРѕР»СЊ РїСЂРё РІС‹С…РѕРґРµ РёР· Р¶РґСѓС‰РµРіРѕ СЂРµР¶РёРјР°",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,60,200,10
-    CONTROL         "&Снизить яркость монитора при работе от батарей",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&РЎРЅРёР·РёС‚СЊ СЏСЂРєРѕСЃС‚СЊ РјРѕРЅРёС‚РѕСЂР° РїСЂРё СЂР°Р±РѕС‚Рµ РѕС‚ Р±Р°С‚Р°СЂРµР№",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,72,200,10
-    GROUPBOX        "Кнопки питания",-1,5,100,230,105
-    LTEXT           "&При закрытии крышки переносного компьютера:", IDC_SLIDCLOSE,10,110,210,10
+    GROUPBOX        "РљРЅРѕРїРєРё РїРёС‚Р°РЅРёСЏ",-1,5,100,230,105
+    LTEXT           "&РџСЂРё Р·Р°РєСЂС‹С‚РёРё РєСЂС‹С€РєРё РїРµСЂРµРЅРѕСЃРЅРѕРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°:", IDC_SLIDCLOSE,10,110,210,10
     COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "При &нажатии кнопки включения питания компьютера:", IDC_SPOWERBUTTON,10,140,210,10
+    LTEXT           "РџСЂРё &РЅР°Р¶Р°С‚РёРё РєРЅРѕРїРєРё РІРєР»СЋС‡РµРЅРёСЏ РїРёС‚Р°РЅРёСЏ РєРѕРјРїСЊСЋС‚РµСЂР°:", IDC_SPOWERBUTTON,10,140,210,10
     COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "При нажатии &кнопки перехода в спящий режим:", IDC_SSLEEPBUTTON,10,170,210,10
+    LTEXT           "РџСЂРё РЅР°Р¶Р°С‚РёРё &РєРЅРѕРїРєРё РїРµСЂРµС…РѕРґР° РІ СЃРїСЏС‰РёР№ СЂРµР¶РёРј:", IDC_SSLEEPBUTTON,10,170,210,10
     COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 250, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Спящий режим"
+CAPTION "РЎРїСЏС‰РёР№ СЂРµР¶РёРј"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_SCREEN,IDI_SCREEN,5,5,32,32
-    LTEXT           "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.",
+    LTEXT           "РџСЂРё РїРµСЂРµС…РѕРґРµ РІ СЃРїСЏС‰РёР№ СЂРµР¶РёРј РєРѕРјРїСЊСЋС‚РµСЂ РїРµСЂРµРЅРѕСЃРёС‚ СЃРѕРґРµСЂР¶РёРјРѕРµ РѕРїРµСЂР°С‚РёРІРЅРѕР№ РїР°РјСЏС‚Рё РЅР° РґРёСЃРє Рё РІС‹РєР»СЋС‡Р°РµС‚СЃСЏ. РџСЂРё РІС‹С…РѕРґРµ РёР· СЃРїСЏС‰РµРіРѕ СЂРµР¶РёРјР° РєРѕРјРїСЊСЋС‚РµСЂ РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ РІ РїСЂРµР¶РЅРµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ.",
                     -1,37,5,195,35
-    GROUPBOX        "Спящий режим",-1,5,57,235,25
-    CONTROL         "&Разрешить переход в спящий режим",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
+    GROUPBOX        "РЎРїСЏС‰РёР№ СЂРµР¶РёРј",-1,5,57,235,25
+    CONTROL         "&Р Р°Р·СЂРµС€РёС‚СЊ РїРµСЂРµС…РѕРґ РІ СЃРїСЏС‰РёР№ СЂРµР¶РёРј",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,67,210,10
-    GROUPBOX        "Место на диске для перехода в спящий режим",-1,5,92,240,60
-    LTEXT           "Свободно места на диске:",-1,10,102,100,10
-    LTEXT           "Нет данных",IDC_FREESPACE,130,102,70,10
-    LTEXT           "Требуется для спящего режима:",-1,10,112,115,10
-    LTEXT           "Нет данных",IDC_SPACEFORHIBERNATEFILE,130,112,55,10
-    LTEXT           "Для возможности перехода в спящий режим требуется освободить место на диске.",IDC_TOLESSFREESPACE,10,127,220,20
+    GROUPBOX        "РњРµСЃС‚Рѕ РЅР° РґРёСЃРєРµ РґР»СЏ РїРµСЂРµС…РѕРґР° РІ СЃРїСЏС‰РёР№ СЂРµР¶РёРј",-1,5,92,240,60
+    LTEXT           "РЎРІРѕР±РѕРґРЅРѕ РјРµСЃС‚Р° РЅР° РґРёСЃРєРµ:",-1,10,102,100,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_FREESPACE,130,102,70,10
+    LTEXT           "РўСЂРµР±СѓРµС‚СЃСЏ РґР»СЏ СЃРїСЏС‰РµРіРѕ СЂРµР¶РёРјР°:",-1,10,112,115,10
+    LTEXT           "РќРµС‚ РґР°РЅРЅС‹С…",IDC_SPACEFORHIBERNATEFILE,130,112,55,10
+    LTEXT           "Р”Р»СЏ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё РїРµСЂРµС…РѕРґР° РІ СЃРїСЏС‰РёР№ СЂРµР¶РёРј С‚СЂРµР±СѓРµС‚СЃСЏ РѕСЃРІРѕР±РѕРґРёС‚СЊ РјРµСЃС‚Рѕ РЅР° РґРёСЃРєРµ.",IDC_TOLESSFREESPACE,10,127,220,20
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME_1 "Электропитание"
-  IDS_CPLDESCRIPTION_1 "Настройка параметров энергосбережения для компьютера."
+  IDS_CPLNAME_1 "Р­Р»РµРєС‚СЂРѕРїРёС‚Р°РЅРёРµ"
+  IDS_CPLDESCRIPTION_1 "РќР°СЃС‚СЂРѕР№РєР° РїР°СЂР°РјРµС‚СЂРѕРІ СЌРЅРµСЂРіРѕСЃР±РµСЂРµР¶РµРЅРёСЏ РґР»СЏ РєРѕРјРїСЊСЋС‚РµСЂР°."
   IDS_PROCENT "%i%%"
-  IDS_SOUND "Звук"
-  IDS_TEXT "Текст"
-  IDS_CONFIG1 "Параметры схемы %1"
-  IDS_CONFIG2 "Дополнительные параметры схемы %1"
+  IDS_SOUND "Р—РІСѓРє"
+  IDS_TEXT "РўРµРєСЃС‚"
+  IDS_CONFIG1 "РџР°СЂР°РјРµС‚СЂС‹ СЃС…РµРјС‹ %1"
+  IDS_CONFIG2 "Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ СЃС…РµРјС‹ %1"
 
-  IDS_SIZEBYTS "%i байт"
-  IDS_SIZEMB "%i МБ"
+  IDS_SIZEBYTS "%i Р±Р°Р№С‚"
+  IDS_SIZEMB "%i РњР‘"
 
-  IDS_NOACTION "Не делать ничего"
+  IDS_NOACTION "РќРµ РґРµР»Р°С‚СЊ РЅРёС‡РµРіРѕ"
 
-  IDS_PowerActionNone1 "Действие не требуется"
-  IDS_PowerActionUnknown "Нет данных"
-  IDS_PowerActionSleep "Ждущий режим"
-  IDS_PowerActionHibernate "Спящий режим"
-  IDS_PowerActionShutdown "Завершение работы"
-  IDS_PowerActionRestart "Перезагрузка"
-  IDS_PowerActionShutdownOff "Завершение работы и выключение питания"
-  IDS_PowerActionWarmEject "Спросить о нужном действии"
-  IDS_PowerActionNone2 "Отсутствует"
+  IDS_PowerActionNone1 "Р”РµР№СЃС‚РІРёРµ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ"
+  IDS_PowerActionUnknown "РќРµС‚ РґР°РЅРЅС‹С…"
+  IDS_PowerActionSleep "Р–РґСѓС‰РёР№ СЂРµР¶РёРј"
+  IDS_PowerActionHibernate "РЎРїСЏС‰РёР№ СЂРµР¶РёРј"
+  IDS_PowerActionShutdown "Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹"
+  IDS_PowerActionRestart "РџРµСЂРµР·Р°РіСЂСѓР·РєР°"
+  IDS_PowerActionShutdownOff "Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹ Рё РІС‹РєР»СЋС‡РµРЅРёРµ РїРёС‚Р°РЅРёСЏ"
+  IDS_PowerActionWarmEject "РЎРїСЂРѕСЃРёС‚СЊ Рѕ РЅСѓР¶РЅРѕРј РґРµР№СЃС‚РІРёРё"
+  IDS_PowerActionNone2 "РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚"
 
-  IDS_TIMEOUT1 "через 1 мин"
-  IDS_TIMEOUT2 "через 2 мин"
-  IDS_TIMEOUT3 "через 3 мин"
-  IDS_TIMEOUT4 "через 5 мин"
-  IDS_TIMEOUT5 "через 10 мин"
-  IDS_TIMEOUT6 "через 15 мин"
-  IDS_TIMEOUT7 "через 20 мин"
-  IDS_TIMEOUT8 "через 25 мин"
-  IDS_TIMEOUT9 "через 30 мин"
-  IDS_TIMEOUT10 "через 45 мин"
-  IDS_TIMEOUT11 "через 1 час"
-  IDS_TIMEOUT12 "через 2 часа"
-  IDS_TIMEOUT13 "через 3 часа"
-  IDS_TIMEOUT14 "через 4 часа"
-  IDS_TIMEOUT15 "через 5 часов"
-  IDS_TIMEOUT16 "никогда"
+  IDS_TIMEOUT1 "С‡РµСЂРµР· 1 РјРёРЅ"
+  IDS_TIMEOUT2 "С‡РµСЂРµР· 2 РјРёРЅ"
+  IDS_TIMEOUT3 "С‡РµСЂРµР· 3 РјРёРЅ"
+  IDS_TIMEOUT4 "С‡РµСЂРµР· 5 РјРёРЅ"
+  IDS_TIMEOUT5 "С‡РµСЂРµР· 10 РјРёРЅ"
+  IDS_TIMEOUT6 "С‡РµСЂРµР· 15 РјРёРЅ"
+  IDS_TIMEOUT7 "С‡РµСЂРµР· 20 РјРёРЅ"
+  IDS_TIMEOUT8 "С‡РµСЂРµР· 25 РјРёРЅ"
+  IDS_TIMEOUT9 "С‡РµСЂРµР· 30 РјРёРЅ"
+  IDS_TIMEOUT10 "С‡РµСЂРµР· 45 РјРёРЅ"
+  IDS_TIMEOUT11 "С‡РµСЂРµР· 1 С‡Р°СЃ"
+  IDS_TIMEOUT12 "С‡РµСЂРµР· 2 С‡Р°СЃР°"
+  IDS_TIMEOUT13 "С‡РµСЂРµР· 3 С‡Р°СЃР°"
+  IDS_TIMEOUT14 "С‡РµСЂРµР· 4 С‡Р°СЃР°"
+  IDS_TIMEOUT15 "С‡РµСЂРµР· 5 С‡Р°СЃРѕРІ"
+  IDS_TIMEOUT16 "РЅРёРєРѕРіРґР°"
   
   IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
   IDS_DEL_SCHEME_TITLE "Delete Scheme"

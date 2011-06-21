@@ -5,111 +5,111 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Добро пожаловать в мастер установки ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Этот мастер поможет ввести сведения для правильной установки ReactOS и установит ее на ваш компьютер.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Нажмите ""Далее"" для продолжения установки.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РјР°СЃС‚РµСЂ СѓСЃС‚Р°РЅРѕРІРєРё ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Р­С‚РѕС‚ РјР°СЃС‚РµСЂ РїРѕРјРѕР¶РµС‚ РІРІРµСЃС‚Рё СЃРІРµРґРµРЅРёСЏ РґР»СЏ РїСЂР°РІРёР»СЊРЅРѕР№ СѓСЃС‚Р°РЅРѕРІРєРё ReactOS Рё СѓСЃС‚Р°РЅРѕРІРёС‚ РµРµ РЅР° РІР°С€ РєРѕРјРїСЊСЋС‚РµСЂ.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "РќР°Р¶РјРёС‚Рµ ""Р”Р°Р»РµРµ"" РґР»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Разработчики ReactOS и Open Source-проекты, благодаря которым была создана ReactOS:",
+    LTEXT           "Р Р°Р·СЂР°Р±РѕС‚С‡РёРєРё ReactOS Рё Open Source-РїСЂРѕРµРєС‚С‹, Р±Р»Р°РіРѕРґР°СЂСЏ РєРѕС‚РѕСЂС‹Рј Р±С‹Р»Р° СЃРѕР·РґР°РЅР° ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS распространяется под лицензией GPL, если вы хотите использовать и распространять ее, вы должны соблюдать GPL.",
+    LTEXT           "ReactOS СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ РїРѕРґ Р»РёС†РµРЅР·РёРµР№ GPL, РµСЃР»Рё РІС‹ С…РѕС‚РёС‚Рµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Рё СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏС‚СЊ РµРµ, РІС‹ РґРѕР»Р¶РЅС‹ СЃРѕР±Р»СЋРґР°С‚СЊ GPL.",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "&Лицензия...",IDC_VIEWGPL,251,110,50,14
-    LTEXT           "Нажмите ""Далее"" для продолжения установки.",IDC_STATIC,15,136,
+    PUSHBUTTON      "&Р›РёС†РµРЅР·РёСЏ...",IDC_VIEWGPL,251,110,50,14
+    LTEXT           "РќР°Р¶РјРёС‚Рµ ""Р”Р°Р»РµРµ"" РґР»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё.",IDC_STATIC,15,136,
                     195,17
 END
 
 
 IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введите ваше полное имя и название организации.",
+    LTEXT "Р’РІРµРґРёС‚Рµ РІР°С€Рµ РїРѕР»РЅРѕРµ РёРјСЏ Рё РЅР°Р·РІР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё.",
           IDC_STATIC, 54, 7, 242, 21
-    LTEXT "&Имя:", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "&РРјСЏ:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Организация:", IDC_STATIC, 54, 57, 47, 8
+    LTEXT "&РћСЂРіР°РЅРёР·Р°С†РёСЏ:", IDC_STATIC, 54, 57, 47, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 
 IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Введите имя вашего компьютера (не более 15 символов). Если ваш компьютер подключен к сети, то его имя должно быть уникально.",
+    LTEXT "Р’РІРµРґРёС‚Рµ РёРјСЏ РІР°С€РµРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР° (РЅРµ Р±РѕР»РµРµ 15 СЃРёРјРІРѕР»РѕРІ). Р•СЃР»Рё РІР°С€ РєРѕРјРїСЊСЋС‚РµСЂ РїРѕРґРєР»СЋС‡РµРЅ Рє СЃРµС‚Рё, С‚Рѕ РµРіРѕ РёРјСЏ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ СѓРЅРёРєР°Р»СЊРЅРѕ.",
           IDC_STATIC, 54, 7, 250, 24
-    LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "&РРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР°:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "При установке будет создан профиль пользователя с именем Administrator Вы можете использовать этот профиль, если вам нужно получить права администратора.",
+    LTEXT "РџСЂРё СѓСЃС‚Р°РЅРѕРІРєРµ Р±СѓРґРµС‚ СЃРѕР·РґР°РЅ РїСЂРѕС„РёР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃ РёРјРµРЅРµРј Administrator Р’С‹ РјРѕР¶РµС‚Рµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЌС‚РѕС‚ РїСЂРѕС„РёР»СЊ, РµСЃР»Рё РІР°Рј РЅСѓР¶РЅРѕ РїРѕР»СѓС‡РёС‚СЊ РїСЂР°РІР° Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Введите пароль администратора (не более 14 символов).",
+    LTEXT "Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° (РЅРµ Р±РѕР»РµРµ 14 СЃРёРјРІРѕР»РѕРІ).",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
+    LTEXT "&РџР°СЂРѕР»СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°:", IDC_STATIC, 54, 104, 96, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "П&овторите пароль:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "Рџ&РѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
 IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Язык системы устанавливается и действует во всех приложениях. Можно выбрать систему исчисления, формат чисел и даты.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "РЇР·С‹Рє СЃРёСЃС‚РµРјС‹ СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ Рё РґРµР№СЃС‚РІСѓРµС‚ РІРѕ РІСЃРµС… РїСЂРёР»РѕР¶РµРЅРёСЏС…. РњРѕР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ СЃРёСЃС‚РµРјСѓ РёСЃС‡РёСЃР»РµРЅРёСЏ, С„РѕСЂРјР°С‚ С‡РёСЃРµР» Рё РґР°С‚С‹.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Для изменения языка системы нажмите ""Настроить"".",
+    LTEXT "Р”Р»СЏ РёР·РјРµРЅРµРЅРёСЏ СЏР·С‹РєР° СЃРёСЃС‚РµРјС‹ РЅР°Р¶РјРёС‚Рµ ""РќР°СЃС‚СЂРѕРёС‚СЊ"".",
           IDC_STATIC, 53, 60, 197, 8
-    PUSHBUTTON "&Настроить...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
-    LTEXT "Выбрав раскладку вы сможете вводить символы на вашем языке.",
+    PUSHBUTTON "&РќР°СЃС‚СЂРѕРёС‚СЊ...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "Р’С‹Р±СЂР°РІ СЂР°СЃРєР»Р°РґРєСѓ РІС‹ СЃРјРѕР¶РµС‚Рµ РІРІРѕРґРёС‚СЊ СЃРёРјРІРѕР»С‹ РЅР° РІР°С€РµРј СЏР·С‹РєРµ.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Для изменения раскладки нажмите ""Настроить"".",
+    LTEXT "Р”Р»СЏ РёР·РјРµРЅРµРЅРёСЏ СЂР°СЃРєР»Р°РґРєРё РЅР°Р¶РјРёС‚Рµ ""РќР°СЃС‚СЂРѕРёС‚СЊ"".",
           IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "Н&астроить...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
+    PUSHBUTTON "Рќ&Р°СЃС‚СЂРѕРёС‚СЊ...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
 
 
 IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Дата и время:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Р”Р°С‚Р° Рё РІСЂРµРјСЏ:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Часовой пояс:", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Р§Р°СЃРѕРІРѕР№ РїРѕСЏСЃ:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ав&томатический переход на летнее время и обратно.",
+    AUTOCHECKBOX "РђРІ&С‚РѕРјР°С‚РёС‡РµСЃРєРёР№ РїРµСЂРµС…РѕРґ РЅР° Р»РµС‚РЅРµРµ РІСЂРµРјСЏ Рё РѕР±СЂР°С‚РЅРѕ.",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка ReactOS"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -121,19 +121,19 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершение установки ReactOS"
+CAPTION "Р—Р°РІРµСЂС€РµРЅРёРµ СѓСЃС‚Р°РЅРѕРІРєРё ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Завершение мастера установки ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Вы успешно закончили установку ReactOS.\n\nНажмите ""Готово"" для перезагрузки вашего компьютера.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Р—Р°РІРµСЂС€РµРЅРёРµ РјР°СЃС‚РµСЂР° СѓСЃС‚Р°РЅРѕРІРєРё ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Р’С‹ СѓСЃРїРµС€РЅРѕ Р·Р°РєРѕРЅС‡РёР»Рё СѓСЃС‚Р°РЅРѕРІРєСѓ ReactOS.\n\nРќР°Р¶РјРёС‚Рµ ""Р“РѕС‚РѕРІРѕ"" РґР»СЏ РїРµСЂРµР·Р°РіСЂСѓР·РєРё РІР°С€РµРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Если в CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Р•СЃР»Рё РІ CD РЅР°С…РѕРґРёС‚СЃСЏ РІ РїСЂРёРІРѕРґРµ, РЅСѓР¶РЅРѕ РёР·РІР»РµС‡СЊ РµРіРѕ. Р”Р»СЏ РїРµСЂРµР·Р°РіСЂСѓР·РєРё РєРѕРјРїСЊСЋС‚РµСЂР° РЅР°Р¶РјРёС‚Рµ ""Р“РѕС‚РѕРІРѕ"".", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Открытое лицензионное соглашение GNU"
+CAPTION "РћС‚РєСЂС‹С‚РѕРµ Р»РёС†РµРЅР·РёРѕРЅРЅРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
@@ -144,7 +144,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Пожалуйста подождите..."
+CAPTION "РџРѕР¶Р°Р»СѓР№СЃС‚Р° РїРѕРґРѕР¶РґРёС‚Рµ..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -153,129 +153,129 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Подтверждение лицензии"
-    IDS_ACKSUBTITLE      "Информация о разработчиках ReactOS и лизензионное соглашение."
-    IDS_OWNERTITLE       "Персональные данные"
-    IDS_OWNERSUBTITLE    "Установка информации о пользователях ReactOS."
-    IDS_COMPUTERTITLE    "Имя компьютера и пароль администратора"
-    IDS_COMPUTERSUBTITLE "Вы должны ввести имя и администраторский пароль для вашего компьютера."
-    IDS_LOCALETITLE      "Региональные настройки"
-    IDS_LOCALESUBTITLE   "Вы можете настраивать ReactOS для разных регионов и языков."
-    IDS_DATETIMETITLE    "Дата и время"
-    IDS_DATETIMESUBTITLE "Установите правильную дату и время на вашем компьютере."
-    IDS_PROCESSTITLE     "Процесс установки"
-    IDS_PROCESSSUBTITLE  "Установка ReactOS на ваш компьютер."
+    IDS_ACKTITLE         "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ Р»РёС†РµРЅР·РёРё"
+    IDS_ACKSUBTITLE      "РРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЂР°Р·СЂР°Р±РѕС‚С‡РёРєР°С… ReactOS Рё Р»РёР·РµРЅР·РёРѕРЅРЅРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ."
+    IDS_OWNERTITLE       "РџРµСЂСЃРѕРЅР°Р»СЊРЅС‹Рµ РґР°РЅРЅС‹Рµ"
+    IDS_OWNERSUBTITLE    "РЈСЃС‚Р°РЅРѕРІРєР° РёРЅС„РѕСЂРјР°С†РёРё Рѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏС… ReactOS."
+    IDS_COMPUTERTITLE    "РРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР° Рё РїР°СЂРѕР»СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°"
+    IDS_COMPUTERSUBTITLE "Р’С‹ РґРѕР»Р¶РЅС‹ РІРІРµСЃС‚Рё РёРјСЏ Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСЃРєРёР№ РїР°СЂРѕР»СЊ РґР»СЏ РІР°С€РµРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°."
+    IDS_LOCALETITLE      "Р РµРіРёРѕРЅР°Р»СЊРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё"
+    IDS_LOCALESUBTITLE   "Р’С‹ РјРѕР¶РµС‚Рµ РЅР°СЃС‚СЂР°РёРІР°С‚СЊ ReactOS РґР»СЏ СЂР°Р·РЅС‹С… СЂРµРіРёРѕРЅРѕРІ Рё СЏР·С‹РєРѕРІ."
+    IDS_DATETIMETITLE    "Р”Р°С‚Р° Рё РІСЂРµРјСЏ"
+    IDS_DATETIMESUBTITLE "РЈСЃС‚Р°РЅРѕРІРёС‚Рµ РїСЂР°РІРёР»СЊРЅСѓСЋ РґР°С‚Сѓ Рё РІСЂРµРјСЏ РЅР° РІР°С€РµРј РєРѕРјРїСЊСЋС‚РµСЂРµ."
+    IDS_PROCESSTITLE     "РџСЂРѕС†РµСЃСЃ СѓСЃС‚Р°РЅРѕРІРєРё"
+    IDS_PROCESSSUBTITLE  "РЈСЃС‚Р°РЅРѕРІРєР° ReactOS РЅР° РІР°С€ РєРѕРјРїСЊСЋС‚РµСЂ."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Скачать и установить другие приложения"
+    IDS_CMT_DOWNLOADER  "РЎРєР°С‡Р°С‚СЊ Рё СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РґСЂСѓРіРёРµ РїСЂРёР»РѕР¶РµРЅРёСЏ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Стандартные"
-    IDS_CMT_CALC        "Запустить калькулятор"
-    IDS_CMT_CMD         "Открыть командную строку"
-    IDS_CMT_EXPLORER    "Запустить Проводник"
-    IDS_CMT_NOTEPAD     "Запустить текстовый редактор"
-    IDS_CMT_REGEDIT     "Запустить редактор реестра"
-    IDS_CMT_WORDPAD     "Запустить редактор документов"
-    IDS_CMT_SCREENSHOT  "Сделать снимок экрана"
-    IDS_CMT_DEVMGMT     "Запустить диспетчер устройств"
-    IDS_CMT_SERVMAN     "Запустить диспетчер служб"
-    IDS_CMT_RDESKTOP    "Запустить удаленный рабочий стол"
-    IDS_CMT_EVENTVIEW   "Запустить программу просмотра событий"
-    IDS_CMT_MSCONFIG    "Запустить программу настройки системы"
-    IDS_CMT_PAINT       "Запустить Paint"
+    IDS_ACCESSORIES     "РЎС‚Р°РЅРґР°СЂС‚РЅС‹Рµ"
+    IDS_CMT_CALC        "Р—Р°РїСѓСЃС‚РёС‚СЊ РєР°Р»СЊРєСѓР»СЏС‚РѕСЂ"
+    IDS_CMT_CMD         "РћС‚РєСЂС‹С‚СЊ РєРѕРјР°РЅРґРЅСѓСЋ СЃС‚СЂРѕРєСѓ"
+    IDS_CMT_EXPLORER    "Р—Р°РїСѓСЃС‚РёС‚СЊ РџСЂРѕРІРѕРґРЅРёРє"
+    IDS_CMT_NOTEPAD     "Р—Р°РїСѓСЃС‚РёС‚СЊ С‚РµРєСЃС‚РѕРІС‹Р№ СЂРµРґР°РєС‚РѕСЂ"
+    IDS_CMT_REGEDIT     "Р—Р°РїСѓСЃС‚РёС‚СЊ СЂРµРґР°РєС‚РѕСЂ СЂРµРµСЃС‚СЂР°"
+    IDS_CMT_WORDPAD     "Р—Р°РїСѓСЃС‚РёС‚СЊ СЂРµРґР°РєС‚РѕСЂ РґРѕРєСѓРјРµРЅС‚РѕРІ"
+    IDS_CMT_SCREENSHOT  "РЎРґРµР»Р°С‚СЊ СЃРЅРёРјРѕРє СЌРєСЂР°РЅР°"
+    IDS_CMT_DEVMGMT     "Р—Р°РїСѓСЃС‚РёС‚СЊ РґРёСЃРїРµС‚С‡РµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІ"
+    IDS_CMT_SERVMAN     "Р—Р°РїСѓСЃС‚РёС‚СЊ РґРёСЃРїРµС‚С‡РµСЂ СЃР»СѓР¶Р±"
+    IDS_CMT_RDESKTOP    "Р—Р°РїСѓСЃС‚РёС‚СЊ СѓРґР°Р»РµРЅРЅС‹Р№ СЂР°Р±РѕС‡РёР№ СЃС‚РѕР»"
+    IDS_CMT_EVENTVIEW   "Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РїСЂРѕСЃРјРѕС‚СЂР° СЃРѕР±С‹С‚РёР№"
+    IDS_CMT_MSCONFIG    "Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РЅР°СЃС‚СЂРѕР№РєРё СЃРёСЃС‚РµРјС‹"
+    IDS_CMT_PAINT       "Р—Р°РїСѓСЃС‚РёС‚СЊ Paint"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES			"Игры"
-    IDS_CMT_SOLITAIRE	"Пасьянс Косынка"
-    IDS_CMT_WINEMINE	"Сапер"
-	IDS_CMT_SPIDER      "Пасьянс Паук"
+    IDS_GAMES			"РРіСЂС‹"
+    IDS_CMT_SOLITAIRE	"РџР°СЃСЊСЏРЅСЃ РљРѕСЃС‹РЅРєР°"
+    IDS_CMT_WINEMINE	"РЎР°РїРµСЂ"
+	IDS_CMT_SPIDER      "РџР°СЃСЊСЏРЅСЃ РџР°СѓРє"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Служебные"
-	IDS_CMT_CHARMAP      "Таблица символов"
-	IDS_CMT_KBSWITCH     "Переключатель раскладки клавиатуры"
-    IDS_CMT_DXDIAG       "Запустить программу диагностики ReactX"
+	IDS_SYS_TOOLS        "РЎР»СѓР¶РµР±РЅС‹Рµ"
+	IDS_CMT_CHARMAP      "РўР°Р±Р»РёС†Р° СЃРёРјРІРѕР»РѕРІ"
+	IDS_CMT_KBSWITCH     "РџРµСЂРµРєР»СЋС‡Р°С‚РµР»СЊ СЂР°СЃРєР»Р°РґРєРё РєР»Р°РІРёР°С‚СѓСЂС‹"
+    IDS_CMT_DXDIAG       "Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ РґРёР°РіРЅРѕСЃС‚РёРєРё ReactX"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Специальные возможности"
-	IDS_CMT_MAGNIFY      	     "Экранная лупа"
+	IDS_SYS_ACCESSIBILITY        "РЎРїРµС†РёР°Р»СЊРЅС‹Рµ РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё"
+	IDS_CMT_MAGNIFY      	     "Р­РєСЂР°РЅРЅР°СЏ Р»СѓРїР°"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Развлечения"
-    IDS_CMT_MPLAY32             "Запустить проигрыватель"
-    IDS_CMT_SNDVOL32            "Запустить регулятор громкости"
+    IDS_SYS_ENTERTAINMENT       "Р Р°Р·РІР»РµС‡РµРЅРёСЏ"
+    IDS_CMT_MPLAY32             "Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРѕРёРіСЂС‹РІР°С‚РµР»СЊ"
+    IDS_CMT_SNDVOL32            "Р—Р°РїСѓСЃС‚РёС‚СЊ СЂРµРіСѓР»СЏС‚РѕСЂ РіСЂРѕРјРєРѕСЃС‚Рё"
     IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP			"Установка ReactOS"
-    IDS_UNKNOWN_ERROR           "Неизвестная ошибка"
-    IDS_REGISTERING_COMPONENTS  "Регистрация компонентов..."
-    IDS_LOADLIBRARY_FAILED		"Ошибка LoadLibrary: "
-    IDS_GETPROCADDR_FAILED		"Ошибка GetProcAddr: "
-    IDS_REGSVR_FAILED           "Ошибка DllRegisterServer: "
-    IDS_DLLINSTALL_FAILED		"Ошибка DllInstall: "
-    IDS_TIMEOUT					"Таймаут в ходе регистрации"
+    IDS_REACTOS_SETUP			"РЈСЃС‚Р°РЅРѕРІРєР° ReactOS"
+    IDS_UNKNOWN_ERROR           "РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°"
+    IDS_REGISTERING_COMPONENTS  "Р РµРіРёСЃС‚СЂР°С†РёСЏ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ..."
+    IDS_LOADLIBRARY_FAILED		"РћС€РёР±РєР° LoadLibrary: "
+    IDS_GETPROCADDR_FAILED		"РћС€РёР±РєР° GetProcAddr: "
+    IDS_REGSVR_FAILED           "РћС€РёР±РєР° DllRegisterServer: "
+    IDS_DLLINSTALL_FAILED		"РћС€РёР±РєР° DllInstall: "
+    IDS_TIMEOUT					"РўР°Р№РјР°СѓС‚ РІ С…РѕРґРµ СЂРµРіРёСЃС‚СЂР°С†РёРё"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Командная строка.lnk"
-    IDS_SHORT_EXPLORER   "Проводник ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Менеджер приложений ReactOS.lnk"
-    IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
-    IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
-    IDS_SHORT_MPLAY32    "Проигрыватель.lnk"
-    IDS_SHORT_CALC       "Калькулятор.lnk"
-    IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
-    IDS_SHORT_NOTEPAD    "Блокнот.lnk"
+    IDS_SHORT_CMD        "РљРѕРјР°РЅРґРЅР°СЏ СЃС‚СЂРѕРєР°.lnk"
+    IDS_SHORT_EXPLORER   "РџСЂРѕРІРѕРґРЅРёРє ReactOS.lnk"
+    IDS_SHORT_DOWNLOADER "РњРµРЅРµРґР¶РµСЂ РїСЂРёР»РѕР¶РµРЅРёР№ ReactOS.lnk"
+    IDS_SHORT_SERVICE    "Р”РёСЃРїРµС‚С‡РµСЂ СЃР»СѓР¶Р±.lnk"
+    IDS_SHORT_DEVICE     "Р”РёСЃРїРµС‚С‡РµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІ.lnk"
+    IDS_SHORT_MPLAY32    "РџСЂРѕРёРіСЂС‹РІР°С‚РµР»СЊ.lnk"
+    IDS_SHORT_CALC       "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ.lnk"
+    IDS_SHORT_REGEDIT    "Р РµРґР°РєС‚РѕСЂ СЂРµРµСЃС‚СЂР°.lnk"
+    IDS_SHORT_NOTEPAD    "Р‘Р»РѕРєРЅРѕС‚.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Пасьянс Косынка.lnk"
-    IDS_SHORT_WINEMINE   "Сапер.lnk"
-    IDS_SHORT_CHARMAP    "Таблица символов.lnk"
-    IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
-    IDS_SHORT_RDESKTOP   "Удаленный рабочий стол.lnk"
-    IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
-    IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
-    IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
-    IDS_SHORT_SNDVOL32   "Громкость.lnk"
+    IDS_SHORT_SOLITAIRE  "РџР°СЃСЊСЏРЅСЃ РљРѕСЃС‹РЅРєР°.lnk"
+    IDS_SHORT_WINEMINE   "РЎР°РїРµСЂ.lnk"
+    IDS_SHORT_CHARMAP    "РўР°Р±Р»РёС†Р° СЃРёРјРІРѕР»РѕРІ.lnk"
+    IDS_SHORT_MAGNIFY    "Р­РєСЂР°РЅРЅР°СЏ Р»СѓРїР°.lnk"
+    IDS_SHORT_RDESKTOP   "РЈРґР°Р»РµРЅРЅС‹Р№ СЂР°Р±РѕС‡РёР№ СЃС‚РѕР».lnk"
+    IDS_SHORT_KBSWITCH   "РџРµСЂРµРєР»СЋС‡Р°С‚РµР»СЊ СЂР°СЃРєР»Р°РґРєРё РєР»Р°РІРёР°С‚СѓСЂС‹.lnk"
+    IDS_SHORT_EVENTVIEW  "РџСЂРѕСЃРјРѕС‚СЂ СЃРѕР±С‹С‚РёР№.lnk"
+    IDS_SHORT_MSCONFIG   "РџР°СЂР°РјРµС‚СЂС‹ СЃРёСЃС‚РµРјС‹.lnk"
+    IDS_SHORT_SNDVOL32   "Р“СЂРѕРјРєРѕСЃС‚СЊ.lnk"
     IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
+    IDS_SHORT_DXDIAG     "РЎСЂРµРґСЃС‚РІРѕ РґРёР°РіРЅРѕСЃС‚РёРєРё ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Пасьянс Паук.lnk"
+	IDS_SHORT_SPIDER     "РџР°СЃСЊСЏРЅСЃ РџР°СѓРє.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME             "Для продолжения установки нужно ввести ваше имя."
-    IDS_WZD_SETCOMPUTERNAME  "Ошибка установки! Нужно ввести имя компьютера."
-    IDS_WZD_COMPUTERNAME     "Для продолжения установки нужно ввести имя компьютера."
-    IDS_WZD_PASSWORDEMPTY    "Вы должны ввести пароль!"
-    IDS_WZD_PASSWORDMATCH    "Пароли, которые вы ввели не совпадают. Введите их снова."
-    IDS_WZD_PASSWORDCHAR     "Пароли, которые вы ввели содержат запрещенные символы. Введите их снова."
-    IDS_WZD_LOCALTIME        "Не удалось установить местное время."
+    IDS_WZD_NAME             "Р”Р»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё РЅСѓР¶РЅРѕ РІРІРµСЃС‚Рё РІР°С€Рµ РёРјСЏ."
+    IDS_WZD_SETCOMPUTERNAME  "РћС€РёР±РєР° СѓСЃС‚Р°РЅРѕРІРєРё! РќСѓР¶РЅРѕ РІРІРµСЃС‚Рё РёРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР°."
+    IDS_WZD_COMPUTERNAME     "Р”Р»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё РЅСѓР¶РЅРѕ РІРІРµСЃС‚Рё РёРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР°."
+    IDS_WZD_PASSWORDEMPTY    "Р’С‹ РґРѕР»Р¶РЅС‹ РІРІРµСЃС‚Рё РїР°СЂРѕР»СЊ!"
+    IDS_WZD_PASSWORDMATCH    "РџР°СЂРѕР»Рё, РєРѕС‚РѕСЂС‹Рµ РІС‹ РІРІРµР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚. Р’РІРµРґРёС‚Рµ РёС… СЃРЅРѕРІР°."
+    IDS_WZD_PASSWORDCHAR     "РџР°СЂРѕР»Рё, РєРѕС‚РѕСЂС‹Рµ РІС‹ РІРІРµР»Рё СЃРѕРґРµСЂР¶Р°С‚ Р·Р°РїСЂРµС‰РµРЅРЅС‹Рµ СЃРёРјРІРѕР»С‹. Р’РІРµРґРёС‚Рµ РёС… СЃРЅРѕРІР°."
+    IDS_WZD_LOCALTIME        "РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РјРµСЃС‚РЅРѕРµ РІСЂРµРјСЏ."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Установка оборудования..."
+    IDS_STATUS_INSTALL_DEV "РЈСЃС‚Р°РЅРѕРІРєР° РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ..."
 END
 
 /* EOF */

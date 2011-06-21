@@ -10,6 +10,6 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Телефон і модем"
-	IDS_CPLSYSTEMDESCRIPTION "Настройка правил набору номера та інших параметрів модема."
+	IDS_CPLSYSTEMNAME "РўРµР»РµС„РѕРЅ С– РјРѕРґРµРј"
+	IDS_CPLSYSTEMDESCRIPTION "РќР°СЃС‚СЂРѕР№РєР° РїСЂР°РІРёР» РЅР°Р±РѕСЂСѓ РЅРѕРјРµСЂР° С‚Р° С–РЅС€РёС… РїР°СЂР°РјРµС‚СЂС–РІ РјРѕРґРµРјР°."
 END

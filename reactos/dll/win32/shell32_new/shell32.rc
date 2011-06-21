@@ -69,11 +69,14 @@ END
 #include "lang/pt-BR.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/tr-TR.rc"
-#include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
 #include "lang/zh-TW.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

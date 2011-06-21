@@ -1,4 +1,4 @@
-﻿/*
+/*
  * wininet.dll (Ukrainian resources)
  *
  * Copyright 2006 Artem Reznikov
@@ -21,44 +21,47 @@
 
 #include "resource.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ââåä³òü Ìåðåæíèé Ïàðîëü"
+CAPTION "Введіть Мережний Пароль"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Áóäü ëàñêà, ââåä³òü Âàø³ ³ì'ÿ òà ïàðîëü:", -1, 40, 6, 150, 15
- LTEXT "Ïðîêñ³", -1, 40, 26, 50, 10
- LTEXT "Îáëàñòü", -1, 40, 46, 50, 10
- LTEXT "Êîðèñòóâà÷", -1, 40, 66, 50, 10
- LTEXT "Ïàðîëü", -1, 40, 86, 50, 10
+ LTEXT "Будь ласка, введіть Ваші ім'я та пароль:", -1, 40, 6, 150, 15
+ LTEXT "Проксі", -1, 40, 26, 50, 10
+ LTEXT "Область", -1, 40, 46, 50, 10
+ LTEXT "Користувач", -1, 40, 66, 50, 10
+ LTEXT "Пароль", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Çáåðåãòè öåé ïàðîëü (íåáåçïå÷íî)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Зберегти цей пароль (небезпечно)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ñêàñóâàòè", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 IDD_AUTHDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Íåîáõ³äíà àâòîðèçàö³ÿ"
+CAPTION "Необхідна авторизація"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Áóäü ëàñêà, ââåä³òü Âàø³ ³ì'ÿ òà ïàðîëü:", -1, 40, 6, 150, 15
- LTEXT "Ñåðâåð", -1, 40, 26, 50, 10
- LTEXT "Îáëàñòü", -1, 40, 46, 50, 10
- LTEXT "Êîðèñòóâà÷", -1, 40, 66, 50, 10
- LTEXT "Ïàðîëü", -1, 40, 86, 50, 10
+ LTEXT "Будь ласка, введіть Ваші ім'я та пароль:", -1, 40, 6, 150, 15
+ LTEXT "Сервер", -1, 40, 26, 50, 10
+ LTEXT "Область", -1, 40, 46, 50, 10
+ LTEXT "Користувач", -1, 40, 66, 50, 10
+ LTEXT "Пароль", -1, 40, 86, 50, 10
  LTEXT "", IDC_SERVER, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Çáåðåãòè öåé ïàðîëü (íåáåçïå÷íî)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Зберегти цей пароль (небезпечно)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ñêàñóâàòè", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

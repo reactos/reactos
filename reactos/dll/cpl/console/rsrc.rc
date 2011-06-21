@@ -12,12 +12,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/no-NO.rc"
-#include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
-#include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
 
 // UTF-8
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

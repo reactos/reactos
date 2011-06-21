@@ -29,74 +29,74 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Стандартні Кнопки",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Рядок Адреси",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Посилання",						IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "&РЎС‚Р°РЅРґР°СЂС‚РЅС– РљРЅРѕРїРєРё",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Р СЏРґРѕРє РђРґСЂРµСЃРё",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "&РџРѕСЃРёР»Р°РЅРЅСЏ",						IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "", -1,                            MFT_SEPARATOR
-        MENUITEM "Блокування панелей інструментів",	IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Налаштувати...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Текстові мітки",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Кнопка Йти",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+        MENUITEM "Р‘Р»РѕРєСѓРІР°РЅРЅСЏ РїР°РЅРµР»РµР№ С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ",	IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&РќР°Р»Р°С€С‚СѓРІР°С‚Рё...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
+        MENUITEM "&РўРµРєСЃС‚РѕРІС– РјС–С‚РєРё",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&РљРЅРѕРїРєР° Р™С‚Рё",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
     END
 END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "&Файл",									FCIDM_MENU_FILE
+    POPUP "&Р¤Р°Р№Р»",									FCIDM_MENU_FILE
     BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Закрити",						IDM_FILE_CLOSE
+        MENUITEM "&Р—Р°РєСЂРёС‚Рё",						IDM_FILE_CLOSE
     END
-    POPUP "&Редагувати",							FCIDM_MENU_EDIT
+    POPUP "&Р РµРґР°РіСѓРІР°С‚Рё",							FCIDM_MENU_EDIT
     BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
     END
-    POPUP "&Вигляд",								FCIDM_MENU_VIEW
+    POPUP "&Р’РёРіР»СЏРґ",								FCIDM_MENU_VIEW
     BEGIN
-        POPUP "&Панелі інструментів",				IDM_VIEW_TOOLBARS
+        POPUP "&РџР°РЅРµР»С– С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ",				IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "",							-1, MFT_SEPARATOR
         END
-        MENUITEM "Рядок &Стану",					IDM_VIEW_STATUSBAR
-        POPUP "&Панель Провідника",					IDM_VIEW_EXPLORERBAR
+        MENUITEM "Р СЏРґРѕРє &РЎС‚Р°РЅСѓ",					IDM_VIEW_STATUSBAR
+        POPUP "&РџР°РЅРµР»СЊ РџСЂРѕРІС–РґРЅРёРєР°",					IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Пошук\tCtrl+E",           	IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Обране\tCtrl+I",         	IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Медіа",                      IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Історія\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
-            MENUITEM "П&апки",                  	IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&РџРѕС€СѓРє\tCtrl+E",           	IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&РћР±СЂР°РЅРµ\tCtrl+I",         	IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&РњРµРґС–Р°",                      IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Р†СЃС‚РѕСЂС–СЏ\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
+            MENUITEM "Рџ&Р°РїРєРё",                  	IDM_EXPLORERBAR_FOLDERS
             MENUITEM "",                            IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "",								FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "Й&ти До",							FCIDM_MENU_EXPLORE
+        POPUP "Р™&С‚Рё Р”Рѕ",							FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Назад\tAlt+Ліва Стрілка",    IDM_GOTO_BACK
-            MENUITEM "&Вперед\tAlt+Права Стрілка",  IDM_GOTO_FORWARD
-            MENUITEM "Вве&рх на один рівень",       IDM_GOTO_UPONELEVEL
+            MENUITEM "&РќР°Р·Р°Рґ\tAlt+Р›С–РІР° РЎС‚СЂС–Р»РєР°",    IDM_GOTO_BACK
+            MENUITEM "&Р’РїРµСЂРµРґ\tAlt+РџСЂР°РІР° РЎС‚СЂС–Р»РєР°",  IDM_GOTO_FORWARD
+            MENUITEM "Р’РІРµ&СЂС… РЅР° РѕРґРёРЅ СЂС–РІРµРЅСЊ",       IDM_GOTO_UPONELEVEL
             MENUITEM "",							-1, MFT_SEPARATOR
-            MENUITEM "&Домашня Сторінка\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "&Р”РѕРјР°С€РЅСЏ РЎС‚РѕСЂС–РЅРєР°\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
-        MENUITEM "&Оновити",						IDM_VIEW_REFRESH
+        MENUITEM "&РћРЅРѕРІРёС‚Рё",						IDM_VIEW_REFRESH
     END
-    POPUP "О&бране",								FCIDM_MENU_FAVORITES
+    POPUP "Рћ&Р±СЂР°РЅРµ",								FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Додати до Обраного...",			IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Організувати Обране...",			IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Р”РѕРґР°С‚Рё РґРѕ РћР±СЂР°РЅРѕРіРѕ...",			IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&РћСЂРіР°РЅС–Р·СѓРІР°С‚Рё РћР±СЂР°РЅРµ...",			IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "",								-1, MFT_SEPARATOR
         MENUITEM "(Empty)",							IDM_FAVORITES_EMPTY
     END
-    POPUP "&Інструменти",							FCIDM_MENU_TOOLS
+    POPUP "&Р†РЅСЃС‚СЂСѓРјРµРЅС‚Рё",							FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Під'єднати &Мережевий Диск...",	IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Від'єднати Мержевий Диск...",	IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Синхронізувати...",				IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "РџС–Рґ'С”РґРЅР°С‚Рё &РњРµСЂРµР¶РµРІРёР№ Р”РёСЃРє...",	IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Р’С–Рґ'С”РґРЅР°С‚Рё РњРµСЂР¶РµРІРёР№ Р”РёСЃРє...",	IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&РЎРёРЅС…СЂРѕРЅС–Р·СѓРІР°С‚Рё...",				IDM_TOOLS_SYNCHRONIZE
         MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Опції Папки...",					IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&РћРїС†С–С— РџР°РїРєРё...",					IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Допомога",								FCIDM_MENU_HELP
+    POPUP "&Р”РѕРїРѕРјРѕРіР°",								FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Ця копія ReactOS &законна?",		IDM_HELP_ISTHISCOPYLEGAL
-        MENUITEM "&Про ReactOS",					IDM_HELP_ABOUT
+        MENUITEM "Р¦СЏ РєРѕРїС–СЏ ReactOS &Р·Р°РєРѕРЅРЅР°?",		IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&РџСЂРѕ ReactOS",					IDM_HELP_ABOUT
     END
 END
 
@@ -110,9 +110,9 @@ IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Опції &тексту:",-1,4,2,48,15
+    LTEXT           "РћРїС†С–С— &С‚РµРєСЃС‚Сѓ:",-1,4,2,48,15
     COMBOBOX        IDC_TEXTOPTIONS,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Опції &значків:",-1,4,20,48,15
+    LTEXT           "РћРїС†С–С— &Р·РЅР°С‡РєС–РІ:",-1,4,20,48,15
     COMBOBOX        IDC_ICONOPTIONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -146,130 +146,130 @@ END
 
 STRINGTABLE
 BEGIN
-    800                       "Містить команди маніпулювання вибраними об'єктами."
+    800                       "РњС–СЃС‚РёС‚СЊ РєРѕРјР°РЅРґРё РјР°РЅС–РїСѓР»СЋРІР°РЅРЅСЏ РІРёР±СЂР°РЅРёРјРё РѕР±'С”РєС‚Р°РјРё."
 END
 
 STRINGTABLE
 BEGIN
-    864                       "Містить команди правки."
+    864                       "РњС–СЃС‚РёС‚СЊ РєРѕРјР°РЅРґРё РїСЂР°РІРєРё."
 END
 
 STRINGTABLE
 BEGIN
-    928                       "Містить команди маніпулювання виглядом."
+    928                       "РњС–СЃС‚РёС‚СЊ РєРѕРјР°РЅРґРё РјР°РЅС–РїСѓР»СЋРІР°РЅРЅСЏ РІРёРіР»СЏРґРѕРј."
 END
 
 STRINGTABLE
 BEGIN
-    992                       "Містить команди інструментів."
+    992                       "РњС–СЃС‚РёС‚СЊ РєРѕРјР°РЅРґРё С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ."
 END
 
 STRINGTABLE
 BEGIN
-    1056                      "Містить команди для відображення Допомоги."
+    1056                      "РњС–СЃС‚РёС‚СЊ РєРѕРјР°РЅРґРё РґР»СЏ РІС–РґРѕР±СЂР°Р¶РµРЅРЅСЏ Р”РѕРїРѕРјРѕРіРё."
 END
 
 STRINGTABLE
 BEGIN
-    9025                      "Закриває вікно."
-    9026                      "Йде вверх на один рівень."
+    9025                      "Р—Р°РєСЂРёРІР°С” РІС–РєРЅРѕ."
+    9026                      "Р™РґРµ РІРІРµСЂС… РЅР° РѕРґРёРЅ СЂС–РІРµРЅСЊ."
 END
 
 STRINGTABLE
 BEGIN
-    9121                      "Під'єднує до мережевого диску."
-    9122                      "Від'єднує від мережевого диску."
+    9121                      "РџС–Рґ'С”РґРЅСѓС” РґРѕ РјРµСЂРµР¶РµРІРѕРіРѕ РґРёСЃРєСѓ."
+    9122                      "Р’С–Рґ'С”РґРЅСѓС” РІС–Рґ РјРµСЂРµР¶РµРІРѕРіРѕ РґРёСЃРєСѓ."
 END
 
 STRINGTABLE
 BEGIN
-    9250                      "Відображає дані про програму, номер версії, та copyright."
-    9252                      "Відображає дані для налагодження."
+    9250                      "Р’С–РґРѕР±СЂР°Р¶Р°С” РґР°РЅС– РїСЂРѕ РїСЂРѕРіСЂР°РјСѓ, РЅРѕРјРµСЂ РІРµСЂСЃС–С—, С‚Р° copyright."
+    9252                      "Р’С–РґРѕР±СЂР°Р¶Р°С” РґР°РЅС– РґР»СЏ РЅР°Р»Р°РіРѕРґР¶РµРЅРЅСЏ."
 END
 
 STRINGTABLE
 BEGIN
-    9281                      "Йде до попередньої сторінки."
-    9282                      "Йде до наступної сторінки."
-    9283                      "Дозволяє вам змінити налаштування."
-    9285                      "Йде до вашої домашньої сторінки."
+    9281                      "Р™РґРµ РґРѕ РїРѕРїРµСЂРµРґРЅСЊРѕС— СЃС‚РѕСЂС–РЅРєРё."
+    9282                      "Р™РґРµ РґРѕ РЅР°СЃС‚СѓРїРЅРѕС— СЃС‚РѕСЂС–РЅРєРё."
+    9283                      "Р”РѕР·РІРѕР»СЏС” РІР°Рј Р·РјС–РЅРёС‚Рё РЅР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ."
+    9285                      "Р™РґРµ РґРѕ РІР°С€РѕС— РґРѕРјР°С€РЅСЊРѕС— СЃС‚РѕСЂС–РЅРєРё."
 END
 
 STRINGTABLE
 BEGIN
-    9362                      "Відкриває папку Обране."
-    9363                      "Додає поточну сторінку до списку Обраного."
+    9362                      "Р’С–РґРєСЂРёРІР°С” РїР°РїРєСѓ РћР±СЂР°РЅРµ."
+    9363                      "Р”РѕРґР°С” РїРѕС‚РѕС‡РЅСѓ СЃС‚РѕСЂС–РЅРєСѓ РґРѕ СЃРїРёСЃРєСѓ РћР±СЂР°РЅРѕРіРѕ."
 END
 
 STRINGTABLE
 BEGIN
-    9505                      "Показує чи приховує панелі інструментів."
-    9506                      "Показує чи приховує рядок стану."
-    9508                      "Показує панель стандартних кнопок."
-    9509                      "Показує рядок адреси."
-    9510                      "Показує панель швидких посилань."
-    9516                      "Блокує розміри та розташування панелей інструментів."
+    9505                      "РџРѕРєР°Р·СѓС” С‡Рё РїСЂРёС…РѕРІСѓС” РїР°РЅРµР»С– С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ."
+    9506                      "РџРѕРєР°Р·СѓС” С‡Рё РїСЂРёС…РѕРІСѓС” СЂСЏРґРѕРє СЃС‚Р°РЅСѓ."
+    9508                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ СЃС‚Р°РЅРґР°СЂС‚РЅРёС… РєРЅРѕРїРѕРє."
+    9509                      "РџРѕРєР°Р·СѓС” СЂСЏРґРѕРє Р°РґСЂРµСЃРё."
+    9510                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ С€РІРёРґРєРёС… РїРѕСЃРёР»Р°РЅСЊ."
+    9516                      "Р‘Р»РѕРєСѓС” СЂРѕР·РјС–СЂРё С‚Р° СЂРѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РїР°РЅРµР»РµР№ С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ."
 END
 
 STRINGTABLE
 BEGIN
-    9533                      "Персоналізує панель інструментів."
+    9533                      "РџРµСЂСЃРѕРЅР°Р»С–Р·СѓС” РїР°РЅРµР»СЊ С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ."
 END
 
 STRINGTABLE
 BEGIN
-    9552                      "Показує чи приховує панель Провідника."
-    9553                      "Показує панель Пошуку."
-    9554                      "Показує панель Обраного."
-    9555                      "Показує панель Історії."
-    9557                      "Показує панель Тек."
-    9559                      "Показує панель Медіа."
+    9552                      "РџРѕРєР°Р·СѓС” С‡Рё РїСЂРёС…РѕРІСѓС” РїР°РЅРµР»СЊ РџСЂРѕРІС–РґРЅРёРєР°."
+    9553                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ РџРѕС€СѓРєСѓ."
+    9554                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ РћР±СЂР°РЅРѕРіРѕ."
+    9555                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ Р†СЃС‚РѕСЂС–С—."
+    9557                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ РўРµРє."
+    9559                      "РџРѕРєР°Р·СѓС” РїР°РЅРµР»СЊ РњРµРґС–Р°."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SMALLICONS            "Малі значки"
-    IDS_LARGEICONS            "Великі значки"
-    IDS_SHOWTEXTLABELS        "Показати текстові мітки"
+    IDS_SMALLICONS            "РњР°Р»С– Р·РЅР°С‡РєРё"
+    IDS_LARGEICONS            "Р’РµР»РёРєС– Р·РЅР°С‡РєРё"
+    IDS_SHOWTEXTLABELS        "РџРѕРєР°Р·Р°С‚Рё С‚РµРєСЃС‚РѕРІС– РјС–С‚РєРё"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS          "Без текстових міток"
-    IDS_SELECTIVETEXTONRIGHT  "Частина тексту праворуч"
+    IDS_NOTEXTLABELS          "Р‘РµР· С‚РµРєСЃС‚РѕРІРёС… РјС–С‚РѕРє"
+    IDS_SELECTIVETEXTONRIGHT  "Р§Р°СЃС‚РёРЅР° С‚РµРєСЃС‚Сѓ РїСЂР°РІРѕСЂСѓС‡"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GOBUTTONLABEL         "|Йти||"
-    IDS_GOBUTTONTIPTEMPLATE   "Йти до ""%s"""
+    IDS_GOBUTTONLABEL         "|Р™С‚Рё||"
+    IDS_GOBUTTONTIPTEMPLATE   "Р™С‚Рё РґРѕ ""%s"""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHLABEL           "Пошук"
-    IDS_ADDRESSBANDLABEL      "А&дреса"
+    IDS_SEARCHLABEL           "РџРѕС€СѓРє"
+    IDS_ADDRESSBANDLABEL      "Рђ&РґСЂРµСЃР°"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL          "Папки"
+    IDS_FOLDERSLABEL          "РџР°РїРєРё"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT           "&Історія\tCtrl+H"
+    IDS_HISTORYTEXT           "&Р†СЃС‚РѕСЂС–СЏ\tCtrl+H"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_UP                    "Вверх"
+    IDS_UP                    "Р’РІРµСЂС…"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK                  "Назад"
-    IDS_FORWARD               "Вперед"
+    IDS_BACK                  "РќР°Р·Р°Рґ"
+    IDS_FORWARD               "Р’РїРµСЂРµРґ"
 END
 
 
