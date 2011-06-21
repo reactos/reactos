@@ -717,11 +717,19 @@ NTAPI
 INIT_FUNCTION
 DisplayFilter(PCHAR *String)
 {
-    /* Ignore empty and "." strings */
-    if(*String && strcmp(*String, ".") != 0)
+    /* Windows hack to skip first dots */
+    static BOOLEAN DotHack = TRUE;
+
+    /* If "." is given set *String to empty string */
+    if(DotHack && strcmp(*String, ".") == 0)
+        *String = "";
+
+    if(**String)
     {
         /* Remove the filter */
         InbvInstallDisplayStringFilter(NULL);
+        
+        DotHack = FALSE;
 
         /* Draw text screen */
         DisplayBootBitmap(TRUE);
