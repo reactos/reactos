@@ -286,6 +286,20 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
         return UnlockAndMaybeComplete( FCB, Status, Irp, Information );
     }
+    
+    if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
+    {
+        if (FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
+        {
+            /* This is a local send shutdown or a graceful remote disconnect */
+            return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+        }
+        else
+        {
+            /* This is an unexpected remote disconnect */
+            return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
+        }
+    }
 
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete

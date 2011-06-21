@@ -47,24 +47,18 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
 }
 
 static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
-	NTSTATUS Status;
-
 	if( !FCB->ReceiveIrp.InFlightRequest &&
         !(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT)) ) {
 		AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
 
-		Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-							 FCB->Connection.Object,
-							 TDI_RECEIVE_NORMAL,
-							 FCB->Recv.Window,
-							 FCB->Recv.Size,
-							 &FCB->ReceiveIrp.Iosb,
-							 ReceiveComplete,
-							 FCB );
-        if (Status != STATUS_PENDING)
-        {
-            HandleEOFOnIrp(FCB, Status, FCB->ReceiveIrp.Iosb.Information);
-        }
+		TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+                    FCB->Connection.Object,
+                    TDI_RECEIVE_NORMAL,
+                    FCB->Recv.Window,
+                    FCB->Recv.Size,
+                    &FCB->ReceiveIrp.Iosb,
+                    ReceiveComplete,
+                    FCB );
 	}
 }
 
@@ -163,12 +157,23 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
 						  RecvReq->BufferCount, FALSE );
-            Status = NextIrp->IoStatus.Status = FCB->PollStatus[FD_CLOSE_BIT];
+            if (FCB->Overread && FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
+            {
+                /* Overread after a graceful disconnect so complete with an error */
+                Status = STATUS_FILE_CLOSED;
+            }
+            else
+            {
+                /* Unexpected disconnect by the remote host or initial read after a graceful disconnnect */
+                Status = FCB->PollStatus[FD_CLOSE_BIT];
+            }
+            NextIrp->IoStatus.Status = Status;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
             if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 			(void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+            FCB->Overread = TRUE;
         }
     } else {
 		/* Kick the user that receive would be possible now */
