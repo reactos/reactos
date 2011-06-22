@@ -13,8 +13,12 @@ elseif(OPTIMIZE STREQUAL "5")
     add_definitions(/GF /Gy /Ob2 /Os /Ox /GS-)
 endif()
 
+if(ARCH MATCHES i386)
+    add_definitions(/DWIN32 /D_WINDOWS)
+endif()
+
 add_definitions(/X /GR- /GS- /Zl)
-add_definitions(-Dinline=__inline -D__STDC__=1)
+add_definitions(/Dinline=__inline /D__STDC__=1)
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB")
@@ -23,7 +27,7 @@ if(${_MACHINE_ARCH_FLAG} MATCHES X86)
 endif()
 
 if(${ARCH} MATCHES amd64)
-    add_definitions(-D__x86_64)
+    add_definitions(/D__x86_64)
     set(SPEC2DEF_ARCH x86_64)
 else()
     set(SPEC2DEF_ARCH i386)
