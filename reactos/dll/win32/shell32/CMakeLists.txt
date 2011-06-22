@@ -12,8 +12,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/recyclebin
     ${REACTOS_SOURCE_DIR})
 
-generate_idl_iids(shobjidl_local.idl)
-
 spec2def(shell32.dll shell32.spec)
 
 list(APPEND SOURCE
@@ -71,7 +69,6 @@ list(APPEND SOURCE
     shv_item_new.c
     folder_options.c
     shell32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shobjidl_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
@@ -99,7 +96,7 @@ add_importlibs(shell32
     kernel32
     msvcrt
     ntdll)
-	
+
 add_pch(shell32 precomp.h)
 
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)
