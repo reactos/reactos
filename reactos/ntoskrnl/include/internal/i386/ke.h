@@ -644,12 +644,13 @@ KiSystemCallTrampoline(IN PVOID Handler,
     {
         mov ecx, StackBytes
         mov edx, Arguments
+        mov ebx, Handler
         sub esp, ecx
         mov edi, esp
         mov esi, edx
         shr ecx, 2
         rep movsd
-        call Handler
+        call ebx
         mov Result, eax
     }
 #else
@@ -803,7 +804,7 @@ KiIret(VOID)
 #elif defined(_MSC_VER)
     __asm
     {
-        iret
+        iretd
     }
 #else
 #error Unsupported compiler

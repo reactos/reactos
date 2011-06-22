@@ -343,7 +343,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_IRET)
 
         /* Return with iret */
-        iret
+        iretd
 
     elseif (Flags AND KI_EXIT_JMP)
 
