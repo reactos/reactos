@@ -17,8 +17,9 @@ if(ARCH MATCHES i386)
     add_definitions(/DWIN32 /D_WINDOWS)
 endif()
 
-add_definitions(/X /GR- /GS- /Zl)
 add_definitions(/Dinline=__inline /D__STDC__=1)
+
+add_compiler_flags(/X /GR- /GS- /Zl /W3)
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB")
