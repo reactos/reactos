@@ -600,13 +600,6 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-NTSTATUS
-FORCEINLINE
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
 
     /*
      * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
@@ -624,6 +617,14 @@ KiSystemCallTrampoline(IN PVOID Handler,
      *
      */
 #ifdef __GNUC__
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+
     __asm__ __volatile__
     (
         "subl %1, %%esp\n"
@@ -639,26 +640,32 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
     __asm
     {
         mov ecx, StackBytes
-        mov edx, Arguments
-        mov ebx, Handler
+        mov esi, Arguments
+        mov eax, Handler
         sub esp, ecx
         mov edi, esp
-        mov esi, edx
         shr ecx, 2
         rep movsd
-        call ebx
-        mov Result, eax
+        call eax
     }
+    /* Return with result in EAX */
+}
 #else
 #error Unknown Compiler
 #endif
 
-    return Result;
-}
 
 //
 // Checks for pending APCs
