@@ -59,8 +59,11 @@ static NTSTATUS NTAPI SendComplete
                (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
-	SocketStateUnlock( FCB );
-	return STATUS_FILE_CLOSED;
+        
+        RetryDisconnectCompletion(FCB);
+        
+        SocketStateUnlock( FCB );
+        return STATUS_FILE_CLOSED;
     }
 
     if( !NT_SUCCESS(Status) ) {
@@ -85,6 +88,8 @@ static NTSTATUS NTAPI SendComplete
                         (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
+        
+        RetryDisconnectCompletion(FCB);
 
 		SocketStateUnlock( FCB );
 
@@ -164,6 +169,8 @@ static NTSTATUS NTAPI SendComplete
 						  &FCB->SendIrp.Iosb,
 						  SendComplete,
 						  FCB );
+        
+        RetryDisconnectCompletion(FCB);
     } else {
 		FCB->PollState |= AFD_EVENT_SEND;
 		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
@@ -409,6 +416,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Dismissing request: %x (%d)\n",
                                 Status, TotalBytesCopied));
     }
+    
+    RetryDisconnectCompletion(FCB);
     
     return UnlockAndMaybeComplete
     ( FCB, Status, Irp, TotalBytesCopied );
