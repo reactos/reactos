@@ -171,6 +171,10 @@ VOID NTAPI DispCancelRequest(
     case TDI_CONNECT:
         DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
         break;
+            
+    case TDI_DISCONNECT:
+        DequeuedIrp = TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        break;
 
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));

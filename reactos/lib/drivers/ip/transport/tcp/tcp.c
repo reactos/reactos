@@ -18,6 +18,33 @@ static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 PORT_SET TCPPorts;
 CLIENT_DATA ClientInfo;
 
+VOID
+CompleteBucketWorker(PVOID Context)
+{
+    PTDI_BUCKET Bucket = Context;
+    PCONNECTION_ENDPOINT Connection;
+    PTCP_COMPLETION_ROUTINE Complete;
+    
+    ASSERT(Bucket);
+    
+    Connection = Bucket->AssociatedEndpoint;
+    Complete = Bucket->Request.RequestNotifyObject;
+    
+    Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
+    
+    ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
+    
+    DereferenceObject(Connection);
+}
+
+VOID
+CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket)
+{
+    Bucket->AssociatedEndpoint = Connection;
+    ReferenceObject(Connection);
+    ChewCreate(CompleteBucketWorker, Bucket);
+}
+
 VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 {
         PTDI_BUCKET Bucket;
@@ -25,8 +52,6 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
         NTSTATUS Status;
         PIRP Irp;
         PMDL Mdl;
-        KIRQL OldIrql;
-        PTCP_COMPLETION_ROUTINE Complete;
 
         if (ClientInfo.Unlocked)
             LockObjectAtDpcLevel(Connection);
@@ -44,7 +69,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                Bucket->Status = (Connection->SignalState & SEL_CONNECT) ? STATUS_SUCCESS : STATUS_CANCELLED;
                Bucket->Information = 0;
 
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
+               CompleteBucket(Connection, Bucket);
            }
        }
 
@@ -91,7 +116,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                    Bucket->Information = 0;
                    DereferenceObject(Bucket->AssociatedEndpoint);
 
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
+                   CompleteBucket(Connection, Bucket);
                }
           }
       }
@@ -155,7 +180,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                    Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
                    Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Received : 0;
 
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
+                   CompleteBucket(Connection, Bucket);
                }
            }
        }
@@ -216,49 +241,60 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                    Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
                    Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Sent : 0;
 
-                   InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
+                   CompleteBucket(Connection, Bucket);
                }
            }
        }
+       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
+          while (!IsListEmpty(&Connection->ShutdownRequest)) {
+            Entry = RemoveHeadList( &Connection->ShutdownRequest );
+            
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+            
+            if (!(Connection->SignalState & SEL_FIN))
+            {
+                /* See if we can satisfy this after the events */
+                if (IsListEmpty(&Connection->SendRequest))
+                {
+                    /* Send queue is empty so we're good to go */
+                    Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
+                }
+                else
+                {
+                    /* We still have to wait */
+                    Status = STATUS_PENDING;
+                }
+            }
+            else
+            {
+                /* We were cancelled by a FIN */
+                Status = STATUS_CANCELLED;
+            }
+            
+            if( Status == STATUS_PENDING ) {
+                InsertHeadList( &Connection->ShutdownRequest, &Bucket->Entry );
+                break;
+            } else {
+                TI_DbgPrint(DEBUG_TCP,
+                            ("Completing shutdown request: %x %x\n",
+                             Bucket->Request, Status));
 
-       ReferenceObject(Connection);
-       if (ClientInfo.Unlocked)
-       {
-           UnlockObjectFromDpcLevel(Connection);
-           KeReleaseSpinLock(&ClientInfo.Lock, ClientInfo.OldIrql);
+                Bucket->Status = Status;
+                Bucket->Information = 0;
+                
+                CompleteBucket(Connection, Bucket);
+            }
+          }
        }
-       else
-       {
-           UnlockObject(Connection, Connection->OldIrql);
-       }
-
-       while ((Entry = ExInterlockedRemoveHeadList(&Connection->CompletionQueue,
-                                                   &Connection->Lock)))
-       {
-           Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
-           Complete = Bucket->Request.RequestNotifyObject;
-
-           Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
-
-           ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
-       }
-
-       if (!ClientInfo.Unlocked)
-       {
-           LockObject(Connection, &OldIrql);
-       }
-       else
-       {
-           KeAcquireSpinLock(&ClientInfo.Lock, &ClientInfo.OldIrql);
-       }
-       DereferenceObject(Connection);
-
-       /* If the socket is dead, remove the reference we added for oskit */
+    
        if (Connection->SignalState & SEL_FIN)
        {
            Connection->SocketContext = NULL;
            DereferenceObject(Connection);
        }
+
+       if (ClientInfo.Unlocked)
+           UnlockObjectFromDpcLevel(Connection);
 }
 
 VOID ConnectionFree(PVOID Object) {
@@ -291,12 +327,12 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     InitializeListHead(&Connection->ListenRequest);
     InitializeListHead(&Connection->ReceiveRequest);
     InitializeListHead(&Connection->SendRequest);
-    InitializeListHead(&Connection->CompletionQueue);
+    InitializeListHead(&Connection->ShutdownRequest);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
 
-    /* Add an extra reference for oskit */
+
     Connection->RefCount = 2;
     Connection->Free = ConnectionFree;
 
@@ -662,23 +698,96 @@ NTSTATUS TCPDisconnect
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PTDI_BUCKET Bucket;
     KIRQL OldIrql;
+    PLIST_ENTRY Entry;
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
     LockObject(Connection, &OldIrql);
 
     if (Flags & TDI_DISCONNECT_RELEASE)
-        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
+    {
+        /* See if we can satisfy this right now */
+        if (IsListEmpty(&Connection->SendRequest))
+        {
+            /* Send queue is empty so we're good to go */
+            Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE));
+            
+            UnlockObject(Connection, OldIrql);
+            
+            return Status;
+        }
+        
+        /* Otherwise we wait for the send queue to be empty */
+    }
 
     if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+    {
+        /* This request overrides any pending graceful disconnects */
+        while (!IsListEmpty(&Connection->ShutdownRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ShutdownRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = STATUS_FILE_CLOSED;
+            
+            CompleteBucket(Connection, Bucket);
+        }
+        
+        /* Also kill any pending reads and writes */
+        while (!IsListEmpty(&Connection->SendRequest))
+        {
+            Entry = RemoveHeadList(&Connection->SendRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = STATUS_FILE_CLOSED;
+            
+            CompleteBucket(Connection, Bucket);
+        }
+        
+        while (!IsListEmpty(&Connection->ReceiveRequest))
+        {
+            Entry = RemoveHeadList(&Connection->ReceiveRequest);
+            
+            Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+            
+            Bucket->Information = 0;
+            Bucket->Status = STATUS_FILE_CLOSED;
+            
+            CompleteBucket(Connection, Bucket);
+        }
+        
+        /* An abort never pends; we just drop everything and complete */
         Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
+            
+        UnlockObject(Connection, OldIrql);
+            
+        return Status;
+    }
+    
+    /* We couldn't complete the request now because we need to wait for outstanding I/O */
+    Bucket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG);
+    if (!Bucket)
+    {
+        UnlockObject(Connection, OldIrql);
+        return STATUS_NO_MEMORY;
+    }
+    
+    Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+    Bucket->Request.RequestContext = Context;
+
+    InsertTailList(&Connection->ShutdownRequest, &Bucket->Entry);
 
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
-    return Status;
+    return STATUS_PENDING;
 }
 
 NTSTATUS TCPClose
@@ -887,7 +996,7 @@ NTSTATUS TCPGetSockAddress
 
 BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
     PLIST_ENTRY Entry;
-    PLIST_ENTRY ListHead[4];
+    PLIST_ENTRY ListHead[5];
     KIRQL OldIrql;
     PTDI_BUCKET Bucket;
     UINT i = 0;
@@ -897,10 +1006,11 @@ BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
     ListHead[1] = &Endpoint->ReceiveRequest;
     ListHead[2] = &Endpoint->ConnectRequest;
     ListHead[3] = &Endpoint->ListenRequest;
+    ListHead[4] = &Endpoint->ShutdownRequest;
 
     LockObject(Endpoint, &OldIrql);
 
-    for( i = 0; i < 4; i++ )
+    for( i = 0; i < 5; i++ )
     {
         for( Entry = ListHead[i]->Flink;
              Entry != ListHead[i];
