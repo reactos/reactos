@@ -22,7 +22,9 @@ add_subdirectory(dsound)
 add_subdirectory(fusion)
 add_subdirectory(gdi32)
 add_subdirectory(gdiplus)
-add_subdirectory(hlink)
+if(NOT MSVC)
+    add_subdirectory(hlink) # FIXME: msvc build.
+endif()
 add_subdirectory(icmp)
 if(NOT MSVC)
     add_subdirectory(imagehlp) # FIXME: msvc build.
@@ -43,9 +45,10 @@ add_subdirectory(msacm32)
 add_subdirectory(mscms)
 add_subdirectory(msctf)
 if(NOT MSVC)
-    add_subdirectory(mshtml) # FIXME: msvc build.
+    # FIXME: msvc build.
+    add_subdirectory(mshtml)
+    add_subdirectory(msi)
 endif()
-add_subdirectory(msi)
 add_subdirectory(mstask)
 add_subdirectory(msvcrt)
 add_subdirectory(msvcrtd)
