@@ -48,7 +48,8 @@ AfdGetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     ASSERT(FCB->DisconnectOptions);
 
-    if (FCB->FilledDisconnectOptions < BufferSize) BufferSize = FCB->FilledDisconnectOptions;
+    if (FCB->FilledDisconnectOptions < BufferSize)
+        BufferSize = FCB->FilledDisconnectOptions;
 
     RtlCopyMemory(Irp->UserBuffer,
                   FCB->DisconnectOptions,
@@ -595,56 +596,42 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 static
 NTSTATUS
-NTAPI
-AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
+DoDisconnect(PAFD_FCB FCB, PIRP CurrentIrp)
 {
-    PFILE_OBJECT FileObject = IrpSp->FileObject;
-    PAFD_FCB FCB = (PAFD_FCB)FileObject->FsContext;
     PAFD_DISCONNECT_INFO DisReq;
     IO_STATUS_BLOCK Iosb;
     PTDI_CONNECTION_INFORMATION ConnectionReturnInfo;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION CurrentIrpSp;
     USHORT Flags = 0;
-
-    if (!SocketAcquireStateLock(FCB))
-        return LostSocket(Irp);
-
-    if (!(DisReq = LockRequest(Irp, IrpSp)))
-	    return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    NTSTATUS Status;
     
-    if ( DisReq->DisconnectType & AFD_DISCONNECT_SEND)
+    CurrentIrpSp = IoGetCurrentIrpStackLocation(CurrentIrp);
+    DisReq = GetLockedData(CurrentIrp, CurrentIrpSp);
+    
+    if (DisReq->DisconnectType & AFD_DISCONNECT_SEND)
 	    Flags |= TDI_DISCONNECT_RELEASE;
-    if ( DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
+    if (DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
        DisReq->DisconnectType & AFD_DISCONNECT_ABORT)
 	    Flags |= TDI_DISCONNECT_ABORT;
-
-    if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
+    
+    Status = TdiBuildNullConnectionInfo(&ConnectionReturnInfo,
+                                        FCB->RemoteAddress->Address[0].AddressType);
+    if (NT_SUCCESS(Status))
     {
-        if (!FCB->ConnectInfo)
-            return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
-
-        ASSERT(FCB->RemoteAddress);
-
-        Status = TdiBuildNullConnectionInfo
-	       ( &ConnectionReturnInfo, FCB->RemoteAddress->Address[0].AddressType );
-
-        if (!NT_SUCCESS(Status))
-	        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
-
         FCB->ConnectInfo->UserData = FCB->DisconnectData;
         FCB->ConnectInfo->UserDataLength = FCB->DisconnectDataSize;
         FCB->ConnectInfo->Options = FCB->DisconnectOptions;
         FCB->ConnectInfo->OptionsLength = FCB->DisconnectOptionsSize;
-
-        Status = TdiDisconnect( FCB->Connection.Object,
-			        &DisReq->Timeout,
-			        Flags,
-			        &Iosb,
-			        NULL,
-			        NULL,
-			        FCB->ConnectInfo,
-			        ConnectionReturnInfo);
-
+        
+        Status = TdiDisconnect(FCB->Connection.Object,
+                               &DisReq->Timeout,
+                               Flags,
+                               &Iosb,
+                               NULL,
+                               NULL,
+                               FCB->ConnectInfo,
+                               ConnectionReturnInfo);
+        
         if (NT_SUCCESS(Status))
         {
             FCB->FilledDisconnectData = MIN(FCB->DisconnectDataSize, ConnectionReturnInfo->UserDataLength);
@@ -654,7 +641,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
                               ConnectionReturnInfo->UserData,
                               FCB->FilledDisconnectData);
             }
-
+            
             FCB->FilledDisconnectOptions = MIN(FCB->DisconnectOptionsSize, ConnectionReturnInfo->OptionsLength);
             if (FCB->FilledDisconnectOptions)
             {
@@ -663,15 +650,92 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
                               FCB->FilledDisconnectOptions);
             }
         }
-
-        ExFreePool( ConnectionReturnInfo );
-
+        
+        ExFreePool(ConnectionReturnInfo);
+        
         if (Flags & TDI_DISCONNECT_RELEASE)
             FCB->PollState |= AFD_EVENT_DISCONNECT;
         else
             FCB->PollState |= AFD_EVENT_ABORT;
-        FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
+        
+        FCB->PollStatus[FD_CLOSE_BIT] = Status;
+        PollReeval(FCB->DeviceExt, FCB->FileObject);
+    }
+    
+    CurrentIrp->IoStatus.Status = Status;
+    CurrentIrp->IoStatus.Information = 0;
+    UnlockRequest(CurrentIrp, CurrentIrpSp);
+    (void)IoSetCancelRoutine(CurrentIrp, NULL);
+    
+    IoCompleteRequest(CurrentIrp, IO_NETWORK_INCREMENT);
+    
+    return Status;
+}
+
+VOID
+RetryDisconnectCompletion(PAFD_FCB FCB)
+{
+    if (IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]))
+    {
+        PIRP CurrentIrp;
+        PLIST_ENTRY CurrentEntry;
+        
+        ASSERT(FCB->RemoteAddress);
+        
+        while (!IsListEmpty(&FCB->PendingIrpList[FUNCTION_DISCONNECT]))
+        {
+            CurrentEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_DISCONNECT]);
+            CurrentIrp = CONTAINING_RECORD(CurrentEntry, IRP, Tail.Overlay.ListEntry);
+            
+            DoDisconnect(FCB, CurrentIrp);
+        }
+    }
+}
+
+static
+NTSTATUS
+NTAPI
+AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = (PAFD_FCB)FileObject->FsContext;
+    PAFD_DISCONNECT_INFO DisReq;
+    NTSTATUS Status = STATUS_SUCCESS;
+    USHORT Flags = 0;
+
+    if (!SocketAcquireStateLock(FCB))
+        return LostSocket(Irp);
+
+    if (!(DisReq = LockRequest(Irp, IrpSp)))
+	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0);
+    
+    if (DisReq->DisconnectType & AFD_DISCONNECT_SEND)
+	    Flags |= TDI_DISCONNECT_RELEASE;
+    if (DisReq->DisconnectType & AFD_DISCONNECT_RECV ||
+        DisReq->DisconnectType & AFD_DISCONNECT_ABORT)
+	    Flags |= TDI_DISCONNECT_ABORT;
+
+    if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
+    {
+        if (!FCB->ConnectInfo)
+            return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+        
+        if (IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) || (Flags & TDI_DISCONNECT_ABORT))
+        {
+            /* Go ahead an execute the disconnect because we're ready for it */
+            Status = DoDisconnect(FCB, Irp);
+            
+            /* DoDisconnect takes care of the IRP */
+            SocketStateUnlock(FCB);
+            
+            return Status;
+        }
+        else
+        {
+            /* We have a graceful disconnect waiting on pending sends to complete */
+            return LeaveIrpUntilLater(FCB, Irp, FUNCTION_DISCONNECT);
+        }
+
     }
     else
     {

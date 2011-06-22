@@ -34,10 +34,10 @@ static
 VOID
 BucketCompletionWorker(PVOID Context)
 {
-    PTDI_BUCKET Bucket = Context;
+    PTDI_BUCKET Bucket = (PTDI_BUCKET)Context;
     PTCP_COMPLETION_ROUTINE Complete;
     
-    Complete = Bucket->Request.RequestNotifyObject;
+    Complete = (PTCP_COMPLETION_ROUTINE)Bucket->Request.RequestNotifyObject;
     
     Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
     
@@ -203,7 +203,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
             DbgPrint("[IP, TCPAcceptEventHandler] Trying to unlock Bucket->AssociatedEndpoint\n");
             UnlockObject(Bucket->AssociatedEndpoint, OldIrql);
 
-            /* sanity assert...this should never be in a LISTEN state */
+            /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT(((struct tcp_pcb*)OldSocketContext)->state == CLOSED);
             /*  free socket context created in FileOpenConnection, as we're using a new
                 one; we free it asynchornously because otherwise we create a dedlock */
@@ -251,6 +251,8 @@ TCPSendEventHandler(void *arg, u16_t space)
         
         TI_DbgPrint(DEBUG_TCP,
                     ("Writing %d bytes to %x\n", SendLen, SendBuffer));
+        DbgPrint("[IP, TCPSendEventHandler] Sending out &d bytes on pcb = 0x%x\n",
+            Connection->SocketContext);
         
         TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
         TI_DbgPrint
@@ -325,10 +327,7 @@ TCPRecvEventHandler(void *arg, struct pbuf *p)
                     ("[IP, TCPRecvEventHandler] Reading %d bytes to %x\n", RecvLen, RecvBuffer));
         
         TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
-        TI_DbgPrint
-        (DEBUG_TCP,
-         ("[IP, TCPRecvEventHandler] Connection->SocketContext: %x\n",
-          Connection->SocketContext));
+        TI_DbgPrint(DEBUG_TCP, ("[IP, TCPRecvEventHandler] Connection->SocketContext: %x\n", Connection->SocketContext));
         TI_DbgPrint(DEBUG_TCP, ("[IP, TCPRecvEventHandler] RecvBuffer: %x\n", RecvBuffer));
         
         RecvLen = MIN(p->tot_len, RecvLen);

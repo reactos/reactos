@@ -208,7 +208,7 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 
-NTSTATUS WarmSocketForConnection( PAFD_FCB FCB )
+NTSTATUS WarmSocketForConnection(PAFD_FCB FCB)
 {
     NTSTATUS Status;
 
@@ -240,18 +240,21 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB )
 
     Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
                                        &FCB->Send.Size);
+
+    DbgPrint("[AFD, MakeSocketIntoConnection] Called\n");
+
     if (!NT_SUCCESS(Status))
         return Status;
 
     FCB->Recv.Size = FCB->Send.Size;
 
     /* Allocate the receive area and start receiving */
-    FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
+    FCB->Recv.Window = (PCHAR)ExAllocatePool(PagedPool, FCB->Recv.Size);
 
     if (!FCB->Recv.Window)
         return STATUS_NO_MEMORY;
 
-    FCB->Send.Window = ExAllocatePool(PagedPool, FCB->Send.Size);
+    FCB->Send.Window = (PCHAR)ExAllocatePool(PagedPool, FCB->Send.Size);
 
     if (!FCB->Send.Window)
     {
@@ -278,6 +281,8 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB )
    FCB->PollStatus[FD_CONNECT_BIT] = STATUS_SUCCESS;
    FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
+   DbgPrint("[AFD, MakeSocketIntoConnection] Leaving\n");
 
    return Status;
 }
@@ -528,7 +533,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	            AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
                 DbgPrint("[AFD, AfdStreamSocketConnect] Queueing IRP %x\n", Irp);
 
-	            if( Status == STATUS_PENDING )
+	            if (Status == STATUS_PENDING)
                 {
                     FCB->State = SOCKET_STATE_CONNECTING;
                     return LeaveIrpUntilLater(FCB, Irp, FUNCTION_CONNECT);

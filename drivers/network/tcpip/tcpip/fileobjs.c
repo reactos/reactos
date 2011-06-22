@@ -384,8 +384,7 @@ NTSTATUS FileOpenAddress(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileCloseAddress(
-  PTDI_REQUEST Request)
+NTSTATUS FileCloseAddress(PTDI_REQUEST Request)
 {
     PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
     KIRQL OldIrql;
@@ -396,8 +395,6 @@ NTSTATUS FileCloseAddress(
         return STATUS_INVALID_PARAMETER;
 
     LockObject(AddrFile, &OldIrql);
-
-    DbgPrint("[TCPIP, FileCloseAddress] AddrFile->RefCount = %d before TCPClose\n", AddrFile->RefCount);
 
     /* We have to close this listener because we started it */
     if ( AddrFile->Listener )
@@ -411,8 +408,6 @@ NTSTATUS FileCloseAddress(
     UnlockObject(AddrFile, OldIrql);
 
     DereferenceObject(AddrFile);
-
-    DbgPrint("[TCPIP, FileCloseAddress] AddrFile->RefCount = %d after TCPClose\n", AddrFile->RefCount);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
     DbgPrint("[TCPIP, FileCloseAddress] Leaving\n");

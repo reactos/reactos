@@ -99,8 +99,9 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_SEND                   2
 #define FUNCTION_PREACCEPT              3
 #define FUNCTION_ACCEPT                 4
-#define FUNCTION_CLOSE                  5
-#define MAX_FUNCTIONS                   6
+#define FUNCTION_DISCONNECT             5
+#define FUNCTION_CLOSE                  6
+#define MAX_FUNCTIONS                   7
 
 #define IN_FLIGHT_REQUESTS              4
 
@@ -304,11 +305,11 @@ PVOID GetLockedData( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 
 /* main.c */
 
-VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
 VOID DestroySocket( PAFD_FCB FCB );
 VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);
+VOID RetryDisconnectCompletion(PAFD_FCB FCB);
 
 /* read.c */
 

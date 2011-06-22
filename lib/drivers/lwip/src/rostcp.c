@@ -65,6 +65,8 @@ InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, u16_t space)
     if (!arg) return ERR_OK;
     
     TCPSendEventHandler(arg, space);
+
+    DbgPrint("[lwIP, InternalSendEventHandler] Done\n");
     
     return ERR_OK;
 }
@@ -75,13 +77,17 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 {
     u32_t len;
 
-    DbgPrint("[lwIP, InternalRecvEventHandler] RecvEvent (0x%x, 0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalRecvEventHandler] RecvEvent (0x%x, pcb = 0x%x, pbuf = 0x%x, err = %d)\n",
         arg, pcb, p, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
     if (!arg)
     {
-        if (p) pbuf_free(p);
+        if (p)
+            pbuf_free(p);
+
+        DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 0 - socket got closed on us\n");
+
         return ERR_OK;
     }
     
@@ -97,6 +103,8 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 
             pbuf_free(p);
 
+            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 1\n");
+
             return ERR_OK;
         }
         else if (len != 0)
@@ -106,12 +114,14 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
             tcp_recved(pcb, len);
             
             /* Possible memory leak of pbuf here? */
+            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 2\n");
             
             return ERR_OK;
         }
         else
         {
             /* We want lwIP to store the pbuf on its queue for later */
+            DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_TIMEOUT\n");
             return ERR_TIMEOUT;
         }
     }
@@ -120,6 +130,8 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
         TCPFinEventHandler(arg, ERR_OK);
         tcp_close(pcb);
     }
+
+    DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 3\n");
     
     return ERR_OK;
 }
@@ -151,7 +163,7 @@ static
 err_t
 InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
 {
-    DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent(0x%x, 0x%x, %d)\n",
+    DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent (0x%x, pcb = 0x%x, err = %d)\n",
         arg, pcb, (unsigned int)err);
     
     /* Make sure the socket didn't get closed */
@@ -159,6 +171,8 @@ InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
         return ERR_OK;
     
     TCPConnectEventHandler(arg, err);
+
+    DbgPrint("[lwIP, InternalConnectEventHandler] Done\n");
     
     return ERR_OK;
 }
@@ -511,7 +525,11 @@ LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
         tcpip_callback_with_block(LibTCPConnectCallback, msg, 1);
         
         if (WaitForEventSafely(&msg->Event))
+        {
             ret = msg->Error;
+            if (pcb->state != CLOSED && ret == ERR_INPROGRESS)
+                ret = ERR_OK;
+        }
         else
             ret = ERR_CLSD;
         

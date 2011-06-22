@@ -15,7 +15,7 @@
 NTSTATUS TCPCheckPeerForAccept(PVOID Context,
                                PTDI_REQUEST_KERNEL Request)
 {
-    struct tcp_pcb *newpcb = Context;
+    struct tcp_pcb *newpcb = (struct tcp_pcb*)Context;
     NTSTATUS Status;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
     PTA_IP_ADDRESS RemoteAddress;
@@ -46,7 +46,7 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
 
 /* This listen is on a socket we keep as internal.  That socket has the same
  * lifetime as the address file */
-NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
+NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     struct ip_addr AddressToBind;
@@ -84,8 +84,9 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog )
     return Status;
 }
 
-BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
-                  PCONNECTION_ENDPOINT Connection )
+BOOLEAN TCPAbortListenForSocket
+(   PCONNECTION_ENDPOINT Listener,
+    PCONNECTION_ENDPOINT Connection)
 {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
@@ -97,7 +98,7 @@ BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     LockObject(Listener, &OldIrql);
 
     ListEntry = Listener->ListenRequest.Flink;
-    while ( ListEntry != &Listener->ListenRequest )
+    while (ListEntry != &Listener->ListenRequest)
     {
         Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
 
@@ -135,10 +136,11 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 
     LockObject(Listener, &OldIrql);
 
-    Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket),
-                                   TDI_BUCKET_TAG );
+    Bucket = (PTDI_BUCKET)ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(*Bucket),
+                                    TDI_BUCKET_TAG );
     
-    if( Bucket )
+    if (Bucket)
     {
         Bucket->AssociatedEndpoint = Connection;
         ReferenceObject(Bucket->AssociatedEndpoint);

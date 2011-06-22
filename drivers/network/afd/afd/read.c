@@ -42,8 +42,7 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB )
 {
     UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
 	
-    return !BytesAvailable &&
-	(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT));
+    return !BytesAvailable && (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_ABORT));
 }
 
 static VOID RefillSocketBuffer( PAFD_FCB FCB )
@@ -78,8 +77,7 @@ TryToSatisfyRecvRequestFromBuffer
     PUINT TotalBytesCopied )
 {
     UINT i, BytesToCopy = 0, FcbBytesCopied = FCB->Recv.BytesUsed,
-		BytesAvailable =
-		FCB->Recv.Content - FCB->Recv.BytesUsed;
+		BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
     PAFD_MAPBUF Map;
     *TotalBytesCopied = 0;
 
@@ -174,8 +172,9 @@ ReceiveActivity(PAFD_FCB FCB, PIRP Irp)
                                     TotalBytesCopied));
             UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
             
-            Status = NextIrp->IoStatus.Status =
-			    FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+            //Status = NextIrp->IoStatus.Status =
+			//    FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+            Status = NextIrp->IoStatus.Status = FCB->PollStatus[FD_CLOSE_BIT];
             NextIrp->IoStatus.Information = 0;
             
             if (NextIrp == Irp)
@@ -185,7 +184,7 @@ ReceiveActivity(PAFD_FCB FCB, PIRP Irp)
 			
             (void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-            FCB->Overread = TRUE;
+            //FCB->Overread = TRUE;
         }
     }
     else
@@ -239,8 +238,8 @@ ReceiveActivity(PAFD_FCB FCB, PIRP Irp)
 		}
     }
 
-    if( FCB->Recv.Content - FCB->Recv.BytesUsed &&
-        IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]) )
+    if (FCB->Recv.Content - FCB->Recv.BytesUsed &&
+        IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]))
     {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
         FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;

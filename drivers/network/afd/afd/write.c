@@ -68,6 +68,8 @@ SendComplete
             (void)IoSetCancelRoutine(NextIrp, NULL);
 	        IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
+
+        RetryDisconnectCompletion(FCB);
 	
         SocketStateUnlock(FCB);
 	    return STATUS_FILE_CLOSED;
@@ -97,6 +99,8 @@ SendComplete
             (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
+
+        RetryDisconnectCompletion(FCB);
 
 		SocketStateUnlock( FCB );
 
@@ -177,6 +181,8 @@ SendComplete
 						  &FCB->SendIrp.Iosb,
 						  SendComplete,
 						  FCB );
+
+        RetryDisconnectCompletion(FCB);
     }
     else
     {
@@ -433,6 +439,8 @@ AfdConnectedSocketWriteData
         AFD_DbgPrint(MID_TRACE,("Dismissing request: %x (%d)\n",
                                 Status, TotalBytesCopied));
     }
+
+    RetryDisconnectCompletion(FCB);
     
     return UnlockAndMaybeComplete(FCB, Status, Irp, TotalBytesCopied);
 }
