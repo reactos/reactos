@@ -440,7 +440,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]));
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]));
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_PREACCEPT]));
-    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_DISCONNECT]))
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_DISCONNECT]));
 
     while (!IsListEmpty(&FCB->PendingConnections))
     {
