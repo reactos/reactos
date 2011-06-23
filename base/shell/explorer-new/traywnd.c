@@ -43,6 +43,7 @@ typedef struct
     const IShellDesktopTrayVtbl *lpVtblShellDesktopTray;
     LONG Ref;
 
+    HTHEME TaskbarTheme;
     HWND hWnd;
     HWND hWndDesktop;
 
@@ -1019,6 +1020,12 @@ ITrayWindowImpl_Destroy(ITrayWindowImpl *This)
         This->TrayBandSite = NULL;
     }
 
+    if(This->TaskbarTheme)
+    {
+        CloseThemeData(This->TaskbarTheme);
+        This->TaskbarTheme = NULL;
+    }
+
     ITrayWindowImpl_Release(ITrayWindow_from_impl(This));
 
     if (InterlockedDecrement(&TrayWndCount) == 0)
@@ -1105,6 +1112,8 @@ ITrayWindowImpl_AlignControls(IN OUT ITrayWindowImpl *This,
     BOOL Horizontal;
     HDWP dwp;
 
+    ITrayWindowImpl_UpdateStartButton(This,
+                                      NULL);
     if (prcClient != NULL)
     {
         rcClient = *prcClient;
@@ -1392,11 +1401,25 @@ Cleanup:
 
     return hBitmap;
 }
+static VOID
+ITrayWindowImpl_UpdateTheme(IN OUT ITrayWindowImpl *This)
+{
+    if(This->TaskbarTheme)
+        CloseThemeData(This->TaskbarTheme);
 
+    if(IsThemeActive())
+        This->TaskbarTheme = OpenThemeData(This->hWnd, L"Taskbar");
+    else
+        This->TaskbarTheme = 0;
+}
 static VOID
 ITrayWindowImpl_Create(IN OUT ITrayWindowImpl *This)
 {
     TCHAR szStartCaption[32];
+
+
+    SetWindowTheme(This->hWnd,L"TaskBar", NULL);
+    ITrayWindowImpl_UpdateTheme(This);
 
     InterlockedIncrement(&TrayWndCount);
 
@@ -1450,6 +1473,7 @@ ITrayWindowImpl_Create(IN OUT ITrayWindowImpl *This)
                                      NULL);
     if (This->hwndStart)
     {
+        SetWindowTheme(This->hwndStart, L"Start", NULL);
         SendMessage(This->hwndStart,
                     WM_SETFONT,
                     (WPARAM)This->hStartBtnFont,
@@ -1530,6 +1554,7 @@ SetStartBtnImage:
     This->TrayBandSite = CreateTrayBandSite(ITrayWindow_from_impl(This),
                                             &This->hwndRebar,
                                             &This->hwndTaskSwitch);
+    SetWindowTheme(This->hwndRebar,L"TaskBar", NULL);
 
     /* Create the tray notification window */
     This->hwndTrayNotify = CreateTrayNotifyWnd(ITrayWindow_from_impl(This),
@@ -1851,6 +1876,105 @@ static const ITrayWindowVtbl ITrayWindowImpl_Vtbl =
     ITrayWindowImpl_Lock
 };
 
+static int ITrayWindowImpl_DrawBackground(IN ITrayWindowImpl *This,
+                                          IN HDC dc)
+{
+    int backoundPart;
+    RECT rect;
+
+    GetClientRect(This->hWnd, &rect);
+    switch (This->Position)
+    {
+        case ABE_LEFT:
+            backoundPart=TBP_BACKGROUNDLEFT;
+            break;
+        case ABE_TOP:
+            backoundPart=TBP_BACKGROUNDTOP;
+            break;
+        case ABE_RIGHT:
+            backoundPart=TBP_BACKGROUNDRIGHT;
+            break;
+        case ABE_BOTTOM:
+        default:
+            backoundPart=TBP_BACKGROUNDBOTTOM;
+            break;
+    }
+    DrawThemeBackground(This->TaskbarTheme, dc, backoundPart, 0, &rect, 0);
+    return 0;
+}
+
+static int ITrayWindowImpl_DrawSizer(IN ITrayWindowImpl *This,
+                                     IN HRGN hRgn)
+{
+    HDC hdc;
+    RECT rect;
+    int backoundPart;
+    
+    GetWindowRect (This->hWnd, &rect);
+    OffsetRect (&rect, -rect.left, -rect.top);    
+    
+    hdc = GetDCEx(This->hWnd, hRgn, DCX_WINDOW|DCX_INTERSECTRGN|DCX_PARENTCLIP);
+
+    switch (This->Position)
+    {
+        case ABE_LEFT:
+            backoundPart=TBP_SIZINGBARLEFT;
+            rect.left=rect.right-GetSystemMetrics(SM_CXSIZEFRAME);
+            break;
+        case ABE_TOP:
+            backoundPart=TBP_SIZINGBARTOP;
+            rect.top=rect.bottom-GetSystemMetrics(SM_CYSIZEFRAME);
+            break;
+        case ABE_RIGHT:
+            backoundPart=TBP_SIZINGBARRIGHT;
+            rect.right=rect.left+GetSystemMetrics(SM_CXSIZEFRAME);
+            break;
+        case ABE_BOTTOM:
+        default:
+            backoundPart=TBP_SIZINGBARBOTTOM;
+            rect.bottom=rect.top+GetSystemMetrics(SM_CYSIZEFRAME);
+            break;
+    }
+    
+    DrawThemeBackground(This->TaskbarTheme, hdc, backoundPart, 0, &rect, 0);
+    
+    ReleaseDC(This->hWnd, hdc);
+    return 0;
+}
+DWORD WINAPI RunFileDlgThread( LPVOID lpParam ) 
+{ 
+    ITrayWindowImpl *This = (ITrayWindowImpl*)lpParam;
+    HANDLE hShell32;
+    RUNFILEDLG RunFileDlg;
+    HWND hwnd;
+    RECT posRect;
+    
+    GetWindowRect(This->hwndStart,&posRect);
+    
+    hwnd = CreateWindowEx(0,
+                          WC_STATIC,
+                          NULL,
+                          WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                          posRect.left,
+                          posRect.top,
+                          posRect.right-posRect.left,
+                          posRect.bottom-posRect.top,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
+    
+    hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+    RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+
+    RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+    
+    DestroyWindow(hwnd);
+
+    return 0; 
+} 
+
+
 static LRESULT CALLBACK
 TrayWndProc(IN HWND hwnd,
             IN UINT uMsg,
@@ -1891,6 +2015,23 @@ TrayWndProc(IN HWND hwnd,
 
         switch (uMsg)
         {
+    
+            case WM_THEMECHANGED:
+                ITrayWindowImpl_UpdateTheme(This);
+                return 0;
+            case WM_NCPAINT:
+                if(!This->TaskbarTheme)
+                    goto DefHandler;
+                return ITrayWindowImpl_DrawSizer(This,
+                                                 (HRGN)wParam);
+            case WM_ERASEBKGND:
+                if(!This->TaskbarTheme)
+                    goto DefHandler;
+                return ITrayWindowImpl_DrawBackground(This,
+                                                      (HDC)wParam);
+            case WM_CTLCOLORBTN:
+                SetBkMode((HDC)wParam, TRANSPARENT);
+                return (int)GetStockObject(HOLLOW_BRUSH);
             case WM_NCHITTEST:
             {
                 RECT rcClient;
@@ -1903,13 +2044,16 @@ TrayWndProc(IN HWND hwnd,
                        clicks on the border. */
                     return HTBORDER;
                 }
-
+                
+                /* 0 is a possible valid response for MapWindowPoints.
+                   While the default error code is 0. An extra check needs to be done */
+                SetLastError(-1);
                 if (GetClientRect(hwnd,
                                   &rcClient) &&
-                    MapWindowPoints(hwnd,
+                    (MapWindowPoints(hwnd,
                                     NULL,
                                     (LPPOINT)&rcClient,
-                                    2) != 0)
+                                    2) != 0 || GetLastError()!=0))
                 {
                     pt.x = (SHORT)LOWORD(lParam);
                     pt.y = (SHORT)HIWORD(lParam);
@@ -2005,7 +2149,7 @@ TrayWndProc(IN HWND hwnd,
             case WM_SIZE:
             {
                 RECT rcClient;
-
+                InvalidateRect(This->hWnd, NULL, TRUE); 
                 if (wParam == SIZE_RESTORED && lParam == 0)
                 {
                     ITrayWindowImpl_ResizeWorkArea(This);
@@ -2350,13 +2494,12 @@ HandleTrayContextMenu:
 
                         case IDM_RUN:
                         {
-                            HANDLE hShell32;
-                            RUNFILEDLG RunFileDlg;
-
-                            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-                            RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
-
-                            RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+                            CreateThread(NULL,                   // default security attributes
+                                         0,                      // use default stack size  
+                                         RunFileDlgThread,       // thread function name
+                                         This,                   // argument to thread function 
+                                         0,                      // use default creation flags 
+                                         NULL);                  // returns the thread identifier 
                             break;
                         }
 
