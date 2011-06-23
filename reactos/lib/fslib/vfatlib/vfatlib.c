@@ -194,6 +194,21 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         Context.Percent = 0;
         Callback (PROGRESS, 0, (PVOID)&Context.Percent);
     }
+    
+    Status = NtFsControlFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             FSCTL_LOCK_VOLUME,
+                             NULL,
+                             0,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WARNING: Failed to lock volume for formatting! Format may fail! (Status: 0x%x)\n", Status);
+    }
 
     if (PartitionInfo.PartitionType == PARTITION_FAT_12)
     {
@@ -234,6 +249,21 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     else
     {
         Status = STATUS_INVALID_PARAMETER;
+    }
+    
+    Status = NtFsControlFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             FSCTL_UNLOCK_VOLUME,
+                             NULL,
+                             0,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to unlock volume (Status: 0x%x)\n", Status);
     }
 
     NtClose(FileHandle);
