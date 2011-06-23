@@ -302,6 +302,18 @@ NTSTATUS TCPConnect
     if (NT_SUCCESS(Status))
     {
         connaddr.addr = RemoteAddress.Address.IPv4Address;
+
+        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+        if( !Bucket )
+        {
+            UnlockObject(Connection, OldIrql);
+            return STATUS_NO_MEMORY;
+        }
+            
+        Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+        Bucket->Request.RequestContext = Context;
+			
+        InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
         
         Status = TCPTranslateError(LibTCPConnect(Connection->SocketContext,
                                                  &connaddr,
@@ -311,7 +323,7 @@ NTSTATUS TCPConnect
 
         if (Status == STATUS_PENDING)
         {
-            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+            /*Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
             if( !Bucket )
             {
                UnlockObject(Connection, OldIrql);
@@ -321,7 +333,7 @@ NTSTATUS TCPConnect
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
 			
-            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );*/
         }
     }
 
@@ -390,6 +402,9 @@ NTSTATUS TCPReceiveData
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Called for %d bytes (on socket %x)\n",
                            ReceiveLength, Connection->SocketContext));
 
+    DbgPrint("[IP, TCPReceiveData] Called for %d bytes (on Connection->SocketContext = 0x%x)\n",
+                           ReceiveLength, Connection->SocketContext);
+
     LockObject(Connection, &OldIrql);
     
     /* Freed in TCPSocketState */
@@ -412,6 +427,7 @@ NTSTATUS TCPReceiveData
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n"));
+    DbgPrint("[IP, TCPReceiveData] Leaving. Status = STATUS_PENDING\n");
 
     return STATUS_PENDING;
 }
@@ -437,6 +453,7 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection = %x\n", Connection));
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Connection->SocketContext = %x\n",
                            Connection->SocketContext));
+    DbgPrint("[IP, TCPSendData] Called\n");
 
     Status = TCPTranslateError(LibTCPSend(Connection->SocketContext,
                                           BufferData,
@@ -475,6 +492,8 @@ NTSTATUS TCPSendData
     UnlockObject(Connection, OldIrql);
 
     TI_DbgPrint(DEBUG_TCP, ("[IP, TCPSendData] Leaving. Status = %x\n", Status));
+
+    DbgPrint("[IP, TCPSendData] Leaving. Status = %x\n", Status);
 
     return Status;
 }

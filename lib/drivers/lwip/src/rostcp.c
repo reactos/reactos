@@ -494,9 +494,10 @@ LibTCPConnectCallback(void *arg)
     tcp_recv(msg->Pcb, InternalRecvEventHandler);
     tcp_sent(msg->Pcb, InternalSendEventHandler);
     
-    msg->Error = tcp_connect(msg->Pcb, msg->IpAddress, ntohs(msg->Port), InternalConnectEventHandler);
-    if (msg->Error == ERR_OK)
-        msg->Error = ERR_INPROGRESS;
+    //if (msg->Error == ERR_OK)
+    //    msg->Error = ERR_INPROGRESS;
+    err_t Error = tcp_connect(msg->Pcb, msg->IpAddress, ntohs(msg->Port), InternalConnectEventHandler);
+    msg->Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
     
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 
@@ -527,8 +528,6 @@ LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
         if (WaitForEventSafely(&msg->Event))
         {
             ret = msg->Error;
-            if (pcb->state != CLOSED && ret == ERR_INPROGRESS)
-                ret = ERR_OK;
         }
         else
             ret = ERR_CLSD;

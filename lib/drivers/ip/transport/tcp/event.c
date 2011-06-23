@@ -41,9 +41,9 @@ BucketCompletionWorker(PVOID Context)
     
     Complete(Bucket->Request.RequestContext, Bucket->Status, Bucket->Information);
     
-    ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
-    
     DereferenceObject(Bucket->AssociatedEndpoint);
+
+    ExFreePoolWithTag(Bucket, TDI_BUCKET_TAG);
 }
 
 static
