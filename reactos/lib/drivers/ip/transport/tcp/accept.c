@@ -39,24 +39,19 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     if( NT_SUCCESS(Status) && Status != STATUS_PENDING ) {
-    RequestAddressReturn = WhoIsConnecting->RemoteAddress;
+        RequestAddressReturn = WhoIsConnecting->RemoteAddress;
 
-    TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n",
-                   RequestAddressReturn, WhoIsConnecting));
+        TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n",
+                               RequestAddressReturn, WhoIsConnecting));
 
         RequestAddressReturn->TAAddressCount = 1;
-    RequestAddressReturn->Address[0].AddressLength = OutAddrLen;
+        RequestAddressReturn->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+        RequestAddressReturn->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+        RequestAddressReturn->Address[0].Address[0].sin_port = OutAddr.sin_port;
+        RequestAddressReturn->Address[0].Address[0].in_addr = OutAddr.sin_addr.s_addr;
+        RtlZeroMemory(RequestAddressReturn->Address[0].Address[0].sin_zero, 8);
 
-        /* BSD uses the first byte of the sockaddr struct as a length.
-         * Since windows doesn't do that we strip it */
-    RequestAddressReturn->Address[0].AddressType =
-        (OutAddr.sin_family >> 8) & 0xff;
-
-    RtlCopyMemory( &RequestAddressReturn->Address[0].Address,
-               ((PCHAR)&OutAddr) + sizeof(USHORT),
-               sizeof(RequestAddressReturn->Address[0].Address[0]) );
-
-    TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
+        TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
     }
 
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
