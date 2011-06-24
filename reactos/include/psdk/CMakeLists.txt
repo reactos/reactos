@@ -1,6 +1,8 @@
 
 add_definitions(-D_MIDL_USE_GUIDDEF_)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 list(APPEND SOURCE
 #   access.idl
     activaut.idl
