@@ -1886,17 +1886,17 @@ static int ITrayWindowImpl_DrawBackground(IN ITrayWindowImpl *This,
     switch (This->Position)
     {
         case ABE_LEFT:
-            backoundPart=TBP_BACKGROUNDLEFT;
+            backoundPart = TBP_BACKGROUNDLEFT;
             break;
         case ABE_TOP:
-            backoundPart=TBP_BACKGROUNDTOP;
+            backoundPart = TBP_BACKGROUNDTOP;
             break;
         case ABE_RIGHT:
-            backoundPart=TBP_BACKGROUNDRIGHT;
+            backoundPart = TBP_BACKGROUNDRIGHT;
             break;
         case ABE_BOTTOM:
         default:
-            backoundPart=TBP_BACKGROUNDBOTTOM;
+            backoundPart = TBP_BACKGROUNDBOTTOM;
             break;
     }
     DrawThemeBackground(This->TaskbarTheme, dc, backoundPart, 0, &rect, 0);
@@ -1918,21 +1918,21 @@ static int ITrayWindowImpl_DrawSizer(IN ITrayWindowImpl *This,
     switch (This->Position)
     {
         case ABE_LEFT:
-            backoundPart=TBP_SIZINGBARLEFT;
-            rect.left=rect.right-GetSystemMetrics(SM_CXSIZEFRAME);
+            backoundPart = TBP_SIZINGBARLEFT;
+            rect.left = rect.right-GetSystemMetrics(SM_CXSIZEFRAME);
             break;
         case ABE_TOP:
-            backoundPart=TBP_SIZINGBARTOP;
-            rect.top=rect.bottom-GetSystemMetrics(SM_CYSIZEFRAME);
+            backoundPart = TBP_SIZINGBARTOP;
+            rect.top = rect.bottom-GetSystemMetrics(SM_CYSIZEFRAME);
             break;
         case ABE_RIGHT:
-            backoundPart=TBP_SIZINGBARRIGHT;
-            rect.right=rect.left+GetSystemMetrics(SM_CXSIZEFRAME);
+            backoundPart = TBP_SIZINGBARRIGHT;
+            rect.right = rect.left+GetSystemMetrics(SM_CXSIZEFRAME);
             break;
         case ABE_BOTTOM:
         default:
-            backoundPart=TBP_SIZINGBARBOTTOM;
-            rect.bottom=rect.top+GetSystemMetrics(SM_CYSIZEFRAME);
+            backoundPart = TBP_SIZINGBARBOTTOM;
+            rect.bottom = rect.top+GetSystemMetrics(SM_CYSIZEFRAME);
             break;
     }
     
@@ -2053,7 +2053,7 @@ TrayWndProc(IN HWND hwnd,
                     (MapWindowPoints(hwnd,
                                     NULL,
                                     (LPPOINT)&rcClient,
-                                    2) != 0 || GetLastError()!=0))
+                                    2) != 0 || GetLastError() != 0))
                 {
                     pt.x = (SHORT)LOWORD(lParam);
                     pt.y = (SHORT)HIWORD(lParam);
