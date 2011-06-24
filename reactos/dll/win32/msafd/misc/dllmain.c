@@ -1986,6 +1986,9 @@ WSPIoctl(IN  SOCKET Handle,
 				*lpcbBytesReturned = sizeof(ULONG);
 				return NO_ERROR;
 			}
+        case SIO_GET_EXTENSION_FUNCTION_POINTER:
+            *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
         default:
 			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
 													Handle,
