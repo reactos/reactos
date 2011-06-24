@@ -325,7 +325,6 @@ NTSTATUS TdiConnect(
  */
 {
 	PDEVICE_OBJECT DeviceObject;
-	NTSTATUS Status;
 
 	AFD_DbgPrint(MAX_TRACE, ("Called\n"));
     
@@ -360,9 +359,9 @@ NTSTATUS TdiConnect(
 					ConnectionCallInfo,     /* Request connection information */
 					ConnectionReturnInfo);  /* Return connection information */
 
-	Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+	TdiCall(*Irp, DeviceObject, NULL, Iosb);
 
-	return Status;
+	return STATUS_PENDING;
 }
 
 
@@ -380,7 +379,6 @@ NTSTATUS TdiAssociateAddressFile(
 {
 	PDEVICE_OBJECT DeviceObject;
 	IO_STATUS_BLOCK Iosb;
-	NTSTATUS Status;
 	KEVENT Event;
 	PIRP Irp;
 
@@ -415,9 +413,7 @@ NTSTATUS TdiAssociateAddressFile(
 							 NULL,
 							 AddressHandle);
 
-	Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-
-	return Status;
+	return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
 NTSTATUS TdiDisassociateAddressFile(
@@ -432,7 +428,6 @@ NTSTATUS TdiDisassociateAddressFile(
 {
 	PDEVICE_OBJECT DeviceObject;
 	IO_STATUS_BLOCK Iosb;
-	NTSTATUS Status;
 	KEVENT Event;
 	PIRP Irp;
 
@@ -465,9 +460,7 @@ NTSTATUS TdiDisassociateAddressFile(
 							 NULL,
 							 NULL);
 
-	Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-
-	return Status;
+	return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
 NTSTATUS TdiListen
@@ -489,7 +482,6 @@ NTSTATUS TdiListen
  */
 {
 	PDEVICE_OBJECT DeviceObject;
-	NTSTATUS Status;
 
 	AFD_DbgPrint(MAX_TRACE, ("Called\n"));
     
@@ -523,9 +515,9 @@ NTSTATUS TdiListen
 				   *RequestConnectionInfo, /* Request connection information */
 				   *ReturnConnectionInfo);  /* Return connection information */
 
-	Status = TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, Iosb);
+	TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, Iosb);
 
-	return Status;
+    return STATUS_PENDING;
 }
 
 
@@ -549,7 +541,6 @@ NTSTATUS TdiSetEventHandler(
 {
 	PDEVICE_OBJECT DeviceObject;
 	IO_STATUS_BLOCK Iosb;
-	NTSTATUS Status;
 	KEVENT Event;
 	PIRP Irp;
 
@@ -587,9 +578,7 @@ NTSTATUS TdiSetEventHandler(
 							Handler,
 							Context);
 
-	Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-
-	return Status;
+	return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
 
@@ -670,7 +659,6 @@ NTSTATUS TdiQueryInformation(
 {
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
-    NTSTATUS Status;
     KEVENT Event;
     PIRP Irp;
 
@@ -705,9 +693,7 @@ NTSTATUS TdiQueryInformation(
 		QueryType,
 		MdlBuffer);
 
-    Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
-
-    return Status;
+    return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
 NTSTATUS TdiQueryInformationEx(
@@ -897,7 +883,6 @@ NTSTATUS TdiSend
   PVOID CompletionContext )
 {
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status = STATUS_SUCCESS;
     PMDL Mdl;
     
     ASSERT(*Irp == NULL);
@@ -960,11 +945,11 @@ NTSTATUS TdiSend
 				 Flags,                  /* Flags */
 				 BufferLength);          /* Length of data */
 
-    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
 
-    return Status;
+    return STATUS_PENDING;
 }
 
 NTSTATUS TdiReceive(
@@ -977,7 +962,6 @@ NTSTATUS TdiReceive(
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT DeviceObject;
     PMDL Mdl;
     
@@ -1028,7 +1012,7 @@ NTSTATUS TdiReceive(
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);
         IoCompleteRequest(*Irp, IO_NO_INCREMENT);
-		*Irp = NULL;
+        *Irp = NULL;
 		_SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
 
@@ -1044,14 +1028,11 @@ NTSTATUS TdiReceive(
 					BufferLength);          /* Length of data */
 
 
-    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
 
-    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n",
-							Status, Iosb->Information));
-
-    return Status;
+    return STATUS_PENDING;
 }
 
 
@@ -1078,7 +1059,6 @@ NTSTATUS TdiReceiveDatagram(
  */
 {
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
     PMDL Mdl;
     
     ASSERT(*Irp == NULL);
@@ -1144,11 +1124,11 @@ NTSTATUS TdiReceiveDatagram(
 		 Addr,
 		 Flags);                 /* Length of data */
 
-    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
 
-    return Status;
+    return STATUS_PENDING;
 }
 
 
@@ -1174,7 +1154,6 @@ NTSTATUS TdiSendDatagram(
  */
 {
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
     PMDL Mdl;
     
     ASSERT(*Irp == NULL);
@@ -1241,11 +1220,11 @@ NTSTATUS TdiSendDatagram(
 		 BufferLength,           /* Bytes to send */
 		 Addr);                  /* Address */
 
-    Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the send completion
        routine. */
 
-    return Status;
+    return STATUS_PENDING;
 }
 
 NTSTATUS TdiDisconnect(
@@ -1258,7 +1237,6 @@ NTSTATUS TdiDisconnect(
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
     PTDI_CONNECTION_INFORMATION ReturnConnectionInfo) {
     PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
     KEVENT Event;
     PIRP Irp;
 
@@ -1300,9 +1278,7 @@ NTSTATUS TdiDisconnect(
 		 RequestConnectionInfo,  /* Indication of who to disconnect */
 		 ReturnConnectionInfo);  /* Indication of who disconnected */
 
-    Status = TdiCall(Irp, DeviceObject, &Event, Iosb);
-
-    return Status;
+    return TdiCall(Irp, DeviceObject, &Event, Iosb);
 }
 
 /* EOF */

@@ -465,23 +465,30 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             TargetAddress->UserDataLength = FCB->ConnectDataSize;
             TargetAddress->Options = FCB->ConnectOptions;
             TargetAddress->OptionsLength = FCB->ConnectOptionsSize;
+        
+        FCB->State = SOCKET_STATE_CONNECTING;
+        
+        AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
+        Status = QueueUserModeIrp( FCB, Irp, FUNCTION_CONNECT );
+        if (Status == STATUS_PENDING)
+        {
+            Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest,
+                                FCB->Connection.Object,
+                                TargetAddress,
+                                FCB->ConnectInfo,
+                                &FCB->ConnectIrp.Iosb,
+                                StreamSocketConnectComplete,
+                                FCB );
+        }
+        
+        if (Status != STATUS_PENDING)
+            FCB->State = SOCKET_STATE_BOUND;
 
-	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest,
-				 FCB->Connection.Object,
-				 TargetAddress,
-				 FCB->ConnectInfo,
-				 &FCB->ConnectIrp.Iosb,
-				 StreamSocketConnectComplete,
-				 FCB );
+        ExFreePool(TargetAddress);
+        
+        SocketStateUnlock(FCB);
 
-            ExFreePool(TargetAddress);
-
-	    AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
-
-	    if( Status == STATUS_PENDING ) {
-                FCB->State = SOCKET_STATE_CONNECTING;
-		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
-            }
+	    return Status;
 	}
 	break;
 

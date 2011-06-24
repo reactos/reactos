@@ -287,12 +287,13 @@ NTSTATUS LostSocket( PIRP Irp ) {
     return Status;
 }
 
-NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
+NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function)
+{
     NTSTATUS Status;
     
     /* Add the IRP to the queue in all cases (so AfdCancelHandler will work properly) */
     InsertTailList( &FCB->PendingIrpList[Function],
-                    &Irp->Tail.Overlay.ListEntry );
+                   &Irp->Tail.Overlay.ListEntry );
     
     /* Acquire the cancel spin lock and check the cancel bit */
     IoAcquireCancelSpinLock(&Irp->CancelIrql);
@@ -319,6 +320,14 @@ NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
         Status = STATUS_CANCELLED;
     }
     
+    return Status;
+}
+
+NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
+    NTSTATUS Status;
+    
+    Status = QueueUserModeIrp(FCB, Irp, Function);
+        
     SocketStateUnlock( FCB );
 
     return Status;
