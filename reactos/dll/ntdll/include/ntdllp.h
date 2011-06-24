@@ -10,6 +10,11 @@
 
 #define LDR_HASH_TABLE_ENTRIES 32
 
+/* LdrpUpdateLoadCount2 flags */
+#define LDRP_UPDATE_REFCOUNT   0x01
+#define LDRP_UPDATE_DEREFCOUNT 0x02
+#define LDRP_UPDATE_PIN        0x03
+
 typedef struct _LDRP_TLS_DATA
 {
     LIST_ENTRY TlsLinks;
@@ -27,10 +32,21 @@ extern BOOLEAN LdrpInLdrInit;
 extern LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 extern BOOLEAN ShowSnaps;
 extern UNICODE_STRING LdrpDefaultPath;
+extern HANDLE LdrpKnownDllObjectDirectory;
+extern ULONG LdrpNumberOfProcessors;
+extern ULONG LdrpFatalHardErrorCount;
+extern PUNICODE_STRING LdrpTopLevelDllBeingLoaded;
+extern PLDR_DATA_TABLE_ENTRY LdrpCurrentDllInitializer;
+extern UNICODE_STRING LdrApiDefaultExtension;
+extern BOOLEAN LdrpLdrDatabaseIsSetup;
+extern ULONG LdrpActiveUnloadCount;
+extern BOOLEAN LdrpShutdownInProgress;
+extern UNICODE_STRING LdrpKnownDllPath;
+extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache;
 
 /* ldrinit.c */
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
-NTSTATUS NTAPI LdrpInitializeThread(IN PCONTEXT Context);
+VOID NTAPI LdrpInitializeThread(IN PCONTEXT Context);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
 NTSTATUS NTAPI LdrpAllocateTls(VOID);
 VOID NTAPI LdrpFreeTls(VOID);
@@ -38,7 +54,7 @@ VOID NTAPI LdrpTlsCallback(PVOID BaseAddress, ULONG Reason);
 BOOLEAN NTAPI LdrpCallDllEntry(PDLLMAIN_FUNC EntryPoint, PVOID BaseAddress, ULONG Reason, PVOID Context);
 NTSTATUS NTAPI LdrpInitializeProcess(PCONTEXT Context, PVOID SystemArgument1);
 VOID NTAPI LdrpInitFailure(NTSTATUS Status);
-
+VOID NTAPI LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry);
 
 /* ldrpe.c */
 NTSTATUS
@@ -79,6 +95,10 @@ LdrpLoadDll(IN BOOLEAN Redirected,
             OUT PVOID *BaseAddress,
             IN BOOLEAN CallInit);
 
+VOID NTAPI
+LdrpUpdateLoadCount2(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+                     IN ULONG Flags);
+
 ULONG NTAPI
 LdrpClearLoadInProgress();
 
@@ -101,6 +121,9 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
 PVOID NTAPI
 LdrpFetchAddressOfEntryPoint(PVOID ImageBase);
 
+BOOLEAN NTAPI
+LdrpFreeUnicodeString(PUNICODE_STRING String);
+
 
 /* FIXME: Cleanup this mess */
 typedef NTSTATUS (NTAPI *PEPFUNC)(PPEB);
@@ -110,13 +133,8 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PIMAGE_NT_HEADERS NTHeaders);
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 			       PHANDLE NTDllSectionHandle);
-BOOLEAN LdrMappedAsDataFile(PVOID *BaseAddress);
 ULONG
 LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
-PEPFUNC LdrPEStartup (PVOID  ImageBase,
-		      HANDLE SectionHandle,
-		      PLDR_DATA_TABLE_ENTRY* Module,
-		      PWSTR FullDosName);
 
 extern HANDLE WindowsApiPort;
 

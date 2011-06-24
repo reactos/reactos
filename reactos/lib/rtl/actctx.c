@@ -2736,6 +2736,10 @@ NTAPI
 RtlAllocateActivationContextStack(IN PVOID *Context)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
+
+    /* FIXME: Check if it's already allocated */
+    //if (*Context) return STATUS_SUCCESS;
+
     ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
     if (!ContextStack)
     {
@@ -2798,7 +2802,16 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
     /* Return pointer to the activation frame */
     return &Frame->Frame;
 #else
-    return NULL;
+
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
+
+    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame->ActivationContext = Context;
+    frame->Flags = 0;
+
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+
+    return STATUS_SUCCESS;
 #endif
 }
 
@@ -2806,7 +2819,6 @@ PRTL_ACTIVATION_CONTEXT_STACK_FRAME
 FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-#if NEW_NTDLL_LOADER
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
     /* find the right frame */
@@ -2820,9 +2832,6 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
 
     return frame;
-#else
-    return NULL;
-#endif
 }
 
 

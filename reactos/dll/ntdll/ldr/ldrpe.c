@@ -100,9 +100,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
 
                     /* Deal with Watcom and other retarded compilers */
                     if (!IatSize)
-                    {
                         IatSize = SectionHeader->SizeOfRawData;
-                    }
 
                     /* Found it, get out */
                     break;
@@ -255,7 +253,7 @@ NTSTATUS
 NTAPI
 LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
                                        IN PLDR_DATA_TABLE_ENTRY LdrEntry,
-                                       IN PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry,
+                                       IN PIMAGE_BOUND_IMPORT_DESCRIPTOR *BoundEntryPtr,
                                        IN PIMAGE_BOUND_IMPORT_DESCRIPTOR FirstEntry)
 {
     LPSTR ImportName = NULL, BoundImportName, ForwarderName;
@@ -264,11 +262,15 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     PLDR_DATA_TABLE_ENTRY DllLdrEntry, ForwarderLdrEntry;
     PIMAGE_BOUND_FORWARDER_REF ForwarderEntry;
+    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry;
     PPEB Peb = NtCurrentPeb();
     ULONG i, IatSize;
 
+    /* Get the pointer to the bound entry */
+    BoundEntry = *BoundEntryPtr;
+
     /* Get the name's VA */
-    BoundImportName = (LPSTR)(BoundEntry + BoundEntry->OffsetModuleName);
+    BoundImportName = (LPSTR)FirstEntry + BoundEntry->OffsetModuleName;
 
     /* Show debug mesage */
     if (ShowSnaps)
@@ -311,7 +313,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         if (ShowSnaps)
         {
             DPRINT1("LDR: %wZ has stale binding to %s\n",
-                    &DllLdrEntry->BaseDllName,
+                    &LdrEntry->BaseDllName,
                     BoundImportName);
         }
 
@@ -324,7 +326,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         if (ShowSnaps)
         {
             DPRINT1("LDR: %wZ has correct binding to %s\n",
-                    &DllLdrEntry->BaseDllName,
+                    &LdrEntry->BaseDllName,
                     BoundImportName);
         }
 
@@ -339,7 +341,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     for (i = 0; i < BoundEntry->NumberOfModuleForwarderRefs; i++)
     {
         /* Get the name */
-        ForwarderName = (LPSTR)(FirstEntry + ForwarderEntry->OffsetModuleName);
+        ForwarderName = (LPSTR)FirstEntry + ForwarderEntry->OffsetModuleName;
 
         /* Show debug message */
         if (ShowSnaps)
@@ -376,7 +378,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             if (ShowSnaps)
             {
                 DPRINT1("LDR: %wZ has stale binding to %s\n",
-                        &ForwarderLdrEntry->BaseDllName,
+                        &LdrEntry->BaseDllName,
                         ForwarderName);
             }
 
@@ -389,7 +391,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             if (ShowSnaps)
             {
                 DPRINT1("LDR: %wZ has correct binding to %s\n",
-                        &ForwarderLdrEntry->BaseDllName,
+                        &LdrEntry->BaseDllName,
                         ForwarderName);
             }
 
@@ -423,7 +425,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             if (!_stricmp(ImportName, BoundImportName)) break;
 
             /* Move to next entry */
-            ImportEntry += 1;
+            ImportEntry++;
         }
 
         /* If we didn't find a name, fail */
@@ -477,7 +479,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
 
 Quickie:
     /* Write where we are now and return */
-    *BoundEntry = *FirstEntry;
+    *BoundEntryPtr = FirstEntry;
     return Status;
 }
 
@@ -496,7 +498,7 @@ LdrpHandleNewFormatImportDescriptors(IN LPWSTR DllPath OPTIONAL,
         /* Parse this descriptor */
         Status = LdrpHandleOneNewFormatImportDescriptor(DllPath,
                                                         LdrEntry,
-                                                        BoundEntry,
+                                                        &BoundEntry,
                                                         FirstEntry);
         if (!NT_SUCCESS(Status)) return Status;
     }
@@ -642,8 +644,35 @@ LdrpNameToOrdinal(LPSTR ImportName,
                   PULONG NameTable,
                   PUSHORT OrdinalTable)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG Start, End, Next;
+    LONG CmpResult;
+
+    /* Use classical binary search to find the ordinal */
+    Start = 0;
+    End = NumberOfNames - 1;
+    while (End >= Start)
+    {
+        /* Next will be exactly between Start and End */
+        Next = (Start + End) >> 1;
+
+        /* Compare this name with the one we need to find */
+        CmpResult = strcmp(ImportName, (PCHAR)((ULONG_PTR)ExportBase + NameTable[Next]));
+
+        /* We found our entry if result is 0 */
+        if (!CmpResult) break;
+
+        /* We didn't find, update our range then */
+        if (CmpResult < 0)
+            End = Next - 1;
+        else if (CmpResult > 0)
+            Start = Next + 1;
+    }
+
+    /* If end is before start, then the search failed */
+    if (End < Start) return -1;
+
+    /* Return found name */
+    return OrdinalTable[Next];
 }
 
 NTSTATUS
@@ -657,10 +686,12 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry = NULL;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     ULONG BoundSize, IatSize;
-DPRINT1("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
+
+    DPRINT("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
+
     /* Set up the Act Ctx */
     ActCtx.Size = sizeof(ActCtx);
-    ActCtx.Frame.Flags = 1;
+    ActCtx.Format = 1;
     RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
     /* Check if we have a manifest prober routine */
@@ -680,7 +711,7 @@ DPRINT1("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
     RtlActivateActivationContextUnsafeFast(&ActCtx,
                                            LdrEntry->EntryPointActivationContext);
 
-    /* Check if we were directed */
+    /* Check if we were redirected */
     if (!(LdrEntry->Flags & LDRP_REDIRECTED))
     {
         /* Get the Bound IAT */
@@ -764,7 +795,9 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     NTSTATUS Status;
     PPEB Peb = RtlGetCurrentPeb();
     PTEB Teb = NtCurrentTeb();
-DPRINT1("LdrpLoadImportModule('%S' '%s' %p %p %p)\n", DllPath, ImportName, DllBase, DataTableEntry, Existing);
+
+    DPRINT("LdrpLoadImportModule('%S' '%s' %p %p %p)\n", DllPath, ImportName, DllBase, DataTableEntry, Existing);
+
     /* Convert import descriptor name to unicode string */
     ImpDescName = &Teb->StaticUnicodeString;
     RtlInitAnsiString(&AnsiString, ImportName);
@@ -788,8 +821,8 @@ DPRINT1("LdrpLoadImportModule('%S' '%s' %p %p %p)\n", DllPath, ImportName, DllBa
 
     /* Map it */
     Status = LdrpMapDll(DllPath,
-                        ImpDescName->Buffer,
                         NULL,
+                        ImpDescName->Buffer,
                         NULL,
                         TRUE,
                         FALSE,
@@ -893,6 +926,12 @@ FailurePath:
         /* Is this a static snap? */
         if (Static)
         {
+            /* Inform the debug log */
+            if (IsOrdinal)
+                DPRINT1("Failed to snap ordinal 0x%x\n", OriginalOrdinal);
+            else
+                DPRINT1("Failed to snap %s\n", ImportName);
+
             /* These are critical errors. Setup a string for the DLL name */
             RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
             RtlAnsiStringToUnicodeString(&HardErrorDllName, &TempString, TRUE);
@@ -943,6 +982,14 @@ FailurePath:
 
             /* Return ordinal error */
             RtlRaiseStatus(STATUS_ORDINAL_NOT_FOUND);
+        }
+        else
+        {
+            /* Inform the debug log */
+            if (IsOrdinal)
+                DPRINT("Non-fatal: Failed to snap ordinal 0x%x\n", OriginalOrdinal);
+            else
+                DPRINT("Non-fatal: Failed to snap %s\n", ImportName);
         }
 
         /* Set this as a bad DLL */

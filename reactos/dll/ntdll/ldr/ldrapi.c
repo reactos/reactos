@@ -16,6 +16,8 @@
 /* GLOBALS *******************************************************************/
 
 LONG LdrpLoaderLockAcquisitonCount;
+BOOLEAN LdrpShowRecursiveLoads;
+UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 
 /* FUNCTIONS *****************************************************************/
 
@@ -247,6 +249,483 @@ Quickie:
  */
 NTSTATUS
 NTAPI
+LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
+           IN PULONG DllCharacteristics OPTIONAL,
+           IN PUNICODE_STRING DllName,
+           OUT PVOID *BaseAddress)
+{
+    WCHAR StringBuffer[MAX_PATH];
+    UNICODE_STRING DllString1, DllString2;
+    BOOLEAN RedirectedDll = FALSE;
+    NTSTATUS Status;
+    ULONG Cookie;
+    PUNICODE_STRING OldTldDll;
+    PTEB Teb = NtCurrentTeb();
+
+    /* Initialize the strings */
+    RtlInitUnicodeString(&DllString2, NULL);
+    DllString1.Buffer = StringBuffer;
+    DllString1.Length = 0;
+    DllString1.MaximumLength = sizeof(StringBuffer);
+
+    /* Check if the SxS Assemblies specify another file */
+    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                      DllName,
+                                                      &LdrApiDefaultExtension,
+                                                      &DllString1,
+                                                      &DllString2,
+                                                      &DllName,
+                                                      NULL,
+                                                      NULL,
+                                                      NULL);
+
+    /* Check success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Let Ldrp know */
+        RedirectedDll = TRUE;
+    }
+    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
+    {
+        /* Unrecoverable SxS failure; did we get a string? */
+        if (DllString2.Buffer)
+        {
+            /* Free the string */
+            RtlFreeUnicodeString(&DllString2);
+            return Status;
+        }
+    }
+
+    /* Lock the loader lock */
+    LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
+
+    /* Check if there's a TLD DLL being loaded */
+    if ((OldTldDll = LdrpTopLevelDllBeingLoaded))
+    {
+        /* This is a recursive load, do something about it? */
+        if (ShowSnaps || LdrpShowRecursiveLoads)
+        {
+            /* Print out debug messages */
+            DPRINT1("[%lx, %lx] LDR: Recursive DLL Load\n",
+                    Teb->RealClientId.UniqueProcess,
+                    Teb->RealClientId.UniqueThread);
+            DPRINT1("[%lx, %lx]      Previous DLL being loaded \"%wZ\"\n",
+                    Teb->RealClientId.UniqueProcess,
+                    Teb->RealClientId.UniqueThread,
+                    OldTldDll);
+            DPRINT1("[%lx, %lx]      DLL being requested \"%wZ\"\n",
+                    Teb->RealClientId.UniqueProcess,
+                    Teb->RealClientId.UniqueThread,
+                    DllName);
+
+            /* Was it initializing too? */
+            if (!LdrpCurrentDllInitializer)
+            {
+                DPRINT1("[%lx, %lx] LDR: No DLL Initializer was running\n",
+                        Teb->RealClientId.UniqueProcess,
+                        Teb->RealClientId.UniqueThread);
+            }
+            else
+            {
+                DPRINT1("[%lx, %lx]      DLL whose initializer was currently running \"%wZ\"\n",
+                        Teb->ClientId.UniqueProcess,
+                        Teb->ClientId.UniqueThread,
+                        &LdrpCurrentDllInitializer->BaseDllName);
+            }
+        }
+    }
+
+    /* Set this one as the TLD DLL being loaded*/
+    LdrpTopLevelDllBeingLoaded = DllName;
+
+    /* Load the DLL */
+    Status = LdrpLoadDll(RedirectedDll,
+                         SearchPath,
+                         DllCharacteristics,
+                         DllName,
+                         BaseAddress,
+                         TRUE);
+
+    /* Set it to success just to be sure */
+    Status = STATUS_SUCCESS;
+
+    /* Restore the old TLD DLL */
+    LdrpTopLevelDllBeingLoaded = OldTldDll;
+
+    /* Release the lock */
+    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+
+    /* Do we have a redirect string? */
+    if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
+
+    /* Return */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrFindEntryForAddress(PVOID Address,
+                       PLDR_DATA_TABLE_ENTRY *Module)
+{
+    PLIST_ENTRY ListHead, NextEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PIMAGE_NT_HEADERS NtHeader;
+    PPEB_LDR_DATA Ldr = NtCurrentPeb()->Ldr;
+    ULONG_PTR DllBase, DllEnd;
+
+    DPRINT("LdrFindEntryForAddress(Address %p)\n", Address);
+
+    /* Nothing to do */
+    if (!Ldr) return STATUS_NO_MORE_ENTRIES;
+
+    /* Loop the module list */
+    ListHead = &Ldr->InMemoryOrderModuleList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the entry and NT Headers */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
+        if ((NtHeader = RtlImageNtHeader(LdrEntry->DllBase)))
+        {
+            /* Get the Image Base */
+            DllBase = (ULONG_PTR)LdrEntry->DllBase;
+            DllEnd = DllBase + NtHeader->OptionalHeader.SizeOfImage;
+
+            /* Check if they match */
+            if (((ULONG_PTR)Address >= DllBase) &&
+                ((ULONG_PTR)Address < DllEnd))
+            {
+                /* Return it */
+                *Module = LdrEntry;
+                return STATUS_SUCCESS;
+            }
+
+            /* Next Entry */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+
+    /* Nothing found */
+    return STATUS_NO_MORE_ENTRIES;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrGetDllHandleEx(IN ULONG Flags,
+                  IN PWSTR DllPath OPTIONAL,
+                  IN PULONG DllCharacteristics OPTIONAL,
+                  IN PUNICODE_STRING DllName,
+                  OUT PVOID *DllHandle OPTIONAL)
+{
+    NTSTATUS Status = STATUS_DLL_NOT_FOUND;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    UNICODE_STRING RedirectName, DllString1;
+    UNICODE_STRING RawDllName;
+    PUNICODE_STRING pRedirectName = &RedirectName;
+    PUNICODE_STRING CompareName;
+    PWCHAR p1, p2, p3;
+    BOOLEAN Locked = FALSE;
+    BOOLEAN RedirectedDll = FALSE;
+    ULONG Cookie;
+    ULONG LoadFlag;
+
+    /* Initialize the strings */
+    RtlInitUnicodeString(&DllString1, NULL);
+    RtlInitUnicodeString(&RawDllName, NULL);
+    RedirectName = *DllName;
+
+    /* Clear the handle */
+    if (DllHandle) *DllHandle = NULL;
+
+    /* Check for a valid flag */
+    if ((Flags & ~3) || (!DllHandle && !(Flags & 2)))
+    {
+        DPRINT1("Flags are invalid or no DllHandle given\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* If not initializing */
+    if (!LdrpInLdrInit)
+    {
+        /* Acquire the lock */
+        Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        Locked = TRUE;
+    }
+
+    /* Check if the SxS Assemblies specify another file */
+    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                      pRedirectName,
+                                                      &LdrApiDefaultExtension,
+                                                      NULL,
+                                                      &DllString1,
+                                                      &pRedirectName,
+                                                      NULL,
+                                                      NULL,
+                                                      NULL);
+
+    /* Check success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Let Ldrp know */
+        RedirectedDll = TRUE;
+    }
+    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
+    {
+        /* Unrecoverable SxS failure; */
+        goto Quickie;
+    }
+
+    /* Use the cache if we can */
+    if (LdrpGetModuleHandleCache)
+    {
+        /* Check if we were redirected */
+        if (RedirectedDll)
+        {
+            /* Check the flag */
+            if (LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED)
+            {
+                /* Use the right name */
+                CompareName = &LdrpGetModuleHandleCache->FullDllName;
+            }
+            else
+            {
+                goto DontCompare;
+            }
+        }
+        else
+        {
+            /* Check the flag */
+            if (!(LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED))
+            {
+                /* Use the right name */
+                CompareName = &LdrpGetModuleHandleCache->BaseDllName;
+            }
+            else
+            {
+                goto DontCompare;
+            }
+        }
+
+        /* Check if the name matches */
+        if (RtlEqualUnicodeString(pRedirectName,
+                                  CompareName,
+                                  TRUE))
+        {
+            /* Skip the rest */
+            LdrEntry = LdrpGetModuleHandleCache;
+
+            /* Return success */
+            Status = STATUS_SUCCESS;
+
+            goto FoundEntry;
+        }
+    }
+
+DontCompare:
+    /* Find the name without the extension */
+    p1 = pRedirectName->Buffer;
+    p3 = &p1[pRedirectName->Length / sizeof(WCHAR)];
+StartLoop:
+    p2 = NULL;
+    while (p1 != p3)
+    {
+        if (*p1++ == L'.')
+        {
+            p2 = p1;
+        }
+        else if (*p1 == L'\\')
+        {
+            goto StartLoop;
+        }
+    }
+
+    /* Check if no extension was found or if we got a slash */
+    if (!p2 || *p2 == L'\\' || *p2 == L'/')
+    {
+        /* Check that we have space to add one */
+        if (pRedirectName->Length + LdrApiDefaultExtension.Length >= MAXLONG)
+        {
+            /* No space to add the extension */
+            return STATUS_NAME_TOO_LONG;
+        }
+
+        /* Setup the string */
+        RawDllName.MaximumLength = pRedirectName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL);
+        RawDllName.Length = RawDllName.MaximumLength - sizeof(UNICODE_NULL);
+        RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            0,
+                                            RawDllName.MaximumLength);
+
+        /* Copy the buffer */
+        RtlMoveMemory(RawDllName.Buffer,
+                      pRedirectName->Buffer,
+                      pRedirectName->Length);
+
+        /* Add extension */
+        RtlMoveMemory((PVOID)((ULONG_PTR)RawDllName.Buffer + pRedirectName->Length),
+                      LdrApiDefaultExtension.Buffer,
+                      LdrApiDefaultExtension.Length);
+
+        /* Null terminate */
+        RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+    else
+    {
+        /* Check if there's something in the name */
+        if (pRedirectName->Length)
+        {
+            /* Check and remove trailing period */
+            if (pRedirectName->Buffer[(pRedirectName->Length - 2) /
+                sizeof(WCHAR)] == '.')
+            {
+                /* Decrease the size */
+                pRedirectName->Length -= sizeof(WCHAR);
+            }
+        }
+
+        /* Setup the string */
+        RawDllName.MaximumLength = pRedirectName->Length + sizeof(WCHAR);
+        RawDllName.Length = pRedirectName->Length;
+        RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            0,
+                                            RawDllName.MaximumLength);
+
+        /* Copy the buffer */
+        RtlMoveMemory(RawDllName.Buffer,
+                      pRedirectName->Buffer,
+                      pRedirectName->Length);
+
+        /* Null terminate */
+        RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* Display debug string */
+    if (ShowSnaps)
+    {
+        DPRINT1("LDR: LdrGetDllHandle, searching for %wZ from %ws\n",
+                &RawDllName,
+                DllPath ? ((ULONG_PTR)DllPath == 1 ? L"" : DllPath) : L"");
+    }
+
+    /* Do the lookup */
+    if (LdrpCheckForLoadedDll(DllPath,
+                              &RawDllName,
+                              ((ULONG_PTR)DllPath == 1) ? TRUE : FALSE,
+                              RedirectedDll,
+                              &LdrEntry))
+    {
+        /* Update cached entry */
+        LdrpGetModuleHandleCache = LdrEntry;
+
+        /* Return success */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Make sure to NULL this */
+        LdrEntry = NULL;
+    }
+FoundEntry:
+    DPRINT("Got LdrEntry->BaseDllName %wZ\n", LdrEntry ? &LdrEntry->BaseDllName : NULL);
+
+    /* Check if we got an entry */
+    if (LdrEntry)
+    {
+        /* Check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* Check if the DLL is locked */
+            if (LdrEntry->LoadCount != -1)
+            {
+                /* Check what flag we got */
+                if (!(Flags & 1))
+                {
+                    /* Check what to do with the load count */
+                    if (Flags & 2)
+                    {
+                        /* Pin it */
+                        LdrEntry->LoadCount = -1;
+                        LoadFlag = LDRP_UPDATE_PIN;
+                    }
+                    else
+                    {
+                        /* Increase the load count */
+                        LdrEntry->LoadCount++;
+                        LoadFlag = LDRP_UPDATE_REFCOUNT;
+                    }
+
+                    /* Update the load count now */
+                    LdrpUpdateLoadCount2(LdrEntry, LoadFlag);
+                    LdrpClearLoadInProgress();
+                }
+            }
+
+            /* Check if the caller is requesting the handle */
+            if (DllHandle) *DllHandle = LdrEntry->DllBase;
+        }
+    }
+Quickie:
+    /* Free string if needed */
+    if (DllString1.Buffer) RtlFreeUnicodeString(&DllString1);
+
+    /* Free the raw DLL Name if needed */
+    if (RawDllName.Buffer)
+    {
+        /* Free the heap-allocated buffer */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RawDllName.Buffer);
+        RawDllName.Buffer = NULL;
+    }
+
+    /* Release lock */
+    if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+
+    /* Return */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
+                IN PULONG DllCharacteristics OPTIONAL,
+                IN PUNICODE_STRING DllName,
+                OUT PVOID *DllHandle)
+{
+    /* Call the newer API */
+    return LdrGetDllHandleEx(TRUE,
+                             DllPath,
+                             DllCharacteristics,
+                             DllName,
+                             DllHandle);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrGetProcedureAddress(IN PVOID BaseAddress,
+                       IN PANSI_STRING Name,
+                       IN ULONG Ordinal,
+                       OUT PVOID *ProcedureAddress)
+{
+    /* Call the internal routine and tell it to execute DllInit */
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
                               IN PLDR_CALLBACK Callback,
                               IN PVOID CallbackContext,
@@ -373,21 +852,6 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
     /* Return status */
     return !Result ? STATUS_IMAGE_CHECKSUM_MISMATCH : Status;
 }
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-LdrGetProcedureAddress_(IN PVOID BaseAddress,
-                       IN PANSI_STRING Name,
-                       IN ULONG Ordinal,
-                       OUT PVOID *ProcedureAddress)
-{
-    /* Call the internal routine and tell it to execute DllInit */
-    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
-}
-
 
 NTSTATUS
 NTAPI
