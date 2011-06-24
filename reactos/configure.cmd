@@ -18,6 +18,7 @@ if defined ROS_ARCH (
     )
     set BUILD_ENVIRONMENT=WDK
     set USE_NMAKE=1
+    set USE_WDK_HEADERS=0
     echo Detected DDK/WDK for %DDK_TARGET_OS%-%ARCH%
 )else if defined VCINSTALLDIR (
 :: VS command prompt does not put this in enviroment vars
@@ -118,7 +119,7 @@ if EXIST CMakeCache.txt (
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G "MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else if defined USE_NMAKE (
-    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
         cmake -G "Visual Studio 8 2005 Win64" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%

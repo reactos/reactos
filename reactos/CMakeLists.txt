@@ -152,19 +152,36 @@ else()
     # Activate language support for resource files
     enable_language(RC)
 
-    include_directories(
-        include
-        include/psdk
-        include/dxsdk
-        ${REACTOS_BINARY_DIR}/include
-        ${REACTOS_BINARY_DIR}/include/dxsdk
-        ${REACTOS_BINARY_DIR}/include/psdk
-        ${REACTOS_BINARY_DIR}/include/reactos
-        include/crt
-        include/ddk
-        include/ndk
-        include/reactos
-        include/reactos/libs)
+    if(MSVC AND USE_WDK_HEADERS)
+        include_directories(
+            include
+            $ENV{SDK_INC_PATH}
+            include/dxsdk
+            ${REACTOS_BINARY_DIR}/include
+            ${REACTOS_BINARY_DIR}/include/dxsdk
+            ${REACTOS_BINARY_DIR}/include/psdk
+            ${REACTOS_BINARY_DIR}/include/reactos
+            $ENV{CRT_INC_PATH}
+            $ENV{DDK_INC_PATH}
+            include/ndk
+            include/reactos
+            include/reactos/libs)
+    else()
+        include_directories(
+            include
+            include/psdk
+            include/dxsdk
+            ${REACTOS_BINARY_DIR}/include
+            ${REACTOS_BINARY_DIR}/include/dxsdk
+            ${REACTOS_BINARY_DIR}/include/psdk
+            ${REACTOS_BINARY_DIR}/include/reactos
+            include/crt
+            include/ddk
+            include/ndk
+            include/reactos
+            include/reactos/libs)
+    endif()
+    
 
     if(ARCH MATCHES arm)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
