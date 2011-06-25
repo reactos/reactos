@@ -1,12 +1,8 @@
 
 add_subdirectory(arp)
-if(NOT MSVC)
-    add_subdirectory(dwnl) # FIXME: fix msvc build
-endif()
+add_subdirectory(dwnl)
 add_subdirectory(finger)
-if(NOT MSVC)
-    add_subdirectory(ftp) # FIXME: fix msvc build
-endif()
+add_subdirectory(ftp)
 add_subdirectory(ipconfig)
 add_subdirectory(net)
 add_subdirectory(netstat)
