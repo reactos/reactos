@@ -311,10 +311,16 @@ VOID LoadReactOSSetup2(VOID)
     /* Load all referenced DLLs for kernel, HAL and kdcom.dll */
     strcpy(SearchPath, BootPath);
     strcat(SearchPath, "system32\\");
-    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
-    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
+    Status = WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
+    Status &= WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
     if (KdComDTE)
-        WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
+        Status &= WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
+
+    if (!Status)
+    {
+        UiMessageBox("Error loading imported dll.");
+        return;
+    }
 
     /* Load NLS data, they are in system32 */
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, SearchPath);
