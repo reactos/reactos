@@ -503,7 +503,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom < 8000))
-                    zoomTo(zoom * 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
+                    zoomTo(zoom * 2, LOWORD(lParam), HIWORD(lParam));
             }
             break;
 
@@ -524,7 +524,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom > 125))
-                    zoomTo(zoom / 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
+                    zoomTo(zoom / 2, LOWORD(lParam), HIWORD(lParam));
             }
             break;
 
@@ -589,8 +589,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             if (hwnd == hImageArea)
             {
-                short xNow = (short)LOWORD(lParam) * 1000 / zoom;
-                short yNow = (short)HIWORD(lParam) * 1000 / zoom;
+                LONG xNow = LOWORD(lParam) * 1000 / zoom;
+                LONG yNow = HIWORD(lParam) * 1000 / zoom;
                 if ((!drawing) || (activeTool <= TOOL_AIRBRUSH))
                 {
                     TRACKMOUSEEVENT tme;
@@ -598,7 +598,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (activeTool == TOOL_ZOOM)
                     {
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
-                        drawZoomFrame((short)LOWORD(lParam), (short)HIWORD(lParam));
+                        drawZoomFrame(LOWORD(lParam), HIWORD(lParam));
                     }
 
                     tme.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -617,8 +617,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (drawing)
                 {
                     /* values displayed in statusbar */
-                    short xRel = xNow - startX;
-                    short yRel = yNow - startY;
+                    LONG xRel = xNow - startX;
+                    LONG yRel = yNow - startY;
                     /* freesel, rectsel and text tools always show numbers limited to fit into image area */
                     if ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_TEXT))
                     {

@@ -43,10 +43,10 @@ int undoSteps = 0;
 int redoSteps = 0;
 BOOL imageSaved = TRUE;
 
-short startX;
-short startY;
-short lastX;
-short lastY;
+LONG startX;
+LONG startY;
+LONG lastX;
+LONG lastY;
 int lineWidth = 1;
 int shapeStyle = 0;
 int brushStyle = 0;
