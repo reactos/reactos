@@ -1465,8 +1465,9 @@ QSI_DEF(SystemExceptionInformation)
     PSYSTEM_EXCEPTION_INFORMATION ExceptionInformation =
         (PSYSTEM_EXCEPTION_INFORMATION)Buffer;
     PKPRCB Prcb;
-    ULONG i, AlignmentFixupCount = 0, ExceptionDispatchCount = 0;
+    ULONG AlignmentFixupCount = 0, ExceptionDispatchCount = 0;
     ULONG FloatingEmulationCount = 0, ByteWordEmulationCount = 0;
+    CHAR i;
 
     /* Check size of a buffer, it must match our expectations */
     if (sizeof(SYSTEM_EXCEPTION_INFORMATION) != Size)
@@ -1523,8 +1524,9 @@ QSI_DEF(SystemContextSwitchInformation)
 {
     PSYSTEM_CONTEXT_SWITCH_INFORMATION ContextSwitchInformation =
         (PSYSTEM_CONTEXT_SWITCH_INFORMATION)Buffer;
-    ULONG ContextSwitches, i;
+    ULONG ContextSwitches;
     PKPRCB Prcb;
+    CHAR i;
 
     /* Check size of a buffer, it must match our expectations */
     if (sizeof(SYSTEM_CONTEXT_SWITCH_INFORMATION) != Size)

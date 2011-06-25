@@ -205,7 +205,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
             /* Check if it was because we were low in memory
              * If yes, then ignore, that's normal
              */
-            if (InterlockedDecrement(&(Lock->Dbg.LowMemoryCount) < 0))
+            if (InterlockedDecrement(&(Lock->Dbg.LowMemoryCount)) < 0)
             {
                 /* Otherwise signal the issue, it shouldn't happen */
                 InterlockedIncrement(&(Lock->Dbg.LowMemoryCount));

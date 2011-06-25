@@ -13,8 +13,8 @@
 #include <debug.h>
 
 /* Macros for reading resource flags */
-#define IsExclusiveWaiting(r)   (r->NumberOfExclusiveWaiters)
-#define IsSharedWaiting(r)      (r->NumberOfSharedWaiters)
+#define IsExclusiveWaiting(r)   (r->NumberOfExclusiveWaiters > 0)
+#define IsSharedWaiting(r)      (r->NumberOfSharedWaiters > 0)
 #define IsOwnedExclusive(r)     (r->Flag & ResourceOwnedExclusive)
 #define IsBoostAllowed(r)       (!(r->Flag & ResourceHasDisabledPriorityBoost))
 
