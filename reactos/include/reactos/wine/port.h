@@ -57,19 +57,19 @@
 #  endif
 #endif
 
-#ifndef HAVE_MODE_T
+#if !defined(HAVE_MODE_T) && !defined(_MODE_T)
 typedef int mode_t;
 #endif
-#ifndef HAVE_OFF_T
+#if !defined(HAVE_OFF_T) && !defined(_OFF_T)
 typedef long off_t;
 #endif
-#ifndef HAVE_PID_T
+#if !defined(HAVE_PID_T) && !defined(_PID_T)
 typedef int pid_t;
 #endif
-#ifndef HAVE_SIZE_T
+#if !defined(HAVE_SIZE_T) && !defined(_SIZE_T)
 typedef unsigned int size_t;
 #endif
-#ifndef HAVE_SSIZE_T
+#if !defined(HAVE_SSIZE_T) && !defined(_SSIZE_T)
 typedef int ssize_t;
 #endif
 //#ifndef HAVE_SOCKLEN_T
