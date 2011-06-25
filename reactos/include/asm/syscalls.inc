@@ -11,7 +11,7 @@ ENDM
 MACRO(STUBCODE_K, SyscallId, StackBytes)
     mov eax, SyscallId
     lea edx, [esp + 4]
-    pushf
+    pushfd
     push KGDT_R0_CODE
     call _KiSystemService
     ret StackBytes

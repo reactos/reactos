@@ -329,7 +329,7 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_EFLAGS)
 
         /* Restore EFLAGS */
-        popf
+        popfd
 
     endif
 
