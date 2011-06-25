@@ -807,6 +807,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     OpenClipboard(hMainWnd);
                     if (GetClipboardData(CF_BITMAP) != NULL)
                     {
+                        HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
+                        SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
+                        SendMessage(hwnd, WM_COMMAND, ID_RECTSEL, 0);
+
                         DeleteObject(SelectObject(hSelDC, hSelBm = CopyImage(GetClipboardData(CF_BITMAP),
                                                                              IMAGE_BITMAP, 0, 0,
                                                                              LR_COPYRETURNORG)));
