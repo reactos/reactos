@@ -148,7 +148,7 @@ MempSetupPaging(IN ULONG StartPage,
 	ULONG Entry, Page;
 
 	//Print(L"MempSetupPaging: SP 0x%X, Number: 0x%X\n", StartPage, NumberOfPages);
-	
+
 	// HACK
 	if (StartPage+NumberOfPages >= 0x80000)
 	{
@@ -487,13 +487,13 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 		"1:\n");
 #elif defined(_MSC_VER)
 	/* We can't express the above in MASM so we use this far return instead */
-	DbgPrint("WinLdrSetProcessorContext: Performing untested far-return\n");
-	__asm {
+	__asm
+	{
 		push 8
 		push offset resume
 		retf
 		resume:
-		};
+	};
 #else
 #error
 #endif

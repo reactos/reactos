@@ -123,7 +123,7 @@ SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPC
     do
     {
         if (InfGetDataField(&InfContext, 7, &Media) &&
-            InfGetDataField(&InfContext, 0, &DriverName) && 
+            InfGetDataField(&InfContext, 0, &DriverName) &&
             InfGetDataField(&InfContext, 13, &dirIndex))
         {
             if ((strcmp(Media, "x") == 0) &&
@@ -137,7 +137,7 @@ SetupLdrScanBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPC
                 swprintf(ImagePathW, L"%S", ImagePath);
                 wcscat(ImagePathW, L"\\");
                 wcscat(ImagePathW, ServiceName);
-                
+
                 /* Remove .sys extension */
                 ServiceName[wcslen(ServiceName) - 4] = 0;
 
@@ -310,12 +310,7 @@ VOID LoadReactOSSetup2(VOID)
 
     /* Load all referenced DLLs for kernel, HAL and kdcom.dll */
     strcpy(SearchPath, BootPath);
-    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
-    WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
-    if (KdComDTE)
-        WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KdComDTE);
-    /* In system32 too */
-    strcpy(SearchPath + strlen(BootPath), "system32\\");
+    strcat(SearchPath, "system32\\");
     WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, KernelDTE);
     WinLdrScanImportDescriptorTable(LoaderBlock, SearchPath, HalDTE);
     if (KdComDTE)
