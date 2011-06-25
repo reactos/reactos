@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(opengl32.dll opengl32.spec)
+spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     font.c

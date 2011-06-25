@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(traffic.dll traffic.spec)
+spec2def(traffic.dll traffic.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     traffic_main.c

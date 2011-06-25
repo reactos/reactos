@@ -221,68 +221,86 @@ endif()
 
 macro(add_importlib_target _exports_file)
 
-    get_filename_component(_name ${_exports_file} NAME_WE)
-    get_filename_component(_extension ${_exports_file} EXT)
-    get_target_property(_suffix ${_name} SUFFIX)
-    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
-        get_target_property(_type ${_name} TYPE)
-        if(${_type} MATCHES EXECUTABLE)
-            set(_suffix ".exe")
-        else()
-            set(_suffix ".dll")
-        endif()
-    endif()
+    # get_filename_component(_name ${_exports_file} NAME_WE)
+    # get_filename_component(_extension ${_exports_file} EXT)
+    # get_target_property(_suffix ${_name} SUFFIX)
+    # if(${_suffix} STREQUAL "_suffix-NOTFOUND")
+        # get_target_property(_type ${_name} TYPE)
+        # if(${_type} MATCHES EXECUTABLE)
+            # set(_suffix ".exe")
+        # else()
+            # set(_suffix ".dll")
+        # endif()
+    # endif()
 
-    if (${_extension} STREQUAL ".spec")
+    # if (${_extension} STREQUAL ".spec")
 
-        # Normal importlib creation
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+        # # Normal importlib creation
+        # add_custom_command(
+            # OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            # COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            # COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            # DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
-        # Delayed importlib creation
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+        # # Delayed importlib creation
+        # add_custom_command(
+            # OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            # COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+            # COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            # DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
-    elseif(${_extension} STREQUAL ".def")
-        message("Use of def files for import libs is deprecated: ${_exports_file}")
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
-    else()
-        message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
-    endif()
+    # elseif(${_extension} STREQUAL ".def")
+        # message("Use of def files for import libs is deprecated: ${_exports_file}")
+        # add_custom_command(
+            # OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            # COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            # DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+        # add_custom_command(
+            # OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            # COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            # DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
+    # else()
+        # message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
+    # endif()
 
-    # Normal importlib target
-    add_custom_target(
-        lib${_name}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
-    # Delayed importlib target
-    add_custom_target(
-        lib${_name}_delayed
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a)
+    # # Normal importlib target
+    # add_custom_target(
+        # lib${_name}
+        # DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
+    # # Delayed importlib target
+    # add_custom_target(
+        # lib${_name}_delayed
+        # DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a)
 
 endmacro()
 
 macro(spec2def _dllname _spec_file)
+    cmake_parse_arguments(__s2d "ADD_IMPORTLIB;GENERATE_STUBS" "" "" ${ARGN})
     get_filename_component(_file ${_spec_file} NAME_WE)
+    list(APPEND __output ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+    list(APPEND __args -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+    #Generate stubs only if needed
+    if(__s2d_GENERATE_STUBS)
+        list(APPEND __output ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
+        list(APPEND __args -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
+    endif()
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        OUTPUT ${__output}
+        COMMAND native-spec2def ${__args} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
+        PROPERTIES EXTERNAL_OBJECT TRUE)
+    if(__s2d_ADD_IMPORTLIB)
+        get_filename_component(_name ${_dllname} NAME_WE)
+        add_custom_target(lib${_name}
+            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+        add_custom_target(lib${_name}_delayed
+            COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --kill-at --output-delaylib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+    endif()
+    
 endmacro()
 
 macro(macro_mc FILE)
@@ -316,20 +334,42 @@ macro(_PCH_GET_COMPILE_FLAGS _target_name _out_compile_flags _header_filename)
             list(APPEND ${_out_compile_flags} -D${item})
         endforeach()
     endif()
+	
+	if(IS_CPP)
+		list(APPEND ${_out_compile_flags} ${CMAKE_CXX_FLAGS})
+	else()
+		list(APPEND ${_out_compile_flags} ${CMAKE_C_FLAGS})
+	endif()
 
 	separate_arguments(${_out_compile_flags})
 endmacro()
 
 macro(add_pch _target_name _FILE)
-	#set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
-	#get_filename_component(_basename ${_FILE} NAME)
-    #set(_gch_filename ${_basename}.gch)
-    #_PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+if(__some_non_existent_variable)
+	set(_header_filename ${CMAKE_CURRENT_SOURCE_DIR}/${_FILE})
+	get_filename_component(_basename ${_FILE} NAME)
+    set(_gch_filename ${_basename}.gch)
+    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+	
+	if(IS_CPP)
+		set(__lang CXX)
+		set(__compiler ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1})
+	else()
+		set(__lang C)
+		set(__compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1})
+	endif()
 
-    #add_custom_command(OUTPUT ${_gch_filename} COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args} DEPENDS ${_header_filename})
-	#get_target_property(_src_files ${_target_name} SOURCES)
-	#set_source_files_properties(${_src_files} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" #OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
-	#add_linkerflag(${_target_name} "${_gch_filename}")
+    add_custom_command(OUTPUT ${_gch_filename} COMMAND ${__compiler} ${_args} IMPLICIT_DEPENDS ${__lang} ${_header_filename})
+	get_target_property(_src_files ${_target_name} SOURCES)
+	foreach(_item in ${_src_files})
+		get_source_file_property(__src_lang ${_item} LANGUAGE)
+		if(__src_lang STREQUAL __lang)
+			set_source_files_properties(${_item} PROPERTIES COMPILE_FLAGS "-Winvalid-pch -fpch-preprocess" OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gch_filename})
+		endif()
+	endforeach()
+	#set dependency checking : depends on precompiled header only whixh already depends on deeper header
+	set_target_properties(${_target_name} PROPERTIES IMPLICIT_DEPENDS_INCLUDE_TRANSFORM "\"${_basename}\"=;<${_basename}>=")
+endif()
 endmacro()
 
 macro(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)

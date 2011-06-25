@@ -1,6 +1,6 @@
 set_rc_compiler()
 
-spec2def(d3dx9_24.dll d3dx9_24.spec)
+spec2def(d3dx9_24.dll d3dx9_24.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     d3dx9_24_main.c

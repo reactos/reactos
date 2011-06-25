@@ -1,5 +1,5 @@
 
-spec2def(avicap32.dll avicap32.spec)
+spec2def(avicap32.dll avicap32.spec ADD_IMPORTLIB)
 
 set_unicode()
 

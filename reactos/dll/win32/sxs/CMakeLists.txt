@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(sxs.dll sxs.spec)
+spec2def(sxs.dll sxs.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     sxs.c

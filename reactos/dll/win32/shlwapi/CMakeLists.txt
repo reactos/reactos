@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(shlwapi.dll shlwapi.spec)
+spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     assoc.c

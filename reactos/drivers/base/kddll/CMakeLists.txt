@@ -1,5 +1,5 @@
 
-spec2def(kdcom.dll kdcom.spec)
+spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
 
 add_library(kdcom SHARED
     kdcom.c

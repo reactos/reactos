@@ -10,7 +10,7 @@ add_definitions(
     -DNDIS_LEGACY_PROTOCOL
     -DNDIS_MINIPORT_DRIVER)
 
-spec2def(ndis.sys ndis.spec)
+spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ndis/30stubs.c

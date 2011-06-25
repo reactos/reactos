@@ -1,5 +1,5 @@
 
-spec2def(ufatx.dll ufatx.spec)
+spec2def(ufatx.dll ufatx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ufatx.rc

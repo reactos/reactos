@@ -18,7 +18,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(msxml3.dll msxml3.spec)
+spec2def(msxml3.dll msxml3.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     attribute.c

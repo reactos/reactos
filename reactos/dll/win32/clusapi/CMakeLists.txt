@@ -4,7 +4,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(clusapi.dll clusapi.spec)
+spec2def(clusapi.dll clusapi.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     clusapi.c

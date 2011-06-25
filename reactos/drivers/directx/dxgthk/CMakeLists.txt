@@ -1,5 +1,5 @@
 
-spec2def(dxgthk.sys dxgthk.spec)
+spec2def(dxgthk.sys dxgthk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c

@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(sensapi.dll sensapi.spec)
+spec2def(sensapi.dll sensapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     sensapi.c

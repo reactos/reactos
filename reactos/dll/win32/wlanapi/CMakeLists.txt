@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
 
-spec2def(wlanapi.dll wlanapi.spec)
+spec2def(wlanapi.dll wlanapi.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     main.c

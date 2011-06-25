@@ -1,5 +1,5 @@
 
-spec2def(psapi.dll psapi.spec)
+spec2def(psapi.dll psapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     malloc.c

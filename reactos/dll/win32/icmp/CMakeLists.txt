@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(icmp.dll icmp.spec)
+spec2def(icmp.dll icmp.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     icmp_main.c

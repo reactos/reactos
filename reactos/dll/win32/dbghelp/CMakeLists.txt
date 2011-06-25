@@ -14,7 +14,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(dbghelp.dll dbghelp.spec)
+spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     coff.c

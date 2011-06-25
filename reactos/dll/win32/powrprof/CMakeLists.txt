@@ -1,5 +1,5 @@
 
-spec2def(powrprof.dll powrprof.spec)
+spec2def(powrprof.dll powrprof.spec ADD_IMPORTLIB)
 
 set_unicode()
 

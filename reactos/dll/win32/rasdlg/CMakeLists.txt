@@ -1,6 +1,6 @@
 
 set_rc_compiler()
-spec2def(rasdlg.dll rasdlg.spec)
+spec2def(rasdlg.dll rasdlg.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     rasdlg.c

@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(authz.dll authz.spec)
+spec2def(authz.dll authz.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     authz.c

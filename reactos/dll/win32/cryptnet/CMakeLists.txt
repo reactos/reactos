@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(cryptnet.dll cryptnet.spec)
+spec2def(cryptnet.dll cryptnet.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     cryptnet_main.c

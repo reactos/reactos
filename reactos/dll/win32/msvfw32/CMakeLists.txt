@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__)
 add_definitions(-D_WINE)
 
 set_rc_compiler()
-spec2def(msvfw32.dll msvfw32.spec)
+spec2def(msvfw32.dll msvfw32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     mciwnd.c

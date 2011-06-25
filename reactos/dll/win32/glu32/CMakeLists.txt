@@ -12,7 +12,7 @@ include_directories(
     libtess
     libutil)
 
-spec2def(glu32.dll glu32.spec)
+spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     libnurbs/interface/bezierEval.cc

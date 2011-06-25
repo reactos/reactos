@@ -2,7 +2,7 @@
 set_unicode()
 set_rc_compiler()
 
-spec2def(syssetup.dll syssetup.spec)
+spec2def(syssetup.dll syssetup.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     classinst.c

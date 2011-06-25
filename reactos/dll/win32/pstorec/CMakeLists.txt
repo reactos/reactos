@@ -5,7 +5,7 @@ add_dependencies(pstorec_tlb stdole2)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(pstorec.dll pstorec.spec)
+spec2def(pstorec.dll pstorec.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     pstorec.c

@@ -1,5 +1,5 @@
 
-spec2def(scsiport.sys scsiport.spec)
+spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     scsiport.c

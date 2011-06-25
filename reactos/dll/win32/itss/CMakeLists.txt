@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(itss.dll itss.spec)
+spec2def(itss.dll itss.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     chm_lib.c

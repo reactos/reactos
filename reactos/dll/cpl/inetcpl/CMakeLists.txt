@@ -4,7 +4,7 @@ set_rc_compiler()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(inetcpl.cpl inetcpl.spec)
+spec2def(inetcpl.cpl inetcpl.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     inetcpl.c

@@ -4,7 +4,7 @@ set_unicode()
 add_definitions(-DLANGPACK)
 include_directories(include)
 
-spec2def(lpk.dll lpk.spec)
+spec2def(lpk.dll lpk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c

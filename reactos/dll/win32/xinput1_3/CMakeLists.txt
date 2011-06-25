@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(xinput1_3.dll xinput1_3.spec)
+spec2def(xinput1_3.dll xinput1_3.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     xinput1_3_main.c

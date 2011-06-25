@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(url.dll url.spec)
+spec2def(url.dll url.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     url_main.c

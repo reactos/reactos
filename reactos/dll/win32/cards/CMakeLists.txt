@@ -6,7 +6,7 @@ add_definitions(-DCARDSTYLE_DEFAULT)
 
 set_rc_compiler()
 
-spec2def(cards.dll cards.spec)
+spec2def(cards.dll cards.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cards.c

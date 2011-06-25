@@ -1,6 +1,6 @@
 set_rc_compiler()
 
-spec2def(d3dx9_30.dll d3dx9_30.spec)
+spec2def(d3dx9_30.dll d3dx9_30.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     d3dx9_30_main.c

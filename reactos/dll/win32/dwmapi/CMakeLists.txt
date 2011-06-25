@@ -5,7 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(dwmapi.dll dwmapi.spec)
+spec2def(dwmapi.dll dwmapi.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     dwmapi_main.c

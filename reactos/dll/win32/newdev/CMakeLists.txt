@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(newdev.dll newdev.spec)
+spec2def(newdev.dll newdev.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     newdev.c

@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(pdh.dll pdh.spec)
+spec2def(pdh.dll pdh.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     pdh_main.c

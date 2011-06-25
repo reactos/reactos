@@ -1,5 +1,5 @@
 
-spec2def(usbd.sys usbd.spec)
+spec2def(usbd.sys usbd.spec ADD_IMPORTLIB)
 
 add_library(usbd SHARED
     usbd.c

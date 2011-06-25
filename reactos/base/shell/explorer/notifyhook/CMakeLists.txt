@@ -1,7 +1,7 @@
 
 add_definitions(-D_NOTIFYHOOK_IMPL)
 
-spec2def(notifyhook.dll notifyhook.spec)
+spec2def(notifyhook.dll notifyhook.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     notifyhook.c

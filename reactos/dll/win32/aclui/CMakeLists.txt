@@ -1,5 +1,5 @@
 
-spec2def(aclui.dll aclui.spec)
+spec2def(aclui.dll aclui.spec ADD_IMPORTLIB)
 set_rc_compiler()
 set_unicode()
 

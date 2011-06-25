@@ -12,7 +12,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/recyclebin
     ${REACTOS_SOURCE_DIR})
 
-spec2def(shell32.dll shell32.spec)
+spec2def(shell32.dll shell32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     authors.c

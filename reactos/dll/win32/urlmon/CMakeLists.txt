@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(urlmon.dll urlmon.spec)
+spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 add_rpcproxy_files(urlmon_urlmon.idl)
 

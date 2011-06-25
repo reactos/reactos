@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(mpr.dll mpr.spec)
+spec2def(mpr.dll mpr.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     auth.c

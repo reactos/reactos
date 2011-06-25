@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(wtsapi32.dll wtsapi32.spec)
+spec2def(wtsapi32.dll wtsapi32.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     wtsapi32.c

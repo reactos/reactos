@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(mssign32.dll mssign32.spec)
+spec2def(mssign32.dll mssign32.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     mssign32_main.c

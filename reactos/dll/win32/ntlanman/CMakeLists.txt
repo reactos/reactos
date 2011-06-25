@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(ntlanman.dll ntlanman.spec)
+spec2def(ntlanman.dll ntlanman.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     ntlanman.c

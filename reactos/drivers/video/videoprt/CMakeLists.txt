@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 add_definitions(-D_VIDEOPORT_)
 
-spec2def(videoprt.sys videoprt.spec)
+spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     agp.c

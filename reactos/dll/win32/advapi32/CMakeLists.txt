@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(advapi32.dll advapi32.spec)
+spec2def(advapi32.dll advapi32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 add_definitions(-D_ADVAPI32_)
 

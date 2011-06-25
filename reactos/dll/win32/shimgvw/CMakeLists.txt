@@ -1,6 +1,6 @@
 
 set_rc_compiler()
-spec2def(shimgvw.dll shimgvw.spec)
+spec2def(shimgvw.dll shimgvw.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     shimgvw.c

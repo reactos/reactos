@@ -1,7 +1,7 @@
 
 add_definitions(-DBUILDING_DRMK)
 
-spec2def(drmk.sys drmk.spec)
+spec2def(drmk.sys drmk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     stubs.cpp

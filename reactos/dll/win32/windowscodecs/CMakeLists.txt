@@ -16,7 +16,7 @@ if(MSVC)
     add_compiler_flags(/FItypeof.h)
 endif()
 
-spec2def(windowscodecs.dll windowscodecs.spec)
+spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     bmpdecode.c

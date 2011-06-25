@@ -10,7 +10,7 @@ add_idl_headers(atl_atliface_header atliface.idl)
 generate_idl_iids(atliface.idl)
 
 set_rc_compiler()
-spec2def(atl.dll atl.spec)
+spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     atl_ax.c

@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(inseng.dll inseng.spec)
+spec2def(inseng.dll inseng.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     inseng_main.c

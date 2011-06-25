@@ -1,7 +1,7 @@
 
 set_rc_compiler()
 
-spec2def(dplayx.dll dplayx.spec)
+spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dpclassfactory.c

@@ -9,7 +9,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(d3d9.dll d3d9.spec)
+spec2def(d3d9.dll d3d9.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     buffer.c

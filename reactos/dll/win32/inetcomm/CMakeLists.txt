@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(inetcomm.dll inetcomm.spec)
+spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     imaptransport.c

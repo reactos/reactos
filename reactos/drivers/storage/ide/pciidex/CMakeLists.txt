@@ -1,5 +1,5 @@
 
-spec2def(pciidex.sys pciidex.spec)
+spec2def(pciidex.sys pciidex.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     fdo.c

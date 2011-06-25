@@ -1,5 +1,5 @@
 
-spec2def(sfc_os.dll sfc_os.spec)
+spec2def(sfc_os.dll sfc_os.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     sfc_os.c

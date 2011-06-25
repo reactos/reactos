@@ -10,7 +10,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(crypt32.dll crypt32.spec)
+spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     base64.c

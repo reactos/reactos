@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(comdlg32.dll comdlg32.spec)
+spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     cdlg32.c

@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
-spec2def(rasadhlp.dll rasadhlp.spec)
+spec2def(rasadhlp.dll rasadhlp.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     autodial.c

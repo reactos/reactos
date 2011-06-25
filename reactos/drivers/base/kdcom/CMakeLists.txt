@@ -1,5 +1,5 @@
 
-spec2def(kdcom.dll kdcom.spec)
+spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE i386/kdbg.c)

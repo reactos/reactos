@@ -1,5 +1,5 @@
 
-spec2def(unicows.dll unicows.spec)
+spec2def(unicows.dll unicows.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/unicows_stubs.c

@@ -3,7 +3,7 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(t2embed.dll t2embed.spec)
+spec2def(t2embed.dll t2embed.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     t2embed.c

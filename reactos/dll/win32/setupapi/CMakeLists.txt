@@ -12,7 +12,7 @@ include_directories(
 
 set_rc_compiler()
 
-spec2def(setupapi.dll setupapi.spec)
+spec2def(setupapi.dll setupapi.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     cfgmgr.c

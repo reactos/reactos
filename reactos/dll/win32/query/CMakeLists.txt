@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(query.dll query.spec)
+spec2def(query.dll query.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     query_main.c

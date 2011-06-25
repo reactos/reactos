@@ -1,5 +1,5 @@
 
-spec2def(ks.sys ks.spec)
+spec2def(ks.sys ks.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DBUILDING_KS

@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(xmllite.dll xmllite.spec)
+spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     reader.c

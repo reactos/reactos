@@ -5,7 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(dciman32.dll dciman32.spec)
+spec2def(dciman32.dll dciman32.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     dciman_main.c

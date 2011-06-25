@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(version.dll version.spec)
+spec2def(version.dll version.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     info.c

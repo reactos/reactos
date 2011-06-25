@@ -1,7 +1,7 @@
 
 include_directories(..)
 
-spec2def(class2.sys class2.spec)
+spec2def(class2.sys class2.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     class2.c

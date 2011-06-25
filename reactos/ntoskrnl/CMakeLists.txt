@@ -1,5 +1,5 @@
 
-spec2def(ntoskrnl.exe ntoskrnl.spec)
+spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}

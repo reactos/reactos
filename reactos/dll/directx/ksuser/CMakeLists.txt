@@ -1,5 +1,5 @@
 
-spec2def(ksuser.dll ksuser.spec)
+spec2def(ksuser.dll ksuser.spec ADD_IMPORTLIB)
 
 add_library(ksuser SHARED ksuser.c ksuser.rc ${CMAKE_CURRENT_BINARY_DIR}/ksuser.def)
 

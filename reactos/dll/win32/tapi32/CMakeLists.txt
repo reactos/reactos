@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(tapi32.dll tapi32.spec)
+spec2def(tapi32.dll tapi32.spec GENERATE_STUBS)
 
 list(APPEND SOURCE
     assisted.c

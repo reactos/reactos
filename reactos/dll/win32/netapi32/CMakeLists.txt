@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(netapi32.dll netapi32.spec)
+spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB GENERATE_STUBS)
 
 list(APPEND SOURCE
     access.c
