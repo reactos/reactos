@@ -49,11 +49,11 @@ INT_PTR CALLBACK LicenceDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
 typedef struct _PAGEFILE
 {
-    TCHAR szDrive[3];
-    INT   InitialSize;
-    INT   MaximumSize;
-    INT   FreeSize;
-    BOOL  bUsed;
+    TCHAR  szDrive[3];
+    UINT   InitialSize;
+    UINT   MaximumSize;
+    UINT   FreeSize;
+    BOOL   bUsed;
 } PAGEFILE, *PPAGEFILE;
 
 typedef struct _VIRTMEM

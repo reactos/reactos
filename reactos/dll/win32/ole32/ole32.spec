@@ -98,7 +98,7 @@
 @ stdcall CreatePointerMoniker(ptr ptr)
 @ stdcall CreateStreamOnHGlobal(ptr long ptr)
 @ stdcall DllDebugObjectRPCHook(long ptr)
-@ stdcall DllGetClassObject (ptr ptr ptr)
+@ stdcall -private DllGetClassObject (ptr ptr ptr)
 @ stub DllGetClassObjectWOW
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
