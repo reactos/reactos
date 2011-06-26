@@ -290,75 +290,7 @@ ProgressSetStepCount(PPROGRESSBAR Bar,
 VOID
 ProgressNextStep(PPROGRESSBAR Bar)
 {
-  CHAR TextBuffer[8];
-  COORD coPos;
-  DWORD Written;
-  ULONG NewPercent;
-  ULONG NewPos;
-
-  if ((Bar->StepCount == 0) ||
-      (Bar->CurrentStep == Bar->StepCount))
-    return;
-
-  Bar->CurrentStep++;
-
-  /* Calculate new percentage */
-  NewPercent = (ULONG)(((100.0 * (float)Bar->CurrentStep) / (float)Bar->StepCount) + 0.5);
-
-  /* Redraw precentage if changed */
-  if (Bar->Percent != NewPercent)
-    {
-      Bar->Percent = NewPercent;
-
-      sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
-
-      coPos.X = Bar->Left + (Bar->Width - 2) / 2;
-      coPos.Y = Bar->Top;
-      WriteConsoleOutputCharacterA(StdOutput,
-				   TextBuffer,
-				   4,
-				   coPos,
-				   &Written);
-    }
-
-  /* Calculate bar position */
-  NewPos = (ULONG)((((float)(Bar->Width - 2) * 2.0 * (float)Bar->CurrentStep) / (float)Bar->StepCount) + 0.5);
-
-  /* Redraw bar if changed */
-  if (Bar->Pos != NewPos)
-    {
-      Bar->Pos = NewPos;
-
-      for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
-	{
-	  coPos.X = Bar->Left + 1;
-	  FillConsoleOutputCharacterA(StdOutput,
-				     0xDB,
-				     Bar->Pos / 2,
-				     coPos,
-				     &Written);
-	  coPos.X += Bar->Pos/2;
-
-	  if (NewPos & 1)
-	    {
-	      FillConsoleOutputCharacterA(StdOutput,
-					 0xDD,
-					 1,
-					 coPos,
-					 &Written);
-	      coPos.X++;
-	    }
-
-	  if (coPos.X <= Bar->Right - 1)
-	    {
-	      FillConsoleOutputCharacterA(StdOutput,
-					 ' ',
-					 Bar->Right - coPos.X,
-					 coPos,
-					 &Written);
-	    }
-	}
-    }
+  ProgressSetStep(Bar, Bar->CurrentStep + 1);
 }
 
 
