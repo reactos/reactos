@@ -5,7 +5,7 @@ set REACTOS_SOURCE_DIR=%~dp0
 set USE_NMAKE=0
 
 :: Detect presence of cmake
-cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
+ cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 
 :: Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
@@ -35,7 +35,7 @@ if defined ROS_ARCH (
         exit /b
     )
     echo Detected Visual Studio Environment %BUILD_ENVIRONMENT%-%ARCH%
-    if not "%1" == "VSSolution" (
+    if /I not "%1" == "VSSolution" (
         set USE_NMAKE=1
         echo This script defaults to nmake. To use Visual Studio GUI specify "VSSolution" as a parameter.
     )
@@ -53,7 +53,7 @@ if defined ROS_ARCH (
 
 :: Detect NMAKE JOM
 if %USE_NMAKE% == 1 (
-    jom /version 2>&1 | find "jom version" > NUL && set USE_NMAKE=2
+    cmd /c jom /version 2>&1 | find "jom version" > NUL && set USE_NMAKE=2
 )
 
 :: Checkpoint
@@ -91,11 +91,23 @@ if EXIST CMakeCache.txt (
 set REACTOS_BUILD_TOOLS_DIR=%CD%
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G "MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
-) else if %USE_NMAKE% == 1 (
-    cmake -G "NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
-) else if %USE_NMAKE% == 2 (
-    cmake -G "NMake Makefiles JOM" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    if /I "%1" == "Codeblocks" (
+        cmake -G "CodeBlocks - MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    ) else if /I "%1" == "Eclipse" (
+        cmake -G "Eclipse CDT4 - MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    ) else (
+        cmake -G "MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    )
+) else if defined USE_NMAKE (
+    if /I "%1" == "CodeBlocks" (
+        cmake -G "CodeBlocks - NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    ) else if /I "%1" == "Eclipse" (
+        cmake -G "Eclipse CDT4 - NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    ) else if %USE_NMAKE% == 2 (
+        cmake -G "NMake Makefiles JOM" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    ) else (
+        cmake -G "NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    )
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
         cmake -G "Visual Studio 8 2005 Win64" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
@@ -124,11 +136,23 @@ if EXIST CMakeCache.txt (
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G "MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
-) else if %USE_NMAKE% == 1 (
-    cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
-) else if %USE_NMAKE% == 2 (
-    cmake -G "NMake Makefiles JOM" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    if /I "%1" == "CodeBlocks" (
+        cmake -G "CodeBlocks - MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    ) else if /I "%1" == "Eclipse" (
+        cmake -G "Eclipse CDT4 - MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    ) else (
+        cmake -G "MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    )
+) else if defined USE_NMAKE (
+    if /I "%1" == "CodeBlocks" (
+        cmake -G "CodeBlocks - NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    ) else if  /I "%1" == "Eclipse" (
+        cmake -G "Eclipse CDT4 - NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    ) else if %USE_NMAKE% == 2 (
+        cmake -G "NMake Makefiles JOM" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    ) else (
+        cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    )
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
         cmake -G "Visual Studio 8 2005 Win64" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
