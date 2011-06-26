@@ -1,5 +1,5 @@
 
-if(ARCH MATCHES i386)
+if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     CreateBootSectorTarget2(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
@@ -120,6 +120,7 @@ if(ARCH MATCHES i386)
     endif()
 elseif(ARCH MATCHES amd64)
     list(APPEND FREELDR_COMMON_SOURCE
+        arch/amd64/entry.S
         arch/amd64/loader.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
@@ -137,15 +138,6 @@ elseif(ARCH MATCHES amd64)
         arch/i386/pcvideo.c
         windows/amd64/ntsetup.c
         windows/amd64/wlmemory.c)
-    if(NOT MSVC)
-        list(APPEND FREELDR_COMMON_SOURCE
-            arch/i386/drvmap.S
-            arch/i386/i386trap.S
-            arch/amd64/mb.S)
-    else()
-        list(APPEND FREELDR_COMMON_SOURCE
-            arch/amd64/stubs.S)
-    endif()
 else()
 #TBD
 endif()
