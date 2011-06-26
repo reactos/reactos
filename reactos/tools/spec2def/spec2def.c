@@ -32,13 +32,14 @@ enum _ARCH
 
 typedef int (*PFNOUTLINE)(FILE *, EXPORT *);
 int gbKillAt = 0;
-int gbUseDeco = 0;
 int gbMSComp = 0;
+int gbImportLib = 0;
 int no_redirections = 0;
 int giArch = ARCH_X86;
 char *pszArchString = "i386";
 char *pszArchString2;
 char *pszDllName = 0;
+char *gpszUnderscore = "";
 
 enum
 {
@@ -242,37 +243,37 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     /* Handle autoname */
     if (pexp->nNameLength == 1 && pexp->pcName[0] == '@')
     {
-        fprintf(fileDest, "PUBLIC ordinal%d\nordinal%d: nop\n",
-                pexp->nOrdinal, pexp->nOrdinal);
+        fprintf(fileDest, "PUBLIC %sordinal%d\n%sordinal%d: nop\n",
+                gpszUnderscore, pexp->nOrdinal, gpszUnderscore, pexp->nOrdinal);
     }
-    else if (giArch == ARCH_AMD64)
+    else if (giArch != ARCH_X86)
     {
-        fprintf(fileDest, "PUBLIC %.*s\n%.*s: nop\n",
+        fprintf(fileDest, "PUBLIC _stub_%.*s\n_stub_%.*s: nop\n",
                 pexp->nNameLength, pexp->pcName,
                 pexp->nNameLength, pexp->pcName);
     }
     else if (pexp->nCallingConvention == CC_STDCALL)
     {
-        fprintf(fileDest, "PUBLIC _%.*s@%d\n_%.*s@%d: nop\n",
+        fprintf(fileDest, "PUBLIC __stub_%.*s@%d\n__stub_%.*s@%d: nop\n",
                 pexp->nNameLength, pexp->pcName, pexp->nStackBytes,
                 pexp->nNameLength, pexp->pcName, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_FASTCALL)
     {
-        fprintf(fileDest, "PUBLIC @%.*s@%d\n@%.*s@%d: nop\n",
+        fprintf(fileDest, "PUBLIC @_stub_%.*s@%d\n@_stub_%.*s@%d: nop\n",
                 pexp->nNameLength, pexp->pcName, pexp->nStackBytes,
                 pexp->nNameLength, pexp->pcName, pexp->nStackBytes);
     }
     else if (pexp->nCallingConvention == CC_CDECL ||
              pexp->nCallingConvention == CC_STUB)
     {
-        fprintf(fileDest, "PUBLIC _%.*s\n_%.*s: nop\n",
+        fprintf(fileDest, "PUBLIC __stub_%.*s\n__stub_%.*s: nop\n",
                 pexp->nNameLength, pexp->pcName,
                 pexp->nNameLength, pexp->pcName);
     }
     else if (pexp->nCallingConvention == CC_EXTERN)
     {
-        fprintf(fileDest, "PUBLIC _%.*s\n_%.*s:\n",
+        fprintf(fileDest, "PUBLIC __stub_%.*s\n__stub_%.*s:\n",
                 pexp->nNameLength, pexp->pcName,
                 pexp->nNameLength, pexp->pcName);
     }
@@ -291,18 +292,26 @@ OutputHeader_def(FILE *file, char *libname)
 }
 
 void
-PrintName(FILE *fileDest, EXPORT *pexp, int fRedir, int fDeco)
+PrintName(FILE *fileDest, EXPORT *pexp, char *pszPrefix, int fRedir, int fDeco)
 {
     char *pcName = fRedir ? pexp->pcRedirection : pexp->pcName;
     size_t nNameLength = fRedir ? pexp->nRedirectionLength : pexp->nNameLength;
 
-    if (fDeco && pexp->nCallingConvention == CC_FASTCALL)
-         fprintf(fileDest, "@");
-    fprintf(fileDest, "%.*s", nNameLength, pcName);
-    if ((pexp->nCallingConvention == CC_STDCALL ||
-        pexp->nCallingConvention == CC_FASTCALL) && fDeco)
+    /* Handle autoname */
+    if (nNameLength == 1 && pcName[0] == '@')
     {
-        fprintf(fileDest, "@%d", pexp->nStackBytes);
+        fprintf(fileDest, "ordinal%d", pexp->nOrdinal);
+    }
+    else
+    {
+        if (fDeco && pexp->nCallingConvention == CC_FASTCALL)
+             fprintf(fileDest, "@");
+        fprintf(fileDest, "%s%.*s", pszPrefix, nNameLength, pcName);
+        if ((pexp->nCallingConvention == CC_STDCALL ||
+            pexp->nCallingConvention == CC_FASTCALL) && fDeco)
+        {
+            fprintf(fileDest, "@%d", pexp->nStackBytes);
+        }
     }
 }
 
@@ -311,29 +320,26 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
     fprintf(fileDest, " ");
 
-    /* Handle autoname */
-    if (pexp->nNameLength == 1 && pexp->pcName[0] == '@')
-    {
-        fprintf(fileDest, "ordinal%d", pexp->nOrdinal);
-    }
-    else
-    {
-        PrintName(fileDest, pexp, 0, gbUseDeco && !gbKillAt);
-    }
+    PrintName(fileDest, pexp, "", 0, (giArch == ARCH_X86) && !gbKillAt);
 
-    if (pexp->pcRedirection && !no_redirections)
+    if (gbImportLib)
     {
-        int fDeco = (gbUseDeco && !ScanToken(pexp->pcRedirection, '.'));
+        fprintf(fileDest, "=");
+        PrintName(fileDest, pexp, "_stub_", 0, 0);
+    }
+    else if (pexp->pcRedirection)
+    {
+        int fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
 
         fprintf(fileDest, "=");
-        PrintName(fileDest, pexp, 1, fDeco && !gbMSComp);
+        PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
     }
-    else if (gbUseDeco && gbKillAt && !gbMSComp &&
+    else if ((giArch == ARCH_X86) && gbKillAt && !gbMSComp &&
              (pexp->nCallingConvention == CC_STDCALL ||
               pexp->nCallingConvention == CC_FASTCALL))
     {
         fprintf(fileDest, "=");
-        PrintName(fileDest, pexp, 0, 1);
+        PrintName(fileDest, pexp, "", 0, 1);
     }
 
     if (pexp->nOrdinal != -1)
@@ -691,6 +697,11 @@ int main(int argc, char *argv[])
         {
             pszDllName = argv[i] + 3;
         }
+        else if ((strcasecmp(argv[i], "--implib") == 0))
+        {
+            no_redirections = 1;
+            gbImportLib = 1;
+        }
         else if ((strcasecmp(argv[i], "--kill-at") == 0))
         {
             gbKillAt = 1;
@@ -714,7 +725,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (strcasecmp(pszArchString, "i386") == 0) giArch = ARCH_X86;
+    if (strcasecmp(pszArchString, "i386") == 0)
+    {
+        giArch = ARCH_X86;
+        gpszUnderscore = "_";
+    }
     else if (strcasecmp(pszArchString, "x86_64") == 0) giArch = ARCH_AMD64;
     else if (strcasecmp(pszArchString, "ia64") == 0) giArch = ARCH_IA64;
     else if (strcasecmp(pszArchString, "arm") == 0) giArch = ARCH_ARM;
@@ -726,11 +741,6 @@ int main(int argc, char *argv[])
     }
     else
         pszArchString2 = "win32";
-
-    if (giArch == ARCH_X86)
-    {
-        gbUseDeco = 1;
-    }
 
     /* Set a default dll name */
     if (!pszDllName)

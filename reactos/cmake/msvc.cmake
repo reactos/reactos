@@ -141,7 +141,7 @@ macro(add_importlib_target _exports_file)
     # Generate the asm stub file and the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -r -n=${_name}${_suffix} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
+        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_name}${_suffix} -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
 
     # Assemble the stub file
