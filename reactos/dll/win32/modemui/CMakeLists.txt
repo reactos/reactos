@@ -2,7 +2,7 @@
 set_unicode()
 set_rc_compiler()
 
-spec2def(modemui.dll modemui.spec GENERATE_STUBS)
+spec2def(modemui.dll modemui.spec)
 
 list(APPEND SOURCE
     modemui.c

@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(initpki.dll initpki.spec GENERATE_STUBS)
+spec2def(initpki.dll initpki.spec)
 
 list(APPEND SOURCE
     main.c

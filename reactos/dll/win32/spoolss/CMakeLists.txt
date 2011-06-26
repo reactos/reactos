@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(spoolss.dll spoolss.spec)
 
 list(APPEND SOURCE
     spoolss_main.c

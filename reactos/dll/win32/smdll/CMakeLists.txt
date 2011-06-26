@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(smdll.dll smdll.spec ADD_IMPORTLIB)
+spec2def(smdll.dll smdll.spec)
 
 list(APPEND SOURCE
     dllmain.c

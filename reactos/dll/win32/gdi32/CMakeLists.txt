@@ -5,7 +5,7 @@ add_definitions(-DLANGPACK)
 
 include_directories(include)
 
-spec2def(gdi32.dll gdi32.spec ADD_IMPORTLIB)
+spec2def(gdi32.dll gdi32.spec)
 
 if(ARCH MATCHES i386)
     list(APPEND SOURCE

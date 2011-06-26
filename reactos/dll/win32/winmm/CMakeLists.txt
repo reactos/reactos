@@ -2,7 +2,7 @@
 add_definitions(-D_WINE)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(winmm.dll winmm.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(winmm.dll winmm.spec)
 
 set_rc_compiler()
 

@@ -1,5 +1,5 @@
 set_rc_compiler()
-spec2def(rasman.dll rasman.spec GENERATE_STUBS)
+spec2def(rasman.dll rasman.spec)
 
 list(APPEND SOURCE
     rasman.c

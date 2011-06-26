@@ -2,7 +2,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(schannel.dll schannel.spec GENERATE_STUBS)
+spec2def(schannel.dll schannel.spec)
 
 list(APPEND SOURCE
     lsamode.c

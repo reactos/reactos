@@ -4,7 +4,7 @@ set_unicode()
 add_definitions(-DLE)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mswsock.dll mswsock.spec ADD_IMPORTLIB)
+spec2def(mswsock.dll mswsock.spec)
 
 list(APPEND SOURCE
     extensions.c

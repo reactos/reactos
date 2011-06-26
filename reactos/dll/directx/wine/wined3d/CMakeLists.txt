@@ -13,7 +13,7 @@ if(MSVC)
     add_definitions(-Disinf=!_finite)
 endif()
 
-spec2def(wined3d.dll wined3d.spec ADD_IMPORTLIB)
+spec2def(wined3d.dll wined3d.spec)
 
 list(APPEND SOURCE
     ati_fragment_shader.c

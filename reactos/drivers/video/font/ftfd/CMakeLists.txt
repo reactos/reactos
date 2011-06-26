@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
 
-spec2def(ftfd.dll ftfd.spec ADD_IMPORTLIB)
+spec2def(ftfd.dll ftfd.spec)
 
 add_library(ftfd SHARED
     enable.c

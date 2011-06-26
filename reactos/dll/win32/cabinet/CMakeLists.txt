@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(cabinet.dll cabinet.spec ADD_IMPORTLIB)
+spec2def(cabinet.dll cabinet.spec)
 
 list(APPEND SOURCE
     cabinet_main.c

@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(gdiplus.dll gdiplus.spec)
 
 list(APPEND SOURCE
     brush.c

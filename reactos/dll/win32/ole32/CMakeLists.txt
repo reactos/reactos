@@ -1,7 +1,7 @@
 
 set_rc_compiler()
 
-spec2def(ole32.dll ole32.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(ole32.dll ole32.spec)
 generate_idl_iids(dcom.idl)
 add_idl_headers(ole32idl dcom.idl irot.idl)
 

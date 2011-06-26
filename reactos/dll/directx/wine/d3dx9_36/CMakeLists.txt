@@ -1,6 +1,6 @@
 set_rc_compiler()
 
-spec2def(d3dx9_36.dll d3dx9_36.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(d3dx9_36.dll d3dx9_36.spec)
 
 list(APPEND SOURCE
     core.c

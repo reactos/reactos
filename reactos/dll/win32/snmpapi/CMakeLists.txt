@@ -6,7 +6,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 set_rc_compiler()
 
-spec2def(snmpapi.dll snmpapi.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(snmpapi.dll snmpapi.spec)
 
 list(APPEND SOURCE
     main.c

@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(loadperf.dll loadperf.spec ADD_IMPORTLIB)
+spec2def(loadperf.dll loadperf.spec)
 
 add_library(loadperf SHARED
             loadperf_main.c

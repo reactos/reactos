@@ -6,7 +6,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
     ${REACTOS_SOURCE_DIR}/lib/tdilib)
 
-spec2def(iphlpapi.dll iphlpapi.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(iphlpapi.dll iphlpapi.spec)
 
 list(APPEND SOURCE
     dhcp_reactos.c

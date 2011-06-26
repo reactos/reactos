@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(wldap32.dll wldap32.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(wldap32.dll wldap32.spec)
 
 list(APPEND SOURCE
     add.c

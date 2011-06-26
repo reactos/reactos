@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(httpapi.dll httpapi.spec GENERATE_STUBS)
+spec2def(httpapi.dll httpapi.spec)
 
 list(APPEND SOURCE
     httpapi_main.c

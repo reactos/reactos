@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(nddeapi.dll nddeapi.spec GENERATE_STUBS)
+spec2def(nddeapi.dll nddeapi.spec)
 
 list(APPEND SOURCE
     nddeapi.c

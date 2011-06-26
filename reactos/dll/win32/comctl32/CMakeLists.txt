@@ -12,7 +12,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
+spec2def(comctl32.dll comctl32.spec)
 
 list(APPEND SOURCE
     animate.c

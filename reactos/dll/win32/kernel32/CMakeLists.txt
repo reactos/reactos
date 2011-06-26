@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 set_rc_compiler()
 
-spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
+spec2def(kernel32.dll kernel32.spec)
 
 list(APPEND SOURCE
     debug/debugger.c

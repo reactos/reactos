@@ -1,5 +1,5 @@
 
-spec2def(sfc.dll sfc.spec GENERATE_STUBS)
+spec2def(sfc.dll sfc.spec)
 
 list(APPEND SOURCE
     sfc.c

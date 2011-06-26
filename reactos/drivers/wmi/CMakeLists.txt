@@ -1,5 +1,5 @@
 
-spec2def(wmilib.sys wmilib.spec ADD_IMPORTLIB)
+spec2def(wmilib.sys wmilib.spec)
 
 list(APPEND SOURCE
     wmilib.c

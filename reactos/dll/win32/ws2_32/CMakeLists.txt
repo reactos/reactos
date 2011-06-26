@@ -7,7 +7,7 @@ add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
 include_directories(BEFORE include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(ws2_32.dll ws2_32.spec ADD_IMPORTLIB)
+spec2def(ws2_32.dll ws2_32.spec)
 
 list(APPEND SOURCE
     misc/bsd.c

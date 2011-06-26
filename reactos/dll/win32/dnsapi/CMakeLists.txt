@@ -6,7 +6,7 @@ include_directories(
 
 add_definitions(-DADNS_JGAA_WIN32)
 
-spec2def(dnsapi.dll dnsapi.spec ADD_IMPORTLIB)
+spec2def(dnsapi.dll dnsapi.spec)
 
 list(APPEND SOURCE
     dnsapi/adns.c

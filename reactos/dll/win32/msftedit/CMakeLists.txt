@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(msftedit.dll msftedit.spec GENERATE_STUBS)
+spec2def(msftedit.dll msftedit.spec)
 
 list(APPEND SOURCE
     msftedit_main.c

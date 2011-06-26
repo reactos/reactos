@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mscoree.dll mscoree.spec GENERATE_STUBS)
+spec2def(mscoree.dll mscoree.spec)
 
 list(APPEND SOURCE
     corruntimehost.c

@@ -1,7 +1,7 @@
 
 set_unicode()
 set_rc_compiler()
-spec2def(acledit.dll acledit.spec ADD_IMPORTLIB)
+spec2def(acledit.dll acledit.spec)
 
 list(APPEND SOURCE
     acledit.c

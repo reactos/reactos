@@ -5,7 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(winspool.drv winspool.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(winspool.drv winspool.spec)
 
 list(APPEND SOURCE
     info.c

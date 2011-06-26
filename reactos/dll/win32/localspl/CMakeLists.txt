@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(localspl.dll localspl.spec GENERATE_STUBS)
+spec2def(localspl.dll localspl.spec)
 
 list(APPEND SOURCE
     localmon.c

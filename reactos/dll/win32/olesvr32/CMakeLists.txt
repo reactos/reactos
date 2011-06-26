@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(olesvr32.dll olesvr32.spec GENERATE_STUBS)
+spec2def(olesvr32.dll olesvr32.spec)
 
 list(APPEND SOURCE
     olesvr_main.c

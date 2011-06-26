@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(odbc32.dll odbc32.spec GENERATE_STUBS)
+spec2def(odbc32.dll odbc32.spec)
 
 list(APPEND SOURCE
     proxyodbc.c

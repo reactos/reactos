@@ -2,7 +2,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 set_rc_compiler()
-spec2def(netcfgx.dll netcfgx.spec GENERATE_STUBS)
+spec2def(netcfgx.dll netcfgx.spec)
 
 list(APPEND SOURCE
     netcfgx.c

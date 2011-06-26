@@ -1,5 +1,5 @@
 
-spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
+spec2def(ntdll.dll def/ntdll.spec)
 
 add_definitions(
     -D__NTDLL__

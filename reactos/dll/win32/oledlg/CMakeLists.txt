@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(oledlg.dll oledlg.spec ADD_IMPORTLIB)
+spec2def(oledlg.dll oledlg.spec)
 
 list(APPEND SOURCE
     insobjdlg.c

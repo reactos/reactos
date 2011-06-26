@@ -79,7 +79,7 @@ if(ARCH MATCHES i386)
         up/pic.c
         up/processor.c)
 
-    spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
+    spec2def(hal.dll ../hal.spec)
 
     list(APPEND HAL_SOURCE
         ${HAL_GENERIC_SOURCE}

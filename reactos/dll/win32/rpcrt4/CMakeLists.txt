@@ -35,7 +35,7 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
-spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(rpcrt4.dll rpcrt4.spec)
 
 add_library(rpcrt4 SHARED ${SOURCE})
 

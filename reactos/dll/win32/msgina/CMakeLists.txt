@@ -5,7 +5,7 @@ include_directories(
 
 set_rc_compiler()
 
-spec2def(msgina.dll msgina.spec GENERATE_STUBS)
+spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE
     gui.c

@@ -7,7 +7,7 @@ include_directories(
 
 set_rc_compiler()
 
-spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(lsasrv.dll lsasrv.spec)
 
 list(APPEND SOURCE
     authport.c

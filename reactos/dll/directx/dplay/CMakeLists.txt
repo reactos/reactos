@@ -3,7 +3,7 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dplay.dll dplay.spec ADD_IMPORTLIB)
+spec2def(dplay.dll dplay.spec)
 
 add_library(dplay SHARED
     dplay_main.c

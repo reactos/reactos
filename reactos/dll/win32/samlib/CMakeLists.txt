@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(samlib.dll samlib.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(samlib.dll samlib.spec)
 
 list(APPEND SOURCE
     dllmain.c

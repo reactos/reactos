@@ -1,5 +1,5 @@
 
-spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
+spec2def(msvcrt.dll msvcrt.spec)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX

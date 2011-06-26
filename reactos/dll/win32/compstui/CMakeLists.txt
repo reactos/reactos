@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(compstui.dll compstui.spec ADD_IMPORTLIB)
+spec2def(compstui.dll compstui.spec)
 
 list(APPEND SOURCE
     compstui_main.c

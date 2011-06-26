@@ -12,6 +12,7 @@ add_definitions(
     -DWIN32
     -D__WINDRES__)
 
+#add_pch(explorer precomp.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SOURCE
@@ -65,10 +66,6 @@ target_link_libraries(explorer
     uuid)
 
 add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 notifyhook msvcrt kernel32 ntdll)
-#hack 
-set(IS_CPP 1)
-add_pch(explorer precomp.h)
-set(IS_CPP)
 set_image_base(explorer 0x00400000)
 add_dependencies(explorer psdk)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)

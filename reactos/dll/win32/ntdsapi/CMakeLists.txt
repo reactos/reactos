@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(ntdsapi.dll ntdsapi.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(ntdsapi.dll ntdsapi.spec)
 
 list(APPEND SOURCE
     ntdsapi.c

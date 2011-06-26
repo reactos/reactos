@@ -2,7 +2,7 @@
 add_definitions(-D__SECUR32__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(secur32.dll secur32.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(secur32.dll secur32.spec)
 
 list(APPEND SOURCE
     dllmain.c

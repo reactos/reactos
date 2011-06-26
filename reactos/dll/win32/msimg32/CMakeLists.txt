@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(msimg32.dll msimg32.spec ADD_IMPORTLIB)
+spec2def(msimg32.dll msimg32.spec)
 
 list(APPEND SOURCE
     msimg32_main.c

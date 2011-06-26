@@ -5,7 +5,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(wininet.dll wininet.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(wininet.dll wininet.spec)
 
 set_rc_compiler()
 

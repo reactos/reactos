@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(cryptdlg.dll cryptdlg.spec GENERATE_STUBS)
+spec2def(cryptdlg.dll cryptdlg.spec)
 
 list(APPEND SOURCE
     main.c

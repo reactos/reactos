@@ -1,5 +1,5 @@
 
-spec2def(srclient.dll srclient.spec GENERATE_STUBS)
+spec2def(srclient.dll srclient.spec)
 
 list(APPEND SOURCE
     srclient_main.c

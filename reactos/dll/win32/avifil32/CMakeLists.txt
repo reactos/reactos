@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(avifil32.dll avifil32.spec ADD_IMPORTLIB)
+spec2def(avifil32.dll avifil32.spec)
 
 add_library(avifil32 SHARED
     acmstream.c

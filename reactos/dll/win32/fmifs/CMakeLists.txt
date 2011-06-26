@@ -1,5 +1,5 @@
 
-spec2def(fmifs.dll fmifs.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(fmifs.dll fmifs.spec)
 
 list(APPEND SOURCE
     chkdsk.c

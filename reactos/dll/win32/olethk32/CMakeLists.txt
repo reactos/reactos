@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(olethk32.dll olethk32.spec GENERATE_STUBS)
+spec2def(olethk32.dll olethk32.spec)
 
 list(APPEND SOURCE
     main.c

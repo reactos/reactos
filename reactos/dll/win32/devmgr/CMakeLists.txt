@@ -2,7 +2,7 @@
 set_unicode()
 set_rc_compiler()
 
-spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(devmgr.dll devmgr.spec)
 
 list(APPEND SOURCE
     devmgr.rc

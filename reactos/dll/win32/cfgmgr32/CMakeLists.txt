@@ -1,5 +1,5 @@
 
-spec2def(cfgmgr32.dll cfgmgr32.spec GENERATE_STUBS)
+spec2def(cfgmgr32.dll cfgmgr32.spec)
 
 list(APPEND SOURCE
     cfgmgr32.rc

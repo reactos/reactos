@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(cryptui.dll cryptui.spec)
 
 list(APPEND SOURCE
     main.c

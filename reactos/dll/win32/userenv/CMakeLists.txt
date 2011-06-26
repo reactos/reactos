@@ -1,5 +1,5 @@
 
-spec2def(userenv.dll userenv.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(userenv.dll userenv.spec)
 
 set_rc_compiler()
 

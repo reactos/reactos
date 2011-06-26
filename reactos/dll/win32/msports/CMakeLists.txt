@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(msports.dll msports.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(msports.dll msports.spec)
 
 list(APPEND SOURCE
     classinst.c

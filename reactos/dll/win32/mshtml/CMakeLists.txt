@@ -9,7 +9,7 @@ add_idl_Headers(mshtml_nsiface_header nsiface.idl)
 
 set_rc_compiler()
 
-spec2def(mshtml.dll mshtml.spec GENERATE_STUBS)
+spec2def(mshtml.dll mshtml.spec)
 
 list(APPEND SOURCE
     conpoint.c

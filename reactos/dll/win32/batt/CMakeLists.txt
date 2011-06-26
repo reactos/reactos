@@ -1,5 +1,5 @@
 
-spec2def(batt.dll batt.spec ADD_IMPORTLIB)
+spec2def(batt.dll batt.spec)
 
 set_unicode()
 set_rc_compiler()

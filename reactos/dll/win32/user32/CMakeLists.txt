@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(user32.dll user32.spec ADD_IMPORTLIB)
+spec2def(user32.dll user32.spec)
 
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine

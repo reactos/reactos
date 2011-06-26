@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(msctf.dll msctf.spec GENERATE_STUBS)
+spec2def(msctf.dll msctf.spec)
 
 list(APPEND SOURCE
     categorymgr.c

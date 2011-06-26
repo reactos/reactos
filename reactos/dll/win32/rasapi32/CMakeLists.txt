@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
 set_rc_compiler()
-spec2def(rasapi32.dll rasapi32.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(rasapi32.dll rasapi32.spec)
 
 list(APPEND SOURCE
     rasapi.c

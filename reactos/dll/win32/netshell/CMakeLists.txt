@@ -3,7 +3,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 set_rc_compiler()
-spec2def(netshell.dll netshell.spec GENERATE_STUBS)
+spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
     netshell.c

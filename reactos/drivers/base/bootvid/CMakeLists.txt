@@ -1,5 +1,5 @@
 
-spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
+spec2def(bootvid.dll bootvid.spec)
 
 list(APPEND SOURCE
     bootvid.rc

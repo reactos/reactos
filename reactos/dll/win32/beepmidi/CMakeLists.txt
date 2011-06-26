@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(beepmidi.dll beepmidi.spec ADD_IMPORTLIB)
+spec2def(beepmidi.dll beepmidi.spec)
 
 list(APPEND SOURCE
     beepmidi.c

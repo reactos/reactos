@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mlang.dll mlang.spec ADD_IMPORTLIB GENERATE_STUBS)
+spec2def(mlang.dll mlang.spec)
 
 list(APPEND SOURCE
     mlang.c

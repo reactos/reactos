@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(csrsrv.dll csrsrv.spec ADD_IMPORTLIB)
+spec2def(csrsrv.dll csrsrv.spec)
 
 list(APPEND SOURCE
     api/process.c

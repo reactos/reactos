@@ -13,7 +13,7 @@ set_rc_compiler()
 
 generate_idl_iids(mstask_local.idl)
 
-spec2def(mstask.dll mstask.spec GENERATE_STUBS)
+spec2def(mstask.dll mstask.spec)
 
 list(APPEND SOURCE
     factory.c

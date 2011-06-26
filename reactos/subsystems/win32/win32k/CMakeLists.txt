@@ -1,5 +1,5 @@
 
-spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
+spec2def(win32k.sys win32k.spec)
 
 include_directories(
     .
