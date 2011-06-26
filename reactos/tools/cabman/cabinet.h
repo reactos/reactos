@@ -7,7 +7,7 @@
 
 #pragma once
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #else
 #include <errno.h>
@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
 
@@ -431,7 +431,7 @@ private:
     ULONG GetAttributesOnFile(PCFFILE_NODE File);
     ULONG SetAttributesOnFile(char* FileName, USHORT FileAttributes);
     ULONG GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
-#if !defined(WIN32)
+#if !defined(_WIN32)
     void ConvertDateAndTime(time_t* Time, PUSHORT DosDate, PUSHORT DosTime);
 #endif
 #endif /* CAB_READ_ONLY */

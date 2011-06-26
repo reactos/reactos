@@ -33,7 +33,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef WIN32
+#ifdef _WIN32
 # include <io.h>
 # include <dos.h>
 #else
@@ -46,11 +46,11 @@
 # include <sys/types.h>
 # include <dirent.h>
 # include <unistd.h>
-#endif // WIN32
+#endif // _WIN32
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>
-#ifndef WIN32
+#ifndef _WIN32
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
@@ -529,9 +529,9 @@ static int check_for_punctuation(int c, const char *name)
   return c;
 }
 
-#if WIN32
+#if _WIN32
 #define strcasecmp stricmp
-#endif//WIN32
+#endif//_WIN32
 
 /*-----------------------------------------------------------------------------
 This function checks to see if there's a cdname conflict.
@@ -643,7 +643,7 @@ specified ffblk. It links it into the beginning of the directory list
 for the specified parent and returns a pointer to the new record.
 -----------------------------------------------------------------------------*/
 
-#if WIN32
+#if _WIN32
 
 /* Win32 version */
 PDIR_RECORD
@@ -764,7 +764,7 @@ and puts the appropriate directory records into the database in memory, with
 the specified root. It calls itself recursively to scan all subdirectories.
 -----------------------------------------------------------------------------*/
 
-#ifdef WIN32
+#ifdef _WIN32
 
 static void
 make_directory_records (PDIR_RECORD d)

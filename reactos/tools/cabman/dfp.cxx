@@ -18,7 +18,7 @@
 #include "dfp.h"
 
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
 static LONG _GetSizeOfFile(FILEHANDLE handle)
 {
@@ -126,7 +126,7 @@ void CDFParser::WriteInfLine(char* InfLine)
     char buf[MAX_PATH];
     char eolbuf[2];
     char* destpath;
-#if defined(WIN32)
+#if defined(_WIN32)
     ULONG BytesWritten;
 #endif
 
@@ -149,21 +149,21 @@ void CDFParser::WriteInfLine(char* InfLine)
             strcpy(buf, InfFileName);
 
         /* Create .inf file, overwrite if it already exists */
-#if defined(WIN32)
+#if defined(_WIN32)
         InfFileHandle = CreateFile(buf,     // Create this file
             GENERIC_WRITE,                  // Open for writing
             0,                              // No sharing
             NULL,                           // No security
             CREATE_ALWAYS,                  // Create or overwrite
-            FILE_ATTRIBUTE_NORMAL,          // Normal file 
+            FILE_ATTRIBUTE_NORMAL,          // Normal file
             NULL);                          // No attribute template
         if (InfFileHandle == INVALID_HANDLE_VALUE)
         {
             DPRINT(MID_TRACE, ("Error creating '%u'.\n", (UINT)GetLastError()));
             return;
         }
-#else /* !WIN32 */
-        InfFileHandle = fopen(buf, "wb"); 
+#else /* !_WIN32 */
+        InfFileHandle = fopen(buf, "wb");
         if (InfFileHandle == NULL)
         {
             DPRINT(MID_TRACE, ("Error creating '%i'.\n", errno));
@@ -172,7 +172,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 #endif
     }
 
-#if defined(WIN32)
+#if defined(_WIN32)
     if (!WriteFile(InfFileHandle, InfLine, (DWORD)strlen(InfLine), (LPDWORD)&BytesWritten, NULL))
     {
         DPRINT(MID_TRACE, ("ERROR WRITING '%u'.\n", (UINT)GetLastError()));
@@ -186,7 +186,7 @@ void CDFParser::WriteInfLine(char* InfLine)
     eolbuf[0] = 0x0d;
     eolbuf[1] = 0x0a;
 
-#if defined(WIN32)
+#if defined(_WIN32)
     if (!WriteFile(InfFileHandle, eolbuf, sizeof(eolbuf), (LPDWORD)&BytesWritten, NULL))
     {
         DPRINT(MID_TRACE, ("ERROR WRITING '%u'.\n", (UINT)GetLastError()));
@@ -215,7 +215,7 @@ ULONG CDFParser::Load(char* FileName)
         return CAB_STATUS_SUCCESS;
 
     /* Create cabinet file, overwrite if it already exists */
-#if defined(WIN32)
+#if defined(_WIN32)
     FileHandle = CreateFile(FileName, // Create this file
         GENERIC_READ,                 // Open for reading
         0,                            // No sharing
@@ -225,8 +225,8 @@ ULONG CDFParser::Load(char* FileName)
         NULL);                        // No attribute template
     if (FileHandle == INVALID_HANDLE_VALUE)
         return CAB_STATUS_CANNOT_OPEN;
-#else /* !WIN32 */
-    FileHandle = fopen(FileName, "rb"); 
+#else /* !_WIN32 */
+    FileHandle = fopen(FileName, "rb");
     if (FileHandle == NULL)
         return CAB_STATUS_CANNOT_OPEN;
 #endif
@@ -1223,7 +1223,7 @@ ULONG CDFParser::PerformFileCopy()
             }
             else
                 printf("File does not exist: %s.\n", SrcName);
-            
+
             break;
 
         case CAB_STATUS_NOMEMORY:
