@@ -172,6 +172,8 @@ struct statfs;
             "\tnop\n" \
             "\t.section \".text\",#alloc,#execinstr\n" ); } \
     static void func(void)
+#elif defined(_M_AMD64)
+#pragma message("You must define the DECL_GLOBAL_CONSTRUCTOR macro for amd64")
 #else
 # error You must define the DECL_GLOBAL_CONSTRUCTOR macro for your platform
 #endif
