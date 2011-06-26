@@ -111,6 +111,12 @@ typedef enum _CM_SHARE_DISPOSITION
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
 //
+// Interrupt Resource Descriptor Flags
+//
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
+#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+
+//
 // NtInitializeRegistry Flags
 //
 #define CM_BOOT_FLAG_SMSS                 0x0000
