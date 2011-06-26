@@ -49,6 +49,11 @@ list(APPEND MSVCRTEX_SOURCE
     math/i386/ftol2_asm.s
     math/i386/alldiv_asm.s
 )
+elseif(ARCH MATCHES amd64)
+list(APPEND MSVCRTEX_SOURCE
+    except/amd64/chkstk_asm.s
+    except/amd64/chkstk_ms.s
+    math/amd64/alldiv.S)
 endif()
 
 if(MSVC)

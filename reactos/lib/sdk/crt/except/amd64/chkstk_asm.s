@@ -13,7 +13,8 @@
 /* CODE **********************************************************************/
 .code64
 
-EXTERN MsgUnimplemented:BYTE
+MsgUnimplemented:
+    .ascii "Unimplemented", CR, LF, NUL
 
 FUNC __chkstk
     .endprolog

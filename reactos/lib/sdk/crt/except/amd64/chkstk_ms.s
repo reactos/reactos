@@ -28,17 +28,17 @@ ___chkstk_ms:
     lea rcx, [rsp + 24]         /* point past return addr */
     jb l_LessThanAPage
 
-.l_MoreThanAPage:
+l_MoreThanAPage:
     sub rcx, PAGE_SIZE          /* yes, move pointer down 4k */
-    or [rcx], 0                 /* probe there */
+    or byte ptr [rcx], 0        /* probe there */
     sub rax, PAGE_SIZE          /* decrement count */
 
     cmp rax, PAGE_SIZE
     ja l_MoreThanAPage          /* and do it again */
 
-.l_LessThanAPage:
+l_LessThanAPage:
     sub rcx, rax
-    or [rcx], 0                 /* less than 4k, just peek here */
+    or byte ptr [rcx], 0        /* less than 4k, just peek here */
 
     pop rax
     //cfi_pop(%rax)

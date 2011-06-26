@@ -277,7 +277,7 @@ __tmainCRTStartup (void)
     _pei386_runtime_relocator ();
 #endif
     __mingw_oldexcpt_handler = SetUnhandledExceptionFilter (_gnu_exception_handler);
-#ifdef _WIN64
+#if defined(_WIN64) && !defined(_MSC_VER)
     __mingw_init_ehandler ();
 #endif
     __mingw_prepare_except_for_msvcr80_and_higher ();
