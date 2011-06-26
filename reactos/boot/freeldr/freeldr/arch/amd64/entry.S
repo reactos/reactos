@@ -28,6 +28,10 @@ PUBLIC Int386
 Int386:
 PUBLIC PxeCallApi
 PxeCallApi:
+PUBLIC __lgdt
+__lgdt:
+PUBLIC __ltr
+__ltr:
 
 nop
 
