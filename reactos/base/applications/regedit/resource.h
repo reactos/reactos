@@ -188,6 +188,54 @@
 #define IDS_IMPORT_PROMPT               31129
 #define IDS_IMPORTED_OK                 31130
 
+#define IDS_FINISHEDFIND                31131
+
+#define IDS_BUSNUMBER                   31132
+#define IDS_INTERFACE                   31133
+
+#define IDS_DMA_CHANNEL                 31134
+#define IDS_DMA_PORT                    31135
+#define IDS_INTERRUPT_VECTOR            31136
+#define IDS_INTERRUPT_LEVEL             31137
+#define IDS_INTERRUPT_AFFINITY          31138
+#define IDS_INTERRUPT_TYPE              31139
+#define IDS_MEMORY_ADDRESS              31140
+#define IDS_MEMORY_LENGTH               31141
+#define IDS_MEMORY_ACCESS               31142
+#define IDS_PORT_ADDRESS                31143
+#define IDS_PORT_LENGTH                 31144
+#define IDS_PORT_ACCESS                 31145
+#define IDS_SPECIFIC_RESERVED1          31146
+#define IDS_SPECIFIC_RESERVED2          31147
+#define IDS_SPECIFIC_DATASIZE           31148
+
+#define IDS_PORT_PORT_IO                31149
+#define IDS_PORT_MEMORY_IO              31150
+#define IDS_INTERRUPT_EDGE_SENSITIVE    31151
+#define IDS_INTERRUPT_LEVEL_SENSITIVE   31152
+#define IDS_MEMORY_READ_ONLY            31153
+#define IDS_MEMORY_WRITE_ONLY           31154
+#define IDS_MEMORY_READ_WRITE           31155
+
+#define IDS_BUS_UNDEFINED               31156
+#define IDS_BUS_INTERNAL                31157
+#define IDS_BUS_ISA                     31158
+#define IDS_BUS_EISA                    31159
+#define IDS_BUS_MICROCHANNEL            31160
+#define IDS_BUS_TURBOCHANNEL            31161
+#define IDS_BUS_PCIBUS                  31162
+#define IDS_BUS_VMEBUS                  31163
+#define IDS_BUS_NUBUS                   31164
+#define IDS_BUS_PCMCIABUS               31165
+#define IDS_BUS_CBUS                    31166
+#define IDS_BUS_MPIBUS                  31167
+#define IDS_BUS_MPSABUS                 31168
+#define IDS_BUS_PROCESSORINTERNAL       31169
+#define IDS_BUS_INTERNALPOWERBUS        31170
+#define IDS_BUS_PNPISABUS               31171
+#define IDS_BUS_PNPBUS                  31172
+#define IDS_BUS_UNKNOWNTYPE             31173
+
 #define IDD_EDIT_STRING                  2000
 #define IDC_VALUE_NAME                   2001
 #define IDC_VALUE_DATA                   2002
@@ -215,7 +263,25 @@
 #define IDC_MATCHSTRING                  2017
 #define IDC_MATCHCASE                    2018
 
-#define IDS_FINISHEDFIND                 2019
+#define IDD_EDIT_RESOURCE_LIST           2019
+#define IDC_RESOURCE_LIST                2020
+#define IDC_SHOW_RESOURCE                2021
+
+#define IDD_EDIT_RESOURCE                2022
+#define IDC_DMA_LIST                     2023
+#define IDC_IRQ_LIST                     2024
+#define IDC_MEMORY_LIST                  2025
+#define IDC_PORT_LIST                    2026
+#define IDC_DEVICE_LIST                  2027
+#define IDC_UNDETERMINED                 2028
+#define IDC_SHARED                       2029
+#define IDC_DEVICE_EXCLUSIVE             2030
+#define IDC_DRIVER_EXCLUSIVE             2031
+#define IDC_INTERFACETYPE                2032
+#define IDC_BUSNUMBER                    2033
+#define IDC_VERSION                      2034
+#define IDC_REVISION                     2035
+#define IDC_SHOW_RESOURCE_DATA           2036
 
 #define ID_FAVORITES_MIN                 2100
 #define ID_FAVORITES_MAX                 2999

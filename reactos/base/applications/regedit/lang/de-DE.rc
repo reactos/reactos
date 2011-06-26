@@ -248,6 +248,53 @@ BEGIN
     PUSHBUTTON      "Abbrechen",IDCANCEL,196,82,50,14
 END
 
+
+IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
+      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Liste der Ressourcen"
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
+    DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
+    PUSHBUTTON "Anzeige...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+}
+
+
+IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
+      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Ressourcen"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
+    CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
+    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
+    LTEXT "Speicher:", IDC_STATIC, 10, 91, 32, 8
+    CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
+    LTEXT "Anschluss:", IDC_STATIC, 10, 134, 38, 8
+    CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
+    LTEXT "Gerätspezifische Daten:", IDC_STATIC, 10, 177, 80, 8
+    CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
+    GROUPBOX "Benutzung", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Unbestimmt", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Gemeinsam", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Gerät-exklusiv", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Treiber-exklusiv", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Schnittstellentyp:", IDC_STATIC, 144, 220, 58, 8
+    LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
+    RTEXT "Busnummer:", IDC_STATIC, 151, 230, 51, 8
+    LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
+    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    LTEXT "", IDC_VERSION, 205, 240, 66, 8
+    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    LTEXT "", IDC_REVISION, 205, 250, 66, 8
+    DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
+    PUSHBUTTON "&Daten...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+}
+
+
 /*
  * String Table
  */
@@ -397,6 +444,60 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_IMPORT_PROMPT             "Add the data to the registry?"
   IDS_IMPORTED_OK               "Information added to the registry"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BUSNUMBER                 "Busnummer"
+    IDS_INTERFACE                 "Schnittstelle"
+    IDS_DMA_CHANNEL               "Kanal"
+    IDS_DMA_PORT                  "Anschluss"
+    IDS_INTERRUPT_VECTOR          "Vektor"
+    IDS_INTERRUPT_LEVEL           "Ebene"
+    IDS_INTERRUPT_AFFINITY        "Affinität"
+    IDS_INTERRUPT_TYPE            "Typ"
+    IDS_MEMORY_ADDRESS            "Physikalische Adresse"
+    IDS_MEMORY_LENGTH             "Länge"
+    IDS_MEMORY_ACCESS             "Zugriff"
+    IDS_PORT_ADDRESS              "Physikalische Adresse"
+    IDS_PORT_LENGTH               "Länge"
+    IDS_PORT_ACCESS               "Zugriff"
+    IDS_SPECIFIC_RESERVED1        "Reserviert 1"
+    IDS_SPECIFIC_RESERVED2        "Reserviert 2"
+    IDS_SPECIFIC_DATASIZE         "Datengröße"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PORT_PORT_IO              "Anschluss"
+    IDS_PORT_MEMORY_IO            "Speicher"
+    IDS_INTERRUPT_EDGE_SENSITIVE  "Flankengesteuert"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Pegelgesteuert"
+    IDS_MEMORY_READ_ONLY          "Nur Lesen"
+    IDS_MEMORY_WRITE_ONLY         "Nur Schreiben"
+    IDS_MEMORY_READ_WRITE         "Lesen / Schreiben"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BUS_UNDEFINED             "Undefiniert"
+    IDS_BUS_INTERNAL              "Intern"
+    IDS_BUS_ISA                   "ISA"
+    IDS_BUS_EISA                  "EISA"
+    IDS_BUS_MICROCHANNEL          "MicroChannel"
+    IDS_BUS_TURBOCHANNEL          "TurboChannel"
+    IDS_BUS_PCIBUS                "PCI"
+    IDS_BUS_VMEBUS                "VME"
+    IDS_BUS_NUBUS                 "NuBus"
+    IDS_BUS_PCMCIABUS             "PCMCIA"
+    IDS_BUS_CBUS                  "C-Bus"
+    IDS_BUS_MPIBUS                "MPI-Bus"
+    IDS_BUS_MPSABUS               "MPSA-Bus"
+    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
+    IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
+    IDS_BUS_PNPISABUS             "PnP-ISA Bus"
+    IDS_BUS_PNPBUS                "PnP Bus"
+    IDS_BUS_UNKNOWNTYPE           "Unbekannter Schnittstellentyp"
 END
 
 /*****************************************************************/
