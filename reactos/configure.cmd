@@ -2,7 +2,10 @@
 
 :: Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
-set USE_NMAKE=
+set USE_NMAKE=0
+
+:: Detect presence of cmake
+cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 
 :: Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
@@ -48,16 +51,21 @@ if defined ROS_ARCH (
     echo Detected Windows SDK %TARGET_PLATFORM%-%ARCH%
 )
 
-if defined ARCH if defined BUILD_ENVIRONMENT (
-    goto createdirs
+:: Detect NMAKE JOM
+if %USE_NMAKE% == 1 (
+    jom /version 2>&1 | find "jom version" > NUL && set USE_NMAKE=2
 )
 
-echo Error: Unable to detect a build environment. Configure script failure.
-exit /b
+:: Checkpoint
+if not defined ARCH (
+    goto fail
+)
+
+if not defined BUILD_ENVIRONMENT (
+    goto fail
+)
 
 :: Create directories
-:createdirs
-
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     echo Creating directories in %REACTOS_OUTPUT_PATH%
@@ -75,7 +83,6 @@ if not exist reactos (
     mkdir reactos
 )
 
-:hostprep
 echo Preparing host tools...
 cd host-tools
 if EXIST CMakeCache.txt (
@@ -85,8 +92,10 @@ set REACTOS_BUILD_TOOLS_DIR=%CD%
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G "MinGW Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
-) else if defined USE_NMAKE (
+) else if %USE_NMAKE% == 1 (
     cmake -G "NMake Makefiles" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+) else if %USE_NMAKE% == 2 (
+    cmake -G "NMake Makefiles JOM" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
         cmake -G "Visual Studio 8 2005 Win64" -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
@@ -108,9 +117,7 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 )
 cd..
 
-:reactprep
 echo Preparing reactos...
-
 cd reactos
 if EXIST CMakeCache.txt (
     del CMakeCache.txt /q
@@ -118,8 +125,10 @@ if EXIST CMakeCache.txt (
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G "MinGW Makefiles" -DENABLE_CCACHE=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
-) else if defined USE_NMAKE (
+) else if %USE_NMAKE% == 1 (
     cmake -G "NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+) else if %USE_NMAKE% == 2 (
+    cmake -G "NMake Makefiles JOM" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
 ) else if "%BUILD_ENVIRONMENT%" == "VS8" (
     if "%ARCH%" == "amd64" (
         cmake -G "Visual Studio 8 2005 Win64" -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
@@ -142,5 +151,13 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 
 cd..
 
-echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, nmake, etc...).
+echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, nmake, jom, etc...).
+exit /b
 
+:fail
+echo Error: Unable to detect build environment. Configure script failure.
+exit /b
+
+:cmake_notfound
+ echo Unable to find cmake, if it is installed, check your PATH variable.
+ exit /b
