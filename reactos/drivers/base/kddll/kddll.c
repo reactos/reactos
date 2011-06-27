@@ -14,6 +14,7 @@
 PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 ULONG RemotePacketId = 0;
+BOOLEAN KdpPhase1Complete = FALSE;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -88,11 +89,9 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    // HACK: misuse this function to get a pointer to FrLdrDbgPrint
-    KdpDbgPrint = (PVOID)LoaderBlock;
-    KDDBGPRINT("KdDebuggerInitialize1\n");
+    KdpPhase1Complete = TRUE;
 
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 
@@ -198,7 +197,7 @@ KdReceivePacket(
             switch (Packet.PacketType)
             {
                 case PACKET_TYPE_KD_ACKNOWLEDGE:
-                    /* Are we waiting for an ACK packet? */                    
+                    /* Are we waiting for an ACK packet? */
                     if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE &&
                         Packet.PacketId == (CurrentPacketId & ~SYNC_PACKET_ID))
                     {
@@ -276,7 +275,7 @@ KdReceivePacket(
         if (MessageData)
         {
             /* Set the length of the message data */
-            MessageData->Length = *DataLength;
+            MessageData->Length = (USHORT)*DataLength;
 
             /* Do we have data? */
             if (MessageData->Length)
@@ -359,7 +358,7 @@ KdSendPacket(
 
     /* Initialize a KD_PACKET */
     Packet.PacketLeader = PACKET_LEADER;
-    Packet.PacketType = PacketType;
+    Packet.PacketType = (USHORT)PacketType;
     Packet.ByteCount = MessageHeader->Length;
     Packet.Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
                                            MessageHeader->Length);

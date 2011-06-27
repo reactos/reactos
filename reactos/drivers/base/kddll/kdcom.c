@@ -10,7 +10,7 @@
 #include "kdcom.h"
 
 /* Define wait timeout value. */
-#define REPEAT_COUNT (1000 * 1000)
+#define REPEAT_COUNT 100
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
@@ -257,6 +257,20 @@ KdpReceiveByte(OUT PBYTE OutByte)
         {
             /* We successfully got a byte */
             return KDP_PACKET_RECEIVED;
+        }
+
+        /* Check if phase 1 is complete */
+        if (KdpPhase1Complete)
+        {
+            /* Use hal to wait 1ms */
+            KeStallExecutionProcessor(1000);
+        }
+        else
+        {
+            volatile unsigned long i;
+
+            /* Do some busy waiting */
+            for (i = 0; i < 1000; i++);
         }
     }
 

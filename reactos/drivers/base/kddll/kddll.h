@@ -25,6 +25,7 @@ typedef UCHAR BYTE, *PBYTE;
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
 extern PFNDBGPRNT KdpDbgPrint;
+extern BOOLEAN KdpPhase1Complete;
 
 typedef enum
 {
