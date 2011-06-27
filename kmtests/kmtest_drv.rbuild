@@ -13,6 +13,24 @@
 	<directory name="example">
 		<file>Example.c</file>
 	</directory>
+	<directory name="ntos_ex">
+		<file>ExPools.c</file>
+		<file>ExTimer.c</file>
+	</directory>
+	<directory name="ntos_fsrtl">
+		<file>FsRtlExpression.c</file>
+	</directory>
+	<directory name="ntos_io">
+		<file>IoDeviceInterface.c</file>
+		<file>IoIrp.c</file>
+		<file>IoMdl.c</file>
+	</directory>
+	<directory name="ntos_ke">
+		<file>KeProcessor.c</file>
+	</directory>
+	<directory name="ntos_ob">
+		<file>ObCreate.c</file>
+	</directory>
 </module>
 <module name="kmtest_printf" type="staticlibrary">
 	<include base="crt">include</include>

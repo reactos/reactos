@@ -14,6 +14,14 @@ list(APPEND KMTEST_DRV_SOURCE
     kmtest_drv/testlist.c
 
     example/Example.c
+    ntos_ex/ExPools.c
+    ntos_ex/ExTimer.c
+    ntos_fsrtl/FsRtlExpression.c
+    ntos_io/IoDeviceInterface.c
+    ntos_io/IoIrp.c
+    ntos_io/IoMdl.c
+    ntos_ke/KeProcessor.c
+    ntos_ob/ObCreate.c
 
     kmtest_drv/kmtest_drv.rc)
 
