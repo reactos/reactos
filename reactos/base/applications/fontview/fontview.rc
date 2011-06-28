@@ -18,10 +18,8 @@ END
 #include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
 #include "lang/lt-LT.rc"
-#include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
-#include "lang/uk-UA.rc"
 #include "lang/no-NO.rc"
 #include "lang/zh-CN.rc"
 #include "lang/zh-TW.rc"
@@ -30,3 +28,5 @@ END
 #pragma code_page(65001)
 #include "lang/pl-PL.rc"
 #include "lang/ro-RO.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

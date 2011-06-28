@@ -1,6 +1,7 @@
 /* FILE:        applications/charmap/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2011-03-31
+ * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -9,14 +10,14 @@ IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "Písmo:", IDC_STATIC, 6, 7, 24, 9
+  LTEXT         "PÃ­smo:", IDC_STATIC, 6, 7, 24, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
-  PUSHBUTTON    "Nápovìda", IDC_CMHELP, 249, 5, 35, 13
+  PUSHBUTTON    "NÃ¡povÃ¬da", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "Znaky ke zkopírování:", IDC_STATIC, 6, 188, 66, 9
+  LTEXT         "Znaky ke zkopÃ­rovÃ¡nÃ­:", IDC_STATIC, 6, 188, 66, 9
   CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "Oznaèit", IDC_SELECT, 194, 186, 44, 13
-  PUSHBUTTON    "Kopírovat", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+  DEFPUSHBUTTON "OznaÃ¨it", IDC_SELECT, 194, 186, 44, 13
+  PUSHBUTTON    "KopÃ­rovat", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
   CONTROL       "Advanced view",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
 END
 
@@ -36,12 +37,12 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "O programu Mapa znakù"
+CAPTION "O programu Mapa znakÃ¹"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Mapa znakù v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON    "Zavøít", IDOK, 75, 162, 44, 15
+  LTEXT         "Mapa znakÃ¹ v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "ZavÃ¸Ã­t", IDOK, 75, 162, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END

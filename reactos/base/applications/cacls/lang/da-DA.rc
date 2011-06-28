@@ -1,5 +1,6 @@
 /*
- *  German language file by Daniel Reimer <EmuandCo> 2006-06-15
+ *  Danish language file by Daniel Reimer <EmuandCo> 2006-06-15
+ *  UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
@@ -7,28 +8,28 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "Ændringer fil-ACL'er (Access Control List) eller viser dem.\n\n\
+IDS_HELP, "Ã†ndringer fil-ACL'er (Access Control List) eller viser dem.\n\n\
 CACLS Filenavn [/T] [/E] [/C] [/G Bruger:Adgang] [/R Bruger [...]]\n\
                 [/P Bruger:Adgang [...]] [/D Bruger [...]]\n\
   Filnavn              Viser ACL'er for angivet filer.\n\
-  /T                   Ændre ACL'er for angivene filer i mapper\n\
+  /T                   Ã†ndre ACL'er for angivene filer i mapper\n\
                        og alle undermapper.\n\
   /E                   Bearbejde ACL i stedet for at erstatte.\n\
   /C                   Forandre ACL'er ved adgangfejl videre.\n\
   /G Bruger:Adgang     Tillade angivene adgangsformer.\n\
-                       Adgang kan være:   R  læse\n\
+                       Adgang kan vÃ¦re:   R  lÃ¦se\n\
                                           W  skrive\n\
-                                          C  ændre (At skrive)\n\
+                                          C  Ã¦ndre (At skrive)\n\
                                           F  Fuld adgang\n\
   /R Bruger            Fjerne adgangsrette af brugeren (kun gyldig med /E).\n\
   /P Bruger:Adgang     Erstatte adgangsretterne af brugeren.\n\
-                       Adgang kan være:   N  Ingen\n\
-                                          R  Læse\n\
+                       Adgang kan vÃ¦re:   N  Ingen\n\
+                                          R  LÃ¦se\n\
                                           W  Skrive\n\
-                                          C  ændre (Skrive)\n\
+                                          C  Ã¦ndre (Skrive)\n\
                                           F  fuld adgang\n\
    /D Bruger           Forbyde adgang for brugeren.\n\
-Mellemrum(Wildcards) bliver understøttet i filenavn.\n\
+Mellemrum(Wildcards) bliver understÃ¸ttet i filenavn.\n\
 Man kan angive flere bruger i en kommando.\n\n\
 Forkortninger:\n\
    CI - Container overtagelse.\n\
