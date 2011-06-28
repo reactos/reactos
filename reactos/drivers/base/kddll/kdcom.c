@@ -125,7 +125,7 @@ KdDebuggerInitialize0(
     {
         /* HACK */
         KdpDbgPrint = LoaderBlock->u.I386.CommonDataArea;
-        KDDEBUG("KdDebuggerInitialize0\n");
+        KDDBGPRINT("KdDebuggerInitialize0\n");
 
         /* Get the Command Line */
         CommandLine = LoaderBlock->LoadOptions;
