@@ -9,9 +9,6 @@
 #include "kddll.h"
 #include "kdcom.h"
 
-/* Define wait timeout value. */
-#define REPEAT_COUNT 100
-
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
 #define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
@@ -126,6 +123,10 @@ KdDebuggerInitialize0(
     /* Check if e have a LoaderBlock */
     if (LoaderBlock)
     {
+        /* HACK */
+        KdpDbgPrint = LoaderBlock->u.I386.CommonDataArea;
+        KDDEBUG("KdDebuggerInitialize0\n");
+
         /* Get the Command Line */
         CommandLine = LoaderBlock->LoadOptions;
 
@@ -248,7 +249,7 @@ KDP_STATUS
 NTAPI
 KdpReceiveByte(OUT PBYTE OutByte)
 {
-    ULONG Repeats = REPEAT_COUNT;
+    ULONG Repeats = KdpStallScaleFactor * 100;
 
     while (Repeats--)
     {
@@ -257,20 +258,6 @@ KdpReceiveByte(OUT PBYTE OutByte)
         {
             /* We successfully got a byte */
             return KDP_PACKET_RECEIVED;
-        }
-
-        /* Check if phase 1 is complete */
-        if (KdpPhase1Complete)
-        {
-            /* Use hal to wait 1ms */
-            KeStallExecutionProcessor(1000);
-        }
-        else
-        {
-            volatile unsigned long i;
-
-            /* Do some busy waiting */
-            for (i = 0; i < 1000; i++);
         }
     }
 

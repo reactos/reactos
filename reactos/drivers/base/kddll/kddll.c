@@ -6,7 +6,6 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
  */
 
-//#define KDDEBUG /* uncomment to enable debugging this dll */
 #include "kddll.h"
 
 /* GLOBALS ********************************************************************/
@@ -15,6 +14,7 @@ PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 ULONG RemotePacketId = 0;
 BOOLEAN KdpPhase1Complete = FALSE;
+ULONG KdpStallScaleFactor = 1000;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -89,6 +89,7 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
+    KdpStallScaleFactor = KeGetPcr()->StallScaleFactor * 100;
     KdpPhase1Complete = TRUE;
 
     return STATUS_SUCCESS;
