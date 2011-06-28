@@ -77,7 +77,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
     
     ReferenceObject(Connection);
     
-    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x\n", Status);
+    DbgPrint("[IP, FlushAllQueues] Flushing recv/all with status: 0x%x fox Connection = 0x%x\n", Status, Connection);
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ReceiveRequest, &Connection->Lock)))
     {
@@ -103,7 +103,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
 
-        DbgPrint("[IP, FlushAllQueues] Flushing Listen request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
+        DbgPrint("[IP, FlushAllQueues] Completing Listen request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
         DereferenceObject(Bucket->AssociatedEndpoint);
         CompleteBucket(Connection, Bucket, TRUE);
@@ -129,22 +129,28 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         
         Bucket->Status = Status;
         Bucket->Information = 0;
+
+        DbgPrint("[IP, FlushAllQueues] Completing Connection request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
         CompleteBucket(Connection, Bucket, TRUE);
     }
     
     DereferenceObject(Connection);
+
+    DbgPrint("[IP, FlushAllQueues] Leaving\n");
 }
 
 VOID
 TCPFinEventHandler(void *arg, err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    
-    FlushAllQueues(Connection, TCPTranslateError(err));
-    
+
     /* We're already closed so we don't want to call lwip_close */
     Connection->SocketContext = NULL;
+
+    DbgPrint("[IP, TCPFinEventHandler] Called for Connection( 0x%x )-> SocketContext = pcb (0x%x)\n", Connection, Connection->SocketContext);
+    
+    FlushAllQueues(Connection, TCPTranslateError(err));
 }
     
 VOID
