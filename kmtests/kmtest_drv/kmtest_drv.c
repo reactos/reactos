@@ -29,7 +29,7 @@ typedef struct
 {
     PKMT_RESULTBUFFER ResultBuffer;
     PMDL Mdl;
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+} KMT_DEVICE_EXTENSION, *PKMT_DEVICE_EXTENSION;
 
 /* Globals */
 static PDEVICE_OBJECT MainDeviceObject;
@@ -47,11 +47,15 @@ static PDEVICE_OBJECT MainDeviceObject;
  *
  * @return Status
  */
-NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
+NTSTATUS
+NTAPI
+DriverEntry(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegistryPath)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DeviceName;
-    PDEVICE_EXTENSION DeviceExtension;
+    PKMT_DEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
@@ -59,8 +63,9 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Re
 
     DPRINT("DriverEntry\n");
 
-    RtlInitUnicodeString(&DeviceName, L"\\Device\\Kmtest");
-    Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION), &DeviceName,
+    RtlInitUnicodeString(&DeviceName, KMTEST_DEVICE_DRIVER_PATH);
+    Status = IoCreateDevice(DriverObject, sizeof(KMT_DEVICE_EXTENSION),
+                            &DeviceName,
                             FILE_DEVICE_UNKNOWN,
                             FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
                             TRUE, &MainDeviceObject);
@@ -98,7 +103,11 @@ cleanup:
  * @param DriverObject
  *        Driver Object
  */
-static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
+static
+VOID
+NTAPI
+DriverUnload(
+    IN PDRIVER_OBJECT DriverObject)
 {
     PAGED_CODE();
 
@@ -108,7 +117,7 @@ static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
 
     if (MainDeviceObject)
     {
-        PDEVICE_EXTENSION DeviceExtension = MainDeviceObject->DeviceExtension;
+        PKMT_DEVICE_EXTENSION DeviceExtension = MainDeviceObject->DeviceExtension;
         ASSERT(!DeviceExtension->Mdl);
         ASSERT(!DeviceExtension->ResultBuffer);
         ASSERT(!ResultBuffer);
@@ -128,11 +137,16 @@ static VOID NTAPI DriverUnload(IN PDRIVER_OBJECT DriverObject)
  *
  * @return Status
  */
-static NTSTATUS NTAPI DriverCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+static
+NTSTATUS
+NTAPI
+DriverCreate(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
-    PDEVICE_EXTENSION DeviceExtension;
+    PKMT_DEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
@@ -166,11 +180,16 @@ static NTSTATUS NTAPI DriverCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
  *
  * @return Status
  */
-static NTSTATUS NTAPI DriverClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+static
+NTSTATUS
+NTAPI
+DriverClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
-    PDEVICE_EXTENSION DeviceExtension;
+    PKMT_DEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
@@ -208,7 +227,12 @@ static NTSTATUS NTAPI DriverClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
  *
  * @return Status
  */
-static NTSTATUS NTAPI DriverIoControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+static
+NTSTATUS
+NTAPI
+DriverIoControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
@@ -283,7 +307,7 @@ static NTSTATUS NTAPI DriverIoControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
         }
         case IOCTL_KMTEST_SET_RESULTBUFFER:
         {
-            PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+            PKMT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
             DPRINT("DriverIoControl. IOCTL_KMTEST_SET_RESULTBUFFER, inlen=%lu, outlen=%lu\n",
                      IoStackLocation->Parameters.DeviceIoControl.InputBufferLength,

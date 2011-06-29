@@ -25,10 +25,20 @@ START_TEST(Example)
     ok_eq_ulong(3LU, 4LU);
     ok_eq_pointer((PVOID)8, (PVOID)9);
     ok_eq_hex(0x1234LU, 0x5678LU);
+    ok_eq_bool(TRUE, TRUE);
+    ok_eq_bool(TRUE, FALSE);
+    ok_eq_bool(FALSE, TRUE);
     ok_bool_true(FALSE, "foo");
     ok_bool_false(TRUE, "bar");
     ok_eq_print(1, 2, "%i");
     ok_eq_str("Hello", "world");
     ok_eq_wstr(L"ABC", L"DEF");
+
+    if (!skip(KeGetCurrentIrql() == HIGH_LEVEL, "This should only work on HIGH_LEVEL\n"))
+    {
+        /* do tests depending on HIGH_LEVEL here */
+        ok(1, "This is fine\n");
+    }
+
     KeLowerIrql(Irql);
 }

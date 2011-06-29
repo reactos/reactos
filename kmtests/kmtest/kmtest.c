@@ -158,11 +158,8 @@ int __cdecl main(int argc, char **argv)
         size_t len;
 
         printf("Usage: %s test_name\n", programName);
+        printf("       %s <Create|Start|Stop|Delete>\n", programName);
         puts("\nValid test names:");
-        puts("    Create");
-        puts("    Start");
-        puts("    Stop");
-        puts("    Delete");
 
         error = ListTests(&testNames);
         testName = testNames;
