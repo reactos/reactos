@@ -297,11 +297,11 @@ BiosCHSDriveSize:
     .long 0
 
 msgDiskError:
-    .asciz "Disk error\r\n"
+    .ascii "Disk error", CR, LF, NUL
 msgFileSystemError:
-    .asciz "File system error\r\n"
+    .ascii "File system error", CR, LF, NUL
 msgAnyKey:
-    .asciz "Press any key to restart\r\n"
+    .ascii "Press any key to restart", CR, LF, NUL
 
 .org 509 // Pad to 509 bytes
 

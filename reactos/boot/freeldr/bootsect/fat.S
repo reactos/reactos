@@ -412,7 +412,7 @@ msgFreeLdr:
     .ascii "ldr not found", CR, LF, NUL
 // Sorry, need the space...
 //msgAnyKey:
-//  .asciz "Press any key to restart\r\n"
+//  .ascii "Press any key to restart", CR, LF, NUL
 filename:
     .ascii "FREELDR SYS"
 
