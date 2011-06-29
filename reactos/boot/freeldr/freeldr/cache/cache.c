@@ -243,6 +243,7 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 	return TRUE;
 }
 
+#if 0
 BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount)
 {
 	PCACHE_BLOCK	CacheBlock;
@@ -288,6 +289,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULON
 
 	return TRUE;
 }
+#endif
 
 BOOLEAN CacheReleaseMemory(ULONG MinimumAmountToRelease)
 {

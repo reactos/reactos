@@ -279,7 +279,6 @@ if(ARCH MATCHES i386)
         ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
-        ke/freeldr.c
         ke/i386/abios.c
         ke/i386/cpu.c
         ke/i386/context.c

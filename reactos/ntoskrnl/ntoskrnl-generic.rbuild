@@ -113,9 +113,6 @@
 		<file>dpc.c</file>
 		<file>eventobj.c</file>
 		<file>except.c</file>
-		<if property="ARCH" value="i386">
-			<file>freeldr.c</file>
-		</if>
 		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>

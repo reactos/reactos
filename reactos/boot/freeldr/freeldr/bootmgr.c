@@ -19,6 +19,11 @@
 
 #include <freeldr.h>
 
+ARC_DISK_SIGNATURE reactos_arc_disk_info[32]; // ARC Disk Information
+unsigned long reactos_disk_count = 0;
+char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
+char reactos_arc_strings[32][256];
+
 ULONG	 GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG	 OperatingSystemCount)
 {
 	CHAR	DefaultOSText[80];
@@ -231,27 +236,16 @@ VOID RunLoader(VOID)
 #if defined(__i386__) && !defined(_MSC_VER)
 		DriveMapMapDrivesInSection(SectionName);
 #endif
-		if (_stricmp(BootType, "ReactOS") == 0)
-		{
-			LoadAndBootReactOS(SectionName);
-		}
 #ifdef FREELDR_REACTOS_SETUP
-		else if (_stricmp(BootType, "ReactOSSetup") == 0)
-		{
-			// In future we could pass the selected OS details through this
-			// to have different install methods, etc.
-			LoadReactOSSetup();
-		}
-#if defined(__i386__) || defined(__x86_64__)
-		else if (_stricmp(BootType, "ReactOSSetup2") == 0)
+		if (_stricmp(BootType, "ReactOSSetup2") == 0)
 		{
 			// WinLdr-style boot
 			LoadReactOSSetup2();
 		}
-#endif
+		else
 #endif
 #ifdef __i386__
-		else if (_stricmp(BootType, "Windows") == 0)
+		if (_stricmp(BootType, "Windows") == 0)
 		{
 			LoadAndBootWindows(SectionName, SettingValue, 0);
 		}

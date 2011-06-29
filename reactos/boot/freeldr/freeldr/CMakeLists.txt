@@ -52,8 +52,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     reactos/arcname.c
     reactos/archwsup.c
     reactos/binhive.c
-    reactos/reactos.c
-    reactos/imageldr.c
+
     ui/directui.c
     ui/gui.c
     ui/minitui.c
@@ -90,7 +89,6 @@ if(ARCH MATCHES i386)
         arch/i386/i386trap.S
         arch/i386/i386vid.c
         arch/i386/linux.cmake.S
-        arch/i386/loader.c
         arch/i386/machpc.c
         arch/i386/mb.S
         arch/i386/miscboot.c
@@ -190,8 +188,7 @@ add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR all)
 
 list(APPEND SETUPLDR_SOURCE
-    inffile/inffile.c
-    reactos/setupldr.c)
+    inffile/inffile.c)
 
 if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     list(APPEND SETUPLDR_SOURCE windows/setupldr2.c)
