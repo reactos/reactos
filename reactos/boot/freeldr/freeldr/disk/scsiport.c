@@ -1540,7 +1540,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR Register,
-    IN ULONG Value)
+    IN UCHAR Value)
 {
     WRITE_REGISTER_UCHAR(Register, Value);
 }
