@@ -156,11 +156,21 @@ static NTSTATUS NTAPI SendComplete
         else
             break;
     }
+    
+    if (FCB->Send.Size - FCB->Send.BytesUsed != 0)
+    {
+		FCB->PollState |= AFD_EVENT_SEND;
+		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+    else
+    {
+        FCB->PollState &= ~AFD_EVENT_SEND;
+    }
 
     /* Some data is still waiting */
-    if( FCB->Send.BytesUsed ) {
-		FCB->PollState &= ~AFD_EVENT_SEND;
-
+    if( FCB->Send.BytesUsed )
+    {
 		Status = TdiSend( &FCB->SendIrp.InFlightRequest,
 						  FCB->Connection.Object,
 						  0,
@@ -171,10 +181,6 @@ static NTSTATUS NTAPI SendComplete
 						  FCB );
         
         RetryDisconnectCompletion(FCB);
-    } else {
-		FCB->PollState |= AFD_EVENT_SEND;
-		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
     SocketStateUnlock( FCB );
@@ -388,6 +394,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
     else
     {
+        FCB->PollState &= ~AFD_EVENT_SEND;
         if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
             AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
             UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
@@ -415,6 +422,17 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         
         AFD_DbgPrint(MID_TRACE,("Dismissing request: %x (%d)\n",
                                 Status, TotalBytesCopied));
+    }
+    
+    if (SpaceAvail)
+    {
+        FCB->PollState |= AFD_EVENT_SEND;
+		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+    else
+    {
+        FCB->PollState &= ~AFD_EVENT_SEND;
     }
     
     RetryDisconnectCompletion(FCB);
