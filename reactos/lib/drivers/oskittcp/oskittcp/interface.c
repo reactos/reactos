@@ -117,7 +117,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 void InitializeSocketFlags(struct socket *so)
 {
     so->so_state |= SS_NBIO;
-    so->so_options |= SO_DONTROUTE;
+    so->so_options |= SO_DONTROUTE | SO_REUSEPORT;
     so->so_snd.sb_flags |= SB_SEL;
     so->so_rcv.sb_flags |= SB_SEL;
 }
@@ -382,8 +382,9 @@ int OskitTCPAccept( void *socket,
 
     inp = so ? (struct inpcb *)so->so_pcb : NULL;
     if( inp && name ) {
-        ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr =
-            inp->inp_faddr.s_addr;
+        ((struct sockaddr_in *)AddrOut)->sin_len = sizeof(struct sockaddr_in);
+        ((struct sockaddr_in *)AddrOut)->sin_family = AF_INET;
+        ((struct sockaddr_in *)AddrOut)->sin_addr = inp->inp_faddr;
         ((struct sockaddr_in *)AddrOut)->sin_port = inp->inp_fport;
     }
 
