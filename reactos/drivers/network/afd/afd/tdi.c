@@ -1228,6 +1228,7 @@ NTSTATUS TdiSendDatagram(
 }
 
 NTSTATUS TdiDisconnect(
+    PIRP *Irp,
     PFILE_OBJECT TransportObject,
     PLARGE_INTEGER Time,
     USHORT Flags,
@@ -1237,10 +1238,6 @@ NTSTATUS TdiDisconnect(
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
     PTDI_CONNECTION_INFORMATION ReturnConnectionInfo) {
     PDEVICE_OBJECT DeviceObject;
-    KEVENT Event;
-    PIRP Irp;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     if (!TransportObject) {
 		AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
@@ -1255,20 +1252,20 @@ NTSTATUS TdiDisconnect(
         return STATUS_INVALID_PARAMETER;
     }
 
-    Irp = TdiBuildInternalDeviceControlIrp
+    *Irp = TdiBuildInternalDeviceControlIrp
 		( TDI_DISCONNECT,          /* Sub function */
 		  DeviceObject,            /* Device object */
 		  TransportObject,         /* File object */
-		  &Event,                  /* Event */
+		  NULL,                    /* Event */
 		  Iosb );                  /* Status */
 
-    if (!Irp) {
+    if (!*Irp) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     TdiBuildDisconnect
-		(Irp,                    /* I/O Request Packet */
+		(*Irp,                   /* I/O Request Packet */
 		 DeviceObject,           /* Device object */
 		 TransportObject,        /* File object */
 		 CompletionRoutine,      /* Completion routine */
@@ -1278,7 +1275,9 @@ NTSTATUS TdiDisconnect(
 		 RequestConnectionInfo,  /* Indication of who to disconnect */
 		 ReturnConnectionInfo);  /* Indication of who disconnected */
 
-    return TdiCall(Irp, DeviceObject, &Event, Iosb);
+    TdiCall(*Irp, DeviceObject, NULL, Iosb);
+    
+    return STATUS_PENDING;
 }
 
 /* EOF */

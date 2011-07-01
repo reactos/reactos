@@ -182,10 +182,12 @@ typedef struct _AFD_FCB {
     PAFD_DEVICE_EXTENSION DeviceExt;
     BOOLEAN DelayedAccept;
     UINT ConnSeq;
+    USHORT DisconnectFlags;
+    BOOLEAN DisconnectPending;
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
-    PTDI_CONNECTION_INFORMATION AddressFrom, ConnectInfo;
+    PTDI_CONNECTION_INFORMATION AddressFrom, ConnectCallInfo, ConnectReturnInfo;
     AFD_TDI_OBJECT AddressFile, Connection;
-    AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp;
+    AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp, DisconnectIrp;
     AFD_DATA_WINDOW Send, Recv;
     KMUTEX Mutex;
     PKEVENT EventSelect;

@@ -332,19 +332,19 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	    return Status;
 	}
 
-        FCB->FilledConnectData = MIN(FCB->ConnectInfo->UserDataLength, FCB->ConnectDataSize);
+        FCB->FilledConnectData = MIN(FCB->ConnectReturnInfo->UserDataLength, FCB->ConnectDataSize);
         if (FCB->FilledConnectData)
         {
             RtlCopyMemory(FCB->ConnectData,
-                          FCB->ConnectInfo->UserData,
+                          FCB->ConnectReturnInfo->UserData,
                           FCB->FilledConnectData);
         }
 
-        FCB->FilledConnectOptions = MIN(FCB->ConnectInfo->OptionsLength, FCB->ConnectOptionsSize);
+        FCB->FilledConnectOptions = MIN(FCB->ConnectReturnInfo->OptionsLength, FCB->ConnectOptionsSize);
         if (FCB->FilledConnectOptions)
         {
             RtlCopyMemory(FCB->ConnectOptions,
-                          FCB->ConnectInfo->Options,
+                          FCB->ConnectReturnInfo->Options,
                           FCB->FilledConnectOptions);
         }
 
@@ -380,7 +380,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_CONNECT_INFO ConnectReq;
-    PTDI_CONNECTION_INFORMATION TargetAddress;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
@@ -450,21 +449,25 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( !NT_SUCCESS(Status) )
 	    break;
 
+    if (FCB->ConnectReturnInfo) ExFreePool(FCB->ConnectReturnInfo);
 	Status = TdiBuildConnectionInfo
-	    ( &FCB->ConnectInfo,
+	    ( &FCB->ConnectReturnInfo,
 	      &ConnectReq->RemoteAddress );
 
         if( NT_SUCCESS(Status) )
-            Status = TdiBuildConnectionInfo(&TargetAddress,
+        {
+            if (FCB->ConnectCallInfo) ExFreePool(FCB->ConnectCallInfo);
+            Status = TdiBuildConnectionInfo(&FCB->ConnectCallInfo,
                                   	    &ConnectReq->RemoteAddress);
+        }
         else break;
 
 
 	if( NT_SUCCESS(Status) ) {
-            TargetAddress->UserData = FCB->ConnectData;
-            TargetAddress->UserDataLength = FCB->ConnectDataSize;
-            TargetAddress->Options = FCB->ConnectOptions;
-            TargetAddress->OptionsLength = FCB->ConnectOptionsSize;
+            FCB->ConnectCallInfo->UserData = FCB->ConnectData;
+            FCB->ConnectCallInfo->UserDataLength = FCB->ConnectDataSize;
+            FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
+            FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
         
         FCB->State = SOCKET_STATE_CONNECTING;
         
@@ -474,8 +477,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         {
             Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest,
                                 FCB->Connection.Object,
-                                TargetAddress,
-                                FCB->ConnectInfo,
+                                FCB->ConnectCallInfo,
+                                FCB->ConnectReturnInfo,
                                 &FCB->ConnectIrp.Iosb,
                                 StreamSocketConnectComplete,
                                 FCB );
@@ -483,8 +486,6 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         
         if (Status != STATUS_PENDING)
             FCB->State = SOCKET_STATE_BOUND;
-
-        ExFreePool(TargetAddress);
         
         SocketStateUnlock(FCB);
 

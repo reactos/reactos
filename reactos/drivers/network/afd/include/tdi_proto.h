@@ -16,7 +16,8 @@ NTSTATUS TdiCloseDevice(HANDLE Handle,
 			PFILE_OBJECT FileObject);
 
 NTSTATUS TdiDisconnect
-( PFILE_OBJECT TransportObject,
+( PIRP *Irp,
+  PFILE_OBJECT TransportObject,
   PLARGE_INTEGER Time,
   USHORT Flags,
   PIO_STATUS_BLOCK Iosb,
