@@ -194,6 +194,13 @@ ReadSectorsSetupDiskAddressPacket:
     mov  dl, byte ptr BP_REL(BootDrive)                // Drive number
     mov  ah, HEX(42)                                // Int 13h, AH = 42h - Extended Read
     int  HEX(13)                                // Call BIOS
+
+    /* This code "fixes" loading the MSVC built kernel */
+    pushad
+    mov  si, offset msgNull
+    call PutChars
+    popad
+
     jc   PrintDiskError                        // If the read failed then abort
 
     add  sp, 16                            // Remove disk address packet from stack
@@ -302,6 +309,8 @@ msgFileSystemError:
     .ascii "File system error", CR, LF, NUL
 msgAnyKey:
     .ascii "Press any key to restart", CR, LF, NUL
+msgNull:
+    .ascii NUL
 
 .org 509 // Pad to 509 bytes
 
@@ -527,7 +536,7 @@ msgFreeLdr:
 filename:
     .ascii "FREELDR SYS"
 msgLoading:
-    .ascii "Loading FreeLoader...\r\n", CR, LF, NUL
+    .ascii "Loading FreeLoader...", CR, LF, NUL
 
 .org 1022   // Pad to 1022 bytes
 
