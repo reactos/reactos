@@ -30,6 +30,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD dwResumeCount = 1;
 
+static CRITICAL_SECTION ControlServiceCriticalSection;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -691,13 +692,18 @@ ScmControlService(PSERVICE Service,
 
     DPRINT("ScmControlService() called\n");
 
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
     TotalLength = wcslen(Service->lpServiceName) + 1;
 
     ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
                                                    HEAP_ZERO_MEMORY,
                                                    sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
     if (ControlPacket == NULL)
+    {
+        LeaveCriticalSection(&ControlServiceCriticalSection);
         return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
     ControlPacket->dwControl = dwControl;
     ControlPacket->dwSize = TotalLength;
@@ -727,6 +733,8 @@ ScmControlService(PSERVICE Service,
     {
         dwError = ReplyPacket.dwError;
     }
+
+    LeaveCriticalSection(&ControlServiceCriticalSection);
 
     DPRINT("ScmControlService() done\n");
 
@@ -914,6 +922,9 @@ ScmStartUserModeService(PSERVICE Service,
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
+
+    DPRINT("Service: %p  ImagePath: %wZ  PipeName: %S\n", Service, &ImagePath, NtControlPipeName);
+
     Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
                                                   PIPE_ACCESS_DUPLEX,
                                                   PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -1025,8 +1036,20 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
+    LPCWSTR ErrorLogStrings[2];
 
     DPRINT("ScmStartService() called\n");
+
+    DPRINT("Start Service %p (%S)\n", Service, Service->lpServiceName);
+
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
+    if (Service->Status.dwCurrentState != SERVICE_STOPPED)
+    {
+        DPRINT("Service %S is already running!\n", Service->lpServiceName);
+        LeaveCriticalSection(&ControlServiceCriticalSection);
+        return ERROR_SERVICE_ALREADY_RUNNING;
+    }
 
     Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
@@ -1055,6 +1078,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         }
     }
 
+    LeaveCriticalSection(&ControlServiceCriticalSection);
+
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
 
     if (dwError == ERROR_SUCCESS)
@@ -1064,15 +1089,20 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
             Group->ServicesRunning = TRUE;
         }
     }
-#if 0
     else
     {
-        switch (Service->ErrorControl)
+        if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
-            case SERVICE_ERROR_NORMAL:
-                /* FIXME: Log error */
-                break;
+            ErrorLogStrings[0] = Service->lpServiceName;
+            ErrorLogStrings[1] = L"Test";
+            ScmLogError(EVENT_SERVICE_START_FAILED,
+                        2,
+                        ErrorLogStrings);
+        }
 
+#if 0
+        switch (Service->dwErrorControl)
+        {
             case SERVICE_ERROR_SEVERE:
                 if (IsLastKnownGood == FALSE)
                 {
@@ -1091,8 +1121,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
                 }
                 break;
         }
-    }
 #endif
+    }
 
     return dwError;
 }
@@ -1105,14 +1135,65 @@ ScmAutoStartServices(VOID)
     PLIST_ENTRY ServiceEntry;
     PSERVICE_GROUP CurrentGroup;
     PSERVICE CurrentService;
+    WCHAR szSafeBootServicePath[MAX_PATH];
+    DWORD dwError;
+    HKEY hKey;
     ULONG i;
 
-    /* Clear 'ServiceVisited' flag */
+    /* Clear 'ServiceVisited' flag (or set if not to start in Safe Mode) */
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-      CurrentService->ServiceVisited = FALSE;
+        /* Build the safe boot path */
+        wcscpy(szSafeBootServicePath,
+               L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
+        switch(GetSystemMetrics(SM_CLEANBOOT))
+        {
+            /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
+            case 1:
+            case 3: wcscat(szSafeBootServicePath, L"\\Minimal\\"); break;
+            case 2: wcscat(szSafeBootServicePath, L"\\Network\\"); break;
+        }
+        if(GetSystemMetrics(SM_CLEANBOOT))
+        {
+            /* If key does not exist then do not assume safe mode */
+            dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                    szSafeBootServicePath,
+                                    0,
+                                    KEY_READ,
+                                    &hKey);
+            if(dwError == ERROR_SUCCESS)
+            {
+                RegCloseKey(hKey);
+                /* Finish Safe Boot path off */
+                wcsncat(szSafeBootServicePath,
+                        CurrentService->lpServiceName,
+                        MAX_PATH - wcslen(szSafeBootServicePath));
+                /* Check that the key is in the Safe Boot path */
+                dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                        szSafeBootServicePath,
+                                        0,
+                                        KEY_READ,
+                                        &hKey);
+                if(dwError != ERROR_SUCCESS)
+                {
+                    /* Mark service as visited so it is not auto-started */
+                    CurrentService->ServiceVisited = TRUE;
+                }
+                else
+                {
+                    /* Must be auto-started in safe mode - mark as unvisited */
+                    RegCloseKey(hKey);
+                    CurrentService->ServiceVisited = FALSE;
+                }
+            }
+            else
+            {
+                DPRINT1("WARNING: Could not open the associated Safe Boot key!");
+                CurrentService->ServiceVisited = FALSE;
+            }
+        }
       ServiceEntry = ServiceEntry->Flink;
     }
 
@@ -1218,6 +1299,9 @@ ScmAutoShutdownServices(VOID)
 
     DPRINT("ScmAutoShutdownServices() called\n");
 
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
@@ -1227,13 +1311,17 @@ ScmAutoShutdownServices(VOID)
             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
         {
             /* shutdown service */
-            ScmControlService(CurrentService, SERVICE_CONTROL_STOP);
+            DPRINT("Shutdown service: %S\n", CurrentService->szServiceName);
+            ScmControlService(CurrentService, SERVICE_CONTROL_SHUTDOWN);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
 
-    DPRINT("ScmGetBootAndSystemDriverState() done\n");
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("ScmAutoShutdownServices() done\n");
 }
 
 
@@ -1255,6 +1343,20 @@ VOID
 ScmUnlockDatabase(VOID)
 {
     RtlReleaseResource(&DatabaseLock);
+}
+
+
+VOID
+ScmInitNamedPipeCriticalSection(VOID)
+{
+    InitializeCriticalSection(&ControlServiceCriticalSection);
+}
+
+
+VOID
+ScmDeleteNamedPipeCriticalSection(VOID)
+{
+    DeleteCriticalSection(&ControlServiceCriticalSection);
 }
 
 /* EOF */

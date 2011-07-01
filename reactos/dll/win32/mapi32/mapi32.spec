@@ -1,4 +1,4 @@
-  8 stub @
+  8 stub mapi32_8
  10 stdcall MAPILogonEx(long ptr ptr long ptr)
  11 stdcall MAPILogonEx@20(long ptr ptr long ptr) MAPILogonEx
  12 stdcall MAPIAllocateBuffer(long ptr)
@@ -18,8 +18,8 @@
  26 stub LaunchWizard@20
  27 stdcall -private DllGetClassObject(ptr ptr ptr)
  28 stdcall -private DllCanUnloadNow()
- 29 stub MAPIOpenFormMgr
- 30 stub MAPIOpenFormMgr@8
+ 29 stdcall MAPIOpenFormMgr(ptr ptr)
+ 30 stdcall MAPIOpenFormMgr@8(ptr ptr) MAPIOpenFormMgr
  31 stdcall MAPIOpenLocalFormContainer(ptr)
  32 stdcall MAPIOpenLocalFormContainer@4(ptr) MAPIOpenLocalFormContainer
  33 stdcall ScInitMapiUtil@4(long) ScInitMapiUtil
@@ -89,12 +89,12 @@
 146 stub HrDecomposeMsgID@24
 147 stdcall OpenStreamOnFile@24(ptr ptr ptr ptr ptr ptr) OpenStreamOnFile
 148 stdcall OpenStreamOnFile(ptr ptr ptr ptr ptr ptr)
-149 stub OpenTnefStream@28
-150 stub OpenTnefStream
-151 stub OpenTnefStreamEx@32
-152 stub OpenTnefStreamEx
-153 stub GetTnefStreamCodepage@12
-154 stub GetTnefStreamCodepage
+149 stdcall OpenTnefStream@28(ptr ptr ptr long ptr long ptr) OpenTnefStream
+150 stdcall OpenTnefStream(ptr ptr ptr long ptr long ptr)
+151 stdcall OpenTnefStreamEx@32(ptr ptr ptr long ptr long ptr ptr) OpenTnefStreamEx
+152 stdcall OpenTnefStreamEx(ptr ptr ptr long ptr long ptr ptr)
+153 stdcall GetTnefStreamCodepage@12(ptr ptr ptr) GetTnefStreamCodepage
+154 stdcall GetTnefStreamCodepage(ptr ptr ptr)
 155 stdcall UlFromSzHex@4(ptr) UlFromSzHex
 156 stub UNKOBJ_ScAllocate@12
 157 stub UNKOBJ_ScAllocateMore@16
@@ -120,10 +120,10 @@
 180 stdcall FBadRow@4(ptr) FBadRow
 181 stdcall FBadProp@4(ptr) FBadProp
 182 stdcall FBadColumnSet@4(ptr) FBadColumnSet
-183 stub RTFSync@12
-184 stub RTFSync
-185 stub WrapCompressedRTFStream@12
-186 stub WrapCompressedRTFStream
+183 stdcall RTFSync@12(ptr long ptr) RTFSync
+184 stdcall RTFSync(ptr long ptr)
+185 stdcall WrapCompressedRTFStream@12(ptr long ptr) WrapCompressedRTFStream
+186 stdcall WrapCompressedRTFStream(ptr long ptr)
 187 stub __ValidateParameters@8
 188 stub __CPPValidateParameters@8
 189 stub FBadSortOrderSet@4
@@ -178,13 +178,13 @@
 239 stub HrDispatchNotifications@4
 241 stub HrValidateParameters@8
 244 stub ScCreateConversationIndex@16
-246 stub HrGetOmiProvidersFlags
-247 stub HrGetOmiProvidersFlags@8
-248 stub HrSetOmiProvidersFlagsInvalid
-249 stub HrSetOmiProvidersFlagsInvalid@4
-250 stub GetOutlookVersion
-251 stub GetOutlookVersion@0
-252 stub FixMAPI
-253 stub FixMAPI@0
+246 stdcall HrGetOmiProvidersFlags(long long)
+247 stdcall HrGetOmiProvidersFlags@8(long long) HrGetOmiProvidersFlags
+248 stdcall HrSetOmiProvidersFlagsInvalid(long)
+249 stdcall HrSetOmiProvidersFlagsInvalid@4(long) HrSetOmiProvidersFlagsInvalid
+250 stdcall GetOutlookVersion()
+251 stdcall GetOutlookVersion@0() GetOutlookVersion
+252 stdcall FixMAPI()
+253 stdcall FixMAPI@0() FixMAPI
 254 stdcall FGetComponentPath(str str ptr long long)
 255 stdcall FGetComponentPath@20(str str ptr long long) FGetComponentPath

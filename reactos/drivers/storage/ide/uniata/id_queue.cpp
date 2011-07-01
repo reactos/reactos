@@ -1,3 +1,36 @@
+/*++
+
+Copyright (c) 2008-2010 Alexandr A. Telyatnikov (Alter)
+
+Module Name:
+    id_probe.cpp
+
+Abstract:
+    This module handles comamnd queue reordering and channel load balance
+
+Author:
+    Alexander A. Telyatnikov (Alter)
+
+Environment:
+    kernel mode only
+
+Notes:
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+    IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+    NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Revision History:
+
+--*/
+
 #include "stdafx.h"
 
 /*
@@ -74,13 +107,13 @@ UniataQueueRequest(
     BOOLEAN reordered = FALSE;
 #endif //QUEUE_STATISTICS
 
-    PHW_LU_EXTENSION LunExt = chan->lun[GET_LDEV(Srb) & 1];
+    PHW_LU_EXTENSION LunExt = chan->lun[GET_CDEV(Srb)];
     AtaReq->Srb = Srb;
 
 /*
 #ifdef _DEBUG
     if(!LunExt) {
-        PrintNtConsole("q: chan = %#x, dev %#x\n", chan, GET_LDEV(Srb));
+        PrintNtConsole("q: chan = %#x, dev %#x\n", chan, GET_CDEV(Srb));
         int i;
         for(i=0; i<1000; i++) {
             AtapiStallExecution(5*1000);
@@ -234,7 +267,7 @@ UniataRemoveRequest(
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
     //PHW_DEVICE_EXTENSION deviceExtension = chan->DeviceExtension;
 
-    ULONG cdev = GET_LDEV(Srb) & 1;
+    ULONG cdev = GET_CDEV(Srb);
     PHW_LU_EXTENSION LunExt = chan->lun[cdev];
 
     if(!LunExt)

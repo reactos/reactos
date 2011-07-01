@@ -4,6 +4,8 @@
  *	Copyright 1998	Patrik Stridvall
  *	Copyright 2003	Mike McCormack
  *	Copyright 2009  Owen Rudge for CodeWeavers
+ *	Copyright 2010  Juan Lang
+ *	Copyright 2010  Andrey Turkin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -461,9 +463,10 @@ BOOL WINAPI ImageAddCertificate(
     if (Certificate->dwLength % 8)
     {
         char null[8];
+		DWORD dwBytesWritten;
 
         ZeroMemory(null, 8);
-        WriteFile(FileHandle, null, 8 - (Certificate->dwLength % 8), NULL, NULL);
+        WriteFile(FileHandle, null, 8 - (Certificate->dwLength % 8), &dwBytesWritten, NULL);
 
         size += 8 - (Certificate->dwLength % 8);
     }
@@ -630,18 +633,255 @@ BOOL WINAPI ImageGetCertificateHeader(
     return TRUE;
 }
 
+/* Finds the section named section in the array of IMAGE_SECTION_HEADERs hdr.  If
+ * found, returns the offset to the section.  Otherwise returns 0.  If the section
+ * is found, optionally returns the size of the section (in size) and the base
+ * address of the section (in base.)
+ */
+static DWORD IMAGEHLP_GetSectionOffset( IMAGE_SECTION_HEADER *hdr,
+    DWORD num_sections, LPCSTR section, PDWORD size, PDWORD base )
+{
+    DWORD i, offset = 0;
+
+    for( i = 0; !offset && i < num_sections; i++, hdr++ )
+    {
+        if( !memcmp( hdr->Name, section, strlen(section) ) )
+        {
+            offset = hdr->PointerToRawData;
+            if( size )
+                *size = hdr->SizeOfRawData;
+            if( base )
+                *base = hdr->VirtualAddress;
+        }
+    }
+    return offset;
+}
+
+/* Calls DigestFunction e bytes at offset offset from the file mapped at map.
+ * Returns the return value of DigestFunction, or FALSE if the data is not available.
+ */
+static BOOL IMAGEHLP_ReportSectionFromOffset( DWORD offset, DWORD size,
+    BYTE *map, DWORD fileSize, DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle )
+{
+    if( offset + size > fileSize )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    return DigestFunction( DigestHandle, map + offset, size );
+}
+
+/* Finds the section named section among the IMAGE_SECTION_HEADERs in
+ * section_headers and calls DigestFunction for this section.  Returns
+ * the return value from DigestFunction, or FALSE if the data could not be read.
+ */
+static BOOL IMAGEHLP_ReportSection( IMAGE_SECTION_HEADER *section_headers,
+    DWORD num_sections, LPCSTR section, BYTE *map, DWORD fileSize,
+    DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle )
+{
+    DWORD offset, size = 0;
+
+    offset = IMAGEHLP_GetSectionOffset( section_headers, num_sections, section,
+        &size, NULL );
+    if( !offset )
+        return FALSE;
+    return IMAGEHLP_ReportSectionFromOffset( offset, size, map, fileSize,
+            DigestFunction, DigestHandle );
+}
+
+/* Calls DigestFunction for all sections with the IMAGE_SCN_CNT_CODE flag set.
+ * Returns the return value from * DigestFunction, or FALSE if a section could not be read.
+ */
+static BOOL IMAGEHLP_ReportCodeSections( IMAGE_SECTION_HEADER *hdr, DWORD num_sections,
+    BYTE *map, DWORD fileSize, DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle )
+{
+    DWORD i;
+    BOOL ret = TRUE;
+
+    for( i = 0; ret && i < num_sections; i++, hdr++ )
+    {
+        if( hdr->Characteristics & IMAGE_SCN_CNT_CODE )
+            ret = IMAGEHLP_ReportSectionFromOffset( hdr->PointerToRawData,
+                hdr->SizeOfRawData, map, fileSize, DigestFunction, DigestHandle );
+    }
+    return ret;
+}
+
+/* Reports the import section from the file FileHandle.  If
+ * CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO is set in DigestLevel, reports the entire
+ * import section.
+ * FIXME: if it's not set, the function currently fails.
+ */
+static BOOL IMAGEHLP_ReportImportSection( IMAGE_SECTION_HEADER *hdr,
+    DWORD num_sections, BYTE *map, DWORD fileSize, DWORD DigestLevel,
+    DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle )
+{
+    BOOL ret = FALSE;
+    DWORD offset, size, base;
+
+    /* Get import data */
+    offset = IMAGEHLP_GetSectionOffset( hdr, num_sections, ".idata", &size,
+        &base );
+    if( !offset )
+        return FALSE;
+
+    /* If CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO is set, the entire
+     * section is reported.  Otherwise, the debug info section is
+     * decoded and reported piecemeal.  See tests.  However, I haven't been
+     * able to figure out how the native implementation decides which values
+     * to report.  Either it's buggy or my understanding is flawed.
+     */
+    if( DigestLevel & CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO )
+        ret = IMAGEHLP_ReportSectionFromOffset( offset, size, map, fileSize,
+                DigestFunction, DigestHandle );
+    else
+    {
+        FIXME("not supported except for CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO\n");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        ret = FALSE;
+    }
+
+    return ret;
+}
+
 /***********************************************************************
  *		ImageGetDigestStream (IMAGEHLP.@)
+ *
+ * Gets a stream of bytes from a PE file overwhich a hash might be computed to
+ * verify that the image has not changed.  Useful for creating a certificate to
+ * be added to the file with ImageAddCertificate.
+ *
+ * PARAMS
+ *  FileHandle     [In] File for which to return a stream.
+ *  DigestLevel    [In] Flags to control which portions of the file to return.
+ *                      0 is allowed, as is any combination of:
+ *                       CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO: reports the entire
+ *                        import section rather than selected portions of it.
+ *                       CERT_PE_IMAGE_DIGEST_DEBUG_INFO: reports the debug section.
+ *                       CERT_PE_IMAGE_DIGEST_RESOURCES: reports the resources
+                          section.
+ *  DigestFunction [In] Callback function.
+ *  DigestHandle   [In] Handle passed as first parameter to DigestFunction.
+ *
+ * RETURNS
+ *  TRUE if successful.
+ *  FALSE if unsuccessful.  GetLastError returns more about the error.
+ *
+ * NOTES
+ *  Only supports 32-bit PE files, not tested with any other format.
+ *  Reports data in the following order:
+ *  1. The file headers are reported first
+ *  2. Any code sections are reported next.
+ *  3. The data (".data" and ".rdata") sections are reported next.
+ *  4. The import section is reported next.
+ *  5. If CERT_PE_IMAGE_DIGEST_DEBUG_INFO is set in DigestLevel, the debug section is
+ *     reported next.
+ *  6. If CERT_PE_IMAGE_DIGEST_RESOURCES is set in DigestLevel, the resources section
+ *     is reported next.
+ *
+ * BUGS
+ *  CERT_PE_IMAGE_DIGEST_ALL_IMPORT_INFO must be specified, returns an error if not.
  */
 BOOL WINAPI ImageGetDigestStream(
   HANDLE FileHandle, DWORD DigestLevel,
   DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle)
 {
-  FIXME("(%p, %d, %p, %p): stub\n",
-    FileHandle, DigestLevel, DigestFunction, DigestHandle
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    DWORD error = 0;
+    BOOL ret = FALSE;
+    DWORD offset, size, num_sections, fileSize;
+    HANDLE hMap = INVALID_HANDLE_VALUE;
+    BYTE *map = NULL;
+    IMAGE_DOS_HEADER *dos_hdr;
+    IMAGE_NT_HEADERS *nt_hdr;
+    IMAGE_SECTION_HEADER *section_headers;
+
+    TRACE("(%p, %d, %p, %p)\n", FileHandle, DigestLevel, DigestFunction,
+        DigestHandle);
+
+    /* Get the file size */
+    if( !FileHandle )
+        goto invalid_parameter;
+    fileSize = GetFileSize( FileHandle, NULL );
+    if(fileSize == INVALID_FILE_SIZE )
+        goto invalid_parameter;
+
+    /* map file */
+    hMap = CreateFileMappingW( FileHandle, NULL, PAGE_READONLY, 0, 0, NULL );
+    if( hMap == INVALID_HANDLE_VALUE )
+        goto invalid_parameter;
+    map = MapViewOfFile( hMap, FILE_MAP_COPY, 0, 0, 0 );
+    if( !map )
+        goto invalid_parameter;
+
+    /* Read the file header */
+    if( fileSize < sizeof(IMAGE_DOS_HEADER) )
+        goto invalid_parameter;
+    dos_hdr = (IMAGE_DOS_HEADER *)map;
+
+    if( dos_hdr->e_magic != IMAGE_DOS_SIGNATURE )
+        goto invalid_parameter;
+    offset = dos_hdr->e_lfanew;
+    if( !offset || offset > fileSize )
+        goto invalid_parameter;
+    ret = DigestFunction( DigestHandle, map, offset );
+    if( !ret )
+        goto end;
+
+    /* Read the NT header */
+    if( offset + sizeof(IMAGE_NT_HEADERS) > fileSize )
+        goto invalid_parameter;
+    nt_hdr = (IMAGE_NT_HEADERS *)(map + offset);
+    if( nt_hdr->Signature != IMAGE_NT_SIGNATURE )
+        goto invalid_parameter;
+    /* It's clear why the checksum is cleared, but why only these size headers?
+     */
+    nt_hdr->OptionalHeader.SizeOfInitializedData = 0;
+    nt_hdr->OptionalHeader.SizeOfImage = 0;
+    nt_hdr->OptionalHeader.CheckSum = 0;
+    size = sizeof(nt_hdr->Signature) + sizeof(nt_hdr->FileHeader) +
+        nt_hdr->FileHeader.SizeOfOptionalHeader;
+    ret = DigestFunction( DigestHandle, map + offset, size );
+    if( !ret )
+        goto end;
+
+    /* Read the section headers */
+    offset += size;
+    num_sections = nt_hdr->FileHeader.NumberOfSections;
+    size = num_sections * sizeof(IMAGE_SECTION_HEADER);
+    if( offset + size > fileSize )
+        goto invalid_parameter;
+    ret = DigestFunction( DigestHandle, map + offset, size );
+    if( !ret )
+        goto end;
+
+    section_headers = (IMAGE_SECTION_HEADER *)(map + offset);
+    IMAGEHLP_ReportCodeSections( section_headers, num_sections,
+        map, fileSize, DigestFunction, DigestHandle );
+    IMAGEHLP_ReportSection( section_headers, num_sections, ".data",
+        map, fileSize, DigestFunction, DigestHandle );
+    IMAGEHLP_ReportSection( section_headers, num_sections, ".rdata",
+        map, fileSize, DigestFunction, DigestHandle );
+    IMAGEHLP_ReportImportSection( section_headers, num_sections,
+        map, fileSize, DigestLevel, DigestFunction, DigestHandle );
+    if( DigestLevel & CERT_PE_IMAGE_DIGEST_DEBUG_INFO )
+        IMAGEHLP_ReportSection( section_headers, num_sections, ".debug",
+            map, fileSize, DigestFunction, DigestHandle );
+    if( DigestLevel & CERT_PE_IMAGE_DIGEST_RESOURCES )
+        IMAGEHLP_ReportSection( section_headers, num_sections, ".rsrc",
+            map, fileSize, DigestFunction, DigestHandle );
+
+end:
+    if( map )
+        UnmapViewOfFile( map );
+    if( hMap != INVALID_HANDLE_VALUE )
+        CloseHandle( hMap );
+    if( error )
+        SetLastError(error);
+    return ret;
+
+invalid_parameter:
+    error = ERROR_INVALID_PARAMETER;
+    goto end;
 }
 
 /***********************************************************************

@@ -4,6 +4,7 @@
 #include "Pl.rc"
 
 /* UTF-8 */
+#include "Bg.rc"
 #include "Da.rc"
 #include "De.rc"
 #include "Es.rc"

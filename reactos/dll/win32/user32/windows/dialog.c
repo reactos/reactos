@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/dialog.c
+ * FILE:            dll/win32/user32/windows/dialog.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -39,17 +39,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
-#define CW_USEDEFAULT16 ((short)0x8000)
+#define DF_DIALOGACTIVE 0x4000 // ReactOS
 #define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
-#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define DIALOG_CLASS_ATOMA   MAKEINTATOMA(32770)  /* Dialog */
-#define DIALOG_CLASS_ATOMW   MAKEINTATOMW(32770)  /* Dialog */
-
 void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
@@ -118,7 +113,7 @@ typedef struct
  */
 const struct builtin_class_descr DIALOG_builtin_class =
 {
-    DIALOG_CLASS_ATOMW,       /* name */
+    WC_DIALOG,       /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
     (WNDPROC) DefDlgProcA,    /* procA */
     (WNDPROC) DefDlgProcW,    /* procW */
@@ -632,7 +627,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     switch(GET_WORD(p))
     {
         case 0x0000:
-            result->className = DIALOG_CLASS_ATOMW;
+            result->className = WC_DIALOG;
             p++;
             break;
         case 0xffff:
@@ -995,6 +990,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
            ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
+           IntNotifyWinEvent(EVENT_SYSTEM_DIALOGSTART, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
         }
         return hwnd;
     }
@@ -1136,6 +1132,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
+                NtUserSetThreadState(0,DF_DIALOGACTIVE);
                 NtUserCallHwndParam( hwnd, 0, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
             }
              /* Window clean-up */
@@ -1146,6 +1143,13 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
         case WM_ACTIVATE:
+            { // ReactOS
+               DWORD dwSetFlag;
+               HWND hwndparent = DIALOG_FindMsgDestination( hwnd );
+               // if WA_CLICK/ACTIVE ? set dialog is active.
+               dwSetFlag = wParam ? DF_DIALOGACTIVE : 0;
+               if (hwndparent != hwnd) NtUserSetThreadState(dwSetFlag, DF_DIALOGACTIVE);
+            }
             if (wParam) DEFDLG_RestoreFocus( hwnd );
             else DEFDLG_SaveFocus( hwnd );
             return 0;

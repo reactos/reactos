@@ -179,6 +179,12 @@ GdiSelectPalette(
                                   DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
+    if(pdc->dctype == DCTYPE_MEMORY)
+    {
+        // This didn't work anyway
+        //IntGdiRealizePalette(hDC);
+    }
+
     PALETTE_ShareUnlockPalette(ppal);
     DC_UnlockDc(pdc);
 
@@ -251,89 +257,119 @@ NtGdiSelectPen(
 HBITMAP
 APIENTRY
 NtGdiSelectBitmap(
-    IN HDC hDC,
-    IN HBITMAP hBmp)
+    IN HDC hdc,
+    IN HBITMAP hbmp)
 {
-    PDC pDC;
+    PDC pdc;
     PDC_ATTR pdcattr;
-    HBITMAP hOrgBmp;
-    PSURFACE psurfBmp, psurfOld;
+    HBITMAP hbmpOld;
+    PSURFACE psurfNew;
     HRGN hVisRgn;
+    SIZEL sizlBitmap = {1, 1};
+    HDC hdcOld;
+    ASSERT_NOGDILOCKS();
 
-    if (hDC == NULL || hBmp == NULL) return NULL;
+    /* Verify parameters */
+    if (hdc == NULL || hbmp == NULL) return NULL;
 
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
+    /* First lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         return NULL;
     }
-    pdcattr = pDC->pdcattr;
+    pdcattr = pdc->pdcattr;
 
-    /* must be memory dc to select bitmap */
-    if (pDC->dctype != DC_TYPE_MEMORY)
+    /* Must be a memory dc to select a bitmap */
+    if (pdc->dctype != DC_TYPE_MEMORY)
     {
-        DC_UnlockDc(pDC);
+        DC_UnlockDc(pdc);
         return NULL;
     }
 
-    psurfBmp = SURFACE_LockSurface(hBmp);
-    if (!psurfBmp)
+    /* Check if there was a bitmap selected before */
+    if (pdc->dclevel.pSurface)
     {
-        DC_UnlockDc(pDC);
-        return NULL;
+        /* Return its handle */
+        hbmpOld = pdc->dclevel.pSurface->BaseObject.hHmgr;
+    }
+    else
+    {
+        /* Return default bitmap */
+        hbmpOld = StockObjects[DEFAULT_BITMAP];
     }
 
-    /* Get the handle for the old bitmap */
-    ASSERT(pDC->dclevel.pSurface);
-    hOrgBmp = pDC->dclevel.pSurface->BaseObject.hHmgr;
+    /* Check if the default bitmap was passed */
+    if (hbmp == StockObjects[DEFAULT_BITMAP])
+    {
+        psurfNew = NULL;
 
-	/* Lock it, to be sure while we mess with it*/
-	psurfOld = SURFACE_LockSurface(hOrgBmp);
+        // HACK
+        psurfNew = SURFACE_ShareLockSurface(hbmp);
+    }
+    else
+    {
+        /* Reference the new bitmap and check if it's valid */
+        psurfNew = SURFACE_ShareLockSurface(hbmp);
+        if (!psurfNew)
+        {
+            DC_UnlockDc(pdc);
+            return NULL;
+        }
 
-	/* Reset hdc, this surface isn't selected anymore */
-	psurfOld->hdc = NULL;
+        /* Set the bitmp's hdc */
+        hdcOld = InterlockedCompareExchangePointer((PVOID*)&psurfNew->hdc, hdc, 0);
+        if (hdcOld != NULL && hdcOld != hdc)
+        {
+            /* The bitmap is already selected, fail */
+            SURFACE_ShareUnlockSurface(psurfNew);
+            DC_UnlockDc(pdc);
+            return NULL;
+        }
 
-    /* Release the old bitmap, reference the new */
-    DC_vSelectSurface(pDC, psurfBmp);
+        /* Get the bitmap size */
+        sizlBitmap = psurfNew->SurfObj.sizlBitmap;
 
-	/* And unlock it, now we're done */
-	SURFACE_UnlockSurface(psurfOld);
+        /* Check if the bitmap is a dibsection */
+        if(psurfNew->hSecure)
+        {
+            /* Set DIBSECTION attribute */
+            pdcattr->ulDirty_ |= DC_DIBSECTION;
+        }
+        else
+        {
+            pdcattr->ulDirty_ &= ~DC_DIBSECTION;
+        }
+    }
 
-    // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    psurfBmp->hdc = hDC;
+    /* Select the new surface, release the old */
+    DC_vSelectSurface(pdc, psurfNew);
 
+    /* Set the new size */
+    pdc->dclevel.sizl = sizlBitmap;
+
+    /* Release one reference we added */
+    SURFACE_ShareUnlockSurface(psurfNew);
+
+    /* Mark the dc brushes invalid */
+    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
                                    0,
-                                   psurfBmp->SurfObj.sizlBitmap.cx,
-                                   psurfBmp->SurfObj.sizlBitmap.cy);
-
-    if(psurfBmp->hSecure)
-    {
-        /* Set DIBSECTION attribute */
-        pdcattr->ulDirty_ |= DC_DIBSECTION;
-    }
-    else
-    {
-        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
-    }
-
-    /* Release the exclusive lock */
-    SURFACE_UnlockSurface(psurfBmp);
-
-    /* Mark the brushes invalid */
-    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
-
-    DC_UnlockDc(pDC);
-
+                                   sizlBitmap.cx,
+                                   sizlBitmap.cy);
     if (hVisRgn)
     {
-        GdiSelectVisRgn(hDC, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
+        GdiSelectVisRgn(hdc, hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
-    return hOrgBmp;
+    /* Return the old bitmap handle */
+    return hbmpOld;
 }
 
 
@@ -352,7 +388,7 @@ NtGdiSelectClipPath(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
     pdcattr = pdc->pdcattr;
@@ -367,7 +403,7 @@ NtGdiSelectClipPath(
     /* Check that path is closed */
     if (pPath->state != PATH_Closed)
     {
-        SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         DC_UnlockDc(pdc);
         return FALSE;
     }
@@ -404,7 +440,7 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
     if(!(pdc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     pdcattr = pdc->pdcattr;
@@ -449,12 +485,90 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
         default:
             SelObject = NULL;
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
     }
 
     DC_UnlockDc(pdc);
     return SelObject;
+}
+
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw
+
+   1st: http://www.codeproject.com/gdi/cliprgnguide.asp is wrong!
+
+   The intersection of the clip with the meta region is not Rao it's API!
+   Go back and read 7.2 Clipping pages 418-19:
+   Rao = API & Vis:
+   1) The Rao region is the intersection of the API region and the system region,
+      named after the Microsoft engineer who initially proposed it.
+   2) The Rao region can be calculated from the API region and the system region.
+
+   API:
+      API region is the intersection of the meta region and the clipping region,
+      clearly named after the fact that it is controlled by GDI API calls.
+*/
+INT
+APIENTRY
+NtGdiGetRandomRgn(
+    HDC hdc,
+    HRGN hrgnDest,
+    INT iCode)
+{
+    INT ret = 0;
+    PDC pdc;
+    HRGN hrgnSrc = NULL;
+    POINTL ptlOrg;
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
+
+    switch (iCode)
+    {
+        case CLIPRGN:
+            hrgnSrc = pdc->rosdc.hClipRgn;
+//            if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            break;
+        case METARGN:
+            if (pdc->dclevel.prgnMeta)
+                hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case APIRGN:
+            if (pdc->prgnAPI) hrgnSrc = pdc->prgnAPI->BaseObject.hHmgr;
+//            else if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+            else if (pdc->rosdc.hClipRgn) hrgnSrc = pdc->rosdc.hClipRgn;
+            else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            break;
+        case SYSRGN:
+            if (pdc->prgnVis)
+            {
+                PREGION prgnDest = REGION_LockRgn(hrgnDest);
+                ret = IntGdiCombineRgn(prgnDest, pdc->prgnVis, 0, RGN_COPY) == ERROR ? -1 : 1;
+                REGION_UnlockRgn(prgnDest);
+            }
+            break;
+        default:
+            hrgnSrc = NULL;
+    }
+
+    if (hrgnSrc)
+    {
+        ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+    }
+
+    if (iCode == SYSRGN)
+    {
+        ptlOrg = pdc->ptlDCOrig;
+        NtGdiOffsetRgn(hrgnDest, ptlOrg.x, ptlOrg.y );
+    }
+
+    DC_UnlockDc(pdc);
+
+    return ret;
 }
 
 ULONG

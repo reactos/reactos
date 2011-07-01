@@ -2,7 +2,7 @@
  * jcmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2009 by Guido Vollbeding.
+ * Modified 2003-2010 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -231,10 +231,10 @@ emit_dac (j_compress_ptr cinfo)
   char ac_in_use[NUM_ARITH_TBLS];
   int length, i;
   jpeg_component_info *compptr;
-  
+
   for (i = 0; i < NUM_ARITH_TBLS; i++)
     dc_in_use[i] = ac_in_use[i] = 0;
-  
+
   for (i = 0; i < cinfo->comps_in_scan; i++) {
     compptr = cinfo->cur_comp_info[i];
     /* DC needs no table for refinement scan */
@@ -244,23 +244,25 @@ emit_dac (j_compress_ptr cinfo)
     if (cinfo->Se)
       ac_in_use[compptr->ac_tbl_no] = 1;
   }
-  
+
   length = 0;
   for (i = 0; i < NUM_ARITH_TBLS; i++)
     length += dc_in_use[i] + ac_in_use[i];
-  
-  emit_marker(cinfo, M_DAC);
-  
-  emit_2bytes(cinfo, length*2 + 2);
-  
-  for (i = 0; i < NUM_ARITH_TBLS; i++) {
-    if (dc_in_use[i]) {
-      emit_byte(cinfo, i);
-      emit_byte(cinfo, cinfo->arith_dc_L[i] + (cinfo->arith_dc_U[i]<<4));
-    }
-    if (ac_in_use[i]) {
-      emit_byte(cinfo, i + 0x10);
-      emit_byte(cinfo, cinfo->arith_ac_K[i]);
+
+  if (length) {
+    emit_marker(cinfo, M_DAC);
+
+    emit_2bytes(cinfo, length*2 + 2);
+
+    for (i = 0; i < NUM_ARITH_TBLS; i++) {
+      if (dc_in_use[i]) {
+	emit_byte(cinfo, i);
+	emit_byte(cinfo, cinfo->arith_dc_L[i] + (cinfo->arith_dc_U[i]<<4));
+      }
+      if (ac_in_use[i]) {
+	emit_byte(cinfo, i + 0x10);
+	emit_byte(cinfo, cinfo->arith_ac_K[i]);
+      }
     }
   }
 #endif /* C_ARITH_CODING_SUPPORTED */

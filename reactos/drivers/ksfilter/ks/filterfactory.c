@@ -69,7 +69,7 @@ IKsFilterFactory_Create(
     {
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     return Status;

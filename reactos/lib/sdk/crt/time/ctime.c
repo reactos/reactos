@@ -7,6 +7,7 @@
  */
 #define MINGW_HAS_SECURE_API 1
 
+#define RC_INVOKED 1 // to prevent inline functions
 #include <tchar.h>
 #include <time.h>
 #include "bitsfixup.h"

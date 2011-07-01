@@ -1243,6 +1243,19 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 LRESULT WINAPI
 ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+#ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
+  PWND pWnd;
+
+  pWnd = ValidateHwnd(Wnd);
+  if (pWnd)
+  {
+     if (!pWnd->fnid)
+     {
+        NtUserSetWindowFNID(Wnd, FNID_SCROLLBAR);
+     }
+  }    
+#endif    
+
   if (! IsWindow(Wnd))
     {
       return 0;
@@ -1253,6 +1266,12 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
       case WM_CREATE:
         IntScrollCreateScrollBar(Wnd, (LPCREATESTRUCTW) lParam);
         break;
+
+#ifdef __REACTOS__
+      case WM_DESTROY:
+        NtUserSetWindowFNID(Wnd, FNID_DESTROY);
+        return DefWindowProc(Wnd, Msg, wParam, lParam );
+#endif
 
 //#if 0 /* FIXME */
       case WM_ENABLE:

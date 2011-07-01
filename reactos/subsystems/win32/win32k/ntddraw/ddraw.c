@@ -133,6 +133,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     /* Loading the kernel interface of directx for win32k */
 
+    DPRINT1("Warning: trying loading xp/2003/windows7/reactos dxg.sys\n");
     ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
     if ( ghDxGraphics == NULL)
     {

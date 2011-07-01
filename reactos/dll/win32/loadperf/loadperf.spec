@@ -1,14 +1,14 @@
-@ stub BackupPerfRegistryToFileW
+@ stdcall BackupPerfRegistryToFileW(long long)
 @ stdcall InstallPerfDllA(str str ptr)
 @ stdcall InstallPerfDllW(wstr wstr ptr)
-@ stub LoadMofFromInstalledServiceA
-@ stub LoadMofFromInstalledServiceW
+@ stdcall LoadMofFromInstalledServiceA(ptr ptr ptr)
+@ stdcall LoadMofFromInstalledServiceW(ptr ptr ptr)
 @ stdcall LoadPerfCounterTextStringsA(str long)
 @ stdcall LoadPerfCounterTextStringsW(wstr long)
-@ stub RestorePerfRegistryFromFileW
-@ stub SetServiceAsTrustedA
-@ stub SetServiceAsTrustedW
+@ stdcall RestorePerfRegistryFromFileW(ptr ptr)
+@ stdcall SetServiceAsTrustedA(ptr ptr)
+@ stdcall SetServiceAsTrustedW(ptr ptr)
 @ stdcall UnloadPerfCounterTextStringsA(str long)
 @ stdcall UnloadPerfCounterTextStringsW(wstr long)
-@ stub UpdatePerfNameFilesA
-@ stub UpdatePerfNameFilesW
+@ stdcall UpdatePerfNameFilesA(ptr ptr ptr ptr)
+@ stdcall UpdatePerfNameFilesW(ptr ptr ptr ptr)

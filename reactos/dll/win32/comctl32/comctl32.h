@@ -101,16 +101,15 @@ extern HBRUSH  COMCTL32_hPattern55AABrush;
 #define IDT_CHECK        401
 
 
-/* Header cursors */
+/* Cursors */
+#define IDC_MOVEBUTTON                  102
+#define IDC_COPY                        104
 #define IDC_DIVIDER                     106
 #define IDC_DIVIDEROPEN                 107
 
 
 /* DragList resources */
 #define IDI_DRAGARROW                   501
-#define IDC_COPY                        502
-
-#define IDC_MOVEBUTTON                    1
 
 /* HOTKEY internal strings */
 #define HKY_NONE                        2048

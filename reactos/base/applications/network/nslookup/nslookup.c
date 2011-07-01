@@ -791,7 +791,7 @@ int main( int argc, char* argv[] )
     RtlZeroMemory( State.DefaultServer, 256 );
     RtlZeroMemory( State.DefaultServerAddress, 16 );
 
-    strncpy( State.root, DEFAULT_ROOT, strlen( DEFAULT_ROOT ) );
+    memcpy( State.root, DEFAULT_ROOT, sizeof(DEFAULT_ROOT) );
 
     /* We don't know how long of a buffer it will want to return. So we'll
        pass an empty one now and let it fail only once, instead of guessing. */

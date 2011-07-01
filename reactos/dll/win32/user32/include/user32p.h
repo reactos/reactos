@@ -26,6 +26,9 @@
 #include "winsta.h"
 #include "ntwrapper.h"
 
+#define IS_ATOM(x) \
+  (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
+
 /* One/Two Param Functions */
 #define NtUserMsqSetWakeMask(dwWaitMask) \
   (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_GETINPUTEVENT)
@@ -103,24 +106,11 @@
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
+#define user32_module User32Instance
 extern HINSTANCE hImmInstance;
 
 /* Critical Section*/
 extern RTL_CRITICAL_SECTION User32Crit;
-
-typedef struct _USER32_TRACKINGLIST {
-    TRACKMOUSEEVENT tme;
-    POINT pos; /* center of hover rectangle */
-    UINT_PTR timer;
-} USER32_TRACKINGLIST,*PUSER32_TRACKINGLIST;
-
-typedef struct _USER32_THREAD_DATA
-{
-    MSG LastMessage;
-    USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
-} USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
-
-PUSER32_THREAD_DATA User32GetThreadData();
 
 /* FIXME: Belongs to some header. */
 BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);

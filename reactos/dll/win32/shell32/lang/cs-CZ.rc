@@ -1,6 +1,6 @@
 /* FILE:        dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2010-05-25
+ * UPDATED:     2011-03-31
  * THANKS TO:   navaraf, who translated major part of this file
  */
 
@@ -113,7 +113,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Verze " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Verze "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Tato verze ReactOS je zaregistrov·na na:", IDC_STATIC, 35, 115, 180, 10
@@ -158,7 +158,7 @@ BEGIN
 	LTEXT "Typ cÌle:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "UmÌstÏnÌ cÌle:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "&CÌl:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Spustit v:", 14010, 8, 96, 57, 10
@@ -197,13 +197,13 @@ BEGIN
 	LTEXT "Typ souboru:", 14004, 8, 35, 50, 10
 	LTEXT "Sloûka", 14005, 68, 35, 160, 10
 	LTEXT "UmÌstÏnÌ:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Velikost:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Obsahuje:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Vytvo¯eno:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Jen pro ËtenÌ", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Skryt˝", 14022, 126, 150, 50, 10
 END
@@ -218,17 +218,17 @@ BEGIN
 	LTEXT "Typ souboru:", 14004, 8, 35, 50, 10
 	LTEXT "Soubor", 14005, 68, 35, 160, 10
 	LTEXT "OtevÌrat v:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "UmÌstÏnÌ:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Velikost:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Vytvo¯eno:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "ZmÏnÏno:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Otev¯eno:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Atributy:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Jen pro ËtenÌ", 14021, 58, 189, 67, 10
 	CHECKBOX "&Skryt˝", 14022, 126, 189, 50, 10
@@ -241,11 +241,11 @@ CAPTION "Verze"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Verze souboru: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Popis: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "DalöÌ informace o verzi: ", 14006, 6, 70, 222, 115
 	LTEXT "N·zev poloûky: ", 14007, 13, 82, 50, 10
 	LTEXT "Hodnota: ", 14008, 112, 82, 45, 10
@@ -260,24 +260,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Typ:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Souborov˝ systÈm:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "VyuûitÈ mÌsto:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "VolnÈ mÌsto:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Kapacita:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -412,7 +412,7 @@ LTEXT "OtevÌrat v:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
 PUSHBUTTON "&ZmÏnit...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Soubory s p¯Ìponou '%s' jsou typu '%s'. KliknutÌm\nna tlaËÌtko PokroËilÈ lze zmÏnit nastavenÌ pro vöechny\nsoubory '%s'.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "&PokroËilÈ", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -539,7 +539,7 @@ BEGIN
 	PUSHBUTTON "&Zav¯Ìt", IDCANCEL, 118, 198, 60, 14
 	LTEXT "&Kapacita:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&Souborov˝ systÈm", -1, 7, 35, 170, 9
+	LTEXT "Souborov˝ systÈ&m", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
 	LTEXT "&Velikost alokaËnÌ jednotky", -1, 7, 64, 170, 9
@@ -597,7 +597,7 @@ BEGIN
 	IDS_SHV_COLUMN13            "Kategorie"
 	IDS_SHV_COLUMN_DELFROM      "P˘vodnÌ umÌstÏnÌ"
 	IDS_SHV_COLUMN_DELDATE      "OdstranÏno"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_FONTTYPE     "Druh pÌsma" //fonttype
 	IDS_SHV_COLUMN_WORKGROUP    "PracovnÌ skupina"
 	IDS_SHV_NETWORKLOCATION     "SÌùovÈ umÌstÏnÌ"
 	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
@@ -643,9 +643,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Poloûka '%1' nem˘ûe b˝t p¯esunuta do Koöe. Chcete ji mÌsto toho smazat?"
 	IDS_OVERWRITEFILE_TEXT      "Tato sloûka jiû obsahuje soubor s n·zvem '%1'.\n\nChcete jej p¯epsat?"
 	IDS_OVERWRITEFILE_CAPTION   "Potvrdit p¯eps·nÌ souboru"
-	IDS_OVERWRITEFOLDER_TEXT    "Tato sloûka jiû obsahuje sloûku s n·zvem '%1'.\n\n"\
-		"Pokud majÌ soubory v cÌlovÈ sloûce stejnÈ n·zvy jako soubory ve zvolenÈ\n"\
-		"sloûce, budou p¯eps·ny. Opravdu chcete p¯esunout nebo zkopÌrovat tuto sloûku?"
+	IDS_OVERWRITEFOLDER_TEXT    "Tato sloûka jiû obsahuje sloûku s n·zvem '%1'.\n\nPokud majÌ soubory v cÌlovÈ sloûce stejnÈ n·zvy jako soubory ve zvolenÈ\nsloûce, budou p¯eps·ny. Opravdu chcete p¯esunout nebo zkopÌrovat tuto sloûku?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Restartovat"
@@ -654,6 +652,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Opravdu chcete vypnout poËÌtaË?"
 	IDS_LOGOFF_TITLE            "Odhl·sit se"
 	IDS_LOGOFF_PROMPT           "Opravdu se chcete odhl·sit?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "NabÌdka Start\\Programy"
@@ -704,8 +708,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ mÌsto"
 	IDS_EMPTY_BITBUCKET         "Vysypat koö"
 	IDS_PICK_ICON_TITLE         "Zvolit ikonu"
-	IDS_PICK_ICON_FILTER        "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "SpustitelnÈ soubory\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "SpustitelnÈ soubory (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Sloûka"
 	IDS_VIRTUAL_DRIVER          "Virtu·lnÌ ovladaË za¯ÌzenÌ"
 	IDS_BAT_FILE                "ReactOS d·vkov˝ soubor"
@@ -724,20 +728,24 @@ BEGIN
 	IDS_SYS_FILE                "SystÈmov˝ soubor"
 
 	IDS_OPEN_VERB               "Otev¯Ìt"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Spustit jako "
 	IDS_EDIT_VERB               "Upravit"
 	IDS_FIND_VERB               "NajÌt"
 	IDS_PRINT_VERB              "Tisknout"
-	IDS_PLAY_VERB               "P¯ehr·t"
-	IDS_PREVIEW_VERB            "N·hled"
 
 	IDS_FILE_FOLDER             "%u soubor˘, %u sloûek"
 	IDS_PRINTERS                "Tisk·rny"
-	IDS_FONTS                   "Fonty"
-	IDS_INSTALLNEWFONT          "Nainstalovat nov˝ font..."
+	IDS_FONTS                   "PÌsma"
+	IDS_INSTALLNEWFONT          "Nainstalovat novÈ pÌsmo..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "V˝chozÌ alokaËnÌ velikost"
 	IDS_COPY_OF                 "Kopie "
 
 	IDS_SHLEXEC_NOASSOC         "Pro otev¯enÌ tohoto souboru nenÌ nakonfigurov·n û·dn˝ program."
+	
+	IDS_FILE_DETAILS            "Podrobnosti pro typ soubor˘ '%s'"
+	IDS_FILE_DETAILSADV         "Soubory s p¯Ìponou '%s' jsou typu '%s'. KliknutÌm na tlaËÌtko PokroËilÈ lze zmÏnit nastavenÌ pro vöechny soubory '%s'."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

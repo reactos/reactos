@@ -1111,6 +1111,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
              return FALSE;
            SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
            ci->hBmpClose = 0;
+           NtUserSetWindowFNID( hwnd, FNID_MDICLIENT); // wine uses WIN_ISMDICLIENT
 #else
            WND *wndPtr = WIN_GetPtr( hwnd );
            wndPtr->flags |= WIN_ISMDICLIENT;
@@ -1160,6 +1161,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 #ifdef __REACTOS__
           HeapFree( GetProcessHeap(), 0, ci );
           SetWindowLongPtrW( hwnd, 0, 0 );
+          NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 #endif
           return 0;
       }

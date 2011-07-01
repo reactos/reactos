@@ -9,4 +9,5 @@
 	<library>advapi32</library>
 	<library>ntdll</library>
 	<file>cryptdll.c</file>
+	<file>stubs.c</file>
 </module>

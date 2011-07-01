@@ -22,6 +22,8 @@
 
 #include <wine/unicode.h>
 
+BOOLEAN RtlpNotAllowingMultipleActivation;
+
 #define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
 
 #define ACTCTX_FLAGS_ALL (\
@@ -239,7 +241,7 @@ static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
     UNICODE_STRING res;
 
     res.Buffer = (PWSTR)xmlstr->ptr;
-    res.Length = res.MaximumLength = xmlstr->len;
+    res.Length = res.MaximumLength = xmlstr->len * sizeof(WCHAR);
 
     return res;
 }
@@ -575,12 +577,12 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 
 static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 {
-    _InterlockedExchangeAdd( &actctx->ref_count, 1 );
+    InterlockedExchangeAdd( &actctx->ref_count, 1 );
 }
 
 static void actctx_release( ACTIVATION_CONTEXT *actctx )
 {
-    if (_InterlockedExchangeAdd( &actctx->ref_count, -1 ) == 1)
+    if (InterlockedExchangeAdd( &actctx->ref_count, -1 ) == 1)
     {
         unsigned int i, j;
 
@@ -2665,30 +2667,52 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
     return STATUS_SUCCESS;
 }
 
+#define FIND_ACTCTX_RETURN_FLAGS 0x00000002
+#define FIND_ACTCTX_RETURN_ASSEMBLY_METADATA 0x00000004
+#define FIND_ACTCTX_VALID_MASK (FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX | FIND_ACTCTX_RETURN_FLAGS | FIND_ACTCTX_RETURN_ASSEMBLY_METADATA)
+
+NTSTATUS
+NTAPI
+RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid, ULONG section_kind,
+                                                  UNICODE_STRING *section_name, PACTCTX_SECTION_KEYED_DATA data )
+{
+    /* Check general parameter combinations */
+    if (!section_name ||
+        (flags & ~FIND_ACTCTX_VALID_MASK) ||
+        ((flags & FIND_ACTCTX_VALID_MASK) && !data) ||
+        (data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)))
+    {
+        DPRINT1("invalid parameter\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* TODO */
+    if (flags & FIND_ACTCTX_RETURN_FLAGS ||
+        flags & FIND_ACTCTX_RETURN_ASSEMBLY_METADATA)
+    {
+        DPRINT1("unknown flags %08x\n", flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
                                        UNICODE_STRING *section_name, PVOID ptr )
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
-    NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    NTSTATUS status;
 
-    if (guid)
-    {
-        DPRINT1("expected guid == NULL\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-    if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
-    {
-        DPRINT1("unknown flags %08x\n", flags);
-        return STATUS_INVALID_PARAMETER;
-    }
-    if (!data || data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) ||
-        !section_name || !section_name->Buffer)
-    {
-        DPRINT1("invalid parameter\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
+    if (!NT_SUCCESS(status)) return status;
+
+    status = STATUS_SXS_KEY_NOT_FOUND;
+
+    /* if there is no data, but params are valid,
+       we return that sxs key is not found to be at least somehow compatible */
+    if (!data) return status;
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
@@ -2712,6 +2736,10 @@ NTAPI
 RtlAllocateActivationContextStack(IN PVOID *Context)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
+
+    /* FIXME: Check if it's already allocated */
+    //if (*Context) return STATUS_SUCCESS;
+
     ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
     if (!ContextStack)
     {
@@ -2730,21 +2758,80 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
+PRTL_ACTIVATION_CONTEXT_STACK_FRAME
+FASTCALL
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+#if NEW_NTDLL_LOADER
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
+
+    /* Get the curren active frame */
+    ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+
+    DPRINT1("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
+
+    /* Actually activate it */
+    Frame->Frame.Previous = ActiveFrame;
+    Frame->Frame.ActivationContext = Context;
+    Frame->Frame.Flags = 0;
+
+    /* Check if we can activate this context */
+    if ((ActiveFrame && (ActiveFrame->ActivationContext != Context)) ||
+        Context)
+    {
+        /* Set new active frame */
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
+        return &Frame->Frame;
+    }
+
+    /* We can get here only one way: it was already activated */
+    DPRINT1("Trying to activate improper activation context\n");
+
+    /* Activate only if we are allowing multiple activation */
+    if (!RtlpNotAllowingMultipleActivation)
+    {
+        NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = &Frame->Frame;
+    }
+    else
+    {
+        /* Set flag */
+        Frame->Frame.Flags = 0x30;
+    }
+
+    /* Return pointer to the activation frame */
+    return &Frame->Frame;
+#else
+
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
+
+    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame->ActivationContext = Context;
+    frame->Flags = 0;
+
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+
+    return STATUS_SUCCESS;
+#endif
 }
 
-NTSTATUS
-NTAPI
+PRTL_ACTIVATION_CONTEXT_STACK_FRAME
+FASTCALL
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
+
+    /* find the right frame */
+    top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame = &Frame->Frame;
+
+    if (!frame)
+        RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
+
+    /* pop everything up to and including frame */
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame->Previous;
+
+    return frame;
 }
 
 

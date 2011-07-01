@@ -6,32 +6,9 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <stdarg.h>
+#define _sxprintf _vsnwprintf
+#define USE_COUNT 1
+#define USE_VARARGS 1
+#define _UNICODE
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
-
-int
-__cdecl
-_vsnwprintf(
-   wchar_t *buffer,
-   size_t count,
-   const wchar_t *format,
-   va_list argptr)
-{
-    int result;
-    FILE stream;
-
-    stream._base = (char*)buffer;
-    stream._ptr = stream._base;
-    stream._bufsiz = count * sizeof(wchar_t);
-    stream._cnt = stream._bufsiz;
-    stream._flag = _IOSTRG | _IOWRT;
-    stream._tmpfname = 0;
-    stream._charbuf = 0;
-
-    result = wstreamout(&stream, format, argptr);
-    *(wchar_t*)stream._ptr = L'\0';
-
-    return result;
-}
+#include "_sxprintf.c"

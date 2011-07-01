@@ -45,17 +45,22 @@ typedef struct _tagASMNAME
 
 typedef struct
 {
-    const IAssemblyEnumVtbl *lpIAssemblyEnumVtbl;
+    IAssemblyEnum IAssemblyEnum_iface;
 
     struct list assemblies;
     struct list *iter;
     LONG ref;
 } IAssemblyEnumImpl;
 
+static inline IAssemblyEnumImpl *impl_from_IAssemblyEnum(IAssemblyEnum *iface)
+{
+    return CONTAINING_RECORD(iface, IAssemblyEnumImpl, IAssemblyEnum_iface);
+}
+
 static HRESULT WINAPI IAssemblyEnumImpl_QueryInterface(IAssemblyEnum *iface,
                                                        REFIID riid, LPVOID *ppobj)
 {
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
+    IAssemblyEnumImpl *This = impl_from_IAssemblyEnum(iface);
 
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
 
@@ -75,7 +80,7 @@ static HRESULT WINAPI IAssemblyEnumImpl_QueryInterface(IAssemblyEnum *iface,
 
 static ULONG WINAPI IAssemblyEnumImpl_AddRef(IAssemblyEnum *iface)
 {
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
+    IAssemblyEnumImpl *This = impl_from_IAssemblyEnum(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
@@ -85,7 +90,7 @@ static ULONG WINAPI IAssemblyEnumImpl_AddRef(IAssemblyEnum *iface)
 
 static ULONG WINAPI IAssemblyEnumImpl_Release(IAssemblyEnum *iface)
 {
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
+    IAssemblyEnumImpl *This = impl_from_IAssemblyEnum(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
     struct list *item, *cursor;
 
@@ -113,7 +118,7 @@ static HRESULT WINAPI IAssemblyEnumImpl_GetNextAssembly(IAssemblyEnum *iface,
                                                         IAssemblyName **ppName,
                                                         DWORD dwFlags)
 {
-    IAssemblyEnumImpl *asmenum = (IAssemblyEnumImpl *)iface;
+    IAssemblyEnumImpl *asmenum = impl_from_IAssemblyEnum(iface);
     ASMNAME *asmname;
 
     TRACE("(%p, %p, %p, %d)\n", iface, pvReserved, ppName, dwFlags);
@@ -135,7 +140,7 @@ static HRESULT WINAPI IAssemblyEnumImpl_GetNextAssembly(IAssemblyEnum *iface,
 
 static HRESULT WINAPI IAssemblyEnumImpl_Reset(IAssemblyEnum *iface)
 {
-    IAssemblyEnumImpl *asmenum = (IAssemblyEnumImpl *)iface;
+    IAssemblyEnumImpl *asmenum = impl_from_IAssemblyEnum(iface);
 
     TRACE("(%p)\n", iface);
 
@@ -287,6 +292,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
     WIN32_FIND_DATAW ffd;
     WCHAR buf[MAX_PATH];
     WCHAR disp[MAX_PATH];
+    WCHAR asmpath[MAX_PATH];
     ASMNAME *asmname;
     HANDLE hfind;
     LPWSTR ptr;
@@ -297,9 +303,9 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
     static const WCHAR dot[] = {'.',0};
     static const WCHAR dotdot[] = {'.','.',0};
     static const WCHAR search_fmt[] = {'%','s','\\','*',0};
-    static const WCHAR parent_fmt[] = {'%','s',',',' ',0};
     static const WCHAR dblunder[] = {'_','_',0};
-    static const WCHAR fmt[] = {'V','e','r','s','i','o','n','=','%','s',',',' ',
+    static const WCHAR path_fmt[] = {'%','s','\\','%','s','\\','%','s','.','d','l','l',0};
+    static const WCHAR fmt[] = {'%','s',',',' ','V','e','r','s','i','o','n','=','%','s',',',' ',
         'C','u','l','t','u','r','e','=','n','e','u','t','r','a','l',',',' ',
         'P','u','b','l','i','c','K','e','y','T','o','k','e','n','=','%','s',0};
     static const WCHAR ss_fmt[] = {'%','s','\\','%','s',0};
@@ -325,17 +331,17 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             else
                 ptr = ffd.cFileName;
 
-            sprintfW(parent, parent_fmt, ptr);
+            lstrcpyW(parent, ptr);
         }
         else if (depth == 1)
         {
+            sprintfW(asmpath, path_fmt, path, ffd.cFileName, parent);
+
             ptr = strstrW(ffd.cFileName, dblunder);
             *ptr = '\0';
             ptr += 2;
-            sprintfW(buf, fmt, ffd.cFileName, ptr);
 
-            lstrcpyW(disp, parent);
-            lstrcatW(disp, buf);
+            sprintfW(disp, fmt, parent, ffd.cFileName, ptr);
 
             asmname = HeapAlloc(GetProcessHeap(), 0, sizeof(ASMNAME));
             if (!asmname)
@@ -348,6 +354,14 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
                                           CANOF_PARSE_DISPLAY_NAME, NULL);
             if (FAILED(hr))
             {
+                HeapFree(GetProcessHeap(), 0, asmname);
+                break;
+            }
+
+            hr = IAssemblyName_SetPath(asmname->name, asmpath);
+            if (FAILED(hr))
+            {
+                IAssemblyName_Release(asmname->name);
                 HeapFree(GetProcessHeap(), 0, asmname);
                 break;
             }
@@ -422,7 +436,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
     if (!asmenum)
         return E_OUTOFMEMORY;
 
-    asmenum->lpIAssemblyEnumVtbl = &AssemblyEnumVtbl;
+    asmenum->IAssemblyEnum_iface.lpVtbl = &AssemblyEnumVtbl;
     asmenum->ref = 1;
     list_init(&asmenum->assemblies);
 
@@ -437,7 +451,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
     }
 
     asmenum->iter = list_head(&asmenum->assemblies);
-    *pEnum = (IAssemblyEnum *)asmenum;
+    *pEnum = &asmenum->IAssemblyEnum_iface;
 
     return S_OK;
 }

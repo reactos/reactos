@@ -6,6 +6,7 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
+		<define name="CONFIG_ACPI" />
 		<directory name="generic">
     	    <directory name="acpi">
     	        <file>halacpi.c</file>
@@ -17,6 +18,9 @@
     				<file>pcibus.c</file>
     			</directory>
     		</directory>
+			<if property="ARCH" value="i386">
+				<file>halinit.c</file>
+			</if>
 		</directory>
 	</module>
 </group>

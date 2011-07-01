@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Описание на компютъра:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Цялото име на компютъра:", IDC_STATIC, 6, 68, 94, 9
-    LTEXT       "(Подразбирано)", IDC_COMPUTERNAME, 100, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Работна група:", IDC_WORKGROUPDOMAIN, 6, 84, 94, 9
-    LTEXT       "(Празно)", IDC_WORKGROUPDOMAIN_NAME, 100, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "За вълшебника за мрежово опознаване и създаване на местен потребител, натиснете „Мрежов опознавател...”.", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Мрежов опознавател...", IDC_NETWORK_ID, 170, 114, 85, 15
     LTEXT       "За преименуване на компютъра или присъединяване към имение, натиснете „Промяна”.", IDC_STATIC, 6, 149, 170, 24
@@ -67,12 +67,12 @@ BEGIN
     22 "Добре дошли в работна група %1."
     23 "Добре дошли в имение %1."
     24 "Трябва да презапуснете компютъра, за да влязат промените в действие."
-	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
+	25 "Можете да смените името и членството на компютъра. Възможно е промените могат да повлияят на достъпа до мрежовите източници."
     1021 "Забележка: Само управниците могат да променят опознавателите на компютъра."
     1022 "Забележка: Опознавателят на компютъра не може да бъде сменен, защото:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+	1030 "Новото име на компютъра „%s“ съдържа непозволени знаци. Някои от непозволените знаци са ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / и ?"
     3210 "&По&дробности >>"
     3220 "<< &По&дробности"
-	4000 "Information"
-	4001 "Can't set new a computer name!"
+	4000 "Сведения"
+	4001 "Грешка при смяната на името на компютъра!"
 END

@@ -14,8 +14,6 @@
 	<file>hivewrt.c</file>
 </module>
 <module name="cmlibhost" type="hoststaticlibrary">
-	<define name="WINE_UNICODE_API">" "</define>
-	<include base="unicode" />
 	<include base="cmlibhost">.</include>
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_NTOSKRNL_" />

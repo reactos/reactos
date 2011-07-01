@@ -195,9 +195,9 @@
 @ stdcall InternetSetStatusCallback(ptr ptr) InternetSetStatusCallbackA
 @ stdcall InternetSetStatusCallbackA(ptr ptr)
 @ stdcall InternetSetStatusCallbackW(ptr ptr)
-@ stub InternetShowSecurityInfoByURL
-@ stub InternetShowSecurityInfoByURLA
-@ stub InternetShowSecurityInfoByURLW
+@ stdcall InternetShowSecurityInfoByURL(str ptr) InternetShowSecurityInfoByURLA
+@ stdcall InternetShowSecurityInfoByURLA(str ptr)
+@ stdcall InternetShowSecurityInfoByURLW(wstr ptr)
 @ stdcall InternetTimeFromSystemTime(ptr long ptr long) InternetTimeFromSystemTimeA
 @ stdcall InternetTimeFromSystemTimeA(ptr long ptr long)
 @ stdcall InternetTimeFromSystemTimeW(ptr long ptr long)

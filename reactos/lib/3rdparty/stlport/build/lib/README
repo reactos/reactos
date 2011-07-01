@@ -1,0 +1,85 @@
+Quick start.
+
+  GNU Make (Linux, OpenBSD, FreeBSD, CygWin, etc.), with gcc:
+
+    make -f gcc.mak depend
+    make -f gcc.mak install
+
+  GNU Make (SunOS), with SunPro CC:
+
+    make -f CC.mak depend
+    make -f CC.mak install
+
+  Microsoft NMAKE (MS Windows), with VC6:
+
+    nmake /fmsvc.mak install
+
+
+Make system goals.
+
+  - all source files declared in one place (for all platforms and
+    compilers); the same is for base library (application) name and
+    version.
+  - derive object filenames from source filenames in make system
+  - source files may be situated in few catalogs
+  - avoid information duplication, if possible
+  - support cross-compilation
+
+
+Make targets.
+
+  release-static
+
+    build STLport as static library
+
+  dbg-static
+
+    build STLport as static library (with debug information)
+
+  stldbg-static
+
+    build STLport as static library (STLP_DEBUG mode, with debug information)
+
+  release-shared
+
+    build STLport as dynamic (shared) library
+
+  dbg-shared
+
+    STLport as dynamic (shared) library (with debug information)
+
+  stldbg-shared
+
+    build STLport as dynamic (shared) library (STLP_DEBUG mode, with
+    debug information)
+
+  all (default)
+
+     cumulative target for release,dbg,stldbg -shared on Unix-lile platforms
+     and plus release,dbg,stldbg -static on Windows.
+
+  depend
+
+    create dependency files (for performance reasons dependency not created
+    during compilation process); this target absent for MS NMAKE (due to pure
+    scripting opportunities)
+
+  install-release-shared
+  install-dbg-shared
+  install-stldbg-shared
+  install-release-static
+  install-dbg-static
+  install-stldbg-static
+
+    build and install appropriate libraries and related files, into
+    'STLport/lib' and 'STLport/bin' (../../lib, relative position of this file)
+
+  install
+
+    cumulative target for install-*-shared on Unix-like platforms and
+    install-*-* on Windows.
+
+  clean
+
+    remove all intermediate files
+

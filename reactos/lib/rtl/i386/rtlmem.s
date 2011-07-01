@@ -210,70 +210,124 @@ ByteZero:
 
 
 _RtlMoveMemory@12:
+	push ebp
+	mov ebp, esp
 
-    /* Save volatiles */
+    /* Save non-volatiles */
     push esi
     push edi
 
     /* Get pointers and size  */
-    mov esi, [esp+16]
-    mov edi, [esp+12]
-    mov ecx, [esp+20]
-    cld
+	mov	edi, [ebp + 8]
+	mov	esi, [ebp + 12]
+	mov	ecx, [ebp + 16]
 
-    /* Check if the destination is higher (or equal) */
-    cmp esi, edi
-    jbe Overlap
+    /* Use downward copy if source < dest and overlapping */
+	cmp	edi, esi
+	jbe	.CopyUp
+	mov	eax, ecx
+	add	eax, esi
+	cmp	edi, eax
+	jb .CopyDown
 
-    /* Set ULONG size and UCHAR remainder */
-DoMove:
-    mov edx, ecx
-    and edx, 3
-    shr ecx, 2
+.CopyUp:
+	cld
 
-    /* Do the move */
-    rep movsd
-    or ecx, edx
-    jnz ByteMove
+    /* Check for small moves */
+	cmp	ecx, 16
+	jb .CopyUpBytes
 
-    /* Return */
-    pop edi
-    pop esi
-    ret 12
+    /* Check if its already aligned */
+	mov edx, ecx
+	test edi, 3
+	je .CopyUpDwords
 
-ByteMove:
-    /* Move what's left */
-    rep movsb
+    /* Make the destination dword aligned */
+	mov ecx, edi
+	and ecx, 3
+	sub ecx, 5
+	not ecx
+	sub edx, ecx
+	rep movsb
+	mov ecx, edx
 
-DoneMove:
-    /* Restore volatiles */
-    pop edi
-    pop esi
-    ret 12
+.CopyUpDwords:
+	shr ecx, 2
+	rep movsd
+	mov ecx, edx
+	and ecx, 3
 
-Overlap:
-    /* Don't copy if they're equal */
-    jz DoneMove
+.CopyUpBytes:
+	test ecx, ecx
+	je .CopyUpEnd
+	rep movsb
 
-    /* Compare pointer distance with given length and check for overlap */
-    mov eax, edi
-    sub eax, esi
-    cmp ecx, eax
-    jbe DoMove
+.CopyUpEnd:
+	mov eax, [ebp + 8]
+	pop edi
+	pop esi
+	pop ebp
+	ret 12
 
-    /* Set direction flag for backward move */
-    std
+.CopyDown:
+	std
 
-    /* Copy byte-by-byte the non-overlapping distance */
-    add esi, ecx
-    add edi, ecx
-    dec esi
-    dec edi
+    /* Go to the end of the region */
+	add edi, ecx
+	add esi, ecx
 
-    /* Do the move, reset flag and return */
-    rep movsb
-    cld
-    jmp DoneMove
+    /* Check for small moves */
+	cmp ecx, 16
+	jb .CopyDownSmall
+
+    /* Check if its already aligned */
+	mov edx, ecx
+	test edi, 3
+	je .CopyDownAligned
+
+    /* Make the destination dword aligned */
+	mov ecx, edi
+	and ecx, 3
+	sub edx, ecx
+	dec esi
+	dec edi
+	rep movsb
+	mov ecx, edx
+	sub esi, 3
+	sub edi, 3
+
+.CopyDownDwords:
+	shr ecx, 2
+	rep movsd
+	mov ecx, edx
+	and ecx, 3
+	je .CopyDownEnd
+	add esi, 3
+	add edi, 3
+
+.CopyDownBytes:
+	rep movsb
+
+.CopyDownEnd:
+	cld
+	mov eax, [ebp + 8]
+	pop edi
+	pop esi
+	pop ebp
+	ret 12
+
+.CopyDownAligned:
+	sub edi, 4
+	sub esi, 4
+	jmp .CopyDownDwords
+
+.CopyDownSmall:
+	test ecx, ecx
+	je .CopyDownEnd
+	dec esi
+	dec edi
+	jmp .CopyDownBytes
+
 
 
 @RtlPrefetchMemoryNonTemporal@8:

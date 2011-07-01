@@ -462,7 +462,7 @@ WndProc_wave( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 x = ( i * samples ) / WAVEBAR_CX;
 
-                line_h = ( abs(AUD_OUT->nsample( x )) * max_h ) / AUD_OUT->samplevalue_max();
+                line_h = ( AUD_OUT->nsample( x ) * max_h ) / AUD_OUT->samplevalue_max();
 
 
                 if ( line_h )

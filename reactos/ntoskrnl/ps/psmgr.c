@@ -212,7 +212,7 @@ PspLookupKernelUserEntryPoints(VOID)
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Get user-mode sysenter stub */
-        SharedUserdata->SystemCall = (PsNtosImageBase >> (PAGE_SHIFT + 1));
+        SharedUserData->SystemCall = (PsNtosImageBase >> (PAGE_SHIFT + 1));
         Status = PspLookupSystemDllEntryPoint("KiFastSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);

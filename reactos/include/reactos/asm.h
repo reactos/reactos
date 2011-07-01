@@ -12,6 +12,7 @@
 OPTION DOTNAME
 
 .586
+.XMM
 .MODEL FLAT
 ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
@@ -75,6 +76,10 @@ ENDM
     dd args
 ENDM
 
+.double MACRO args:VARARG
+    dq args
+ENDM
+
 UNIMPLEMENTED MACRO name
 ENDM
 
@@ -115,6 +120,10 @@ ENDM
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
     .global \symbol
+.endm
+
+/* Dummy ASSUME */
+.macro ASSUME p1 p2 p3 p4 p5 p6 p7 p8
 .endm
 
 /* MASM compatible ALIGN */

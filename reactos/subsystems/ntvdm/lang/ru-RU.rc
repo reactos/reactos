@@ -8,6 +8,6 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_WelcomeMsg,      "Виртуальная машина поддержки DOS для ReactOS.\n"
-STRING_PromptMsg,       "Введите r<cr> для запуска, s<cr> для выключения или q<cr> выхода."
+STRING_WelcomeMsg,      "Р’РёСЂС‚СѓР°Р»СЊРЅР°СЏ РјР°С€РёРЅР° РїРѕРґРґРµСЂР¶РєРё DOS РґР»СЏ ReactOS.\n"
+STRING_PromptMsg,       "Р’РІРµРґРёС‚Рµ r<cr> РґР»СЏ Р·Р°РїСѓСЃРєР°, s<cr> РґР»СЏ РІС‹РєР»СЋС‡РµРЅРёСЏ РёР»Рё q<cr> РІС‹С…РѕРґР°."
 END

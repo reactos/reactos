@@ -1,0 +1,43 @@
+The cygwin platform is used to build STLport with different compilers.
+
+- gcc (native compiler):
+
+  Makefile : gcc.mak
+
+  Notes:
+
+    1. Static builds (archive)
+
+    If you use the static version of the STLport libraries you have
+  to define the _STLP_USE_STATIC_LIB macro in order to have your
+  executable linked correctly.
+
+    2. Link
+
+    Under this platform STLport is complete replacement for libstdc++.
+  It means that when you were linking with libstdc++ (-lstdc++) you only
+  have to replace it with STLport (-lstlport.5.2 for instance). However
+  default gcc behavior is to automatically link libstdc++ and a number of
+  other system libs. To avoid this behavior you have to use the -nodefaultlibs
+  compiler option and explicitely give all libraries by yourself. See build of
+  unit tests to see what library you might need, here is the list when this
+  note was written:
+
+  without -mnocygwin option:
+
+    -lstlportg.5.2 -lgcc -lm -lc -lpthread -lkernel32
+
+  with -mno-cygwin option:
+
+    -lstlportg.5.2 -lgcc -lmingw32 -lmingwex -lmsvcrt -lm -lmoldname
+    -lcoldname -lkernel32
+
+    3. No cygwin
+
+    To build STLport libraries that do not depend on cygwin1.dll
+  making them freely redistributable pass the following option to
+  the configure script:
+
+  ./configure --with-extra-cflags=-mno-cygwin --with-extra-cxxflags=-mno-cygwin
+
+- Borland C++ compiler

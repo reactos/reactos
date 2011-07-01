@@ -44,7 +44,7 @@ RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,
                       IN PVOID Buffer,
                       IN PVOID UserData)
 {
-    PRTL_BALANCED_LINKS CurrentNode = (PVOID)((ULONG_PTR)UserData - sizeof(LIST_ENTRY) - sizeof(RTL_BALANCED_LINKS));
+    PRTL_BALANCED_LINKS CurrentNode = (PVOID)((ULONG_PTR)UserData - sizeof(RTL_BALANCED_LINKS));
     ULONG_PTR StartingVpn = (ULONG_PTR)Buffer;
     if (StartingVpn < CurrentNode->StartingVpn)
     {

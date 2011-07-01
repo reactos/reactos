@@ -17,8 +17,6 @@ extern "C" {
 #define WINUSERAPI
 #endif
 
-
-#define WC_DIALOG MAKEINTATOM(0x8002)
 #define FALT	16
 #define FCONTROL	8
 #define FNOINVERT	2
@@ -300,9 +298,6 @@ extern "C" {
 #define ES_LOWERCASE 16
 #define ES_MULTILINE 4
 #define ES_NOHIDESEL 256
-#ifdef _WINE
-#define ES_COMBO 0x200   /* Undocumented. Parent is a combobox */
-#endif
 #define ES_NUMBER 0x2000
 #define ES_OEMCONVERT 0x400
 #define ES_PASSWORD 32
@@ -390,7 +385,6 @@ extern "C" {
 #define WS_EX_COMPOSITED 0x2000000 /* XP */
 #define WS_EX_CONTEXTHELP 0x400
 #define WS_EX_CONTROLPARENT 0x10000
-#define WS_EX_DRAGDETECT 0x00000002L
 #define WS_EX_DLGMODALFRAME 1
 #define WS_EX_LAYERED 0x80000   /* w2k */
 #define WS_EX_LAYOUTRTL 0x400000 /* w98, w2k */
@@ -583,8 +577,8 @@ extern "C" {
 #define SB_BOTTOM	7
 #define SB_TOP	6
 #define IS_INTRESOURCE(i) (((ULONG_PTR)(i) >> 16) == 0)
-#define MAKEINTRESOURCEA(i) (LPSTR)((ULONG_PTR)((WORD)(i)))
-#define MAKEINTRESOURCEW(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
+#define MAKEINTRESOURCEA(i) ((LPSTR)(ULONG_PTR)LOWORD(i))
+#define MAKEINTRESOURCEW(i) ((LPWSTR)(ULONG_PTR)LOWORD(i))
 #ifndef XFree86Server
 # define RT_CURSOR MAKEINTRESOURCE(1)
 # define RT_FONT MAKEINTRESOURCE(8)
@@ -870,8 +864,6 @@ extern "C" {
 #endif
 #define QS_SENDMESSAGE 64
 #define QS_TIMER 16
-/* Extra (undocumented) queue wake bits - see "Undoc. Windows" */
-#define QS_SMRESULT 0x8000
 
 #define USER_TIMER_MAXIMUM  2147483647
 #define USER_TIMER_MINIMUM  10
@@ -1075,40 +1067,41 @@ extern "C" {
 #define KEYEVENTF_UNICODE 0x00000004
 #define KEYEVENTF_SCANCODE 0x00000008
 #endif
-#define OBM_BTNCORNERS 32758
-#define OBM_BTSIZE 32761
-#define OBM_CHECK 32760
-#define OBM_CHECKBOXES 32759
-#define OBM_CLOSE 32754
-#define OBM_COMBO 32738
-#define OBM_DNARROW 32752
-#define OBM_DNARROWD 32742
-#define OBM_DNARROWI 32736
-#define OBM_LFARROW 32750
+#define OBM_TRTYPE 32732
 #define OBM_LFARROWI 32734
-#define OBM_LFARROWD 32740
+#define OBM_RGARROWI 32735
+#define OBM_DNARROWI 32736
+#define OBM_UPARROWI 32737
+#define OBM_COMBO 32738
 #define OBM_MNARROW 32739
-#define OBM_OLD_CLOSE 32767
-#define OBM_OLD_DNARROW 32764
-#define OBM_OLD_LFARROW 32762
-#define OBM_OLD_REDUCE 32757
-#define OBM_OLD_RESTORE 32755
-#define OBM_OLD_RGARROW 32763
-#define OBM_OLD_UPARROW 32765
-#define OBM_OLD_ZOOM 32756
-#define OBM_REDUCE 32749
+#define OBM_LFARROWD 32740
+#define OBM_RGARROWD 32741
+#define OBM_DNARROWD 32742
+#define OBM_UPARROWD 32743
+#define OBM_RESTORED 32744
+#define OBM_ZOOMD 32745
 #define OBM_REDUCED 32746
 #define OBM_RESTORE 32747
-#define OBM_RESTORED 32744
-#define OBM_RGARROW 32751
-#define OBM_RGARROWD 32741
-#define OBM_RGARROWI 32735
-#define OBM_SIZE 32766
-#define OBM_UPARROW 32753
-#define OBM_UPARROWD 32743
-#define OBM_UPARROWI 32737
 #define OBM_ZOOM 32748
-#define OBM_ZOOMD 32745
+#define OBM_REDUCE 32749
+#define OBM_LFARROW 32750
+#define OBM_RGARROW 32751
+#define OBM_DNARROW 32752
+#define OBM_UPARROW 32753
+#define OBM_CLOSE 32754
+#define OBM_OLD_RESTORE 32755
+#define OBM_OLD_ZOOM 32756
+#define OBM_OLD_REDUCE 32757
+#define OBM_BTNCORNERS 32758
+#define OBM_CHECKBOXES 32759
+#define OBM_CHECK 32760
+#define OBM_BTSIZE 32761
+#define OBM_OLD_LFARROW 32762
+#define OBM_OLD_RGARROW 32763
+#define OBM_OLD_DNARROW 32764
+#define OBM_OLD_UPARROW 32765
+#define OBM_SIZE 32766
+#define OBM_OLD_CLOSE 32767
 #define OCR_NORMAL 32512
 #define OCR_IBEAM 32513
 #define OCR_WAIT 32514
@@ -1122,7 +1115,9 @@ extern "C" {
 #define OCR_SIZENS 32645
 #define OCR_SIZEALL 32646
 #define OCR_NO 32648
+#define OCR_HAND 32649
 #define OCR_APPSTARTING 32650
+#define OCR_HELP 32651
 #define OIC_SAMPLE 32512
 #define OIC_HAND 32513
 #define OIC_QUES 32514
@@ -1213,10 +1208,6 @@ extern "C" {
 #define SWP_NOSENDCHANGING 1024
 #define SWP_DEFERERASE 8192
 #define SWP_ASYNCWINDOWPOS  16384
-/* undocumented SWP flags - from SDK 3.1 */
-#define SWP_NOCLIENTSIZE 0x0800
-#define SWP_NOCLIENTMOVE 0x1000
-#define SWP_STATECHANGED 0x8000
 
 #define HSHELL_WINDOWCREATED 1
 #define HSHELL_WINDOWDESTROYED 2
@@ -1575,9 +1566,6 @@ extern "C" {
 #define WM_ACTIVATE 6
 #define WM_SETFOCUS 7
 #define WM_KILLFOCUS 8
-#ifdef _WINE
-#define WM_SETVISIBLE 9
-#endif
 #define WM_ENABLE 10
 #define WM_SETREDRAW 11
 #define WM_SETTEXT 12
@@ -1617,8 +1605,6 @@ extern "C" {
 #define WM_GETFONT 49
 #define WM_SETHOTKEY 50
 #define WM_GETHOTKEY 51
-#define WM_ISACTIVEICON 53
-#define WM_QUERYPARKICON 54
 #define WM_QUERYDRAGICON 55
 #define WM_COMPAREITEM 57
 #if (WINVER >= 0x0500)
@@ -1673,7 +1659,6 @@ extern "C" {
 #define WM_NCXBUTTONDBLCLK 173
 #endif /* (_WIN32_WINNT >= 0x0500) */
 
-#define WM_KEYF1 0x004d
 #define WM_KEYFIRST 256
 #define WM_KEYDOWN 256
 #define WM_KEYUP 257
@@ -1707,7 +1692,6 @@ extern "C" {
 #define WM_VSCROLL 277
 #define WM_INITMENU 278
 #define WM_INITMENUPOPUP 279
-#define WM_SYSTIMER 280
 #define WM_MENUSELECT 287
 #define WM_MENUCHAR 288
 #define WM_ENTERIDLE 289
@@ -1727,15 +1711,6 @@ extern "C" {
 #endif /* _WIN32_WCE */
 #endif /* (WINVER >= 0x0500) */
 
-/* D&D messages */
-#define WM_DROPOBJECT	    0x022A
-#define WM_QUERYDROPOBJECT  0x022B
-#define WM_BEGINDRAG	    0x022C
-#define WM_DRAGLOOP	    0x022D
-#define WM_DRAGSELECT	    0x022E
-#define WM_DRAGMOVE	    0x022F
-
-#define WM_CTLCOLOR 25
 #define WM_CTLCOLORMSGBOX 306
 #define WM_CTLCOLOREDIT 307
 #define WM_CTLCOLORLISTBOX 308
@@ -1746,7 +1721,6 @@ extern "C" {
 #define MN_GETHMENU 481
 #define WM_MOUSEFIRST 512
 #define WM_MOUSEMOVE 512
-#define WM_LBTRACKPOINT 0x0131
 #define WM_LBUTTONDOWN 513
 #define WM_LBUTTONUP 514
 #define WM_LBUTTONDBLCLK 515
@@ -1763,6 +1737,9 @@ extern "C" {
 #define WM_XBUTTONDOWN 523
 #define WM_XBUTTONUP 524
 #define WM_XBUTTONDBLCLK 525
+#endif
+#if (_WIN32_WINNT >= 0x0600)
+#define WM_MOUSEHWHEEL 526
 #endif
 #if (_WIN32_WINNT >= 0x0500)
 #define WM_MOUSELAST 525
@@ -1978,10 +1955,6 @@ extern "C" {
 #define EN_VSCROLL 1538
 #define LB_ADDFILE 406
 #define LB_ADDSTRING 384
-#ifdef _WINE
-#define LB_CARETON 419
-#define LB_CARETOFF 420
-#endif
 #define LB_DELETESTRING 386
 #define LB_DIR 397
 #define LB_FINDSTRING 399
@@ -2075,9 +2048,6 @@ extern "C" {
 #define DCX_INTERSECTRGN 128
 #define DCX_VALIDATE 0x200000
 #define DCX_EXCLUDEUPDATE   0x100
-#ifdef _WINE
-#define DCX_USESTYLE     0x10000
-#endif
 #define GMDI_GOINTOPOPUPS 2
 #define GMDI_USEDISABLED 1
 #define FKF_AVAILABLE 2
@@ -4941,6 +4911,10 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #endif /* NOGDI */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
+
+#ifdef _WINE
+#include "reactos/undocuser.h"
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

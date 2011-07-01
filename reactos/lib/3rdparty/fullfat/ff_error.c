@@ -56,7 +56,7 @@ const struct _FFERRTAB
     {"Not enough memory (malloc() returned NULL).",									FF_ERR_NOT_ENOUGH_MEMORY},
     {"Device Driver returned a FATAL error!.",										FF_ERR_DEVICE_DRIVER_FAILED},
     {"The blocksize is not 512 multiple.",											FF_ERR_IOMAN_BAD_BLKSIZE},
-    {"The provided memory size, is not a multiple of the blocksize.",				FF_ERR_IOMAN_BAD_MEMSIZE},
+    {"The memory size, is not a multiple of the blocksize. (Atleast 2 Blocks).",	FF_ERR_IOMAN_BAD_MEMSIZE},
     {"Device is already registered, use FF_UnregisterBlkDevice() first.",			FF_ERR_IOMAN_DEV_ALREADY_REGD},
     {"No mountable partition was found on the specified device.",					FF_ERR_IOMAN_NO_MOUNTABLE_PARTITION},
     {"The format of the MBR was unrecognised.",										FF_ERR_IOMAN_INVALID_FORMAT},
@@ -65,6 +65,7 @@ const struct _FFERRTAB
     {"Cannot register device. (BlkSize not a multiple of 512).",					FF_ERR_IOMAN_DEV_INVALID_BLKSIZE},
     {"Cannot unregister device, a partition is still mounted.",						FF_ERR_IOMAN_PARTITION_MOUNTED},
     {"Cannot unmount the partition while there are active FILE handles.",			FF_ERR_IOMAN_ACTIVE_HANDLES},
+	{"The GPT partition header appears to be corrupt, refusing to mount.",			FF_ERR_IOMAN_GPT_HEADER_CORRUPT},
     {"Cannot open the file, file already in use.",									FF_ERR_FILE_ALREADY_OPEN},
     {"The specified file could not be found.",										FF_ERR_FILE_NOT_FOUND},
     {"Cannot open a Directory.",													FF_ERR_FILE_OBJECT_IS_A_DIR},
@@ -84,6 +85,9 @@ const struct _FFERRTAB
 	{"Source file was not found.",													FF_ERR_FILE_SOURCE_NOT_FOUND},
 	{"Destination path (dir) was not found.",										FF_ERR_FILE_DIR_NOT_FOUND},
 	{"Failed to create the directory Entry.",										FF_ERR_FILE_COULD_NOT_CREATE_DIRENT},
+	{"Not enough free disk space to complete the disk transaction.",				FF_ERR_IOMAN_NOT_ENOUGH_FREE_SPACE},
+	{"Attempted to Read a sector out of bounds.",									FF_ERR_IOMAN_OUT_OF_BOUNDS_READ},
+	{"Attempted to Write a sector out of bounds.",									FF_ERR_IOMAN_OUT_OF_BOUNDS_WRITE},
 };
 
 /**

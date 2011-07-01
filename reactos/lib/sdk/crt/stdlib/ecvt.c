@@ -18,6 +18,7 @@ _ecvt (double value, int ndigits, int *decpt, int *sign)
   static char ecvtbuf[DBL_MAX_10_EXP + 10];
   char *cvtbuf, *s, *d;
 
+  if (ndigits < 0) ndigits = 0;
   s = cvtbuf = (char*)malloc(ndigits + NUMBER_EFMT); 
   d = ecvtbuf;
 

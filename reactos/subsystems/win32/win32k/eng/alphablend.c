@@ -69,7 +69,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
          InputRect.right > psoSource->sizlBitmap.cx ||
          InputRect.bottom > psoSource->sizlBitmap.cy )
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 

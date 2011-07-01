@@ -17,7 +17,7 @@ NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PLIST_ENTRY CurrentEntry;
@@ -26,6 +26,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    InfoReq ? InfoReq->InformationClass : 0));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    
+    if (!InfoReq)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
 	switch( InfoReq->InformationClass ) {
@@ -67,10 +70,6 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	         CurrentEntry = CurrentEntry->Flink;
 	    }
 
-	    /* Count the send in progress */
-	    if (FCB->SendIrp.InFlightRequest)
-	        InfoReq->Information.Ulong++;
-
             break;
 
 	default:
@@ -93,11 +92,14 @@ NTSTATUS NTAPI
 AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+    
+    if (!InfoReq)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
       switch (InfoReq->InformationClass) {

@@ -1213,9 +1213,9 @@ DOC_MODULE=libxml2-$(VERSION)
 EXAMPLES_DIR=$(BASE_DIR)/$(DOC_MODULE)/examples
 
 install-data-local: 
-	$(mkinstalldirs) $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
+	@MKDIR_P@ $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	-@INSTALL@ -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
-	$(mkinstalldirs) $(DESTDIR)$(EXAMPLES_DIR)
+	@MKDIR_P@ $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/xmllint.c $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/testSAX.c $(DESTDIR)$(EXAMPLES_DIR)
 	-@INSTALL@ -m 0644 $(srcdir)/testHTML.c $(DESTDIR)$(EXAMPLES_DIR)

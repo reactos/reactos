@@ -34,8 +34,8 @@
 #define UNIMPLEMENTED \
    VideoPortDebugPrint(Error, "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
-void
-InitVGAMode();
+VOID
+InitVGAMode(VOID);
 
 VP_STATUS NTAPI
 VGAFindAdapter(

@@ -1,14 +1,5 @@
 #pragma once
 
-/* Missing from Winuser.h */
-#define ES_COMBO        0x00000200   /* Undocumented. Parent is a combobox */
-#ifndef MAKEINTATOMA
-#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
-#endif
-#ifndef WM_ISACTIVEICON
-#define WM_ISACTIVEICON         0x0035
-#endif
-
 #ifndef HBMMENU_CALLBACK
 #define HBMMENU_CALLBACK	((HBITMAP) -1)
 #endif
@@ -45,11 +36,6 @@
 
 /* winuser.h */
 
-
-// I dont know where this goes
-
-#define LB_CARETON             0x01a3
-#define LB_CARETOFF            0x01a4
 
 /* combo box */
 
@@ -106,7 +92,6 @@ extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL );
 #define LB_ADDSTRING_UPPER        0x1AC
 #define LB_ADDSTRING_LOWER        0x1AD
 
-#define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
 LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI User32DefWindowProc(HWND,UINT,WPARAM,LPARAM,BOOL);
 BOOL WINAPI RegisterClientPFN(VOID);
@@ -129,3 +114,5 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);
+LRESULT WINAPI SwitchWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+LRESULT WINAPI SwitchWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );

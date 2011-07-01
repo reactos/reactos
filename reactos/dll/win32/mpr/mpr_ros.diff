@@ -1,0 +1,47 @@
+Index: mpr.spec
+===================================================================
+--- mpr.spec	(revision 49877)
++++ mpr.spec	(working copy)
+@@ -1,23 +1,23 @@
+ # ordinal exports
+- 1 stub @
+- 2 stub @
+- 3 stub @
+- 4 stub @
+- 5 stub @
+- 6 stub @
+- 7 stub @
+- 8 stub @
+- 9 stub @
+-12 stub @
+-13 stub @
+-14 stub @
+-15 stub @
+-16 stub @
+-17 stub @
+-18 stub @
+-19 stub @
+-20 stub @
+-21 stub @
++ 1 stub MPR_1
++ 2 stub MPR_2
++ 3 stub MPR_3
++ 4 stub MPR_4
++ 5 stub MPR_5
++ 6 stub MPR_6
++ 7 stub MPR_7
++ 8 stub MPR_8
++ 9 stub MPR_9
++12 stub MPR_12
++13 stub MPR_13
++14 stub MPR_14
++15 stub MPR_15
++16 stub MPR_16
++17 stub MPR_17
++18 stub MPR_18
++19 stub MPR_19
++20 stub MPR_20
++21 stub MPR_21
+ 22 stdcall @(long) MPR_Alloc
+ 23 stdcall @(ptr long) MPR_ReAlloc
+ 24 stdcall @(ptr) MPR_Free

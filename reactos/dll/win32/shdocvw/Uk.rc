@@ -42,7 +42,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Створити"
         {
-            MENUITEM "&Вікно"                   ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Вікно",                  ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Відкрити...",                ID_BROWSE_OPEN
         MENUITEM "&Зберегти",                   ID_BROWSE_SAVE
@@ -59,13 +59,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Панелі інструментів"
         {
-            MENUITEM "&Стандартна панель"       ID_BROWSE_BAR_STD
-            MENUITEM "Рядок &адреси"            ID_BROWSE_BAR_ADDR
+            MENUITEM "&Стандартна панель",      ID_BROWSE_BAR_STD
+            MENUITEM "Рядок &адреси",           ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Обране"
     {
-        MENUITEM "&Додати до Обраного..."       ID_BROWSE_ADDFAV
+        MENUITEM "&Додати до Обраного...",      ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Довідка"

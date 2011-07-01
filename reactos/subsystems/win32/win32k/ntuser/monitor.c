@@ -101,14 +101,14 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
 
     if (!hMonitor)
     {
-        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);
         return NULL;
     }
 
     Monitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
     if (!Monitor)
     {
-        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);
         return NULL;
     }
 
@@ -157,16 +157,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
     }
 
     Monitor->GdiDevice = pGdiDevice;
-    Monitor->rcMonitor.left  = 0;
-    Monitor->rcMonitor.top   = 0;
-    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
-    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
-    Monitor->rcWork = Monitor->rcMonitor;
     Monitor->cWndStack = 0;
-
-    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
-
-    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
     if (gMonitorList == NULL)
     {
@@ -184,6 +175,8 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
         }
         Monitor->Prev = p;
     }
+
+    IntUpdateMonitorSize(pGdiDevice);
 
     return STATUS_SUCCESS;
 }
@@ -239,9 +232,57 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
     }
 
     if (Monitor->hrgnMonitor)
-        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+        GreDeleteObject(Monitor->hrgnMonitor);
 
     IntDestroyMonitorObject(Monitor);
+
+    return STATUS_SUCCESS;
+}
+
+/* IntUpdateMonitorSize
+ *
+ * Reset size of the monitor using atached device
+ *
+ * Arguments
+ *
+ *   PMONITOR
+ *      pGdiDevice  Pointer to the PDEVOBJ, which size has changed
+ *
+ * Return value
+ *   Returns a NTSTATUS
+ */
+NTSTATUS
+IntUpdateMonitorSize(IN PDEVOBJ *pGdiDevice)
+{
+	PMONITOR Monitor;
+
+    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
+    {
+        if (Monitor->GdiDevice == pGdiDevice)
+            break;
+    }
+
+    if (Monitor == NULL)
+    {
+        /* no monitor for given device found */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Monitor->rcMonitor.left  = 0;
+    Monitor->rcMonitor.top   = 0;
+    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
+    Monitor->rcWork = Monitor->rcMonitor;
+
+    if (Monitor->hrgnMonitor)
+    {
+        GreSetObjectOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(Monitor->hrgnMonitor);
+    }
+
+    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
+
+    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
     return STATUS_SUCCESS;
 }
@@ -372,7 +413,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
             if (monitorRectList != NULL)
                 monitorRectList[iCount] = IntersectionRect;
         }
-        
+
         /* Increase count of found monitors */
         iCount++;
     }
@@ -523,7 +564,7 @@ NtUserEnumDisplayMonitors(
         safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
         if (safeHMonitorList == NULL)
         {
-            /* FIXME: SetLastWin32Error? */
+            /* FIXME: EngSetLastError? */
             return -1;
         }
     }
@@ -533,7 +574,7 @@ NtUserEnumDisplayMonitors(
         if (safeRectList == NULL)
         {
             ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
-            /* FIXME: SetLastWin32Error? */
+            /* FIXME: EngSetLastError? */
             return -1;
         }
     }
@@ -653,13 +694,10 @@ NtUserGetMonitorInfo(
     /* fill device name */
     if (MonitorInfo.cbSize == sizeof (MONITORINFOEXW))
     {
-        WCHAR nul = L'\0';
-        INT len = Monitor->DeviceName.Length;
-        if (len >= CCHDEVICENAME * sizeof (WCHAR))
-            len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
-
-        memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
-        memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
+        RtlStringCbCopyNW(MonitorInfo.szDevice,
+                          sizeof(MonitorInfo.szDevice),
+                          Monitor->DeviceName.Buffer,
+                          Monitor->DeviceName.Length);
     }
 
     /* output data */
@@ -768,12 +806,12 @@ NtUserMonitorFromRect(
         return hMonitor;
     }
 
-    hMonitorList = ExAllocatePoolWithTag(PagedPool, 
+    hMonitorList = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(HMONITOR) * numMonitors,
                                          USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)
     {
-        /* FIXME: SetLastWin32Error? */
+        /* FIXME: EngSetLastError? */
         return (HMONITOR)NULL;
     }
 
@@ -783,7 +821,7 @@ NtUserMonitorFromRect(
     if (rectList == NULL)
     {
         ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-        /* FIXME: SetLastWin32Error? */
+        /* FIXME: EngSetLastError? */
         return (HMONITOR)NULL;
     }
 

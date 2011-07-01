@@ -47,7 +47,7 @@
   typedef struct FT_MemTableRec_*   FT_MemTable;
 
 
-#define FT_MEM_VAL( addr )  ((FT_ULong)(FT_Pointer)( addr ))
+#define FT_MEM_VAL( addr )  ((FT_PtrDist)(FT_Pointer)( addr ))
 
   /*
    *  This structure holds statistics for a single allocation/release
@@ -275,7 +275,7 @@
       for ( i = 0; i < table->size; i++ )
       {
         FT_MemNode  node, next, *pnode;
-        FT_ULong    hash;
+        FT_PtrDist  hash;
 
 
         node = table->buckets[i];
@@ -430,7 +430,7 @@
   ft_mem_table_get_nodep( FT_MemTable  table,
                           FT_Byte*     address )
   {
-    FT_ULong     hash;
+    FT_PtrDist   hash;
     FT_MemNode  *pnode, node;
 
 

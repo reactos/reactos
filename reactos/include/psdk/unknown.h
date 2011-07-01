@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef __unknwn_h__
-#define __unknwn_h__
+#ifndef _UNKNOWN_H_
+#define _UNKNOWN_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,5 +70,5 @@ HRESULT
   IN  POOL_TYPE   PoolType
 );
 
-#endif
+#endif /* _UNKNOWN_H_ */
 

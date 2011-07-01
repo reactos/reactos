@@ -595,7 +595,7 @@ KdbpCmdDisassembleX(
 
         while (Count > 0)
         {
-            if (!KdbSymPrintAddress((PVOID)Address))
+            if (!KdbSymPrintAddress((PVOID)Address, NULL))
                 KdbpPrint("<%x>:", Address);
             else
                 KdbpPrint(":");
@@ -621,7 +621,7 @@ KdbpCmdDisassembleX(
         /* Disassemble */
         while (Count-- > 0)
         {
-            if (!KdbSymPrintAddress((PVOID)Address))
+            if (!KdbSymPrintAddress((PVOID)Address, NULL))
                 KdbpPrint("<%08x>: ", Address);
             else
                 KdbpPrint(": ");
@@ -794,6 +794,7 @@ KdbpCmdBackTrace(
     ULONGLONG Result = 0;
     ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Ebp;
     ULONG_PTR Address;
+    KTRAP_FRAME TrapFrame;
 
     if (Argc >= 2)
     {
@@ -853,15 +854,19 @@ KdbpCmdBackTrace(
         KdbpPrint("Eip:\n");
 
         /* Try printing the function at EIP */
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
+        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
             KdbpPrint("<%08x>\n", KdbCurrentTrapFrame->Tf.Eip);
         else
             KdbpPrint("\n");
     }
 
+    TrapFrame = KdbCurrentTrapFrame->Tf;
     KdbpPrint("Frames:\n");
+
     for (;;)
     {
+        BOOLEAN GotNextFrame;
+
         if (Frame == 0)
             break;
 
@@ -871,16 +876,21 @@ KdbpCmdBackTrace(
             break;
         }
 
+        if ((GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR)))))
+            TrapFrame.Ebp = Frame;
+
         /* Print the location of the call instruction */
-        if (!KdbSymPrintAddress((PVOID)(Address - 5)))
+        if (!KdbSymPrintAddress((PVOID)(Address - 5), &TrapFrame))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
 
+        if (KdbOutputAborted) break;
+
         if (Address == 0)
             break;
 
-        if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR))))
+        if (!GotNextFrame)
         {
             KdbpPrint("Couldn't access memory at 0x%p!\n", Frame);
             break;
@@ -2488,14 +2498,12 @@ KdbpReadCommand(
              */
             if (Buffer == Orig)
             {
-                strncpy(Buffer, LastCommand, Size);
-                Buffer[Size - 1] = '\0';
+                RtlStringCbCopyA(Buffer, Size, LastCommand);
             }
             else
             {
                 *Buffer = '\0';
-                strncpy(LastCommand, Orig, sizeof (LastCommand));
-                LastCommand[sizeof (LastCommand) - 1] = '\0';
+                RtlStringCbCopyA(LastCommand, sizeof(LastCommand), Orig);
             }
 
             return;
@@ -2612,8 +2620,7 @@ KdbpDoCommand(
     static PCH Argv[256];
     static CHAR OrigCommand[1024];
 
-    strncpy(OrigCommand, Command, sizeof(OrigCommand) - 1);
-    OrigCommand[sizeof(OrigCommand) - 1] = '\0';
+    RtlStringCbCopyA(OrigCommand, sizeof(OrigCommand), Command);
 
     Argc = 0;
     p = Command;
@@ -2667,7 +2674,7 @@ KdbpCliMainLoop(
 
     if (EnteredOnSingleStep)
     {
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
+        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
         {
             KdbpPrint("<%x>", KdbCurrentTrapFrame->Tf.Eip);
         }
@@ -2694,6 +2701,9 @@ KdbpCliMainLoop(
     /* Main loop */
     do
     {
+        /* Reset the number of rows/cols printed */
+        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
+
         /* Print the prompt */
         KdbpPrint("kdb:> ");
 
@@ -2707,6 +2717,7 @@ KdbpCliMainLoop(
 
         /* Call the command */
         Continue = KdbpDoCommand(Command);
+        KdbOutputAborted = FALSE;
     }
     while (Continue);
 }

@@ -707,9 +707,9 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
     return Result;
 }
 
-VOID
+BOOLEAN
 NTAPI
-CcpUnpinData(IN PNOCC_BCB RealBcb)
+CcpUnpinData(IN PNOCC_BCB RealBcb, BOOLEAN ReleaseBit)
 {
     if (RealBcb->RefCount <= 2)
     {
@@ -718,9 +718,11 @@ CcpUnpinData(IN PNOCC_BCB RealBcb)
 		{
 			DPRINT("Triggering exclusive waiter\n");
 			KeSetEvent(&RealBcb->ExclusiveWait, IO_NO_INCREMENT, FALSE);
-			return;
+			return TRUE;
 		}
     }
+	if (RealBcb->RefCount == 2 && !ReleaseBit)
+		return FALSE;
     if (RealBcb->RefCount > 1)
     {
 		DPRINT("Removing one reference #%x\n", RealBcb - CcCacheSections);
@@ -730,6 +732,7 @@ CcpUnpinData(IN PNOCC_BCB RealBcb)
 	if (RealBcb->RefCount == 1)
 	{
 		DPRINT("Clearing allocation bit #%x\n", RealBcb - CcCacheSections);
+
 		RtlClearBit(CcCacheBitmap, RealBcb - CcCacheSections);
 
 #ifdef PIN_WRITE_ONLY
@@ -745,6 +748,8 @@ CcpUnpinData(IN PNOCC_BCB RealBcb)
 			 &OldProtect);
 #endif
 	}
+
+	return TRUE;
 }
 
 VOID
@@ -753,13 +758,21 @@ CcUnpinData(IN PVOID Bcb)
 {
     PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
     ULONG Selected = RealBcb - CcCacheSections;
+	BOOLEAN Released;
 
 	ASSERT(RealBcb >= CcCacheSections && RealBcb - CcCacheSections < CACHE_NUM_SECTIONS);
     DPRINT("CcUnpinData Bcb #%x (RefCount %d)\n", Selected, RealBcb->RefCount);
 
     CcpLock();
-	CcpUnpinData(RealBcb);
+	Released = CcpUnpinData(RealBcb, FALSE);
     CcpUnlock();
+
+	if (!Released) {
+		MiFlushMappedSection(RealBcb->BaseAddress, &RealBcb->FileOffset, &RealBcb->Map->FileSizes.FileSize, RealBcb->Dirty);
+		CcpLock();
+		CcpUnpinData(RealBcb, TRUE);
+		CcpUnlock();
+	}
 }
 
 VOID

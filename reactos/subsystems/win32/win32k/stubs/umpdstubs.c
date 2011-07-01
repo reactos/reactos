@@ -1,4 +1,5 @@
 #include <win32k.h>
+#undef XFORMOBJ
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 

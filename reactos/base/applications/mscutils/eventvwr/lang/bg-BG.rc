@@ -85,19 +85,32 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE				      "Преглед на събития"
-  	 IDC_EVENTSTRINGIDNOTFOUND	"Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
+    IDS_APP_TITLE                  "Преглед на събития"
+    IDS_EVENTSTRINGIDNOTFOUND      "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
+    IDS_EVENTLOG_ERROR_TYPE        "Error"
+    IDS_EVENTLOG_WARNING_TYPE      "Warning"
+    IDS_EVENTLOG_INFORMATION_TYPE  "Information"
+    IDS_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
+    IDS_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
+    IDS_EVENTLOG_SUCCESS           "Success"
+    IDS_EVENTLOG_UNKNOWN_TYPE      "Unknown Event"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Type"
-    IDS_COLUMNDATE      "Date"
-    IDS_COLUMNTIME      "Time"
-    IDS_COLUMNSOURCE    "Source"
-    IDS_COLUMNCATEGORY  "Category"
-    IDS_COLUMNEVENT     "Event"
-    IDS_COLUMNUSER      "User"
-    IDS_COLUMNCOMPUTER  "Computer"
-    IDS_COLUMNEVENTDATA "Event Data"
+    IDS_COLUMNTYPE      "Вид"
+    IDS_COLUMNDATE      "Дата"
+    IDS_COLUMNTIME      "Време"
+    IDS_COLUMNSOURCE    "Източник"
+    IDS_COLUMNCATEGORY  "Разряд"
+    IDS_COLUMNEVENT     "Събитие"
+    IDS_COLUMNUSER      "Потребител"
+    IDS_COLUMNCOMPUTER  "Компютър"
+    IDS_COLUMNEVENTDATA "Данни за събитието"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "None"
+    IDS_NOT_AVAILABLE "N/A"
 END

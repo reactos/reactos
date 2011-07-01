@@ -113,11 +113,11 @@ WINAPI
 ChoosePixelFormat(HDC  hdc,
                   CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
-  if (glChoosePixelFormat == NULL)
-    if (OpenGLEnable() == FALSE)
-      return(0);
+    if (glChoosePixelFormat == NULL)
+        if (OpenGLEnable() == FALSE)
+            return(0);
 
-  return(glChoosePixelFormat(hdc, ppfd));
+    return(glChoosePixelFormat(hdc, ppfd));
 }
 
 
@@ -132,11 +132,11 @@ DescribePixelFormat(HDC  hdc,
                     UINT  nBytes,
                     LPPIXELFORMATDESCRIPTOR  ppfd)
 {
-  if (glDescribePixelFormat == NULL)
-    if (OpenGLEnable() == FALSE)
-      return(0);
+    if (glDescribePixelFormat == NULL)
+        if (OpenGLEnable() == FALSE)
+            return(0);
 
-  return(glDescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd));
+    return(glDescribePixelFormat(hdc, iPixelFormat, nBytes, ppfd));
 }
 
 
@@ -148,11 +148,11 @@ INT
 WINAPI
 GetPixelFormat(HDC  hdc)
 {
-  if (glGetPixelFormat == NULL)
-    if (OpenGLEnable() == FALSE)
-      return(0);
+    if (glGetPixelFormat == NULL)
+        if (OpenGLEnable() == FALSE)
+            return(0);
 
-  return(glGetPixelFormat(hdc));
+    return(glGetPixelFormat(hdc));
 }
 
 
@@ -166,15 +166,15 @@ SetPixelFormat(HDC  hdc,
                INT  iPixelFormat,
                CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
-  /* Can only be set once */
-  INT current = GetPixelFormat(hdc);
-  if(current) return current == iPixelFormat ;
-  
-  if (glSetPixelFormat == NULL)
-    if (OpenGLEnable() == FALSE)
-      return(0);
+    /* Can only be set once */
+    INT current = GetPixelFormat(hdc);
+    if(current) return current == iPixelFormat ;
 
-  return(glSetPixelFormat(hdc, iPixelFormat, ppfd));
+    if (glSetPixelFormat == NULL)
+        if (OpenGLEnable() == FALSE)
+            return(0);
+
+    return(glSetPixelFormat(hdc, iPixelFormat, ppfd));
 }
 
 
@@ -186,12 +186,12 @@ BOOL
 WINAPI
 SwapBuffers(HDC  hdc)
 {
-  if (glSwapBuffers == NULL)
-    if (OpenGLEnable() == FALSE)
-      return(0);
+    if (glSwapBuffers == NULL)
+        if (OpenGLEnable() == FALSE)
+            return(0);
 
 
-  return(glSwapBuffers(hdc));
+    return(glSwapBuffers(hdc));
 }
 
 
@@ -205,25 +205,25 @@ SwapBuffers(HDC  hdc)
 UINT
 WINAPI
 GetEnhMetaFilePixelFormat(
-	HENHMETAFILE			hemf,
-	UINT				cbBuffer,
-	PIXELFORMATDESCRIPTOR	*ppfd
-	)
+    HENHMETAFILE			hemf,
+    UINT				cbBuffer,
+    PIXELFORMATDESCRIPTOR	*ppfd
+)
 {
-	ENHMETAHEADER pemh;
+    ENHMETAHEADER pemh;
 
-	if(GetEnhMetaFileHeader(hemf, sizeof(ENHMETAHEADER), &pemh))
-	{
-	if(pemh.bOpenGL)
-	{
-		if(pemh.cbPixelFormat)
-		{
-		memcpy((void*)ppfd, UlongToPtr(pemh.offPixelFormat), cbBuffer );
-		return(pemh.cbPixelFormat);
-		}
-	}
-	}
-	return(0);
+    if(GetEnhMetaFileHeader(hemf, sizeof(ENHMETAHEADER), &pemh))
+    {
+        if(pemh.bOpenGL)
+        {
+            if(pemh.cbPixelFormat)
+            {
+                memcpy((void*)ppfd, UlongToPtr(pemh.offPixelFormat), cbBuffer );
+                return(pemh.cbPixelFormat);
+            }
+        }
+    }
+    return(0);
 }
 
 /* EOF */

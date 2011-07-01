@@ -608,6 +608,16 @@ MMixerSetWaveStatus(
 {
     KSPROPERTY Property;
     ULONG Length;
+    MIXER_STATUS Status;
+
+    /* verify mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* invalid context passed */
+        return Status;
+    }
 
     /* setup property request */
     Property.Set = KSPROPSETID_Connection;
@@ -615,6 +625,31 @@ MMixerSetWaveStatus(
     Property.Flags = KSPROPERTY_TYPE_SET;
 
     return MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY, &Property, sizeof(KSPROPERTY), &State, sizeof(KSSTATE), &Length);
+}
+
+MIXER_STATUS
+MMixerSetWaveResetState(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN ULONG bBegin)
+{
+    ULONG Length;
+    MIXER_STATUS Status;
+    KSRESET Reset;
+
+    /* verify mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* invalid context passed */
+        return Status;
+    }
+
+    /* begin / stop reset */
+    Reset = (bBegin ? KSRESET_BEGIN : KSRESET_END);
+
+    return MixerContext->Control(PinHandle, IOCTL_KS_RESET_STATE, &Reset, sizeof(KSRESET), NULL, 0, &Length);
 }
 
 MIXER_STATUS

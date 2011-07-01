@@ -307,3 +307,34 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
     STDMETHOD_(NTSTATUS, CheckIoCapability)(THIS_
         IN ULONG Unknown)PURE;
 };
+
+#undef INTERFACE
+
+
+/*****************************************************************************
+ * IKsProcessingObject
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsProcessingObject
+
+DECLARE_INTERFACE_(IKsProcessingObject, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(VOID, ProcessingObjectWork)(THIS) PURE;
+
+    STDMETHOD_(PKSGATE, GetAndGate)(THIS) PURE;
+
+    STDMETHOD_(VOID, Process)(THIS_
+        IN BOOLEAN Asynchronous)PURE;
+
+    STDMETHOD_(VOID, Reset)(THIS) PURE;
+
+    STDMETHOD_(VOID, TriggerNotification)(THIS) PURE;
+
+};
+
+#undef INTERFACE
+

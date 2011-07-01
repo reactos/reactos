@@ -17,6 +17,9 @@ Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client.
 [Section.040a]
 Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
 
+[Section.040c]
+Description = Un client SSH, Telnet, rlogin et raw TCP gratuit.
+
 [Section.0415]
 Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz bezpośrednie TCP.
 

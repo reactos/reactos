@@ -822,3 +822,10 @@ GetCurrentTimeInSeconds()
     UNIMPLEMENTED;
     return ERROR_OUTOFMEMORY;
 }
+
+DNS_STATUS WINAPI
+DnsNotifyResolver()
+{
+    UNIMPLEMENTED;
+    return ERROR_OUTOFMEMORY;
+}

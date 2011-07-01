@@ -67,8 +67,6 @@ typedef struct _USER_REFERENCE_ENTRY
    PVOID obj;
 } USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
 
-#include <malloc.h>
-
 #define USER_ASSERT(exp,file,line) \
     if (!(exp)) {RtlAssert(#exp,(PVOID)file,line,"");}
 

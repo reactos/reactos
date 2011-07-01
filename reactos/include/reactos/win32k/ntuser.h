@@ -65,6 +65,8 @@ typedef struct _DESKTOPINFO
     HWND hProgmanWindow;
     HWND hShellWindow;
 
+    PPROCESSINFO ppiShellProcess;
+
     union
     {
         UINT Dummy;
@@ -230,6 +232,10 @@ typedef struct _CLIENTINFO
 C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
+
+#define HRGN_NULL    ( (HRGN) 0) // NULL empty region
+#define HRGN_WINDOW  ( (HRGN) 1) // region from window rcWindow
+#define HRGN_MONITOR ( (HRGN) 2) // region from monitor region.
 
 /* Menu Item fType. */
 #define MFT_RTOL 0x6000
@@ -465,19 +471,6 @@ typedef struct _SBINFOEX
 #define WNDS2_SMALLICONFROMWMQUERYDRAG  0X20000000
 #define WNDS2_SHELLHOOKREGISTERED       0X40000000
 #define WNDS2_WMCREATEMSGPROCESSED      0X80000000
-
-/* Non SDK ExStyles */
-#define WS_EX_MAKEVISIBLEWHENUNGHOSTED 0x00000800
-#define WS_EX_FORCELEGACYRESIZENCMETR  0x00800000
-#define WS_EX_UISTATEACTIVE            0x04000000
-#define WS_EX_REDIRECTED               0X20000000
-#define WS_EX_UISTATEKBACCELHIDDEN     0X40000000
-#define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
-#define WS_EX_SETANSICREATOR           0x80000000 // For WNDS_ANSICREATOR
-
-/* Non SDK Styles */
-#define WS_MAXIMIZED  WS_MAXIMIZE
-#define WS_MINIMIZED  WS_MINIMIZE
 
 /* ExStyles2 */
 #define WS_EX2_CLIPBOARDLISTENER        0X00000001
@@ -859,29 +852,6 @@ typedef struct _USERCONNECT
   DWORD dwDispatchCount;
   SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
-
-//
-// Non SDK Window Message types.
-//
-#define WM_CLIENTSHUTDOWN 59
-#define WM_COPYGLOBALDATA 73
-#define WM_SYSTIMER 280
-#define WM_POPUPSYSTEMMENU 787
-#define WM_CBT 1023 // ReactOS only.
-#define WM_MAXIMUM 0x0001FFFF
-
-//
-// Non SDK DCE types.
-//
-#define DCX_USESTYLE     0x00010000
-#define DCX_KEEPCLIPRGN  0x00040000
-#define DCX_KEEPLAYOUT   0x40000000
-#define DCX_PROCESSOWNED 0x80000000
-
-//
-// Non SDK Queue message types.
-//
-#define QS_SMRESULT      0x8000
 
 DWORD
 NTAPI
@@ -1494,7 +1464,7 @@ NtUserCreateLocalMemHandle(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
+  DWORD dwExStyle,
   PLARGE_STRING plstrClassName,
   PLARGE_STRING plstrClsVersion,
   PLARGE_STRING plstrWindowName,
@@ -1513,9 +1483,9 @@ NtUserCreateWindowEx(
 HWINSTA
 NTAPI
 NtUserCreateWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
+  DWORD Unknown2,
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5,
@@ -1663,10 +1633,10 @@ NtUserEnableScrollBar(
   UINT wSBflags,
   UINT wArrows);
 
-DWORD
+BOOL
 NTAPI
 NtUserEndDeferWindowPosEx(
-  DWORD Unknown0,
+  HDWP WinPosInfo,
   DWORD Unknown1);
 
 BOOL NTAPI
@@ -1796,15 +1766,8 @@ NtUserGetClassInfo(HINSTANCE hInstance,
 INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
-		   PUNICODE_STRING ClassName,
-                   BOOL Ansi);
-#if 0 // Real NtUserGetClassName
-INT
-NTAPI
-NtUserGetClassName(HWND hWnd,
                    BOOL Real, // 0 GetClassNameW, 1 RealGetWindowClassA/W
                    PUNICODE_STRING ClassName);
-#endif
 
 HANDLE
 NTAPI
@@ -1996,19 +1959,11 @@ NTAPI
 NtUserGetListBoxInfo(
   HWND hWnd);
 
-typedef struct tagNTUSERGETMESSAGEINFO
-{
-  MSG Msg;
-  ULONG LParamSize;
-} NTUSERGETMESSAGEINFO, *PNTUSERGETMESSAGEINFO;
-
-BOOL
-NTAPI
-NtUserGetMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax);
+BOOL APIENTRY
+NtUserGetMessage(PMSG pMsg,
+                 HWND hWnd,
+                 UINT MsgFilterMin,
+                 UINT MsgFilterMax);
 
 DWORD
 NTAPI
@@ -2104,7 +2059,8 @@ enum ThreadStateRoutines
     THREADSTATE_PROGMANWINDOW,
     THREADSTATE_TASKMANWINDOW,
     THREADSTATE_GETMESSAGETIME,
-    THREADSTATE_GETINPUTSTATE
+    THREADSTATE_GETINPUTSTATE,
+    THREADSTATE_UPTIMELASTREAD
 };
 
 DWORD_PTR
@@ -2254,6 +2210,15 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
+
+typedef struct tagDOSENDMESSAGE
+{
+  UINT uFlags;
+  UINT uTimeout;
+  ULONG_PTR Result;
+}
+DOSENDMESSAGE, *PDOSENDMESSAGE;
+
 BOOL
 NTAPI
 NtUserMessageCall(
@@ -2331,9 +2296,9 @@ NtUserOpenClipboard(
 HDESK
 NTAPI
 NtUserOpenDesktop(
-  PUNICODE_STRING lpszDesktopName,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess);
+   POBJECT_ATTRIBUTES ObjectAttributes,
+   DWORD dwFlags,
+   ACCESS_MASK dwDesiredAccess);
 
 HDESK
 NTAPI
@@ -2345,7 +2310,7 @@ NtUserOpenInputDesktop(
 HWINSTA
 NTAPI
 NtUserOpenWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
+  POBJECT_ATTRIBUTES ObjectAttributes,
   ACCESS_MASK dwDesiredAccess);
 
 BOOL
@@ -2363,14 +2328,12 @@ NtUserPaintMenuBar(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-BOOL
-NTAPI
-NtUserPeekMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg);
+BOOL APIENTRY
+NtUserPeekMessage( PMSG pMsg,
+                   HWND hWnd,
+                   UINT MsgFilterMin,
+                   UINT MsgFilterMax,
+                   UINT RemoveMsg);
 
 BOOL
 NTAPI
@@ -2443,28 +2406,28 @@ NtUserQueryWindow(
   HWND hWnd,
   DWORD Index);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6);
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG);
 
-DWORD
+HWND
 NTAPI
 NtUserRealChildWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+    HWND Parent,
+    LONG x,
+    LONG y);
 
-DWORD
+BOOL
 NTAPI
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    DWORD dwWakeMask,
+    UINT uTimeout);
 
 BOOL
 NTAPI
@@ -3162,8 +3125,6 @@ typedef struct tagKMDDELPARAM
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
-#define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
-#define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
 #define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0xfffd0050
 #define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0xfffd0052
   #define MSQ_STATE_CAPTURE	0x1
@@ -3185,23 +3146,12 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved);
 
-
-/* Should be done in usermode and use NtUserGetCPD. */
-ULONG_PTR
-NTAPI
-NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
-
 UINT
 NTAPI
 NtUserGetMenuDefaultItem(
   HMENU hMenu,
   UINT fByPos,
   UINT gmdiFlags);
-
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
 
 BOOL
 NTAPI
@@ -3300,33 +3250,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-
-typedef struct tagNTUSERSENDMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-          PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessageTimeout(HWND hWnd,
-			 UINT Msg,
-			 WPARAM wParam,
-			 LPARAM lParam,
-			 UINT uFlags,
-			 UINT uTimeout,
-			 ULONG_PTR *uResult,
-             PNTUSERSENDMESSAGEINFO Info);
 
 typedef struct _SETSCROLLBARINFO
 {

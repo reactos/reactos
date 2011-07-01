@@ -21,7 +21,9 @@ import "unknwn.idl";
 #endif
 
 cpp_quote("#include <imm.h>")
-
+#ifdef _MSC_VER
+cpp_quote("DEFINE_GUID(CLSID_CActiveIMM, 0x4955dd33, 0xb159, 0x11d0, 0x8f,0xcf, 0x00,0xaa,0x00,0x6b,0xcc,0x59);")
+#endif
 cpp_quote("#if 0")
 
 typedef struct {
@@ -588,3 +590,4 @@ coclass CActiveIMM
     /* interface IActiveIMMRegistrar; */
     /* interface IActiveIMMMessagePumpOwner; */
 }
+

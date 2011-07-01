@@ -41,9 +41,25 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
                                EXCEPTION_REGISTRATION_RECORD* nested_frame, int nested_trylevel );
 
 /* call a function with a given ebp */
-static inline void *call_ebp_func( void *func, void *ebp )
+#ifdef _MSC_VER
+#pragma warning(disable:4731) // don't warn about modification of ebp
+#endif
+static inline void *call_ebp_func( void *func, void *_ebp )
 {
-    void *ret;
+    void *result;
+#ifdef _MSC_VER
+    __asm
+    {
+        mov eax, func
+        push ebx
+        push ebp
+        mov ebp, _ebp
+        call eax
+        pop ebp
+        pop ebx
+        mov result, eax
+    }
+#else
     int dummy;
     __asm__ __volatile__ ("pushl %%ebx\n\t"
                           "pushl %%ebp\n\t"
@@ -51,15 +67,22 @@ static inline void *call_ebp_func( void *func, void *ebp )
                           "call *%%eax\n\t"
                           "popl %%ebp\n\t"
                           "popl %%ebx"
-                          : "=a" (ret), "=S" (dummy), "=D" (dummy)
-                          : "0" (func), "1" (ebp) : "ecx", "edx", "memory" );
-    return ret;
+                          : "=a" (result), "=S" (dummy), "=D" (dummy)
+                          : "0" (func), "1" (_ebp) : "ecx", "edx", "memory" );
+#endif
+    return result;
 }
+#ifdef _MSC_VER
+#pragma warning(default:4731)
+#endif
 
 /* call a copy constructor */
 static inline void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
 {
     TRACE( "calling copy ctor %p object %p src %p\n", func, this, src );
+#ifdef _MSC_VER
+#pragma message ("call_copy_ctor is unimplemented for MSC")
+#else
     if (has_vbase)
         /* in that case copy ctor takes an extra bool indicating whether to copy the base class */
         __asm__ __volatile__("pushl $1; pushl %2; call *%0"
@@ -67,19 +90,28 @@ static inline void call_copy_ctor( void *func, void *this, void *src, int has_vb
     else
         __asm__ __volatile__("pushl %2; call *%0"
                              : : "r" (func), "c" (this), "r" (src) : "eax", "edx", "memory" );
+#endif
 }
 
 /* call the destructor of the exception object */
 static inline void call_dtor( void *func, void *object )
 {
+#ifdef _MSC_VER
+#pragma message ("call_dtor is unimplemented for MSC")
+#else
     __asm__ __volatile__("call *%0" : : "r" (func), "c" (object) : "eax", "edx", "memory" );
+#endif
 }
 
 /* continue execution to the specified address after exception is caught */
 static inline void DECLSPEC_NORETURN continue_after_catch( cxx_exception_frame* frame, void *addr )
 {
+#ifdef _MSC_VER
+#pragma message ("continue_after_catch is unimplemented for MSC")
+#else
     __asm__ __volatile__("movl -4(%0),%%esp; leal 12(%0),%%ebp; jmp *%1"
                          : : "r" (frame), "a" (addr) );
+#endif
     for (;;) ; /* unreached */
 }
 
@@ -415,6 +447,14 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
  */
 extern DWORD CDECL __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
                                       PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch );
+#ifdef _MSC_VER
+#pragma message ("__CxxFrameHandler is unimplemented for MSC")
+DWORD CDECL __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
+                                      PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch )
+{
+    return 0;
+}
+#else
 __ASM_GLOBAL_FUNC( __CxxFrameHandler,
                    "pushl $0\n\t"        /* nested_trylevel */
                    __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
@@ -434,7 +474,7 @@ __ASM_GLOBAL_FUNC( __CxxFrameHandler,
                    "add $28,%esp\n\t"
                    __ASM_CFI(".cfi_adjust_cfa_offset -28\n\t")
                    "ret" )
-
+#endif
 
 /*********************************************************************
  *		__CxxLongjmpUnwind (MSVCRT.@)
@@ -466,7 +506,7 @@ int CDECL __CppXcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
 /*********************************************************************
  *		_CxxThrowException (MSVCRT.@)
  */
-void CDECL _CxxThrowException( exception *object, const cxx_exception_type *type )
+void WINAPI _CxxThrowException( exception *object, const cxx_exception_type *type )
 {
     ULONG_PTR args[3];
 

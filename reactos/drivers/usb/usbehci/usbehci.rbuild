@@ -4,12 +4,15 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>usbehci.c</file>
+    <file>hardware.c</file>
+    <file>physmem.c</file>
+    <file>hwiface.c</file>
+    <file>transfer.c</file>
 	<file>fdo.c</file>
 	<file>pdo.c</file>
 	<file>common.c</file>
 	<file>misc.c</file>
 	<file>irp.c</file>
 	<file>usbiffn.c</file>
-	<file>urbreq.c</file>
 	<file>usbehci.rc</file>
 </module>

@@ -117,7 +117,7 @@ _pow:
 	/* fistpll raises invalid exception for |y| >= 1L<<63.  */
 	fld	st		// y : y : x
 	fabs			// |y| : y : x
-	fcomp qword ptr MO(p63)		// y : x
+	fcomp qword ptr ds:MO(p63)		// y : x
 	fnstsw ax
 	sahf
 	jnc	L2
@@ -194,7 +194,7 @@ L7:	fyl2x			// log2(x) : y
 L8:	fmul st, st(1)		// y*log2(x) : y
 	fst st(1)		// y*log2(x) : y*log2(x)
 	frndint			// int(y*log2(x)) : y*log2(x)
-	fsubr st(1), st	// int(y*log2(x)) : fract(y*log2(x))
+	fsub st(1), st	// int(y*log2(x)) : fract(y*log2(x))
 	fxch			// fract(y*log2(x)) : int(y*log2(x))
 	f2xm1			// 2^fract(y*log2(x))-1 : int(y*log2(x))
 	fadd qword ptr MO(one)		// 2^fract(y*log2(x)) : int(y*log2(x))
@@ -278,7 +278,7 @@ L155:
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-L16:fcomp qword ptr MO(zero)
+L16:fcomp qword ptr ds:MO(zero)
 	add esp, 8
 	cfi_adjust_cfa_offset (-8)
 	fnstsw ax
@@ -289,7 +289,7 @@ L16:fcomp qword ptr MO(zero)
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-L17:	shl ecx, 30	// sign bit for y in right position
+L17:	shl edx, 30	// sign bit for y in right position
 	add esp, 8
 	cfi_adjust_cfa_offset (-8)
 L18:	shr edx, 31

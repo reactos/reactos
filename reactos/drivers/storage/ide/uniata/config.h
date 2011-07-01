@@ -86,18 +86,55 @@
 /*  Compiler dependencies                          */
 /***************************************************/
 
-#define DDKFASTAPI      __fastcall
+/* ReactOS-specific defines */
+#ifdef __REACTOS__
+ #define USE_REACTOS_DDK
+#endif //__REACTOS__
+
+#ifdef USE_REACTOS_DDK
+ #define ULONGIO_PTR     ULONG_PTR
+ #define CRNT_ILK_TYPE   
+ #define CRNT_ILK_PTYPE
+ #define REGRTL_STR_PTYPE  
+#else 
+ #define ULONG_PTR       ULONG
+ #define ULONGIO_PTR     ULONG
+ #define CRNT_ILK_TYPE   (PVOID)
+ #define CRNT_ILK_PTYPE  (PVOID*)
+ #define REGRTL_STR_PTYPE  (PWCHAR)
+#endif //USE_REACTOS_DDK
 
 /* Are we under GNU C (mingw) ??? */
-#ifdef __GNUC__
+#if __GNUC__ >=3
 
  #define  DEF_U64(x)     (x##ULL)
  #define  DEF_I64(x)     (x##LL)
+
+ /* ReactOS-specific defines */
+ #ifdef USE_REACTOS_DDK
+  #define DDKFASTAPI __attribute__((fastcall))
+ #else //USE_REACTOS_DDK
+
+  #define DDKAPI          __attribute__((stdcall))
+  #define DDKFASTAPI      __attribute__((fastcall))
+  #define DDKCDECLAPI     __attribute__((cdecl))
+
+ #endif  //DDKAPI
+
+ #define DECLSPEC_NAKED   __attribute__((naked))
 
 #else // !__GNUC__ => MSVC/Intel
 
  #define  DEF_U64(x)     (x##UI64)
  #define  DEF_I64(x)     (x##I64)
+
+ /* ReactOS-specific defines */
+
+  #define DDKAPI          __stdcall
+  #define DDKFASTAPI      __fastcall
+  #define DDKCDECLAPI     _cdecl
+
+ #define DECLSPEC_NAKED   __declspec(naked)
 
 #endif //__GNUC__
 

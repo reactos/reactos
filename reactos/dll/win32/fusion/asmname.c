@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <assert.h>
 
 #define COBJMACROS
 #define INITGUID
@@ -39,6 +40,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 typedef struct {
     const IAssemblyNameVtbl *lpIAssemblyNameVtbl;
+
+    LPWSTR path;
 
     LPWSTR displayname;
     LPWSTR name;
@@ -104,6 +107,7 @@ static ULONG WINAPI IAssemblyNameImpl_Release(IAssemblyName *iface)
 
     if (!refCount)
     {
+        HeapFree(GetProcessHeap(), 0, This->path);
         HeapFree(GetProcessHeap(), 0, This->displayname);
         HeapFree(GetProcessHeap(), 0, This->name);
         HeapFree(GetProcessHeap(), 0, This->culture);
@@ -425,6 +429,43 @@ static const IAssemblyNameVtbl AssemblyNameVtbl = {
     IAssemblyNameImpl_Clone
 };
 
+/* Internal methods */
+HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path)
+{
+    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+
+    assert(name->lpIAssemblyNameVtbl == &AssemblyNameVtbl);
+
+    name->path = strdupW(path);
+    if (!name->path)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
+HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len)
+{
+    ULONG buffer_size = *len;
+    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+
+    assert(name->lpIAssemblyNameVtbl == &AssemblyNameVtbl);
+
+    if (!name->path)
+        return S_OK;
+
+    if (!buf)
+        buffer_size = 0;
+
+    *len = lstrlenW(name->path) + 1;
+
+    if (*len <= buffer_size)
+        lstrcpyW(buf, name->path);
+    else
+        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+
+    return S_OK;
+}
+
 static HRESULT parse_version(IAssemblyNameImpl *name, LPWSTR version)
 {
     LPWSTR beg, end;
@@ -450,7 +491,7 @@ static HRESULT parse_version(IAssemblyNameImpl *name, LPWSTR version)
     return S_OK;
 }
 
-static HRESULT parse_culture(IAssemblyNameImpl *name, LPWSTR culture)
+static HRESULT parse_culture(IAssemblyNameImpl *name, LPCWSTR culture)
 {
     static const WCHAR empty[] = {0};
 
@@ -480,7 +521,7 @@ static BYTE hextobyte(WCHAR c)
     return 0;
 }
 
-static HRESULT parse_pubkey(IAssemblyNameImpl *name, LPWSTR pubkey)
+static HRESULT parse_pubkey(IAssemblyNameImpl *name, LPCWSTR pubkey)
 {
     int i;
     BYTE val;
@@ -522,8 +563,16 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
     if (!str)
         return E_OUTOFMEMORY;
 
-    ptr = strstrW(str, separator);
+    ptr = strchrW(str, ',');
     if (ptr) *ptr = '\0';
+
+    /* no ',' but ' ' only */
+    if( !ptr && strchrW(str, ' ') )
+    {
+        hr = FUSION_E_INVALID_NAME;
+        goto done;
+    }
+
     name->name = strdupW(str);
     if (!name->name)
         return E_OUTOFMEMORY;

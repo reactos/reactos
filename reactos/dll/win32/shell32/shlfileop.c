@@ -584,7 +584,7 @@ BOOL
 QueueFile(
     FILE_OPERATION_CONTEXT * Context)
 {
-    FILE_ENTRY * from, *to;
+    FILE_ENTRY * from, *to = NULL;
     BOOL bRet = FALSE;
 
     if (Context->Index >= Context->from->dwNumFiles)
@@ -593,7 +593,7 @@ QueueFile(
     /* get current file */
     from = &Context->from->feFiles[Context->Index];
 
-    if (Context->op->req->fFlags != FO_DELETE)
+    if (Context->op->req->wFunc != FO_DELETE)
         to = &Context->to->feFiles[Context->Index];
 
     /* update status */

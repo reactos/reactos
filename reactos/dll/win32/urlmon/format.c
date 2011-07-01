@@ -24,7 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 static WCHAR wszEnumFORMATETC[] = {'_','E','n','u','m','F','O','R','M','A','T','E','T','C','_',0};
 
 typedef struct {
-    const IEnumFORMATETCVtbl *lpEnumFORMATETCVtbl;
+    IEnumFORMATETC IEnumFORMATETC_iface;
 
     FORMATETC *fetc;
     UINT fetc_cnt;
@@ -33,13 +33,16 @@ typedef struct {
     LONG ref;
 } EnumFORMATETC;
 
-static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmtetc, UINT it);
+static inline EnumFORMATETC *impl_from_IEnumFORMATETC(IEnumFORMATETC *iface)
+{
+    return CONTAINING_RECORD(iface, EnumFORMATETC, IEnumFORMATETC_iface);
+}
 
-#define ENUMF_THIS(iface) DEFINE_THIS(EnumFORMATETC, EnumFORMATETC, iface)
+static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmtetc, UINT it);
 
 static HRESULT WINAPI EnumFORMATETC_QueryInterface(IEnumFORMATETC *iface, REFIID riid, void **ppv)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
 
@@ -57,7 +60,7 @@ static HRESULT WINAPI EnumFORMATETC_QueryInterface(IEnumFORMATETC *iface, REFIID
 
 static ULONG WINAPI EnumFORMATETC_AddRef(IEnumFORMATETC *iface)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -65,7 +68,7 @@ static ULONG WINAPI EnumFORMATETC_AddRef(IEnumFORMATETC *iface)
 
 static ULONG WINAPI EnumFORMATETC_Release(IEnumFORMATETC *iface)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -83,7 +86,7 @@ static ULONG WINAPI EnumFORMATETC_Release(IEnumFORMATETC *iface)
 static HRESULT WINAPI EnumFORMATETC_Next(IEnumFORMATETC *iface, ULONG celt,
         FORMATETC *rgelt, ULONG *pceltFetched)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
     ULONG cnt;
 
     TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
@@ -110,7 +113,7 @@ static HRESULT WINAPI EnumFORMATETC_Next(IEnumFORMATETC *iface, ULONG celt,
 
 static HRESULT WINAPI EnumFORMATETC_Skip(IEnumFORMATETC *iface, ULONG celt)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
 
     TRACE("(%p)->(%d)\n", This, celt);
 
@@ -120,7 +123,7 @@ static HRESULT WINAPI EnumFORMATETC_Skip(IEnumFORMATETC *iface, ULONG celt)
 
 static HRESULT WINAPI EnumFORMATETC_Reset(IEnumFORMATETC *iface)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
 
     TRACE("(%p)\n", This);
 
@@ -130,7 +133,7 @@ static HRESULT WINAPI EnumFORMATETC_Reset(IEnumFORMATETC *iface)
 
 static HRESULT WINAPI EnumFORMATETC_Clone(IEnumFORMATETC *iface, IEnumFORMATETC **ppenum)
 {
-    EnumFORMATETC *This = ENUMF_THIS(iface);
+    EnumFORMATETC *This = impl_from_IEnumFORMATETC(iface);
 
     TRACE("(%p)->(%p)\n", This, ppenum);
 
@@ -157,7 +160,7 @@ static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmt
 
     URLMON_LockModule();
 
-    ret->lpEnumFORMATETCVtbl = &EnumFORMATETCVtbl;
+    ret->IEnumFORMATETC_iface.lpVtbl = &EnumFORMATETCVtbl;
     ret->ref = 1;
     ret->it = it;
     ret->fetc_cnt = cfmtetc;
@@ -165,7 +168,7 @@ static IEnumFORMATETC *EnumFORMATETC_Create(UINT cfmtetc, const FORMATETC *rgfmt
     ret->fetc = heap_alloc(cfmtetc*sizeof(FORMATETC));
     memcpy(ret->fetc, rgfmtetc, cfmtetc*sizeof(FORMATETC));
 
-    return (IEnumFORMATETC*)ret;
+    return &ret->IEnumFORMATETC_iface;
 }
 
 /**********************************************************

@@ -48,9 +48,8 @@ DragDetect(
   HWND hWnd,
   POINT pt)
 {
-#if 0
   return NtUserDragDetect(hWnd, pt);
-#else
+#if 0
   MSG msg;
   RECT rect;
   POINT tmp;
@@ -101,7 +100,6 @@ DragDetect(
 #endif
 }
 
-
 /*
  * @implemented
  */
@@ -109,42 +107,8 @@ BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
-    // This will soon be moved to win32k.
-    BOOL Update;
-    LONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-    /* check if updating is needed */
-    UINT bIsDisabled = (Style & WS_DISABLED);
-    Update = bIsDisabled;
-
-    if (bEnable)
-    {
-       Style &= ~WS_DISABLED;
-    }
-    else
-    {
-       Update = !bIsDisabled;
-
-       SendMessageW( hWnd, WM_CANCELMODE, 0, 0);
-
-       /* Remove keyboard focus from that window if it had focus */
-       if (hWnd == GetFocus())
-       {
-          SetFocus(NULL);
-       }
-       Style |= WS_DISABLED;
-    }
-
-    NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
-    
-    if (Update)
-    {
-        IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
-        SendMessageW(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
-    }
-    // Return nonzero if it was disabled, or zero if it wasn't:
-    return bIsDisabled;
+  return NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bEnable, TWOPARAM_ROUTINE_ENABLEWINDOW);
 }
-
 
 /*
  * @implemented
@@ -217,7 +181,6 @@ GetKeyNameTextW(LONG lParam,
   return NtUserGetKeyNameText( lParam, lpString, nSize );
 }
 
-
 /*
  * @implemented
  */
@@ -226,7 +189,6 @@ GetKeyState(int nVirtKey)
 {
  return (SHORT) NtUserGetKeyState((DWORD) nVirtKey);
 }
-
 
 /*
  * @implemented
@@ -261,16 +223,23 @@ GetKeyboardType(int nTypeFlag)
 return (int)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
-
 /*
  * @implemented
  */
 BOOL WINAPI
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
-  return NtUserGetLastInputInfo(plii);
-}
+  TRACE("%p\n", plii);
 
+  if (plii->cbSize != sizeof (*plii) )
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  plii->dwTime = gpsi->dwLastRITEventTickCount;
+  return TRUE;
+}
 
 /*
  * @implemented
@@ -283,7 +252,6 @@ LoadKeyboardLayoutA(LPCSTR pwszKLID,
                strtoul(pwszKLID, NULL, 16),
                Flags);
 }
-
 
 /*
  * @implemented
@@ -299,7 +267,6 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
                Flags);
 }
 
-
 /*
  * @implemented
  */
@@ -309,7 +276,6 @@ MapVirtualKeyA(UINT uCode,
 {
   return MapVirtualKeyExA( uCode, uMapType, GetKeyboardLayout( 0 ) );
 }
-
 
 /*
  * @implemented
@@ -564,244 +530,6 @@ mouse_event(
   Input.mi.dwExtraInfo = dwExtraInfo;
 
   NtUserSendInput(1, &Input, sizeof(INPUT));
-}
-
-
-/***********************************************************************
- *           get_key_state
- */
-static WORD get_key_state(void)
-{
-    WORD ret = 0;
-
-    if (GetSystemMetrics( SM_SWAPBUTTON ))
-    {
-        if (GetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_LBUTTON;
-        if (GetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_RBUTTON;
-    }
-    else
-    {
-        if (GetAsyncKeyState(VK_LBUTTON) & 0x80) ret |= MK_LBUTTON;
-        if (GetAsyncKeyState(VK_RBUTTON) & 0x80) ret |= MK_RBUTTON;
-    }
-    if (GetAsyncKeyState(VK_MBUTTON) & 0x80)  ret |= MK_MBUTTON;
-    if (GetAsyncKeyState(VK_SHIFT) & 0x80)    ret |= MK_SHIFT;
-    if (GetAsyncKeyState(VK_CONTROL) & 0x80)  ret |= MK_CONTROL;
-    if (GetAsyncKeyState(VK_XBUTTON1) & 0x80) ret |= MK_XBUTTON1;
-    if (GetAsyncKeyState(VK_XBUTTON2) & 0x80) ret |= MK_XBUTTON2;
-    return ret;
-}
-
-static void CALLBACK TrackMouseEventProc(HWND hwndUnused, UINT uMsg, UINT_PTR idEvent,
-    DWORD dwTime)
-{
-    POINT pos;
-    POINT posClient;
-    HWND hwnd;
-    INT hoverwidth = 0, hoverheight = 0;
-    RECT client;
-    PUSER32_TRACKINGLIST ptracking_info;
-
-    ptracking_info = & User32GetThreadData()->tracking_info;
-
-    GetCursorPos(&pos);
-    hwnd = WindowFromPoint(pos);
-
-    SystemParametersInfoW(SPI_GETMOUSEHOVERWIDTH, 0, &hoverwidth, 0);
-    SystemParametersInfoW(SPI_GETMOUSEHOVERHEIGHT, 0, &hoverheight, 0);
-
-    /* see if this tracking event is looking for TME_LEAVE and that the */
-    /* mouse has left the window */
-    if (ptracking_info->tme.dwFlags & TME_LEAVE)
-    {
-        if (ptracking_info->tme.hwndTrack != hwnd)
-        {
-            if (ptracking_info->tme.dwFlags & TME_NONCLIENT)
-            {
-                PostMessageW(ptracking_info->tme.hwndTrack, WM_NCMOUSELEAVE, 0, 0);
-            }
-            else
-            {
-                PostMessageW(ptracking_info->tme.hwndTrack, WM_MOUSELEAVE, 0, 0);
-            }
-
-            /* remove the TME_LEAVE flag */
-            ptracking_info->tme.dwFlags &= ~TME_LEAVE;
-        }
-        else
-        {
-            GetClientRect(hwnd, &client);
-            MapWindowPoints(hwnd, NULL, (LPPOINT)&client, 2);
-            if (PtInRect(&client, pos))
-            {
-                if (ptracking_info->tme.dwFlags & TME_NONCLIENT)
-                {
-                    PostMessageW(ptracking_info->tme.hwndTrack, WM_NCMOUSELEAVE, 0, 0);
-                    /* remove the TME_LEAVE flag */
-                    ptracking_info->tme.dwFlags &= ~TME_LEAVE;
-                }
-            }
-            else
-            {
-                if (!(ptracking_info->tme.dwFlags & TME_NONCLIENT))
-                {
-                    PostMessageW(ptracking_info->tme.hwndTrack, WM_MOUSELEAVE, 0, 0);
-                    /* remove the TME_LEAVE flag */
-                    ptracking_info->tme.dwFlags &= ~TME_LEAVE;
-                }
-            }
-        }
-    }
-
-    /* see if we are tracking hovering for this hwnd */
-    if (ptracking_info->tme.dwFlags & TME_HOVER)
-    {
-        /* has the cursor moved outside the rectangle centered around pos? */
-        if ((abs(pos.x - ptracking_info->pos.x) > (hoverwidth / 2.0)) ||
-            (abs(pos.y - ptracking_info->pos.y) > (hoverheight / 2.0)))
-        {
-            /* record this new position as the current position and reset */
-            /* the iHoverTime variable to 0 */
-            ptracking_info->pos = pos;
-        }
-        else
-        {
-            posClient.x = pos.x;
-            posClient.y = pos.y;
-            ScreenToClient(hwnd, &posClient);
-
-            if (ptracking_info->tme.dwFlags & TME_NONCLIENT)
-            {
-                PostMessageW(ptracking_info->tme.hwndTrack, WM_NCMOUSEHOVER,
-                            get_key_state(), MAKELPARAM( posClient.x, posClient.y ));
-            }
-            else
-            {
-                PostMessageW(ptracking_info->tme.hwndTrack, WM_MOUSEHOVER,
-                            get_key_state(), MAKELPARAM( posClient.x, posClient.y ));
-            }
-
-            /* stop tracking mouse hover */
-            ptracking_info->tme.dwFlags &= ~TME_HOVER;
-        }
-    }
-
-    /* stop the timer if the tracking list is empty */
-    if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
-    {
-        KillTimer(0, ptracking_info->timer);
-        RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
-    }
-}
-
-
-/***********************************************************************
- * TrackMouseEvent [USER32]
- *
- * Requests notification of mouse events
- *
- * During mouse tracking WM_MOUSEHOVER or WM_MOUSELEAVE events are posted
- * to the hwnd specified in the ptme structure.  After the event message
- * is posted to the hwnd, the entry in the queue is removed.
- *
- * If the current hwnd isn't ptme->hwndTrack the TME_HOVER flag is completely
- * ignored. The TME_LEAVE flag results in a WM_MOUSELEAVE message being posted
- * immediately and the TME_LEAVE flag being ignored.
- *
- * PARAMS
- *     ptme [I,O] pointer to TRACKMOUSEEVENT information structure.
- *
- * RETURNS
- *     Success: non-zero
- *     Failure: zero
- *
- */
-/*
- * @implemented
- */
-BOOL
-WINAPI
-TrackMouseEvent(
-  LPTRACKMOUSEEVENT ptme)
-{
-    HWND hwnd;
-    POINT pos;
-    DWORD hover_time;
-    PUSER32_TRACKINGLIST ptracking_info;
-
-    TRACE("%lx, %lx, %p, %lx\n", ptme->cbSize, ptme->dwFlags, ptme->hwndTrack, ptme->dwHoverTime);
-
-    if (ptme->cbSize != sizeof(TRACKMOUSEEVENT)) {
-        WARN("wrong TRACKMOUSEEVENT size from app\n");
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    ptracking_info = & User32GetThreadData()->tracking_info;
-
-    /* fill the TRACKMOUSEEVENT struct with the current tracking for the given hwnd */
-    if (ptme->dwFlags & TME_QUERY )
-    {
-        *ptme = ptracking_info->tme;
-        ptme->cbSize = sizeof(TRACKMOUSEEVENT);
-
-        return TRUE; /* return here, TME_QUERY is retrieving information */
-    }
-
-    if (!IsWindow(ptme->hwndTrack))
-    {
-        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
-    }
-
-    hover_time = ptme->dwHoverTime;
-
-    /* if HOVER_DEFAULT was specified replace this with the systems current value */
-    if (hover_time == HOVER_DEFAULT || hover_time == 0)
-    {
-        SystemParametersInfoW(SPI_GETMOUSEHOVERTIME, 0, &hover_time, 0);
-    }
-
-    GetCursorPos(&pos);
-    hwnd = WindowFromPoint(pos);
-
-    if (ptme->dwFlags & ~(TME_CANCEL | TME_HOVER | TME_LEAVE | TME_NONCLIENT))
-    {
-        FIXME("Unknown flag(s) %08lx\n", ptme->dwFlags & ~(TME_CANCEL | TME_HOVER | TME_LEAVE | TME_NONCLIENT));
-    }
-
-    if (ptme->dwFlags & TME_CANCEL)
-    {
-        if (ptracking_info->tme.hwndTrack == ptme->hwndTrack)
-        {
-            ptracking_info->tme.dwFlags &= ~(ptme->dwFlags & ~TME_CANCEL);
-
-            /* if we aren't tracking on hover or leave remove this entry */
-            if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
-            {
-                KillTimer(0, ptracking_info->timer);
-                RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
-            }
-        }
-    } else {
-        if (ptme->hwndTrack == hwnd)
-        {
-            /* Adding new mouse event to the tracking list */
-            ptracking_info->tme = *ptme;
-            ptracking_info->tme.dwHoverTime = hover_time;
-
-            /* Initialize HoverInfo variables even if not hover tracking */
-            ptracking_info->pos = pos;
-
-            if (!ptracking_info->timer)
-            {
-                ptracking_info->timer = SetTimer(0, 0, hover_time, TrackMouseEventProc);
-            }
-        }
-    }
-
-    return TRUE;
-
 }
 
 /* EOF */

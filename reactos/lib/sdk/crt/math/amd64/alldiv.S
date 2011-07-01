@@ -10,18 +10,21 @@
 
 #include <asm.inc>
 
-/* DATA *********************************************************************/
+/* DATA **********************************************************************/
+.code64
 
 PUBLIC _fltused
 _fltused:
-        .long 0x9875
+        .long HEX(9875)
 
-/* FUNCTIONS ****************************************************************/
-
+/* CODE **********************************************************************/
 .code64
 
-.proc alldiv
+FUNC alldiv
+    .endprolog
     UNIMPLEMENTED alldiv
     ret
 
-.endp alldiv
+ENDFUNC alldiv
+
+END

@@ -383,8 +383,8 @@
 @ stub LsaOpenSecret
 @ stub LsaOpenTrustedDomain
 @ stdcall LsaOpenTrustedDomainByName(ptr ptr long ptr)
-@ stub LsaQueryDomainInformationPolicy
-@ stub LsaQueryForestTrustInformation
+@ stdcall LsaQueryDomainInformationPolicy(ptr long ptr)
+@ stdcall LsaQueryForestTrustInformation(ptr ptr ptr)
 @ stdcall LsaQueryInfoTrustedDomain(long long long)
 @ stdcall LsaQueryInformationPolicy(ptr long ptr)
 @ stub LsaQuerySecret
@@ -396,7 +396,7 @@
 @ stub LsaRemovePrivilegesFromAccount
 @ stdcall LsaRetrievePrivateData(ptr ptr ptr)
 @ stdcall LsaSetDomainInformationPolicy(ptr long ptr)
-@ stub LsaSetForestTrustInformation
+@ stdcall LsaSetForestTrustInformation(ptr ptr ptr long ptr)
 @ stdcall LsaSetInformationPolicy(long long ptr)
 @ stub LsaSetInformationTrustedDomain
 @ stub LsaSetQuotasForAccount

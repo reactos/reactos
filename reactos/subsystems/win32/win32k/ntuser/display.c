@@ -309,11 +309,11 @@ UserEnumDisplayDevices(
     ZwClose(hkey);
 
     /* Copy device name, device string and StateFlags */
-    wcsncpy(pdispdev->DeviceName, pGraphicsDevice->szWinDeviceName, 32);
-    wcsncpy(pdispdev->DeviceString, pGraphicsDevice->pwszDescription, 128);
+    RtlStringCbCopyW(pdispdev->DeviceName, sizeof(pdispdev->DeviceName), pGraphicsDevice->szWinDeviceName);
+    RtlStringCbCopyW(pdispdev->DeviceString, sizeof(pdispdev->DeviceString), pGraphicsDevice->pwszDescription);
     pdispdev->StateFlags = pGraphicsDevice->StateFlags;
-
     // FIXME: fill in DEVICE ID
+    pdispdev->DeviceID[0] = UNICODE_NULL;
 
     return STATUS_SUCCESS;
 }
@@ -339,7 +339,7 @@ NtUserEnumDisplayDevices(
     if (pustrDevice && iDevNum != 0)
         return FALSE;
 
-    dispdev.cb = sizeof(DISPLAY_DEVICEW);
+    dispdev.cb = sizeof(dispdev);
 
     if (pustrDevice)
     {
@@ -551,7 +551,7 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    DPRINT1("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
+    DPRINT("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
             pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
 
     if (pustrDevice)
@@ -634,7 +634,6 @@ NtUserEnumDisplaySettings(
 
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 VOID APIENTRY UserRedrawDesktop();
-HCURSOR FASTCALL UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange);
 
 LONG
 APIENTRY
@@ -739,15 +738,16 @@ UserChangeDisplaySettings(
     if (!(flags & CDS_NORESET))
     {
         ULONG ulResult;
+        PVOID pvOldCursor;
 
         /* Remove mouse pointer */
-        UserSetCursor(NULL, TRUE);
+        pvOldCursor = UserSetCursor(NULL, TRUE);
 
         /* Do the mode switch */
         ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
 
         /* Restore mouse pointer, no hooks called */
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
+        UserSetCursor(pvOldCursor, TRUE);
 
         /* Check for failure */
         if (!ulResult)
@@ -763,6 +763,9 @@ UserChangeDisplaySettings(
         InitMetrics();
 
         //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
+
+        /* Set new size of the monitor */
+        IntUpdateMonitorSize(ppdev);
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
@@ -809,7 +812,7 @@ NtUserChangeDisplaySettings(
     if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
         (hwnd != NULL))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;
     }
 

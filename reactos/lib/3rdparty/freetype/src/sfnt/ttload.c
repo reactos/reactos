@@ -5,7 +5,8 @@
 /*    Load the basic TrueType tables, i.e., tables that can be either in   */
 /*    TTF or OTF fonts (body).                                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -77,7 +78,8 @@
     {
       /* For compatibility with Windows, we consider    */
       /* zero-length tables the same as missing tables. */
-      if ( entry->Tag == tag ) {
+      if ( entry->Tag == tag )
+      {
         if ( entry->Length != 0 )
         {
           FT_TRACE4(( "found table.\n" ));
@@ -382,6 +384,10 @@
 
     entry = face->dir_tables;
 
+    FT_TRACE2(( "\n"
+                "  tag    offset    length   checksum\n"
+                "  ----------------------------------\n" ));
+
     for ( nn = 0; nn < sfnt.num_tables; nn++ )
     {
       entry->Tag      = FT_GET_TAG4();
@@ -394,13 +400,14 @@
         continue;
       else
       {
-        FT_TRACE2(( "  %c%c%c%c  -  %08lx  -  %08lx\n",
+        FT_TRACE2(( "  %c%c%c%c  %08lx  %08lx  %08lx\n",
                     (FT_Char)( entry->Tag >> 24 ),
                     (FT_Char)( entry->Tag >> 16 ),
                     (FT_Char)( entry->Tag >> 8  ),
                     (FT_Char)( entry->Tag       ),
                     entry->Offset,
-                    entry->Length ));
+                    entry->Length,
+                    entry->CheckSum ));
         entry++;
       }
     }
@@ -678,9 +685,9 @@
       /*      broken fonts like `Keystrokes MT' :-(           */
       /*                                                      */
       /*   We allocate 64 function entries by default when    */
-      /*   the maxFunctionDefs field is null.                 */
+      /*   the maxFunctionDefs value is smaller.              */
 
-      if ( maxProfile->maxFunctionDefs == 0 )
+      if ( maxProfile->maxFunctionDefs < 64 )
         maxProfile->maxFunctionDefs = 64;
 
       /* we add 4 phantom points later */
@@ -692,6 +699,15 @@
                     " some glyphs might be rendered incorrectly\n" ));
 
         maxProfile->maxTwilightPoints = 0xFFFFU - 4;
+      }
+
+      /* we arbitrarily limit recursion to avoid stack exhaustion */
+      if ( maxProfile->maxComponentDepth > 100 )
+      {
+        FT_TRACE0(( "tt_face_load_maxp:"
+                    " abnormally large component depth (%d) set to 100\n",
+                    maxProfile->maxComponentDepth ));
+        maxProfile->maxComponentDepth = 100;
       }
     }
 

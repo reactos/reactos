@@ -29,7 +29,7 @@ PULONG MmGetPageDirectory(VOID);
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
 #define MiAddressToPte(x) \
     ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
 #define MiAddressToPteOffset(x) \
@@ -39,11 +39,13 @@ PULONG MmGetPageDirectory(VOID);
 // Convert a PTE into a corresponding address
 //
 #define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
-#define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 10))
+#define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 20))
+#define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
+#define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
 
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
-#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+#define ADDR_TO_PAGE_TABLE(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
+#define ADDR_TO_PDE_OFFSET(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
+#define ADDR_TO_PTE_OFFSET(v) ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
 
 #define MiGetPdeOffset ADDR_TO_PDE_OFFSET
 

@@ -130,7 +130,7 @@ IntEngGradientFillRect(
               {
                 Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
                 DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_VLine(
-                  psoOutput, y, FillRect.top, FillRect.bottom, Color);
+                  psoOutput, y + Translate.x, FillRect.top + Translate.y, FillRect.bottom + Translate.y, Color);
               }
               HVSTEPCOL(0);
               HVSTEPCOL(1);
@@ -158,7 +158,7 @@ IntEngGradientFillRect(
             {
               Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
               DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(
-                psoOutput, FillRect.left, FillRect.right, y, Color);
+                psoOutput, FillRect.left + Translate.x, FillRect.right + Translate.x, y + Translate.y, Color);
             }
             HVSTEPCOL(0);
             HVSTEPCOL(1);
@@ -187,7 +187,7 @@ IntEngGradientFillRect(
         for(; FillRect.top < FillRect.bottom; FillRect.top++)
         {
           DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(
-            psoOutput, FillRect.left, FillRect.right, FillRect.top, Color);
+            psoOutput, FillRect.left + Translate.x, FillRect.right + Translate.x, FillRect.top + Translate.y, Color);
         }
       }
     }
@@ -318,7 +318,7 @@ IntEngGradientFillTriangle(
   //ULONG i;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
-  RECTL FillRect;
+  RECTL FillRect = { 0, 0, 0, 0 };
   //ULONG Color;
 
   //BOOL sx[NLINES];

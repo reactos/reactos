@@ -3,11 +3,12 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="halacpi" type="kernelmodedll" entrypoint="HalInitSystem@8" installbase="system32" installname="halacpi.dll">
 		<importlibrary base="hal" definition="../hal.pspec" />
-		<bootstrap installbase="$(CDOUTPUT)" />
+		<bootstrap installbase="$(CDOUTPUT)/system32" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
+		<define name="CONFIG_ACPI" />
 		<library>hal_generic</library>
 		<library>hal_generic_acpi</library>
 		<library>hal_generic_up</library>

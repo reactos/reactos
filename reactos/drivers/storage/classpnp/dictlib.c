@@ -26,30 +26,27 @@ Revision History:
 #include <ntddk.h>
 #include <classpnp.h>
 
-#define DICTIONARY_SIGNATURE (((ULONG)'dict' << 32) + 'sig ')
+#define DICTIONARY_SIGNATURE 'dsig'
 
-struct _DICTIONARY_HEADER {
+typedef struct _DICTIONARY_HEADER {
     struct _DICTIONARY_HEADER* Next;
     ULONGLONG Key;
     UCHAR Data[0];
-};
+} DICTIONARY_HEADER, *PDICTIONARY_HEADER;
 
-struct _DICTIONARY_HEADER;
-typedef struct _DICTIONARY_HEADER DICTIONARY_HEADER, *PDICTIONARY_HEADER;
 
-
 VOID
 InitializeDictionary(
     IN PDICTIONARY Dictionary
     )
 {
-    RtlZeroMemory(Dictionary, sizeof(Dictionary));
+    RtlZeroMemory(Dictionary, sizeof(DICTIONARY));
     Dictionary->Signature = DICTIONARY_SIGNATURE;
     KeInitializeSpinLock(&Dictionary->SpinLock);
     return;
 }
 
-
+
 BOOLEAN
 TestDictionarySignature(
     IN PDICTIONARY Dictionary
@@ -136,7 +133,7 @@ AllocateDictionaryEntry(
     return status;
 }
 
-
+
 PVOID
 GetDictionaryEntry(
     IN PDICTIONARY Dictionary,
@@ -168,7 +165,7 @@ GetDictionaryEntry(
     return data;
 }
 
-
+
 VOID
 FreeDictionaryEntry(
     IN PDICTIONARY Dictionary,

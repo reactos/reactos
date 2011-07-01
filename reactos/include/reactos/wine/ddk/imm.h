@@ -2,7 +2,7 @@
 #ifndef _WINE_IMM_H_
 #define _WINE_IMM_H_
 
-#include <psdk/wingdi.h>
+#include <wingdi.h>
 
 #ifdef WINE_NO_UNICODE_MACROS
 # define WINELIB_NAME_AW(func) \

@@ -38,7 +38,7 @@ typedef struct _PROGRESS
   SHORT Width;
 
   ULONG Percent;
-  ULONG Pos;
+  SHORT Pos;
 
   ULONG StepCount;
   ULONG CurrentStep;

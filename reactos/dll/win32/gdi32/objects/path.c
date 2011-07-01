@@ -17,10 +17,10 @@
 BOOL
 WINAPI
 AbortPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiAbortPath( hdc );
+    return NtGdiAbortPath( hdc );
 }
 
 
@@ -30,10 +30,10 @@ AbortPath(
 BOOL
 WINAPI
 BeginPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiBeginPath( hdc );
+    return NtGdiBeginPath( hdc );
 }
 
 /*
@@ -42,10 +42,10 @@ BeginPath(
 BOOL
 WINAPI
 CloseFigure(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiCloseFigure ( hdc );
+    return NtGdiCloseFigure ( hdc );
 }
 
 
@@ -55,10 +55,10 @@ CloseFigure(
 BOOL
 WINAPI
 EndPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiEndPath( hdc );
+    return NtGdiEndPath( hdc );
 }
 
 
@@ -68,10 +68,10 @@ EndPath(
 BOOL
 WINAPI
 FillPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiFillPath( hdc );
+    return NtGdiFillPath( hdc );
 }
 
 
@@ -81,10 +81,10 @@ FillPath(
 BOOL
 WINAPI
 FlattenPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiFlattenPath ( hdc );
+    return NtGdiFlattenPath ( hdc );
 }
 
 
@@ -119,10 +119,10 @@ GetPath(HDC hdc,
 HRGN
 WINAPI
 PathToRegion(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiPathToRegion ( hdc );
+    return NtGdiPathToRegion ( hdc );
 }
 
 /*
@@ -131,18 +131,18 @@ PathToRegion(
 BOOL
 WINAPI
 SetMiterLimit(
-	HDC	hdc,
-	FLOAT	a1,
-	PFLOAT	a2
-	)
+    HDC	hdc,
+    FLOAT	a1,
+    PFLOAT	a2
+)
 {
-  BOOL Ret;
-  gxf_long worker, worker1;
+    BOOL Ret;
+    gxf_long worker, worker1;
 
-  worker.f  = a1;
-  Ret = NtGdiSetMiterLimit ( hdc, worker.l, a2 ? &worker1.l : NULL  );
-  if (a2 && Ret) *a2 = worker1.f;
-  return Ret;
+    worker.f  = a1;
+    Ret = NtGdiSetMiterLimit ( hdc, worker.l, a2 ? &worker1.l : NULL  );
+    if (a2 && Ret) *a2 = worker1.f;
+    return Ret;
 }
 
 
@@ -152,10 +152,10 @@ SetMiterLimit(
 BOOL
 WINAPI
 StrokeAndFillPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiStrokeAndFillPath ( hdc );
+    return NtGdiStrokeAndFillPath ( hdc );
 }
 
 
@@ -165,10 +165,10 @@ StrokeAndFillPath(
 BOOL
 WINAPI
 StrokePath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiStrokePath ( hdc );
+    return NtGdiStrokePath ( hdc );
 }
 
 
@@ -178,10 +178,10 @@ StrokePath(
 BOOL
 WINAPI
 WidenPath(
-	HDC	hdc
-	)
+    HDC	hdc
+)
 {
-	return NtGdiWidenPath ( hdc );
+    return NtGdiWidenPath ( hdc );
 }
 
 /*
@@ -190,9 +190,9 @@ WidenPath(
 BOOL
 WINAPI
 SelectClipPath(
-	HDC	hdc,
-	int	Mode
-	)
+    HDC	hdc,
+    int	Mode
+)
 {
-	return NtGdiSelectClipPath ( hdc, Mode );
+    return NtGdiSelectClipPath ( hdc, Mode );
 }

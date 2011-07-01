@@ -282,8 +282,13 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
 	TRACE("%p\n",This);
 
 	dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		  LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_ALIGNLEFT | LVS_AUTOARRANGE;
+          LVS_SHAREIMAGELISTS | LVS_EDITLABELS | LVS_AUTOARRANGE;
         dwExStyle = WS_EX_CLIENTEDGE;
+
+    if (This->FolderSettings.fFlags & FWF_DESKTOP) 
+       dwStyle |= LVS_ALIGNLEFT;
+    else
+       dwStyle |= LVS_ALIGNTOP;
 
 	switch (This->FolderSettings.ViewMode)
 	{
@@ -324,8 +329,11 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
           * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
           * and activate drop shadows if necessary
           */
-         if (0)
+         if (1)
+         {
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
+           SendMessageW(This->hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
+         }
          else
          {
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
@@ -1475,7 +1483,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 
 	  case LVN_ENDLABELEDITW:
 	    {
-	      TRACE("-- LVN_ENDLABELEDITA %p\n",This);
+	      TRACE("-- LVN_ENDLABELEDITW %p\n",This);
 	      if (lpdi->item.pszText)
 	      {
 	        HRESULT hr;
@@ -1594,11 +1602,144 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
         }
         else if(plvKeyDown->wVKey == 'C' && ctrl)
         {
-            FIXME("Need to copy\n");
+            if (ShellView_GetSelections(This))
+            {
+                IDataObject * pda;
+
+                if (SUCCEEDED(IShellFolder_GetUIObjectOf(This->pSFParent, This->hWnd, This->cidl, (LPCITEMIDLIST*)This->apidl, &IID_IDataObject,0,(LPVOID *)&pda)))
+                {
+                    HRESULT hr = OleSetClipboard(pda);
+                    if (FAILED(hr))
+                    {
+                        WARN("OleSetClipboard failed");
+                    }
+                    IDataObject_Release(pda);
+                }
+            }
+            break;
         }
         else if(plvKeyDown->wVKey == 'V' && ctrl)
         {
-            FIXME("Need to paste\n");
+            IDataObject * pda;
+            STGMEDIUM medium;
+            FORMATETC formatetc;
+            LPITEMIDLIST * apidl;
+            LPITEMIDLIST pidl;
+            IShellFolder *psfFrom = NULL, *psfDesktop, *psfTarget = NULL;
+            LPIDA lpcida;
+            ISFHelper *psfhlpdst, *psfhlpsrc;
+            HRESULT hr;
+
+            hr = OleGetClipboard(&pda);
+            if (hr != S_OK)
+            {
+                ERR("Failed to get clipboard with %lx\n", hr);
+                return E_FAIL;
+            }
+
+            InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+            hr = IDataObject_GetData(pda,&formatetc,&medium);
+
+            if (FAILED(hr))
+            {
+                ERR("Failed to get clipboard data with %lx\n", hr);
+                IDataObject_Release(pda);
+                return E_FAIL;
+            }
+
+            /* lock the handle */
+            lpcida = GlobalLock(medium.u.hGlobal);
+            if (!lpcida)
+            {
+                ERR("failed to lock pidl\n");
+                ReleaseStgMedium(&medium);
+                IDataObject_Release(pda);
+                return E_FAIL;
+            }
+
+            /* convert the data into pidl */
+            apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+
+            if (!apidl)
+            {
+                ERR("failed to copy pidl\n");
+                return E_FAIL;
+            }
+
+            if (FAILED(SHGetDesktopFolder(&psfDesktop)))
+            {
+                ERR("failed to get desktop folder\n");
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                IDataObject_Release(pda);
+                return E_FAIL;
+            }
+
+            if (_ILIsDesktop(pidl))
+            {
+                /* use desktop shellfolder */
+                psfFrom = psfDesktop;
+            }
+            else if (FAILED(IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom)))
+            {
+                ERR("no IShellFolder\n");
+
+                IShellFolder_Release(psfDesktop);
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                IDataObject_Release(pda);
+
+                return E_FAIL;
+            }
+
+            psfTarget = This->pSFParent;
+
+
+            /* get source and destination shellfolder */
+            if (FAILED(IShellFolder_QueryInterface(psfTarget, &IID_ISFHelper, (LPVOID*)&psfhlpdst)))
+            {
+                ERR("no IID_ISFHelper for destination\n");
+
+                IShellFolder_Release(psfFrom);
+                IShellFolder_Release(psfTarget);
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                IDataObject_Release(pda);
+
+                return E_FAIL;
+            }
+
+            if (FAILED(IShellFolder_QueryInterface(psfFrom, &IID_ISFHelper, (LPVOID*)&psfhlpsrc)))
+            {
+                ERR("no IID_ISFHelper for source\n");
+
+                ISFHelper_Release(psfhlpdst);
+                IShellFolder_Release(psfFrom);
+                IShellFolder_Release(psfTarget);
+                SHFree(pidl);
+                _ILFreeaPidl(apidl, lpcida->cidl);
+                ReleaseStgMedium(&medium);
+                IDataObject_Release(pda);
+                return E_FAIL;
+            }
+
+            /* FIXXME
+            * do we want to perform a copy or move ???
+            */
+            hr = ISFHelper_CopyItems(psfhlpdst, psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
+
+            ISFHelper_Release(psfhlpdst);
+            ISFHelper_Release(psfhlpsrc);
+            IShellFolder_Release(psfFrom);
+            SHFree(pidl);
+            _ILFreeaPidl(apidl, lpcida->cidl);
+            ReleaseStgMedium(&medium);
+            IDataObject_Release(pda);
+            TRACE("paste end hr %x\n", hr);
+            break;
         }
         else
             FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
@@ -1700,7 +1841,7 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	  case WM_SHOWWINDOW:	UpdateWindow(pThis->hWndList);
 				break;
 
-	  case WM_GETDLGCODE:   return SendMessageA(pThis->hWndList,uMessage,0,0);
+	  case WM_GETDLGCODE:   return SendMessageW(pThis->hWndList,uMessage,0,0);
 
 	  case WM_DESTROY:
 	  			RevokeDragDrop(pThis->hWnd);
@@ -1710,8 +1851,14 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	  case WM_ERASEBKGND:
 	    if ((pThis->FolderSettings.fFlags & FWF_DESKTOP) ||
 	        (pThis->FolderSettings.fFlags & FWF_TRANSPARENT))
-	      return 1;
+            return SendMessageW(pThis->hWndParent, WM_ERASEBKGND, wParam, lParam); /* redirect to parent */
 	    break;
+
+      case WM_SYSCOLORCHANGE:
+        /* Forward WM_SYSCOLORCHANGE to common controls */
+        SendMessage(pThis->hWndList, WM_SYSCOLORCHANGE, 0, 0);
+        break;
+
       case CWM_GETISHELLBROWSER:
           return (LRESULT)pThis->pShellBrowser;
 	}
@@ -1939,7 +2086,14 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 
 
 	TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n",This, lpPrevView,lpfs, psb, prcView, phWnd);
-	TRACE("-- vmode=%x flags=%x left=%i top=%i right=%i bottom=%i\n",lpfs->ViewMode, lpfs->fFlags ,prcView->left,prcView->top, prcView->right, prcView->bottom);
+	if (lpfs != NULL)
+		TRACE("-- vmode=%x flags=%x\n", lpfs->ViewMode, lpfs->fFlags);
+	if (prcView != NULL)
+		TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
+
+	/* Validate the Shell Browser */
+	if (psb == NULL)
+		return E_UNEXPECTED;
 
 	/*set up the member variables*/
 	This->pShellBrowser = psb;
@@ -1961,7 +2115,7 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 	if(!GetClassInfoW(shell32_hInstance, SV_CLASS_NAME, &wc))
 	{
 	  ZeroMemory(&wc, sizeof(wc));
-	  wc.style		= CS_HREDRAW | CS_VREDRAW;
+	  wc.style		= 0;
 	  wc.lpfnWndProc	= ShellView_WndProc;
 	  wc.cbClsExtra		= 0;
 	  wc.cbWndExtra		= 0;
@@ -2401,8 +2555,13 @@ static HRESULT WINAPI ISVDropTarget_DragLeave(IDropTarget *iface) {
         IDropTarget_Release(This->pCurDropTarget);
         This->pCurDropTarget = NULL;
     }
-    IDataObject_Release(This->pCurDataObject);
-    This->pCurDataObject = NULL;
+
+    if (This->pCurDataObject != NULL)
+    {
+        IDataObject_Release(This->pCurDataObject);
+        This->pCurDataObject = NULL;
+    }
+
     This->iDragOverItem = 0;
 
     return S_OK;
@@ -2420,8 +2579,12 @@ static HRESULT WINAPI ISVDropTarget_Drop(IDropTarget *iface, IDataObject* pDataO
         This->pCurDropTarget = NULL;
     }
 
-    IDataObject_Release(This->pCurDataObject);
-    This->pCurDataObject = NULL;
+    if (This->pCurDataObject != NULL)
+    {
+        IDataObject_Release(This->pCurDataObject);
+        This->pCurDataObject = NULL;
+    }
+
     This->iDragOverItem = 0;
 
     return S_OK;

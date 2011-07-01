@@ -15,6 +15,8 @@
 EXTERN _MmGrowKernelStack@4:PROC
 EXTERN _KeUserCallbackDispatcher:PROC
 EXTERN @KiServiceExit@8:PROC
+EXTERN _KeGetCurrentIrql@0:PROC
+EXTERN _KeBugCheckEx@20:PROC
 
 /* FUNCTIONS ****************************************************************/
 .code
@@ -30,7 +32,7 @@ _KiGetUserModeStackAddress@0:
 
 
 /*++
- * @name KiCallUserMode 
+ * @name KiCallUserMode
  *
  *     The KiSwitchToUserMode routine sets up a Trap Frame and a Callback stack
  *     for the purpose of switching to user mode. The actual final jump is done
@@ -406,7 +408,7 @@ NoStack:
     ret 12
 
 /*++
- * @name KeSwitchKernelStack 
+ * @name KeSwitchKernelStack
  *
  *     The KeSwitchKernelStack routine switches from the current thread's stack
  *     to the new specified base and limit.
@@ -419,7 +421,7 @@ NoStack:
  *
  * @return The previous Stack Base of the thread.
  *
- * @remark This routine should typically only be used when converting from a 
+ * @remark This routine should typically only be used when converting from a
  *         non-GUI to a GUI Thread. The caller is responsible for freeing the
  *         previous stack. The new stack values MUST be valid before calling
  *         this routine.

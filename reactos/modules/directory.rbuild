@@ -22,11 +22,4 @@
 			</xi:fallback>
 		</xi:include>
 	</directory>
-	<!-- directory name="3rdparty">
-		<xi:include href="3rdparty/directory.rbuild">
-			<xi:fallback>
-				<xi:include href="empty.rbuild" />
-			</xi:fallback>
-		</xi:include>
-	</directory -->
 </group>

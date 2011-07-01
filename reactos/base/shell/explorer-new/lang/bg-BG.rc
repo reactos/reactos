@@ -1,3 +1,4 @@
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDM_TRAYWND MENU DISCARDABLE
@@ -36,7 +37,7 @@ BEGIN
             MENUITEM "&Сигурност...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Мрежови връзки", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Печатачи и факсове", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Taskbar and Start Menu", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Задачна лента и изборник „Пуск“", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "&Търсене", IDM_SEARCH
         BEGIN
@@ -49,6 +50,7 @@ BEGIN
         MENUITEM "&Изход %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "&Откачване...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
 /* undock computer*/
+/* неясно */
         MENUITEM "От&гнездване на компютъра", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "&Изключване...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
@@ -121,7 +123,7 @@ BEGIN
     IDS_PROPERTIES        "&Свойства"
     IDS_OPEN_ALL_USERS    "&Отваряне на всички потребители"
     IDS_EXPLORE_ALL_USERS "&Разлистване на всички потребители"
-    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_STARTUP_ERROR     "Уредбата не  може да пусне изследователя, понеже понеже регистърът е увреден или недостъпен."
 END
 
 STRINGTABLE DISCARDABLE

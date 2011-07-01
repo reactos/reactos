@@ -104,7 +104,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 	HeapFree(GetProcessHeap(), 0, Buffer);
 
 	/* Load the service dll */
-	DPRINT1("Trying to load dll\n");
+	DPRINT("Trying to load dll\n");
 	hServiceDll = LoadLibrary(DllPath);
 
 	if (NULL == hServiceDll)
@@ -226,7 +226,7 @@ int _tmain (int argc, LPTSTR argv [])
 
 	NrOfServices = LoadServiceCategory(argv[2]);
 
-	DPRINT1("NrOfServices: %lu\n", NrOfServices);
+	DPRINT("NrOfServices: %lu\n", NrOfServices);
 	if (0 == NrOfServices)
 		return 0;
 
@@ -240,7 +240,7 @@ int _tmain (int argc, LPTSTR argv [])
 		/* Fill the service table */
 		for (i = 0; i < NrOfServices; ++i)
 		{
-			DPRINT1("Loading service: %s\n", Service->Name);
+			DPRINT("Loading service: %s\n", Service->Name);
 			ServiceTable[i].lpServiceName = Service->Name;
 			ServiceTable[i].lpServiceProc = Service->ServiceMainFunc;
 			Service = Service->Next;

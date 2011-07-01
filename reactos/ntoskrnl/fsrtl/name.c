@@ -5,7 +5,8 @@
  * PURPOSE:         Provides name parsing and other support routines for FSDs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
- *                  Pierre Schweitzer (pierre.schweitzer@reactos.org) 
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -22,65 +23,185 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    ULONG i = 0, j, k = 0;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, StarFound = MAXUSHORT;
+    UNICODE_STRING IntExpression;
     PAGED_CODE();
+
+    /* Check if we were given strings at all */
+    if (!Name->Length || !Expression->Length)
+    {
+        /* Return TRUE if both strings are empty, otherwise FALSE */
+        if (Name->Length == 0 && Expression->Length == 0)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /* Check for a shortcut: just one wildcard */
+    if (Expression->Length == sizeof(WCHAR))
+    {
+        if (Expression->Buffer[0] == L'*')
+            return TRUE;
+    }
 
     ASSERT(!IgnoreCase || UpcaseTable);
 
-    while (i < Name->Length / sizeof(WCHAR) && k < Expression->Length / sizeof(WCHAR))
+    /* Another shortcut, wildcard followed by some string */
+    if (Expression->Buffer[0] == L'*')
     {
-      if ((Expression->Buffer[k] == (IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i])) ||
-          (Expression->Buffer[k] == L'?') || (Expression->Buffer[k] == DOS_QM) ||
-          (Expression->Buffer[k] == DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
-      {
-        i++;
-        k++;
-      }
-      else if (Expression->Buffer[k] == L'*')
-      {
-        if (k < (Expression->Length / sizeof(WCHAR) - 1))
+        /* Copy Expression to our local variable */
+        IntExpression = *Expression;
+
+        /* Skip the first char */
+        IntExpression.Buffer++;
+        IntExpression.Length -= sizeof(WCHAR);
+
+        /* Continue only if the rest of the expression does NOT contain
+           any more wildcards */
+        if (!FsRtlDoesNameContainWildCards(&IntExpression))
         {
-          if (Expression->Buffer[k+1] != L'*' && Expression->Buffer[k+1] != L'?' &&
-              Expression->Buffer[k+1] != DOS_DOT && Expression->Buffer[k+1] != DOS_QM &&
-              Expression->Buffer[k+1] != DOS_STAR)
-          {
-            while ((IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i]) != Expression->Buffer[k+1] &&
-                   i < Name->Length / sizeof(WCHAR)) i++;
-          }
-          else
-          {
-            if (!(Expression->Buffer[k+1] != DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
+            /* Check for a degenerate case */
+            if (Name->Length < (Expression->Length - sizeof(WCHAR)))
+                return FALSE;
+
+            /* Calculate position */
+            NamePosition = (Name->Length - IntExpression.Length) / sizeof(WCHAR);
+
+            /* Compare */
+            if (!IgnoreCase)
             {
-              i++;
+                /* We can just do a byte compare */
+                return RtlEqualMemory(IntExpression.Buffer,
+                                      Name->Buffer + NamePosition,
+                                      IntExpression.Length);
             }
-          }
+            else
+            {
+                /* Not so easy, need to upcase and check char by char */
+                for (ExpressionPosition = 0; ExpressionPosition < (IntExpression.Length / sizeof(WCHAR)); ExpressionPosition++)
+                {
+                    /* Assert that expression is already upcased! */
+                    ASSERT(IntExpression.Buffer[ExpressionPosition] == UpcaseTable[IntExpression.Buffer[ExpressionPosition]]);
+
+                    /* Now compare upcased name char with expression */
+                    if (UpcaseTable[Name->Buffer[NamePosition + ExpressionPosition]] !=
+                        IntExpression.Buffer[ExpressionPosition])
+                    {
+                        return FALSE;
+                    }
+                }
+
+                /* It matches */
+                return TRUE;
+            }
+        }
+    }
+
+    while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
+    {
+        if ((Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition])))
+        {
+            NamePosition++;
+            ExpressionPosition++;
+        }
+        else if (StarFound != MAXUSHORT && (Expression->Buffer[StarFound + 1] == L'*' ||
+                 Expression->Buffer[StarFound + 1] == L'?' || Expression->Buffer[StarFound + 1] == DOS_DOT))
+        {
+            ExpressionPosition = StarFound + 1;
+            switch (Expression->Buffer[ExpressionPosition])
+            {
+                case L'*':
+                    StarFound = MAXUSHORT;
+                    break;
+
+                case L'?':
+                    if (++ExpressionPosition == Expression->Length / sizeof(WCHAR))
+                    {
+                        NamePosition = Name->Length / sizeof(WCHAR);
+                        break;
+                    }
+
+                    MatchingChars = NamePosition;
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                         Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
+                    {
+                        NamePosition++;
+                    }
+
+                    if (NamePosition - MatchingChars > 0)
+                    {
+                        StarFound = MAXUSHORT;
+                    }
+                    break;
+
+                case DOS_DOT:
+                    while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                           Name->Buffer[NamePosition] != L'.')
+                    {
+                        NamePosition++;
+                    }
+                    ExpressionPosition++;
+                    StarFound = MAXUSHORT;
+                    break;
+
+                default:
+                    /* Should never happen */
+                    ASSERT(FALSE);                   
+            }
+        }
+        else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM) ||
+                 (Expression->Buffer[ExpressionPosition] == DOS_DOT && Name->Buffer[NamePosition] == L'.'))
+        {
+            NamePosition++;
+            ExpressionPosition++;
+            StarFound = MAXUSHORT;
+        }
+        else if (Expression->Buffer[ExpressionPosition] == L'*')
+        {
+            StarFound = ExpressionPosition++;
+            if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
+            {
+                NamePosition = Name->Length / sizeof(WCHAR);
+                break;
+            }
+        }
+        else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
+        {
+            StarFound = MAXUSHORT;
+            MatchingChars = NamePosition;
+            while (MatchingChars < Name->Length / sizeof(WCHAR))
+            {
+                if (Name->Buffer[MatchingChars] == L'.')
+                {
+                    NamePosition = MatchingChars;
+                }
+                MatchingChars++;
+            }
+            ExpressionPosition++;
+        }
+        else if (StarFound != MAXUSHORT)
+        {
+            ExpressionPosition = StarFound + 1;
+            while (NamePosition < Name->Length / sizeof(WCHAR) &&
+                   (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                    Name->Buffer[NamePosition]) != Expression->Buffer[ExpressionPosition])
+            {
+                NamePosition++;
+            }
         }
         else
         {
-          i = Name->Length / sizeof(WCHAR);
+            break;
         }
-        k++;
-      }
-      else if (Expression->Buffer[k] == DOS_STAR)
-      {
-        j = i;
-        while (j < Name->Length / sizeof(WCHAR))
-        {
-          if (Name->Buffer[j] == L'.')
-          {
-            i = j;
-          }
-          j++;
-        }
-        k++;
-      }
-      else
-      {
-        i = Name->Length / sizeof(WCHAR);
-      }
+    }
+    if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
+        Expression->Buffer[ExpressionPosition] == DOS_DOT)
+    {
+        ExpressionPosition++;
     }
 
-    return (k == Expression->Length / sizeof(WCHAR) && i == Name->Length / sizeof(WCHAR));
+    return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -118,7 +239,7 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
     UNICODE_STRING UpcaseName1;
     UNICODE_STRING UpcaseName2;
     BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
-    ULONG i;
+    USHORT i;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -210,8 +331,8 @@ FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
                  OUT PUNICODE_STRING RemainingPart)
 {
-    ULONG FirstPosition, i;
-    ULONG SkipFirstSlash = 0;
+    USHORT FirstPosition, i;
+    USHORT SkipFirstSlash = 0;
     PAGED_CODE();
 
     /* Zero the strings before continuing */
@@ -334,7 +455,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
     if (IgnoreCase && !UpcaseTable)
     {
         Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status))
         {
             ExRaiseStatus(Status);
         }

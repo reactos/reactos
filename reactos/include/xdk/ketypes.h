@@ -640,11 +640,12 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
 #endif /* defined(_AMD64_) */
 
 typedef VOID
-(NTAPI *PKDEFERRED_ROUTINE)(
+(NTAPI KDEFERRED_ROUTINE)(
   IN struct _KDPC *Dpc,
   IN PVOID DeferredContext OPTIONAL,
   IN PVOID SystemArgument1 OPTIONAL,
   IN PVOID SystemArgument2 OPTIONAL);
+typedef KDEFERRED_ROUTINE *PKDEFERRED_ROUTINE;
 
 typedef enum _KDPC_IMPORTANCE {
   LowImportance,
@@ -1017,7 +1018,7 @@ typedef VOID
 
 typedef enum _TIMER_SET_INFORMATION_CLASS {
   TimerSetCoalescableTimer,
-  MaxTimerInfoClass 
+  MaxTimerInfoClass
 } TIMER_SET_INFORMATION_CLASS;
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)

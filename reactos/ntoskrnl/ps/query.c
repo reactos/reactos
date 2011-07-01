@@ -469,11 +469,26 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            DPRINT1("Not implemented: ProcessWow64Information\n");
+            /* Protect write in SEH */
+            _SEH2_TRY
+            {
+#ifdef _WIN64
+                DPRINT1("Not implemented: ProcessWow64Information\n");
+                Status = STATUS_NOT_IMPLEMENTED;
+#else
+                /* Wow64 not present */
+                *(PULONG_PTR)ProcessInformation = 0;
+#endif
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
 
             /* Dereference the process */
             ObDereferenceObject(Process);
-            Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         /* Virtual Memory Statistics */

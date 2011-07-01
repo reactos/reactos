@@ -17,13 +17,6 @@ BOOL gfServerProcess = FALSE;
 
 WCHAR szAppInit[KEY_LENGTH];
 
-PUSER32_THREAD_DATA
-User32GetThreadData()
-{
-   return ((PUSER32_THREAD_DATA)TlsGetValue(User32TlsIndex));
-}
-
-
 BOOL
 GetDllList()
 {
@@ -192,25 +185,12 @@ UnloadAppInitDlls()
 BOOL
 InitThread(VOID)
 {
-   PUSER32_THREAD_DATA ThreadData;
-
-   ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                          sizeof(USER32_THREAD_DATA));
-   if (ThreadData == NULL)
-      return FALSE;
-   if (!TlsSetValue(User32TlsIndex, ThreadData))
-      return FALSE;
    return TRUE;
 }
 
 VOID
 CleanupThread(VOID)
 {
-   PUSER32_THREAD_DATA ThreadData;
-
-   ThreadData = (PUSER32_THREAD_DATA)TlsGetValue(User32TlsIndex);
-   HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, ThreadData);
-   TlsSetValue(User32TlsIndex, 0);
 }
 
 BOOL

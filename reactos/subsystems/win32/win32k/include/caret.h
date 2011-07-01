@@ -3,8 +3,6 @@
 #include <include/win32.h>
 #include <include/window.h>
 
-#define IDCARETTIMER (0xffff)
-
 BOOL FASTCALL
 co_IntDestroyCaret(PTHREADINFO Win32Thread);
 

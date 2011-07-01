@@ -307,6 +307,20 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
     DPRINT("NpfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
+    FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
+    DPRINT("FileObject %p\n", FileObject);
+    DPRINT("Pipe name %wZ\n", &FileObject->FileName);
+    Ccb = FileObject->FsContext2;
+
+    /* Fail, if the CCB is not a pipe CCB */
+    if (Ccb->Type != CCB_PIPE)
+    {
+        DPRINT("Not a pipe!\n");
+        Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+        goto done;
+    }
+
     if (Irp->MdlAddress == NULL)
     {
         DPRINT("Irp->MdlAddress == NULL\n");
@@ -315,10 +329,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         goto done;
     }
 
-    FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
-    DPRINT("FileObject %p\n", FileObject);
-    DPRINT("Pipe name %wZ\n", &FileObject->FileName);
-    Ccb = FileObject->FsContext2;
     Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
     if ((Ccb->OtherSide) && (Ccb->OtherSide->PipeState == FILE_PIPE_DISCONNECTED_STATE) && (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
@@ -736,7 +746,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Length;
     ULONG Offset;
-    ULONG Information;
+    ULONG Information = 0;
     ULONG CopyLength;
     ULONG TempLength;
 
@@ -748,12 +758,21 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     DPRINT("Pipe name %wZ\n", &FileObject->FileName);
 
     Ccb = FileObject->FsContext2;
+
+    /* Fail, if the CCB is not a pipe CCB */
+    if (Ccb->Type != CCB_PIPE)
+    {
+        DPRINT("Not a pipe!\n");
+        Status = STATUS_INVALID_PARAMETER;
+        Length = 0;
+        goto done;
+    }
+
     ReaderCcb = Ccb->OtherSide;
     Fcb = Ccb->Fcb;
 
     Length = IoStack->Parameters.Write.Length;
     Offset = IoStack->Parameters.Write.ByteOffset.u.LowPart;
-    Information = 0;
 
     if (Irp->MdlAddress == NULL)
     {

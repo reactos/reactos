@@ -42,7 +42,13 @@ InbvEnableBootDriver(
 VOID
 NTAPI
 DisplayBootBitmap(
-    IN BOOLEAN SosMode
+    IN BOOLEAN TextMode
+);
+
+VOID
+NTAPI
+DisplayFilter(
+    IN PCHAR *String
 );
 
 VOID

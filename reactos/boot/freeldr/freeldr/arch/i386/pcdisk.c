@@ -367,4 +367,15 @@ PcDiskGetCacheableBlockCount(ULONG DriveNumber)
     }
 }
 
+BOOLEAN
+PcDiskGetBootPath(char *BootPath, unsigned Size)
+{
+  if (PxeInit())
+    {
+      strcpy(BootPath, "net(0)");
+      return 0;
+    }
+  return DiskGetBootPath(BootPath, Size);
+}
+
 /* EOF */

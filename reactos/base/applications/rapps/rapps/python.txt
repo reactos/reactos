@@ -1,19 +1,24 @@
 ﻿; UTF-8
 
 [Section]
-Name = Python
-Version = 2.6.6
+Name = Python 2
+Version = 2.7.1
 Licence = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
-Size = 14.5MB
+Size = 15.0MB
 Category = 7
 URLSite = http://www.python.org/
-URLDownload = http://www.python.org/ftp/python/2.6.6/python-2.6.6.msi
+URLDownload = http://www.python.org/ftp/python/2.7.1/python-2.7.1.msi
 CDPath = none
 
 [Section.0407]
 Description = Eine sehr mächtige, dynamische Programmiersprache.
 
+[Section.040a]
+Description = Un lenguaje de programación dinámico sumamente potente. 
+
+[Section.040c]
+Description = Un langage de programmation dynamique remarquablement puissant.
 
 [Section.0415]
 Description = Potęży i dynamiczny język programowania.

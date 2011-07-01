@@ -31,6 +31,9 @@
 		<file>brush.c</file>
 		<file>coord.c</file>
 		<file>dc.c</file>
+		<if property="ARCH" value="i386">
+			<file>efloat.c</file>
+		</if>
 		<file>eng.c</file>
 		<file>enhmfile.c</file>
 		<file>font.c</file>

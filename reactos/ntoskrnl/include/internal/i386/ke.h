@@ -10,8 +10,6 @@
 #define DR_MASK(x)                              (1 << (x))
 #define DR_REG_MASK                             0x4F
 
-#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_I386
-
 //
 // INT3 is 1 byte long
 //
@@ -33,7 +31,7 @@
 
 #define KiGetLinkedTrapFrame(x) \
     (PKTRAP_FRAME)((x)->Edx)
-    
+
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Eax)
 
@@ -77,7 +75,7 @@
 #define KTE_SKIP_PM_BIT  (((KTRAP_EXIT_SKIP_BITS) { { .SkipPreviousMode = TRUE } }).Bits)
 #define KTE_SKIP_SEG_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipSegments  = TRUE } }).Bits)
 #define KTE_SKIP_VOL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipVolatiles = TRUE } }).Bits)
- 
+
 typedef union _KTRAP_EXIT_SKIP_BITS
 {
     struct
@@ -165,7 +163,7 @@ typedef struct _KV8086_STACK_FRAME
     FX_SAVE_AREA NpxArea;
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
-              
+
 //
 // Registers an interrupt handler with an IDT vector
 //
@@ -173,7 +171,7 @@ FORCEINLINE
 VOID
 KeRegisterInterruptHandler(IN ULONG Vector,
                            IN PVOID Handler)
-{                           
+{
     UCHAR Entry;
     ULONG_PTR Address;
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -388,7 +386,7 @@ NTAPI
 VdmDispatchBop(
     IN PKTRAP_FRAME TrapFrame
 );
- 
+
 BOOLEAN
 FASTCALL
 KiVdmOpcodePrefix(
@@ -602,14 +600,7 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-NTSTATUS
-FORCEINLINE
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
-    
+
     /*
      * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
      * and then calls the function associated with the system call.
@@ -626,6 +617,14 @@ KiSystemCallTrampoline(IN PVOID Handler,
      *
      */
 #ifdef __GNUC__
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+
     __asm__ __volatile__
     (
         "subl %1, %%esp\n"
@@ -641,25 +640,32 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
     __asm
     {
         mov ecx, StackBytes
-        mov edx, Arguments
+        mov esi, Arguments
+        mov eax, Handler
         sub esp, ecx
         mov edi, esp
-        mov esi, edx
         shr ecx, 2
         rep movsd
-        call Handler
-        mov Result, eax
+        call eax
     }
+    /* Return with result in EAX */
+}
 #else
 #error Unknown Compiler
 #endif
 
-    return Result;
-}
 
 //
 // Checks for pending APCs
@@ -705,7 +711,7 @@ NTSTATUS
 FORCEINLINE
 KiConvertToGuiThread(VOID)
 {
-    NTSTATUS Result;  
+    NTSTATUS Result;
     PVOID StackFrame;
 
     /*
@@ -769,7 +775,7 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
         "subl %1, %%esp\n"
         "pushl %2\n"
         "jmp _KiSystemStartupBootStack@0\n"
-        : 
+        :
         : "c"(InitialStack),
           "i"(NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH),
           "i"(CR0_EM | CR0_TS | CR0_MP)
@@ -805,7 +811,7 @@ KiIret(VOID)
 #elif defined(_MSC_VER)
     __asm
     {
-        iret
+        iretd
     }
 #else
 #error Unsupported compiler
@@ -825,7 +831,7 @@ KiEndInterrupt(IN KIRQL Irql,
     /* Disable interrupts and end the interrupt */
     _disable();
     HalEndSystemInterrupt(Irql, TrapFrame);
-    
+
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }

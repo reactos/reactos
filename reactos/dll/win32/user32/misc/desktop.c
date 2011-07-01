@@ -20,7 +20,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #if 0 // Kept for referencing.
 const struct builtin_class_descr DESKTOP_builtin_class =
 {
-  (LPCWSTR) DESKTOP_CLASS_ATOM,   /* name */
+  WC_DESKTOP,           /* name */
   CS_DBLCLKS,           /* style */
   NULL,                 /* procA (winproc is Unicode only) */
   (WNDPROC) DesktopWndProc,       /* procW */
@@ -564,13 +564,22 @@ OpenDesktopW(
   ACCESS_MASK dwDesiredAccess)
 {
   UNICODE_STRING DesktopName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
 
   RtlInitUnicodeString(&DesktopName, lpszDesktop);
 
-  return NtUserOpenDesktop(
-    &DesktopName,
-    dwFlags,
-    dwDesiredAccess);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &DesktopName,
+                             OBJ_CASE_INSENSITIVE,
+                             GetProcessWindowStation(),
+                             0);
+
+  if( fInherit == TRUE )
+  {
+      ObjectAttributes.Attributes |= OBJ_INHERIT;
+  }
+
+  return NtUserOpenDesktop(&ObjectAttributes, dwFlags, dwDesiredAccess);
 }
 
 

@@ -57,8 +57,9 @@
  * Hardware Support Routines
  */
 
-
-static BOOLEAN NTAPI ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
+
+static BOOLEAN NTAPI
+ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Determine of the controller is ready to accept a byte on the FIFO
  * ARGUMENTS:
@@ -71,19 +72,20 @@ static BOOLEAN NTAPI ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
  *       and that the "ready for i/o" bit is set.
  */
 {
-  UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
+    UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
 
-  if(Status & MSR_IO_DIRECTION) /* 0 for out */
-      return FALSE;
+    if(Status & MSR_IO_DIRECTION) /* 0 for out */
+        return FALSE;
 
-  if(!(Status & MSR_DATA_REG_READY_FOR_IO))
-      return FALSE;
+    if(!(Status & MSR_DATA_REG_READY_FOR_IO))
+        return FALSE;
 
-  return TRUE;
+    return TRUE;
 }
 
-
-static BOOLEAN NTAPI ReadyForRead(PCONTROLLER_INFO ControllerInfo)
+
+static BOOLEAN NTAPI
+ReadyForRead(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Determine of the controller is ready to read a byte on the FIFO
  * ARGUMENTS:
@@ -96,20 +98,20 @@ static BOOLEAN NTAPI ReadyForRead(PCONTROLLER_INFO ControllerInfo)
  *       and that the "ready for i/o" bit is set.
  */
 {
-  UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
+    UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
 
-  if(!(Status & MSR_IO_DIRECTION)) /* Read = 1 */
-      return FALSE;
+    if(!(Status & MSR_IO_DIRECTION)) /* Read = 1 */
+        return FALSE;
 
-  if(!(Status & MSR_DATA_REG_READY_FOR_IO))
-      return FALSE;
+    if(!(Status & MSR_DATA_REG_READY_FOR_IO))
+        return FALSE;
 
-  return TRUE;
+    return TRUE;
 }
 
-
-static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
-                                UCHAR Byte)
+
+static NTSTATUS NTAPI
+Send_Byte(PCONTROLLER_INFO ControllerInfo, UCHAR Byte)
 /*
  * FUNCTION: Send a byte from the host to the controller's FIFO
  * ARGUMENTS:
@@ -129,34 +131,34 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
  *       and isn't yet ready to read or write the next byte
  */
 {
-  int i;
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  for(i = 0; i < 5; i++)
+    for(i = 0; i < 5; i++)
     {
-      if(ReadyForWrite(ControllerInfo))
-         break;
+        if(ReadyForWrite(ControllerInfo))
+            break;
 
-      KeStallExecutionProcessor(50);
+        KeStallExecutionProcessor(50);
     }
 
-  if (i < 5)
-  {
-    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO, Byte);
-    return STATUS_SUCCESS;
-  }
-  else
-  {
-    INFO_(FLOPPY, "Send_Byte: timed out trying to write\n");
-    HwDumpRegisters(ControllerInfo);
-    return STATUS_UNSUCCESSFUL;
-  }
+    if (i < 5)
+    {
+        WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO, Byte);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        INFO_(FLOPPY, "Send_Byte: timed out trying to write\n");
+        HwDumpRegisters(ControllerInfo);
+        return STATUS_UNSUCCESSFUL;
+    }
 }
 
-
-static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
-                               PUCHAR Byte)
+
+static NTSTATUS NTAPI
+Get_Byte(PCONTROLLER_INFO ControllerInfo, PUCHAR Byte)
 /*
  * FUNCTION: Read a byte from the controller to the host
  * ARGUMENTS:
@@ -175,34 +177,34 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
  *     - PAGED_CODE because we spin for longer than Microsoft recommends
  */
 {
-  int i;
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  for(i = 0; i < 5; i++)
+    for(i = 0; i < 5; i++)
     {
-      if(ReadyForRead(ControllerInfo))
-         break;
+        if(ReadyForRead(ControllerInfo))
+            break;
 
-      KeStallExecutionProcessor(50);
+        KeStallExecutionProcessor(50);
     }
 
-  if (i < 5)
-  {
-    *Byte = READ_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO);
-    return STATUS_SUCCESS;
-  }
-  else
-  {
-    INFO_(FLOPPY, "Get_Byte: timed out trying to write\n");
-    HwDumpRegisters(ControllerInfo);
-    return STATUS_UNSUCCESSFUL;
-  }
+    if (i < 5)
+    {
+        *Byte = READ_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        INFO_(FLOPPY, "Get_Byte: timed out trying to write\n");
+        HwDumpRegisters(ControllerInfo);
+        return STATUS_UNSUCCESSFUL;
+    }
 }
 
-
-NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
-                             UCHAR DataRate)
+
+NTSTATUS NTAPI
+HwSetDataRate(PCONTROLLER_INFO ControllerInfo, UCHAR DataRate)
 /*
  * FUNCTION: Set the data rte on a controller
  * ARGUMENTS:
@@ -212,15 +214,16 @@ NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo,
  *     STATUS_SUCCESS
  */
 {
-  TRACE_(FLOPPY, "HwSetDataRate called; writing rate code 0x%x to offset 0x%x\n", DataRate, DATA_RATE_SELECT_REGISTER);
+    TRACE_(FLOPPY, "HwSetDataRate called; writing rate code 0x%x to offset 0x%x\n", DataRate, DATA_RATE_SELECT_REGISTER);
 
-  WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DataRate);
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DataRate);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Turn off all motors
  * ARGUMENTS:
@@ -233,15 +236,16 @@ NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
  *     - Called at DISPATCH_LEVEL
  */
 {
-  TRACE_(FLOPPY, "HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE, DIGITAL_OUTPUT_REGISTER);
+    TRACE_(FLOPPY, "HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE, DIGITAL_OUTPUT_REGISTER);
 
-  WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE);
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
+
+NTSTATUS NTAPI
+HwTurnOnMotor(PDRIVE_INFO DriveInfo)
 /*
  * FUNCTION: Turn on the motor on the selected drive
  * ARGUMENTS:
@@ -254,35 +258,36 @@ NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
  *     - Currently cannot fail
  */
 {
-  PCONTROLLER_INFO ControllerInfo = DriveInfo->ControllerInfo;
-  UCHAR Unit = DriveInfo->UnitNumber;
-  UCHAR Buffer;
+    PCONTROLLER_INFO ControllerInfo = DriveInfo->ControllerInfo;
+    UCHAR Unit = DriveInfo->UnitNumber;
+    UCHAR Buffer;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  /* turn on motor */
-  Buffer = Unit;
+    /* turn on motor */
+    Buffer = Unit;
 
-  Buffer |= DOR_FDC_ENABLE;
-  Buffer |= DOR_DMA_IO_INTERFACE_ENABLE;
+    Buffer |= DOR_FDC_ENABLE;
+    Buffer |= DOR_DMA_IO_INTERFACE_ENABLE;
 
-  if(Unit == 0)
-    Buffer |= DOR_FLOPPY_MOTOR_ON_A;
-  else if (Unit == 1)
-    Buffer |= DOR_FLOPPY_MOTOR_ON_B;
-  else if (Unit == 2)
-    Buffer |= DOR_FLOPPY_MOTOR_ON_C;
-  else if (Unit == 3)
-    Buffer |= DOR_FLOPPY_MOTOR_ON_D;
+    if(Unit == 0)
+        Buffer |= DOR_FLOPPY_MOTOR_ON_A;
+    else if (Unit == 1)
+        Buffer |= DOR_FLOPPY_MOTOR_ON_B;
+    else if (Unit == 2)
+        Buffer |= DOR_FLOPPY_MOTOR_ON_C;
+    else if (Unit == 3)
+        Buffer |= DOR_FLOPPY_MOTOR_ON_D;
 
-  TRACE_(FLOPPY, "HwTurnOnMotor: writing byte 0x%x to offset 0x%x\n", Buffer, DIGITAL_OUTPUT_REGISTER);
-  WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, Buffer);
+    TRACE_(FLOPPY, "HwTurnOnMotor: writing byte 0x%x to offset 0x%x\n", Buffer, DIGITAL_OUTPUT_REGISTER);
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, Buffer);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
+
+NTSTATUS NTAPI
+HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
 /*
  * FUNCTION: Start a sense status command
  * ARGUMENTS:
@@ -295,37 +300,38 @@ NTSTATUS NTAPI HwSenseDriveStatus(PDRIVE_INFO DriveInfo)
  *     - hard-wired to head 0
  */
 {
-  UCHAR Buffer[2];
-  int i;
+    UCHAR Buffer[2];
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  TRACE_(FLOPPY, "HwSenseDriveStatus called\n");
+    TRACE_(FLOPPY, "HwSenseDriveStatus called\n");
 
-  Buffer[0] = COMMAND_SENSE_DRIVE_STATUS;
-  Buffer[1] = DriveInfo->UnitNumber; /* hard-wired to head 0 for now */
+    Buffer[0] = COMMAND_SENSE_DRIVE_STATUS;
+    Buffer[1] = DriveInfo->UnitNumber; /* hard-wired to head 0 for now */
 
-  for(i = 0; i < 2; i++)
-    if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwSenseDriveStatus: failed to write FIFO\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 2; i++)
+        if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwSenseDriveStatus: failed to write FIFO\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
-                               BOOLEAN Read,
-                               UCHAR Unit,
-                               UCHAR Cylinder,
-                               UCHAR Head,
-                               UCHAR Sector,
-                               UCHAR BytesPerSector,
-                               UCHAR EndOfTrack,
-                               UCHAR Gap3Length,
-                               UCHAR DataLength)
+
+NTSTATUS NTAPI
+HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
+                BOOLEAN Read,
+                UCHAR Unit,
+                UCHAR Cylinder,
+                UCHAR Head,
+                UCHAR Sector,
+                UCHAR BytesPerSector,
+                UCHAR EndOfTrack,
+                UCHAR Gap3Length,
+                UCHAR DataLength)
 /*
  * FUNCTION: Read or write data to the drive
  * ARGUMENTS:
@@ -346,48 +352,49 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
  *     - Generates an interrupt
  */
 {
-  UCHAR Buffer[9];
-  int i;
+    UCHAR Buffer[9];
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  /* Shouldn't be using DataLength in this driver */
-  ASSERT(DataLength == 0xff);
+    /* Shouldn't be using DataLength in this driver */
+    ASSERT(DataLength == 0xff);
 
-  /* Build the command to send */
-  if(Read)
-    Buffer[0] = COMMAND_READ_DATA;
-  else
-    Buffer[0] = COMMAND_WRITE_DATA;
+    /* Build the command to send */
+    if(Read)
+        Buffer[0] = COMMAND_READ_DATA;
+    else
+        Buffer[0] = COMMAND_WRITE_DATA;
 
-  Buffer[0] |= READ_DATA_MFM | READ_DATA_MT;
+    Buffer[0] |= READ_DATA_MFM | READ_DATA_MT;
 
-  Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | Unit;
-  Buffer[2] = Cylinder;
-  Buffer[3] = Head;
-  Buffer[4] = Sector;
-  Buffer[5] = BytesPerSector;
-  Buffer[6] = EndOfTrack;
-  Buffer[7] = Gap3Length;
-  Buffer[8] = DataLength;
+    Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | Unit;
+    Buffer[2] = Cylinder;
+    Buffer[3] = Head;
+    Buffer[4] = Sector;
+    Buffer[5] = BytesPerSector;
+    Buffer[6] = EndOfTrack;
+    Buffer[7] = Gap3Length;
+    Buffer[8] = DataLength;
 
-  /* Send the command */
-  for(i = 0; i < 9; i++)
+    /* Send the command */
+    for(i = 0; i < 9; i++)
     {
         INFO_(FLOPPY, "HwReadWriteData: Sending a command byte to the FIFO: 0x%x\n", Buffer[i]);
 
-	if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-	  {
-	    WARN_(FLOPPY, "HwReadWriteData: Unable to write to the FIFO\n");
-	    return STATUS_UNSUCCESSFUL;
-	  }
+        if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwReadWriteData: Unable to write to the FIFO\n");
+            return STATUS_UNSUCCESSFUL;
+        }
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Get the result of a recalibrate command
  * ARGUMENTS:
@@ -403,55 +410,56 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
  *     - perhaps handle more status
  */
 {
-  UCHAR Buffer[2];
-  int i;
+    UCHAR Buffer[2];
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
+    if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "HwRecalibrateResult: Unable to write the controller\n");
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  for(i = 0; i < 2; i++)
-    if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwRecalibrateResult: unable to read FIFO\n");
+        WARN_(FLOPPY, "HwRecalibrateResult: Unable to write the controller\n");
         return STATUS_UNSUCCESSFUL;
-      }
-
-  /* Validate  that it did what we told it to */
-  INFO_(FLOPPY, "HwRecalibrateResult results: ST0: 0x%x PCN: 0x%x\n", Buffer[0], Buffer[1]);
-
-  /*
-   * Buffer[0] = ST0
-   * Buffer[1] = PCN
-   */
-
-  /* Is the PCN 0? */
-  if(Buffer[1] != 0)
-    {
-      WARN_(FLOPPY, "HwRecalibrateResult: PCN not 0\n");
-      return STATUS_UNSUCCESSFUL;
     }
 
-  /* test seek complete */
-  if((Buffer[0] & SR0_SEEK_COMPLETE) != SR0_SEEK_COMPLETE)
+    for(i = 0; i < 2; i++)
+        if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwRecalibrateResult: unable to read FIFO\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+
+    /* Validate  that it did what we told it to */
+    INFO_(FLOPPY, "HwRecalibrateResult results: ST0: 0x%x PCN: 0x%x\n", Buffer[0], Buffer[1]);
+
+    /*
+     * Buffer[0] = ST0
+     * Buffer[1] = PCN
+     */
+
+    /* Is the PCN 0? */
+    if(Buffer[1] != 0)
     {
-      WARN_(FLOPPY, "HwRecalibrateResult: Failed to complete the seek\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "HwRecalibrateResult: PCN not 0\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  /* Is the equipment check flag set?  Could be no disk in drive... */
-  if((Buffer[0] & SR0_EQUIPMENT_CHECK) == SR0_EQUIPMENT_CHECK)
-      INFO_(FLOPPY, "HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning STATUS_SUCCESS anyway\n");
+    /* test seek complete */
+    if((Buffer[0] & SR0_SEEK_COMPLETE) != SR0_SEEK_COMPLETE)
+    {
+        WARN_(FLOPPY, "HwRecalibrateResult: Failed to complete the seek\n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
-  return STATUS_SUCCESS;
+    /* Is the equipment check flag set?  Could be no disk in drive... */
+    if((Buffer[0] & SR0_EQUIPMENT_CHECK) == SR0_EQUIPMENT_CHECK)
+        INFO_(FLOPPY, "HwRecalibrateResult: Seeked to track 0 successfully, but EC is set; returning STATUS_SUCCESS anyway\n");
+
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Get the result of a read or write from the controller
  * ARGUMENTS:
@@ -467,31 +475,32 @@ NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
  *     - perhaps handle more status
  */
 {
-  UCHAR Buffer[7];
-  int i;
+    UCHAR Buffer[7];
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  for(i = 0; i < 7; i++)
-    if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwReadWriteResult: unable to read fifo\n");
+    for(i = 0; i < 7; i++)
+        if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwReadWriteResult: unable to read fifo\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+
+    /* Validate  that it did what we told it to */
+    INFO_(FLOPPY, "HwReadWriteResult results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
+          Buffer[4], Buffer[5], Buffer[6]);
+
+    /* Last command successful? */
+    if((Buffer[0] & SR0_LAST_COMMAND_STATUS) != SR0_LCS_SUCCESS)
         return STATUS_UNSUCCESSFUL;
-      }
 
-  /* Validate  that it did what we told it to */
-  INFO_(FLOPPY, "HwReadWriteResult results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
-	   Buffer[4], Buffer[5], Buffer[6]);
-
-  /* Last command successful? */
-  if((Buffer[0] & SR0_LAST_COMMAND_STATUS) != SR0_LCS_SUCCESS)
-    return STATUS_UNSUCCESSFUL;
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo)
+
+NTSTATUS NTAPI
+HwRecalibrate(PDRIVE_INFO DriveInfo)
 /*
  * FUNCTION: Start a recalibration of a drive
  * ARGUMENTS:
@@ -503,30 +512,31 @@ NTSTATUS NTAPI HwRecalibrate(PDRIVE_INFO DriveInfo)
  *     - Generates an interrupt
  */
 {
-  PCONTROLLER_INFO ControllerInfo = DriveInfo->ControllerInfo;
-  UCHAR Unit = DriveInfo->UnitNumber;
-  UCHAR Buffer[2];
-  int i;
+    PCONTROLLER_INFO ControllerInfo = DriveInfo->ControllerInfo;
+    UCHAR Unit = DriveInfo->UnitNumber;
+    UCHAR Buffer[2];
+    int i;
 
-  TRACE_(FLOPPY, "HwRecalibrate called\n");
+    TRACE_(FLOPPY, "HwRecalibrate called\n");
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  Buffer[0] = COMMAND_RECALIBRATE;
-  Buffer[1] = Unit;
+    Buffer[0] = COMMAND_RECALIBRATE;
+    Buffer[1] = Unit;
 
-  for(i = 0; i < 2; i++)
-    if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwRecalibrate: unable to write FIFO\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 2; i++)
+        if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwRecalibrate: unable to write FIFO\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Send a sense interrupt status command to a controller
  * ARGUMENTS:
@@ -536,33 +546,34 @@ NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
  *     STATUS_UNSUCCESSFUL if not
  */
 {
-  UCHAR Buffer[2];
-  int i;
+    UCHAR Buffer[2];
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
+    if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "HwSenseInterruptStatus: failed to write controller\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "HwSenseInterruptStatus: failed to write controller\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  for(i = 0; i  < 2; i++)
+    for(i = 0; i  < 2; i++)
     {
-      if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
-	{
-	  WARN_(FLOPPY, "HwSenseInterruptStatus: failed to read controller\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+        if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwSenseInterruptStatus: failed to read controller\n");
+            return STATUS_UNSUCCESSFUL;
+        }
     }
 
-  INFO_(FLOPPY, "HwSenseInterruptStatus returned 0x%x 0x%x\n", Buffer[0], Buffer[1]);
+    INFO_(FLOPPY, "HwSenseInterruptStatus returned 0x%x 0x%x\n", Buffer[0], Buffer[1]);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
+
+NTSTATUS NTAPI
+HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
 /*
  * FUNCTION: Issue a read id command to the drive
  * ARGUMENTS:
@@ -575,34 +586,35 @@ NTSTATUS NTAPI HwReadId(PDRIVE_INFO DriveInfo, UCHAR Head)
  *     - Generates an interrupt
  */
 {
-  UCHAR Buffer[2];
-  int i;
+    UCHAR Buffer[2];
+    int i;
 
-  TRACE_(FLOPPY, "HwReadId called\n");
+    TRACE_(FLOPPY, "HwReadId called\n");
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  Buffer[0] = COMMAND_READ_ID | READ_ID_MFM;
-  Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | DriveInfo->UnitNumber;
+    Buffer[0] = COMMAND_READ_ID | READ_ID_MFM;
+    Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | DriveInfo->UnitNumber;
 
-  for(i = 0; i < 2; i++)
-    if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwReadId: unable to send bytes to fifo\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 2; i++)
+        if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwReadId: unable to send bytes to fifo\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
-                             UCHAR Unit,
-                             UCHAR Head,
-                             UCHAR BytesPerSector,
-                             UCHAR SectorsPerTrack,
-                             UCHAR Gap3Length,
-                             UCHAR FillerPattern)
+
+NTSTATUS NTAPI
+HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
+              UCHAR Unit,
+              UCHAR Head,
+              UCHAR BytesPerSector,
+              UCHAR SectorsPerTrack,
+              UCHAR Gap3Length,
+              UCHAR FillerPattern)
 /*
  * FUNCTION: Format a track
  * ARGUMENTS:
@@ -618,33 +630,33 @@ NTSTATUS NTAPI HwFormatTrack(PCONTROLLER_INFO ControllerInfo,
  *     STATUS_UNSUCCESSFUL otherwise
  */
 {
-  UCHAR Buffer[6];
-  int i;
+    UCHAR Buffer[6];
+    int i;
 
-  TRACE_(FLOPPY, "HwFormatTrack called\n");
+    TRACE_(FLOPPY, "HwFormatTrack called\n");
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  Buffer[0] = COMMAND_FORMAT_TRACK;
-  Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | Unit;
-  Buffer[2] = BytesPerSector;
-  Buffer[3] = SectorsPerTrack;
-  Buffer[4] = Gap3Length;
-  Buffer[5] = FillerPattern;
+    Buffer[0] = COMMAND_FORMAT_TRACK;
+    Buffer[1] = (Head << COMMAND_HEAD_NUMBER_SHIFT) | Unit;
+    Buffer[2] = BytesPerSector;
+    Buffer[3] = SectorsPerTrack;
+    Buffer[4] = Gap3Length;
+    Buffer[5] = FillerPattern;
 
-  for(i = 0; i < 6; i++)
-    if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwFormatTrack: unable to send bytes to floppy\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 6; i++)
+        if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwFormatTrack: unable to send bytes to floppy\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
-                      UCHAR Cylinder)
+
+NTSTATUS NTAPI
+HwSeek(PDRIVE_INFO DriveInfo, UCHAR Cylinder)
 /*
  * FUNCTION: Seek the heads to a particular cylinder
  * ARGUMENTS:
@@ -657,42 +669,43 @@ NTSTATUS NTAPI HwSeek(PDRIVE_INFO DriveInfo,
  *     - Generates an interrupt
  */
 {
-  LARGE_INTEGER Delay;
-  UCHAR Buffer[3];
-  int i;
+    LARGE_INTEGER Delay;
+    UCHAR Buffer[3];
+    int i;
 
-  TRACE_(FLOPPY, "HwSeek called for cyl 0x%x\n", Cylinder);
+    TRACE_(FLOPPY, "HwSeek called for cyl 0x%x\n", Cylinder);
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  Buffer[0] = COMMAND_SEEK;
-  Buffer[1] = DriveInfo->UnitNumber;
-  Buffer[2] = Cylinder;
+    Buffer[0] = COMMAND_SEEK;
+    Buffer[1] = DriveInfo->UnitNumber;
+    Buffer[2] = Cylinder;
 
-  for(i = 0; i < 3; i++)
-    if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwSeek: failed to write fifo\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 3; i++)
+        if(Send_Byte(DriveInfo->ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwSeek: failed to write fifo\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  /* Wait for the head to settle */
-  Delay.QuadPart = 10 * 1000;
-  Delay.QuadPart *= -1;
-  Delay.QuadPart *= DriveInfo->FloppyDeviceData.HeadSettleTime;
+    /* Wait for the head to settle */
+    Delay.QuadPart = 10 * 1000;
+    Delay.QuadPart *= -1;
+    Delay.QuadPart *= DriveInfo->FloppyDeviceData.HeadSettleTime;
 
-  KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+    KeDelayExecutionThread(KernelMode, FALSE, &Delay);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
-                           BOOLEAN EIS,
-			   BOOLEAN EFIFO,
-			   BOOLEAN POLL,
-			   UCHAR FIFOTHR,
-			   UCHAR PRETRK)
+
+NTSTATUS NTAPI
+HwConfigure(PCONTROLLER_INFO ControllerInfo,
+            BOOLEAN EIS,
+            BOOLEAN EFIFO,
+            BOOLEAN POLL,
+            UCHAR FIFOTHR,
+            UCHAR PRETRK)
 /*
  * FUNCTION: Sends configuration to the drive
  * ARGUMENTS:
@@ -709,30 +722,31 @@ NTSTATUS NTAPI HwConfigure(PCONTROLLER_INFO ControllerInfo,
  *     - No interrupt
  */
 {
-  UCHAR Buffer[4];
-  int i;
+    UCHAR Buffer[4];
+    int i;
 
-  TRACE_(FLOPPY, "HwConfigure called\n");
+    TRACE_(FLOPPY, "HwConfigure called\n");
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  Buffer[0] = COMMAND_CONFIGURE;
-  Buffer[1] = 0;
-  Buffer[2] = (EIS * CONFIGURE_EIS) + (EFIFO * CONFIGURE_EFIFO) + (POLL * CONFIGURE_POLL) + (FIFOTHR);
-  Buffer[3] = PRETRK;
+    Buffer[0] = COMMAND_CONFIGURE;
+    Buffer[1] = 0;
+    Buffer[2] = (EIS * CONFIGURE_EIS) + (EFIFO * CONFIGURE_EFIFO) + (POLL * CONFIGURE_POLL) + (FIFOTHR);
+    Buffer[3] = PRETRK;
 
-  for(i = 0; i < 4; i++)
-    if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwConfigure: failed to write the fifo\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 4; i++)
+        if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwConfigure: failed to write the fifo\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwGetVersion(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Gets the version of the controller
  * ARGUMENTS:
@@ -746,29 +760,29 @@ NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo)
  *       we issue the command
  */
 {
-  UCHAR Buffer;
+    UCHAR Buffer;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if(Send_Byte(ControllerInfo, COMMAND_VERSION) != STATUS_SUCCESS)
+    if(Send_Byte(ControllerInfo, COMMAND_VERSION) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "HwGetVersion: unable to write fifo\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "HwGetVersion: unable to write fifo\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  if(Get_Byte(ControllerInfo, &Buffer) != STATUS_SUCCESS)
+    if(Get_Byte(ControllerInfo, &Buffer) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "HwGetVersion: unable to write fifo\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "HwGetVersion: unable to write fifo\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  INFO_(FLOPPY, "HwGetVersion returning version 0x%x\n", Buffer);
+    INFO_(FLOPPY, "HwGetVersion returning version 0x%x\n", Buffer);
 
-  return Buffer;
+    return Buffer;
 }
 
-NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
-                             PBOOLEAN DiskChanged)
+NTSTATUS NTAPI
+HwDiskChanged(PDRIVE_INFO DriveInfo, PBOOLEAN DiskChanged)
 /*
  * FUNCTION: Detect whether the hardware has sensed a disk change
  * ARGUMENTS:
@@ -781,45 +795,45 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
  *     - Guessing a bit at the Model30 stuff
  */
 {
-  UCHAR Buffer;
-  PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO) DriveInfo->ControllerInfo;
+    UCHAR Buffer;
+    PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO) DriveInfo->ControllerInfo;
 
-  Buffer = READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER);
+    Buffer = READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER);
 
-  TRACE_(FLOPPY, "HwDiskChanged: read 0x%x from DIR\n", Buffer);
+    TRACE_(FLOPPY, "HwDiskChanged: read 0x%x from DIR\n", Buffer);
 
-  if(ControllerInfo->Model30)
+    if(ControllerInfo->Model30)
     {
-      if(!(Buffer & DIR_DISKETTE_CHANGE))
-	{
-	  INFO_(FLOPPY, "HdDiskChanged - Model30 - returning TRUE\n");
-	  *DiskChanged = TRUE;
-	}
-      else
-	{
-	  INFO_(FLOPPY, "HdDiskChanged - Model30 - returning FALSE\n");
-	  *DiskChanged = FALSE;
-	}
+        if(!(Buffer & DIR_DISKETTE_CHANGE))
+        {
+            INFO_(FLOPPY, "HdDiskChanged - Model30 - returning TRUE\n");
+            *DiskChanged = TRUE;
+        }
+        else
+        {
+            INFO_(FLOPPY, "HdDiskChanged - Model30 - returning FALSE\n");
+            *DiskChanged = FALSE;
+        }
     }
-  else
+    else
     {
-      if(Buffer & DIR_DISKETTE_CHANGE)
-	{
-	  INFO_(FLOPPY, "HdDiskChanged - PS2 - returning TRUE\n");
-	  *DiskChanged = TRUE;
-	}
-      else
-	{
-	  INFO_(FLOPPY, "HdDiskChanged - PS2 - returning FALSE\n");
-	  *DiskChanged = FALSE;
-	}
+        if(Buffer & DIR_DISKETTE_CHANGE)
+        {
+            INFO_(FLOPPY, "HdDiskChanged - PS2 - returning TRUE\n");
+            *DiskChanged = TRUE;
+        }
+        else
+        {
+            INFO_(FLOPPY, "HdDiskChanged - PS2 - returning FALSE\n");
+            *DiskChanged = FALSE;
+        }
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
-                                        PUCHAR Status)
+NTSTATUS NTAPI
+HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo, PUCHAR Status)
 /*
  * FUNCTION: Get the result of a sense drive status command
  * ARGUMENTS:
@@ -832,23 +846,24 @@ NTSTATUS NTAPI HwSenseDriveStatusResult(PCONTROLLER_INFO ControllerInfo,
  *     - Called post-interrupt; does not interrupt
  */
 {
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if(Get_Byte(ControllerInfo, Status) != STATUS_SUCCESS)
+    if(Get_Byte(ControllerInfo, Status) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "HwSenseDriveStatus: unable to read fifo\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "HwSenseDriveStatus: unable to read fifo\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  TRACE_(FLOPPY, "HwSenseDriveStatusResult: ST3: 0x%x\n", *Status);
+    TRACE_(FLOPPY, "HwSenseDriveStatusResult: ST3: 0x%x\n", *Status);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
-                              PUCHAR CurCylinder,
-                              PUCHAR CurHead)
+
+NTSTATUS NTAPI
+HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
+               PUCHAR CurCylinder,
+               PUCHAR CurHead)
 /*
  * FUNCTION: Get the result of a read id command
  * ARGUMENTS:
@@ -866,51 +881,52 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
  *     - perhaps handle more status
  */
 {
-  UCHAR Buffer[7] = {0,0,0,0,0,0,0};
-  int i;
+    UCHAR Buffer[7] = {0,0,0,0,0,0,0};
+    int i;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  for(i = 0; i < 7; i++)
-    if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "ReadIdResult(): can't read from the controller\n");
+    for(i = 0; i < 7; i++)
+        if(Get_Byte(ControllerInfo, &Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "ReadIdResult(): can't read from the controller\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+
+    /* Validate  that it did what we told it to */
+    INFO_(FLOPPY, "ReadId results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
+          Buffer[4], Buffer[5], Buffer[6]);
+
+    /* Last command successful? */
+    if((Buffer[0] & SR0_LAST_COMMAND_STATUS) != SR0_LCS_SUCCESS)
+    {
+        WARN_(FLOPPY, "ReadId didn't return last command success\n");
         return STATUS_UNSUCCESSFUL;
-      }
-
-  /* Validate  that it did what we told it to */
-  INFO_(FLOPPY, "ReadId results: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", Buffer[0], Buffer[1], Buffer[2], Buffer[3],
-	   Buffer[4], Buffer[5], Buffer[6]);
-
-  /* Last command successful? */
-  if((Buffer[0] & SR0_LAST_COMMAND_STATUS) != SR0_LCS_SUCCESS)
-    {
-      WARN_(FLOPPY, "ReadId didn't return last command success\n");
-      return STATUS_UNSUCCESSFUL;
     }
 
-  /* ID mark found? */
-  if(Buffer[1] & SR1_CANNOT_FIND_ID_ADDRESS)
+    /* ID mark found? */
+    if(Buffer[1] & SR1_CANNOT_FIND_ID_ADDRESS)
     {
-      WARN_(FLOPPY, "ReadId didn't find an address mark\n");
-      return STATUS_UNSUCCESSFUL;
+        WARN_(FLOPPY, "ReadId didn't find an address mark\n");
+        return STATUS_UNSUCCESSFUL;
     }
 
-  if(CurCylinder)
-    *CurCylinder = Buffer[3];
+    if(CurCylinder)
+        *CurCylinder = Buffer[3];
 
-  if(CurHead)
-    *CurHead = Buffer[4];
+    if(CurHead)
+        *CurHead = Buffer[4];
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
-                         UCHAR HeadLoadTime,
-                         UCHAR HeadUnloadTime,
-                         UCHAR StepRateTime,
-                         BOOLEAN NonDma)
+
+NTSTATUS NTAPI
+HwSpecify(PCONTROLLER_INFO ControllerInfo,
+          UCHAR HeadLoadTime,
+          UCHAR HeadUnloadTime,
+          UCHAR StepRateTime,
+          BOOLEAN NonDma)
 /*
  * FUNCTION: Set up timing and DMA mode for the controller
  * ARGUMENTS:
@@ -928,32 +944,33 @@ NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
  * TODO: Figure out timings
  */
 {
-  UCHAR Buffer[3];
-  int i;
+    UCHAR Buffer[3];
+    int i;
 
-  Buffer[0] = COMMAND_SPECIFY;
-  /*
-  Buffer[1] = (StepRateTime << 4) + HeadUnloadTime;
-  Buffer[2] = (HeadLoadTime << 1) + (NonDma ? 1 : 0);
-  */
-  Buffer[1] = 0xdf;
-  Buffer[2] = 0x2;
+    Buffer[0] = COMMAND_SPECIFY;
+    /*
+    Buffer[1] = (StepRateTime << 4) + HeadUnloadTime;
+    Buffer[2] = (HeadLoadTime << 1) + (NonDma ? 1 : 0);
+    */
+    Buffer[1] = 0xdf;
+    Buffer[2] = 0x2;
 
-  //INFO_(FLOPPY, "HwSpecify: sending 0x%x 0x%x 0x%x to FIFO\n", Buffer[0], Buffer[1], Buffer[2]);
-  WARN_(FLOPPY, "HWSPECIFY: FIXME - sending 0x3 0xd1 0x2 to FIFO\n");
+    //INFO_(FLOPPY, "HwSpecify: sending 0x%x 0x%x 0x%x to FIFO\n", Buffer[0], Buffer[1], Buffer[2]);
+    WARN_(FLOPPY, "HWSPECIFY: FIXME - sending 0x3 0xd1 0x2 to FIFO\n");
 
-  for(i = 0; i < 3; i++)
-    if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
-      {
-        WARN_(FLOPPY, "HwSpecify: unable to write to controller\n");
-        return STATUS_UNSUCCESSFUL;
-      }
+    for(i = 0; i < 3; i++)
+        if(Send_Byte(ControllerInfo, Buffer[i]) != STATUS_SUCCESS)
+        {
+            WARN_(FLOPPY, "HwSpecify: unable to write to controller\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwReset(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwReset(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Reset the controller
  * ARGUMENTS:
@@ -964,32 +981,33 @@ NTSTATUS NTAPI HwReset(PCONTROLLER_INFO ControllerInfo)
  *     - Generates an interrupt that must be serviced four times (one per drive)
  */
 {
-  TRACE_(FLOPPY, "HwReset called\n");
+    TRACE_(FLOPPY, "HwReset called\n");
 
-  /* Write the reset bit in the DRSR */
-  WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_SW_RESET);
+    /* Write the reset bit in the DRSR */
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_SW_RESET);
 
-  /* Check for the reset bit in the DOR and set it if necessary (see Intel doc) */
-  if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
+    /* Check for the reset bit in the DOR and set it if necessary (see Intel doc) */
+    if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
     {
-      HwDumpRegisters(ControllerInfo);
-      INFO_(FLOPPY, "HwReset: Setting Enable bit\n");
-      WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_DMA_IO_INTERFACE_ENABLE|DOR_RESET);
-      HwDumpRegisters(ControllerInfo);
+        HwDumpRegisters(ControllerInfo);
+        INFO_(FLOPPY, "HwReset: Setting Enable bit\n");
+        WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_DMA_IO_INTERFACE_ENABLE|DOR_RESET);
+        HwDumpRegisters(ControllerInfo);
 
-      if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
-	{
-	  WARN_(FLOPPY, "HwReset: failed to set the DOR enable bit!\n");
-          HwDumpRegisters(ControllerInfo);
-	  return STATUS_UNSUCCESSFUL;
-	}
+        if(!(READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER) & DOR_RESET))
+        {
+            WARN_(FLOPPY, "HwReset: failed to set the DOR enable bit!\n");
+            HwDumpRegisters(ControllerInfo);
+            return STATUS_UNSUCCESSFUL;
+        }
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo)
+
+NTSTATUS NTAPI
+HwPowerOff(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Power down a controller
  * ARGUMENTS:
@@ -1000,27 +1018,28 @@ NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo)
  *     - Wake up with a hardware reset
  */
 {
-  TRACE_(FLOPPY, "HwPowerOff called on controller 0x%p\n", ControllerInfo);
+    TRACE_(FLOPPY, "HwPowerOff called on controller 0x%p\n", ControllerInfo);
 
-  WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_POWER_DOWN);
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_POWER_DOWN);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-VOID NTAPI HwDumpRegisters(PCONTROLLER_INFO ControllerInfo)
+VOID NTAPI
+HwDumpRegisters(PCONTROLLER_INFO ControllerInfo)
 /*
  * FUNCTION: Dump all readable registers from the floppy controller
  * ARGUMENTS:
  *     ControllerInfo: Controller to dump registers from
  */
 {
-  UNREFERENCED_PARAMETER(ControllerInfo);
+    UNREFERENCED_PARAMETER(ControllerInfo);
 
-  INFO_(FLOPPY, "STATUS:\n");
-  INFO_(FLOPPY, "STATUS_REGISTER_A = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_A));
-  INFO_(FLOPPY, "STATUS_REGISTER_B = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_B));
-  INFO_(FLOPPY, "DIGITAL_OUTPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER));
-  INFO_(FLOPPY, "MAIN_STATUS_REGISTER =0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER));
-  INFO_(FLOPPY, "DIGITAL_INPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER));
+    INFO_(FLOPPY, "STATUS:\n");
+    INFO_(FLOPPY, "STATUS_REGISTER_A = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_A));
+    INFO_(FLOPPY, "STATUS_REGISTER_B = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_B));
+    INFO_(FLOPPY, "DIGITAL_OUTPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER));
+    INFO_(FLOPPY, "MAIN_STATUS_REGISTER =0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER));
+    INFO_(FLOPPY, "DIGITAL_INPUT_REGISTER = 0x%x\n", READ_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_INPUT_REGISTER));
 }
 

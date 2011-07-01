@@ -42,7 +42,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Nuevo"
         {
-            MENUITEM "&Ventana"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&Ventana",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Abrir...",                    ID_BROWSE_OPEN
         MENUITEM "&Guardar",                       ID_BROWSE_SAVE
@@ -58,13 +58,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&Barra de herramientas"
         {
-            MENUITEM "Barra &estándar"            ID_BROWSE_BAR_STD
-            MENUITEM "Barra de &direcciones"             ID_BROWSE_BAR_ADDR
+            MENUITEM "Barra &estándar",           ID_BROWSE_BAR_STD
+            MENUITEM "Barra de &direcciones",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&Favoritos"
     {
-        MENUITEM "&Añadir a Favoritos..."         ID_BROWSE_ADDFAV
+        MENUITEM "&Añadir a Favoritos...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "A&yuda"

@@ -944,6 +944,7 @@ CreatePartitionList (SHORT Left,
   List->Bottom = Bottom;
 
   List->Line = 0;
+  List->Offset = 0;
 
   List->TopDisk = (ULONG)-1;
   List->TopPartition = (ULONG)-1;
@@ -1611,7 +1612,7 @@ SelectPartition(PPARTLIST List, ULONG DiskNumber, ULONG PartitionNumber)
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry1;
   PLIST_ENTRY Entry2;
-  ULONG i;
+  UCHAR i;
 
   /* Check for empty disks */
   if (IsListEmpty (&List->DiskListHead))
@@ -1964,7 +1965,7 @@ CreateNewPartition (PPARTLIST List,
     PartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
     PartEntry->PartInfo[0].HiddenSectors = 
-      PartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+      (ULONG)(PartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
     PartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
     PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -1995,7 +1996,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2023,7 +2024,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2080,7 +2081,7 @@ CreateNewPartition (PPARTLIST List,
     NewPartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
     NewPartEntry->PartInfo[0].HiddenSectors = 
-      NewPartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+      (ULONG)(NewPartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
     NewPartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartitionSize - DiskEntry->TrackSize;
     NewPartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -2111,7 +2112,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2139,7 +2140,7 @@ CreateNewPartition (PPARTLIST List,
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
       PrevPartEntry->PartInfo[1].HiddenSectors = 
-        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
+        (ULONG)(PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector);
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {

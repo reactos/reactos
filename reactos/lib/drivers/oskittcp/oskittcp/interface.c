@@ -117,7 +117,9 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 void InitializeSocketFlags(struct socket *so)
 {
     so->so_state |= SS_NBIO;
-    so->so_options |= SO_DONTROUTE;
+    so->so_options |= SO_DONTROUTE | SO_REUSEPORT;
+    so->so_snd.sb_flags |= SB_SEL;
+    so->so_rcv.sb_flags |= SB_SEL;
 }
 
 /* From uipc_syscalls.c */
@@ -129,9 +131,10 @@ int OskitTCPSocket( void *context,
 		    int proto )
 {
     struct socket *so;
+    int error ;
 
     OSKLock();
-    int error = socreate(domain, &so, type, proto);
+    error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
     InitializeSocketFlags(so);
@@ -147,6 +150,7 @@ int OskitTCPRecv( void *connection,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
 		  OSK_UINT Flags ) {
+    struct socket *so = connection;
     struct uio uio = { 0 };
     struct iovec iov = { 0 };
     int error = 0;
@@ -154,9 +158,12 @@ int OskitTCPRecv( void *connection,
     
     if (!connection)
         return OSK_ESHUTDOWN;
+    
+    if (so->so_state & SS_CANTRCVMORE)
+        return OSK_ESHUTDOWN;
 
     OS_DbgPrint(OSK_MID_TRACE,
-                ("so->so_state %x\n", ((struct socket *)connection)->so_state));
+                ("so->so_state %x\n", so->so_state));
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
@@ -289,11 +296,15 @@ int OskitTCPClose( void *socket ) {
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
+    struct socket *so = socket;
     int error;
     struct uio uio;
     struct iovec iov;
 
     if (!socket)
+        return OSK_ESHUTDOWN;
+    
+    if (so->so_state & SS_CANTSENDMORE)
         return OSK_ESHUTDOWN;
 
     iov.iov_len = Len;
@@ -371,8 +382,9 @@ int OskitTCPAccept( void *socket,
 
     inp = so ? (struct inpcb *)so->so_pcb : NULL;
     if( inp && name ) {
-        ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr =
-            inp->inp_faddr.s_addr;
+        ((struct sockaddr_in *)AddrOut)->sin_len = sizeof(struct sockaddr_in);
+        ((struct sockaddr_in *)AddrOut)->sin_family = AF_INET;
+        ((struct sockaddr_in *)AddrOut)->sin_addr = inp->inp_faddr;
         ((struct sockaddr_in *)AddrOut)->sin_port = inp->inp_fport;
     }
 

@@ -16,7 +16,6 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<compilerflag compilerset="msc">/wd4276</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
@@ -94,7 +93,6 @@
 	</directory>
 	<directory name="misc">
 		<file>driver.c</file>
-		<file>err.c</file>
 		<file>file.c</file>
 		<file>math.c</file>
 		<file>rtlstr.c</file>
@@ -184,7 +182,9 @@
 		<file>font.c</file>
 		<file>freetype.c</file>
 		<file>gdibatch.c</file>
+		<file>gdidbg.c</file>
 		<file>gdiobj.c</file>
+		<file>gdipool.c</file>
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
@@ -204,5 +204,9 @@
 		<file>stubs.c</file>
 		<file>umpdstubs.c</file>
 	</directory>
+</module>
+<module name="win32ksys" type="staticlibrary">
+	<include base="ReactOS">include/reactos</include>
+	<file>sys-stubs.S</file>
 </module>
 </group>

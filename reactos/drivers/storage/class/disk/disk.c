@@ -1908,8 +1908,9 @@ Return Value:
 
                 case EXECUTE_OFFLINE_DIAGS:
                     controlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
-
-                default:
+                    break;
+      
+          default:
                     status = STATUS_INVALID_PARAMETER;
                     break;
             }

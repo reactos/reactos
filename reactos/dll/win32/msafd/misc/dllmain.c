@@ -27,7 +27,7 @@ CRITICAL_SECTION SocketListLock;
 LIST_ENTRY SockHelpersListHead = { NULL, NULL };
 ULONG SockAsyncThreadRefCount;
 HANDLE SockAsyncHelperAfdHandle;
-HANDLE SockAsyncCompletionPort;
+HANDLE SockAsyncCompletionPort = NULL;
 BOOLEAN SockAsyncSelectCalled;
 
 
@@ -401,6 +401,7 @@ WSPCloseSocket(IN SOCKET Handle,
     HANDLE SockEvent;
     AFD_DISCONNECT_INFO DisconnectInfo;
     SOCKET_STATE OldState;
+    LONG LingerWait = -1;
 
     /* Create the Wait Event */
     Status = NtCreateEvent(&SockEvent,
@@ -453,7 +454,6 @@ WSPCloseSocket(IN SOCKET Handle,
     /* FIXME: Should we do this on Datagram Sockets too? */
     if ((OldState == SocketConnected) && (Socket->SharedData.LingerData.l_onoff))
     {
-        ULONG LingerWait;
         ULONG SendsInProgress;
         ULONG SleepWait;
 
@@ -477,7 +477,11 @@ WSPCloseSocket(IN SOCKET Handle,
 
             /* Bail out if no more sends are pending */
             if (!SendsInProgress)
+            {
+                LingerWait = -1;
                 break;
+            }
+
             /* 
              * We have to execute a sleep, so it's kind of like
              * a block. If the socket is Nonblock, we cannot
@@ -502,15 +506,14 @@ WSPCloseSocket(IN SOCKET Handle,
             Sleep(SleepWait);
             LingerWait -= SleepWait;
         }
+    }
 
-        /*
-        * We have reached the timeout or sends are over.
-        * Disconnect if the timeout has been reached. 
-        */
+    if (OldState == SocketConnected)
+    {
         if (LingerWait <= 0)
         {
             DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(0);
-            DisconnectInfo.DisconnectType = AFD_DISCONNECT_ABORT;
+            DisconnectInfo.DisconnectType = LingerWait < 0 ? AFD_DISCONNECT_SEND : AFD_DISCONNECT_ABORT;
 
             /* Send IOCTL */
             Status = NtDeviceIoControlFile((HANDLE)Handle,
@@ -562,12 +565,11 @@ WSPCloseSocket(IN SOCKET Handle,
     }
     LeaveCriticalSection(&SocketListLock);
 
-    HeapFree(GlobalHeap, 0, Socket);
-
     /* Close the handle */
     NtClose((HANDLE)Handle);
     NtClose(SockEvent);
 
+    HeapFree(GlobalHeap, 0, Socket);
     return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
 
@@ -907,7 +909,7 @@ WSPSelect(IN int nfds,
     }
 
     PollInfo->HandleCount = j;
-    PollBufferSize = ((PCHAR)&PollInfo->Handles[j+1]) - ((PCHAR)PollInfo);
+    PollBufferSize = FIELD_OFFSET(AFD_POLL_INFO, Handles) + PollInfo->HandleCount * sizeof(AFD_HANDLE);
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)PollInfo->Handles[0].Handle,
@@ -1045,6 +1047,7 @@ WSPAccept(SOCKET Handle,
     ULONG                       CallBack;
     WSAPROTOCOL_INFOW           ProtocolInfo;
     SOCKET                      AcceptSocket;
+    PSOCKET_INFORMATION         AcceptSocketInfo;
     UCHAR                       ReceiveBuffer[0x1A];
     HANDLE                      SockEvent;
 
@@ -1360,6 +1363,17 @@ WSPAccept(SOCKET Handle,
         MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
         return INVALID_SOCKET;
     }
+    
+    AcceptSocketInfo = GetSocketStructure(AcceptSocket);
+    if (!AcceptSocketInfo)
+    {
+        NtClose(SockEvent);
+        WSPCloseSocket( AcceptSocket, lpErrno );
+        MsafdReturnWithErrno( STATUS_INVALID_CONNECTION, lpErrno, 0, NULL );
+        return INVALID_SOCKET;
+    }
+    
+    AcceptSocketInfo->SharedData.State = SocketConnected;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
@@ -1565,6 +1579,7 @@ WSPConnect(SOCKET Handle,
     if (Status != STATUS_SUCCESS)
         goto notify;
 
+    Socket->SharedData.State = SocketConnected;
     Socket->TdiConnectionHandle = (HANDLE)IOSB.Information;
 
     /* Get any pending connect data */
@@ -1743,6 +1758,13 @@ WSPGetSockName(IN SOCKET Handle,
        return SOCKET_ERROR;
     }
 
+    if (!Name || !NameLength)
+    {
+        NtClose(SockEvent);
+        *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
+
     /* Allocate a buffer for the address */
     TdiAddressSize = 
 		sizeof(TRANSPORT_ADDRESS) + Socket->SharedData.SizeOfLocalAddress;
@@ -1835,6 +1857,20 @@ WSPGetPeerName(IN SOCKET s,
        NtClose(SockEvent);
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData.State != SocketConnected)
+    {
+        NtClose(SockEvent);
+        *lpErrno = WSAENOTCONN;
+        return SOCKET_ERROR;
+    }
+
+    if (!Name || !NameLength)
+    {
+        NtClose(SockEvent);
+        *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     /* Allocate a buffer for the address */
@@ -1950,6 +1986,9 @@ WSPIoctl(IN  SOCKET Handle,
 				*lpcbBytesReturned = sizeof(ULONG);
 				return NO_ERROR;
 			}
+        case SIO_GET_EXTENSION_FUNCTION_POINTER:
+            *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
         default:
 			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
 													Handle,
@@ -2420,6 +2459,7 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
     /* Check if the Thread Already Exists */
     if (SockAsyncThreadRefCount)
     {
+        ASSERT(SockAsyncCompletionPort);
         return TRUE;
     }
 
@@ -2430,7 +2470,11 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
                                       IO_COMPLETION_ALL_ACCESS,
                                       NULL,
                                       2); // Allow 2 threads only
-
+        if (!NT_SUCCESS(Status))
+        {
+             AFD_DbgPrint(MID_TRACE,("Failed to create completion port\n"));
+             return FALSE;
+        }
         /* Protect Handle */	
         HandleFlags.ProtectFromClose = TRUE;
         HandleFlags.Inherit = FALSE;

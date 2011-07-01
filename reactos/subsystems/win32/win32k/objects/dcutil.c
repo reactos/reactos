@@ -14,7 +14,7 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
 
     if (!(dc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
     pdcattr = dc->pdcattr;
@@ -37,7 +37,7 @@ IntGdiSetBkMode(HDC hDC, INT Mode)
 
     if (!(dc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
     pdcattr = dc->pdcattr;
@@ -60,7 +60,7 @@ IntGdiSetTextAlign(HDC  hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     pdcattr = dc->pdcattr;
@@ -82,7 +82,7 @@ IntGdiSetTextColor(HDC hDC,
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return CLR_INVALID;
     }
     pdcattr = pdc->pdcattr;
@@ -104,7 +104,7 @@ DCU_SetDcUndeletable(HDC  hDC)
     PDC dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return;
     }
 
@@ -207,7 +207,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
 
     if (NULL == dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -250,14 +250,14 @@ NtGdiGetDCDword(
 
     if (!Result)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pdc->pdcattr;
@@ -306,7 +306,7 @@ NtGdiGetDCDword(
             break;
 
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
             break;
     }
@@ -352,14 +352,14 @@ NtGdiGetAndSetDCDword(
 
     if (!Result)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pdc->pdcattr;
@@ -393,7 +393,7 @@ NtGdiGetAndSetDCDword(
         case GdiGetSetMapperFlagsInternal:
             if (dwIn & ~1)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 Ret = FALSE;
                 break;
             }
@@ -408,7 +408,7 @@ NtGdiGetAndSetDCDword(
         case GdiGetSetArcDirection:
             if (dwIn != AD_COUNTERCLOCKWISE && dwIn != AD_CLOCKWISE)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 Ret = FALSE;
                 break;
             }
@@ -436,7 +436,7 @@ NtGdiGetAndSetDCDword(
             break;
 
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
             break;
     }
@@ -463,4 +463,94 @@ NtGdiGetAndSetDCDword(
 
     DC_UnlockDc(pdc);
     return Ret;
+}
+
+DWORD
+APIENTRY
+NtGdiGetBoundsRect(
+    IN HDC hdc,
+    OUT LPRECT prc,
+    IN DWORD flags)
+{
+    DWORD ret;
+    PDC pdc;
+
+    /* Lock the DC */
+    if (!(pdc = DC_LockDc(hdc))) return 0;
+
+    /* Get the return value */
+    ret = pdc->fs & DC_ACCUM_APP ? DCB_ENABLE : DCB_DISABLE;
+    ret |= RECTL_bIsEmptyRect(&pdc->erclBoundsApp) ? DCB_RESET : DCB_SET;
+
+    /* Copy the rect to the caller */
+    _SEH2_TRY
+    {
+        ProbeForWrite(prc, sizeof(RECT), 1);
+        *prc = pdc->erclBoundsApp;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = 0;
+    }
+    _SEH2_END;
+
+    if (flags & DCB_RESET)
+    {
+        RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
+    }
+
+    DC_UnlockDc(pdc);
+    return ret;
+}
+
+
+DWORD
+APIENTRY
+NtGdiSetBoundsRect(
+    IN HDC hdc,
+    IN LPRECT prc,
+    IN DWORD flags)
+{
+    DWORD ret;
+    PDC pdc;
+    RECTL rcl;
+
+    /* Verify arguments */
+    if ((flags & DCB_ENABLE) && (flags & DCB_DISABLE)) return 0;
+
+    /* Lock the DC */
+    if (!(pdc = DC_LockDc(hdc))) return 0;
+
+    /* Get the return value */
+    ret = pdc->fs & DC_ACCUM_APP ? DCB_ENABLE : DCB_DISABLE;
+    ret |= RECTL_bIsEmptyRect(&pdc->erclBoundsApp) ? DCB_RESET : DCB_SET;
+
+    if (flags & DCB_RESET)
+    {
+        RECTL_vSetEmptyRect(&pdc->erclBoundsApp);
+    }
+
+    if (flags & DCB_ACCUMULATE)
+    {
+        /* Capture the rect */
+        _SEH2_TRY
+        {
+            ProbeForRead(prc, sizeof(RECT), 1);
+            rcl = *prc;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DC_UnlockDc(pdc);
+            _SEH2_YIELD(return 0;)
+        }
+        _SEH2_END;
+
+        RECTL_vMakeWellOrdered(&rcl);
+        RECTL_bUnionRect(&pdc->erclBoundsApp, &pdc->erclBoundsApp, &rcl);
+    }
+
+    if (flags & DCB_ENABLE) pdc->fs |= DC_ACCUM_APP;
+    if (flags & DCB_DISABLE) pdc->fs &= ~DC_ACCUM_APP;
+    DC_UnlockDc(pdc);
+    return ret;
 }

@@ -38,17 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(listbox);
 
-/* Start of hack section -------------------------------- */
-
-#define WM_LBTRACKPOINT     0x0131
-#define WS_EX_DRAGDETECT    0x00000002L
-#define WM_BEGINDRAG        0x022C
-
-UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
-
-/* End of hack section -------------------------------- */
-
 /* Items array granularity */
 #define LB_ARRAY_GRANULARITY 16
 
@@ -2585,6 +2574,18 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     LB_DESCR *descr = (LB_DESCR *)GetWindowLongPtrW( hwnd, 0 );
     LPHEADCOMBO lphc = 0;
     LRESULT ret;
+#ifdef __REACTOS__
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hwnd, FNID_LISTBOX); // Could be FNID_COMBOLBOX by class.
+       }
+    }    
+#endif    
 
     if (!descr)
     {
@@ -2999,6 +3000,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
 
     case WM_DESTROY:
+#ifdef __REACTOS__
+        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+#endif
         return LISTBOX_Destroy( descr );
 
     case WM_ENABLE:

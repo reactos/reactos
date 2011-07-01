@@ -6,6 +6,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>chkstk_asm.s</file>
+				<file>chkstk_ms.s</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
@@ -27,8 +28,6 @@
 	<define name="_MT" />
 	<define name="_CRTBLD" />
 
-	<if property="NEWSPRINTF" value="1">
-	<define name="USE_NEW_SPRINTF" />
 	<directory name="printf">
 		<file>_cprintf.c</file>
 		<file>_snprintf.c</file>
@@ -51,11 +50,9 @@
 		<file>wprintf.c</file>
 		<file>wstreamout.c</file>
 	</directory>
-	</if>
 
 	<directory name="conio">
 		<file>cgets.c</file>
-		<file>cprintf.c</file>
 		<file>cputs.c</file>
 		<file>getch.c</file>
 		<file>getche.c</file>
@@ -156,7 +153,7 @@
 		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
-		<file>pow_asm.c</file>
+		<file>powl.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -314,6 +311,7 @@
 		<file>assert.c</file>
 		<file>environ.c</file>
 		<file>getargs.c</file>
+		<file>i10output.c</file>
 		<file>initterm.c</file>
 		<file>lock.c</file>
 		<file>purecall.c</file>
@@ -353,13 +351,14 @@
 		<file>xcptinfo.c</file>
 	</directory>
 	<directory name="stdio">
+		<file>_flsbuf.c</file>
+		<file>_flswbuf.c</file>
 		<file>access.c</file>
 		<file>file.c</file>
 		<file>find.c</file>
 		<file>find64.c</file>
 		<file>findi64.c</file>
 		<file>fmode.c</file>
-		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
 		<file>stat.c</file>
@@ -550,4 +549,27 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+
+<module name="user32_wsprintf" type="staticlibrary">
+	<library>chkstk</library>
+	<include base="crt">.</include>
+	<include base="crt">include</include>
+	<define name="_USER32_WSPRINTF" />
+
+	<directory name="printf">
+		<file>streamout.c</file>
+		<file>wstreamout.c</file>
+		<file>wsprintfA.c</file>
+		<file>wsprintfW.c</file>
+		<file>wvsprintfA.c</file>
+		<file>wvsprintfW.c</file>
+		<file>wvsnprintfA.c</file>
+		<file>wvsnprintfW.c</file>
+	</directory>
+	<directory name="string">
+		<file>mbstowcs_nt.c</file>
+		<file>wcstombs_nt.c</file>
+	</directory>
+</module>
+
 </group>

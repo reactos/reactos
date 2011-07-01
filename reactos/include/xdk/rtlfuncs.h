@@ -2630,7 +2630,7 @@ RtlExtendedMagicDivide(
   ret64 = UnsignedMultiplyHigh(Pos ? Dividend.QuadPart : -Dividend.QuadPart,
                                MagicDivisor.QuadPart);
   ret64 >>= ShiftCount;
-  ret.QuadPart = Pos ? ret64 : -ret64;
+  ret.QuadPart = Pos ? ret64 : -(LONG64)ret64;
   return ret;
 }
 #endif

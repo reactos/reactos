@@ -17,6 +17,9 @@ Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
 [Section.040a]
 Description = Es una cadena de herramientas GNU con GCC, GDB, GNU make, etc.
 
+[Section.040c]
+Description = Un portage de la chaîne d'outils GNU avec GCC, GDB, GNU make, etc.
+
 [Section.0415]
 Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzędziami (GDB, make, itd.).
 

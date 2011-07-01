@@ -11,11 +11,17 @@ URLSite = http://offbyone.com/
 URLDownload = http://offbyone.com/offbyone/images/OffByOneSetup.exe
 CDPath = none
 
+[Section.0405]
+Description = Off-By-One-Browser je velmi malý a rychlý webový prohlížeč s plnou podporou HTML 3.2.
+
 [Section.0407]
 Description = Der Off-By-One-Browser ist ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
 
 [Section.040a]
 Description = Es un pequeño y rápido navegador web con completo soporte HTML 3.2.
+
+[Section.040c]
+Description = Le navigateur Off By One est un navigateur internet très petit et rapide avec un support complet de HTML 3.2.
 
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.

@@ -20,7 +20,7 @@
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
 
-UNICODE_STRING DllDirectory = {0, 0, NULL};
+UNICODE_STRING BaseDllDirectory = {0, 0, NULL};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -599,12 +599,6 @@ GetFullPathNameA (
    TRACE("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
         "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-   if (!lpFileName)
-   {
-     SetLastError(ERROR_INVALID_PARAMETER);
-     return 0;
-   }
-
    if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
       return 0;
 
@@ -661,6 +655,14 @@ GetFullPathNameW (
 
     TRACE("GetFullPathNameW ret: lpBuffer %S lpFilePart %S Length %ld\n",
            lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
+
+    if (!lpFileName)
+    {
+#if (WINVER >= _WIN32_WINNT_WIN7)
+        SetLastError(ERROR_INVALID_PARAMETER);
+#endif
+        return 0;
+    }
 
     return Length/sizeof(WCHAR);
 }
@@ -1077,35 +1079,35 @@ SetDllDirectoryW(
 
   RtlInitUnicodeString(&PathName, lpPathName);
 
-  RtlEnterCriticalSection(&DllLock);
+  RtlEnterCriticalSection(&BaseDllDirectoryLock);
   if(PathName.Length > 0)
   {
-    if(PathName.Length + sizeof(WCHAR) <= DllDirectory.MaximumLength)
+    if(PathName.Length + sizeof(WCHAR) <= BaseDllDirectory.MaximumLength)
     {
-      RtlCopyUnicodeString(&DllDirectory, &PathName);
+      RtlCopyUnicodeString(&BaseDllDirectory, &PathName);
     }
     else
     {
-      RtlFreeUnicodeString(&DllDirectory);
-      if(!(DllDirectory.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
-                                                        0,
-                                                        PathName.Length + sizeof(WCHAR))))
+      RtlFreeUnicodeString(&BaseDllDirectory);
+      if(!(BaseDllDirectory.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                            0,
+                                                            PathName.Length + sizeof(WCHAR))))
       {
-        RtlLeaveCriticalSection(&DllLock);
+        RtlLeaveCriticalSection(&BaseDllDirectoryLock);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
       }
-      DllDirectory.Length = 0;
-      DllDirectory.MaximumLength = PathName.Length + sizeof(WCHAR);
+      BaseDllDirectory.Length = 0;
+      BaseDllDirectory.MaximumLength = PathName.Length + sizeof(WCHAR);
 
-      RtlCopyUnicodeString(&DllDirectory, &PathName);
+      RtlCopyUnicodeString(&BaseDllDirectory, &PathName);
     }
   }
   else
   {
-    RtlFreeUnicodeString(&DllDirectory);
+    RtlFreeUnicodeString(&BaseDllDirectory);
   }
-  RtlLeaveCriticalSection(&DllLock);
+  RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
   return TRUE;
 }
@@ -1142,10 +1144,10 @@ GetDllDirectoryW(
 {
   DWORD Ret;
 
-  RtlEnterCriticalSection(&DllLock);
+  RtlEnterCriticalSection(&BaseDllDirectoryLock);
   if(nBufferLength > 0)
   {
-    Ret = DllDirectory.Length / sizeof(WCHAR);
+    Ret = BaseDllDirectory.Length / sizeof(WCHAR);
     if(Ret > nBufferLength - 1)
     {
       Ret = nBufferLength - 1;
@@ -1153,16 +1155,16 @@ GetDllDirectoryW(
 
     if(Ret > 0)
     {
-      RtlCopyMemory(lpBuffer, DllDirectory.Buffer, Ret * sizeof(WCHAR));
+      RtlCopyMemory(lpBuffer, BaseDllDirectory.Buffer, Ret * sizeof(WCHAR));
     }
     lpBuffer[Ret] = L'\0';
   }
   else
   {
     /* include termination character, even if the string is empty! */
-    Ret = (DllDirectory.Length / sizeof(WCHAR)) + 1;
+    Ret = (BaseDllDirectory.Length / sizeof(WCHAR)) + 1;
   }
-  RtlLeaveCriticalSection(&DllLock);
+  RtlLeaveCriticalSection(&BaseDllDirectoryLock);
 
   return Ret;
 }

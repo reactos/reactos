@@ -256,6 +256,18 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     UINT btn_type = get_button_type( style );
     LONG state;
     HANDLE oldHbitmap;
+#ifdef __REACTOS__
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hWnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hWnd, FNID_BUTTON);
+       }
+    }    
+#endif    
 
     pt.x = (short)LOWORD(lParam);
     pt.y = (short)HIWORD(lParam);
@@ -299,6 +311,13 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         set_button_state( hWnd, BUTTON_UNCHECKED );
         button_update_uistate( hWnd, unicode );
         return 0;
+
+#ifdef __REACTOS__
+    case WM_DESTROY:
+    case WM_NCDESTROY:
+        NtUserSetWindowFNID(hWnd, FNID_DESTROY);
+        break;
+#endif
 
     case WM_ERASEBKGND:
         if (btn_type == BS_OWNERDRAW)

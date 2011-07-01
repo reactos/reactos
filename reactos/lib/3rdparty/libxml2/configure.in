@@ -1,4 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.59)
 AC_INIT(entities.c)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_MACRO_DIR([m4])
@@ -6,7 +7,7 @@ AC_CANONICAL_HOST
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=7
+LIBXML_MICRO_VERSION=8
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -52,6 +53,7 @@ AM_INIT_AUTOMAKE(libxml2, $VERSION)
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_MKDIR_P
 AC_PROG_CPP
 AC_PATH_PROG(RM, rm, /bin/rm)
 AC_PATH_PROG(MV, mv, /bin/mv)
@@ -82,7 +84,7 @@ else
   esac
 fi
 AC_SUBST(VERSION_SCRIPT_FLAGS)
-AM_CONDITIONAL([USE_VERSION_SCRIPT], [test -n "$VERSION_SCRIPT_FLAGS"])
+AM_CONDITIONAL([USE_VERSION_SCRIPT], [test -z "$VERSION_SCRIPT_FLAGS"])
 
 dnl
 dnl We process the AC_ARG_WITH first so that later we can modify
@@ -126,6 +128,8 @@ AC_ARG_WITH(http,
 [  --with-http             add the HTTP support (on)])
 AC_ARG_WITH(iconv,
 [  --with-iconv[[=DIR]]      add ICONV support (on)])
+AC_ARG_WITH(icu,
+[  --with-icu                add ICU support (off)])
 AC_ARG_WITH(iso8859x,
 [  --with-iso8859x         add ISO8859X support if no iconv (on)])
 AC_ARG_WITH(legacy,
@@ -702,17 +706,23 @@ if test "$with_python" != "no" ; then
         echo Found python in $with_python/bin/python
         PYTHON="$with_python/bin/python"
     else
-	if test -x "$with_python"
-	then
-	    echo Found python in $with_python
-	    PYTHON="$with_python"
-	else
-	    if test -x "$PYTHON"
-	    then
-	        echo Found python in environment PYTHON=$PYTHON
-		with_python=`$PYTHON -c "import sys; print sys.exec_prefix"`
-	    else
-		AC_PATH_PROG(PYTHON, python python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 python1.6 python1.5)
+        if test -x "$with_python/python.exe"
+        then
+            echo Found python in $with_python/python.exe
+            PYTHON="$with_python/python.exe"
+        else
+            if test -x "$with_python"
+            then
+                echo Found python in $with_python
+                PYTHON="$with_python"
+            else
+                if test -x "$PYTHON"
+                then
+                    echo Found python in environment PYTHON=$PYTHON
+                    with_python=`$PYTHON -c "import sys; print sys.exec_prefix"`
+                else
+                    AC_PATH_PROG(PYTHON, python python2.6 python2.5 python2.4 python2.3 python2.2 python2.1 python2.0 python1.6 python1.5)
+		fi
 	    fi
 	fi
     fi
@@ -739,7 +749,14 @@ if test "$with_python" != "no" ; then
 		    PYTHON_INCLUDES=/usr/include/python$PYTHON_VERSION
 	            PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
 		else
-		    echo could not find python$PYTHON_VERSION/Python.h
+	            if test -r $with_python/include/Python.h -a \
+	               -d $with_python/lib/site-packages
+	            then
+	                PYTHON_INCLUDES=$with_python/include
+	                PYTHON_SITE_PACKAGES=$with_python/lib/site-packages
+	            else
+		        echo could not find python$PYTHON_VERSION/Python.h or $with_python/include/Python.h
+		    fi
 		fi
 	    fi
 	    if test ! -d "$PYTHON_SITE_PACKAGES"
@@ -1306,6 +1323,23 @@ XML_LIBS="-lxml2 $Z_LIBS $THREAD_LIBS $ICONV_LIBS $M_LIBS $LIBS"
 XML_LIBTOOLLIBS="libxml2.la"
 AC_SUBST(WITH_ICONV)
 
+WITH_ICU=0
+if test "$with_icu" != "yes" ; then
+    echo Disabling ICU support
+else
+    ICU_CONFIG=icu-config
+    if ${ICU_CONFIG} --cflags >/dev/null 2>&1
+    then
+        ICU_LIBS=`icu-config --ldflags`
+        LDFLAGS="$LDFLAGS $ICU_LIBS"
+        WITH_ICU=1
+        echo Enabling ICU support
+    else
+        AC_MSG_ERROR([libicu config program icu-config not found])
+    fi
+fi
+AC_SUBST(WITH_ICU)
+
 WITH_ISO8859X=1
 if test "$WITH_ICONV" != "1" ; then
 if test "$with_iso8859x" = "no" ; then
@@ -1395,6 +1429,7 @@ WIN32_EXTRA_LIBADD=
 WIN32_EXTRA_LDFLAGS=
 CYGWIN_EXTRA_LDFLAGS=
 CYGWIN_EXTRA_PYTHON_LIBADD=
+WIN32_EXTRA_PYTHON_LIBADD=
 case "$host" in
  *-*-mingw*)
  CPPFLAGS="$CPPFLAGS -DWIN32"
@@ -1403,6 +1438,10 @@ case "$host" in
  AC_DEFINE([_WINSOCKAPI_],1,[Using the Win32 Socket implementation])
  AC_DEFINE([snprintf],[_snprintf],[Win32 Std C name mangling work-around])
  AC_DEFINE([vsnprintf],[_vsnprintf],[Win32 Std C name mangling work-around])
+ if test "${PYTHON}" != ""
+ then
+   WIN32_EXTRA_PYTHON_LIBADD="-L${pythondir}/../../libs -lpython${PYTHON_VERSION//./}"
+ fi
  ;;
  *-*-cygwin*)
  CYGWIN_EXTRA_LDFLAGS="-no-undefined"
@@ -1414,6 +1453,7 @@ case "$host" in
 esac
 AC_SUBST(WIN32_EXTRA_LIBADD)
 AC_SUBST(WIN32_EXTRA_LDFLAGS)
+AC_SUBST(WIN32_EXTRA_PYTHON_LIBADD)
 AC_SUBST(CYGWIN_EXTRA_LDFLAGS)
 AC_SUBST(CYGWIN_EXTRA_PYTHON_LIBADD)
 

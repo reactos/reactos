@@ -2,10 +2,10 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Дата и время"
+CAPTION "Р”Р°С‚Р° Рё РІСЂРµРјСЏ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Дата", -1, 4, 2, 122, 125
+    GROUPBOX "&Р”Р°С‚Р°", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
@@ -14,7 +14,7 @@ BEGIN
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&Время", -1, 132, 2, 113, 125
+    GROUPBOX "&Р’СЂРµРјСЏ", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             144, 105, 90, 12
@@ -26,42 +26,42 @@ END
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Часовой пояс"
+CAPTION "Р§Р°СЃРѕРІРѕР№ РїРѕСЏСЃ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Автомати&ческий переход на летнее время и обратно",
+    AUTOCHECKBOX "РђРІС‚РѕРјР°С‚Рё&С‡РµСЃРєРёР№ РїРµСЂРµС…РѕРґ РЅР° Р»РµС‚РЅРµРµ РІСЂРµРјСЏ Рё РѕР±СЂР°С‚РЅРѕ",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Время через Интернет"
+CAPTION "Р’СЂРµРјСЏ С‡РµСЂРµР· РРЅС‚РµСЂРЅРµС‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "&Выполнять синхронизацию с сервером времени в Интернете", IDC_AUTOSYNC,
+    AUTOCHECKBOX    "&Р’С‹РїРѕР»РЅСЏС‚СЊ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ СЃ СЃРµСЂРІРµСЂРѕРј РІСЂРµРјРµРЅРё РІ РРЅС‚РµСЂРЅРµС‚Рµ", IDC_AUTOSYNC,
                     11 ,7, 246, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT           "Сервер:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON      "&Обновить", IDC_UPDATEBUTTON, 187, 22, 49, 13
+    LTEXT           "РЎРµСЂРІРµСЂ:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON      "&РћР±РЅРѕРІРёС‚СЊ", IDC_UPDATEBUTTON, 187, 22, 49, 13
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Синхронизация может быть выполнена только при наличии подключения к сети Интернет.", -1, 12, 114, 225, 25
+    LTEXT           "РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІС‹РїРѕР»РЅРµРЅР° С‚РѕР»СЊРєРѕ РїСЂРё РЅР°Р»РёС‡РёРё РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє СЃРµС‚Рё РРЅС‚РµСЂРЅРµС‚.", -1, 12, 114, 225, 25
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Дата и время"
-    IDS_CPLDESCRIPTION "Установка даты, времени и часового пояса для этого компьютера"
-    IDS_TIMEZONETEXT "Текущий часовой пояс: %s"
-    IDS_TIMEZONEINVALID "Недействительная"
-    IDS_TIMEZONEUNKNOWN "Неизвестная"
-    IDS_INETTIMESUCSYNC "Время было успешно синхронизировано с %s на %s в %s"
-    IDS_INETTIMENEXTSYNC "Следующая синхронизация через: %s в %s"
-    IDS_INETTIMESYNCING "Подождите, пока РеактОС синхронизирует время с %s"
-    IDS_INETTIMEERROR "Возникла ошибка во время синхронизации с %s"
+    IDS_CPLNAME "Р”Р°С‚Р° Рё РІСЂРµРјСЏ"
+    IDS_CPLDESCRIPTION "РЈСЃС‚Р°РЅРѕРІРєР° РґР°С‚С‹, РІСЂРµРјРµРЅРё Рё С‡Р°СЃРѕРІРѕРіРѕ РїРѕСЏСЃР° РґР»СЏ СЌС‚РѕРіРѕ РєРѕРјРїСЊСЋС‚РµСЂР°"
+    IDS_TIMEZONETEXT "РўРµРєСѓС‰РёР№ С‡Р°СЃРѕРІРѕР№ РїРѕСЏСЃ: %s"
+    IDS_TIMEZONEINVALID "РќРµРґРµР№СЃС‚РІРёС‚РµР»СЊРЅР°СЏ"
+    IDS_TIMEZONEUNKNOWN "РќРµРёР·РІРµСЃС‚РЅР°СЏ"
+    IDS_INETTIMESUCSYNC "Р’СЂРµРјСЏ Р±С‹Р»Рѕ СѓСЃРїРµС€РЅРѕ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ СЃ %s РЅР° %s РІ %s"
+    IDS_INETTIMENEXTSYNC "РЎР»РµРґСѓСЋС‰Р°СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ С‡РµСЂРµР·: %s РІ %s"
+    IDS_INETTIMESYNCING "РџРѕРґРѕР¶РґРёС‚Рµ, РїРѕРєР° Р РµР°РєС‚РћРЎ СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµС‚ РІСЂРµРјСЏ СЃ %s"
+    IDS_INETTIMEERROR "Р’РѕР·РЅРёРєР»Р° РѕС€РёР±РєР° РІРѕ РІСЂРµРјСЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃ %s"
 END

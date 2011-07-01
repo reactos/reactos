@@ -21,16 +21,10 @@ void _ReadBarrier(void);
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
 
-char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand);
-#pragma intrinsic(_InterlockedCompareExchange8)
-short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
-#pragma intrinsic(_InterlockedCompareExchange16)
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
 long _InterlockedExchange(volatile long * const Target, const long Value);
 #pragma intrinsic(_InterlockedExchange)
-short _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
-#pragma intrinsic(_InterlockedExchangeAdd16)
 long _InterlockedExchangeAdd(volatile long * const Addend, const long Value);
 #pragma intrinsic(_InterlockedExchangeAdd)
 char _InterlockedAnd8(volatile char * const value, const char mask);
@@ -51,8 +45,6 @@ short _InterlockedXor16(volatile short * const value, const short mask);
 #pragma intrinsic(_InterlockedXor16)
 long _InterlockedXor(volatile long * const value, const long mask);
 #pragma intrinsic(_InterlockedXor)
-long _InterlockedAddLargeStatistic(volatile __int64 * const Addend, const long Value);
-#pragma intrinsic(_InterlockedAddLargeStatistic)
 long _InterlockedDecrement(volatile long * const lpAddend);
 #pragma intrinsic(_InterlockedDecrement)
 long _InterlockedIncrement(volatile long * const lpAddend);
@@ -66,7 +58,10 @@ unsigned char _interlockedbittestandreset(volatile long * a, const long b);
 unsigned char _interlockedbittestandset(volatile long * a, const long b);
 #pragma intrinsic(_interlockedbittestandset)
 
-#if defined(_M_AMD64)
+#if defined(_M_IX86)
+long _InterlockedAddLargeStatistic(volatile __int64 * const Addend, const long Value);
+#pragma intrinsic(_InterlockedAddLargeStatistic)
+#elif defined(_M_AMD64)
 __int64 _InterlockedExchange64(volatile __int64 * const Target, const __int64 Value);
 #pragma intrinsic(_InterlockedExchange64)
 __int64 _InterlockedExchangeAdd64(volatile __int64 * const Addend, const __int64 Value);
@@ -77,7 +72,7 @@ void * _InterlockedExchangePointer(void * volatile * const Target, void * const 
 #pragma intrinsic(_InterlockedExchangePointer)
 __int64 _InterlockedAnd64(volatile __int64 * const value, const __int64 mask);
 #pragma intrinsic(_InterlockedAnd64)
-long _InterlockedOr64(volatile __int64 * const value, const __int64 mask);
+__int64 _InterlockedOr64(volatile __int64 * const value, const __int64 mask);
 #pragma intrinsic(_InterlockedOr64)
 __int64 _InterlockedCompareExchange64(volatile __int64 * const Destination, const __int64 Exchange, const __int64 Comperand);
 #pragma intrinsic(_InterlockedCompareExchange64)
@@ -139,7 +134,7 @@ void __addgsqword(const unsigned long Offset, const unsigned __int64 Data);
 #pragma intrinsic(__addgsqword)
 #endif
 
-//#if defined(_M_IX86)
+#if defined(_M_IX86)
 /*** FS segment addressing ***/
 void __writefsbyte(const unsigned long Offset, const unsigned char Data);
 #pragma intrinsic(__writefsbyte)
@@ -165,7 +160,7 @@ void __addfsword(const unsigned long Offset, const unsigned short Data);
 #pragma intrinsic(__addfsword)
 void __addfsdword(const unsigned long Offset, const unsigned int Data);
 #pragma intrinsic(__addfsdword)
-//#endif
+#endif
 
 
 /*** Bit manipulation ***/
@@ -289,7 +284,12 @@ void __writedr(unsigned reg, unsigned __int64 value);
 unsigned long __readcr0(void);
 unsigned long __readcr2(void);
 unsigned long __readcr3(void);
-unsigned long __readcr4(void);
+//unsigned long __readcr4(void);
+//#pragma intrinsic(__readcr4)
+// HACK: MSVC is broken
+unsigned long  ___readcr4(void);
+#define __readcr4 ___readcr4
+
 unsigned int __readdr(unsigned int reg);
 void __writedr(unsigned reg, unsigned int value);
 #endif

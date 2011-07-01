@@ -80,7 +80,7 @@ typedef struct _FAT_PAGE_CONTEXT
         CcUnpinData((xContext)->Bcb);                   \
         (xContext)->Bcb = NULL;                         \
     }                                                   \
-    
+
 #define FatPinEndOfPage(xContext, xType) \
     Add2Ptr((xContext)->Buffer, (xContext)->ValidLength, xType)
 

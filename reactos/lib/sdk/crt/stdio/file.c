@@ -88,7 +88,7 @@ int *__p___mb_cur_max(void);
 typedef struct {
     HANDLE              handle;
     unsigned char       wxflag;
-    DWORD               unkn[7]; /* critical section and init flag */       
+    DWORD               unkn[7]; /* critical section and init flag */
 } ioinfo;
 
 ioinfo fdesc[MAX_FILES];
@@ -292,12 +292,12 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
     wxflag_ptr++; handle_ptr++;
-  } 
+  }
   return TRUE;
 }
 
-/* INTERNAL: Set up all file descriptors, 
- * as well as default streams (stdin, stderr and stdout) 
+/* INTERNAL: Set up all file descriptors,
+ * as well as default streams (stdin, stderr and stdout)
  */
 void msvcrt_init_io(void)
 {
@@ -342,7 +342,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
     DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_INPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[0].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[0].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[0].handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -355,7 +355,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
       DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_OUTPUT_HANDLE),
-                    GetCurrentProcess(), &fdesc[1].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[1].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[1].handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -368,7 +368,7 @@ void msvcrt_init_io(void)
   {
 #ifndef __REACTOS__
       DuplicateHandle(GetCurrentProcess(), GetStdHandle(STD_ERROR_HANDLE),
-                    GetCurrentProcess(), &fdesc[2].handle, 0, TRUE, 
+                    GetCurrentProcess(), &fdesc[2].handle, 0, TRUE,
                     DUPLICATE_SAME_ACCESS);
 #else
       fdesc[2].handle = GetStdHandle(STD_ERROR_HANDLE);
@@ -409,7 +409,7 @@ static int flush_buffer(FILE* file)
 }
 
 /* INTERNAL: Allocate stdio file buffer */
-static void alloc_buffer(FILE* file)
+void alloc_buffer(FILE* file)
 {
 	file->_base = calloc(BUFSIZ,1);
 	if(file->_base) {
@@ -722,7 +722,7 @@ int CDECL _dup2(int od, int nd)
 int CDECL _dup(int od)
 {
   int fd, ret;
- 
+
   LOCK_FILES();
   fd = fdstart;
   if (_dup2(od, fd) == 0)
@@ -1393,7 +1393,7 @@ int CDECL _sopen( const char *path, int oflags, int shflags, ... )
     else
       creation = OPEN_EXISTING;
   }
-  
+
   switch( shflags )
   {
     case _SH_DENYRW:
@@ -2030,12 +2030,12 @@ wint_t CDECL fgetwc(FILE* file)
       wcp = (char *)&wc;
       for(i=0; i<sizeof(wc); i++)
       {
-        if (file->_cnt>0) 
+        if (file->_cnt>0)
         {
           file->_cnt--;
           chp = file->_ptr++;
           wcp[i] = *chp;
-        } 
+        }
         else
         {
           j = _filbuf(file);
@@ -2050,7 +2050,7 @@ wint_t CDECL fgetwc(FILE* file)
       }
       return wc;
     }
-    
+
   c = fgetc(file);
   if ((*__p___mb_cur_max() > 1) && isleadbyte(c))
     {
@@ -2175,12 +2175,33 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 /*********************************************************************
  *		fputwc (MSVCRT.@)
  */
-wint_t CDECL fputwc(wint_t wc, FILE* file)
+wint_t CDECL fputwc(wchar_t c, FILE* stream)
 {
-  wchar_t mwc=wc;
-  if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
-    return WEOF;
-  return wc;
+    /* If this is a real file stream (and not some temporary one for
+       sprintf-like functions), check whether it is opened in text mode.
+       In this case, we have to perform an implicit conversion to ANSI. */
+    if (!(stream->_flag & _IOSTRG) && fdesc[stream->_file].wxflag & WX_TEXT)
+    {
+        /* Convert to multibyte in text mode */
+        char mbc[MB_LEN_MAX];
+        int mb_return;
+
+        mb_return = wctomb(mbc, c);
+
+        if(mb_return == -1)
+            return WEOF;
+
+        /* Output all characters */
+        if (fwrite(mbc, mb_return, 1, stream) != 1)
+            return WEOF;
+    }
+    else
+    {
+        if (fwrite(&c, sizeof(c), 1, stream) != 1)
+            return WEOF;
+    }
+
+    return c;
 }
 
 /*********************************************************************
@@ -2287,37 +2308,6 @@ int CDECL fputc(int c, FILE* file)
       return c & 0xff;
   } else {
     return _flsbuf(c, file);
-  }
-}
-
-/*********************************************************************
- *		_flsbuf (MSVCRT.@)
- */
-int CDECL _flsbuf(int c, FILE* file)
-{
-  /* Flush output buffer */
-  if(file->_bufsiz == 0 && !(file->_flag & _IONBF)) {
-	alloc_buffer(file);
-  }
-  if(!(file->_flag & _IOWRT)) {
-	if(file->_flag & _IORW) {
-		file->_flag |= _IOWRT;
-	} else {
-		return EOF;
-	}
-  }
-  if(file->_bufsiz) {
-        int res=flush_buffer(file);
-    return res?res : fputc(c, file);
-  } else {
-    unsigned char cc=c;
-        int len;
-        /* set _cnt to 0 for unbuffered FILEs */
-        file->_cnt = 0;
-        len = _write(file->_file, &cc, 1);
-        if (len == 1) return c & 0xff;
-        file->_flag |= _IOERR;
-        return EOF;
   }
 }
 
@@ -2487,7 +2477,7 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
   /* Discard buffered input */
   file->_cnt = 0;
   file->_ptr = file->_base;
-  
+
   /* Reset direction of i/o */
   if(file->_flag & _IORW) {
         file->_flag &= ~(_IOREAD|_IOWRT);
@@ -2560,7 +2550,7 @@ int CDECL fputs(const char *s, FILE* file)
     if (!(fdesc[file->_file].wxflag & WX_TEXT))
       return fwrite(s,sizeof(*s),len,file) == len ? 0 : EOF;
     for (i=0; i<len; i++)
-      if (fputc(s[i], file) == EOF) 
+      if (fputc(s[i], file) == EOF)
 	return EOF;
     return 0;
 }
@@ -2578,7 +2568,7 @@ int CDECL fputws(const wchar_t *s, FILE* file)
         if ((s[i] == '\n') && (fputc('\r', file) == EOF))
 	  return WEOF;
 	if (fputwc(s[i], file) == WEOF)
-	  return WEOF; 
+	  return WEOF;
       }
     return 0;
 }
@@ -2814,142 +2804,6 @@ FILE* CDECL tmpfile(void)
   return file;
 }
 
-#ifndef USE_NEW_SPRINTF
-/*********************************************************************
- *		vfprintf (MSVCRT.@)
- */
-int CDECL vfprintf(FILE* file, const char *format, va_list valist)
-{
-  char buf[2048], *mem = buf;
-  int written, resize = sizeof(buf), retval;
-  /* There are two conventions for vsnprintf failing:
-   * Return -1 if we truncated, or
-   * Return the number of bytes that would have been written
-   * The code below handles both cases
-   */
-  while ((written = _vsnprintf(mem, resize, format, valist)) == -1 ||
-          written > resize)
-  {
-    resize = (written == -1 ? resize * 2 : written + 1);
-    if (mem != buf)
-      free (mem);
-    if (!(mem = malloc(resize)))
-      return EOF;
-  }
-  retval = fwrite(mem, sizeof(*mem), written, file);
-  if (mem != buf)
-    free (mem);
-  return retval;
-}
-
-/*********************************************************************
- *		vfwprintf (MSVCRT.@)
- * FIXME:
- * Is final char included in written (then resize is too big) or not
- * (then we must test for equality too)?
- */
-int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
-{
-  wchar_t buf[2048], *mem = buf;
-  int written, resize = sizeof(buf) / sizeof(wchar_t), retval;
-  /* See vfprintf comments */
-  while ((written = _vsnwprintf(mem, resize, format, valist)) == -1 ||
-          written > resize)
-  {
-    resize = (written == -1 ? resize * 2 : written + sizeof(wchar_t));
-    if (mem != buf)
-      free (mem);
-    if (!(mem = malloc(resize*sizeof(*mem))))
-      return EOF;
-  }
-
-  /* Check if outputting to a text-file */
-  if (fdesc[file->_file].wxflag & WX_TEXT)
-  {
-      /* Convert each character and stop at the first invalid character. Behavior verified by tests under WinXP SP2 */
-      char chMultiByte[MB_LEN_MAX];
-      int nReturn;
-      wchar_t *p;
-
-      retval = 0;
-
-      for (p = mem; *p; p++)
-      {
-          nReturn = wctomb(chMultiByte, *p);
-
-          if(nReturn == -1)
-              break;
-
-          retval += fwrite(chMultiByte, 1, nReturn, file);
-      }
-  }
-  else
-  {
-    retval = fwrite(mem, sizeof(*mem), written, file);
-  }
-
-  if (mem != buf)
-    free (mem);
-
-  return retval;
-}
-
-/*********************************************************************
- *		vprintf (MSVCRT.@)
- */
-int CDECL vprintf(const char *format, va_list valist)
-{
-  return vfprintf(stdout,format,valist);
-}
-
-/*********************************************************************
- *		vwprintf (MSVCRT.@)
- */
-int CDECL vwprintf(const wchar_t *format, va_list valist)
-{
-  return vfwprintf(stdout,format,valist);
-}
-
-/*********************************************************************
- *		fprintf (MSVCRT.@)
- */
-int CDECL fprintf(FILE* file, const char *format, ...)
-{
-    va_list valist;
-    int res;
-    va_start(valist, format);
-    res = vfprintf(file, format, valist);
-    va_end(valist);
-    return res;
-}
-
-/*********************************************************************
- *		fwprintf (MSVCRT.@)
- */
-int CDECL fwprintf(FILE* file, const wchar_t *format, ...)
-{
-    va_list valist;
-    int res;
-    va_start(valist, format);
-    res = vfwprintf(file, format, valist);
-    va_end(valist);
-    return res;
-}
-
-/*********************************************************************
- *		printf (MSVCRT.@)
- */
-int CDECL printf(const char *format, ...)
-{
-    va_list valist;
-    int res;
-    va_start(valist, format);
-    res = vfprintf(stdout, format, valist);
-    va_end(valist);
-    return res;
-}
-#endif
-
 /*********************************************************************
  *		ungetc (MSVCRT.@)
  */
@@ -2985,21 +2839,6 @@ wint_t CDECL ungetwc(wint_t wc, FILE * file)
 	}
 	return mwc;
 }
-
-#ifndef USE_NEW_SPRINTF
-/*********************************************************************
- *		wprintf (MSVCRT.@)
- */
-int CDECL wprintf(const wchar_t *format, ...)
-{
-    va_list valist;
-    int res;
-    va_start(valist, format);
-    res = vwprintf(format, valist);
-    va_end(valist);
-    return res;
-}
-#endif
 
 /*********************************************************************
  *		_getmaxstdio (MSVCRT.@)

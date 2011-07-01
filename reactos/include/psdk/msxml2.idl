@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2005 Vijay Kiran Kamuju
  * Copyright (C) 2008 Alistair Leslie-Hughes
+ * Copyright (C) 2010 Nikolay Sivov for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +19,7 @@
  */
 
 #include <msxml2did.h>
-#include <olectl.h>
+#include <idispids.h>
 
 import "unknwn.idl";
 import "objidl.idl";
@@ -54,6 +55,7 @@ interface IXMLDOMNotation;
 interface IXMLDOMEntity;
 interface IXMLDOMEntityReference;
 interface IXMLDOMParseError;
+interface IXMLDOMParseErrorCollection;
 interface IXTLRuntime;
 interface IXSLTemplate;
 interface IXSLProcessor;
@@ -105,9 +107,9 @@ interface ISchemaNotation;
 cpp_quote("#define DOMDocument DOMDocument2")
 cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
 
-cpp_quote("#ifndef __WIDL_XMLDOM_H")
-typedef enum tagDOMNodeType 
-{  
+cpp_quote("#if !defined(__WIDL_XMLDOM_H) && !defined(__xmldom_h__)")
+typedef enum tagDOMNodeType
+{
     NODE_INVALID  		= 0,
     NODE_ELEMENT  		= 1,
     NODE_ATTRIBUTE		= 2,
@@ -629,6 +631,27 @@ interface IXMLDOMDocument2 : IXMLDOMDocument
     HRESULT getProperty(
         [in] BSTR p,
         [retval, out] VARIANT *var);
+}
+
+[
+    local,
+    object,
+    dual,
+    uuid(2933bf96-7b36-11d2-b20e-00c04f983e60),
+    oleautomation,
+]
+interface IXMLDOMDocument3 : IXMLDOMDocument2
+{
+    [id(DISPID_XMLDOM_DOCUMENT3_VALIDATENODE)]
+    HRESULT validateNode(
+        [in] IXMLDOMNode *node,
+        [out, retval] IXMLDOMParseError **error);
+
+    [id(DISPID_XMLDOM_DOCUMENT3_IMPORTNODE)]
+    HRESULT importNode(
+        [in] IXMLDOMNode *node,
+        [in] VARIANT_BOOL deep,
+        [out, retval] IXMLDOMNode **clone);
 }
 
 [
@@ -1236,6 +1259,74 @@ interface IXMLHTTPRequest : IDispatch
 };
 
 [
+object,
+dual,
+oleautomation,
+uuid(2e9196bf-13ba-4dd4-91ca-6c571f281495)
+]
+interface IServerXMLHTTPRequest : IXMLHTTPRequest
+{
+    typedef enum _SERVERXMLHTTP_OPTION
+    {
+        SXH_OPTION_URL = -1,
+        SXH_OPTION_URL_CODEPAGE,
+        SXH_OPTION_ESCAPE_PERCENT_IN_URL,
+        SXH_OPTION_IGNORE_SERVER_SSL_CERT_ERROR_FLAGS,
+        SXH_OPTION_SELECT_CLIENT_SSL_CERT
+    } SERVERXMLHTTP_OPTION;
+
+    [id(15)]
+    HRESULT setTimeouts(
+        [in] long resolveTimeout,
+        [in] long connectTimeout,
+        [in] long sendTimeout,
+        [in] long receiveTimeout);
+
+    [id(16)]
+    HRESULT waitForResponse(
+        [in, optional] VARIANT timeoutInSeconds,
+        [out, retval] VARIANT_BOOL * isSuccessful);
+
+    [id(17)]
+    HRESULT getOption(
+        [in] SERVERXMLHTTP_OPTION option,
+        [out, retval] VARIANT * value);
+
+    [id(18)]
+    HRESULT setOption(
+        [in] SERVERXMLHTTP_OPTION option,
+        [in] VARIANT value);
+}
+
+[
+object,
+dual,
+oleautomation,
+uuid(2e01311b-c322-4b0a-bd77-b90cfdc8dce7)
+]
+interface IServerXMLHTTPRequest2 : IServerXMLHTTPRequest
+{
+    typedef enum _SXH_PROXY_SETTING
+    {
+        SXH_PROXY_SET_DEFAULT = 0,
+        SXH_PROXY_SET_PRECONFIG = 0,
+        SXH_PROXY_SET_DIRECT,
+        SXH_PROXY_SET_PROXY
+    } SXH_PROXY_SETTING;
+
+    [id(19)]
+    HRESULT setProxy(
+        [in] SXH_PROXY_SETTING proxySetting,
+        [in, optional] VARIANT varProxyServer,
+        [in, optional] VARIANT varBypassList);
+
+    [id(20)]
+    HRESULT setProxyCredentials(
+        [in] BSTR bstrUserName,
+        [in] BSTR bstrPassword);
+}
+
+[
 local,
 object,
 dual,
@@ -1264,6 +1355,57 @@ interface IXMLDOMParseError : IDispatch
 
     [propget, id(DISPID_DOM_ERROR_FILEPOS)]
     HRESULT filepos([retval, out] LONG * filePos);
+}
+
+[
+local,
+object,
+dual,
+oleautomation,
+uuid (3efaa428-272f-11d2-836f-0000f87a7782)
+]
+interface IXMLDOMParseError2 : IXMLDOMParseError
+{
+    [propget, id(DISPID_DOM_ERROR2_ERRORXPATH)]
+    HRESULT errorXPath([retval, out] BSTR *xpathexpr);
+
+    [propget, id(DISPID_DOM_ERROR2_ALLERRORS)]
+    HRESULT allErrors([retval, out] IXMLDOMParseErrorCollection **allErrors);
+
+    [id(DISPID_DOM_ERROR2_ERRORPARAMETERS)]
+    HRESULT errorParameters(
+        [in] long index,
+        [retval, out] BSTR *param);
+
+    [propget, id(DISPID_DOM_ERROR2_ERRORPARAMETERSCOUNT)]
+    HRESULT errorParametersCount([retval, out] long *count);
+}
+
+[
+local,
+object,
+dual,
+oleautomation,
+uuid (3efaa429-272f-11d2-836f-0000f87a7782)
+]
+interface IXMLDOMParseErrorCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT item(
+        [in] long index,
+        [retval, out] IXMLDOMParseError2 **error);
+
+    [propget, id(DISPID_DOM_ERRORCOLLECTION_LENGTH)]
+    HRESULT length( [retval, out] long *length);
+
+    [propget, id(DISPID_DOM_ERRORCOLLECTION_NEXT)]
+    HRESULT next( [retval, out] IXMLDOMParseError2 **error);
+
+    [id(DISPID_DOM_ERRORCOLLECTION_RESET)]
+    HRESULT reset();
+
+    [propget, hidden, restricted, id(DISPID_NEWENUM)]
+    HRESULT _newEnum( [retval, out] IUnknown **ppunk);
 }
 
 [
@@ -1303,6 +1445,15 @@ coclass DOMDocument40
 }
 
 [
+    uuid(88d96a05-f192-11d4-a65f-0040963251e5)
+]
+coclass DOMDocument60
+{
+    [default] interface IXMLDOMDocument3;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+}
+
+[
     uuid(F6D90F12-9C73-11D3-B32E-00C04F990BB4)
 ]
 coclass FreeThreadedDOMDocument
@@ -1330,13 +1481,94 @@ coclass FreeThreadedDOMDocument30
 }
 
 [
-    uuid(88d969c1-f192-11d4-a65f-0040963251e5),
+    uuid(88d969c1-f192-11d4-a65f-0040963251e5)
 ]
 coclass FreeThreadedDOMDocument40
 {
     [default] interface IXMLDOMDocument2;
     [default, source] dispinterface XMLDOMDocumentEvents;
-};
+}
+
+[
+    uuid(88d96a06-f192-11d4-a65f-0040963251e5),
+]
+coclass FreeThreadedDOMDocument60
+{
+    [default] interface IXMLDOMDocument3;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+}
+
+[
+    uuid(f6d90f16-9c73-11d3-b32e-00c04f990bb4)
+]
+coclass XMLHTTP
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    uuid(f5078f1e-c551-11d3-89b9-0000f81fe221)
+]
+coclass XMLHTTP26
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    uuid(f5078f35-c551-11d3-89b9-0000f81fe221)
+]
+coclass XMLHTTP30
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    uuid(88d969c5-f192-11d4-a65f-0040963251e5)
+]
+coclass XMLHTTP40
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    uuid(88d96a0a-f192-11d4-a65f-0040963251e5)
+]
+coclass XMLHTTP60
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    uuid(afba6b42-5692-48ea-8141-dc517dcf0ef1)
+]
+coclass ServerXMLHTTP
+{
+    [default] interface IServerXMLHTTPRequest;
+}
+
+[
+    uuid(afb40ffd-b609-40a3-9828-f88bbe11e4e3)
+]
+coclass ServerXMLHTTP30
+{
+    [default] interface IServerXMLHTTPRequest;
+}
+
+[
+    uuid(88d969c6-f192-11d4-a65f-0040963251e5)
+]
+coclass ServerXMLHTTP40
+{
+    [default] interface IServerXMLHTTPRequest2;
+}
+
+[
+    uuid(88d96a0b-f192-11d4-a65f-0040963251e5)
+]
+coclass ServerXMLHTTP60
+{
+    [default] interface IServerXMLHTTPRequest2;
+}
 
 [
     uuid(373984c9-b845-449b-91e7-45ac83036ade)
@@ -1368,7 +1600,15 @@ coclass XMLSchemaCache30
 coclass XMLSchemaCache40
 {
     [default] interface IXMLDOMSchemaCollection2;
-};
+}
+
+[
+    uuid(88d96a07-f192-11d4-a65f-0040963251e5)
+]
+coclass XMLSchemaCache60
+{
+    [default] interface IXMLDOMSchemaCollection2;
+}
 
 [
     uuid(2933BF94-7B36-11d2-B20E-00C04F983E60)
@@ -1390,6 +1630,22 @@ coclass XSLTemplate26
     uuid(f5078f36-c551-11d3-89b9-0000f81fe221)
 ]
 coclass XSLTemplate30
+{
+    [default] interface IXSLTemplate;
+}
+
+[
+    uuid(88d969c3-f192-11d4-a65f-0040963251e5)
+]
+coclass XSLTemplate40
+{
+    [default] interface IXSLTemplate;
+}
+
+[
+    uuid(88d96a08-f192-11d4-a65f-0040963251e5)
+]
+coclass XSLTemplate60
 {
     [default] interface IXSLTemplate;
 }
@@ -2144,6 +2400,19 @@ interface IMXAttributes : IDispatch
 };
 
 [
+    local,
+    object,
+    dual,
+    oleautomation,
+    uuid(fa4bb38c-faf9-4cca-9302-d1dd0fe520db)
+]
+interface IMXSchemaDeclHandler : IDispatch
+{
+    [id(DISPID_MX_SCHEMADECLHANDLER_SCHEMAELEMENTDECL)]
+    HRESULT schemaElementDecl( [in] ISchemaElement *oSchemaElement );
+}
+
+[
     object,
     dual,
     oleautomation,
@@ -2212,6 +2481,179 @@ interface IMXWriter :  IDispatch
     [id(DISPID_MX_WRITER_FLUSH)]
     HRESULT flush();
 };
+
+[
+    local,
+    object,
+    dual,
+    oleautomation,
+    uuid(c90352f4-643c-4fbc-bb23-e996eb2d51fd)
+]
+interface IMXNamespacePrefixes : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT item(
+        [in] long index,
+        [out, retval] BSTR *prefix);
+
+    [propget, id(DISPID_MX_NSMGR_LENGTH)]
+    HRESULT length( [out,retval] long *length );
+
+    [propget, restricted, hidden, id(DISPID_NEWENUM)]
+    HRESULT _newEnum( [out, retval] IUnknown **ppUnk );
+}
+
+[
+    local,
+    object,
+    hidden,
+    uuid(c90352f6-643c-4fbc-bb23-e996eb2d51fd)
+]
+interface IMXNamespaceManager : IUnknown
+{
+    HRESULT putAllowOverride([in] VARIANT_BOOL fOverride);
+
+    HRESULT getAllowOverride([out, retval] VARIANT_BOOL *fOverride);
+
+    HRESULT reset();
+
+    HRESULT pushContext();
+
+    HRESULT pushNodeContext(
+        [in] IXMLDOMNode *contextNode,
+        [in] VARIANT_BOOL fDeep);
+
+    HRESULT popContext();
+
+    HRESULT declarePrefix(
+        [in] const WCHAR *prefix,
+        [in] const WCHAR *namespaceURI);
+
+    HRESULT getDeclaredPrefix(
+        [in] long nIndex,
+        [in, out] WCHAR *pwchPrefix,
+        [in, out] int *pcchPrefix);
+
+    HRESULT getPrefix(
+        [in] const WCHAR *pwszNamespaceURI,
+        [in] long nIndex,
+        [in, out] WCHAR *pwchPrefix,
+        [in, out] int *pcchPrefix);
+
+    HRESULT getURI(
+        [in] const WCHAR *pwchPrefix,
+        [in] IXMLDOMNode* pContextNode,
+        [in, out] WCHAR *pwchUri,
+        [in, out] int *pcchUri);
+}
+
+[
+    local,
+    object,
+    dual,
+    oleautomation,
+    uuid(c90352f5-643c-4fbc-bb23-e996eb2d51fd)
+]
+interface IVBMXNamespaceManager : IDispatch
+{
+    [propput, id(DISPID_MX_NSMGR_ALLOWOVERRIDE)]
+    HRESULT allowOverride([in] VARIANT_BOOL fOverride);
+
+    [propget, id(DISPID_MX_NSMGR_ALLOWOVERRIDE)]
+    HRESULT allowOverride([out,retval] VARIANT_BOOL* fOverride);
+
+    [id(DISPID_MX_NSMGR_RESET)]
+    HRESULT reset();
+
+    [id(DISPID_MX_NSMGR_PUSHCONTEXT)]
+    HRESULT pushContext();
+
+    [id(DISPID_MX_NSMGR_PUSHNODECONTEXT)]
+    HRESULT pushNodeContext(
+        [in] IXMLDOMNode* contextNode,
+        [in, defaultvalue(-1)] VARIANT_BOOL fDeep);
+
+    [id(DISPID_MX_NSMGR_POPCONTEXT)]
+    HRESULT popContext();
+
+    [id(DISPID_MX_NSMGR_DECLAREPREFIX)]
+    HRESULT declarePrefix(
+        [in] BSTR prefix,
+        [in] BSTR namespaceURI);
+
+    [id(DISPID_MX_NSMGR_GETDECLAREDPREFIXES)]
+    HRESULT getDeclaredPrefixes([out, retval] IMXNamespacePrefixes** prefixes);
+
+    [id(DISPID_MX_NSMGR_GETPREFIXES)]
+    HRESULT getPrefixes(
+        [in] BSTR namespaceURI,
+        [out, retval] IMXNamespacePrefixes** prefixes);
+
+    [id(DISPID_MX_NSMGR_GETURI)]
+    HRESULT getURI(
+        [in] BSTR prefix,
+        [out, retval] VARIANT* uri);
+
+    [id(DISPID_MX_NSMGR_GETURIFROMNODE)]
+    HRESULT getURIFromNode(
+        [in] BSTR strPrefix,
+        [in] IXMLDOMNode* contextNode,
+        [out, retval] VARIANT* uri);
+}
+
+[
+    local,
+    object,
+    dual,
+    oleautomation,
+    uuid(c90352f7-643c-4fbc-bb23-e996eb2d51fd)
+]
+interface IMXXMLFilter : IDispatch
+{
+    [id(DISPID_MXXML_FILTER_GETFEATURE)]
+    HRESULT getFeature(
+        [in] BSTR strName,
+        [out, retval] VARIANT_BOOL * fValue);
+
+    [id(DISPID_MXXML_FILTER_PUTFEATURE)]
+    HRESULT putFeature(
+        [in] BSTR strName,
+        [in] VARIANT_BOOL fValue);
+
+    [id(DISPID_MXXML_FILTER_GETPROPERTY)]
+    HRESULT getProperty(
+        [in] BSTR strName,
+        [out, retval] VARIANT * varValue);
+
+    [id(DISPID_MXXML_FILTER_PUTPROPERTY)]
+    HRESULT putProperty(
+        [in] BSTR strName,
+        [in] VARIANT varValue);
+
+    [id(DISPID_MXXML_FILTER_ENTITYRESOLVER), propget]
+    HRESULT entityResolver( [out, retval] IUnknown **oResolver );
+
+    [id(DISPID_MXXML_FILTER_ENTITYRESOLVER), propputref]
+    HRESULT entityResolver( [in] IUnknown *oResolver );
+
+    [id(DISPID_MXXML_FILTER_CONTENTHANDLER), propget]
+    HRESULT contentHandler( [out, retval] IUnknown **oHandler );
+
+    [id(DISPID_MXXML_FILTER_CONTENTHANDLER), propputref]
+    HRESULT contentHandler( [in] IUnknown *oHandler );
+
+    [id(DISPID_MXXML_FILTER_DTDHANDLER), propget]
+    HRESULT dtdHandler( [out, retval] IUnknown **oHandler );
+
+    [id(DISPID_MXXML_FILTER_DTDHANDLER), propputref]
+    HRESULT dtdHandler( [in] IUnknown *oHandler );
+
+    [id(DISPID_MXXML_FILTER_ERRORHANDLER), propget]
+    HRESULT errorHandler( [out, retval] IUnknown **oHandler );
+
+    [id(DISPID_MXXML_FILTER_ERRORHANDLER), propputref]
+    HRESULT errorHandler( [in] IUnknown *oHandler );
+}
 
 [
     local,
@@ -2691,7 +3133,96 @@ coclass SAXXMLReader40
 {
     [default] interface IVBSAXXMLReader;
     interface ISAXXMLReader;
-};
+}
+
+[
+    uuid(88d96a0c-f192-11d4-a65f-0040963251e5)
+]
+coclass SAXXMLReader60
+{
+    [default] interface IVBSAXXMLReader;
+    interface ISAXXMLReader;
+}
+
+[
+    uuid(a4c23ec3-6b70-4466-9127-550077239978)
+]
+coclass MXHTMLWriter
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXErrorHandler;
+    interface ISAXDTDHandler;
+    interface ISAXLexicalHandler;
+    interface ISAXDeclHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
+
+[
+    uuid(853d1540-c1a7-4aa9-a226-4d3bd301146d)
+]
+coclass MXHTMLWriter30
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXDeclHandler;
+    interface ISAXDTDHandler;
+    interface ISAXErrorHandler;
+    interface ISAXLexicalHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
+
+[
+    uuid(88d969c9-f192-11d4-a65f-0040963251e5)
+]
+coclass MXHTMLWriter40
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXDeclHandler;
+    interface ISAXDTDHandler;
+    interface ISAXErrorHandler;
+    interface ISAXLexicalHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
+
+[
+    uuid(88d96a10-f192-11d4-a65f-0040963251e5)
+]
+coclass MXHTMLWriter60
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXDeclHandler;
+    interface ISAXDTDHandler;
+    interface ISAXErrorHandler;
+    interface ISAXLexicalHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
 
 [
     uuid(fc220ad8-a72a-4ee8-926e-0b7ad152a020)
@@ -2751,7 +3282,54 @@ coclass MXXMLWriter40
     interface IVBSAXDTDHandler;
     interface IVBSAXErrorHandler;
     interface IVBSAXLexicalHandler;
-};
+}
+
+[
+    uuid(88d96a0f-f192-11d4-a65f-0040963251e5)
+]
+coclass MXXMLWriter60
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXDeclHandler;
+    interface ISAXDTDHandler;
+    interface ISAXErrorHandler;
+    interface ISAXLexicalHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
+
+[
+    uuid(88d969d5-f192-11d4-a65f-0040963251e5)
+]
+coclass MXNamespaceManager
+{
+    [default] interface IVBMXNamespaceManager;
+    interface IMXNamespaceManager;
+}
+
+[
+    uuid(88d969d6-f192-11d4-a65f-0040963251e5)
+]
+coclass MXNamespaceManager40
+{
+    [default] interface IVBMXNamespaceManager;
+    interface IMXNamespaceManager;
+}
+
+[
+    uuid(88d96a11-f192-11d4-a65f-0040963251e5)
+]
+coclass MXNamespaceManager60
+{
+    [default] interface IVBMXNamespaceManager;
+    interface IMXNamespaceManager;
+}
 
 [
     uuid(4dd441ad-526d-4a77-9f1b-9841ed802fb0)
@@ -2761,7 +3339,7 @@ coclass SAXAttributes
     [default] interface IMXAttributes;
     interface IVBSAXAttributes;
     interface ISAXAttributes;
-};
+}
 
 [
     uuid(3e784a01-f3ae-4dc0-9354-9526b9370eba)
@@ -2771,7 +3349,7 @@ coclass SAXAttributes30
     [default] interface IMXAttributes;
     interface IVBSAXAttributes;
     interface ISAXAttributes;
-};
+}
 
 [
     uuid(88d969ca-f192-11d4-a65f-0040963251e5),
@@ -2781,7 +3359,24 @@ coclass SAXAttributes40
     [default] interface IMXAttributes;
     interface IVBSAXAttributes;
     interface ISAXAttributes;
-};
+}
 
+[
+    uuid(88d96a0e-f192-11d4-a65f-0040963251e5)
+]
+coclass SAXAttributes60
+{
+    [default] interface IMXAttributes;
+    interface IVBSAXAttributes;
+    interface ISAXAttributes;
+}
+
+/*
+ * Error Codes
+ */
+cpp_quote("#define E_XML_NOTWF              0xC00CE223")
+cpp_quote("#define E_XML_NODTD              0xC00CE224")
+cpp_quote("#define E_XML_INVALID            0xC00CE225")
+cpp_quote("#define E_XML_BUFFERTOOSMALL     0xC00CE226")
 
 } /* Library MSXML */

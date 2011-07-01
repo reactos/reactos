@@ -1,7 +1,8 @@
 /*
  *  cacls (Simplified Chinese resources)
- *  (����������Դ)
+ *  (简体中文资源)
  *  Copyright 2007 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *  UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,36 +25,36 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "��ʾ�����޸��ļ��ķ��ʿ��Ʊ� \n\n\
+IDS_HELP, "显示或者修改文件的访问控制表\n\n\
 CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
-   filename      ��ʾ ACLs��\n\
-   /T            ���ĵ�ǰĿ¼����������Ŀ¼��\n\
-                 ָ���ļ��� ACL��\n\
-   /E            �༭ ACL �����滻��\n\
-   /C            �ڳ��־ܾ����ʴ���ʱ������\n\
-   /G user:perm  ����ָ���û�����Ȩ�ޡ�\n\
-                 Perm ������: R  ��ȡ \n\
-                              W  д�� \n\
-                              C  ����(д��) \n\
-                              F  ��ȫ���� \n\
-   /R user       ����ָ���û��ķ���Ȩ��(������ /E һ��ʹ��ʱ�Ϸ�)��\n\
-   /P user:perm  �滻ָ���û��ķ���Ȩ�ޡ�\n\
-                 Perm ������: N  �� \n\
-                              R  ��ȡ \n\
-                              W  д�� \n\
-                              C  ����(д��) \n\
-                              F  ��ȫ���� \n\
-   /D user       �ܾ�ָ���û��ķ��ʡ�\n\
-�������п���ʹ��ͨ���ָ������ļ���\n\
-��Ҳ������������ָ������û���\n\n\
-��д: \n\
-   CI - �����̳С�\n\
-        ACE����Ŀ¼�̳С�\n\
-   OI - ����̳С�\n\
-        ACE �����ļ��̳С�\n\
-   IO - ֻ�̳С�\n\
-        ACE �������ڵ�ǰ�ļ�/Ŀ¼��\n"
+   filename      显示 ACLs。\n\
+   /T            更改当前目录及其所有子目录中\n\
+                 指定文件的 ACL。\n\
+   /E            编辑 ACL 而不替换。\n\
+   /C            在出现拒绝访问错误时继续。\n\
+   /G user:perm  赋予指定用户访问权限。\n\
+                 Perm 可以是: R  读取\n\
+                              W  写入\n\
+                              C  更改(写入)\n\
+                              F  完全控制\n\
+   /R user       撤销指定用户的访问权限(仅在与 /E 一起使用时合法)。\n\
+   /P user:perm  替换指定用户的访问权限。\n\
+                 Perm 可以是: N  无\n\
+                              R  读取\n\
+                              W  写入\n\
+                              C  更改(写入)\n\
+                              F  完全控制\n\
+   /D user       拒绝指定用户的访问。\n\
+在命令中可以使用通配符指定多个文件。\n\
+您也可以在命令中指定多个用户。\n\n\
+缩写: \n\
+   CI - 容器继承。\n\
+        ACE会由目录继承。\n\
+   OI - 对象继承。\n\
+        ACE 会由文件继承。\n\
+   IO - 只继承。\n\
+        ACE 不适用于当前文件/目录。\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

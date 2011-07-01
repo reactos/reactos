@@ -1982,16 +1982,14 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
     if (*StringSid == '-')
         StringSid++;
 
-    pisid->SubAuthority[i] = atoiW(StringSid);
-
     while (*StringSid)
     {
+        pisid->SubAuthority[i++] = atoiW(StringSid);
+
         while (*StringSid && *StringSid != '-')
             StringSid++;
         if (*StringSid == '-')
             StringSid++;
-
-        pisid->SubAuthority[++i] = atoiW(StringSid);
     }
 
     if (i != pisid->SubAuthorityCount)
@@ -2002,7 +2000,10 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
 
 lend:
     if (!ret)
+    {
+        LocalFree(pisid);
         SetLastError(ERROR_INVALID_SID);
+    }
 
     TRACE("returning %s\n", ret ? "TRUE" : "FALSE");
     return ret;

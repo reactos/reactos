@@ -22,8 +22,6 @@
 VOID
 PcMachInit(const char *CmdLine)
 {
-    EnableA20();
-    
     /* Setup vtbl */
     MachVtbl.ConsPutChar = PcConsPutChar;
     MachVtbl.ConsKbHit = PcConsKbHit;
@@ -32,7 +30,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
-    MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
     MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
     MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = PcVideoPutChar;
@@ -44,7 +41,7 @@ PcMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = PcPrepareForReactOS;
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
-    MachVtbl.DiskGetBootPath = DiskGetBootPath;
+    MachVtbl.DiskGetBootPath = PcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;

@@ -110,7 +110,7 @@ typedef void (*Sig_t)(int);
 
 void psabort(int sig);
 
-char *hookup(char *host, int port)
+char *hookup(const char *host, int port)
 {
 	register struct hostent *hp = 0;
 	int len;
@@ -837,7 +837,7 @@ null();//		(void) signal(SIGINT, oldintr);
 			oldverbose = verbose;
 			if (!debug)
 				verbose = 0;
-			setascii();
+			setascii(0, NULL);
 			verbose = oldverbose;
 		}
 	} else if (restart_point) {
@@ -852,13 +852,13 @@ null();//			(void) signal(SIGINT, oldintr);
 					verbose = 0;
 				switch (oldtype) {
 					case TYPE_I:
-						setbinary();
+						setbinary(0, NULL);
 						break;
 					case TYPE_E:
 						setebcdic();
 						break;
 					case TYPE_L:
-						settenex();
+						settenex(0, NULL);
 						break;
 				}
 				verbose = oldverbose;
@@ -873,13 +873,13 @@ null();//			(void) signal(SIGINT, oldintr);
 					verbose = 0;
 				switch (oldtype) {
 					case TYPE_I:
-						setbinary();
+						setbinary(0, NULL);
 						break;
 					case TYPE_E:
 						setebcdic();
 						break;
 					case TYPE_L:
-						settenex();
+						settenex(0, NULL);
 						break;
 				}
 				verbose = oldverbose;
@@ -1044,13 +1044,13 @@ null();//		(void) signal(SIGPIPE, oldintp);
 			verbose = 0;
 		switch (oldtype) {
 			case TYPE_I:
-				setbinary();
+				setbinary(0, NULL);
 				break;
 			case TYPE_E:
 				setebcdic();
 				break;
 			case TYPE_L:
-				settenex();
+				settenex(0, NULL);
 				break;
 		}
 		verbose = oldverbose;
@@ -1069,13 +1069,13 @@ null();//	(void) signal(SIGINT,SIG_IGN);
 			verbose = 0;
 		switch (oldtype) {
 			case TYPE_I:
-				setbinary();
+				setbinary(0, NULL);
 				break;
 			case TYPE_E:
 				setebcdic();
 				break;
 			case TYPE_L:
-				settenex();
+				settenex(0, NULL);
 				break;
 		}
 		verbose = oldverbose;
@@ -1463,16 +1463,16 @@ void proxtrans(cmd, local, remote)
 		oldtype = type;
 		switch (tmptype) {
 			case TYPE_A:
-				setascii();
+				setascii(0, NULL);
 				break;
 			case TYPE_I:
-				setbinary();
+				setbinary(0, NULL);
 				break;
 			case TYPE_E:
 				setebcdic();
 				break;
 			case TYPE_L:
-				settenex();
+				settenex(0, NULL);
 				break;
 		}
 	}
@@ -1481,16 +1481,16 @@ void proxtrans(cmd, local, remote)
 			case 0:
 				break;
 			case TYPE_A:
-				setascii();
+				setascii(0, NULL);
 				break;
 			case TYPE_I:
-				setbinary();
+				setbinary(0, NULL);
 				break;
 			case TYPE_E:
 				setebcdic();
 				break;
 			case TYPE_L:
-				settenex();
+				settenex(0, NULL);
 				break;
 		}
 		pswitch(1);
@@ -1505,16 +1505,16 @@ null();//		(void) signal(SIGINT, oldintr);
 			case 0:
 				break;
 			case TYPE_A:
-				setascii();
+				setascii(0, NULL);
 				break;
 			case TYPE_I:
-				setbinary();
+				setbinary(0, NULL);
 				break;
 			case TYPE_E:
 				setebcdic();
 				break;
 			case TYPE_L:
-				settenex();
+				settenex(0, NULL);
 				break;
 		}
 		pswitch(1);
@@ -1534,16 +1534,16 @@ null();//	(void) signal(SIGINT, oldintr);
 		case 0:
 			break;
 		case TYPE_A:
-			setascii();
+			setascii(0, NULL);
 			break;
 		case TYPE_I:
-			setbinary();
+			setbinary(0, NULL);
 			break;
 		case TYPE_E:
 			setebcdic();
 			break;
 		case TYPE_L:
-			settenex();
+			settenex(0, NULL);
 			break;
 	}
 	pswitch(1);
@@ -1565,16 +1565,16 @@ null();//	(void) signal(SIGINT, SIG_IGN);
 				case 0:
 					break;
 				case TYPE_A:
-					setascii();
+					setascii(0, NULL);
 					break;
 				case TYPE_I:
-					setbinary();
+					setbinary(0, NULL);
 					break;
 				case TYPE_E:
 					setebcdic();
 					break;
 				case TYPE_L:
-					settenex();
+					settenex(0, NULL);
 					break;
 			}
 			if (cpend) {
@@ -1636,16 +1636,16 @@ null();//		(void) signal(SIGINT, oldintr);
 				case 0:
 					break;
 				case TYPE_A:
-					setascii();
+					setascii(0, NULL);
 					break;
 				case TYPE_I:
-					setbinary();
+					setbinary(0, NULL);
 					break;
 				case TYPE_E:
 					setebcdic();
 					break;
 				case TYPE_L:
-					settenex();
+					settenex(0, NULL);
 					break;
 			}
 			if (cpend) {
@@ -1720,16 +1720,16 @@ null();//			(void) signal(SIGINT, oldintr);
 		case 0:
 			break;
 		case TYPE_A:
-			setascii();
+			setascii(0, NULL);
 			break;
 		case TYPE_I:
-			setbinary();
+			setbinary(0, NULL);
 			break;
 		case TYPE_E:
 			setebcdic();
 			break;
 		case TYPE_L:
-			settenex();
+			settenex(0, NULL);
 			break;
 	}
 	pswitch(1);
@@ -1738,7 +1738,7 @@ null();//			(void) signal(SIGINT, oldintr);
 null();//	(void) signal(SIGINT, oldintr);
 }
 
-void reset()
+void reset(int argc, const char *argv[])
 {
 //	struct
 	fd_set mask;

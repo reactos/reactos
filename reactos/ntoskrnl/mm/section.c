@@ -690,9 +690,6 @@ l_ReadHeaderFromFile:
 	    DIE(("The image is larger than 4GB\n"));
     }
 
-    /* spare our caller some work in validating the segments */
-    *Flags = EXEFMT_LOAD_ASSUME_SEGMENTS_SORTED | EXEFMT_LOAD_ASSUME_SEGMENTS_NO_OVERLAP;
-
     if(nSectionAlignment >= PAGE_SIZE)
 	*Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
 
@@ -2039,7 +2036,9 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    ULONG FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
+#ifndef NEWCC
    PBCB Bcb = NULL;
+#endif
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -2061,6 +2060,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 
    FileObject = Context.Section->FileObject;
    DirectMapped = FALSE;
+#ifndef NEWCC
    if (FileObject != NULL &&
        !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
@@ -2077,6 +2077,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          DirectMapped = TRUE;
       }
    }
+#endif
 
 
    /*
@@ -4325,14 +4326,11 @@ MmUnmapViewOfSection(PEPROCESS Process,
        * and calculate the image base address */
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-         {
-            if (Segment == &SectionSegments[i])
-            {
-               ImageBaseAddress = (char*)BaseAddress - (ULONG_PTR)SectionSegments[i].VirtualAddress;
-               break;
-            }
-         }
+          if (Segment == &SectionSegments[i])
+          {
+              ImageBaseAddress = (char*)BaseAddress - (ULONG_PTR)SectionSegments[i].VirtualAddress;
+              break;
+          }
       }
       if (i >= NrSegments)
       {
@@ -4341,13 +4339,10 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-         {
-            PVOID SBaseAddress = (PVOID)
-                                 ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
+          PVOID SBaseAddress = (PVOID)
+                               ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
 
-            Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
-         }
+          Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
       }
    }
    else
@@ -4570,6 +4565,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
    PMMSUPPORT AddressSpace;
    ULONG ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
+   BOOLEAN NotAtBase = FALSE;
 
    if ((ULONG_PTR)SectionObject & 1)
    {
@@ -4623,13 +4619,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
       ImageSize = 0;
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-         {
-            ULONG_PTR MaxExtent;
-            MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
-                        SectionSegments[i].Length;
-            ImageSize = max(ImageSize, MaxExtent);
-         }
+          ULONG_PTR MaxExtent;
+          MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
+                      SectionSegments[i].Length;
+          ImageSize = max(ImageSize, MaxExtent);
       }
 
       ImageSectionObject->ImageSize = ImageSize;
@@ -4651,33 +4644,33 @@ MmMapViewOfSection(IN PVOID SectionObject,
             MmUnlockAddressSpace(AddressSpace);
             return(STATUS_UNSUCCESSFUL);
          }
+         /* Remember that we loaded image at a different base address */
+         NotAtBase = TRUE;
       }
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
-         {
-            PVOID SBaseAddress = (PVOID)
-                                 ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);
-            MmLockSectionSegment(&SectionSegments[i]);
-            Status = MmMapViewOfSegment(AddressSpace,
-                                        Section,
-                                        &SectionSegments[i],
-                                        &SBaseAddress,
-                                        SectionSegments[i].Length,
-                                        SectionSegments[i].Protection,
-                                        0,
-                                        0);
-            MmUnlockSectionSegment(&SectionSegments[i]);
-            if (!NT_SUCCESS(Status))
-            {
-               MmUnlockAddressSpace(AddressSpace);
-               return(Status);
-            }
-         }
+          PVOID SBaseAddress = (PVOID)
+                               ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);
+          MmLockSectionSegment(&SectionSegments[i]);
+          Status = MmMapViewOfSegment(AddressSpace,
+                                      Section,
+                                      &SectionSegments[i],
+                                      &SBaseAddress,
+                                      SectionSegments[i].Length,
+                                      SectionSegments[i].Protection,
+                                      0,
+                                      0);
+          MmUnlockSectionSegment(&SectionSegments[i]);
+          if (!NT_SUCCESS(Status))
+          {
+              MmUnlockAddressSpace(AddressSpace);
+              return(Status);
+          }
       }
 
       *BaseAddress = (PVOID)ImageBase;
+      *ViewSize = ImageSize;
    }
    else
    {
@@ -4755,7 +4748,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    MmUnlockAddressSpace(AddressSpace);
 
-   return(STATUS_SUCCESS);
+   if (NotAtBase)
+       Status = STATUS_IMAGE_NOT_AT_BASE;
+   else
+       Status = STATUS_SUCCESS;
+
+   return Status;
 }
 
 /*

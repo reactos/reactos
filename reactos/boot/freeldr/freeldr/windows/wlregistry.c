@@ -711,7 +711,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 {
 	PBOOT_DRIVER_LIST_ENTRY BootDriverEntry;
 	NTSTATUS Status;
-	ULONG PathLength;
+	USHORT PathLength;
 
 	BootDriverEntry = MmHeapAlloc(sizeof(BOOT_DRIVER_LIST_ENTRY));
 
@@ -726,10 +726,10 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	if (ImagePath && (wcslen(ImagePath) > 0))
 	{
 		// Just copy ImagePath to the corresponding field in the structure
-		PathLength = wcslen(ImagePath) * sizeof(WCHAR);
+		PathLength = wcslen(ImagePath) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
 		BootDriverEntry->FilePath.Length = 0;
-		BootDriverEntry->FilePath.MaximumLength = PathLength + sizeof(WCHAR);
+		BootDriverEntry->FilePath.MaximumLength = PathLength;
 		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
@@ -751,7 +751,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 		// we have to construct ImagePath ourselves
 		PathLength = wcslen(ServiceName)*sizeof(WCHAR) + sizeof(L"system32\\drivers\\.sys");
 		BootDriverEntry->FilePath.Length = 0;
-		BootDriverEntry->FilePath.MaximumLength = PathLength+sizeof(WCHAR);
+		BootDriverEntry->FilePath.MaximumLength = PathLength;
 		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
@@ -786,9 +786,9 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	}
 
 	// Add registry path
-	PathLength = (wcslen(RegistryPath)+wcslen(ServiceName))*sizeof(WCHAR);
+	PathLength = (wcslen(RegistryPath) + wcslen(ServiceName))*sizeof(WCHAR) + sizeof(UNICODE_NULL);
 	BootDriverEntry->RegistryPath.Length = 0;
-	BootDriverEntry->RegistryPath.MaximumLength = PathLength;//+sizeof(WCHAR);
+	BootDriverEntry->RegistryPath.MaximumLength = PathLength;
 	BootDriverEntry->RegistryPath.Buffer = MmHeapAlloc(PathLength);
 	if (!BootDriverEntry->RegistryPath.Buffer)
 		return FALSE;

@@ -28,22 +28,16 @@ static WCHAR BSCBHolder[] = { '_','B','S','C','B','_','H','o','l','d','e','r','_
 extern IID IID_IBindStatusCallbackHolder;
 
 typedef struct {
-    const IBindStatusCallbackExVtbl  *lpBindStatusCallbackExVtbl;
-    const IServiceProviderVtbl       *lpServiceProviderVtbl;
-    const IHttpNegotiate2Vtbl        *lpHttpNegotiate2Vtbl;
-    const IAuthenticateVtbl          *lpAuthenticateVtbl;
+    IBindStatusCallbackEx IBindStatusCallbackEx_iface;
+    IServiceProvider      IServiceProvider_iface;
+    IHttpNegotiate2       IHttpNegotiate2_iface;
+    IAuthenticate         IAuthenticate_iface;
 
     LONG ref;
 
     IBindStatusCallback *callback;
     IServiceProvider *serv_prov;
 } BindStatusCallback;
-
-#define STATUSCLB(x)     ((IBindStatusCallback*)  &(x)->lpBindStatusCallbackExVtbl)
-#define STATUSCLBEX(x)   ((IBindStatusCallbackEx*)&(x)->lpBindStatusCallbackExVtbl)
-#define SERVPROV(x)      ((IServiceProvider*)     &(x)->lpServiceProviderVtbl)
-#define HTTPNEG2(x)      ((IHttpNegotiate2*)      &(x)->lpHttpNegotiate2Vtbl)
-#define AUTHENTICATE(x)  ((IAuthenticate*)        &(x)->lpAuthenticateVtbl)
 
 static void *get_callback_iface(BindStatusCallback *This, REFIID riid)
 {
@@ -57,39 +51,42 @@ static void *get_callback_iface(BindStatusCallback *This, REFIID riid)
     return SUCCEEDED(hres) ? ret : NULL;
 }
 
-#define STATUSCLB_THIS(iface) DEFINE_THIS(BindStatusCallback, BindStatusCallbackEx, iface)
+static inline BindStatusCallback *impl_from_IBindStatusCallbackEx(IBindStatusCallbackEx *iface)
+{
+    return CONTAINING_RECORD(iface, BindStatusCallback, IBindStatusCallbackEx_iface);
+}
 
 static HRESULT WINAPI BindStatusCallback_QueryInterface(IBindStatusCallbackEx *iface,
         REFIID riid, void **ppv)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown, %p)\n", This, ppv);
-        *ppv = STATUSCLB(This);
+        *ppv = &This->IBindStatusCallbackEx_iface;
     }else if(IsEqualGUID(&IID_IBindStatusCallback, riid)) {
         TRACE("(%p)->(IID_IBindStatusCallback, %p)\n", This, ppv);
-        *ppv = STATUSCLB(This);
+        *ppv = &This->IBindStatusCallbackEx_iface;
     }else if(IsEqualGUID(&IID_IBindStatusCallbackEx, riid)) {
         TRACE("(%p)->(IID_IBindStatusCallback, %p)\n", This, ppv);
-        *ppv = STATUSCLBEX(This);
+        *ppv = &This->IBindStatusCallbackEx_iface;
     }else if(IsEqualGUID(&IID_IBindStatusCallbackHolder, riid)) {
         TRACE("(%p)->(IID_IBindStatusCallbackHolder, %p)\n", This, ppv);
         *ppv = This;
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider, %p)\n", This, ppv);
-        *ppv = SERVPROV(This);
+        *ppv = &This->IServiceProvider_iface;
     }else if(IsEqualGUID(&IID_IHttpNegotiate, riid)) {
         TRACE("(%p)->(IID_IHttpNegotiate, %p)\n", This, ppv);
-        *ppv = HTTPNEG2(This);
+        *ppv = &This->IHttpNegotiate2_iface;
     }else if(IsEqualGUID(&IID_IHttpNegotiate2, riid)) {
         TRACE("(%p)->(IID_IHttpNegotiate2, %p)\n", This, ppv);
-        *ppv = HTTPNEG2(This);
+        *ppv = &This->IHttpNegotiate2_iface;
     }else if(IsEqualGUID(&IID_IAuthenticate, riid)) {
         TRACE("(%p)->(IID_IAuthenticate, %p)\n", This, ppv);
-        *ppv = AUTHENTICATE(This);
+        *ppv = &This->IAuthenticate_iface;
     }
 
     if(*ppv) {
@@ -103,7 +100,7 @@ static HRESULT WINAPI BindStatusCallback_QueryInterface(IBindStatusCallbackEx *i
 
 static ULONG WINAPI BindStatusCallback_AddRef(IBindStatusCallbackEx *iface)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref = %d\n", This, ref);
@@ -113,7 +110,7 @@ static ULONG WINAPI BindStatusCallback_AddRef(IBindStatusCallbackEx *iface)
 
 static ULONG WINAPI BindStatusCallback_Release(IBindStatusCallbackEx *iface)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref = %d\n", This, ref);
@@ -131,7 +128,7 @@ static ULONG WINAPI BindStatusCallback_Release(IBindStatusCallbackEx *iface)
 static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallbackEx *iface,
         DWORD dwReserved, IBinding *pbind)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%d %p)\n", This, dwReserved, pbind);
 
@@ -140,7 +137,7 @@ static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallbackEx *i
 
 static HRESULT WINAPI BindStatusCallback_GetPriority(IBindStatusCallbackEx *iface, LONG *pnPriority)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%p)\n", This, pnPriority);
 
@@ -149,7 +146,7 @@ static HRESULT WINAPI BindStatusCallback_GetPriority(IBindStatusCallbackEx *ifac
 
 static HRESULT WINAPI BindStatusCallback_OnLowResource(IBindStatusCallbackEx *iface, DWORD reserved)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%d)\n", This, reserved);
 
@@ -159,7 +156,7 @@ static HRESULT WINAPI BindStatusCallback_OnLowResource(IBindStatusCallbackEx *if
 static HRESULT WINAPI BindStatusCallback_OnProgress(IBindStatusCallbackEx *iface, ULONG ulProgress,
         ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("%p)->(%u %u %u %s)\n", This, ulProgress, ulProgressMax, ulStatusCode,
             debugstr_w(szStatusText));
@@ -171,7 +168,7 @@ static HRESULT WINAPI BindStatusCallback_OnProgress(IBindStatusCallbackEx *iface
 static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallbackEx *iface,
         HRESULT hresult, LPCWSTR szError)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%08x %s)\n", This, hresult, debugstr_w(szError));
 
@@ -181,7 +178,7 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallbackEx *if
 static HRESULT WINAPI BindStatusCallback_GetBindInfo(IBindStatusCallbackEx *iface,
         DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     IBindStatusCallbackEx *bscex;
     HRESULT hres;
 
@@ -203,7 +200,7 @@ static HRESULT WINAPI BindStatusCallback_GetBindInfo(IBindStatusCallbackEx *ifac
 static HRESULT WINAPI BindStatusCallback_OnDataAvailable(IBindStatusCallbackEx *iface,
         DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%08x %d %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
 
@@ -213,7 +210,7 @@ static HRESULT WINAPI BindStatusCallback_OnDataAvailable(IBindStatusCallbackEx *
 static HRESULT WINAPI BindStatusCallback_OnObjectAvailable(IBindStatusCallbackEx *iface,
         REFIID riid, IUnknown *punk)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), punk);
 
@@ -223,7 +220,7 @@ static HRESULT WINAPI BindStatusCallback_OnObjectAvailable(IBindStatusCallbackEx
 static HRESULT WINAPI BindStatusCallback_GetBindInfoEx(IBindStatusCallbackEx *iface, DWORD *grfBINDF,
         BINDINFO *pbindinfo, DWORD *grfBINDF2, DWORD *pdwReserved)
 {
-    BindStatusCallback *This = STATUSCLB_THIS(iface);
+    BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     IBindStatusCallbackEx *bscex;
     HRESULT hres;
 
@@ -240,8 +237,6 @@ static HRESULT WINAPI BindStatusCallback_GetBindInfoEx(IBindStatusCallbackEx *if
     return hres;
 }
 
-#undef STATUSCLB_THIS
-
 static const IBindStatusCallbackExVtbl BindStatusCallbackExVtbl = {
     BindStatusCallback_QueryInterface,
     BindStatusCallback_AddRef,
@@ -257,46 +252,49 @@ static const IBindStatusCallbackExVtbl BindStatusCallbackExVtbl = {
     BindStatusCallback_GetBindInfoEx
 };
 
-#define SERVPROV_THIS(iface) DEFINE_THIS(BindStatusCallback, ServiceProvider, iface)
+static inline BindStatusCallback *impl_from_IServiceProvider(IServiceProvider *iface)
+{
+    return CONTAINING_RECORD(iface, BindStatusCallback, IServiceProvider_iface);
+}
 
 static HRESULT WINAPI BSCServiceProvider_QueryInterface(IServiceProvider *iface,
         REFIID riid, void **ppv)
 {
-    BindStatusCallback *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+    BindStatusCallback *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
 }
 
 static ULONG WINAPI BSCServiceProvider_AddRef(IServiceProvider *iface)
 {
-    BindStatusCallback *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_AddRef(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_AddRef(&This->IBindStatusCallbackEx_iface);
 }
 
 static ULONG WINAPI BSCServiceProvider_Release(IServiceProvider *iface)
 {
-    BindStatusCallback *This = SERVPROV_THIS(iface);
-    return IBindStatusCallback_Release(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IServiceProvider(iface);
+    return IBindStatusCallback_Release(&This->IBindStatusCallbackEx_iface);
 }
 
 static HRESULT WINAPI BSCServiceProvider_QueryService(IServiceProvider *iface,
         REFGUID guidService, REFIID riid, void **ppv)
 {
-    BindStatusCallback *This = SERVPROV_THIS(iface);
+    BindStatusCallback *This = impl_from_IServiceProvider(iface);
     HRESULT hres;
 
     if(IsEqualGUID(&IID_IHttpNegotiate, guidService)) {
         TRACE("(%p)->(IID_IHttpNegotiate %s %p)\n", This, debugstr_guid(riid), ppv);
-        return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+        return IBindStatusCallback_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
     }
 
     if(IsEqualGUID(&IID_IHttpNegotiate2, guidService)) {
         TRACE("(%p)->(IID_IHttpNegotiate2 %s %p)\n", This, debugstr_guid(riid), ppv);
-        return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+        return IBindStatusCallback_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
     }
 
     if(IsEqualGUID(&IID_IAuthenticate, guidService)) {
         TRACE("(%p)->(IID_IAuthenticate %s %p)\n", This, debugstr_guid(riid), ppv);
-        return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+        return IBindStatusCallback_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
     }
 
     TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
@@ -314,8 +312,6 @@ static HRESULT WINAPI BSCServiceProvider_QueryService(IServiceProvider *iface,
     return E_NOINTERFACE;
 }
 
-#undef SERVPROV_THIS
-
 static const IServiceProviderVtbl BSCServiceProviderVtbl = {
     BSCServiceProvider_QueryInterface,
     BSCServiceProvider_AddRef,
@@ -323,31 +319,34 @@ static const IServiceProviderVtbl BSCServiceProviderVtbl = {
     BSCServiceProvider_QueryService
 };
 
-#define HTTPNEG2_THIS(iface) DEFINE_THIS(BindStatusCallback, HttpNegotiate2, iface)
+static inline BindStatusCallback *impl_from_IHttpNegotiate2(IHttpNegotiate2 *iface)
+{
+    return CONTAINING_RECORD(iface, BindStatusCallback, IHttpNegotiate2_iface);
+}
 
 static HRESULT WINAPI BSCHttpNegotiate_QueryInterface(IHttpNegotiate2 *iface,
         REFIID riid, void **ppv)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
-    return IBindStatusCallback_QueryInterface(STATUSCLB(This), riid, ppv);
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
+    return IBindStatusCallback_QueryInterface(&This->IBindStatusCallbackEx_iface, riid, ppv);
 }
 
 static ULONG WINAPI BSCHttpNegotiate_AddRef(IHttpNegotiate2 *iface)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
-    return IBindStatusCallback_AddRef(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
+    return IBindStatusCallback_AddRef(&This->IBindStatusCallbackEx_iface);
 }
 
 static ULONG WINAPI BSCHttpNegotiate_Release(IHttpNegotiate2 *iface)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
-    return IBindStatusCallback_Release(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
+    return IBindStatusCallback_Release(&This->IBindStatusCallbackEx_iface);
 }
 
 static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate2 *iface,
         LPCWSTR szURL, LPCWSTR szHeaders, DWORD dwReserved, LPWSTR *pszAdditionalHeaders)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
     IHttpNegotiate *http_negotiate;
     HRESULT hres = S_OK;
 
@@ -370,7 +369,7 @@ static HRESULT WINAPI BSCHttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD 
         LPCWSTR szResponseHeaders, LPCWSTR szRequestHeaders,
         LPWSTR *pszAdditionalRequestHeaders)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
     LPWSTR additional_headers = NULL;
     IHttpNegotiate *http_negotiate;
     HRESULT hres = S_OK;
@@ -396,7 +395,7 @@ static HRESULT WINAPI BSCHttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD 
 static HRESULT WINAPI BSCHttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
         BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
-    BindStatusCallback *This = HTTPNEG2_THIS(iface);
+    BindStatusCallback *This = impl_from_IHttpNegotiate2(iface);
     IHttpNegotiate2 *http_negotiate2;
     HRESULT hres = E_FAIL;
 
@@ -412,8 +411,6 @@ static HRESULT WINAPI BSCHttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
     return hres;
 }
 
-#undef HTTPNEG2_THIS
-
 static const IHttpNegotiate2Vtbl BSCHttpNegotiateVtbl = {
     BSCHttpNegotiate_QueryInterface,
     BSCHttpNegotiate_AddRef,
@@ -423,35 +420,36 @@ static const IHttpNegotiate2Vtbl BSCHttpNegotiateVtbl = {
     BSCHttpNegotiate_GetRootSecurityId
 };
 
-#define AUTHENTICATE_THIS(iface)  DEFINE_THIS(BindStatusCallback, Authenticate, iface)
+static inline BindStatusCallback *impl_from_IAuthenticate(IAuthenticate *iface)
+{
+    return CONTAINING_RECORD(iface, BindStatusCallback, IAuthenticate_iface);
+}
 
 static HRESULT WINAPI BSCAuthenticate_QueryInterface(IAuthenticate *iface, REFIID riid, void **ppv)
 {
-    BindStatusCallback *This = AUTHENTICATE_THIS(iface);
-    return IBindStatusCallback_QueryInterface(AUTHENTICATE(This), riid, ppv);
+    BindStatusCallback *This = impl_from_IAuthenticate(iface);
+    return IBindStatusCallback_QueryInterface(&This->IAuthenticate_iface, riid, ppv);
 }
 
 static ULONG WINAPI BSCAuthenticate_AddRef(IAuthenticate *iface)
 {
-    BindStatusCallback *This = AUTHENTICATE_THIS(iface);
-    return IBindStatusCallback_AddRef(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IAuthenticate(iface);
+    return IBindStatusCallback_AddRef(&This->IBindStatusCallbackEx_iface);
 }
 
 static ULONG WINAPI BSCAuthenticate_Release(IAuthenticate *iface)
 {
-    BindStatusCallback *This = AUTHENTICATE_THIS(iface);
-    return IBindStatusCallback_Release(STATUSCLB(This));
+    BindStatusCallback *This = impl_from_IAuthenticate(iface);
+    return IBindStatusCallback_Release(&This->IBindStatusCallbackEx_iface);
 }
 
 static HRESULT WINAPI BSCAuthenticate_Authenticate(IAuthenticate *iface,
         HWND *phwnd, LPWSTR *pszUsername, LPWSTR *pszPassword)
 {
-    BindStatusCallback *This = AUTHENTICATE_THIS(iface);
+    BindStatusCallback *This = impl_from_IAuthenticate(iface);
     FIXME("(%p)->(%p %p %p)\n", This, phwnd, pszUsername, pszPassword);
     return E_NOTIMPL;
 }
-
-#undef AUTHENTICATE_THIS
 
 static const IAuthenticateVtbl BSCAuthenticateVtbl = {
     BSCAuthenticate_QueryInterface,
@@ -460,23 +458,41 @@ static const IAuthenticateVtbl BSCAuthenticateVtbl = {
     BSCAuthenticate_Authenticate
 };
 
-static IBindStatusCallback *create_bsc(IBindStatusCallback *bsc)
+static void set_callback(BindStatusCallback *This, IBindStatusCallback *bsc)
 {
-    BindStatusCallback *ret = heap_alloc_zero(sizeof(BindStatusCallback));
+    IServiceProvider *serv_prov;
+    HRESULT hres;
 
-    ret->lpBindStatusCallbackExVtbl = &BindStatusCallbackExVtbl;
-    ret->lpServiceProviderVtbl    = &BSCServiceProviderVtbl;
-    ret->lpHttpNegotiate2Vtbl     = &BSCHttpNegotiateVtbl;
-    ret->lpAuthenticateVtbl       = &BSCAuthenticateVtbl;
-
-    ret->ref = 1;
+    if(This->callback)
+        IBindStatusCallback_Release(This->callback);
+    if(This->serv_prov)
+        IServiceProvider_Release(This->serv_prov);
 
     IBindStatusCallback_AddRef(bsc);
-    ret->callback = bsc;
+    This->callback = bsc;
 
-    IBindStatusCallback_QueryInterface(bsc, &IID_IServiceProvider, (void**)&ret->serv_prov);
+    hres = IBindStatusCallback_QueryInterface(bsc, &IID_IServiceProvider, (void**)&serv_prov);
+    This->serv_prov = hres == S_OK ? serv_prov : NULL;
+}
 
-    return STATUSCLB(ret);
+HRESULT wrap_callback(IBindStatusCallback *bsc, IBindStatusCallback **ret_iface)
+{
+    BindStatusCallback *ret;
+
+    ret = heap_alloc_zero(sizeof(BindStatusCallback));
+    if(!ret)
+        return E_OUTOFMEMORY;
+
+    ret->IBindStatusCallbackEx_iface.lpVtbl = &BindStatusCallbackExVtbl;
+    ret->IServiceProvider_iface.lpVtbl = &BSCServiceProviderVtbl;
+    ret->IHttpNegotiate2_iface.lpVtbl = &BSCHttpNegotiateVtbl;
+    ret->IAuthenticate_iface.lpVtbl = &BSCAuthenticateVtbl;
+
+    ret->ref = 1;
+    set_callback(ret, bsc);
+
+    *ret_iface = (IBindStatusCallback*)&ret->IBindStatusCallbackEx_iface;
+    return S_OK;
 }
 
 /***********************************************************************
@@ -511,25 +527,33 @@ HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pb
     hres = IBindCtx_GetObjectParam(pbc, BSCBHolder, &unk);
     if(SUCCEEDED(hres)) {
         hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&bsc);
+        IUnknown_Release(unk);
         if(SUCCEEDED(hres)) {
             hres = IBindStatusCallback_QueryInterface(bsc, &IID_IBindStatusCallbackHolder, (void**)&holder);
             if(SUCCEEDED(hres)) {
-                prev = holder->callback;
-                IBindStatusCallback_AddRef(prev);
+                if(ppbscPrevious) {
+                    IBindStatusCallback_AddRef(holder->callback);
+                    *ppbscPrevious = holder->callback;
+                }
+
+                set_callback(holder, pbsc);
+
                 IBindStatusCallback_Release(bsc);
-                IBindStatusCallback_Release(STATUSCLB(holder));
+                IBindStatusCallback_Release(&holder->IBindStatusCallbackEx_iface);
+                return S_OK;
             }else {
                 prev = bsc;
             }
         }
 
-        IUnknown_Release(unk);
         IBindCtx_RevokeObjectParam(pbc, BSCBHolder);
     }
 
-    bsc = create_bsc(pbsc);
-    hres = IBindCtx_RegisterObjectParam(pbc, BSCBHolder, (IUnknown*)bsc);
-    IBindStatusCallback_Release(bsc);
+    hres = wrap_callback(pbsc, &bsc);
+    if(SUCCEEDED(hres)) {
+        hres = IBindCtx_RegisterObjectParam(pbc, BSCBHolder, (IUnknown*)bsc);
+        IBindStatusCallback_Release(bsc);
+    }
     if(FAILED(hres)) {
         if(prev)
             IBindStatusCallback_Release(prev);
@@ -579,7 +603,7 @@ HRESULT WINAPI RevokeBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pbsc
     if(SUCCEEDED(hres)) {
         if(pbsc == holder->callback)
             dorevoke = TRUE;
-        IBindStatusCallback_Release(STATUSCLB(holder));
+        IBindStatusCallback_Release(&holder->IBindStatusCallbackEx_iface);
     }else if(pbsc == callback) {
         dorevoke = TRUE;
     }
@@ -592,32 +616,33 @@ HRESULT WINAPI RevokeBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pbsc
 }
 
 typedef struct {
-    const IBindCtxVtbl *lpBindCtxVtbl;
+    IBindCtx IBindCtx_iface;
 
     LONG ref;
 
     IBindCtx *bindctx;
 } AsyncBindCtx;
 
-#define BINDCTX(x)  ((IBindCtx*)  &(x)->lpBindCtxVtbl)
-
-#define BINDCTX_THIS(iface) DEFINE_THIS(AsyncBindCtx, BindCtx, iface)
+static inline AsyncBindCtx *impl_from_IBindCtx(IBindCtx *iface)
+{
+    return CONTAINING_RECORD(iface, AsyncBindCtx, IBindCtx_iface);
+}
 
 static HRESULT WINAPI AsyncBindCtx_QueryInterface(IBindCtx *iface, REFIID riid, void **ppv)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(riid, &IID_IUnknown)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = BINDCTX(This);
+        *ppv = &This->IBindCtx_iface;
     }else if(IsEqualGUID(riid, &IID_IBindCtx)) {
         TRACE("(%p)->(IID_IBindCtx %p)\n", This, ppv);
-        *ppv = BINDCTX(This);
+        *ppv = &This->IBindCtx_iface;
     }else if(IsEqualGUID(riid, &IID_IAsyncBindCtx)) {
         TRACE("(%p)->(IID_IAsyncBindCtx %p)\n", This, ppv);
-        *ppv = BINDCTX(This);
+        *ppv = &This->IBindCtx_iface;
     }
 
     if(*ppv) {
@@ -631,7 +656,7 @@ static HRESULT WINAPI AsyncBindCtx_QueryInterface(IBindCtx *iface, REFIID riid, 
 
 static ULONG WINAPI AsyncBindCtx_AddRef(IBindCtx *iface)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -641,7 +666,7 @@ static ULONG WINAPI AsyncBindCtx_AddRef(IBindCtx *iface)
 
 static ULONG WINAPI AsyncBindCtx_Release(IBindCtx *iface)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -656,7 +681,7 @@ static ULONG WINAPI AsyncBindCtx_Release(IBindCtx *iface)
 
 static HRESULT WINAPI AsyncBindCtx_RegisterObjectBound(IBindCtx *iface, IUnknown *punk)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%p)\n", This, punk);
 
@@ -665,7 +690,7 @@ static HRESULT WINAPI AsyncBindCtx_RegisterObjectBound(IBindCtx *iface, IUnknown
 
 static HRESULT WINAPI AsyncBindCtx_RevokeObjectBound(IBindCtx *iface, IUnknown *punk)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p %p)\n", This, punk);
 
@@ -674,7 +699,7 @@ static HRESULT WINAPI AsyncBindCtx_RevokeObjectBound(IBindCtx *iface, IUnknown *
 
 static HRESULT WINAPI AsyncBindCtx_ReleaseBoundObjects(IBindCtx *iface)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)\n", This);
 
@@ -683,7 +708,7 @@ static HRESULT WINAPI AsyncBindCtx_ReleaseBoundObjects(IBindCtx *iface)
 
 static HRESULT WINAPI AsyncBindCtx_SetBindOptions(IBindCtx *iface, BIND_OPTS *pbindopts)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%p)\n", This, pbindopts);
 
@@ -692,7 +717,7 @@ static HRESULT WINAPI AsyncBindCtx_SetBindOptions(IBindCtx *iface, BIND_OPTS *pb
 
 static HRESULT WINAPI AsyncBindCtx_GetBindOptions(IBindCtx *iface, BIND_OPTS *pbindopts)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%p)\n", This, pbindopts);
 
@@ -701,7 +726,7 @@ static HRESULT WINAPI AsyncBindCtx_GetBindOptions(IBindCtx *iface, BIND_OPTS *pb
 
 static HRESULT WINAPI AsyncBindCtx_GetRunningObjectTable(IBindCtx *iface, IRunningObjectTable **pprot)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%p)\n", This, pprot);
 
@@ -710,7 +735,7 @@ static HRESULT WINAPI AsyncBindCtx_GetRunningObjectTable(IBindCtx *iface, IRunni
 
 static HRESULT WINAPI AsyncBindCtx_RegisterObjectParam(IBindCtx *iface, LPOLESTR pszkey, IUnknown *punk)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(pszkey), punk);
 
@@ -719,7 +744,7 @@ static HRESULT WINAPI AsyncBindCtx_RegisterObjectParam(IBindCtx *iface, LPOLESTR
 
 static HRESULT WINAPI AsyncBindCtx_GetObjectParam(IBindCtx* iface, LPOLESTR pszkey, IUnknown **punk)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(pszkey), punk);
 
@@ -728,7 +753,7 @@ static HRESULT WINAPI AsyncBindCtx_GetObjectParam(IBindCtx* iface, LPOLESTR pszk
 
 static HRESULT WINAPI AsyncBindCtx_RevokeObjectParam(IBindCtx *iface, LPOLESTR pszkey)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(pszkey));
 
@@ -737,14 +762,12 @@ static HRESULT WINAPI AsyncBindCtx_RevokeObjectParam(IBindCtx *iface, LPOLESTR p
 
 static HRESULT WINAPI AsyncBindCtx_EnumObjectParam(IBindCtx *iface, IEnumString **pszkey)
 {
-    AsyncBindCtx *This = BINDCTX_THIS(iface);
+    AsyncBindCtx *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)->(%p)\n", This, pszkey);
 
     return IBindCtx_EnumObjectParam(This->bindctx, pszkey);
 }
-
-#undef BINDCTX_THIS
 
 static const IBindCtxVtbl AsyncBindCtxVtbl =
 {
@@ -852,16 +875,16 @@ HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
 
     ret = heap_alloc(sizeof(AsyncBindCtx));
 
-    ret->lpBindCtxVtbl = &AsyncBindCtxVtbl;
+    ret->IBindCtx_iface.lpVtbl = &AsyncBindCtxVtbl;
     ret->ref = 1;
     ret->bindctx = bindctx;
 
-    hres = init_bindctx(BINDCTX(ret), options, callback, format);
+    hres = init_bindctx(&ret->IBindCtx_iface, options, callback, format);
     if(FAILED(hres)) {
-        IBindCtx_Release(BINDCTX(ret));
+        IBindCtx_Release(&ret->IBindCtx_iface);
         return hres;
     }
 
-    *pbind = BINDCTX(ret);
+    *pbind = &ret->IBindCtx_iface;
     return S_OK;
 }

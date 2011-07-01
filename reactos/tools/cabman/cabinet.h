@@ -7,14 +7,14 @@
 
 #pragma once
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 #else
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 #include <unistd.h>
 #ifndef MAX_PATH
 #define MAX_PATH 260
@@ -25,11 +25,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
 
-#define strcasecmp _strcmpi
+#define strcasecmp _stricmp
 #define strdup _strdup
 
 #define AllocateMemory(size) HeapAlloc(GetProcessHeap(), 0, size)
@@ -80,7 +80,7 @@ extern ULONG DebugTraceLevel;
 #else /* DBG */
 
 #undef DPRINT
-#define DPRINT(_t_, _x_)
+#define DPRINT(_t_, _x_) do { } while(0)
 
 #undef ASSERT
 #define ASSERT(_x_)
@@ -431,7 +431,7 @@ private:
     ULONG GetAttributesOnFile(PCFFILE_NODE File);
     ULONG SetAttributesOnFile(char* FileName, USHORT FileAttributes);
     ULONG GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
-#if !defined(WIN32)
+#if !defined(_WIN32)
     void ConvertDateAndTime(time_t* Time, PUSHORT DosDate, PUSHORT DosTime);
 #endif
 #endif /* CAB_READ_ONLY */

@@ -1182,6 +1182,21 @@ UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL cr
     return RegOpenKeyW(HKEY_CLASSES_ROOT, keypath, key);
 }
 
+UINT MSIREG_DeleteClassesUpgradeCodesKey(LPCWSTR szUpgradeCode)
+{
+    WCHAR squished_pc[GUID_SIZE];
+    WCHAR keypath[0x200];
+
+    TRACE("%s\n", debugstr_w(szUpgradeCode));
+    if (!squash_guid(szUpgradeCode, squished_pc))
+        return ERROR_FUNCTION_FAILED;
+    TRACE("squished (%s)\n", debugstr_w(squished_pc));
+
+    sprintfW(keypath, szInstaller_ClassesUpgrade_fmt, squished_pc);
+
+    return RegDeleteTreeW(HKEY_CLASSES_ROOT, keypath);
+}
+
 /*************************************************************************
  *  MsiDecomposeDescriptorW   [MSI.@]
  *
@@ -1549,10 +1564,11 @@ UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
     sz = SQUISH_GUID_SIZE;
     r = RegEnumValueW(hkeyComp, index, szValName, &sz, NULL, NULL, NULL, NULL);
     if( r == ERROR_SUCCESS )
+    {
         unsquash_guid(szValName, szProduct);
-
+        TRACE("-> %s\n", debugstr_w(szProduct));
+    }
     RegCloseKey(hkeyComp);
-
     return r;
 }
 
@@ -2140,7 +2156,7 @@ UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
     if (!szProductCode || !squash_guid(szProductCode, squished_pc))
         return ERROR_INVALID_PARAMETER;
 
-    if (!lstrcmpW(szUserSid, szLocalSid))
+    if (szUserSid && !strcmpW( szUserSid, szLocalSid ))
         return ERROR_INVALID_PARAMETER;
 
     if (dwContext & MSIINSTALLCONTEXT_MACHINE && szUserSid)

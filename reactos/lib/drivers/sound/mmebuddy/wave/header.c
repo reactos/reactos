@@ -242,7 +242,11 @@ EnqueueWaveHeader(
         SoundDeviceInstance->HeadWaveHeader = WaveHeader;
         SoundDeviceInstance->TailWaveHeader = WaveHeader;
 
-        DoWaveStreaming(SoundDeviceInstance);
+        /* Only do wave streaming when the stream has not been paused */
+        if (SoundDeviceInstance->bPaused == FALSE)
+        {
+            DoWaveStreaming(SoundDeviceInstance);
+        }
     }
     else
     {
@@ -258,7 +262,11 @@ EnqueueWaveHeader(
             SoundDeviceInstance->TailWaveHeader = WaveHeader;
             DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
-            DoWaveStreaming(SoundDeviceInstance);
+            /* Only do wave streaming when the stream has not been paused */
+            if ( SoundDeviceInstance->bPaused == FALSE )
+            {
+                DoWaveStreaming(SoundDeviceInstance);
+            }
         }
     }
 

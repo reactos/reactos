@@ -191,7 +191,7 @@ IopSuffixUnicodeString(
  * Display 'Loading XXX...' message.
  */
 
-VOID 
+VOID
 FASTCALL
 INIT_FUNCTION
 IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
@@ -310,51 +310,65 @@ IopLoadServiceModule(
       return STATUS_UNSUCCESSFUL;
    }
 
-   /* Open CurrentControlSet */
-   RtlInitUnicodeString(&CCSName,
-                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-   Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+   if (ExpInTextModeSetup)
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-       return Status;
-   }
+       /* We have no registry, but luckily we know where all the drivers are */
 
-   /* Open service key */
-   Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+       /* ServiceStart < 4 is all that matters */
+       ServiceStart = 0;
+
+       /* IopNormalizeImagePath will do all of the work for us if we give it an empty string */
+       ServiceImagePath.Length = ServiceImagePath.MaximumLength = 0;
+       ServiceImagePath.Buffer = NULL;
+   }
+   else
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       /* Open CurrentControlSet */
+       RtlInitUnicodeString(&CCSName,
+                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+       Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           return Status;
+       }
+
+       /* Open service key */
+       Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           ZwClose(CCSKey);
+           return Status;
+       }
+
+       /*
+        * Get information about the service.
+        */
+
+       RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+       RtlInitUnicodeString(&ServiceImagePath, NULL);
+
+       QueryTable[0].Name = L"Start";
+       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[0].EntryContext = &ServiceStart;
+
+       QueryTable[1].Name = L"ImagePath";
+       QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[1].EntryContext = &ServiceImagePath;
+
+       Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+          (PWSTR)ServiceKey, QueryTable, NULL, NULL);
+
+       ZwClose(ServiceKey);
        ZwClose(CCSKey);
-       return Status;
-   }
 
-   /*
-    * Get information about the service.
-    */
-
-   RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-   RtlInitUnicodeString(&ServiceImagePath, NULL);
-
-   QueryTable[0].Name = L"Start";
-   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[0].EntryContext = &ServiceStart;
-
-   QueryTable[1].Name = L"ImagePath";
-   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[1].EntryContext = &ServiceImagePath;
-
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-      (PWSTR)ServiceKey, QueryTable, NULL, NULL);
-
-   ZwClose(ServiceKey);
-   ZwClose(CCSKey);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
-      return Status;
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+          return Status;
+       }
    }
 
    /*
@@ -369,20 +383,20 @@ IopLoadServiceModule(
       return Status;
    }
 
-      /*
-       * Case for disabled drivers
-       */
+   /*
+    * Case for disabled drivers
+    */
 
-  if (ServiceStart >= 4)
-  {
-     /* FIXME: Check if it is the right status code */
-     Status = STATUS_PLUGPLAY_NO_DEVICE;
-  }
-  else
-  {
-     DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
-  }
+   if (ServiceStart >= 4)
+   {
+      /* FIXME: Check if it is the right status code */
+      Status = STATUS_PLUGPLAY_NO_DEVICE;
+   }
+   else
+   {
+      DPRINT("Loading module\n");
+      Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
+   }
 
    ExFreePool(ServiceImagePath.Buffer);
 
@@ -932,16 +946,16 @@ IopInitializeBootDrivers(VOID)
     /* Get highest group order index */
     IopGroupIndex = PpInitGetGroupOrderIndex(NULL);
     if (IopGroupIndex == 0xFFFF) ASSERT(FALSE);
-    
+
     /* Allocate the group table */
     IopGroupTable = ExAllocatePoolWithTag(PagedPool,
                                           IopGroupIndex * sizeof(LIST_ENTRY),
                                           TAG_IO);
     if (IopGroupTable == NULL) ASSERT(FALSE);
-    
+
     /* Initialize the group table lists */
     for (i = 0; i < IopGroupIndex; i++) InitializeListHead(&IopGroupTable[i]);
-    
+
     /* Loop the boot modules */
     ListHead = &KeLoaderBlock->LoadOrderListHead;
     NextEntry = ListHead->Flink;
@@ -951,18 +965,18 @@ IopInitializeBootDrivers(VOID)
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
-                                     
+
         /* Check if the DLL needs to be initialized */
         if (LdrEntry->Flags & LDRP_DRIVER_DEPENDENT_DLL)
         {
             /* Call its entrypoint */
             MmCallDllInitialize(LdrEntry, NULL);
         }
-        
+
         /* Go to the next driver */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Loop the boot drivers */
     ListHead = &KeLoaderBlock->BootDriverListHead;
     NextEntry = ListHead->Flink;
@@ -972,10 +986,10 @@ IopInitializeBootDrivers(VOID)
         BootEntry = CONTAINING_RECORD(NextEntry,
                                       BOOT_DRIVER_LIST_ENTRY,
                                       Link);
-        
+
         /* Get the driver loader entry */
         LdrEntry = BootEntry->LdrEntry;
-        
+
         /* Allocate our internal accounting structure */
         DriverInfo = ExAllocatePoolWithTag(PagedPool,
                                            sizeof(DRIVER_INFORMATION),
@@ -986,24 +1000,24 @@ IopInitializeBootDrivers(VOID)
             RtlZeroMemory(DriverInfo, sizeof(DRIVER_INFORMATION));
             InitializeListHead(&DriverInfo->Link);
             DriverInfo->DataTableEntry = BootEntry;
-            
+
             /* Open the registry key */
             Status = IopOpenRegistryKeyEx(&KeyHandle,
                                           NULL,
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
-                ((KeLoaderBlock->SetupLdrBlock) && (KeyHandle = (PVOID)1)))
+                ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1)))) // yes, it's an assignment!
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
-                
+
                 /* Get the group oder index */
                 Index = PpInitGetGroupOrderIndex(KeyHandle);
-                
+
                 /* Get the tag position */
                 DriverInfo->TagPosition = PipGetDriverTagPriority(KeyHandle);
-                
+
                 /* Insert it into the list, at the right place */
                 ASSERT(Index < IopGroupIndex);
                 NextEntry2 = IopGroupTable[Index].Flink;
@@ -1013,18 +1027,18 @@ IopInitializeBootDrivers(VOID)
                     DriverInfoTag = CONTAINING_RECORD(NextEntry2,
                                                       DRIVER_INFORMATION,
                                                       Link);
-                    
+
                     /* Check if we found the right tag position */
                     if (DriverInfoTag->TagPosition > DriverInfo->TagPosition)
                     {
                         /* We're done */
                         break;
                     }
-                    
+
                     /* Next entry */
                     NextEntry2 = NextEntry2->Flink;
                 }
-                
+
                 /* Insert us right before the next entry */
                 NextEntry2 = NextEntry2->Blink;
                 InsertHeadList(NextEntry2, &DriverInfo->Link);
@@ -1046,18 +1060,18 @@ IopInitializeBootDrivers(VOID)
             DriverInfo = CONTAINING_RECORD(NextEntry,
                                            DRIVER_INFORMATION,
                                            Link);
-            
+
             /* Get the driver loader entry */
             LdrEntry = DriverInfo->DataTableEntry->LdrEntry;
-            
+
             /* Initialize it */
             IopInitializeBuiltinDriver(LdrEntry);
-            
+
             /* Next entry */
             NextEntry = NextEntry->Flink;
         }
     }
-    
+
     /* In old ROS, the loader list became empty after this point. Simulate. */
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
@@ -1068,24 +1082,24 @@ INIT_FUNCTION
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;
-    
+
     /* No system drivers on the boot cd */
     if (KeLoaderBlock->SetupLdrBlock) return;
-    
+
     /* Get the driver list */
     SavedList = DriverList = CmGetSystemDriverList();
     ASSERT(DriverList);
-    
+
     /* Loop it */
     while (*DriverList)
     {
         /* Load the driver */
         ZwLoadDriver(*DriverList);
-        
+
         /* Free the entry */
         RtlFreeUnicodeString(*DriverList);
         ExFreePool(*DriverList);
-        
+
         /* Next entry */
         InbvIndicateProgress();
         DriverList++;

@@ -97,14 +97,14 @@ HintFromAccel(ULONG flAccel)
 {
     switch (flAccel & (MX_NOTRANSLATE |  MX_IDENTITYSCALE | MX_SCALE))
     {
-    case (MX_SCALE | MX_IDENTITYSCALE | MX_NOTRANSLATE):
-        return GX_IDENTITY;
-    case (MX_SCALE | MX_IDENTITYSCALE):
-        return GX_OFFSET;
-    case MX_SCALE:
-        return GX_SCALE;
-    default:
-        return GX_GENERAL;
+        case (MX_SCALE | MX_IDENTITYSCALE | MX_NOTRANSLATE):
+            return GX_IDENTITY;
+        case (MX_SCALE | MX_IDENTITYSCALE):
+            return GX_OFFSET;
+        case MX_SCALE:
+            return GX_SCALE;
+        default:
+            return GX_GENERAL;
     }
 }
 
@@ -115,7 +115,7 @@ INTERNAL_CALL
 XFORMOBJ_UpdateAccel(
     IN XFORMOBJ *pxo)
 {
-    PMATRIX pmx = (PMATRIX)pxo;
+    PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
     /* Copy Dx and Dy to FIX format */
     pmx->fxDx = FLOATOBJ_GetFix(&pmx->efDx);
@@ -124,25 +124,25 @@ XFORMOBJ_UpdateAccel(
     pmx->flAccel = 0;
 
     if (FLOATOBJ_Equal0(&pmx->efDx) &&
-            FLOATOBJ_Equal0(&pmx->efDy))
+        FLOATOBJ_Equal0(&pmx->efDy))
     {
         pmx->flAccel |= MX_NOTRANSLATE;
     }
 
     if (FLOATOBJ_Equal0(&pmx->efM12) &&
-            FLOATOBJ_Equal0(&pmx->efM21))
+        FLOATOBJ_Equal0(&pmx->efM21))
     {
         pmx->flAccel |= MX_SCALE;
     }
 
     if (FLOATOBJ_Equal1(&pmx->efM11) &&
-            FLOATOBJ_Equal1(&pmx->efM22))
+        FLOATOBJ_Equal1(&pmx->efM22))
     {
         pmx->flAccel |= MX_IDENTITYSCALE;
     }
 
     if (FLOATOBJ_IsLong(&pmx->efM11) && FLOATOBJ_IsLong(&pmx->efM12) &&
-            FLOATOBJ_IsLong(&pmx->efM21) && FLOATOBJ_IsLong(&pmx->efM22))
+        FLOATOBJ_IsLong(&pmx->efM21) && FLOATOBJ_IsLong(&pmx->efM22))
     {
         pmx->flAccel |= MX_INTEGER;
     }
@@ -155,9 +155,9 @@ ULONG
 INTERNAL_CALL
 XFORMOBJ_iSetXform(
     OUT XFORMOBJ *pxo,
-    IN XFORML * pxform)
+    IN const XFORML *pxform)
 {
-    PMATRIX pmx = (PMATRIX)pxo;
+    PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
     /* Check parameters */
     if (!pxo || !pxform)
@@ -195,9 +195,9 @@ XFORMOBJ_iCombine(
     MATRIX mx;
     PMATRIX pmx, pmx1, pmx2;
 
-    pmx = (PMATRIX)pxo;
-    pmx1 = (PMATRIX)pxo1;
-    pmx2 = (PMATRIX)pxo2;
+    pmx = XFORMOBJ_pmx(pxo);
+    pmx1 =XFORMOBJ_pmx(pxo1);
+    pmx2 = XFORMOBJ_pmx(pxo2);
 
     /* Do a 3 x 3 matrix multiplication with mx as destinantion */
     MulAdd(&mx.efM11, &pmx1->efM11, &pmx2->efM11, &pmx1->efM12, &pmx2->efM21);
@@ -226,17 +226,18 @@ XFORMOBJ_iCombineXform(
     IN BOOL bLeftMultiply)
 {
     MATRIX mx;
-    XFORMOBJ *pxo2 = (XFORMOBJ*)&mx;
+    XFORMOBJ xo2;
 
-    XFORMOBJ_iSetXform(pxo2, pxform);
+    XFORMOBJ_vInit(&xo2, &mx);
+    XFORMOBJ_iSetXform(&xo2, pxform);
 
     if (bLeftMultiply)
     {
-        return XFORMOBJ_iCombine(pxo, pxo2, pxo1);
+        return XFORMOBJ_iCombine(pxo, &xo2, pxo1);
     }
     else
     {
-        return XFORMOBJ_iCombine(pxo, pxo1, pxo2);
+        return XFORMOBJ_iCombine(pxo, pxo1, &xo2);
     }
 }
 
@@ -246,15 +247,15 @@ XFORMOBJ_iCombineXform(
  */
 ULONG
 INTERNAL_CALL
-XFORMOBJ_Inverse(
+XFORMOBJ_iInverse(
     OUT XFORMOBJ *pxoDst,
     IN XFORMOBJ *pxoSrc)
 {
     PMATRIX pmxDst, pmxSrc;
     FLOATOBJ foDet;
 
-    pmxDst = (PMATRIX)pxoDst;
-    pmxSrc = (PMATRIX)pxoSrc;
+    pmxDst = XFORMOBJ_pmx(pxoDst);
+    pmxSrc = XFORMOBJ_pmx(pxoSrc);
 
     /* det = M11 * M22 - M12 * M21 */
     MulSub(&foDet, &pmxSrc->efM11, &pmxSrc->efM22, &pmxSrc->efM12, &pmxSrc->efM21);
@@ -296,56 +297,57 @@ XFORMOBJ_bXformFixPoints(
     FLOATOBJ fo1, fo2;
     FLONG flAccel;
 
-    pmx = (PMATRIX)pxo;
-    flAccel = pmx->flAccel & (MX_INTEGER|MX_SCALE|MX_IDENTITYSCALE);
+    pmx = XFORMOBJ_pmx(pxo);
+    flAccel = pmx->flAccel;
 
-    switch (flAccel)
+    if ((flAccel & (MX_SCALE|MX_IDENTITYSCALE)) == (MX_SCALE|MX_IDENTITYSCALE))
     {
-    case (MX_SCALE | MX_IDENTITYSCALE):
-    case (MX_SCALE | MX_IDENTITYSCALE | MX_INTEGER):
         /* Identity transformation, nothing todo */
-        break;
-
-    case (MX_IDENTITYSCALE | MX_INTEGER):
-        /* 1-scale integer transform */
-        i = cPoints - 1;
-        do
+    }
+    else if (flAccel & MX_INTEGER)
+    {
+        if (flAccel & MX_IDENTITYSCALE)
         {
-            LONG x = pptIn[i].x + pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-            LONG y = pptIn[i].y + pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
-            pptOut[i].y = y;
-            pptOut[i].x = x;
+            /* 1-scale integer transform */
+            i = cPoints - 1;
+            do
+            {
+                LONG x = pptIn[i].x + pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
+                LONG y = pptIn[i].y + pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                pptOut[i].y = y;
+                pptOut[i].x = x;
+            }
+            while (--i >= 0);
         }
-        while (--i >= 0);
-        break;
-
-    case (MX_SCALE | MX_INTEGER):
-        /* Diagonal integer transform */
-        i = cPoints - 1;
-        do
+        else if (flAccel & MX_SCALE)
         {
-            pptOut[i].x = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-            pptOut[i].y = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+            /* Diagonal integer transform */
+            i = cPoints - 1;
+            do
+            {
+                pptOut[i].x = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
+                pptOut[i].y = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+            }
+            while (--i >= 0);
         }
-        while (--i >= 0);
-        break;
-
-    case (MX_INTEGER):
-        /* Full integer transform */
-        i = cPoints - 1;
-        do
+        else
         {
-            LONG x;
-            x  = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
-            x += pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
-            pptOut[i].y  = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
-            pptOut[i].y += pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
-            pptOut[i].x = x;
+            /* Full integer transform */
+            i = cPoints - 1;
+            do
+            {
+                LONG x;
+                x  = pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM11);
+                x += pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM21);
+                pptOut[i].y  = pptIn[i].y * FLOATOBJ_GetLong(&pmx->efM22);
+                pptOut[i].y += pptIn[i].x * FLOATOBJ_GetLong(&pmx->efM12);
+                pptOut[i].x = x;
+            }
+            while (--i >= 0);
         }
-        while (--i >= 0);
-        break;
-
-    case (MX_IDENTITYSCALE):
+    }
+    else if (flAccel & MX_IDENTITYSCALE)
+    {
         /* 1-scale transform */
         i = cPoints - 1;
         do
@@ -358,9 +360,9 @@ XFORMOBJ_bXformFixPoints(
             pptOut[i].y = pptIn[i].y + FLOATOBJ_GetLong(&fo2);
         }
         while (--i >= 0);
-        break;
-
-    case (MX_SCALE):
+    }
+    else if (flAccel & MX_SCALE)
+    {
         /* Diagonal float transform */
         i = cPoints - 1;
         do
@@ -373,9 +375,9 @@ XFORMOBJ_bXformFixPoints(
             pptOut[i].y = FLOATOBJ_GetLong(&fo2);
         }
         while (--i >= 0);
-        break;
-
-    default:
+    }
+    else
+    {
         /* Full float transform */
         i = cPoints - 1;
         do
@@ -386,7 +388,6 @@ XFORMOBJ_bXformFixPoints(
             pptOut[i].y = FLOATOBJ_GetLong(&fo2);
         }
         while (--i >= 0);
-        break;
     }
 
     if (!(pmx->flAccel & MX_NOTRANSLATE))
@@ -414,7 +415,7 @@ XFORMOBJ_iGetXform(
     IN XFORMOBJ *pxo,
     OUT XFORML *pxform)
 {
-    PMATRIX pmx = (PMATRIX)pxo;
+    PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
     /* Check parameters */
     if (!pxo || !pxform)
@@ -442,7 +443,7 @@ XFORMOBJ_iGetFloatObjXform(
     IN XFORMOBJ *pxo,
     OUT FLOATOBJ_XFORM *pxfo)
 {
-    PMATRIX pmx = (PMATRIX)pxo;
+    PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
     /* Check parameters */
     if (!pxo || !pxfo)
@@ -467,13 +468,14 @@ XFORMOBJ_iGetFloatObjXform(
 BOOL
 APIENTRY
 XFORMOBJ_bApplyXform(
-    IN XFORMOBJ  *pxo,
-    IN ULONG  iMode,
-    IN ULONG  cPoints,
-    IN PVOID  pvIn,
-    OUT PVOID  pvOut)
+    IN XFORMOBJ *pxo,
+    IN ULONG iMode,
+    IN ULONG cPoints,
+    IN PVOID pvIn,
+    OUT PVOID pvOut)
 {
     MATRIX mx;
+    XFORMOBJ xoInv;
     POINTL *pptl;
     INT i;
 
@@ -486,13 +488,12 @@ XFORMOBJ_bApplyXform(
     /* Use inverse xform? */
     if (iMode == XF_INV_FXTOL || iMode == XF_INV_LTOL)
     {
-        ULONG ret;
-        ret = XFORMOBJ_Inverse((XFORMOBJ*)&mx, pxo);
-        if (ret == DDI_ERROR)
+        XFORMOBJ_vInit(&xoInv, &mx);
+        if (XFORMOBJ_iInverse(&xoInv, pxo) == DDI_ERROR)
         {
             return FALSE;
         }
-        pxo = (XFORMOBJ*)&mx;
+        pxo = &xoInv;
     }
 
     /* Convert POINTL to POINTFIX? */

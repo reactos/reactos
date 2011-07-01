@@ -74,6 +74,7 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>heapdbg.c</file>
+	<file>heappage.c</file>
 	<file>image.c</file>
 	<file>interlck.c</file>
 	<file>message.c</file>
@@ -95,9 +96,7 @@
 	<file>security.c</file>
 	<file>slist.c</file>
 	<file>sid.c</file>
-	<file>sprintf.c</file>
 	<file>srw.c</file>
-	<file>swprintf.c</file>
 	<file>splaytree.c</file>
 	<file>thread.c</file>
 	<file>time.c</file>

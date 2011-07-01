@@ -1,0 +1,54 @@
+﻿; UTF-8
+
+[Section]
+Name = SoundBlaster Driver for VMWare
+Version = 5.12.1.5017
+Licence = Unknown
+Description = Unzip in the "ReactOS" folder then restart ReactOS twice.
+Size = 2.2MB
+Category = 13
+URLSite = Unknown
+URLDownload = http://svn.reactos.org/packages/sb_vmware.exe
+CDPath = none
+
+[Section.0405]
+Name = Ovladač SoundBlaster pro VMWare
+Licence = Neznámá
+Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
+URLSite = Neznámá
+
+[Section.0407]
+Name = SoundBlaster Treiber für VMWare
+Licence = Unbekannt
+Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+URLSite = Unbekannt
+
+[Section.040a]
+Name = Driver SoundBlaster para VMWare
+Licence = Desconocida
+Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
+URLSite = Desconocida
+
+[Section.040c]
+Name = Pilote SoundBlaster pour VMWare
+Licence = Inconnue
+Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois.
+URLSite = Inconnue
+
+[Section.0415]
+Name = Sterownik SoundBlaster dla VMWare
+Licence = Nieznana
+Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
+URLSite = Nieznana
+
+[Section.0419]
+Name = Драйвер SoundBlaster для VMWare
+Licence = Не указано
+Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+URLSite = Не указано
+
+[Section.0422]
+Name = Драйвер SoundBlaster для VMWare
+Licence = Невідома
+Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+URLSite = Не вказано

@@ -18,6 +18,11 @@
 #define INIT_FUNCTION
 #endif
 
+/* Enable debugging features */
+#define GDI_DEBUG 0
+#define DBG_ENABLE_EVENT_LOGGING 0
+#define DBG_ENABLE_SERVICE_HOOKS 0
+
 /* Internal Win32k Headers */
 #include <include/accelerator.h>
 #include <include/clipboard.h>
@@ -36,7 +41,6 @@
 #include <include/dib.h>
 #include <include/driver.h>
 #include <include/driverobj.h>
-#include <include/error.h>
 #include <include/floatobj.h>
 #include <include/gdiobj.h>
 #include <include/palette.h>
@@ -88,3 +92,4 @@
 #include <include/ldevobj.h>
 #include <include/device.h>
 #include <dib/dib.h>
+#include <include/gdidebug.h>

@@ -75,15 +75,21 @@ KdbSymProcessSymbols(
 
 BOOLEAN
 KdbSymPrintAddress(
-    IN PVOID Address);
+    IN PVOID Address,
+    IN PKTRAP_FRAME Context
+);
 
 NTSTATUS
 KdbSymGetAddressInformation(
     IN PROSSYM_INFO  RosSymInfo,
     IN ULONG_PTR  RelativeAddress,
+#ifdef __ROS_CMAKE__
+	IN PROSSYM_LINEINFO RosSymLineInfo
+#else
     OUT PULONG LineNumber  OPTIONAL,
     OUT PCH FileName  OPTIONAL,
     OUT PCH FunctionName  OPTIONAL
+#endif
 );
 #endif
 
@@ -245,7 +251,7 @@ KdpSafeWriteMemory(
 
 VOID
 NTAPI
-KdpEnableSafeMem();
+KdpEnableSafeMem(VOID);
 
 
 /* KD GLOBALS  ***************************************************************/
@@ -362,4 +368,13 @@ extern PKDEBUG_ROUTINE KiDebugRoutine;
 extern KD_CONTEXT KdpContext;
 extern ULONG Kd_WIN2000_Mask;
 
+#endif
+
+#if DBG
+#define ID_Win32PreServiceHook 'WSH0'
+#define ID_Win32PostServiceHook 'WSH1'
+typedef void (NTAPI *PKDBG_PRESERVICEHOOK)(ULONG, PULONG_PTR);
+typedef ULONG_PTR (NTAPI *PKDBG_POSTSERVICEHOOK)(ULONG, ULONG_PTR);
+extern PKDBG_PRESERVICEHOOK KeWin32PreServiceHook;
+extern PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook;
 #endif

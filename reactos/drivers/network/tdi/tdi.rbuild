@@ -4,9 +4,11 @@
 	<importlibrary definition="misc/tdi.spec"></importlibrary>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<define name="_TDI_" />
 	<directory name="cte">
+		<file>events.c</file>
 		<file>string.c</file>
-		<file>stubs.c</file>
+		<file>timer.c</file>
 	</directory>
 	<directory name="misc">
 		<file>main.c</file>

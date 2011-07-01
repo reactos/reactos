@@ -1529,6 +1529,12 @@ CmSetLazyFlushState(
     IN BOOLEAN Enable
 );
 
+VOID
+NTAPI
+CmpSetVersionData(
+    VOID
+);
+
 //
 // Driver List Routines
 //
@@ -1563,6 +1569,13 @@ CmpResolveDriverDependencies(
     IN PLIST_ENTRY DriverListHead
 );
 
+BOOLEAN
+NTAPI
+CmpIsSafe(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SafeBootCell,
+    IN HCELL_INDEX DriverCell);
+
 //
 // Global variables accessible from all of Cm
 //
@@ -1585,6 +1598,7 @@ extern ULONG CmDefaultLanguageIdType;
 extern WCHAR CmInstallUILanguageId[];
 extern ULONG CmInstallUILanguageIdLength;
 extern ULONG CmInstallUILanguageIdType;
+extern ULONG CmNtGlobalFlag;
 extern LANGID PsInstallUILanguageId;
 extern LANGID PsDefaultUILanguageId;
 extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];

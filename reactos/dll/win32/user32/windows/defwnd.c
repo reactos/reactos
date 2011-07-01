@@ -16,13 +16,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-#ifndef WM_SETVISIBLE
-#define WM_SETVISIBLE 9
-#endif
-#ifndef WM_QUERYDROPOBJECT
-#define WM_QUERYDROPOBJECT  0x022B
-#endif
-
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
 LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
@@ -33,10 +26,6 @@ void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG
 void MENU_EndMenu( HWND );
 
 /* GLOBALS *******************************************************************/
-
-/* Bits in the dwKeyData */
-#define KEYDATA_ALT             0x2000
-#define KEYDATA_PREVSTATE       0x4000
 
 static short iF10Key = 0;
 static short iMenuSysKey = 0;
@@ -300,8 +289,9 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
       pt.x = pt.y = 0;
       while(!hittest)
 	{
-	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)
-	    break;
+          if (!GetMessageW(&msg, NULL, 0, 0)) break; //return 0;
+          if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
+
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
@@ -337,8 +327,13 @@ DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		  pt.y =(rectWindow.top+rectWindow.bottom)/2;
 		  break;
 		case VK_RETURN:
-		case VK_ESCAPE: return 0;
+		case VK_ESCAPE:
+		  return 0;
 		}
+            default:
+              TranslateMessage( &msg );
+              DispatchMessageW( &msg );
+              break;
 	    }
 	}
       *capturePoint = pt;
@@ -562,8 +557,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       int dx = 0, dy = 0;
 
-      if (GetMessageW(&msg, 0, 0, 0) <= 0)
-        break;
+      if (!GetMessageW(&msg, 0, 0, 0)) break;
+      if (CallMsgFilterW( &msg, MSGF_SIZE )) continue;
 
       /* Exit on button-up, Return, or Esc */
       if ((msg.message == WM_LBUTTONUP) ||
@@ -579,7 +574,11 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         }
 
       if ((msg.message != WM_KEYDOWN) && (msg.message != WM_MOUSEMOVE))
-	continue;  /* We are not interested in other messages */
+      {
+         TranslateMessage( &msg );
+         DispatchMessageW( &msg );
+         continue;  /* We are not interested in other messages */
+      }
 
       pt = msg.pt;
 
@@ -754,18 +753,19 @@ DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
   ScrollTrackScrollBar(Wnd, ScrollBar, Pt );
 }
 
+LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam);
 
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   WINDOWPLACEMENT wp;
   POINT Pt;
+  LRESULT lResult;
 
   if (!IsWindowEnabled( hWnd )) return 0;
 
   if (ISITHOOKED(WH_CBT))
   {
-     LRESULT lResult;
      NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
      if (lResult) return 0;
   }
@@ -802,7 +802,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
       case SC_CLOSE:
         return SendMessageW(hWnd, WM_CLOSE, 0, 0);
-
+//      case SC_DEFAULT:
       case SC_MOUSEMENU:
         {
           Pt.x = (short)LOWORD(lParam);
@@ -822,9 +822,41 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
 	break;
 
+      case SC_SCREENSAVE:
+        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+        break;
+
+      case SC_NEXTWINDOW:
+      case SC_PREVWINDOW:
+        DoAppSwitch( wParam, lParam);
+        break;
+
+      case SC_HOTKEY:
+        {
+           HWND hwnd, hWndLastActive;
+           PWND pWnd;
+
+           hwnd = (HWND)lParam;
+           pWnd = ValidateHwnd(hwnd);
+           if (pWnd)
+           {
+              hWndLastActive = GetLastActivePopup(hwnd);
+              if (hWndLastActive)
+              {
+                 hwnd = hWndLastActive;
+                 pWnd = ValidateHwnd(hwnd);
+              }
+              SetForegroundWindow(hwnd);
+              if (pWnd->style & WS_MINIMIZE)
+              {
+                 PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+              }
+           }
+        }
+        break;
+
       default:
-	/* FIXME: Implement */
-        UNIMPLEMENTED;
+        FIXME("Unimplemented DefWndHandleSysCommand wParam 0x%x\n",wParam);
         break;
     }
 
@@ -897,8 +929,8 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
-  if (CTLCOLOR_SCROLLBAR == ctlType)
-    {
+  if (ctlType == CTLCOLOR_SCROLLBAR)
+  {
       HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
       COLORREF bk = GetSysColor(COLOR_3DHILIGHT);
       SetTextColor(hDC, GetSysColor(COLOR_3DFACE));
@@ -908,37 +940,24 @@ DefWndControlColor(HDC hDC, UINT ctlType)
        * we better use 0x55aa bitmap brush to make scrollbar's background
        * look different from the window background.
        */
-      if (bk == GetSysColor(COLOR_WINDOW))
-	{
-          static const WORD wPattern55AA[] =
-          {
-              0x5555, 0xaaaa, 0x5555, 0xaaaa,
-              0x5555, 0xaaaa, 0x5555, 0xaaaa
-          };
-          static HBITMAP hPattern55AABitmap = NULL;
-          static HBRUSH hPattern55AABrush = NULL;
-          if (hPattern55AABrush == NULL)
-            {
-              hPattern55AABitmap = CreateBitmap(8, 8, 1, 1, wPattern55AA);
-              hPattern55AABrush = CreatePatternBrush(hPattern55AABitmap);
-            }
-          return hPattern55AABrush;
-	}
-      UnrealizeObject(hb);
+      if ( bk == GetSysColor(COLOR_WINDOW))
+          return gpsi->hbrGray;
+
+      UnrealizeObject( hb );
       return hb;
-    }
+  }
 
   SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
 
-  if ((CTLCOLOR_EDIT == ctlType) || (CTLCOLOR_LISTBOX == ctlType))
-    {
+  if ((ctlType == CTLCOLOR_EDIT) || (ctlType == CTLCOLOR_LISTBOX))
+  {
       SetBkColor(hDC, GetSysColor(COLOR_WINDOW));
-    }
+  }
   else
-    {
+  {
       SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
       return GetSysColorBrush(COLOR_3DFACE);
-    }
+  }
 
   return GetSysColorBrush(COLOR_WINDOW);
 }
@@ -1196,7 +1215,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCOLORCHANGE:
         {
             /* force to redraw non-client area */
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             /* Use InvalidateRect to redraw client area, enable
              * erase to redraw all subcontrols otherwise send the
              * WM_SYSCOLORCHANGE to child windows/controls is required
@@ -1387,39 +1406,49 @@ User32DefWindowProc(HWND hWnd,
             if(wParam == VK_F10) iF10Key = VK_F10;
             break;
 
-        /* FIXME: This is also incomplete. */
         case WM_SYSKEYDOWN:
         {
-            if (HIWORD(lParam) & KEYDATA_ALT)
-            {
-                HWND top = GetAncestor(hWnd, GA_ROOT);
-             /* if( HIWORD(lParam) & ~KEYDATA_PREVSTATE ) */
-                if ( (wParam == VK_MENU || wParam == VK_LMENU
-                                    || wParam == VK_RMENU) && !iMenuSysKey )
-                   iMenuSysKey = 1;
-                else
-                   iMenuSysKey = 0;
+            if (HIWORD(lParam) & KF_ALTDOWN)
+            {   /* Previous state, if the key was down before this message,
+                   this is a cheap way to ignore autorepeat keys. */
+                if ( !(HIWORD(lParam) & KF_REPEAT) )
+                {
+                   if ( ( wParam == VK_MENU  ||
+                          wParam == VK_LMENU ||
+                          wParam == VK_RMENU ) && !iMenuSysKey )
+                       iMenuSysKey = 1;
+                   else
+                       iMenuSysKey = 0;
+                }
 
                 iF10Key = 0;
 
                 if (wParam == VK_F4) /* Try to close the window */
                 {
-                    if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
-                    {
-                        if (bUnicode)
-                            PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
-                        else
-                            PostMessageA(top, WM_SYSCOMMAND, SC_CLOSE, 0);
-                    }
+                   HWND top = GetAncestor(hWnd, GA_ROOT);
+                   if (!(GetClassLongPtrW(top, GCL_STYLE) & CS_NOCLOSE))
+                      PostMessageW(top, WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
-                else if (wParam == VK_SNAPSHOT)
+                else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?
                 {
-                    HWND hwnd = hWnd;
-                    while (GetParent(hwnd) != NULL)
-                    {
-                        hwnd = GetParent(hwnd);
-                    }
-                    DefWndScreenshot(hwnd);
+                   HWND hwnd = hWnd;
+                   while (GetParent(hwnd) != NULL)
+                   {
+                       hwnd = GetParent(hwnd);
+                   }
+                   DefWndScreenshot(hwnd);
+                }
+                else if ( wParam == VK_ESCAPE || wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+                {
+                   WPARAM wParamTmp;
+                   HWND Active = GetActiveWindow(); // Noticed MDI problem.
+                   if (!Active)
+                   {
+                      FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
+                      break;
+                   }
+                   wParamTmp = GetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                   SendMessageW( Active, WM_SYSCOMMAND, wParamTmp, wParam );
                 }
             }
             else if( wParam == VK_F10 )
@@ -1428,8 +1457,6 @@ User32DefWindowProc(HWND hWnd,
                     SendMessageW( hWnd, WM_CONTEXTMENU, (WPARAM)hWnd, MAKELPARAM(-1, -1) );
                 iF10Key = 1;
             }
-            else if( wParam == VK_ESCAPE && (GetKeyState(VK_SHIFT) & 0x8000))
-                SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, ' ' );
             break;
         }
 
@@ -1447,36 +1474,22 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCHAR:
         {
             iMenuSysKey = 0;
-            if (wParam == '\r' && IsIconic(hWnd))
+            if (wParam == VK_RETURN && IsIconic(hWnd))
             {
                 PostMessageW( hWnd, WM_SYSCOMMAND, SC_RESTORE, 0L );
                 break;
             }
-            if ((HIWORD(lParam) & KEYDATA_ALT) && wParam)
+            if ((HIWORD(lParam) & KF_ALTDOWN) && wParam)
             {
-                if (wParam == '\t' || wParam == '\x1b') break;
-                if (wParam == ' ' && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
+                if (wParam == VK_TAB || wParam == VK_ESCAPE) break;
+                if (wParam == VK_SPACE && (GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD))
                     SendMessageW( GetParent(hWnd), Msg, wParam, lParam );
                 else
                     SendMessageW( hWnd, WM_SYSCOMMAND, SC_KEYMENU, wParam );
             }
             else /* check for Ctrl-Esc */
-                if (wParam != '\x1b') MessageBeep(0);
+                if (wParam != VK_ESCAPE) MessageBeep(0);
             break;
-        }
-
-        case WM_SHOWWINDOW:
-        {
-            if (lParam) // Call when it is necessary.
-               NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE);
-            break;
-        }
-
-        case WM_CLIENTSHUTDOWN:
-        {
-            LRESULT lResult;
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
-            return lResult;   
         }
 
         case WM_CANCELMODE:
@@ -1807,6 +1820,17 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
+/* Move to win32k !*/
+        case WM_SHOWWINDOW:
+            if (!lParam) break; // Call when it is necessary.
+        case WM_CLIENTSHUTDOWN:
+        case WM_GETHOTKEY:
+        case WM_SETHOTKEY:
+        {
+            LRESULT lResult;
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
+            return lResult;
+        }
     }
     return 0;
 }
@@ -1973,7 +1997,7 @@ RealDefWindowProcA(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1, -1);
+                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             }
             Result = 1;
             break;
@@ -2119,7 +2143,7 @@ RealDefWindowProcW(HWND hWnd,
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
-                DefWndNCPaint(hWnd, (HRGN)1, -1);
+                DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
             }
             Result = 1;
             break;

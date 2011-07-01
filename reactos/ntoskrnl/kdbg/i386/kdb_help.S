@@ -116,7 +116,7 @@ _KdbEnter:
     /*
      * Return to the caller.
      */
-    iret
+    iretd
 
 
 PUBLIC _KdbpStackSwitchAndCall@8

@@ -29,6 +29,10 @@ KD_PORT_INFORMATION SerialPortInfo = { DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RA
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
 
+#define KdpScreenLineLenght 80
+CHAR KdpScreenLineBuffer[KdpScreenLineLenght + 1] = "";
+ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
+
 /* DEBUG LOG FUNCTIONS *******************************************************/
 
 VOID
@@ -316,8 +320,50 @@ NTAPI
 KdpScreenPrint(LPSTR Message,
                ULONG Length)
 {
-    /* Call HAL */
-    HalDisplayString(Message);
+    PCHAR pch = (PCHAR) Message;
+
+    while (*pch)
+    {
+        if(*pch == '\b')
+        {
+            /* HalDisplayString does not support '\b'. Workaround it and use '\r' */
+            if(KdpScreenLineLength > 0)
+            {
+                /* Remove last character from buffer */
+                KdpScreenLineBuffer[--KdpScreenLineLength] = '\0';
+                KdpScreenLineBufferPos = KdpScreenLineLength;
+
+                /* Clear row and print line again */
+                HalDisplayString("\r");
+                HalDisplayString(KdpScreenLineBuffer);
+            }
+        }
+        else
+        {
+            KdpScreenLineBuffer[KdpScreenLineLength++] = *pch;
+            KdpScreenLineBuffer[KdpScreenLineLength] = '\0';
+        }
+
+        if(*pch == '\n' || KdpScreenLineLength == KdpScreenLineLenght)
+        {
+            /* Print buffered characters */
+            if(KdpScreenLineBufferPos != KdpScreenLineLength)
+                HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
+
+            /* Clear line buffer */
+            KdpScreenLineBuffer[0] = '\0';
+            KdpScreenLineLength = KdpScreenLineBufferPos = 0;
+        }
+        
+        ++pch;
+    }
+    
+    /* Print buffered characters */
+    if(KdpScreenLineBufferPos != KdpScreenLineLength)
+    {
+        HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
+        KdpScreenLineBufferPos = KdpScreenLineLength;
+    }
 }
 
 VOID

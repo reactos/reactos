@@ -18,8 +18,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
 
-#define CW_USEDEFAULT16 0x00008000
-
 /* FUNCTIONS *****************************************************************/
 
 
@@ -67,17 +65,7 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 HDWP WINAPI
 BeginDeferWindowPos(int nNumWindows)
 {
-    if (nNumWindows < 0)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-#if 0
-    UNIMPLEMENTED;
-    return (HDWP)0;
-#else
-    return (HDWP)1;
-#endif
+    return (HDWP)NtUserCallOneParam((DWORD_PTR)nNumWindows, ONEPARAM_ROUTINE_BEGINDEFERWNDPOS);
 }
 
 
@@ -342,6 +330,17 @@ CreateWindowExA(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND pWndParent;
+
+        pWndParent = ValidateHwnd(hWndParent);
+
+        if (!pWndParent) return NULL;
+
+        if (pWndParent->fnid != FNID_MDICLIENT) // wine uses WIN_ISMDICLIENT
+        {
+           WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+           return NULL;
+        }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
@@ -358,7 +357,7 @@ CreateWindowExA(DWORD dwExStyle,
 
         lpParam = (LPVOID)&mdi;
 
-        if (GetWindowLongPtrW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+        if (pWndParent->style & MDIS_ALLCHILDSTYLES)
         {
             if (dwStyle & WS_POPUP)
             {
@@ -454,7 +453,18 @@ CreateWindowExW(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND pWndParent;
 
+        pWndParent = ValidateHwnd(hWndParent);
+
+        if (!pWndParent) return NULL;
+
+        if (pWndParent->fnid != FNID_MDICLIENT)
+        {
+           WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+           return NULL;
+        }
+        
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
         */
@@ -470,7 +480,7 @@ CreateWindowExW(DWORD dwExStyle,
 
         lpParam = (LPVOID)&mdi;
 
-        if (GetWindowLongPtrW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+        if (pWndParent->style & MDIS_ALLCHILDSTYLES)
         {
             if (dwStyle & WS_POPUP)
             {
@@ -547,12 +557,7 @@ DeferWindowPos(HDWP hWinPosInfo,
                int cy,
                UINT uFlags)
 {
-#if 0
     return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-#else
-    SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-    return hWinPosInfo;
-#endif
 }
 
 
@@ -562,12 +567,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 BOOL WINAPI
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
-#if 0
-    UNIMPLEMENTED;
-    return FALSE;
-#else
-    return TRUE;
-#endif
+    return NtUserEndDeferWindowPosEx(hWinPosInfo, 0);
 }
 
 
@@ -653,6 +653,14 @@ User32EnumWindows(HDESK hDesktop,
         return FALSE;
     }
 
+    if (!dwCount)
+    {
+       if (!dwThreadId)
+          return FALSE; 
+       else
+          return TRUE;
+    }
+
     /* call the user's callback function until we're done or
        they tell us to quit */
     for ( i = 0; i < dwCount; i++ )
@@ -660,7 +668,8 @@ User32EnumWindows(HDESK hDesktop,
         /* FIXME I'm only getting NULLs from Thread Enumeration, and it's
          * probably because I'm not doing it right in NtUserBuildHwndList.
          * Once that's fixed, we shouldn't have to check for a NULL HWND
-         * here
+         * here 
+         * This is now fixed in revision 50205. (jt)
          */
         if (!pHwnd[i]) /* don't enumerate a NULL HWND */
             continue;
@@ -1450,14 +1459,11 @@ IsChild(HWND hWndParent,
 
     _SEH2_TRY
     {
-        while (Wnd != NULL)
+        while (Wnd != NULL && ((Wnd->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
         {
             if (Wnd->spwndParent != NULL)
             {
                 Wnd = DesktopPtrToUser(Wnd->spwndParent);
-
-                if(Wnd == DesktopWnd)
-                    Wnd = NULL;
 
                 if (Wnd == WndParent)
                 {
@@ -1701,7 +1707,7 @@ SetWindowTextA(HWND hWnd,
 
         if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
         }
         return TRUE;
     }
@@ -1731,7 +1737,7 @@ SetWindowTextW(HWND hWnd,
 
         if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
-            DefWndNCPaint(hWnd, (HRGN)1, -1);
+            DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
         }
         return TRUE;
     }
@@ -1803,92 +1809,6 @@ UpdateLayeredWindowIndirect(HWND hwnd,
   return FALSE;
 }
 
-
-/*
- * @implemented
- */
-HWND WINAPI
-WindowFromPoint(POINT Point)
-{
-    //TODO: Determine what the actual parameters to
-    // NtUserWindowFromPoint are.
-    return NtUserWindowFromPoint(Point.x, Point.y);
-}
-
-
-/*
- * @implemented
- */
-int WINAPI
-MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
-{
-    PWND FromWnd, ToWnd;
-    POINT Delta;
-    UINT i;
-
-    FromWnd = ValidateHwndOrDesk(hWndFrom);
-    if (!FromWnd)
-        return 0;
-
-    ToWnd = ValidateHwndOrDesk(hWndTo);
-    if (!ToWnd)
-        return 0;
-
-    Delta.x = FromWnd->rcClient.left - ToWnd->rcClient.left;
-    Delta.y = FromWnd->rcClient.top - ToWnd->rcClient.top;
-
-    for (i = 0; i != cPoints; i++)
-    {
-        lpPoints[i].x += Delta.x;
-        lpPoints[i].y += Delta.y;
-    }
-
-    return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-ScreenToClient(HWND hWnd, LPPOINT lpPoint)
-{
-    PWND Wnd, DesktopWnd;
-
-    Wnd = ValidateHwnd(hWnd);
-    if (!Wnd)
-        return FALSE;
-
-    DesktopWnd = GetThreadDesktopWnd();
-
-    lpPoint->x += DesktopWnd->rcClient.left - Wnd->rcClient.left;
-    lpPoint->y += DesktopWnd->rcClient.top - Wnd->rcClient.top;
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-ClientToScreen(HWND hWnd, LPPOINT lpPoint)
-{
-    PWND Wnd, DesktopWnd;
-
-    Wnd = ValidateHwnd(hWnd);
-    if (!Wnd)
-        return FALSE;
-
-    DesktopWnd = GetThreadDesktopWnd();
-
-    lpPoint->x += Wnd->rcClient.left - DesktopWnd->rcClient.left;
-    lpPoint->y += Wnd->rcClient.top - DesktopWnd->rcClient.top;
-
-    return TRUE;
-}
-
-
 /*
  * @implemented
  */
@@ -1898,7 +1818,6 @@ SetWindowContextHelpId(HWND hwnd,
 {
     return NtUserSetWindowContextHelpId(hwnd, dwContextHelpId);
 }
-
 
 /*
  * @implemented

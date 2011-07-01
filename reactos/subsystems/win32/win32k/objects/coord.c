@@ -1,24 +1,5 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- *
- * COPYRIGHT:        See COPYING in the top level directory
+ * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Coordinate systems
  * FILE:             subsys/win32k/objects/coord.c
@@ -35,13 +16,13 @@
 /* FUNCTIONS *****************************************************************/
 
 void FASTCALL
-IntFixIsotropicMapping(PDC dc)
+IntFixIsotropicMapping(PDC pdc)
 {
     PDC_ATTR pdcattr;
     LONG fx, fy, s;
 
     /* Get a pointer to the DC_ATTR */
-    pdcattr = dc->pdcattr;
+    pdcattr = pdc->pdcattr;
 
     /* Check if all values are valid */
     if (pdcattr->szlWindowExt.cx == 0 || pdcattr->szlWindowExt.cy == 0 ||
@@ -66,6 +47,76 @@ IntFixIsotropicMapping(PDC dc)
     }
 }
 
+// FIXME: Don't use floating point in the kernel!
+void IntWindowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
+{
+    FLOAT scaleX, scaleY;
+
+    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
+    xformWnd2Vport->eM11 = scaleX;
+    xformWnd2Vport->eM12 = 0.0;
+    xformWnd2Vport->eM21 = 0.0;
+    xformWnd2Vport->eM22 = scaleY;
+    xformWnd2Vport->eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport->eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+}
+
+// FIXME: Use XFORMOBJECT!
+VOID FASTCALL
+DC_UpdateXforms(PDC dc)
+{
+    XFORM  xformWnd2Vport;
+    PDC_ATTR pdcattr = dc->pdcattr;
+    XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
+
+    /* Construct a transformation to do the window-to-viewport conversion */
+    IntWindowToViewPort(pdcattr, &xformWnd2Vport);
+
+    /* Combine with the world transformation */
+    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
+    MatrixS2XForm(&xformWorld2Wnd, &dc->dclevel.mxWorldToPage);
+    IntGdiCombineTransform(&xformWorld2Vport, &xformWorld2Wnd, &xformWnd2Vport);
+
+    /* Create inverse of world-to-viewport transformation */
+    MatrixS2XForm(&xformVport2World, &dc->dclevel.mxDeviceToWorld);
+    if (DC_InvertXform(&xformWorld2Vport, &xformVport2World))
+    {
+        pdcattr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+    }
+    else
+    {
+        pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
+    }
+
+    /* Update transformation matrices */
+    XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
+    XForm2MatrixS(&dc->dclevel.mxDeviceToWorld, &xformVport2World);
+}
+
+VOID
+FASTCALL
+DC_vUpdateViewportExt(PDC pdc)
+{
+    PDC_ATTR pdcattr;
+
+    /* Get a pointer to the dc attribute */
+    pdcattr = pdc->pdcattr;
+
+    /* Check if we need to recalculate */
+    if (pdcattr->flXform & PAGE_EXTENTS_CHANGED)
+    {
+        /* Check if we need to do isotropic fixup */
+        if (pdcattr->iMapMode == MM_ISOTROPIC)
+        {
+            IntFixIsotropicMapping(pdc);
+        }
+
+        /* Update xforms, CHECKME: really done here? */
+        DC_UpdateXforms(pdc);
+    }
+}
+
 // FIXME: don't use floating point in the kernel! use XFORMOBJ function
 BOOL FASTCALL
 IntGdiCombineTransform(
@@ -74,6 +125,7 @@ IntGdiCombineTransform(
     LPXFORM xform2)
 {
     XFORM xformTemp;
+
     /* Check for illegal parameters */
     if (!XFormResult || !xform1 || !xform2)
     {
@@ -94,10 +146,12 @@ IntGdiCombineTransform(
 }
 
 // FIXME: should be XFORML and use XFORMOBJ functions
-BOOL APIENTRY NtGdiCombineTransform(
-    LPXFORM  UnsafeXFormResult,
-    LPXFORM  Unsafexform1,
-    LPXFORM  Unsafexform2)
+BOOL
+APIENTRY
+NtGdiCombineTransform(
+    LPXFORM UnsafeXFormResult,
+    LPXFORM Unsafexform1,
+    LPXFORM Unsafexform2)
 {
     BOOL Ret;
 
@@ -117,6 +171,164 @@ BOOL APIENTRY NtGdiCombineTransform(
     _SEH2_END;
 
     return Ret;
+}
+
+// FIXME: Should be XFORML and use XFORMOBJ functions directly
+BOOL
+APIENTRY
+NtGdiGetTransform(
+    HDC  hDC,
+    DWORD iXform,
+    LPXFORM  XForm)
+{
+    PDC pdc;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!XForm)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(XForm, sizeof(XFORM), 1);
+        switch (iXform)
+        {
+            case GdiWorldSpaceToPageSpace:
+                MatrixS2XForm(XForm, &pdc->dclevel.mxWorldToPage);
+                break;
+
+            case GdiWorldSpaceToDeviceSpace:
+                MatrixS2XForm(XForm, &pdc->dclevel.mxWorldToDevice);
+                break;
+
+            case GdiPageSpaceToDeviceSpace:
+                IntWindowToViewPort(pdc->pdcattr, XForm);
+                break;
+
+            case GdiDeviceSpaceToWorldSpace:
+                MatrixS2XForm(XForm, &pdc->dclevel.mxDeviceToWorld);
+                break;
+
+            default:
+                DPRINT1("Unknown transform %lu\n", iXform);
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    DC_UnlockDc(pdc);
+    return NT_SUCCESS(Status);
+}
+
+
+/*!
+ * Converts points from logical coordinates into device coordinates.
+ * Conversion depends on the mapping mode,
+ * world transfrom, viewport origin settings for the given device context.
+ * \param	hDC		device context.
+ * \param	Points	an array of POINT structures (in/out).
+ * \param	Count	number of elements in the array of POINT structures.
+ * \return  TRUE if success, FALSE otherwise.
+*/
+BOOL
+APIENTRY
+NtGdiTransformPoints(
+    HDC hDC,
+    PPOINT UnsafePtsIn,
+    PPOINT UnsafePtOut,
+    INT Count,
+    INT iMode)
+{
+    PDC pdc;
+    LPPOINT Points;
+    ULONG Size;
+    BOOL ret = TRUE;
+
+    if (Count <= 0)
+        return TRUE;
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Size = Count * sizeof(POINT);
+
+    // FIXME: It would be wise to have a small stack buffer as optimization
+    Points = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEMP);
+    if (!Points)
+    {
+        DC_UnlockDc(pdc);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(UnsafePtOut, Size, 1);
+        ProbeForRead(UnsafePtsIn, Size, 1);
+        RtlCopyMemory(Points, UnsafePtsIn, Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Do not set last error */
+        _SEH2_YIELD(goto leave;)
+    }
+    _SEH2_END;
+
+    switch (iMode)
+    {
+        case GdiDpToLp:
+            IntDPtoLP(pdc, Points, Count);
+            break;
+
+        case GdiLpToDp:
+            IntLPtoDP(pdc, Points, Count);
+            break;
+
+        case 2: // Not supported yet. Need testing.
+        default:
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+            goto leave;
+        }
+    }
+
+    _SEH2_TRY
+    {
+        /* pointer was already probed! */
+        RtlCopyMemory(UnsafePtOut, Points, Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Do not set last error */
+    }
+    _SEH2_END;
+
+//
+// If we are getting called that means User XForms is a mess!
+//
+leave:
+    DC_UnlockDc(pdc);
+    ExFreePoolWithTag(Points, GDITAG_TEMP);
+    return ret;
 }
 
 // FIXME: Don't use floating point in the kernel
@@ -165,196 +377,6 @@ IntGdiModifyWorldTransform(
     return TRUE;
 }
 
-// FIXME: Don't use floating point in the kernel!
-void IntWindowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
-{
-    FLOAT scaleX, scaleY;
-
-    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
-    xformWnd2Vport->eM11 = scaleX;
-    xformWnd2Vport->eM12 = 0.0;
-    xformWnd2Vport->eM21 = 0.0;
-    xformWnd2Vport->eM22 = scaleY;
-    xformWnd2Vport->eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport->eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
-}
-
-// FIXME: Should be XFORML and use XFORMOBJ functions directly
-BOOL
-APIENTRY
-NtGdiGetTransform(
-    HDC  hDC,
-    DWORD iXform,
-    LPXFORM  XForm)
-{
-    PDC  dc;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    dc = DC_LockDc(hDC);
-    if (!dc)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-    if (!XForm)
-    {
-        DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(XForm, sizeof(XFORM), 1);
-        switch (iXform)
-        {
-            case GdiWorldSpaceToPageSpace:
-                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
-                break;
-
-            case GdiWorldSpaceToDeviceSpace:
-                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToDevice);
-                break;
-
-            case GdiPageSpaceToDeviceSpace:
-                IntWindowToViewPort(dc->pdcattr, XForm);
-                break;
-
-            case GdiDeviceSpaceToWorldSpace:
-                MatrixS2XForm(XForm, &dc->dclevel.mxDeviceToWorld);
-                break;
-
-            default:
-                DPRINT1("Unknown transform %lu\n", iXform);
-                Status = STATUS_INVALID_PARAMETER;
-                break;
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    DC_UnlockDc(dc);
-    return NT_SUCCESS(Status);
-}
-
-
-/*!
- * Converts points from logical coordinates into device coordinates. Conversion depends on the mapping mode,
- * world transfrom, viewport origin settings for the given device context.
- * \param	hDC		device context.
- * \param	Points	an array of POINT structures (in/out).
- * \param	Count	number of elements in the array of POINT structures.
- * \return  TRUE 	if success.
-*/
-BOOL
-APIENTRY
-NtGdiTransformPoints(
-    HDC hDC,
-    PPOINT UnsafePtsIn,
-    PPOINT UnsafePtOut,
-    INT Count,
-    INT iMode)
-{
-    PDC dc;
-    NTSTATUS Status = STATUS_SUCCESS;
-    LPPOINT Points;
-    ULONG Size;
-
-    dc = DC_LockDc(hDC);
-    if (!dc)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
-    {
-        DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    Size = Count * sizeof(POINT);
-
-    // FIXME: It would be wise to have a small stack buffer as optimization
-    Points = ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
-    if (!Points)
-    {
-        DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(UnsafePtOut, Size, 1);
-        ProbeForRead(UnsafePtsIn, Size, 1);
-        RtlCopyMemory(Points, UnsafePtsIn, Size);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DC_UnlockDc(dc);
-        ExFreePoolWithTag(Points, TAG_COORD);
-        SetLastNtError(Status);
-        return FALSE;
-    }
-
-    switch (iMode)
-    {
-        case GdiDpToLp:
-            IntDPtoLP(dc, Points, Count);
-            break;
-
-        case GdiLpToDp:
-            IntLPtoDP(dc, Points, Count);
-            break;
-
-        case 2: // Not supported yet. Need testing.
-        default:
-        {
-            DC_UnlockDc(dc);
-            ExFreePoolWithTag(Points, TAG_COORD);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-    }
-
-    _SEH2_TRY
-    {
-        /* pointer was already probed! */
-        RtlCopyMemory(UnsafePtOut, Points, Size);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DC_UnlockDc(dc);
-        ExFreePoolWithTag(Points, TAG_COORD);
-        SetLastNtError(Status);
-        return FALSE;
-    }
-//
-// If we are getting called that means User XForms is a mess!
-//
-    DC_UnlockDc(dc);
-    ExFreePoolWithTag(Points, TAG_COORD);
-    return TRUE;
-}
-
 BOOL
 APIENTRY
 NtGdiModifyWorldTransform(
@@ -363,13 +385,13 @@ NtGdiModifyWorldTransform(
     DWORD Mode)
 {
     PDC dc;
-    XFORM SafeXForm;
+    XFORM SafeXForm; //FIXME: use XFORML
     BOOL Ret = TRUE;
 
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -410,7 +432,7 @@ NtGdiOffsetViewportOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -467,7 +489,7 @@ NtGdiOffsetWindowOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -523,35 +545,10 @@ NtGdiScaleViewportExtEx(
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pDC->pdcattr;
-
-    if (pSize)
-    {
-        NTSTATUS Status = STATUS_SUCCESS;
-
-        _SEH2_TRY
-        {
-            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
-
-            pSize->cx = pdcattr->szlViewportExt.cx;
-            pSize->cy = pdcattr->szlViewportExt.cy;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            DC_UnlockDc(pDC);
-            return FALSE;
-        }
-    }
 
     if (pdcattr->iMapMode > MM_TWIPS)
     {
@@ -586,6 +583,23 @@ NtGdiScaleViewportExtEx(
     else
         Ret = TRUE;
 
+    if (pSize)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
+
+            pSize->cx = pdcattr->szlViewportExt.cx;
+            pSize->cy = pdcattr->szlViewportExt.cy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+            Ret = FALSE;
+        }
+        _SEH2_END;
+    }
+
     DC_UnlockDc(pDC);
     return Ret;
 }
@@ -608,7 +622,7 @@ NtGdiScaleWindowExtEx(
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = pDC->pdcattr;
@@ -766,7 +780,7 @@ NtGdiSetViewportOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -818,7 +832,7 @@ NtGdiSetWindowOrgEx(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;
@@ -948,7 +962,7 @@ NtGdiSetLayout(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
     pdcattr = pdc->pdcattr;
@@ -973,7 +987,7 @@ NtGdiGetDeviceWidth(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
     Ret = dc->erclWindow.right - dc->erclWindow.left;
@@ -993,7 +1007,7 @@ NtGdiMirrorWindowOrg(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     IntMirrorWindowOrg(dc);
@@ -1057,7 +1071,7 @@ NtGdiSetVirtualResolution(
         cxVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, HORZSIZE);
         cyVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, VERTSIZE);
     }
-    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 || 
+    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 ||
              cxVirtualDeviceMm == 0 || cyVirtualDeviceMm == 0)
     {
         return FALSE;
@@ -1102,37 +1116,6 @@ DC_InvertXform(const XFORM *xformSrc,
     return  TRUE;
 }
 
-VOID FASTCALL
-DC_UpdateXforms(PDC dc)
-{
-    XFORM  xformWnd2Vport;
-    PDC_ATTR pdcattr = dc->pdcattr;
-    XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
-
-    /* Construct a transformation to do the window-to-viewport conversion */
-    IntWindowToViewPort(pdcattr, &xformWnd2Vport);
-
-    /* Combine with the world transformation */
-    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
-    MatrixS2XForm(&xformWorld2Wnd, &dc->dclevel.mxWorldToPage);
-    IntGdiCombineTransform(&xformWorld2Vport, &xformWorld2Wnd, &xformWnd2Vport);
-
-    /* Create inverse of world-to-viewport transformation */
-    MatrixS2XForm(&xformVport2World, &dc->dclevel.mxDeviceToWorld);
-    if (DC_InvertXform(&xformWorld2Vport, &xformVport2World))
-    {
-        pdcattr->flXform &= ~DEVICE_TO_WORLD_INVALID;
-    }
-    else
-    {
-        pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
-    }
-
-    /* Update transformation matrices */
-    XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
-    XForm2MatrixS(&dc->dclevel.mxDeviceToWorld, &xformVport2World);
-}
-
 LONG FASTCALL
 IntCalcFillOrigin(PDC pdc)
 {
@@ -1150,49 +1133,6 @@ IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
     pdc->dclevel.ptlBrushOrigin.y = y;
     IntCalcFillOrigin(pdc);
     return &pdc->dclevel.ptlBrushOrigin;
-}
-
-VOID
-APIENTRY
-GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
-{
-    PDC pdc;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc) return;
-
-    pdc->ptlDCOrig.x = Left;
-    pdc->ptlDCOrig.y = Top;
-
-    IntCalcFillOrigin(pdc);
-
-    if (prc) pdc->erclWindow = *prc;
-
-    DC_UnlockDc(pdc);
-}
-
-// FIXME: remove me
-BOOL FASTCALL
-IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
-{
-    *ppt = pDc->ptlDCOrig;
-    return TRUE;
-}
-
-// FIXME: remove me
-BOOL APIENTRY
-GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
-{
-    PDC pdc;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc) return FALSE;
-
-    *prc = pdc->erclWindow;
-    *ppt = pdc->ptlDCOrig;
-
-    DC_UnlockDc(pdc);
-    return TRUE;
 }
 
 static
@@ -1213,29 +1153,6 @@ DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
     }
 }
 
-VOID
-FASTCALL
-DC_vUpdateViewportExt(PDC pdc)
-{
-    PDC_ATTR pdcattr;
-
-    /* Get a pointer to the dc attribute */
-    pdcattr = pdc->pdcattr;
-
-    /* Check if we need to recalculate */
-    if (pdcattr->flXform & PAGE_EXTENTS_CHANGED)
-    {
-        /* Check if we need to do isotropic fixup */
-        if (pdcattr->iMapMode == MM_ISOTROPIC)
-        {
-            IntFixIsotropicMapping(pdc);
-        }
-
-        /* Update xforms, CHECKME: really done here? */
-        DC_UpdateXforms(pdc);
-    }
-}
-
 BOOL APIENTRY
 NtGdiGetDCPoint(
     HDC hDC,
@@ -1250,14 +1167,14 @@ NtGdiGetDCPoint(
 
     if (!Point)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -1293,7 +1210,7 @@ NtGdiGetDCPoint(
             break;
 
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
             break;
     }
@@ -1321,29 +1238,5 @@ NtGdiGetDCPoint(
     DC_UnlockDc(pdc);
     return Ret;
 }
-
-
-DWORD
-APIENTRY
-NtGdiGetBoundsRect(
-    IN HDC hdc,
-    OUT LPRECT prc,
-    IN DWORD f)
-{
-    DPRINT1("stub\n");
-    return  DCB_RESET;   /* bounding rectangle always empty */
-}
-
-DWORD
-APIENTRY
-NtGdiSetBoundsRect(
-    IN HDC hdc,
-    IN LPRECT prc,
-    IN DWORD f)
-{
-    DPRINT1("stub\n");
-    return  DCB_DISABLE;   /* bounding rectangle always empty */
-}
-
 
 /* EOF */

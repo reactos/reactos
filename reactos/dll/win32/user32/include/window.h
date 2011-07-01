@@ -12,8 +12,6 @@ extern HBRUSH SysBrushes[];
 
 #define NUM_SYSCOLORS 31
 
-#define IS_ATOM(x) \
-  (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
 #define UserHasAnyFrameStyle(Style, ExStyle)                                   \
   (((Style) & (WS_THICKFRAME | WS_DLGFRAME | WS_BORDER)) ||                    \

@@ -134,10 +134,10 @@ void LoadSettings(void)
 		QueryBool(hKey,     _T("fWrap"),            &Globals.bWrapLongLines);
 		QueryBool(hKey,     _T("fStatusBar"),       &Globals.bShowStatusBar);
 
-		QueryByte(hKey,    _T("iWindowPosX"),       (LPBYTE)&Globals.main_rect.left);
-		QueryByte(hKey,    _T("iWindowPosX"),       (LPBYTE)&Globals.main_rect.top);
-		QueryByte(hKey,    _T("iWindowPosDX"),      (LPBYTE)&dx);
-		QueryByte(hKey,    _T("iWindowPosDY"),      (LPBYTE)&dy);
+		QueryDword(hKey,    _T("iWindowPosX"),      (DWORD*)&Globals.main_rect.left);
+		QueryDword(hKey,    _T("iWindowPosY"),      (DWORD*)&Globals.main_rect.top);
+		QueryDword(hKey,    _T("iWindowPosDX"),     (DWORD*)&dx);
+		QueryDword(hKey,    _T("iWindowPosDY"),     (DWORD*)&dy);
 
         Globals.main_rect.right = Globals.main_rect.left + dx;
         Globals.main_rect.bottom = Globals.main_rect.top + dy;

@@ -201,6 +201,11 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         ProcessPageOnNotify(wParam, lParam);
         break;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_DELETE)
+            ProcessPage_OnEndProcess();
+        break;
     }
 
     return 0;
@@ -249,6 +254,12 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
         case NM_RCLICK:
 
             ProcessPageShowContextMenu(GetSelectedProcessId());
+            break;
+
+        case LVN_KEYDOWN:
+
+            if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
+                ProcessPage_OnEndProcess();
             break;
 
         }
@@ -424,6 +435,8 @@ void UpdateProcesses()
     LV_ITEM item;
     LPPROCESS_PAGE_LIST_ITEM pData;
 
+    SendMessage(hProcessPageListCtrl, WM_SETREDRAW, FALSE, 0);
+
     /* Remove old processes */
     for (i = 0; i < ListView_GetItemCount(hProcessPageListCtrl); i++)
     {
@@ -453,6 +466,8 @@ void UpdateProcesses()
     {
         (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
     }
+
+    SendMessage(hProcessPageListCtrl, WM_SETREDRAW, TRUE, 0);
 }
 
 BOOL ProcessRunning(ULONG ProcessId) 

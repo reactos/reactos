@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE BEGIN
@@ -39,7 +37,7 @@ BEGIN
         MENUITEM "Ny&begynder",     IDM_BEGINNER
         MENUITEM "&Avanceret",      IDM_ADVANCED
         MENUITEM "&Ekspert",        IDM_EXPERT
-        MENUITEM "B&rugerdefineret" IDM_CUSTOM
+        MENUITEM "B&rugerdefineret", IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "Afslut&t\tAlt+X", IDM_EXIT
     END

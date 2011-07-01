@@ -365,7 +365,7 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
 #ifdef NEWCC
-	  if (!RMAP_IS_SEGMENT(current_entry->Address)) 
+	  if (!RMAP_IS_SEGMENT(previous_entry->Address)) 
 #endif
 	  {
 		  if (DeleteMapping)

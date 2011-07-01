@@ -68,7 +68,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ZeroMemory(&wcFrame, sizeof(WNDCLASSEX));
     wcFrame.cbSize = sizeof(WNDCLASSEX);
-    wcFrame.style = CS_HREDRAW | CS_VREDRAW;
     wcFrame.lpfnWndProc = FrameWndProc;
     wcFrame.hInstance = hInstance;
     wcFrame.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
@@ -82,15 +81,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ZeroMemory(&wcChild, sizeof(WNDCLASSEX));
     wcChild.cbSize = sizeof(WNDCLASSEX);
-    wcChild.style = CS_HREDRAW | CS_VREDRAW;
     wcChild.lpfnWndProc = ChildWndProc;
     wcChild.cbWndExtra = sizeof(HANDLE);
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
     wcChild.hCursor = LoadCursor(0, IDC_ARROW),
-    wcChild.lpszClassName =  szChildClass,
-    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+            wcChild.lpszClassName =  szChildClass,
+                    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
+                                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
     RegisterClassEx(&wcChild); /* register child windows class */
 
@@ -107,13 +105,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     AclUiAvailable = InitializeAclUiDll();
     if(!AclUiAvailable)
     {
-      /* hide the Edit/Permissions... menu entry */
-      if(hEditMenu != NULL)
-      {
-        RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
-        /* remove the separator after the menu item */
-        RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
-      }
+        /* hide the Edit/Permissions... menu entry */
+        if(hEditMenu != NULL)
+        {
+            RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
+            /* remove the separator after the menu item */
+            RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
+        }
     }
 
     if(hEditMenu != NULL)
@@ -129,14 +127,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
-    if (!hFrameWnd) {
+    if (!hFrameWnd)
+    {
         return FALSE;
     }
 
     /* Create the status bar */
-    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS,
+    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|SBT_NOBORDERS,
                                     _T(""), hFrameWnd, STATUS_WINDOW);
-    if (hStatusBar) {
+    if (hStatusBar)
+    {
         /* Create the status bar panes */
         SetupStatusBar(hFrameWnd, FALSE);
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
@@ -144,7 +144,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     /* Restore position */
     if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"),
-        szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+                         szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
     {
         SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
     }
@@ -159,8 +159,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 /* we need to destroy the main menu before destroying the main window
    to avoid a memory leak */
 
-void DestroyMainMenu() {
-	DestroyMenu(hMenuFrame);
+void DestroyMainMenu()
+{
+    DestroyMenu(hMenuFrame);
 }
 
 /******************************************************************************/
@@ -175,11 +176,11 @@ void ExitInstance(HINSTANCE hInstance)
 
 BOOL TranslateChildTabMessage(MSG *msg)
 {
-  if (msg->message != WM_KEYDOWN) return FALSE;
-  if (msg->wParam != VK_TAB) return FALSE;
-  if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
-  PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
-  return TRUE;
+    if (msg->message != WM_KEYDOWN) return FALSE;
+    if (msg->wParam != VK_TAB) return FALSE;
+    if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
+    PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
+    return TRUE;
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance,
@@ -192,7 +193,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    if (ProcessCmdLine(lpCmdLine)) {
+    if (ProcessCmdLine(lpCmdLine))
+    {
         return 0;
     }
 
@@ -205,15 +207,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     hInst = hInstance;
 
     /* Perform application initialization */
-    if (!InitInstance(hInstance, nCmdShow)) {
+    if (!InitInstance(hInstance, nCmdShow))
+    {
         return FALSE;
     }
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
     /* Main message loop */
-    while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
+    while (GetMessage(&msg, (HWND)NULL, 0, 0))
+    {
         if (!TranslateAccelerator(hFrameWnd, hAccel, &msg)
-            && !TranslateChildTabMessage(&msg)) {
+                && !TranslateChildTabMessage(&msg))
+        {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

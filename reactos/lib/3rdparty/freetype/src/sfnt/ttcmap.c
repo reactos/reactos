@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (body).              */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by            */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -2689,7 +2689,7 @@
                     FT_Memory  memory )
   {
     FT_UInt32 old_max = cmap->max_results;
-    FT_Error  error   = 0;
+    FT_Error  error   = SFNT_Err_Ok;
 
 
     if ( num_results > cmap->max_results )
@@ -2787,7 +2787,8 @@
         }
 
         /* and the non-default table (these glyphs are specified here) */
-        if ( nondefOff != 0 ) {
+        if ( nondefOff != 0 )
+        {
           FT_Byte*  ndp         = table + nondefOff;
           FT_ULong  numMappings = TT_NEXT_ULONG( ndp );
           FT_ULong  i, lastUni = 0;
@@ -3375,7 +3376,7 @@
     clazz[i] = NULL;
 
     *output_class = clazz;
-    return FT_Err_Ok;
+    return SFNT_Err_Ok;
   }
 
 #endif /*FT_CONFIG_OPTION_PIC*/
@@ -3391,11 +3392,12 @@
     FT_Byte*           limit = table + face->cmap_size;
     FT_UInt volatile   num_cmaps;
     FT_Byte* volatile  p     = table;
-    FT_Library         library = FT_FACE_LIBRARY(face);
-    FT_UNUSED(library);
+    FT_Library         library = FT_FACE_LIBRARY( face );
+
+    FT_UNUSED( library );
 
 
-    if ( p + 4 > limit )
+    if ( !p || p + 4 > limit )
       return SFNT_Err_Invalid_Table;
 
     /* only recognize format 0 */
@@ -3409,6 +3411,12 @@
     }
 
     num_cmaps = TT_NEXT_USHORT( p );
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+    if ( num_cmaps > FT_MAX_CHARMAP_CACHEABLE )
+      FT_ERROR(( "tt_face_build_cmaps: too many cmap subtables(%d) "
+                 "subtable#%d and later are loaded but cannot be searched\n",
+                 num_cmaps, FT_MAX_CHARMAP_CACHEABLE + 1 ));
+#endif
 
     for ( ; num_cmaps > 0 && p + 8 <= limit; num_cmaps-- )
     {

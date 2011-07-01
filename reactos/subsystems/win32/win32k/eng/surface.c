@@ -37,28 +37,19 @@ gajBitsPerFormat[11] =
 };
 
 
-ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
+ULONG FASTCALL BitmapFormat(ULONG cBits, ULONG iCompression)
 {
-    switch (Compression)
+    switch (iCompression)
     {
         case BI_RGB:
             /* Fall through */
         case BI_BITFIELDS:
-            switch (Bits)
-            {
-                case 1:
-                    return BMF_1BPP;
-                case 4:
-                    return BMF_4BPP;
-                case 8:
-                    return BMF_8BPP;
-                case 16:
-                    return BMF_16BPP;
-                case 24:
-                    return BMF_24BPP;
-                case 32:
-                    return BMF_32BPP;
-            }
+            if (cBits <= 1) return BMF_1BPP;
+            if (cBits <= 4) return BMF_4BPP;
+            if (cBits <= 8) return BMF_8BPP;
+            if (cBits <= 16) return BMF_16BPP;
+            if (cBits <= 24) return BMF_24BPP;
+            if (cBits <= 32) return BMF_32BPP;
             return 0;
 
         case BI_RLE4:
@@ -160,7 +151,7 @@ SURFACE_AllocSurface(
     }
 
     /* Allocate a SURFACE object */
-    psurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP);
+    psurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP, sizeof(SURFACE));
 
     if (psurf)
     {
@@ -175,7 +166,7 @@ SURFACE_AllocSurface(
 
         /* Assign a default palette and increment its reference count */
         psurf->ppal = appalSurfaceDefault[iFormat];
-        GDIOBJ_IncrementShareCount(&psurf->ppal->BaseObject);
+        GDIOBJ_vReferenceObjectByPointer(&psurf->ppal->BaseObject);
     }
 
     return psurf;
@@ -294,12 +285,12 @@ EngCreateBitmap(
     {
         /* Bail out if that failed */
         DPRINT1("SURFACE_bSetBitmapBits failed.\n");
-        SURFACE_FreeSurfaceByHandle(hbmp);
+        GDIOBJ_vDeleteObject(&psurf->BaseObject);
         return NULL;
     }
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hbmp, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -333,7 +324,7 @@ EngCreateDeviceBitmap(
     hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hbmp, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -364,7 +355,7 @@ EngCreateDeviceSurface(
     hsurf = psurf->SurfObj.hsurf;
 
     /* Set public ownership */
-    GDIOBJ_SetOwnership(hsurf, NULL);
+    GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -385,7 +376,7 @@ EngAssociateSurface(
     ppdev = (PDEVOBJ*)hdev;
 
     /* Lock the surface */
-    psurf = SURFACE_LockSurface(hsurf);
+    psurf = SURFACE_ShareLockSurface(hsurf);
     if (!psurf)
     {
         return FALSE;
@@ -403,7 +394,7 @@ EngAssociateSurface(
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return TRUE;
 }
@@ -424,7 +415,7 @@ EngModifySurface(
     PSURFACE psurf;
     PDEVOBJ* ppdev;
 
-    psurf = SURFACE_LockSurface(hsurf);
+    psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf == NULL)
     {
         return FALSE;
@@ -447,7 +438,7 @@ EngModifySurface(
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    SURFACE_UnlockSurface(psurf);
+    SURFACE_ShareUnlockSurface(psurf);
 
     return TRUE;
 }
@@ -457,8 +448,16 @@ BOOL
 APIENTRY
 EngDeleteSurface(IN HSURF hsurf)
 {
-    GDIOBJ_SetOwnership(hsurf, PsGetCurrentProcess());
-    SURFACE_FreeSurfaceByHandle(hsurf);
+    PSURFACE psurf;
+
+    psurf = SURFACE_ShareLockSurface(hsurf);
+    if (!psurf)
+    {
+        DPRINT1("Could not reference surface to delete\n");
+        return FALSE;
+    }
+
+    GDIOBJ_vDeleteObject(&psurf->BaseObject);
     return TRUE;
 }
 
@@ -488,19 +487,17 @@ SURFOBJ *
 APIENTRY
 EngLockSurface(IN HSURF hsurf)
 {
-    SURFACE *psurf = GDIOBJ_ShareLockObj(hsurf, GDI_OBJECT_TYPE_BITMAP);
+    SURFACE *psurf = SURFACE_ShareLockSurface(hsurf);
 
-    if (psurf != NULL)
-        return &psurf->SurfObj;
-
-    return NULL;
+    return psurf ? &psurf->SurfObj : NULL;
 }
 
 VOID
 APIENTRY
 NtGdiEngUnlockSurface(IN SURFOBJ *pso)
 {
-    EngUnlockSurface(pso);
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
 }
 
 VOID
@@ -510,7 +507,7 @@ EngUnlockSurface(IN SURFOBJ *pso)
     if (pso != NULL)
     {
         SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
-        GDIOBJ_ShareUnlockObjByPtr((POBJ)psurf);
+        SURFACE_ShareUnlockSurface(psurf);
     }
 }
 

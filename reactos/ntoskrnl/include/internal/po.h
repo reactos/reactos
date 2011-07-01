@@ -291,7 +291,8 @@ PoVolumeDevice(
 NTSTATUS
 NTAPI
 PopSetSystemPowerState(
-    SYSTEM_POWER_STATE PowerState
+    SYSTEM_POWER_STATE PowerState,
+    POWER_ACTION PowerAction
 );
 
 VOID

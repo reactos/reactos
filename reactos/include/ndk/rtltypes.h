@@ -144,6 +144,19 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #endif
 
 //
+// Native image architecture
+//
+#if defined(_M_IX86)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_I386
+#elif defined(_M_ARM)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_ARM
+#elif defined(_M_AMD64)
+#define IMAGE_FILE_MACHINE_NATIVE IMAGE_FILE_MACHINE_AMD64
+#else
+#error Define these please!
+#endif
+
+//
 // Registry Keys
 //
 #define RTL_REGISTRY_ABSOLUTE                               0
@@ -999,13 +1012,20 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
-typedef struct RTL_DRIVE_LETTER_CURDIR
+typedef struct _RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;
     USHORT Length;
     ULONG TimeStamp;
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+typedef struct _RTL_PERTHREAD_CURDIR
+{
+    PRTL_DRIVE_LETTER_CURDIR CurrentDirectories;
+    PUNICODE_STRING ImageName;
+    PVOID Environment;
+} RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
 
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege
@@ -1271,6 +1291,18 @@ typedef struct _STACK_TRACE_DATABASE
 {
     RTL_CRITICAL_SECTION CriticalSection;
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
+
+typedef struct _RTL_TRACE_BLOCK
+{
+    ULONG Magic;
+    ULONG Count;
+    ULONG Size;
+    ULONG UserCount;
+    ULONG UserSize;
+    PVOID UserContext;
+    struct _RTL_TRACE_BLOCK *Next;
+    PVOID *Trace;
+} RTL_TRACE_BLOCK, *PRTL_TRACE_BLOCK;
 
 #ifndef NTOS_MODE_USER
 

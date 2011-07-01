@@ -61,6 +61,7 @@ typedef struct _WINSTATION_OBJECT
 
 extern WINSTATION_OBJECT *InputWindowStation;
 extern PPROCESSINFO LogonProcess;
+extern HWND hwndSAS;
 
 INIT_FUNCTION
 NTSTATUS
@@ -80,6 +81,9 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 NTSTATUS
 APIENTRY
 IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
+
+NTSTATUS NTAPI 
+IntWinstaOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
@@ -104,5 +108,8 @@ IntGetFullWindowStationName(
    IN OPTIONAL PUNICODE_STRING DesktopName);
 
 PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
+
+BOOL FASTCALL
+UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 /* EOF */

@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::ZEROPAGE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -35,7 +34,7 @@ MmZeroPageThread(VOID)
     PVOID ZeroAddress;
     PFN_NUMBER PageIndex, FreePage;
     PMMPFN Pfn1;
-    
+
     /* FIXME: Get the discardable sections to free them */
 //    MiFindInitializationCode(&StartAddress, &EndAddress);
 //    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
@@ -44,7 +43,7 @@ MmZeroPageThread(VOID)
     /* Set our priority to 0 */
     Thread->BasePriority = 0;
     KeSetPriorityThread(Thread, 0);
-    
+
     /* Setup the wait objects */
     WaitObjects[0] = &MmZeroingPageEvent;
 //    WaitObjects[1] = &PoSystemIdleTimer; FIXME: Implement idle timer
@@ -75,7 +74,7 @@ MmZeroPageThread(VOID)
             MI_SET_USAGE(MI_USAGE_ZERO_LOOP);
             MI_SET_PROCESS2("Kernel 0 Loop");
             FreePage = MiRemoveAnyPage(MI_GET_PAGE_COLOR(PageIndex));
-            
+
             /* The first global free page should also be the first on its own list */
             if (FreePage != PageIndex)
             {
@@ -85,15 +84,15 @@ MmZeroPageThread(VOID)
                              PageIndex,
                              0);
             }
-            
+
             Pfn1->u1.Flink = LIST_HEAD;
             KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-            
+
             ZeroAddress = MiMapPagesToZeroInHyperSpace(Pfn1, 1);
             ASSERT(ZeroAddress);
             RtlZeroMemory(ZeroAddress, PAGE_SIZE);
             MiUnmapPagesInZeroSpace(ZeroAddress, 1);
-            
+
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
             MiInsertPageInList(&MmZeroedPageListHead, PageIndex);

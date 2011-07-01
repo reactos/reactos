@@ -146,7 +146,7 @@ static VOID *assembly_data_offset(ASSEMBLY *assembly, ULONG offset)
 #define MAX_TABLES_3BIT_ENCODE 8191
 #define MAX_TABLES_5BIT_ENCODE 2047
 
-static inline ULONG get_table_size(ASSEMBLY *assembly, DWORD index)
+static inline ULONG get_table_size(const ASSEMBLY *assembly, DWORD index)
 {
     DWORD size;
     INT tables;
@@ -731,11 +731,11 @@ HRESULT assembly_release(ASSEMBLY *assembly)
     return S_OK;
 }
 
-static LPWSTR assembly_dup_str(ASSEMBLY *assembly, DWORD index)
+static LPWSTR assembly_dup_str(const ASSEMBLY *assembly, DWORD index)
 {
     int len;
     LPWSTR cpy;
-    LPSTR str = (LPSTR)&assembly->strings[index];
+    LPCSTR str = (LPCSTR)&assembly->strings[index];
 
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
 
@@ -772,7 +772,7 @@ HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name)
     return S_OK;
 }
 
-HRESULT assembly_get_path(ASSEMBLY *assembly, LPWSTR *path)
+HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path)
 {
     LPWSTR cpy = HeapAlloc(GetProcessHeap(), 0, (strlenW(assembly->path) + 1) * sizeof(WCHAR));
     *path = cpy;

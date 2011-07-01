@@ -162,7 +162,7 @@ static void AddButton(HWND hwndToolBar, int nImage, int nCommand)
     button.iBitmap = nImage;
     button.idCommand = nCommand;
     button.fsState = TBSTATE_ENABLED;
-    button.fsStyle = TBSTYLE_BUTTON;
+    button.fsStyle = BTNS_BUTTON;
     button.dwData = 0;
     button.iString = -1;
     SendMessageW(hwndToolBar, TB_ADDBUTTONSW, 1, (LPARAM)&button);
@@ -176,7 +176,7 @@ static void AddSeparator(HWND hwndToolBar)
     button.iBitmap = -1;
     button.idCommand = 0;
     button.fsState = 0;
-    button.fsStyle = TBSTYLE_SEP;
+    button.fsStyle = BTNS_SEP;
     button.dwData = 0;
     button.iString = -1;
     SendMessageW(hwndToolBar, TB_ADDBUTTONSW, 1, (LPARAM)&button);
@@ -1818,7 +1818,7 @@ static LRESULT OnCreate( HWND hWnd )
     if(!SendMessageW(hReBarWnd, RB_SETBARINFO, 0, (LPARAM)&rbi))
         return -1;
 
-    hToolBarWnd = CreateToolbarEx(hReBarWnd, CCS_NOPARENTALIGN|CCS_NOMOVEY|WS_VISIBLE|WS_CHILD|TBSTYLE_TOOLTIPS|TBSTYLE_BUTTON,
+    hToolBarWnd = CreateToolbarEx(hReBarWnd, CCS_NOPARENTALIGN|CCS_NOMOVEY|WS_VISIBLE|WS_CHILD|TBSTYLE_TOOLTIPS|BTNS_BUTTON,
       IDC_TOOLBAR,
       1, hInstance, IDB_TOOLBAR,
       NULL, 0,
@@ -1880,7 +1880,7 @@ static LRESULT OnCreate( HWND hWnd )
     SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
 
     hFormatBarWnd = CreateToolbarEx(hReBarWnd,
-         CCS_NOPARENTALIGN | CCS_NOMOVEY | WS_VISIBLE | TBSTYLE_TOOLTIPS | TBSTYLE_BUTTON,
+         CCS_NOPARENTALIGN | CCS_NOMOVEY | WS_VISIBLE | TBSTYLE_TOOLTIPS | BTNS_BUTTON,
          IDC_FORMATBAR, 8, hInstance, IDB_FORMATBAR, NULL, 0, 16, 16, 16, 16, sizeof(TBBUTTON));
 
     AddButton(hFormatBarWnd, 0, ID_FORMAT_BOLD);

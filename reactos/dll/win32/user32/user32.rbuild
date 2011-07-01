@@ -5,17 +5,18 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
+	<library>user32_wsprintf</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>imm32</library>
 	<library>win32ksys</library>
 	<library>pseh</library>
 	<library>ntdll</library>
-	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>
 	<directory name="controls">
+		<file>appswitch.c</file>
 		<file>button.c</file>
 		<file>combo.c</file>
 		<file>edit.c</file>
@@ -44,7 +45,6 @@
 		<file>usrapihk.c</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
-		<file>wsprintf.c</file>
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>

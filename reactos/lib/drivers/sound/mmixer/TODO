@@ -1,0 +1,6 @@
+=== MMIXER TASKS ===
+
+- Add hacks for source lines, such that Wave Mixer line always has a volume control
+- Support custom mixer controls
+- Assign mixer controls after all controls have been assigned (starting on the destination lines)
+- TESTING & BUGFIXING

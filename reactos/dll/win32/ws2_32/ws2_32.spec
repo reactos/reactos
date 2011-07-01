@@ -48,7 +48,7 @@
 
 151 stdcall  __WSAFDIsSet(long ptr)
 
-500 stub     WEP
+500 stdcall WEP()
 
 # @ stdcall GetAddrInfoW(wstr wstr ptr ptr)
 @ stdcall WSApSetPostRoutine(ptr)
@@ -84,13 +84,13 @@
 @ stdcall WSALookupServiceEnd(long)
 @ stdcall WSALookupServiceNextA(long long ptr ptr)
 @ stdcall WSALookupServiceNextW(long long ptr ptr)
-@ stub    WSANSPIoctl
+@ stdcall WSANSPIoctl(ptr long ptr long ptr long ptr ptr)
 @ stdcall WSANtohl(long long ptr)
 @ stdcall WSANtohs(long long ptr)
 @ stdcall WSAProviderConfigChange(ptr ptr ptr)
 @ stdcall WSARecv(long ptr long ptr ptr ptr ptr)
 @ stdcall WSARecvDisconnect(long ptr)
-@ stdcall WSARecvFrom(long ptr long ptr ptr ptr ptr ptr ptr ) 
+@ stdcall WSARecvFrom(long ptr long ptr ptr ptr ptr ptr ptr )
 @ stdcall WSARemoveServiceClass(ptr)
 @ stdcall WSAResetEvent(long) kernel32.ResetEvent
 @ stdcall WSASend(long ptr long ptr long ptr ptr)
@@ -111,8 +111,8 @@
 @ stdcall WSCInstallNameSpace(wstr wstr long long ptr)
 @ stdcall WSCInstallProvider(ptr wstr ptr long ptr)
 @ stdcall WSCUnInstallNameSpace(ptr)
-@ stub    WSCUpdateProvider
-@ stub    WSCWriteNameSpaceOrder
+@ stdcall WSCUpdateProvider(ptr ptr ptr long ptr)
+@ stdcall WSCWriteNameSpaceOrder(ptr long)
 @ stdcall WSCWriteProviderOrder(ptr long)
 @ stdcall freeaddrinfo(ptr)
 @ stdcall getaddrinfo(str str ptr ptr)

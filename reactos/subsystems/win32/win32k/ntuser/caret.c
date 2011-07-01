@@ -73,7 +73,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       ObDereferenceObject(WinStaObject);
       return FALSE;
    }
@@ -257,7 +257,7 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 
    if(Window && Window->head.pti->pEThread != PsGetCurrentThread())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -266,7 +266,7 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 
    if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -293,7 +293,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 
    if(Window && Window->head.pti->pEThread != PsGetCurrentThread())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -302,7 +302,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 
    if(Window && ThreadQueue->CaretInfo->hWnd != Window->head.h)
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -346,7 +346,7 @@ NtUserCreateCaret(
 
    if(Window->head.pti->pEThread != PsGetCurrentThread())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
    }
 

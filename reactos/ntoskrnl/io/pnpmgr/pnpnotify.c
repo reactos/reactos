@@ -23,6 +23,7 @@ typedef struct _PNP_NOTIFY_ENTRY
     PVOID Context;
     UNICODE_STRING Guid;
     PFILE_OBJECT FileObject;
+    PDRIVER_OBJECT DriverObject;
     PDRIVER_NOTIFICATION_CALLBACK_ROUTINE PnpNotificationProc;
 } PNP_NOTIFY_ENTRY, *PPNP_NOTIFY_ENTRY;
 
@@ -118,7 +119,6 @@ IopNotifyPlugPlayNotification(
 				NotificationInfos->Version = 1;
 				NotificationInfos->Size = sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION);
 				RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
-				NotificationInfos->FileObject = (PFILE_OBJECT)EventCategoryData1;
 			}
 			else
 			{
@@ -176,22 +176,21 @@ IopNotifyPlugPlayNotification(
 			}
 			case EventCategoryTargetDeviceChange:
 			{
-				if (Event != &GUID_PNP_CUSTOM_NOTIFICATION)
-				{
-					if (ChangeEntry->FileObject == (PFILE_OBJECT)EventCategoryData1)
-						CallCurrentEntry = TRUE;
-				}
-				else
-				{
-					Status = IoGetRelatedTargetDevice(ChangeEntry->FileObject, &EntryDeviceObject);
-    				if (NT_SUCCESS(Status))
-    				{
-						if (DeviceObject == EntryDeviceObject)
-						{
-							((PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
-							CallCurrentEntry = TRUE;
-						}
-					}
+				Status = IoGetRelatedTargetDevice(ChangeEntry->FileObject, &EntryDeviceObject);
+    			if (NT_SUCCESS(Status))
+                {
+                    if (DeviceObject == EntryDeviceObject)
+                    {
+                        if (Event == &GUID_PNP_CUSTOM_NOTIFICATION)
+                        {
+                            ((PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
+                        }
+                        else
+                        {
+                            ((PTARGET_DEVICE_REMOVAL_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
+                        }
+                        CallCurrentEntry = TRUE;
+                    }
 				}
 			}
 			default:
@@ -319,6 +318,7 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
     Entry->PnpNotificationProc = CallbackRoutine;
     Entry->EventCategory = EventCategory;
     Entry->Context = Context;
+    Entry->DriverObject = DriverObject;
     switch (EventCategory)
     {
         case EventCategoryDeviceInterfaceChange:
@@ -377,9 +377,14 @@ IoUnregisterPlugPlayNotification(IN PVOID NotificationEntry)
     DPRINT("__FUNCTION__(NotificationEntry %p) called\n", Entry);
 
     KeAcquireGuardedMutex(&PnpNotifyListLock);
-    RtlFreeUnicodeString(&Entry->Guid);
     RemoveEntryList(&Entry->PnpNotifyList);
     KeReleaseGuardedMutex(&PnpNotifyListLock);
+
+    RtlFreeUnicodeString(&Entry->Guid);
+
+    ObDereferenceObject(Entry->DriverObject);
+
+    ExFreePoolWithTag(Entry, TAG_PNP_NOTIFY);
 
     return STATUS_SUCCESS;
 }

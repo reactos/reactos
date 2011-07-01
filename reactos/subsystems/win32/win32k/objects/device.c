@@ -41,7 +41,7 @@ IntCreatePrimarySurface()
     /* attach monitor */
     IntAttachMonitor(gppdevPrimary, 0);
 
-    DPRINT1("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
+    DPRINT("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
         pPrimarySurface, pPrimarySurface->pSurface);
 
     /* Create surface */

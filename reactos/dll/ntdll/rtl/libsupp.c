@@ -486,3 +486,55 @@ done:
     *ret = resdirptr;
     return STATUS_SUCCESS;
 }
+
+/*
+ * @implemented
+ */
+PVOID NTAPI
+RtlPcToFileHeader(IN PVOID PcValue,
+                  PVOID* BaseOfImage)
+{
+    PLIST_ENTRY ModuleListHead;
+    PLIST_ENTRY Entry;
+    PLDR_DATA_TABLE_ENTRY Module;
+    PVOID ImageBase = NULL;
+
+    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    Entry = ModuleListHead->Flink;
+    while (Entry != ModuleListHead)
+    {
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        if ((ULONG_PTR)PcValue >= (ULONG_PTR)Module->DllBase &&
+                (ULONG_PTR)PcValue < (ULONG_PTR)Module->DllBase + Module->SizeOfImage)
+        {
+            ImageBase = Module->DllBase;
+            break;
+        }
+        Entry = Entry->Flink;
+    }
+    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+    *BaseOfImage = ImageBase;
+    return ImageBase;
+}
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDosApplyFileIsolationRedirection_Ustr(
+    IN BOOLEAN Unknown,
+    IN PUNICODE_STRING OriginalName,
+    IN PUNICODE_STRING Extension,
+    IN OUT PUNICODE_STRING RedirectedName,
+    IN OUT PUNICODE_STRING RedirectedName2,
+    IN OUT PUNICODE_STRING *OriginalName2,
+    IN PVOID Unknown1,
+    IN PVOID Unknown2,
+    IN PVOID Unknown3
+)
+{
+    return STATUS_SXS_KEY_NOT_FOUND;
+}
+

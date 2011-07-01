@@ -26,6 +26,7 @@
 #define RC_CTRLC      2
 #define RC_INITERROR  4
 #define RC_WRITEERROR 5
+#define RC_HELP       6
 
 #define OPT_ASSUMEDIR    0x00000001
 #define OPT_RECURSIVE    0x00000002

@@ -1,0 +1,95 @@
+setup VC9 for CE:
+------------------
+
+- VC9 doesn't have any setup batchfiles that prepare the environment for compiling
+with CE. You can take those from eVC4 and adapt them or write your own. This snippet
+should get you going:
+
+  rem you need to adapt at least these three
+  set OSVERSION=WCE500
+  set PLATFORM=MY_OWN_PLATFORM
+  set TARGETCPU=MIPSII
+
+  rem the compiler is always cl.exe, different compilers are in different paths
+  set CC=cl.exe
+  rem obviously, these need to be adjusted to where you installed VS2008 and the SDKs
+  set VSINSTALLDIR=C:\Programme\Microsoft Visual Studio 9.0
+  set SDKROOT=C:\Programme\Windows CE Tools
+
+  set PATH=%VSINSTALLDIR%\VC\ce\bin\x86_mips;%VSINSTALLDIR%\VC\bin;%VSINSTALLDIR%\Common7\IDE;%PATH%
+  set PLATFORMROOT=%SDKROOT%\%OSVERSION%\%PLATFORM%
+
+  rem add libs and includes from the SDK
+  set INCLUDE=%PLATFORMROOT%\include\%TARGETCPU%;%PLATFORMROOT%\MFC\include;%PLATFORMROOT%\ATL\include
+  set LIB=%PLATFORMROOT%\lib\%TARGETCPU%;%PLATFORMROOT%\MFC\lib\%TARGETCPU%;%PLATFORMROOT%\ATL\lib\%TARGETCPU%
+
+  rem add libs that came with VC9
+  rem Note: there are more libs and includes under ce\atlmfc, you need to add these
+  rem instead of the ones in the SDK if you want to use the newer version of ATL/MFC.
+  set LIB=%LIB%;%VSINSTALLDIR%\VC\ce\lib\%TARGETCPU%
+
+
+- The snippet below can be used to build STLport for Pocket PC 2003 (using the
+  Pocket PC 2003 SDK shipped with Visual Studio 2008, this is the SDK used when
+  compiling programs from within the IDE):
+
+  set OSVERSION=WCE420
+  set PLATFORM=POCKET PC 2003
+  set TARGETCPU=ARMV4
+
+  rem the compiler is always cl.exe, different compilers are in different paths
+  set CC=cl.exe
+
+  rem obviously, these need to be adjusted to where you installed VS2008
+  set VSINSTALLDIR=C:\Program Files\Microsoft Visual Studio 9.0
+  set SDKROOT=%VSINSTALLDIR%\SmartDevices\SDK
+
+  set PATH=%VSINSTALLDIR%\VC\ce\bin\x86_arm;%VSINSTALLDIR%\VC\bin;%VSINSTALLDIR%\Common7\IDE;%PATH%
+  set PLATFORMROOT=%SDKROOT%\PocketPC2003
+
+  rem add libs and includes from the SDK
+  set INCLUDE=%PLATFORMROOT%\include
+  set LIB=%PLATFORMROOT%\lib\%TARGETCPU%
+
+  rem add libs that came with VC9
+  set INCLUDE=%INCLUDE%;%VSINSTALLDIR%\VC\ce\atlmfc\include
+  set LIB=%LIB%;%VSINSTALLDIR%\VC\ce\lib\%TARGETCPU%;%VSINSTALLDIR%\VC\ce\atlmfc\lib\%TARGETCPU%
+
+
+You should now be able to run cl.exe for the target you expected.
+
+- The cross compilers of VC9 are the same version as for the native target, i.e. MSC15.
+
+- In order for STLport to recognize which target you are compiling for, you need to have
+some macros defined, e.g. for the target architecture. The compilers do that partially on
+their own, but not sufficiently. Therefore, STLport requires these defines:
+
+ -- These are generally set for CE:
+  _UNICODE;UNICODE;_WIN32;WIN32;UNDER_CE;WINCE;
+ -- This one uses an environment variable to set the CE version:
+  _WIN32_WCE=$(CEVER);
+ -- These are used to help STLport recognise the target architecture:
+  $(ARCHFAM);$(_ARCHFAM_);$(INSTRUCTIONSET)
+ Note that the instructionset is not strictly needed for x86 but definitely for ARM. It
+ doesn't hurt for x86 though, so I'd always set these in any new project.
+ -- For release builds:
+  NDEBUG;
+ -- For debug builds:
+  DEBUG;_DEBUG;
+ -- For debug builds with additional STLport diagnostics:
+  DEBUG;_DEBUG;_STLP_DEBUG;
+ -- For MFC applications:
+  _AFXDLL;
+
+- Further settings:
+ Code generation: Multithreaded [Debug] DLL
+ Language: enable RTTI
+ Optimization: maximise speed and enable whole program optimization for release builds
+
+- Linker settings:
+ Ignore specific libraries: libc.lib;libcd.lib
+ Commandline: /SUBSYSTEM:WINDOWSCE
+ Optimisation: /LTCG for release builds
+
+- Resource compiler:
+ Define: UNDER_CE;WINCE;_WIN32_WCE=$(CEVER)

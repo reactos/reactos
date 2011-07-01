@@ -31,9 +31,6 @@
 	<directory name="fslib">
 		<xi:include href="fslib/directory.rbuild" />
 	</directory>
-	<directory name="host">
-		<xi:include href="host/directory.rbuild" />
-	</directory>
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>
@@ -45,9 +42,6 @@
 	</directory>
 	<directory name="nls">
 		<xi:include href="nls/nls.rbuild" />
-	</directory>
-	<directory name="ntdllsys">
-		<xi:include href="ntdllsys/ntdllsys.rbuild" />
 	</directory>
 	<directory name="ppcmmu">
 		<xi:include href="ppcmmu/ppcmmu.rbuild" />
@@ -69,8 +63,5 @@
 	</directory>
 	<directory name="tdilib">
 		<xi:include href="tdilib/tdilib.rbuild" />
-	</directory>
-	<directory name="win32ksys">
-		<xi:include href="win32ksys/win32ksys.rbuild" />
 	</directory>
 </group>

@@ -1,10 +1,10 @@
- 6 stub @
- 7 stub @
- 8 stub @
- 9 stub @
-10 stub @
-11 stub @
-12 stub @
+ 6 stub MSXML3_6
+ 7 stub MSXML3_7
+ 8 stub MSXML3_8
+ 9 stub MSXML3_9
+10 stub MSXML3_10
+11 stub MSXML3_11
+12 stub MSXML3_12
 
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)

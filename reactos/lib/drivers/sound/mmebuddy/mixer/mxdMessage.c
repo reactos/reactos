@@ -20,6 +20,7 @@
 
 MMRESULT
 MmeGetLineInfo(
+    IN UINT DeviceId,
     IN  UINT Message,
     IN  DWORD_PTR PrivateHandle,
     IN  DWORD_PTR Parameter1,
@@ -31,6 +32,21 @@ MmeGetLineInfo(
     PMMFUNCTION_TABLE FunctionTable;
 
     //SND_TRACE(L"Getting mixer info %u\n", Message);
+
+    if ( PrivateHandle == 0 )
+    {
+        Result = GetSoundDevice(MIXER_DEVICE_TYPE, DeviceId, &SoundDevice);
+
+        if ( ! MMSUCCESS(Result) )
+            return TranslateInternalMmResult(Result);
+
+         Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+         if ( ! MMSUCCESS(Result) )
+            return TranslateInternalMmResult(Result);
+
+         Result = FunctionTable->QueryMixerInfo(NULL, DeviceId, Message, (LPVOID)Parameter1, Parameter2);
+         return Result;
+    }
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
@@ -46,7 +62,7 @@ MmeGetLineInfo(
     if ( ! FunctionTable->QueryMixerInfo )
         return MMSYSERR_NOTSUPPORTED;
 
-    Result = FunctionTable->QueryMixerInfo(SoundDeviceInstance, Message, (LPVOID)Parameter1, Parameter2);
+    Result = FunctionTable->QueryMixerInfo(SoundDeviceInstance, DeviceId, Message, (LPVOID)Parameter1, Parameter2);
 
     return Result;
 }
@@ -100,7 +116,7 @@ mxdMessage(
                                    (LPWAVEOPENDESC) Parameter1, /* unused */
                                    Parameter2,
                                    (DWORD*) PrivateHandle);
-
+            VALIDATE_MMSYS_PARAMETER(*(DWORD_PTR*)PrivateHandle);
             break;
         }
 
@@ -113,7 +129,8 @@ mxdMessage(
 
         case MXDM_GETCONTROLDETAILS :
         {
-            Result = MmeGetLineInfo(Message,
+            Result = MmeGetLineInfo(DeviceId,
+                                    Message,
                                     PrivateHandle,
                                     Parameter1,
                                     Parameter2);
@@ -123,7 +140,8 @@ mxdMessage(
 
         case MXDM_SETCONTROLDETAILS :
         {
-            Result = MmeGetLineInfo(Message,
+            Result = MmeGetLineInfo(DeviceId,
+                                    Message,
                                     PrivateHandle,
                                     Parameter1,
                                     Parameter2);
@@ -133,7 +151,8 @@ mxdMessage(
 
         case MXDM_GETLINECONTROLS :
         {
-            Result = MmeGetLineInfo(Message,
+            Result = MmeGetLineInfo(DeviceId,
+                                    Message,
                                     PrivateHandle,
                                     Parameter1,
                                     Parameter2);
@@ -143,7 +162,8 @@ mxdMessage(
 
         case MXDM_GETLINEINFO :
         {
-            Result = MmeGetLineInfo(Message,
+            Result = MmeGetLineInfo(DeviceId,
+                                    Message,
                                     PrivateHandle,
                                     Parameter1,
                                     Parameter2);

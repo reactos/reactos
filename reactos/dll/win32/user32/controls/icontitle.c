@@ -22,11 +22,6 @@
 
 #include <wine/debug.h>
 
-#ifdef __REACTOS__
-#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
-#define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
-#endif
-
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
@@ -35,13 +30,13 @@ static HFONT hIconTitleFont;
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    (LPCWSTR)ICONTITLE_CLASS_ATOM, /* name */
-    0,                    /* style */
-    NULL,                 /* procA (winproc is Unicode only) */
-    IconTitleWndProc,     /* procW */
-    0,                    /* extra */
-    IDC_ARROW,            /* cursor */
-    0                     /* brush */
+    WC_ICONTITLE,     /* name */
+    0,                /* style */
+    NULL,             /* procA (winproc is Unicode only) */
+    IconTitleWndProc, /* procW */
+    0,                /* extra */
+    IDC_ARROW,        /* cursor */
+    0                 /* brush */
 };
 
 
@@ -193,6 +188,19 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
 {
     HWND owner = GetWindow( hWnd, GW_OWNER );
 
+#ifdef __REACTOS__ // Do this now, remove after Server side is fixed.
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hWnd);
+    if (pWnd)
+    {
+       if (!pWnd->fnid)
+       {
+          NtUserSetWindowFNID(hWnd, FNID_ICONTITLE);
+       }
+    }    
+#endif    
+
     if (!IsWindow(hWnd)) return 0;
 
     switch( msg )
@@ -206,6 +214,11 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
                 hIconTitleFont = CreateFontIndirectA( &logFont );
             }
             return (hIconTitleFont ? 0 : -1);
+#ifdef __REACTOS__
+        case WM_DESTROY:
+          NtUserSetWindowFNID(hWnd, FNID_DESTROY);
+          break;
+#endif
 	case WM_NCHITTEST:
 	     return HTCAPTION;
 	case WM_NCMOUSEMOVE:

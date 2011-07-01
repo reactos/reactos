@@ -1952,6 +1952,9 @@ FT_BEGIN_HEADER
   /*    Each new face object created with this function also owns a        */
   /*    default @FT_Size object, accessible as `face->size'.               */
   /*                                                                       */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Face.                                                */
+  /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Open_Face( FT_Library           library,
                 const FT_Open_Args*  args,
@@ -2019,6 +2022,33 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_Reference_Face                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A counter gets initialized to~1 at the time an @FT_Face structure  */
+  /*    is created.  This function increments the counter.  @FT_Done_Face  */
+  /*    then only destroys a face if the counter is~1, otherwise it simply */
+  /*    decrements the counter.                                            */
+  /*                                                                       */
+  /*    This function helps in managing life-cycles of structures which    */
+  /*    reference @FT_Face objects.                                        */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face :: A handle to a target face object.                          */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Since>                                                               */
+  /*    2.4.2                                                              */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Reference_Face( FT_Face  face );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_Done_Face                                                       */
   /*                                                                       */
   /* <Description>                                                         */
@@ -2030,6 +2060,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    See the discussion of reference counters in the description of     */
+  /*    @FT_Reference_Face.                                                */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Face( FT_Face  face );
@@ -2997,7 +3031,7 @@ FT_BEGIN_HEADER
    *
    * @return:
    *   The index into the array of character maps within the face to which
-   *   `charmap' belongs.
+   *   `charmap' belongs.  If an error occurs, -1 is returned.
    *
    */
   FT_EXPORT( FT_Int )
@@ -3773,8 +3807,8 @@ FT_BEGIN_HEADER
    *
    */
 #define FREETYPE_MAJOR  2
-#define FREETYPE_MINOR  3
-#define FREETYPE_PATCH  12
+#define FREETYPE_MINOR  4
+#define FREETYPE_PATCH  4
 
 
   /*************************************************************************/
@@ -3834,6 +3868,9 @@ FT_BEGIN_HEADER
   /*    1~if this is a TrueType font that uses one of the patented         */
   /*    opcodes, 0~otherwise.                                              */
   /*                                                                       */
+  /* <Note>                                                                */
+  /*    Since May 2010, TrueType hinting is no longer patented.            */
+  /*                                                                       */
   /* <Since>                                                               */
   /*    2.3.5                                                              */
   /*                                                                       */
@@ -3860,6 +3897,9 @@ FT_BEGIN_HEADER
   /*    The old setting value.  This will always be false if this is not   */
   /*    an SFNT font, or if the unpatented hinter is not compiled in this  */
   /*    instance of the library.                                           */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    Since May 2010, TrueType hinting is no longer patented.            */
   /*                                                                       */
   /* <Since>                                                               */
   /*    2.3.5                                                              */

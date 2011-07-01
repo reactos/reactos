@@ -455,7 +455,7 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
     mciPlay.dwFrom = 0;
     mciPlay.dwTo = MaxFilePos;
 
-    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM | MCI_TO, (DWORD_PTR)&mciPlay);
+    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM /*| MCI_TO*/, (DWORD_PTR)&mciPlay);
     if (mciError != 0)
     {
         MessageBox(hwnd, _T("Can't play!"), NULL, MB_OK);

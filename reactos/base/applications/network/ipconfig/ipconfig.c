@@ -28,13 +28,21 @@ HANDLE ProcessHeap;
 int LoadStringAndOem(HINSTANCE hInst,
 		UINT uID,
 		LPTSTR szNode,
-		int Siz
-)	
+		int byteSize
+)
 {
-  TCHAR szTmp[25];
-  int res = LoadString(hInst, uID, szTmp, sizeof(szTmp)); 
+  TCHAR *szTmp;
+  int res;
+
+  szTmp = (LPTSTR)HeapAlloc(ProcessHeap, 0, byteSize);
+  if (szTmp == NULL)
+  {
+    return 0;
+  }
+  res = LoadString(hInst, uID, szTmp, byteSize); 
   CharToOem(szTmp, szNode);
-  return(res);
+  HeapFree(ProcessHeap, 0, szTmp);
+  return res;
 }
 
 LPTSTR GetNodeTypeName(UINT NodeType)
@@ -702,7 +710,7 @@ VOID Usage(VOID)
                            Size))
             {
                 _tprintf(_T("%s"), lpUsage);
-            }
+            }            
         }
     }
 

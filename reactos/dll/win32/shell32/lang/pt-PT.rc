@@ -128,7 +128,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versão " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versão "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Esta versão do ReactOS é registado a:", IDC_STATIC, 35, 115, 180, 10
@@ -173,7 +173,7 @@ BEGIN
 	LTEXT "Tipo de destino:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "Localização do destino:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Destino:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Iniciar em:", 14010, 8, 96, 57, 10
@@ -212,13 +212,13 @@ BEGIN
 	LTEXT "Tipo de ficheiro:", 14004, 8, 35, 50, 10
 	LTEXT "Pasta", 14005, 68, 35, 160, 10
 	LTEXT "Localização:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Tamanho:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Contém:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Criado:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Sómente de Leitura", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Escondido", 14022, 126, 150, 50, 10
 END
@@ -233,17 +233,17 @@ BEGIN
 	LTEXT "Tipo de Ficheiro:", 14004, 8, 35, 50, 10
 	LTEXT "Ficheiro", 14005, 68, 35, 160, 10
 	LTEXT "Abre com::", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Localização:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Tamanho:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Criado:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Modificado:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Acedido:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "propriedades:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Somente de Leitura", 14021, 58, 189, 67, 10
 	CHECKBOX "&Oculto", 14022, 126, 189, 50, 10
@@ -256,11 +256,11 @@ CAPTION "Versão"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Versão do Ficheiro: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Descrição: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "Outras informações da versão: ", 14006, 6, 70, 222, 115
 	LTEXT "Nome do Item: ", 14007, 13, 82, 50, 10
 	LTEXT "Valor: ", 14008, 112, 82, 45, 10
@@ -275,24 +275,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Tipo:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Sistema de Ficheiros:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Espaço utilizado:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Espaço livre:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Capacidade:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -427,7 +427,7 @@ LTEXT "Abre com:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appnome", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Mudar...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Ficheiros com extensão '%s' são do tipo '%s'. Para\nmudar definições que afectam todos '%s' ficheiros, click\nAvançado.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vançado", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
 	IDS_OVERWRITEFILE_TEXT      "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmar substituição de ficheiro"
-	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\n"\
-		"Se os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\n"\
-		"pasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\n"\
-		"a pasta?"
+	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"
@@ -670,6 +667,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Deseja finalizar esta sessão do ReactOS?"
 	IDS_LOGOFF_TITLE            "Terminar a sessão"
 	IDS_LOGOFF_PROMPT           "Pretende terminar a sessão?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Iniciar\\Programas"
@@ -720,8 +723,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Espaço Disponível"
 	IDS_EMPTY_BITBUCKET         "Esvaziar Reciclagem"
 	IDS_PICK_ICON_TITLE         "Escolha Ícone"
-	IDS_PICK_ICON_FILTER        "Ficheiros de Ícones(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Ficheiros Executáveis\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Ficheiros de Ícones (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Ficheiros Executáveis (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Pasta"
 	IDS_VIRTUAL_DRIVER          "Driver de Dispositivo Virtual"
 	IDS_BAT_FILE                "ReactOS Batch File"
@@ -740,12 +743,11 @@ BEGIN
 	IDS_SYS_FILE                "Ficheiro de Sistema"
 
 	IDS_OPEN_VERB               "Abrir"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Executar como "
 	IDS_EDIT_VERB               "Editar"
 	IDS_FIND_VERB               "Procurar"
 	IDS_PRINT_VERB              "Imprimir"
-	IDS_PLAY_VERB               "Reproduzir"
-	IDS_PREVIEW_VERB            "Previzualizar"
 
 	IDS_FILE_FOLDER             "%u Ficheiros, %u Pastas"
 	IDS_PRINTERS                "Impressoras"
@@ -756,4 +758,9 @@ BEGIN
 	IDS_COPY_OF                 "Cópia de"
 
 	IDS_SHLEXEC_NOASSOC         "Não existe um programa Windows configurado para abrir este tipo de ficheiro."
+	
+	IDS_FILE_DETAILS            "Detalhes para '%s' extensão"
+	IDS_FILE_DETAILSADV         "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

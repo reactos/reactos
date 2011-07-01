@@ -120,7 +120,7 @@ PDEVOBJ_bEnablePDEV(
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
 
-    DPRINT1("PDEVOBJ_bEnablePDEV()\n");
+    DPRINT("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
@@ -146,10 +146,9 @@ PDEVOBJ_bEnablePDEV(
         ppdev->gdiinfo.ulLogPixelsY = 96;
 
     /* Setup Palette */
-    GDIOBJ_SetOwnership(ppdev->devinfo.hpalDefault, NULL);
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    DPRINT1("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
+    DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 
     return TRUE;
 }
@@ -174,7 +173,7 @@ PDEVOBJ_pSurface(
     if (ppdev->pSurface)
     {
         /* Increment reference count */
-        GDIOBJ_IncrementShareCount(&ppdev->pSurface->BaseObject);
+        GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
     }
     else
     {
@@ -269,7 +268,7 @@ EngpCreatePDEV(
     {
         /* ... use the device's default one */
         pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT1("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
+        DPRINT("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
     }
 
     /* Try to get a diplay driver */
@@ -657,7 +656,7 @@ NtGdiGetDeviceCaps(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -807,7 +806,7 @@ NtGdiGetDeviceCapsAll(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 

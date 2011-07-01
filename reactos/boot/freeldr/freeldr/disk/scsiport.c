@@ -11,6 +11,33 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#undef ScsiPortLogError
+#undef ScsiPortMoveMemory
+#undef ScsiPortWritePortBufferUchar
+#undef ScsiPortWritePortBufferUlong
+#undef ScsiPortWritePortBufferUshort
+#undef ScsiPortWritePortUchar
+#undef ScsiPortWritePortUlong
+#undef ScsiPortWritePortUshort
+#undef ScsiPortWriteRegisterBufferUchar
+#undef ScsiPortWriteRegisterBufferUlong
+#undef ScsiPortWriteRegisterBufferUshort
+#undef ScsiPortWriteRegisterUchar
+#undef ScsiPortWriteRegisterUlong
+#undef ScsiPortWriteRegisterUshort
+#undef ScsiPortReadPortBufferUchar
+#undef ScsiPortReadPortBufferUlong
+#undef ScsiPortReadPortBufferUshort
+#undef ScsiPortReadPortUchar
+#undef ScsiPortReadPortUlong
+#undef ScsiPortReadPortUshort
+#undef ScsiPortReadRegisterBufferUchar
+#undef ScsiPortReadRegisterBufferUlong
+#undef ScsiPortReadRegisterBufferUshort
+#undef ScsiPortReadRegisterUchar
+#undef ScsiPortReadRegisterUlong
+#undef ScsiPortReadRegisterUshort
+
 #define NDEBUG
 #include <debug.h>
 
@@ -445,9 +472,12 @@ ScsiPortConvertPhysicalAddressToUlong(
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-    IN ULONG UlongAddress)
+    IN ULONG_PTR UlongAddress)
 {
-    return RtlConvertUlongToLargeInteger(UlongAddress);
+    SCSI_PHYSICAL_ADDRESS Address;
+
+    Address.QuadPart = UlongAddress;
+    return Address;
 }
 
 VOID
@@ -1510,7 +1540,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR Register,
-    IN ULONG Value)
+    IN UCHAR Value)
 {
     WRITE_REGISTER_UCHAR(Register, Value);
 }
@@ -1540,7 +1570,7 @@ LoadBootDeviceDriver(VOID)
     {
         CHAR* Name;
         PVOID Function;
-    } ExportTable[] = 
+    } ExportTable[] =
     {
         { "ScsiDebugPrint", ScsiDebugPrint },
         { "ScsiPortCompleteRequest", ScsiPortCompleteRequest },
@@ -1618,7 +1648,7 @@ LoadBootDeviceDriver(VOID)
     ImageDosHeader.e_lfanew = SWAPD((ULONG_PTR)&ImageNtHeaders - (ULONG_PTR)&ImageDosHeader);
     ImageNtHeaders.Signature = IMAGE_NT_SIGNATURE;
     ImageNtHeaders.OptionalHeader.NumberOfRvaAndSizes = SWAPD(IMAGE_DIRECTORY_ENTRY_EXPORT + 1);
-    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress = 
+    ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress =
         SWAPW((ULONG_PTR)&ImageExportDirectory - (ULONG_PTR)&ImageDosHeader);
     ImageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size = 1;
     ImageExportDirectory.NumberOfNames = sizeof(ExportTable) / sizeof(ExportTable[0]);

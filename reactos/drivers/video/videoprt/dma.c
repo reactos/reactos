@@ -203,8 +203,7 @@ VideoPortFreeCommonBuffer(IN PVOID HwDeviceExtension,
     ASSERT(VpDmaAdapter->Adapter != NULL);
     ASSERT(VpDmaAdapter->MapRegisters != 0);
 
-    return VideoPortReleaseCommonBuffer(HwDeviceExtension, (PVP_DMA_ADAPTER)VpDmaAdapter, Length, LogicalAddress, VirtualAddress, CacheEnabled);
-
+    VideoPortReleaseCommonBuffer(HwDeviceExtension, (PVP_DMA_ADAPTER)VpDmaAdapter, Length, LogicalAddress, VirtualAddress, CacheEnabled);
 }
 
 /*

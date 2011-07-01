@@ -210,6 +210,11 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         ApplicationPageOnNotify(wParam, lParam);
         break;
 
+    case WM_KEYDOWN:
+        if (wParam == VK_DELETE)
+            ProcessPage_OnEndProcess();
+        break;
+
     }
 
   return 0;
@@ -584,6 +589,14 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             ApplicationPage_OnSwitchTo();
 
             break;
+
+        case LVN_KEYDOWN:
+
+            if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
+                ApplicationPage_OnEndTask();
+
+            break;
+
         }
     }
     else if (pnmh->hwndFrom == ListView_GetHeader(hApplicationPageListCtrl))

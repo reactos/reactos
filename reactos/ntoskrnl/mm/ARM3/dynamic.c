@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::DYNAMIC"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -74,7 +73,7 @@ NTAPI
 MmGetPhysicalMemoryRanges(VOID)
 {
     ULONG Size, i;
-    PPHYSICAL_MEMORY_RANGE Entry, Buffer;    
+    PPHYSICAL_MEMORY_RANGE Entry, Buffer;
     KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -82,7 +81,7 @@ MmGetPhysicalMemoryRanges(VOID)
     // Calculate how much memory we'll need
     //
     Size = sizeof(PHYSICAL_MEMORY_RANGE) * (MmPhysicalMemoryBlock->NumberOfRuns + 1);
-    
+
     //
     // Allocate a copy
     //
@@ -93,13 +92,13 @@ MmGetPhysicalMemoryRanges(VOID)
     // Lock the PFN database
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     //
     // Make sure it hasn't changed before we had acquired the lock
     //
-    ASSERT(Size == (sizeof(PHYSICAL_MEMORY_RANGE) * 
+    ASSERT(Size == (sizeof(PHYSICAL_MEMORY_RANGE) *
                     (MmPhysicalMemoryBlock->NumberOfRuns + 1)));
-    
+
     //
     // Now loop our block
     //
@@ -112,7 +111,7 @@ MmGetPhysicalMemoryRanges(VOID)
         Entry->NumberOfBytes.QuadPart = MmPhysicalMemoryBlock->Run[i].PageCount << PAGE_SHIFT;
         Entry++;
     }
-    
+
     //
     // Last entry is empty
     //

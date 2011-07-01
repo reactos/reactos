@@ -943,6 +943,10 @@ CONFIGRET
 WINAPI
 CMP_UnregisterNotification(IN ULONG luhDevNotify);
 
+CMAPI
+CONFIGRET
+WINAPI
+CMP_WaitServicesAvailable(IN HMACHINE hMachine);
 */
 
 CMAPI

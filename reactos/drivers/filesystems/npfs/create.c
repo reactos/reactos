@@ -121,6 +121,8 @@ NpfsOpenFileSystem(PNPFS_FCB Fcb,
         return;
     }
 
+    RtlZeroMemory(Ccb, sizeof(NPFS_CCB));
+
     Ccb->Type = CCB_DEVICE;
     Ccb->Fcb = Fcb;
 
@@ -149,6 +151,8 @@ NpfsOpenRootDirectory(PNPFS_FCB Fcb,
         IoStatus->Status = STATUS_NO_MEMORY;
         return;
     }
+
+    RtlZeroMemory(Ccb, sizeof(NPFS_CCB));
 
     Ccb->Type = CCB_DIRECTORY;
     Ccb->Fcb = Fcb;
@@ -221,7 +225,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     }
 
     /* Open the root directory */
-    if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
+    if ((FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL) ||
+        (FileName->Length == 0 && ((PNPFS_CCB)RelatedFileObject->FsContext2)->Type == CCB_DIRECTORY))
     {
         DPRINT("Open the root directory\n");
 
@@ -880,6 +885,9 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     {
         DPRINT("Closing the root directory!\n");
 
+        if (Ccb->u.Directory.SearchPattern.Buffer != NULL)
+            ExFreePool(Ccb->u.Directory.SearchPattern.Buffer);
+
         ExFreePool(Ccb);
         FileObject->FsContext = NULL;
         FileObject->FsContext2 = NULL;
@@ -929,10 +937,10 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     if (IsListEmpty(&Fcb->ServerCcbListHead) &&
         IsListEmpty(&Fcb->ClientCcbListHead))
     {
-        RtlFreeUnicodeString(&Fcb->PipeName);
         KeLockMutex(&Vcb->PipeListLock);
         RemoveEntryList(&Fcb->PipeListEntry);
         KeUnlockMutex(&Vcb->PipeListLock);
+        RtlFreeUnicodeString(&Fcb->PipeName);
         ExFreePool(Fcb);
         FileObject->FsContext = NULL;
     }

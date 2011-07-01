@@ -34,7 +34,7 @@ STRINGTABLE
     STRING_SIMCOPY,  "%d file saranno copiati\n"
     STRING_COPY,     "%d file copiato/i\n"
     STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n\
-                     nell'obiettivo?\n\
+                     nella destinazione?\n\
                      (F - File, C - Cartella)\n"
     STRING_SRCPROMPT,"%s? (Sì|No)\n"
     STRING_OVERWRITE,"Sovrascrivere %s? (Sì|No|Tutti)\n"

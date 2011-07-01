@@ -5,6 +5,7 @@
 	<define name="__WINESRC__" />
 	<file>dmoreg.c</file>
 	<file>dmort.c</file>
+	<file>stubs.c</file>
 	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>uuid</library>

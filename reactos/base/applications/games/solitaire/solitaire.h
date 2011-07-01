@@ -16,7 +16,7 @@ extern bool fGameStarted;
 
 extern DWORD dwOptions;
 
-void CreateSol();
+void CreateSol(void);
 void NewGame(void);
 
 #define NUM_ROW_STACKS     7

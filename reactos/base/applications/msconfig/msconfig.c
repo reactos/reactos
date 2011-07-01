@@ -212,6 +212,13 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
 
+        case WM_SYSCOLORCHANGE:
+            /* Forward WM_SYSCOLORCHANGE to common controls */
+            SendMessage(hServicesListCtrl, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hStartupListCtrl, WM_SYSCOLORCHANGE, 0, 0);
+            SendMessage(hToolsListCtrl, WM_SYSCOLORCHANGE, 0, 0);
+            break;
+
         case WM_DESTROY:
             if (hToolsPage)
                 DestroyWindow(hToolsPage);

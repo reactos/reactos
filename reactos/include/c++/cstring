@@ -1,0 +1,60 @@
+// Standard C string declarations for C++
+
+//
+// ISO C++ 14882: 20.4.6  C library
+//
+
+#pragma once
+
+#include <cstddef>
+#include <string.h>
+
+// Get rid of those macros defined in <string.h> in lieu of real functions.
+#undef memchr
+#undef memcmp
+#undef memcpy
+#undef memmove
+#undef memset
+#undef strcat
+#undef strchr
+#undef strcmp
+#undef strcoll
+#undef strcpy
+#undef strcspn
+#undef strerror
+#undef strlen
+#undef strncat
+#undef strncmp
+#undef strncpy
+#undef strpbrk
+#undef strrchr
+#undef strspn
+#undef strstr
+#undef strtok
+#undef strxfrm
+
+namespace std
+{
+  using ::memchr;
+  using ::memcmp;
+  using ::memcpy;
+  using ::memmove;
+  using ::memset;
+  using ::strcat;
+  using ::strcmp;
+  using ::strcoll;
+  using ::strcpy;
+  using ::strcspn;
+  using ::strerror;
+  using ::strlen;
+  using ::strncat;
+  using ::strncmp;
+  using ::strncpy;
+  using ::strspn;
+  using ::strtok;
+  using ::strxfrm;
+  using ::strchr;
+  using ::strpbrk;
+  using ::strrchr;
+  using ::strstr;
+}

@@ -42,9 +42,12 @@
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-    IN ULONG  UlongAddress)
+    IN ULONG_PTR UlongAddress)
 {
-    return RtlConvertUlongToLargeInteger(UlongAddress);
+    SCSI_PHYSICAL_ADDRESS Address;
+
+    Address.QuadPart = UlongAddress;
+    return Address;
 }
 
 VOID
@@ -246,7 +249,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR  Register,
-    IN ULONG  Value)
+    IN UCHAR  Value)
 {
     WRITE_REGISTER_UCHAR(Register, Value);
 }

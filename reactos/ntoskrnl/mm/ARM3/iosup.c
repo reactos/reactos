@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::IOSUP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -49,7 +48,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
              IN SIZE_T NumberOfBytes,
              IN MEMORY_CACHING_TYPE CacheType)
 {
-    
+
     PFN_NUMBER Pfn, PageCount;
     PMMPTE PointerPte;
     PVOID BaseAddress;
@@ -78,13 +77,13 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     //
     CacheType &= 0xFF;
     if (CacheType >= MmMaximumCacheType) return NULL;
-    
+
     //
     // Calculate page count
     //
     PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(PhysicalAddress.LowPart,
                                                NumberOfBytes);
-    
+
     //
     // Compute the PFN and check if it's a known I/O mapping
     // Also translate the cache attribute
@@ -93,14 +92,14 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     Pfn1 = MiGetPfnEntry(Pfn);
     IsIoMapping = (Pfn1 == NULL) ? TRUE : FALSE;
     CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
-    
+
     //
     // Now allocate system PTEs for the mapping, and get the VA
     //
     PointerPte = MiReserveSystemPtes(PageCount, SystemPteSpace);
     if (!PointerPte) return NULL;
     BaseAddress = MiPteToAddress(PointerPte);
-    
+
     //
     // Check if this is uncached
     //
@@ -112,13 +111,13 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
         KeFlushEntireTb(TRUE, TRUE);
         KeInvalidateAllCaches();
     }
-    
+
     //
     // Now compute the VA offset
     //
     BaseAddress = (PVOID)((ULONG_PTR)BaseAddress +
                           BYTE_OFFSET(PhysicalAddress.LowPart));
-    
+
     //
     // Get the template and configure caching
     //
@@ -126,38 +125,38 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     switch (CacheAttribute)
     {
         case MiNonCached:
-            
+
             //
             // Disable the cache
             //
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
-            
+
         case MiCached:
-            
+
             //
             // Leave defaults
             //
             break;
-            
+
         case MiWriteCombined:
-            
+
             //
             // We don't support write combining yet
             //
             ASSERT(FALSE);
             break;
-            
+
         default:
-            
+
             //
             // Should never happen
             //
             ASSERT(FALSE);
             break;
     }
-    
+
     //
     // Sanity check and re-flush
     //
@@ -165,7 +164,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     ASSERT((Pfn1 == MiGetPfnEntry(Pfn)) || (Pfn1 == NULL));
     KeFlushEntireTb(TRUE, TRUE);
     KeInvalidateAllCaches();
-    
+
     //
     // Do the mapping
     //
@@ -177,7 +176,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
         TempPte.u.Hard.PageFrameNumber = Pfn++;
         MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--PageCount);
-    
+
     //
     // We're done!
     //
@@ -191,26 +190,26 @@ VOID
 NTAPI
 MmUnmapIoSpace(IN PVOID BaseAddress,
                IN SIZE_T NumberOfBytes)
-{    
+{
     PFN_NUMBER PageCount, Pfn;
     PMMPTE PointerPte;
-    
+
     //
     // Sanity check
     //
     ASSERT(NumberOfBytes != 0);
-    
+
     //
     // Get the page count
     //
     PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(BaseAddress, NumberOfBytes);
-    
+
     //
     // Get the PTE and PFN
     //
     PointerPte = MiAddressToPte(BaseAddress);
     Pfn = PFN_FROM_PTE(PointerPte);
-    
+
     //
     // Is this an I/O mapping?
     //
@@ -220,13 +219,13 @@ MmUnmapIoSpace(IN PVOID BaseAddress,
         // Destroy the PTE
         //
         RtlZeroMemory(PointerPte, PageCount * sizeof(MMPTE));
-        
+
         //
         // Blow the TLB
         //
         KeFlushEntireTb(TRUE, TRUE);
     }
-    
+
     //
     // Release the PTEs
     //
@@ -243,7 +242,7 @@ MmMapVideoDisplay(IN PHYSICAL_ADDRESS PhysicalAddress,
                   IN MEMORY_CACHING_TYPE CacheType)
 {
     PAGED_CODE();
-    
+
     //
     // Call the real function
     //

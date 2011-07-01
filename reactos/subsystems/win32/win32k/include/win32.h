@@ -75,6 +75,7 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
+    struct _USER_SENT_MESSAGE *pusmCurrent;
     LONG                timeLast;
     ULONG_PTR           idLast;
     INT                 exitCode;
@@ -98,10 +99,16 @@ typedef struct _THREADINFO
 
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
-  /* ReactOS */
-  LIST_ENTRY WindowListHead;
-  LIST_ENTRY W32CallbackListHead;
-  SINGLE_LIST_ENTRY  ReferencesList;
+
+    /* ReactOS */
+    LIST_ENTRY WindowListHead;
+    LIST_ENTRY W32CallbackListHead;
+    SINGLE_LIST_ENTRY  ReferencesList;
+    ULONG cExclusiveLocks;
+#if DBG
+    USHORT acExclusiveLockCount[GDIObjTypeTotal];
+#endif
+
 } THREADINFO;
 
 #include <poppack.h>
@@ -161,6 +168,8 @@ typedef struct _PROCESSINFO
   struct _DESKTOP* rpdeskStartup;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
+  INT cThreads;
+  HDESK hdeskStartup;
   DWORD dwhmodLibLoadedMask;
   HANDLE ahmodLibLoaded[CLIBS];
   struct _WINSTATION_OBJECT *prpwinsta;
@@ -173,7 +182,6 @@ typedef struct _PROCESSINFO
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */
-  LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;
@@ -181,4 +189,7 @@ typedef struct _PROCESSINFO
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
+  struct _GDI_POOL *pPoolDcAttr;
+  struct _GDI_POOL *pPoolBrushAttr;
+  struct _GDI_POOL *pPoolRgnAttr;
 } PROCESSINFO;

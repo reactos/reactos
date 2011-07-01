@@ -22,8 +22,8 @@
 
 typedef enum _EDIT_MODE
 {
-  EDIT_MODE_DEC,
-  EDIT_MODE_HEX
+    EDIT_MODE_DEC,
+    EDIT_MODE_HEX
 } EDIT_MODE;
 
 
@@ -31,6 +31,8 @@ static const TCHAR* editValueName;
 static TCHAR* stringValueData;
 static PVOID binValueData;
 static DWORD dwordValueData;
+static PCM_RESOURCE_LIST resourceValueData;
+static INT fullResourceIndex = -1;
 static DWORD valueDataLen;
 static EDIT_MODE dwordEditMode = EDIT_MODE_HEX;
 
@@ -96,17 +98,18 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -140,8 +143,8 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
                 }
                 else
                 {
-                  if (stringValueData)
-                    *stringValueData = 0;
+                    if (stringValueData)
+                        *stringValueData = 0;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -163,17 +166,18 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
@@ -207,8 +211,8 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                 }
                 else
                 {
-                  if (stringValueData)
-                    *stringValueData = 0;
+                    if (stringValueData)
+                        *stringValueData = 0;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -274,7 +278,8 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         dwordEditMode = EDIT_MODE_HEX;
 
@@ -290,9 +295,9 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         }
         else
         {
-	    TCHAR buffer[255];
-	    LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	    SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         CheckRadioButton (hwndDlg, IDC_FORMAT_HEX, IDC_FORMAT_DEC, IDC_FORMAT_HEX);
         _stprintf (ValueString, _T("%lx"), dwordValueData);
@@ -359,8 +364,8 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 }
                 else
                 {
-                  EndDialog(hwndDlg, IDCANCEL);
-                  return TRUE;
+                    EndDialog(hwndDlg, IDCANCEL);
+                    return TRUE;
                 }
             }
             EndDialog(hwndDlg, IDOK);
@@ -382,17 +387,18 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch(uMsg) {
+    switch(uMsg)
+    {
     case WM_INITDIALOG:
         if(editValueName && _tcscmp(editValueName, _T("")))
         {
-          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
         }
         else
         {
-          TCHAR buffer[255];
-	  LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
-	  SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
+            TCHAR buffer[255];
+            LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+            SetDlgItemText(hwndDlg, IDC_VALUE_NAME, buffer);
         }
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
         HexEdit_LoadBuffer(hwndValue, binValueData, valueDataLen);
@@ -408,12 +414,639 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
             {
                 len = (UINT) HexEdit_GetBufferSize(hwndValue);
                 if (len > 0 && binValueData)
-                  binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
+                    binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
                 else
-                  binValueData = HeapAlloc(GetProcessHeap(), 0, len + 1);
+                    binValueData = HeapAlloc(GetProcessHeap(), 0, len + 1);
                 HexEdit_CopyBuffer(hwndValue, binValueData, len);
                 valueDataLen = len;
             }
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
+static BOOL CreateResourceColumns(HWND hwnd)
+{
+    TCHAR szText[80];
+    RECT rc;
+    LV_COLUMN lvC;
+    HWND hwndLV;
+    INT width;
+
+    /* Create columns. */
+    lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvC.pszText = szText;
+    lvC.fmt = LVCFMT_LEFT;
+
+    hwndLV = GetDlgItem(hwnd, IDC_DMA_LIST);
+    ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+    GetClientRect(hwndLV, &rc);
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = (rc.right - rc.left) / 2;
+    LoadString(hInst, IDS_DMA_CHANNEL, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    lvC.cx = (rc.right - rc.left) - lvC.cx;
+    LoadString(hInst, IDS_DMA_PORT, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
+        return FALSE;
+
+
+    /* Interrupt list */
+    hwndLV = GetDlgItem(hwnd, IDC_IRQ_LIST);
+    ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+    GetClientRect(hwndLV, &rc);
+    width = (rc.right - rc.left) / 4;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = width;
+    LoadString(hInst, IDS_INTERRUPT_VECTOR, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    LoadString(hInst, IDS_INTERRUPT_LEVEL, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    LoadString(hInst, IDS_INTERRUPT_AFFINITY, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 3;
+    lvC.cx = (rc.right - rc.left) - 3 * width;
+    LoadString(hInst, IDS_INTERRUPT_TYPE, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 3, &lvC) == -1)
+        return FALSE;
+
+
+    /* Memory list */
+    hwndLV = GetDlgItem(hwnd, IDC_MEMORY_LIST);
+    ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+    GetClientRect(hwndLV, &rc);
+    width = (rc.right - rc.left) / 3;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = width;
+    LoadString(hInst, IDS_MEMORY_ADDRESS, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    LoadString(hInst, IDS_MEMORY_LENGTH, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    lvC.cx = (rc.right - rc.left) - 2 * width;
+    LoadString(hInst, IDS_MEMORY_ACCESS, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
+        return FALSE;
+
+
+    /* Port list */
+    hwndLV = GetDlgItem(hwnd, IDC_PORT_LIST);
+    ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+    GetClientRect(hwndLV, &rc);
+    width = (rc.right - rc.left) / 3;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = width;
+    LoadString(hInst, IDS_PORT_ADDRESS, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    LoadString(hInst, IDS_PORT_LENGTH, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    lvC.cx = (rc.right - rc.left) - 2 * width;
+    LoadString(hInst, IDS_PORT_ACCESS, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
+        return FALSE;
+
+    /* Device specific list */
+    hwndLV = GetDlgItem(hwnd, IDC_DEVICE_LIST);
+    ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+    GetClientRect(hwndLV, &rc);
+    width = (rc.right - rc.left) / 3;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = width;
+    LoadString(hInst, IDS_SPECIFIC_RESERVED1, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    LoadString(hInst, IDS_SPECIFIC_RESERVED2, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 1, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 2;
+    lvC.cx = (rc.right - rc.left) - 2 * width;
+    LoadString(hInst, IDS_SPECIFIC_DATASIZE, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hwndLV, 2, &lvC) == -1)
+        return FALSE;
+
+    return TRUE;
+}
+
+static VOID
+GetInterfaceType(INTERFACE_TYPE InterfaceType,
+                 LPTSTR pBuffer,
+                 DWORD dwLength)
+{
+//    LPTSTR lpInterfaceType;
+
+    switch (InterfaceType)
+    {
+        case InterfaceTypeUndefined:
+            LoadString(hInst, IDS_BUS_UNDEFINED, pBuffer, dwLength);
+//            lpInterfaceType = _T("Undefined");
+            break;
+        case Internal:
+            LoadString(hInst, IDS_BUS_INTERNAL, pBuffer, dwLength);
+//            lpInterfaceType = _T("Internal");
+            break;
+        case Isa:
+            LoadString(hInst, IDS_BUS_ISA, pBuffer, dwLength);
+//            lpInterfaceType = _T("Isa");
+            break;
+        case Eisa:
+            LoadString(hInst, IDS_BUS_EISA, pBuffer, dwLength);
+//            lpInterfaceType = _T("Eisa");
+            break;
+        case MicroChannel:
+            LoadString(hInst, IDS_BUS_MICROCHANNEL, pBuffer, dwLength);
+//            lpInterfaceType = _T("MicroChannel");
+            break;
+        case TurboChannel:
+            LoadString(hInst, IDS_BUS_TURBOCHANNEL, pBuffer, dwLength);
+//            lpInterfaceType = _T("TurboChannel");
+            break;
+        case PCIBus:
+            LoadString(hInst, IDS_BUS_PCIBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("PCIBus");
+            break;
+        case VMEBus:
+            LoadString(hInst, IDS_BUS_VMEBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("VMEBus");
+            break;
+        case NuBus:
+            LoadString(hInst, IDS_BUS_NUBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("NuBus");
+            break;
+        case PCMCIABus:
+            LoadString(hInst, IDS_BUS_PCMCIABUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("PCMCIABus");
+            break;
+        case CBus:
+            LoadString(hInst, IDS_BUS_CBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("CBus");
+            break;
+        case MPIBus:
+            LoadString(hInst, IDS_BUS_MPIBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("MPIBus");
+            break;
+        case MPSABus:
+            LoadString(hInst, IDS_BUS_MPSABUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("MPSABus");
+            break;
+        case ProcessorInternal:
+            LoadString(hInst, IDS_BUS_PROCESSORINTERNAL, pBuffer, dwLength);
+//            lpInterfaceType = _T("ProcessorInternal");
+            break;
+        case InternalPowerBus:
+            LoadString(hInst, IDS_BUS_INTERNALPOWERBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("InternalPowerBus");
+            break;
+        case PNPISABus:
+            LoadString(hInst, IDS_BUS_PNPISABUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("PNPISABus");
+            break;
+        case PNPBus:
+            LoadString(hInst, IDS_BUS_PNPBUS, pBuffer, dwLength);
+//            lpInterfaceType = _T("PNPBus");
+            break;
+        default:
+            LoadString(hInst, IDS_BUS_UNKNOWNTYPE, pBuffer, dwLength);
+//            lpInterfaceType = _T("Unknown interface type");
+            break;
+    }
+
+//    _tcscpy(pBuffer, lpInterfaceType);
+}
+
+
+static VOID
+ParseResources(HWND hwnd)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR pFullDescriptor;
+    PCM_PARTIAL_RESOURCE_LIST pPartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
+    ULONG i;
+    HWND hwndLV;
+
+    TCHAR buffer[80];
+    LVITEM item;
+    INT iItem;
+
+    pFullDescriptor = &resourceValueData->List[fullResourceIndex];
+    pPartialResourceList = &pFullDescriptor->PartialResourceList;
+
+    /* Interface type */
+    GetInterfaceType(pFullDescriptor->InterfaceType, buffer, 80);
+    SetDlgItemText(hwnd, IDC_INTERFACETYPE, buffer);
+
+    /* Busnumber */
+    SetDlgItemInt(hwnd, IDC_BUSNUMBER, (UINT)pFullDescriptor->BusNumber, FALSE);
+
+    /* Version */
+    SetDlgItemInt(hwnd, IDC_VERSION, (UINT)pPartialResourceList->Version, FALSE);
+
+    /* Revision */
+    SetDlgItemInt(hwnd, IDC_REVISION, (UINT)pPartialResourceList->Revision, FALSE);
+
+    for (i = 0; i < pPartialResourceList->Count; i++)
+    {
+        pDescriptor = &pPartialResourceList->PartialDescriptors[i];
+
+        switch (pDescriptor->Type)
+        {
+            case CmResourceTypePort:
+                hwndLV = GetDlgItem(hwnd, IDC_PORT_LIST);
+
+#ifdef _M_AMD64
+                wsprintf(buffer, _T("0x%16I64x"), pDescriptor->u.Port.Start.QuadPart);
+#else
+                wsprintf(buffer, _T("0x%08lx"), pDescriptor->u.Port.Start.u.LowPart);
+#endif
+
+                item.mask = LVIF_TEXT | LVIF_PARAM;
+                item.iItem = 1000;
+                item.iSubItem = 0;
+                item.state = 0;
+                item.stateMask = 0;
+                item.pszText = buffer;
+                item.cchTextMax = (int)_tcslen(item.pszText);
+                item.lParam = (LPARAM)pDescriptor;
+
+                iItem = ListView_InsertItem(hwndLV, &item);
+                if (iItem != -1)
+                {
+                    wsprintf(buffer, _T("0x%lx"), pDescriptor->u.Port.Length);
+                    ListView_SetItemText(hwndLV, iItem, 1, buffer);
+
+                    if (pDescriptor->Flags & CM_RESOURCE_PORT_IO)
+                        LoadString(hInst, IDS_PORT_PORT_IO, buffer, sizeof(buffer)/sizeof(TCHAR));
+                    else
+                        LoadString(hInst, IDS_PORT_MEMORY_IO, buffer, sizeof(buffer)/sizeof(TCHAR));
+                    ListView_SetItemText(hwndLV, iItem, 2, buffer);
+                }
+                break;
+
+            case CmResourceTypeInterrupt:
+                hwndLV = GetDlgItem(hwnd, IDC_IRQ_LIST);
+
+                wsprintf(buffer, _T("%lu"), pDescriptor->u.Interrupt.Vector);
+
+                item.mask = LVIF_TEXT | LVIF_PARAM;
+                item.iItem = 1000;
+                item.iSubItem = 0;
+                item.state = 0;
+                item.stateMask = 0;
+                item.pszText = buffer;
+                item.cchTextMax = (int)_tcslen(item.pszText);
+                item.lParam = (LPARAM)pDescriptor;
+
+                iItem = ListView_InsertItem(hwndLV, &item);
+                if (iItem != -1)
+                {
+                    wsprintf(buffer, _T("%lu"), pDescriptor->u.Interrupt.Level);
+                    ListView_SetItemText(hwndLV, iItem, 1, buffer);
+
+                    wsprintf(buffer, _T("0x%08lx"), pDescriptor->u.Interrupt.Affinity);
+                    ListView_SetItemText(hwndLV, iItem, 2, buffer);
+
+                    if (pDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+                        LoadString(hInst, IDS_INTERRUPT_EDGE_SENSITIVE, buffer, sizeof(buffer)/sizeof(TCHAR));
+                    else
+                        LoadString(hInst, IDS_INTERRUPT_LEVEL_SENSITIVE, buffer, sizeof(buffer)/sizeof(TCHAR));
+
+                    ListView_SetItemText(hwndLV, iItem, 3, buffer);
+                }
+                break;
+
+            case CmResourceTypeMemory:
+                hwndLV = GetDlgItem(hwnd, IDC_MEMORY_LIST);
+
+#ifdef _M_AMD64
+                wsprintf(buffer, _T("0x%16I64x"), pDescriptor->u.Memory.Start.QuadPart);
+#else
+                wsprintf(buffer, _T("0x%08lx"), pDescriptor->u.Memory.Start.u.LowPart);
+#endif
+
+                item.mask = LVIF_TEXT | LVIF_PARAM;
+                item.iItem = 1000;
+                item.iSubItem = 0;
+                item.state = 0;
+                item.stateMask = 0;
+                item.pszText = buffer;
+                item.cchTextMax = (int)_tcslen(item.pszText);
+                item.lParam = (LPARAM)pDescriptor;
+
+                iItem = ListView_InsertItem(hwndLV, &item);
+                if (iItem != -1)
+                {
+                    wsprintf(buffer, _T("0x%lx"), pDescriptor->u.Memory.Length);
+                    ListView_SetItemText(hwndLV, iItem, 1, buffer);
+
+                    switch (pDescriptor->Flags & (CM_RESOURCE_MEMORY_READ_ONLY | CM_RESOURCE_MEMORY_WRITE_ONLY))
+                    {
+                        case CM_RESOURCE_MEMORY_READ_ONLY:
+                            LoadString(hInst, IDS_MEMORY_READ_ONLY, buffer, sizeof(buffer)/sizeof(TCHAR));
+                            break;
+
+                        case CM_RESOURCE_MEMORY_WRITE_ONLY:
+                            LoadString(hInst, IDS_MEMORY_WRITE_ONLY, buffer, sizeof(buffer)/sizeof(TCHAR));
+                            break;
+
+                        default:
+                            LoadString(hInst, IDS_MEMORY_READ_WRITE, buffer, sizeof(buffer)/sizeof(TCHAR));
+                            break;
+                    }
+
+                    ListView_SetItemText(hwndLV, iItem, 2, buffer);
+                }
+                break;
+
+            case CmResourceTypeDma:
+                hwndLV = GetDlgItem(hwnd, IDC_DMA_LIST);
+
+                wsprintf(buffer, _T("%lu"), pDescriptor->u.Dma.Channel);
+
+                item.mask = LVIF_TEXT | LVIF_PARAM;
+                item.iItem = 1000;
+                item.iSubItem = 0;
+                item.state = 0;
+                item.stateMask = 0;
+                item.pszText = buffer;
+                item.cchTextMax = (int)_tcslen(item.pszText);
+                item.lParam = (LPARAM)pDescriptor;
+
+                iItem = ListView_InsertItem(hwndLV, &item);
+                if (iItem != -1)
+                {
+                    wsprintf(buffer, _T("%lu"), pDescriptor->u.Dma.Port);
+                    ListView_SetItemText(hwndLV, iItem, 1, buffer);
+                }
+                break;
+
+            case CmResourceTypeDeviceSpecific:
+                hwndLV = GetDlgItem(hwnd, IDC_DEVICE_LIST);
+
+                wsprintf(buffer, _T("0x%08lx"), pDescriptor->u.DeviceSpecificData.Reserved1);
+
+                item.mask = LVIF_TEXT | LVIF_PARAM;
+                item.iItem = 1000;
+                item.iSubItem = 0;
+                item.state = 0;
+                item.stateMask = 0;
+                item.pszText = buffer;
+                item.cchTextMax = (int)_tcslen(item.pszText);
+                item.lParam = (LPARAM)pDescriptor;
+
+                iItem = ListView_InsertItem(hwndLV, &item);
+                if (iItem != -1)
+                {
+                    wsprintf(buffer, _T("0x%08lx"), pDescriptor->u.DeviceSpecificData.Reserved2);
+                    ListView_SetItemText(hwndLV, iItem, 1, buffer);
+
+                    wsprintf(buffer, _T("0x%lx"), pDescriptor->u.DeviceSpecificData.DataSize);
+                    ListView_SetItemText(hwndLV, iItem, 2, buffer);
+                }
+                break;
+        }
+    }
+}
+
+
+static BOOL
+OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
+
+    switch (phdr->idFrom)
+    {
+        case IDC_PORT_LIST:
+        case IDC_MEMORY_LIST:
+        case IDC_DMA_LIST:
+        case IDC_IRQ_LIST:
+        case IDC_DEVICE_LIST:
+            switch(phdr->code)
+            {
+                case NM_CLICK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
+                        LVITEM item;
+
+                        item.mask = LVIF_PARAM;
+                        item.iItem = lpnmlv->iItem;
+                        item.iSubItem = 0;
+
+                        if (ListView_GetItem(phdr->hwndFrom, &item))
+                        {
+                            pDescriptor = (PCM_PARTIAL_RESOURCE_DESCRIPTOR)item.lParam;
+
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_UNDETERMINED),
+                                         (pDescriptor->ShareDisposition == CmResourceShareUndetermined));
+
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_SHARED),
+                                         (pDescriptor->ShareDisposition == CmResourceShareShared));
+
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_EXCLUSIVE),
+                                         (pDescriptor->ShareDisposition == CmResourceShareDeviceExclusive));
+
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_DRIVER_EXCLUSIVE),
+                                         (pDescriptor->ShareDisposition == CmResourceShareDriverExclusive));
+                        }
+                    }
+                    else
+                    {
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_UNDETERMINED), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SHARED), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_EXCLUSIVE), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_DRIVER_EXCLUSIVE), FALSE);
+                    }
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static INT_PTR CALLBACK modify_resource_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        CreateResourceColumns(hwndDlg);
+        ParseResources(hwndDlg);
+        return FALSE;
+
+    case WM_NOTIFY:
+        return OnResourceNotify(hwndDlg, (NMHDR *)lParam);
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static BOOL CreateResourceListColumns(HWND hWndListView)
+{
+    TCHAR szText[80];
+    RECT rc;
+    LV_COLUMN lvC;
+
+    ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT);
+
+    GetClientRect(hWndListView, &rc);
+
+    /* Create columns. */
+    lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvC.pszText = szText;
+    lvC.fmt = LVCFMT_LEFT;
+
+    /* Load the column labels from the resource file. */
+    lvC.iSubItem = 0;
+    lvC.cx = (rc.right - rc.left) / 2;
+    LoadString(hInst, IDS_BUSNUMBER, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hWndListView, 0, &lvC) == -1)
+        return FALSE;
+
+    lvC.iSubItem = 1;
+    lvC.cx = (rc.right - rc.left) - lvC.cx;
+    LoadString(hInst, IDS_INTERFACE, szText, sizeof(szText)/sizeof(TCHAR));
+    if (ListView_InsertColumn(hWndListView, 1, &lvC) == -1)
+        return FALSE;
+
+    return TRUE;
+}
+
+static VOID AddFullResourcesToList(HWND hwnd)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR pFullDescriptor;
+    TCHAR buffer[80];
+    LVITEM item;
+    ULONG i;
+    INT iItem;
+
+    for (i = 0; i < resourceValueData->Count; i++)
+    {
+        pFullDescriptor = &resourceValueData->List[i];
+
+        wsprintf(buffer, _T("%lu"), pFullDescriptor->BusNumber);
+
+        item.mask = LVIF_TEXT;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.state = 0;
+        item.stateMask = 0;
+        item.pszText = buffer;
+        item.cchTextMax = (int)_tcslen(item.pszText);
+
+        iItem = ListView_InsertItem(hwnd, &item);
+        if (iItem != -1)
+        {
+            GetInterfaceType(pFullDescriptor->InterfaceType, buffer, 80);
+            ListView_SetItemText(hwnd, iItem, 1, buffer);
+        }
+    }
+}
+
+static BOOL
+OnResourceListNotify(HWND hwndDlg, NMHDR *phdr)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
+
+    switch (phdr->idFrom)
+    {
+        case IDC_RESOURCE_LIST:
+            switch(phdr->code)
+            {
+                case NM_CLICK:
+                    fullResourceIndex = lpnmlv->iItem;
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_SHOW_RESOURCE), (lpnmlv->iItem != -1));
+                    break;
+
+                case NM_DBLCLK:
+                    if (lpnmlv->iItem != -1)
+                    {
+                        fullResourceIndex = lpnmlv->iItem;
+                        DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_RESOURCE), hwndDlg, modify_resource_dlgproc);
+                    }
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        CreateResourceListColumns(GetDlgItem(hwndDlg, IDC_RESOURCE_LIST));
+        AddFullResourcesToList(GetDlgItem(hwndDlg, IDC_RESOURCE_LIST));
+        return FALSE;
+
+    case WM_NOTIFY:
+        return OnResourceListNotify(hwndDlg, (NMHDR *)lParam);
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_SHOW_RESOURCE:
+            if (fullResourceIndex != -1)
+                DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_RESOURCE), hwndDlg, modify_resource_dlgproc);
+            break;
+        case IDOK:
             EndDialog(hwndDlg, IDOK);
             break;
         case IDCANCEL:
@@ -439,11 +1072,11 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
     lRet = RegQueryValueEx(hKey, valueName, 0, &type, 0, &valueDataLen);
     if (lRet != ERROR_SUCCESS && (!_tcscmp(valueName, _T("")) || valueName == NULL))
     {
-      lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
-      type = REG_SZ;
-      valueDataLen = 0;
-      stringValueData = NULL;
-      binValueData = NULL;
+        lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
+        type = REG_SZ;
+        valueDataLen = 0;
+        stringValueData = NULL;
+        binValueData = NULL;
     }
 
     if (lRet != ERROR_SUCCESS)
@@ -494,7 +1127,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
             size_t llen, listlen, nl_len;
             LPTSTR src, lines = NULL;
 
-	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+            if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
             {
                 error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
                 goto done;
@@ -506,7 +1139,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 goto done;
             }
 
-	    /* convert \0 to \r\n */
+            /* convert \0 to \r\n */
             src = stringValueData;
             nl_len = _tcslen(_T("\r\n")) * sizeof(TCHAR);
             listlen = sizeof(TCHAR);
@@ -515,12 +1148,12 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
             {
                 llen = _tcslen(src);
                 if(llen == 0)
-                  break;
+                    break;
                 listlen += (llen * sizeof(TCHAR)) + nl_len;
-		lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, listlen);
-		_tcscat(lines, src);
-		_tcscat(lines, _T("\r\n"));
-		src += llen + 1;
+                lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, listlen);
+                _tcscat(lines, src);
+                _tcscat(lines, _T("\r\n"));
+                src += llen + 1;
             }
             HeapFree(GetProcessHeap(), 0, stringValueData);
             stringValueData = lines;
@@ -552,7 +1185,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                         if(nl == src)
                         {
                             EmptyLines = TRUE;
-			    src = nl + c_nl;
+                            src = nl + c_nl;
                             continue;
                         }
                     }
@@ -562,7 +1195,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     }
                     if(linechars > 0)
                     {
-			buflen += ((linechars + 1) * sizeof(TCHAR));
+                        buflen += ((linechars + 1) * sizeof(TCHAR));
                         lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, buflen);
                         memcpy((lines + dest), src, linechars * sizeof(TCHAR));
                         dest += linechars;
@@ -581,8 +1214,8 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-		lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
-		HeapFree(GetProcessHeap(), 0, lines);
+                lRet = RegSetValueEx(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
+                HeapFree(GetProcessHeap(), 0, lines);
             }
             else
             {
@@ -608,50 +1241,77 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
                 result = TRUE;
         }
     }
+    else if (EditBin == FALSE && type == REG_RESOURCE_LIST)
+    {
+        if (valueDataLen > 0)
+        {
+            resourceValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen);
+            if (resourceValueData == NULL)
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
+            }
+
+            lRet = RegQueryValueEx(hKey, valueName, 0, 0, (LPBYTE)resourceValueData, &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
+        }
+        else
+        {
+            resourceValueData = NULL;
+        }
+
+        if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_RESOURCE_LIST), hwnd, modify_resource_list_dlgproc) == IDOK)
+        {
+        }
+    }
     else if (EditBin == TRUE || type == REG_NONE || type == REG_BINARY)
     {
 #ifndef UNICODE
         LPWSTR u_valuename;
         int len_vname = lstrlen(valueName);
 
-	if(len_vname > 0)
+        if(len_vname > 0)
         {
-          if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
-          {
-            error(hwnd, IDS_TOO_BIG_VALUE, len_vname);
-            goto done;
-          }
-	  /* convert the ansi value name to an unicode string */
-          MultiByteToWideChar(CP_ACP, 0, valueName, -1, u_valuename, len_vname + 1);
-          valueDataLen *= sizeof(WCHAR);
+            if(!(u_valuename = HeapAlloc(GetProcessHeap(), 0, (len_vname + 1) * sizeof(WCHAR))))
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, len_vname);
+                goto done;
+            }
+            /* convert the ansi value name to an unicode string */
+            MultiByteToWideChar(CP_ACP, 0, valueName, -1, u_valuename, len_vname + 1);
+            valueDataLen *= sizeof(WCHAR);
         }
         else
-          u_valuename = L"";
+            u_valuename = L"";
 #endif
-	if(valueDataLen > 0)
+        if(valueDataLen > 0)
         {
-	    if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + 1)))
+            if(!(binValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen + 1)))
             {
-              error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
-              goto done;
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
             }
 
-	    /* force to use the unicode version, so editing strings in binary mode is correct */
-	    lRet = RegQueryValueExW(hKey,
+            /* force to use the unicode version, so editing strings in binary mode is correct */
+            lRet = RegQueryValueExW(hKey,
 #ifndef UNICODE
-	                            u_valuename,
+                                    u_valuename,
 #else
-	                            valueName,
+                                    valueName,
 #endif
-				    0, 0, (LPBYTE)binValueData, &valueDataLen);
+                                    0, 0, (LPBYTE)binValueData, &valueDataLen);
             if (lRet != ERROR_SUCCESS)
             {
                 HeapFree(GetProcessHeap(), 0, binValueData);
 #ifndef UNICODE
                 if(len_vname > 0)
-                  HeapFree(GetProcessHeap(), 0, u_valuename);
+                    HeapFree(GetProcessHeap(), 0, u_valuename);
 #endif
-	        error(hwnd, IDS_BAD_VALUE, valueName);
+                error(hwnd, IDS_BAD_VALUE, valueName);
                 goto done;
             }
         }
@@ -662,22 +1322,22 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
 
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_BIN_DATA), hwnd, modify_binary_dlgproc) == IDOK)
         {
-	    /* force to use the unicode version, so editing strings in binary mode is correct */
-	    lRet = RegSetValueExW(hKey,
+            /* force to use the unicode version, so editing strings in binary mode is correct */
+            lRet = RegSetValueExW(hKey,
 #ifndef UNICODE
-	                          u_valuename,
+                                  u_valuename,
 #else
-	                          valueName,
+                                  valueName,
 #endif
-				  0, type, (LPBYTE)binValueData, valueDataLen);
+                                  0, type, (LPBYTE)binValueData, valueDataLen);
             if (lRet == ERROR_SUCCESS)
                 result = TRUE;
         }
         if(binValueData != NULL)
-	  HeapFree(GetProcessHeap(), 0, binValueData);
+            HeapFree(GetProcessHeap(), 0, binValueData);
 #ifndef UNICODE
         if(len_vname > 0)
-          HeapFree(GetProcessHeap(), 0, u_valuename);
+            HeapFree(GetProcessHeap(), 0, u_valuename);
 #endif
     }
     else
@@ -686,6 +1346,10 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin)
     }
 
 done:
+    if (resourceValueData)
+        HeapFree(GetProcessHeap(), 0, resourceValueData);
+    resourceValueData = NULL;
+
     if (stringValueData)
         HeapFree(GetProcessHeap(), 0, stringValueData);
     stringValueData = NULL;
@@ -717,7 +1381,7 @@ static LONG CopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR l
 
     /* create the destination subkey */
     lResult = RegCreateKeyEx(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
-        &hDestSubKey, &dwDisposition);
+                             &hDestSubKey, &dwDisposition);
     if (lResult)
         goto done;
 
@@ -786,9 +1450,10 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
     HKEY hKey;
 
     lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ|KEY_SET_VALUE, &hKey);
-    if (lRet != ERROR_SUCCESS) {
-	error_code_messagebox(hwnd, lRet);
-	return FALSE;
+    if (lRet != ERROR_SUCCESS)
+    {
+        error_code_messagebox(hwnd, lRet);
+        return FALSE;
     }
 
     LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
@@ -798,9 +1463,10 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
         goto done;
 
     lRet = SHDeleteKey(hKeyRoot, keyPath);
-    if (lRet != ERROR_SUCCESS) {
-	error(hwnd, IDS_BAD_KEY, keyPath);
-	goto done;
+    if (lRet != ERROR_SUCCESS)
+    {
+        error(hwnd, IDS_BAD_KEY, keyPath);
+        goto done;
     }
     result = TRUE;
 

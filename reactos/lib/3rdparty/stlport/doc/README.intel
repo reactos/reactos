@@ -1,0 +1,19 @@
+Build of STLport with Intel C++ compiler for Windows is identical
+to the one for Microsoft Visual Studio compiler (see README.msvc).
+
+Known issues:
+
+1. If you have bind your Intel C++ compiler to the Visual Studio 6
+install and build your application without the -Qvc6 option you might
+experiement linking issue concerning 'std::unexpected' missing symbol.
+The reason of this problem is that without -Qvc6, ICL adds necessary
+code to invoke std::unexpected function when a raised exception is
+different to the one specified in a function prototype. As VC6 library
+do not contain this symbol ICL cannot find it anywhere.
+
+  As a workaround, STLport has its own std::unexpected implementation
+that you will find in src/dll_main.cpp. ICL is looking for a static
+symbol so if you use STLport static lib ICL will use its std::unexpected
+implementation but if you use STLport dynamic lib then ICL won't find
+it. You only need then to copy/paste the STLport implementation somewhere
+in your implementation and ICL will be happy.

@@ -586,8 +586,7 @@ ProgmanWindowProc(IN HWND hwnd,
         switch (uMsg)
         {
             case WM_ERASEBKGND:
-                PaintDesktop((HDC)wParam);
-                break;
+                return (LRESULT)PaintDesktop((HDC)wParam);
 
             case WM_GETISHELLBROWSER:
                 Ret = (LRESULT)IShellBrowser_from_impl(This);

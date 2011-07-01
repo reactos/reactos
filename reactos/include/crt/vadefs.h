@@ -81,14 +81,24 @@ extern "C" {
 #define __va_copy(d,s)	__builtin_va_copy(d,s)
 #elif defined(_MSC_VER)
 
-#if defined(_M_IA64) || defined(_M_AMD64) || defined(_M_CEE)
-#error Please implement me
-#endif
-
+#if defined(_M_IX86)
 #define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
 #define _crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
 #define _crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
+#elif defined(_M_AMD64)
+#define _PTRSIZEOF(n) ((sizeof(n) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
+#define _ISSTRUCT(t) ((sizeof(t) > sizeof(void*)) || (sizeof(t) & (sizeof(t)-1)) != 0)
+#define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _PTRSIZEOF(l)))
+#define _crt_va_arg(v,t)	(_ISSTRUCT(t) ? \
+                            (**(t**)(((v) += sizeof(void*)) - sizeof(void*))) : \
+                            (*(t*)(((v) += sizeof(void*)) - sizeof(void*))))
+#define _crt_va_end(v)	((void)((v) = (va_list)0))
+#define __va_copy(d,s)	((void)((d) = (s)))
+#else //if defined(_M_IA64) || defined(_M_CEE)
+#error Please implement me
+#endif
+
 #endif
 
 #if !defined(va_copy) && (!defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L)

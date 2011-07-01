@@ -20,8 +20,9 @@ BOOLEAN
 NTAPI
 PciAreBusNumbersConfigured(IN PPCI_PDO_EXTENSION PdoExtension)
 {
-    PAGED_CODE();
     UCHAR PrimaryBus, BaseBus, SecondaryBus, SubordinateBus;
+
+    PAGED_CODE();
 
     /* Get all relevant bus number details */
     PrimaryBus = PdoExtension->Dependent.type1.PrimaryBus;

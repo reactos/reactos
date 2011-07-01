@@ -89,7 +89,7 @@ BEGIN
         MENUITEM "&Buscar...",            CMD_HELP_SEARCH
         MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca de"             CMD_ABOUT
+        MENUITEM "&Acerca de",            CMD_ABOUT
         MENUITEM "&Información...",       CMD_ABOUT_WINE
     END
 END

@@ -21,6 +21,9 @@
 
 #include <math.h>
 
+#ifdef _MSC_VER
+#pragma function(asin)
+#endif
 
 double asin(double __x)
 {

@@ -92,11 +92,10 @@ PropsMaker::_generate_global_includes(bool debug, bool use_ros_headers)
 			fprintf ( OUT, "\"$(RootIntDir)\\");
 		else if (incs[i]->directory->directory == OutputDirectory)
 			fprintf ( OUT, "\"$(RootOutDir)\\");
-		else 
+		else
 			continue;
 
-		fprintf ( OUT, incs[i]->directory->relative_path.c_str()); 
-		fprintf ( OUT, "\" ; ");
+		fprintf ( OUT, "%s\" ; ", incs[i]->directory->relative_path.c_str());
 	}
 
 	fprintf ( OUT, "\"$(RootIntDir)\\include\" ; ");
@@ -146,10 +145,9 @@ PropsMaker::_generate_global_definitions(bool debug, bool use_ros_headers)
 			continue;
 
 		if ( defs[i]->value != "" )
-			fprintf ( OUT, "%s=%s",defs[i]->name.c_str(), defs[i]->value.c_str());
+			fprintf ( OUT, "%s=%s ; ",defs[i]->name.c_str(), defs[i]->value.c_str());
 		else
-			fprintf ( OUT, defs[i]->name.c_str());
-		fprintf ( OUT, " ; ");
+			fprintf ( OUT, "%s ; ", defs[i]->name.c_str());
 	}
 
 	fprintf ( OUT, "\t</globalDefines>\r\n");

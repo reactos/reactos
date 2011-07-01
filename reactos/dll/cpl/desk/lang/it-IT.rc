@@ -52,7 +52,7 @@ BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Schema dei colori", IDC_STATIC, 7, 140, 64, 7
-    COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Effetti...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "A&vanzato...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
@@ -112,7 +112,7 @@ BEGIN
     CONTROL         "&Ombreggiatura sotto i menu",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Mostrare il contenuto delle finestr mentre le si trascina",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Annulla", IDCANCEL, 226, 165, 50, 14
@@ -260,6 +260,6 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Impostazioni del monitor"
-    IDS_APPLY_FAILED "Impossibile applicare le uove impostazioni..."
+    IDS_APPLY_FAILED "Impossibile applicare le nuove impostazioni..."
     IDS_APPLY_NEEDS_RESTART "E' necessario riavviare il computer per applicare le modifiche."
 END

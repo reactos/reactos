@@ -118,7 +118,6 @@ Author:
 #define DISPATCH_LENGTH                 106
 #endif
 
-#define SharedUserdata                  ((KUSER_SHARED_DATA *CONST)(USER_SHARED_DATA|KSEG0_BASE))
 #else
 
 //

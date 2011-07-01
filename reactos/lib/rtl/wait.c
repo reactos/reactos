@@ -91,7 +91,7 @@ Wait_thread_proc(LPVOID Arg)
     completion_event = Wait->CompletionEvent;
     if (completion_event) NtSetEvent( completion_event, NULL );
 
-    if (_InterlockedIncrement( &Wait->DeleteCount ) == 2 )
+    if (InterlockedIncrement( &Wait->DeleteCount ) == 2 )
     {
        NtClose( Wait->CancelEvent );
        RtlFreeHeap( RtlGetProcessHeap(), 0, Wait );
@@ -220,7 +220,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
                 if (Status != STATUS_SUCCESS)
                     return Status;
 
-                (void)_InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
+                (void)InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
 
                 if (Wait->CallbackInProgress)
                     NtWaitForSingleObject( CompletionEvent, FALSE, NULL );
@@ -229,7 +229,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
             }
             else
             {
-                (void)_InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
+                (void)InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
 
                 if (Wait->CallbackInProgress)
                     Status = STATUS_PENDING;
@@ -239,7 +239,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
             Status = STATUS_PENDING;
     }
 
-    if (_InterlockedIncrement( &Wait->DeleteCount ) == 2 )
+    if (InterlockedIncrement( &Wait->DeleteCount ) == 2 )
     {
         Status = STATUS_SUCCESS;
         NtClose( Wait->CancelEvent );

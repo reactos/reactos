@@ -768,7 +768,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
 
     /* Setup the object */
     RtlZeroMemory(Directory, sizeof(OBJECT_DIRECTORY));
-    ExInitializePushLock((PULONG_PTR)&Directory->Lock);
+    ExInitializePushLock(&Directory->Lock);
     Directory->SessionId = -1;
 
     /* Insert it into the handle table */

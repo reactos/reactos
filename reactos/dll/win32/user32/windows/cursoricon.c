@@ -458,16 +458,10 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     void *color_bits, *mask_bits;
     BOOL ret = FALSE;
     HDC hdc = 0;
-	static HDC hScreenDC = 0;
 
     if (!(info = HeapAlloc( GetProcessHeap(), 0, max( size, FIELD_OFFSET( BITMAPINFO, bmiColors[2] )))))
         return FALSE;
-	if(!hScreenDC)
-	{
-		hScreenDC = GetDC(0);
-		if(!hScreenDC) goto done;
-	}
-    if (!(hdc = CreateCompatibleDC(hScreenDC))) goto done;
+    if (!(hdc = CreateCompatibleDC(NULL))) goto done;
 
     memcpy( info, bmi, size );
     info->bmiHeader.biHeight /= 2;
@@ -491,8 +485,8 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     else
     {
         if (!(*mask = CreateBitmap( width, height, 1, 1, NULL ))) goto done;
-        if (!(*color = CreateBitmap( width, height, GetDeviceCaps(hScreenDC, PLANES),
-                                     GetDeviceCaps(hScreenDC, BITSPIXEL), NULL )))
+        if (!(*color = CreateBitmap( width, height, GetDeviceCaps(hdc, PLANES),
+                                     GetDeviceCaps(hdc, BITSPIXEL), NULL )))
         {
             DeleteObject( *mask );
             goto done;
@@ -1005,7 +999,7 @@ static HICON CURSORICON_ExtCopy(HICON hIcon, UINT nType,
         && (iDesiredCX > 0 || iDesiredCY > 0))
         || nFlags & LR_MONOCHROME)
     {
-		FIXME("Copying from resource isn't implemented yet\n");
+		TRACE("Copying from resource isn't implemented yet\n");
 		hNew = CopyIcon(hIcon);
 
 #if 0
@@ -1173,13 +1167,21 @@ HICON WINAPI CreateIcon(
     iinfo.fIcon = TRUE;
     iinfo.xHotspot = nWidth / 2;
     iinfo.yHotspot = nHeight / 2;
-    iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
-    iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
+    if (bPlanes * bBitsPixel > 1)
+    {
+        iinfo.hbmColor = CreateBitmap( nWidth, nHeight, bPlanes, bBitsPixel, lpXORbits );
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight, 1, 1, lpANDbits );
+    }
+    else
+    {
+        iinfo.hbmMask = CreateBitmap( nWidth, nHeight * 2, 1, 1, lpANDbits );
+        iinfo.hbmColor = NULL;
+    }
 
     hIcon = CreateIconIndirect( &iinfo );
 
     DeleteObject( iinfo.hbmMask );
-    DeleteObject( iinfo.hbmColor );
+    if (iinfo.hbmColor) DeleteObject( iinfo.hbmColor );
 
     return hIcon;
 }
@@ -1477,8 +1479,9 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
                bmpXor.bmWidth, bmpXor.bmHeight, bmpXor.bmWidthBytes,
                bmpXor.bmPlanes, bmpXor.bmBitsPixel);
 
-        width = bmpXor.bmWidth;
-        height = bmpXor.bmHeight;
+        // the size of the mask bitmap always determines the icon size!
+        width = bmpAnd.bmWidth;
+        height = bmpAnd.bmHeight;
         if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
         {
             color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
@@ -2180,4 +2183,24 @@ User32SetupDefaultCursors(PVOID Arguments,
     }
 
     return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+}
+
+BOOL get_icon_size(HICON hIcon, SIZE *size)
+{
+    ICONINFO info;
+    BITMAP bitmap;
+
+    if (!GetIconInfo(hIcon, &info)) return FALSE;
+    if (!GetObject(info.hbmMask, sizeof(bitmap), &bitmap)) return FALSE;
+
+    size->cx = bitmap.bmWidth;
+    size->cy = bitmap.bmHeight;
+
+    /* Black and white icons store both the XOR and AND bitmap in hbmMask */
+    if (!info.hbmColor)
+    {
+        size->cy /= 2;
+    }
+
+    return TRUE;
 }

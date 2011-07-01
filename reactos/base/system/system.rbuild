@@ -10,6 +10,9 @@
 	<directory name="expand">
 		<xi:include href="expand/expand.rbuild" />
 	</directory>
+	<directory name="subst">
+		<xi:include href="subst/subst.rbuild" />
+	</directory>
 	<directory name="format">
 		<xi:include href="format/format.rbuild" />
 	</directory>

@@ -18,6 +18,7 @@
 #include <ntifs.h>
 #include <tvout.h>
 #include <ntndk.h>
+#include <ntstrsafe.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -62,16 +63,14 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntgdibad.h>
 #include <ntgdi.h>
 
+/* Undocumented user definitions */
+#include <undocuser.h>
+
 /* Internal Win32K Header */
 #include "include/win32kp.h"
 
 /* Undocumented stuff */
 typedef DRIVEROBJ *PDRIVEROBJ;
-#define WM_SYSTIMER 280
-#ifndef M_PI
-#define M_PI 3.14159265358979323846f
-#define M_PI_2 1.57079632679489661923
-#endif
 
 /* User heap */
 extern HANDLE GlobalUserHeap;

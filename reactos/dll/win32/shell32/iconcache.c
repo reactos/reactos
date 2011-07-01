@@ -180,8 +180,8 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
     if (!MaskBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
                  ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-                 ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0, 
-                 MAKEROP4(SRCCOPY, 0xAA0000)))
+                 ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0,
+                 MAKEROP4(0xAA0000, SRCCOPY)))
     {
         goto fail;
     }

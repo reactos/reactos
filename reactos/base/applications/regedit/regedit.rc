@@ -31,10 +31,10 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #include "rsrc.rc"
 
-IDI_OPEN_FILE	ICON	DISCARDABLE	res/folderopen.ico
-IDI_CLOSED_FILE	ICON	DISCARDABLE	res/folder.ico
-IDI_ROOT	ICON	DISCARDABLE	res/computer.ico
-IDI_STRING	ICON	DISCARDABLE	res/string.ico
-IDI_BIN		ICON	DISCARDABLE	res/bin.ico
-IDI_REGEDIT	ICON	DISCARDABLE	res/regedit.ico
-IDI_REGFILE ICON    DISCARDABLE res/regfile.ico
+IDI_OPEN_FILE   ICON    DISCARDABLE    res/folderopen.ico
+IDI_CLOSED_FILE ICON    DISCARDABLE    res/folder.ico
+IDI_ROOT        ICON    DISCARDABLE    res/computer.ico
+IDI_STRING      ICON    DISCARDABLE    res/string.ico
+IDI_BIN         ICON    DISCARDABLE    res/bin.ico
+IDI_REGEDIT     ICON    DISCARDABLE    res/regedit.ico
+IDI_REGFILE     ICON    DISCARDABLE    res/regfile.ico

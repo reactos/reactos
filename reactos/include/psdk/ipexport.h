@@ -91,6 +91,18 @@ typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
 #define IP_SPEC_MTU_CHANGE          (IP_STATUS_BASE + 20)
 #define IP_MTU_CHANGE               (IP_STATUS_BASE + 21)
 #define IP_UNLOAD                   (IP_STATUS_BASE + 22)
+#define IP_ADDR_ADDED               (IP_STATUS_BASE + 23)
+#define IP_MEDIA_CONNECT            (IP_STATUS_BASE + 24)
+#define IP_MEDIA_DISCONNECT         (IP_STATUS_BASE + 25)
+#define IP_BIND_ADAPTER             (IP_STATUS_BASE + 26)
+#define IP_UNBIND_ADAPTER           (IP_STATUS_BASE + 27)
+#define IP_DEVICE_DOES_NOT_EXIST    (IP_STATUS_BASE + 28)
+#define IP_DUPLICATE_ADDRESS        (IP_STATUS_BASE + 29)
+#define IP_INTERFACE_METRIC_CHANGE  (IP_STATUS_BASE + 30)
+#define IP_RECONFIG_SECFLTR         (IP_STATUS_BASE + 31)
+#define IP_NEGOTIATING_IPSEC        (IP_STATUS_BASE + 32)
+#define IP_INTERFACE_WOL_CAPABILITY_CHANGE (IP_STATUS_BASE + 33)
+#define IP_DUPLICATE_IPADD          (IP_STATUS_BASE + 34)
 
 #define IP_GENERAL_FAILURE          (IP_STATUS_BASE + 50)
 #define MAX_IP_STATUS               IP_GENERAL_FAILURE

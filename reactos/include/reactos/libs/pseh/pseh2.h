@@ -19,16 +19,37 @@
 	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-#ifdef _M_AMD64
-#include "pseh2_64.h"
-#else
 
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if !defined (__arm__) && !defined(__clang__)
+#if defined(USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
 
-#if defined(__GNUC__)
+#define _SEH2_TRY  {
+#define _SEH2_FINALLY }  {
+#define _SEH2_EXCEPT(...) } if (0) {
+#define _SEH2_END }
+#define _SEH2_GetExceptionInformation()
+#define _SEH2_GetExceptionCode() 0
+#define _SEH2_AbnormalTermination()
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE
+
+#elif defined(USE_NATIVE_SEH) || defined(_MSC_VER)
+
+#include <excpt.h>
+#define _SEH2_TRY __try
+#define _SEH2_FINALLY __finally
+#define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
+#define _SEH2_END
+#define _SEH2_GetExceptionInformation() (GetExceptionInformation())
+#define _SEH2_GetExceptionCode() (GetExceptionCode())
+#define _SEH2_AbnormalTermination() (AbnormalTermination())
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE __leave
+
+#elif defined(__GNUC__)
+
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
 struct _CONTEXT;
@@ -76,8 +97,7 @@ typedef struct __SEH2HandleTryLevel
 _SEH2HandleTryLevel_t;
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 extern int __cdecl _SEH2EnterFrameAndTrylevel(_SEH2Frame_t *, volatile _SEH2TryLevel_t *);
@@ -369,41 +389,11 @@ extern void __cdecl _SEH2Return(void);
 
 __SEH_END_SCOPE_CHAIN;
 
-#else
-
-#include <excpt.h>
-
-#define _SEH2_TRY __try
-#define _SEH2_FINALLY __finally
-#define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
-#define _SEH2_END
-
-#define _SEH2_GetExceptionInformation() (GetExceptionInformation())
-#define _SEH2_GetExceptionCode() (GetExceptionCode())
-#define _SEH2_AbnormalTermination() (AbnormalTermination())
-
-#define _SEH2_YIELD(STMT_) STMT_
-#define _SEH2_LEAVE __leave
-
-#endif
 
 #else
-
-#define _SEH2_TRY  {
-#define _SEH2_FINALLY }  {
-#define _SEH2_EXCEPT(...) } if (0) {
-#define _SEH2_END }
-
-#define _SEH2_GetExceptionInformation() 
-#define _SEH2_GetExceptionCode() 0
-#define _SEH2_AbnormalTermination() 
-
-#define _SEH2_YIELD(STMT_) STMT_
-#define _SEH2_LEAVE
-
+#error no PSEH support
 #endif
 
-#endif
-#endif
+#endif /* !KJK_PSEH2_H_ */
 
 /* EOF */

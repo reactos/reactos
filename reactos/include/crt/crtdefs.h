@@ -52,7 +52,7 @@
 
 #ifndef _CRTIMP
  #ifdef CRTDLL /* Defined for ntdll, crtdll, msvcrt, etc */
-  #define _CRTIMP __declspec(dllexport)
+  #define _CRTIMP
  #elif defined(_DLL)
   #define _CRTIMP __declspec(dllimport)
  #else /* !CRTDLL && !_DLL */
@@ -133,7 +133,13 @@
 #endif
 
 #ifndef _CRT_ALIGN
+#if defined (__midl) || defined(__WIDL__)
+#define _CRT_ALIGN(x)
+#elif defined(_MSC_VER)
+#define _CRT_ALIGN(x) __declspec(align(x))
+#else
 #define _CRT_ALIGN(x) __attribute__ ((aligned(x)))
+#endif
 #endif
 
 #ifndef _CRTNOALIAS

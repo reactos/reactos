@@ -214,9 +214,9 @@
 @ stdcall WNDOBJ_bEnum(ptr long ptr)
 @ stdcall WNDOBJ_cEnumStart(ptr long long long)
 @ stdcall WNDOBJ_vSetConsumer(ptr ptr)
-@ stdcall XFORMOBJ_bApplyXform(ptr long long ptr ptr)
-@ stdcall XFORMOBJ_iGetFloatObjXform(ptr ptr)
-@ stdcall XFORMOBJ_iGetXform(ptr ptr)
+@ stdcall XFORMOBJ_bApplyXform(ptr long long ptr ptr) EXFORMOBJ_bApplyXform
+@ stdcall XFORMOBJ_iGetFloatObjXform(ptr ptr) EXFORMOBJ_iGetFloatObjXform
+@ stdcall XFORMOBJ_iGetXform(ptr ptr) EXFORMOBJ_iGetXform
 @ stdcall XLATEOBJ_cGetPalette(ptr long long ptr)
 @ stdcall XLATEOBJ_hGetColorTransform(ptr)
 @ stdcall XLATEOBJ_iXlate(ptr long)

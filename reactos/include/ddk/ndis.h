@@ -3296,7 +3296,7 @@ NdisQueryBufferOffset(
  * NDIS_BUFFER_LINKAGE(
  *   IN PNDIS_BUFFER Buffer);
  */
-#define NDIS_BUFFER_LINKAGE(Buffer)(Buffer)->Next;
+#define NDIS_BUFFER_LINKAGE(Buffer) (Buffer)->Next
 
 /*
  * VOID
@@ -3321,7 +3321,7 @@ NdisQueryBufferOffset(
  * NdisGetPacketFlags(
  *   IN PNDIS_PACKET  Packet);
  */
-#define NdisGetPacketFlags(Packet)(Packet)->Private.Flags;
+#define NdisGetPacketFlags(Packet) (Packet)->Private.Flags
 
 /*
  * ULONG

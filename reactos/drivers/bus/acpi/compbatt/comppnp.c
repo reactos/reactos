@@ -436,7 +436,7 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                     DbgPrint("CompBatt: Couldn't register for PnP notification - %x\n",
                              Status);
             }
-        
+             break;
         case IRP_MN_CANCEL_STOP_DEVICE:
         
             /* Explicitly say ok */

@@ -345,6 +345,18 @@ interface IBindCtx : IUnknown
     COSERVERINFO *pServerInfo;
   } BIND_OPTS2, *LPBIND_OPTS2;
 
+  typedef struct tagBIND_OPTS3 {
+    DWORD cbStruct;
+    DWORD grfFlags;
+    DWORD grfMode;
+    DWORD dwTickCountDeadline;
+    DWORD dwTrackFlags;
+    DWORD dwClassContext;
+    LCID  locale;
+    COSERVERINFO *pServerInfo;
+    HWND hwnd;
+  } BIND_OPTS3, *LPBIND_OPTS3;
+
   typedef enum tagBIND_FLAGS {
     BIND_MAYBOTHERUSER   = 1,
     BIND_JUSTTESTEXISTENCE = 2

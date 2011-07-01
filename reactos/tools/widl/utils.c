@@ -234,3 +234,130 @@ char *xstrdup(const char *str)
 	s = xmalloc(strlen(str)+1);
 	return strcpy(s, str);
 }
+
+int strendswith(const char* str, const char* end)
+{
+    int l = strlen(str);
+    int m = strlen(end);
+    return l >= m && strcmp(str + l - m, end) == 0;
+}
+
+/*******************************************************************
+ *         buffer management
+ *
+ * Function for writing to a memory buffer.
+ */
+
+int byte_swapped = 0;
+unsigned char *output_buffer;
+size_t output_buffer_pos;
+size_t output_buffer_size;
+
+static void check_output_buffer_space( size_t size )
+{
+    if (output_buffer_pos + size >= output_buffer_size)
+    {
+        output_buffer_size = max( output_buffer_size * 2, output_buffer_pos + size );
+        output_buffer = xrealloc( output_buffer, output_buffer_size );
+    }
+}
+
+void init_output_buffer(void)
+{
+    output_buffer_size = 1024;
+    output_buffer_pos = 0;
+    output_buffer = xmalloc( output_buffer_size );
+}
+
+void flush_output_buffer( const char *name )
+{
+    int fd = open( name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666 );
+    if (fd == -1) error( "Error creating %s\n", name );
+    if (write( fd, output_buffer, output_buffer_pos ) != output_buffer_pos)
+        error( "Error writing to %s\n", name );
+    close( fd );
+    free( output_buffer );
+}
+
+void put_data( const void *data, size_t size )
+{
+    check_output_buffer_space( size );
+    memcpy( output_buffer + output_buffer_pos, data, size );
+    output_buffer_pos += size;
+}
+
+void put_byte( unsigned char val )
+{
+    check_output_buffer_space( 1 );
+    output_buffer[output_buffer_pos++] = val;
+}
+
+void put_word( unsigned short val )
+{
+    if (byte_swapped) val = (val << 8) | (val >> 8);
+    put_data( &val, sizeof(val) );
+}
+
+void put_dword( unsigned int val )
+{
+    if (byte_swapped)
+        val = ((val << 24) | ((val << 8) & 0x00ff0000) | ((val >> 8) & 0x0000ff00) | (val >> 24));
+    put_data( &val, sizeof(val) );
+}
+
+void put_qword( unsigned int val )
+{
+    if (byte_swapped)
+    {
+        put_dword( 0 );
+        put_dword( val );
+    }
+    else
+    {
+        put_dword( val );
+        put_dword( 0 );
+    }
+}
+
+/* pointer-sized word */
+void put_pword( unsigned int val )
+{
+    if (pointer_size == 8) put_qword( val );
+    else put_dword( val );
+}
+
+void put_str( int indent, const char *format, ... )
+{
+    int n;
+    va_list args;
+
+    check_output_buffer_space( 4 * indent );
+    memset( output_buffer + output_buffer_pos, ' ', 4 * indent );
+    output_buffer_pos += 4 * indent;
+
+    for (;;)
+    {
+        size_t size = output_buffer_size - output_buffer_pos;
+        va_start( args, format );
+	n = vsnprintf( (char *)output_buffer + output_buffer_pos, size, format, args );
+	va_end( args );
+        if (n == -1) size *= 2;
+        else if ((size_t)n >= size) size = n + 1;
+        else
+        {
+            output_buffer_pos += n;
+            return;
+        }
+        check_output_buffer_space( size );
+    }
+}
+
+void align_output( unsigned int align )
+{
+    size_t size = align - (output_buffer_pos % align);
+
+    if (size == align) return;
+    check_output_buffer_space( size );
+    memset( output_buffer + output_buffer_pos, 0, size );
+    output_buffer_pos += size;
+}

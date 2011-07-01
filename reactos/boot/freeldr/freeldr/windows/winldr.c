@@ -39,6 +39,10 @@ extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
 
+extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+extern BOOLEAN WinLdrTerminalConnected;
+extern void WinLdrSetupEms(IN PCHAR BootOptions);
+
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -155,7 +159,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		ArcDiskInfo->ArcName = (PCHAR)PaToVa(ArcDiskInfo->ArcName);
 
 		/* Mark partition table as valid */
-		ArcDiskInfo->ValidPartitionTable = TRUE; 
+		ArcDiskInfo->ValidPartitionTable = TRUE;
 
 		/* Insert into the list */
 		InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
@@ -203,11 +207,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		/* See KiRosFrldrLpbToNtLpb for details */
 		Extension->AcpiTable = (PVOID)1;
 	}
-    
-#ifndef _M_ARM
+
+#ifdef _M_IX86
     /* Set headless block pointer */
-    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
-    extern BOOLEAN WinLdrTerminalConnected;
     if (WinLdrTerminalConnected)
     {
         Extension->HeadlessLoaderBlock = MmHeapAlloc(sizeof(HEADLESS_LOADER_BLOCK));
@@ -455,6 +457,8 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	PVOID GdtIdt;
 	ULONG PcrBasePage=0;
 	ULONG TssBasePage=0;
+	// Progress bar
+	CHAR ProgressString[256];
 
 	// Open the operating system section
 	// specified in the .ini file
@@ -462,7 +466,8 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Detecting Hardware...");
-	UiDrawProgressBarCenter(1, 100, "Loading NT...");
+	sprintf(ProgressString, "Loading NT...");
+	UiDrawProgressBarCenter(1, 100, ProgressString);
 
 	/* Read the system path is set in the .ini file */
 	if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))
@@ -522,7 +527,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	}
 
 	/* Let user know we started loading */
-	UiDrawStatusText("Loading...");
+	//UiDrawStatusText("Loading...");
 
 	/* append a backslash */
 	strcpy(BootPath, FullPath);
@@ -534,15 +539,18 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
-    
-#ifndef _M_ARM
+
+#ifdef _M_IX86
    	/* Setup redirection support */
-	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
 #endif
 	/* Detect hardware */
 	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();
+
+	sprintf(ProgressString, "Loading system hive...");
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(15, 100, ProgressString);
 
 	/* Load Hive */
 	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
@@ -554,12 +562,18 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	/* Load kernel */
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
+	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(30, 100, ProgressString);
 	Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
 	DPRINTM(DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase);
 
 	/* Load HAL */
 	strcpy(FileName, BootPath);
 	strcat(FileName, "SYSTEM32\\HAL.DLL");
+	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(45, 100, ProgressString);
 	Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
 	DPRINTM(DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase);
 
@@ -568,6 +582,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	{
 		strcpy(FileName, BootPath);
 		strcat(FileName, "SYSTEM32\\KDCOM.DLL");
+		sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
+		UiDrawBackdrop();
+		UiDrawProgressBarCenter(60, 100, ProgressString);
 		Status = WinLdrLoadImage(FileName, LoaderBootDriver, &KdComBase);
 		DPRINTM(DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase);
 	}
@@ -591,11 +608,17 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	if (KdComDTE)
 		WinLdrScanImportDescriptorTable(LoaderBlock, FileName, KdComDTE);
 
+	sprintf(ProgressString, "Loading NLS and OEM fonts...");
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(80, 100, ProgressString);
 	/* Load NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
 	DPRINTM(DPRINT_WINDOWS, "SYSTEM hive scanned with status %d\n", Status);
 
 	/* Load boot drivers */
+	sprintf(ProgressString, "Loading boot drivers...");
+	UiDrawBackdrop();
+	UiDrawProgressBarCenter(100, 100, ProgressString);
 	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
 	DPRINTM(DPRINT_WINDOWS, "Boot drivers loaded with status %d\n", Status);
 

@@ -31,7 +31,7 @@ i8042MouHandlePs2pp(
 	 * a normal packet.
 	 *
 	 * Otherwise, the packet is different, like this:
-	 * 1: E  1 b3 b2  x  x  x  x
+	 * 1: E  1 b3 b2  1  x  x  x
 	 * 2: x  x b1 b0 x1 x0  1  0
 	 * 3: x  x  x  x  x  x x1 x0
 	 *
@@ -93,8 +93,8 @@ i8042MouHandlePs2pp(
 				}
 
 			/* Now get the packet type */
-			PktType = ((DeviceExtension->MouseLogiBuffer[0] & 0x30) >> 4) &
-			          ((DeviceExtension->MouseLogiBuffer[1] & 0x30) >> 6);
+			PktType = ((DeviceExtension->MouseLogiBuffer[0] & 0x30) >> 2) |
+			          ((DeviceExtension->MouseLogiBuffer[1] & 0x30) >> 4);
 
 			switch (PktType)
 			{

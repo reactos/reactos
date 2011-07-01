@@ -2,6 +2,10 @@
 
 #include <math.h>
 
+#ifdef _MSC_VER
+#pragma function(tanh)
+#endif
+
 /*
  * @implemented
  */

@@ -20,13 +20,12 @@
 .intel_syntax noprefix
 #define HEX(y) 0x##y
 
-#define ASM
-#include <arch.h>
+#include <arch/pc/x86common.h>
 #include <multiboot.h>
 
 	.code16
 
-EXTERN(RealEntryPoint)
+EXTERN(_RealEntryPoint)
 
 	cli
 
@@ -50,14 +49,16 @@ EXTERN(RealEntryPoint)
 
 	/* Zero BootDrive and BootPartition */
 	xor eax, eax
-	mov dword ptr [_BootDrive], eax
-	mov dword ptr [_BootPartition], eax
+	mov dword ptr [_FrldrBootDrive], eax
+	mov dword ptr [_FrldrBootPartition], eax
 
 	/* Store the boot drive */
-	mov byte ptr [_BootDrive], dl
+	mov byte ptr [_FrldrBootDrive], dl
 
 	/* Store the boot partition */
-	mov byte ptr [_BootPartition], dh
+	mov byte ptr [_FrldrBootPartition], dh
+
+	call _EnableA20
 
 	/* GO! */
 	push eax
@@ -302,7 +303,7 @@ EXTERN(_DisableA20)
 
 	/* Align 32 bits boundary */
 .align 4
-	
+
 	/* Multiboot header */
 MultibootHeader:
 	/* magic */
@@ -400,12 +401,12 @@ mb4:
 	mov eax, [ebx + MB_INFO_BOOT_DEVICE_OFFSET]
 	shr eax, 16
 	inc al
-	mov byte ptr _BootPartition, al
-	mov byte ptr _BootDrive, ah
+	mov byte ptr _FrldrBootPartition, al
+	mov byte ptr _FrldrBootDrive, ah
 	jmp mb6
 mb5:	/* No boot device known, assume first partition of first harddisk */
-	mov byte ptr _BootDrive, HEX(80)
-	mov byte ptr _BootPartition, 1
+	mov byte ptr _FrldrBootDrive, HEX(80)
+	mov byte ptr _FrldrBootPartition, 1
 mb6:
 	/* Check for command line */
 	mov eax, offset cmdline
@@ -415,7 +416,7 @@ mb6:
 mb7:
 
 	/* GO! */
-	push eax	
+	push eax
 	call	_BootMain
 
 mbfail:
@@ -496,8 +497,8 @@ mb_info:
 cmdline:
 	.fill	CMDLINE_SIZE, 1, 0
 
-EXTERN(_BootDrive)
+EXTERN(_FrldrBootDrive)
     .long 0
-    
-EXTERN(_BootPartition)
+
+EXTERN(_FrldrBootPartition)
     .long 0

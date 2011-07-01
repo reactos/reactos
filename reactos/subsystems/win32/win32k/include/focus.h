@@ -7,6 +7,10 @@ HWND FASTCALL
 IntGetCaptureWindow(VOID);
 HWND FASTCALL
 IntGetFocusWindow(VOID);
+HWND FASTCALL
+co_UserSetCapture(HWND hWnd);
+BOOL FASTCALL
+IntReleaseCapture(VOID);
 
 /*
  * These functions take the window handles from current thread queue.

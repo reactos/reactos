@@ -54,7 +54,7 @@ ExpDeleteProfile(PVOID ObjectBody)
         /* Unmap the Locked Buffer */
         MmUnmapLockedPages(Profile->LockedBufferAddress, Profile->Mdl);
         MmUnlockPages(Profile->Mdl);
-        ExFreePool(Profile->Mdl);
+        IoFreeMdl(Profile->Mdl);
     }
 
     /* Check if a Process is associated and reference it */
@@ -368,7 +368,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
     }
 
     /* Allocate the Mdl Structure */
-    Profile->Mdl = MmCreateMdl(NULL, Profile->Buffer, Profile->BufferSize);
+    Profile->Mdl = IoAllocateMdl(Profile->Buffer, Profile->BufferSize, FALSE, FALSE, NULL);
 
     /* Protect this in SEH as we might raise an exception */
     _SEH2_TRY
@@ -381,7 +381,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
         /* Release our lock, free the buffer, dereference and return */
         KeReleaseMutex(&ExpProfileMutex, FALSE);
         ObDereferenceObject(Profile);
-        ExFreePool(ProfileObject);
+        ExFreePoolWithTag(ProfileObject, TAG_PROFILE);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -449,7 +449,7 @@ NtStopProfile(IN HANDLE ProfileHandle)
     /* Unlock the Buffer */
     MmUnmapLockedPages(Profile->LockedBufferAddress, Profile->Mdl);
     MmUnlockPages(Profile->Mdl);
-    ExFreePool(Profile->ProfileObject);
+    ExFreePoolWithTag(Profile->ProfileObject, TAG_PROFILE);
 
     /* Clear the Locked Buffer pointer, meaning the Object is Stopped */
     Profile->LockedBufferAddress = NULL;

@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * THANKS TO:   preston
- * UPDATED:     2010-05-25
+ * THANKS TO:   preston for bugfix advice at line 842
+ * UPDATED:     2011-03-31
  */
 
 #pragma once
@@ -43,7 +43,7 @@ static MUI_ENTRY csCZLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Tento jazyk bude defaultn¡m jazykem v nainstalovan‚m syst‚mu.",
+        "\x07  Tento jazyk bude vìchoz¡m jazykem v nainstalovan‚m syst‚mu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -993,13 +993,13 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Nainstalovat zavadØŸ na pevnì disk (MBR a VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Nainstalovat zavadØŸ na pevnì disk (pouze VBR).",
         TEXT_STYLE_NORMAL
     },
     {

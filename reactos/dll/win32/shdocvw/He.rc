@@ -42,7 +42,7 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&חדש"
         {
-            MENUITEM "&חלון"                  ID_BROWSE_NEW_WINDOW
+            MENUITEM "&חלון",                 ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&פתיחה...",                    ID_BROWSE_OPEN
         MENUITEM "&שמירה",                       ID_BROWSE_SAVE
@@ -59,13 +59,13 @@ IDR_BROWSE_MAIN_MENU MENU
     {
         POPUP "&סרגלי כלים"
         {
-            MENUITEM "סרגל הכלים ה&רגיל"            ID_BROWSE_BAR_STD
-            MENUITEM "סרגל ה&כתובות"             ID_BROWSE_BAR_ADDR
+            MENUITEM "סרגל הכלים ה&רגיל",           ID_BROWSE_BAR_STD
+            MENUITEM "סרגל ה&כתובות",            ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "&מועדפים"
     {
-        MENUITEM "הו&ספה למועדפים..."         ID_BROWSE_ADDFAV
+        MENUITEM "הו&ספה למועדפים...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "ע&זרה"

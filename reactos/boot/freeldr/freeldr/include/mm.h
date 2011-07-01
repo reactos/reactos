@@ -42,6 +42,7 @@ typedef struct
 #define MM_PAGE_SIZE	4096
 #define MM_PAGE_MASK	0xFFF
 #define MM_PAGE_SHIFT	12
+#define MM_MAX_PAGE	    0xFFFFF
 
 #define MM_SIZE_TO_PAGES(a)  \
 	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
@@ -53,6 +54,7 @@ typedef struct
 #define MM_PAGE_SIZE	4096
 #define MM_PAGE_MASK	0xFFF
 #define MM_PAGE_SHIFT	12
+#define MM_MAX_PAGE	    0xFFFFFFFFFFFFF
 
 #define MM_SIZE_TO_PAGES(a)  \
 	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )

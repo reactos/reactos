@@ -266,7 +266,7 @@ typedef struct {
 // eVb: 3.3 [VBE]
     PUSHORT CmdStream;   // pointer to array of register-setting commands to
                                          //  set up mode
-// eVb: 3.4 [VBE] - Add fields to track linear addresses/sizes and flags                      
+// eVb: 3.4 [VBE] - Add fields to track linear addresses/sizes and flags
     ULONG PhysBase;
     ULONG FrameBufferBase;
     ULONG FrameBufferSize;
@@ -407,7 +407,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     UCHAR CursorEnable;           // whether cursor is enabled or not
     UCHAR CursorTopScanLine;      // Cursor Start register setting (top scan)
     UCHAR CursorBottomScanLine;   // Cursor End register setting (bottom scan)
-// eVb: 3.5 [VBE] - Add fields for VBE support and XP+ INT10 interface  
+// eVb: 3.5 [VBE] - Add fields for VBE support and XP+ INT10 interface
     VIDEO_PORT_INT10_INTERFACE Int10Interface;
     BOOLEAN VesaBiosOk;
 // eVb: 3.5 [END]
@@ -438,9 +438,12 @@ extern ULONG NumVideoModes;
 extern VIDEOMODE ModesVGA[];
 extern PVIDEOMODE VgaModeList;
 
-// eVb: 3.5 [VGA] - Add ATI/Mach64 Access Range    
+// eVb: 3.5 [VGA] - Add ATI/Mach64 Access Range
 #define NUM_VGA_ACCESS_RANGES  5
 // eVb: 3.5 [END]
 extern VIDEO_ACCESS_RANGE VgaAccessRange[];
+
+/* VESA Bios Magic number */
+#define VESA_MAGIC ('V' + ('E' << 8) + ('S' << 16) + ('A' << 24))
 
 #include "vbe.h"

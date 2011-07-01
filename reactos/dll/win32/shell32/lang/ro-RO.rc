@@ -127,7 +127,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versiune " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versiune "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Versiune de ReactOS înregistrată pentru:", IDC_STATIC, 35, 115, 180, 10
@@ -172,7 +172,7 @@ BEGIN
 	LTEXT "Tip țintă:", 14004, 8, 38, 64, 10
 	LTEXT "", 14005, 78, 38, 142, 10
 	LTEXT "Locație țintă:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Țintă:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Pornire în:", 14010, 8, 96, 57, 10
@@ -211,13 +211,13 @@ BEGIN
 	LTEXT "Tip fișier:", 14004, 8, 35, 50, 10
 	LTEXT "Folder", 14005, 68, 35, 160, 10
 	LTEXT "Locație:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Mărime:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Conține:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Creat:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Doar-în-citire", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Ascuns", 14022, 126, 150, 50, 10
 END
@@ -233,17 +233,17 @@ BEGIN
 	LTEXT "Tip fișier:", 14004, 8, 35, 50, 10
 	LTEXT "Fișier", 14005, 68, 35, 160, 10
 	LTEXT "Se deschide cu:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Locație:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Mărime:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Creat:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Modificat:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Accesat:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Atribute:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Doar-în-citire", 14021, 58, 189, 67, 10
 	CHECKBOX "&Ascuns", 14022, 126, 189, 50, 10
@@ -256,11 +256,11 @@ CAPTION "Versiune"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Versiune fișier: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Descriere: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Drept de autor: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "Alte informații versiune", 14006, 6, 70, 222, 115
 	LTEXT "Nume element: ", 14007, 13, 82, 50, 10
 	LTEXT "Valoare: ", 14008, 112, 82, 45, 10
@@ -275,24 +275,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Tip:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Sistem de fișiere:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Spațiu folosit:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Spațiu liber:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Capacitate:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -427,7 +427,7 @@ LTEXT "Deschidere cu:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nume ap.", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Schimbare", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Fișierele cu extensia '%s' sunt de tipul '%s'. \nPentru a schimbat setări care vor afecta\ntoate fișierele '%s', clic pe Avansat.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vansat", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Elementul '%1' nu poate fi trimit la gunoi. Vreți să îl ștergeți definitiv în schimb?"
 	IDS_OVERWRITEFILE_TEXT      "Acest dosar deja conține un fișier numit '%1'.\n\nVreți să îl înlocuiți"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmare înlocuire fișier"
-	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\n"\
-		"Dacă fișierele din dosarul de destinație au același nume ca cele din\n"\
-		"dosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\n"\
-		"mutați dosarul?"
+	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\nmutați dosarul?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Repornire"
@@ -670,6 +667,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Vreți să închideți computerul?"
 	IDS_LOGOFF_TITLE            "Log Off"
 	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Meniu Start\\Programe"
@@ -720,8 +723,8 @@ BEGIN
 	IDS_RECYCLEBIN_DISKSPACE    "Spațiu disponibil"
 	IDS_EMPTY_BITBUCKET         "Golire Coș de gunoi"
 	IDS_PICK_ICON_TITLE         "Alegere pictogramă"
-	IDS_PICK_ICON_FILTER        "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Fișiere executabile\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Fișiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Fișiere executabile (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Dosar"
 	IDS_VIRTUAL_DRIVER          "Driver dispozitiv virtual"
 	IDS_BAT_FILE                "Fișier serie de comenzi ReactOS"
@@ -740,12 +743,11 @@ BEGIN
 	IDS_SYS_FILE                "Fișier de sistem"
 
 	IDS_OPEN_VERB               "Deschidere"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Rulare ca "
 	IDS_EDIT_VERB               "Editare"
 	IDS_FIND_VERB               "Căutare"
 	IDS_PRINT_VERB              "Imprimare"
-	IDS_PLAY_VERB               "Redare"
-	IDS_PREVIEW_VERB            "Previzualizare"
 
 	IDS_FILE_FOLDER             "%u fișiere, %u dosare"
 	IDS_PRINTERS                "Imprimante"
@@ -755,6 +757,11 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Mărime de alocare implicită"
 
 	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	
+	IDS_FILE_DETAILS            "Detalii pentru extensia '%s'"
+	IDS_FILE_DETAILSADV         "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END
 
 #pragma code_page(default)

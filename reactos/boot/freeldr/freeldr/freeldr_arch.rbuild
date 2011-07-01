@@ -12,7 +12,6 @@
 	<directory name="arch">
 		<directory name="i386">
 			<if property="ARCH" value="i386">
-				<file>_alloca.S</file>
 				<file>archmach.c</file>
 				<file>custom.c</file>
 				<file>drivemap.c</file>
@@ -25,7 +24,6 @@
 				<file>i386disk.c</file>
 				<file>i386rtl.c</file>
 				<file>i386vid.c</file>
-				<file>loader.c</file>
 				<file>machpc.c</file>
 				<file>miscboot.c</file>
 				<file>ntoskrnl.c</file>

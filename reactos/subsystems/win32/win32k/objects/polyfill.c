@@ -606,14 +606,14 @@ IntFillPolygon(
     BRUSHOBJ *BrushObj,
     CONST PPOINT Points,
     int Count,
-    RECTL DestRect, 
+    RECTL DestRect,
     POINTL *BrushOrigin)
 {
     FILL_EDGE_LIST *list = 0;
     FILL_EDGE *ActiveHead = 0;
     FILL_EDGE *pLeft, *pRight;
     int ScanLine;
-  
+
     //DPRINT("IntFillPolygon\n");
 
     /* Create Edge List. */
@@ -657,11 +657,11 @@ IntFillPolygon(
                                  NULL,
                                  BrushObj,
                                  BrushOrigin,
-                                 ROP3_TO_ROP4(PATCOPY));
+                                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
             }
             pLeft = pRight->pNext;
             pRight = pLeft ? pLeft->pNext : NULL;
-        }   
+        }
     }
 
     /* Free Edge List. If any are left. */

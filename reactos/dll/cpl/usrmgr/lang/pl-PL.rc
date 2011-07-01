@@ -1,10 +1,19 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Jun,2008)
+ *         updated by Saibamen - Adam Stachowicz (Jul, 2008)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 /* Dialogs */
 
 IDD_USERS DIALOGEX DISCARDABLE  0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Uøytkownicy"
+CAPTION "U≈ºytkownicy"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_USERS_LIST, "SysListView32", LVS_REPORT | LVS_EDITLABELS | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
@@ -27,38 +36,38 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dodatki"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "PrzestrzeÒ celowo pozostawiona pusta", IDC_STATIC, 66, 90, 112, 8
+    LTEXT "Przestrze≈Ñ celowo pozostawiona pusta", IDC_STATIC, 66, 90, 112, 8
 END
 
 
 IDD_USER_GENERAL DIALOGEX DISCARDABLE  0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "OgÛlne"
+CAPTION "Og√≥lne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USER_GENERAL_NAME, 7, 12, 112, 8
-    LTEXT "ImiÍ i nazwisko:", -1, 7, 46, 63, 8
+    LTEXT "Imiƒô i Nazwisko:", -1, 7, 46, 63, 8
     EDITTEXT IDC_USER_GENERAL_FULL_NAME,77,43,168,13,ES_AUTOHSCROLL
     LTEXT "Opis:", -1, 7, 64, 63, 8
     EDITTEXT IDC_USER_GENERAL_DESCRIPTION,77,61,168,13,ES_AUTOHSCROLL
-    AUTOCHECKBOX    "Uøytkownik musi zmieniÊ has≥o podczas pierwszego logowania",IDC_USER_GENERAL_FORCE_CHANGE,7,82,210,10
-    AUTOCHECKBOX    "Uøytkownik nie moøe zmieniÊ has≥a",IDC_USER_GENERAL_CANNOT_CHANGE,7,95,210,10
-    AUTOCHECKBOX    "Has≥o nigdy nie wygasa",IDC_USER_GENERAL_NEVER_EXPIRES,7,108,210,10
-    AUTOCHECKBOX    "Konto jest wy≥πczone",IDC_USER_GENERAL_DISABLED,7,121,210,10
+    AUTOCHECKBOX    "U≈ºytkownik musi zmieniƒá has≈Ço podczas pierwszego logowania",IDC_USER_GENERAL_FORCE_CHANGE,7,82,210,10
+    AUTOCHECKBOX    "U≈ºytkownik nie mo≈ºe zmieniƒá has≈Ça",IDC_USER_GENERAL_CANNOT_CHANGE,7,95,210,10
+    AUTOCHECKBOX    "Has≈Ço nigdy nie wygasa",IDC_USER_GENERAL_NEVER_EXPIRES,7,108,210,10
+    AUTOCHECKBOX    "Konto jest wy≈ÇƒÖczone",IDC_USER_GENERAL_DISABLED,7,121,210,10
     AUTOCHECKBOX    "Konto jest zablokowane",IDC_USER_GENERAL_LOCKED,7,134,210,10
 END
 
 
 IDD_USER_MEMBERSHIP DIALOGEX DISCARDABLE  0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Cz≥onkostwo"
+CAPTION "Cz≈Çonkostwo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Naleøy do:", -1, 7, 7, 56, 8
+    LTEXT "Nale≈ºy do:", -1, 7, 7, 56, 8
     CONTROL "", IDC_USER_MEMBERSHIP_LIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
             7, 18, 238, 173, WS_EX_CLIENTEDGE
     PUSHBUTTON "Dodaj...", IDC_USER_MEMBERSHIP_ADD, 7, 197, 50, 14
-    PUSHBUTTON "UsuÒ", IDC_USER_MEMBERSHIP_REMOVE, 61, 197, 50, 14, WS_DISABLED
+    PUSHBUTTON "Usu≈Ñ", IDC_USER_MEMBERSHIP_REMOVE, 61, 197, 50, 14, WS_DISABLED
 END
 
 
@@ -67,15 +76,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Profil uøytkownika", -1, 7, 7, 238, 54
-    LTEXT "åcieøka profilu:", -1, 16, 22, 55, 8
+    GROUPBOX "Profil u≈ºytkownika", -1, 7, 7, 238, 54
+    LTEXT "≈öcie≈ºka profilu:", -1, 16, 22, 55, 8
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
     LTEXT "Skrypt logowania:", -1, 16, 40, 55, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
 
     GROUPBOX "Katalog domowy", -1, 7, 68, 238, 54
-    AUTORADIOBUTTON "åcieøka lokalna:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
-    AUTORADIOBUTTON "Po≥πcz:", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
+    AUTORADIOBUTTON "≈öcie≈ºka lokalna:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
+    AUTORADIOBUTTON "Po≈ÇƒÖcz:", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
     EDITTEXT IDC_USER_PROFILE_LOCAL_PATH, 78, 81, 160, 13, ES_AUTOHSCROLL
     COMBOBOX IDC_USER_PROFILE_DRIVE, 78, 99, 26, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "z:", -1, 112, 101, 12, 8
@@ -85,29 +94,29 @@ END
 
 IDD_GROUP_GENERAL DIALOGEX DISCARDABLE  0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "OgÛlne"
+CAPTION "Og√≥lne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_GROUP_GENERAL_NAME, 7, 12, 112, 8
     LTEXT "Opis:", -1, 7, 45, 46, 8
     EDITTEXT IDC_GROUP_GENERAL_DESCRIPTION,65,42,180,13,ES_AUTOHSCROLL
-    LTEXT "Cz≥onkowie:", -1, 7, 63, 45, 8
+    LTEXT "Cz≈Çonkowie:", -1, 7, 63, 45, 8
     CONTROL "", IDC_GROUP_GENERAL_MEMBERS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
             7, 74, 238, 117, WS_EX_CLIENTEDGE
     PUSHBUTTON "Dodaj...", IDC_GROUP_GENERAL_ADD, 7, 197, 50, 14, WS_DISABLED
-    PUSHBUTTON "UsuÒ", IDC_GROUP_GENERAL_REMOVE, 61, 197, 50, 14, WS_DISABLED
+    PUSHBUTTON "Usu≈Ñ", IDC_GROUP_GENERAL_REMOVE, 61, 197, 50, 14, WS_DISABLED
 END
 
 
 IDD_CHANGE_PASSWORD DIALOGEX DISCARDABLE  0, 0, 267, 74
 STYLE  DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Zmiana has≥a"
+CAPTION "Zmiana has≈Ça"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_EDIT_PASSWORD1,107,7,153,14,ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT           "Nowe has≥o:", -1,7,10,96,8
+    RTEXT           "Nowe has≈Ço:", -1,7,10,96,8
     EDITTEXT        IDC_EDIT_PASSWORD2,107,25,153,14,ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT           "PowtÛrz has≥o:", -1,7,28,96,8
+    RTEXT           "Powt√≥rz has≈Ço:", -1,7,28,96,8
     DEFPUSHBUTTON   "OK",IDOK,156,53,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,210,53,50,14
 END
@@ -115,22 +124,22 @@ END
 
 IDD_USER_NEW DIALOGEX DISCARDABLE  0, 0, 267, 200
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Nowy uøytkownik"
+CAPTION "Nowy u≈ºytkownik"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_USER_NEW_NAME,107,7,153,14,ES_AUTOHSCROLL
-    RTEXT           "Nazwa uøytkownika:", -1,7,10,96,8
+    RTEXT           "Nazwa u≈ºytkownika:", -1,7,10,96,8
     EDITTEXT        IDC_USER_NEW_FULL_NAME,107,25,153,14,ES_AUTOHSCROLL
-    RTEXT           "ImiÍ i nazwisko:", -1,7,28,96,8
+    RTEXT           "Imiƒô i Nazwisko:", -1,7,28,96,8
     EDITTEXT        IDC_USER_NEW_DESCRIPTION,107,43,153,14,ES_AUTOHSCROLL
     RTEXT           "Opis:", -1,7,46,96,8
     EDITTEXT        IDC_USER_NEW_PASSWORD1,107,67,153,14,ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT           "Has≥o:", -1,7,70,96,8
+    RTEXT           "Has≈Ço:", -1,7,70,96,8
     EDITTEXT        IDC_USER_NEW_PASSWORD2,107,85,153,14,ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT           "PowtÛrz has≥o:", -1,7,88,96,8
-    AUTOCHECKBOX    "Uøytkownik musi zmieniÊ has≥o podczas pierwszego logowania",IDC_USER_NEW_FORCE_CHANGE,7,109,200,10
-    AUTOCHECKBOX    "Uøytkownik nie moøe zmieniÊ has≥a",IDC_USER_NEW_CANNOT_CHANGE,7,123,200,10,WS_DISABLED
-    AUTOCHECKBOX    "Has≥o nigdy nie wygasa",IDC_USER_NEW_NEVER_EXPIRES,7,137,200,10,WS_DISABLED
+    RTEXT           "Powt√≥rz has≈Ço:", -1,7,88,96,8
+    AUTOCHECKBOX    "U≈ºytkownik musi zmieniƒá has≈Ço podczas pierwszego logowania",IDC_USER_NEW_FORCE_CHANGE,7,109,200,10
+    AUTOCHECKBOX    "U≈ºytkownik nie mo≈ºe zmieniƒá has≈Ça",IDC_USER_NEW_CANNOT_CHANGE,7,123,200,10,WS_DISABLED
+    AUTOCHECKBOX    "Has≈Ço nigdy nie wygasa",IDC_USER_NEW_NEVER_EXPIRES,7,137,200,10,WS_DISABLED
     AUTOCHECKBOX    "Konto jest zablokowane",IDC_USER_NEW_DISABLED,7,151,200,10
     DEFPUSHBUTTON   "OK",IDOK,156,179,50,14,WS_DISABLED
     PUSHBUTTON      "Anuluj",IDCANCEL,210,179,50,14
@@ -153,10 +162,10 @@ END
 
 IDD_USER_ADD_MEMBERSHIP DIALOGEX DISCARDABLE  0, 0, 252, 223
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "PrzynaleønoúÊ do grup"
+CAPTION "Przynale≈ºno≈õƒá do grup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-LTEXT "Naleøy do:", -1, 7, 7, 56, 8
+LTEXT "Nale≈ºy do:", -1, 7, 7, 56, 8
 CONTROL "", IDC_USER_ADD_MEMBERSHIP_LIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
 7, 18, 238, 173, WS_EX_CLIENTEDGE
 DEFPUSHBUTTON   "OK",IDOK,156,197,50,14
@@ -175,12 +184,12 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "Dodaj cz≥onka grupy", IDM_GROUP_ADD_MEMBER, GRAYED
+        MENUITEM "Dodaj cz≈Çonka grupy", IDM_GROUP_ADD_MEMBER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "UsuÒ", IDM_GROUP_DELETE
-        MENUITEM "ZmieÒ nazwÍ", IDM_GROUP_RENAME
+        MENUITEM "Usu≈Ñ", IDM_GROUP_DELETE
+        MENUITEM "Zmie≈Ñ nazwƒô", IDM_GROUP_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "W≥aúciwoúci", IDM_GROUP_PROPERTIES
+        MENUITEM "W≈Ça≈õciwo≈õci", IDM_GROUP_PROPERTIES
     END
 END
 
@@ -189,16 +198,16 @@ IDM_POPUP_USER MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Nowy uøytkownik...", IDM_USER_NEW
+        MENUITEM "Nowy u≈ºytkownik...", IDM_USER_NEW
     END
     POPUP ""
     BEGIN
-        MENUITEM "ZmieÒ has≥o", IDM_USER_CHANGE_PASSWORD
+        MENUITEM "Zmie≈Ñ has≈Ço", IDM_USER_CHANGE_PASSWORD
         MENUITEM SEPARATOR
-        MENUITEM "UsuÒ", IDM_USER_DELETE
-        MENUITEM "ZmieÒ nazwÍ", IDM_USER_RENAME
+        MENUITEM "Usu≈Ñ", IDM_USER_DELETE
+        MENUITEM "Zmie≈Ñ nazwƒô", IDM_USER_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "W≥aúciwoúci", IDM_USER_PROPERTIES
+        MENUITEM "W≈Ça≈õciwo≈õci", IDM_USER_PROPERTIES
     END
 END
 
@@ -207,13 +216,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Konta uøytkownikÛw"
-    IDS_CPLDESCRIPTION "Zarzπdzanie uøytkownikami i grupami."
+    IDS_CPLNAME "Konta u≈ºytkownik√≥w"
+    IDS_CPLDESCRIPTION "ZarzƒÖdzanie u≈ºytkownikami i grupami."
 END
 
 STRINGTABLE
 BEGIN
     IDS_NAME "Nazwa"
-    IDS_FULLNAME "ImiÍ i nazwisko"
+    IDS_FULLNAME "Imiƒô i Nazwisko"
     IDS_DESCRIPTION "Opis"
 END

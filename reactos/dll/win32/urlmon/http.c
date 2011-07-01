@@ -20,6 +20,9 @@
 #include "urlmon_main.h"
 #include "wininet.h"
 
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
+
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
@@ -27,23 +30,34 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl *lpIInternetProtocolVtbl;
-    const IInternetPriorityVtbl *lpInternetPriorityVtbl;
-    const IWinInetHttpInfoVtbl  *lpWinInetHttpInfoVtbl;
+    IInternetProtocolEx IInternetProtocolEx_iface;
+    IInternetPriority   IInternetPriority_iface;
+    IWinInetHttpInfo    IWinInetHttpInfo_iface;
 
     BOOL https;
     IHttpNegotiate *http_negotiate;
-    LPWSTR full_header;
+    WCHAR *full_header;
 
     LONG ref;
 } HttpProtocol;
 
-#define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
-#define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
+static inline HttpProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
+{
+    return CONTAINING_RECORD(iface, HttpProtocol, IInternetProtocolEx_iface);
+}
 
-/* Default headers from native */
-static const WCHAR wszHeaders[] = {'A','c','c','e','p','t','-','E','n','c','o','d','i','n','g',
-                                   ':',' ','g','z','i','p',',',' ','d','e','f','l','a','t','e',0};
+static inline HttpProtocol *impl_from_IInternetPriority(IInternetPriority *iface)
+{
+    return CONTAINING_RECORD(iface, HttpProtocol, IInternetPriority_iface);
+}
+
+static inline HttpProtocol *impl_from_IWinInetHttpInfo(IWinInetHttpInfo *iface)
+{
+    return CONTAINING_RECORD(iface, HttpProtocol, IWinInetHttpInfo_iface);
+}
+
+static const WCHAR default_headersW[] = {
+    'A','c','c','e','p','t','-','E','n','c','o','d','i','n','g',':',' ','g','z','i','p',',',' ','d','e','f','l','a','t','e',0};
 
 static LPWSTR query_http_info(HttpProtocol *This, DWORD option)
 {
@@ -65,21 +79,205 @@ static LPWSTR query_http_info(HttpProtocol *This, DWORD option)
     return ret;
 }
 
-#define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(HttpProtocol, base, iface)
+static inline BOOL set_security_flag(HttpProtocol *This, DWORD new_flag)
+{
+    DWORD flags, size = sizeof(flags);
+    BOOL res;
+
+    res = InternetQueryOptionW(This->base.request, INTERNET_OPTION_SECURITY_FLAGS, &flags, &size);
+    if(res) {
+        flags |= new_flag;
+        res = InternetSetOptionW(This->base.request, INTERNET_OPTION_SECURITY_FLAGS, &flags, size);
+    }
+    if(!res)
+        ERR("Failed to set security flag(s): %x\n", new_flag);
+
+    return res;
+}
+
+static inline HRESULT internet_error_to_hres(DWORD error)
+{
+    switch(error)
+    {
+    case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
+    case ERROR_INTERNET_SEC_CERT_CN_INVALID:
+    case ERROR_INTERNET_INVALID_CA:
+    case ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED:
+        return INET_E_INVALID_CERTIFICATE;
+    case ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR:
+    case ERROR_INTERNET_HTTPS_TO_HTTP_ON_REDIR:
+    case ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION:
+        return INET_E_REDIRECT_FAILED;
+    default:
+        return INET_E_DOWNLOAD_FAILURE;
+    }
+}
+
+static HRESULT handle_http_error(HttpProtocol *This, DWORD error)
+{
+    IServiceProvider *serv_prov;
+    IWindowForBindingUI *wfb_ui;
+    IHttpSecurity *http_security;
+    BOOL security_problem;
+    HRESULT hres;
+
+    switch(error) {
+    case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
+    case ERROR_INTERNET_SEC_CERT_CN_INVALID:
+    case ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR:
+    case ERROR_INTERNET_HTTPS_TO_HTTP_ON_REDIR:
+    case ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION:
+    case ERROR_INTERNET_INVALID_CA:
+    case ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED:
+        security_problem = TRUE;
+        break;
+    default:
+        security_problem = FALSE;
+    }
+
+    hres = IInternetProtocolSink_QueryInterface(This->base.protocol_sink, &IID_IServiceProvider,
+                                                (void**)&serv_prov);
+    if(FAILED(hres)) {
+        ERR("Failed to get IServiceProvider.\n");
+        return E_ABORT;
+    }
+
+    if(security_problem) {
+        hres = IServiceProvider_QueryService(serv_prov, &IID_IHttpSecurity, &IID_IHttpSecurity,
+                                             (void**)&http_security);
+        if(SUCCEEDED(hres)) {
+            hres = IHttpSecurity_OnSecurityProblem(http_security, error);
+            IHttpSecurity_Release(http_security);
+
+            if(hres != S_FALSE)
+            {
+                BOOL res = FALSE;
+
+                IServiceProvider_Release(serv_prov);
+
+                if(hres == S_OK) {
+                    if(error == ERROR_INTERNET_SEC_CERT_DATE_INVALID)
+                        res = set_security_flag(This, SECURITY_FLAG_IGNORE_CERT_DATE_INVALID);
+                    else if(error == ERROR_INTERNET_SEC_CERT_CN_INVALID)
+                        res = set_security_flag(This, SECURITY_FLAG_IGNORE_CERT_CN_INVALID);
+                    else if(error == ERROR_INTERNET_INVALID_CA)
+                        res = set_security_flag(This, SECURITY_FLAG_IGNORE_UNKNOWN_CA);
+
+                    if(res)
+                        return RPC_E_RETRY;
+
+                    FIXME("Don't know how to ignore error %d\n", error);
+                    return E_ABORT;
+                }
+
+                if(hres == E_ABORT)
+                    return E_ABORT;
+                if(hres == RPC_E_RETRY)
+                    return RPC_E_RETRY;
+
+                return internet_error_to_hres(error);
+            }
+        }
+    }
+
+    hres = IServiceProvider_QueryService(serv_prov, &IID_IWindowForBindingUI, &IID_IWindowForBindingUI,
+                                         (void**)&wfb_ui);
+    if(SUCCEEDED(hres)) {
+        HWND hwnd;
+        const IID *iid_reason;
+
+        if(security_problem)
+            iid_reason = &IID_IHttpSecurity;
+        else if(error == ERROR_INTERNET_INCORRECT_PASSWORD)
+            iid_reason = &IID_IAuthenticate;
+        else
+            iid_reason = &IID_IWindowForBindingUI;
+
+        hres = IWindowForBindingUI_GetWindow(wfb_ui, iid_reason, &hwnd);
+        if(SUCCEEDED(hres) && hwnd)
+        {
+            DWORD res;
+
+            res = InternetErrorDlg(hwnd, This->base.request, error,
+                                   FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS | FLAGS_ERROR_UI_FLAGS_GENERATE_DATA,
+                                   NULL);
+
+            if(res == ERROR_INTERNET_FORCE_RETRY || res == ERROR_SUCCESS)
+                hres = RPC_E_RETRY;
+            else
+                hres = E_FAIL;
+        }
+        IWindowForBindingUI_Release(wfb_ui);
+    }
+
+    IServiceProvider_Release(serv_prov);
+
+    if(hres == RPC_E_RETRY)
+        return hres;
+
+    return internet_error_to_hres(error);
+}
+
+static ULONG send_http_request(HttpProtocol *This)
+{
+    INTERNET_BUFFERSW send_buffer = {sizeof(INTERNET_BUFFERSW)};
+    BOOL res;
+
+    send_buffer.lpcszHeader = This->full_header;
+    send_buffer.dwHeadersLength = send_buffer.dwHeadersTotal = strlenW(This->full_header);
+
+    if(This->base.bind_info.dwBindVerb != BINDVERB_GET) {
+        switch(This->base.bind_info.stgmedData.tymed) {
+        case TYMED_HGLOBAL:
+            /* Native does not use GlobalLock/GlobalUnlock, so we won't either */
+            send_buffer.lpvBuffer = This->base.bind_info.stgmedData.u.hGlobal;
+            send_buffer.dwBufferLength = send_buffer.dwBufferTotal = This->base.bind_info.cbstgmedData;
+            break;
+        case TYMED_ISTREAM: {
+            LARGE_INTEGER offset;
+
+            send_buffer.dwBufferTotal = This->base.bind_info.cbstgmedData;
+            if(!This->base.post_stream) {
+                This->base.post_stream = This->base.bind_info.stgmedData.u.pstm;
+                IStream_AddRef(This->base.post_stream);
+            }
+
+            offset.QuadPart = 0;
+            IStream_Seek(This->base.post_stream, offset, STREAM_SEEK_SET, NULL);
+            break;
+        }
+        default:
+            FIXME("Unsupported This->base.bind_info.stgmedData.tymed %d\n", This->base.bind_info.stgmedData.tymed);
+        }
+    }
+
+    if(This->base.post_stream)
+        res = HttpSendRequestExW(This->base.request, &send_buffer, NULL, 0, 0);
+    else
+        res = HttpSendRequestW(This->base.request, send_buffer.lpcszHeader, send_buffer.dwHeadersLength,
+                send_buffer.lpvBuffer, send_buffer.dwBufferLength);
+
+    return res ? 0 : GetLastError();
+}
+
+static inline HttpProtocol *impl_from_Protocol(Protocol *prot)
+{
+    return CONTAINING_RECORD(prot, HttpProtocol, base);
+}
 
 static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD request_flags,
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
-    HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
-    LPWSTR addl_header = NULL, post_cookie = NULL, optional = NULL;
+    HttpProtocol *This = impl_from_Protocol(prot);
+    LPWSTR addl_header = NULL, post_cookie = NULL;
     IServiceProvider *service_provider = NULL;
     IHttpNegotiate2 *http_negotiate2 = NULL;
     BSTR url, host, user, pass, path;
     LPOLESTR accept_mimes[257];
     const WCHAR **accept_types;
     BYTE security_id[512];
-    DWORD len = 0, port;
-    ULONG num;
+    DWORD len, port;
+    ULONG num, error;
     BOOL res, b;
     HRESULT hres;
 
@@ -162,6 +360,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
             &IID_IHttpNegotiate, (void **)&This->http_negotiate);
     if (hres != S_OK) {
         WARN("IServiceProvider_QueryService IID_IHttpNegotiate failed: %08x\n", hres);
+        IServiceProvider_Release(service_provider);
         return hres;
     }
 
@@ -171,7 +370,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         return hres;
     }
 
-    hres = IHttpNegotiate_BeginningTransaction(This->http_negotiate, url, wszHeaders,
+    hres = IHttpNegotiate_BeginningTransaction(This->http_negotiate, url, default_headersW,
             0, &addl_header);
     SysFreeString(url);
     if(hres != S_OK) {
@@ -180,17 +379,18 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         return hres;
     }
 
-    if(addl_header) {
-        int len_addl_header = strlenW(addl_header);
+    len = addl_header ? strlenW(addl_header) : 0;
 
-        This->full_header = heap_alloc(len_addl_header*sizeof(WCHAR)+sizeof(wszHeaders));
-
-        lstrcpyW(This->full_header, addl_header);
-        lstrcpyW(&This->full_header[len_addl_header], wszHeaders);
-        CoTaskMemFree(addl_header);
-    }else {
-        This->full_header = (LPWSTR)wszHeaders;
+    This->full_header = heap_alloc(len*sizeof(WCHAR)+sizeof(default_headersW));
+    if(!This->full_header) {
+        IServiceProvider_Release(service_provider);
+        return E_OUTOFMEMORY;
     }
+
+    if(len)
+        memcpy(This->full_header, addl_header, len*sizeof(WCHAR));
+    CoTaskMemFree(addl_header);
+    memcpy(This->full_header+len, default_headersW, sizeof(default_headersW));
 
     hres = IServiceProvider_QueryService(service_provider, &IID_IHttpNegotiate2,
             &IID_IHttpNegotiate2, (void **)&http_negotiate2);
@@ -219,25 +419,33 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         }
     }
 
-    if(This->base.bind_info.dwBindVerb != BINDVERB_GET) {
-        /* Native does not use GlobalLock/GlobalUnlock, so we won't either */
-        if (This->base.bind_info.stgmedData.tymed != TYMED_HGLOBAL)
-            WARN("Expected This->base.bind_info.stgmedData.tymed to be TYMED_HGLOBAL, not %d\n",
-                 This->base.bind_info.stgmedData.tymed);
-        else
-            optional = (LPWSTR)This->base.bind_info.stgmedData.u.hGlobal;
-    }
-
     b = TRUE;
     res = InternetSetOptionW(This->base.request, INTERNET_OPTION_HTTP_DECODING, &b, sizeof(b));
     if(!res)
         WARN("InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %08x\n", GetLastError());
 
-    res = HttpSendRequestW(This->base.request, This->full_header, lstrlenW(This->full_header),
-            optional, optional ? This->base.bind_info.cbstgmedData : 0);
+    do {
+        error = send_http_request(This);
+
+        if(error == ERROR_IO_PENDING || error == ERROR_SUCCESS)
+            return S_OK;
+
+        hres = handle_http_error(This, error);
+
+    } while(hres == RPC_E_RETRY);
+
+    WARN("HttpSendRequest failed: %d\n", error);
+    return hres;
+}
+
+static HRESULT HttpProtocol_end_request(Protocol *protocol)
+{
+    BOOL res;
+
+    res = HttpEndRequestW(protocol->request, NULL, 0, 0);
     if(!res && GetLastError() != ERROR_IO_PENDING) {
-        WARN("HttpSendRequest failed: %d\n", GetLastError());
-        return INET_E_DOWNLOAD_FAILURE;
+        FIXME("HttpEndRequest failed: %u\n", GetLastError());
+        return E_FAIL;
     }
 
     return S_OK;
@@ -245,7 +453,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
 
 static HRESULT HttpProtocol_start_downloading(Protocol *prot)
 {
-    HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    HttpProtocol *This = impl_from_Protocol(prot);
     LPWSTR content_type, content_length, ranges;
     DWORD len = sizeof(DWORD);
     DWORD status_code;
@@ -313,53 +521,77 @@ static HRESULT HttpProtocol_start_downloading(Protocol *prot)
 
 static void HttpProtocol_close_connection(Protocol *prot)
 {
-    HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    HttpProtocol *This = impl_from_Protocol(prot);
 
     if(This->http_negotiate) {
         IHttpNegotiate_Release(This->http_negotiate);
-        This->http_negotiate = 0;
+        This->http_negotiate = NULL;
     }
 
     if(This->full_header) {
-        if(This->full_header != wszHeaders)
-            heap_free(This->full_header);
-        This->full_header = 0;
+        heap_free(This->full_header);
+        This->full_header = NULL;
     }
 }
 
-#undef ASYNCPROTOCOL_THIS
+static void HttpProtocol_on_error(Protocol *prot, DWORD error)
+{
+    HttpProtocol *This = impl_from_Protocol(prot);
+    HRESULT hres;
+
+    TRACE("(%p) %d\n", prot, error);
+
+    if(prot->flags & FLAG_FIRST_CONTINUE_COMPLETE) {
+        FIXME("Not handling error %d\n", error);
+        return;
+    }
+
+    while((hres = handle_http_error(This, error)) == RPC_E_RETRY) {
+        error = send_http_request(This);
+
+        if(error == ERROR_IO_PENDING || error == ERROR_SUCCESS)
+            return;
+    }
+
+    protocol_abort(prot, hres);
+    protocol_close_connection(prot);
+    return;
+}
 
 static const ProtocolVtbl AsyncProtocolVtbl = {
     HttpProtocol_open_request,
+    HttpProtocol_end_request,
     HttpProtocol_start_downloading,
-    HttpProtocol_close_connection
+    HttpProtocol_close_connection,
+    HttpProtocol_on_error
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, IInternetProtocol, iface)
-
-static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
+static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocolEx_iface;
+    }else if(IsEqualGUID(&IID_IInternetProtocolEx, riid)) {
+        TRACE("(%p)->(IID_IInternetProtocolEx %p)\n", This, ppv);
+        *ppv = &This->IInternetProtocolEx_iface;
     }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
-        *ppv = PRIORITY(This);
+        *ppv = &This->IInternetPriority_iface;
     }else if(IsEqualGUID(&IID_IWinInetInfo, riid)) {
         TRACE("(%p)->(IID_IWinInetInfo %p)\n", This, ppv);
-        *ppv = INETHTTPINFO(This);
+        *ppv = &This->IWinInetHttpInfo_iface;
     }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
         TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
-        *ppv = INETHTTPINFO(This);
+        *ppv = &This->IWinInetHttpInfo_iface;
     }
 
     if(*ppv) {
@@ -371,17 +603,17 @@ static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFI
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI HttpProtocol_AddRef(IInternetProtocol *iface)
+static ULONG WINAPI HttpProtocol_AddRef(IInternetProtocolEx *iface)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
 }
 
-static ULONG WINAPI HttpProtocol_Release(IInternetProtocol *iface)
+static ULONG WINAPI HttpProtocol_Release(IInternetProtocolEx *iface)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -396,55 +628,50 @@ static ULONG WINAPI HttpProtocol_Release(IInternetProtocol *iface)
     return ref;
 }
 
-static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
+static HRESULT WINAPI HttpProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     IUri *uri;
     HRESULT hres;
 
-    static const WCHAR httpW[] = {'h','t','t','p',':'};
-    static const WCHAR httpsW[] = {'h','t','t','p','s',':'};
-
     TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
-
-    if(This->https
-        ? strncmpW(szUrl, httpsW, sizeof(httpsW)/sizeof(WCHAR))
-        : strncmpW(szUrl, httpW, sizeof(httpW)/sizeof(WCHAR)))
-        return MK_E_SYNTAX;
 
     hres = CreateUri(szUrl, 0, 0, &uri);
     if(FAILED(hres))
         return hres;
 
-    hres = protocol_start(&This->base, PROTOCOL(This), uri, pOIProtSink, pOIBindInfo);
+    hres = IInternetProtocolEx_StartEx(&This->IInternetProtocolEx_iface, uri, pOIProtSink,
+            pOIBindInfo, grfPI, (HANDLE*)dwReserved);
 
     IUri_Release(uri);
     return hres;
 }
 
-static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
+static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocolEx *iface, PROTOCOLDATA *pProtocolData)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
     return protocol_continue(&This->base, pProtocolData);
 }
 
-static HRESULT WINAPI HttpProtocol_Abort(IInternetProtocol *iface, HRESULT hrReason,
+static HRESULT WINAPI HttpProtocol_Abort(IInternetProtocolEx *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
-    return E_NOTIMPL;
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
+
+    TRACE("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+
+    return protocol_abort(&This->base, hrReason);
 }
 
-static HRESULT WINAPI HttpProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
+static HRESULT WINAPI HttpProtocol_Terminate(IInternetProtocolEx *iface, DWORD dwOptions)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -452,59 +679,78 @@ static HRESULT WINAPI HttpProtocol_Terminate(IInternetProtocol *iface, DWORD dwO
     return S_OK;
 }
 
-static HRESULT WINAPI HttpProtocol_Suspend(IInternetProtocol *iface)
+static HRESULT WINAPI HttpProtocol_Suspend(IInternetProtocolEx *iface)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HttpProtocol_Resume(IInternetProtocol *iface)
+static HRESULT WINAPI HttpProtocol_Resume(IInternetProtocolEx *iface)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HttpProtocol_Read(IInternetProtocol *iface, void *pv,
+static HRESULT WINAPI HttpProtocol_Read(IInternetProtocolEx *iface, void *pv,
         ULONG cb, ULONG *pcbRead)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
     return protocol_read(&This->base, pv, cb, pcbRead);
 }
 
-static HRESULT WINAPI HttpProtocol_Seek(IInternetProtocol *iface, LARGE_INTEGER dlibMove,
+static HRESULT WINAPI HttpProtocol_Seek(IInternetProtocolEx *iface, LARGE_INTEGER dlibMove,
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
     FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HttpProtocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
+static HRESULT WINAPI HttpProtocol_LockRequest(IInternetProtocolEx *iface, DWORD dwOptions)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
     return protocol_lock_request(&This->base);
 }
 
-static HRESULT WINAPI HttpProtocol_UnlockRequest(IInternetProtocol *iface)
+static HRESULT WINAPI HttpProtocol_UnlockRequest(IInternetProtocolEx *iface)
 {
-    HttpProtocol *This = PROTOCOL_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
     TRACE("(%p)\n", This);
 
     return protocol_unlock_request(&This->base);
 }
 
-#undef PROTOCOL_THIS
+static HRESULT WINAPI HttpProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri,
+        IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
+        DWORD grfPI, HANDLE *dwReserved)
+{
+    HttpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    DWORD scheme = 0;
+    HRESULT hres;
 
-static const IInternetProtocolVtbl HttpProtocolVtbl = {
+    TRACE("(%p)->(%p %p %p %08x %p)\n", This, pUri, pOIProtSink,
+            pOIBindInfo, grfPI, dwReserved);
+
+    hres = IUri_GetScheme(pUri, &scheme);
+    if(FAILED(hres))
+        return hres;
+    if(scheme != (This->https ? URL_SCHEME_HTTPS : URL_SCHEME_HTTP))
+        return MK_E_SYNTAX;
+
+    return protocol_start(&This->base, (IInternetProtocol*)&This->IInternetProtocolEx_iface, pUri,
+                          pOIProtSink, pOIBindInfo);
+}
+
+static const IInternetProtocolExVtbl HttpProtocolVtbl = {
     HttpProtocol_QueryInterface,
     HttpProtocol_AddRef,
     HttpProtocol_Release,
@@ -517,32 +763,31 @@ static const IInternetProtocolVtbl HttpProtocolVtbl = {
     HttpProtocol_Read,
     HttpProtocol_Seek,
     HttpProtocol_LockRequest,
-    HttpProtocol_UnlockRequest
+    HttpProtocol_UnlockRequest,
+    HttpProtocol_StartEx
 };
-
-#define PRIORITY_THIS(iface) DEFINE_THIS(HttpProtocol, InternetPriority, iface)
 
 static HRESULT WINAPI HttpPriority_QueryInterface(IInternetPriority *iface, REFIID riid, void **ppv)
 {
-    HttpProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+    HttpProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_QueryInterface(&This->IInternetProtocolEx_iface, riid, ppv);
 }
 
 static ULONG WINAPI HttpPriority_AddRef(IInternetPriority *iface)
 {
-    HttpProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_AddRef(PROTOCOL(This));
+    HttpProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_AddRef(&This->IInternetProtocolEx_iface);
 }
 
 static ULONG WINAPI HttpPriority_Release(IInternetPriority *iface)
 {
-    HttpProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_Release(PROTOCOL(This));
+    HttpProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocolEx_Release(&This->IInternetProtocolEx_iface);
 }
 
 static HRESULT WINAPI HttpPriority_SetPriority(IInternetPriority *iface, LONG nPriority)
 {
-    HttpProtocol *This = PRIORITY_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%d)\n", This, nPriority);
 
@@ -552,15 +797,13 @@ static HRESULT WINAPI HttpPriority_SetPriority(IInternetPriority *iface, LONG nP
 
 static HRESULT WINAPI HttpPriority_GetPriority(IInternetPriority *iface, LONG *pnPriority)
 {
-    HttpProtocol *This = PRIORITY_THIS(iface);
+    HttpProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%p)\n", This, pnPriority);
 
     *pnPriority = This->base.priority;
     return S_OK;
 }
-
-#undef PRIORITY_THIS
 
 static const IInternetPriorityVtbl HttpPriorityVtbl = {
     HttpPriority_QueryInterface,
@@ -570,43 +813,54 @@ static const IInternetPriorityVtbl HttpPriorityVtbl = {
     HttpPriority_GetPriority
 };
 
-#define INETINFO_THIS(iface) DEFINE_THIS(HttpProtocol, WinInetHttpInfo, iface)
-
 static HRESULT WINAPI HttpInfo_QueryInterface(IWinInetHttpInfo *iface, REFIID riid, void **ppv)
 {
-    HttpProtocol *This = INETINFO_THIS(iface);
-    return IBinding_QueryInterface(PROTOCOL(This), riid, ppv);
+    HttpProtocol *This = impl_from_IWinInetHttpInfo(iface);
+    return IInternetProtocolEx_QueryInterface(&This->IInternetProtocolEx_iface, riid, ppv);
 }
 
 static ULONG WINAPI HttpInfo_AddRef(IWinInetHttpInfo *iface)
 {
-    HttpProtocol *This = INETINFO_THIS(iface);
-    return IBinding_AddRef(PROTOCOL(This));
+    HttpProtocol *This = impl_from_IWinInetHttpInfo(iface);
+    return IInternetProtocolEx_AddRef(&This->IInternetProtocolEx_iface);
 }
 
 static ULONG WINAPI HttpInfo_Release(IWinInetHttpInfo *iface)
 {
-    HttpProtocol *This = INETINFO_THIS(iface);
-    return IBinding_Release(PROTOCOL(This));
+    HttpProtocol *This = impl_from_IWinInetHttpInfo(iface);
+    return IInternetProtocolEx_Release(&This->IInternetProtocolEx_iface);
 }
 
 static HRESULT WINAPI HttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOption,
         void *pBuffer, DWORD *pcbBuffer)
 {
-    HttpProtocol *This = INETINFO_THIS(iface);
-    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
-    return E_NOTIMPL;
+    HttpProtocol *This = impl_from_IWinInetHttpInfo(iface);
+    TRACE("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+
+    if(!This->base.request)
+        return E_FAIL;
+
+    if(!InternetQueryOptionW(This->base.request, dwOption, pBuffer, pcbBuffer))
+        return S_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
         void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
 {
-    HttpProtocol *This = INETINFO_THIS(iface);
-    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
-    return E_NOTIMPL;
-}
+    HttpProtocol *This = impl_from_IWinInetHttpInfo(iface);
+    TRACE("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
 
-#undef INETINFO_THIS
+    if(!This->base.request)
+        return E_FAIL;
+
+    if(!HttpQueryInfoW(This->base.request, dwOption, pBuffer, pcbBuffer, pdwFlags)) {
+        if(pBuffer)
+            memset(pBuffer, 0, *pcbBuffer);
+        return S_OK;
+    }
+    return S_OK;
+}
 
 static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
     HttpInfo_QueryInterface,
@@ -625,15 +879,15 @@ static HRESULT create_http_protocol(BOOL https, void **ppobj)
         return E_OUTOFMEMORY;
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpIInternetProtocolVtbl = &HttpProtocolVtbl;
-    ret->lpInternetPriorityVtbl  = &HttpPriorityVtbl;
-    ret->lpWinInetHttpInfoVtbl   = &WinInetHttpInfoVtbl;
+    ret->IInternetProtocolEx_iface.lpVtbl = &HttpProtocolVtbl;
+    ret->IInternetPriority_iface.lpVtbl   = &HttpPriorityVtbl;
+    ret->IWinInetHttpInfo_iface.lpVtbl    = &WinInetHttpInfoVtbl;
 
     ret->https = https;
     ret->ref = 1;
 
-    *ppobj = PROTOCOL(ret);
-    
+    *ppobj = &ret->IInternetProtocolEx_iface;
+
     URLMON_LockModule();
     return S_OK;
 }

@@ -20,8 +20,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 ID_ACCEL ACCELERATORS
 BEGIN
     "^A", CMD_SELECT_ALL
@@ -87,7 +85,7 @@ BEGIN
         MENUITEM "&Căutare...",    CMD_HELP_SEARCH
         MENUITEM "&Ajutor despre ajutor", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre"         CMD_ABOUT
+        MENUITEM "&Despre",        CMD_ABOUT
         MENUITEM "Inf&o",         CMD_ABOUT_WINE
     END
 END
@@ -204,5 +202,3 @@ STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
 STRING_LINE_COLUMN,                             "Linie %d, coloană %d"
 END
-
-#pragma code_page(default)

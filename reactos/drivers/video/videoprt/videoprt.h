@@ -107,11 +107,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 
 typedef struct _VIDEO_PORT_EVENT
 {
-    /* Public part */
     ENG_EVENT;
-
-    /* Private part */
-    KEVENT Event;
 } VIDEO_PORT_EVENT, *PVIDEO_PORT_EVENT;
 
 /* agp.c */
@@ -120,7 +116,7 @@ NTSTATUS
 IopInitiatePnpIrp(
   PDEVICE_OBJECT DeviceObject,
   PIO_STATUS_BLOCK IoStatusBlock,
-  ULONG MinorFunction,
+  UCHAR MinorFunction,
   PIO_STACK_LOCATION Stack OPTIONAL);
 
 NTSTATUS NTAPI

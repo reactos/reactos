@@ -17,7 +17,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef __ASM__
 #pragma once
+#endif
 
 /* just some stuff */
 #define VERSION			"FreeLoader v3.0"
@@ -37,8 +39,8 @@
 #define FREELOADER_PATCH_VERSION	0
 
 
-#ifndef ASM
+#ifndef __ASM__
 
 PCHAR	GetFreeLoaderVersionString(VOID);
 
-#endif // ASM
+#endif // __ASM__

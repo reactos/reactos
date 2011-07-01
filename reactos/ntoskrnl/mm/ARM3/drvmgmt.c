@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::DRVMGMT"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -91,18 +90,18 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
-    
+
     //
     // Make sure the driver verifier is initialized
     //
     if (!MiVerifierDriverAddedThunkListHead.Flink) return STATUS_NOT_SUPPORTED;
-    
+
     //
     // Get the thunk pairs and count them
     //
     ThunkCount = ThunkBufferSize / sizeof(DRIVER_VERIFIER_THUNK_PAIRS);
     if (!ThunkCount) return STATUS_INVALID_PARAMETER_1;
-    
+
     //
     // Now allocate our own thunk table
     //
@@ -112,7 +111,7 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
                                          sizeof(DRIVER_VERIFIER_THUNK_PAIRS),
                                          'tVmM');
     if (!DriverThunks) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     //
     // Now copy the driver-fed part
     //
@@ -120,7 +119,7 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
     RtlCopyMemory(ThunkTable,
                   ThunkBuffer,
                   ThunkCount * sizeof(DRIVER_VERIFIER_THUNK_PAIRS));
-    
+
     //
     // Acquire the system load lock
     //
@@ -130,7 +129,7 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
                           KernelMode,
                           FALSE,
                           NULL);
-    
+
     //
     // Get the loader entry
     //
@@ -143,13 +142,13 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
         Status = STATUS_INVALID_PARAMETER_2;
         goto Cleanup;
     }
-    
+
     //
     // Get driver base and end
     //
     ModuleBase = LdrEntry->DllBase;
     ModuleEnd = (PVOID)((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage);
-    
+
     //
     // Don't allow hooking the kernel or HAL
     //
@@ -161,7 +160,7 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
         Status = STATUS_INVALID_PARAMETER_2;
         goto Cleanup;
     }
-    
+
     //
     // Loop all the thunks
     //
@@ -180,7 +179,7 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
             goto Cleanup;
         }
     }
-    
+
     //
     // Otherwise, add this entry
     //
@@ -190,14 +189,14 @@ MmAddVerifierThunks(IN PVOID ThunkBuffer,
     InsertTailList(&MiVerifierDriverAddedThunkListHead,
                    &DriverThunks->ListEntry);
     DriverThunks = NULL;
-    
+
 Cleanup:
     //
     // Release the lock
     //
     KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
     KeLeaveCriticalRegion();
-    
+
     //
     // Free the table if we failed and return status
     //
@@ -213,13 +212,13 @@ NTAPI
 MmIsDriverVerifying(IN PDRIVER_OBJECT DriverObject)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    
+
     //
     // Get the loader entry
     //
     LdrEntry = (PLDR_DATA_TABLE_ENTRY)DriverObject->DriverSection;
     if (!LdrEntry) return FALSE;
-    
+
     //
     // Check if we're verifying or not
     //
@@ -244,7 +243,7 @@ MmIsVerifierEnabled(OUT PULONG VerifierFlags)
         *VerifierFlags = MmVerifierData.Level;
         return STATUS_SUCCESS;
     }
-    
+
     //
     // Otherwise, we're disabled
     //

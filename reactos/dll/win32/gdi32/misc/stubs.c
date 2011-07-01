@@ -48,30 +48,30 @@ BOOL
 WINAPI
 CancelDC(HDC hDC)
 {
-  PDC_ATTR pDc_Attr;
+    PDC_ATTR pDc_Attr;
 
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC &&
-      GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
-  {
-     PLDC pLDC = GdiGetLDC(hDC);
-     if ( !pLDC )
-     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-     }
-     /* If a document has started set it to die. */
-     if (pLDC->Flags & LDC_INIT_DOCUMENT) pLDC->Flags |= LDC_KILL_DOCUMENT;
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC &&
+            GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+        /* If a document has started set it to die. */
+        if (pLDC->Flags & LDC_INIT_DOCUMENT) pLDC->Flags |= LDC_KILL_DOCUMENT;
 
-     return NtGdiCancelDC(hDC);
-  }
+        return NtGdiCancelDC(hDC);
+    }
 
-  if (GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr))
-  {
-     pDc_Attr->ulDirty_ &= ~DC_PLAYMETAFILE;
-     return TRUE;
-  }
+    if (GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr))
+    {
+        pDc_Attr->ulDirty_ &= ~DC_PLAYMETAFILE;
+        return TRUE;
+    }
 
-  return FALSE;
+    return FALSE;
 }
 
 
@@ -85,25 +85,25 @@ DrawEscape(HDC  hDC,
            INT cbInput,
            LPCSTR lpszInData)
 {
-  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
-     return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+        return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
 
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
-  {
-     PLDC pLDC = GdiGetLDC(hDC);
-     if ( pLDC )
-     {
-        if (pLDC->Flags & LDC_META_PRINT)
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( pLDC )
         {
+            if (pLDC->Flags & LDC_META_PRINT)
+            {
 //           if (nEscape != QUERYESCSUPPORT)
 //              return EMFDRV_WriteEscape(hDC, nEscape, cbInput, lpszInData, EMR_DRAWESCAPE);
 
-           return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+                return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+            }
         }
-     }
-     SetLastError(ERROR_INVALID_HANDLE);
-  }
-  return 0;
+        SetLastError(ERROR_INVALID_HANDLE);
+    }
+    return 0;
 }
 
 
@@ -125,17 +125,17 @@ EnumObjects(HDC hdc,
 
     switch (nObjectType)
     {
-        case OBJ_BRUSH:
-            Size = sizeof(LOGBRUSH);
-            break;
+    case OBJ_BRUSH:
+        Size = sizeof(LOGBRUSH);
+        break;
 
-        case OBJ_PEN:
-            Size = sizeof(LOGPEN);
-            break;
+    case OBJ_PEN:
+        Size = sizeof(LOGPEN);
+        break;
 
-        default:
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
+    default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
     }
 
     ObjectsCount = NtGdiEnumObjects(hdc, nObjectType, 0, NULL);
@@ -172,10 +172,10 @@ EnumObjects(HDC hdc,
 UINT
 WINAPI
 GetBoundsRect(
-	HDC	hdc,
-	LPRECT	lprcBounds,
-	UINT	flags
-	)
+    HDC	hdc,
+    LPRECT	lprcBounds,
+    UINT	flags
+)
 {
     return NtGdiGetBoundsRect(hdc,lprcBounds,flags & DCB_RESET);
 }
@@ -186,14 +186,14 @@ GetBoundsRect(
 UINT
 WINAPI
 GetMetaFileBitsEx(
-	HMETAFILE	a0,
-	UINT		a1,
-	LPVOID		a2
-	)
+    HMETAFILE	a0,
+    UINT		a1,
+    LPVOID		a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -202,13 +202,13 @@ GetMetaFileBitsEx(
 BOOL
 WINAPI
 PlayMetaFile(
-	HDC		a0,
-	HMETAFILE	a1
-	)
+    HDC		a0,
+    HMETAFILE	a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -230,24 +230,24 @@ SetBoundsRect(HDC hdc,
 HMETAFILE
 WINAPI
 SetMetaFileBitsEx(
-	UINT		size,
-	CONST BYTE	*lpData
-	)
+    UINT		size,
+    CONST BYTE	*lpData
+)
 {
     const METAHEADER *mh_in = (const METAHEADER *)lpData;
 
     if (size & 1) return 0;
 
     if (!size || mh_in->mtType != METAFILE_MEMORY || mh_in->mtVersion != 0x300 ||
-        mh_in->mtHeaderSize != sizeof(METAHEADER) / 2)
+            mh_in->mtHeaderSize != sizeof(METAHEADER) / 2)
     {
         SetLastError(ERROR_INVALID_DATA);
         return 0;
     }
 
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -256,15 +256,15 @@ SetMetaFileBitsEx(
 BOOL
 WINAPI
 PlayMetaFileRecord(
-	HDC		a0,
-	LPHANDLETABLE	a1,
-	LPMETARECORD	a2,
-	UINT		a3
-	)
+    HDC		a0,
+    LPHANDLETABLE	a1,
+    LPMETARECORD	a2,
+    UINT		a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -274,15 +274,15 @@ PlayMetaFileRecord(
 BOOL
 WINAPI
 EnumMetaFile(
-	HDC			a0,
-	HMETAFILE		a1,
-	MFENUMPROC		a2,
-	LPARAM			a3
-	)
+    HDC			a0,
+    HMETAFILE		a1,
+    MFENUMPROC		a2,
+    LPARAM			a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -291,12 +291,12 @@ EnumMetaFile(
 BOOL
 WINAPI
 DeleteEnhMetaFile(
-	HENHMETAFILE	a0
-	)
+    HENHMETAFILE	a0
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -305,12 +305,12 @@ DeleteEnhMetaFile(
 BOOL
 WINAPI
 EnumEnhMetaFile(
-	HDC		hdc,
-	HENHMETAFILE	hmf,
-	ENHMFENUMPROC	callback,
-	LPVOID		data,
-	CONST RECT	*lpRect
-	)
+    HDC		hdc,
+    HENHMETAFILE	hmf,
+    ENHMFENUMPROC	callback,
+    LPVOID		data,
+    CONST RECT	*lpRect
+)
 {
     if(!lpRect && hdc)
     {
@@ -318,9 +318,9 @@ EnumEnhMetaFile(
         return FALSE;
     }
 
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -329,14 +329,14 @@ EnumEnhMetaFile(
 UINT
 WINAPI
 GetEnhMetaFileBits(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPBYTE		a2
-	)
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPBYTE		a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -346,14 +346,14 @@ GetEnhMetaFileBits(
 UINT
 WINAPI
 GetEnhMetaFileHeader(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPENHMETAHEADER	a2
-	)
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPENHMETAHEADER	a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -362,14 +362,14 @@ GetEnhMetaFileHeader(
 UINT
 WINAPI
 GetEnhMetaFilePaletteEntries(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPPALETTEENTRY	a2
-	)
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPPALETTEENTRY	a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -378,16 +378,16 @@ GetEnhMetaFilePaletteEntries(
 UINT
 WINAPI
 GetWinMetaFileBits(
-	HENHMETAFILE	a0,
-	UINT		a1,
-	LPBYTE		a2,
-	INT		a3,
-	HDC		a4
-	)
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPBYTE		a2,
+    INT		a3,
+    HDC		a4
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -397,14 +397,14 @@ GetWinMetaFileBits(
 BOOL
 WINAPI
 PlayEnhMetaFile(
-	HDC		a0,
-	HENHMETAFILE	a1,
-	CONST RECT	*a2
-	)
+    HDC		a0,
+    HENHMETAFILE	a1,
+    CONST RECT	*a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -414,15 +414,15 @@ PlayEnhMetaFile(
 BOOL
 WINAPI
 PlayEnhMetaFileRecord(
-	HDC			a0,
-	LPHANDLETABLE		a1,
-	CONST ENHMETARECORD	*a2,
-	UINT			a3
-	)
+    HDC			a0,
+    LPHANDLETABLE		a1,
+    CONST ENHMETARECORD	*a2,
+    UINT			a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -432,13 +432,13 @@ PlayEnhMetaFileRecord(
 HENHMETAFILE
 WINAPI
 SetEnhMetaFileBits(
-	UINT		a0,
-	CONST BYTE	*a1
-	)
+    UINT		a0,
+    CONST BYTE	*a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -448,14 +448,14 @@ SetEnhMetaFileBits(
 HENHMETAFILE
 WINAPI
 SetWinMetaFileBits(
-	UINT			a0,
-	CONST BYTE		*a1,
-	HDC			a2,
-	CONST METAFILEPICT	*a3)
+    UINT			a0,
+    CONST BYTE		*a1,
+    HDC			a2,
+    CONST METAFILEPICT	*a3)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -465,27 +465,28 @@ SetWinMetaFileBits(
 BOOL
 WINAPI
 GdiComment(
-	HDC		hDC,
-	UINT		bytes,
-	CONST BYTE	*buffer
-	)
+    HDC		hDC,
+    UINT		bytes,
+    CONST BYTE	*buffer
+)
 {
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_EMF)
-  {
-     PLDC pLDC = GdiGetLDC(hDC);
-     if ( !pLDC )
-     {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-     }
-     if (pLDC->iType == LDC_EMFLDC)
-     {          // Wine port
-         return EMFDRV_GdiComment( hDC, bytes, buffer );
-     }
-  }
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_EMF)
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+        if (pLDC->iType == LDC_EMFLDC)
+        {
+            // Wine port
+            return EMFDRV_GdiComment( hDC, bytes, buffer );
+        }
+    }
 #endif
-  return FALSE;
+    return FALSE;
 }
 
 
@@ -495,13 +496,13 @@ GdiComment(
 BOOL
 WINAPI
 SetColorAdjustment(
-	HDC			hdc,
-	CONST COLORADJUSTMENT	*a1
-	)
+    HDC			hdc,
+    CONST COLORADJUSTMENT	*a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -512,19 +513,19 @@ WINAPI
 UnrealizeObject(HGDIOBJ  hgdiobj)
 {
     BOOL retValue = TRUE;
-/*
-   Win 2k Graphics API, Black Book. by coriolis.com
-   Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
-   and Windows 2000(tm).
+    /*
+       Win 2k Graphics API, Black Book. by coriolis.com
+       Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
+       and Windows 2000(tm).
 
-   Step 5. UnrealizeObject(hTrackBrush);
- */
-/*
-    msdn.microsoft.com,
-    "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
-    and the function returns TRUE. Use SetBrushOrgEx to set the origin of
-    a brush."
- */
+       Step 5. UnrealizeObject(hTrackBrush);
+     */
+    /*
+        msdn.microsoft.com,
+        "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
+        and the function returns TRUE. Use SetBrushOrgEx to set the origin of
+        a brush."
+     */
     if (GDI_HANDLE_GET_TYPE(hgdiobj) != GDI_OBJECT_TYPE_BRUSH)
     {
         retValue = NtGdiUnrealizeObject(hgdiobj);
@@ -552,18 +553,18 @@ GdiFlush()
 int
 WINAPI
 SetICMMode(
-	HDC	hdc,
-	int	iEnableICM
-	)
+    HDC	hdc,
+    int	iEnableICM
+)
 {
     /*FIXME:  Assume that ICM is always off, and cannot be turned on */
     if (iEnableICM == ICM_OFF) return ICM_OFF;
     if (iEnableICM == ICM_ON) return 0;
     if (iEnableICM == ICM_QUERY) return ICM_OFF;
 
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -573,15 +574,15 @@ SetICMMode(
 BOOL
 WINAPI
 CheckColorsInGamut(
-	HDC	a0,
-	LPVOID	a1,
-	LPVOID	a2,
-	DWORD	a3
-	)
+    HDC	a0,
+    LPVOID	a1,
+    LPVOID	a2,
+    DWORD	a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 
@@ -635,14 +636,14 @@ SetDeviceGammaRamp(HDC hdc,
 BOOL
 WINAPI
 ColorMatchToTarget(
-	HDC	a0,
-	HDC	a1,
-	DWORD	a2
-	)
+    HDC	a0,
+    HDC	a1,
+    DWORD	a2
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /* === AFTER THIS POINT I GUESS... =========
@@ -656,13 +657,13 @@ ColorMatchToTarget(
 DWORD
 WINAPI
 IsValidEnhMetaRecord(
-	DWORD	a0,
-	DWORD	a1
-	)
+    DWORD	a0,
+    DWORD	a1
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 
 }
 
@@ -672,15 +673,15 @@ IsValidEnhMetaRecord(
 DWORD
 WINAPI
 IsValidEnhMetaRecordOffExt(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3
-	)
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 
 }
 
@@ -690,18 +691,18 @@ IsValidEnhMetaRecordOffExt(
 DWORD
 WINAPI
 GetGlyphOutlineWow(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5,
-	DWORD	a6
-	)
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3,
+    DWORD	a4,
+    DWORD	a5,
+    DWORD	a6
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -710,17 +711,17 @@ GetGlyphOutlineWow(
 DWORD
 WINAPI
 gdiPlaySpoolStream(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	)
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3,
+    DWORD	a4,
+    DWORD	a5
+)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -729,18 +730,18 @@ gdiPlaySpoolStream(
 HANDLE
 WINAPI
 AddFontMemResourceEx(
-	PVOID pbFont,
-	DWORD cbFont,
-	PVOID pdv,
-	DWORD *pcFonts
+    PVOID pbFont,
+    DWORD cbFont,
+    PVOID pdv,
+    DWORD *pcFonts
 )
 {
-  if ( pbFont && cbFont && pcFonts)
-  {
-     return NtGdiAddFontMemResourceEx(pbFont, cbFont, NULL, 0, pcFonts);
-  }
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return NULL;
+    if ( pbFont && cbFont && pcFonts)
+    {
+        return NtGdiAddFontMemResourceEx(pbFont, cbFont, NULL, 0, pcFonts);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return NULL;
 }
 
 /*
@@ -749,13 +750,13 @@ AddFontMemResourceEx(
 int
 WINAPI
 AddFontResourceTracking(
-	LPCSTR lpString,
-	int unknown
+    LPCSTR lpString,
+    int unknown
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -767,9 +768,9 @@ HBITMAP
 WINAPI
 ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -779,9 +780,9 @@ HBRUSH
 WINAPI
 ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -791,9 +792,9 @@ BOOL
 WINAPI
 ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEntries)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -803,9 +804,9 @@ BOOL
 WINAPI
 GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -815,10 +816,10 @@ BOOL
 WINAPI
 GdiCleanCacheDC(HDC hdc)
 {
-   if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_DC_TYPE)
-      return TRUE;
-   SetLastError(ERROR_INVALID_HANDLE);
-   return FALSE;
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_DC_TYPE)
+        return TRUE;
+    SetLastError(ERROR_INVALID_HANDLE);
+    return FALSE;
 }
 
 /*
@@ -828,20 +829,20 @@ HDC
 WINAPI
 GdiConvertAndCheckDC(HDC hdc)
 {
-   PLDC pldc;
-   ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
-   if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
-      return hdc;
-   pldc = GdiGetLDC(hdc);
-   if (pldc)
-   {
-      if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
-      if (pldc->Flags & LDC_KILL_DOCUMENT) return NULL;
-      if (pldc->Flags & LDC_STARTPAGE) StartPage(hdc);
-      return hdc;
-   }
-   SetLastError(ERROR_INVALID_HANDLE);
-   return NULL;   
+    PLDC pldc;
+    ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+    if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+        return hdc;
+    pldc = GdiGetLDC(hdc);
+    if (pldc)
+    {
+        if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
+        if (pldc->Flags & LDC_KILL_DOCUMENT) return NULL;
+        if (pldc->Flags & LDC_STARTPAGE) StartPage(hdc);
+        return hdc;
+    }
+    SetLastError(ERROR_INVALID_HANDLE);
+    return NULL;
 }
 
 /*
@@ -875,22 +876,22 @@ BOOL
 WINAPI
 GdiIsMetaFileDC(HDC hDC)
 {
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-        return TRUE;
-     else
-     {
-        PLDC pLDC = GdiGetLDC(hDC);
-        if ( !pLDC )
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return TRUE;
+        else
         {
-           SetLastError(ERROR_INVALID_HANDLE);
-           return FALSE;
+            PLDC pLDC = GdiGetLDC(hDC);
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if ( pLDC->iType == LDC_EMFLDC) return TRUE;
         }
-        if ( pLDC->iType == LDC_EMFLDC) return TRUE;
-     }
-  }
-  return FALSE;
+    }
+    return FALSE;
 }
 
 /*
@@ -901,22 +902,22 @@ WINAPI
 GdiIsMetaPrintDC(HDC hDC)
 {
 
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-        return FALSE;
-     else
-     {
-        PLDC pLDC = GdiGetLDC(hDC);
-        if ( !pLDC )
+    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+            return FALSE;
+        else
         {
-           SetLastError(ERROR_INVALID_HANDLE);
-           return FALSE;
+            PLDC pLDC = GdiGetLDC(hDC);
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if ( pLDC->Flags & LDC_META_PRINT) return TRUE;
         }
-        if ( pLDC->Flags & LDC_META_PRINT) return TRUE;
-     }
-  }
-  return FALSE;
+    }
+    return FALSE;
 }
 
 /*
@@ -926,12 +927,12 @@ BOOL
 WINAPI
 GdiIsPlayMetafileDC(HDC hDC)
 {
-  PLDC pLDC = GdiGetLDC(hDC);
-  if ( pLDC )
-  {
-     if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
-  }
-  return FALSE;
+    PLDC pLDC = GdiGetLDC(hDC);
+    if ( pLDC )
+    {
+        if ( pLDC->Flags & LDC_PLAY_MFDC ) return TRUE;
+    }
+    return FALSE;
 }
 
 /*
@@ -941,18 +942,18 @@ BOOL
 WINAPI
 GdiValidateHandle(HGDIOBJ hobj)
 {
-  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hobj);
-  if ( (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
-       ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                   GDI_HANDLE_GET_TYPE(hobj) )
-  {
-    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-    if(pid == NULL || pid == CurrentProcessId)
+    PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hobj);
+    if ( (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
+            ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) ==
+            GDI_HANDLE_GET_TYPE(hobj) )
     {
-      return TRUE;
+        HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+        if(pid == NULL || pid == CurrentProcessId)
+        {
+            return TRUE;
+        }
     }
-  }
-  return FALSE;
+    return FALSE;
 
 }
 
@@ -1042,12 +1043,12 @@ BOOL
 WINAPI
 RemoveFontMemResourceEx(HANDLE fh)
 {
-  if (fh)
-  {
-     return NtGdiRemoveFontMemResourceEx(fh);
-  }
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return FALSE;
+    if (fh)
+    {
+        return NtGdiRemoveFontMemResourceEx(fh);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
 }
 
 /*
@@ -1057,9 +1058,9 @@ int
 WINAPI
 RemoveFontResourceTracking(LPCSTR lpString,int unknown)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1069,9 +1070,9 @@ HBITMAP
 WINAPI
 SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1081,9 +1082,9 @@ HBRUSH
 WINAPI
 SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1127,12 +1128,12 @@ WINAPI
 GetETM(HDC hdc,
        EXTTEXTMETRIC *petm)
 {
-  BOOL Ret = NtGdiGetETM(hdc, petm);
+    BOOL Ret = NtGdiGetETM(hdc, petm);
 
-  if (Ret && petm)
-    petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
+    if (Ret && petm)
+        petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
 
-  return Ret;
+    return Ret;
 }
 
 /*
@@ -1142,7 +1143,7 @@ int
 WINAPI
 Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 {
-    int retValue = SP_ERROR;    
+    int retValue = SP_ERROR;
     HGDIOBJ hObject = hdc;
     UINT Type = 0;
     LPVOID pUserData = NULL;
@@ -1159,165 +1160,165 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
     {
         switch (nEscape)
         {
-            case ABORTDOC:        
-                /* Note Winodws check see if the handle have any user data for ABORTDOC command 
-                 * ReactOS copy this behavior to be compatible with windows 2003 
-                 */
-                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
-                      (pUserData == NULL) ) 
-                 {
-                     GdiSetLastError(ERROR_INVALID_HANDLE);
-                     retValue = FALSE;
-                 }
-                 else
-                 {
-                    retValue = AbortDoc(hdc);
-                 }
-                break;
-
-            case DRAFTMODE:
-            case FLUSHOUTPUT:
-            case SETCOLORTABLE:
-                /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
-                /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behavior to be compatible with windows 2003 
-                 */
-                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
-                     (pUserData == NULL) ) 
-                {
-                    GdiSetLastError(ERROR_INVALID_HANDLE);
-                }
+        case ABORTDOC:
+            /* Note Winodws check see if the handle have any user data for ABORTDOC command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
-                break;
+            }
+            else
+            {
+                retValue = AbortDoc(hdc);
+            }
+            break;
 
-            case SETABORTPROC:
-                /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behavior to be compatible with windows 2003 
-                 */
-                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
-                     (pUserData == NULL) ) 
-                {
-                    GdiSetLastError(ERROR_INVALID_HANDLE);
-                    retValue = FALSE;
-                }
-                retValue = SetAbortProc(hdc, (ABORTPROC)lpvInData);
-                break;
+        case DRAFTMODE:
+        case FLUSHOUTPUT:
+        case SETCOLORTABLE:
+            /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
+            /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+            }
+            retValue = FALSE;
+            break;
 
-            case GETCOLORTABLE:
-                retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
-                if ( !retValue )
-                {
-                    retValue = SP_ERROR;        
-                }            
-                break;
-
-            case ENDDOC:
-                /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command 
-                 * ReactOS copy this behavior to be compatible with windows 2003 
-                 */
-                if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||  
-                     (pUserData == NULL) ) 
-                {
-                    GdiSetLastError(ERROR_INVALID_HANDLE);
-                    retValue = FALSE;
-                }
-                retValue = EndDoc(hdc);
-                break;
-
-
-            case GETSCALINGFACTOR:
-                /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
-                if ( Type == GDI_OBJECT_TYPE_DC )
-                {                
-                    if ( lpvOutData )
-                    {
-                        PPOINT ptr = (PPOINT) lpvOutData;
-                        ptr->x = 0;
-                        ptr->y = 0;                            
-                    }
-                }                                
+        case SETABORTPROC:
+            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
-                break;
+            }
+            retValue = SetAbortProc(hdc, (ABORTPROC)lpvInData);
+            break;
 
-            case GETEXTENDEDTEXTMETRICS:
-                retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
-                break;
+        case GETCOLORTABLE:
+            retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
+            if ( !retValue )
+            {
+                retValue = SP_ERROR;
+            }
+            break;
 
-            case  STARTDOC:
+        case ENDDOC:
+            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+            retValue = EndDoc(hdc);
+            break;
+
+
+        case GETSCALINGFACTOR:
+            /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
+            if ( Type == GDI_OBJECT_TYPE_DC )
+            {
+                if ( lpvOutData )
                 {
-                    DOCINFOA *pUserDatalpdi;
-                    DOCINFOA lpdi;
+                    PPOINT ptr = (PPOINT) lpvOutData;
+                    ptr->x = 0;
+                    ptr->y = 0;
+                }
+            }
+            retValue = FALSE;
+            break;
 
-                    /* Note : Winodws check see if the handle have any user data for STARTDOC command 
-                     * ReactOS copy this behavior to be compatible with windows 2003 
+        case GETEXTENDEDTEXTMETRICS:
+            retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+            break;
+
+        case  STARTDOC:
+        {
+            DOCINFOA *pUserDatalpdi;
+            DOCINFOA lpdi;
+
+            /* Note : Winodws check see if the handle have any user data for STARTDOC command
+             * ReactOS copy this behavior to be compatible with windows 2003
+             */
+            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserDatalpdi)) ||
+                    (pUserData == NULL) )
+            {
+                GdiSetLastError(ERROR_INVALID_HANDLE);
+                retValue = FALSE;
+            }
+
+            lpdi.cbSize = sizeof(DOCINFOA);
+
+            /* NOTE lpszOutput will be store in handle userdata */
+            lpdi.lpszOutput = 0;
+
+            lpdi.lpszDatatype = 0;
+            lpdi.fwType = 0;
+            lpdi.lpszDocName = lpvInData;
+
+            /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
+            retValue = StartDocA(hdc, &lpdi);
+
+            /* StartDocA fail */
+            if (retValue < 0)
+            {
+                /* check see if outbuffer contain any data, if it does abort */
+                if  ( (pUserDatalpdi->lpszOutput != 0) &&
+                        ( (*(WCHAR *)pUserDatalpdi->lpszOutput) != UNICODE_NULL) )
+                {
+                    retValue = SP_APPABORT;
+                }
+                else
+                {
+                    retValue = GetLastError();
+
+                    /* Translate StartDocA error code to STARTDOC error code
+                     * see msdn http://msdn2.microsoft.com/en-us/library/ms535472.aspx
                      */
-                    if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserDatalpdi)) ||  
-                         (pUserData == NULL) ) 
+                    switch(retValue)
                     {
-                        GdiSetLastError(ERROR_INVALID_HANDLE);
-                        retValue = FALSE;
-                    }
+                    case ERROR_NOT_ENOUGH_MEMORY:
+                        retValue = SP_OUTOFMEMORY;
+                        break;
 
-                    lpdi.cbSize = sizeof(DOCINFOA);
+                    case ERROR_PRINT_CANCELLED:
+                        retValue = SP_USERABORT;
+                        break;
 
-                    /* NOTE lpszOutput will be store in handle userdata */
-                    lpdi.lpszOutput = 0;
+                    case ERROR_DISK_FULL:
+                        retValue = SP_OUTOFDISK;
+                        break;
 
-                    lpdi.lpszDatatype = 0;
-                    lpdi.fwType = 0;
-                    lpdi.lpszDocName = lpvInData;
-
-                    /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
-                    retValue = StartDocA(hdc, &lpdi);  
-
-                    /* StartDocA fail */
-                    if (retValue < 0)
-                    {                                        
-                        /* check see if outbuffer contain any data, if it does abort */ 
-                        if  ( (pUserDatalpdi->lpszOutput != 0) && 
-                              ( (*(WCHAR *)pUserDatalpdi->lpszOutput) != UNICODE_NULL) )
-                        {
-                            retValue = SP_APPABORT;
-                        }
-                        else
-                        {
-                            retValue = GetLastError();
-                         
-                            /* Translate StartDocA error code to STARTDOC error code 
-                             * see msdn http://msdn2.microsoft.com/en-us/library/ms535472.aspx 
-                             */
-                            switch(retValue)
-                            {
-                                case ERROR_NOT_ENOUGH_MEMORY:
-                                    retValue = SP_OUTOFMEMORY;
-                                    break;
-
-                                case ERROR_PRINT_CANCELLED:
-                                    retValue = SP_USERABORT;
-                                    break;
-
-                                case ERROR_DISK_FULL:
-                                    retValue = SP_OUTOFDISK;
-                                    break;
-
-                                default:
-                                    retValue = SP_ERROR;
-                                    break;
-                            }                         
-                        }                                                  
+                    default:
+                        retValue = SP_ERROR;
+                        break;
                     }
                 }
-                break;
-                
-            
+            }
+        }
+        break;
 
 
-            default:
-                UNIMPLEMENTED;
-                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);                
+
+
+        default:
+            UNIMPLEMENTED;
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         }
     }
-    
+
     return retValue;
 }
 
@@ -1375,14 +1376,14 @@ GdiConvertToDevmodeW(const DEVMODEA *dmA)
     if (!dmW) return NULL;
 
     MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmDeviceName, CCHDEVICENAME,
-                                   dmW->dmDeviceName, CCHDEVICENAME);
+                        dmW->dmDeviceName, CCHDEVICENAME);
     /* copy slightly more, to avoid long computations */
     memcpy(&dmW->dmSpecVersion, &dmA->dmSpecVersion, dmA_size - CCHDEVICENAME);
 
     if (dmA_size >= FIELD_OFFSET(DEVMODEA, dmFormName) + CCHFORMNAME)
     {
         MultiByteToWideChar(CP_ACP, 0, (const char*) dmA->dmFormName, CCHFORMNAME,
-                                       dmW->dmFormName, CCHFORMNAME);
+                            dmW->dmFormName, CCHFORMNAME);
         if (dmA_size > FIELD_OFFSET(DEVMODEA, dmLogPixels))
             memcpy(&dmW->dmLogPixels, &dmA->dmLogPixels, dmA_size - FIELD_OFFSET(DEVMODEA, dmLogPixels));
     }
@@ -1559,7 +1560,7 @@ GdiPlayEMF(LPWSTR pwszPrinterName,
            LPWSTR pwszDocName,
            EMFPLAYPROC pfnEMFPlayFn,
            HANDLE hPageQuery
-)
+          )
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1622,7 +1623,7 @@ GdiTransparentBlt(IN HDC hdcDst,
                   IN INT cxSrc,
                   IN INT cySrc,
                   IN COLORREF TransColor
-)
+                 )
 {
     /* FIXME some part need be done in user mode */
     return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, TransColor);
@@ -1695,7 +1696,7 @@ GetFontData(HDC hdc,
 {
     if (!lpvBuffer)
     {
-       cbData = 0;
+        cbData = 0;
     }
     return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
 }

@@ -25,6 +25,7 @@ extern VOID NTAPI CcpUnmapThread(PVOID Unused);
 extern VOID NTAPI CcpLazyWriteThread(PVOID Unused);
 HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
 CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
+FAST_MUTEX GlobalPageOperation;
 
 typedef struct _NOCC_PRIVATE_CACHE_MAP
 {
@@ -53,7 +54,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 		// Reference a cache stripe so it won't go away
 		CcpLock();
 		if (CcCacheSections[BcbHead].BaseAddress) {
-			CcpReferenceCache(i);
+			CcpReferenceCache(BcbHead);
 			CcpUnlock();
 		} else {
 			CcpUnlock();
@@ -68,7 +69,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 		*NrFreed += Freed;
 
 		CcpLock();
-		CcpDereferenceCache(BcbHead, FALSE);
+		CcpUnpinData(&CcCacheSections[BcbHead], TRUE);
 		CcpUnlock();
 	}
 
@@ -98,6 +99,7 @@ CcInitializeCacheManager(VOID)
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
+	ExInitializeFastMutex(&GlobalPageOperation);
 
 	// MM stub
 	KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
@@ -474,10 +476,10 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 			CcpLock();
 			ListEntry = ListEntry->Flink;
 			// Return from pin state
-			CcpUnpinData(PinnedBcb);
+			CcpUnpinData(PinnedBcb, TRUE);
 		}
 
-		CcpUnpinData(Bcb);
+		CcpUnpinData(Bcb, TRUE);
 	}
 
 	CcpUnlock();

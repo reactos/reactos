@@ -550,7 +550,7 @@ SCSIPORTAPI
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-  IN ULONG UlongAddress);
+  IN ULONG_PTR UlongAddress);
 
 SCSIPORTAPI
 VOID
@@ -883,7 +883,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
   IN PUCHAR Register,
-  IN ULONG Value);
+  IN UCHAR Value);
 
 SCSIPORTAPI
 VOID

@@ -29,28 +29,28 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.7.7"
+#define LIBXML_DOTTED_VERSION "2.7.8"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 20707
+#define LIBXML_VERSION 20708
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "20707"
+#define LIBXML_VERSION_STRING "20708"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
  * extra version information, used to show a CVS compilation
  */
-#define LIBXML_VERSION_EXTRA "-GITv2.7.6-36-g06c93b7"
+#define LIBXML_VERSION_EXTRA "-GITv2.7.7-40-g82143f4"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -58,7 +58,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(20707);
+#define LIBXML_TEST_VERSION xmlCheckVersion(20708);
 
 #ifndef VMS
 #if 0
@@ -266,6 +266,15 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  */
 #if 0
 #define LIBXML_ICONV_ENABLED
+#endif
+
+/**
+ * LIBXML_ICU_ENABLED:
+ *
+ * Whether icu support is available
+ */
+#if 0
+#define LIBXML_ICU_ENABLED
 #endif
 
 /**

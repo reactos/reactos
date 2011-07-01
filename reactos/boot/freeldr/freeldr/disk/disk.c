@@ -111,7 +111,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 	PARTITION_TABLE_ENTRY PartitionEntry;
 	MASTER_BOOT_RECORD MasterBootRecord;
 
-	if (BootDrive < 0x80)
+	if (FrldrBootDrive < 0x80)
 	{
 		/* This is a floppy */
 
@@ -124,41 +124,44 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
 		strcat(BootPath, "fdisk");
 
-		_itoa(BootDrive, Device, 10);
+		_itoa(FrldrBootDrive, Device, 10);
 		strcat(BootPath, "(");
 		strcat(BootPath, Device);
 		strcat(BootPath, ")");
 	}
 	/* FIXME */
-	else if (DiskReadBootRecord(BootDrive, 0, &MasterBootRecord))
+	else if (DiskReadBootRecord(FrldrBootDrive, 0, &MasterBootRecord))
 	{
-		/* This is a hard disk */
+		ULONG BootPartition;
 
-		if (!DiskGetActivePartitionEntry(BootDrive, &PartitionEntry, &BootPartition))
+		/* This is a hard disk */
+		if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
 		{
 			DbgPrint("Invalid active partition information\n");
 			return FALSE;
 		}
 
-        	if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
-            	{
-                	return FALSE;
-            	}
+		FrldrBootPartition = BootPartition;
+
+		if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
+		{
+			return FALSE;
+		}
 
 		strcpy(BootPath, Path);
 
 		strcat(BootPath, "rdisk");
 
-		_itoa(BootDrive - 0x80, Device, 10);
+		_itoa(FrldrBootDrive - 0x80, Device, 10);
 		strcat(BootPath, "(");
 		strcat(BootPath, Device);
 		strcat(BootPath, ")");
 
-		_itoa(BootPartition, Partition, 10);
+		_itoa(FrldrBootPartition, Partition, 10);
 		strcat(BootPath, "partition(");
 		strcat(BootPath, Partition);
 		strcat(BootPath, ")");
-        }
+	}
 	else
 	{
 		/* This is a CD-ROM drive */
@@ -172,7 +175,7 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
 		strcat(BootPath, "cdrom");
 
-		_itoa(BootDrive - 0x80, Device, 10);
+		_itoa(FrldrBootDrive - 0x80, Device, 10);
 		strcat(BootPath, "(");
 		strcat(BootPath, Device);
 		strcat(BootPath, ")");

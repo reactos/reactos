@@ -1,7 +1,7 @@
 @ stdcall AddMIMEFileTypesPS(ptr ptr)
 @ stub AutodialHookCallback
-@ stub DllCanUnloadNow
-@ stub DllGetClassObject
+@ stub -private DllCanUnloadNow
+@ stub -private DllGetClassObject
 @ stub DummyEntryPoint
 @ stub DummyEntryPointA
 @ stdcall FileProtocolHandler(long ptr str long) FileProtocolHandlerA

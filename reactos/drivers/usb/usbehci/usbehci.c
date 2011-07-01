@@ -69,7 +69,7 @@ UsbEhciClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 VOID NTAPI
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
-    DPRINT1("Unloading Driver\n");
+    DPRINT("Unloading Driver\n");
     /* FIXME: Clean up */
 }
 
@@ -88,14 +88,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DPRINT1("Driver Entry %wZ!\n", RegistryPath);
 
     DriverObject->DriverExtension->AddDevice = AddDevice;
-
     DriverObject->MajorFunction[IRP_MJ_CREATE] = UsbEhciCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = UsbEhciClose;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = UsbEhciCleanup;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-
+    
     DriverObject->DriverUnload = DriverUnload;
     DPRINT1("Driver entry done\n");
 

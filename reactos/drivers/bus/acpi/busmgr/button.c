@@ -42,13 +42,13 @@ static int acpi_button_add (struct acpi_device *device);
 static int acpi_button_remove (struct acpi_device *device, int type);
 
 static struct acpi_driver acpi_button_driver = {
-	.name =		ACPI_BUTTON_DRIVER_NAME,
-	.class =	ACPI_BUTTON_CLASS,
-	.ids =		"ACPI_FPB,ACPI_FSB,PNP0C0D,PNP0C0C,PNP0C0E",
-	.ops =		{
-				.add =		acpi_button_add,
-				.remove =	acpi_button_remove,
-			},
+    {0,0},
+    ACPI_BUTTON_DRIVER_NAME,
+    ACPI_BUTTON_CLASS,
+    0,
+    0,
+    "ACPI_FPB,ACPI_FSB,PNP0C0D,PNP0C0C,PNP0C0E",
+    {acpi_button_add,acpi_button_remove}
 };
 
 struct acpi_button {

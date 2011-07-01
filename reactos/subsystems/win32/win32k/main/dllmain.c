@@ -23,6 +23,7 @@ PSECTION_OBJECT GlobalUserHeapSection = NULL;
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 SHORT gusLanguageID;
+PPROCESSINFO ppiScrnSaver;
 
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
@@ -63,6 +64,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
         PVOID UserBase = NULL;
+        PRTL_USER_PROCESS_PARAMETERS pParams = NULL;
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
@@ -89,8 +91,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
 
-        InitializeListHead(&Win32Process->ClassList);
-
         InitializeListHead(&Win32Process->MenuListHead);
 
         InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
@@ -109,18 +109,54 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         if(Process->Peb != NULL)
         {
             /* map the gdi handle table to user land */
-            Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
+            Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
             Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
+            pParams = Process->Peb->ProcessParameters;
         }
 
         Win32Process->peProcess = Process;
         /* setup process flags */
-        Win32Process->W32PF_flags = 0;
+        Win32Process->W32PF_flags = W32PF_THREADCONNECTED;
+
+        if ( pParams &&
+             pParams->WindowFlags & STARTF_SCRNSAVER )
+        {
+           ppiScrnSaver = Win32Process;
+           Win32Process->W32PF_flags |= W32PF_SCREENSAVER;
+        }
+
+        /* Create pools for GDI object attributes */
+        Win32Process->pPoolDcAttr = GdiPoolCreate(sizeof(DC_ATTR), 'acdG');
+        Win32Process->pPoolBrushAttr = GdiPoolCreate(sizeof(BRUSH_ATTR), 'arbG');
+        Win32Process->pPoolRgnAttr = GdiPoolCreate(sizeof(RGN_ATTR), 'agrG');
+        ASSERT(Win32Process->pPoolDcAttr);
+        ASSERT(Win32Process->pPoolBrushAttr);
+        ASSERT(Win32Process->pPoolRgnAttr);
     }
     else
     {
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
         Win32Process->W32PF_flags |= W32PF_TERMINATED;
+
+        if (ppiScrnSaver == Win32Process) ppiScrnSaver = NULL;
+
+        /* Notify logon application to restart shell if needed */
+        if(Win32Process->rpdeskStartup->pDeskInfo)
+        {
+            if(Win32Process->rpdeskStartup->pDeskInfo->ppiShellProcess == Win32Process)
+            {
+                DWORD ExitCode;
+                ExitCode = PsGetProcessExitStatus(Win32Process->peProcess);
+
+                DPRINT1("Shell process is exiting (%d)\n", ExitCode);
+
+                UserPostMessage(hwndSAS, 
+                                WM_LOGONNOTIFY, 
+                                LN_SHELL_EXITED, 
+                                ExitCode);
+            }
+        }
+
         if (Win32Process->InputIdleEvent)
         {
            EngFreeMem((PVOID)Win32Process->InputIdleEvent);
@@ -133,6 +169,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         /* no process windows should exist at this point, or the function will assert! */
         DestroyProcessClasses(Win32Process);
+        Win32Process->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
 
         GDI_CleanupForProcess(Process);
 
@@ -145,6 +182,20 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         {
             LogonProcess = NULL;
         }
+
+        /* Close the startup desktop */
+        ASSERT(Win32Process->rpdeskStartup);
+        ASSERT(Win32Process->hdeskStartup);
+        ObDereferenceObject(Win32Process->rpdeskStartup);
+        ZwClose(Win32Process->hdeskStartup);
+
+        /* Close the current window station */
+        UserSetProcessWindowStation(NULL);
+
+        /* Destroy GDI pools */
+        GdiPoolDestroy(Win32Process->pPoolDcAttr);
+        GdiPoolDestroy(Win32Process->pPoolBrushAttr);
+        GdiPoolDestroy(Win32Process->pPoolRgnAttr);
     }
 
     RETURN( STATUS_SUCCESS);
@@ -196,6 +247,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         HDESK hDesk = NULL;
         NTSTATUS Status;
         PUNICODE_STRING DesktopPath;
+        PDESKTOP pdesk;
         PRTL_USER_PROCESS_PARAMETERS ProcessParams = (Process->Peb ? Process->Peb->ProcessParameters : NULL);
 
         DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
@@ -208,72 +260,71 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
             InitializeListHead(&Win32Thread->aphkStart[i]);
         }
 
-        /*
-         * inherit the thread desktop and process window station (if not yet inherited) from the process startup
-         * info structure. See documentation of CreateProcess()
-         */
-        DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
-        Status = IntParseDesktopPath(Process,
-                                     DesktopPath,
-                                     &hWinSta,
-                                     &hDesk);
-        if(NT_SUCCESS(Status))
-        {
-            if(hWinSta != NULL)
-            {
-                if(Process != CsrProcess)
-                {
-                    HWINSTA hProcessWinSta = (HWINSTA)InterlockedCompareExchangePointer((PVOID)&Process->Win32WindowStation, (PVOID)hWinSta, NULL);
-                    if(hProcessWinSta != NULL)
-                    {
-                        /* our process is already assigned to a different window station, we don't need the handle anymore */
-                        NtClose(hWinSta);
-                    }
-                }
-                else
-                {
-                    NtClose(hWinSta);
-                }
-            }
-
-            if (hDesk != NULL)
-            {
-                PDESKTOP DesktopObject;
-                Win32Thread->rpdesk = NULL;
-                Status = ObReferenceObjectByHandle(hDesk,
-                                                   0,
-                                                   ExDesktopObjectType,
-                                                   KernelMode,
-                                                   (PVOID*)&DesktopObject,
-                                                   NULL);
-                NtClose(hDesk);
-                if(NT_SUCCESS(Status))
-                {
-                    if (!IntSetThreadDesktop(DesktopObject,
-                                             FALSE))
-                    {
-                        DPRINT1("Unable to set thread desktop\n");
-                    }
-                }
-                else
-                {
-                    DPRINT1("Unable to reference thread desktop handle 0x%x\n", hDesk);
-                }
-            }
-        }
-        else
-        {
-           DPRINT1("No Desktop handle for this Thread!\n");
-        }
         Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
         co_IntDestroyCaret(Win32Thread);
         Win32Thread->ppi = PsGetCurrentProcessWin32Process();
+        Win32Thread->ptiSibling = Win32Thread->ppi->ptiList;
+        Win32Thread->ppi->ptiList = Win32Thread;
+        Win32Thread->ppi->cThreads++;
         if (Win32Thread->rpdesk && !Win32Thread->pDeskInfo)
         {
            Win32Thread->pDeskInfo = Win32Thread->rpdesk->pDeskInfo;
         }
         Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
         Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+        Win32Thread->pEThread = Thread;
+
+        /* HAAAAAAAACK! This should go to Win32kProcessCallback */
+        if(Win32Thread->ppi->hdeskStartup == NULL)
+        {
+            /*
+             * inherit the thread desktop and process window station (if not yet inherited) from the process startup
+             * info structure. See documentation of CreateProcess()
+             */
+            DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
+            Status = IntParseDesktopPath(Process,
+                                         DesktopPath,
+                                         &hWinSta,
+                                         &hDesk);
+            if(NT_SUCCESS(Status))
+            {
+                if(hWinSta != NULL)
+                {
+                    if(!UserSetProcessWindowStation(hWinSta))
+                    {
+                        DPRINT1("Failed to set process window station\n");
+                    }
+                }
+
+                if (hDesk != NULL)
+                {
+                    /* Validate the new desktop. */
+                    Status = IntValidateDesktopHandle(hDesk,
+                                                      UserMode,
+                                                      0,
+                                                      &pdesk);
+
+                    if(NT_SUCCESS(Status))
+                    {
+                        Win32Thread->ppi->hdeskStartup = hDesk;
+                        Win32Thread->ppi->rpdeskStartup = pdesk;
+                    }
+                }
+            }
+            else
+            {
+               DPRINT1("No Desktop handle for this Thread!\n");
+            }
+        }
+
+        if (Win32Thread->ppi->hdeskStartup != NULL)
+        {
+            if (!IntSetThreadDesktop(Win32Thread->ppi->hdeskStartup, FALSE))
+            {
+                DPRINT1("Unable to set thread desktop\n");
+            }
+        }
+
         pTeb = NtCurrentTeb();
         if (pTeb)
         { /* Attempt to startup client support which should have been initialized in IntSetThreadDesktop. */
@@ -284,7 +335,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
            if (Win32Thread->KeyboardLayout) pci->hKL = Win32Thread->KeyboardLayout->hkl;
            pci->dwTIFlags = Win32Thread->TIF_flags;
            /* CI may not have been initialized. */
-           if (!pci->pDeskInfo && Win32Thread->pDeskInfo) 
+           if (!pci->pDeskInfo && Win32Thread->pDeskInfo)
            {
               if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
 
@@ -298,16 +349,39 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         else
         {
            DPRINT1("No TEB for this Thread!\n");
+           // System thread running! Now SendMessage should be okay.
+           Win32Thread->pcti = &Win32Thread->cti;
         }
-        Win32Thread->pEThread = Thread;
+        GetW32ThreadInfo();
     }
     else
     {
+        PTHREADINFO pti;
         PSINGLE_LIST_ENTRY e;
 
         DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
         Win32Thread->TIF_flags |= TIF_INCLEANUP;
+        pti = Win32Thread->ppi->ptiList;
+        if (pti == Win32Thread)
+        {
+           Win32Thread->ppi->ptiList = Win32Thread->ptiSibling;
+           Win32Thread->ppi->cThreads--;
+        }
+        else
+        {
+           do
+           {
+               if (pti->ptiSibling == Win32Thread)
+               {
+                  pti->ptiSibling = Win32Thread->ptiSibling;
+                  Win32Thread->ppi->cThreads--;
+                  break;
+               }
+               pti = pti->ptiSibling;
+           }
+           while (pti);
+        }
         DceFreeThreadDCE(Win32Thread);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
@@ -332,9 +406,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
             e = PopEntryList(&Win32Thread->ReferencesList);
         }
 
-        IntSetThreadDesktop(NULL,
-                            TRUE);
-
+        IntSetThreadDesktop(NULL, TRUE);
 
         PsSetThreadWin32Thread(Thread, NULL);
     }
@@ -433,9 +505,17 @@ DriverEntry(
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
+    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
+    CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
 
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
+
+#if DBG_ENABLE_SERVICE_HOOKS
+    /* Register service hook callbacks */
+    KdSystemDebugControl('CsoR', DbgPreServiceHook, ID_Win32PreServiceHook, 0, 0, 0, 0);
+    KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
+#endif
 
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,

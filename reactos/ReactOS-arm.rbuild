@@ -104,9 +104,6 @@
 				<xi:include href="lib/sdk/wdmguid/wdmguid.rbuild" />
 			</directory>
 		</directory>
-		<directory name="ntdllsys">
-			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
-		</directory>
 		<directory name="smlib">
 			<xi:include href="lib/smlib/smlib.rbuild" />
 		</directory>

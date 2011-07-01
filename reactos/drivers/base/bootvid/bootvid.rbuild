@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="bootvid" type="kernelmodedll" entrypoint="0" installbase="system32" installname="bootvid.dll">
 	<importlibrary definition="bootvid.spec"></importlibrary>
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="bootvid.dll" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="bootvid.dll" />
 	<include base="bootvid">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

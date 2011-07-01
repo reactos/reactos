@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" />
 	<importlibrary definition="ntoskrnl.pspec" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -113,9 +113,6 @@
 		<file>dpc.c</file>
 		<file>eventobj.c</file>
 		<file>except.c</file>
-		<if property="ARCH" value="i386">
-			<file>freeldr.c</file>
-		</if>
 		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
@@ -215,7 +212,7 @@
 		<file>dbgkutil.c</file>
 		<file>dbgkobj.c</file>
 	</directory>
-	<directory name="ex" root="intermediate">
+	<directory name="ex">
 		<file>zw.S</file>
 	</directory>
 	<directory name="ex">
@@ -285,6 +282,7 @@
 		<file>disksup.c</file>
 		<file>fstubex.c</file>
 		<file>halstub.c</file>
+		<file>translate.c</file>
 	</directory>
 	<directory name="inbv">
 		<file>inbv.c</file>

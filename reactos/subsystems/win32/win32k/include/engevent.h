@@ -1,13 +1,8 @@
 #pragma once
 
-#define ENG_EVENT_USERMAPPED 1
+//
+// Flags for the fFlags field of ENG_EVENT
+//
+#define ENG_EVENT_USERMAPPED    0x01
 
-typedef struct _ENG_EVENT
-{
-    /* Public part */
-    PVOID  pKEvent;
-    ULONG  fFlags;
-
-    /* Private part */
-    KEVENT KEvent;
-} ENG_EVENT, *PENG_EVENT;
+/* EOF */

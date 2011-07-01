@@ -1,7 +1,5 @@
 #include "iphlpapi_private.h"
 
-#include "debug.h"
-
 int GetLongestChildKeyName( HANDLE RegHandle ) {
   LONG Status;
   DWORD MaxAdapterName;

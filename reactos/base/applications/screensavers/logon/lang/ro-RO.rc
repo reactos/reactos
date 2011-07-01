@@ -1,11 +1,7 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Ecran de veghe Siglă"
     IDS_TEXT        "Acest ecran de veghe nu are opțiuni."
 END
-
-#pragma code_page(default)

@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
- 
+
 // Arguments for idt
 #define INT_32_DPL0                 HEX(08E00)
 #define INT_32_DPL3                 HEX(0EE00)
@@ -43,7 +43,7 @@
 #else
 #define LOCK
 #define ACQUIRE_SPINLOCK(x, y)
-#define RELEASE_SPINLOCK(x) 
+#define RELEASE_SPINLOCK(x)
 #endif
 
 //
@@ -135,7 +135,17 @@ MACRO(KiEnterTrap, Flags)
     endif
 
     /* Save segment registers? */
-    if (NOT (Flags AND KI_DONT_SAVE_SEGS))
+    if (Flags AND KI_DONT_SAVE_SEGS)
+
+        /* Initialize TrapFrame segment registers with sane values */
+        mov eax, KGDT_R3_DATA OR 3
+        mov ecx, fs
+        mov [esp + KTRAP_FRAME_DS], eax
+        mov [esp + KTRAP_FRAME_ES], eax
+        mov [esp + KTRAP_FRAME_FS], ecx
+        mov dword ptr [esp + KTRAP_FRAME_GS], 0
+
+    else
 
         /* Check for V86 mode */
         test byte ptr [esp + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK / HEX(10000))
@@ -319,7 +329,7 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_EFLAGS)
 
         /* Restore EFLAGS */
-        popf
+        popfd
 
     endif
 
@@ -333,7 +343,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_IRET)
 
         /* Return with iret */
-        iret
+        iretd
 
     elseif (Flags AND KI_EXIT_JMP)
 

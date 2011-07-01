@@ -27,6 +27,7 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winuser.h"
+#include "undocuser.h"
 #include "softpub.h"
 #include "wingdi.h"
 #include "richedit.h"

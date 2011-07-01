@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <host/nls.h>
+#include <nls.h>
 
 #include "widltypes.h"
 #include "hash.h"

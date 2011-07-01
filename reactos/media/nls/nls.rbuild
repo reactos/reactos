@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-	<cdfile installbase="$(CDOUTPUT)">c_437.nls</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">c_1252.nls</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">l_intl.nls</cdfile>
+	<cdfile installbase="$(CDOUTPUT)/system32">c_437.nls</cdfile>
+	<cdfile installbase="$(CDOUTPUT)/system32">c_1252.nls</cdfile>
+	<cdfile installbase="$(CDOUTPUT)/system32">l_intl.nls</cdfile>
 
 	<installfile installbase="system32">c_037.nls</installfile>
 	<installfile installbase="system32">c_424.nls</installfile>

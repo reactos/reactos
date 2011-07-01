@@ -9,9 +9,13 @@
  *                  Created 01/11/98
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
+
+/* FUNCTIONS ****************************************************************/
 
 /*
  * @implemented
@@ -35,20 +39,30 @@ FindCloseChangeNotification (HANDLE hChangeHandle)
  */
 HANDLE
 WINAPI
-FindFirstChangeNotificationA (
-	LPCSTR	lpPathName,
-	BOOL	bWatchSubtree,
-	DWORD	dwNotifyFilter
-	)
+FindFirstChangeNotificationA(IN LPCSTR lpPathName,
+                             IN BOOL bWatchSubtree,
+                             IN DWORD dwNotifyFilter)
 {
-	PWCHAR PathNameW;
+    NTSTATUS Status;
+    ANSI_STRING PathNameString;
 
-   if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
-      return INVALID_HANDLE_VALUE;
+    RtlInitAnsiString(&PathNameString, lpPathName);
+    Status = RtlAnsiStringToUnicodeString(&(NtCurrentTeb()->StaticUnicodeString), &PathNameString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status != STATUS_BUFFER_OVERFLOW)
+        {
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+        }
+        else
+        {
+            BaseSetLastNTError(Status);
+        }
+        return INVALID_HANDLE_VALUE;
+    }
 
-   return FindFirstChangeNotificationW (PathNameW ,
-	                                        bWatchSubtree,
-	                                        dwNotifyFilter);
+    return FindFirstChangeNotificationW(NtCurrentTeb()->StaticUnicodeString.Buffer,
+                                        bWatchSubtree, dwNotifyFilter);
 }
 
 
@@ -219,7 +233,7 @@ ReadDirectoryChangesW(
       EventHandle,
       IoApcRoutine,
       CompletionRoutine, /* ApcContext */
-      lpOverlapped ? (PIO_STATUS_BLOCK)lpOverlapped->Internal : &IoStatus,
+      lpOverlapped ? (PIO_STATUS_BLOCK) lpOverlapped : &IoStatus,
       lpBuffer,
       nBufferLength,
       dwNotifyFilter,

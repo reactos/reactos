@@ -9,6 +9,7 @@
 	<file>cabinet_main.c</file>
 	<file>fci.c</file>
 	<file>fdi.c</file>
+	<file>stubs.c</file>
 	<file>cabinet.rc</file>
 	<library>wine</library>
 	<library>ntdll</library>

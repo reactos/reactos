@@ -380,7 +380,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
           Pattern |= (DIB_GetSourceIndex(PatternObj, (X + BrushOrigin.x + k) % PatternWidth, PatternY) << (31 - k));
       }
 
-      Dest = DIB_DoRop(Rop4, Dest, Source, Pattern);
+      Dest = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);
       Dest &= ~((1 << (31 - NoBits)) - 1);
       Dest |= *((PBYTE)DestBits) & ((1 << (31 - NoBits)) - 1);
 

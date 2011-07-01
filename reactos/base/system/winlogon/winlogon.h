@@ -40,6 +40,7 @@
 #include <accctrl.h>
 #include <aclapi.h>
 
+#include <reactos/undocuser.h>
 #include <reactos/winlogon.h>
 
 #include "setup.h"
@@ -203,6 +204,13 @@ StartScreenSaver(
 	IN PWLSESSION Session);
 
 /* winlogon.c */
+
+BOOL
+PlaySoundRoutine(
+	IN LPCWSTR FileName,
+	IN UINT Logon,
+	IN UINT Flags);
+
 BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,

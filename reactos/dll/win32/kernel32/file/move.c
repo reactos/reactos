@@ -418,7 +418,7 @@ MoveFileWithProgressW (
 		   /* Get the file name */
 		   memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
 		   hFile = FindFirstFileW(lpExistingFileName2,  &findBuffer);
-		   if (hFile == NULL) 
+		   if (hFile == INVALID_HANDLE_VALUE) 
 		       loop=FALSE;
 
 		   if (findBuffer.cFileName[0] == L'\0')
@@ -446,13 +446,13 @@ MoveFileWithProgressW (
 		       {					 
 		         size = wcslen(lpExistingFileName2)-4;
 		         FindClose(hFile);
+		         hFile = INVALID_HANDLE_VALUE;
+
 		         wcscpy( &lpExistingFileName2[size],L"\0");
 
 		         if (wcsncmp(lpExistingFileName,lpExistingFileName2,size))
 		         {  
 				   DWORD Attributes;
-
-		           FindClose(hFile);			     
 
 				   /* delete folder */					  				 
 				   TRACE("MoveFileWithProgressW : Delete folder : %S\n",lpDeleteFile);

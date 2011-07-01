@@ -5,7 +5,7 @@
  * PURPOSE:         Font
  * PROGRAMMER:
  */
-      
+
 /** Includes ******************************************************************/
 
 #include <win32k.h>
@@ -34,7 +34,7 @@ GreGetKerningPairs(
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -44,7 +44,7 @@ GreGetKerningPairs(
 
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -57,24 +57,37 @@ GreGetKerningPairs(
   {
      if (Count > NumPairs)
      {
-        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
-     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
      }
      ftGdiGetKerningPairs(FontGDI,Count,pKP);
 
      RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
 
-     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+     ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
   return Count;
 }
 
+/*
+ 
+  It is recommended that an application use the GetFontLanguageInfo function
+  to determine whether the GCP_DIACRITIC, GCP_DBCS, GCP_USEKERNING, GCP_LIGATE,
+  GCP_REORDER, GCP_GLYPHSHAPE, and GCP_KASHIDA values are valid for the
+  currently selected font. If not valid, GetCharacterPlacement ignores the
+  value.
+
+  M$ must use a preset "compiled in" support for each language based releases.
+  ReactOS uses FreeType, this will need to be supported. ATM this is hard coded
+  for GCPCLASS_LATIN!
+
+ */
 #if 0
 DWORD
 FASTCALL
@@ -86,16 +99,166 @@ GreGetCharacterPlacementW(
     LPGCP_RESULTSW pgcpw,
     DWORD dwFlags)
 {
+  GCP_RESULTSW gcpwSave;
+  UINT i, nSet, cSet;
+  INT *tmpDxCaretPos;
+  LONG Cx;
   SIZE Size = {0,0};
+ 
+  DPRINT1("GreGCPW Start\n");
 
-  if (!pgcpw)
+   if (!pgcpw)
+   {
+      if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+         return MAKELONG(Size.cx, Size.cy);
+      return 0;
+   }
+
+  DPRINT1("GreGCPW 1\n");
+
+  RtlCopyMemory(&gcpwSave, pgcpw, sizeof(GCP_RESULTSW));
+
+  cSet = nSet = nCount;
+
+  if ( nCount > gcpwSave.nGlyphs ) cSet = gcpwSave.nGlyphs;
+
+  /* GCP_JUSTIFY may only be used in conjunction with GCP_MAXEXTENT. */
+  if ( dwFlags & GCP_JUSTIFY) dwFlags |= GCP_MAXEXTENT;
+
+  if ( !gcpwSave.lpDx && gcpwSave.lpCaretPos )
+     tmpDxCaretPos = gcpwSave.lpCaretPos;
+  else
+     tmpDxCaretPos = gcpwSave.lpDx;  
+
+  if ( !GreGetTextExtentExW( hdc,
+                             pwsz,
+                             cSet,
+                             nMaxExtent,
+                            ((dwFlags & GCP_MAXEXTENT) ? (PULONG) &cSet : NULL),
+                            (PULONG) tmpDxCaretPos,
+                             &Size,
+                             0) )
   {
-     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 0))
-        return MAKELONG(Size.cx, Size.cy);
      return 0;
   }
-  UNIMPLEMENTED;
-  return 0;
+
+  DPRINT1("GreGCPW 2\n");
+
+  nSet = cSet;
+
+  if ( tmpDxCaretPos && nSet > 0)
+  {  
+      for (i = (nSet - 1); i > 0; i--)
+      {
+          tmpDxCaretPos[i] -= tmpDxCaretPos[i - 1];
+      }
+  }
+
+  if ( !(dwFlags & GCP_MAXEXTENT) || nSet )
+  {
+     if ( (dwFlags & GCP_USEKERNING) &&
+           ( gcpwSave.lpDx ||
+             gcpwSave.lpCaretPos ) &&
+           nSet >= 2 )
+     {
+        DWORD Count;
+        LPKERNINGPAIR pKP;
+        
+        Count = GreGetKerningPairs( hdc, 0, NULL);
+        if (Count)
+        {
+           pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
+           if (pKP)
+           {
+              if ( GreGetKerningPairs( hdc, Count, pKP) != Count)
+              {
+                 ExFreePoolWithTag( pKP, GDITAG_TEXT);
+                 return 0;
+              }
+
+              if ( (ULONG_PTR)(pKP) < ((ULONG_PTR)(pKP) + (ULONG_PTR)(Count * sizeof(KERNINGPAIR))) )
+              {
+                 DPRINT1("We Need to Do Something HERE!\n");
+              }
+
+              ExFreePoolWithTag( pKP, GDITAG_TEXT);
+
+              if ( dwFlags & GCP_MAXEXTENT )
+              {
+                 if ( Size.cx > nMaxExtent )
+                 {
+                    for (Cx = Size.cx; nSet > 0; nSet--)
+                    {
+                        Cx -= tmpDxCaretPos[nSet - 1];
+                        Size.cx = Cx;
+                        if ( Cx <= nMaxExtent ) break;
+                    }
+                 }
+                 if ( !nSet )
+                 {
+                    pgcpw->nGlyphs = 0;
+                    pgcpw->nMaxFit = 0;
+                    return 0;
+                 }
+              }
+           }
+        }
+     }
+
+     if ( (dwFlags & GCP_JUSTIFY) &&
+           ( gcpwSave.lpDx ||
+             gcpwSave.lpCaretPos ) &&
+           nSet )
+     {
+         DPRINT1("We Need to Do Something HERE 2!\n");
+     }
+
+     if ( gcpwSave.lpDx && gcpwSave.lpCaretPos )
+        RtlCopyMemory( gcpwSave.lpCaretPos, gcpwSave.lpDx, nSet * sizeof(LONG));
+
+     if ( gcpwSave.lpCaretPos )
+     {
+        int pos = 0;
+        i = 0;
+        if ( nSet > 0 )
+        {
+           do
+           {
+              Cx = gcpwSave.lpCaretPos[i];
+              gcpwSave.lpCaretPos[i] = pos;
+              pos += Cx;
+              ++i;
+           }
+           while ( i < nSet );
+        }
+     }
+
+     if ( gcpwSave.lpOutString )
+        RtlCopyMemory(gcpwSave.lpOutString, pwsz,  nSet * sizeof(WCHAR));
+
+     if ( gcpwSave.lpClass )
+        RtlFillMemory(gcpwSave.lpClass, nSet, GCPCLASS_LATIN);
+
+     if ( gcpwSave.lpOrder )
+     {
+        for (i = 0; i < nSet; i++)
+           gcpwSave.lpOrder[i] = i;
+     }
+
+     if ( gcpwSave.lpGlyphs )
+     {
+        if ( GreGetGlyphIndicesW( hdc, pwsz, nSet, gcpwSave.lpGlyphs, 0, 0) == GDI_ERROR )
+        {
+           nSet = 0;
+           Size.cx = 0;
+           Size.cy = 0;
+        }
+     }
+     pgcpw->nGlyphs = nSet;
+     pgcpw->nMaxFit = nSet;
+  }
+  DPRINT1("GreGCPW Exit\n");
+  return MAKELONG(Size.cx, Size.cy);
 }
 #endif
 
@@ -132,7 +295,7 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
         break;
 
      default:
-        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+        EngSetLastError(ERROR_BUFFER_OVERFLOW);
         return 0;
   }
   return Count;
@@ -323,7 +486,7 @@ NtGdiAddFontResourceW(
   SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
   if(!SafeFileName.Buffer)
   {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return 0;
   }
 
@@ -359,6 +522,14 @@ NtGdiGetCharacterPlacementW(
 {
     UNIMPLEMENTED;
     return 0;
+#if 0
+    return GreGetCharacterPlacementW( hdc,
+                                      pwsz,
+                                      nCount,
+                                      nMaxExtent,
+                                      pgcpw,
+                                      dwFlags);
+#endif
 }
 
 DWORD
@@ -396,7 +567,7 @@ NtGdiGetFontData(
   Dc = DC_LockDc(hDC);
   if (Dc == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
   pdcattr = Dc->pdcattr;
@@ -407,7 +578,7 @@ NtGdiGetFontData(
 
   if (TextObj == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
 
@@ -441,7 +612,7 @@ NtGdiGetFontUnicodeRanges(
   pDc = DC_LockDc(hdc);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -449,10 +620,10 @@ NtGdiGetFontUnicodeRanges(
 
   hFont = pdcattr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
-        
+
   if ( TextObj == NULL)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      goto Exit;
   }
   FontGdi = ObjToGDI(TextObj->Font, FONT);
@@ -461,10 +632,10 @@ NtGdiGetFontUnicodeRanges(
 
   if (Size && pgs)
   {
-     pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+     pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
      if (!pgsSafe)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         Size = 0;
         goto Exit;
      }
@@ -472,7 +643,7 @@ NtGdiGetFontUnicodeRanges(
      Size = ftGetFontUnicodeRanges( FontGdi, pgsSafe);
 
      if (Size)
-     {     
+     {
         _SEH2_TRY
         {
             ProbeForWrite(pgs, Size, 1);
@@ -486,7 +657,7 @@ NtGdiGetFontUnicodeRanges(
 
         if (!NT_SUCCESS(Status)) Size = 0;
      }
-     ExFreePoolWithTag(pgsSafe, TAG_GDITEXT);
+     ExFreePoolWithTag(pgsSafe, GDITAG_TEXT);
   }
 Exit:
   TEXTOBJ_UnlockText(TextObj);
@@ -515,16 +686,16 @@ NtGdiGetGlyphOutline(
   dc = DC_LockDc(hdc);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
 
   if (UnsafeBuf && cjBuf)
   {
-     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
+     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, GDITAG_TEXT);
      if (!pvBuf)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto Exit;
      }
   }
@@ -551,7 +722,7 @@ NtGdiGetGlyphOutline(
      }
      _SEH2_END
 
-     ExFreePoolWithTag(pvBuf, TAG_GDITEXT);
+     ExFreePoolWithTag(pvBuf, GDITAG_TEXT);
   }
 
   if (pgm)
@@ -570,7 +741,7 @@ NtGdiGetGlyphOutline(
 
   if (! NT_SUCCESS(Status))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      Ret = GDI_ERROR;
   }
 
@@ -596,7 +767,7 @@ NtGdiGetKerningPairs(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -606,7 +777,7 @@ NtGdiGetKerningPairs(HDC  hDC,
 
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
 
@@ -619,13 +790,13 @@ NtGdiGetKerningPairs(HDC  hDC,
   {
      if (Count > NumPairs)
      {
-        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
         return 0;
      }
-     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
      }
      ftGdiGetKerningPairs(FontGDI,Count,pKP);
@@ -641,10 +812,10 @@ NtGdiGetKerningPairs(HDC  hDC,
      _SEH2_END
      if (!NT_SUCCESS(Status))
      {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         Count = 0;
-     }     
-     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+     }
+     ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
   return Count;
 }
@@ -672,7 +843,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   pdcattr = dc->pdcattr;
@@ -681,7 +852,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   DC_UnlockDc(dc);
   if (!TextObj)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -690,13 +861,13 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   if (!otm) return Size;
   if (Size > Data)
   {
-      SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+      EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
       return 0;
   }
-  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
   if (!potm)
   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
   }
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
@@ -715,11 +886,11 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
 
      if (!NT_SUCCESS(Status))
      {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         Size = 0;
      }
   }
-  ExFreePoolWithTag(potm,TAG_GDITEXT);
+  ExFreePoolWithTag(potm,GDITAG_TEXT);
   return Size;
 }
 
@@ -753,7 +924,7 @@ NtGdiGetFontResourceInfoInternalW(
        dwType == 4 seems to be handled by gdi32 only */
     if (dwType == 4 || dwType > 5)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -765,7 +936,7 @@ NtGdiGetFontResourceInfoInternalW(
                                                  'RTSU');
     if (!SafeFileNames.Buffer)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -845,7 +1016,7 @@ NtGdiGetRealizationInfo(
   pDc = DC_LockDc(hdc);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   pdcattr = pDc->pdcattr;

@@ -29,22 +29,15 @@
 
 PBRUSH
 FASTCALL
-PEN_LockPen(HGDIOBJ hBMObj)
+PEN_ShareLockPen(HGDIOBJ hobj)
 {
-   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
-   else
-      return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
-}
+    if (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE &&
+        GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE)
+    {
+        return NULL;
+    }
 
-PBRUSH
-FASTCALL
-PEN_ShareLockPen(HGDIOBJ hBMObj)
-{
-   if (GDI_HANDLE_GET_TYPE(hBMObj) == GDI_OBJECT_TYPE_EXTPEN)
-      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_EXTPEN);
-   else
-      return GDIOBJ_ShareLockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
+    return (PBRUSH)GDIOBJ_ReferenceObjectByHandle(hobj, GDIObjType_BRUSH_TYPE);
 }
 
 HPEN APIENTRY
@@ -87,7 +80,7 @@ IntGdiExtCreatePen(
 
    if (!pbrushPen)
    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       DPRINT("Can't allocate pen\n");
       return 0;
    }
@@ -187,29 +180,25 @@ IntGdiExtCreatePen(
    return hPen;
 
 ExitCleanup:
-   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   EngSetLastError(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
-   PEN_UnlockPen(pbrushPen);
-   if (bOldStylePen)
-      PEN_FreePenByHandle(hPen);
-   else
-      PEN_FreeExtPenByHandle(hPen);
+   GDIOBJ_vDeleteObject(&pbrushPen->BaseObject);
    return NULL;
 }
 
 VOID FASTCALL
 IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color)
 {
-  PBRUSH pbrushPen;
+  PBRUSH pbrPen;
 
-  pbrushPen = PEN_LockPen(hPen);
-  if (pbrushPen)
+  pbrPen = PEN_ShareLockPen(hPen);
+  if (pbrPen)
   {
-    if (pbrushPen->flAttrs & GDIBRUSH_IS_SOLID)
+    if (pbrPen->flAttrs & GDIBRUSH_IS_SOLID)
     {
-      pbrushPen->BrushAttr.lbColor = Color & 0xFFFFFF;
+      pbrPen->BrushAttr.lbColor = Color & 0xFFFFFF;
     }
-    PEN_UnlockPen(pbrushPen);
+    PEN_ShareUnlockPen(pbrPen);
   }
 }
 
@@ -228,10 +217,10 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
 
          if (cbCount < cbRetCount) return 0;
 
-         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL && 
+         if ( (pbrushPen->ulPenStyle & PS_STYLE_MASK) == PS_NULL &&
                cbCount == sizeof(EXTLOGPEN))
          {
-            pExtLogPen = (PEXTLOGPEN)pBuffer; 
+            pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
             pExtLogPen->elpWidth = 0;
             pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
@@ -287,7 +276,7 @@ NtGdiCreatePen(
 {
    if ( PenStyle < PS_SOLID || PenStyle > PS_INSIDEFRAME )
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
    }
 
@@ -325,13 +314,13 @@ NtGdiExtCreatePen(
    if ((int)dwStyleCount < 0) return 0;
    if (dwStyleCount > 16)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
    if (dwStyleCount > 0)
    {
-      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), TAG_PENSTYLES);
+      pSafeStyle = ExAllocatePoolWithTag(NonPagedPool, dwStyleCount * sizeof(DWORD), GDITAG_PENSTYLE);
       if (!pSafeStyle)
       {
          SetLastNtError(ERROR_NOT_ENOUGH_MEMORY);
@@ -352,7 +341,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -371,7 +360,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
          return 0;
       }
    }
@@ -390,7 +379,7 @@ NtGdiExtCreatePen(
 
    if (!hPen && pSafeStyle)
    {
-      ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+      ExFreePoolWithTag(pSafeStyle, GDITAG_PENSTYLE);
    }
    return hPen;
 }

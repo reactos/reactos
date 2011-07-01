@@ -52,7 +52,7 @@ VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressTex
 VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	ULONG		i;
-	ULONG		ProgressBarWidth = (Right - Left) - 3;
+	ULONG		ProgressBarWidth = (Right - Left) - 4;
 
 	// First make sure the progress bar text fits
 	UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);

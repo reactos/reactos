@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Computer Description:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Full computer name:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(Default)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Workgroup:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(empty)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "To use the Network Identfication Wizard to join a domain and create a local user, click ""Network ID"".", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Network ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "To rename this computer or join a domain, click ""Change"".", IDC_STATIC, 6, 149, 170, 17
@@ -71,6 +71,7 @@ BEGIN
     1021 "Note: Only Administrators can change the identification of this computer."
     1022 "Note: The identification of the computer cannot be changed because:"
     1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+//Windows allows using these characters, although it displays a warning message. Forbidding the use of these characters means incompatibility with Windows.
     3210 "&Details >>"
     3220 "<< &Details"
     4000 "Information"

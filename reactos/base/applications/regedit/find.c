@@ -101,10 +101,10 @@ CompareData(
         {
             if (s_dwFlags & RSF_MATCHCASE)
                 return 2 == CompareString(LOCALE_SYSTEM_DEFAULT, 0,
-                    psz1, cch1, psz2, cch2);
+                                          psz1, cch1, psz2, cch2);
             else
-                return 2 == CompareString(LOCALE_SYSTEM_DEFAULT, 
-                    NORM_IGNORECASE, psz1, cch1, psz2, cch2);
+                return 2 == CompareString(LOCALE_SYSTEM_DEFAULT,
+                                          NORM_IGNORECASE, psz1, cch1, psz2, cch2);
         }
 
         for(i = 0; i <= cch1 - cch2; i++)
@@ -112,13 +112,13 @@ CompareData(
             if (s_dwFlags & RSF_MATCHCASE)
             {
                 if (2 == CompareString(LOCALE_SYSTEM_DEFAULT, 0,
-                    psz1 + i, cch2, psz2, cch2))
+                                       psz1 + i, cch2, psz2, cch2))
                     return TRUE;
             }
             else
             {
                 if (2 == CompareString(LOCALE_SYSTEM_DEFAULT,
-                    NORM_IGNORECASE, psz1 + i, cch2, psz2, cch2))
+                                       NORM_IGNORECASE, psz1 + i, cch2, psz2, cch2))
                     return TRUE;
             }
         }
@@ -134,7 +134,7 @@ int compare(const void *x, const void *y)
 }
 
 BOOL RegFindRecurse(
-    HKEY    hKey, 
+    HKEY    hKey,
     LPCTSTR pszSubKey,
     LPCTSTR pszValueName,
     LPTSTR *ppszFoundSubKey,
@@ -162,7 +162,7 @@ BOOL RegFindRecurse(
         pszValueName = s_empty;
 
     lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL,
-        &c, NULL, NULL, NULL, NULL);
+                              &c, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
         goto err;
     ppszNames = (LPTSTR *) malloc(c * sizeof(LPTSTR));
@@ -176,7 +176,7 @@ BOOL RegFindRecurse(
             goto err;
 
         s_cbName = MAX_PATH * sizeof(TCHAR);
-        lResult = RegEnumValue(hSubKey, i, s_szName, &s_cbName, NULL, NULL, 
+        lResult = RegEnumValue(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
                                NULL, &cb);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -206,8 +206,8 @@ BOOL RegFindRecurse(
         if (!fPast)
             continue;
 
-        if ((s_dwFlags & RSF_LOOKATVALUES) && 
-            CompareName(ppszNames[i], s_szFindWhat))
+        if ((s_dwFlags & RSF_LOOKATVALUES) &&
+                CompareName(ppszNames[i], s_szFindWhat))
         {
             *ppszFoundSubKey = _tcsdup(szSubKey);
             if (ppszNames[i][0] == 0)
@@ -218,19 +218,19 @@ BOOL RegFindRecurse(
         }
 
         lResult = RegQueryValueEx(hSubKey, ppszNames[i], NULL, &type,
-            NULL, &cb);
+                                  NULL, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
         pb = malloc(cb);
         if (pb == NULL)
             goto err;
         lResult = RegQueryValueEx(hSubKey, ppszNames[i], NULL, &type,
-            pb, &cb);
+                                  pb, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
 
-        if ((s_dwFlags & RSF_LOOKATDATA) && 
-            CompareData(type, (LPTSTR) pb, s_szFindWhat))
+        if ((s_dwFlags & RSF_LOOKATDATA) &&
+                CompareData(type, (LPTSTR) pb, s_szFindWhat))
         {
             *ppszFoundSubKey = _tcsdup(szSubKey);
             if (ppszNames[i][0] == 0)
@@ -252,7 +252,7 @@ BOOL RegFindRecurse(
     ppszNames = NULL;
 
     lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL);
+                              NULL, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
         goto err;
     ppszNames = (LPTSTR *) malloc(c * sizeof(LPTSTR));
@@ -266,7 +266,7 @@ BOOL RegFindRecurse(
             goto err;
 
         s_cbName = MAX_PATH * sizeof(TCHAR);
-        lResult = RegEnumKeyEx(hSubKey, i, s_szName, &s_cbName, NULL, NULL, 
+        lResult = RegEnumKeyEx(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
                                NULL, NULL);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -289,11 +289,11 @@ BOOL RegFindRecurse(
             goto err;
 
         if ((s_dwFlags & RSF_LOOKATKEYS) &&
-            CompareName(ppszNames[i], s_szFindWhat))
+                CompareName(ppszNames[i], s_szFindWhat))
         {
             *ppszFoundSubKey = malloc(
-                (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) * 
-                    sizeof(TCHAR));
+                                   (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) *
+                                   sizeof(TCHAR));
             if (*ppszFoundSubKey == NULL)
                 goto err;
             if (szSubKey[0])
@@ -313,7 +313,7 @@ BOOL RegFindRecurse(
         {
             LPTSTR psz = *ppszFoundSubKey;
             *ppszFoundSubKey = malloc(
-                (lstrlen(szSubKey) + lstrlen(psz) + 2) * sizeof(TCHAR));
+                                   (lstrlen(szSubKey) + lstrlen(psz) + 2) * sizeof(TCHAR));
             if (*ppszFoundSubKey == NULL)
                 goto err;
             if (szSubKey[0])
@@ -352,7 +352,7 @@ success:
 }
 
 BOOL RegFindWalk(
-    HKEY *  phKey, 
+    HKEY *  phKey,
     LPCTSTR pszSubKey,
     LPCTSTR pszValueName,
     LPTSTR *ppszFoundSubKey,
@@ -393,13 +393,13 @@ BOOL RegFindWalk(
             lstrcpyn(szKeyName, pch + 1, MAX_PATH);
             *pch = 0;
             lResult = RegOpenKeyEx(hBaseKey, szSubKey, 0, KEY_ALL_ACCESS,
-                &hSubKey);
+                                   &hSubKey);
             if (lResult != ERROR_SUCCESS)
                 return FALSE;
         }
 
         lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
-            NULL, NULL, NULL, NULL, NULL);
+                                  NULL, NULL, NULL, NULL, NULL);
         if (lResult != ERROR_SUCCESS)
             goto err;
 
@@ -415,7 +415,7 @@ BOOL RegFindWalk(
 
             s_cbName = MAX_PATH * sizeof(TCHAR);
             lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName,
-                NULL, NULL, NULL, NULL);
+                                    NULL, NULL, NULL, NULL);
             if (lResult == ERROR_NO_MORE_ITEMS)
             {
                 c = i;
@@ -443,11 +443,11 @@ BOOL RegFindWalk(
                 continue;
 
             if ((s_dwFlags & RSF_LOOKATKEYS) &&
-                CompareName(ppszNames[i], s_szFindWhat))
+                    CompareName(ppszNames[i], s_szFindWhat))
             {
                 *ppszFoundSubKey = malloc(
-                    (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) *
-                        sizeof(TCHAR));
+                                       (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) *
+                                       sizeof(TCHAR));
                 if (*ppszFoundSubKey == NULL)
                     goto err;
                 if (szSubKey[0])
@@ -462,13 +462,13 @@ BOOL RegFindWalk(
                 goto success;
             }
 
-            if (RegFindRecurse(hSubKey, ppszNames[i], NULL, 
+            if (RegFindRecurse(hSubKey, ppszNames[i], NULL,
                                ppszFoundSubKey, ppszFoundValueName))
             {
                 LPTSTR psz = *ppszFoundSubKey;
                 *ppszFoundSubKey = malloc(
-                    (lstrlen(szSubKey) + lstrlen(psz) + 2) * 
-                        sizeof(TCHAR));
+                                       (lstrlen(szSubKey) + lstrlen(psz) + 2) *
+                                       sizeof(TCHAR));
                 if (*ppszFoundSubKey == NULL)
                     goto err;
                 if (szSubKey[0])
@@ -605,23 +605,23 @@ static INT_PTR CALLBACK AbortFindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
     switch(uMsg)
     {
-        case WM_CLOSE:
-            s_bAbort = TRUE;
-            break;
+    case WM_CLOSE:
+        s_bAbort = TRUE;
+        break;
 
-        case WM_COMMAND:
-            switch(HIWORD(wParam))
+    case WM_COMMAND:
+        switch(HIWORD(wParam))
+        {
+        case BN_CLICKED:
+            switch(LOWORD(wParam))
             {
-                case BN_CLICKED:
-                    switch(LOWORD(wParam))
-                    {
-                        case IDCANCEL:
-                            s_bAbort = TRUE;
-                            break;
-                    }
-                    break;
+            case IDCANCEL:
+                s_bAbort = TRUE;
+                break;
             }
             break;
+        }
+        break;
     }
     return 0;
 }
@@ -652,7 +652,7 @@ BOOL FindNext(HWND hWnd)
 
     /* Create abort find dialog */
     s_hwndAbortDialog = CreateDialog(GetModuleHandle(NULL),
-        MAKEINTRESOURCE(IDD_FINDING), hWnd, AbortFindDialogProc);
+                                     MAKEINTRESOURCE(IDD_FINDING), hWnd, AbortFindDialogProc);
     if (s_hwndAbortDialog)
     {
         ShowWindow(s_hwndAbortDialog, SW_SHOW);
@@ -667,7 +667,7 @@ BOOL FindNext(HWND hWnd)
     EnableWindow(g_pChildWnd->hListWnd, FALSE);
     EnableWindow(g_pChildWnd->hAddressBarWnd, FALSE);
 
-    fSuccess = RegFindWalk(&hKeyRoot, pszKeyPath, pszValueName, 
+    fSuccess = RegFindWalk(&hKeyRoot, pszKeyPath, pszValueName,
                            &pszFoundSubKey, &pszFoundValueName);
 
     EnableWindow(hFrameWnd, TRUE);
@@ -703,107 +703,107 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
     switch(uMsg)
     {
-        case WM_INITDIALOG:
-            dwFlags = GetFindFlags();
+    case WM_INITDIALOG:
+        dwFlags = GetFindFlags();
 
-            hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
-            if (hControl)
-                SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATKEYS) ? TRUE : FALSE, 0);
+        hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
+        if (hControl)
+            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATKEYS) ? TRUE : FALSE, 0);
 
-            hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
-            if (hControl)
-                SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATVALUES) ? TRUE : FALSE, 0);
+        hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
+        if (hControl)
+            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATVALUES) ? TRUE : FALSE, 0);
 
-            hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
-            if (hControl)
-                SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATDATA) ? TRUE : FALSE, 0);
+        hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
+        if (hControl)
+            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATDATA) ? TRUE : FALSE, 0);
 
-            /* Match whole string */
-            hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
-            if (hControl)
-                SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_WHOLESTRING) ? TRUE : FALSE, 0);
+        /* Match whole string */
+        hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
+        if (hControl)
+            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_WHOLESTRING) ? TRUE : FALSE, 0);
 
-            /* Case sensitivity */
-            hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
-            if (hControl)
-                SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_MATCHCASE) ? TRUE : FALSE, 0);
+        /* Case sensitivity */
+        hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
+        if (hControl)
+            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_MATCHCASE) ? TRUE : FALSE, 0);
 
-            hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
-            if (hControl)
+        hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
+        if (hControl)
+        {
+            SetWindowText(hControl, s_szSavedFindValue);
+            SetFocus(hControl);
+            SendMessage(hControl, EM_SETSEL, 0, -1);
+        }
+        break;
+
+    case WM_CLOSE:
+        EndDialog(hDlg, 0);
+        break;
+
+    case WM_COMMAND:
+        switch(HIWORD(wParam))
+        {
+        case BN_CLICKED:
+            switch(LOWORD(wParam))
             {
-                SetWindowText(hControl, s_szSavedFindValue);
-                SetFocus(hControl);
-                SendMessage(hControl, EM_SETSEL, 0, -1);
+            case IDOK:
+                dwFlags = 0;
+
+                hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
+                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    dwFlags |= RSF_LOOKATKEYS;
+
+                hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
+                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    dwFlags |= RSF_LOOKATVALUES;
+
+                hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
+                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    dwFlags |= RSF_LOOKATDATA;
+
+                hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
+                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    dwFlags |= RSF_WHOLESTRING;
+
+                hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
+                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    dwFlags |= RSF_MATCHCASE;
+
+                SetFindFlags(dwFlags);
+
+                hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
+                if (hControl)
+                    GetWindowText(hControl, s_szFindWhat, sizeof(s_szFindWhat) / sizeof(s_szFindWhat[0]));
+                EndDialog(hDlg, 1);
+                break;
+
+            case IDCANCEL:
+                EndDialog(hDlg, 0);
+                break;
             }
             break;
 
-        case WM_CLOSE:
-            EndDialog(hDlg, 0);
-            break;
-
-        case WM_COMMAND:
-            switch(HIWORD(wParam))
+        case EN_CHANGE:
+            switch(LOWORD(wParam))
             {
-                case BN_CLICKED:
-                    switch(LOWORD(wParam))
-                    {
-                        case IDOK:
-                            dwFlags = 0;
-
-                            hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
-                            if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
-                                dwFlags |= RSF_LOOKATKEYS;
-
-                            hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
-                            if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
-                                dwFlags |= RSF_LOOKATVALUES;
-
-                            hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
-                            if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
-                                dwFlags |= RSF_LOOKATDATA;
-
-                            hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
-                            if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
-                                dwFlags |= RSF_WHOLESTRING;
-
-                            hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
-                            if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
-                                dwFlags |= RSF_MATCHCASE;
-
-                            SetFindFlags(dwFlags);
-
-                            hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
-                            if (hControl)
-                                GetWindowText(hControl, s_szFindWhat, sizeof(s_szFindWhat) / sizeof(s_szFindWhat[0]));
-                            EndDialog(hDlg, 1);
-                            break;
-
-                        case IDCANCEL:
-                            EndDialog(hDlg, 0);
-                            break;
-                    }
-                    break;
-
-                case EN_CHANGE:
-                    switch(LOWORD(wParam))
-                    {
-                        case IDC_FINDWHAT:
-                            GetWindowText((HWND) lParam, s_szSavedFindValue, sizeof(s_szSavedFindValue) / sizeof(s_szSavedFindValue[0]));
-                            hControl = GetDlgItem(hDlg, IDOK);
-                            if (hControl)
-                            {
-                                lStyle = GetWindowLongPtr(hControl, GWL_STYLE);
-                                if (s_szSavedFindValue[0])
-                                    lStyle &= ~WS_DISABLED;
-                                else
-                                    lStyle |= WS_DISABLED;
-                                SetWindowLongPtr(hControl, GWL_STYLE, lStyle);
-                                RedrawWindow(hControl, NULL, NULL, RDW_INVALIDATE);
-                            }
-                            break;
-                    }
+            case IDC_FINDWHAT:
+                GetWindowText((HWND) lParam, s_szSavedFindValue, sizeof(s_szSavedFindValue) / sizeof(s_szSavedFindValue[0]));
+                hControl = GetDlgItem(hDlg, IDOK);
+                if (hControl)
+                {
+                    lStyle = GetWindowLongPtr(hControl, GWL_STYLE);
+                    if (s_szSavedFindValue[0])
+                        lStyle &= ~WS_DISABLED;
+                    else
+                        lStyle |= WS_DISABLED;
+                    SetWindowLongPtr(hControl, GWL_STYLE, lStyle);
+                    RedrawWindow(hControl, NULL, NULL, RDW_INVALIDATE);
+                }
+                break;
             }
-            break;
+        }
+        break;
     }
     return iResult;
 }
@@ -811,15 +811,15 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 void FindDialog(HWND hWnd)
 {
     if (DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_FIND),
-        hWnd, FindDialogProc, 0) != 0)
+                       hWnd, FindDialogProc, 0) != 0)
     {
         if (!FindNext(hWnd))
         {
-           TCHAR msg[128], caption[128];
+            TCHAR msg[128], caption[128];
 
-           LoadString(hInst, IDS_FINISHEDFIND, msg, sizeof(msg)/sizeof(TCHAR));
-           LoadString(hInst, IDS_APP_TITLE, caption, sizeof(caption)/sizeof(TCHAR));
-           MessageBox(0, msg, caption, MB_ICONINFORMATION);
+            LoadString(hInst, IDS_FINISHEDFIND, msg, sizeof(msg)/sizeof(TCHAR));
+            LoadString(hInst, IDS_APP_TITLE, caption, sizeof(caption)/sizeof(TCHAR));
+            MessageBox(0, msg, caption, MB_ICONINFORMATION);
         }
     }
 }

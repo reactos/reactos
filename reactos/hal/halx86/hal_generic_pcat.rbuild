@@ -19,6 +19,9 @@
     		    <file>bussupp.c</file>
     	        <file>halpcat.c</file>
     	    </directory>
+			<if property="ARCH" value="i386">
+				<file>halinit.c</file>
+			</if>
 		</directory>
 	</module>
 </group>

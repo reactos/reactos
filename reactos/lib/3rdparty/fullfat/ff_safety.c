@@ -55,50 +55,113 @@
  **/
 
 #include "ff_safety.h"	// Íncludes ff_types.h
+#include <ntifs.h>
 
+#define TAG_FULLFAT 'FLUF'
+
+// Call your OS's CreateSemaphore function
+//
 void *FF_CreateSemaphore(void) {
-	// Call your OS's CreateSemaphore function
-	//
+    PKSEMAPHORE ProcessSemaphore;
 
-	// return pointer to semaphore
-	return NULL;	// Comment this out for your implementation.
+    /* Allocate some memory to store the semaphore */
+    ProcessSemaphore = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(KSEMAPHORE),
+                                             TAG_FULLFAT);
+    if (ProcessSemaphore)
+    {
+        /* Initialize it */
+        KeInitializeSemaphore(ProcessSemaphore,
+                              0,
+                              MAXLONG);
+    }
+
+    return ProcessSemaphore;
 }
 
+// Call your OS's PendSemaphore with the provided pSemaphore pointer.
+//
+// This should block indefinitely until the Semaphore
+// becomes available. (No timeout!)
+// If your OS doesn't do it for you, you should sleep
+// this thread until the Semaphore is available.
 void FF_PendSemaphore(void *pSemaphore) {
-	// Call your OS's PendSemaphore with the provided pSemaphore pointer.
-	//
-	// This should block indefinitely until the Semaphore
-	// becomes available. (No timeout!)
-	// If your OS doesn't do it for you, you should sleep
-	// this thread until the Semaphore is available.
-	pSemaphore = 0;
+    NTSTATUS Status;
+
+    /* Sanity check */
+    if (pSemaphore)
+    {
+        /* Wait for the sempaphore to become signaled */
+        Status = KeWaitForSingleObject(pSemaphore,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        if (NT_SUCCESS(Status))
+        {
+            if (Status != STATUS_SUCCESS)
+            {
+                // log an error?
+            }
+        }
+        else
+        {
+            // log an error?
+        }
+    }
 }
 
+// Call your OS's ReleaseSemaphore with the provided pSemaphore pointer.
+//
 void FF_ReleaseSemaphore(void *pSemaphore) {
-	// Call your OS's ReleaseSemaphore with the provided pSemaphore pointer.
-	//
 
-	//
-	pSemaphore = 0;
+    /* Sanity check */
+    if (pSemaphore)
+    {
+        /* Increment the semaphore */
+        KeReleaseSemaphore(pSemaphore,
+                           0,
+                           1,
+                           FALSE);
+    }
 }
 
+// Call your OS's DestroySemaphore with the provided pSemaphore pointer.
+//
 void FF_DestroySemaphore(void *pSemaphore) {
-	// Call your OS's DestroySemaphore with the provided pSemaphore pointer.
-	//
 
-	//
-	pSemaphore = 0;
+    /* Sanity check */
+    if (pSemaphore)
+    {
+        /* Free the semaphore memory */
+        ExFreePoolWithTag(pSemaphore,
+                          TAG_FULLFAT);
+    }
 }
 
+// FIXME: what do we do with this?
 void FF_Yield(void) {
 	// Call your OS's thread Yield function.
 	// If this doesn't work, then a deadlock will occur
 }
 
+// Call your OS's thread sleep function,
+// Sleep for TimeMs milliseconds
 void FF_Sleep(FF_T_UINT32 TimeMs) {
-	// Call your OS's thread sleep function,
-	// Sleep for TimeMs milliseconds
-	TimeMs = 0;
+    LARGE_INTEGER Interval;
+    NTSTATUS Status;
+
+    /* Calculate the interval */
+    Interval.QuadPart = -((LONGLONG)TimeMs * 10000);
+
+    /* Do the wait */
+    Status = KeDelayExecutionThread(KernelMode,
+                                    FALSE,
+                                    &Interval);
+    if (!NT_SUCCESS(Status))
+    {
+        // log an error?
+    }
 }
 
 

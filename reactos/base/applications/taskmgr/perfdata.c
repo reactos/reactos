@@ -60,7 +60,7 @@ BOOL PerfDataInitialize(void)
      * Get number of processors in the system
      */
     status = NtQuerySystemInformation(SystemBasicInformation, &SystemBasicInfo, sizeof(SystemBasicInfo), NULL);
-    if (status != NO_ERROR)
+    if (!NT_SUCCESS(status))
         return FALSE;
 
     /*
@@ -179,25 +179,25 @@ void PerfDataRefresh(void)
     ULONG                                      cwcUserName;
 
     /* Get new system time */
-    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
-    if (status != NO_ERROR)
+    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
+    if (!NT_SUCCESS(status))
         return;
 
     /* Get new CPU's idle time */
     status = NtQuerySystemInformation(SystemPerformanceInformation, &SysPerfInfo, sizeof(SysPerfInfo), NULL);
-    if (status != NO_ERROR)
+    if (!NT_SUCCESS(status))
         return;
 
     /* Get system cache information */
     status = NtQuerySystemInformation(SystemFileCacheInformation, &SysCacheInfo, sizeof(SysCacheInfo), NULL);
-    if (status != NO_ERROR)
+    if (!NT_SUCCESS(status))
         return;
 
     /* Get processor time information */
     SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(), 0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors);
     status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberOfProcessors, &ulSize);
 
-    if (status != NO_ERROR)
+    if (!NT_SUCCESS(status))
     {
         if (SysProcessorTimeInfo != NULL)
             HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);

@@ -183,7 +183,7 @@ co_IntGetScrollInfo(PWND Window, INT nBar, LPSCROLLINFO lpsi)
 
    if(!SBID_IS_VALID(nBar))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
       return FALSE;
    }
@@ -240,7 +240,7 @@ NEWco_IntGetScrollInfo(
 
   if (!SBID_IS_VALID(nBar))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
      return FALSE;
   }
@@ -292,7 +292,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 
    if(!SBID_IS_VALID(nBar))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", nBar);
       return FALSE;
    }
@@ -305,12 +305,12 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    if (lpsi->cbSize != sizeof(SCROLLINFO) &&
          lpsi->cbSize != (sizeof(SCROLLINFO) - sizeof(lpsi->nTrackPos)))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
    if (lpsi->fMask & ~(SIF_ALL | SIF_DISABLENOSCROLL))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
@@ -442,7 +442,7 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
 
    if(!SBID_IS_VALID(Bar))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", Bar);
       return FALSE;
    }
@@ -703,7 +703,7 @@ NtUserEnableScrollBar(
 
    if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", wSBflags);
       RETURN(FALSE);
    }
@@ -776,7 +776,7 @@ NtUserSetScrollBarInfo(
    Obj = SBOBJ_TO_SBID(idObject);
    if(!SBID_IS_VALID(Obj))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
       RETURN( FALSE);
    }
@@ -876,7 +876,7 @@ co_UserShowScrollBar(PWND Wnd, int wBar, DWORD bShow)
          Style = 0;
          break;
       default:
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          return( FALSE);
    }
 

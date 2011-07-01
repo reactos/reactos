@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "FINDSTR: Prints all lines of a file that contain a string.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
     /C  Count the number of lines that contain string\n\
     /I  Ignore case\n\
     /N  Number the displayed lines, starting at 1\n\

@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "Utilisation: shutdown [-?] [-l | -s | -r] [-f]\n\n\
-  Aucun argument ou -?\tAffichent ce message\n\
+  Aucun argument ou -?\tAffiche ce message\n\
   -l\t\t\tSe déconnecter\n\
   -s\t\t\tÉteindre l'ordinateur\n\
   -r\t\t\tÉteindre et redémarrer l'ordinateur\n\

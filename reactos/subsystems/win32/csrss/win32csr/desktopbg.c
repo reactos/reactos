@@ -65,6 +65,7 @@ DtbgWindowProc(HWND Wnd,
         return (LRESULT)TRUE;
 
     case WM_CREATE:
+        NtUserSetWindowFNID(Wnd, FNID_DESKTOP); // Anti-ReactOS hack!
     case WM_CLOSE:
         return 0;
 
@@ -135,7 +136,7 @@ DtbgInit(VOID)
      * Create the desktop window class
      */
     Class.cbSize = sizeof(WNDCLASSEXW);
-    Class.style = CS_GLOBALCLASS;
+    Class.style = 0; // Local Class
     Class.lpfnWndProc = DtbgWindowProc;
     Class.cbClsExtra = 0;
     Class.cbWndExtra = 0;

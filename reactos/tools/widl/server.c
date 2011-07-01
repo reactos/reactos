@@ -57,7 +57,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
 
     STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
     {
-        const var_t *func = stmt->u.var;
+        var_t *func = stmt->u.var;
         int has_full_pointer = is_full_pointer_function(func);
 
         /* check for a defined binding handle */
@@ -243,6 +243,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         fprintf(server, "\n");
 
         /* update proc_offset */
+        func->procstring_offset = *proc_offset;
         *proc_offset += get_size_procformatstring_func( func );
     }
 }
@@ -275,6 +276,42 @@ static void write_dispatchtable(type_t *iface)
     indent--;
     print_server("};\n");
     fprintf(server, "\n");
+}
+
+
+static void write_routinetable(type_t *iface)
+{
+    const statement_t *stmt;
+
+    print_server( "static const SERVER_ROUTINE %s_ServerRoutineTable[] =\n", iface->name );
+    print_server( "{\n" );
+    indent++;
+    STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
+    {
+        var_t *func = stmt->u.var;
+        if (is_local( func->attrs )) continue;
+        print_server( "(SERVER_ROUTINE)%s,\n", func->name );
+    }
+    indent--;
+    print_server( "};\n\n" );
+}
+
+
+static void write_serverinfo(type_t *iface)
+{
+    print_server( "static const MIDL_SERVER_INFO %s_ServerInfo =\n", iface->name );
+    print_server( "{\n" );
+    indent++;
+    print_server( "&%s_StubDesc,\n", iface->name );
+    print_server( "%s_ServerRoutineTable,\n", iface->name );
+    print_server( "__MIDL_ProcFormatString.Format,\n" );
+    print_server( "%s_FormatStringOffsetTable,\n", iface->name );
+    print_server( "0,\n" );
+    print_server( "0,\n" );
+    print_server( "0,\n" );
+    print_server( "0\n" );
+    indent--;
+    print_server( "};\n\n" );
 }
 
 
@@ -332,6 +369,7 @@ static void write_serverinterfacedecl(type_t *iface)
     if (endpoints) write_endpoints( server, iface->name, endpoints );
 
     print_server("static RPC_DISPATCH_TABLE %s_v%d_%d_DispatchTable;\n", iface->name, MAJORVERSION(ver), MINORVERSION(ver));
+    print_server( "static const MIDL_SERVER_INFO %s_ServerInfo;\n", iface->name );
     fprintf(server, "\n");
     print_server("static const RPC_SERVER_INTERFACE %s___RpcServerInterface =\n", iface->name );
     print_server("{\n");
@@ -354,7 +392,7 @@ static void write_serverinterfacedecl(type_t *iface)
         print_server("0,\n");
     }
     print_server("0,\n");
-    print_server("0,\n");
+    print_server("&%s_ServerInfo,\n", iface->name);
     print_server("0,\n");
     indent--;
     print_server("};\n");
@@ -383,22 +421,6 @@ static void init_server(void)
     print_server( "#ifndef DECLSPEC_HIDDEN\n");
     print_server( "#define DECLSPEC_HIDDEN\n");
     print_server( "#endif\n");
-    print_server( "\n");
-    write_exceptions( server );
-    print_server("\n");
-    print_server("struct __server_frame\n");
-    print_server("{\n");
-    print_server("    __DECL_EXCEPTION_FRAME\n");
-    print_server("    MIDL_STUB_MESSAGE _StubMsg;\n");
-    print_server("};\n");
-    print_server("\n");
-    print_server("static int __server_filter( struct __server_frame *__frame )\n");
-    print_server( "{\n");
-    print_server( "    return (__frame->code == STATUS_ACCESS_VIOLATION) ||\n");
-    print_server( "           (__frame->code == STATUS_DATATYPE_MISALIGNMENT) ||\n");
-    print_server( "           (__frame->code == RPC_X_BAD_STUB_DATA) ||\n");
-    print_server( "           (__frame->code == RPC_S_INVALID_BOUND);\n");
-    print_server( "}\n");
     print_server( "\n");
 }
 
@@ -433,8 +455,11 @@ static void write_server_stmts(const statement_list_t *stmts, int expr_eval_rout
                 print_server("#endif\n");
 
                 fprintf(server, "\n");
+                write_procformatstring_offsets( server, iface );
                 write_stubdescriptor(iface, expr_eval_routines);
                 write_dispatchtable(iface);
+                write_routinetable(iface);
+                write_serverinfo(iface);
             }
         }
     }
@@ -445,6 +470,23 @@ static void write_server_routines(const statement_list_t *stmts)
     unsigned int proc_offset = 0;
     int expr_eval_routines;
 
+    write_exceptions( server );
+    print_server("\n");
+    print_server("struct __server_frame\n");
+    print_server("{\n");
+    print_server("    __DECL_EXCEPTION_FRAME\n");
+    print_server("    MIDL_STUB_MESSAGE _StubMsg;\n");
+    print_server("};\n");
+    print_server("\n");
+    print_server("static int __server_filter( struct __server_frame *__frame )\n");
+    print_server( "{\n");
+    print_server( "    return (__frame->code == STATUS_ACCESS_VIOLATION) ||\n");
+    print_server( "           (__frame->code == STATUS_DATATYPE_MISALIGNMENT) ||\n");
+    print_server( "           (__frame->code == RPC_X_BAD_STUB_DATA) ||\n");
+    print_server( "           (__frame->code == RPC_S_INVALID_BOUND);\n");
+    print_server( "}\n");
+    print_server( "\n");
+
     write_formatstringsdecl(server, indent, stmts, need_stub);
     expr_eval_routines = write_expr_eval_routines(server, server_token);
     if (expr_eval_routines)
@@ -452,8 +494,6 @@ static void write_server_routines(const statement_list_t *stmts)
     write_user_quad_list(server);
 
     write_server_stmts(stmts, expr_eval_routines, &proc_offset);
-
-    fprintf(server, "\n");
 
     write_procformatstring(server, stmts, need_stub);
     write_typeformatstring(server, stmts, need_stub);
@@ -472,7 +512,7 @@ void write_server(const statement_list_t *stmts)
 
     if (do_win32 && do_win64)
     {
-        fprintf(server, "\n#ifndef _WIN64\n\n");
+        fprintf(server, "#ifndef _WIN64\n\n");
         pointer_size = 4;
         write_server_routines( stmts );
         fprintf(server, "\n#else /* _WIN64 */\n\n");

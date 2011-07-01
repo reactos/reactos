@@ -40,6 +40,15 @@ typedef ULONG DBREFCOUNT;
 typedef ULONG DB_UPARAMS;
 typedef LONG  DB_LPARAMS;
 typedef DWORD DBHASHVALUE;
+typedef struct {
+    SHORT year;
+    USHORT month;
+    USHORT day;
+    USHORT hour;
+    USHORT minute;
+    USHORT second;
+    ULONG fraction;
+} DBTIMESTAMP;
 
 #include "dbs.idl"
 

@@ -2,7 +2,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Window painting function
- *  FILE:             subsys/win32k/ntuser/painting.c
+ *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
  *  REVISION HISTORY:
  *       06/06/2001   Created (?)
@@ -141,7 +141,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
    UINT RgnType;
 
    if (Window->hrgnUpdate != NULL &&
-       Window->hrgnUpdate != (HRGN)1)
+       Window->hrgnUpdate != HRGN_WINDOW)
    {
       hRgnNonClient = IntCalcWindowRgn(Window, FALSE);
 
@@ -151,28 +151,28 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
        */
       if (hRgnNonClient == NULL)
       {
-         return (HRGN)1;
+         return HRGN_WINDOW;
       }
 
       hRgnWindow = IntCalcWindowRgn(Window, TRUE);
       if (hRgnWindow == NULL)
       {
-         REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         GreDeleteObject(hRgnNonClient);
+         return HRGN_WINDOW;
       }
 
       RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient,
                                 hRgnWindow, RGN_DIFF);
       if (RgnType == ERROR)
       {
-         REGION_FreeRgnByHandle(hRgnWindow);
-         REGION_FreeRgnByHandle(hRgnNonClient);
-         return (HRGN)1;
+         GreDeleteObject(hRgnWindow);
+         GreDeleteObject(hRgnNonClient);
+         return HRGN_WINDOW;
       }
       else if (RgnType == NULLREGION)
       {
-         REGION_FreeRgnByHandle(hRgnWindow);
-         REGION_FreeRgnByHandle(hRgnNonClient);
+         GreDeleteObject(hRgnWindow);
+         GreDeleteObject(hRgnNonClient);
          return NULL;
       }
 
@@ -187,14 +187,14 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
                              hRgnWindow, RGN_AND) == NULLREGION)
          {
             IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
-            REGION_FreeRgnByHandle(Window->hrgnUpdate);
+            GreDeleteObject(Window->hrgnUpdate);
             Window->hrgnUpdate = NULL;
             if (!(Window->state & WNDS_INTERNALPAINT))
                MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
          }
       }
 
-      REGION_FreeRgnByHandle(hRgnWindow);
+      GreDeleteObject(hRgnWindow);
 
       return hRgnNonClient;
    }
@@ -242,15 +242,9 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
             MsqDecPaintCountQueue(Wnd->head.pti->MessageQueue);
             co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
 
-            if ( (HANDLE) 1 != TempRegion &&
-                 NULL != TempRegion)
-            {
-               /* NOTE: The region can already be deleted! */
-               GDIOBJ_FreeObjByHandle(TempRegion, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
-            }
          }
 
-         if (Wnd->state & WNDS_ERASEBACKGROUND)
+         if (Wnd->state & WNDS_SENDERASEBACKGROUND)
          {
             if (Wnd->hrgnUpdate)
             {
@@ -258,9 +252,11 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
                                   Wnd->hrgnUpdate,
                                   DCX_CACHE|DCX_USESTYLE|DCX_INTERSECTRGN|DCX_KEEPCLIPRGN);
 
-               if (co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
+               Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+               // Kill the loop, so Clear before we send.
+               if (!co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                {
-                  Wnd->state &= ~WNDS_ERASEBACKGROUND;
+                  Wnd->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
                }
                UserReleaseDC(Wnd, hDC, FALSE);
             }
@@ -307,9 +303,9 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 /*
  * IntInvalidateWindows
  *
- * Internal function used by IntRedrawWindow.
+ * Internal function used by IntRedrawWindow, UserRedrawDesktop,
+ * co_WinPosSetWindowPos, IntValidateParent, co_UserRedrawWindow.
  */
-
 VOID FASTCALL
 IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 {
@@ -328,7 +324,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 
       hRgnClient = IntSysCreateRectRgnIndirect(&Wnd->rcClient);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnClient, RGN_AND);
-      REGION_FreeRgnByHandle(hRgnClient);
+      GreDeleteObject(hRgnClient);
    }
 
    /*
@@ -341,7 +337,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 
       hRgnWindow = IntSysCreateRectRgnIndirect(&Wnd->rcWindow);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);
-      REGION_FreeRgnByHandle(hRgnWindow);
+      GreDeleteObject(hRgnWindow);
    }
    else
    {
@@ -378,14 +374,14 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
                           hRgn, RGN_OR) == NULLREGION)
       {
          IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
-         REGION_FreeRgnByHandle(Wnd->hrgnUpdate);
+         GreDeleteObject(Wnd->hrgnUpdate);
          Wnd->hrgnUpdate = NULL;
       }
 
       if (Flags & RDW_FRAME)
          Wnd->state |= WNDS_SENDNCPAINT;
       if (Flags & RDW_ERASE)
-         Wnd->state |= WNDS_ERASEBACKGROUND;
+         Wnd->state |= WNDS_SENDERASEBACKGROUND;
 
       Flags |= RDW_FRAME;
    }
@@ -398,17 +394,17 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
                              hRgn, RGN_DIFF) == NULLREGION)
          {
             IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
-            REGION_FreeRgnByHandle(Wnd->hrgnUpdate);
+            GreDeleteObject(Wnd->hrgnUpdate);
             Wnd->hrgnUpdate = NULL;
          }
       }
 
       if (Wnd->hrgnUpdate == NULL)
-         Wnd->state &= ~WNDS_ERASEBACKGROUND;
+         Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
       if (Flags & RDW_NOFRAME)
          Wnd->state &= ~WNDS_SENDNCPAINT;
       if (Flags & RDW_NOERASE)
-         Wnd->state &= ~WNDS_ERASEBACKGROUND;
+         Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
    }
 
    if (Flags & RDW_INTERNALPAINT)
@@ -440,7 +436,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
             HRGN hRgnTemp = IntSysCreateRectRgn(0, 0, 0, 0);
             NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
             IntInvalidateWindows(Child, hRgnTemp, Flags);
-            REGION_FreeRgnByHandle(hRgnTemp);
+            GreDeleteObject(hRgnTemp);
          }
 
       }
@@ -540,7 +536,7 @@ co_UserRedrawWindow(
          hRgn = IntSysCreateRectRgn(0, 0, 0, 0);
          if (NtGdiCombineRgn(hRgn, UpdateRgn, NULL, RGN_COPY) == NULLREGION)
          {
-            REGION_FreeRgnByHandle(hRgn);
+            GreDeleteObject(hRgn);
             hRgn = NULL;
          }
          else
@@ -595,7 +591,7 @@ co_UserRedrawWindow(
 
    if (hRgn != NULL)
    {
-      REGION_FreeRgnByHandle(hRgn);
+      GreDeleteObject(hRgn);
    }
    DPRINT("co_UserRedrawWindow exit\n");
 
@@ -660,9 +656,7 @@ IntGetPaintMessage(
    MSG *Message,
    BOOL Remove)
 {
-   PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
-
-   if (!MessageQueue->PaintCount)
+   if (!Thread->cPaintsReady)
       return FALSE;
 
    if ((MsgFilterMin != 0 || MsgFilterMax != 0) &&
@@ -673,9 +667,9 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
-      MessageQueue->PaintCount = 0;
+      Thread->cPaintsReady = 0;
       return FALSE;
    }
 
@@ -694,13 +688,18 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 {
    PDESKTOP Desktop;
    PTHRDCARETINFO CaretInfo;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ActiveMessageQueue;
    HWND hWndCaret;
    PWND WndCaret;
 
    ASSERT_REFS_CO(Window);
 
-   Desktop = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->rpdesk;
-   CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
+   pti = PsGetCurrentThreadWin32Thread();
+   Desktop = pti->rpdesk;
+   ActiveMessageQueue = Desktop->ActiveMessageQueue;
+   if (!ActiveMessageQueue) return 0;
+   CaretInfo = ActiveMessageQueue->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 
    WndCaret = UserGetWindowObject(hWndCaret);
@@ -756,7 +755,7 @@ IntPrintWindow(
        xSrc = 0;
        ySrc = 0;
     }
-    
+
     // TODO: Setup Redirection for Print.
     return FALSE;
 
@@ -822,10 +821,10 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       Window->state &= ~WNDS_SENDNCPAINT;
       MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
       co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
-      if (hRgn != (HANDLE)1 && hRgn != NULL)
+      if (hRgn != HRGN_WINDOW && hRgn != NULL && GreIsHandleValid(hRgn))
       {
          /* NOTE: The region can already by deleted! */
-         GDIOBJ_FreeObjByHandle(hRgn, GDI_OBJECT_TYPE_REGION | GDI_OBJECT_TYPE_SILENT);
+         GreDeleteObject(hRgn);
       }
    }
 
@@ -857,10 +856,14 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    Window->state &= ~WNDS_INTERNALPAINT;
 
-   if (Window->state & WNDS_ERASEBACKGROUND)
+   if (Window->state & WNDS_SENDERASEBACKGROUND)
    {
-      Window->state &= ~WNDS_ERASEBACKGROUND;
+      Window->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
       Ps.fErase = !co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)Ps.hdc, 0);
+      if ( Ps.fErase )
+      {
+         Window->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+      }
    }
    else
    {
@@ -1046,7 +1049,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    else
    {
       /* Get the update region bounding box. */
-      if (Window->hrgnUpdate == (HRGN)1)
+      if (Window->hrgnUpdate == HRGN_WINDOW)
       {
          Rect = Window->rcClient;
       }
@@ -1085,7 +1088,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECTL));
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          RETURN(FALSE);
       }
    }
@@ -1141,7 +1144,7 @@ NtUserRedrawWindow(
       _SEH2_END
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(RtlNtStatusToDosError(Status));
+         EngSetLastError(RtlNtStatusToDosError(Status));
          RETURN( FALSE);
       }
    }
@@ -1151,7 +1154,7 @@ NtUserRedrawWindow(
                   RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN|RDW_NOCHILDREN) )
    {
       /* RedrawWindow fails only in case that flags are invalid */
-      SetLastWin32Error(ERROR_INVALID_FLAGS);
+      EngSetLastError(ERROR_INVALID_FLAGS);
       RETURN( FALSE);
    }
 
@@ -1227,14 +1230,14 @@ UserScrollDC(
       could not be copied, because it was not visible */
    if (hrgnUpdate || prcUpdate)
    {
-      HRGN hrgnOwn, hrgnVisible, hrgnTmp;
+      HRGN hrgnOwn, hrgnTmp;
+      PREGION prgnTmp;
 
       pDC = DC_LockDc(hDC);
       if (!pDC)
       {
          return FALSE;
       }
-      hrgnVisible = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;  // pDC->prgnRao?
 
       /* Begin with the shifted and then clipped scroll rect */
       rcDst = rcScroll;
@@ -1245,6 +1248,7 @@ UserScrollDC(
          hrgnOwn = hrgnUpdate;
          if (!NtGdiSetRectRgn(hrgnOwn, rcDst.left, rcDst.top, rcDst.right, rcDst.bottom))
          {
+            DC_UnlockDc(pDC);
             return ERROR;
          }
       }
@@ -1258,14 +1262,16 @@ UserScrollDC(
       NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_OR);
 
       /* Substract the part of the dest that was visible in source */
-      NtGdiCombineRgn(hrgnTmp, hrgnTmp, hrgnVisible, RGN_AND);
+      prgnTmp = RGNOBJAPI_Lock(hrgnTmp, NULL);
+      IntGdiCombineRgn(prgnTmp, prgnTmp, pDC->prgnVis, RGN_AND);
+      RGNOBJAPI_Unlock(prgnTmp);
       NtGdiOffsetRgn(hrgnTmp, dx, dy);
       Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
 
-	  /* DO NOT Unlock DC while messing with prgnVis! */
-	  DC_UnlockDc(pDC);
+      /* DO NOT Unlock DC while messing with prgnVis! */
+      DC_UnlockDc(pDC);
 
-      REGION_FreeRgnByHandle(hrgnTmp);
+      GreDeleteObject(hrgnTmp);
 
       if (prcUpdate)
       {
@@ -1274,7 +1280,7 @@ UserScrollDC(
 
       if (!hrgnUpdate)
       {
-         REGION_FreeRgnByHandle(hrgnOwn);
+         GreDeleteObject(hrgnOwn);
       }
    }
    else
@@ -1487,9 +1493,9 @@ NtUserScrollWindowEx(
       NtGdiOffsetRgn(hrgnTemp, dx, dy);
       NtGdiCombineRgn(hrgnTemp, hrgnTemp, hrgnClip, RGN_AND);
       co_UserRedrawWindow(Window, NULL, hrgnTemp, RDW_INVALIDATE | RDW_ERASE);
-      REGION_FreeRgnByHandle(hrgnClip);
+      GreDeleteObject(hrgnClip);
    }
-   REGION_FreeRgnByHandle(hrgnTemp);
+   GreDeleteObject(hrgnTemp);
 
    if (flags & SW_SCROLLCHILDREN)
    {
@@ -1562,7 +1568,7 @@ NtUserScrollWindowEx(
 CLEANUP:
    if (hrgnOwn && !hrgnUpdate)
    {
-      REGION_FreeRgnByHandle(hrgnOwn);
+      GreDeleteObject(hrgnOwn);
    }
 
    if (Window)
@@ -1954,7 +1960,7 @@ UserRealizePalette(HDC hdc)
       hWnd = IntWindowFromDC(hdc);
       if (hWnd) // Send broadcast if dc is associated with a window.
       {  // FYI: Thread locked in CallOneParam.
-         co_IntSendMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
+         UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
   return Ret;
@@ -2062,7 +2068,7 @@ NtUserPrintWindow(
     HDC  hdcBlt,
     UINT nFlags)
 {
-    PWND Window;   
+    PWND Window;
     BOOL Ret = FALSE;
 
     UserEnterExclusive();
@@ -2072,12 +2078,12 @@ NtUserPrintWindow(
        Window = UserGetWindowObject(hwnd);
        // TODO: Add Desktop and MessageBox check via FNID's.
        if ( Window )
-       { 
+       {
           /* Validate flags and check it as a mask for 0 or 1. */
           if ( (nFlags & PW_CLIENTONLY) == nFlags)
              Ret = IntPrintWindow( Window, hdcBlt, nFlags);
           else
-             SetLastWin32Error(ERROR_INVALID_PARAMETER);
+             EngSetLastError(ERROR_INVALID_PARAMETER);
        }
     }
 

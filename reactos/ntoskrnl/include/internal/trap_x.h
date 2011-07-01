@@ -21,6 +21,7 @@
 #endif
 #elif _MSC_VER
 #define UNREACHABLE __assume(0)
+#define __builtin_expect(a,b) (a)
 #else
 #define UNREACHABLE
 #endif
@@ -33,7 +34,7 @@ FORCEINLINE
 KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Anything else but Ring 0 is Ring 3 */
-    return (TrapFrame->SegCs & MODE_MASK);
+    return !!(TrapFrame->SegCs & MODE_MASK);
 }
 
 //

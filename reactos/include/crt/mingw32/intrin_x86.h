@@ -79,21 +79,36 @@ extern "C" {
 #define _alloca(s) __builtin_alloca(s)
 #endif
 
-/*** Atomic operations ***/
+/*** Memory barriers ***/
 
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
-#define _ReadWriteBarrier() __sync_synchronize()
-#else
-__INTRIN_INLINE void _MemoryBarrier(void)
+#ifdef _x86_64
+__INTRIN_INLINE void __faststorefence(void)
+{
+    long local;
+	__asm__ __volatile__("lock; orl $0, %0;" : : "m"(local));
+}
+#endif
+
+__INTRIN_INLINE void _mm_lfence(void)
+{
+	__asm__ __volatile__("lfence");
+}
+
+__INTRIN_INLINE void _mm_sfence(void)
+{
+	__asm__ __volatile__("sfence");
+}
+
+__INTRIN_INLINE void _ReadWriteBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
 }
-#define _ReadWriteBarrier() _MemoryBarrier()
-#endif
 
-/* BUGBUG: GCC only supports full barriers */
+/* GCC only supports full barriers */
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
+
+/*** Atomic operations ***/
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 
@@ -896,7 +911,7 @@ __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 __INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
-	__asm__("rorb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rorb %b[shift], %b[retval]" : [retval] "=qm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
@@ -1111,6 +1126,39 @@ __INTRIN_INLINE void __outwordstring(unsigned short const Port, const unsigned s
 __INTRIN_INLINE void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
 {
 	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+}
+
+__INTRIN_INLINE int _inp(unsigned short Port)
+{
+	return __inbyte(Port);
+}
+
+__INTRIN_INLINE unsigned short _inpw(unsigned short Port)
+{
+	return __inword(Port);
+}
+
+__INTRIN_INLINE unsigned long _inpd(unsigned short Port)
+{
+	return __indword(Port);
+}
+
+__INTRIN_INLINE int _outp(unsigned short Port, int databyte)
+{
+	__outbyte(Port, databyte);
+	return databyte;
+}
+
+__INTRIN_INLINE unsigned short _outpw(unsigned short Port, unsigned short dataword)
+{
+	__outword(Port, dataword);
+	return dataword;
+}
+
+__INTRIN_INLINE unsigned long _outpd(unsigned short Port, unsigned long dataword)
+{
+	__outdword(Port, dataword);
+	return dataword;
 }
 
 

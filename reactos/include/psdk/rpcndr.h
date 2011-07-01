@@ -17,18 +17,17 @@
  */
 
 #ifndef __RPCNDR_H_VERSION__
-/* FIXME: What version?   Perhaps something is better than nothing, however incorrect */
-#define __RPCNDR_H_VERSION__ ( 399 )
+#define __RPCNDR_H_VERSION__ ( 500 )
 #endif
 
 #ifndef __WINE_RPCNDR_H
 #define __WINE_RPCNDR_H
 
+#include <basetsd.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <basetsd.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -36,7 +35,6 @@ extern "C" {
 #pragma warning(disable:4255)
 #pragma warning(disable:4820)
 #endif
-
 #undef CONST_VTBL
 #ifdef CONST_VTABLE
 # define CONST_VTBL const
@@ -117,6 +115,9 @@ typedef unsigned char boolean;
 #define MIDL_memset(d,v,n) memset(d,v,n)
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
+
+void * __RPC_USER MIDL_user_allocate(SIZE_T);
+void __RPC_USER MIDL_user_free(void *);
 
 #define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
@@ -649,15 +650,13 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI unsigned char* RPC_ENTRY
   NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
-/* Note: this should return a CLIENT_CALL_RETURN, but calling convention for
- * returning structures/unions is different between Windows and gcc on i386. */
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrClientCall2( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 
 RPCRTAPI void RPC_ENTRY

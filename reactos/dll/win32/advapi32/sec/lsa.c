@@ -430,12 +430,15 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
                OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
                OUT PLSA_TRANSLATED_SID *Sids)
 {
-    LSAPR_TRANSLATED_SIDS TranslatedSids;
+    LSAPR_TRANSLATED_SIDS TranslatedSids = {0, NULL};
     ULONG MappedCount = 0;
     NTSTATUS Status;
 
     TRACE("(%p,0x%08x,%p,%p,%p)\n", PolicyHandle, Count, Names,
           ReferencedDomains, Sids);
+
+    if (ReferencedDomains == NULL || Sids == NULL)
+        return STATUS_INVALID_PARAMETER;
 
     RpcTryExcept
     {
@@ -443,7 +446,6 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
         *Sids = NULL;
 
         TranslatedSids.Entries = Count;
-        TranslatedSids.Sids = *Sids;
 
         Status = LsarLookupNames((LSAPR_HANDLE)PolicyHandle,
                                  Count,
@@ -458,9 +460,7 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         if (TranslatedSids.Sids != NULL)
-        {
             MIDL_user_free(TranslatedSids.Sids);
-        }
 
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
@@ -471,27 +471,56 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaLookupNames2(
-    LSA_HANDLE PolicyHandle,
-    ULONG Flags,
-    ULONG Count,
-    PLSA_UNICODE_STRING Names,
-    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-    PLSA_TRANSLATED_SID2 *Sids)
+LsaLookupNames2(IN LSA_HANDLE PolicyHandle,
+                IN ULONG Flags,
+                IN ULONG Count,
+                IN PLSA_UNICODE_STRING Names,
+                OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                OUT PLSA_TRANSLATED_SID2 *Sids)
 {
-    FIXME("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
-        Count, Names, ReferencedDomains, Sids);
-    if (Names != NULL && Count > 0)
+    LSAPR_TRANSLATED_SIDS_EX2 TranslatedSids = {0, NULL};
+    ULONG MappedCount = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
+          Count, Names, ReferencedDomains, Sids);
+
+    if (ReferencedDomains == NULL || Sids == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    RpcTryExcept
     {
-        *ReferencedDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_REFERENCED_DOMAIN_LIST));
-        *Sids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID2));
-        return STATUS_SOME_NOT_MAPPED;
+        *ReferencedDomains = NULL;
+        *Sids = NULL;
+
+        TranslatedSids.Entries = Count;
+
+        Status = LsarLookupNames3((LSAPR_HANDLE)PolicyHandle,
+                                  Count,
+                                  (PRPC_UNICODE_STRING)Names,
+                                  (PLSAPR_REFERENCED_DOMAIN_LIST *)ReferencedDomains,
+                                  &TranslatedSids,
+                                  LsapLookupWksta,
+                                  &MappedCount,
+                                  Flags,
+                                  2);
+
+        *Sids = (PLSA_TRANSLATED_SID2)TranslatedSids.Sids;
     }
-    return STATUS_NONE_MAPPED;
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TranslatedSids.Sids != NULL)
+            MIDL_user_free(TranslatedSids.Sids);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -761,6 +790,7 @@ LsaQueryDomainInformationPolicy(
     FIXME("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /*
  * @unimplemented
