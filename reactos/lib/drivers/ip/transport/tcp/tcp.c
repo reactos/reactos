@@ -278,6 +278,11 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                 TI_DbgPrint(DEBUG_TCP,
                             ("Completing shutdown request: %x %x\n",
                              Bucket->Request, Status));
+                
+                if (KeCancelTimer(&Connection->DisconnectTimer))
+                {
+                    DereferenceObject(Connection);
+                }
 
                 Bucket->Status = Status;
                 Bucket->Information = 0;
@@ -295,6 +300,49 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
        if (ClientInfo.Unlocked)
            UnlockObjectFromDpcLevel(Connection);
+}
+
+VOID NTAPI
+DisconnectTimeoutDpc(PKDPC Dpc,
+                     PVOID DeferredContext,
+                     PVOID SystemArgument1,
+                     PVOID SystemArgument2)
+{
+    PCONNECTION_ENDPOINT Connection = DeferredContext;
+    PLIST_ENTRY Entry;
+    PTDI_BUCKET Bucket;
+    
+    LockObjectAtDpcLevel(Connection);
+    
+    /* We timed out waiting for pending sends so force it to shutdown */
+    OskitTCPShutdown(Connection->SocketContext, FWRITE);
+    
+    while (!IsListEmpty(&Connection->SendRequest))
+    {
+        Entry = RemoveHeadList(&Connection->SendRequest);
+        
+        Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+        
+        Bucket->Information = 0;
+        Bucket->Status = STATUS_FILE_CLOSED;
+        
+        CompleteBucket(Connection, Bucket);
+    }
+    
+    while (!IsListEmpty(&Connection->ShutdownRequest)) {
+        Entry = RemoveHeadList( &Connection->ShutdownRequest );
+        
+        Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+        
+        Bucket->Status = STATUS_TIMEOUT;
+        Bucket->Information = 0;
+        
+        CompleteBucket(Connection, Bucket);
+    }
+    
+    UnlockObjectFromDpcLevel(Connection);
+    
+    DereferenceObject(Connection);
 }
 
 VOID ConnectionFree(PVOID Object) {
@@ -328,10 +376,12 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     InitializeListHead(&Connection->ReceiveRequest);
     InitializeListHead(&Connection->SendRequest);
     InitializeListHead(&Connection->ShutdownRequest);
+    
+    KeInitializeTimer(&Connection->DisconnectTimer);
+    KeInitializeDpc(&Connection->DisconnectDpc, DisconnectTimeoutDpc, Connection);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
-
 
     Connection->RefCount = 2;
     Connection->Free = ConnectionFree;
@@ -569,22 +619,61 @@ NTSTATUS TCPTranslateError( int OskitError ) {
 
     switch( OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
-    case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
-    case OSK_EADDRINUSE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break;
-    case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
-    case OSK_ECONNREFUSED: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_ECONNRESET: Status = STATUS_REMOTE_DISCONNECT; break;
-    case OSK_ECONNABORTED: Status = STATUS_LOCAL_DISCONNECT; break;
+    case OSK_EADDRNOTAVAIL:
+        Status = STATUS_INVALID_ADDRESS;
+        DbgPrint("OskitTCP: EADDRNOTAVAIL\n");
+        break;
+    case OSK_EADDRINUSE:
+        Status = STATUS_ADDRESS_ALREADY_EXISTS;
+        DbgPrint("OskitTCP: EADDRINUSE\n");
+        break;
+    case OSK_EAFNOSUPPORT:
+        Status = STATUS_INVALID_CONNECTION;
+        DbgPrint("OskitTCP: EAFNOSUPPORT\n");
+        break;
+    case OSK_ECONNREFUSED:
+        Status = STATUS_REMOTE_NOT_LISTENING;
+        DbgPrint("OskitTCP: ECONNREFUSED\n");
+        break;
+    case OSK_ECONNRESET:
+        Status = STATUS_REMOTE_DISCONNECT;
+        DbgPrint("OskitTCP: ECONNRESET\n");
+        break;
+    case OSK_ECONNABORTED:
+        Status = STATUS_LOCAL_DISCONNECT;
+        DbgPrint("OskitTCP: ECONNABORTED\n");
+        break;
     case OSK_EWOULDBLOCK:
     case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
-    case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
+    case OSK_EINVAL:
+        Status = STATUS_INVALID_PARAMETER;
+        DbgPrint("OskitTCP: EINVAL\n");
+        break;
     case OSK_ENOMEM:
-    case OSK_ENOBUFS: Status = STATUS_INSUFFICIENT_RESOURCES; break;
-    case OSK_ESHUTDOWN: Status = STATUS_FILE_CLOSED; break;
-    case OSK_EMSGSIZE: Status = STATUS_BUFFER_TOO_SMALL; break;
-    case OSK_ETIMEDOUT: Status = STATUS_TIMEOUT; break;
-    case OSK_ENETUNREACH: Status = STATUS_NETWORK_UNREACHABLE; break;
-    case OSK_EFAULT: Status = STATUS_ACCESS_VIOLATION; break;
+    case OSK_ENOBUFS:
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        DbgPrint("OskitTCP: ENOMEM/ENOBUFS\n");
+        break;
+    case OSK_ESHUTDOWN:
+        Status = STATUS_FILE_CLOSED;
+        DbgPrint("OskitTCP: ESHUTDOWN\n");
+        break;
+    case OSK_EMSGSIZE:
+        Status = STATUS_BUFFER_TOO_SMALL;
+        DbgPrint("OskitTCP: EMSGSIZE\n");
+        break;
+    case OSK_ETIMEDOUT:
+        Status = STATUS_TIMEOUT;
+        DbgPrint("OskitTCP: ETIMEDOUT\n");
+        break;
+    case OSK_ENETUNREACH:
+        Status = STATUS_NETWORK_UNREACHABLE;
+        DbgPrint("OskitTCP: ENETUNREACH\n");
+        break;
+    case OSK_EFAULT:
+        Status = STATUS_ACCESS_VIOLATION;
+        DbgPrint("OskitTCP: EFAULT\n");
+        break;
     default:
        DbgPrint("OskitTCP returned unhandled error code: %d\n", OskitError);
        Status = STATUS_INVALID_CONNECTION;
@@ -714,6 +803,7 @@ NTSTATUS TCPConnect
 NTSTATUS TCPDisconnect
 ( PCONNECTION_ENDPOINT Connection,
   UINT Flags,
+  PLARGE_INTEGER Timeout,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
@@ -722,6 +812,7 @@ NTSTATUS TCPDisconnect
     PTDI_BUCKET Bucket;
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
+    LARGE_INTEGER ActualTimeout;
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
@@ -738,6 +829,28 @@ NTSTATUS TCPDisconnect
             UnlockObject(Connection, OldIrql);
             
             return Status;
+        }
+        
+        /* Check if the timeout was 0 */
+        if (Timeout && Timeout->QuadPart == 0)
+        {
+            OskitTCPShutdown(Connection->SocketContext, FWRITE);
+            
+            while (!IsListEmpty(&Connection->SendRequest))
+            {
+                Entry = RemoveHeadList(&Connection->SendRequest);
+                
+                Bucket = CONTAINING_RECORD(Entry, TDI_BUCKET, Entry);
+                
+                Bucket->Information = 0;
+                Bucket->Status = STATUS_FILE_CLOSED;
+                
+                CompleteBucket(Connection, Bucket);
+            }
+            
+            UnlockObject(Connection, OldIrql);
+            
+            return STATUS_TIMEOUT;
         }
         
         /* Otherwise we wait for the send queue to be empty */
@@ -803,6 +916,19 @@ NTSTATUS TCPDisconnect
     Bucket->Request.RequestContext = Context;
 
     InsertTailList(&Connection->ShutdownRequest, &Bucket->Entry);
+    
+    /* Use the timeout specified or 1 second if none was specified */
+    if (Timeout)
+    {
+        ActualTimeout = *Timeout;
+    }
+    else
+    {
+        ActualTimeout.QuadPart = -1000000;
+    }
+    
+    ReferenceObject(Connection);
+    KeSetTimer(&Connection->DisconnectTimer, ActualTimeout, &Connection->DisconnectDpc);
 
     UnlockObject(Connection, OldIrql);
 

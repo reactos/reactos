@@ -270,6 +270,10 @@ typedef struct _CONNECTION_ENDPOINT {
 
     /* Signals */
     UINT    SignalState;       /* Active signals from oskit */
+    
+    /* Disconnect Timer */
+    KTIMER DisconnectTimer;
+    KDPC DisconnectDpc;
 
     struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;

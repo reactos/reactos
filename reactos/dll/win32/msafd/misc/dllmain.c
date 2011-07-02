@@ -1696,7 +1696,7 @@ WSPShutdown(SOCKET Handle,
             break;
     }
 
-    DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(-1);
+    DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(-1000000);
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
