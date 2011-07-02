@@ -605,6 +605,7 @@ NTSTATUS TCPConnect
     SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
+    TA_IP_ADDRESS LocalAddress;
     PTDI_BUCKET Bucket;
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
@@ -652,6 +653,8 @@ NTSTATUS TCPConnect
     {
         AddressToBind.sin_addr.s_addr = Connection->AddressFile->Address.Address.IPv4Address;
     }
+    
+    AddressToBind.sin_port = Connection->AddressFile->Port;
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
@@ -659,29 +662,47 @@ NTSTATUS TCPConnect
                         sizeof(AddressToBind) ) );
 
     if (NT_SUCCESS(Status)) {
-        memcpy( &AddressToConnect.sin_addr,
-                &RemoteAddress.Address.IPv4Address,
-                sizeof(AddressToConnect.sin_addr) );
-        AddressToConnect.sin_port = RemotePort;
-
-        Status = TCPTranslateError
-            ( OskitTCPConnect( Connection->SocketContext,
-                               &AddressToConnect,
-                               sizeof(AddressToConnect) ) );
-
-        if (Status == STATUS_PENDING)
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
         {
-            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-            if( !Bucket )
+            /* We did, so we need to copy back the port */
+            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
+            if (NT_SUCCESS(Status))
             {
-               UnlockObject(Connection, OldIrql);
-               return STATUS_NO_MEMORY;
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                    
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
             }
+        }
+        
+        if (NT_SUCCESS(Status))
+        {
+            memcpy( &AddressToConnect.sin_addr,
+                   &RemoteAddress.Address.IPv4Address,
+                   sizeof(AddressToConnect.sin_addr) );
+            AddressToConnect.sin_port = RemotePort;
             
-            Bucket->Request.RequestNotifyObject = (PVOID)Complete;
-            Bucket->Request.RequestContext = Context;
-			
-            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+            Status = TCPTranslateError
+            ( OskitTCPConnect( Connection->SocketContext,
+                              &AddressToConnect,
+                              sizeof(AddressToConnect) ) );
+            
+            if (Status == STATUS_PENDING)
+            {
+                Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+                if( !Bucket )
+                {
+                    UnlockObject(Connection, OldIrql);
+                    return STATUS_NO_MEMORY;
+                }
+                
+                Bucket->Request.RequestNotifyObject = (PVOID)Complete;
+                Bucket->Request.RequestContext = Context;
+                
+                InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+            }
         }
     }
 

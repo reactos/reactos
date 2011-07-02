@@ -117,7 +117,7 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 void InitializeSocketFlags(struct socket *so)
 {
     so->so_state |= SS_NBIO;
-    so->so_options |= SO_DONTROUTE | SO_REUSEPORT;
+    so->so_options |= SO_DONTROUTE;
     so->so_snd.sb_flags |= SB_SEL;
     so->so_rcv.sb_flags |= SB_SEL;
 }

@@ -739,10 +739,16 @@ NTSTATUS DispTdiQueryInformation(
           case TDI_CONNECTION_FILE:
             Endpoint =
 				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+                
+            Address->TAAddressCount = 1;
+            Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+            Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+            Address->Address[0].Address[0].sin_port = Endpoint->AddressFile->Port;
+            Address->Address[0].Address[0].in_addr = Endpoint->AddressFile->Address.Address.IPv4Address;
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
-			return TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
+            return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));

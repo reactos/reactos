@@ -194,7 +194,10 @@ VOID AddrFileFree(
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
-    TCPFreePort( AddrFile->Port );
+    if (AddrFile->Port)
+    {
+        TCPFreePort(AddrFile->Port);
+    }
     break;
 
   case IPPROTO_UDP:
@@ -277,15 +280,25 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-      AddrFile->Port =
-          TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-
-      if ((Address->Address[0].Address[0].sin_port &&
-           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
-           AddrFile->Port == 0xffff)
+      if (Address->Address[0].Address[0].sin_port)
       {
-          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-          return STATUS_ADDRESS_ALREADY_EXISTS;
+          /* The client specified an explicit port so we force a bind to this */
+          AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+          
+          /* Check for bind success */
+          if (AddrFile->Port == 0xffff)
+          {
+              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+              return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+          
+          /* Sanity check */
+          ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
+      }
+      else
+      {
+          /* The client wants an unspecified port so we wait to see what the TCP library gives us */
+          AddrFile->Port = 0;
       }
 
       AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
