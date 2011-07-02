@@ -158,9 +158,6 @@ int OskitTCPRecv( void *connection,
     
     if (!connection)
         return OSK_ESHUTDOWN;
-    
-    if (so->so_state & SS_CANTRCVMORE)
-        return OSK_ESHUTDOWN;
 
     OS_DbgPrint(OSK_MID_TRACE,
                 ("so->so_state %x\n", so->so_state));
@@ -302,9 +299,6 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     struct iovec iov;
 
     if (!socket)
-        return OSK_ESHUTDOWN;
-    
-    if (so->so_state & SS_CANTSENDMORE)
         return OSK_ESHUTDOWN;
 
     iov.iov_len = Len;
