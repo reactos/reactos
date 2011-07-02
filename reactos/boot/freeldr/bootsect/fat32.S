@@ -153,6 +153,7 @@ LoadExtraBootCode:
 // EAX has logical sector number to read
 // CX has number of sectors to read
 ReadSectors:
+    push es
     cmp  eax, dword ptr ds:[BiosCHSDriveSize]        // Check if they are reading a sector outside CHS range
     jae  ReadSectorsLBA                        // Yes - go to the LBA routine
                                                 // If at all possible we want to use LBA routines because
@@ -194,13 +195,6 @@ ReadSectorsSetupDiskAddressPacket:
     mov  dl, byte ptr BP_REL(BootDrive)                // Drive number
     mov  ah, HEX(42)                                // Int 13h, AH = 42h - Extended Read
     int  HEX(13)                                // Call BIOS
-
-    /* This code "fixes" loading the MSVC built kernel */
-    pushad
-    mov  si, offset msgNull
-    call PutChars
-    popad
-
     jc   PrintDiskError                        // If the read failed then abort
 
     add  sp, 16                            // Remove disk address packet from stack
@@ -219,6 +213,7 @@ ReadSectorsSetupDiskAddressPacket:
     sub  cx, word ptr ds:[LBASectorsRead]
     jnz  ReadSectorsLBA                        // Read next sector
 
+    pop es
     ret
 
 LBASectorsRead:
@@ -309,8 +304,6 @@ msgFileSystemError:
     .ascii "File system error", CR, LF, NUL
 msgAnyKey:
     .ascii "Press any key to restart", CR, LF, NUL
-msgNull:
-    .ascii NUL
 
 .org 509 // Pad to 509 bytes
 
@@ -473,21 +466,21 @@ GetActiveFatOffset:
 
 LoadFatSector:
     push  ecx
+
+    mov   bx, HEX(9000)                            // We will load it to [9000:0000h]
+    mov   es, bx
+
     // EAX holds logical FAT sector number
     // Check if we have already loaded it
     cmp   eax, dword ptr ds:[FatSectorInCache]
     je    LoadFatSectorAlreadyLoaded
 
     mov   dword ptr ds:[FatSectorInCache], eax
-    mov   bx, HEX(7000)
-    mov   es, bx
-    xor   bx, bx                                // We will load it to [7000:0000h]
+    xor   bx, bx
     mov   cx, 1
     call  ReadSectors
 
 LoadFatSectorAlreadyLoaded:
-    mov   bx, HEX(7000)
-    mov   es, bx
     pop   ecx
     mov   eax, dword ptr es:[ecx]                    // Get FAT entry
     and   eax, HEX(0fffffff)                        // Mask off reserved bits
