@@ -184,6 +184,7 @@ typedef struct _AFD_FCB {
     UINT ConnSeq;
     USHORT DisconnectFlags;
     BOOLEAN DisconnectPending;
+    LARGE_INTEGER DisconnectTimeout;
     PTRANSPORT_ADDRESS LocalAddress, RemoteAddress;
     PTDI_CONNECTION_INFORMATION AddressFrom, ConnectCallInfo, ConnectReturnInfo;
     AFD_TDI_OBJECT AddressFile, Connection;

@@ -603,8 +603,6 @@ static
 NTSTATUS
 DoDisconnect(PAFD_FCB FCB)
 {
-    PAFD_DISCONNECT_INFO DisReq;
-    IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     
     ASSERT(FCB->DisconnectPending);
@@ -621,9 +619,9 @@ DoDisconnect(PAFD_FCB FCB)
 
     Status = TdiDisconnect(&FCB->DisconnectIrp.InFlightRequest,
                            FCB->Connection.Object,
-                           &DisReq->Timeout,
+                           &FCB->DisconnectTimeout,
                            FCB->DisconnectFlags,
-                           &Iosb,
+                           &FCB->DisconnectIrp.Iosb,
                            DisconnectComplete,
                            FCB,
                            FCB->ConnectCallInfo,
@@ -700,6 +698,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
         
         FCB->DisconnectFlags = Flags;
+        FCB->DisconnectTimeout = DisReq->Timeout;
         FCB->DisconnectPending = TRUE;
         
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
