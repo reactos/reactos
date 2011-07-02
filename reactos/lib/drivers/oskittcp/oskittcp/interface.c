@@ -293,7 +293,6 @@ int OskitTCPClose( void *socket ) {
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
-    struct socket *so = socket;
     int error;
     struct uio uio;
     struct iovec iov;
