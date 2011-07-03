@@ -13,7 +13,7 @@
 #include <internal/i386/asmmacro.S>
 
 EXTERN _MmGrowKernelStack@4:PROC
-EXTERN _KeUserCallbackDispatcher:PROC
+EXTERN _KeUserCallbackDispatcher:DWORD
 EXTERN @KiServiceExit@8:PROC
 EXTERN _KeGetCurrentIrql@0:PROC
 EXTERN _KeBugCheckEx@20:PROC
@@ -190,7 +190,7 @@ DontBias:
 
     /* Get user-mode dispatcher address and set it as EIP */
 SetEip:
-    mov eax, _KeUserCallbackDispatcher
+    mov eax, dword ptr [_KeUserCallbackDispatcher]
     mov [esp+KTRAP_FRAME_EIP], eax
 
     /* Set the exception list */
