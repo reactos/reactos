@@ -2365,9 +2365,8 @@ LdrAddRefDll(IN ULONG Flags,
     {
         /* Acquire the lock */
         Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        if (!NT_SUCCESS(Status)) goto quickie;
         Locked = TRUE;
-
-		if (!NT_SUCCESS(Status)) goto quickie;
     }
 
 	/* Get this module's data table entry */
