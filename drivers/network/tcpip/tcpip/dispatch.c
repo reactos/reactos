@@ -729,120 +729,130 @@ NTSTATUS DispTdiQueryInformation(
  *     Status of operation
  */
 {
-  PTDI_REQUEST_KERNEL_QUERY_INFORMATION Parameters;
-  PTRANSPORT_CONTEXT TranContext;
-  PIO_STACK_LOCATION IrpSp;
+    PTDI_REQUEST_KERNEL_QUERY_INFORMATION Parameters;
+    PTRANSPORT_CONTEXT TranContext;
+    PIO_STACK_LOCATION IrpSp;
 
-  TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiQueryInformation] Called\n"));
+    TI_DbgPrint(DEBUG_IRP, ("[TCPIP, DispTdiQueryInformation] Called\n"));
 
-  IrpSp = IoGetCurrentIrpStackLocation(Irp);
-  Parameters = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    Parameters = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
 
-  TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_PARAMETER;
-  }
+    TranContext = IrpSp->FileObject->FsContext;
+    if (!TranContext)
+    {
+        TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
-  switch (Parameters->QueryType)
-  {
-    case TDI_QUERY_ADDRESS_INFO:
-      {
-        PTDI_ADDRESS_INFO AddressInfo;
-        PADDRESS_FILE AddrFile;
-        PTA_IP_ADDRESS Address;
-        PCONNECTION_ENDPOINT Endpoint = NULL;
+    switch (Parameters->QueryType)
+    {
+        case TDI_QUERY_ADDRESS_INFO:
+        {
+            PTDI_ADDRESS_INFO AddressInfo;
+            PADDRESS_FILE AddrFile;
+            PTA_IP_ADDRESS Address;
+            PCONNECTION_ENDPOINT Endpoint = NULL;
 
+            if (MmGetMdlByteCount(Irp->MdlAddress) <
+                (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
+                    sizeof(TDI_ADDRESS_IP)))
+            {
+                TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+                return STATUS_BUFFER_TOO_SMALL;
+            }
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
-             sizeof(TDI_ADDRESS_IP))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
-          return STATUS_BUFFER_TOO_SMALL;
+            AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
+	        Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
+
+            switch ((ULONG_PTR)IrpSp->FileObject->FsContext2)
+            {
+                case TDI_TRANSPORT_ADDRESS_FILE:
+                    AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+
+		            Address->TAAddressCount = 1;
+		            Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+		            Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+		            Address->Address[0].Address[0].sin_port = AddrFile->Port;
+		            Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;
+		            RtlZeroMemory(
+			            &Address->Address[0].Address[0].sin_zero,
+			            sizeof(Address->Address[0].Address[0].sin_zero));
+		            return STATUS_SUCCESS;
+
+                case TDI_CONNECTION_FILE:
+                    Endpoint = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+                    
+                    Address->TAAddressCount = 1;
+                    Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+                    Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+                    Address->Address[0].Address[0].sin_port = Endpoint->AddressFile->Port;
+                    Address->Address[0].Address[0].in_addr = Endpoint->AddressFile->Address.Address.IPv4Address;
+		            
+                    RtlZeroMemory(
+			            &Address->Address[0].Address[0].sin_zero,
+			            sizeof(Address->Address[0].Address[0].sin_zero));
+
+		            return STATUS_SUCCESS;
+
+                default:
+                    TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+                    return STATUS_INVALID_PARAMETER;
+            }
         }
 
-        AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
-		Address = (PTA_IP_ADDRESS)&AddressInfo->Address;
+        case TDI_QUERY_CONNECTION_INFO:
+        {
+            PTDI_CONNECTION_INFORMATION AddressInfo;
+            PADDRESS_FILE AddrFile;
+            PCONNECTION_ENDPOINT Endpoint = NULL;
 
-        switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-          case TDI_TRANSPORT_ADDRESS_FILE:
-            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            if (MmGetMdlByteCount(Irp->MdlAddress) <
+                (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
+                    sizeof(PVOID))) {
+                TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+                return STATUS_BUFFER_TOO_SMALL;
+            }
 
-			Address->TAAddressCount = 1;
-			Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
-			Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-			Address->Address[0].Address[0].sin_port = AddrFile->Port;
-			Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;
-			RtlZeroMemory(
-				&Address->Address[0].Address[0].sin_zero,
-				sizeof(Address->Address[0].Address[0].sin_zero));
-			return STATUS_SUCCESS;
+            AddressInfo = (PTDI_CONNECTION_INFORMATION)
+                MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-          case TDI_CONNECTION_FILE:
-            Endpoint =
-				(PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-			RtlZeroMemory(
-				&Address->Address[0].Address[0].sin_zero,
-				sizeof(Address->Address[0].Address[0].sin_zero));
-			return TCPGetSockAddress( Endpoint, (PTRANSPORT_ADDRESS)Address, FALSE );
+            switch ((ULONG_PTR)IrpSp->FileObject->FsContext2)
+            {
+                case TDI_TRANSPORT_ADDRESS_FILE:
+                    AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+                    Endpoint = AddrFile ? AddrFile->Connection : NULL;
+                    break;
 
-          default:
-            TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
-            return STATUS_INVALID_PARAMETER;
-        }
-      }
+                case TDI_CONNECTION_FILE:
+                    Endpoint = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+                    break;
 
-    case TDI_QUERY_CONNECTION_INFO:
-      {
-        PTDI_CONNECTION_INFORMATION AddressInfo;
-        PADDRESS_FILE AddrFile;
-        PCONNECTION_ENDPOINT Endpoint = NULL;
+                default:
+                    TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+                    return STATUS_INVALID_PARAMETER;
+            }
 
-        if (MmGetMdlByteCount(Irp->MdlAddress) <
-            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
-             sizeof(PVOID))) {
-          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
-          return STATUS_BUFFER_TOO_SMALL;
+            if (!Endpoint)
+            {
+                TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
         }
 
-        AddressInfo = (PTDI_CONNECTION_INFORMATION)
-          MmGetSystemAddressForMdl(Irp->MdlAddress);
+        case TDI_QUERY_MAX_DATAGRAM_INFO:
+        {
+            PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-        switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-          case TDI_TRANSPORT_ADDRESS_FILE:
-            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-            Endpoint = AddrFile ? AddrFile->Connection : NULL;
-            break;
+            MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
 
-          case TDI_CONNECTION_FILE:
-            Endpoint =
-              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-            break;
-
-          default:
-            TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
-            return STATUS_INVALID_PARAMETER;
+            return STATUS_SUCCESS;
         }
+    }
 
-        if (!Endpoint) {
-          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
-      }
-
-      case TDI_QUERY_MAX_DATAGRAM_INFO:
-      {
-         PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
-
-         MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
-
-         return STATUS_SUCCESS;
-     }
-  }
-
-  return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 

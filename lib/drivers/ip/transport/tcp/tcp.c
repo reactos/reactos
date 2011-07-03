@@ -110,10 +110,11 @@ NTSTATUS TCPClose
     PVOID Socket;
 
     LockObject(Connection, &OldIrql);
+
+    DbgPrint("[IP, TCPClose] Called for Connection( 0x%x )->SocketConext( 0x%x )\n", Connection, Connection->SocketContext);
+
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
-
-    DbgPrint("[IP, TCPClose] Called\n");
 
     /* We should not be associated to an address file at this point */
     ASSERT(!Connection->AddressFile);
@@ -122,6 +123,9 @@ NTSTATUS TCPClose
     if (Socket)
     {
         FlushAllQueues(Connection, STATUS_CANCELLED);
+
+        DbgPrint("[IP, TCPClose] Socket (pcb) = 0x%x\n", Socket);
+
         LibTCPClose(Socket);
     }
 
@@ -247,6 +251,7 @@ NTSTATUS TCPConnect
     struct ip_addr bindaddr, connaddr;
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
+    TA_IP_ADDRESS LocalAddress;
     PTDI_BUCKET Bucket;
     PNEIGHBOR_CACHE_ENTRY NCE;
     KIRQL OldIrql;
@@ -301,39 +306,42 @@ NTSTATUS TCPConnect
 
     if (NT_SUCCESS(Status))
     {
-        connaddr.addr = RemoteAddress.Address.IPv4Address;
-
-        Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
-        if( !Bucket )
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
         {
-            UnlockObject(Connection, OldIrql);
-            return STATUS_NO_MEMORY;
+            /* We did, so we need to copy back the port */
+            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
+            if (NT_SUCCESS(Status))
+            {
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                    
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+            }
         }
-            
-        Bucket->Request.RequestNotifyObject = (PVOID)Complete;
-        Bucket->Request.RequestContext = Context;
-			
-        InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
-        
-        Status = TCPTranslateError(LibTCPConnect(Connection->SocketContext,
-                                                 &connaddr,
-                                                 RemotePort));
-        
-        DbgPrint("LibTCPConnect: 0x%x\n", Status);
 
-        if (Status == STATUS_PENDING)
+        if (NT_SUCCESS(Status))
         {
-            /*Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
+            connaddr.addr = RemoteAddress.Address.IPv4Address;
+
+            Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );
             if( !Bucket )
             {
-               UnlockObject(Connection, OldIrql);
-               return STATUS_NO_MEMORY;
+                UnlockObject(Connection, OldIrql);
+                return STATUS_NO_MEMORY;
             }
             
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
 			
-            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );*/
+            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+        
+            Status = TCPTranslateError(LibTCPConnect(Connection->SocketContext,
+                                                     &connaddr,
+                                                     RemotePort));
+        
+            DbgPrint("LibTCPConnect: 0x%x\n", Status);
         }
     }
 

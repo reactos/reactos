@@ -212,7 +212,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
             /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT(((struct tcp_pcb*)OldSocketContext)->state == CLOSED);
             /*  free socket context created in FileOpenConnection, as we're using a new
-                one; we free it asynchornously because otherwise we create a dedlock */
+                one; we free it asynchornously because otherwise we create a deadlock */
             ChewCreate(SocketContextCloseWorker, OldSocketContext);
         }
         

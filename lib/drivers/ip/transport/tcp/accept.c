@@ -51,11 +51,13 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     NTSTATUS Status = STATUS_SUCCESS;
     struct ip_addr AddressToBind;
     KIRQL OldIrql;
+    TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);
-    ASSERT_KM_POINTER(Connection->AddressFile);
 
     LockObject(Connection, &OldIrql);
+
+    ASSERT_KM_POINTER(Connection->AddressFile);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Called\n"));
     DbgPrint("[IP, TCPListen] Called\n");
@@ -68,6 +70,24 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
     Status = TCPTranslateError(LibTCPBind(Connection->SocketContext,
                                           &AddressToBind,
                                           Connection->AddressFile->Port));
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if we had an unspecified port */
+        if (!Connection->AddressFile->Port)
+        {
+            /* We did, so we need to copy back the port */
+            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
+            if (NT_SUCCESS(Status))
+            {
+                /* Allocate the port in the port bitmap */
+                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+                
+                /* This should never fail */
+                ASSERT(Connection->AddressFile->Port != 0xFFFF);
+            }
+        }
+    }
 
     if (NT_SUCCESS(Status))
     {
