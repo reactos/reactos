@@ -923,7 +923,6 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 
   PcVideoSetBlinkBit(! Init);
 
-DbgBreakPoint();
   return DisplayMode;
 }
 
