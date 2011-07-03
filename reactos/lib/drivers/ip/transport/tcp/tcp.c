@@ -654,9 +654,10 @@ NTSTATUS TCPTranslateError( int OskitError ) {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         DbgPrint("OskitTCP: ENOMEM/ENOBUFS\n");
         break;
+    case OSK_EPIPE:
     case OSK_ESHUTDOWN:
         Status = STATUS_FILE_CLOSED;
-        DbgPrint("OskitTCP: ESHUTDOWN\n");
+        DbgPrint("OskitTCP: ESHUTDOWN/EPIPE\n");
         break;
     case OSK_EMSGSIZE:
         Status = STATUS_BUFFER_TOO_SMALL;
