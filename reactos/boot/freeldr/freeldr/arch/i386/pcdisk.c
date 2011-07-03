@@ -87,7 +87,6 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 	Packet->Reserved = 0;
 	Packet->LBABlockCount = (USHORT)SectorCount;
 	ASSERT(Packet->LBABlockCount == SectorCount);
-	DbgPrint("here\n");
 	Packet->TransferBufferOffset = ((ULONG_PTR)Buffer) & 0x0F;
 	Packet->TransferBufferSegment = (USHORT)(((ULONG_PTR)Buffer) >> 4);
 	Packet->LBAStartBlock = SectorNumber;
@@ -103,17 +102,17 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 
 	// Retry 3 times
 	for (RetryCount=0; RetryCount<3; RetryCount++)
-	{DPRINTM(DPRINT_DISK, "retry\n");
+	{
 		Int386(0x13, &RegsIn, &RegsOut);
 
 		// If it worked return TRUE
 		if (INT386_SUCCESS(RegsOut))
-		{DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() success\n");
+		{
 			return TRUE;
 		}
 		// If it was a corrected ECC error then the data is still good
 		else if (RegsOut.b.ah == 0x11)
-		{DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() success\n");
+		{
 			return TRUE;
 		}
 		// If it failed the do the next retry
