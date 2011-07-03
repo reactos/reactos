@@ -150,7 +150,9 @@ int OskitTCPRecv( void *connection,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
 		  OSK_UINT Flags ) {
+#if DBG
     struct socket *so = connection;
+#endif
     struct uio uio = { 0 };
     struct iovec iov = { 0 };
     int error = 0;
