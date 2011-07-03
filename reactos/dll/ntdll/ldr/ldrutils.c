@@ -118,7 +118,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             Entry->LoadCount--;
                             break;
                         case LDRP_UPDATE_PIN:
-                            Entry->LoadCount == -1;
+                            Entry->LoadCount = -1;
                             break;
                         }
 
@@ -162,7 +162,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                 Entry->LoadCount--;
                                 break;
                             case LDRP_UPDATE_PIN:
-                                Entry->LoadCount == -1;
+                                Entry->LoadCount = -1;
                                 break;
                             }
 
@@ -231,7 +231,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             Entry->LoadCount--;
                             break;
                         case LDRP_UPDATE_PIN:
-                            Entry->LoadCount == -1;
+                            Entry->LoadCount = -1;
                             break;
                         }
 
