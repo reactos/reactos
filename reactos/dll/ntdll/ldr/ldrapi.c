@@ -292,8 +292,8 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
         {
             /* Free the string */
             RtlFreeUnicodeString(&DllString2);
-            return Status;
         }
+        return Status;
     }
 
     /* Lock the loader lock */
