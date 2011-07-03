@@ -2301,7 +2301,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
 Quickie:
     /* Decrease unload count */
     LdrpActiveUnloadCount--;
-    if (!LdrpInLdrInit) Status = RtlLeaveCriticalSection(Peb->LoaderLock);
+    if (!LdrpInLdrInit) RtlLeaveCriticalSection(Peb->LoaderLock);
 
     /* FIXME: Rundown the Hotpatch data, if present */
 
