@@ -141,6 +141,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     UINT i;
 
     AFD_DbgPrint(MID_TRACE,("Killing selects that refer to %x\n", FileObject));
+    DbgPrint("[AFD, KillSelectsForFCB] Called for FileObject->FsContext = 0x%x\n", FileObject->FsContext);
 
     KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
 
@@ -153,6 +154,8 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
         PollReq = Irp->AssociatedIrp.SystemBuffer;
         HandleArray = AFD_HANDLES(PollReq);
 
+        DbgPrint("[AFD, KillSelectsForFCB] killing select 0x%x\n", Poll);
+
         for (i = 0; i < PollReq->HandleCount; i++)
         {
             AFD_DbgPrint(MAX_TRACE,("Req: %x, This %x\n",
@@ -161,6 +164,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
             if ((PVOID)HandleArray[i].Handle == FileObject &&
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) )
             {
+                DbgPrint("[AFD, KillSelectsForFCB] Zeroing events and signaling socket\n");
                 ZeroEvents( PollReq->Handles, PollReq->HandleCount );
                 SignalSocket( Poll, NULL, PollReq, STATUS_CANCELLED );
             }
@@ -170,6 +174,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Done\n"));
+    DbgPrint("[AFD, KillSelectsForFCB] Leaving\n");
 }
 
 NTSTATUS
@@ -190,6 +195,10 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
     AFD_DbgPrint(MID_TRACE,("Called (HandleCount %d Timeout %d)\n",
 			    PollReq->HandleCount,
 			    (INT)(PollReq->Timeout.QuadPart)));
+
+    DbgPrint("[AFD, AfdSelect] Called. HandleCount = %d, Timeout = %d\n",
+                PollReq->HandleCount,
+			    (INT)(PollReq->Timeout.QuadPart));
 
     SET_AFD_HANDLES(PollReq,
 		    LockHandles( PollReq->Handles, PollReq->HandleCount ));
@@ -266,6 +275,8 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
 
             KeSetTimer( &Poll->Timer, PollReq->Timeout, &Poll->TimeoutDpc );
 
+            DbgPrint("[AFD, AfdSelect] Marking IRP with STATUS_PENDING\n");
+
             Status = STATUS_PENDING;
             IoMarkIrpPending( Irp );
             (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
@@ -280,6 +291,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
 	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
+    DbgPrint("[AFD, AfdSelect] Leaving. Status = 0x%x\n", Status);
 
     return Status;
 }
