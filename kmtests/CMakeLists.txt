@@ -48,6 +48,8 @@ set_rc_compiler()
 list(APPEND KMTEST_SOURCE
     kmtest/kmtest.c
     kmtest/service.c
+    kmtest/support.c
+    kmtest/testlist.c
     kmtest/kmtest.rc)
 
 add_executable(kmtest ${KMTEST_SOURCE})

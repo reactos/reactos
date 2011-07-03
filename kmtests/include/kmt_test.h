@@ -16,6 +16,7 @@
 #include <stdarg.h>
 
 typedef VOID KMT_TESTFUNC(VOID);
+typedef KMT_TESTFUNC *PKMT_TESTFUNC;
 
 typedef struct
 {
@@ -37,6 +38,17 @@ typedef struct
     CHAR LogBuffer[ANYSIZE_ARRAY];
 } KMT_RESULTBUFFER, *PKMT_RESULTBUFFER;
 
+#if defined KMT_USER_MODE
+VOID KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
+VOID KmtUnloadDriver(VOID);
+VOID KmtOpenDriver(VOID);
+VOID KmtCloseDriver(VOID);
+
+DWORD KmtSendToDriver(IN DWORD ControlCode);
+DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
+DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer, IN DWORD Length);
+#endif /* defined KMT_USER_MODE */
+
 extern PKMT_RESULTBUFFER ResultBuffer;
 
 #ifdef __GNUC__
@@ -47,13 +59,15 @@ extern PKMT_RESULTBUFFER ResultBuffer;
 
 #define START_TEST(name) VOID Test_##name(VOID)
 
+#ifndef KMT_STRINGIZE
 #define KMT_STRINGIZE(x) #x
-#define ok(test, ...)                ok_(test, __FILE__, __LINE__, __VA_ARGS__)
-#define trace(...)                   trace_(   __FILE__, __LINE__, __VA_ARGS__)
+#endif /* !defined KMT_STRINGIZE */
+#define ok(test, ...)                ok_(test,   __FILE__, __LINE__, __VA_ARGS__)
+#define trace(...)                   trace_(     __FILE__, __LINE__, __VA_ARGS__)
 #define skip(test, ...)              skip_(test, __FILE__, __LINE__, __VA_ARGS__)
 
-#define ok_(test, file, line, ...)   KmtOk(test, file ":" KMT_STRINGIZE(line), __VA_ARGS__)
-#define trace_(file, line, ...)      KmtTrace(   file ":" KMT_STRINGIZE(line), __VA_ARGS__)
+#define ok_(test, file, line, ...)   KmtOk(test,   file ":" KMT_STRINGIZE(line), __VA_ARGS__)
+#define trace_(file, line, ...)      KmtTrace(     file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 #define skip_(test, file, line, ...) KmtSkip(test, file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 
 VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)      KMT_FORMAT(ms_printf, 3, 0);
@@ -75,7 +89,9 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
 #define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
 #define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE\n")
 #define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE\n")
-#define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s\n", (value) ? "TRUE" : "FALSE", (expected) ? "TRUE" : "FALSE")
+#define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s\n",    \
+                                                (value) ? "TRUE" : "FALSE",                             \
+                                                (expected) ? "TRUE" : "FALSE")
 #define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
 

@@ -6,6 +6,7 @@
  */
 
 #define UNICODE
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <strsafe.h>
 
@@ -19,186 +20,288 @@
 #define KMT_DEFINE_TEST_FUNCTIONS
 #include <kmt_test.h>
 
-#define LOGBUFFER_SIZE 65000
+#define SERVICE_NAME        L"Kmtest"
+#define SERVICE_PATH        L"kmtest_drv.sys"
 
-static void OutputError(FILE *fp, DWORD error);
-static DWORD RunTest(char *testName);
-static DWORD ListTests(PSTR *testList);
-int __cdecl main(int argc, char **argv);
+#define LOGBUFFER_SIZE      65000
+#define RESULTBUFFER_SIZE   FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE])
 
-static void OutputError(FILE *fp, DWORD error)
+static HANDLE KmtestHandle;
+PCSTR ErrorFileAndLine = "No error";
+
+static void OutputError(DWORD Error);
+static DWORD ListTests(VOID);
+static PKMT_TESTFUNC FindTest(PCSTR TestName);
+static DWORD OutputResult(PCSTR TestName);
+static DWORD RunTest(PCSTR TestName);
+int __cdecl main(int ArgCount, char **Arguments);
+
+/**
+ * @name OutputError
+ *
+ * Output an error message to the console.
+ *
+ * @param Error
+ *        Win32 error code
+ */
+static
+void
+OutputError(
+    DWORD Error)
 {
-    char *message;
+    PSTR Message;
     if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                   NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&message, 0, NULL))
+                   NULL, Error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&Message, 0, NULL))
     {
-        fprintf(fp, "Could not retrieve error message (error 0x%08lx). Original error: 0x%08lx\n", GetLastError(), error);
+        fprintf(stderr, "%s: Could not retrieve error message (error 0x%08lx). Original error: 0x%08lx\n",
+            ErrorFileAndLine, GetLastError(), Error);
+        return;
     }
 
-    fprintf(fp, "%s\n", message);
+    fprintf(stderr, "%s: error 0x%08lx: %s\n", ErrorFileAndLine, Error, Message);
 
-    LocalFree(message);
+    LocalFree(Message);
 }
 
-static DWORD RunTest(char *testName)
+/**
+ * @name ListTests
+ *
+ * Output the list of tests to the console.
+ * The list will comprise tests as listed by the driver
+ * in addition to user-mode tests in TestList.
+ *
+ * @return Win32 error code
+ */
+static
+DWORD
+ListTests(VOID)
 {
-    DWORD error = ERROR_SUCCESS;
-    HANDLE hDevice = INVALID_HANDLE_VALUE;
-    DWORD bytesRead, bytesWritten;
+    DWORD Error = ERROR_SUCCESS;
+    CHAR Buffer[1024];
+    DWORD BytesRead;
+    PCSTR TestName = Buffer;
+    PCKMT_TEST TestEntry = TestList;
+    PCSTR NextTestName;
+
+    puts("Valid test names:");
+
+    // get test list from driver
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_GET_TESTS, NULL, 0, Buffer, sizeof Buffer, &BytesRead, NULL))
+        error_goto(Error, cleanup);
+
+    // output test list plus user-mode tests
+    while (TestEntry->TestName || *TestName)
+    {
+        // tests starting with a '-' should not be listed
+        while (TestEntry->TestName && *TestEntry->TestName == '-')
+            ++TestEntry;
+
+        if (!TestEntry->TestName)
+        {
+            NextTestName = TestName;
+            TestName += strlen(TestName) + 1;
+        }
+        else if (!*TestName)
+        {
+            NextTestName = TestEntry->TestName;
+            ++TestEntry;
+        }
+        else
+        {
+            int Result = strcmp(TestEntry->TestName, TestName);
+
+            if (Result == 0)
+            {
+                NextTestName = TestEntry->TestName;
+                TestName += strlen(TestName) + 1;
+                ++TestEntry;
+            }
+            else if (Result < 0)
+            {
+                NextTestName = TestEntry->TestName;
+                ++TestEntry;
+            }
+            else
+            {
+                NextTestName = TestName;
+                TestName += strlen(TestName) + 1;
+            }
+        }
+        printf("    %s\n", NextTestName);
+    }
+
+cleanup:
+    return Error;
+}
+
+/**
+ * @name FindTest
+ *
+ * Find a test in TestList by name.
+ *
+ * @param TestName
+ *        Name of the test to look for. Case sensitive
+ *
+ * @return pointer to test function, or NULL if not found
+ */
+static
+PKMT_TESTFUNC
+FindTest(
+    PCSTR TestName)
+{
+    PCKMT_TEST TestEntry = TestList;
+
+    for (TestEntry = TestList; TestEntry->TestName; ++TestEntry)
+    {
+        PCSTR TestEntryName = TestEntry->TestName;
+
+        // skip leading '-' if present
+        if (*TestEntryName == '-')
+            ++TestEntryName;
+
+        if (!lstrcmpA(TestEntryName, TestName))
+            break;
+    }
+
+    return TestEntry->TestFunction;
+}
+
+/**
+ * @name OutputResult
+ *
+ * Output the test results in ResultBuffer to the console.
+ *
+ * @param TestName
+ *        Name of the test whose result is to be printed
+ *
+ * @return Win32 error code
+ */
+static
+DWORD
+OutputResult(
+    PCSTR TestName)
+{
+    DWORD Error = ERROR_SUCCESS;
+    DWORD BytesWritten;
+
+    KmtFinishTest(TestName);
+
+    if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &BytesWritten, NULL))
+        Error = GetLastError();
+
+    return Error;
+}
+
+/**
+ * @name RunTest
+ *
+ * Run the named test and output its results.
+ *
+ * @param TestName
+ *        Name of the test to run. Case sensitive
+ *
+ * @return Win32 error code
+ */
+static
+DWORD
+RunTest(
+    PCSTR TestName)
+{
+    DWORD Error = ERROR_SUCCESS;
+    PKMT_TESTFUNC TestFunction;
+    DWORD BytesRead;
 
     ResultBuffer = KmtAllocateResultBuffer(LOGBUFFER_SIZE);
-    if (!ResultBuffer)
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, RESULTBUFFER_SIZE, NULL, 0, &BytesRead, NULL))
+        error_goto(Error, cleanup);
+
+    // check test list
+    TestFunction = FindTest(TestName);
+
+    if (TestFunction)
     {
-        error = GetLastError();
+        TestFunction();
         goto cleanup;
     }
-
-    hDevice = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0,
-                         NULL, OPEN_EXISTING, 0, NULL);
-
-    if (hDevice == INVALID_HANDLE_VALUE)
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
-
-    if (!DeviceIoControl(hDevice, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE]), NULL, 0, &bytesRead, NULL))
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
-
-    if (!DeviceIoControl(hDevice, IOCTL_KMTEST_RUN_TEST, testName, strlen(testName), NULL, 0, &bytesRead, NULL))
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
-
-    KmtFinishTest(testName);
-
-    if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &bytesWritten, NULL))
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
+    
+    // not found in user-mode test list, call driver
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, strlen(TestName), NULL, 0, &BytesRead, NULL))
+        error_goto(Error, cleanup);
 
 cleanup:
-    if (hDevice != INVALID_HANDLE_VALUE)
-        CloseHandle(hDevice);
+    OutputResult(TestName);
+    
+    KmtFreeResultBuffer(ResultBuffer);
 
-    if (ResultBuffer)
-        KmtFreeResultBuffer(ResultBuffer);
-
-    return error;
+    return Error;
 }
 
-static DWORD ListTests(PSTR *testList)
+/**
+ * @name main
+ *
+ * Program entry point
+ *
+ * @param ArgCount
+ * @param Arguments
+ *
+ * @return EXIT_SUCCESS on success, EXIT_FAILURE on failure
+ */
+int
+main(
+    int ArgCount,
+    char **Arguments)
 {
-    DWORD error = ERROR_SUCCESS;
-    HANDLE hDevice = INVALID_HANDLE_VALUE;
-    DWORD bytesRead;
-    PSTR buffer = NULL;
-    DWORD bufferSize;
+    INT Status = EXIT_SUCCESS;
+    DWORD Error = ERROR_SUCCESS;
+    SC_HANDLE ServiceHandle;
+    PCSTR AppName = "kmtest.exe";
+    PCSTR TestName;
 
-    if (!testList)
-    {
-        error = ERROR_INVALID_PARAMETER;
+    Error = KmtServiceInit();
+    if (Error)
         goto cleanup;
-    }
 
-    hDevice = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0,
-                         NULL, OPEN_EXISTING, 0, NULL);
-
-    if (hDevice == INVALID_HANDLE_VALUE)
-    {
-        error = GetLastError();
+    Error = KmtCreateAndStartService(SERVICE_NAME, SERVICE_PATH, L"ReactOS Kernel-Mode Test Suite Driver", &ServiceHandle, FALSE);
+    if (Error)
         goto cleanup;
-    }
 
-    bufferSize = 1024;
-    buffer = HeapAlloc(GetProcessHeap(), 0, bufferSize);
-    if (!buffer)
+    KmtestHandle = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (KmtestHandle == INVALID_HANDLE_VALUE)
+        error_goto(Error, cleanup);
+
+    if (ArgCount >= 1)
+        AppName = Arguments[0];
+
+    if (ArgCount <= 1)
     {
-        error = GetLastError();
-        goto cleanup;
-    }
-
-    if (!DeviceIoControl(hDevice, IOCTL_KMTEST_GET_TESTS, NULL, 0, buffer, bufferSize, &bytesRead, NULL))
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
-
-cleanup:
-    if (buffer && error)
-    {
-        HeapFree(GetProcessHeap(), 0, buffer);
-        buffer = NULL;
-    }
-
-    if (hDevice != INVALID_HANDLE_VALUE)
-        CloseHandle(hDevice);
-
-    if (testList)
-        *testList = buffer;
-
-    return error;
-}
-
-int __cdecl main(int argc, char **argv)
-{
-    int status = EXIT_SUCCESS;
-    DWORD error;
-
-    if (argc <= 1)
-    {
-        /* no arguments: show usage and list tests */
-        char *programName = argc == 0 ? "kmtest" : argv[0];
-        char *testNames, *testName;
-        size_t len;
-
-        printf("Usage: %s test_name\n", programName);
-        printf("       %s <Create|Start|Stop|Delete>\n", programName);
-        puts("\nValid test names:");
-
-        error = ListTests(&testNames);
-        testName = testNames;
-
-        while ((len = strlen(testName)) != 0)
-        {
-            printf("    %s\n", testName);
-            testName += len + 1;
-        }
-
-        /* TODO: user-mode test parts */
-
-        if (error)
-            OutputError(stdout, error);
+        printf("Usage: %s <test_name>                 - run the specified test\n", AppName);
+        printf("       %s --list                      - list available tests\n", AppName);
+        printf("       %s <create|delete|start|stop>  - manage the kmtest driver\n\n", AppName);
+        Error = ListTests();
     }
     else
     {
-        char *testName = argv[1];
-
-        if (argc > 2)
-            fputs("Excess arguments ignored\n", stderr);
-
-        if (!lstrcmpiA(testName, "create"))
-            error = Service_Control(Service_Create);
-        else if (!lstrcmpiA(testName, "delete"))
-            error = Service_Control(Service_Delete);
-        else if (!lstrcmpiA(testName, "start"))
-            error = Service_Control(Service_Start);
-        else if (!lstrcmpiA(testName, "stop"))
-            error = Service_Control(Service_Stop);
+        TestName = Arguments[1];
+        if (!lstrcmpA(Arguments[1], "--list"))
+            Error = ListTests();
         else
-            /* TODO: user-mode test parts */
-            error = RunTest(testName);
-
-        OutputError(stdout, error);
+            Error = RunTest(TestName);
     }
 
-    if (error)
-        status = EXIT_FAILURE;
+cleanup:
+    if (KmtestHandle)
+        CloseHandle(KmtestHandle);
 
-    return status;
+    if (Error)
+        KmtServiceCleanup(TRUE);
+    else
+        Error = KmtServiceCleanup(FALSE);
+
+    if (Error)
+        OutputError(Error);
+
+    if (Error)
+        Status = EXIT_FAILURE;
+
+    return Status;
 }

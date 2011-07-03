@@ -6,130 +6,308 @@
  */
 
 #define UNICODE
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <strsafe.h>
 
+#include <assert.h>
+
 #include "kmtest.h"
 
-#define SERVICE_NAME L"Kmtest"
-#define SERVICE_PATH L"\\kmtest_drv.sys"
+#define SERVICE_ACCESS (SERVICE_START | SERVICE_STOP | DELETE)
 
-DWORD Service_Create(SC_HANDLE hScm)
+static SC_HANDLE ScmHandle;
+
+/**
+ * @name KmtServiceInit
+ *
+ * Initialize service management routines (by opening the service control manager)
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtServiceInit(VOID)
 {
-    DWORD error = ERROR_SUCCESS;
-    SC_HANDLE hService = NULL;
-    wchar_t driverPath[MAX_PATH];
+    DWORD Error = ERROR_SUCCESS;
+
+    assert(!ScmHandle);
+
+    ScmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+    if (!ScmHandle)
+        error(Error);
+
+    return Error;
+}
+
+/**
+ * @name KmtServiceCleanup
+ *
+ * Clean up resources used by service management routines.
+ *
+ * @param IgnoreErrors
+ *        If TRUE, the function will never set ErrorLineAndFile, and always return ERROR_SUCCESS
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtServiceCleanup(
+    BOOLEAN IgnoreErrors)
+{
+    DWORD Error = ERROR_SUCCESS;
+
+    if (ScmHandle && !CloseServiceHandle(ScmHandle) && !IgnoreErrors)
+        error(Error);
+
+    return Error;
+}
+
+/**
+ * @name KmtCreateService
+ *
+ * Create the specified driver service and return a handle to it
+ *
+ * @param ServiceName
+ *        Name of the service to create
+ * @param ServicePath
+ *        File name of the driver, relative to the current directory
+ * @param DisplayName
+ *        Service display name
+ * @param ServiceHandle
+ *        Pointer to a variable to receive the handle to the service
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtCreateService(
+    IN PCWSTR ServiceName,
+    IN PCWSTR ServicePath,
+    IN PCWSTR DisplayName OPTIONAL,
+    OUT SC_HANDLE *ServiceHandle)
+{
+    DWORD Error = ERROR_SUCCESS;
+    WCHAR DriverPath[MAX_PATH];
     HRESULT result = S_OK;
 
-    if (!GetCurrentDirectory(sizeof driverPath / sizeof driverPath[0], driverPath)
-            || FAILED(result = StringCbCat(driverPath, sizeof driverPath, SERVICE_PATH)))
+    assert(ServiceHandle);
+    assert(ServiceName && ServicePath);
+
+    if (!GetCurrentDirectory(sizeof DriverPath / sizeof DriverPath[0], DriverPath))
+        error_goto(Error, cleanup);
+
+    if (DriverPath[wcslen(DriverPath) - 1] != L'\\')
     {
-        if (FAILED(result))
-            error = result;
-        else
-            error = GetLastError();
-        goto cleanup;
+        DriverPath[wcslen(DriverPath) + 1] = L'\0';
+        DriverPath[wcslen(DriverPath)] = L'\\';
     }
 
-    hService = CreateService(hScm, SERVICE_NAME, L"ReactOS Kernel-Mode Test Suite Driver",
-                            SERVICE_START, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,
-                            SERVICE_ERROR_NORMAL, driverPath, NULL, NULL, NULL, NULL, NULL);
+    result = StringCbCat(DriverPath, sizeof DriverPath, ServicePath);
+    if (FAILED(result))
+        error_value_goto(Error, result, cleanup);
 
-    if (!hService)
-        error = GetLastError();
+    *ServiceHandle = CreateService(ScmHandle, ServiceName, DisplayName,
+                            SERVICE_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,
+                            SERVICE_ERROR_NORMAL, DriverPath, NULL, NULL, NULL, NULL, NULL);
+
+    if (!*ServiceHandle)
+        error_goto(Error, cleanup);
 
 cleanup:
-    return error;
+    return Error;
 }
 
-DWORD Service_Delete(SC_HANDLE hScm)
+/**
+ * @name KmtStartService
+ *
+ * Start the specified driver service by handle or name (and return a handle to it)
+ *
+ * @param ServiceName
+ *        If *ServiceHandle is NULL, name of the service to start
+ * @param ServiceHandle
+ *        Pointer to a variable containing the service handle,
+ *        or NULL (in which case it will be filled with a handle to the service)
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtStartService(
+    IN PCWSTR ServiceName OPTIONAL,
+    IN OUT SC_HANDLE *ServiceHandle)
 {
-    DWORD error = ERROR_SUCCESS;
-    SC_HANDLE hService = NULL;
+    DWORD Error = ERROR_SUCCESS;
 
-    hService = OpenService(hScm, SERVICE_NAME, DELETE);
+    assert(ServiceHandle);
+    assert(ServiceName || *ServiceHandle);
 
-    if (!hService)
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
+    if (!*ServiceHandle)
+        *ServiceHandle = OpenService(ScmHandle, ServiceName, SERVICE_ACCESS);
 
-    if (!DeleteService(hService))
-        error = GetLastError();
+    if (!*ServiceHandle)
+        error_goto(Error, cleanup);
+
+    if (!StartService(*ServiceHandle, 0, NULL))
+        error_goto(Error, cleanup);
 
 cleanup:
-    if (hService)
-        CloseServiceHandle(hService);
-
-    return error;
+    return Error;
 }
 
-DWORD Service_Start(SC_HANDLE hScm)
+/**
+ * @name KmtCreateAndStartService
+ *
+ * Create and start the specified driver service and return a handle to it
+ *
+ * @param ServiceName
+ *        Name of the service to create
+ * @param ServicePath
+ *        File name of the driver, relative to the current directory
+ * @param DisplayName
+ *        Service display name
+ * @param ServiceHandle
+ *        Pointer to a variable to receive the handle to the service
+ * @param RestartIfRunning
+ *        TRUE to stop and restart the service if it is already running
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtCreateAndStartService(
+    IN PCWSTR ServiceName,
+    IN PCWSTR ServicePath,
+    IN PCWSTR DisplayName OPTIONAL,
+    OUT SC_HANDLE *ServiceHandle,
+    IN BOOLEAN RestartIfRunning)
 {
-    DWORD error = ERROR_SUCCESS;
-    SC_HANDLE hService = NULL;
+    DWORD Error = ERROR_SUCCESS;
 
-    hService = OpenService(hScm, SERVICE_NAME, SERVICE_START);
+    assert(ServiceHandle);
 
-    if (!hService)
-    {
-        error = GetLastError();
+    Error = KmtCreateService(ServiceName, ServicePath, DisplayName, ServiceHandle);
+
+    if (Error && Error != ERROR_SERVICE_EXISTS)
         goto cleanup;
-    }
 
-    if (!StartService(hService, 0, NULL))
-        error = GetLastError();
+    Error = KmtStartService(ServiceName, ServiceHandle);
+
+    if (Error != ERROR_SERVICE_ALREADY_RUNNING)
+        goto cleanup;
+
+    Error = ERROR_SUCCESS;
+
+    if (!RestartIfRunning)
+        goto cleanup;
+
+    Error = KmtStopService(ServiceName, ServiceHandle);
+    if (Error)
+        goto cleanup;
+
+    Error = KmtStartService(ServiceName, ServiceHandle);
+    if (Error)
+        goto cleanup;
 
 cleanup:
-    if (hService)
-        CloseServiceHandle(hService);
-
-    return error;
+    assert(Error || *ServiceHandle);
+    return Error;
 }
 
-DWORD Service_Stop(SC_HANDLE hScm)
+/**
+ * @name KmtStopService
+ *
+ * Stop the specified driver service by handle or name (and return a handle to it)
+ *
+ * @param ServiceName
+ *        If *ServiceHandle is NULL, name of the service to stop
+ * @param ServiceHandle
+ *        Pointer to a variable containing the service handle,
+ *        or NULL (in which case it will be filled with a handle to the service)
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtStopService(
+    IN PCWSTR ServiceName OPTIONAL,
+    IN OUT SC_HANDLE *ServiceHandle)
 {
-    DWORD error = ERROR_SUCCESS;
-    SC_HANDLE hService = NULL;
-    SERVICE_STATUS serviceStatus;
+    DWORD Error = ERROR_SUCCESS;
+    SERVICE_STATUS ServiceStatus;
 
-    hService = OpenService(hScm, SERVICE_NAME, SERVICE_STOP);
+    assert(ServiceHandle);
+    assert(ServiceName || *ServiceHandle);
 
-    if (!hService)
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
+    if (!*ServiceHandle)
+        *ServiceHandle = OpenService(ScmHandle, ServiceName, SERVICE_ACCESS);
 
-    if (!ControlService(hService, SERVICE_CONTROL_STOP, &serviceStatus))
-        error = GetLastError();
+    if (!*ServiceHandle)
+        error_goto(Error, cleanup);
+
+    if (!ControlService(*ServiceHandle, SERVICE_CONTROL_STOP, &ServiceStatus))
+        error_goto(Error, cleanup);
 
 cleanup:
-    if (hService)
-        CloseServiceHandle(hService);
-
-    return error;
+    return Error;
 }
 
-DWORD Service_Control(SERVICE_FUNC *Service_Func)
+/**
+ * @name KmtDeleteService
+ *
+ * Delete the specified driver service by handle or name (and return a handle to it)
+ *
+ * @param ServiceName
+ *        If *ServiceHandle is NULL, name of the service to delete
+ * @param ServiceHandle
+ *        Pointer to a variable containing the service handle.
+ *        Will be set to NULL on success
+ *
+ * @return Win32 error code
+ */
+DWORD
+KmtDeleteService(
+    IN PCWSTR ServiceName OPTIONAL,
+    IN OUT SC_HANDLE *ServiceHandle)
 {
-    DWORD error = ERROR_SUCCESS;
-    SC_HANDLE hScm = NULL;
+    DWORD Error = ERROR_SUCCESS;
 
-    hScm = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+    assert(ServiceHandle);
+    assert(ServiceName || *ServiceHandle);
 
-    if (!hScm)
-    {
-        error = GetLastError();
-        goto cleanup;
-    }
+    if (!*ServiceHandle)
+        *ServiceHandle = OpenService(ScmHandle, ServiceName, SERVICE_ACCESS);
 
-    error = Service_Func(hScm);
+    if (!*ServiceHandle)
+        error_goto(Error, cleanup);
+
+    if (!DeleteService(*ServiceHandle))
+        error_goto(Error, cleanup);
+
+    if (*ServiceHandle)
+        CloseServiceHandle(*ServiceHandle);
 
 cleanup:
-    if (hScm)
-        CloseServiceHandle(hScm);
+    return Error;
+}
 
-    return error;
+/**
+ * @name KmtCloseService
+ *
+ * Close the specified driver service handle
+ *
+ * @param ServiceHandle
+ *        Pointer to a variable containing the service handle.
+ *        Will be set to NULL on success
+ *
+ * @return Win32 error code
+ */
+DWORD KmtCloseService(
+    IN OUT SC_HANDLE *ServiceHandle)
+{
+    DWORD Error = ERROR_SUCCESS;
+
+    assert(ServiceHandle);
+
+    if (*ServiceHandle && !CloseServiceHandle(*ServiceHandle))
+        error_goto(Error, cleanup);
+
+    *ServiceHandle = NULL;
+
+cleanup:
+    return Error;
 }

@@ -5,5 +5,7 @@
 	<directory name="kmtest">
 		<file>kmtest.c</file>
 		<file>service.c</file>
+		<file>support.c</file>
+		<file>testlist.c</file>
 	</directory>
 </module>
