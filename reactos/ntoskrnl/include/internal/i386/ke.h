@@ -707,6 +707,7 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Converts a base thread to a GUI thread
 //
+#ifdef __GNUC__
 NTSTATUS
 FORCEINLINE
 KiConvertToGuiThread(VOID)
@@ -730,7 +731,6 @@ KiConvertToGuiThread(VOID)
      * on its merry way.
      *
      */
-#ifdef __GNUC__
     __asm__ __volatile__
     (
         "movl %%ebp, %1\n"
@@ -743,22 +743,15 @@ KiConvertToGuiThread(VOID)
         :
         : "%esp", "%ecx", "%edx", "memory"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
-    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
-    __asm
-    {
-        mov StackFrame, ebp
-        sub StackFrame, esp
-        call PsConvertToGuiThread
-        add StackFrame, esp
-        mov ebp, StackFrame
-        mov Result, eax
-    }
+NTSTATUS
+NTAPI
+KiConvertToGuiThread(VOID);
 #else
 #error Unknown Compiler
 #endif
-    return Result;
-}
 
 //
 // Switches from boot loader to initial kernel stack
