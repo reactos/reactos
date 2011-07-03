@@ -31,8 +31,8 @@ static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information
 	if( ( Status == STATUS_SUCCESS && !Information ) ||
 	   ( !NT_SUCCESS( Status ) ) )
 	{
-		/* The socket has been closed */
-		FCB->PollState |= AFD_EVENT_CLOSE;
+		/* The socket has been closed by the remote side */
+		FCB->PollState |= AFD_EVENT_ABORT;
 		FCB->PollStatus[FD_CLOSE_BIT] = Status;
 		
 		PollReeval( FCB->DeviceExt, FCB->FileObject );

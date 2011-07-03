@@ -553,7 +553,8 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
     FCB->DisconnectIrp.InFlightRequest = NULL;
     
     ASSERT(FCB->DisconnectPending);
-    //ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) || (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT));
+    ASSERT((IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest) ||
+           (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT));
     
     if (NT_SUCCESS(Irp->IoStatus.Status) && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
     {
@@ -606,6 +607,8 @@ DoDisconnect(PAFD_FCB FCB)
     NTSTATUS Status;
     
     ASSERT(FCB->DisconnectPending);
+    ASSERT((IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest) ||
+           (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT));
     
     if (FCB->DisconnectIrp.InFlightRequest)
     {
@@ -639,7 +642,7 @@ RetryDisconnectCompletion(PAFD_FCB FCB)
 {
     ASSERT(FCB->RemoteAddress);
 
-    if (IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && FCB->DisconnectPending)
+    if (IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest && FCB->DisconnectPending)
     {
         /* Sends are done; fire off a TDI_DISCONNECT request */
         DoDisconnect(FCB);
@@ -704,9 +707,10 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
         if (Status == STATUS_PENDING)
         {
-            if (IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) || (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT))
+            if ((IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest) ||
+                (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT))
             {
-                /* Go ahead an execute the disconnect because we're ready for it */
+                /* Go ahead and execute the disconnect because we're ready for it */
                 Status = DoDisconnect(FCB);
             }
             

@@ -179,7 +179,10 @@ static NTSTATUS NTAPI SendComplete
 						  &FCB->SendIrp.Iosb,
 						  SendComplete,
 						  FCB );
-        
+    }
+    else
+    {
+        /* Nothing is waiting so try to complete a pending disconnect */
         RetryDisconnectCompletion(FCB);
     }
 
@@ -298,6 +301,12 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		Information = SendReq->BufferArray[0].len;
 		UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
         return UnlockAndMaybeComplete( FCB, Status, Irp, Information );
+    }
+    
+    if (FCB->DisconnectPending && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
+    {
+        /* We're pending a send shutdown so don't accept anymore sends */
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
     
     if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
@@ -434,8 +443,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     {
         FCB->PollState &= ~AFD_EVENT_SEND;
     }
-    
-    RetryDisconnectCompletion(FCB);
     
     return UnlockAndMaybeComplete
     ( FCB, Status, Irp, TotalBytesCopied );
