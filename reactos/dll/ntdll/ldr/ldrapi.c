@@ -346,9 +346,6 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
                          BaseAddress,
                          TRUE);
 
-    /* Set it to success just to be sure */
-    Status = STATUS_SUCCESS;
-
     /* Restore the old TLD DLL */
     LdrpTopLevelDllBeingLoaded = OldTldDll;
 
