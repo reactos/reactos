@@ -73,6 +73,19 @@ AfdGetInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
 	                 InfoReq->Information.Ulong++;
 	                 CurrentEntry = CurrentEntry->Flink;
 	            }
+
+                /* This needs to count too because when this is dispatched
+                 * the user-mode IRP has already been completed and therefore
+                 * will NOT be in our pending IRP list. We count this as one send
+                 * outstanding although it could be multiple since we batch sends
+                 * when waiting for the in flight request to return, so this number
+                 * may not be accurate but it really doesn't matter that much since
+                 * it's more or less a zero/non-zero comparison to determine whether
+                 * we can shutdown the socket
+                 */
+                if (FCB->SendIrp.InFlightRequest)
+                    InfoReq->Information.Ulong++;
+
                 break;
 
 	        default:

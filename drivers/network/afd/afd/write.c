@@ -190,7 +190,10 @@ SendComplete
 						  &FCB->SendIrp.Iosb,
 						  SendComplete,
 						  FCB );
-
+    }
+    else
+    {
+        /* Nothing is waiting so try to complete a pending disconnect */
         RetryDisconnectCompletion(FCB);
     }
 
@@ -326,9 +329,28 @@ AfdConnectedSocketWriteData
         return UnlockAndMaybeComplete( FCB, Status, Irp, Information );
     }
 
-    if( !(SendReq = LockRequest(Irp, IrpSp)))
-		return UnlockAndMaybeComplete
-			( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied );
+    if (FCB->DisconnectPending && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
+    {
+        /* We're pending a send shutdown so don't accept anymore sends */
+        return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+    }
+
+    if (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT))
+    {
+        if (FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
+        {
+            /* This is a local send shutdown or a graceful remote disconnect */
+            return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
+        }
+        else
+        {
+            /* This is an unexpected remote disconnect */
+            return UnlockAndMaybeComplete(FCB, FCB->PollStatus[FD_CLOSE_BIT], Irp, 0);
+        }
+    }
+
+    if (!(SendReq = LockRequest(Irp, IrpSp)))
+		return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied);
 
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
 										SendReq->BufferCount,
