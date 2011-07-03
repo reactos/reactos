@@ -182,7 +182,7 @@ XboxVideoGetBufferSize(VOID)
 }
 
 VOID
-XboxVideoSetTextCursorPosition(ULONG X, ULONG Y)
+XboxVideoSetTextCursorPosition(UCHAR X, UCHAR Y)
 {
   /* We don't have a cursor yet */
 }

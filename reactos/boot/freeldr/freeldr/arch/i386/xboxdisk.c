@@ -152,7 +152,7 @@ static struct
  *  Data block read and write commands
  */
 #define IDEReadBlock(Address, Buffer, Count) \
-  (__inwordstring(((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
   (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
@@ -435,7 +435,7 @@ XboxDiskPolledRead(ULONG CommandPort,
 }
 
 BOOLEAN
-XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
   ULONG StartSector;
   UCHAR Count;
@@ -456,7 +456,7 @@ XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG Sect
   StartSector = (ULONG) SectorNumber;
   while (0 < SectorCount)
     {
-      Count = (SectorCount <= 255 ? SectorCount : 255);
+      Count = (SectorCount <= 255 ? (UCHAR)SectorCount : 255);
       if (! XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
                                XBOX_IDE_CONTROL_PORT,
                                0, Count,
@@ -478,7 +478,7 @@ XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG Sect
 }
 
 BOOLEAN
-XboxDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
   UCHAR SectorData[IDE_SECTOR_BUF_SZ];
 
@@ -503,7 +503,7 @@ XboxDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_T
 }
 
 BOOLEAN
-XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
+XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
   IDE_DRIVE_IDENTIFY DrvParms;
   ULONG i;
@@ -563,7 +563,7 @@ XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 }
 
 ULONG
-XboxDiskGetCacheableBlockCount(ULONG DriveNumber)
+XboxDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
   /* 64 seems a nice number, it is used by the machpc code for LBA devices */
   return 64;

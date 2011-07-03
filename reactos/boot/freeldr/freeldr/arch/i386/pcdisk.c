@@ -42,7 +42,7 @@ typedef struct
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-static BOOLEAN PcDiskResetController(ULONG DriveNumber)
+static BOOLEAN PcDiskResetController(UCHAR DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -65,7 +65,7 @@ static BOOLEAN PcDiskResetController(ULONG DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	REGS						RegsIn;
 	REGS						RegsOut;
@@ -73,6 +73,7 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	PI386_DISK_ADDRESS_PACKET	Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
 	DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
+    ASSERT(((ULONG_PTR)Buffer) <= 0xFFFFF);
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
 	RegsIn.b.ah = 0x42;					// Subfunction 42h
@@ -84,9 +85,11 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	RtlZeroMemory(Packet, sizeof(I386_DISK_ADDRESS_PACKET));
 	Packet->PacketSize = sizeof(I386_DISK_ADDRESS_PACKET);
 	Packet->Reserved = 0;
-	Packet->LBABlockCount = SectorCount;
+	Packet->LBABlockCount = (USHORT)SectorCount;
+	ASSERT(Packet->LBABlockCount == SectorCount);
+	DbgPrint("here\n");
 	Packet->TransferBufferOffset = ((ULONG_PTR)Buffer) & 0x0F;
-	Packet->TransferBufferSegment = ((ULONG_PTR)Buffer) >> 4;
+	Packet->TransferBufferSegment = (USHORT)(((ULONG_PTR)Buffer) >> 4);
 	Packet->LBAStartBlock = SectorNumber;
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
@@ -100,17 +103,17 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 
 	// Retry 3 times
 	for (RetryCount=0; RetryCount<3; RetryCount++)
-	{
+	{DPRINTM(DPRINT_DISK, "retry\n");
 		Int386(0x13, &RegsIn, &RegsOut);
 
 		// If it worked return TRUE
 		if (INT386_SUCCESS(RegsOut))
-		{
+		{DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() success\n");
 			return TRUE;
 		}
 		// If it was a corrected ECC error then the data is still good
 		else if (RegsOut.b.ah == 0x11)
-		{
+		{DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectorsLBA() success\n");
 			return TRUE;
 		}
 		// If it failed the do the next retry
@@ -128,10 +131,10 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	return FALSE;
 }
 
-static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	ULONG			PhysicalSector;
-	ULONG			PhysicalHead;
+	UCHAR			PhysicalSector;
+	UCHAR			PhysicalHead;
 	ULONG			PhysicalTrack;
 	GEOMETRY	DriveGeometry;
 	ULONG			NumberOfSectorsToRead;
@@ -156,10 +159,11 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 
 		//
 		// Calculate the physical disk offsets
+		// Note: DriveGeometry.Sectors < 64
 		//
-		PhysicalSector = 1 + (SectorNumber % DriveGeometry.Sectors);
-		PhysicalHead = (SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads;
-		PhysicalTrack = (SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads;
+		PhysicalSector = 1 + (UCHAR)(SectorNumber % DriveGeometry.Sectors);
+		PhysicalHead = (UCHAR)((SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads);
+		PhysicalTrack = (ULONG)((SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads);
 
 		//
 		// Calculate how many sectors we need to read this round
@@ -208,12 +212,12 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 		// AL = number of sectors transferred
 		//  (only valid if CF set for some BIOSes)
 		RegsIn.b.ah = 0x02;
-		RegsIn.b.al = NumberOfSectorsToRead;
+		RegsIn.b.al = (UCHAR)NumberOfSectorsToRead;
 		RegsIn.b.ch = (PhysicalTrack & 0xFF);
-		RegsIn.b.cl = (PhysicalSector + ((PhysicalTrack & 0x300) >> 2));
+		RegsIn.b.cl = (UCHAR)(PhysicalSector + ((PhysicalTrack & 0x300) >> 2));
 		RegsIn.b.dh = PhysicalHead;
 		RegsIn.b.dl = DriveNumber;
-		RegsIn.w.es = ((ULONG_PTR)Buffer) >> 4;
+		RegsIn.w.es = (USHORT)(((ULONG_PTR)Buffer) >> 4);
 		RegsIn.w.bx = ((ULONG_PTR)Buffer) & 0x0F;
 
 		//
@@ -264,7 +268,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 	return TRUE;
 }
 
-BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 
 	DPRINTM(DPRINT_DISK, "PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer);
@@ -294,7 +298,7 @@ BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULON
 }
 
 BOOLEAN
-PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
+PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
   REGS RegsIn;
   REGS RegsOut;
@@ -345,7 +349,7 @@ PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 }
 
 ULONG
-PcDiskGetCacheableBlockCount(ULONG DriveNumber)
+PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
   GEOMETRY	Geometry;
 

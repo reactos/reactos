@@ -77,8 +77,8 @@ ArcGetMemoryDescriptor(const MEMORY_DESCRIPTOR* Current)
             // Copy this memory descriptor
             //
             BiosMemoryDescriptors[j].m.MemoryType = MemoryFree;
-            BiosMemoryDescriptors[j].m.BasePage = BiosMemoryMap[i].BaseAddress / MM_PAGE_SIZE;
-            BiosMemoryDescriptors[j].m.PageCount = BiosMemoryMap[i].Length / MM_PAGE_SIZE;
+            BiosMemoryDescriptors[j].m.BasePage = (ULONG)(BiosMemoryMap[i].BaseAddress / MM_PAGE_SIZE);
+            BiosMemoryDescriptors[j].m.PageCount = (ULONG)(BiosMemoryMap[i].Length / MM_PAGE_SIZE);
             BiosMemoryDescriptors[j].Index = j;
             BiosMemoryDescriptors[j].GeneratedDescriptor = TRUE;
             j++;

@@ -36,7 +36,7 @@ VOID XboxVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE XboxVideoSetDisplayMode(char *DisplayModem, BOOLEAN Init);
 VOID XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG XboxVideoGetBufferSize(VOID);
-VOID XboxVideoSetTextCursorPosition(ULONG X, ULONG Y);
+VOID XboxVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 VOID XboxVideoHideShowTextCursor(BOOLEAN Show);
 VOID XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
@@ -51,10 +51,10 @@ VOID XboxMemInit(VOID);
 PVOID XboxMemReserveMemory(ULONG MbToReserve);
 ULONG XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
-BOOLEAN XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN XboxDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
-ULONG XboxDiskGetCacheableBlockCount(ULONG DriveNumber);
+BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
+ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* XboxGetTime(VOID);
 

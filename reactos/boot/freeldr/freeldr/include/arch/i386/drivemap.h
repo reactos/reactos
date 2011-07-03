@@ -29,7 +29,7 @@ typedef struct
 
 VOID	DriveMapMapDrivesInSection(PCSTR SectionName);
 BOOLEAN	DriveMapIsValidDriveString(PCSTR DriveString);			// Checks the drive string ("hd0") for validity
-ULONG		DriveMapGetBiosDriveNumber(PCSTR DeviceName);			// Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
+UCHAR		DriveMapGetBiosDriveNumber(PCSTR DeviceName);			// Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
 VOID	DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap);	// Installs the int 13h handler for the drive mapper
 VOID	DriveMapRemoveInt13Handler(VOID);						// Removes a previously installed int 13h drive map handler
 

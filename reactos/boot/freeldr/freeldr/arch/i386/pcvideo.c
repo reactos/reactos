@@ -108,7 +108,7 @@ typedef struct
 } SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
 #include <poppack.h>
 
-static ULONG BiosVideoMode;                              /* Current video mode as known by BIOS */
+static USHORT BiosVideoMode;                             /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;	                       /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                          /* Screen Height in characters */
 static ULONG BytesPerScanLine = 160;                     /* Number of bytes per scanline (delta) */
@@ -191,7 +191,7 @@ PcVideoDetectVideoCard(VOID)
     }
 }
 
-static VOID PcVideoSetBiosMode(ULONG VideoMode)
+static VOID PcVideoSetBiosMode(UCHAR VideoMode)
 {
   REGS Regs;
 
@@ -298,7 +298,7 @@ PcVideoDisableCursorEmulation(VOID)
 }
 
 static VOID
-PcVideoDefineCursor(ULONG StartScanLine, ULONG EndScanLine)
+PcVideoDefineCursor(UCHAR StartScanLine, UCHAR EndScanLine)
 {
   REGS Regs;
 
@@ -334,7 +334,7 @@ PcVideoDefineCursor(ULONG StartScanLine, ULONG EndScanLine)
 }
 
 static VOID
-PcVideoSetVerticalResolution(ULONG ScanLines)
+PcVideoSetVerticalResolution(UCHAR VerticalResolutionMode)
 {
   REGS Regs;
 
@@ -356,7 +356,7 @@ PcVideoSetVerticalResolution(ULONG ScanLines)
    */
   Regs.b.ah = 0x12;
   Regs.b.bl = 0x30;
-  Regs.b.al = ScanLines;
+  Regs.b.al = VerticalResolutionMode;
   Int386(0x10, &Regs, &Regs);
 }
 
@@ -698,7 +698,7 @@ PcVideoSetMode80x60(VOID)
 }
 
 static BOOLEAN
-PcVideoSetMode(ULONG NewMode)
+PcVideoSetMode(USHORT NewMode)
 {
   CurrentMemoryBank = 0;
 
@@ -735,7 +735,7 @@ PcVideoSetMode(ULONG NewMode)
   if (0x12 == NewMode)
     {
       /* 640x480x16 */
-      PcVideoSetBiosMode(NewMode);
+      PcVideoSetBiosMode((UCHAR)NewMode);
       WRITE_PORT_USHORT((USHORT*)0x03CE, 0x0F01); /* For some reason this is necessary? */
       ScreenWidth = 640;
       ScreenHeight = 480;
@@ -748,7 +748,7 @@ PcVideoSetMode(ULONG NewMode)
   else if (0x13 == NewMode)
     {
       /* 320x200x256 */
-      PcVideoSetBiosMode(NewMode);
+      PcVideoSetBiosMode((UCHAR)NewMode);
       ScreenWidth = 320;
       ScreenHeight = 200;
       BytesPerScanLine = 320;
@@ -871,7 +871,7 @@ PcVideoSetMemoryBank(USHORT BankNumber)
 VIDEODISPLAYMODE
 PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 {
-  ULONG VideoMode = VIDEOMODE_NORMAL_TEXT;
+  USHORT VideoMode = VIDEOMODE_NORMAL_TEXT;
 
   if (NULL == DisplayModeName || '\0' == *DisplayModeName)
     {
@@ -923,7 +923,7 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 
   PcVideoSetBlinkBit(! Init);
 
-
+DbgBreakPoint();
   return DisplayMode;
 }
 
@@ -958,7 +958,7 @@ PcVideoGetBufferSize(VOID)
 }
 
 VOID
-PcVideoSetTextCursorPosition(ULONG X, ULONG Y)
+PcVideoSetTextCursorPosition(UCHAR X, UCHAR Y)
 {
   REGS Regs;
 
@@ -998,9 +998,9 @@ PcVideoHideShowTextCursor(BOOLEAN Show)
 VOID
 PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-  ULONG BanksToCopy;
+  USHORT BanksToCopy;
   ULONG BytesInLastBank;
-  ULONG CurrentBank;
+  USHORT CurrentBank;
   ULONG BankSize;
 
   /* PcVideoWaitForVerticalRetrace(); */
@@ -1014,7 +1014,7 @@ PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
   else if (VideoGraphicsMode == DisplayMode && VesaVideoMode)
     {
       BankSize = VesaVideoModeInformation.WindowGranularity << 10;
-      BanksToCopy = (VesaVideoModeInformation.HeightInPixels * VesaVideoModeInformation.BytesPerScanLine) / BankSize;
+      BanksToCopy = (USHORT)((VesaVideoModeInformation.HeightInPixels * VesaVideoModeInformation.BytesPerScanLine) / BankSize);
       BytesInLastBank = (VesaVideoModeInformation.HeightInPixels * VesaVideoModeInformation.BytesPerScanLine) % BankSize;
 
       /* Copy all the banks but the last one because

@@ -32,7 +32,7 @@ ULONG			CacheBlockCount = 0;
 ULONG			CacheSizeLimit = 0;
 ULONG			CacheSizeCurrent = 0;
 
-BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
+BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
 {
 	PCACHE_BLOCK	NextCacheBlock;
 	GEOMETRY	DriveGeometry;
@@ -111,7 +111,7 @@ VOID CacheInvalidateCacheData(VOID)
 	CacheManagerDataInvalid = TRUE;
 }
 
-BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer)
+BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount, PVOID Buffer)
 {
 	PCACHE_BLOCK	CacheBlock;
 	ULONG				StartBlock;
@@ -122,7 +122,7 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 	ULONG				BlockCount;
 	ULONG				Idx;
 
-	DPRINTM(DPRINT_CACHE, "CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
+	DPRINTM(DPRINT_CACHE, "CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %I64d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
 
 	// If we aren't initialized yet then they can't do this
 	if (CacheManagerInitialized == FALSE)
@@ -133,11 +133,11 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 	//
 	// Caculate which blocks we must cache
 	//
-	StartBlock = StartSector / CacheManagerDrive.BlockSize;
-	SectorOffsetInStartBlock = StartSector % CacheManagerDrive.BlockSize;
-	CopyLengthInStartBlock = (SectorCount > (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock)) ? (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock) : SectorCount;
-	EndBlock = (StartSector + (SectorCount - 1)) / CacheManagerDrive.BlockSize;
-	SectorOffsetInEndBlock = 1 + (StartSector + (SectorCount - 1)) % CacheManagerDrive.BlockSize;
+	StartBlock = (ULONG)(StartSector / CacheManagerDrive.BlockSize);
+	SectorOffsetInStartBlock = (ULONG)(StartSector % CacheManagerDrive.BlockSize);
+	CopyLengthInStartBlock = (ULONG)((SectorCount > (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock)) ? (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock) : SectorCount);
+	EndBlock = (ULONG)((StartSector + (SectorCount - 1)) / CacheManagerDrive.BlockSize);
+	SectorOffsetInEndBlock = (ULONG)(1 + (StartSector + (SectorCount - 1)) % CacheManagerDrive.BlockSize);
 	BlockCount = (EndBlock - StartBlock) + 1;
 	DPRINTM(DPRINT_CACHE, "StartBlock: %d SectorOffsetInStartBlock: %d CopyLengthInStartBlock: %d EndBlock: %d SectorOffsetInEndBlock: %d BlockCount: %d\n", StartBlock, SectorOffsetInStartBlock, CopyLengthInStartBlock, EndBlock, SectorOffsetInEndBlock, BlockCount);
 
@@ -244,7 +244,7 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 }
 
 #if 0
-BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount)
+BOOLEAN CacheForceDiskSectorsIntoCache(UCHAR DiskNumber, ULONGLONG StartSector, ULONG SectorCount)
 {
 	PCACHE_BLOCK	CacheBlock;
 	ULONG				StartBlock;

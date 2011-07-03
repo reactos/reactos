@@ -25,7 +25,7 @@ BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG
 PEXT2_FILE_INFO	Ext2OpenFile(PCSTR FileName);
 BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
 BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
+BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
 BOOLEAN	Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 BOOLEAN	Ext2ReadSuperBlock(VOID);
@@ -61,7 +61,7 @@ ULONG					Ext2GroupCount = 0;				// Number of groups in this file system
 ULONG					Ext2InodesPerBlock = 0;			// Number of inodes in one block
 ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
 
-BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
+BOOLEAN DiskGetBootVolume(PUCHAR DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
 {
 	*DriveNumber = 0;
 	*StartSector = 0;
@@ -425,7 +425,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 		DPRINTM(DPRINT_FILESYSTEM, "Reading fast symbolic link data\n");
 
 		// Copy the data from the link
-		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Ext2FileInfo->FilePointer + Ext2FileInfo->Inode.symlink), BytesToRead);
+		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Ext2FileInfo->FilePointer + Ext2FileInfo->Inode.symlink), (ULONG)BytesToRead);
 
 		if (BytesRead != NULL)
 		{
@@ -472,10 +472,10 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 		//
 		// Do the math for our first read
 		//
-		BlockNumberIndex = (Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
+		BlockNumberIndex = (ULONG)(Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
 		BlockNumber = Ext2FileInfo->FileBlockList[BlockNumberIndex];
 		OffsetInBlock = (Ext2FileInfo->FilePointer % Ext2BlockSizeInBytes);
-		LengthInBlock = (BytesToRead > (Ext2BlockSizeInBytes - OffsetInBlock)) ? (Ext2BlockSizeInBytes - OffsetInBlock) : BytesToRead;
+		LengthInBlock = (ULONG)((BytesToRead > (Ext2BlockSizeInBytes - OffsetInBlock)) ? (Ext2BlockSizeInBytes - OffsetInBlock) : BytesToRead);
 
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
@@ -501,11 +501,11 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 		//
 		// Determine how many full clusters we need to read
 		//
-		NumberOfBlocks = (BytesToRead / Ext2BlockSizeInBytes);
+		NumberOfBlocks = (ULONG)(BytesToRead / Ext2BlockSizeInBytes);
 
 		while (NumberOfBlocks > 0)
 		{
-			BlockNumberIndex = (Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
+			BlockNumberIndex = (ULONG)(Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
 			BlockNumber = Ext2FileInfo->FileBlockList[BlockNumberIndex];
 
 			//
@@ -531,13 +531,13 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 	//
 	if (BytesToRead > 0)
 	{
-		BlockNumberIndex = (Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
+		BlockNumberIndex = (ULONG)(Ext2FileInfo->FilePointer / Ext2BlockSizeInBytes);
 		BlockNumber = Ext2FileInfo->FileBlockList[BlockNumberIndex];
 
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!Ext2ReadPartialBlock(BlockNumber, 0, BytesToRead, Buffer))
+		if (!Ext2ReadPartialBlock(BlockNumber, 0, (ULONG)BytesToRead, Buffer))
 		{
 			return FALSE;
 		}
@@ -553,7 +553,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
 	return TRUE;
 }
 
-BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer)
+BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	//GEOMETRY	DiskGeometry;
 	//BOOLEAN		ReturnValue;
@@ -796,7 +796,8 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 	//
 	// Now allocate the memory to hold the group descriptors
 	//
-	*DirectoryBuffer = (PEXT2_DIR_ENTRY)MmHeapAlloc(DirectoryFileInfo.FileSize);
+	ASSERT(DirectoryFileInfo.FileSize <= 0xFFFFFFFF);
+	*DirectoryBuffer = (PEXT2_DIR_ENTRY)MmHeapAlloc((ULONG)DirectoryFileInfo.FileSize);
 
 	//
 	// Make sure we got the memory
@@ -1009,7 +1010,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	//BlockCount = Inode->i_blocks;
 	FileSize = Ext2GetInodeFileSize(Inode);
 	FileSize = ROUND_UP(FileSize, Ext2BlockSizeInBytes);
-	BlockCount = (FileSize / Ext2BlockSizeInBytes);
+	BlockCount = (ULONG)(FileSize / Ext2BlockSizeInBytes);
 
 	// Allocate the memory for the block list
 	BlockList = MmHeapAlloc(BlockCount * sizeof(ULONG));
@@ -1181,8 +1182,8 @@ LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
 	RtlZeroMemory(Information, sizeof(FILEINFORMATION));
-	Information->EndingAddress.LowPart = FileHandle->FileSize;
-	Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+	Information->EndingAddress.QuadPart = FileHandle->FileSize;
+	Information->CurrentAddress.QuadPart = FileHandle->FilePointer;
 
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileInformation() FileSize = %d\n",
 	    Information->EndingAddress.LowPart);
@@ -1297,7 +1298,7 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 		//
 		// Compatibility hack as long as FS is not using underlying device DeviceId
 		//
-		ULONG DriveNumber;
+		UCHAR DriveNumber;
 		ULONGLONG StartSector;
 		ULONGLONG SectorCount;
 		int Type;
