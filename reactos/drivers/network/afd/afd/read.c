@@ -448,6 +448,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     
     if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK))
     {
+        FCB->Recv.Content -= *TotalBytesCopied;
         ExFreePool( DatagramRecv->Address );
         ExFreePool( DatagramRecv );
     }
@@ -512,6 +513,8 @@ PacketSocketRecvComplete(
         SocketStateUnlock(FCB);
         return Irp->IoStatus.Status;
     }
+    
+    FCB->Recv.Content += Irp->IoStatus.Information;
 
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
 
