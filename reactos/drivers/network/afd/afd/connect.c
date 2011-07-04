@@ -223,26 +223,33 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     ASSERT(!FCB->Recv.Window);
     ASSERT(!FCB->Send.Window);
 
-    Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
-                                       &FCB->Send.Size);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    if (!FCB->Recv.Size)
+    {
+        Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                           &FCB->Recv.Size);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
 
-    FCB->Recv.Size = FCB->Send.Size;
+    if (!FCB->Send.Size)
+    {
+        Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                           &FCB->Send.Size);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
 
     /* Allocate the receive area and start receiving */
-    FCB->Recv.Window =
-	ExAllocatePool( PagedPool, FCB->Recv.Size );
+    if (!FCB->Recv.Window)
+    {
+        FCB->Recv.Window = ExAllocatePool( PagedPool, FCB->Recv.Size );
+        if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
+    }
 
-    if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
-
-    FCB->Send.Window =
-	ExAllocatePool( PagedPool, FCB->Send.Size );
-
-    if( !FCB->Send.Window ) {
-	ExFreePool( FCB->Recv.Window );
-	FCB->Recv.Window = NULL;
-	return STATUS_NO_MEMORY;
+    if (!FCB->Send.Window)
+    {
+        FCB->Send.Window = ExAllocatePool( PagedPool, FCB->Send.Size );
+        if( !FCB->Send.Window ) return STATUS_NO_MEMORY;
     }
 
     FCB->State = SOCKET_STATE_CONNECTED;

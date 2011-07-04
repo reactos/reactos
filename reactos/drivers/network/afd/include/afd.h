@@ -173,7 +173,7 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked, Critical, Overread, NonBlocking;
+    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline;
     UINT State, Flags, GroupID, GroupType;
     KIRQL OldIrql;
     UINT LockCount;

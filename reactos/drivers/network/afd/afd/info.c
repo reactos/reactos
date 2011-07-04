@@ -50,6 +50,10 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	case AFD_INFO_BLOCKING_MODE:
 	    InfoReq->Information.Boolean = FCB->NonBlocking;
 	    break;
+            
+    case AFD_INFO_INLINING_MODE:
+        InfoReq->Information.Boolean = FCB->OobInline;
+        break;
 
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
         /* Only touch InfoReq if a socket has been set up.
@@ -106,6 +110,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    PCHAR NewBuffer;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
     
@@ -117,6 +122,61 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         case AFD_INFO_BLOCKING_MODE:
           AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
           FCB->NonBlocking = InfoReq->Information.Boolean;
+          break;
+        case AFD_INFO_INLINING_MODE:
+          FCB->OobInline = InfoReq->Information.Boolean;
+          break;
+        case AFD_INFO_RECEIVE_WINDOW_SIZE:
+          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+          if (NewBuffer)
+          {
+              if (FCB->Recv.Content > InfoReq->Information.Ulong)
+                  FCB->Recv.Content = InfoReq->Information.Ulong;
+              
+              if (FCB->Recv.Window)
+              {
+                  RtlCopyMemory(NewBuffer,
+                                FCB->Recv.Window,
+                                FCB->Recv.Content);
+                  
+                  ExFreePool(FCB->Recv.Window);
+              }
+              
+              FCB->Recv.Size = InfoReq->Information.Ulong;
+              FCB->Recv.Window = NewBuffer;
+              
+              Status = STATUS_SUCCESS;
+          }
+          else
+          {
+              Status = STATUS_NO_MEMORY;
+          }
+          break;
+        case AFD_INFO_SEND_WINDOW_SIZE:
+          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+          if (NewBuffer)
+          {
+              if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
+                  FCB->Send.BytesUsed = InfoReq->Information.Ulong;
+                  
+              if (FCB->Send.Window)
+              {
+                  RtlCopyMemory(NewBuffer,
+                                FCB->Send.Window,
+                                FCB->Send.BytesUsed);
+                  
+                  ExFreePool(FCB->Send.Window);
+              }
+                  
+              FCB->Send.Size = InfoReq->Information.Ulong;
+              FCB->Send.Window = NewBuffer;
+                  
+              Status = STATUS_SUCCESS;
+          }
+          else
+          {
+              Status = STATUS_NO_MEMORY;
+          }
           break;
         default:
           AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
