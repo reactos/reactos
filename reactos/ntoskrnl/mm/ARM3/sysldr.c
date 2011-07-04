@@ -2086,7 +2086,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_SECTION_HEADER Section;
     PFN_NUMBER DriverPages;
-    ULONG CurrentProtection, SectionProtection, CombinedProtection, ProtectionMask;
+    ULONG CurrentProtection, SectionProtection, CombinedProtection = 0, ProtectionMask;
     ULONG Sections, Size;
     ULONG_PTR BaseAddress, CurrentAddress;
     PMMPTE PointerPte, StartPte, LastPte, CurrentPte, ComboPte = NULL;
