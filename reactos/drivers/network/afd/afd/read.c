@@ -513,8 +513,6 @@ PacketSocketRecvComplete(
         SocketStateUnlock(FCB);
         return Irp->IoStatus.Status;
     }
-    
-    FCB->Recv.Content += Irp->IoStatus.Information;
 
     DatagramRecv = ExAllocatePool( NonPagedPool, DGSize );
 
@@ -536,6 +534,7 @@ PacketSocketRecvComplete(
 		SocketStateUnlock( FCB );
 		return Status;
     } else {
+        FCB->Recv.Content += DatagramRecv->Len;
 		InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
     }
 
