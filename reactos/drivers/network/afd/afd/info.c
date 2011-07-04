@@ -54,7 +54,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
         /* Only touch InfoReq if a socket has been set up.
            Behaviour was verified under WinXP SP2. */
-        if(FCB->AddressFile.Object)
+        if(FCB->AddressFile.Object || FCB->Connection.Object)
             InfoReq->Information.Ulong = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
         break;
