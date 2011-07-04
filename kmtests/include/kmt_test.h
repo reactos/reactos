@@ -38,7 +38,14 @@ typedef struct
     CHAR LogBuffer[ANYSIZE_ARRAY];
 } KMT_RESULTBUFFER, *PKMT_RESULTBUFFER;
 
-#if defined KMT_USER_MODE
+#ifdef KMT_KERNEL_MODE
+/* Device Extension layout */
+typedef struct
+{
+    PKMT_RESULTBUFFER ResultBuffer;
+    PMDL Mdl;
+} KMT_DEVICE_EXTENSION, *PKMT_DEVICE_EXTENSION;
+#elif defined KMT_USER_MODE
 VOID KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
 VOID KmtUnloadDriver(VOID);
 VOID KmtOpenDriver(VOID);
@@ -46,7 +53,7 @@ VOID KmtCloseDriver(VOID);
 
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
-DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer, IN DWORD Length);
+DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer, IN OUT PDWORD Length);
 #endif /* defined KMT_USER_MODE */
 
 extern PKMT_RESULTBUFFER ResultBuffer;
@@ -95,6 +102,11 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
 #define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
 
+#define KMT_MAKE_CODE(ControlCode)  CTL_CODE(FILE_DEVICE_UNKNOWN,           \
+                                             0xA00 + (ControlCode),         \
+                                             METHOD_BUFFERED,               \
+                                             FILE_ANY_ACCESS)
+
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 PKMT_RESULTBUFFER ResultBuffer = NULL;
 
@@ -122,6 +134,9 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
 {
     LONG OldLength;
     LONG NewLength;
+
+    if (!Buffer)
+        return;
 
     do
     {
@@ -199,6 +214,9 @@ VOID KmtFinishTest(PCSTR TestName)
     CHAR MessageBuffer[512];
     SIZE_T MessageLength;
 
+    if (!ResultBuffer)
+        return;
+
     MessageLength = KmtXSNPrintF(MessageBuffer, sizeof MessageBuffer, NULL, NULL,
                                     "%s: %ld tests executed (0 marked as todo, %ld failures), %ld skipped.\n",
                                     TestName,
@@ -212,6 +230,9 @@ VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)
 {
     CHAR MessageBuffer[512];
     SIZE_T MessageLength;
+
+    if (!ResultBuffer)
+        return;
 
     if (Condition)
     {
@@ -260,6 +281,9 @@ BOOLEAN KmtVSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Argumen
 {
     CHAR MessageBuffer[512];
     SIZE_T MessageLength;
+
+    if (!ResultBuffer)
+        return !Condition;
 
     if (!Condition)
     {

@@ -24,13 +24,6 @@ static DRIVER_DISPATCH DriverCreate;
 static DRIVER_DISPATCH DriverClose;
 static DRIVER_DISPATCH DriverIoControl;
 
-/* Device Extension layout */
-typedef struct
-{
-    PKMT_RESULTBUFFER ResultBuffer;
-    PMDL Mdl;
-} KMT_DEVICE_EXTENSION, *PKMT_DEVICE_EXTENSION;
-
 /* Globals */
 static PDEVICE_OBJECT MainDeviceObject;
 
@@ -68,13 +61,13 @@ DriverEntry(
                             &DeviceName,
                             FILE_DEVICE_UNKNOWN,
                             FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
-                            TRUE, &MainDeviceObject);
+                            FALSE, &MainDeviceObject);
 
     if (!NT_SUCCESS(Status))
         goto cleanup;
 
-    DPRINT("DriverEntry. Created DeviceObject %p\n",
-             MainDeviceObject);
+    DPRINT("DriverEntry. Created DeviceObject %p. DeviceExtension %p\n",
+             MainDeviceObject, MainDeviceObject->DeviceExtension);
     DeviceExtension = MainDeviceObject->DeviceExtension;
     DeviceExtension->ResultBuffer = NULL;
     DeviceExtension->Mdl = NULL;
@@ -146,19 +139,14 @@ DriverCreate(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
-    PKMT_DEVICE_EXTENSION DeviceExtension;
 
     PAGED_CODE();
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("DriverCreate. DeviceObject=%p\n",
-             DeviceObject);
-
-    DeviceExtension = DeviceObject->DeviceExtension;
-    ASSERT(!DeviceExtension->Mdl);
-    ASSERT(!DeviceExtension->ResultBuffer);
-    ASSERT(!ResultBuffer);
+    DPRINT("DriverCreate. DeviceObject=%p, RequestorMode=%d, FileObject=%p, FsContext=%p, FsContext2=%p\n",
+             DeviceObject, Irp->RequestorMode, IoStackLocation->FileObject,
+             IoStackLocation->FileObject->FsContext, IoStackLocation->FileObject->FsContext2);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
@@ -195,16 +183,22 @@ DriverClose(
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("DriverClose. DeviceObject=%p\n",
-             DeviceObject);
+    DPRINT("DriverClose. DeviceObject=%p, RequestorMode=%d, FileObject=%p, FsContext=%p, FsContext2=%p\n",
+             DeviceObject, Irp->RequestorMode, IoStackLocation->FileObject,
+             IoStackLocation->FileObject->FsContext, IoStackLocation->FileObject->FsContext2);
 
+    ASSERT(IoStackLocation->FileObject->FsContext2 == NULL);
     DeviceExtension = DeviceObject->DeviceExtension;
-    if (DeviceExtension->Mdl)
+    if (DeviceExtension->Mdl && IoStackLocation->FileObject->FsContext == DeviceExtension->Mdl)
     {
         MmUnlockPages(DeviceExtension->Mdl);
         IoFreeMdl(DeviceExtension->Mdl);
         DeviceExtension->Mdl = NULL;
         ResultBuffer = DeviceExtension->ResultBuffer = NULL;
+    }
+    else
+    {
+        ASSERT(IoStackLocation->FileObject->FsContext == NULL);
     }
 
     Irp->IoStatus.Status = Status;
@@ -242,9 +236,10 @@ DriverIoControl(
 
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("DriverIoControl. Code=0x%08X, DeviceObject=%p\n",
+    DPRINT("DriverIoControl. Code=0x%08X, DeviceObject=%p, FileObject=%p, FsContext=%p, FsContext2=%p\n",
              IoStackLocation->Parameters.DeviceIoControl.IoControlCode,
-             DeviceObject);
+             DeviceObject, IoStackLocation->FileObject,
+             IoStackLocation->FileObject->FsContext, IoStackLocation->FileObject->FsContext2);
 
     switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -315,8 +310,15 @@ DriverIoControl(
 
             if (DeviceExtension->Mdl)
             {
+                if (IoStackLocation->FileObject->FsContext != DeviceExtension->Mdl)
+                {
+                    Status = STATUS_ACCESS_DENIED;
+                    break;
+                }
                 MmUnlockPages(DeviceExtension->Mdl);
                 IoFreeMdl(DeviceExtension->Mdl);
+                IoStackLocation->FileObject->FsContext = NULL;
+                ResultBuffer = DeviceExtension->ResultBuffer = NULL;
             }
 
             DeviceExtension->Mdl = IoAllocateMdl(IoStackLocation->Parameters.DeviceIoControl.Type3InputBuffer,
@@ -341,6 +343,7 @@ DriverIoControl(
             } _SEH2_END;
 
             ResultBuffer = DeviceExtension->ResultBuffer = MmGetSystemAddressForMdlSafe(DeviceExtension->Mdl, NormalPagePriority);
+            IoStackLocation->FileObject->FsContext = DeviceExtension->Mdl;
 
             DPRINT("DriverIoControl. ResultBuffer: %ld %ld %ld %ld\n",
                     ResultBuffer->Successes, ResultBuffer->Failures,

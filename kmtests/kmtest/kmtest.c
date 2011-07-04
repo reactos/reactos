@@ -9,13 +9,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <strsafe.h>
+#include <winioctl.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "kmtest.h"
-#include <winioctl.h>
 #include <kmt_public.h>
 #define KMT_DEFINE_TEST_FUNCTIONS
 #include <kmt_test.h>
@@ -187,7 +187,7 @@ OutputResult(
     KmtFinishTest(TestName);
 
     if (!WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer, ResultBuffer->LogBufferLength, &BytesWritten, NULL))
-        Error = GetLastError();
+        error(Error);
 
     return Error;
 }
@@ -229,7 +229,8 @@ RunTest(
         error_goto(Error, cleanup);
 
 cleanup:
-    OutputResult(TestName);
+    if (!Error)
+        OutputResult(TestName);
     
     KmtFreeResultBuffer(ResultBuffer);
 

@@ -9,20 +9,26 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <strsafe.h>
+#include <winioctl.h>
+
+#include <assert.h>
 
 #include "kmtest.h"
-#include <kmt_test.h>
 #include <kmt_public.h>
+#include <kmt_test.h>
 
 /* pseudo-tests */
 START_TEST(Create)
 {
-    // nothing to do here. All tests start the service if needed
+    // nothing to do here. All tests create the service if needed
 }
 
 START_TEST(Delete)
 {
-    // TODO: delete kmtest service
+    SC_HANDLE Handle = NULL;
+    DWORD Error = KmtDeleteService(L"Kmtest", &Handle);
+
+    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
 }
 
 START_TEST(Start)
@@ -32,7 +38,14 @@ START_TEST(Start)
 
 START_TEST(Stop)
 {
-    // TODO: stop kmtest service
+    // TODO: requiring the service to be started for this is... bad,
+    // especially when it's marked for deletion and won't start ;)
+    SC_HANDLE Handle = NULL;
+    DWORD Error = KmtStopService(L"Kmtest", &Handle);
+
+    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
+    Error = KmtCloseService(&Handle);
+    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
 }
 
 /* test support functions for special-purpose drivers */
@@ -107,7 +120,7 @@ KmtOpenDriver(VOID)
     StringCbCopy(DevicePath, sizeof DevicePath, L"\\\\.\\Global\\GLOBALROOT\\Device\\");
     StringCbCat(DevicePath, sizeof DevicePath, TestServiceName);
 
-    TestDeviceHandle = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    TestDeviceHandle = CreateFile(DevicePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (TestDeviceHandle == INVALID_HANDLE_VALUE)
         error(Error);
 
@@ -139,8 +152,6 @@ KmtCloseDriver(VOID)
     }
 }
 
-/* TODO: check if these will be useful */
-
 /**
  * @name KmtSendToDriver
  *
@@ -154,8 +165,12 @@ DWORD
 KmtSendToDriver(
     IN DWORD ControlCode)
 {
-    // TODO
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD BytesRead;
+
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), NULL, 0, NULL, 0, &BytesRead, NULL))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
 }
 
 /**
@@ -173,8 +188,12 @@ KmtSendStringToDriver(
     IN DWORD ControlCode,
     IN PCSTR String)
 {
-    // TODO
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD BytesRead;
+
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, strlen(String), NULL, 0, &BytesRead, NULL))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
 }
 
 /**
@@ -190,8 +209,12 @@ DWORD
 KmtSendBufferToDriver(
     IN DWORD ControlCode,
     IN OUT PVOID Buffer,
-    IN DWORD Length)
+    IN OUT PDWORD Length)
 {
-    // TODO
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    assert(Length);
+
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), Buffer, *Length, NULL, 0, Length, NULL))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
 }
