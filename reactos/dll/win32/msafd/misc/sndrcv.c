@@ -25,7 +25,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
     PSOCKET_INFORMATION Socket = NULL;
     PASYNC_DATA                 AsyncData;
     NTSTATUS                    Status;
-    ULONG                       BlockMode;
+    BOOLEAN                     BlockMode;
 
     /* Get the Socket Structure associated to this Socket */
     Socket = GetSocketStructure(Handle);
@@ -44,8 +44,8 @@ WSPAsyncSelect(IN  SOCKET Handle,
     }
 
     /* Change the Socket to Non Blocking */
-    BlockMode = 1;
-    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+    BlockMode = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
     Socket->SharedData.NonBlocking = TRUE;
 
     /* Deactive WSPEventSelect */

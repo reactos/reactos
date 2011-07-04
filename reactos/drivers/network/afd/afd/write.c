@@ -340,7 +340,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
-		if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
+		if( (SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
 			AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 			UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 			return UnlockAndMaybeComplete
@@ -404,7 +404,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     else
     {
         FCB->PollState &= ~AFD_EVENT_SEND;
-        if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
+        if( (SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
             AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
             UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
             return UnlockAndMaybeComplete

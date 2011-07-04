@@ -346,7 +346,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     Status = ReceiveActivity( FCB, Irp );
 
-    if( Status == STATUS_PENDING && (RecvReq->AfdFlags & AFD_IMMEDIATE) ) {
+    if( Status == STATUS_PENDING &&
+        ((RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)) ) {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
@@ -690,7 +691,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			return UnlockAndMaybeComplete
 				( FCB, Status, Irp, Irp->IoStatus.Information );
 		}
-    } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+    } else if( (RecvReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking) ) {
 		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;

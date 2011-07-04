@@ -264,7 +264,7 @@ WSPSocket(int AddressFamily,
     /* Save Group Info */
     if (g != 0)
     {
-        GetSocketInformation(Socket, AFD_INFO_GROUP_ID_TYPE, 0, &GroupData);
+        GetSocketInformation(Socket, AFD_INFO_GROUP_ID_TYPE, NULL, NULL, &GroupData);
         Socket->SharedData.GroupID = GroupData.u.LowPart;
         Socket->SharedData.GroupType = GroupData.u.HighPart;
     }
@@ -272,11 +272,13 @@ WSPSocket(int AddressFamily,
     /* Get Window Sizes and Save them */
     GetSocketInformation (Socket,
                           AFD_INFO_SEND_WINDOW_SIZE,
+                          NULL,
                           &Socket->SharedData.SizeOfSendBuffer,
                           NULL);
 
     GetSocketInformation (Socket,
                           AFD_INFO_RECEIVE_WINDOW_SIZE,
+                          NULL,
                           &Socket->SharedData.SizeOfRecvBuffer,
                           NULL);
 
@@ -467,6 +469,7 @@ WSPCloseSocket(IN SOCKET Handle,
             /* Find out how many Sends are in Progress */
             if (GetSocketInformation(Socket,
                                      AFD_INFO_SENDS_IN_PROGRESS,
+                                     NULL,
                                      &SendsInProgress,
                                      NULL))
             {
@@ -1951,6 +1954,7 @@ WSPIoctl(IN  SOCKET Handle,
 {
     PSOCKET_INFORMATION Socket = NULL;
 	BOOLEAN NeedsCompletion;
+    BOOLEAN NonBlocking;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -1970,8 +1974,9 @@ WSPIoctl(IN  SOCKET Handle,
                 *lpErrno = WSAEFAULT;
                 return SOCKET_ERROR;
             }
-            Socket->SharedData.NonBlocking = *((PULONG)lpvInBuffer) ? 1 : 0;
-            *lpErrno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, (PULONG)lpvInBuffer, NULL);
+            NonBlocking = *((PULONG)lpvInBuffer) ? TRUE : FALSE;
+            Socket->SharedData.NonBlocking = NonBlocking ? 1 : 0;
+            *lpErrno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &NonBlocking, NULL, NULL);
 			if (*lpErrno != NO_ERROR)
 				return SOCKET_ERROR;
 			else
@@ -1982,7 +1987,7 @@ WSPIoctl(IN  SOCKET Handle,
                 *lpErrno = WSAEFAULT;
                 return SOCKET_ERROR;
             }
-            *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
+            *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, NULL, (PULONG)lpvOutBuffer, NULL);
 			if (*lpErrno != NO_ERROR)
 				return SOCKET_ERROR;
 			else
@@ -2258,6 +2263,7 @@ WSPCleanup(OUT LPINT lpErrno)
 int 
 GetSocketInformation(PSOCKET_INFORMATION Socket, 
                      ULONG AfdInformationClass, 
+                     PBOOLEAN Boolean OPTIONAL,
                      PULONG Ulong OPTIONAL, 
                      PLARGE_INTEGER LargeInteger OPTIONAL)
 {
@@ -2309,6 +2315,10 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     {
         *LargeInteger = InfoData.Information.LargeInteger;
     }
+    if (Boolean != NULL)
+    {
+        *Boolean = InfoData.Information.Boolean;
+    }
 
     NtClose( SockEvent );
 
@@ -2319,7 +2329,8 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
 
 int 
 SetSocketInformation(PSOCKET_INFORMATION Socket, 
-                     ULONG AfdInformationClass, 
+                     ULONG AfdInformationClass,
+                     PBOOLEAN Boolean OPTIONAL,
                      PULONG Ulong OPTIONAL, 
                      PLARGE_INTEGER LargeInteger OPTIONAL)
 {
@@ -2348,6 +2359,10 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     if (LargeInteger != NULL)
     {
         InfoData.Information.LargeInteger = *LargeInteger;
+    }
+    if (Boolean != NULL)
+    {
+        InfoData.Information.Boolean = *Boolean;
     }
 
     AFD_DbgPrint(MID_TRACE,("XXX Info %x (Data %x)\n",

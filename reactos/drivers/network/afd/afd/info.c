@@ -48,7 +48,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 
 	case AFD_INFO_BLOCKING_MODE:
-	    InfoReq->Information.Ulong = FCB->BlockingMode;
+	    InfoReq->Information.Boolean = FCB->NonBlocking;
 	    break;
 
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
@@ -115,8 +115,8 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     _SEH2_TRY {
       switch (InfoReq->InformationClass) {
         case AFD_INFO_BLOCKING_MODE:
-          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Ulong));
-          FCB->BlockingMode = InfoReq->Information.Ulong;
+          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
+          FCB->NonBlocking = InfoReq->Information.Boolean;
           break;
         default:
           AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
