@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS uxtheme.dll
- * FILE:            dll/win32/uxtheme/themehooks.c
+ * FILE:            dll/win32/uxtheme/nonclient.c
  * PURPOSE:         uxtheme non client area management
  * PROGRAMMER:      Giannis Adamopoulos
  */
@@ -181,6 +181,7 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
                      HWND hWnd,
                      HRGN hRgn)
 {
+    pcontext->wi.cbSize = sizeof(pcontext->wi);
     GetWindowInfo(hWnd, &pcontext->wi);
     pcontext->hWnd = hWnd;
     pcontext->Active = IsWindowActive(hWnd, pcontext->wi.dwExStyle);
@@ -189,15 +190,11 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     pcontext->CaptionHeight = pcontext->wi.cyWindowBorders;
     pcontext->CaptionHeight += GetSystemMetrics(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
 
-    if(hRgn <= 0)
+    if(hRgn <= (HRGN)1)
     {
         hRgn = CreateRectRgnIndirect(&pcontext->wi.rcWindow);
-        pcontext->hRgn = hRgn;
     }
-    else
-    {
-        pcontext->hRgn = 0;
-    }
+    pcontext->hRgn = hRgn;
 
     pcontext->hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
 }
@@ -905,6 +902,10 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
         Point.y = GET_Y_LPARAM(lParam);
         return DefWndNCHitTest(hWnd, Point);
     }
+    case WM_NCUAHDRAWCAPTION:
+    case WM_NCUAHDRAWFRAME:
+        /* FIXME: how should these be handled? */
+        return 0;
     default:
         return DefWndProc(hWnd, Msg, wParam, lParam);
     }
