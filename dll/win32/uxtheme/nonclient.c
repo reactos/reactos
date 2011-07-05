@@ -26,6 +26,10 @@ typedef struct _DRAW_CONTEXT
     BOOL Active; /* wi.dwWindowStatus isn't correct for mdi child windows */
     HRGN hRgn;
     int CaptionHeight;
+
+    /* for double buffering */
+    HDC hDCScreen;
+    HBITMAP hbmpOld;
 } DRAW_CONTEXT, *PDRAW_CONTEXT;
 
 typedef enum 
@@ -59,6 +63,7 @@ typedef enum {
 
 #define BUTTON_GAP_SIZE 2
 
+#define MENU_BAR_ITEMS_SPACE (12)
 
 HFONT hMenuFont = NULL;
 HFONT hMenuFontBold = NULL;
@@ -232,6 +237,29 @@ ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext)
     {
         DeleteObject(pcontext->hRgn);
     }
+}
+
+static void 
+ThemeStartBufferedPaint(PDRAW_CONTEXT pcontext, int cx, int cy)
+{
+    HBITMAP hbmp;
+
+    pcontext->hDCScreen = pcontext->hDC;
+    pcontext->hDC = CreateCompatibleDC(pcontext->hDCScreen);
+    hbmp = CreateCompatibleBitmap(pcontext->hDCScreen, cx, cy); 
+    pcontext->hbmpOld = (HBITMAP)SelectObject(pcontext->hDC, hbmp);
+}
+
+static void
+ThemeEndBufferedPaint(PDRAW_CONTEXT pcontext, int x, int y, int cx, int cy)
+{
+    HBITMAP hbmp;
+    BitBlt(pcontext->hDCScreen, 0, 0, cx, cy, pcontext->hDC, x, y, SRCCOPY);
+    hbmp = (HBITMAP) SelectObject(pcontext->hDC, pcontext->hbmpOld);
+    DeleteObject(pcontext->hDC);
+    DeleteObject(hbmp);
+
+    pcontext->hDC = pcontext->hDCScreen;
 }
 
 static void 
@@ -663,7 +691,9 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 
     if((pcontext->wi.dwStyle & WS_CAPTION)==WS_CAPTION)
     {
+        ThemeStartBufferedPaint(pcontext, prcCurrent->right, pcontext->CaptionHeight);
         ThemeDrawCaption(pcontext, prcCurrent);
+        ThemeEndBufferedPaint(pcontext, 0, 0, prcCurrent->right, pcontext->CaptionHeight);
         ThemeDrawBorders(pcontext, prcCurrent);
     }
     else
