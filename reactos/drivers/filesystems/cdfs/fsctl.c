@@ -46,7 +46,7 @@ CdfsGetPVDData(PUCHAR Buffer,
                PCDINFO CdInfo)
 {
     PPVD Pvd;
-    ULONG i;
+    USHORT i;
     PUCHAR pc;
     PWCHAR pw;
 

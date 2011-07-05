@@ -21,7 +21,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                    PULONG Size)
 {
     PIO_STACK_LOCATION Stack;
-    LONG BufferLength = 0;
+    ULONG BufferLength = 0;
     PUNICODE_STRING SearchPattern = NULL;
     FILE_INFORMATION_CLASS FileInformationClass;
     ULONG FileIndex = 0;

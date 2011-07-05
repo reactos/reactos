@@ -21,7 +21,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
     CHAR Line[65];
     UCHAR ch;
     const char Hex[] = "0123456789ABCDEF";
-    int i, j;
+    ULONG i, j;
 
     DbgPrint("---------------\n");
 
