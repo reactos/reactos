@@ -806,7 +806,8 @@ WSPSelect(IN int nfds,
     IO_STATUS_BLOCK     IOSB;
     PAFD_POLL_INFO      PollInfo;
     NTSTATUS            Status;
-    LONG                HandleCount, OutCount = 0;
+    ULONG               HandleCount;
+    LONG                OutCount = 0;
     ULONG               PollBufferSize;
     PVOID               PollBuffer;
     ULONG               i, j = 0, x;
@@ -823,7 +824,7 @@ WSPSelect(IN int nfds,
 
     if ( HandleCount == 0 )
     {
-        AFD_DbgPrint(MAX_TRACE,("HandleCount: %d. Return SOCKET_ERROR\n",
+        AFD_DbgPrint(MAX_TRACE,("HandleCount: %u. Return SOCKET_ERROR\n",
                      HandleCount));
         if (lpErrno) *lpErrno = WSAEINVAL;
         return SOCKET_ERROR;
@@ -831,7 +832,7 @@ WSPSelect(IN int nfds,
 
     PollBufferSize = sizeof(*PollInfo) + ((HandleCount - 1) * sizeof(AFD_HANDLE));
 
-    AFD_DbgPrint(MID_TRACE,("HandleCount: %d BufferSize: %d\n", 
+    AFD_DbgPrint(MID_TRACE,("HandleCount: %u BufferSize: %u\n", 
                  HandleCount, PollBufferSize));
 
     /* Convert Timeout to NT Format */
