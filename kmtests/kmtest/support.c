@@ -192,6 +192,8 @@ KmtSendToDriver(
 {
     DWORD BytesRead;
 
+    assert(ControlCode < 0x400);
+
     if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), NULL, 0, NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
@@ -215,6 +217,8 @@ KmtSendStringToDriver(
 {
     DWORD BytesRead;
 
+    assert(ControlCode < 0x400);
+
     if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, strlen(String), NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
@@ -226,19 +230,23 @@ KmtSendStringToDriver(
  *
  * @param ControlCode
  * @param Buffer
- * @param Length
+ * @param InLength
+ * @param OutLength
  *
  * @return Win32 error code as returned by DeviceIoControl
  */
 DWORD
 KmtSendBufferToDriver(
     IN DWORD ControlCode,
-    IN OUT PVOID Buffer,
-    IN OUT PDWORD Length)
+    IN OUT PVOID Buffer OPTIONAL,
+    IN DWORD InLength,
+    IN OUT PDWORD OutLength)
 {
-    assert(Length);
+    assert(OutLength);
+    assert(Buffer || (!InLength && !*OutLength));
+    assert(ControlCode < 0x400);
 
-    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), Buffer, *Length, NULL, 0, Length, NULL))
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), Buffer, InLength, Buffer, *OutLength, OutLength, NULL))
         return GetLastError();
 
     return ERROR_SUCCESS;

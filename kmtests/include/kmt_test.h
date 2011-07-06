@@ -38,6 +38,40 @@ typedef struct
     CHAR LogBuffer[ANYSIZE_ARRAY];
 } KMT_RESULTBUFFER, *PKMT_RESULTBUFFER;
 
+#ifdef KMT_STANDALONE_DRIVER
+#define KMT_KERNEL_MODE
+
+typedef NTSTATUS (KMT_IRP_HANDLER)(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation);
+typedef KMT_IRP_HANDLER *PKMT_IRP_HANDLER;
+
+NTSTATUS KmtRegisterIrpHandler(IN UCHAR MajorFunction, IN PDEVICE_OBJECT DeviceObject OPTIONAL, IN PKMT_IRP_HANDLER IrpHandler);
+NTSTATUS KmtUnregisterIrpHandler(IN UCHAR MajorFunction, IN PDEVICE_OBJECT DeviceObject OPTIONAL, IN PKMT_IRP_HANDLER IrpHandler);
+
+typedef NTSTATUS (KMT_MESSAGE_HANDLER)(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG ControlCode,
+    IN PVOID Buffer OPTIONAL,
+    IN SIZE_T InLength,
+    IN OUT PSIZE_T OutLength);
+typedef KMT_MESSAGE_HANDLER *PKMT_MESSAGE_HANDLER;
+
+NTSTATUS KmtRegisterMessageHandler(IN ULONG ControlCode OPTIONAL, IN PDEVICE_OBJECT DeviceObject OPTIONAL, IN PKMT_MESSAGE_HANDLER MessageHandler);
+NTSTATUS KmtUnregisterMessageHandler(IN ULONG ControlCode OPTIONAL, IN PDEVICE_OBJECT DeviceObject OPTIONAL, IN PKMT_MESSAGE_HANDLER MessageHandler);
+
+typedef enum
+{
+    TESTENTRY_NO_CREATE_DEVICE = 1,
+    TESTENTRY_NO_REGISTER_DISPATCH = 2,
+    TESTENTRY_NO_REGISTER_UNLOAD = 4,
+} KMT_TESTENTRY_FLAGS;
+
+NTSTATUS TestEntry(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING RegistryPath, OUT PCWSTR *DeviceName, OUT INT *Flags);
+VOID TestUnload(IN PDRIVER_OBJECT DriverObject);
+#endif /* defined KMT_STANDALONE_DRIVER */
+
 #ifdef KMT_KERNEL_MODE
 /* Device Extension layout */
 typedef struct
@@ -55,7 +89,7 @@ VOID KmtCloseDriver(VOID);
 
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
-DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer, IN OUT PDWORD Length);
+DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
 #endif /* defined KMT_USER_MODE */
 
 extern PKMT_RESULTBUFFER ResultBuffer;
@@ -105,7 +139,7 @@ BOOLEAN KmtSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)            
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
 
 #define KMT_MAKE_CODE(ControlCode)  CTL_CODE(FILE_DEVICE_UNKNOWN,           \
-                                             0xA00 + (ControlCode),         \
+                                             0xC00 + (ControlCode),         \
                                              METHOD_BUFFERED,               \
                                              FILE_ANY_ACCESS)
 

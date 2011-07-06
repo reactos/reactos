@@ -4,7 +4,7 @@ include_directories(
 #
 # subdirectories containing special-purpose drivers
 #
-#add_subdirectory(something)
+add_subdirectory(Example)
 
 #
 # kmtest_drv.sys driver

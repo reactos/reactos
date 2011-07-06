@@ -1,7 +1,6 @@
 <module name="kmtest_drv" type="kernelmodedriver" installbase="system32/drivers" installname="kmtest_drv.sys">
 	<include base="kmtest_drv">include</include>
 	<library>ntoskrnl</library>
-	<library>ntdll</library>
 	<library>hal</library>
 	<library>pseh</library>
 	<library>kmtest_printf</library>
