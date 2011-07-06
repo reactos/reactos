@@ -50,6 +50,9 @@ list(APPEND KMTEST_SOURCE
     kmtest/service.c
     kmtest/support.c
     kmtest/testlist.c
+
+    example/Example_user.c
+
     kmtest/kmtest.rc)
 
 add_executable(kmtest ${KMTEST_SOURCE})

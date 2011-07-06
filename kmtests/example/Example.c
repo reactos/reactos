@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite Example Test kernel-mode part
+ * PURPOSE:         Kernel-Mode Test Suite Example kernel-mode test part
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 

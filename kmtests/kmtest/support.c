@@ -50,6 +50,31 @@ START_TEST(Stop)
 
 /* test support functions for special-purpose drivers */
 
+extern HANDLE KmtestHandle;
+
+/**
+ * @name KmtRunKernelTest
+ *
+ * Run the specified kernel-mode test part
+ *
+ * @param TestName
+ *        Name of the test to run
+ *
+ * @return Win32 error code as returned by DeviceIoControl
+ */
+DWORD
+KmtRunKernelTest(
+    IN PCSTR TestName)
+{
+    DWORD Error = ERROR_SUCCESS;
+    DWORD BytesRead;
+
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, strlen(TestName), NULL, 0, &BytesRead, NULL))
+        error(Error);
+
+    return Error;
+}
+
 static WCHAR TestServiceName[MAX_PATH];
 static SC_HANDLE TestServiceHandle;
 static HANDLE TestDeviceHandle;

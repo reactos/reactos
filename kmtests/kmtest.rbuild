@@ -8,4 +8,7 @@
 		<file>support.c</file>
 		<file>testlist.c</file>
 	</directory>
+	<directory name="example">
+		<file>Example_user.c</file>
+	</directory>
 </module>

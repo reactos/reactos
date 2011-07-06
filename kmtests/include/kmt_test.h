@@ -46,6 +46,8 @@ typedef struct
     PMDL Mdl;
 } KMT_DEVICE_EXTENSION, *PKMT_DEVICE_EXTENSION;
 #elif defined KMT_USER_MODE
+DWORD KmtRunKernelTest(IN PCSTR TestName);
+
 VOID KmtLoadDriver(IN PCWSTR ServiceName, IN BOOLEAN RestartIfRunning);
 VOID KmtUnloadDriver(VOID);
 VOID KmtOpenDriver(VOID);

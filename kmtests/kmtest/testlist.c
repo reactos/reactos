@@ -14,6 +14,7 @@ VOID Test_Create(VOID);
 VOID Test_Delete(VOID);
 VOID Test_Start(VOID);
 VOID Test_Stop(VOID);
+VOID Test_Example(VOID);
 
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
@@ -22,5 +23,6 @@ const KMT_TEST TestList[] =
     { "-delete",            Test_Delete },
     { "-start",             Test_Start },
     { "-stop",              Test_Stop, },
+    { "Example",            Test_Example },
     { NULL,                 NULL },
 };

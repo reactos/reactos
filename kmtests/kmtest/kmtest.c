@@ -26,7 +26,7 @@
 #define LOGBUFFER_SIZE      65000
 #define RESULTBUFFER_SIZE   FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE])
 
-static HANDLE KmtestHandle;
+HANDLE KmtestHandle;
 PCSTR ErrorFileAndLine = "No error";
 
 static void OutputError(DWORD Error);
@@ -223,15 +223,14 @@ RunTest(
         TestFunction();
         goto cleanup;
     }
-    
+
     // not found in user-mode test list, call driver
-    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, strlen(TestName), NULL, 0, &BytesRead, NULL))
-        error_goto(Error, cleanup);
+    Error = KmtRunKernelTest(TestName);
 
 cleanup:
     if (!Error)
-        OutputResult(TestName);
-    
+        Error = OutputResult(TestName);
+
     KmtFreeResultBuffer(ResultBuffer);
 
     return Error;
