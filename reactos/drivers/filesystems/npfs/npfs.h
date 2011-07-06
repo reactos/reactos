@@ -5,6 +5,12 @@
 #include <ndk/iotypes.h>
 #include <pseh/pseh2.h>
 
+#define TAG_NPFS_CCB 'cFpN'
+#define TAG_NPFS_CCB_DATA 'iFpN' /* correct? */
+#define TAG_NPFS_FCB 'FFpN'
+#define TAG_NPFS_NAMEBLOCK 'nFpN'
+#define TAG_NPFS_THREAD_CONTEXT 'tFpN'
+
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
 
@@ -87,6 +93,7 @@ typedef struct _NPFS_CCB
     ULONG PipeState;
     ULONG ReadDataAvailable;
     ULONG WriteQuotaAvailable;
+    ULONG RefCount;
 
     LIST_ENTRY ReadRequestListHead;
 

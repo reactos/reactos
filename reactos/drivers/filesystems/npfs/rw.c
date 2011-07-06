@@ -194,12 +194,11 @@ NpfsWaiterThread(PVOID InitContext)
         {
             /* it exist an other thread with empty wait slots, we can remove our thread from the list */
             RemoveEntryList(&ThreadContext->ListEntry);
-            ThreadContext->Vcb->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
+            ExFreePoolWithTag(ThreadContext, TAG_NPFS_THREAD_CONTEXT);
             KeUnlockMutex(&ThreadContext->Vcb->PipeListLock);
             break;
         }
     }
-    ExFreePool(ThreadContext);
 }
 
 static NTSTATUS
@@ -234,7 +233,9 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
 
     if (ListEntry == &Vcb->ThreadListHead)
     {
-        ThreadContext = ExAllocatePool(NonPagedPool, sizeof(NPFS_THREAD_CONTEXT));
+        ThreadContext = ExAllocatePoolWithTag(NonPagedPool,
+                                              sizeof(NPFS_THREAD_CONTEXT),
+                                              TAG_NPFS_THREAD_CONTEXT);
         if (ThreadContext == NULL)
         {
             KeUnlockMutex(&Vcb->PipeListLock);
@@ -257,7 +258,7 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
             (PVOID)ThreadContext);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePool(ThreadContext);
+            ExFreePoolWithTag(ThreadContext, TAG_NPFS_THREAD_CONTEXT);
             KeUnlockMutex(&Vcb->PipeListLock);
             return Status;
         }
@@ -638,7 +639,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                         Buffer = (PVOID)((ULONG_PTR)Buffer + CopyLength);
                         Length -= CopyLength;
                     }
-                    else 
+                    else
                     {
                         KeResetEvent(&Ccb->ReadEvent);
 
