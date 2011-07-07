@@ -280,6 +280,20 @@ WSPRecvFrom(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Call WSPRecv for a non-datagram socket */
+        return WSPRecv(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesRead,
+                       ReceiveFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
+    }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
                             NULL, 1, FALSE );
