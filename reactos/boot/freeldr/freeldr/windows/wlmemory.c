@@ -224,7 +224,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
-	PKTSS Tss;
+	//PKTSS Tss;
 	BOOLEAN Status;
 
 	//
@@ -353,7 +353,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
 	WinLdrMapSpecialPages(PcrBasePage);
 
-	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+	//Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
 	// Unmap what is not needed from kernel page table
 	MempDisablePages();

@@ -34,7 +34,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-  EXTENDED_GEOMETRY ExtGeometry;
+  //EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
   ULONG Size;
 
@@ -69,7 +69,7 @@ GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
   DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
 
   /* Get the disk geometry */
-  ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
+  //ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
 
   if(MachDiskGetDriveGeometry(DriveNumber, &Geometry))
     {

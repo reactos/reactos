@@ -1196,12 +1196,12 @@ LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
 	PEXT2_FILE_INFO FileHandle;
-	ULONG DeviceId;
+	//ULONG DeviceId;
 
 	if (OpenMode != OpenReadOnly)
 		return EACCES;
 
-	DeviceId = FsGetDeviceId(*FileId);
+	//DeviceId = FsGetDeviceId(*FileId);
 
 	DPRINTM(DPRINT_FILESYSTEM, "Ext2Open() FileName = %s\n", Path);
 

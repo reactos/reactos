@@ -536,7 +536,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
 static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, PCHAR FileName, ULONGLONG *OutMFTIndex)
 {
     PNTFS_MFT_RECORD MftRecord;
-    ULONG Magic;
+    //ULONG Magic;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
     PNTFS_ATTR_CONTEXT IndexBitmapCtx;
     PNTFS_ATTR_CONTEXT IndexAllocationCtx;
@@ -557,7 +557,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
 
     if (NtfsReadMftRecord(Volume, MFTIndex, MftRecord))
     {
-        Magic = MftRecord->Magic;
+        //Magic = MftRecord->Magic;
 
         IndexRootCtx = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30");
         if (IndexRootCtx == NULL)

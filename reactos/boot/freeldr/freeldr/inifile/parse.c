@@ -180,12 +180,11 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
 ULONG IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
 {
-	ULONG		Idx;
 	ULONG		LineCharCount = 0;
 
 	// Loop through counting chars until we hit the end of the
 	// file or we encounter a new line char
-	for (Idx=0; (CurrentOffset < IniFileSize); CurrentOffset++)
+	for (; (CurrentOffset < IniFileSize); CurrentOffset++)
 	{
 		// Increment the line character count
 		LineCharCount++;
@@ -193,7 +192,6 @@ ULONG IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffs
 		// Check for new line char
 		if (IniFileData[CurrentOffset] == '\n')
 		{
-			CurrentOffset++;
 			break;
 		}
 	}
