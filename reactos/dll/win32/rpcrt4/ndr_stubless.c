@@ -841,11 +841,12 @@ __declspec(naked) LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigne
     __asm
     {
         push ebp
+        mov ebp, esp
         push edi            ; Save registers
         push esi
-        mov ebp, esp
         mov eax, [ebp+16]   ; Get stack size
         sub esp, eax        ; Make room in stack for arguments
+        and esp, 0xFFFFFFF0
         mov edi, esp
         mov ecx, eax
         mov esi, [ebp+12]
