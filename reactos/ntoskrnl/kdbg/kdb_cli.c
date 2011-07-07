@@ -110,10 +110,8 @@ PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into duri
 BOOLEAN KdbpBugCheckRequested = FALSE;
 
 /* Vars for dmesg */
-/* defined here, used in ../kd/kdio.c: */
-volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
-
 /* defined in ../kd/kdio.c, declare here: */
+extern volatile BOOLEAN KdbpIsInDmesgMode;
 extern const ULONG KdpDmesgBufferSize;
 extern PCHAR KdpDmesgBuffer;
 extern volatile ULONG KdpDmesgCurrentPosition;

@@ -39,7 +39,7 @@ volatile ULONG KdpDmesgCurrentPosition = 0;
 volatile ULONG KdpDmesgFreeBytes = 0;
 volatile ULONG KdbDmesgTotalWritten = 0;
 KSPIN_LOCK KdpDmesgLogSpinLock;
-extern volatile BOOLEAN KdbpIsInDmesgMode;
+volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 
 /* FILE DEBUG LOG FUNCTIONS **************************************************/
 
