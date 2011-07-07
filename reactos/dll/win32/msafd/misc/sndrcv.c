@@ -573,6 +573,20 @@ WSPSendTo(SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Use WSPSend for connection-oriented sockets */
+        return WSPSend(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesSent,
+                       iFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
+    }
 
     /* Bind us First */
     if (Socket->SharedData.State == SocketOpen)
