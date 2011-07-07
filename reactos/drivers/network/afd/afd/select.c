@@ -302,6 +302,11 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = STATUS_SUCCESS;
     }
 
+    if( FCB->EventSelect && (FCB->PollState & FCB->EventSelectTriggers) ) {
+        AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
+    }
+
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return UnlockAndMaybeComplete( FCB, Status, Irp,
