@@ -33,7 +33,15 @@ ULONG KdpPort;
 CHAR KdpScreenLineBuffer[KdpScreenLineLenght + 1] = "";
 ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
-/* DEBUG LOG FUNCTIONS *******************************************************/
+const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
+PCHAR KdpDmesgBuffer = NULL;
+volatile ULONG KdpDmesgCurrentPosition = 0;
+volatile ULONG KdpDmesgFreeBytes = 0;
+volatile ULONG KdbDmesgTotalWritten = 0;
+KSPIN_LOCK KdpDmesgLogSpinLock;
+extern volatile BOOLEAN KdbpIsInDmesgMode;
+
+/* FILE DEBUG LOG FUNCTIONS **************************************************/
 
 VOID
 NTAPI
@@ -49,8 +57,14 @@ KdpLoggerThread(PVOID Context)
         KeWaitForSingleObject(&KdpLoggerThreadEvent, 0, KernelMode, FALSE, NULL);
 
         /* Bug */
+        /* Keep KdpCurrentPosition and KdpFreeBytes values in local
+         * variables to avoid their possible change from Producer part,
+         * KdpPrintToLogFile function
+         */
         end = KdpCurrentPosition;
         num = KdpFreeBytes;
+
+        /* Now securely calculate values, based on local variables */
         beg = (end + num) % KdpBufferSize;
         num = KdpBufferSize - num;
 
@@ -148,6 +162,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
     IO_STATUS_BLOCK Iosb;
     HANDLE ThreadHandle;
     KPRIORITY Priority;
+    SIZE_T MemSizeMBs;
 
     if (!KdpDebugMode.File) return;
 
@@ -175,6 +190,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
         /* Display separator + ReactOS version at start of the debug log */
         DPRINT1("---------------------------------------------------------------\n");
         DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
     }
     else if (BootPhase == 2)
     {
@@ -276,6 +293,7 @@ NTAPI
 KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
+    SIZE_T MemSizeMBs;
     if (!KdpDebugMode.Serial) return;
 
     if (BootPhase == 0)
@@ -301,6 +319,8 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Display separator + ReactOS version at start of the debug log */
         DPRINT1("-----------------------------------------------------\n");
         DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
         DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
         DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
                                             KeLoaderBlock->NtHalPathName,
@@ -315,11 +335,19 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
 /* SCREEN FUNCTIONS **********************************************************/
 
+/*
+ * Screen debug logger function KdpScreenPrint() writes text messages into
+ * KdpDmesgBuffer, using it as a circular buffer. KdpDmesgBuffer contents could
+ * be later (re)viewed using dmesg command of kdbg. KdpScreenPrint() protects
+ * KdpDmesgBuffer from simultaneous writes by use of KdpDmesgLogSpinLock.
+ */
 VOID
 NTAPI
 KdpScreenPrint(LPSTR Message,
                ULONG Length)
 {
+    ULONG beg, end, num;
+    KIRQL OldIrql;
     PCHAR pch = (PCHAR) Message;
 
     while (*pch)
@@ -354,16 +382,74 @@ KdpScreenPrint(LPSTR Message,
             KdpScreenLineBuffer[0] = '\0';
             KdpScreenLineLength = KdpScreenLineBufferPos = 0;
         }
-        
+
         ++pch;
     }
-    
+
     /* Print buffered characters */
     if(KdpScreenLineBufferPos != KdpScreenLineLength)
     {
         HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
         KdpScreenLineBufferPos = KdpScreenLineLength;
     }
+
+    /* Dmesg: store Message in the buffer to show it later */
+    if (KdbpIsInDmesgMode)
+       return;
+
+    if (KdpDmesgBuffer == NULL)
+      return;
+
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Wait when the spinlock becomes available */
+        while (!KeTestSpinLock(&KdpDmesgLogSpinLock));
+
+        /* Spinlock was free, raise IRQL */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDmesgLogSpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
+     * set num to min(KdpDmesgFreeBytes, Length).
+     */
+    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes; 
+    beg = KdpDmesgCurrentPosition;
+    if (num != 0)
+    {
+        end = (beg + num) % KdpDmesgBufferSize;
+        if (end > beg)
+        {
+            RtlCopyMemory(KdpDmesgBuffer + beg, Message, Length);
+        }
+        else
+        {
+            RtlCopyMemory(KdpDmesgBuffer + beg, Message, KdpDmesgBufferSize - beg);
+            RtlCopyMemory(KdpDmesgBuffer, Message + (KdpDmesgBufferSize - beg), end);
+        }
+        KdpDmesgCurrentPosition = end;
+
+        /* Counting the total bytes written */
+        KdbDmesgTotalWritten += num;
+    }
+
+    /* Release spinlock */
+    KiReleaseSpinLock(&KdpDmesgLogSpinLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+
+    /* Optional step(?): find out a way to notify about buffer exhaustion,
+     * and possibly fall into kbd to use dmesg command: user will read
+     * debug messages before they will be wiped over by next writes.
+     */
 }
 
 VOID
@@ -371,6 +457,7 @@ NTAPI
 KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
+    SIZE_T MemSizeMBs;
     if (!KdpDebugMode.Screen) return;
 
     if (BootPhase == 0)
@@ -381,6 +468,30 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+    }
+    else if (BootPhase == 1)
+    {
+      /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
+       * see kdbp_cli.c:KdbpCmdDmesg()/2
+       */
+      KdpDmesgBuffer = ExAllocatePool(NonPagedPool, KdpDmesgBufferSize + 1);
+      RtlZeroMemory(KdpDmesgBuffer, KdpDmesgBufferSize + 1);
+      KdpDmesgFreeBytes = KdpDmesgBufferSize;
+      KdbDmesgTotalWritten = 0;
+
+      /* Initialize spinlock */
+      KeInitializeSpinLock(&KdpDmesgLogSpinLock);
+
+      /* Display separator + ReactOS version at start of the debug log */
+      DPRINT1("-----------------------------------------------------\n");
+      DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+      MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+      DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
+      DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
+      DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
+                                          KeLoaderBlock->NtHalPathName,
+                                          KeLoaderBlock->ArcHalDeviceName,
+                                          KeLoaderBlock->NtBootPathName);
     }
     else if (BootPhase == 2)
     {
