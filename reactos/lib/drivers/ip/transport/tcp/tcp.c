@@ -60,20 +60,31 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                Connection, Connection->SocketContext));
 
         /* Things that can happen when we try the initial connection */
-        if( Connection->SignalState & (SEL_CONNECT | SEL_FIN) ) {
+        if( Connection->SignalState & (SEL_CONNECT | SEL_FIN | SEL_ERROR) ) {
             while (!IsListEmpty(&Connection->ConnectRequest)) {
                Entry = RemoveHeadList( &Connection->ConnectRequest );
 
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 
-               Bucket->Status = (Connection->SignalState & SEL_CONNECT) ? STATUS_SUCCESS : STATUS_CANCELLED;
+               if (Connection->SignalState & SEL_ERROR)
+               {
+                   Bucket->Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+               }
+               else if (Connection->SignalState & SEL_FIN)
+               {
+                   Bucket->Status = STATUS_CANCELLED;
+               }
+               else
+               {
+                   Bucket->Status = STATUS_SUCCESS;
+               }
                Bucket->Information = 0;
 
                CompleteBucket(Connection, Bucket);
            }
        }
 
-       if( Connection->SignalState & (SEL_ACCEPT | SEL_FIN) ) {
+       if( Connection->SignalState & (SEL_ACCEPT | SEL_FIN | SEL_ERROR) ) {
            /* Handle readable on a listening socket --
             * TODO: Implement filtering
             */
@@ -94,25 +105,28 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                TI_DbgPrint(DEBUG_TCP,("Getting the socket\n"));
 
-               if (Connection->SignalState & SEL_ACCEPT)
+               if (Connection->SignalState & SEL_ERROR)
+               {
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+               }
+               else if (Connection->SignalState & SEL_FIN)
+               {
+                   Status = STATUS_CANCELLED;
+               }
+               else
                {
                    Status = TCPServiceListeningSocket(Connection->AddressFile->Listener,
                                                       Bucket->AssociatedEndpoint,
                                                       (PTDI_REQUEST_KERNEL)&IrpSp->Parameters);
                }
-               else
-               {
-                   /* We got here because of a SEL_FIN event */
-                   Status = STATUS_CANCELLED;
-               }
 
                TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
+               if( Status == STATUS_PENDING ) {
                    InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
                    break;
                } else {
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
+                   Bucket->Status = Status;
                    Bucket->Information = 0;
                    DereferenceObject(Bucket->AssociatedEndpoint);
 
@@ -122,7 +136,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
       }
 
       /* Things that happen after we're connected */
-      if( Connection->SignalState & (SEL_READ | SEL_FIN) ) {
+      if( Connection->SignalState & (SEL_READ | SEL_FIN | SEL_ERROR) ) {
           TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
                                  IsListEmpty(&Connection->ReceiveRequest) ?
                                  "empty" : "nonempty"));
@@ -153,7 +167,16 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                      Connection->SocketContext));
                TI_DbgPrint(DEBUG_TCP, ("RecvBuffer: %x\n", RecvBuffer));
 
-               if (Connection->SignalState & SEL_READ)
+               if (Connection->SignalState & SEL_ERROR)
+               {
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+               }
+               else if (Connection->SignalState & SEL_FIN)
+               {
+                   /* We got here because of a SEL_FIN event */
+                   Status = STATUS_CANCELLED;
+               }
+               else
                {
                    Status = TCPTranslateError(OskitTCPRecv(Connection->SocketContext,
                                                            RecvBuffer,
@@ -161,15 +184,10 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                                            &Received,
                                                            0));
                }
-               else
-               {
-                   /* We got here because of a SEL_FIN event */
-                   Status = STATUS_CANCELLED;
-               }
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
 
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
+               if( Status == STATUS_PENDING ) {
                    InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
                    break;
                } else {
@@ -177,14 +195,14 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                ("Completing Receive request: %x %x\n",
                                 Bucket->Request, Status));
 
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
+                   Bucket->Status = Status;
                    Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Received : 0;
 
                    CompleteBucket(Connection, Bucket);
                }
            }
        }
-       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
+       if( Connection->SignalState & (SEL_WRITE | SEL_FIN | SEL_ERROR) ) {
            TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
                                   IsListEmpty(&Connection->SendRequest) ?
                                   "empty" : "nonempty"));
@@ -214,7 +232,16 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                  ("Connection->SocketContext: %x\n",
                   Connection->SocketContext));
 
-               if (Connection->SignalState & SEL_WRITE)
+               if (Connection->SignalState & SEL_ERROR)
+               {
+                   Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+               }
+               else if (Connection->SignalState & SEL_FIN)
+               {
+                   /* We got here because of a SEL_FIN event */
+                   Status = STATUS_CANCELLED;
+               }
+               else
                {
                    Status = TCPTranslateError(OskitTCPSend(Connection->SocketContext,
                                                            SendBuffer,
@@ -222,15 +249,10 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                                            &Sent,
                                                            0));
                }
-               else
-               {
-                   /* We got here because of a SEL_FIN event */
-                   Status = STATUS_CANCELLED;
-               }
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Sent));
 
-               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
+               if( Status == STATUS_PENDING ) {
                    InsertHeadList( &Connection->SendRequest, &Bucket->Entry );
                    break;
                } else {
@@ -238,20 +260,29 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                ("Completing Send request: %x %x\n",
                                Bucket->Request, Status));
 
-                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
+                   Bucket->Status = Status;
                    Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Sent : 0;
 
                    CompleteBucket(Connection, Bucket);
                }
            }
        }
-       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
+       if( Connection->SignalState & (SEL_WRITE | SEL_FIN | SEL_ERROR) ) {
           while (!IsListEmpty(&Connection->ShutdownRequest)) {
             Entry = RemoveHeadList( &Connection->ShutdownRequest );
             
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-            
-            if (!(Connection->SignalState & SEL_FIN))
+
+            if (Connection->SignalState & SEL_ERROR)
+            {
+                Status = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
+            }
+            else if (Connection->SignalState & SEL_FIN)
+            {
+                /* We were cancelled by a FIN */
+                Status = STATUS_CANCELLED;
+            }
+            else
             {
                 /* See if we can satisfy this after the events */
                 if (IsListEmpty(&Connection->SendRequest))
@@ -265,12 +296,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                     Status = STATUS_PENDING;
                 }
             }
-            else
-            {
-                /* We were cancelled by a FIN */
-                Status = STATUS_CANCELLED;
-            }
-            
+              
             if( Status == STATUS_PENDING ) {
                 InsertHeadList( &Connection->ShutdownRequest, &Bucket->Entry );
                 break;

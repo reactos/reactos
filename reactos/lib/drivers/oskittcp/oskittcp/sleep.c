@@ -41,6 +41,10 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket writeable\n"));
 	flags |= SEL_WRITE;
     }
+    if (so->so_error) {
+    OS_DbgPrint(OSK_MID_TRACE,("Socket error\n"));
+    flags |= SEL_ERROR;
+    }
     if (!so->so_pcb) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket dying\n"));
 	flags |= SEL_FIN;
