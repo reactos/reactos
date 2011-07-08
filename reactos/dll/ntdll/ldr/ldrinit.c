@@ -1624,16 +1624,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                    &ObjectAttributes);
 
     /* Check if it exists */
-    if (!NT_SUCCESS(Status))
-    {
-        /* It doesn't, so assume System32 */
-        LdrpKnownDllObjectDirectory = NULL;
-        RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
-        LdrpKnownDllPath.Length -= sizeof(WCHAR);
-    }
-    else
+    if (NT_SUCCESS(Status))
     {
         /* Open the Known DLLs Path */
+        RtlInitUnicodeString(&KnownDllString, L"KnownDllPath");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KnownDllString,
                                    OBJ_CASE_INSENSITIVE,
@@ -1656,6 +1650,15 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                 return Status;
             }
         }
+    }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Aassume System32 */
+        LdrpKnownDllObjectDirectory = NULL;
+        RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
+        LdrpKnownDllPath.Length -= sizeof(WCHAR);
     }
 
     /* If we have process parameters, get the default path and current path */
