@@ -86,14 +86,17 @@ macro(add_rpcproxy_files)
 
     if(MSVC)
         set(DLLDATA_ARG /dlldata ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c)
+        set(DLLDATA_DEPENDENCIES "")
     endif()
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
-        if(NOT MSVC)
+        if(MSVC)
+            set(DLLDATA_DEPENDENCIES ${DLLDATA_DEPENDENCIES} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c)
+        else()
             list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${NAME}_p.h
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c/${NAME}_p.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
     endforeach()
@@ -101,6 +104,10 @@ macro(add_rpcproxy_files)
     # Extra pass to generate dlldata
     if(MSVC)
         #nobody told how to generate it, so mark it as generated
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+            COMMAND echo test
+            DEPENDS ${DLLDATA_DEPENDENCIES})
         set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
     else()
         add_custom_command(
