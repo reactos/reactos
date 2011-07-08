@@ -25,6 +25,8 @@
 		<file>IoMdl.c</file>
 	</directory>
 	<directory name="ntos_ke">
+		<file>KeDpc.c</file>
+		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>
 	</directory>
 	<directory name="ntos_ob">

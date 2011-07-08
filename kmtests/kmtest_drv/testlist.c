@@ -15,6 +15,8 @@ KMT_TESTFUNC Test_FsRtlExpression;
 KMT_TESTFUNC Test_IoDeviceInterface;
 KMT_TESTFUNC Test_IoIrp;
 KMT_TESTFUNC Test_IoMdl;
+KMT_TESTFUNC Test_KeDpc;
+KMT_TESTFUNC Test_KeIrql;
 KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_ObCreate;
 
@@ -27,6 +29,8 @@ const KMT_TEST TestList[] =
     { "IoDeviceInterface",  Test_IoDeviceInterface },
     { "IoIrp",              Test_IoIrp },
     { "IoMdl",              Test_IoMdl },
+    { "KeDpc",              Test_KeDpc },
+    { "KeIrql",             Test_KeIrql },
     { "KeProcessor",        Test_KeProcessor },
     { "ObCreate",           Test_ObCreate },
     { NULL,                 NULL }

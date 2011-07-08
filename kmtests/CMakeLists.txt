@@ -4,7 +4,7 @@ include_directories(
 #
 # subdirectories containing special-purpose drivers
 #
-add_subdirectory(Example)
+add_subdirectory(example)
 
 #
 # kmtest_drv.sys driver
@@ -20,6 +20,8 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoDeviceInterface.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
+    ntos_ke/KeDpc.c
+    ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
     ntos_ob/ObCreate.c
 
