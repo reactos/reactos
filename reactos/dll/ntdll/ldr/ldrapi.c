@@ -34,19 +34,17 @@ LdrUnlockLoaderLock(IN ULONG Flags,
     DPRINT("LdrUnlockLoaderLock(%x %x)\n", Flags, Cookie);
 
     /* Check for valid flags */
-    if (Flags & ~1)
+    if (Flags & ~LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
     {
         /* Flags are invalid, check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
+        if (Flags & LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_1);
         }
-        else
-        {
-           /* A normal failure */
-            return STATUS_INVALID_PARAMETER_1;
-        }
+
+        /* A normal failure */
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     /* If we don't have a cookie, just return */
@@ -59,20 +57,18 @@ LdrUnlockLoaderLock(IN ULONG Flags,
         DPRINT1("LdrUnlockLoaderLock() called with an invalid cookie!\n");
 
         /* Invalid cookie, check how to fail */
-        if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
+        if (Flags & LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
         {
             /* The caller wants us to raise status */
             RtlRaiseStatus(STATUS_INVALID_PARAMETER_2);
         }
-        else
-        {
-            /* A normal failure */
-            return STATUS_INVALID_PARAMETER_2;
-        }
+
+        /* A normal failure */
+        return STATUS_INVALID_PARAMETER_2;
     }
 
     /* Ready to release the lock */
-    if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
+    if (Flags & LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
     {
         /* Do a direct leave */
         RtlLeaveCriticalSection(&LdrpLoaderLock);
