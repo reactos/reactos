@@ -261,6 +261,8 @@ NTSTATUS RawIPSendDatagram(
         FreeNdisPacket(Packet.NdisPacket);
         return Status;
     }
+    
+    *DataUsed = DataSize;
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 

@@ -26,7 +26,7 @@ WSPEventSelect(
 	AFD_EVENT_SELECT_INFO		EventSelectInfo;
 	PSOCKET_INFORMATION			Socket = NULL;
 	NTSTATUS					Status;
-	ULONG						BlockMode;
+	BOOLEAN						BlockMode;
 	HANDLE                                  SockEvent;
 
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
@@ -44,8 +44,8 @@ WSPEventSelect(
 	}
 
 	/* Set Socket to Non-Blocking */
-	BlockMode = 1;
-	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+	BlockMode = TRUE;
+	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
 	Socket->SharedData.NonBlocking = TRUE;
 
 	/* Deactivate Async Select if there is one */

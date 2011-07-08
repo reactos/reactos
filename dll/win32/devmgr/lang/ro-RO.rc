@@ -2,8 +2,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 BEGIN
     IDS_NAME "Nume"
@@ -229,5 +227,3 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
-
-#pragma code_page(default)

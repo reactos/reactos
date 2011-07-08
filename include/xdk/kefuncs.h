@@ -161,7 +161,7 @@ KeQuerySystemTime(
   OUT PLARGE_INTEGER CurrentTime);
 #endif /* !_M_AMD64 */
 
-#if !defined(_X86_)
+#if !defined(_X86_) && !defined(_M_ARM)
 NTKERNELAPI
 KIRQL
 NTAPI
@@ -207,7 +207,7 @@ KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
 }
 #endif
 
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 NTKERNELAPI
 VOID
 NTAPI

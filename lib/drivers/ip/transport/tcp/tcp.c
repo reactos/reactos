@@ -57,6 +57,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext )
     InitializeListHead(&Connection->ListenRequest);
     InitializeListHead(&Connection->ReceiveRequest);
     InitializeListHead(&Connection->SendRequest);
+    InitializeListHead(&Connection->ShutdownRequest);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;

@@ -2,44 +2,44 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX  45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершення роботи з комп'ютером"
+CAPTION "Р—Р°РІРµСЂС€РµРЅРЅСЏ СЂРѕР±РѕС‚Рё Р· РєРѕРјРї'СЋС‚РµСЂРѕРј"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Тепер можна вимкнути комп'ютер.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "РўРµРїРµСЂ РјРѕР¶РЅР° РІРёРјРєРЅСѓС‚Рё РєРѕРјРї'СЋС‚РµСЂ.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
     ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "&Перезавантаження", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&РџРµСЂРµР·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX  58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Помилка інтерфейсу користувача"
+CAPTION "РџРѕРјРёР»РєР° С–РЅС‚РµСЂС„РµР№СЃСѓ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Не вдалося завантажити бібліотеку інтерфейсу входу користувача %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Зверніться до системного адміністратора щоб замінити наявну, або відновіть початкову бібліотеку.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Перезавантаження", 1, 80, 91, 68, 14
+    LTEXT "РќРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё Р±С–Р±Р»С–РѕС‚РµРєСѓ С–РЅС‚РµСЂС„РµР№СЃСѓ РІС…РѕРґСѓ РєРѕСЂРёСЃС‚СѓРІР°С‡Р° %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Р—РІРµСЂРЅС–С‚СЊСЃСЏ РґРѕ СЃРёСЃС‚РµРјРЅРѕРіРѕ Р°РґРјС–РЅС–СЃС‚СЂР°С‚РѕСЂР° С‰РѕР± Р·Р°РјС–РЅРёС‚Рё РЅР°СЏРІРЅСѓ, Р°Р±Рѕ РІС–РґРЅРѕРІС–С‚СЊ РїРѕС‡Р°С‚РєРѕРІСѓ Р±С–Р±Р»С–РѕС‚РµРєСѓ.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&РџРµСЂРµР·Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ", 1, 80, 91, 68, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Підготовка мережних підключень..."
-    IDS_APPLYINGCOMPUTERSETTINGS "Застосування параметрів комп'ютера..."
-    IDS_RUNNINGSTARTUPSCRIPTS "Виконання сценаріїв запуску..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "Виконання сценаріїв завершення роботи..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Застосування особистих параметрів..."
-    IDS_RUNNINGLOGOFFSCRIPTS "Виконання сценаріїв виходу із системи..."
-    IDS_RUNNINGLOGONSCRIPTS "Виконання сценаріїв входу до системи..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Завантаження особистих параметрів..."
-    IDS_CLOSINGNETWORKCONNECTIONS "Закриття мережних підключень..."
-    IDS_REACTOSISSHUTTINGDOWN "Завершення роботи ReactOS..."
-    IDS_PREPARETOSTANDBY "Підготовка до режиму очікування..."
-    IDS_PREPARETOHIBERNATE "Підготовка до сплячого режиму..."
-    IDS_SAVEYOURSETTINGS "Збереження параметрів..."
-    IDS_REACTOSISSTARTINGUP "Запуск ReactOS..."
+    IDS_PREPARENETWORKCONNECTIONS "РџС–РґРіРѕС‚РѕРІРєР° РјРµСЂРµР¶РЅРёС… РїС–РґРєР»СЋС‡РµРЅСЊ..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Р—Р°СЃС‚РѕСЃСѓРІР°РЅРЅСЏ РїР°СЂР°РјРµС‚СЂС–РІ РєРѕРјРї'СЋС‚РµСЂР°..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Р’РёРєРѕРЅР°РЅРЅСЏ СЃС†РµРЅР°СЂС–С—РІ Р·Р°РїСѓСЃРєСѓ..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Р’РёРєРѕРЅР°РЅРЅСЏ СЃС†РµРЅР°СЂС–С—РІ Р·Р°РІРµСЂС€РµРЅРЅСЏ СЂРѕР±РѕС‚Рё..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Р—Р°СЃС‚РѕСЃСѓРІР°РЅРЅСЏ РѕСЃРѕР±РёСЃС‚РёС… РїР°СЂР°РјРµС‚СЂС–РІ..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Р’РёРєРѕРЅР°РЅРЅСЏ СЃС†РµРЅР°СЂС–С—РІ РІРёС…РѕРґСѓ С–Р· СЃРёСЃС‚РµРјРё..."
+    IDS_RUNNINGLOGONSCRIPTS "Р’РёРєРѕРЅР°РЅРЅСЏ СЃС†РµРЅР°СЂС–С—РІ РІС…РѕРґСѓ РґРѕ СЃРёСЃС‚РµРјРё..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Р—Р°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РѕСЃРѕР±РёСЃС‚РёС… РїР°СЂР°РјРµС‚СЂС–РІ..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Р—Р°РєСЂРёС‚С‚СЏ РјРµСЂРµР¶РЅРёС… РїС–РґРєР»СЋС‡РµРЅСЊ..."
+    IDS_REACTOSISSHUTTINGDOWN "Р—Р°РІРµСЂС€РµРЅРЅСЏ СЂРѕР±РѕС‚Рё ReactOS..."
+    IDS_PREPARETOSTANDBY "РџС–РґРіРѕС‚РѕРІРєР° РґРѕ СЂРµР¶РёРјСѓ РѕС‡С–РєСѓРІР°РЅРЅСЏ..."
+    IDS_PREPARETOHIBERNATE "РџС–РґРіРѕС‚РѕРІРєР° РґРѕ СЃРїР»СЏС‡РѕРіРѕ СЂРµР¶РёРјСѓ..."
+    IDS_SAVEYOURSETTINGS "Р—Р±РµСЂРµР¶РµРЅРЅСЏ РїР°СЂР°РјРµС‚СЂС–РІ..."
+    IDS_REACTOSISSTARTINGUP "Р—Р°РїСѓСЃРє ReactOS..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Winlogon не вдалося активувати оболонку користувача!"
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon РЅРµ РІРґР°Р»РѕСЃСЏ Р°РєС‚РёРІСѓРІР°С‚Рё РѕР±РѕР»РѕРЅРєСѓ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°!"
 END
 

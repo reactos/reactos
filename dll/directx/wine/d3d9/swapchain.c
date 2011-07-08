@@ -50,7 +50,15 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_AddRef(LPDIRECT3DSWAPCHAIN9 iface) {
 
     TRACE("%p increasing refcount to %u.\n", iface, ref);
 
-    if(ref == 1 && This->parentDevice) IDirect3DDevice9Ex_AddRef(This->parentDevice);
+    if (ref == 1)
+    {
+        if (This->parentDevice)
+            IDirect3DDevice9Ex_AddRef(This->parentDevice);
+
+        wined3d_mutex_lock();
+        wined3d_swapchain_incref(This->wined3d_swapchain);
+        wined3d_mutex_unlock();
+    }
 
     return ref;
 }
@@ -64,13 +72,9 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_Release(LPDIRECT3DSWAPCHAIN9 iface) 
     if (ref == 0) {
         IDirect3DDevice9Ex *parentDevice = This->parentDevice;
 
-        if (!This->isImplicit) {
-            wined3d_mutex_lock();
-            IWineD3DSwapChain_Destroy(This->wineD3DSwapChain);
-            wined3d_mutex_unlock();
-
-            HeapFree(GetProcessHeap(), 0, This);
-        }
+        wined3d_mutex_lock();
+        wined3d_swapchain_decref(This->wined3d_swapchain);
+        wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
         if (parentDevice) IDirect3DDevice9Ex_Release(parentDevice);
@@ -87,7 +91,8 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH IDirect3DSwapChain9Impl_Present(LPDIRECT
             iface, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_Present(This->wineD3DSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+    hr = wined3d_swapchain_present(This->wined3d_swapchain, pSourceRect,
+            pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
     wined3d_mutex_unlock();
 
     return hr;
@@ -100,7 +105,8 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetFrontBufferData(LPDIRECT3DSWAPC
     TRACE("iface %p, surface %p.\n", iface, pDestSurface);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_GetFrontBufferData(This->wineD3DSwapChain,  ((IDirect3DSurface9Impl *)pDestSurface)->wineD3DSurface);
+    hr = wined3d_swapchain_get_front_buffer_data(This->wined3d_swapchain,
+            ((IDirect3DSurface9Impl *)pDestSurface)->wined3d_surface);
     wined3d_mutex_unlock();
 
     return hr;
@@ -110,20 +116,20 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetBackBuffer(IDirect3DSwapChain9 
         UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9 **ppBackBuffer)
 {
     IDirect3DSwapChain9Impl *This = (IDirect3DSwapChain9Impl *)iface;
-    IWineD3DSurface *mySurface = NULL;
+    struct wined3d_surface *wined3d_surface = NULL;
     HRESULT hr;
 
     TRACE("iface %p, backbuffer_idx %u, backbuffer_type %#x, backbuffer %p.\n",
             iface, iBackBuffer, Type, ppBackBuffer);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_GetBackBuffer(This->wineD3DSwapChain, iBackBuffer,
-            (WINED3DBACKBUFFER_TYPE)Type, &mySurface);
-    if (SUCCEEDED(hr) && mySurface)
+    hr = wined3d_swapchain_get_back_buffer(This->wined3d_swapchain,
+            iBackBuffer, (WINED3DBACKBUFFER_TYPE)Type, &wined3d_surface);
+    if (SUCCEEDED(hr) && wined3d_surface)
     {
-       *ppBackBuffer = IWineD3DSurface_GetParent(mySurface);
+       *ppBackBuffer = wined3d_surface_get_parent(wined3d_surface);
        IDirect3DSurface9_AddRef(*ppBackBuffer);
-       IWineD3DSurface_Release(mySurface);
+       wined3d_surface_decref(wined3d_surface);
     }
     wined3d_mutex_unlock();
 
@@ -138,7 +144,7 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetRasterStatus(LPDIRECT3DSWAPCHAI
     TRACE("iface %p, raster_status %p.\n", iface, pRasterStatus);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_GetRasterStatus(This->wineD3DSwapChain, (WINED3DRASTER_STATUS *) pRasterStatus);
+    hr = wined3d_swapchain_get_raster_status(This->wined3d_swapchain, (WINED3DRASTER_STATUS *)pRasterStatus);
     wined3d_mutex_unlock();
 
     return hr;
@@ -151,7 +157,7 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetDisplayMode(LPDIRECT3DSWAPCHAIN
     TRACE("iface %p, mode %p.\n", iface, pMode);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_GetDisplayMode(This->wineD3DSwapChain, (WINED3DDISPLAYMODE *) pMode);
+    hr = wined3d_swapchain_get_display_mode(This->wined3d_swapchain, (WINED3DDISPLAYMODE *)pMode);
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr)) pMode->Format = d3dformat_from_wined3dformat(pMode->Format);
@@ -181,7 +187,7 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetPresentParameters(LPDIRECT3DSWA
     TRACE("iface %p, parameters %p.\n", iface, pPresentationParameters);
 
     wined3d_mutex_lock();
-    hr = IWineD3DSwapChain_GetPresentParameters(This->wineD3DSwapChain, &winePresentParameters);
+    hr = wined3d_swapchain_get_present_parameters(This->wined3d_swapchain, &winePresentParameters);
     wined3d_mutex_unlock();
 
     pPresentationParameters->BackBufferWidth            = winePresentParameters.BackBufferWidth;
@@ -217,6 +223,16 @@ static const IDirect3DSwapChain9Vtbl Direct3DSwapChain9_Vtbl =
     IDirect3DSwapChain9Impl_GetPresentParameters
 };
 
+static void STDMETHODCALLTYPE d3d9_swapchain_wined3d_object_released(void *parent)
+{
+    HeapFree(GetProcessHeap(), 0, parent);
+}
+
+static const struct wined3d_parent_ops d3d9_swapchain_wined3d_parent_ops =
+{
+    d3d9_swapchain_wined3d_object_released,
+};
+
 HRESULT swapchain_init(IDirect3DSwapChain9Impl *swapchain, IDirect3DDevice9Impl *device,
         D3DPRESENT_PARAMETERS *present_parameters)
 {
@@ -243,8 +259,9 @@ HRESULT swapchain_init(IDirect3DSwapChain9Impl *swapchain, IDirect3DDevice9Impl 
     wined3d_parameters.AutoRestoreDisplayMode = TRUE;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateSwapChain(device->WineD3DDevice, &wined3d_parameters,
-            SURFACE_OPENGL, swapchain, &swapchain->wineD3DSwapChain);
+    hr = wined3d_swapchain_create(device->wined3d_device, &wined3d_parameters,
+            SURFACE_OPENGL, swapchain, &d3d9_swapchain_wined3d_parent_ops,
+            &swapchain->wined3d_swapchain);
     wined3d_mutex_unlock();
 
     present_parameters->BackBufferWidth = wined3d_parameters.BackBufferWidth;
@@ -268,7 +285,7 @@ HRESULT swapchain_init(IDirect3DSwapChain9Impl *swapchain, IDirect3DDevice9Impl 
         return hr;
     }
 
-    swapchain->parentDevice = (IDirect3DDevice9Ex *)device;
+    swapchain->parentDevice = &device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9Ex_AddRef(swapchain->parentDevice);
 
     return D3D_OK;

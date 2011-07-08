@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__USE_W32_SOCKETS
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__USE_W32_SOCKETS)
 
 add_executable(finger 
     finger.c

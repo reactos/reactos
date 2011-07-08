@@ -37,16 +37,16 @@
 #include "wine/list.h"
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
-extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT StdURLMoniker_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
-extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT StdURLMoniker_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
 
 extern BOOL WINAPI URLMON_DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
@@ -58,30 +58,24 @@ extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
 /**********************************************************************
  * Dll lifetime tracking declaration for urlmon.dll
  */
-extern LONG URLMON_refCount;
+extern LONG URLMON_refCount DECLSPEC_HIDDEN;
 static inline void URLMON_LockModule(void) { InterlockedIncrement( &URLMON_refCount ); }
 static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_refCount ); }
 
-#define DEFINE_THIS2(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,ifc)))
-#define DEFINE_THIS(cls,ifc,iface) DEFINE_THIS2(cls,lp ## ifc ## Vtbl,iface)
+IInternetProtocolInfo *get_protocol_info(LPCWSTR) DECLSPEC_HIDDEN;
+HRESULT get_protocol_handler(IUri*,CLSID*,BOOL*,IClassFactory**) DECLSPEC_HIDDEN;
+IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
+BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
+void register_urlmon_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
+HINTERNET get_internet_session(IInternetBindInfo*) DECLSPEC_HIDDEN;
+LPWSTR get_useragent(void) DECLSPEC_HIDDEN;
+void free_session(void) DECLSPEC_HIDDEN;
 
-IInternetProtocolInfo *get_protocol_info(LPCWSTR);
-HRESULT get_protocol_handler(IUri*,CLSID*,BOOL*,IClassFactory**);
-IInternetProtocol *get_mime_filter(LPCWSTR);
-BOOL is_registered_protocol(LPCWSTR);
-void register_urlmon_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL);
-HINTERNET get_internet_session(IInternetBindInfo*);
-LPWSTR get_useragent(void);
-void free_session(void);
+HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**) DECLSPEC_HIDDEN;
+HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv) DECLSPEC_HIDDEN;
 
-HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**);
-HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv);
-
-HRESULT create_binding_protocol(BOOL,IInternetProtocolEx**);
-void set_binding_sink(IInternetProtocolEx*,IInternetProtocolSink*,IInternetBindInfo*);
-IWinInetInfo *get_wininet_info(IInternetProtocolEx*);
-HRESULT create_default_callback(IBindStatusCallback**);
-HRESULT wrap_callback(IBindStatusCallback*,IBindStatusCallback**);
+HRESULT create_default_callback(IBindStatusCallback**) DECLSPEC_HIDDEN;
+HRESULT wrap_callback(IBindStatusCallback*,IBindStatusCallback**) DECLSPEC_HIDDEN;
 
 typedef struct ProtocolVtbl ProtocolVtbl;
 
@@ -113,19 +107,53 @@ struct ProtocolVtbl {
     HRESULT (*end_request)(Protocol*);
     HRESULT (*start_downloading)(Protocol*);
     void (*close_connection)(Protocol*);
+    void (*on_error)(Protocol*,DWORD);
 };
 
-HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*);
-HRESULT protocol_continue(Protocol*,PROTOCOLDATA*);
-HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*);
-HRESULT protocol_lock_request(Protocol*);
-HRESULT protocol_unlock_request(Protocol*);
-HRESULT protocol_abort(Protocol*,HRESULT);
-void protocol_close_connection(Protocol*);
+/* Flags are needed for, among other things, return HRESULTs from the Read function
+ * to conform to native. For example, Read returns:
+ *
+ * 1. E_PENDING if called before the request has completed,
+ *        (flags = 0)
+ * 2. S_FALSE after all data has been read and S_OK has been reported,
+ *        (flags = FLAG_REQUEST_COMPLETE | FLAG_ALL_DATA_READ | FLAG_RESULT_REPORTED)
+ * 3. INET_E_DATA_NOT_AVAILABLE if InternetQueryDataAvailable fails. The first time
+ *    this occurs, INET_E_DATA_NOT_AVAILABLE will also be reported to the sink,
+ *        (flags = FLAG_REQUEST_COMPLETE)
+ *    but upon subsequent calls to Read no reporting will take place, yet
+ *    InternetQueryDataAvailable will still be called, and, on failure,
+ *    INET_E_DATA_NOT_AVAILABLE will still be returned.
+ *        (flags = FLAG_REQUEST_COMPLETE | FLAG_RESULT_REPORTED)
+ *
+ * FLAG_FIRST_DATA_REPORTED and FLAG_LAST_DATA_REPORTED are needed for proper
+ * ReportData reporting. For example, if OnResponse returns S_OK, Continue will
+ * report BSCF_FIRSTDATANOTIFICATION, and when all data has been read Read will
+ * report BSCF_INTERMEDIATEDATANOTIFICATION|BSCF_LASTDATANOTIFICATION. However,
+ * if OnResponse does not return S_OK, Continue will not report data, and Read
+ * will report BSCF_FIRSTDATANOTIFICATION|BSCF_LASTDATANOTIFICATION when all
+ * data has been read.
+ */
+#define FLAG_REQUEST_COMPLETE         0x0001
+#define FLAG_FIRST_CONTINUE_COMPLETE  0x0002
+#define FLAG_FIRST_DATA_REPORTED      0x0004
+#define FLAG_ALL_DATA_READ            0x0008
+#define FLAG_LAST_DATA_REPORTED       0x0010
+#define FLAG_RESULT_REPORTED          0x0020
+#define FLAG_ERROR                    0x0040
+
+HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
+HRESULT protocol_continue(Protocol*,PROTOCOLDATA*) DECLSPEC_HIDDEN;
+HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*) DECLSPEC_HIDDEN;
+HRESULT protocol_lock_request(Protocol*) DECLSPEC_HIDDEN;
+HRESULT protocol_unlock_request(Protocol*) DECLSPEC_HIDDEN;
+HRESULT protocol_abort(Protocol*,HRESULT) DECLSPEC_HIDDEN;
+void protocol_close_connection(Protocol*) DECLSPEC_HIDDEN;
+
+void find_domain_name(const WCHAR*,DWORD,INT*) DECLSPEC_HIDDEN;
 
 typedef struct {
-    const IInternetProtocolVtbl      *lpIInternetProtocolVtbl;
-    const IInternetProtocolSinkVtbl  *lpIInternetProtocolSinkVtbl;
+    IInternetProtocol     IInternetProtocol_iface;
+    IInternetProtocolSink IInternetProtocolSink_iface;
 
     LONG ref;
 
@@ -133,10 +161,59 @@ typedef struct {
     IInternetProtocol *protocol;
 } ProtocolProxy;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)       &(x)->lpIInternetProtocolVtbl)
-#define PROTSINK(x)  ((IInternetProtocolSink*)   &(x)->lpIInternetProtocolSinkVtbl)
+HRESULT create_protocol_proxy(IInternetProtocol*,IInternetProtocolSink*,ProtocolProxy**) DECLSPEC_HIDDEN;
 
-HRESULT create_protocol_proxy(IInternetProtocol*,IInternetProtocolSink*,ProtocolProxy**);
+typedef struct _task_header_t task_header_t;
+
+typedef struct {
+    IInternetProtocolEx   IInternetProtocolEx_iface;
+    IInternetBindInfo     IInternetBindInfo_iface;
+    IInternetPriority     IInternetPriority_iface;
+    IServiceProvider      IServiceProvider_iface;
+    IInternetProtocolSink IInternetProtocolSink_iface;
+    IWinInetHttpInfo      IWinInetHttpInfo_iface;
+
+    LONG ref;
+
+    IInternetProtocol *protocol;
+    IInternetBindInfo *bind_info;
+    IInternetProtocolSink *protocol_sink;
+    IServiceProvider *service_provider;
+    IWinInetInfo *wininet_info;
+    IWinInetHttpInfo *wininet_http_info;
+
+    struct {
+        IInternetProtocol IInternetProtocol_iface;
+    } default_protocol_handler;
+    IInternetProtocol *protocol_handler;
+
+    LONG priority;
+
+    BOOL reported_result;
+    BOOL reported_mime;
+    BOOL from_urlmon;
+    DWORD pi;
+
+    DWORD bscf;
+    ULONG progress;
+    ULONG progress_max;
+
+    DWORD apartment_thread;
+    HWND notif_hwnd;
+    DWORD continue_call;
+
+    CRITICAL_SECTION section;
+    task_header_t *task_queue_head, *task_queue_tail;
+
+    BYTE *buf;
+    DWORD buf_size;
+    LPWSTR mime;
+    IUri *uri;
+    ProtocolProxy *filter_proxy;
+}  BindProtocol;
+
+HRESULT create_binding_protocol(BOOL,BindProtocol**) DECLSPEC_HIDDEN;
+void set_binding_sink(BindProtocol*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
 
 typedef struct {
     HWND notif_hwnd;
@@ -145,10 +222,10 @@ typedef struct {
     struct list entry;
 } tls_data_t;
 
-tls_data_t *get_tls_data(void);
+tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
 
-HWND get_notif_hwnd(void);
-void release_notif_hwnd(HWND);
+HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
+void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc(size_t len)
 {

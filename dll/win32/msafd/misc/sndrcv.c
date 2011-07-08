@@ -25,7 +25,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
     PSOCKET_INFORMATION Socket = NULL;
     PASYNC_DATA                 AsyncData;
     NTSTATUS                    Status;
-    ULONG                       BlockMode;
+    BOOLEAN                     BlockMode;
 
     /* Get the Socket Structure associated to this Socket */
     Socket = GetSocketStructure(Handle);
@@ -44,8 +44,8 @@ WSPAsyncSelect(IN  SOCKET Handle,
     }
 
     /* Change the Socket to Non Blocking */
-    BlockMode = 1;
-    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL);
+    BlockMode = TRUE;
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
     Socket->SharedData.NonBlocking = TRUE;
 
     /* Deactive WSPEventSelect */
@@ -279,6 +279,20 @@ WSPRecvFrom(SOCKET Handle,
     {
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
+    }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Call WSPRecv for a non-datagram socket */
+        return WSPRecv(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesRead,
+                       ReceiveFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
     }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
@@ -558,6 +572,20 @@ WSPSendTo(SOCKET Handle,
     {
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
+    }
+    
+    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    {
+        /* Use WSPSend for connection-oriented sockets */
+        return WSPSend(Handle,
+                       lpBuffers,
+                       dwBufferCount,
+                       lpNumberOfBytesSent,
+                       iFlags,
+                       lpOverlapped,
+                       lpCompletionRoutine,
+                       lpThreadId,
+                       lpErrno);
     }
 
     /* Bind us First */

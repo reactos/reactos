@@ -35,27 +35,29 @@ rip = 0
     name PROC FRAME
     _name:
 ENDM
+#define FUNC .PROC
 
 /* ... and .ENDP, replacing ENDP */
 .ENDP MACRO name
     name ENDP
 ENDM
+#define ENDFUNC .ENDP
 
 /* MASM doesn't have an ASCII macro */
-.ASCII MACRO text
+.ASCII MACRO text:VARARG
+    DB text
+ENDM
+.ascii MACRO text:VARARG
     DB text
 ENDM
 
 /* MASM doesn't have an ASCIZ macro */
-.ASCIZ MACRO text
-    DB text, 0
+.ASCIZ MACRO text:VARARG
+    DB text
+    DB 0
 ENDM
-
-#define lgdt lgdt fword ptr ds:
-
-#define lidt lidt fword ptr ds:
-
-ljmp MACRO segment, offset
+.asciz MACRO text:VARARG
+    DB text
     DB 0
 ENDM
 
@@ -70,11 +72,12 @@ ENDM
 
 .code16 MACRO
     ASSUME nothing
-    .text16 SEGMENT use16
+    .text SEGMENT use16
+    .586P
 ENDM
 
 .endcode16 MACRO
-    .text16 ENDS
+    .text ENDS
 ENDM
 
 .bss MACRO
@@ -115,13 +118,12 @@ ENDM
 
 .fill MACRO count, size, value
     REPEAT count
-        if (size == 1)
+        if (size EQ 1)
             DB value
-        elseif (size == 2)
+        elseif (size EQ 2)
             DW value
-        elseif (size == 4)
+        elseif (size EQ 4)
             DD value
-        else
         endif
     ENDM
 ENDM
@@ -145,8 +147,22 @@ ENDM
 UNIMPLEMENTED MACRO name
 ENDM
 
+absolute MACRO address
+    __absolute__address__ = address
+ENDM
+
+resb MACRO name, size
+    name = __absolute__address__
+    __absolute__address__ = __absolute__address__ + size
+ENDM
+
+
 /* We need this to distinguish repeat from macros */
 #define ENDR ENDM
+
+#define CR 13
+#define LF 10
+#define NUL 0
 
 #else /***********************************************************************/
 
@@ -263,6 +279,15 @@ code = 1
 .macro .endprolog
 .endm
 
+.macro absolute address
+    __absolute__address__ = \address
+ENDM
+
+.macro resb name, size
+    \name = __absolute__address__
+    __absolute__address__ = __absolute__address__ + \size
+ENDM
+
 .macro UNIMPLEMENTED2 file, line, func
 
     jmp 3f
@@ -285,5 +310,9 @@ code = 1
 #define endif .endif
 #define else .else
 #define elseif .elseif
+
+#define CR "\r"
+#define LF "\n"
+#define NUL "\0"
 
 #endif

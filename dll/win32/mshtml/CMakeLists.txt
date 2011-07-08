@@ -2,11 +2,7 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL
-    -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_idl_Headers(mshtml_nsiface_header nsiface.idl)

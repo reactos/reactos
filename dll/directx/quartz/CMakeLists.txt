@@ -6,9 +6,7 @@ add_definitions(
     -D__WINESRC__
     -DENTRY_PREFIX=QUARTZ_
     -DREGISTER_PROXY_DLL
-    -DPROXY_DELEGATION
-    -D_DLL
-    -D__USE_CRTIMP)
+    -DPROXY_DELEGATION)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 

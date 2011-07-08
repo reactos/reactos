@@ -108,9 +108,11 @@
 #pragma warning(disable : 4761)
 #endif
 
+/*
 #if defined(_MSC_VER) && _MSC_VER >= 1200
 #pragma comment(linker, "/OPT:NOWIN98")
 #endif
+*/
 
 #ifndef GLAPIENTRY
 #define GLAPIENTRY APIENTRY

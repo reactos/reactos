@@ -24,20 +24,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl  *lpIInternetProtocolVtbl;
-    const IInternetPriorityVtbl  *lpInternetPriorityVtbl;
+    IInternetProtocol IInternetProtocol_iface;
+    IInternetPriority IInternetPriority_iface;
 
     LONG ref;
 } GopherProtocol;
 
-#define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
-
-#define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(GopherProtocol, base, iface)
+static inline GopherProtocol *impl_from_Protocol(Protocol *prot)
+{
+    return CONTAINING_RECORD(prot, GopherProtocol, base);
+}
 
 static HRESULT GopherProtocol_open_request(Protocol *prot, IUri *uri, DWORD request_flags,
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
-    GopherProtocol *This = ASYNCPROTOCOL_THIS(prot);
+    GopherProtocol *This = impl_from_Protocol(prot);
     BSTR url;
     HRESULT hres;
 
@@ -70,34 +71,41 @@ static void GopherProtocol_close_connection(Protocol *prot)
 {
 }
 
-#undef ASYNCPROTOCOL_THIS
+static void GopherProtocol_on_error(Protocol *prot, DWORD error)
+{
+    FIXME("(%p) %d - stub\n", prot, error);
+}
 
 static const ProtocolVtbl AsyncProtocolVtbl = {
     GopherProtocol_open_request,
     GopherProtocol_end_request,
     GopherProtocol_start_downloading,
-    GopherProtocol_close_connection
+    GopherProtocol_close_connection,
+    GopherProtocol_on_error
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(GopherProtocol, IInternetProtocol, iface)
+static inline GopherProtocol *impl_from_IInternetProtocol(IInternetProtocol *iface)
+{
+    return CONTAINING_RECORD(iface, GopherProtocol, IInternetProtocol_iface);
+}
 
 static HRESULT WINAPI GopherProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
-        *ppv = PROTOCOL(This);
+        *ppv = &This->IInternetProtocol_iface;
     }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
-        *ppv = PRIORITY(This);
+        *ppv = &This->IInternetPriority_iface;
     }
 
     if(*ppv) {
@@ -111,7 +119,7 @@ static HRESULT WINAPI GopherProtocol_QueryInterface(IInternetProtocol *iface, RE
 
 static ULONG WINAPI GopherProtocol_AddRef(IInternetProtocol *iface)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -119,7 +127,7 @@ static ULONG WINAPI GopherProtocol_AddRef(IInternetProtocol *iface)
 
 static ULONG WINAPI GopherProtocol_Release(IInternetProtocol *iface)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -137,7 +145,7 @@ static HRESULT WINAPI GopherProtocol_Start(IInternetProtocol *iface, LPCWSTR szU
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     IUri *uri;
     HRESULT hres;
 
@@ -148,7 +156,8 @@ static HRESULT WINAPI GopherProtocol_Start(IInternetProtocol *iface, LPCWSTR szU
     if(FAILED(hres))
         return hres;
 
-    hres = protocol_start(&This->base, PROTOCOL(This), uri, pOIProtSink, pOIBindInfo);
+    hres = protocol_start(&This->base, &This->IInternetProtocol_iface, uri, pOIProtSink,
+            pOIBindInfo);
 
     IUri_Release(uri);
     return hres;
@@ -156,7 +165,7 @@ static HRESULT WINAPI GopherProtocol_Start(IInternetProtocol *iface, LPCWSTR szU
 
 static HRESULT WINAPI GopherProtocol_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
@@ -166,7 +175,7 @@ static HRESULT WINAPI GopherProtocol_Continue(IInternetProtocol *iface, PROTOCOL
 static HRESULT WINAPI GopherProtocol_Abort(IInternetProtocol *iface, HRESULT hrReason,
         DWORD dwOptions)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
 
@@ -175,7 +184,7 @@ static HRESULT WINAPI GopherProtocol_Abort(IInternetProtocol *iface, HRESULT hrR
 
 static HRESULT WINAPI GopherProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -185,14 +194,14 @@ static HRESULT WINAPI GopherProtocol_Terminate(IInternetProtocol *iface, DWORD d
 
 static HRESULT WINAPI GopherProtocol_Suspend(IInternetProtocol *iface)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI GopherProtocol_Resume(IInternetProtocol *iface)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -200,7 +209,7 @@ static HRESULT WINAPI GopherProtocol_Resume(IInternetProtocol *iface)
 static HRESULT WINAPI GopherProtocol_Read(IInternetProtocol *iface, void *pv,
         ULONG cb, ULONG *pcbRead)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
 
@@ -210,14 +219,14 @@ static HRESULT WINAPI GopherProtocol_Read(IInternetProtocol *iface, void *pv,
 static HRESULT WINAPI GopherProtocol_Seek(IInternetProtocol *iface, LARGE_INTEGER dlibMove,
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
     FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI GopherProtocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)->(%08x)\n", This, dwOptions);
 
@@ -226,14 +235,12 @@ static HRESULT WINAPI GopherProtocol_LockRequest(IInternetProtocol *iface, DWORD
 
 static HRESULT WINAPI GopherProtocol_UnlockRequest(IInternetProtocol *iface)
 {
-    GopherProtocol *This = PROTOCOL_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetProtocol(iface);
 
     TRACE("(%p)\n", This);
 
     return protocol_unlock_request(&This->base);
 }
-
-#undef PROTOCOL_THIS
 
 static const IInternetProtocolVtbl GopherProtocolVtbl = {
     GopherProtocol_QueryInterface,
@@ -251,29 +258,32 @@ static const IInternetProtocolVtbl GopherProtocolVtbl = {
     GopherProtocol_UnlockRequest
 };
 
-#define PRIORITY_THIS(iface) DEFINE_THIS(GopherProtocol, InternetPriority, iface)
+static inline GopherProtocol *impl_from_IInternetPriority(IInternetPriority *iface)
+{
+    return CONTAINING_RECORD(iface, GopherProtocol, IInternetPriority_iface);
+}
 
 static HRESULT WINAPI GopherPriority_QueryInterface(IInternetPriority *iface, REFIID riid, void **ppv)
 {
-    GopherProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+    GopherProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocol_QueryInterface(&This->IInternetProtocol_iface, riid, ppv);
 }
 
 static ULONG WINAPI GopherPriority_AddRef(IInternetPriority *iface)
 {
-    GopherProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_AddRef(PROTOCOL(This));
+    GopherProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocol_AddRef(&This->IInternetProtocol_iface);
 }
 
 static ULONG WINAPI GopherPriority_Release(IInternetPriority *iface)
 {
-    GopherProtocol *This = PRIORITY_THIS(iface);
-    return IInternetProtocol_Release(PROTOCOL(This));
+    GopherProtocol *This = impl_from_IInternetPriority(iface);
+    return IInternetProtocol_Release(&This->IInternetProtocol_iface);
 }
 
 static HRESULT WINAPI GopherPriority_SetPriority(IInternetPriority *iface, LONG nPriority)
 {
-    GopherProtocol *This = PRIORITY_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%d)\n", This, nPriority);
 
@@ -283,15 +293,13 @@ static HRESULT WINAPI GopherPriority_SetPriority(IInternetPriority *iface, LONG 
 
 static HRESULT WINAPI GopherPriority_GetPriority(IInternetPriority *iface, LONG *pnPriority)
 {
-    GopherProtocol *This = PRIORITY_THIS(iface);
+    GopherProtocol *This = impl_from_IInternetPriority(iface);
 
     TRACE("(%p)->(%p)\n", This, pnPriority);
 
     *pnPriority = This->base.priority;
     return S_OK;
 }
-
-#undef PRIORITY_THIS
 
 static const IInternetPriorityVtbl GopherPriorityVtbl = {
     GopherPriority_QueryInterface,
@@ -312,11 +320,11 @@ HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret = heap_alloc_zero(sizeof(GopherProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpIInternetProtocolVtbl = &GopherProtocolVtbl;
-    ret->lpInternetPriorityVtbl  = &GopherPriorityVtbl;
+    ret->IInternetProtocol_iface.lpVtbl = &GopherProtocolVtbl;
+    ret->IInternetPriority_iface.lpVtbl = &GopherPriorityVtbl;
     ret->ref = 1;
 
-    *ppobj = PROTOCOL(ret);
+    *ppobj = &ret->IInternetProtocol_iface;
 
     return S_OK;
 }

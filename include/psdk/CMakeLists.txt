@@ -1,4 +1,8 @@
 
+add_definitions(-D_MIDL_USE_GUIDDEF_)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 list(APPEND SOURCE
 #   access.idl
     activaut.idl
@@ -113,3 +117,6 @@ add_idl_headers(psdk ${SOURCE})
 add_typelib(stdole2 stdole2.idl)
 
 add_iid_library(wuguid wuapi.idl)
+add_iid_library(xml_uuids msxml2.idl)
+
+generate_idl_iids(wincodec.idl)

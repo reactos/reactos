@@ -2,29 +2,29 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Файл"
+	POPUP "&Р¤Р°Р№Р»"
 	BEGIN
-		MENUITEM "&Открыть...", IDM_OPEN_FILE
-		MENUITEM "&Закрыть", IDM_CLOSE_FILE
+		MENUITEM "&РћС‚РєСЂС‹С‚СЊ...", IDM_OPEN_FILE
+		MENUITEM "&Р—Р°РєСЂС‹С‚СЊ", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "&Выход", IDM_EXIT
+		MENUITEM "&Р’С‹С…РѕРґ", IDM_EXIT
 	END
-	POPUP "&Помощь"
+	POPUP "&РџРѕРјРѕС‰СЊ"
 	BEGIN
-		MENUITEM "&О программе...", IDM_ABOUT
+		MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ...", IDM_ABOUT
 	END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Все поддерживаемые (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
-	IDS_TOOLTIP_PLAY "Воспроизведение"
-	IDS_TOOLTIP_STOP "Остановить"
-	IDS_TOOLTIP_EJECT "Извлечь"
-	IDS_TOOLTIP_BACKWARD "Назад"
-	IDS_TOOLTIP_SEEKBACK "Перемотка назад"
-	IDS_TOOLTIP_SEEKFORW "Перемотка вперед"
-	IDS_TOOLTIP_FORWARD "Вперед"
-    IDS_APPTITLE "Проигрыватель ReactOS"
-	IDS_PLAY "Воспроизвести"
+	IDS_ALL_TYPES_FILTER "Р’СЃРµ РїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Р’РѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ"
+	IDS_TOOLTIP_STOP "РћСЃС‚Р°РЅРѕРІРёС‚СЊ"
+	IDS_TOOLTIP_EJECT "РР·РІР»РµС‡СЊ"
+	IDS_TOOLTIP_BACKWARD "РќР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKBACK "РџРµСЂРµРјРѕС‚РєР° РЅР°Р·Р°Рґ"
+	IDS_TOOLTIP_SEEKFORW "РџРµСЂРµРјРѕС‚РєР° РІРїРµСЂРµРґ"
+	IDS_TOOLTIP_FORWARD "Р’РїРµСЂРµРґ"
+    IDS_APPTITLE "РџСЂРѕРёРіСЂС‹РІР°С‚РµР»СЊ ReactOS"
+	IDS_PLAY "Р’РѕСЃРїСЂРѕРёР·РІРµСЃС‚Рё"
 END

@@ -21,7 +21,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
                    PULONG Size)
 {
     PIO_STACK_LOCATION Stack;
-    LONG BufferLength = 0;
+    ULONG BufferLength = 0;
     PUNICODE_STRING SearchPattern = NULL;
     FILE_INFORMATION_CLASS FileInformationClass;
     ULONG FileIndex = 0;
@@ -71,7 +71,9 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
         if (SearchPattern != NULL)
         {
             Ccb->u.Directory.SearchPattern.Buffer =
-                ExAllocatePool(NonPagedPool, SearchPattern->Length + sizeof(WCHAR));
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      SearchPattern->Length + sizeof(WCHAR),
+                                      TAG_NPFS_NAMEBLOCK);
             if (Ccb->u.Directory.SearchPattern.Buffer == NULL)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -87,7 +89,9 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
         else
         {
             Ccb->u.Directory.SearchPattern.Buffer =
-                ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      2 * sizeof(WCHAR),
+                                      TAG_NPFS_NAMEBLOCK);
             if (Ccb->u.Directory.SearchPattern.Buffer == NULL)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;

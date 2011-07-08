@@ -26,7 +26,7 @@ placeSelWin()
 }
 
 void
-regularize(short x0, short y0, short *x1, short *y1)
+regularize(LONG x0, LONG y0, LONG *x1, LONG *y1)
 {
     if (abs(*x1 - x0) >= abs(*y1 - y0))
         *y1 = y0 + (*y1 > y0 ? abs(*x1 - x0) : -abs(*x1 - x0));
@@ -35,7 +35,7 @@ regularize(short x0, short y0, short *x1, short *y1)
 }
 
 void
-roundTo8Directions(short x0, short y0, short *x1, short *y1)
+roundTo8Directions(LONG x0, LONG y0, LONG *x1, LONG *y1)
 {
     if (abs(*x1 - x0) >= abs(*y1 - y0))
     {
@@ -59,7 +59,7 @@ POINT *ptStack = NULL;
 int ptSP = 0;
 
 void
-startPaintingL(HDC hdc, short x, short y, int fg, int bg)
+startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     startX = x;
     startY = y;
@@ -132,7 +132,7 @@ startPaintingL(HDC hdc, short x, short y, int fg, int bg)
 }
 
 void
-whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
+whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     switch (activeTool)
     {
@@ -149,8 +149,8 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case TOOL_RECTSEL:
         {
-            short tempX;
-            short tempY;
+            int tempX;
+            int tempY;
             resetToU1();
             tempX = max(0, min(x, imgXRes));
             tempY = max(0, min(y, imgYRes));
@@ -209,7 +209,7 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
+                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
             break;
@@ -232,7 +232,7 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
 }
 
 void
-endPaintingL(HDC hdc, short x, short y, int fg, int bg)
+endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     switch (activeTool)
     {
@@ -350,7 +350,7 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
+                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {
@@ -384,7 +384,7 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 }
 
 void
-startPaintingR(HDC hdc, short x, short y, int fg, int bg)
+startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     startX = x;
     startY = y;
@@ -444,7 +444,7 @@ startPaintingR(HDC hdc, short x, short y, int fg, int bg)
 }
 
 void
-whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
+whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     switch (activeTool)
     {
@@ -496,7 +496,7 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
+                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
             break;
@@ -519,7 +519,7 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
 }
 
 void
-endPaintingR(HDC hdc, short x, short y, int fg, int bg)
+endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
 {
     switch (activeTool)
     {
@@ -553,7 +553,7 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             pointStack[pointSP].y = y;
             if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
+                                   &pointStack[pointSP].x, &pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {

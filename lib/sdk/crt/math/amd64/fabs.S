@@ -18,4 +18,8 @@ _fabs:
     UNIMPLEMENTED fabs
     ret
 
+#ifdef _USE_ML
+ALIAS <fabs> = <_fabs>
+#endif
+
 END

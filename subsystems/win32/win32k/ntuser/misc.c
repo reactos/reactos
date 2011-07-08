@@ -150,6 +150,32 @@ NtUserGetThreadState(
    return ret;
 }
 
+DWORD
+APIENTRY
+NtUserSetThreadState(
+   DWORD Set,
+   DWORD Flags)
+{
+   PTHREADINFO pti;
+   DWORD Ret = 0;
+   // Test the only flags user can change.
+   if (Set & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;
+   if (Flags & ~(QF_FF10STATUS|QF_DIALOGACTIVE|QF_TABSWITCHING|QF_FMENUSTATUS|QF_FMENUSTATUSBREAK)) return 0;   
+   UserEnterExclusive();
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->MessageQueue)
+   {
+      Ret = pti->MessageQueue->QF_flags;    // Get the queue flags.
+      if (Set)
+         pti->MessageQueue->QF_flags |= (Set&Flags); // Set the queue flags.
+      else
+      {
+         if (Flags) pti->MessageQueue->QF_flags &= ~Flags; // Clr the queue flags.
+      }
+   }
+   UserLeave();
+   return Ret;
+}
 
 UINT
 APIENTRY

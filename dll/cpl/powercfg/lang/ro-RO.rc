@@ -2,8 +2,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Scheme de alimentare"
@@ -164,5 +162,3 @@ BEGIN
   IDS_DEL_SCHEME "Sunteți sigur că vreți să eliminați această schemă?"
   IDS_DEL_SCHEME_TITLE "Eliminare schemă"
 END
-
-#pragma code_page(default)

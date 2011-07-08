@@ -404,6 +404,7 @@ KdbpSymAddCachedFile(
     IN PROSSYM_INFO RosSymInfo)
 {
     PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
+    KIRQL Irql;
 
     DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
 
@@ -420,7 +421,9 @@ KdbpSymAddCachedFile(
     ASSERT(CacheEntry->FileName.Buffer);
     CacheEntry->RefCount = 1;
     CacheEntry->RosSymInfo = RosSymInfo;
-    InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry); /* FIXME: Lock list? */
+    KeAcquireSpinLock(&SymbolFileListLock, &Irql);
+    InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry);
+    KeReleaseSpinLock(&SymbolFileListLock, Irql);
 }
 
 /*! \brief Remove a symbol file (reference) from the cache.

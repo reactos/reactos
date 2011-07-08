@@ -26,7 +26,7 @@
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN DiskResetController(ULONG DriveNumber)
+BOOLEAN DiskResetController(UCHAR DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -49,9 +49,9 @@ BOOLEAN DiskResetController(ULONG DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-BOOLEAN DiskInt13ExtensionsSupported(ULONG DriveNumber)
+BOOLEAN DiskInt13ExtensionsSupported(UCHAR DriveNumber)
 {
-	static ULONG	LastDriveNumber = 0xffffffff;
+	static UCHAR	LastDriveNumber = 0xff;
 	static BOOLEAN	LastSupported;
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -141,7 +141,7 @@ VOID DiskStopFloppyMotor(VOID)
 	WRITE_PORT_UCHAR((PUCHAR)0x3F2, 0);
 }
 
-BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize)
+BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;

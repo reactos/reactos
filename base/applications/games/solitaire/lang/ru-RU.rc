@@ -3,25 +3,25 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 
-/* Диалоги */
+/* Р”РёР°Р»РѕРіРё */
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Настройки"
+CAPTION "РќР°СЃС‚СЂРѕР№РєРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Карты", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "По &одной", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
-    AUTOCHECKBOX    "&Показывать время", IDC_OPT_SHOWTIME, 7 ,51 ,75 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 75, 10, WS_TABSTOP
+    GROUPBOX        "РљР°СЂС‚С‹", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "РџРѕ &РѕРґРЅРѕР№", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "РџРѕ &С‚СЂРё", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    AUTOCHECKBOX    "&РџРѕРєР°Р·С‹РІР°С‚СЊ РІСЂРµРјСЏ", IDC_OPT_SHOWTIME, 7 ,51 ,75 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&РЎС‚СЂРѕРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ", IDC_OPT_STATUSBAR, 7, 66, 75, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Отмена", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "РћС‚РјРµРЅР°", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Выбор обложки карт"
+CAPTION "Р’С‹Р±РѕСЂ РѕР±Р»РѕР¶РєРё РєР°СЂС‚"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -38,39 +38,39 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Отмена", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "РћС‚РјРµРЅР°", IDCANCEL, 126, 84, 54, 13
 END
 
 
-/* Строки */
+/* РЎС‚СЂРѕРєРё */
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Пасьянс"
-    IDS_SOL_ABOUT   "Пасьянс от J Brown\n\nCardLib версии 1.0."
-    IDS_SOL_QUIT    "Закончить текущую игру?"
+    IDS_SOL_NAME    "РџР°СЃСЊСЏРЅСЃ"
+    IDS_SOL_ABOUT   "РџР°СЃСЊСЏРЅСЃ РѕС‚ J Brown\n\nCardLib РІРµСЂСЃРёРё 1.0."
+    IDS_SOL_QUIT    "Р—Р°РєРѕРЅС‡РёС‚СЊ С‚РµРєСѓС‰СѓСЋ РёРіСЂСѓ?"
     IDS_SOL_WIN     "Congratulations, you win!!"
     IDS_SOL_DEAL    "Deal again?"
 END
 
 
-/* Меню */
+/* РњРµРЅСЋ */
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Игра"
+    POPUP "&РРіСЂР°"
     BEGIN
-        MENUITEM "Н&овая игра\tF2",             IDM_GAME_NEW
+        MENUITEM "Рќ&РѕРІР°СЏ РёРіСЂР°\tF2",             IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Обложки...",                 IDM_GAME_DECK
-        MENUITEM "&Настройки...",               IDM_GAME_OPTIONS
+        MENUITEM "&РћР±Р»РѕР¶РєРё...",                 IDM_GAME_DECK
+        MENUITEM "&РќР°СЃС‚СЂРѕР№РєРё...",               IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Выход",                      IDM_GAME_EXIT
+        MENUITEM "&Р’С‹С…РѕРґ",                      IDM_GAME_EXIT
     END
-    POPUP "&Помощь"
+    POPUP "&РџРѕРјРѕС‰СЊ"
     BEGIN
-        MENUITEM "&Справка\tF1",                IDM_HELP_CONTENTS
-        MENUITEM "&О программе",                IDM_HELP_ABOUT
+        MENUITEM "&РЎРїСЂР°РІРєР°\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ",                IDM_HELP_ABOUT
     END
 END
 

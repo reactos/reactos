@@ -37,10 +37,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(combo);
 
-  /* bits in the dwKeyData */
-#define KEYDATA_ALT             0x2000
-#define KEYDATA_PREVSTATE       0x4000
-
 /*
  * Additional combo box definitions
  */
@@ -2011,7 +2007,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 		SendMessageW(lphc->hWndLBox, message, wParam, lParam);
 		return  0;
 	case WM_SYSKEYDOWN:
-		if( KEYDATA_ALT & HIWORD(lParam) )
+		if( KF_ALTDOWN & HIWORD(lParam) ) // ReactOS (wine) KEYDATA_ALT
 		    if( wParam == VK_UP || wParam == VK_DOWN )
 			COMBO_FlipListbox( lphc, FALSE, FALSE );
                 return  0;

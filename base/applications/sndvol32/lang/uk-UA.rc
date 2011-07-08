@@ -10,56 +10,56 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Параметри"
+    POPUP "&РџР°СЂР°РјРµС‚СЂРё"
     BEGIN
-        MENUITEM "&Властивості", IDC_PROPERTIES
-        MENUITEM "&Додаткові параметри", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–", IDC_PROPERTIES
+        MENUITEM "&Р”РѕРґР°С‚РєРѕРІС– РїР°СЂР°РјРµС‚СЂРё", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "В&ихід", IDC_EXIT
+        MENUITEM "Р’&РёС…С–Рґ", IDC_EXIT
     END
-    POPUP "До&відка"
+    POPUP "Р”Рѕ&РІС–РґРєР°"
     BEGIN
-        MENUITEM "&Зміст", IDC_HELP_TOPICS
+        MENUITEM "&Р—РјС–СЃС‚", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Про регулятор гучності", IDC_ABOUT
+        MENUITEM "&РџСЂРѕ СЂРµРіСѓР»СЏС‚РѕСЂ РіСѓС‡РЅРѕСЃС‚С–", IDC_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SNDVOL32       "Регулятор гучності"
-    IDS_NOMIXERDEVICES "Активні пристрої-мікшери недоступні! Додаток закінчує роботу."
+    IDS_SNDVOL32       "Р РµРіСѓР»СЏС‚РѕСЂ РіСѓС‡РЅРѕСЃС‚С–"
+    IDS_NOMIXERDEVICES "РђРєС‚РёРІРЅС– РїСЂРёСЃС‚СЂРѕС—-РјС–РєС€РµСЂРё РЅРµРґРѕСЃС‚СѓРїРЅС–! Р”РѕРґР°С‚РѕРє Р·Р°РєС–РЅС‡СѓС” СЂРѕР±РѕС‚Сѓ."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Властивості"
+CAPTION "Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Мікшер:", -1, 7,8,48,9
+  LTEXT "&РњС–РєС€РµСЂ:", -1, 7,8,48,9
   COMBOBOX IDC_MIXERDEVICE, 55,8,162,80, CBS_DROPDOWNLIST | WS_TABSTOP
-  GROUPBOX "Регуляція гучності для:", -1, 7,25,211,77
-  PUSHBUTTON "&Відтворення", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&Запис", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
-  PUSHBUTTON "&Інше:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
+  GROUPBOX "Р РµРіСѓР»СЏС†С–СЏ РіСѓС‡РЅРѕСЃС‚С– РґР»СЏ:", -1, 7,25,211,77
+  PUSHBUTTON "&Р’С–РґС‚РІРѕСЂРµРЅРЅСЏ", IDC_PLAYBACK, 13,43,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&Р—Р°РїРёСЃ", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
+  PUSHBUTTON "&Р†РЅС€Рµ:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
   COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  LTEXT "Відображати наступні регулятори гучності:", IDC_LABELCONTROLS, 7, 109, 162, 8
+  LTEXT "Р’С–РґРѕР±СЂР°Р¶Р°С‚Рё РЅР°СЃС‚СѓРїРЅС– СЂРµРіСѓР»СЏС‚РѕСЂРё РіСѓС‡РЅРѕСЃС‚С–:", IDC_LABELCONTROLS, 7, 109, 162, 8
   CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
 
   PUSHBUTTON "OK", IDOK, 114,226,50,14
-  PUSHBUTTON "Скасувати", IDCANCEL, 168,226,50,14
+  PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 168,226,50,14
 END
 
 IDD_VOLUME_CTRL DIALOG 0, 0, 90, 150
 STYLE WS_POPUP | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT "Головна", IDC_LINE_NAME, 4, 7, 100, 15
+   LTEXT "Р“РѕР»РѕРІРЅР°", IDC_LINE_NAME, 4, 7, 100, 15
    CONTROL "", -1, "static", SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE, 4, 30, 82, 1 
-   LTEXT "Баланс", -1, 4, 35, 80, 42
-   LTEXT "Гучність", -1, 4, 100, 77, 108
+   LTEXT "Р‘Р°Р»Р°РЅСЃ", -1, 4, 35, 80, 42
+   LTEXT "Р“СѓС‡РЅС–СЃС‚СЊ", -1, 4, 100, 77, 108
    CONTROL "", IDC_LINE_SLIDER_HORZ, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | TBS_BOTH | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 25, 55, 85, 30
    CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 115, 30, 70
-   CHECKBOX "&Тиша", IDC_LINE_SWITCH, 4, 190, 90, 12, BS_AUTOCHECKBOX
+   CHECKBOX "&РўРёС€Р°", IDC_LINE_SWITCH, 4, 190, 90, 12, BS_AUTOCHECKBOX
    CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 130, 7, 1, 200  
 END

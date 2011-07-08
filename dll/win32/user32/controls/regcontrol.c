@@ -131,8 +131,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnDefWindowProc         = DefWindowProcW;
   pfnClientA.pfnMessageWindowProc     = MsgWindowProc;
   pfnClientW.pfnMessageWindowProc     = MsgWindowProc;
-  pfnClientA.pfnSwitchWindowProc      = DefWindowProcA;
-  pfnClientW.pfnSwitchWindowProc      = DefWindowProcW;
+  pfnClientA.pfnSwitchWindowProc      = SwitchWndProcA;
+  pfnClientW.pfnSwitchWindowProc      = SwitchWndProcW;
   pfnClientA.pfnButtonWndProc         = ButtonWndProcA;
   pfnClientW.pfnButtonWndProc         = ButtonWndProcW;
   pfnClientA.pfnComboBoxWndProc       = ComboWndProcA;

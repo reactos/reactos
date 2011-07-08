@@ -11,8 +11,8 @@
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
 #else
 #define INIT_FUNCTION
-#define PAGE_LOCKED_FUNCTION	
-#define PAGE_UNLOCKED_FUNCTION	
+#define PAGE_LOCKED_FUNCTION
+#define PAGE_UNLOCKED_FUNCTION
 #endif
 
 #ifdef _MSC_VER
@@ -158,7 +158,7 @@ typedef enum _TIMER_CHANNELS
 
 typedef union _TIMER_CONTROL_PORT_REGISTER
 {
-    struct 
+    struct
     {
         UCHAR BcdMode:1;
         TIMER_OPERATING_MODES OperatingMode:3;
@@ -178,7 +178,7 @@ typedef union _TIMER_CONTROL_PORT_REGISTER
 #define SYSTEM_CONTROL_PORT_B   0x61
 typedef union _SYSTEM_CONTROL_PORT_B_REGISTER
 {
-    struct 
+    struct
     {
         UCHAR Timer2GateToSpeaker:1;
         UCHAR SpeakerDataEnable:1;
@@ -269,12 +269,12 @@ typedef enum _I8259_EOI_MODE
 //
 typedef union _I8259_ICW1
 {
-    struct 
+    struct
     {
         UCHAR NeedIcw4:1;
-        I8259_ICW1_OPERATING_MODE OperatingMode:1;
-        I8259_ICW1_INTERVAL Interval:1;
-        I8259_ICW1_INTERRUPT_MODE InterruptMode:1;
+        UCHAR OperatingMode:1;
+        UCHAR Interval:1;
+        UCHAR InterruptMode:1;
         UCHAR Init:1;
         UCHAR InterruptVectorAddress:3;
     };
@@ -283,7 +283,7 @@ typedef union _I8259_ICW1
 
 typedef union _I8259_ICW2
 {
-    struct 
+    struct
     {
         UCHAR Sbz:3;
         UCHAR InterruptVector:5;
@@ -295,7 +295,7 @@ typedef union _I8259_ICW3
 {
     union
     {
-        struct 
+        struct
         {
             UCHAR SlaveIrq0:1;
             UCHAR SlaveIrq1:1;
@@ -306,7 +306,7 @@ typedef union _I8259_ICW3
             UCHAR SlaveIrq6:1;
             UCHAR SlaveIrq7:1;
         };
-        struct 
+        struct
         {
             UCHAR SlaveId:3;
             UCHAR Reserved:5;
@@ -317,11 +317,11 @@ typedef union _I8259_ICW3
 
 typedef union _I8259_ICW4
 {
-    struct 
+    struct
     {
-        I8259_ICW4_SYSTEM_MODE SystemMode:1;
-        I8259_ICW4_EOI_MODE EoiMode:1;
-        I8259_ICW4_BUFFERED_MODE BufferedMode:2;
+        UCHAR SystemMode:1;
+        UCHAR EoiMode:1;
+        UCHAR BufferedMode:2;
         UCHAR SpecialFullyNestedMode:1;
         UCHAR Reserved:3;
     };
@@ -334,7 +334,7 @@ typedef union _I8259_OCW2
     {
         UCHAR IrqNumber:3;
         UCHAR Sbz:2;
-        I8259_EOI_MODE EoiMode:3;
+        UCHAR EoiMode:3;
     };
     UCHAR Bits;
 } I8259_OCW2, *PI8259_OCW2;
@@ -343,7 +343,7 @@ typedef union _I8259_OCW3
 {
     struct
     {
-        I8259_READ_REQUEST ReadRequest:2;
+        UCHAR ReadRequest:2;
         UCHAR PollCommand:1;
         UCHAR Sbo:1;
         UCHAR Sbz:1;
@@ -423,7 +423,7 @@ typedef struct _PIC_MASK
             UCHAR Slave;
         };
         USHORT Both;
-    };    
+    };
 } PIC_MASK, *PPIC_MASK;
 
 typedef
@@ -527,7 +527,7 @@ HalpHardwareInterruptLevel(
 //
 #define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)
 #define HalAddressToPte(x) (PHARDWARE_PTE)MiAddressToPte(x)
-    
+
 typedef struct _IDTUsageFlags
 {
     UCHAR Flags;
@@ -740,7 +740,7 @@ HalpAllocPhysicalMemory(
     IN ULONG PageCount,
     IN BOOLEAN Aligned
 );
-                        
+
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(
@@ -748,13 +748,13 @@ HalpMapPhysicalMemory64(
     IN ULONG PageCount
 );
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 HalpOpenRegistryKey(
     IN PHANDLE KeyHandle,
     IN HANDLE RootKey,
     IN PUNICODE_STRING KeyName,
-    IN ACCESS_MASK DesiredAccess, 
+    IN ACCESS_MASK DesiredAccess,
     IN BOOLEAN Create
 );
 

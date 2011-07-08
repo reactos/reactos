@@ -10,6 +10,15 @@
 #ifndef REACTOS_ROSSYM_H_INCLUDED
 #define REACTOS_ROSSYM_H_INCLUDED
 
+#define ROSSYM_SECTION_NAME ".rossym"
+
+typedef struct _ROSSYM_HEADER {
+  unsigned long SymbolsOffset;
+  unsigned long SymbolsLength;
+  unsigned long StringsOffset;
+  unsigned long StringsLength;
+} ROSSYM_HEADER, *PROSSYM_HEADER;
+
 typedef struct _ROSSYM_ENTRY {
   ULONG_PTR Address;
   ULONG FunctionOffset;
@@ -27,7 +36,7 @@ enum _ROSSYM_REGNAME {
     ROSSYM_X86_ESI,
     ROSSYM_X86_EDI,
 
-	ROSSYM_X64_RAX = 0, 
+	ROSSYM_X64_RAX = 0,
 	ROSSYM_X64_RDX,
 	ROSSYM_X64_RCX,
 	ROSSYM_X64_RBX,
@@ -85,17 +94,42 @@ typedef struct _ROSSYM_CALLBACKS {
   BOOLEAN (*MemGetProc)(PVOID FileContext, ULONG_PTR *Target, PVOID SourceMem, ULONG Size);
 } ROSSYM_CALLBACKS, *PROSSYM_CALLBACKS;
 
+#ifdef __ROS_CMAKE__
+typedef struct _ROSSYM_OWN_FILECONTEXT {
+  BOOLEAN (*ReadFileProc)(PVOID FileContext, PVOID Buffer, ULONG Size);
+  BOOLEAN (*SeekFileProc)(PVOID FileContext, ULONG_PTR Position);
+} ROSSYM_OWN_FILECONTEXT, *PROSSYM_OWN_FILECONTEXT;
+
 struct Dwarf;
 typedef struct Dwarf *PROSSYM_INFO;
+#else
+typedef struct _ROSSYM_INFO *PROSSYM_INFO;
+#endif
 
 VOID RosSymInit(PROSSYM_CALLBACKS Callbacks);
+#ifndef __ROS_CMAKE__
+VOID RosSymInitKernelMode(VOID);
+#endif
 VOID RosSymInitUserMode(VOID);
 
+BOOLEAN RosSymCreateFromRaw(PVOID RawData, ULONG_PTR DataSize,
+                            PROSSYM_INFO *RosSymInfo);
+BOOLEAN RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize,
+                            PROSSYM_INFO *RosSymInfo);
 BOOLEAN RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo);
-BOOLEAN RosSymGetAddressInformation
-(PROSSYM_INFO RosSymInfo,
- ULONG_PTR RelativeAddress,
- PROSSYM_LINEINFO RosSymLineInfo);
+ULONG RosSymGetRawDataLength(PROSSYM_INFO RosSymInfo);
+VOID RosSymGetRawData(PROSSYM_INFO RosSymInfo, PVOID RawData);
+#ifdef __ROS_CMAKE__
+BOOLEAN RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
+                                    ULONG_PTR RelativeAddress,
+                                    PROSSYM_LINEINFO RosSymLineInfo);
+#else
+BOOLEAN RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
+                                    ULONG_PTR RelativeAddress,
+                                    ULONG *LineNumber,
+                                    char *FileName,
+                                    char *FunctionName);
+#endif
 VOID RosSymFreeInfo(PROSSYM_LINEINFO RosSymLineInfo);
 VOID RosSymDelete(PROSSYM_INFO RosSymInfo);
 

@@ -112,8 +112,7 @@ PADDRESS_FILE AddrSearchNext(
 
     TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
-    while (CurrentEntry != &AddressFileListHead)
-    {
+    while (CurrentEntry != &AddressFileListHead) {
         Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
 
         IPAddress = &Current->Address;
@@ -154,66 +153,61 @@ VOID AddrFileFree(
  *     Object = Pointer to address file object to free
  */
 {
-    PADDRESS_FILE AddrFile = Object;
-    KIRQL OldIrql;
-    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-    PDATAGRAM_SEND_REQUEST SendRequest;
-    PLIST_ENTRY CurrentEntry;
+  PADDRESS_FILE AddrFile = Object;
+  KIRQL OldIrql;
+  PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+  PDATAGRAM_SEND_REQUEST SendRequest;
+  PLIST_ENTRY CurrentEntry;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
-    DbgPrint("[TCPIP, AddrFileFree] Called\n");
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-    /* We should not be associated with a connection here */
-    ASSERT(!AddrFile->Connection);
+  /* We should not be associated with a connection here */
+  ASSERT(!AddrFile->Connection);
 
-    /* Remove address file from the global list */
-    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
-    RemoveEntryList(&AddrFile->ListEntry);
-    TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+  /* Remove address file from the global list */
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  RemoveEntryList(&AddrFile->ListEntry);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
-    /* FIXME: Kill TCP connections on this address file object */
+  /* FIXME: Kill TCP connections on this address file object */
 
-    /* Return pending requests with error */
+  /* Return pending requests with error */
 
-    TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
 
-    /* Go through pending receive request list and cancel them all */
-    while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock)))
+  /* Go through pending receive request list and cancel them all */
+  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+    ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
+    /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
+  }
+
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
+
+  /* Go through pending send request list and cancel them all */
+  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+    (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
+    ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
+  }
+
+  /* Protocol specific handling */
+  switch (AddrFile->Protocol) {
+  case IPPROTO_TCP:
+    if (AddrFile->Port)
     {
-        ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-        (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
-        /* ExFreePoolWithTag(ReceiveRequest, DATAGRAM_RECV_TAG); FIXME: WTF? */
+        TCPFreePort(AddrFile->Port);
     }
+    break;
 
-    TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
+  case IPPROTO_UDP:
+    UDPFreePort( AddrFile->Port );
+    break;
+  }
 
-    /* Go through pending send request list and cancel them all */
-    while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->TransmitQueue, &AddrFile->Lock)))
-    {
-        SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-        (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
-        ExFreePoolWithTag(SendRequest, DATAGRAM_SEND_TAG);
-    }
+  RemoveEntityByContext(AddrFile);
 
-    /* Protocol specific handling */
-    switch (AddrFile->Protocol)
-    {
-        case IPPROTO_TCP:
-            if (AddrFile->Port)
-            {
-                TCPFreePort(AddrFile->Port);
-            }
-            break;
-
-        case IPPROTO_UDP:
-            UDPFreePort( AddrFile->Port );
-            break;
-    }
-
-    RemoveEntityByContext(AddrFile);
-
-    ExFreePoolWithTag(Object, ADDR_FILE_TAG);
-    DbgPrint("[TCPIP, AddrFileFree] Leaving\n");
+  ExFreePoolWithTag(Object, ADDR_FILE_TAG);
 }
 
 
@@ -245,160 +239,153 @@ NTSTATUS FileOpenAddress(
   USHORT Protocol,
   PVOID Options)
 {
-    PADDRESS_FILE AddrFile;
+  PADDRESS_FILE AddrFile;
 
-    TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
-    DbgPrint("[TCPIP, FileOpenAddress] Called. Proto %d\n", Protocol);
+  TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
-    AddrFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(ADDRESS_FILE),
-                                    ADDR_FILE_TAG);
-    if (!AddrFile)
-    {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  AddrFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(ADDRESS_FILE),
+                                   ADDR_FILE_TAG);
+  if (!AddrFile) {
+    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
-    RtlZeroMemory(AddrFile, sizeof(ADDRESS_FILE));
-    DbgPrint("[TCPIP, FileOpenAddress] Allocated AddressFile = 0x%x, sizeof(ADDRESS_FILE) = %d\n",
-        AddrFile, sizeof(ADDRESS_FILE));
+  RtlZeroMemory(AddrFile, sizeof(ADDRESS_FILE));
 
-    AddrFile->RefCount = 1;
-    AddrFile->Free = AddrFileFree;
+  AddrFile->RefCount = 1;
+  AddrFile->Free = AddrFileFree;
 
-    /* Set our default options */
-    AddrFile->TTL = 128;
-    AddrFile->DF = 0;
-    AddrFile->BCast = 1;
-    AddrFile->HeaderIncl = 1;
+  /* Set our default options */
+  AddrFile->TTL = 128;
+  AddrFile->DF = 0;
+  AddrFile->BCast = 1;
+  AddrFile->HeaderIncl = 1;
 
-    /* Make sure address is a local unicast address or 0 */
-    /* FIXME: IPv4 only */
-    AddrFile->Family = Address->Address[0].AddressType;
-    AddrFile->Address.Address.IPv4Address = Address->Address[0].Address[0].in_addr;
-    AddrFile->Address.Type = IP_ADDRESS_V4;
+  /* Make sure address is a local unicast address or 0 */
+  /* FIXME: IPv4 only */
+  AddrFile->Family = Address->Address[0].AddressType;
+  AddrFile->Address.Address.IPv4Address = Address->Address[0].Address[0].in_addr;
+  AddrFile->Address.Type = IP_ADDRESS_V4;
 
-    if (!AddrIsUnspecified(&AddrFile->Address) &&
-        !AddrLocateInterface(&AddrFile->Address))
-    {
-	    ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-	    TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
-	    return STATUS_INVALID_ADDRESS;
-    }
+  if (!AddrIsUnspecified(&AddrFile->Address) &&
+      !AddrLocateInterface(&AddrFile->Address)) {
+	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
+	  return STATUS_INVALID_ADDRESS;
+  }
 
-    TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
+  TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
     A2S(&AddrFile->Address), Protocol, IPPROTO_UDP));
 
-    /* Protocol specific handling */
-    switch (Protocol)
-    {
-        case IPPROTO_TCP:
-            if (Address->Address[0].Address[0].sin_port)
-            {
-                /* The client specified an explicit port so we force a bind to this */
-                AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+  /* Protocol specific handling */
+  switch (Protocol) {
+  case IPPROTO_TCP:
+      if (Address->Address[0].Address[0].sin_port)
+      {
+          /* The client specified an explicit port so we force a bind to this */
+          AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
           
-                /* Check for bind success */
-                if (AddrFile->Port == 0xffff)
-                {
-                    ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-                    return STATUS_ADDRESS_ALREADY_EXISTS;
-                }
+          /* Check for bind success */
+          if (AddrFile->Port == 0xffff)
+          {
+              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+              return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
           
-                /* Sanity check */
-                ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
-            }
-            else if (!AddrIsUnspecified(&AddrFile->Address))
-            {
-                / The client is trying to bind to a local address so allocate a port now too 
-                AddrFile->Port = TCPAllocatePort(0);
+          /* Sanity check */
+          ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
+      }
+      else if (!AddrIsUnspecified(&AddrFile->Address))
+      {
+          /* The client is trying to bind to a local address so allocate a port now too */
+          AddrFile->Port = TCPAllocatePort(0);
           
-                // Check for bind success
-                if (AddrFile->Port == 0xffff)
-                {
-                    ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-                    return STATUS_ADDRESS_ALREADY_EXISTS;
-                }
-            }
-            else
-            {
-                /* The client wants an unspecified port with an unspecified address so we wait to see what the TCP library gives us */
-                AddrFile->Port = 0;
-            }
+          /* Check for bind success */
+          if (AddrFile->Port == 0xffff)
+          {
+              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+              return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+      }
+      else
+      {
+          /* The client wants an unspecified port with an unspecified address so we wait to see what the TCP library gives us */
+          AddrFile->Port = 0;
+      }
 
-            AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
+      AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
 
-            AddrFile->Send = NULL; /* TCPSendData */
-            break;
+      AddrFile->Send = NULL; /* TCPSendData */
+      break;
 
-        case IPPROTO_UDP:
-            TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
-            AddrFile->Port =
-	        UDPAllocatePort(Address->Address[0].Address[0].sin_port);
+  case IPPROTO_UDP:
+      TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
+      AddrFile->Port =
+	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
 
-            if ((Address->Address[0].Address[0].sin_port &&
-                AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
-                AddrFile->Port == 0xffff)
-            {
-                ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-                return STATUS_ADDRESS_ALREADY_EXISTS;
-            }
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
+      {
+          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+          return STATUS_ADDRESS_ALREADY_EXISTS;
+      }
 
-            TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
-                                    AddrFile->Port,
-                                    Address->Address[0].Address[0].sin_port));
+      TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
+                             AddrFile->Port,
+                             Address->Address[0].Address[0].sin_port));
 
-            AddEntity(CL_TL_ENTITY, AddrFile, CL_TL_UDP);
+      AddEntity(CL_TL_ENTITY, AddrFile, CL_TL_UDP);
 
-            AddrFile->Send = UDPSendDatagram;
-            break;
+      AddrFile->Send = UDPSendDatagram;
+      break;
 
-        case IPPROTO_ICMP:
-            AddrFile->Port = 0;
-            AddrFile->Send = ICMPSendDatagram;
+  case IPPROTO_ICMP:
+    AddrFile->Port = 0;
+    AddrFile->Send = ICMPSendDatagram;
 
-            /* FIXME: Verify this */
-            AddEntity(ER_ENTITY, AddrFile, ER_ICMP);
-            break;
+    /* FIXME: Verify this */
+    AddEntity(ER_ENTITY, AddrFile, ER_ICMP);
+    break;
 
-            default:
-            /* Use raw IP for all other protocols */
-            AddrFile->Port = 0;
-            AddrFile->Send = RawIPSendDatagram;
+  default:
+    /* Use raw IP for all other protocols */
+    AddrFile->Port = 0;
+    AddrFile->Send = RawIPSendDatagram;
 
-            /* FIXME: Verify this */
-            AddEntity(CL_TL_ENTITY, AddrFile, 0);
-            break;
-    }
+    /* FIXME: Verify this */
+    AddEntity(CL_TL_ENTITY, AddrFile, 0);
+    break;
+  }
 
-    TI_DbgPrint(MID_TRACE, ("IP protocol number for address file object is %d.\n",
+  TI_DbgPrint(MID_TRACE, ("IP protocol number for address file object is %d.\n",
     Protocol));
 
-    TI_DbgPrint(MID_TRACE, ("Port number for address file object is %d.\n",
+  TI_DbgPrint(MID_TRACE, ("Port number for address file object is %d.\n",
     WN2H(AddrFile->Port)));
 
-    /* Set protocol */
-    AddrFile->Protocol = Protocol;
+  /* Set protocol */
+  AddrFile->Protocol = Protocol;
 
-    /* Initialize receive and transmit queues */
-    InitializeListHead(&AddrFile->ReceiveQueue);
-    InitializeListHead(&AddrFile->TransmitQueue);
+  /* Initialize receive and transmit queues */
+  InitializeListHead(&AddrFile->ReceiveQueue);
+  InitializeListHead(&AddrFile->TransmitQueue);
 
-    /* Initialize spin lock that protects the address file object */
-    KeInitializeSpinLock(&AddrFile->Lock);
+  /* Initialize spin lock that protects the address file object */
+  KeInitializeSpinLock(&AddrFile->Lock);
 
-    /* Return address file object */
-    Request->Handle.AddressHandle = AddrFile;
+  /* Return address file object */
+  Request->Handle.AddressHandle = AddrFile;
 
-    /* Add address file to global list */
-    ExInterlockedInsertTailList(
-        &AddressFileListHead,
-        &AddrFile->ListEntry,
-        &AddressFileListLock);
+  /* Add address file to global list */
+  ExInterlockedInsertTailList(
+    &AddressFileListHead,
+    &AddrFile->ListEntry,
+    &AddressFileListLock);
 
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-    DbgPrint("[TCPIP, FileOpenAddress] Leaving\n");
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
@@ -409,35 +396,30 @@ NTSTATUS FileOpenAddress(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileCloseAddress(PTDI_REQUEST Request)
+NTSTATUS FileCloseAddress(
+  PTDI_REQUEST Request)
 {
-    PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
-    KIRQL OldIrql;
+  PADDRESS_FILE AddrFile = Request->Handle.AddressHandle;
+  KIRQL OldIrql;
 
-    DbgPrint("[TCPIP, FileCloseAddress] Called\n");
+  if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
-    if (!Request->Handle.AddressHandle)
-        return STATUS_INVALID_PARAMETER;
+  LockObject(AddrFile, &OldIrql);
 
-    LockObject(AddrFile, &OldIrql);
+  /* We have to close this listener because we started it */
+  if( AddrFile->Listener )
+  {
+      AddrFile->Listener->AddressFile = NULL;
+      TCPClose( AddrFile->Listener );
+  }
 
-    /* We have to close this listener because we started it */
-    if ( AddrFile->Listener )
-    {
-        AddrFile->Listener->AddressFile = NULL;
+  UnlockObject(AddrFile, OldIrql);
 
-        //DbgPrint("[TCPIP, FileCloseAddress] Calling TCPClose( 0x%x )\n", AddrFile->Listener);
-        TCPClose( AddrFile->Listener );
-    }
+  DereferenceObject(AddrFile);
 
-    UnlockObject(AddrFile, OldIrql);
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-    DereferenceObject(AddrFile);
-
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-    DbgPrint("[TCPIP, FileCloseAddress] Leaving\n");
-
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
@@ -456,19 +438,15 @@ NTSTATUS FileOpenConnection(
   NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
 
-  TI_DbgPrint(MID_TRACE, ("[TCPIP, FileOpenConnection] Called\n"));
-  //DbgPrint("[TCPIP, FileOpenConnection] Called\n");
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   Connection = TCPAllocateConnectionEndpoint( ClientContext );
 
-  if (!Connection)
-      return STATUS_NO_MEMORY;
+  if( !Connection ) return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
-
-  if (!NT_SUCCESS(Status))
-  {
+  if( !NT_SUCCESS(Status) ) {
       DereferenceObject( Connection );
       return Status;
   }
@@ -476,8 +454,7 @@ NTSTATUS FileOpenConnection(
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
 
-  TI_DbgPrint(MAX_TRACE, ("[TCPIP, FileOpenConnection] Leaving\n"));
-  //DbgPrint("[TCPIP, FileOpenConnection] Leaving\n");
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
 }
@@ -498,8 +475,7 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
-  if (!Connection)
-      return STATUS_INVALID_PARAMETER;
+  if (!Connection) return STATUS_INVALID_PARAMETER;
 
   TCPClose( Connection );
 

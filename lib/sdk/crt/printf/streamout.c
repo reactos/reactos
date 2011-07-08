@@ -73,7 +73,7 @@ enum
 #ifndef _USER32_WSPRINTF
 
 void
-#ifdef _LIBCNT
+#ifdef _LIBCNT_
 /* Due to restrictions in kernel mode regarding the use of floating point,
    we prevent it from being inlined */
 __declspec(noinline)

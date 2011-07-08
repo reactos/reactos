@@ -14,7 +14,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Выбор оформления"
+CAPTION "Р’С‹Р±РѕСЂ РѕС„РѕСЂРјР»РµРЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -31,31 +31,31 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Отмена", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "РћС‚РјРµРЅР°", IDCANCEL, 126, 84, 54, 13
 END
 
 IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 112, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Уровень"
+CAPTION "РЈСЂРѕРІРµРЅСЊ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Простой: &один цвет", IDC_DIF_ONECOLOR,   8, 10, 102, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Средний: &два цвета", IDC_DIF_TWOCOLORS,  8, 23, 102, 10
-    AUTORADIOBUTTON "Сложный: &четыре цвета", IDC_DIF_FOURCOLORS, 8, 36, 102, 10
+    AUTORADIOBUTTON "РџСЂРѕСЃС‚РѕР№: &РѕРґРёРЅ С†РІРµС‚", IDC_DIF_ONECOLOR,   8, 10, 102, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "РЎСЂРµРґРЅРёР№: &РґРІР° С†РІРµС‚Р°", IDC_DIF_TWOCOLORS,  8, 23, 102, 10
+    AUTORADIOBUTTON "РЎР»РѕР¶РЅС‹Р№: &С‡РµС‚С‹СЂРµ С†РІРµС‚Р°", IDC_DIF_FOURCOLORS, 8, 36, 102, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "Отмена", IDCANCEL, 63, 58, 40, 14
+    PUSHBUTTON      "РћС‚РјРµРЅР°", IDCANCEL, 63, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Пасьянс ""Паук"""
-    IDS_SPI_ABOUT   "Пасьянс ""Паук"", Gregor Schneider\n\nCardLib версии 1.0"
-    IDS_SPI_QUIT    "Выйти из текущей игры?"
-    IDS_SPI_WIN     "Поздравляем, вы выйграли!"
-    IDS_SPI_DEAL    "Попробовать снова?"
+    IDS_SPI_NAME    "РџР°СЃСЊСЏРЅСЃ ""РџР°СѓРє"""
+    IDS_SPI_ABOUT   "РџР°СЃСЊСЏРЅСЃ ""РџР°СѓРє"", Gregor Schneider\n\nCardLib РІРµСЂСЃРёРё 1.0"
+    IDS_SPI_QUIT    "Р’С‹Р№С‚Рё РёР· С‚РµРєСѓС‰РµР№ РёРіСЂС‹?"
+    IDS_SPI_WIN     "РџРѕР·РґСЂР°РІР»СЏРµРј, РІС‹ РІС‹Р№РіСЂР°Р»Рё!"
+    IDS_SPI_DEAL    "РџРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°?"
 END
 
 
@@ -63,18 +63,18 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Игра"
+    POPUP "&РРіСЂР°"
     BEGIN
-        MENUITEM "&Новая игра\tF2", IDM_GAME_NEW
+        MENUITEM "&РќРѕРІР°СЏ РёРіСЂР°\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Оформление...", IDM_GAME_DECK
+        MENUITEM "&РћС„РѕСЂРјР»РµРЅРёРµ...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDM_GAME_EXIT
+        MENUITEM "&Р’С‹С…РѕРґ", IDM_GAME_EXIT
     END
-    POPUP "&Справка"
+    POPUP "&РЎРїСЂР°РІРєР°"
     BEGIN
-        MENUITEM "&Просмотр справки\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&О программе", IDM_HELP_ABOUT
+        MENUITEM "&РџСЂРѕСЃРјРѕС‚СЂ СЃРїСЂР°РІРєРё\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ", IDM_HELP_ABOUT
     END
 END
 

@@ -22,7 +22,6 @@ list(APPEND SOURCE
     main.c
     material.c
     palette.c
-    parent.c
     regsvr.c
     stubs.c
     surface.c
@@ -40,7 +39,6 @@ target_link_libraries(ddraw
     wine
     uuid
     dxguid
-    wined3d_guid
     ${PSEH_LIB})
 
 add_importlibs(ddraw

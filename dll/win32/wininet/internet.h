@@ -47,14 +47,68 @@
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
 
+extern HMODULE WININET_hModule DECLSPEC_HIDDEN;
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
+typedef struct {
+    WCHAR *name;
+    INTERNET_PORT port;
+    struct sockaddr_storage addr;
+    socklen_t addr_len;
+    char addr_str[INET6_ADDRSTRLEN];
+
+    LONG ref;
+    DWORD64 keep_until;
+
+    struct list entry;
+    struct list conn_pool;
+} server_t;
+
+void server_addref(server_t*) DECLSPEC_HIDDEN;
+void server_release(server_t*) DECLSPEC_HIDDEN;
+BOOL collect_connections(BOOL) DECLSPEC_HIDDEN;
+
 /* used for netconnection.c stuff */
 typedef struct
 {
     BOOL useSSL;
     int socketFD;
     void *ssl_s;
+    server_t *server;
     DWORD security_flags;
-} WININET_NETCONNECTION;
+
+    BOOL keep_alive;
+    DWORD64 keep_until;
+    struct list pool_entry;
+} netconn_t;
+
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
+
+static inline void * __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t len)
+{
+    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+}
+
+static inline void * __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t len)
+{
+    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
 
 static inline LPWSTR heap_strdupW(LPCWSTR str)
 {
@@ -64,7 +118,7 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
         DWORD size;
 
         size = (strlenW(str)+1)*sizeof(WCHAR);
-        ret = HeapAlloc(GetProcessHeap(), 0, size);
+        ret = heap_alloc(size);
         if(ret)
             memcpy(ret, str, size);
     }
@@ -84,7 +138,7 @@ static inline LPWSTR heap_strndupW(LPCWSTR str, UINT max_len)
         if(str[len] == '\0')
             break;
 
-    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(len+1));
+    ret = heap_alloc(sizeof(WCHAR)*(len+1));
     if(ret) {
         memcpy(ret, str, sizeof(WCHAR)*len);
         ret[len] = '\0';
@@ -101,7 +155,7 @@ static inline WCHAR *heap_strdupAtoW(const char *str)
         DWORD len;
 
         len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-        ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        ret = heap_alloc(len*sizeof(WCHAR));
         if(ret)
             MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
     }
@@ -115,7 +169,7 @@ static inline char *heap_strdupWtoA(LPCWSTR str)
 
     if(str) {
         DWORD size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-        ret = HeapAlloc(GetProcessHeap(), 0, size);
+        ret = heap_alloc(size);
         if(ret)
             WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
     }
@@ -177,6 +231,7 @@ struct _object_header_t
     WH_TYPE htype;
     const object_vtbl_t *vtbl;
     HINTERNET hInternet;
+    BOOL valid_handle;
     DWORD  dwFlags;
     DWORD_PTR dwContext;
     DWORD  dwError;
@@ -192,27 +247,24 @@ struct _object_header_t
 typedef struct
 {
     object_header_t hdr;
-    LPWSTR  lpszAgent;
-    LPWSTR  lpszProxy;
-    LPWSTR  lpszProxyBypass;
-    LPWSTR  lpszProxyUsername;
-    LPWSTR  lpszProxyPassword;
-    DWORD   dwAccessType;
+    LPWSTR  agent;
+    LPWSTR  proxy;
+    LPWSTR  proxyBypass;
+    LPWSTR  proxyUsername;
+    LPWSTR  proxyPassword;
+    DWORD   accessType;
 } appinfo_t;
-
 
 typedef struct
 {
     object_header_t hdr;
-    appinfo_t *lpAppInfo;
-    LPWSTR  lpszHostName; /* the final destination of the request */
-    LPWSTR  lpszServerName; /* the name of the server we directly connect to */
-    LPWSTR  lpszUserName;
-    LPWSTR  lpszPassword;
-    INTERNET_PORT nHostPort; /* the final destination port of the request */
-    INTERNET_PORT nServerPort; /* the port of the server we directly connect to */
-    struct sockaddr_storage socketAddress;
-    socklen_t sa_len;
+    appinfo_t *appInfo;
+    LPWSTR  hostName; /* the final destination of the request */
+    LPWSTR  serverName; /* the name of the server we directly connect to */
+    LPWSTR  userName;
+    LPWSTR  password;
+    INTERNET_PORT hostPort; /* the final destination port of the request */
+    INTERNET_PORT serverPort; /* the port of the server we directly connect to */
 } http_session_t;
 
 #define HDR_ISREQUEST		0x0001
@@ -230,37 +282,53 @@ typedef struct
 
 struct HttpAuthInfo;
 
-typedef struct gzip_stream_t gzip_stream_t;
+typedef struct data_stream_vtbl_t data_stream_vtbl_t;
+
+typedef struct {
+    const data_stream_vtbl_t *vtbl;
+}  data_stream_t;
+
+typedef struct {
+    data_stream_t data_stream;
+    DWORD content_length;
+    DWORD content_read;
+} netconn_stream_t;
+
+#define READ_BUFFER_SIZE 8192
 
 typedef struct
 {
     object_header_t hdr;
-    http_session_t *lpHttpSession;
-    LPWSTR lpszPath;
-    LPWSTR lpszVerb;
-    LPWSTR lpszRawHeaders;
-    WININET_NETCONNECTION netConnection;
-    LPWSTR lpszVersion;
-    LPWSTR lpszStatusText;
-    DWORD dwBytesToWrite;
-    DWORD dwBytesWritten;
-    HTTPHEADERW *pCustHeaders;
+    http_session_t *session;
+    LPWSTR path;
+    LPWSTR verb;
+    LPWSTR rawHeaders;
+    netconn_t *netconn;
+    DWORD security_flags;
+    LPWSTR version;
+    LPWSTR statusText;
+    DWORD bytesToWrite;
+    DWORD bytesWritten;
+    HTTPHEADERW *custHeaders;
     DWORD nCustHeaders;
+    FILETIME last_modified;
     HANDLE hCacheFile;
-    LPWSTR lpszCacheFile;
-    struct HttpAuthInfo *pAuthInfo;
-    struct HttpAuthInfo *pProxyAuthInfo;
+    LPWSTR cacheFile;
+    FILETIME expires;
+    struct HttpAuthInfo *authInfo;
+    struct HttpAuthInfo *proxyAuthInfo;
 
     CRITICAL_SECTION read_section;  /* section to protect the following fields */
-    DWORD dwContentLength; /* total number of bytes to be read */
-    DWORD dwContentRead;  /* bytes of the content read so far */
+    DWORD contentLength;  /* total number of bytes to be read */
     BOOL  read_chunked;   /* are we reading in chunked mode? */
+    BOOL  read_gzip;      /* are we reading in gzip mode? */
     DWORD read_pos;       /* current read position in read_buf */
     DWORD read_size;      /* valid data size in read_buf */
-    BYTE  read_buf[4096]; /* buffer for already read but not returned data */
+    BYTE  read_buf[READ_BUFFER_SIZE]; /* buffer for already read but not returned data */
 
     BOOL decoding;
-    gzip_stream_t *gzip_stream;
+    data_stream_t *data_stream;
+    netconn_stream_t netconn_stream;
 } http_request_t;
 
 
@@ -407,65 +475,63 @@ typedef struct WORKREQ
 
 } WORKREQUEST, *LPWORKREQUEST;
 
-HINTERNET WININET_AllocHandle( object_header_t *info );
-object_header_t *WININET_GetObject( HINTERNET hinternet );
-object_header_t *WININET_AddRef( object_header_t *info );
-BOOL WININET_Release( object_header_t *info );
-BOOL WININET_FreeHandle( HINTERNET hinternet );
+void *alloc_object(object_header_t*,const object_vtbl_t*,size_t) DECLSPEC_HIDDEN;
+object_header_t *get_handle_object( HINTERNET hinternet ) DECLSPEC_HIDDEN;
+object_header_t *WININET_AddRef( object_header_t *info ) DECLSPEC_HIDDEN;
+BOOL WININET_Release( object_header_t *info ) DECLSPEC_HIDDEN;
 
-DWORD INET_QueryOption( object_header_t *, DWORD, void *, DWORD *, BOOL );
+DWORD INET_QueryOption( object_header_t *, DWORD, void *, DWORD *, BOOL ) DECLSPEC_HIDDEN;
 
-time_t ConvertTimeString(LPCWSTR asctime);
+time_t ConvertTimeString(LPCWSTR asctime) DECLSPEC_HIDDEN;
 
 HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
 	INTERNET_PORT nServerPort, LPCWSTR lpszUserName,
 	LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
-	DWORD dwInternalFlags);
+	DWORD dwInternalFlags) DECLSPEC_HIDDEN;
 
 DWORD HTTP_Connect(appinfo_t*,LPCWSTR,
         INTERNET_PORT nServerPort, LPCWSTR lpszUserName,
         LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
-        DWORD dwInternalFlags, HINTERNET*);
+        DWORD dwInternalFlags, HINTERNET*) DECLSPEC_HIDDEN;
 
 BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
-	struct sockaddr *psa, socklen_t *sa_len);
+	struct sockaddr *psa, socklen_t *sa_len) DECLSPEC_HIDDEN;
 
-void INTERNET_SetLastError(DWORD dwError);
-DWORD INTERNET_GetLastError(void);
-DWORD INTERNET_AsyncCall(LPWORKREQUEST lpWorkRequest);
-LPSTR INTERNET_GetResponseBuffer(void);
-LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen);
+BOOL get_cookie(const WCHAR*,const WCHAR*,WCHAR*,DWORD*) DECLSPEC_HIDDEN;
+BOOL set_cookie(const WCHAR*,const WCHAR*,const WCHAR*,const WCHAR*) DECLSPEC_HIDDEN;
+
+void INTERNET_SetLastError(DWORD dwError) DECLSPEC_HIDDEN;
+DWORD INTERNET_GetLastError(void) DECLSPEC_HIDDEN;
+DWORD INTERNET_AsyncCall(LPWORKREQUEST lpWorkRequest) DECLSPEC_HIDDEN;
+LPSTR INTERNET_GetResponseBuffer(void) DECLSPEC_HIDDEN;
+LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen) DECLSPEC_HIDDEN;
 
 VOID SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
                        DWORD dwInternetStatus, LPVOID lpvStatusInfo,
-                       DWORD dwStatusInfoLength);
+                       DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 
 VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwInternetStatus, LPVOID lpvStatusInfo,
-                           DWORD dwStatusInfoLength);
-BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen);
+                           DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
+BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen) DECLSPEC_HIDDEN;
 
-BOOL NETCON_connected(WININET_NETCONNECTION *connection);
-DWORD NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
-void NETCON_unload(void);
-DWORD NETCON_create(WININET_NETCONNECTION *connection, int domain,
-	      int type, int protocol);
-DWORD NETCON_close(WININET_NETCONNECTION *connection);
-DWORD NETCON_connect(WININET_NETCONNECTION *connection, const struct sockaddr *serv_addr,
-		    unsigned int addrlen);
-DWORD NETCON_secure_connect(WININET_NETCONNECTION *connection, LPWSTR hostname);
-DWORD NETCON_send(WININET_NETCONNECTION *connection, const void *msg, size_t len, int flags,
-		int *sent /* out */);
-DWORD NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int flags,
-		int *recvd /* out */);
-BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *available);
-LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection);
-int NETCON_GetCipherStrength(WININET_NETCONNECTION *connection);
-DWORD NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value);
+DWORD create_netconn(BOOL,server_t*,DWORD,netconn_t**) DECLSPEC_HIDDEN;
+void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
+void NETCON_unload(void) DECLSPEC_HIDDEN;
+DWORD NETCON_secure_connect(netconn_t *connection, LPWSTR hostname) DECLSPEC_HIDDEN;
+DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
+		int *sent /* out */) DECLSPEC_HIDDEN;
+DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
+		int *recvd /* out */) DECLSPEC_HIDDEN;
+BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available) DECLSPEC_HIDDEN;
+BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
+LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
+int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
+DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, int value) DECLSPEC_HIDDEN;
 #define sock_get_error(x) WSAGetLastError()
 
-extern void URLCacheContainers_CreateDefaults(void);
-extern void URLCacheContainers_DeleteAll(void);
+extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;
+extern void URLCacheContainers_DeleteAll(void) DECLSPEC_HIDDEN;
 
 #define MAX_REPLY_LEN	 	0x5B4
 

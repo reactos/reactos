@@ -441,7 +441,9 @@ NpfsWaitPipe2(PIRP Irp,
     /* Calculate the pipe name length and allocate the buffer */
     PipeName.Length = WaitPipe->NameLength + sizeof(WCHAR);
     PipeName.MaximumLength = PipeName.Length + sizeof(WCHAR);
-    PipeName.Buffer = ExAllocatePool(NonPagedPool, PipeName.MaximumLength);
+    PipeName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                            PipeName.MaximumLength,
+                                            TAG_NPFS_NAMEBLOCK);
     if (PipeName.Buffer == NULL)
     {
         DPRINT1("Could not allocate memory for the pipe name!\n");
@@ -471,7 +473,7 @@ NpfsWaitPipe2(PIRP Irp,
     KeUnlockMutex(&Vcb->PipeListLock);
 
     /* Release the pipe name buffer */
-    ExFreePool(PipeName.Buffer);
+    ExFreePoolWithTag(PipeName.Buffer, TAG_NPFS_NAMEBLOCK);
 
     /* Fail if not pipe was found */
     if (Fcb == NULL)

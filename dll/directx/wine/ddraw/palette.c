@@ -98,7 +98,7 @@ IDirectDrawPaletteImpl_Release(IDirectDrawPalette *iface)
     if (ref == 0)
     {
         EnterCriticalSection(&ddraw_cs);
-        IWineD3DPalette_Release(This->wineD3DPalette);
+        wined3d_palette_decref(This->wineD3DPalette);
         if(This->ifaceToRelease)
         {
             IUnknown_Release(This->ifaceToRelease);
@@ -156,14 +156,14 @@ IDirectDrawPaletteImpl_GetCaps(IDirectDrawPalette *iface,
                                DWORD *Caps)
 {
     IDirectDrawPaletteImpl *This = (IDirectDrawPaletteImpl *)iface;
-    HRESULT hr;
 
     TRACE("iface %p, caps %p.\n", iface, Caps);
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DPalette_GetCaps(This->wineD3DPalette, Caps);
+    *Caps = wined3d_palette_get_flags(This->wineD3DPalette);
     LeaveCriticalSection(&ddraw_cs);
-    return hr;
+
+    return D3D_OK;
 }
 
 /*****************************************************************************
@@ -201,7 +201,7 @@ IDirectDrawPaletteImpl_SetEntries(IDirectDrawPalette *iface,
         return DDERR_INVALIDPARAMS;
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DPalette_SetEntries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
+    hr = wined3d_palette_set_entries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }
@@ -240,7 +240,7 @@ IDirectDrawPaletteImpl_GetEntries(IDirectDrawPalette *iface,
         return DDERR_INVALIDPARAMS;
 
     EnterCriticalSection(&ddraw_cs);
-    hr = IWineD3DPalette_GetEntries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
+    hr = wined3d_palette_get_entries(This->wineD3DPalette, Flags, Start, Count, PalEnt);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }
@@ -266,7 +266,7 @@ HRESULT ddraw_palette_init(IDirectDrawPaletteImpl *palette,
     palette->lpVtbl = &ddraw_palette_vtbl;
     palette->ref = 1;
 
-    hr = IWineD3DDevice_CreatePalette(ddraw->wineD3DDevice, flags,
+    hr = wined3d_palette_create(ddraw->wined3d_device, flags,
             entries, palette, &palette->wineD3DPalette);
     if (FAILED(hr))
     {
@@ -274,7 +274,7 @@ HRESULT ddraw_palette_init(IDirectDrawPaletteImpl *palette,
         return hr;
     }
 
-    palette->ifaceToRelease = (IUnknown *)ddraw;
+    palette->ifaceToRelease = (IUnknown *)&ddraw->IDirectDraw7_iface;
     IUnknown_AddRef(palette->ifaceToRelease);
 
     return DD_OK;

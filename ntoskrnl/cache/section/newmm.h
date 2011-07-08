@@ -181,7 +181,9 @@ MiSimpleRead
  PLARGE_INTEGER FileOffset,
  PVOID Buffer, 
  ULONG Length,
+#ifdef __ROS_CMAKE__
  BOOLEAN Paging,
+#endif
  PIO_STATUS_BLOCK ReadStatus);
 
 NTSTATUS

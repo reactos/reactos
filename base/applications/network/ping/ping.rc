@@ -13,6 +13,9 @@
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"
-#include "lang/pl-PL.rc"
 #include "lang/sv-SE.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "lang/pl-PL.rc"
 #include "lang/uk-UA.rc"

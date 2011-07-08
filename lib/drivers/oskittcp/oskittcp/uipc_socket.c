@@ -610,7 +610,7 @@ restart:
 		if ((so->so_state & (SS_ISCONNECTED|SS_ISCONNECTING)) == 0 &&
 		    (so->so_proto->pr_flags & PR_CONNREQUIRED)) {
 		    printf("so: %x\n", so);
-		    __asm__("int3");
+		    __debugbreak();
 			error = ENOTCONN;
 			goto release;
 		}
@@ -826,7 +826,13 @@ soshutdown(so, how)
 {
 	register struct protosw *pr = so->so_proto;
 
+#ifndef __REACTOS__
+    /* Reads are always killed whether we want
+     * them stopped or not. We don't want this
+     * happening on ROS so this code is commented out
+     */
 	how++;
+#endif
 	if (how & FREAD)
 		sorflush(so);
 	if (how & FWRITE)

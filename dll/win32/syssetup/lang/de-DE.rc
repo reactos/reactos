@@ -26,9 +26,7 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Willkommen beim ReactOS-Setupassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. "\
-          "Der Assistent benötigt einige Informationen, um ReactOS "\
-          "installieren zu können.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Der Assistent benötigt einige Informationen, um ReactOS installieren zu können.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 115, 160, 189, 31
 END
 
@@ -38,13 +36,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Die ReactOS-Programmierer möchten folgende Open-Source-Projekte anerkennen, "\
-                    "die (teils) verwendet wurden, um ReactOS zu erstellen:",
+    LTEXT           "Die ReactOS-Programmierer möchten folgende Open-Source-Projekte anerkennen, die (teils) verwendet wurden, um ReactOS zu erstellen:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden "\
-                    "oder wiederveröffentlichen wollen, müssen Sie die Bestimmungen der GPL anerkennen.",
+    LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden oder wiederveröffentlichen wollen, müssen Sie die Bestimmungen der GPL anerkennen.",
                     IDC_STATIC,15,110,227,24
     PUSHBUTTON      "GPL &ansehen...",IDC_VIEWGPL,251,110,55,19
     LTEXT           "Klicken Sie auf Weiter, um mit der Einrichtung fortzufahren.",IDC_STATIC,15,136,
@@ -73,14 +69,12 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Bitte geben sie einen Computernamen ein (maximal 15 Zeichen). "\
-          "Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
+    LTEXT "Bitte geben sie einen Computernamen ein (maximal 15 Zeichen). Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Das Setup wird ein Administratorkonto erstellen. "\
-          "Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
+    LTEXT "Das Setup wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 14 Zeichen ein.",
           IDC_STATIC, 54, 87, 250, 8
@@ -97,9 +91,7 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, "\
-          "die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, "\
-          "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
     LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.",
           IDC_STATIC, 53, 57, 188, 15
@@ -149,11 +141,9 @@ CAPTION "Fertigstellung des ReactOS-Setups"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellung des ReactOS-Setupassistenten",IDC_FINISHTITLE,115,9,195,37
-    LTEXT "Das ReactOS-Setup wurde erfolgreich fertiggestellt.\n\n" \
-          "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Das ReactOS-Setup wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Entfernen Sie die CD, wenn vorhanden. Danach klicken Sie "\
-          "auf Beenden, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Entfernen Sie die CD, wenn vorhanden. Danach klicken Sie auf Beenden, um den Computer neu zu starten.", IDC_STATIC, 115, 160, 195, 31
 END
 
 

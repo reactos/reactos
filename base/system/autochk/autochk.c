@@ -324,7 +324,7 @@ CheckVolume(
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose
-                        FALSE, // CheckOnlyIfDirty
+                        TRUE, // CheckOnlyIfDirty
                         FALSE,// ScanDrive
                         ChkdskCallback);
 

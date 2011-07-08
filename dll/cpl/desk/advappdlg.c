@@ -276,8 +276,8 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 	if (g_Assignment[g->CurrentElement].Font != -1)
 	{
 		g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight = -MulDiv(GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, &bTranslated, FALSE), GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-		g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight = (SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0) == 1)?FW_BOLD:FW_NORMAL;
-		g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
+		g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight = (SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0) == 1) ? FW_BOLD : FW_NORMAL;
+		g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic = (BYTE)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
 		GetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, g->ThemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName, LF_FACESIZE * sizeof(TCHAR));
 	}
 

@@ -129,6 +129,10 @@ InitBadBlocks(
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];    // Main record and zero filled end of array marker
     WCHAR DevSerial[128];
+#ifdef _DEBUG
+    UCHAR cDevSerial[128];
+    ULONG i;
+#endif
     ULONG Length;
     PLIST_ENTRY      link;
     PSBadBlockListItem   cur;
@@ -145,10 +149,10 @@ InitBadBlocks(
 
         QueryTable[0].QueryRoutine    = BadBlockQueryRoutine;
         QueryTable[0].Flags           = RTL_QUERY_REGISTRY_REQUIRED;
-        QueryTable[0].Name            = NULL;   // If Name is NULL, the QueryRoutine function
-                                                //  specified for this table entry is called
-                                                //  for all values associated with the current
-                                                //  registry key.
+        QueryTable[0].Name            = NULL;   // If Name is NULL, the QueryRoutine function 
+                                                //  specified for this table entry is called 
+                                                //  for all values associated with the current 
+                                                //  registry key. 
         QueryTable[0].EntryContext    = NULL;
         QueryTable[0].DefaultType     = REG_NONE;
         QueryTable[0].DefaultData     = 0;
@@ -173,8 +177,13 @@ InitBadBlocks(
         Length++;
         Length += EncodeVendorStr(DevSerial+Length, LunExt->IdentifyData.SerialNumber, sizeof(LunExt->IdentifyData.SerialNumber));
 
+#ifdef _DEBUG
         KdPrint(( "LunExt %#x\n", LunExt));
-        KdPrint(( "S/N:%S\n", DevSerial));
+        for(i=0; i<Length; i++) {
+            cDevSerial[i] = (UCHAR)(DevSerial[i]);
+        }
+        KdPrint(( "S/N:%s\n", cDevSerial));
+#endif
 
         LunExt->nBadBlocks = 0;
         LunExt->arrBadBlocks = NULL;
@@ -260,7 +269,7 @@ CheckIfBadBlock(
 
     for (ULONG i = 0; i < nBadBlocks; i++)
     {
-        if (lba + count > arrBadBlocks->m_lbaStart  &&
+        if (lba + count > arrBadBlocks->m_lbaStart  &&  
                     lba < arrBadBlocks->m_lbaEnd) {
             KdPrint(( "listed BB @ %I64x\n", lba));
             return true;

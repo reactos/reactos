@@ -310,51 +310,65 @@ IopLoadServiceModule(
       return STATUS_UNSUCCESSFUL;
    }
 
-   /* Open CurrentControlSet */
-   RtlInitUnicodeString(&CCSName,
-                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-   Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+   if (ExpInTextModeSetup)
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
-       return Status;
-   }
+       /* We have no registry, but luckily we know where all the drivers are */
 
-   /* Open service key */
-   Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
-   if (!NT_SUCCESS(Status))
+       /* ServiceStart < 4 is all that matters */
+       ServiceStart = 0;
+
+       /* IopNormalizeImagePath will do all of the work for us if we give it an empty string */
+       ServiceImagePath.Length = ServiceImagePath.MaximumLength = 0;
+       ServiceImagePath.Buffer = NULL;
+   }
+   else
    {
-       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       /* Open CurrentControlSet */
+       RtlInitUnicodeString(&CCSName,
+                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+       Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           return Status;
+       }
+
+       /* Open service key */
+       Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           ZwClose(CCSKey);
+           return Status;
+       }
+
+       /*
+        * Get information about the service.
+        */
+
+       RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+       RtlInitUnicodeString(&ServiceImagePath, NULL);
+
+       QueryTable[0].Name = L"Start";
+       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[0].EntryContext = &ServiceStart;
+
+       QueryTable[1].Name = L"ImagePath";
+       QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+       QueryTable[1].EntryContext = &ServiceImagePath;
+
+       Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+          (PWSTR)ServiceKey, QueryTable, NULL, NULL);
+
+       ZwClose(ServiceKey);
        ZwClose(CCSKey);
-       return Status;
-   }
 
-   /*
-    * Get information about the service.
-    */
-
-   RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-   RtlInitUnicodeString(&ServiceImagePath, NULL);
-
-   QueryTable[0].Name = L"Start";
-   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[0].EntryContext = &ServiceStart;
-
-   QueryTable[1].Name = L"ImagePath";
-   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[1].EntryContext = &ServiceImagePath;
-
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-      (PWSTR)ServiceKey, QueryTable, NULL, NULL);
-
-   ZwClose(ServiceKey);
-   ZwClose(CCSKey);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
-      return Status;
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+          return Status;
+       }
    }
 
    /*
@@ -369,20 +383,20 @@ IopLoadServiceModule(
       return Status;
    }
 
-      /*
-       * Case for disabled drivers
-       */
+   /*
+    * Case for disabled drivers
+    */
 
-  if (ServiceStart >= 4)
-  {
-     /* FIXME: Check if it is the right status code */
-     Status = STATUS_PLUGPLAY_NO_DEVICE;
-  }
-  else
-  {
-     DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
-  }
+   if (ServiceStart >= 4)
+   {
+      /* FIXME: Check if it is the right status code */
+      Status = STATUS_PLUGPLAY_NO_DEVICE;
+   }
+   else
+   {
+      DPRINT("Loading module\n");
+      Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
+   }
 
    ExFreePool(ServiceImagePath.Buffer);
 

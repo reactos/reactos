@@ -12,7 +12,7 @@ list(APPEND SOURCE
     console.rc
     ${CMAKE_CURRENT_BINARY_DIR}/console.def)
 
-add_library(console SHARED ${CMAKE_CURRENT_BINARY_DIR}/console_console.h.gch ${SOURCE})
+add_library(console SHARED ${SOURCE})
 
 set_module_type(console win32dll)
 
@@ -23,5 +23,5 @@ add_importlibs(console
     comctl32
     kernel32)
 
-add_pch(console ${CMAKE_CURRENT_SOURCE_DIR}/console.h ${SOURCE})
+add_pch(console console.h)
 add_cd_file(TARGET console DESTINATION reactos/system32 FOR all)

@@ -1,7 +1,7 @@
 
 add_definitions(-D_BATTERYCLASS_)
 
-spec2def(batc.sys battc.spec)
+spec2def(battc.sys battc.spec)
 
 add_library(battc SHARED
             battc.c

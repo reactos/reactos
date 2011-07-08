@@ -45,9 +45,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
 
-add_library(advapi32 SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_advapi32.h.gch
-    ${SOURCE})
+add_library(advapi32 SHARED ${SOURCE})
 
 set_module_type(advapi32 win32dll)
 
@@ -60,6 +58,6 @@ target_link_libraries(advapi32
 
 add_importlibs(advapi32 rpcrt4 kernel32 ntdll msvcrt)
 
-add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
+add_pch(advapi32 advapi32.h)
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(advapi32.spec)

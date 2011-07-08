@@ -64,7 +64,7 @@ typedef struct
 {
 	COLORREF crColor[NUM_COLORS];
 	LOGFONT lfFont[NUM_FONTS];
-	UINT64 Size[NUM_SIZES];
+	INT Size[NUM_SIZES];
 	BOOL bFlatMenus;
 	EFFECTS Effects;
 } THEME;

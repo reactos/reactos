@@ -20,8 +20,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Erweiterte Tasteneinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Um Caps Lock zu deaktivieren", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "Caps &Lock Taste drücken", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    GROUPBOX "Um die Feststelltaste zu deaktivieren", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "Festste&lltaste drücken", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
     AUTORADIOBUTTON "Um&schalttaste drücken", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Schnelltasten für Eingabesprachen", -1, 7, 37, 258, 95
     LTEXT "Aktion", -1, 14, 47, 60, 9

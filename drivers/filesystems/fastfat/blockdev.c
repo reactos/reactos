@@ -38,6 +38,10 @@ VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
     {
       IrpContext->Flags |= IRPCONTEXT_PENDINGRETURNED;
     }
+  else
+    {
+      IrpContext->Flags &= ~IRPCONTEXT_PENDINGRETURNED;
+    }
   if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
       IrpContext->Irp->IoStatus.Status = Irp->IoStatus.Status;
@@ -67,6 +71,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
   KEVENT event;
   NTSTATUS Status;
 
+again:
   KeInitializeEvent (&event, NotificationEvent, FALSE);
 
   DPRINT ("VfatReadDisk(pDeviceObject %p, Offset %I64x, Length %d, Buffer %p)\n",
@@ -104,6 +109,25 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
       Status = IoStatus.Status;
     }
 
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      PDEVICE_OBJECT DeviceToVerify;
+
+      DPRINT1 ("Media change detected!\n");
+
+      /* Find the device to verify and reset the thread field to empty value again. */
+      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+      IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
+      Status = IoVerifyVolume (DeviceToVerify,
+                               FALSE);
+
+      if (NT_SUCCESS(Status))
+        {
+          DPRINT1 ("Volume verification successful; Reissuing read request\n");
+          goto again;
+        }
+    }
+
   if (!NT_SUCCESS (Status))
     {
       DPRINT ("IO failed!!! VfatReadDisk : Error code: %x\n", Status);
@@ -134,6 +158,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 
+again:
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
     {
@@ -190,6 +215,25 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
       Status = IrpContext->Irp->IoStatus.Status;
     }
 
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      PDEVICE_OBJECT DeviceToVerify;
+
+      DPRINT1 ("Media change detected!\n");
+
+      /* Find the device to verify and reset the thread field to empty value again. */
+      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+      IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
+      Status = IoVerifyVolume (DeviceToVerify,
+                               FALSE);
+
+      if (NT_SUCCESS(Status))
+        {
+          DPRINT1 ("Volume verification successful; Reissuing read request\n");
+          goto again;
+        }
+    }
+
   DPRINT("%x\n", Status);
   return Status;
 }
@@ -212,6 +256,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 
+again:
   DPRINT ("Building asynchronous FSD Request...\n");
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
@@ -268,6 +313,25 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
       Status = IrpContext->Irp->IoStatus.Status;
     }
 
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      PDEVICE_OBJECT DeviceToVerify;
+
+      DPRINT1 ("Media change detected!\n");
+
+      /* Find the device to verify and reset the thread field to empty value again. */
+      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+      IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
+      Status = IoVerifyVolume (DeviceToVerify,
+                               FALSE);
+
+      if (NT_SUCCESS(Status))
+        {
+          DPRINT1 ("Volume verification successful; Reissuing write request\n");
+          goto again;
+        }
+    }
+
   return Status;
 }
 
@@ -292,6 +356,7 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
          InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
          OutputBufferSize ? *OutputBufferSize : 0);
 
+again:
   KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
   DPRINT("Building device I/O control request ...\n");
@@ -327,6 +392,25 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
       DPRINT ("Getting IO Status... for %p\n", Irp);
 
       Status = IoStatus.Status;
+    }
+    
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      PDEVICE_OBJECT DeviceToVerify;
+
+      DPRINT1 ("Media change detected!\n");
+
+      /* Find the device to verify and reset the thread field to empty value again. */
+      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+      IoSetDeviceToVerify (PsGetCurrentThread (), NULL);
+      Status = IoVerifyVolume (DeviceToVerify,
+                               FALSE);
+
+      if (NT_SUCCESS(Status))
+        {
+          DPRINT1 ("Volume verification successful; Reissuing IOCTL request\n");
+          goto again;
+        }
     }
 
   if (OutputBufferSize)

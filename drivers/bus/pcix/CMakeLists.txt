@@ -36,12 +36,12 @@ list(APPEND SOURCE
     utils.c
     pci.rc)
 
-add_library(pcix SHARED ${CMAKE_CURRENT_BINARY_DIR}/pcix_pci.h.gch ${SOURCE})
+add_library(pcix SHARED ${SOURCE})
 
 set_module_type(pcix kernelmodedriver)
 add_importlibs(pcix ntoskrnl hal)
 
-add_pch(pcix ${CMAKE_CURRENT_SOURCE_DIR}/pci.h ${SOURCE})
+add_pch(pcix pci.h)
 add_dependencies(pcix pciclass)
 
 add_cd_file(TARGET pcix DESTINATION reactos/system32/drivers NO_CAB FOR all)

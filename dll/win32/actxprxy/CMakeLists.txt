@@ -44,6 +44,7 @@ add_importlibs(actxprxy
     rpcrt4
     ole32
     oleaut32
+    msvcrt
     kernel32
     ntdll)
 

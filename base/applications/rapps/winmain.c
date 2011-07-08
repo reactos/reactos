@@ -794,7 +794,6 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = MainWindowProc;
     WndClass.hInstance     = hInstance;
-    WndClass.style         = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
     WndClass.hCursor       = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);

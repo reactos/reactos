@@ -12,7 +12,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Калькулятор ReactOS"
+CAPTION "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -141,19 +141,19 @@ BEGIN
     PUSHBUTTON      "F",IDC_BUTTON_F,288,140,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     GROUPBOX        "",IDC_STATIC,140,16,172,21
-    CONTROL         "8 байт",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "8 Р±Р°Р№С‚",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,148,24,37,10
-    CONTROL         "4 байт",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "4 Р±Р°Р№С‚",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON | 
                     NOT WS_VISIBLE,188,24,37,10
-    CONTROL         "2 байт",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "2 Р±Р°Р№С‚",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,232,24,33,10
-    CONTROL         "1 байт",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
+    CONTROL         "1 Р±Р°Р№С‚",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,272,24,30,10
-    CONTROL         "Градуси",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
+    CONTROL         "Р“СЂР°РґСѓСЃРё",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
                     42,10
-    CONTROL         "Радіани",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
+    CONTROL         "Р Р°РґС–Р°РЅРё",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
                     24,42,10
-    CONTROL         "Гради",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+    CONTROL         "Р“СЂР°РґРё",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
                     236,24,44,10
     PUSHBUTTON      "C",IDC_BUTTON_CANC,272,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -168,7 +168,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 172, 127
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Калькулятор ReactOS"
+CAPTION "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -235,20 +235,20 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Калькулятор ReactOS"
+CAPTION "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "Перевести",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "РџРµСЂРµРІРµСЃС‚Рё",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,4,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Категорія:",IDC_STATIC,4,20,56,8
+    LTEXT           "РљР°С‚РµРіРѕСЂС–СЏ:",IDC_STATIC,4,20,56,8
     COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Вихідна величина:",IDC_STATIC,4,49,56,8
+    LTEXT           "Р’РёС…С–РґРЅР° РІРµР»РёС‡РёРЅР°:",IDC_STATIC,4,49,56,8
     COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
-    LTEXT           "Кінцева величина:",IDC_STATIC,4,76,56,8
+    LTEXT           "РљС–РЅС†РµРІР° РІРµР»РёС‡РёРЅР°:",IDC_STATIC,4,76,56,8
     CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
@@ -313,16 +313,16 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Про Калькулятор ReactOS"
+CAPTION "РџСЂРѕ РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "Калькулятор ReactOS",IDC_STATIC,120,12,132,8,
+    LTEXT           "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
-    LTEXT           "Версія ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
-    LTEXT           "Написав Карло Браміні",IDC_STATIC,120,32,132,8,
+    LTEXT           "Р’РµСЂСЃС–СЏ ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "РќР°РїРёСЃР°РІ РљР°СЂР»Рѕ Р‘СЂР°РјС–РЅС–",IDC_STATIC,120,32,132,8,
                     SS_CENTERIMAGE
     GROUPBOX        "",IDC_STATIC,112,0,148,52
     GROUPBOX        "",IDC_STATIC,4,56,256,88
@@ -332,7 +332,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Статистика"
+CAPTION "РЎС‚Р°С‚РёСЃС‚РёРєР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
@@ -349,89 +349,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "Правка"
+    POPUP "РџСЂР°РІРєР°"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "РљРѕРїС–СЋРІР°С‚Рё\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Р’СЃС‚Р°РІРёС‚Рё\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "Вигляд"
+    POPUP "Р’РёРіР»СЏРґ"
     BEGIN
-        MENUITEM "Звичайний",                   IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Перетворення",                IDM_VIEW_CONVERSION
+        MENUITEM "Р—РІРёС‡Р°Р№РЅРёР№",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "РќР°СѓРєРѕРІРёР№",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "РџРµСЂРµС‚РІРѕСЂРµРЅРЅСЏ",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шістнадцятковий\tF5",         IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятковий\tF6",              IDM_VIEW_DEC, CHECKED
-        MENUITEM "Вісімковий\tF7",              IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двійковий\tF8",               IDM_VIEW_BIN, CHECKED
+        MENUITEM "РЁС–СЃС‚РЅР°РґС†СЏС‚РєРѕРІРёР№\tF5",         IDM_VIEW_HEX, CHECKED
+        MENUITEM "Р”РµСЃСЏС‚РєРѕРІРёР№\tF6",              IDM_VIEW_DEC, CHECKED
+        MENUITEM "Р’С–СЃС–РјРєРѕРІРёР№\tF7",              IDM_VIEW_OCT, CHECKED
+        MENUITEM "Р”РІС–Р№РєРѕРІРёР№\tF8",               IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Градуси\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Радіани\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Гради\tF4",                   IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Р“СЂР°РґСѓСЃРё\tF2",                 IDM_VIEW_DEG, CHECKED
+        MENUITEM "Р Р°РґС–Р°РЅРё\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "Р“СЂР°РґРё\tF4",                   IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Кількість цифр у групі",      IDM_VIEW_GROUP, CHECKED
+        MENUITEM "РљС–Р»СЊРєС–СЃС‚СЊ С†РёС„СЂ Сѓ РіСЂСѓРїС–",      IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Довідка"
+    POPUP "Р”РѕРІС–РґРєР°"
     BEGIN
-        MENUITEM "Зміст",                       IDM_HELP_HELP
+        MENUITEM "Р—РјС–СЃС‚",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS",     IDM_HELP_ABOUT
+        MENUITEM "РџСЂРѕ РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS",     IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "Правка"
+    POPUP "РџСЂР°РІРєР°"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "РљРѕРїС–СЋРІР°С‚Рё\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Р’СЃС‚Р°РІРёС‚Рё\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "Вигляд"
+    POPUP "Р’РёРіР»СЏРґ"
     BEGIN
-        MENUITEM "Звичайний",                   IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Перетворення",                IDM_VIEW_CONVERSION
+        MENUITEM "Р—РІРёС‡Р°Р№РЅРёР№",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "РќР°СѓРєРѕРІРёР№",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "РџРµСЂРµС‚РІРѕСЂРµРЅРЅСЏ",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шістнадцятковий\tF5",         IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятковий\tF6",              IDM_VIEW_DEC, CHECKED
-        MENUITEM "Вісімковий\tF7",              IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двійковий\tF8",               IDM_VIEW_BIN, CHECKED
+        MENUITEM "РЁС–СЃС‚РЅР°РґС†СЏС‚РєРѕРІРёР№\tF5",         IDM_VIEW_HEX, CHECKED
+        MENUITEM "Р”РµСЃСЏС‚РєРѕРІРёР№\tF6",              IDM_VIEW_DEC, CHECKED
+        MENUITEM "Р’С–СЃС–РјРєРѕРІРёР№\tF7",              IDM_VIEW_OCT, CHECKED
+        MENUITEM "Р”РІС–Р№РєРѕРІРёР№\tF8",               IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "8 байт\tF12",                 IDM_VIEW_QWORD, CHECKED
-        MENUITEM "4 байт\tF2",                  IDM_VIEW_DWORD, CHECKED
-        MENUITEM "2 байт\tF3",                  IDM_VIEW_WORD, CHECKED
-        MENUITEM "1 байт\tF4",                  IDM_VIEW_BYTE, CHECKED
+        MENUITEM "8 Р±Р°Р№С‚\tF12",                 IDM_VIEW_QWORD, CHECKED
+        MENUITEM "4 Р±Р°Р№С‚\tF2",                  IDM_VIEW_DWORD, CHECKED
+        MENUITEM "2 Р±Р°Р№С‚\tF3",                  IDM_VIEW_WORD, CHECKED
+        MENUITEM "1 Р±Р°Р№С‚\tF4",                  IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Кількість цифр у групі",      IDM_VIEW_GROUP, CHECKED
+        MENUITEM "РљС–Р»СЊРєС–СЃС‚СЊ С†РёС„СЂ Сѓ РіСЂСѓРїС–",      IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Довідка"
+    POPUP "Р”РѕРІС–РґРєР°"
     BEGIN
-        MENUITEM "Зміст",                       IDM_HELP_HELP
+        MENUITEM "Р—РјС–СЃС‚",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS",     IDM_HELP_ABOUT
+        MENUITEM "РџСЂРѕ РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS",     IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "Правка"
+    POPUP "РџСЂР°РІРєР°"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V",            IDM_EDIT_PASTE
+        MENUITEM "РљРѕРїС–СЋРІР°С‚Рё\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Р’СЃС‚Р°РІРёС‚Рё\tCTRL-V",            IDM_EDIT_PASTE
     END
-    POPUP "Вигляд"
+    POPUP "Р’РёРіР»СЏРґ"
     BEGIN
-        MENUITEM "Звичайний",                   IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Перетворення",                IDM_VIEW_CONVERSION
+        MENUITEM "Р—РІРёС‡Р°Р№РЅРёР№",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "РќР°СѓРєРѕРІРёР№",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "РџРµСЂРµС‚РІРѕСЂРµРЅРЅСЏ",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Кількість цифр у групі",      IDM_VIEW_GROUP, CHECKED
+        MENUITEM "РљС–Р»СЊРєС–СЃС‚СЊ С†РёС„СЂ Сѓ РіСЂСѓРїС–",      IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Довідка"
+    POPUP "Р”РѕРІС–РґРєР°"
     BEGIN
-        MENUITEM "Зміст",                       IDM_HELP_HELP
+        MENUITEM "Р—РјС–СЃС‚",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS",     IDM_HELP_ABOUT
+        MENUITEM "РџСЂРѕ РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS",     IDM_HELP_ABOUT
     END
 END
 
@@ -439,302 +439,302 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "Калькулятор ReactOS - вільне програмне забезпечення, випущене за ліцензією GNU GPL.\r\n\r\nВи можете отримати копію ліцензії GNU GPL тут:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nВи можете також отримати переклад ліцензії GNU GPL тут:\r\nhttp://www.gnu.org/licenses/translations.html"
-    IDS_MATH_ERROR          "Помилка"
-    IDS_QUICKHELP           "Швидка довідка"
+    IDS_STRING_LICENSE      "РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ ReactOS - РІС–Р»СЊРЅРµ РїСЂРѕРіСЂР°РјРЅРµ Р·Р°Р±РµР·РїРµС‡РµРЅРЅСЏ, РІРёРїСѓС‰РµРЅРµ Р·Р° Р»С–С†РµРЅР·С–С”СЋ GNU GPL.\r\n\r\nР’Рё РјРѕР¶РµС‚Рµ РѕС‚СЂРёРјР°С‚Рё РєРѕРїС–СЋ Р»С–С†РµРЅР·С–С— GNU GPL С‚СѓС‚:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nР’Рё РјРѕР¶РµС‚Рµ С‚Р°РєРѕР¶ РѕС‚СЂРёРјР°С‚Рё РїРµСЂРµРєР»Р°Рґ Р»С–С†РµРЅР·С–С— GNU GPL С‚СѓС‚:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_MATH_ERROR          "РџРѕРјРёР»РєР°"
+    IDS_QUICKHELP           "РЁРІРёРґРєР° РґРѕРІС–РґРєР°"
 END
 
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_ANGLE          "Кут"
-    IDS_CONV_AREA           "Площа"
-    IDS_CONV_CONSUMPTION    "Витрата палива (двигуни)"
-    IDS_CONV_CURRENCY       "Валюта"
-    IDS_CONV_ENERGY         "Енергія"
-    IDS_CONV_LENGTH         "Довжина"
-    IDS_CONV_POWER          "Потужність"
-    IDS_CONV_PRESSURE       "Тиск"
-    IDS_CONV_TEMPERATURE    "Температура"
-    IDS_CONV_TIME           "Час"
-    IDS_CONV_VELOCITY       "Швидкість"
-    IDS_CONV_VOLUME         "Об'єм"
-    IDS_CONV_WEIGHT         "Вага"
+    IDS_CONV_ANGLE          "РљСѓС‚"
+    IDS_CONV_AREA           "РџР»РѕС‰Р°"
+    IDS_CONV_CONSUMPTION    "Р’РёС‚СЂР°С‚Р° РїР°Р»РёРІР° (РґРІРёРіСѓРЅРё)"
+    IDS_CONV_CURRENCY       "Р’Р°Р»СЋС‚Р°"
+    IDS_CONV_ENERGY         "Р•РЅРµСЂРіС–СЏ"
+    IDS_CONV_LENGTH         "Р”РѕРІР¶РёРЅР°"
+    IDS_CONV_POWER          "РџРѕС‚СѓР¶РЅС–СЃС‚СЊ"
+    IDS_CONV_PRESSURE       "РўРёСЃРє"
+    IDS_CONV_TEMPERATURE    "РўРµРјРїРµСЂР°С‚СѓСЂР°"
+    IDS_CONV_TIME           "Р§Р°СЃ"
+    IDS_CONV_VELOCITY       "РЁРІРёРґРєС–СЃС‚СЊ"
+    IDS_CONV_VOLUME         "РћР±'С”Рј"
+    IDS_CONV_WEIGHT         "Р’Р°РіР°"
 END
 
 // TYPES OF ANGLES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ANGLE_DEGREES       "Градус"
-    IDS_ANGLE_GRADIANS      "Град"
-    IDS_ANGLE_RADIANS       "Радіан"
+    IDS_ANGLE_DEGREES       "Р“СЂР°РґСѓСЃ"
+    IDS_ANGLE_GRADIANS      "Р“СЂР°Рґ"
+    IDS_ANGLE_RADIANS       "Р Р°РґС–Р°РЅ"
 END
 
 // TYPES OF AREAS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_AREA_ACRES                  "Акр"
-    IDS_AREA_ACRES_BRAZIL           "Акр (бразильський)"
-    IDS_AREA_ACRES_FRANCE           "Акр (французький)"
-    IDS_AREA_ACRES_SCOTS            "Акр (шотландський)"
-    IDS_AREA_ACRES_US               "Акр (США)"
-    IDS_AREA_ARES                   "Ар"
-    IDS_AREA_CHOU                   "Чоу"
-    IDS_AREA_DANBO                  "Дамбо"
-    IDS_AREA_HECTARES               "Гектар"
-    IDS_AREA_JEONGBO                "Дженгбо"
-    IDS_AREA_MORGEN_HUNGARY         "Морген (угорський)"
-    IDS_AREA_MU                     "Му"
-    IDS_AREA_PING                   "Пінг"
-    IDS_AREA_PYEONG                 "Пйон"
-    IDS_AREA_PYEONGBANGJA           "Пйонбанджа"
-    IDS_AREA_RAI                    "Рай"
+    IDS_AREA_ACRES                  "РђРєСЂ"
+    IDS_AREA_ACRES_BRAZIL           "РђРєСЂ (Р±СЂР°Р·РёР»СЊСЃСЊРєРёР№)"
+    IDS_AREA_ACRES_FRANCE           "РђРєСЂ (С„СЂР°РЅС†СѓР·СЊРєРёР№)"
+    IDS_AREA_ACRES_SCOTS            "РђРєСЂ (С€РѕС‚Р»Р°РЅРґСЃСЊРєРёР№)"
+    IDS_AREA_ACRES_US               "РђРєСЂ (РЎРЁРђ)"
+    IDS_AREA_ARES                   "РђСЂ"
+    IDS_AREA_CHOU                   "Р§РѕСѓ"
+    IDS_AREA_DANBO                  "Р”Р°РјР±Рѕ"
+    IDS_AREA_HECTARES               "Р“РµРєС‚Р°СЂ"
+    IDS_AREA_JEONGBO                "Р”Р¶РµРЅРіР±Рѕ"
+    IDS_AREA_MORGEN_HUNGARY         "РњРѕСЂРіРµРЅ (СѓРіРѕСЂСЃСЊРєРёР№)"
+    IDS_AREA_MU                     "РњСѓ"
+    IDS_AREA_PING                   "РџС–РЅРі"
+    IDS_AREA_PYEONG                 "РџР№РѕРЅ"
+    IDS_AREA_PYEONGBANGJA           "РџР№РѕРЅР±Р°РЅРґР¶Р°"
+    IDS_AREA_RAI                    "Р Р°Р№"
     IDS_AREA_SE                     "Se"
-    IDS_AREA_SQUARE_CENTIMETERS     "Квадратний сантиметр"
-    IDS_AREA_SQUARE_CHR             "Квадратний ча"
-    IDS_AREA_SQUARE_FATHOMS         "Квадратний фатом"
-    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Квадратний фатом (угорський)"
-    IDS_AREA_SQUARE_FEET            "Квадратний фут"
-    IDS_AREA_SQUARE_INCHES          "Квадратний дюйм"
-    IDS_AREA_SQUARE_KILOMETERS      "Квадратний кілометр"
-    IDS_AREA_SQUARE_LAR             "Квадратний лар"
-    IDS_AREA_SQUARE_METER           "Квадратний метр"
-    IDS_AREA_SQUARE_MILES           "Квадратна миля"
-    IDS_AREA_SQUARE_MILLIMETERS     "Квадратний міліметр"
-    IDS_AREA_SQUARE_SHAKU           "Квадратний шаку"
-    IDS_AREA_SQUARE_TSUEN           "Квадратний тсуен"
-    IDS_AREA_SQUARE_VA              "Квадратна ва"
-    IDS_AREA_SQUARE_YARD            "Квадратний ярд"
-    IDS_AREA_TAN                    "Тан"
-    IDS_AREA_TSUBO                  "Цубо"
+    IDS_AREA_SQUARE_CENTIMETERS     "РљРІР°РґСЂР°С‚РЅРёР№ СЃР°РЅС‚РёРјРµС‚СЂ"
+    IDS_AREA_SQUARE_CHR             "РљРІР°РґСЂР°С‚РЅРёР№ С‡Р°"
+    IDS_AREA_SQUARE_FATHOMS         "РљРІР°РґСЂР°С‚РЅРёР№ С„Р°С‚РѕРј"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "РљРІР°РґСЂР°С‚РЅРёР№ С„Р°С‚РѕРј (СѓРіРѕСЂСЃСЊРєРёР№)"
+    IDS_AREA_SQUARE_FEET            "РљРІР°РґСЂР°С‚РЅРёР№ С„СѓС‚"
+    IDS_AREA_SQUARE_INCHES          "РљРІР°РґСЂР°С‚РЅРёР№ РґСЋР№Рј"
+    IDS_AREA_SQUARE_KILOMETERS      "РљРІР°РґСЂР°С‚РЅРёР№ РєС–Р»РѕРјРµС‚СЂ"
+    IDS_AREA_SQUARE_LAR             "РљРІР°РґСЂР°С‚РЅРёР№ Р»Р°СЂ"
+    IDS_AREA_SQUARE_METER           "РљРІР°РґСЂР°С‚РЅРёР№ РјРµС‚СЂ"
+    IDS_AREA_SQUARE_MILES           "РљРІР°РґСЂР°С‚РЅР° РјРёР»СЏ"
+    IDS_AREA_SQUARE_MILLIMETERS     "РљРІР°РґСЂР°С‚РЅРёР№ РјС–Р»С–РјРµС‚СЂ"
+    IDS_AREA_SQUARE_SHAKU           "РљРІР°РґСЂР°С‚РЅРёР№ С€Р°РєСѓ"
+    IDS_AREA_SQUARE_TSUEN           "РљРІР°РґСЂР°С‚РЅРёР№ С‚СЃСѓРµРЅ"
+    IDS_AREA_SQUARE_VA              "РљРІР°РґСЂР°С‚РЅР° РІР°"
+    IDS_AREA_SQUARE_YARD            "РљРІР°РґСЂР°С‚РЅРёР№ СЏСЂРґ"
+    IDS_AREA_TAN                    "РўР°РЅ"
+    IDS_AREA_TSUBO                  "Р¦СѓР±Рѕ"
 END
 
 // TYPES OF COMSUMPTIONS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONSUMPTION_KM_PER_L        "Кілометр/літр"
-    IDS_CONSUMPTION_L_PER_100_KM    "Літрів/100 кілометрів"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Миль/галонів (британський)"
-    IDS_CONSUMPTION_MILES_GALLON_US "Миль/галонів (США)"
+    IDS_CONSUMPTION_KM_PER_L        "РљС–Р»РѕРјРµС‚СЂ/Р»С–С‚СЂ"
+    IDS_CONSUMPTION_L_PER_100_KM    "Р›С–С‚СЂС–РІ/100 РєС–Р»РѕРјРµС‚СЂС–РІ"
+    IDS_CONSUMPTION_MILES_GALLON_UK "РњРёР»СЊ/РіР°Р»РѕРЅС–РІ (Р±СЂРёС‚Р°РЅСЃСЊРєРёР№)"
+    IDS_CONSUMPTION_MILES_GALLON_US "РњРёР»СЊ/РіР°Р»РѕРЅС–РІ (РЎРЁРђ)"
 END
 
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Австралійський шилінг"
-    IDS_CURRENCY_BELGIAN_FRANC      "Бельгійський франк"
-    IDS_CURRENCY_CYPRIOT_POUND      "Кіпріотський фунт"
-    IDS_CURRENCY_CZECH_KORUNA       "Чешська крона"
-    IDS_CURRENCY_DEUTSCHE_MARK      "Немецька марка"
-    IDS_CURRENCY_DUTCH_GUILDER      "Голандський гульден"
-    IDS_CURRENCY_EURO               "Євро"
-    IDS_CURRENCY_FINNISH_MARKKA     "Фінська марка"
-    IDS_CURRENCY_FRENCH_FRANC       "Французський франк"
-    IDS_CURRENCY_GREEK_DRACHMA      "Грецька драхма"
-    IDS_CURRENCY_IRISH_POUND        "Ірландський фунт"
-    IDS_CURRENCY_ITALIAN_LIRA       "Італьянськая ліра"
-    IDS_CURRENCY_LUXEMBOURG_FRANC   "Люксембургський франк"
-    IDS_CURRENCY_MALTESE_LIRA       "Мальтийськая ліра"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Португальське ескудо"
-    IDS_CURRENCY_SLOVAK_KORUNA      "Словацька крона"
-    IDS_CURRENCY_SLOVENIAN_TOLAR    "Словенський толар"
-    IDS_CURRENCY_SPANISH_PESETA     "Іспанська песета"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "РђРІСЃС‚СЂР°Р»С–Р№СЃСЊРєРёР№ С€РёР»С–РЅРі"
+    IDS_CURRENCY_BELGIAN_FRANC      "Р‘РµР»СЊРіС–Р№СЃСЊРєРёР№ С„СЂР°РЅРє"
+    IDS_CURRENCY_CYPRIOT_POUND      "РљС–РїСЂС–РѕС‚СЃСЊРєРёР№ С„СѓРЅС‚"
+    IDS_CURRENCY_CZECH_KORUNA       "Р§РµС€СЃСЊРєР° РєСЂРѕРЅР°"
+    IDS_CURRENCY_DEUTSCHE_MARK      "РќРµРјРµС†СЊРєР° РјР°СЂРєР°"
+    IDS_CURRENCY_DUTCH_GUILDER      "Р“РѕР»Р°РЅРґСЃСЊРєРёР№ РіСѓР»СЊРґРµРЅ"
+    IDS_CURRENCY_EURO               "Р„РІСЂРѕ"
+    IDS_CURRENCY_FINNISH_MARKKA     "Р¤С–РЅСЃСЊРєР° РјР°СЂРєР°"
+    IDS_CURRENCY_FRENCH_FRANC       "Р¤СЂР°РЅС†СѓР·СЃСЊРєРёР№ С„СЂР°РЅРє"
+    IDS_CURRENCY_GREEK_DRACHMA      "Р“СЂРµС†СЊРєР° РґСЂР°С…РјР°"
+    IDS_CURRENCY_IRISH_POUND        "Р†СЂР»Р°РЅРґСЃСЊРєРёР№ С„СѓРЅС‚"
+    IDS_CURRENCY_ITALIAN_LIRA       "Р†С‚Р°Р»СЊСЏРЅСЃСЊРєР°СЏ Р»С–СЂР°"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Р›СЋРєСЃРµРјР±СѓСЂРіСЃСЊРєРёР№ С„СЂР°РЅРє"
+    IDS_CURRENCY_MALTESE_LIRA       "РњР°Р»СЊС‚РёР№СЃСЊРєР°СЏ Р»С–СЂР°"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "РџРѕСЂС‚СѓРіР°Р»СЊСЃСЊРєРµ РµСЃРєСѓРґРѕ"
+    IDS_CURRENCY_SLOVAK_KORUNA      "РЎР»РѕРІР°С†СЊРєР° РєСЂРѕРЅР°"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "РЎР»РѕРІРµРЅСЃСЊРєРёР№ С‚РѕР»Р°СЂ"
+    IDS_CURRENCY_SPANISH_PESETA     "Р†СЃРїР°РЅСЃСЊРєР° РїРµСЃРµС‚Р°"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "Калорія 15-градусна"
-    IDS_ENERGY_BTUS                 "Британська теплова одиниця"
-    IDS_ENERGY_ERGS                 "Ерг"
-    IDS_ENERGY_EVS                  "Електронвольт"
-    IDS_ENERGY_FOOT_POUNDS          "Футо-фунт"
-    IDS_ENERGY_IT_CALORIES          "Калорія міжнародна"
-    IDS_ENERGY_IT_KILOCALORIES      "Кілокалорія міжнародна"
-    IDS_ENERGY_JOULES               "Джоуль"
-    IDS_ENERGY_KILOJOULES           "Кілоджоуль"
-    IDS_ENERGY_KILOWATT_HOURS       "Кіловат за годину"
-    IDS_ENERGY_NUTRITION_CALORIES   "Калорія харчова"
-    IDS_ENERGY_TH_CALORIES          "Калорія термохімічна"
+    IDS_ENERGY_15_C_CALORIES        "РљР°Р»РѕСЂС–СЏ 15-РіСЂР°РґСѓСЃРЅР°"
+    IDS_ENERGY_BTUS                 "Р‘СЂРёС‚Р°РЅСЃСЊРєР° С‚РµРїР»РѕРІР° РѕРґРёРЅРёС†СЏ"
+    IDS_ENERGY_ERGS                 "Р•СЂРі"
+    IDS_ENERGY_EVS                  "Р•Р»РµРєС‚СЂРѕРЅРІРѕР»СЊС‚"
+    IDS_ENERGY_FOOT_POUNDS          "Р¤СѓС‚Рѕ-С„СѓРЅС‚"
+    IDS_ENERGY_IT_CALORIES          "РљР°Р»РѕСЂС–СЏ РјС–Р¶РЅР°СЂРѕРґРЅР°"
+    IDS_ENERGY_IT_KILOCALORIES      "РљС–Р»РѕРєР°Р»РѕСЂС–СЏ РјС–Р¶РЅР°СЂРѕРґРЅР°"
+    IDS_ENERGY_JOULES               "Р”Р¶РѕСѓР»СЊ"
+    IDS_ENERGY_KILOJOULES           "РљС–Р»РѕРґР¶РѕСѓР»СЊ"
+    IDS_ENERGY_KILOWATT_HOURS       "РљС–Р»РѕРІР°С‚ Р·Р° РіРѕРґРёРЅСѓ"
+    IDS_ENERGY_NUTRITION_CALORIES   "РљР°Р»РѕСЂС–СЏ С…Р°СЂС‡РѕРІР°"
+    IDS_ENERGY_TH_CALORIES          "РљР°Р»РѕСЂС–СЏ С‚РµСЂРјРѕС…С–РјС–С‡РЅР°"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Ангстрем"
-    IDS_LENGTH_ASTRONOMICAL_UNITS   "Астрономічна одиниця"
-    IDS_LENGTH_BARLEYCORNS          "Барлейкорн"
-    IDS_LENGTH_CENTIMETERS          "Сантиметр"
-    IDS_LENGTH_CHAINS_UK            "Чейн (британський)"
-    IDS_LENGTH_CHI                  "Чі"
-    IDS_LENGTH_CHOU                 "Чоу"
-    IDS_LENGTH_CHR                  "Ча"
-    IDS_LENGTH_CUN                  "Цунь"
-    IDS_LENGTH_FATHOMS              "Фатом"
-    IDS_LENGTH_FATHOMS_HUNGARY      "Фатом (угорський)"
-    IDS_LENGTH_FEET                 "Фут"
-    IDS_LENGTH_FURLONGS             "Фарлонг"
-    IDS_LENGTH_GAN                  "Гань"
-    IDS_LENGTH_HANDS                "Долоня"
-    IDS_LENGTH_HUNH                 "Ханх"
-    IDS_LENGTH_INCHES               "Дюйм"
-    IDS_LENGTH_JA                   "Я"
-    IDS_LENGTH_JEONG                "Джеонг"
-    IDS_LENGTH_KABIET               "Каб’єт"
-    IDS_LENGTH_KEN                  "Кен"
-    IDS_LENGTH_KEUB                 "Кеуб"
-    IDS_LENGTH_KILOMETERS           "Кілометр"
-    IDS_LENGTH_LAR                  "Лар"
-    IDS_LENGTH_LIGHT_YEARS          "Світловий рік"
-    IDS_LENGTH_LINKS_UK             "Лінк (британский)"
-    IDS_LENGTH_METERS               "Метр"
-    IDS_LENGTH_MICRONS              "Мікрометр"
-    IDS_LENGTH_MILES                "Миля"
-    IDS_LENGTH_MILLIMETERS          "Міліметр"
-    IDS_LENGTH_NAUTICAL_MILES       "Морська миля"
-    IDS_LENGTH_NIEU                 "Ньйо"
-    IDS_LENGTH_PARSECS              "Парсек"
-    IDS_LENGTH_PICAS                "Піка"
-    IDS_LENGTH_RI_JAPAN             "Рі (японська)"
-    IDS_LENGTH_RI_KOREA             "Рі (корейськая)"
-    IDS_LENGTH_RODS                 "Род"
-    IDS_LENGTH_SAWK                 "Соук"
-    IDS_LENGTH_SEN                  "Сен"
-    IDS_LENGTH_SHAKU                "Шаку"
-    IDS_LENGTH_SPAN                 "Спан"
-    IDS_LENGTH_SUN                  "Сан"
-    IDS_LENGTH_TSUEN                "Тсуен"
-    IDS_LENGTH_VA                   "Ва"
-    IDS_LENGTH_YARDS                "Ярд"
-    IDS_LENGTH_YOTE                 "Йоут"
-    IDS_LENGTH_ZHANG                "Чжан"
+    IDS_LENGTH_ANGSTROMS            "РђРЅРіСЃС‚СЂРµРј"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "РђСЃС‚СЂРѕРЅРѕРјС–С‡РЅР° РѕРґРёРЅРёС†СЏ"
+    IDS_LENGTH_BARLEYCORNS          "Р‘Р°СЂР»РµР№РєРѕСЂРЅ"
+    IDS_LENGTH_CENTIMETERS          "РЎР°РЅС‚РёРјРµС‚СЂ"
+    IDS_LENGTH_CHAINS_UK            "Р§РµР№РЅ (Р±СЂРёС‚Р°РЅСЃСЊРєРёР№)"
+    IDS_LENGTH_CHI                  "Р§С–"
+    IDS_LENGTH_CHOU                 "Р§РѕСѓ"
+    IDS_LENGTH_CHR                  "Р§Р°"
+    IDS_LENGTH_CUN                  "Р¦СѓРЅСЊ"
+    IDS_LENGTH_FATHOMS              "Р¤Р°С‚РѕРј"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Р¤Р°С‚РѕРј (СѓРіРѕСЂСЃСЊРєРёР№)"
+    IDS_LENGTH_FEET                 "Р¤СѓС‚"
+    IDS_LENGTH_FURLONGS             "Р¤Р°СЂР»РѕРЅРі"
+    IDS_LENGTH_GAN                  "Р“Р°РЅСЊ"
+    IDS_LENGTH_HANDS                "Р”РѕР»РѕРЅСЏ"
+    IDS_LENGTH_HUNH                 "РҐР°РЅС…"
+    IDS_LENGTH_INCHES               "Р”СЋР№Рј"
+    IDS_LENGTH_JA                   "РЇ"
+    IDS_LENGTH_JEONG                "Р”Р¶РµРѕРЅРі"
+    IDS_LENGTH_KABIET               "РљР°Р±вЂ™С”С‚"
+    IDS_LENGTH_KEN                  "РљРµРЅ"
+    IDS_LENGTH_KEUB                 "РљРµСѓР±"
+    IDS_LENGTH_KILOMETERS           "РљС–Р»РѕРјРµС‚СЂ"
+    IDS_LENGTH_LAR                  "Р›Р°СЂ"
+    IDS_LENGTH_LIGHT_YEARS          "РЎРІС–С‚Р»РѕРІРёР№ СЂС–Рє"
+    IDS_LENGTH_LINKS_UK             "Р›С–РЅРє (Р±СЂРёС‚Р°РЅСЃРєРёР№)"
+    IDS_LENGTH_METERS               "РњРµС‚СЂ"
+    IDS_LENGTH_MICRONS              "РњС–РєСЂРѕРјРµС‚СЂ"
+    IDS_LENGTH_MILES                "РњРёР»СЏ"
+    IDS_LENGTH_MILLIMETERS          "РњС–Р»С–РјРµС‚СЂ"
+    IDS_LENGTH_NAUTICAL_MILES       "РњРѕСЂСЃСЊРєР° РјРёР»СЏ"
+    IDS_LENGTH_NIEU                 "РќСЊР№Рѕ"
+    IDS_LENGTH_PARSECS              "РџР°СЂСЃРµРє"
+    IDS_LENGTH_PICAS                "РџС–РєР°"
+    IDS_LENGTH_RI_JAPAN             "Р С– (СЏРїРѕРЅСЃСЊРєР°)"
+    IDS_LENGTH_RI_KOREA             "Р С– (РєРѕСЂРµР№СЃСЊРєР°СЏ)"
+    IDS_LENGTH_RODS                 "Р РѕРґ"
+    IDS_LENGTH_SAWK                 "РЎРѕСѓРє"
+    IDS_LENGTH_SEN                  "РЎРµРЅ"
+    IDS_LENGTH_SHAKU                "РЁР°РєСѓ"
+    IDS_LENGTH_SPAN                 "РЎРїР°РЅ"
+    IDS_LENGTH_SUN                  "РЎР°РЅ"
+    IDS_LENGTH_TSUEN                "РўСЃСѓРµРЅ"
+    IDS_LENGTH_VA                   "Р’Р°"
+    IDS_LENGTH_YARDS                "РЇСЂРґ"
+    IDS_LENGTH_YOTE                 "Р™РѕСѓС‚"
+    IDS_LENGTH_ZHANG                "Р§Р¶Р°РЅ"
 END
 
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "Британська теплова одиниця за хвилину"
-    IDS_POWER_FPS_PER_MINUTE        "Футо-фунт за хвилину"
-    IDS_POWER_HORSEPOWER            "Кінська сила"
-    IDS_POWER_KILOWATTS             "Кіловат"
-    IDS_POWER_MEGAWATTS             "Мегават"
-    IDS_POWER_WATTS                 "Ват"
+    IDS_POWER_BTUS_PER_MINUTE       "Р‘СЂРёС‚Р°РЅСЃСЊРєР° С‚РµРїР»РѕРІР° РѕРґРёРЅРёС†СЏ Р·Р° С…РІРёР»РёРЅСѓ"
+    IDS_POWER_FPS_PER_MINUTE        "Р¤СѓС‚Рѕ-С„СѓРЅС‚ Р·Р° С…РІРёР»РёРЅСѓ"
+    IDS_POWER_HORSEPOWER            "РљС–РЅСЃСЊРєР° СЃРёР»Р°"
+    IDS_POWER_KILOWATTS             "РљС–Р»РѕРІР°С‚"
+    IDS_POWER_MEGAWATTS             "РњРµРіР°РІР°С‚"
+    IDS_POWER_WATTS                 "Р’Р°С‚"
 END
 
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Атмосфера (Фізична)"
-    IDS_PRESSURE_BARS               "Бар"
-    IDS_PRESSURE_HECTOPASCALS       "Гектопаскаль"
-    IDS_PRESSURE_KILOPASCALS        "Кілопаскаль"
-    IDS_PRESSURE_MM_OF_MERCURY      "Міліметр ртутного стовпчика"
-    IDS_PRESSURE_PASCALS            "Паскаль"
-    IDS_PRESSURE_PSI                "Фунт на квадратний дюйм"
+    IDS_PRESSURE_ATMOSPHERES        "РђС‚РјРѕСЃС„РµСЂР° (Р¤С–Р·РёС‡РЅР°)"
+    IDS_PRESSURE_BARS               "Р‘Р°СЂ"
+    IDS_PRESSURE_HECTOPASCALS       "Р“РµРєС‚РѕРїР°СЃРєР°Р»СЊ"
+    IDS_PRESSURE_KILOPASCALS        "РљС–Р»РѕРїР°СЃРєР°Р»СЊ"
+    IDS_PRESSURE_MM_OF_MERCURY      "РњС–Р»С–РјРµС‚СЂ СЂС‚СѓС‚РЅРѕРіРѕ СЃС‚РѕРІРїС‡РёРєР°"
+    IDS_PRESSURE_PASCALS            "РџР°СЃРєР°Р»СЊ"
+    IDS_PRESSURE_PSI                "Р¤СѓРЅС‚ РЅР° РєРІР°РґСЂР°С‚РЅРёР№ РґСЋР№Рј"
 END
 
 // TYPES OF TEMPERATURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TEMPERATURE_CELSIUS         "Градус (за шкалою Цельсія)"
-    IDS_TEMPERATURE_FAHRENHEIT      "Градус (за шкалою Фаренгейта)"
-    IDS_TEMPERATURE_KELVIN          "Градус (за шкалою Кельвіна)"
-    IDS_TEMPERATURE_RANKINE         "Градус (за шкалою Ранкіна)"
+    IDS_TEMPERATURE_CELSIUS         "Р“СЂР°РґСѓСЃ (Р·Р° С€РєР°Р»РѕСЋ Р¦РµР»СЊСЃС–СЏ)"
+    IDS_TEMPERATURE_FAHRENHEIT      "Р“СЂР°РґСѓСЃ (Р·Р° С€РєР°Р»РѕСЋ Р¤Р°СЂРµРЅРіРµР№С‚Р°)"
+    IDS_TEMPERATURE_KELVIN          "Р“СЂР°РґСѓСЃ (Р·Р° С€РєР°Р»РѕСЋ РљРµР»СЊРІС–РЅР°)"
+    IDS_TEMPERATURE_RANKINE         "Р“СЂР°РґСѓСЃ (Р·Р° С€РєР°Р»РѕСЋ Р Р°РЅРєС–РЅР°)"
 END
 
 // TYPES OF TIME
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TIME_DAYS         "Доба"
-    IDS_TIME_HOURS        "Година"
+    IDS_TIME_DAYS         "Р”РѕР±Р°"
+    IDS_TIME_HOURS        "Р“РѕРґРёРЅР°"
     IDS_TIME_NANOSECONDS  "Nanoseconds"
-    IDS_TIME_MICROSECONDS "Мікросекунда"
-    IDS_TIME_MILLISECONDS "Мілісекунда"
-    IDS_TIME_MINUTES      "Хвилина"
-    IDS_TIME_SECONDS      "Секунда"
-    IDS_TIME_WEEKS        "Тиждень"
-    IDS_TIME_YEARS        "Рік"
+    IDS_TIME_MICROSECONDS "РњС–РєСЂРѕСЃРµРєСѓРЅРґР°"
+    IDS_TIME_MILLISECONDS "РњС–Р»С–СЃРµРєСѓРЅРґР°"
+    IDS_TIME_MINUTES      "РҐРІРёР»РёРЅР°"
+    IDS_TIME_SECONDS      "РЎРµРєСѓРЅРґР°"
+    IDS_TIME_WEEKS        "РўРёР¶РґРµРЅСЊ"
+    IDS_TIME_YEARS        "Р С–Рє"
 END
 
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND         "Сантиметр за годину"
-    IDS_VELOCITY_FEET_HOUR          "Фут за годину"
-    IDS_VELOCITY_FEET_SECOND        "Фут за секунду"
-    IDS_VELOCITY_KILOMETERS_HOUR    "Кілометр за годину"
-    IDS_VELOCITY_KNOTS              "Вузол"
-    IDS_VELOCITY_MACH               "Мах"
-    IDS_VELOCITY_METERS_SECOND      "Метр за секунду"
-    IDS_VELOCITY_MILES_HOUR         "Миля за годину"
+    IDS_VELOCITY_CMS_SECOND         "РЎР°РЅС‚РёРјРµС‚СЂ Р·Р° РіРѕРґРёРЅСѓ"
+    IDS_VELOCITY_FEET_HOUR          "Р¤СѓС‚ Р·Р° РіРѕРґРёРЅСѓ"
+    IDS_VELOCITY_FEET_SECOND        "Р¤СѓС‚ Р·Р° СЃРµРєСѓРЅРґСѓ"
+    IDS_VELOCITY_KILOMETERS_HOUR    "РљС–Р»РѕРјРµС‚СЂ Р·Р° РіРѕРґРёРЅСѓ"
+    IDS_VELOCITY_KNOTS              "Р’СѓР·РѕР»"
+    IDS_VELOCITY_MACH               "РњР°С…"
+    IDS_VELOCITY_METERS_SECOND      "РњРµС‚СЂ Р·Р° СЃРµРєСѓРЅРґСѓ"
+    IDS_VELOCITY_MILES_HOUR         "РњРёР»СЏ Р·Р° РіРѕРґРёРЅСѓ"
 END
 
 // TYPES OF VOLUMES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK           "Барель (британський)"
-    IDS_VOLUME_BARRELS_OIL          "Барель нафти"
-    IDS_VOLUME_BUN                  "Бун"
-    IDS_VOLUME_BUSHELS_UK           "Бушель (британський)"
-    IDS_VOLUME_BUSHELS_US           "Бушель (США)"
-    IDS_VOLUME_CUBIC_CENTIMETERS    "Кубічний сантиметр"
-    IDS_VOLUME_CUBIC_FEET           "Кубічний фут"
-    IDS_VOLUME_CUBIC_INCHES         "Кубічний дюйм"
-    IDS_VOLUME_CUBIC_METERS         "Кубічний метр"
-    IDS_VOLUME_CUBIC_YARDS          "Кубічний ярд"
-    IDS_VOLUME_DOE                  "То"
-    IDS_VOLUME_FLUID_OUNCES_UK      "Рідка унція (британська)"
-    IDS_VOLUME_FLUID_OUNCES_US      "Рідка унція (США)"
-    IDS_VOLUME_GALLONS_UK           "Галон (британський)"
-    IDS_VOLUME_GALLONS_DRY_US       "Галон (для сухих речовин, США)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "Галон (для рідин, США)"
-    IDS_VOLUME_GOU                  "Гоу"
-    IDS_VOLUME_HOP                  "Хоп"
-    IDS_VOLUME_ICCE                 "Ікке"
-    IDS_VOLUME_KWIAN                "Квіан"
-    IDS_VOLUME_LITERS               "Літр"
-    IDS_VOLUME_MAL                  "Маль"
-    IDS_VOLUME_MILLILITERS          "Мілілітр"
-    IDS_VOLUME_PINTS_UK             "Пінта (британська)"
-    IDS_VOLUME_PINTS_DRY_US         "Пінта (для сухих речовин, США)"
-    IDS_VOLUME_PINTS_LIQUID_US      "Пінта (для рідин, США)"
-    IDS_VOLUME_QUARTS_UK            "Кварта (британська)"
-    IDS_VOLUME_QUARTS_DRY_US        "Кварта (для сухих речовин, США)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "Кварта (для рідин, США)"
-    IDS_VOLUME_SEKI                 "Секі"
-    IDS_VOLUME_SYOU                 "Сьо"
-    IDS_VOLUME_TANANLOUNG           "Тананлунг"
-    IDS_VOLUME_TANG                 "Танг"
-    IDS_VOLUME_TO                   "Ту"
+    IDS_VOLUME_BARRELS_UK           "Р‘Р°СЂРµР»СЊ (Р±СЂРёС‚Р°РЅСЃСЊРєРёР№)"
+    IDS_VOLUME_BARRELS_OIL          "Р‘Р°СЂРµР»СЊ РЅР°С„С‚Рё"
+    IDS_VOLUME_BUN                  "Р‘СѓРЅ"
+    IDS_VOLUME_BUSHELS_UK           "Р‘СѓС€РµР»СЊ (Р±СЂРёС‚Р°РЅСЃСЊРєРёР№)"
+    IDS_VOLUME_BUSHELS_US           "Р‘СѓС€РµР»СЊ (РЎРЁРђ)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "РљСѓР±С–С‡РЅРёР№ СЃР°РЅС‚РёРјРµС‚СЂ"
+    IDS_VOLUME_CUBIC_FEET           "РљСѓР±С–С‡РЅРёР№ С„СѓС‚"
+    IDS_VOLUME_CUBIC_INCHES         "РљСѓР±С–С‡РЅРёР№ РґСЋР№Рј"
+    IDS_VOLUME_CUBIC_METERS         "РљСѓР±С–С‡РЅРёР№ РјРµС‚СЂ"
+    IDS_VOLUME_CUBIC_YARDS          "РљСѓР±С–С‡РЅРёР№ СЏСЂРґ"
+    IDS_VOLUME_DOE                  "РўРѕ"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Р С–РґРєР° СѓРЅС†С–СЏ (Р±СЂРёС‚Р°РЅСЃСЊРєР°)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Р С–РґРєР° СѓРЅС†С–СЏ (РЎРЁРђ)"
+    IDS_VOLUME_GALLONS_UK           "Р“Р°Р»РѕРЅ (Р±СЂРёС‚Р°РЅСЃСЊРєРёР№)"
+    IDS_VOLUME_GALLONS_DRY_US       "Р“Р°Р»РѕРЅ (РґР»СЏ СЃСѓС…РёС… СЂРµС‡РѕРІРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Р“Р°Р»РѕРЅ (РґР»СЏ СЂС–РґРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_GOU                  "Р“РѕСѓ"
+    IDS_VOLUME_HOP                  "РҐРѕРї"
+    IDS_VOLUME_ICCE                 "Р†РєРєРµ"
+    IDS_VOLUME_KWIAN                "РљРІС–Р°РЅ"
+    IDS_VOLUME_LITERS               "Р›С–С‚СЂ"
+    IDS_VOLUME_MAL                  "РњР°Р»СЊ"
+    IDS_VOLUME_MILLILITERS          "РњС–Р»С–Р»С–С‚СЂ"
+    IDS_VOLUME_PINTS_UK             "РџС–РЅС‚Р° (Р±СЂРёС‚Р°РЅСЃСЊРєР°)"
+    IDS_VOLUME_PINTS_DRY_US         "РџС–РЅС‚Р° (РґР»СЏ СЃСѓС…РёС… СЂРµС‡РѕРІРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_PINTS_LIQUID_US      "РџС–РЅС‚Р° (РґР»СЏ СЂС–РґРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_QUARTS_UK            "РљРІР°СЂС‚Р° (Р±СЂРёС‚Р°РЅСЃСЊРєР°)"
+    IDS_VOLUME_QUARTS_DRY_US        "РљРІР°СЂС‚Р° (РґР»СЏ СЃСѓС…РёС… СЂРµС‡РѕРІРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "РљРІР°СЂС‚Р° (РґР»СЏ СЂС–РґРёРЅ, РЎРЁРђ)"
+    IDS_VOLUME_SEKI                 "РЎРµРєС–"
+    IDS_VOLUME_SYOU                 "РЎСЊРѕ"
+    IDS_VOLUME_TANANLOUNG           "РўР°РЅР°РЅР»СѓРЅРі"
+    IDS_VOLUME_TANG                 "РўР°РЅРі"
+    IDS_VOLUME_TO                   "РўСѓ"
 END
 
 // TYPES OF WEIGHTS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_WEIGHT_BAHT                 "Бат"
-    IDS_WEIGHT_CARATS               "Карат"
-    IDS_WEIGHT_CHUNG                "Чанг"
-    IDS_WEIGHT_DON                  "Дон"
-    IDS_WEIGHT_GEUN                 "Джин"
-    IDS_WEIGHT_GRAMS                "Грам"
-    IDS_WEIGHT_GWAN                 "Кван"
-    IDS_WEIGHT_HARB                 "Хап"
-    IDS_WEIGHT_JIN_CHINA            "Джин (китайський)"
-    IDS_WEIGHT_JIN_TAIWAN           "Джин (тайванський)"
-    IDS_WEIGHT_KAN                  "Кан"
-    IDS_WEIGHT_KILOGRAMS            "Кілограм"
-    IDS_WEIGHT_KIN                  "Кін"
-    IDS_WEIGHT_LIANG_CHINA          "Ліанг (китайський)"
-    IDS_WEIGHT_LIANG_TAIWAN         "Ліанг (тайванський)"
-    IDS_WEIGHT_MONME                "Монм"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Унція (торгівельна)"
-    IDS_WEIGHT_OUNCES_TROY          "Унція (тройська)"
-    IDS_WEIGHT_POUNDS               "Фунт"
-    IDS_WEIGHT_QUINTAL_METRIC       "Квінтал (метричний)"
-    IDS_WEIGHT_SALOUNG              "Салунг"
-    IDS_WEIGHT_STONES               "Стоун"
-    IDS_WEIGHT_TAMLUNG              "тамлунг"
-    IDS_WEIGHT_TONNES               "Тонна"
-    IDS_WEIGHT_TONS_UK              "Тонна (британська)"
-    IDS_WEIGHT_TONS_US              "Тонна (США)"
+    IDS_WEIGHT_BAHT                 "Р‘Р°С‚"
+    IDS_WEIGHT_CARATS               "РљР°СЂР°С‚"
+    IDS_WEIGHT_CHUNG                "Р§Р°РЅРі"
+    IDS_WEIGHT_DON                  "Р”РѕРЅ"
+    IDS_WEIGHT_GEUN                 "Р”Р¶РёРЅ"
+    IDS_WEIGHT_GRAMS                "Р“СЂР°Рј"
+    IDS_WEIGHT_GWAN                 "РљРІР°РЅ"
+    IDS_WEIGHT_HARB                 "РҐР°Рї"
+    IDS_WEIGHT_JIN_CHINA            "Р”Р¶РёРЅ (РєРёС‚Р°Р№СЃСЊРєРёР№)"
+    IDS_WEIGHT_JIN_TAIWAN           "Р”Р¶РёРЅ (С‚Р°Р№РІР°РЅСЃСЊРєРёР№)"
+    IDS_WEIGHT_KAN                  "РљР°РЅ"
+    IDS_WEIGHT_KILOGRAMS            "РљС–Р»РѕРіСЂР°Рј"
+    IDS_WEIGHT_KIN                  "РљС–РЅ"
+    IDS_WEIGHT_LIANG_CHINA          "Р›С–Р°РЅРі (РєРёС‚Р°Р№СЃСЊРєРёР№)"
+    IDS_WEIGHT_LIANG_TAIWAN         "Р›С–Р°РЅРі (С‚Р°Р№РІР°РЅСЃСЊРєРёР№)"
+    IDS_WEIGHT_MONME                "РњРѕРЅРј"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "РЈРЅС†С–СЏ (С‚РѕСЂРіС–РІРµР»СЊРЅР°)"
+    IDS_WEIGHT_OUNCES_TROY          "РЈРЅС†С–СЏ (С‚СЂРѕР№СЃСЊРєР°)"
+    IDS_WEIGHT_POUNDS               "Р¤СѓРЅС‚"
+    IDS_WEIGHT_QUINTAL_METRIC       "РљРІС–РЅС‚Р°Р» (РјРµС‚СЂРёС‡РЅРёР№)"
+    IDS_WEIGHT_SALOUNG              "РЎР°Р»СѓРЅРі"
+    IDS_WEIGHT_STONES               "РЎС‚РѕСѓРЅ"
+    IDS_WEIGHT_TAMLUNG              "С‚Р°РјР»СѓРЅРі"
+    IDS_WEIGHT_TONNES               "РўРѕРЅРЅР°"
+    IDS_WEIGHT_TONS_UK              "РўРѕРЅРЅР° (Р±СЂРёС‚Р°РЅСЃСЊРєР°)"
+    IDS_WEIGHT_TONS_US              "РўРѕРЅРЅР° (РЎРЁРђ)"
 END

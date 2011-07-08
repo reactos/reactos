@@ -1,7 +1,5 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fundal"
@@ -267,5 +265,3 @@ BEGIN
     IDS_APPLY_FAILED "Nu s-au putut aplica noile setări."
     IDS_APPLY_NEEDS_RESTART "Trebuie să reporniți computerul pentru a aplica noile setări."
 END
-
-#pragma code_page(default)

@@ -6,12 +6,12 @@ list(APPEND SOURCE
     cmbwmi.c
     cmbatt.rc)
 
-add_library(cmbatt SHARED ${CMAKE_CURRENT_BINARY_DIR}/cmbatt_cmbatt.h.gch ${SOURCE})
+add_library(cmbatt SHARED ${SOURCE})
 
 set_module_type(cmbatt kernelmodedriver)
 add_importlibs(cmbatt ntoskrnl hal battc wmilib)
 
-add_pch(cmbatt ${CMAKE_CURRENT_SOURCE_DIR}/cmbatt.h ${SOURCE})
+add_pch(cmbatt cmbatt.h)
 
 
 add_cd_file(TARGET cmbatt DESTINATION reactos/system32/drivers FOR all)

@@ -13,9 +13,7 @@ add_library(olesvr32 SHARED ${SOURCE})
 
 set_entrypoint(olesvr32 0)
 
-target_link_libraries(olesvr32
-    wine
-    mingw_common)
+target_link_libraries(olesvr32 wine)
 
 add_importlibs(olesvr32 kernel32 ntdll)
 add_dependencies(olesvr32 psdk)

@@ -387,7 +387,7 @@ DoShellNewCmd(INewMenuImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
          }
 
          ZeroMemory(&sInfo, sizeof(sInfo));
-         sInfo.cb = sizeof(sizeof(sInfo));
+         sInfo.cb = sizeof(sInfo);
          szCmd = _wcsdup(ptr);
          if (!szCmd)
              break;

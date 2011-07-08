@@ -1,3 +1,4 @@
+#pragma code_page(65001)
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"

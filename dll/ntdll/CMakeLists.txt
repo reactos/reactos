@@ -37,9 +37,7 @@ else()
 list(APPEND SOURCE dispatch/dispatch.c)
 endif(ARCH MATCHES i386)
 
-add_library(ntdll SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch
-    ${SOURCE})
+add_library(ntdll SHARED ${SOURCE})
 
 set_entrypoint(ntdll 0)
 
@@ -55,7 +53,7 @@ target_link_libraries(ntdll
                       ${PSEH_LIB})
 
 set_image_base(ntdll ${baseaddress_ntdll})
-add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
+add_pch(ntdll include/ntdll.h)
 add_dependencies(ntdll ntstatus asm)
 
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)

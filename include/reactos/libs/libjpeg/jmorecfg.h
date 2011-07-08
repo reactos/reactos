@@ -23,10 +23,6 @@
 
 #define BITS_IN_JSAMPLE  8	/* use 8 or 12 */
 
-#if (defined (_MSC_VER) && (_MSC_VER >= 800))
-#define HAVE_UNSIGNED_CHAR
-#define EXTERN(type)  extern type __cdecl
-#endif
 
 /*
  * Maximum number of components (color channels) allowed in JPEG image.

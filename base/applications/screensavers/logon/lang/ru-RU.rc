@@ -2,6 +2,6 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Заставка ""Вход в систему"""
-    IDS_TEXT        "Эта заставка не имеет настраиваемых параметров."
+    IDS_DESCRIPTION "Р—Р°СЃС‚Р°РІРєР° ""Р’С…РѕРґ РІ СЃРёСЃС‚РµРјСѓ"""
+    IDS_TEXT        "Р­С‚Р° Р·Р°СЃС‚Р°РІРєР° РЅРµ РёРјРµРµС‚ РЅР°СЃС‚СЂР°РёРІР°РµРјС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ."
 END

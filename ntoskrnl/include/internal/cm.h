@@ -1529,6 +1529,12 @@ CmSetLazyFlushState(
     IN BOOLEAN Enable
 );
 
+VOID
+NTAPI
+CmpSetVersionData(
+    VOID
+);
+
 //
 // Driver List Routines
 //
@@ -1562,6 +1568,13 @@ NTAPI
 CmpResolveDriverDependencies(
     IN PLIST_ENTRY DriverListHead
 );
+
+BOOLEAN
+NTAPI
+CmpIsSafe(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX SafeBootCell,
+    IN HCELL_INDEX DriverCell);
 
 //
 // Global variables accessible from all of Cm

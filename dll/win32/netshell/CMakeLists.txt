@@ -17,9 +17,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
-add_library(netshell SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/netshell_precomp.h.gch
-    ${SOURCE})
+add_library(netshell SHARED ${SOURCE})
 
 set_module_type(netshell win32dll)
 
@@ -42,6 +40,6 @@ add_importlibs(netshell
     kernel32
     ntdll)
 
-add_pch(netshell ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(netshell precomp.h)
 
 add_cd_file(TARGET netshell DESTINATION reactos/system32 FOR all)

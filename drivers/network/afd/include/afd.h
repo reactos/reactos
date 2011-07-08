@@ -173,8 +173,8 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked, Critical, Overread;
-    UINT State, Flags, BlockingMode, GroupID, GroupType;
+    BOOLEAN Locked, Critical, Overread, NonBlocking, OobInline;
+    UINT State, Flags, GroupID, GroupType;
     KIRQL OldIrql;
     UINT LockCount;
     PVOID CurrentThread;
@@ -308,11 +308,9 @@ PVOID GetLockedData( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );
 NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function);
 
-NTSTATUS LeaveIrpUntilLater(PAFD_FCB FCB, PIRP Irp, UINT Function);
-NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function);
-
 /* main.c */
 
+VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 VOID DestroySocket( PAFD_FCB FCB );
 VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp);

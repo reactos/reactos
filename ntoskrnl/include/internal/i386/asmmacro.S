@@ -329,7 +329,7 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_EFLAGS)
 
         /* Restore EFLAGS */
-        popf
+        popfd
 
     endif
 
@@ -343,7 +343,7 @@ PUBLIC @&Name&@4
     elseif (Flags AND KI_EXIT_IRET)
 
         /* Return with iret */
-        iret
+        iretd
 
     elseif (Flags AND KI_EXIT_JMP)
 

@@ -544,7 +544,7 @@ ParseFromRoot:
     }
 
     /* Reparse */
-    while (Reparse)
+    while (Reparse && MaxReparse)
     {
         /* Get the name */
         RemainingName = *ObjectName;
@@ -694,7 +694,7 @@ ParseFromRoot:
                                               ObjectHeader)))
                 {
                     /* Either couldn't allocate the name, or insert failed */
-                    if (NewName) ExFreePool(NewName);
+                    if (NewName) ExFreePoolWithTag(NewName, OB_NAME_TAG);
 
                     /* Fail due to memory reasons */
                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -795,6 +795,7 @@ ReparseObject:
                 {
                     /* Reparse again */
                     Reparse = TRUE;
+                    --MaxReparse;
 
                     /* Start over from root if we got sent back there */
                     if ((Status == STATUS_REPARSE_OBJECT) ||

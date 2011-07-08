@@ -9,11 +9,11 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Избор на прозорец"
+CAPTION "РР·Р±РѕСЂ РЅР° РїСЂРѕР·РѕСЂРµС†"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
-  PUSHBUTTON "&Добре", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&Отказ" , 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Р”РѕР±СЂРµ", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&РћС‚РєР°Р·" , 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -25,27 +25,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Отмяна",         EM_UNDO
+    MENUITEM "&РћС‚РјСЏРЅР°",         EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "От&рязване",      WM_CUT
-    MENUITEM "За&помняне",      WM_COPY
-    MENUITEM "По&ставяне",      WM_PASTE
-    MENUITEM "Из&триване",      WM_CLEAR
+    MENUITEM "РћС‚&СЂСЏР·РІР°РЅРµ",      WM_CUT
+    MENUITEM "Р—Р°&РїРѕРјРЅСЏРЅРµ",      WM_COPY
+    MENUITEM "РџРѕ&СЃС‚Р°РІСЏРЅРµ",      WM_PASTE
+    MENUITEM "РР·&С‚СЂРёРІР°РЅРµ",      WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Избор на вси&чки",EM_SETSEL
+    MENUITEM "РР·Р±РѕСЂ РЅР° РІСЃРё&С‡РєРё",EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Възстановяване",   SC_RESTORE
-  MENUITEM "&Преместване",      SC_MOVE
-  MENUITEM "&Размер",           SC_SIZE
-  MENUITEM "С&маляване",        SC_MINIMIZE
-  MENUITEM "У&големяване",      SC_MAXIMIZE
+  MENUITEM "&Р’СЉР·СЃС‚Р°РЅРѕРІСЏРІР°РЅРµ",   SC_RESTORE
+  MENUITEM "&РџСЂРµРјРµСЃС‚РІР°РЅРµ",      SC_MOVE
+  MENUITEM "&Р Р°Р·РјРµСЂ",           SC_SIZE
+  MENUITEM "РЎ&РјР°Р»СЏРІР°РЅРµ",        SC_MINIMIZE
+  MENUITEM "РЈ&РіРѕР»РµРјСЏРІР°РЅРµ",      SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Затваряне\tAlt-F4",SC_CLOSE
+  MENUITEM "&Р—Р°С‚РІР°СЂСЏРЅРµ\tAlt-F4",SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -55,21 +55,21 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_ERROR,    "Грешка"
-  IDS_OK,       "Добре"
-  IDS_CANCEL,   "Отказ"
-  IDS_ABORT,    "Прекъсване"
-  IDS_RETRY,    "&Нов опит"
-  IDS_IGNORE,   "Прене&брегване"
-  IDS_YES,      "&Да"
-  IDS_NO,       "&Не"
-  IDS_HELP,     "Помощ"
-  IDS_TRYAGAIN, "&Нов опит"
-  IDS_CONTINUE, "Про&дължаване"
+  IDS_ERROR,    "Р“СЂРµС€РєР°"
+  IDS_OK,       "Р”РѕР±СЂРµ"
+  IDS_CANCEL,   "РћС‚РєР°Р·"
+  IDS_ABORT,    "РџСЂРµРєСЉСЃРІР°РЅРµ"
+  IDS_RETRY,    "&РќРѕРІ РѕРїРёС‚"
+  IDS_IGNORE,   "РџСЂРµРЅРµ&Р±СЂРµРіРІР°РЅРµ"
+  IDS_YES,      "&Р”Р°"
+  IDS_NO,       "&РќРµ"
+  IDS_HELP,     "РџРѕРјРѕС‰"
+  IDS_TRYAGAIN, "&РќРѕРІ РѕРїРёС‚"
+  IDS_CONTINUE, "РџСЂРѕ&РґСЉР»Р¶Р°РІР°РЅРµ"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_MDI_MOREWINDOWS, "&Още прозорци..."
+  IDS_MDI_MOREWINDOWS, "&РћС‰Рµ РїСЂРѕР·РѕСЂС†Рё..."
 END
 

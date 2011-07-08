@@ -116,7 +116,7 @@ NTSTATUS
 IopInitiatePnpIrp(
   PDEVICE_OBJECT DeviceObject,
   PIO_STATUS_BLOCK IoStatusBlock,
-  ULONG MinorFunction,
+  UCHAR MinorFunction,
   PIO_STACK_LOCATION Stack OPTIONAL);
 
 NTSTATUS NTAPI

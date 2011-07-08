@@ -1,9 +1,10 @@
 /*
- * PROJECT:     PAINT for ReactOS
- * LICENSE:     unknown (LGPL assumed)
- * FILE:        base/applications/paint/lang/pl-PL.rc
- * PURPOSE:     Polish Language resource file
- * TRANSLATORS: Caemyr - Olaf Siejka (May,2009), Use ReactOS forum PM or IRC to contact me
+ *         PROJECT:     PAINT for ReactOS
+ *         LICENSE:     unknown (LGPL assumed)
+ *         FILE:        base/applications/paint/lang/pl-PL.rc
+ *         PURPOSE:     Polish Language resource file
+ *         TRANSLATORS: Caemyr - Olaf Siejka (May,2009), Use ReactOS forum PM or IRC to contact me
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -13,27 +14,27 @@ BEGIN
     POPUP "&Plik"
     BEGIN
         MENUITEM "&Nowy\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Otwórz...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&OtwÃ³rz...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Zapisz\tCtrl+S", IDM_FILESAVE
         MENUITEM "Zapisz &jako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Ustaw jako tapetê (s¹siaduj¹ce)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Ustaw jako tapetê (wyœrodkowana)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Ustaw jako tapetê (rozci¹gniêta)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Ustaw jako tapetÄ™ (sÄ…siadujÄ…ce)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Ustaw jako tapetÄ™ (wyÅ›rodkowana)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Ustaw jako tapetÄ™ (rozciÄ…gniÄ™ta)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&WyjdŸ\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&WyjdÅº\tAlt+F4", IDM_FILEEXIT
     END
 
     POPUP "&Edytuj"
     BEGIN
         MENUITEM "Cofnij\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Ponów\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "PonÃ³w\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "Wytnij\tCtrl+X", IDM_EDITCUT
         MENUITEM "Kopiuj\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Wklej\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Usuñ zaznaczenie\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Odwróæ zaznaczenie", IDM_EDITINVERTSELECTION
+        MENUITEM "UsuÅ„ zaznaczenie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "OdwrÃ³Ä‡ zaznaczenie", IDM_EDITINVERTSELECTION
         MENUITEM "Zaznacz wszystko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopiuj do...", IDM_EDITCOPYTO
@@ -42,14 +43,14 @@ BEGIN
 
     POPUP "&Widok"
     BEGIN
-        MENUITEM "Pasek narzêdzi\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Paleta kolorów\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Pasek narzÄ™dzi\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Paleta kolorÃ³w\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
         MENUITEM "Pasek stanu", IDM_VIEWSTATUSBAR, CHECKED
         MENUITEM "Pasek tekstu", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Powiêkszenie"
+        POPUP "PowiÄ™kszenie"
         BEGIN
-            POPUP "Zdefiniowane przez u¿ytkownika"
+            POPUP "Zdefiniowane przez uÅ¼ytkownika"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,20 +61,20 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Poka¿ siatkê", IDM_VIEWSHOWGRID
-            MENUITEM "Poka¿ miniaturê", IDM_VIEWSHOWMINIATURE
+            MENUITEM "PokaÅ¼ siatkÄ™", IDM_VIEWSHOWGRID
+            MENUITEM "PokaÅ¼ miniaturkÄ™", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Pe³ny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "PeÅ‚ny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     
     POPUP "&Obraz"
     BEGIN
-        MENUITEM "Obrót/Odbicie...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "ObrÃ³t/Odbicie...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Zmiana rozmiaru...\tCtrl+W", IDM_IMAGECHANGESIZE
         MENUITEM "Kadrowanie", IDM_IMAGECROP
-        MENUITEM "Odwrócenie kolorów\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "OdwrÃ³cenie kolorÃ³w\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atrybuty...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Wyczyœæ obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "WyczyÅ›Ä‡ obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
     END
     
@@ -115,15 +116,15 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Obrót i odbicie lustrzane"
+CAPTION "ObrÃ³t i odbicie lustrzane"
 BEGIN
-    GROUPBOX "Obrót lub odbicie", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    GROUPBOX "ObrÃ³t lub odbicie", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "Odbicie poziome", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "Odbicie pionowe", IDD_MIRRORROTATERB2, 12, 30, 100, 10
-    AUTORADIOBUTTON "Obrót o k¹t:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "ObrÃ³t o kÄ…t:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 125, 24, 48, 14
 END
@@ -135,24 +136,24 @@ CAPTION "Atrybuty"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
-    LTEXT "Szerokoœæ:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
-    LTEXT "Wysokoœæ:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "SzerokoÅ›Ä‡:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "WysokoÅ›Ä‡:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
     LTEXT "Data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Rozmiar:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Rozdzielczoœæ:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
-    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
-    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    LTEXT "RozdzielczoÅ›Ä‡:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "NiedostÄ™pny", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "NiedostÄ™pny", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "NiedostÄ™pny", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Jednostki", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
     AUTORADIOBUTTON "Piksele", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
     GROUPBOX "Kolory", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
-    AUTORADIOBUTTON "Czerñ i biel", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "CzerÅ„ i biel", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Kolory", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 155, 24, 48, 14
-    PUSHBUTTON "Domyœlne", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+    PUSHBUTTON "DomyÅ›lne", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
 END
 
 IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
@@ -160,7 +161,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Zmiana rozmiaru"
 BEGIN
-    GROUPBOX "Zmieñ rozmiar", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    GROUPBOX "ZmieÅ„ rozmiar", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
     ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
     LTEXT "Poziomo:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
@@ -178,28 +179,28 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint dla ReactOS"
-    IDS_INFOTEXT, "Paint dla ReactOS jest dostêpny na licencji GNU Lesser General Public License (LGPL) wersja 3 (www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Czy chcesz zapisaæ zmiany do %s?"
+    IDS_INFOTEXT, "Paint dla ReactOS jest dostÄ™pny na licencji GNU Lesser General Public License (LGPL) wersja 3 (www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Czy chcesz zapisaÄ‡ zmiany do %s?"
     IDS_DEFAULTFILENAME, "Nienazwany.bmp"
     IDS_MINIATURETITLE, "Miniatura"
     IDS_TOOLTIP1, "Zaznaczenie dowolne"
     IDS_TOOLTIP2, "Zaznaczenie"
     IDS_TOOLTIP3, "Gumka"
-    IDS_TOOLTIP4, "Wype³nij kolorem"
+    IDS_TOOLTIP4, "WypeÅ‚nij kolorem"
     IDS_TOOLTIP5, "Wybierz kolor"
-    IDS_TOOLTIP6, "Przybli¿enie"
-    IDS_TOOLTIP7, "O³ówek"
-    IDS_TOOLTIP8, "Pêdzel"
+    IDS_TOOLTIP6, "PrzybliÅ¼enie"
+    IDS_TOOLTIP7, "OÅ‚Ã³wek"
+    IDS_TOOLTIP8, "PÄ™dzel"
     IDS_TOOLTIP9, "Aerograf"
     IDS_TOOLTIP10, "Tekst"
     IDS_TOOLTIP11, "Linia"
     IDS_TOOLTIP12, "Krzywa Beziera"
-    IDS_TOOLTIP13, "Prostok¹t"
-    IDS_TOOLTIP14, "Wielok¹t"
+    IDS_TOOLTIP13, "ProstokÄ…t"
+    IDS_TOOLTIP14, "WielokÄ…t"
     IDS_TOOLTIP15, "Elipsa"
-    IDS_TOOLTIP16, "Zaokr¹glony Prostok¹t"
+    IDS_TOOLTIP16, "ZaokrÄ…glony ProstokÄ…t"
     IDS_OPENFILTER, "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bajtów"
+    IDS_FILESIZE, "%d bajtÃ³w"
     IDS_PRINTRES, "%d x %d pikseli na metr"
 END

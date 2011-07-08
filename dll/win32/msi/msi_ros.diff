@@ -1,0 +1,1026 @@
+Index: D:/trunk/dll/win32/msi/msi_Es.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Es.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Es.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "No se ha podido abrir el paquete de instalaci�n especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
+ 	5 "ruta %s no encontrada"
+ 	9 "inserte el disco %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "introduzca qu� carpeta contiene %s"
+ 	12 "instalar fuente para caracter�stica ausente"
+ 	13 "unidad de red para caracter�stica ausente"
+Index: D:/trunk/dll/win32/msi/msi_Ko.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Ko.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Ko.rc	(revision 51711)
+@@ -29,33 +29,7 @@
+ 	4 " ������ ��ġ ��Ű���� �� �� �����ϴ�. ���� ��θ� Ȯ���ϰ� �ٽ� �õ��Ͻʽÿ�."
+ 	5 "%s  ��θ� ã���� �����ϴ�"
+ 	9 "��ũ %s ����"
+-	10 "Windows Installer %s\n\n" \
+-	"����:\n" \
+-	"msiexec ���� {�ʼ� �Ű�����}  [������ �Ű�����]\n\n" \
+-	"��ǰ ��ġ:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"��ġ ����:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"��ǰ ����:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"��ǰ �˸���:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"��ġ �߰�:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"���� ���ɾ ���� Log �� UI ������ :\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"MSI ����  ���:\n" \
+-	"\t/y\n" \
+-	"MSI ���� ��� ����:\n" \
+-	"\t/z\n" \
+-	"����  ����:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\n����:\nmsiexec ���� {�ʼ� �Ű�����}  [������ �Ű�����]\n\n��ǰ ��ġ:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\n��ġ ����:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n��ǰ ����:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\n��ǰ �˸���:\n\t/j[u|m] package [/t transform] [/g languageid]\n��ġ �߰�:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\n���� ���ɾ ���� Log �� UI ������ :\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nMSI ����  ���:\n\t/y\nMSI ���� ��� ����:\n\t/z\n����  ����:\n\t/help\n\t/?\n"
+ 	11 "%s�� �����ϴ� ������ �Է��ϼ���"
+ 	12 "���� �κ�(feature)�� ���� ��ġ ����"
+ 	13 "���� �κ�(feature)�� ���� ��Ʈ��ũ ����̺�"
+Index: D:/trunk/dll/win32/msi/msi_No.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_No.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_No.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "Klarte ikke �pne den oppgitte installasjonspakken. Kontroller filbanen og pr�v igjen."
+ 	5 "Fant ikke stien '%s'."
+ 	9 "Sett i disk '%s'"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "Oppgi katalogen som inneholder '%s'."
+ 	12 "Egenskapens installasjonskilde mangler."
+ 	13 "Egenskapens nettverksstasjon mangler."
+Index: D:/trunk/dll/win32/msi/msi_Uk.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Uk.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Uk.rc	(revision 51711)
+@@ -32,33 +32,7 @@
+ 	4 "Не вдалося відкрити вказаний пакет інсталяції.  Перевірте шлях до файлу та спробуйте знов."
+ 	5 "шлях %s не знайдено"
+ 	9 "вставте диск %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "вкажіть папку, що містить %s"
+ 	12 "джерело встановлення даної можливості не вказане"
+ 	13 "мережевий диск для даної можливості не вказаний"
+Index: D:/trunk/dll/win32/msi/msi_Ro.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Ro.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Ro.rc	(revision 51711)
+@@ -28,33 +28,7 @@
+         4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
+         5 "calea %s nu a fost găsită"
+         9 "inserați discul %s"
+-        10 "Windows Installer %s\n\n" \
+-        "Usage:\n" \
+-        "msiexec command {required parameter} [optional parammeter]\n\n" \
+-        "Install a product:\n" \
+-        "\t/i {package|productcode} [property]\n" \
+-        "\t/package {package|productcode} [property]\n" \
+-        "\t/a package [property]\n" \
+-        "Repair an installation:\n" \
+-        "\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-        "Uninstall a product:\n" \
+-        "\t/uninstall {package|productcode} [property]\n" \
+-        "\t/x {package|productcode} [property]\n" \
+-        "Advertise a product:\n" \
+-        "\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-        "Apply a patch:\n" \
+-        "\t/p patchpackage [property]\n" \
+-        "\t/p patchpackage /a package [property]\n" \
+-        "Log and UI Modifiers for above commands:\n" \
+-        "\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-        "\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-        "Register MSI Service:\n" \
+-        "\t/y\n" \
+-        "Unregister MSI Service:\n" \
+-        "\t/z\n" \
+-        "Display this help:\n" \
+-        "\t/help\n" \
+-        "\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+         11 "introduceți fișierul care conține %s"
+         12 "lipsește sursa de instalare pentru această caracteristică"
+         13 "lipsește unitatea de rețea pentru această caracteristică"
+Index: D:/trunk/dll/win32/msi/msvchelper.h
+===================================================================
+--- D:/trunk/dll/win32/msi/msvchelper.h	(revision 0)
++++ D:/trunk/dll/win32/msi/msvchelper.h	(revision 51711)
+@@ -0,0 +1,13 @@
++
++#ifdef __i386__
++#define __ASM_DEFINE_FUNC(name,suffix,code)
++
++typedef unsigned int (__stdcall *__MSVC__MsiCustomActionEntryPoint)(unsigned int);
++
++__inline unsigned int CUSTOMPROC_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
++{
++#pragma message("warning: CUSTOMPROC_wrapper might not be correct")
++    return proc(handle);
++}
++
++#endif
+
+Property changes on: D:\trunk\dll\win32\msi\msvchelper.h
+___________________________________________________________________
+Added: svn:eol-style
+   + native
+
+Index: D:/trunk/dll/win32/msi/msi_En.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_En.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_En.rc	(revision 51711)
+@@ -28,33 +28,7 @@
+ 	4 "The specified installation package could not be opened.  Please check the file path and try again."
+ 	5 "path %s not found"
+ 	9 "insert disk %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parameter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parameter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "enter which folder contains %s"
+ 	12 "install source for feature missing"
+ 	13 "network drive for feature missing"
+Index: D:/trunk/dll/win32/msi/msi_Fr.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Fr.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Fr.rc	(revision 51711)
+@@ -31,33 +31,7 @@
+ 	4 "Le paquet d'installation spécifié n'a pu être ouvert. Veuillez vérifier le chemin du fichier et réessayer."
+ 	5 "Le chemin %s est introuvable"
+ 	9 "insérez le disque %s"
+-	10 "Programme d'installation Windows %s\n\n" \
+-	"Usage :\n" \
+-	"msiexec commande {paramètre obligatoire} [paramètre optionnel]\n\n" \
+-	"Installer un produit :\n" \
+-	"\t/i {paquet|code_produit} [propriété]\n" \
+-	"\t/package {paquet|code_produit} [propriété]\n" \
+-	"\t/a paquet [propriété]\n" \
+-	"Réparer une installation :\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {paquet|code_produit}\n" \
+-	"Désinstaller un produit :\n" \
+-	"\t/uninstall {paquet|code_produit} [propriété]\n" \
+-	"\t/x {paquet|code_produit} [propriété]\n" \
+-	"Publier un produit :\n" \
+-	"\t/j[u|m] paquet [/t transformation] [/g id_langue]\n" \
+-	"Appliquer un patch :\n" \
+-	"\t/p paquet_patch [propriété]\n" \
+-	"\t/p paquet_patch /a paquet [propriété]\n" \
+-	"Modificateurs de journalisation et d'interface utilisateur pour les commandes ci-dessus :\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fichier_journal\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Enregistrer le service MSI :\n" \
+-	"\t/y\n" \
+-	"Annuler l'enregistrement du service MSI :\n" \
+-	"\t/z\n" \
+-	"Afficher cette aide :\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Programme d'installation Windows %s\n\nUsage :\nmsiexec commande {paramètre obligatoire} [paramètre optionnel]\n\nInstaller un produit :\n\t/i {paquet|code_produit} [propriété]\n\t/package {paquet|code_produit} [propriété]\n\t/a paquet [propriété]\nRéparer une installation :\n\t/f[p|o|e|d|c|a|u|m|s|v] {paquet|code_produit}\nDésinstaller un produit :\n\t/uninstall {paquet|code_produit} [propriété]\n\t/x {paquet|code_produit} [propriété]\nPublier un produit :\n\t/j[u|m] paquet [/t transformation] [/g id_langue]\nAppliquer un patch :\n\t/p paquet_patch [propriété]\n\t/p paquet_patch /a paquet [propriété]\nModificateurs de journalisation et d'interface utilisateur pour les commandes ci-dessus :\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fichier_journal\n\t/q{|n|b|r|f|n+|b+|b-}\nEnregistrer le service MSI :\n\t/y\nAnnuler l'enregistrement du service MSI :\n\t/z\nAfficher cette aide :\n\t/help\n\t/?\n"
+ 	11 "saisissez le nom du dossier contenant %s"
+ 	12 "source d'installation pour la fonctionnalité manquante"
+ 	13 "lecteur réseau pour la fonctionnalité manquante"
+Index: D:/trunk/dll/win32/msi/msi_Da.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Da.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Da.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "Kunne ikke �bne den specificerede installationspakke. Kontroller stien og pr�v igen."
+ 	5 "kunne ikke finden stien '%s'."
+ 	9 "inds�t disk '%s'"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "angiv kataloget som indeholder '%s'."
+ 	12 "featurens installationskilde mangler."
+         13 "featurens netv�rksdrev mangler."
+Index: D:/trunk/dll/win32/msi/msi_Sr.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Sr.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Sr.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "Instalacija ne može biti otvorena.  Molimo proverite destinaciju fajla i pokušajte ponovo."
+ 	5 "putanja %s nije nađena"
+ 	9 "Ubacite disk %s"
+-	10 "Windows Instalacija programa %s\n\n" \
+-        "Svrha:\n" \
+-        "msiexec komanda {traženi parametar} [opcioni parametar]\n\n" \
+-        "Instalacija proizvoda:\n" \
+-        "\t/i {paket|kod} [svojina]\n" \
+-        "\t/package {paket|kod} [svojina]\n" \
+-        "\t/a paket [svojina]\n" \
+-        "Popravak instalacije:\n" \
+-        "\t/f[p|o|e|d|c|a|u|m|s|v] {paket|kod}\n" \
+-        "Uninstal programa:\n" \
+-        "\t/uninstall {paket|kod} [svojina]\n" \
+-        "\t/x {paket|kod} [svojina]\n" \
+-        "Reklama programa:\n" \
+-        "\t/j[u|m] paket [/t pretvori] [/g id jezika]\n" \
+-        "Primeni peč:\n" \
+-        "\t/p pečpaket [svojina]\n" \
+-        "\t/p pečpaket /a paket [svojina]\n" \
+-        "Izveštalj i Izgled Modifikatori za komande iznad:\n" \
+-        "\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] izvestaj\n" \
+-        "\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-        "Registracija MSI Servisa:\n" \
+-        "\t/y\n " \
+-        "Uklanjanje MSI Servisa:\n" \
+-        "\t/z\n" \
+-        "Prikaži ovu Pomoć:\n" \
+-        "\t/help\n" \
+-        "\t/?\n"
++	10 "Windows Instalacija programa %s\n\nSvrha:\nmsiexec komanda {traženi parametar} [opcioni parametar]\n\nInstalacija proizvoda:\n\t/i {paket|kod} [svojina]\n\t/package {paket|kod} [svojina]\n\t/a paket [svojina]\nPopravak instalacije:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paket|kod}\nUninstal programa:\n\t/uninstall {paket|kod} [svojina]\n\t/x {paket|kod} [svojina]\nReklama programa:\n\t/j[u|m] paket [/t pretvori] [/g id jezika]\nPrimeni peč:\n\t/p pečpaket [svojina]\n\t/p pečpaket /a paket [svojina]\nIzveštalj i Izgled Modifikatori za komande iznad:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] izvestaj\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistracija MSI Servisa:\n\t/y\n Uklanjanje MSI Servisa:\n\t/z\nPrikaži ovu Pomoć:\n\t/help\n\t/?\n"
+ 	11 "unesite koji folder sadrži %s"
+ 	12 "instalacija nedostaje"
+ 	13 "mrežni drajv nedostaje"
+@@ -71,33 +45,7 @@
+ 	4 "Инсталација не може бити отворена. Молимо проверите дестинацију фајла и покушајте поново."
+ 	5 "путања %s није нађена"
+ 	9 "Убаците диск %s"
+-	10 "Виндовс Инсталација програма %s\n\n" \
+-        "Сврха:\n" \
+-        "msiexec команда {тражени параметар} [опциони параметар]\n\n" \
+-        "Инсталација производа:\n" \
+-        "\t/i {пакет|код} [својина]\n" \
+-        "\t/package {пакет|код} [својина]\n" \
+-        "\t/a пакет [svojina]\n" \
+-        "Поправак инсталације:\n" \
+-        "\t/f[p|o|e|d|c|a|u|m|s|v] {пакет|код}\n" \
+-        "Брисање програма:\n" \
+-        "\t/uninstall {пакет|код} [svojina]\n" \
+-        "\t/x {пакет|код} [својина]\n" \
+-        "Реклама програма:\n" \
+-        "\t/j[u|m] пакет [/t transform] [/g languageid]\n" \
+-        "Примени печ:\n" \
+-        "\t/p печпакет [својина]\n" \
+-        "\t/p печпакет /a пакет [својина]\n" \
+-        "Известај и Изглед Модификатора за команде изнад:\n" \
+-        "\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] извештај\n" \
+-        "\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-        "Регистрација МСИ Сервиса:\n" \
+-        "\t/y\n" \
+-        "Уклањање МСИ Сервиса:\n" \
+-        "\t/z\n" \
+-        "Прикажи ову Помоћ:\n" \
+-        "\t/help\n" \
+-        "\t/?\n"
++	10 "Виндовс Инсталација програма %s\n\nСврха:\nmsiexec команда {тражени параметар} [опциони параметар]\n\nИнсталација производа:\n\t/i {пакет|код} [својина]\n\t/package {пакет|код} [својина]\n\t/a пакет [svojina]\nПоправак инсталације:\n\t/f[p|o|e|d|c|a|u|m|s|v] {пакет|код}\nБрисање програма:\n\t/uninstall {пакет|код} [svojina]\n\t/x {пакет|код} [својина]\nРеклама програма:\n\t/j[u|m] пакет [/t transform] [/g languageid]\nПримени печ:\n\t/p печпакет [својина]\n\t/p печпакет /a пакет [својина]\nИзвестај и Изглед Модификатора за команде изнад:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] извештај\n\t/q{|n|b|r|f|n+|b+|b-}\nРегистрација МСИ Сервиса:\n\t/y\nУклањање МСИ Сервиса:\n\t/z\nПрикажи ову Помоћ:\n\t/help\n\t/?\n"
+ 	11 "Унесите који фолдер садржи %s"
+ 	12 "Инсталација недостаје"
+ 	13 "Мрежни драјв недостаје"
+Index: D:/trunk/dll/win32/msi/msi_Tr.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Tr.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Tr.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "The specified installation package could not be opened.  Please check the file path and try again."
+ 	5 "%s yolu bulunamad�"
+ 	9 "%s nolu diski yerle�tirin"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "%s ��esini i�eren dizini girin"
+ 	12 "eksik �zellik i�in kurulum kayna��"
+ 	13 "eksik �zellik i�in a� s�r�c�s�"
+Index: D:/trunk/dll/win32/msi/msi_De.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_De.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_De.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "Das angegebene Installationspaket konnte nicht geöffnet werden. Bitte überprüfen Sie den Pfadnamen und versuchen Sie es noch einmal."
+ 	5 "Der Pfad %s wurde nicht gefunden."
+ 	9 "Bitte Disk %s einlegen."
+-	10 "Windows Installer %s\n\n" \
+-	"Benutzung:\n" \
+-	"msiexec Befehl {Parameter} [Zusätzliche Parammeter]\n\n" \
+-	"Produkt installieren:\n" \
+-	"\t/i {Paket|Produktcode} [Eigenschaft]\n" \
+-	"\t/package {Paket|Produktcode} [Eigenschaft]\n" \
+-	"\t/a Paket [Eigenschaft]\n" \
+-	"Installation reparieren:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {Paket|Produktcode}\n" \
+-	"Produkt deinstallieren:\n" \
+-	"\t/uninstall {Paket|Produktcode} [Eigenschaft]\n" \
+-	"\t/x {Paket|Produktcode} [Eigenschaft]\n" \
+-	"Produkt ankündigen:\n" \
+-	"\t/j[u|m] Paket [/t Transformationspaket] [/g Sprachkennung]\n" \
+-	"Patch integrieren:\n" \
+-	"\t/p Patchpaket [Eigenschaft]\n" \
+-	"\t/p Patchpaket /a Paket [Eigenschaft]\n" \
+-	"Protokollierung und Benutzeroberfläche für die oberen Befehle anpassen:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] Protokolldatei\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"MSI Service registrieren:\n" \
+-	"\t/y\n" \
+-	"Registrierung des MSI Service aufheben:\n" \
+-	"\t/z\n" \
+-	"Hilfe anzeigen:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nBenutzung:\nmsiexec Befehl {Parameter} [Zusätzliche Parammeter]\n\nProdukt installieren:\n\t/i {Paket|Produktcode} [Eigenschaft]\n\t/package {Paket|Produktcode} [Eigenschaft]\n\t/a Paket [Eigenschaft]\nInstallation reparieren:\n\t/f[p|o|e|d|c|a|u|m|s|v] {Paket|Produktcode}\nProdukt deinstallieren:\n\t/uninstall {Paket|Produktcode} [Eigenschaft]\n\t/x {Paket|Produktcode} [Eigenschaft]\nProdukt ankündigen:\n\t/j[u|m] Paket [/t Transformationspaket] [/g Sprachkennung]\nPatch integrieren:\n\t/p Patchpaket [Eigenschaft]\n\t/p Patchpaket /a Paket [Eigenschaft]\nProtokollierung und Benutzeroberfläche für die oberen Befehle anpassen:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] Protokolldatei\n\t/q{|n|b|r|f|n+|b+|b-}\nMSI Service registrieren:\n\t/y\nRegistrierung des MSI Service aufheben:\n\t/z\nHilfe anzeigen:\n\t/help\n\t/?\n"
+ 	11 "Geben Sie das Verzeichnis ein, dass %s enthält."
+ 	12 "Die Installationsquelle für das Feature fehlt."
+ 	13 "Das Netzwerklaufwerk für das Feature fehlt."
+Index: D:/trunk/dll/win32/msi/msi_Sv.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Sv.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Sv.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "Det angivna installationspaketet kunde inte �ppnas.  Kontrollera fils�kv�gen och f�rs�k igen."
+ 	5 "s�kv�gen %s hittades inte"
+ 	9 "mata in %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "ange vilken mapp som inneh�ller %s"
+ 	12 "installationsk�lla f�r funktion saknar"
+ 	13 "n�tverksenhet f�r funktion saknar"
+Index: D:/trunk/dll/win32/msi/msi_Fi.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Fi.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Fi.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "Annettua asennuspakettia ei voitu avata. Tarkista tiedoston polku ja yrit� uudelleen."
+ 	5 "Polkua %s ei l�ydy."
+ 	9 "Anna levy %s"
+-	10 "Windows Installer %s\n\n" \
+-	"K�ytt�:\n" \
+-	"msiexec komento {pakollinen parametri} [valinnainen parametri]\n\n" \
+-	"Asenna tuote:\n" \
+-	"\t/i {paketti|tuotekoodi} [ominaisuus]\n" \
+-	"\t/package {paketti|tuotekoodi} [ominaisuus]\n" \
+-	"\t/a {paketti} [ominaisuus]\n" \
+-	"Korjaa asennus:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {paketti|tuotekoodi}\n" \
+-	"Poista tuote:\n" \
+-	"\t/uninstall {paketti|tuotekoodi} [ominaisuus]\n" \
+-	"\t/x {paketti|tuotekoodi} [ominaisuus]\n" \
+-	"Mainosta (advertise) tuotetta:\n" \
+-	"\t/j[u|m] paketti [/t muunnos] [/g kielitunnus]\n" \
+-	"Asenna korjaus:\n" \
+-	"\t/p korjauspaketti [ominaisuus]\n" \
+-	"\t/p korjauspaketti /a paketti [ominaisuus]\n" \
+-	"Loki- ja k�ytt�liittym�asetukset edellisille komennoille:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] lokitiedosto\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Rekister�i MSI-palvelu:\n" \
+-	"\t/y\n" \
+-	"Peru MSI-palvelun rekister�inti:\n" \
+-	"\t/z\n" \
+-	"N�yt� t�m� ohje:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nK�ytt�:\nmsiexec komento {pakollinen parametri} [valinnainen parametri]\n\nAsenna tuote:\n\t/i {paketti|tuotekoodi} [ominaisuus]\n\t/package {paketti|tuotekoodi} [ominaisuus]\n\t/a {paketti} [ominaisuus]\nKorjaa asennus:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paketti|tuotekoodi}\nPoista tuote:\n\t/uninstall {paketti|tuotekoodi} [ominaisuus]\n\t/x {paketti|tuotekoodi} [ominaisuus]\nMainosta (advertise) tuotetta:\n\t/j[u|m] paketti [/t muunnos] [/g kielitunnus]\nAsenna korjaus:\n\t/p korjauspaketti [ominaisuus]\n\t/p korjauspaketti /a paketti [ominaisuus]\nLoki- ja k�ytt�liittym�asetukset edellisille komennoille:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] lokitiedosto\n\t/q{|n|b|r|f|n+|b+|b-}\nRekister�i MSI-palvelu:\n\t/y\nPeru MSI-palvelun rekister�inti:\n\t/z\nN�yt� t�m� ohje:\n\t/help\n\t/?\n"
+ 	11 "Anna kansio, jossa on %s"
+ 	12 "Ominaisuuden asennusl�hde puuttuu."
+ 	13 "Ominaisuuden verkkolevy puuttuu."
+Index: D:/trunk/dll/win32/msi/msi_Si.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Si.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Si.rc	(revision 51711)
+@@ -29,33 +29,7 @@
+ 	4 "Navedenega namestitvenega paketa ni mogoče odpreti. Preverite ime datoteke in poskusite znova."
+ 	5 "pot %s ne obstaja"
+ 	9 "vnesite disk %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "vnesite ime mape, ki vsebuje %s"
+ 	12 "manjkajoč namestitveni vir za namestitev funkcije"
+ 	13 "manjkajoč omrežni pogon za namestitev funkcijo"
+Index: D:/trunk/dll/win32/msi/msi_Hu.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Hu.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Hu.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "The specified installation package could not be opened.  Please check the file path and try again."
+ 	5 "%s �tvonal nem tal�lhat�"
+ 	9 "helyezze be a lemezt: %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "adja meg melyik mappa tartalmazza ezt: %s"
+ 	12 "hi�nyz� tulajdons�g a telep�t�si forr�shoz"
+ 	13 "hi�nyz� tulajdons�g a h�l�zati meghajt�hoz"
+Index: D:/trunk/dll/win32/msi/msi_Ru.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Ru.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Ru.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "Указанный пакет не может быть открыт. Проверьте файл и повторите попытку."
+ 	5 "путь %s не найден"
+ 	9 "вставьте диск %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "укажите каталог, содержащий %s"
+ 	12 "источник установки данной возможности не указан"
+ 	13 "сетевой диск для данной возможности не указан"
+Index: D:/trunk/dll/win32/msi/msi_Nl.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Nl.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Nl.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "Het opgegeven installatie pakket kon niet worden geopend.  Verifieer het bestandspad en probeer opnieuw."
+ 	5 "Pad %s niet gevonden"
+ 	9 "Plaats disk %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Gebruik:\n" \
+-	"msiexec commando {vereiste parameter} [optionele parameter]\n\n" \
+-	"Installeer een product:\n" \
+-	"\t/i {pakket|productcode} [eigenschap]\n" \
+-	"\t/package {pakket|productcode} [eigenschap]\n" \
+-	"\t/a pakket [eigenschap]\n" \
+-	"Herstel een installatie:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {pakket|productcode}\n" \
+-	"Verwijder een product:\n" \
+-	"\t/uninstall {pakket|productcode} [eigenschap]\n" \
+-	"\t/x {pakket|productcode} [eigenschap]\n" \
+-	"Adverteer een product:\n" \
+-	"\t/j[u|m] pakket [/t transform] [/g languageid]\n" \
+-	"Pas een patch toe:\n" \
+-	"\t/p patchpakket [eigenschap]\n" \
+-	"\t/p patchpakket /a pakket [eigenschap]\n" \
+-	"Log en UI Modifiers voor bovenstaande commando's:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logbestand\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Registreer MSI Service:\n" \
+-	"\t/y\n" \
+-	"Maak registratie MSI Service ongedaan:\n" \
+-	"\t/z\n" \
+-	"Laat dit helpvenster zien:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nGebruik:\nmsiexec commando {vereiste parameter} [optionele parameter]\n\nInstalleer een product:\n\t/i {pakket|productcode} [eigenschap]\n\t/package {pakket|productcode} [eigenschap]\n\t/a pakket [eigenschap]\nHerstel een installatie:\n\t/f[p|o|e|d|c|a|u|m|s|v] {pakket|productcode}\nVerwijder een product:\n\t/uninstall {pakket|productcode} [eigenschap]\n\t/x {pakket|productcode} [eigenschap]\nAdverteer een product:\n\t/j[u|m] pakket [/t transform] [/g languageid]\nPas een patch toe:\n\t/p patchpakket [eigenschap]\n\t/p patchpakket /a pakket [eigenschap]\nLog en UI Modifiers voor bovenstaande commando's:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logbestand\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistreer MSI Service:\n\t/y\nMaak registratie MSI Service ongedaan:\n\t/z\nLaat dit helpvenster zien:\n\t/help\n\t/?\n"
+ 	11 "Voer de map in die %s bevat"
+ 	12 "De installatiebron van de feature ontbreekt"
+ 	13 "De netwerkschijf met de feature ontbreekt"
+Index: D:/trunk/dll/win32/msi/msi_Pl.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Pl.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Pl.rc	(revision 51711)
+@@ -28,33 +28,7 @@
+ 	4 "Nie uda�o si� otworzy� wybranego pakietu instalacyjnego. Sprawd� czy �cie�ka jest poprawna i spr�buj ponownie."
+ 	5 "�cie�ka '%s' nie zosta�a odnaleziona"
+ 	9 "w�� dysk '%s'"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "wprowad� sice�k� do folderu zawieraj�cego '%s'"
+ 	12 "�r�d�o danych zawieraj�ce ��dan� funkcj� jest niedost�pne"
+ 	13 "dysk siecowy zawieraj�cy ��dan� funckje jest niedost�pny"
+Index: D:/trunk/dll/win32/msi/msi_It.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_It.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_It.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "Impossibile aprire il pacchetto di installazione specificato.  Per favore controlla l'indirizzo del file e riprova."
+ 	5 "percorso %s non trovato"
+ 	9 "inserire disco %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "immettere il nome della cartella che contiene %s"
+ 	12 "sorgente di installazione per la funzionalità mancante"
+ 	13 "periferica di rete per la funzionalità mancante"
+Index: D:/trunk/dll/win32/msi/msi_Lt.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Lt.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Lt.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "Nepavyko atverti nurodyto diegimo paketo. Patikrinkite failo kelią ir mėginkite dar kartą."
+ 	5 "kelias %s nerastas"
+ 	9 "įdėkite diską %s"
+-	10 "Windows diegimo programa %s\n\n" \
+-	"Naudojimas:\n" \
+-	"msiexec komanda {būtinas parametras} [nebūtinas parametras]\n\n" \
+-	"Įdiegti produktą:\n" \
+-	"\t/i {paketas|produkto_kodas} [savybė]\n" \
+-	"\t/package {paketas|produkto_kodas} [savybė]\n" \
+-	"\t/a paketas [savybė]\n" \
+-	"Taisyti įdiegimą:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {paketas|produkto_kodas}\n" \
+-	"Pašalinti produktą:\n" \
+-	"\t/uninstall {paketas|produkto_kodas} [savybė]\n" \
+-	"\t/x {paketas|produkto_kodas} [savybė]\n" \
+-	"Skelbti produktą:\n" \
+-	"\t/j[u|m] paketas [/t pakeitimas] [/g kalbos_identifikatorius]\n" \
+-	"Pritaikyti pataisą:\n" \
+-	"\t/p pataisos_paketas [savybė]\n" \
+-	"\t/p pataisos_paketas /a paketas [savybė]\n" \
+-	"Žurnalo ir sąsajos modifikatoriai aukščiau išvardintoms komandoms:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] žurnalo_failas\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Registruoti MSI tarnybą:\n" \
+-	"\t/y\n" \
+-	"Išregistruoti MSI tarnybą:\n" \
+-	"\t/z\n" \
+-	"Parodyti šią pagalbą:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows diegimo programa %s\n\nNaudojimas:\nmsiexec komanda {būtinas parametras} [nebūtinas parametras]\n\nĮdiegti produktą:\n\t/i {paketas|produkto_kodas} [savybė]\n\t/package {paketas|produkto_kodas} [savybė]\n\t/a paketas [savybė]\nTaisyti įdiegimą:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paketas|produkto_kodas}\nPašalinti produktą:\n\t/uninstall {paketas|produkto_kodas} [savybė]\n\t/x {paketas|produkto_kodas} [savybė]\nSkelbti produktą:\n\t/j[u|m] paketas [/t pakeitimas] [/g kalbos_identifikatorius]\nPritaikyti pataisą:\n\t/p pataisos_paketas [savybė]\n\t/p pataisos_paketas /a paketas [savybė]\nŽurnalo ir sąsajos modifikatoriai aukščiau išvardintoms komandoms:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] žurnalo_failas\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistruoti MSI tarnybą:\n\t/y\nIšregistruoti MSI tarnybą:\n\t/z\nParodyti šią pagalbą:\n\t/help\n\t/?\n"
+ 	11 "įveskite aplanką, kuris turi %s"
+ 	12 "trūksta diegimo šaltinio komponentui"
+ 	13 "trūksta tinklo disko komponentui"
+Index: D:/trunk/dll/win32/msi/msi_Zh.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Zh.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Zh.rc	(revision 51711)
+@@ -30,33 +30,7 @@
+ 	4 "不能打开所指定的安装软件包. 请检查文件路径后再试."
+ 	5 "路径 %s 没找到"
+ 	9 "插入软盘 %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "输入包含 %s 的文件夹"
+ 	12 "本功能的安装源不存在"
+ 	13 "本功能的网络驱动器不存在"
+@@ -71,33 +45,7 @@
+ 	4 "不能開啟所指定的安裝軟件包. 請檢查檔案路徑後再試."
+ 	5 "路徑 %s 沒找到"
+ 	9 "插入軟碟 %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "輸入包含 %s 的檔案夾"
+ 	12 "本功能的安裝源不存在"
+ 	13 "本功能的網路儲存槽不存在"
+Index: D:/trunk/dll/win32/msi/msi_Pt.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Pt.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Pt.rc	(revision 51711)
+@@ -31,33 +31,7 @@
+ 	4 "O pacote de instalação especificado não pôde ser aberto. Por favor, verifique o arquivo e tente novamente."
+ 	5 "caminho %s não encontrado"
+ 	9 "insira disco %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Modo de usar:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Instalar um produto:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Reparar uma instalação:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Desinstalar um produto:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Anunciar um produto:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Aplicar um patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Modificadores Log e UI para os comandos acima:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Registrar Serviço MSI:\n" \
+-	"\t/y\n" \
+-	"Desregistrar Serviço MSI:\n" \
+-	"\t/z\n" \
+-	"Mostrar esta ajuda:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nModo de usar:\nmsiexec command {required parameter} [optional parammeter]\n\nInstalar um produto:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nReparar uma instalação:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nDesinstalar um produto:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAnunciar um produto:\n\t/j[u|m] package [/t transform] [/g languageid]\nAplicar um patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nModificadores Log e UI para os comandos acima:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistrar Serviço MSI:\n\t/y\nDesregistrar Serviço MSI:\n\t/z\nMostrar esta ajuda:\n\t/help\n\t/?\n"
+ 	11 "entre a pasta que contém %s"
+ 	12 "faltando fonte de instalação para característica"
+ 	13 "faltando drive de rede para característica"
+@@ -72,33 +46,7 @@
+ 	4 "The specified installation package could not be opened.  Please check the file path and try again."
+ 	5 "localização %s não encontrada"
+ 	9 "insira o disco %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "indique que pasta contém %s"
+ 	12 "instalar fonte para a opção em falta"
+ 	13 "controlador de rede para a opção em falta"
+Index: D:/trunk/dll/win32/msi/msi_Bg.rc
+===================================================================
+--- D:/trunk/dll/win32/msi/msi_Bg.rc	(revision 51710)
++++ D:/trunk/dll/win32/msi/msi_Bg.rc	(revision 51711)
+@@ -27,33 +27,7 @@
+ 	4 "The specified installation package could not be opened.  Please check the file path and try again."
+ 	5 "����� %s �� � �������"
+ 	9 "��������� ���� %s"
+-	10 "Windows Installer %s\n\n" \
+-	"Usage:\n" \
+-	"msiexec command {required parameter} [optional parammeter]\n\n" \
+-	"Install a product:\n" \
+-	"\t/i {package|productcode} [property]\n" \
+-	"\t/package {package|productcode} [property]\n" \
+-	"\t/a package [property]\n" \
+-	"Repair an installation:\n" \
+-	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+-	"Uninstall a product:\n" \
+-	"\t/uninstall {package|productcode} [property]\n" \
+-	"\t/x {package|productcode} [property]\n" \
+-	"Advertise a product:\n" \
+-	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+-	"Apply a patch:\n" \
+-	"\t/p patchpackage [property]\n" \
+-	"\t/p patchpackage /a package [property]\n" \
+-	"Log and UI Modifiers for above commands:\n" \
+-	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+-	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+-	"Register MSI Service:\n" \
+-	"\t/y\n" \
+-	"Unregister MSI Service:\n" \
+-	"\t/z\n" \
+-	"Display this help:\n" \
+-	"\t/help\n" \
+-	"\t/?\n"
++	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+ 	11 "�������� �������, ����� ������� %s"
+ 	12 "��������� �� ���������� �� ���������������� ������"
+ 	13 "��������� ���������� ����� �� ���������������� ������ "

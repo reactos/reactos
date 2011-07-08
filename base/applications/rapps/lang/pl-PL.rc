@@ -1,5 +1,10 @@
-// * translated by Caemyr - Olaf Siejka (Aug, 2009)
-// * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+/*
+ *         translated by Caemyr - Olaf Siejka (Aug, 2009)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ */
 
 #pragma code_page(65001) // UTF-8
 

@@ -85,8 +85,8 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 				NULL, NULL);
   if (!NT_SUCCESS(Status))
   {
-		DPRINT1("SM: %s: running '$S' failed (Status=0x%08lx)\n",
-			__FUNCTION__, Status);
+		DPRINT1("SM: %s: running '%S' failed (Status=0x%08lx)\n",
+			__FUNCTION__, ImagePath, Status);
   }
   return(STATUS_SUCCESS);
 }

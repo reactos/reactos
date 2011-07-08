@@ -139,15 +139,27 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	BOOLEAN Status;
 
 	//
-	// Check for some weird stuff at the top
+	// Check for memory block after 4GB - we don't support it yet
+	// Note: Even last page before 4GB limit is not supported
 	//
-	if (BasePage + PageCount > 0xF0000)
+	if (BasePage >= MM_MAX_PAGE)
 	{
 		//
 		// Just skip this, without even adding to MAD list
 		//
 		return;
 	}
+
+    //
+    // Check if last page is after 4GB limit and shorten this block if needed
+    //
+    if (BasePage + PageCount > MM_MAX_PAGE)
+    {
+        //
+        // shorten this block
+        //
+        PageCount = MM_MAX_PAGE - BasePage;
+    }
 
 	//
 	// Set Base page, page count and type
@@ -212,7 +224,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
 	ULONG NoEntries;
-	PKTSS Tss;
+	//PKTSS Tss;
 	BOOLEAN Status;
 
 	//
@@ -255,7 +267,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	// Calculate parameters of the memory map
 	MemoryMapStartPage = (ULONG_PTR)MemoryMap >> MM_PAGE_SHIFT;
-	MemoryMapSizeInPages = NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM);
+	MemoryMapSizeInPages = (NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM) + MM_PAGE_SIZE - 1) / MM_PAGE_SIZE;
 
 	DPRINTM(DPRINT_WINDOWS, "Got memory map with %d entries\n", NoEntries);
 
@@ -341,7 +353,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
 	WinLdrMapSpecialPages(PcrBasePage);
 
-	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
+	//Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
 	// Unmap what is not needed from kernel page table
 	MempDisablePages();

@@ -41,7 +41,7 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
                       ULONG *TssBasePage)
 {
 	ULONG TssSize;
-	ULONG TssPages;
+	//ULONG TssPages;
 	ULONG_PTR Pcr = 0;
 	ULONG_PTR Tss = 0;
 	ULONG BlockSize, NumPages;
@@ -61,7 +61,7 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	/* Allocate TSS */
 	TssSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
-	TssPages = TssSize / MM_PAGE_SIZE;
+	//TssPages = TssSize / MM_PAGE_SIZE;
 
 	Tss = (ULONG_PTR)MmAllocateMemoryWithType(TssSize, LoaderMemoryData);
 

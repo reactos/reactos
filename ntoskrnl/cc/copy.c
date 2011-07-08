@@ -255,7 +255,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     // MmGlobalPageDirectory and the real system PDE directory. What a mess...
     //
     {
-        int i = 0;
+        ULONG i = 0;
         do
         {
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));

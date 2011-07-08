@@ -1709,9 +1709,9 @@ xmlTextReaderReadInnerXml(xmlTextReaderPtr reader ATTRIBUTE_UNUSED)
  *
  * Reads the contents of the current node, including child nodes and markup.
  *
- * Returns a string containing the XML content, or NULL if the current node
- *         is neither an element nor attribute, or has no child nodes. The
- *         string must be deallocated by the caller.
+ * Returns a string containing the node and any XML content, or NULL if the 
+ *         current node cannot be serialized. The string must be deallocated 
+ *         by the caller.
  */
 xmlChar *
 xmlTextReaderReadOuterXml(xmlTextReaderPtr reader ATTRIBUTE_UNUSED)
@@ -1726,7 +1726,11 @@ xmlTextReaderReadOuterXml(xmlTextReaderPtr reader ATTRIBUTE_UNUSED)
     if (xmlTextReaderExpand(reader) == NULL) {
         return NULL;
     }
-    node = xmlDocCopyNode(node, doc, 1);
+	if (node->type == XML_DTD_NODE) {
+		node = (xmlNodePtr) xmlCopyDtd((xmlDtdPtr) node);
+	} else {
+		node = xmlDocCopyNode(node, doc, 1);
+	}
     buff = xmlBufferCreate();
     if (xmlNodeDump(buff, doc, node, 0, 0) == -1) {
         xmlFreeNode(node);

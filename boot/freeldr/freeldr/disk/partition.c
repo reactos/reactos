@@ -21,7 +21,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-BOOLEAN DiskGetActivePartitionEntry(ULONG DriveNumber,
+BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,
                                  ULONG *ActivePartition)
 {
@@ -77,7 +77,7 @@ BOOLEAN DiskGetActivePartitionEntry(ULONG DriveNumber,
 	return TRUE;
 }
 
-BOOLEAN DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	MASTER_BOOT_RECORD		MasterBootRecord;
 	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
@@ -195,7 +195,7 @@ BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord,
 	return FALSE;
 }
 
-BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
+BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 	ULONG		Index;
 

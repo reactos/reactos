@@ -15,10 +15,11 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * updated by Caemyr - Olaf Siejka (Jan, 2008)
- * Use ReactOS forum PM or IRC to contact me
- * http://www.reactos.org
- * IRC: irc.freenode.net #reactos-pl; 
+ *      updated by Caemyr - Olaf Siejka (Jan, 2008)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl;
+ *      UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -31,7 +32,7 @@ BEGIN
     IDS_FAVORITES      "Ulubione"
     IDS_STARTMENU      "Menu Start"
     IDS_PROGRAMS       "Menu Start\\Programy"
-    IDS_ADMINTOOLS     "Menu Start\\Programy\\Narzêdzia administracyjne"
+    IDS_ADMINTOOLS     "Menu Start\\Programy\\NarzÄ™dzia administracyjne"
     IDS_STARTUP        "Menu Start\\Programy\\Autostart"
     IDS_MYDOCUMENTS    "Moje dokumenty"
     IDS_MYPICTURES     "Moje dokumenty\\Moje obrazy"
@@ -39,7 +40,7 @@ BEGIN
     IDS_MYVIDEOS       "Moje dokumenty\\Moje wideo"
     IDS_TEMPLATES      "Szablony"
     IDS_RECENT         "Ostatnie"
-    IDS_SENDTO         "WyœlijDo"
+    IDS_SENDTO         "WyÅ›lij Do"
     IDS_PRINTHOOD      "Drukarki"
     IDS_NETHOOD        "Sieci"
     IDS_LOCALSETTINGS  "Ustawienia lokalne"

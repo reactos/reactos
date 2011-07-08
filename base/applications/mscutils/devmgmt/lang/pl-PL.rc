@@ -1,8 +1,9 @@
 /*
-* translated by xrogers
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -10,27 +11,27 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&Plik"
   BEGIN
-    MENUITEM "Za&koÒcz",                   IDC_EXIT
+    MENUITEM "Za&ko≈Ñcz",                   IDC_EXIT
   END
   POPUP "&Akcja"
   BEGIN
     MENUITEM "&Drukuj",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&W≥aúciwoúci",              IDC_PROP, GRAYED
+    MENUITEM "&W≈Ça≈õciwo≈õci",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Pomo&c",                    IDC_PROGHELP, GRAYED
   END
   POPUP "&Widok"
   BEGIN
-    MENUITEM "Urzπdzenia w&ed≥ug typu",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Ur&zπdzenia wed≥ug po≥πczenia",   IDC_STATIC, GRAYED
-    MENUITEM "Zaso&by wed≥ug typu",       IDC_STATIC, GRAYED
-    MENUITEM "Za&soby wed≥ug po≥πczenia", IDC_STATIC, GRAYED
+    MENUITEM "UrzƒÖdzenia w&ed≈Çug typu",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Ur&zƒÖdzenia wed≈Çug po≈ÇƒÖczenia",   IDC_STATIC, GRAYED
+    MENUITEM "Zaso&by wed≈Çug typu",       IDC_STATIC, GRAYED
+    MENUITEM "Za&soby wed≈Çug po≈ÇƒÖczenia", IDC_STATIC, GRAYED
   END
   POPUP "Pomo&c"
   BEGIN
     MENUITEM "&Tematy pomocy",                    IDC_PROGHELP
-    MENUITEM "Menedøer urzπdzeÒ - i&nformacje",                   IDC_ABOUT
+    MENUITEM "Mened≈ºer urzƒÖdze≈Ñ - i&nformacje",                   IDC_ABOUT
   END
 END
 
@@ -38,18 +39,18 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "W≥aúciwoúci",              IDC_PROP, GRAYED
+    MENUITEM "W≈Ça≈õciwo≈õci",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Pomoc",                    IDC_PROGHELP
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Menedøer urzπdzeÒ - informacje"
+CAPTION "Mened≈ºer urzƒÖdze≈Ñ - informacje"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Menedøer urzπdzeÒ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Mened≈ºer urzƒÖdze≈Ñ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Zamknij", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -57,32 +58,32 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; moøesz go rozprowadzaÊ dalej i/lub modyfikowaÊ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez FundacjÍ Wolnego Oprogramowania - wed≥ug wersji 2 tej Licencji lub (wed≥ug twojego wyboru) ktÛrejµ z pÛªniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejö, iø bÍdzie on uøyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyµlnej gwarancji PRZYDATNO©CI HANDLOWEJ albo PRZYDATNO©CI DO OKRE©LONYCH ZASTOSOWA—. W celu uzyskania bliøszych informacji siÍgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoµciö wraz z niniejszym programem otrzyma≥eµ teø egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeµli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo≈ºesz go rozprowadzaƒá dalej i/lub modyfikowaƒá na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjƒô Wolnego Oprogramowania - wed≈Çug wersji 2 tej Licencji lub (wed≈Çug twojego wyboru) kt√≥rej≈õ z p√≥≈∫niejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejƒÖ, i≈º bƒôdzie on u≈ºyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domy≈õlnej gwarancji PRZYDATNO≈öCI HANDLOWEJ albo PRZYDATNO≈öCI DO OKRE≈öLONYCH ZASTOSOWA≈É. W celu uzyskania bli≈ºszych informacji siƒôgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewno≈õciƒÖ wraz z niniejszym programem otrzyma≈Çe≈õ te≈º egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); je≈õli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "W≥aúciwoúci"
-  IDS_TOOLTIP_REFRESH   "Odúwieø"
+  IDS_TOOLTIP_PROP      "W≈Ça≈õciwo≈õci"
+  IDS_TOOLTIP_REFRESH   "Od≈õwie≈º"
   IDS_TOOLTIP_HELP      "Pomoc"
-  IDS_TOOLTIP_EXIT      "Wyjúcie"
+  IDS_TOOLTIP_EXIT      "Wyj≈õcie"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Menedøer urzπdzeÒ ReactOS"
+  IDS_APPNAME "Mened≈ºer urzƒÖdze≈Ñ ReactOS"
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Zamyka program."
-  IDS_HINT_REFRESH      " Odúwieø listÍ serwisÛw."
-  IDS_HINT_PROP         " Otwiera arkusz w≥aúciwoúci dla bieøπcego zaznaczenia."
+  IDS_HINT_REFRESH      " Od≈õwie≈º listƒô serwis√≥w."
+  IDS_HINT_PROP         " Otwiera arkusz w≈Ça≈õciwo≈õci dla bie≈ºƒÖcego zaznaczenia."
   IDS_HINT_HELP         " Otwiera pomoc."
-  IDS_HINT_ABOUT        " Informacje o Menedøerze urzπdzeÒ ReactOS."
+  IDS_HINT_ABOUT        " Informacje o Mened≈ºerze urzƒÖdze≈Ñ ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Przywraca okno do normalnych rozmiarÛw."
+  IDS_HINT_SYS_RESTORE  " Przywraca okno do normalnych rozmiar√≥w."
   IDS_HINT_SYS_MOVE     " Przesuwa to okno."
   IDS_HINT_SYS_SIZE     " Zmienia rozmiar tego okna."
   IDS_HINT_SYS_MINIMIZE " Minimalizuje to okno do ikony."
-  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiarÛw ekranu."
+  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiar√≥w ekranu."
   IDS_HINT_SYS_CLOSE    " Zamyka okno."
 END

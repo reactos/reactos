@@ -17,6 +17,8 @@
 
 #ifndef _WINKD_
 #define KdpDprintf DPRINT
+#elif defined(NDEBUG)
+#define KdpDprintf(...)
 #endif
 
 /* GLOBALS ********************************************************************/

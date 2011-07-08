@@ -1,15 +1,20 @@
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+/*
+ *         translated by Maciej Bia≈Ças
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
 
-//By Maciej Bialas
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Plik"
 	BEGIN
-		MENUITEM "&OtwÛrz...", IDM_OPEN_FILE
+		MENUITEM "&Otw√≥rz...", IDM_OPEN_FILE
 		MENUITEM "&Zamknij", IDM_CLOSE_FILE
 		MENUITEM SEPARATOR
-		MENUITEM "&Wyjdü", IDM_EXIT
+		MENUITEM "&Wyjd≈∫", IDM_EXIT
 	END
 	POPUP "&Pomoc"
 	BEGIN
@@ -22,11 +27,11 @@ BEGIN
 	IDS_ALL_TYPES_FILTER "Wszystkie formaty (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
 	IDS_TOOLTIP_PLAY "Odtwarzaj"
 	IDS_TOOLTIP_STOP "Zatrzymaj"
-	IDS_TOOLTIP_EJECT "WysuÒ"
-	IDS_TOOLTIP_BACKWARD "Przeskocz do ty≥u"
-	IDS_TOOLTIP_SEEKBACK "PrzewiÒ do ty≥u"
-	IDS_TOOLTIP_SEEKFORW "PrzewiÒ do przodu"
+	IDS_TOOLTIP_EJECT "Wysu≈Ñ"
+	IDS_TOOLTIP_BACKWARD "Przeskocz do ty≈Çu"
+	IDS_TOOLTIP_SEEKBACK "Przewi≈Ñ do ty≈Çu"
+	IDS_TOOLTIP_SEEKFORW "Przewi≈Ñ do przodu"
 	IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
     IDS_APPTITLE "ReactOS Multimedia Player"
-	IDS_PLAY "OdtwÛrz"
+	IDS_PLAY "Odtw√≥rz"
 END

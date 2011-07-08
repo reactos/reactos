@@ -1,42 +1,44 @@
+/* UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011) */
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "�t�@�C���̃A�N�Z�X���䃊�X�g(ACL) ��\\���܂��͕ύX���܂��B\n\n\
-CACLS �t�@�C���� [/T] [/E] [/C] [/G ���[�U�[��:�A�N�Z�X��]\n\
-                 [/R ���[�U�[�� [...]] [/P ���[�U�[��:�A�N�Z�X�� [...]]\n\
-                 [/D ���[�U�[�� [...]]\n\
-  �t�@�C����        ACL ��\\�����܂��B\n\
-  /T                ���݂̃f�B���N�g���Ƃ��ׂẴT�u�f�B���N�g���ɂ���\n\
-                    �w�肳�ꂽ�t�@�C���� ACL ��ύX���܂��B\n\
-  /E                ACL ��u���������ɁAACL ��ҏW���܂��B\n\
-  /C                �A�N�Z�X���ۃG���[�𖳎����āAACL �̕ύX�𑱍s���܂��B\n\
-  /G ���[�U�[��:�A�N�Z�X��\n\
-                    �w�肳�ꂽ���[�U�[�ɃA�N�Z�X����^���܂��B\n\
-                    �A�N�Z�X��: R  �ǂݎ��\n\
-                                W  ��������\n\
-                                C  �ύX (��������)\n\
-                                F  �t�� �R���g���[��\n\
-  /R ���[�U�[��     �w�肳�ꂽ���[�U�[�̃A�N�Z�X�������������܂��B\n\
-                    (/E �I�v�V�����Ƌ��Ɏg�p)�B\n\
-  /P ���[�U�[��:�A�N�Z�X��\n\
-                    �w�肳�ꂽ���[�U�[�̃A�N�Z�X����u�������܂��B\n\
-                    �A�N�Z�X��: N  �Ȃ�\n\
-                                W  ��������\n\
-                                R  �ǂݎ��\n\
-                                C  �ύX (��������)\n\
-                                F  �t�� �R���g���[��\n\
-  /D ���[�U�[��     �w�肳�ꂽ���[�U�[�̃A�N�Z�X�����ۂ��܂��B\n\
-�����̃t�@�C�����w�肷��ɂ́A���C���h�J�[�h���g�p�ł��܂��B\n\
-�����̃��[�U�[���w��ł��܂��B\n\n\
-�ȗ��`:\n\
-   CI - �R���e�i�p���B\n\
-        ACE �̓f�B���N�g���Ɍp������܂��B\n\
-   OI - �I�u�W�F�N�g�p���B\n\
-        ACE �̓t�@�C���Ɍp������܂��B\n\
-   IO - �p���̂݁B\n\
-        ACE �͌��݂̃t�@�C��/�f�B���N�g���ɓK�p����܂���B\n"
+IDS_HELP, "ファイルのアクセス制御リスト(ACL) を表\示または変更します。\n\n\
+CACLS ファイル名 [/T] [/E] [/C] [/G ユーザー名:アクセス権]\n\
+                 [/R ユーザー名 [...]] [/P ユーザー名:アクセス権 [...]]\n\
+                 [/D ユーザー名 [...]]\n\
+  ファイル名        ACL を表\示します。\n\
+  /T                現在のディレクトリとすべてのサブディレクトリにある\n\
+                    指定されたファイルの ACL を変更します。\n\
+  /E                ACL を置き換えずに、ACL を編集します。\n\
+  /C                アクセス拒否エラーを無視して、ACL の変更を続行します。\n\
+  /G ユーザー名:アクセス権\n\
+                    指定されたユーザーにアクセス権を与えます。\n\
+                    アクセス権: R  読み取り\n\
+                                W  書き込み\n\
+                                C  変更 (書き込み)\n\
+                                F  フル コントロール\n\
+  /R ユーザー名     指定されたユーザーのアクセス権を失効させます。\n\
+                    (/E オプションと共に使用)。\n\
+  /P ユーザー名:アクセス権\n\
+                    指定されたユーザーのアクセス権を置き換えます。\n\
+                    アクセス権: N  なし\n\
+                                W  書き込み\n\
+                                R  読み取り\n\
+                                C  変更 (書き込み)\n\
+                                F  フル コントロール\n\
+  /D ユーザー名     指定されたユーザーのアクセスを拒否します。\n\
+複数のファイルを指定するには、ワイルドカードを使用できます。\n\
+複数のユーザーを指定できます。\n\n\
+省略形:\n\
+   CI - コンテナ継承。\n\
+        ACE はディレクトリに継承されます。\n\
+   OI - オブジェクト継承。\n\
+        ACE はファイルに継承されます。\n\
+   IO - 継承のみ。\n\
+        ACE は現在のファイル/ディレクトリに適用されません。\n"
 
 IDS_ABBR_CI, "(CI)"
 IDS_ABBR_OI, "(OI)"

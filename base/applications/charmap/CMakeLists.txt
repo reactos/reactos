@@ -9,14 +9,12 @@ list(APPEND SOURCE
     map.c
     charmap.rc)
 
-add_executable(charmap
-    ${CMAKE_CURRENT_BINARY_DIR}/charmap_precomp.h.gch
-    ${SOURCE})
-
-add_pch(charmap ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_executable(charmap ${SOURCE})
 
 set_module_type(charmap win32gui)
 
-add_importlibs(charmap user32 gdi32 comctl32 kernel32 msvcrt)
+add_importlibs(charmap msvcrt user32 gdi32 comctl32 kernel32)
+
+add_pch(charmap precomp.h)
 
 add_cd_file(TARGET charmap DESTINATION reactos/system32 FOR all)

@@ -1,6 +1,3 @@
-#include <windows.h>
-#include "resource.h"
-
 #include "lang/bg-BG.rc"
 #include "lang/ca-ES.rc"
 #include "lang/cs-CZ.rc"
@@ -12,8 +9,11 @@
 #include "lang/it-IT.rc"
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
-#include "lang/pl-PL.rc"
-#include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
