@@ -1519,11 +1519,11 @@ lookinhash:
             *LdrEntry = CurEntry;
 
             /* Find activation context */
-            Status = RtlFindActivationContextSectionString(0, NULL, ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, DllName, NULL);
-            if (!NT_SUCCESS(Status))
-                return FALSE;
-            else
-                return TRUE;
+            //Status = RtlFindActivationContextSectionString(0, NULL, ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, DllName, NULL);
+            //if (!NT_SUCCESS(Status))
+            //    return FALSE;
+            //else
+            return TRUE;
         }
     }
 
