@@ -359,7 +359,7 @@ KdbSymGetAddressInformation(
  *
  * \sa KdbpSymAddCachedFile
  */
-static PROSSYM_INFO
+PROSSYM_INFO
 KdbpSymFindCachedFile(
     IN PUNICODE_STRING FileName)
 {
@@ -405,7 +405,7 @@ KdbpSymAddCachedFile(
 {
     PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
 
-    DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
+    DPRINT("Adding symbol file: %wZ RosSymInfo = %p\n", FileName, RosSymInfo);
 
     /* allocate entry */
     CacheEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof (IMAGE_SYMBOL_INFO_CACHE), TAG_KDBS);
@@ -416,6 +416,7 @@ KdbpSymAddCachedFile(
     CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                         FileName->Length,
                                                         TAG_KDBS);
+    CacheEntry->FileName.MaximumLength = FileName->Length;
     RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
     ASSERT(CacheEntry->FileName.Buffer);
     CacheEntry->RefCount = 1;
@@ -476,7 +477,7 @@ KdbpSymRemoveCachedFile(
  *
  * \sa KdbpSymUnloadModuleSymbols
  */
-static VOID
+VOID
 KdbpSymLoadModuleSymbols(
     IN PUNICODE_STRING FileName,
     OUT PROSSYM_INFO *RosSymInfo)
@@ -508,7 +509,7 @@ KdbpSymLoadModuleSymbols(
     /*  Open the file  */
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE|OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -519,10 +520,10 @@ KdbpSymLoadModuleSymbols(
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ|FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open image file: %wZ\n", FileName);
+        DPRINT("Could not open image file(%x): %wZ\n", Status, FileName);
         return;
     }
 
@@ -548,8 +549,17 @@ KdbpSymLoadModuleSymbols(
         if (RosSymCreateFromFile(FileContext, RosSymInfo))
         {
             /* add file to cache */
-            KdbpSymAddCachedFile(FileName, *RosSymInfo);
-            DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
+            int i;
+            UNICODE_STRING TruncatedName = *FileName;
+            for (i = (TruncatedName.Length / sizeof(WCHAR)) - 1; i >= 0; i--)
+                if (TruncatedName.Buffer[i] == '\\') {
+                    TruncatedName.Buffer += i+1;
+                    TruncatedName.Length -= (i+1)*sizeof(WCHAR);
+                    TruncatedName.MaximumLength -= (i+1)*sizeof(WCHAR);
+                    break;
+                }
+            KdbpSymAddCachedFile(&TruncatedName, *RosSymInfo);
+            DPRINT("Installed symbols: %wZ %p\n", &TruncatedName, *RosSymInfo);
         }
         KdbpReleaseFileForSymbols(FileContext);
     }
@@ -569,12 +579,44 @@ KdbSymProcessSymbols(
     }
 
     /* Remove symbol info if it already exists */
-    if (LdrEntry->PatchInformation)
+    if (LdrEntry->PatchInformation) {
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
+    }
 
 	/* Error loading symbol info, try to load it from file */
 	KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
             (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+
+    if (!LdrEntry->PatchInformation) {
+        // HACK: module dll names don't identify the real files
+        UNICODE_STRING SystemRoot;
+        UNICODE_STRING ModuleNameCopy;
+        RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\system32\\Drivers\\");
+        ModuleNameCopy.Length = 0;
+        ModuleNameCopy.MaximumLength = 
+            LdrEntry->BaseDllName.MaximumLength + SystemRoot.MaximumLength;
+        ModuleNameCopy.Buffer = ExAllocatePool(NonPagedPool, SystemRoot.MaximumLength + LdrEntry->BaseDllName.MaximumLength);
+        RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);
+        RtlCopyMemory
+            (ModuleNameCopy.Buffer + ModuleNameCopy.Length / sizeof(WCHAR),
+             LdrEntry->BaseDllName.Buffer,
+             LdrEntry->BaseDllName.Length);
+        ModuleNameCopy.Length += LdrEntry->BaseDllName.Length;
+        KdbpSymLoadModuleSymbols(&ModuleNameCopy,
+                                 (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+        if (!LdrEntry->PatchInformation) {
+            SystemRoot.Length -= strlen("Drivers\\") * sizeof(WCHAR);
+            RtlCopyUnicodeString(&ModuleNameCopy, &SystemRoot);
+            RtlCopyMemory
+                (ModuleNameCopy.Buffer + ModuleNameCopy.Length / sizeof(WCHAR),
+                 LdrEntry->BaseDllName.Buffer,
+                 LdrEntry->BaseDllName.Length);
+            ModuleNameCopy.Length += LdrEntry->BaseDllName.Length;
+            KdbpSymLoadModuleSymbols(&ModuleNameCopy,
+                                     (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+        }
+        RtlFreeUnicodeString(&ModuleNameCopy);
+    }
 
 	/* It already added symbols to cache */
     DPRINT("Installed symbols: %wZ@%p-%p %p\n",

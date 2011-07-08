@@ -83,7 +83,7 @@ parseabbrevs(Dwarf *d, ulong off, DwarfAbbrev *abbrev, DwarfAttr *attr, int *pna
         if(num == 0)
             break;
         tag = dwarfget128(&b);
-        DPRINT("num %d tag %x @ %x", num, tag, b.p - d->abbrev.data);
+        werrstr("abbrev: num %d tag %x @ %x", num, tag, b.p - d->abbrev.data);
         haskids = dwarfget1(&b);
         for(i=0;; i++){
             name = dwarfget128(&b);
@@ -120,11 +120,12 @@ findabbrev(DwarfAbbrev *a, int na, ulong num)
 {
     int i;
 
-    for(i=0; i<na; i++)
-        if(a[i].num == num)
+    for(i=0; i<na; i++) {
+        if(a[i].num == num) {
             return &a[i];
-    assert(0);
-    werrstr("abbrev not found");
+        }
+    }
+    werrstr("abbrev not found (%x)", na);
     return nil;
 }
 
@@ -133,7 +134,7 @@ dwarfgetabbrev(Dwarf *d, ulong off, ulong num)
 {
     DwarfAbbrev *a;
     int na;
-
+    werrstr("want num %d\n", num);
     if((na = loadabbrevs(d, off, &a)) < 0){
         werrstr("loadabbrevs: %r");
         return nil;

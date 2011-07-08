@@ -90,6 +90,10 @@ static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
+#ifdef __ROS_CMAKE__
+static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
+#endif
+
 /* GLOBALS *******************************************************************/
 
 static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
@@ -135,6 +139,9 @@ static const struct
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame addr", KdbpCmdBackTrace },
+#ifdef __ROS_CMAKE__
+    { "dt", "dt [mod] [type] [addr]", "Print a struct.  Addr is optional.", KdbpCmdPrintStruct },
+#endif
 
     /* Flow control */
     { NULL, NULL, "Flow control", NULL },
@@ -452,6 +459,142 @@ KdbpCmdEvalExpression(
 
     return TRUE;
 }
+
+#ifdef __ROS_CMAKE__
+
+/*!\brief Print a struct
+ */
+static VOID
+KdbpPrintStructInternal
+(PROSSYM_INFO Info, 
+ PCHAR Indent, 
+ BOOLEAN DoRead, 
+ PVOID BaseAddress, 
+ PROSSYM_AGGREGATE Aggregate)
+{
+    ULONG i;
+    ULONGLONG Result;
+    PROSSYM_AGGREGATE_MEMBER Member;
+    ULONG IndentLen = strlen(Indent);
+    ROSSYM_AGGREGATE MemberAggregate = { };
+
+    for (i = 0; i < Aggregate->NumElements; i++) {
+        Member = &Aggregate->Elements[i];
+        KdbpPrint("%s%p+%x: %s", Indent, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size, Member->Name ? Member->Name : "<anoymous>");
+        if (DoRead) {
+            if (!strcmp(Member->Type, "_UNICODE_STRING")) {
+                KdbpPrint("\"%wZ\"\n", ((PCHAR)BaseAddress) + Member->BaseOffset);
+                continue;
+            } else if (!strcmp(Member->Type, "PUNICODE_STRING")) {
+                KdbpPrint("\"%wZ\"\n", *(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                continue;
+            }
+            switch (Member->Size) {
+            case 1:
+            case 2:
+            case 4:
+            case 8: {
+                Result = 0;
+                if (NT_SUCCESS(KdbpSafeReadMemory(&Result, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size))) {
+                    if (Member->Bits) {
+                        Result >>= Member->FirstBit;
+                        Result &= ((1 << Member->Bits) - 1);
+                    }
+                    KdbpPrint(" %lx\n", Result);
+                }
+                else goto readfail;
+                break;
+            }
+            default: {
+                if (Member->Size < 8) {
+                    if (NT_SUCCESS(KdbpSafeReadMemory(&Result, ((PCHAR)BaseAddress) + Member->BaseOffset, Member->Size))) {
+                        int j;
+                        for (j = 0; j < Member->Size; j++) {
+                            KdbpPrint(" %02x", (int)(Result & 0xff));
+                            Result >>= 8;
+                        }
+                    } else goto readfail;
+                } else {
+                    KdbpPrint(" %s @ %p {\n", Member->Type, ((PCHAR)BaseAddress) + Member->BaseOffset);
+                    Indent[IndentLen] = ' ';
+                    if (RosSymAggregate(Info, Member->Type, &MemberAggregate)) {
+                        KdbpPrintStructInternal(Info, Indent, DoRead, ((PCHAR)BaseAddress) + Member->BaseOffset, &MemberAggregate);
+                        RosSymFreeAggregate(&MemberAggregate);
+                    }
+                    Indent[IndentLen] = 0;
+                    KdbpPrint("%s}\n", Indent);
+                } break;
+            }
+            }
+        } else {
+        readfail:
+            if (Member->Size <= 8) {
+                KdbpPrint(" ??\n");
+            } else {
+                KdbpPrint(" %s @ %x {\n", Member->Type, Member->BaseOffset);
+                Indent[IndentLen] = ' ';
+                if (RosSymAggregate(Info, Member->Type, &MemberAggregate)) {
+                    KdbpPrintStructInternal(Info, Indent, DoRead, BaseAddress, &MemberAggregate);
+                    RosSymFreeAggregate(&MemberAggregate);
+                }
+                Indent[IndentLen] = 0;
+                KdbpPrint("%s}\n", Indent);
+            }
+        }
+    }
+}
+
+PROSSYM_INFO KdbpSymFindCachedFile(PUNICODE_STRING ModName);
+
+static BOOLEAN
+KdbpCmdPrintStruct(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    int i;
+    ULONGLONG Result = 0;
+    PVOID BaseAddress = 0;
+    ROSSYM_AGGREGATE Aggregate = { };
+    UNICODE_STRING ModName = { };
+    ANSI_STRING AnsiName = { };
+    CHAR Indent[100] = { };
+    if (Argc < 3) goto end;
+    AnsiName.Length = AnsiName.MaximumLength = strlen(Argv[1]);
+    AnsiName.Buffer = Argv[1];
+    RtlAnsiStringToUnicodeString(&ModName, &AnsiName, TRUE);
+    PROSSYM_INFO Info = KdbpSymFindCachedFile(&ModName);
+
+    if (!Info || !RosSymAggregate(Info, Argv[2], &Aggregate)) {
+        DPRINT1("Could not get aggregate\n");
+        goto end;
+    }
+    
+    // Get an argument for location if it was given
+    if (Argc > 3) {
+        ULONG len;
+        PCHAR ArgStart = Argv[3];
+        DPRINT1("Trying to get expression\n");
+        for (i = 3; i < Argc - 1; i++)
+        {
+            len = strlen(Argv[i]);
+            Argv[i][len] = ' ';
+        }
+        
+        /* Evaluate the expression */
+        DPRINT1("Arg: %s\n", ArgStart);
+        if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result)) {
+            BaseAddress = (PVOID)(ULONG_PTR)Result;
+            DPRINT1("BaseAddress: %p\n", BaseAddress);
+        }
+    }
+    DPRINT1("BaseAddress %p\n", BaseAddress);
+    KdbpPrintStructInternal(Info, Indent, !!BaseAddress, BaseAddress, &Aggregate);
+end:
+    RosSymFreeAggregate(&Aggregate);
+    RtlFreeUnicodeString(&ModName);
+    return TRUE;
+}
+#endif
 
 /*!\brief Display list of active debug channels
  */

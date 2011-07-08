@@ -483,5 +483,6 @@ struct DwarfStack
 DwarfAbbrev *dwarfgetabbrev(Dwarf*, ulong, ulong);
 
 int dwarfgetinfounit(Dwarf*, ulong, DwarfBlock*);
+void dwarfdumpsym(Dwarf *d, DwarfSym *s);
 
 #define MAXIMUM_DWARF_NAME_SIZE 64
