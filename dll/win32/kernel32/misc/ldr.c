@@ -443,11 +443,20 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
             }
         }
 
-        /* Call the API Properly */
-        Status = LdrLoadDll(SearchPath,
-                            &DllCharacteristics,
-                            &DllName,
-                            (PVOID*)&hInst);
+        /* HACK!!! FIXME */
+        if (InWindows)
+        {
+            /* Call the API Properly */
+            Status = LdrLoadDll(SearchPath,
+                                &DllCharacteristics,
+                                &DllName,
+                                (PVOID*)&hInst);
+        }
+        else
+        {
+            /* Call the ROS API. NOTE: Don't fix this, I have a patch to merge later. */
+            Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
