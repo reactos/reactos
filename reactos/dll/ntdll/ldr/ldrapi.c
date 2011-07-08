@@ -21,6 +21,15 @@ UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 
 /* FUNCTIONS *****************************************************************/
 
+ULONG_PTR
+FORCEINLINE
+LdrpMakeCookie(VOID)
+{
+    /* Generate a cookie */
+    return (((ULONG_PTR)NtCurrentTeb()->RealClientId.UniqueThread & 0xFFF) << 16) |
+                        _InterlockedIncrement(&LdrpLoaderLockAcquisitonCount);
+}
+
 /*
  * @implemented
  */
@@ -99,17 +108,16 @@ LdrUnlockLoaderLock(IN ULONG Flags,
 NTSTATUS
 NTAPI
 LdrLockLoaderLock(IN ULONG Flags,
-                  OUT PULONG Result OPTIONAL,
-                  OUT PULONG Cookie OPTIONAL)
+                  OUT PULONG Disposition OPTIONAL,
+                  OUT PULONG_PTR Cookie OPTIONAL)
 {
-    LONG OldCount;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN InInit = LdrpInLdrInit;
 
-    DPRINT("LdrLockLoaderLock(%x %p %p)\n", Flags, Result, Cookie);
+    DPRINT("LdrLockLoaderLock(%x %p %p)\n", Flags, Disposition, Cookie);
 
     /* Zero out the outputs */
-    if (Result) *Result = 0;
+    if (Disposition) *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_INVALID;
     if (Cookie) *Cookie = 0;
 
     /* Validate the flags */
@@ -140,9 +148,12 @@ LdrLockLoaderLock(IN ULONG Flags,
         /* A normal failure */
         return STATUS_INVALID_PARAMETER_3;
     }
+    
+    /* Do or Do Not. There is no Try */
+    ASSERT((Disposition != NULL) || !(Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY));
 
     /* If the flag is set, make sure we have a valid pointer to use */
-    if ((Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY) && !(Result))
+    if ((Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY) && !(Disposition))
     {
         /* No pointer to return the data to */
         if (Flags & LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS)
@@ -168,13 +179,13 @@ LdrLockLoaderLock(IN ULONG Flags,
             if (!RtlTryEnterCriticalSection(&LdrpLoaderLock))
             {
                 /* It's locked */
-                *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
-                goto Quickie;
+                *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
             }
             else
             {
                 /* It worked */
-                *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                *Cookie = LdrpMakeCookie();
             }
         }
         else
@@ -183,14 +194,9 @@ LdrLockLoaderLock(IN ULONG Flags,
             RtlEnterCriticalSection(&LdrpLoaderLock);
 
             /* See if result was requested */
-            if (Result) *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+            if (Disposition) *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+            *Cookie = LdrpMakeCookie();
         }
-
-        /* Increase the acquisition count */
-        OldCount = _InterlockedIncrement(&LdrpLoaderLockAcquisitonCount);
-
-        /* Generate a cookie */
-        *Cookie = (((ULONG)NtCurrentTeb()->RealClientId.UniqueThread & 0xFFF) << 16) | OldCount;
     }
     else
     {
@@ -204,13 +210,13 @@ LdrLockLoaderLock(IN ULONG Flags,
                 if (!RtlTryEnterCriticalSection(&LdrpLoaderLock))
                 {
                     /* It's locked */
-                    *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
-                    _SEH2_YIELD(return STATUS_SUCCESS);
+                    *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_NOT_ACQUIRED;
                 }
                 else
                 {
                     /* It worked */
-                    *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                    *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                    *Cookie = LdrpMakeCookie();
                 }
             }
             else
@@ -219,14 +225,9 @@ LdrLockLoaderLock(IN ULONG Flags,
                 RtlEnterCriticalSection(&LdrpLoaderLock);
 
                 /* See if result was requested */
-                if (Result) *Result = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                if (Disposition) *Disposition = LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED;
+                *Cookie = LdrpMakeCookie();
             }
-
-            /* Increase the acquisition count */
-            OldCount = _InterlockedIncrement(&LdrpLoaderLockAcquisitonCount);
-
-            /* Generate a cookie */
-            *Cookie = (((ULONG)NtCurrentTeb()->RealClientId.UniqueThread & 0xFFF) << 16) | OldCount;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -236,7 +237,7 @@ LdrLockLoaderLock(IN ULONG Flags,
         _SEH2_END;
     }
 
-Quickie:
+    /* Return status */
     return Status;
 }
 
