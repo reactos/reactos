@@ -474,7 +474,6 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
         }
     }
 
-Quickie:
     /* Close the file handle, we don't need it */
     NtClose(FileHandle);
 

@@ -15,6 +15,10 @@
 #define LDRP_UPDATE_DEREFCOUNT 0x02
 #define LDRP_UPDATE_PIN        0x03
 
+/* Loader flags */
+#define IMAGE_LOADER_FLAGS_COMPLUS 0x00000001
+#define IMAGE_LOADER_FLAGS_SYSTEM_GLOBAL 0x01000000
+
 typedef struct _LDRP_TLS_DATA
 {
     LIST_ENTRY TlsLinks;
