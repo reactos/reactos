@@ -18,6 +18,8 @@
 
 /* GLOBALS ******************************************************************/
 
+#define CURRENT_PROCESS ((HANDLE)~0)
+
 typedef struct _IMAGE_SYMBOL_INFO_CACHE
 {
     LIST_ENTRY ListEntry;
@@ -635,14 +637,69 @@ KdbDebugPrint(
     /* Nothing here */
 }
 
-static PVOID KdbpSymAllocMem(ULONG_PTR size)
+typedef struct {
+    PMDL Mdl;
+    SIZE_T Size;
+    PVOID OriginalMapping;
+} KdbpMallocHeader;
+
+static PVOID KdbpSymAllocMem(ULONG_PTR Size)
 {
-	return ExAllocatePoolWithTag(NonPagedPool, size, 'RSYM');
+    KdbpMallocHeader *Hdr;
+    if (Size < PAGE_SIZE)
+    {
+        PVOID Result = ExAllocatePoolWithTag(NonPagedPool, Size + sizeof(KdbpMallocHeader), 'RSYM');
+        if (!Result) return NULL;
+        Hdr = (KdbpMallocHeader*)Result;
+        Hdr->Mdl = NULL;
+        Hdr->Size = Size;
+        return &Hdr[1];
+    }
+    else
+    {
+        PVOID Base = NULL;
+        SIZE_T RegionSize = Size + sizeof(KdbpMallocHeader);
+        NTSTATUS Status = NtAllocateVirtualMemory
+            (CURRENT_PROCESS, &Base, 0, &RegionSize, MEM_COMMIT, PAGE_READWRITE);
+        if (!NT_SUCCESS(Status)) return NULL;
+        Hdr = (KdbpMallocHeader*)Base;
+        Hdr->Mdl = IoAllocateMdl(Base, RegionSize, FALSE, FALSE, NULL);
+        if (!Hdr->Mdl) {
+            NtFreeVirtualMemory(CURRENT_PROCESS, &Base, &RegionSize, MEM_RELEASE);
+            return NULL;
+        }
+        Hdr->Size = RegionSize;
+        Hdr->OriginalMapping = Base;
+        MmProbeAndLockPages(Hdr->Mdl, KernelMode, IoModifyAccess);
+        KdbpMallocHeader *MappedHdr = (KdbpMallocHeader*)MmMapLockedPages(Hdr->Mdl, KernelMode);
+        if (!MappedHdr) {
+            MmUnlockPages(Hdr->Mdl);
+            IoFreeMdl(Hdr->Mdl);
+            NtFreeVirtualMemory(CURRENT_PROCESS, &Base, &RegionSize, MEM_RELEASE);
+            return NULL;
+        }
+        return &Hdr[1];
+    }
 }
 
 static VOID KdbpSymFreeMem(PVOID Area)
 {
-	return ExFreePool(Area);
+    PCHAR HdrPtr = ((PCHAR)Area) - sizeof(KdbpMallocHeader);
+    KdbpMallocHeader *Hdr = (KdbpMallocHeader*)HdrPtr;
+    if (Hdr->Size < PAGE_SIZE)
+    {
+        ExFreePool(Hdr);
+    }
+    else
+    {
+        PMDL Mdl = Hdr->Mdl;
+        PVOID BaseAddress = Hdr->OriginalMapping;
+        SIZE_T RegionSize = Hdr->Size;
+        MmUnmapLockedPages(Hdr, Mdl);
+        MmUnlockPages(Mdl);
+        NtFreeVirtualMemory(CURRENT_PROCESS, &BaseAddress, &RegionSize, MEM_RELEASE);
+        IoFreeMdl(Mdl);
+    }
 }
 
 static BOOLEAN KdbpSymReadMem(PVOID FileContext, PVOID TargetDebug, PVOID SourceMem, ULONG Size)
