@@ -96,7 +96,7 @@ macro(add_rpcproxy_files)
             list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
         endif()
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c/${NAME}_p.h
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
             COMMAND ${IDL_COMPILER} ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${IDL_HEADER_ARG2} ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${DLLDATA_ARG}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
     endforeach()
