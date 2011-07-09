@@ -374,6 +374,29 @@ LdrFindEntryForAddress(PVOID Address,
 
     /* Nothing to do */
     if (!Ldr) return STATUS_NO_MORE_ENTRIES;
+    
+    /* Get the current entry */
+    LdrEntry = Ldr->EntryInProgress;
+    if (LdrEntry)
+    {
+        /* Get the NT Headers */
+        NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
+        if (NtHeader)
+        {
+            /* Get the Image Base */
+            DllBase = (ULONG_PTR)LdrEntry->DllBase;
+            DllEnd = DllBase + NtHeader->OptionalHeader.SizeOfImage;
+
+            /* Check if they match */
+            if (((ULONG_PTR)Address >= DllBase) &&
+                ((ULONG_PTR)Address < DllEnd))
+            {
+                /* Return it */
+                *Module = LdrEntry;
+                return STATUS_SUCCESS;
+            }
+        }
+    }
 
     /* Loop the module list */
     ListHead = &Ldr->InMemoryOrderModuleList;
@@ -382,7 +405,8 @@ LdrFindEntryForAddress(PVOID Address,
     {
         /* Get the entry and NT Headers */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
-        if ((NtHeader = RtlImageNtHeader(LdrEntry->DllBase)))
+        NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
+        if (NtHeader)
         {
             /* Get the Image Base */
             DllBase = (ULONG_PTR)LdrEntry->DllBase;
@@ -403,6 +427,8 @@ LdrFindEntryForAddress(PVOID Address,
     }
 
     /* Nothing found */
+    // 85 == DPFLTR_LDR_ID;
+    DbgPrintEx(85, DPFLTR_WARNING_LEVEL, "LDR: %s() exiting 0x%08lx\n", __FUNCTION__, STATUS_NO_MORE_ENTRIES);
     return STATUS_NO_MORE_ENTRIES;
 }
 
@@ -753,14 +779,16 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
     HANDLE SectionHandle;
-    SIZE_T ViewSize = 0;
-    PVOID ViewBase = NULL;
-    BOOLEAN Result;
+    SIZE_T ViewSize;
+    PVOID ViewBase;
+    BOOLEAN Result, NoActualCheck;
     NTSTATUS Status;
     PVOID ImportName;
     ULONG Size;
-
     DPRINT("LdrVerifyImageMatchesChecksum() called\n");
+
+    /* If the handle has the magic KnownDll flag, skip actual checksums */
+    NoActualCheck = ((ULONG_PTR)FileHandle & 1);
 
     /* Create the section */
     Status = NtCreateSection(&SectionHandle,
@@ -777,6 +805,8 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
     }
 
     /* Map the section */
+    ViewSize = 0;
+    ViewBase = NULL;
     Status = NtMapViewOfSection(SectionHandle,
                                 NtCurrentProcess(),
                                 &ViewBase,
@@ -811,13 +841,22 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
     /* Protect with SEH */
     _SEH2_TRY
     {
-        /* Verify the checksum */
-        Result = LdrVerifyMappedImageMatchesChecksum(ViewBase,
-                                                     ViewSize,
-                                                     FileStandardInfo.EndOfFile.LowPart);
+        /* Check if this is the KnownDll hack */
+        if (NoActualCheck)
+        {
+            /* Don't actually do it */
+            Result = TRUE;
+        }
+        else
+        {
+            /* Verify the checksum */
+            Result = LdrVerifyMappedImageMatchesChecksum(ViewBase,
+                                                         FileStandardInfo.EndOfFile.LowPart,
+                                                         FileStandardInfo.EndOfFile.LowPart);
+        }
 
         /* Check if a callback was supplied */
-        if (Result && Callback)
+        if ((Result) && (Callback))
         {
             /* Get the NT Header */
             NtHeader = RtlImageNtHeader(ViewBase);
@@ -866,7 +905,7 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
     NtClose(SectionHandle);
 
     /* Return status */
-    return !Result ? STATUS_IMAGE_CHECKSUM_MISMATCH : Status;
+    return Result ? Status : STATUS_IMAGE_CHECKSUM_MISMATCH;
 }
 
 NTSTATUS

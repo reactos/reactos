@@ -1671,7 +1671,7 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
     PVOID ImageBase;
     PIMAGE_IMPORT_BY_NAME ImportName = NULL;
     PIMAGE_EXPORT_DIRECTORY ExportDir;
-    ULONG ExportDirSize;
+    ULONG ExportDirSize, Length;
     PLIST_ENTRY Entry;
 
     /* Show debug message */
@@ -1684,20 +1684,22 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
         if (ShowSnaps) DbgPrint("NAME - %s\n", Name->Buffer);
 
         /* Make sure it's not too long */
-        if ((Name->Length + sizeof(CHAR) + sizeof(USHORT)) > MAXLONG)
+        Length = Name->Length +
+                 sizeof(CHAR) +
+                 FIELD_OFFSET(IMAGE_IMPORT_BY_NAME, Name);
+        if (Length > UNICODE_STRING_MAX_BYTES)
         {
             /* Won't have enough space to add the hint */
             return STATUS_NAME_TOO_LONG;
         }
 
         /* Check if our buffer is large enough */
-        if (Name->Length >= (sizeof(ImportBuffer) - sizeof(CHAR)))
+        if (Name->Length > sizeof(ImportBuffer))
         {
             /* Allocate from heap, plus 2 bytes for the Hint */
             ImportName = RtlAllocateHeap(RtlGetProcessHeap(),
-                0,
-                Name->Length + sizeof(CHAR) +
-                sizeof(USHORT));
+                                         0,
+                                         Length);
         }
         else
         {
@@ -1709,8 +1711,8 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
         ImportName->Hint = 0;
 
         /* Copy the name and null-terminate it */
-        RtlMoveMemory(ImportName->Name, Name->Buffer, Name->Length);
-        ImportName->Name[Name->Length] = 0;
+        RtlCopyMemory(ImportName->Name, Name->Buffer, Name->Length);
+        ImportName->Name[Name->Length] = ANSI_NULL;
 
         /* Clear the high bit */
         ImageBase = ImportName;
@@ -1724,16 +1726,16 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
         /* Show debug message */
         if (ShowSnaps) DbgPrint("ORDINAL - %lx\n", Ordinal);
 
-        if (Ordinal)
-        {
-            Thunk.u1.Ordinal = Ordinal | IMAGE_ORDINAL_FLAG;
-        }
-        else
+        /* Make sure an ordinal was given */
+        if (!Ordinal)
         {
             /* No ordinal */
             DPRINT1("No ordinal and no name\n");
             return STATUS_INVALID_PARAMETER;
         }
+
+        /* Set the orginal flag in the thunk */
+        Thunk.u1.Ordinal = Ordinal | IMAGE_ORDINAL_FLAG;
     }
 
     /* Acquire lock unless we are initting */
@@ -1774,7 +1776,7 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
                                NULL);
 
         /* Finally, see if we're supposed to run the init routines */
-        if (ExecuteInit)
+        if ((NT_SUCCESS(Status)) && (ExecuteInit))
         {
             /*
             * It's possible a forwarded entry had us load the DLL. In that case,
