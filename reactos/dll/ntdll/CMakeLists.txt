@@ -20,8 +20,6 @@ list(APPEND SOURCE
 	ldr/ldrinit.c
 	ldr/ldrpe.c
 	ldr/ldrutils.c
-    ldr/startup.c
-    ldr/utils.c
     rtl/libsupp.c
     rtl/version.c
     def/ntdll.rc

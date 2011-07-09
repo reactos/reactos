@@ -148,7 +148,7 @@ LdrLockLoaderLock(IN ULONG Flags,
         /* A normal failure */
         return STATUS_INVALID_PARAMETER_3;
     }
-    
+
     /* Do or Do Not. There is no Try */
     ASSERT((Disposition != NULL) || !(Flags & LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY));
 
@@ -388,7 +388,7 @@ LdrFindEntryForAddress(PVOID Address,
 
     /* Nothing to do */
     if (!Ldr) return STATUS_NO_MORE_ENTRIES;
-    
+
     /* Get the current entry */
     LdrEntry = Ldr->EntryInProgress;
     if (LdrEntry)
@@ -471,7 +471,7 @@ LdrGetDllHandleEx(IN ULONG Flags,
     RtlInitEmptyUnicodeString(&RawDllName, NULL, 0);
     RedirectName = *DllName;
     pRedirectName = &RedirectName;
-    
+
     /* Initialize state */
     RedirectedDll = Locked = FALSE;
     LdrEntry = NULL;
@@ -495,7 +495,7 @@ LdrGetDllHandleEx(IN ULONG Flags,
         /* Acquire the lock */
         Status = LdrLockLoaderLock(0, NULL, &Cookie);
         if (!NT_SUCCESS(Status)) goto Quickie;
-        
+
         /* Remember we own it */
         Locked = TRUE;
     }
@@ -522,7 +522,11 @@ LdrGetDllHandleEx(IN ULONG Flags,
         /* Unrecoverable SxS failure; */
         goto Quickie;
     }
-    
+    else
+    {
+        ASSERT(pRedirectName == &RedirectName);
+    }
+
     /* Set default failure code */
     Status = STATUS_DLL_NOT_FOUND;
 
@@ -533,28 +537,24 @@ LdrGetDllHandleEx(IN ULONG Flags,
         if (RedirectedDll)
         {
             /* Check the flag */
-            if (LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED)
-            {
-                /* Use the right name */
-                CompareName = &LdrpGetModuleHandleCache->FullDllName;
-            }
-            else
+            if (!(LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED))
             {
                 goto DontCompare;
             }
+
+            /* Use the right name */
+            CompareName = &LdrpGetModuleHandleCache->FullDllName;
         }
         else
         {
             /* Check the flag */
-            if (!(LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED))
-            {
-                /* Use the right name */
-                CompareName = &LdrpGetModuleHandleCache->BaseDllName;
-            }
-            else
+            if (LdrpGetModuleHandleCache->Flags & LDRP_REDIRECTED)
             {
                 goto DontCompare;
             }
+
+            /* Use the right name */
+            CompareName = &LdrpGetModuleHandleCache->BaseDllName;
         }
 
         /* Check if the name matches */
@@ -604,7 +604,6 @@ DontCompare:
         /* Setup the string */
         RawDllName.MaximumLength = Length;
         ASSERT(Length >= sizeof(UNICODE_NULL));
-        RawDllName.Length = RawDllName.MaximumLength - sizeof(UNICODE_NULL);
         RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             RawDllName.MaximumLength);
@@ -614,18 +613,9 @@ DontCompare:
             goto Quickie;
         }
 
-        /* Copy the buffer */
-        RtlMoveMemory(RawDllName.Buffer,
-                      pRedirectName->Buffer,
-                      pRedirectName->Length);
-
-        /* Add extension */
-        RtlMoveMemory((PVOID)((ULONG_PTR)RawDllName.Buffer + pRedirectName->Length),
-                      LdrApiDefaultExtension.Buffer,
-                      LdrApiDefaultExtension.Length);
-
-        /* Null terminate */
-        RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        /* Copy the string and add extension */
+        RtlCopyUnicodeString(&RawDllName, pRedirectName);
+        RtlAppendUnicodeStringToString(&RawDllName, &LdrApiDefaultExtension);
     }
     else
     {
@@ -643,7 +633,6 @@ DontCompare:
 
         /* Setup the string */
         RawDllName.MaximumLength = pRedirectName->Length + sizeof(WCHAR);
-        RawDllName.Length = pRedirectName->Length;
         RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             RawDllName.MaximumLength);
@@ -653,19 +642,14 @@ DontCompare:
             goto Quickie;
         }
 
-        /* Copy the buffer */
-        RtlMoveMemory(RawDllName.Buffer,
-                      pRedirectName->Buffer,
-                      pRedirectName->Length);
-
-        /* Null terminate */
-        RawDllName.Buffer[RawDllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        /* Copy the string */
+        RtlCopyUnicodeString(&RawDllName, pRedirectName);
     }
 
     /* Display debug string */
     if (ShowSnaps)
     {
-        DPRINT1("LDR: LdrGetDllHandle, searching for %wZ from %ws\n",
+        DPRINT1("LDR: LdrGetDllHandleEx, searching for %wZ from %ws\n",
                 &RawDllName,
                 DllPath ? ((ULONG_PTR)DllPath == 1 ? L"" : DllPath) : L"");
     }
@@ -730,15 +714,15 @@ Quickie:
     if (RawDllName.Buffer)
     {
         /* Free the heap-allocated buffer */
-        Status = RtlFreeHeap(RtlGetProcessHeap(), 0, RawDllName.Buffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RawDllName.Buffer);
         RawDllName.Buffer = NULL;
     }
 
     /* Release lock */
     if (Locked)
     {
-        Status = LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
-                                     Cookie);
+        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
+                            Cookie);
     }
 
     /* Return */
@@ -756,7 +740,7 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
                 OUT PVOID *DllHandle)
 {
     /* Call the newer API */
-    return LdrGetDllHandleEx(TRUE,
+    return LdrGetDllHandleEx(LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT,
                              DllPath,
                              DllCharacteristics,
                              DllName,
@@ -1134,10 +1118,10 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     BOOLEAN LockHeld;
     ULONG_PTR Cookie;
     DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %p)\n", BaseAddress);
-    
+
     /* Don't do it during shutdown */
     if (LdrpShutdownInProgress) return STATUS_SUCCESS;
-    
+
     /* Check if we should grab the lock */
     LockHeld = FALSE;
     if (!LdrpInLdrInit)
@@ -1147,7 +1131,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
         if (!NT_SUCCESS(Status)) return Status;
         LockHeld = TRUE;
     }
-    
+
     /* Make sure the DLL is valid and get its entry */
     Status = STATUS_DLL_NOT_FOUND;
     if (LdrpCheckForLoadedDllHandle(BaseAddress, &LdrEntry))
@@ -1167,7 +1151,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
         /* Release it */
         LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
     }
-    
+
     /* Return the status */
     return Status;
 }
