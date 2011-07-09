@@ -436,7 +436,7 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
 
     /* Check for Safer restrictions */
     if (DllCharacteristics &&
-        !(*DllCharacteristics & IMAGE_DLLCHARACTERISTICS_WX86_DLL))
+        !(*DllCharacteristics & IMAGE_FILE_SYSTEM))
     {
         /* Make sure it's executable */
         Status = ZwQuerySection(*SectionHandle,
@@ -446,10 +446,10 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
                                 NULL);
         if (NT_SUCCESS(Status))
         {
-            /* Check if it's executable */
-            if (SectionImageInfo.ImageContainsCode)
+            /* Bypass the check for .NET images */
+            if (!(SectionImageInfo.LoaderFlags & IMAGE_LOADER_FLAGS_COMPLUS))
             {
-                /* It is, check safer */
+                /* Check with Safer */
                 Status = LdrpCodeAuthzCheckDllAllowed(FullName, DllHandle);
                 if (!NT_SUCCESS(Status) && (Status != STATUS_NOT_FOUND))
                 {
@@ -459,18 +459,19 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
                         DPRINT1("LDR: Loading of (%wZ) blocked by Winsafer\n",
                                 &FullName);
                     }
-                }
-                else
-                {
-                    /* We're fine, return normally */
-                    goto Quickie;
+                    
+                    /* Failure case, close section handle */
+                    NtClose(*SectionHandle);
+                    *SectionHandle = NULL;
                 }
             }
         }
-
-        /* Failure case, close section handle */
-        NtClose(*SectionHandle);
-        *SectionHandle = NULL;
+        else
+        {
+            /* Failure case, close section handle */
+            NtClose(*SectionHandle);
+            *SectionHandle = NULL;
+        }
     }
 
 Quickie:
