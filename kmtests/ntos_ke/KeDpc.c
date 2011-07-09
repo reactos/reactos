@@ -82,12 +82,12 @@ START_TEST(KeDpc)
     ok_eq_uint(Dpc.Type, DpcObject);
     ok_eq_uint(Dpc.Importance, DpcImportance);
     ok_eq_uint(Dpc.Number, 0);
-    ok_eq_pointer(Dpc.DpcListEntry.Flink, (LIST_ENTRY *)0x5555555555555555);
-    ok_eq_pointer(Dpc.DpcListEntry.Blink, (LIST_ENTRY *)0x5555555555555555);
+    ok_eq_pointer(Dpc.DpcListEntry.Flink, (LIST_ENTRY *)0x5555555555555555LL);
+    ok_eq_pointer(Dpc.DpcListEntry.Blink, (LIST_ENTRY *)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DeferredRoutine, DpcHandler);
     ok_eq_pointer(Dpc.DeferredContext, &Dpc);
-    ok_eq_pointer(Dpc.SystemArgument1, (PVOID)0x5555555555555555);
-    ok_eq_pointer(Dpc.SystemArgument2, (PVOID)0x5555555555555555);
+    ok_eq_pointer(Dpc.SystemArgument1, (PVOID)0x5555555555555555LL);
+    ok_eq_pointer(Dpc.SystemArgument2, (PVOID)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DpcData, NULL);
 
     /* simply run the Dpc a few times */
@@ -117,8 +117,6 @@ START_TEST(KeDpc)
           KeRaiseIrql(HIGH_LEVEL, &Irql3);
             ok_dpccount();
           KeLowerIrql(Irql3);
-          ok_dpccount();
-          DPRINT1("This is a debug print\n");
           ok_dpccount();
         KeLowerIrql(Irql2);
         ++ExpectedDpcCount;

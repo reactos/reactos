@@ -23,7 +23,7 @@
 #define SERVICE_NAME        L"Kmtest"
 #define SERVICE_PATH        L"kmtest_drv.sys"
 
-#define LOGBUFFER_SIZE      65000
+#define LOGBUFFER_SIZE      16364
 #define RESULTBUFFER_SIZE   FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE])
 
 HANDLE KmtestHandle;

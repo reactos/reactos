@@ -14,6 +14,7 @@
 	</directory>
 	<directory name="ntos_ex">
 		<file>ExPools.c</file>
+		<file>ExResource.c</file>
 		<file>ExTimer.c</file>
 	</directory>
 	<directory name="ntos_fsrtl">
@@ -25,6 +26,7 @@
 		<file>IoMdl.c</file>
 	</directory>
 	<directory name="ntos_ke">
+		<file>KeApc.c</file>
 		<file>KeDpc.c</file>
 		<file>KeIrql.c</file>
 		<file>KeProcessor.c</file>

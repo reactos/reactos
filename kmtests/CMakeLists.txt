@@ -15,11 +15,13 @@ list(APPEND KMTEST_DRV_SOURCE
 
     example/Example.c
     ntos_ex/ExPools.c
+    ntos_ex/ExResource.c
     ntos_ex/ExTimer.c
     ntos_fsrtl/FsRtlExpression.c
     ntos_io/IoDeviceInterface.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
+    ntos_ke/KeApc.c
     ntos_ke/KeDpc.c
     ntos_ke/KeIrql.c
     ntos_ke/KeProcessor.c
