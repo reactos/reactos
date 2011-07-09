@@ -102,6 +102,16 @@ LdrpUpdateLoadCount2(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 ULONG NTAPI
 LdrpClearLoadInProgress();
 
+NTSTATUS
+NTAPI
+LdrpSetProtection(PVOID ViewBase,
+                  BOOLEAN Restore);
+
+BOOLEAN
+NTAPI
+LdrpCheckForLoadedDllHandle(IN PVOID Base,
+                            OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
+
 BOOLEAN NTAPI
 LdrpCheckForLoadedDll(IN PWSTR DllPath,
                       IN PUNICODE_STRING DllName,

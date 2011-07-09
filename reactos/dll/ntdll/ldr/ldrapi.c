@@ -1122,4 +1122,90 @@ LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, PVO
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    NTSTATUS Status;
+    BOOLEAN LockHeld;
+    ULONG_PTR Cookie;
+    DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %p)\n", BaseAddress);
+    
+    /* Don't do it during shutdown */
+    if (LdrpShutdownInProgress) return STATUS_SUCCESS;
+    
+    /* Check if we should grab the lock */
+    LockHeld = FALSE;
+    if (!LdrpInLdrInit)
+    {
+        /* Grab the lock */
+        Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        if (!NT_SUCCESS(Status)) return Status;
+        LockHeld = TRUE;
+    }
+    
+    /* Make sure the DLL is valid and get its entry */
+    Status = STATUS_DLL_NOT_FOUND;
+    if (LdrpCheckForLoadedDllHandle(BaseAddress, &LdrEntry))
+    {
+        /* Get if it has a TLS slot */
+        if (!LdrEntry->TlsIndex)
+        {
+            /* It doesn't, so you're allowed to call this */
+            LdrEntry->Flags |= LDRP_DONT_CALL_FOR_THREADS;
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    /* Check if the lock was held */
+    if (LockHeld)
+    {
+        /* Release it */
+        LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    }
+    
+    /* Return the status */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RtlDllShutdownInProgress(VOID)
+{
+    /* Return the internal global */
+    return LdrpShutdownInProgress;
+}
+
+/*
+ * @implemented
+ */
+PIMAGE_BASE_RELOCATION
+NTAPI
+LdrProcessRelocationBlock(IN ULONG_PTR Address,
+                          IN ULONG Count,
+                          IN PUSHORT TypeOffset,
+                          IN LONG_PTR Delta)
+{
+    return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+{
+    static BOOLEAN WarnedOnce = FALSE;
+    if (WarnedOnce == FALSE) { UNIMPLEMENTED; WarnedOnce = TRUE; }
+    return FALSE;
+}
+
 /* EOF */

@@ -1358,6 +1358,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PLDR_DATA_TABLE_ENTRY NtLdrEntry;
     PWCHAR Current;
     ULONG ExecuteOptions = 0;
+    PVOID ViewBase;
 
     /* Set a NULL SEH Filter */
     RtlSetUnhandledExceptionFilter(NULL);
@@ -1858,13 +1859,37 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
     {
-        DPRINT("LDR: Performing relocations\n");
-        Status = LdrPerformRelocations(NtHeader, Peb->ImageBaseAddress);
+        DPRINT1("LDR: Performing EXE relocation\n");
+        
+        /* Change the protection to prepare for relocation */
+        ViewBase = Peb->ImageBaseAddress;
+        Status = LdrpSetProtection(ViewBase, FALSE);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Do the relocation */
+        Status = LdrRelocateImageWithBias(ViewBase,
+                                          0LL,
+                                          NULL,
+                                          STATUS_SUCCESS,
+                                          STATUS_CONFLICTING_ADDRESSES,
+                                          STATUS_INVALID_IMAGE_FORMAT);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("LdrPerformRelocations() failed\n");
+            DPRINT1("LdrRelocateImageWithBias() failed\n");
+            return Status;
+        }
+        
+        /* Check if a start context was provided */
+        if (Context)
+        {
+            DPRINT1("WARNING: Relocated EXE Context");
+            UNIMPLEMENTED; // We should support this
             return STATUS_INVALID_IMAGE_FORMAT;
         }
+        
+        /* Restore the protection */
+        Status = LdrpSetProtection(ViewBase, TRUE);
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Lock the DLLs */
