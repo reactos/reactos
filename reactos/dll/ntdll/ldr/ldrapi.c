@@ -16,7 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 LONG LdrpLoaderLockAcquisitonCount;
-BOOLEAN LdrpShowRecursiveLoads;
+BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 
 /* FUNCTIONS *****************************************************************/
@@ -260,7 +260,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     PTEB Teb = NtCurrentTeb();
 
     /* Initialize the strings */
-    RtlInitUnicodeString(&DllString2, NULL);
+    RtlInitEmptyUnicodeString(&DllString2, NULL, 0);
     DllString1.Buffer = StringBuffer;
     DllString1.Length = 0;
     DllString1.MaximumLength = sizeof(StringBuffer);
@@ -285,11 +285,7 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     else if (Status != STATUS_SXS_KEY_NOT_FOUND)
     {
         /* Unrecoverable SxS failure; did we get a string? */
-        if (DllString2.Buffer)
-        {
-            /* Free the string */
-            RtlFreeUnicodeString(&DllString2);
-        }
+        if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
         return Status;
     }
 
@@ -297,10 +293,11 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
     LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
 
     /* Check if there's a TLD DLL being loaded */
-    if ((OldTldDll = LdrpTopLevelDllBeingLoaded))
+    OldTldDll = LdrpTopLevelDllBeingLoaded;
+    if (OldTldDll)
     {
         /* This is a recursive load, do something about it? */
-        if (ShowSnaps || LdrpShowRecursiveLoads)
+        if ((ShowSnaps) || (LdrpShowRecursiveLoads) || (LdrpBreakOnRecursiveDllLoads))
         {
             /* Print out debug messages */
             DPRINT1("[%lx, %lx] LDR: Recursive DLL Load\n",
@@ -342,6 +339,23 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
                          DllName,
                          BaseAddress,
                          TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        Status = STATUS_SUCCESS;
+    }
+    else if ((Status != STATUS_NO_SUCH_FILE) &&
+             (Status != STATUS_DLL_NOT_FOUND) &&
+             (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
+             (Status != STATUS_DLL_INIT_FAILED))
+    {
+        // 85 == DPFLTR_LDR_ID;
+        DbgPrintEx(85,
+                   DPFLTR_WARNING_LEVEL,
+                   "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
+                   __FUNCTION__,
+                   DllName,
+                   Status);
+    }
 
     /* Restore the old TLD DLL */
     LdrpTopLevelDllBeingLoaded = OldTldDll;
@@ -1057,7 +1071,7 @@ LdrEnumerateLoadedModules(BOOLEAN ReservedFlag, PLDR_ENUM_CALLBACK EnumProc, PVO
     BOOLEAN Stop = FALSE;
 
     /* Check parameters */
-    if (ReservedFlag || !EnumProc) return STATUS_INVALID_PARAMETER;
+    if ((ReservedFlag) || !(EnumProc)) return STATUS_INVALID_PARAMETER;
 
     /* Acquire the loader lock */
     Status = LdrLockLoaderLock(0, NULL, &Cookie);
