@@ -417,31 +417,36 @@ LdrGetDllHandleEx(IN ULONG Flags,
                   IN PUNICODE_STRING DllName,
                   OUT PVOID *DllHandle OPTIONAL)
 {
-    NTSTATUS Status = STATUS_DLL_NOT_FOUND;
+    NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    UNICODE_STRING RedirectName, DllString1;
-    UNICODE_STRING RawDllName;
-    PUNICODE_STRING pRedirectName = &RedirectName;
-    PUNICODE_STRING CompareName;
+    UNICODE_STRING RedirectName, DllString1, RawDllName;
+    PUNICODE_STRING pRedirectName, CompareName;
     PWCHAR p1, p2, p3;
-    BOOLEAN Locked = FALSE;
-    BOOLEAN RedirectedDll = FALSE;
-    ULONG Cookie;
-    ULONG LoadFlag;
+    BOOLEAN Locked, RedirectedDll;
+    ULONG_PTR Cookie;
+    ULONG LoadFlag, Length;
 
     /* Initialize the strings */
-    RtlInitUnicodeString(&DllString1, NULL);
-    RtlInitUnicodeString(&RawDllName, NULL);
+    RtlInitEmptyUnicodeString(&DllString1, NULL, 0);
+    RtlInitEmptyUnicodeString(&RawDllName, NULL, 0);
     RedirectName = *DllName;
+    pRedirectName = &RedirectName;
+    
+    /* Initialize state */
+    RedirectedDll = Locked = FALSE;
+    LdrEntry = NULL;
+    Cookie = 0;
 
     /* Clear the handle */
     if (DllHandle) *DllHandle = NULL;
 
-    /* Check for a valid flag */
-    if ((Flags & ~3) || (!DllHandle && !(Flags & 2)))
+    /* Check for a valid flag combination */
+    if ((Flags & ~(LDR_GET_DLL_HANDLE_EX_PIN | LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT)) ||
+        (!DllHandle && !(Flags & LDR_GET_DLL_HANDLE_EX_PIN)))
     {
         DPRINT1("Flags are invalid or no DllHandle given\n");
-        return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
     }
 
     /* If not initializing */
@@ -449,6 +454,9 @@ LdrGetDllHandleEx(IN ULONG Flags,
     {
         /* Acquire the lock */
         Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+        
+        /* Remember we own it */
         Locked = TRUE;
     }
 
@@ -474,6 +482,9 @@ LdrGetDllHandleEx(IN ULONG Flags,
         /* Unrecoverable SxS failure; */
         goto Quickie;
     }
+    
+    /* Set default failure code */
+    Status = STATUS_DLL_NOT_FOUND;
 
     /* Use the cache if we can */
     if (LdrpGetModuleHandleCache)
@@ -516,17 +527,15 @@ LdrGetDllHandleEx(IN ULONG Flags,
 
             /* Return success */
             Status = STATUS_SUCCESS;
-
-            goto FoundEntry;
+            goto Quickie;
         }
     }
 
 DontCompare:
     /* Find the name without the extension */
     p1 = pRedirectName->Buffer;
-    p3 = &p1[pRedirectName->Length / sizeof(WCHAR)];
-StartLoop:
     p2 = NULL;
+    p3 = &p1[pRedirectName->Length / sizeof(WCHAR)];
     while (p1 != p3)
     {
         if (*p1++ == L'.')
@@ -535,26 +544,35 @@ StartLoop:
         }
         else if (*p1 == L'\\')
         {
-            goto StartLoop;
+            p2 = NULL;
         }
     }
 
     /* Check if no extension was found or if we got a slash */
-    if (!p2 || *p2 == L'\\' || *p2 == L'/')
+    if (!(p2) || (*p2 == L'\\') || (*p2 == L'/'))
     {
         /* Check that we have space to add one */
-        if (pRedirectName->Length + LdrApiDefaultExtension.Length >= MAXLONG)
+        Length = pRedirectName->Length +
+                 LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL);
+        if (Length >= UNICODE_STRING_MAX_BYTES)
         {
             /* No space to add the extension */
-            return STATUS_NAME_TOO_LONG;
+            Status = STATUS_NAME_TOO_LONG;
+            goto Quickie;
         }
 
         /* Setup the string */
-        RawDllName.MaximumLength = pRedirectName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL);
+        RawDllName.MaximumLength = Length;
+        ASSERT(Length >= sizeof(UNICODE_NULL));
         RawDllName.Length = RawDllName.MaximumLength - sizeof(UNICODE_NULL);
         RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             RawDllName.MaximumLength);
+        if (!RawDllName.Buffer)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quickie;
+        }
 
         /* Copy the buffer */
         RtlMoveMemory(RawDllName.Buffer,
@@ -572,11 +590,11 @@ StartLoop:
     else
     {
         /* Check if there's something in the name */
-        if (pRedirectName->Length)
+        Length = pRedirectName->Length;
+        if (Length)
         {
             /* Check and remove trailing period */
-            if (pRedirectName->Buffer[(pRedirectName->Length - 2) /
-                sizeof(WCHAR)] == '.')
+            if (pRedirectName->Buffer[Length / sizeof(WCHAR) - sizeof(ANSI_NULL)] == '.')
             {
                 /* Decrease the size */
                 pRedirectName->Length -= sizeof(WCHAR);
@@ -589,6 +607,11 @@ StartLoop:
         RawDllName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             RawDllName.MaximumLength);
+        if (!RawDllName.Buffer)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quickie;
+        }
 
         /* Copy the buffer */
         RtlMoveMemory(RawDllName.Buffer,
@@ -625,46 +648,41 @@ StartLoop:
         /* Make sure to NULL this */
         LdrEntry = NULL;
     }
-FoundEntry:
+Quickie:
+    /* The success path must have a valid loader entry */
+    ASSERT((LdrEntry != NULL) == NT_SUCCESS(Status));
+
+    /* Check if we got an entry and success */
     DPRINT("Got LdrEntry->BaseDllName %wZ\n", LdrEntry ? &LdrEntry->BaseDllName : NULL);
-
-    /* Check if we got an entry */
-    if (LdrEntry)
+    if ((LdrEntry) && (NT_SUCCESS(Status)))
     {
-        /* Check for success */
-        if (NT_SUCCESS(Status))
+        /* Check if the DLL is locked */
+        if ((LdrEntry->LoadCount != 0xFFFF) &&
+            !(Flags & LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT))
         {
-            /* Check if the DLL is locked */
-            if (LdrEntry->LoadCount != -1)
+            /* Check what to do with the load count */
+            if (Flags & LDR_GET_DLL_HANDLE_EX_PIN)
             {
-                /* Check what flag we got */
-                if (!(Flags & 1))
-                {
-                    /* Check what to do with the load count */
-                    if (Flags & 2)
-                    {
-                        /* Pin it */
-                        LdrEntry->LoadCount = -1;
-                        LoadFlag = LDRP_UPDATE_PIN;
-                    }
-                    else
-                    {
-                        /* Increase the load count */
-                        LdrEntry->LoadCount++;
-                        LoadFlag = LDRP_UPDATE_REFCOUNT;
-                    }
-
-                    /* Update the load count now */
-                    LdrpUpdateLoadCount2(LdrEntry, LoadFlag);
-                    LdrpClearLoadInProgress();
-                }
+                /* Pin it */
+                LdrEntry->LoadCount = 0xFFFF;
+                LoadFlag = LDRP_UPDATE_PIN;
+            }
+            else
+            {
+                /* Increase the load count */
+                LdrEntry->LoadCount++;
+                LoadFlag = LDRP_UPDATE_REFCOUNT;
             }
 
-            /* Check if the caller is requesting the handle */
-            if (DllHandle) *DllHandle = LdrEntry->DllBase;
+            /* Update the load count now */
+            LdrpUpdateLoadCount2(LdrEntry, LoadFlag);
+            LdrpClearLoadInProgress();
         }
+
+        /* Check if the caller is requesting the handle */
+        if (DllHandle) *DllHandle = LdrEntry->DllBase;
     }
-Quickie:
+
     /* Free string if needed */
     if (DllString1.Buffer) RtlFreeUnicodeString(&DllString1);
 
@@ -672,12 +690,16 @@ Quickie:
     if (RawDllName.Buffer)
     {
         /* Free the heap-allocated buffer */
-        RtlFreeHeap(RtlGetProcessHeap(), 0, RawDllName.Buffer);
+        Status = RtlFreeHeap(RtlGetProcessHeap(), 0, RawDllName.Buffer);
         RawDllName.Buffer = NULL;
     }
 
     /* Release lock */
-    if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    if (Locked)
+    {
+        Status = LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS,
+                                     Cookie);
+    }
 
     /* Return */
     return Status;

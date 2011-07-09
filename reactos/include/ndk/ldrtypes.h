@@ -61,23 +61,29 @@ Author:
 //
 // Dll Characteristics for LdrLoadDll
 //
-#define LDR_IGNORE_CODE_AUTHZ_LEVEL             0x00001000
+#define LDR_IGNORE_CODE_AUTHZ_LEVEL                 0x00001000
 
 //
 // LdrAddRef Flags
 //
-#define LDR_PIN_MODULE                          0x00000001
+#define LDR_PIN_MODULE                              0x00000001
 
 //
 // LdrLockLoaderLock Flags
 //
-#define LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS 0x00000001
-#define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY        0x00000002
+#define LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS   0x00000001
+#define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY          0x00000002
 
 //
 // LdrUnlockLoaderLock Flags
 //
 #define LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS 0x00000001
+
+//
+// LdrGetDllHandleEx Flags
+//
+#define LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT    0x00000001
+#define LDR_GET_DLL_HANDLE_EX_PIN                   0x00000002
 
 #define LDR_LOCK_LOADER_LOCK_DISPOSITION_INVALID           0
 #define LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED     1
