@@ -2763,12 +2763,13 @@ FASTCALL
 RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame,
                                        IN PVOID Context)
 {
+#if NEW_NTDLL_LOADER
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
 
     /* Get the curren active frame */
     ActiveFrame = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
 
-    DPRINT("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
+    DPRINT1("ActiveFrame %p, &Frame->Frame %p, Context %p\n", ActiveFrame, &Frame->Frame, Context);
 
     /* Actually activate it */
     Frame->Frame.Previous = ActiveFrame;
@@ -2800,6 +2801,18 @@ RtlActivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTE
 
     /* Return pointer to the activation frame */
     return &Frame->Frame;
+#else
+
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame = &Frame->Frame;
+
+    frame->Previous = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
+    frame->ActivationContext = Context;
+    frame->Flags = 0;
+
+    NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame = frame;
+
+    return STATUS_SUCCESS;
+#endif
 }
 
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME
