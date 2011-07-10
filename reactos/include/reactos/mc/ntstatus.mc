@@ -412,6 +412,26 @@ One of the files containing the system's Registry data had to be recovered by us
 The recovery was successful.
 
 .
+MessageId=0xa
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_FT_READ_RECOVERY_FROM_BACKUP 
+Language=English
+{Redundant Read}
+To satisfy a read request, the Windows NT fault-tolerant file system successfully read the requested data from a redundant copy.
+This was done because the file system encountered a failure on a member of the fault-tolerant volume but was unable to reassign the failing area of the device.
+
+.
+MessageId=0xb
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_FT_WRITE_RECOVERY 
+Language=English
+{Redundant Write}
+To satisfy a write request, the Windows NT fault-tolerant file system successfully wrote a redundant copy of the information.
+This was done because the file system encountered a failure on a member of the fault-tolerant volume but was unable to reassign the failing area of the device.
+
+.
 MessageId=0xc
 Severity=Informational
 Facility=System
@@ -420,6 +440,33 @@ Language=English
 {Serial IOCTL Timeout}
 A serial I/O operation completed because the time-out period expired.
 (The IOCTL_SERIAL_XOFF_COUNTER had not reached zero.)
+
+.
+MessageId=0xd
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_NULL_LM_PASSWORD
+Language=English
+{Password Too Complex}
+The Windows password is too complex to be converted to a LAN Manager password. The LAN Manager password that returned is a NULL string.
+
+.
+MessageId=0xe
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_IMAGE_MACHINE_TYPE_MISMATCH
+Language=English
+{Machine Type Mismatch}
+The image file %hs is valid, but is for a machine type other than the current machine.
+
+.
+MessageId=0xf
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_RECEIVE_PARTIAL
+Language=English
+{Partial Data Received}
+The network transport returned partial data to its client. The remaining data will be sent later.
 
 .
 MessageId=0x10
@@ -1714,6 +1761,24 @@ Facility=System
 SymbolicName=STATUS_INVALID_SECURITY_DESCR 
 Language=English
 Indicates the SECURITY_DESCRIPTOR structure is not valid.
+
+.
+MessageId=0x7a
+Severity=Error
+Facility=System
+SymbolicName=STATUS_PROCEDURE_NOT_FOUND 
+Language=English
+Indicates the specified procedure address cannot be found in the DLL.
+
+.
+MessageId=0x7b
+Severity=Error
+Facility=System
+SymbolicName=STATUS_INVALID_IMAGE_FORMAT 
+Language=English
+{Bad Image}
+%hs is either not designed for ReactOS or it contains an error.
+Try reinstalling the application using the original installation media or contact the software vendor for support.
 
 .
 MessageId=0x7c
