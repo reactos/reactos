@@ -145,6 +145,14 @@ NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 ULONG
 LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
 
+NTSTATUS
+NTAPI
+LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
+                     IN LPSTR ImportName,
+                     IN PVOID DllBase,
+                     OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
+                     OUT PBOOLEAN Existing);
+                     
 extern HANDLE WindowsApiPort;
 
 /* EOF */
