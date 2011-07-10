@@ -463,7 +463,7 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
 
     SystemTimeToFileTime(pSystemTime, &Time.ft);
     SystemTimeToFileTime(&st1970, &u1970.ft);
-    *pEventTime = (Time.ll - u1970.ll) / 10000000;
+    *pEventTime = (DWORD)((Time.ll - u1970.ll) / 10000000ull);
 }
 
 VOID PRINT_HEADER(PEVENTLOGHEADER header)
