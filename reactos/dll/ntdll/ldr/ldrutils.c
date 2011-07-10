@@ -16,6 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache, LdrpGetModuleHandleCache;
+BOOLEAN g_ShimsEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1849,6 +1850,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     PPEB Peb = NtCurrentPeb();
     NTSTATUS Status = STATUS_SUCCESS;
     PWCHAR p1, p2;
+    WCHAR c;
     WCHAR NameBuffer[266];
     LPWSTR RawDllName;
     UNICODE_STRING RawDllNameString;
@@ -1857,39 +1859,47 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
     /* Find the name without the extension */
     p1 = DllName->Buffer;
-StartLoop:
     p2 = NULL;
     while (*p1)
     {
-        if (*p1++ == L'.')
+        c = *p1++;
+        if (c == L'.')
         {
             p2 = p1;
         }
-        else if (*p1 == L'\\')
+        else if (c == L'\\')
         {
-            goto StartLoop;
+            p2 = NULL;
         }
     }
 
     /* Save the Raw DLL Name */
     RawDllName = NameBuffer;
-    if (DllName->Length >= sizeof(NameBuffer))
-    {
-        /* The DLL's name is too long */
-        return STATUS_NAME_TOO_LONG;
-    }
+    if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
     RtlMoveMemory(RawDllName, DllName->Buffer, DllName->Length);
 
     /* Check if no extension was found or if we got a slash */
-    if (!p2 || *p2 == '\\')
+    if (!(p2) || (*p2 == '\\'))
     {
         /* Check that we have space to add one */
-        if (DllName->Length + LdrApiDefaultExtension.Length >= sizeof(NameBuffer))
+        if ((DllName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL)) >=
+            sizeof(NameBuffer))
         {
             /* No space to add the extension */
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s - Dll name missing extension; with extension "
+                       "added the name is too long\n"
+                       "   DllName: (@ %p) \"%wZ\"\n"
+                       "   DllName->Length: %u\n",
+                       __FUNCTION__,
+                       DllName,
+                       DllName,
+                       DllName->Length);
             return STATUS_NAME_TOO_LONG;
         }
 
+        /* FIXME: CLEAN THIS UP WITH Rtl String Functions */
         /* Add it */
         RtlMoveMemory((PVOID)((ULONG_PTR)RawDllName + DllName->Length),
                       LdrApiDefaultExtension.Buffer,
@@ -1941,16 +1951,18 @@ StartLoop:
                             Redirected,
                             &LdrEntry);
         if (!NT_SUCCESS(Status)) goto Quickie;
+        
+        /* FIXME: Need to mark the DLL range for the stack DB */
+        //RtlpStkMarkDllRange(LdrEntry);
 
-		/* Check if IMAGE_FILE_EXECUTABLE_IMAGE was provided */
-		if (DllCharacteristics &&
-			(*DllCharacteristics & IMAGE_FILE_EXECUTABLE_IMAGE))
-		{
-			LdrEntry->EntryPoint = NULL;
-			LdrEntry->Flags &= ~LDRP_IMAGE_DLL;
-		}
-
-        /* FIXME Mark the DLL Ranges for Stack Traces later */
+        /* Check if IMAGE_FILE_EXECUTABLE_IMAGE was provided */
+        if ((DllCharacteristics) &&
+            (*DllCharacteristics & IMAGE_FILE_EXECUTABLE_IMAGE))
+        {
+            /* This is not a DLL, so remove such data */
+            LdrEntry->EntryPoint = NULL;
+            LdrEntry->Flags &= ~LDRP_IMAGE_DLL;
+        }
 
         /* Make sure it's a DLL */
         if (LdrEntry->Flags & LDRP_IMAGE_DLL)
@@ -1974,8 +1986,17 @@ StartLoop:
                 InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
                                &LdrEntry->InInitializationOrderModuleList);
 
-                /* Cancel the load and unload the DLL */
+                /* Cancel the load */
                 LdrpClearLoadInProgress();
+                
+                /* Unload the DLL */
+                if (ShowSnaps)
+                {
+                    DbgPrint("LDR: Unloading %wZ due to error %x walking "
+                             "import descriptors",
+                             DllName,
+                             Status);
+                }
                 LdrUnloadDll(LdrEntry->DllBase);
 
                 /* Return the error */
@@ -1996,12 +2017,26 @@ StartLoop:
         if (CallInit && LdrpLdrDatabaseIsSetup)
         {
             /* FIXME: Notify Shim Engine */
-
+            if (g_ShimsEnabled)
+            {
+                /* Call it */
+                //ShimLoadCallback = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
+                //ShimLoadCallback(LdrEntry);
+            }
+            
             /* Run the init routine */
             Status = LdrpRunInitializeRoutines(NULL);
             if (!NT_SUCCESS(Status))
             {
                 /* Failed, unload the DLL */
+                if (ShowSnaps)
+                {
+                    DbgPrint("LDR: Unloading %wZ because either its init "
+                             "routine or one of its static imports failed; "
+                             "status = 0x%08lx\n",
+                             DllName,
+                             Status);
+                }
                 LdrUnloadDll(LdrEntry->DllBase);
             }
         }
