@@ -24,7 +24,9 @@ typedef struct ClientStream
 } ClientStream;
 
 /********************API Functions******************/
-WINAPI int InitStream (ClientStream * clientstream,
+int
+WINAPI
+InitStream (ClientStream * clientstream,
                        LONG frequency,
                        int channels,
                        int bitspersample,
@@ -34,18 +36,34 @@ WINAPI int InitStream (ClientStream * clientstream,
                        int mute,
                        float balance);
 
-WINAPI int PlayAudio ( ClientStream * clientstream);
-WINAPI int StopAudio (ClientStream * clientstream );
+int
+WINAPI
+PlayAudio ( ClientStream * clientstream);
 
-WINAPI int Volume(ClientStream * clientstream,
+int
+WINAPI
+StopAudio (ClientStream * clientstream );
+
+int
+WINAPI
+Volume(ClientStream * clientstream,
                   int * volume );
 
-WINAPI int SetVolume(ClientStream * clientstream ,
+int
+WINAPI
+SetVolume(ClientStream * clientstream ,
                      const int newvolume);
-WINAPI int Write(ClientStream * clientstream ,
+int
+WINAPI
+Write(ClientStream * clientstream ,
                  const char * aData);
-WINAPI int SetBalance(ClientStream * clientstream ,
+
+int
+WINAPI
+SetBalance(ClientStream * clientstream ,
                       float balance);
-WINAPI int GetBalance(ClientStream * clientstream ,
+int
+WINAPI
+GetBalance(ClientStream * clientstream ,
                       float * balance);
 #endif

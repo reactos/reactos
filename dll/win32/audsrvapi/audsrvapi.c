@@ -14,7 +14,9 @@ int status = 0;
 /*Initialize an audio stream
  *Return -1 if callbacks are NULL pointers
  */
-WINAPI int InitStream (ClientStream * clientstream,
+int
+WINAPI
+InitStream (ClientStream * clientstream,
                        LONG frequency,
                        int channels,
                        int bitspersample,
@@ -69,7 +71,9 @@ WINAPI int InitStream (ClientStream * clientstream,
     return 0;
 }
 
-WINAPI int PlayAudio ( ClientStream * clientstream )
+int
+WINAPI
+PlayAudio ( ClientStream * clientstream )
 {
     /*This is an ActiveScheduler*/
     clientstream->callbacks.OpenComplete(0);
@@ -97,7 +101,9 @@ WINAPI int PlayAudio ( ClientStream * clientstream )
     return 0;
 }
 
-WINAPI int StopAudio (ClientStream * clientstream )
+int
+WINAPI
+StopAudio (ClientStream * clientstream )
 {
     /*Server Side termination is remaining*/
     /*If connected Properly call the remote audsrv_stop() function*/
@@ -106,19 +112,25 @@ WINAPI int StopAudio (ClientStream * clientstream )
     return 0;
 }
 
-WINAPI int Volume(ClientStream * clientstream,
+int
+WINAPI
+Volume(ClientStream * clientstream,
                   int * volume )
 {
     return 0;
 }
 
-WINAPI int SetVolume(ClientStream * clientstream ,
+int
+WINAPI
+SetVolume(ClientStream * clientstream ,
                      const int newvolume)
 {
     return 0;
 }
 
-WINAPI int Write(ClientStream * clientstream ,
+int
+WINAPI
+Write(ClientStream * clientstream ,
                  const char * aData)
 {
     if(clientstream->dead)
@@ -129,13 +141,17 @@ WINAPI int Write(ClientStream * clientstream ,
     return 0;
 }
 
-WINAPI int SetBalance(ClientStream * clientstream ,
+int
+WINAPI
+SetBalance(ClientStream * clientstream ,
                       float balance)
 {
     return 0;
 }
 
-WINAPI int GetBalance(ClientStream * clientstream ,
+int
+WINAPI
+GetBalance(ClientStream * clientstream ,
                       float * balance)
 {
     return 0;

@@ -55,9 +55,10 @@ typedef struct ServerStream
     PVOID minsamplevalue;
     PVOID maxsamplevalue;
 
-    HANDLE played;
+    HANDLE stream_played_event;
     HANDLE threadready;
     HANDLE thread;
+    CRITICAL_SECTION CriticalSection;
 
     struct ServerStream * next;
 } ServerStream;

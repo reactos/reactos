@@ -13,6 +13,9 @@ void * MixS8(MixerEngine * mixer,
 {
     return NULL;
 }
+
+/*Filter Should ensure that sample data is divided equally on both side of Analog-Zero Sample value[0 for signed data,maxattainablevalue/2 for unsigned]*/
+
 void * MixS16(MixerEngine * mixer,
               int buffer)
 {
@@ -41,15 +44,24 @@ void * MixS16(MixerEngine * mixer,
 
     /*Perform Actual Mixing*/
     stream = mixer->serverstreamlist;
-    minsamplevalue = *(short *) stream->minsamplevalue;
-    maxsamplevalue = *(short *) stream->maxsamplevalue;
+    minsamplevalue = 0;
+    maxsamplevalue = 0;
 
     while( stream != NULL)
     {
-        localsrcbuf = stream->filteredbuf;
-        if(stream->ready == TRUE )
+        EnterCriticalSection(&(stream->CriticalSection));
+
+        if(stream->ready == TRUE && *(short *) stream->minsamplevalue != 0 && *(short *) stream->minsamplevalue != 0)
         {
 		    coefficient = 1.0;
+
+            localsrcbuf = stream->filteredbuf;
+
+            if(minsamplevalue == 0)
+				minsamplevalue = *(short *) stream->minsamplevalue;
+
+            if(maxsamplevalue == 0)
+				maxsamplevalue = *(short *) stream->maxsamplevalue;
 
             if( *(short *)stream->maxsamplevalue != maxsamplevalue ||
                 *(short *)stream->minsamplevalue != minsamplevalue  )
@@ -60,12 +72,20 @@ void * MixS16(MixerEngine * mixer,
                 else
                     coefficient = (float) minsamplevalue / (float)*(short *)stream->minsamplevalue;
             }
+
 			for(i=0;i<stream->length_filtered/sizeof(short);i++)
             {
                 localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
 			}
+
         }
         //stream->ready = 0;  /*TODO Enable it when actual filter thread starts working*/
+        //HeapFree(GetProcessHeap(),
+        //                 0,
+        //                 stream->filteredbuf);
+		SetEvent(stream->stream_played_event);
+        LeaveCriticalSection(&(stream->CriticalSection));
+
         streamcount++;
         stream = stream->next;
     }

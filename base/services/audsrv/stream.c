@@ -12,7 +12,7 @@
 long GetNewStreamID()
 {
     long streamid= pengine->streamidpool;
-    pengine->streamidpool+=1;
+    pengine->streamidpool += 1;
     return streamid;
 }
 
@@ -23,11 +23,11 @@ DWORD WINAPI RunStreamThread(LPVOID param)
 
 /*UGLY HACK--WILL be removed soon-- fill filtered buffer (1 second duration in the master stream format) directly until we are in a condition to get buffer directly from the client*/
 /******************************************************/
-    BOOL initmin=FALSE,initmax =FALSE;
-    short minimum=0,maximum=0;
+    BOOL initmin=FALSE,initmax = FALSE;
+    short minimum=0,maximum = 0;
     PSHORT tempbuf;
 
-    localstream->ready =TRUE;
+
     localstream->length_filtered = localstream->freq * localstream->channels * localstream->bitspersample / 8;
     tempbuf = (PSHORT) HeapAlloc(GetProcessHeap(),
                                 0,
@@ -35,12 +35,12 @@ DWORD WINAPI RunStreamThread(LPVOID param)
 
     while (i < localstream->length_filtered / 2)
     {
-        tempbuf[i] = 0x7FFF * sin(0.5 * (i - 1) * 500 * 6.28 / 48000);
+        tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
 
         if((localstream->streamid %2) == 0)
-            tempbuf[i] = 0;
+            tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 24000);
 
-			if(initmin)
+        if(initmin)
         {
             if(tempbuf[i]<minimum)
                 minimum = tempbuf[i];
@@ -60,10 +60,10 @@ DWORD WINAPI RunStreamThread(LPVOID param)
         }
         i++;
 
-        tempbuf[i] = 0x7FFF * sin(0.5 * (i - 2) * 500 * 6.28 / 48000);
+        tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
 
-        if((localstream->streamid %2) != 0)
-            tempbuf[i] = 0;
+        if((localstream->streamid %2) == 0)
+            tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 24000);
 
 
         if(initmin)
@@ -86,13 +86,21 @@ DWORD WINAPI RunStreamThread(LPVOID param)
     *((int *)localstream->minsamplevalue) = minimum;
     *((int *)localstream->maxsamplevalue) = maximum;
     localstream->filteredbuf = tempbuf;
+    localstream->ready =TRUE;
+
 /******************************************************/
+/*Do Some Initialization If needed.Only After these Initialization remaining system will be told that stream is ready*/
     SetEvent(localstream->threadready);
 
-    while (1)
+    while (TRUE)
     {
-        OutputDebugStringA("Stream Thread Running.");
-        Sleep(100);
+        /*Wait For Data Write Event,currently NO Wait considering Data has always been written*/
+
+		EnterCriticalSection(&(localstream->CriticalSection));
+
+		LeaveCriticalSection(&(localstream->CriticalSection));
+		/*Wait For Stream Played Event*/
+		WaitForSingleObject(localstream->stream_played_event,INFINITE);
     }
     /*Clean Stream's data*/
 }
@@ -164,7 +172,7 @@ long AddStream(LONG frequency,
     
     newstream->next = NULL;
 
-    newstream->played = CreateEvent(NULL,
+    newstream->stream_played_event = CreateEvent(NULL,
                                     FALSE,
                                     FALSE,
                                     NULL);
@@ -174,7 +182,13 @@ long AddStream(LONG frequency,
                                          FALSE,
                                          NULL);
 
-    if(newstream->played == NULL || newstream->threadready == NULL)
+    if(newstream->stream_played_event == NULL || newstream->threadready == NULL)
+        goto error;
+
+    newstream->streamid=GetNewStreamID();
+
+    if (!InitializeCriticalSectionAndSpinCount(&(newstream->CriticalSection), 
+                                               0x00000400) ) 
         goto error;
 
     newstream->thread=CreateThread(NULL,
@@ -187,11 +201,10 @@ long AddStream(LONG frequency,
     if(newstream->thread == NULL)
         goto error;
 
-
     WaitForSingleObject(newstream->threadready,
                         INFINITE);
 
-    newstream->streamid=GetNewStreamID();
+
 
     if(localstream == NULL)
     {
@@ -212,8 +225,11 @@ long AddStream(LONG frequency,
     return newstream->streamid;
 
 error:
-    HeapFree(GetProcessHeap(), 0, newstream);
+    HeapFree(GetProcessHeap(),
+             0,
+			 newstream);
     return 0;
 }
 
 /*Dont forget to clean ServerStream's minsamplevalue and maxsamplevalue while removing the stream*/
+/*Delete Critical Section while cleaning Stream*/
