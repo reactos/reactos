@@ -262,7 +262,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if (Mdl)
         {
             _SEH2_TRY {
-               MmProbeAndLockPages(Mdl, Irp->RequestorMode, IoModifyAccess);
+               MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
             } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	       AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	       Status = _SEH2_GetExceptionCode();
