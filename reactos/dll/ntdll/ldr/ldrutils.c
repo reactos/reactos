@@ -38,8 +38,6 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                      OUT PUNICODE_STRING UpdateString)
 {
     PIMAGE_BOUND_FORWARDER_REF NewImportForwarder;
-    
-
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     PIMAGE_THUNK_DATA FirstThunk;
@@ -461,7 +459,7 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
                         DPRINT1("LDR: Loading of (%wZ) blocked by Winsafer\n",
                                 &FullName);
                     }
-                    
+
                     /* Failure case, close section handle */
                     NtClose(*SectionHandle);
                     *SectionHandle = NULL;
@@ -885,7 +883,7 @@ SkipCheck:
             /* We couldn't resolve the name, is this a static load? */
             if (Static)
             {
-                /* 
+                /*
                  * This is BAD! Static loads are CRITICAL. Bugcheck!
                  * Initialize the strings for the error
                  */
@@ -1283,10 +1281,11 @@ LdrpAllocateDataTableEntry(IN PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
     PIMAGE_NT_HEADERS NtHeader;
-    DPRINT("LdrpAllocateDataTableEntry(%p), NtHeader %p\n", BaseAddress, NtHeader);
 
     /* Make sure the header is valid */
     NtHeader = RtlImageNtHeader(BaseAddress);
+    DPRINT("LdrpAllocateDataTableEntry(%p), NtHeader %p\n", BaseAddress, NtHeader);
+
     if (NtHeader)
     {
         /* Allocate an entry */
@@ -1319,7 +1318,7 @@ LdrpInsertMemoryTableEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     /* Insert into hash table */
     i = LDR_GET_HASH_ENTRY(LdrEntry->BaseDllName.Buffer[0]);
     InsertTailList(&LdrpHashTable[i], &LdrEntry->HashLinks);
-    
+
     /* Insert into other lists */
     InsertTailList(&PebData->InLoadOrderModuleList, &LdrEntry->InLoadOrderLinks);
     InsertTailList(&PebData->InMemoryOrderModuleList, &LdrEntry->InMemoryOrderModuleList);

@@ -561,7 +561,6 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         }
 
         /* Return */
-        *ImportEntry = *ImportEntry;
         return Status;
     }
 
@@ -595,13 +594,12 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         }
 
         /* Return */
-        *ImportEntry = *ImportEntry;
         return Status;
     }
 
 SkipEntry:
     /* Move on */
-    *ImportEntry = (*ImportEntry)++;
+    (*ImportEntry)++;
     return STATUS_SUCCESS;
 }
 
