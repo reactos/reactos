@@ -27,21 +27,15 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
             IN PIMAGE_IMPORT_DESCRIPTOR IatEntry,
             IN BOOLEAN EntriesValid)
 {
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    ULONG ExportSize;
     PVOID Iat;
-    SIZE_T ImportSize;
-    ULONG IatSize;
-    //PPEB Peb = NtCurrentPeb();
     NTSTATUS Status;
     PIMAGE_THUNK_DATA OriginalThunk, FirstThunk;
-    LPSTR ImportName;
-    ULONG ForwarderChain;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER SectionHeader;
-    ULONG i, Rva;
-    ULONG OldProtect;
-
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    LPSTR ImportName;
+    ULONG ForwarderChain, i, Rva, OldProtect, IatSize, ExportSize;
+    SIZE_T ImportSize;
     DPRINT("LdrpSnapIAT(%wZ %wZ %p %d)\n", &ExportLdrEntry->BaseDllName, &ImportLdrEntry->BaseDllName, IatEntry, EntriesValid);
 
     /* Get export directory */
@@ -51,7 +45,13 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
                                                    &ExportSize);
 
     /* Make sure it has one */
-    if (!ExportDirectory) return STATUS_INVALID_IMAGE_FORMAT;
+    if (!ExportDirectory)
+    {
+        /* Fail */
+        DbgPrint("LDR: %wZ doesn't contain an EXPORT table\n",
+                 &ExportLdrEntry->BaseDllName);
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
 
     /* Get the IAT */
     Iat = RtlImageDirectoryEntryToData(ImportLdrEntry->DllBase,
@@ -65,6 +65,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
     {
         /* Get the NT Header and the first section */
         NtHeader = RtlImageNtHeader(ImportLdrEntry->DllBase);
+        if (!NtHeader) return STATUS_INVALID_IMAGE_FORMAT;
         SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 
         /* Get the RVA of the import directory */
@@ -89,8 +90,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
                     IatSize = SectionHeader->Misc.VirtualSize;
 
                     /* Deal with Watcom and other retarded compilers */
-                    if (!IatSize)
-                        IatSize = SectionHeader->SizeOfRawData;
+                    if (!IatSize) IatSize = SectionHeader->SizeOfRawData;
 
                     /* Found it, get out */
                     break;
@@ -102,7 +102,14 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         }
 
         /* If we still don't have an IAT, that's bad */
-        if (!Iat) return STATUS_INVALID_IMAGE_FORMAT;
+        if (!Iat)
+        {
+            /* Fail */
+            DbgPrint("LDR: Unable to unprotect IAT for %wZ (Image Base %p)\n",
+                     &ImportLdrEntry->BaseDllName,
+                     ImportLdrEntry->DllBase);
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
 
         /* Set the right size */
         ImportSize = IatSize;
@@ -114,7 +121,14 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
                                     &ImportSize,
                                     PAGE_READWRITE,
                                     &OldProtect);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DbgPrint("LDR: Unable to unprotect IAT for %wZ (Status %x)\n",
+                 &ImportLdrEntry->BaseDllName,
+                 Status);
+        return Status;
+    }
 
     /* Check if the Thunks are already valid */
     if (EntriesValid)
@@ -400,6 +414,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     if (Stale)
     {
         /* It was, so find the IAT entry for it */
+        ++LdrpNormalSnap;
         ImportEntry = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                    TRUE,
                                                    IMAGE_DIRECTORY_ENTRY_IMPORT,

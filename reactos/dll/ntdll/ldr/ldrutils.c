@@ -15,10 +15,7 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY LdrpUnloadHead;
 PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache, LdrpGetModuleHandleCache;
-
-#define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
 
 /* FUNCTIONS *****************************************************************/
 
@@ -283,35 +280,39 @@ LdrpCallTlsInitializers(IN PVOID BaseAddress,
     /* Protect against invalid pointers */
     _SEH2_TRY
     {
-        /* Make sure it's valid and we have an array */
-        Array = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks;
-        if ((TlsDirectory) && (Array))
+        /* Make sure it's valid */
+        if (TlsDirectory)
         {
-            /* Display debug */
-            if (ShowSnaps)
+            /* Get the array */
+            Array = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks;
+            if (Array)
             {
-                DPRINT1("LDR: Tls Callbacks Found. Imagebase %p Tls %p CallBacks %p\n",
-                        BaseAddress, TlsDirectory, Array);
-            }
-
-            /* Loop the array */
-            while (*Array)
-            {
-                /* Get the TLS Entrypoint */
-                Callback = *Array++;
-
                 /* Display debug */
                 if (ShowSnaps)
                 {
-                    DPRINT1("LDR: Calling Tls Callback Imagebase %p Function %p\n",
-                            BaseAddress, Callback);
+                    DPRINT1("LDR: Tls Callbacks Found. Imagebase %p Tls %p CallBacks %p\n",
+                            BaseAddress, TlsDirectory, Array);
                 }
 
-                /* Call it */
-                LdrpCallInitRoutine((PDLL_INIT_ROUTINE)Callback,
-                                    BaseAddress,
-                                    Reason,
-                                    NULL);
+                /* Loop the array */
+                while (*Array)
+                {
+                    /* Get the TLS Entrypoint */
+                    Callback = *Array++;
+
+                    /* Display debug */
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("LDR: Calling Tls Callback Imagebase %p Function %p\n",
+                                BaseAddress, Callback);
+                    }
+
+                    /* Call it */
+                    LdrpCallInitRoutine((PDLL_INIT_ROUTINE)Callback,
+                                        BaseAddress,
+                                        Reason,
+                                        NULL);
+                }
             }
         }
     }
@@ -2047,272 +2048,6 @@ Quickie:
     }
 
     /* Return status */
-    return Status;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-LdrUnloadDll(IN PVOID BaseAddress)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PPEB Peb = NtCurrentPeb();
-    PLDR_DATA_TABLE_ENTRY LdrEntry, CurrentEntry;
-    PVOID EntryPoint;
-    PLIST_ENTRY NextEntry;
-    LIST_ENTRY UnloadList;
-    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
-    PVOID CorImageData;
-    ULONG ComSectionSize;
-
-    /* Get the LDR Lock */
-    if (!LdrpInLdrInit) RtlEnterCriticalSection(Peb->LoaderLock);
-
-    /* Increase the unload count */
-    LdrpActiveUnloadCount++;
-
-    /* Skip unload */
-    if (LdrpShutdownInProgress) goto Quickie;
-
-    /* Make sure the DLL is valid and get its entry */
-    if (!LdrpCheckForLoadedDllHandle(BaseAddress, &LdrEntry))
-    {
-        Status = STATUS_DLL_NOT_FOUND;
-        goto Quickie;
-    }
-
-    /* Check the current Load Count */
-    if (LdrEntry->LoadCount != 0xFFFF)
-    {
-        /* Decrease it */
-        LdrEntry->LoadCount--;
-
-        /* If it's a dll */
-        if (LdrEntry->Flags & LDRP_IMAGE_DLL)
-        {
-            /* Set up the Act Ctx */
-            ActCtx.Size = sizeof(ActCtx);
-            ActCtx.Format = 1;
-            RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
-
-            /* Activate the ActCtx */
-            RtlActivateActivationContextUnsafeFast(&ActCtx,
-                                                   LdrEntry->EntryPointActivationContext);
-
-            /* Update the load count */
-            LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_DEREFCOUNT);
-
-            /* Release the context */
-            RtlDeactivateActivationContextUnsafeFast(&ActCtx);
-        }
-    }
-    else
-    {
-        /* The DLL is locked */
-        goto Quickie;
-    }
-
-    /* Show debug message */
-    if (ShowSnaps) DPRINT1("LDR: UNINIT LIST\n");
-
-    /* Check if this is our only unload */
-    if (LdrpActiveUnloadCount == 1)
-    {
-        /* Initialize the unload list */
-        InitializeListHead(&LdrpUnloadHead);
-    }
-
-    /* Loop the modules to build the list */
-    NextEntry = Peb->Ldr->InInitializationOrderModuleList.Blink;
-    while (NextEntry != &Peb->Ldr->InInitializationOrderModuleList)
-    {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-        NextEntry = NextEntry->Blink;
-
-        /* Remove flag */
-        LdrEntry->Flags &= ~LDRP_UNLOAD_IN_PROGRESS;
-
-        /* If the load count is now 0 */
-        if (!LdrEntry->LoadCount)
-        {
-            /* Show message */
-            if (ShowSnaps)
-            {
-                DPRINT1("(%d) [%ws] %ws (%lx) deinit %lx\n",
-                        LdrpActiveUnloadCount,
-                        LdrEntry->BaseDllName.Buffer,
-                        LdrEntry->FullDllName.Buffer,
-                        (ULONG)LdrEntry->LoadCount,
-                        LdrEntry->EntryPoint);
-            }
-
-            /* FIXME: Call Shim Engine and notify */
-
-            /* Unlink it */
-            CurrentEntry = LdrEntry;
-            RemoveEntryList(&CurrentEntry->InInitializationOrderModuleList);
-            RemoveEntryList(&CurrentEntry->InMemoryOrderModuleList);
-            RemoveEntryList(&CurrentEntry->HashLinks);
-
-            /* If there's more then one active unload */
-            if (LdrpActiveUnloadCount > 1)
-            {
-                /* Flush the cached DLL handle and clear the list */
-                LdrpLoadedDllHandleCache = NULL;
-                CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
-            }
-
-            /* Add the entry on the unload list */
-            InsertTailList(&LdrpUnloadHead, &CurrentEntry->HashLinks);
-        }
-    }
-
-    /* Only call the entrypoints once */
-    if (LdrpActiveUnloadCount > 1) goto Quickie;
-
-    /* Now loop the unload list and create our own */
-    InitializeListHead(&UnloadList);
-    CurrentEntry = NULL;
-    NextEntry = LdrpUnloadHead.Flink;
-    while (NextEntry != &LdrpUnloadHead)
-    {
-        /* If we have an active entry */
-        if (CurrentEntry)
-        {
-            /* Remove it */
-            RemoveEntryList(&CurrentEntry->InLoadOrderLinks);
-            CurrentEntry = NULL;
-
-            /* Reset list pointers */
-            NextEntry = LdrpUnloadHead.Flink;
-            if (NextEntry == &LdrpUnloadHead) break;
-        }
-
-        /* Get the current entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
-
-        /* Log the Unload Event */
-        //LdrpRecordUnloadEvent(LdrEntry);
-
-        /* Set the entry and clear it from the list */
-        CurrentEntry = LdrEntry;
-        LdrpLoadedDllHandleCache = NULL;
-        CurrentEntry->InMemoryOrderModuleList.Flink = NULL;
-
-        /* Move it from the global to the local list */
-        RemoveEntryList(&CurrentEntry->HashLinks);
-        InsertTailList(&UnloadList, &CurrentEntry->HashLinks);
-
-        /* Get the entrypoint */
-        EntryPoint = LdrEntry->EntryPoint;
-
-        /* Check if we should call it */
-        if (EntryPoint && (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED))
-        {
-            /* Show message */
-            if (ShowSnaps)
-            {
-                DPRINT1("LDR: Calling deinit %lx\n", EntryPoint);
-            }
-
-            /* Set up the Act Ctx */
-            ActCtx.Size = sizeof(ActCtx);
-            ActCtx.Format = 1;
-            RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
-
-            /* Activate the ActCtx */
-            RtlActivateActivationContextUnsafeFast(&ActCtx,
-                                                   LdrEntry->EntryPointActivationContext);
-
-            /* Call the entrypoint */
-            LdrpCallInitRoutine(LdrEntry->EntryPoint,
-                                LdrEntry->DllBase,
-                                DLL_PROCESS_DETACH,
-                                NULL);
-
-            /* Release the context */
-            RtlDeactivateActivationContextUnsafeFast(&ActCtx);
-        }
-
-        /* Remove it from the list */
-        RemoveEntryList(&CurrentEntry->InLoadOrderLinks);
-        CurrentEntry = NULL;
-        NextEntry = LdrpUnloadHead.Flink;
-    }
-
-    /* Now loop our local list */
-    NextEntry = UnloadList.Flink;
-    while (NextEntry != &UnloadList)
-    {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, HashLinks);
-        NextEntry = NextEntry->Flink;
-        CurrentEntry = LdrEntry;
-
-        /* Notify Application Verifier */
-        if (Peb->NtGlobalFlag & FLG_HEAP_ENABLE_TAIL_CHECK)
-        {
-            DPRINT1("We don't support Application Verifier yet\n");
-        }
-
-        /* Show message */
-        if (ShowSnaps)
-        {
-            DPRINT1("LDR: Unmapping [%ws]\n", LdrEntry->BaseDllName.Buffer);
-        }
-
-        /* Check if this is a .NET executable */
-        if ((CorImageData = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
-                                                         TRUE,
-                                                         IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
-                                                         &ComSectionSize)))
-        {
-            /* FIXME */
-            DPRINT1(".NET Images are not supported yet\n");
-        }
-
-        /* Check if we should unmap*/
-        if (!(CurrentEntry->Flags & LDR_COR_OWNS_UNMAP))
-        {
-            /* Unmap the DLL */
-            Status = NtUnmapViewOfSection(NtCurrentProcess(),
-                                          CurrentEntry->DllBase);
-        }
-
-        /* Unload the alternate resource module, if any */
-        LdrUnloadAlternateResourceModule(CurrentEntry->DllBase);
-
-        /* Send shutdown notification */
-        //LdrpSendDllNotifications(CurrentEntry, 2, LdrpShutdownInProgress);
-
-        /* Check if a Hotpatch is active */
-        if (LdrEntry->PatchInformation)
-        {
-            /* FIXME */
-            DPRINT1("We don't support Hotpatching yet\n");
-        }
-
-        /* Deallocate the Entry */
-        LdrpFinalizeAndDeallocateDataTableEntry(CurrentEntry);
-
-        /* If this is the cached entry, invalide it */
-        if (LdrpGetModuleHandleCache == CurrentEntry)
-        {
-            LdrpGetModuleHandleCache = NULL;
-        }
-    }
-
-Quickie:
-    /* Decrease unload count */
-    LdrpActiveUnloadCount--;
-    if (!LdrpInLdrInit) RtlLeaveCriticalSection(Peb->LoaderLock);
-
-    /* FIXME: Rundown the Hotpatch data, if present */
-
-    /* Return to caller */
     return Status;
 }
 

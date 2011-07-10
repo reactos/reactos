@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #define LDR_HASH_TABLE_ENTRIES 32
+#define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
 
 /* LdrpUpdateLoadCount2 flags */
 #define LDRP_UPDATE_REFCOUNT   0x01
@@ -41,7 +42,7 @@ extern BOOLEAN LdrpLdrDatabaseIsSetup;
 extern ULONG LdrpActiveUnloadCount;
 extern BOOLEAN LdrpShutdownInProgress;
 extern UNICODE_STRING LdrpKnownDllPath;
-extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache;
+extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache, LdrpLoadedDllHandleCache;
 
 /* ldrinit.c */
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
@@ -152,6 +153,10 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                      IN PVOID DllBase,
                      OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
                      OUT PBOOLEAN Existing);
+                     
+VOID
+NTAPI
+LdrpFinalizeAndDeallocateDataTableEntry(IN PLDR_DATA_TABLE_ENTRY Entry);
                      
 extern HANDLE WindowsApiPort;
 
