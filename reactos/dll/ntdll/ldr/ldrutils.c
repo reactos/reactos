@@ -105,7 +105,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                           FALSE,
                                           &Entry))
                 {
-                    if (Entry->LoadCount != -1)
+                    if (Entry->LoadCount != 0xFFFF)
                     {
                         /* Perform the required action */
                         switch (Flags)
@@ -117,7 +117,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             Entry->LoadCount--;
                             break;
                         case LDRP_UPDATE_PIN:
-                            Entry->LoadCount = -1;
+                            Entry->LoadCount = 0xFFFF;
                             break;
                         }
 
@@ -149,7 +149,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                               FALSE,
                                               &Entry))
                     {
-                        if (Entry->LoadCount != -1)
+                        if (Entry->LoadCount != 0xFFFF)
                         {
                             /* Perform the required action */
                             switch (Flags)
@@ -161,7 +161,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                 Entry->LoadCount--;
                                 break;
                             case LDRP_UPDATE_PIN:
-                                Entry->LoadCount = -1;
+                                Entry->LoadCount = 0xFFFF;
                                 break;
                             }
 
@@ -218,7 +218,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                           FALSE,
                                           &Entry))
                 {
-                    if (Entry->LoadCount != -1)
+                    if (Entry->LoadCount != 0xFFFF)
                     {
                         /* Perform the required action */
                         switch (Flags)
@@ -230,7 +230,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             Entry->LoadCount--;
                             break;
                         case LDRP_UPDATE_PIN:
-                            Entry->LoadCount = -1;
+                            Entry->LoadCount = 0xFFFF;
                             break;
                         }
 
@@ -1963,7 +1963,7 @@ StartLoop:
             }
 
             /* Update load count, unless it's locked */
-            if (LdrEntry->LoadCount != -1) LdrEntry->LoadCount++;
+            if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
             LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
 
             /* Check if we failed */
@@ -1982,7 +1982,7 @@ StartLoop:
                 goto Quickie;
             }
         }
-        else if (LdrEntry->LoadCount != -1)
+        else if (LdrEntry->LoadCount != 0xFFFF)
         {
             /* Increase load count */
             LdrEntry->LoadCount++;
@@ -2014,7 +2014,7 @@ StartLoop:
     else
     {
         /* We were already loaded. Are we a DLL? */
-        if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != -1))
+        if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != 0xFFFF))
         {
             /* Increase load count */
             LdrEntry->LoadCount++;
@@ -2026,7 +2026,7 @@ StartLoop:
         else
         {
             /* Not a DLL, just increase the load count */
-            if (LdrEntry->LoadCount != -1) LdrEntry->LoadCount++;
+            if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
         }
     }
 
@@ -2084,7 +2084,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
     }
 
     /* Check the current Load Count */
-    if (LdrEntry->LoadCount != -1)
+    if (LdrEntry->LoadCount != 0xFFFF)
     {
         /* Decrease it */
         LdrEntry->LoadCount--;
