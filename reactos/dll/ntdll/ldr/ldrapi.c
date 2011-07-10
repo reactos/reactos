@@ -1159,6 +1159,91 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 /*
  * @implemented
  */
+NTSTATUS
+NTAPI
+LdrAddRefDll(IN ULONG Flags,
+             IN PVOID BaseAddress)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Cookie;
+    BOOLEAN Locked = FALSE;
+
+    /* Check for invalid flags */
+    if (Flags & ~(LDR_ADDREF_DLL_PIN))
+    {
+        /* Fail with invalid parameter status if so */
+        Status = STATUS_INVALID_PARAMETER;
+        goto quickie;
+    }
+
+    /* Acquire the loader lock if not in init phase */
+    if (!LdrpInLdrInit)
+    {
+        /* Acquire the lock */
+        Status = LdrLockLoaderLock(0, NULL, &Cookie);
+        if (!NT_SUCCESS(Status)) goto quickie;
+        Locked = TRUE;
+    }
+
+    /* Get this module's data table entry */
+    if (LdrpCheckForLoadedDllHandle(BaseAddress, &LdrEntry))
+    {
+        if (!LdrEntry)
+        {
+            /* Shouldn't happen */
+            Status = STATUS_INTERNAL_ERROR;
+            goto quickie;
+        }
+
+        /* If this is not a pinned module */
+        if (LdrEntry->LoadCount != 0xFFFF)
+        {
+            /* Update its load count */
+            if (Flags & LDR_ADDREF_DLL_PIN)
+            {
+                /* Pin it by setting load count to -1 */
+                LdrEntry->LoadCount = 0xFFFF;
+                LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_PIN);
+            }
+            else
+            {
+                /* Increase its load count by one */
+                LdrEntry->LoadCount++;
+                LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
+            }
+
+            /* Clear load in progress */
+            LdrpClearLoadInProgress();
+        }
+    }
+    else
+    {
+        /* There was an error getting this module's handle, return invalid param status */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+quickie:
+    /* Check for error case */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Print debug information */
+        if ((ShowSnaps) || ((Status != STATUS_NO_SUCH_FILE) &&
+                            (Status != STATUS_DLL_NOT_FOUND) &&
+                            (Status != STATUS_OBJECT_NAME_NOT_FOUND)))
+        {
+            DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress);
+        }
+    }
+
+    /* Release the lock if needed */
+    if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    return Status;
+}
+
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 RtlDllShutdownInProgress(VOID)

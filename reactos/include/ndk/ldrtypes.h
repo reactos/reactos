@@ -66,7 +66,7 @@ Author:
 //
 // LdrAddRef Flags
 //
-#define LDR_PIN_MODULE                              0x00000001
+#define LDR_ADDREF_DLL_PIN                          0x00000001
 
 //
 // LdrLockLoaderLock Flags
@@ -84,6 +84,7 @@ Author:
 //
 #define LDR_GET_DLL_HANDLE_EX_UNCHANGED_REFCOUNT    0x00000001
 #define LDR_GET_DLL_HANDLE_EX_PIN                   0x00000002
+
 
 #define LDR_LOCK_LOADER_LOCK_DISPOSITION_INVALID           0
 #define LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED     1
@@ -215,5 +216,15 @@ typedef struct _ALT_RESOURCE_MODULE
 //
 typedef VOID (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, IN PVOID Parameter, OUT BOOLEAN *Stop);
 typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
+
+//
+// DLL Main Routine
+//
+typedef BOOLEAN
+(NTAPI *PDLL_INIT_ROUTINE)(
+    IN PVOID DllHandle,
+    IN ULONG Reason,
+    IN PCONTEXT Context OPTIONAL
+);
 
 #endif

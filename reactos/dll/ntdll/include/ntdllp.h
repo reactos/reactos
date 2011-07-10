@@ -25,11 +25,6 @@ typedef struct _LDRP_TLS_DATA
     IMAGE_TLS_DIRECTORY TlsDirectory;
 } LDRP_TLS_DATA, *PLDRP_TLS_DATA;
 
-typedef BOOL
-(NTAPI *PDLLMAIN_FUNC)(HANDLE hInst,
-                       ULONG ul_reason_for_call,
-                       LPVOID lpReserved);
-
 /* Global data */
 extern RTL_CRITICAL_SECTION LdrpLoaderLock;
 extern BOOLEAN LdrpInLdrInit;
@@ -54,8 +49,8 @@ VOID NTAPI LdrpInitializeThread(IN PCONTEXT Context);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
 NTSTATUS NTAPI LdrpAllocateTls(VOID);
 VOID NTAPI LdrpFreeTls(VOID);
-VOID NTAPI LdrpTlsCallback(PVOID BaseAddress, ULONG Reason);
-BOOLEAN NTAPI LdrpCallDllEntry(PDLLMAIN_FUNC EntryPoint, PVOID BaseAddress, ULONG Reason, PVOID Context);
+VOID NTAPI LdrpCallTlsInitializers(PVOID BaseAddress, ULONG Reason);
+BOOLEAN NTAPI LdrpCallInitRoutine(PDLL_INIT_ROUTINE EntryPoint, PVOID BaseAddress, ULONG Reason, PVOID Context);
 NTSTATUS NTAPI LdrpInitializeProcess(PCONTEXT Context, PVOID SystemArgument1);
 VOID NTAPI LdrpInitFailure(NTSTATUS Status);
 VOID NTAPI LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry);
@@ -135,7 +130,7 @@ LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
 PVOID NTAPI
 LdrpFetchAddressOfEntryPoint(PVOID ImageBase);
 
-BOOLEAN NTAPI
+VOID NTAPI
 LdrpFreeUnicodeString(PUNICODE_STRING String);
 
 

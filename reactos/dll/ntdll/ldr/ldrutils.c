@@ -14,11 +14,9 @@
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
-#define IMAGE_DLLCHARACTERISTICS_WX86_DLL 0x1000
 
 LIST_ENTRY LdrpUnloadHead;
-PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache;
-PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache;
+PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache, LdrpGetModuleHandleCache;
 
 #define LDR_GET_HASH_ENTRY(x) (RtlUpcaseUnicodeChar((x)) & (LDR_HASH_TABLE_ENTRIES - 1))
 
@@ -26,15 +24,16 @@ PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache;
 
 BOOLEAN
 NTAPI
-LdrpCallDllEntry(PDLLMAIN_FUNC EntryPoint,
-                 PVOID BaseAddress,
-                 ULONG Reason,
-                 PVOID Context)
+LdrpCallInitRoutine(IN PDLL_INIT_ROUTINE EntryPoint,
+                    IN PVOID BaseAddress,
+                    IN ULONG Reason,
+                    IN PVOID Context)
 {
     /* Call the entry */
     return EntryPoint(BaseAddress, Reason, Context);
 }
 
+/* NOTE: This function is broken */
 VOID
 NTAPI
 LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
@@ -261,18 +260,15 @@ LdrpUpdateLoadCount2(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     WCHAR Buffer[MAX_PATH];
     UNICODE_STRING UpdateString;
 
-    /* Setup the string */
-    UpdateString.Buffer = Buffer;
-    UpdateString.Length = 0;
-    UpdateString.MaximumLength = sizeof(Buffer);
-
-    /* Call the extended API */
+    /* Setup the string and call the extended API */
+    RtlInitEmptyUnicodeString(&UpdateString, Buffer, sizeof(Buffer));
     LdrpUpdateLoadCount3(LdrEntry, Flags, &UpdateString);
 }
 
 VOID
 NTAPI
-LdrpTlsCallback(PVOID BaseAddress, ULONG Reason)
+LdrpCallTlsInitializers(IN PVOID BaseAddress,
+                        IN ULONG Reason)
 {
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PIMAGE_TLS_CALLBACK *Array, Callback;
@@ -288,7 +284,8 @@ LdrpTlsCallback(PVOID BaseAddress, ULONG Reason)
     _SEH2_TRY
     {
         /* Make sure it's valid and we have an array */
-        if (TlsDirectory && (Array = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks))
+        Array = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks;
+        if ((TlsDirectory) && (Array))
         {
             /* Display debug */
             if (ShowSnaps)
@@ -311,7 +308,10 @@ LdrpTlsCallback(PVOID BaseAddress, ULONG Reason)
                 }
 
                 /* Call it */
-                LdrpCallDllEntry((PDLLMAIN_FUNC)Callback, BaseAddress, Reason, NULL);
+                LdrpCallInitRoutine((PDLL_INIT_ROUTINE)Callback,
+                                    BaseAddress,
+                                    Reason,
+                                    NULL);
             }
         }
     }
@@ -324,9 +324,10 @@ LdrpTlsCallback(PVOID BaseAddress, ULONG Reason)
 
 NTSTATUS
 NTAPI
-LdrpCodeAuthzCheckDllAllowed(PUNICODE_STRING FullName,
-                             HANDLE DllHandle)
+LdrpCodeAuthzCheckDllAllowed(IN PUNICODE_STRING FullName,
+                             IN HANDLE DllHandle)
 {
+    /* Not implemented */
     return STATUS_SUCCESS;
 }
 
@@ -481,6 +482,7 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
     return Status;
 }
 
+/* NOTE: This function is totally b0rked and doesn't handle the parameters/functionality it should */
 BOOLEAN
 NTAPI
 LdrpResolveDllName(PWSTR DllPath,
@@ -577,25 +579,25 @@ LdrpResolveDllName(PWSTR DllPath,
 
 PVOID
 NTAPI
-LdrpFetchAddressOfEntryPoint(PVOID ImageBase)
+LdrpFetchAddressOfEntryPoint(IN PVOID ImageBase)
 {
     PIMAGE_NT_HEADERS NtHeaders;
-    ULONG_PTR EntryPoint;
+    ULONG_PTR EntryPoint = 0;
 
     /* Get entry point offset from NT headers */
     NtHeaders = RtlImageNtHeader(ImageBase);
-    EntryPoint = NtHeaders->OptionalHeader.AddressOfEntryPoint;
+    if (NtHeaders)
+    {
+        /* Add image base */
+        EntryPoint = NtHeaders->OptionalHeader.AddressOfEntryPoint;
+        if (EntryPoint) EntryPoint += (ULONG_PTR)ImageBase;
+    }
 
-    /* If it's 0 - return so */
-    if (!EntryPoint) return NULL;
-
-    /* Add image base */
-    EntryPoint += (ULONG_PTR)ImageBase;
-
-    /* Return calculated pointer */
+    /* Return calculated pointer (or zero in case of failure) */
     return (PVOID)EntryPoint;
 }
 
+/* NOTE: This function is broken, wrong number of parameters, no SxS, etc */
 HANDLE
 NTAPI
 LdrpCheckForKnownDll(PWSTR DllName,
@@ -702,31 +704,36 @@ LdrpSetProtection(PVOID ViewBase,
 
     /* Get the NT headers */
     NtHeaders = RtlImageNtHeader(ViewBase);
+    if (!NtHeaders) return STATUS_INVALID_IMAGE_FORMAT;
 
     /* Compute address of the first section header */
-    Section = (PIMAGE_SECTION_HEADER)(
-        (ULONG_PTR)NtHeaders + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) +
-        NtHeaders->FileHeader.SizeOfOptionalHeader);
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
 
     /* Go through all sections */
     for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++)
     {
-        if (Section->SizeOfRawData &&
+        /* Check for read-only non-zero section */
+        if ((Section->SizeOfRawData) &&
             !(Section->Characteristics & IMAGE_SCN_MEM_WRITE))
         {
-            /* This section is not writable and has some size, so we need to change
-               its protection */
+            /* Check if we are setting or restoring protection */
             if (Restore)
             {
                 /* Set it to either EXECUTE or READONLY */
                 if (Section->Characteristics & IMAGE_SCN_MEM_EXECUTE)
+                {
                     NewProtection = PAGE_EXECUTE;
+                }
                 else
+                {
                     NewProtection = PAGE_READONLY;
+                }
 
                 /* Add PAGE_NOCACHE if needed */
                 if (Section->Characteristics & IMAGE_SCN_MEM_NOT_CACHED)
+                {
                     NewProtection |= PAGE_NOCACHE;
+                }
             }
             else
             {
@@ -734,9 +741,9 @@ LdrpSetProtection(PVOID ViewBase,
                 NewProtection = PAGE_READWRITE;
             }
 
+            /* Get the section VA */
             SectionBase = (PVOID)((ULONG_PTR)ViewBase + Section->VirtualAddress);
             SectionSize = Section->SizeOfRawData;
-
             if (SectionSize)
             {
                 /* Set protection */
@@ -745,7 +752,6 @@ LdrpSetProtection(PVOID ViewBase,
                                                 &SectionSize,
                                                 NewProtection,
                                                 &OldProtection);
-
                 if (!NT_SUCCESS(Status)) return Status;
             }
         }
@@ -756,10 +762,10 @@ LdrpSetProtection(PVOID ViewBase,
 
     /* Flush instruction cache if necessary */
     if (Restore) ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
-
     return STATUS_SUCCESS;
 }
 
+/* NOTE: Not yet reviewed */
 NTSTATUS
 NTAPI
 LdrpMapDll(IN PWSTR SearchPath OPTIONAL,
@@ -1275,11 +1281,11 @@ NTAPI
 LdrpAllocateDataTableEntry(IN PVOID BaseAddress)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
-    PIMAGE_NT_HEADERS NtHeader = RtlImageNtHeader(BaseAddress);
-
+    PIMAGE_NT_HEADERS NtHeader;
     DPRINT("LdrpAllocateDataTableEntry(%p), NtHeader %p\n", BaseAddress, NtHeader);
 
     /* Make sure the header is valid */
+    NtHeader = RtlImageNtHeader(BaseAddress);
     if (NtHeader)
     {
         /* Allocate an entry */
@@ -1294,6 +1300,7 @@ LdrpAllocateDataTableEntry(IN PVOID BaseAddress)
             LdrEntry->DllBase = BaseAddress;
             LdrEntry->SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
             LdrEntry->TimeDateStamp = NtHeader->FileHeader.TimeDateStamp;
+            LdrEntry->PatchInformation = NULL;
         }
     }
 
@@ -1308,36 +1315,33 @@ LdrpInsertMemoryTableEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     PPEB_LDR_DATA PebData = NtCurrentPeb()->Ldr;
     ULONG i;
 
-    /* Get the Hash entry */
+    /* Insert into hash table */
     i = LDR_GET_HASH_ENTRY(LdrEntry->BaseDllName.Buffer[0]);
-
     InsertTailList(&LdrpHashTable[i], &LdrEntry->HashLinks);
+    
+    /* Insert into other lists */
     InsertTailList(&PebData->InLoadOrderModuleList, &LdrEntry->InLoadOrderLinks);
     InsertTailList(&PebData->InMemoryOrderModuleList, &LdrEntry->InMemoryOrderModuleList);
 }
 
 VOID
 NTAPI
-LdrpFinalizeAndDeallocateDataTableEntry(PLDR_DATA_TABLE_ENTRY Entry)
+LdrpFinalizeAndDeallocateDataTableEntry(IN PLDR_DATA_TABLE_ENTRY Entry)
 {
+    /* Sanity check */
     ASSERT(Entry != NULL);
 
-    /* Release the activation context if it exists */
-    if (Entry->EntryPointActivationContext)
+    /* Release the activation context if it exists and wasn't already released */
+    if ((Entry->EntryPointActivationContext) &&
+        (Entry->EntryPointActivationContext != INVALID_HANDLE_VALUE))
     {
-        /* Check if it wasn't already released */
-        if ((HANDLE)Entry->EntryPointActivationContext != INVALID_HANDLE_VALUE)
-        {
-            RtlReleaseActivationContext(Entry->EntryPointActivationContext);
-
-            /* Mark it as invalid */
-            Entry->EntryPointActivationContext = INVALID_HANDLE_VALUE;
-        }
+        /* Mark it as invalid */
+        RtlReleaseActivationContext(Entry->EntryPointActivationContext);
+        Entry->EntryPointActivationContext = INVALID_HANDLE_VALUE;
     }
 
     /* Release the full dll name string */
-    if (Entry->FullDllName.Buffer)
-        LdrpFreeUnicodeString(&Entry->FullDllName);
+    if (Entry->FullDllName.Buffer) LdrpFreeUnicodeString(&Entry->FullDllName);
 
     /* Finally free the entry's memory */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Entry);
@@ -1352,7 +1356,8 @@ LdrpCheckForLoadedDllHandle(IN PVOID Base,
     PLIST_ENTRY ListHead, Next;
 
     /* Check the cache first */
-    if (LdrpLoadedDllHandleCache && LdrpLoadedDllHandleCache->DllBase == Base)
+    if ((LdrpLoadedDllHandleCache) &&
+        (LdrpLoadedDllHandleCache->DllBase == Base))
     {
         /* We got lucky, return the cached entry */
         *LdrEntry = LdrpLoadedDllHandleCache;
@@ -1362,12 +1367,12 @@ LdrpCheckForLoadedDllHandle(IN PVOID Base,
     /* Time for a lookup */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     Next = ListHead->Flink;
-    while(Next != ListHead)
+    while (Next != ListHead)
     {
         /* Get the current entry */
-        Current =  CONTAINING_RECORD(Next,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
+        Current = CONTAINING_RECORD(Next,
+                                    LDR_DATA_TABLE_ENTRY,
+                                    InLoadOrderLinks);
 
         /* Make sure it's not unloading and check for a match */
         if ((Current->InMemoryOrderModuleList.Flink) && (Base == Current->DllBase))
@@ -2223,10 +2228,10 @@ LdrUnloadDll(IN PVOID BaseAddress)
                                                    LdrEntry->EntryPointActivationContext);
 
             /* Call the entrypoint */
-            LdrpCallDllEntry(LdrEntry->EntryPoint,
-                             LdrEntry->DllBase,
-                             DLL_PROCESS_DETACH,
-                             NULL);
+            LdrpCallInitRoutine(LdrEntry->EntryPoint,
+                                LdrEntry->DllBase,
+                                DLL_PROCESS_DETACH,
+                                NULL);
 
             /* Release the context */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -2313,139 +2318,55 @@ Quickie:
 
 ULONG
 NTAPI
-LdrpClearLoadInProgress()
+LdrpClearLoadInProgress(VOID)
 {
-    PLIST_ENTRY ListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
+    PLIST_ENTRY ListHead, Entry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG ModulesCount = 0;
 
     /* Traverse the init list */
     ListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
     Entry = ListHead->Flink;
-
     while (Entry != ListHead)
     {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
+        /* Get the loader entry */
+        LdrEntry = CONTAINING_RECORD(Entry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InInitializationOrderModuleList);
 
         /* Clear load in progress flag */
-        Module->Flags &= ~LDRP_LOAD_IN_PROGRESS;
+        LdrEntry->Flags &= ~LDRP_LOAD_IN_PROGRESS;
 
-        /* Increase counter for modules with entry point count but not processed yet */
-        if (Module->EntryPoint &&
-            !(Module->Flags & LDRP_ENTRY_PROCESSED)) ModulesCount++;
+        /* Check for modules with entry point count but not processed yet */
+        if ((LdrEntry->EntryPoint) &&
+            !(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
+        {
+            /* Increase counter */
+            ModulesCount++;
+        }
 
         /* Advance to the next entry */
         Entry = Entry->Flink;
     }
 
+    /* Return final count */
     return ModulesCount;
 }
 
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-LdrAddRefDll(IN ULONG Flags,
-             IN PVOID BaseAddress)
-{
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    NTSTATUS Status = STATUS_SUCCESS;
-	ULONG Cookie;
-	BOOLEAN Locked = FALSE;
-
-	/* Check for invalid flags */
-    if (Flags & ~(LDR_PIN_MODULE))
-    {
-		/* Fail with invalid parameter status if so */
-		Status = STATUS_INVALID_PARAMETER;
-		goto quickie;
-    }
-
-	/* Acquire the loader lock if not in init phase */
-    if (!LdrpInLdrInit)
-    {
-        /* Acquire the lock */
-        Status = LdrLockLoaderLock(0, NULL, &Cookie);
-        if (!NT_SUCCESS(Status)) goto quickie;
-        Locked = TRUE;
-    }
-
-	/* Get this module's data table entry */
-	if (LdrpCheckForLoadedDllHandle(BaseAddress, &LdrEntry))
-	{
-		if (!LdrEntry)
-		{
-			/* Shouldn't happen */
-			Status = STATUS_INTERNAL_ERROR;
-			goto quickie;
-		}
-
-		/* If this is not a pinned module */
-		if (LdrEntry->LoadCount != -1)
-		{
-			/* Update its load count */
-			if (Flags & LDR_PIN_MODULE)
-			{
-				/* Pin it by setting load count to -1 */
-				LdrEntry->LoadCount = -1;
-				LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_PIN);
-			}
-			else
-			{
-				/* Increase its load count by one */
-				LdrEntry->LoadCount++;
-				LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
-			}
-
-			/* Clear load in progress */
-			LdrpClearLoadInProgress();
-		}
-	}
-	else
-	{
-		/* There was an error getting this module's handle, return invalid param status */
-		Status = STATUS_INVALID_PARAMETER;
-		goto quickie;
-	}
-
-quickie:
-	if (!NT_SUCCESS(Status))
-	{
-		if (ShowSnaps ||
-			(Status != STATUS_NO_SUCH_FILE &&
-			 Status != STATUS_DLL_NOT_FOUND &&
-			 Status != STATUS_OBJECT_NAME_NOT_FOUND))
-		{
-			DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress);
-		}
-	}
-
-	/* Release the lock if needed */
-	if (Locked) LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
-
-    return Status;
-}
-
-
-BOOLEAN
+VOID
 NTAPI
-LdrpFreeUnicodeString(PUNICODE_STRING String)
+LdrpFreeUnicodeString(IN PUNICODE_STRING StringIn)
 {
-    BOOLEAN Result = FALSE;
-
-    ASSERT(String != NULL);
+    ASSERT(StringIn != NULL);
 
     /* If Buffer is not NULL - free it */
-    if (String->Buffer)
-        Result = RtlFreeHeap(RtlGetProcessHeap(), 0, String->Buffer);
+    if (StringIn->Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, StringIn->Buffer);
+    }
 
     /* Zero it out */
-    String->Length = 0;
-    String->MaximumLength = 0;
-    String->Buffer = NULL;
-
-    return Result;
+    RtlInitEmptyUnicodeString(StringIn, NULL, 0);
 }
 
 /* EOF */
