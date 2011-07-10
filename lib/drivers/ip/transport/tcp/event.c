@@ -90,11 +90,18 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        CompleteBucket(Connection, Bucket, TRUE);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
-    
+
+    /* Calling with Status == STATUS_SUCCESS means that we got a graceful closure
+     * so we don't want to kill everything else since send is still valid in this state
+     */
     if (Status == STATUS_SUCCESS)
-        Status = STATUS_FILE_CLOSED;
+    {
+        DbgPrint("[IP, FlushAllQueues] Flushed recv only after graceful closure\n");
+        DereferenceObject(Connection);
+        return;
+    }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ListenRequest, &Connection->Lock)))
     {
@@ -106,7 +113,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         DbgPrint("[IP, FlushAllQueues] Completing Listen request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
         DereferenceObject(Bucket->AssociatedEndpoint);
-        CompleteBucket(Connection, Bucket, TRUE);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->SendRequest, &Connection->Lock)))
@@ -120,7 +127,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
         Bucket->Status = Status;
         Bucket->Information = 0;
         
-        CompleteBucket(Connection, Bucket, TRUE);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
     
     while ((Entry = ExInterlockedRemoveHeadList(&Connection->ConnectRequest, &Connection->Lock)))
@@ -132,7 +139,7 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
 
         DbgPrint("[IP, FlushAllQueues] Completing Connection request for Connection = 0x%x\n", Bucket->AssociatedEndpoint);
         
-        CompleteBucket(Connection, Bucket, TRUE);
+        CompleteBucket(Connection, Bucket, FALSE);
     }
     
     DereferenceObject(Connection);
@@ -145,8 +152,12 @@ TCPFinEventHandler(void *arg, err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
 
-    /* We're already closed so we don't want to call lwip_close */
-    Connection->SocketContext = NULL;
+    /* Only clear the pointer if the shutdown was caused by an error */
+    if (err != ERR_OK)
+    {
+        /* We're already closed by the error so we don't want to call lwip_close */
+        Connection->SocketContext = NULL;
+    }
 
     DbgPrint("[IP, TCPFinEventHandler] Called for Connection( 0x%x )-> SocketContext = pcb (0x%x)\n", Connection, Connection->SocketContext);
     

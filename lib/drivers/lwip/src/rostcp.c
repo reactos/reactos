@@ -127,8 +127,11 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
     }
     else if (err == ERR_OK)
     {
+        /* Complete pending reads with 0 bytes to indicate a graceful closure,
+         * but note that send is still possible in this state so we don't close the
+         * whole socket here (by calling tcp_close()) as that would violate TCP specs
+         */
         TCPFinEventHandler(arg, ERR_OK);
-        tcp_close(pcb);
     }
 
     DbgPrint("[lwIP, InternalRecvEventHandler] Done ERR_OK 3\n");
