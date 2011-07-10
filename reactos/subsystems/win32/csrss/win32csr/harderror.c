@@ -106,6 +106,25 @@ CsrpGetClientFileName(
     return STATUS_SUCCESS;
 }
 
+static
+VOID
+CsrpFreeStringParameters(
+    IN OUT PULONG_PTR Parameters,
+    IN PHARDERROR_MSG HardErrorMessage)
+{
+    ULONG nParam;
+
+    /* Loop all parameters */
+    for (nParam = 0; nParam < HardErrorMessage->NumberOfParameters; nParam++)
+    {
+        /* Check if the current parameter is a string */
+        if (HardErrorMessage->UnicodeStringParameterMask & (1 << nParam) && Parameters[nParam])
+        {
+            /* Free the string buffer */
+            RtlFreeHeap(RtlGetProcessHeap(), 0, (PVOID)Parameters[nParam]);
+        }
+    }
+}
 
 static
 NTSTATUS
@@ -115,62 +134,82 @@ CsrpCaptureStringParameters(
     IN PHARDERROR_MSG HardErrorMessage,
     HANDLE hProcess)
 {
-    ULONG nParam, UnicodeStringParameterMask, Size = 0;
-    NTSTATUS Status;
-    UNICODE_STRING TempStringU;
-    CHAR *ParamString;
-
-    UnicodeStringParameterMask = HardErrorMessage->UnicodeStringParameterMask;
+    ULONG nParam, Size = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING TempStringU, ParamStringU;
+    ANSI_STRING TempStringA;
 
     /* Read all strings from client space */
-    for (nParam = 0;
-            nParam < HardErrorMessage->NumberOfParameters;
-            nParam++, UnicodeStringParameterMask >>= 1)
+    for (nParam = 0; nParam < HardErrorMessage->NumberOfParameters; nParam++)
     {
         Parameters[nParam] = 0;
 
         /* Check if the current parameter is a unicode string */
-        if (UnicodeStringParameterMask & 0x01)
+        if (HardErrorMessage->UnicodeStringParameterMask & (1 << nParam))
         {
             /* Read the UNICODE_STRING from the process memory */
             Status = NtReadVirtualMemory(hProcess,
                                          (PVOID)HardErrorMessage->Parameters[nParam],
-                                         &TempStringU,
-                                         sizeof(TempStringU),
+                                         &ParamStringU,
+                                         sizeof(ParamStringU),
                                          NULL);
 
-            if (!NT_SUCCESS(Status)) return Status;
+            if (!NT_SUCCESS(Status))
+                break;
 
             /* Allocate a buffer for the string */
-            ParamString = RtlAllocateHeap(RtlGetProcessHeap(),
-                                          HEAP_ZERO_MEMORY,
-                                          TempStringU.Length + sizeof(WCHAR));
+            TempStringU.MaximumLength = ParamStringU.Length;
+            TempStringU.Length = ParamStringU.Length;
+            TempStringU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                 HEAP_ZERO_MEMORY,
+                                                 TempStringU.MaximumLength);
 
-            if (!ParamString)
+            if (!TempStringU.Buffer)
             {
-                DPRINT1("Cannot allocate memory %d\n", TempStringU.Length);
-                return STATUS_NO_MEMORY;
+                DPRINT1("Cannot allocate memory %u\n", TempStringU.MaximumLength);
+                Status = STATUS_NO_MEMORY;
             }
 
             /* Read the string buffer from the process memory */
             Status = NtReadVirtualMemory(hProcess,
+                                         ParamStringU.Buffer,
                                          TempStringU.Buffer,
-                                         ParamString,
-                                         TempStringU.Length,
+                                         ParamStringU.Length,
                                          NULL);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtReadVirtualMemory failed with code: %lx\n", Status);
-                RtlFreeHeap(RtlGetProcessHeap(), 0, ParamString);
-                return Status;
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
+                break;
             }
 
-            /* Zero terminate the string */
-            ParamString[TempStringU.Length] = 0;
-            ParamString[TempStringU.Length + 1] = 0;
-            DPRINT("ParamString=\'%S\'\n", ParamString);
+            DPRINT("ParamString=\'%wZ\'\n", &TempStringU);
 
-            Parameters[nParam] = (ULONG_PTR)ParamString;
+            /* Allocate a buffer for converted to ANSI string */
+            TempStringA.MaximumLength = RtlUnicodeStringToAnsiSize(&TempStringU);
+            TempStringA.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                 HEAP_ZERO_MEMORY,
+                                                 TempStringA.MaximumLength);
+
+            if (!TempStringA.Buffer)
+            {
+                DPRINT1("Cannot allocate memory %u\n", TempStringA.MaximumLength);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+
+            /* Convert string to ANSI and free temporary buffer */
+            Status = RtlUnicodeStringToAnsiString(&TempStringA, &TempStringU, FALSE);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringA.Buffer);
+                break;
+            }
+
+            /* Note: RtlUnicodeStringToAnsiString returns NULL terminated string */
+            Parameters[nParam] = (ULONG_PTR)TempStringA.Buffer;
             Size += TempStringU.Length;
         }
         else
@@ -180,34 +219,15 @@ CsrpCaptureStringParameters(
         }
     }
 
-    *SizeOfAllUnicodeStrings = Size;
-    return STATUS_SUCCESS;
-}
-
-static
-VOID
-CsrpFreeStringParameters(
-    IN OUT PULONG_PTR Parameters,
-    IN PHARDERROR_MSG HardErrorMessage)
-{
-    ULONG nParam, UnicodeStringParameterMask;
-
-    UnicodeStringParameterMask = HardErrorMessage->UnicodeStringParameterMask;
-
-    /* Loop all parameters */
-    for (nParam = 0;
-            nParam < HardErrorMessage->NumberOfParameters;
-            nParam++, UnicodeStringParameterMask >>= 1)
+    if (!NT_SUCCESS(Status))
     {
-        /* Check if the current parameter is a string */
-        if (UnicodeStringParameterMask & 0x01)
-        {
-            /* Free the string buffer */
-            RtlFreeHeap(RtlGetProcessHeap(), 0, (PVOID)Parameters[nParam]);
-        }
+        CsrpFreeStringParameters(Parameters, HardErrorMessage);
+        return Status;
     }
-}
 
+    *SizeOfAllUnicodeStrings = Size;
+    return Status;
+}
 
 static
 NTSTATUS
