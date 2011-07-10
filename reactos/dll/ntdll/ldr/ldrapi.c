@@ -1292,7 +1292,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Set up the Act Ctx */
             ActCtx.Size = sizeof(ActCtx);
             ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
-            RtlZeroMemory(&ActCtx.Frame, sizeof(ActCtx));
+            RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
             /* Activate the ActCtx */
             RtlActivateActivationContextUnsafeFast(&ActCtx,
@@ -1416,7 +1416,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Set up the Act Ctx */
             ActCtx.Size = sizeof(ActCtx);
             ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
-            RtlZeroMemory(&ActCtx.Frame, sizeof(ActCtx));
+            RtlZeroMemory(&ActCtx.Frame, sizeof(RTL_ACTIVATION_CONTEXT_STACK_FRAME));
 
             /* Activate the ActCtx */
             RtlActivateActivationContextUnsafeFast(&ActCtx,
