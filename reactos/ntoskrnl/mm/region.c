@@ -135,16 +135,20 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
       {
          return(STATUS_NO_MEMORY);
       }
+      if(NewRegion->Length < Length)
+         RemainingLength = Length - NewRegion->Length;
+      else
+         RemainingLength = 0;
    }
    else
    {
       NewRegion = InitialRegion;
+      if(((ULONG_PTR)InitialBaseAddress + NewRegion->Length) < 
+            ((ULONG_PTR)StartAddress + Length))
+         RemainingLength = ((ULONG_PTR)StartAddress + Length) - ((ULONG_PTR)InitialBaseAddress + NewRegion->Length);
+      else
+         RemainingLength = 0;
    }
-   
-   if(NewRegion->Length < Length)
-      RemainingLength = Length - NewRegion->Length;
-   else
-      RemainingLength = 0;
 
    /*
     * Free any complete regions that are containing in the range of addresses
