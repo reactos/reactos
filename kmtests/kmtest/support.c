@@ -17,39 +17,6 @@
 #include <kmt_public.h>
 #include <kmt_test.h>
 
-/* pseudo-tests */
-START_TEST(Create)
-{
-    // nothing to do here. All tests create the service if needed
-}
-
-START_TEST(Delete)
-{
-    SC_HANDLE Handle = NULL;
-    DWORD Error = KmtDeleteService(L"Kmtest", &Handle);
-
-    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
-}
-
-START_TEST(Start)
-{
-    // nothing to do here. All tests start the service
-}
-
-START_TEST(Stop)
-{
-    // TODO: requiring the service to be started for this is... bad,
-    // especially when it's marked for deletion and won't start ;)
-    SC_HANDLE Handle = NULL;
-    DWORD Error = KmtStopService(L"Kmtest", &Handle);
-
-    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
-    Error = KmtCloseService(&Handle);
-    ok_eq_hex(Error, (DWORD)ERROR_SUCCESS);
-}
-
-/* test support functions for special-purpose drivers */
-
 extern HANDLE KmtestHandle;
 
 /**

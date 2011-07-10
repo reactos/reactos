@@ -22,11 +22,20 @@
 
 #define SERVICE_NAME        L"Kmtest"
 #define SERVICE_PATH        L"kmtest_drv.sys"
+#define SERVICE_DESCRIPTION L"ReactOS Kernel-Mode Test Suite Driver"
 
 #define LOGBUFFER_SIZE      16364
 #define RESULTBUFFER_SIZE   FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer[LOGBUFFER_SIZE])
 
+typedef enum
+{
+    KMT_DO_NOTHING,
+    KMT_LIST_TESTS,
+    KMT_RUN_TEST,
+} KMT_OPERATION;
+
 HANDLE KmtestHandle;
+SC_HANDLE KmtestServiceHandle;
 PCSTR ErrorFileAndLine = "No error";
 
 static void OutputError(DWORD Error);
@@ -211,6 +220,8 @@ RunTest(
     PKMT_TESTFUNC TestFunction;
     DWORD BytesRead;
 
+    assert(TestName != NULL);
+
     ResultBuffer = KmtAllocateResultBuffer(LOGBUFFER_SIZE);
     if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_SET_RESULTBUFFER, ResultBuffer, RESULTBUFFER_SIZE, NULL, 0, &BytesRead, NULL))
         error_goto(Error, cleanup);
@@ -253,44 +264,70 @@ main(
 {
     INT Status = EXIT_SUCCESS;
     DWORD Error = ERROR_SUCCESS;
-    SC_HANDLE ServiceHandle;
     PCSTR AppName = "kmtest.exe";
-    PCSTR TestName;
+    PCSTR TestName = NULL;
+    KMT_OPERATION Operation = KMT_DO_NOTHING;
 
     Error = KmtServiceInit();
     if (Error)
         goto cleanup;
-
-    Error = KmtCreateAndStartService(SERVICE_NAME, SERVICE_PATH, L"ReactOS Kernel-Mode Test Suite Driver", &ServiceHandle, FALSE);
-    if (Error)
-        goto cleanup;
-
-    KmtestHandle = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (KmtestHandle == INVALID_HANDLE_VALUE)
-        error_goto(Error, cleanup);
 
     if (ArgCount >= 1)
         AppName = Arguments[0];
 
     if (ArgCount <= 1)
     {
-        printf("Usage: %s <test_name>                 - run the specified test\n", AppName);
+        printf("Usage: %s <test_name>                 - run the specified test (creates/starts the driver(s) as appropriate)\n", AppName);
         printf("       %s --list                      - list available tests\n", AppName);
         printf("       %s <create|delete|start|stop>  - manage the kmtest driver\n\n", AppName);
-        Error = ListTests();
+        Operation = KMT_LIST_TESTS;
     }
     else
     {
         TestName = Arguments[1];
-        if (!lstrcmpA(Arguments[1], "--list"))
-            Error = ListTests();
+        if (!lstrcmpA(TestName, "create"))
+            Error = KmtCreateService(SERVICE_NAME, SERVICE_PATH, SERVICE_DESCRIPTION, &KmtestServiceHandle);
+        else if (!lstrcmpA(TestName, "delete"))
+            Error = KmtDeleteService(SERVICE_NAME, &KmtestServiceHandle);
+        else if (!lstrcmpA(TestName, "start"))
+            Error = KmtStartService(SERVICE_NAME, &KmtestServiceHandle);
+        else if (!lstrcmpA(TestName, "stop"))
+            Error = KmtStopService(SERVICE_NAME, &KmtestServiceHandle);
+
+        else if (!lstrcmpA(TestName, "--list"))
+            Operation = KMT_LIST_TESTS;
         else
-            Error = RunTest(TestName);
+            Operation = KMT_RUN_TEST;
+    }
+
+    if (Operation)
+    {
+        Error = KmtCreateAndStartService(SERVICE_NAME, SERVICE_PATH, SERVICE_DESCRIPTION, &KmtestServiceHandle, FALSE);
+        if (Error)
+            goto cleanup;
+
+        KmtestHandle = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+        if (KmtestHandle == INVALID_HANDLE_VALUE)
+            error_goto(Error, cleanup);
+
+        switch (Operation)
+        {
+            case KMT_LIST_TESTS:
+                Error = ListTests();
+                break;
+            case KMT_RUN_TEST:
+                Error = RunTest(TestName);
+                break;
+            default:
+                assert(FALSE);
+        }
     }
 
 cleanup:
     if (KmtestHandle)
         CloseHandle(KmtestHandle);
+
+    KmtCloseService(&KmtestServiceHandle);
 
     if (Error)
         KmtServiceCleanup(TRUE);
@@ -298,10 +335,11 @@ cleanup:
         Error = KmtServiceCleanup(FALSE);
 
     if (Error)
+    {
         OutputError(Error);
 
-    if (Error)
         Status = EXIT_FAILURE;
+    }
 
     return Status;
 }
