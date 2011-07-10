@@ -1281,7 +1281,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
     }
 
     /* Check the current Load Count */
-    if (LdrEntry->LoadCount != -1)
+    if (LdrEntry->LoadCount != 0xFFFF)
     {
         /* Decrease it */
         LdrEntry->LoadCount--;
