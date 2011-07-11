@@ -48,13 +48,6 @@ BucketCompletionWorker(PVOID Context)
 
 static
 VOID
-SocketContextCloseWorker(PVOID Context)
-{
-    LibTCPClose(Context);
-}
-
-static
-VOID
 CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, BOOLEAN Synchronous)
 {
     ReferenceObject(Connection);
@@ -173,7 +166,7 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
     PIRP Irp;
     NTSTATUS Status;
     KIRQL OldIrql;
-    void *OldSocketContext;
+    struct tcp_pcb* OldSocketContext;
     
     DbgPrint("[IP, TCPAcceptEventHandler] Called\n");
     
@@ -222,9 +215,9 @@ TCPAcceptEventHandler(void *arg, struct tcp_pcb *newpcb)
 
             /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT(((struct tcp_pcb*)OldSocketContext)->state == CLOSED);
-            /*  free socket context created in FileOpenConnection, as we're using a new
-                one; we free it asynchornously because otherwise we create a deadlock */
-            ChewCreate(SocketContextCloseWorker, OldSocketContext);
+            
+            /*  free socket context created in FileOpenConnection, as we're using a new one */
+            LibTCPClose(OldSocketContext, TRUE);
         }
         
         DereferenceObject(Bucket->AssociatedEndpoint);
@@ -279,7 +272,7 @@ TCPSendEventHandler(void *arg, u16_t space)
         
         Status = TCPTranslateError(LibTCPSend(Connection->SocketContext,
                                               SendBuffer,
-                                              SendLen));
+                                              SendLen, TRUE));
         
         TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", SendLen));
         

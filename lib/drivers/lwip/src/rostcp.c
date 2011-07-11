@@ -437,34 +437,57 @@ LibTCPSendCallback(void *arg)
 }
 
 err_t
-LibTCPSend(struct tcp_pcb *pcb, void *dataptr, u16_t len)
+LibTCPSend(struct tcp_pcb *pcb, const void *dataptr, const u16_t len, const int safe)
 {
-    struct send_callback_msg *msg;
     err_t ret;
     
     if (!pcb)
         return ERR_CLSD;
-    
-    msg = ExAllocatePool(NonPagedPool, sizeof(struct send_callback_msg));
-    if (msg)
+
+    /*  
+        If  we're being called from a handler it means we're in the conetxt of teh tcpip
+        main thread. Therefore we don't have to queue our request via a callback and we
+        can execute immediately.
+    */
+    if (safe)
     {
-        KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-        msg->Pcb = pcb;
-        msg->Data = dataptr;
-        msg->DataLength = len;
-        
-        tcpip_callback_with_block(LibTCPSendCallback, msg, 1);
-        
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Error;
+        if (tcp_sndbuf(pcb) < len)
+        {
+            ret = ERR_INPROGRESS;
+        }
         else
-            ret = ERR_CLSD;
-        
-        DbgPrint("LibTCPSend(0x%x)\n", pcb);
-        
-        ExFreePool(msg);
-        
+        {
+            ret = tcp_write(pcb, dataptr, len, TCP_WRITE_FLAG_COPY);
+            tcp_output(pcb);
+        }
+
         return ret;
+    }
+    else
+    {
+        struct send_callback_msg *msg;
+
+        msg = ExAllocatePool(NonPagedPool, sizeof(struct send_callback_msg));
+        if (msg)
+        {
+            KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
+            msg->Pcb = pcb;
+            msg->Data = dataptr;
+            msg->DataLength = len;
+        
+            tcpip_callback_with_block(LibTCPSendCallback, msg, 1);
+        
+            if (WaitForEventSafely(&msg->Event))
+                ret = msg->Error;
+            else
+                ret = ERR_CLSD;
+        
+            DbgPrint("LibTCPSend(0x%x)\n", pcb);
+        
+            ExFreePool(msg);
+        
+            return ret;
+        }
     }
 
     return ERR_MEM;
@@ -496,9 +519,7 @@ LibTCPConnectCallback(void *arg)
     
     tcp_recv(msg->Pcb, InternalRecvEventHandler);
     tcp_sent(msg->Pcb, InternalSendEventHandler);
-    
-    //if (msg->Error == ERR_OK)
-    //    msg->Error = ERR_INPROGRESS;
+
     err_t Error = tcp_connect(msg->Pcb, msg->IpAddress, ntohs(msg->Port), InternalConnectEventHandler);
     msg->Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
     
@@ -648,9 +669,8 @@ LibTCPCloseCallback(void *arg)
 }
 
 err_t
-LibTCPClose(struct tcp_pcb *pcb)
+LibTCPClose(struct tcp_pcb *pcb, const int safe)
 {
-    struct close_callback_msg *msg;
     err_t ret;
 
     DbgPrint("[lwIP, LibTCPClose] Called on pcb = 0x%x\n", pcb);
@@ -681,32 +701,58 @@ LibTCPClose(struct tcp_pcb *pcb)
     tcp_accept(pcb, NULL);
 
     DbgPrint("[lwIP, LibTCPClose] Attempting to allocate memory for msg\n");
-    
-    msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
-    if (msg)
+
+    /*  
+        If  we're being called from a handler it means we're in the conetxt of teh tcpip
+        main thread. Therefore we don't have to queue our request via a callback and we
+        can execute immediately.
+    */
+    if (safe)
     {
-        DbgPrint("[lwIP, LibTCPClose] Initializing msg->Event\n");
-        KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
-
-        DbgPrint("[lwIP, LibTCPClose] Initializing msg->pcb = 0x%x\n", pcb);
-        msg->Pcb = pcb;
-
-        DbgPrint("[lwIP, LibTCPClose] Attempting to call LibTCPCloseCallback\n");
-        
-        tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
-        
-        if (WaitForEventSafely(&msg->Event))
-            ret = msg->Error;
+        if (pcb->state == LISTEN)
+        {
+            DbgPrint("[lwIP, LibTCPClose] Closing a listener\n");
+            ret = tcp_close(pcb);
+        }
         else
-            ret = ERR_CLSD;
-        
-        ExFreePool(msg);
-        
-        DbgPrint("[lwIP, LibTCPClose] pcb = 0x%x\n", pcb);
+        {
+            DbgPrint("[lwIP, LibTCPClose] Aborting a connection\n");
+            tcp_abort(pcb);
+            ret = ERR_OK;
+        }
 
-        DbgPrint("[lwIP, LibTCPClose] Done\n");
-        
         return ret;
+    }
+    else
+    {
+        struct close_callback_msg *msg;
+
+        msg = ExAllocatePool(NonPagedPool, sizeof(struct close_callback_msg));
+        if (msg)
+        {
+            DbgPrint("[lwIP, LibTCPClose] Initializing msg->Event\n");
+            KeInitializeEvent(&msg->Event, NotificationEvent, FALSE);
+
+            DbgPrint("[lwIP, LibTCPClose] Initializing msg->pcb = 0x%x\n", pcb);
+            msg->Pcb = pcb;
+
+            DbgPrint("[lwIP, LibTCPClose] Attempting to call LibTCPCloseCallback\n");
+        
+            tcpip_callback_with_block(LibTCPCloseCallback, msg, 1);
+        
+            if (WaitForEventSafely(&msg->Event))
+                ret = msg->Error;
+            else
+                ret = ERR_CLSD;
+        
+            ExFreePool(msg);
+        
+            DbgPrint("[lwIP, LibTCPClose] pcb = 0x%x\n", pcb);
+
+            DbgPrint("[lwIP, LibTCPClose] Done\n");
+        
+            return ret;
+        }
     }
 
     DbgPrint("[lwIP, LibTCPClose] Failed to allocate memory\n");
