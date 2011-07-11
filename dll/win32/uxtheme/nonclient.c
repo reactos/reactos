@@ -621,7 +621,7 @@ ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, PRECT prcCurrent)
 
     SelectObject(pcontext->hDC, FontOld);
 
-    /* Fill the menu background are that isn't painted yet*/
+    /* Fill the menu background area that isn't painted yet*/
     FillRect(pcontext->hDC, &Rect, GetSysColorBrush(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
 }
 
