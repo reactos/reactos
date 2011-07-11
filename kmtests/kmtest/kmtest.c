@@ -31,6 +31,7 @@ typedef enum
 {
     KMT_DO_NOTHING,
     KMT_LIST_TESTS,
+    KMT_LIST_ALL_TESTS,
     KMT_RUN_TEST,
 } KMT_OPERATION;
 
@@ -38,11 +39,11 @@ HANDLE KmtestHandle;
 SC_HANDLE KmtestServiceHandle;
 PCSTR ErrorFileAndLine = "No error";
 
-static void OutputError(DWORD Error);
-static DWORD ListTests(VOID);
-static PKMT_TESTFUNC FindTest(PCSTR TestName);
-static DWORD OutputResult(PCSTR TestName);
-static DWORD RunTest(PCSTR TestName);
+static void OutputError(IN DWORD Error);
+static DWORD ListTests(IN BOOLEAN IncludeHidden);
+static PKMT_TESTFUNC FindTest(IN PCSTR TestName);
+static DWORD OutputResult(IN PCSTR TestName);
+static DWORD RunTest(IN PCSTR TestName);
 int __cdecl main(int ArgCount, char **Arguments);
 
 /**
@@ -56,7 +57,7 @@ int __cdecl main(int ArgCount, char **Arguments);
 static
 void
 OutputError(
-    DWORD Error)
+    IN DWORD Error)
 {
     PSTR Message;
     if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
@@ -79,11 +80,15 @@ OutputError(
  * The list will comprise tests as listed by the driver
  * in addition to user-mode tests in TestList.
  *
+ * @param IncludeHidden
+ *        TRUE to include "hidden" tests prefixed with a '-'
+ *
  * @return Win32 error code
  */
 static
 DWORD
-ListTests(VOID)
+ListTests(
+    IN BOOLEAN IncludeHidden)
 {
     DWORD Error = ERROR_SUCCESS;
     CHAR Buffer[1024];
@@ -101,10 +106,6 @@ ListTests(VOID)
     // output test list plus user-mode tests
     while (TestEntry->TestName || *TestName)
     {
-        // tests starting with a '-' should not be listed
-        while (TestEntry->TestName && *TestEntry->TestName == '-')
-            ++TestEntry;
-
         if (!TestEntry->TestName)
         {
             NextTestName = TestName;
@@ -136,7 +137,12 @@ ListTests(VOID)
                 TestName += strlen(TestName) + 1;
             }
         }
-        printf("    %s\n", NextTestName);
+
+        if (IncludeHidden && NextTestName[0] == '-')
+            ++NextTestName;
+
+        if (NextTestName[0] != '-')
+            printf("    %s\n", NextTestName);
     }
 
 cleanup:
@@ -156,7 +162,7 @@ cleanup:
 static
 PKMT_TESTFUNC
 FindTest(
-    PCSTR TestName)
+    IN PCSTR TestName)
 {
     PCKMT_TEST TestEntry = TestList;
 
@@ -188,7 +194,7 @@ FindTest(
 static
 DWORD
 OutputResult(
-    PCSTR TestName)
+    IN PCSTR TestName)
 {
     DWORD Error = ERROR_SUCCESS;
     DWORD BytesWritten;
@@ -214,7 +220,7 @@ OutputResult(
 static
 DWORD
 RunTest(
-    PCSTR TestName)
+    IN PCSTR TestName)
 {
     DWORD Error = ERROR_SUCCESS;
     PKMT_TESTFUNC TestFunction;
@@ -267,6 +273,7 @@ main(
     PCSTR AppName = "kmtest.exe";
     PCSTR TestName = NULL;
     KMT_OPERATION Operation = KMT_DO_NOTHING;
+    BOOLEAN ShowHidden = FALSE;
 
     Error = KmtServiceInit();
     if (Error)
@@ -279,6 +286,7 @@ main(
     {
         printf("Usage: %s <test_name>                 - run the specified test (creates/starts the driver(s) as appropriate)\n", AppName);
         printf("       %s --list                      - list available tests\n", AppName);
+        printf("       %s --list-all                  - list available tests, including hidden\n", AppName);
         printf("       %s <create|delete|start|stop>  - manage the kmtest driver\n\n", AppName);
         Operation = KMT_LIST_TESTS;
     }
@@ -296,6 +304,8 @@ main(
 
         else if (!lstrcmpA(TestName, "--list"))
             Operation = KMT_LIST_TESTS;
+        else if (!lstrcmpA(TestName, "--list-all"))
+            Operation = KMT_LIST_ALL_TESTS;
         else
             Operation = KMT_RUN_TEST;
     }
@@ -312,8 +322,11 @@ main(
 
         switch (Operation)
         {
+            case KMT_LIST_ALL_TESTS:
+                ShowHidden = TRUE;
+                /* fall through */
             case KMT_LIST_TESTS:
-                Error = ListTests();
+                Error = ListTests(ShowHidden);
                 break;
             case KMT_RUN_TEST:
                 Error = RunTest(TestName);

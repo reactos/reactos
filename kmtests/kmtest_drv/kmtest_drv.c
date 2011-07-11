@@ -284,7 +284,10 @@ DriverIoControl(
             for (TestEntry = TestList; TestEntry->TestName; ++TestEntry)
             {
                 ANSI_STRING EntryName;
-                RtlInitAnsiString(&EntryName, TestEntry->TestName);
+                if (TestEntry->TestName[0] == '-')
+                    RtlInitAnsiString(&EntryName, TestEntry->TestName + 1);
+                else
+                    RtlInitAnsiString(&EntryName, TestEntry->TestName);
 
                 if (!RtlCompareString(&TestName, &EntryName, FALSE))
                 {

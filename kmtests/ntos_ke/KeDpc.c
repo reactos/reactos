@@ -16,8 +16,8 @@
 
 /* TODO: DPC importance */
 
-static volatile LONG DpcCount = 0;
-static volatile UCHAR DpcImportance = MediumImportance;
+static volatile LONG DpcCount;
+static volatile UCHAR DpcImportance;
 
 static KDEFERRED_ROUTINE DpcHandler;
 
@@ -73,6 +73,9 @@ START_TEST(KeDpc)
     LONG ExpectedDpcCount = 0;
     BOOLEAN Ret;
     int i;
+
+    DpcCount = 0;
+    DpcImportance = MediumImportance;
 
 #define ok_dpccount() ok(DpcCount == ExpectedDpcCount, "DpcCount = %ld, expected %ld\n", DpcCount, ExpectedDpcCount);
     trace("Dpc = %p\n", &Dpc);

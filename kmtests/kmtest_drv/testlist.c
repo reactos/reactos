@@ -24,18 +24,18 @@ KMT_TESTFUNC Test_ObCreate;
 
 const KMT_TEST TestList[] =
 {
-    { "Example",            Test_Example },
-    { "ExPools",            Test_ExPools },
-    { "ExResource",         Test_ExResource },
-    { "ExTimer",            Test_ExTimer },
-    { "FsRtlExpression",    Test_FsRtlExpression },
-    { "IoDeviceInterface",  Test_IoDeviceInterface },
-    { "IoIrp",              Test_IoIrp },
-    { "IoMdl",              Test_IoMdl },
-    { "KeApc",              Test_KeApc },
-    { "KeDpc",              Test_KeDpc },
-    { "KeIrql",             Test_KeIrql },
-    { "KeProcessor",        Test_KeProcessor },
-    { "ObCreate",           Test_ObCreate },
-    { NULL,                 NULL }
+    { "Example",                            Test_Example },
+    { "ExPools",                            Test_ExPools },
+    { "ExResource",                         Test_ExResource },
+    { "ExTimer",                            Test_ExTimer },
+    { "FsRtlExpression",                    Test_FsRtlExpression },
+    { "IoDeviceInterface",                  Test_IoDeviceInterface },
+    { "IoIrp",                              Test_IoIrp },
+    { "IoMdl",                              Test_IoMdl },
+    { "KeApc",                              Test_KeApc },
+    { "KeDpc",                              Test_KeDpc },
+    { "KeIrql",                             Test_KeIrql },
+    { "KeProcessor",                        Test_KeProcessor },
+    { "ObCreate",                           Test_ObCreate },
+    { NULL,                                 NULL }
 };
