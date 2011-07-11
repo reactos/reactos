@@ -550,6 +550,12 @@ int OskitTCPSetAddress( void *socket,
 
     OSKLock();
     inp = (struct inpcb *)so->so_pcb;
+    if (!inp)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+
     inp->inp_laddr.s_addr = LocalAddress;
     inp->inp_lport = LocalPort;
     inp->inp_faddr.s_addr = RemoteAddress;
@@ -572,6 +578,12 @@ int OskitTCPGetAddress( void *socket,
 
     OSKLock();
     inp = (struct inpcb *)so->so_pcb;
+    if (!inp)
+    {
+        OSKUnlock();
+        return OSK_ESHUTDOWN;
+    }
+
     *LocalAddress = inp->inp_laddr.s_addr;
     *LocalPort = inp->inp_lport;
     *RemoteAddress = inp->inp_faddr.s_addr;
