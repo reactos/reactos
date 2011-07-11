@@ -7,8 +7,8 @@
 
 void
 LibIPInsertPacket(void *ifarg,
-                  void *data,
-                  u32_t size)
+                  const void *const data,
+                  const u32_t size)
 {
     struct pbuf *p, *p1;
     u32_t i;
@@ -25,6 +25,8 @@ LibIPInsertPacket(void *ifarg,
             ASSERT(p1);
             RtlCopyMemory(p1->payload, ((PUCHAR)data) + i, p1->len);
         }
+
+        DbgPrint("LibIPInsertPacket: called 0x%x\n", *((struct netif *)ifarg)->input);
 
         ((struct netif *)ifarg)->input(p, ifarg);
     }

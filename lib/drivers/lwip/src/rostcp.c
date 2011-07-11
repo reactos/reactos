@@ -56,7 +56,7 @@ WaitForEventSafely(PRKEVENT Event)
 
 static
 err_t
-InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, u16_t space)
+InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, const u16_t space)
 {
     DbgPrint("[lwIP, InternalSendEventHandler] SendEvent (0x%x, 0x%x, %d)\n",
         arg, pcb, (unsigned int)space);
@@ -73,7 +73,7 @@ InternalSendEventHandler(void *arg, struct tcp_pcb *pcb, u16_t space)
 
 static
 err_t
-InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
+InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, const err_t err)
 {
     u32_t len;
 
@@ -141,7 +141,7 @@ InternalRecvEventHandler(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 
 static
 err_t
-InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, err_t err)
+InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, const err_t err)
 {
     DbgPrint("[lwIP, InternalAcceptEventHandler] AcceptEvent arg = 0x%x, newpcb = 0x%x, err = %d\n",
         arg, newpcb, (unsigned int)err);
@@ -164,7 +164,7 @@ InternalAcceptEventHandler(void *arg, struct tcp_pcb *newpcb, err_t err)
 
 static
 err_t
-InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
+InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, const err_t err)
 {
     DbgPrint("[lwIP, InternalConnectEventHandler] ConnectEvent (0x%x, pcb = 0x%x, err = %d)\n",
         arg, pcb, (unsigned int)err);
@@ -182,7 +182,7 @@ InternalConnectEventHandler(void *arg, struct tcp_pcb *pcb, err_t err)
 
 static
 void
-InternalErrorEventHandler(void *arg, err_t err)
+InternalErrorEventHandler(void *arg, const err_t err)
 {
     DbgPrint("[lwIP, InternalErrorEventHandler] ErrorEvent(0x%x, %d)\n",
         arg, (unsigned int)err);
@@ -290,7 +290,7 @@ LibTCPBindCallback(void *arg)
 }
 
 err_t
-LibTCPBind(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
+LibTCPBind(struct tcp_pcb *pcb, struct ip_addr *const ipaddr, const u16_t port)
 {
     struct bind_callback_msg *msg;
     err_t ret;
@@ -363,7 +363,7 @@ LibTCPListenCallback(void *arg)
 }
 
 struct tcp_pcb *
-LibTCPListen(struct tcp_pcb *pcb, u8_t backlog)
+LibTCPListen(struct tcp_pcb *pcb, const u8_t backlog)
 {
     struct listen_callback_msg *msg;
     void *ret;
@@ -437,7 +437,7 @@ LibTCPSendCallback(void *arg)
 }
 
 err_t
-LibTCPSend(struct tcp_pcb *pcb, const void *dataptr, const u16_t len, const int safe)
+LibTCPSend(struct tcp_pcb *pcb, void *const dataptr, const u16_t len, const int safe)
 {
     err_t ret;
     
@@ -529,7 +529,7 @@ LibTCPConnectCallback(void *arg)
 }
 
 err_t
-LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
+LibTCPConnect(struct tcp_pcb *pcb, struct ip_addr *const ipaddr, const u16_t port)
 {
     struct connect_callback_msg *msg;
     err_t ret;
@@ -594,7 +594,7 @@ LibTCPShutdownCallback(void *arg)
 }
 
 err_t
-LibTCPShutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx)
+LibTCPShutdown(struct tcp_pcb *pcb, const int shut_rx, const int shut_tx)
 {
     struct shutdown_callback_msg *msg;
     err_t ret;
@@ -779,7 +779,7 @@ LibTCPAccept(struct tcp_pcb *pcb, struct tcp_pcb *listen_pcb, void *arg)
 }
 
 err_t
-LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
+LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *const ipaddr, u16_t *const port)
 {
     DbgPrint("[lwIP, LibTCPGetHostName] Called. pcb = (0x%x)\n", pcb);
     
@@ -797,7 +797,7 @@ LibTCPGetHostName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
 }
 
 err_t
-LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr *ipaddr, u16_t *port)
+LibTCPGetPeerName(struct tcp_pcb *pcb, struct ip_addr * const ipaddr, u16_t * const port)
 {
     DbgPrint("[lwIP, LibTCPGetPeerName] pcb = (0x%x)\n", pcb);
     
