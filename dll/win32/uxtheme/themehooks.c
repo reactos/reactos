@@ -100,6 +100,8 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_THEMECHANGED);
     UAH_HOOK_MESSAGE(puah->WndProcArray, WM_UAHINIT);
 
+    UXTHEME_InitSystem(hDllInst);
+
     return TRUE;
 }
 
