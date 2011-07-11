@@ -66,32 +66,29 @@ RtlGetLongestNtPathLength(VOID)
  * @implemented
  *
  */
-ULONG NTAPI
-RtlDetermineDosPathNameType_U(PCWSTR Path)
+ULONG
+NTAPI
+RtlDetermineDosPathNameType_U(IN PCWSTR Path)
 {
-   DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
+    DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
+    ASSERT(Path != NULL);
 
-   if (Path == NULL)
-   {
-      return RtlPathTypeUnknown;
-   }
+    if (IS_PATH_SEPARATOR(Path[0]))
+    {
+        if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;                /* \xxx   */
+        if ((Path[2] != L'.') && (Path[2] != L'?')) return RtlPathTypeUncAbsolute;/* \\xxx   */
+        if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\xxx */
+        if (Path[3]) return RtlPathTypeUncAbsolute;                               /* \\.xxxx */
 
-   if (IS_PATH_SEPARATOR(Path[0]))
-   {
-      if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;         /* \xxx   */
-      if (Path[2] != L'.') return RtlPathTypeUncAbsolute;                          /* \\xxx   */
-      if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\xxx */
-      if (Path[3]) return RtlPathTypeUncAbsolute;                                  /* \\.xxxx */
+        return RtlPathTypeRootLocalDevice;                                        /* \\.     */
+    }
+    else
+    {
+        if (!(Path[0]) || (Path[1] != L':')) return RtlPathTypeRelative;          /* xxx     */
+        if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;          /* x:\xxx  */
 
-      return RtlPathTypeRootLocalDevice;                                           /* \\.     */
-   }
-   else
-   {
-      if (!Path[0] || Path[1] != L':') return RtlPathTypeRelative;       /* xxx     */
-      if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;    /* x:\xxx  */
-
-      return RtlPathTypeDriveRelative;                                    /* x:xxx   */
-   }
+        return RtlPathTypeDriveRelative;                                          /* x:xxx   */
+    }
 }
 
 
