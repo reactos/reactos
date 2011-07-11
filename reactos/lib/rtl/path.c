@@ -159,49 +159,75 @@ RtlIsDosDeviceName_U(PWSTR dos_name)
     return 0;
 }
 
-
 /*
  * @implemented
  */
-ULONG NTAPI
-RtlGetCurrentDirectory_U(ULONG MaximumLength,
-			 PWSTR Buffer)
+ULONG
+NTAPI
+RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
+                         IN PWSTR Buffer)
 {
-	ULONG Length;
-	PCURDIR cd;
+    ULONG Length;
+    PCURDIR CurDir;
+    PWSTR CurDirName;
+    DPRINT("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
 
-	DPRINT ("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
+    /* Lock the PEB to get the current directory */
+    RtlAcquirePebLock();
+    CurDir = &NtCurrentPeb()->ProcessParameters->CurrentDirectory;
 
-	RtlAcquirePebLock();
+    /* Get the buffer and character length */
+    CurDirName = CurDir->DosPath.Buffer;
+    Length = CurDir->DosPath.Length / sizeof(WCHAR);
+    ASSERT((CurDirName != NULL) && (Length > 0));
 
-	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
-	Length = cd->DosPath.Length / sizeof(WCHAR);
-	if (cd->DosPath.Buffer[Length - 1] == L'\\' &&
-	    cd->DosPath.Buffer[Length - 2] != L':')
-		Length--;
+    /* Check for x:\ vs x:\path\foo (note the trailing slash) */
+    Bytes = Length * sizeof(WCHAR);
+    if ((Length <= 1) || (CurDirName[Length - 2] == ":"))
+    {
+        /* Check if caller does not have enough space */
+        if (MaximumLength <= Bytes)
+        {
+            /* Call has no space for it, fail, add the trailing slash */
+            RtlReleasePebLock();
+            return Bytes + sizeof(L'\\');
+        }
+    }
+    else
+    {
+        /* Check if caller does not have enough space */
+        if (MaximumLength <= Bytes)
+        {
+            /* Call has no space for it, fail */
+            RtlReleasePebLock();
+            return Bytes;
+        }
+    }
 
-	DPRINT ("cd->DosPath.Buffer %S Length %lu\n",
-	        cd->DosPath.Buffer, Length);
+    /* Copy the buffer since we seem to have space */
+    RtlCopyMemory(Buffer, CurDirName, Bytes);
 
-	if (MaximumLength / sizeof(WCHAR) > Length)
-	{
-		memcpy (Buffer,
-		        cd->DosPath.Buffer,
-		        Length * sizeof(WCHAR));
-		Buffer[Length] = 0;
-	}
-	else
-	{
-		Length++;
-	}
+    /* The buffer should end with a path separator */
+    ASSERT(Buffer[Length - 1] == L'\\');
 
-	RtlReleasePebLock ();
+    /* Again check for our two cases (drive root vs path) */
+    if ((Length <= 1) || (Buffer[Length - 2] != ":"))
+    {
+        /* Replace the trailing slash with a null */
+        Buffer[Length - 1] = UNICODE_NULL;
+        --Length;
+    }
+    else
+    {
+        /* Append the null char since there's no trailing slash */
+        Buffer[Length] = UNICODE_NULL;
+    }
 
-	DPRINT ("CurrentDirectory %S\n", Buffer);
-
-	return (Length * sizeof(WCHAR));
+    /* Release PEB lock */
+    RtlReleasePebLock();
+    DPRINT("CurrentDirectory %S\n", Buffer);
+    return Length * sizeof(WCHAR);
 }
-
 
 /*
  * @implemented
