@@ -11,6 +11,7 @@ list(APPEND SOURCE
     main.c
     metric.c
     msstyles.c
+    ncscrollbar.c
     nonclient.c
     property.c
     stylemap.c

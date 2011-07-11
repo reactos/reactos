@@ -156,7 +156,7 @@ HRESULT WINAPI ThemeDrawCaptionText(HTHEME hTheme, HDC hdc, int iPartId, int iSt
     return S_OK;
 }
 
-static void
+void
 ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
                      HWND hWnd,
                      HRGN hRgn)
@@ -167,6 +167,7 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     pcontext->Active = IsWindowActive(hWnd, pcontext->wi.dwExStyle);
     pcontext->hPrevTheme = GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWindowTheme));
     pcontext->theme = OpenThemeData(pcontext->hWnd,  L"WINDOW");
+    pcontext->scrolltheme = OpenThemeData(pcontext->hWnd,  L"SCROLLBAR");
 
     pcontext->CaptionHeight = pcontext->wi.cyWindowBorders;
     pcontext->CaptionHeight += GetSystemMetrics(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
@@ -180,12 +181,13 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     pcontext->hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
 }
 
-static void
+void
 ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext)
 {
     ReleaseDC(pcontext->hWnd ,pcontext->hDC);
 
     CloseThemeData (pcontext->theme);
+    CloseThemeData (pcontext->scrolltheme);
 
     SetPropW(pcontext->hWnd, (LPCWSTR)MAKEINTATOM(atWindowTheme), pcontext->hPrevTheme);
 
@@ -629,12 +631,6 @@ ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, PRECT prcCurrent)
 }
 
 static void 
-ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar)
-{
-
-}
-
-static void 
 ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
     if(!(pcontext->wi.dwStyle & WS_VISIBLE))
@@ -662,10 +658,10 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
         ThemeDrawMenuBar(pcontext, prcCurrent);
     
     if(pcontext->wi.dwStyle & WS_HSCROLL)
-        ThemeDrawScrollBar(pcontext, OBJID_VSCROLL);
+        ThemeDrawScrollBar(pcontext, SB_HORZ , NULL);
 
     if(pcontext->wi.dwStyle & WS_VSCROLL)
-        ThemeDrawScrollBar(pcontext, OBJID_HSCROLL);
+        ThemeDrawScrollBar(pcontext, SB_VERT, NULL);
 }
 
 /*
@@ -690,7 +686,7 @@ ThemeHandleNCPaint(HWND hWnd, HRGN hRgn)
 }
 
 static LRESULT 
-ThemeHandleNcMouseMove(HWND hWnd, DWORD ht)
+ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
 {
     DRAW_CONTEXT context;
     TRACKMOUSEEVENT tme;
@@ -708,6 +704,13 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht)
 
     ThemeInitDrawContext(&context, hWnd, 0);
     ThemeDrawCaptionButtons(&context, ht, 0);
+
+   if(context.wi.dwStyle & WS_HSCROLL)
+        ThemeDrawScrollBar(&context, SB_HORZ , ht == HTHSCROLL ? pt : NULL);
+
+    if(context.wi.dwStyle & WS_VSCROLL)
+        ThemeDrawScrollBar(&context, SB_VERT, ht == HTVSCROLL ? pt : NULL);
+
     ThemeCleanupDrawContext(&context);
 
     return 0;
@@ -720,6 +723,13 @@ ThemeHandleNcMouseLeave(HWND hWnd)
 
     ThemeInitDrawContext(&context, hWnd, 0);
     ThemeDrawCaptionButtons(&context, 0, 0);
+
+   if(context.wi.dwStyle & WS_HSCROLL)
+        ThemeDrawScrollBar(&context, SB_HORZ, NULL);
+
+    if(context.wi.dwStyle & WS_VSCROLL)
+        ThemeDrawScrollBar(&context, SB_VERT, NULL);
+
     ThemeCleanupDrawContext(&context);
 
     return 0;
@@ -1021,7 +1031,12 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
         ThemeHandleNCPaint(hWnd, (HRGN)1);
         return TRUE;
     case WM_NCMOUSEMOVE:
-        return ThemeHandleNcMouseMove(hWnd, wParam);
+    {
+        POINT Point;
+        Point.x = GET_X_LPARAM(lParam);
+        Point.y = GET_Y_LPARAM(lParam);
+        return ThemeHandleNcMouseMove(hWnd, wParam, &Point);
+    }
     case WM_NCMOUSELEAVE:
         return ThemeHandleNcMouseLeave(hWnd);
     case WM_NCLBUTTONDOWN:
@@ -1043,6 +1058,21 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
         Point.x = GET_X_LPARAM(lParam);
         Point.y = GET_Y_LPARAM(lParam);
         return DefWndNCHitTest(hWnd, Point);
+    }
+    case WM_SYSCOMMAND:
+    {
+        if((wParam & 0xfff0) == SC_VSCROLL ||
+           (wParam & 0xfff0) == SC_HSCROLL)
+        {
+            POINT Pt;
+            Pt.x = (short)LOWORD(lParam);
+            Pt.y = (short)HIWORD(lParam);
+            NC_TrackScrollBar(hWnd, wParam, Pt);
+        }
+        else
+        {
+            return DefWndProc(hWnd, Msg, wParam, lParam);
+        }
     }
     case WM_NCUAHDRAWCAPTION:
     case WM_NCUAHDRAWFRAME:
