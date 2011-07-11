@@ -7,11 +7,13 @@
 
 extern void func_RtlInitializeBitMap(void);
 extern void func_ZwContinue(void);
+extern void func_NtFreeVirtualMemory(void);
 
 const struct test winetest_testlist[] =
 {
     { "RtlInitializeBitMap", func_RtlInitializeBitMap },
     { "ZwContinue", func_ZwContinue },
+    { "NtFreeVirtualMemory", func_NtFreeVirtualMemory },
 
     { 0, 0 }
 };
