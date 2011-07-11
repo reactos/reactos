@@ -47,3 +47,5 @@ typedef enum {
 #define BUTTON_GAP_SIZE 2
 
 #define MENU_BAR_ITEMS_SPACE (12)
+
+extern ATOM atWindowTheme;
