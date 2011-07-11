@@ -1394,6 +1394,7 @@ LdrpCheckForLoadedDllHandle(IN PVOID Base,
     return FALSE;
 }
 
+/* NOTE: This function is b0rked and in the process of being slowly unf*cked */
 BOOLEAN
 NTAPI
 LdrpCheckForLoadedDll(IN PWSTR DllPath,
@@ -1417,12 +1418,14 @@ LdrpCheckForLoadedDll(IN PWSTR DllPath,
     PVOID ViewBase = NULL;
     SIZE_T ViewSize = 0;
     PIMAGE_NT_HEADERS NtHeader, NtHeader2;
-
     DPRINT("LdrpCheckForLoadedDll('%S' '%wZ' %d %d %p)\n", DllPath, DllName, Flag, RedirectedDll, LdrEntry);
 
     /* Check if a dll name was provided */
-    if (!DllName->Buffer || !DllName->Buffer[0]) return FALSE;
+    if (!(DllName->Buffer) || !(DllName->Buffer[0])) return FALSE;
 
+    /* FIXME: Warning, "Flag" is used as magic instead of "Static" */
+    /* FIXME: Warning, code does not support redirection at all */
+    
     /* Look in the hash table if flag was set */
 lookinhash:
     if (Flag)
@@ -1459,7 +1462,7 @@ lookinhash:
     while (*wc)
     {
         /* Check for a slash in the current position*/
-        if (*wc == L'\\' || *wc == L'/')
+        if ((*wc == L'\\') || (*wc == L'/'))
         {
             /* Found the slash, so dll name contains path */
             FullPath = TRUE;
@@ -1467,6 +1470,7 @@ lookinhash:
             /* Setup full dll name string */
             FullDllName.Buffer = NameBuf;
 
+            /* FIXME: This is from the Windows 2000 loader, not XP/2003, we should call LdrpSearchPath */
             Length = RtlDosSearchPath_U(DllPath ? DllPath : LdrpDefaultPath.Buffer,
                                         DllName->Buffer,
                                         NULL,
@@ -1475,7 +1479,7 @@ lookinhash:
                                         NULL);
 
             /* Check if that was successful */
-            if (!Length || Length > sizeof(NameBuf) - sizeof(UNICODE_NULL))
+            if (!(Length) || (Length > (sizeof(NameBuf) - sizeof(UNICODE_NULL))))
             {
                 if (ShowSnaps)
                 {
@@ -1502,18 +1506,22 @@ lookinhash:
         Flag = TRUE;
         goto lookinhash;
     }
+    
+    /* FIXME: Warning, activation context missing */
+    /* NOTE: From here on down, everything looks good */
 
-    /* Now go through the InLoadOrder module list */
+    /* Loop the module list */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     ListEntry = ListHead->Flink;
-
     while (ListEntry != ListHead)
     {
-        /* Get the containing record of the current entry and advance to the next one */
-        CurEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        /* Get the current entry and advance to the next one */
+        CurEntry = CONTAINING_RECORD(ListEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
         ListEntry = ListEntry->Flink;
 
-        /* Check if it's already being unloaded */
+        /* Check if it's being unloaded */
         if (!CurEntry->InMemoryOrderModuleList.Flink) continue;
 
         /* Check if name matches */
@@ -1523,17 +1531,9 @@ lookinhash:
         {
             /* Found it */
             *LdrEntry = CurEntry;
-
-            /* Find activation context */
-            //Status = RtlFindActivationContextSectionString(0, NULL, ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, DllName, NULL);
-            //if (!NT_SUCCESS(Status))
-            //    return FALSE;
-            //else
             return TRUE;
         }
     }
-
-    /* The DLL was not found in the load order modules list. Perform a complex check */
 
     /* Convert given path to NT path */
     if (!RtlDosPathNameToNtPathName_U(FullDllName.Buffer,
@@ -1551,7 +1551,6 @@ lookinhash:
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtOpenFile(&FileHandle,
                         SYNCHRONIZE | FILE_EXECUTE,
                         &ObjectAttributes,
@@ -1567,7 +1566,9 @@ lookinhash:
 
     /* Create a section for this file */
     Status = NtCreateSection(&SectionHandle,
-                             SECTION_MAP_READ | SECTION_MAP_EXECUTE | SECTION_MAP_WRITE,
+                             SECTION_MAP_READ |
+                             SECTION_MAP_EXECUTE |
+                             SECTION_MAP_WRITE,
                              NULL,
                              NULL,
                              PAGE_EXECUTE,
@@ -1591,6 +1592,7 @@ lookinhash:
                                 ViewShare,
                                 0,
                                 PAGE_EXECUTE);
+
     /* Close section handle */
     NtClose(SectionHandle);
 
@@ -1598,52 +1600,51 @@ lookinhash:
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get pointer to the NT header of this section */
-    NtHeader = RtlImageNtHeader(ViewBase);
-    if (!NtHeader)
+    Status = RtlImageNtHeaderEx(0, ViewBase, ViewSize, &NtHeader);
+    if (!(NT_SUCCESS(Status)) || !(NtHeader))
     {
         /* Unmap the section and fail */
         NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
         return FALSE;
     }
 
-    /* Go through the list of modules */
+    /* Go through the list of modules again */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     ListEntry = ListHead->Flink;
-
     while (ListEntry != ListHead)
     {
-        CurEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        /* Get the current entry and advance to the next one */
+        CurEntry = CONTAINING_RECORD(ListEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
         ListEntry = ListEntry->Flink;
 
-        /* Check if it's already being unloaded */
+        /* Check if it's in the process of being unloaded */
         if (!CurEntry->InMemoryOrderModuleList.Flink) continue;
-
+        
+        /* The header is untrusted, use SEH */
         _SEH2_TRY
         {
             /* Check if timedate stamp and sizes match */
-            if (CurEntry->TimeDateStamp == NtHeader->FileHeader.TimeDateStamp &&
-                CurEntry->SizeOfImage == NtHeader->OptionalHeader.SizeOfImage)
+            if ((CurEntry->TimeDateStamp == NtHeader->FileHeader.TimeDateStamp) &&
+                (CurEntry->SizeOfImage == NtHeader->OptionalHeader.SizeOfImage))
             {
                 /* Time, date and size match. Let's compare their headers */
                 NtHeader2 = RtlImageNtHeader(CurEntry->DllBase);
-
                 if (RtlCompareMemory(NtHeader2, NtHeader, sizeof(IMAGE_NT_HEADERS)))
                 {
                     /* Headers match too! Finally ask the kernel to compare mapped files */
                     Status = ZwAreMappedFilesTheSame(CurEntry->DllBase, ViewBase);
-
                     if (!NT_SUCCESS(Status))
                     {
+                        /* Almost identical, but not quite, keep trying */
                         _SEH2_YIELD(continue;)
                     }
                     else
                     {
-                        /* This is our entry! */
+                        /* This is our entry!, unmap and return success */
                         *LdrEntry = CurEntry;
-
-                        /* Unmap the section */
                         NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
-
                         _SEH2_YIELD(return TRUE;)
                     }
                 }
@@ -1656,9 +1657,8 @@ lookinhash:
         _SEH2_END;
     }
 
-    /* Unmap the section */
+    /* Unmap the section and fail */
     NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
-
     return FALSE;
 }
 
