@@ -1,15 +1,16 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Jan, 2008)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
+ *         translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Utwórz ³¹cze"
+CAPTION "UtwÃ³rz Å‚Ä…cze"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1", -1, 115, 15, 160, 24
@@ -18,7 +19,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Utwórz ³¹cze"
+CAPTION "UtwÃ³rz Å‚Ä…cze"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Text1",-1,10,0,225,40
@@ -28,30 +29,30 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Utwórz skrót"
+CAPTION "UtwÃ³rz skrÃ³t"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Ten program konfiguracyjny pomo¿e ci stworzyæ skróty do lokalnych lub\nsieciowych programów, plików, katalogów, komputerów, b¹dŸ addresów\nInternetowych.", -1, 120, 15, 200, 30
-  LTEXT "Wpisz œcie¿kê dostêpu do obiektu:", -1, 120, 50, 120, 10
+  LTEXT "Ten program konfiguracyjny pomoÅ¼e ci stworzyÄ‡ skrÃ³ty do lokalnych lub\nsieciowych programÃ³w, plikÃ³w, katalogÃ³w, komputerÃ³w, bÄ…dÅº addresÃ³w\nInternetowych.", -1, 120, 15, 200, 30
+  LTEXT "Wpisz Å›cieÅ¼kÄ™ dostÄ™pu do obiektu:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Przegl¹daj...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Naciœnij Dalej aby kontynuowaæ.", -1, 120, 97, 162, 10
+  PUSHBUTTON "PrzeglÄ…daj...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "NaciÅ›nij Dalej aby kontynuowaÄ‡.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Wybierz nazwê"
+CAPTION "Wybierz nazwÄ™"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Wpisz nazwê dla tego skrótu:", -1, 120, 15, 150, 10
+  LTEXT "&Wpisz nazwÄ™ dla tego skrÃ³tu:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Naciœnij Zakoñcz by utworzyæ skrót.", -1, 118, 97, 178, 17
+  LTEXT "NaciÅ›nij ZakoÅ„cz by utworzyÄ‡ skrÃ³t.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Dodaj/Usuñ Programy"
-	IDS_CPLSYSTEMDESCRIPTION "Instaluje b¹dŸ usuwa programy oraz tworzy skróty."
-    IDS_CREATE_SHORTCUT "Utwórz skrót"
-    IDS_ERROR_NOT_FOUND "Plik %s nie zosta³ znaleziony."
+	IDS_CPLSYSTEMNAME "Dodaj/UsuÅ„ Programy"
+	IDS_CPLSYSTEMDESCRIPTION "Instaluje bÄ…dÅº usuwa programy oraz tworzy skrÃ³ty."
+    IDS_CREATE_SHORTCUT "UtwÃ³rz skrÃ³t"
+    IDS_ERROR_NOT_FOUND "Plik %s nie zostaÅ‚ znaleziony."
 END

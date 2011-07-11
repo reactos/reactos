@@ -24,6 +24,6 @@ add_importlibs(msdmo
     kernel32
     ntdll)
 
-add_dependencies(msdmo dxsdk psdk buildno_header)
+add_dependencies(msdmo dxsdk psdk)
 
-add_cab_target(msdmo 1)
+add_cd_file(TARGET msdmo DESTINATION reactos/system32 FOR all)

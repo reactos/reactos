@@ -675,7 +675,6 @@ SVC_(GdiDrawStream, 3)
 
 
 // ReactOS, specific, syscalls)
-SVC_(GdiSetDIBits, 7)
 SVC_(GdiSetViewportOrgEx, 4)
 SVC_(GdiSetWindowOrgEx, 4)
 SVC_(GdiGetFontFamilyInfo, 4)
@@ -684,7 +683,6 @@ SVC_(GdiOffsetWindowOrgEx, 4)
 
 SVC_(UserBuildMenuItemList, 4)
 SVC_(UserGetMenuDefaultItem, 3)
-SVC_(UserGetLastInputInfo, 1)
 SVC_(UserGetMinMaxInfo, 3)
 SVC_(UserGetMonitorInfo, 2)
 SVC_(UserMenuInfo, 3)

@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
@@ -24,8 +21,10 @@ list(APPEND SOURCE
 add_library(itss SHARED ${SOURCE})
 
 set_module_type(itss win32dll)
-
 target_link_libraries(itss uuid wine)
+if(MSVC)
+    target_link_libraries(itss itss_guid)
+endif()
 
 add_importlibs(itss
     urlmon
@@ -36,4 +35,4 @@ add_importlibs(itss
     ntdll)
 
 add_dependencies(itss wineheaders)
-add_cab_target(itss 1)
+add_cd_file(TARGET itss DESTINATION reactos/system32 FOR all)

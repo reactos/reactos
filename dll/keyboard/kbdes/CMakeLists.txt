@@ -7,6 +7,6 @@ add_library(kbdes SHARED kbdes.c kbdes.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdes.def)
 
 set_entrypoint(kbdes 0)
 
-add_dependencies(kbdes psdk buildno_header)
+add_dependencies(kbdes psdk)
 
-add_cab_target(kbdes 1)
+add_cd_file(TARGET kbdes DESTINATION reactos/system32 FOR all)

@@ -190,24 +190,15 @@ interface eventlog
 
     /* Function 19 */
     NTSTATUS ElfrRegisterClusterSvc(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 20 */
     NTSTATUS ElfrDeregisterClusterSvc(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 21 */
     NTSTATUS ElfrWriteClusterEvents(
-#ifndef __midl
-        [in] handle_t BindingHandle
-#endif
-        ); /* FIXME */
+        [in] handle_t BindingHandle);
 
     /* Function 22 */
     NTSTATUS ElfrGetLogInformation(

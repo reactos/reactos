@@ -481,6 +481,7 @@ EnableUserModePnpManager(VOID)
     if (hSCManager == NULL)
     {
         DPRINT1("Unable to open the service control manager.\n");
+        DPRINT1("Last Error %d\n", GetLastError());
         goto cleanup;
     }
 
@@ -506,9 +507,9 @@ EnableUserModePnpManager(VOID)
     }
 
     ret = StartServiceW(hService, 0, NULL);
-    if (!ret)
+    if ((!ret) && (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING))
     {
-        DPRINT("Unable to start service\n");
+        DPRINT1("Unable to start service\n");
         goto cleanup;
     }
 
@@ -792,7 +793,7 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\paint.exe"), IDS_CMT_PAINT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\mspaint.exe"), IDS_CMT_PAINT, TRUE);
     }
 
     /* Create System Tools subfolder and fill if the exe is available */

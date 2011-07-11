@@ -366,6 +366,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hStopEvent;
     HANDLE hResetEvent;
     BOOL ResetInProgress;
+    BOOL bPaused;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -381,10 +382,10 @@ typedef struct _WAVEHDR_EXTENSION
 */
 
 MMRESULT
-InitEntrypointMutexes();
+InitEntrypointMutexes(VOID);
 
 VOID
-CleanupEntrypointMutexes();
+CleanupEntrypointMutexes(VOID);
 
 VOID
 AcquireEntrypointMutex(
@@ -501,7 +502,7 @@ UnlistSoundDevices(
     IN  MMDEVICE_TYPE DeviceType);
 
 VOID
-UnlistAllSoundDevices();
+UnlistAllSoundDevices(VOID);
 
 MMRESULT
 GetSoundDevice(
@@ -607,7 +608,7 @@ FreeMemory(
     IN  PVOID Pointer);
 
 UINT
-GetMemoryAllocationCount();
+GetMemoryAllocationCount(VOID);
 
 UINT
 GetDigitCount(
@@ -702,6 +703,9 @@ MMRESULT
 StopStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
+VOID
+InitiateSoundStreaming(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 /*
     kernel.c

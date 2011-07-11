@@ -16,15 +16,14 @@ list(APPEND SOURCE
     arm/bootdata.c)
 endif(ARCH MATCHES i386 OR ARCH MATCHES amd64)
 
-add_library(bootvid SHARED ${CMAKE_CURRENT_BINARY_DIR}/bootvid_precomp.h.gch ${SOURCE})
+add_library(bootvid SHARED ${SOURCE})
 
 set_entrypoint(bootvid 0)
 set_subsystem(bootvid native)
 set_image_base(bootvid 0x00010000)
 
 add_importlibs(bootvid ntoskrnl hal)
-add_pch(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(bootvid psdk buildno_header bugcodes)
-add_minicd_target(bootvid reactos bootvid.dll)
-add_cab_target(bootvid 1)
+add_pch(bootvid precomp.h)
+add_dependencies(bootvid psdk bugcodes)
+add_cd_file(TARGET bootvid DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(bootvid.spec)

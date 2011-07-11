@@ -13,7 +13,7 @@ list(APPEND SOURCE
     init.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
-add_library(csrsrv SHARED ${CMAKE_CURRENT_BINARY_DIR}/csrsrv_srv.h.gch ${SOURCE})
+add_library(csrsrv SHARED ${SOURCE})
 
 target_link_libraries(csrsrv ${PSEH_LIB})
 
@@ -26,8 +26,8 @@ endif()
 
 add_importlibs(csrsrv ntdll smdll)
 
-add_pch(csrsrv ${CMAKE_CURRENT_SOURCE_DIR}/srv.h ${SOURCE})
+add_pch(csrsrv srv.h)
 
 add_dependencies(csrsrv psdk bugcodes)
-add_cab_target(csrsrv 1)
+add_cd_file(TARGET csrsrv DESTINATION reactos/system32 FOR all)
 add_importlib_target(csrsrv.spec)

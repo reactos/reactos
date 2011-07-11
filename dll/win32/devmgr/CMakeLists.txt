@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(devmgr.dll devmgr.spec)
 
@@ -13,7 +14,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
 
-add_library(devmgr SHARED ${CMAKE_CURRENT_BINARY_DIR}/devmgr_precomp.h.gch ${SOURCE})
+add_library(devmgr SHARED ${SOURCE})
 
 set_module_type(devmgr win32dll)
 
@@ -28,7 +29,7 @@ add_importlibs(devmgr
     kernel32
     ntdll)
 
-add_pch(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(devmgr precomp.h)
 
-add_cab_target(devmgr 1)
+add_cd_file(TARGET devmgr DESTINATION reactos/system32 FOR all)
 add_importlib_target(devmgr.spec)

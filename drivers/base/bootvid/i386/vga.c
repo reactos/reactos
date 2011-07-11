@@ -66,7 +66,7 @@ ULONG lookup[16] =
 ULONG TextColor = 0xF;
 ULONG curr_x = 0;
 ULONG curr_y = 0;
-BOOLEAN NextLine = FALSE;
+BOOLEAN CarriageReturn = FALSE;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
 
@@ -280,14 +280,8 @@ VOID
 NTAPI
 VgaScroll(ULONG Scroll)
 {
-    ULONG Top;
-    ULONG SourceOffset, DestOffset;
-    ULONG Offset;
-    ULONG i, j;
-
-    /* Set memory positions of the scroll */
-    SourceOffset = VgaBase + (ScrollRegion[1] * 80) + (ScrollRegion[0] >> 3);
-    DestOffset = SourceOffset + (Scroll * 80);
+    ULONG Top, RowSize, i;
+    PUCHAR OldPosition, NewPosition;
 
     /* Clear the 4 planes */
     __outpw(0x3C4, 0xF02);
@@ -297,50 +291,20 @@ VgaScroll(ULONG Scroll)
 
     /* Set Mode 1 */
     ReadWriteMode(1);
-
-    /* Save top and check if it's above the bottom */
-    Top = ScrollRegion[1];
-    if (Top > ScrollRegion[3]) return;
+    
+    RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
 
     /* Start loop */
-    do
+    for(Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
     {
-        /* Set number of bytes to loop and start offset */
-        Offset = ScrollRegion[0] >> 3;
-        j = SourceOffset;
-
-        /* Check if this is part of the scroll region */
-        if (Offset <= (ScrollRegion[2] >> 3))
-        {
-            /* Update position */
-            i = DestOffset - SourceOffset;
-
-            /* Loop the X axis */
-            do
-            {
-                /* Write value in the new position so that we can do the scroll */
-                WRITE_REGISTER_UCHAR(UlongToPtr(j),
-                                     READ_REGISTER_UCHAR(UlongToPtr(j + i)));
-
-                /* Move to the next memory location to write to */
-                j++;
-
-                /* Move to the next byte in the region */
-                Offset++;
-
-                /* Make sure we don't go past the scroll region */
-            } while (Offset <= (ScrollRegion[2] >> 3));
-        }
-
-        /* Move to the next line */
-        SourceOffset += 80;
-        DestOffset += 80;
-
-        /* Increase top */
-        Top++;
-
-        /* Make sure we don't go past the scroll region */
-    } while (Top <= ScrollRegion[3]);
+        /* Calculate the position in memory for the row */
+        OldPosition = (PUCHAR)VgaBase + (Top + Scroll) * 80 + ScrollRegion[0] / 8;
+        NewPosition = (PUCHAR)VgaBase + Top * 80 + ScrollRegion[0] / 8;
+        
+        /* Scroll the row */
+        for(i = 0; i < RowSize; ++i)
+            WRITE_REGISTER_UCHAR(NewPosition + i, READ_REGISTER_UCHAR(OldPosition + i));
+    }
 }
 
 VOID
@@ -739,7 +703,7 @@ VOID
 NTAPI
 VidDisplayString(PUCHAR String)
 {
-    ULONG TopDelta = 14;
+    ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
     while (*String)
@@ -749,38 +713,40 @@ VidDisplayString(PUCHAR String)
         {
             /* Modify Y position */
             curr_y += TopDelta;
-            if (curr_y >= ScrollRegion[3])
+            if (curr_y + TopDelta >= ScrollRegion[3])
             {
                 /* Scroll the view */
                 VgaScroll(TopDelta);
                 curr_y -= TopDelta;
-
+            }
+            else
+            {
                 /* Preserve row */
-                PreserveRow(curr_y, TopDelta, TRUE);
+                PreserveRow(curr_y, TopDelta, FALSE);
             }
 
             /* Update current X */
             curr_x = ScrollRegion[0];
 
-            /* Preseve the current row */
-            PreserveRow(curr_y, TopDelta, FALSE);
+            /* Do not clear line if "\r\n" is given */
+            CarriageReturn = FALSE;
         }
         else if (*String == '\r')
         {
             /* Update current X */
             curr_x = ScrollRegion[0];
-
+            
             /* Check if we're being followed by a new line */
-            if (String[1] != '\n') NextLine = TRUE;
+            CarriageReturn = TRUE;
         }
         else
         {
-            /* Check if we had a \n\r last time */
-            if (NextLine)
+            /* check if we had a '\r' last time */
+            if (CarriageReturn)
             {
-                /* We did, preserve the current row */
+                /* We did, clear the current row */
                 PreserveRow(curr_y, TopDelta, TRUE);
-                NextLine = FALSE;
+                CarriageReturn = FALSE;
             }
 
             /* Display this character */
@@ -788,18 +754,20 @@ VidDisplayString(PUCHAR String)
             curr_x += 8;
 
             /* Check if we should scroll */
-            if (curr_x > ScrollRegion[2])
+            if (curr_x + 8 > ScrollRegion[2])
             {
                 /* Update Y position and check if we should scroll it */
                 curr_y += TopDelta;
-                if (curr_y > ScrollRegion[3])
+                if (curr_y + TopDelta > ScrollRegion[3])
                 {
                     /* Do the scroll */
                     VgaScroll(TopDelta);
                     curr_y -= TopDelta;
-
-                    /* Save the row */
-                    PreserveRow(curr_y, TopDelta, TRUE);
+                }
+                else
+                {
+                    /* Preserve the current row */
+                    PreserveRow(curr_y, TopDelta, FALSE);
                 }
 
                 /* Update X */

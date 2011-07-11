@@ -7,10 +7,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-if(MSVC)
-    add_definitions(-FImsvchelper.h)
-endif()
-
 set_rc_compiler()
 
 spec2def(d3d8.dll d3d8.spec)
@@ -29,7 +25,6 @@ list(APPEND SOURCE
     volume.c
     volumetexture.c
     version.rc
-    #${REACTOS_BINARY_DIR}/include/reactos/wine/wined3d_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
 add_library(d3d8 SHARED ${SOURCE})
@@ -48,4 +43,4 @@ add_importlibs(d3d8
     ntdll)
 
 add_dependencies(d3d8 wineheaders)
-add_cab_target(d3d8 1)
+add_cd_file(TARGET d3d8 DESTINATION reactos/system32 FOR all)

@@ -38,5 +38,5 @@ add_importlibs(d3dx9_36
     ntdll)
 
 add_dependencies(d3dx9_36 wineheaders)
-add_cab_target(d3dx9_36 1)
+add_cd_file(TARGET d3dx9_36 DESTINATION reactos/system32 FOR all)
 add_importlib_target(d3dx9_36.spec)

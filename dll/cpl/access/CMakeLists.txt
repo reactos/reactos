@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(access.cpl access.spec)
 
@@ -23,4 +24,4 @@ add_importlibs(access
     comctl32
     kernel32)
 
-add_cab_target(access 1)
+add_cd_file(TARGET access DESTINATION reactos/system32 FOR all)

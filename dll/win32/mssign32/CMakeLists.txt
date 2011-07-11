@@ -17,4 +17,4 @@ target_link_libraries(mssign32 wine)
 
 add_importlibs(mssign32 msvcrt kernel32 ntdll)
 
-add_cab_target(mssign32 1)
+add_cd_file(TARGET mssign32 DESTINATION reactos/system32 FOR all)

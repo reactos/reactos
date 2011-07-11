@@ -116,7 +116,7 @@ BEGIN
     CONTROL         "Изобразяване на &сенки под изборницте",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Показване на съдържанието на &прозорците по време на влачене",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "С&криване на подчертаването за клавиатурното насочване, до натискане на Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "Отказ", IDCANCEL, 226, 165, 50, 14

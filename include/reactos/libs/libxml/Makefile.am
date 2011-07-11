@@ -51,7 +51,4 @@ xmlinc_HEADERS = \
 		xmlsave.h \
 		schematron.h
 
-install-exec-hook:
-	$(mkinstalldirs) $(DESTDIR)$(xmlincdir)
-
 EXTRA_DIST = xmlversion.h.in

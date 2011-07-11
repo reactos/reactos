@@ -7,6 +7,6 @@ add_library(kbdusa SHARED kbdusa.c kbdusa.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdusa.
 
 set_entrypoint(kbdusa 0)
 
-add_dependencies(kbdusa psdk buildno_header)
+add_dependencies(kbdusa psdk)
 
-add_cab_target(kbdusa 1)
+add_cd_file(TARGET kbdusa DESTINATION reactos/system32 FOR all)

@@ -280,19 +280,19 @@ OpenDevice(
     OUT PFILE_OBJECT * FileObject);
 
 ULONG
-WdmAudGetMixerDeviceCount();
+WdmAudGetMixerDeviceCount(VOID);
 
 ULONG
-WdmAudGetWaveInDeviceCount();
+WdmAudGetWaveInDeviceCount(VOID);
 
 ULONG
-WdmAudGetWaveOutDeviceCount();
+WdmAudGetWaveOutDeviceCount(VOID);
 
 ULONG
-WdmAudGetMidiInDeviceCount();
+WdmAudGetMidiInDeviceCount(VOID);
 
 ULONG
-WdmAudGetMidiOutDeviceCount();
+WdmAudGetMidiOutDeviceCount(VOID);
 
 NTSTATUS
 WdmAudGetPnpNameByIndexAndType(

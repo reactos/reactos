@@ -12,6 +12,6 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary не вдалося завантажити '%s'"
-    IDS_MissingEntry,   "Неможливо знайти точку входу:%s\nВ бібліотеці %s"
+    IDS_DllNotLoaded,   "LoadLibrary РЅРµ РІРґР°Р»РѕСЃСЏ Р·Р°РІР°РЅС‚Р°Р¶РёС‚Рё '%s'"
+    IDS_MissingEntry,   "РќРµРјРѕР¶Р»РёРІРѕ Р·РЅР°Р№С‚Рё С‚РѕС‡РєСѓ РІС…РѕРґСѓ:%s\nР’ Р±С–Р±Р»С–РѕС‚РµС†С– %s"
 END

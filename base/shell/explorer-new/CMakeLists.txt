@@ -3,6 +3,8 @@ set_unicode()
 
 add_definitions(-DWIN32)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
     desktop.c
     dragdrop.c
@@ -16,11 +18,10 @@ list(APPEND SOURCE
     traywnd.c
     explorer.rc)
 
-add_executable(explorer_new ${CMAKE_CURRENT_BINARY_DIR}/explorer_new_precomp.h.gch ${SOURCE})
+add_executable(explorer_new ${SOURCE})
 
 target_link_libraries(explorer_new uuid)
 
-add_pch(explorer_new ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 set_module_type(explorer_new win32gui)
 add_importlibs(explorer_new
     advapi32
@@ -35,5 +36,6 @@ add_importlibs(explorer_new
     msvcrt
     kernel32
     ntdll)
+add_pch(explorer_new precomp.h)
 
-add_cab_target(explorer_new 4)
+add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)

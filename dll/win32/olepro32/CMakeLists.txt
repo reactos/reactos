@@ -20,4 +20,4 @@ add_importlibs(olepro32
     kernel32
     ntdll)
 
-add_cab_target(olepro32 1)
+add_cd_file(TARGET olepro32 DESTINATION reactos/system32 FOR all)

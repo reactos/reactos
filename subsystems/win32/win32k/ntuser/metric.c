@@ -23,8 +23,20 @@ BOOL
 FASTCALL
 InitMetrics(VOID)
 {
-    INT *piSysMet;
+    INT *piSysMet = gpsi->aiSysMet;
     ULONG Width, Height;
+
+    /* note: used for the SM_CLEANBOOT metric */
+    DWORD dwValue = 0;
+    HKEY hKey = 0;
+
+    /* Clean boot */
+    piSysMet[SM_CLEANBOOT] = 0; // fallback value of 0 (normal mode)
+    if(NT_SUCCESS(RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option", &hKey)))
+    {
+        if(RegReadDWORD(hKey, L"OptionValue", &dwValue)) piSysMet[SM_CLEANBOOT] = (INT)dwValue;
+        ZwClose(hKey);
+    }
 
     /* FIXME: HACK, due to missing PDEV on first init */
     if (!pPrimarySurface)
@@ -37,8 +49,6 @@ InitMetrics(VOID)
         Width = pPrimarySurface->gdiinfo.ulHorzRes;
         Height = pPrimarySurface->gdiinfo.ulVertRes;
     }
-
-    piSysMet = gpsi->aiSysMet;
 
     /* Screen sizes */
     piSysMet[SM_CXSCREEN] = Width;
@@ -146,7 +156,6 @@ InitMetrics(VOID)
     piSysMet[SM_SLOWMACHINE] = 0;
     piSysMet[SM_SECURE] = 0;
     piSysMet[SM_DBCSENABLED] = 0;
-    piSysMet[SM_CLEANBOOT] = 0;
     piSysMet[SM_SHOWSOUNDS] = gspv.bShowSounds;
     piSysMet[SM_MIDEASTENABLED] = 0;
     piSysMet[SM_CMONITORS] = 1;

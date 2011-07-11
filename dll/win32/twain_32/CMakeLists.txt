@@ -1,6 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 spec2def(twain_32.dll twain_32.spec)
 
 list(APPEND SOURCE
@@ -18,4 +16,4 @@ add_library(twain_32 SHARED ${SOURCE})
 set_module_type(twain_32 win32dll)
 target_link_libraries(twain_32 wine)
 add_importlibs(twain_32 msvcrt kernel32 ntdll)
-add_cab_target(twain_32 1)
+add_cd_file(TARGET twain_32 DESTINATION reactos/system32 FOR all)

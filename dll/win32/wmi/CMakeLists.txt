@@ -10,5 +10,5 @@ add_library(wmi SHARED ${SOURCE})
 set_entrypoint(wmi 0)
 
 add_importlibs(wmi advapi32)
-add_dependencies(wmi psdk buildno_header)
-add_cab_target(wmi 1)
+add_dependencies(wmi psdk)
+add_cd_file(TARGET wmi DESTINATION reactos/system32 FOR all)

@@ -77,7 +77,7 @@ NTAPI
 ExFreeCallBack(IN PEX_CALLBACK_ROUTINE_BLOCK CallbackBlock)
 {
     /* Just free it from memory */
-    ExFreePool(CallbackBlock);
+    ExFreePoolWithTag(CallbackBlock, CALLBACK_TAG);
 }
 
 VOID
@@ -602,7 +602,7 @@ ExRegisterCallback(IN PCALLBACK_OBJECT CallbackObject,
         KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
         /* Free the registration */
-        ExFreePool(CallbackRegistration);
+        ExFreePoolWithTag(CallbackRegistration, CALLBACK_TAG);
         CallbackRegistration = NULL;
 
         /* Dereference the object */
@@ -676,7 +676,7 @@ ExUnregisterCallback(IN PVOID CallbackRegistrationHandle)
     KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
     /* Delete this registration */
-    ExFreePool(CallbackRegistration);
+    ExFreePoolWithTag(CallbackRegistration, CALLBACK_TAG);
 
     /* Remove the reference */
     ObDereferenceObject(CallbackObject);

@@ -7,6 +7,6 @@ add_library(kbdusx SHARED kbdusx.c kbdusx.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdusx.
 
 set_entrypoint(kbdusx 0)
 
-add_dependencies(kbdusx psdk buildno_header)
+add_dependencies(kbdusx psdk)
 
-add_cab_target(kbdusx 1)
+add_cd_file(TARGET kbdusx DESTINATION reactos/system32 FOR all)

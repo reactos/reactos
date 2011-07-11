@@ -37,10 +37,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(combo);
 
-  /* bits in the dwKeyData */
-#define KEYDATA_ALT             0x2000
-#define KEYDATA_PREVSTATE       0x4000
-
 /*
  * Additional combo box definitions
  */
@@ -1119,7 +1115,7 @@ static void CBDropDown( LPHEADCOMBO lphc )
    if( (rect.bottom + nDroppedHeight) >= mon_info.rcWork.bottom )
       rect.bottom = rect.top - nDroppedHeight;
 
-   SetWindowPos( lphc->hWndLBox, HWND_TOP, rect.left, rect.bottom,
+   SetWindowPos( lphc->hWndLBox, HWND_TOPMOST, rect.left, rect.bottom,
 		 lphc->droppedRect.right - lphc->droppedRect.left,
 		 nDroppedHeight,
 		 SWP_NOACTIVATE | SWP_SHOWWINDOW);
@@ -2011,7 +2007,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 		SendMessageW(lphc->hWndLBox, message, wParam, lParam);
 		return  0;
 	case WM_SYSKEYDOWN:
-		if( KEYDATA_ALT & HIWORD(lParam) )
+		if( KF_ALTDOWN & HIWORD(lParam) ) // ReactOS (wine) KEYDATA_ALT
 		    if( wParam == VK_UP || wParam == VK_DOWN )
 			COMBO_FlipListbox( lphc, FALSE, FALSE );
                 return  0;
@@ -2232,6 +2228,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 	case CB_LIMITTEXT:
 		if( lphc->wState & CBF_EDIT )
 			return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
+                break; // ReactOS!!! removed at revision 38715
 
     case WM_UPDATEUISTATE:
         if (unicode)

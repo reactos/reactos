@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(telephon.cpl telephon.spec)
 
@@ -18,4 +19,4 @@ add_importlibs(telephon
     msvcrt
     kernel32)
 
-add_cab_target(telephon 1)
+add_cd_file(TARGET telephon DESTINATION reactos/system32 FOR all)

@@ -14,4 +14,4 @@ target_link_libraries(powrprof wine)
 
 add_importlibs(powrprof advapi32 user32 comctl32 msvcrt kernel32 ntdll)
 add_importlib_target(powrprof.spec)
-add_cab_target(powrprof 1)
+add_cd_file(TARGET powrprof DESTINATION reactos/system32 FOR all)

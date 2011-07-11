@@ -44,6 +44,7 @@
 
 FF_T_UINT8	FF_GetCRC8	(FF_T_UINT8 *pbyData, FF_T_UINT32 stLength);
 FF_T_UINT16 FF_GetCRC16	(FF_T_UINT8 *pbyData, FF_T_UINT32 stLength);
+FF_T_UINT32 FF_GetCRC32	(FF_T_UINT8 *pbyData, FF_T_UINT32 stLength);
 
 #endif
 

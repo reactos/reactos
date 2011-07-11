@@ -23,6 +23,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
+if(MSVC)
+    list(APPEND SOURCE msvc.S)
+endif()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -49,5 +53,5 @@ target_link_libraries(rpcrt4
 
 add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
 add_dependencies(rpcrt4 winesdk)
-add_cab_target(rpcrt4 1)
+add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
 add_importlib_target(rpcrt4.spec)

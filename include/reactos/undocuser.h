@@ -38,7 +38,7 @@
 #define WM_LBTRACKPOINT     0x00000131
 #define LB_CARETON          0x000001a3
 #define LB_CARETOFF         0x000001a4
-#define WM_DROPOBJEC        0x0000022A
+#define WM_DROPOBJECT       0x0000022A
 #define WM_QUERYDROPOBJECT  0x0000022B
 #define WM_BEGINDRAG        0x0000022C
 #define WM_DRAGLOOP	        0x0000022D
@@ -80,11 +80,14 @@
 //
 // Definitions used by WM_LOGONNOTIFY
 //
+#define LN_SHELL_EXITED       0x2
 #define LN_START_TASK_MANAGER 0x4
 #define LN_LOCK_WORKSTATION   0x5
 #define LN_UNLOCK_WORKSTATION 0x6
 #define LN_MESSAGE_BEEP       0x9
+#define LN_START_SCREENSAVE   0xA
 
+#define STARTF_SCRNSAVER 0x80000000
 #define CW_USEDEFAULT16 ((short)0x8000)
 
 #define SBRG_SCROLLBAR     0 /* the scrollbar itself */
@@ -94,7 +97,7 @@
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
-
+BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 DWORD_PTR WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD_PTR);

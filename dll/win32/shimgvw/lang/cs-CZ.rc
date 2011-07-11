@@ -7,8 +7,9 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "ReactOS prohlížeè obrázkù a faxù"
+    IDS_APPTITLE    "ReactOS prohlížeè obrázkù a faxù"
     IDS_SETASDESKBG "Nastavit jako pozadí plochy"
+    IDS_PREVIEW     "Náhled"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Další obrázek"

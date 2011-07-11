@@ -20,6 +20,9 @@ Description = Erlaubt es Ihnen den ReactOS AMD64 Source Code zu kompilieren. Im 
 [Section.040a]
 Description = Te permite compilar el código de ReactOS AMD64. Para más instrucciones consulta la wiki de ReactOS.
 
+[Section.040c]
+Description = Vous permet de compiler le code source de ReactOS pour AMD64. Pour plus d'instruction, reportez-vous au wiki ReactOS.
+
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS AMD64 ze źródeł. Więcej informacji na Wiki ReactOS.
 

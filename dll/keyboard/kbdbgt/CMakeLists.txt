@@ -7,6 +7,6 @@ add_library(kbdbgt SHARED kbdbgt.c kbdbgt.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbgt.
 
 set_entrypoint(kbdbgt 0)
 
-add_dependencies(kbdbgt psdk buildno_header)
+add_dependencies(kbdbgt psdk)
 
-add_cab_target(kbdbgt 1)
+add_cd_file(TARGET kbdbgt DESTINATION reactos/system32 FOR all)

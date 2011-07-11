@@ -20,9 +20,7 @@
 	.text
 	.code16
 
-#define ASM
-#include <arch.h>
-
+#include <arch/pc/x86common.h>
 
 	.code32
 EXTERN(_BootNewLinuxKernel)
@@ -30,7 +28,7 @@ EXTERN(_BootNewLinuxKernel)
 	.code16
 
 	/* Set the boot drive */
-	movb	(_BootDrive),%dl
+	movb	(_FrldrBootDrive),%dl
 
 	/* Load segment registers */
 	cli
@@ -66,7 +64,7 @@ EXTERN(_BootOldLinuxKernel)
 	.code16
 
 	/* Set the boot drive */
-	movb	(_BootDrive),%dl
+	movb	(_FrldrBootDrive),%dl
 
 	/* Load segment registers */
 	cli

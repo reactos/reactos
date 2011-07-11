@@ -5,6 +5,7 @@ list(APPEND INF_FILES
     bda.inf
     cdrom.inf
     cpu.inf
+    disk.inf
     display.inf
     fdc.inf
     font.inf
@@ -23,6 +24,7 @@ list(APPEND INF_FILES
     nettcpip.inf
     ports.inf
     scsi.inf
+    unknown.inf
     usb.inf
     usbport.inf
     usbstor.inf
@@ -30,7 +32,7 @@ list(APPEND INF_FILES
 )
 
 foreach(item ${INF_FILES})
-    add_cab("${CMAKE_CURRENT_SOURCE_DIR}/${item}" 6)
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/inf FOR all)
 endforeach(item)
 
-add_cab(${CMAKE_CURRENT_SOURCE_DIR}/syssetup.inf 6)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/syssetup.inf DESTINATION reactos/inf FOR all)

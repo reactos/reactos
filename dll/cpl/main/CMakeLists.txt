@@ -1,7 +1,6 @@
 
 set_unicode()
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
+set_rc_compiler()
 
 spec2def(main.cpl main.spec)
 
@@ -25,4 +24,4 @@ add_importlibs(main
     gdi32
     kernel32)
 
-add_cab_target(main 1)
+add_cd_file(TARGET main DESTINATION reactos/system32 FOR all)

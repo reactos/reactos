@@ -250,7 +250,9 @@ WdmAudGetCapabilitiesByLegacy(
 }
 
 MMRESULT
-WdmAudOpenSoundDeviceByLegacy()
+WdmAudOpenSoundDeviceByLegacy(
+    IN PSOUND_DEVICE SoundDevice,
+    OUT PVOID *Handle)
 {
     /* Only open this if it's not already open */
     if ( KernelHandle == INVALID_HANDLE_VALUE )
@@ -476,7 +478,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
     DeviceInfo.u.WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
     DeviceInfo.u.WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
     DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
-    DeviceInfo.u.WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+    DeviceInfo.u.WaveFormatEx.wBitsPerSample = (DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec * 8) / (DeviceInfo.u.WaveFormatEx.nSamplesPerSec * DeviceInfo.u.WaveFormatEx.nChannels);
 #endif
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
@@ -492,14 +494,19 @@ WdmAudSetWaveDeviceFormatByLegacy(
         return TranslateInternalMmResult(Result);
     }
 
-    /* Store format */
-    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
-    Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
-    Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
-    Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
-    Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
-    Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
-    Instance->WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+    if (WaveFormatSize >= sizeof(WAVEFORMAT))
+    {
+        /* Store format */
+        Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+        Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
+        Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
+        Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
+        Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
+    }
+
+    /* store details */
+    Instance->WaveFormatEx.cbSize = sizeof(WAVEFORMATEX);
+    Instance->WaveFormatEx.wBitsPerSample = (DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec * 8) / (DeviceInfo.u.WaveFormatEx.nSamplesPerSec * DeviceInfo.u.WaveFormatEx.nChannels);
 
     /* Store sound device handle instance handle */
     Instance->Handle = (PVOID)DeviceInfo.hDevice;
@@ -528,18 +535,18 @@ WdmAudSetWaveDeviceFormatByLegacy(
         Instance->BufferCount = 100;
     }
 
-    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
-    {
-        /* Now start the stream */
-        DeviceInfo.u.State = KSSTATE_RUN;
-        SyncOverlappedDeviceIoControl(KernelHandle,
-                                      IOCTL_SETDEVICE_STATE,
-                                      (LPVOID) &DeviceInfo,
-                                      sizeof(WDMAUD_DEVICE_INFO),
-                                      (LPVOID) &DeviceInfo,
-                                      sizeof(WDMAUD_DEVICE_INFO),
-                                      NULL);
-    }
+    /* Now acquire resources */
+    DeviceInfo.u.State = KSSTATE_ACQUIRE;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
+    /* pause the pin */
+    DeviceInfo.u.State = KSSTATE_PAUSE;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
+    /* start the pin */
+    DeviceInfo.u.State = KSSTATE_RUN;
+    SyncOverlappedDeviceIoControl(KernelHandle, IOCTL_SETDEVICE_STATE, (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPVOID) &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), NULL);
+
 
     return MMSYSERR_NOERROR;
 }
@@ -617,7 +624,7 @@ WdmAudCommitWaveBufferByLegacy(
 
 
     // create completion event
-    Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    Overlap->Standard.hEvent = Handle = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (Overlap->Standard.hEvent == NULL)
     {
         // no memory
@@ -641,12 +648,10 @@ WdmAudCommitWaveBufferByLegacy(
     }
 
     // close event handle
-    CloseHandle(Overlap->Standard.hEvent);
+    CloseHandle(Handle);
 
     return MMSYSERR_NOERROR;
 }
-
-
 
 MMRESULT
 WdmAudSetWaveStateByLegacy(

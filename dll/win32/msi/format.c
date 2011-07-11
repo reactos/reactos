@@ -185,7 +185,6 @@ static LPWSTR deformat_component(FORMAT *format, FORMSTR *str)
 {
     LPWSTR key, ret = NULL;
     MSICOMPONENT *comp;
-    BOOL source;
 
     key = msi_alloc((str->len + 1) * sizeof(WCHAR));
     lstrcpynW(key, get_formstr_data(format, str), str->len + 1);
@@ -194,8 +193,10 @@ static LPWSTR deformat_component(FORMAT *format, FORMSTR *str)
     if (!comp)
         goto done;
 
-    source = (comp->Action == INSTALLSTATE_SOURCE) ? TRUE : FALSE;
-    ret = resolve_folder(format->package, comp->Directory, source, FALSE, TRUE, NULL);
+    if (comp->Action == INSTALLSTATE_SOURCE)
+        ret = resolve_source_folder( format->package, comp->Directory, NULL );
+    else
+        ret = resolve_target_folder( format->package, comp->Directory, FALSE, TRUE, NULL );
 
 done:
     msi_free(key);

@@ -32,5 +32,5 @@ add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 
 
 add_subdirectory(midimap)
-add_cab_target(winmm 1)
+add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
 add_importlib_target(winmm.spec)

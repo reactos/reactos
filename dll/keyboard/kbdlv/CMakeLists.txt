@@ -7,6 +7,6 @@ add_library(kbdlv SHARED kbdlv.c kbdlv.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdlv.def)
 
 set_entrypoint(kbdlv 0)
 
-add_dependencies(kbdlv psdk buildno_header)
+add_dependencies(kbdlv psdk)
 
-add_cab_target(kbdlv 1)
+add_cd_file(TARGET kbdlv DESTINATION reactos/system32 FOR all)

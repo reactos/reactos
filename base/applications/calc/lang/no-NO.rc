@@ -1,3 +1,5 @@
+/* UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011) */
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 // Dialog
@@ -355,7 +357,7 @@ BEGIN
         MENUITEM "Heksadesimalt\tF5",           IDM_VIEW_HEX, CHECKED
         MENUITEM "Desimalt\tF6",                IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktalt\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binært\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "BinÃ¦rt\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Grader\tF2",                  IDM_VIEW_DEG, CHECKED
         MENUITEM "Radianer\tF3",                IDM_VIEW_RAD, CHECKED
@@ -387,7 +389,7 @@ BEGIN
         MENUITEM "Heksadesimalt\tF5",           IDM_VIEW_HEX, CHECKED
         MENUITEM "Desimal\tF6",                 IDM_VIEW_DEC, CHECKED
         MENUITEM "Oktalt\tF7",                  IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binært\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "BinÃ¦rt\tF8",                  IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
@@ -431,7 +433,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS Kalkulator er gratis programvare utgitt under GNU GPL lisensen.\r\n\r\nDu kan få en kopi av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan også få en oversettelse av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS Kalkulator er gratis programvare utgitt under GNU GPL lisensen.\r\n\r\nDu kan fÃ¥ en kopi av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan ogsÃ¥ fÃ¥ en oversettelse av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Feil"
     IDS_QUICKHELP           "Rask hjelp"
 END
@@ -440,12 +442,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONV_ANGLE          "Vinkel"
-    IDS_CONV_AREA           "Område"
+    IDS_CONV_AREA           "OmrÃ¥de"
     IDS_CONV_CONSUMPTION    "Forbruk (maskin)"
     IDS_CONV_CURRENCY       "Valuta"
     IDS_CONV_ENERGY         "Energi"
     IDS_CONV_LENGTH         "Lengde"
-    IDS_CONV_POWER          "Strøm"
+    IDS_CONV_POWER          "StrÃ¸m"
     IDS_CONV_PRESSURE       "Trykk"
     IDS_CONV_TEMPERATURE    "Temperatur"
     IDS_CONV_TIME           "Tid"
@@ -513,7 +515,7 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Østerriksk schilling"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Ã˜sterriksk schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgisk franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Kypriotisk pound"
     IDS_CURRENCY_CZECH_KORUNA       "Tsjekkisk koruna"
@@ -536,7 +538,7 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 Â°C calories"
     IDS_ENERGY_BTUS                 "Britisk varme-enhet"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Elektrisk-Volt"
@@ -546,7 +548,7 @@ BEGIN
     IDS_ENERGY_JOULES               "Joules"
     IDS_ENERGY_KILOJOULES           "Kilojoules"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt timer"
-    IDS_ENERGY_NUTRITION_CALORIES   "Ernæring kalori"
+    IDS_ENERGY_NUTRITION_CALORIES   "ErnÃ¦ring kalori"
     IDS_ENERGY_TH_CALORIES          "Termokjemisk kalori"
 END
 
@@ -577,7 +579,7 @@ BEGIN
     IDS_LENGTH_KEUB                 "Keub"
     IDS_LENGTH_KILOMETERS           "Kilometer"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Lysende år"
+    IDS_LENGTH_LIGHT_YEARS          "Lysende Ã¥r"
     IDS_LENGTH_LINKS_UK             "Linker (UK)"
     IDS_LENGTH_METERS               "Meters"
     IDS_LENGTH_MICRONS              "Microns"
@@ -616,7 +618,7 @@ END
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Atmosfæretrykk"
+    IDS_PRESSURE_ATMOSPHERES        "AtmosfÃ¦retrykk"
     IDS_PRESSURE_BARS               "Bars"
     IDS_PRESSURE_HECTOPASCALS       "Hectopascals"
     IDS_PRESSURE_KILOPASCALS        "Kilopascals"

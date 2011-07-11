@@ -46,7 +46,7 @@ IntArc( DC *dc,
 {
     PDC_ATTR pdcattr;
     RECTL RectBounds, RectSEpts;
-    PBRUSH pbrushPen;
+    PBRUSH pbrPen;
     SURFACE *psurf;
     BOOL ret = TRUE;
     LONG PenWidth, PenOrigWidth;
@@ -71,18 +71,18 @@ IntArc( DC *dc,
 
     pdcattr = dc->pdcattr;
 
-    pbrushPen = PEN_LockPen(pdcattr->hpen);
-    if (!pbrushPen)
+    pbrPen = PEN_ShareLockPen(pdcattr->hpen);
+    if (!pbrPen)
     {
         DPRINT1("Arc Fail 1\n");
         EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrushPen->ptPenWidth.x;
-    if (pbrushPen->ulPenStyle == PS_NULL) PenWidth = 0;
+    PenOrigWidth = PenWidth = pbrPen->ptPenWidth.x;
+    if (pbrPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
-    if (pbrushPen->ulPenStyle == PS_INSIDEFRAME)
+    if (pbrPen->ulPenStyle == PS_INSIDEFRAME)
     {
        if (2*PenWidth > (Right - Left)) PenWidth = (Right -Left + 1)/2;
        if (2*PenWidth > (Bottom - Top)) PenWidth = (Bottom -Top + 1)/2;
@@ -93,7 +93,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrushPen->ptPenWidth.x = PenWidth;
+    pbrPen->ptPenWidth.x = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -156,13 +156,13 @@ IntArc( DC *dc,
               AngleStart,
               AngleEnd,
               arctype,
-              pbrushPen);
+              pbrPen);
 
     psurf = dc->dclevel.pSurface;
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
-        PEN_UnlockPen(pbrushPen);
+        PEN_ShareUnlockPen(pbrPen);
         EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
@@ -175,8 +175,8 @@ IntArc( DC *dc,
     if (arctype == GdiTypeChord)
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
 
-    pbrushPen->ptPenWidth.x = PenOrigWidth;
-    PEN_UnlockPen(pbrushPen);
+    pbrPen->ptPenWidth.x = PenOrigWidth;
+    PEN_ShareUnlockPen(pbrPen);
     DPRINT("IntArc Exit.\n");
     return ret;
 }

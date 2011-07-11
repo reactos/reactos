@@ -7,6 +7,6 @@ add_library(kbdur SHARED kbdur.c kbdur.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdur.def)
 
 set_entrypoint(kbdur 0)
 
-add_dependencies(kbdur psdk buildno_header)
+add_dependencies(kbdur psdk)
 
-add_cab_target(kbdur 1)
+add_cd_file(TARGET kbdur DESTINATION reactos/system32 FOR all)

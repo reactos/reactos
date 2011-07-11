@@ -7,6 +7,6 @@ add_library(kbdru SHARED kbdru.c kbdru.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdru.def)
 
 set_entrypoint(kbdru 0)
 
-add_dependencies(kbdru psdk buildno_header)
+add_dependencies(kbdru psdk)
 
-add_cab_target(kbdru 1)
+add_cd_file(TARGET kbdru DESTINATION reactos/system32 FOR all)

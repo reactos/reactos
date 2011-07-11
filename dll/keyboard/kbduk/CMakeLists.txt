@@ -7,6 +7,6 @@ add_library(kbduk SHARED kbduk.c kbduk.rc ${CMAKE_CURRENT_BINARY_DIR}/kbduk.def)
 
 set_entrypoint(kbduk 0)
 
-add_dependencies(kbduk psdk buildno_header)
+add_dependencies(kbduk psdk)
 
-add_cab_target(kbduk 1)
+add_cd_file(TARGET kbduk DESTINATION reactos/system32 FOR all)

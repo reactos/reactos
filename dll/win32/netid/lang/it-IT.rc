@@ -11,9 +11,9 @@ BEGIN
     LTEXT       "Descrizione del computer:", IDC_STATIC, 6, 37, 78, 16
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Nome esteso del computer:", IDC_STATIC, 6, 67, 78, 16
-    LTEXT       "(Predefinito)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Gruppo di lavoro:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(vuoto)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Per usare il wizard per la Identificazione in rete per collegarsi a un dominio e creare un utente locale, click ""Network ID"".", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&ID di rete...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Per cambiare il nome a questo computer o collegarsi a un dominio, clicca ""Modifica"".", IDC_STATIC, 6, 149, 170, 17

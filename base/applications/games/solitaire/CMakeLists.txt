@@ -1,6 +1,7 @@
 
 set_unicode()
 set_cpp()
+set_rc_compiler()
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib)
 
@@ -14,6 +15,6 @@ target_link_libraries(sol cardlib)
 
 set_module_type(sol win32gui)
 
-add_importlibs(sol advapi32 comctl32 user32 gdi32 kernel32 msvcrt)
+add_importlibs(sol advapi32 comctl32 user32 gdi32 msvcrt kernel32)
 
-add_cab_target(sol 1)
+add_cd_file(TARGET sol DESTINATION reactos/system32 FOR all)

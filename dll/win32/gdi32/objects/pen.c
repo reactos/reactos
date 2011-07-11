@@ -23,12 +23,34 @@ CreatePen(
     int nWidth,
     COLORREF crColor)
 {
-    /* FIXME Some part need be done in user mode */
+/*    HPEN hPen;
+    PBRUSH_ATTR Pen_Attr;
+*/
+    if (nPenStyle < PS_SOLID) nPenStyle = PS_SOLID;
     if (nPenStyle > PS_DASHDOTDOT)
     {
         if (nPenStyle == PS_NULL) return GetStockObject(NULL_PEN);
         if (nPenStyle != PS_INSIDEFRAME) nPenStyle = PS_SOLID;
     }
+#if 0
+    hPen = hGetPEBHandle(hctPenHandle, nPenStyle);
+    if ( nWidth || nPenStyle || !hPen )
+    {
+       return NtGdiCreatePen(nPenStyle, nWidth, crColor, NULL);
+    }
+
+    if ((GdiGetHandleUserData( hPen, GDI_OBJECT_TYPE_PEN, (PVOID) &Pen_Attr)) &&
+        ( Pen_Attr != NULL ))
+    {
+        if ( Pen_Attr->lbColor != crColor)
+        {
+           Pen_Attr->lbColor = crColor;
+           Pen_Attr->AttrFlags |= ATTR_NEW_COLOR;
+        }
+        return hPen;
+    }
+    DeleteObject(hPen);
+#endif
     return NtGdiCreatePen(nPenStyle, nWidth, crColor, NULL);
 }
 

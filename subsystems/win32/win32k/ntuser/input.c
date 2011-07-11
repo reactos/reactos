@@ -18,6 +18,7 @@
 
 extern BYTE gQueueKeyStateTable[];
 extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
+extern PPROCESSINFO ppiScrnSaver;
 
 /* GLOBALS *******************************************************************/
 
@@ -27,6 +28,7 @@ PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
+static DWORD LastInputTick = 0;
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
@@ -53,55 +55,57 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet);
   if(mi.dx != 0 || mi.dy != 0) \
     mi.dwFlags |= MOUSEEVENTF_MOVE; \
   if(mi.dwFlags) \
-    IntMouseInput(&mi); \
+    IntMouseInput(&mi,FALSE); \
   ClearMouseInput(mi);
 
 
 DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 {
-	static DWORD LastInputTick = 0;
-	if (LastInputTickSetGet == TRUE)
-	{
-		LARGE_INTEGER TickCount;
-        KeQueryTickCount(&TickCount);
-        LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
-	}
-    return LastInputTick;
+   if (LastInputTickSetGet == TRUE)
+   {
+      LARGE_INTEGER TickCount;
+      KeQueryTickCount(&TickCount);
+      LastInputTick = MsqCalculateMessageTime(&TickCount);
+      if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
+   }
+   return LastInputTick;
 }
 
-BOOL
-APIENTRY
-NtUserGetLastInputInfo(PLASTINPUTINFO plii)
+
+VOID FASTCALL DoTheScreenSaver(VOID)
 {
-    BOOL ret = TRUE;
+   LARGE_INTEGER TickCount;
+   DWORD Test, TO;
 
-    UserEnterShared();
+   if (gspv.iScrSaverTimeout > 0) // Zero means Off.
+   {
+      KeQueryTickCount(&TickCount);
+      Test = MsqCalculateMessageTime(&TickCount);
+      Test = Test - LastInputTick;
+      TO = 1000 * gspv.iScrSaverTimeout;
+      if (Test > TO)
+      {
+         DPRINT("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
 
-    _SEH2_TRY
-    {
-        if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-            _SEH2_LEAVE;
-        }
-
-        ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
-
-        plii->dwTime = IntLastInputTick(FALSE);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-        ret = FALSE;
-    }
-    _SEH2_END;
-
-    UserLeave();
-
-    return ret;
+         if (ppiScrnSaver) // We are or we are not the screensaver, prevent reentry...
+         { 
+            if (!(ppiScrnSaver->W32PF_flags & W32PF_IDLESCREENSAVER))
+            {
+               ppiScrnSaver->W32PF_flags |= W32PF_IDLESCREENSAVER;
+               DPRINT1("Screensaver is Idle\n");
+            }
+         }
+         else
+         {
+            PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+            if (ForegroundQueue && ForegroundQueue->ActiveWindow)
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 1); // lParam 1 == Secure
+            else
+               UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0);
+         }
+      }
+   }
 }
-
 
 VOID FASTCALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
@@ -481,7 +485,8 @@ IntKeyboardSendWinKeyMsg()
 static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
-   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+   DPRINT1("co_IntKeyboardSendAltKeyMsg\n");
+//   co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0); // This sends everything into a msg loop!
 }
 
 static VOID APIENTRY
@@ -708,6 +713,7 @@ KeyboardThreadMain(PVOID StartContext)
 
                   if (ModifierState == 0)
                   {
+                     UserEnterExclusive();
                      if (fsModifiers == MOD_WIN)
                         IntKeyboardSendWinKeyMsg();
                      else if (fsModifiers == MOD_ALT)
@@ -723,6 +729,7 @@ KeyboardThreadMain(PVOID StartContext)
                         }
                         co_IntKeyboardSendAltKeyMsg();
                      }
+                     UserLeave();
                      continue;
                   }
 
@@ -730,6 +737,8 @@ KeyboardThreadMain(PVOID StartContext)
                }
             }
          }
+
+         UserEnterExclusive();
 
          for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
                NumKeys--)
@@ -764,7 +773,7 @@ KeyboardThreadMain(PVOID StartContext)
                      (KeyInput.MakeCode == LastMakeCode))
                {
                   RepeatCount++;
-                  lParam |= (1 << 30);
+                  lParam |= (KF_REPEAT << 16);
                }
                else
                {
@@ -777,7 +786,7 @@ KeyboardThreadMain(PVOID StartContext)
             {
                LastFlags = 0;
                LastMakeCode = 0; /* Should never match */
-               lParam |= (1 << 30) | (1 << 31);
+               lParam |= (KF_UP << 16) | (KF_REPEAT << 16);
             }
 
             lParam |= RepeatCount;
@@ -785,11 +794,11 @@ KeyboardThreadMain(PVOID StartContext)
             lParam |= (KeyInput.MakeCode & 0xff) << 16;
 
             if (KeyInput.Flags & KEY_E0)
-               lParam |= (1 << 24);
+               lParam |= (KF_EXTENDED << 16);
 
             if (ModifierState & MOD_ALT)
             {
-               lParam |= (1 << 29);
+               lParam |= (KF_ALTDOWN << 16);
 
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_SYSKEYDOWN;
@@ -816,6 +825,10 @@ KeyboardThreadMain(PVOID StartContext)
                 {
                     keyboardLayout = ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout;
                 }
+                if ( FocusQueue->QF_flags & QF_DIALOGACTIVE )
+                   lParam |= (KF_DLGMODE << 16);
+                if ( FocusQueue->MenuOwner )//FocusQueue->MenuState ) // MenuState needs a start flag...
+                   lParam |= (KF_MENUMODE << 16);
             }
             if (!keyboardLayout)
             {
@@ -855,11 +868,18 @@ KeyboardThreadMain(PVOID StartContext)
                 /* There is no focused window to receive a keyboard message */
                 continue;
             }
+            if ( msg.wParam == VK_F10 ) // Bypass this key before it is in the queue.
+            {
+               if (msg.message == WM_KEYUP) msg.message = WM_SYSKEYUP;
+               if (msg.message == WM_KEYDOWN) msg.message = WM_SYSKEYDOWN;
+            }
             /*
              * Post a keyboard message.
              */
             co_MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
          }
+
+         UserLeave();
       }
 
 KeyboardEscape:
@@ -1067,7 +1087,7 @@ CLEANUP:
 }
 
 BOOL FASTCALL
-IntMouseInput(MOUSEINPUT *mi)
+IntMouseInput(MOUSEINPUT *mi, BOOL Injected)
 {
    const UINT SwapBtnMsg[2][2] =
       {
@@ -1131,7 +1151,7 @@ IntMouseInput(MOUSEINPUT *mi)
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
-      UserSetCursorPos(MousePos.x, MousePos.y, TRUE);
+      UserSetCursorPos(MousePos.x, MousePos.y, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
@@ -1139,7 +1159,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
    {
@@ -1147,7 +1167,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
    {
@@ -1155,7 +1175,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
    {
@@ -1163,7 +1183,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
    {
@@ -1171,7 +1191,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
    {
@@ -1179,7 +1199,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
 
    if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
@@ -1197,14 +1217,14 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         co_MsqInsertMouseMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         co_MsqInsertMouseMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
    }
    else if(mi->dwFlags & MOUSEEVENTF_XUP)
@@ -1215,52 +1235,52 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         co_MsqInsertMouseMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         co_MsqInsertMouseMessage(&Msg);
+         co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
       }
    }
    if(mi->dwFlags & MOUSEEVENTF_WHEEL)
    {
       Msg.message = WM_MOUSEWHEEL;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
-      co_MsqInsertMouseMessage(&Msg);
+      co_MsqInsertMouseMessage(&Msg, Injected, mi->dwExtraInfo, TRUE);
    }
 
    return TRUE;
 }
 
 BOOL FASTCALL
-IntKeyboardInput(KEYBDINPUT *ki)
+IntKeyboardInput(KEYBDINPUT *ki, BOOL Injected)
 {
    PUSER_MESSAGE_QUEUE FocusMessageQueue;
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
    WORD flags, wVkStripped, wVkL, wVkR, wVk = ki->wVk, vk_hook = ki->wVk;
-   BOOLEAN Entered = FALSE;
 
    Msg.lParam = 0;
 
-  // Condition may arise when calling MsqPostMessage and waiting for an event.
-   if (!UserIsEntered())
-   {
-         // Fixme: Not sure ATM if this thread is locked.
-         UserEnterExclusive();
-         Entered = TRUE;
-   }
+   // Condition may arise when calling MsqPostMessage and waiting for an event.
+   ASSERT (UserIsEntered());
 
    wVk = LOBYTE(wVk);
    Msg.wParam = wVk;
    flags = LOBYTE(ki->wScan);
 
+   FocusMessageQueue = IntGetFocusMessageQueue();
+
    if (ki->dwFlags & KEYEVENTF_EXTENDEDKEY) flags |= KF_EXTENDED;
    /* FIXME: set KF_DLGMODE and KF_MENUMODE when needed */
+   if ( FocusMessageQueue && FocusMessageQueue->QF_flags & QF_DIALOGACTIVE )
+      flags |= KF_DLGMODE;
+   if ( FocusMessageQueue && FocusMessageQueue->MenuOwner )//FocusMessageQueue->MenuState ) // MenuState needs a start flag...
+      flags |= KF_MENUMODE;
 
    /* strip left/right for menu, control, shift */
    switch (wVk)
@@ -1296,9 +1316,10 @@ IntKeyboardInput(KEYBDINPUT *ki)
    if (ki->dwFlags & KEYEVENTF_KEYUP)
    {
       Msg.message = WM_KEYUP;
-      if ((gQueueKeyStateTable[VK_MENU] & 0x80) &&
+      if (((gQueueKeyStateTable[VK_MENU] & 0x80) &&
           ((wVkStripped == VK_MENU) || (wVkStripped == VK_CONTROL)
            || !(gQueueKeyStateTable[VK_CONTROL] & 0x80)))
+          || (wVkStripped == VK_F10))
       {
          if( TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
              (wVkStripped != VK_MENU)) /* <ALT>-down...<something else>-up */
@@ -1310,8 +1331,9 @@ IntKeyboardInput(KEYBDINPUT *ki)
    else
    {
       Msg.message = WM_KEYDOWN;
-      if ((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
+      if (((gQueueKeyStateTable[VK_MENU] & 0x80 || wVkStripped == VK_MENU) &&
           !(gQueueKeyStateTable[VK_CONTROL] & 0x80 || wVkStripped == VK_CONTROL))
+          || (wVkStripped == VK_F10))
       {
          Msg.message = WM_SYSKEYDOWN;
          TrackSysKey = wVkStripped;
@@ -1323,37 +1345,6 @@ IntKeyboardInput(KEYBDINPUT *ki)
    {
       vk_hook = Msg.wParam = wVk = VK_PACKET;
       Msg.lParam = MAKELPARAM(1 /* repeat count */, ki->wScan);
-   }
-
-   FocusMessageQueue = IntGetFocusMessageQueue();
-
-   Msg.hwnd = 0;
-
-   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
-       Msg.hwnd = FocusMessageQueue->FocusWindow;
-
-   if (!ki->time)
-   {
-      KeQueryTickCount(&LargeTickCount);
-      Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-   }
-   else
-      Msg.time = ki->time;
-
-   /* All messages have to contain the cursor point. */
-   Msg.pt = gpsi->ptCursor;
-
-   KbdHookData.vkCode = vk_hook;
-   KbdHookData.scanCode = ki->wScan;
-   KbdHookData.flags = flags >> 8;
-   KbdHookData.time = Msg.time;
-   KbdHookData.dwExtraInfo = ki->dwExtraInfo;
-   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
-   {
-      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-             Msg.message, vk_hook, Msg.lParam);
-      if (Entered) UserLeave();
-      return FALSE;
    }
 
    if (!(ki->dwFlags & KEYEVENTF_UNICODE))
@@ -1377,10 +1368,40 @@ IntKeyboardInput(KEYBDINPUT *ki)
       Msg.lParam = MAKELPARAM(1 /* repeat count */, flags);
    }
 
+   Msg.hwnd = 0;
+
+   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
+       Msg.hwnd = FocusMessageQueue->FocusWindow;
+
+   if (!ki->time)
+   {
+      KeQueryTickCount(&LargeTickCount);
+      Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+   }
+   else
+      Msg.time = ki->time;
+
+   /* All messages have to contain the cursor point. */
+   Msg.pt = gpsi->ptCursor;
+
+   KbdHookData.vkCode = vk_hook;
+   KbdHookData.scanCode = ki->wScan;
+   KbdHookData.flags = (flags & (KF_EXTENDED | KF_ALTDOWN | KF_UP)) >> 8;
+   if (Injected) KbdHookData.flags |= LLKHF_INJECTED;
+   KbdHookData.time = Msg.time;
+   KbdHookData.dwExtraInfo = ki->dwExtraInfo;
+   if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
+   {
+      DPRINT1("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
+             Msg.message, vk_hook, Msg.lParam);
+
+      return FALSE;
+   }
+
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");
-         if (Entered) UserLeave();
+
          return FALSE;
    }
 
@@ -1391,7 +1412,6 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
-         Msg.pt = gpsi->ptCursor;
       // Post to hardware queue, based on the first part of wine "some GetMessage tests"
       // in test_PeekMessage()
          MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
@@ -1400,8 +1420,6 @@ IntKeyboardInput(KEYBDINPUT *ki)
    {
          DPRINT("Invalid focus window handle\n");
    }
-
-   if (Entered) UserLeave();
 
    return TRUE;
 }
@@ -1512,13 +1530,13 @@ NtUserSendInput(
       switch(SafeInput.type)
       {
          case INPUT_MOUSE:
-            if(IntMouseInput(&SafeInput.mi))
+            if(IntMouseInput(&SafeInput.mi, TRUE))
             {
                cnt++;
             }
             break;
          case INPUT_KEYBOARD:
-            if(IntKeyboardInput(&SafeInput.ki))
+            if(IntKeyboardInput(&SafeInput.ki, TRUE))
             {
                cnt++;
             }
@@ -1539,6 +1557,282 @@ NtUserSendInput(
 
 CLEANUP:
    DPRINT("Leave NtUserSendInput, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
+BOOL
+FASTCALL
+IntQueryTrackMouseEvent(
+   LPTRACKMOUSEEVENT lpEventTrack)
+{
+   PDESKTOP pDesk;
+   PTHREADINFO pti;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   pDesk = pti->rpdesk;
+
+   /* Always cleared with size set and return true. */
+   RtlZeroMemory(lpEventTrack ,sizeof(TRACKMOUSEEVENT));
+   lpEventTrack->cbSize = sizeof(TRACKMOUSEEVENT);
+
+   if ( pDesk->dwDTFlags & (DF_TME_LEAVE|DF_TME_HOVER) &&
+        pDesk->spwndTrack &&
+        pti->MessageQueue == pDesk->spwndTrack->head.pti->MessageQueue )
+   {
+      if ( pDesk->htEx != HTCLIENT )
+         lpEventTrack->dwFlags |= TME_NONCLIENT;
+
+      if ( pDesk->dwDTFlags & DF_TME_LEAVE )
+         lpEventTrack->dwFlags |= TME_LEAVE;
+
+      if ( pDesk->dwDTFlags & DF_TME_HOVER )
+      {
+         lpEventTrack->dwFlags |= TME_HOVER;
+         lpEventTrack->dwHoverTime = pDesk->dwMouseHoverTime;
+      }
+      lpEventTrack->hwndTrack = UserHMGetHandle(pDesk->spwndTrack);
+   }
+   return TRUE;
+}
+
+BOOL
+FASTCALL
+IntTrackMouseEvent(
+   LPTRACKMOUSEEVENT lpEventTrack)
+{
+   PDESKTOP pDesk;
+   PTHREADINFO pti;
+   PWND pWnd;
+   POINT point;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   pDesk = pti->rpdesk;
+
+   if (!(pWnd = UserGetWindowObject(lpEventTrack->hwndTrack)))
+      return FALSE;
+
+   if ( pDesk->spwndTrack != pWnd ||
+       (pDesk->htEx != HTCLIENT) ^ !!(lpEventTrack->dwFlags & TME_NONCLIENT) )
+   {
+      if ( lpEventTrack->dwFlags & TME_LEAVE && !(lpEventTrack->dwFlags & TME_CANCEL) )
+      {
+         UserPostMessage( lpEventTrack->hwndTrack,
+                          lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
+                          0, 0);
+      }
+      DPRINT("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack,pWnd);
+      return TRUE;
+   }
+
+   /* Tracking spwndTrack same as pWnd */
+   if ( lpEventTrack->dwFlags & TME_CANCEL ) // Canceled mode.
+   {
+      if ( lpEventTrack->dwFlags & TME_LEAVE )
+         pDesk->dwDTFlags &= ~DF_TME_LEAVE;
+
+      if ( lpEventTrack->dwFlags & TME_HOVER )
+      {
+         if ( pDesk->dwDTFlags & DF_TME_HOVER )
+         { // Kill hover timer.
+            IntKillTimer(pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+            pDesk->dwDTFlags &= ~DF_TME_HOVER;
+         }
+      }
+   }
+   else // Not Canceled.
+   {
+      if ( lpEventTrack->dwFlags & TME_LEAVE )
+         pDesk->dwDTFlags |= DF_TME_LEAVE;
+
+      if ( lpEventTrack->dwFlags & TME_HOVER )
+      {
+         pDesk->dwDTFlags |= DF_TME_HOVER;
+
+         if ( !lpEventTrack->dwHoverTime || lpEventTrack->dwHoverTime == HOVER_DEFAULT )
+            pDesk->dwMouseHoverTime = gspv.iMouseHoverTime; // use the system default hover time-out.
+         else
+            pDesk->dwMouseHoverTime = lpEventTrack->dwHoverTime;
+         // Start timer for the hover period.
+         IntSetTimer( pWnd, ID_EVENT_SYSTIMER_MOUSEHOVER, pDesk->dwMouseHoverTime, SystemTimerProc, TMRF_SYSTEM);
+         // Get windows thread message points.
+         point = pWnd->head.pti->ptLast;
+         // Set desktop mouse hover from the system default hover rectangle.
+         RECTL_vSetRect(&pDesk->rcMouseHover,
+                         point.x - gspv.iMouseHoverWidth  / 2,
+                         point.y - gspv.iMouseHoverHeight / 2,
+                         point.x + gspv.iMouseHoverWidth  / 2,
+                         point.y + gspv.iMouseHoverHeight / 2);
+      }
+   }
+   return TRUE;
+}
+
+BOOL
+APIENTRY
+NtUserTrackMouseEvent(
+   LPTRACKMOUSEEVENT lpEventTrack)
+{
+   TRACKMOUSEEVENT saveTME;
+   BOOL Ret = FALSE;
+
+   DPRINT("Enter NtUserTrackMouseEvent\n");
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead(lpEventTrack, sizeof(TRACKMOUSEEVENT), 1);
+      RtlCopyMemory(&saveTME, lpEventTrack, sizeof(TRACKMOUSEEVENT));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      _SEH2_YIELD(goto Exit;)
+   }
+   _SEH2_END;
+
+   if ( saveTME.cbSize != sizeof(TRACKMOUSEEVENT) )
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      goto Exit;
+   }
+
+   if (saveTME.dwFlags & ~(TME_CANCEL|TME_QUERY|TME_NONCLIENT|TME_LEAVE|TME_HOVER) )
+   {
+      EngSetLastError(ERROR_INVALID_FLAGS);
+      goto Exit;
+   }
+
+   if ( saveTME.dwFlags & TME_QUERY )
+   {
+      Ret = IntQueryTrackMouseEvent(&saveTME);
+      _SEH2_TRY
+      {
+         ProbeForWrite(lpEventTrack, sizeof(TRACKMOUSEEVENT), 1);
+         RtlCopyMemory(lpEventTrack, &saveTME, sizeof(TRACKMOUSEEVENT));
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         SetLastNtError(_SEH2_GetExceptionCode());
+         Ret = FALSE;
+      }
+      _SEH2_END;
+   }
+   else
+   {
+      Ret = IntTrackMouseEvent(&saveTME);
+   }
+   
+Exit:
+   DPRINT("Leave NtUserTrackMouseEvent, ret=%i\n",Ret);
+   UserLeave();
+   return Ret;
+}
+
+extern MOUSEMOVEPOINT MouseHistoryOfMoves[];
+extern INT gcur_count; 
+
+DWORD
+APIENTRY
+NtUserGetMouseMovePointsEx(
+   UINT cbSize,
+   LPMOUSEMOVEPOINT lpptIn,
+   LPMOUSEMOVEPOINT lpptOut,
+   int nBufPoints,
+   DWORD resolution)
+{
+   MOUSEMOVEPOINT Safeppt;
+   BOOL Hit;
+   INT Count = -1;
+   DECLARE_RETURN(DWORD);
+
+   DPRINT("Enter NtUserGetMouseMovePointsEx\n");
+   UserEnterExclusive();
+
+   if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      RETURN( -1);
+   }
+
+   if (!lpptIn || (!lpptOut && nBufPoints))
+   {
+      EngSetLastError(ERROR_NOACCESS);
+      RETURN( -1);
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead( lpptIn, cbSize, 1);
+      RtlCopyMemory(&Safeppt, lpptIn, cbSize);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      _SEH2_YIELD(RETURN( -1))
+   }
+   _SEH2_END;
+
+   // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
+   // This explains the math issues in transforming points.
+   Count = gcur_count; // FIFO is forward so retrieve backward.
+   Hit = FALSE;
+   do
+   {
+       if (Safeppt.x == 0 && Safeppt.y == 0)
+          break; // No test.
+       // Finds the point, it returns the last nBufPoints prior to and including the supplied point. 
+       if (MouseHistoryOfMoves[Count].x == Safeppt.x && MouseHistoryOfMoves[Count].y == Safeppt.y)
+       {
+          if ( Safeppt.time ) // Now test time and it seems to be absolute.
+          {
+             if (Safeppt.time == MouseHistoryOfMoves[Count].time)
+             {
+                Hit = TRUE;
+                break;
+             }
+             else
+             {
+                if (--Count < 0) Count = 63;
+                continue;
+             }
+          }
+          Hit = TRUE;
+          break;
+       }
+       if (--Count < 0) Count = 63;
+   }
+   while ( Count != gcur_count);
+
+   switch(resolution)
+   {
+     case GMMP_USE_DISPLAY_POINTS:
+        if (nBufPoints)
+        {
+           _SEH2_TRY
+           {
+              ProbeForWrite(lpptOut, cbSize, 1);
+           }
+           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+           {
+              SetLastNtError(_SEH2_GetExceptionCode());
+              _SEH2_YIELD(RETURN( -1))
+           }
+           _SEH2_END;
+        }
+        Count = nBufPoints;
+        break;
+     case GMMP_USE_HIGH_RESOLUTION_POINTS:
+        break;
+     default:
+        EngSetLastError(ERROR_POINT_NOT_FOUND);
+        RETURN( -1);
+   }
+
+   RETURN( Count);
+
+CLEANUP:
+   DPRINT("Leave NtUserGetMouseMovePointsEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

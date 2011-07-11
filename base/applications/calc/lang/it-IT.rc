@@ -1,3 +1,5 @@
+/* UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011) */
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 // Dialog
@@ -449,7 +451,7 @@ BEGIN
     IDS_CONV_PRESSURE       "Pressione"
     IDS_CONV_TEMPERATURE    "Temperatura"
     IDS_CONV_TIME           "Tempo"
-    IDS_CONV_VELOCITY       "Velocit‡"
+    IDS_CONV_VELOCITY       "Velocit√†"
     IDS_CONV_VOLUME         "Volume"
     IDS_CONV_WEIGHT         "Peso"
 END
@@ -554,7 +556,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstrom"
-    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unit‡ astronomiche"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Unit√† astronomiche"
     IDS_LENGTH_BARLEYCORNS          "Barleycorn"
     IDS_LENGTH_CENTIMETERS          "Centimetri"
     IDS_LENGTH_CHAINS_UK            "Catene (GB)"
@@ -648,7 +650,7 @@ BEGIN
     IDS_TIME_YEARS        "Anni"
 END
 
-// Tipi di velocit‡
+// Tipi di velocit√†
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Centimetri/ora"

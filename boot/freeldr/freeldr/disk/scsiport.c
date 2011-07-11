@@ -11,6 +11,33 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#undef ScsiPortLogError
+#undef ScsiPortMoveMemory
+#undef ScsiPortWritePortBufferUchar
+#undef ScsiPortWritePortBufferUlong
+#undef ScsiPortWritePortBufferUshort
+#undef ScsiPortWritePortUchar
+#undef ScsiPortWritePortUlong
+#undef ScsiPortWritePortUshort
+#undef ScsiPortWriteRegisterBufferUchar
+#undef ScsiPortWriteRegisterBufferUlong
+#undef ScsiPortWriteRegisterBufferUshort
+#undef ScsiPortWriteRegisterUchar
+#undef ScsiPortWriteRegisterUlong
+#undef ScsiPortWriteRegisterUshort
+#undef ScsiPortReadPortBufferUchar
+#undef ScsiPortReadPortBufferUlong
+#undef ScsiPortReadPortBufferUshort
+#undef ScsiPortReadPortUchar
+#undef ScsiPortReadPortUlong
+#undef ScsiPortReadPortUshort
+#undef ScsiPortReadRegisterBufferUchar
+#undef ScsiPortReadRegisterBufferUlong
+#undef ScsiPortReadRegisterBufferUshort
+#undef ScsiPortReadRegisterUchar
+#undef ScsiPortReadRegisterUlong
+#undef ScsiPortReadRegisterUshort
+
 #define NDEBUG
 #include <debug.h>
 
@@ -110,9 +137,9 @@ typedef struct tagDISKCONTEXT
 {
     /* Device ID */
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    ULONG PathId;
-    ULONG TargetId;
-    ULONG Lun;
+    UCHAR PathId;
+    UCHAR TargetId;
+    UCHAR Lun;
 
     /* Device characteristics */
     ULONG SectorSize;
@@ -135,7 +162,7 @@ static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 
     RtlZeroMemory(Information, sizeof(FILEINFORMATION));
     Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
-    Information->CurrentAddress.LowPart = Context->SectorNumber * Context->SectorSize;
+    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -168,9 +195,9 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
     Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
     Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-    Srb->PathId = PathId;
-    Srb->TargetId = TargetId;
-    Srb->Lun = Lun;
+    Srb->PathId = (UCHAR)PathId;
+    Srb->TargetId = (UCHAR)TargetId;
+    Srb->Lun = (UCHAR)Lun;
     Srb->CdbLength = 10;
     Srb->SrbFlags = SRB_FLAGS_DATA_IN;
     Srb->DataTransferLength = sizeof(READ_CAPACITY_DATA);
@@ -198,9 +225,9 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (!Context)
         return ENOMEM;
     Context->DeviceExtension = DeviceExtension;
-    Context->PathId = PathId;
-    Context->TargetId = TargetId;
-    Context->Lun = Lun;
+    Context->PathId = (UCHAR)PathId;
+    Context->TargetId = (UCHAR)TargetId;
+    Context->Lun = (UCHAR)Lun;
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
     Context->SectorCount = SectorCount;
@@ -231,7 +258,8 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         return EINVAL;
 
     /* Read full sectors */
-    Lba = Context->SectorNumber;
+    ASSERT(Context->SectorNumber < 0xFFFFFFFF);
+    Lba = (ULONG)Context->SectorNumber;
     if (FullSectors > 0)
     {
         Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
@@ -783,14 +811,14 @@ VOID
 SpiScanAdapter(
     IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     IN ULONG ScsiBus,
-    IN ULONG PathId)
+    IN UCHAR PathId)
 {
     CHAR ArcName[64];
     PSCSI_REQUEST_BLOCK Srb;
     PCDB Cdb;
     INQUIRYDATA InquiryBuffer;
-    ULONG TargetId;
-    ULONG Lun;
+    UCHAR TargetId;
+    UCHAR Lun;
 
     if (!DeviceExtension->HwResetBus(DeviceExtension->MiniPortDeviceExtension, PathId))
     {
@@ -825,7 +853,7 @@ SpiScanAdapter(
             Cdb = (PCDB)Srb->Cdb;
             Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
             Cdb->CDB6INQUIRY.LogicalUnitNumber = Srb->Lun;
-            Cdb->CDB6INQUIRY.AllocationLength = Srb->DataTransferLength;
+            Cdb->CDB6INQUIRY.AllocationLength = (UCHAR)Srb->DataTransferLength;
             if (!SpiSendSynchronousSrb(DeviceExtension, Srb))
             {
                 /* Don't check next LUNs */
@@ -835,13 +863,13 @@ SpiScanAdapter(
             /* Device exists, create its ARC name */
             if (InquiryBuffer.RemovableMedia)
             {
-                sprintf(ArcName, "scsi(%ld)cdrom(%ld)fdisk(%ld)",
+                sprintf(ArcName, "scsi(%ld)cdrom(%d)fdisk(%d)",
                     ScsiBus, TargetId, Lun);
                 FsRegisterDevice(ArcName, &DiskVtbl);
             }
             else
             {
-                sprintf(ArcName, "scsi(%ld)disk(%ld)rdisk(%ld)",
+                sprintf(ArcName, "scsi(%ld)disk(%d)rdisk(%d)",
                     ScsiBus, TargetId, Lun);
                 /* Now, check if it has partitions */
                 SpiScanDevice(DeviceExtension, ArcName, PathId, TargetId, Lun);
@@ -1047,6 +1075,7 @@ ScsiPortInitialize(
     BOOLEAN Again;
     BOOLEAN FirstConfigCall = TRUE;
     PCI_SLOT_NUMBER SlotNumber;
+    UCHAR ScsiBus;
     NTSTATUS Status;
 
     if (HwInitializationData->HwInitializationDataSize != sizeof(HW_INITIALIZATION_DATA))
@@ -1169,13 +1198,10 @@ ScsiPortInitialize(
         }
 
         /* Scan bus */
+        for (ScsiBus = 0; ScsiBus < PortConfig.NumberOfBuses; ScsiBus++)
         {
-            ULONG ScsiBus;
-            for (ScsiBus = 0; ScsiBus < PortConfig.NumberOfBuses; ScsiBus++)
-            {
-                SpiScanAdapter(DeviceExtension, PortConfig.SystemIoBusNumber, ScsiBus);
-                PortConfig.SystemIoBusNumber++;
-            }
+            SpiScanAdapter(DeviceExtension, PortConfig.SystemIoBusNumber, ScsiBus);
+            PortConfig.SystemIoBusNumber++;
         }
 
         FirstConfigCall = FALSE;
@@ -1513,7 +1539,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR Register,
-    IN ULONG Value)
+    IN UCHAR Value)
 {
     WRITE_REGISTER_UCHAR(Register, Value);
 }
@@ -1606,7 +1632,7 @@ LoadBootDeviceDriver(VOID)
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
-    ULONG i;
+    USHORT i;
     BOOLEAN Status;
 
     /* Some initialization of our temporary loader block */
@@ -1683,7 +1709,7 @@ LoadBootDeviceDriver(VOID)
     NtHeaders = RtlImageNtHeader(VaToPa(BootDdDTE->DllBase));
     if (!NtHeaders)
         return EIO;
-    Status = LdrRelocateImageWithBias(
+    Status = (BOOLEAN)LdrRelocateImageWithBias(
         VaToPa(BootDdDTE->DllBase),
         NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
         "FreeLdr",

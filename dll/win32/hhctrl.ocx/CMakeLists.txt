@@ -6,6 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(hhctrl.ocx hhctrl.ocx.spec)
 
 add_library(hhctrl SHARED
@@ -37,4 +38,4 @@ add_importlibs(hhctrl
     kernel32
     ntdll)
 
-add_cab_target(hhctrl 1)
+add_cd_file(TARGET hhctrl DESTINATION reactos/system32 FOR all)

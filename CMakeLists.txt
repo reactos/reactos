@@ -1,12 +1,19 @@
 
 cmake_minimum_required(VERSION 2.6)
+
+if(POLICY CMP0017)
+    # Shadow cmake provided modules
+    cmake_policy(SET CMP0017 OLD)
+endif()
+
 project(REACTOS)
 
-#versioning
+# Versioning
 include(include/reactos/version.cmake)
 
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
+cmake_policy(SET CMP0002 NEW)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -14,7 +21,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
-set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+#set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 if(NOT ARCH)
     set(ARCH i386)
@@ -23,38 +30,40 @@ string(TOLOWER ${ARCH} ARCH)
 
 # Compile options
 if(ARCH MATCHES i386)
-    include(config.cmake)
+    include(cmake/config.cmake)
 elseif(ARCH MATCHES amd64)
-    include(config-amd64.cmake)
+    include(cmake/config-amd64.cmake)
 elseif(ARCH MATCHES arm)
-    include(config-arm.cmake)
+    include(cmake/config-arm.cmake)
 endif()
 
-add_definitions(-D__REACTOS__)
+# Compiler flags handling
+include(cmake/compilerflags.cmake)
+
+add_definitions(-D__REACTOS__ -D__ROS_CMAKE__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})
 
     if(MSVC)
-        add_definitions(-Dinline=__inline)
+        if(ARCH MATCHES i386)
+            add_definitions(/DWIN32 /D_WINDOWS)
+        endif()
+        add_definitions(/Dinline=__inline)
     else()
-       add_definitions(-fshort-wchar)
+        add_compiler_flags(-fshort-wchar)
     endif()
 
-    include_directories(
-        ${REACTOS_SOURCE_DIR}/tools/unicode
-        include
-        include/host
-        ${REACTOS_BINARY_DIR}/include)
+    include_directories(include/host)
 
     add_subdirectory(tools)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl wrc gendib cabman cdmake mkhive obj2bin spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -63,8 +72,11 @@ else()
     # search headers and libraries in the target environment, search
     # programs in the host environment
     set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
+
+    #useful stuff!
+    include(CMakeParseArguments)
 
     # Do some cleanup
     file(REMOVE
@@ -82,29 +94,6 @@ else()
 
     set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
     include(${IMPORT_EXECUTABLES})
-
-    # Compiler specific definitions and macros
-    if(MSVC)
-        include(msc.cmake)
-    else()
-        include(gcc.cmake)
-    endif()
-
-    # Generic macros
-    include(CMakeMacros.cmake)
-
-    # IDL macros for widl/midl
-    include(cmake/idl-support.cmake)
-
-    #Some useful variables
-    set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
-    set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
-
-    # Activate support for assembly source files
-    enable_language(ASM)
-
-    # Activate language support for resource files
-    enable_language(RC)
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
@@ -144,19 +133,55 @@ else()
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
 
-    include_directories(
-        include
-        include/psdk
-        include/dxsdk
-        ${REACTOS_BINARY_DIR}/include
-        ${REACTOS_BINARY_DIR}/include/dxsdk
-        ${REACTOS_BINARY_DIR}/include/psdk
-        ${REACTOS_BINARY_DIR}/include/reactos
-        include/crt
-        include/ddk
-        include/ndk
-        include/reactos
-        include/reactos/libs)
+    # Compiler specific definitions and macros
+    if(MSVC)
+        include(cmake/msvc.cmake)
+    else()
+        include(cmake/gcc.cmake)
+    endif()
+
+    # Generic macros
+    include(cmake/CMakeMacros.cmake)
+
+    # IDL macros for widl/midl
+    include(cmake/idl-support.cmake)
+
+    # Activate support for assembly source files
+    enable_language(ASM)
+
+    # Activate language support for resource files
+    enable_language(RC)
+
+    if(MSVC AND USE_WDK_HEADERS)
+        include_directories(
+            include
+            $ENV{SDK_INC_PATH}
+            include/dxsdk
+            ${REACTOS_BINARY_DIR}/include
+            ${REACTOS_BINARY_DIR}/include/dxsdk
+            ${REACTOS_BINARY_DIR}/include/psdk
+            ${REACTOS_BINARY_DIR}/include/reactos
+            $ENV{CRT_INC_PATH}
+            $ENV{DDK_INC_PATH}
+            include/ndk
+            include/reactos
+            include/reactos/libs)
+    else()
+        include_directories(
+            include
+            include/psdk
+            include/dxsdk
+            ${REACTOS_BINARY_DIR}/include
+            ${REACTOS_BINARY_DIR}/include/dxsdk
+            ${REACTOS_BINARY_DIR}/include/psdk
+            ${REACTOS_BINARY_DIR}/include/reactos
+            include/crt
+            include/ddk
+            include/ndk
+            include/reactos
+            include/reactos/libs)
+    endif()
+    
 
     if(ARCH MATCHES arm)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
@@ -177,10 +202,11 @@ else()
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)
 
-    include(baseaddress.cmake)
+    include(cmake/baseaddress.cmake)
 
-    add_subdirectory(base)
+    #begin with boot so reactos_cab target is defined before all other modules
     add_subdirectory(boot)
+    add_subdirectory(base)
     add_subdirectory(dll)
     add_subdirectory(drivers)
     add_subdirectory(hal)
@@ -192,27 +218,7 @@ else()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
-    add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
-
-    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib)
-
-    list(APPEND OUTPUT_FILES
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib8gen.c
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib16gen.c
-        ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib32gen.c)
-
-    add_custom_command(
-        OUTPUT ${OUTPUT_FILES}
-        COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
-        DEPENDS native-gendib)
-
-    add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
-
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
-    #bootcd and livecd
-    include(ros_cd.cmake)
-
     add_dependency_footer()
-
 endif()

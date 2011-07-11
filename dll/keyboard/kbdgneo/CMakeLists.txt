@@ -7,6 +7,6 @@ add_library(kbdgneo SHARED kbdgneo.c kbdgneo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdg
 
 set_entrypoint(kbdgneo 0)
 
-add_dependencies(kbdgneo psdk buildno_header)
+add_dependencies(kbdgneo psdk)
 
-add_cab_target(kbdgneo 1)
+add_cd_file(TARGET kbdgneo DESTINATION reactos/system32 FOR all)

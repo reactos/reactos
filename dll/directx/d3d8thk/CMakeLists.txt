@@ -7,6 +7,6 @@ set_entrypoint(d3d8thk 0)
 
 add_importlibs(d3d8thk gdi32)
 
-add_dependencies(d3d8thk psdk buildno_header)
+add_dependencies(d3d8thk psdk)
 
-add_cab_target(d3d8thk 1)
+add_cd_file(TARGET d3d8thk DESTINATION reactos/system32 FOR all)

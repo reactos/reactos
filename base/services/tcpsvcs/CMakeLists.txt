@@ -12,12 +12,12 @@ list(APPEND SOURCE
     tcpsvcs.rc
     log.c)
 
-add_executable(tcpsvcs ${CMAKE_CURRENT_BINARY_DIR}/tcpsvcs_tcpsvcs.h.gch ${SOURCE})
+add_executable(tcpsvcs ${SOURCE})
 
-add_pch(tcpsvcs ${CMAKE_CURRENT_SOURCE_DIR}/tcpsvcs.h ${SOURCE})
 set_module_type(tcpsvcs win32cui)
 add_importlibs(tcpsvcs ws2_32 advapi32 msvcrt kernel32 ntdll)
+add_pch(tcpsvcs tcpsvcs.h)
 
 
-add_cab_target(tcpsvcs 1)
-add_cab(${CMAKE_CURRENT_SOURCE_DIR}/quotes 5)
+add_cd_file(TARGET tcpsvcs DESTINATION reactos/system32 FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/quotes DESTINATION reactos/system32/drivers/etc FOR all)

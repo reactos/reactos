@@ -35,4 +35,4 @@ add_importlibs(devenum
     kernel32
     ntdll)
 
-add_cab_target(devenum 1)
+add_cd_file(TARGET devenum DESTINATION reactos/system32 FOR all)

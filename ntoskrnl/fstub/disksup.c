@@ -24,6 +24,8 @@ const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
 #define PARTITION_MAGIC    0xaa55
 
+#define EFI_PMBR_OSTYPE_EFI 0xEE
+
 #include <pshpack1.h>
 
 typedef struct _REG_DISK_MOUNT_INFO
@@ -62,17 +64,20 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 26))
     {
         /* Force assignment */
+        KeAcquireGuardedMutex(&ObpDeviceMapLock);
         if ((ObSystemDeviceMap->DriveMap & (1 << DriveNumber)) != 0)
         {
             DbgPrint("Drive letter already used!\n");
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
             return FALSE;
         }
+        KeReleaseGuardedMutex(&ObpDeviceMapLock);
     }
     else
     {
         /* Automatic assignment */
         DriveNumber = AUTO_DRIVE;
-
+        KeAcquireGuardedMutex(&ObpDeviceMapLock);
         for (i = 2; i < 26; i++)
         {
             if ((ObSystemDeviceMap->DriveMap & (1 << i)) == 0)
@@ -81,6 +86,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
                 break;
             }
         }
+        KeReleaseGuardedMutex(&ObpDeviceMapLock);
 
         if (DriveNumber == AUTO_DRIVE)
         {
@@ -90,10 +96,6 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     }
 
     DPRINT("DriveNumber %d\n", DriveNumber);
-
-    /* Update the System Device Map */
-    ObSystemDeviceMap->DriveMap |= (1 << DriveNumber);
-    ObSystemDeviceMap->DriveType[DriveNumber] = DriveType;
 
     /* Build drive name */
     swprintf(DriveNameBuffer,
@@ -157,7 +159,7 @@ xHalpGetRDiskCount(VOID)
     BOOLEAN First = TRUE;
     ULONG Count;
 
-    DirectoryInfo = ExAllocatePool(PagedPool, 2 * PAGE_SIZE);
+    DirectoryInfo = ExAllocatePoolWithTag(PagedPool, 2 * PAGE_SIZE, TAG_FILE_SYSTEM);
     if (DirectoryInfo == NULL)
     {
         return 0;
@@ -176,7 +178,7 @@ xHalpGetRDiskCount(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwOpenDirectoryObject for %wZ failed, status=%lx\n", &ArcName, Status);
-        ExFreePool(DirectoryInfo);
+        ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
         return 0;
     }
 
@@ -221,7 +223,7 @@ xHalpGetRDiskCount(VOID)
             }
         }
     }
-    ExFreePool(DirectoryInfo);
+    ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
     return RDiskCount;
 }
 
@@ -375,8 +377,8 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
         PDRIVE_LAYOUT_INFORMATION Buffer;
 
         /* Allocate a partition list for a single entry. */
-        Buffer = ExAllocatePool(NonPagedPool,
-            sizeof(DRIVE_LAYOUT_INFORMATION));
+        Buffer = ExAllocatePoolWithTag(NonPagedPool,
+            sizeof(DRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
         if (Buffer != NULL)
         {
             RtlZeroMemory(Buffer,
@@ -444,13 +446,13 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     DPRINT("RDiskCount %d\n", RDiskCount);
 
-    Buffer1 = (PWSTR)ExAllocatePool(PagedPool,
-        64 * sizeof(WCHAR));
-    Buffer2 = (PWSTR)ExAllocatePool(PagedPool,
-        32 * sizeof(WCHAR));
+    Buffer1 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
+        64 * sizeof(WCHAR), TAG_FILE_SYSTEM);
+    Buffer2 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
+        32 * sizeof(WCHAR), TAG_FILE_SYSTEM);
 
-    PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(PagedPool,
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO));
+    PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool,
+        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO), TAG_FILE_SYSTEM);
 
     if (!Buffer1 || !Buffer2 || !PartialInformation) return;
 
@@ -526,13 +528,13 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Initialize layout array */
     if (ConfigInfo->DiskCount == 0)
         goto end_assign_disks;
-    LayoutArray = ExAllocatePool(NonPagedPool,
-        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+    LayoutArray = ExAllocatePoolWithTag(NonPagedPool,
+        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
     if (!LayoutArray)
     {
-        ExFreePool(PartialInformation);
-        ExFreePool(Buffer2);
-        ExFreePool(Buffer1);
+        ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
+        ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
+        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
         if (hKey) ZwClose(hKey);
     }
 
@@ -894,9 +896,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     for (i = 0; i < ConfigInfo->DiskCount; i++)
     {
         if (LayoutArray[i] != NULL)
-            ExFreePool(LayoutArray[i]);
+            ExFreePoolWithTag(LayoutArray[i], TAG_FILE_SYSTEM);
     }
-    ExFreePool(LayoutArray);
+    ExFreePoolWithTag(LayoutArray, TAG_FILE_SYSTEM);
 end_assign_disks:
 
     /* Assign floppy drives */
@@ -946,9 +948,9 @@ end_assign_disks:
 
     /* Anything else to do? */
 
-    ExFreePool(PartialInformation);
-    ExFreePool(Buffer2);
-    ExFreePool(Buffer1);
+    ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
+    ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
+    ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
     if (hKey)
     {
         ZwClose(hKey);
@@ -1247,8 +1249,8 @@ xHalGetPartialGeometry(IN PDEVICE_OBJECT DeviceObject,
 Cleanup:
     /* Free all the pointers */
     if (Event) ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
-    if (IoStatusBlock) ExFreePool(IoStatusBlock);
-    if (DiskGeometry) ExFreePool(DiskGeometry);
+    if (IoStatusBlock) ExFreePoolWithTag(IoStatusBlock, TAG_FILE_SYSTEM);
+    if (DiskGeometry) ExFreePoolWithTag(DiskGeometry, TAG_FILE_SYSTEM);
     return;
 }
 
@@ -1358,6 +1360,24 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
+VOID
+NTAPI
+FstubFixupEfiPartition(IN PPARTITION_DESCRIPTOR PartitionDescriptor,
+                       IN ULONGLONG MaxOffset)
+{
+    ULONG PartitionLength;
+    PAGED_CODE();
+
+    /* Compute partition length (according to MBR entry) */
+    PartitionLength = PartitionDescriptor->StartingSectorLsb0 + PartitionDescriptor->PartitionLengthLsb0;
+    /* In case the partition length goes beyond disk size... */
+    if (PartitionLength > MaxOffset)
+    {
+        /* Resize partition to its maximum real length */
+        PartitionDescriptor->PartitionLengthLsb0 = MaxOffset - PartitionDescriptor->StartingSectorLsb0;
+    }
+}
+
 NTSTATUS
 FASTCALL
 xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
@@ -1405,7 +1425,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 
@@ -1425,7 +1445,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             MaxOffset, MaxSector);
 
     /* Allocate our buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, InputSize, TAG_FILE_SYSTEM);
     if (!Buffer)
     {
         /* Fail, free the input buffer */
@@ -1503,9 +1523,6 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         PartitionDescriptor = (PPARTITION_DESCRIPTOR)
                                &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
 
-        /* Get the partition type */
-        PartitionType = PartitionDescriptor->PartitionType;
-
         /* Start looping partitions */
         j++;
         DPRINT("FSTUB: Partition Table %d:\n", j);
@@ -1523,6 +1540,14 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             DPRINT("\tOffset %#08lx for %#08lx Sectors\n",
                     GET_STARTING_SECTOR(PartitionDescriptor),
                     GET_PARTITION_LENGTH(PartitionDescriptor));
+
+            /* Check whether we're facing a protective MBR */
+            if (PartitionType == EFI_PMBR_OSTYPE_EFI)
+            {
+                /* Partition length might be bigger than disk size */
+                FstubFixupEfiPartition(PartitionDescriptor,
+                                       MaxOffset);
+            }
 
             /* Make sure that the partition is valid, unless it's the first */
             if (!(HalpIsValidPartitionEntry(PartitionDescriptor,
@@ -1818,7 +1843,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 
@@ -1970,7 +1995,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     } while (i < PartitionNumber);
 
     /* Everything done, cleanup */
-    if (Buffer) ExFreePool(Buffer);
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
     return Status;
 }
 
@@ -2018,7 +2043,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     {
         /* EZ Drive found, bias the offset */
         IsEzDrive = TRUE;
-        ExFreePool(MbrBuffer);
+        ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 

@@ -14,5 +14,5 @@ target_link_libraries(midimap uuid wine)
 
 add_importlibs(midimap advapi32 user32 winmm kernel32 ntdll)
 add_dependencies(midimap psdk)
-add_cab_target(midimap 1)
+add_cd_file(TARGET midimap DESTINATION reactos/system32 FOR all)
 

@@ -12,4 +12,4 @@ set_module_type(winmine win32gui)
 target_link_libraries(winmine wine)
 add_importlibs(winmine user32 gdi32 advapi32 shell32 msvcrt kernel32 ntdll)
 
-add_cab_target(winmine 1)
+add_cd_file(TARGET winmine DESTINATION reactos/system32 FOR all)

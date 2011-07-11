@@ -4,7 +4,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-#pragma code_page(65001)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -651,7 +650,6 @@ BEGIN
     IDS_Not_Responding            "Nu Răspunde"
     IDS_Running                   "Rulează"
 END
-
 
 #pragma code_page(1252)
 #endif    // Romanian resources

@@ -68,7 +68,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ZeroMemory(&wcFrame, sizeof(WNDCLASSEX));
     wcFrame.cbSize = sizeof(WNDCLASSEX);
-    wcFrame.style = CS_HREDRAW | CS_VREDRAW;
     wcFrame.lpfnWndProc = FrameWndProc;
     wcFrame.hInstance = hInstance;
     wcFrame.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
@@ -82,7 +81,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ZeroMemory(&wcChild, sizeof(WNDCLASSEX));
     wcChild.cbSize = sizeof(WNDCLASSEX);
-    wcChild.style = CS_HREDRAW | CS_VREDRAW;
     wcChild.lpfnWndProc = ChildWndProc;
     wcChild.cbWndExtra = sizeof(HANDLE);
     wcChild.hInstance = hInstance;
@@ -135,7 +133,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     /* Create the status bar */
-    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS,
+    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|SBT_NOBORDERS,
                                     _T(""), hFrameWnd, STATUS_WINDOW);
     if (hStatusBar)
     {

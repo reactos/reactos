@@ -10,5 +10,5 @@ add_library(cfgmgr32 SHARED ${SOURCE})
 
 set_entrypoint(cfgmgr32 0)
 add_importlibs(cfgmgr32 setupapi kernel32 ntdll)
-add_dependencies(cfgmgr32 psdk buildno_header)
-add_cab_target(cfgmgr32 1)
+add_dependencies(cfgmgr32 psdk)
+add_cd_file(TARGET cfgmgr32 DESTINATION reactos/system32 FOR all)

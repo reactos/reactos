@@ -7,6 +7,6 @@ add_library(kbdgeo SHARED kbdgeo.c kbdgeo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdgeo.
 
 set_entrypoint(kbdgeo 0)
 
-add_dependencies(kbdgeo psdk buildno_header)
+add_dependencies(kbdgeo psdk)
 
-add_cab_target(kbdgeo 1)
+add_cd_file(TARGET kbdgeo DESTINATION reactos/system32 FOR all)

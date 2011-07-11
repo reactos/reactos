@@ -13,10 +13,8 @@ add_library(olesvr32 SHARED ${SOURCE})
 
 set_entrypoint(olesvr32 0)
 
-target_link_libraries(olesvr32
-    wine
-    mingw_common)
+target_link_libraries(olesvr32 wine)
 
 add_importlibs(olesvr32 kernel32 ntdll)
-add_dependencies(olesvr32 psdk buildno_header)
-add_cab_target(olesvr32 1)
+add_dependencies(olesvr32 psdk)
+add_cd_file(TARGET olesvr32 DESTINATION reactos/system32 FOR all)

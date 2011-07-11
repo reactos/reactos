@@ -175,7 +175,7 @@ IntHideMousePointer(
                  &ptlSave,
                  NULL,
                  NULL,
-                 ROP3_TO_ROP4(SRCCOPY));
+                 ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 }
 
 VOID
@@ -228,7 +228,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                  NULL,
                  NULL,
                  NULL,
-                 ROP3_TO_ROP4(SRCCOPY));
+                 ROP4_FROM_INDEX(R3_OPINDEX_SRCCOPY));
 
     /* Blt the pointer on the screen. */
     if (pgp->psurfColor)
@@ -243,7 +243,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                      NULL,
                      NULL,
                      NULL,
-                     ROP3_TO_ROP4(SRCAND));
+                     ROP4_FROM_INDEX(R3_OPINDEX_SRCAND));
 
         IntEngBitBlt(psoDest,
                      &pgp->psurfColor->SurfObj,
@@ -255,7 +255,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                      NULL,
                      NULL,
                      NULL,
-                     ROP3_TO_ROP4(SRCINVERT));
+                     ROP4_FROM_INDEX(R3_OPINDEX_SRCINVERT));
     }
     else
     {
@@ -269,7 +269,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                      NULL,
                      NULL,
                      NULL,
-                     ROP3_TO_ROP4(SRCAND));
+                     ROP4_FROM_INDEX(R3_OPINDEX_SRCAND));
 
         rclPointer.top += pgp->Size.cy;
 
@@ -283,7 +283,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                      NULL,
                      NULL,
                      NULL,
-                     ROP3_TO_ROP4(SRCINVERT));
+                     ROP4_FROM_INDEX(R3_OPINDEX_SRCINVERT));
     }
 }
 
@@ -337,7 +337,7 @@ EngSetPointerShape(
         rectl.bottom = sizel.cy;
 
         /* Calculate lDelta for our surfaces. */
-        lDelta = WIDTH_BYTES_ALIGN32(sizel.cx, 
+        lDelta = WIDTH_BYTES_ALIGN32(sizel.cx,
                                       BitsPerFormat(pso->iBitmapFormat));
 
         /* Create a bitmap for saving the pixels under the cursor. */
@@ -390,7 +390,7 @@ EngSetPointerShape(
         if (!psurfMask) goto failure;
 
         /* Initialize an EXLATEOBJ */
-        ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
+        ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
         EXLATEOBJ_vInitialize(&exlo,
                               &gpalMono,
                               ppal,
@@ -409,7 +409,7 @@ EngSetPointerShape(
 
         /* Cleanup */
         EXLATEOBJ_vCleanup(&exlo);
-        if (ppal) PALETTE_UnlockPalette(ppal);
+        if (ppal) PALETTE_ShareUnlockPalette(ppal);
     }
 
     /* Hide mouse pointer */

@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 add_definitions(
     -D__WINESRC__
@@ -70,5 +71,5 @@ add_importlibs(comctl32
     kernel32
     ntdll)
 
-add_cab_target(comctl32 1)
+add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(comctl32.spec)

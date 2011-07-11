@@ -519,3 +519,22 @@ RtlPcToFileHeader(IN PVOID PcValue,
     *BaseOfImage = ImageBase;
     return ImageBase;
 }
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDosApplyFileIsolationRedirection_Ustr(
+    IN BOOLEAN Unknown,
+    IN PUNICODE_STRING OriginalName,
+    IN PUNICODE_STRING Extension,
+    IN OUT PUNICODE_STRING RedirectedName,
+    IN OUT PUNICODE_STRING RedirectedName2,
+    IN OUT PUNICODE_STRING *OriginalName2,
+    IN PVOID Unknown1,
+    IN PVOID Unknown2,
+    IN PVOID Unknown3
+)
+{
+    return STATUS_SXS_KEY_NOT_FOUND;
+}
+

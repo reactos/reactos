@@ -19,6 +19,10 @@ Description = Zusätzlich Plugins zur Unterstützung von weiteren Dateitypen.
 Licence = Gratuito (para uso personal)
 Description = Complementos adicionales para soportar más formatos.
 
+[Section.040c]
+Licence = Gratuit (pour un usage personnel)
+Description = Modules additionnels pour supporter plus de types de fichiers.
+
 [Section.0415]
 Licence = Freeware (dla użytku domowego)
 Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.

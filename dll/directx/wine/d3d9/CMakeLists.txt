@@ -7,10 +7,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-if(MSVC)
-    add_definitions(-FImsvchelper.h)
-endif()
-
 set_rc_compiler()
 
 spec2def(d3d9.dll d3d9.spec)
@@ -31,7 +27,6 @@ list(APPEND SOURCE
     volume.c
     volumetexture.c
     version.rc
-    #${REACTOS_BINARY_DIR}/include/reactos/wine/wined3d_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
 
@@ -51,5 +46,5 @@ add_importlibs(d3d9
     ntdll)
 
 add_dependencies(d3d9 wineheaders)
-add_cab_target(d3d9 1)
+add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
 add_importlib_target(d3d9.spec)

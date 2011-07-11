@@ -19,5 +19,5 @@ add_library(mmdrv SHARED ${SOURCE})
 
 set_entrypoint(mmdrv 0)
 add_importlibs(mmdrv winmm user32 kernel32 ntdll)
-add_dependencies(mmdrv psdk buildno_header)
-add_cab_target(mmdrv 1)
+add_dependencies(mmdrv psdk)
+add_cd_file(TARGET mmdrv DESTINATION reactos/system32 FOR all)

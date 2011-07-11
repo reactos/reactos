@@ -102,8 +102,9 @@ EngDeleteDriverObj(
     /* NOTE: We don't care about the bLocked param, as our handle manager
        allows freeing the object, while we hold any number of locks. */
 
-    /* Free the object */
-    return DRIVEROBJ_FreeObjectByHandle(hdo);
+    /* Delete the object */
+    GDIOBJ_vDeleteObject(&pedo->baseobj);
+    return TRUE;
 }
 
 
@@ -139,10 +140,11 @@ EngUnlockDriverObj(
     }
 
     /* Unlock object */
-    cLocks = DRIVEROBJ_UnlockObject(pedo);
+    cLocks = pedo->baseobj.cExclusiveLock;
+    DRIVEROBJ_UnlockObject(pedo);
 
     /* Check if we still hold a lock */
-    if (cLocks < 1)
+    if (cLocks < 2)
     {
         /* Object wasn't locked before, fail. */
         return FALSE;

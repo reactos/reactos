@@ -58,9 +58,9 @@
 58  stdcall -noname ParseField(str long ptr long) ParseFieldAW # Fixme
 59  stdcall RestartDialog(long wstr long)
 60  stdcall -noname ExitWindowsDialog(long) # Fixme
-61  stdcall -noname RunFileDlg(long long long str str long) RunFileDlg # Fixme
+61  stdcall -noname RunFileDlg(long long long wstr wstr long) RunFileDlg # Fixme?
 62  stdcall PickIconDlg(long long long long)
-63  stdcall GetFileNameFromBrowse(long long long long str str str)
+63  stdcall GetFileNameFromBrowse(long long long long wstr wstr wstr)
 64  stdcall DriveType(long)
 65  stdcall -noname InvalidateDriveType(long)
 66  stdcall IsNetDrive(long)

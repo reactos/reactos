@@ -13,4 +13,4 @@ set_entrypoint(security 0)
 
 add_importlibs(security secur32 advapi32 ntdll kernel32)
 
-add_cab_target(security 1)
+add_cd_file(TARGET security DESTINATION reactos/system32 FOR all)

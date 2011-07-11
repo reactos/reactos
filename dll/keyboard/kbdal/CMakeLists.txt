@@ -7,6 +7,6 @@ add_library(kbdal SHARED kbdal.c kbdal.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdal.def)
 
 set_entrypoint(kbdal 0)
 
-add_dependencies(kbdal psdk buildno_header)
+add_dependencies(kbdal psdk)
 
-add_cab_target(kbdal 1)
+add_cd_file(TARGET kbdal DESTINATION reactos/system32 FOR all)

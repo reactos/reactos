@@ -19,4 +19,4 @@ target_link_libraries(spoolss wine)
 add_importlibs(spoolss winspool msvcrt kernel32 ntdll)
 add_importlib_target(spoolss.spec)
 
-add_cab_target(spoolss 1)
+add_cd_file(TARGET spoolss DESTINATION reactos/system32 FOR all)

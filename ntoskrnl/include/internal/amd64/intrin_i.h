@@ -104,8 +104,6 @@ static __inline__ __attribute__((always_inline)) void __str(unsigned short *Dest
 
 #elif defined(_MSC_VER)
 
-#define UNIMPLEMENTED DbgPrint("%s is unimplemented!!!\n", __FUNCTION__);
-
 void __lgdt(void *Source);
 
 void __sgdt(void *Destination);

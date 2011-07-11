@@ -1,8 +1,5 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(rsaenh.dll rsaenh.spec)
@@ -28,4 +25,4 @@ set_module_type(rsaenh win32dll)
 target_link_libraries(rsaenh wine)
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
 add_importlib_target(rsaenh.spec)
-add_cab_target(rsaenh 1)
+add_cd_file(TARGET rsaenh DESTINATION reactos/system32 FOR all)

@@ -9,6 +9,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 generate_idl_iids(mstask_local.idl)
 
 spec2def(mstask.dll mstask.spec)
@@ -32,4 +34,4 @@ target_link_libraries(mstask uuid wine)
 
 add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
 
-add_cab_target(mstask 1)
+add_cd_file(TARGET mstask DESTINATION reactos/system32 FOR all)

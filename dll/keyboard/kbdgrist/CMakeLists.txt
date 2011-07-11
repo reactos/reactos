@@ -7,6 +7,6 @@ add_library(kbdgrist SHARED kbdgrist.c kbdgrist.rc ${CMAKE_CURRENT_BINARY_DIR}/k
 
 set_entrypoint(kbdgrist 0)
 
-add_dependencies(kbdgrist psdk buildno_header)
+add_dependencies(kbdgrist psdk)
 
-add_cab_target(kbdgrist 1)
+add_cd_file(TARGET kbdgrist DESTINATION reactos/system32 FOR all)

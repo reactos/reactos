@@ -7,6 +7,6 @@ add_library(kbdusl SHARED kbdusl.c kbdusl.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdusl.
 
 set_entrypoint(kbdusl 0)
 
-add_dependencies(kbdusl psdk buildno_header)
+add_dependencies(kbdusl psdk)
 
-add_cab_target(kbdusl 1)
+add_cd_file(TARGET kbdusl DESTINATION reactos/system32 FOR all)

@@ -100,8 +100,8 @@ typedef struct _OSKITTCP_EVENT_HANDLERS {
 
 extern OSKITTCP_EVENT_HANDLERS OtcpEvent;
 
-extern void InitOskitTCP();
-extern void DeinitOskitTCP();
+extern void InitOskitTCP( void );
+extern void DeinitOskitTCP( void );
 extern void TimerOskitTCP( int FastTimer, int SlowTimer );
 extern void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len );
 extern int  OskitTCPShutdown( void *socket, int disconn_type );

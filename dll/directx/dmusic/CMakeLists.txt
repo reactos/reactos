@@ -39,6 +39,6 @@ add_importlibs(dmusic
     kernel32
     ntdll)
 
-add_dependencies(dmusic psdk buildno_header)
+add_dependencies(dmusic psdk)
 
-add_cab_target(dmusic 1)
+add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)

@@ -15,5 +15,5 @@ set_entrypoint(nddeapi 0)
 target_link_libraries(nddeapi wine)
 
 add_importlibs(nddeapi kernel32 ntdll)
-add_dependencies(nddeapi psdk buildno_header)
-add_cab_target(nddeapi 1)
+add_dependencies(nddeapi psdk)
+add_cd_file(TARGET nddeapi DESTINATION reactos/system32 FOR all)

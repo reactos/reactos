@@ -85,7 +85,7 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
 
 /* enumlist.c */
 IEnumIDList * IEnumIDList_Constructor(void);
-LPITEMIDLIST _ILCreateNetConnect();
+LPITEMIDLIST _ILCreateNetConnect(void);
 LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem);
 BOOL _ILIsNetConnect (LPCITEMIDLIST pidl);
 BOOL AddToEnumList(IEnumIDList * iface, LPITEMIDLIST pidl);

@@ -9,6 +9,7 @@ typedef struct _DESKTOP
     LIST_ENTRY ListEntry;
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *rpwinstaParent;
+    DWORD dwDTFlags;
     PWND spwndForeground;
     PWND spwndTray;
     PWND spwndMessage;
@@ -27,11 +28,19 @@ typedef struct _DESKTOP
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
     /* Handle of the desktop window. */
-    HANDLE DesktopWindow;
+    HWND DesktopWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
     LIST_ENTRY ShellHookWindows;
 } DESKTOP, *PDESKTOP;
+
+// Desktop flags
+#define DF_TME_HOVER        0x00000400
+#define DF_TME_LEAVE        0x00000800
+#define DF_DESTROYED        0x00008000
+#define DF_DESKWNDDESTROYED 0x00010000
+#define DF_DYING            0x00020000
+
 
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
@@ -69,6 +78,9 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
+NTSTATUS NTAPI 
+IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -102,7 +114,7 @@ IntHideDesktop(PDESKTOP Desktop);
 HDESK FASTCALL
 IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
 
-BOOL IntSetThreadDesktop(IN PDESKTOP DesktopObject,
+BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
 NTSTATUS FASTCALL
@@ -122,6 +134,7 @@ BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
+BOOL FASTCALL IntPaintDesktop(HDC hDC);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))

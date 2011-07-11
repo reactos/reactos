@@ -7,4 +7,4 @@ add_executable(lsass lsass.c lsass.rc)
 
 set_module_type(lsass win32gui)
 add_importlibs(lsass advapi32 lsasrv msvcrt kernel32 ntdll)
-add_cab_target(lsass 1)
+add_cd_file(TARGET lsass DESTINATION reactos/system32 FOR all)

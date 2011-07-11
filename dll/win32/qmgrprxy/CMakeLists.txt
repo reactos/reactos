@@ -12,13 +12,15 @@ spec2def(qmgrprxy.dll qmgrprxy.spec)
 list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy.def)
 
-add_rpcproxy_library(qmgrprxylib qmgrprxy.idl)
+add_rpcproxy_files(qmgrprxy.idl)
 
 add_library(qmgrprxy SHARED ${SOURCE})
 
 set_module_type(qmgrprxy win32dll)
-target_link_libraries(qmgrprxy qmgrprxylib ${PSEH_LIB} wine)
+target_link_libraries(qmgrprxy ${PSEH_LIB} wine)
 add_importlibs(qmgrprxy rpcrt4 msvcrt kernel32 ntdll)
-add_cab_target(qmgrprxy 1)
+add_cd_file(TARGET qmgrprxy DESTINATION reactos/system32 FOR all)

@@ -11639,32 +11639,8 @@ static int
 test_xmlNanoFTPGetConnection(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_FTP_ENABLED)
-    int mem_base;
-    int ret_val;
-    void * ctx; /* an FTP context */
-    int n_ctx;
 
-    for (n_ctx = 0;n_ctx < gen_nb_xmlNanoFTPCtxtPtr;n_ctx++) {
-        mem_base = xmlMemBlocks();
-        ctx = gen_xmlNanoFTPCtxtPtr(n_ctx, 0);
-
-        ret_val = xmlNanoFTPGetConnection(ctx);
-        desret_int(ret_val);
-        call_tests++;
-        des_xmlNanoFTPCtxtPtr(n_ctx, ctx, 0);
-        xmlResetLastError();
-        if (mem_base != xmlMemBlocks()) {
-            printf("Leak of %d blocks found in xmlNanoFTPGetConnection",
-	           xmlMemBlocks() - mem_base);
-	    test_ret++;
-            printf(" %d", n_ctx);
-            printf("\n");
-        }
-    }
-    function_tests++;
-#endif
-
+    /* missing type support */
     return(test_ret);
 }
 
@@ -11707,39 +11683,8 @@ static int
 test_xmlNanoFTPGetSocket(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_FTP_ENABLED)
-    int mem_base;
-    int ret_val;
-    void * ctx; /* an FTP context */
-    int n_ctx;
-    const char * filename; /* the file to retrieve (or NULL if path is in context). */
-    int n_filename;
 
-    for (n_ctx = 0;n_ctx < gen_nb_xmlNanoFTPCtxtPtr;n_ctx++) {
-    for (n_filename = 0;n_filename < gen_nb_filepath;n_filename++) {
-        mem_base = xmlMemBlocks();
-        ctx = gen_xmlNanoFTPCtxtPtr(n_ctx, 0);
-        filename = gen_filepath(n_filename, 1);
-
-        ret_val = xmlNanoFTPGetSocket(ctx, filename);
-        desret_int(ret_val);
-        call_tests++;
-        des_xmlNanoFTPCtxtPtr(n_ctx, ctx, 0);
-        des_filepath(n_filename, filename, 1);
-        xmlResetLastError();
-        if (mem_base != xmlMemBlocks()) {
-            printf("Leak of %d blocks found in xmlNanoFTPGetSocket",
-	           xmlMemBlocks() - mem_base);
-	    test_ret++;
-            printf(" %d", n_ctx);
-            printf(" %d", n_filename);
-            printf("\n");
-        }
-    }
-    }
-    function_tests++;
-#endif
-
+    /* missing type support */
     return(test_ret);
 }
 
@@ -12043,7 +11988,7 @@ static int
 test_nanoftp(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing nanoftp : 16 of 22 functions ...\n");
+    if (quiet == 0) printf("Testing nanoftp : 14 of 22 functions ...\n");
     test_ret += test_xmlNanoFTPCheckResponse();
     test_ret += test_xmlNanoFTPCleanup();
     test_ret += test_xmlNanoFTPCloseConnection();

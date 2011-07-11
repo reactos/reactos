@@ -10,4 +10,4 @@ add_library(serenum SHARED
 set_module_type(serenum kernelmodedriver)
 add_importlibs(serenum ntoskrnl hal)
 
-add_cab_target(serenum 2)
+add_cd_file(TARGET serenum DESTINATION reactos/system32/drivers FOR all)

@@ -1,7 +1,7 @@
-/*
+Ôªø/*
  * Turkish Resources
  *
- * Copyright 2006 Fatih A˛˝c˝
+ * Copyright 2006 Fatih A√æ√Ωc√Ω
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,27 +22,22 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "A Parolas˝n˝ Girin"
+CAPTION "A√∞ Parolas√Ωn√Ω Girin"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "L¸tfen kullan˝c˝ ad˝n˝z˝ ve parolan˝z˝ girin:", -1, 40, 6, 150, 15
+ LTEXT "L√ºtfen kullan√Ωc√Ω ad√Ωn√Ωz√Ω ve parolan√Ωz√Ω girin:", -1, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
  LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT "Kullan˝c˝", -1, 40, 66, 50, 10
+ LTEXT "Kullan√Ωc√Ω", -1, 40, 66, 50, 10
  LTEXT "Parola", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Bu parolay˝ &sakla (g¸vensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "Bu parolay√Ω &sakla (g√ºvensiz)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Tamam", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "›ptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
-}
-
-STRINGTABLE DISCARDABLE
-{
-  IDS_LANCONNECTION "LAN Balant˝s˝"
+ PUSHBUTTON "√ùptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

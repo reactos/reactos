@@ -7,6 +7,6 @@ add_library(kbdinasa SHARED kbdinasa.c kbdinasa.rc ${CMAKE_CURRENT_BINARY_DIR}/k
 
 set_entrypoint(kbdinasa 0)
 
-add_dependencies(kbdinasa psdk buildno_header)
+add_dependencies(kbdinasa psdk)
 
-add_cab_target(kbdinasa 1)
+add_cd_file(TARGET kbdinasa DESTINATION reactos/system32 FOR all)

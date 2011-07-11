@@ -7,6 +7,6 @@ add_library(kbdinmal SHARED kbdinmal.c kbdinmal.rc ${CMAKE_CURRENT_BINARY_DIR}/k
 
 set_entrypoint(kbdinmal 0)
 
-add_dependencies(kbdinmal psdk buildno_header)
+add_dependencies(kbdinmal psdk)
 
-add_cab_target(kbdinmal 1)
+add_cd_file(TARGET kbdinmal DESTINATION reactos/system32 FOR all)

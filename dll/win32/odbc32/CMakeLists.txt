@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -23,5 +22,4 @@ add_importlibs(odbc32
     kernel32
     ntdll)
 
-
-add_cab_target(odbc32 1)
+add_cd_file(TARGET odbc32 DESTINATION reactos/system32 FOR all)

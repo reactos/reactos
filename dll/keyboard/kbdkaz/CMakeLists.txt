@@ -7,6 +7,6 @@ add_library(kbdkaz SHARED kbdkaz.c kbdkaz.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdkaz.
 
 set_entrypoint(kbdkaz 0)
 
-add_dependencies(kbdkaz psdk buildno_header)
+add_dependencies(kbdkaz psdk)
 
-add_cab_target(kbdkaz 1)
+add_cd_file(TARGET kbdkaz DESTINATION reactos/system32 FOR all)

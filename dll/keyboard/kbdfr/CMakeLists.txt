@@ -7,6 +7,6 @@ add_library(kbdfr SHARED kbdfr.c kbdfr.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdfr.def)
 
 set_entrypoint(kbdfr 0)
 
-add_dependencies(kbdfr psdk buildno_header)
+add_dependencies(kbdfr psdk)
 
-add_cab_target(kbdfr 1)
+add_cd_file(TARGET kbdfr DESTINATION reactos/system32 FOR all)

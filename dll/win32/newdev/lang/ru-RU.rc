@@ -3,106 +3,106 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка нового оборудования",IDC_WELCOMETITLE,120,8,210,24
-    LTEXT           "Этот мастер устанавливает драйвер для:",
+    LTEXT           "РЈСЃС‚Р°РЅРѕРІРєР° РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ",IDC_WELCOMETITLE,120,8,210,24
+    LTEXT           "Р­С‚РѕС‚ РјР°СЃС‚РµСЂ СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РґСЂР°Р№РІРµСЂ РґР»СЏ:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Для продолжения нажмите кнопку ""Далее"".",IDC_STATIC,120,169,195,17
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,134,36,164,11
-    LTEXT           "ВНИМАНИЕ! Установка нового оборудования может закончиться зависанием компьютера или невозможностью загрузить его!",IDC_STATIC,120,59,195,25
-    CONTROL         "Установить драйвер автоматически",IDC_RADIO_AUTO,"Button",
+    LTEXT           "Р”Р»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ РЅР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ ""Р”Р°Р»РµРµ"".",IDC_STATIC,120,169,195,17
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,134,36,164,11
+    LTEXT           "Р’РќРРњРђРќРР•! РЈСЃС‚Р°РЅРѕРІРєР° РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ РјРѕР¶РµС‚ Р·Р°РєРѕРЅС‡РёС‚СЊСЃСЏ Р·Р°РІРёСЃР°РЅРёРµРј РєРѕРјРїСЊСЋС‚РµСЂР° РёР»Рё РЅРµРІРѕР·РјРѕР¶РЅРѕСЃС‚СЊСЋ Р·Р°РіСЂСѓР·РёС‚СЊ РµРіРѕ!",IDC_STATIC,120,59,195,25
+    CONTROL         "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РґСЂР°Р№РІРµСЂ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
-    CONTROL         "Установить драйвер из указанного места",IDC_RADIO_MANUAL,
+    CONTROL         "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РґСЂР°Р№РІРµСЂ РёР· СѓРєР°Р·Р°РЅРЅРѕРіРѕ РјРµСЃС‚Р°",IDC_RADIO_MANUAL,
                     "Button",BS_AUTORADIOBUTTON,120,133,164,14
 END
 
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Это оборудование установить не удалось",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Оборудование не установлено, поскольку мастер не смог найти нужного программного обеспечения.",
+    LTEXT           "Р­С‚Рѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ, РїРѕСЃРєРѕР»СЊРєСѓ РјР°СЃС‚РµСЂ РЅРµ СЃРјРѕРі РЅР°Р№С‚Рё РЅСѓР¶РЅРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Если имеются установочные диски или известно расположение нужного программного обеспечения, нажмите кнопку ""Назад"".",
+    LTEXT           "Р•СЃР»Рё РёРјРµСЋС‚СЃСЏ СѓСЃС‚Р°РЅРѕРІРѕС‡РЅС‹Рµ РґРёСЃРєРё РёР»Рё РёР·РІРµСЃС‚РЅРѕ СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ РЅСѓР¶РЅРѕРіРѕ РїСЂРѕРіСЂР°РјРјРЅРѕРіРѕ РѕР±РµСЃРїРµС‡РµРЅРёСЏ, РЅР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ ""РќР°Р·Р°Рґ"".",
                     IDC_STATIC,120,125,181,24
-    CONTROL         "Больше не напоминать об установке этого драйвера.",IDC_DONOTSHOWDLG,"Button",
+    CONTROL         "Р‘РѕР»СЊС€Рµ РЅРµ РЅР°РїРѕРјРёРЅР°С‚СЊ РѕР± СѓСЃС‚Р°РЅРѕРІРєРµ СЌС‚РѕРіРѕ РґСЂР°Р№РІРµСЂР°.",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,190,11
 END
 
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Это оборудование установить не удалось",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Неизвестная ошибка. Не удалось установить устройство.",
+    LTEXT           "Р­С‚Рѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°. РќРµ СѓРґР°Р»РѕСЃСЊ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,134,55,164,11
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,134,55,164,11
 END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Искать по этим путям",IDC_RADIO_SEARCHHERE,"Button",
+    CONTROL         "РСЃРєР°С‚СЊ РїРѕ СЌС‚РёРј РїСѓС‚СЏРј",IDC_RADIO_SEARCHHERE,"Button",
                     BS_AUTORADIOBUTTON,27,11,239,13
-    CONTROL         "Выбор драйвера вручную",IDC_RADIO_CHOOSE,"Button",
+    CONTROL         "Р’С‹Р±РѕСЂ РґСЂР°Р№РІРµСЂР° РІСЂСѓС‡РЅСѓСЋ",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "Поиск на сменных носителях",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "РџРѕРёСЃРє РЅР° СЃРјРµРЅРЅС‹С… РЅРѕСЃРёС‚РµР»СЏС…",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
-    CONTROL         "Включить это место поиска",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Р’РєР»СЋС‡РёС‚СЊ СЌС‚Рѕ РјРµСЃС‚Рѕ РїРѕРёСЃРєР°",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "Обзор",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "РћР±Р·РѕСЂ",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,51,20,169,16
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,51,20,169,16
 END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,51,20,169,16
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,51,20,169,16
 END
 
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка оборудования завершена",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Вы должны выполнить перезагрузку, чтобы закончить установку:",
+    LTEXT           "РЈСЃС‚Р°РЅРѕРІРєР° РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ Р·Р°РІРµСЂС€РµРЅР°",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Р’С‹ РґРѕР»Р¶РЅС‹ РІС‹РїРѕР»РЅРёС‚СЊ РїРµСЂРµР·Р°РіСЂСѓР·РєСѓ, С‡С‚РѕР±С‹ Р·Р°РєРѕРЅС‡РёС‚СЊ СѓСЃС‚Р°РЅРѕРІРєСѓ:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Нажмите ""Готово"" для завершения мастера.",IDC_STATIC,120,174,179,11
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,148,53,147,12
+    LTEXT           "РќР°Р¶РјРёС‚Рµ ""Р“РѕС‚РѕРІРѕ"" РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ РјР°СЃС‚РµСЂР°.",IDC_STATIC,120,174,179,11
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,148,53,147,12
 END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Мастер нового оборудования"
+CAPTION "РњР°СЃС‚РµСЂ РЅРѕРІРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Мастер закончил установку драйвера для:",
+    LTEXT           "РЈСЃС‚Р°РЅРѕРІРєР° Р·Р°РІРµСЂС€РµРЅР°",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "РњР°СЃС‚РµСЂ Р·Р°РєРѕРЅС‡РёР» СѓСЃС‚Р°РЅРѕРІРєСѓ РґСЂР°Р№РІРµСЂР° РґР»СЏ:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Нажмите ""Готово"" для завершения мастера.",IDC_STATIC,120,174,
+    LTEXT           "РќР°Р¶РјРёС‚Рµ ""Р“РѕС‚РѕРІРѕ"" РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ РјР°СЃС‚РµСЂР°.",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "Неизвестное устройство",IDC_DEVICE,148,53,147,12
+    LTEXT           "РќРµРёР·РІРµСЃС‚РЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ",IDC_DEVICE,148,53,147,12
 END
 

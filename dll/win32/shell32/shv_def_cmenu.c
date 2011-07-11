@@ -644,6 +644,8 @@ AddStaticContextMenusToMenu(
            fState |= MFS_DEFAULT;
            idResource = IDS_OPEN_VERB;
         }
+        else if (!wcsicmp(curEntry->szVerb, L"explore"))
+           idResource = IDS_EXPLORE_VERB;
         else if (!wcsicmp(curEntry->szVerb, L"runas"))
            idResource = IDS_RUNAS_VERB;
         else if (!wcsicmp(curEntry->szVerb, L"edit"))
@@ -652,10 +654,6 @@ AddStaticContextMenusToMenu(
            idResource = IDS_FIND_VERB;
         else if (!wcsicmp(curEntry->szVerb, L"print"))
            idResource = IDS_PRINT_VERB;
-        else if (!wcsicmp(curEntry->szVerb, L"play"))
-           idResource = IDS_PLAY_VERB;
-        else if (!wcsicmp(curEntry->szVerb, L"preview"))
-           idResource = IDS_PREVIEW_VERB;
         else
            idResource = 0;
 

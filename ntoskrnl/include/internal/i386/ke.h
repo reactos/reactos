@@ -457,6 +457,7 @@ extern VOID __cdecl KiTrap08(VOID);
 extern VOID __cdecl KiTrap13(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
 extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
+extern VOID NTAPI ExpInterlockedPopEntrySListResume(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
@@ -600,13 +601,6 @@ KiDispatchException2Args(IN NTSTATUS Code,
 //
 // Performs a system call
 //
-NTSTATUS
-FORCEINLINE
-KiSystemCallTrampoline(IN PVOID Handler,
-                       IN PVOID Arguments,
-                       IN ULONG StackBytes)
-{
-    NTSTATUS Result;
 
     /*
      * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
@@ -624,6 +618,14 @@ KiSystemCallTrampoline(IN PVOID Handler,
      *
      */
 #ifdef __GNUC__
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+
     __asm__ __volatile__
     (
         "subl %1, %%esp\n"
@@ -639,25 +641,32 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
     __asm
     {
         mov ecx, StackBytes
-        mov edx, Arguments
+        mov esi, Arguments
+        mov eax, Handler
         sub esp, ecx
         mov edi, esp
-        mov esi, edx
         shr ecx, 2
         rep movsd
-        call Handler
-        mov Result, eax
+        call eax
     }
+    /* Return with result in EAX */
+}
 #else
 #error Unknown Compiler
 #endif
 
-    return Result;
-}
 
 //
 // Checks for pending APCs
@@ -699,6 +708,7 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Converts a base thread to a GUI thread
 //
+#ifdef __GNUC__
 NTSTATUS
 FORCEINLINE
 KiConvertToGuiThread(VOID)
@@ -722,7 +732,6 @@ KiConvertToGuiThread(VOID)
      * on its merry way.
      *
      */
-#ifdef __GNUC__
     __asm__ __volatile__
     (
         "movl %%ebp, %1\n"
@@ -735,22 +744,15 @@ KiConvertToGuiThread(VOID)
         :
         : "%esp", "%ecx", "%edx", "memory"
     );
+    return Result;
+}
 #elif defined(_MSC_VER)
-    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
-    __asm
-    {
-        mov StackFrame, ebp
-        sub StackFrame, esp
-        call PsConvertToGuiThread
-        add StackFrame, esp
-        mov ebp, StackFrame
-        mov Result, eax
-    }
+NTSTATUS
+NTAPI
+KiConvertToGuiThread(VOID);
 #else
 #error Unknown Compiler
 #endif
-    return Result;
-}
 
 //
 // Switches from boot loader to initial kernel stack
@@ -803,7 +805,7 @@ KiIret(VOID)
 #elif defined(_MSC_VER)
     __asm
     {
-        iret
+        iretd
     }
 #else
 #error Unsupported compiler

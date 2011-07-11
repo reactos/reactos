@@ -55,7 +55,7 @@ BEGIN
 		MENUITEM "Aktualisieren",             FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "Einfügen",                  FCIDM_SHVIEW_INSERT
-		MENUITEM "Einfügen als Verweis",      FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Verknüpfung einfügen",      FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "&Eigenschaften",            FCIDM_SHVIEW_PROPERTIES
 	END
@@ -127,7 +127,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Diese ReactOS-Version wurde registriert auf:", IDC_STATIC, 35, 115, 180, 10
@@ -170,9 +170,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
 	LTEXT "Zieltyp:", 14004, 8, 38, 64, 10
-	LTEXT "", 14005, 78, 38, 142, 10
+	LTEXT "", 14005, 78, 38, 142, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Zielpfad:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
+	EDITTEXT 14007, 79, 58, 141, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Ziel:", 14008, 8, 77, 45, 10
 	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
 	LTEXT "&Starten in:", 14010, 8, 96, 57, 10
@@ -211,13 +211,13 @@ BEGIN
 	LTEXT "Typ:", 14004, 8, 35, 50, 10
 	LTEXT "Dateiordner", 14005, 68, 35, 160, 10
 	LTEXT "Ort:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 315, 10
+	EDITTEXT 14007, 68, 53, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Größe:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Inhalt:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Erstellt:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	AUTOCHECKBOX "&Schreibgeschützt", 14021, 45, 150, 67, 10
 	AUTOCHECKBOX "&Versteckt", 14022, 126, 150, 50, 10
 END
@@ -233,17 +233,17 @@ BEGIN
 	LTEXT "Dateityp:", 14004, 8, 35, 50, 10
 	LTEXT "Datei", 14005, 68, 35, 160, 10
 	LTEXT "Öffnen mit:", 14006, 8, 53, 50, 10
-	LTEXT "", 14007, 68, 53, 160, 10
+	EDITTEXT 14007, 68, 53, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Pfad:", 14008, 8, 72, 45, 10
-	LTEXT "", 14009, 68, 72, 315, 10
+	EDITTEXT 14009, 68, 72, 315, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Größe:", 14010, 8, 93, 45, 10
-	LTEXT "", 14011, 68, 93, 160, 10
+	EDITTEXT 14011, 68, 93, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Erstellt:", 14014, 8, 118, 45, 10
-	LTEXT "", 14015, 68, 118, 160, 10
+	EDITTEXT 14015, 68, 118, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Geändert:", 14016, 8, 140, 45, 10
-	LTEXT "", 14017, 68, 140, 160, 10
+	EDITTEXT 14017, 68, 140, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Zugegriffen:", 14018, 8, 160, 45, 10
-	LTEXT "", 14019, 68, 160, 160, 10
+	EDITTEXT 14019, 68, 160, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Attribute:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Schreibgeschützt", 14021, 45, 189, 67, 10
 	CHECKBOX "&Versteckt", 14022, 126, 189, 50, 10
@@ -256,11 +256,11 @@ CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Dateiversion: ", 14000, 10, 10, 55, 10
-	LTEXT "", 14001, 77, 10, 152, 10
+	EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Beschreibung: ", 14002, 10, 27, 45, 10
-	LTEXT "", 14003, 77, 27, 152, 10
+	EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
-	LTEXT "", 14005, 77, 46, 152, 10
+	EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 	GROUPBOX "Weitere Versionsinformationen: ", 14006, 6, 70, 222, 115
 	LTEXT "Elementname: ", 14007, 13, 82, 50, 10
 	LTEXT "Wert: ", 14008, 112, 82, 45, 10
@@ -275,24 +275,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Typ:", -1, 15, 55, 40, 10
-	LTEXT "", 14001, 110, 55, 100, 10
+	EDITTEXT 14001, 110, 55, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Dateisystem:", -1, 15, 70, 100, 10
-	LTEXT "", 14002, 110, 70, 100, 10
+	EDITTEXT 14002, 110, 70, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Belegter Speicher:", -1, 25, 90, 120, 10
-	LTEXT "", 14003, 110, 90, 120, 10
-	LTEXT "", 14004, 200, 90, 40, 10
+	EDITTEXT 14003, 110, 90, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14004, 200, 90, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Freier Speicher:", -1, 25, 105, 70, 10
-	LTEXT "", 14005, 110, 105, 120, 10
-	LTEXT "", 14006, 200, 105, 40, 10
+	EDITTEXT 14005, 110, 105, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14006, 200, 105, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	LTEXT "Speicherkapazität:", -1, 25, 125, 80, 10
-	LTEXT "", 14007, 110, 125, 120, 10
-	LTEXT "", 14008, 200, 125, 40, 10
+	EDITTEXT 14007, 110, 125, 85, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+	EDITTEXT 14008, 200, 125, 40, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
@@ -427,7 +427,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Um\ndie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -660,9 +660,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Das Objekt '%1' kann nicht in den Papierkorb verschoben werden. Möchten Sie es stattdessen löschen?"
 	IDS_OVERWRITEFILE_TEXT      "Dieser Ordner enthält bereits eine Datei namens '%1'.\n\nWollen Sie diese überschreiben?"
 	IDS_OVERWRITEFILE_CAPTION   "Bestätigung: Datei überschreiben"
-	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\n"\
-		"Wenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\n"\
-		"im gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
+	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\nWenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\nim gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Neu starten"
@@ -671,6 +669,12 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Möchten Sie das System herunterfahren?"
 	IDS_LOGOFF_TITLE            "Ausloggen"
 	IDS_LOGOFF_PROMPT           "Möchten Sie sich ausloggen?"
+
+    /* Run File dialog */
+	IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
+	IDS_RUNDLG_BROWSE_CAPTION   "Browse"
+	IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Startmenü\\Programme"
@@ -715,14 +719,14 @@ BEGIN
 	IDS_SHELL_ABOUT_BACK        "< &Zurück"
 	FCIDM_SHVIEW_NEW 	    "Neu"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Neues Ver&zeichnis"
-	FCIDM_SHVIEW_NEWLINK        "Neuer Ver&weis"
+	FCIDM_SHVIEW_NEWLINK        "Neue &Verknüpfung"
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
 	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
 	IDS_RECYCLEBIN_DISKSPACE    "freier Speicher"
 	IDS_EMPTY_BITBUCKET         "Papierkorb leeren"
 	IDS_PICK_ICON_TITLE         "Symbol auswählen"
-	IDS_PICK_ICON_FILTER        "Symboldateien(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Programme\0*.exe\0"
+	IDS_PICK_ICON_FILTER        "Symboldateien (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
+	IDS_OPEN_WITH_FILTER        "Programme (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 	IDS_DIRECTORY               "Dateiordner"
 	IDS_VIRTUAL_DRIVER          "Virtueller Gerätetreiber"
 	IDS_BAT_FILE                "ReactOS-Stapelverarbeitungsdatei"
@@ -741,12 +745,11 @@ BEGIN
 	IDS_SYS_FILE                "Systemdatei"
 
 	IDS_OPEN_VERB               "Öffnen"
+	IDS_EXPLORE_VERB            "Explore"
 	IDS_RUNAS_VERB              "Ausführen als "
 	IDS_EDIT_VERB               "Bearbeiten"
 	IDS_FIND_VERB               "Finden"
 	IDS_PRINT_VERB              "Drucken"
-	IDS_PLAY_VERB               "Abspielen"
-	IDS_PREVIEW_VERB            "Vorschau"
 
 	IDS_FILE_FOLDER             "%u Dateien, %u Ordner"
 	IDS_PRINTERS                "Drucker"
@@ -757,4 +760,9 @@ BEGIN
 	IDS_COPY_OF                 "Kopie von"
 
     IDS_SHLEXEC_NOASSOC         "Es ist kein Programm mit diesem Dateityp verknüpft."
+	
+	IDS_FILE_DETAILS            "Details zum Dateityp '%s'"
+	IDS_FILE_DETAILSADV         "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
+	IDS_FILE_TYPES              "Dateitypen"
+	IDS_COLUMN_EXTENSION        "Erweiterungen"
 END

@@ -266,13 +266,6 @@ WinLdrLoadImage(IN PCHAR FileName,
 	LARGE_INTEGER Position;
 	ULONG i, BytesRead;
 
-	CHAR ProgressString[256];
-
-	/* Inform user we are loading files */
-	sprintf(ProgressString, "Loading %s...", strchr(FileName, '\\') + 1);
-	UiDrawBackdrop();
-	UiDrawProgressBarCenter(1, 100, ProgressString);
-
 	/* Open the image file */
 	Status = ArcOpen(FileName, OpenReadOnly, &FileId);
 	if (Status != ESUCCESS)

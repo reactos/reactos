@@ -12,5 +12,8 @@
 #include "lang/en-US.rc"
 #include "lang/de-DE.rc"
 #include "lang/es-ES.rc"
+
+// UTF-8
+#pragma code_page(65001)
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"

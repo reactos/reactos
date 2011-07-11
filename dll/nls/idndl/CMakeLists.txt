@@ -1,6 +1,6 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
+remove_definitions(-DWINVER=0x502)
+add_definitions(-DWINVER=0x600)
 
 spec2def(idndl.dll idndl.spec)
 
@@ -16,6 +16,6 @@ endif(NOT MSVC)
 
 add_importlibs(idndl kernel32)
 
-add_dependencies(idndl psdk buildno_header)
+add_dependencies(idndl psdk)
 
-add_livecd_target(idndl reactos)
+add_cd_file(TARGET idndl DESTINATION reactos FOR all)

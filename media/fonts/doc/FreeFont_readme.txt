@@ -63,7 +63,7 @@ Licensing
 
 Free UCS scalable fonts is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published
-by the Free Software Foundation; either version 2 of the License, or
+by the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 The fonts are distributed in the hope that they will be useful, but
@@ -105,4 +105,4 @@ Primoz Peterlin, <primoz.peterlin@biofiz.mf.uni-lj.si>
 Steve White <stevan.white@googlemail.com>
 
 Free UCS scalable fonts: http://savannah.gnu.org/projects/freefont/
-$Id: README,v 1.5 2008/08/30 09:30:09 Stevan_White Exp $
+$Id: README,v 1.7 2009/01/13 08:43:23 Stevan_White Exp $

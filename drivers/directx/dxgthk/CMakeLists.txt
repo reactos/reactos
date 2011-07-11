@@ -13,4 +13,4 @@ set_module_type(dxgthk kernelmodedriver)
 add_importlibs(dxgthk win32k)
 add_importlib_target(dxgthk.spec)
 
-add_cab_target(dxgthk 2)
+add_cd_file(TARGET dxgthk DESTINATION reactos/system32/drivers FOR all)

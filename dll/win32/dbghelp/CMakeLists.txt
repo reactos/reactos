@@ -1,16 +1,14 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_DLL
-    -D__USE_CRTIMP
     -D_WINE
     -DHAVE_REGEX_H
     -DHAVE_ALLOCA_H
     -D_IMAGEHLP_SOURCE_)
 
 if(ARCH MATCHES amd64)
-add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
-endif(ARCH MATCHES amd64)
+    add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
+endif()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -49,7 +47,6 @@ list(APPEND SOURCE
 add_library(dbghelp SHARED ${SOURCE})
 
 set_module_type(dbghelp win32dll)
-
 target_link_libraries(dbghelp
     wine
     ${PSEH_LIB}
@@ -57,4 +54,4 @@ target_link_libraries(dbghelp
 
 add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
 add_importlib_target(dbghelp.spec)
-add_cab_target(dbghelp 1)
+add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)

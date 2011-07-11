@@ -113,7 +113,7 @@ interface ISchemaNotation;
 cpp_quote("#define DOMDocument DOMDocument2")
 cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
 
-cpp_quote("#ifndef __WIDL_XMLDOM_H")
+cpp_quote("#if !defined(__WIDL_XMLDOM_H) && !defined(__xmldom_h__)")
 typedef enum tagDOMNodeType
 {
     NODE_INVALID  		= 0,

@@ -45,7 +45,7 @@ static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD st
 
     if (state->textures[stage])
     {
-        switch (state->textures[stage]->baseTexture.target)
+        switch (state->textures[stage]->target)
         {
             case GL_TEXTURE_2D:
                 glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, bumpmap ? GL_OFFSET_TEXTURE_2D_NV : GL_TEXTURE_2D);
@@ -456,7 +456,7 @@ void set_tex_op_nvrc(const struct wined3d_gl_info *gl_info, const struct wined3d
 }
 
 
-static void nvrc_colorop(DWORD state_id, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
+static void nvrc_colorop(DWORD state_id, struct wined3d_stateblock *stateblock, struct wined3d_context *context)
 {
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     BOOL tex_used = stateblock->device->fixed_function_usage_map & (1 << stage);
@@ -566,7 +566,7 @@ static void nvrc_colorop(DWORD state_id, IWineD3DStateBlockImpl *stateblock, str
     }
 }
 
-static void nvts_texdim(DWORD state_id, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
+static void nvts_texdim(DWORD state_id, struct wined3d_stateblock *stateblock, struct wined3d_context *context)
 {
     DWORD sampler = state_id - STATE_SAMPLER(0);
     DWORD mapped_stage = stateblock->device->texUnitMap[sampler];
@@ -583,7 +583,7 @@ static void nvts_texdim(DWORD state_id, IWineD3DStateBlockImpl *stateblock, stru
     nvts_activate_dimensions(state, sampler, context);
 }
 
-static void nvts_bumpenvmat(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
+static void nvts_bumpenvmat(DWORD state, struct wined3d_stateblock *stateblock, struct wined3d_context *context)
 {
     DWORD stage = (state - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     DWORD mapped_stage = stateblock->device->texUnitMap[stage + 1];
@@ -612,7 +612,7 @@ static void nvts_bumpenvmat(DWORD state, IWineD3DStateBlockImpl *stateblock, str
     }
 }
 
-static void nvrc_texfactor(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
+static void nvrc_texfactor(DWORD state, struct wined3d_stateblock *stateblock, struct wined3d_context *context)
 {
     const struct wined3d_gl_info *gl_info = context->gl_info;
     float col[4];
@@ -621,11 +621,11 @@ static void nvrc_texfactor(DWORD state, IWineD3DStateBlockImpl *stateblock, stru
 }
 
 /* Context activation is done by the caller. */
-static void nvrc_enable(IWineD3DDevice *iface, BOOL enable) { }
+static void nvrc_enable(BOOL enable) {}
 
-/* Context activation is done by the caller. */
-static void nvts_enable(IWineD3DDevice *iface, BOOL enable) {
-    ENTER_GL();
+/* Context activation and GL locking are done by the caller. */
+static void nvts_enable(BOOL enable)
+{
     if(enable) {
         glEnable(GL_TEXTURE_SHADER_NV);
         checkGLcall("glEnable(GL_TEXTURE_SHADER_NV)");
@@ -633,68 +633,66 @@ static void nvts_enable(IWineD3DDevice *iface, BOOL enable) {
         glDisable(GL_TEXTURE_SHADER_NV);
         checkGLcall("glDisable(GL_TEXTURE_SHADER_NV)");
     }
-    LEAVE_GL();
 }
 
-static void nvrc_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *pCaps)
+static void nvrc_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
 {
-    pCaps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
+    caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
 
     /* The caps below can be supported but aren't handled yet in utils.c
      * 'd3dta_to_combiner_input', disable them until support is fixed */
 #if 0
     if (gl_info->supported[NV_REGISTER_COMBINERS2])
-        pCaps->PrimitiveMiscCaps |=  WINED3DPMISCCAPS_PERSTAGECONSTANT;
+        caps->PrimitiveMiscCaps |=  WINED3DPMISCCAPS_PERSTAGECONSTANT;
 #endif
 
-    pCaps->TextureOpCaps =  WINED3DTEXOPCAPS_ADD                        |
-                            WINED3DTEXOPCAPS_ADDSIGNED                  |
-                            WINED3DTEXOPCAPS_ADDSIGNED2X                |
-                            WINED3DTEXOPCAPS_MODULATE                   |
-                            WINED3DTEXOPCAPS_MODULATE2X                 |
-                            WINED3DTEXOPCAPS_MODULATE4X                 |
-                            WINED3DTEXOPCAPS_SELECTARG1                 |
-                            WINED3DTEXOPCAPS_SELECTARG2                 |
-                            WINED3DTEXOPCAPS_DISABLE                    |
-                            WINED3DTEXOPCAPS_BLENDDIFFUSEALPHA          |
-                            WINED3DTEXOPCAPS_BLENDTEXTUREALPHA          |
-                            WINED3DTEXOPCAPS_BLENDFACTORALPHA           |
-                            WINED3DTEXOPCAPS_BLENDCURRENTALPHA          |
-                            WINED3DTEXOPCAPS_LERP                       |
-                            WINED3DTEXOPCAPS_SUBTRACT                   |
-                            WINED3DTEXOPCAPS_ADDSMOOTH                  |
-                            WINED3DTEXOPCAPS_MULTIPLYADD                |
-                            WINED3DTEXOPCAPS_MODULATEALPHA_ADDCOLOR     |
-                            WINED3DTEXOPCAPS_MODULATECOLOR_ADDALPHA     |
-                            WINED3DTEXOPCAPS_BLENDTEXTUREALPHAPM        |
-                            WINED3DTEXOPCAPS_DOTPRODUCT3                |
-                            WINED3DTEXOPCAPS_MODULATEINVALPHA_ADDCOLOR  |
-                            WINED3DTEXOPCAPS_MODULATEINVCOLOR_ADDALPHA;
+    caps->TextureOpCaps = WINED3DTEXOPCAPS_ADD
+            | WINED3DTEXOPCAPS_ADDSIGNED
+            | WINED3DTEXOPCAPS_ADDSIGNED2X
+            | WINED3DTEXOPCAPS_MODULATE
+            | WINED3DTEXOPCAPS_MODULATE2X
+            | WINED3DTEXOPCAPS_MODULATE4X
+            | WINED3DTEXOPCAPS_SELECTARG1
+            | WINED3DTEXOPCAPS_SELECTARG2
+            | WINED3DTEXOPCAPS_DISABLE
+            | WINED3DTEXOPCAPS_BLENDDIFFUSEALPHA
+            | WINED3DTEXOPCAPS_BLENDTEXTUREALPHA
+            | WINED3DTEXOPCAPS_BLENDFACTORALPHA
+            | WINED3DTEXOPCAPS_BLENDCURRENTALPHA
+            | WINED3DTEXOPCAPS_LERP
+            | WINED3DTEXOPCAPS_SUBTRACT
+            | WINED3DTEXOPCAPS_ADDSMOOTH
+            | WINED3DTEXOPCAPS_MULTIPLYADD
+            | WINED3DTEXOPCAPS_MODULATEALPHA_ADDCOLOR
+            | WINED3DTEXOPCAPS_MODULATECOLOR_ADDALPHA
+            | WINED3DTEXOPCAPS_BLENDTEXTUREALPHAPM
+            | WINED3DTEXOPCAPS_DOTPRODUCT3
+            | WINED3DTEXOPCAPS_MODULATEINVALPHA_ADDCOLOR
+            | WINED3DTEXOPCAPS_MODULATEINVCOLOR_ADDALPHA;
 
     if (gl_info->supported[NV_TEXTURE_SHADER2])
     {
         /* Bump mapping is supported already in NV_TEXTURE_SHADER, but that extension does
          * not support 3D textures. This asks for trouble if an app uses both bump mapping
          * and 3D textures. It also allows us to keep the code simpler by having texture
-         * shaders constantly enabled.
-         */
-        pCaps->TextureOpCaps |= WINED3DTEXOPCAPS_BUMPENVMAP;
+         * shaders constantly enabled. */
+        caps->TextureOpCaps |= WINED3DTEXOPCAPS_BUMPENVMAP;
         /* TODO: Luminance bump map? */
     }
 
 #if 0
     /* FIXME: Add
-            pCaps->TextureOpCaps |= WINED3DTEXOPCAPS_BUMPENVMAPLUMINANCE
+            caps->TextureOpCaps |= WINED3DTEXOPCAPS_BUMPENVMAPLUMINANCE
             WINED3DTEXOPCAPS_PREMODULATE */
 #endif
 
-    pCaps->MaxTextureBlendStages = min(MAX_TEXTURES, gl_info->limits.general_combiners);
-    pCaps->MaxSimultaneousTextures = gl_info->limits.textures;
+    caps->MaxTextureBlendStages = min(MAX_TEXTURES, gl_info->limits.general_combiners);
+    caps->MaxSimultaneousTextures = gl_info->limits.textures;
 }
 
-static HRESULT nvrc_fragment_alloc(IWineD3DDevice *iface) { return WINED3D_OK; }
+static HRESULT nvrc_fragment_alloc(struct wined3d_device *device) { return WINED3D_OK; }
 /* Context activation is done by the caller. */
-static void nvrc_fragment_free(IWineD3DDevice *iface) {}
+static void nvrc_fragment_free(struct wined3d_device *device) {}
 
 /* Two fixed function pipeline implementations using GL_NV_register_combiners and
  * GL_NV_texture_shader. The nvts_fragment_pipeline assumes that both extensions

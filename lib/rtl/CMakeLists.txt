@@ -29,6 +29,7 @@ list(APPEND SOURCE
     handle.c
     heap.c
     heapdbg.c
+	heappage.c
     image.c
     interlck.c
     message.c
@@ -96,6 +97,6 @@ elseif(ARCH MATCHES powerpc)
         powerpc/thread.c)
 endif()
 
-add_library(rtl ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch ${SOURCE})
-add_pch(rtl ${CMAKE_CURRENT_SOURCE_DIR}/rtl.h ${SOURCE})
+add_library(rtl ${SOURCE})
+add_pch(rtl rtl.h)
 add_dependencies(rtl psdk asm)

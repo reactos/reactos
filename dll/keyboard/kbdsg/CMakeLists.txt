@@ -7,6 +7,6 @@ add_library(kbdsg SHARED kbdsg.c kbdsg.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdsg.def)
 
 set_entrypoint(kbdsg 0)
 
-add_dependencies(kbdsg psdk buildno_header)
+add_dependencies(kbdsg psdk)
 
-add_cab_target(kbdsg 1)
+add_cd_file(TARGET kbdsg DESTINATION reactos/system32 FOR all)

@@ -7,6 +7,6 @@ add_library(kbdarme SHARED kbdarme.c kbdarme.rc ${CMAKE_CURRENT_BINARY_DIR}/kbda
 
 set_entrypoint(kbdarme 0)
 
-add_dependencies(kbdarme psdk buildno_header)
+add_dependencies(kbdarme psdk)
 
-add_cab_target(kbdarme 1)
+add_cd_file(TARGET kbdarme DESTINATION reactos/system32 FOR all)

@@ -12,4 +12,4 @@ add_library(fs_rec SHARED
 set_module_type(fs_rec kernelmodedriver)
 add_importlibs(fs_rec ntoskrnl hal)
 
-add_cab_target(fs_rec 2)
+add_cd_file(TARGET fs_rec DESTINATION reactos/system32/drivers FOR all)

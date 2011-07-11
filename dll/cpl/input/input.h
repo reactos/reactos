@@ -47,7 +47,7 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
 INT_PTR CALLBACK
 KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 VOID
-UpdateKeySettingsList();
+UpdateKeySettingsList(VOID);
 
 /* add.c */
 INT_PTR CALLBACK

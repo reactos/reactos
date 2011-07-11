@@ -17,5 +17,5 @@ set_entrypoint(printui 0)
 target_link_libraries(printui wine)
 
 add_importlibs(printui shell32 kernel32 ntdll)
-add_dependencies(printui psdk buildno_header)
-add_cab_target(printui 1)
+add_dependencies(printui psdk)
+add_cd_file(TARGET printui DESTINATION reactos/system32 FOR all)

@@ -10,7 +10,7 @@ add_subdirectory(nslookup)
 add_subdirectory(ping)
 add_subdirectory(route)
 if(NOT MSVC)
-add_subdirectory(telnet)
+    add_subdirectory(telnet) # FIXME: fix msvc build
 endif()
 add_subdirectory(tracert)
 add_subdirectory(whois)

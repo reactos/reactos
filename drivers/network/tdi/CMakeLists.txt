@@ -27,4 +27,4 @@ add_library(tdi SHARED ${SOURCE})
 set_module_type(tdi kernelmodedriver)
 add_importlibs(tdi ntoskrnl hal)
 
-add_cab_target(tdi 2)
+add_cd_file(TARGET tdi DESTINATION reactos/system32/drivers FOR all)

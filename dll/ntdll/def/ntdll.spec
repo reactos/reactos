@@ -75,7 +75,7 @@
 ;@ stdcall LdrDestroyOutOfProcessImage
 @ stdcall LdrDisableThreadCalloutsForDll(long)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
-;@ stdcall LdrEnumerateLoadedModules
+@ stdcall LdrEnumerateLoadedModules(long ptr long)
 ;@ stdcall LdrFindCreateProcessManifest ; 5.1 and 5.2 only
 @ stdcall LdrFindEntryForAddress(ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(long ptr long ptr)
@@ -417,7 +417,7 @@
 @ stdcall RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
 ;@ stdcall RtlActivateActivationContextEx
-@ stdcall RtlActivateActivationContextUnsafeFast(ptr ptr)
+@ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
 @ stdcall RtlAddAccessAllowedObjectAce(ptr long long long ptr ptr ptr)
@@ -530,7 +530,7 @@
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
 @ stdcall RtlDeNormalizeProcessParams(ptr)
 @ stdcall RtlDeactivateActivationContext(long long)
-@ stdcall RtlDeactivateActivationContextUnsafeFast(ptr)
+@ fastcall RtlDeactivateActivationContextUnsafeFast(ptr)
 ;@ stdcall RtlDebugPrintTimes
 @ stdcall RtlDecodePointer(ptr)
 @ stdcall RtlDecodeSystemPointer(ptr) RtlEncodeSystemPointer

@@ -23,4 +23,4 @@ add_importlibs(cryptnet
     ntdll)
 
 add_importlib_target(cryptnet.spec)
-add_cab_target(cryptnet 1)
+add_cd_file(TARGET cryptnet DESTINATION reactos/system32 FOR all)

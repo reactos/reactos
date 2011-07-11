@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D_DLL -D__USE_CRTIMP
-    -Dlint)
+add_definitions(-Dlint)
 
 add_executable(ftp
     cmds.c
@@ -21,4 +19,4 @@ if(MSVC)
     add_importlibs(ftp ntdll)
 endif()
 
-add_cab_target(ftp 1)
+add_cd_file(TARGET ftp DESTINATION reactos/system32 FOR all)

@@ -7,5 +7,5 @@ set_module_type(ksuser win32dll)
 
 add_importlibs(ksuser advapi32 msvcrt kernel32 ntdll)
 add_dependencies(ksuser psdk bugcodes)
-add_cab_target(ksuser 1)
+add_cd_file(TARGET ksuser DESTINATION reactos/system32 FOR all)
 add_importlib_target(ksuser.spec)

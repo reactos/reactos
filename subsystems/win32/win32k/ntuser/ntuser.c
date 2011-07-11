@@ -38,7 +38,7 @@ InitUserAtoms(VOID)
   gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
   gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
   gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
-  
+
   /* System Message Atom */
   AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
   gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
@@ -92,6 +92,10 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
+    static const DWORD wPattern55AA[] = /* 32 bit aligned */
+    { 0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa,
+      0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa };
+    HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
@@ -112,7 +116,7 @@ UserInitialize(
 // {
 
     GetW32ThreadInfo();
-   
+
 //    Callback to User32 Client Thread Setup
 
     co_IntClientThreadSetup();
@@ -124,6 +128,14 @@ UserInitialize(
     NtUserUpdatePerUserSystemParameters(0, TRUE);
 
     CsrInit();
+
+    if (gpsi->hbrGray == NULL)
+    {
+       hPattern55AABitmap = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)wPattern55AA);
+       gpsi->hbrGray = IntGdiCreatePatternBrush(hPattern55AABitmap);
+       GreDeleteObject(hPattern55AABitmap);
+       GreSetBrushOwner(gpsi->hbrGray, GDI_OBJ_HMGR_PUBLIC);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -208,12 +220,14 @@ VOID FASTCALL UserEnterShared(VOID)
 
 VOID FASTCALL UserEnterExclusive(VOID)
 {
+   ASSERT_NOGDILOCKS();
    KeEnterCriticalRegion();
    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
 }
 
 VOID FASTCALL UserLeave(VOID)
 {
+   ASSERT_NOGDILOCKS();
    ExReleaseResourceLite(&UserLock);
    KeLeaveCriticalRegion();
 }

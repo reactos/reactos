@@ -14,8 +14,8 @@
 @ stdcall CM_Add_ID_ExA(ptr str long ptr)
 @ stdcall CM_Add_ID_ExW(ptr wstr long ptr)
 @ stub CM_Add_Range
-@ stub CM_Add_Res_Des
-@ stub CM_Add_Res_Des_Ex
+@ stdcall CM_Add_Res_Des(ptr ptr long ptr long long)
+@ stdcall CM_Add_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Connect_MachineA(str ptr)
 @ stdcall CM_Connect_MachineW(wstr ptr)
 @ stdcall CM_Create_DevNodeA(ptr str long long)
@@ -48,9 +48,9 @@
 @ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
 @ stub CM_Free_Range_List
-@ stub CM_Free_Res_Des
-@ stub CM_Free_Res_Des_Ex
-@ stub CM_Free_Res_Des_Handle
+@ stdcall CM_Free_Res_Des(ptr ptr long)
+@ stdcall CM_Free_Res_Des_Ex(ptr ptr long long)
+@ stdcall CM_Free_Res_Des_Handle(ptr)
 @ stub CM_Free_Resource_Conflict_Handle
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long long)
@@ -62,8 +62,8 @@
 @ stdcall CM_Get_Class_NameW(ptr wstr ptr long)
 @ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long)
 @ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long)
-@ stub CM_Get_Class_Registry_PropertyA
-@ stub CM_Get_Class_Registry_PropertyW
+@ stdcall CM_Get_Class_Registry_PropertyA(ptr long ptr ptr ptr long ptr)
+@ stdcall CM_Get_Class_Registry_PropertyW(ptr long ptr ptr ptr long ptr)
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
 @ stub CM_Get_DevNode_Custom_PropertyA
@@ -90,16 +90,16 @@
 @ stdcall CM_Get_Device_ID_List_Size_ExW(ptr wstr long long)
 @ stdcall CM_Get_Device_ID_Size(ptr long long)
 @ stdcall CM_Get_Device_ID_Size_Ex(ptr long long long)
-@ stub CM_Get_Device_Interface_AliasA
-@ stub CM_Get_Device_Interface_AliasW
-@ stub CM_Get_Device_Interface_Alias_ExA
-@ stub CM_Get_Device_Interface_Alias_ExW
-@ stub CM_Get_Device_Interface_ListA
-@ stub CM_Get_Device_Interface_ListW
-@ stub CM_Get_Device_Interface_List_ExA
-@ stub CM_Get_Device_Interface_List_ExW
-@ stub CM_Get_Device_Interface_List_SizeA
-@ stub CM_Get_Device_Interface_List_SizeW
+@ stdcall CM_Get_Device_Interface_AliasA(str ptr str ptr long)
+@ stdcall CM_Get_Device_Interface_AliasW(wstr ptr wstr ptr long)
+@ stdcall CM_Get_Device_Interface_Alias_ExA(str ptr str ptr long long)
+@ stdcall CM_Get_Device_Interface_Alias_ExW(wstr ptr wstr ptr long long)
+@ stdcall CM_Get_Device_Interface_ListA(ptr str str long long)
+@ stdcall CM_Get_Device_Interface_ListW(ptr wstr wstr long long)
+@ stdcall CM_Get_Device_Interface_List_ExA(ptr str str long long ptr)
+@ stdcall CM_Get_Device_Interface_List_ExW(ptr wstr wstr long long ptr)
+@ stdcall CM_Get_Device_Interface_List_SizeA(ptr ptr str long)
+@ stdcall CM_Get_Device_Interface_List_SizeW(ptr ptr wstr long)
 @ stdcall CM_Get_Device_Interface_List_Size_ExA(ptr ptr str long ptr)
 @ stdcall CM_Get_Device_Interface_List_Size_ExW(ptr ptr wstr long ptr)
 @ stdcall CM_Get_First_Log_Conf(ptr long long)
@@ -110,22 +110,22 @@
 @ stdcall CM_Get_HW_Prof_FlagsW(wstr long ptr long)
 @ stdcall CM_Get_HW_Prof_Flags_ExA(str long ptr long long)
 @ stdcall CM_Get_HW_Prof_Flags_ExW(wstr long ptr long long)
-@ stub CM_Get_Hardware_Profile_InfoA
-@ stub CM_Get_Hardware_Profile_InfoW
-@ stub CM_Get_Hardware_Profile_Info_ExA
-@ stub CM_Get_Hardware_Profile_Info_ExW
+@ stdcall CM_Get_Hardware_Profile_InfoA(long ptr long)
+@ stdcall CM_Get_Hardware_Profile_InfoW(long ptr long)
+@ stdcall CM_Get_Hardware_Profile_Info_ExA(long ptr long long)
+@ stdcall CM_Get_Hardware_Profile_Info_ExW(long ptr long long)
 @ stdcall CM_Get_Log_Conf_Priority(ptr ptr long)
 @ stdcall CM_Get_Log_Conf_Priority_Ex(ptr ptr long long)
 @ stdcall CM_Get_Next_Log_Conf(ptr ptr long)
 @ stdcall CM_Get_Next_Log_Conf_Ex(ptr ptr long long)
-@ stub CM_Get_Next_Res_Des
-@ stub CM_Get_Next_Res_Des_Ex
+@ stdcall CM_Get_Next_Res_Des(ptr ptr long ptr long)
+@ stdcall CM_Get_Next_Res_Des_Ex(ptr ptr long ptr long long)
 @ stdcall CM_Get_Parent(ptr long long)
 @ stdcall CM_Get_Parent_Ex(ptr long long long)
-@ stub CM_Get_Res_Des_Data
-@ stub CM_Get_Res_Des_Data_Ex
-@ stub CM_Get_Res_Des_Data_Size
-@ stub CM_Get_Res_Des_Data_Size_Ex
+@ stdcall CM_Get_Res_Des_Data(ptr ptr long long)
+@ stdcall CM_Get_Res_Des_Data_Ex(ptr ptr long long long)
+@ stdcall CM_Get_Res_Des_Data_Size(ptr ptr long)
+@ stdcall CM_Get_Res_Des_Data_Size_Ex(ptr ptr long long)
 @ stub CM_Get_Resource_Conflict_Count
 @ stub CM_Get_Resource_Conflict_DetailsA
 @ stub CM_Get_Resource_Conflict_DetailsW
@@ -144,8 +144,8 @@
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
 @ stdcall CM_Locate_DevNode_ExW(ptr wstr long long)
 @ stub CM_Merge_Range_List
-@ stub CM_Modify_Res_Des
-@ stub CM_Modify_Res_Des_Ex
+@ stdcall CM_Modify_Res_Des(ptr ptr long ptr long long)
+@ stdcall CM_Modify_Res_Des_Ex(ptr ptr long ptr long long long)
 @ stdcall CM_Move_DevNode(long long long)
 @ stdcall CM_Move_DevNode_Ex(long long long long)
 @ stub CM_Next_Range
@@ -155,37 +155,37 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long)
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long)
-@ stub CM_Query_And_Remove_SubTreeA
-@ stub CM_Query_And_Remove_SubTreeW
-@ stub CM_Query_And_Remove_SubTree_ExA
-@ stub CM_Query_And_Remove_SubTree_ExW
-@ stub CM_Query_Arbitrator_Free_Data
-@ stub CM_Query_Arbitrator_Free_Data_Ex
-@ stub CM_Query_Arbitrator_Free_Size
-@ stub CM_Query_Arbitrator_Free_Size_Ex
-@ stub CM_Query_Remove_SubTree
-@ stub CM_Query_Remove_SubTree_Ex
+@ stdcall CM_Query_And_Remove_SubTreeA(long ptr str long long)
+@ stdcall CM_Query_And_Remove_SubTreeW(long ptr wstr long long)
+@ stdcall CM_Query_And_Remove_SubTree_ExA(long ptr str long long long)
+@ stdcall CM_Query_And_Remove_SubTree_ExW(long ptr wstr long long long)
+@ stdcall CM_Query_Arbitrator_Free_Data(ptr long long long long)
+@ stdcall CM_Query_Arbitrator_Free_Data_Ex(ptr long long long long ptr)
+@ stdcall CM_Query_Arbitrator_Free_Size(ptr long long long)
+@ stdcall CM_Query_Arbitrator_Free_Size_Ex(ptr long long long ptr)
+@ stdcall CM_Query_Remove_SubTree(long long)
+@ stdcall CM_Query_Remove_SubTree_Ex(long long long)
 @ stub CM_Query_Resource_Conflict_List
 @ stdcall CM_Reenumerate_DevNode(long long)
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long)
-@ stub CM_Register_Device_Driver
-@ stub CM_Register_Device_Driver_Ex
-@ stub CM_Register_Device_InterfaceA
-@ stub CM_Register_Device_InterfaceW
-@ stub CM_Register_Device_Interface_ExA
-@ stub CM_Register_Device_Interface_ExW
-@ stub CM_Remove_SubTree
-@ stub CM_Remove_SubTree_Ex
-@ stub CM_Request_Device_EjectA
-@ stub CM_Request_Device_EjectW
-@ stub CM_Request_Device_Eject_ExA
-@ stub CM_Request_Device_Eject_ExW
+@ stdcall CM_Register_Device_Driver(long long)
+@ stdcall CM_Register_Device_Driver_Ex(long long ptr)
+@ stdcall CM_Register_Device_InterfaceA(long ptr str str ptr long)
+@ stdcall CM_Register_Device_InterfaceW(long ptr wstr wstr ptr long)
+@ stdcall CM_Register_Device_Interface_ExA(long ptr str str ptr long long)
+@ stdcall CM_Register_Device_Interface_ExW(long ptr wstr wstr ptr long long)
+@ stdcall CM_Remove_SubTree(long long)
+@ stdcall CM_Remove_SubTree_Ex(long long long)
+@ stdcall CM_Request_Device_EjectA(long ptr str long long)
+@ stdcall CM_Request_Device_EjectW(long ptr wstr long long)
+@ stdcall CM_Request_Device_Eject_ExA(long ptr str long long long)
+@ stdcall CM_Request_Device_Eject_ExW(long ptr wstr long long long)
 @ stdcall CM_Request_Eject_PC()
 @ stdcall CM_Request_Eject_PC_Ex(long)
 @ stdcall CM_Run_Detection(long)
 @ stdcall CM_Run_Detection_Ex(long long)
-@ stub CM_Set_Class_Registry_PropertyA
-@ stub CM_Set_Class_Registry_PropertyW
+@ stdcall CM_Set_Class_Registry_PropertyA(ptr long ptr long long ptr)
+@ stdcall CM_Set_Class_Registry_PropertyW(ptr long ptr long long ptr)
 @ stdcall CM_Set_DevNode_Problem(long long long)
 @ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
 @ stdcall CM_Set_DevNode_Registry_PropertyA(long long ptr long long)
@@ -203,17 +203,17 @@
 @ stub CM_Test_Range_Available
 @ stdcall CM_Uninstall_DevNode(long long)
 @ stdcall CM_Uninstall_DevNode_Ex(long long long)
-@ stub CM_Unregister_Device_InterfaceA
-@ stub CM_Unregister_Device_InterfaceW
-@ stub CM_Unregister_Device_Interface_ExA
-@ stub CM_Unregister_Device_Interface_ExW
+@ stdcall CM_Unregister_Device_InterfaceA(str long)
+@ stdcall CM_Unregister_Device_InterfaceW(wstr long)
+@ stdcall CM_Unregister_Device_Interface_ExA(str long long)
+@ stdcall CM_Unregister_Device_Interface_ExW(wstr long long)
 @ stdcall DoesUserHavePrivilege(wstr)
 @ stub ExtensionPropSheetPageProc
 @ stdcall InstallCatalog(str str ptr)
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
 @ stdcall InstallHinfSectionA(long long str long)
 @ stdcall InstallHinfSectionW(long long wstr long)
-@ stdcall IsUserAdmin()
+@ stdcall IsUserAdmin() pSetupIsUserAdmin
 @ stdcall MyFree(ptr)
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
@@ -532,32 +532,32 @@
 @ stdcall SetupUninstallOEMInfW(wstr long ptr)
 @ stub SetupVerifyInfFileA
 @ stub SetupVerifyInfFileW
-@ stdcall UnicodeToMultiByte(wstr long)
+@ stdcall UnicodeToMultiByte(wstr long) pSetupUnicodeToMultiByte
 @ stub VerifyCatalogFile
 @ stub pSetupAccessRunOnceNodeList
 @ stub pSetupAcquireSCMLock
 @ stub pSetupAddMiniIconToList
 @ stub pSetupAddTagToGroupOrderListEntry
 @ stub pSetupAppendStringToMultiSz
-@ stdcall pSetupCaptureAndConvertAnsiArg(str ptr) CaptureAndConvertAnsiArg
-@ stdcall pSetupCenterWindowRelativeToParent(long) CenterWindowRelativeToParent
-@ stdcall pSetupConcatenatePaths(wstr wstr long ptr) ConcatenatePaths
+@ stdcall pSetupCaptureAndConvertAnsiArg(str ptr)
+@ stdcall pSetupCenterWindowRelativeToParent(long)
+@ stdcall pSetupConcatenatePaths(wstr wstr long ptr)
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDiGetDeviceInfoContext
 @ stub pSetupDiSetDeviceInfoContext
 @ stub pSetupDoesUserHavePrivilege
-@ stdcall pSetupDuplicateString(wstr) DuplicateString
-@ stdcall pSetupEnablePrivilege(wstr long) EnablePrivilege
+@ stdcall pSetupDuplicateString(wstr)
+@ stdcall pSetupEnablePrivilege(wstr long)
 @ stub pSetupFree
 @ stub pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
-@ stdcall pSetupGetFileTitle(wstr) MyGetFileTitle
+@ stdcall pSetupGetFileTitle(wstr)
 @ stdcall pSetupGetGlobalFlags()
 @ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
 @ stub pSetupGetRealSystemTime
-@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr) GetVersionInfoFromImage
+@ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr)
 @ stdcall pSetupGuidFromString(wstr ptr)
 @ stub pSetupHandleFailedVerification
 @ stub pSetupInfCacheBuild
@@ -566,16 +566,16 @@
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupIsLocalSystem
-@ stdcall pSetupIsUserAdmin() IsUserAdmin
+@ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
 @ stub pSetupModifyGlobalFlags
-@ stdcall pSetupMultiByteToUnicode(str long) MultiByteToUnicode
-@ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr) OpenAndMapFileForRead
+@ stdcall pSetupMultiByteToUnicode(str long)
+@ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory
 @ stub pSetupQueryMultiSzValueToArray
 @ stub pSetupRealloc
-@ stdcall pSetupRegistryDelnode(long long) RegistryDelnode
+@ stdcall pSetupRegistryDelnode(long long)
 @ stub pSetupRetrieveServiceConfig
 @ stub pSetupSetArrayToMultiSzValue
 @ stdcall pSetupSetGlobalFlags(long)
@@ -584,21 +584,21 @@
 @ stub pSetupSetSystemSourcePath
 @ stub pSetupShouldDeviceBeExcluded
 @ stdcall pSetupStringFromGuid(ptr wstr long)
-@ stdcall pSetupStringTableAddString(ptr wstr long) StringTableAddString
-@ stdcall pSetupStringTableAddStringEx(ptr wstr long ptr long) StringTableAddStringEx
-@ stdcall pSetupStringTableDestroy(ptr) StringTableDestroy
-@ stdcall pSetupStringTableDuplicate(ptr) StringTableDuplicate
+@ stdcall pSetupStringTableAddString(ptr wstr long)
+@ stdcall pSetupStringTableAddStringEx(ptr wstr long ptr long)
+@ stdcall pSetupStringTableDestroy(ptr)
+@ stdcall pSetupStringTableDuplicate(ptr)
 @ stub pSetupStringTableEnum
-@ stdcall pSetupStringTableGetExtraData(ptr long ptr long) StringTableGetExtraData
-@ stdcall pSetupStringTableInitialize() StringTableInitialize
-@ stdcall pSetupStringTableInitializeEx(long long) StringTableInitializeEx
-@ stdcall pSetupStringTableLookUpString(ptr wstr long) StringTableLookUpString
-@ stdcall pSetupStringTableLookUpStringEx(ptr wstr long ptr ptr) StringTableLookUpStringEx
-@ stdcall pSetupStringTableSetExtraData(ptr long ptr long) StringTableSetExtraData
-@ stdcall pSetupStringTableStringFromId(ptr long) StringTableStringFromId
-@ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr) StringTableStringFromIdEx
-@ stdcall pSetupUnicodeToMultiByte(wstr long) UnicodeToMultiByte
-@ stdcall pSetupUnmapAndCloseFile(long long ptr) UnmapAndCloseFile
+@ stdcall pSetupStringTableGetExtraData(ptr long ptr long)
+@ stdcall pSetupStringTableInitialize()
+@ stdcall pSetupStringTableInitializeEx(long long)
+@ stdcall pSetupStringTableLookUpString(ptr wstr long)
+@ stdcall pSetupStringTableLookUpStringEx(ptr wstr long ptr ptr)
+@ stdcall pSetupStringTableSetExtraData(ptr long ptr long)
+@ stdcall pSetupStringTableStringFromId(ptr long)
+@ stdcall pSetupStringTableStringFromIdEx(ptr long ptr ptr)
+@ stdcall pSetupUnicodeToMultiByte(wstr long)
+@ stdcall pSetupUnmapAndCloseFile(long long ptr)
 @ stub pSetupVerifyCatalogFile
 @ stub pSetupVerifyFile
 @ stub pSetupVerifyQueuedCatalogs
@@ -627,7 +627,6 @@
 @ stdcall RetreiveFileSecurity(wstr ptr)
 @ stub SearchForInfFile
 @ stdcall StampFileSecurity(wstr ptr)
-@ stdcall StringTableTrim(ptr)
 @ stdcall TakeOwnershipOfFile(wstr)
 @ stub pSetupDirectoryIdToPath
 @ stub pSetupGetOsLoaderDriveAndPath

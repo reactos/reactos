@@ -23,28 +23,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /***********************************************************************
- *		TPWriteProfileString (SETUPX.62)
+ *		pSetupRegistryDelnode(SETUPAPI.@)
  */
-BOOL WINAPI TPWriteProfileString16( LPCSTR section, LPCSTR entry, LPCSTR string )
-{
-    FIXME( "%s %s %s: stub\n", debugstr_a(section), debugstr_a(entry), debugstr_a(string) );
-    return TRUE;
-}
-
-
-/***********************************************************************
- *		suErrorToIds  (SETUPX.61)
- */
-DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
-{
-    FIXME( "%x %x: stub\n", w1, w2 );
-    return 0;
-}
-
-/***********************************************************************
- *		RegistryDelnode(SETUPAPI.@)
- */
-BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
+BOOL WINAPI pSetupRegistryDelnode(DWORD x, DWORD y)
 {
     FIXME("%08x %08x: stub\n", x, y);
     return FALSE;
@@ -158,54 +139,6 @@ SetupDiUnremoveDevice(
     return FALSE;
 }
 
-
-/***********************************************************************
- *		CMP_RegisterNotification(SETUPAPI.@)
- */
-CONFIGRET
-WINAPI
-CMP_RegisterNotification(
-  IN HANDLE hRecipient,
-  IN LPVOID lpvNotificationFilter,
-  IN DWORD  dwFlags,
-  OUT PULONG pluhDevNotify)
-{
-    FIXME ("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return CR_FAILURE;
-}
-
-
-/***********************************************************************
- *		CMP_UnregisterNotification(SETUPAPI.@)
- */
-CONFIGRET
-WINAPI
-CMP_UnregisterNotification(IN HDEVNOTIFY handle)
-{
-    FIXME ("Stub %p\n", handle);
-    return CR_SUCCESS;
-}
-
-/***********************************************************************
- *      CM_Get_Device_Interface_List_Size_ExA (SETUPAPI.@)
- */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(PULONG len, LPGUID class, DEVINSTID_A id,
-                                                       ULONG flags, HMACHINE machine)
-{
-    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_a(id), flags, machine);
-    return CR_FAILURE;
-}
-
-/***********************************************************************
- *      CM_Get_Device_Interface_List_Size_ExW (SETUPAPI.@)
- */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(PULONG len, LPGUID class, DEVINSTID_W id,
-                                                       ULONG flags, HMACHINE machine)
-{
-    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_w(id), flags, machine);
-    return CR_FAILURE;
-}
 
 WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN CONST GUID *AliasInterfaceClassGuid, OUT PSP_DEVICE_INTERFACE_DATA  AliasDeviceInterfaceData)
 {

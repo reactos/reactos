@@ -13,4 +13,4 @@ add_library(xinput1_1 SHARED ${SOURCE})
 
 set_module_type(xinput1_1 win32dll)
 add_importlibs(xinput1_1 msvcrt kernel32 xinput1_3)
-add_cab_target(xinput1_1 1)
+add_cd_file(TARGET xinput1_1 DESTINATION reactos/system32 FOR all)

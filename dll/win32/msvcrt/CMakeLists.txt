@@ -21,15 +21,13 @@ list(APPEND SOURCE
     msvcrt.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
-add_library(msvcrt SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_precomp.h.gch
-    ${SOURCE})
+add_library(msvcrt SHARED ${SOURCE})
 
 if (NOT MSVC)
 set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
 endif()
 
-add_dependencies(msvcrt psdk buildno_header)
+add_dependencies(msvcrt psdk)
 set_entrypoint(msvcrt DllMain@12)
 set_image_base(msvcrt ${baseaddress_msvcrt})
 
@@ -38,8 +36,8 @@ target_link_libraries(msvcrt
     wine
     ${PSEH_LIB})
 
-add_pch(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_pch(msvcrt precomp.h)
 add_importlibs(msvcrt kernel32 ntdll)
-add_cab_target(msvcrt 1)
+add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)
 add_importlib_target(msvcrt.spec)
 

@@ -7,6 +7,6 @@ add_library(kbdmac SHARED kbdmac.c kbdmac.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdmac.
 
 set_entrypoint(kbdmac 0)
 
-add_dependencies(kbdmac psdk buildno_header)
+add_dependencies(kbdmac psdk)
 
-add_cab_target(kbdmac 1)
+add_cd_file(TARGET kbdmac DESTINATION reactos/system32 FOR all)

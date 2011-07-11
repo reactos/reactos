@@ -18,6 +18,7 @@
 #include <ntifs.h>
 #include <tvout.h>
 #include <ntndk.h>
+#include <ntstrsafe.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */

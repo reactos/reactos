@@ -1,7 +1,6 @@
 
 set_unicode()
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
+set_rc_compiler()
 
 spec2def(mmsys.cpl mmsys.spec)
 
@@ -30,4 +29,4 @@ add_importlibs(mmsys
     ntdll
     kernel32)
 
-add_cab_target(mmsys 1)
+add_cd_file(TARGET mmsys DESTINATION reactos/system32 FOR all)

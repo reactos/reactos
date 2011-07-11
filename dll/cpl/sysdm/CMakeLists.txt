@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(sysdm.cpl sysdm.spec)
 
@@ -17,7 +18,7 @@ list(APPEND SOURCE
     sysdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
 
-add_library(sysdm SHARED ${CMAKE_CURRENT_BINARY_DIR}/sysdm_precomp.h.gch ${SOURCE})
+add_library(sysdm SHARED ${SOURCE})
 
 set_module_type(sysdm cpl)
 
@@ -36,5 +37,5 @@ add_importlibs(sysdm
     kernel32
     ntdll)
 
-add_pch(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_cab_target(sysdm 1)
+add_pch(sysdm precomp.h)
+add_cd_file(TARGET sysdm DESTINATION reactos/system32 FOR all)

@@ -244,7 +244,7 @@ extern const ULONG MmProtectToValue[32];
 // Returns the color of a page
 //
 #define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
-#define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
 #ifndef _M_AMD64

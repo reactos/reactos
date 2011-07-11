@@ -84,11 +84,11 @@ NtUserBitBltSysBmp(
    Ret = NtGdiBitBlt( hdc,
                    nXDest,
                    nYDest,
-                   nWidth, 
-                  nHeight, 
+                   nWidth,
+                  nHeight,
                 hSystemBM,
-                    nXSrc, 
-                    nYSrc, 
+                    nXSrc,
+                    nYSrc,
                     dwRop,
                         0,
                         0);
@@ -255,7 +255,7 @@ HBRUSH
 APIENTRY
 NtUserGetControlColor(
    HWND hwndParent,
-   HWND hwnd, 
+   HWND hwnd,
    HDC hdc,
    UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
 {
@@ -276,56 +276,6 @@ NtUserGetImeHotKey(
 
    return 0;
 }
-
-
-DWORD
-APIENTRY
-NtUserGetMouseMovePointsEx(
-   UINT cbSize,
-   LPMOUSEMOVEPOINT lppt,
-   LPMOUSEMOVEPOINT lpptBuf,
-   int nBufPoints,
-   DWORD resolution)
-{
-   UserEnterExclusive();
-
-   if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
-   {
-      UserLeave();
-      EngSetLastError(ERROR_INVALID_PARAMETER);
-      return -1;
-   }
-
-   _SEH2_TRY
-   {
-      ProbeForRead(lppt, cbSize, 1);
-      ProbeForWrite(lpptBuf, cbSize, 1);
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-       SetLastNtError(_SEH2_GetExceptionCode());
-       EngSetLastError(ERROR_NOACCESS);
-   }
-   _SEH2_END;
-
-/*
-   Call a subfunction of GetMouseMovePointsEx!
-   switch(resolution)
-   {
-     case GMMP_USE_DISPLAY_POINTS:
-     case GMMP_USE_HIGH_RESOLUTION_POINTS:
-          break;
-     default:
-        EngSetLastError(GMMP_ERR_POINT_NOT_FOUND);
-        return GMMP_ERR_POINT_NOT_FOUND;
-   }
-  */
-   UNIMPLEMENTED
-   UserLeave();
-   return -1;
-}
-
-
 
 BOOL
 APIENTRY
@@ -380,7 +330,7 @@ NtUserInitializeClientPfnArrays(
       DPRINT1("Failed reading Client Pfns from user space.\n");
       SetLastNtError(Status);
    }
-   
+
    UserLeave();
    return Status;
 }
@@ -538,59 +488,44 @@ NtUserSetSysColors(
    IN CONST COLORREF *lpaRgbValues,
    FLONG Flags)
 {
-  DWORD Ret = FALSE;
-  NTSTATUS Status = STATUS_SUCCESS;
-  UserEnterExclusive();
-  _SEH2_TRY
-  {
-     ProbeForRead(lpaElements,
-                   sizeof(INT),
-                   1);
-     ProbeForRead(lpaRgbValues,
-                   sizeof(INT),
-                   1);
-// Developers: We are thread locked and calling gdi.
-     Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-      Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
-  if (!NT_SUCCESS(Status))
-  {
-      SetLastNtError(Status);
+   DWORD Ret = TRUE;
+
+   if (cElements == 0)
+      return TRUE;
+
+   /* We need this check to prevent overflow later */
+   if ((ULONG)cElements >= 0x40000000)
+   {
+      EngSetLastError(ERROR_NOACCESS);
+      return FALSE;
+   }
+
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead(lpaElements, cElements * sizeof(INT), 1);
+      ProbeForRead(lpaRgbValues, cElements * sizeof(COLORREF), 1);
+
+      IntSetSysColors(cElements, lpaElements, lpaRgbValues);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastNtError(_SEH2_GetExceptionCode());
       Ret = FALSE;
-  }
-  if (Ret)
-  {
-     UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
-  }
-  UserLeave();
-  return Ret;
+   }
+   _SEH2_END;
+
+   if (Ret)
+   {
+      UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
+
+      UserRedrawDesktop();
+   }
+
+   UserLeave();
+   return Ret;
 }
-
-DWORD
-APIENTRY
-NtUserSetThreadState(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-BOOL
-APIENTRY
-NtUserTrackMouseEvent(
-   LPTRACKMOUSEEVENT lpEventTrack)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 
 DWORD
 APIENTRY
@@ -817,8 +752,45 @@ NtUserMinMaximize(
     UINT cmd, // Wine SW_ commands
     BOOL Hide)
 {
-    UNIMPLEMENTED;
-    return 0;
+  RECTL NewPos;
+  UINT SwFlags;
+  PWND pWnd;
+
+  DPRINT("Enter NtUserMinMaximize\n");
+  UserEnterExclusive();
+
+  pWnd = UserGetWindowObject(hWnd);
+  if ( !pWnd ||                          // FIXME:
+        pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+        pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+  {
+     goto Exit;
+  }
+
+  if ( cmd > SW_MAX || pWnd->state2 & WNDS2_INDESTROY)
+  {
+     EngSetLastError(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
+
+  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
+
+  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
+
+  co_WinPosSetWindowPos( pWnd,
+                         NULL,
+                         NewPos.left,
+                         NewPos.top,
+                         NewPos.right,
+                         NewPos.bottom,
+                         SwFlags);
+
+  co_WinPosShowWindow(pWnd, cmd);
+
+Exit:
+  DPRINT("Leave NtUserMinMaximize\n");
+  UserLeave();
+  return 0; // Always NULL?
 }
 
 DWORD
@@ -893,25 +865,25 @@ NtUserQueryInputContext(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealInternalGetMessage(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6)
+    LPMSG lpMsg,
+    HWND hWnd,
+    UINT wMsgFilterMin,
+    UINT wMsgFilterMax,
+    UINT wRemoveMsg,
+    BOOL bGMSG)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRealWaitMessageEx(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    DWORD dwWakeMask,
+    UINT uTimeout)
 {
     UNIMPLEMENTED;
     return 0;
@@ -1169,18 +1141,6 @@ NtUserDrawMenuBarTemp(
 }
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserEndDeferWindowPosEx(DWORD Unknown0,
-                          DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
  * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
  */
 /*
@@ -1205,7 +1165,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
 
-   return 0;
+   return 1;
 }
 
 /*
@@ -1222,10 +1182,10 @@ NtUserLockWindowUpdate(HWND hWnd)
 /*
  * @unimplemented
  */
-DWORD APIENTRY
-NtUserRealChildWindowFromPoint(DWORD Unknown0,
-                               DWORD Unknown1,
-                               DWORD Unknown2)
+HWND APIENTRY
+NtUserRealChildWindowFromPoint(HWND Parent,
+                               LONG x,
+                               LONG y)
 {
    UNIMPLEMENTED
 
@@ -1275,17 +1235,6 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 /*
  * @unimplemented
  */
-BOOL APIENTRY
-NtUserSetLogonNotifyWindow(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtUserUpdateLayeredWindow(
@@ -1317,25 +1266,6 @@ NtUserWindowFromPhysicalPoint(POINT Point)
 }
 
 /*
- * @unimplemented
- */
-HDWP APIENTRY
-NtUserDeferWindowPos(HDWP WinPosInfo,
-                     HWND Wnd,
-                     HWND WndInsertAfter,
-                     int x,
-                     int y,
-                     int cx,
-                     int cy,
-                     UINT Flags)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
  * NtUserResolveDesktopForWOW
  *
  * Status
@@ -1344,16 +1274,6 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 
 DWORD APIENTRY
 NtUserResolveDesktopForWOW(DWORD Unknown0)
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
-BOOL
-APIENTRY
-NtUserDragDetect(
-   HWND hWnd,
-   POINT pt) // Just like the User call.
 {
    UNIMPLEMENTED
    return 0;

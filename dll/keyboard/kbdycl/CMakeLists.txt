@@ -7,6 +7,6 @@ add_library(kbdycl SHARED kbdycl.c kbdycl.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdycl.
 
 set_entrypoint(kbdycl 0)
 
-add_dependencies(kbdycl psdk buildno_header)
+add_dependencies(kbdycl psdk)
 
-add_cab_target(kbdycl 1)
+add_cd_file(TARGET kbdycl DESTINATION reactos/system32 FOR all)

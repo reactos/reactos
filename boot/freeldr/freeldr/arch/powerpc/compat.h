@@ -102,4 +102,4 @@ void btext_drawhex(unsigned long v);
 void *ioremap(__u32 phys, __u32 size);
 void iounmap(void *logical);
 
-__u32 GetPVR();
+__u32 GetPVR(void);

@@ -14,5 +14,5 @@ set_entrypoint(shfolder 0)
 
 target_link_libraries(shfolder wine)
 add_importlibs(shfolder shell32 kernel32 ntdll)
-add_dependencies(shfolder psdk buildno_header)
-add_cab_target(shfolder 1)
+add_dependencies(shfolder psdk)
+add_cd_file(TARGET shfolder DESTINATION reactos/system32 FOR all)

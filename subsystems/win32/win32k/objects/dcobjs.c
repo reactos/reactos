@@ -179,6 +179,12 @@ GdiSelectPalette(
                                   DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
+    if(pdc->dctype == DCTYPE_MEMORY)
+    {
+        // This didn't work anyway
+        //IntGdiRealizePalette(hDC);
+    }
+
     PALETTE_ShareUnlockPalette(ppal);
     DC_UnlockDc(pdc);
 
@@ -251,89 +257,119 @@ NtGdiSelectPen(
 HBITMAP
 APIENTRY
 NtGdiSelectBitmap(
-    IN HDC hDC,
-    IN HBITMAP hBmp)
+    IN HDC hdc,
+    IN HBITMAP hbmp)
 {
-    PDC pDC;
+    PDC pdc;
     PDC_ATTR pdcattr;
-    HBITMAP hOrgBmp;
-    PSURFACE psurfBmp, psurfOld;
+    HBITMAP hbmpOld;
+    PSURFACE psurfNew;
     HRGN hVisRgn;
+    SIZEL sizlBitmap = {1, 1};
+    HDC hdcOld;
+    ASSERT_NOGDILOCKS();
 
-    if (hDC == NULL || hBmp == NULL) return NULL;
+    /* Verify parameters */
+    if (hdc == NULL || hbmp == NULL) return NULL;
 
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
+    /* First lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         return NULL;
     }
-    pdcattr = pDC->pdcattr;
+    pdcattr = pdc->pdcattr;
 
-    /* must be memory dc to select bitmap */
-    if (pDC->dctype != DC_TYPE_MEMORY)
+    /* Must be a memory dc to select a bitmap */
+    if (pdc->dctype != DC_TYPE_MEMORY)
     {
-        DC_UnlockDc(pDC);
+        DC_UnlockDc(pdc);
         return NULL;
     }
 
-    psurfBmp = SURFACE_LockSurface(hBmp);
-    if (!psurfBmp)
+    /* Check if there was a bitmap selected before */
+    if (pdc->dclevel.pSurface)
     {
-        DC_UnlockDc(pDC);
-        return NULL;
+        /* Return its handle */
+        hbmpOld = pdc->dclevel.pSurface->BaseObject.hHmgr;
+    }
+    else
+    {
+        /* Return default bitmap */
+        hbmpOld = StockObjects[DEFAULT_BITMAP];
     }
 
-    /* Get the handle for the old bitmap */
-    ASSERT(pDC->dclevel.pSurface);
-    hOrgBmp = pDC->dclevel.pSurface->BaseObject.hHmgr;
+    /* Check if the default bitmap was passed */
+    if (hbmp == StockObjects[DEFAULT_BITMAP])
+    {
+        psurfNew = NULL;
 
-	/* Lock it, to be sure while we mess with it*/
-	psurfOld = SURFACE_LockSurface(hOrgBmp);
+        // HACK
+        psurfNew = SURFACE_ShareLockSurface(hbmp);
+    }
+    else
+    {
+        /* Reference the new bitmap and check if it's valid */
+        psurfNew = SURFACE_ShareLockSurface(hbmp);
+        if (!psurfNew)
+        {
+            DC_UnlockDc(pdc);
+            return NULL;
+        }
 
-	/* Reset hdc, this surface isn't selected anymore */
-	psurfOld->hdc = NULL;
+        /* Set the bitmp's hdc */
+        hdcOld = InterlockedCompareExchangePointer((PVOID*)&psurfNew->hdc, hdc, 0);
+        if (hdcOld != NULL && hdcOld != hdc)
+        {
+            /* The bitmap is already selected, fail */
+            SURFACE_ShareUnlockSurface(psurfNew);
+            DC_UnlockDc(pdc);
+            return NULL;
+        }
 
-    /* Release the old bitmap, reference the new */
-    DC_vSelectSurface(pDC, psurfBmp);
+        /* Get the bitmap size */
+        sizlBitmap = psurfNew->SurfObj.sizlBitmap;
 
-	/* And unlock it, now we're done */
-	SURFACE_UnlockSurface(psurfOld);
+        /* Check if the bitmap is a dibsection */
+        if(psurfNew->hSecure)
+        {
+            /* Set DIBSECTION attribute */
+            pdcattr->ulDirty_ |= DC_DIBSECTION;
+        }
+        else
+        {
+            pdcattr->ulDirty_ &= ~DC_DIBSECTION;
+        }
+    }
 
-    // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    psurfBmp->hdc = hDC;
+    /* Select the new surface, release the old */
+    DC_vSelectSurface(pdc, psurfNew);
 
+    /* Set the new size */
+    pdc->dclevel.sizl = sizlBitmap;
+
+    /* Release one reference we added */
+    SURFACE_ShareUnlockSurface(psurfNew);
+
+    /* Mark the dc brushes invalid */
+    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
                                    0,
-                                   psurfBmp->SurfObj.sizlBitmap.cx,
-                                   psurfBmp->SurfObj.sizlBitmap.cy);
-
-    if(psurfBmp->hSecure)
-    {
-        /* Set DIBSECTION attribute */
-        pdcattr->ulDirty_ |= DC_DIBSECTION;
-    }
-    else
-    {
-        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
-    }
-
-    /* Release the exclusive lock */
-    SURFACE_UnlockSurface(psurfBmp);
-
-    /* Mark the brushes invalid */
-    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
-
-    DC_UnlockDc(pDC);
-
+                                   sizlBitmap.cx,
+                                   sizlBitmap.cy);
     if (hVisRgn)
     {
-        GdiSelectVisRgn(hDC, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
+        GdiSelectVisRgn(hdc, hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
-    return hOrgBmp;
+    /* Return the old bitmap handle */
+    return hbmpOld;
 }
 
 
@@ -487,7 +523,7 @@ NtGdiGetRandomRgn(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
 
@@ -508,7 +544,12 @@ NtGdiGetRandomRgn(
             else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
             break;
         case SYSRGN:
-            if (pdc->prgnVis) hrgnSrc = pdc->prgnVis->BaseObject.hHmgr;
+            if (pdc->prgnVis)
+            {
+                PREGION prgnDest = REGION_LockRgn(hrgnDest);
+                ret = IntGdiCombineRgn(prgnDest, pdc->prgnVis, 0, RGN_COPY) == ERROR ? -1 : 1;
+                REGION_UnlockRgn(prgnDest);
+            }
             break;
         default:
             hrgnSrc = NULL;

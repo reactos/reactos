@@ -28,6 +28,8 @@ DEBUG_CHANNEL(kernel32file);
 
 UNICODE_STRING SystemDirectory;
 UNICODE_STRING WindowsDirectory;
+UNICODE_STRING BaseDefaultPathAppend;
+UNICODE_STRING BaseDefaultPath;
 
 
 /* FUNCTIONS *****************************************************************/

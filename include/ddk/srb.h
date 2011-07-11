@@ -883,7 +883,7 @@ VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
   IN PUCHAR Register,
-  IN ULONG Value);
+  IN UCHAR Value);
 
 SCSIPORTAPI
 VOID

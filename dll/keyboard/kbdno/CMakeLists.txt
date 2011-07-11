@@ -7,6 +7,6 @@ add_library(kbdno SHARED kbdno.c kbdno.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdno.def)
 
 set_entrypoint(kbdno 0)
 
-add_dependencies(kbdno psdk buildno_header)
+add_dependencies(kbdno psdk)
 
-add_cab_target(kbdno 1)
+add_cd_file(TARGET kbdno DESTINATION reactos/system32 FOR all)

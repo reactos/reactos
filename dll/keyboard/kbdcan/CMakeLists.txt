@@ -7,6 +7,6 @@ add_library(kbdcan SHARED kbdcan.c kbdcan.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdcan.
 
 set_entrypoint(kbdcan 0)
 
-add_dependencies(kbdcan psdk buildno_header)
+add_dependencies(kbdcan psdk)
 
-add_cab_target(kbdcan 1)
+add_cd_file(TARGET kbdcan DESTINATION reactos/system32 FOR all)

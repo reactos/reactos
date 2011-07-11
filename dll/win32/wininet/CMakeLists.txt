@@ -1,10 +1,9 @@
 
-add_definitions(-D__WINESRC__ -D_WINE)
-add_definitions(-Dclose=_close)
+add_definitions(
+	-D__WINESRC__ -D_WINE
+	-Dclose=_close)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(wininet.dll wininet.spec)
 
@@ -30,12 +29,9 @@ add_library(wininet SHARED ${SOURCE})
 
 set_module_type(wininet win32dll)
 
-target_link_libraries(wininet
-    wine
-    zlib
-    ${PSEH_LIB})
+target_link_libraries(wininet wine ${PSEH_LIB})
 
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 secur32 crypt32 ws2_32 msvcrt kernel32 ntdll)
 
-add_cab_target(wininet 1)
+add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
 add_importlib_target(wininet.spec)

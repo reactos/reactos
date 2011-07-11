@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(hdwwiz.cpl hdwwiz.spec)
 
@@ -19,4 +20,4 @@ add_importlibs(hdwwiz
     kernel32
     ntdll)
 
-add_cab_target(hdwwiz 1)
+add_cd_file(TARGET hdwwiz DESTINATION reactos/system32 FOR all)

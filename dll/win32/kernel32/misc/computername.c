@@ -39,7 +39,7 @@ BOOL
 GetComputerNameFromRegistry(LPWSTR RegistryKey,
                             LPWSTR ValueNameStr,
                             LPWSTR lpBuffer,
-                            LPDWORD nSize )
+                            LPDWORD nSize)
 {
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -50,7 +50,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
     ULONG ReturnSize;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&KeyName,RegistryKey);
+    RtlInitUnicodeString(&KeyName, RegistryKey);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -75,7 +75,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ValueName,ValueNameStr);
+    RtlInitUnicodeString(&ValueName, ValueNameStr);
 
     Status = ZwQueryValueKey(KeyHandle,
                              &ValueName,
@@ -83,35 +83,40 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
                              KeyInfo,
                              KeyInfoSize,
                              &ReturnSize);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-        ZwClose(KeyHandle);
-        *nSize = ReturnSize;
-        SetLastErrorByStatus(Status);
-        return FALSE;
-    }
 
-    if (lpBuffer && *nSize > (KeyInfo->DataLength / sizeof(WCHAR)))
-    {
-        *nSize = KeyInfo->DataLength / sizeof(WCHAR) - 1;
-        lpBuffer[*nSize] = 0;
-    }
-    else
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-        ZwClose(KeyHandle);
-        *nSize = ReturnSize;
-        SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
-        return FALSE;
-    }
-
-    RtlCopyMemory(lpBuffer, KeyInfo->Data, *nSize * sizeof(WCHAR));
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
     ZwClose(KeyHandle);
 
+    if (!NT_SUCCESS(Status))
+    {
+        *nSize = ReturnSize;
+        goto failed;
+    }
+
+    if (KeyInfo->Type != REG_SZ)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto failed;
+    }
+
+    if (!lpBuffer || *nSize < (KeyInfo->DataLength / sizeof(WCHAR)))
+    {
+        *nSize = ReturnSize;
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto failed;
+    }
+
+    *nSize = KeyInfo->DataLength / sizeof(WCHAR) - 1;
+    RtlCopyMemory(lpBuffer, KeyInfo->Data, KeyInfo->DataLength);
+    lpBuffer[*nSize] = 0;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+
     return TRUE;
+
+failed:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /*

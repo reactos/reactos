@@ -13,6 +13,17 @@ add_definitions(
     -DLANGPACK
     -D_WIN32K_)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dib)
+
+list(APPEND GENDIB_FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib16gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib32gen.c)
+
+add_custom_command(
+    OUTPUT ${GENDIB_FILES}
+    COMMAND native-gendib ${CMAKE_CURRENT_BINARY_DIR}/dib)
+
 list(APPEND SOURCE
     dib/alphablend.c
     dib/dib1bpp.c
@@ -130,7 +141,9 @@ list(APPEND SOURCE
     objects/font.c
     objects/freetype.c
     objects/gdibatch.c
+	objects/gdidbg.c
     objects/gdiobj.c
+    objects/gdipool.c
     objects/icm.c
     objects/line.c
     objects/metafile.c
@@ -148,15 +161,8 @@ list(APPEND SOURCE
     stubs/stubs.c
     stubs/umpdstubs.c
     win32k.rc)
-    
-list(APPEND GENDIB_GENERATED
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib16gen.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib32gen.c)
 
-set_source_files_properties(${GENDIB_GENERATED} PROPERTIES GENERATED TRUE)
-
-list(APPEND SOURCE ${GENDIB_GENERATED})
+list(APPEND SOURCE ${GENDIB_FILES})
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -176,7 +182,6 @@ list(APPEND SOURCE
 endif()
 
 add_library(win32k SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/win32k_pch.h.gch
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def
     ${SOURCE})
 
@@ -188,9 +193,9 @@ target_link_libraries(win32k
     libcntpr)
 
 add_importlibs(win32k ntoskrnl hal ftfd)
-add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
-add_dependencies(win32k gendib_generated subsystem_napi)
-add_cab_target(win32k 1)
+add_pch(win32k pch.h)
+add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 add_importlib_target(win32k.spec)
 
 add_library(win32ksys sys-stubs.S)
+set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)

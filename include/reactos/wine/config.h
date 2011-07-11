@@ -457,12 +457,6 @@
 /* Define to 1 if you have the <openssl/ssl.h> header file. */
 /* #undef HAVE_OPENSSL_SSL_H */
 
-/* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_ZLIB 1
-
-/* Define to 1 if you have the <zlib.h> header file. */
-#define HAVE_ZLIB_H 1
-
 /* Define to 1 if you have the `pclose' function. */
 #define HAVE_PCLOSE 1
 
@@ -1026,6 +1020,8 @@
 #else
 #define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.def " #name suffix "; .scl 2; .type 32; .endef\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
 #endif
+#else
+#define __ASM_DEFINE_FUNC(name,suffix,code)
 #endif
 
 /* Define to a macro to generate an assembly function directive */

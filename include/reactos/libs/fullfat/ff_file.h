@@ -75,19 +75,29 @@ typedef struct _FF_FILE {
 //---------- PROTOTYPES
 // PUBLIC (Interfaces):
 
-FF_FILE		*FF_Open		(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ERROR *pError);
+#ifdef FF_UNICODE_SUPPORT
+FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_WCHAR *path, FF_T_UINT8 Mode, FF_ERROR *pError);
+FF_T_BOOL	 FF_isDirEmpty	(FF_IOMAN *pIoman, const FF_T_WCHAR *Path);
+FF_ERROR	 FF_RmFile		(FF_IOMAN *pIoman, const FF_T_WCHAR *path);
+FF_ERROR	 FF_RmDir		(FF_IOMAN *pIoman, const FF_T_WCHAR *path);
+FF_ERROR	 FF_Move		(FF_IOMAN *pIoman, const FF_T_WCHAR *szSourceFile, const FF_T_WCHAR *szDestinationFile);
+#else
+FF_FILE *FF_Open(FF_IOMAN *pIoman, const FF_T_INT8 *path, FF_T_UINT8 Mode, FF_ERROR *pError);
+FF_T_BOOL	 FF_isDirEmpty	(FF_IOMAN *pIoman, const FF_T_INT8 *Path);
+FF_ERROR	 FF_RmFile		(FF_IOMAN *pIoman, const FF_T_INT8 *path);
+FF_ERROR	 FF_RmDir		(FF_IOMAN *pIoman, const FF_T_INT8 *path);
+FF_ERROR	 FF_Move		(FF_IOMAN *pIoman, const FF_T_INT8 *szSourceFile, const FF_T_INT8 *szDestinationFile);
+#endif
 FF_ERROR	 FF_Close		(FF_FILE *pFile);
 FF_T_SINT32	 FF_GetC		(FF_FILE *pFile);
+FF_T_SINT32  FF_GetLine		(FF_FILE *pFile, FF_T_INT8 *szLine, FF_T_UINT32 ulLimit);
 FF_T_SINT32	 FF_Read		(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count, FF_T_UINT8 *buffer);
 FF_T_SINT32	 FF_Write		(FF_FILE *pFile, FF_T_UINT32 ElementSize, FF_T_UINT32 Count, FF_T_UINT8 *buffer);
 FF_T_BOOL	 FF_isEOF		(FF_FILE *pFile);
 FF_ERROR	 FF_Seek		(FF_FILE *pFile, FF_T_SINT32 Offset, FF_T_INT8 Origin);
 FF_T_SINT32	 FF_PutC		(FF_FILE *pFile, FF_T_UINT8 Value);
 FF_T_UINT32	 FF_Tell		(FF_FILE *pFile);
-FF_ERROR	 FF_RmFile		(FF_IOMAN *pIoman, const FF_T_INT8 *path);
-FF_ERROR	 FF_RmDir		(FF_IOMAN *pIoman, const FF_T_INT8 *path);
-FF_T_BOOL	 FF_isDirEmpty	(FF_IOMAN *pIoman, const FF_T_INT8 *Path);
-FF_ERROR	 FF_Move		(FF_IOMAN *pIoman, const FF_T_INT8 *szSourceFile, const FF_T_INT8 *szDestinationFile);
+
 FF_T_UINT8	 FF_GetModeBits	(FF_T_INT8 *Mode);
 
 // Private :

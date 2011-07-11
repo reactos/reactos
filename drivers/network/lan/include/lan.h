@@ -156,8 +156,8 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
 
 VOID FreeNdisPacketX( PNDIS_PACKET Packet, PCHAR File, UINT Line );
 
-NDIS_STATUS InitNdisPools();
-VOID CloseNdisPools();
+NDIS_STATUS InitNdisPools(VOID);
+VOID CloseNdisPools(VOID);
 
 PLAN_ADAPTER FindAdapterByIndex( PLAN_DEVICE_EXT DeviceExt, UINT Index );
 

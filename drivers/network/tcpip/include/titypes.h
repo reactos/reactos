@@ -266,10 +266,16 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
-    LIST_ENTRY CompletionQueue;/* Completed requests to finish */
+    LIST_ENTRY ShutdownRequest;/* Queued shutdown requests */
 
     /* Signals */
     UINT    SignalState;       /* Active signals from oskit */
+    
+    /* Disconnect Timer */
+    KTIMER DisconnectTimer;
+    KDPC DisconnectDpc;
+
+    struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

@@ -13,11 +13,11 @@ SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "V˝ber okna"
+CAPTION "V√Ωber okna"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
   PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "&Zruöiù", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Zru≈°i≈•", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,27 +29,27 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Sp‰ù",           EM_UNDO
+    MENUITEM "&Sp√§≈•",           EM_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Vystri&hn˙ù",     WM_CUT
-    MENUITEM "&KopÌrovaù",      WM_COPY
-    MENUITEM "&Prilepiù",       WM_PASTE
-    MENUITEM "&Odstr·niù",      WM_CLEAR
+    MENUITEM "Vystri&hn√∫≈•",     WM_CUT
+    MENUITEM "&Kop√≠rova≈•",      WM_COPY
+    MENUITEM "&Prilepi≈•",       WM_PASTE
+    MENUITEM "&Odstr√°ni≈•",      WM_CLEAR
     MENUITEM SEPARATOR
-    MENUITEM "Vybraù &vöetko",  EM_SETSEL
+    MENUITEM "Vybra≈• &v≈°etko",  EM_SETSEL
   END
 END
 
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
-  MENUITEM "&Obnoviù",          SC_RESTORE
-  MENUITEM "&Premiestniù",      SC_MOVE
-  MENUITEM "&Veækosù",          SC_SIZE
-  MENUITEM "&Minimalizovaù",    SC_MINIMIZE
-  MENUITEM "M&aximalizovaù",    SC_MAXIMIZE
+  MENUITEM "&Obnovi≈•",          SC_RESTORE
+  MENUITEM "&Premiestni≈•",      SC_MOVE
+  MENUITEM "&Veƒækos≈•",          SC_SIZE
+  MENUITEM "&Minimalizova≈•",    SC_MINIMIZE
+  MENUITEM "M&aximalizova≈•",    SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Zavrieù\tAlt-F4",  SC_CLOSE
+  MENUITEM "&Zavrie≈•\tAlt-F4",  SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,15 +61,15 @@ STRINGTABLE
 BEGIN
   IDS_ERROR,    "Chyba"
   IDS_OK,       "OK"
-  IDS_CANCEL,   "Zruöiù"
-  IDS_ABORT,    "&Preruöiù"
+  IDS_CANCEL,   "Zru≈°i≈•"
+  IDS_ABORT,    "&Preru≈°i≈•"
   IDS_RETRY,    "&Znova"
-  IDS_IGNORE,   "&Ignorovaù"
-  IDS_YES,      "¡n&o"
+  IDS_IGNORE,   "&Ignorova≈•"
+  IDS_YES,      "√Ån&o"
   IDS_NO,       "&Nie"
   IDS_HELP,     "Pomoc"
-  IDS_TRYAGAIN, "&Sk˙siù znova"
-  IDS_CONTINUE, "&PokraËovaù"
+  IDS_TRYAGAIN, "&Sk√∫si≈• znova"
+  IDS_CONTINUE, "&Pokraƒçova≈•"
 END
 
 STRINGTABLE

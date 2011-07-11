@@ -7,6 +7,6 @@ add_library(kbdbe SHARED kbdbe.c kbdbe.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbe.def)
 
 set_entrypoint(kbdbe 0)
 
-add_dependencies(kbdbe psdk buildno_header)
+add_dependencies(kbdbe psdk)
 
-add_cab_target(kbdbe 1)
+add_cd_file(TARGET kbdbe DESTINATION reactos/system32 FOR all)

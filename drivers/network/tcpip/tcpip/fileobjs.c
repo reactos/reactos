@@ -161,6 +161,9 @@ VOID AddrFileFree(
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
+  /* We should not be associated with a connection here */
+  ASSERT(!AddrFile->Connection);
+
   /* Remove address file from the global list */
   TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
   RemoveEntryList(&AddrFile->ListEntry);
@@ -191,7 +194,10 @@ VOID AddrFileFree(
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
-    TCPFreePort( AddrFile->Port );
+    if (AddrFile->Port)
+    {
+        TCPFreePort(AddrFile->Port);
+    }
     break;
 
   case IPPROTO_UDP:
@@ -274,15 +280,37 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-      AddrFile->Port =
-          TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-
-      if ((Address->Address[0].Address[0].sin_port &&
-           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
-           AddrFile->Port == 0xffff)
+      if (Address->Address[0].Address[0].sin_port)
       {
-          ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-          return STATUS_ADDRESS_ALREADY_EXISTS;
+          /* The client specified an explicit port so we force a bind to this */
+          AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+          
+          /* Check for bind success */
+          if (AddrFile->Port == 0xffff)
+          {
+              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+              return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+          
+          /* Sanity check */
+          ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
+      }
+      else if (!AddrIsUnspecified(&AddrFile->Address))
+      {
+          /* The client is trying to bind to a local address so allocate a port now too */
+          AddrFile->Port = TCPAllocatePort(0);
+          
+          /* Check for bind success */
+          if (AddrFile->Port == 0xffff)
+          {
+              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
+              return STATUS_ADDRESS_ALREADY_EXISTS;
+          }
+      }
+      else
+      {
+          /* The client wants an unspecified port with an unspecified address so we wait to see what the TCP library gives us */
+          AddrFile->Port = 0;
       }
 
       AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
@@ -377,17 +405,14 @@ NTSTATUS FileCloseAddress(
   if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
   LockObject(AddrFile, &OldIrql);
-  /* We have to close this connection because we started it */
+
+  /* We have to close this listener because we started it */
   if( AddrFile->Listener )
   {
       AddrFile->Listener->AddressFile = NULL;
       TCPClose( AddrFile->Listener );
   }
-  if( AddrFile->Connection )
-  {
-      AddrFile->Connection->AddressFile = NULL;
-      DereferenceObject( AddrFile->Connection );
-  }
+
   UnlockObject(AddrFile, OldIrql);
 
   DereferenceObject(AddrFile);

@@ -1689,3 +1689,17 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD 
                                                                   crText, crShadow, ixOffset, iyOffset);
     return DrawTextW(hdc, pszText, cch, rect, DT_LEFT);
 }
+
+/***********************************************************************
+ * TaskDialogIndirect [COMCTL32.@]
+ */
+HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *pTaskConfig, int *pnButton,
+                                  int *pnRadioButton, BOOL *pfVerificationFlagChecked)
+{
+    FIXME("%p, %p, %p, %p\n", pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
+
+    if (pnButton) *pnButton = IDYES;
+    if (pnRadioButton) *pnRadioButton = pTaskConfig->nDefaultButton;
+    if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
+    return S_OK;
+}

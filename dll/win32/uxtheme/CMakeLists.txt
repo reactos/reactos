@@ -29,5 +29,5 @@ target_link_libraries(uxtheme wine)
 
 add_importlibs(uxtheme user32 advapi32 gdi32 msimg32 msvcrt kernel32 ntdll)
 
-add_cab_target(uxtheme 1)
+add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)
 add_importlib_target(uxtheme.spec)

@@ -16,16 +16,17 @@ list(APPEND SOURCE
     regsvr.c
     sti.c
     sti_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sti_wia_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
-add_rpcproxy_library(stiproxy sti_wia.idl)
+add_rpcproxy_files(sti_wia.idl)
 
 add_library(sti SHARED ${SOURCE})
 
 set_entrypoint(sti 0)
 
 target_link_libraries(sti
-    stiproxy
     wine
     uuid
     ${PSEH_LIB})
@@ -35,7 +36,8 @@ add_importlibs(sti
     oleaut32
     rpcrt4
     advapi32
+    msvcrt
     kernel32
     ntdll)
 
-add_cab_target(sti 1)
+add_cd_file(TARGET sti DESTINATION reactos/system32 FOR all)

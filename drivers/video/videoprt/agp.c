@@ -29,7 +29,7 @@ NTSTATUS
 IopInitiatePnpIrp(
   PDEVICE_OBJECT DeviceObject,
   PIO_STATUS_BLOCK IoStatusBlock,
-  ULONG MinorFunction,
+  UCHAR MinorFunction,
   PIO_STACK_LOCATION Stack OPTIONAL)
 {
   PDEVICE_OBJECT TopDeviceObject;
@@ -56,8 +56,8 @@ IopInitiatePnpIrp(
     IoStatusBlock);
 
   /* PNP IRPs are always initialized with a status code of
-     STATUS_NOT_IMPLEMENTED */
-  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+     STATUS_NOT_SUPPORTED */
+  Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
   Irp->IoStatus.Information = 0;
 
   IrpSp = IoGetNextIrpStackLocation(Irp);

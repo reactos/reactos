@@ -7,6 +7,6 @@ add_library(kbdinguj SHARED kbdinguj.c kbdinguj.rc ${CMAKE_CURRENT_BINARY_DIR}/k
 
 set_entrypoint(kbdinguj 0)
 
-add_dependencies(kbdinguj psdk buildno_header)
+add_dependencies(kbdinguj psdk)
 
-add_cab_target(kbdinguj 1)
+add_cd_file(TARGET kbdinguj DESTINATION reactos/system32 FOR all)

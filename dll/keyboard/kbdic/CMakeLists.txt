@@ -7,6 +7,6 @@ add_library(kbdic SHARED kbdic.c kbdic.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdic.def)
 
 set_entrypoint(kbdic 0)
 
-add_dependencies(kbdic psdk buildno_header)
+add_dependencies(kbdic psdk)
 
-add_cab_target(kbdic 1)
+add_cd_file(TARGET kbdic DESTINATION reactos/system32 FOR all)

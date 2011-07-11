@@ -2,6 +2,7 @@
 spec2def(batt.dll batt.spec)
 
 set_unicode()
+set_rc_compiler()
 
 add_library(batt SHARED
     batt.c
@@ -14,4 +15,4 @@ add_importlib_target(batt.spec)
 
 add_importlibs(batt msvcrt kernel32 ntdll)
 
-add_cab_target(batt 1)
+add_cd_file(TARGET batt DESTINATION reactos/system32 FOR all)

@@ -4,6 +4,8 @@ set_unicode()
 # Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN
 add_definitions(-DCARDSTYLE_DEFAULT)
 
+set_rc_compiler()
+
 spec2def(cards.dll cards.spec)
 
 list(APPEND SOURCE
@@ -16,4 +18,4 @@ add_library(cards SHARED ${SOURCE})
 set_module_type(cards win32dll)
 add_importlibs(cards user32 gdi32 msvcrt kernel32)
 add_importlib_target(cards.spec)
-add_cab_target(cards 1)
+add_cd_file(TARGET cards DESTINATION reactos/system32 FOR all)

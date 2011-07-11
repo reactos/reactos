@@ -12,5 +12,4 @@ target_link_libraries(floppy csq)
 set_module_type(floppy kernelmodedriver)
 add_importlibs(floppy hal ntoskrnl)
 
-add_minicd_target(floppy reactos floppy.sys)
-add_livecd_target(floppy reactos/system32/drivers)
+add_cd_file(TARGET floppy DESTINATION reactos/system32/drivers NO_CAB FOR all)

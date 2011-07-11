@@ -28,4 +28,4 @@ add_importlibs(hlink
     ntdll)
 
 add_importlib_target(hlink.spec)
-add_cab_target(hlink 1)
+add_cd_file(TARGET hlink DESTINATION reactos/system32 FOR all)

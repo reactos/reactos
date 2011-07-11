@@ -637,6 +637,10 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
     if (LanguageId == NULL)
         return FALSE;
 
+    /* Skip first 4 zeroes */
+    if (wcslen(LanguageId) >= 4)
+        LanguageId += 4;
+
     /* Open the NLS language key */
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
@@ -660,13 +664,12 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
     /* Set default language */
     RtlInitUnicodeString(&ValueName,
                          L"Default");
-
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)(LanguageId + 4),
-                           8 * sizeof(PWCHAR));
+                           (PVOID)LanguageId,
+                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -681,8 +684,8 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
                             &ValueName,
                             0,
                             REG_SZ,
-                            (PVOID)(LanguageId + 4),
-                            8 * sizeof(PWCHAR));
+                            (PVOID)LanguageId,
+                            (wcslen(LanguageId) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {

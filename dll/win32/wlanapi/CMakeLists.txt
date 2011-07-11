@@ -17,8 +17,8 @@ target_link_libraries(wlanapi
     wine
     ${PSEH_LIB})
 
-add_importlibs(wlanapi rpcrt4 kernel32 ntdll)
+add_importlibs(wlanapi rpcrt4 msvcrt kernel32 ntdll)
 add_importlib_target(wlanapi.spec)
 
-add_dependencies(wlanapi psdk buildno_header)
-add_cab_target(wlanapi 1)
+add_dependencies(wlanapi psdk)
+add_cd_file(TARGET wlanapi DESTINATION reactos/system32 FOR all)

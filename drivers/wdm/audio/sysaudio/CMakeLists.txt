@@ -15,4 +15,4 @@ target_link_libraries(sysaudio libcntpr)
 
 add_importlibs(sysaudio ntoskrnl ks hal)
 
-add_cab_target(sysaudio 2)
+add_cd_file(TARGET sysaudio DESTINATION reactos/system32/drivers FOR all)

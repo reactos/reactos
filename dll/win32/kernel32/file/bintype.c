@@ -301,23 +301,43 @@ GetBinaryTypeW (
  */
 BOOL
 WINAPI
-GetBinaryTypeA (
-    LPCSTR  lpApplicationName,
-    LPDWORD lpBinaryType
-    )
+GetBinaryTypeA(IN LPCSTR lpApplicationName,
+               OUT LPDWORD lpBinaryType)
 {
-  PWCHAR ApplicationNameW;
+    ANSI_STRING ApplicationNameString;
+    UNICODE_STRING ApplicationNameW;
+    BOOL StringAllocated = FALSE, Result;
+    NTSTATUS Status;
 
-  if(!lpApplicationName || !lpBinaryType)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    RtlInitAnsiString(&ApplicationNameString, lpApplicationName);
 
-  if (!(ApplicationNameW = FilenameA2W(lpApplicationName, FALSE)))
-     return FALSE;
+    if (ApplicationNameString.Length * sizeof(WCHAR) >= NtCurrentTeb()->StaticUnicodeString.MaximumLength)
+    {
+        StringAllocated = TRUE;
+        Status = RtlAnsiStringToUnicodeString(&ApplicationNameW, &ApplicationNameString, TRUE);
+    }
+    else
+    {
+        Status = RtlAnsiStringToUnicodeString(&(NtCurrentTeb()->StaticUnicodeString), &ApplicationNameString, FALSE);
+    }
 
-  return GetBinaryTypeW(ApplicationNameW, lpBinaryType);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (StringAllocated)
+    {
+        Result = GetBinaryTypeW(ApplicationNameW.Buffer, lpBinaryType);
+        RtlFreeUnicodeString(&ApplicationNameW);
+    }
+    else
+    {
+        Result = GetBinaryTypeW(NtCurrentTeb()->StaticUnicodeString.Buffer, lpBinaryType);
+    }
+
+    return Result;
 }
 
 /* EOF */

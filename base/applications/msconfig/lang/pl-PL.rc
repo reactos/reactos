@@ -1,9 +1,10 @@
 /*
  *         translated by TestamenT
- *      testament@users.sourceforge.net
- * https://sourceforge.net/projects/reactospl
+ *         testament@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
-
+ 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_MSCONFIG_DIALOG DIALOGEX DISCARDABLE  0, 0, 378, 220
@@ -25,8 +26,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List3",IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
-    PUSHBUTTON      "&W≥πcz wszystkie",IDC_BTN_STARTUP_ACTIVATE,223,155,66,14
-    PUSHBUTTON      "Wy≥πcz wszy&stkie",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
+    PUSHBUTTON      "&W≈ÇƒÖcz wszystkie",IDC_BTN_STARTUP_ACTIVATE,223,155,66,14
+    PUSHBUTTON      "Wy≈ÇƒÖcz wszy&stkie",IDC_BTN_STARTUP_DEACTIVATE,295,155,66,14
 END
 
 IDD_SYSTEM_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -34,18 +35,18 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    CONTROL "", 237, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
-    PUSHBUTTON      "Przenieú w &gÛrÍ", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
-    PUSHBUTTON      "Przenieú w &dÛ≥", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
+    PUSHBUTTON      "Przenie≈õ w &g√≥rƒô", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
+    PUSHBUTTON      "Przenie≈õ w &d√≥≈Ç", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
 
-    PUSHBUTTON      "W≥π&cz", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
-    PUSHBUTTON      "W&y≥πcz", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
+    PUSHBUTTON      "W≈ÇƒÖ&cz", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
+    PUSHBUTTON      "W&y≈ÇƒÖcz", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
 
-    PUSHBUTTON      "&Znajdü", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
+    PUSHBUTTON      "&Znajd≈∫", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON      "&Nowa", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON      "Edy&tuj", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
 
-    PUSHBUTTON      "&W≥πcz wszystkie", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
-    PUSHBUTTON      "Wy≥πcz wszy&stkie",IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
+    PUSHBUTTON      "&W≈ÇƒÖcz wszystkie", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
+    PUSHBUTTON      "Wy≈ÇƒÖcz wszy&stkie",IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
@@ -62,32 +63,32 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List1",IDC_SERVICES_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,2,1,360,148
-    PUSHBUTTON      "&W≥πcz wszystkie",IDC_BTN_SERVICES_ACTIVATE,223,155,66,14
-    PUSHBUTTON      "Wy≥πcz wszy&stkie",IDC_BTN_SERVICES_DEACTIVATE,295,155,66,14
+    PUSHBUTTON      "&W≈ÇƒÖcz wszystkie",IDC_BTN_SERVICES_ACTIVATE,223,155,66,14
+    PUSHBUTTON      "Wy≈ÇƒÖcz wszy&stkie",IDC_BTN_SERVICES_DEACTIVATE,295,155,66,14
 END
 
 IDD_GENERAL_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "WybÛr uruchamiania", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
- CONTROL "Uruchamianie &normalne - za≥aduj wszystkie sterowniki urzπdzeÒ i us≥ugi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
- CONTROL "Uruchamianie &diagnostyczne - za≥aduj tylko podstawowe urzπdzenia i us≥ugi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
+ GROUPBOX "Wyb√≥r uruchamiania", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
+ CONTROL "Uruchamianie &normalne - za≈Çaduj wszystkie sterowniki urzƒÖdze≈Ñ i us≈Çugi", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 180, 10
+ CONTROL "Uruchamianie &diagnostyczne - za≈Çaduj tylko podstawowe urzƒÖdzenia i us≈Çugi", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 195, 10
  CONTROL "Uruchamianie &selektywne", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 70, 10
  AUTOCHECKBOX "&Przetwarzaj plik SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 95, 10
- AUTOCHECKBOX "Za≥aduj &us≥ugi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
- AUTOCHECKBOX "Za≥aduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+ AUTOCHECKBOX "Za≈Çaduj &us≈Çugi systemowe", IDC_CBX_SYSTEM_SERVICE, 30, 95, 90, 10
+ AUTOCHECKBOX "Za≈Çaduj &elementy startowe", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-   CONTROL "", IDC_LIST_BOX, "ListBox", 0x50010141, 10, 10, 340, 50, 0x00000200
-   PUSHBUTTON    "&Sprawdü wszystkie úcieøki rozruchu", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
-   PUSHBUTTON    "&Ustaw jako domyúlne", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
-   PUSHBUTTON    "Przenieú w &gÛrÍ", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
-   PUSHBUTTON    "Przenieú w &dÛ≥", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
+   LISTBOX         IDC_LIST_BOX, 10, 10, 340, 50, WS_CHILD | WS_VISIBLE | WS_TABSTOP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
+   PUSHBUTTON    "&Sprawd≈∫ wszystkie ≈õcie≈ºki rozruchu", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
+   PUSHBUTTON    "&Ustaw jako domy≈õlne", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
+   PUSHBUTTON    "Przenie≈õ w &g√≥rƒô", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
+   PUSHBUTTON    "Przenie≈õ w &d√≥≈Ç", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
    GROUPBOX "Opcje rozruchu", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
@@ -128,18 +129,18 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_MSCONFIG             "Program konfiguracji systemu"
-    IDS_TAB_GENERAL          "OgÛlne"
+    IDS_TAB_GENERAL          "Og√≥lne"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
     IDS_TAB_FREELDR          "FREELDR.INI"
-    IDS_TAB_SERVICES         "Us≥ugi"
+    IDS_TAB_SERVICES         "Us≈Çugi"
     IDS_TAB_STARTUP          "Uruchamianie"
-    IDS_TAB_TOOLS            "NarzÍdzia"
+    IDS_TAB_TOOLS            "Narzƒôdzia"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_COLUMN_SERVICE "Us≥uga"
-    IDS_SERVICES_COLUMN_REQ     "Waøny"
+    IDS_SERVICES_COLUMN_SERVICE "Us≈Çuga"
+    IDS_SERVICES_COLUMN_REQ     "Wymagany"
     IDS_SERVICES_COLUMN_VENDOR  "Producent"
     IDS_SERVICES_COLUMN_STATUS  "Stan"
 END
@@ -154,14 +155,14 @@ BEGIN
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
     IDS_TOOLS_INFO_NAME      "Wersja"
-    IDS_TOOLS_INFO_DESCR     "Wyúwietla informacje o wersji."
+    IDS_TOOLS_INFO_DESCR     "Wy≈õwietla informacje o wersji."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Edytor rejestru"
     IDS_TOOLS_REGEDIT_DESCR  "Otwiera edytor rejestru."
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
-    IDS_TOOLS_SYSDM_NAME     "W≥aúciwoúci systemu"
+    IDS_TOOLS_SYSDM_NAME     "W≈Ça≈õciwo≈õci systemu"
     IDS_TOOLS_SYSDM_DESCR    "Pokazuje informacje o tym komputerze."
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
@@ -173,8 +174,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Dzia≥a"
-    IDS_SERVICES_STATUS_STOPPED "Zatrzymano"
+    IDS_SERVICES_STATUS_RUNNING "Uruchomiona"
+    IDS_SERVICES_STATUS_STOPPED "Zatrzymana"
     IDS_SERVICES_YES "Tak"
     IDS_SERVICES_UNKNOWN "Nieznany"
 END

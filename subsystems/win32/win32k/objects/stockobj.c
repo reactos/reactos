@@ -216,13 +216,10 @@ NtGdiGetStockObject(INT Object)
     return ((Object < 0) || (NB_STOCK_OBJECTS <= Object)) ? NULL : StockObjects[Object];
 }
 
-BOOL FASTCALL
-IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
+VOID FASTCALL
+IntSetSysColors(UINT nColors, CONST INT *Elements, CONST COLORREF *Colors)
 {
     UINT i;
-
-    ASSERT(Elements);
-    ASSERT(Colors);
 
     for (i = 0; i < nColors; i++)
     {
@@ -234,7 +231,6 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
         Elements++;
         Colors++;
     }
-    return nColors > 0;
 }
 
 HGDIOBJ FASTCALL

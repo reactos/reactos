@@ -5,6 +5,8 @@ add_dependencies(shdocvw_v1 stdole2)
 add_definitions(-D_SHDOCVW_)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(shdocvw.dll shdocvw.spec)
 
 list(APPEND SOURCE
@@ -52,5 +54,5 @@ add_importlibs(shdocvw
     ntdll)
 
 add_dependencies(shdocvw shdocvw_v1)
-add_cab_target(shdocvw 1)
+add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
 add_importlib_target(shdocvw.spec)

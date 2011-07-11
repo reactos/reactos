@@ -10,9 +10,9 @@ BEGIN
     LTEXT       "Описание на компютъра:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Цялото име на компютъра:", IDC_STATIC, 6, 68, 94, 9
-    LTEXT       "(Подразбирано)", IDC_COMPUTERNAME, 100, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Работна група:", IDC_WORKGROUPDOMAIN, 6, 84, 94, 9
-    LTEXT       "(Празно)", IDC_WORKGROUPDOMAIN_NAME, 100, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "За вълшебника за мрежово опознаване и създаване на местен потребител, натиснете „Мрежов опознавател...”.", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Мрежов опознавател...", IDC_NETWORK_ID, 170, 114, 85, 15
     LTEXT       "За преименуване на компютъра или присъединяване към имение, натиснете „Промяна”.", IDC_STATIC, 6, 149, 170, 24

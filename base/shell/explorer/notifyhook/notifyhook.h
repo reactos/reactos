@@ -39,8 +39,8 @@
 extern "C" {
 #endif
 
-DECL_NOTIFYHOOK UINT InstallNotifyHook();
-DECL_NOTIFYHOOK void DeinstallNotifyHook();
+DECL_NOTIFYHOOK UINT InstallNotifyHook(void);
+DECL_NOTIFYHOOK void DeinstallNotifyHook(void);
 
 DECL_NOTIFYHOOK void GetWindowModulePath(HWND hwnd);
 DECL_NOTIFYHOOK int GetWindowModulePathCopyData(LPARAM lparam, HWND* phwnd, LPSTR buffer, int size);

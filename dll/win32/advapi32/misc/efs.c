@@ -13,10 +13,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /*
+ * @unimplemented
+ */
+DWORD WINAPI
+AddUsersToEncryptedFile(LPCWSTR lpcwstr,
+                        PENCRYPTION_CERTIFICATE_LIST pencryption_certificate_list)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 BOOL WINAPI
-DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
+DecryptFileA(LPCSTR lpFileName,
+             DWORD dwReserved)
 {
     UNICODE_STRING FileName;
     NTSTATUS Status;
@@ -40,7 +53,9 @@ DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
 /*
  * @unimplemented
  */
-BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
+BOOL WINAPI
+DecryptFileW(LPCWSTR lpFileName,
+             DWORD dwReserved)
 {
     FIXME("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
     return TRUE;
@@ -80,6 +95,115 @@ EncryptFileW(LPCWSTR lpFileName)
 {
     FIXME("%s() not implemented!\n", __FUNCTION__);
     return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI
+EncryptionDisable(LPCWSTR DirPath,
+                  BOOL Disable)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+FileEncryptionStatusA(LPCSTR lpFileName,
+                      LPDWORD lpStatus)
+{
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+    BOOL ret = FALSE;
+
+    TRACE("(%s, %p)\n", lpFileName, lpStatus);
+
+    FileName.Buffer = NULL;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        goto cleanup;
+    }
+
+    ret = FileEncryptionStatusW(FileName.Buffer, lpStatus);
+
+cleanup:
+    if (FileName.Buffer != NULL)
+        RtlFreeUnicodeString(&FileName);
+
+    return ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI
+FileEncryptionStatusW(LPCWSTR lpFileName,
+                      LPDWORD lpStatus)
+{
+    FIXME("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
+
+    if (!lpStatus)
+        return FALSE;
+
+    *lpStatus = FILE_SYSTEM_NOT_SUPPORT;
+
+    return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID WINAPI
+FreeEncryptionCertificateHashList(PENCRYPTION_CERTIFICATE_HASH_LIST pencryption_certificate_hash_list)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI
+QueryRecoveryAgentsOnEncryptedFile(LPCWSTR lpctstr,
+                                   PENCRYPTION_CERTIFICATE_HASH_LIST* pencryption_certificate_hash_list)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI
+QueryUsersOnEncryptedFile(LPCWSTR lpctstr,
+                          PENCRYPTION_CERTIFICATE_HASH_LIST* pencryption_certificate_hash_list)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI
+RemoveUsersFromEncryptedFile(LPCWSTR lpcwstr,
+                             PENCRYPTION_CERTIFICATE_HASH_LIST pencryption_certificate_hash_list)
+{
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */

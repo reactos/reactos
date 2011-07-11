@@ -17,4 +17,4 @@ target_link_libraries(rasman
 
 add_importlibs(rasman msvcrt kernel32 ntdll)
 
-add_cab_target(rasman 1)
+add_cd_file(TARGET rasman DESTINATION reactos/system32 FOR all)

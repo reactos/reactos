@@ -156,6 +156,22 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 	return dp;
 }
 
+/*
+ * free the allocated memory of a batch file
+ */
+VOID ClearBatch()
+{
+	TRACE ("ClearBatch  mem = %08x    free = %d\n", bc->mem, bc->memfree);
+
+	if (bc->mem && bc->memfree)
+		cmd_free(bc->mem);
+
+	if (bc->raw_params)
+		cmd_free(bc->raw_params);
+
+	if (bc->params)
+		cmd_free(bc->params);
+}
 
 /*
  * If a batch file is current, exits it, freeing the context block and
@@ -169,19 +185,9 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 
 VOID ExitBatch()
 {
+	ClearBatch();
+
 	TRACE ("ExitBatch\n");
-
-	if (bc->hBatchFile)
-	{
-		CloseHandle (bc->hBatchFile);
-		bc->hBatchFile = INVALID_HANDLE_VALUE;
-	}
-
-	if (bc->raw_params)
-		cmd_free(bc->raw_params);
-
-	if (bc->params)
-		cmd_free(bc->params);
 
 	UndoRedirection(bc->RedirList, NULL);
 	FreeRedirection(bc->RedirList);
@@ -195,6 +201,33 @@ VOID ExitBatch()
 	bc = bc->prev;
 }
 
+/*
+ * Load batch file into memory
+ *
+ */
+void BatchFile2Mem(HANDLE hBatchFile)
+{
+	TRACE ("BatchFile2Mem ()\n");
+
+	bc->memsize = GetFileSize(hBatchFile, NULL);
+	bc->mem     = (char *)cmd_alloc(bc->memsize+1);		/* 1 extra for '\0' */
+	
+	/* if memory is available, read it in and close the file */
+	if (bc->mem != NULL) 
+	{
+		TRACE ("BatchFile2Mem memory %08x - %08x\n",bc->mem,bc->memsize);
+		SetFilePointer (hBatchFile, 0, NULL, FILE_BEGIN);
+		ReadFile(hBatchFile, (LPVOID)bc->mem, bc->memsize,  &bc->memsize, NULL);
+		bc->mem[bc->memsize]='\0';		/* end this, so you can dump it as a string */
+		bc->memfree=TRUE;				/* this one needs to be freed */
+	} 
+	else 
+	{
+	    bc->memsize=0;					/* this will prevent mem being accessed */
+		bc->memfree=FALSE;
+	}
+	bc->mempos = 0;						/* set position to the start */
+}
 
 /*
  * Start batch file execution
@@ -209,31 +242,37 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 	LPFOR_CONTEXT saved_fc;
 	INT i;
 	INT ret = 0;
+	BOOL same_fn = FALSE;	
 
-	HANDLE hFile;
+	HANDLE hFile = 0;
 	SetLastError(0);
-	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
-			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-
-	TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n",
-		debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), hFile);
-
-	if (hFile == INVALID_HANDLE_VALUE)
+	if (bc && bc->mem) 
 	{
-		ConErrResPuts(STRING_BATCH_ERROR);
-		return 1;
+		TCHAR	  fpname[MAX_PATH];
+		GetFullPathName(fullname, sizeof(fpname) / sizeof(TCHAR), fpname, NULL);
+		if (_tcsicmp(bc->BatchFilePath,fpname)==0) 
+			same_fn=TRUE;
 	}
+	TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  same_fn = %d\n",
+		debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), same_fn);
 
+	if (!same_fn)
+	{
+		hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
+				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
+				FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			ConErrResPuts(STRING_BATCH_ERROR);
+			return 1;
+		}
+	}
+	
 	if (bc != NULL && Cmd == bc->current)
 	{
 		/* Then we are transferring to another batch */
-		CloseHandle (bc->hBatchFile);
-		bc->hBatchFile = INVALID_HANDLE_VALUE;
-		if (bc->params)
-			cmd_free (bc->params);
-		if (bc->raw_params)
-			cmd_free (bc->raw_params);
+		ClearBatch();
 		AddBatchRedirection(&Cmd->Redirections);
 	}
 	else
@@ -261,15 +300,27 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 		/* Create a new context. This function will not
 		 * return until this context has been exited */
 		new.prev = bc;
+		/* copy some fields in the new structure if it is the same file */
+		if (same_fn) {
+			new.mem     = bc->mem;
+			new.memsize = bc->memsize;
+			new.mempos  = 0;
+			new.memfree = FALSE;			/* don't free this, being used before this */
+		}
 		bc = &new;
 		bc->RedirList = NULL;
 		bc->setlocal = setlocal;
 	}
 
 	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);
-
-	bc->hBatchFile = hFile;
-	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
+	/*  if a new batch file, load it into memory and close the file */
+	if (!same_fn) 
+	{
+		BatchFile2Mem(hFile);
+		CloseHandle(hFile);
+	}
+	
+	bc->mempos = 0;	   /* goto begin of batch file */
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	for (i = 0; i < 10; i++)
 		bc->shiftlevel[i] = i;
@@ -340,6 +391,49 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
 }
 
 /*
+ *   Read a single line from the batch file from the current batch/memory position.
+ *   Almost a copy of FileGetString with same UNICODE handling
+ */
+BOOL BatchGetString (LPTSTR lpBuffer, INT nBufferLength)
+{
+	LPSTR lpString;
+	INT len = 0;
+#ifdef _UNICODE
+	lpString = cmd_alloc(nBufferLength);
+#else
+	lpString = lpBuffer;
+#endif
+	/* read all chars from memory until a '\n' is encountered */
+	if (bc->mem) 
+	{
+		for (; (bc->mempos < bc->memsize  &&  len < (nBufferLength-1)); len++) 
+		{  
+			lpString[len] = bc->mem[bc->mempos++];
+			if (lpString[len] == '\n' ) 
+			{
+				len++;
+				break;
+			}
+		}
+	}
+
+	if (!len)
+	{
+#ifdef _UNICODE
+		cmd_free(lpString);
+#endif
+		return FALSE;
+	}
+
+	lpString[len++] = '\0';
+#ifdef _UNICODE
+	MultiByteToWideChar(OutputCodePage, 0, lpString, -1, lpBuffer, len);
+	cmd_free(lpString);
+#endif
+	return TRUE;
+}
+
+/*
  * Read and return the next executable line form the current batch file
  *
  * If no batch file is current or no further executable lines are found
@@ -347,7 +441,6 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
  *
  * Set eflag to 0 if line is not to be echoed else 1
  */
-
 LPTSTR ReadBatchLine ()
 {
 	TRACE ("ReadBatchLine ()\n");
@@ -360,7 +453,7 @@ LPTSTR ReadBatchLine ()
 		return NULL;
 	}
 
-	if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0]) - 1))
+	if (!BatchGetString (textline, sizeof (textline) / sizeof (textline[0]) - 1))
 	{
 		TRACE ("ReadBatchLine(): Reached EOF!\n");
 		/* End of file.... */

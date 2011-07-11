@@ -12,5 +12,5 @@ add_library(samsrv SHARED ${SOURCE})
 
 set_entrypoint(samsrv 0)
 add_importlibs(samsrv kernel32 ntdll)
-add_dependencies(samsrv psdk buildno_header)
-add_cab_target(samsrv 1)
+add_dependencies(samsrv psdk)
+add_cd_file(TARGET samsrv DESTINATION reactos/system32 FOR all)

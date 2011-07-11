@@ -19,4 +19,4 @@ target_link_libraries(t2embed wine)
 
 add_importlibs(t2embed gdi32 user32 advapi32 version msvcrt kernel32 ntdll)
 
-add_cab_target(t2embed 1)
+add_cd_file(TARGET t2embed DESTINATION reactos/system32 FOR all)

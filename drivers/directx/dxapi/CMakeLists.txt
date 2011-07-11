@@ -11,4 +11,4 @@ add_library(dxapi SHARED
 set_module_type(dxapi kernelmodedriver)
 add_importlibs(dxapi ntoskrnl hal videoprt)
 
-add_cab_target(dxapi 2)
+add_cd_file(TARGET dxapi DESTINATION reactos/system32/drivers FOR all)

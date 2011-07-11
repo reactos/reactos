@@ -7,6 +7,6 @@ add_library(kbdest SHARED kbdest.c kbdest.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdest.
 
 set_entrypoint(kbdest 0)
 
-add_dependencies(kbdest psdk buildno_header)
+add_dependencies(kbdest psdk)
 
-add_cab_target(kbdest 1)
+add_cd_file(TARGET kbdest DESTINATION reactos/system32 FOR all)

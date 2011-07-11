@@ -2,7 +2,6 @@
 spec2def(ksproxy.ax ksproxy.spec)
 
 add_definitions(
-    -D_DLL -D__USE_CRTIMP
     -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
     -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
 
@@ -36,11 +35,11 @@ if(MSVC)
 else()
     #FIXME : can't build if this is enabled, check if this is needed
     #set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
-    target_link_libraries(ksproxy -lsupc++ -lgcc -lmingw32 -lcoldname)
-endif(MSVC)
+    target_link_libraries(ksproxy -lsupc++ -lgcc -lmingw32 oldnames)
+endif()
 
-target_link_libraries(ksproxy stlport  strmiids)
-    
+target_link_libraries(ksproxy stlport strmiids)
+
 add_importlibs(ksproxy
     advapi32
     ole32
@@ -50,6 +49,6 @@ add_importlibs(ksproxy
     kernel32
     ntdll)
 
-add_dependencies(ksproxy psdk buildno_header)
+add_dependencies(ksproxy psdk)
 
-add_cab_target(ksproxy 1)
+add_cd_file(TARGET ksproxy DESTINATION reactos/system32 FOR all)

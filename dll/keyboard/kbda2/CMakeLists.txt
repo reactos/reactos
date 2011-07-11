@@ -7,6 +7,6 @@ add_library(kbda2 SHARED kbda2.c kbda2.rc ${CMAKE_CURRENT_BINARY_DIR}/kbda2.def)
 
 set_entrypoint(kbda2 0)
 
-add_dependencies(kbda2 psdk buildno_header)
+add_dependencies(kbda2 psdk)
 
-add_cab_target(kbda2 1)
+add_cd_file(TARGET kbda2 DESTINATION reactos/system32 FOR all)

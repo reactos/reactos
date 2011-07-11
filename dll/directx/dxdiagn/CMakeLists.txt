@@ -25,4 +25,4 @@ add_importlibs(dxdiagn
     kernel32
     ntdll)
 
-add_cab_target(dxdiagn 1)
+add_cd_file(TARGET dxdiagn DESTINATION reactos/system32 FOR all)

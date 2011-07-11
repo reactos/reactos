@@ -53,7 +53,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
                                       TAG_MM_REGION);
    if (NewRegion1 == NULL)
    {
-      ExFreePool(NewRegion2);
+      ExFreePoolWithTag(NewRegion2, TAG_MM_REGION);
       return(NULL);
    }
    NewRegion1->Type = NewType;
@@ -86,14 +86,14 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
    }
    else
    {
-      ExFreePool(NewRegion2);
+      ExFreePoolWithTag(NewRegion2, TAG_MM_REGION);
    }
 
    /* Either remove or shrink the initial region. */
    if (InitialBaseAddress == StartAddress)
    {
       RemoveEntryList(&InitialRegion->RegionListEntry);
-      ExFreePool(InitialRegion);
+      ExFreePoolWithTag(InitialRegion, TAG_MM_REGION);
    }
    else
    {
@@ -123,17 +123,6 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
     */
    InitialRegion = MmFindRegion(BaseAddress, RegionListHead, StartAddress,
                                 &InitialBaseAddress);
-   if (((char*)StartAddress + Length) >
-         ((char*)InitialBaseAddress + InitialRegion->Length))
-   {
-      RemainingLength = ((char*)StartAddress + Length) -
-                        ((char*)InitialBaseAddress + InitialRegion->Length);
-   }
-   else
-   {
-      RemainingLength = 0;
-   }
-
    /*
     * If necessary then split the region into the affected and unaffected parts.
     */
@@ -146,10 +135,19 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
       {
          return(STATUS_NO_MEMORY);
       }
+      if(NewRegion->Length < Length)
+         RemainingLength = Length - NewRegion->Length;
+      else
+         RemainingLength = 0;
    }
    else
    {
       NewRegion = InitialRegion;
+      if(((ULONG_PTR)InitialBaseAddress + NewRegion->Length) < 
+            ((ULONG_PTR)StartAddress + Length))
+         RemainingLength = ((ULONG_PTR)StartAddress + Length) - ((ULONG_PTR)InitialBaseAddress + NewRegion->Length);
+      else
+         RemainingLength = 0;
    }
 
    /*
@@ -163,7 +161,7 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
    while (RemainingLength > 0 && CurrentRegion->Length <= RemainingLength &&
           CurrentEntry != RegionListHead)
    {
-      if (CurrentRegion->Type != NewType &&
+      if (CurrentRegion->Type != NewType ||
             CurrentRegion->Protect != NewProtect)
       {
          AlterFunc(AddressSpace, CurrentBaseAddress, CurrentRegion->Length,
@@ -176,7 +174,7 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
       RemainingLength -= CurrentRegion->Length;
       CurrentEntry = CurrentEntry->Flink;
       RemoveEntryList(&CurrentRegion->RegionListEntry);
-      ExFreePool(CurrentRegion);
+      ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
       CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION,
                                         RegionListEntry);
    }
@@ -188,10 +186,10 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
    {
       CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION,
                                         RegionListEntry);
-      if (CurrentRegion->Type != NewType &&
+      if (CurrentRegion->Type != NewType ||
             CurrentRegion->Protect != NewProtect)
       {
-         AlterFunc(AddressSpace, CurrentBaseAddress, CurrentRegion->Length,
+         AlterFunc(AddressSpace, CurrentBaseAddress, RemainingLength,
                    CurrentRegion->Type, CurrentRegion->Protect,
                    NewType, NewProtect);
       }
@@ -212,7 +210,7 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
       {
          NewRegion->Length += CurrentRegion->Length;
          RemoveEntryList(&CurrentRegion->RegionListEntry);
-         ExFreePool(CurrentRegion);
+         ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
       }
    }
 
@@ -229,9 +227,12 @@ MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
       {
          NewRegion->Length += CurrentRegion->Length;
          RemoveEntryList(&CurrentRegion->RegionListEntry);
-         ExFreePool(CurrentRegion);
+         ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
       }
    }
+   
+   if(NewRegion->Length < Length)
+      return(STATUS_NO_MEMORY);
 
    return(STATUS_SUCCESS);
 }

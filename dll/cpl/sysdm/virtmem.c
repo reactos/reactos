@@ -206,8 +206,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
     HKEY hk = NULL;
     TCHAR szPagingFiles[2048];
     TCHAR szText[256];
-    INT i;
-    INT nPos = 0;
+    INT i, nPos = 0;
     BOOL bErr = TRUE;
 
     for (i = 0; i < pVirtMem->Count; ++i)
@@ -312,7 +311,7 @@ OnSet(PVIRTMEM pVirtMem)
                                      LB_GETCURSEL,
                                      0,
                                      0);
-    if (Index < pVirtMem->Count)
+    if (Index >= 0 && Index < pVirtMem->Count)
     {
         /* check if custom settings are checked */
         if (IsDlgButtonChecked(pVirtMem->hSelf,
@@ -463,8 +462,8 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         if (GetDiskFreeSpaceEx(pVirtMem->Pagefile[Index].szDrive,
                                NULL, NULL, &FreeBytes))
         {
-            pVirtMem->Pagefile[Index].FreeSize = FreeBytes.QuadPart >> 20;
-            _stprintf(szBuffer, _T("%I64u MB"), FreeBytes.QuadPart / (1024 * 1024));
+            pVirtMem->Pagefile[Index].FreeSize = (UINT)(FreeBytes.QuadPart / (1024 * 1024));
+            _stprintf(szBuffer, _T("%I64u MB"), pVirtMem->Pagefile[Index].FreeSize);
             SetDlgItemText(hwndDlg, IDC_SPACEAVAIL, szBuffer);
         }
 

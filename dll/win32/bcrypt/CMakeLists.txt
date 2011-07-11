@@ -18,4 +18,4 @@ target_link_libraries(bcrypt wine)
 
 add_importlibs(bcrypt msvcrt kernel32 ntdll)
 
-add_cab_target(bcrypt 1)
+add_cd_file(TARGET bcrypt DESTINATION reactos/system32 FOR all)

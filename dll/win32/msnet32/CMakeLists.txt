@@ -12,4 +12,4 @@ target_link_libraries(msnet32 wine)
 
 add_importlibs(msnet32 msvcrt kernel32 ntdll)
 
-add_cab_target(msnet32 1)
+add_cd_file(TARGET msnet32 DESTINATION reactos/system32 FOR all)

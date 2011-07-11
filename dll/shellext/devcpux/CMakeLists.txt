@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(devcpux.dll devcpux.spec)
 
@@ -15,4 +16,4 @@ add_importlibs(devcpux
     kernel32
     ntdll)
 
-add_cab_target(devcpux 1)
+add_cd_file(TARGET devcpux DESTINATION reactos/system32 FOR all)

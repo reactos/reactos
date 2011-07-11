@@ -10,5 +10,4 @@ add_importlibs(cdrom
     ntoskrnl
     hal)
 
-add_minicd_target(cdrom reactos cdrom.sys)
-add_livecd_target(cdrom reactos/system32/drivers)
+add_cd_file(TARGET cdrom DESTINATION reactos/system32/drivers NO_CAB FOR all)

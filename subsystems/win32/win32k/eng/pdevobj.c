@@ -143,7 +143,6 @@ PDEVOBJ_bEnablePDEV(
         ppdev->gdiinfo.ulLogPixelsY = 96;
 
     /* Setup Palette */
-    GDIOBJ_SetOwnership(ppdev->devinfo.hpalDefault, NULL);
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
     DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
@@ -171,7 +170,7 @@ PDEVOBJ_pSurface(
     if (ppdev->pSurface)
     {
         /* Increment reference count */
-        GDIOBJ_IncrementShareCount(&ppdev->pSurface->BaseObject);
+        GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
     }
     else
     {

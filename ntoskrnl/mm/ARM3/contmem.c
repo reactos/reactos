@@ -430,7 +430,7 @@ MiAllocateContiguousMemory(IN SIZE_T NumberOfBytes,
             //
             // No such luck
             //
-            ExFreePool(BaseAddress);
+            ExFreePoolWithTag(BaseAddress, 'mCmM');
         }
     }
 
@@ -472,7 +472,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         //
         // It did, so just use the pool to free this
         //
-        ExFreePool(BaseAddress);
+        ExFreePoolWithTag(BaseAddress, 'mCmM');
         return;
     }
 

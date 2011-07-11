@@ -17,7 +17,6 @@ list(APPEND SOURCE
 add_library(mlang SHARED ${SOURCE})
 
 set_entrypoint(mlang 0)
-
 target_link_libraries(mlang uuid wine)
 
 add_importlibs(mlang
@@ -30,5 +29,5 @@ add_importlibs(mlang
     ntdll)
 
 add_importlib_target(mlang.spec)
-add_dependencies(mlang psdk buildno_header)
-add_cab_target(mlang 1)
+add_dependencies(mlang psdk)
+add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)

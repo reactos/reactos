@@ -1,8 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_WINE
-    -D_DLL -D__USE_CRTIMP)
+    -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -42,5 +41,5 @@ add_importlibs(comdlg32
     kernel32
     ntdll)
 
-add_cab_target(comdlg32 1)
+add_cd_file(TARGET comdlg32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(comdlg32.spec)

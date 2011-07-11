@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for psnames module.  */
 /*                                                                         */
-/*  Copyright 2009 by                                                      */
+/*  Copyright 2009, 2010 by                                                */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,13 +44,15 @@
     }
   }
 
+
   FT_Error
-  psnames_module_class_pic_init(  FT_Library library )
+  psnames_module_class_pic_init( FT_Library  library )
   {
-    FT_PIC_Container* pic_container = &library->pic_container;
-    FT_Error        error = FT_Err_Ok;
-    PSModulePIC* container;
-    FT_Memory memory = library->memory;
+    FT_PIC_Container*  pic_container = &library->pic_container;
+    FT_Error           error         = PSnames_Err_Ok;
+    PSModulePIC*       container;
+    FT_Memory          memory        = library->memory;
+
 
     /* allocate pointer, clear and set global container pointer */
     if ( FT_ALLOC ( container, sizeof ( *container ) ) )

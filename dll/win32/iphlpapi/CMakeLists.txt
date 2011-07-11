@@ -1,8 +1,6 @@
 
 set_unicode()
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
@@ -29,5 +27,5 @@ set_module_type(iphlpapi win32dll)
 
 target_link_libraries(iphlpapi wine tdilib)
 add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
-add_cab_target(iphlpapi 1)
+add_cd_file(TARGET iphlpapi DESTINATION reactos/system32 FOR all)
 add_importlib_target(iphlpapi.spec)

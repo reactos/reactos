@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(joy.cpl joy.spec)
 
@@ -18,4 +19,4 @@ add_importlibs(joy
     kernel32
     ntdll)
 
-add_cab_target(joy 1)
+add_cd_file(TARGET joy DESTINATION reactos/system32 FOR all)

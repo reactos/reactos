@@ -258,11 +258,11 @@ static Uri *get_uri_obj(IUri *uri)
 }
 
 static inline BOOL is_alpha(WCHAR val) {
-	return ((val >= 'a' && val <= 'z') || (val >= 'A' && val <= 'Z'));
+    return ((val >= 'a' && val <= 'z') || (val >= 'A' && val <= 'Z'));
 }
 
 static inline BOOL is_num(WCHAR val) {
-	return (val >= '0' && val <= '9');
+    return (val >= '0' && val <= '9');
 }
 
 static inline BOOL is_drive_path(const WCHAR *str) {
@@ -348,6 +348,11 @@ static inline BOOL is_hexdigit(WCHAR val) {
 
 static inline BOOL is_path_delim(WCHAR val) {
     return (!val || val == '#' || val == '?');
+}
+
+static inline BOOL is_slash(WCHAR c)
+{
+    return c == '/' || c == '\\';
 }
 
 static BOOL is_default_port(URL_SCHEME scheme, DWORD port) {
@@ -592,21 +597,6 @@ static inline void pct_encode_val(WCHAR val, WCHAR *dest) {
     dest[2] = hexDigits[val & 0xf];
 }
 
-/* Scans the range of characters [str, end] and returns the last occurrence
- * of 'ch' or returns NULL.
- */
-static const WCHAR *str_last_of(const WCHAR *str, const WCHAR *end, WCHAR ch) {
-    const WCHAR *ptr = end;
-
-    while(ptr >= str) {
-        if(*ptr == ch)
-            return ptr;
-        --ptr;
-    }
-
-    return NULL;
-}
-
 /* Attempts to parse the domain name from the host.
  *
  * This function also includes the Top-level Domain (TLD) name
@@ -614,10 +604,10 @@ static const WCHAR *str_last_of(const WCHAR *str, const WCHAR *end, WCHAR ch) {
  * a valid domain name it will assign 'domain_start' the offset
  * into 'host' where the domain name starts.
  *
- * It's implied that if a domain name its range is implied to be
+ * It's implied that if there is a domain name its range is:
  * [host+domain_start, host+host_len).
  */
-static void find_domain_name(const WCHAR *host, DWORD host_len,
+void find_domain_name(const WCHAR *host, DWORD host_len,
                              INT *domain_start) {
     const WCHAR *last_tld, *sec_last_tld, *end;
 
@@ -631,12 +621,12 @@ static void find_domain_name(const WCHAR *host, DWORD host_len,
     if(host_len < 4)
         return;
 
-    last_tld = str_last_of(host, end, '.');
+    last_tld = memrchrW(host, '.', host_len);
     if(!last_tld)
         /* http://hostname -> has no domain name. */
         return;
 
-    sec_last_tld = str_last_of(host, last_tld-1, '.');
+    sec_last_tld = memrchrW(host, '.', last_tld-host);
     if(!sec_last_tld) {
         /* If the '.' is at the beginning of the host there
          * has to be at least 3 characters in the TLD for it
@@ -687,7 +677,7 @@ static void find_domain_name(const WCHAR *host, DWORD host_len,
         if(last_tld - (sec_last_tld+1) == 3) {
             for(i = 0; i < sizeof(recognized_tlds)/sizeof(recognized_tlds[0]); ++i) {
                 if(!StrCmpNIW(sec_last_tld+1, recognized_tlds[i].tld_name, 3)) {
-                    const WCHAR *domain = str_last_of(host, sec_last_tld-1, '.');
+                    const WCHAR *domain = memrchrW(host, '.', sec_last_tld-host);
 
                     if(!domain)
                         *domain_start = 0;
@@ -705,7 +695,7 @@ static void find_domain_name(const WCHAR *host, DWORD host_len,
              * part of the TLD.
              *  Ex: www.google.fo.uk -> google.fo.uk as the domain name.
              */
-            const WCHAR *domain = str_last_of(host, sec_last_tld-1, '.');
+            const WCHAR *domain = memrchrW(host, '.', sec_last_tld-host);
 
             if(!domain)
                 *domain_start = 0;
@@ -727,8 +717,6 @@ static void find_domain_name(const WCHAR *host, DWORD host_len,
 /* Removes the dot segments from a hierarchical URIs path component. This
  * function performs the removal in place.
  *
- * This is a modified version of Qt's QUrl function "removeDotsFromPath".
- *
  * This function returns the new length of the path string.
  */
 static DWORD remove_dot_segments(WCHAR *path, DWORD path_len) {
@@ -738,48 +726,46 @@ static DWORD remove_dot_segments(WCHAR *path, DWORD path_len) {
     DWORD len;
 
     while(in < end) {
-        /* A.  if the input buffer begins with a prefix of "/./" or "/.",
-         *     where "." is a complete path segment, then replace that
-         *     prefix with "/" in the input buffer; otherwise,
+        /* Move the first path segment in the input buffer to the end of
+         * the output buffer, and any subsequent characters up to, including
+         * the next "/" character (if any) or the end of the input buffer.
          */
-        if(in <= end - 3 && in[0] == '/' && in[1] == '.' && in[2] == '/') {
-            in += 2;
-            continue;
-        } else if(in == end - 2 && in[0] == '/' && in[1] == '.') {
-            *out++ = '/';
-            in += 2;
-            break;
-        }
-
-        /* B.  if the input buffer begins with a prefix of "/../" or "/..",
-         *     where ".." is a complete path segment, then replace that
-         *     prefix with "/" in the input buffer and remove the last
-         *     segment and its preceding "/" (if any) from the output
-         *     buffer; otherwise,
-         */
-        if(in <= end - 4 && in[0] == '/' && in[1] == '.' && in[2] == '.' && in[3] == '/') {
-            while(out > path && *(--out) != '/');
-
-            in += 3;
-            continue;
-        } else if(in == end - 3 && in[0] == '/' && in[1] == '.' && in[2] == '.') {
-            while(out > path && *(--out) != '/');
-
-            if(*out == '/')
-                ++out;
-
-            in += 3;
-            break;
-        }
-
-        /* C.  move the first path segment in the input buffer to the end of
-         *     the output buffer, including the initial "/" character (if
-         *     any) and any subsequent characters up to, but not including,
-         *     the next "/" character or the end of the input buffer.
-         */
-        *out++ = *in++;
-        while(in < end && *in != '/')
+        while(in < end && !is_slash(*in))
             *out++ = *in++;
+        if(in == end)
+            break;
+        *out++ = *in++;
+
+        while(in < end) {
+            if(*in != '.')
+                break;
+
+            /* Handle ending "/." */
+            if(in + 1 == end) {
+                ++in;
+                break;
+            }
+
+            /* Handle "/./" */
+            if(is_slash(in[1])) {
+                in += 2;
+                continue;
+            }
+
+            /* If we don't have "/../" or ending "/.." */
+            if(in[1] != '.' || (in + 2 != end && !is_slash(in[2])))
+                break;
+
+            /* Find the slash preceding out pointer and move out pointer to it */
+            if(out > path+1 && is_slash(*--out))
+                --out;
+            while(out > path && !is_slash(*(--out)));
+            if(is_slash(*out))
+                ++out;
+            in += 2;
+            if(in != end)
+                ++in;
+        }
     }
 
     len = out - path;
@@ -809,12 +795,12 @@ static INT find_file_extension(const WCHAR *path, DWORD path_len) {
  *
  * NOTES:
  *  Windows will expand an elision if the elision only represents 1 h16
- *  component of the URI.
+ *  component of the address.
  *
  *  Ex: [1::2:3:4:5:6:7] -> [1:0:2:3:4:5:6:7]
  *
  *  If the IPv6 address contains an IPv4 address, the IPv4 address is also
- *  considered for being included as part of an elision if all it's components
+ *  considered for being included as part of an elision if all its components
  *  are zeros.
  *
  *  Ex: [1:2:3:4:5:6:0.0.0.0] -> [1:2:3:4:5:6::]
@@ -987,7 +973,7 @@ static USHORT h16tous(h16 component) {
     return ret;
 }
 
-/* Converts an IPv6 address into it's 128 bits (16 bytes) numerical value.
+/* Converts an IPv6 address into its 128 bits (16 bytes) numerical value.
  *
  * This function assumes that the ipv6_address has already been validated.
  */
@@ -998,7 +984,7 @@ static BOOL ipv6_to_number(const ipv6_address *address, USHORT number[8]) {
     for(i = 0; i < address->h16_count; ++i) {
         if(address->elision) {
             if(address->components[i].str > address->elision && !already_passed_elision) {
-                /* Means we just passed the elision and need to add it's values to
+                /* Means we just passed the elision and need to add its values to
                  * 'number' before we do anything else.
                  */
                 DWORD j = 0;
@@ -1016,7 +1002,6 @@ static BOOL ipv6_to_number(const ipv6_address *address, USHORT number[8]) {
     if(!already_passed_elision && address->elision) {
         for(i = 0; i < address->elision_size; i+=2)
             number[cur_component++] = 0;
-        already_passed_elision = TRUE;
     }
 
     if(address->ipv4) {
@@ -1818,7 +1803,7 @@ static BOOL parse_ipv6address(const WCHAR **ptr, parse_data *data, DWORD flags) 
 
     TRACE("(%p %p %x): Found valid IPv6 literal %s len=%d\n",
         ptr, data, flags, debugstr_wn(start, *ptr-start),
-        *ptr-start);
+        (int)(*ptr-start));
     return TRUE;
 }
 
@@ -1860,7 +1845,7 @@ static BOOL parse_ipvfuture(const WCHAR **ptr, parse_data *data, DWORD flags) {
     data->host_type = Uri_HOST_UNKNOWN;
 
     TRACE("(%p %p %x): Parsed IPvFuture address %s len=%d\n", ptr, data, flags,
-        debugstr_wn(start, *ptr-start), *ptr-start);
+          debugstr_wn(start, *ptr-start), (int)(*ptr-start));
 
     return TRUE;
 }
@@ -3151,10 +3136,17 @@ static BOOL canonicalize_path_opaque(const parse_data *data, Uri *uri, DWORD fla
         }
     }
 
+    if(data->scheme_type == URL_SCHEME_MK && !computeOnly && !(flags & Uri_CREATE_NO_CANONICALIZE)) {
+        DWORD new_len = remove_dot_segments(uri->canon_uri + uri->path_start,
+                                            uri->canon_len - uri->path_start);
+        uri->canon_len = uri->path_start + new_len;
+    }
+
     uri->path_len = uri->canon_len - uri->path_start;
 
-    TRACE("(%p %p %x %d): Canonicalized opaque URI path %s len=%d\n", data, uri, flags, computeOnly,
-        debugstr_wn(uri->canon_uri+uri->path_start, uri->path_len), uri->path_len);
+    if(!computeOnly)
+        TRACE("(%p %p %x %d): Canonicalized opaque URI path %s len=%d\n", data, uri, flags, computeOnly,
+            debugstr_wn(uri->canon_uri+uri->path_start, uri->path_len), uri->path_len);
     return TRUE;
 }
 
@@ -3436,7 +3428,7 @@ static HRESULT canonicalize_uri(const parse_data *data, Uri *uri, DWORD flags) {
     INT len;
 
     uri->canon_uri = NULL;
-    len = uri->canon_size = uri->canon_len = 0;
+    uri->canon_size = uri->canon_len = 0;
 
     TRACE("(%p %p %x): beginning to canonicalize URI %s.\n", data, uri, flags, debugstr_w(data->uri));
 
@@ -5007,10 +4999,10 @@ static ULONG WINAPI UriBuilderFactory_Release(IUriBuilderFactory *iface)
     return ref;
 }
 
-static HRESULT WINAPI UriBuilderFactory_CreateInitializedIUriBuilder(IUriBuilderFactory *iface,
-                                                              DWORD dwFlags,
-                                                              DWORD_PTR dwReserved,
-                                                              IUriBuilder **ppIUriBuilder)
+static HRESULT WINAPI UriBuilderFactory_CreateIUriBuilder(IUriBuilderFactory *iface,
+                                                          DWORD dwFlags,
+                                                          DWORD_PTR dwReserved,
+                                                          IUriBuilder **ppIUriBuilder)
 {
     Uri *This = impl_from_IUriBuilderFactory(iface);
     TRACE("(%p)->(%08x %08x %p)\n", This, dwFlags, (DWORD)dwReserved, ppIUriBuilder);
@@ -5026,10 +5018,10 @@ static HRESULT WINAPI UriBuilderFactory_CreateInitializedIUriBuilder(IUriBuilder
     return CreateIUriBuilder(NULL, 0, 0, ppIUriBuilder);
 }
 
-static HRESULT WINAPI UriBuilderFactory_CreateIUriBuilder(IUriBuilderFactory *iface,
-                                                   DWORD dwFlags,
-                                                   DWORD_PTR dwReserved,
-                                                   IUriBuilder **ppIUriBuilder)
+static HRESULT WINAPI UriBuilderFactory_CreateInitializedIUriBuilder(IUriBuilderFactory *iface,
+                                                                     DWORD dwFlags,
+                                                                     DWORD_PTR dwReserved,
+                                                                     IUriBuilder **ppIUriBuilder)
 {
     Uri *This = impl_from_IUriBuilderFactory(iface);
     TRACE("(%p)->(%08x %08x %p)\n", This, dwFlags, (DWORD)dwReserved, ppIUriBuilder);
@@ -5049,8 +5041,8 @@ static const IUriBuilderFactoryVtbl UriBuilderFactoryVtbl = {
     UriBuilderFactory_QueryInterface,
     UriBuilderFactory_AddRef,
     UriBuilderFactory_Release,
-    UriBuilderFactory_CreateInitializedIUriBuilder,
-    UriBuilderFactory_CreateIUriBuilder
+    UriBuilderFactory_CreateIUriBuilder,
+    UriBuilderFactory_CreateInitializedIUriBuilder
 };
 
 static Uri* create_uri_obj(void) {
@@ -5795,10 +5787,10 @@ static HRESULT merge_paths(parse_data *data, const WCHAR *base, DWORD base_len, 
         /* Find the characters the will be copied over from
          * the base path.
          */
-        end = str_last_of(base, base+(base_len-1), '/');
+        end = memrchrW(base, '/', base_len);
         if(!end && data->scheme_type == URL_SCHEME_FILE)
             /* Try looking for a '\\'. */
-            end = str_last_of(base, base+(base_len-1), '\\');
+            end = memrchrW(base, '\\', base_len);
     }
 
     if(end) {
@@ -6002,7 +5994,7 @@ static HRESULT combine_uri(Uri *base, Uri *relative, DWORD flags, IUri **result,
                 DWORD new_len = remove_dot_segments(path+offset,path_len-offset);
 
                 if(new_len != path_len) {
-                    WCHAR *tmp = heap_realloc(path, (path_offset+new_len+1)*sizeof(WCHAR));
+                    WCHAR *tmp = heap_realloc(path, (offset+new_len+1)*sizeof(WCHAR));
                     if(!tmp) {
                         heap_free(path);
                         *result = NULL;
@@ -6013,6 +6005,11 @@ static HRESULT combine_uri(Uri *base, Uri *relative, DWORD flags, IUri **result,
                     path = tmp;
                     path_len = new_len+offset;
                 }
+            }
+
+            if(relative->query_start > -1) {
+                data.query = relative->canon_uri+relative->query_start;
+                data.query_len = relative->query_len;
             }
 
             /* Make sure the path component is valid. */

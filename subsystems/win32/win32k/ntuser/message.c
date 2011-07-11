@@ -139,7 +139,6 @@ static MSGMEMORY MsgMemory[] =
     { WM_COPYGLOBALDATA, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
-    { WM_MDICREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
 };
 
 static PMSGMEMORY FASTCALL
@@ -165,7 +164,6 @@ static UINT FASTCALL
 MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 {
     CREATESTRUCTW *Cs;
-    MDICREATESTRUCTW *mCs;
     PUNICODE_STRING WindowName;
     PUNICODE_STRING ClassName;
     UINT Size = 0;
@@ -194,21 +192,6 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 WindowName = (PUNICODE_STRING) Cs->lpszName;
                 ClassName = (PUNICODE_STRING) Cs->lpszClass;
                 Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
-                if (IS_ATOM(ClassName->Buffer))
-                {
-                    Size += sizeof(WCHAR) + sizeof(ATOM);
-                }
-                else
-                {
-                    Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
-                }
-                break;
-
-            case WM_MDICREATE:
-                mCs = (MDICREATESTRUCTW *)lParam;
-                WindowName = (PUNICODE_STRING) mCs->szTitle;
-                ClassName = (PUNICODE_STRING) mCs->szClass;
-                Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
                 if (IS_ATOM(ClassName->Buffer))
                 {
                     Size += sizeof(WCHAR) + sizeof(ATOM);
@@ -254,7 +237,6 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
     NCCALCSIZE_PARAMS *PackedNcCalcsize;
     CREATESTRUCTW *UnpackedCs;
     CREATESTRUCTW *PackedCs;
-    MDICREATESTRUCTW *UnpackedmCs, *PackedmCs;
     PLARGE_STRING WindowName;
     PUNICODE_STRING ClassName;
     POOL_TYPE PoolType;
@@ -333,57 +315,11 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         ASSERT(CsData == (PCHAR) PackedCs + Size);
         *lParamPacked = (LPARAM) PackedCs;
     }
-    else if (WM_MDICREATE == Msg)
-    {
-        UnpackedmCs = (MDICREATESTRUCTW *) lParam;
-        WindowName = (PLARGE_STRING) UnpackedmCs->szTitle;
-        ClassName = (PUNICODE_STRING) UnpackedmCs->szClass;
-        Size = sizeof(MDICREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
-        if (IS_ATOM(ClassName->Buffer))
-        {
-            Size += sizeof(WCHAR) + sizeof(ATOM);
-        }
-        else
-        {
-            Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
-        }
-        PackedmCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
-        if (NULL == PackedmCs)
-        {
-            DPRINT1("Not enough memory to pack lParam\n");
-            return STATUS_NO_MEMORY;
-        }
-        RtlCopyMemory(PackedmCs, UnpackedmCs, sizeof(MDICREATESTRUCTW));
-        CsData = (PCHAR) (PackedmCs + 1);
-        PackedmCs->szTitle = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
-        RtlCopyMemory(CsData, WindowName->Buffer, WindowName->Length);
-        CsData += WindowName->Length;
-        *((WCHAR *) CsData) = L'\0';
-        CsData += sizeof(WCHAR);
-        PackedmCs->szClass = (LPCWSTR) (CsData - (PCHAR) PackedmCs);
-        if (IS_ATOM(ClassName->Buffer))
-        {
-            *((WCHAR *) CsData) = L'A';
-            CsData += sizeof(WCHAR);
-            *((ATOM *) CsData) = (ATOM)(DWORD_PTR) ClassName->Buffer;
-            CsData += sizeof(ATOM);
-        }
-        else
-        {
-            *((WCHAR *) CsData) = L'S';
-            CsData += sizeof(WCHAR);
-            RtlCopyMemory(CsData, ClassName->Buffer, ClassName->Length);
-            CsData += ClassName->Length;
-            *((WCHAR *) CsData) = L'\0';
-            CsData += sizeof(WCHAR);
-        }
-        ASSERT(CsData == (PCHAR) PackedmCs + Size);
-        *lParamPacked = (LPARAM) PackedmCs;
-    }
     else if (PoolType == NonPagedPool)
     {
         PMSGMEMORY MsgMemoryEntry;
         PVOID PackedData;
+        SIZE_T size;
 
         MsgMemoryEntry = FindMsgMemory(Msg);
 
@@ -392,7 +328,13 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
             /* Keep previous behavior */
             return STATUS_SUCCESS;
         }
-        PackedData = ExAllocatePoolWithTag(NonPagedPool, MsgMemorySize(MsgMemoryEntry, wParam, lParam), TAG_MSG);
+        size = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+        if (!size)
+        {
+           DPRINT1("No size for lParamPacked\n");
+           return STATUS_SUCCESS;
+        }
+        PackedData = ExAllocatePoolWithTag(NonPagedPool, size, TAG_MSG);
         RtlCopyMemory(PackedData, (PVOID)lParam, MsgMemorySize(MsgMemoryEntry, wParam, lParam));
         *lParamPacked = (LPARAM)PackedData;
     }
@@ -428,11 +370,6 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     {
         ExFreePool((PVOID) lParamPacked);
 
-        return STATUS_SUCCESS;
-    }
-    else if (WM_MDICREATE == Msg)
-    {
-        ExFreePool((PVOID) lParamPacked);
         return STATUS_SUCCESS;
     }
     else if (NonPagedPoolUsed)
@@ -730,7 +667,7 @@ IntDispatchMessage(PMSG pMsg)
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
         HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
-        REGION_FreeRgnByHandle( hrgn );
+        GreDeleteObject(hrgn);
     }
 
     return retval;
@@ -798,7 +735,8 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now check for normal messages. */
-        if ((ProcessMask & QS_POSTMESSAGE) &&
+        if (( (ProcessMask & QS_POSTMESSAGE) ||
+              (ProcessMask & QS_HOTKEY) ) &&
             MsqPeekMessage( ThreadQueue,
                             RemoveMessages,
                             Window,
@@ -919,15 +857,18 @@ co_IntWaitMessage( PWND Window,
                                            Window,
                                            MsgFilterMin,
                                            MsgFilterMax);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DPRINT1("Exit co_IntWaitMessage on error!\n");
+            return FALSE;
+        }
+        if (Status == STATUS_USER_APC || Status == STATUS_TIMEOUT)
+        {
+           return FALSE;
+        }
     }
-    while ( (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) ||
-            STATUS_TIMEOUT == Status );
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DPRINT1("Exit co_IntWaitMessage on error!\n");
-    }
+    while ( TRUE );
 
     return FALSE;
 }
@@ -943,6 +884,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     PWND Window;
     PTHREADINFO pti;
     BOOL Present = FALSE;
+    NTSTATUS Status;
 
     if ( hWnd == HWND_TOPMOST || hWnd == HWND_BROADCAST )
         hWnd = HWND_BOTTOM;
@@ -1001,16 +943,18 @@ co_IntGetPeekMessage( PMSG pMsg,
 
            co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)pMsg);
 
-           if ( bGMSG )
-           {
-              Present = (WM_QUIT != pMsg->message);
-              break;
-           }
+           if ( bGMSG ) break;
         }
 
         if ( bGMSG )
         {
-           if ( !co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax) )
+            Status = co_MsqWaitForNewMessages( pti->MessageQueue,
+                                               Window,
+                                               MsgFilterMin,
+                                               MsgFilterMax);
+           if ( !NT_SUCCESS(Status) ||
+                Status == STATUS_USER_APC ||
+                Status == STATUS_TIMEOUT )
            {
               Present = -1;
               break;
@@ -1102,7 +1046,6 @@ UserPostMessage( HWND Wnd,
     PTHREADINFO pti;
     MSG Message, KernelModeMsg;
     LARGE_INTEGER LargeTickCount;
-    PMSGMEMORY MsgMemoryEntry;
 
     Message.hwnd = Wnd;
     Message.message = Msg;
@@ -1112,11 +1055,18 @@ UserPostMessage( HWND Wnd,
     KeQueryTickCount(&LargeTickCount);
     Message.time = MsqCalculateMessageTime(&LargeTickCount);
 
-    MsgMemoryEntry = FindMsgMemory(Message.message);
+    if (is_pointer_message(Message.message))
+    {
+        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
+        return FALSE;
+    }
 
     if( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
     {
         NTSTATUS Status;
+        PMSGMEMORY MsgMemoryEntry;
+
+        MsgMemoryEntry = FindMsgMemory(Message.message);
 
         Status = CopyMsgToKernelMem(&KernelModeMsg, &Message, MsgMemoryEntry);
         if (! NT_SUCCESS(Status))
@@ -1133,12 +1083,6 @@ UserPostMessage( HWND Wnd,
             ExFreePool((PVOID) KernelModeMsg.lParam);
 
         return TRUE;
-    }
-
-    if (is_pointer_message(Message.message))
-    {
-        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
-        return FALSE;
     }
 
     if (!Wnd)
@@ -1274,7 +1218,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
             RETURN( FALSE);
         }
 
-        ObReferenceObject(Win32Thread->pEThread);
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1286,8 +1229,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         {
             *uResult = Result;
         }
-
-        ObDereferenceObject(Win32Thread->pEThread);
 
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1302,6 +1243,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti->MessageQueue))
     {
+        // FIXME - Set window hung and add to a list.
         /* FIXME - Set a LastError? */
         RETURN( FALSE);
     }
@@ -1327,14 +1269,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti->MessageQueue));
+           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME - Set window hung and add to a list.
 
     IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
     if (STATUS_TIMEOUT == Status)
     {
-        /*
-MSDN says:
+/*
+    MSDN says:
     Microsoft Windows 2000: If GetLastError returns zero, then the function
     timed out.
     XP+ : If the function fails or times out, the return value is zero.
@@ -1417,7 +1359,13 @@ co_IntSendMessageNoWait(HWND hWnd,
                                   &Result);
     return Result;
 }
-
+/* MSDN:
+   If you send a message in the range below WM_USER to the asynchronous message
+   functions (PostMessage, SendNotifyMessage, and SendMessageCallback), its
+   message parameters cannot include pointers. Otherwise, the operation will fail.
+   The functions will return before the receiving thread has had a chance to
+   process the message and the sender will free the memory before it is used.
+*/
 LRESULT FASTCALL
 co_IntSendMessageWithCallBack( HWND hWnd,
                               UINT Msg,
@@ -1453,17 +1401,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
-
     if (Win32Thread == NULL)
     {
-        ASSERT(FALSE);
-        RETURN(FALSE);
-    }
-
-    if (Win32Thread->TIF_flags & TIF_INCLEANUP)
-    {
-        /* Never send messages to exiting threads */
         RETURN(FALSE);
     }
 
@@ -1484,10 +1423,18 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN( FALSE);
     }
 
-    /* If this is not a callback and it can be sent now, then send it. */
-    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+    /* If it can be sent now, then send it. */
+    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
-        ObReferenceObject(Win32Thread->pEThread);
+        if (Win32Thread->TIF_flags & TIF_INCLEANUP)
+        {
+            UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE);
+            /* Never send messages to exiting threads */
+            RETURN(FALSE);
+        }
+
+        IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -1499,12 +1446,22 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         {
             *uResult = Result;
         }
-        ObDereferenceObject(Win32Thread->pEThread);
+
+        IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+
+        if (CompletionCallback)
+        {
+            co_IntCallSentMessageCallback(CompletionCallback,
+                                          hWnd,
+                                          Msg,
+                                          CompletionCallbackContext,
+                                          Result);
+        }
     }
 
-    IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+
+    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
@@ -1516,8 +1473,14 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
     {
         DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        RETURN( FALSE);
     }
+
+    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
+    /* Take reference on this MessageQueue if its a callback. It will be released
+       when message is processed or removed from target hwnd MessageQueue */
+    if (CompletionCallback)
+       IntReferenceMessageQueue(Win32Thread->MessageQueue);
 
     Message->Msg.hwnd = hWnd;
     Message->Msg.message = Msg;
@@ -1529,17 +1492,15 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->QS_Flags = 0;
     Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
     Message->CallBackSenderQueue = Win32Thread->MessageQueue;
-
-    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
+    Message->DispatchingListEntry.Flink = NULL;
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
-    Message->HookMessage = MSQ_NORMAL | MSQ_SENTNOWAIT;
+    Message->HookMessage = MSQ_NORMAL;
     Message->HasPackedLParam = (lParamBufferSize > 0);
-
     Message->QS_Flags = QS_SENDMESSAGE;
-    MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, FALSE);
 
     InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, TRUE);
     IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
     RETURN(TRUE);
@@ -1547,6 +1508,47 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 CLEANUP:
     if (Window) UserDerefObjectCo(Window);
     END_CLEANUP;
+}
+
+/* This function posts a message if the destination's message queue belongs to
+another thread, otherwise it sends the message. It does not support broadcast
+messages! */
+LRESULT FASTCALL
+co_IntPostOrSendMessage( HWND hWnd,
+                         UINT Msg,
+                         WPARAM wParam,
+                         LPARAM lParam )
+{
+    ULONG_PTR Result;
+    PTHREADINFO pti;
+    PWND Window;
+
+    if ( hWnd == HWND_BROADCAST )
+    {
+        return 0;
+    }
+
+    if(!(Window = UserGetWindowObject(hWnd)))
+    {
+        return 0;
+    }
+
+    pti = PsGetCurrentThreadWin32Thread();
+
+    if ( Window->head.pti->MessageQueue != pti->MessageQueue &&
+         FindMsgMemory(Msg) == 0 )
+    {
+        Result = UserPostMessage(hWnd, Msg, wParam, lParam);
+    }
+    else
+    {
+        if ( !co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result) )
+        {
+            Result = 0;
+        }
+    }
+
+    return (LRESULT)Result;
 }
 
 LRESULT FASTCALL
@@ -1653,11 +1655,6 @@ UserSendNotifyMessage( HWND hWnd,
             for (i = 0; List[i]; i++)
             {
                 Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
-                if (!Ret)
-                {
-                   DPRINT1("SendNotifyMessage: Failed in Broadcast!\n");
-                   break;
-                }
             }
             ExFreePool(List);
         }
@@ -1732,6 +1729,76 @@ IntUninitMessagePumpHook()
 
 /** Functions ******************************************************************/
 
+BOOL
+APIENTRY
+NtUserDragDetect(
+   HWND hWnd,
+   POINT pt) // Just like the User call.
+{
+    MSG msg;
+    RECT rect;
+    WORD wDragWidth, wDragHeight;
+    DECLARE_RETURN(BOOL);
+
+    DPRINT("Enter NtUserDragDetect(%x)\n", hWnd);
+    UserEnterExclusive();
+
+    wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
+    wDragHeight= UserGetSystemMetrics(SM_CYDRAG);
+
+    rect.left = pt.x - wDragWidth;
+    rect.right = pt.x + wDragWidth;
+
+    rect.top = pt.y - wDragHeight;
+    rect.bottom = pt.y + wDragHeight;
+
+    co_UserSetCapture(hWnd);
+
+    for (;;)
+    {
+        while (co_IntGetPeekMessage( &msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE, FALSE ) ||
+               co_IntGetPeekMessage( &msg, 0, WM_QUEUESYNC,  WM_QUEUESYNC, PM_REMOVE, FALSE ) ||
+               co_IntGetPeekMessage( &msg, 0, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE, FALSE ) )
+        {
+            if ( msg.message == WM_LBUTTONUP )
+            {
+                co_UserSetCapture(NULL);
+                RETURN( FALSE);
+            }
+            if ( msg.message == WM_MOUSEMOVE )
+            {
+                POINT tmp;
+                tmp.x = (short)LOWORD(msg.lParam);
+                tmp.y = (short)HIWORD(msg.lParam);
+                if( !IntPtInRect( &rect, tmp ) )
+                {
+                    co_UserSetCapture(NULL);
+                    RETURN( TRUE);
+                }
+            }
+            if ( msg.message == WM_KEYDOWN )
+            {
+                if ( msg.wParam == VK_ESCAPE )
+                {
+                   co_UserSetCapture(NULL);
+                   RETURN( TRUE);
+                }
+            }
+            if ( msg.message == WM_QUEUESYNC )
+            {
+                co_HOOK_CallHooks( WH_CBT, HCBT_QS, 0, 0 );
+            }
+        }
+        co_IntWaitMessage(NULL, 0, 0);
+    }
+    RETURN( FALSE);
+
+CLEANUP:
+   DPRINT("Leave NtUserDragDetect, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
 BOOL APIENTRY
 NtUserPostMessage(HWND hWnd,
                   UINT Msg,
@@ -1803,7 +1870,7 @@ NtUserGetMessage(PMSG pMsg,
 
     UserLeave();
 
-    if (Ret)
+    if (Ret == TRUE)
     {
         _SEH2_TRY
         {
@@ -1817,6 +1884,9 @@ NtUserGetMessage(PMSG pMsg,
         }
         _SEH2_END;
     }
+
+    if ((INT)Ret != -1)
+       Ret = Ret ? (WM_QUIT != pMsg->message) : FALSE;
 
     return Ret;
 }
@@ -1977,24 +2047,23 @@ NtUserMessageCall( HWND hWnd,
 
     UserEnterExclusive();
 
-    /* Validate input */
-    if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
-    {
-        Window = UserGetWindowObject(hWnd);
-        if (!Window)
-        {
-            UserLeave();
-            return FALSE;
-        }
-    }
-
     switch(dwType)
     {
     case FNID_DEFWINDOWPROC:
-        if (Window) UserRefObjectCo(Window, &Ref);
+        /* Validate input */
+        if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
+        {
+           Window = UserGetWindowObject(hWnd);
+           if (!Window)
+           {
+               UserLeave();
+               return FALSE;
+           }
+        }
+        UserRefObjectCo(Window, &Ref);
         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
         Ret = TRUE;
-        if (Window) UserDerefObjectCo(Window);
+        UserDerefObjectCo(Window);
         break;
     case FNID_SENDNOTIFYMESSAGE:
         Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);
@@ -2013,7 +2082,6 @@ NtUserMessageCall( HWND hWnd,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Ret = FALSE;
                     _SEH2_YIELD(break);
                 }
                 _SEH2_END;
@@ -2084,13 +2152,18 @@ NtUserMessageCall( HWND hWnd,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Ret = FALSE;
                 _SEH2_YIELD(break);
             }
             _SEH2_END;
 
-            if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
-                        CallBackInfo.CallBack, CallBackInfo.Context, &uResult))
+            if (is_pointer_message(Msg))
+            {
+               EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
+               break;
+            }
+
+            if (!(Ret = co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
+                        CallBackInfo.CallBack, CallBackInfo.Context, &uResult)))
             {
                 DPRINT1("Callback failure!\n");
             }
@@ -2128,7 +2201,6 @@ NtUserMessageCall( HWND hWnd,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Ret = FALSE;
                     _SEH2_YIELD(break);
                 }
                 _SEH2_END;

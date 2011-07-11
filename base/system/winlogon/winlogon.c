@@ -23,6 +23,49 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL
+PlaySoundRoutine(
+	IN LPCWSTR FileName,
+	IN UINT bLogon,
+	IN UINT Flags)
+{
+	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
+	typedef UINT (WINAPI *WAVEOUTGETNUMDEVS)(VOID);
+	PLAYSOUNDW Play;
+	WAVEOUTGETNUMDEVS waveOutGetNumDevs;
+	UINT NumDevs;
+	HMODULE hLibrary;
+	BOOL Ret = FALSE;
+
+	hLibrary = LoadLibraryW(L"winmm.dll");
+	if (hLibrary)
+	{
+		waveOutGetNumDevs = (WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
+		if (waveOutGetNumDevs)
+		{
+			NumDevs = waveOutGetNumDevs();
+			if (!NumDevs)
+			{
+				if (!bLogon)
+				{
+					Beep(500, 500);
+				}
+				FreeLibrary(hLibrary);
+				return FALSE;
+			}
+		}
+
+		Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
+		if (Play)
+		{
+			Ret = Play(FileName, NULL, Flags);
+		}
+		FreeLibrary(hLibrary);
+	}
+
+	return Ret;
+}
+
 DWORD
 WINAPI
 PlayLogonSoundThread(
@@ -32,10 +75,8 @@ PlayLogonSoundThread(
 	WCHAR szBuffer[MAX_PATH] = {0};
 	WCHAR szDest[MAX_PATH];
 	DWORD dwSize = sizeof(szBuffer);
-	HMODULE hLibrary;
 	SERVICE_STATUS_PROCESS Info;
-	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
-	PLAYSOUNDW Play;
+
 	ULONG Index = 0;
 
 	if (RegOpenKeyExW(HKEY_CURRENT_USER, L"AppEvents\\Schemes\\Apps\\.Default\\WindowsLogon\\.Current", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -94,17 +135,7 @@ PlayLogonSoundThread(
 		if (Info.dwCurrentState != SERVICE_RUNNING)
 			ExitThread(0);
 
-
-		hLibrary = LoadLibraryW(L"winmm.dll");
-		if (hLibrary)
-		{
-			Play = (PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
-			if (Play)
-			{
-				Play(szDest, NULL, SND_FILENAME);
-			}
-			FreeLibrary(hLibrary);
-		}
+		PlaySoundRoutine(szDest, TRUE, SND_FILENAME);
 	}
 	ExitThread(0);
 }

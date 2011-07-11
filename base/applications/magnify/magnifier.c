@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Magnify
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/magnify/magnifier.c
- * PURPOSE:
+ * PURPOSE:     Magnification of parts of the screen.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *
  */
@@ -78,19 +78,19 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 
 
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-//  COMMENTS:
-//
-//    This function and its usage are only necessary if you want this code
-//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
-//    function that was added to Windows 95. It is important to call this function
-//    so that the application will get 'well formed' small icons associated
-//    with it.
-//
+/*
+ *  FUNCTION: MyRegisterClass()
+ *
+ *  PURPOSE: Registers the window class.
+ *
+ *  COMMENTS:
+ *
+ *    This function and its usage are only necessary if you want this code
+ *    to be compatible with Win32 systems prior to the 'RegisterClassEx'
+ *    function that was added to Windows 95. It is important to call this function
+ *    so that the application will get 'well formed' small icons associated
+ *    with it.
+ */
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASS wc;
@@ -109,16 +109,16 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClass(&wc);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
+/*
+ *  FUNCTION: InitInstance(HINSTANCE, int)
+ *
+ *  PURPOSE: Saves instance handle and creates main window
+ *
+ *   COMMENTS:
+ *
+ *        In this function, we save the instance handle in a global variable and
+ *        create and display the main program window.
+ */
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
@@ -283,16 +283,16 @@ void Draw(HDC aDc)
     ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-//  WM_COMMAND	- process the application menu
-//  WM_PAINT	- Paint the main window
-//  WM_DESTROY	- post a quit message and return
-//
-//
+/*
+ *  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+ *
+ *  PURPOSE:  Processes messages for the main window.
+ *
+ *  WM_COMMAND	- process the application menu
+ *  WM_PAINT	- Paint the main window
+ *  WM_DESTROY	- post a quit message and return
+ *
+ */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId;

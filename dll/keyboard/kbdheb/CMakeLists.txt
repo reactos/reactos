@@ -7,6 +7,6 @@ add_library(kbdheb SHARED kbdheb.c kbdheb.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdheb.
 
 set_entrypoint(kbdheb 0)
 
-add_dependencies(kbdheb psdk buildno_header)
+add_dependencies(kbdheb psdk)
 
-add_cab_target(kbdheb 1)
+add_cd_file(TARGET kbdheb DESTINATION reactos/system32 FOR all)

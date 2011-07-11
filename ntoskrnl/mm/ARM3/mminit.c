@@ -1087,7 +1087,7 @@ MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                            FALSE);
 CleanUp:
     /* Free the DACL */
-    ExFreePool(Dacl);
+    ExFreePoolWithTag(Dacl, 'lcaD');
 
     /* Check if this is the success path */
     if (NT_SUCCESS(Status))
@@ -1533,7 +1533,7 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             RtlCopyMemory(NewBuffer->Run,
                           Buffer->Run,
                           sizeof(PHYSICAL_MEMORY_RUN) * Run);
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, 'lMmM');
 
             //
             // Now use the new buffer
@@ -1993,7 +1993,7 @@ MmArmInitSystem(IN ULONG Phase,
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
 
         /* Initialize the working set lock */
-        ExInitializePushLock((PULONG_PTR)&MmSystemCacheWs.WorkingSetMutex);
+        ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);
 
         /* Set commit limit */
         MmTotalCommitLimit = 2 * _1GB;

@@ -19,4 +19,4 @@ target_link_libraries(xmllite wine uuid)
 
 add_importlibs(xmllite msvcrt kernel32 ntdll)
 add_importlib_target(xmllite.spec)
-add_cab_target(xmllite 1)
+add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

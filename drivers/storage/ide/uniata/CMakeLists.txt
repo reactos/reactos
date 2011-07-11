@@ -1,7 +1,10 @@
 
 include_directories(inc)
 
+#add_definitions(-D_DEBUG)
+
 set_cpp()
+set_rc_compiler()
 
 add_library(uniata SHARED
     id_ata.cpp
@@ -17,5 +20,4 @@ add_library(uniata SHARED
 set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)
 
-add_minicd_target(uniata reactos uniata.sys)
-add_livecd_target(uniata reactos/system32/drivers)
+add_cd_file(TARGET uniata DESTINATION reactos/system32/drivers NO_CAB FOR all)

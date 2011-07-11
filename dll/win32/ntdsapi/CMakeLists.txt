@@ -16,5 +16,5 @@ target_link_libraries(ntdsapi wine)
 
 add_importlibs(ntdsapi user32 kernel32 ntdll)
 add_importlib_target(ntdsapi.spec)
-add_dependencies(ntdsapi psdk buildno_header)
-add_cab_target(ntdsapi 1)
+add_dependencies(ntdsapi psdk)
+add_cd_file(TARGET ntdsapi DESTINATION reactos/system32 FOR all)

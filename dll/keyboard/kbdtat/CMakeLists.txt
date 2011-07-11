@@ -7,6 +7,6 @@ add_library(kbdtat SHARED kbdtat.c kbdtat.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtat.
 
 set_entrypoint(kbdtat 0)
 
-add_dependencies(kbdtat psdk buildno_header)
+add_dependencies(kbdtat psdk)
 
-add_cab_target(kbdtat 1)
+add_cd_file(TARGET kbdtat DESTINATION reactos/system32 FOR all)

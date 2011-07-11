@@ -1,9 +1,8 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+set_rc_compiler()
 
 spec2def(msrle32.dll msrle32.spec)
 
@@ -17,4 +16,4 @@ add_library(msrle32 SHARED ${SOURCE})
 set_module_type(msrle32 win32dll)
 target_link_libraries(msrle32 wine)
 add_importlibs(msrle32 msvcrt winmm user32 kernel32 ntdll)
-add_cab_target(msrle32 1)
+add_cd_file(TARGET msrle32 DESTINATION reactos/system32 FOR all)

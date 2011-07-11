@@ -156,8 +156,8 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 
 /* Stock objects */
 
-BOOL FASTCALL
-IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
+VOID FASTCALL
+IntSetSysColors(UINT nColors, CONST INT *Elements, CONST COLORREF *Colors);
 
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object);
@@ -232,8 +232,6 @@ IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            LPPALETTEENTRY  pe);
-UINT APIENTRY
-IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
 
 UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);

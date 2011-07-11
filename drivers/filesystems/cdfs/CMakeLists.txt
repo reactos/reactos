@@ -17,12 +17,11 @@ list(APPEND SOURCE
     volinfo.c
     cdfs.rc)
 
-add_library(cdfs SHARED ${CMAKE_CURRENT_BINARY_DIR}/cdfs_cdfs.h.gch ${SOURCE})
+add_library(cdfs SHARED ${SOURCE})
 
 set_module_type(cdfs kernelmodedriver)
 add_importlibs(cdfs ntoskrnl hal)
 
-add_pch(cdfs ${CMAKE_CURRENT_SOURCE_DIR}/cdfs.h ${SOURCE})
+add_pch(cdfs cdfs.h)
 
-add_minicd_target(cdfs reactos cdfs.sys)
-add_livecd_target(cdfs reactos/system32/drivers cdfs.sys)
+add_cd_file(TARGET cdfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

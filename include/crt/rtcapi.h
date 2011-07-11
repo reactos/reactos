@@ -76,7 +76,7 @@ extern "C" {
   __MINGW_EXTENSION int __fastcall _RTC_Check_8_to_4(__int64 _Src);
 
 #if (defined(_X86_) && !defined(__x86_64))
-  void __cdecl _RTC_CheckEsp();
+  void __cdecl _RTC_CheckEsp(void);
 #endif
   void __fastcall _RTC_CheckStackVars(void *_Esp,_RTC_framedesc *_Fd);
   void __fastcall _RTC_CheckStackVars2(void *_Esp,_RTC_framedesc *_Fd,_RTC_ALLOCA_NODE *_AllocaList);
@@ -85,7 +85,7 @@ extern "C" {
   void __cdecl _RTC_Shutdown(void);
   void __cdecl _RTC_InitBase(void);
 #ifdef __cplusplus
-  void *_ReturnAddress();
+  void *_ReturnAddress(void);
 }
 #endif
 

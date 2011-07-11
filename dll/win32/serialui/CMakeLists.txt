@@ -1,6 +1,6 @@
 
 set_unicode()
-
+set_rc_compiler()
 spec2def(serialui.dll serialui.spec)
 
 list(APPEND SOURCE
@@ -12,4 +12,4 @@ add_library(serialui SHARED ${SOURCE})
 
 set_module_type(serialui win32dll)
 add_importlibs(serialui user32 shlwapi msvcrt kernel32)
-add_cab_target(serialui 1)
+add_cd_file(TARGET serialui DESTINATION reactos/system32 FOR all)

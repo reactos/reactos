@@ -1,5 +1,6 @@
 
 spec2def(netid.dll netid.spec)
+set_rc_compiler()
 
 list(APPEND SOURCE
     netid.c
@@ -10,4 +11,4 @@ add_library(netid SHARED ${SOURCE})
 
 set_module_type(netid win32dll)
 add_importlibs(netid user32 gdi32 comctl32 advapi32 netapi32 msvcrt kernel32 ntdll)
-add_cab_target(netid 1)
+add_cd_file(TARGET netid DESTINATION reactos/system32 FOR all)

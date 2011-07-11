@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -311,6 +311,12 @@ FT_BEGIN_HEADER
   /*      in the case when the unpatented hinter is compiled within the    */
   /*      library.                                                         */
   /*                                                                       */
+  /*    refcount ::                                                        */
+  /*      A counter initialized to~1 at the time an @FT_Face structure is  */
+  /*      created.  @FT_Reference_Face increments this counter, and        */
+  /*      @FT_Done_Face only destroys a face if the counter is~1,          */
+  /*      otherwise it simply decrements it.                               */
+  /*                                                                       */
   typedef struct  FT_Face_InternalRec_
   {
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
@@ -328,6 +334,7 @@ FT_BEGIN_HEADER
 #endif
 
     FT_Bool             ignore_unpatented_hinter;
+    FT_UInt             refcount;
 
   } FT_Face_InternalRec;
 
@@ -805,10 +812,28 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    debug_hooks      :: XXX                                            */
   /*                                                                       */
+  /*    lcd_filter       :: If subpixel rendering is activated, the        */
+  /*                        selected LCD filter mode.                      */
+  /*                                                                       */
+  /*    lcd_extra        :: If subpixel rendering is activated, the number */
+  /*                        of extra pixels needed for the LCD filter.     */
+  /*                                                                       */
+  /*    lcd_weights      :: If subpixel rendering is activated, the LCD    */
+  /*                        filter weights, if any.                        */
+  /*                                                                       */
+  /*    lcd_filter_func  :: If subpixel rendering is activated, the LCD    */
+  /*                        filtering callback function.                   */
+  /*                                                                       */
   /*    pic_container    :: Contains global structs and tables, instead    */
   /*                        of defining them globallly.                    */
   /*                                                                       */
-
+  /*    refcount         :: A counter initialized to~1 at the time an      */
+  /*                        @FT_Library structure is created.              */
+  /*                        @FT_Reference_Library increments this counter, */
+  /*                        and @FT_Done_Library only destroys a library   */
+  /*                        if the counter is~1, otherwise it simply       */
+  /*                        decrements it.                                 */
+  /*                                                                       */
   typedef struct  FT_LibraryRec_
   {
     FT_Memory          memory;           /* library's memory manager */
@@ -842,6 +867,8 @@ FT_BEGIN_HEADER
 #ifdef FT_CONFIG_OPTION_PIC
     FT_PIC_Container   pic_container;
 #endif
+
+    FT_UInt            refcount;
 
   } FT_LibraryRec;
 

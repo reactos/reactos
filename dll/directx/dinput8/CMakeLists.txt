@@ -30,7 +30,7 @@ add_importlibs(dinput8
     kernel32
     ntdll)
 
-add_dependencies(dinput8 psdk buildno_header)
+add_dependencies(dinput8 psdk)
 
-add_cab_target(dinput8 1)
+add_cd_file(TARGET dinput8 DESTINATION reactos/system32 FOR all)
 add_importlib_target(dinput8.spec)

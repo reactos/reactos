@@ -5,7 +5,7 @@
  * Copyright 2003 Mike McCormack for CodeWeavers
  * Copyright 2003 Vincent Béron
  * Copyright 2005 Jonathan Ernst
- * Copyright 2009 Frédéric Delanoy
+ * Copyright 2009-2010 Frédéric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 218, 150
+IDD_PROXYDLG DIALOG 36, 24, 218, 150
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Entrez le mot de passe réseau"
 FONT 8, "MS Shell Dlg"
@@ -49,7 +49,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Annuler", IDCANCEL, 147, 128, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 218, 150
+IDD_AUTHDLG DIALOG 36, 24, 218, 150
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Authentification requise"
 FONT 8, "MS Shell Dlg"
@@ -69,7 +69,14 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Annuler", IDCANCEL, 147, 128, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE
+IDD_INVCERTDLG DIALOG 3, 24, 250, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Alerte de sécurité"
+FONT 8, "MS Shell Dlg"
 {
-  IDS_LANCONNECTION "Connexion réseau local (LAN)"
+ LTEXT "Le certificat pour ce site pose problème.", -1, 40, 6, 200, 20
+ LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
+ LTEXT "Voulez-vous tout de même continuer ?", -1, 40, 46, 200, 20
+ PUSHBUTTON "Oui", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Non", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

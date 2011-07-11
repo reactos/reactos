@@ -16,5 +16,5 @@ set_entrypoint(msvcrt20 0)
 target_link_libraries(msvcrt20 wine)
 
 add_importlibs(msvcrt20 msvcrt kernel32 ntdll)
-add_dependencies(msvcrt20 psdk buildno_header)
-add_cab_target(msvcrt20 1)
+add_dependencies(msvcrt20 psdk)
+add_cd_file(TARGET msvcrt20 DESTINATION reactos/system32 FOR all)

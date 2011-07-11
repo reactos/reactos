@@ -1,9 +1,8 @@
 
-set_unicode()
+add_definitions(-D_WIN32)
 
-add_definitions(
-    -D_WIN32
-    -D_DLL -D__USE_CRTIMP)
+set_unicode()
+set_rc_compiler()
 
 spec2def(desk.cpl desk.spec)
 
@@ -46,4 +45,4 @@ add_importlibs(desk
     kernel32
     ntdll)
 
-add_cab_target(desk 1)
+add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

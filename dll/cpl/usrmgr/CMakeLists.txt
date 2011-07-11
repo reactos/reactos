@@ -3,6 +3,8 @@ set_unicode()
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
+
 spec2def(usrmgr.cpl usrmgr.spec)
 
 add_library(usrmgr SHARED
@@ -29,4 +31,4 @@ add_importlibs(usrmgr
     ntdll)
 
 
-add_cab_target(usrmgr 1)
+add_cd_file(TARGET usrmgr DESTINATION reactos/system32 FOR all)

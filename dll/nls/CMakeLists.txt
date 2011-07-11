@@ -1,3 +1,5 @@
 
-#add_subdirectory(idndl)#FIXME: idndl.cpp:20: error: 'GetLocaleInfoEx' was not declared in this scope
-add_subdirectory(normaliz)
+if(NOT MSVC)
+    add_subdirectory(idndl) # FIXME: msvc build.
+endif()
+#add_subdirectory(normaliz) # Win Vista

@@ -14,5 +14,5 @@ target_link_libraries(avicap32 wine)
 
 add_importlibs(avicap32 advapi32 user32 version msvcrt kernel32 ntdll)
 
-add_cab_target(avicap32 1)
+add_cd_file(TARGET avicap32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(avicap32.spec)

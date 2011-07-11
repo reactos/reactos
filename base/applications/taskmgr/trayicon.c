@@ -100,8 +100,6 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     hOldBitmap = NULL;
 
     iconInfo.fIcon = TRUE;
-    iconInfo.xHotspot = 0;
-    iconInfo.yHotspot = 0;
     iconInfo.hbmMask = hBitmapMask;
     iconInfo.hbmColor = hBitmap;
 
@@ -113,8 +111,6 @@ done:
      */
     if (hScreenDC)
         ReleaseDC(NULL, hScreenDC);
-    if (hOldBitmap)
-        hBitmap = SelectObject(hDC, hOldBitmap);
     if (hDC)
         DeleteDC(hDC);
     if (hBitmapBrush)
@@ -135,7 +131,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     NOTIFYICONDATAW nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
-    WCHAR           szMsg[256];
+    WCHAR           szMsg[64];
 
     memset(&nid, 0, sizeof(NOTIFYICONDATAW));
 
@@ -183,7 +179,7 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     NOTIFYICONDATAW nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
-    WCHAR           szTemp[256];
+    WCHAR           szTemp[64];
 
     memset(&nid, 0, sizeof(NOTIFYICONDATAW));
 
@@ -195,7 +191,7 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
-    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, 256);
+    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, sizeof(szTemp)/sizeof(szTemp[0]));
     wsprintfW(nid.szTip, szTemp, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIconW(NIM_MODIFY, &nid);

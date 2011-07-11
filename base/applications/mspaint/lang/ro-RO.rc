@@ -1,0 +1,206 @@
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/ro-RO.rc
+ * PURPOSE:     Romanian Language resource file
+ * TRANSLATORS: Petru Dimitriu
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+ID_MENU MENU
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "Nou\tCtrl+N", IDM_FILENEW
+        MENUITEM "Deschidere...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "Salvare\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Salvare ca...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Setare ca fundal (în carou)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Setare ca fundal (centrat)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Setare ca fundal (întins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Ieșire\tAlt+F4", IDM_FILEEXIT
+    END
+
+    POPUP "&Editare"
+    BEGIN
+        MENUITEM "Anulare\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Refacere\tCtrl+Y", IDM_EDITREDO
+        MENUITEM SEPARATOR
+        MENUITEM "Decupare\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Copiere\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Ștergere selecție\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Inversare selecție", IDM_EDITINVERTSELECTION
+        MENUITEM "Selectare totală\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Copiere în...", IDM_EDITCOPYTO
+        MENUITEM "Lipire din...", IDM_EDITPASTEFROM
+    END
+
+    POPUP "&Vizualizare"
+    BEGIN
+        MENUITEM "Instrumente\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Paletă de culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Bară de stare", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Bară de instrumente text", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Panoramare"
+        BEGIN
+            POPUP "Definită de utilizator"
+            BEGIN
+                MENUITEM "12,5%", IDM_VIEWZOOM125
+                MENUITEM "25%", IDM_VIEWZOOM25
+                MENUITEM "50%", IDM_VIEWZOOM50
+                MENUITEM "100%", IDM_VIEWZOOM100
+                MENUITEM "200%", IDM_VIEWZOOM200
+                MENUITEM "400%", IDM_VIEWZOOM400
+                MENUITEM "800%", IDM_VIEWZOOM800
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Afișare grilă", IDM_VIEWSHOWGRID
+            MENUITEM "Afișare miniatură", IDM_VIEWSHOWMINIATURE
+        END
+        MENUITEM "Pe tot ecranul\tCtrl+F", IDM_VIEWFULLSCREEN
+    END
+    
+    POPUP "&Imagine"
+    BEGIN
+        MENUITEM "Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Redimensionare...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Tăiere", IDM_IMAGECROP
+        MENUITEM "Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Ștergere imagine", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Desenare opacă", IDM_IMAGEDRAWOPAQUE
+    END
+    
+    POPUP "&Culori"
+    BEGIN
+        MENUITEM "Editare paletă...", IDM_COLORSEDITPALETTE
+    END
+    
+    POPUP "&Ajutor"
+    BEGIN
+        MENUITEM "Topici de ajutor", IDM_HELPHELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Despre", IDM_HELPINFO
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^N", IDM_FILENEW
+    "^O", IDM_FILEOPEN
+    "^S", IDM_FILESAVE
+    "^Z", IDM_EDITUNDO
+    "^Y", IDM_EDITREDO
+    "^X", IDM_EDITCUT
+    "^C", IDM_EDITCOPY
+    "^V", IDM_EDITPASTE
+    VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
+    "^A", IDM_EDITSELECTALL
+    "^T", IDM_VIEWTOOLBOX
+    "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
+    "^F", IDM_VIEWFULLSCREEN
+    "^R", IDM_IMAGEROTATEMIRROR
+    "^W", IDM_IMAGECHANGESIZE
+    "^I", IDM_IMAGEINVERTCOLORS
+    "^E", IDM_IMAGEATTRIBUTES
+    "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+END
+
+IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Rotire și oglindire imagine"
+BEGIN
+    GROUPBOX "Rotire sau oglindire", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "Oglindire orizontală", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Oglindire verticală", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Rotire la un unghi de:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 125, 24, 48, 14
+END
+
+IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Atribute"
+BEGIN
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
+    LTEXT "Lățime:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "Înălțime:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "Dată:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Mărime:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Rezoluție:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
+    GROUPBOX "Unitate", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    AUTORADIOBUTTON "țoli", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
+    AUTORADIOBUTTON "Pixeli", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "Culori", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "Alb și negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "Color", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 155, 24, 48, 14
+    PUSHBUTTON "Standard", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+END
+
+IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Schimbare dimensiune"
+BEGIN
+    GROUPBOX "Schimbare dimensiune", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
+    LTEXT "Orizontal:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
+    LTEXT "Vertical:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 155, 24, 48, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMNAME, "Paint"
+    IDS_WINDOWTITLE, "%s - Paint"
+    IDS_INFOTITLE, "Paint pentru ReactOS"
+    IDS_INFOTEXT, "Paint pentru ReactOS este disponibil sub licența GNU Lesser General Public versiunea 3 (vedeți www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Vreți să salvați schimbările la %s?"
+    IDS_DEFAULTFILENAME, "FărăNume.bmp"
+    IDS_MINIATURETITLE, "Miniature"
+    IDS_TOOLTIP1, "Golire selecție"
+    IDS_TOOLTIP2, "Selecție"
+    IDS_TOOLTIP3, "Radieră"
+    IDS_TOOLTIP4, "Umplere cu culoare"
+    IDS_TOOLTIP5, "Selectare culoare"
+    IDS_TOOLTIP6, "Panoramare"
+    IDS_TOOLTIP7, "Creion"
+    IDS_TOOLTIP8, "Pensulă"
+    IDS_TOOLTIP9, "Pulverizator"
+    IDS_TOOLTIP10, "Text"
+    IDS_TOOLTIP11, "Linie"
+    IDS_TOOLTIP12, "Curbă bezier"
+    IDS_TOOLTIP13, "Dreptunghi"
+    IDS_TOOLTIP14, "Poligon"
+    IDS_TOOLTIP15, "Oval"
+    IDS_TOOLTIP16, "Dreptunghi rotunjit"
+    IDS_OPENFILTER, "Fișiere bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "Bitmap pe 24 biți (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_FILESIZE, "%d bytes"
+    IDS_PRINTRES, "%d x %d pixels per meter"
+END

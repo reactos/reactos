@@ -40,4 +40,4 @@ add_importlibs(atl
 add_importlib_target(atl.spec)
 
 add_dependencies(atl atl_atliface_header)
-add_cab_target(atl 1)
+add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)

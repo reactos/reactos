@@ -15,9 +15,9 @@ BEGIN
     LTEXT       "Descripción del equipo:", IDC_STATIC, 6, 40, 85, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Nombre completo del equipo:", IDC_STATIC, 6, 66, 64, 16
-    LTEXT       "(Defecto)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Grupo de trabajo:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(vacío)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT       "Para usar el Asistente para identificación de red para unirse a un dominio y crear una cuenta de usuario local, haga clic en ""Id de red"".", IDC_STATIC, 6, 108, 172, 24
     PUSHBUTTON  "&Id de red...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Para cambiar el nombre de este equipo o unirse a un dominio, haga clic en ""Cambiar"".", IDC_STATIC, 6, 149, 170, 17

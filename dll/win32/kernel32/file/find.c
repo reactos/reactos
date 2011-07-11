@@ -5,6 +5,7 @@
  * FILE:            lib/kernel32/file/find.c
  * PURPOSE:         Find functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -74,34 +75,6 @@ InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
 }
 
 static VOID
-InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
-                            PUNICODE_STRING FileName,
-                            ULONG DeviceNameInfo)
-{
-    UNICODE_STRING DeviceName;
-    ANSI_STRING BufferA;
-    CHAR Buffer[MAX_PATH];
-
-    DeviceName.Length = DeviceName.MaximumLength = (USHORT)(DeviceNameInfo & 0xFFFF);
-    DeviceName.Buffer = (LPWSTR)((ULONG_PTR)FileName->Buffer + (DeviceNameInfo >> 16));
-
-    BufferA.MaximumLength = sizeof(Buffer) - sizeof(Buffer[0]);
-    BufferA.Buffer = Buffer;
-    if (bIsFileApiAnsi)
-        RtlUnicodeStringToAnsiString (&BufferA, &DeviceName, FALSE);
-    else
-        RtlUnicodeStringToOemString (&BufferA, &DeviceName, FALSE);
-
-    /* Return the data */
-    RtlZeroMemory(lpFindFileData,
-                  sizeof(*lpFindFileData));
-    lpFindFileData->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
-    RtlCopyMemory(lpFindFileData->cFileName,
-                  BufferA.Buffer,
-                  BufferA.Length);
-}
-
-static VOID
 InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
                       PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
 {
@@ -126,57 +99,6 @@ InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
     lpFindFileData->cAlternateFileName[lpFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
 }
 
-static VOID
-InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
-                      PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
-{
-    UNICODE_STRING FileNameU;
-    ANSI_STRING FileNameA;
-
-    lpFindFileData->dwFileAttributes = lpFileInfo->FileAttributes;
-
-    lpFindFileData->ftCreationTime.dwHighDateTime = lpFileInfo->CreationTime.u.HighPart;
-    lpFindFileData->ftCreationTime.dwLowDateTime = lpFileInfo->CreationTime.u.LowPart;
-
-    lpFindFileData->ftLastAccessTime.dwHighDateTime = lpFileInfo->LastAccessTime.u.HighPart;
-    lpFindFileData->ftLastAccessTime.dwLowDateTime = lpFileInfo->LastAccessTime.u.LowPart;
-
-    lpFindFileData->ftLastWriteTime.dwHighDateTime = lpFileInfo->LastWriteTime.u.HighPart;
-    lpFindFileData->ftLastWriteTime.dwLowDateTime = lpFileInfo->LastWriteTime.u.LowPart;
-
-    lpFindFileData->nFileSizeHigh = lpFileInfo->EndOfFile.u.HighPart;
-    lpFindFileData->nFileSizeLow = lpFileInfo->EndOfFile.u.LowPart;
-
-    FileNameU.Length = FileNameU.MaximumLength = (USHORT)lpFileInfo->FileNameLength;
-    FileNameU.Buffer = lpFileInfo->FileName;
-
-    FileNameA.MaximumLength = sizeof(lpFindFileData->cFileName) - sizeof(CHAR);
-    FileNameA.Buffer = lpFindFileData->cFileName;
-
-    /* convert unicode string to ansi (or oem) */
-    if (bIsFileApiAnsi)
-    	RtlUnicodeStringToAnsiString (&FileNameA, &FileNameU, FALSE);
-    else
-        RtlUnicodeStringToOemString (&FileNameA, &FileNameU, FALSE);
-
-    FileNameA.Buffer[FileNameA.Length] = 0;
-
-    TRACE("lpFileInfo->ShortNameLength %d\n", lpFileInfo->ShortNameLength);
-
-    FileNameU.Length = FileNameU.MaximumLength = lpFileInfo->ShortNameLength;
-    FileNameU.Buffer = lpFileInfo->ShortName;
-
-    FileNameA.MaximumLength = sizeof(lpFindFileData->cAlternateFileName) - sizeof(CHAR);
-    FileNameA.Buffer = lpFindFileData->cAlternateFileName;
-
-    /* convert unicode string to ansi (or oem) */
-    if (bIsFileApiAnsi)
-	RtlUnicodeStringToAnsiString (&FileNameA, &FileNameU, FALSE);
-    else
-    	RtlUnicodeStringToOemString (&FileNameA, &FileNameU, FALSE);
-
-    FileNameA.Buffer[FileNameA.Length] = 0;
-}
 
 /*
  * @implemented
@@ -186,8 +108,7 @@ WINAPI
 InternalFindNextFile (
     HANDLE	hFindFile,
     PUNICODE_STRING SearchPattern,
-    PVOID lpFindFileData,
-    BOOL bUnicode
+    PVOID lpFindFileData
     )
 {
     PKERNEL32_FIND_DATA_HEADER IHeader;
@@ -290,16 +211,8 @@ NeedMoreData:
         {
             _SEH2_TRY
             {
-                if (bUnicode)
-                {
-                    InternalCopyFindDataW(lpFindFileData,
-                                          FoundFile);
-                }
-                else
-                {
-                    InternalCopyFindDataA(lpFindFileData,
-                                          FoundFile);
-                }
+                InternalCopyFindDataW(lpFindFileData,
+                                      FoundFile);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -334,8 +247,7 @@ WINAPI
 InternalFindFirstFile (
     LPCWSTR	lpFileName,
     BOOLEAN DirectoryOnly,
-    PVOID lpFindFileData,
-    BOOL bUnicode
+    PVOID lpFindFileData
 	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -460,18 +372,9 @@ InternalFindFirstFile (
 	   DeviceNameInfo = RtlIsDosDeviceName_U((PWSTR)((ULONG_PTR)lpFileName));
 	   if (DeviceNameInfo != 0)
 	   {
-	       if (bUnicode)
-	       {
-	           InternalCopyDeviceFindDataW(lpFindFileData,
-	                                       lpFileName,
-	                                       DeviceNameInfo);
-	       }
-	       else
-	       {
-	           InternalCopyDeviceFindDataA(lpFindFileData,
-	                                       &FileName,
-	                                       DeviceNameInfo);
-	       }
+	       InternalCopyDeviceFindDataW(lpFindFileData,
+	                                   lpFileName,
+	                                   DeviceNameInfo);
 
 	       return FIND_DEVICE_HANDLE;
 	   }
@@ -526,8 +429,7 @@ InternalFindFirstFile (
 
 	bResult = InternalFindNextFile((HANDLE)IHeader,
 	                               &PathFileName,
-	                               lpFindFileData,
-	                               bUnicode);
+	                               lpFindFileData);
 
 	RtlFreeHeap (hProcessHeap,
 	             0,
@@ -551,17 +453,59 @@ InternalFindFirstFile (
  */
 HANDLE
 WINAPI
-FindFirstFileA (
-	LPCSTR			lpFileName,
-	LPWIN32_FIND_DATAA	lpFindFileData
-	)
+FindFirstFileA(IN LPCSTR lpFileName,
+               OUT LPWIN32_FIND_DATAA lpFindFileData)
 {
-	return FindFirstFileExA (lpFileName,
-	                         FindExInfoStandard,
-	                         (LPVOID)lpFindFileData,
-	                         FindExSearchNameMatch,
-	                         NULL,
-	                         0);
+    HANDLE hSearch;
+    NTSTATUS Status;
+    ANSI_STRING Ansi;
+    UNICODE_STRING UTF8;
+    PUNICODE_STRING lpFileNameW;
+    WIN32_FIND_DATAW FindFileDataW;
+
+    lpFileNameW = Basep8BitStringToStaticUnicodeString(lpFileName);
+    if (!lpFileNameW)
+    {
+        return INVALID_HANDLE_VALUE;
+    }
+
+    hSearch = FindFirstFileExW(lpFileNameW->Buffer,
+                               FindExInfoStandard,
+                               &FindFileDataW,
+                               FindExSearchNameMatch,
+                               NULL, 0);
+    if (hSearch == INVALID_HANDLE_VALUE)
+    {
+        return INVALID_HANDLE_VALUE;
+    }
+
+    memcpy(lpFindFileData, &FindFileDataW, FIELD_OFFSET(WIN32_FIND_DATA, cFileName));
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cFileName);
+    Ansi.Buffer = lpFindFileData->cFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = MAX_PATH;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        FindClose(hSearch);
+        BaseSetLastNTError(Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cAlternateFileName);
+    Ansi.Buffer = lpFindFileData->cAlternateFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = 14;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        FindClose(hSearch);
+        BaseSetLastNTError(Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hSearch;
 }
 
 
@@ -570,14 +514,44 @@ FindFirstFileA (
  */
 BOOL
 WINAPI
-FindNextFileA (
-	HANDLE hFindFile,
-	LPWIN32_FIND_DATAA lpFindFileData)
+FindNextFileA(IN HANDLE hFindFile,
+              OUT LPWIN32_FIND_DATAA lpFindFileData)
 {
-	return InternalFindNextFile (hFindFile,
-	                             NULL,
-	                             lpFindFileData,
-	                             FALSE);
+    NTSTATUS Status;
+    ANSI_STRING Ansi;
+    UNICODE_STRING UTF8;
+    WIN32_FIND_DATAW FindFileDataW;
+
+    if (!FindNextFileW(hFindFile, &FindFileDataW))
+    {
+        return FALSE;
+    }
+
+    memcpy(lpFindFileData, &FindFileDataW, FIELD_OFFSET(WIN32_FIND_DATA, cFileName));
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cFileName);
+    Ansi.Buffer = lpFindFileData->cFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = MAX_PATH;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cAlternateFileName);
+    Ansi.Buffer = lpFindFileData->cAlternateFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = 14;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -643,17 +617,15 @@ FindClose (
  */
 HANDLE
 WINAPI
-FindFirstFileW (
-	LPCWSTR			lpFileName,
-	LPWIN32_FIND_DATAW	lpFindFileData
-	)
+FindFirstFileW(IN LPCWSTR lpFileName,
+               OUT LPWIN32_FIND_DATAW lpFindFileData)
 {
-    return FindFirstFileExW (lpFileName,
-                             FindExInfoStandard,
-                             (LPVOID)lpFindFileData,
-                             FindExSearchNameMatch,
-                             NULL,
-                             0);
+    return FindFirstFileExW(lpFileName,
+                            FindExInfoStandard,
+                            lpFindFileData,
+                            FindExSearchNameMatch,
+                            NULL,
+                            0);
 }
 
 /*
@@ -661,15 +633,12 @@ FindFirstFileW (
  */
 BOOL
 WINAPI
-FindNextFileW (
-	HANDLE			hFindFile,
-	LPWIN32_FIND_DATAW	lpFindFileData
-	)
+FindNextFileW(IN HANDLE hFindFile,
+              OUT LPWIN32_FIND_DATAW lpFindFileData)
 {
-	return InternalFindNextFile (hFindFile,
-	                             NULL,
-	                             lpFindFileData,
-	                             TRUE);
+	return InternalFindNextFile(hFindFile,
+	                            NULL,
+	                            lpFindFileData);
 }
 
 
@@ -678,12 +647,12 @@ FindNextFileW (
  */
 HANDLE
 WINAPI
-FindFirstFileExW (LPCWSTR               lpFileName,
-                  FINDEX_INFO_LEVELS    fInfoLevelId,
-                  LPVOID                lpFindFileData,
-                  FINDEX_SEARCH_OPS     fSearchOp,
-                  LPVOID                lpSearchFilter,
-                  DWORD                 dwAdditionalFlags)
+FindFirstFileExW(IN LPCWSTR lpFileName,
+                 IN FINDEX_INFO_LEVELS fInfoLevelId,
+                 OUT LPVOID lpFindFileData,
+                 IN FINDEX_SEARCH_OPS fSearchOp,
+                 LPVOID lpSearchFilter,
+                 IN DWORD dwAdditionalFlags)
 {
     if (fInfoLevelId != FindExInfoStandard)
     {
@@ -701,8 +670,7 @@ FindFirstFileExW (LPCWSTR               lpFileName,
 
         return InternalFindFirstFile (lpFileName,
                                       fSearchOp == FindExSearchLimitToDirectories,
-                                      lpFindFileData,
-                                      TRUE);
+                                      lpFindFileData);
     }
 
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -714,51 +682,64 @@ FindFirstFileExW (LPCWSTR               lpFileName,
  */
 HANDLE
 WINAPI
-FindFirstFileExA (
-	LPCSTR			lpFileName,
-	FINDEX_INFO_LEVELS	fInfoLevelId,
-	LPVOID			lpFindFileData,
-	FINDEX_SEARCH_OPS	fSearchOp,
-	LPVOID			lpSearchFilter,
-	DWORD			dwAdditionalFlags
-	)
+FindFirstFileExA(IN LPCSTR lpFileName,
+                 IN FINDEX_INFO_LEVELS fInfoLevelId,
+                 OUT LPVOID lpFindFileData,
+                 IN FINDEX_SEARCH_OPS fSearchOp,
+                 LPVOID lpSearchFilter,
+                 IN DWORD dwAdditionalFlags)
 {
-    UNICODE_STRING FileNameU;
-    ANSI_STRING FileNameA;
-    HANDLE Handle;
+    HANDLE hSearch;
+    NTSTATUS Status;
+    ANSI_STRING Ansi;
+    UNICODE_STRING UTF8;
+    PUNICODE_STRING lpFileNameW;
+    WIN32_FIND_DATAW FindFileDataW;
 
-    if (fInfoLevelId != FindExInfoStandard)
+    lpFileNameW = Basep8BitStringToStaticUnicodeString(lpFileName);
+    if (!lpFileNameW)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
-    if (fSearchOp == FindExSearchNameMatch || fSearchOp == FindExSearchLimitToDirectories)
+
+    hSearch = FindFirstFileExW(lpFileNameW->Buffer,
+                               fInfoLevelId,
+                               &FindFileDataW,
+                               fSearchOp,
+                               lpSearchFilter,
+                               dwAdditionalFlags);
+    if (hSearch == INVALID_HANDLE_VALUE)
     {
-        if (lpSearchFilter)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return INVALID_HANDLE_VALUE;
-        }
-
-        RtlInitAnsiString (&FileNameA, (LPSTR)lpFileName);
-
-        /* convert ansi (or oem) string to unicode */
-        if (bIsFileApiAnsi)
-            RtlAnsiStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
-        else
-            RtlOemStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
-
-        Handle = InternalFindFirstFile (FileNameU.Buffer,
-                                        fSearchOp == FindExSearchLimitToDirectories,
-                                        lpFindFileData,
-                                        FALSE);
-
-        RtlFreeUnicodeString (&FileNameU);
-        return Handle;
+        return INVALID_HANDLE_VALUE;
     }
 
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return INVALID_HANDLE_VALUE;
+    memcpy(lpFindFileData, &FindFileDataW, FIELD_OFFSET(WIN32_FIND_DATA, cFileName));
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cFileName);
+    Ansi.Buffer = ((LPWIN32_FIND_DATAA)lpFindFileData)->cFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = MAX_PATH;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        FindClose(hSearch);
+        BaseSetLastNTError(Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    RtlInitUnicodeString(&UTF8, FindFileDataW.cAlternateFileName);
+    Ansi.Buffer = ((LPWIN32_FIND_DATAA)lpFindFileData)->cAlternateFileName;
+    Ansi.Length = 0;
+    Ansi.MaximumLength = 14;
+    Status = BasepUnicodeStringTo8BitString(&Ansi, &UTF8, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        FindClose(hSearch);
+        BaseSetLastNTError(Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hSearch;
 }
 
 

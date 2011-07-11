@@ -6,6 +6,10 @@ add_definitions(
     -D__WINESRC__
     -DROS_Headers)
 
+if (MSVC)
+    add_compiler_flags(/EHa-)
+endif()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -47,9 +51,7 @@ set_module_type(browseui win32dll)
 target_link_libraries(browseui
     atlnew
     uuid
-    wine
-    -lmingw32
-    -lcoldname)
+    wine)
 
 add_importlibs(browseui
     shlwapi
@@ -64,4 +66,4 @@ add_importlibs(browseui
     kernel32
     ntdll)
 
-add_cab_target(browseui 1)
+add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)

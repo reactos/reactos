@@ -32,7 +32,6 @@ if(NEWCC)
         cache/pinsup.c
         cache/section/data.c
         cache/section/fault.c
-        cache/section/io.c
         cache/section/reqtools.c
         cache/section/sptab.c
         cache/section/swapout.c)
@@ -47,6 +46,7 @@ else()
 endif()
 
 list(APPEND SOURCE
+    cache/section/io.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c
@@ -127,6 +127,7 @@ list(APPEND SOURCE
     fstub/disksup.c
     fstub/fstubex.c
     fstub/halstub.c
+	fstub/translate.c
     inbv/inbv.c
     inbv/inbvport.c
     io/iomgr/adapter.c
@@ -278,7 +279,6 @@ if(ARCH MATCHES i386)
         ex/i386/interlck_asm.S
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
-        ke/freeldr.c
         ke/i386/abios.c
         ke/i386/cpu.c
         ke/i386/context.c
@@ -389,7 +389,7 @@ if(NOT _WINKD_)
     endif()
 
     if(DBG OR KDBG)
-        list(APPEND SOURCE kdbg/kdb_symbols.c)
+        list(APPEND SOURCE kdbg/kdb_symbols.cmake.c)
     endif()
 
     list(APPEND SOURCE
@@ -420,9 +420,13 @@ else() # _WINKD_
 
 endif()
 
-add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SOURCE})
+add_executable(ntoskrnl ${SOURCE})
 
-set_entrypoint(ntoskrnl KiSystemStartup@4)
+if (ARCH MATCHES i386)
+  set_entrypoint(ntoskrnl KiSystemStartup@4)
+else()
+  set_entrypoint(ntoskrnl KiSystemStartup)
+endif()
 set_subsystem(ntoskrnl native)
 
 if(MSVC)
@@ -444,12 +448,10 @@ target_link_libraries(ntoskrnl
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 
-add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
-add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi asm)
+add_pch(ntoskrnl include/ntoskrnl.h)
+add_dependencies(ntoskrnl psdk bugcodes asm)
 
-add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
-add_livecd_target(ntoskrnl reactos/system32)
+add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(ntoskrnl.spec)
 
 add_library(ntdllsys ntdll.S)
-set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE C)

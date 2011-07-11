@@ -18,7 +18,6 @@ set_image_base(kdcom 0x00010000)
 
 add_importlibs(kdcom ntoskrnl hal)
 
-add_dependencies(kdcom psdk buildno_header bugcodes)
-add_minicd_target(kdcom reactos kdcom.dll)
-add_livecd_target(kdcom reactos/system32)
+add_dependencies(kdcom psdk bugcodes)
+add_cd_file(TARGET kdcom DESTINATION reactos/system32 NO_CAB FOR all)
 add_importlib_target(kdcom.spec)

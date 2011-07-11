@@ -170,7 +170,7 @@ typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #elif defined(_WDM_INCLUDED_)
 typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #else
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #endif
 
 #ifndef DEFINE_GUIDEX
@@ -191,7 +191,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #ifdef __cplusplus
 inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 {
-    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
+    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) &&
              (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
 }
 #else
@@ -1204,11 +1204,12 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
 #endif /* defined(_AMD64_) */
 
 typedef VOID
-(NTAPI *PKDEFERRED_ROUTINE)(
+(NTAPI KDEFERRED_ROUTINE)(
   IN struct _KDPC *Dpc,
   IN PVOID DeferredContext OPTIONAL,
   IN PVOID SystemArgument1 OPTIONAL,
   IN PVOID SystemArgument2 OPTIONAL);
+typedef KDEFERRED_ROUTINE *PKDEFERRED_ROUTINE;
 
 typedef enum _KDPC_IMPORTANCE {
   LowImportance,
@@ -7718,6 +7719,8 @@ KeMemoryBarrier(VOID)
 #endif
 }
 
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
+
 NTHALAPI
 KIRQL
 NTAPI
@@ -7875,6 +7878,21 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
+#define FastFence __faststorefence
+#define LoadFence _mm_lfence
+#define MemoryFence _mm_mfence
+#define StoreFence _mm_sfence
+#define LFENCE_ACQUIRE() LoadFence()
+
+FORCEINLINE
+VOID
+KeMemoryBarrier(VOID)
+{
+  FastFence();
+  LFENCE_ACQUIRE();
+}
+
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 
 FORCEINLINE
 KIRQL
@@ -9772,8 +9790,8 @@ KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
 }
 #endif
 
-NTKERNELAPI
 //DECLSPEC_NORETURN
+NTKERNELAPI
 VOID
 NTAPI
 KeBugCheckEx(
@@ -13290,14 +13308,14 @@ ExInterlockedFlushSList(
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
 
 NTKERNELAPI
-PSINGLE_LIST_ENTRY 
+PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPopEntrySList(
   IN PSLIST_HEADER ListHead,
   IN PKSPIN_LOCK Lock);
 
 NTKERNELAPI
-PSINGLE_LIST_ENTRY 
+PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPushEntrySList(
   IN PSLIST_HEADER ListHead,

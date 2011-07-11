@@ -1,5 +1,6 @@
 
 set_unicode()
+set_rc_compiler()
 
 spec2def(appwiz.cpl appwiz.spec)
 
@@ -22,4 +23,4 @@ add_importlibs(appwiz
     shell32
     kernel32)
 
-add_cab_target(appwiz 1)
+add_cd_file(TARGET appwiz DESTINATION reactos/system32 FOR all)

@@ -51,7 +51,6 @@
  *   - WM_QUERYNEWPALETTE
  *   - WM_RBUTTONDOWN
  *   - WM_RBUTTONUP
- *   - WM_SYSCOLORCHANGE
  *   - WM_VKEYTOITEM
  *   - WM_WININICHANGE
  *   Notifications:
@@ -1180,8 +1179,6 @@ static void REBAR_SetRowRectsX(const REBAR_INFO *infoPtr, INT iBeginBand, INT iE
     for (i = iBeginBand; i < iEndBand; i = next_visible(infoPtr, i))
     {
         REBAR_BAND *lpBand = REBAR_GetBand(infoPtr, i);
-
-        lpBand = REBAR_GetBand(infoPtr, i);
         if (lpBand->rcBand.left != xPos || lpBand->rcBand.right != xPos + lpBand->cxEffective) {
             lpBand->fDraw |= NTF_INVALIDATE;
             TRACE("Setting rect %d to %d,%d\n", i, xPos, xPos + lpBand->cxEffective);
@@ -1262,6 +1259,57 @@ static int REBAR_ShrinkBandsLTR(const REBAR_INFO *infoPtr, INT iBeginBand, INT i
             break;
     }
     return cxShrink;
+}
+
+/* Tries to move a band to a given offset within a row. */
+static int REBAR_MoveBandToRowOffset(REBAR_INFO *infoPtr, INT iBand, INT iFirstBand,
+    INT iLastBand, INT xOff, BOOL reorder)
+{
+    REBAR_BAND *insertBand = REBAR_GetBand(infoPtr, iBand);
+    int xPos = 0, i;
+    const BOOL setBreak = REBAR_GetBand(infoPtr, iFirstBand)->fStyle & RBBS_BREAK;
+
+    /* Find the band's new position */
+    if(reorder)
+    {
+        /* Used during an LR band reorder drag */
+        for (i = iFirstBand; i < iLastBand; i = next_visible(infoPtr, i))
+        {
+            if(xPos > xOff)
+                break;
+            xPos += REBAR_GetBand(infoPtr, i)->cxEffective + SEP_WIDTH;
+        }
+    }
+    else
+    {
+        /* Used during a UD band insertion drag */
+        for (i = iFirstBand; i < iLastBand; i = next_visible(infoPtr, i))
+        {
+            const REBAR_BAND *band = REBAR_GetBand(infoPtr, i);
+            if(xPos + band->cxMinBand / 2 > xOff)
+                break;
+            xPos += band->cxEffective + SEP_WIDTH;
+        }
+    }
+
+    /* Move the band to its new position */
+    DPA_DeletePtr(infoPtr->bands, iBand);
+    if(i > iBand)
+        i--;
+    DPA_InsertPtr(infoPtr->bands, i, insertBand);
+
+    /* Ensure only the last band has the RBBS_BREAK flag set */
+    insertBand->fStyle &= ~RBBS_BREAK;
+    if(setBreak)
+        REBAR_GetBand(infoPtr, iFirstBand)->fStyle |= RBBS_BREAK;
+
+    /* Return the currently grabbed band */
+    if(infoPtr->iGrabbedBand == iBand)
+    {
+        infoPtr->iGrabbedBand = i;
+        return i;
+    }
+    else return -1;
 }
 
 /* Set the heights of the visible bands in [iBeginBand; iEndBand) to the max height. iBeginBand must be visible */
@@ -1475,8 +1523,9 @@ REBAR_SizeToHeight(REBAR_INFO *infoPtr, int height)
         for (i = prev_visible(infoPtr, infoPtr->uNumBands); i > 0; i = prev_visible(infoPtr, i))
         {
             REBAR_BAND *lpBand = REBAR_GetBand(infoPtr, i);
-            int height = lpBand->rcBand.bottom - lpBand->rcBand.top;
             int cyBreakExtra;  /* additional cy for the rebar after a RBBS_BREAK on this band */
+
+            height = lpBand->rcBand.bottom - lpBand->rcBand.top;
 
             if (infoPtr->dwStyle & RBS_VARHEIGHT)
                 cyBreakExtra = lpBand->cyRowSoFar; /* 'height' => 'lpBand->cyRowSoFar' + 'height'*/
@@ -1797,8 +1846,7 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
     return uChanged;
 }
 
-static LRESULT
-REBAR_InternalEraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc, const RECT *clip)
+static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
      /* Function:  This erases the background rectangle by drawing  */
      /*  each band with its background color (or the default) and   */
      /*  draws each bands right separator if necessary. The row     */
@@ -1901,14 +1949,10 @@ REBAR_InternalEraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc, const RECT *clip)
         else
         {
             old = SetBkColor (hdc, new);
-            TRACE("%s background color=0x%06x, band (%d,%d)-(%d,%d), clip (%d,%d)-(%d,%d)\n",
+            TRACE("%s background color=0x%06x, band %s\n",
                   (lpBand->clrBack == CLR_NONE) ? "none" :
                     ((lpBand->clrBack == CLR_DEFAULT) ? "dft" : ""),
-                  GetBkColor(hdc),
-                  rcBand.left,rcBand.top,
-                  rcBand.right,rcBand.bottom,
-                  clip->left, clip->top,
-                  clip->right, clip->bottom);
+                  GetBkColor(hdc), wine_dbgstr_rect(&rcBand));
             ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &rcBand, NULL, 0, 0);
             if (lpBand->clrBack != CLR_NONE)
                 SetBkColor (hdc, old);
@@ -2002,26 +2046,11 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
      /*  Gripper drag within a row. It will not implement "out-   */
      /*  of-row" drags. (They are detected and handled in         */
      /*  REBAR_MouseMove.)                                        */
-     /*  **** FIXME Switching order of bands in a row not   ****  */
-     /*  ****       yet implemented.                        ****  */
 {
     REBAR_BAND *hitBand;
     INT iHitBand, iRowBegin, iRowEnd;
-    INT movement, xBand;
-
-    /* on first significant mouse movement, issue notify */
-    if (!(infoPtr->fStatus & BEGIN_DRAG_ISSUED)) {
-	if (REBAR_Notify_NMREBAR (infoPtr, -1, RBN_BEGINDRAG)) {
-	    /* Notify returned TRUE - abort drag */
-	    infoPtr->dragStart.x = 0;
-	    infoPtr->dragStart.y = 0;
-	    infoPtr->dragNow = infoPtr->dragStart;
-	    infoPtr->iGrabbedBand = -1;
-	    ReleaseCapture ();
-	    return ;
-	}
-	infoPtr->fStatus |= BEGIN_DRAG_ISSUED;
-    }
+    INT movement, xBand, cxLeft = 0;
+    BOOL shrunkBands = FALSE;
 
     iHitBand = infoPtr->iGrabbedBand;
     iRowBegin = get_row_begin_for_band(infoPtr, iHitBand);
@@ -2032,19 +2061,42 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     movement = (infoPtr->dwStyle&CCS_VERT ? ptsmove->y : ptsmove->x)
                     - (xBand + REBAR_PRE_GRIPPER - infoPtr->ihitoffset);
 
-    if (movement < 0) {
-        INT cxLeft = REBAR_ShrinkBandsRTL(infoPtr, iRowBegin, iHitBand, -movement, TRUE);
-        hitBand->cxEffective += -movement - cxLeft;
-        hitBand->cx = hitBand->cxEffective;
-    } else if (movement > 0) {
-        INT prev;
+    /* Dragging the first band in a row cannot cause shrinking */
+    if(iHitBand != iRowBegin)
+    {
+        if (movement < 0) {
+            cxLeft = REBAR_ShrinkBandsRTL(infoPtr, iRowBegin, iHitBand, -movement, TRUE);
 
-        if ((prev = prev_visible(infoPtr, iHitBand)) >= 0) {
-            INT cxLeft = REBAR_ShrinkBandsLTR(infoPtr, iHitBand, iRowEnd, movement, TRUE);
-            REBAR_BAND *lpPrev = REBAR_GetBand(infoPtr, prev_visible(infoPtr, iHitBand));
-            lpPrev->cxEffective += movement - cxLeft;
-            lpPrev->cx = lpPrev->cxEffective;
+            if(cxLeft < -movement)
+            {
+                hitBand->cxEffective += -movement - cxLeft;
+                hitBand->cx = hitBand->cxEffective;
+                shrunkBands = TRUE;
+            }
+
+        } else if (movement > 0) {
+
+            cxLeft = movement;
+            if (prev_visible(infoPtr, iHitBand) >= 0)
+                cxLeft = REBAR_ShrinkBandsLTR(infoPtr, iHitBand, iRowEnd, movement, TRUE);
+
+            if(cxLeft < movement)
+            {
+                REBAR_BAND *lpPrev = REBAR_GetBand(infoPtr, prev_visible(infoPtr, iHitBand));
+                lpPrev->cxEffective += movement - cxLeft;
+                lpPrev->cx = hitBand->cxEffective;
+                shrunkBands = TRUE;
+            }
+
         }
+    }
+
+    if(!shrunkBands)
+    {
+        /* It was not possible to move the band by shrinking bands.
+         * Try relocating the band instead. */
+        REBAR_MoveBandToRowOffset(infoPtr, iHitBand, iRowBegin,
+            iRowEnd, xBand + movement, TRUE);
     }
 
     REBAR_SetRowRectsX(infoPtr, iRowBegin, iRowEnd);
@@ -2055,6 +2107,71 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     REBAR_MoveChildWindows(infoPtr, iRowBegin, iRowEnd);
 }
 
+static void
+REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
+{
+    INT yOff = (infoPtr->dwStyle & CCS_VERT) ? ptsmove->x : ptsmove->y;
+    INT iHitBand, iRowBegin, iNextRowBegin;
+    REBAR_BAND *hitBand, *rowBeginBand;
+
+    if(infoPtr->uNumBands <= 0)
+        ERR("There are no bands in this rebar\n");
+
+    /* Up/down dragging can only occur when there is more than one
+     * band in the rebar */
+    if(infoPtr->uNumBands <= 1)
+        return;
+
+    iHitBand = infoPtr->iGrabbedBand;
+    hitBand = REBAR_GetBand(infoPtr, iHitBand);
+
+    /* If we're taking a band that has the RBBS_BREAK style set, this
+     * style needs to be reapplied to the band that is going to become
+     * the new start of the row. */
+    if((hitBand->fStyle & RBBS_BREAK) &&
+        (iHitBand < infoPtr->uNumBands - 1))
+        REBAR_GetBand(infoPtr, iHitBand + 1)->fStyle |= RBBS_BREAK;
+
+    if(yOff < 0)
+    {
+        /* Place the band above the current top row */
+        DPA_DeletePtr(infoPtr->bands, iHitBand);
+        hitBand->fStyle &= RBBS_BREAK;
+        REBAR_GetBand(infoPtr, 0)->fStyle |= RBBS_BREAK;
+        infoPtr->iGrabbedBand = DPA_InsertPtr(
+            infoPtr->bands, 0, hitBand);
+    }
+    else if(yOff > REBAR_GetBand(infoPtr, infoPtr->uNumBands - 1)->rcBand.bottom)
+    {
+        /* Place the band below the current bottom row */
+        DPA_DeletePtr(infoPtr->bands, iHitBand);
+        hitBand->fStyle |= RBBS_BREAK;
+        infoPtr->iGrabbedBand = DPA_InsertPtr(
+            infoPtr->bands, infoPtr->uNumBands - 1, hitBand);
+    }
+    else
+    {
+        /* Place the band in the prexisting row the mouse is hovering over */
+        iRowBegin = first_visible(infoPtr);
+        while(iRowBegin < infoPtr->uNumBands)
+        {
+            iNextRowBegin = get_row_end_for_band(infoPtr, iRowBegin);
+            rowBeginBand = REBAR_GetBand(infoPtr, iRowBegin);
+            if(rowBeginBand->rcBand.bottom > yOff)
+            {
+                REBAR_MoveBandToRowOffset(
+                    infoPtr, iHitBand, iRowBegin, iNextRowBegin,
+                    ((infoPtr->dwStyle & CCS_VERT) ? ptsmove->y : ptsmove->x)
+                        - REBAR_PRE_GRIPPER - infoPtr->ihitoffset, FALSE);
+                break;
+            }
+
+            iRowBegin = iNextRowBegin;
+        }
+    }
+
+    REBAR_Layout(infoPtr);
+}
 
 
 /* << REBAR_BeginDrag >> */
@@ -2397,7 +2514,7 @@ REBAR_IdToIndex (const REBAR_INFO *infoPtr, UINT uId)
 
 
 static LRESULT
-REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, LPREBARBANDINFOW lprbbi, BOOL bUnicode)
+REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, const REBARBANDINFOW *lprbbi, BOOL bUnicode)
 {
     REBAR_BAND *lpBand;
 
@@ -2422,10 +2539,8 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, LPREBARBANDINFOW lprbbi, BOOL
 
     /* initialize band */
     memset(lpBand, 0, sizeof(*lpBand));
-    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
-                                                     infoPtr->clrText;
-    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
-                                                   infoPtr->clrBk;
+    lpBand->clrFore = infoPtr->clrText;
+    lpBand->clrBack = infoPtr->clrBk;
     lpBand->iImage = -1;
 
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
@@ -2613,7 +2728,7 @@ REBAR_strdifW( LPCWSTR a, LPCWSTR b )
 }
 
 static LRESULT
-REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, LPREBARBANDINFOW lprbbi, BOOL bUnicode)
+REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, const REBARBANDINFOW *lprbbi, BOOL bUnicode)
 {
     REBAR_BAND *lpBand;
     UINT uChanged;
@@ -2661,7 +2776,7 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, LPREBARBANDINFOW lprbbi, BOOL
 
 
 static LRESULT
-REBAR_SetBarInfo (REBAR_INFO *infoPtr, LPREBARINFO lpInfo)
+REBAR_SetBarInfo (REBAR_INFO *infoPtr, const REBARINFO *lpInfo)
 {
     REBAR_BAND *lpBand;
     UINT i;
@@ -2878,18 +2993,6 @@ REBAR_Destroy (REBAR_INFO *infoPtr)
     return 0;
 }
 
-
-static LRESULT
-REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
-{
-    RECT cliprect;
-
-    if (GetClipBox ( hdc, &cliprect))
-        return REBAR_InternalEraseBkGnd (infoPtr, hdc, &cliprect);
-    return 0;
-}
-
-
 static LRESULT
 REBAR_GetFont (const REBAR_INFO *infoPtr)
 {
@@ -3025,25 +3128,36 @@ REBAR_MouseMove (REBAR_INFO *infoPtr, LPARAM lParam)
     /* if we are currently dragging a band */
     if (infoPtr->iGrabbedBand >= 0)
     {
-        REBAR_BAND *band1 = NULL, *band2;
+        REBAR_BAND *band;
         int yPtMove = (infoPtr->dwStyle & CCS_VERT ? ptMove.x : ptMove.y);
 
         if (GetCapture() != infoPtr->hwndSelf)
             ERR("We are dragging but haven't got capture?!?\n");
 
-        if (infoPtr->iGrabbedBand > 0)
-            band1 = REBAR_GetBand(infoPtr, infoPtr->iGrabbedBand - 1);
-        band2 = REBAR_GetBand(infoPtr, infoPtr->iGrabbedBand);
+        band = REBAR_GetBand(infoPtr, infoPtr->iGrabbedBand);
 
         /* if mouse did not move much, exit */
         if ((abs(ptMove.x - infoPtr->dragNow.x) <= mindragx) &&
             (abs(ptMove.y - infoPtr->dragNow.y) <= mindragy)) return 0;
 
+        /* on first significant mouse movement, issue notify */
+        if (!(infoPtr->fStatus & BEGIN_DRAG_ISSUED)) {
+            if (REBAR_Notify_NMREBAR (infoPtr, -1, RBN_BEGINDRAG)) {
+                /* Notify returned TRUE - abort drag */
+                infoPtr->dragStart.x = 0;
+                infoPtr->dragStart.y = 0;
+                infoPtr->dragNow = infoPtr->dragStart;
+                infoPtr->iGrabbedBand = -1;
+                ReleaseCapture ();
+                return 0;
+            }
+            infoPtr->fStatus |= BEGIN_DRAG_ISSUED;
+        }
+
         /* Test for valid drag case - must not be first band in row */
-        if ((yPtMove < band2->rcBand.top) ||
-	      (yPtMove > band2->rcBand.bottom) ||
-              ((infoPtr->iGrabbedBand > 0) && (band1->iRow != band2->iRow))) {
-            FIXME("Cannot drag to other rows yet!!\n");
+        if ((yPtMove < band->rcBand.top) ||
+              (yPtMove > band->rcBand.bottom)) {
+            REBAR_HandleUDDrag (infoPtr, &ptMove);
         }
         else {
             REBAR_HandleLRDrag (infoPtr, &ptMove);
@@ -3126,7 +3240,7 @@ REBAR_NCCalcSize (const REBAR_INFO *infoPtr, RECT *rect)
 
 
 static LRESULT
-REBAR_NCCreate (HWND hwnd, LPCREATESTRUCTW cs)
+REBAR_NCCreate (HWND hwnd, const CREATESTRUCTW *cs)
 {
     REBAR_INFO *infoPtr = REBAR_GetInfoPtr (hwnd);
     RECT wnrc1, clrc1;
@@ -3321,7 +3435,7 @@ REBAR_Paint (const REBAR_INFO *infoPtr, HDC hdc)
         TRACE("painting (%s)\n", wine_dbgstr_rect(&ps.rcPaint));
         if (ps.fErase) {
             /* Erase area of paint if requested */
-            REBAR_InternalEraseBkGnd (infoPtr, hdc, &ps.rcPaint);
+            REBAR_EraseBkGnd (infoPtr, hdc);
         }
         REBAR_Refresh (infoPtr, hdc);
 	EndPaint (infoPtr->hwndSelf, &ps);
@@ -3676,6 +3790,8 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOLORCHANGE:
             COMCTL32_RefreshSysColors();
+            infoPtr->clrBtnText = comctl32_color.clrBtnText;
+            infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
             return 0;
 
 /*      case WM_VKEYTOITEM:     supported according to ControlSpy */

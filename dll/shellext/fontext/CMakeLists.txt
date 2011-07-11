@@ -1,6 +1,6 @@
 
 set_unicode()
-
+set_rc_compiler()
 spec2def(fontext.dll fontext.spec)
 
 add_library(fontext SHARED
@@ -25,4 +25,4 @@ add_importlibs(fontext
     kernel32
     ntdll)
 
-add_cab_target(fontext 1)
+add_cd_file(TARGET fontext DESTINATION reactos/system32 FOR all)

@@ -1,8 +1,6 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_DLL
-    -D__USE_CRTIMP
     -D_WINE)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -40,7 +38,6 @@ list(APPEND SOURCE
     store.c
     str.c
     crypt32.rc
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
@@ -54,6 +51,5 @@ target_link_libraries(crypt32
     oldnames)
 
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
-
-add_cab_target(crypt32 1)
+add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)
 add_importlib_target(crypt32.spec)

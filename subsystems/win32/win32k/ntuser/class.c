@@ -19,15 +19,15 @@
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
 {
-/*  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
+  { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL,
     0,
     IDC_ARROW,
-    (HBRUSH)(COLOR_BACKGROUND+1),
+    (HBRUSH)(COLOR_BACKGROUND + 1),
     FNID_DESKTOP,
     ICLS_DESKTOP
-  },*/
+  },
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8003))),
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
@@ -1398,6 +1398,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 INT
 UserGetClassName(IN PCLS Class,
                  IN OUT PUNICODE_STRING ClassName,
+                 IN RTL_ATOM Atom,
                  IN BOOL Ansi)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1451,7 +1452,7 @@ UserGetClassName(IN PCLS Class,
 
                 /* query the class name */
                 Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                                 Class->atomClassName,
+                                                 Atom ? Atom : Class->atomClassName,
                                                  NULL,
                                                  NULL,
                                                  szTemp,
@@ -1485,7 +1486,7 @@ UserGetClassName(IN PCLS Class,
 
             /* query the atom name */
             Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->atomClassName,
+                                             Atom ? Atom : Class->atomClassName,
                                              NULL,
                                              NULL,
                                              ClassName->Buffer,
@@ -2376,18 +2377,27 @@ NtUserGetClassInfo(
 
 INT APIENTRY
 NtUserGetClassName (IN HWND hWnd,
-                    OUT PUNICODE_STRING ClassName,
-                    IN BOOL Ansi)
+                    IN BOOL Real,
+                    OUT PUNICODE_STRING ClassName)
 {
     PWND Window;
     UNICODE_STRING CapturedClassName;
-    INT Ret = 0;
+    INT iCls, Ret = 0;
+    RTL_ATOM Atom = 0;
 
     UserEnterShared();
 
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
+        if (Real && Window->fnid && !(Window->fnid & FNID_DESTROY))
+        {
+           if (LookupFnIdToiCls(Window->fnid, &iCls))
+           {
+              Atom = gpsi->atomSysClass[iCls];
+           }
+        }
+
         _SEH2_TRY
         {
             ProbeForWriteUnicodeString(ClassName);
@@ -2396,7 +2406,8 @@ NtUserGetClassName (IN HWND hWnd,
             /* get the class name */
             Ret = UserGetClassName(Window->pcls,
                                    &CapturedClassName,
-                                   Ansi);
+                                   Atom,
+                                   FALSE);
 
             if (Ret != 0)
             {

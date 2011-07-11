@@ -18,7 +18,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -28,42 +27,42 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Выполнить...",               ID_EXECUTE
+        MENUITEM "&Р’С‹РїРѕР»РЅРёС‚СЊ...",               ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "В&ыход",                      ID_FILE_EXIT
+        MENUITEM "Р’&С‹С…РѕРґ",                      ID_FILE_EXIT
     END
-    POPUP "&Вид"
+    POPUP "&Р’РёРґ"
     BEGIN
-        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR
-        MENUITEM "&Дополнительная панель",      ID_VIEW_EXTRA_BAR
-        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR
-        MENUITEM "И&збранное",                  ID_VIEW_SIDE_BAR
-        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR
+        MENUITEM "&РџР°РЅРµР»СЊ РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅР°СЏ РїР°РЅРµР»СЊ",      ID_VIEW_EXTRA_BAR
+        MENUITEM "&Р”РёСЃРєРё",                      ID_VIEW_DRIVE_BAR
+        MENUITEM "Р&Р·Р±СЂР°РЅРЅРѕРµ",                  ID_VIEW_SIDE_BAR
+        MENUITEM "&РЎС‚СЂРѕРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ",           ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Обновить\tF5",               ID_REFRESH
-        MENUITEM "По&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&РћР±РЅРѕРІРёС‚СЊ\tF5",               ID_REFRESH
+        MENUITEM "РџРѕ&Р»РЅС‹Р№ СЌРєСЂР°РЅ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI",                         ID_VIEW_SDI
     END
-    POPUP "О&кна"
+    POPUP "Рћ&РєРЅР°"
     BEGIN
-        MENUITEM "Новое о&кно",                 ID_WINDOW_NEW
-        MENUITEM "Расположить каскадом\tShift+F5", ID_WINDOW_CASCADE
-        MENUITEM "&Горизонтально",              ID_WINDOW_TILE_HORZ
-        MENUITEM "&Вертикально\tShift+F4",      ID_WINDOW_TILE_VERT
-        MENUITEM "Упорядочить автоматически",   ID_WINDOW_AUTOSORT
-        MENUITEM "Упорядочить &значки",         ID_WINDOW_ARRANGE
+        MENUITEM "РќРѕРІРѕРµ Рѕ&РєРЅРѕ",                 ID_WINDOW_NEW
+        MENUITEM "Р Р°СЃРїРѕР»РѕР¶РёС‚СЊ РєР°СЃРєР°РґРѕРј\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "&Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ",              ID_WINDOW_TILE_HORZ
+        MENUITEM "&Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ\tShift+F4",      ID_WINDOW_TILE_VERT
+        MENUITEM "РЈРїРѕСЂСЏРґРѕС‡РёС‚СЊ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё",   ID_WINDOW_AUTOSORT
+        MENUITEM "РЈРїРѕСЂСЏРґРѕС‡РёС‚СЊ &Р·РЅР°С‡РєРё",         ID_WINDOW_ARRANGE
     END
-    POPUP "&Инструменты"
+    POPUP "&РРЅСЃС‚СЂСѓРјРµРЅС‚С‹"
     BEGIN
-        MENUITEM "&Параметры",                       ID_TOOLS_OPTIONS
+        MENUITEM "&РџР°СЂР°РјРµС‚СЂС‹",                       ID_TOOLS_OPTIONS
     END
-    POPUP "По&мощь"
+    POPUP "РџРѕ&РјРѕС‰СЊ"
     BEGIN
-        MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
-        MENUITEM "О &программе...",                  ID_ABOUT_EXPLORER
-        MENUITEM "О &ReactOS...",                    ID_ABOUT_WINDOWS
+        MENUITEM "&Р§Р°СЃС‚С‹Рµ РІРѕРїСЂРѕСЃС‹ РїРѕ РџСЂРѕРІРѕРґРЅРёРєСѓ...", ID_EXPLORER_FAQ
+        MENUITEM "Рћ &РїСЂРѕРіСЂР°РјРјРµ...",                  ID_ABOUT_EXPLORER
+        MENUITEM "Рћ &ReactOS...",                    ID_ABOUT_WINDOWS
     END
 END
 
@@ -71,10 +70,10 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Параметры...",            ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Диспетчер задач",         ID_TASKMGR
+        MENUITEM "&РџР°СЂР°РјРµС‚СЂС‹...",            ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Р”РёСЃРїРµС‚С‡РµСЂ Р·Р°РґР°С‡",         ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&О программе...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ...",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -82,8 +81,8 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Громкость",                   ID_TRAY_VOLUME
-        MENUITEM "Свойства звука",              ID_VOLUME_PROPERTIES
+        MENUITEM "Р“СЂРѕРјРєРѕСЃС‚СЊ",                   ID_TRAY_VOLUME
+        MENUITEM "РЎРІРѕР№СЃС‚РІР° Р·РІСѓРєР°",              ID_VOLUME_PROPERTIES
     END
 END
 
@@ -91,42 +90,42 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Показывать скрытые значки",  ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Показывать значки на &кнопках", ID_SHOW_ICON_BUTTON
-        MENUITEM "&Настройка уведомлений...",   ID_CONFIG_NOTIFYAREA
-        MENUITEM "Настройка даты/&времени",     ID_CONFIG_TIME
+        MENUITEM "&РџРѕРєР°Р·С‹РІР°С‚СЊ СЃРєСЂС‹С‚С‹Рµ Р·РЅР°С‡РєРё",  ID_SHOW_HIDDEN_ICONS
+        MENUITEM "РџРѕРєР°Р·С‹РІР°С‚СЊ Р·РЅР°С‡РєРё РЅР° &РєРЅРѕРїРєР°С…", ID_SHOW_ICON_BUTTON
+        MENUITEM "&РќР°СЃС‚СЂРѕР№РєР° СѓРІРµРґРѕРјР»РµРЅРёР№...",   ID_CONFIG_NOTIFYAREA
+        MENUITEM "РќР°СЃС‚СЂРѕР№РєР° РґР°С‚С‹/&РІСЂРµРјРµРЅРё",     ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&О программе...",             ID_ABOUT_EXPLORER
+        MENUITEM "&Рћ РїСЂРѕРіСЂР°РјРјРµ...",             ID_ABOUT_EXPLORER
     END
 END
 
 IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Запустить...",               ID_EXECUTE
+        MENUITEM "&Р—Р°РїСѓСЃС‚РёС‚СЊ...",               ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "В&ыход",                      ID_FILE_EXIT
+        MENUITEM "Р’&С‹С…РѕРґ",                      ID_FILE_EXIT
     END
-    POPUP "&Вид"
+    POPUP "&Р’РёРґ"
     BEGIN
-        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR
-        MENUITEM "И&збранное",                  ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR
+        MENUITEM "&РџР°РЅРµР»СЊ РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ",        ID_VIEW_TOOL_BAR
+        MENUITEM "Р&Р·Р±СЂР°РЅРЅРѕРµ",                  ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&РЎС‚СЂРѕРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ",           ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Обновить\tF5",               ID_REFRESH
-        MENUITEM "По&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&РћР±РЅРѕРІРёС‚СЊ\tF5",               ID_REFRESH
+        MENUITEM "РџРѕ&Р»РЅС‹Р№ СЌРєСЂР°РЅ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        ID_VIEW_MDI
     END
-    POPUP "&Инструменты"
+    POPUP "&РРЅСЃС‚СЂСѓРјРµРЅС‚С‹"
     BEGIN
-        MENUITEM "&Параметры",                       ID_TOOLS_OPTIONS
+        MENUITEM "&РџР°СЂР°РјРµС‚СЂС‹",                       ID_TOOLS_OPTIONS
     END
-    POPUP "&Справка"
+    POPUP "&РЎРїСЂР°РІРєР°"
     BEGIN
-        MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
-        MENUITEM "О &Проводнике...",                 ID_ABOUT_EXPLORER
-        MENUITEM "О &ReactOS...",                    ID_ABOUT_WINDOWS
+        MENUITEM "&Р§Р°СЃС‚С‹Рµ РІРѕРїСЂРѕСЃС‹ РїРѕ РџСЂРѕРІРѕРґРЅРёРєСѓ...", ID_EXPLORER_FAQ
+        MENUITEM "Рћ &РџСЂРѕРІРѕРґРЅРёРєРµ...",                 ID_ABOUT_EXPLORER
+        MENUITEM "Рћ &ReactOS...",                    ID_ABOUT_WINDOWS
     END
 END
 
@@ -138,41 +137,41 @@ END
 
 IDD_EXECUTE DIALOGEX DISCARDABLE  15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Выполнить"
+CAPTION "Р’С‹РїРѕР»РЅРёС‚СЊ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
-    CONTROL         "&Команда:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+    CONTROL         "&РљРѕРјР°РЅРґР°:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
                     18,60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
-    CONTROL         "Как &ссылку",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+    CONTROL         "РљР°Рє &СЃСЃС‹Р»РєСѓ",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
                     45,71,12
     DEFPUSHBUTTON   "&OK",1,158,6,47,14
-    PUSHBUTTON      "&Отмена",2,158,24,47,14
-    PUSHBUTTON      "&Справка",254,158,42,47,14
+    PUSHBUTTON      "&РћС‚РјРµРЅР°",2,158,24,47,14
+    PUSHBUTTON      "&РЎРїСЂР°РІРєР°",254,158,42,47,14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Поиск программ в меню Пуcк"
+CAPTION "РџРѕРёСЃРє РїСЂРѕРіСЂР°РјРј РІ РјРµРЅСЋ РџСѓcРє"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "&Фильтр:",IDC_STATIC,7,9,30,8
+    LTEXT           "&Р¤РёР»СЊС‚СЂ:",IDC_STATIC,7,9,30,8
     EDITTEXT        IDC_FILTER,40,7,94,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
                     WS_TABSTOP,7,25,186,33
-    PUSHBUTTON      "&Проверить",IDC_CHECK_ENTRIES,143,7,50,14
+    PUSHBUTTON      "&РџСЂРѕРІРµСЂРёС‚СЊ",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
 IDD_DESKBAR_DESKTOP DIALOGEX DISCARDABLE  0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства: Рабочий стол"
+CAPTION "РЎРІРѕР№СЃС‚РІР°: Р Р°Р±РѕС‡РёР№ СЃС‚РѕР»"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Выберите, наиболее предпочтительный для вас, \nспособ выравнивания значков",
+    LTEXT           "Р’С‹Р±РµСЂРёС‚Рµ, РЅР°РёР±РѕР»РµРµ РїСЂРµРґРїРѕС‡С‚РёС‚РµР»СЊРЅС‹Р№ РґР»СЏ РІР°СЃ, \nСЃРїРѕСЃРѕР± РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ Р·РЅР°С‡РєРѕРІ",
                     IDC_STATIC,7,7,195,18
     CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
@@ -198,26 +197,26 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,121,46,44
-//    CONTROL         "Показывать номер &версии",ID_DESKTOP_VERSION,"Button",
+//    CONTROL         "РџРѕРєР°Р·С‹РІР°С‚СЊ РЅРѕРјРµСЂ &РІРµСЂСЃРёРё",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,109,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX DISCARDABLE  0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства панели задач"
+CAPTION "РЎРІРѕР№СЃС‚РІР° РїР°РЅРµР»Рё Р·Р°РґР°С‡"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Отображать &часы",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "РћС‚РѕР±СЂР°Р¶Р°С‚СЊ &С‡Р°СЃС‹",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,142,100,10
-    CONTROL         "&Скрывать неиспользуемые значки",
+    CONTROL         "&РЎРєСЂС‹РІР°С‚СЊ РЅРµРёСЃРїРѕР»СЊР·СѓРµРјС‹Рµ Р·РЅР°С‡РєРё",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,157,133,10
-    PUSHBUTTON      "&Уведомления...",ID_CONFIG_NOTIFYAREA,133,173,70,14
+    PUSHBUTTON      "&РЈРІРµРґРѕРјР»РµРЅРёСЏ...",ID_CONFIG_NOTIFYAREA,133,173,70,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX DISCARDABLE  0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства меню Пуск"
+CAPTION "РЎРІРѕР№СЃС‚РІР° РјРµРЅСЋ РџСѓСЃРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -226,63 +225,63 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Конфигурация значков"
+CAPTION "РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ Р·РЅР°С‡РєРѕРІ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Текст подсказки:",IDC_LABEL1,7,44,62,8
+    LTEXT           "&РўРµРєСЃС‚ РїРѕРґСЃРєР°Р·РєРё:",IDC_LABEL1,7,44,62,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,76,42,125,14,ES_AUTOHSCROLL
-    LTEXT           "Заголовок о&кна:",IDC_LABEL2,7,63,58,8
+    LTEXT           "Р—Р°РіРѕР»РѕРІРѕРє Рѕ&РєРЅР°:",IDC_LABEL2,7,63,58,8
     EDITTEXT        IDC_NOTIFY_TITLE,76,60,125,14,ES_AUTOHSCROLL
-    LTEXT           "&Путь к модулю:",IDC_LABEL3,7,81,54,8
+    LTEXT           "&РџСѓС‚СЊ Рє РјРѕРґСѓР»СЋ:",IDC_LABEL3,7,81,54,8
     EDITTEXT        IDC_NOTIFY_MODULE,76,78,125,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Режим отображения",IDC_LABEL4,7,96,169,28
-    CONTROL         "&показать",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
+    GROUPBOX        "&Р РµР¶РёРј РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ",IDC_LABEL4,7,96,169,28
+    CONTROL         "&РїРѕРєР°Р·Р°С‚СЊ",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,47,10
-    CONTROL         "&Скрыть",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+    CONTROL         "&РЎРєСЂС‹С‚СЊ",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
                     108,41,10
-    CONTROL         "А&втоскрытие",IDC_NOTIFY_AUTOHIDE,"Button",
+    CONTROL         "Рђ&РІС‚РѕСЃРєСЂС‹С‚РёРµ",IDC_NOTIFY_AUTOHIDE,"Button",
                     BS_AUTORADIOBUTTON,112,108,60,10
     ICON            "",IDC_PICTURE,181,101,20,20
-    LTEXT           "&Последние\nизменения",IDC_LABEL6,7,129,40,19
+    LTEXT           "&РџРѕСЃР»РµРґРЅРёРµ\nРёР·РјРµРЅРµРЅРёСЏ",IDC_LABEL6,7,129,40,19
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
                     ES_READONLY
-    CONTROL         "Пока&зать скрытое",ID_SHOW_HIDDEN_ICONS,"Button",
+    CONTROL         "РџРѕРєР°&Р·Р°С‚СЊ СЃРєСЂС‹С‚РѕРµ",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,154,78,10
     DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
-    PUSHBUTTON      "&Отмена",IDCANCEL,151,153,50,14
+    PUSHBUTTON      "&РћС‚РјРµРЅР°",IDCANCEL,151,153,50,14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Выберите режим MDI / SDI"
+CAPTION "Р’С‹Р±РµСЂРёС‚Рµ СЂРµР¶РёРј MDI / SDI"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Выберите наиболее предпочтительный для вас\nвид проводника:",
+    LTEXT           "Р’С‹Р±РµСЂРёС‚Рµ РЅР°РёР±РѕР»РµРµ РїСЂРµРґРїРѕС‡С‚РёС‚РµР»СЊРЅС‹Р№ РґР»СЏ РІР°СЃ\nРІРёРґ РїСЂРѕРІРѕРґРЅРёРєР°:",
                     IDC_STATIC,7,7,171,17
-    CONTROL         "&MDI (многодокументный интерфейс)",IDC_MDI,"Button",
+    CONTROL         "&MDI (РјРЅРѕРіРѕРґРѕРєСѓРјРµРЅС‚РЅС‹Р№ РёРЅС‚РµСЂС„РµР№СЃ)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,137,10
-    CONTROL         "&SDI (однодокументный интерфейс)",IDC_SDI,"Button",
+    CONTROL         "&SDI (РѕРґРЅРѕРґРѕРєСѓРјРµРЅС‚РЅС‹Р№ РёРЅС‚РµСЂС„РµР№СЃ)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,134,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
-    CONTROL         "Открывать подпапки в о&тдельных окнах",
+    CONTROL         "РћС‚РєСЂС‹РІР°С‚СЊ РїРѕРґРїР°РїРєРё РІ Рѕ&С‚РґРµР»СЊРЅС‹С… РѕРєРЅР°С…",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,155,10
-    LTEXT           "Эти настройки будут использованны, как значение по умолчанию для всех окон проводника в дальнейшем.",
+    LTEXT           "Р­С‚Рё РЅР°СЃС‚СЂРѕР№РєРё Р±СѓРґСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°РЅРЅС‹, РєР°Рє Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РґР»СЏ РІСЃРµС… РѕРєРѕРЅ РїСЂРѕРІРѕРґРЅРёРєР° РІ РґР°Р»СЊРЅРµР№С€РµРј.",
                     IDC_STATIC,7,107,185,26
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
-    PUSHBUTTON      "&Отмена",IDCANCEL,106,136,50,14
+    PUSHBUTTON      "&РћС‚РјРµРЅР°",IDCANCEL,106,136,50,14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX DISCARDABLE  0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О Проводнике ReactOS"
+CAPTION "Рћ РџСЂРѕРІРѕРґРЅРёРєРµ ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Проводник ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "РџСЂРѕРІРѕРґРЅРёРє ReactOS",IDC_ROS_EXPLORER,91,13,104,11
     LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
     LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
     LTEXT           "",IDC_WIN_VERSION,91,58,98,22
@@ -326,64 +325,64 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TITLE               "Проводник ReactOS"
-    IDS_START               "Пуск"
-    IDS_LOGOFF              "Выход из системы..."
-    IDS_SHUTDOWN            "Выключение..."
-    IDS_RESTART             "Перезагрузка..."
-    IDS_LAUNCH              "Выполнить..."
-    IDS_START_HELP          "Справка"
-    IDS_SEARCH_FILES        "Поиск..."
-    IDS_DOCUMENTS           "Документы"
-    IDS_FAVORITES           "Избранное"
-    IDS_PROGRAMS            "Программы"
-    IDS_SETTINGS            "Настройка"
-    IDS_EXPLORE             "Обзор"
-    IDS_EMPTY               "(пусто)"
-    IDS_RECENT              "Недавние документы"
-    IDS_ADMIN               "Администрирование"
+    IDS_TITLE               "РџСЂРѕРІРѕРґРЅРёРє ReactOS"
+    IDS_START               "РџСѓСЃРє"
+    IDS_LOGOFF              "Р’С‹С…РѕРґ РёР· СЃРёСЃС‚РµРјС‹..."
+    IDS_SHUTDOWN            "Р’С‹РєР»СЋС‡РµРЅРёРµ..."
+    IDS_RESTART             "РџРµСЂРµР·Р°РіСЂСѓР·РєР°..."
+    IDS_LAUNCH              "Р’С‹РїРѕР»РЅРёС‚СЊ..."
+    IDS_START_HELP          "РЎРїСЂР°РІРєР°"
+    IDS_SEARCH_FILES        "РџРѕРёСЃРє..."
+    IDS_DOCUMENTS           "Р”РѕРєСѓРјРµРЅС‚С‹"
+    IDS_FAVORITES           "РР·Р±СЂР°РЅРЅРѕРµ"
+    IDS_PROGRAMS            "РџСЂРѕРіСЂР°РјРјС‹"
+    IDS_SETTINGS            "РќР°СЃС‚СЂРѕР№РєР°"
+    IDS_EXPLORE             "РћР±Р·РѕСЂ"
+    IDS_EMPTY               "(РїСѓСЃС‚Рѕ)"
+    IDS_RECENT              "РќРµРґР°РІРЅРёРµ РґРѕРєСѓРјРµРЅС‚С‹"
+    IDS_ADMIN               "РђРґРјРёРЅРёСЃС‚СЂРёСЂРѕРІР°РЅРёРµ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STARTMENU           "Меню Пуск"
-    IDS_MINIMIZE_ALL        "Cвернуть все окна"
-    IDS_DESKTOP_NUM         "Рабочий cтол %d"
-    IDS_VOLUME              "Объём"
-    IDS_ITEMS_CUR           "Текущей элемент"
-    IDS_ITEMS_CONFIGURED    "Конфигурация"
-    IDS_ITEMS_VISIBLE       "Видимый"
-    IDS_ITEMS_HIDDEN        "Скрытый"
-    IDS_NOTIFY_SHOW         "Показать"
-    IDS_NOTIFY_HIDE         "Скрыть"
-    IDS_NOTIFY_AUTOHIDE     "Автоскрытие"
-    IDS_SHOW_HIDDEN_ICONS   "Показать скрытые значки"
-    IDS_HIDE_ICONS          "Скрыть значки"
-    IDS_TERMINATE           "Завершить работу Проводника"
+    IDS_STARTMENU           "РњРµРЅСЋ РџСѓСЃРє"
+    IDS_MINIMIZE_ALL        "CРІРµСЂРЅСѓС‚СЊ РІСЃРµ РѕРєРЅР°"
+    IDS_DESKTOP_NUM         "Р Р°Р±РѕС‡РёР№ cС‚РѕР» %d"
+    IDS_VOLUME              "РћР±СЉС‘Рј"
+    IDS_ITEMS_CUR           "РўРµРєСѓС‰РµР№ СЌР»РµРјРµРЅС‚"
+    IDS_ITEMS_CONFIGURED    "РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ"
+    IDS_ITEMS_VISIBLE       "Р’РёРґРёРјС‹Р№"
+    IDS_ITEMS_HIDDEN        "РЎРєСЂС‹С‚С‹Р№"
+    IDS_NOTIFY_SHOW         "РџРѕРєР°Р·Р°С‚СЊ"
+    IDS_NOTIFY_HIDE         "РЎРєСЂС‹С‚СЊ"
+    IDS_NOTIFY_AUTOHIDE     "РђРІС‚РѕСЃРєСЂС‹С‚РёРµ"
+    IDS_SHOW_HIDDEN_ICONS   "РџРѕРєР°Р·Р°С‚СЊ СЃРєСЂС‹С‚С‹Рµ Р·РЅР°С‡РєРё"
+    IDS_HIDE_ICONS          "РЎРєСЂС‹С‚СЊ Р·РЅР°С‡РєРё"
+    IDS_TERMINATE           "Р—Р°РІРµСЂС€РёС‚СЊ СЂР°Р±РѕС‚Сѓ РџСЂРѕРІРѕРґРЅРёРєР°"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_NETWORK             "Сеть"
-    IDS_CONNECTIONS         "Сетевые подключения"
-    IDS_DRIVES              "Диски"
-    IDS_SEARCH_COMPUTER     "Найти компьютер..."
-    IDS_SETTINGS_MENU       "Меню настройки"
-    IDS_CONTROL_PANEL       "Панель управления"
-    IDS_PRINTERS            "Принтеры"
-    IDS_BROWSE              "Обзор файлов"
-    IDS_SEARCH_PRG          "Найти программу..."
-    IDS_ALL_USERS           "Все пользователи\\"
-    IDS_SEARCH              "Поиск"
-    IDS_ABOUT_EXPLORER      "&О Проводнике"
+    IDS_NETWORK             "РЎРµС‚СЊ"
+    IDS_CONNECTIONS         "РЎРµС‚РµРІС‹Рµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ"
+    IDS_DRIVES              "Р”РёСЃРєРё"
+    IDS_SEARCH_COMPUTER     "РќР°Р№С‚Рё РєРѕРјРїСЊСЋС‚РµСЂ..."
+    IDS_SETTINGS_MENU       "РњРµРЅСЋ РЅР°СЃС‚СЂРѕР№РєРё"
+    IDS_CONTROL_PANEL       "РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ"
+    IDS_PRINTERS            "РџСЂРёРЅС‚РµСЂС‹"
+    IDS_BROWSE              "РћР±Р·РѕСЂ С„Р°Р№Р»РѕРІ"
+    IDS_SEARCH_PRG          "РќР°Р№С‚Рё РїСЂРѕРіСЂР°РјРјСѓ..."
+    IDS_ALL_USERS           "Р’СЃРµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё\\"
+    IDS_SEARCH              "РџРѕРёСЃРє"
+    IDS_ABOUT_EXPLORER      "&Рћ РџСЂРѕРІРѕРґРЅРёРєРµ"
     IDS_LAUNCH_MANY_PROGRAMS
-                            "Вы выбрали более одной программы.\nВы уверены, что хотите выполнить их все?"
-    IDS_DESKTOPBAR_SETTINGS "Настройки рабочего стола"
-    IDS_DESKTOP             "Рабочий стол"
-    IDS_TASKBAR             "Панель задач"
-    IDS_NAMECOLUMN          "Имя"
-    IDS_PATHCOLUMN          "Путь"
-    IDS_MENUCOLUMN          "Путь в меню"
+                            "Р’С‹ РІС‹Р±СЂР°Р»Рё Р±РѕР»РµРµ РѕРґРЅРѕР№ РїСЂРѕРіСЂР°РјРјС‹.\nР’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РІС‹РїРѕР»РЅРёС‚СЊ РёС… РІСЃРµ?"
+    IDS_DESKTOPBAR_SETTINGS "РќР°СЃС‚СЂРѕР№РєРё СЂР°Р±РѕС‡РµРіРѕ СЃС‚РѕР»Р°"
+    IDS_DESKTOP             "Р Р°Р±РѕС‡РёР№ СЃС‚РѕР»"
+    IDS_TASKBAR             "РџР°РЅРµР»СЊ Р·Р°РґР°С‡"
+    IDS_NAMECOLUMN          "РРјСЏ"
+    IDS_PATHCOLUMN          "РџСѓС‚СЊ"
+    IDS_MENUCOLUMN          "РџСѓС‚СЊ РІ РјРµРЅСЋ"
 END
 
 #endif    // Russian resources

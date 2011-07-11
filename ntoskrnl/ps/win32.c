@@ -20,6 +20,8 @@ PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch = NULL;
 extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
+extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose;
+extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
 extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
@@ -116,6 +118,8 @@ PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
     PspW32ThreadCallout = CalloutData->ThreadCallout;
     ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
     ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
+    ExpWindowStationObjectOkToClose = CalloutData->WindowStationOkToCloseProcedure;
+    ExpDesktopObjectOkToClose = CalloutData->DesktopOkToCloseProcedure;
     ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
     PopEventCallout = CalloutData->PowerEventCallout;
     KeGdiFlushUserBatch = CalloutData->BatchFlushRoutine;

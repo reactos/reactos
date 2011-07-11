@@ -7,6 +7,6 @@ add_library(kbdth0 SHARED kbdth0.c kbdth0.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdth0.
 
 set_entrypoint(kbdth0 0)
 
-add_dependencies(kbdth0 psdk buildno_header)
+add_dependencies(kbdth0 psdk)
 
-add_cab_target(kbdth0 1)
+add_cd_file(TARGET kbdth0 DESTINATION reactos/system32 FOR all)

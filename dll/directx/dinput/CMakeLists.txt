@@ -37,5 +37,5 @@ add_importlibs(dinput
     kernel32
     ntdll)
 
-add_cab_target(dinput 1)
+add_cd_file(TARGET dinput DESTINATION reactos/system32 FOR all)
 add_importlib_target(dinput.spec)

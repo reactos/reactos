@@ -16,5 +16,5 @@ set_module_type(traffic win32dll)
 target_link_libraries(traffic wine)
 
 add_importlibs(traffic msvcrt kernel32 ntdll)
-add_dependencies(traffic psdk buildno_header)
-add_cab_target(traffic 1)
+add_dependencies(traffic psdk)
+add_cd_file(TARGET traffic DESTINATION reactos/system32 FOR all)

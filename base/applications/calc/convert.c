@@ -50,7 +50,7 @@ typedef struct {
 static const conv_t conv_ANGLE[] = {
     DECLARE_CONV_UNIT(ANGLE, DEGREES,  "$", "$")
     DECLARE_CONV_UNIT(ANGLE, GRADIANS, "$*0.9", "$/0.9")
-    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$*180/P", "$*P/180")
+    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$/P*180", "$*P/180")
     DECLARE_CONV_END
 };
 
@@ -355,7 +355,7 @@ static const conv_t conv_TIME[] = {
  */
 static const conv_t conv_TEMPERATURE[] = {
     DECLARE_CONV_UNIT(TEMPERATURE, CELSIUS,     "$+273.15",       "$-273.15")
-    DECLARE_CONV_UNIT(TEMPERATURE, FAHRENHEIT,  "($-459.67)*5/9", "$*9/5-459.67")
+    DECLARE_CONV_UNIT(TEMPERATURE, FAHRENHEIT,  "($+459.67)*5/9", "$*9/5-459.67")
     DECLARE_CONV_UNIT(TEMPERATURE, KELVIN,      "$",              "$")
     DECLARE_CONV_UNIT(TEMPERATURE, RANKINE,     "$*5/9",          "$*9/5")
     DECLARE_CONV_END
