@@ -143,6 +143,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
 {
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_DOS_HEADER DosHeader;
+    BOOLEAN WantsRangeCheck;
 
     /* You must want NT Headers, no? */
     if (!OutHeaders) return STATUS_INVALID_PARAMETER;
@@ -161,7 +162,8 @@ RtlImageNtHeaderEx(IN ULONG Flags,
     if (!(Base) || (Base == (PVOID)-1)) return STATUS_INVALID_PARAMETER;
 
     /* Check if the caller wants validation */
-    if (Flags & RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK)
+    WantsRangeCheck = !(Flags & RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK);
+    if (WantsRangeCheck)
     {
         /* Make sure the image size is at least big enough for the DOS header */
         if (Size < sizeof(IMAGE_DOS_HEADER))
@@ -181,7 +183,7 @@ RtlImageNtHeaderEx(IN ULONG Flags,
     }
 
     /* Check if the caller wants validation */
-    if (Flags & RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK)
+    if (WantsRangeCheck)
     {
         /* The offset should fit in the passsed-in size */
         if (DosHeader->e_lfanew >= Size)
