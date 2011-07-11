@@ -28,6 +28,8 @@ static const WCHAR DeviceRootW[] = L"\\\\.\\";
 
 static const UNICODE_STRING _condev = RTL_CONSTANT_STRING(L"\\\\.\\CON");
 
+static const UNICODE_STRING _unc = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
+
 static const UNICODE_STRING _lpt = RTL_CONSTANT_STRING(L"LPT");
 
 static const UNICODE_STRING _com = RTL_CONSTANT_STRING(L"COM");
@@ -46,9 +48,17 @@ static const UNICODE_STRING _nul = RTL_CONSTANT_STRING(L"NUL");
 /*
  * @implemented
  */
-ULONG NTAPI RtlGetLongestNtPathLength (VOID)
+ULONG
+NTAPI
+RtlGetLongestNtPathLength(VOID)
 {
-   return (MAX_PATH + 9);
+    /*
+     * The longest NT path is a DOS path that actually sits on a UNC path (ie:
+     * a mapped network drive), which is accessed through the DOS Global?? path.
+     * This is, and has always been equal to, 269 characters, except in Wine
+     * which claims this is 277. Go figure.
+     */
+    return (MAX_PATH + _unc.Length + sizeof(ANSI_NULL));
 }
 
 
