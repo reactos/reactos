@@ -678,7 +678,7 @@ static PVOID KdbpSymAllocMem(ULONG_PTR Size)
             NtFreeVirtualMemory(CURRENT_PROCESS, &Base, &RegionSize, MEM_RELEASE);
             return NULL;
         }
-        return &Hdr[1];
+        return &MappedHdr[1];
     }
 }
 
