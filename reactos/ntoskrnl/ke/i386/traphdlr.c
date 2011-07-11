@@ -1199,20 +1199,41 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 #endif
     }
 
+    /* Check for S-LIST fault in kernel mode */
+    if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
+    {
+        PSLIST_HEADER SListHeader;
+
+        /* Sanity check that the assembly is correct:
+           This must be mov ebx, [eax]
+           Followed by cmpxchg8b [ebp] */
+        ASSERT((((UCHAR*)TrapFrame->Eip)[0] == 0x8B) &&
+               (((UCHAR*)TrapFrame->Eip)[1] == 0x18) &&
+               (((UCHAR*)TrapFrame->Eip)[2] == 0x0F) &&
+               (((UCHAR*)TrapFrame->Eip)[3] == 0xC7) &&
+               (((UCHAR*)TrapFrame->Eip)[4] == 0x4D) &&
+               (((UCHAR*)TrapFrame->Eip)[5] == 0x00));
+
+        /* Get the pointer to the SLIST_HEADER */
+        SListHeader = (PSLIST_HEADER)TrapFrame->Ebp;
+
+        /* Check if the Next member of the SLIST_HEADER was changed */
+        if (SListHeader->Next.Next != (PSLIST_ENTRY)TrapFrame->Eax)
+        {
+            /* Restart the operation */
+            TrapFrame->Eip = (ULONG_PTR)ExpInterlockedPopEntrySListResume;
+
+            /* Continue execution */
+            KiEoiHelper(TrapFrame);
+        }
+    }
+
     /* Call the access fault handler */
     Status = MmAccessFault(TrapFrame->ErrCode & 1,
                            (PVOID)Cr2,
                            TrapFrame->SegCs & MODE_MASK,
                            TrapFrame);
     if (NT_SUCCESS(Status)) KiEoiHelper(TrapFrame);
-    
-    /* Check for S-LIST fault */
-    if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
-    {
-        /* Not yet implemented */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
     
     /* Check for syscall fault */
 #if 0
