@@ -140,7 +140,6 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
     }
   }
 
-  RegCloseKey(hKey);
   return dwRet;
 }
 
