@@ -317,6 +317,7 @@ ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
                            ThemeGetButtonState(HTHELP, htHot, htDown, pcontext->Active));
 }
 
+/* Used from WM_NCPAINT and WM_NCACTIVATE handlers*/
 static void 
 ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
 {
@@ -564,7 +565,7 @@ ThemeDrawMenuItem(PDRAW_CONTEXT pcontext, HMENU Menu, int imenu)
     
     DrawTextW(pcontext->hDC, Text, i, &Rect, uFormat);
 
-    /* Exclude the area drawn by DrawText from the clip region */
+    /* Exclude from the clip region the area drawn by DrawText */
     SetRect(&rcCalc, 0,0,0,0);
     DrawTextW(pcontext->hDC, Text, i, &rcCalc, uFormat | DT_CALCRECT);
     InflateRect( &Rect, 0, -(rcCalc.bottom+1)/2);
@@ -620,7 +621,7 @@ ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, PRECT prcCurrent)
 
     SelectObject(pcontext->hDC, FontOld);
 
-    /* Fill the menu background area that isn't painted yet*/
+    /* Fill the menu background are that isn't painted yet*/
     FillRect(pcontext->hDC, &Rect, GetSysColorBrush(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
 }
 
