@@ -4,6 +4,7 @@ typedef struct _DRAW_CONTEXT
     HWND hWnd;
     HDC hDC;
     HTHEME theme; 
+    HTHEME hPrevTheme;
     WINDOWINFO wi;
     BOOL Active; /* wi.dwWindowStatus isn't correct for mdi child windows */
     HRGN hRgn;

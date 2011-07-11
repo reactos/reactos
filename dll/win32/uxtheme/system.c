@@ -61,7 +61,7 @@ HINSTANCE hDllInst;
 ATOM atDialogThemeEnabled;
 
 static DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
-static ATOM atWindowTheme;
+ATOM atWindowTheme;
 static ATOM atSubAppName;
 static ATOM atSubIdList;
 

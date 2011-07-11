@@ -165,6 +165,7 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     GetWindowInfo(hWnd, &pcontext->wi);
     pcontext->hWnd = hWnd;
     pcontext->Active = IsWindowActive(hWnd, pcontext->wi.dwExStyle);
+    pcontext->hPrevTheme = GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWindowTheme));
     pcontext->theme = OpenThemeData(pcontext->hWnd,  L"WINDOW");
 
     pcontext->CaptionHeight = pcontext->wi.cyWindowBorders;
@@ -185,6 +186,8 @@ ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext)
     ReleaseDC(pcontext->hWnd ,pcontext->hDC);
 
     CloseThemeData (pcontext->theme);
+
+    SetPropW(pcontext->hWnd, (LPCWSTR)MAKEINTATOM(atWindowTheme), pcontext->hPrevTheme);
 
     if(pcontext->hRgn != NULL)
     {
