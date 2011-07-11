@@ -20,6 +20,72 @@ BOOLEAN g_ShimsEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
+                          IN ULONG Length)
+{
+    /* Sanity checks */
+    ASSERT(StringOut);
+    ASSERT(Length <= UNICODE_STRING_MAX_BYTES);
+
+    /* Assume failure */
+    StringOut->Length = 0;
+
+    /* Make sure it's not mis-aligned */
+    if (Length & 1)
+    {
+        /* Fail */
+        StringOut->Buffer = NULL;
+        StringOut->MaximumLength = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Allocate the string*/
+    StringOut->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        0,
+                                        StringOut->Length + sizeof(WCHAR));
+    if (!StringOut->Buffer)
+    {
+        /* Fail */
+        StringOut->MaximumLength = 0;
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Null-terminate it */
+    StringOut->Buffer[StringOut->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Check if this is a maximum-sized string */
+    if (StringOut->Length != UNICODE_STRING_MAX_BYTES)
+    {
+        /* It's not, so set the maximum length to be one char more */
+        StringOut->MaximumLength = StringOut->Length + sizeof(UNICODE_NULL);
+    }
+    else
+    {
+        /* The length is already the maximum possible */
+        StringOut->MaximumLength = UNICODE_STRING_MAX_BYTES;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+LdrpFreeUnicodeString(IN PUNICODE_STRING StringIn)
+{
+    ASSERT(StringIn != NULL);
+
+    /* If Buffer is not NULL - free it */
+    if (StringIn->Buffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, StringIn->Buffer);
+    }
+
+    /* Zero it out */
+    RtlInitEmptyUnicodeString(StringIn, NULL, 0);
+}
 BOOLEAN
 NTAPI
 LdrpCallInitRoutine(IN PDLL_INIT_ROUTINE EntryPoint,
@@ -1394,6 +1460,314 @@ LdrpCheckForLoadedDllHandle(IN PVOID Base,
     return FALSE;
 }
 
+NTSTATUS
+NTAPI
+LdrpResolveFullName(IN PUNICODE_STRING OriginalName,
+                    IN PUNICODE_STRING PathName,
+                    IN PUNICODE_STRING FullPathName,
+                    IN PUNICODE_STRING *ExpandedName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+//    RTL_PATH_TYPE PathType;
+//    BOOLEAN InvalidName;
+    ULONG Length;
+
+    /* Display debug output if snaps are on */
+    if (ShowSnaps)
+    {
+        DbgPrintEx(81, //DPFLTR_LDR_ID,
+                   0,
+                   "LDR: %s - Expanding full name of %wZ\n",
+                   __FUNCTION__,
+                   OriginalName);
+    }
+
+    /* FIXME: Lock the PEB */
+    //RtlEnterCriticalSection(&FastPebLock);
+#if 0
+    /* Get the path name */
+    Length = RtlGetFullPathName_Ustr(OriginalName,
+                                     PathName->Length,
+                                     PathName->Buffer,
+                                     NULL,
+                                     &InvalidName,
+                                     &PathType);
+#else
+    Length = 0;
+#endif
+    if (!(Length) || (Length > UNICODE_STRING_MAX_BYTES))
+    {
+        /* Fail */
+        Status = STATUS_NAME_TOO_LONG;
+        goto Quickie;
+    }
+
+    /* Check if the length hasn't changed */
+    if (Length <= PathName->Length)
+    {
+        /* Return the same thing */
+        *ExpandedName = PathName;
+        PathName->Length = (USHORT)Length;
+        goto Quickie;
+    }
+
+    /* Sanity check */
+    ASSERT(Length >= sizeof(WCHAR));
+
+    /* Allocate a string */
+    Status = LdrpAllocateUnicodeString(FullPathName, Length - sizeof(WCHAR));
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Now get the full path again */
+#if 0
+    Length = RtlGetFullPathName_Ustr(OriginalName,
+                                     FullPathName->Length,
+                                     FullPathName->Buffer,
+                                     NULL,
+                                     &InvalidName,
+                                     &PathType);
+#else
+    Length = 0;
+#endif
+    if (!(Length) || (Length > FullPathName->Length))
+    {
+        /* Fail */
+        LdrpFreeUnicodeString(FullPathName);
+        Status = STATUS_NAME_TOO_LONG;
+    }
+    else
+    {
+        /* Return the expanded name */
+        *ExpandedName = FullPathName;
+        FullPathName->Length = (USHORT)Length;
+    }
+
+Quickie:
+    /* FIXME: Unlock the PEB */
+    //RtlLeaveCriticalSection(&FastPebLock);
+
+    /* Display debug output if snaps are on */
+    if (ShowSnaps)
+    {
+        /* Check which output to use -- failure or success */
+        if (NT_SUCCESS(Status))
+        {
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s - Expanded to %wZ\n",
+                       __FUNCTION__,
+                       *ExpandedName);
+        }
+        else
+        {
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s - Failed to expand %wZ; 0x%08x\n",
+                       __FUNCTION__,
+                       OriginalName,
+                       Status);
+        }
+    }
+
+    /* If we failed, return NULL */
+    if (!NT_SUCCESS(Status)) *ExpandedName = NULL;
+
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+LdrpSearchPath(IN PWCHAR *SearchPath,
+               IN PWCHAR DllName,
+               IN PUNICODE_STRING PathName,
+               IN PUNICODE_STRING FullPathName,
+               IN PUNICODE_STRING *ExpandedName)
+{
+    BOOLEAN TryAgain = FALSE;
+    PWCHAR ActualSearchPath = *SearchPath;
+    UNICODE_STRING TestName;
+    NTSTATUS Status;
+    PWCHAR Buffer, BufEnd = NULL;
+    ULONG Length = 0;
+    WCHAR p;
+    PWCHAR pp;
+
+    /* Check if we don't have a search path */
+    if (!ActualSearchPath) *SearchPath = LdrpDefaultPath.Buffer;
+
+    /* Display debug output if snaps are on */
+    if (ShowSnaps)
+    {
+        DbgPrintEx(81, //DPFLTR_LDR_ID,
+                   0,
+                   "LDR: %s - Looking for %ws in %ws\n",
+                   __FUNCTION__,
+                   DllName,
+                   *SearchPath);
+    }
+
+    /* Check if we're dealing with a relative path */
+    if (RtlDetermineDosPathNameType_U(DllName) != RtlPathTypeRelative)
+    {
+        /* Good, we're not. Create the name string */
+        Status = RtlInitUnicodeStringEx(&TestName, DllName);
+        if (!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Make sure it exists */
+        #if 0
+        if (!RtlDoesFileExists_UstrEx(&TestName, TRUE))
+        {
+            /* It doesn't, fail */
+            Status = STATUS_DLL_NOT_FOUND;
+            goto Quickie;
+        }
+        #endif
+
+        /* Resolve the full name */
+        Status = LdrpResolveFullName(&TestName,
+                                     PathName,
+                                     FullPathName,
+                                     ExpandedName);
+        goto Quickie;
+    }
+
+    /* FIXME: Handle relative case semicolon-lookup here */
+
+    /* Calculate length */
+    Length += (ULONG)wcslen(DllName) + sizeof(UNICODE_NULL);
+    if (Length > UNICODE_STRING_MAX_CHARS)
+    {
+        /* Too long, fail */
+        Status = STATUS_NAME_TOO_LONG;
+        goto Quickie;
+    }
+
+    /* Allocate buffer */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    if (!Buffer)
+    {
+        /* Fail */
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* FIXME: Setup TestName here */
+    Status = STATUS_NOT_FOUND;
+
+    /* Start loop */
+    do
+    {
+        /* Get character */
+        p = *ActualSearchPath;
+        if (!(p) && (p == ';'))
+        {
+            /* FIXME: We don't have a character, or is a semicolon.*/
+
+            /* Display debug output if snaps are on */
+            if (ShowSnaps)
+            {
+                DbgPrintEx(81, //DPFLTR_LDR_ID,
+                           0,
+                           "LDR: %s - Looking for %ws\n",
+                           __FUNCTION__,
+                           Buffer);
+            }
+
+            /* Sanity check */
+            TestName.Length = (USHORT)ALIGN_DOWN((BufEnd - Buffer), WCHAR);
+            ASSERT(TestName.Length < TestName.MaximumLength);
+
+            /* Check if the file exists */
+            #if 0
+            if (RtlDoesFileExists_UstrEx(&TestName, FALSE))
+            #endif
+            {
+                /* It does. Reallocate the buffer */
+                TestName.MaximumLength = (USHORT)ALIGN_DOWN((BufEnd - Buffer), WCHAR) + sizeof(WCHAR);
+                TestName.Buffer = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                                    0,
+                                                    Buffer,
+                                                    TestName.MaximumLength);
+                if (!TestName.Buffer)
+                {
+                    /* Keep the old one */
+                    TestName.Buffer = Buffer;
+                }
+                else
+                {
+                    /* Update buffer */
+                    Buffer = TestName.Buffer;
+                }
+
+                /* Make sure we have a buffer at least */
+                ASSERT(TestName.Buffer);
+
+                /* Resolve the name */
+                *SearchPath = ActualSearchPath++;
+                Status = LdrpResolveFullName(&TestName,
+                                             PathName,
+                                             FullPathName,
+                                             ExpandedName);
+                break;
+            }
+
+            /* Update buffer end */
+            BufEnd = Buffer;
+
+            /* Update string position */
+            pp = ActualSearchPath++;
+        }
+        else
+        {
+            /* Otherwise, write the character */
+            *BufEnd = p;
+            BufEnd++;
+        }
+
+        /* Check if the string is empty, meaning we're done */
+        if (!(*ActualSearchPath)) TryAgain = TRUE;
+
+        /* Advance in the string */
+        ActualSearchPath++;
+    } while (!TryAgain);
+
+    /* Check if we had a buffer and free it */
+    if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+Quickie:
+    /* Check if we got here through failure */
+    if (!NT_SUCCESS(Status)) *ExpandedName = NULL;
+
+    /* Display debug output if snaps are on */
+    if (ShowSnaps)
+    {
+        /* Check which output to use -- failure or success */
+        if (NT_SUCCESS(Status))
+        {
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s - Returning %wZ\n",
+                       __FUNCTION__,
+                       *ExpandedName);
+        }
+        else
+        {
+            DbgPrintEx(81, //DPFLTR_LDR_ID,
+                       0,
+                       "LDR: %s -  Unable to locate %ws in %ws: 0x%08x\n",
+                       __FUNCTION__,
+                       DllName,
+                       ActualSearchPath,
+                       Status);
+        }
+    }
+
+    /* Return status */
+    return Status;
+}
+
+
 /* NOTE: This function is b0rked and in the process of being slowly unf*cked */
 BOOLEAN
 NTAPI
@@ -2120,22 +2494,6 @@ LdrpClearLoadInProgress(VOID)
 
     /* Return final count */
     return ModulesCount;
-}
-
-VOID
-NTAPI
-LdrpFreeUnicodeString(IN PUNICODE_STRING StringIn)
-{
-    ASSERT(StringIn != NULL);
-
-    /* If Buffer is not NULL - free it */
-    if (StringIn->Buffer)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, StringIn->Buffer);
-    }
-
-    /* Zero it out */
-    RtlInitEmptyUnicodeString(StringIn, NULL, 0);
 }
 
 /* EOF */
