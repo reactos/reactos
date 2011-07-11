@@ -167,7 +167,7 @@ NTAPI
 RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
                          IN PWSTR Buffer)
 {
-    ULONG Length;
+    ULONG Length, Bytes;
     PCURDIR CurDir;
     PWSTR CurDirName;
     DPRINT("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
@@ -183,7 +183,7 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
 
     /* Check for x:\ vs x:\path\foo (note the trailing slash) */
     Bytes = Length * sizeof(WCHAR);
-    if ((Length <= 1) || (CurDirName[Length - 2] == ":"))
+    if ((Length <= 1) || (CurDirName[Length - 2] == L':'))
     {
         /* Check if caller does not have enough space */
         if (MaximumLength <= Bytes)
@@ -211,7 +211,7 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
     ASSERT(Buffer[Length - 1] == L'\\');
 
     /* Again check for our two cases (drive root vs path) */
-    if ((Length <= 1) || (Buffer[Length - 2] != ":"))
+    if ((Length <= 1) || (Buffer[Length - 2] != L':'))
     {
         /* Replace the trailing slash with a null */
         Buffer[Length - 1] = UNICODE_NULL;
