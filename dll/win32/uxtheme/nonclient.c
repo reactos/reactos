@@ -35,7 +35,7 @@ void InitMenuFont(VOID)
     hMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
 
     ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
-    hMenuFontBold = CreateFontIndirectW(&ncm.lfMenuFont);
+    hMenuFontBold = CreateFontIndirect(&ncm.lfMenuFont);
 
 }
 

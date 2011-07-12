@@ -24,6 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 static BOOL SCROLL_trackVertical;
 static enum SCROLL_HITTEST SCROLL_trackHitTest;
 /* Is the moving thumb being displayed? */
+static BOOL SCROLL_MovingThumb = FALSE;
 static HWND SCROLL_TrackingWin = 0;
 static INT  SCROLL_TrackingBar = 0;
 static INT  SCROLL_TrackingPos = 0;
@@ -277,7 +278,6 @@ static void SCROLL_DrawMovingThumb( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
 void 
 ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
 {
-    BOOL Save_SCROLL_MovingThumb = SCROLL_MovingThumb;
     SCROLLINFO si;
     SCROLLBARINFO sbi;
     BOOL vertical;
