@@ -92,7 +92,19 @@ PlayAudio ( ClientStream * clientstream )
 
             /*Check Connection Status If not connected call Connect()*/
             /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
-            Sleep(1000);
+            RpcTryExcept  
+            {
+                AUDPlayBuffer (audsrv_v0_0_c_ifspec,
+                               clientstream->stream,
+							   0,
+							   NULL);
+            }
+            RpcExcept(1)
+            {
+                status = RpcExceptionCode();
+            }
+            RpcEndExcept
+
             clientstream->callbacks.BufferCopied(0);
     }
     clientstream->callbacks.PlayComplete(0);

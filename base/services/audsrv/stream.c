@@ -4,7 +4,6 @@
  * FILE:             services/stream.c
  * PURPOSE:          Audio Server
  * COPYRIGHT:        Copyright 2011 Neeraj Yadav
-
  */
 
 #include "audsrv.h"
@@ -15,92 +14,53 @@ long GetNewStreamID()
     pengine->streamidpool += 1;
     return streamid;
 }
+BOOL FilterAudio(LPVOID param)
+{
+    ServerStream * localstream = (ServerStream *) param;
+
+    EnterCriticalSection(&(localstream->CriticalSection));
+
+    if(localstream->state == 1)
+    {
+	/*Fake Filter,Simply gives the genuine buffer as filtered buffer*/
+	/*minsamplevalue and maxsamplevalue must be calculated during filtering*/
+	/*Filter must ensure that all the samples are distributed evenly about 0 in case of signed samples*/
+    localstream->length_filtered = localstream->length_genuine;
+    localstream->filteredbuf = HeapAlloc(GetProcessHeap(),
+                                         0,
+                                         localstream->length_filtered);
+
+    memcpy(localstream->filteredbuf,localstream->genuinebuf,localstream->length_filtered);
+
+    HeapFree(GetProcessHeap(),
+              0,
+              localstream->genuinebuf);
+
+    *((int *)localstream->minsamplevalue) = -32766;
+    *((int *)localstream->maxsamplevalue) = 32766;
+
+    localstream->state = 2;
+
+    LeaveCriticalSection(&(localstream->CriticalSection));
+    return TRUE;
+    }
+    else
+	{
+	    LeaveCriticalSection(&(localstream->CriticalSection));
+		return FALSE;
+	}
+}
 
 DWORD WINAPI RunStreamThread(LPVOID param)
 {
-    UINT i = 0;
     ServerStream * localstream = (ServerStream *) param;
 
-/*UGLY HACK--WILL be removed soon-- fill filtered buffer (1 second duration in the master stream format) directly until we are in a condition to get buffer directly from the client*/
-/******************************************************/
-    BOOL initmin=FALSE,initmax = FALSE;
-    short minimum=0,maximum = 0;
-    PSHORT tempbuf;
-
-
-    localstream->length_filtered = localstream->freq * localstream->channels * localstream->bitspersample / 8;
-    tempbuf = (PSHORT) HeapAlloc(GetProcessHeap(),
-                                0,
-                                localstream->length_filtered);
-
-    while (i < localstream->length_filtered / 2)
-    {
-        tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
-
-        if((localstream->streamid %2) == 0)
-            tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 24000);
-
-        if(initmin)
-        {
-            if(tempbuf[i]<minimum)
-                minimum = tempbuf[i];
-        }else
-            minimum = tempbuf[i];
-        if(initmax)
-        {
-            if(tempbuf[i]>maximum)
-                maximum = tempbuf[i];
-        }else
-            maximum = tempbuf[i];
-
-        if(initmin == FALSE || initmax == FALSE )
-        {
-            initmin = TRUE;
-            initmax = TRUE;
-        }
-        i++;
-
-        tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
-
-        if((localstream->streamid %2) == 0)
-            tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 24000);
-
-
-        if(initmin)
-        {
-            if(tempbuf[i]<minimum)
-                minimum = tempbuf[i];
-        }
-        else
-            minimum = tempbuf[i];
-
-        if(initmax)
-        {
-            if(tempbuf[i]>maximum)
-                maximum = tempbuf[i];
-        }else
-            maximum = tempbuf[i];
-        i++;
-    }
-
-    *((int *)localstream->minsamplevalue) = minimum;
-    *((int *)localstream->maxsamplevalue) = maximum;
-    localstream->filteredbuf = tempbuf;
-    localstream->ready =TRUE;
-
-/******************************************************/
-/*Do Some Initialization If needed.Only After these Initialization remaining system will be told that stream is ready*/
     SetEvent(localstream->threadready);
 
     while (TRUE)
     {
-        /*Wait For Data Write Event,currently NO Wait considering Data has always been written*/
-
-		EnterCriticalSection(&(localstream->CriticalSection));
-
-		LeaveCriticalSection(&(localstream->CriticalSection));
-		/*Wait For Stream Played Event*/
-		WaitForSingleObject(localstream->stream_played_event,INFINITE);
+        if(FilterAudio(param) == TRUE )
+            WaitForSingleObject(localstream->stream_played_event,INFINITE);
     }
     /*Clean Stream's data*/
 }
@@ -157,7 +117,7 @@ long AddStream(LONG frequency,
     newstream->channels = channels; /*TODO validation*/
     newstream->channelmask = channelmask; /*TODO validation*/
 
-    newstream->ready = FALSE;
+    newstream->state = 0;
     newstream->length_genuine = 0;
     newstream->genuinebuf = NULL;
     newstream->length_filtered = 0;
@@ -173,6 +133,11 @@ long AddStream(LONG frequency,
     newstream->next = NULL;
 
     newstream->stream_played_event = CreateEvent(NULL,
+                                    FALSE,
+                                    FALSE,
+                                    NULL);
+
+    newstream->buffer_write_event = CreateEvent(NULL,
                                     FALSE,
                                     FALSE,
                                     NULL);
@@ -231,5 +196,43 @@ error:
     return 0;
 }
 
+long WriteBuffer(LONG streamid,
+                 LONG length,
+                 LPVOID buffer)
+{
+	int i =0;
+    PSHORT tempbuf;
+    ServerStream * localstream = pengine->serverstreamlist;
+    while(localstream!=NULL)
+    {
+        if(localstream->streamid == streamid) break;
+        localstream = localstream->next;
+    }
+
+    if(localstream == NULL)
+        return -1;
+
+    EnterCriticalSection(&(localstream->CriticalSection));
+
+    if(localstream->state == 0)
+	{
+        localstream->length_genuine = localstream->freq * localstream->channels * localstream->bitspersample / 8;
+        localstream->genuinebuf = tempbuf = (PSHORT) HeapAlloc(GetProcessHeap(),
+                                                               0,
+                                                               localstream->length_genuine);
+
+        while (i < localstream->length_genuine / 2)
+        {
+            tempbuf[i+1] = tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
+            i+=2;
+        }
+
+        localstream->state = 1;
+    }
+
+	LeaveCriticalSection(&(localstream->CriticalSection));
+
+    return 0;
+}
 /*Dont forget to clean ServerStream's minsamplevalue and maxsamplevalue while removing the stream*/
 /*Delete Critical Section while cleaning Stream*/

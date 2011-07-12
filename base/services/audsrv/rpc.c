@@ -79,6 +79,14 @@ long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,
     return stream;
 }
 
+long AUDPlayBuffer(    IN RPC_BINDING_HANDLE hBinding,
+                       LONG streamid,
+					   LONG length,
+					   LPVOID buffer)
+{
+    WriteBuffer(streamid,length,NULL);
+    return 0;
+}
 /*************************************************************************/
 void __RPC_FAR *__RPC_USER midl_user_allocate(SIZE_T len)
 {

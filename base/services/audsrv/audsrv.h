@@ -44,7 +44,8 @@ typedef struct ServerStream
 
     /*Balance from -1.0 to 1.0*/
     float balance;
-    BOOL ready;
+    /*state cycle   0->buffer write -> 1 -> filtering -> 2 ->playback -> 0*/
+	char state;
     /*This buffer is filled by the client using RPC calls*/
     PVOID genuinebuf;
     int length_genuine;
@@ -56,6 +57,7 @@ typedef struct ServerStream
     PVOID maxsamplevalue;
 
     HANDLE stream_played_event;
+    HANDLE buffer_write_event;
     HANDLE threadready;
     HANDLE thread;
     CRITICAL_SECTION CriticalSection;
@@ -116,6 +118,9 @@ long AddStream(LONG frequency,
                int mute,
                float balance);
 
+long WriteBuffer(LONG streamid,
+                 LONG length,
+                 LPVOID buffer);
 /*mixer.c*/
 void * MixS8(MixerEngine * mixer,
              int buffer);

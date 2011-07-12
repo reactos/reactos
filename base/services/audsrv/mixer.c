@@ -4,7 +4,6 @@
  * FILE:             services/mixer.c
  * PURPOSE:          Audio Server
  * COPYRIGHT:        Copyright 2011 Neeraj Yadav
-
  */
 
 #include "audsrv.h"
@@ -32,7 +31,7 @@ void * MixS16(MixerEngine * mixer,
     length = stream->length_filtered;
     while(stream->next != NULL)
     {
-        if(stream->length_filtered > length && stream->ready == TRUE )
+        if(stream->length_filtered > length && stream->state == 2 )
             length = stream->length_filtered;
         stream = stream->next;
     }
@@ -47,11 +46,11 @@ void * MixS16(MixerEngine * mixer,
     minsamplevalue = 0;
     maxsamplevalue = 0;
 
-    while( stream != NULL)
+    while(stream != NULL)
     {
         EnterCriticalSection(&(stream->CriticalSection));
 
-        if(stream->ready == TRUE && *(short *) stream->minsamplevalue != 0 && *(short *) stream->minsamplevalue != 0)
+        if(stream->state == 2 && *(short *) stream->minsamplevalue != 0 && *(short *) stream->minsamplevalue != 0)
         {
 		    coefficient = 1.0;
 
@@ -78,12 +77,14 @@ void * MixS16(MixerEngine * mixer,
                 localsinkbuf[i] = (short) (( (localsinkbuf[i] * streamcount) + ((short)((float)  localsrcbuf[i] ) * coefficient) ) / (streamcount +1));
 			}
 
+            stream->state = 0;
+            HeapFree(GetProcessHeap(),
+                             0,
+                             stream->filteredbuf);
+
+		    SetEvent(stream->stream_played_event);
         }
-        //stream->ready = 0;  /*TODO Enable it when actual filter thread starts working*/
-        //HeapFree(GetProcessHeap(),
-        //                 0,
-        //                 stream->filteredbuf);
-		SetEvent(stream->stream_played_event);
+
         LeaveCriticalSection(&(stream->CriticalSection));
 
         streamcount++;
