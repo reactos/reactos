@@ -1310,7 +1310,7 @@ static void test_WSASocket(void)
     ok(ret != SOCKET_ERROR, "WSAEnumProtocolsA failed, last error is %d\n",
             WSAGetLastError());
 
-    if (ret == 0) {
+    if (ret <= 0) {
         skip("No protocols enumerated.\n");
         HeapFree(GetProcessHeap(), 0, pi);
         return;
