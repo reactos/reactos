@@ -1121,10 +1121,6 @@ MmIsDirtyPageRmap(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_NUMBER Page);
-
-NTSTATUS
-NTAPI
 MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* freelist.c **********************************************************/
