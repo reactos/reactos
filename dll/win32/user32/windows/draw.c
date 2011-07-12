@@ -1457,7 +1457,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

@@ -318,7 +318,7 @@ MDIRedrawFrame(HWND hWnd, DWORD flags)
 {
    BOOL Hook, Ret = FALSE;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

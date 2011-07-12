@@ -2209,7 +2209,7 @@ DefWindowProcA(HWND hWnd,
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)
@@ -2242,7 +2242,7 @@ DefWindowProcW(HWND hWnd,
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
-   LOADUSERAPIHOOK
+  LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
    if (Hook)

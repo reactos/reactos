@@ -200,7 +200,7 @@ SetWindowRgn(
    BOOL Hook;
    int Ret = 0;
 
-   LOADUSERAPIHOOK
+   LoadUserApiHook();
 
    Hook = BeginIfHookedUserApiHook();
 

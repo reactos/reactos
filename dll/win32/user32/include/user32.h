@@ -45,6 +45,11 @@
 /* SEH Support with PSEH */
 #include <pseh/pseh2.h>
 
+extern PPROCESSINFO g_ppi;
+extern ULONG_PTR g_ulSharedDelta;
+extern PSERVERINFO gpsi;
+extern BOOL gfServerProcess;
+
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 #define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId) ||\
                            (GetWin32ClientInfo()->pDeskInfo && GetWin32ClientInfo()->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId)))
@@ -53,29 +58,37 @@
 
 extern RTL_CRITICAL_SECTION gcsUserApiHook;
 extern USERAPIHOOK guah;
+extern HINSTANCE ghmodUserApiHook;
 BOOL FASTCALL BeginIfHookedUserApiHook(VOID);
 BOOL FASTCALL EndUserApiHook(VOID);
 BOOL FASTCALL IsInsideUserApiHook(VOID);
 VOID FASTCALL ResetUserApiHook(PUSERAPIHOOK);
 BOOL FASTCALL IsMsgOverride(UINT,PUAHOWP);
+BOOL WINAPI InitUserApiHook(HINSTANCE hInstance, USERAPIHOOKPROC pfn);
+BOOL WINAPI ClearUserApiHook(HINSTANCE hInstance);
 
-#define LOADUSERAPIHOOK \
-   if (!gfServerProcess &&                                \
-       !IsInsideUserApiHook() &&                          \
-       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&           \
-       !RtlIsThreadWithinLoaderCallout())                 \
-   {                                                      \
-      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK); \
-   }                                                      \
+static __inline void LoadUserApiHook()
+{
+    if(!(gpsi->dwSRVIFlags & SRVINFO_APIHOOK))
+        return;
+
+   if(IsInsideUserApiHook())
+        return;
+
+   /* HACK! Please remove when gfServerProcess is correct */
+#if 0
+    if(gfServerProcess)
+        return;
+#endif
+    if(RtlIsThreadWithinLoaderCallout())
+        return;
+
+    NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK);
+}
 
 /* FIXME: Use ntgdi.h then cleanup... */
 LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
-
-extern PPROCESSINFO g_ppi;
-extern ULONG_PTR g_ulSharedDelta;
-extern PSERVERINFO gpsi;
-extern BOOL gfServerProcess;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)

@@ -217,6 +217,8 @@ Init(VOID)
       (PVOID)User32CallLoadMenuFromKernel;
    KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
       (PVOID)User32CallClientThreadSetupFromKernel;
+   KernelCallbackTable[USER32_CALLBACK_CLIENTLOADLIBRARY] =
+      (PVOID)User32CallClientLoadLibraryFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
