@@ -494,11 +494,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
 #if DBG
+#ifndef _WINKD_
     /* ReactOS_KdSerial */
     CreateFreeLoaderEntry(IniCache, IniSection,
         L"ReactOS_KdSerial", L"\"ReactOS (RosDbg)\"",
         L"Windows2003", ArcPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+#endif
 
     /* ReactOS_LogFile */
     CreateFreeLoaderEntry(IniCache, IniSection,
