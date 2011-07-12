@@ -78,25 +78,36 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
     Connection->SocketContext));
 
-    AddressToBind.sin_family = AF_INET;
-    memcpy( &AddressToBind.sin_addr,
-        &Connection->AddressFile->Address.Address.IPv4Address,
-        sizeof(AddressToBind.sin_addr) );
-    AddressToBind.sin_port = Connection->AddressFile->Port;
+    if (Connection->AddressFile->Port)
+    {
+        AddressToBind.sin_family = AF_INET;
+        memcpy( &AddressToBind.sin_addr,
+               &Connection->AddressFile->Address.Address.IPv4Address,
+               sizeof(AddressToBind.sin_addr) );
+        AddressToBind.sin_port = Connection->AddressFile->Port;
+        TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
-    TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
+        /* Perform an explicit bind */
+        Status = TCPTranslateError(OskitTCPBind(Connection->SocketContext,
+                                                &AddressToBind,
+                                                sizeof(AddressToBind)));
+    }
+    else
+    {
+        /* An implicit bind will be performed */
+        Status = STATUS_SUCCESS;
+    }
 
-    Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
-                        &AddressToBind,
-                        sizeof(AddressToBind) ) );
+    if (NT_SUCCESS(Status))
+        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
+    
     if (NT_SUCCESS(Status))
     {
         /* Check if we had an unspecified port */
         if (!Connection->AddressFile->Port)
         {
             /* We did, so we need to copy back the port */
-            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
-            if (NT_SUCCESS(Status))
+            if (NT_SUCCESS(TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE)))
             {
                 /* Allocate the port in the port bitmap */
                 Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
@@ -106,9 +117,6 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
             }
         }
     }
-
-    if (NT_SUCCESS(Status))
-        Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext, Backlog ) );
 
     UnlockObject(Connection, OldIrql);
 
