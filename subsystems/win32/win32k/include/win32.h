@@ -30,6 +30,7 @@
 #define W32PF_NOWINDOWGHOSTING       (0x01000000)
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
+#define W32PF_APIHOOKLOADED          (0x08000000)
 
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;

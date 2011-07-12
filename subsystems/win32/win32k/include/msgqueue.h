@@ -7,6 +7,7 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
+#define MSQ_INJECTMODULE 3
 
 #define QSIDCOUNTS 6
 

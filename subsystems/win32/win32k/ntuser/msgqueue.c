@@ -811,6 +811,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Message->Msg.wParam,
                                     Message->Msg.lParam);
    }
+   else if(Message->HookMessage == MSQ_INJECTMODULE)
+   {
+       Result = IntLoadHookModule(Message->Msg.message,
+                                  (HHOOK)Message->Msg.lParam,
+                                  Message->Msg.wParam);
+   }
    else if ((Message->CompletionCallback)
        && (Message->CallBackSenderQueue == MessageQueue))
    {   /* Call the callback routine */
