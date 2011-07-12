@@ -984,7 +984,8 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     /* Disconnect the pipes */
     if (Ccb->OtherSide)
     {
-        ASSERT(Ccb->OtherSide->OtherSide == Ccb);
+        /* FIXME: Timo wants it rewritten */
+        /*ASSERT(Ccb->OtherSide->OtherSide == Ccb);*/
         NpfsCcbSetOtherSide(Ccb->OtherSide, NULL);
         NpfsCcbSetOtherSide(Ccb, NULL);
     }
