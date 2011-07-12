@@ -1,0 +1,84 @@
+#include <windows.h>
+#include "commctrl.h"
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+IDD_DESKTOP_INTEGRATION DIALOGEX 0, 0, 260, 132
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        " Appearance ",IDC_STATIC,8,4,244,106
+    LTEXT           "&Theme:",IDC_STATIC,15,16,130,8
+    COMBOBOX        IDC_THEME_THEMECOMBO,15,24,130,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Install theme...",IDC_THEME_INSTALL,152,23,93,14
+    LTEXT           "&Color:",IDC_THEME_COLORTEXT,15,40,112,8
+    COMBOBOX        IDC_THEME_COLORCOMBO,15,48,112,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Size:",IDC_THEME_SIZETEXT,135,40,110,8
+    COMBOBOX        IDC_THEME_SIZECOMBO,135,48,110,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "It&em:",IDC_STATIC,15,64,112,8
+    COMBOBOX        IDC_SYSPARAM_COMBO,15,74,112,120,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "C&olor:",IDC_SYSPARAM_COLOR_TEXT,135,64,25,8,WS_DISABLED
+    CONTROL         "",IDC_SYSPARAM_COLOR,"Button",BS_OWNERDRAW | WS_DISABLED | WS_TABSTOP,135,74,25,13
+    LTEXT           "Si&ze:",IDC_SYSPARAM_SIZE_TEXT,166,64,30,8,WS_DISABLED
+    EDITTEXT        IDC_SYSPARAM_SIZE,166,74,23,13,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "&Font...",IDC_SYSPARAM_FONT,208,74,37,13,WS_DISABLED
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TAB_APPLICATIONS    "Applications"
+    IDS_TAB_DLLS            "Libraries"
+    IDS_TAB_DRIVES          "Drives"
+    IDS_CHOOSE_PATH         "Select the unix target directory, please."
+    IDS_HIDE_ADVANCED       "Hide &Advanced"
+    IDS_SHOW_ADVANCED       "Show &Advanced"
+    IDS_NOTHEME             "(No Theme)"
+    IDS_TAB_GRAPHICS        "Graphics"
+    IDS_TAB_DESKTOP_INTEGRATION "Desktop Integration"
+    IDS_TAB_AUDIO           "Audio"
+    IDS_TAB_ABOUT           "About"
+    IDS_WINECFG_TITLE       "Wine configuration"
+    IDS_WINECFG_TITLE_APP   "Wine configuration for %s"
+    IDS_THEMEFILE           "Theme files"
+    IDS_THEMEFILE_SELECT    "Select a theme file"
+    IDS_AUDIO_MISSING       "There is no audio driver currently specified in the registry.\n\nA recommended driver has been selected for you.\nYou can use this driver or select another driver if available.\n\nYou must click Apply for the selection to take effect."
+    IDS_SHELL_FOLDER        "Folder"
+    IDS_LINKS_TO            "Links to"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDC_SYSPARAMS_BUTTON            "Controls Background"
+    IDC_SYSPARAMS_BUTTON_TEXT       "Controls Text"
+    IDC_SYSPARAMS_DESKTOP           "Desktop"
+    IDC_SYSPARAMS_MENU              "Menu Background"
+    IDC_SYSPARAMS_MENU_TEXT         "Menu Text"
+    IDC_SYSPARAMS_SCROLLBAR         "Scrollbar"
+    IDC_SYSPARAMS_SELECTION         "Selection Background"
+    IDC_SYSPARAMS_SELECTION_TEXT    "Selection Text"
+    IDC_SYSPARAMS_TOOLTIP           "ToolTip Background"
+    IDC_SYSPARAMS_TOOLTIP_TEXT      "ToolTip Text"
+    IDC_SYSPARAMS_WINDOW            "Window Background"
+    IDC_SYSPARAMS_WINDOW_TEXT       "Window Text"
+    IDC_SYSPARAMS_ACTIVE_TITLE      "Active Title Bar"
+    IDC_SYSPARAMS_ACTIVE_TITLE_TEXT "Active Title Text"
+    IDC_SYSPARAMS_INACTIVE_TITLE    "Inactive Title Bar"
+    IDC_SYSPARAMS_INACTIVE_TITLE_TEXT "Inactive Title Text"
+    IDC_SYSPARAMS_MSGBOX_TEXT       "Message Box Text"
+    IDC_SYSPARAMS_APPWORKSPACE      "Application Workspace"
+    IDC_SYSPARAMS_WINDOW_FRAME      "Window Frame"
+    IDC_SYSPARAMS_ACTIVE_BORDER     "Active Border"
+    IDC_SYSPARAMS_INACTIVE_BORDER   "Inactive Border"
+    IDC_SYSPARAMS_BUTTON_SHADOW     "Controls Shadow"
+    IDC_SYSPARAMS_GRAY_TEXT         "Gray Text"
+    IDC_SYSPARAMS_BUTTON_HILIGHT    "Controls Highlight"
+    IDC_SYSPARAMS_BUTTON_DARK_SHADOW "Controls Dark Shadow"
+    IDC_SYSPARAMS_BUTTON_LIGHT      "Controls Light"
+    IDC_SYSPARAMS_BUTTON_ALTERNATE  "Controls Alternate Background"
+    IDC_SYSPARAMS_HOT_TRACKING      "Hot Tracked Item"
+    IDC_SYSPARAMS_ACTIVE_TITLE_GRADIENT "Active Title Bar Gradient"
+    IDC_SYSPARAMS_INACTIVE_TITLE_GRADIENT "Inactive Title Bar Gradient"
+    IDC_SYSPARAMS_MENU_HILIGHT      "Menu Highlight"
+    IDC_SYSPARAMS_MENUBAR           "Menu Bar"
+END
