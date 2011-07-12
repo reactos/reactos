@@ -16,8 +16,6 @@ int _tmain(int argc, _TCHAR* argv[])
         return 0;
     }
 
-
-      //hmodRosTheme = LoadLibrary(L"C:\\Reactos\\src\\themes-priv\\output-MinGW-i386\\reactos\\dll\\win32\\uxtheme\\rostheme.dll");
     hmodRosTheme = LoadLibrary(argv[1]);
     if(!hmodRosTheme)
     {
