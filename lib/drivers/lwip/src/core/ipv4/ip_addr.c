@@ -93,7 +93,7 @@ ip4_addr_netmask_valid(u32_t netmask)
   u32_t nm_hostorder = lwip_htonl(netmask);
 
   /* first, check for the first zero */
-  for (mask = 1U << 31 ; mask != 0; mask >>= 1) {
+  for (mask = 1UL << 31 ; mask != 0; mask >>= 1) {
     if ((nm_hostorder & mask) == 0) {
       break;
     }

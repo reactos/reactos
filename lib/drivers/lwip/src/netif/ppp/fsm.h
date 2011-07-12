@@ -48,15 +48,12 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: fsm.h,v 1.4 2007/12/19 20:47:23 fbernon Exp $
+ * $Id: fsm.h,v 1.5 2009/12/31 17:08:08 goldsimon Exp $
  */
 
 #ifndef FSM_H
 #define FSM_H
 
-/*****************************************************************************
-************************* PUBLIC DEFINITIONS *********************************
-*****************************************************************************/
 /*
  * LCP Packet header = Code, id, length.
  */
@@ -74,31 +71,7 @@
 #define TERMACK     6 /* Termination Ack */
 #define CODEREJ     7 /* Code Reject */
 
-/*
- * Link states.
- */
-#define LS_INITIAL  0 /* Down, hasn't been opened */
-#define LS_STARTING 1 /* Down, been opened */
-#define LS_CLOSED   2 /* Up, hasn't been opened */
-#define LS_STOPPED  3 /* Open, waiting for down event */
-#define LS_CLOSING  4 /* Terminating the connection, not open */
-#define LS_STOPPING 5 /* Terminating, but open */
-#define LS_REQSENT  6 /* We've sent a Config Request */
-#define LS_ACKRCVD  7 /* We've received a Config Ack */
-#define LS_ACKSENT  8 /* We've sent a Config Ack */
-#define LS_OPENED   9 /* Connection available */
 
-/*
- * Flags - indicate options controlling FSM operation
- */
-#define OPT_PASSIVE 1 /* Don't die if we don't get a response */
-#define OPT_RESTART 2 /* Treat 2nd OPEN as DOWN, UP */
-#define OPT_SILENT  4 /* Wait for peer to speak first */
-
-
-/*****************************************************************************
-************************* PUBLIC DATA TYPES **********************************
-*****************************************************************************/
 /*
  * Each FSM is described by an fsm structure and fsm callbacks.
  */
@@ -141,18 +114,27 @@ typedef struct fsm_callbacks {
 } fsm_callbacks;
 
 
-/*****************************************************************************
-*********************** PUBLIC DATA STRUCTURES *******************************
-*****************************************************************************/
 /*
- * Variables
+ * Link states.
  */
-extern int peer_mru[]; /* currently negotiated peer MRU (per unit) */
+#define LS_INITIAL  0 /* Down, hasn't been opened */
+#define LS_STARTING 1 /* Down, been opened */
+#define LS_CLOSED   2 /* Up, hasn't been opened */
+#define LS_STOPPED  3 /* Open, waiting for down event */
+#define LS_CLOSING  4 /* Terminating the connection, not open */
+#define LS_STOPPING 5 /* Terminating, but open */
+#define LS_REQSENT  6 /* We've sent a Config Request */
+#define LS_ACKRCVD  7 /* We've received a Config Ack */
+#define LS_ACKSENT  8 /* We've sent a Config Ack */
+#define LS_OPENED   9 /* Connection available */
 
+/*
+ * Flags - indicate options controlling FSM operation
+ */
+#define OPT_PASSIVE 1 /* Don't die if we don't get a response */
+#define OPT_RESTART 2 /* Treat 2nd OPEN as DOWN, UP */
+#define OPT_SILENT  4 /* Wait for peer to speak first */
 
-/*****************************************************************************
-************************** PUBLIC FUNCTIONS **********************************
-*****************************************************************************/
 
 /*
  * Prototypes
@@ -165,5 +147,11 @@ void fsm_close (fsm*, char*);
 void fsm_input (fsm*, u_char*, int);
 void fsm_protreject (fsm*);
 void fsm_sdata (fsm*, u_char, u_char, u_char*, int);
+
+
+/*
+ * Variables
+ */
+extern int peer_mru[]; /* currently negotiated peer MRU (per unit) */
 
 #endif /* FSM_H */

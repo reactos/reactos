@@ -85,6 +85,8 @@
 #include "chap.h"
 #include "chpms.h"
 
+#include <string.h>
+
 
 /*************************/
 /*** LOCAL DEFINITIONS ***/
@@ -137,49 +139,12 @@ static u_char Get7Bits(
   int startBit
 );
 
-
-/***********************************/
-/*** PUBLIC FUNCTION DEFINITIONS ***/
-/***********************************/
-void
-ChapMS( chap_state *cstate, char *rchallenge, int rchallenge_len, char *secret, int secret_len)
-{
-  MS_ChapResponse response;
-#ifdef MSLANMAN
-  extern int ms_lanman;
-#endif
-
-#if 0
-  CHAPDEBUG((LOG_INFO, "ChapMS: secret is '%.*s'\n", secret_len, secret));
-#endif
-  BZERO(&response, sizeof(response));
-
-  /* Calculate both always */
-  ChapMS_NT(rchallenge, rchallenge_len, secret, secret_len, &response);
-
-#ifdef MSLANMAN
-  ChapMS_LANMan(rchallenge, rchallenge_len, secret, secret_len, &response);
-
-  /* prefered method is set by option  */
-  response.UseNT = !ms_lanman;
-#else
-  response.UseNT = 1;
-#endif
-
-  BCOPY(&response, cstate->response, MS_CHAP_RESPONSE_LEN);
-  cstate->resp_length = MS_CHAP_RESPONSE_LEN;
-}
-
-
-/**********************************/
-/*** LOCAL FUNCTION DEFINITIONS ***/
-/**********************************/
 static void
 ChallengeResponse( u_char *challenge, /* IN   8 octets */
                    u_char *pwHash,    /* IN  16 octets */
                    u_char *response   /* OUT 24 octets */)
 {
-  char    ZPasswordHash[21];
+  u_char    ZPasswordHash[21];
 
   BZERO(ZPasswordHash, sizeof(ZPasswordHash));
   BCOPY(pwHash, ZPasswordHash, 16);
@@ -211,19 +176,19 @@ DesEncrypt( u_char *clear, /* IN  8 octets */
   MakeKey(key, des_key);
 
   Expand(des_key, crypt_key);
-  setkey(crypt_key);
+  setkey((char*)crypt_key);
 
 #if 0
-  CHAPDEBUG((LOG_INFO, "DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
              clear[0], clear[1], clear[2], clear[3], clear[4], clear[5], clear[6], clear[7]));
 #endif
 
   Expand(clear, des_input);
-  encrypt(des_input, 0);
+  encrypt((char*)des_input, 0);
   Collapse(des_input, cipher);
 
 #if 0
-  CHAPDEBUG((LOG_INFO, "DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
              cipher[0], cipher[1], cipher[2], cipher[3], cipher[4], cipher[5], cipher[6], cipher[7]));
 #endif
 }
@@ -243,14 +208,14 @@ DesEncrypt( u_char *clear, /* IN  8 octets */
   des_set_key(&des_key, key_schedule);
 
 #if 0
-  CHAPDEBUG((LOG_INFO, "DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
              clear[0], clear[1], clear[2], clear[3], clear[4], clear[5], clear[6], clear[7]));
 #endif
 
   des_ecb_encrypt((des_cblock *)clear, (des_cblock *)cipher, key_schedule, 1);
 
 #if 0
-  CHAPDEBUG((LOG_INFO, "DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
              cipher[0], cipher[1], cipher[2], cipher[3], cipher[4], cipher[5], cipher[6], cipher[7]));
 #endif
 }
@@ -329,9 +294,9 @@ MakeKey( u_char *key,    /* IN  56 bit DES key missing parity bits */
 #endif
   
 #if 0
-  CHAPDEBUG((LOG_INFO, "MakeKey: 56-bit input : %02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("MakeKey: 56-bit input : %02X%02X%02X%02X%02X%02X%02X\n",
              key[0], key[1], key[2], key[3], key[4], key[5], key[6]));
-  CHAPDEBUG((LOG_INFO, "MakeKey: 64-bit output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("MakeKey: 64-bit output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
              des_key[0], des_key[1], des_key[2], des_key[3], des_key[4], des_key[5], des_key[6], des_key[7]));
 #endif
 }
@@ -348,6 +313,8 @@ ChapMS_NT( char *rchallenge,
   u_char    unicodePassword[MAX_NT_PASSWORD * 2];
   static int  low_byte_first = -1;
 
+  LWIP_UNUSED_ARG(rchallenge_len);
+
   /* Initialize the Unicode version of the secret (== password). */
   /* This implicitly supports 8-bit ISO8859/1 characters. */
   BZERO(unicodePassword, sizeof(unicodePassword));
@@ -358,15 +325,16 @@ ChapMS_NT( char *rchallenge,
   MDupdate(&md4Context, unicodePassword, secret_len * 2 * 8);  /* Unicode is 2 bytes/char, *8 for bit count */
 
   if (low_byte_first == -1) {
-    low_byte_first = (htons((unsigned short int)1) != 1);
+    low_byte_first = (PP_HTONS((unsigned short int)1) != 1);
   }
   if (low_byte_first == 0) {
-    MDreverse((u_long *)&md4Context);  /*  sfb 961105 */
+    /* @todo: arg type - u_long* or u_int* ? */
+    MDreverse((unsigned int*)&md4Context);  /*  sfb 961105 */
   }
 
   MDupdate(&md4Context, NULL, 0);  /* Tell MD4 we're done */
 
-  ChallengeResponse(rchallenge, (char *)md4Context.buffer, response->NTResp);
+  ChallengeResponse((u_char*)rchallenge, (u_char*)md4Context.buffer, response->NTResp);
 }
 
 #ifdef MSLANMAN
@@ -393,6 +361,35 @@ ChapMS_LANMan( char *rchallenge,
   ChallengeResponse(rchallenge, PasswordHash, response->LANManResp);
 }
 #endif
+
+void
+ChapMS( chap_state *cstate, char *rchallenge, int rchallenge_len, char *secret, int secret_len)
+{
+  MS_ChapResponse response;
+#ifdef MSLANMAN
+  extern int ms_lanman;
+#endif
+
+#if 0
+  CHAPDEBUG(LOG_INFO, ("ChapMS: secret is '%.*s'\n", secret_len, secret));
+#endif
+  BZERO(&response, sizeof(response));
+
+  /* Calculate both always */
+  ChapMS_NT(rchallenge, rchallenge_len, secret, secret_len, &response);
+
+#ifdef MSLANMAN
+  ChapMS_LANMan(rchallenge, rchallenge_len, secret, secret_len, &response);
+
+  /* prefered method is set by option  */
+  response.UseNT = !ms_lanman;
+#else
+  response.UseNT = 1;
+#endif
+
+  BCOPY(&response, cstate->response, MS_CHAP_RESPONSE_LEN);
+  cstate->resp_length = MS_CHAP_RESPONSE_LEN;
+}
 
 #endif /* MSCHAP_SUPPORT */
 

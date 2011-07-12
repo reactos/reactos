@@ -48,15 +48,11 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: lcp.h,v 1.3 2007/12/19 20:47:23 fbernon Exp $
+ * $Id: lcp.h,v 1.4 2010/01/18 20:49:43 goldsimon Exp $
  */
 
 #ifndef LCP_H
 #define LCP_H
-
-/*************************
-*** PUBLIC DEFINITIONS ***
-*************************/
 /*
  * Options.
  */
@@ -73,18 +69,13 @@
 #define CI_EPDISC        19 /* endpoint discriminator */
 
 /*
- * LCP-specific packet types.
+ * LCP-specific packet types (code numbers).
  */
 #define PROTREJ          8  /* Protocol Reject */
 #define ECHOREQ          9  /* Echo Request */
 #define ECHOREP          10 /* Echo Reply */
 #define DISCREQ          11 /* Discard Request */
 #define CBCP_OPT         6  /* Use callback control protocol */
-
-
-/************************
-*** PUBLIC DATA TYPES ***
-************************/
 
 /*
  * The state of options is described by an lcp_options structure.
@@ -135,9 +126,6 @@ typedef enum {
 } LinkPhase;
 
 
-/*****************************
-*** PUBLIC DATA STRUCTURES ***
-*****************************/
 
 extern LinkPhase lcp_phase[NUM_PPP]; /* Phase of link session (RFC 1661) */
 extern lcp_options lcp_wantoptions[];
@@ -146,10 +134,6 @@ extern lcp_options lcp_allowoptions[];
 extern lcp_options lcp_hisoptions[];
 extern ext_accm xmit_accm[];
 
-
-/***********************
-*** PUBLIC FUNCTIONS ***
-***********************/
 
 void lcp_init     (int);
 void lcp_open     (int);

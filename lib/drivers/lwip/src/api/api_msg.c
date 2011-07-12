@@ -120,7 +120,9 @@ recv_raw(void *arg, struct raw_pcb *pcb, struct pbuf *p,
         netbuf_delete(buf);
         return 0;
       } else {
+#if LWIP_SO_RCVBUF
         SYS_ARCH_INC(conn->recv_avail, len);
+#endif /* LWIP_SO_RCVBUF */
         /* Register event with callback */
         API_EVENT(conn, NETCONN_EVT_RCVPLUS, len);
       }
@@ -194,7 +196,9 @@ recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     netbuf_delete(buf);
     return;
   } else {
+#if LWIP_SO_RCVBUF
     SYS_ARCH_INC(conn->recv_avail, len);
+#endif /* LWIP_SO_RCVBUF */
     /* Register event with callback */
     API_EVENT(conn, NETCONN_EVT_RCVPLUS, len);
   }
@@ -248,7 +252,9 @@ recv_tcp(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
     /* don't deallocate p: it is presented to us later again from tcp_fasttmr! */
     return ERR_MEM;
   } else {
+#if LWIP_SO_RCVBUF
     SYS_ARCH_INC(conn->recv_avail, len);
+#endif /* LWIP_SO_RCVBUF */
     /* Register event with callback */
     API_EVENT(conn, NETCONN_EVT_RCVPLUS, len);
   }
@@ -614,7 +620,6 @@ netconn_alloc(enum netconn_type t, netconn_callback callback)
   conn->socket       = -1;
 #endif /* LWIP_SOCKET */
   conn->callback     = callback;
-  conn->recv_avail   = 0;
 #if LWIP_TCP
   conn->current_msg  = NULL;
   conn->write_offset = 0;
@@ -624,6 +629,7 @@ netconn_alloc(enum netconn_type t, netconn_callback callback)
 #endif /* LWIP_SO_RCVTIMEO */
 #if LWIP_SO_RCVBUF
   conn->recv_bufsize = RECV_BUFSIZE_DEFAULT;
+  conn->recv_avail   = 0;
 #endif /* LWIP_SO_RCVBUF */
   conn->flags = 0;
   return conn;
@@ -944,12 +950,7 @@ do_connected(void *arg, struct tcp_pcb *pcb, err_t err)
   conn->current_msg = NULL;
   conn->state = NETCONN_NONE;
   if (!was_blocking) {
-    SYS_ARCH_DECL_PROTECT(lev);
-    SYS_ARCH_PROTECT(lev);
-    if (conn->last_err == ERR_INPROGRESS) {
-      conn->last_err = ERR_OK;
-    }
-    SYS_ARCH_UNPROTECT(lev);
+    NETCONN_SET_SAFE_ERR(conn, ERR_OK);
   }
   API_EVENT(conn, NETCONN_EVT_SENDPLUS, 0);
 
@@ -1040,6 +1041,7 @@ do_disconnect(struct api_msg_msg *msg)
   TCPIP_APIMSG_ACK(msg);
 }
 
+#if LWIP_TCP
 /**
  * Set a TCP pcb contained in a netconn into listen mode
  * Called from netconn_listen.
@@ -1049,7 +1051,6 @@ do_disconnect(struct api_msg_msg *msg)
 void
 do_listen(struct api_msg_msg *msg)
 {
-#if LWIP_TCP
   if (ERR_IS_FATAL(msg->conn->last_err)) {
     msg->err = msg->conn->last_err;
   } else {
@@ -1091,9 +1092,9 @@ do_listen(struct api_msg_msg *msg)
       }
     }
   }
-#endif /* LWIP_TCP */
   TCPIP_APIMSG_ACK(msg);
 }
+#endif /* LWIP_TCP */
 
 /**
  * Send some data on a RAW or UDP pcb contained in a netconn
@@ -1147,6 +1148,7 @@ do_send(struct api_msg_msg *msg)
   TCPIP_APIMSG_ACK(msg);
 }
 
+#if LWIP_TCP
 /**
  * Indicate data has been received from a TCP pcb contained in a netconn
  * Called from netconn_recv
@@ -1156,7 +1158,6 @@ do_send(struct api_msg_msg *msg)
 void
 do_recv(struct api_msg_msg *msg)
 {
-#if LWIP_TCP
   msg->err = ERR_OK;
   if (msg->conn->pcb.tcp != NULL) {
     if (msg->conn->type == NETCONN_TCP) {
@@ -1175,11 +1176,9 @@ do_recv(struct api_msg_msg *msg)
       }
     }
   }
-#endif /* LWIP_TCP */
   TCPIP_APIMSG_ACK(msg);
 }
 
-#if LWIP_TCP
 /**
  * See if more data needs to be written from a previous call to netconn_write.
  * Called initially from do_write. If the first call can't send all data

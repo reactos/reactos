@@ -105,8 +105,10 @@ struct lwip_select_cb {
 struct lwip_setgetsockopt_data {
   /** socket struct for which to change options */
   struct lwip_sock *sock;
+#ifdef LWIP_DEBUG
   /** socket index for which to change options */
   int s;
+#endif /* LWIP_DEBUG */
   /** level of the option to process */
   int level;
   /** name of the option to process */
@@ -139,14 +141,14 @@ static const int err_to_errno_table[] = {
   EINPROGRESS,   /* ERR_INPROGRESS -5      Operation in progress    */
   EINVAL,        /* ERR_VAL        -6      Illegal value.           */
   EWOULDBLOCK,   /* ERR_WOULDBLOCK -7      Operation would block.   */
-  ECONNABORTED,  /* ERR_ABRT       -8      Connection aborted.      */
-  ECONNRESET,    /* ERR_RST        -9      Connection reset.        */
-  ESHUTDOWN,     /* ERR_CLSD       -10     Connection closed.       */
-  ENOTCONN,      /* ERR_CONN       -11     Not connected.           */
-  EIO,           /* ERR_ARG        -12     Illegal argument.        */
-  EADDRINUSE,    /* ERR_USE        -13     Address in use.          */
-  -1,            /* ERR_IF         -14     Low-level netif error    */
-  -1,            /* ERR_ISCONN     -15     Already connected.       */
+  EADDRINUSE,    /* ERR_USE        -8      Address in use.          */
+  EALREADY,      /* ERR_ISCONN     -9      Already connected.       */
+  ECONNABORTED,  /* ERR_ABRT       -10     Connection aborted.      */
+  ECONNRESET,    /* ERR_RST        -11     Connection reset.        */
+  ENOTCONN,      /* ERR_CLSD       -12     Connection closed.       */
+  ENOTCONN,      /* ERR_CONN       -13     Not connected.           */
+  EIO,           /* ERR_ARG        -14     Illegal argument.        */
+  -1,            /* ERR_IF         -15     Low-level netif error    */
 };
 
 #define ERR_TO_ERRNO_TABLE_SIZE \
@@ -804,6 +806,7 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
 #if LWIP_TCP
     return lwip_send(s, data, size, flags);
 #else /* LWIP_TCP */
+    LWIP_UNUSED_ARG(flags);
     sock_set_errno(sock, err_to_errno(ERR_ARG));
     return -1;
 #endif /* LWIP_TCP */
@@ -844,14 +847,19 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
         inet_addr_to_ipaddr_p(remote_addr, &to_in->sin_addr);
         remote_port = ntohs(to_in->sin_port);
       } else {
-        remote_addr = IP_ADDR_ANY;
-        remote_port = 0;
+        remote_addr = &sock->conn->pcb.raw->remote_ip;
+        if (sock->conn->type == NETCONN_RAW) {
+          remote_port = 0;
+        } else {
+          remote_port = sock->conn->pcb.udp->remote_port;
+        }
       }
 
       LOCK_TCPIP_CORE();
       if (sock->conn->type == NETCONN_RAW) {
         err = sock->conn->last_err = raw_sendto(sock->conn->pcb.raw, p, remote_addr);
       } else {
+#if LWIP_UDP
 #if LWIP_CHECKSUM_ON_COPY && LWIP_NETIF_TX_SINGLE_PBUF
         err = sock->conn->last_err = udp_sendto_chksum(sock->conn->pcb.udp, p,
           remote_addr, remote_port, 1, chksum);
@@ -859,6 +867,9 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
         err = sock->conn->last_err = udp_sendto(sock->conn->pcb.udp, p,
           remote_addr, remote_port);
 #endif /* LWIP_CHECKSUM_ON_COPY && LWIP_NETIF_TX_SINGLE_PBUF */
+#else /* LWIP_UDP */
+        err = ERR_ARG;
+#endif /* LWIP_UDP */
       }
       UNLOCK_TCPIP_CORE();
       
@@ -883,7 +894,7 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
     netbuf_fromport(&buf) = 0;
   }
 
-  LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_sendto(%d, data=%p, short_size=%d"U16_F", flags=0x%x to=",
+  LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_sendto(%d, data=%p, short_size=%"U16_F", flags=0x%x to=",
               s, data, short_size, flags));
   ip_addr_debug_print(SOCKETS_DEBUG, &buf.addr);
   LWIP_DEBUGF(SOCKETS_DEBUG, (" port=%"U16_F"\n", remote_port));
@@ -1181,6 +1192,8 @@ lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
       LWIP_ASSERT("select_cb.prev != NULL", select_cb.prev != NULL);
       select_cb.prev->next = select_cb.next;
     }
+    /* Increasing this counter tells even_callback that the list has changed. */
+    select_cb_ctr++;
     SYS_ARCH_UNPROTECT(lev);
 
     sys_sem_free(&select_cb.sem);
@@ -1223,6 +1236,7 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
   int s;
   struct lwip_sock *sock;
   struct lwip_select_cb *scb;
+  int last_select_cb_ctr;
   SYS_ARCH_DECL_PROTECT(lev);
 
   LWIP_UNUSED_ARG(len);
@@ -1285,56 +1299,51 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
     return;
   }
 
-  SYS_ARCH_UNPROTECT(lev);
-
   /* Now decide if anyone is waiting for this socket */
-  /* NOTE: This code is written this way to protect the select link list
-     but to avoid a deadlock situation by releasing select_lock before
-     signalling for the select. This means we need to go through the list
-     multiple times ONLY IF a select was actually waiting. We go through
-     the list the number of waiting select calls + 1. This list is
-     expected to be small. */
-  while (1) {
-    int last_select_cb_ctr;
-    SYS_ARCH_PROTECT(lev);
-    for (scb = select_cb_list; scb; scb = scb->next) {
-      /* @todo: unprotect with each loop and check for changes? */
-      if (scb->sem_signalled == 0) {
-        /* Test this select call for our socket */
+  /* NOTE: This code goes through the select_cb_list list multiple times
+     ONLY IF a select was actually waiting. We go through the list the number
+     of waiting select calls + 1. This list is expected to be small. */
+
+  /* At this point, SYS_ARCH is still protected! */
+again:
+  for (scb = select_cb_list; scb != NULL; scb = scb->next) {
+    if (scb->sem_signalled == 0) {
+      /* semaphore not signalled yet */
+      int do_signal = 0;
+      /* Test this select call for our socket */
+      if (sock->rcvevent > 0) {
         if (scb->readset && FD_ISSET(s, scb->readset)) {
-          if (sock->rcvevent > 0) {
-            break;
-          }
-        }
-        if (scb->writeset && FD_ISSET(s, scb->writeset)) {
-          if (sock->sendevent != 0) {
-            break;
-          }
-        }
-        if (scb->exceptset && FD_ISSET(s, scb->exceptset)) {
-          if (sock->errevent != 0) {
-            break;
-          }
+          do_signal = 1;
         }
       }
-      /* unlock interrupts with each step */
-      last_select_cb_ctr = select_cb_ctr;
-      SYS_ARCH_UNPROTECT(lev);
-      SYS_ARCH_PROTECT(lev);
-      if (last_select_cb_ctr != select_cb_ctr) {
-        /* someone has changed select_cb_list, restart at the beginning */
-        scb = select_cb_list;
+      if (sock->sendevent != 0) {
+        if (!do_signal && scb->writeset && FD_ISSET(s, scb->writeset)) {
+          do_signal = 1;
+        }
+      }
+      if (sock->errevent != 0) {
+        if (!do_signal && scb->exceptset && FD_ISSET(s, scb->exceptset)) {
+          do_signal = 1;
+        }
+      }
+      if (do_signal) {
+        scb->sem_signalled = 1;
+        /* Don't call SYS_ARCH_UNPROTECT() before signaling the semaphore, as this might
+           lead to the select thread taking itself off the list, invalidagin the semaphore. */
+        sys_sem_signal(&scb->sem);
       }
     }
-    if (scb) {
-      scb->sem_signalled = 1;
-      sys_sem_signal(&scb->sem);
-      SYS_ARCH_UNPROTECT(lev);
-    } else {
-      SYS_ARCH_UNPROTECT(lev);
-      break;
+    /* unlock interrupts with each step */
+    last_select_cb_ctr = select_cb_ctr;
+    SYS_ARCH_UNPROTECT(lev);
+    /* this makes sure interrupt protection time is short */
+    SYS_ARCH_PROTECT(lev);
+    if (last_select_cb_ctr != select_cb_ctr) {
+      /* someone has changed select_cb_list, restart at the beginning */
+      goto again;
     }
   }
+  SYS_ARCH_UNPROTECT(lev);
 }
 
 /**
@@ -1610,6 +1619,9 @@ lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
 
   /* Now do the actual option processing */
   data.sock = sock;
+#ifdef LWIP_DEBUG
+  data.s = s;
+#endif /* LWIP_DEBUG */
   data.level = level;
   data.optname = optname;
   data.optval = optval;
@@ -1691,8 +1703,8 @@ lwip_getsockopt_internal(void *arg)
       break;
 
     case SO_ERROR:
-      /* only overwrite if ERR_OK before */
-      if (sock->err == 0) {
+      /* only overwrite ERR_OK or tempoary errors */
+      if ((sock->err == 0) || (sock->err == EINPROGRESS)) {
         sock_set_errno(sock, err_to_errno(sock->conn->last_err));
       } 
       *(int *)optval = sock->err;
@@ -2017,6 +2029,9 @@ lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t opt
 
   /* Now do the actual option processing */
   data.sock = sock;
+#ifdef LWIP_DEBUG
+  data.s = s;
+#endif /* LWIP_DEBUG */
   data.level = level;
   data.optname = optname;
   data.optval = (void*)optval;
@@ -2239,15 +2254,18 @@ int
 lwip_ioctl(int s, long cmd, void *argp)
 {
   struct lwip_sock *sock = get_socket(s);
+  u8_t val;
+#if LWIP_SO_RCVBUF
   u16_t buflen = 0;
   s16_t recv_avail;
-  u8_t val;
+#endif /* LWIP_SO_RCVBUF */
 
   if (!sock) {
     return -1;
   }
 
   switch (cmd) {
+#if LWIP_SO_RCVBUF
   case FIONREAD:
     if (!argp) {
       sock_set_errno(sock, EINVAL);
@@ -2275,6 +2293,7 @@ lwip_ioctl(int s, long cmd, void *argp)
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_ioctl(%d, FIONREAD, %p) = %"U16_F"\n", s, argp, *((u16_t*)argp)));
     sock_set_errno(sock, 0);
     return 0;
+#endif /* LWIP_SO_RCVBUF */
 
   case FIONBIO:
     val = 0;

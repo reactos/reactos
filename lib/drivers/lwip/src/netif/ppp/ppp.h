@@ -40,12 +40,23 @@
 
 #include "lwip/def.h"
 #include "lwip/sio.h"
-#include "lwip/api.h"
-#include "lwip/sockets.h"
 #include "lwip/stats.h"
 #include "lwip/mem.h"
-#include "lwip/tcpip.h"
 #include "lwip/netif.h"
+#include "lwip/sys.h"
+#include "lwip/timers.h"
+
+/** Some defines for code we skip compared to the original pppd.
+ *  These are just here to minimise the use of the ugly "#if 0". */
+#define PPP_ADDITIONAL_CALLBACKS  0
+
+/** Some error checks to test for unsupported code */
+#if CBCP_SUPPORT
+#error "CBCP is not supported in lwIP PPP"
+#endif
+#if CCP_SUPPORT
+#error "CCP is not supported in lwIP PPP"
+#endif
 
 /*
  * pppd.h - PPP daemon global declarations.
@@ -93,7 +104,7 @@
  * OR MODIFICATIONS.
  */
 
-#define TIMEOUT(f, a, t)    sys_untimeout((f), (a)), sys_timeout((t)*1000, (f), (a))
+#define TIMEOUT(f, a, t)    do { sys_untimeout((f), (a)); sys_timeout((t)*1000, (f), (a)); } while(0)
 #define UNTIMEOUT(f, a)     sys_untimeout((f), (a))
 
 
@@ -212,7 +223,7 @@ enum NPmode {
 #define BZERO(s, n)         memset(s, 0, n)
 
 #if PPP_DEBUG
-#define PRINTMSG(m, l)  { m[l] = '\0'; ppp_trace(LOG_INFO, "Remote message: %s\n", m); }
+#define PRINTMSG(m, l)  { m[l] = '\0'; LWIP_DEBUGF(LOG_INFO, ("Remote message: %s\n", m)); }
 #else  /* PPP_DEBUG */
 #define PRINTMSG(m, l)
 #endif /* PPP_DEBUG */
@@ -276,24 +287,24 @@ struct protent {
     void (*open) (int unit);
     /* Close the protocol */
     void (*close) (int unit, char *reason);
-#if 0
+#if PPP_ADDITIONAL_CALLBACKS
     /* Print a packet in readable form */
     int  (*printpkt) (u_char *pkt, int len,
               void (*printer) (void *, char *, ...),
               void *arg);
     /* Process a received data packet */
     void (*datainput) (int unit, u_char *pkt, int len);
-#endif
-    int  enabled_flag;      /* 0 iff protocol is disabled */
+#endif /* PPP_ADDITIONAL_CALLBACKS */
+    int  enabled_flag;      /* 0 if protocol is disabled */
     char *name;         /* Text name of protocol */
-#if 0
+#if PPP_ADDITIONAL_CALLBACKS
     /* Check requested options, assign defaults */
     void (*check_options) (u_long);
     /* Configure interface for demand-dial */
     int  (*demand_conf) (int unit);
     /* Say whether to bring up link for this pkt */
     int  (*active_pkt) (u_char *pkt, int len);
-#endif
+#endif /* PPP_ADDITIONAL_CALLBACKS */
 };
 
 /*
@@ -325,7 +336,7 @@ struct ppp_settings {
 };
 
 struct ppp_addrs {
-  struct ip_addr our_ipaddr, his_ipaddr, netmask, dns1, dns2;
+  ip_addr_t our_ipaddr, his_ipaddr, netmask, dns1, dns2;
 };
 
 /*****************************
@@ -413,7 +424,7 @@ int  pppIOCtl(int pd, int cmd, void *arg);
 /*
  * Return the Maximum Transmission Unit for the given PPP connection.
  */
-u_int pppMTU(int pd);
+u_short pppMTU(int pd);
 
 /*
  * Write n characters to a ppp link.
@@ -429,10 +440,10 @@ void pppLinkTerminated(int pd);
 
 void pppLinkDown(int pd);
 
-void pppMainWakeup(int pd);
+void pppos_input(int pd, u_char* data, int len);
 
 /* Configure i/f transmit parameters */
-void ppp_send_config (int, int, u32_t, int, int);
+void ppp_send_config (int, u16_t, u32_t, int, int);
 /* Set extended transmit ACCM */
 void ppp_set_xaccm (int, ext_accm *);
 /* Configure i/f receive parameters */
@@ -441,7 +452,7 @@ void ppp_recv_config (int, int, u32_t, int, int);
 int  get_idle_time (int, struct ppp_idle *);
 
 /* Configure VJ TCP header compression */
-int  sifvjcomp (int, int, int, int);
+int  sifvjcomp (int, int, u8_t, u8_t);
 /* Configure i/f down (for IP) */
 int  sifup (int);
 /* Set mode for handling packets for proto */
@@ -459,6 +470,13 @@ int  cifdefaultroute (int, u32_t, u32_t);
 
 /* Get appropriate netmask for address */
 u32_t GetMask (u32_t); 
+
+#if LWIP_NETIF_STATUS_CALLBACK
+void ppp_set_netif_statuscallback(int pd, netif_status_callback_fn status_callback);
+#endif /* LWIP_NETIF_STATUS_CALLBACK */
+#if LWIP_NETIF_LINK_CALLBACK
+void ppp_set_netif_linkcallback(int pd, netif_status_callback_fn link_callback);
+#endif /* LWIP_NETIF_LINK_CALLBACK */
 
 #endif /* PPP_SUPPORT */
 

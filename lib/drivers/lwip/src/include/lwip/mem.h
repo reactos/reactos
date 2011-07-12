@@ -68,7 +68,7 @@ typedef size_t mem_size_t;
 /* MEM_SIZE would have to be aligned, but using 64000 here instead of
  * 65535 leaves some room for alignment...
  */
-#if MEM_SIZE > 64000l
+#if MEM_SIZE > 64000L
 typedef u32_t mem_size_t;
 #define MEM_SIZE_F U32_F
 #else

@@ -168,12 +168,11 @@ struct netconn {
   /** maximum amount of bytes queued in recvmbox
       not used for TCP: adjust TCP_WND instead! */
   int recv_bufsize;
-#endif /* LWIP_SO_RCVBUF */
   /** number of bytes currently in recvmbox to be received,
       tested against recv_bufsize to limit bytes on recvmbox
-      for UDP and RAW
-      @todo: should only be necessary with LWIP_SO_RCVBUF==1 */
+      for UDP and RAW, used for FIONREAD */
   s16_t recv_avail;
+#endif /* LWIP_SO_RCVBUF */
   /** flags holding more netconn-internal state, see NETCONN_FLAG_* defines */
   u8_t flags;
 #if LWIP_TCP

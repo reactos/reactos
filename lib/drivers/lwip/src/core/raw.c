@@ -218,8 +218,10 @@ raw_sendto(struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *ipaddr)
       LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS, ("raw_sendto: could not allocate header\n"));
       return ERR_MEM;
     }
-    /* chain header q in front of given pbuf p */
-    pbuf_chain(q, p);
+    if (p->tot_len != 0) {
+      /* chain header q in front of given pbuf p */
+      pbuf_chain(q, p);
+    }
     /* { first pbuf q points to header pbuf } */
     LWIP_DEBUGF(RAW_DEBUG, ("raw_sendto: added header pbuf %p before given pbuf %p\n", (void *)q, (void *)p));
   }  else {

@@ -59,7 +59,7 @@ struct sockaddr_in {
 struct sockaddr {
   u8_t sa_len;
   u8_t sa_family;
-  u16_t sa_data[14];
+  char sa_data[14];
 };
 
 #ifndef socklen_t
@@ -280,9 +280,9 @@ typedef struct ip_mreq {
 #endif
 
 #ifndef SHUT_RD
-  #define SHUT_RD   1
-  #define SHUT_WR   2
-  #define SHUT_RDWR 3
+  #define SHUT_RD   0
+  #define SHUT_WR   1
+  #define SHUT_RDWR 2
 #endif
 
 /* FD_SET used for lwip_select */

@@ -201,7 +201,7 @@ ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
   }
 
   /* Incrementally update the IP checksum. */
-  if (IPH_CHKSUM(iphdr) >= PP_HTONS(0xffff - 0x100)) {
+  if (IPH_CHKSUM(iphdr) >= PP_HTONS(0xffffU - 0x100)) {
     IPH_CHKSUM_SET(iphdr, IPH_CHKSUM(iphdr) + PP_HTONS(0x100) + 1);
   } else {
     IPH_CHKSUM_SET(iphdr, IPH_CHKSUM(iphdr) + PP_HTONS(0x100));
@@ -251,8 +251,6 @@ ip_input(struct pbuf *p, struct netif *inp)
 
   IP_STATS_INC(ip.recv);
   snmp_inc_ipinreceives();
-
-  DbgPrint("ip_input: called\n");
 
   /* identify the IP header */
   iphdr = (struct ip_hdr *)p->payload;
@@ -490,7 +488,7 @@ ip_input(struct pbuf *p, struct netif *inp)
   if (raw_input(p, inp) == 0)
 #endif /* LWIP_RAW */
   {
-      DbgPrint("ip_input: choosing protocol\n");
+
     switch (IPH_PROTO(iphdr)) {
 #if LWIP_UDP
     case IP_PROTO_UDP:
@@ -504,7 +502,6 @@ ip_input(struct pbuf *p, struct netif *inp)
 #if LWIP_TCP
     case IP_PROTO_TCP:
       snmp_inc_ipindelivers();
-      DbgPrint("ip_input: sending data to tcp_input\n");
       tcp_input(p, inp);
       break;
 #endif /* LWIP_TCP */
@@ -628,7 +625,7 @@ err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
         memset(((char*)p->payload) + optlen, 0, optlen_aligned - optlen);
       }
 #if CHECKSUM_GEN_IP_INLINE
-      for (i = 0; i < optlen_aligned; i += sizeof(u16_t)) {
+      for (i = 0; i < optlen_aligned/2; i++) {
         chk_sum += ((u16_t*)p->payload)[i];
       }
 #endif /* CHECKSUM_GEN_IP_INLINE */

@@ -48,9 +48,10 @@
 extern "C" {
 #endif
 
+/* For the netconn API, these values are use as a bitmask! */
 #define NETCONN_SHUT_RD   1
 #define NETCONN_SHUT_WR   2
-#define NETCONN_SHUT_RDWR 3
+#define NETCONN_SHUT_RDWR (NETCONN_SHUT_RD | NETCONN_SHUT_WR)
 
 /* IP addresses and port numbers are expected to be in
  * the same byte order as in the corresponding pcb.

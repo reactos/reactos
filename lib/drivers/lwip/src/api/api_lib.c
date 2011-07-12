@@ -240,6 +240,7 @@ netconn_disconnect(struct netconn *conn)
 err_t
 netconn_listen_with_backlog(struct netconn *conn, u8_t backlog)
 {
+#if LWIP_TCP
   struct api_msg msg;
   err_t err;
 
@@ -257,6 +258,11 @@ netconn_listen_with_backlog(struct netconn *conn, u8_t backlog)
 
   NETCONN_SET_SAFE_ERR(conn, err);
   return err;
+#else /* LWIP_TCP */
+  LWIP_UNUSED_ARG(conn);
+  LWIP_UNUSED_ARG(backlog);
+  return ERR_ARG;
+#endif /* LWIP_TCP */
 }
 
 /**
@@ -301,9 +307,9 @@ netconn_accept(struct netconn *conn, struct netconn **new_conn)
   API_EVENT(conn, NETCONN_EVT_RCVMINUS, 0);
 
   if (newconn == NULL) {
-    /* connection has been closed */
-    NETCONN_SET_SAFE_ERR(conn, ERR_CLSD);
-    return ERR_CLSD;
+    /* connection has been aborted */
+    NETCONN_SET_SAFE_ERR(conn, ERR_ABRT);
+    return ERR_ABRT;
   }
 #if TCP_LISTEN_BACKLOG
   /* Let the stack know that we have accepted the connection. */
@@ -402,7 +408,9 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
   }
 #endif /* (LWIP_UDP || LWIP_RAW) */
 
+#if LWIP_SO_RCVBUF
   SYS_ARCH_DEC(conn->recv_avail, len);
+#endif /* LWIP_SO_RCVBUF */
   /* Register event with callback */
   API_EVENT(conn, NETCONN_EVT_RCVMINUS, len);
 
@@ -499,6 +507,7 @@ netconn_recv(struct netconn *conn, struct netbuf **new_buf)
 void
 netconn_recved(struct netconn *conn, u32_t length)
 {
+#if LWIP_TCP
   if ((conn != NULL) && (conn->type == NETCONN_TCP) &&
       (netconn_get_noautorecved(conn))) {
     struct api_msg msg;
@@ -511,6 +520,10 @@ netconn_recved(struct netconn *conn, u32_t length)
     /* don't care for the return value of do_recv */
     TCPIP_APIMSG(&msg);
   }
+#else /* LWIP_TCP */
+  LWIP_UNUSED_ARG(conn);
+  LWIP_UNUSED_ARG(length);
+#endif /* LWIP_TCP */
 }
 
 /**

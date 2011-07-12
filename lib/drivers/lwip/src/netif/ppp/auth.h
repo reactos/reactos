@@ -97,7 +97,7 @@ void auth_check_options (void);
 void auth_reset (int);
 
 /* Check peer-supplied username/password */
-int  check_passwd (int, char *, int, char *, int, char **, int *);
+u_char check_passwd (int, char *, int, char *, int, char **, int *);
 
 /* get "secret" for chap */
 int  get_secret (int, char *, char *, char *, int *, int);

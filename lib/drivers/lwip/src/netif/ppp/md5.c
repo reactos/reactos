@@ -138,8 +138,8 @@ MD5Update(MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen)
   unsigned int i, ii;
 
 #if 0
-  ppp_trace(LOG_INFO, "MD5Update: %u:%.*H\n", inLen, MIN(inLen, 20) * 2, inBuf);
-  ppp_trace(LOG_INFO, "MD5Update: %u:%s\n", inLen, inBuf);
+  PPPDEBUG(LOG_INFO, ("MD5Update: %u:%.*H\n", inLen, LWIP_MIN(inLen, 20) * 2, inBuf));
+  PPPDEBUG(LOG_INFO, ("MD5Update: %u:%s\n", inLen, inBuf));
 #endif
   
   /* compute number of bytes mod 64 */

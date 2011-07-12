@@ -494,12 +494,7 @@ autoip_arp_reply(struct netif *netif, struct etharp_hdr *hdr)
     */
     ip_addr_t sipaddr, dipaddr;
     struct eth_addr netifaddr;
-    netifaddr.addr[0] = netif->hwaddr[0];
-    netifaddr.addr[1] = netif->hwaddr[1];
-    netifaddr.addr[2] = netif->hwaddr[2];
-    netifaddr.addr[3] = netif->hwaddr[3];
-    netifaddr.addr[4] = netif->hwaddr[4];
-    netifaddr.addr[5] = netif->hwaddr[5];
+    ETHADDR16_COPY(netifaddr.addr, netif->hwaddr);
 
     /* Copy struct ip_addr2 to aligned ip_addr, to support compilers without
      * structure packing (not using structure copy which breaks strict-aliasing rules).

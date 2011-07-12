@@ -191,7 +191,7 @@ icmp_input(struct pbuf *p, struct netif *inp)
     ip_addr_copy(iphdr->dest, *ip_current_src_addr());
     ICMPH_TYPE_SET(iecho, ICMP_ER);
     /* adjust the checksum */
-    if (iecho->chksum >= PP_HTONS(0xffff - (ICMP_ECHO << 8))) {
+    if (iecho->chksum >= PP_HTONS(0xffffU - (ICMP_ECHO << 8))) {
       iecho->chksum += PP_HTONS(ICMP_ECHO << 8) + 1;
     } else {
       iecho->chksum += PP_HTONS(ICMP_ECHO << 8);

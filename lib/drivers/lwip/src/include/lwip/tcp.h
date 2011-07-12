@@ -228,7 +228,7 @@ struct tcp_pcb {
   u16_t acked;
   
   u16_t snd_buf;   /* Available buffer space for sending (in bytes). */
-#define TCP_SNDQUEUELEN_OVERFLOW (0xffff-3)
+#define TCP_SNDQUEUELEN_OVERFLOW (0xffffU-3)
   u16_t snd_queuelen; /* Available buffer space for sending (in tcp_segs). */
 
 #if TCP_OVERSIZE

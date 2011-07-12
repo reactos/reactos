@@ -48,15 +48,12 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Id: ipcp.h,v 1.3 2007/12/19 20:47:23 fbernon Exp $
+ * $Id: ipcp.h,v 1.4 2010/01/18 20:49:43 goldsimon Exp $
  */
 
 #ifndef IPCP_H
 #define IPCP_H
 
-/*************************
-*** PUBLIC DEFINITIONS ***
-*************************/
 /*
  * Options.
  */
@@ -64,10 +61,10 @@
 #define CI_COMPRESSTYPE     2      /* Compression Type */
 #define CI_ADDR             3
 
-#define CI_MS_WINS1         128    /* Primary WINS value */
 #define CI_MS_DNS1          129    /* Primary DNS value */
-#define CI_MS_WINS2         130    /* Secondary WINS value */
+#define CI_MS_WINS1         128    /* Primary WINS value */
 #define CI_MS_DNS2          131    /* Secondary DNS value */
+#define CI_MS_WINS2         130    /* Secondary WINS value */
 
 #define IPCP_VJMODE_OLD     1      /* "old" mode (option # = 0x0037) */
 #define IPCP_VJMODE_RFC1172 2      /* "old-rfc"mode (option # = 0x002d) */
@@ -77,11 +74,6 @@
 #define IPCP_VJ_COMP        0x002d /* current value for VJ compression option */
 #define IPCP_VJ_COMP_OLD    0x0037 /* "old" (i.e, broken) value for VJ */
                                    /* compression option */ 
-
-
-/************************
-*** PUBLIC DATA TYPES ***
-************************/
 
 typedef struct ipcp_options {
   u_int   neg_addr      : 1; /* Negotiate IP Address? */
@@ -103,11 +95,6 @@ typedef struct ipcp_options {
   u32_t   winsaddr[2];       /* Primary and secondary MS WINS entries */
 } ipcp_options;
 
-
-/*****************************
-*** PUBLIC DATA STRUCTURES ***
-*****************************/
-
 extern fsm ipcp_fsm[];
 extern ipcp_options ipcp_wantoptions[];
 extern ipcp_options ipcp_gotoptions[];
@@ -115,10 +102,5 @@ extern ipcp_options ipcp_allowoptions[];
 extern ipcp_options ipcp_hisoptions[];
 
 extern struct protent ipcp_protent;
-
-
-/***********************
-*** PUBLIC FUNCTIONS ***
-***********************/
 
 #endif /* IPCP_H */

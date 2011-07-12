@@ -106,6 +106,9 @@ PACK_STRUCT_END
 #endif
 
 void dhcp_set_struct(struct netif *netif, struct dhcp *dhcp);
+/** Remove a struct dhcp previously set to the netif using dhcp_set_struct() */
+#define dhcp_remove_struct(netif) do { (netif)->dhcp = NULL; } while(0)
+void dhcp_cleanup(struct netif *netif);
 /** start DHCP configuration */
 err_t dhcp_start(struct netif *netif);
 /** enforce early lease renewal (not needed normally)*/

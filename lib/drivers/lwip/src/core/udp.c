@@ -520,8 +520,10 @@ udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *dst_ip,
       LWIP_DEBUGF(UDP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS, ("udp_send: could not allocate header\n"));
       return ERR_MEM;
     }
-    /* chain header q in front of given pbuf p */
-    pbuf_chain(q, p);
+    if (p->tot_len != 0) {
+      /* chain header q in front of given pbuf p (only if p contains data) */
+      pbuf_chain(q, p);
+    }
     /* first pbuf q points to header pbuf */
     LWIP_DEBUGF(UDP_DEBUG,
                 ("udp_send: added header pbuf %p before given pbuf %p\n", (void *)q, (void *)p));
@@ -744,8 +746,10 @@ udp_bind(struct udp_pcb *pcb, ip_addr_t *ipaddr, u16_t port)
   /* no port specified? */
   if (port == 0) {
 #ifndef UDP_LOCAL_PORT_RANGE_START
-#define UDP_LOCAL_PORT_RANGE_START 4096
-#define UDP_LOCAL_PORT_RANGE_END   0x7fff
+/* From http://www.iana.org/assignments/port-numbers:
+   "The Dynamic and/or Private Ports are those from 49152 through 65535" */
+#define UDP_LOCAL_PORT_RANGE_START  0xc000
+#define UDP_LOCAL_PORT_RANGE_END    0xffff
 #endif
     port = UDP_LOCAL_PORT_RANGE_START;
     ipcb = udp_pcbs;

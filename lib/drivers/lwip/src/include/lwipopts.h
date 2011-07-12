@@ -18,6 +18,8 @@
 
 #define ARP_QUEUEING                    0
 
+#define ETH_PAD_SIZE                    2
+
 #define IP_FORWARD                      0
 
 #define IP_REASS_MAX_PBUFS              0xFFFFFFFF
