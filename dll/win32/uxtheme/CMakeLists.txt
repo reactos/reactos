@@ -1,5 +1,6 @@
 
 add_subdirectory(themecfg)
+add_subdirectory(apihooksrv)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
