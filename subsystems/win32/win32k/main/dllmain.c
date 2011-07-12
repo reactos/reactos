@@ -382,6 +382,18 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
            }
            while (pti);
         }
+
+        /* Do now some process cleanup that requires a valid win32 thread */
+        if(Win32Thread->ppi->cThreads == 0)
+        {
+            /* Check if we have registered the user api hook */
+            if(Win32Thread->ppi == ppiUahServer)
+            {
+                /* Unregister the api hook without blocking */
+                UserUnregisterUserApiHook(FALSE);
+            }
+        }
+
         DceFreeThreadDCE(Win32Thread);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
