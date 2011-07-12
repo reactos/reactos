@@ -21,6 +21,9 @@ typedef struct ClientStream
     int dead;
     HANDLE ClientEventPool[1];
     struct CallBacks callbacks;
+
+    /*Just for the time being when we dont have any audio source*/
+	long wavefreq;
 } ClientStream;
 
 /********************API Functions******************/

@@ -120,7 +120,7 @@ long AddStream(LONG frequency,
 
 long WriteBuffer(LONG streamid,
                  LONG length,
-                 LPVOID buffer);
+                 char * buffer);
 /*mixer.c*/
 void * MixS8(MixerEngine * mixer,
              int buffer);

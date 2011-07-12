@@ -58,8 +58,8 @@ wmain(int argc,
     DWORD dwID;
     HANDLE audiothread = NULL;
     char input='\0';
-    printf("ReactOS Audio Mixer Sample Client.Enter 'a' to Stop.\n");
-    //if (clientstream->callbacks.OpenComplete == NULL || clientstream->callbacks.BufferCopied == NULL || clientstream->callbacks.PlayComplete == NULL) printf("");
+    printf("ReactOS Audio Mixer Sample Client.Enter 'a' to Stop.\nPlease Enter the frequency of the sinusoidal wave [Hz] : ");
+	scanf("%ld",&(clientstream.wavefreq));
 
     /*[out]HANDLE * streamhandle,[in] long frequency,[in] int number of channels,[in] int bitspersample,[in]ULONG channelmask,[in] int volume,[in] int mute,[in] float balance*/
     error = InitStream ( &clientstream ,

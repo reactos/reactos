@@ -82,9 +82,9 @@ long AUDInitStream(    IN RPC_BINDING_HANDLE hBinding,
 long AUDPlayBuffer(    IN RPC_BINDING_HANDLE hBinding,
                        LONG streamid,
 					   LONG length,
-					   LPVOID buffer)
+					   char* buffer)
 {
-    WriteBuffer(streamid,length,NULL);
+    WriteBuffer(streamid,length,buffer);
     return 0;
 }
 /*************************************************************************/

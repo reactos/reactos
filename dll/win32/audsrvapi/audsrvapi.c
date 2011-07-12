@@ -8,6 +8,7 @@
  */
 
 #include "audsrvapi.h"
+#include <math.h>
 
 /*All the wrappers for Remote Function should be here*/
 int status = 0;
@@ -75,6 +76,10 @@ int
 WINAPI
 PlayAudio ( ClientStream * clientstream )
 {
+    /******************************************/
+	int i =0;
+    PSHORT tempbuf;
+	/******************************************/
     /*This is an ActiveScheduler*/
     clientstream->callbacks.OpenComplete(0);
 
@@ -90,26 +95,39 @@ PlayAudio ( ClientStream * clientstream )
         if(clientstream->dead)
             break;
 
-            /*Check Connection Status If not connected call Connect()*/
-            /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
-            RpcTryExcept  
-            {
-                AUDPlayBuffer (audsrv_v0_0_c_ifspec,
-                               clientstream->stream,
-							   0,
-							   NULL);
-            }
-            RpcExcept(1)
-            {
-                status = RpcExceptionCode();
-            }
-            RpcEndExcept
+        /*Check Connection Status If not connected call Connect()*/
+        /*If connected Properly call the remote audsrv_play() function,This will be a blocking call, placing a dummy wait function here is a good idea.*/
+		tempbuf = (PSHORT) HeapAlloc(GetProcessHeap(),
+                                     0,
+                                     44100);
 
-            clientstream->callbacks.BufferCopied(0);
+		for(i = 0;i<22050;i+=2)
+        {
+            tempbuf[i+1] = tempbuf[i] = 0x7FFF * sin( i * 500 * 3.14 / clientstream->wavefreq);
+        }
+
+        RpcTryExcept
+        {
+            AUDPlayBuffer (audsrv_v0_0_c_ifspec,
+                           clientstream->stream,
+                           44100,
+                           (char *)tempbuf);
+        }
+        RpcExcept(1)
+        {
+            status = RpcExceptionCode();
+        }
+        RpcEndExcept
+
+        HeapFree(GetProcessHeap(),
+		         0,
+				 tempbuf);
+
+        clientstream->callbacks.BufferCopied(0);
     }
     clientstream->callbacks.PlayComplete(0);
 
-/*Audio Thread Ended*/
+    /*Audio Thread Ended*/
     return 0;
 }
 

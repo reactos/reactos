@@ -198,10 +198,8 @@ error:
 
 long WriteBuffer(LONG streamid,
                  LONG length,
-                 LPVOID buffer)
+                 char * buffer)
 {
-	int i =0;
-    PSHORT tempbuf;
     ServerStream * localstream = pengine->serverstreamlist;
     while(localstream!=NULL)
     {
@@ -216,16 +214,12 @@ long WriteBuffer(LONG streamid,
 
     if(localstream->state == 0)
 	{
-        localstream->length_genuine = localstream->freq * localstream->channels * localstream->bitspersample / 8;
-        localstream->genuinebuf = tempbuf = (PSHORT) HeapAlloc(GetProcessHeap(),
+        localstream->length_genuine = length;
+        localstream->genuinebuf = (PSHORT) HeapAlloc(GetProcessHeap(),
                                                                0,
-                                                               localstream->length_genuine);
+                                                               length);
 
-        while (i < localstream->length_genuine / 2)
-        {
-            tempbuf[i+1] = tempbuf[i] = 0x7FFF * sin(0.5 * i * 500 * 6.28 / 48000);
-            i+=2;
-        }
+        memcpy(localstream->genuinebuf,buffer,length);
 
         localstream->state = 1;
     }

@@ -2,7 +2,7 @@
  * Event Log RPC interface definition
  */
 
-#include <ms-dtyp.idl>
+#include <wtypes.idl>
 
 
 cpp_quote("#if !defined(__AUDSRV_H__) ")
@@ -40,5 +40,5 @@ interface audsrv
 {
 
     long AUDInitStream([in] handle_t h1,[in]LONG frequency,[in]int channels,[in]int bitspersample,[in]int datatype,[in] ULONG channelmask,[in]int volume,[in]int mute,[in]float balance);
-    long AUDPlayBuffer([in] handle_t h1,[in]LONG streamid,[in]LONG length,[in]LPVOID buffer);
+    long AUDPlayBuffer([in] handle_t h1,[in]LONG streamid,[in]LONG length,[in, size_is(length)]char* buffer);
 }
