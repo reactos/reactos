@@ -723,7 +723,7 @@ NTSTATUS TCPConnect
     USHORT RemotePort;
     TA_IP_ADDRESS LocalAddress;
     PTDI_BUCKET Bucket;
-    PNEIGHBOR_CACHE_ENTRY NCE;
+    PNEIGHBOR_CACHE_ENTRY NCE = NULL;
     KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
@@ -762,37 +762,36 @@ NTSTATUS TCPConnect
             UnlockObject(Connection, OldIrql);
             return STATUS_NETWORK_UNREACHABLE;
         }
+    }
 
-        AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
+    if (Connection->AddressFile->Port)
+    {
+        /* See if we had an unspecified bind address */
+        if (NCE)
+        {
+            /* We did, so use the interface unicast address associated with the route */
+            AddressToBind.sin_addr.s_addr = NCE->Interface->Unicast.Address.IPv4Address;
+        }
+        else
+        {
+            /* Bind address was explicit so use it */
+            AddressToBind.sin_addr.s_addr = Connection->AddressFile->Address.Address.IPv4Address;
+        }
+        
+        AddressToBind.sin_port = Connection->AddressFile->Port;
+        
+        /* Perform an explicit bind */
+        Status = TCPTranslateError(OskitTCPBind(Connection->SocketContext,
+                                                &AddressToBind,
+                                                sizeof(AddressToBind)));
     }
     else
     {
-        AddressToBind.sin_addr.s_addr = Connection->AddressFile->Address.Address.IPv4Address;
+        /* An implicit bind will be performed */
+        Status = STATUS_SUCCESS;
     }
-    
-    AddressToBind.sin_port = Connection->AddressFile->Port;
 
-    Status = TCPTranslateError
-        ( OskitTCPBind( Connection->SocketContext,
-                        &AddressToBind,
-                        sizeof(AddressToBind) ) );
-
-    if (NT_SUCCESS(Status)) {
-        /* Check if we had an unspecified port */
-        if (!Connection->AddressFile->Port)
-        {
-            /* We did, so we need to copy back the port */
-            Status = TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE);
-            if (NT_SUCCESS(Status))
-            {
-                /* Allocate the port in the port bitmap */
-                Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
-                    
-                /* This should never fail */
-                ASSERT(Connection->AddressFile->Port != 0xFFFF);
-            }
-        }
-        
+    if (NT_SUCCESS(Status)) {        
         if (NT_SUCCESS(Status))
         {
             memcpy( &AddressToConnect.sin_addr,
@@ -804,7 +803,31 @@ NTSTATUS TCPConnect
             ( OskitTCPConnect( Connection->SocketContext,
                               &AddressToConnect,
                               sizeof(AddressToConnect) ) );
-            
+
+            if (NT_SUCCESS(Status))
+            {
+                /* Check if we had an unspecified port */
+                if (!Connection->AddressFile->Port)
+                {
+                    /* We did, so we need to copy back the port */
+                    if (NT_SUCCESS(TCPGetSockAddress(Connection, (PTRANSPORT_ADDRESS)&LocalAddress, FALSE)))
+                    {
+                        /* Allocate the port in the port bitmap */
+                        Connection->AddressFile->Port = TCPAllocatePort(LocalAddress.Address[0].Address[0].sin_port);
+
+                        /* This should never fail */
+                        ASSERT(Connection->AddressFile->Port != 0xFFFF);
+                    }
+                }
+                
+                /* Check if the address was unspecified */
+                if (AddrIsUnspecified(&Connection->AddressFile->Address))
+                {
+                    /* It is, so store the address of the outgoing NIC */
+                    Connection->AddressFile->Address = NCE->Interface->Unicast;
+                }
+            }
+
             if (Status == STATUS_PENDING)
             {
                 Bucket = ExAllocatePoolWithTag( NonPagedPool, sizeof(*Bucket), TDI_BUCKET_TAG );

@@ -32,6 +32,8 @@ EXTERN _KiTrap02:PROC
 .data
 ASSUME nothing
 
+.align 16
+
 PUBLIC _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */

@@ -681,9 +681,9 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     DPRINT("LdrpWalkImportDescriptor('%S' %x)\n", DllPath, LdrEntry);
 
     /* Set up the Act Ctx */
+    RtlZeroMemory(&ActCtx, sizeof(ActCtx));
     ActCtx.Size = sizeof(ActCtx);
     ActCtx.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
-    RtlZeroMemory(&ActCtx.Frame, sizeof(ActCtx));
 
     /* Check if we have a manifest prober routine */
     if (LdrpManifestProberRoutine)

@@ -850,7 +850,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
       DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return(Status);
    }
-   DeviceNode->ServiceName = ServiceName;
 
    /*
     * Initialize the driver
@@ -1834,8 +1833,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
       cur--;
    }
 
-   IopDisplayLoadingMessage(&ServiceName);
-
    /*
     * Get service type.
     */
@@ -1882,21 +1879,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
    DPRINT("Type: %lx\n", Type);
 
-   /*
-    * Create device node
-    */
-
-   /* Use IopRootDeviceNode for now */
-   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-      LoadParams->Status = Status;
-      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-      return;
-   }
-
    /* Get existing DriverObject pointer (in case the driver has
       already been loaded and initialized) */
    Status = IopGetDriverObject(
@@ -1916,23 +1898,29 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
-           IopFreeDeviceNode(DeviceNode);
            LoadParams->Status = Status;
            (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
            return;
        }
 
        /*
-        * Set a service name for the device node
-        */
-
-       RtlCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer);
-
-       /*
         * Initialize the driver module if it's loaded for the first time
         */
        if (Status != STATUS_IMAGE_ALREADY_LOADED)
        {
+           Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
+
+           if (!NT_SUCCESS(Status))
+           {
+               DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+               MmUnloadSystemImage(ModuleObject);
+               LoadParams->Status = Status;
+               (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+               return;
+           }
+
+           IopDisplayLoadingMessage(&DeviceNode->ServiceName);
+
            Status = IopInitializeDriverModule(
                DeviceNode,
                ModuleObject,
@@ -1950,11 +1938,11 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
                (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
                return;
            }
+           
+           /* Initialize and start device */
+           IopInitializeDevice(DeviceNode, DriverObject);
+           Status = IopStartDevice(DeviceNode);
        }
-
-       /* Initialize and start device */
-       IopInitializeDevice(DeviceNode, DriverObject);
-       Status = IopStartDevice(DeviceNode);
    }
    else
    {
@@ -1962,9 +1950,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
       /* IopGetDriverObject references the DriverObject, so dereference it */
       ObDereferenceObject(DriverObject);
-
-      /* Free device node since driver loading failed */
-      IopFreeDeviceNode(DeviceNode);
    }
 
    /* Pass status to the caller and signal the event */
