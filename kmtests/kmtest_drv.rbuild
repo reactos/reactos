@@ -13,6 +13,8 @@
 		<file>Example.c</file>
 	</directory>
 	<directory name="ntos_ex">
+		<file>ExHardError.c</file>
+		<file>ExInterlocked.c</file>
 		<file>ExPools.c</file>
 		<file>ExResource.c</file>
 		<file>ExTimer.c</file>

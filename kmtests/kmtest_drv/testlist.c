@@ -9,6 +9,9 @@
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;
+KMT_TESTFUNC Test_ExHardError;
+KMT_TESTFUNC Test_ExHardErrorInteractive;
+KMT_TESTFUNC Test_ExInterlocked;
 KMT_TESTFUNC Test_ExPools;
 KMT_TESTFUNC Test_ExResource;
 KMT_TESTFUNC Test_ExTimer;
@@ -25,6 +28,9 @@ KMT_TESTFUNC Test_ObCreate;
 const KMT_TEST TestList[] =
 {
     { "Example",                            Test_Example },
+    { "ExHardError",                        Test_ExHardError },
+    { "-ExHardErrorInteractive",            Test_ExHardErrorInteractive },
+    { "ExInterlocked",                      Test_ExInterlocked },
     { "ExPools",                            Test_ExPools },
     { "ExResource",                         Test_ExResource },
     { "ExTimer",                            Test_ExTimer },
