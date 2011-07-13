@@ -74,7 +74,9 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
            ApiMessage->Header.u1.s1.TotalLength);
                 
     /* Check if we are already inside a CSR Server */
+#if 0
     if (!InsideCsrProcess)
+#endif
     {
         /* Check if we got a a Capture Buffer */
         if (CaptureBuffer)
@@ -148,6 +150,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
             ApiMessage->Status = Status;
         }
     }
+#if 0
     else
     {
         /* This is a server-to-server call. Save our CID and do a direct call */
@@ -163,6 +166,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
             ApiMessage->Status = Status;
         }
     }
+#endif
 
     /* Return the CSR Result */
     DPRINT("Got back: 0x%lx\n", ApiMessage->Status);

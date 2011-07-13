@@ -48,7 +48,7 @@
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
 extern PSERVERINFO gpsi;
-extern BOOL gfServerProcess;
+extern BOOLEAN gfServerProcess;
 
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 #define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId) ||\
@@ -75,11 +75,9 @@ static __inline void LoadUserApiHook()
    if(IsInsideUserApiHook())
         return;
 
-   /* HACK! Please remove when gfServerProcess is correct */
-#if 0
     if(gfServerProcess)
         return;
-#endif
+
     if(RtlIsThreadWithinLoaderCallout())
         return;
 

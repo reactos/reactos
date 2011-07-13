@@ -13,7 +13,7 @@ PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
-BOOL gfServerProcess = FALSE;
+BOOLEAN gfServerProcess = FALSE;
 
 WCHAR szAppInit[KEY_LENGTH];
 
@@ -198,7 +198,7 @@ Init(VOID)
 {
    USERCONNECT UserCon;
    PVOID *KernelCallbackTable;
-
+ 
    /* Set up the kernel callbacks. */
    KernelCallbackTable = NtCurrentPeb()->KernelCallbackTable;
    KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
@@ -231,8 +231,8 @@ Init(VOID)
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
    RtlInitializeCriticalSection(&gcsUserApiHook);
-   gfServerProcess = TRUE; // FIXME HAX! Used in CsrClientConnectToServer(,,,,&gfServerProcess);
 
+    CsrClientConnectToServer(L"\\Windows", 0, NULL, 0, &gfServerProcess);
    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
    /* Allocate an index for user32 thread local data. */
