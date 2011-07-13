@@ -40,6 +40,36 @@ __declspec(dllimport)   int             __stdcall   Exi386InterlockedDecrementLo
 
 static KSPIN_LOCK SpinLock;
 
+typedef struct
+{
+    int esi, edi, ebx, ebp, esp;
+} PROCESSOR_STATE, *PPROCESSOR_STATE;
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+#define SaveState(State) do                                                 \
+{                                                                           \
+    __asm lea ecx,      [State]                                             \
+    __asm mov [ecx],    esi                                                 \
+    __asm mov [ecx+4],  edi                                                 \
+    __asm mov [ecx+8],  ebx                                                 \
+    __asm mov [ecx+12], ebp                                                 \
+    __asm mov [ecx+16], esp                                                 \
+} while (0)
+
+#define CheckState(OldState, NewState) do                                   \
+{                                                                           \
+    ok_eq_hex((OldState)->esi, (NewState)->esi);                            \
+    ok_eq_hex((OldState)->edi, (NewState)->edi);                            \
+    ok_eq_hex((OldState)->ebx, (NewState)->ebx);                            \
+    ok_eq_hex((OldState)->ebp, (NewState)->ebp);                            \
+    ok_eq_hex((OldState)->esp, (NewState)->esp);                            \
+} while (0)
+
+#else
+#define SaveState(State)
+#define CheckState(OldState, NewState)
+#endif
+
 static
 LARGE_INTEGER
 Large(
@@ -57,7 +87,10 @@ Large(
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Ret##Type = Function(&Value##Type, Xchg, Cmp, ##__VA_ARGS__);       \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -75,8 +108,11 @@ Large(
     Type Exchange##Type = Xchg;                                             \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Ret##Type = Function(&Value##Type, &Exchange##Type,                 \
                                 &Compare##Type, ##__VA_ARGS__);             \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -94,7 +130,10 @@ Large(
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Ret##Type = Function(&Value##Type, Op, ##__VA_ARGS__);              \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -110,7 +149,10 @@ Large(
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Ret##Type = Function(&Value##Type, ##__VA_ARGS__);                  \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -126,7 +168,10 @@ Large(
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Ret##Type = Function(&Value##Type, Op, ##__VA_ARGS__);              \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -141,7 +186,10 @@ Large(
     Type Value##Type = Val;                                                 \
     Status = STATUS_SUCCESS;                                                \
     _SEH2_TRY {                                                             \
+        SaveState(OldState);                                                \
         Function(&Value##Type, Op, ##__VA_ARGS__);                          \
+        SaveState(NewState);                                                \
+        CheckState(&OldState, &NewState);                                   \
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {                             \
         Status = _SEH2_GetExceptionCode();                                  \
     } _SEH2_END;                                                            \
@@ -163,6 +211,7 @@ TestInterlockedFunctional(VOID)
 {
     NTSTATUS Status;
     PKSPIN_LOCK pSpinLock = &SpinLock;
+    PROCESSOR_STATE OldState, NewState;
 
     /* on x86, most of these are supported intrinsicly and don't need a spinlock! */
 #if defined _M_IX86 || defined _M_AMD64
