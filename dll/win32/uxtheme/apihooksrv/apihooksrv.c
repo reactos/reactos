@@ -43,7 +43,7 @@ int _tmain(int argc, _TCHAR* argv[])
     
     BroadcastSystemMessage(BSF_POSTMESSAGE, &info,WM_SETFOCUS,0,0);
 
-    Sleep(36000);
+    system("pause");
 
     ret = fnRemove();
     printf("ThemeHooksRemove returned %d\n", ret);
