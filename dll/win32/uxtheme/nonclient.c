@@ -229,8 +229,8 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
     RECT rcPart;
     INT ButtonWidth, ButtonHeight, iPartId;
     
-    ButtonHeight = GetThemeSysSize(pcontext->theme,  pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
-    ButtonWidth = GetThemeSysSize(pcontext->theme,  pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CXSMSIZE : SM_CXSIZE);
+    ButtonHeight = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
+    ButtonWidth = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CXSMSIZE : SM_CXSIZE);
 
     switch(buttonId)
     {
