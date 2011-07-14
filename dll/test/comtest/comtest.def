@@ -1,0 +1,6 @@
+LIBRARY   comtest
+EXPORTS  
+    DllCanUnloadNow       @1
+	DllGetClassObject     @2
+	DllRegisterServer     @3
+	DllUnregisterServer   @4

@@ -1,0 +1,6 @@
+LIBRARY   LogCom
+EXPORTS  
+    DllCanUnloadNow       @1
+	DllGetClassObject     @2
+	DllCanUnloadNow       @3
+	DllUnregisterServer   @4

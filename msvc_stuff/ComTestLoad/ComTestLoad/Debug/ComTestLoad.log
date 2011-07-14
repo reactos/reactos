@@ -1,0 +1,38 @@
+﻿Build started 4/07/2011 4:30:16 PM.
+     1>Project "c:\Users\Greenie\documents\visual studio 2010\Projects\ComTestLoad\ComTestLoad\ComTestLoad.vcxproj" on node 2 (rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Debug\ComTestLoad.lastbuildstate".
+       InitializeBuildStatus:
+         Touching "Debug\ComTestLoad.unsuccessfulbuild".
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\comtest\comtest\iComTest_i.c
+         iComTest_i.c
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ComTestLoad.cpp stdafx.cpp
+         stdafx.cpp
+         ComTestLoad.cpp
+         Generating Code...
+       ManifestResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\ComTestLoad.exe.embed.manifest.res" Debug\ComTestLoad_manifest.rc 
+       Link:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\ComTestLoad.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.lib" /MACHINE:X86 Debug\ComTestLoad.exe.embed.manifest.res
+         Debug\iComTest_i.obj
+         Debug\ComTestLoad.obj
+         Debug\stdafx.obj
+       Manifest:
+         Deleting file "Debug\ComTestLoad.exe.embed.manifest".
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\ComTestLoad.exe.embed.manifest" /manifest Debug\ComTestLoad.exe.intermediate.manifest
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\ComTestLoad.exe.embed.manifest.res" Debug\ComTestLoad_manifest.rc 
+       LinkEmbedManifest:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\ComTestLoad.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.lib" /MACHINE:X86 Debug\ComTestLoad.exe.embed.manifest.res
+         Debug\iComTest_i.obj
+         Debug\ComTestLoad.obj
+         Debug\stdafx.obj
+         ComTestLoad.vcxproj -> c:\users\greenie\documents\visual studio 2010\Projects\ComTestLoad\Debug\ComTestLoad.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\ComTestLoad.unsuccessfulbuild".
+         Touching "Debug\ComTestLoad.lastbuildstate".
+     1>Done Building Project "c:\Users\Greenie\documents\visual studio 2010\Projects\ComTestLoad\ComTestLoad\ComTestLoad.vcxproj" (rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.20

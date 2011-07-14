@@ -1,0 +1,37 @@
+﻿Build started 6/07/2011 4:55:06 PM.
+     1>Project "c:\Users\Greenie\documents\visual studio 2010\Projects\LogCom\LogCom\LogCom.vcxproj" on node 2 (rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Release\LogCom.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "Release\LogCom.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Release\LogCom.pch" /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt dllmain.cpp
+         dllmain.cpp
+     1>dllmain.cpp(59): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include\stdio.h(234) : see declaration of 'fopen'
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Release\LogCom.pch" /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt LogCom.cpp
+         LogCom.cpp
+       Link:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.dll" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:"LogCom.def" /MANIFEST /ManifestFile:"Release\LogCom.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.lib" /MACHINE:X86 /DLL Release\dllmain.obj
+         Release\LogCom.obj
+         Release\stdafx.obj
+     1>LogCom.def : warning LNK4104: export of symbol 'DllCanUnloadNow' should be PRIVATE
+     1>LogCom.def : warning LNK4104: export of symbol 'DllGetClassObject' should be PRIVATE
+     1>LogCom.def : warning LNK4197: export 'DllCanUnloadNow' specified multiple times; using first specification
+     1>LogCom.def : warning LNK4104: export of symbol 'DllUnregisterServer' should be PRIVATE
+            Creating library c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.lib and object c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.exp
+         Generating code
+         Finished generating code
+         LogCom.vcxproj -> c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.dll
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Release\LogCom.dll;#2" /manifest Release\LogCom.dll.intermediate.manifest
+       FinalizeBuildStatus:
+         Deleting file "Release\LogCom.unsuccessfulbuild".
+         Touching "Release\LogCom.lastbuildstate".
+     1>Done Building Project "c:\Users\Greenie\documents\visual studio 2010\Projects\LogCom\LogCom\LogCom.vcxproj" (rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.71

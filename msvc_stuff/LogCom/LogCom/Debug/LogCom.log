@@ -1,0 +1,40 @@
+﻿Build started 6/07/2011 3:37:05 PM.
+     1>Project "c:\Users\Greenie\documents\visual studio 2010\Projects\LogCom\LogCom\LogCom.vcxproj" on node 2 (rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Debug\LogCom.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "Debug\LogCom.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\LogCom.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt dllmain.cpp
+         dllmain.cpp
+     1>c:\users\greenie\documents\visual studio 2010\projects\logcom\logcom\dllmain.cpp(58): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files (x86)\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D LOGCOM_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\LogCom.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt LogCom.cpp
+         LogCom.cpp
+       ManifestResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\LogCom.dll.embed.manifest.res" Debug\LogCom_manifest.rc 
+       Link:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.dll" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\LogCom.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.lib" /MACHINE:X86 /DLL Debug\LogCom.dll.embed.manifest.res
+         Debug\dllmain.obj
+         Debug\LogCom.obj
+         Debug\stdafx.obj
+       Manifest:
+         Deleting file "Debug\LogCom.dll.embed.manifest".
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\LogCom.dll.embed.manifest" /manifest Debug\LogCom.dll.intermediate.manifest
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\LogCom.dll.embed.manifest.res" Debug\LogCom_manifest.rc 
+       LinkEmbedManifest:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.dll" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\LogCom.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.lib" /MACHINE:X86 /DLL Debug\LogCom.dll.embed.manifest.res
+         Debug\dllmain.obj
+         Debug\LogCom.obj
+         Debug\stdafx.obj
+         LogCom.vcxproj -> c:\users\greenie\documents\visual studio 2010\Projects\LogCom\Debug\LogCom.dll
+       FinalizeBuildStatus:
+         Deleting file "Debug\LogCom.unsuccessfulbuild".
+         Touching "Debug\LogCom.lastbuildstate".
+     1>Done Building Project "c:\Users\Greenie\documents\visual studio 2010\Projects\LogCom\LogCom\LogCom.vcxproj" (rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:05.48

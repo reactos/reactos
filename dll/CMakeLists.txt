@@ -7,3 +7,5 @@ add_subdirectory(nls)
 add_subdirectory(ntdll)
 add_subdirectory(shellext)
 add_subdirectory(win32)
+add_subdirectory(test)
+

@@ -1,0 +1,10 @@
+import "unknwn.idl"; 
+[
+object,
+uuid(10CDF249-A336-406F-B472-20F08660D609),
+]
+interface IComTest : IUnknown
+{
+HRESULT test(void);
+};
+ 
