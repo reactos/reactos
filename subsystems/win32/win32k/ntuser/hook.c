@@ -46,14 +46,22 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
     {
         if(!Unload && !(ppi->W32PF_flags & W32PF_APIHOOKLOADED))
         {
+            /* A callback in user mode can trigger UserLoadApiHook to be called and 
+               as a result IntLoadHookModule will be called recursively.
+               To solve this we set the flag that means that the appliaction has
+               loaded the api hook before the callback and in case of error we remove it */
+            ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
+
             /* Call ClientLoadLibrary in user32 */
             hmod = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
-            if(hmod != 0)
+            DPRINT1("co_IntClientLoadLibrary returned %d\n", hmod );
+            if(hmod == 0)
             {
-                ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
-                return TRUE;
+                /* Remove the flag we set before */
+                ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
+                return FALSE;
             }
-            return FALSE;
+            return TRUE;
         }
         else if(Unload && (ppi->W32PF_flags & W32PF_APIHOOKLOADED))
         {
@@ -91,7 +99,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook, BOOL Block)
     ULONG_PTR Result;
     PPROCESSINFO ppiCsr;
     
-    DPRINT("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
+    DPRINT1("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
 
     ppiCsr = PsGetProcessWin32Process(CsrProcess);
 
@@ -155,7 +163,7 @@ UserRegisterUserApiHook(
         return FALSE;
     }
 
-    DPRINT("UserRegisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
+    DPRINT1("UserRegisterUserApiHook. Server PID: %d\n", PsGetProcessId(pti->ppi->peProcess));
 
     /* Register the api hook */
     gpsi->dwSRVIFlags |= SRVINFO_APIHOOK;
