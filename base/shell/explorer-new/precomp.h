@@ -386,6 +386,11 @@ HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
                     IN BOOL bHideClock);
 
+void
+TrayNotify_NotifyMsg(IN HWND hwnd,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam);
+
 /*
  * taskswnd.c
  */

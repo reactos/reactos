@@ -2015,7 +2015,16 @@ TrayWndProc(IN HWND hwnd,
 
         switch (uMsg)
         {
-    
+            case WM_COPYDATA:
+            {
+                if(This->hwndTrayNotify)
+                {
+                    TrayNotify_NotifyMsg(This->hwndTrayNotify,
+                                         wParam,
+                                         lParam);
+                }
+                return TRUE;
+            }
             case WM_THEMECHANGED:
                 ITrayWindowImpl_UpdateTheme(This);
                 return 0;
@@ -2073,30 +2082,23 @@ TrayWndProc(IN HWND hwnd,
                             if (pt.y > rcClient.bottom)
                                 return HTBOTTOM;
                             break;
-
-                        case ABE_BOTTOM:
-                            if (pt.y < rcClient.top)
-                                return HTTOP;
-                            break;
-
                         case ABE_LEFT:
                             if (pt.x > rcClient.right)
                                 return HTRIGHT;
                             break;
-
                         case ABE_RIGHT:
                             if (pt.x < rcClient.left)
                                 return HTLEFT;
                             break;
-
-                        default:
+                        case ABE_BOTTOM:
+						default:
+                            if (pt.y < rcClient.top)
+                                return HTTOP;
                             break;
                     }
                 }
-
                 return HTBORDER;
             }
-
             case WM_MOVING:
             {
                 POINT ptCursor;

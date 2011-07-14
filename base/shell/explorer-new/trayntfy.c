@@ -19,6 +19,720 @@
  */
 
 #include <precomp.h>
+#include <DocObj.h>
+
+/*
+ * SysPagerWnd
+ */ 
+static const TCHAR szSysPagerWndClass[] = TEXT("SysPager");
+
+typedef struct _NOTIFY_ITEM _NOTIFY_ITEM;
+
+
+typedef struct _NOTIFY_ITEM
+{
+    _NOTIFY_ITEM *next;
+    INT Index;
+    INT IconIndex;
+    NOTIFYICONDATA iconData;
+} NOTIFY_ITEM, *PNOTIFY_ITEM, **PPNOTIFY_ITEM;
+
+typedef struct _SYS_PAGER_DATA
+{
+    HWND hWnd;
+    HWND hWndToolbar;
+    HIMAGELIST SysIcons;
+    PNOTIFY_ITEM NotifyItems;
+    INT ButtonCount;
+    INT VisibleButtonCount;
+} SYS_PAGER_WND_DATA, *PSYS_PAGER_WND_DATA;
+
+
+static PNOTIFY_ITEM
+SysPagerWnd_CreateNotifyItemData(IN OUT PSYS_PAGER_WND_DATA This)
+{
+    PNOTIFY_ITEM *findNotifyPointer=&This->NotifyItems;
+    PNOTIFY_ITEM notifyItem;
+    
+    while((*findNotifyPointer)!=NULL){
+        findNotifyPointer=&((*findNotifyPointer)->next);
+
+    }
+    
+    *findNotifyPointer=malloc(sizeof((*notifyItem)));
+    
+    
+    notifyItem = (*findNotifyPointer);
+
+    ZeroMemory(notifyItem,
+        sizeof(*notifyItem));
+    
+    notifyItem->next=NULL;
+    
+    return notifyItem;
+}
+
+static PPNOTIFY_ITEM
+SysPagerWnd_FindPPNotifyItemByIconData(IN OUT PSYS_PAGER_WND_DATA This,NOTIFYICONDATA *iconData)
+{
+    PPNOTIFY_ITEM findNotifyPointer=&This->NotifyItems;
+    
+    while((*findNotifyPointer)!=NULL){
+        if((*findNotifyPointer)->iconData.hWnd==iconData->hWnd &&
+                (*findNotifyPointer)->iconData.uID==iconData->uID)
+        {
+            return findNotifyPointer;
+            
+        }
+        findNotifyPointer=&((*findNotifyPointer)->next);
+    }
+    
+    return NULL;
+}
+
+static PPNOTIFY_ITEM
+SysPagerWnd_FindPPNotifyItemByIndex(IN OUT PSYS_PAGER_WND_DATA This,IN WORD wIndex)
+{
+    PPNOTIFY_ITEM findNotifyPointer=&This->NotifyItems;
+    
+    while((*findNotifyPointer)!=NULL){
+        if((*findNotifyPointer)->Index==wIndex)
+        {
+            return findNotifyPointer;
+            
+        }
+        findNotifyPointer=&((*findNotifyPointer)->next);
+    }
+    
+    return NULL;
+}
+static VOID
+SysPagerWnd_UpdateButton(IN OUT PSYS_PAGER_WND_DATA This,NOTIFYICONDATA *iconData)
+{
+    TBBUTTONINFO tbbi;
+    PNOTIFY_ITEM notifyItem;
+    PPNOTIFY_ITEM NotifyPointer;
+    NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,iconData);
+    notifyItem = *NotifyPointer;
+    
+    tbbi.cbSize = sizeof(tbbi);
+    tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
+    tbbi.idCommand = notifyItem->Index;
+    
+
+    if (iconData->uFlags & NIF_MESSAGE ){
+
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+
+    if (iconData->uFlags & NIF_ICON){
+        tbbi.dwMask |=TBIF_IMAGE;
+        notifyItem->IconIndex = tbbi.iImage = ImageList_AddIcon(This->SysIcons, iconData->hIcon);
+    }
+    
+    /*if (iconData->uFlags & NIF_TIP){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    if (iconData->uFlags & NIF_STATE){
+        if(iconData->dwStateMask & NIS_HIDDEN &&
+                (notifyItem->iconData.dwState & NIS_HIDDEN) != (iconData->dwState & NIS_HIDDEN))
+        {
+            tbbi.dwMask |=TBIF_STATE;
+            if(iconData->dwState & NIS_HIDDEN)
+            {
+                tbbi.fsState |= TBSTATE_HIDDEN;
+                This->VisibleButtonCount--;
+            }
+            else
+            {
+                tbbi.fsState &= ~TBSTATE_HIDDEN;
+                This->VisibleButtonCount++;
+            }
+        }
+        notifyItem->iconData.dwState &= ~iconData->dwStateMask;
+        notifyItem->iconData.dwState |= (iconData->dwState & iconData->dwStateMask);
+
+    }
+    
+    /*if (iconData->uFlags & NIF_INFO){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    /*if (iconData->uFlags & NIF_GUID){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+    
+    if (iconData->uFlags & NIF_REALTIME){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+    
+    if (iconData->uFlags & NIF_SHOWTIP){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    
+    SendMessage(This->hWndToolbar,
+                    TB_SETBUTTONINFO,
+                    (WPARAM)notifyItem->Index,
+                    (LPARAM)&tbbi);
+}
+
+
+static VOID
+SysPagerWnd_AddButton(IN OUT PSYS_PAGER_WND_DATA This,NOTIFYICONDATA *iconData)
+{
+    TBBUTTON tbBtn;
+    PNOTIFY_ITEM notifyItem;
+
+    notifyItem = SysPagerWnd_CreateNotifyItemData(This);
+
+    notifyItem->next=NULL;
+    notifyItem->Index=This->ButtonCount;
+    This->ButtonCount++;
+    This->VisibleButtonCount++;
+    
+    notifyItem->iconData.hWnd=iconData->hWnd;
+    notifyItem->iconData.uID=iconData->uID;
+
+    TCHAR text[]=TEXT("");
+    tbBtn.fsState = TBSTATE_ENABLED;
+    tbBtn.fsStyle = BTNS_NOPREFIX;
+    tbBtn.dwData = notifyItem->Index;
+
+    tbBtn.iString = (INT_PTR)text;
+    tbBtn.idCommand=notifyItem->Index;
+    
+
+    if (iconData->uFlags & NIF_MESSAGE ){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+
+    if (iconData->uFlags & NIF_ICON){
+        notifyItem->IconIndex = tbBtn.iBitmap = ImageList_AddIcon(This->SysIcons, iconData->hIcon);
+    }
+    
+    /*if (iconData->uFlags & NIF_TIP){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    if (iconData->uFlags & NIF_STATE){
+        notifyItem->iconData.dwState &= ~iconData->dwStateMask;
+        notifyItem->iconData.dwState |= (iconData->dwState & iconData->dwStateMask);
+        if(notifyItem->iconData.dwState & NIS_HIDDEN)
+        {
+            tbBtn.fsState |= TBSTATE_HIDDEN;
+            This->VisibleButtonCount--;
+        }
+
+    }
+    
+    /*if (iconData->uFlags & NIF_INFO){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    /*if (iconData->uFlags & NIF_GUID){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+    
+    if (iconData->uFlags & NIF_REALTIME){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }
+    
+    if (iconData->uFlags & NIF_SHOWTIP){
+        notifyItem->iconData.uCallbackMessage = iconData->uCallbackMessage;
+    }*/
+    
+    SendMessage(This->hWndToolbar,
+                    TB_INSERTBUTTON,
+                    (WPARAM)notifyItem->Index,
+                    (LPARAM)&tbBtn);
+                    
+    SendMessage(This->hWndToolbar,
+                TB_SETBUTTONSIZE,
+                0,
+                (LPARAM)MAKELONG(16,
+                                 16));
+}
+
+
+static VOID
+SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,NOTIFYICONDATA *iconData)
+{
+    PPNOTIFY_ITEM NotifyPointer;
+    
+    NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,iconData);
+    if(NotifyPointer)
+    {
+        PNOTIFY_ITEM deleteItem;
+        PNOTIFY_ITEM updateItem;
+        deleteItem=*NotifyPointer;
+        
+        
+        SendMessage(This->hWndToolbar,
+                            TB_DELETEBUTTON,
+                            (WPARAM)deleteItem->Index,
+                            0);
+            
+        *NotifyPointer=updateItem=deleteItem->next;
+        
+        if(!(deleteItem->iconData.dwState & NIS_HIDDEN))
+            This->VisibleButtonCount--;
+        free(deleteItem);
+        This->ButtonCount--;
+        
+        
+        while(updateItem != NULL)
+        {
+            TBBUTTONINFO tbbi;
+            updateItem->Index--;
+            tbbi.cbSize = sizeof(tbbi);
+            tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
+            tbbi.idCommand = updateItem->Index;
+
+            SendMessage(This->hWndToolbar,
+                               TB_SETBUTTONINFO,
+                               (WPARAM)updateItem->Index,
+                               (LPARAM)&tbbi);
+            
+            updateItem = updateItem->next;
+        }
+    }
+
+}
+
+static VOID
+SysPagerWnd_HandleButtonClick(IN OUT PSYS_PAGER_WND_DATA This,IN WORD wIndex,IN UINT uMsg,WPARAM wParam)
+{
+    PPNOTIFY_ITEM NotifyPointer;
+    
+    NotifyPointer = SysPagerWnd_FindPPNotifyItemByIndex(This,wIndex);
+    if(NotifyPointer)
+    {
+        PNOTIFY_ITEM notifyItem;
+        notifyItem = *NotifyPointer;
+        
+        if(IsWindow(notifyItem->iconData.hWnd))
+        {
+            
+            if (uMsg == WM_MOUSEMOVE ||
+                    uMsg == WM_LBUTTONDOWN ||
+                    uMsg == WM_MBUTTONDOWN ||
+                    uMsg == WM_RBUTTONDOWN)
+                PostMessage(notifyItem->iconData.hWnd,
+                            notifyItem->iconData.uCallbackMessage,
+                            (WPARAM)notifyItem->iconData.uID,
+                            (LPARAM)uMsg);
+            else
+            {
+                DWORD pid;
+                if (pid == GetCurrentProcessId())
+                    PostMessage(notifyItem->iconData.hWnd,
+                                notifyItem->iconData.uCallbackMessage,
+                                (WPARAM)notifyItem->iconData.uID,
+                                (LPARAM)uMsg);
+                else
+                    SendMessage(notifyItem->iconData.hWnd,
+                                notifyItem->iconData.uCallbackMessage,
+                                (WPARAM)notifyItem->iconData.uID,
+                                (LPARAM)uMsg);
+            
+            }
+        }
+    }
+
+}
+
+static void SysPagerWnd_DrawBackground(HWND wnd, HDC dc)
+{
+        RECT rect;
+        GetClientRect(wnd, &rect);
+        DrawThemeParentBackground(wnd, dc, &rect);
+}
+
+
+static LRESULT CALLBACK
+SysPagerWnd_ToolbarSubclassedProc(IN HWND hWnd,
+                                   IN UINT msg,
+                                   IN WPARAM wParam,
+                                   IN LPARAM lParam,
+                                   IN UINT_PTR uIdSubclass,
+                                   IN DWORD_PTR dwRefData)
+{
+    LRESULT Ret = FALSE;
+
+    if(msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST)
+    {
+        HWND parent = GetParent(hWnd);
+
+        if (!parent)
+            return 0;
+
+        return SendMessage(parent,msg, wParam, lParam);
+    }
+    Ret = DefSubclassProc(hWnd,
+                          msg,
+                          wParam,
+                          lParam);
+
+    return Ret;
+}
+
+
+static VOID
+SysPagerWnd_Create(IN OUT PSYS_PAGER_WND_DATA This)
+{
+    This->hWndToolbar = CreateWindowEx(0,
+                                       TOOLBARCLASSNAME,
+                                       NULL,
+                                       WS_CHILD | WS_VISIBLE  | WS_CLIPCHILDREN |
+                                           TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | 
+                                           TBSTYLE_TRANSPARENT |
+                                           CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER,
+                                       0,
+                                       0,
+                                       0,
+                                       0,
+                                       This->hWnd,
+                                       NULL,
+                                       hExplorerInstance,
+                                       NULL);
+    if (This->hWndToolbar != NULL)
+    {
+        SIZE BtnSize;
+        SetWindowTheme(This->hWndToolbar, L"TrayNotify", NULL);
+        /* Identify the version we're using */
+        SendMessage(This->hWndToolbar,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(TBBUTTON),
+                    0);
+                    
+        This->SysIcons = ImageList_Create(16, 16, ILC_COLOR32, 0, 1000);
+        SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->SysIcons);
+        
+        BtnSize.cx = BtnSize.cy = 18;
+        //BtnSize.cx = GetSystemMetrics(SM_CXMINIMIZED);
+        //This->ButtonSize.cy = BtnSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
+        SendMessage(This->hWndToolbar,
+                    TB_SETBUTTONSIZE,
+                    0,
+                    (LPARAM)MAKELONG(BtnSize.cx,
+                                     BtnSize.cy));
+        /*SysPagerWnd_AddButton(This);*/
+        
+
+        SetWindowSubclass(This->hWndToolbar,
+                        SysPagerWnd_ToolbarSubclassedProc,
+                        2,
+                        (DWORD_PTR)This);
+        
+        
+    }
+
+}
+
+static VOID
+SysPagerWnd_NCDestroy(IN OUT PSYS_PAGER_WND_DATA This)
+{
+    /* Free allocated resources */
+    SetWindowLongPtr(This->hWnd,
+                     0,
+                     0);
+    HeapFree(hProcessHeap,
+             0,
+             This);
+}
+
+
+static void
+SysPagerWnd_NotifyMsg(IN HWND hwnd,
+                  IN WPARAM wParam,
+                  IN LPARAM lParam)
+{
+    PSYS_PAGER_WND_DATA This = (PSYS_PAGER_WND_DATA)GetWindowLongPtr(hwnd,
+                                                      0);
+
+            
+    PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
+    if (cpData->dwData == 1)
+    {
+        DWORD trayCommand;
+        NOTIFYICONDATA *iconData;
+        HWND parentHWND;
+        RECT windowRect;
+        parentHWND = GetParent(This->hWnd);
+        parentHWND = GetParent(parentHWND);
+        GetClientRect(parentHWND, &windowRect);
+        
+        trayCommand = *(DWORD *) (((BYTE *)cpData->lpData) + 4);
+        iconData = (NOTIFYICONDATA *) (((BYTE *)cpData->lpData) + 8);
+        
+        switch (trayCommand)
+        {
+            case NIM_ADD:
+            {
+                PPNOTIFY_ITEM NotifyPointer;
+                NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,iconData);
+                if(!NotifyPointer)
+                {
+                    SysPagerWnd_AddButton(This,iconData);
+                }
+            }
+            break;
+            case NIM_MODIFY:
+            {
+                PPNOTIFY_ITEM NotifyPointer;
+                NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,iconData);
+                if(!NotifyPointer)
+                {
+                    SysPagerWnd_AddButton(This,iconData);
+                }
+                else
+                {
+                    SysPagerWnd_UpdateButton(This,iconData);
+                }
+            }
+            break;
+            case NIM_DELETE:
+            {
+                SysPagerWnd_RemoveButton(This,iconData);
+            }
+            break;
+        }
+        SendMessage(parentHWND,
+                    WM_SIZE,
+                    0,
+                    (LPARAM)MAKELONG(windowRect.right-windowRect.left,
+                                     windowRect.bottom-windowRect.top));
+    }
+}
+
+static void
+SysPagerWnd_GetSize(IN HWND hwnd,
+                    IN WPARAM wParam,
+                    IN PSIZE size)
+{
+    PSYS_PAGER_WND_DATA This = (PSYS_PAGER_WND_DATA)GetWindowLongPtr(hwnd,
+                                                      0);
+    INT rows = 0;
+    TBMETRICS tbm;
+
+        
+    if(((BOOL)wParam))//horozontal
+    {
+        rows = size->cy/24;
+        if(rows == 0)
+            rows++;
+        size->cx = ((This->VisibleButtonCount+rows-1)/rows)*24;
+    }
+    else
+    {
+        rows = size->cx/24;
+        if(rows == 0)
+            rows++;
+        size->cy = ((This->VisibleButtonCount+rows-1)/rows)*24;
+    }
+                
+    tbm.cbSize = sizeof(tbm);
+    tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
+    tbm.cxBarPad = tbm.cyBarPad = 0;
+    tbm.cxButtonSpacing = 0;
+    tbm.cyButtonSpacing = 0;
+
+    SendMessage(This->hWndToolbar,
+                TB_SETMETRICS,
+                0,
+                (LPARAM)&tbm);
+}
+
+
+static LRESULT CALLBACK
+SysPagerWndProc(IN HWND hwnd,
+                 IN UINT uMsg,
+                 IN WPARAM wParam,
+                 IN LPARAM lParam)
+{
+    PSYS_PAGER_WND_DATA This = NULL;
+    LRESULT Ret = FALSE;
+
+    if (uMsg != WM_NCCREATE)
+    {
+        This = (PSYS_PAGER_WND_DATA)GetWindowLongPtr(hwnd,
+                                                      0);
+    }
+    
+                
+    if (This != NULL || uMsg == WM_NCCREATE)
+    {
+        switch (uMsg)
+        {
+ 
+            case WM_ERASEBKGND:
+                SysPagerWnd_DrawBackground(hwnd,(HDC)wParam);
+                return 0;
+    
+
+            case WM_NCCREATE:
+            {
+                LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
+                This = (PSYS_PAGER_WND_DATA)CreateStruct->lpCreateParams;
+                This->hWnd = hwnd;
+                This->NotifyItems = NULL;
+                This->ButtonCount = 0;
+                This->VisibleButtonCount = 0;
+
+                SetWindowLongPtr(hwnd,
+                                 0,
+                                 (LONG_PTR)This);
+                                 
+                                 
+                return TRUE;
+            }
+            case WM_CREATE:
+                SysPagerWnd_Create(This);
+                break;
+            case WM_NCDESTROY:
+                SysPagerWnd_NCDestroy(This);
+                break;
+
+            case WM_SIZE:
+            {
+                SIZE szClient;
+                szClient.cx = LOWORD(lParam);
+                szClient.cy = HIWORD(lParam);
+                
+                Ret = DefWindowProc(hwnd,
+                                    uMsg,
+                                    wParam,
+                                    lParam);
+                
+                
+                if (This->hWndToolbar != NULL && This->hWndToolbar != hwnd)
+                {
+                    SetWindowPos(This->hWndToolbar,
+                                 NULL,
+                                 0,
+                                 0,
+                                 szClient.cx,
+                                 szClient.cy,
+                                 SWP_NOZORDER);
+                }
+            }
+
+            default:
+                if(uMsg>=WM_MOUSEFIRST && uMsg<=WM_MOUSELAST)
+                {
+                    POINT pt;
+                    INT iBtn;
+
+                    pt.x = (LONG)LOWORD(lParam);
+                    pt.y = (LONG)HIWORD(lParam);
+
+                    iBtn = (INT)SendMessage(This->hWndToolbar,
+                                                TB_HITTEST,
+                                                0,
+                                                (LPARAM)&pt);
+                    
+                    if (iBtn >= 0)
+                    {
+                        SysPagerWnd_HandleButtonClick(This,iBtn,uMsg,wParam);
+                    }
+                    
+                    
+                    return 0;
+                
+                }
+            
+            
+            
+                Ret = DefWindowProc(hwnd,
+                                    uMsg,
+                                    wParam,
+                                    lParam);
+                break;
+        }
+    }
+
+    return Ret;
+}
+
+static HWND
+CreateSysPagerWnd(IN HWND hWndParent,
+                   IN BOOL bVisible)
+{
+    PSYS_PAGER_WND_DATA TcData;
+    DWORD dwStyle;
+    HWND hWnd = NULL;
+
+    TcData = HeapAlloc(hProcessHeap,
+                       0,
+                       sizeof(*TcData));
+    if (TcData != NULL)
+    {
+        ZeroMemory(TcData,
+                   sizeof(*TcData));
+
+        //TcData->IsHorizontal = TRUE;
+        /* Create the window. The tray window is going to move it to the correct
+           position and resize it as needed. */
+        dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
+        if (bVisible)
+            dwStyle |= WS_VISIBLE;
+
+        hWnd = CreateWindowEx(0,
+                              szSysPagerWndClass,
+                              NULL,
+                              dwStyle,
+                              0,
+                              0,
+                              0,
+                              0,
+                              hWndParent,
+                              NULL,
+                              hExplorerInstance,
+                              (LPVOID)TcData);
+
+        if (hWnd == NULL)
+        {
+            HeapFree(hProcessHeap,
+                     0,
+                     TcData);
+        }
+    }
+    
+    SetWindowTheme(hWnd, L"TrayNotify", NULL);
+
+    return hWnd;
+
+}
+
+static BOOL
+RegisterSysPagerWndClass(VOID)
+{
+    WNDCLASS wcTrayClock;
+
+    wcTrayClock.style = CS_DBLCLKS;
+    wcTrayClock.lpfnWndProc = SysPagerWndProc;
+    wcTrayClock.cbClsExtra = 0;
+    wcTrayClock.cbWndExtra = sizeof(PSYS_PAGER_WND_DATA);
+    wcTrayClock.hInstance = hExplorerInstance;
+    wcTrayClock.hIcon = NULL;
+    wcTrayClock.hCursor = LoadCursor(NULL,
+                                     IDC_ARROW);
+    wcTrayClock.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wcTrayClock.lpszMenuName = NULL;
+    wcTrayClock.lpszClassName = szSysPagerWndClass;
+
+    return RegisterClass(&wcTrayClock) != 0;
+}
+
+static VOID
+UnregisterSysPagerWndClass(VOID)
+{
+    UnregisterClass(szSysPagerWndClass,
+                    hExplorerInstance);
+}
+
 
 /*
  * TrayClockWnd
@@ -40,46 +754,46 @@ static const struct
 {TRUE, 0, NULL},
 {FALSE, 0, TEXT("dddd")},
 {FALSE, DATE_SHORTDATE, NULL}
-};					 
+};                     
 
 HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult) 
 {
-	LONG lResult;
-	DWORD dwDataSize = sizeof(DWORD);
-	DWORD dwType = 0;
+    LONG lResult;
+    DWORD dwDataSize = sizeof(DWORD);
+    DWORD dwType = 0;
 
-	// Check input parameters...
-	if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
+    // Check input parameters...
+    if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
 
-	// Get dword value from the registry...
-	lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
+    // Get dword value from the registry...
+    lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
 
-	// Check result and make sure the registry value is a DWORD(REG_DWORD)...
-	if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
-	else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
+    // Check result and make sure the registry value is a DWORD(REG_DWORD)...
+    if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
+    else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
 
-	return NOERROR;
+    return NOERROR;
 }
 
 void LoadSettings(void)
 {
-	HKEY hKey = NULL;
-	DWORD dwValue;
+    HKEY hKey = NULL;
+    DWORD dwValue;
 
-	if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
-	{
-		 RegGetDWord(hKey,  TEXT("blShowSeconds"), &dwValue);
-		 if (dwValue == 1)
-		 {
-		     blShowSeconds = TRUE;
-		 }
-		 else
-		 {
-		     blShowSeconds = FALSE;
-		 }
+    if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
+    {
+         RegGetDWord(hKey,  TEXT("blShowSeconds"), &dwValue);
+         if (dwValue == 1)
+         {
+             blShowSeconds = TRUE;
+         }
+         else
+         {
+             blShowSeconds = FALSE;
+         }
 
-		RegCloseKey(hKey);
-	}
+        RegCloseKey(hKey);
+    }
 }
 
 #define CLOCKWND_FORMAT_COUNT (sizeof(ClockWndFormats) / sizeof(ClockWndFormats[0]))
@@ -92,9 +806,10 @@ typedef struct _TRAY_CLOCK_WND_DATA
     HWND hWnd;
     HWND hWndNotify;
     HFONT hFont;
+    COLORREF textColor;
     RECT rcText;
     SYSTEMTIME LocalTime;
-	
+    
     union
     {
         DWORD dwFlags;
@@ -112,6 +827,55 @@ typedef struct _TRAY_CLOCK_WND_DATA
     SIZE LineSizes[CLOCKWND_FORMAT_COUNT];
     TCHAR szLines[CLOCKWND_FORMAT_COUNT][48];
 } TRAY_CLOCK_WND_DATA, *PTRAY_CLOCK_WND_DATA;
+
+static VOID
+TrayClockWnd_SetFont(IN OUT PTRAY_CLOCK_WND_DATA This,
+                     IN HFONT hNewFont,
+                     IN BOOL bRedraw);
+
+static void TrayClockWnd_UpdateTheme(PTRAY_CLOCK_WND_DATA This)
+{
+    LOGFONTW clockFont;
+    HTHEME clockTheme;
+    HFONT hFont;
+
+    clockTheme = OpenThemeData(This->hWnd, L"Clock");
+    
+    
+    if(clockTheme){
+                
+        GetThemeFont(
+                clockTheme,
+                NULL,
+                CLP_TIME,
+                0,
+                TMT_FONT,
+                &clockFont);
+        
+        hFont = CreateFontIndirect(&clockFont);
+        
+                
+        TrayClockWnd_SetFont(This,
+                            hFont,
+                            FALSE);
+                    
+        GetThemeColor(
+                    clockTheme,
+                  CLP_TIME,
+                  0,
+                  TMT_TEXTCOLOR,
+                  &This->textColor);
+
+        
+    }else
+    {
+        This->textColor = RGB(0,0,0);
+    }
+    
+    
+    CloseThemeData(clockTheme);
+        
+}
 
 static BOOL
 TrayClockWnd_MeasureLines(IN OUT PTRAY_CLOCK_WND_DATA This)
@@ -276,11 +1040,11 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
 
         if (iRet != 0 && i == 0)
         {
-			if (blShowSeconds == FALSE)
-			{
-				(This->szLines[0][5] = '\0');
-			};
-			
+            if (blShowSeconds == FALSE)
+            {
+                (This->szLines[0][5] = '\0');
+            };
+            
             /* Set the window text to the time only */
             SetWindowText(This->hWnd,
                           This->szLines[i]);
@@ -344,10 +1108,10 @@ TrayClockWnd_CalculateDueTime(IN OUT PTRAY_CLOCK_WND_DATA This)
     /* Calculate the due time */
     GetLocalTime(&This->LocalTime);
     uiDueTime = 1000 - (UINT)This->LocalTime.wMilliseconds;
-	if (blShowSeconds == TRUE)
-		uiDueTime += ( (UINT)This->LocalTime.wSecond) * 100;
-	else
-		uiDueTime += (59 - (UINT)This->LocalTime.wSecond) * 1000;
+    if (blShowSeconds == TRUE)
+        uiDueTime += ( (UINT)This->LocalTime.wSecond) * 100;
+    else
+        uiDueTime += (59 - (UINT)This->LocalTime.wSecond) * 1000;
 
     if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
         uiDueTime = 1000;
@@ -401,7 +1165,7 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
 {
     UINT uiDueTime;
     BOOL Ret;
-	int intWait1, intWait2;
+    int intWait1, intWait2;
 
     /* Kill the initialization timer */
     KillTimer(This->hWnd,
@@ -409,17 +1173,17 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
     This->IsInitTimerEnabled = FALSE;
 
     uiDueTime = TrayClockWnd_CalculateDueTime(This);
-	
-	if (blShowSeconds == TRUE) 
-	{
-		intWait1 = 1000-200;
-		intWait2 = 1000;
-	}
-	else
-	{
-		intWait1 = 60*1000-200;
-		intWait2 = 60*1000;
-	}
+    
+    if (blShowSeconds == TRUE) 
+    {
+        intWait1 = 1000-200;
+        intWait2 = 1000;
+    }
+    else
+    {
+        intWait1 = 60*1000-200;
+        intWait2 = 60*1000;
+    }
 
     if (uiDueTime > intWait1)
     {
@@ -428,7 +1192,7 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
            intWait2. */   
         Ret = SetTimer(This->hWnd,
                        ID_TRAYCLOCK_TIMER,
-					   intWait2,
+                       intWait2,
                        NULL) != 0;
         This->IsTimerEnabled = Ret;
 
@@ -482,6 +1246,8 @@ TrayClockWnd_Paint(IN OUT PTRAY_CLOCK_WND_DATA This,
     {
         iPrevBkMode = SetBkMode(hDC,
                                 TRANSPARENT);
+        
+        SetTextColor(hDC,This->textColor);
 
         hPrevFont = SelectObject(hDC,
                                  This->hFont);
@@ -532,6 +1298,13 @@ TrayClockWnd_SetFont(IN OUT PTRAY_CLOCK_WND_DATA This,
     }
 }
 
+static void TrayClockWnd_DrawBackground(HWND wnd, HDC dc)
+{
+        RECT rect;
+        GetClientRect(wnd, &rect);
+        DrawThemeParentBackground(wnd, dc, &rect);
+}
+
 static LRESULT CALLBACK
 TrayClockWndProc(IN HWND hwnd,
                  IN UINT uMsg,
@@ -551,6 +1324,12 @@ TrayClockWndProc(IN HWND hwnd,
     {
         switch (uMsg)
         {
+            case WM_THEMECHANGED:
+                TrayClockWnd_UpdateTheme(This);
+                break;
+            case WM_ERASEBKGND:
+                TrayClockWnd_DrawBackground(hwnd,(HDC)wParam);
+                break;
             case WM_PAINT:
             case WM_PRINTCLIENT:
             {
@@ -621,6 +1400,7 @@ TrayClockWndProc(IN HWND hwnd,
                 SetWindowLongPtr(hwnd,
                                  0,
                                  (LONG_PTR)This);
+                TrayClockWnd_UpdateTheme(This);
 
                 return TRUE;
             }
@@ -677,7 +1457,7 @@ CreateTrayClockWnd(IN HWND hWndParent,
     PTRAY_CLOCK_WND_DATA TcData;
     DWORD dwStyle;
     HWND hWnd = NULL;
-	LoadSettings();
+    LoadSettings();
 
     TcData = HeapAlloc(hProcessHeap,
                        0,
@@ -714,6 +1494,7 @@ CreateTrayClockWnd(IN HWND hWndParent,
                      TcData);
         }
     }
+    SetWindowTheme(hWnd, L"TrayNotify", NULL);
 
     return hWnd;
 
@@ -760,9 +1541,13 @@ typedef struct _TRAY_NOTIFY_WND_DATA
     HWND hWnd;
     HWND hWndTrayClock;
     HWND hWndNotify;
+    HWND hWndSysPager;
+    HTHEME TrayTheme;
     SIZE szTrayClockMin;
-    SIZE szNonClient;
+    SIZE szTrayNotify;
+    MARGINS ContentMargin;
     ITrayWindow *TrayWindow;
+    HFONT hFontClock;
     union
     {
         DWORD dwFlags;
@@ -774,23 +1559,54 @@ typedef struct _TRAY_NOTIFY_WND_DATA
     };
 } TRAY_NOTIFY_WND_DATA, *PTRAY_NOTIFY_WND_DATA;
 
-static VOID
-TrayNotifyWnd_UpdateStyle(IN OUT PTRAY_NOTIFY_WND_DATA This)
+static void TrayNotifyWnd_UpdateTheme(PTRAY_NOTIFY_WND_DATA This)
 {
-    RECT rcClient = { 0, 0, 0, 0 };
+    LONG_PTR style;
 
-    if (AdjustWindowRectEx(&rcClient,
-                           GetWindowLongPtr(This->hWnd,
-                                            GWL_STYLE),
-                           FALSE,
-                           GetWindowLongPtr(This->hWnd,
-                                            GWL_EXSTYLE)))
-    {
-        This->szNonClient.cx = rcClient.right - rcClient.left;
-        This->szNonClient.cy = rcClient.bottom - rcClient.top;
-    }
+    if(This->TrayTheme)
+            CloseThemeData(This->TrayTheme);
+        
+    if(IsThemeActive())
+        This->TrayTheme = OpenThemeData(This->hWnd, L"TrayNotify");
     else
-        This->szNonClient.cx = This->szNonClient.cy = 0;
+        This->TrayTheme = 0;
+    
+    if(This->TrayTheme){
+        style = GetWindowLongPtr(
+                This->hWnd,
+                GWL_EXSTYLE);
+        style = style & ~WS_EX_STATICEDGE;
+        SetWindowLongPtr(
+                This->hWnd,
+                GWL_EXSTYLE,    
+                style);
+                
+                
+        GetThemeMargins(
+                This->TrayTheme,
+                NULL,
+                TNP_BACKGROUND,
+                0,
+                TMT_CONTENTMARGINS,
+                NULL,
+                &This->ContentMargin);
+                
+    }else{
+        style = GetWindowLongPtr(
+                This->hWnd,
+                GWL_EXSTYLE);
+        style = style | WS_EX_STATICEDGE;
+        SetWindowLongPtr(
+                This->hWnd,
+                GWL_EXSTYLE,    
+                style);
+        
+        This->ContentMargin.cxLeftWidth=0;
+        This->ContentMargin.cxRightWidth=0;
+        This->ContentMargin.cyTopHeight=0;
+        This->ContentMargin.cyBottomHeight=0;
+    }
+        
 }
 
 static VOID
@@ -798,8 +1614,11 @@ TrayNotifyWnd_Create(IN OUT PTRAY_NOTIFY_WND_DATA This)
 {
     This->hWndTrayClock = CreateTrayClockWnd(This->hWnd,
                                              !This->HideClock);
-
-    TrayNotifyWnd_UpdateStyle(This);
+                                 
+    This->hWndSysPager = CreateSysPagerWnd(This->hWnd,
+                                             !This->HideClock);
+    
+    TrayNotifyWnd_UpdateTheme(This);
 }
 
 static VOID
@@ -818,21 +1637,25 @@ TrayNotifyWnd_GetMinimumSize(IN OUT PTRAY_NOTIFY_WND_DATA This,
                              IN BOOL Horizontal,
                              IN OUT PSIZE pSize)
 {
+    SIZE szClock = { 0, 0 };
+    SIZE szTray = { 0, 0 };
     This->IsHorizontal = Horizontal;
+    if(This->IsHorizontal)
+        SetWindowTheme(This->hWnd, L"TrayNotifyHoriz", NULL);
+    else
+        SetWindowTheme(This->hWnd, L"TrayNotifyVert", NULL);
 
     if (!This->HideClock)
     {
-        SIZE szClock = { 0, 0 };
-
         if (Horizontal)
         {
-            szClock.cy = pSize->cy - This->szNonClient.cy - (2 * TRAY_NOTIFY_WND_SPACING_Y);
+            szClock.cy = pSize->cy - (2 * TRAY_NOTIFY_WND_SPACING_Y);
             if (szClock.cy <= 0)
                 goto NoClock;
         }
         else
         {
-            szClock.cx = pSize->cx - This->szNonClient.cx - (2 * TRAY_NOTIFY_WND_SPACING_X);
+            szClock.cx = pSize->cx - (2 * TRAY_NOTIFY_WND_SPACING_X);
             if (szClock.cx <= 0)
                 goto NoClock;
         }
@@ -846,22 +1669,47 @@ TrayNotifyWnd_GetMinimumSize(IN OUT PTRAY_NOTIFY_WND_DATA This,
     }
     else
 NoClock:
-        This->szTrayClockMin = This->szNonClient;
-
+        This->szTrayClockMin = szClock;
+        
+        
     if (Horizontal)
     {
-        pSize->cx = This->szNonClient.cx + (2 * TRAY_NOTIFY_WND_SPACING_X);
-
-        if (!This->HideClock)
-            pSize->cx += TRAY_NOTIFY_WND_SPACING_X + This->szTrayClockMin.cx;
+        szTray.cy = pSize->cy - (2 * TRAY_NOTIFY_WND_SPACING_Y);
     }
     else
     {
-        pSize->cy = This->szNonClient.cy + (2 * TRAY_NOTIFY_WND_SPACING_Y);
+        szTray.cx = pSize->cx - (2 * TRAY_NOTIFY_WND_SPACING_X);
+    }
+
+    SysPagerWnd_GetSize(This->hWndSysPager,
+                        Horizontal,
+                        &szTray);
+                        
+                
+    This->szTrayNotify = szTray;
+
+
+    if (Horizontal)
+    {
+        pSize->cx = (2 * TRAY_NOTIFY_WND_SPACING_X);
+
+        if (!This->HideClock)
+            pSize->cx += TRAY_NOTIFY_WND_SPACING_X + This->szTrayClockMin.cx;
+            
+        pSize->cx +=szTray.cx;
+    }
+    else
+    {
+        pSize->cy = (2 * TRAY_NOTIFY_WND_SPACING_Y);
 
         if (!This->HideClock)
             pSize->cy += TRAY_NOTIFY_WND_SPACING_Y + This->szTrayClockMin.cy;
+            
+        pSize->cy +=szTray.cy;
     }
+    
+    pSize->cy+=This->ContentMargin.cyTopHeight+This->ContentMargin.cyBottomHeight;
+    pSize->cx+=This->ContentMargin.cxLeftWidth+This->ContentMargin.cxRightWidth;
 
     return TRUE;
 }
@@ -897,6 +1745,59 @@ TrayNotifyWnd_Size(IN OUT PTRAY_NOTIFY_WND_DATA This,
                      szClock.cx,
                      szClock.cy,
                      SWP_NOZORDER);
+
+        if (This->IsHorizontal)
+        {
+            //szClock.cx *=2;
+            ptClock.x -= This->szTrayNotify.cx;
+        }
+        else
+        {
+            //szClock.cy *=2;
+            ptClock.y -= This->szTrayNotify.cy;
+        }
+        
+        SetWindowPos(This->hWndSysPager,
+                     NULL,
+                     ptClock.x,
+                     ptClock.y,
+                     This->szTrayNotify.cx,
+                     This->szTrayNotify.cy,
+                     SWP_NOZORDER);
+    }
+}
+
+static int TrayNotifyWnd_DrawBackground(IN HWND hwnd,
+            IN UINT uMsg,
+            IN WPARAM wParam,
+            IN LPARAM lParam)
+{
+        PTRAY_NOTIFY_WND_DATA This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd,
+                                                       0);
+        RECT rect;
+        HDC dc=(HDC)wParam;
+        
+        GetClientRect(hwnd, &rect);
+
+        DrawThemeParentBackground(hwnd, dc, &rect);
+        DrawThemeBackground(This->TrayTheme, dc, TNP_BACKGROUND, 0, &rect, 0);
+        
+        return 0;
+}
+
+
+void
+TrayNotify_NotifyMsg(IN HWND hwnd,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam)
+{
+    PTRAY_NOTIFY_WND_DATA This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd,
+                                                                            0);
+    if(This->hWndSysPager)
+    {
+        SysPagerWnd_NotifyMsg(This->hWndSysPager,
+                              wParam,
+                              lParam);
     }
 }
 
@@ -919,6 +1820,14 @@ TrayNotifyWndProc(IN HWND hwnd,
     {
         switch (uMsg)
         {
+            case WM_THEMECHANGED:
+                TrayNotifyWnd_UpdateTheme(This);
+                return 0;
+            case WM_ERASEBKGND:
+                return TrayNotifyWnd_DrawBackground(hwnd,
+                                uMsg,
+                                wParam,
+                                lParam);
             case TNWM_GETMINIMUMSIZE:
             {
                 Ret = (LRESULT)TrayNotifyWnd_GetMinimumSize(This,
@@ -1112,6 +2021,7 @@ RegisterTrayNotifyWndClass(VOID)
             UnregisterClass(szTrayNotifyWndClass,
                             hExplorerInstance);
         }
+        RegisterSysPagerWndClass();
     }
 
     return Ret;
@@ -1121,6 +2031,8 @@ VOID
 UnregisterTrayNotifyWndClass(VOID)
 {
     UnregisterTrayClockWndClass();
+    
+    UnregisterSysPagerWndClass();
 
     UnregisterClass(szTrayNotifyWndClass,
                     hExplorerInstance);
