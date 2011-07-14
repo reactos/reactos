@@ -1017,6 +1017,14 @@ typedef struct _CURDIR
     HANDLE Handle;
 } CURDIR, *PCURDIR;
 
+typedef struct _RTLP_CURDIR_REF *PRTLP_CURDIR_REF;
+typedef struct _RTL_RELATIVE_NAME_U
+{
+    UNICODE_STRING RelativeName;
+    HANDLE ContainingDirectory;
+    PRTLP_CURDIR_REF CurDirRef;
+} RTL_RELATIVE_NAME_U, *PRTL_RELATIVE_NAME_U;
+
 typedef struct _RTL_DRIVE_LETTER_CURDIR
 {
     USHORT Flags;

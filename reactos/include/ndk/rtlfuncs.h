@@ -2348,7 +2348,7 @@ RtlDosPathNameToNtPathName_U(
     IN PCWSTR DosPathName,
     OUT PUNICODE_STRING NtPathName,
     OUT PCWSTR *NtFileNamePart,
-    OUT CURDIR *DirectoryInfo
+    OUT PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
 NTSYSAPI
@@ -2377,18 +2377,6 @@ RtlGetFullPathName_U(
     IN ULONG Size,
     IN PWSTR Buffer,
     OUT PWSTR *ShortName
-);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlGetFullPathName_Ustr(
-    IN PUNICODE_STRING FileName,
-    IN ULONG Size,
-    IN PWSTR Buffer,
-    OUT PWSTR *ShortName,
-    OUT PBOOLEAN InvalidName,
-    OUT RTL_PATH_TYPE *PathType
 );
 
 NTSYSAPI

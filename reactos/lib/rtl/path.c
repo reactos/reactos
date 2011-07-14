@@ -669,7 +669,7 @@ BOOLEAN NTAPI
 RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 			     OUT PUNICODE_STRING NtPathName,
 			     OUT PCWSTR *NtFileNamePart,
-			     OUT CURDIR *DirectoryInfo)
+			     OUT PRTL_RELATIVE_NAME_U DirectoryInfo)
 {
 	UNICODE_STRING  us;
 	PCURDIR cd;
@@ -731,10 +731,10 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 
 			if (DirectoryInfo != NULL)
 			{
-				DirectoryInfo->DosPath.Length = 0;
-				DirectoryInfo->DosPath.MaximumLength = 0;
-				DirectoryInfo->DosPath.Buffer = NULL;
-				DirectoryInfo->Handle = NULL;
+				DirectoryInfo->RelativeName.Length = 0;
+				DirectoryInfo->RelativeName.MaximumLength = 0;
+				DirectoryInfo->RelativeName.Buffer = NULL;
+				DirectoryInfo->ContainingDirectory = NULL;
 			}
 
 			return TRUE;
@@ -804,7 +804,7 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 	/* Set name and handle structure if possible */
 	if (DirectoryInfo)
 	{
-		memset (DirectoryInfo, 0, sizeof(CURDIR));
+		memset (DirectoryInfo, 0, sizeof(RTL_RELATIVE_NAME_U));
 		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
 		if (Type == 5 && cd->Handle)
 		{
@@ -812,10 +812,10 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 		    if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
 		    {
 			Length = ((cd->DosPath.Length / sizeof(WCHAR)) - Offset) + ((Type == 1) ? 8 : 4);
-			DirectoryInfo->DosPath.Buffer = Buffer + Length;
-			DirectoryInfo->DosPath.Length = NtPathName->Length - (Length * sizeof(WCHAR));
-			DirectoryInfo->DosPath.MaximumLength = DirectoryInfo->DosPath.Length;
-			DirectoryInfo->Handle = cd->Handle;
+			DirectoryInfo->RelativeName.Buffer = Buffer + Length;
+			DirectoryInfo->RelativeName.Length = NtPathName->Length - (Length * sizeof(WCHAR));
+			DirectoryInfo->RelativeName.MaximumLength = DirectoryInfo->RelativeName.Length;
+			DirectoryInfo->ContainingDirectory = cd->Handle;
 		    }
 		}
 	}
@@ -914,23 +914,23 @@ RtlDoesFileExists_U(IN PCWSTR FileName)
 	OBJECT_ATTRIBUTES Attr;
     FILE_BASIC_INFORMATION Info;
 	NTSTATUS Status;
-	CURDIR CurDir;
+	RTL_RELATIVE_NAME_U RelativeName;
 
 	if (!RtlDosPathNameToNtPathName_U (FileName,
 	                                   &NtFileName,
 	                                   NULL,
-	                                   &CurDir))
+	                                   &RelativeName))
 		return FALSE;
 
-	if (CurDir.DosPath.Length)
-		NtFileName = CurDir.DosPath;
+	if (RelativeName.RelativeName.Length)
+		NtFileName = RelativeName.RelativeName;
 	else
-		CurDir.Handle = 0;
+		RelativeName.ContainingDirectory = 0;
 
 	InitializeObjectAttributes (&Attr,
 	                            &NtFileName,
 	                            OBJ_CASE_INSENSITIVE,
-	                            CurDir.Handle,
+	                            RelativeName.ContainingDirectory,
 	                            NULL);
 
 	Status = ZwQueryAttributesFile (&Attr, &Info);
