@@ -44,11 +44,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         }
         break;
     case DLL_THREAD_ATTACH:
+        break;
     case DLL_THREAD_DETACH:
+        break;
     case DLL_PROCESS_DETACH:
         status = RpcBindingFree(audsrv_v0_0_c_ifspec);
          if (status == RPC_S_INVALID_BINDING)
-            OutputDebugStringA("Error Closing RPC Connection");
+            OutputDebugStringA("Error Closing RPC Connection\n");
     break;
     }
     return TRUE;
