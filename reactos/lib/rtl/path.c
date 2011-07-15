@@ -25,22 +25,18 @@
 /* GLOBALS ********************************************************************/
 
 static const WCHAR DeviceRootW[] = L"\\\\.\\";
-
 static const UNICODE_STRING _condev = RTL_CONSTANT_STRING(L"\\\\.\\CON");
-
 static const UNICODE_STRING _unc = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
 
-static const UNICODE_STRING _lpt = RTL_CONSTANT_STRING(L"LPT");
+const UNICODE_STRING DeviceRootString = RTL_CONSTANT_STRING(L"\\\\.\\");
 
-static const UNICODE_STRING _com = RTL_CONSTANT_STRING(L"COM");
-
-static const UNICODE_STRING _prn = RTL_CONSTANT_STRING(L"PRN");
-
-static const UNICODE_STRING _aux = RTL_CONSTANT_STRING(L"AUX");
-
-static const UNICODE_STRING _con = RTL_CONSTANT_STRING(L"CON");
-
-static const UNICODE_STRING _nul = RTL_CONSTANT_STRING(L"NUL");
+const UNICODE_STRING RtlpDosLPTDevice = RTL_CONSTANT_STRING(L"LPT");
+const UNICODE_STRING RtlpDosCOMDevice = RTL_CONSTANT_STRING(L"COM");
+const UNICODE_STRING RtlpDosPRNDevice = RTL_CONSTANT_STRING(L"PRN");
+const UNICODE_STRING RtlpDosAUXDevice = RTL_CONSTANT_STRING(L"AUX");
+const UNICODE_STRING RtlpDosCONDevice = RTL_CONSTANT_STRING(L"CON");
+const UNICODE_STRING RtlpDosSlashCONDevice = RTL_CONSTANT_STRING(L"\\\\.\\CON");
+const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
 /* FUNCTIONS *****************************************************************/
 
@@ -79,7 +75,6 @@ RtlGetLongestNtPathLength(VOID)
 
 /*
  * @implemented
- *
  */
 ULONG
 NTAPI
@@ -88,90 +83,229 @@ RtlDetermineDosPathNameType_U(IN PCWSTR Path)
     DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
     ASSERT(Path != NULL);
 
+    /* Unlike the newer RtlDetermineDosPathNameType_U we assume 4 characters */
     if (IS_PATH_SEPARATOR(Path[0]))
     {
-        if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;                /* \xxx   */
-        if ((Path[2] != L'.') && (Path[2] != L'?')) return RtlPathTypeUncAbsolute;/* \\xxx   */
-        if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\xxx */
-        if (Path[3]) return RtlPathTypeUncAbsolute;                               /* \\.xxxx */
-
-        return RtlPathTypeRootLocalDevice;                                        /* \\.     */
+        if (!IS_PATH_SEPARATOR(Path[1])) return RtlPathTypeRooted;                /* \x             */
+        if ((Path[2] != L'.') && (Path[2] != L'?')) return RtlPathTypeUncAbsolute;/* \\x            */
+        if (IS_PATH_SEPARATOR(Path[3])) return RtlPathTypeLocalDevice;            /* \\.\x or \\?\x */
+        if (Path[3]) return RtlPathTypeUncAbsolute;                               /* \\.x or \\?x   */
+        return RtlPathTypeRootLocalDevice;                                        /* \\. or \\?     */
     }
     else
     {
-        if (!(Path[0]) || (Path[1] != L':')) return RtlPathTypeRelative;          /* xxx     */
-        if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;          /* x:\xxx  */
-
-        return RtlPathTypeDriveRelative;                                          /* x:xxx   */
+        if (!(Path[0]) || (Path[1] != L':')) return RtlPathTypeRelative;          /* x              */
+        if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;          /* x:\            */
+        return RtlPathTypeDriveRelative;                                          /* x:             */
     }
 }
-
-
-/* returns 0 if name is not valid DOS device name, or DWORD with
- * offset in bytes to DOS device name from beginning of buffer in high word
- * and size in bytes of DOS device name in low word */
 
 /*
  * @implemented
  */
-ULONG NTAPI
-RtlIsDosDeviceName_U(PWSTR dos_name)
+RTL_PATH_TYPE
+NTAPI
+RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
 {
-    static const WCHAR consoleW[] = {'\\','\\','.','\\','C','O','N',0};
-    static const WCHAR auxW[3] = {'A','U','X'};
-    static const WCHAR comW[3] = {'C','O','M'};
-    static const WCHAR conW[3] = {'C','O','N'};
-    static const WCHAR lptW[3] = {'L','P','T'};
-    static const WCHAR nulW[3] = {'N','U','L'};
-    static const WCHAR prnW[3] = {'P','R','N'};
+    PWCHAR Path = PathString->Buffer;
+    ULONG Chars = PathString->Length / sizeof(WCHAR);
 
-    const WCHAR *start, *end, *p;
-
-    switch(RtlDetermineDosPathNameType_U( dos_name ))
+    /*
+     * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
+     * actually check for the path length before touching the characters
+     */
+    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
     {
-    case RtlPathTypeUnknown:
-    case RtlPathTypeUncAbsolute:
-        return 0;
-    case RtlPathTypeLocalDevice:
-        if (!_wcsicmp( dos_name, consoleW ))
-            return MAKELONG( sizeof(conW), 4 * sizeof(WCHAR) );  /* 4 is length of \\.\ prefix */
-        return 0;
-    case RtlPathTypeDriveAbsolute:
-    case RtlPathTypeDriveRelative:
-        start = dos_name + 2;  /* skip drive letter */
-        break;
-    default:
-        start = dos_name;
-        break;
+        if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
+        if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
+        if ((Chars >= 4) && (IS_PATH_SEPARATOR(Path[3]))) return RtlPathTypeLocalDevice;           /* \\.\x or \\?\x */
+        if (Chars != 3) return RtlPathTypeUncAbsolute;                                             /* \\.x or \\?x   */
+        return RtlPathTypeRootLocalDevice;                                                         /* \\. or \\?     */
+    }
+    else
+    {
+        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
+        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
+        return RtlPathTypeDriveRelative;                                                           /* x:             */
+    }
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlIsDosDeviceName_Ustr(IN PUNICODE_STRING PathString)
+{
+    UNICODE_STRING PathCopy;
+    PWCHAR Start, End;
+    ULONG PathChars, ColonCount = 0;
+    USHORT ReturnOffset = 0, ReturnLength;
+    WCHAR c;
+
+    /* Check what type of path this is */
+    switch (RtlDetermineDosPathNameType_Ustr(PathString))
+    {
+        /* Fail for UNC or unknown paths */
+        case RtlPathTypeUnknown:
+        case RtlPathTypeUncAbsolute:
+            return 0;
+
+        /* Make special check for the CON device */
+        case RtlPathTypeLocalDevice:
+            if (RtlEqualUnicodeString(PathString, &RtlpDosSlashCONDevice, TRUE))
+            {
+                /* This should return 0x80006 */
+                return MAKELONG(RtlpDosCONDevice.Length, DeviceRootString.Length);
+            }
+            return 0;
+
+        default:
+            break;
     }
 
-    /* find start of file name */
-    for (p = start; *p; p++) if (IS_PATH_SEPARATOR(*p)) start = p + 1;
+    /* Make a copy of the string */
+    PathCopy = *PathString;
 
-    /* truncate at extension and ':' */
-    for (end = start; *end; end++) if (*end == '.' || *end == ':') break;
-    end--;
+    /* Return if there's no characters */
+    PathChars = PathCopy.Length / sizeof(WCHAR);
+    if (!PathChars) return 0;
 
-    /* remove trailing spaces */
-    while (end >= start && *end == ' ') end--;
-
-    /* now we have a potential device name between start and end, check it */
-    switch(end - start + 1)
+    /* Check for drive path and truncate */
+    if (PathCopy.Buffer[PathChars - 1] == L':')
     {
-    case 3:
-        if (_wcsnicmp( start, auxW, 3 ) &&
-            _wcsnicmp( start, conW, 3 ) &&
-            _wcsnicmp( start, nulW, 3 ) &&
-            _wcsnicmp( start, prnW, 3 )) break;
-        return MAKELONG( 3 * sizeof(WCHAR), (start - dos_name) * sizeof(WCHAR) );
-    case 4:
-        if (_wcsnicmp( start, comW, 3 ) && _wcsnicmp( start, lptW, 3 )) break;
-        if (*end <= '0' || *end > '9') break;
-        return MAKELONG( 4 * sizeof(WCHAR), (start - dos_name) * sizeof(WCHAR) );
-    default:  /* can't match anything */
-        break;
+        /* Fixup the lengths */
+        PathCopy.Length -= sizeof(WCHAR);
+        if (!--PathChars) return 0;
+
+        /* Remember this for later */
+        ColonCount = 1;
     }
+
+    /* Check for extension or space, and truncate */
+    c = PathCopy.Buffer[PathChars - 1];
+    do
+    {
+        /* Stop if we hit a space or period */
+        if ((c != '.') && (c != ' ')) break;
+
+        /* Fixup the lengths and get the next character */
+        PathCopy.Length -= sizeof(WCHAR);
+        if (!--PathChars) c = PathCopy.Buffer[PathChars - 1];
+
+        /* Remember this for later */
+        ColonCount++;
+    } while (PathChars);
+
+    /* Anything still left? */
+    if (PathChars)
+    {
+        /* Loop from the end */
+        for (End = &PathCopy.Buffer[PathChars - 1];
+             End >= PathCopy.Buffer;
+             --End)
+        {
+            /* Check if the character is a path or drive separator */
+            c = *End;
+            if ((c == '\\') || (c == '/') || ((c == ':') && (End == PathCopy.Buffer + 1)))
+            {
+                /* Get the next lower case character */
+                End++;
+                c = *End | ' '; // ' ' == ('z' - 'Z')
+
+                /* Check if it's a DOS device (LPT, COM, PRN, AUX, or NUL) */
+                if ((End < &PathCopy.Buffer[PathCopy.Length / sizeof(WCHAR)]) &&
+                    ((c == 'l') || (c == 'c') || (c == 'p') || (c == 'a') || (c == 'n')))
+                {
+                    /* Calculate the offset */
+                    ReturnOffset = (PCHAR)End - (PCHAR)PathCopy.Buffer;
+
+                    /* Build the final string */
+                    PathCopy.Length -= ReturnOffset;
+                    PathCopy.Length -= (ColonCount * sizeof(WCHAR));
+                    PathCopy.Buffer = End;
+                    break;
+                }
+            }
+
+            return 0;
+        }
+
+        /* Get the next lower case character and check if it's a DOS device */
+        c = *PathCopy.Buffer | ' '; // ' ' == ('z' - 'Z')
+        if ((c != 'l') && (c != 'c') && (c != 'p') && (c != 'a') && (c != 'n'))
+        {
+            /* Not LPT, COM, PRN, AUX, or NUL */
+            return 0;
+        }
+    }
+
+    /* Now skip past any extra extension or drive letter characters */
+    Start = PathCopy.Buffer;
+    End = &Start[PathChars];
+    while (Start < End)
+    {
+        c = *Start;
+        if ((c == '.') || (c == ':')) break;
+        Start++;
+    }
+
+    /* And then go backwards to get rid of spaces */
+    while ((Start > PathCopy.Buffer) && (Start[-1] == ' ')) --Start;
+
+    /* Finally see how many characters are left, and that's our size */
+    PathChars = Start - PathCopy.Buffer;
+    PathCopy.Length = PathChars * sizeof(WCHAR);
+
+    /* Check if this is a COM or LPT port, which has a digit after it */
+    if ((PathChars == 4) &&
+        (iswdigit(PathCopy.Buffer[3]) && (PathCopy.Buffer[3] != '0')))
+    {
+        /* Don't compare the number part, just check for LPT or COM */
+        PathCopy.Length -= sizeof(WCHAR);
+        if ((RtlEqualUnicodeString(&PathCopy, &RtlpDosLPTDevice, TRUE)) ||
+            (RtlEqualUnicodeString(&PathCopy, &RtlpDosCOMDevice, TRUE)))
+        {
+            /* Found it */
+            ReturnLength = sizeof(L"COM1");
+            return MAKELONG(ReturnOffset, ReturnLength);
+        }
+    }
+    else if ((PathChars == 3) &&
+             ((RtlEqualUnicodeString(&PathCopy, &RtlpDosPRNDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosAUXDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosNULDevice, TRUE)) ||
+              (RtlEqualUnicodeString(&PathCopy, &RtlpDosCONDevice, TRUE))))
+    {
+        /* Otherwise this was something like AUX, NUL, PRN, or CON */
+        ReturnLength = sizeof(L"AUX");
+        return MAKELONG(ReturnOffset, ReturnLength);
+    }
+
+    /* Otherwise, this isn't a valid DOS device */
     return 0;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlIsDosDeviceName_U(IN PWSTR Path)
+{
+    UNICODE_STRING PathString;
+    NTSTATUS Status;
+    
+    /* Build the string */
+    Status = RtlInitUnicodeStringEx(&PathString, Path);
+    if (!NT_SUCCESS(Status)) return 0;
+    
+    /* 
+     * Returns 0 if name is not valid DOS device name, or DWORD with
+     * offset in bytes to DOS device name from beginning of buffer in high word
+     * and size in bytes of DOS device name in low word
+     */
+     return RtlIsDosDeviceName_Ustr(&PathString);
 }
 
 /*
