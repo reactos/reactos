@@ -120,6 +120,13 @@ LdrVerifyMappedImageMatchesChecksum(
 
     return (BOOLEAN)(CalcSum == HeaderSum);
 #else
+    /*
+     * FIXME: Warning, this violates the PE standard and makes ReactOS drivers
+     * and other system code when normally on Windows they would not, since
+     * we do not write the checksum in them.
+     * Our compilers should be made to write out the checksum and this function
+     * should be enabled as to reject badly checksummed code.
+     */
     return TRUE;
 #endif
 }
@@ -127,28 +134,124 @@ LdrVerifyMappedImageMatchesChecksum(
 /*
  * @implemented
  */
+NTSTATUS
+NTAPI
+RtlImageNtHeaderEx(IN ULONG Flags,
+                   IN PVOID Base,
+                   IN ULONG64 Size,
+                   OUT PIMAGE_NT_HEADERS *OutHeaders)
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_DOS_HEADER DosHeader;
+    BOOLEAN WantsRangeCheck;
+
+    /* You must want NT Headers, no? */
+    if (!OutHeaders) return STATUS_INVALID_PARAMETER;
+
+    /* Assume failure */
+    *OutHeaders = NULL;
+
+    /* Validate Flags */
+    if (Flags &~ RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK)
+    {
+        DPRINT1("Invalid flag combination... check for new API flags?\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validate base */
+    if (!(Base) || (Base == (PVOID)-1)) return STATUS_INVALID_PARAMETER;
+
+    /* Check if the caller wants validation */
+    WantsRangeCheck = !(Flags & RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK);
+    if (WantsRangeCheck)
+    {
+        /* Make sure the image size is at least big enough for the DOS header */
+        if (Size < sizeof(IMAGE_DOS_HEADER))
+        {
+            DPRINT1("Size too small\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+    }
+
+    /* Check if the DOS Signature matches */
+    DosHeader = Base;
+    if (DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+    {
+        /* Not a valid COFF */
+        DPRINT1("Not an MZ file\n");
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Check if the caller wants validation */
+    if (WantsRangeCheck)
+    {
+        /* The offset should fit in the passsed-in size */
+        if (DosHeader->e_lfanew >= Size)
+        {
+            /* Fail */
+            DPRINT1("e_lfanew is larger than PE file\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+        
+        /* It shouldn't be past 4GB either */
+        if (DosHeader->e_lfanew >=
+            (MAXULONG - sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)))
+        {
+            /* Fail */
+            DPRINT1("e_lfanew is larger than 4GB\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+        
+        /* And the whole file shouldn't overflow past 4GB */
+        if ((DosHeader->e_lfanew +
+            sizeof(IMAGE_DOS_SIGNATURE) - sizeof(IMAGE_FILE_HEADER)) >= Size)
+        {
+            /* Fail */
+            DPRINT1("PE is larger than 4GB\n");
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+    }
+    
+    /* The offset also can't be larger than 256MB, as a hard-coded check */
+    if (DosHeader->e_lfanew >= (256 * 1024 * 1024))
+    {
+        /* Fail */
+        DPRINT1("PE offset is larger than 256MB\n");
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Now it's safe to get the NT Headers */
+    NtHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)Base + DosHeader->e_lfanew);
+
+    /* Verify the PE Signature */
+    if (NtHeaders->Signature != IMAGE_NT_SIGNATURE)
+    {
+        /* Fail */
+        DPRINT1("PE signature missing\n");
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Now return success and the NT header */
+    *OutHeaders = NtHeaders;
+    return STATUS_SUCCESS;
+}
+    
+/*
+ * @implemented
+ */
 PIMAGE_NT_HEADERS
 NTAPI
-RtlImageNtHeader(IN PVOID BaseAddress)
+RtlImageNtHeader(IN PVOID Base)
 {
     PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
 
-    if (DosHeader && SWAPW(DosHeader->e_magic) != IMAGE_DOS_SIGNATURE)
-    {
-        DPRINT1("DosHeader->e_magic %x\n", SWAPW(DosHeader->e_magic));
-        DPRINT1("NtHeader 0x%lx\n", ((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew)));
-    }
-    else
-    {
-        NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew));
-        if (SWAPD(NtHeader->Signature) == IMAGE_NT_SIGNATURE)
-            return NtHeader;
-    }
-
-    return NULL;
+    /* Call the new API */
+    RtlImageNtHeaderEx(RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK,
+                       Base,
+                       0,
+                       &NtHeader);
+    return NtHeader;
 }
-
 
 /*
  * @implemented

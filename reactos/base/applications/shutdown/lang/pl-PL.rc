@@ -1,8 +1,9 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Dec,2007)
- *      Use ReactOS forum PM or IRC to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
+ *         translated by Caemyr - Olaf Siejka (Dec,2007)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -10,12 +11,12 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "Sk≥adnia: shutdown [-?] [-l | -s | -r] [-f]\n\n\
-  Bez parametrÛw albo z -?\tWyúwietla niniejszπ pomoc\n\
+IDS_USAGE, "Sk≈Çadnia: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Bez parametr√≥w albo z -?\tWy≈õwietla niniejszƒÖ pomoc\n\
   -l\t\t\tWylogowanie\n\
-  -s\t\t\tWy≥πczenie komputera\n\
+  -s\t\t\tWy≈ÇƒÖczenie komputera\n\
   -r\t\t\tRestart komputera\n\
-  -f\t\t\tZamkniÍcie wszystkich dzia≥ajπcych aplikacji, bez ostrzeøenia\n\
-    \t\t\tBez podania innego parametru, ta opcja domyúlnie wyloguje \n\
-    \t\t\tobecnego uøytkownika"
+  -f\t\t\tZamkniƒôcie wszystkich dzia≈ÇajƒÖcych aplikacji, bez ostrze≈ºenia\n\
+    \t\t\tBez podania innego parametru, ta opcja domy≈õlnie wyloguje \n\
+    \t\t\tobecnego u≈ºytkownika"
 END

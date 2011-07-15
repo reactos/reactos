@@ -1,0 +1,120 @@
+**********************************************************************
+* 	INSTALL file for STLport 5.2                                 *
+*                                                                    *
+**********************************************************************
+
+STLport is a full ANSI C++ Standard library.
+
+This distribution contains STLport sources only, no binaries.
+To use STLport iostreams, locale and complex numbers, you have
+to build STLport library from sources and link your programs with it.
+
+Starting with 5.0 the 'wrapper' mode is not supported anymore.
+You cannot use native compiler iostreams implementation with STLport STL
+(see doc/FAQ for explanations).
+
+==== Installing STLport ==========
+
+0) DO NOT overwrite/move/rename header files coming with the compiler,
+   even if you made a backup---STLport need this headers and don't
+   override ones.
+
+1) Run 
+
+   ./configure --help
+
+   read options description; if you use compiler
+   different from gcc, pay attention to --use-compiler-family= option.
+
+2) Run
+
+   ./configure <option>
+
+   Options here more-or-less traditional.
+
+   Note: ./configure give hints only for library build, it dosen't
+   create/edit any headers, check you system etc. This is simple way
+   to store custom options, not more. If you want to change default
+   behaviour of STLport, see stlport/stl/config/user_config.h and
+   stlport/stl/config/host.h; read the comments in this files!
+   Not all combinations of options healthy, you should understand
+   what you do. If not, keep all unchanged.
+
+   Note: you can find all recognised 'settings' in the file
+   build/Makefiles/gmake/config.mak
+
+   This is generated file, but only ./configure will rewrite one.
+
+3) Run
+
+   make && make check
+
+   Only GNU Make supported! Preferred verion of GNU Make >= 3.81;
+   never use GNU Make before 3.79 --- build not work properly;
+   GNU makes >= 3.79  and < 3.81 may fail to build library/tests
+   properly, due to bugs; but the real results depends upon
+   platform.
+
+4) If build fine, become superuser and run
+
+   make install
+
+   Note: you can use --prefix= to change installation path
+   (or macro DESTDIR, as usual), or even skip installation and use
+   STLport in-place.
+
+==== Usage STLport ==========
+
+1) The best way to understand how to use it, is to see on compilation,
+   linking, running unit tests, i.e. see on options when you do
+
+   (cd build/test/unit; make check)
+
+2) Make sure "stlport" directory of this distribution comes before
+   compiler's one in your include paths (something like
+   -I<base install path>/stlport); never rename 'stlport' part of path!
+
+   Compilation:
+
+   c++ -pthread -fexceptions -O2 -I/usr/local/include/stlport -c -o test.o test.cc
+
+   In case of gcc, libstlport replace libstdc++ (not in all cases!)
+   
+   Link, variant 1:
+
+   c++ -pthread -fexceptions -O2 -I/usr/local/include/stlport -nostdlib -o mytest \
+   /usr/lib/gcc/i686-pc-linux-gnu/4.2.4/../../../crt1.o \
+   /usr/lib/gcc/i686-pc-linux-gnu/4.2.4/../../../crti.o \
+   /usr/lib/gcc/i686-pc-linux-gnu/4.2.4/crtbegin.o \
+   test.o \
+   -lstlport \
+   -lgcc_s -lpthread -lc -lm \
+   /usr/lib/gcc/i686-pc-linux-gnu/4.2.4/crtend.o \
+   /usr/lib/gcc/i686-pc-linux-gnu/4.2.4/../../../crtn.o
+
+   Of cause, names of start/stop files not hardcoded, you can locate it with
+
+   c++ -print-file-name=crt1.o
+
+   Link, variant 2:
+
+   gcc -pthread -fexceptions -O2 -I/usr/local/include/stlport -o mytest \
+   test.o -lstlport
+
+   If you use gcc before 3.3, you must link with libstdc++, because
+   language-support library (libsupc++.a) don't contain necessary
+   functions.
+
+3) STLport builds only multithreaded libraries (by default), so your
+   application should be compiled as multithreaded, too. Use -pthread
+   (or -pthreads on Solaris) option for GCC, -mt for SunPro and so on.
+   Sometimes you should define _REENTRANT or something else, depends
+   upon platform/compiler. See compiler's and linker's options
+   on command line when you build unit tests (build/test/unit)
+   for reference. The last is useful for ANY platform (special
+   attention for Windows users).
+
+4) Don't hesitate to read READMEs (doc/README*, build/lib/README*,
+   build/test/unit/README*) and doc/FAQ.
+
+5) Have fun!

@@ -24,7 +24,7 @@ PUBLIC @HalpExitToV86@4
 @HalpExitToV86@4:
     /* Point esp to the iret frame and return */
     lea esp, [ecx + KTRAP_FRAME_EIP]
-    iret
+    iretd
 
 /* Here starts the real mode code */
 .code16

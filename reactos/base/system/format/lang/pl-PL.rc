@@ -1,57 +1,57 @@
-#include "resource.h"
 /*
-* translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-*/
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011) 
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Sposób u¿ycia: %s wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
-  [wolumin:]      Okreœla literê dysku przeznaczonego do formatowania.\n\
-  -FS:syst-plik   Okreœla rodzaj systemu plików (%s).\n\
-  -V:etykieta     Okreœla etykietê woluminu.\n\
+STRING_HELP,  "SposÃ³b uÅ¼ycia: %s wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
+  [wolumin:]      OkreÅ›la literÄ™ dysku przeznaczonego do formatowania.\n\
+  -FS:syst-plik   OkreÅ›la rodzaj systemu plikÃ³w (%s).\n\
+  -V:etykieta     OkreÅ›la etykietÄ™ woluminu.\n\
   -Q              Przeprowadza szybkie formatowanie.\n\
-  -A:rozmiar      Zastêpuje domyœlny rozmiar jednostki alokacji. Dla zastosowañ\n\
-                  ogólnych zaleca siê u¿ywanie ustawieñ domyœlnych.\n\
-                  System NTFS obs³uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
+  -A:rozmiar      ZastÄ™puje domyÅ›lny rozmiar jednostki alokacji. Dla zastosowaÅ„\n\
+                  ogÃ³lnych zaleca siÄ™ uÅ¼ywanie ustawieÅ„ domyÅ›lnych.\n\
+                  System NTFS obsÅ‚uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
                   16 KB, 32 KB, 64 KB.\n\
-                  System FAT obs³uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
+                  System FAT obsÅ‚uguje rozmiary: 512, 1024, 2048, 4096, 8192,\n\
                   16 KB, 32 KB, 64 KB, 128 KB, 256 KB.\n\
-                  Kompresja NTFS nie jest obs³ugiwana dla jednostek alokacji\n\
-                  wiêkszych ni¿ 4096 bajtów.\n\
-  -C              Pliki utworzone na nowym woluminie bêd¹ domyœlnie poddane\n\
+                  Kompresja NTFS nie jest obsÅ‚ugiwana dla jednostek alokacji\n\
+                  wiÄ™kszych niÅ¼ 4096 bajtÃ³w.\n\
+  -C              Pliki utworzone na nowym woluminie bÄ™dÄ… domyÅ›lnie poddane\n\
                   kompresji.\n\n"
 
-STRING_COMPLETE   "%lu procent ukoñczone.\r"
+STRING_COMPLETE   "%lu procent ukoÅ„czone.\r"
 
-STRING_FORMAT_FAIL "FormatEx nie móg³ zakoñczyæ dzia³ania pomyœlnie.\n\n"
+STRING_FORMAT_FAIL "FormatEx nie mÃ³gÅ‚ zakoÅ„czyÄ‡ dziaÅ‚ania pomyÅ›lnie.\n\n"
 
 STRING_NO_SUPPORT  "Operacja niewspierana"
 
-STRING_FMIFS_FAIL  "Nie mo¿na zlokalizowaæ punktów wejœciowych FMIFS.\n\n"
+STRING_FMIFS_FAIL  "Nie moÅ¼na zlokalizowaÄ‡ punktÃ³w wejÅ›ciowych FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Nieprawid³owy parametr: %s\n"
+STRING_UNKNOW_ARG  "NieprawidÅ‚owy parametr: %s\n"
 
-STRING_DRIVE_PARM  "Brakuj¹cy wymagany parametr dysku.\n\n"
+STRING_DRIVE_PARM  "BrakujÄ…cy wymagany parametr dysku.\n\n"
 
-STRING_ERROR_DRIVE_TYPE  "Nie mo¿na okreœliæ rodzaju dysku"
+STRING_ERROR_DRIVE_TYPE  "Nie moÅ¼na okreÅ›liÄ‡ rodzaju dysku"
 
-STRING_INSERT_DISK       "W³ó¿ nowy dysk do napêdu %C:\ni naciœnij Enter, gdy bêdzie gotowe..."
+STRING_INSERT_DISK       "WÅ‚Ã³Å¼ nowy dysk do napÄ™du %C:\ni naciÅ›nij Enter..."
 
-STRING_NO_VOLUME         "Nie mo¿na odczytaæ woluminu"
+STRING_NO_VOLUME         "Nie moÅ¼na odczytaÄ‡ woluminu"
 
-STRING_NO_VOLUME_SIZE    "Nie mo¿na odczytaæ rozmiaru woluminu"
+STRING_NO_VOLUME_SIZE    "Nie moÅ¼na odczytaÄ‡ rozmiaru woluminu"
 
-STRING_FILESYSTEM        "Rodzaj systemu plików to %s.\n"
+STRING_FILESYSTEM        "Rodzaj systemu plikÃ³w to %s.\n"
 
-STRING_LABEL_NAME_EDIT  "Podaj aktualn¹ etykietê woluminu dla dysku %C: "
+STRING_LABEL_NAME_EDIT  "Podaj aktualnÄ… etykietÄ™ woluminu dla dysku %C: "
 
-STRING_ERROR_LABEL     "Nieprawid³owa etykieta woluminu zosta³a wpisana dla tego dysku.\n"
+STRING_ERROR_LABEL     "NieprawidÅ‚owa etykieta woluminu zostaÅ‚a wpisana dla tego dysku.\n"
 
-STRING_YN_FORMAT       "\\OSTRZE¯ENIE: WSZYSTKIE DANE NA NIEWYJMOWALNYM DYSKU\n\
-W STACJI %C: ZOSTAN¥ UTRACONE!\nCzy kontynuowaæ formatowanie (T/N)? "
+STRING_YN_FORMAT       "\\OSTRZEÅ»ENIE: WSZYSTKIE DANE NA NIEWYJMOWALNYM DYSKU\n\
+W STACJI %C: ZOSTANÄ„ UTRACONE!\nCzy kontynuowaÄ‡ formatowanie (T/N)? "
 
 STRING_YES_NO_FAQ      "TN"
 
@@ -59,17 +59,17 @@ STRING_VERIFYING       "Sprawdzanie"
 
 STRING_FAST_FMT        "Szybkie formatowanie"
 
-STRING_CREATE_FSYS     "Tworzenie struktury systemu plików.\n"
+STRING_CREATE_FSYS     "Tworzenie struktury systemu plikÃ³w.\n"
 
-STRING_FMT_COMPLETE    "Formatowanie ukoñczone.\n"
+STRING_FMT_COMPLETE    "Formatowanie ukoÅ„czone.\n"
 
-STRING_VOL_COMPRESS    "Wolumin nie obs³uguje kompresji.\n"
+STRING_VOL_COMPRESS    "Wolumin nie obsÅ‚uguje kompresji.\n"
 
-STRING_ENTER_LABEL     "Podaj etykietê woluminu (11 znaków, ENTER = bez etykiety) "
+STRING_ENTER_LABEL     "Podaj etykietÄ™ woluminu (11 znakÃ³w, ENTER = bez etykiety) "
 
-STRING_NO_LABEL        "Nie mo¿na zmieniæ etykiety woluminu"
+STRING_NO_LABEL        "Nie moÅ¼na zmieniÄ‡ etykiety woluminu"
 
-STRING_FREE_SPACE     "\n%I64d bajtów ca³kowitego miejsca na dysku.\n%I64d bajtów dostêpnych na dysku.\n"
+STRING_FREE_SPACE     "\n%I64d bajtÃ³w caÅ‚kowitego miejsca na dysku.\n%I64d bajtÃ³w dostÄ™pnych na dysku.\n"
 
 STRING_SERIAL_NUMBER   "\nNumer seryjny woluminu to %04X-%04X\n"
 END

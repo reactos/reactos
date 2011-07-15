@@ -686,7 +686,7 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* We failed to copy the data to the new descriptor */
-                ExFreePool(NewDescriptor);
+                ExFreePoolWithTag(NewDescriptor, TAG_SD);
                 _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
@@ -1248,7 +1248,7 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 
     if (*SecurityDescriptor != NULL)
     {
-        ExFreePool(*SecurityDescriptor);
+        ExFreePoolWithTag(*SecurityDescriptor, TAG_SD);
         *SecurityDescriptor = NULL;
     }
 

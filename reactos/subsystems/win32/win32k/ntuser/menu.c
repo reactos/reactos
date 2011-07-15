@@ -1864,8 +1864,8 @@ NtUserGetMenuBarInfo(
                 }
               Rect.left = Offset.x;
               Rect.right = Offset.x + MenuObject->MenuInfo.Width;
-              Rect.top = Offset.y;
-              Rect.bottom = Offset.y + MenuObject->MenuInfo.Height;
+              Rect.bottom = Offset.y;
+              Rect.top = Offset.y - MenuObject->MenuInfo.Height;
               kmbi.rcBar = Rect;
               DPRINT("Rect top = %d bottom = %d left = %d right = %d \n",
                        Rect.top, Rect.bottom, Rect.left, Rect.right);
@@ -2050,7 +2050,6 @@ NtUserGetMenuItemRect(
    UINT uItem,
    PRECTL lprcItem)
 {
-   ROSMENUINFO mi;
    PWND ReferenceWnd;
    LONG XMove, YMove;
    RECTL Rect;
@@ -2074,15 +2073,12 @@ NtUserGetMenuItemRect(
 
    if(!hWnd)
    {
-      if(!UserMenuInfo(Menu, &mi, FALSE))
-         RETURN( FALSE);
-      if(mi.Wnd == 0)
-         RETURN( FALSE);
+       hWnd = Menu->MenuInfo.Wnd;
    }
 
    if (lprcItem == NULL) RETURN( FALSE);
 
-   if (!(ReferenceWnd = UserGetWindowObject(mi.Wnd))) RETURN( FALSE);
+   if (!(ReferenceWnd = UserGetWindowObject(hWnd))) RETURN( FALSE);
 
    if(MenuItem->fType & MF_POPUP)
    {

@@ -128,7 +128,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versão " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versão "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Esta versão do ReactOS é registado a:", IDC_STATIC, 35, 115, 180, 10
@@ -427,7 +427,7 @@ LTEXT "Abre com:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appnome", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Mudar...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vançado", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "O item '%1' não pode ser enviado para a reciclagem. Em vez disso pretende eliminá-lo?"
 	IDS_OVERWRITEFILE_TEXT      "Esta pasta já contém um ficheiro com o nome '%1'.\n\npretende substituí-lo?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmar substituição de ficheiro"
-	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\n"\
-		"Se os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\n"\
-		"pasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\n"\
-		"a pasta?"
+	IDS_OVERWRITEFOLDER_TEXT    "Esta pasta já contém uma pasta com o nome '%1'.\n\nSe os ficheiros na pasta de destino tiverem o mesmo nome dos ficheiros na\npasta seleccionada, serão substituídos. Ainda assim pretende mover ou copiar\na pasta?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"
@@ -764,4 +761,6 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detalhes para '%s' extensão"
 	IDS_FILE_DETAILSADV         "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END

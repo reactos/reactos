@@ -259,7 +259,7 @@ InternalFindFirstFile (
 	PWSTR NtPathBuffer;
 	BOOLEAN RemovedLastChar = FALSE;
 	BOOL bResult;
-	CURDIR DirInfo;
+	RTL_RELATIVE_NAME_U DirInfo;
 	ULONG DeviceNameInfo;
 	HANDLE hDirectory = NULL;
 
@@ -292,20 +292,20 @@ InternalFindFirstFile (
 	}
 	PathFileName.MaximumLength = PathFileName.Length;
 
-	if (DirInfo.DosPath.Length != 0 && DirInfo.DosPath.Buffer != PathFileName.Buffer)
+	if (DirInfo.RelativeName.Length != 0 && DirInfo.RelativeName.Buffer != PathFileName.Buffer)
 	{
 	    if (PathFileName.Buffer != NULL)
 	    {
-	        /* This is a relative path to DirInfo.Handle, adjust NtPathU! */
+	        /* This is a relative path to DirInfo.ContainingDirectory, adjust NtPathU! */
 	        NtPathU.Length = NtPathU.MaximumLength =
-	            (USHORT)((ULONG_PTR)PathFileName.Buffer - (ULONG_PTR)DirInfo.DosPath.Buffer);
-	        NtPathU.Buffer = DirInfo.DosPath.Buffer;
+	            (USHORT)((ULONG_PTR)PathFileName.Buffer - (ULONG_PTR)DirInfo.RelativeName.Buffer);
+	        NtPathU.Buffer = DirInfo.RelativeName.Buffer;
 	    }
 	}
 	else
 	{
 	    /* This is an absolute path, NtPathU receives the full path */
-	    DirInfo.Handle = NULL;
+	    DirInfo.ContainingDirectory = NULL;
 	    if (PathFileName.Buffer != NULL)
 	    {
 	        NtPathU.Length = NtPathU.MaximumLength =
@@ -332,12 +332,12 @@ InternalFindFirstFile (
 	TRACE("lpFileName: \"%ws\"\n", lpFileName);
 	TRACE("NtPathU: \"%wZ\"\n", &NtPathU);
 	TRACE("PathFileName: \"%wZ\"\n", &PathFileName);
-	TRACE("RelativeTo: 0x%p\n", DirInfo.Handle);
+	TRACE("RelativeTo: 0x%p\n", DirInfo.ContainingDirectory);
 
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &NtPathU,
 	                            OBJ_CASE_INSENSITIVE,
-	                            DirInfo.Handle,
+	                            DirInfo.ContainingDirectory,
 	                            NULL);
 
 	Status = NtOpenFile (&hDirectory,

@@ -18,6 +18,14 @@
 	</module>
 
 	<module name="neteventmsg" type="messageheader">
-		<file>netevent.mc</file>
+		<file>neteventmsg.mc</file>
+	</module>
+
+	<module name="ntiologc" type="messageheader">
+		<file>ntiologc.mc</file>
+	</module>
+	
+	<module name="sacmsg" type="messageheader">
+		<file>sacmsg.mc</file>
 	</module>
 </group>

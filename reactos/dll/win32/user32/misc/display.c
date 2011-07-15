@@ -83,7 +83,7 @@ WINAPI
 EnumDisplayDevicesW(
     LPCWSTR lpDevice,
     DWORD iDevNum,
-    PDISPLAY_DEVICE lpDisplayDevice,
+    PDISPLAY_DEVICEW lpDisplayDevice,
     DWORD dwFlags)
 {
     UNICODE_STRING Device;

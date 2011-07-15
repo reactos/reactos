@@ -1,0 +1,152 @@
+// C++ wchar forwarding header
+
+#pragma once
+
+#include <cstddef>
+
+#include <wchar.h>
+
+namespace std
+{
+  using ::mbstate_t;
+}
+
+// Get rid of those macros defined in <wchar.h> in lieu of real functions.
+#undef btowc
+#undef fgetwc
+#undef fgetws
+#undef fputwc
+#undef fputws
+#undef fwide
+#undef fwprintf
+#undef fwscanf
+#undef getwc
+#undef getwchar
+#undef mbrlen
+#undef mbrtowc
+#undef mbsinit
+#undef mbsrtowcs
+#undef putwc
+#undef putwchar
+#undef swprintf
+#undef swscanf
+#undef ungetwc
+#undef vfwprintf
+#undef vfwscanf
+#undef vswprintf
+#undef vswscanf
+#undef vwprintf
+#undef vwscanf
+#undef wcrtomb
+#undef wcscat
+#undef wcschr
+#undef wcscmp
+#undef wcscoll
+#undef wcscpy
+#undef wcscspn
+#undef wcsftime
+#undef wcslen
+#undef wcsncat
+#undef wcsncmp
+#undef wcsncpy
+#undef wcspbrk
+#undef wcsrchr
+#undef wcsrtombs
+#undef wcsspn
+#undef wcsstr
+#undef wcstod
+#undef wcstof
+#undef wcstok
+#undef wcstol
+#undef wcstoul
+#undef wcsxfrm
+#undef wctob
+#undef wmemchr
+#undef wmemcmp
+#undef wmemcpy
+#undef wmemmove
+#undef wmemset
+#undef wprintf
+#undef wscanf
+
+namespace std
+{
+  using ::wint_t;
+
+  using ::btowc;
+  using ::fgetwc;
+  using ::fgetws;
+  using ::fputwc;
+  using ::fputws;
+  using ::fwide;
+  using ::fwprintf;
+  using ::fwscanf;
+  using ::getwc;
+  using ::getwchar;
+  using ::mbrlen;
+  using ::mbrtowc;
+  using ::mbsinit;
+  using ::mbsrtowcs;
+  using ::putwc;
+  using ::putwchar;
+  using ::swprintf;
+  using ::swscanf;
+  using ::ungetwc;
+  using ::vfwprintf;
+  using ::vfwscanf;
+  using ::vswprintf;
+  using ::vswscanf;
+  using ::vwprintf;
+  using ::vwscanf;
+  using ::wcrtomb;
+  using ::wcscat;
+  using ::wcscmp;
+  using ::wcscoll;
+  using ::wcscpy;
+  using ::wcscspn;
+  using ::wcsftime;
+  using ::wcslen;
+  using ::wcsncat;
+  using ::wcsncmp;
+  using ::wcsncpy;
+  using ::wcsrtombs;
+  using ::wcsspn;
+  using ::wcstod;
+  using ::wcstof;
+  using ::wcstok;
+  using ::wcstol;
+  using ::wcstoul;
+  using ::wcsxfrm;
+  using ::wctob;
+  using ::wmemcmp;
+  using ::wmemcpy;
+  using ::wmemmove;
+  using ::wmemset;
+  using ::wprintf;
+  using ::wscanf;
+  using ::wcschr;
+  using ::wcspbrk;
+  using ::wcsrchr;
+  using ::wcsstr;
+  using ::wmemchr;
+
+  inline wchar_t*
+  wcschr(wchar_t* __p, wchar_t __c)
+  { return wcschr(const_cast<const wchar_t*>(__p), __c); }
+
+  inline wchar_t*
+  wcspbrk(wchar_t* __s1, const wchar_t* __s2)
+  { return wcspbrk(const_cast<const wchar_t*>(__s1), __s2); }
+
+  inline wchar_t*
+  wcsrchr(wchar_t* __p, wchar_t __c)
+  { return wcsrchr(const_cast<const wchar_t*>(__p), __c); }
+
+  inline wchar_t*
+  wcsstr(wchar_t* __s1, const wchar_t* __s2)
+  { return wcsstr(const_cast<const wchar_t*>(__s1), __s2); }
+
+  inline wchar_t*
+  wmemchr(wchar_t* __p, wchar_t __c, size_t __n)
+  { return wmemchr(const_cast<const wchar_t*>(__p), __c, __n); }
+}

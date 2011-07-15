@@ -379,7 +379,7 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
   ASSERT(FCB != NULL);
 
   /* If buffer can't hold at least the file name length, bail out */
-  if (*BufferLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+  if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
     return STATUS_BUFFER_OVERFLOW;
 
   /* Save file name length, and as much file len, as buffer length allows */

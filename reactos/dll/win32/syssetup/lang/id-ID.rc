@@ -24,9 +24,7 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "This wizard installs ReactOS on your computer. The wizard "\
-          "needs to gather some information about you and your computer "\
-          "to set up ReactOS properly.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "This wizard installs ReactOS on your computer. The wizard needs to gather some information about you and your computer to set up ReactOS properly.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -36,13 +34,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "The ReactOS developers would like to acknowledge the following Open Source projects, "\
-                    "(parts of) which were used to create ReactOS:",
+    LTEXT           "The ReactOS developers would like to acknowledge the following Open Source projects, (parts of) which were used to create ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS is licensed under the GPL, so if you want to reuse or redistribute "\
-                    "(parts of) it you must respect the GPL",
+    LTEXT           "ReactOS is licensed under the GPL, so if you want to reuse or redistribute (parts of) it you must respect the GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&View GPL...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Click Next to continue with Setup.",IDC_STATIC,15,136,
@@ -71,14 +67,12 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Type a name for your computer that is 15 characters or less. "\
-          "If you are on a network, your computer name must be unique.",
+    LTEXT "Type a name for your computer that is 15 characters or less. If you are on a network, your computer name must be unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Setup will create a user account on your computer called Administrator. "\
-          "You can use this account if you need full access to your computer.",
+    LTEXT "Setup will create a user account on your computer called Administrator. You can use this account if you need full access to your computer.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Type an Administrator Password that is 14 characters or less.",
           IDC_STATIC, 54, 87, 250, 8
@@ -95,9 +89,7 @@ CAPTION "Setup ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokal sistem harus sama bahasa dari aplikasi "\
-          "yang ingin anda gunakan. Pengguna lokal mengontrol bagaimana "\
-          "angka, kurs, dan tampilan tanggal.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Lokal sistem harus sama bahasa dari aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol bagaimana angka, kurs, dan tampilan tanggal.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Untuk mengubah sistem atau setelan lokal pengguna, klik Kustomisasi.",
           IDC_STATIC, 53, 60, 184, 8
@@ -148,11 +140,9 @@ CAPTION "Menyelesaikan Setup ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Menyelesaikan Bimbingan Setup ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda telah sukses menyelesaikan Setup ReactOS.\n\n" \
-          "Saat anda mengklik Selesai, komputer anda akan dimulai lagi.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Anda telah sukses menyelesaikan Setup ReactOS.\n\nSaat anda mengklik Selesai, komputer anda akan dimulai lagi.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Jika ada CD di dalam drive, keluarkan. Lalu, untuk memulai lagi "\
-          "komputer anda, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Jika ada CD di dalam drive, keluarkan. Lalu, untuk memulai lagi komputer anda, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
 END
 
 

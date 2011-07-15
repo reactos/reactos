@@ -24,7 +24,7 @@
 25 stdcall @(ptr long) _MPR_25
 
 @ stdcall -private DllCanUnloadNow()
-@ stub DllGetClassObject
+@ stub -private DllGetClassObject
 @ stdcall MultinetGetConnectionPerformanceA(ptr ptr)
 @ stdcall MultinetGetConnectionPerformanceW(ptr ptr)
 @ stdcall MultinetGetErrorTextA(long ptr long)

@@ -51,9 +51,6 @@
 			<file>ldrinit.c</file>
 			<file>ldrpe.c</file>
 			<file>ldrutils.c</file>
-			<file>startup.c</file>
-			<file>utils.c</file>
-			<file>actctx.c</file>
 		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>

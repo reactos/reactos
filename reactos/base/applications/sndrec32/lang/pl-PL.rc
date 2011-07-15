@@ -1,10 +1,11 @@
 /*
- *      translated by Saibamen - Adam Stachowicz (Apr,2011)
- *      Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
- *      http://www.reactos.org
- *      IRC: irc.freenode.net #reactos-pl;
+ *         translated by Saibamen - Adam Stachowicz (Apr,2011)
+ *         Use ReactOS forum PM, IRC or saibamenppl at gmail.com to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011) 
  */
- 
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
@@ -29,11 +30,11 @@ BEGIN
     POPUP "Plik"
     BEGIN
         MENUITEM "Nowy",                         ID_NEW
-        MENUITEM "Otwórz...",                     ID_FILE_OPEN
+        MENUITEM "OtwÃ³rz...",                     ID_FILE_OPEN
         MENUITEM "Zapisz",                        ID_FILE_SAVE, GRAYED
         MENUITEM "Zapisz jako...",                  ID_FILE_SAVEAS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Wyjœcie",                        ID_EXIT
+        MENUITEM "WyjÅ›cie",                        ID_EXIT
     END
     MENUITEM "todo1",                       0
     MENUITEM "todo2",                       0
@@ -45,14 +46,14 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "Rejestrator dŸwiêku"
+    IDS_APP_TITLE           "Rejestrator dÅºwiÄ™ku"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
 END
 
 STRINGTABLE 
 BEGIN
     IDS_STRPOS              "Pozycja: %.2f s"
-    IDS_STRDUR              "D³ugoœæ: %.2f s"
+    IDS_STRDUR              "DÅ‚ugoÅ›Ä‡: %.2f s"
     IDS_STRBUF              "Bufor: %.2f kb"
     IDS_STRFMT              "%.1f kHz %u bits"
     IDS_STRMONO             "mono"

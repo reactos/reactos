@@ -75,7 +75,7 @@ struct ext2_sblock
   ULONG free_inodes;
   ULONG first_data_block;
   ULONG log2_block_size;
-  ULONG log2_fragment_size;
+  LONG log2_fragment_size;
   ULONG blocks_per_group;
   ULONG fragments_per_group;
   ULONG inodes_per_group;

@@ -6577,7 +6577,7 @@ static void halve1DimagePackedPixel(int components,
  * Contributed by Gerk Huisma <gerk@five-d.demon.nl>.
  */
 
-typedef WINAPI void (GLAPIENTRY *TexImage3Dproc)( GLenum target, GLint level,
+typedef void (GLAPIENTRY *TexImage3Dproc)( GLenum target, GLint level,
 						  GLenum internalFormat,
 						  GLsizei width, GLsizei height,
 						  GLsizei depth, GLint border,

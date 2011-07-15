@@ -1511,12 +1511,26 @@ typedef enum _tagINTERNETFEATURELIST
     FEATURE_DISABLE_TELNET_PROTOCOL,
     FEATURE_FEEDS,
     FEATURE_BLOCK_INPUT_PROMPTS,
-    FEATURE_DOMSTORAGE,
-    FEATURE_XDOMAINREQUEST,
-    FEATURE_DATAURI,
-    FEATURE_AJAX_CONNECTIONSERVICES,
     FEATURE_ENTRY_COUNT
 } INTERNETFEATURELIST;
+
+cpp_quote("#define SET_FEATURE_ON_THREAD                0x00000001")
+cpp_quote("#define SET_FEATURE_ON_PROCESS               0x00000002")
+cpp_quote("#define SET_FEATURE_IN_REGISTRY              0x00000004")
+cpp_quote("#define SET_FEATURE_ON_THREAD_LOCALMACHINE   0x00000008")
+cpp_quote("#define SET_FEATURE_ON_THREAD_INTRANET       0x00000010")
+cpp_quote("#define SET_FEATURE_ON_THREAD_TRUSTED        0x00000020")
+cpp_quote("#define SET_FEATURE_ON_THREAD_INTERNET       0x00000040")
+cpp_quote("#define SET_FEATURE_ON_THREAD_RESTRICTED     0x00000080")
+
+cpp_quote("#define GET_FEATURE_FROM_THREAD              0x00000001")
+cpp_quote("#define GET_FEATURE_FROM_PROCESS             0x00000002")
+cpp_quote("#define GET_FEATURE_FROM_REGISTRY            0x00000004")
+cpp_quote("#define GET_FEATURE_FROM_THREAD_LOCALMACHINE 0x00000008")
+cpp_quote("#define GET_FEATURE_FROM_THREAD_INTRANET     0x00000010")
+cpp_quote("#define GET_FEATURE_FROM_THREAD_TRUSTED      0x00000020")
+cpp_quote("#define GET_FEATURE_FROM_THREAD_INTERNET     0x00000040")
+cpp_quote("#define GET_FEATURE_FROM_THREAD_RESTRICTED   0x00000080")
 
 typedef struct _tagPROTOCOLFILTERDATA {
     DWORD cbSize;
@@ -1839,16 +1853,16 @@ cpp_quote("HRESULT WINAPI CreateIUriBuilder(IUri*,DWORD,DWORD_PTR,IUriBuilder**)
 ]
 interface IUriBuilderFactory : IUnknown
 {
-    HRESULT CreateInitializedIUriBuilder(
-        [in]  DWORD dwFlags,
-        [in]  DWORD_PTR dwReserved,
-        [out] IUriBuilder **ppIUriBuilder);
-
     HRESULT CreateIUriBuilder(
         [in]  DWORD dwFlags,
         [in]  DWORD_PTR dwReserved,
         [out] IUriBuilder **ppIUriBuilder);
-};
+
+    HRESULT CreateInitializedIUriBuilder(
+        [in]  DWORD dwFlags,
+        [in]  DWORD_PTR dwReserved,
+        [out] IUriBuilder **ppIUriBuilder);
+}
 
 /*****************************************************************************
  * IInternetProtocolEx interface
@@ -1964,6 +1978,7 @@ cpp_quote("HRESULT WINAPI CoInternetParseIUri(IUri*,PARSEACTION,DWORD,LPWSTR,DWO
 cpp_quote("HRESULT WINAPI CoInternetQueryInfo(LPCWSTR,QUERYOPTION,DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST,DWORD,BOOL);")
 cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR,LPWSTR*,PSUACTION,DWORD);")
+cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrlEx(IUri*,IUri**,PSUACTION,DWORD_PTR);")
 cpp_quote("HRESULT WINAPI CreateFormatEnumerator(UINT,FORMATETC*,IEnumFORMATETC**);")
 cpp_quote("HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi);")
 cpp_quote("HRESULT WINAPI FaultInIEFeature(HWND,uCLSSPEC*,QUERYCONTEXT*,DWORD);")

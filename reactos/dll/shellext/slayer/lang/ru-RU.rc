@@ -9,32 +9,32 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_SLAYERSHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Совместимость"
+CAPTION "РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "При возникновении проблем выберите, какую операционную систему должна имитировать ReactOS для этой программы", -1, 7,7,210,31
-  GROUPBOX "Режим совместимости", IDC_COMPATGROUP, 7,41,210,49
-  CHECKBOX "Запускать в режиме совместимости для:", IDC_CHKRUNCOMPATIBILITY, 18,57,188,10, BS_AUTOCHECKBOX | WS_TABSTOP
+  LTEXT "РџСЂРё РІРѕР·РЅРёРєРЅРѕРІРµРЅРёРё РїСЂРѕР±Р»РµРј РІС‹Р±РµСЂРёС‚Рµ, РєР°РєСѓСЋ РѕРїРµСЂР°С†РёРѕРЅРЅСѓСЋ СЃРёСЃС‚РµРјСѓ РґРѕР»Р¶РЅР° РёРјРёС‚РёСЂРѕРІР°С‚СЊ ReactOS РґР»СЏ СЌС‚РѕР№ РїСЂРѕРіСЂР°РјРјС‹", -1, 7,7,210,31
+  GROUPBOX "Р РµР¶РёРј СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё", IDC_COMPATGROUP, 7,41,210,49
+  CHECKBOX "Р—Р°РїСѓСЃРєР°С‚СЊ РІ СЂРµР¶РёРјРµ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё РґР»СЏ:", IDC_CHKRUNCOMPATIBILITY, 18,57,188,10, BS_AUTOCHECKBOX | WS_TABSTOP
   COMBOBOX IDC_COMPATIBILITYMODE, 18,70,188,85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  GROUPBOX "Настройки экрана", -1, 7,99,210,61, BS_GROUPBOX | WS_DISABLED
-  CHECKBOX "256 цветов", IDC_CHKRUNIN256COLORS, 18,114,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  CHECKBOX "Разрешение 640x480", IDC_CHKRUNIN640480RES, 18,129,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  CHECKBOX "Запрещать визуальные темы", IDC_CHKDISABLEVISUALTHEMES, 18,144,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-  PUSHBUTTON "&Режимы совместимости...", IDC_EDITCOMPATIBILITYMODES, 117,167,100,15
+  GROUPBOX "РќР°СЃС‚СЂРѕР№РєРё СЌРєСЂР°РЅР°", -1, 7,99,210,61, BS_GROUPBOX | WS_DISABLED
+  CHECKBOX "256 С†РІРµС‚РѕРІ", IDC_CHKRUNIN256COLORS, 18,114,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+  CHECKBOX "Р Р°Р·СЂРµС€РµРЅРёРµ 640x480", IDC_CHKRUNIN640480RES, 18,129,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+  CHECKBOX "Р—Р°РїСЂРµС‰Р°С‚СЊ РІРёР·СѓР°Р»СЊРЅС‹Рµ С‚РµРјС‹", IDC_CHKDISABLEVISUALTHEMES, 18,144,188,10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+  PUSHBUTTON "&Р РµР¶РёРјС‹ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё...", IDC_EDITCOMPATIBILITYMODES, 117,167,100,15
   /* CONTROL "Learn more about <A>program compatibility</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7,207,210,10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Правка режимов совместимости"
+CAPTION "РџСЂР°РІРєР° СЂРµР¶РёРјРѕРІ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LISTBOX IDC_COMPATIBILITYMODE, 9,6,148,108, LBS_NOTIFY | LBS_WANTKEYBOARDINPUT | WS_BORDER
-  PUSHBUTTON "&Добавить...", IDC_ADD, 162,6,60,14, WS_DISABLED
-  PUSHBUTTON "&Изменить...", IDC_EDIT, 162,24,60,14, WS_DISABLED
-  PUSHBUTTON "&Удалить", IDC_DELETE, 162,42,60,14, WS_DISABLED
+  PUSHBUTTON "&Р”РѕР±Р°РІРёС‚СЊ...", IDC_ADD, 162,6,60,14, WS_DISABLED
+  PUSHBUTTON "&РР·РјРµРЅРёС‚СЊ...", IDC_EDIT, 162,24,60,14, WS_DISABLED
+  PUSHBUTTON "&РЈРґР°Р»РёС‚СЊ", IDC_DELETE, 162,42,60,14, WS_DISABLED
   PUSHBUTTON "&OK", IDOK, 95,116,60,14
-  PUSHBUTTON "&Отмена", IDCANCEL, 162,116,60,14
+  PUSHBUTTON "&РћС‚РјРµРЅР°", IDCANCEL, 162,116,60,14
 END
 
 STRINGTABLE

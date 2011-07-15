@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hook.h"
+#include "cursoricon.h"
 
 #define MSQ_HUNG        5000
 #define MSQ_NORMAL      0
@@ -59,8 +60,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY PostedMessagesListHead;
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
-  /* Lock for the hardware message list. */
-  KMUTEX HardwareLock;
   /* True if a WM_MOUSEMOVE is pending */
   BOOLEAN MouseMoved;
   /* Current WM_MOUSEMOVE message */
@@ -110,6 +109,11 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* state of each key */
   UCHAR KeyState[256];
+
+  /* showing cursor counter (value>=0 - cursor visible, value<0 - cursor hidden) */
+  INT ShowingCursor;
+  /* cursor object */
+  PCURICON_OBJECT CursorObject;
 
   /* messages that are currently dispatched by other threads */
   LIST_ENTRY DispatchingMessagesHead;
@@ -321,5 +325,11 @@ BOOL FASTCALL co_MsqReplyMessage(LRESULT);
 UINT FASTCALL GetWakeMask(UINT, UINT);
 VOID FASTCALL MsqWakeQueue(PUSER_MESSAGE_QUEUE,DWORD,BOOL);
 VOID FASTCALL ClearMsgBitsMask(PUSER_MESSAGE_QUEUE,UINT);
+
+int UserShowCursor(BOOL bShow);
+PCURICON_OBJECT
+FASTCALL
+UserSetCursor(PCURICON_OBJECT NewCursor,
+              BOOL ForceChange);
 
 /* EOF */

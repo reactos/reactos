@@ -1,9 +1,10 @@
 /*
-* translated by xrogers
-* xxrogers@users.sourceforge.net
-* https://sourceforge.net/projects/reactospl
-* updated by Olaf Siejka (May, 2011)
-*/
+ *         translated by xrogers
+ *         xxrogers@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         updated by Olaf Siejka (May, 2011)
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -26,9 +27,9 @@ IDD_ADVANCED DIALOGEX  0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT         "Zestaw znaków:",IDC_STATIC,8,8,48,8
+  LTEXT         "Zestaw znakÃ³w:",IDC_STATIC,8,8,48,8
   COMBOBOX      IDC_COMBO_CHARSET,72,4,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT         "Grupowanie wed³ug:",IDC_STATIC,8,28,50,8
+  LTEXT         "Grupowanie wedÅ‚ug:",IDC_STATIC,8,28,50,8
   COMBOBOX      IDC_COMBO_GROUPBY,72,24,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
   PUSHBUTTON    "Szukaj",IDC_BUTTON_SEARCH,200,44,50,14
   EDITTEXT      IDC_EDIT_SEARCH,72,44,116,14,ES_AUTOHSCROLL
@@ -38,11 +39,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "Informacje o tablicy znaków"
+CAPTION "Informacje o tablicy znakÃ³w"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "Tablica znaków v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  LTEXT         "Tablica znakÃ³w v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
   PUSHBUTTON    "Zamknij", IDOK, 75, 162, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -50,7 +51,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE   "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE   "Niniejszy program jest wolnym oprogramowaniem; moÅ¼esz go rozprowadzaÄ‡ dalej i/lub modyfikowaÄ‡ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez FundacjÄ™ Wolnego Oprogramowania - wedÅ‚ug wersji 2 tej Licencji lub (wedÅ‚ug twojego wyboru) ktÃ³rejÅ› z pÃ³Åºniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejÄ…, iÅ¼ bÄ™dzie on uÅ¼yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyÅ›lnej gwarancji PRZYDATNOÅšCI HANDLOWEJ albo PRZYDATNOÅšCI DO OKRESLONYCH ZASTOSOWAÅƒ. W celu uzyskania bliÅ¼szych informacji siÄ™gnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoÅ›ciÄ… wraz z niniejszym programem otrzymaÅ‚eÅ› teÅ¼ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeÅ›li nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
   IDS_ABOUT     "&O programie..."
-  IDS_TITLE     "Tablica znaków"
+  IDS_TITLE     "Tablica znakÃ³w"
 END

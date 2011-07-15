@@ -124,8 +124,6 @@ TODO:
     "language='*'\"")
 #endif // __GNUC__
 
-#define SHANDLE_PTR LONG
-
 struct categoryCacheHeader
 {
 	long				dwSize;			// size of header only
@@ -154,7 +152,6 @@ SHSTDAPI_(void *) SHAlloc(SIZE_T cb);
 
 // temporary
 extern HRESULT CreateInternetToolbar(REFIID riid, void **ppv);
-
 
 
 #ifdef SetWindowLongPtr
@@ -556,19 +553,29 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE get_Document(IDispatch **ppDisp);
 	virtual HRESULT STDMETHODCALLTYPE get_TopLevelContainer(VARIANT_BOOL *pBool);
 	virtual HRESULT STDMETHODCALLTYPE get_Type(BSTR *Type);
-	virtual HRESULT STDMETHODCALLTYPE get_Left(LONG *pl);
-	virtual HRESULT STDMETHODCALLTYPE put_Left(LONG Left);
-	virtual HRESULT STDMETHODCALLTYPE get_Top(LONG *pl);
-	virtual HRESULT STDMETHODCALLTYPE put_Top(LONG Top);
-	virtual HRESULT STDMETHODCALLTYPE get_Width(LONG *pl);
-	virtual HRESULT STDMETHODCALLTYPE put_Width(LONG Width);
-	virtual HRESULT STDMETHODCALLTYPE get_Height(LONG *pl);
-	virtual HRESULT STDMETHODCALLTYPE put_Height(LONG Height);
+
+// WIDL temp hack : when the interface contains 'long' WIDL writes it out as a 'LONG'
+// Setting the prototype to LONG in this class breaks building with MSVC so we use 
+// the correct 'long' type here and temp hack it for WIDL generated prototypes.
+#ifdef __WIDL_EXDISP_H
+#define long LONG
+#endif
+	virtual HRESULT STDMETHODCALLTYPE get_Left(long *pl);
+	virtual HRESULT STDMETHODCALLTYPE put_Left(long Left);
+	virtual HRESULT STDMETHODCALLTYPE get_Top(long *pl);
+	virtual HRESULT STDMETHODCALLTYPE put_Top(long Top);
+	virtual HRESULT STDMETHODCALLTYPE get_Width(long *pl);
+	virtual HRESULT STDMETHODCALLTYPE put_Width(long Width);
+	virtual HRESULT STDMETHODCALLTYPE get_Height(long *pl);
+	virtual HRESULT STDMETHODCALLTYPE put_Height(long Height);
+#ifdef __WIDL_EXDISP_H
+#undef long
+#endif
 	virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR *LocationName);
 	virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR *LocationURL);
 	virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL *pBool);
 
-	// *** IWebBrowser2 methods ***
+	// *** IWebBrowserApp methods ***
 	virtual HRESULT STDMETHODCALLTYPE Quit();
 	virtual HRESULT STDMETHODCALLTYPE ClientToWindow(int *pcx, int *pcy);
 	virtual HRESULT STDMETHODCALLTYPE PutProperty(BSTR Property, VARIANT vtValue);
@@ -2546,47 +2553,51 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_Type(BSTR *Type)
 {
 	return E_NOTIMPL;
 }
-
-HRESULT STDMETHODCALLTYPE CShellBrowser::get_Left(LONG *pl)
+#ifdef __WIDL_EXDISP_H
+#define long LONG
+#endif
+HRESULT STDMETHODCALLTYPE CShellBrowser::get_Left(long *pl)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::put_Left(LONG Left)
+HRESULT STDMETHODCALLTYPE CShellBrowser::put_Left(long Left)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::get_Top(LONG *pl)
+HRESULT STDMETHODCALLTYPE CShellBrowser::get_Top(long *pl)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::put_Top(LONG Top)
+HRESULT STDMETHODCALLTYPE CShellBrowser::put_Top(long Top)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::get_Width(LONG *pl)
+HRESULT STDMETHODCALLTYPE CShellBrowser::get_Width(long *pl)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::put_Width(LONG Width)
+HRESULT STDMETHODCALLTYPE CShellBrowser::put_Width(long Width)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::get_Height(LONG *pl)
+HRESULT STDMETHODCALLTYPE CShellBrowser::get_Height(long *pl)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::put_Height(LONG Height)
+HRESULT STDMETHODCALLTYPE CShellBrowser::put_Height(long Height)
 {
 	return E_NOTIMPL;
 }
-
+#ifdef __WIDL_EXDISP_H
+#undef long
+#endif
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_LocationName(BSTR *LocationName)
 {
 	return E_NOTIMPL;

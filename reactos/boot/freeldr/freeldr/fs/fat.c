@@ -23,7 +23,7 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
+ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONGLONG PartitionSectorCount);
 PVOID	FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
 BOOLEAN	FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer);
@@ -263,8 +263,8 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
 		Volume->FatSectorStart = (4096 / Volume->BytesPerSector);
 		Volume->ActiveFatSectorStart = Volume->FatSectorStart;
 		Volume->NumberOfFats = 1;
-		FatSize = PartitionSectorCount / Volume->SectorsPerCluster *
-		          (Volume->FatType == FATX16 ? 2 : 4);
+		FatSize = (ULONG)(PartitionSectorCount / Volume->SectorsPerCluster *
+		          (Volume->FatType == FATX16 ? 2 : 4));
 		Volume->SectorsPerFat = (((FatSize + 4095) / 4096) * 4096) / Volume->BytesPerSector;
 
 		Volume->RootDirSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
@@ -313,7 +313,7 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
 	return TRUE;
 }
 
-ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount)
+ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONGLONG PartitionSectorCount)
 {
 	ULONG			RootDirSectors;
 	ULONG			DataSectorCount;
@@ -325,7 +325,7 @@ ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCo
 
 	if (0 == strncmp(FatXBootSector->FileSystemType, "FATX", 4))
 	{
-		CountOfClusters = PartitionSectorCount / FatXBootSector->SectorsPerCluster;
+		CountOfClusters = (ULONG)(PartitionSectorCount / FatXBootSector->SectorsPerCluster);
 		if (CountOfClusters < 65525)
 		{
 			/* Volume is FATX16 */

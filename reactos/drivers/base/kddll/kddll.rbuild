@@ -16,7 +16,7 @@
 
 <module name="kdcom" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kdcom.dll">
 	<importlibrary definition="kddll.spec"></importlibrary>
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="kdcom.dll" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="kdcom.dll" />
 	<include base="kdcom">.</include>
 	<library>kdlib</library>
 	<library>kdserial</library>

@@ -447,11 +447,11 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             else if (hwnd == hwndMiniature)
             {
-                long mclient[4];
+                RECT mclient;
                 HDC hdc;
-                GetClientRect(hwndMiniature, (LPRECT) &mclient);
+                GetClientRect(hwndMiniature, &mclient);
                 hdc = GetDC(hwndMiniature);
-                BitBlt(hdc, 0, 0, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+                StretchBlt(hdc, 0, 0, mclient.right, mclient.bottom, hDrawingDC, 0, 0, imgXRes, imgYRes, SRCCOPY);
                 ReleaseDC(hwndMiniature, hdc);
             }
             break;
@@ -503,7 +503,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom < 8000))
-                    zoomTo(zoom * 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
+                    zoomTo(zoom * 2, LOWORD(lParam), HIWORD(lParam));
             }
             break;
 
@@ -524,7 +524,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if ((activeTool == TOOL_ZOOM) && (zoom > 125))
-                    zoomTo(zoom / 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
+                    zoomTo(zoom / 2, LOWORD(lParam), HIWORD(lParam));
             }
             break;
 
@@ -589,8 +589,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             if (hwnd == hImageArea)
             {
-                short xNow = (short)LOWORD(lParam) * 1000 / zoom;
-                short yNow = (short)HIWORD(lParam) * 1000 / zoom;
+                LONG xNow = LOWORD(lParam) * 1000 / zoom;
+                LONG yNow = HIWORD(lParam) * 1000 / zoom;
                 if ((!drawing) || (activeTool <= TOOL_AIRBRUSH))
                 {
                     TRACKMOUSEEVENT tme;
@@ -598,7 +598,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (activeTool == TOOL_ZOOM)
                     {
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
-                        drawZoomFrame((short)LOWORD(lParam), (short)HIWORD(lParam));
+                        drawZoomFrame(LOWORD(lParam), HIWORD(lParam));
                     }
 
                     tme.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -617,8 +617,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (drawing)
                 {
                     /* values displayed in statusbar */
-                    short xRel = xNow - startX;
-                    short yRel = yNow - startY;
+                    LONG xRel = xNow - startX;
+                    LONG yRel = yNow - startY;
                     /* freesel, rectsel and text tools always show numbers limited to fit into image area */
                     if ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_TEXT))
                     {
@@ -721,6 +721,9 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SendMessage(hwnd, WM_CLOSE, wParam, lParam);
                     break;
                 case IDM_FILENEW:
+                    ShowWindow(hSelection, SW_HIDE);
+                    clearHistory();
+
                     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
                     SendMessage(hImageArea, WM_PAINT, 0, 0);
                     break;
@@ -794,10 +797,20 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetClipboardData(CF_BITMAP, CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
                     CloseClipboard();
                     break;
+                case IDM_EDITCUT:
+                    /* Copy */
+                    SendMessage(hwnd, WM_COMMAND, IDM_EDITCOPY, 0);
+                    /* Delete selection */
+                    SendMessage(hwnd, WM_COMMAND, IDM_EDITDELETESELECTION, 0);
+                    break;
                 case IDM_EDITPASTE:
                     OpenClipboard(hMainWnd);
                     if (GetClipboardData(CF_BITMAP) != NULL)
                     {
+                        HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
+                        SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
+                        SendMessage(hwnd, WM_COMMAND, ID_RECTSEL, 0);
+
                         DeleteObject(SelectObject(hSelDC, hSelBm = CopyImage(GetClipboardData(CF_BITMAP),
                                                                              IMAGE_BITMAP, 0, 0,
                                                                              LR_COPYRETURNORG)));

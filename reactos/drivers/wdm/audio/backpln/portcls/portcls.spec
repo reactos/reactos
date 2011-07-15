@@ -1,5 +1,5 @@
-@ stdcall DllInitialize(long)
-@ stdcall DllUnload()
+@ stdcall -private DllInitialize(long)
+@ stdcall -private DllUnload()
 
 ; Adapters (adapter.c)
 @ stdcall PcAddAdapterDevice(ptr ptr ptr long long)

@@ -2111,14 +2111,37 @@ void StartMenuHandler::ShowSearchComputer()
 		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
-void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
+struct RunDialogThread : public Thread 
+{ 
+	int	Run(); 
+}; 
+
+int RunDialogThread::Run()
 {
 	static DynamicFct<RUNFILEDLG> RunFileDlg(TEXT("SHELL32"), 61);
 
+	// RunFileDlg needs owner window to properly position dialog
+	// that window will be disabled so we can't use DesktopBar
+	RECT rect = {0};
+#ifndef TASKBAR_AT_TOP
+	rect.top = GetSystemMetrics(SM_CYSCREEN) - DESKTOPBARBAR_HEIGHT;
+#endif
+	rect.right = GetSystemMetrics(SM_CXSCREEN);
+	rect.bottom = rect.top + DESKTOPBARBAR_HEIGHT;
+	Static dlgOwner(0, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0, 0);
+
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
-		(*RunFileDlg)(hwndOwner, 0, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+		(*RunFileDlg)(dlgOwner, 0, NULL, NULL, NULL, RFF_CALCDIRECTORY);
 	}
+	DestroyWindow(dlgOwner);
+	return 0;
+}
+
+void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
+{
+	RunDialogThread * rdt = new RunDialogThread();
+	rdt->Start();
 }
 
 void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner)

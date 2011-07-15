@@ -399,7 +399,7 @@ FolderOptionsFileTypesDlg(
 {
     LPNMLISTVIEW lppl;
     LVITEMW lvItem;
-    WCHAR Buffer[200], FormatBuffer[100];  //FIXME
+    WCHAR Buffer[255], FormatBuffer[255];
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
 

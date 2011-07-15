@@ -7,7 +7,7 @@ Signature = "$ReactOS$"
 
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
-UnattendSetupEnabled = no
+UnattendSetupEnabled = yes
 
 ; Install to \Device\Harddisk0\Partition1\ReactOS
 DestinationDiskNumber = 0
@@ -19,7 +19,7 @@ InstallationDirectory=ReactOS
 ; MBRInstallType=2  install MBR on hdd
 MBRInstallType=2 
 
-FullName="MyName"
+FullName="encoded"
 ;OrgName="MyOrg"
 ComputerName="MYCOMPUTERNAME";
 AdminPassword="MyPassword"
@@ -28,7 +28,7 @@ AdminPassword="MyPassword"
 TimeZoneIndex=85
 
 ; enable this setting to disable daylight saving changes
-; DisableAutoDaylightTimeSet = 1
+ DisableAutoDaylightTimeSet = 1
 
 ; enable this setting to format the selected partition
 ; 1 - format enabled
@@ -49,12 +49,12 @@ DisableVmwInst = yes
 ; set this option to automatically
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages
-; LocaleID = 407 
+ LocaleID = 409
 
 
 ; enable this section to automatically launch programs
 ; after 3rd boot
 ;
-; [GuiRunOnce]
-; %SystemRoot%\system32\cmd.exe
+[GuiRunOnce]
+ %SystemRoot%\system32\cmd.exe /k "%SystemRoot%\bin\secur32_winetest.exe ntlm"
 

@@ -99,79 +99,13 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     return CurIcon;
 }
 
-PCURICON_OBJECT
-FASTCALL
-UserSetCursor(
-    PCURICON_OBJECT NewCursor,
-    BOOL ForceChange)
-{
-    PSYSTEM_CURSORINFO CurInfo;
-    PCURICON_OBJECT OldCursor;
-    HDC hdcScreen;
-
-	CurInfo = IntGetSysCursorInfo();
-
-    OldCursor = CurInfo->CurrentCursorObject;
-
-    /* Is the new cursor the same as the old cursor? */
-    if (OldCursor == NewCursor)
-    {
-        /* Nothing to to do in this case */
-        return OldCursor;
-    }
-
-    /* Get the screen DC */
-    if(!(hdcScreen = IntGetScreenDC()))
-    {
-        return (HCURSOR)0;
-    }
-
-    /* Do we have a new cursor? */
-    if (NewCursor)
-    {
-        CurInfo->ShowingCursor = 0;
-        CurInfo->CurrentCursorObject = NewCursor;
-
-        /* Call GDI to set the new screen cursor */
-        GreSetPointerShape(hdcScreen,
-                           NewCursor->IconInfo.hbmMask,
-                           NewCursor->IconInfo.hbmColor,
-                           NewCursor->IconInfo.xHotspot,
-                           NewCursor->IconInfo.yHotspot,
-                           gpsi->ptCursor.x,
-                           gpsi->ptCursor.y);
-    }
-    else
-    {
-        /* Check if were diplaying a cursor */
-        if (OldCursor && CurInfo->ShowingCursor >= 0)
-        {
-            /* Remove the cursor */
-            GreMovePointer(hdcScreen, -1, -1);
-            DPRINT("Removing pointer!\n");
-        }
-
-        CurInfo->CurrentCursorObject = NULL;
-        CurInfo->ShowingCursor = -1;
-    }
-
-    /* Return the old cursor */
-    return OldCursor;
-}
-
 BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook)
 {
     PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
-    HDC hDC;
     MSG Msg;
     RECTL rcClip;
     POINT pt;
-
-    if(!(hDC = IntGetScreenDC()))
-    {
-        return FALSE;
-    }
 
     if(!(DesktopWindow = UserGetDesktopWindow()))
     {
@@ -194,56 +128,17 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     pt.x = x;
     pt.y = y;
 
-    /* 3. Generate a mouse move message, this sets the htEx and Track Window too. */
+    /* 1. Generate a mouse move message, this sets the htEx and Track Window too. */
     Msg.message = WM_MOUSEMOVE;
     Msg.wParam = CurInfo->ButtonsDown;
     Msg.lParam = MAKELPARAM(x, y);
     Msg.pt = pt;
     co_MsqInsertMouseMessage(&Msg, flags, dwExtraInfo, Hook);
 
-    /* 1. Store the new cursor position */
+    /* 2. Store the new cursor position */
     gpsi->ptCursor = pt;
 
-    /* 2. Move the mouse pointer */
-    GreMovePointer(hDC, x, y);
-
     return TRUE;
-}
-
-/* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
- * User32 macro NtUserShowCursor */
-int UserShowCursor(BOOL bShow)
-{
-    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();
-    HDC hdcScreen;
-
-    if (!(hdcScreen = IntGetScreenDC()))
-    {
-        return -1; /* No mouse */
-    }
-
-    if (bShow == FALSE)
-    {
-        /* Check if were diplaying a cursor */
-        if (CurInfo->ShowingCursor == 0)
-        {
-            /* Remove the pointer */
-            GreMovePointer(hdcScreen, -1, -1);
-            DPRINT("Removing pointer!\n");
-        }
-        CurInfo->ShowingCursor--;
-    }
-    else
-    {
-        if (CurInfo->ShowingCursor == -1)
-        {
-            /*Show the pointer*/
-            GreMovePointer(hdcScreen, gpsi->ptCursor.x, gpsi->ptCursor.y);
-        }
-        CurInfo->ShowingCursor++;
-    }
-
-    return CurInfo->ShowingCursor;
 }
 
 /*

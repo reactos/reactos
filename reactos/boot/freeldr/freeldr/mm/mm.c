@@ -371,6 +371,17 @@ ExFreePool(
     MmHeapFree(P);
 }
 
+#undef ExFreePoolWithTag
+NTKERNELAPI
+VOID
+NTAPI
+ExFreePoolWithTag(
+  IN PVOID P,
+  IN ULONG Tag)
+{
+    ExFreePool(P);
+}
+
 PVOID
 NTAPI
 RtlAllocateHeap(

@@ -23,7 +23,10 @@ IDB_USRGRPIMAGES BITMAP "res/usrgrp.bmp"
 #include "aclui_Nl.rc"
 #include "aclui_No.rc"
 #include "aclui_Pl.rc"
-#include "aclui_Ru.rc"
 #include "aclui_Sv.rc"
 #include "aclui_Th.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "aclui_Ru.rc"
 #include "aclui_Uk.rc"

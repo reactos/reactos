@@ -533,7 +533,7 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
 
     /* Copy short name */
     ASSERT(Fcb->ShortNameU.Length / sizeof(WCHAR) <= 12);
-    Info->ShortNameLength = Fcb->ShortNameU.Length;
+    Info->ShortNameLength = (CCHAR)Fcb->ShortNameU.Length;
     RtlCopyMemory(Info->ShortName, Fcb->ShortNameU.Buffer, Fcb->ShortNameU.Length);
 
     return(STATUS_SUCCESS);

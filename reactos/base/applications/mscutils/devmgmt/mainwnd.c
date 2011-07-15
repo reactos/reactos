@@ -550,7 +550,13 @@ MainWndProc(HWND hwnd,
             /* Show the window */
             ShowWindow(hwnd,
                        Info->nCmdShow);
+        }
+        break;
 
+        case WM_SETFOCUS:
+        {
+            if (Info->hTreeView != NULL)
+                SetFocus(Info->hTreeView);
         }
         break;
 

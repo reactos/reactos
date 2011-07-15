@@ -9,8 +9,8 @@
 #ifndef _WRC_ROSTYPES_H
 #define _WRC_ROSTYPES_H
 
-#include <host/typedefs.h>
-#include <host/nls.h>
+#include <typedefs.h>
+#include <nls.h>
 #include <string.h>
 
 // Definitions copied from various <win....h> files
@@ -55,7 +55,7 @@
 #define WS_TABSTOP           0x10000
 #define WS_VISIBLE           0x10000000
 
-#include <host/pshpack2.h>
+#include <pshpack2.h>
 typedef struct tagBITMAPFILEHEADER {
    WORD   bfType;
    DWORD  bfSize;
@@ -63,7 +63,7 @@ typedef struct tagBITMAPFILEHEADER {
    WORD   bfReserved2;
    DWORD  bfOffBits;
 } BITMAPFILEHEADER,*LPBITMAPFILEHEADER,*PBITMAPFILEHEADER;
-#include <host/poppack.h>
+#include <poppack.h>
 
 typedef int FXPT2DOT30;
 typedef struct tagCIEXYZ {

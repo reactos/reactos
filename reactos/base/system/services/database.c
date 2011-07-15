@@ -1036,6 +1036,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
+    LPCWSTR ErrorLogStrings[2];
 
     DPRINT("ScmStartService() called\n");
 
@@ -1088,15 +1089,20 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
             Group->ServicesRunning = TRUE;
         }
     }
-#if 0
     else
     {
-        switch (Service->ErrorControl)
+        if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
-            case SERVICE_ERROR_NORMAL:
-                /* FIXME: Log error */
-                break;
+            ErrorLogStrings[0] = Service->lpServiceName;
+            ErrorLogStrings[1] = L"Test";
+            ScmLogError(EVENT_SERVICE_START_FAILED,
+                        2,
+                        ErrorLogStrings);
+        }
 
+#if 0
+        switch (Service->dwErrorControl)
+        {
             case SERVICE_ERROR_SEVERE:
                 if (IsLastKnownGood == FALSE)
                 {
@@ -1115,8 +1121,8 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
                 }
                 break;
         }
-    }
 #endif
+    }
 
     return dwError;
 }
@@ -1129,14 +1135,65 @@ ScmAutoStartServices(VOID)
     PLIST_ENTRY ServiceEntry;
     PSERVICE_GROUP CurrentGroup;
     PSERVICE CurrentService;
+    WCHAR szSafeBootServicePath[MAX_PATH];
+    DWORD dwError;
+    HKEY hKey;
     ULONG i;
 
-    /* Clear 'ServiceVisited' flag */
+    /* Clear 'ServiceVisited' flag (or set if not to start in Safe Mode) */
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-      CurrentService->ServiceVisited = FALSE;
+        /* Build the safe boot path */
+        wcscpy(szSafeBootServicePath,
+               L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
+        switch(GetSystemMetrics(SM_CLEANBOOT))
+        {
+            /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
+            case 1:
+            case 3: wcscat(szSafeBootServicePath, L"\\Minimal\\"); break;
+            case 2: wcscat(szSafeBootServicePath, L"\\Network\\"); break;
+        }
+        if(GetSystemMetrics(SM_CLEANBOOT))
+        {
+            /* If key does not exist then do not assume safe mode */
+            dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                    szSafeBootServicePath,
+                                    0,
+                                    KEY_READ,
+                                    &hKey);
+            if(dwError == ERROR_SUCCESS)
+            {
+                RegCloseKey(hKey);
+                /* Finish Safe Boot path off */
+                wcsncat(szSafeBootServicePath,
+                        CurrentService->lpServiceName,
+                        MAX_PATH - wcslen(szSafeBootServicePath));
+                /* Check that the key is in the Safe Boot path */
+                dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                        szSafeBootServicePath,
+                                        0,
+                                        KEY_READ,
+                                        &hKey);
+                if(dwError != ERROR_SUCCESS)
+                {
+                    /* Mark service as visited so it is not auto-started */
+                    CurrentService->ServiceVisited = TRUE;
+                }
+                else
+                {
+                    /* Must be auto-started in safe mode - mark as unvisited */
+                    RegCloseKey(hKey);
+                    CurrentService->ServiceVisited = FALSE;
+                }
+            }
+            else
+            {
+                DPRINT1("WARNING: Could not open the associated Safe Boot key!");
+                CurrentService->ServiceVisited = FALSE;
+            }
+        }
       ServiceEntry = ServiceEntry->Flink;
     }
 
@@ -1242,6 +1299,9 @@ ScmAutoShutdownServices(VOID)
 
     DPRINT("ScmAutoShutdownServices() called\n");
 
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
@@ -1251,13 +1311,17 @@ ScmAutoShutdownServices(VOID)
             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
         {
             /* shutdown service */
-            ScmControlService(CurrentService, SERVICE_CONTROL_STOP);
+            DPRINT("Shutdown service: %S\n", CurrentService->szServiceName);
+            ScmControlService(CurrentService, SERVICE_CONTROL_SHUTDOWN);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
 
-    DPRINT("ScmGetBootAndSystemDriverState() done\n");
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("ScmAutoShutdownServices() done\n");
 }
 
 

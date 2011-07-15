@@ -393,7 +393,7 @@ static BOOL UnloadHive(HWND hWnd)
 static BOOL ImportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
-    TCHAR Caption[128];
+    TCHAR Caption[128], szTitle[256], szText[256];
     LPCTSTR pszKeyPath;
     HKEY hRootKey;
 
@@ -414,6 +414,10 @@ static BOOL ImportRegistryFile(HWND hWnd)
                 fclose(fp);
             return FALSE;
         }
+        LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
+        LoadString(hInst, IDS_IMPORTED_OK, szText, sizeof(szTitle));
+        /* show successful import */
+        MessageBox(NULL, szText, szTitle, MB_OK);
         fclose(fp);
     }
     else

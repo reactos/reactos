@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////
 // Polish (P.L.) resources
 // 2005 Emil Kaczmarek
+// UTF-8 conversion by Caemyr (May, 2011) 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-#pragma code_page(1250)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -16,17 +16,17 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Plik"
     BEGIN
-        MENUITEM "P&o³¹cz", IDM_FILE_CONNECT
-        MENUITEM "&Roz³¹cz", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "P&oÅ‚Ä…cz", IDM_FILE_CONNECT
+        MENUITEM "&RozÅ‚Ä…cz", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Wyczyœæ wyœwietlacz", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&WyczyÅ›Ä‡ wyÅ›wietlacz", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "Ro&zpocznij zrzut", IDM_FILE_STARTCAPTURE
         MENUITEM "Za&trzymaj zrzut", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Lo&kalne Echo", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjœcie", IDM_EXIT
+        MENUITEM "&WyjÅ›cie", IDM_EXIT
     END
     POPUP "Po&moc"
     BEGIN
@@ -132,12 +132,12 @@ END
 
 IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opcje po³¹czenia"
+CAPTION "Opcje poÅ‚Ä…czenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "WprowadŸ port COM (np. COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "WprowadÅº port COM (np. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "WprowadŸ szybkoœæ portu w bodach (np. 115200):",IDC_STATIC,7,38,114,
+    LTEXT           "WprowadÅº szybkoÅ›Ä‡ portu w bodach (np. 115200):",IDC_STATIC,7,38,114,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
@@ -146,12 +146,12 @@ END
 
 IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Przechwyæ plik"
+CAPTION "PrzechwyÄ‡ plik"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Nazwa pliku zrzutu:",IDC_STATIC,7,17,62,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Przeg&l¹daj",IDC_BROWSE,194,26,50,14
+    PUSHBUTTON      "Przeg&lÄ…daj",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "OK",IDOK,139,74,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,194,74,50,14
 END
@@ -172,7 +172,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 
-	IDS_LICENSE				"Ten program nale¿y do wolnego oprogramowania; mo¿esz go rozpowszechniaæ i/lub modyfikowaæ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zosta³y opublikowane przez fundacjê Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybór) w jakiejkolwiek póŸniejszej wersji.\r\n\r\nRozpowszechniaj¹c ten program mamy nadziejê, ¿e bêdzie u¿yteczny, ale BEZ ¯ADNEJ GWARANCJI; nawet bez zak³adanej gwarancji HANDLOWOŒCI, a w szczególnym przypadku zdatnoœci. Aby poznaæ wiêcej szczegó³ów, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byæ dostarczona razem z tym programem; jeœli tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+	IDS_LICENSE				"Ten program naleÅ¼y do wolnego oprogramowania; moÅ¼esz go rozpowszechniaÄ‡ i/lub modyfikowaÄ‡ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zostaÅ‚y opublikowane przez fundacjÄ™ Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybÃ³r) w jakiejkolwiek pÃ³Åºniejszej wersji.\r\n\r\nRozpowszechniajÄ…c ten program mamy nadziejÄ™, Å¼e bÄ™dzie uÅ¼yteczny, ale BEZ Å»ADNEJ GWARANCJI; nawet bez zakÅ‚adanej gwarancji HANDLOWOÅšCI, a w szczegÃ³lnym przypadku zdatnoÅ›ci. Aby poznaÄ‡ wiÄ™cej szczegÃ³Å‚Ã³w, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byÄ‡ dostarczona razem z tym programem; jeÅ›li tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 
 	END
 
@@ -190,4 +190,3 @@ BEGIN
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

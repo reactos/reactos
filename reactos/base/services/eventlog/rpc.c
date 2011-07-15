@@ -199,7 +199,7 @@ NTSTATUS ElfrNumberOfRecords(
     DWORD *NumberOfRecords)
 {
     PLOGHANDLE lpLogHandle;
-    DWORD dwRecords;
+    PLOGFILE lpLogFile;
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
@@ -207,9 +207,13 @@ NTSTATUS ElfrNumberOfRecords(
         return STATUS_INVALID_HANDLE;
     }
 
-    dwRecords = lpLogHandle->LogFile->Header.CurrentRecordNumber;
+    lpLogFile = lpLogHandle->LogFile;
 
-    *NumberOfRecords = (dwRecords > 0) ? (dwRecords - 1) : 0;
+    if (lpLogFile->Header.OldestRecordNumber == 0)
+        *NumberOfRecords = 0;
+    else
+        *NumberOfRecords = lpLogFile->Header.CurrentRecordNumber -
+                           lpLogFile->Header.OldestRecordNumber;
 
     return STATUS_SUCCESS;
 }

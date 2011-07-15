@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Andras Kovacs
+ * Copyright 2006-2010 Andras Kovacs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,27 +20,45 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+/* UTF-8 */
+#pragma code_page(65001)
+
+IDD_PROXYDLG DIALOG 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "H�l�zati jelsz� megad�sa"
+CAPTION "Hálózati jelszó megadása"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "K�rem adja meg a felhaszn�l�nevet, �s jelsz�t:", -1, 40, 6, 150, 15
+ LTEXT "Kérem adja meg a felhasználónevet és jelszót:", -1, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
  LTEXT "Csoport", -1, 40, 46, 50, 10
- LTEXT "Felhaszn�l�", -1, 40, 66, 50, 10
- LTEXT "Jelsz�", -1, 40, 86, 50, 10
+ LTEXT "Felhasználó", -1, 40, 66, 50, 10
+ LTEXT "Jelszó", -1, 40, 86, 50, 10
  LTEXT "", IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Jelsz� ment�se (nem biztons�gos)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Jelszó mentése (nem biztonságos)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "M�gse", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Mégse", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE
+IDD_AUTHDLG DIALOG 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hitelesítés szükséges"
+FONT 8, "MS Shell Dlg"
 {
-  IDS_LANCONNECTION "LAN kapcsolat"
+ LTEXT "Kérem adja meg a felhasználónevet és jelszót:", -1, 40, 6, 150, 15
+ LTEXT "Kiszolgáló", -1, 40, 26, 50, 10
+ LTEXT "Tartomány", -1, 40, 46, 50, 10
+ LTEXT "Felhasználó", -1, 40, 66, 50, 10
+ LTEXT "Jelszó", -1, 40, 86, 50, 10
+ LTEXT "", IDC_SERVER, 80, 26, 150, 14, 0
+ LTEXT "", IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "Jel&szó elmentése (nem biztonságos)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Mégse", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

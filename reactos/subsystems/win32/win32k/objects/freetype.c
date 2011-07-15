@@ -2165,8 +2165,8 @@ TextIntGetTextExtentPoint(PDC dc,
     error = FT_Set_Pixel_Sizes(face,
                                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
                                /* FIXME should set character height if neg */
-                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 
-							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));							   
+                               (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
+							   dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
     if (error)
     {
         DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -3394,13 +3394,13 @@ GreExtTextOutW(
 
         previous = 0;
 
-        if (pdcattr->lTextAlign & TA_RIGHT)
+        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
         {
-            RealXStart -= TextWidth;
+            RealXStart -= TextWidth / 2;
         }
         else
         {
-            RealXStart -= TextWidth / 2;
+            RealXStart -= TextWidth;
         }
     }
 

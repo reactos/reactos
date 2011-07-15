@@ -127,7 +127,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Versiune " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Versiune "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Versiune de ReactOS înregistrată pentru:", IDC_STATIC, 35, 115, 180, 10
@@ -427,7 +427,7 @@ LTEXT "Deschidere cu:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nume ap.", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Schimbare", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat.", 14007, 12, 155, 160, 30
+LTEXT "", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vansat", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -658,10 +658,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Elementul '%1' nu poate fi trimit la gunoi. Vreți să îl ștergeți definitiv în schimb?"
 	IDS_OVERWRITEFILE_TEXT      "Acest dosar deja conține un fișier numit '%1'.\n\nVreți să îl înlocuiți"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmare înlocuire fișier"
-	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\n"\
-		"Dacă fișierele din dosarul de destinație au același nume ca cele din\n"\
-		"dosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\n"\
-		"mutați dosarul?"
+	IDS_OVERWRITEFOLDER_TEXT    "Acest dosar deja conține un sub-dosar cu numele '%1'.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur vreți să copiați sau\nmutați dosarul?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Repornire"
@@ -763,6 +760,8 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Detalii pentru extensia '%s'"
 	IDS_FILE_DETAILSADV         "Fișierele cu extensia '%s' sunt de tipul '%s'. Pentru a schimbat setări care vor afecta toate fișierele '%s', clic pe Avansat."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END
 
 #pragma code_page(default)

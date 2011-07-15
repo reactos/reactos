@@ -23,7 +23,7 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 /* Byteordering defines */
 #define WMC_BO_NATIVE	0x00

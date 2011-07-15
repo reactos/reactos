@@ -443,20 +443,11 @@ LoadLibraryExW(LPCWSTR lpLibFileName,
             }
         }
 
-        /* HACK!!! FIXME */
-        if (InWindows)
-        {
-            /* Call the API Properly */
-            Status = LdrLoadDll(SearchPath,
-                                &DllCharacteristics,
-                                &DllName,
-                                (PVOID*)&hInst);
-        }
-        else
-        {
-            /* Call the ROS API. NOTE: Don't fix this, I have a patch to merge later. */
-            Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
-        }
+        /* Call the API Properly */
+        Status = LdrLoadDll(SearchPath,
+                            &DllCharacteristics,
+                            &DllName,
+                            (PVOID*)&hInst);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -872,7 +863,7 @@ BasepGetModuleHandleExW(BOOLEAN NoLock, DWORD dwPublicFlags, LPCWSTR lpwModuleNa
     if (!(dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT))
     {
         /* Add reference to this DLL */
-        Status = LdrAddRefDll((dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) ? LDR_PIN_MODULE : 0,
+        Status = LdrAddRefDll((dwPublicFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) ? LDR_ADDREF_DLL_PIN : 0,
                               hModule);
     }
 

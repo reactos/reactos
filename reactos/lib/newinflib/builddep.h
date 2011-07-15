@@ -8,8 +8,7 @@
 
 /* Definitions native to the host on which we're building */
 
-#include <wine/unicode.h>
-#include <host/typedefs.h>
+#include <typedefs.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -82,6 +81,6 @@ extern PVOID InfpHeap;
 
 #endif /* INFLIB_HOST */
 
-#include <host/wcsfuncs.h>
+#include <wine/unicode.h>
 
 /* EOF */

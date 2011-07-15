@@ -467,7 +467,7 @@ interface pnp
     /* Function 27 */
     DWORD PNP_SetClassRegProp(
         [in] handle_t hBinding,
-        [in, string, ref] LPWSTR *pszClassGuid,
+        [in, string, ref] LPWSTR pszClassGuid,
         [in] DWORD ulProperty,
         [in] DWORD ulDataType,
         [in, size_is(ulLength)] BYTE *Buffer,

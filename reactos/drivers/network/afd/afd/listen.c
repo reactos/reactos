@@ -37,7 +37,10 @@ static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
 	Status = MakeSocketIntoConnection( FCB );
 
     if (NT_SUCCESS(Status))
-        Status = TdiBuildConnectionInfo(&FCB->ConnectInfo, FCB->RemoteAddress);
+        Status = TdiBuildConnectionInfo(&FCB->ConnectCallInfo, FCB->RemoteAddress);
+    
+    if (NT_SUCCESS(Status))
+        Status = TdiBuildConnectionInfo(&FCB->ConnectReturnInfo, FCB->RemoteAddress);
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
@@ -95,12 +98,13 @@ static NTSTATUS NTAPI ListenComplete
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-    PLIST_ENTRY NextIrpEntry, QeltEntry;
+    PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
 
     if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 
+    ASSERT(FCB->ListenIrp.InFlightRequest == Irp);
     FCB->ListenIrp.InFlightRequest = NULL;
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
@@ -113,13 +117,6 @@ static NTSTATUS NTAPI ListenComplete
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
                (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-        }
-
-        /* Free all pending connections */
-        while( !IsListEmpty( &FCB->PendingConnections ) ) {
-               QeltEntry = RemoveHeadList(&FCB->PendingConnections);
-               Qelt = CONTAINING_RECORD(QeltEntry, AFD_TDI_OBJECT_QELT, ListEntry);
-               ExFreePool(Qelt);
         }
 
         /* Free ConnectionReturnInfo and ConnectionCallInfo */
@@ -140,7 +137,13 @@ static NTSTATUS NTAPI ListenComplete
     }
 
     AFD_DbgPrint(MID_TRACE,("Completing listen request.\n"));
-    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", FCB->ListenIrp.Iosb.Status));
+    AFD_DbgPrint(MID_TRACE,("IoStatus was %x\n", Irp->IoStatus.Status));
+    
+    if (Irp->IoStatus.Status != STATUS_SUCCESS)
+    {
+        SocketStateUnlock(FCB);
+        return Irp->IoStatus.Status;
+    }
 
     Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
     if( !Qelt ) {
@@ -178,17 +181,30 @@ static NTSTATUS NTAPI ListenComplete
 				 ListEntry ) );
     }
 
-    if( FCB->ListenIrp.ConnectionCallInfo ) {
-        ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
-        FCB->ListenIrp.ConnectionCallInfo = NULL;
-    }
+    /* Launch new accept socket */
+    Status = WarmSocketForConnection( FCB );
+        
+    if (NT_SUCCESS(Status))
+    {
+        Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionCallInfo,
+                                                   FCB->LocalAddress->Address[0].AddressType);
+        ASSERT(Status == STATUS_SUCCESS);
+        
+        Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionReturnInfo,
+                                                   FCB->LocalAddress->Address[0].AddressType);
+        ASSERT(Status == STATUS_SUCCESS);
+        
+        Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
+                            FCB->Connection.Object,
+                            &FCB->ListenIrp.ConnectionCallInfo,
+                            &FCB->ListenIrp.ConnectionReturnInfo,
+                            &FCB->ListenIrp.Iosb,
+                            ListenComplete,
+                            FCB );
 
-    if( FCB->ListenIrp.ConnectionReturnInfo ) {
-        ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
-        FCB->ListenIrp.ConnectionReturnInfo = NULL;
+        if (Status == STATUS_PENDING)
+            Status = STATUS_SUCCESS;
     }
-
-    FCB->NeedsNewListen = TRUE;
 
     /* Trigger a select return if appropriate */
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
@@ -264,9 +280,6 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( Status == STATUS_PENDING )
 	Status = STATUS_SUCCESS;
 
-    if (NT_SUCCESS(Status))
-        FCB->NeedsNewListen = FALSE;
-
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
@@ -302,6 +315,10 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	SocketStateUnlock( FCB );
 	return Status;
+    } else if (FCB->NonBlocking) {
+        AFD_DbgPrint(MID_TRACE,("No connection ready on a non-blocking socket\n"));
+        
+        return UnlockAndMaybeComplete(FCB, STATUS_CANT_WAIT, Irp, 0);
     } else {
 	AFD_DbgPrint(MID_TRACE,("Holding\n"));
 
@@ -322,48 +339,6 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-
-    if( FCB->NeedsNewListen ) {
-	AFD_DbgPrint(MID_TRACE,("ADDRESSFILE: %x\n", FCB->AddressFile.Handle));
-
-	/* Launch new accept socket */
-	Status = WarmSocketForConnection( FCB );
-
-	if( Status == STATUS_SUCCESS ) {
-	     Status = TdiBuildNullConnectionInfo
-		( &FCB->ListenIrp.ConnectionCallInfo,
-		  FCB->LocalAddress->Address[0].AddressType );
-
-	    if (!NT_SUCCESS(Status)) return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
-
-	    Status = TdiBuildNullConnectionInfo
-		( &FCB->ListenIrp.ConnectionReturnInfo,
-		  FCB->LocalAddress->Address[0].AddressType );
-
-	    if (!NT_SUCCESS(Status))
-	    {
-	        ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
-	        FCB->ListenIrp.ConnectionCallInfo = NULL;
-	        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
-	    }
-
-	    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
-				FCB->Connection.Object,
-				&FCB->ListenIrp.ConnectionCallInfo,
-				&FCB->ListenIrp.ConnectionReturnInfo,
-				&FCB->ListenIrp.Iosb,
-				ListenComplete,
-				FCB );
-
-            if( Status == STATUS_PENDING )
-                Status = STATUS_SUCCESS;
-
-            if( !NT_SUCCESS(Status) )
-                return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
-
-	    FCB->NeedsNewListen = FALSE;
-	} else return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
-    }
 
     for( PendingConn = FCB->PendingConnections.Flink;
 	 PendingConn != &FCB->PendingConnections;

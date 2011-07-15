@@ -7,19 +7,19 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE            "ReactOS - Добро пожаловать!"
+    IDS_APPTITLE            "ReactOS - Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ!"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Добро пожаловать в ReactOS.\n\nВыберите пункт слева."
-//    IDS_CHECKTEXT           "Показывать это окно снова"
-//    IDS_CLOSETEXT           "Выход"
+    IDS_DEFAULTTOPICDESC    "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ ReactOS.\n\nР’С‹Р±РµСЂРёС‚Рµ РїСѓРЅРєС‚ СЃР»РµРІР°."
+//    IDS_CHECKTEXT           "РџРѕРєР°Р·С‹РІР°С‚СЊ СЌС‚Рѕ РѕРєРЅРѕ СЃРЅРѕРІР°"
+//    IDS_CLOSETEXT           "Р’С‹С…РѕРґ"
 END
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICBUTTON0        "Установить ReactOS"
-    IDS_TOPICBUTTON1        "Обзор диска"
-    IDS_TOPICBUTTON2        "Выход"
+    IDS_TOPICBUTTON0        "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ ReactOS"
+    IDS_TOPICBUTTON1        "РћР±Р·РѕСЂ РґРёСЃРєР°"
+    IDS_TOPICBUTTON2        "Р’С‹С…РѕРґ"
 //    IDS_TOPICBUTTON3        "Empty Topic 3"
 //    IDS_TOPICBUTTON4        "Empty Topic 4"
 //    IDS_TOPICBUTTON5        "Empty Topic 5"
@@ -32,9 +32,9 @@ END
 /* Topic titles */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICTITLE0         "Установить ReactOS"
-    IDS_TOPICTITLE1         "Обзор диска"
-    IDS_TOPICTITLE2         "Выход"
+    IDS_TOPICTITLE0         "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ ReactOS"
+    IDS_TOPICTITLE1         "РћР±Р·РѕСЂ РґРёСЃРєР°"
+    IDS_TOPICTITLE2         "Р’С‹С…РѕРґ"
 //    IDS_TOPICTITLE3         "Empty Topic Title 3"
 //    IDS_TOPICTITLE4         "Empty Topic Title 4"
 //    IDS_TOPICTITLE5         "Empty Topic Title 5"
@@ -47,9 +47,9 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Установит ReactOS на Ваш компьютер с нуля или обновит уже установленную версию."
-    IDS_TOPICDESC1          "Обзор диска."
-    IDS_TOPICDESC2          "Выберите для выхода из этого приложения."
+    IDS_TOPICDESC0          "РЈСЃС‚Р°РЅРѕРІРёС‚ ReactOS РЅР° Р’Р°С€ РєРѕРјРїСЊСЋС‚РµСЂ СЃ РЅСѓР»СЏ РёР»Рё РѕР±РЅРѕРІРёС‚ СѓР¶Рµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅСѓСЋ РІРµСЂСЃРёСЋ."
+    IDS_TOPICDESC1          "РћР±Р·РѕСЂ РґРёСЃРєР°."
+    IDS_TOPICDESC2          "Р’С‹Р±РµСЂРёС‚Рµ РґР»СЏ РІС‹С…РѕРґР° РёР· СЌС‚РѕРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
 //    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
 //    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."

@@ -1,4 +1,10 @@
-// Chinese (Simplified) language resource file (Elton Chung, elton328@gmail.com)
+/*
+ * PROJECT:     ReactOS Character Map
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/charmap/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language File for charmap
+ * TRANSLATOR:  Elton Chung <elton328@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -6,39 +12,39 @@ IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
-  LTEXT         "◊÷ÃÂ:", IDC_STATIC, 6, 7, 24, 9
+  LTEXT         "Â≠ó‰Ωì:", IDC_STATIC, 6, 7, 24, 9
   COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
-  PUSHBUTTON    "Àµ√˜", IDC_CMHELP, 249, 5, 35, 13
+  PUSHBUTTON    "ËØ¥Êòé", IDC_CMHELP, 249, 5, 35, 13
   CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
-  LTEXT         "¥˝∏¥÷∆µƒ◊÷∑˚:", IDC_STATIC, 6, 188, 66, 9
+  LTEXT         "ÂæÖÂ§çÂà∂ÁöÑÂ≠óÁ¨¶:", IDC_STATIC, 6, 188, 66, 9
   CONTROL       "",IDC_TEXTBOX,RICHEDIT_CLASS,ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
-  DEFPUSHBUTTON "—°‘Ò", IDC_SELECT, 194, 186, 44, 13
-  PUSHBUTTON    "∏¥÷∆", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
-  CONTROL       "Advanced view",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
+  DEFPUSHBUTTON "ÈÄâÊã©", IDC_SELECT, 194, 186, 44, 13
+  PUSHBUTTON    "Â§çÂà∂", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+  CONTROL       "È´òÁ∫ßÊü•Áúã",IDC_CHECK_ADVANCED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
 END
 
 IDD_ADVANCED DIALOGEX  0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT         "Charset:",IDC_STATIC,8,8,48,8
+  LTEXT         "Â≠óÁ¨¶ÈõÜ:",IDC_STATIC,8,8,48,8
   COMBOBOX      IDC_COMBO_CHARSET,72,4,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  LTEXT         "Group by:",IDC_STATIC,8,28,50,8
+  LTEXT         "ÂàÜÁªÑ:",IDC_STATIC,8,28,50,8
   COMBOBOX      IDC_COMBO_GROUPBY,72,24,116,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-  PUSHBUTTON    "Search",IDC_BUTTON_SEARCH,200,44,50,14
+  PUSHBUTTON    "ÊêúÁ¥¢",IDC_BUTTON_SEARCH,200,44,50,14
   EDITTEXT      IDC_EDIT_SEARCH,72,44,116,14,ES_AUTOHSCROLL
-  LTEXT         "Search for:",IDC_STATIC,8,48,42,8
-  LTEXT         "Unicode:",IDC_STATIC,200,8,30,8
+  LTEXT         "ÊêúÁ¥¢ÁõÆÊ†á:",IDC_STATIC,8,48,42,8
+  LTEXT         "Âà∞ Unicode:",IDC_STATIC,200,8,30,8
   EDITTEXT      IDC_EDIT_UNICODE,236,4,28,12,ES_AUTOHSCROLL
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
-CAPTION "πÿ”⁄◊÷∑˚±Ì"
+CAPTION "ÂÖ≥‰∫éÂ≠óÁ¨¶Êò†Â∞ÑË°®"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT         "◊÷∑˚±Ì v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON    "πÿ±’", IDOK, 75, 162, 44, 15
+  LTEXT         "Â≠óÁ¨¶Êò†Â∞ÑË°® v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "ÂÖ≥Èó≠", IDOK, 75, 162, 44, 15
   ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -46,6 +52,6 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE   "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-  IDS_ABOUT     "πÿ”⁄(&A)..."
-  IDS_TITLE     "Character Map"
+  IDS_ABOUT     "ÂÖ≥‰∫é(&A)..."
+  IDS_TITLE     "Â≠óÁ¨¶Êò†Â∞ÑË°®"
 END

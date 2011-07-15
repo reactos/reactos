@@ -41,6 +41,12 @@ ENDM
     name ENDP
 ENDM
 
+/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
+   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+FPO MACRO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
+    .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
+ENDM
+
 /* MASM doesn't have an ASCII macro */
 .ASCII MACRO text
     DB text
@@ -143,7 +149,7 @@ ENDM
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
     .func \name
-    \name:
+    _\name:
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
@@ -190,6 +196,12 @@ ENDM
 
 .macro .code
     .text
+.endm
+
+/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
+   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+.macro FPO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
+    /* dummy */
 .endm
 
 /* Macros for x64 stack unwind OPs */

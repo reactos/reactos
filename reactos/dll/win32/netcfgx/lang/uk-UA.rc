@@ -2,68 +2,68 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Загальні"
+CAPTION "Р—Р°РіР°Р»СЊРЅС–"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Параметри протоколу IP можуть призначатися автоматично, якщо мережа підтримує таку можливість. Інакше вам потрібно отримати ці параметри у адміністратора мережі.", -1, 9, 9, 228, 27
- CONTROL "Отримувати IP-адресу автоматично", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+ LTEXT "РџР°СЂР°РјРµС‚СЂРё РїСЂРѕС‚РѕРєРѕР»Сѓ IP РјРѕР¶СѓС‚СЊ РїСЂРёР·РЅР°С‡Р°С‚РёСЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ, СЏРєС‰Рѕ РјРµСЂРµР¶Р° РїС–РґС‚СЂРёРјСѓС” С‚Р°РєСѓ РјРѕР¶Р»РёРІС–СЃС‚СЊ. Р†РЅР°РєС€Рµ РІР°Рј РїРѕС‚СЂС–Р±РЅРѕ РѕС‚СЂРёРјР°С‚Рё С†С– РїР°СЂР°РјРµС‚СЂРё Сѓ Р°РґРјС–РЅС–СЃС‚СЂР°С‚РѕСЂР° РјРµСЂРµР¶С–.", -1, 9, 9, 228, 27
+ CONTROL "РћС‚СЂРёРјСѓРІР°С‚Рё IP-Р°РґСЂРµСЃСѓ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Використовувати наступну IP-адресу:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
- LTEXT "IP-адреса:", -1, 14, 75, 135, 8
+ CONTROL "&Р’РёРєРѕСЂРёСЃС‚РѕРІСѓРІР°С‚Рё РЅР°СЃС‚СѓРїРЅСѓ IP-Р°РґСЂРµСЃСѓ:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "IP-Р°РґСЂРµСЃР°:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "Маска підмережі:", -1, 14, 90, 135, 8
+ LTEXT "РњР°СЃРєР° РїС–РґРјРµСЂРµР¶С–:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Шлюз за замовчуванням:", -1, 14, 105, 135, 8
+ LTEXT "РЁР»СЋР· Р·Р° Р·Р°РјРѕРІС‡СѓРІР°РЅРЅСЏРј:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
- CONTROL "Отримувати адресу DNS-сервера автоматично", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+ CONTROL "РћС‚СЂРёРјСѓРІР°С‚Рё Р°РґСЂРµСЃСѓ DNS-СЃРµСЂРІРµСЂР° Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
- CONTROL "В&икористовувати наступні адреси DNS-серверів", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Основний DNS-сервер:", -1, 14, 171, 135, 8
+ CONTROL "Р’&РёРєРѕСЂРёСЃС‚РѕРІСѓРІР°С‚Рё РЅР°СЃС‚СѓРїРЅС– Р°РґСЂРµСЃРё DNS-СЃРµСЂРІРµСЂС–РІ", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "РћСЃРЅРѕРІРЅРёР№ DNS-СЃРµСЂРІРµСЂ:", -1, 14, 171, 135, 8
  CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "Альтернативний DNS-сервер:", -1, 14, 186, 135, 8
+ LTEXT "РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅРёР№ DNS-СЃРµСЂРІРµСЂ:", -1, 14, 186, 135, 8
  CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
- PUSHBUTTON "&Додатково", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Р”РѕРґР°С‚РєРѕРІРѕ", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Альтернативна конфігурація"
+CAPTION "РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅР° РєРѕРЅС„С–РіСѓСЂР°С†С–СЏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Якщо цей комп'ютер використовується в декількох мережах, введіть параметри альтернативної конфігурації IP", -1, 9, 9, 220, 20
-    CONTROL "А&втоматична приватна IP-адреса", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    LTEXT "РЇРєС‰Рѕ С†РµР№ РєРѕРјРї'СЋС‚РµСЂ РІРёРєРѕСЂРёСЃС‚РѕРІСѓС”С‚СЊСЃСЏ РІ РґРµРєС–Р»СЊРєРѕС… РјРµСЂРµР¶Р°С…, РІРІРµРґС–С‚СЊ РїР°СЂР°РјРµС‚СЂРё Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕС— РєРѕРЅС„С–РіСѓСЂР°С†С–С— IP", -1, 9, 9, 220, 20
+    CONTROL "Рђ&РІС‚РѕРјР°С‚РёС‡РЅР° РїСЂРёРІР°С‚РЅР° IP-Р°РґСЂРµСЃР°", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "Н&алаштована користувачем", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 120, 12
-    LTEXT "&IP-адреса:", -1, 14, 75, 135, 8
+    CONTROL "Рќ&Р°Р»Р°С€С‚РѕРІР°РЅР° РєРѕСЂРёСЃС‚СѓРІР°С‡РµРј", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 120, 12
+    LTEXT "&IP-Р°РґСЂРµСЃР°:", -1, 14, 75, 135, 8
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "Ма&ска підмережі:", -1, 14, 95, 135, 8
+    LTEXT "РњР°&СЃРєР° РїС–РґРјРµСЂРµР¶С–:", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
-    LTEXT "&Шлюз за замовчуванням:", -1, 14, 115, 135, 8
+    LTEXT "&РЁР»СЋР· Р·Р° Р·Р°РјРѕРІС‡СѓРІР°РЅРЅСЏРј:", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
-    LTEXT "&Основний DNS-сервер:", -1, 14, 150, 135, 8
+    LTEXT "&РћСЃРЅРѕРІРЅРёР№ DNS-СЃРµСЂРІРµСЂ:", -1, 14, 150, 135, 8
     CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
-    LTEXT "&Альтернативний DNS-сервер:", -1, 14, 165, 180, 8
+    LTEXT "&РђР»СЊС‚РµСЂРЅР°С‚РёРІРЅРёР№ DNS-СЃРµСЂРІРµСЂ:", -1, 14, 165, 180, 8
     CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Параметри IP"
+CAPTION "РџР°СЂР°РјРµС‚СЂРё IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "IP-адреси", -1, 5, 5, 240, 90
+    GROUPBOX "IP-Р°РґСЂРµСЃРё", -1, 5, 5, 240, 90
     CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
-    PUSHBUTTON "Додати...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Редагувати...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Видалити", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
-    GROUPBOX "Основні шлюзи:", -1, 5, 100, 240, 90
+    PUSHBUTTON "Р”РѕРґР°С‚Рё...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р РµРґР°РіСѓРІР°С‚Рё...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РёРґР°Р»РёС‚Рё", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
+    GROUPBOX "РћСЃРЅРѕРІРЅС– С€Р»СЋР·Рё:", -1, 5, 100, 240, 90
     CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
-    PUSHBUTTON "Додати...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Редагувати...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Видалити", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р”РѕРґР°С‚Рё...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р РµРґР°РіСѓРІР°С‚Рё...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РёРґР°Р»РёС‚Рё", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 5, 200, 240, 30
-    CHECKBOX "Автоматична метрика", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Метрика інтерфейсу:", -1, 15, 215, 90, 12
+    CHECKBOX "РђРІС‚РѕРјР°С‚РёС‡РЅР° РјРµС‚СЂРёРєР°", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "РњРµС‚СЂРёРєР° С–РЅС‚РµСЂС„РµР№СЃСѓ:", -1, 15, 215, 90, 12
     EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
@@ -73,157 +73,157 @@ CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 60, LBS_NOTIFY
-    LTEXT "Адреси D&NS серверів в порядку використання:", -1, 5, 5, 180, 12
-    PUSHBUTTON "Вверх", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Вниз", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
-    LTEXT "Наступні три параметри застосовуються для всіх підключень, що використовують TCP/IP. Для дозволу невідомих імен:", -1, 5, 90, 220, 24
-    CONTROL "Додавати &основний DNS-суфікс і суфікс підключення", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 190, 12
-    CHECKBOX "Додавати &батьківські суфікси основного DNS-суфікса", IDC_TOPPRIMSUFFIX, 15, 125, 194, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Додавати &наступні DNS-суфікси (по порядку):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    LTEXT "РђРґСЂРµСЃРё D&NS СЃРµСЂРІРµСЂС–РІ РІ РїРѕСЂСЏРґРєСѓ РІРёРєРѕСЂРёСЃС‚Р°РЅРЅСЏ:", -1, 5, 5, 180, 12
+    PUSHBUTTON "Р’РІРµСЂС…", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РЅРёР·", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р”РѕРґР°С‚Рё...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р РµРґР°РіСѓРІР°С‚Рё...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р’РёРґР°Р»РёС‚Рё", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    LTEXT "РќР°СЃС‚СѓРїРЅС– С‚СЂРё РїР°СЂР°РјРµС‚СЂРё Р·Р°СЃС‚РѕСЃРѕРІСѓСЋС‚СЊСЃСЏ РґР»СЏ РІСЃС–С… РїС–РґРєР»СЋС‡РµРЅСЊ, С‰Рѕ РІРёРєРѕСЂРёСЃС‚РѕРІСѓСЋС‚СЊ TCP/IP. Р”Р»СЏ РґРѕР·РІРѕР»Сѓ РЅРµРІС–РґРѕРјРёС… С–РјРµРЅ:", -1, 5, 90, 220, 24
+    CONTROL "Р”РѕРґР°РІР°С‚Рё &РѕСЃРЅРѕРІРЅРёР№ DNS-СЃСѓС„С–РєСЃ С– СЃСѓС„С–РєСЃ РїС–РґРєР»СЋС‡РµРЅРЅСЏ", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 190, 12
+    CHECKBOX "Р”РѕРґР°РІР°С‚Рё &Р±Р°С‚СЊРєС–РІСЃСЊРєС– СЃСѓС„С–РєСЃРё РѕСЃРЅРѕРІРЅРѕРіРѕ DNS-СЃСѓС„С–РєСЃР°", IDC_TOPPRIMSUFFIX, 15, 125, 194, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Р”РѕРґР°РІР°С‚Рё &РЅР°СЃС‚СѓРїРЅС– DNS-СЃСѓС„С–РєСЃРё (РїРѕ РїРѕСЂСЏРґРєСѓ):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 60, LBS_NOTIFY
-    PUSHBUTTON "Вверх", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Вниз", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "DNS-&суфікс цього підключення:", -1, 5, 228, 110, 14
+    PUSHBUTTON "Р’РІРµСЂС…", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РЅРёР·", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р”РѕРґР°С‚Рё...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р РµРґР°РіСѓРІР°С‚Рё...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Р’РёРґР°Р»РёС‚Рё", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
+    LTEXT "DNS-&СЃСѓС„С–РєСЃ С†СЊРѕРіРѕ РїС–РґРєР»СЋС‡РµРЅРЅСЏ:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
-    CHECKBOX "&Зареєструвати адреси цього підключення в DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Вик&ористовувати DNS-суфікс підключення при реєстрації в DNS", IDC_USESUFFIX, 15, 255, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Р—Р°СЂРµС”СЃС‚СЂСѓРІР°С‚Рё Р°РґСЂРµСЃРё С†СЊРѕРіРѕ РїС–РґРєР»СЋС‡РµРЅРЅСЏ РІ DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Р’РёРє&РѕСЂРёСЃС‚РѕРІСѓРІР°С‚Рё DNS-СЃСѓС„С–РєСЃ РїС–РґРєР»СЋС‡РµРЅРЅСЏ РїСЂРё СЂРµС”СЃС‚СЂР°С†С–С— РІ DNS", IDC_USESUFFIX, 15, 255, 227, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX DISCARDABLE  0, 0, 247, 247
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Параметри"
+CAPTION "РџР°СЂР°РјРµС‚СЂРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
-    LTEXT "&Додаткові параметри", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Властивості", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
-    GROUPBOX "Опис:", -1, 5, 120, 240, 70
+    LTEXT "&Р”РѕРґР°С‚РєРѕРІС– РїР°СЂР°РјРµС‚СЂРё", -1, 5, 15, 130, 12
+    PUSHBUTTON "&Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    GROUPBOX "РћРїРёСЃ:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
 
 IDD_TCPIPADDIP_DLG DIALOGEX DISCARDABLE  0, 0, 200, 70
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP Адреса"
+CAPTION "TCP/IP РђРґСЂРµСЃР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "IP-адреса:", -1, 5, 15, 70, 12
-    LTEXT "Маска підмережі:", -1, 5, 30, 70, 12
+    LTEXT "IP-Р°РґСЂРµСЃР°:", -1, 5, 15, 70, 12
+    LTEXT "РњР°СЃРєР° РїС–РґРјРµСЂРµР¶С–:", -1, 5, 30, 70, 12
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32", WS_TABSTOP, 100, 30, 80, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Адреса TCP/IP шлюза"
+CAPTION "РђРґСЂРµСЃР° TCP/IP С€Р»СЋР·Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
-    LTEXT "Шлюз:", -1, 5, 15, 70, 12
-    CHECKBOX "Автоматична метрика", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "&Метрика:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    LTEXT "РЁР»СЋР·:", -1, 5, 15, 70, 12
+    CHECKBOX "РђРІС‚РѕРјР°С‚РёС‡РЅР° РјРµС‚СЂРёРєР°", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&РњРµС‚СЂРёРєР°:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
     EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     PUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIPDNS_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP DNS Сервер"
+CAPTION "TCP/IP DNS РЎРµСЂРІРµСЂ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 5, 25, 80, 12
-    LTEXT "DNS сервер:", -1, 5, 10, 120, 12
+    LTEXT "DNS СЃРµСЂРІРµСЂ:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIPSUFFIX_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Доменний суфікс TCP/IP"
+CAPTION "Р”РѕРјРµРЅРЅРёР№ СЃСѓС„С–РєСЃ TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
-    LTEXT "Доменний суфікс:", -1, 5, 10, 120, 12
+    LTEXT "Р”РѕРјРµРЅРЅРёР№ СЃСѓС„С–РєСЃ:", -1, 5, 10, 120, 12
     PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_FILTER_DLG DIALOGEX DISCARDABLE  0, 0, 305, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Фільтрування TCP/IP"
+CAPTION "Р¤С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CHECKBOX "Ввімкнути фільтрування TCP/IP (всі адаптери)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Р’РІС–РјРєРЅСѓС‚Рё С„С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ TCP/IP (РІСЃС– Р°РґР°РїС‚РµСЂРё)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
-    CONTROL "Можна все", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
-    CONTROL "Можна лише", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "РњРѕР¶РЅР° РІСЃРµ", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "РњРѕР¶РЅР° Р»РёС€Рµ", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
-    PUSHBUTTON "Додати", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Видалити", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р”РѕРґР°С‚Рё", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РёРґР°Р»РёС‚Рё", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Можна все", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
-    CONTROL "Можна лише", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "РњРѕР¶РЅР° РІСЃРµ", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "РњРѕР¶РЅР° Р»РёС€Рµ", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
-    PUSHBUTTON "Додати", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Видалити", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р”РѕРґР°С‚Рё", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РёРґР°Р»РёС‚Рё", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 205, 30, 90, 150
-    CONTROL "Можна все", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
-    CONTROL "Можна лише", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "РњРѕР¶РЅР° РІСЃРµ", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "РњРѕР¶РЅР° Р»РёС€Рµ", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
-    PUSHBUTTON "Додати", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Видалити", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р”РѕРґР°С‚Рё", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Р’РёРґР°Р»РёС‚Рё", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
     PUSHBUTTON "OK", IDC_OK, 150, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_PORT_DLG DIALOGEX DISCARDABLE  0, 0, 200, 60
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Додати фільтр"
+CAPTION "Р”РѕРґР°С‚Рё С„С–Р»СЊС‚СЂ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
     LTEXT "", IDC_PORT_DESC, 5, 15, 40, 12
     PUSHBUTTON "OK", IDC_OK, 120, 15, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Скасувати", IDCANCEL, 120, 30, 50, 14, WS_TABSTOP
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 120, 30, 50, 14, WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Мережне підключення"
-	IDS_NO_IPADDR_SET   "Адаптеру потрібна хоча б одна IP-адреса. Будь-ласка, введіть її."
-	IDS_NO_SUBMASK_SET  "Введено адресу без вказання маски підмережі. Додайте маску підмережі."
-	IDS_TCPFILTERDESC   "Фільтрування TCP/IP дозволяє контролювати мережний трафік TCP/IP, що надходить на ваш комп'ютер."
-	IDS_TCPFILTER       "Фільтрування TCP/IP"
-	IDS_IPADDR          "IP-адреса"
-	IDS_SUBMASK         "Маска підмережі"
-	IDS_GATEWAY         "Шлюз"
-	IDS_METRIC          "Метрика"
-	IDS_DHCPACTIVE      "DHCP включено"
-	IDS_AUTOMATIC       "Автоматично"
-	IDS_NOITEMSEL       "Не вибрано ні одного елементу. Виберіть хоча б один."
+	IDS_NET_CONNECT "РњРµСЂРµР¶РЅРµ РїС–РґРєР»СЋС‡РµРЅРЅСЏ"
+	IDS_NO_IPADDR_SET   "РђРґР°РїС‚РµСЂСѓ РїРѕС‚СЂС–Р±РЅР° С…РѕС‡Р° Р± РѕРґРЅР° IP-Р°РґСЂРµСЃР°. Р‘СѓРґСЊ-Р»Р°СЃРєР°, РІРІРµРґС–С‚СЊ С—С—."
+	IDS_NO_SUBMASK_SET  "Р’РІРµРґРµРЅРѕ Р°РґСЂРµСЃСѓ Р±РµР· РІРєР°Р·Р°РЅРЅСЏ РјР°СЃРєРё РїС–РґРјРµСЂРµР¶С–. Р”РѕРґР°Р№С‚Рµ РјР°СЃРєСѓ РїС–РґРјРµСЂРµР¶С–."
+	IDS_TCPFILTERDESC   "Р¤С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ TCP/IP РґРѕР·РІРѕР»СЏС” РєРѕРЅС‚СЂРѕР»СЋРІР°С‚Рё РјРµСЂРµР¶РЅРёР№ С‚СЂР°С„С–Рє TCP/IP, С‰Рѕ РЅР°РґС…РѕРґРёС‚СЊ РЅР° РІР°С€ РєРѕРјРї'СЋС‚РµСЂ."
+	IDS_TCPFILTER       "Р¤С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ TCP/IP"
+	IDS_IPADDR          "IP-Р°РґСЂРµСЃР°"
+	IDS_SUBMASK         "РњР°СЃРєР° РїС–РґРјРµСЂРµР¶С–"
+	IDS_GATEWAY         "РЁР»СЋР·"
+	IDS_METRIC          "РњРµС‚СЂРёРєР°"
+	IDS_DHCPACTIVE      "DHCP РІРєР»СЋС‡РµРЅРѕ"
+	IDS_AUTOMATIC       "РђРІС‚РѕРјР°С‚РёС‡РЅРѕ"
+	IDS_NOITEMSEL       "РќРµ РІРёР±СЂР°РЅРѕ РЅС– РѕРґРЅРѕРіРѕ РµР»РµРјРµРЅС‚Сѓ. Р’РёР±РµСЂС–С‚СЊ С…РѕС‡Р° Р± РѕРґРёРЅ."
 	IDS_TCPIP           "ReactOS-TCP/IP"
-	IDS_ADD             "Додати"
+	IDS_ADD             "Р”РѕРґР°С‚Рё"
 	IDS_MOD             "OK"
-	IDS_TCP_PORTS       "TCP-порти"
-	IDS_UDP_PORTS       "UDP-порти"
-	IDS_IP_PROTO        "IP-протоколи"
-	IDS_PORT_RANGE      "Номери портів повинні бути більші від 0 та менші від 65536. Введіть номер з цього діапазону."
-	IDS_PROT_RANGE      "Номери протоколу повинні бути більші від 0 та менші від 256. Введіть номер з цього діапазону."
-	IDS_DUP_NUMBER      "Номер, який ви хочете додати, вже є в списку. Введіть інший номер."
-	IDS_DISABLE_FILTER  "Заборона цього глобального параметра TCP/IP вплине на всі адаптери."
-	IDS_NO_SUFFIX       "Поточні параметри методу пошуку вимагають вказання хоча б одного суфіксу DNS. Введіть суфікс або змініть налаштування."
-	IDS_DOMAIN_SUFFIX   "Невірний суфікс домена."
-	IDS_DNS_SUFFIX      "DNS-ім'я домену ""%s"" не є допустимим DNS-іменем."
-	IDS_DUP_SUFFIX      "DNS-суфікс вже присутній в списку."
-	IDS_DUP_IPADDR      "IP-адреса вже є всписку."
-	IDS_DUP_GW          "Шлюз по замовчуванню вже є в списку."
+	IDS_TCP_PORTS       "TCP-РїРѕСЂС‚Рё"
+	IDS_UDP_PORTS       "UDP-РїРѕСЂС‚Рё"
+	IDS_IP_PROTO        "IP-РїСЂРѕС‚РѕРєРѕР»Рё"
+	IDS_PORT_RANGE      "РќРѕРјРµСЂРё РїРѕСЂС‚С–РІ РїРѕРІРёРЅРЅС– Р±СѓС‚Рё Р±С–Р»СЊС€С– РІС–Рґ 0 С‚Р° РјРµРЅС€С– РІС–Рґ 65536. Р’РІРµРґС–С‚СЊ РЅРѕРјРµСЂ Р· С†СЊРѕРіРѕ РґС–Р°РїР°Р·РѕРЅСѓ."
+	IDS_PROT_RANGE      "РќРѕРјРµСЂРё РїСЂРѕС‚РѕРєРѕР»Сѓ РїРѕРІРёРЅРЅС– Р±СѓС‚Рё Р±С–Р»СЊС€С– РІС–Рґ 0 С‚Р° РјРµРЅС€С– РІС–Рґ 256. Р’РІРµРґС–С‚СЊ РЅРѕРјРµСЂ Р· С†СЊРѕРіРѕ РґС–Р°РїР°Р·РѕРЅСѓ."
+	IDS_DUP_NUMBER      "РќРѕРјРµСЂ, СЏРєРёР№ РІРё С…РѕС‡РµС‚Рµ РґРѕРґР°С‚Рё, РІР¶Рµ С” РІ СЃРїРёСЃРєСѓ. Р’РІРµРґС–С‚СЊ С–РЅС€РёР№ РЅРѕРјРµСЂ."
+	IDS_DISABLE_FILTER  "Р—Р°Р±РѕСЂРѕРЅР° С†СЊРѕРіРѕ РіР»РѕР±Р°Р»СЊРЅРѕРіРѕ РїР°СЂР°РјРµС‚СЂР° TCP/IP РІРїР»РёРЅРµ РЅР° РІСЃС– Р°РґР°РїС‚РµСЂРё."
+	IDS_NO_SUFFIX       "РџРѕС‚РѕС‡РЅС– РїР°СЂР°РјРµС‚СЂРё РјРµС‚РѕРґСѓ РїРѕС€СѓРєСѓ РІРёРјР°РіР°СЋС‚СЊ РІРєР°Р·Р°РЅРЅСЏ С…РѕС‡Р° Р± РѕРґРЅРѕРіРѕ СЃСѓС„С–РєСЃСѓ DNS. Р’РІРµРґС–С‚СЊ СЃСѓС„С–РєСЃ Р°Р±Рѕ Р·РјС–РЅС–С‚СЊ РЅР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ."
+	IDS_DOMAIN_SUFFIX   "РќРµРІС–СЂРЅРёР№ СЃСѓС„С–РєСЃ РґРѕРјРµРЅР°."
+	IDS_DNS_SUFFIX      "DNS-С–Рј'СЏ РґРѕРјРµРЅСѓ ""%s"" РЅРµ С” РґРѕРїСѓСЃС‚РёРјРёРј DNS-С–РјРµРЅРµРј."
+	IDS_DUP_SUFFIX      "DNS-СЃСѓС„С–РєСЃ РІР¶Рµ РїСЂРёСЃСѓС‚РЅС–Р№ РІ СЃРїРёСЃРєСѓ."
+	IDS_DUP_IPADDR      "IP-Р°РґСЂРµСЃР° РІР¶Рµ С” РІСЃРїРёСЃРєСѓ."
+	IDS_DUP_GW          "РЁР»СЋР· РїРѕ Р·Р°РјРѕРІС‡СѓРІР°РЅРЅСЋ РІР¶Рµ С” РІ СЃРїРёСЃРєСѓ."
 END

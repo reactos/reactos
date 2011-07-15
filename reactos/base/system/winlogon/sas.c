@@ -25,6 +25,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
+static BOOL inScrn = FALSE;
+
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
@@ -960,6 +962,28 @@ SASWindowProc(
                     {
                         SetTimer(hwndDlg, 1, 1000, NULL);
                     }
+                    break;
+                }
+                case LN_START_SCREENSAVE:
+                {
+                    BOOL bSecure = FALSE;
+
+                    if (inScrn)
+                       break;
+
+                    inScrn = TRUE;
+
+                    // lParam 1 == Secure
+                    if (lParam)
+                    {
+                       if (Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
+                       {
+                          if (bSecure) DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
+		       }
+                    }
+
+                    StartScreenSaver(Session);
+                    inScrn = FALSE;
                     break;
                 }
                 default:

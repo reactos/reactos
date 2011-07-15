@@ -125,7 +125,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Версия " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Версия "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Тази версия на РеактОС е записана на:", IDC_STATIC, 35, 115, 180, 10
@@ -423,7 +423,7 @@ LTEXT "Отваряне с:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Име на приложение", 14005, 100, 140, 40, 10
 PUSHBUTTON "Про&мяна...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Файловете с разширение '%s' са от вида '%s'. За да промените настройките, за всички '%s' файлове, натиснете „Разширени”.", 14007, 12, 155, 160, 32
+LTEXT "", 14007, 12, 155, 160, 32
 PUSHBUTTON "Раз&ширени", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -656,10 +656,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Предметът '%1' не може да бъде изпратен в кошчето. Искате ли направо да го изтриете?"
 	IDS_OVERWRITEFILE_TEXT      "Папката вече съдържа файл с име '%1'.\n\nИскате ли да го замените?"
 	IDS_OVERWRITEFILE_CAPTION   "Потвърждаване замяната на файла"
-	IDS_OVERWRITEFOLDER_TEXT    "Тази папка вече съдържа папка с име '%1'.\n\n"\
-		"Ако файловете в целевата папка имат същите имена като файловете в\n"\
-		"избраната папка, те ще бъдат заменени. Все още ли искате да преместите\n"\
-		"или презапишете папката?"
+	IDS_OVERWRITEFOLDER_TEXT    "Тази папка вече съдържа папка с име '%1'.\n\nАко файловете в целевата папка имат същите имена като файловете в\nизбраната папка, те ще бъдат заменени. Все още ли искате да преместите\nили презапишете папката?"
 
 	// message box strings 
 	IDS_RESTART_TITLE           "Презапуск"
@@ -762,6 +759,8 @@ BEGIN
 	
 	IDS_FILE_DETAILS            "Подробности за разширение '%s"
 	IDS_FILE_DETAILSADV         "Файловете с разширение '%s' са от вида '%s'. За да промените настройките, за всички '%s' файлове, натиснете „Разширени”."
+	IDS_FILE_TYPES              "FileTypes"
+	IDS_COLUMN_EXTENSION        "Extensions"
 END
 
 

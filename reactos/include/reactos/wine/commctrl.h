@@ -29,6 +29,19 @@ static const WCHAR DRAGLISTMSGSTRINGW[] = { 'c','o','m','m','c','t','r','l',
   '_','D','r','a','g','L','i','s','t','M','s','g',0 };
 #endif
 
+#define ListView_InsertItemA(hwnd,pitem) \
+    (INT)SNDMSGA((hwnd),LVM_INSERTITEMA,0,(LPARAM)(const LVITEMA *)(pitem))
+#define ListView_InsertItemW(hwnd,pitem) \
+    (INT)SNDMSGW((hwnd),LVM_INSERTITEMW,0,(LPARAM)(const LVITEMW *)(pitem))
+
+#ifdef __cplusplus
+#define SNDMSGA ::SendMessageA
+#define SNDMSGW ::SendMessageW
+#else
+#define SNDMSGA SendMessageA
+#define SNDMSGW SendMessageW
+#endif
+
 #define FLATSB_CLASSA         "flatsb_class32"
 #if defined(__GNUC__)
 # define FLATSB_CLASSW (const WCHAR []){ 'f','l','a','t','s','b','_', \

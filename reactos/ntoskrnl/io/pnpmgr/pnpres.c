@@ -758,6 +758,13 @@ IopTranslateDeviceResources(
                   DPRINT1("Failed to translate port resource (Start: 0x%I64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
+                
+               if (AddressSpace == 0)
+               {
+                   /* This is actually a memory resource */
+                   DescriptorRaw->Type = CmResourceTypeMemory;
+                   DescriptorTranslated->Type = CmResourceTypeMemory;
+               }
                break;
             }
             case CmResourceTypeInterrupt:
@@ -792,6 +799,13 @@ IopTranslateDeviceResources(
                   Status = STATUS_UNSUCCESSFUL;
                   DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
+               }
+
+               if (AddressSpace != 0)
+               {
+                   /* This is actually an I/O port resource */
+                   DescriptorRaw->Type = CmResourceTypePort;
+                   DescriptorTranslated->Type = CmResourceTypePort;
                }
             }
 

@@ -8,8 +8,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 ID_MENU MENU
 BEGIN
     POPUP "&Fișier"
@@ -206,5 +204,3 @@ BEGIN
     IDS_FILESIZE, "%d bytes"
     IDS_PRINTRES, "%d x %d pixels per meter"
 END
-
-#pragma code_page(default)

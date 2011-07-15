@@ -126,7 +126,7 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
      * Therefore if we see one below in the switch, we can return STATUS_SUCCESS
      * immediately.
      */
-    if(DriveInfo->DeviceObject->Flags & DO_VERIFY_VOLUME && !(DriveInfo->DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME))
+    if(DriveInfo->DeviceObject->Flags & DO_VERIFY_VOLUME && !(Stack->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
         INFO_(FLOPPY, "DeviceIoctl(): completing with STATUS_VERIFY_REQUIRED\n");
         Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;

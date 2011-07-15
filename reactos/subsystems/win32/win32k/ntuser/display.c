@@ -634,7 +634,6 @@ NtUserEnumDisplaySettings(
 
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 VOID APIENTRY UserRedrawDesktop();
-HCURSOR FASTCALL UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange);
 
 LONG
 APIENTRY

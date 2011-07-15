@@ -59,8 +59,8 @@
 @ stdcall CM_Get_Class_NameW(ptr wstr ptr long) setupapi.CM_Get_Class_NameW
 @ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long) setupapi.CM_Get_Class_Name_ExA
 @ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long) setupapi.CM_Get_Class_Name_ExW
-@ stub CM_Get_Class_Registry_PropertyA # setupapi.CM_Get_Class_Registry_PropertyA
-@ stub CM_Get_Class_Registry_PropertyW # setupapi.CM_Get_Class_Registry_PropertyW
+@ stdcall CM_Get_Class_Registry_PropertyA(ptr long ptr ptr ptr long ptr) setupapi.CM_Get_Class_Registry_PropertyA
+@ stdcall CM_Get_Class_Registry_PropertyW(ptr long ptr ptr ptr long ptr) setupapi.CM_Get_Class_Registry_PropertyW
 @ stdcall CM_Get_Depth(ptr long long) setupapi.CM_Get_Depth
 @ stdcall CM_Get_Depth_Ex(ptr long long long) setupapi.CM_Get_Depth_Ex
 @ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long) setupapi.CM_Get_DevNode_Registry_PropertyA
@@ -83,18 +83,18 @@
 @ stdcall CM_Get_Device_ID_List_Size_ExW(ptr wstr long long) setupapi.CM_Get_Device_ID_List_Size_ExA
 @ stdcall CM_Get_Device_ID_Size(ptr long long) setupapi.CM_Get_Device_ID_Size
 @ stdcall CM_Get_Device_ID_Size_Ex(ptr long long long) setupapi.CM_Get_Device_ID_Size_Ex
-@ stub CM_Get_Device_Interface_AliasA # setupapi.CM_Get_Device_Interface_AliasA
-@ stub CM_Get_Device_Interface_AliasW # setupapi.CM_Get_Device_Interface_AliasW
-@ stub CM_Get_Device_Interface_Alias_ExA # setupapi.CM_Get_Device_Interface_Alias_ExA
-@ stub CM_Get_Device_Interface_Alias_ExW # setupapi.CM_Get_Device_Interface_Alias_ExW
-@ stub CM_Get_Device_Interface_ListA # setupapi.CM_Get_Device_Interface_ListA
-@ stub CM_Get_Device_Interface_ListW # setupapi.CM_Get_Device_Interface_ListW
-@ stub CM_Get_Device_Interface_List_ExA # setupapi.CM_Get_Device_Interface_List_ExA
-@ stub CM_Get_Device_Interface_List_ExW # setupapi.CM_Get_Device_Interface_List_ExW
-@ stub CM_Get_Device_Interface_List_SizeA # setupapi.CM_Get_Device_Interface_List_SizeA
-@ stub CM_Get_Device_Interface_List_SizeW # setupapi.CM_Get_Device_Interface_List_SizeW
-@ stub CM_Get_Device_Interface_List_Size_ExA # setupapi.CM_Get_Device_Interface_List_Size_ExA
-@ stub CM_Get_Device_Interface_List_Size_ExW # setupapi.CM_Get_Device_Interface_List_Size_ExW
+@ stdcall CM_Get_Device_Interface_AliasA(str ptr str ptr long) setupapi.CM_Get_Device_Interface_AliasA
+@ stdcall CM_Get_Device_Interface_AliasW(wstr ptr wstr ptr long) setupapi.CM_Get_Device_Interface_AliasW
+@ stdcall CM_Get_Device_Interface_Alias_ExA(str ptr str ptr long long) setupapi.CM_Get_Device_Interface_Alias_ExA
+@ stdcall CM_Get_Device_Interface_Alias_ExW(wstr ptr wstr ptr long long) setupapi.CM_Get_Device_Interface_Alias_ExW
+@ stdcall CM_Get_Device_Interface_ListA(ptr str str long long) setupapi.CM_Get_Device_Interface_ListA
+@ stdcall CM_Get_Device_Interface_ListW(ptr wstr wstr long long) setupapi.CM_Get_Device_Interface_ListW
+@ stdcall CM_Get_Device_Interface_List_ExA(ptr str str long long ptr) setupapi.CM_Get_Device_Interface_List_ExA
+@ stdcall CM_Get_Device_Interface_List_ExW(ptr wstr wstr long long ptr) setupapi.CM_Get_Device_Interface_List_ExW
+@ stdcall CM_Get_Device_Interface_List_SizeA(ptr ptr str long) setupapi.CM_Get_Device_Interface_List_SizeA
+@ stdcall CM_Get_Device_Interface_List_SizeW(ptr ptr wstr long) setupapi.CM_Get_Device_Interface_List_SizeW
+@ stdcall CM_Get_Device_Interface_List_Size_ExA(ptr ptr str long ptr) setupapi.CM_Get_Device_Interface_List_Size_ExA
+@ stdcall CM_Get_Device_Interface_List_Size_ExW(ptr ptr wstr long ptr) setupapi.CM_Get_Device_Interface_List_Size_ExW
 @ stdcall CM_Get_First_Log_Conf(ptr long long) setupapi.CM_Get_First_Log_Conf
 @ stdcall CM_Get_First_Log_Conf_Ex(ptr long long long) setupapi.CM_Get_First_Log_Conf_Ex
 @ stdcall CM_Get_Global_State(ptr long) setupapi.CM_Get_Global_State
@@ -103,10 +103,10 @@
 @ stdcall CM_Get_HW_Prof_FlagsW(wstr long ptr long) setupapi.CM_Get_HW_Prof_FlagsW
 @ stdcall CM_Get_HW_Prof_Flags_ExA(str long ptr long long) setupapi.CM_Get_HW_Prof_Flags_ExA
 @ stdcall CM_Get_HW_Prof_Flags_ExW(wstr long ptr long long) setupapi.CM_Get_HW_Prof_Flags_ExW
-@ stub CM_Get_Hardware_Profile_InfoA # setupapi.CM_Get_Hardware_Profile_InfoA
-@ stub CM_Get_Hardware_Profile_InfoW # setupapi.CM_Get_Hardware_Profile_InfoW
-@ stub CM_Get_Hardware_Profile_Info_ExA # setupapi.CM_Get_Hardware_Profile_Info_ExA
-@ stub CM_Get_Hardware_Profile_Info_ExW # setupapi.CM_Get_Hardware_Profile_Info_ExW
+@ stdcall CM_Get_Hardware_Profile_InfoA(long ptr long) setupapi.CM_Get_Hardware_Profile_InfoA
+@ stdcall CM_Get_Hardware_Profile_InfoW(long ptr long) setupapi.CM_Get_Hardware_Profile_InfoW
+@ stdcall CM_Get_Hardware_Profile_Info_ExA(long ptr long long) setupapi.CM_Get_Hardware_Profile_Info_ExA
+@ stdcall CM_Get_Hardware_Profile_Info_ExW(long ptr long long) setupapi.CM_Get_Hardware_Profile_Info_ExW
 @ stdcall CM_Get_Log_Conf_Priority(ptr ptr long) setupapi.CM_Get_Log_Conf_Priority
 @ stdcall CM_Get_Log_Conf_Priority_Ex(ptr ptr long long) setupapi.CM_Get_Log_Conf_Priority_Ex
 @ stdcall CM_Get_Next_Log_Conf(ptr ptr long) setupapi.CM_Get_Next_Log_Conf
@@ -146,29 +146,27 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long) setupapi.CM_Open_Class_Key_ExW
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long) setupapi.CM_Open_DevNode_Key
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long) setupapi.CM_Open_DevNode_Key_Ex
-@ stub CM_Query_And_Remove_SubTreeA # setupapi.CM_Query_And_Remove_SubTreeA
-@ stub CM_Query_And_Remove_SubTreeW # setupapi.CM_Query_And_Remove_SubTreeW
-@ stub CM_Query_And_Remove_SubTree_ExA # setupapi.CM_Query_And_Remove_SubTree_ExA
-@ stub CM_Query_And_Remove_SubTree_ExW # setupapi.CM_Query_And_Remove_SubTree_ExW
-@ stub CM_Query_Arbitrator_Free_Data # setupapi.CM_Query_Arbitrator_Free_Data
-@ stub CM_Query_Arbitrator_Free_Data_Ex # setupapi.CM_Query_Arbitrator_Free_Data_Ex
-@ stub CM_Query_Arbitrator_Free_Size # setupapi.CM_Query_Arbitrator_Free_Size
-@ stub CM_Query_Arbitrator_Free_Size_Ex # setupapi.CM_Query_Arbitrator_Free_Size_Ex
-@ stub CM_Query_Remove_SubTree # setupapi.CM_Query_Remove_SubTree
-@ stub CM_Query_Remove_SubTree_Ex # setupapi.CM_Query_Remove_SubTree_Ex
+@ stdcall CM_Query_And_Remove_SubTreeA(long ptr str long long) setupapi.CM_Query_And_Remove_SubTreeA
+@ stdcall CM_Query_And_Remove_SubTreeW(long ptr wstr long long) setupapi.CM_Query_And_Remove_SubTreeW
+@ stdcall CM_Query_And_Remove_SubTree_ExA(long ptr str long long long) setupapi.CM_Query_And_Remove_SubTree_ExA
+@ stdcall CM_Query_And_Remove_SubTree_ExW(long ptr wstr long long long) setupapi.CM_Query_And_Remove_SubTree_ExW
+@ stdcall CM_Query_Arbitrator_Free_Data(ptr long long long long) setupapi.CM_Query_Arbitrator_Free_Data
+@ stdcall CM_Query_Arbitrator_Free_Data_Ex(ptr long long long long ptr) setupapi.CM_Query_Arbitrator_Free_Data_Ex
+@ stdcall CM_Query_Arbitrator_Free_Size(ptr long long long) setupapi.CM_Query_Arbitrator_Free_Size
+@ stdcall CM_Query_Arbitrator_Free_Size_Ex(ptr long long long ptr) setupapi.CM_Query_Arbitrator_Free_Size_Ex
+@ stdcall CM_Query_Remove_SubTree(long long) setupapi.CM_Query_Remove_SubTree
+@ stdcall CM_Query_Remove_SubTree_Ex(long long long) setupapi.CM_Query_Remove_SubTree_Ex
 @ stub CM_Query_Resource_Conflict_List # setupapi.CM_Query_Resource_Conflict_List
 @ stdcall CM_Reenumerate_DevNode(long long) setupapi.CM_Reenumerate_DevNode
 @ stdcall CM_Reenumerate_DevNode_Ex(long long long) setuapi.CM_Reenumerate_DevNode_Ex
-@ stub CM_Register_Device_Driver # setupapi.CM_Register_Device_Driver
-@ stub CM_Register_Device_Driver_Ex # setupapi.CM_Register_Device_Driver_Ex
-@ stub CM_Register_Device_InterfaceA # setupapi.CM_Register_Device_InterfaceA
-@ stub CM_Register_Device_InterfaceW # setupapi.CM_Register_Device_InterfaceW
-@ stub CM_Register_Device_Interface_ExA # setupapi.CM_Register_Device_Interface_ExA
-@ stub CM_Register_Device_Interface_ExW # setupapi.CM_Register_Device_Interface_ExW
-@ stub CM_Remove_SubTree # setupapi.CM_Remove_SubTree
-@ stub CM_Remove_SubTree_Ex # setupapi.CM_Remove_SubTree_Ex
-@ stub CM_Request_Device_EjectA # setupapi.CM_Request_Device_EjectA
-@ stub CM_Request_Device_EjectW # setupapi.CM_Request_Device_EjectW
+@ stdcall CM_Register_Device_Driver(long long) setupapi.CM_Register_Device_Driver
+@ stdcall CM_Register_Device_Driver_Ex(long long ptr) setupapi.CM_Register_Device_Driver_Ex
+@ stdcall CM_Register_Device_InterfaceA(long ptr str str ptr long) setupapi.CM_Register_Device_InterfaceA
+@ stdcall CM_Register_Device_InterfaceW(long ptr wstr wstr ptr long) setupapi.CM_Register_Device_InterfaceW
+@ stdcall CM_Register_Device_Interface_ExA(long ptr str str ptr long long) setupapi.CM_Register_Device_Interface_ExA
+@ stdcall CM_Register_Device_Interface_ExW(long ptr wstr wstr ptr long long) setupapi.CM_Register_Device_Interface_ExW
+@ stdcall CM_Remove_SubTree(long long) setupapi.CM_Remove_SubTree
+@ stdcall CM_Remove_SubTree_Ex(long long long) setupapi.CM_Remove_SubTree_Ex
 @ stdcall CM_Request_Eject_PC() setupapi.CM_Request_Eject_PC
 @ stdcall CM_Request_Eject_PC_Ex(long) setupapi.CM_Request_Eject_PC_Ex
 @ stdcall CM_Run_Detection(long) setupapi.CM_Run_Detection
@@ -181,8 +179,8 @@
 @ stdcall CM_Set_DevNode_Registry_PropertyW(long long ptr long long) setupapi.CM_Set_DevNode_Registry_PropertyW
 @ stdcall CM_Set_DevNode_Registry_Property_ExA(long long ptr long long long) setupapi.CM_Set_DevNode_Registry_Property_ExA
 @ stdcall CM_Set_DevNode_Registry_Property_ExW(long long ptr long long long) setupapi.CM_Set_DevNode_Registry_Property_ExW
-@ stub CM_Set_HW_Prof # setupapi.CM_Set_HW_Prof
-@ stub CM_Set_HW_Prof_Ex # setupapi.CM_Set_HW_Prof_Ex
+@ stdcall CM_Set_HW_Prof(long long) setupapi.CM_Set_HW_Prof
+@ stdcall CM_Set_HW_Prof_Ex(long long long) setupapi.CM_Set_HW_Prof_Ex
 @ stdcall CM_Set_HW_Prof_FlagsA(str long long long) setupapi.CM_Set_HW_Prof_FlagsA
 @ stdcall CM_Set_HW_Prof_FlagsW(wstr long long long) setupapi.CM_Set_HW_Prof_FlagsW
 @ stdcall CM_Set_HW_Prof_Flags_ExA(str long long long long) setupapi.CM_Set_HW_Prof_Flags_ExA
@@ -192,10 +190,10 @@
 @ stub CM_Test_Range_Available # setupapi.CM_Test_Range_Available
 @ stdcall CM_Uninstall_DevNode(long long) setupapi.CM_Uninstall_DevNode
 @ stdcall CM_Uninstall_DevNode_Ex(long long long) setupapi.CM_Uninstall_DevNode_Ex
-@ stub CM_Unregister_Device_InterfaceA # setupapi.CM_Unregister_Device_InterfaceA
-@ stub CM_Unregister_Device_InterfaceW # setupapi.CM_Unregister_Device_InterfaceW
-@ stub CM_Unregister_Device_Interface_ExA # setupapi.CM_Unregister_Device_Interface_ExA
-@ stub CM_Unregister_Device_Interface_ExW # setupapi.CM_Unregister_Device_Interface_ExW
+@ stdcall CM_Unregister_Device_InterfaceA(str long) setupapi.CM_Unregister_Device_InterfaceA
+@ stdcall CM_Unregister_Device_InterfaceW(wstr long) setupapi.CM_Unregister_Device_InterfaceW
+@ stdcall CM_Unregister_Device_Interface_ExA(str long long) setupapi.CM_Unregister_Device_Interface_ExA
+@ stdcall CM_Unregister_Device_Interface_ExW(wstr long long) setupapi.CM_Unregister_Device_Interface_ExW
 
 # Deprecated functions, they are not present in Win2003 SP1
 @ stub CM_Remove_Unmarked_Children # setupapi.CM_Remove_Unmarked_Children

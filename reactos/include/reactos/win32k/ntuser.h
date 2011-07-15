@@ -3146,23 +3146,12 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved);
 
-
-/* Should be done in usermode and use NtUserGetCPD. */
-ULONG_PTR
-NTAPI
-NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
-
 UINT
 NTAPI
 NtUserGetMenuDefaultItem(
   HMENU hMenu,
   UINT fByPos,
   UINT gmdiFlags);
-
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
 
 BOOL
 NTAPI

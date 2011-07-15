@@ -24,16 +24,18 @@
 #include "lang/ja-JP.rc"
 #include "lang/nl-NL.rc"
 #include "lang/no-NO.rc"
-#include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
 #include "lang/pt-PT.rc"
 // cp 1250 languages
 #include "lang/cs-CZ.rc"
 #include "lang/hu-HU.rc"
-#include "lang/ro-RO.rc"
 #include "lang/sk-SK.rc"
 // cp 1251 languages
 #include "lang/bg-BG.rc"
+
+// UTF-8
+#pragma code_page(65001)
+#include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
-

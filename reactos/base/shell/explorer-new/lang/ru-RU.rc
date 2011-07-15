@@ -7,10 +7,10 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Диспетчер задач", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Р”РёСЃРїРµС‚С‡РµСЂ Р·Р°РґР°С‡", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Закрепить панель задач", ID_LOCKTASKBAR
-        MENUITEM "&Свойства", ID_SHELL_CMD_PROPERTIES
+        MENUITEM "&Р—Р°РєСЂРµРїРёС‚СЊ РїР°РЅРµР»СЊ Р·Р°РґР°С‡", ID_LOCKTASKBAR
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°", ID_SHELL_CMD_PROPERTIES
     END
 END
 
@@ -19,113 +19,113 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "&Программы", IDM_PROGRAMS
+        POPUP "&РџСЂРѕРіСЂР°РјРјС‹", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РїСѓСЃС‚Рѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Избранное", IDM_FAVORITES
+        POPUP "&РР·Р±СЂР°РЅРЅРѕРµ", IDM_FAVORITES
         BEGIN
-            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РїСѓСЃС‚Рѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Документы", IDM_DOCUMENTS
+        POPUP "&Р”РѕРєСѓРјРµРЅС‚С‹", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(РїСѓСЃС‚Рѕ)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Настройки", IDM_SETTINGS
+        POPUP "&РќР°СЃС‚СЂРѕР№РєРё", IDM_SETTINGS
         BEGIN
-            MENUITEM "&Панель управления", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "&РџР°РЅРµР»СЊ СѓРїСЂР°РІР»РµРЅРёСЏ", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Безопасность...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Сетевые подключения", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Принтеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Панель задач и меню пуск", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РЎРµС‚РµРІС‹Рµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РџСЂРёРЅС‚РµСЂС‹ Рё С„Р°РєСЃС‹", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&РџР°РЅРµР»СЊ Р·Р°РґР°С‡ Рё РјРµРЅСЋ РїСѓСЃРє", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "П&оиск", IDM_SEARCH
+        POPUP "Рџ&РѕРёСЃРє", IDM_SEARCH
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Сп&равка и поддержка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Запус&к...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "РЎРї&СЂР°РІРєР° Рё РїРѕРґРґРµСЂР¶РєР°", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Р—Р°РїСѓСЃ&Рє...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "Синхрониза&ция", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "Завершени&е сеанса %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "Отклю&чение...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Блокировать комп&ьютер", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "В&ыключение...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "РЎРёРЅС…СЂРѕРЅРёР·Р°&С†РёСЏ", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Р—Р°РІРµСЂС€РµРЅРё&Рµ СЃРµР°РЅСЃР° %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "РћС‚РєР»СЋ&С‡РµРЅРёРµ...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Р‘Р»РѕРєРёСЂРѕРІР°С‚СЊ РєРѕРјРї&СЊСЋС‚РµСЂ", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Р’&С‹РєР»СЋС‡РµРЅРёРµ...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
 
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Панель задач"
+CAPTION "РџР°РЅРµР»СЊ Р·Р°РґР°С‡"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Свойства панели задач", IDC_STATIC, 6,6,240,121
+    GROUPBOX        "РЎРІРѕР№СЃС‚РІР° РїР°РЅРµР»Рё Р·Р°РґР°С‡", IDC_STATIC, 6,6,240,121
     CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
-    AUTOCHECKBOX    "&Закрепить панель задач", IDC_TASKBARPROP_LOCK, 13,45,200,10
-    AUTOCHECKBOX    "&Автоматически скрывать панель задач", IDC_TASKBARPROP_HIDE, 13,58,200,10
-    AUTOCHECKBOX    "&Поверх других окон", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX    "&Группировать схожие кнопки", IDC_TASKBARPROP_GROUP, 13,84,200,10
-    AUTOCHECKBOX    "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
-    AUTOCHECKBOX    "Отобра&жать образцы окон (эскизы)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
+    AUTOCHECKBOX    "&Р—Р°РєСЂРµРїРёС‚СЊ РїР°РЅРµР»СЊ Р·Р°РґР°С‡", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "&РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё СЃРєСЂС‹РІР°С‚СЊ РїР°РЅРµР»СЊ Р·Р°РґР°С‡", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "&РџРѕРІРµСЂС… РґСЂСѓРіРёС… РѕРєРѕРЅ", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Р“СЂСѓРїРїРёСЂРѕРІР°С‚СЊ СЃС…РѕР¶РёРµ РєРЅРѕРїРєРё", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "РћС‚РѕР±СЂР°Р¶Р°С‚СЊ РїР°РЅРµР»СЊ &Р±С‹СЃС‚СЂРѕРіРѕ Р·Р°РїСѓСЃРєР°", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "РћС‚РѕР±СЂР°&Р¶Р°С‚СЊ РѕР±СЂР°Р·С†С‹ РѕРєРѕРЅ (СЌСЃРєРёР·С‹)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Меню ""Пуск"""
+CAPTION "РњРµРЅСЋ ""РџСѓСЃРє"""
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "М&еню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "Этот стиль меню обеспечивает удобный доступ к папкам, часто используемым программам и поиску.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "&Настроить...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "&Классичесское меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "Классичесский стиль отображения меню ""Пуск"".",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "Н&астроить...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
-    GROUPBOX        "Конфиденциальность",IDC_STATIC, 7,100,238,50
-    AUTOCHECKBOX    "Хранить и отображать список недавно открывавшихся фа&йлов", IDC_TASKBARPROP_RECENTFILES, 14,114,227,10, WS_DISABLED
-    AUTOCHECKBOX    "Хранить и отображать список недавно открывавшихся &программ",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,17, WS_DISABLED
+    AUTORADIOBUTTON "Рњ&РµРЅСЋ ""РџСѓСЃРє""", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    LTEXT           "Р­С‚РѕС‚ СЃС‚РёР»СЊ РјРµРЅСЋ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ СѓРґРѕР±РЅС‹Р№ РґРѕСЃС‚СѓРї Рє РїР°РїРєР°Рј, С‡Р°СЃС‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРјС‹Рј РїСЂРѕРіСЂР°РјРјР°Рј Рё РїРѕРёСЃРєСѓ.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    PUSHBUTTON      "&РќР°СЃС‚СЂРѕРёС‚СЊ...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
+    AUTORADIOBUTTON "&РљР»Р°СЃСЃРёС‡РµСЃСЃРєРѕРµ РјРµРЅСЋ ""РџСѓСЃРє""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "РљР»Р°СЃСЃРёС‡РµСЃСЃРєРёР№ СЃС‚РёР»СЊ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РјРµРЅСЋ ""РџСѓСЃРє"".",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "Рќ&Р°СЃС‚СЂРѕРёС‚СЊ...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    GROUPBOX        "РљРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚СЊ",IDC_STATIC, 7,100,238,50
+    AUTOCHECKBOX    "РҐСЂР°РЅРёС‚СЊ Рё РѕС‚РѕР±СЂР°Р¶Р°С‚СЊ СЃРїРёСЃРѕРє РЅРµРґР°РІРЅРѕ РѕС‚РєСЂС‹РІР°РІС€РёС…СЃСЏ С„Р°&Р№Р»РѕРІ", IDC_TASKBARPROP_RECENTFILES, 14,114,227,10, WS_DISABLED
+    AUTOCHECKBOX    "РҐСЂР°РЅРёС‚СЊ Рё РѕС‚РѕР±СЂР°Р¶Р°С‚СЊ СЃРїРёСЃРѕРє РЅРµРґР°РІРЅРѕ РѕС‚РєСЂС‹РІР°РІС€РёС…СЃСЏ &РїСЂРѕРіСЂР°РјРј",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,17, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Область уведомлений"
+CAPTION "РћР±Р»Р°СЃС‚СЊ СѓРІРµРґРѕРјР»РµРЅРёР№"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
-    GROUPBOX        "Значки", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "Можно избежать загромождения области уведомлений, скрывая значки, которые давно не использовались.", IDC_STATIC, 13,48,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Скрывать неиспользуемые значки", IDC_TASKBARPROP_HIDEICONS, 13,70,140,10, WS_DISABLED
-    PUSHBUTTON      "&Настроить...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
-    GROUPBOX        "Системные значки", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Выберите постоянно отображаемые системные значки.", IDC_STATIC, 13,112,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Часы", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Громкость", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Сеть", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Питание", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
+    GROUPBOX        "Р—РЅР°С‡РєРё", IDC_STATIC, 6,33,240,58, WS_DISABLED
+    LTEXT           "РњРѕР¶РЅРѕ РёР·Р±РµР¶Р°С‚СЊ Р·Р°РіСЂРѕРјРѕР¶РґРµРЅРёСЏ РѕР±Р»Р°СЃС‚Рё СѓРІРµРґРѕРјР»РµРЅРёР№, СЃРєСЂС‹РІР°СЏ Р·РЅР°С‡РєРё, РєРѕС‚РѕСЂС‹Рµ РґР°РІРЅРѕ РЅРµ РёСЃРїРѕР»СЊР·РѕРІР°Р»РёСЃСЊ.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&РЎРєСЂС‹РІР°С‚СЊ РЅРµРёСЃРїРѕР»СЊР·СѓРµРјС‹Рµ Р·РЅР°С‡РєРё", IDC_TASKBARPROP_HIDEICONS, 13,70,140,10, WS_DISABLED
+    PUSHBUTTON      "&РќР°СЃС‚СЂРѕРёС‚СЊ...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
+    GROUPBOX        "РЎРёСЃС‚РµРјРЅС‹Рµ Р·РЅР°С‡РєРё", IDC_STATIC, 6,97,240,84, WS_DISABLED
+    LTEXT           "Р’С‹Р±РµСЂРёС‚Рµ РїРѕСЃС‚РѕСЏРЅРЅРѕ РѕС‚РѕР±СЂР°Р¶Р°РµРјС‹Рµ СЃРёСЃС‚РµРјРЅС‹Рµ Р·РЅР°С‡РєРё.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&Р§Р°СЃС‹", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Р“СЂРѕРјРєРѕСЃС‚СЊ", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&РЎРµС‚СЊ", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&РџРёС‚Р°РЅРёРµ", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
 
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Панели инструментов"
+CAPTION "РџР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Выберите панели инструментов, отображаемые на панели задач.", IDC_STATIC, 7,7,238,12, WS_DISABLED
+    LTEXT           "Р’С‹Р±РµСЂРёС‚Рµ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ, РѕС‚РѕР±СЂР°Р¶Р°РµРјС‹Рµ РЅР° РїР°РЅРµР»Рё Р·Р°РґР°С‡.", IDC_STATIC, 7,7,238,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_START             "Пуск"
-    IDS_PROPERTIES        "&Свойства"
-    IDS_OPEN_ALL_USERS    "&Все пользователи"
-    IDS_EXPLORE_ALL_USERS "&Обзор Всех пользователей"
+    IDS_START             "РџСѓСЃРє"
+    IDS_PROPERTIES        "&РЎРІРѕР№СЃС‚РІР°"
+    IDS_OPEN_ALL_USERS    "&Р’СЃРµ РїРѕР»СЊР·РѕРІР°С‚РµР»Рё"
+    IDS_EXPLORE_ALL_USERS "&РћР±Р·РѕСЂ Р’СЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№"
     IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Свойства меню Пуск и Панели задач"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "РЎРІРѕР№СЃС‚РІР° РјРµРЅСЋ РџСѓСЃРє Рё РџР°РЅРµР»Рё Р·Р°РґР°С‡"
 END

@@ -20,8 +20,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 ID_ACCEL ACCELERATORS
 BEGIN
     "^A", CMD_SELECT_ALL
@@ -204,5 +202,3 @@ STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
 STRING_LINE_COLUMN,                             "Linie %d, coloană %d"
 END
-
-#pragma code_page(default)

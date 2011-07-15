@@ -64,14 +64,13 @@ static int acpi_power_remove (struct acpi_device *device, int type);
 static int acpi_power_resume(struct acpi_device *device, int state);
 
 static struct acpi_driver acpi_power_driver = {
-	.name =		ACPI_POWER_DRIVER_NAME,
-	.class =	ACPI_POWER_CLASS,
-	.ids =		ACPI_POWER_HID,
-	.ops =		{
-				.add =		acpi_power_add,
-				.remove =	acpi_power_remove,
-				.resume = acpi_power_resume,
-			},
+	{0,0},
+	ACPI_POWER_DRIVER_NAME,
+	ACPI_POWER_CLASS,
+	0,
+	0,
+	ACPI_POWER_HID,
+	{acpi_power_add, acpi_power_remove, NULL, NULL, acpi_power_resume}
 };
 
 struct acpi_power_reference {

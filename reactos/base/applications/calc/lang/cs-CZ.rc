@@ -1,6 +1,7 @@
 /* FILE:        base/applications/calc/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2010-05-30
+ * UTF-8 Conversion: Elton Chung aka MfldElton <elton328@gmail.com> (June, 2011)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -9,7 +10,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 161
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS kalkulaËka"
+CAPTION "ReactOS kalkula√®ka"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -75,7 +76,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "M+",IDC_BUTTON_MP,124,121,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "pÌ",IDC_BUTTON_PI,124,140,24,17,BS_CENTER | BS_VCENTER |
+    PUSHBUTTON      "p√≠",IDC_BUTTON_PI,124,140,24,17,BS_CENTER | BS_VCENTER |
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "7",IDC_BUTTON_7,158,64,24,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -146,9 +147,9 @@ BEGIN
                     WS_VISIBLE,232,24,33,10
     CONTROL         "Byte",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT 
                     WS_VISIBLE,272,24,30,10
-    CONTROL         "StupnÏ",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
+    CONTROL         "Stupn√¨",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,148,24,
                     42,10
-    CONTROL         "Radi·ny",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
+    CONTROL         "Radi√°ny",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,192,
                     24,42,10
     CONTROL         "Grady",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
                     236,24,44,10
@@ -156,7 +157,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,228,40,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "ZpÏt",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER |
+    PUSHBUTTON      "Zp√¨t",IDC_BUTTON_BACK,184,40,40,17,BS_CENTER |
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,308,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -165,7 +166,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 172, 127
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS KalkulaËka"
+CAPTION "ReactOS Kalkula√®ka"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -173,7 +174,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,84,24,40,17,BS_CENTER | BS_VCENTER | 
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "ZpÏt",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER |
+    PUSHBUTTON      "Zp√¨t",IDC_BUTTON_BACK,40,24,40,17,BS_CENTER |
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,164,12,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -232,17 +233,17 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS KalkulaËka"
+CAPTION "ReactOS Kalkula√®ka"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "P¯evÈst",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "P√∏ev√©st",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,4,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT           "Kategorie:",IDC_STATIC,4,20,56,8
     COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "P¯evÈst z:",IDC_STATIC,4,49,56,8
+    LTEXT           "P√∏ev√©st z:",IDC_STATIC,4,49,56,8
     COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
     LTEXT           "Na:",IDC_STATIC,4,76,56,8
@@ -250,7 +251,7 @@ BEGIN
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
-    CONTROL         "ZpÏt",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW |
+    CONTROL         "Zp√¨t",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW |
                     BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
                     40,17
     RTEXT           "",IDC_TEXT_OUTPUT,4,4,312,12,SS_CENTERIMAGE,
@@ -310,13 +311,13 @@ END
 
 IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "O ReactOS KalkulaËce"
+CAPTION "O ReactOS Kalkula√®ce"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
     CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
                     SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
-    LTEXT           "ReactOS KalkulaËka",IDC_STATIC,120,12,132,8,
+    LTEXT           "ReactOS Kalkula√®ka",IDC_STATIC,120,12,132,8,
                     SS_CENTERIMAGE
     LTEXT           "Verze ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
     LTEXT           "Autor: Carlo Bramini",IDC_STATIC,120,32,132,8,
@@ -329,7 +330,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "StatistickÈ v˝poËty"
+CAPTION "Statistick√© v√Ωpo√®ty"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT | 
@@ -346,89 +347,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
-    POPUP "⁄pravy"
+    POPUP "√öpravy"
     BEGIN
-        MENUITEM "KopÌrovat\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Vloûit\tCTRL-V",              IDM_EDIT_PASTE
+        MENUITEM "Kop√≠rovat\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Vlo≈æit\tCTRL-V",              IDM_EDIT_PASTE
     END
     POPUP "Zobrazit"
     BEGIN
-        MENUITEM "StandardnÌ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "VÏdeck·",                     IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "P¯evody",                     IDM_VIEW_CONVERSION
+        MENUITEM "Standardn√≠",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "V√¨deck√°",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "P√∏evody",                     IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "äestn·ctkovÏ\tF5",            IDM_VIEW_HEX, CHECKED
-        MENUITEM "DesÌtkovÏ\tF6",               IDM_VIEW_DEC, CHECKED
-        MENUITEM "OsmiËkovÏ\tF7",               IDM_VIEW_OCT, CHECKED
-        MENUITEM "Bin·rnÏ\tF8",                 IDM_VIEW_BIN, CHECKED
+        MENUITEM "≈†estn√°ctkov√¨\tF5",            IDM_VIEW_HEX, CHECKED
+        MENUITEM "Des√≠tkov√¨\tF6",               IDM_VIEW_DEC, CHECKED
+        MENUITEM "Osmi√®kov√¨\tF7",               IDM_VIEW_OCT, CHECKED
+        MENUITEM "Bin√°rn√¨\tF8",                 IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "StupnÏ\tF2",                  IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radi·ny\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "Stupn√¨\tF2",                  IDM_VIEW_DEG, CHECKED
+        MENUITEM "Radi√°ny\tF3",                 IDM_VIEW_RAD, CHECKED
         MENUITEM "Grady\tF4",                   IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Seskupov·nÌ ËÌslic",          IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Seskupov√°n√≠ √®√≠slic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "N·povÏda"
+    POPUP "N√°pov√¨da"
     BEGIN
-        MENUITEM "TÈmata n·povÏdy",             IDM_HELP_HELP
+        MENUITEM "T√©mata n√°pov√¨dy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O ReactOS kalkulaËce",        IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkula√®ce",        IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE 
 BEGIN
-    POPUP "⁄pravy"
+    POPUP "√öpravy"
     BEGIN
-        MENUITEM "KopÌrovat\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Vloûit\tCTRL-V",              IDM_EDIT_PASTE
+        MENUITEM "Kop√≠rovat\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Vlo≈æit\tCTRL-V",              IDM_EDIT_PASTE
     END
     POPUP "Zobrazit"
     BEGIN
-        MENUITEM "StandardnÌ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "VÏdeck·",                     IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "P¯evody",                     IDM_VIEW_CONVERSION
+        MENUITEM "Standardn√≠",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "V√¨deck√°",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "P√∏evody",                     IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "äestn·ctkovÏ\tF5",            IDM_VIEW_HEX, CHECKED
-        MENUITEM "DesÌtkovÏ\tF6",               IDM_VIEW_DEC, CHECKED
-        MENUITEM "OsmiËkovÏ\tF7",               IDM_VIEW_OCT, CHECKED
-        MENUITEM "Bin·rnÏ\tF8",                 IDM_VIEW_BIN, CHECKED
+        MENUITEM "≈†estn√°ctkov√¨\tF5",            IDM_VIEW_HEX, CHECKED
+        MENUITEM "Des√≠tkov√¨\tF6",               IDM_VIEW_DEC, CHECKED
+        MENUITEM "Osmi√®kov√¨\tF7",               IDM_VIEW_OCT, CHECKED
+        MENUITEM "Bin√°rn√¨\tF8",                 IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
         MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Byte\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Seskupov·nÌ ËÌslic",          IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Seskupov√°n√≠ √®√≠slic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "N·povÏda"
+    POPUP "N√°pov√¨da"
     BEGIN
-        MENUITEM "TÈmata n·povÏdy",             IDM_HELP_HELP
+        MENUITEM "T√©mata n√°pov√¨dy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O ReactOS kalkulaËce",        IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkula√®ce",        IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU DISCARDABLE 
 BEGIN
-    POPUP "⁄pravy"
+    POPUP "√öpravy"
     BEGIN
-        MENUITEM "KopÌrovat\tCTRL-C",           IDM_EDIT_COPY
-        MENUITEM "Vloûit\tCTRL-V",              IDM_EDIT_PASTE
+        MENUITEM "Kop√≠rovat\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Vlo≈æit\tCTRL-V",              IDM_EDIT_PASTE
     END
     POPUP "Zobrazit"
     BEGIN
-        MENUITEM "StandardnÌ",                  IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "VÏdeck·",                     IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "P¯evody",                     IDM_VIEW_CONVERSION
+        MENUITEM "Standardn√≠",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "V√¨deck√°",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "P√∏evody",                     IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Seskupov·nÌ ËÌslic",          IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Seskupov√°n√≠ √®√≠slic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "N·povÏda"
+    POPUP "N√°pov√¨da"
     BEGIN
-        MENUITEM "TÈmata n·povÏdy",             IDM_HELP_HELP
+        MENUITEM "T√©mata n√°pov√¨dy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O ReactOS kalkulaËce",        IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkula√®ce",        IDM_HELP_ABOUT
     END
 END
 
@@ -436,66 +437,66 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS kalkulaËka je svobodn˝ software vydan˝ pod licencÌ GNU GPL.\r\n\r\nZde najdete znÏnÌ GNU GPL licence:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nZde takÈ najdete p¯eklad GNU GPL licence:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS kalkula√®ka je svobodn√Ω software vydan√Ω pod licenc√≠ GNU GPL.\r\n\r\nZde najdete zn√¨n√≠ GNU GPL licence:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nZde tak√© najdete p√∏eklad GNU GPL licence:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Chyba"
-    IDS_QUICKHELP           "Rychl· n·povÏda"
+    IDS_QUICKHELP           "Rychl√° n√°pov√¨da"
 END
 
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_TIME           "»as"
-    IDS_CONV_LENGTH         "DÈlka"
+    IDS_CONV_TIME           "√àas"
+    IDS_CONV_LENGTH         "D√©lka"
     IDS_CONV_ENERGY         "Energie"
     IDS_CONV_WEIGHT         "Hmotnost"
-    IDS_CONV_CURRENCY       "MÏna"
+    IDS_CONV_CURRENCY       "M√¨na"
     IDS_CONV_VOLUME         "Objem"
     IDS_CONV_AREA           "Plocha"
     IDS_CONV_VELOCITY       "Rychlost"
-    IDS_CONV_CONSUMPTION    "Spot¯eba"
+    IDS_CONV_CONSUMPTION    "Spot√∏eba"
     IDS_CONV_TEMPERATURE    "Teplota"
     IDS_CONV_PRESSURE       "Tlak"
-    IDS_CONV_ANGLE          "⁄hel"
-    IDS_CONV_POWER          "V˝kon"
+    IDS_CONV_ANGLE          "√öhel"
+    IDS_CONV_POWER          "V√Ωkon"
 END
 
 // TYPES OF ANGLES
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ANGLE_GRADIANS      "Grady"
-    IDS_ANGLE_RADIANS       "Radi·ny"
-    IDS_ANGLE_DEGREES       "StupnÏ"
+    IDS_ANGLE_RADIANS       "Radi√°ny"
+    IDS_ANGLE_DEGREES       "Stupn√¨"
 END
 
 // TYPES OF AREAS
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AREA_ACRES                  "Akry"
-    IDS_AREA_ACRES_BRAZIL           "Akry (BrazÌlie)"
+    IDS_AREA_ACRES_BRAZIL           "Akry (Braz√≠lie)"
     IDS_AREA_ACRES_FRANCE           "Akry (Francie)"
     IDS_AREA_ACRES_SCOTS            "Akry (Skotsko)"
     IDS_AREA_ACRES_US               "Akry (USA)"
     IDS_AREA_ARES                   "Ary"
     IDS_AREA_CHOU                   "Chou"
-    IDS_AREA_SQUARE_CENTIMETERS     "»tvereËnÌ centimetry"
-    IDS_AREA_SQUARE_CHR             "»tvereËnÌ chr"
-    IDS_AREA_SQUARE_FATHOMS         "»tvereËnÌ fathomy"
-    IDS_AREA_SQUARE_FATHOMS_HUNGARY "»tvereËnÌ fathomy (MaÔarsko)"
-    IDS_AREA_SQUARE_FEET            "»tvereËnÌ stopy"
-    IDS_AREA_SQUARE_INCHES          "»tvereËnÌ palce"
-    IDS_AREA_SQUARE_KILOMETERS      "»tvereËnÌ kilometry"
-    IDS_AREA_SQUARE_LAR             "»tvereËnÌ lar"
-    IDS_AREA_SQUARE_METER           "»tvereËnÌ metry"
-    IDS_AREA_SQUARE_MILES           "»tvereËnÌ mÌle"
-    IDS_AREA_SQUARE_MILLIMETERS     "»tvereËnÌ milimetry"
-    IDS_AREA_SQUARE_SHAKU           "»tvereËnÌ shaku"
-    IDS_AREA_SQUARE_TSUEN           "»tvereËnÌ tsuen"
-    IDS_AREA_SQUARE_VA              "»tvereËnÌ va"
-    IDS_AREA_SQUARE_YARD            "»tvereËnÌ yardy"
+    IDS_AREA_SQUARE_CENTIMETERS     "√àtvere√®n√≠ centimetry"
+    IDS_AREA_SQUARE_CHR             "√àtvere√®n√≠ chr"
+    IDS_AREA_SQUARE_FATHOMS         "√àtvere√®n√≠ fathomy"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "√àtvere√®n√≠ fathomy (Ma√Øarsko)"
+    IDS_AREA_SQUARE_FEET            "√àtvere√®n√≠ stopy"
+    IDS_AREA_SQUARE_INCHES          "√àtvere√®n√≠ palce"
+    IDS_AREA_SQUARE_KILOMETERS      "√àtvere√®n√≠ kilometry"
+    IDS_AREA_SQUARE_LAR             "√àtvere√®n√≠ lar"
+    IDS_AREA_SQUARE_METER           "√àtvere√®n√≠ metry"
+    IDS_AREA_SQUARE_MILES           "√àtvere√®n√≠ m√≠le"
+    IDS_AREA_SQUARE_MILLIMETERS     "√àtvere√®n√≠ milimetry"
+    IDS_AREA_SQUARE_SHAKU           "√àtvere√®n√≠ shaku"
+    IDS_AREA_SQUARE_TSUEN           "√àtvere√®n√≠ tsuen"
+    IDS_AREA_SQUARE_VA              "√àtvere√®n√≠ va"
+    IDS_AREA_SQUARE_YARD            "√àtvere√®n√≠ yardy"
     IDS_AREA_DANBO                  "Danbo"
     IDS_AREA_HECTARES               "Hektary"
     IDS_AREA_JEONGBO                "Jeongbo"
-    IDS_AREA_MORGEN_HUNGARY         "Morgen (MaÔarsko)"
+    IDS_AREA_MORGEN_HUNGARY         "Morgen (Ma√Øarsko)"
     IDS_AREA_MU                     "Mu"
     IDS_AREA_PING                   "Ping"
     IDS_AREA_PYEONG                 "Pyeong"
@@ -510,56 +511,56 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L        "Kilometry/litr"
-    IDS_CONSUMPTION_L_PER_100_KM    "Litry/100 kilometr˘"
-    IDS_CONSUMPTION_MILES_GALLON_UK "MÌle/galon (UK)"
-    IDS_CONSUMPTION_MILES_GALLON_US "MÌle/galon (USA)"
+    IDS_CONSUMPTION_L_PER_100_KM    "Litry/100 kilometr√π"
+    IDS_CONSUMPTION_MILES_GALLON_UK "M√≠le/galon (UK)"
+    IDS_CONSUMPTION_MILES_GALLON_US "M√≠le/galon (USA)"
 END
 
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_BELGIAN_FRANC      "Belgick˝ frank"
-    IDS_CURRENCY_CZECH_KORUNA       "»esk· koruna"
+    IDS_CURRENCY_BELGIAN_FRANC      "Belgick√Ω frank"
+    IDS_CURRENCY_CZECH_KORUNA       "√àesk√° koruna"
     IDS_CURRENCY_EURO               "Euro"
-    IDS_CURRENCY_FINNISH_MARKKA     "Finsk· marka"
-    IDS_CURRENCY_FRENCH_FRANC       "Francouzsk˝ frank"
-    IDS_CURRENCY_IRISH_POUND        "Irsk· libra"
-    IDS_CURRENCY_ITALIAN_LIRA       "Italsk· lira"
-    IDS_CURRENCY_CYPRIOT_POUND      "Kypersk· libra"
-    IDS_CURRENCY_LUXEMBOURG_FRANC   "Lucembursk˝ frank"
-    IDS_CURRENCY_MALTESE_LIRA       "Maltsk· lira"
-    IDS_CURRENCY_DEUTSCHE_MARK      "NÏmeck· marka"
-    IDS_CURRENCY_DUTCH_GUILDER      "Nizozemsk˝ gulden"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO  "PortugalskÈ escudo"
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rakousk˝ öilink"
-    IDS_CURRENCY_GREEK_DRACHMA      "ÿeck· drachma"
-    IDS_CURRENCY_SLOVAK_KORUNA      "Slovensk· koruna"
-    IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovinsk˝ tolar"
-    IDS_CURRENCY_SPANISH_PESETA     "äpanÏlsk· peseta"
+    IDS_CURRENCY_FINNISH_MARKKA     "Finsk√° marka"
+    IDS_CURRENCY_FRENCH_FRANC       "Francouzsk√Ω frank"
+    IDS_CURRENCY_IRISH_POUND        "Irsk√° libra"
+    IDS_CURRENCY_ITALIAN_LIRA       "Italsk√° lira"
+    IDS_CURRENCY_CYPRIOT_POUND      "Kypersk√° libra"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Lucembursk√Ω frank"
+    IDS_CURRENCY_MALTESE_LIRA       "Maltsk√° lira"
+    IDS_CURRENCY_DEUTSCHE_MARK      "N√¨meck√° marka"
+    IDS_CURRENCY_DUTCH_GUILDER      "Nizozemsk√Ω gulden"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugalsk√© escudo"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rakousk√Ω ≈°ilink"
+    IDS_CURRENCY_GREEK_DRACHMA      "√òeck√° drachma"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slovensk√° koruna"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovinsk√Ω tolar"
+    IDS_CURRENCY_SPANISH_PESETA     "≈†pan√¨lsk√° peseta"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ∞C kalorie"
-    IDS_ENERGY_BTUS                 "BritskÈ term·lnÌ jednotky"
+    IDS_ENERGY_15_C_CALORIES        "15 ¬∞C kalorie"
+    IDS_ENERGY_BTUS                 "Britsk√© term√°ln√≠ jednotky"
     IDS_ENERGY_EVS                  "Elektronvolty"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_ERGS                 "Ergy"
     IDS_ENERGY_JOULES               "Jouly"
     IDS_ENERGY_KILOJOULES           "Kilojouly"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hodiny"
-    IDS_ENERGY_IT_CALORIES          "Mezin·rodnÌ kalorie"
-    IDS_ENERGY_IT_KILOCALORIES      "Mezin·rodnÌ kilokalorie"
-    IDS_ENERGY_NUTRITION_CALORIES   "NutriËnÌ kalorie"
-    IDS_ENERGY_TH_CALORIES          "TermochemickÈ kalorie"
+    IDS_ENERGY_IT_CALORIES          "Mezin√°rodn√≠ kalorie"
+    IDS_ENERGY_IT_KILOCALORIES      "Mezin√°rodn√≠ kilokalorie"
+    IDS_ENERGY_NUTRITION_CALORIES   "Nutri√®n√≠ kalorie"
+    IDS_ENERGY_TH_CALORIES          "Termochemick√© kalorie"
 END
 
 // TYPES OF LENGTHS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LENGTH_ANGSTROMS            "Angstrˆmy"
-    IDS_LENGTH_ASTRONOMICAL_UNITS   "AstronomickÈ jednotky"
+    IDS_LENGTH_ANGSTROMS            "Angstr√∂my"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomick√© jednotky"
     IDS_LENGTH_BARLEYCORNS          "Barleycorny"
     IDS_LENGTH_CENTIMETERS          "Centimetry"
     IDS_LENGTH_CHAINS_UK            "Chains (Gunter's chains) (UK)"
@@ -568,10 +569,10 @@ BEGIN
     IDS_LENGTH_CHR                  "Chr"
     IDS_LENGTH_CUN                  "Cun"
     IDS_LENGTH_FATHOMS              "Fathomy"
-    IDS_LENGTH_FATHOMS_HUNGARY      "Fathomy (MaÔarsko)"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Fathomy (Ma√Øarsko)"
     IDS_LENGTH_FURLONGS             "Furlongy"
     IDS_LENGTH_GAN                  "Gan"
-    IDS_LENGTH_HANDS                "Hands (dlanÏ)"
+    IDS_LENGTH_HANDS                "Hands (dlan√¨)"
     IDS_LENGTH_HUNH                 "Hunh"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
@@ -583,9 +584,9 @@ BEGIN
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Metry"
     IDS_LENGTH_MICRONS              "Mikrony"
-    IDS_LENGTH_MILES                "MÌle"
+    IDS_LENGTH_MILES                "M√≠le"
     IDS_LENGTH_MILLIMETERS          "Milimetry"
-    IDS_LENGTH_NAUTICAL_MILES       "N·mo¯nÌ mÌle"
+    IDS_LENGTH_NAUTICAL_MILES       "N√°mo√∏n√≠ m√≠le"
     IDS_LENGTH_NIEU                 "Nieu"
     IDS_LENGTH_INCHES               "Palce"
     IDS_LENGTH_PARSECS              "Parseky"
@@ -599,7 +600,7 @@ BEGIN
     IDS_LENGTH_SPAN                 "Span"
     IDS_LENGTH_FEET                 "Stopy"
     IDS_LENGTH_SUN                  "Sun"
-    IDS_LENGTH_LIGHT_YEARS          "SvÏtelnÈ roky"
+    IDS_LENGTH_LIGHT_YEARS          "Sv√¨teln√© roky"
     IDS_LENGTH_TSUEN                "Tsuen"
     IDS_LENGTH_VA                   "Va"
     IDS_LENGTH_YARDS                "Yardy"
@@ -610,9 +611,9 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "BritskÈ term·lnÌ jednotky za minutu"
+    IDS_POWER_BTUS_PER_MINUTE       "Britsk√© term√°ln√≠ jednotky za minutu"
     IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds za minutu"
-    IDS_POWER_HORSEPOWER            "KoÚskÈ sÌly"
+    IDS_POWER_HORSEPOWER            "Ko√≤sk√© s√≠ly"
     IDS_POWER_KILOWATTS             "Kilowatty"
     IDS_POWER_MEGAWATTS             "Megawatty"
     IDS_POWER_WATTS                 "Watty"
@@ -621,12 +622,12 @@ END
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "AtmosfÈry"
+    IDS_PRESSURE_ATMOSPHERES        "Atmosf√©ry"
     IDS_PRESSURE_BARS               "Bary"
     IDS_PRESSURE_HECTOPASCALS       "Hektopascaly"
     IDS_PRESSURE_KILOPASCALS        "Kilopascaly"
-    IDS_PRESSURE_PSI                "Libry na Ëtvercov˝ palec"
-    IDS_PRESSURE_MM_OF_MERCURY      "Milimetry rtuùovÈho sloupce"
+    IDS_PRESSURE_PSI                "Libry na √®tvercov√Ω palec"
+    IDS_PRESSURE_MM_OF_MERCURY      "Milimetry rtu¬ùov√©ho sloupce"
     IDS_PRESSURE_PASCALS            "Pascaly"
 END
 
@@ -650,7 +651,7 @@ BEGIN
     IDS_TIME_MINUTES      "Minuty"
     IDS_TIME_SECONDS      "Sekundy"
     IDS_TIME_YEARS        "Roky"
-    IDS_TIME_WEEKS        "T˝dny"
+    IDS_TIME_WEEKS        "T√Ωdny"
 END
 
 // TYPES OF VELOCITIES
@@ -660,7 +661,7 @@ BEGIN
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometry za hodinu"
     IDS_VELOCITY_MACH               "Machy"
     IDS_VELOCITY_METERS_SECOND      "Metry za sekundu"
-    IDS_VELOCITY_MILES_HOUR         "MÌle za hodinu"
+    IDS_VELOCITY_MILES_HOUR         "M√≠le za hodinu"
     IDS_VELOCITY_FEET_HOUR          "Stopy za hodinu"
     IDS_VELOCITY_FEET_SECOND        "Stopy za sekundu"
     IDS_VELOCITY_KNOTS              "Uzly"
@@ -672,30 +673,30 @@ BEGIN
     IDS_VOLUME_BARRELS_UK           "Barely (UK)"
     IDS_VOLUME_BARRELS_OIL          "Barely ropy"
     IDS_VOLUME_BUN                  "Bun"
-    IDS_VOLUME_BUSHELS_UK           "Buöly (UK)"
-    IDS_VOLUME_BUSHELS_US           "Buöly (USA)"
-    IDS_VOLUME_QUARTS_UK            "»tvrtky (UK)"
-    IDS_VOLUME_QUARTS_DRY_US        "»tvrtky, suchÈ (USA)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "»tvrtky, tekutÈ (USA)"
+    IDS_VOLUME_BUSHELS_UK           "Bu≈°ly (UK)"
+    IDS_VOLUME_BUSHELS_US           "Bu≈°ly (USA)"
+    IDS_VOLUME_QUARTS_UK            "√àtvrtky (UK)"
+    IDS_VOLUME_QUARTS_DRY_US        "√àtvrtky, such√© (USA)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "√àtvrtky, tekut√© (USA)"
     IDS_VOLUME_DOE                  "Doe"
     IDS_VOLUME_GALLONS_UK           "Galony (UK)"
-    IDS_VOLUME_GALLONS_DRY_US       "Galony, suchÈ (USA)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "Galony, tekutÈ (USA)"
+    IDS_VOLUME_GALLONS_DRY_US       "Galony, such√© (USA)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Galony, tekut√© (USA)"
     IDS_VOLUME_GOU                  "Gou"
     IDS_VOLUME_HOP                  "Hop"
     IDS_VOLUME_ICCE                 "Icce"
-    IDS_VOLUME_CUBIC_CENTIMETERS    "KrychlovÈ centimetry"
-    IDS_VOLUME_CUBIC_FEET           "KrychlovÈ stopy"
-    IDS_VOLUME_CUBIC_INCHES         "KrychlovÈ palce"
-    IDS_VOLUME_CUBIC_METERS         "KrychlovÈ metry"
-    IDS_VOLUME_CUBIC_YARDS          "KrychlovÈ yardy"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "Krychlov√© centimetry"
+    IDS_VOLUME_CUBIC_FEET           "Krychlov√© stopy"
+    IDS_VOLUME_CUBIC_INCHES         "Krychlov√© palce"
+    IDS_VOLUME_CUBIC_METERS         "Krychlov√© metry"
+    IDS_VOLUME_CUBIC_YARDS          "Krychlov√© yardy"
     IDS_VOLUME_KWIAN                "Kwian"
     IDS_VOLUME_LITERS               "Litry"
     IDS_VOLUME_MAL                  "Mal"
     IDS_VOLUME_MILLILITERS          "Mililitry"
     IDS_VOLUME_PINTS_UK             "Pinty (UK)"
-    IDS_VOLUME_PINTS_DRY_US         "Pinty, suchÈ (USA)"
-    IDS_VOLUME_PINTS_LIQUID_US      "Pinty, tekutÈ (USA)"
+    IDS_VOLUME_PINTS_DRY_US         "Pinty, such√© (USA)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pinty, tekut√© (USA)"
     IDS_VOLUME_SEKI                 "Seki"
     IDS_VOLUME_SYOU                 "Syou"
     IDS_VOLUME_TANANLOUNG           "Tananloung"
@@ -709,17 +710,17 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
-    IDS_WEIGHT_QUINTAL_METRIC       "Centy (metrickÈ)"
+    IDS_WEIGHT_QUINTAL_METRIC       "Centy (metrick√©)"
     IDS_WEIGHT_CHUNG                "Chung"
     IDS_WEIGHT_DON                  "Don"
     IDS_WEIGHT_GEUN                 "Geun"
     IDS_WEIGHT_GRAMS                "Gramy"
     IDS_WEIGHT_GWAN                 "Gwan"
     IDS_WEIGHT_HARB                 "Harb"
-    IDS_WEIGHT_JIN_CHINA            "Jin (»Ìna)"
+    IDS_WEIGHT_JIN_CHINA            "Jin (√à√≠na)"
     IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
     IDS_WEIGHT_KAN                  "Kan"
-    IDS_WEIGHT_CARATS               "Kar·ty"
+    IDS_WEIGHT_CARATS               "Kar√°ty"
     IDS_WEIGHT_KILOGRAMS            "Kilogramy"
     IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
@@ -729,9 +730,9 @@ BEGIN
     IDS_WEIGHT_SALOUNG              "Saloung"
     IDS_WEIGHT_STONES               "Stones"
     IDS_WEIGHT_TAMLUNG              "Tamlung"
-    IDS_WEIGHT_TONNES               "Tuny (metrickÈ)"
+    IDS_WEIGHT_TONNES               "Tuny (metrick√©)"
     IDS_WEIGHT_TONS_UK              "Tuny (UK)"
     IDS_WEIGHT_TONS_US              "Tuny (USA)"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Unce (angloamerickÈ)"
-    IDS_WEIGHT_OUNCES_TROY          "Unce (trojskÈ/lÈk·renskÈ)"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Unce (angloamerick√©)"
+    IDS_WEIGHT_OUNCES_TROY          "Unce (trojsk√©/l√©k√°rensk√©)"
 END

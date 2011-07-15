@@ -17,11 +17,9 @@
 
 	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>
-	<file>basetexture.c</file>
 	<file>buffer.c</file>
 	<file>clipper.c</file>
 	<file>context.c</file>
-	<file>cubetexture.c</file>
 	<file>device.c</file>
 	<file>directx.c</file>
 	<file>drawprim.c</file>
@@ -36,18 +34,13 @@
 	<file>shader_sm4.c</file>
 	<file>state.c</file>
 	<file>stateblock.c</file>
-	<file>surface_base.c</file>
 	<file>surface.c</file>
-	<file>surface_gdi.c </file>
 	<file>swapchain.c</file>
-	<file>swapchain_base.c</file>
-	<file>swapchain_gdi.c</file>
 	<file>texture.c</file>
 	<file>utils.c</file>
 	<file>vertexdeclaration.c</file>
 	<file>view.c</file>
 	<file>volume.c</file>
-	<file>volumetexture.c</file>
 	<file>wined3d_main.c</file>
 	<file>version.rc</file>
 	<if property="ARCH" value="amd64">

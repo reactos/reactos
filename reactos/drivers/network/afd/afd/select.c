@@ -286,9 +286,9 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( EventSelectInfo->EventObject && EventSelectInfo->Events ) {
 	Status = ObReferenceObjectByHandle( (PVOID)EventSelectInfo->
 					    EventObject,
-					    FILE_ALL_ACCESS,
-					    NULL,
-					    KernelMode,
+					    EVENT_ALL_ACCESS,
+					    ExEventObjectType,
+					    UserMode,
 					    (PVOID *)&FCB->EventSelect,
 					    NULL );
 
@@ -300,6 +300,11 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->EventSelect = NULL;
         FCB->EventSelectTriggers = 0;
 	Status = STATUS_SUCCESS;
+    }
+
+    if( FCB->EventSelect && (FCB->PollState & FCB->EventSelectTriggers) ) {
+        AFD_DbgPrint(MID_TRACE,("Setting event %x\n", FCB->EventSelect));
+        KeSetEvent( FCB->EventSelect, IO_NETWORK_INCREMENT, FALSE );
     }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));

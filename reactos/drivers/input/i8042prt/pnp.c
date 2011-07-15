@@ -708,7 +708,6 @@ i8042Pnp(
 		default:
 		{
 			ERR_(I8042PRT, "IRP_MJ_PNP / unknown minor function 0x%x\n", MinorFunction);
-			ASSERT(FALSE);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}

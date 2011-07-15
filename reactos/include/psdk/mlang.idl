@@ -26,6 +26,15 @@ cpp_quote("#define CPIOD_PEEK          0x40000000")
 cpp_quote("#define CPIOD_FORCE_PROMPT  0x80000000")
 
 [
+    uuid(275c23e0-3747-11d0-9fea-00aa003f8646),
+    lcid(0x0000),
+    version(0.2)
+]
+library MultiLanguage
+{
+    importlib("stdole2.tlb");
+
+[
   object,
   uuid(359f3443-bd4a-11d0-b188-00aa0038c969),
   pointer_default(unique)
@@ -308,17 +317,17 @@ interface IMLangLineBreakConsole : IUnknown
 }
 
 [
-  object,
-  uuid(275c23e3-3747-11d0-9fea-00aa003f8646),
-  pointer_default(unique)
+      object,
+      uuid(275c23e3-3747-11d0-9fea-00aa003f8646),
+      pointer_default(unique)
 ]
 interface IEnumCodePage : IUnknown
 {
     const USHORT MAX_MIMECP_NAME = 64;
     const USHORT MAX_MIMECSET_NAME = 50;
 
-    typedef enum tagMIMECONTF
-    {
+        typedef enum tagMIMECONTF
+        {
         MIMECONTF_MAILNEWS = 0x00000001,
         MIMECONTF_BROWSER = 0x00000002,
         MIMECONTF_MINIMAL = 0x00000004,
@@ -332,7 +341,7 @@ interface IEnumCodePage : IUnknown
         MIMECONTF_MIME_IE4 = 0x10000000,
         MIMECONTF_MIME_LATEST = 0x20000000,
         MIMECONTF_MIME_REGISTRY = 0x40000000
-    } MIMECONTF;
+        } MIMECONTF;
 
     typedef struct tagMIMECPINFO {
         DWORD dwFlags;
@@ -347,12 +356,12 @@ interface IEnumCodePage : IUnknown
         BYTE bGDICharset;
     } MIMECPINFO, *PMIMECPINFO;
 
-    typedef struct tagMIMECSETINFO
-    {
+        typedef struct tagMIMECSETINFO
+        {
         UINT uiCodePage;
         UINT uiInternetEncoding;
         WCHAR wszCharset[MAX_MIMECSET_NAME];
-    } MIMECSETINFO, *PMIMECSETINFO;
+        } MIMECSETINFO, *PMIMECSETINFO;
 
     HRESULT Clone( 
         [out] IEnumCodePage **ppEnum);
@@ -362,16 +371,16 @@ interface IEnumCodePage : IUnknown
         [out] PMIMECPINFO rgelt,
         [out] ULONG *pceltFetched);
 
-    HRESULT Reset();
+        HRESULT Reset();
 
     HRESULT Skip(      
         [in] ULONG celt);
 }
 
 [
-  object,
-  uuid(d66d6f98-cdaa-11d0-b822-00c04fc9b31f),
-  pointer_default(unique)
+      object,
+      uuid(d66d6f98-cdaa-11d0-b822-00c04fc9b31f),
+      pointer_default(unique)
 ]
 interface IMLangConvertCharset : IUnknown
 {
@@ -417,21 +426,21 @@ coclass CMLangConvertCharset
 };
 
 [
-  object,
-  uuid(3dc39d1d-c030-11d0-b81b-00c04fc9b31f),
-  pointer_default(unique)
+      object,
+      uuid(3dc39d1d-c030-11d0-b81b-00c04fc9b31f),
+      pointer_default(unique)
 ]
 interface IEnumRfc1766 : IUnknown
 {
     const USHORT MAX_RFC1766_NAME = 6;
     const USHORT MAX_LOCALE_NAME = 32;
 
-    typedef struct tagRFC1766INFO
-    {
+        typedef struct tagRFC1766INFO
+        {
         LCID lcid;
         WCHAR wszRfc1766[MAX_RFC1766_NAME];
         WCHAR wszLocaleName[MAX_LOCALE_NAME];
-    } RFC1766INFO, *PRFC1766INFO;
+        } RFC1766INFO, *PRFC1766INFO;
 
     HRESULT Clone( 
         [out] IEnumRfc1766 **ppEnum);
@@ -448,9 +457,9 @@ interface IEnumRfc1766 : IUnknown
 }
 
 [
-  object,
-  uuid(275c23e1-3747-11d0-9fea-00aa003f8646),
-  pointer_default(unique)
+      object,
+      uuid(275c23e1-3747-11d0-9fea-00aa003f8646),
+      pointer_default(unique)
 ]
 interface IMultiLanguage : IUnknown
 {
@@ -528,19 +537,19 @@ interface IMultiLanguage : IUnknown
 }
 
 [
-  object,
+      object,
   uuid(dccfc164-2b38-11d2-b7ec-00c04f8f5d9a),
   pointer_default(unique)
 ]
 interface IMultiLanguage2 : IUnknown
 {
-    typedef struct tagDetectEncodingInfo
-    {
+        typedef struct tagDetectEncodingInfo
+        {
         UINT nLangID;
         UINT nCodePage;
         INT nDocPercent;
         INT nConfidence;
-    } DetectEncodingInfo, *pDetectEncodingInfo;
+        } DetectEncodingInfo, *pDetectEncodingInfo;
 
     HRESULT GetNumberOfCodePageInfo(      
         [out] UINT *pcCodePage);
@@ -692,14 +701,14 @@ interface IMultiLanguage2 : IUnknown
 }
 
 [
-    object,
-    uuid(4e5868ab-b157-4623-9acc-6a1d9caebe04),
-    pointer_default(unique)
+      object,
+      uuid(4e5868ab-b157-4623-9acc-6a1d9caebe04),
+      pointer_default(unique)
 ]
 interface IMultiLanguage3 : IMultiLanguage2
 {
-    typedef [unique] IMultiLanguage3 *LPMULTILANGUAGE3;
-    HRESULT DetectOutboundCodePage(
+       typedef [unique] IMultiLanguage3 *LPMULTILANGUAGE3;
+       HRESULT DetectOutboundCodePage(
         [in] DWORD dwFlags,
         [in] LPCWSTR lpWideCharStr,
         [in] UINT cchWideChar,
@@ -709,7 +718,7 @@ interface IMultiLanguage3 : IMultiLanguage2
         [in, out] UINT *pnDetectedCodePages,
         [in] WCHAR *lpSpecialChar);
 
-    HRESULT DetectOutboundCodePageInIStream(
+       HRESULT DetectOutboundCodePageInIStream(
         [in] DWORD dwFlags,
         [in] IStream *pStrIn,
         [in] UINT *puiPreferredCodePages,
@@ -724,12 +733,14 @@ interface IMultiLanguage3 : IMultiLanguage2
 ]
 coclass CMultiLanguage
 {
-    [default] interface IMultiLanguage;
-    interface IMLangCodePages;
-    interface IMLangFontLink;
+        [default] interface IMultiLanguage;
+        interface IMLangCodePages;
+        interface IMLangFontLink;
     /* interface IMLangLineBreakConsole; */
-    interface IMLangFontLink2;
-}
+        interface IMLangFontLink2;
+};
+
+} // library MultiLanguage
 
 cpp_quote("STDAPI LcidToRfc1766A(LCID, LPSTR, INT);")
 cpp_quote("STDAPI LcidToRfc1766W(LCID, LPWSTR, INT);")

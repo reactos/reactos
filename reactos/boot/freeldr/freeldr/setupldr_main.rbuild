@@ -9,9 +9,6 @@
 	<directory name="inffile">
 		<file>inffile.c</file>
 	</directory>
-	<directory name="reactos">
-		<file>setupldr.c</file>
-	</directory>
 	<if property="ARCH" value="i386">
 		<directory name="windows">
 			<file>setupldr2.c</file>

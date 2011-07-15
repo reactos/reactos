@@ -43,10 +43,10 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   LONG PatternX = 0, PatternY = 0;
 
-  ASSERT(IS_VALID_ROP4(ROP));
-
   BOOL UsesSource = ROP4_USES_SOURCE(ROP);
   BOOL UsesPattern = ROP4_USES_PATTERN(ROP);
+
+  ASSERT(IS_VALID_ROP4(ROP));
 
   fnDest_GetPixel = DibFunctionsForBitmapFormat[DestSurf->iBitmapFormat].DIB_GetPixel;
   fnDest_PutPixel = DibFunctionsForBitmapFormat[DestSurf->iBitmapFormat].DIB_PutPixel;

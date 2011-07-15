@@ -1800,6 +1800,15 @@ RtlCreateUnicodeStringFromAsciiz(
     IN PCSZ Source
 );
 
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualString(
+    IN const PSTRING String1,
+    IN const PSTRING String2,
+    IN BOOLEAN CaseInSensitive);
+
+
 //
 // Unicode String Functions
 //
@@ -2331,7 +2340,7 @@ RtlDetermineDosPathNameType_U(
 );
 
 NTSYSAPI
-ULONG
+RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_Ustr(
     IN PCUNICODE_STRING Path
@@ -2356,7 +2365,7 @@ RtlDosPathNameToNtPathName_U(
     IN PCWSTR DosPathName,
     OUT PUNICODE_STRING NtPathName,
     OUT PCWSTR *NtFileNamePart,
-    OUT CURDIR *DirectoryInfo
+    OUT PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
 NTSYSAPI
@@ -2385,18 +2394,6 @@ RtlGetFullPathName_U(
     IN ULONG Size,
     IN PWSTR Buffer,
     OUT PWSTR *ShortName
-);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlGetFullPathName_Ustr(
-    IN PUNICODE_STRING FileName,
-    IN ULONG Size,
-    IN PWSTR Buffer,
-    OUT PWSTR *ShortName,
-    OUT PBOOLEAN InvalidName,
-    OUT RTL_PATH_TYPE *PathType
 );
 
 NTSYSAPI

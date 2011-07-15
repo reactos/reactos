@@ -84,25 +84,6 @@ RpcStatusToCmStatus(RPC_STATUS Status)
 
 
 /***********************************************************************
- * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
- */
-DWORD WINAPI CMP_WaitNoPendingInstallEvents(
-    DWORD dwTimeout)
-{
-    HANDLE hEvent;
-    DWORD ret;
-
-    hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
-    if (hEvent == NULL)
-       return WAIT_FAILED;
-
-    ret = WaitForSingleObject(hEvent, dwTimeout);
-    CloseHandle(hEvent);
-    return ret;
-}
-
-
-/***********************************************************************
  * CMP_Init_Detection [SETUPAPI.@]
  */
 CONFIGRET WINAPI CMP_Init_Detection(
@@ -130,6 +111,22 @@ CONFIGRET WINAPI CMP_Init_Detection(
     RpcEndExcept;
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CMP_RegisterNotification [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_RegisterNotification(IN HANDLE hRecipient,
+                         IN LPVOID lpvNotificationFilter,
+                         IN DWORD dwFlags,
+                         OUT PULONG pluhDevNotify)
+{
+    FIXME("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return CR_FAILURE;
 }
 
 
@@ -175,6 +172,37 @@ CONFIGRET WINAPI CMP_Report_LogOn(
         Sleep(5000);
     }
 
+    return ret;
+}
+
+
+/***********************************************************************
+ * CMP_UnregisterNotification [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+{
+    FIXME("Stub %p\n", handle);
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
+ */
+DWORD WINAPI CMP_WaitNoPendingInstallEvents(
+    DWORD dwTimeout)
+{
+    HANDLE hEvent;
+    DWORD ret;
+
+    hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
+    if (hEvent == NULL)
+       return WAIT_FAILED;
+
+    ret = WaitForSingleObject(hEvent, dwTimeout);
+    CloseHandle(hEvent);
     return ret;
 }
 
@@ -595,8 +623,9 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpParentDevInst;
     CONFIGRET ret = CR_SUCCESS;
+    WCHAR szLocalDeviceID[MAX_DEVICE_ID_LEN];
 
-    FIXME("%p %s %p %lx %p\n",
+    TRACE("%p %s %p %lx %p\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
@@ -605,7 +634,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     if (pdnDevInst == NULL)
         return CR_INVALID_POINTER;
 
-    if (pDeviceID == NULL || wcslen(pDeviceID) == 0)
+    if (pDeviceID == NULL || wcslen(pDeviceID) == 0 || wcslen(pDeviceID) >= MAX_DEVICE_ID_LEN)
         return CR_INVALID_DEVICE_ID;
 
     if (dnParent == 0)
@@ -634,10 +663,12 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     if (lpParentDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
+    wcscpy(szLocalDeviceID, pDeviceID);
+
     RpcTryExcept
     {
         ret = PNP_CreateDevInst(BindingHandle,
-                                pDeviceID,
+                                szLocalDeviceID,
                                 lpParentDevInst,
                                 MAX_DEVICE_ID_LEN,
                                 ulFlags);
@@ -1541,6 +1572,92 @@ CM_Get_Class_Name_ExW(
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
+    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %lu %p %p %p %lx %lx\n",
+          ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
+    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
+    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
+    ULONG ulType = 0;
+    ULONG ulTransferLength = 0;
+    CONFIGRET ret;
+
+    TRACE("%p %lu %p %p %p %lx %lx\n",
+          ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
+          ulFlags, hMachine);
+
+    if (ClassGuid == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pSetupStringFromGuid(ClassGuid,
+                             szGuidString,
+                             PNP_MAX_GUID_STRING_LEN) != 0)
+        return CR_INVALID_DATA;
+
+    if (ulProperty < CM_CRP_MIN || ulProperty > CM_CRP_MAX)
+        return CR_INVALID_PROPERTY;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulTransferLength = *pulLength;
+
+    RpcTryExcept
+    {
+        ret = PNP_GetClassRegProp(BindingHandle,
+                                  szGuidString,
+                                  ulProperty,
+                                  &ulType,
+                                  Buffer,
+                                  &ulTransferLength,
+                                  pulLength,
+                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+    {
+        if (pulRegDataType != NULL)
+            *pulRegDataType = ulType;
+    }
 
     return ret;
 }
@@ -4884,6 +5001,32 @@ CONFIGRET WINAPI CM_Run_Detection_Ex(
 
 
 /***********************************************************************
+ * CM_Set_Class_Registry_PropertyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_Class_Registry_PropertyA(
+    LPGUID ClassGuid, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %lx %p %lu %lx %p\n",
+          ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Set_Class_Registry_PropertyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_Class_Registry_PropertyW(
+    LPGUID ClassGuid, ULONG ulProperty, PCVOID Buffer, ULONG ulLength,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %lx %p %lu %lx %p\n",
+          ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Set_DevNode_Problem [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Set_DevNode_Problem(
@@ -5063,6 +5206,30 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
                 ulType = REG_MULTI_SZ;
                 break;
 
+            case CM_DRP_SECURITY:
+                ulType = REG_BINARY;
+                break;
+
+            case CM_DRP_DEVTYPE:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_EXCLUSIVE:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_CHARACTERISTICS:
+                ulType = REG_DWORD;
+                break;
+
+            case CM_DRP_UI_NUMBER_DESC_FORMAT:
+                ulType = REG_SZ;
+                break;
+
+            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+                ulType = REG_DWORD;
+                break;
+
             default:
                 return CR_INVALID_PROPERTY;
         }
@@ -5213,6 +5380,30 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
 
         case CM_DRP_LOWERFILTERS:
             ulType = REG_MULTI_SZ;
+            break;
+
+        case CM_DRP_SECURITY:
+            ulType = REG_BINARY;
+            break;
+
+        case CM_DRP_DEVTYPE:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_EXCLUSIVE:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_CHARACTERISTICS:
+            ulType = REG_DWORD;
+            break;
+
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            ulType = REG_SZ;
+            break;
+
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+            ulType = REG_DWORD;
             break;
 
         default:

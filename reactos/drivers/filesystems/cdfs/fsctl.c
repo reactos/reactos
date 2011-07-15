@@ -46,7 +46,7 @@ CdfsGetPVDData(PUCHAR Buffer,
                PCDINFO CdInfo)
 {
     PPVD Pvd;
-    ULONG i;
+    USHORT i;
     PUCHAR pc;
     PWCHAR pw;
 
@@ -566,6 +566,7 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
     switch (Stack->MinorFunction)
     {
+    case IRP_MN_KERNEL_CALL:
     case IRP_MN_USER_FS_REQUEST:
         switch (Stack->Parameters.DeviceIoControl.IoControlCode)
         {

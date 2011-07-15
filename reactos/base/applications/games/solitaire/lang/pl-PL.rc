@@ -1,13 +1,13 @@
 /*
  *         translated by TestamenT & xrogers
- *      testament@users.sourceforge.net
- * https://sourceforge.net/projects/reactospl
- * updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
- * updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         testament@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
+ *         updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *         UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
-
 
 /* Dialogs */
 
@@ -17,7 +17,7 @@ CAPTION "Opcje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Karty", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Rozdaj &jedn¹", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Rozdaj &jednÄ…", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Rozdaj &dwie", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
     AUTOCHECKBOX    "&Pokazuj czas gry", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
@@ -55,8 +55,8 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Pasjans"
     IDS_SOL_ABOUT   "Pasjans by J. Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Zakoñczyæ aktualn¹ grê?"
-    IDS_SOL_WIN     "Gratulacje, wygra³eœ!"
+    IDS_SOL_QUIT    "ZakoÅ„czyÄ‡ aktualnÄ… grÄ™?"
+    IDS_SOL_WIN     "Gratulacje, wygraÅ‚eÅ›!"
     IDS_SOL_DEAL    "Nowe rozdanie?"
 END
 
@@ -72,11 +72,11 @@ BEGIN
         MENUITEM "&Talia...",                    IDM_GAME_DECK
         MENUITEM "&Opcje...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Zakoñcz",                       IDM_GAME_EXIT
+        MENUITEM "&ZakoÅ„cz",                       IDM_GAME_EXIT
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Spis treœci\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Spis treÅ›ci\tF1",               IDM_HELP_CONTENTS
         MENUITEM "Pasj&ans - informacje",        IDM_HELP_ABOUT
     END
 END

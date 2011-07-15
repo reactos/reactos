@@ -26,10 +26,10 @@ extern int undoSteps;
 extern int redoSteps;
 extern BOOL imageSaved;
 
-extern short startX;
-extern short startY;
-extern short lastX;
-extern short lastY;
+extern LONG startX;
+extern LONG startY;
+extern LONG lastX;
+extern LONG lastY;
 extern int lineWidth;
 extern int shapeStyle;
 extern int brushStyle;

@@ -25,96 +25,99 @@
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Відкрити"
+CAPTION "Р’С–РґРєСЂРёС‚Рё"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Ім'я файлу:", 1090, 6, 6, 76, 9
+ LTEXT "&Р†Рј'СЏ С„Р°Р№Р»Сѓ:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Теки:", -1, 110, 6, 92, 9
+ LTEXT "&РўРµРєРё:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Показувати файли &типу:", 1089, 6, 104, 90, 9
+ LTEXT "РџРѕРєР°Р·СѓРІР°С‚Рё С„Р°Р№Р»Рё &С‚РёРїСѓ:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Диски:", 1091, 110, 104, 92, 9
+ LTEXT "&Р”РёСЃРєРё:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Відкрити", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE  | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Р’С–РґРєСЂРёС‚Рё", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Р”РѕРІС–РґРєР°", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Р›РёС€Рµ РґР»СЏ С‡РёС‚Р°РЅРЅСЏ", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE  | WS_GROUP | WS_TABSTOP
 }
 
 
 SAVE_FILE DIALOG 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Зберегти як..."
+CAPTION "Р—Р±РµСЂРµРіС‚Рё СЏРє..."
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Ім'я файлу:", 1090, 6, 6, 76, 9
+ LTEXT "&Р†Рј'СЏ С„Р°Р№Р»Сѓ:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Теки:", -1, 110, 6, 92, 9
+ LTEXT "&РўРµРєРё:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Показувати файли &типу:", 1089, 6, 104, 90, 9
+ LTEXT "РџРѕРєР°Р·СѓРІР°С‚Рё С„Р°Р№Р»Рё &С‚РёРїСѓ:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Диски:", 1091, 110, 104, 92, 9
+ LTEXT "&Р”РёСЃРєРё:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Зберегти як", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Р—Р±РµСЂРµРіС‚Рё СЏРє", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Р”РѕРІС–РґРєР°", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Р›РёС€Рµ РґР»СЏ С‡РёС‚Р°РЅРЅСЏ", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT DIALOG 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Друк"
+CAPTION "Р”СЂСѓРє"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Принтер:", 1088, 6, 6, 40, 9
+ LTEXT "РџСЂРёРЅС‚РµСЂ:", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
- GROUPBOX "Друкувати", 1072, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "&Все", 1056, 16, 45, 60, 12
- RADIOBUTTON "В&иділенний фрагмент", 1057, 16, 60, 60, 12
- RADIOBUTTON "&Сторінки", 1058, 16, 75, 60, 12
- DEFPUSHBUTTON "Друк", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Властивості", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- LTEXT "&з:", 1090, 60, 80, 30, 9
- LTEXT "&до:", 1091, 120, 80, 30, 9
- LTEXT "&Якість друку:", 1092, 6, 100, 76, 9
+ GROUPBOX "Р”СЂСѓРєСѓРІР°С‚Рё", 1072, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&Р’СЃРµ", 1056, 16, 45, 60, 12
+ RADIOBUTTON "Р’&РёРґС–Р»РµРЅРЅРёР№ С„СЂР°РіРјРµРЅС‚", 1057, 16, 60, 60, 12
+ RADIOBUTTON "&РЎС‚РѕСЂС–РЅРєРё", 1058, 16, 75, 60, 12
+ DEFPUSHBUTTON "Р”СЂСѓРє", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&Р·:", 1090, 60, 80, 30, 9
+ LTEXT "&РґРѕ:", 1091, 120, 80, 30, 9
+ LTEXT "&РЇРєС–СЃС‚СЊ РґСЂСѓРєСѓ:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "Друк до файлу", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Стисло", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Р”СЂСѓРє РґРѕ С„Р°Р№Р»Сѓ", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "РЎС‚РёСЃР»Рѕ", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка принтера"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РїСЂРёРЅС‚РµСЂР°"
 FONT 8, "MS Shell Dlg"
 {
- GROUPBOX "Принтер", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "Принтер за &обумовленням", 1056, 16, 20, 80, 12
- LTEXT "[Нема]", 1088, 35, 35, 120, 9
- RADIOBUTTON "&Інший принтер", 1057, 16, 50, 80, 12
+ GROUPBOX "РџСЂРёРЅС‚РµСЂ", 1072, 6, 10, 180, 65, BS_GROUPBOX
+ RADIOBUTTON "РџСЂРёРЅС‚РµСЂ Р·Р° &РѕР±СѓРјРѕРІР»РµРЅРЅСЏРј", 1056, 16, 20, 80, 12
+ LTEXT "[РќРµРјР°]", 1088, 35, 35, 120, 9
+ RADIOBUTTON "&Р†РЅС€РёР№ РїСЂРёРЅС‚РµСЂ", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Настройка", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "Орієнтація", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "&Книжна", 1058, 50, 100, 40, 12
- RADIOBUTTON "&Альбомна", 1059, 50, 115, 40, 12
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&РќР°СЃС‚СЂРѕР№РєР°", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "РћСЂС–С”РЅС‚Р°С†С–СЏ", 1073, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&РљРЅРёР¶РЅР°", 1058, 50, 100, 40, 12
+ RADIOBUTTON "&РђР»СЊР±РѕРјРЅР°", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
  ICON "PORTRAIT", 1098, 10, 95, 32, 32
- GROUPBOX "Папір", 1074, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "Ро&змір", 1089, 130, 95, 30, 9
- LTEXT "&Джерело", 1090, 130, 110, 30, 9
+ GROUPBOX "РџР°РїС–СЂ", 1074, 120, 85, 180, 50, BS_GROUPBOX
+ LTEXT "Р Рѕ&Р·РјС–СЂ", 1089, 130, 95, 30, 9
+ LTEXT "&Р”Р¶РµСЂРµР»Рѕ", 1090, 130, 110, 30, 9
  COMBOBOX 1137, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX 1138, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -122,31 +125,31 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_FONT DIALOG  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Шрифт"
+CAPTION "РЁСЂРёС„С‚"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "&Шрифт:",1088 ,6,3,40,9
+    LTEXT           "&РЁСЂРёС„С‚:",1088 ,6,3,40,9
     COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Стиль:",1089 ,108,3,44,9
+    LTEXT           "&РЎС‚РёР»СЊ:",1089 ,108,3,44,9
     COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Розмір:",1090,179,3,30,9
+    LTEXT           "&Р РѕР·РјС–СЂ:",1090,179,3,30,9
     COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Скасувати",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Застосувати", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "&Довідка" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
-    GROUPBOX        "Атрибути",1072,6,72,84,34,WS_GROUP
-    CHECKBOX	    "&Закреслений", 1040, 10,82,75,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&Підкреслений", 1041, 10,94,75,10, BS_AUTOCHECKBOX
-    LTEXT           "&Колір:", 1091 ,6,110,30,9
+    PUSHBUTTON      "РЎРєР°СЃСѓРІР°С‚Рё",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Р—Р°СЃС‚РѕСЃСѓРІР°С‚Рё", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Р”РѕРІС–РґРєР°" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "РђС‚СЂРёР±СѓС‚Рё",1072,6,72,84,34,WS_GROUP
+    CHECKBOX	    "&Р—Р°РєСЂРµСЃР»РµРЅРёР№", 1040, 10,82,75,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&РџС–РґРєСЂРµСЃР»РµРЅРёР№", 1041, 10,94,75,10, BS_AUTOCHECKBOX
+    LTEXT           "&РљРѕР»С–СЂ:", 1091 ,6,110,30,9
     COMBOBOX        1139,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "&Зразок",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "АаБбAaBb",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Скрипт:",stc7 ,98,114,80,9
+    GROUPBOX        "&Р—СЂР°Р·РѕРє",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "РђР°Р‘Р±AaBb",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "РЎРєСЂРёРїС‚:",stc7 ,98,114,80,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -154,23 +157,23 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_COLOR DIALOG 36, 24, 310, 185
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Зміна палітри"
+CAPTION "Р—РјС–РЅР° РїР°Р»С–С‚СЂРё"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Базова палітра:",   1088, 4,    4,  140, 10
- LTEXT "Д&одаткові кольори:",  1089, 4,   106, 140, 10
- LTEXT "Колір|За&ливка",  1090, 150, 151,  48, 10
- LTEXT   "&Червоний:", 726 /*1094*/,254,126,32,10
+ LTEXT "&Р‘Р°Р·РѕРІР° РїР°Р»С–С‚СЂР°:",   1088, 4,    4,  140, 10
+ LTEXT "Р”&РѕРґР°С‚РєРѕРІС– РєРѕР»СЊРѕСЂРё:",  1089, 4,   106, 140, 10
+ LTEXT "РљРѕР»С–СЂ|Р—Р°&Р»РёРІРєР°",  1090, 150, 151,  48, 10
+ LTEXT   "&Р§РµСЂРІРѕРЅРёР№:", 726 /*1094*/,254,126,32,10
  EDITTEXT 706, 288,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Зелений:",727/*1095*/,254,140,32,10
+ LTEXT   "&Р—РµР»РµРЅРёР№:",727/*1095*/,254,140,32,10
  EDITTEXT 707, 288,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "С&иній:",728 /*1096*/,264,154,24,10
+ LTEXT   "РЎ&РёРЅС–Р№:",728 /*1096*/,264,154,24,10
  EDITTEXT 708, 288,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "Від&тінок:" ,723 /*1091*/,202,126,30,10
+ LTEXT  "Р’С–Рґ&С‚С–РЅРѕРє:" ,723 /*1091*/,202,126,30,10
  EDITTEXT 703, 234,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Контраст:" ,724 /*1092*/,199,140,34,10
+ LTEXT  "&РљРѕРЅС‚СЂР°СЃС‚:" ,724 /*1092*/,199,140,34,10
  EDITTEXT 704, 234,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Яскравість:" ,725 /*1093*/,202,154,30,10
+ LTEXT  "&РЇСЃРєСЂР°РІС–СЃС‚СЊ:" ,725 /*1093*/,202,154,30,10
  EDITTEXT 705, 234,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -178,308 +181,308 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "OK",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Довідка", 1038,100,166, 44, 14
- PUSHBUTTON "&Додати до набору",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Визначити колір >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Р”РѕРІС–РґРєР°", 1038,100,166, 44, 14
+ PUSHBUTTON "&Р”РѕРґР°С‚Рё РґРѕ РЅР°Р±РѕСЂСѓ",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Р’РёР·РЅР°С‡РёС‚Рё РєРѕР»С–СЂ >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
 
 FINDDLGORD DIALOG 36, 24, 245, 62
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Пошук"
+CAPTION "РџРѕС€СѓРє"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Зразок:", -1, 4, 8, 42, 8
+ LTEXT "&Р—СЂР°Р·РѕРє:", -1, 4, 8, 42, 8
  EDITTEXT 1152, 47, 7, 138, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Лише слово цілком", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Залік &реґістру", 1041, 4, 42, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Напрям", 1072, 107, 26, 78, 28
- CONTROL "&Вгору", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 40, 12
- CONTROL "В&низ", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 152, 38, 30, 12
+ CHECKBOX "&Р›РёС€Рµ СЃР»РѕРІРѕ С†С–Р»РєРѕРј", 1040, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Р—Р°Р»С–Рє &СЂРµТ‘С–СЃС‚СЂСѓ", 1041, 4, 42, 100, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "РќР°РїСЂСЏРј", 1072, 107, 26, 78, 28
+ CONTROL "&Р’РіРѕСЂСѓ", 1056, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 40, 12
+ CONTROL "Р’&РЅРёР·", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 152, 38, 30, 12
 
- DEFPUSHBUTTON "З&найти далі", IDOK, 190,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Скасувати", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Довідка", pshHelp	 , 190, 45, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Р—&РЅР°Р№С‚Рё РґР°Р»С–", IDOK, 190,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Р”РѕРІС–РґРєР°", pshHelp	 , 190, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 
 REPLACEDLGORD DIALOG 36, 24, 230, 94
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Заміна"
+CAPTION "Р—Р°РјС–РЅР°"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Зразок:", -1, 4, 9, 48, 8
+ LTEXT "&Р—СЂР°Р·РѕРє:", -1, 4, 9, 48, 8
  EDITTEXT 1152, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "З&амінити на:", -1, 4, 26, 48, 8
+ LTEXT "Р—&Р°РјС–РЅРёС‚Рё РЅР°:", -1, 4, 26, 48, 8
  EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Лише слово цілком", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Залік &реґістру", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "&Р›РёС€Рµ СЃР»РѕРІРѕ С†С–Р»РєРѕРј", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Р—Р°Р»С–Рє &СЂРµТ‘С–СЃС‚СЂСѓ", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
- DEFPUSHBUTTON "З&найти далі", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "&Замінити", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Замінити &все", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Скасувати", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Довідка", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Р—&РЅР°Р№С‚Рё РґР°Р»С–", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Р—Р°РјС–РЅРёС‚Рё", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Р—Р°РјС–РЅРёС‚Рё &РІСЃРµ", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Р”РѕРІС–РґРєР°", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 PRINT32 DIALOG  32, 32, 288, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Друк"
+CAPTION "Р”СЂСѓРє"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Скасувати", IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&Довідка",  pshHelp,  50, 161, 48,14, WS_GROUP
+    PUSHBUTTON      "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Р”РѕРІС–РґРєР°",  pshHelp,  50, 161, 48,14, WS_GROUP
 
-    GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "Друк у фай&л", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&Властивості",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Ім'я:",         stc6,  16, 20,  46,8
+    GROUPBOX        "РџСЂРёРЅС‚РµСЂ",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Р”СЂСѓРє Сѓ С„Р°Р№&Р»", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "&Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Р†Рј'СЏ:",         stc6,  16, 20,  46,8
     COMBOBOX                          cmb4,  64, 18, 140,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Статус:",        stc8,  16, 36,  46,10, SS_NOPREFIX
-    LTEXT           "Емульовано",    stc12, 64, 36, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Тип:",          stc7,  16, 48,  46,10, SS_NOPREFIX
-    LTEXT           "Емульовано",     stc11, 64, 48, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Місце:",         stc10, 16, 60,  46,10, SS_NOPREFIX
-    LTEXT           "Емульовано", stc14, 64, 60, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примітка:",    stc9,  16, 72,  46,10, SS_NOPREFIX
-    LTEXT           "Емульовано",   stc13, 64, 72, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РЎС‚Р°С‚СѓСЃ:",        stc8,  16, 36,  46,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ",    stc12, 64, 36, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РўРёРї:",          stc7,  16, 48,  46,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ",     stc11, 64, 48, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РњС–СЃС†Рµ:",         stc10, 16, 60,  46,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ", stc14, 64, 60, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РџСЂРёРјС–С‚РєР°:",    stc9,  16, 72,  46,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ",   stc13, 64, 72, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Копії",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "Число &копій:",stc5,168,108,68,8
+    GROUPBOX        "РљРѕРїС–С—",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Р§РёСЃР»Рѕ &РєРѕРїС–Р№:",stc5,168,108,68,8
     ICON            "",               ico3, 162,124,  60,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "&Розбити",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,42,12
+    CONTROL         "&Р РѕР·Р±РёС‚Рё",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,42,12
     EDITTEXT                          edt3, 230,106,  42,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Друкувати",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Все",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Сторінки",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,50,12
-    CONTROL         "&Виділення",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Р”СЂСѓРєСѓРІР°С‚Рё",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Р’СЃРµ",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&РЎС‚РѕСЂС–РЅРєРё",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,50,12
+    CONTROL         "&Р’РёРґС–Р»РµРЅРЅСЏ",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  85,122,  20,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  20,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&від:",         stc2,  70,124,  12,8
-    RTEXT           "&до:",           stc3, 106,124,  10,8
+    RTEXT           "&РІС–Рґ:",         stc2,  70,124,  12,8
+    RTEXT           "&РґРѕ:",           stc3, 106,124,  10,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Установки принтера"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєРё РїСЂРёРЅС‚РµСЂР°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "Скасувати",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "Сітка...", psh5, 284,156,48,14 */
+    PUSHBUTTON      "РЎРєР°СЃСѓРІР°С‚Рё",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "РЎС–С‚РєР°...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Властивості",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Ім'я:",         stc6,  16, 20,  36,8
+    GROUPBOX        "РџСЂРёРЅС‚РµСЂ",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Р’Р»Р°СЃС‚РёРІРѕСЃС‚С–",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Р†Рј'СЏ:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Статус:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Емульовано",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Емульовано",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Місце:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Емульовано", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примітки:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Емульовані",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РЎС‚Р°С‚СѓСЃ:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РўРёРї:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РњС–СЃС†Рµ:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅРѕ", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "РџСЂРёРјС–С‚РєРё:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Р•РјСѓР»СЊРѕРІР°РЅС–",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Папір",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "Роз&мір:",         stc2,  16,108,  36, 8
+    GROUPBOX        "РџР°РїС–СЂ",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Р РѕР·&РјС–СЂ:",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Джерело:",       stc3,  16,128,  36, 8
+    LTEXT           "&Р”Р¶РµСЂРµР»Рѕ:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "Орієнтація",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "РћСЂС–С”РЅС‚Р°С†С–СЏ",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Портрет",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "Л&андшафт",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "&РџРѕСЂС‚СЂРµС‚",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "Р›&Р°РЅРґС€Р°С„С‚",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Параметри сторінки"
+CAPTION "РџР°СЂР°РјРµС‚СЂРё СЃС‚РѕСЂС–РЅРєРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
   CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
-  GROUPBOX "Папір", grp2, 8, 96, 224, 56, BS_GROUPBOX
-  LTEXT "&Розмір:", stc2, 16, 112, 36, 8
+  GROUPBOX "РџР°РїС–СЂ", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Р РѕР·РјС–СЂ:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  LTEXT "Пода&ча:", stc3, 16, 132, 36, 8
+  LTEXT "РџРѕРґР°&С‡Р°:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Орієнтація", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "К&нижкова", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Аль&бомна", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
-  GROUPBOX "Поля", grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT "З&ліва:", stc15, 88, 172, 21, 8
+  GROUPBOX "РћСЂС–С”РЅС‚Р°С†С–СЏ", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "Рљ&РЅРёР¶РєРѕРІР°", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "РђР»СЊ&Р±РѕРјРЅР°", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "РџРѕР»СЏ", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "Р—&Р»С–РІР°:", stc15, 88, 172, 21, 8
   EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "С&права:", stc16, 159, 172, 27, 8
+  LTEXT "РЎ&РїСЂР°РІР°:", stc16, 159, 172, 27, 8
   EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "З&верху:", stc17, 88, 192, 21, 8
+  LTEXT "Р—&РІРµСЂС…Сѓ:", stc17, 88, 192, 21, 8
   EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
-  LTEXT "З&низу:", stc18, 159, 192, 23, 8
+  LTEXT "Р—&РЅРёР·Сѓ:", stc18, 159, 192, 23, 8
   EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
-  PUSHBUTTON "Скасувати", IDCANCEL, 126, 220, 50, 14
-  PUSHBUTTON "П&ринтер...", psh3, 184, 220, 48, 14
+  PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Рџ&СЂРёРЅС‚РµСЂ...", psh3, 184, 220, 48, 14
 END
 
 NEWFILEOPENORD DIALOG 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Відкрити"
+CAPTION "Р’С–РґРєСЂРёС‚Рё"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT	"Шукати &в",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"РЁСѓРєР°С‚Рё &РІ",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"Ім'я &файлу:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    LTEXT	"Р†Рј'СЏ &С„Р°Р№Р»Сѓ:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
-    LTEXT	"Файли &типу",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    LTEXT	"Р¤Р°Р№Р»Рё &С‚РёРїСѓ",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"Лише для &читання",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+    CONTROL	"Р›РёС€Рµ РґР»СЏ &С‡РёС‚Р°РЅРЅСЏ",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
-    DEFPUSHBUTTON	"&Відкрити",		 IDOK,222,110,50,14
-    PUSHBUTTON		"Скасувати",		 IDCANCEL,222,128,50,14
-    PUSHBUTTON		"&Довідка",		 pshHelp,222,145,50,14
+    DEFPUSHBUTTON	"&Р’С–РґРєСЂРёС‚Рё",		 IDOK,222,110,50,14
+    PUSHBUTTON		"РЎРєР°СЃСѓРІР°С‚Рё",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Р”РѕРІС–РґРєР°",		 pshHelp,222,145,50,14
 }
 
 STRINGTABLE
 {
-    IDS_ABOUTBOX            "&Про тест ВибірТеки"
-    IDS_DOCUMENTFOLDERS     "Теки документів"
-    IDS_PERSONAL            "Мої документи"
-    IDS_FAVORITES           "Закладки"
-    IDS_PATH                "Системний шлях"
-    IDS_DESKTOP             "Стільниця"
-    IDS_FONTS               "Шрифти"
-    IDS_MYCOMPUTER          "Мій комп'ютер"
+    IDS_ABOUTBOX            "&РџСЂРѕ С‚РµСЃС‚ Р’РёР±С–СЂРўРµРєРё"
+    IDS_DOCUMENTFOLDERS     "РўРµРєРё РґРѕРєСѓРјРµРЅС‚С–РІ"
+    IDS_PERSONAL            "РњРѕС— РґРѕРєСѓРјРµРЅС‚Рё"
+    IDS_FAVORITES           "Р—Р°РєР»Р°РґРєРё"
+    IDS_PATH                "РЎРёСЃС‚РµРјРЅРёР№ С€Р»СЏС…"
+    IDS_DESKTOP             "РЎС‚С–Р»СЊРЅРёС†СЏ"
+    IDS_FONTS               "РЁСЂРёС„С‚Рё"
+    IDS_MYCOMPUTER          "РњС–Р№ РєРѕРјРї'СЋС‚РµСЂ"
 }
 
 STRINGTABLE
 {
-    IDS_SYSTEMFOLDERS       "Системні теки"
-    IDS_LOCALHARDRIVES      "Локальні жорсткі диски"
-    IDS_FILENOTFOUND        "Файл не знайдено"
-    IDS_VERIFYFILE          "Перевірте, чи правильно вказано ім'я файлу"
-    IDS_CREATEFILE          "Файл не існує\nЧи хочете Ви його створити?"
-    IDS_OVERWRITEFILE       "Файл уже існує.\nЗамінити його?"
-    IDS_INVALID_FILENAME_TITLE "Невірний символ в запису шляху"
-    IDS_INVALID_FILENAME    "Ім'я файлу не може містити наступні символи:\n                          / : < > |"
-    IDS_PATHNOTEXISTING     "Шлях не існує"
-    IDS_FILENOTEXISTING     "Файл не існує"
+    IDS_SYSTEMFOLDERS       "РЎРёСЃС‚РµРјРЅС– С‚РµРєРё"
+    IDS_LOCALHARDRIVES      "Р›РѕРєР°Р»СЊРЅС– Р¶РѕСЂСЃС‚РєС– РґРёСЃРєРё"
+    IDS_FILENOTFOUND        "Р¤Р°Р№Р» РЅРµ Р·РЅР°Р№РґРµРЅРѕ"
+    IDS_VERIFYFILE          "РџРµСЂРµРІС–СЂС‚Рµ, С‡Рё РїСЂР°РІРёР»СЊРЅРѕ РІРєР°Р·Р°РЅРѕ С–Рј'СЏ С„Р°Р№Р»Сѓ"
+    IDS_CREATEFILE          "Р¤Р°Р№Р» РЅРµ С–СЃРЅСѓС”\nР§Рё С…РѕС‡РµС‚Рµ Р’Рё Р№РѕРіРѕ СЃС‚РІРѕСЂРёС‚Рё?"
+    IDS_OVERWRITEFILE       "Р¤Р°Р№Р» СѓР¶Рµ С–СЃРЅСѓС”.\nР—Р°РјС–РЅРёС‚Рё Р№РѕРіРѕ?"
+    IDS_INVALID_FILENAME_TITLE "РќРµРІС–СЂРЅРёР№ СЃРёРјРІРѕР» РІ Р·Р°РїРёСЃСѓ С€Р»СЏС…Сѓ"
+    IDS_INVALID_FILENAME    "Р†Рј'СЏ С„Р°Р№Р»Сѓ РЅРµ РјРѕР¶Рµ РјС–СЃС‚РёС‚Рё РЅР°СЃС‚СѓРїРЅС– СЃРёРјРІРѕР»Рё:\n                          / : < > |"
+    IDS_PATHNOTEXISTING     "РЁР»СЏС… РЅРµ С–СЃРЅСѓС”"
+    IDS_FILENOTEXISTING     "Р¤Р°Р№Р» РЅРµ С–СЃРЅСѓС”"
 }
 
 STRINGTABLE
 {
-    IDS_UPFOLDER         "Вгору на один рівень"
-    IDS_NEWFOLDER        "Створити нову теку"
-    IDS_LISTVIEW         "Список"
-    IDS_REPORTVIEW       "Подробиці"
-    IDS_TODESKTOP        "Перехід на стільницю"
+    IDS_UPFOLDER         "Р’РіРѕСЂСѓ РЅР° РѕРґРёРЅ СЂС–РІРµРЅСЊ"
+    IDS_NEWFOLDER        "РЎС‚РІРѕСЂРёС‚Рё РЅРѕРІСѓ С‚РµРєСѓ"
+    IDS_LISTVIEW         "РЎРїРёСЃРѕРє"
+    IDS_REPORTVIEW       "РџРѕРґСЂРѕР±РёС†С–"
+    IDS_TODESKTOP        "РџРµСЂРµС…С–Рґ РЅР° СЃС‚С–Р»СЊРЅРёС†СЋ"
 }
 
 STRINGTABLE
 {
-    PD32_PRINT_TITLE       "Друк"
+    PD32_PRINT_TITLE       "Р”СЂСѓРє"
 
-    PD32_VALUE_UREADABLE                  "Нечитаємий елемент"
-    PD32_INVALID_PAGE_RANGE "Це значення не лежить у діапазоні сторінок\n\
-Введіть значенне між %d та %d"
-    PD32_FROM_NOT_ABOVE_TO                "Значення ВІД не повинно перевищувати ДО:"
-    PD32_MARGINS_OVERLAP                  "Межі перекривають чи перевищують \
-розміри паперу.\nВведіть їх наново"
-    PD32_NR_OF_COPIES_EMPTY               "Значення Числа Копій не може бути \
-пустим"
-    PD32_TOO_LARGE_COPIES                 "Така велика кількість копій не \
-може бути надрукована Вашим принтером.\nВведіть значення між 1 та %d"
-    PD32_PRINT_ERROR                      "Виникла помилка принтера"
-    PD32_NO_DEFAULT_PRINTER               "Немає принтера, поставленого за обумовленням"
-    PD32_CANT_FIND_PRINTER                "Не вдалось знайти принтер"
-    PD32_OUT_OF_MEMORY                    "Мало пам'яті"
-    PD32_GENERIC_ERROR                    "Виникла(и) помилка(и)"
-    PD32_DRIVER_UNKNOWN                   "Невідомий драйвер принтера"
-    PD32_NO_DEVICES                       "Перед запуском таких дій як налаштування \
-сторінки чи друкування вам треба встановити принтер. \
-Встановіть принтер та спробуйте знов."
+    PD32_VALUE_UREADABLE                  "РќРµС‡РёС‚Р°С”РјРёР№ РµР»РµРјРµРЅС‚"
+    PD32_INVALID_PAGE_RANGE "Р¦Рµ Р·РЅР°С‡РµРЅРЅСЏ РЅРµ Р»РµР¶РёС‚СЊ Сѓ РґС–Р°РїР°Р·РѕРЅС– СЃС‚РѕСЂС–РЅРѕРє\n\
+Р’РІРµРґС–С‚СЊ Р·РЅР°С‡РµРЅРЅРµ РјС–Р¶ %d С‚Р° %d"
+    PD32_FROM_NOT_ABOVE_TO                "Р—РЅР°С‡РµРЅРЅСЏ Р’Р†Р” РЅРµ РїРѕРІРёРЅРЅРѕ РїРµСЂРµРІРёС‰СѓРІР°С‚Рё Р”Рћ:"
+    PD32_MARGINS_OVERLAP                  "РњРµР¶С– РїРµСЂРµРєСЂРёРІР°СЋС‚СЊ С‡Рё РїРµСЂРµРІРёС‰СѓСЋС‚СЊ \
+СЂРѕР·РјС–СЂРё РїР°РїРµСЂСѓ.\nР’РІРµРґС–С‚СЊ С—С… РЅР°РЅРѕРІРѕ"
+    PD32_NR_OF_COPIES_EMPTY               "Р—РЅР°С‡РµРЅРЅСЏ Р§РёСЃР»Р° РљРѕРїС–Р№ РЅРµ РјРѕР¶Рµ Р±СѓС‚Рё \
+РїСѓСЃС‚РёРј"
+    PD32_TOO_LARGE_COPIES                 "РўР°РєР° РІРµР»РёРєР° РєС–Р»СЊРєС–СЃС‚СЊ РєРѕРїС–Р№ РЅРµ \
+РјРѕР¶Рµ Р±СѓС‚Рё РЅР°РґСЂСѓРєРѕРІР°РЅР° Р’Р°С€РёРј РїСЂРёРЅС‚РµСЂРѕРј.\nР’РІРµРґС–С‚СЊ Р·РЅР°С‡РµРЅРЅСЏ РјС–Р¶ 1 С‚Р° %d"
+    PD32_PRINT_ERROR                      "Р’РёРЅРёРєР»Р° РїРѕРјРёР»РєР° РїСЂРёРЅС‚РµСЂР°"
+    PD32_NO_DEFAULT_PRINTER               "РќРµРјР°С” РїСЂРёРЅС‚РµСЂР°, РїРѕСЃС‚Р°РІР»РµРЅРѕРіРѕ Р·Р° РѕР±СѓРјРѕРІР»РµРЅРЅСЏРј"
+    PD32_CANT_FIND_PRINTER                "РќРµ РІРґР°Р»РѕСЃСЊ Р·РЅР°Р№С‚Рё РїСЂРёРЅС‚РµСЂ"
+    PD32_OUT_OF_MEMORY                    "РњР°Р»Рѕ РїР°Рј'СЏС‚С–"
+    PD32_GENERIC_ERROR                    "Р’РёРЅРёРєР»Р°(Рё) РїРѕРјРёР»РєР°(Рё)"
+    PD32_DRIVER_UNKNOWN                   "РќРµРІС–РґРѕРјРёР№ РґСЂР°Р№РІРµСЂ РїСЂРёРЅС‚РµСЂР°"
+    PD32_NO_DEVICES                       "РџРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј С‚Р°РєРёС… РґС–Р№ СЏРє РЅР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ \
+СЃС‚РѕСЂС–РЅРєРё С‡Рё РґСЂСѓРєСѓРІР°РЅРЅСЏ РІР°Рј С‚СЂРµР±Р° РІСЃС‚Р°РЅРѕРІРёС‚Рё РїСЂРёРЅС‚РµСЂ. \
+Р’СЃС‚Р°РЅРѕРІС–С‚СЊ РїСЂРёРЅС‚РµСЂ С‚Р° СЃРїСЂРѕР±СѓР№С‚Рµ Р·РЅРѕРІ."
 
-    PD32_DEFAULT_PRINTER                  "Принтер за обумовленням; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документів у черзі"
-    PD32_MARGINS_IN_INCHES                "Межі  [дюйми]"
-    PD32_MARGINS_IN_MILLIMETERS           "Межі [мм]"
-    PD32_MILLIMETERS                      "мм"
+    PD32_DEFAULT_PRINTER                  "РџСЂРёРЅС‚РµСЂ Р·Р° РѕР±СѓРјРѕРІР»РµРЅРЅСЏРј; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d РґРѕРєСѓРјРµРЅС‚С–РІ Сѓ С‡РµСЂР·С–"
+    PD32_MARGINS_IN_INCHES                "РњРµР¶С–  [РґСЋР№РјРё]"
+    PD32_MARGINS_IN_MILLIMETERS           "РњРµР¶С– [РјРј]"
+    PD32_MILLIMETERS                      "РјРј"
 
-    PD32_PRINTER_STATUS_READY             "Готово"
-    PD32_PRINTER_STATUS_PAUSED            "Призупинено; "
-    PD32_PRINTER_STATUS_ERROR             "Помилка; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  "Чекання видалення; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Папір застряг; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Не вистачає паперу; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "Поставте папір вручну; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Проблема с папером; "
-    PD32_PRINTER_STATUS_OFFLINE           "Принтер в режимі offline; "
-    PD32_PRINTER_STATUS_IO_ACTIVE         "Ввід/Вивід активний; "
-    PD32_PRINTER_STATUS_BUSY              "Зайнятий; "
-    PD32_PRINTER_STATUS_PRINTING          "Йде друк; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Лоток переповнений папером; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Не доступний; "
-    PD32_PRINTER_STATUS_WAITING           "Чекання; "
-    PD32_PRINTER_STATUS_PROCESSING        "Обробка; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Готування; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Прогрів; "
-    PD32_PRINTER_STATUS_TONER_LOW         "Тонер при кінці; "
-    PD32_PRINTER_STATUS_NO_TONER          "Нема тонера; "
+    PD32_PRINTER_STATUS_READY             "Р“РѕС‚РѕРІРѕ"
+    PD32_PRINTER_STATUS_PAUSED            "РџСЂРёР·СѓРїРёРЅРµРЅРѕ; "
+    PD32_PRINTER_STATUS_ERROR             "РџРѕРјРёР»РєР°; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Р§РµРєР°РЅРЅСЏ РІРёРґР°Р»РµРЅРЅСЏ; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "РџР°РїС–СЂ Р·Р°СЃС‚СЂСЏРі; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "РќРµ РІРёСЃС‚Р°С‡Р°С” РїР°РїРµСЂСѓ; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "РџРѕСЃС‚Р°РІС‚Рµ РїР°РїС–СЂ РІСЂСѓС‡РЅСѓ; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "РџСЂРѕР±Р»РµРјР° СЃ РїР°РїРµСЂРѕРј; "
+    PD32_PRINTER_STATUS_OFFLINE           "РџСЂРёРЅС‚РµСЂ РІ СЂРµР¶РёРјС– offline; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "Р’РІС–Рґ/Р’РёРІС–Рґ Р°РєС‚РёРІРЅРёР№; "
+    PD32_PRINTER_STATUS_BUSY              "Р—Р°Р№РЅСЏС‚РёР№; "
+    PD32_PRINTER_STATUS_PRINTING          "Р™РґРµ РґСЂСѓРє; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Р›РѕС‚РѕРє РїРµСЂРµРїРѕРІРЅРµРЅРёР№ РїР°РїРµСЂРѕРј; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "РќРµ РґРѕСЃС‚СѓРїРЅРёР№; "
+    PD32_PRINTER_STATUS_WAITING           "Р§РµРєР°РЅРЅСЏ; "
+    PD32_PRINTER_STATUS_PROCESSING        "РћР±СЂРѕР±РєР°; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Р“РѕС‚СѓРІР°РЅРЅСЏ; "
+    PD32_PRINTER_STATUS_WARMING_UP        "РџСЂРѕРіСЂС–РІ; "
+    PD32_PRINTER_STATUS_TONER_LOW         "РўРѕРЅРµСЂ РїСЂРё РєС–РЅС†С–; "
+    PD32_PRINTER_STATUS_NO_TONER          "РќРµРјР° С‚РѕРЅРµСЂР°; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "Перервано користувачем; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Мало пам'яті; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "Кришка принтера відкрита; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Невідомий сервер принтера; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Живлення в безпечному режимі; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "РџРµСЂРµСЂРІР°РЅРѕ РєРѕСЂРёСЃС‚СѓРІР°С‡РµРј; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "РњР°Р»Рѕ РїР°Рј'СЏС‚С–; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "РљСЂРёС€РєР° РїСЂРёРЅС‚РµСЂР° РІС–РґРєСЂРёС‚Р°; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "РќРµРІС–РґРѕРјРёР№ СЃРµСЂРІРµСЂ РїСЂРёРЅС‚РµСЂР°; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Р–РёРІР»РµРЅРЅСЏ РІ Р±РµР·РїРµС‡РЅРѕРјСѓ СЂРµР¶РёРјС–; "
 }
 
 STRINGTABLE /* Font styles */
 {
-    IDS_FONT_REGULAR       "Нормальний"
-    IDS_FONT_BOLD          "Жирний"
-    IDS_FONT_ITALIC        "Курсив"
-    IDS_FONT_BOLD_ITALIC   "Жирний курсив"
+    IDS_FONT_REGULAR       "РќРѕСЂРјР°Р»СЊРЅРёР№"
+    IDS_FONT_BOLD          "Р–РёСЂРЅРёР№"
+    IDS_FONT_ITALIC        "РљСѓСЂСЃРёРІ"
+    IDS_FONT_BOLD_ITALIC   "Р–РёСЂРЅРёР№ РєСѓСЂСЃРёРІ"
 }
 
 STRINGTABLE /* Color names */
 {
-    IDS_COLOR_BLACK     "Чорний"
-    IDS_COLOR_MAROON    "Коричневий"
-    IDS_COLOR_GREEN     "Зелений"
-    IDS_COLOR_OLIVE     "Оливковий"
-    IDS_COLOR_NAVY      "Темно-синій"
-    IDS_COLOR_PURPLE    "Пурпуровий"
-    IDS_COLOR_TEAL      "Синьо-зелений"
-    IDS_COLOR_GRAY      "Сірий"
-    IDS_COLOR_SILVER    "Сріблястий"
-    IDS_COLOR_RED       "Червоний"
-    IDS_COLOR_LIME      "Салатовий"
-    IDS_COLOR_YELLOW    "Жовтий"
-    IDS_COLOR_BLUE      "Синій"
-    IDS_COLOR_FUCHSIA   "Малиновий"
-    IDS_COLOR_AQUA      "Блакитний"
-    IDS_COLOR_WHITE     "Білий"
+    IDS_COLOR_BLACK     "Р§РѕСЂРЅРёР№"
+    IDS_COLOR_MAROON    "РљРѕСЂРёС‡РЅРµРІРёР№"
+    IDS_COLOR_GREEN     "Р—РµР»РµРЅРёР№"
+    IDS_COLOR_OLIVE     "РћР»РёРІРєРѕРІРёР№"
+    IDS_COLOR_NAVY      "РўРµРјРЅРѕ-СЃРёРЅС–Р№"
+    IDS_COLOR_PURPLE    "РџСѓСЂРїСѓСЂРѕРІРёР№"
+    IDS_COLOR_TEAL      "РЎРёРЅСЊРѕ-Р·РµР»РµРЅРёР№"
+    IDS_COLOR_GRAY      "РЎС–СЂРёР№"
+    IDS_COLOR_SILVER    "РЎСЂС–Р±Р»СЏСЃС‚РёР№"
+    IDS_COLOR_RED       "Р§РµСЂРІРѕРЅРёР№"
+    IDS_COLOR_LIME      "РЎР°Р»Р°С‚РѕРІРёР№"
+    IDS_COLOR_YELLOW    "Р–РѕРІС‚РёР№"
+    IDS_COLOR_BLUE      "РЎРёРЅС–Р№"
+    IDS_COLOR_FUCHSIA   "РњР°Р»РёРЅРѕРІРёР№"
+    IDS_COLOR_AQUA      "Р‘Р»Р°РєРёС‚РЅРёР№"
+    IDS_COLOR_WHITE     "Р‘С–Р»РёР№"
 }
 
 STRINGTABLE
 {
-    IDS_FONT_SIZE   "Биберіть шрифт розміром %d - %d пунктів."
-    IDS_SAVE_BUTTON "&Зберегти"
-    IDS_SAVE_IN     "Зберегти &в:"
-    IDS_SAVE        "Зберегти"
-    IDS_SAVE_AS     "Зберегти як"
-    IDS_OPEN_FILE   "Відкрити файл"
+    IDS_FONT_SIZE   "Р‘РёР±РµСЂС–С‚СЊ С€СЂРёС„С‚ СЂРѕР·РјС–СЂРѕРј %d - %d РїСѓРЅРєС‚С–РІ."
+    IDS_SAVE_BUTTON "&Р—Р±РµСЂРµРіС‚Рё"
+    IDS_SAVE_IN     "Р—Р±РµСЂРµРіС‚Рё &РІ:"
+    IDS_SAVE        "Р—Р±РµСЂРµРіС‚Рё"
+    IDS_SAVE_AS     "Р—Р±РµСЂРµРіС‚Рё СЏРє"
+    IDS_OPEN_FILE   "Р’С–РґРєСЂРёС‚Рё С„Р°Р№Р»"
 }

@@ -11,7 +11,7 @@
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivesft.inf">hivesft_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivesys.inf">hivesys_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
-	<cdfile installbase="$(CDOUTPUT)" nameoncd="unattend.inf.sample">unattend.inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)" nameoncd="unattend.inf">unattend.inf</cdfile>
 
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />
@@ -19,10 +19,12 @@
 	<directory name="livecd">
 		<xi:include href="livecd/livecd.rbuild" />
 	</directory>
+	<!--
 	<directory name="bootcdregtest">
 		<xi:include href="bootcdregtest/bootcdregtest.rbuild" />
 	</directory>
 	<directory name="livecdregtest">
 		<xi:include href="livecdregtest/livecdregtest.rbuild" />
 	</directory>
+	-->
 </group>

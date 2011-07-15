@@ -21,7 +21,7 @@
 
 #include <freeldr.h>
 
-BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition)
+BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition)
 {
 	char *p;
 
@@ -160,7 +160,9 @@ DissectArcPath2(
     return FALSE;
 }
 
-VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition)
+
+#if 0
+VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Partition)
 {
 	char	tmp[50];
 
@@ -196,10 +198,10 @@ VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Parti
 	}
 }
 
-ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
+UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 {
 	char *	p;
-	ULONG		DriveNumber = 0;
+	UCHAR		DriveNumber = 0;
 
 	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return 0;
@@ -226,3 +228,4 @@ ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 
 	return DriveNumber;
 }
+#endif

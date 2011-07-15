@@ -4,6 +4,7 @@
 <if property="ARCH" value="i386">
 	<module name="bootcd" type="iso" output="ReactOS.iso">
 		<bootsector>isoboot</bootsector>
+		<!--cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile-->
 	</module>
 </if>
 <ifnot property="ARCH" value="i386">

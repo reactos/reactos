@@ -1,0 +1,166 @@
+**********************************************************************
+* 	INSTALL file for STLport                                         *
+*                                                                    *
+**********************************************************************
+
+STLport is a full ANSI C++ Standard library.
+
+This distribution contains STLport sources only, no binaries.
+To use STLport iostreams, locale and complex numbers, you have to build STLport
+library from sources in "build/lib" directory and link your programs with it.
+
+Starting with 5.0 the 'wrapper' mode is not supported anymore. You cannot use native
+compiler iostreams implementation with STLport STL (see doc/FAQ for explanations).
+Now you have to choose between STLport iostreams or no iostreams.
+
+==== Unpacking and installing STLport ==========
+
+1) Unpack STLport archive to a directory accessible during compilation.
+   NOTE: DO NOT overwrite header files coming with the compiler, even if you made
+   a backup - this won't work! Most probably, you've already unpacked the archive before
+   reading this file though ;)
+
+2) Make sure "stlport" directory of this distribution comes before compiler's one 
+   in your include paths when you compile the project.
+
+   Note: for SunPro CC 5.0 and higher, there used to be special directory "stlport/SC5"
+	 this is now obsolete, please make sure you do not use it anymore.
+
+3) Make sure you do not rename this "stlport" subdirectory -
+   that may result in compilation errors.
+
+   NOTE:  Your compiler should be recognized by STLport source code with no configuring.
+          Please edit appropriate configuration header for your compiler
+          directly if you have to make compiler-specific configuration changes
+          (see stlport/stl/config). 
+
+4)  Run:
+
+    configure --help
+
+    Depending on your environment, Windows command shell or Unix like shell,
+    configure.bat or configure script will be run respectively. For Windows users
+    running configure script is mandatory in order to declare the compiler you are
+    going to use.
+
+5)  Go to "build/lib" subdirectory. It contains various makefiles for different
+    compilers and 'make' utilities (GNU Make and Microsoft's nmake supported).
+
+    Verify you can do command line compiles. IDE users may have to do something 
+    special, like add environment variables (for Microsoft) or install 
+    additional compiler components (for Metrowerks), before they can use their 
+    command line compilers (see doc/README.xxxx for additionnal information).
+
+    configure script should have already created a Makefile file so that you only
+    have to call 'make' or 'nmake' (for some platforms GNU make might be hidden
+    behind 'gmake').
+
+    IMPORTANT:
+
+    If you DO NOT plan to use STLport iostreams and/or locale implementation but just
+    the STL, you do not have to build the library.
+ 
+    If you have decided to disable STLport iostreams and locale using _STLP_NO_IOSTREAMS
+    configuration macro in stlport/stl/config/user_config.h, you may stop reading here.
+
+
+==== Building STLport iostreams library ==========
+
+Below are step-by-step instructions to build STLport streams library. This is a general
+build process description, for a more detailed one check README files in the doc folder:
+
+5)  Using appropriate make command (make or nmake), do
+
+      make clean install
+
+    to build the STLport libraries. Make files are set up to build several different
+    flavors - debug/nondebug, static/dynamic versions. But not all flavors will be build
+    by default. See build/lib/README for other make targets.
+
+    Note: 'install' target work slightly different than usual - it installs libraries into
+    <STLport root dir>/lib and bin catalogs, NOT IN SYSTEM CATALOG. You can do the system
+    install by just copying stlport and lib folder to the destination of your choise. For
+    example on UNIX-like platforms this can be done with the following commands:
+
+      su
+      tar cf - stlport | (cd /usr/local/include; tar xf -)
+      chmod -R a+r /usr/local/include/stlport
+      chown -R root:root /usr/local/include/stlport
+      (cd lib; tar cf - --exclude=CVS --exclude=.cvsignore .) | (cd /usr/local/lib; tar xf -)
+      chown -R root:root /usr/local/lib/libstlport*
+      exit
+
+    Note: System install is optional, most of compilers/linkers support searching for includes
+    and libs throught out the whole filesystem, just check your documentation on how to achieve
+    this.
+
+    If you use cross-compiler, you can find libraries in the <STLport root dir>/lib/<target platform>
+    catalog.
+
+6)  If build fails, you may choose to :
+     - try fixing the build ;)
+     - wait until somebody else will submit corresponding changes to be incorporated in next STLport 
+       release/snapshot.
+
+    In case you do patch STLport, please submit your patches to
+    https://sourceforge.net/tracker/?atid=766246&group_id=146814&func=browse
+
+==== Linking your application with STLport library ==========
+
+7) Check the build:
+
+    Example:
+    
+    - under Linux and other Unixes:
+
+    cd build/test/unit
+    make install
+    ../../../bin/stl_unit_test
+    ../../../bin-g/stl_unit_test
+
+    - under Windows:
+
+    cd build\test\unit
+    nmake install
+    cd ..\..\..\bin
+    stl_unit_test
+    stl_unit_testd
+    stl_unit_teststld
+
+8) Supply the "lib" subdirectory to the library search path and add desired 
+   library to the list of libraries to link with.
+   Examples (imagine you have mytest.cpp in the same directory as this file is):
+	With GCC     : g++ -pthread -I./stlport mytest.cpp -L./lib/ -lstlport
+	With DEC CC  : cxx -I./stlport mytest.cpp -L./lib/ -lstlport
+	With SUN CC  : CC -mt -I./stlport mytest.cpp -L./lib/ -lstlport
+	.....
+   For several compilers supporting auto linking feature (VC++, Borland, DMC),
+   you do not have to specify "stlport.M.m.lib" explicitly, as it is being choosen
+   and forced to link automatically by "#pragma"'s in compiler config files 
+   Appropriate version is being selected based on compiler options and _STLP_DEBUG
+   setting. All you have to do is to set library search path for the linker.
+
+	Example :
+           cl.exe /I.\stlport mytest.cpp /link /libpath:.\lib /MD
+
+9) If you linked your application with shared STLport library (.so or .dll), please 
+   make suze that your .so or .dll can be found by the dynamic linker. 
+   Under Windows, the paths searched depend on the particular flavor, see the MSDN 
+   documentation for LoadLibrary at http://msdn.microsoft.com. The easiest ways are to
+   either modify the PATH environment variable or copy all .dll's next to the 
+   executable like it is done per default when unit tests executable are put next
+   to dlls. 
+   Under Linux, the environment variable LD_LIBRARY_PATH can be adjusted to point
+   to the dir containing .so. See the manpage for ld.so for more info.
+
+10) STLport builds only multithreaded libraries, so your application should be compiled
+   as multithreaded, too. Use -pthread (or -pthreads on Solaris) option for GCC, -mt for SunPro,
+   /MT for VC, and so on. Sometimes you should define _REENTRANT or something else, depends
+   upon platform/compiler. See compiler's and linker's options on command line when you build
+   unit tests (build/test/unit) for reference. The last is useful for ANY platform.
+
+11) Don't hesitate to read READMEs (doc/README*, build/lib/README*, build/test/unit/README*)
+   and doc/FAQ.
+
+12) Have fun!
+

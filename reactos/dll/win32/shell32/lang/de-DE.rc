@@ -55,7 +55,7 @@ BEGIN
 		MENUITEM "Aktualisieren",             FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "Einfügen",                  FCIDM_SHVIEW_INSERT
-		MENUITEM "Einfügen als Verweis",      FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Verknüpfung einfügen",      FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "&Eigenschaften",            FCIDM_SHVIEW_PROPERTIES
 	END
@@ -127,7 +127,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Version "KERNEL_VERSION_STR" ("KERNEL_VERSION_BUILD_STR")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
 	LTEXT "Diese ReactOS-Version wurde registriert auf:", IDC_STATIC, 35, 115, 180, 10
@@ -427,7 +427,7 @@ BEGIN
 	//ICON
 	LTEXT "Anwendungsname", 14005, 100, 140, 40, 10
 	PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-	LTEXT "Umdie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert.", 14007, 12, 155, 160, 30
+	LTEXT "", 14007, 12, 155, 160, 30
 	PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -660,9 +660,7 @@ BEGIN
 	IDS_CANTTRASH_TEXT          "Das Objekt '%1' kann nicht in den Papierkorb verschoben werden. Möchten Sie es stattdessen löschen?"
 	IDS_OVERWRITEFILE_TEXT      "Dieser Ordner enthält bereits eine Datei namens '%1'.\n\nWollen Sie diese überschreiben?"
 	IDS_OVERWRITEFILE_CAPTION   "Bestätigung: Datei überschreiben"
-	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\n"\
-		"Wenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\n"\
-		"im gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
+	IDS_OVERWRITEFOLDER_TEXT    "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\nWenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\nim gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Neu starten"
@@ -721,7 +719,7 @@ BEGIN
 	IDS_SHELL_ABOUT_BACK        "< &Zurück"
 	FCIDM_SHVIEW_NEW 	    "Neu"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Neues Ver&zeichnis"
-	FCIDM_SHVIEW_NEWLINK        "Neuer Ver&weis"
+	FCIDM_SHVIEW_NEWLINK        "Neue &Verknüpfung"
 	IDS_FOLDER_OPTIONS          "Ordneroptionen"
 	IDS_RECYCLEBIN_LOCATION     "Papierkorbpfad"
 	IDS_RECYCLEBIN_DISKSPACE    "freier Speicher"
@@ -764,5 +762,7 @@ BEGIN
     IDS_SHLEXEC_NOASSOC         "Es ist kein Programm mit diesem Dateityp verknüpft."
 	
 	IDS_FILE_DETAILS            "Details zum Dateityp '%s'"
-	IDS_FILE_DETAILSADV         "Umdie Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
+	IDS_FILE_DETAILSADV         "Um die Einstellungen, die alle Dateien des Typs '%s' betreffen zu ändern, klicken Sie auf Erweitert."
+	IDS_FILE_TYPES              "Dateitypen"
+	IDS_COLUMN_EXTENSION        "Erweiterungen"
 END

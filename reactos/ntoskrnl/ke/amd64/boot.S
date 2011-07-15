@@ -8,7 +8,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-
 #include <ksamd64.inc>
 
 EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
@@ -19,7 +18,6 @@ EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
 /* FUNCTIONS *****************************************************************/
 
 .code64
-.text
 
 /**
  * VOID

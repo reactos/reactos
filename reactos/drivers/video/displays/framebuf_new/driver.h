@@ -10,6 +10,7 @@
 //#define DBG 1
 #include "stddef.h"
 #include <stdarg.h>
+#include <string.h>
 #include "windef.h"
 #include "wingdi.h"
 #include "winddi.h"

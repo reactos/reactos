@@ -52,7 +52,7 @@
 
 #ifndef _CRTIMP
  #ifdef CRTDLL /* Defined for ntdll, crtdll, msvcrt, etc */
-  #define _CRTIMP __declspec(dllexport)
+  #define _CRTIMP
  #elif defined(_DLL)
   #define _CRTIMP __declspec(dllimport)
  #else /* !CRTDLL && !_DLL */

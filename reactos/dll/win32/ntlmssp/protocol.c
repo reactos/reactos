@@ -387,12 +387,12 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     ret = SEC_I_CONTINUE_NEEDED;
 
 exit:
-    if(chaMessage) NtlmFree(chaMessage);
-    if(negoMessage) NtlmFree(negoMessage);
-    if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
-    if(targetName.Buffer) NtlmFree(targetName.Buffer);
-    if(OemDomainName.Buffer) NtlmFree(OemDomainName.Buffer);
-    if(OemWorkstationName.Buffer) NtlmFree(OemWorkstationName.Buffer);
+    //if(chaMessage) NtlmFree(chaMessage);
+    //if(negoMessage) NtlmFree(negoMessage);
+    //if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
+    //if(targetName.Buffer) NtlmFree(targetName.Buffer);
+    //if(OemDomainName.Buffer) NtlmFree(OemDomainName.Buffer);
+    //if(OemWorkstationName.Buffer) NtlmFree(OemWorkstationName.Buffer);
 
     return ret;
 }

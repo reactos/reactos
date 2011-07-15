@@ -11,7 +11,7 @@
 @ stdcall CredUIReadSSOCredW(wstr ptr)
 @ stdcall CredUIStoreSSOCredA(str str str long)
 @ stdcall CredUIStoreSSOCredW(wstr wstr wstr long)
-@ stub DllCanUnloadNow
-@ stub DllGetClassObject
-@ stub DllRegisterServer
-@ stub DllUnregisterServer
+@ stub -private DllCanUnloadNow
+@ stub -private DllGetClassObject
+@ stub -private DllRegisterServer
+@ stub -private DllUnregisterServer

@@ -20,7 +20,7 @@
  *
  * The other difference is that the AVL package for Rtl has custom callbacks for
  * comparison purposes (which would access some internal, opaque, user data) while
- * the Mm package stores the user-data inline as StartingVpn and EndingVpn. So 
+ * the Mm package stores the user-data inline as StartingVpn and EndingVpn. So
  * when a compare is being made, RtlpAvlCompareRoutine is called, which will either
  * perform the Mm work, or call the user-specified callback in the Rtl case.
  */
@@ -54,7 +54,7 @@ RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,
     {
         return GenericEqual;
     }
-    else 
+    else
     {
         return GenericGreaterThan;
     }
@@ -80,7 +80,7 @@ SCHAR
 FORCEINLINE
 RtlBalance(IN PRTL_BALANCED_LINKS Node)
 {
-    return Node->u1.Balance;
+    return (SCHAR)Node->u1.Balance;
 }
 
 PRTL_BALANCED_LINKS

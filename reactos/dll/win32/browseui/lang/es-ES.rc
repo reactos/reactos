@@ -23,14 +23,14 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 // Menus
 //
 
-IDM_CABINET_CONTEXTMENU MENUEX 
+IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "Botones e&stándar",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Barra de direcciones",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "&Vínculos",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Bloquear las barras de &herramientas",				IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Personalizar...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
         MENUITEM "&Etiquetas",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
@@ -120,7 +120,7 @@ END
 // Accelerator
 //
 
-IDR_ACCELERATORS ACCELERATORS 
+IDR_ACCELERATORS ACCELERATORS
 BEGIN
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
     VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
@@ -142,50 +142,50 @@ END
 // Strings
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     800                       "Contiene comandos para trabajar con los elementos seleccionados."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     864                       "Contiene comandos de edición."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     928                       "Contiene comandos para manipular la vista."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     992                       "Contiene comandos de herramientas."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     1056                      "Contiene comandos para mostrar la Ayuda."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9025                      "Cierra la ventana."
     9026                      "Sube un nivel."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9121                      "Conecta a unidad de red."
     9122                      "Desconecta de unidad de red."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9250                      "Muestra información sobre el programa, número de versión y copyright."
     9252                      "Muestra información para debugging."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9281                      "Va a la página previa."
     9282                      "Va a la próxima página."
@@ -193,13 +193,13 @@ BEGIN
     9285                      "Va a página de inicio."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9362                      "Abre la carpeta Organizar Favoritos."
     9363                      "Añade la página actual a la lista de Favoritos."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9505                      "Muestra u oculta las barras de herramientas."
     9506                      "Muestra u oculta la barra de estado."
@@ -209,12 +209,12 @@ BEGIN
     9516                      "Bloquear el tamaño y la posición de las barras de herramientas."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9533                      "Personalizar la barra de herramientas."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     9552                      "Muestra u oculta una de las barras del explorador."
     9553                      "Muestra la barra de búsqueda."
@@ -224,47 +224,47 @@ BEGIN
     9559                      "Muestra la barra de media."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SMALLICONS            "Iconos pequeños"
     IDS_LARGEICONS            "Iconos grandes"
     IDS_SHOWTEXTLABELS        "Muestra etiquetas de texto"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS          "Sin etiquetas de texto"
     IDS_SELECTIVETEXTONRIGHT  "Selecciona el texto a la derecha"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL         "|Ir||"
     IDS_GOBUTTONTIPTEMPLATE   "Ir a ""%s"""
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_SEARCHLABEL           "Búsqueda"
     IDS_ADDRESSBANDLABEL      "Dire&cción"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FOLDERSLABEL          "Carpetas"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_HISTORYTEXT           "&Historial\tCtrl+H"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_UP                    "Arriba"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_BACK                  "Atrás"
     IDS_FORWARD               "Adelante"
