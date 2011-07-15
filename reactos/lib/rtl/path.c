@@ -1014,7 +1014,6 @@ RtlDoesFileExists_UStr(IN PUNICODE_STRING FileName)
  * @implemented
  */
 BOOLEAN
-BOOLEAN
 NTAPI
 RtlDoesFileExists_UEx(IN PCWSTR FileName,
                       IN BOOLEAN SucceedIfBusy)
