@@ -33,11 +33,8 @@ if defined ROS_ARCH (
 
 ) else if defined VCINSTALLDIR (
     :: VS command prompt does not put this in enviroment vars
-    cl 2>&1 | find "x86" > NUL && set ARCH=i386
-    cl 2>&1 | find "x64" > NUL && set ARCH=amd64
-    cl 2>&1 | find "14." > NUL && set BUILD_ENVIRONMENT=VS8
-    cl 2>&1 | find "15." > NUL && set BUILD_ENVIRONMENT=VS9
-    cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
+    set ARCH=i386
+    set BUILD_ENVIRONMENT=VS10
     if not defined BUILD_ENVIRONMENT (
         echo Error: Visual Studio version too old or version detection failed.
         exit /b
@@ -45,25 +42,7 @@ if defined ROS_ARCH (
 
     echo Detected Visual Studio Environment %BUILD_ENVIRONMENT%-%ARCH%
     if /I "%1" == "VSSolution" (
-        if "%BUILD_ENVIRONMENT%" == "VS8" (
-            if "%ARCH%" == "amd64" (
-                set CMAKE_GENERATOR="Visual Studio 8 2005 Win64"
-            ) else (
-                set CMAKE_GENERATOR="Visual Studio 8 2005"
-            )
-        ) else if "%BUILD_ENVIRONMENT%" == "VS9" (
-            if "%ARCH%" == "amd64" (
-                set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
-            ) else (
-                set CMAKE_GENERATOR="Visual Studio 9 2008"
-            )
-        ) else if "%BUILD_ENVIRONMENT%" == "VS10" (
-            if "%ARCH%" == "amd64" (
-                set CMAKE_GENERATOR="Visual Studio 10 Win64"
-            ) else (
-                set CMAKE_GENERATOR="Visual Studio 10"
-            )
-        )
+        set CMAKE_GENERATOR="Visual Studio 10"
     ) else (
         set USE_NMAKE=1
         echo This script defaults to nmake. To use Visual Studio GUI specify "VSSolution" as a parameter.
